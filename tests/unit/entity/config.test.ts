@@ -111,7 +111,7 @@ describe("entity", () => {
         { show_name: 0 as unknown as boolean, name_position: "left" },
         ITEM_DEFAULTS.row!,
       ),
-    ).toEqual({ showName: false, showValue: false, showIcon: true, namePosition: "above" });
+    ).toEqual({ showName: false, showValue: false, showIcon: true, namePosition: "below" });
     expect(normalizeActionDefaults({ tap_action: "toggle" })).toMatchObject({
       tap: { action: "toggle" },
       hold: { action: "more-info" },
@@ -148,8 +148,12 @@ describe("group", () => {
       showName: true,
       showValue: false,
       showIcon: true,
-      namePosition: "above",
+      namePosition: "below",
     });
+    expect(
+      normalizeGroup({ layout: "column", entities: ["l.a"] }, ctx, {}, "entities", 0).entities[0]
+        .item.namePosition,
+    ).toBe("above");
     expect(
       normalizeGroup({ layout: "column", entities: ["l.a"] }, ctx, {}, "entities", 0).group.align,
     ).toBe("end");
@@ -184,7 +188,7 @@ describe("group", () => {
     expect(a.entities[0].item).toMatchObject({
       showValue: true,
       showIcon: false,
-      namePosition: "above",
+      namePosition: "below",
     });
     expect(a.entities[1].item).toMatchObject({ showValue: false, showIcon: false });
     expect(a.group.align).toBe("center");

@@ -46,7 +46,7 @@ export const ITEM_DEFAULTS: { [layout: string]: ItemDefaults | undefined } & {
   header: ItemDefaults;
   other: ItemDefaults;
 } = {
-  row: { showName: true, showValue: false, showIcon: true, namePosition: "above", align: "start" },
+  row: { showName: true, showValue: false, showIcon: true, namePosition: "below", align: "start" },
   column: { showName: true, showValue: false, showIcon: true, namePosition: "above", align: "end" },
   table: { showName: true, showValue: true, showIcon: false, namePosition: "above", align: "end" },
   header: { showName: false, showValue: true, showIcon: true, namePosition: "above" },

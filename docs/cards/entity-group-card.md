@@ -272,7 +272,7 @@ entities:
 
 ## Row
 
-Entities side by side as compact items: the name above a round icon, optionally the value next to it. Items wrap when the card is narrow. `align` spreads them (`start`, `center`, `end`, `space-between` or `stretch`). Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
+Entities side by side as compact items: a round icon with the name under it, optionally the value next to it. Items wrap when the card is narrow. `align` spreads them (`start`, `center`, `end`, `space-between` or `stretch`). Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
 
 ::: live
 
@@ -315,7 +315,7 @@ entities:
 
 :::
 
-`name_position: below` puts the name under the icon and `align: stretch` gives every item the same share of the width.
+`name_position: above` puts the name on top of the icon instead of under it, and `align: stretch` gives every item the same share of the width.
 
 ::: live
 
@@ -325,7 +325,7 @@ title: Garden
 icon: mdi:flower
 layout: row
 align: stretch
-name_position: below
+name_position: above
 entities:
   - entity: light.garden
     name: Lights
@@ -578,14 +578,14 @@ entities:
 
 ### Layouts
 
-| `layout`         | Arrangement                                                                          |
-| ---------------- | ------------------------------------------------------------------------------------ |
-| `list` (default) | One row per entity: icon, name, value, optional toggle; graphs below the name.       |
-| `grid`           | Compact cells, `columns` per row, with the value big.                                |
-| `hero`           | The first entity is the lead with a big value and its graph; the rest are list rows. |
-| `row`            | Compact items side by side: name above a round icon, optionally the value.           |
-| `column`         | The same items stacked vertically, hugging the right edge.                           |
-| `table`          | Key/value rows: small-caps name on the left, value on the right.                     |
+| `layout`         | Arrangement                                                                            |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| `list` (default) | One row per entity: icon, name, value, optional toggle; graphs below the name.         |
+| `grid`           | Compact cells, `columns` per row, with the value big.                                  |
+| `hero`           | The first entity is the lead with a big value and its graph; the rest are list rows.   |
+| `row`            | Compact items side by side: a round icon with the name under it, optionally the value. |
+| `column`         | The same items stacked vertically, hugging the right edge.                             |
+| `table`          | Key/value rows: small-caps name on the left, value on the right.                       |
 
 ### Card options
 
@@ -599,7 +599,7 @@ entities:
 | `columns`                                          | `2`                          | Grid: cells per row, 1 to 4 (not the sections grid `grid_options.columns`).                                                                                                                                                                                                               |
 | `align`                                            | per layout                   | Row: `start`, `center`, `end`, `space-between` or `stretch` (items share the width). Column: `start`, `center`, `end`. Table: `start`, `center`, `end` for the value. `stretch` and `space-between` act as `end` in columns and tables. Defaults: row `start`, column `end`, table `end`. |
 | `show_name` / `show_value` / `show_icon`           | per layout                   | [Item options](/cards/entity-options#item-options) for row, column and table; every entity can override them.                                                                                                                                                                             |
-| `name_position`                                    | `above`                      | `above` or `below` the icon in row and column items.                                                                                                                                                                                                                                      |
+| `name_position`                                    | per layout                   | `above` or `below` the icon in row (default `below`) and column (default `above`) items.                                                                                                                                                                                                  |
 | `hours_to_show`                                    | `24`                         | History window for `sparkline`, `columns` and `strip`, at least 1. One window per card.                                                                                                                                                                                                   |
 | `bucket_minutes`                                   | `60`                         | Bucket size for `columns` and `strip`, at least 5.                                                                                                                                                                                                                                        |
 | `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none | Defaults for every entity, see [Actions](/cards/entity-options#actions).                                                                                                                                                                                                                  |

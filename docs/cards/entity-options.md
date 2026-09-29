@@ -921,7 +921,7 @@ Row, column and table layouts and header entities show every entity as a compact
 | `show_name`     | `true`  | `true`  | `true`  | `false`         | The name, above or below the icon (table: the key) |
 | `show_value`    | `false` | `false` | `true`  | `true`          | The value next to the icon (badge: the pill)       |
 | `show_icon`     | `true`  | `true`  | `false` | `true`          | The round icon (table: an icon column)             |
-| `name_position` | `above` | `above` |         |                 | `above` or `below` the icon                        |
+| `name_position` | `below` | `above` |         |                 | `above` or `below` the icon                        |
 
 ## Entity options
 
@@ -976,6 +976,6 @@ These two keys sit on the card, not on the entity, and apply to every history vi
 | Option                                   | Default    | Applies to                 | Description                                                   |
 | ---------------------------------------- | ---------- | -------------------------- | ------------------------------------------------------------- |
 | `show_name` / `show_value` / `show_icon` | per layout | row, column, table, header | What a compact item shows, see [Item options](#item-options). |
-| `name_position`                          | `above`    | row, column                | `above` or `below` the icon.                                  |
+| `name_position`                          | per layout | row, column                | `above` or `below` the icon: row `below`, column `above`.     |
 
 Every card also accepts the Home Assistant keys `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`; see [Sizing in sections](/guide/sizing).

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Row items show the name below the icon by default (`name_position: below`); columns keep `above`
 - Entity cards: the hover ring of the strip visual sits exactly on the hovered bar and the one of the columns visual frames its column evenly; the toggle button label and the peak marker of the tooltip were German
 - Multi trend card: lane names and axis labels stay with their lanes when a grid row makes the card taller than its content
 - The entity, sun path and illuminance cards no longer clip the card shadow a theme sets (`--ha-card-box-shadow`)
