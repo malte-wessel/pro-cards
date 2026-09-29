@@ -25,7 +25,10 @@ export async function mount(
       window.pc.reset();
       return window.pc.mount(c, o);
     },
-    [cfg, { theme: opts.theme, width: opts.width, fullWidth: opts.fullWidth }] as const,
+    [
+      cfg,
+      { theme: opts.theme, skin: opts.skin, width: opts.width, fullWidth: opts.fullWidth },
+    ] as const,
   );
   await page.evaluate(() => window.pc.settled());
   return count;

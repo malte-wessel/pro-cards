@@ -14,7 +14,8 @@ import "../../docs/.vitepress/theme/ha.css";
 // ----- the API the harness exposes on `window.pc` (tests drive it through page.evaluate) -----
 
 export interface MountOptions {
-  theme?: string;
+  theme?: string; // light | dark (the mode)
+  skin?: string; // a Home Assistant theme from ha.css, e.g. "graphite"; default when empty
   width?: number | string;
   fullWidth?: boolean;
 }
@@ -106,6 +107,8 @@ const mount = (cfgOrList: CardConfigBase | CardConfigBase[], opts: MountOptions 
   root.textContent = "";
   root.classList.toggle("dark", opts.theme === "dark");
   root.classList.toggle("light", opts.theme === "light");
+  if (opts.skin) root.dataset.theme = opts.skin;
+  else delete root.dataset.theme;
   root.style.width = opts.width
     ? typeof opts.width === "number"
       ? `${opts.width}px`

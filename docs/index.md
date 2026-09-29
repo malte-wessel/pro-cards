@@ -17,7 +17,7 @@ hero:
 features:
   - icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10v9.5h11V10"/><path d="M10 19.5v-5h4v5"/></svg>'
     title: Looks like Home Assistant
-    details: Same spacing, typography, colours and state colours as the built-in tile cards, dark mode included. A custom theme restyles every card at once.
+    details: Same spacing, typography, colours and state colours as the built-in tile cards, dark mode included. A custom theme restyles every card at once. Switch any example on this site to Graphite to see it.
   - icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="8.5" cy="12" r="2"/><path d="M13 10.5h5M13 13.5h3"/></svg>'
     title: Value drives the look
     details: Rules switch icon, colour, label and even the card tint by value or state. Jinja templates for names, values and secondary text.
@@ -31,7 +31,7 @@ features:
 
 ## Live on this site
 
-Every example on these pages is the real card code running against a simulated home. Values drift, switches toggle, templates render. Hover the graphs, click the tiles.
+Every example on these pages is the real card code running against a simulated home. Values drift, switches toggle, templates render. Hover the graphs, click the tiles, and use the picker in a frame's corner to see every example in a different theme (the second card here is pinned to [Graphite](https://github.com/TilmanGriesel/graphite)).
 
 Each card page starts with the smallest possible configuration and adds one option at a time, so you can stop as soon as the card looks the way you want.
 
@@ -45,7 +45,7 @@ Each card page starts with the smallest possible configuration and adds one opti
   { entity: 'light.dining_table', toggle: true, rules: [ { state: 'on', color: 'amber', label: 'On' }, { state: 'off', color: 'grey', label: 'Off' } ] },
   { entity: 'sensor.living_room_temperature', name: 'Temperature', decimals: 1, rules: [ { below: 19, color: 'blue', label: 'Cold' }, { below: 24, color: 'green', label: 'Comfortable' }, { above: 24, color: 'orange', label: 'Warm' } ] },
   { entity: 'sensor.living_room_co2', name: 'CO₂', visual: 'strip', rules: [ { below: 800, color: 'green' }, { below: 1200, color: 'amber' }, { above: 1200, color: 'red' } ] },
-  { entity: 'cover.living_room_blinds', name: 'Blinds', attribute: 'current_position', unit: '%', visual: 'bar', icon: 'mdi:window-shutter' } ] }" width="full" />
+  { entity: 'cover.living_room_blinds', name: 'Blinds', attribute: 'current_position', unit: '%', visual: 'bar', icon: 'mdi:window-shutter' } ] }" width="full" theme="graphite" />
 <LiveCard :config="{ type: 'custom:multi-trend-card', title: 'Temperature & dew point', icon: 'mdi:thermometer', hours_to_show: 12, x_axis: true, entities: [ { entity: 'sensor.outdoor_temperature', name: 'Temperature', color: 'red' }, { entity: 'sensor.dew_point', name: 'Dew point', color: 'blue' } ] }" width="full" />
 <LiveCard :config="{ type: 'custom:sun-path-card', title: 'Sun today' }" width="full" />
 </div>

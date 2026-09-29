@@ -3,7 +3,7 @@ import { PLOT_H } from "./constants.ts";
 
 export const STYLE = `
   /* min-width/overflow: as a grid item the card must never grow past its column because of long text */
-  :host { display: block; min-width: 0; overflow: hidden; }
+  :host { display: block; min-width: 0; }
   ha-card { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; contain: inline-size; }
   .body { padding: 0 16px 12px 16px; flex: 1; display: flex; flex-direction: column; min-width: 0; }
   ha-card:not([header]) .body { padding-top: 16px; }

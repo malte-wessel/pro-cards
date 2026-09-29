@@ -51,15 +51,15 @@ What is covered:
 
 The harness exposes `window.pc`:
 
-| Member                                            | Purpose                                                                                   |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `pc.mount(config \| [configs], { theme, width })` | Renders cards into an HA-like 12-column grid                                              |
-| `pc.settled()`                                    | Resolves once every card has rendered                                                     |
-| `pc.card(i)`                                      | The i-th mounted card element                                                             |
-| `pc.world.set(id, state, attributes)`             | Changes an entity; every card receives a fresh `hass`                                     |
-| `pc.calls`                                        | Every `callService` the cards made                                                        |
-| `pc.events`                                       | `hass-more-info` and `location-changed` events                                            |
-| `pc.actions`                                      | `hass-action` events the cards handed to Home Assistant (the shim plays HA and runs them) |
+| Member                                                  | Purpose                                                                                                                                    |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pc.mount(config \| [configs], { theme, skin, width })` | Renders cards into an HA-like 12-column grid; `theme` is `light` or `dark`, `skin` a Home Assistant theme from `ha.css` such as `graphite` |
+| `pc.settled()`                                          | Resolves once every card has rendered                                                                                                      |
+| `pc.card(i)`                                            | The i-th mounted card element                                                                                                              |
+| `pc.world.set(id, state, attributes)`                   | Changes an entity; every card receives a fresh `hass`                                                                                      |
+| `pc.calls`                                              | Every `callService` the cards made                                                                                                         |
+| `pc.events`                                             | `hass-more-info` and `location-changed` events                                                                                             |
+| `pc.actions`                                            | `hass-action` events the cards handed to Home Assistant (the shim plays HA and runs them)                                                  |
 
 `tests/e2e/util.ts` wraps this for specs. A typical test:
 

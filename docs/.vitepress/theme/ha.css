@@ -148,6 +148,86 @@ html.dark .ha-theme:not(.light),
   color-scheme: dark;
 }
 
+/* Graphite theme by Tilman Griesel (https://github.com/TilmanGriesel/graphite, MIT).
+   Values from themes/graphite-light.yaml and themes/graphite.yaml, reduced to the tokens the
+   cards read. Graphite recolours the state colours through the named colours, so those
+   inherit from the default block above. */
+.ha-theme[data-theme="graphite"] {
+  --primary-color: rgb(238, 147, 0);
+  --accent-color: rgb(238, 147, 0);
+  --primary-text-color: rgba(19, 21, 54, 1);
+  --secondary-text-color: rgba(19, 21, 54, 0.96);
+  --disabled-text-color: rgba(19, 21, 54, 0.46);
+  --primary-background-color: rgb(234, 235, 238);
+  --secondary-background-color: rgb(245, 245, 245);
+  --card-background-color: rgb(255, 255, 255);
+  --divider-color: rgb(234, 235, 238);
+  --state-icon-color: rgba(19, 21, 54, 1);
+  --state-inactive-color: var(--secondary-text-color);
+  --ha-card-border-radius: 20px;
+  --ha-card-border-width: 0;
+  --ha-card-border-color: transparent;
+  --ha-card-box-shadow: 1px 1px 1px 0 rgba(0, 0, 30, 0.18);
+  --switch-unchecked-track-color: rgba(0, 0, 0, 0.25);
+  --red-color: rgb(204, 0, 51);
+  --pink-color: rgb(204, 0, 136);
+  --purple-color: rgb(129, 45, 250);
+  --deep-purple-color: rgb(98, 0, 234);
+  --indigo-color: rgb(48, 63, 159);
+  --blue-color: rgb(33, 150, 243);
+  --light-blue-color: rgb(3, 169, 244);
+  --cyan-color: rgb(0, 188, 212);
+  --teal-color: rgb(0, 150, 136);
+  --green-color: rgb(56, 142, 60);
+  --light-green-color: rgb(139, 195, 74);
+  --lime-color: rgb(205, 220, 57);
+  --yellow-color: rgb(250, 183, 0);
+  --amber-color: rgb(255, 193, 7);
+  --orange-color: rgb(255, 158, 0);
+  --deep-orange-color: rgb(255, 87, 34);
+  --brown-color: rgb(121, 85, 72);
+  --grey-color: rgb(103, 104, 119);
+  --blue-grey-color: rgb(96, 125, 139);
+  --black-color: rgb(0, 0, 0);
+  --white-color: rgb(240, 243, 255);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+html.dark .ha-theme[data-theme="graphite"]:not(.light),
+.ha-theme[data-theme="graphite"].dark {
+  --primary-color: rgb(224, 138, 0);
+  --accent-color: rgb(224, 138, 0);
+  --primary-text-color: rgb(228, 228, 231);
+  --secondary-text-color: rgb(138, 140, 153);
+  --disabled-text-color: rgba(255, 255, 255, 0.5);
+  --primary-background-color: rgb(16, 18, 21);
+  --secondary-background-color: rgb(28, 29, 33);
+  --card-background-color: rgb(35, 36, 43);
+  --divider-color: rgb(16, 18, 21);
+  --state-icon-color: rgb(228, 228, 231);
+  --ha-card-box-shadow: 0 3px 8px 0 rgba(0, 0, 0, 0.12);
+  --switch-unchecked-track-color: rgba(125, 128, 132, 0.4);
+  --red-color: rgb(255, 97, 116);
+  --pink-color: rgb(255, 98, 192);
+  --purple-color: rgb(189, 157, 255);
+  --deep-purple-color: rgb(166, 77, 255);
+  --indigo-color: rgb(84, 132, 255);
+  --blue-color: rgb(33, 150, 243);
+  --light-blue-color: rgb(3, 169, 244);
+  --cyan-color: rgb(0, 188, 212);
+  --teal-color: rgb(107, 255, 237);
+  --green-color: rgb(32, 126, 71);
+  --light-green-color: rgb(42, 126, 77);
+  --lime-color: rgb(205, 220, 57);
+  --yellow-color: rgb(255, 235, 59);
+  --amber-color: rgb(255, 211, 99);
+  --orange-color: rgb(224, 138, 0);
+  --deep-orange-color: rgb(255, 87, 34);
+  --brown-color: rgb(121, 85, 72);
+  --grey-color: rgb(158, 158, 158);
+  --blue-grey-color: rgb(96, 125, 139);
+  color-scheme: dark;
+}
+
 /* toast + more-info dialog used by the hass shim */
 .ha-toast {
   position: fixed;

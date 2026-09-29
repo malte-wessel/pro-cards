@@ -20,7 +20,7 @@ In the markdown page, wrap a YAML fence:
     ```
     :::
 
-Options after `live`: `width=full`, `width=200` (px), `theme=dark`, `theme=light`. A YAML _list_ of cards renders them in one 12-column grid honouring each card's `grid_options.columns`.
+Options after `live`: `width=full`, `width=200` (px), `mode=dark`, `mode=light` (fix the light/dark mode), `theme=graphite` or `theme=default` (pin the Home Assistant theme; without it the example follows the site-wide theme picker; the list of themes is `THEMES` in `docs/.vitepress/theme/exampleTheme.ts`). A YAML _list_ of cards renders them in one 12-column grid honouring each card's `grid_options.columns`.
 
 Templates: the shim evaluates `{{ }}` expressions only (`states()`, `state_attr()`, `is_state()`, `states.<domain>` and common filters). Do not use `{% %}`.
 
@@ -45,7 +45,7 @@ Give the page `pageClass: wide`, `sidebar: false`, `aside: false` in the frontma
 ## 4. Validate and look at it
 
 - `npm run test:unit -- schema` validates every docs example against `schema/`.
-- `npm run docs:dev`, open the page, check the card renders, the theme toggle (top-right of the frame) works and there are no console errors.
+- `npm run docs:dev`, open the page, check the card renders, the theme picker and the auto / light / dark button (top-right of the frame) work and there are no console errors.
 - For a card page, keep the option reference table in sync if the example introduces a new option.
 
 ## 5. Done

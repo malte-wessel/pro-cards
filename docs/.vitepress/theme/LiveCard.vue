@@ -2,6 +2,7 @@
 import { ref, watch, onMounted, onBeforeUnmount, computed, type PropType } from "vue";
 import yamlLib from "js-yaml";
 import { mountGrid, loadRuntime, type MountHandle } from "./mount.ts";
+import { THEMES, useExampleTheme, nextMode, type Mode, type ThemeId } from "./exampleTheme.ts";
 import type { CardConfigBase } from "../../../src/shared/ha.ts";
 
 const props = defineProps({
@@ -9,13 +10,16 @@ const props = defineProps({
   b64: { type: String, default: "" },
   config: { type: [Object, Array] as PropType<CardConfigBase | CardConfigBase[] | null>, default: null },
   width: { type: String, default: "" },   // px number, "full", or css length
-  theme: { type: String, default: "auto" }, // auto | light | dark
+  mode: { type: String as PropType<Mode>, default: "auto" }, // auto | light | dark
+  theme: { type: String as PropType<ThemeId | "">, default: "" }, // pin a theme; "" follows the site-wide choice
   grid: { type: Boolean, default: false }, // keep each card's own grid_options width instead of full width
 });
 
 const host = ref<HTMLDivElement | null>(null);
 const error = ref("");
-const mode = ref(props.theme);
+const mode = ref<Mode>(props.mode);
+const siteTheme = useExampleTheme();
+const theme = computed(() => props.theme || siteTheme.value);
 let handle: MountHandle | null = null;
 
 const source = computed(() => props.config ?? (props.b64 ? decode(props.b64) : props.yaml));
@@ -58,23 +62,29 @@ const render = async () => {
 onMounted(() => { loadRuntime().then(render); });
 onBeforeUnmount(() => handle?.dispose?.());
 watch(source, () => { render(); });
-const cycle = () => { mode.value = mode.value === "auto" ? "light" : mode.value === "light" ? "dark" : "auto"; };
+const cycle = () => { mode.value = nextMode(mode.value); };
 </script>
 
 <template>
   <div class="live">
-    <div class="frame-wrap ha-theme" :class="mode === 'auto' ? '' : mode">
+    <div class="frame-wrap ha-theme" :class="mode === 'auto' ? '' : mode" :data-theme="theme">
       <div class="frame" :style="{ width: frameWidth }"><div ref="host" class="ha-grid"></div></div>
-      <div class="tools">
-        <button
-          type="button"
-          :class="{ on: mode !== 'auto' }"
-          @click="cycle"
-          :title="'Theme: ' + mode"
-        >
-          {{ mode === 'auto' ? 'auto' : mode }}
-        </button>
-      </div>
+    </div>
+    <div class="tools">
+      <select v-if="!props.theme" v-model="siteTheme" title="Home Assistant theme of every example">
+        <option v-for="t in THEMES" :key="t.id" :value="t.id">{{ t.label }}</option>
+      </select>
+      <span v-else class="pinned" title="This example is pinned to one theme">
+        {{ THEMES.find((t) => t.id === theme)?.label }}
+      </span>
+      <button
+        type="button"
+        :class="{ on: mode !== 'auto' }"
+        @click="cycle"
+        :title="'Theme: ' + mode"
+      >
+        {{ mode === 'auto' ? 'auto' : mode }}
+      </button>
     </div>
     <div v-if="error" class="error">{{ error }}</div>
     <details v-if="$slots.default">
