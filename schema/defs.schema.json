@@ -1,0 +1,260 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/defs.schema.json",
+  "title": "Shared definitions for Pro Cards configs",
+  "$defs": {
+    "entityId": {
+      "type": "string",
+      "pattern": "^[a-z_]+\\.[a-z0-9_]+$",
+      "description": "Home Assistant entity id, e.g. sensor.outdoor_temperature"
+    },
+    "color": {
+      "type": "string",
+      "minLength": 1,
+      "description": "HA colour token (primary, accent, red, amber, blue-grey, …), hex, rgb()/hsl(), var(--x) or a Jinja template"
+    },
+    "icon": {
+      "type": "string",
+      "pattern": "^(mdi:[a-z0-9-]+|hass:[a-z0-9-]+|\\{\\{.*\\}\\}.*|.*\\{\\{.*)$",
+      "description": "mdi:… icon or a Jinja template"
+    },
+    "numberish": {
+      "type": ["number", "string"],
+      "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+      "description": "a number (numeric strings accepted)"
+    },
+    "haCardExtras": {
+      "description": "Keys Home Assistant adds to any card; not interpreted by the cards",
+      "grid_options": {
+        "type": "object",
+        "properties": {
+          "columns": {
+            "type": ["integer", "string"]
+          },
+          "rows": {
+            "type": ["integer", "string"]
+          },
+          "min_columns": {
+            "type": "integer"
+          },
+          "max_columns": {
+            "type": "integer"
+          },
+          "min_rows": {
+            "type": "integer"
+          },
+          "max_rows": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false
+      },
+      "visibility": {
+        "type": "array"
+      },
+      "layout_options": {
+        "type": "object"
+      },
+      "view_layout": {
+        "type": "object"
+      },
+      "card_mod": {
+        "type": "object"
+      }
+    },
+    "action": {
+      "description": "Home Assistant action config",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "more-info",
+            "toggle",
+            "navigate",
+            "url",
+            "perform-action",
+            "call-service",
+            "assist",
+            "fire-dom-event",
+            "none"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "more-info",
+                "toggle",
+                "navigate",
+                "url",
+                "perform-action",
+                "call-service",
+                "assist",
+                "none"
+              ]
+            },
+            "navigation_path": {
+              "type": "string"
+            },
+            "navigation_replace": {
+              "type": "boolean"
+            },
+            "url_path": {
+              "type": "string"
+            },
+            "perform_action": {
+              "type": "string",
+              "pattern": "^[a-z_]+\\.[a-z_]+$"
+            },
+            "service": {
+              "type": "string",
+              "pattern": "^[a-z_]+\\.[a-z_]+$"
+            },
+            "data": {
+              "type": "object"
+            },
+            "service_data": {
+              "type": "object"
+            },
+            "target": {
+              "type": "object",
+              "properties": {
+                "entity_id": {
+                  "type": ["string", "array"]
+                },
+                "device_id": {
+                  "type": ["string", "array"]
+                },
+                "area_id": {
+                  "type": ["string", "array"]
+                },
+                "floor_id": {
+                  "type": ["string", "array"]
+                },
+                "label_id": {
+                  "type": ["string", "array"]
+                }
+              },
+              "additionalProperties": false
+            },
+            "entity": {
+              "$ref": "#/$defs/entityId"
+            },
+            "confirmation": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "confirm_text": {
+                      "type": "string"
+                    },
+                    "dismiss_text": {
+                      "type": "string"
+                    },
+                    "exemptions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "user": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["user"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "pipeline_id": {
+              "type": "string",
+              "description": "assist: the assist pipeline to use"
+            },
+            "start_listening": {
+              "type": "boolean",
+              "description": "assist: start listening right away"
+            }
+          },
+          "required": ["action"],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "navigate"
+                  }
+                }
+              },
+              "then": {
+                "required": ["navigation_path"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "url"
+                  }
+                }
+              },
+              "then": {
+                "required": ["url_path"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "perform-action"
+                  }
+                }
+              },
+              "then": {
+                "required": ["perform_action"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "call-service"
+                  }
+                }
+              },
+              "then": {
+                "required": ["service"]
+              }
+            }
+          ],
+          "description": "Home Assistant runs the action (its frontend handles hass-action); fire-dom-event may carry any extra keys"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "action": {
+              "const": "fire-dom-event"
+            }
+          },
+          "required": ["action"],
+          "additionalProperties": true,
+          "description": "fire-dom-event: every other key is passed to the DOM event (browser_mod etc.)"
+        }
+      ]
+    }
+  }
+}

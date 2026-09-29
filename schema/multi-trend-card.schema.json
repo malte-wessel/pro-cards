@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/multi-trend-card.schema.json",
+  "title": "custom:multi-trend-card",
+  "description": "Tile-style trend graph for several numeric sensors with a hover/touch tooltip.",
+  "type": "object",
+  "properties": {
+    "type": { "const": "custom:multi-trend-card" },
+    "title": { "type": "string", "description": "Default: first entity name" },
+    "icon": { "$ref": "defs.schema.json#/$defs/icon" },
+    "color": { "$ref": "defs.schema.json#/$defs/color", "description": "Header icon colour" },
+    "hours_to_show": { "type": "number", "minimum": 1, "maximum": 168, "default": 6 },
+    "layout": {
+      "type": "string",
+      "enum": ["auto", "overlay", "lanes"],
+      "default": "auto",
+      "description": "auto = overlay when all units match, else lanes"
+    },
+    "show_legend": { "type": "boolean", "default": true },
+    "x_axis": {
+      "type": "boolean",
+      "default": false,
+      "description": "Time labels + vertical gridlines"
+    },
+    "y_axis": {
+      "type": "boolean",
+      "default": false,
+      "description": "Value labels + horizontal gridlines (per lane)"
+    },
+    "entities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          { "$ref": "defs.schema.json#/$defs/entityId" },
+          {
+            "type": "object",
+            "properties": {
+              "entity": { "$ref": "defs.schema.json#/$defs/entityId" },
+              "name": { "type": "string" },
+              "color": { "$ref": "defs.schema.json#/$defs/color" }
+            },
+            "required": ["entity"],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "grid_options": { "$ref": "defs.schema.json#/$defs/haCardExtras/grid_options" },
+    "visibility": { "$ref": "defs.schema.json#/$defs/haCardExtras/visibility" },
+    "layout_options": { "$ref": "defs.schema.json#/$defs/haCardExtras/layout_options" },
+    "view_layout": { "$ref": "defs.schema.json#/$defs/haCardExtras/view_layout" },
+    "card_mod": { "$ref": "defs.schema.json#/$defs/haCardExtras/card_mod" }
+  },
+  "required": ["type", "entities"],
+  "additionalProperties": false
+}

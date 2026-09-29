@@ -1,0 +1,154 @@
+# One section per card, using the entities from test/ha/configuration.yaml (named like the docs'
+# demo world) and the demo integration's sun. Edit in place; HA reloads YAML dashboards on refresh.
+title: Pro Cards
+views:
+  - title: Cards
+    path: cards
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Entity card
+          - type: custom:entity-card
+            entity: sensor.living_room_temperature
+            name: Living room
+            decimals: 1
+            rules:
+              - { below: 19, color: blue, icon: mdi:snowflake, label: Cold }
+              - { below: 23, color: green, icon: mdi:thermometer, label: Comfortable }
+              - {
+                  above: 23,
+                  color: orange,
+                  icon: mdi:sun-thermometer,
+                  label: Warm,
+                  tint_card: true,
+                }
+          - type: custom:entity-card
+            entity: sensor.robot_battery
+            name: Robot battery
+            visual: ring
+            rules:
+              - { below: 20, color: red }
+              - { above: 20, color: green }
+          - type: custom:entity-card
+            entity: sensor.power_consumption
+            name: Power
+            visual: sparkline
+            hours_to_show: 6
+          - type: custom:entity-card
+            entity: binary_sensor.window_kitchen
+            name: Kitchen window
+            visual: strip
+            hours_to_show: 12
+            bucket_minutes: 30
+            rules:
+              - { state: "on", color: amber, label: Open }
+              - { state: "off", color: grey, label: Closed }
+          - type: custom:entity-card
+            entity: light.living_room
+            name: Living room light
+            toggle: true
+            hold_action: { action: more-info }
+      - type: grid
+        cards:
+          - type: heading
+            heading: Entity group card
+          - type: custom:entity-group-card
+            title: Living room
+            icon: mdi:sofa
+            layout: row
+            align: space-between
+            header_entities:
+              - { entity: sensor.living_room_temperature, decimals: 1 }
+            entities:
+              - { entity: light.living_room, name: Light, tap_action: toggle }
+              - { entity: light.dining_table, name: Dining, tap_action: toggle }
+              - { entity: cover.living_room_blinds, name: Blinds }
+              - { entity: switch.coffee_machine, name: Coffee, tap_action: toggle }
+          - type: custom:entity-group-card
+            title: Energy
+            layout: list
+            hours_to_show: 12
+            bucket_minutes: 60
+            entities:
+              - { entity: sensor.power_consumption, visual: bar, min: 0, max: 2500, decimals: 0 }
+              - { entity: sensor.solar_power, visual: columns }
+              - entity: sensor.washer_status
+                name: Washing machine
+                attribute: progress
+                unit: "%"
+                visual: bar
+          - type: custom:entity-group-card
+            title: Actions run by Home Assistant
+            entities:
+              - entity: light.kitchen
+                name: Confirm before toggling
+                tap_action: { action: toggle, confirmation: { text: Toggle the kitchen light? } }
+              - entity: light.office
+                name: Assist
+                icon: mdi:microphone
+                tap_action: { action: assist, start_listening: false }
+              - entity: sensor.outdoor_temperature
+                name: Navigate to the map
+                icon: mdi:map
+                tap_action: { action: navigate, navigation_path: /map }
+      - type: grid
+        cards:
+          - type: heading
+            heading: Entity sections card
+          - type: custom:entity-sections-card
+            title: Kitchen
+            icon: mdi:silverware-fork-knife
+            header_entities:
+              - { entity: sensor.outdoor_temperature, decimals: 1 }
+            sections:
+              - layout: row
+                align: space-between
+                entities:
+                  - { entity: light.kitchen, name: Light, tap_action: toggle }
+                  - { entity: binary_sensor.window_kitchen, name: Window }
+                  - { entity: switch.coffee_machine, name: Coffee, tap_action: toggle }
+              - layout: table
+                entities:
+                  - { entity: sensor.kitchen_window_battery, name: Window battery }
+                  - { entity: sensor.outdoor_humidity, name: Humidity }
+      - type: grid
+        cards:
+          - type: heading
+            heading: Multi trend card
+          - type: custom:multi-trend-card
+            title: Outdoor
+            hours_to_show: 6
+            x_axis: true
+            y_axis: true
+            entities:
+              - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
+              - { entity: sensor.outdoor_humidity, name: Humidity, color: blue }
+          - type: custom:multi-trend-card
+            title: Power (overlay)
+            hours_to_show: 12
+            entities:
+              - { entity: sensor.power_consumption, name: Consumption }
+      - type: grid
+        cards:
+          - type: heading
+            heading: Sun path card
+          - type: custom:sun-path-card
+            title: Sun
+            labels: { sunrise: Sunrise, sunset: Sunset, dawn: Dawn, noon: Noon, dusk: Dusk }
+      - type: grid
+        cards:
+          - type: heading
+            heading: Illuminance card
+          - type: custom:illuminance-card
+            entity: sensor.illuminance
+            mode: arc
+          - type: custom:illuminance-card
+            entity: sensor.illuminance
+            mode: trend
+          - type: custom:illuminance-card
+            entity: sensor.illuminance
+            mode: band
+            bucket_minutes: 30

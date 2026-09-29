@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/entity.schema.json",
+  "title": "Entity cards – shared definitions",
+  "description": "Building blocks of entity-card, entity-group-card and entity-sections-card. Not a card itself.",
+  "$defs": {
+    "layout": { "type": "string", "enum": ["list", "grid", "hero", "row", "column", "table"] },
+    "align": { "type": "string", "enum": ["start", "center", "end", "stretch", "space-between"] },
+    "rule": {
+      "type": "object",
+      "description": "First matching rule wins, in the order written. state matches the raw value, below is exclusive, above inclusive.",
+      "properties": {
+        "state": {
+          "type": ["string", "number", "boolean"],
+          "description": "Matches the raw state / value text. Quote \"on\" and \"off\" in YAML."
+        },
+        "below": {
+          "$ref": "defs.schema.json#/$defs/numberish",
+          "description": "matches when value < below"
+        },
+        "above": {
+          "$ref": "defs.schema.json#/$defs/numberish",
+          "description": "matches when value >= above"
+        },
+        "color": { "$ref": "defs.schema.json#/$defs/color" },
+        "icon": { "$ref": "defs.schema.json#/$defs/icon" },
+        "label": { "type": "string" },
+        "tint_card": {
+          "type": "boolean",
+          "description": "Tint the whole card in the rule's colour"
+        }
+      },
+      "anyOf": [{ "required": ["state"] }, { "required": ["below"] }, { "required": ["above"] }],
+      "additionalProperties": false
+    },
+    "itemOptions": {
+      "type": "object",
+      "properties": {
+        "show_name": {
+          "type": "boolean",
+          "description": "row / column / table items and header entities"
+        },
+        "show_value": {
+          "type": "boolean",
+          "description": "row / column / table items and header entities"
+        },
+        "show_icon": {
+          "type": "boolean",
+          "description": "row / column / table items and header entities"
+        },
+        "name_position": {
+          "type": "string",
+          "enum": ["above", "below"],
+          "description": "row / column items"
+        }
+      }
+    },
+    "historyOptions": {
+      "type": "object",
+      "properties": {
+        "hours_to_show": {
+          "type": "number",
+          "minimum": 1,
+          "default": 24,
+          "description": "History window for sparkline, columns and strip"
+        },
+        "bucket_minutes": {
+          "type": "number",
+          "minimum": 5,
+          "default": 60,
+          "description": "Bucket size for columns and strip"
+        }
+      }
+    },
+    "actionDefaults": {
+      "type": "object",
+      "properties": {
+        "tap_action": {
+          "$ref": "defs.schema.json#/$defs/action",
+          "description": "Default for every entity (more-info)"
+        },
+        "hold_action": {
+          "$ref": "defs.schema.json#/$defs/action",
+          "description": "Default for every entity (more-info)"
+        },
+        "double_tap_action": {
+          "$ref": "defs.schema.json#/$defs/action",
+          "description": "Default for every entity (none)"
+        }
+      }
+    },
+    "haExtras": {
+      "type": "object",
+      "properties": {
+        "grid_options": { "$ref": "defs.schema.json#/$defs/haCardExtras/grid_options" },
+        "visibility": { "$ref": "defs.schema.json#/$defs/haCardExtras/visibility" },
+        "layout_options": { "$ref": "defs.schema.json#/$defs/haCardExtras/layout_options" },
+        "view_layout": { "$ref": "defs.schema.json#/$defs/haCardExtras/view_layout" },
+        "card_mod": { "$ref": "defs.schema.json#/$defs/haCardExtras/card_mod" }
+      }
+    },
+    "entityKeys": {
+      "type": "object",
+      "properties": {
+        "entity": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "Optional when value is plain text or a template"
+        },
+        "name": { "type": "string", "description": "Default: friendly name. Template allowed." },
+        "secondary": {
+          "type": "string",
+          "description": "Line under the name (entity-card, hero lead). Template allowed."
+        },
+        "icon": {
+          "$ref": "defs.schema.json#/$defs/icon",
+          "description": "Fixed icon; overrides rules. Template allowed."
+        },
+        "color": {
+          "$ref": "defs.schema.json#/$defs/color",
+          "description": "Fixed colour; overrides rules. Template allowed."
+        },
+        "attribute": {
+          "type": "string",
+          "description": "Show this attribute instead of the state"
+        },
+        "value": {
+          "type": ["string", "number"],
+          "description": "Plain text or a Jinja template instead of the state"
+        },
+        "unit": { "type": "string" },
+        "decimals": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "prefix": { "type": "string" },
+        "suffix": { "type": "string" },
+        "visual": {
+          "type": "string",
+          "enum": ["icon", "ring", "gauge", "bar", "sparkline", "columns", "badge", "strip"],
+          "default": "icon"
+        },
+        "min": {
+          "type": "number",
+          "description": "Scale start for ring, gauge and bar (default: entity min, else 0)"
+        },
+        "max": {
+          "type": "number",
+          "description": "Scale end for ring, gauge and bar (default: entity max, else 100)"
+        },
+        "rules": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/rule" },
+          "description": "Colour, icon, label and tint by value; first match wins"
+        },
+        "toggle": {
+          "type": "boolean",
+          "default": false,
+          "description": "Switch on the right calling homeassistant.toggle (entity-card, list, hero lead, table)"
+        },
+        "show_name": { "type": "boolean" },
+        "show_value": { "type": "boolean" },
+        "show_icon": { "type": "boolean" },
+        "name_position": { "type": "string", "enum": ["above", "below"] },
+        "tap_action": { "$ref": "defs.schema.json#/$defs/action" },
+        "hold_action": { "$ref": "defs.schema.json#/$defs/action" },
+        "double_tap_action": { "$ref": "defs.schema.json#/$defs/action" }
+      }
+    },
+    "entity": {
+      "allOf": [{ "$ref": "#/$defs/entityKeys" }],
+      "anyOf": [{ "required": ["entity"] }, { "required": ["value"] }],
+      "unevaluatedProperties": false
+    },
+    "entityList": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [{ "$ref": "defs.schema.json#/$defs/entityId" }, { "$ref": "#/$defs/entity" }]
+      }
+    },
+    "headerEntities": {
+      "type": "array",
+      "items": {
+        "oneOf": [{ "$ref": "defs.schema.json#/$defs/entityId" }, { "$ref": "#/$defs/entity" }]
+      },
+      "description": "Compact icon + value items on the right of the title line (visual: icon, ring or badge)"
+    },
+    "groupKeys": {
+      "type": "object",
+      "properties": {
+        "layout": { "$ref": "#/$defs/layout", "default": "list" },
+        "entities": { "$ref": "#/$defs/entityList" },
+        "columns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4,
+          "description": "grid: cells per row"
+        },
+        "align": {
+          "$ref": "#/$defs/align",
+          "description": "row: justify the items; column: align them; table: place the value. Defaults: row start, column end, table end"
+        },
+        "show_name": {
+          "type": "boolean",
+          "description": "Item option for row, column and table (default true)"
+        },
+        "show_value": {
+          "type": "boolean",
+          "description": "Item option (default: false for row and column, true for table)"
+        },
+        "show_icon": {
+          "type": "boolean",
+          "description": "Item option (default: true for row and column, false for table)"
+        },
+        "name_position": {
+          "type": "string",
+          "enum": ["above", "below"],
+          "default": "above",
+          "description": "Where the name sits relative to the icon in row and column items"
+        }
+      }
+    }
+  }
+}

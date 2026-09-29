@@ -1,0 +1,192 @@
+# Home Assistant configuration of the devcontainer: the demo integration for a house full of
+# entities, plus template entities named like the docs' demo world so the docs examples can be
+# pasted as they are. An automation moves `input_number.demo_drive` every minute so the history
+# visuals (sparkline, columns, strip, trend) have something to draw.
+default_config:
+
+# the docs' demo world is set near Düsseldorf; the sun path card needs a real location
+homeassistant:
+  name: Pro Cards dev
+  latitude: 51.23
+  longitude: 6.78
+  elevation: 40
+  unit_system: metric
+  time_zone: Europe/Berlin
+  currency: EUR
+  country: DE
+
+demo:
+
+lovelace:
+  mode: storage
+  dashboards:
+    pro-cards:
+      mode: yaml
+      title: Pro Cards
+      icon: mdi:cards-outline
+      show_in_sidebar: true
+      filename: test/dashboards/pro-cards.yaml
+
+input_number:
+  demo_drive:
+    name: Demo drive
+    min: 0
+    max: 100
+    step: 1
+    initial: 50
+
+input_boolean:
+  living_room_light:
+    name: Living room light
+    initial: true
+  kitchen_light:
+    name: Kitchen light
+  office_light:
+    name: Office light
+  dining_table_light:
+    name: Dining table light
+    initial: true
+  living_room_blinds:
+    name: Living room blinds
+    initial: true
+  night_mode:
+    name: Night mode
+    icon: mdi:weather-night
+  coffee_machine:
+    name: Coffee machine
+
+automation:
+  - alias: Demo drive
+    description: Moves the demo value every minute so history visuals have data
+    triggers:
+      - trigger: time_pattern
+        minutes: "/1"
+    actions:
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.demo_drive
+        data:
+          value: >-
+            {{ [0, [100, states('input_number.demo_drive') | float(50) + range(-12, 13) | random] | min] | max }}
+
+template:
+  - sensor:
+      - name: Outdoor temperature
+        unique_id: pro_cards_outdoor_temperature
+        unit_of_measurement: °C
+        device_class: temperature
+        state_class: measurement
+        state: "{{ (12 + states('input_number.demo_drive') | float(50) / 10) | round(1) }}"
+      - name: Outdoor humidity
+        unique_id: pro_cards_outdoor_humidity
+        unit_of_measurement: "%"
+        device_class: humidity
+        state_class: measurement
+        state: "{{ (95 - states('input_number.demo_drive') | float(50) / 2) | round(0) }}"
+      - name: Living room temperature
+        unique_id: pro_cards_living_room_temperature
+        unit_of_measurement: °C
+        device_class: temperature
+        state_class: measurement
+        state: "{{ (19 + states('input_number.demo_drive') | float(50) / 25) | round(1) }}"
+      - name: Power consumption
+        unique_id: pro_cards_power_consumption
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        state: "{{ (200 + states('input_number.demo_drive') | float(50) * 22) | round(0) }}"
+      - name: Solar power
+        unique_id: pro_cards_solar_power
+        unit_of_measurement: kW
+        device_class: power
+        state_class: measurement
+        state: "{{ (states('input_number.demo_drive') | float(50) / 20) | round(1) }}"
+      - name: Illuminance
+        unique_id: pro_cards_illuminance
+        unit_of_measurement: lx
+        device_class: illuminance
+        state_class: measurement
+        state: "{{ (10 ** (0.5 + states('input_number.demo_drive') | float(50) / 22)) | round(0) }}"
+      - name: Robot battery
+        unique_id: pro_cards_robot_battery
+        unit_of_measurement: "%"
+        device_class: battery
+        state_class: measurement
+        state: "{{ states('input_number.demo_drive') | float(50) | round(0) }}"
+      - name: Kitchen window battery
+        unique_id: pro_cards_kitchen_window_battery
+        unit_of_measurement: "%"
+        device_class: battery
+        state: "76"
+      - name: Washer status
+        unique_id: pro_cards_washer_status
+        state: "{{ 'run' if states('input_number.demo_drive') | float(50) > 30 else 'idle' }}"
+        attributes:
+          progress: "{{ states('input_number.demo_drive') | float(50) | round(0) }}"
+          remaining_minutes: "{{ (100 - states('input_number.demo_drive') | float(50)) | round(0) }}"
+  - binary_sensor:
+      - name: Window kitchen
+        unique_id: pro_cards_window_kitchen
+        device_class: window
+        state: "{{ states('input_number.demo_drive') | float(50) > 60 }}"
+
+light:
+  - platform: template
+    lights:
+      living_room:
+        friendly_name: Living room
+        value_template: "{{ is_state('input_boolean.living_room_light', 'on') }}"
+        turn_on:
+          { action: input_boolean.turn_on, target: { entity_id: input_boolean.living_room_light } }
+        turn_off:
+          { action: input_boolean.turn_off, target: { entity_id: input_boolean.living_room_light } }
+      kitchen:
+        friendly_name: Kitchen
+        value_template: "{{ is_state('input_boolean.kitchen_light', 'on') }}"
+        turn_on:
+          { action: input_boolean.turn_on, target: { entity_id: input_boolean.kitchen_light } }
+        turn_off:
+          { action: input_boolean.turn_off, target: { entity_id: input_boolean.kitchen_light } }
+      office:
+        friendly_name: Office
+        value_template: "{{ is_state('input_boolean.office_light', 'on') }}"
+        turn_on:
+          { action: input_boolean.turn_on, target: { entity_id: input_boolean.office_light } }
+        turn_off:
+          { action: input_boolean.turn_off, target: { entity_id: input_boolean.office_light } }
+      dining_table:
+        friendly_name: Dining table
+        value_template: "{{ is_state('input_boolean.dining_table_light', 'on') }}"
+        turn_on:
+          { action: input_boolean.turn_on, target: { entity_id: input_boolean.dining_table_light } }
+        turn_off:
+          {
+            action: input_boolean.turn_off,
+            target: { entity_id: input_boolean.dining_table_light },
+          }
+
+switch:
+  - platform: template
+    switches:
+      coffee_machine:
+        friendly_name: Coffee machine
+        value_template: "{{ is_state('input_boolean.coffee_machine', 'on') }}"
+        turn_on:
+          { action: input_boolean.turn_on, target: { entity_id: input_boolean.coffee_machine } }
+        turn_off:
+          { action: input_boolean.turn_off, target: { entity_id: input_boolean.coffee_machine } }
+
+cover:
+  - platform: template
+    covers:
+      living_room_blinds:
+        friendly_name: Living room blinds
+        device_class: shutter
+        value_template: "{{ is_state('input_boolean.living_room_blinds', 'on') }}"
+        open_cover:
+          { action: input_boolean.turn_on, target: { entity_id: input_boolean.living_room_blinds } }
+        close_cover:
+          {
+            action: input_boolean.turn_off,
+            target: { entity_id: input_boolean.living_room_blinds },
+          }

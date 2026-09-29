@@ -1,0 +1,63 @@
+name: Bug report
+description: A card renders wrong, throws, or behaves differently from the docs.
+labels: [bug]
+body:
+  - type: dropdown
+    id: card
+    attributes:
+      label: Card
+      options:
+        - entity-card
+        - entity-group-card
+        - entity-sections-card
+        - multi-trend-card
+        - sun-path-card
+        - illuminance-card
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Pro Cards version
+      description: The version HACS shows, or the banner in the browser console (`PRO-CARDS vx.y.z`).
+    validations:
+      required: true
+  - type: input
+    id: ha
+    attributes:
+      label: Home Assistant version
+      placeholder: "2026.9.3"
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: Browser or companion app
+      placeholder: Chrome 140 on macOS / iOS app 2026.7
+  - type: textarea
+    id: yaml
+    attributes:
+      label: Card YAML
+      description: The smallest card config that shows the problem. Entity ids can be renamed.
+      render: yaml
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead
+      description: A screenshot helps for anything visual.
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: Browser console errors
+      description: Open the developer tools console, reload the dashboard and paste anything red.
+      render: text

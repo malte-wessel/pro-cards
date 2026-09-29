@@ -1,0 +1,23 @@
+{
+  "name": "Pro Cards + Home Assistant",
+  "image": "thomasloven/hass-custom-devcontainer",
+  "runArgs": ["--env-file", "${localWorkspaceFolder}/test/ha/.env"],
+  "forwardPorts": [8123],
+  "portsAttributes": { "8123": { "label": "Home Assistant" } },
+  "postCreateCommand": "sudo --preserve-env=PATH -E bash -c 'source /usr/local/share/nvm/nvm.sh && nvm install 22' && sudo --preserve-env=PATH -E container setup && npm ci",
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/config/www/workspace,type=bind",
+    "source=${localWorkspaceFolder}/test/ha,target=/config/test,type=bind",
+    "source=${localWorkspaceFolder}/test/ha/configuration.yaml,target=/config/configuration.yaml,type=bind"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint", "redhat.vscode-yaml"],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "files.watcherExclude": { "**/node_modules/**": true, "**/.git/objects/**": true }
+      }
+    }
+  }
+}

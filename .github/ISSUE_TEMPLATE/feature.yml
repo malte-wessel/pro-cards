@@ -1,0 +1,30 @@
+name: Feature request
+description: A new option, visual, layout or card.
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: card
+    attributes:
+      label: Card
+      options:
+        - entity-card
+        - entity-group-card
+        - entity-sections-card
+        - multi-trend-card
+        - sun-path-card
+        - illuminance-card
+        - a new card
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What you want to show or do
+      description: The dashboard situation, not the implementation. A sketch or screenshot of another card helps.
+    validations:
+      required: true
+  - type: textarea
+    id: yaml
+    attributes:
+      label: How the YAML could look
+      render: yaml

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/illuminance-card.schema.json",
+  "title": "custom:illuminance-card",
+  "description": "Illuminance on a log scale with zones: gauge arc, 24 h trend or colour band.",
+  "type": "object",
+  "properties": {
+    "type": { "const": "custom:illuminance-card" },
+    "entity": {
+      "$ref": "defs.schema.json#/$defs/entityId",
+      "description": "Illuminance sensor in lx"
+    },
+    "mode": { "type": "string", "enum": ["arc", "trend", "band"], "default": "trend" },
+    "name": { "type": "string", "description": "Default: friendly name" },
+    "hours_to_show": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 168,
+      "default": 24,
+      "description": "trend / band"
+    },
+    "bucket_minutes": {
+      "type": "number",
+      "minimum": 5,
+      "maximum": 240,
+      "default": 30,
+      "description": "band"
+    },
+    "min_lx": { "type": "number", "exclusiveMinimum": 0, "default": 0.1 },
+    "max_lx": { "type": "number", "exclusiveMinimum": 0, "default": 100000 },
+    "zones": {
+      "type": "object",
+      "description": "Per zone key: label, max (upper bound in lx, not for sun) and colour",
+      "propertyNames": { "enum": ["night", "twilight", "overcast", "day", "sun"] },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "label": { "type": "string" },
+          "max": { "type": "number" },
+          "color": { "$ref": "defs.schema.json#/$defs/color" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "grid_options": { "$ref": "defs.schema.json#/$defs/haCardExtras/grid_options" },
+    "visibility": { "$ref": "defs.schema.json#/$defs/haCardExtras/visibility" },
+    "layout_options": { "$ref": "defs.schema.json#/$defs/haCardExtras/layout_options" },
+    "view_layout": { "$ref": "defs.schema.json#/$defs/haCardExtras/view_layout" },
+    "card_mod": { "$ref": "defs.schema.json#/$defs/haCardExtras/card_mod" }
+  },
+  "required": ["type", "entity"],
+  "additionalProperties": false
+}

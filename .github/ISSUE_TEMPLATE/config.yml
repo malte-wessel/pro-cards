@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation with live examples
+    url: https://malte-wessel.github.io/pro-cards/
+    about: Every option of every card, with examples you can edit in the browser.

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/pro-cards.schema.json",
+  "title": "Pro Cards card config",
+  "description": "Any of the six Pro Cards, discriminated by `type`.",
+  "oneOf": [
+    {
+      "$ref": "entity-card.schema.json"
+    },
+    {
+      "$ref": "entity-group-card.schema.json"
+    },
+    {
+      "$ref": "entity-sections-card.schema.json"
+    },
+    {
+      "$ref": "multi-trend-card.schema.json"
+    },
+    {
+      "$ref": "sun-path-card.schema.json"
+    },
+    {
+      "$ref": "illuminance-card.schema.json"
+    }
+  ]
+}

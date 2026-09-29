@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/sun-path-card.schema.json",
+  "title": "custom:sun-path-card",
+  "description": "Today's sun elevation with sunrise, sunset, dawn, solar noon and dusk, computed from the Home Assistant coordinates.",
+  "type": "object",
+  "properties": {
+    "type": { "const": "custom:sun-path-card" },
+    "title": { "type": "string", "description": "Omit for no header" },
+    "show_dawn_dusk": { "type": "boolean", "default": true },
+    "day_color": { "$ref": "defs.schema.json#/$defs/color", "default": "light-blue" },
+    "night_color": { "$ref": "defs.schema.json#/$defs/color", "default": "indigo" },
+    "sun_color": { "$ref": "defs.schema.json#/$defs/color", "default": "amber" },
+    "labels": {
+      "type": "object",
+      "description": "Overrides for the default labels (Sunrise, Sunset, Dawn, Solar noon, Dusk)",
+      "properties": {
+        "sunrise": { "type": "string" },
+        "sunset": { "type": "string" },
+        "dawn": { "type": "string" },
+        "noon": { "type": "string" },
+        "dusk": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "grid_options": { "$ref": "defs.schema.json#/$defs/haCardExtras/grid_options" },
+    "visibility": { "$ref": "defs.schema.json#/$defs/haCardExtras/visibility" },
+    "layout_options": { "$ref": "defs.schema.json#/$defs/haCardExtras/layout_options" },
+    "view_layout": { "$ref": "defs.schema.json#/$defs/haCardExtras/view_layout" },
+    "card_mod": { "$ref": "defs.schema.json#/$defs/haCardExtras/card_mod" }
+  },
+  "required": ["type"],
+  "additionalProperties": false
+}
