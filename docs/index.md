@@ -4,9 +4,6 @@ hero:
   name: Pro Cards
   text: Beautiful, customizable cards for Home Assistant.
   tagline: Polished dashboard cards that look like they belong in Home Assistant, with every detail adjustable. Installed with HACS, styled by your theme.
-  image:
-    src: /logo.svg
-    alt: Pro Cards
   actions:
     - theme: brand
       text: Get started

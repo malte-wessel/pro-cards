@@ -1,19 +1,44 @@
+/* Brand: Signal Blue family. -3 is the brand button (white text), -1 links and inline code. */
 :root {
-  --vp-c-brand-1: #0288d1;
-  --vp-c-brand-2: #03a9f4;
-  --vp-c-brand-3: #4fc3f7;
-  --vp-c-brand-soft: rgba(3, 169, 244, 0.14);
+  --vp-c-brand-1: #2449d9;
+  --vp-c-brand-2: #2a52ea;
+  --vp-c-brand-3: #2f5bf5;
+  --vp-c-brand-soft: rgba(47, 91, 245, 0.14);
+
+  /* light ground */
+  --vp-c-bg: #ffffff;
+  --vp-c-bg-alt: #f3f5f8;
+  --vp-c-bg-soft: #f3f5f8;
+  --vp-c-bg-elv: #ffffff;
+  --vp-c-text-1: #0e1a2b;
+  --vp-c-text-2: #4a5568;
+  --vp-c-text-3: #7b8595;
+  --vp-c-divider: #e3e7ee;
+  --vp-c-gutter: #e3e7ee;
+  --vp-c-border: #c3cbd8;
+
+  /* hero: no glow; BrandVisual.vue draws the card floor behind the mark */
+  --vp-home-hero-image-background-image: none;
 }
 .dark {
-  --vp-c-brand-1: #4fc3f7;
-  --vp-c-brand-2: #29b6f6;
-  --vp-c-brand-3: #03a9f4;
-}
-:root {
-  --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: linear-gradient(120deg, #0288d1 30%, #ff9800);
-  --vp-home-hero-image-background-image: linear-gradient(-45deg, #03a9f4 50%, #ff9800 50%);
-  --vp-home-hero-image-filter: blur(56px);
+  --vp-c-brand-1: #4fb4ff;
+  --vp-c-brand-2: #3566ff;
+  --vp-c-brand-3: #2f5bf5;
+  --vp-c-brand-soft: rgba(79, 180, 255, 0.16);
+  /* brand-1 is too light for white text, so the pressed button darkens instead */
+  --vp-button-brand-active-bg: #2449d9;
+
+  /* Night ground, panels #151c30 */
+  --vp-c-bg: #0b1020;
+  --vp-c-bg-alt: #10162c;
+  --vp-c-bg-soft: #151c30;
+  --vp-c-bg-elv: #1b2440;
+  --vp-c-text-1: #eef2f8;
+  --vp-c-text-2: #a9b4c6;
+  --vp-c-text-3: #6f7b92;
+  --vp-c-divider: #232c48;
+  --vp-c-gutter: #060913;
+  --vp-c-border: #3a4664;
 }
 
 /* live example frame */
@@ -61,8 +86,8 @@
   margin: 8px 0 0;
   padding: 8px 12px;
   border-radius: 8px;
-  background: rgba(244, 67, 54, 0.12);
-  color: #c62828;
+  background: var(--vp-c-danger-soft);
+  color: var(--vp-c-danger-1);
   font: 13px/18px var(--vp-font-family-mono);
   white-space: pre-wrap;
 }

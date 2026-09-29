@@ -8,6 +8,6 @@ import "./illuminance-card.ts";
 
 console.info(
   `%c PRO-CARDS %c v${__VERSION__} `,
-  "color: white; background: #03a9f4; font-weight: 700; border-radius: 4px 0 0 4px;",
-  "color: #03a9f4; background: white; font-weight: 700; border-radius: 0 4px 4px 0;",
+  "color: white; background: #2f5bf5; font-weight: 700; border-radius: 4px 0 0 4px;",
+  "color: #2f5bf5; background: white; font-weight: 700; border-radius: 0 4px 4px 0;",
 );
