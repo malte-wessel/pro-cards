@@ -56,6 +56,9 @@ export const drawPlot = (card: TrendHost) => {
   const H = plotH + (showX ? X_AXIS_H : 0);
   plot.style.height = `${H}px`;
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  // The plot grows with the card (a tall grid cell stretches it) and the SVG stretches along,
+  // so vertical positions of the HTML labels are percentages of H, not pixels
+  const pct = (y: number) => `${((y / H) * 100).toFixed(3)}%`;
 
   const { now, t0 } = windowOf(card);
 
@@ -113,12 +116,12 @@ export const drawPlot = (card: TrendHost) => {
   // Axes: recessive hairline gridlines in the SVG, labels as HTML
   const axes = qs(plot, ".axes");
   axes.textContent = "";
-  const addLabel = (cls: string, txt: string, left: number, top: number, width?: number) => {
+  const addLabel = (cls: string, txt: string, left: number, top: string, width?: number) => {
     const el = document.createElement("div");
     el.className = `axis-label ${cls}`;
     el.textContent = txt;
     el.style.left = `${left}px`;
-    el.style.top = `${top}px`;
+    el.style.top = top;
     if (width) el.style.width = `${width}px`;
     axes.appendChild(el);
   };
@@ -127,7 +130,7 @@ export const drawPlot = (card: TrendHost) => {
       ts.forEach((tk) => {
         const y = Math.round(tk.y) + 0.5;
         html += `<line class="grid" x1="${gutter}" x2="${W}" y1="${y}" y2="${y}"/>`;
-        addLabel("y", tk.label, 0, tk.y, gutter - 6);
+        addLabel("y", tk.label, 0, pct(tk.y), gutter - 6);
       }),
     );
   }
@@ -151,7 +154,7 @@ export const drawPlot = (card: TrendHost) => {
       let cls = "x";
       if (tk.x - w / 2 < gutter) cls += " first";
       else if (tk.x + w / 2 > W) cls += " last";
-      addLabel(cls, label, tk.x, plotH + 3);
+      addLabel(cls, label, tk.x, `calc(${pct(plotH)} + 3px)`);
       lastShownX = tk.x;
     });
   }
@@ -181,7 +184,7 @@ export const drawPlot = (card: TrendHost) => {
     cfg.entities.forEach((e, i) => {
       const lbl = document.createElement("div");
       lbl.className = "lane-label";
-      lbl.style.top = `${i * laneH + 3}px`;
+      lbl.style.top = `calc(${pct(i * laneH)} + 3px)`;
       lbl.style.left = `${gutter + 4}px`;
       lbl.style.maxWidth = `calc(100% - ${gutter + 8}px)`;
       lbl.textContent = card._name(i);

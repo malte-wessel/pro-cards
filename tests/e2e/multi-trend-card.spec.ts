@@ -44,6 +44,52 @@ test("uses lanes for mixed units and honours the layout override", async ({ page
   expect(rows).toEqual([4, 4, 3]);
 });
 
+test("lane and axis labels stay in their lanes when the card is taller than its content", async ({
+  page,
+}) => {
+  // a tall grid cell stretches the plot; the labels must follow the stretched lanes
+  await mount(
+    page,
+    two({
+      layout: "lanes",
+      x_axis: true,
+      y_axis: true,
+      entities: [
+        { entity: "sensor.wind_speed", name: "Speed" },
+        { entity: "sensor.wind_gust", name: "Gusts" },
+        { entity: "sensor.pressure", name: "Pressure" },
+      ],
+      grid_options: { rows: 10 },
+    }),
+  );
+  const c = card(page);
+  const plot = (await c.locator(".plot").boundingBox())!;
+  const sep = await c
+    .locator("svg .lane-sep")
+    .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().top));
+  const labels = await c
+    .locator(".lane-label")
+    .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().top));
+  expect(labels).toHaveLength(3);
+  // each label sits just below the top of its lane: the plot top, then each separator
+  const laneTops = [plot.y, ...sep];
+  labels.forEach((top, i) => {
+    expect(top).toBeGreaterThan(laneTops[i]);
+    expect(top).toBeLessThan(laneTops[i] + 10);
+  });
+  // the x-axis labels sit below the last lane, above the plot bottom
+  const xTop = await c
+    .locator(".axis-label.x")
+    .first()
+    .evaluate((e) => e.getBoundingClientRect().top);
+  const lastPath = await c
+    .locator("svg path.line")
+    .last()
+    .evaluate((e) => e.getBoundingClientRect().bottom);
+  expect(xTop).toBeGreaterThanOrEqual(lastPath - 1);
+  expect(xTop).toBeLessThan(plot.y + plot.height);
+});
+
 test("axes add labels and gridlines", async ({ page }) => {
   await mount(page, two({ x_axis: true, y_axis: true, hours_to_show: 12 }));
   const c = card(page);
