@@ -21,7 +21,6 @@ export const STYLE = `
     position: relative;
     border-radius: var(--ha-card-border-radius, 12px);
   }
-  .header > ha-ripple { position: absolute; inset: 0; border-radius: inherit; }
   .header:focus-visible { box-shadow: inset 0 0 0 2px var(--tile-color); border-radius: var(--ha-card-border-radius, 12px); }
   .shape {
     flex: none;

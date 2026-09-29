@@ -285,7 +285,9 @@ test.describe("actions", () => {
       config: { entity: "light.kitchen", hold_action: { action: "toggle" } },
     });
     expect(await state(page, "light.kitchen")).toBe("on");
-    expect(await card(page).locator(".row ha-ripple").count()).toBe(1);
+    // actionable rows stay clickable but carry no ripple
+    expect(await card(page).locator(".row.actionable").count()).toBeGreaterThan(0);
+    expect(await card(page).locator(".row ha-ripple").count()).toBe(0);
   });
 });
 

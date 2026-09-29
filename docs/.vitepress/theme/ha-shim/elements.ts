@@ -172,18 +172,10 @@ class HaCard extends HTMLElement {
   }
 }
 
-// HA's ripple gives hover / press feedback; the demo renders nothing for it
-class HaRipple extends HTMLElement {
-  connectedCallback() {
-    this.style.display = "none";
-  }
-}
-
 export const defineElements = () => {
   if (typeof customElements === "undefined") return;
   if (!customElements.get("ha-icon")) customElements.define("ha-icon", HaIcon);
   if (!customElements.get("ha-state-icon")) customElements.define("ha-state-icon", HaStateIcon);
   if (!customElements.get("ha-card")) customElements.define("ha-card", HaCard);
-  if (!customElements.get("ha-ripple")) customElements.define("ha-ripple", HaRipple);
   loadMdi();
 };

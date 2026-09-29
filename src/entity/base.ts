@@ -379,9 +379,6 @@ export abstract class EntityCardBase extends HTMLElement {
       row.style.setProperty("--fe-color", cssColor(m.look.color, "var(--primary-color)"));
       if (m.look.tint && tint === null) tint = m.look.color;
       fillByClass(ctx, row, ent, idx, m);
-      // HA's ripple attaches to its parent for hover and press feedback (the fill rebuilt the row)
-      if (row.classList.contains("actionable"))
-        row.appendChild(document.createElement("ha-ripple"));
     }
     card.classList.toggle("tinted", tint !== null);
     card.style.setProperty(

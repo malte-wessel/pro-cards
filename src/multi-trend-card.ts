@@ -224,7 +224,6 @@ export class MultiTrendCard extends HTMLElement implements TrendHost {
     this._root = card;
 
     const header = qs(card, ".header");
-    header.appendChild(document.createElement("ha-ripple"));
     header.addEventListener("click", () => this._moreInfo());
     header.addEventListener("keydown", (ev) => {
       if (ev.key === "Enter" || ev.key === " ") {

@@ -29,7 +29,6 @@ export const STYLE_ROW = `
   .row { --fe-color: var(--primary-color); --fe-soft: color-mix(in srgb, var(--fe-color) 20%, transparent); }
   .row { display: flex; flex-direction: column; gap: 10px; min-width: 0; border-radius: 8px; outline: none; }
   .row.actionable { cursor: pointer; position: relative; }
-  .row.actionable > ha-ripple { position: absolute; inset: 0; border-radius: inherit; }
   .row.actionable:focus-visible { box-shadow: 0 0 0 2px var(--fe-color); }
   .top { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .lead { position: relative; flex: none; width: var(--lead, 40px); height: var(--lead, 40px); }
