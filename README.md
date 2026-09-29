@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/malte-wessel/pro-cards/main/docs/public/logo.svg" alt="" width="96" height="96">
+</p>
+
 # Pro Cards
 
 [![Release](https://img.shields.io/github/v/release/malte-wessel/pro-cards?include_prereleases)](https://github.com/malte-wessel/pro-cards/releases)

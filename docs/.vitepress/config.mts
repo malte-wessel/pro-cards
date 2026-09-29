@@ -47,11 +47,15 @@ const liveContainer = (md: MarkdownIt) => {
   });
 };
 
+const base = "/pro-cards/";
+const site = `https://malte-wessel.github.io${base}`;
+const description =
+  "Beautiful, customizable cards for Home Assistant dashboards: entity, group and sections cards, multi trend, sun path and illuminance cards that look like they belong in Home Assistant.";
+
 export default defineConfig({
   title: "Pro Cards",
-  description:
-    "Beautiful, customizable cards for Home Assistant dashboards: entity, group and sections cards, multi trend, sun path and illuminance cards that look like they belong in Home Assistant.",
-  base: "/pro-cards/",
+  description,
+  base,
   lang: "en-US",
   lastUpdated: true,
   cleanUrls: true,
@@ -64,7 +68,21 @@ export default defineConfig({
         href: "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap",
       },
     ],
-    ["link", { rel: "icon", href: "/pro-cards/favicon.svg", type: "image/svg+xml" }],
+    ["link", { rel: "icon", href: `${base}favicon.svg`, type: "image/svg+xml" }],
+    ["meta", { property: "og:type", content: "website" }],
+    ["meta", { property: "og:site_name", content: "Pro Cards" }],
+    ["meta", { property: "og:title", content: "Pro Cards" }],
+    ["meta", { property: "og:description", content: description }],
+    ["meta", { property: "og:url", content: site }],
+    ["meta", { property: "og:image", content: `${site}og.png` }],
+    ["meta", { property: "og:image:width", content: "1200" }],
+    ["meta", { property: "og:image:height", content: "630" }],
+    ["meta", { name: "twitter:card", content: "summary_large_image" }],
+    ["meta", { name: "twitter:title", content: "Pro Cards" }],
+    ["meta", { name: "twitter:description", content: description }],
+    ["meta", { name: "twitter:image", content: `${site}og.png` }],
+    ["meta", { name: "theme-color", content: "#ffffff", media: "(prefers-color-scheme: light)" }],
+    ["meta", { name: "theme-color", content: "#0b1020", media: "(prefers-color-scheme: dark)" }],
   ],
   markdown: { config: liveContainer },
   vite: {
