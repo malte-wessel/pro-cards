@@ -16,7 +16,6 @@ A Home Assistant theme is a YAML map of CSS variables. Home Assistant loads the 
 - type: custom:entity-group-card
   title: Living room
   icon: mdi:sofa
-  grid_options: { columns: 6 }
   entities:
     - { entity: light.living_room, toggle: true, rules: [{ state: "on", color: amber, label: On }, { state: "off", color: grey, label: Off }] }
     - { entity: sensor.living_room_temperature, name: Temperature, decimals: 1, rules: [{ below: 19, color: blue, label: Cold }, { below: 24, color: green, label: Comfortable }, { above: 24, color: orange, label: Warm }] }
@@ -26,7 +25,7 @@ A Home Assistant theme is a YAML map of CSS variables. Home Assistant loads the 
   title: Outdoor
   icon: mdi:thermometer
   hours_to_show: 12
-  grid_options: { columns: 6 }
+  x_axis: true
   entities:
     - { entity: sensor.outdoor_temperature, name: Temperature, color: red }
     - { entity: sensor.dew_point, name: Dew point, color: blue }
