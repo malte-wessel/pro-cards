@@ -111,6 +111,29 @@ test.describe("value drives the look", () => {
 });
 
 test.describe("visuals", () => {
+  test("the hover ring of a strip sits exactly on the hovered bar", async ({ page }) => {
+    await mount(page, {
+      type: T,
+      entity: "binary_sensor.rain",
+      visual: "strip",
+      hours_to_show: 24,
+    });
+    const c = card(page);
+    const box = (await c.locator(".plot").boundingBox())!;
+    await page.mouse.move(box.x + box.width * 0.4, box.y + box.height / 2);
+    await expect(c.locator(".tip")).toHaveClass(/on/);
+    const ring = await c
+      .locator(".plot svg .hl")
+      .evaluate((e) => e.getBoundingClientRect().toJSON());
+    const bars = await c
+      .locator(".plot svg rect[fill]")
+      .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().toJSON()));
+    const bar = bars.find((b) => Math.abs(b.x - ring.x) < 1);
+    expect(bar).toBeDefined();
+    expect(Math.abs(bar!.width - ring.width)).toBeLessThan(0.5);
+    expect(Math.abs(bar!.y - ring.y)).toBeLessThan(0.5);
+    expect(Math.abs(bar!.height - ring.height)).toBeLessThan(0.5);
+  });
   test("history visuals draw from recorded state", async ({ page }) => {
     await mount(page, [
       { type: T, entity: "sensor.outdoor_temperature", visual: "sparkline", hours_to_show: 6 },

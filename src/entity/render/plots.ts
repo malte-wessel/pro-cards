@@ -33,6 +33,7 @@ export interface PlotElement extends HTMLDivElement {
   _sampled?: MeanBucket[] | null;
   _buckets?: (MeanBucket | LastBucket | null)[] | null;
   _bw?: number;
+  _hlOff?: number; // x offset of the hover highlight inside a bucket slot
   _peak?: number;
   _numeric?: boolean;
 }
@@ -140,11 +141,12 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement) => {
       const op = i === peak ? 1 : vmax > 0 && b.v >= 0.66 * vmax ? 0.7 : 0.4;
       html += `<rect class="col" x="${(i * bw + gap / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(1, bw - gap).toFixed(1)}" height="${h.toFixed(1)}" rx="2" opacity="${op}"/>`;
     });
-    html += `<g class="hover"><rect class="hl" y="-1" width="${bw.toFixed(1)}" height="${H + 2}" rx="3"/></g>`;
+    html += `<g class="hover"><rect class="hl" y="-1" width="${(Math.max(1, bw - gap) + 2).toFixed(1)}" height="${H + 2}" rx="3"/></g>`;
     svg.innerHTML = html;
     plot._buckets = buckets;
     plot._sampled = null;
     plot._peak = peak;
+    plot._hlOff = gap / 2 - 1;
     return;
   }
   // strip
@@ -177,8 +179,9 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement) => {
       i === buckets.length - 1 ? ` stroke="var(--primary-text-color)" stroke-width="1.5"` : "";
     html += `<rect x="${(i * bw + gap / 2).toFixed(1)}" y="0" width="${Math.max(1, bw - gap).toFixed(1)}" height="${H}" rx="2" fill="${col}" opacity=".7"${stroke}/>`;
   });
-  html += `<g class="hover"><rect class="hl" y="-1" width="${bw.toFixed(1)}" height="${H + 2}" rx="3"/></g>`;
+  html += `<g class="hover"><rect class="hl" y="0" width="${Math.max(1, bw - gap).toFixed(1)}" height="${H}" rx="2"/></g>`;
   svg.innerHTML = html;
+  plot._hlOff = gap / 2;
   addLabel(labels, "", `−${ctx.cfg.hours} h`, 0, H + 3);
   addLabel(labels, "right", "now", W, H + 3);
   plot._buckets = buckets;
@@ -219,11 +222,11 @@ export const showHover = (ctx: RenderCtx, plot: PlotElement, t: number): boolean
     const b = buckets[i];
     if (!b) return false;
     xs = i * bw + bw / 2;
-    qs(g, ".hl").setAttribute("x", (i * bw - 1).toFixed(1));
+    qs(g, ".hl").setAttribute("x", (i * bw + (plot._hlOff ?? 0)).toFixed(1));
     time = `${fmtTime(ctx, b.t1)}–${fmtTime(ctx, b.t2)}`;
     if (b.v !== null && b.v !== undefined) val = b.v;
     else if ("s" in b) stateText = b.s;
-    if (kind === "columns" && i === plot._peak) time += " · Spitze";
+    if (kind === "columns" && i === plot._peak) time += " · Peak";
   }
   const tplGet = tplGetter(ctx);
   let text: string, label: string | null;

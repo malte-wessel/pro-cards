@@ -90,7 +90,7 @@ export const toggleEl = (ctx: RenderCtx, ent: EntityItem, m: EntityModel) => {
   b.className = "toggle";
   const on = !!m.st && m.model.avail && !OFF_STATES.has(m.st.state);
   if (on) b.classList.add("on");
-  b.setAttribute("aria-label", `${nameOf(ctx, ent, m.st)} schalten`);
+  b.setAttribute("aria-label", `Toggle ${nameOf(ctx, ent, m.st)}`);
   b.setAttribute("aria-pressed", String(on));
   b.innerHTML = "<i></i>";
   const stop = (ev: Event) => ev.stopPropagation();
