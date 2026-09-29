@@ -41,6 +41,15 @@
   --vp-c-border: #3a4664;
 }
 
+/* home page feature icons: stroke icons in the mark's style, on a brand tint */
+.VPFeature .icon {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+}
+.VPFeature .icon svg {
+  display: block;
+}
+
 /* live example frame */
 .live {
   margin: 20px 0 28px;
