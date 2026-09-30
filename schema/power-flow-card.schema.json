@@ -64,7 +64,13 @@
         }
       },
       "required": ["type"],
-      "oneOf": [{ "required": ["power"] }, { "required": ["charge", "discharge"] }],
+      "oneOf": [
+        {
+          "required": ["power"],
+          "not": { "anyOf": [{ "required": ["charge"] }, { "required": ["discharge"] }] }
+        },
+        { "required": ["charge", "discharge"], "not": { "required": ["power"] } }
+      ],
       "unevaluatedProperties": false
     },
     "grid": {
@@ -116,7 +122,13 @@
         }
       },
       "required": ["type"],
-      "oneOf": [{ "required": ["power"] }, { "required": ["import"] }],
+      "oneOf": [
+        {
+          "required": ["power"],
+          "not": { "anyOf": [{ "required": ["import"] }, { "required": ["export"] }] }
+        },
+        { "required": ["import"], "not": { "required": ["power"] } }
+      ],
       "unevaluatedProperties": false
     },
     "consumer": {

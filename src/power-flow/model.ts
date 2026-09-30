@@ -71,10 +71,10 @@ export const powerNow = (
         lowCarbon = s.fossilKind === "fossil" ? 1 - share : share;
       }
     }
-    // during an outage a generator takes the grid's place: its power feeds the home
+    // during an outage a running generator takes the grid's place: its power feeds the home
     if (down && s.generatorIdx !== null) {
-      const g = w(s.generatorIdx);
-      return { kind: "grid", w: Math.max(0, g ?? 0), avail: g !== null, ...none, generator: true };
+      const g = Math.max(0, w(s.generatorIdx) ?? 0);
+      if (g > 0) return { kind: "grid", w: g, avail: true, ...none, generator: true };
     }
     return { kind: "grid", w: v, avail: v !== null, ...none, lowCarbon };
   });
