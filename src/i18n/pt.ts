@@ -1,0 +1,77 @@
+// Portuguese. Keys mirror en.ts; leave one out and the English text shows.
+import type { Translation } from "./en.ts";
+
+const pt: Translation = {
+  "common.now": "agora",
+  "common.no_data": "sem dados",
+  "common.loading": "a carregar …",
+  "common.unavailable": "indisponível",
+  "common.not_found": "{entity} não encontrado",
+
+  "entity.peak": "Pico",
+  "group.stub_title": "Grupo",
+  "sections.stub_title": "Secção",
+
+  "sun.label.sunrise": "Nascer do sol",
+  "sun.label.sunset": "Pôr do sol",
+  "sun.label.dawn": "Aurora",
+  "sun.label.noon": "Meio-dia solar",
+  "sun.label.dusk": "Crepúsculo",
+  "sun.elevation": "altura",
+  "sun.stub_title": "Trajetória do sol",
+
+  "illuminance.zone.night": "Noite",
+  "illuminance.zone.twilight": "Crepúsculo",
+  "illuminance.zone.overcast": "Nublado",
+  "illuminance.zone.day": "Dia",
+  "illuminance.zone.sun": "Sol",
+  "illuminance.max": "Máx.",
+  "illuminance.lux": "LUX",
+
+  "editor.default": "Padrão: {value}",
+
+  "editor.sun.title": "Título",
+  "editor.sun.show_dawn_dusk": "Mostrar aurora, meio-dia solar e crepúsculo",
+  "editor.sun.show_tooltip": "Mostrar dica ao passar o rato",
+  "editor.sun.day_color": "Cor do dia",
+  "editor.sun.night_color": "Cor da noite",
+  "editor.sun.sun_color": "Cor do sol",
+  "editor.sun.label_sunrise": "Etiqueta do nascer do sol",
+  "editor.sun.label_sunset": "Etiqueta do pôr do sol",
+  "editor.sun.label_dawn": "Etiqueta da aurora",
+  "editor.sun.label_noon": "Etiqueta do meio-dia solar",
+  "editor.sun.label_dusk": "Etiqueta do crepúsculo",
+  "editor.sun.section_labels": "Etiquetas",
+
+  "editor.illuminance.entity": "Entidade",
+  "editor.illuminance.mode": "Modo",
+  "editor.illuminance.name": "Nome",
+  "editor.illuminance.hours_to_show": "Horas mostradas",
+  "editor.illuminance.bucket_minutes": "Tamanho do intervalo (minutos)",
+  "editor.illuminance.min_lx": "Escala de (lx)",
+  "editor.illuminance.max_lx": "Escala até (lx)",
+  "editor.illuminance.mode.arc": "Arco (indicador com zonas)",
+  "editor.illuminance.mode.trend": "Tendência com zonas (24 h)",
+  "editor.illuminance.mode.band": "Faixa (blocos de cor de 24 h)",
+  "editor.illuminance.section_zones": "Zonas",
+  "editor.illuminance.zone_label": "{zone}: etiqueta",
+  "editor.illuminance.zone_max": "{zone}: até",
+  "editor.illuminance.zone_color": "{zone}: cor",
+
+  "editor.multi_trend.title": "Título",
+  "editor.multi_trend.icon": "Ícone",
+  "editor.multi_trend.color": "Cor do ícone",
+  "editor.multi_trend.hours_to_show": "Horas mostradas",
+  "editor.multi_trend.layout": "Disposição",
+  "editor.multi_trend.show_legend": "Mostrar legenda",
+  "editor.multi_trend.x_axis": "Eixo X (tempo)",
+  "editor.multi_trend.y_axis": "Eixo Y (valores)",
+  "editor.multi_trend.entities": "Entidades",
+  "editor.multi_trend.name": "Nome",
+  "editor.multi_trend.ecolor": "Cor",
+  "editor.multi_trend.layout.auto": "Automático (mesma unidade: sobreposto, senão faixas)",
+  "editor.multi_trend.layout.overlay": "Sobreposto (uma escala)",
+  "editor.multi_trend.layout.lanes": "Faixas (uma escala por entidade)",
+};
+
+export default pt;

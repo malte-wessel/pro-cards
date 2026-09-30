@@ -1,0 +1,77 @@
+// French. Keys mirror en.ts; leave one out and the English text shows.
+import type { Translation } from "./en.ts";
+
+const fr: Translation = {
+  "common.now": "maintenant",
+  "common.no_data": "aucune donnée",
+  "common.loading": "chargement …",
+  "common.unavailable": "indisponible",
+  "common.not_found": "{entity} introuvable",
+
+  "entity.peak": "Pic",
+  "group.stub_title": "Groupe",
+  "sections.stub_title": "Section",
+
+  "sun.label.sunrise": "Lever du soleil",
+  "sun.label.sunset": "Coucher du soleil",
+  "sun.label.dawn": "Aube",
+  "sun.label.noon": "Midi solaire",
+  "sun.label.dusk": "Crépuscule",
+  "sun.elevation": "hauteur",
+  "sun.stub_title": "Course du soleil",
+
+  "illuminance.zone.night": "Nuit",
+  "illuminance.zone.twilight": "Crépuscule",
+  "illuminance.zone.overcast": "Couvert",
+  "illuminance.zone.day": "Jour",
+  "illuminance.zone.sun": "Soleil",
+  "illuminance.max": "Max.",
+  "illuminance.lux": "LUX",
+
+  "editor.default": "Par défaut : {value}",
+
+  "editor.sun.title": "Titre",
+  "editor.sun.show_dawn_dusk": "Afficher l'aube, le midi solaire et le crépuscule",
+  "editor.sun.show_tooltip": "Afficher l'infobulle au survol",
+  "editor.sun.day_color": "Couleur du jour",
+  "editor.sun.night_color": "Couleur de la nuit",
+  "editor.sun.sun_color": "Couleur du soleil",
+  "editor.sun.label_sunrise": "Libellé du lever",
+  "editor.sun.label_sunset": "Libellé du coucher",
+  "editor.sun.label_dawn": "Libellé de l'aube",
+  "editor.sun.label_noon": "Libellé du midi solaire",
+  "editor.sun.label_dusk": "Libellé du crépuscule",
+  "editor.sun.section_labels": "Libellés",
+
+  "editor.illuminance.entity": "Entité",
+  "editor.illuminance.mode": "Mode",
+  "editor.illuminance.name": "Nom",
+  "editor.illuminance.hours_to_show": "Heures affichées",
+  "editor.illuminance.bucket_minutes": "Taille des intervalles (minutes)",
+  "editor.illuminance.min_lx": "Échelle de (lx)",
+  "editor.illuminance.max_lx": "Échelle à (lx)",
+  "editor.illuminance.mode.arc": "Arc (jauge avec zones)",
+  "editor.illuminance.mode.trend": "Courbe avec zones (24 h)",
+  "editor.illuminance.mode.band": "Bande (blocs de couleur sur 24 h)",
+  "editor.illuminance.section_zones": "Zones",
+  "editor.illuminance.zone_label": "{zone} : libellé",
+  "editor.illuminance.zone_max": "{zone} : jusqu'à",
+  "editor.illuminance.zone_color": "{zone} : couleur",
+
+  "editor.multi_trend.title": "Titre",
+  "editor.multi_trend.icon": "Icône",
+  "editor.multi_trend.color": "Couleur de l'icône",
+  "editor.multi_trend.hours_to_show": "Heures affichées",
+  "editor.multi_trend.layout": "Disposition",
+  "editor.multi_trend.show_legend": "Afficher la légende",
+  "editor.multi_trend.x_axis": "Axe X (temps)",
+  "editor.multi_trend.y_axis": "Axe Y (valeurs)",
+  "editor.multi_trend.entities": "Entités",
+  "editor.multi_trend.name": "Nom",
+  "editor.multi_trend.ecolor": "Couleur",
+  "editor.multi_trend.layout.auto": "Auto (même unité : superposé, sinon pistes)",
+  "editor.multi_trend.layout.overlay": "Superposé (une échelle)",
+  "editor.multi_trend.layout.lanes": "Pistes (une échelle par entité)",
+};
+
+export default fr;

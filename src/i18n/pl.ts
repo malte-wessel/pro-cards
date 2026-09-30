@@ -1,0 +1,77 @@
+// Polish. Keys mirror en.ts; leave one out and the English text shows.
+import type { Translation } from "./en.ts";
+
+const pl: Translation = {
+  "common.now": "teraz",
+  "common.no_data": "brak danych",
+  "common.loading": "ładowanie …",
+  "common.unavailable": "niedostępny",
+  "common.not_found": "nie znaleziono {entity}",
+
+  "entity.peak": "Szczyt",
+  "group.stub_title": "Grupa",
+  "sections.stub_title": "Sekcja",
+
+  "sun.label.sunrise": "Wschód słońca",
+  "sun.label.sunset": "Zachód słońca",
+  "sun.label.dawn": "Świt",
+  "sun.label.noon": "Południe słoneczne",
+  "sun.label.dusk": "Zmierzch",
+  "sun.elevation": "wysokość",
+  "sun.stub_title": "Droga słońca",
+
+  "illuminance.zone.night": "Noc",
+  "illuminance.zone.twilight": "Zmierzch",
+  "illuminance.zone.overcast": "Pochmurno",
+  "illuminance.zone.day": "Dzień",
+  "illuminance.zone.sun": "Słońce",
+  "illuminance.max": "Maks.",
+  "illuminance.lux": "LUX",
+
+  "editor.default": "Domyślnie: {value}",
+
+  "editor.sun.title": "Tytuł",
+  "editor.sun.show_dawn_dusk": "Pokaż świt, południe słoneczne i zmierzch",
+  "editor.sun.show_tooltip": "Pokaż podpowiedź po najechaniu",
+  "editor.sun.day_color": "Kolor dnia",
+  "editor.sun.night_color": "Kolor nocy",
+  "editor.sun.sun_color": "Kolor słońca",
+  "editor.sun.label_sunrise": "Etykieta wschodu",
+  "editor.sun.label_sunset": "Etykieta zachodu",
+  "editor.sun.label_dawn": "Etykieta świtu",
+  "editor.sun.label_noon": "Etykieta południa słonecznego",
+  "editor.sun.label_dusk": "Etykieta zmierzchu",
+  "editor.sun.section_labels": "Etykiety",
+
+  "editor.illuminance.entity": "Encja",
+  "editor.illuminance.mode": "Tryb",
+  "editor.illuminance.name": "Nazwa",
+  "editor.illuminance.hours_to_show": "Wyświetlane godziny",
+  "editor.illuminance.bucket_minutes": "Rozmiar przedziału (minuty)",
+  "editor.illuminance.min_lx": "Skala od (lx)",
+  "editor.illuminance.max_lx": "Skala do (lx)",
+  "editor.illuminance.mode.arc": "Łuk (wskaźnik ze strefami)",
+  "editor.illuminance.mode.trend": "Trend ze strefami (24 h)",
+  "editor.illuminance.mode.band": "Pasek (24 h bloki kolorów)",
+  "editor.illuminance.section_zones": "Strefy",
+  "editor.illuminance.zone_label": "{zone}: etykieta",
+  "editor.illuminance.zone_max": "{zone}: do",
+  "editor.illuminance.zone_color": "{zone}: kolor",
+
+  "editor.multi_trend.title": "Tytuł",
+  "editor.multi_trend.icon": "Ikona",
+  "editor.multi_trend.color": "Kolor ikony",
+  "editor.multi_trend.hours_to_show": "Wyświetlane godziny",
+  "editor.multi_trend.layout": "Układ",
+  "editor.multi_trend.show_legend": "Pokaż legendę",
+  "editor.multi_trend.x_axis": "Oś X (czas)",
+  "editor.multi_trend.y_axis": "Oś Y (wartości)",
+  "editor.multi_trend.entities": "Encje",
+  "editor.multi_trend.name": "Nazwa",
+  "editor.multi_trend.ecolor": "Kolor",
+  "editor.multi_trend.layout.auto": "Automatycznie (ta sama jednostka: nałożone, inaczej tory)",
+  "editor.multi_trend.layout.overlay": "Nałożone (jedna skala)",
+  "editor.multi_trend.layout.lanes": "Tory (jedna skala na encję)",
+};
+
+export default pl;

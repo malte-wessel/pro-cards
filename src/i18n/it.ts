@@ -1,0 +1,77 @@
+// Italian. Keys mirror en.ts; leave one out and the English text shows.
+import type { Translation } from "./en.ts";
+
+const it: Translation = {
+  "common.now": "adesso",
+  "common.no_data": "nessun dato",
+  "common.loading": "caricamento …",
+  "common.unavailable": "non disponibile",
+  "common.not_found": "{entity} non trovato",
+
+  "entity.peak": "Picco",
+  "group.stub_title": "Gruppo",
+  "sections.stub_title": "Sezione",
+
+  "sun.label.sunrise": "Alba",
+  "sun.label.sunset": "Tramonto",
+  "sun.label.dawn": "Aurora",
+  "sun.label.noon": "Mezzogiorno solare",
+  "sun.label.dusk": "Crepuscolo",
+  "sun.elevation": "altezza",
+  "sun.stub_title": "Percorso del sole",
+
+  "illuminance.zone.night": "Notte",
+  "illuminance.zone.twilight": "Crepuscolo",
+  "illuminance.zone.overcast": "Coperto",
+  "illuminance.zone.day": "Giorno",
+  "illuminance.zone.sun": "Sole",
+  "illuminance.max": "Max.",
+  "illuminance.lux": "LUX",
+
+  "editor.default": "Predefinito: {value}",
+
+  "editor.sun.title": "Titolo",
+  "editor.sun.show_dawn_dusk": "Mostra aurora, mezzogiorno solare e crepuscolo",
+  "editor.sun.show_tooltip": "Mostra il suggerimento al passaggio del mouse",
+  "editor.sun.day_color": "Colore del giorno",
+  "editor.sun.night_color": "Colore della notte",
+  "editor.sun.sun_color": "Colore del sole",
+  "editor.sun.label_sunrise": "Etichetta dell'alba",
+  "editor.sun.label_sunset": "Etichetta del tramonto",
+  "editor.sun.label_dawn": "Etichetta dell'aurora",
+  "editor.sun.label_noon": "Etichetta del mezzogiorno solare",
+  "editor.sun.label_dusk": "Etichetta del crepuscolo",
+  "editor.sun.section_labels": "Etichette",
+
+  "editor.illuminance.entity": "Entità",
+  "editor.illuminance.mode": "Modalità",
+  "editor.illuminance.name": "Nome",
+  "editor.illuminance.hours_to_show": "Ore mostrate",
+  "editor.illuminance.bucket_minutes": "Dimensione intervallo (minuti)",
+  "editor.illuminance.min_lx": "Scala da (lx)",
+  "editor.illuminance.max_lx": "Scala a (lx)",
+  "editor.illuminance.mode.arc": "Arco (indicatore con zone)",
+  "editor.illuminance.mode.trend": "Andamento con zone (24 h)",
+  "editor.illuminance.mode.band": "Fascia (blocchi di colore su 24 h)",
+  "editor.illuminance.section_zones": "Zone",
+  "editor.illuminance.zone_label": "{zone}: etichetta",
+  "editor.illuminance.zone_max": "{zone}: fino a",
+  "editor.illuminance.zone_color": "{zone}: colore",
+
+  "editor.multi_trend.title": "Titolo",
+  "editor.multi_trend.icon": "Icona",
+  "editor.multi_trend.color": "Colore dell'icona",
+  "editor.multi_trend.hours_to_show": "Ore mostrate",
+  "editor.multi_trend.layout": "Disposizione",
+  "editor.multi_trend.show_legend": "Mostra la legenda",
+  "editor.multi_trend.x_axis": "Asse X (tempo)",
+  "editor.multi_trend.y_axis": "Asse Y (valori)",
+  "editor.multi_trend.entities": "Entità",
+  "editor.multi_trend.name": "Nome",
+  "editor.multi_trend.ecolor": "Colore",
+  "editor.multi_trend.layout.auto": "Automatico (stessa unità: sovrapposto, altrimenti corsie)",
+  "editor.multi_trend.layout.overlay": "Sovrapposto (una scala)",
+  "editor.multi_trend.layout.lanes": "Corsie (una scala per entità)",
+};
+
+export default it;

@@ -1,0 +1,77 @@
+// Czech. Keys mirror en.ts; leave one out and the English text shows.
+import type { Translation } from "./en.ts";
+
+const cs: Translation = {
+  "common.now": "nyní",
+  "common.no_data": "žádná data",
+  "common.loading": "načítání …",
+  "common.unavailable": "nedostupné",
+  "common.not_found": "{entity} nenalezeno",
+
+  "entity.peak": "Vrchol",
+  "group.stub_title": "Skupina",
+  "sections.stub_title": "Sekce",
+
+  "sun.label.sunrise": "Východ slunce",
+  "sun.label.sunset": "Západ slunce",
+  "sun.label.dawn": "Svítání",
+  "sun.label.noon": "Sluneční poledne",
+  "sun.label.dusk": "Soumrak",
+  "sun.elevation": "výška",
+  "sun.stub_title": "Dráha slunce",
+
+  "illuminance.zone.night": "Noc",
+  "illuminance.zone.twilight": "Šero",
+  "illuminance.zone.overcast": "Zataženo",
+  "illuminance.zone.day": "Den",
+  "illuminance.zone.sun": "Slunce",
+  "illuminance.max": "Max.",
+  "illuminance.lux": "LUX",
+
+  "editor.default": "Výchozí: {value}",
+
+  "editor.sun.title": "Název",
+  "editor.sun.show_dawn_dusk": "Zobrazit svítání, sluneční poledne a soumrak",
+  "editor.sun.show_tooltip": "Zobrazit popisek při najetí",
+  "editor.sun.day_color": "Barva dne",
+  "editor.sun.night_color": "Barva noci",
+  "editor.sun.sun_color": "Barva slunce",
+  "editor.sun.label_sunrise": "Popisek východu slunce",
+  "editor.sun.label_sunset": "Popisek západu slunce",
+  "editor.sun.label_dawn": "Popisek svítání",
+  "editor.sun.label_noon": "Popisek slunečního poledne",
+  "editor.sun.label_dusk": "Popisek soumraku",
+  "editor.sun.section_labels": "Popisky",
+
+  "editor.illuminance.entity": "Entita",
+  "editor.illuminance.mode": "Režim",
+  "editor.illuminance.name": "Název",
+  "editor.illuminance.hours_to_show": "Zobrazené hodiny",
+  "editor.illuminance.bucket_minutes": "Velikost intervalu (minuty)",
+  "editor.illuminance.min_lx": "Stupnice od (lx)",
+  "editor.illuminance.max_lx": "Stupnice do (lx)",
+  "editor.illuminance.mode.arc": "Oblouk (ukazatel se zónami)",
+  "editor.illuminance.mode.trend": "Průběh se zónami (24 h)",
+  "editor.illuminance.mode.band": "Pás (24 h barevné bloky)",
+  "editor.illuminance.section_zones": "Zóny",
+  "editor.illuminance.zone_label": "{zone}: popisek",
+  "editor.illuminance.zone_max": "{zone}: do",
+  "editor.illuminance.zone_color": "{zone}: barva",
+
+  "editor.multi_trend.title": "Název",
+  "editor.multi_trend.icon": "Ikona",
+  "editor.multi_trend.color": "Barva ikony",
+  "editor.multi_trend.hours_to_show": "Zobrazené hodiny",
+  "editor.multi_trend.layout": "Rozvržení",
+  "editor.multi_trend.show_legend": "Zobrazit legendu",
+  "editor.multi_trend.x_axis": "Osa X (čas)",
+  "editor.multi_trend.y_axis": "Osa Y (hodnoty)",
+  "editor.multi_trend.entities": "Entity",
+  "editor.multi_trend.name": "Název",
+  "editor.multi_trend.ecolor": "Barva",
+  "editor.multi_trend.layout.auto": "Automaticky (stejná jednotka: překryv, jinak dráhy)",
+  "editor.multi_trend.layout.overlay": "Překryv (jedna stupnice)",
+  "editor.multi_trend.layout.lanes": "Dráhy (jedna stupnice na entitu)",
+};
+
+export default cs;

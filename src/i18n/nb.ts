@@ -1,0 +1,77 @@
+// Norwegian Bokmål. Keys mirror en.ts; leave one out and the English text shows.
+import type { Translation } from "./en.ts";
+
+const nb: Translation = {
+  "common.now": "nå",
+  "common.no_data": "ingen data",
+  "common.loading": "laster …",
+  "common.unavailable": "utilgjengelig",
+  "common.not_found": "{entity} ikke funnet",
+
+  "entity.peak": "Topp",
+  "group.stub_title": "Gruppe",
+  "sections.stub_title": "Seksjon",
+
+  "sun.label.sunrise": "Soloppgang",
+  "sun.label.sunset": "Solnedgang",
+  "sun.label.dawn": "Daggry",
+  "sun.label.noon": "Solmiddag",
+  "sun.label.dusk": "Skumring",
+  "sun.elevation": "høyde",
+  "sun.stub_title": "Solbane",
+
+  "illuminance.zone.night": "Natt",
+  "illuminance.zone.twilight": "Skumring",
+  "illuminance.zone.overcast": "Overskyet",
+  "illuminance.zone.day": "Dag",
+  "illuminance.zone.sun": "Sol",
+  "illuminance.max": "Maks",
+  "illuminance.lux": "LUX",
+
+  "editor.default": "Standard: {value}",
+
+  "editor.sun.title": "Tittel",
+  "editor.sun.show_dawn_dusk": "Vis daggry, solmiddag og skumring",
+  "editor.sun.show_tooltip": "Vis verktøytips ved peking",
+  "editor.sun.day_color": "Dagfarge",
+  "editor.sun.night_color": "Nattfarge",
+  "editor.sun.sun_color": "Solfarge",
+  "editor.sun.label_sunrise": "Etikett for soloppgang",
+  "editor.sun.label_sunset": "Etikett for solnedgang",
+  "editor.sun.label_dawn": "Etikett for daggry",
+  "editor.sun.label_noon": "Etikett for solmiddag",
+  "editor.sun.label_dusk": "Etikett for skumring",
+  "editor.sun.section_labels": "Etiketter",
+
+  "editor.illuminance.entity": "Entitet",
+  "editor.illuminance.mode": "Modus",
+  "editor.illuminance.name": "Navn",
+  "editor.illuminance.hours_to_show": "Viste timer",
+  "editor.illuminance.bucket_minutes": "Intervallstørrelse (minutter)",
+  "editor.illuminance.min_lx": "Skala fra (lx)",
+  "editor.illuminance.max_lx": "Skala til (lx)",
+  "editor.illuminance.mode.arc": "Bue (måler med soner)",
+  "editor.illuminance.mode.trend": "Trend med soner (24 t)",
+  "editor.illuminance.mode.band": "Bånd (24 t fargeblokker)",
+  "editor.illuminance.section_zones": "Soner",
+  "editor.illuminance.zone_label": "{zone}: etikett",
+  "editor.illuminance.zone_max": "{zone}: opptil",
+  "editor.illuminance.zone_color": "{zone}: farge",
+
+  "editor.multi_trend.title": "Tittel",
+  "editor.multi_trend.icon": "Ikon",
+  "editor.multi_trend.color": "Ikonfarge",
+  "editor.multi_trend.hours_to_show": "Viste timer",
+  "editor.multi_trend.layout": "Oppsett",
+  "editor.multi_trend.show_legend": "Vis forklaring",
+  "editor.multi_trend.x_axis": "X-akse (tid)",
+  "editor.multi_trend.y_axis": "Y-akse (verdier)",
+  "editor.multi_trend.entities": "Entiteter",
+  "editor.multi_trend.name": "Navn",
+  "editor.multi_trend.ecolor": "Farge",
+  "editor.multi_trend.layout.auto": "Auto (samme enhet: overlagt, ellers baner)",
+  "editor.multi_trend.layout.overlay": "Overlagt (én skala)",
+  "editor.multi_trend.layout.lanes": "Baner (én skala per entitet)",
+};
+
+export default nb;

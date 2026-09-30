@@ -1,0 +1,77 @@
+// Russian. Keys mirror en.ts; leave one out and the English text shows.
+import type { Translation } from "./en.ts";
+
+const ru: Translation = {
+  "common.now": "сейчас",
+  "common.no_data": "нет данных",
+  "common.loading": "загрузка …",
+  "common.unavailable": "недоступно",
+  "common.not_found": "{entity} не найдено",
+
+  "entity.peak": "Пик",
+  "group.stub_title": "Группа",
+  "sections.stub_title": "Раздел",
+
+  "sun.label.sunrise": "Восход",
+  "sun.label.sunset": "Закат",
+  "sun.label.dawn": "Рассвет",
+  "sun.label.noon": "Солнечный полдень",
+  "sun.label.dusk": "Сумерки",
+  "sun.elevation": "высота",
+  "sun.stub_title": "Путь солнца",
+
+  "illuminance.zone.night": "Ночь",
+  "illuminance.zone.twilight": "Сумерки",
+  "illuminance.zone.overcast": "Пасмурно",
+  "illuminance.zone.day": "День",
+  "illuminance.zone.sun": "Солнце",
+  "illuminance.max": "Макс.",
+  "illuminance.lux": "ЛК",
+
+  "editor.default": "По умолчанию: {value}",
+
+  "editor.sun.title": "Заголовок",
+  "editor.sun.show_dawn_dusk": "Показывать рассвет, солнечный полдень и сумерки",
+  "editor.sun.show_tooltip": "Показывать подсказку при наведении",
+  "editor.sun.day_color": "Цвет дня",
+  "editor.sun.night_color": "Цвет ночи",
+  "editor.sun.sun_color": "Цвет солнца",
+  "editor.sun.label_sunrise": "Подпись восхода",
+  "editor.sun.label_sunset": "Подпись заката",
+  "editor.sun.label_dawn": "Подпись рассвета",
+  "editor.sun.label_noon": "Подпись солнечного полдня",
+  "editor.sun.label_dusk": "Подпись сумерек",
+  "editor.sun.section_labels": "Подписи",
+
+  "editor.illuminance.entity": "Объект",
+  "editor.illuminance.mode": "Режим",
+  "editor.illuminance.name": "Название",
+  "editor.illuminance.hours_to_show": "Показывать часов",
+  "editor.illuminance.bucket_minutes": "Размер интервала (минуты)",
+  "editor.illuminance.min_lx": "Шкала от (лк)",
+  "editor.illuminance.max_lx": "Шкала до (лк)",
+  "editor.illuminance.mode.arc": "Дуга (шкала с зонами)",
+  "editor.illuminance.mode.trend": "График с зонами (24 ч)",
+  "editor.illuminance.mode.band": "Полоса (цветные блоки за 24 ч)",
+  "editor.illuminance.section_zones": "Зоны",
+  "editor.illuminance.zone_label": "{zone}: подпись",
+  "editor.illuminance.zone_max": "{zone}: до",
+  "editor.illuminance.zone_color": "{zone}: цвет",
+
+  "editor.multi_trend.title": "Заголовок",
+  "editor.multi_trend.icon": "Значок",
+  "editor.multi_trend.color": "Цвет значка",
+  "editor.multi_trend.hours_to_show": "Показывать часов",
+  "editor.multi_trend.layout": "Компоновка",
+  "editor.multi_trend.show_legend": "Показывать легенду",
+  "editor.multi_trend.x_axis": "Ось X (время)",
+  "editor.multi_trend.y_axis": "Ось Y (значения)",
+  "editor.multi_trend.entities": "Объекты",
+  "editor.multi_trend.name": "Название",
+  "editor.multi_trend.ecolor": "Цвет",
+  "editor.multi_trend.layout.auto": "Авто (одна единица: наложение, иначе дорожки)",
+  "editor.multi_trend.layout.overlay": "Наложение (одна шкала)",
+  "editor.multi_trend.layout.lanes": "Дорожки (своя шкала для каждого объекта)",
+};
+
+export default ru;

@@ -13,12 +13,22 @@ Everything you write yourself stays as written: `title`, `name`, rule `label`, `
 
 ## Available languages
 
-| Language | Code |
-| -------- | ---- |
-| English  | `en` |
-| German   | `de` |
+| Language         | Code |
+| ---------------- | ---- |
+| English          | `en` |
+| Czech            | `cs` |
+| German           | `de` |
+| Spanish          | `es` |
+| French           | `fr` |
+| Italian          | `it` |
+| Norwegian Bokmål | `nb` |
+| Dutch            | `nl` |
+| Polish           | `pl` |
+| Portuguese       | `pt` |
+| Russian          | `ru` |
+| Swedish          | `sv` |
 
-A language the cards do not ship shows English. A regional variant such as `de-AT` uses the base language.
+A language the cards do not ship shows English. A regional variant such as `de-AT` or `pt-BR` uses the base language.
 
 ## Adding a language
 

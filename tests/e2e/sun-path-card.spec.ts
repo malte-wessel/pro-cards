@@ -83,7 +83,7 @@ test("default labels follow the Home Assistant language, overrides stay", async 
   const box = (await c.locator(".plot").boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await expect(c.locator(".tip .row span")).toHaveText("Höhe");
-  await setLanguage(page, "fr");
+  await setLanguage(page, "fi");
   await expect(c.locator(".row .lbl").first()).toHaveText("Sunrise");
 });
 

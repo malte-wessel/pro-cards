@@ -1,0 +1,77 @@
+// Dutch. Keys mirror en.ts; leave one out and the English text shows.
+import type { Translation } from "./en.ts";
+
+const nl: Translation = {
+  "common.now": "nu",
+  "common.no_data": "geen gegevens",
+  "common.loading": "laden …",
+  "common.unavailable": "niet beschikbaar",
+  "common.not_found": "{entity} niet gevonden",
+
+  "entity.peak": "Piek",
+  "group.stub_title": "Groep",
+  "sections.stub_title": "Sectie",
+
+  "sun.label.sunrise": "Zonsopkomst",
+  "sun.label.sunset": "Zonsondergang",
+  "sun.label.dawn": "Dageraad",
+  "sun.label.noon": "Zonnemiddag",
+  "sun.label.dusk": "Schemering",
+  "sun.elevation": "hoogte",
+  "sun.stub_title": "Zonnebaan",
+
+  "illuminance.zone.night": "Nacht",
+  "illuminance.zone.twilight": "Schemering",
+  "illuminance.zone.overcast": "Bewolkt",
+  "illuminance.zone.day": "Dag",
+  "illuminance.zone.sun": "Zon",
+  "illuminance.max": "Max.",
+  "illuminance.lux": "LUX",
+
+  "editor.default": "Standaard: {value}",
+
+  "editor.sun.title": "Titel",
+  "editor.sun.show_dawn_dusk": "Dageraad, zonnemiddag en schemering tonen",
+  "editor.sun.show_tooltip": "Tooltip tonen bij aanwijzen",
+  "editor.sun.day_color": "Kleur dag",
+  "editor.sun.night_color": "Kleur nacht",
+  "editor.sun.sun_color": "Kleur zon",
+  "editor.sun.label_sunrise": "Label zonsopkomst",
+  "editor.sun.label_sunset": "Label zonsondergang",
+  "editor.sun.label_dawn": "Label dageraad",
+  "editor.sun.label_noon": "Label zonnemiddag",
+  "editor.sun.label_dusk": "Label schemering",
+  "editor.sun.section_labels": "Labels",
+
+  "editor.illuminance.entity": "Entiteit",
+  "editor.illuminance.mode": "Modus",
+  "editor.illuminance.name": "Naam",
+  "editor.illuminance.hours_to_show": "Getoonde uren",
+  "editor.illuminance.bucket_minutes": "Intervalgrootte (minuten)",
+  "editor.illuminance.min_lx": "Schaal van (lx)",
+  "editor.illuminance.max_lx": "Schaal tot (lx)",
+  "editor.illuminance.mode.arc": "Boog (meter met zones)",
+  "editor.illuminance.mode.trend": "Verloop met zones (24 u)",
+  "editor.illuminance.mode.band": "Band (24 u kleurblokken)",
+  "editor.illuminance.section_zones": "Zones",
+  "editor.illuminance.zone_label": "{zone}: label",
+  "editor.illuminance.zone_max": "{zone}: tot",
+  "editor.illuminance.zone_color": "{zone}: kleur",
+
+  "editor.multi_trend.title": "Titel",
+  "editor.multi_trend.icon": "Pictogram",
+  "editor.multi_trend.color": "Kleur pictogram",
+  "editor.multi_trend.hours_to_show": "Getoonde uren",
+  "editor.multi_trend.layout": "Indeling",
+  "editor.multi_trend.show_legend": "Legenda tonen",
+  "editor.multi_trend.x_axis": "X-as (tijd)",
+  "editor.multi_trend.y_axis": "Y-as (waarden)",
+  "editor.multi_trend.entities": "Entiteiten",
+  "editor.multi_trend.name": "Naam",
+  "editor.multi_trend.ecolor": "Kleur",
+  "editor.multi_trend.layout.auto": "Automatisch (zelfde eenheid: overlappend, anders banen)",
+  "editor.multi_trend.layout.overlay": "Overlappend (één schaal)",
+  "editor.multi_trend.layout.lanes": "Banen (één schaal per entiteit)",
+};
+
+export default nl;

@@ -1,0 +1,77 @@
+// Swedish. Keys mirror en.ts; leave one out and the English text shows.
+import type { Translation } from "./en.ts";
+
+const sv: Translation = {
+  "common.now": "nu",
+  "common.no_data": "inga data",
+  "common.loading": "laddar …",
+  "common.unavailable": "otillgänglig",
+  "common.not_found": "{entity} hittades inte",
+
+  "entity.peak": "Topp",
+  "group.stub_title": "Grupp",
+  "sections.stub_title": "Sektion",
+
+  "sun.label.sunrise": "Soluppgång",
+  "sun.label.sunset": "Solnedgång",
+  "sun.label.dawn": "Gryning",
+  "sun.label.noon": "Solmiddag",
+  "sun.label.dusk": "Skymning",
+  "sun.elevation": "höjd",
+  "sun.stub_title": "Solbana",
+
+  "illuminance.zone.night": "Natt",
+  "illuminance.zone.twilight": "Skymning",
+  "illuminance.zone.overcast": "Mulet",
+  "illuminance.zone.day": "Dag",
+  "illuminance.zone.sun": "Sol",
+  "illuminance.max": "Max",
+  "illuminance.lux": "LUX",
+
+  "editor.default": "Standard: {value}",
+
+  "editor.sun.title": "Titel",
+  "editor.sun.show_dawn_dusk": "Visa gryning, solmiddag och skymning",
+  "editor.sun.show_tooltip": "Visa verktygstips vid hovring",
+  "editor.sun.day_color": "Dagfärg",
+  "editor.sun.night_color": "Nattfärg",
+  "editor.sun.sun_color": "Solfärg",
+  "editor.sun.label_sunrise": "Etikett för soluppgång",
+  "editor.sun.label_sunset": "Etikett för solnedgång",
+  "editor.sun.label_dawn": "Etikett för gryning",
+  "editor.sun.label_noon": "Etikett för solmiddag",
+  "editor.sun.label_dusk": "Etikett för skymning",
+  "editor.sun.section_labels": "Etiketter",
+
+  "editor.illuminance.entity": "Entitet",
+  "editor.illuminance.mode": "Läge",
+  "editor.illuminance.name": "Namn",
+  "editor.illuminance.hours_to_show": "Visade timmar",
+  "editor.illuminance.bucket_minutes": "Intervallstorlek (minuter)",
+  "editor.illuminance.min_lx": "Skala från (lx)",
+  "editor.illuminance.max_lx": "Skala till (lx)",
+  "editor.illuminance.mode.arc": "Båge (mätare med zoner)",
+  "editor.illuminance.mode.trend": "Trend med zoner (24 h)",
+  "editor.illuminance.mode.band": "Band (24 h färgblock)",
+  "editor.illuminance.section_zones": "Zoner",
+  "editor.illuminance.zone_label": "{zone}: etikett",
+  "editor.illuminance.zone_max": "{zone}: upp till",
+  "editor.illuminance.zone_color": "{zone}: färg",
+
+  "editor.multi_trend.title": "Titel",
+  "editor.multi_trend.icon": "Ikon",
+  "editor.multi_trend.color": "Ikonfärg",
+  "editor.multi_trend.hours_to_show": "Visade timmar",
+  "editor.multi_trend.layout": "Layout",
+  "editor.multi_trend.show_legend": "Visa förklaring",
+  "editor.multi_trend.x_axis": "X-axel (tid)",
+  "editor.multi_trend.y_axis": "Y-axel (värden)",
+  "editor.multi_trend.entities": "Entiteter",
+  "editor.multi_trend.name": "Namn",
+  "editor.multi_trend.ecolor": "Färg",
+  "editor.multi_trend.layout.auto": "Auto (samma enhet: överlagrat, annars banor)",
+  "editor.multi_trend.layout.overlay": "Överlagrat (en skala)",
+  "editor.multi_trend.layout.lanes": "Banor (en skala per entitet)",
+};
+
+export default sv;
