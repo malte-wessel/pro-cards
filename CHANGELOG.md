@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.4.0 (2026-09-30)
 
 - New weather card (`custom:weather-card`): a weather entity as a tile, or as sections composed like the sections card: `hero` (condition icon, big temperature, today's high / low), entity groups `row` / `list` / `table` / `grid` / `column` whose entries may name attributes of the weather entity (humidity, wind speed, pressure …) next to any entity with rules and every entity-card visual, `trend` (the multi trend plot of the hourly or daily forecast, with `hours` / `days`, `layout`, `x_axis`, `y_axis`, `show_legend` and `show` entries of `{ quantity, name, color }`) and `forecast` (hourly or daily rows or columns with condition, rain figures and temperature; days as low → high bars on one scale). Forecasts come from Home Assistant's forecast subscription. `rules` on the condition, `temperature_rules` on the temperature (on the card, or per `hero` / `forecast` / `trend` section, which also take `divider` and `title` like the sections card), header entities and templates. the conditions are the Home Assistant weather card's pictures (`icons: mdi` for the mdi icons, or a map with an mdi icon or an image per condition, on the card or per section), and `icon_size` sets the icon size of the tile, the hero and the forecast rows. Condition and attribute names come in every language the cards speak
+- Entity cards: the value of a row or column item clips with an ellipsis instead of running into its neighbour when the section is narrow
+- Multi trend card: a value axis no longer shows a `-0` tick
 - The entity layer moved from `src/entity/` to `src/shared/entity/` and the multi trend plot to `src/shared/trend/` (no change for users)
 
 ## 1.3.0 (2026-09-30)
