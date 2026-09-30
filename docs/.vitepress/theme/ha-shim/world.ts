@@ -72,6 +72,8 @@ const shapes: Record<string, (h: number) => number> = {
   co2: (h) => (h > 21 || h < 7 ? 350 : h > 17 ? 200 : 0),
   power: (h) => (h > 6 && h < 9 ? 900 : h > 17 && h < 22 ? 1400 : 0),
   solar: (h) => Math.max(0, Math.sin(((h - 6) / 13) * Math.PI)) * 4.2,
+  grid: (h) =>
+    600 - Math.max(0, Math.sin(((h - 6) / 13) * Math.PI)) * 2400 + (h > 17 && h < 22 ? 900 : 0),
   battery: () => 0,
   flat: () => 0,
 };
@@ -517,6 +519,90 @@ def(
   "power",
   { noise: 0, min: 0, decimals: 0 },
 );
+def(
+  "sensor.grid_power",
+  -960,
+  {
+    unit_of_measurement: "W",
+    device_class: "power",
+    state_class: "measurement",
+    friendly_name: "Grid power",
+  },
+  "grid",
+  { noise: 120, min: -3000, max: 4000, decimals: 0 },
+);
+def(
+  "sensor.battery_power",
+  -1200,
+  {
+    unit_of_measurement: "W",
+    device_class: "power",
+    state_class: "measurement",
+    friendly_name: "Battery power",
+  },
+  "flat",
+  { noise: 80, min: -3000, max: 3000, decimals: 0 },
+);
+def(
+  "sensor.battery_soc",
+  64,
+  { unit_of_measurement: "%", device_class: "battery", friendly_name: "Battery state of charge" },
+  "battery",
+  { noise: 0.4, min: 0, max: 100, decimals: 0 },
+);
+def(
+  "sensor.electricity_price",
+  0.28,
+  { unit_of_measurement: "€/kWh", friendly_name: "Electricity price", icon: "mdi:currency-eur" },
+  "flat",
+  { decimals: 2 },
+);
+def(
+  "sensor.solar_east",
+  2.1,
+  { unit_of_measurement: "kW", device_class: "power", friendly_name: "Solar east" },
+  "solar",
+  { noise: 0.15, min: 0, decimals: 1 },
+);
+def(
+  "sensor.solar_west",
+  1.3,
+  { unit_of_measurement: "kW", device_class: "power", friendly_name: "Solar west" },
+  "solar",
+  { noise: 0.1, min: 0, decimals: 1 },
+);
+def(
+  "sensor.heat_pump_power",
+  430,
+  { unit_of_measurement: "W", device_class: "power", friendly_name: "Heat pump power" },
+  "power",
+  { noise: 40, min: 0, decimals: 0 },
+);
+def(
+  "sensor.washer_power",
+  290,
+  { unit_of_measurement: "W", device_class: "power", friendly_name: "Washer power" },
+  "power",
+  { noise: 30, min: 0, decimals: 0 },
+);
+def(
+  "sensor.dryer_power",
+  0,
+  { unit_of_measurement: "W", device_class: "power", friendly_name: "Dryer power" },
+  "flat",
+  { noise: 0, min: 0, decimals: 0 },
+);
+def(
+  "sensor.office_power",
+  170,
+  { unit_of_measurement: "W", device_class: "power", friendly_name: "Office power" },
+  "power",
+  { noise: 15, min: 0, decimals: 0 },
+);
+def("binary_sensor.grid_outage", "off", {
+  device_class: "problem",
+  friendly_name: "Grid outage",
+});
 def(
   "sensor.dining_light_power",
   42,

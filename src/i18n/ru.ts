@@ -91,6 +91,20 @@ const ru: Translation = {
   "rain.today": "{v} сегодня",
   "rain.today_name": "Дождь сегодня",
 
+  "power.stub_title": "Поток энергии",
+  "power.home": "Дом",
+  "power.solar": "Солнце",
+  "power.battery": "Батарея",
+  "power.grid": "Сеть",
+  "power.other": "Прочее",
+  "power.state.offline": "Сеть отключена · на батарее",
+  "power.state.expensive": "Дорого · {price}",
+  "power.state.exporting": "Отдача {v}",
+  "power.state.battery": "На батарее",
+  "power.state.importing": "Потребление {v}",
+  "power.state.balanced": "Баланс",
+  "power.self_sufficient": "автономность {pct}",
+
   "editor.default": "По умолчанию: {value}",
 
   "editor.sun.title": "Заголовок",

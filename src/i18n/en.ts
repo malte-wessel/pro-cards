@@ -90,6 +90,20 @@ const en = {
   "rain.today": "{v} today",
   "rain.today_name": "Rain today",
 
+  "power.stub_title": "Power flow",
+  "power.home": "Home",
+  "power.solar": "Solar",
+  "power.battery": "Battery",
+  "power.grid": "Grid",
+  "power.other": "Other",
+  "power.state.offline": "Grid offline · on battery",
+  "power.state.expensive": "Expensive · {price}",
+  "power.state.exporting": "Exporting {v}",
+  "power.state.battery": "On battery",
+  "power.state.importing": "Importing {v}",
+  "power.state.balanced": "Balanced",
+  "power.self_sufficient": "self-sufficient {pct}",
+
   "editor.default": "Default: {value}",
 
   "editor.sun.title": "Title",

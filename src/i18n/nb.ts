@@ -91,6 +91,20 @@ const nb: Translation = {
   "rain.today": "{v} i dag",
   "rain.today_name": "Regn i dag",
 
+  "power.stub_title": "Energiflyt",
+  "power.home": "Hjem",
+  "power.solar": "Sol",
+  "power.battery": "Batteri",
+  "power.grid": "Nett",
+  "power.other": "Annet",
+  "power.state.offline": "Nett frakoblet · på batteri",
+  "power.state.expensive": "Dyrt · {price}",
+  "power.state.exporting": "Eksporterer {v}",
+  "power.state.battery": "På batteri",
+  "power.state.importing": "Importerer {v}",
+  "power.state.balanced": "Balansert",
+  "power.self_sufficient": "selvforsynt {pct}",
+
   "editor.default": "Standard: {value}",
 
   "editor.sun.title": "Tittel",

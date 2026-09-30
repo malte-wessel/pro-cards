@@ -16,6 +16,7 @@ const TYPES = [
   "weather-card",
   "wind-card",
   "rain-card",
+  "power-flow-card",
 ];
 
 export const makeValidator = () => {

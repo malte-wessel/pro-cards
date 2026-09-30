@@ -91,6 +91,20 @@ const de: Translation = {
   "rain.today": "{v} heute",
   "rain.today_name": "Regen heute",
 
+  "power.stub_title": "Energiefluss",
+  "power.home": "Haus",
+  "power.solar": "Solar",
+  "power.battery": "Batterie",
+  "power.grid": "Netz",
+  "power.other": "Sonstiges",
+  "power.state.offline": "Netz offline · auf Batterie",
+  "power.state.expensive": "Teuer · {price}",
+  "power.state.exporting": "Einspeisung {v}",
+  "power.state.battery": "Auf Batterie",
+  "power.state.importing": "Bezug {v}",
+  "power.state.balanced": "Ausgeglichen",
+  "power.self_sufficient": "Autarkie {pct}",
+
   "editor.default": "Standard: {value}",
 
   "editor.sun.title": "Titel",

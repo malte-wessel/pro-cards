@@ -91,6 +91,20 @@ const sv: Translation = {
   "rain.today": "{v} idag",
   "rain.today_name": "Regn idag",
 
+  "power.stub_title": "Energiflöde",
+  "power.home": "Hem",
+  "power.solar": "Sol",
+  "power.battery": "Batteri",
+  "power.grid": "Nät",
+  "power.other": "Övrigt",
+  "power.state.offline": "Nät frånkopplat · på batteri",
+  "power.state.expensive": "Dyrt · {price}",
+  "power.state.exporting": "Exporterar {v}",
+  "power.state.battery": "På batteri",
+  "power.state.importing": "Importerar {v}",
+  "power.state.balanced": "Balanserat",
+  "power.self_sufficient": "självförsörjning {pct}",
+
   "editor.default": "Standard: {value}",
 
   "editor.sun.title": "Titel",

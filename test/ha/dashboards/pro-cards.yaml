@@ -205,6 +205,47 @@ views:
       - type: grid
         cards:
           - type: heading
+            heading: Power flow card
+          - type: custom:power-flow-card
+            home: sensor.power_consumption
+            expensive_above: 0.35
+            sources:
+              - { type: solar, entity: sensor.solar_power }
+              - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
+              - type: grid
+                power: sensor.grid_power
+                price: sensor.electricity_price
+                offline: binary_sensor.grid_outage
+          - type: custom:power-flow-card
+            title: Energy
+            icon: mdi:lightning-bolt
+            home: sensor.power_consumption
+            sources:
+              - { type: solar, entity: sensor.solar_power }
+              - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
+              - { type: grid, power: sensor.grid_power }
+            consumers:
+              - group: Laundry
+                icon: mdi:washing-machine
+                entities:
+                  - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
+                  - { entity: sensor.dryer_power, name: Dryer, icon: mdi:tumble-dryer }
+              - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
+          - type: custom:power-flow-card
+            home: sensor.power_consumption
+            direction: down
+            flow_style: arrows
+            sources:
+              - { type: solar, entity: sensor.solar_power }
+              - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
+              - { type: grid, power: sensor.grid_power }
+            consumers:
+              - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
+              - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
+            consumer_style: list
+      - type: grid
+        cards:
+          - type: heading
             heading: Weather card
           - type: custom:weather-card
             entity: weather.demo_weather_south

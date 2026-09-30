@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/power-flow-card.schema.json",
+  "title": "custom:power-flow-card",
+  "description": "Where the power comes from and where it goes: solar, battery and grid → home → rooms and devices, as a tree with animated flow.",
+  "type": "object",
+  "$defs": {
+    "sourceKeys": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Template allowed." },
+        "icon": { "$ref": "defs.schema.json#/$defs/icon" },
+        "color": {
+          "$ref": "defs.schema.json#/$defs/color",
+          "description": "Fixed colour of the node; overrides the flow colour and the rules"
+        },
+        "decimals": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "rules": {
+          "type": "array",
+          "items": { "$ref": "entity.schema.json#/$defs/rule" },
+          "description": "On the sensor's value (its own unit and sign): colour and icon of the node; first match wins"
+        },
+        "invert": {
+          "type": "boolean",
+          "description": "Flips the sign of the signed `power` sensor"
+        }
+      }
+    },
+    "solar": {
+      "allOf": [{ "$ref": "#/$defs/sourceKeys" }],
+      "properties": {
+        "type": { "const": "solar" },
+        "entity": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "Production (W or kW)"
+        }
+      },
+      "required": ["type", "entity"],
+      "unevaluatedProperties": false
+    },
+    "battery": {
+      "allOf": [{ "$ref": "#/$defs/sourceKeys" }],
+      "properties": {
+        "type": { "const": "battery" },
+        "power": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "Signed power: positive discharging, negative charging (`invert` flips it)"
+        },
+        "charge": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "Charging power (with `discharge`)"
+        },
+        "discharge": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "Discharging power (with `charge`)"
+        },
+        "soc": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "State of charge in %: the ring of the node"
+        }
+      },
+      "required": ["type"],
+      "oneOf": [{ "required": ["power"] }, { "required": ["charge", "discharge"] }],
+      "unevaluatedProperties": false
+    },
+    "grid": {
+      "allOf": [{ "$ref": "#/$defs/sourceKeys" }],
+      "properties": {
+        "type": { "const": "grid" },
+        "power": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "Signed power: positive import, negative export (`invert` flips it)"
+        },
+        "import": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "Import power (with an optional `export`)"
+        },
+        "export": { "$ref": "defs.schema.json#/$defs/entityId", "description": "Export power" },
+        "price": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "Price sensor: shown in the Expensive state (see `expensive_above`)"
+        },
+        "offline": {
+          "oneOf": [
+            { "$ref": "defs.schema.json#/$defs/entityId" },
+            {
+              "type": "object",
+              "properties": {
+                "entity": { "$ref": "defs.schema.json#/$defs/entityId" },
+                "state": {
+                  "type": "string",
+                  "description": "The state that means offline (default `on`)"
+                }
+              },
+              "required": ["entity"],
+              "additionalProperties": false
+            }
+          ],
+          "description": "An entity whose state says the grid is down (default: `on`): the node turns red and the card tints"
+        }
+      },
+      "required": ["type"],
+      "oneOf": [{ "required": ["power"] }, { "required": ["import"] }],
+      "unevaluatedProperties": false
+    },
+    "consumer": {
+      "type": "object",
+      "allOf": [{ "$ref": "entity.schema.json#/$defs/entityKeys" }],
+      "required": ["entity"],
+      "unevaluatedProperties": false
+    },
+    "group": {
+      "type": "object",
+      "properties": {
+        "group": { "type": "string", "description": "The room's name" },
+        "icon": { "$ref": "defs.schema.json#/$defs/icon" },
+        "entities": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              { "$ref": "defs.schema.json#/$defs/entityId" },
+              { "$ref": "#/$defs/consumer" }
+            ]
+          }
+        }
+      },
+      "required": ["group", "entities"],
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "type": { "const": "custom:power-flow-card" },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/solar" },
+          { "$ref": "#/$defs/battery" },
+          { "$ref": "#/$defs/grid" }
+        ]
+      },
+      "description": "The sources, in drawing order: solar arrays, batteries and grid connections"
+    },
+    "home": {
+      "oneOf": [{ "$ref": "defs.schema.json#/$defs/entityId" }, { "$ref": "#/$defs/consumer" }],
+      "description": "The home's consumption (W or kW). Without it the home is computed from the sources"
+    },
+    "consumers": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "defs.schema.json#/$defs/entityId" },
+          { "$ref": "#/$defs/consumer" },
+          { "$ref": "#/$defs/group" }
+        ]
+      },
+      "description": "Devices, or rooms with devices, to the right of the home"
+    },
+    "consumer_style": { "type": "string", "enum": ["nodes", "list"], "default": "nodes" },
+    "other": {
+      "type": "boolean",
+      "description": "An \"Other\" node for the home's consumption the consumers do not account for (default: true when consumers are given)"
+    },
+    "direction": { "type": "string", "enum": ["right", "down"], "default": "right" },
+    "flow_style": { "type": "string", "enum": ["dots", "lines", "arrows"], "default": "dots" },
+    "expensive_above": {
+      "type": "number",
+      "description": "Price at or above which importing shows the Expensive state and tints the card (the price sensor's unit)"
+    },
+    "rules": {
+      "type": "array",
+      "items": { "$ref": "entity.schema.json#/$defs/rule" },
+      "description": "On the home power in W (below / above): label pill, colour of the home node, tint; first match wins"
+    },
+    "title": { "type": "string", "description": "Header text. Template allowed." },
+    "icon": {
+      "$ref": "defs.schema.json#/$defs/icon",
+      "description": "Header icon. Template allowed."
+    },
+    "header_entities": { "$ref": "entity.schema.json#/$defs/headerEntities" }
+  },
+  "required": ["type", "sources"],
+  "allOf": [
+    { "$ref": "entity.schema.json#/$defs/historyOptions" },
+    { "$ref": "entity.schema.json#/$defs/actionDefaults" },
+    { "$ref": "entity.schema.json#/$defs/haExtras" }
+  ],
+  "unevaluatedProperties": false
+}

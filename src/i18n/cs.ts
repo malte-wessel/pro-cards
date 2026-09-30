@@ -91,6 +91,20 @@ const cs: Translation = {
   "rain.today": "{v} dnes",
   "rain.today_name": "Déšť dnes",
 
+  "power.stub_title": "Tok energie",
+  "power.home": "Dům",
+  "power.solar": "Solár",
+  "power.battery": "Baterie",
+  "power.grid": "Síť",
+  "power.other": "Ostatní",
+  "power.state.offline": "Síť offline · na baterii",
+  "power.state.expensive": "Drahé · {price}",
+  "power.state.exporting": "Export {v}",
+  "power.state.battery": "Na baterii",
+  "power.state.importing": "Odběr {v}",
+  "power.state.balanced": "Vyrovnáno",
+  "power.self_sufficient": "soběstačnost {pct}",
+
   "editor.default": "Výchozí: {value}",
 
   "editor.sun.title": "Název",
