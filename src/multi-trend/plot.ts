@@ -5,6 +5,7 @@ import { fmtNumber, fmtTime, textWidth } from "../shared/format.ts";
 import { bucketMean, clampedSeries, smoothPath } from "../shared/history.ts";
 import { nearestPoint, placeTip } from "../shared/hover.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
+import { clockTicks, timeStep } from "../shared/ticks.ts";
 import { qs } from "../shared/util.ts";
 import type { TrendHost } from "./config.ts";
 import {
@@ -16,7 +17,6 @@ import {
   mkScale,
   niceStep,
   rangeOf,
-  timeStep,
 } from "./scale.ts";
 
 const fmtDay = (hass: HomeAssistant | undefined, t: number) =>
@@ -136,9 +136,8 @@ export const drawPlot = (card: TrendHost) => {
   }
   if (showX) {
     const step = timeStep(cfg.hours_to_show);
-    const tz = new Date(t0).getTimezoneOffset() * 60e3;
     const xTicks: { t: number; x: number }[] = [];
-    for (let t = Math.ceil((t0 - tz) / step) * step + tz; t <= now; t += step) {
+    for (const t of clockTicks(t0, now, step)) {
       const x = xOf(t);
       if (x - gutter < 1) continue;
       xTicks.push({ t, x });

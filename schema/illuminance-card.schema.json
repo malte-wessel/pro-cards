@@ -10,7 +10,7 @@
       "$ref": "defs.schema.json#/$defs/entityId",
       "description": "Illuminance sensor in lx"
     },
-    "mode": { "type": "string", "enum": ["arc", "trend", "band"], "default": "trend" },
+    "mode": { "type": "string", "enum": ["arc", "trend", "band"], "default": "band" },
     "name": { "type": "string", "description": "Default: friendly name" },
     "hours_to_show": {
       "type": "number",

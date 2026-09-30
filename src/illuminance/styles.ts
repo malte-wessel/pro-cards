@@ -22,13 +22,18 @@ export const STYLE = `
     color: var(--primary-text-color); background: color-mix(in srgb, var(--pill) 12%, transparent); white-space: nowrap;
   }
   .plot { position: relative; min-width: 0; touch-action: pan-y; }
-  svg.abs { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+  svg.abs { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
   .hair { stroke: var(--secondary-text-color); stroke-width: 1; opacity: .6; }
-  .grid { stroke: var(--primary-text-color); stroke-opacity: .08; stroke-width: 1; }
+  .grid { stroke: var(--divider-color); stroke-width: 1; }
   .line { fill: none; stroke: color-mix(in srgb, var(--primary-text-color) 80%, transparent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: butt; }
   .dot { stroke: var(--ha-card-background, var(--card-background-color)); stroke-width: 2; fill: var(--primary-text-color); }
   .label { position: absolute; font: ${AXIS_FONT}; line-height: 12px; color: var(--secondary-text-color); white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
-  .label.zone { font-size: 9px; letter-spacing: .9px; text-transform: uppercase; }
+  .label.zone {
+    transform: translateY(-50%);
+    font-size: 9px; letter-spacing: .9px; text-transform: uppercase;
+    --halo: var(--ha-card-background, var(--card-background-color));
+    text-shadow: 0 0 2px var(--halo), 0 0 2px var(--halo), 0 0 3px var(--halo);
+  }
   .label.x { transform: translateX(-50%); }
   .label.x.first { transform: none; }
   .label.x.last { transform: translateX(-100%); }

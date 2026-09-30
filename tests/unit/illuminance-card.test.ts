@@ -6,6 +6,9 @@ import {
   posOf,
   colorAnchors,
   colorAt,
+  niceCeilLog,
+  scaleTop,
+  yLabels,
   DEFAULT_ZONES,
 } from "../../src/illuminance/zones.ts";
 import { mixHex, hexToRgb, rgbToHex, resolveHex } from "../../src/shared/color.ts";
@@ -41,6 +44,32 @@ describe("illuminance-card zones and scale", () => {
     expect(posOf(-5, 0.1, 100000)).toBe(0);
     expect(posOf(1e9, 0.1, 100000)).toBe(1);
   });
+  it("grows the scale top to a nice ceiling above the peak", () => {
+    expect(niceCeilLog(154652)).toBe(200000);
+    expect(niceCeilLog(100000)).toBe(100000);
+    expect(niceCeilLog(120000)).toBe(200000);
+    expect(niceCeilLog(3)).toBe(5);
+    expect(niceCeilLog(0)).toBe(0);
+    expect(scaleTop(100000, 80000)).toBe(100000);
+    expect(scaleTop(100000, 154652)).toBe(200000);
+    expect(scaleTop(100000, 600000)).toBe(1000000);
+  });
+  it("labels the y axis with the zone thresholds inside the scale", () => {
+    const z = mergeZones();
+    expect(yLabels(z, 0.1, 100000)).toEqual([
+      { val: 1, txt: "1" },
+      { val: 100, txt: "100" },
+      { val: 10000, txt: "10k" },
+      { val: 30000, txt: "30k" },
+    ]);
+    expect(yLabels(z, 1, 30000).map((l) => l.txt)).toEqual(["100", "10k"]);
+    expect(yLabels(mergeZones({ day: { max: 1500 } }), 0.1, 1e5).map((l) => l.txt)).toEqual([
+      "1",
+      "100",
+      "10k",
+      "1.5k",
+    ]);
+  });
   it("blends colours between zone anchors", () => {
     const zones = mergeZones().map((z) => ({ ...z, hex: resolveHex(z.color) }));
     const a = colorAnchors(zones, 0.1, 100000);
@@ -64,14 +93,14 @@ describe("illuminance-card editor and element", () => {
     const cfg = {
       type: "custom:illuminance-card",
       entity: "sensor.lx",
-      mode: "band",
+      mode: "trend",
       hours_to_show: 12,
       zones: { day: { label: "Daylight", max: 25000 } },
     };
     const data = configToForm(cfg);
     expect(data).toMatchObject({
       entity: "sensor.lx",
-      mode: "band",
+      mode: "trend",
       hours_to_show: 12,
       bucket_minutes: 30,
       z_day_label: "Daylight",
@@ -98,6 +127,7 @@ describe("illuminance-card editor and element", () => {
     const el = new IlluminanceCard();
     expect(() => el.setConfig({})).toThrow(/entity/);
     el.setConfig({ entity: "sensor.lx", mode: "nope" });
+    expect(el._config.mode).toBe("band"); // the default, also for an unknown mode
     expect(el.getGridOptions()).toEqual({ columns: 12, rows: "auto", min_columns: 6 });
     expect(el.getCardSize()).toBe(4);
     expect(

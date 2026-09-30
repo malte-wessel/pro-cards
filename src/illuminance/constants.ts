@@ -8,7 +8,7 @@ export const DEFAULTS: {
   min_lx: number;
   max_lx: number;
 } = {
-  mode: "trend",
+  mode: "band",
   hours_to_show: 24,
   bucket_minutes: 30,
   min_lx: 0.1,

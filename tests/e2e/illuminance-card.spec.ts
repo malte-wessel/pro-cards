@@ -24,7 +24,15 @@ test("trend mode draws zones, the series and the current zone pill", async ({ pa
   await expect(c.locator(".valrow .pill")).toHaveText("Day");
   await expect(c.locator("svg rect")).toHaveCount(5);
   await expect(c.locator("svg path.line")).toHaveCount(1);
-  await expect(c.locator(".label.zone")).toContainText(["Twilight", "Overcast", "Day"]);
+  await expect(c.locator(".label.zone")).toContainText([
+    "Night",
+    "Twilight",
+    "Overcast",
+    "Day",
+    "Sun",
+  ]);
+  await expect(c.locator(".label.y")).toContainText(["1", "100", "10k", "30k"]);
+  await expect(c.locator(".label.x").first()).toHaveText(/:00$/);
   await expect(c.locator(".label.x.last")).toHaveText("now");
   await setState(page, "sensor.illuminance", "50");
   await expect(c.locator(".valrow .pill")).toHaveText("Twilight");

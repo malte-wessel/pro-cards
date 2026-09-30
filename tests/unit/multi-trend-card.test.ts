@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { niceStep, decimalsForStep, timeStep, DEFAULT_HOURS } from "../../src/multi-trend/scale.ts";
+import { niceStep, decimalsForStep, DEFAULT_HOURS } from "../../src/multi-trend/scale.ts";
 import { configToForm, formToConfig, editorSchema } from "../../src/multi-trend/editor.ts";
 import { MultiTrendCard } from "../../src/multi-trend-card.ts";
 import type { MultiTrendCardConfig } from "../../src/multi-trend/config.ts";
@@ -18,15 +18,6 @@ describe("multi-trend-card helpers", () => {
     expect(decimalsForStep(0.5)).toBe(1);
     expect(decimalsForStep(0.25)).toBe(2);
     expect(decimalsForStep(0.001)).toBe(3);
-  });
-  it("chooses time tick intervals per window", () => {
-    const h = 3600e3;
-    expect(timeStep(2)).toBe(0.5 * h);
-    expect(timeStep(6)).toBe(h);
-    expect(timeStep(12)).toBe(2 * h);
-    expect(timeStep(24)).toBe(4 * h);
-    expect(timeStep(48)).toBe(12 * h);
-    expect(timeStep(168)).toBe(24 * h);
   });
   it("round-trips the editor form", () => {
     const cfg: MultiTrendCardConfig = {

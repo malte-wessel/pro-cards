@@ -3,13 +3,15 @@ import { textWidth } from "../../shared/format.ts";
 import { bucketMean, clampedSeries, smoothPath } from "../../shared/history.ts";
 import { qs } from "../../shared/util.ts";
 import type { IlluminanceHost } from "../config.ts";
-import { logOf, posOf } from "../zones.ts";
+import { posOf, scaleTop, yLabels } from "../zones.ts";
 import { addLabel, plotShell, windowOf, xTicks } from "./plot.ts";
+
+const LABEL_H = 12; // line height of the axis and zone labels
 
 export const renderTrend = (card: IlluminanceHost, body: HTMLElement, v: number | null) => {
   const cfg = card._config,
     zones = cfg.zonesList;
-  const plotH = 150,
+  const plotH = 160,
     xAxisH = 18;
   const plot = plotShell(card, body, v, plotH + xAxisH);
   const svg = qs<SVGSVGElement>(plot, "svg"),
@@ -17,13 +19,14 @@ export const renderTrend = (card: IlluminanceHost, body: HTMLElement, v: number 
   const W = Math.max(plot.clientWidth, 10);
   svg.setAttribute("viewBox", `0 0 ${W} ${plotH + xAxisH}`);
   const { now, t0 } = windowOf(card);
-  // y gutter for scale labels (1 / 100 / 10k ...)
-  const yTicks: { val: number; txt: string }[] = [];
-  for (let e = Math.ceil(logOf(cfg.min_lx)); e <= Math.floor(logOf(cfg.max_lx)); e++) {
-    if (e % 2 !== 0) continue;
-    const val = Math.pow(10, e);
-    yTicks.push({ val, txt: val >= 1000 ? `${val / 1000}k` : String(val) });
-  }
+  // series: clamp to window, downsample to ~2 px buckets
+  const pts = clampedSeries(card._series, t0, now);
+  // the scale spans [min_lx, max_lx], grown to a nice ceiling when the window's peak is higher
+  let peak = 0;
+  for (const p of pts) if (p.v > peak) peak = p.v;
+  const top = scaleTop(cfg.max_lx, peak);
+  // y gutter for the threshold labels (1 / 100 / 10k / 30k)
+  const yTicks = yLabels(zones, cfg.min_lx, top);
   let gutter = 0;
   yTicks.forEach((tk) => {
     gutter = Math.max(gutter, textWidth(tk.txt));
@@ -32,24 +35,37 @@ export const renderTrend = (card: IlluminanceHost, body: HTMLElement, v: number 
   const PW = W - gutter;
   if (PW < 20) return; // not laid out yet; the ResizeObserver re-renders once the width is known
   const xOf = (t: number) => gutter + ((t - t0) / (now - t0)) * PW;
-  const yOf = (val: number) => plotH - posOf(val, cfg.min_lx, cfg.max_lx) * plotH;
+  const yOf = (val: number) => plotH - posOf(val, cfg.min_lx, top) * plotH;
   let html = "";
-  // zone bands + threshold gridlines + zone labels
+  // zone bands + threshold gridlines + zone labels (right aligned, centred in the band)
   let lo = cfg.min_lx;
   zones.forEach((z, i) => {
-    const hi = i === zones.length - 1 ? cfg.max_lx : Math.min(z.max, cfg.max_lx);
+    const hi = i === zones.length - 1 ? top : Math.min(z.max, top);
     if (hi <= lo) return;
     const y1 = yOf(hi),
       y2 = yOf(lo);
-    html += `<rect x="${gutter}" y="${y1.toFixed(1)}" width="${PW}" height="${(y2 - y1).toFixed(1)}" fill="${z.css}" opacity=".06"/>`;
+    html += `<rect x="${gutter}" y="${y1.toFixed(1)}" width="${PW}" height="${(y2 - y1).toFixed(1)}" fill="${z.css}" opacity=".12"/>`;
     if (i > 0)
       html += `<line class="grid" x1="${gutter}" x2="${W}" y1="${Math.round(y2) + 0.5}" y2="${Math.round(y2) + 0.5}"/>`;
-    if (y2 - y1 >= 11) addLabel(labels, "zone", z.label, gutter + 6, y2 - 12);
+    if (y2 - y1 >= LABEL_H) {
+      const el = document.createElement("div");
+      el.className = "label zone";
+      el.textContent = z.label;
+      el.style.right = "14px"; // clear of the dot at "now"
+      el.style.top = `${(y1 + y2) / 2}px`;
+      labels.appendChild(el);
+    }
     lo = hi;
   });
-  yTicks.forEach((tk) => addLabel(labels, "y", tk.txt, 0, yOf(tk.val), gutter - 6));
-  // series: clamp to window, downsample to ~2 px buckets
-  const pts = clampedSeries(card._series, t0, now);
+  html += `<line class="grid" x1="${gutter}" x2="${W}" y1="${plotH - 0.5}" y2="${plotH - 0.5}"/>`;
+  // threshold labels in the gutter; one that would touch the previous one is left out
+  let lastY = Infinity;
+  yTicks.forEach((tk) => {
+    const y = yOf(tk.val);
+    if (lastY - y < LABEL_H) return;
+    addLabel(labels, "y", tk.txt, 0, y, gutter - 6);
+    lastY = y;
+  });
   const nb = Math.max(1, Math.floor(PW / 2));
   const sampled = bucketMean(pts, t0, now, nb);
   card._sampled = sampled;

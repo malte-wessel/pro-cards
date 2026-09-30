@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.3 (unreleased)
+
+- Illuminance card: `band` is the default mode (was `trend`)
+- Illuminance card: the trend plot labels its time axis at whole clock hours, its y axis with the zone thresholds (1, 100, 10k, 30k) instead of even decades, keeps the zone names right aligned and clear of the line, grows the scale to the window's peak instead of cutting it off, tints the bands more visibly and no longer clips the current-value dot at the right edge
+
 ## 1.0.2 (2026-09-29)
 
 - Row items show the name below the icon by default (`name_position: below`); columns keep `above`

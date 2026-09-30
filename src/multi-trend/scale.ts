@@ -21,17 +21,6 @@ export const decimalsForStep = (step: number) => {
   return d;
 };
 
-// time tick interval (ms) for a window of `hours`
-export const timeStep = (hours: number) => {
-  const h = 3600e3;
-  if (hours <= 3) return 0.5 * h;
-  if (hours <= 8) return h;
-  if (hours <= 14) return 2 * h;
-  if (hours <= 30) return 4 * h;
-  if (hours <= 60) return 12 * h;
-  return 24 * h;
-};
-
 // a value → y scale for the band [top, top + h], padded by 10 % and `topPad` px at the top
 export interface Scale {
   top: number;

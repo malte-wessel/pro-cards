@@ -6,7 +6,7 @@
  * Config:
  *   type: custom:illuminance-card
  *   entity: sensor.xyz_illuminance   # required
- *   mode: trend                      # arc | trend | band
+ *   mode: band                       # arc | trend | band
  *   name: Outdoor light              # optional (default: friendly name)
  *   hours_to_show: 24                # trend / band
  *   bucket_minutes: 30               # band
@@ -74,7 +74,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
         (id) =>
           id.startsWith("sensor.") && hass?.states[id]?.attributes.device_class === "illuminance",
       ) || (entities || []).find((id) => id.startsWith("sensor."));
-    return { entity: e || "", mode: "trend" };
+    return { entity: e || "", mode: "band" };
   }
 
   constructor() {

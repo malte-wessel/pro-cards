@@ -4,6 +4,7 @@
 import { fmtNumber, fmtTime, textWidth } from "../../shared/format.ts";
 import type { HomeAssistant } from "../../shared/ha.ts";
 import { nearestPoint, placeTip } from "../../shared/hover.ts";
+import { clockTicks, timeStep } from "../../shared/ticks.ts";
 import { qs } from "../../shared/util.ts";
 import type { IlluminanceHost, ThemedZone } from "../config.ts";
 import { zoneOf } from "../zones.ts";
@@ -80,7 +81,7 @@ export const addLabel = (
   container.appendChild(el);
 };
 
-// time labels every 6 h from the window start, plus "now" at the right edge
+// time labels at clock boundaries of the window's tick step, plus "now" at the right edge
 export const xTicks = (
   card: IlluminanceHost,
   container: HTMLElement,
@@ -90,17 +91,18 @@ export const xTicks = (
   t0: number,
   now: number,
 ) => {
-  const stepMs = 6 * 3600e3;
   const nowLabel = "now",
     nowW = textWidth(nowLabel);
+  const x0 = xOf(t0);
   let lastRight = -Infinity;
-  for (let t = t0; t < now; t += stepMs) {
+  for (const t of clockTicks(t0, now, timeStep(card._config.hours_to_show))) {
     const x = xOf(t),
       txt = fmtTime(card._hass, t),
       w = textWidth(txt);
-    const left = t === t0 ? x : x - w / 2;
+    const first = x - w / 2 < x0;
+    const left = first ? x : x - w / 2;
     if (left < lastRight + 8 || left + w > W - nowW - 8) continue;
-    addLabel(container, t === t0 ? "x first" : "x", txt, x, plotH + 4);
+    addLabel(container, first ? "x first" : "x", txt, x, plotH + 4);
     lastRight = left + w;
   }
   addLabel(container, "x last", nowLabel, W, plotH + 4);

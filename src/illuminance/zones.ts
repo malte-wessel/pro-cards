@@ -45,6 +45,23 @@ export const mergeZones = (overrides?: ZoneOverrides | null): Zone[] =>
 export const zoneOf = (zones: readonly Zone[], v: number): Zone =>
   zones.find((z) => v < z.max) || zones[zones.length - 1];
 export const logOf = (v: number) => Math.log10(Math.max(v, 0.1));
+// the smallest of 1 / 2 / 5 x 10^n that is >= v (154652 -> 200000)
+export const niceCeilLog = (v: number) => {
+  if (!(v > 0)) return 0;
+  const mag = Math.pow(10, Math.floor(Math.log10(v)));
+  const r = v / mag;
+  return (r <= 1 ? 1 : r <= 2 ? 2 : r <= 5 ? 5 : 10) * mag;
+};
+// top of the trend scale: `maxLx` unless the window's peak is higher, then a nice ceiling above it
+export const scaleTop = (maxLx: number, peak: number) => (peak > maxLx ? niceCeilLog(peak) : maxLx);
+// compact lux text for the axis: 1, 100, 10k, 30k, 1.5k
+export const fmtAxisLx = (v: number) =>
+  v >= 1000 ? `${Math.round((v / 1000) * 10) / 10}k` : String(v);
+// y axis labels: the zone thresholds strictly inside (min, max)
+export const yLabels = (zones: readonly Zone[], min: number, max: number) =>
+  zones
+    .filter((z) => z.max > min && z.max < max)
+    .map((z) => ({ val: z.max, txt: fmtAxisLx(z.max) }));
 // 0..1 position of v on the log scale [min, max]
 export const posOf = (v: number, min: number, max: number) =>
   Math.max(0, Math.min(1, (logOf(v) - logOf(min)) / (logOf(max) - logOf(min))));
