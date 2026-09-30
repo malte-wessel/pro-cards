@@ -1,7 +1,18 @@
 import { describe, it, expect } from "vitest";
-import { normalizeEntity, type NormalizeCtx, type RawEntity } from "../../../src/entity/config.ts";
-import { fmtValue, modelOf, nameOf, tplOf, type FormatCtx } from "../../../src/entity/model.ts";
-import type { HassEntity, HomeAssistant } from "../../../src/shared/ha.ts";
+import {
+  normalizeEntity,
+  type NormalizeCtx,
+  type RawEntity,
+} from "../../../../src/shared/entity/config.ts";
+import {
+  fmtValue,
+  modelOf,
+  nameOf,
+  tplOf,
+  unitOf,
+  type FormatCtx,
+} from "../../../../src/shared/entity/model.ts";
+import type { HassEntity, HomeAssistant } from "../../../../src/shared/ha.ts";
 
 const actx: NormalizeCtx = {
   type: "t",
@@ -104,5 +115,58 @@ describe("model", () => {
     expect(missing.fmt.text).toBe("–");
     const german = modelOf(ctx({}, { locale: { language: "de" } }), ent({}));
     expect(german.look.label).toBe("sensor.x nicht gefunden");
+  });
+});
+
+describe("names and units of items built by a card", () => {
+  const ctx: FormatCtx = {
+    hass: { states: {}, locale: { language: "de" } } as unknown as FormatCtx["hass"],
+    tplResult: new Map(),
+  };
+  const nctx: NormalizeCtx = {
+    type: "x",
+    tap: { action: "none" },
+    hold: { action: "none" },
+    dbl: { action: "none" },
+  };
+  const st = {
+    entity_id: "weather.home",
+    state: "sunny",
+    attributes: {
+      friendly_name: "Home",
+      temperature_unit: "°F",
+      wind_speed_unit: "mph",
+      unit_of_measurement: "x",
+    },
+  } as unknown as HassEntity;
+  it("translates nameKey unless a name is set and falls back to the friendly name", () => {
+    const item = normalizeEntity({ entity: "weather.home", attribute: "humidity" }, nctx, "a");
+    expect(nameOf(ctx, item, st)).toBe("Home");
+    item.nameKey = "weather.attr.humidity";
+    expect(nameOf(ctx, item, st)).toBe("Luftfeuchtigkeit");
+    item.name = "Feuchte";
+    expect(nameOf(ctx, item, st)).toBe("Feuchte");
+  });
+  it("reads the unit from the config, the state, <attribute>_unit or unitAttr", () => {
+    const state = normalizeEntity({ entity: "weather.home" }, nctx, "a");
+    expect(unitOf(state, st)).toBe("x");
+    const wind = normalizeEntity({ entity: "weather.home", attribute: "wind_speed" }, nctx, "a");
+    expect(unitOf(wind, st)).toBe("mph");
+    const feels = normalizeEntity(
+      { entity: "weather.home", attribute: "apparent_temperature" },
+      nctx,
+      "a",
+    );
+    expect(unitOf(feels, st)).toBe("");
+    feels.unitAttr = "temperature_unit";
+    expect(unitOf(feels, st)).toBe("°F");
+    const fixed = normalizeEntity(
+      { entity: "weather.home", attribute: "humidity", unit: "%" },
+      nctx,
+      "a",
+    );
+    expect(unitOf(fixed, st)).toBe("%");
+    expect(unitOf(fixed, undefined)).toBe("%");
+    expect(unitOf(wind, undefined)).toBe("");
   });
 });

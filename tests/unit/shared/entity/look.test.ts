@@ -4,9 +4,9 @@ import {
   type NormalizeCtx,
   type RawEntity,
   type Rule,
-} from "../../../src/entity/config.ts";
-import type { HassEntity, HomeAssistant } from "../../../src/shared/ha.ts";
-import type { ValueModel } from "../../../src/entity/look.ts";
+} from "../../../../src/shared/entity/config.ts";
+import type { HassEntity, HomeAssistant } from "../../../../src/shared/ha.ts";
+import type { ValueModel } from "../../../../src/shared/entity/look.ts";
 import {
   asText,
   matchRule,
@@ -14,7 +14,7 @@ import {
   progressOf,
   scaleOf,
   resolveLook,
-} from "../../../src/entity/look.ts";
+} from "../../../../src/shared/entity/look.ts";
 
 const ctx: NormalizeCtx = {
   type: "t",

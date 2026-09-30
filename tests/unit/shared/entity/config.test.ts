@@ -9,9 +9,13 @@ import {
   normalizeActionDefaults,
   normalizeHistoryOptions,
   collectTemplates,
-} from "../../../src/entity/config.ts";
-import { ITEM_DEFAULTS } from "../../../src/entity/constants.ts";
-import type { EntityCardConfig, NormalizeCtx, RawEntity } from "../../../src/entity/config.ts";
+} from "../../../../src/shared/entity/config.ts";
+import { ITEM_DEFAULTS } from "../../../../src/shared/entity/constants.ts";
+import type {
+  EntityCardConfig,
+  NormalizeCtx,
+  RawEntity,
+} from "../../../../src/shared/entity/config.ts";
 
 const ctx: NormalizeCtx = {
   type: "test-card",

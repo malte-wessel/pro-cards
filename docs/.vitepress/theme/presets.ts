@@ -122,4 +122,16 @@ mode: trend
 name: Outdoor light
 zones: { night: { label: Night }, twilight: { label: Twilight }, overcast: { label: Overcast }, day: { label: Day }, sun: { label: Sun } }
 `,
+  "Weather card": `type: custom:weather-card
+entity: weather.home
+title: Home
+attributes: [humidity, wind_speed, pressure]
+temperature_rules:
+  - { below: 12, color: blue, label: Cool }
+  - { below: 20, color: green, label: Mild }
+  - { above: 20, color: amber, label: Warm }
+sections:
+  - { type: hourly, hours_to_show: 12 }
+  - { type: daily, days: 7 }
+`,
 };

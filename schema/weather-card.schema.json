@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/weather-card.schema.json",
+  "title": "custom:weather-card",
+  "description": "Current conditions, attributes and the hourly / daily forecast of a weather entity: a tile, or a hero lead with attribute items and sections.",
+  "type": "object",
+  "properties": {
+    "type": { "const": "custom:weather-card" },
+    "entity": {
+      "type": "string",
+      "pattern": "^weather\\.[a-z0-9_]+$",
+      "description": "The weather entity"
+    },
+    "layout": {
+      "type": "string",
+      "enum": ["tile", "hero"],
+      "description": "Default: tile, or hero once there is a title, attributes or sections"
+    },
+    "name": {
+      "type": "string",
+      "description": "tile: the name (default: friendly name); hero: the first line (default: the condition). Template allowed."
+    },
+    "secondary": {
+      "type": "string",
+      "description": "The line under the name / temperature (default: temperature · condition, or labels · high / low). Template allowed."
+    },
+    "color": {
+      "$ref": "defs.schema.json#/$defs/color",
+      "description": "Fixed condition colour; overrides rules"
+    },
+    "decimals": { "type": "integer", "minimum": 0, "maximum": 3 },
+    "rules": {
+      "type": "array",
+      "items": { "$ref": "entity.schema.json#/$defs/rule" },
+      "description": "On the condition (state: rainy …): colour, icon, label and tint; first match wins"
+    },
+    "temperature_rules": {
+      "type": "array",
+      "items": { "$ref": "entity.schema.json#/$defs/rule" },
+      "description": "On the temperature (below / above): colour of the temperature, bars and lines, label and tint"
+    },
+    "attributes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+            "description": "An attribute of the weather entity (humidity, pressure, wind_speed, wind_gust_speed, wind_bearing, apparent_temperature, dew_point, uv_index, cloud_coverage, visibility, ozone …)"
+          },
+          { "$ref": "entity.schema.json#/$defs/entity" }
+        ]
+      },
+      "description": "Items under the lead: weather attributes by name or any entity"
+    },
+    "attributes_layout": {
+      "type": "string",
+      "enum": ["row", "list"],
+      "default": "row"
+    },
+    "title": { "type": "string", "description": "Header text. Template allowed." },
+    "icon": {
+      "$ref": "defs.schema.json#/$defs/icon",
+      "description": "Header icon. Template allowed."
+    },
+    "header_entities": { "$ref": "entity.schema.json#/$defs/headerEntities" },
+    "columns": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4,
+      "description": "Default for grid sections"
+    },
+    "align": {
+      "$ref": "entity.schema.json#/$defs/align",
+      "description": "Default for every entity section"
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "The next hours as a chart, sparkline or columns",
+            "properties": {
+              "type": { "const": "hourly" },
+              "hours_to_show": { "type": "integer", "minimum": 1, "maximum": 48, "default": 12 },
+              "bucket_minutes": {
+                "type": "number",
+                "minimum": 60,
+                "default": 60,
+                "description": "columns: bucket size"
+              },
+              "visual": {
+                "type": "string",
+                "enum": ["chart", "sparkline", "columns"],
+                "default": "chart",
+                "description": "chart: lanes per `show`; sparkline: temperature; columns: rain"
+              },
+              "show": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "enum": ["temperature", "precipitation", "probability", "wind"]
+                },
+                "description": "chart lanes, in this order (default: temperature, precipitation)"
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "One forecast quantity as its own section: an hourly chart, sparkline or columns with a title line",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["temperature", "precipitation", "probability", "wind"]
+              },
+              "title": { "type": "string", "description": "Default: the quantity's name" },
+              "hours_to_show": { "type": "integer", "minimum": 1, "maximum": 48, "default": 12 },
+              "bucket_minutes": {
+                "type": "number",
+                "minimum": 60,
+                "default": 60,
+                "description": "columns: bucket size"
+              },
+              "visual": {
+                "type": "string",
+                "enum": ["chart", "sparkline", "columns"],
+                "default": "chart"
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "The next days as a list of range bars, columns or a chart",
+            "properties": {
+              "type": { "const": "daily" },
+              "days": { "type": "integer", "minimum": 1, "maximum": 10, "default": 7 },
+              "layout": {
+                "type": "string",
+                "enum": ["list", "columns", "chart"],
+                "default": "list"
+              },
+              "show": {
+                "type": "array",
+                "items": { "type": "string", "enum": ["probability", "precipitation"] },
+                "description": "Rain figures per day (default: probability); an empty list hides them"
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "An entity group, as in the entity-sections-card",
+            "properties": {
+              "type": { "const": "entities" },
+              "title": { "type": "string", "description": "Line above the group" },
+              "divider": { "type": "boolean", "default": false }
+            },
+            "required": ["entities"],
+            "allOf": [{ "$ref": "entity.schema.json#/$defs/groupKeys" }],
+            "unevaluatedProperties": false
+          }
+        ]
+      }
+    }
+  },
+  "required": ["type", "entity"],
+  "allOf": [
+    { "$ref": "entity.schema.json#/$defs/itemOptions" },
+    { "$ref": "entity.schema.json#/$defs/historyOptions" },
+    { "$ref": "entity.schema.json#/$defs/actionDefaults" },
+    { "$ref": "entity.schema.json#/$defs/haExtras" }
+  ],
+  "unevaluatedProperties": false
+}

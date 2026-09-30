@@ -1,6 +1,6 @@
 # Pro Cards – guide for coding agents
 
-Six dependency-free Home Assistant custom cards in one HACS bundle, plus a VitePress docs site whose
+Seven dependency-free Home Assistant custom cards in one HACS bundle, plus a VitePress docs site whose
 examples run the real cards against a simulated home. Read this file first; the docs site and the code
 explain the rest.
 
@@ -8,12 +8,13 @@ explain the rest.
 
 | Path                                                       | What it is                                                                                                                                           |
 | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/*.ts`                                                 | The six card elements. Plain web components (shadow DOM, inline SVG), no framework, TypeScript. **Source of truth.**                                 |
+| `src/*.ts`                                                 | The seven card elements. Plain web components (shadow DOM, inline SVG), no framework, TypeScript. **Source of truth.**                               |
 | `src/shared/`                                              | Modules every card may use: `ha` (types), `util`, `color`, `format`, `history` (fetch, buckets, smooth path), `hover`, `card`, `editor`, `i18n`.     |
 | `src/i18n/`                                                | One file per language (`en.ts` is the source and the key type, `de.ts` …); picked by `hass.locale.language` through `src/shared/i18n.ts`.            |
-| `src/entity/`                                              | Modules shared by the three entity cards: `config`, `look`, `model`, `render/*`, `base` (the common element class).                                  |
+| `src/shared/entity/`                                       | The entity layer: `config`, `look`, `model`, `render/*`, `base` (the common element class) shared by the entity cards.                               |
 | `src/multi-trend/`, `src/sun-path/`, `src/illuminance/`    | One folder per remaining card: `config` (types), `editor`, `styles`, its pure math (`scale`, `solar`, `zones`) and the plot / render modules.        |
-| `src/index.ts`                                             | Bundle entry: imports the six cards, prints the version banner.                                                                                      |
+| `src/weather/`                                             | The weather card: `config`, `conditions`, `forecast` (pure), `render/*` (current, hourly, daily, the lane chart), `styles`. Extends the entity base. |
+| `src/index.ts`                                             | Bundle entry: imports the seven cards, prints the version banner.                                                                                    |
 | `dist/pro-cards.js`                                        | Built bundle, **committed**. CI fails if it differs from `npm run build`.                                                                            |
 | `schema/*.schema.json`                                     | JSON Schema for every card config. Docs examples and tests are validated against it.                                                                 |
 | `docs/`                                                    | VitePress site. `docs/.vitepress/theme/ha-shim/` is the Home Assistant stand-in (elements, demo world, hass object, Jinja subset).                   |
@@ -25,7 +26,7 @@ explain the rest.
 ## Rules that are not obvious from the code
 
 1. **Edit `src/`, then `npm run build`.** Never edit `dist/`. A change to a card without a rebuilt `dist/pro-cards.js` fails CI.
-2. **Cards stay dependency-free.** No npm runtime deps, no Lit. Every card may import `src/shared/` and its own folder; the three entity cards also share `src/entity/`. A card never imports another card or another card's folder. Colours come from HA theme tokens (`var(--<name>-color)`), never hard-coded hex in CSS (a hex fallback table for blending is fine). No fixed pixel widths on cards; grid items need `min-width: 0` and `contain: inline-size`.
+2. **Cards stay dependency-free.** No npm runtime deps, no Lit. Every card may import `src/shared/` (including `src/shared/entity/`) and its own folder. A card never imports another card or another card's folder. Colours come from HA theme tokens (`var(--<name>-color)`), never hard-coded hex in CSS (a hex fallback table for blending is fine). No fixed pixel widths on cards; grid items need `min-width: 0` and `contain: inline-size`.
 3. **Everything under `src/` is a plain TypeScript ES module** (`strict` on, imports carry explicit `.ts` extensions, `npm run typecheck` runs `vue-tsc --noEmit` over the whole repo). Types for the Home Assistant surface live in `src/shared/ha.ts`; `home-assistant-js-websocket` is a type-only devDependency and never reaches the bundle. Pure helpers live in the card's folder (or `src/shared/` when more than one card needs them) and get a unit test that imports them directly; the element files export only their class. The bundle is an iife, so exports cost nothing.
 4. **User-facing strings inside the cards go through `t(hass, key)`** (`src/shared/i18n.ts`): English in `src/i18n/en.ts` is the source and the fallback, other languages are one file each in `src/i18n/`, picked by `hass.locale.language`. Never write a rendered word or an editor label as a literal. Defaults must resolve at render time, not in `setConfig` (no `hass` yet). Users' own words (`labels` / `zones` / rule `label`, `title`, `name`) are never translated. Config errors, console messages and the card picker entries stay English.
 5. **Docs examples must use entities of the demo world** (`docs/.vitepress/theme/ha-shim/world.ts`). An unknown entity renders as "missing" and looks like a bug.
@@ -57,3 +58,4 @@ Then update `CHANGELOG.md` under the next version and, for behaviour changes, th
 - Explicit `color` / `icon` on an entity **override** the rules (fixed look); leave them out to let the value drive the look.
 - `tint_card` lives on a rule and does nothing unless that rule matches. Rules match in the order written, first match wins (no sorting).
 - The multi trend card's `getGridOptions` rows depend on the layout (2 + entities in lanes).
+- The weather card is a `tile` only when nothing but the entity keys is set; a `title`, `attributes` or `sections` make it a `hero`. Its condition colour ignores HA's state colour (one amber for every condition) and is primary unless a rule or `color` says otherwise.

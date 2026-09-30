@@ -1,6 +1,6 @@
 // CSS of the entity cards, in pieces so every card ships only what it renders.
 // Colours come from HA theme tokens; --fe-color is set per row from the resolved look.
-import { AXIS_FONT } from "../../shared/constants.ts";
+import { AXIS_FONT } from "../../constants.ts";
 
 export const STYLE_BASE = `
   :host { display: block; min-width: 0; }

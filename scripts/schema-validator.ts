@@ -13,6 +13,7 @@ const TYPES = [
   "multi-trend-card",
   "sun-path-card",
   "illuminance-card",
+  "weather-card",
 ];
 
 export const makeValidator = () => {

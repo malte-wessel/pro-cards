@@ -2,11 +2,11 @@
 // ctx = { hass, tplResult, ... } so it runs without a DOM element.
 import { asText, progressOf, readValue, resolveLook, type Look, type ValueModel } from "./look.ts";
 import type { EntityCardConfig, EntityItem } from "./config.ts";
-import { fmtNumber as fmtNum, fmtTime as fmtT, langOf as lang } from "../shared/format.ts";
-import type { HassEntity, HomeAssistant } from "../shared/ha.ts";
-import type { Point } from "../shared/history.ts";
-import { t } from "../shared/i18n.ts";
-import { decimalsOf, isTemplate } from "../shared/util.ts";
+import { fmtNumber as fmtNum, fmtTime as fmtT, langOf as lang } from "../format.ts";
+import type { HassEntity, HomeAssistant } from "../ha.ts";
+import type { Point } from "../history.ts";
+import { t } from "../i18n.ts";
+import { decimalsOf, isTemplate } from "../util.ts";
 
 // the card's bound pointer handlers for the history plots
 export interface PlotHandlers {
@@ -48,8 +48,30 @@ export const tplOf = (ctx: FormatCtx, t: string | null): string | null =>
   isTemplate(t) ? asText(ctx.tplResult.get(t)) : t;
 export const stateOf = (ctx: FormatCtx, ent: EntityItem) =>
   ent.entity ? ctx.hass?.states[ent.entity] : undefined;
+// the name: the config name (template allowed), a translated default (attribute items of the
+// weather card), the friendly name, the entity id
 export const nameOf = (ctx: FormatCtx, ent: EntityItem, st: HassEntity | undefined): string =>
-  tplOf(ctx, ent.name) || st?.attributes?.friendly_name || ent.entity || "";
+  tplOf(ctx, ent.name) ||
+  (ent.nameKey ? t(ctx.hass, ent.nameKey) : null) ||
+  st?.attributes?.friendly_name ||
+  ent.entity ||
+  "";
+// the unit: the config unit, the entity's unit for the state, `<attribute>_unit` for an attribute
+// (how weather entities carry temperature_unit, wind_speed_unit …)
+export const unitOf = (ent: EntityItem, st: HassEntity | undefined): string => {
+  if (ent.unit !== null) return ent.unit;
+  const a = st?.attributes;
+  if (!a) return "";
+  const k = ent.valueSrc.kind;
+  const u = ent.unitAttr
+    ? a[ent.unitAttr]
+    : k === "state"
+      ? a.unit_of_measurement
+      : k === "attribute"
+        ? a[`${ent.valueSrc.key}_unit`]
+        : null;
+  return typeof u === "string" ? u : "";
+};
 export const fmtTime = (ctx: FormatCtx, t: number | Date) => fmtT(ctx.hass, t);
 
 export const fmtNumber = (
@@ -62,11 +84,7 @@ export const fmtNumber = (
   const dec =
     ent.decimals ?? Math.min(2, decimalsOf(ent.valueSrc.kind === "state" ? st?.state : v));
   const n = fmtNum(ctx.hass, v, dec);
-  const unit: string = withUnit
-    ? (ent.unit ??
-      (ent.valueSrc.kind === "state" ? st?.attributes?.unit_of_measurement : null) ??
-      "")
-    : "";
+  const unit = withUnit ? unitOf(ent, st) : "";
   return unit ? `${n} ${unit}` : n;
 };
 // formatted value: { text, num, unit } — num / unit split for the hero and cell "big" value
@@ -86,10 +104,7 @@ export const fmtValue = (
       st &&
       typeof hass?.formatEntityState === "function";
     let num: string,
-      unit: string =
-        ent.unit ??
-        (ent.valueSrc.kind === "state" ? st?.attributes?.unit_of_measurement : null) ??
-        "";
+      unit = unitOf(ent, st);
     if (useHa && hass?.formatEntityState && st) {
       let s: string;
       try {

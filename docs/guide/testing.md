@@ -14,12 +14,12 @@ A fourth, manual layer is a real Home Assistant in the repository's devcontainer
 
 ## Unit tests
 
-`tests/unit/*.test.ts`, one file per card (the three entity cards share `entity-cards.test.ts`), `tests/unit/shared/` for the modules every card uses, `tests/unit/entity/` for the modules the entity cards share, and one each for the docs' template engine, demo world and hass shim.
+`tests/unit/*.test.ts`, one file per card (the three entity cards share `entity-cards.test.ts`), `tests/unit/shared/` for the modules every card uses, `tests/unit/shared/entity/` for the entity layer the entity cards share, and one each for the docs' template engine, demo world and hass shim.
 
-Every card is built from plain ES modules: `src/shared/` (colours, formatting, history fetch and bucketing, the editor base), `src/entity/` for the three entity cards and one folder per other card (`src/multi-trend/`, `src/sun-path/`, `src/illuminance/`). Tests import straight from `src/`:
+Every card is built from plain ES modules: `src/shared/` (colours, formatting, history fetch and bucketing, the editor base), `src/shared/entity/` for the layer the entity cards share, and one folder per other card (`src/multi-trend/`, `src/sun-path/`, `src/illuminance/`). Tests import straight from `src/`:
 
 ```js
-import { matchRule } from "../../src/entity/look.ts";
+import { matchRule } from "../../src/shared/entity/look.ts";
 
 it("matches below exclusively and above inclusively", () => {
   const r = { state: null, below: 20, above: 10 };

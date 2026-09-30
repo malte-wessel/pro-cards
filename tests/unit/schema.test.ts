@@ -101,6 +101,27 @@ describe("card config schemas", () => {
         zones: { dusk: { label: "x" } },
       }),
     ).toBeTruthy();
+    const WC = "custom:weather-card";
+    expect(validate({ type: WC })).toMatch(/entity/);
+    expect(validate({ type: WC, entity: "sensor.a" })).toMatch(/pattern/);
+    expect(validate({ type: WC, entity: "weather.a", layout: "wide" })).toMatch(/enum|allowed/);
+    expect(
+      validate({ type: WC, entity: "weather.a", sections: [{ type: "weekly" }] }),
+    ).toBeTruthy();
+    expect(
+      validate({ type: WC, entity: "weather.a", sections: [{ type: "hourly", visual: "strip" }] }),
+    ).toBeTruthy();
+    expect(
+      validate({ type: WC, entity: "weather.a", sections: [{ type: "daily", days: 20 }] }),
+    ).toBeTruthy();
+    expect(validate({ type: WC, entity: "weather.a", sections: [{ layout: "row" }] })).toBeTruthy();
+    expect(
+      validate({ type: WC, entity: "weather.a", sections: [{ type: "wind", show: ["wind"] }] }),
+    ).toBeTruthy();
+    expect(
+      validate({ type: WC, entity: "weather.a", sections: [{ type: "humidity" }] }),
+    ).toBeTruthy();
+    expect(validate({ type: WC, entity: "weather.a", attributes: [] })).toMatch(/fewer|minItems/);
     expect(validate({ type: "custom:flexible-entity-card", entity: "sensor.a" })).toBeTruthy();
     expect(validate({ type: "custom:other-card", entity: "sensor.a" })).toBeTruthy();
   });
@@ -108,6 +129,37 @@ describe("card config schemas", () => {
     const EC = "custom:entity-card",
       EGC = "custom:entity-group-card",
       ESC = "custom:entity-sections-card";
+    expect(validate({ type: "custom:weather-card", entity: "weather.home" })).toBeNull();
+    expect(
+      validate({
+        type: "custom:weather-card",
+        entity: "weather.home",
+        title: "Home",
+        layout: "hero",
+        name: "Home",
+        secondary: "{{ states('sensor.a') }}",
+        header_entities: [{ entity: "sun.sun", attribute: "next_setting" }],
+        rules: [{ state: "rainy", color: "blue", tint_card: true }],
+        temperature_rules: [{ below: 5, color: "blue", label: "Cold" }],
+        attributes: [
+          "humidity",
+          { entity: "sensor.uv_index", name: "UV", rules: [{ below: 3, color: "green" }] },
+        ],
+        attributes_layout: "list",
+        sections: [
+          { type: "hourly", hours_to_show: 24, visual: "chart", show: ["temperature", "wind"] },
+          { type: "hourly", visual: "sparkline" },
+          { type: "temperature", hours_to_show: 24, title: "Temp" },
+          { type: "probability", visual: "columns", bucket_minutes: 120 },
+          { type: "wind", visual: "sparkline" },
+          { type: "daily", days: 5, layout: "columns", show: [] },
+          { type: "entities", title: "Garden", layout: "row", entities: ["sensor.a"] },
+          { layout: "table", divider: true, entities: [{ entity: "sensor.b", name: "B" }] },
+        ],
+        tap_action: "none",
+        grid_options: { columns: 12 },
+      }),
+    ).toBeNull();
     expect(
       validate({ type: EC, name: "Text only", value: "Hello", icon: "mdi:x", color: "red" }),
     ).toBeNull();

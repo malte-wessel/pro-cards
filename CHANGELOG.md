@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- New weather card (`custom:weather-card`): the current conditions of a weather entity as a tile or a hero lead with the big temperature and today's high / low, weather attributes or any entity as row / list items, an hourly section (lane chart with tooltip, temperature sparkline or rain columns) and a daily section (range bars on one scale, columns or a chart) from Home Assistant's forecast subscription, entity sections like the sections card, `rules` on the condition, `temperature_rules` on the temperature, header entities and templates. Condition names and attribute names come in every language the cards speak. Any forecast quantity (`temperature`, `precipitation`, `probability`, `wind`) can also be its own section with a title line, placed anywhere between the others
+- The entity layer moved from `src/entity/` to `src/shared/entity/` (no change for users)
+
 ## 1.3.0 (2026-09-30)
 
 - The cards speak the language of the Home Assistant profile (English, Czech, German, Spanish, French, Italian, Norwegian Bokmål, Dutch, Polish, Portuguese, Russian and Swedish): the default sun path labels and tooltip word, the illuminance zone names, `Max` and `LUX`, the axis word `now`, `no data` / `loading …`, `Peak`, `unavailable`, `… not found` and every visual editor label. Your own `labels`, `zones`, rule `label`, `title` and `name` stay as written. See the Languages guide for adding a language
