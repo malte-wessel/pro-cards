@@ -46,7 +46,9 @@ export const pxps = (kmh: number) => 16 + Math.max(0, kmh) * 5;
 // wave amplitude: gusts above the speed raise the waves
 export const amplitude = (kmh: number, gustKmh: number | null) =>
   3 + Math.min(16, Math.max(0, (gustKmh ?? kmh) - kmh) * 0.6 + Math.max(0, kmh) * 0.15);
-export const ampBucket = (a: number) => Math.round(a);
+// the field is rebuilt only when the amplitude crosses a 4 px step: ordinary speed changes
+// re-time the running animation, a real change in the gusts redraws the waves
+export const ampBucket = (a: number) => Math.round(a / 4) * 4;
 // one cycle of the lead animation
 export const leadDuration = (px: number) => Math.max(0.35, 90 / px);
 // the base duration of the field: one 480 px crossing
