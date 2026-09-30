@@ -83,6 +83,23 @@ template:
         device_class: humidity
         state_class: measurement
         state: "{{ (95 - states('input_number.demo_drive') | float(50) / 2) | round(0) }}"
+      - name: Wind speed
+        unique_id: pro_cards_wind_speed
+        unit_of_measurement: km/h
+        device_class: wind_speed
+        state_class: measurement
+        state: "{{ (2 + states('input_number.demo_drive') | float(50) / 2) | round(1) }}"
+      - name: Wind gust
+        unique_id: pro_cards_wind_gust
+        unit_of_measurement: km/h
+        device_class: wind_speed
+        state_class: measurement
+        state: "{{ (6 + states('input_number.demo_drive') | float(50) * 0.9) | round(1) }}"
+      - name: Wind direction
+        unique_id: pro_cards_wind_direction
+        unit_of_measurement: °
+        icon: mdi:compass-outline
+        state: "{{ (180 + states('input_number.demo_drive') | float(50) * 1.8) | round(0) }}"
       - name: Living room temperature
         unique_id: pro_cards_living_room_temperature
         unit_of_measurement: °C

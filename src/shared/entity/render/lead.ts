@@ -62,6 +62,25 @@ export const textEl = (cls: string, text: string | null | undefined) => {
   d.textContent = text ?? "";
   return d;
 };
+// the secondary line from parts joined by " · "; an accent part takes the row colour
+export const secondaryEl = (parts: { text: string; accent?: boolean }[]) => {
+  const el = document.createElement("div");
+  el.className = "secondary";
+  fillSecondary(el, parts);
+  return el;
+};
+export const fillSecondary = (el: HTMLElement, parts: { text: string; accent?: boolean }[]) => {
+  el.replaceChildren();
+  parts.forEach((p, i) => {
+    if (i > 0) el.appendChild(document.createTextNode(" · "));
+    if (p.accent) {
+      const s = document.createElement("span");
+      s.className = "accent";
+      s.textContent = p.text;
+      el.appendChild(s);
+    } else el.appendChild(document.createTextNode(p.text));
+  });
+};
 // number and unit on one baseline (hero lead, grid cell)
 export const bigEl = (fmt: FmtValue) => {
   const big = document.createElement("div");

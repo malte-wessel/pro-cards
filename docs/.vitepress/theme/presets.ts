@@ -135,4 +135,17 @@ sections:
   - { type: trend, mode: hourly, hours: 12 }
   - { type: forecast, mode: daily, days: 7 }
 `,
+  "Wind card": `type: custom:wind-card
+entity: sensor.wind_speed
+direction: sensor.wind_direction
+gust: sensor.wind_gust
+title: Wind
+layout: hero
+rules:
+  - { below: 5, color: blue-grey, label: Calm }
+  - { below: 20, color: teal, label: Light breeze }
+  - { below: 35, color: amber, label: Fresh }
+  - { below: 50, color: orange, label: Strong }
+  - { above: 50, color: red, label: Storm, tint_card: true }
+`,
 };

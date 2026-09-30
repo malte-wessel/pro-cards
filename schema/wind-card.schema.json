@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/wind-card.schema.json",
+  "title": "custom:wind-card",
+  "description": "Wind speed, direction and gusts as a tile, a flow tile or a hero, with an animated wind field that rules colour.",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "custom:wind-card"
+    },
+    "entity": {
+      "type": "string",
+      "pattern": "^(sensor|weather)\\.[a-z0-9_]+$",
+      "description": "The wind speed sensor, or a weather entity (wind_speed, wind_bearing and wind_gust_speed attributes)"
+    },
+    "direction": {
+      "type": "string",
+      "pattern": "^sensor\\.[a-z0-9_]+$",
+      "description": "Direction sensor: degrees or a compass point (N, NNE …). Overrides a weather entity's wind_bearing"
+    },
+    "gust": {
+      "type": "string",
+      "pattern": "^sensor\\.[a-z0-9_]+$",
+      "description": "Gust speed sensor. Overrides a weather entity's wind_gust_speed"
+    },
+    "name": {
+      "type": "string",
+      "description": "The name (default: the sensor's friendly name, or Wind). Template allowed."
+    },
+    "secondary": {
+      "type": "string",
+      "description": "Replaces the line under the name (default: speed · direction, or label · from … · gusts …). Template allowed."
+    },
+    "color": {
+      "$ref": "defs.schema.json#/$defs/color",
+      "description": "Fixed colour; overrides rules"
+    },
+    "decimals": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "$ref": "entity.schema.json#/$defs/rule"
+      },
+      "description": "On the speed (below / above): colour of the particles and the lead, label and tint; first match wins"
+    },
+    "layout": {
+      "type": "string",
+      "enum": ["tile", "hero"],
+      "default": "tile"
+    },
+    "visual": {
+      "type": "string",
+      "enum": ["icon", "flow"],
+      "default": "icon",
+      "description": "tile only: `flow` makes the whole tile the animated field"
+    },
+    "lead": {
+      "type": "string",
+      "enum": ["animated", "arrow"],
+      "default": "animated",
+      "description": "The round lead: a small animation of the flow style, or the direction arrow (the flow tile always shows the arrow)"
+    },
+    "flow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "style": {
+          "type": "string",
+          "enum": ["dots", "lines", "swoosh", "vectors"],
+          "default": "dots"
+        },
+        "density": {
+          "type": "string",
+          "enum": ["sparse", "normal", "dense"],
+          "default": "normal"
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 40,
+          "maximum": 400,
+          "default": 120,
+          "description": "Height of the hero's flow band (px)"
+        }
+      }
+    },
+    "title": {
+      "type": "string",
+      "description": "Header text. Template allowed."
+    },
+    "icon": {
+      "$ref": "defs.schema.json#/$defs/icon",
+      "description": "Header icon. Template allowed."
+    },
+    "header_entities": {
+      "$ref": "entity.schema.json#/$defs/headerEntities"
+    }
+  },
+  "required": ["type", "entity"],
+  "allOf": [
+    {
+      "$ref": "entity.schema.json#/$defs/historyOptions"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/actionDefaults"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/haExtras"
+    }
+  ],
+  "unevaluatedProperties": false
+}

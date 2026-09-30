@@ -29,7 +29,7 @@ features:
     details: One entity as a tile or many as list, grid, hero, row, column, table or sections. Icon, ring, gauge, bar, sparkline, columns, badge or strip. Tap, hold and double-tap actions.
   - icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M3 17l5-6 4 4 4-6 5 3"/><circle cx="19" cy="6" r="2.5"/><path d="M4 21h16"/></svg>'
     title: Trends, sun and light
-    details: Multi sensor trend graphs with tooltips, today's sun path with dawn and dusk, illuminance on a log scale with zones, the weather with its hourly and daily forecast.
+    details: Multi sensor trend graphs with tooltips, today's sun path with dawn and dusk, illuminance on a log scale with zones, the weather with its hourly and daily forecast, the wind as an animated flow.
 ---
 
 ## Live on this site

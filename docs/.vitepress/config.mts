@@ -109,6 +109,7 @@ export default defineConfig({
           { text: "Sun Path Card", link: "/cards/sun-path-card" },
           { text: "Illuminance Card", link: "/cards/illuminance-card" },
           { text: "Weather Card", link: "/cards/weather-card" },
+          { text: "Wind Card", link: "/cards/wind-card" },
         ],
       },
       {
@@ -144,6 +145,7 @@ export default defineConfig({
           { text: "Sun Path Card", link: "/cards/sun-path-card" },
           { text: "Illuminance Card", link: "/cards/illuminance-card" },
           { text: "Weather Card", link: "/cards/weather-card" },
+          { text: "Wind Card", link: "/cards/wind-card" },
         ],
       },
       {

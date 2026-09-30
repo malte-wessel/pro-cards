@@ -3,7 +3,7 @@
 import { cssColor } from "../../shared/color.ts";
 import type { EntityItem } from "../../shared/entity/config.ts";
 import { nameOf, tplOf, type EntityModel, type RenderCtx } from "../../shared/entity/model.ts";
-import { bigEl, leadEl, textEl } from "../../shared/entity/render/lead.ts";
+import { bigEl, leadEl, secondaryEl, textEl } from "../../shared/entity/render/lead.ts";
 import { fmtNumber } from "../../shared/format.ts";
 import type { WeatherConfig, WeatherIcons } from "../config.ts";
 import { conditionIcon, conditionText, isNight } from "../conditions.ts";
@@ -44,22 +44,6 @@ const condText = (ctx: RenderCtx, m: EntityModel) =>
 export const hiLoText = (ctx: RenderCtx, today: Day | null) => {
   if (!today || today.hi === null || today.lo === null) return null;
   return `${fmtNumber(ctx.hass, today.hi, 0)}° / ${fmtNumber(ctx.hass, today.lo, 0)}°`;
-};
-
-// secondary line: parts joined by " · ", the temperature label in the temperature colour
-const secondaryEl = (parts: { text: string; accent?: boolean }[]) => {
-  const el = document.createElement("div");
-  el.className = "secondary";
-  parts.forEach((p, i) => {
-    if (i > 0) el.appendChild(document.createTextNode(" · "));
-    if (p.accent) {
-      const s = document.createElement("span");
-      s.className = "accent";
-      s.textContent = p.text;
-      el.appendChild(s);
-    } else el.appendChild(document.createTextNode(p.text));
-  });
-  return el;
 };
 
 export const fillCurrent = (
