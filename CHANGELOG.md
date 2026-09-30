@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- New rain card (`custom:rain-card`): the rain rate (`entity`) and today's total (`today`) as a tile with a small animated lead, a flow tile (`visual: flow`) or a hero (`layout: hero`) with a band and a chip. Three animations (`flow.style`): `drops` fall and splash, more and faster the harder it rains and slanted by a `wind` speed and `direction`; `ripples` spread on a puddle; `fill` is a rain gauge that today's total fills (12 mm). `rules` on the rate colour the rain, label the value and may tint the card; below 0.1 the card is dry. The animation keeps flowing through sensor updates and pauses with `prefers-reduced-motion`
+- The wind card's animation engine moved to `src/shared/flow/` and is shared with the rain card (no change for users)
+
 ## 1.5.2 (2026-09-30)
 
 - Wind card: the flow turns smoothly to a new direction instead of snapping, the short way round

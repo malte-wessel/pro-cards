@@ -177,6 +177,24 @@ def(
   "battery",
   { noise: 0, min: 0, max: 100, decimals: 0 },
 );
+def(
+  "sensor.rain_rate_roof",
+  2.4,
+  {
+    unit_of_measurement: "mm/h",
+    device_class: "precipitation_intensity",
+    friendly_name: "Roof rain rate",
+  },
+  "flat",
+  { noise: 0.8, min: 0, decimals: 1 },
+);
+def(
+  "sensor.rain_today",
+  3.6,
+  { unit_of_measurement: "mm", device_class: "precipitation", friendly_name: "Rain today" },
+  "flat",
+  { noise: 0.2, min: 3.6, decimals: 1 },
+);
 def("binary_sensor.rain", "off", { device_class: "moisture", friendly_name: "Rain" }, "binary", {
   duty: 0.2,
 });

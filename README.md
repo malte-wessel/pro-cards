@@ -16,7 +16,7 @@ Beautiful, customizable cards for Home Assistant dashboards.
 Pro Cards are polished dashboard cards that look like they belong in Home Assistant: same spacing, typography and colours, dark mode included. Every detail can be adjusted, from icons, colours and labels driven by values and templates to layouts, graphs and actions. Themes change the look of all cards at once.
 
 - **High quality.** Crisp rendering, sensible defaults, smooth graphs, tested against a real Home Assistant and pixel by pixel in CI.
-- **Highly customizable.** Rules switch icon, colour, label and card tint by value or state; templates fill names and values; six layouts, eight visuals, a weather card with forecasts, an animated wind card, every action Home Assistant offers.
+- **Highly customizable.** Rules switch icon, colour, label and card tint by value or state; templates fill names and values; six layouts, eight visuals, a weather card with forecasts, animated wind and rain cards, every action Home Assistant offers.
 - **Home Assistant design.** The cards use the theme's colours, fonts, radii and state colours, so they blend in with the built-in tile cards, and a custom theme restyles them along with the rest of the dashboard.
 
 Pro Cards is built with the help of AI. Code, docs and tests are written together with AI coding agents, reviewed and tested by a human before each release.
@@ -36,6 +36,7 @@ Pro Cards is built with the help of AI. Code, docs and tests are written togethe
 | Illuminance Card     | `custom:illuminance-card`     | Illuminance as gauge arc, log-scale trend with zones or a colour band.                                                                        | Visual    |
 | Weather Card         | `custom:weather-card`         | Current conditions, attributes and the hourly / daily forecast of a weather entity, with rules, sections and templates.                       | YAML only |
 | Wind Card            | `custom:wind-card`            | Wind speed, direction and gusts as a tile, a flow tile or a hero, with an animated wind field in four styles that rules colour.               | YAML only |
+| Rain Card            | `custom:rain-card`            | Rain rate and today's total as a tile, a flow tile or a hero, with falling drops, ripples or a filling gauge that rules colour.               | YAML only |
 
 All cards support the sections grid (`grid_options`). Requires Home Assistant 2025.3 or newer.
 
@@ -189,6 +190,27 @@ rules:
 ```
 
 [Wind Card docs](https://malte-wessel.github.io/pro-cards/cards/wind-card)
+
+### Rain Card
+
+The rain rate and today's total, animated: drops that fall harder and slant with the wind, ripples on a puddle, or a rain gauge that fills through the day, coloured by your rules.
+
+```yaml
+type: custom:rain-card
+entity: sensor.rain_rate
+today: sensor.rain_today
+wind: sensor.wind_speed
+direction: sensor.wind_direction
+layout: hero
+flow: { style: drops }
+rules:
+  - { below: 0.1, color: blue-grey, label: Dry }
+  - { below: 2.5, color: light-blue, label: Light rain }
+  - { below: 7.6, color: blue, label: Moderate rain }
+  - { above: 7.6, color: indigo, label: Heavy rain, tint_card: true }
+```
+
+[Rain Card docs](https://malte-wessel.github.io/pro-cards/cards/rain-card)
 
 ## Config schema
 

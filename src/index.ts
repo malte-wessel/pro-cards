@@ -7,6 +7,7 @@ import "./sun-path-card.ts";
 import "./illuminance-card.ts";
 import "./weather-card.ts";
 import "./wind-card.ts";
+import "./rain-card.ts";
 
 console.info(
   `%c PRO-CARDS %c v${__VERSION__} `,

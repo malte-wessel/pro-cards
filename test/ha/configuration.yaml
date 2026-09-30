@@ -100,6 +100,18 @@ template:
         unit_of_measurement: °
         icon: mdi:compass-outline
         state: "{{ (180 + states('input_number.demo_drive') | float(50) * 1.8) | round(0) }}"
+      - name: Roof rain rate
+        unique_id: pro_cards_rain_rate_roof
+        unit_of_measurement: mm/h
+        device_class: precipitation_intensity
+        state_class: measurement
+        state: "{{ (states('input_number.demo_drive') | float(50) / 12) | round(1) }}"
+      - name: Rain today
+        unique_id: pro_cards_rain_today
+        unit_of_measurement: mm
+        device_class: precipitation
+        state_class: total_increasing
+        state: "{{ (states('input_number.demo_drive') | float(50) / 6) | round(1) }}"
       - name: Living room temperature
         unique_id: pro_cards_living_room_temperature
         unit_of_measurement: °C

@@ -17,6 +17,13 @@ const windRules = [
   { above: 35, color: "red", label: "Storm", tint_card: true },
 ];
 
+const rainRules = [
+  { below: 0.1, color: "blue-grey", label: "Dry" },
+  { below: 2.5, color: "light-blue", label: "Light rain" },
+  { below: 7.6, color: "blue", label: "Moderate rain" },
+  { above: 7.6, color: "indigo", label: "Heavy rain", tint_card: true },
+];
+
 const CASES = {
   "ec-visuals": [
     {
@@ -600,6 +607,83 @@ const CASES = {
     layout: "hero",
     flow: { style: "swoosh", height: 140, density: "dense" },
     rules: windRules,
+  },
+  "rc-tile": [
+    {
+      type: "custom:rain-card",
+      entity: "sensor.rain_rate_roof",
+      today: "sensor.rain_today",
+      rules: rainRules,
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:rain-card",
+      entity: "sensor.rain_rate_roof",
+      today: "sensor.rain_today",
+      title: "Rain",
+      lead: "icon",
+      flow: { style: "ripples" },
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:rain-card",
+      entity: "sensor.rain_rate_roof",
+      today: "sensor.rain_today",
+      wind: "sensor.wind_speed",
+      direction: "sensor.wind_direction",
+      visual: "flow",
+      rules: rainRules,
+    },
+  ],
+  "rc-flow": [
+    {
+      type: "custom:rain-card",
+      entity: "sensor.rain_rate_roof",
+      today: "sensor.rain_today",
+      wind: "sensor.wind_speed",
+      direction: "sensor.wind_direction",
+      visual: "flow",
+      rules: rainRules,
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:rain-card",
+      entity: "sensor.rain_rate_roof",
+      today: "sensor.rain_today",
+      visual: "flow",
+      flow: { style: "ripples" },
+      rules: rainRules,
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:rain-card",
+      entity: "sensor.rain_rate_roof",
+      today: "sensor.rain_today",
+      visual: "flow",
+      flow: { style: "fill" },
+      rules: rainRules,
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:rain-card",
+      entity: "sensor.rain_rate",
+      today: "sensor.rain_today",
+      visual: "flow",
+      rules: rainRules,
+      grid_options: { columns: 6 },
+    },
+  ],
+  "rc-hero": {
+    type: "custom:rain-card",
+    entity: "sensor.rain_rate_roof",
+    today: "sensor.rain_today",
+    wind: "sensor.wind_speed",
+    direction: "sensor.wind_direction",
+    title: "Rain",
+    header_entities: [{ entity: "sensor.rain_today", icon: "mdi:cup-water", color: "blue" }],
+    layout: "hero",
+    flow: { style: "fill", height: 140 },
+    rules: rainRules,
   },
   "wc-everything": {
     type: "custom:weather-card",

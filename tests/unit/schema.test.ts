@@ -169,6 +169,36 @@ describe("card config schemas", () => {
     ).toBeNull();
   });
 
+  it("rejects rain card typos and wrong enums", () => {
+    const RC = "custom:rain-card";
+    expect(validate({ type: RC })).toMatch(/entity/);
+    expect(validate({ type: RC, entity: "weather.home" })).toMatch(/pattern/);
+    expect(validate({ type: RC, entity: "sensor.a", today: "weather.home" })).toMatch(/pattern/);
+    expect(validate({ type: RC, entity: "sensor.a", flow: { style: "snow" } })).toMatch(
+      /enum|allowed/,
+    );
+    expect(validate({ type: RC, entity: "sensor.a", flow: { density: "dense" } })).toBeTruthy();
+    expect(validate({ type: RC, entity: "sensor.a", lead: "arrow" })).toMatch(/enum|allowed/);
+    expect(validate({ type: RC, entity: "sensor.a", gust: "sensor.b" })).toBeTruthy();
+    expect(
+      validate({
+        type: RC,
+        entity: "sensor.rain_rate_roof",
+        today: "sensor.rain_today",
+        wind: "sensor.wind_speed",
+        direction: "sensor.wind_direction",
+        layout: "hero",
+        lead: "icon",
+        flow: { style: "fill", height: 140 },
+        rules: [{ above: 50, color: "deep-purple", label: "Violent rain", tint_card: true }],
+        title: "Rain",
+        header_entities: [{ entity: "sensor.rain_today" }],
+        tap_action: "none",
+        grid_options: { columns: 12 },
+      }),
+    ).toBeNull();
+  });
+
   it("accept the documented edge cases", () => {
     const EC = "custom:entity-card",
       EGC = "custom:entity-group-card",

@@ -31,8 +31,8 @@ features:
     title: Every detail adjustable
     details: One entity as a tile or many as list, grid, hero, row, column, table or sections. Icon, ring, gauge, bar, sparkline, columns, badge or strip. Tap, hold and double-tap actions.
   - icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M3 17l5-6 4 4 4-6 5 3"/><circle cx="19" cy="6" r="2.5"/><path d="M4 21h16"/></svg>'
-    title: Trends, sun, light and wind
-    details: Multi sensor trend graphs with tooltips, today's sun path with dawn and dusk, illuminance on a log scale with zones, the weather with its hourly and daily forecast, the wind as an animated flow.
+    title: Trends, sun, light, wind and rain
+    details: Multi sensor trend graphs with tooltips, today's sun path with dawn and dusk, illuminance on a log scale with zones, the weather with its hourly and daily forecast, the wind and the rain as animated flows.
 ---
 
 ## Live on this site
@@ -54,6 +54,7 @@ Each card page starts with the smallest possible configuration and adds one opti
   { entity: 'sensor.living_room_co2', name: 'CO₂', visual: 'strip', rules: [ { below: 800, color: 'green' }, { below: 1200, color: 'amber' }, { above: 1200, color: 'red' } ] },
   { entity: 'cover.living_room_blinds', name: 'Blinds', attribute: 'current_position', unit: '%', visual: 'bar', icon: 'mdi:window-shutter' } ] }" width="full" theme="graphite" />
 <LiveCard :config="{ type: 'custom:wind-card', entity: 'sensor.wind_speed', direction: 'sensor.wind_direction', gust: 'sensor.wind_gust', title: 'Wind', layout: 'hero', flow: { style: 'swoosh' }, rules: [ { below: 5, color: 'blue-grey', label: 'Calm' }, { below: 20, color: 'teal', label: 'Light breeze' }, { below: 35, color: 'amber', label: 'Fresh' }, { above: 35, color: 'red', label: 'Storm', tint_card: true } ] }" width="full" />
+<LiveCard :config="{ type: 'custom:rain-card', entity: 'sensor.rain_rate_roof', today: 'sensor.rain_today', wind: 'sensor.wind_speed', direction: 'sensor.wind_direction', title: 'Rain', layout: 'hero', rules: [ { below: 0.1, color: 'blue-grey', label: 'Dry' }, { below: 2.5, color: 'light-blue', label: 'Light rain' }, { below: 7.6, color: 'blue', label: 'Moderate rain' }, { above: 7.6, color: 'indigo', label: 'Heavy rain', tint_card: true } ] }" width="full" />
 <LiveCard :config="{ type: 'custom:multi-trend-card', title: 'Temperature & dew point', icon: 'mdi:thermometer', hours_to_show: 12, x_axis: true, entities: [ { entity: 'sensor.outdoor_temperature', name: 'Temperature', color: 'red' }, { entity: 'sensor.dew_point', name: 'Dew point', color: 'blue' } ] }" width="full" />
 <LiveCard :config="{ type: 'custom:sun-path-card', title: 'Sun today' }" width="full" />
 </div>

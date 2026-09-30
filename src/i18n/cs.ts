@@ -87,6 +87,10 @@ const cs: Translation = {
   "wind.dir.nw": "SZ",
   "wind.dir.nnw": "SSZ",
 
+  "rain.stub_title": "Déšť",
+  "rain.today": "{v} dnes",
+  "rain.today_name": "Déšť dnes",
+
   "editor.default": "Výchozí: {value}",
 
   "editor.sun.title": "Název",

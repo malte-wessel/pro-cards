@@ -87,6 +87,10 @@ const it: Translation = {
   "wind.dir.nw": "NO",
   "wind.dir.nnw": "NNO",
 
+  "rain.stub_title": "Pioggia",
+  "rain.today": "{v} oggi",
+  "rain.today_name": "Pioggia oggi",
+
   "editor.default": "Predefinito: {value}",
 
   "editor.sun.title": "Titolo",
