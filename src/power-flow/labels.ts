@@ -88,8 +88,12 @@ export const placeLabels = (
   layout: TreeLayout,
   sizes: LabelSize[],
   dir: Direction,
+  hiddenEdges: ReadonlySet<string> = new Set(),
 ): PlacedLabel[] => {
-  const segs = layout.edges.flatMap((e) => segmentsOf(e.pts).map((s) => segBox(s, 3)));
+  // a hidden idle link frees its space
+  const segs = layout.edges
+    .filter((e) => !hiddenEdges.has(e.id))
+    .flatMap((e) => segmentsOf(e.pts).map((s) => segBox(s, 3)));
   const nodeBoxes = layout.nodes
     .filter((n) => n.d > 0)
     .map((n): Box => [n.x - n.d / 2 - 2, n.y - n.d / 2 - 2, n.x + n.d / 2 + 2, n.y + n.d / 2 + 2]);

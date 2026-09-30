@@ -599,6 +599,39 @@ def(
   "power",
   { noise: 15, min: 0, decimals: 0 },
 );
+def(
+  "sensor.ev_charger_power",
+  -1500,
+  {
+    unit_of_measurement: "W",
+    device_class: "power",
+    state_class: "measurement",
+    friendly_name: "EV charger power",
+  },
+  "flat",
+  { noise: 60, min: -3000, max: 7000, decimals: 0 },
+);
+def(
+  "sensor.generator_power",
+  0,
+  { unit_of_measurement: "W", device_class: "power", friendly_name: "Generator power" },
+  "flat",
+  { noise: 0, min: 0, decimals: 0 },
+);
+def(
+  "sensor.grid_fossil_percentage",
+  38,
+  { unit_of_measurement: "%", friendly_name: "Grid fossil fuel percentage", icon: "mdi:leaf" },
+  "flat",
+  { noise: 1, min: 0, max: 100, decimals: 0 },
+);
+def(
+  "sensor.battery_temperature",
+  27.5,
+  { unit_of_measurement: "°C", device_class: "temperature", friendly_name: "Battery temperature" },
+  "flat",
+  { noise: 0.2, decimals: 1 },
+);
 def("binary_sensor.grid_outage", "off", {
   device_class: "problem",
   friendly_name: "Grid outage",

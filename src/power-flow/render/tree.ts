@@ -7,7 +7,7 @@
 import { cssColor } from "../../shared/color.ts";
 import type { EntityItem } from "../../shared/entity/config.ts";
 import type { Look } from "../../shared/entity/look.ts";
-import { nameOf, type EntityModel, type RenderCtx } from "../../shared/entity/model.ts";
+import { nameOf, tplOf, type EntityModel, type RenderCtx } from "../../shared/entity/model.ts";
 import { iconEl, textEl } from "../../shared/entity/render/lead.ts";
 import { el as iEl, setRate, vars } from "../../shared/flow/dom.ts";
 import { fmtNumber, textWidth } from "../../shared/format.ts";
@@ -48,6 +48,11 @@ export interface TreeState {
   layout: TreeLayout;
   homeLook: Look;
 }
+interface LabelTexts {
+  v: string; // the value
+  n: string; // the name
+  s: string; // the secondary line
+}
 
 const svgEl = (tag: string, attrs: Record<string, string | number> = {}) => {
   const e = document.createElementNS(SVG, tag);
@@ -56,6 +61,8 @@ const svgEl = (tag: string, attrs: Record<string, string | number> = {}) => {
 };
 
 // ----- build -----
+
+const RING_SEGMENTS = 5; // solar, battery, generator, low-carbon grid, grid
 
 const leadEl = (d: number, ring: boolean) => {
   const lead = document.createElement("div");
@@ -68,7 +75,7 @@ const leadEl = (d: number, ring: boolean) => {
     svg.appendChild(
       svgEl("circle", { class: "track", cx: d / 2, cy: d / 2, r, "stroke-width": sw }),
     );
-    for (let i = 0; i < 3; i++)
+    for (let i = 0; i < RING_SEGMENTS; i++)
       svg.appendChild(svgEl("path", { class: "prog", "stroke-width": sw, d: "" }));
     lead.appendChild(svg);
   }
@@ -91,7 +98,8 @@ const labelEl = (id: string, small: boolean) => {
   el.className = small ? "plabel small" : "plabel";
   el.dataset.node = id;
   el.appendChild(textEl("state", ""));
-  el.appendChild(textEl("secondary", ""));
+  el.appendChild(textEl("secondary name", ""));
+  el.appendChild(textEl("secondary sec2", ""));
   return el;
 };
 
@@ -109,6 +117,7 @@ const rowEl = (id: string, row: HTMLElement | null) => {
   line.appendChild(name);
   line.appendChild(textEl("state", ""));
   texts.appendChild(line);
+  texts.appendChild(textEl("secondary", ""));
   const bar = document.createElement("div");
   bar.className = "bar";
   bar.appendChild(document.createElement("i"));
@@ -160,10 +169,11 @@ export const buildTree = (
 // ----- update -----
 
 const laneOf = (st: TreeState, e: LEdge, w: number, color: string) => {
+  const a = st.cfg.animation;
   const lane = document.createElement("div");
-  lane.className = "lane";
-  const n = particles(e.len, w);
-  const dur = duration(e.len, w);
+  lane.className = w < 0 ? "lane back" : "lane";
+  const n = particles(e.len, w, a);
+  const dur = duration(e.len, w, a);
   vars(lane, { "--p": `path('${e.d}')`, "--pf-c": color, "--dur": `${dur.toFixed(3)}s` });
   lane.dataset.n = String(n);
   lane.dataset.w = String(Math.round(w));
@@ -184,9 +194,9 @@ const laneOf = (st: TreeState, e: LEdge, w: number, color: string) => {
       const p0 = i / n;
       if (style === "dots") lane.appendChild(iEl("pt", { "--p0": p0.toFixed(3) }));
       else {
-        const a = iEl("fa", { "--p0": p0.toFixed(3) });
-        a.style.width = `${arrowLength(w)}px`;
-        lane.appendChild(a);
+        const ar = iEl("fa", { "--p0": p0.toFixed(3) });
+        ar.style.width = `${arrowLength(w, a)}px`;
+        lane.appendChild(ar);
       }
     }
   }
@@ -198,11 +208,17 @@ const place = (el: HTMLElement, nd: LNode) => {
   el.style.top = `${nd.y}px`;
 };
 
+const sourceOf = (st: TreeState, nd: LNode) =>
+  nd.column === "source" ? st.now.sources[Number(nd.id.slice(1))] : undefined;
+
 const iconFor = (st: TreeState, nd: LNode, look: Look | null): string => {
   if (look?.icon) return look.icon;
   if (nd.kind === "solar") return ICONS.solar;
   if (nd.kind === "battery") return ICONS.battery;
-  if (nd.kind === "grid") return st.now.offline ? ICONS.gridOff : ICONS.grid;
+  if (nd.kind === "grid") {
+    if (!st.now.offline) return ICONS.grid;
+    return sourceOf(st, nd)?.generator ? ICONS.generator : ICONS.gridOff;
+  }
   if (nd.kind === "home") return ICONS.home;
   if (nd.kind === "other") return ICONS.other;
   if (nd.kind === "group") {
@@ -215,10 +231,10 @@ const iconFor = (st: TreeState, nd: LNode, look: Look | null): string => {
 // the colour of a node: an explicit colour or a rule wins, else the energy colour of its flow
 const colorFor = (st: TreeState, nd: LNode, ent: EntityItem | null, look: Look | null): string => {
   if (ent && look && (ent.color || look.rule?.color)) return cssColor(look.color, COLORS.home);
-  if (nd.kind === "home") return COLORS.home;
-  if (nd.kind === "group" || nd.kind === "consumer" || nd.kind === "other") return COLORS.home;
-  const i = Number(nd.id.slice(1));
-  const s = st.now.sources[i];
+  if (nd.kind === "home" || nd.kind === "group" || nd.kind === "other") return COLORS.home;
+  if (nd.kind === "consumer")
+    return (st.flows.leafW.get(nd.id) ?? 0) < 0 ? COLORS.solar : COLORS.home;
+  const s = sourceOf(st, nd);
   return s ? sourceColor(s, st.now.offline) : COLORS.idle;
 };
 
@@ -256,33 +272,53 @@ const setRing = (lead: HTMLElement, d: number, segs: { color: string; f: number 
   });
 };
 
-// value and name of a node's label
-const labelText = (st: TreeState, nd: LNode, ent: EntityItem | null, m: EntityModel | null) => {
+// value, name and secondary line of a node's label
+const labelText = (
+  st: TreeState,
+  nd: LNode,
+  ent: EntityItem | null,
+  m: EntityModel | null,
+): LabelTexts => {
   const { hass } = st.ctx,
-    f = st.flows;
+    f = st.flows,
+    u = st.cfg.units;
   const dec = ent?.decimals ?? null;
-  if (nd.kind === "home") return { v: fmtPower(hass, f.H, dec), n: "" };
+  const s = ent ? (tplOf(st.ctx, ent.secondary) ?? "") : "";
+  if (nd.kind === "home") return { v: fmtPower(hass, f.H, u, dec), n: "", s };
   if (nd.kind === "group") {
     const g = st.cfg.consumers.find((c) => c.id === nd.consumerId);
     return {
-      v: fmtPower(hass, f.groupW.get(nd.id) ?? 0),
+      v: fmtPower(hass, f.groupW.get(nd.id) ?? 0, u),
       n: g && g.kind === "group" ? g.name : "",
+      s: "",
     };
   }
   if (nd.kind === "other")
-    return { v: fmtPower(hass, f.leafW.get(nd.id) ?? 0), n: t(hass, "power.other") };
+    return { v: fmtPower(hass, f.leafW.get(nd.id) ?? 0, u), n: t(hass, "power.other"), s: "" };
   if (nd.kind === "consumer")
     return {
-      v: m && m.model.avail ? fmtPower(hass, f.leafW.get(nd.id) ?? 0, dec) : "–",
+      v: m && m.model.avail ? fmtPower(hass, f.leafW.get(nd.id) ?? 0, u, dec) : "–",
       n: ent && m ? nameOf(st.ctx, ent, m.st) : "",
+      s,
     };
-  const s = st.now.sources[Number(nd.id.slice(1))];
+  const src = sourceOf(st, nd);
   const name = ent && m ? nameOf(st.ctx, ent, m.st) : "";
-  if (!s) return { v: "–", n: name };
-  const v = s.w === null ? "–" : fmtPower(hass, s.w, dec);
-  if (s.kind === "battery" && s.soc !== null)
-    return { v, n: `${name} · ${fmtNumber(hass, Math.round(s.soc), 0)} %` };
-  return { v, n: name };
+  if (!src) return { v: "–", n: name, s };
+  const v = src.w === null ? "–" : fmtPower(hass, src.w, u, dec);
+  if (src.kind === "battery" && src.soc !== null)
+    return { v, n: `${name} · ${fmtNumber(hass, Math.round(src.soc), 0)} %`, s };
+  if (src.kind === "grid") {
+    if (src.generator) return { v, n: t(hass, "power.generator"), s };
+    if (src.lowCarbon !== null && !st.now.offline)
+      return {
+        v,
+        n: `${name} · ${t(hass, "power.low_carbon", {
+          pct: `${fmtNumber(hass, Math.round(src.lowCarbon * 100), 0)} %`,
+        })}`,
+        s,
+      };
+  }
+  return { v, n: name, s };
 };
 
 export const updateTree = (diag: HTMLElement, st: TreeState) => {
@@ -295,6 +331,8 @@ export const updateTree = (diag: HTMLElement, st: TreeState) => {
   const labelEls = new Map<string, HTMLElement>();
   for (const el of diag.querySelectorAll<HTMLElement>(".plabel"))
     if (el.dataset.node) labelEls.set(el.dataset.node, el);
+  diag.classList.toggle("idle-hidden", cfg.idleLinks === "hidden");
+  diag.classList.toggle("idle-faint", cfg.idleLinks === "faint");
 
   // ----- geometry -----
   if (diag.dataset.key !== layout.key) {
@@ -325,10 +363,11 @@ export const updateTree = (diag: HTMLElement, st: TreeState) => {
     trackEls.set(p.dataset.edge ?? "", p);
   const laneEls = new Map<string, HTMLElement>();
   for (const l of flow.querySelectorAll<HTMLElement>(".lane")) laneEls.set(l.dataset.edge ?? "", l);
+  const hiddenEdges = new Set<string>();
   layout.edges.forEach((e, i) => {
     const w = flows.edges[i]?.w ?? 0;
     const active = isActive(w);
-    const color = edgeColor(e.kind);
+    const color = edgeColor(e.kind, w);
     const track = trackEls.get(e.id);
     if (track) {
       track.classList.toggle("active", active);
@@ -337,26 +376,29 @@ export const updateTree = (diag: HTMLElement, st: TreeState) => {
     const lane = laneEls.get(e.id);
     if (!active) {
       lane?.remove();
+      if (cfg.idleLinks === "hidden") hiddenEdges.add(e.id);
       return;
     }
-    const n = particles(e.len, w);
-    if (!lane || needsRebuild(Number(lane.dataset.n), n)) {
+    const n = particles(e.len, w, cfg.animation);
+    const wasBack = lane?.classList.contains("back") ?? false;
+    if (!lane || needsRebuild(Number(lane.dataset.n), n) || wasBack !== w < 0) {
       const fresh = laneOf(st, e, w, color);
       fresh.dataset.edge = e.id;
       if (lane) lane.replaceWith(fresh);
       else flow.appendChild(fresh);
-    } else setRate(lane, rateOf(w, Number(lane.dataset.w)));
+    } else {
+      lane.style.setProperty("--pf-c", color);
+      setRate(lane, rateOf(w, Number(lane.dataset.w), cfg.animation));
+    }
   });
 
   // ----- nodes -----
-  const looks = new Map<string, Look | null>();
   for (const nd of layout.nodes) {
     const el = nodeEls.get(nd.id);
     if (!el) continue;
     const ent = nd.idx === null ? null : cfg.entities[nd.idx];
     const m = nd.idx === null ? null : (models[nd.idx] ?? null);
     const look = nd.kind === "home" ? st.homeLook : (m?.look ?? null);
-    looks.set(nd.id, look);
     const color = colorFor(st, nd, ent, look);
     el.style.setProperty("--fe-color", color);
     const lead = qs(el, ".lead");
@@ -370,13 +412,14 @@ export const updateTree = (diag: HTMLElement, st: TreeState) => {
           ? [
               { color: COLORS.solar, f: flows.sH / H },
               { color: COLORS.battOut, f: flows.bH / H },
-              { color: COLORS.gridIn, f: flows.gH / H },
+              { color: COLORS.generator, f: flows.gHGen / H },
+              { color: COLORS.nonFossil, f: flows.gHClean / H },
+              { color: COLORS.gridIn, f: (flows.gH - flows.gHClean - flows.gHGen) / H },
             ]
           : [],
       );
     } else if (nd.kind === "battery" && lead.classList.contains("ring")) {
-      const s = st.now.sources[Number(nd.id.slice(1))];
-      const soc = s?.soc ?? null;
+      const soc = sourceOf(st, nd)?.soc ?? null;
       setRing(lead, nd.d, soc === null ? [] : [{ color, f: Math.max(0, Math.min(1, soc / 100)) }]);
     }
   }
@@ -384,7 +427,7 @@ export const updateTree = (diag: HTMLElement, st: TreeState) => {
   // ----- rows -----
   const barMax = Math.max(
     flows.H,
-    [...flows.leafW.values()].reduce((a, b) => a + b, 0),
+    [...flows.leafW.values()].reduce((a, b) => a + Math.abs(b), 0),
     1,
   );
   for (const r of layout.rows) {
@@ -392,12 +435,6 @@ export const updateTree = (diag: HTMLElement, st: TreeState) => {
     if (!el) continue;
     const ent = r.idx === null ? null : cfg.entities[r.idx];
     const m = r.idx === null ? null : (models[r.idx] ?? null);
-    el.style.setProperty(
-      "--fe-color",
-      ent && m && (ent.color || m.look.rule?.color)
-        ? cssColor(m.look.color, COLORS.home)
-        : COLORS.home,
-    );
     const w = flows.leafW.get(r.id) ?? 0;
     const nd: LNode = {
       id: r.id,
@@ -409,16 +446,20 @@ export const updateTree = (diag: HTMLElement, st: TreeState) => {
       d: 32,
       consumerId: r.id,
     };
+    el.style.setProperty("--fe-color", colorFor(st, nd, ent, m?.look ?? null));
     fillShape(st, qs(el, ".shape"), iconFor(st, nd, m?.look ?? null), m);
     const txt = labelText(st, nd, ent, m);
     qs(el, ".primary").textContent = txt.n;
     qs(el, ".state").textContent = txt.v;
-    qs(el, ".bar i").style.width = `${((w / barMax) * 100).toFixed(1)}%`;
+    const sec = qs(el, ".secondary");
+    sec.textContent = txt.s;
+    sec.style.display = txt.s ? "" : "none";
+    qs(el, ".bar i").style.width = `${((Math.abs(w) / barMax) * 100).toFixed(1)}%`;
   }
 
   // ----- labels -----
   const sizes: LabelSize[] = [];
-  const texts = new Map<string, { v: string; n: string }>();
+  const texts = new Map<string, LabelTexts>();
   for (const nd of layout.nodes) {
     const el = labelEls.get(nd.id);
     if (!el) continue;
@@ -427,21 +468,27 @@ export const updateTree = (diag: HTMLElement, st: TreeState) => {
     const txt = labelText(st, nd, ent, m);
     texts.set(nd.id, txt);
     const small = el.classList.contains("small");
+    const nameFont = small ? FONT_SMALL_NAME : FONT_NAME;
     const w =
       Math.max(
         textWidth(txt.v, small ? FONT_SMALL : FONT_VALUE),
-        textWidth(txt.n, small ? FONT_SMALL_NAME : FONT_NAME),
+        textWidth(txt.n, nameFont),
+        textWidth(txt.s, nameFont),
       ) + 2;
-    sizes.push({ id: nd.id, w, h: small ? 28 : GEOM.labelH });
+    const h = (small ? 28 : GEOM.labelH) + (txt.s ? (small ? 13 : GEOM.labelLine) : 0);
+    sizes.push({ id: nd.id, w, h });
   }
-  for (const p of placeLabels(layout, sizes, cfg.direction)) {
+  for (const p of placeLabels(layout, sizes, cfg.direction, hiddenEdges)) {
     const el = labelEls.get(p.id);
     const txt = texts.get(p.id);
     if (!el || !txt) continue;
     qs(el, ".state").textContent = txt.v;
-    const name = qs(el, ".secondary");
+    const name = qs(el, ".name");
     name.textContent = txt.n;
     name.style.display = txt.n ? "" : "none";
+    const sec = qs(el, ".sec2");
+    sec.textContent = txt.s;
+    sec.style.display = txt.s ? "" : "none";
     el.classList.remove("l", "r", "c");
     el.classList.add(p.align);
     if (p.align === "r") {

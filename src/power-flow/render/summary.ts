@@ -7,6 +7,7 @@ import { nameOf, type EntityModel, type RenderCtx } from "../../shared/entity/mo
 import { fillSecondary, pillEl, textEl } from "../../shared/entity/render/lead.ts";
 import { t } from "../../shared/i18n.ts";
 import { fmtNumber } from "../../shared/format.ts";
+import type { Units } from "../constants.ts";
 import { fmtPower, type Flows, type PowerNow, type SummaryState } from "../model.ts";
 
 export const buildSummary = () => {
@@ -27,13 +28,14 @@ export const updateSummary = (
   now: PowerNow,
   flows: Flows,
   state: SummaryState,
+  units: Units,
 ) => {
   const hass = ctx.hass;
   const primary = el.querySelector<HTMLElement>(".primary");
   if (primary)
-    primary.textContent = `${nameOf(ctx, home.ent, home.m.st)} · ${fmtPower(hass, flows.H)}`;
+    primary.textContent = `${nameOf(ctx, home.ent, home.m.st)} · ${fmtPower(hass, flows.H, units)}`;
   const vars: Record<string, string> = {
-    v: fmtPower(hass, state.w),
+    v: fmtPower(hass, state.w, units),
     price: now.price?.text ?? "",
   };
   const parts = [{ text: t(hass, state.key, vars), accent: true }];

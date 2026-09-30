@@ -9,6 +9,10 @@
       "type": "object",
       "properties": {
         "name": { "type": "string", "description": "Template allowed." },
+        "secondary": {
+          "type": "string",
+          "description": "A line under the name. Template allowed."
+        },
         "icon": { "$ref": "defs.schema.json#/$defs/icon" },
         "color": {
           "$ref": "defs.schema.json#/$defs/color",
@@ -97,6 +101,18 @@
             }
           ],
           "description": "An entity whose state says the grid is down (default: `on`): the node turns red and the card tints"
+        },
+        "generator": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "A generator's power: while the grid is offline it takes the grid node's place and feeds the home"
+        },
+        "fossil": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "The grid's fossil fuel percentage (co2signal): the home ring shows the low-carbon share, the grid label names it"
+        },
+        "non_fossil": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "The grid's low-carbon percentage instead of `fossil`"
         }
       },
       "required": ["type"],
@@ -106,6 +122,12 @@
     "consumer": {
       "type": "object",
       "allOf": [{ "$ref": "entity.schema.json#/$defs/entityKeys" }],
+      "properties": {
+        "invert": {
+          "type": "boolean",
+          "description": "Flips the sensor's sign; a negative value is power the device produces, flowing back to the home"
+        }
+      },
       "required": ["entity"],
       "unevaluatedProperties": false
     },
@@ -164,6 +186,50 @@
       "description": "An \"Other\" node for the home's consumption the consumers do not account for (default: true when consumers are given)"
     },
     "direction": { "type": "string", "enum": ["right", "down"], "default": "right" },
+    "idle_links": {
+      "type": "string",
+      "enum": ["dashed", "hidden", "faint"],
+      "default": "dashed",
+      "description": "Links that carry nothing: dashed tracks, hidden, or faint solid lines"
+    },
+    "kw_above": {
+      "type": "number",
+      "minimum": 0,
+      "default": 1000,
+      "description": "Watts from which values show in kW; 0 shows every value in kW"
+    },
+    "decimals": {
+      "oneOf": [
+        { "type": "integer", "minimum": 0, "maximum": 3 },
+        {
+          "type": "object",
+          "properties": {
+            "w": { "type": "integer", "minimum": 0, "maximum": 3 },
+            "kw": { "type": "integer", "minimum": 0, "maximum": 3 }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "description": "Decimals of the values: one number for both units, or `{ w, kw }` (default 0 and 2)"
+    },
+    "animation": {
+      "type": "object",
+      "properties": {
+        "slow_below": {
+          "type": "number",
+          "minimum": 0,
+          "default": 0,
+          "description": "Watts at and below which the flow is slowest"
+        },
+        "fast_above": {
+          "type": "number",
+          "minimum": 0,
+          "default": 3600,
+          "description": "Watts at and above which the flow is fastest"
+        }
+      },
+      "additionalProperties": false
+    },
     "flow_style": { "type": "string", "enum": ["dots", "lines", "arrows"], "default": "dots" },
     "expensive_above": {
       "type": "number",

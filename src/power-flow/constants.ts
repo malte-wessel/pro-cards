@@ -10,9 +10,25 @@ export const CONSUMER_STYLES = ["nodes", "list"] as const;
 export type ConsumerStyle = (typeof CONSUMER_STYLES)[number];
 export const SOURCE_KINDS = ["solar", "battery", "grid"] as const;
 export type SourceKind = (typeof SOURCE_KINDS)[number];
+export const IDLE_LINKS = ["dashed", "hidden", "faint"] as const;
+export type IdleLinks = (typeof IDLE_LINKS)[number];
 
 // a link carrying less than this is idle: a dashed track without motion
 export const IDLE_W = 20;
+
+// the loads (W) between which the flow goes from its slowest to its fastest
+export interface Animation {
+  slowBelow: number;
+  fastAbove: number;
+}
+export const DEFAULT_ANIMATION: Animation = { slowBelow: 0, fastAbove: 3600 };
+// W below `kwAbove`, kW from it on (0: always kW), with their decimals
+export interface Units {
+  kwAbove: number;
+  decW: number;
+  decKw: number;
+}
+export const DEFAULT_UNITS: Units = { kwAbove: 1000, decW: 0, decKw: 2 };
 
 export const COLORS = {
   solar: "var(--energy-solar-color, #ff9800)",
@@ -20,6 +36,8 @@ export const COLORS = {
   gridOut: "var(--energy-grid-return-color, #8353d1)",
   battOut: "var(--energy-battery-out-color, #4db6ac)",
   battIn: "var(--energy-battery-in-color, #f06292)",
+  nonFossil: "var(--energy-non-fossil-color, #0f9d58)",
+  generator: "var(--amber-color, #ffc107)",
   home: "var(--primary-color)",
   idle: "var(--disabled-color, #9e9e9e)",
   offline: "var(--red-color, #f44336)",
@@ -31,6 +49,7 @@ export const ICONS = {
   battery: "mdi:battery",
   grid: "mdi:transmission-tower",
   gridOff: "mdi:transmission-tower-off",
+  generator: "mdi:engine",
   home: "mdi:home",
   group: "mdi:home-group",
   consumer: "mdi:flash",
@@ -62,6 +81,7 @@ export const GEOM = {
   columnPitch: 142, // direction: down – distance between the columns along the flow
   downMargin: 70, // direction: down – first / last source centre from the edge
   labelH: 32, // a label: value over name
+  labelLine: 15, // a label's extra line (secondary)
   labelGap: 6,
   summaryH: 40, // the summary line above the diagram (grid rows estimate)
 } as const;

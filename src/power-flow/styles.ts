@@ -23,6 +23,8 @@ const STYLE_POWER = `
   .pdiag svg.abs { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
   .link { fill: none; stroke: var(--divider-color); stroke-width: 2; stroke-dasharray: 4 4; stroke-linejoin: round; }
   .link.active { stroke: color-mix(in srgb, var(--pf-c) 45%, ${CARD_BG}); stroke-dasharray: none; }
+  .pdiag.idle-hidden .link:not(.active) { display: none; }
+  .pdiag.idle-faint .link:not(.active) { stroke-dasharray: none; opacity: .35; }
 
   .pflow, .lane { position: absolute; inset: 0; pointer-events: none; }
   .pt, .fa { position: absolute; left: 0; top: 0; offset-path: var(--p); offset-distance: calc(var(--p0) * 100%); animation: pfm var(--dur, 3s) linear infinite; animation-delay: calc(-1 * var(--p0) * var(--dur, 3s)); }
@@ -32,6 +34,9 @@ const STYLE_POWER = `
   @keyframes pfm { from { offset-distance: 0%; } to { offset-distance: 100%; } }
   .sl { fill: none; stroke: var(--pf-c); stroke-width: 3; stroke-linecap: round; stroke-dasharray: var(--dash) calc(var(--per) - var(--dash)); animation: pfl var(--dur, 3s) linear infinite; }
   @keyframes pfl { from { stroke-dashoffset: var(--per); } to { stroke-dashoffset: 0; } }
+  /* a consumer that produces: its flow runs back to the home */
+  .lane.back .pt, .lane.back .fa, .lane.back .sl { animation-direction: reverse; }
+  .lane.back .fa { offset-rotate: reverse; }
 
   .pdiag .pnode { position: absolute; display: flex; flex-direction: column; transform: translate(-50%, -50%); gap: 0; z-index: 2; }
   .pnode .lead .shape { background: color-mix(in srgb, var(--fe-color) 20%, ${CARD_BG}); }
@@ -42,6 +47,7 @@ const STYLE_POWER = `
   .plabel { position: absolute; z-index: 2; white-space: nowrap; line-height: 1.2; pointer-events: none; }
   .plabel .state { display: block; font-size: 14px; line-height: 17px; }
   .plabel .secondary { line-height: 15px; }
+  .plabel .sec2 { opacity: .85; }
   .plabel.small .state { font-size: 12px; line-height: 15px; }
   .plabel.small .secondary { font-size: 11px; line-height: 13px; }
   .plabel.l { transform: translateY(-50%); text-align: left; }
@@ -54,6 +60,7 @@ const STYLE_POWER = `
   .plist .line { gap: 6px; }
   .plist .primary { font-size: 13px; line-height: 16px; }
   .plist .state { font-size: 13px; }
+  .plist .secondary { font-size: 11px; line-height: 13px; margin-top: -2px; }
   .plist .bar { height: 4px; }
   .plist .bar i { border-radius: 2px; }
 

@@ -88,9 +88,12 @@ const columnPlan = (cfg: PowerFlowConfig, scale = 1): Column => {
 };
 
 // the diagram's extent across the flow (its height for `right`): a function of the config
+// a source whose label carries a secondary line needs a taller pitch
+const srcPitchOf = (cfg: PowerFlowConfig) =>
+  GEOM.srcPitch + (cfg.sources.some((s) => cfg.entities[s.idx].secondary) ? 24 : 0);
 export const acrossOf = (cfg: PowerFlowConfig): number => {
   const n = cfg.sources.length;
-  const srcNeed = 2 * GEOM.srcMargin + (n - 1) * GEOM.srcPitch;
+  const srcNeed = 2 * GEOM.srcMargin + (n - 1) * srcPitchOf(cfg);
   const col = columnPlan(cfg);
   const consNeed = cfg.consumers.length ? col.extent + 2 * GEOM.consumerMargin : 0;
   return Math.ceil(Math.max(GEOM.minAcross, srcNeed, consNeed));
@@ -165,7 +168,7 @@ export const layoutTree = (cfg: PowerFlowConfig, width: number, edges: EdgeFlow[
     n < 2
       ? 0
       : right
-        ? Math.min(96, (across - 2 * GEOM.srcMargin) / (n - 1))
+        ? Math.min(Math.max(96, srcPitchOf(cfg)), (across - 2 * GEOM.srcMargin) / (n - 1))
         : Math.max(44, Math.min(126, (across - 2 * GEOM.downMargin) / (n - 1)));
   const bS = cfg.sources.map((_, i) => across / 2 + (i - (n - 1) / 2) * srcPitch);
   const bH = across / 2;

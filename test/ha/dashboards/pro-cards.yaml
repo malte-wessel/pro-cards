@@ -209,6 +209,7 @@ views:
           - type: custom:power-flow-card
             home: sensor.power_consumption
             expensive_above: 0.35
+            idle_links: faint
             sources:
               - { type: solar, entity: sensor.solar_power }
               - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
@@ -216,6 +217,11 @@ views:
                 power: sensor.grid_power
                 price: sensor.electricity_price
                 offline: binary_sensor.grid_outage
+                generator: sensor.generator_power
+                fossil: sensor.grid_fossil_percentage
+            consumers:
+              - { entity: sensor.ev_charger_power, name: EV, icon: mdi:car-electric }
+              - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
           - type: custom:power-flow-card
             title: Energy
             icon: mdi:lightning-bolt

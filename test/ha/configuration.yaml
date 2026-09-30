@@ -153,6 +153,23 @@ template:
         device_class: power
         state_class: measurement
         state: "0"
+      - name: EV charger power
+        unique_id: pro_cards_ev_charger_power
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        state: "{{ ((states('input_number.demo_drive') | float(50) - 30) * 60) | round(0) }}"
+      - name: Generator power
+        unique_id: pro_cards_generator_power
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        state: "{{ 2200 if states('input_number.demo_drive') | float(50) > 92 else 0 }}"
+      - name: Grid fossil fuel percentage
+        unique_id: pro_cards_grid_fossil_percentage
+        unit_of_measurement: "%"
+        icon: mdi:leaf
+        state: "{{ (20 + states('input_number.demo_drive') | float(50) / 4) | round(0) }}"
       - name: Living room temperature
         unique_id: pro_cards_living_room_temperature
         unit_of_measurement: °C

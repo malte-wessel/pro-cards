@@ -137,6 +137,7 @@ export class PowerFlowCard extends EntityCardBase {
         c.now,
         c.flows,
         c.state,
+        cfg.units,
       );
     const diag = card.querySelector<HTMLElement>(".pdiag");
     if (!diag) return;

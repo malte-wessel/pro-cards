@@ -6,7 +6,7 @@ import { unitOf, type EntityModel } from "../shared/entity/model.ts";
 import { fmtNumber } from "../shared/format.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
 import type { EntityItem } from "../shared/entity/config.ts";
-import { COLORS, IDLE_W } from "./constants.ts";
+import { COLORS, DEFAULT_UNITS, IDLE_W, type Units } from "./constants.ts";
 import { leavesOf, type PowerFlowConfig } from "./config.ts";
 
 const UNIT_TO_W: Record<string, number> = { W: 1, kW: 1000, MW: 1e6, mW: 1e-3 };
@@ -19,13 +19,15 @@ export const wattsOf = (ent: EntityItem, m: EntityModel | undefined): number | n
 
 export interface SourceNow {
   kind: "solar" | "battery" | "grid";
-  w: number | null; // solar ≥ 0; battery + = discharging; grid + = import
+  w: number | null; // solar ≥ 0; battery + = discharging; grid + = import (the generator while offline)
   soc: number | null;
   avail: boolean;
+  generator: boolean; // a grid that runs on its generator during an outage
+  lowCarbon: number | null; // a grid's low-carbon share of its power, 0 … 1
 }
 export interface PowerNow {
   sources: SourceNow[];
-  leaves: Map<string, number | null>; // consumer id → watts
+  leaves: Map<string, number | null>; // consumer id → watts, negative when the consumer produces
   homeW: number | null; // the home sensor, null when computed
   offline: boolean;
   price: { num: number; text: string } | null;
@@ -39,10 +41,11 @@ export const powerNow = (
   const w = (idx: number | null) => (idx === null ? null : wattsOf(entities[idx], models[idx]));
   let offline = false,
     price: PowerNow["price"] = null;
+  const none = { soc: null, generator: false, lowCarbon: null };
   const sources = cfg.sources.map((s): SourceNow => {
     if (s.kind === "solar") {
       const v = w(s.idx);
-      return { kind: "solar", w: v === null ? null : Math.max(0, v), soc: null, avail: v !== null };
+      return { kind: "solar", w: v === null ? null : Math.max(0, v), avail: v !== null, ...none };
     }
     const a = w(s.idx),
       b = w(s.secondIdx);
@@ -52,20 +55,34 @@ export const powerNow = (
     else v = a === null && b === null ? null : (a ?? 0) - (b ?? 0);
     if (s.kind === "battery") {
       const soc = s.socIdx === null ? null : (models[s.socIdx]?.model.num ?? null);
-      return { kind: "battery", w: v, soc, avail: v !== null };
+      return { kind: "battery", w: v, avail: v !== null, ...none, soc };
     }
-    if (s.offlineIdx !== null && models[s.offlineIdx]?.model.raw === s.offlineState) offline = true;
+    const down = s.offlineIdx !== null && models[s.offlineIdx]?.model.raw === s.offlineState;
+    if (down) offline = true;
     if (!price && s.priceIdx !== null) {
       const pm = models[s.priceIdx];
       if (pm && pm.model.num !== null) price = { num: pm.model.num, text: pm.fmt.text };
     }
-    return { kind: "grid", w: v, soc: null, avail: v !== null };
+    let lowCarbon: number | null = null;
+    if (s.fossilIdx !== null) {
+      const p = models[s.fossilIdx]?.model.num ?? null;
+      if (p !== null) {
+        const share = Math.max(0, Math.min(1, p / 100));
+        lowCarbon = s.fossilKind === "fossil" ? 1 - share : share;
+      }
+    }
+    // during an outage a generator takes the grid's place: its power feeds the home
+    if (down && s.generatorIdx !== null) {
+      const g = w(s.generatorIdx);
+      return { kind: "grid", w: Math.max(0, g ?? 0), avail: g !== null, ...none, generator: true };
+    }
+    return { kind: "grid", w: v, avail: v !== null, ...none, lowCarbon };
   });
   const leaves = new Map<string, number | null>();
   for (const leaf of leavesOf(cfg))
     if (leaf.kind === "item") {
       const v = w(leaf.idx);
-      leaves.set(leaf.id, v === null ? null : Math.max(0, v));
+      leaves.set(leaf.id, v === null ? null : leaf.invert ? -v : v);
     }
   const homeW = cfg.homeEntity ? w(cfg.homeIdx) : null;
   return {
@@ -77,11 +94,11 @@ export const powerNow = (
   };
 };
 
-export type EdgeKind = "solar" | "battIn" | "battOut" | "gridIn" | "gridOut" | "home";
+export type EdgeKind = "solar" | "battIn" | "battOut" | "gridIn" | "gridOut" | "generator" | "home";
 export interface EdgeFlow {
   from: string; // node id: s<i> (source), home, g<i> (group), c<i> / c<i>.<j> / other
   to: string;
-  w: number;
+  w: number; // negative on a consumer link whose device produces
   kind: EdgeKind;
 }
 export interface Flows {
@@ -91,6 +108,8 @@ export interface Flows {
   sH: number;
   bH: number;
   gH: number;
+  gHClean: number; // the low-carbon part of gH (grids without a fossil sensor count as unknown)
+  gHGen: number; // the part of gH a generator supplies
   sB: number;
   gB: number;
   sG: number;
@@ -98,7 +117,7 @@ export interface Flows {
   grid: number; // + import, − export
   selfSufficiency: number | null;
   edges: EdgeFlow[];
-  leafW: Map<string, number>; // consumer id → watts, "other" included
+  leafW: Map<string, number>; // consumer id → watts (signed), "other" included
   groupW: Map<string, number>;
 }
 
@@ -112,7 +131,11 @@ export const allocate = (cfg: PowerFlowConfig, now: PowerNow): Flows => {
   const src = now.sources;
   const solar = src.map((s) => (s.kind === "solar" ? (s.w ?? 0) : 0));
   const batt = src.map((s) => (s.kind === "battery" ? (s.w ?? 0) : 0));
-  const gridW = src.map((s) => (s.kind === "grid" && !now.offline ? (s.w ?? 0) : 0));
+  // an offline grid carries nothing, unless its generator runs
+  const gridW = src.map((s) =>
+    s.kind === "grid" && (!now.offline || s.generator) ? (s.w ?? 0) : 0,
+  );
+  const gridAvail = !now.offline || src.some((s) => s.generator);
   const S = solar.reduce((a, b) => a + b, 0),
     B = batt.reduce((a, b) => a + b, 0),
     G = gridW.reduce((a, b) => a + b, 0);
@@ -121,7 +144,7 @@ export const allocate = (cfg: PowerFlowConfig, now: PowerNow): Flows => {
   let rest = H - sH;
   const bH = B > 0 ? Math.min(B, rest) : 0;
   rest -= bH;
-  const gH = now.offline ? 0 : Math.max(0, rest);
+  const gH = gridAvail ? Math.max(0, rest) : 0;
   const sB = B < 0 ? Math.min(S - sH, -B) : 0;
   const gB = now.offline ? 0 : B < 0 ? -B - sB : 0;
   const sG = now.offline ? 0 : Math.max(0, S - sH - sB);
@@ -151,6 +174,8 @@ export const allocate = (cfg: PowerFlowConfig, now: PowerNow): Flows => {
     bExp = shares(discharging, bG);
   const imp = shares(importing, gH),
     gCh = shares(importing, gB);
+  let gHClean = 0,
+    gHGen = 0;
   src.forEach((s, i) => {
     if (s.kind === "battery") {
       push(ids[i], "home", dis[i], "battOut");
@@ -158,14 +183,17 @@ export const allocate = (cfg: PowerFlowConfig, now: PowerNow): Flows => {
         if (src[j].kind === "grid") push(ids[i], ids[j], w, "gridOut");
       });
     } else if (s.kind === "grid") {
-      push(ids[i], "home", imp[i], "gridIn");
+      push(ids[i], "home", imp[i], s.generator ? "generator" : "gridIn");
+      if (s.lowCarbon !== null) gHClean += imp[i] * s.lowCarbon;
+      if (s.generator) gHGen += imp[i];
       shares(charging, gCh[i]).forEach((w, j) => {
         if (src[j].kind === "battery") push(ids[i], ids[j], w, "battIn");
       });
     }
   });
 
-  // the consumers: leaves take their watts, a group the sum of its items, "other" the rest
+  // the consumers: leaves take their watts, a group the sum of its items, "other" the rest of
+  // what the home draws (a producing consumer feeds the home and counts for nothing here)
   const leafW = new Map<string, number>(),
     groupW = new Map<string, number>();
   let used = 0;
@@ -176,15 +204,15 @@ export const allocate = (cfg: PowerFlowConfig, now: PowerNow): Flows => {
         const w = now.leaves.get(it.id) ?? 0;
         leafW.set(it.id, w);
         sum += w;
+        used += Math.max(0, w);
         push(c.id, it.id, w, "home");
       }
       groupW.set(c.id, sum);
-      used += sum;
       push("home", c.id, sum, "home");
     } else if (c.kind === "item") {
       const w = now.leaves.get(c.id) ?? 0;
       leafW.set(c.id, w);
-      used += w;
+      used += Math.max(0, w);
       push("home", c.id, w, "home");
     }
   }
@@ -202,6 +230,8 @@ export const allocate = (cfg: PowerFlowConfig, now: PowerNow): Flows => {
     sH,
     bH,
     gH,
+    gHClean,
+    gHGen,
     sB,
     gB,
     sG,
@@ -216,6 +246,7 @@ export const allocate = (cfg: PowerFlowConfig, now: PowerNow): Flows => {
 
 export type StateKey =
   | "power.state.offline"
+  | "power.state.generator"
   | "power.state.expensive"
   | "power.state.exporting"
   | "power.state.battery"
@@ -229,8 +260,12 @@ export interface SummaryState {
 }
 
 export const summaryState = (cfg: PowerFlowConfig, now: PowerNow, f: Flows): SummaryState => {
-  if (now.offline)
-    return { key: "power.state.offline", color: COLORS.offline, w: null, tint: true };
+  if (now.offline) {
+    const onGenerator = f.gH > IDLE_W && now.sources.some((s) => s.generator);
+    return onGenerator
+      ? { key: "power.state.generator", color: COLORS.generator, w: null, tint: true }
+      : { key: "power.state.offline", color: COLORS.offline, w: null, tint: true };
+  }
   const expensive =
     cfg.expensiveAbove !== null &&
     now.price !== null &&
@@ -247,36 +282,47 @@ export const summaryState = (cfg: PowerFlowConfig, now: PowerNow, f: Flows): Sum
   return { key: "power.state.balanced", color: COLORS.balanced, w: null, tint: false };
 };
 
-// "850 W" or "1.23 kW" (magnitudes; the direction is told by colour and motion)
+// "850 W" or "1.23 kW" (magnitudes; the direction is told by colour and motion); an entity's own
+// decimals win over the card's
 export const fmtPower = (
   hass: HomeAssistant | undefined,
   w: number | null,
+  units: Units = DEFAULT_UNITS,
   dec: number | null = null,
 ): string => {
   if (w === null || !Number.isFinite(w)) return "–";
   const v = Math.abs(w);
-  if (v >= 1000) return `${fmtNumber(hass, v / 1000, dec ?? 2)} kW`;
-  return `${fmtNumber(hass, v, dec ?? 0)} W`;
+  if (units.kwAbove <= 0 || v >= units.kwAbove)
+    return `${fmtNumber(hass, v / 1000, dec ?? units.decKw)} kW`;
+  return `${fmtNumber(hass, v, dec ?? units.decW)} W`;
 };
 
 // the colour of a source node for its current flow
 export const sourceColor = (s: SourceNow, offline: boolean): string => {
-  if (s.kind === "grid" && offline) return COLORS.offline;
+  if (s.kind === "grid" && offline)
+    return s.generator && (s.w ?? 0) > IDLE_W ? COLORS.generator : COLORS.offline;
   if (s.w === null) return COLORS.idle;
   if (s.kind === "solar") return s.w > IDLE_W ? COLORS.solar : COLORS.idle;
   if (s.kind === "battery")
     return s.w > IDLE_W ? COLORS.battOut : s.w < -IDLE_W ? COLORS.battIn : COLORS.idle;
   return s.w > IDLE_W ? COLORS.gridIn : s.w < -IDLE_W ? COLORS.gridOut : COLORS.idle;
 };
-export const edgeColor = (kind: EdgeKind): string =>
-  kind === "solar"
-    ? COLORS.solar
-    : kind === "battIn"
-      ? COLORS.battIn
-      : kind === "battOut"
-        ? COLORS.battOut
-        : kind === "gridIn"
-          ? COLORS.gridIn
-          : kind === "gridOut"
-            ? COLORS.gridOut
-            : COLORS.home;
+// the colour of a link; a consumer link running backwards carries what the device produces
+export const edgeColor = (kind: EdgeKind, w = 0): string => {
+  switch (kind) {
+    case "solar":
+      return COLORS.solar;
+    case "battIn":
+      return COLORS.battIn;
+    case "battOut":
+      return COLORS.battOut;
+    case "gridIn":
+      return COLORS.gridIn;
+    case "gridOut":
+      return COLORS.gridOut;
+    case "generator":
+      return COLORS.generator;
+    default:
+      return w < 0 ? COLORS.solar : COLORS.home;
+  }
+};
