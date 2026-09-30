@@ -319,7 +319,7 @@ export const normalizePowerFlowConfig = (input: unknown): PowerFlowConfig => {
   const h = raw.home;
   const homeRaw: RawEntity =
     typeof h === "string" ? { entity: h } : h && typeof h === "object" ? { ...h } : {};
-  if (h !== undefined && h !== null && !homeRaw.entity && homeRaw.value === undefined)
+  if (h !== undefined && h !== null && typeof h !== "string" && typeof h !== "object")
     throw new Error(`${CARD_TYPE}: 'home' must be a sensor entity or an entity object`);
   const homeEntity = !!homeRaw.entity || homeRaw.value !== undefined;
   const home = item(

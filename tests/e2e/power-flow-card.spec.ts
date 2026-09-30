@@ -105,7 +105,7 @@ test.describe("power flow card", () => {
     await mount(page, { type: T, sources: SRC, home: HOME });
     await pin(page, { [SOLAR]: "0.4", [BATT]: "0", [GRID]: "0", [HOME]: "2600", [OUTAGE]: "on" });
     const c = card(page);
-    await expect(summary(c).locator(".accent")).toHaveText("Grid offline · on battery");
+    await expect(summary(c).locator(".accent")).toHaveText("Grid offline · on solar");
     await expect(c.locator("ha-card")).toHaveClass(/tinted/);
     await expect(c.locator(".pnode[data-node='s2'] ha-icon")).toHaveAttribute(
       "icon",
@@ -214,6 +214,26 @@ test.describe("power flow card", () => {
     const x = (id: string) =>
       r.locator(`.pnode[data-node='${id}']`).evaluate((e) => (e as HTMLElement).style.left);
     expect(await x("c1")).toBe(await x("g0"));
+  });
+
+  test("home rules match watts whatever unit the home sensor reports", async ({ page }) => {
+    // the demo solar sensor reports kW: as the home it reads 3.4 kW = 3400 W
+    await mount(page, {
+      type: T,
+      sources: [SRC[2]],
+      home: {
+        entity: SOLAR,
+        rules: [{ below: 500, color: "green", label: "Quiet", tint_card: true }],
+      },
+    });
+    await pin(page, { [GRID]: "3400" });
+    const c = card(page);
+    await expect(c.locator(".psummary .primary")).toHaveText("Home · 3.40 kW");
+    await expect(c.locator("ha-card")).not.toHaveClass(/tinted/);
+    await expect(c.locator(".psummary .pill")).toHaveCount(0);
+    await pin(page, { [SOLAR]: "0.3", [GRID]: "300" });
+    await expect(c.locator(".psummary .pill")).toHaveText("Quiet");
+    await expect(c.locator("ha-card")).toHaveClass(/tinted/);
   });
 
   test("direction, idle links, units, animation bounds and card size", async ({ page }) => {

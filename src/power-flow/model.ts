@@ -111,6 +111,7 @@ export interface Flows {
   gHClean: number; // the low-carbon part of gH (grids without a fossil sensor count as unknown)
   gHGen: number; // the part of gH a generator supplies
   sB: number;
+  dB: number; // discharge of one battery charging another
   gB: number;
   sG: number;
   bG: number;
@@ -121,14 +122,19 @@ export interface Flows {
   groupW: Map<string, number>;
 }
 
-// splits `total` over the parts pro rata (equal shares when every part is 0)
-const shares = (parts: number[], total: number) => {
-  const sum = parts.reduce((a, b) => a + b, 0);
-  return parts.map((p) => (sum > 0 ? (total * p) / sum : parts.length ? total / parts.length : 0));
+// splits `total` over the parts pro rata; when every eligible part is 0 the eligible ones share
+// it equally (the others get nothing)
+const shares = (parts: number[], total: number, eligible: boolean[]) => {
+  const sum = parts.reduce((a, b, i) => a + (eligible[i] ? b : 0), 0);
+  const n = eligible.filter(Boolean).length;
+  return parts.map((p, i) => (!eligible[i] ? 0 : sum > 0 ? (total * p) / sum : n ? total / n : 0));
 };
 
 export const allocate = (cfg: PowerFlowConfig, now: PowerNow): Flows => {
   const src = now.sources;
+  const isSolar = src.map((s) => s.kind === "solar"),
+    isBatt = src.map((s) => s.kind === "battery"),
+    isGrid = src.map((s) => s.kind === "grid");
   const solar = src.map((s) => (s.kind === "solar" ? (s.w ?? 0) : 0));
   const batt = src.map((s) => (s.kind === "battery" ? (s.w ?? 0) : 0));
   // an offline grid carries nothing, unless its generator runs
@@ -136,58 +142,71 @@ export const allocate = (cfg: PowerFlowConfig, now: PowerNow): Flows => {
     s.kind === "grid" && (!now.offline || s.generator) ? (s.w ?? 0) : 0,
   );
   const gridAvail = !now.offline || src.some((s) => s.generator);
+  // batteries charge and discharge separately: one may feed another
+  const charging = batt.map((b) => Math.max(0, -b)),
+    discharging = batt.map((b) => Math.max(0, b));
+  const isCharging = charging.map((c, i) => isBatt[i] && c > 0),
+    isDischarging = discharging.map((d, i) => isBatt[i] && d > 0);
+  const importing = gridW.map((g) => Math.max(0, g)),
+    exporting = gridW.map((g) => Math.max(0, -g));
   const S = solar.reduce((a, b) => a + b, 0),
     B = batt.reduce((a, b) => a + b, 0),
-    G = gridW.reduce((a, b) => a + b, 0);
+    G = gridW.reduce((a, b) => a + b, 0),
+    D = discharging.reduce((a, b) => a + b, 0),
+    C = charging.reduce((a, b) => a + b, 0);
   const H = now.homeW ?? Math.max(0, S + B + G);
+  // the home: solar first, then the batteries, then the grid
   const sH = Math.min(S, H);
   let rest = H - sH;
-  const bH = B > 0 ? Math.min(B, rest) : 0;
+  const bH = Math.min(D, rest);
   rest -= bH;
   const gH = gridAvail ? Math.max(0, rest) : 0;
-  const sB = B < 0 ? Math.min(S - sH, -B) : 0;
-  const gB = now.offline ? 0 : B < 0 ? -B - sB : 0;
+  // charging: solar surplus first, then other batteries' surplus, then the grid
+  const sB = Math.min(S - sH, C);
+  const dB = Math.min(D - bH, C - sB);
+  const gB = now.offline ? 0 : C - sB - dB;
+  // export: whatever is left
   const sG = now.offline ? 0 : Math.max(0, S - sH - sB);
-  const bG = now.offline ? 0 : B > 0 ? B - bH : 0;
+  const bG = now.offline ? 0 : Math.max(0, D - bH - dB);
   const grid = gH + gB - sG - bG;
 
   const edges: EdgeFlow[] = [];
   const ids = src.map((_, i) => `s${i}`);
-  const charging = batt.map((b) => Math.max(0, -b)),
-    discharging = batt.map((b) => Math.max(0, b));
-  const importing = gridW.map((g) => Math.max(0, g)),
-    exporting = gridW.map((g) => Math.max(0, -g));
   const push = (from: string, to: string, w: number, kind: EdgeKind) =>
     edges.push({ from, to, w, kind });
-  const solarShare = shares(solar, 1);
+  const solarShare = shares(solar, 1, isSolar);
   src.forEach((s, i) => {
     if (s.kind !== "solar") return;
     push(ids[i], "home", sH * solarShare[i], "solar");
-    shares(charging, sB * solarShare[i]).forEach((w, j) => {
-      if (src[j].kind === "battery") push(ids[i], ids[j], w, "battIn");
+    shares(charging, sB * solarShare[i], isCharging).forEach((w, j) => {
+      if (isBatt[j]) push(ids[i], ids[j], w, "battIn");
     });
-    shares(exporting, sG * solarShare[i]).forEach((w, j) => {
-      if (src[j].kind === "grid") push(ids[i], ids[j], w, "gridOut");
+    shares(exporting, sG * solarShare[i], isGrid).forEach((w, j) => {
+      if (isGrid[j]) push(ids[i], ids[j], w, "gridOut");
     });
   });
-  const dis = shares(discharging, bH),
-    bExp = shares(discharging, bG);
-  const imp = shares(importing, gH),
-    gCh = shares(importing, gB);
+  const dis = shares(discharging, bH, isDischarging),
+    bCh = shares(discharging, dB, isDischarging),
+    bExp = shares(discharging, bG, isDischarging);
+  const imp = shares(importing, gH, isGrid),
+    gCh = shares(importing, gB, isGrid);
   let gHClean = 0,
     gHGen = 0;
   src.forEach((s, i) => {
     if (s.kind === "battery") {
       push(ids[i], "home", dis[i], "battOut");
-      shares(exporting, bExp[i]).forEach((w, j) => {
-        if (src[j].kind === "grid") push(ids[i], ids[j], w, "gridOut");
+      shares(charging, bCh[i], isCharging).forEach((w, j) => {
+        if (isBatt[j] && j !== i) push(ids[i], ids[j], w, "battIn");
+      });
+      shares(exporting, bExp[i], isGrid).forEach((w, j) => {
+        if (isGrid[j]) push(ids[i], ids[j], w, "gridOut");
       });
     } else if (s.kind === "grid") {
       push(ids[i], "home", imp[i], s.generator ? "generator" : "gridIn");
       if (s.lowCarbon !== null) gHClean += imp[i] * s.lowCarbon;
       if (s.generator) gHGen += imp[i];
-      shares(charging, gCh[i]).forEach((w, j) => {
-        if (src[j].kind === "battery") push(ids[i], ids[j], w, "battIn");
+      shares(charging, gCh[i], isCharging).forEach((w, j) => {
+        if (isBatt[j]) push(ids[i], ids[j], w, "battIn");
       });
     }
   });
@@ -233,6 +252,7 @@ export const allocate = (cfg: PowerFlowConfig, now: PowerNow): Flows => {
     gHClean,
     gHGen,
     sB,
+    dB,
     gB,
     sG,
     bG,
@@ -246,6 +266,8 @@ export const allocate = (cfg: PowerFlowConfig, now: PowerNow): Flows => {
 
 export type StateKey =
   | "power.state.offline"
+  | "power.state.offline_battery"
+  | "power.state.offline_solar"
   | "power.state.generator"
   | "power.state.expensive"
   | "power.state.exporting"
@@ -262,9 +284,15 @@ export interface SummaryState {
 export const summaryState = (cfg: PowerFlowConfig, now: PowerNow, f: Flows): SummaryState => {
   if (now.offline) {
     const onGenerator = f.gH > IDLE_W && now.sources.some((s) => s.generator);
-    return onGenerator
-      ? { key: "power.state.generator", color: COLORS.generator, w: null, tint: true }
-      : { key: "power.state.offline", color: COLORS.offline, w: null, tint: true };
+    if (onGenerator)
+      return { key: "power.state.generator", color: COLORS.generator, w: null, tint: true };
+    const key =
+      f.bH > IDLE_W
+        ? "power.state.offline_battery"
+        : f.sH > IDLE_W
+          ? "power.state.offline_solar"
+          : "power.state.offline";
+    return { key, color: COLORS.offline, w: null, tint: true };
   }
   const expensive =
     cfg.expensiveAbove !== null &&

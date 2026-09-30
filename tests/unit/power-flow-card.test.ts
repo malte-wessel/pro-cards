@@ -217,6 +217,34 @@ describe("power-flow-card config", () => {
     expect(c.entities[0].rules[0].label).toBe("Quiet");
     expect(c.entities[0].tap).toEqual({ action: "none" });
     expect(c.consumers).toEqual([]);
+    // a home object without a sensor: computed, with its own name, icon and rules
+    const looks = normalizePowerFlowConfig({
+      sources: SRC,
+      home: { name: "House", icon: "mdi:home-city", rules: [{ above: 0, color: "teal" }] },
+    });
+    expect(looks.homeEntity).toBe(false);
+    expect(looks.entities[0]).toMatchObject({ name: "House", icon: "mdi:home-city" });
+    expect(looks.entities[0].rules[0].color).toBe("teal");
+  });
+
+  it("offers a stub the card accepts whatever the home has", () => {
+    const hass = (states: Record<string, unknown>) => ({ states }) as unknown as HomeAssistant;
+    const st = (dc?: string) => ({ attributes: dc ? { device_class: dc } : {} });
+    for (const h of [
+      hass({ "sensor.solar_roof": st("power"), "sensor.house": st("power") }),
+      hass({ "sensor.house": st("power") }),
+      hass({ "sensor.temp": st("temperature") }),
+      hass({}),
+      undefined,
+    ])
+      expect(() => normalizePowerFlowConfig(PowerFlowCard.getStubConfig(h))).not.toThrow();
+    const full = PowerFlowCard.getStubConfig(
+      hass({ "sensor.solar_roof": st("power"), "sensor.house": st("power") }),
+    );
+    expect(full).toMatchObject({
+      home: "sensor.house",
+      sources: [{ type: "solar", entity: "sensor.solar_roof" }],
+    });
   });
 
   it("defaults and clamps the options", () => {
@@ -388,7 +416,7 @@ describe("power flow numbers", () => {
     expect(off.now.offline).toBe(true);
     expect(off.f).toMatchObject({ sH: 900, bH: 1400, gH: 0, sG: 0, gB: 0, bG: 0, grid: 0 });
     expect(summaryState(cfg, off.now, off.f)).toMatchObject({
-      key: "power.state.offline",
+      key: "power.state.offline_battery",
       tint: true,
       color: COLORS.offline,
     });
@@ -415,6 +443,82 @@ describe("power flow numbers", () => {
     });
     expect(sourceColor(on.now.sources[2], true)).toBe(COLORS.generator);
     expect(edgeColor("generator")).toBe(COLORS.generator);
+  });
+
+  it("names what the home runs on during an outage", () => {
+    const cfg = base();
+    const state = (states: Parameters<typeof hassOf>[0]) => {
+      const { now, f } = flowsOf(cfg, { "binary_sensor.outage": "on", ...states });
+      return summaryState(cfg, now, f).key;
+    };
+    expect(state({ "sensor.solar": "0", "sensor.home": "800", "sensor.battery": "800" })).toBe(
+      "power.state.offline_battery",
+    );
+    expect(state({ "sensor.solar": "900", "sensor.home": "800", "sensor.battery": "0" })).toBe(
+      "power.state.offline_solar",
+    );
+    expect(state({ "sensor.solar": "0", "sensor.home": "800", "sensor.battery": "0" })).toBe(
+      "power.state.offline",
+    );
+    // a card without a battery never claims to run on one
+    const solarGrid = normalizePowerFlowConfig({ home: "sensor.home", sources: [SRC[0], SRC[2]] });
+    const { now, f } = flowsOf(solarGrid, {
+      "binary_sensor.outage": "on",
+      "sensor.solar": "0",
+      "sensor.home": "500",
+    });
+    expect(summaryState(solarGrid, now, f).key).toBe("power.state.offline");
+  });
+
+  it("gives an allocated flow to the links of its kind even when their sensors say nothing", () => {
+    const cfg = base();
+    // the grid sensor is unavailable: the home sensor implies 500 W of import, all on the grid link
+    const a = flowsOf(cfg, {
+      "sensor.solar": "0",
+      "sensor.home": "2100",
+      "sensor.battery": "1600",
+    });
+    expect(a.f.gH).toBe(500);
+    expect(edge(a.f, "s2", "home")?.w).toBe(500);
+    const b = flowsOf(cfg, {
+      "sensor.solar": "0",
+      "sensor.home": "600",
+      "sensor.battery": "-1000",
+    });
+    expect(edge(b.f, "s2", "s1")?.w).toBe(1000);
+    expect(edge(b.f, "s2", "home")?.w).toBe(600);
+    const c = flowsOf(cfg, {
+      "sensor.solar": "3000",
+      "sensor.home": "1000",
+      "sensor.battery": "0",
+    });
+    expect(edge(c.f, "s0", "s2")?.w).toBe(2000);
+  });
+
+  it("lets one battery charge another", () => {
+    const cfg = normalizePowerFlowConfig({
+      home: "sensor.home",
+      sources: [
+        { type: "solar", entity: "sensor.solar" },
+        { type: "battery", power: "sensor.b1" },
+        { type: "battery", power: "sensor.b2" },
+        { type: "grid", power: "sensor.grid" },
+      ],
+    });
+    const { f } = flowsOf(cfg, {
+      "sensor.solar": "0",
+      "sensor.home": "500",
+      "sensor.b1": "1000",
+      "sensor.b2": "-500",
+      "sensor.grid": "0",
+    });
+    expect(f).toMatchObject({ bH: 500, dB: 500, gH: 0, sB: 0, gB: 0, bG: 0 });
+    expect(edge(f, "s1", "home")?.w).toBe(500);
+    expect(edge(f, "s1", "s2")).toMatchObject({ w: 500, kind: "battIn" });
+    expect(edge(f, "s2", "home")?.w).toBe(0);
+    // every link of a battery adds up to its label
+    const out = f.edges.filter((e) => e.from === "s1").reduce((a, e) => a + e.w, 0);
+    expect(out).toBe(1000);
   });
 
   it("reads the grid's low-carbon share from a fossil or a non-fossil percentage", () => {

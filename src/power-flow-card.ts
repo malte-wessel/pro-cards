@@ -55,11 +55,13 @@ export class PowerFlowCard extends EntityCardBase {
     const isPower = (id: string) =>
       id.startsWith("sensor.") && states[id]?.attributes?.device_class === "power";
     const solar = ids.find((id) => isPower(id) && /solar|pv/.test(id));
-    const home = ids.find((id) => isPower(id) && id !== solar) || "";
+    const home = ids.find((id) => isPower(id) && id !== solar);
+    // always a config the card accepts: a power sensor, any sensor, or a placeholder
+    const any = ids.find((id) => id.startsWith("sensor.")) || "sensor.solar_power";
     return {
       title: t(hass, "power.stub_title"),
-      home: home || undefined,
-      sources: solar ? [{ type: "solar", entity: solar }] : [{ type: "grid", power: home }],
+      ...(home ? { home } : {}),
+      sources: [solar ? { type: "solar", entity: solar } : { type: "grid", power: home ?? any }],
     };
   }
 
@@ -99,7 +101,13 @@ export class PowerFlowCard extends EntityCardBase {
     const c = this._computed;
     if (c?.state.tint) return "red";
     if (c?.homeLook.tint) return c.homeLook.color;
-    return super._tintColor(ctx, models, card);
+    // the base walks every row: the home row must carry the look resolved on watts, not the raw value
+    const cfg = this._config as PowerFlowConfig;
+    return super._tintColor(
+      ctx,
+      models.map((m, i) => (c && i === cfg.homeIdx ? { ...m, look: c.homeLook } : m)),
+      card,
+    );
   }
   _compute(ctx: RenderCtx, cfg: PowerFlowConfig): Computed {
     const models = cfg.entities.map((ent) => modelOf(ctx, ent));
