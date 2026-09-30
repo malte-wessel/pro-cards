@@ -426,12 +426,12 @@
   .secondary .accent { color: var(--fe-color); font-weight: 500; }
 
   /* the arrow: where the wind blows */
-  .arrow { display: block; transform: rotate(var(--arrow, 0deg)); transition: transform 3s; }
+  .arrow { display: block; transform: rotate(var(--arrow, 0deg)); transition: transform 5s; }
   .nodir .arrow { display: none; }
 
   /* the animated lead: a rotated field inside the soft circle */
   .lead.wlead { overflow: hidden; border-radius: 50%; }
-  .lead.wlead .lfield { position: absolute; inset: -25%; transform: rotate(var(--rot, 0deg)); transition: transform 3s; }
+  .lead.wlead .lfield { position: absolute; inset: -25%; transform: rotate(var(--rot, 0deg)); transition: transform 5s; }
   .ld, .la, .ls { position: absolute; top: var(--t); background: var(--fe-color); }
   .ld { width: 5px; height: 5px; margin-top: -2px; border-radius: 50%; left: calc(-12% + var(--p0) * 120%); animation: lam var(--ldur, 1s) linear infinite; animation-delay: calc(-1 * var(--p0) * var(--ldur, 1s)); }
   .ld.trail { opacity: .5; scale: .75; }
@@ -440,7 +440,7 @@
   @keyframes lam { from { left: -12%; } to { left: 108%; } }
   .ls { left: 0; width: var(--w); height: var(--h, 2px); border-radius: 1px; transform: translateX(calc(-120% + var(--p0) * 540%)); animation: lsm var(--ldur, 1s) linear infinite; animation-delay: calc(-1 * var(--p0) * var(--ldur, 1s)); }
   @keyframes lsm { from { transform: translateX(-120%); } to { transform: translateX(420%); } }
-  .lead.wlead svg { inset: 19%; width: 62%; height: 62%; transform: rotate(var(--rot, 0deg)); transition: transform 3s; overflow: visible; }
+  .lead.wlead svg { inset: 19%; width: 62%; height: 62%; transform: rotate(var(--rot, 0deg)); transition: transform 5s; overflow: visible; }
   .lsw { fill: none; stroke: var(--fe-color); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 100 100; stroke-dashoffset: var(--off); animation: lswm calc(var(--ldur, 1s) * 3.2) ease-in-out infinite; animation-delay: calc(-1 * var(--p0) * var(--ldur, 1s) * 3.2); }
   @keyframes lswm { 0% { stroke-dashoffset: 100; } 45% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -100; } }
 
@@ -460,7 +460,7 @@
   .row.wtile.flow .top { position: relative; }
   .row.wtile.flow .lead .shape { background: color-mix(in srgb, var(--fe-color) 20%, var(--ha-card-background, var(--card-background-color))); }
   .row.wtile.flow .end .big b { font-size: 26px; line-height: 30px; }
-  .field { position: absolute; left: 50%; top: 50%; width: var(--size, 480px); height: var(--size, 480px); margin: calc(var(--size, 480px) / -2) 0 0 calc(var(--size, 480px) / -2); transform: rotate(var(--rot, 0deg)); transition: transform 3s; pointer-events: none; }
+  .field { position: absolute; left: 50%; top: 50%; width: var(--size, 480px); height: var(--size, 480px); margin: calc(var(--size, 480px) / -2) 0 0 calc(var(--size, 480px) / -2); transform: rotate(var(--rot, 0deg)); transition: transform 5s; pointer-events: none; }
   .lane { position: absolute; inset: 0; }
   .pt, .fa, .gs { position: absolute; left: 0; top: 0; offset-path: var(--p); }
   .pt, .fa { offset-distance: calc(var(--p0) * 100%); opacity: var(--o); animation: wflow calc(var(--dur) * var(--k)) linear infinite; animation-delay: calc(-1 * var(--p0) * var(--dur) * var(--k)); }
