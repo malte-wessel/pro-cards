@@ -79,7 +79,9 @@ export const STYLE_CELL = `
 export const STYLE_ITEM = `
   .row.item { flex-direction: column; align-items: center; gap: 6px; max-width: 100%; text-align: center; }
   .item .iname { font-size: 12px; line-height: 16px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  .item .ibody { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .item .ibody { display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; overflow: hidden; }
+  /* a value that does not fit clips with an ellipsis but keeps its first characters */
+  .item .ibody .state, .item .ibody .pill { min-width: 2.5ch; overflow: hidden; text-overflow: ellipsis; }
   .item:focus-visible { box-shadow: none; }
   .item:focus-visible .lead .shape { box-shadow: 0 0 0 2px var(--fe-color); }
 `;
