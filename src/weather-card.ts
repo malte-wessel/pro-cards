@@ -11,7 +11,7 @@
  *   sections:                              # none → a tile
  *     - { type: hero }                                     # condition, big temperature, high / low
  *     - { type: row, entities: [humidity, wind_speed, { entity: sensor.uv_index, visual: ring }] }
- *     - { type: trend, mode: hourly, hours_to_show: 12, show: [temperature, precipitation] }
+ *     - { type: trend, mode: hourly, hours: 12, show: [temperature, precipitation] }
  *     - { type: forecast, mode: daily, layout: vertical, days: 7 }
  *     - { type: table, title: More, entities: [pressure, dew_point] }   # row | list | table | grid | column
  *   tap_action / hold_action / double_tap_action   # more-info / more-info / none
@@ -89,14 +89,16 @@ export class WeatherCard extends EntityCardBase {
     return STYLE_WEATHER_CARD;
   }
   getGridOptions(): GridOptions {
-    if (this._config?.layout === "tile")
-      return { columns: 6, rows: 1, min_columns: 3, min_rows: 1, max_rows: 1 };
+    if (this._config?.layout === "tile") {
+      const rows = this._config.hasHeader ? 2 : 1;
+      return { columns: 6, rows, min_columns: 3, min_rows: rows, max_rows: rows };
+    }
     return { columns: 12, rows: "auto", min_columns: 6, min_rows: 2 };
   }
   getCardSize() {
     const cfg = this._config;
     if (!cfg) return 2;
-    if (cfg.layout === "tile") return 1;
+    if (cfg.layout === "tile") return cfg.hasHeader ? 2 : 1;
     let rows = cfg.hasHeader ? 1 : 0;
     for (const s of cfg.sections) {
       if (s.kind === "hero") rows += 2;
@@ -173,6 +175,7 @@ export class WeatherCard extends EntityCardBase {
           { type: "weather/subscribe_forecast", forecast_type: type, entity_id: cfg.entity },
         )
         .catch((e) => {
+          if (this._fcToken.get(type) !== token) return null; // replaced meanwhile
           console.warn(`${CARD_TYPE}: forecast subscription failed`, type, e);
           this._forecast[type] = null;
           this._render();
@@ -234,14 +237,15 @@ export class WeatherCard extends EntityCardBase {
     const cfg = this._config as WeatherConfig;
     const c = row.classList;
     if (c.contains("wtile") || c.contains("whero")) {
-      const days = this._days(1);
+      // the hero shows today's high / low; the tile does not read the forecast
+      const days = c.contains("whero") ? this._days(1) : null;
       const today = days?.find((d) => isToday(d.t, ctx.now)) ?? null;
       const secEl = row.closest<HTMLElement>("[data-sec]");
       const sec = secEl ? cfg.sections[Number(secEl.dataset.sec)] : undefined;
       const hero = sec?.kind === "hero" ? sec : null;
       const temp = modelOf(ctx, cfg.entities[hero ? hero.tempIdx : cfg.tempIdx]);
       const iconSize = hero ? hero.iconSize : cfg.iconSize;
-      const icons = hero?.icons ?? cfg.icons;
+      const icons = hero ? hero.icons : cfg.icons;
       fillCurrent(ctx, row, cfg, { cond: m, temp, today, iconSize, icons }, c.contains("wtile"));
       return;
     }

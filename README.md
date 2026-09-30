@@ -160,7 +160,7 @@ title: Home
 sections:
   - { type: hero }
   - { type: row, entities: [humidity, wind_speed, pressure] }
-  - { type: trend, mode: hourly, hours_to_show: 12 }
+  - { type: trend, mode: hourly, hours: 12 }
   - { type: forecast, mode: daily, days: 7 }
 ```
 

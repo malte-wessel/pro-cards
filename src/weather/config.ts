@@ -47,7 +47,7 @@ export interface RawWeatherSection extends RawGroup {
   name?: string | null;
   secondary?: string | null;
   mode?: unknown;
-  hours_to_show?: unknown;
+  hours?: unknown;
   days?: unknown;
   show?: unknown;
   x_axis?: unknown;
@@ -86,9 +86,13 @@ export interface SectionItems {
   tempIdx: number;
   divider: boolean; // a line above the section (never drawn for the first)
 }
-// the condition icons: Home Assistant's weather pictures (default), mdi icons, or a map from
-// condition to an mdi icon or an image URL
-export type WeatherIcons = "mdi" | "hass" | Partial<Record<Condition, string>>;
+// the condition icons: a base (Home Assistant's weather pictures by default, or mdi icons) and
+// a map from condition to an mdi icon or an image URL that overrides single conditions. A
+// section's setting merges over the card's.
+export interface WeatherIcons {
+  base: "hass" | "mdi";
+  map: Partial<Record<Condition, string>>;
+}
 export type WeatherSection =
   | ({
       kind: "hero";
@@ -96,7 +100,7 @@ export type WeatherSection =
       name: string | null;
       secondary: string | null;
       iconSize: number;
-      icons: WeatherIcons | null; // null: the card's
+      icons: WeatherIcons; // the card's, merged with the section's
     } & SectionItems)
   | { kind: "entities"; group: Group; title: string | null }
   | ({
@@ -107,7 +111,7 @@ export type WeatherSection =
       show: RainFigure[];
       title: string | null;
       iconSize: number;
-      icons: WeatherIcons | null;
+      icons: WeatherIcons;
     } & SectionItems)
   | ({
       kind: "trend";
@@ -140,18 +144,25 @@ const clampInt = (v: unknown, fallback: number, min: number, max: number) =>
 const bool = (v: unknown, d: boolean) => (v === undefined || v === null ? d : !!v);
 const text = (v: unknown): string | null => (typeof v === "string" && v ? v : null);
 const iconSize = (v: unknown, fallback: number) => clampInt(v, fallback, 12, 160);
-const iconsOf = (v: unknown): WeatherIcons => {
-  if (v === undefined || v === null || v === "hass") return "hass";
-  if (v === "mdi") return "mdi";
+// `icons` on top of what is already in force: a preset name replaces the base, a map adds to
+// the mapped conditions
+const iconsOf = (v: unknown, parent: WeatherIcons): WeatherIcons => {
+  if (v === undefined || v === null) return parent;
+  if (v === "hass" || v === "mdi") return { base: v, map: parent.map };
   if (v && typeof v === "object" && !Array.isArray(v)) {
-    const map: Partial<Record<Condition, string>> = {};
+    const map: Partial<Record<Condition, string>> = { ...parent.map };
     for (const [k, val] of Object.entries(v as Record<string, unknown>))
       if (isCondition(k) && typeof val === "string" && val) map[k] = val;
-    return map;
+    return { base: parent.base, map };
   }
   throw new Error(`${CARD_TYPE}: icons must be mdi, hass or a map of condition → icon`);
 };
 
+// the attribute names of the weather entity are accepted for the quantities too
+const QUANTITY_ALIAS: Record<string, Quantity> = {
+  wind_speed: "wind",
+  precipitation_probability: "probability",
+};
 // `show` of a trend: quantity names or { quantity, name, color } objects (the multi trend
 // `entities` shape); unknown quantities are dropped, duplicates keep the first
 const trendEntries = (v: unknown): TrendEntry[] => {
@@ -165,7 +176,7 @@ const trendEntries = (v: unknown): TrendEntry[] => {
         : e && typeof e === "object"
           ? (e as Record<string, unknown>)
           : {};
-    const q = o.quantity;
+    const q = QUANTITY_ALIAS[String(o.quantity)] ?? o.quantity;
     if (!oneOf(QUANTITIES, q) || out.some((x) => x.quantity === q)) continue;
     out.push({ quantity: q, name: text(o.name), color: text(o.color) });
   }
@@ -184,7 +195,7 @@ const modeOf = (sec: RawWeatherSection, label: string): ForecastMode => {
 };
 const countOf = (sec: RawWeatherSection, mode: ForecastMode) =>
   mode === "hourly"
-    ? clampInt(sec.hours_to_show, DEFAULTS.hours, 1, DEFAULTS.maxHours)
+    ? clampInt(sec.hours, DEFAULTS.hours, 1, DEFAULTS.maxHours)
     : clampInt(sec.days, DEFAULTS.days, 1, DEFAULTS.maxDays);
 
 // an entry of an entity group: an attribute name of the weather entity becomes an attribute
@@ -222,6 +233,7 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
     columns: clampColumns(raw.columns, ENTITY_DEFAULTS.columns),
   };
   const entities: EntityItem[] = [];
+  const icons = iconsOf(raw.icons, { base: "hass", map: {} });
 
   // the condition: the state with the card's rules; the temperature: an attribute with its own;
   // rain, rain chance and wind: items that know the units and formatting of forecast values
@@ -284,7 +296,16 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
   list(raw.sections).forEach((s, i) => {
     const sec = s && typeof s === "object" ? (s as RawWeatherSection) : {};
     const label = `sections[${i}]`;
-    const type = sec.type;
+    // a section without `type` is an entity group, as in the sections card: `layout` picks the
+    // group layout (default list)
+    let type = sec.type;
+    if (type === undefined || type === null) {
+      if (sec.entities === undefined)
+        throw new Error(`${CARD_TYPE}: ${label} needs a 'type' or 'entities'`);
+      type = sec.layout ?? "list";
+      if (!oneOf(GROUP_TYPES, type))
+        throw new Error(`${CARD_TYPE}: ${label}.layout must be one of ${GROUP_TYPES.join(" | ")}`);
+    }
     if (!oneOf(SECTION_TYPES, type))
       throw new Error(`${CARD_TYPE}: ${label}.type must be one of ${SECTION_TYPES.join(" | ")}`);
     const title = sec.title ?? null;
@@ -295,7 +316,7 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
         name: sec.name ?? null,
         secondary: sec.secondary ?? null,
         iconSize: iconSize(sec.icon_size, DEFAULTS.heroIconSize),
-        icons: sec.icons == null ? null : iconsOf(sec.icons),
+        icons: iconsOf(sec.icons, icons),
         ...sectionItems(sec, label),
       });
     } else if (oneOf(GROUP_TYPES, type)) {
@@ -338,7 +359,7 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
         show: rainFigures(sec.show),
         title,
         iconSize: iconSize(sec.icon_size, DEFAULTS.forecastIconSize),
-        icons: sec.icons == null ? null : iconsOf(sec.icons),
+        icons: iconsOf(sec.icons, icons),
         ...sectionItems(sec, label),
       });
     } else {
@@ -383,7 +404,7 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
     precipIdx: 2,
     probIdx: 3,
     windIdx: 4,
-    icons: iconsOf(raw.icons),
+    icons,
     iconSize: iconSize(raw.icon_size, DEFAULTS.tileIconSize),
     sections,
   };
@@ -397,9 +418,6 @@ export const wantedForecasts = (cfg: WeatherConfig) => {
   );
   return {
     hourly: modes.includes("hourly"),
-    daily:
-      cfg.layout === "tile" ||
-      cfg.sections.some((s) => s.kind === "hero") ||
-      modes.includes("daily"),
+    daily: cfg.sections.some((s) => s.kind === "hero") || modes.includes("daily"),
   };
 };

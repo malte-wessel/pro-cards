@@ -32,7 +32,7 @@ sections:
 
 ## Rows of attributes and entities
 
-`row`, `list`, `table`, `grid` and `column` sections are entity groups exactly like the sections of the [sections card](/cards/entity-sections-card): `entities`, `align`, `columns`, the item options, a `title` and `divider: true` for a line above the section (every section type takes these two). An entry that names an attribute of the weather entity gets a translated name, an icon and the entity's unit: `humidity`, `pressure`, `wind_speed`, `wind_gust_speed`, `wind_bearing`, `apparent_temperature`, `dew_point`, `uv_index`, `cloud_coverage`, `visibility`, `ozone`. Any other entry is an [entity](/cards/entity-options) with every option the entity cards know, so a sensor next to the weather station fits in with its own rules and visual.
+`row`, `list`, `table`, `grid` and `column` sections are entity groups exactly like the sections of the [sections card](/cards/entity-sections-card): `entities`, `align`, `columns`, the item options, a `title` and `divider: true` for a line above the section (every section type takes these two). A section of the sections card pastes in unchanged: without `type`, `layout` picks the group layout (default `list`). Row items show their value and spread over the width (`align: stretch`) unless you say otherwise. An entry that names an attribute of the weather entity gets a translated name, an icon and the entity's unit: `humidity`, `pressure`, `wind_speed`, `wind_gust_speed`, `wind_bearing`, `apparent_temperature`, `dew_point`, `uv_index`, `cloud_coverage`, `visibility`, `ozone`. Any other entry is an [entity](/cards/entity-options) with every option the entity cards know, so a sensor next to the weather station fits in with its own rules and visual.
 
 ::: live
 
@@ -56,7 +56,7 @@ sections:
 
 ## Trend
 
-A `trend` section is the plot of the [multi trend card](/cards/multi-trend-card) over the forecast. `mode: hourly` draws the next `hours_to_show` hours (1 to 48), `mode: daily` the next `days` days (1 to 10) with the temperature as high and low. `show` lists the lines like the multi trend card's `entities`: a quantity name (`temperature`, `precipitation`, `probability`, `wind`) or `{ quantity, name, color }`; the temperature takes its rule colour by default. `layout` (`auto`, `overlay`, `lanes`), `x_axis`, `y_axis` and `show_legend` work as in the multi trend card. Hover or touch the plot for the condition and every value at that time.
+A `trend` section is the plot of the [multi trend card](/cards/multi-trend-card) over the forecast. `mode: hourly` draws the next `hours` hours (1 to 48), `mode: daily` the next `days` days (1 to 10) with the temperature as high and low. `show` lists the lines like the multi trend card's `entities`: a quantity name (`temperature`, `precipitation`, `probability`, `wind`) or `{ quantity, name, color }`; the temperature takes its rule colour by default. `layout` (`auto`, `overlay`, `lanes`), `x_axis`, `y_axis` and `show_legend` work as in the multi trend card; the time axis is on by default here, since a forecast needs it. The attribute names `wind_speed` and `precipitation_probability` are accepted for `wind` and `probability`. Hover or touch the plot for the condition and every value at that time.
 
 ::: live
 
@@ -67,7 +67,7 @@ sections:
   - type: hero
   - type: trend
     mode: hourly
-    hours_to_show: 12
+    hours: 12
     show:
       - temperature
       - precipitation
@@ -105,14 +105,14 @@ sections:
     mode: hourly
     layout: horizontal
     divider: true
-    hours_to_show: 6
+    hours: 6
 ```
 
 :::
 
 ## Icons and sizes
 
-By default the conditions are the pictures of Home Assistant's own weather card (a yellow sun, grey clouds, blue drops), coloured by the theme's `--weather-icon-sun-color`, `--weather-icon-moon-color`, `--weather-icon-cloud-back-color`, `--weather-icon-cloud-front-color`, `--weather-icon-rain-color` and `--weather-icon-snow-color`. `icons: mdi` uses the mdi weather icons instead, and a map picks an icon per condition: an `mdi:` icon or the URL of an image (`/local/weather/rain.svg`); conditions left out keep their mdi icon. `icons` sits on the card, or on a `hero` / `forecast` section for that section only. A rule's `icon` still wins. `icon_size` sets the size of the condition icon in pixels: on the card for the tile, on `hero` and `forecast` sections for theirs.
+By default the conditions are the pictures of Home Assistant's own weather card (a yellow sun, grey clouds, blue drops), coloured by the theme's `--weather-icon-sun-color`, `--weather-icon-moon-color`, `--weather-icon-cloud-back-color`, `--weather-icon-cloud-front-color`, `--weather-icon-rain-color` and `--weather-icon-snow-color`. `icons: mdi` uses the mdi weather icons instead, and a map picks an icon per condition: an `mdi:` icon or the URL of an image (`/local/weather/rain.svg`); conditions left out keep the pictures. `icons` sits on the card, or on a `hero` / `forecast` section, where it merges over the card's: a map adds its conditions, `hass` or `mdi` switches the rest. A rule's `icon` still wins. `icon_size` sets the size of the condition icon in pixels: on the card for the tile, on `hero` and `forecast` sections for theirs.
 
 ::: live
 
@@ -129,7 +129,7 @@ sections:
   - type: forecast
     mode: hourly
     layout: horizontal
-    hours_to_show: 6
+    hours: 6
     icon_size: 36
 ```
 
@@ -182,7 +182,7 @@ sections:
       - { state: pouring, color: indigo, icon: mdi:umbrella }
   - type: trend
     mode: hourly
-    hours_to_show: 12
+    hours: 12
     show: [temperature]
     temperature_rules:
       - { below: 18, color: teal, label: Fresh }
@@ -214,7 +214,7 @@ sections:
     entities: [humidity, wind_speed, pressure]
   - type: trend
     mode: hourly
-    hours_to_show: 12
+    hours: 12
   - type: forecast
     mode: daily
     days: 7
@@ -233,30 +233,33 @@ sections:
 
 ### Card options
 
-| Option                                   | Default         | Description                                                                                                                        |
-| ---------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `entity`                                 |                 | The weather entity (required).                                                                                                     |
-| `sections`                               |                 | The sections, rendered in this order (see below). Without sections the card is a tile.                                             |
-| `name`                                   | friendly name   | Tile: the name. Hero: the first line, the condition then moves to the second line. Template allowed.                               |
-| `secondary`                              | see description | The line under the name (tile: `temperature · condition`) or the temperature (hero: labels · high / low). Template allowed.        |
-| `color`                                  | primary         | Fixed condition colour; overrides rules.                                                                                           |
-| `decimals`                               | as reported     | Decimals of the temperature.                                                                                                       |
-| `rules`                                  |                 | [Rules](/cards/entity-options#rules) on the condition (`state: rainy` …): colour, icon, label and `tint_card`. First match wins.   |
-| `temperature_rules`                      |                 | Rules on the temperature (`below` / `above`): colour of the value, the temperature line and the forecast bars, label, `tint_card`. |
-| `title` / `icon` / `header_entities`     |                 | The header, like the [group card](/cards/entity-group-card#card-options). Templates allowed.                                       |
-| `tap_action` …                           | `more-info`     | Actions of the lead and defaults for every entity, see the [entity options](/cards/entity-options#actions).                        |
-| `columns` / `align`                      | per layout      | Defaults for the entity sections, see the [group card](/cards/entity-group-card#card-options).                                     |
-| `show_name` / `show_value` / `show_icon` | per layout      | Default [item options](/cards/entity-options#item-options) for every entity section.                                               |
-| `hours_to_show` / `bucket_minutes`       | `24` / `60`     | History window of sparklines, columns and strips inside entity sections.                                                           |
+| Option                                   | Default         | Description                                                                                                                                                          |
+| ---------------------------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entity`                                 |                 | The weather entity (required).                                                                                                                                       |
+| `sections`                               |                 | The sections, rendered in this order (see below). Without sections the card is a tile.                                                                               |
+| `name`                                   | friendly name   | Tile: the name. Hero: the first line, the condition then moves to the second line. Template allowed.                                                                 |
+| `secondary`                              | see description | The line under the name (tile: `temperature · condition`) or the temperature (hero: labels · high / low). Template allowed.                                          |
+| `color`                                  | primary         | Fixed condition colour; overrides rules.                                                                                                                             |
+| `decimals`                               | as reported     | Decimals of the temperature.                                                                                                                                         |
+| `icons`                                  | `hass`          | `hass` (the Home Assistant weather pictures), `mdi`, or a map from condition to an `mdi:` icon or image URL; mapped conditions override, the rest keep the pictures. |
+| `icon_size`                              | `40`            | Size of the tile's condition icon (px).                                                                                                                              |
+| `rules`                                  |                 | [Rules](/cards/entity-options#rules) on the condition (`state: rainy` …): colour, icon, label and `tint_card`. First match wins.                                     |
+| `temperature_rules`                      |                 | Rules on the temperature (`below` / `above`): colour of the value, the temperature line and the forecast bars, label, `tint_card`.                                   |
+| `title` / `icon` / `header_entities`     |                 | The header, like the [group card](/cards/entity-group-card#card-options). Templates allowed.                                                                         |
+| `tap_action` …                           | `more-info`     | Actions of the lead and defaults for every entity, see the [entity options](/cards/entity-options#actions).                                                          |
+| `columns` / `align`                      | per layout      | Defaults for the entity sections, see the [group card](/cards/entity-group-card#card-options).                                                                       |
+| `show_name` / `show_value` / `show_icon` | per layout      | Default [item options](/cards/entity-options#item-options) for every entity section.                                                                                 |
+| `hours_to_show` / `bucket_minutes`       | `24` / `60`     | History window of sparklines, columns and strips inside entity sections.                                                                                             |
 
 ### Section `hero`
 
-| Option                        | Default    | Description                                                                    |
-| ----------------------------- | ---------- | ------------------------------------------------------------------------------ |
-| `title`                       |            | Line above the section.                                                        |
-| `name` / `secondary`          | the card's | Overrides of the card's `name` / `secondary` for this lead. Templates allowed. |
-| `rules` / `temperature_rules` | the card's | Condition / temperature rules for this section only.                           |
-| `divider`                     | `false`    | Line above the section (never drawn for the first).                            |
+| Option                        | Default           | Description                                                                    |
+| ----------------------------- | ----------------- | ------------------------------------------------------------------------------ |
+| `title`                       |                   | Line above the section.                                                        |
+| `name` / `secondary`          | the card's        | Overrides of the card's `name` / `secondary` for this lead. Templates allowed. |
+| `icons` / `icon_size`         | the card's / `56` | Condition icons for this section only, and their size (px).                    |
+| `rules` / `temperature_rules` | the card's        | Condition / temperature rules for this section only.                           |
+| `divider`                     | `false`           | Line above the section (never drawn for the first).                            |
 
 ### Sections `row`, `list`, `table`, `grid`, `column`
 
@@ -267,7 +270,7 @@ The keys of a [sections card](/cards/entity-sections-card#section-options) secti
 | Option                                         | Default                            | Description                                                                                                                                              |
 | ---------------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `mode`                                         | `daily`                            | `hourly` or `daily`.                                                                                                                                     |
-| `hours_to_show` / `days`                       | `12` / `7`                         | 1 to 48 hours from the current hour / 1 to 10 days, today first.                                                                                         |
+| `hours` / `days`                               | `12` / `7`                         | 1 to 48 hours from the current hour / 1 to 10 days, today first.                                                                                         |
 | `show`                                         | `[temperature, precipitation]`     | The lines, in this order, like the multi trend card's `entities`: `temperature`, `precipitation`, `probability`, `wind`, or `{ quantity, name, color }`. |
 | `layout` / `x_axis` / `y_axis` / `show_legend` | `auto` / `true` / `false` / `true` | The multi trend card's plot options.                                                                                                                     |
 | `title`                                        | "Next N hours" / "N days"          | Line above the section.                                                                                                                                  |
@@ -280,8 +283,9 @@ The keys of a [sections card](/cards/entity-sections-card#section-options) secti
 | ----------------------------- | ------------------------- | ---------------------------------------------------------------------- |
 | `mode`                        | `daily`                   | `hourly` or `daily`.                                                   |
 | `layout`                      | `vertical`                | `vertical` (rows) or `horizontal` (columns).                           |
-| `hours_to_show` / `days`      | `12` / `7`                | 1 to 48 hours from the current hour / 1 to 10 days, today first.       |
+| `hours` / `days`              | `12` / `7`                | 1 to 48 hours from the current hour / 1 to 10 days, today first.       |
 | `show`                        | `[probability]`           | Rain figures per row: `probability`, `precipitation`; `[]` hides them. |
+| `icons` / `icon_size`         | the card's / `22`         | Condition icons for this section only, and their size (px).            |
 | `title`                       | "Next N hours" / "N days" | Line above the section.                                                |
 | `rules` / `temperature_rules` | the card's                | Condition / temperature rules for this section only.                   |
 | `divider`                     | `false`                   | Line above the section (never drawn for the first).                    |

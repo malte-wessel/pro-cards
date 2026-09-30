@@ -191,13 +191,13 @@ describe("card config schemas", () => {
           {
             type: "forecast",
             mode: "hourly",
-            hours_to_show: 6,
+            hours: 6,
             rules: [{ state: "rainy", icon: "mdi:umbrella" }],
           },
           {
             type: "trend",
             mode: "hourly",
-            hours_to_show: 24,
+            hours: 24,
             title: "Trend",
             show: ["temperature", { quantity: "wind", name: "Breeze", color: "teal" }],
             layout: "overlay",

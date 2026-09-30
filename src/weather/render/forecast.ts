@@ -59,7 +59,8 @@ export const drawForecast = (
   const daily = sec.mode === "daily";
   const tempEnt = cfg.entities[sec.tempIdx],
     condEnt = cfg.entities[sec.condIdx],
-    precipEnt = cfg.entities[cfg.precipIdx];
+    precipEnt = cfg.entities[cfg.precipIdx],
+    probEnt = cfg.entities[cfg.probIdx];
   const st = ctx.hass?.states[cfg.entity];
   const tplGet = tplGetter(ctx);
   const range = dailyRange(list);
@@ -83,9 +84,7 @@ export const drawForecast = (
   const night = isNight(ctx.hass);
   const setCondition = (el: HTMLElement, r: ForecastRow) => {
     const look = condLook(r);
-    qs(el, ".ficon").replaceChildren(
-      conditionEl(sec.icons ?? cfg.icons, r.condition, night, look?.icon),
-    );
+    qs(el, ".ficon").replaceChildren(conditionEl(sec.icons, r.condition, night, look?.icon));
     const c = look?.rule?.color;
     el.style.setProperty(
       "--fe-cond",
@@ -97,7 +96,7 @@ export const drawForecast = (
   const rainText = (r: ForecastRow) => {
     const parts: string[] = [];
     if (sec.show.includes("probability") && r.probability !== null)
-      parts.push(`${Math.round(r.probability)} %`);
+      parts.push(fmtNumber(ctx, probEnt, r.probability, st));
     if (sec.show.includes("precipitation") && r.precipitation !== null && r.precipitation > 0)
       parts.push(fmtNumber(ctx, precipEnt, r.precipitation, st));
     return parts.join(" · ");

@@ -465,7 +465,7 @@ const CASES = {
       {
         type: "trend",
         mode: "hourly",
-        hours_to_show: 12,
+        hours: 12,
         show: ["temperature", "precipitation", { quantity: "wind", name: "Breeze", color: "teal" }],
         y_axis: true,
       },
@@ -473,7 +473,7 @@ const CASES = {
       {
         type: "trend",
         mode: "hourly",
-        hours_to_show: 6,
+        hours: 6,
         show: ["temperature"],
         title: "Soon",
         temperature_rules: [{ above: 0, color: "red" }],
@@ -497,8 +497,8 @@ const CASES = {
         rules: [{ state: "rainy", color: "blue", icon: "mdi:umbrella" }],
       },
       { type: "forecast", mode: "daily", layout: "horizontal", days: 6 },
-      { type: "forecast", mode: "hourly", layout: "horizontal", hours_to_show: 6 },
-      { type: "forecast", mode: "hourly", hours_to_show: 4, title: "Soon" },
+      { type: "forecast", mode: "hourly", layout: "horizontal", hours: 6 },
+      { type: "forecast", mode: "hourly", hours: 4, title: "Soon" },
     ],
   },
   "wc-icons": {
@@ -511,7 +511,7 @@ const CASES = {
         type: "forecast",
         mode: "hourly",
         layout: "horizontal",
-        hours_to_show: 6,
+        hours: 6,
         icon_size: 36,
         icons: { sunny: "mdi:white-balance-sunny", partlycloudy: "mdi:weather-partly-cloudy" },
       },
@@ -555,7 +555,7 @@ const CASES = {
       {
         type: "trend",
         mode: "hourly",
-        hours_to_show: 12,
+        hours: 12,
         show: ["temperature", "precipitation", "probability", "wind"],
       },
       { type: "forecast", mode: "daily", days: 7 },

@@ -197,7 +197,7 @@
           },
           {
             "type": "object",
-            "description": "An entity group like a section of the entity sections card; entries may name attributes of the weather entity (humidity, pressure, wind_speed, wind_gust_speed, wind_bearing, apparent_temperature, dew_point, uv_index, cloud_coverage, visibility, ozone)",
+            "description": "An entity group like a section of the entity sections card (`type: row` or, as there, `layout: row` without `type`); entries may name attributes of the weather entity (humidity, pressure, wind_speed, wind_gust_speed, wind_bearing, apparent_temperature, dew_point, uv_index, cloud_coverage, visibility, ozone)",
             "properties": {
               "type": {
                 "type": "string",
@@ -254,9 +254,15 @@
               "name_position": {
                 "type": "string",
                 "enum": ["above", "below"]
+              },
+              "layout": {
+                "type": "string",
+                "enum": ["row", "list", "table", "grid", "column"],
+                "default": "list",
+                "description": "The group layout when `type` is left out, as in the sections card"
               }
             },
-            "required": ["type", "entities"],
+            "required": ["entities"],
             "additionalProperties": false
           },
           {
@@ -279,13 +285,6 @@
                 "type": "string",
                 "enum": ["vertical", "horizontal"],
                 "default": "vertical"
-              },
-              "hours_to_show": {
-                "type": "integer",
-                "minimum": 1,
-                "maximum": 48,
-                "default": 12,
-                "description": "hourly: hours from the current hour"
               },
               "days": {
                 "type": "integer",
@@ -402,6 +401,13 @@
                   }
                 ],
                 "description": "Condition icons for this section only (default: the card's)"
+              },
+              "hours": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 48,
+                "default": 12,
+                "description": "hourly: hours from the current hour"
               }
             },
             "required": ["type"],
@@ -423,13 +429,6 @@
                 "enum": ["hourly", "daily"],
                 "default": "daily"
               },
-              "hours_to_show": {
-                "type": "integer",
-                "minimum": 1,
-                "maximum": 48,
-                "default": 12,
-                "description": "hourly: hours from the current hour"
-              },
               "days": {
                 "type": "integer",
                 "minimum": 1,
@@ -444,14 +443,28 @@
                   "oneOf": [
                     {
                       "type": "string",
-                      "enum": ["temperature", "precipitation", "probability", "wind"]
+                      "enum": [
+                        "temperature",
+                        "precipitation",
+                        "probability",
+                        "wind",
+                        "wind_speed",
+                        "precipitation_probability"
+                      ]
                     },
                     {
                       "type": "object",
                       "properties": {
                         "quantity": {
                           "type": "string",
-                          "enum": ["temperature", "precipitation", "probability", "wind"]
+                          "enum": [
+                            "temperature",
+                            "precipitation",
+                            "probability",
+                            "wind",
+                            "wind_speed",
+                            "precipitation_probability"
+                          ]
                         },
                         "name": {
                           "type": "string"
@@ -506,6 +519,13 @@
                 "type": "boolean",
                 "default": false,
                 "description": "Line above the section (never drawn for the first)"
+              },
+              "hours": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 48,
+                "default": 12,
+                "description": "hourly: hours from the current hour"
               }
             },
             "required": ["type"],
@@ -588,7 +608,7 @@
         }
       ],
       "default": "hass",
-      "description": "Condition icons: the Home Assistant weather pictures (default), mdi icons, or a map from condition to an mdi icon or image URL (conditions left out use mdi)"
+      "description": "Condition icons: the Home Assistant weather pictures (default), mdi icons, or a map from condition to an mdi icon or image URL (conditions left out keep the pictures)"
     },
     "icon_size": {
       "type": "integer",

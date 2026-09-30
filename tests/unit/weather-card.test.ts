@@ -55,19 +55,35 @@ describe("weather-card config", () => {
     expect(c.entities[c.tempIdx].rules).toMatchObject([
       { below: 5, color: "indigo", label: "Cold" },
     ]);
-    expect(wantedForecasts(c)).toEqual({ hourly: false, daily: true });
+    // the tile shows no forecast, the hero does
+    expect(wantedForecasts(c)).toEqual({ hourly: false, daily: false });
+    expect(
+      wantedForecasts(normalizeWeatherCardConfig({ entity: W, sections: [{ type: "hero" }] })),
+    ).toEqual({ hourly: false, daily: true });
     expect(normalizeWeatherCardConfig({ entity: W, title: "x" })).toMatchObject({
       layout: "tile",
       hasHeader: true,
     });
   });
-  it("rejects unknown section types and needs a type", () => {
+  it("rejects unknown section types; a section without type is a group like the sections card", () => {
     expect(() => normalizeWeatherCardConfig({ entity: W, sections: [{ type: "hourly" }] })).toThrow(
       /sections\[0\].type must be one of hero \| row/,
     );
+    expect(() => normalizeWeatherCardConfig({ entity: W, sections: [{ title: "x" }] })).toThrow(
+      /sections\[0\] needs a 'type' or 'entities'/,
+    );
     expect(() =>
-      normalizeWeatherCardConfig({ entity: W, sections: [{ entities: ["humidity"] }] }),
-    ).toThrow(/sections\[0\].type/);
+      normalizeWeatherCardConfig({
+        entity: W,
+        sections: [{ layout: "hero", entities: ["humidity"] }],
+      }),
+    ).toThrow(/sections\[0\].layout must be one of row \| list/);
+    const c = normalizeWeatherCardConfig({
+      entity: W,
+      sections: [{ entities: ["humidity"] }, { layout: "row", entities: ["wind_speed"] }],
+    });
+    expect(c.sections[0]).toMatchObject({ kind: "entities", group: { layout: "list" } });
+    expect(c.sections[1]).toMatchObject({ kind: "entities", group: { layout: "row" } });
   });
   it("hero sections take name / secondary overrides and their own rules", () => {
     const c = normalizeWeatherCardConfig({
@@ -94,7 +110,7 @@ describe("weather-card config", () => {
       tempIdx: 1,
       divider: false,
       iconSize: 56,
-      icons: null,
+      icons: { base: "hass", map: {} },
     });
     expect(c.sections[1]).toMatchObject({
       kind: "hero",
@@ -177,7 +193,7 @@ describe("weather-card config", () => {
         {
           type: "forecast",
           mode: "hourly",
-          hours_to_show: 99,
+          hours: 99,
           layout: "horizontal",
           show: [],
           divider: true,
@@ -201,7 +217,7 @@ describe("weather-card config", () => {
       tempIdx: 1,
       divider: false,
       iconSize: 22,
-      icons: null,
+      icons: { base: "hass", map: {} },
     });
     expect(c.sections[1]).toMatchObject({
       mode: "hourly",
@@ -232,7 +248,7 @@ describe("weather-card config", () => {
         {
           type: "trend",
           mode: "hourly",
-          hours_to_show: 6,
+          hours: 6,
           title: "Soon",
           layout: "lanes",
           x_axis: false,
@@ -266,6 +282,17 @@ describe("weather-card config", () => {
       tempIdx: 1,
       divider: false,
     });
+    expect(
+      normalizeWeatherCardConfig({
+        entity: W,
+        sections: [{ type: "trend", show: ["wind_speed", "precipitation_probability"] }],
+      }).sections[0],
+    ).toMatchObject({
+      show: [
+        { quantity: "wind", name: null, color: null },
+        { quantity: "probability", name: null, color: null },
+      ],
+    });
     expect(c.sections[1]).toMatchObject({
       mode: "hourly",
       count: 6,
@@ -290,9 +317,9 @@ describe("weather-card config", () => {
       entity: W,
       sections: [{ type: "hero" }, { type: "forecast", icons: "mdi" }],
     });
-    expect(dflt).toMatchObject({ icons: "hass", iconSize: 40 });
-    expect(dflt.sections[0]).toMatchObject({ iconSize: 56, icons: null });
-    expect(dflt.sections[1]).toMatchObject({ iconSize: 22, icons: "mdi" });
+    expect(dflt).toMatchObject({ icons: { base: "hass", map: {} }, iconSize: 40 });
+    expect(dflt.sections[0]).toMatchObject({ iconSize: 56, icons: { base: "hass", map: {} } });
+    expect(dflt.sections[1]).toMatchObject({ iconSize: 22, icons: { base: "mdi", map: {} } });
     const c = normalizeWeatherCardConfig({
       entity: W,
       icons: { rainy: "/local/rain.svg", sunny: "mdi:x", nope: "mdi:y", cloudy: "" },
@@ -302,17 +329,27 @@ describe("weather-card config", () => {
         { type: "forecast", icon_size: "30" },
       ],
     });
-    expect(c.icons).toEqual({ rainy: "/local/rain.svg", sunny: "mdi:x" });
+    expect(c.icons).toEqual({ base: "hass", map: { rainy: "/local/rain.svg", sunny: "mdi:x" } });
     expect(c.iconSize).toBe(160);
     expect(c.sections[0]).toMatchObject({ iconSize: 12 });
     expect(c.sections[1]).toMatchObject({ iconSize: 30 });
-    expect(normalizeWeatherCardConfig({ entity: W, icons: "mdi" }).icons).toBe("mdi");
-    expect(
-      normalizeWeatherCardConfig({
-        entity: W,
-        sections: [{ type: "hero", icons: { sunny: "mdi:s" } }],
-      }).sections[0],
-    ).toMatchObject({ icons: { sunny: "mdi:s" } });
+    expect(normalizeWeatherCardConfig({ entity: W, icons: "mdi" }).icons).toEqual({
+      base: "mdi",
+      map: {},
+    });
+    // a section merges over the card: its map adds to the card's, a preset keeps the card's map
+    const merged = normalizeWeatherCardConfig({
+      entity: W,
+      icons: { rainy: "mdi:r" },
+      sections: [
+        { type: "hero", icons: { sunny: "mdi:s" } },
+        { type: "forecast", icons: "mdi" },
+      ],
+    });
+    expect(merged.sections[0]).toMatchObject({
+      icons: { base: "hass", map: { rainy: "mdi:r", sunny: "mdi:s" } },
+    });
+    expect(merged.sections[1]).toMatchObject({ icons: { base: "mdi", map: { rainy: "mdi:r" } } });
     expect(() => normalizeWeatherCardConfig({ entity: W, icons: "svg" })).toThrow(/icons must be/);
     expect(() => normalizeWeatherCardConfig({ entity: W, icons: ["hass"] })).toThrow(
       /icons must be/,

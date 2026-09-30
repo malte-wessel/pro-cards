@@ -23,6 +23,13 @@ test.describe("weather card", () => {
     );
     expect(grid.rows).toBe(1);
     await expect(c.locator(".header")).toHaveCount(0);
+    // a title adds the header and a second row
+    await mount(page, { type: T, entity: W, title: "Home" });
+    await expect(card(page).locator(".header .title")).toHaveText("Home");
+    const titled = await page.evaluate(() =>
+      (window.pc.card(0) as unknown as WeatherCard).getGridOptions(),
+    );
+    expect(titled.rows).toBe(2);
   });
 
   test("hero: condition, big temperature, high / low, overrides, tap opens more-info", async ({
@@ -88,7 +95,7 @@ test.describe("weather card", () => {
           type: "row",
           entities: ["humidity", "wind_speed", { entity: "sensor.uv_index", name: "UV" }],
         },
-        { type: "table", title: "More", entities: ["pressure", { attribute: "visibility" }] },
+        { layout: "table", title: "More", entities: ["pressure", { attribute: "visibility" }] },
         {
           type: "list",
           divider: true,
@@ -128,7 +135,7 @@ test.describe("weather card", () => {
       type: T,
       entity: W,
       sections: [
-        { type: "trend", mode: "hourly", hours_to_show: 12 },
+        { type: "trend", mode: "hourly", hours: 12 },
         {
           type: "trend",
           mode: "hourly",
@@ -176,12 +183,12 @@ test.describe("weather card", () => {
       sections: [
         { type: "forecast", mode: "daily", days: 5, show: ["probability", "precipitation"] },
         { type: "forecast", mode: "daily", layout: "horizontal", days: 3, show: [] },
-        { type: "forecast", mode: "hourly", hours_to_show: 3 },
+        { type: "forecast", mode: "hourly", hours: 3 },
         {
           type: "forecast",
           mode: "hourly",
           layout: "horizontal",
-          hours_to_show: 4,
+          hours: 4,
           title: "Soon",
           divider: true,
         },
@@ -242,7 +249,7 @@ test.describe("weather card", () => {
         {
           type: "trend",
           mode: "hourly",
-          hours_to_show: 6,
+          hours: 6,
           show: ["temperature"],
           temperature_rules: [{ above: 0, color: "pink" }],
         },
@@ -299,6 +306,13 @@ test.describe("weather card", () => {
         sections: [
           { type: "hero", icons: { partlycloudy: "mdi:emoticon-happy" } },
           { type: "forecast", mode: "daily", days: 4, icons: { rainy: "/local/rain.svg" } },
+          {
+            type: "forecast",
+            mode: "daily",
+            days: 4,
+            icons: { rainy: "mdi:umbrella" },
+            title: "Mixed",
+          },
         ],
       },
     ]);
