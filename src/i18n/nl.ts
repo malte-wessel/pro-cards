@@ -32,7 +32,6 @@ const nl: Translation = {
   "weather.stub_title": "Weer",
   "weather.today": "Vandaag",
   "weather.next_hours": "Komende {n} uur",
-  "weather.next_hours_short": "komende {n} u",
   "weather.days": "{n} dagen",
   "weather.temperature": "Temperatuur",
   "weather.precipitation": "Regen",

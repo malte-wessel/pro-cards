@@ -2,8 +2,8 @@
 
 ## Unreleased
 
-- New weather card (`custom:weather-card`): the current conditions of a weather entity as a tile or a hero lead with the big temperature and today's high / low, weather attributes or any entity as row / list items, an hourly section (lane chart with tooltip, temperature sparkline or rain columns) and a daily section (range bars on one scale, columns or a chart) from Home Assistant's forecast subscription, entity sections like the sections card, `rules` on the condition, `temperature_rules` on the temperature, header entities and templates. Condition names and attribute names come in every language the cards speak. Any forecast quantity (`temperature`, `precipitation`, `probability`, `wind`) can also be its own section with a title line, placed anywhere between the others
-- The entity layer moved from `src/entity/` to `src/shared/entity/` (no change for users)
+- New weather card (`custom:weather-card`): a weather entity as a tile, or as sections composed like the sections card: `hero` (condition icon, big temperature, today's high / low), entity groups `row` / `list` / `table` / `grid` / `column` whose entries may name attributes of the weather entity (humidity, wind speed, pressure …) next to any entity with rules and every entity-card visual, `trend` (the multi trend plot of the hourly or daily forecast, with `layout`, `x_axis`, `y_axis`, `show_legend` and `show` entries of `{ quantity, name, color }`) and `forecast` (hourly or daily rows or columns with condition, rain figures and temperature; days as low → high bars on one scale). Forecasts come from Home Assistant's forecast subscription. `rules` on the condition, `temperature_rules` on the temperature (on the card, or per `hero` / `forecast` / `trend` section), header entities and templates. Condition and attribute names come in every language the cards speak
+- The entity layer moved from `src/entity/` to `src/shared/entity/` and the multi trend plot to `src/shared/trend/` (no change for users)
 
 ## 1.3.0 (2026-09-30)
 

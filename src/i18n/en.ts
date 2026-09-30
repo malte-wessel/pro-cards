@@ -31,7 +31,6 @@ const en = {
   "weather.stub_title": "Weather",
   "weather.today": "Today",
   "weather.next_hours": "Next {n} hours",
-  "weather.next_hours_short": "next {n} h",
   "weather.days": "{n} days",
   "weather.temperature": "Temperature",
   "weather.precipitation": "Rain",

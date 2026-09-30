@@ -113,6 +113,18 @@ export const daysOf = (
   return [...days.values()].map((d) => ({ ...d, hi: d.hi ?? d.lo, lo: d.lo ?? d.hi })).slice(0, n);
 };
 
+// a row of a forecast section: a day (high and low) or an hour (the temperature as `hi`)
+export type ForecastRow = Day;
+// the next `n` hours from the start of the current hour as rows
+export const hoursOf = (
+  fc: readonly ForecastEntry[] | null | undefined,
+  now: number,
+  n: number,
+): ForecastRow[] => {
+  const { t0, t1 } = hourlyWindow(now, n);
+  return hoursIn(fc, t0, t1).map((e) => ({ ...dayOf(e), lo: null }));
+};
+
 // the temperature span the daily bars share
 export const dailyRange = (days: readonly Day[]): { min: number; max: number } | null => {
   let min = Infinity,

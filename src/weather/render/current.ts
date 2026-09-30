@@ -58,7 +58,8 @@ export const fillCurrent = (
   cm: CurrentModel,
   isTile: boolean,
 ) => {
-  const ent = cfg.entities[cfg.condIdx];
+  // the row's own item: the card's condition item, or a hero section's
+  const ent = cfg.entities[Number(row.dataset.idx)] ?? cfg.entities[cfg.condIdx];
   row.replaceChildren();
   row.style.setProperty("--fe-color", cssColor(condColor(ent, cm.cond), "var(--primary-color)"));
   row.style.setProperty("--fe-temp", cssColor(cm.temp.look.color, "var(--primary-color)"));

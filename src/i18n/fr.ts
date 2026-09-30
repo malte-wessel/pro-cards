@@ -32,7 +32,6 @@ const fr: Translation = {
   "weather.stub_title": "Météo",
   "weather.today": "Aujourd’hui",
   "weather.next_hours": "Prochaines {n} heures",
-  "weather.next_hours_short": "{n} prochaines h",
   "weather.days": "{n} jours",
   "weather.temperature": "Température",
   "weather.precipitation": "Pluie",

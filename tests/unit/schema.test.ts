@@ -104,24 +104,36 @@ describe("card config schemas", () => {
     const WC = "custom:weather-card";
     expect(validate({ type: WC })).toMatch(/entity/);
     expect(validate({ type: WC, entity: "sensor.a" })).toMatch(/pattern/);
-    expect(validate({ type: WC, entity: "weather.a", layout: "wide" })).toMatch(/enum|allowed/);
+    expect(validate({ type: WC, entity: "weather.a", layout: "hero" })).toBeTruthy();
+    expect(validate({ type: WC, entity: "weather.a", attributes: ["humidity"] })).toBeTruthy();
+    expect(validate({ type: WC, entity: "weather.a", sections: [] })).toMatch(/fewer|minItems/);
     expect(
-      validate({ type: WC, entity: "weather.a", sections: [{ type: "weekly" }] }),
+      validate({ type: WC, entity: "weather.a", sections: [{ type: "hourly" }] }),
+    ).toBeTruthy();
+    expect(validate({ type: WC, entity: "weather.a", sections: [{ type: "row" }] })).toBeTruthy();
+    expect(
+      validate({ type: WC, entity: "weather.a", sections: [{ type: "forecast", mode: "weekly" }] }),
     ).toBeTruthy();
     expect(
-      validate({ type: WC, entity: "weather.a", sections: [{ type: "hourly", visual: "strip" }] }),
+      validate({ type: WC, entity: "weather.a", sections: [{ type: "forecast", layout: "grid" }] }),
     ).toBeTruthy();
     expect(
-      validate({ type: WC, entity: "weather.a", sections: [{ type: "daily", days: 20 }] }),
+      validate({
+        type: WC,
+        entity: "weather.a",
+        sections: [{ type: "trend", show: [{ name: "x" }] }],
+      }),
     ).toBeTruthy();
-    expect(validate({ type: WC, entity: "weather.a", sections: [{ layout: "row" }] })).toBeTruthy();
     expect(
-      validate({ type: WC, entity: "weather.a", sections: [{ type: "wind", show: ["wind"] }] }),
+      validate({ type: WC, entity: "weather.a", sections: [{ type: "trend", layout: "stack" }] }),
     ).toBeTruthy();
     expect(
-      validate({ type: WC, entity: "weather.a", sections: [{ type: "humidity" }] }),
+      validate({
+        type: WC,
+        entity: "weather.a",
+        sections: [{ type: "hero", entities: ["humidity"] }],
+      }),
     ).toBeTruthy();
-    expect(validate({ type: WC, entity: "weather.a", attributes: [] })).toMatch(/fewer|minItems/);
     expect(validate({ type: "custom:flexible-entity-card", entity: "sensor.a" })).toBeTruthy();
     expect(validate({ type: "custom:other-card", entity: "sensor.a" })).toBeTruthy();
   });
@@ -135,29 +147,63 @@ describe("card config schemas", () => {
         type: "custom:weather-card",
         entity: "weather.home",
         title: "Home",
-        layout: "hero",
         name: "Home",
         secondary: "{{ states('sensor.a') }}",
         header_entities: [{ entity: "sun.sun", attribute: "next_setting" }],
         rules: [{ state: "rainy", color: "blue", tint_card: true }],
         temperature_rules: [{ below: 5, color: "blue", label: "Cold" }],
-        attributes: [
-          "humidity",
-          { entity: "sensor.uv_index", name: "UV", rules: [{ below: 3, color: "green" }] },
-        ],
-        attributes_layout: "list",
-        sections: [
-          { type: "hourly", hours_to_show: 24, visual: "chart", show: ["temperature", "wind"] },
-          { type: "hourly", visual: "sparkline" },
-          { type: "temperature", hours_to_show: 24, title: "Temp" },
-          { type: "probability", visual: "columns", bucket_minutes: 120 },
-          { type: "wind", visual: "sparkline" },
-          { type: "daily", days: 5, layout: "columns", show: [] },
-          { type: "entities", title: "Garden", layout: "row", entities: ["sensor.a"] },
-          { layout: "table", divider: true, entities: [{ entity: "sensor.b", name: "B" }] },
-        ],
         tap_action: "none",
         grid_options: { columns: 12 },
+        sections: [
+          {
+            type: "hero",
+            title: "Now",
+            name: "Garden",
+            secondary: "x",
+            rules: [{ state: "sunny", color: "amber" }],
+          },
+          {
+            type: "row",
+            title: "Now",
+            entities: [
+              "humidity",
+              "sensor.uv_index",
+              { attribute: "visibility", decimals: 0 },
+              { entity: "sensor.a", visual: "ring", rules: [{ below: 3, color: "green" }] },
+            ],
+            align: "stretch",
+          },
+          { type: "table", entities: ["pressure"], show_icon: true },
+          { type: "grid", columns: 3, entities: ["humidity"] },
+          { type: "column", entities: ["dew_point"], name_position: "below" },
+          { type: "list", divider: true, entities: ["cloud_coverage"] },
+          {
+            type: "forecast",
+            mode: "daily",
+            layout: "horizontal",
+            days: 5,
+            show: [],
+            temperature_rules: [{ above: 25, color: "red" }],
+          },
+          {
+            type: "forecast",
+            mode: "hourly",
+            hours_to_show: 6,
+            rules: [{ state: "rainy", icon: "mdi:umbrella" }],
+          },
+          {
+            type: "trend",
+            mode: "hourly",
+            hours_to_show: 24,
+            title: "Trend",
+            show: ["temperature", { quantity: "wind", name: "Breeze", color: "teal" }],
+            layout: "overlay",
+            x_axis: false,
+            y_axis: true,
+            show_legend: false,
+          },
+          { type: "trend", mode: "daily", days: 5, show: ["temperature", "precipitation"] },
+        ],
       }),
     ).toBeNull();
     expect(

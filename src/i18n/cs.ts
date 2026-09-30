@@ -32,7 +32,6 @@ const cs: Translation = {
   "weather.stub_title": "Počasí",
   "weather.today": "Dnes",
   "weather.next_hours": "Dalších {n} hodin",
-  "weather.next_hours_short": "dalších {n} h",
   "weather.days": "{n} dní",
   "weather.temperature": "Teplota",
   "weather.precipitation": "Déšť",

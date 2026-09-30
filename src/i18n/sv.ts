@@ -32,7 +32,6 @@ const sv: Translation = {
   "weather.stub_title": "Väder",
   "weather.today": "I dag",
   "weather.next_hours": "Kommande {n} timmar",
-  "weather.next_hours_short": "kommande {n} h",
   "weather.days": "{n} dagar",
   "weather.temperature": "Temperatur",
   "weather.precipitation": "Regn",

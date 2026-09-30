@@ -20,14 +20,7 @@
  */
 import { fireAction, registerCard } from "./shared/card.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
-import type { Scale } from "./multi-trend/scale.ts";
-import type {
-  MultiTrendCardConfig,
-  SampledPoint,
-  TrendConfig,
-  TrendHost,
-  TrendPoint,
-} from "./multi-trend/config.ts";
+import type { MultiTrendCardConfig, TrendConfig, TrendPoint } from "./multi-trend/config.ts";
 import { cssColor } from "./shared/color.ts";
 import { DEVICE_CLASS_ICON, REFRESH_MS } from "./shared/constants.ts";
 import { fmtNumber, langOf } from "./shared/format.ts";
@@ -35,26 +28,29 @@ import { fetchHistory, type Point } from "./shared/history.ts";
 import { hideHover } from "./shared/hover.ts";
 import { decimalsOf, isNum, qs } from "./shared/util.ts";
 import { MultiTrendCardEditor } from "./multi-trend/editor.ts";
-import { drawPlot, showHover, timeAt } from "./multi-trend/plot.ts";
-import { DEFAULT_HOURS, PALETTE } from "./multi-trend/scale.ts";
+import { DEFAULT_HOURS, PALETTE } from "./shared/trend/scale.ts";
+import {
+  drawTrend,
+  trendPlotEl,
+  showTrendHover,
+  trendTimeAt,
+  type TrendPlotEl,
+  type TrendSpec,
+} from "./shared/trend/plot.ts";
 import { STYLE } from "./multi-trend/styles.ts";
 
 const CARD_TYPE = "multi-trend-card";
 
 customElements.define(`${CARD_TYPE}-editor`, MultiTrendCardEditor);
 
-export class MultiTrendCard extends HTMLElement implements TrendHost {
+export class MultiTrendCard extends HTMLElement {
   static cardType = CARD_TYPE;
 
   _config!: TrendConfig;
   _hass?: HomeAssistant;
   _root?: HTMLElement;
+  _plot?: TrendPlotEl;
   _series: TrendPoint[][] = [];
-  _sampled?: SampledPoint[][];
-  _scales?: Scale[];
-  _xOf?: (t: number) => number;
-  _gutter?: number;
-  _plotW?: number;
   _hoverT: number | null = null;
   _fetched = false;
   _fetching = false;
@@ -213,13 +209,8 @@ export class MultiTrendCard extends HTMLElement implements TrendHost {
         <div class="info"><div class="primary"></div><div class="secondary"></div></div>
         <div class="range"></div>
       </div>
-      <div class="legend"></div>
-      <div class="plot">
-        <svg preserveAspectRatio="none"></svg>
-        <div class="lanes"></div>
-        <div class="axes"></div>
-        <div class="tip"></div>
-      </div>`;
+      <div class="legend"></div>`;
+    card.appendChild(trendPlotEl());
     root.appendChild(card);
     this._root = card;
 
@@ -231,7 +222,8 @@ export class MultiTrendCard extends HTMLElement implements TrendHost {
         this._moreInfo();
       }
     });
-    const plot = qs(card, ".plot");
+    const plot = qs<TrendPlotEl>(card, ".plot");
+    this._plot = plot;
     plot.addEventListener("pointermove", this._onPointer);
     plot.addEventListener("pointerdown", this._onPointer);
     plot.addEventListener("pointerleave", this._onLeave);
@@ -295,16 +287,39 @@ export class MultiTrendCard extends HTMLElement implements TrendHost {
       });
     }
 
-    drawPlot(this);
-    if (this._hoverT !== null && !showHover(this, this._hoverT)) this._hideHover();
+    drawTrend(this._plot as TrendPlotEl, this._spec());
+    if (this._hoverT !== null && !showTrendHover(this._plot as TrendPlotEl, this._hoverT))
+      this._hideHover();
+  }
+
+  // what the plot draws: the history window and one series per entity
+  _spec(): TrendSpec {
+    const now = Date.now();
+    return {
+      hass: this._hass,
+      t0: now - this._config.hours_to_show * 3600e3,
+      t1: now,
+      layout: this._layout(),
+      xAxis: this._config.x_axis,
+      yAxis: this._config.y_axis,
+      series: this._config.entities.map((e, i) => ({
+        pts: this._series[i],
+        color: e.colorCss,
+        name: this._name(i),
+        fmt: (v) => this._fmt(i, v),
+      })),
+    };
   }
 
   // ---------- interaction ----------
 
   _onPointer(ev: PointerEvent) {
-    if (!this._sampled || !this._xOf) return;
-    this._hoverT = timeAt(this, ev);
-    if (!showHover(this, this._hoverT)) this._hideHover();
+    const plot = this._plot;
+    if (!plot) return;
+    const t = trendTimeAt(plot, ev);
+    if (t === null) return;
+    this._hoverT = t;
+    if (!showTrendHover(plot, t)) this._hideHover();
   }
 
   _onLeave(ev: PointerEvent) {

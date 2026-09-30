@@ -3,7 +3,7 @@ import { FormEditorBase, setOrDrop } from "../shared/editor.ts";
 import type { HaFormData, HaFormSchema, HomeAssistant } from "../shared/ha.ts";
 import { t, type StringKey } from "../shared/i18n.ts";
 import type { MultiTrendCardConfig, MultiTrendEntity } from "./config.ts";
-import { DEFAULT_HOURS } from "./scale.ts";
+import { DEFAULT_HOURS } from "../shared/trend/scale.ts";
 
 const MAX_EDIT_ENTITIES = 8;
 export const EDITOR_LABELS: Record<string, StringKey> = {

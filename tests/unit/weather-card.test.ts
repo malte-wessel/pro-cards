@@ -9,6 +9,7 @@ import {
   forecastPoints,
   hourlyWindow,
   hoursIn,
+  hoursOf,
   supportsForecast,
 } from "../../src/weather/forecast.ts";
 import type { ForecastEntry, HassEntity, HomeAssistant } from "../../src/shared/ha.ts";
@@ -27,65 +28,117 @@ describe("weather-card config", () => {
     expect(() => normalizeWeatherCardConfig({})).toThrow(/weather entity/);
     expect(() => normalizeWeatherCardConfig({ entity: "sensor.a" })).toThrow(/weather entity/);
   });
-  it("is a tile with only the entity and a hero once there is more to show", () => {
-    const tile = normalizeWeatherCardConfig({ entity: W, name: "Home" });
-    expect(tile).toMatchObject({ layout: "tile", hasHeader: false, attrGroup: null, sections: [] });
-    expect(tile.entities.map((e) => e.valueSrc)).toEqual([
+  it("is a tile without sections and carries the card's items first", () => {
+    const c = normalizeWeatherCardConfig({
+      entity: W,
+      name: "Home",
+      color: "amber",
+      rules: [{ state: "rainy", color: "blue", tint_card: true }],
+      temperature_rules: [{ below: 5, color: "indigo", label: "Cold" }],
+      tap_action: "none",
+    });
+    expect(c).toMatchObject({ layout: "tile", hasHeader: false, sections: [], groups: [] });
+    expect(c.entities.map((e) => e.valueSrc)).toEqual([
       { kind: "state" },
       { kind: "attribute", key: "temperature" },
       { kind: "attribute", key: "precipitation" },
       { kind: "attribute", key: "precipitation_probability" },
       { kind: "attribute", key: "wind_speed" },
     ]);
-    expect(normalizeWeatherCardConfig({ entity: W, title: "Home" }).layout).toBe("hero");
-    expect(normalizeWeatherCardConfig({ entity: W, attributes: ["humidity"] }).layout).toBe("hero");
-    expect(normalizeWeatherCardConfig({ entity: W, sections: [{ type: "daily" }] }).layout).toBe(
-      "hero",
-    );
-    expect(normalizeWeatherCardConfig({ entity: W, title: "x", layout: "tile" }).layout).toBe(
-      "tile",
-    );
-    expect(() => normalizeWeatherCardConfig({ entity: W, layout: "wide" })).toThrow(
-      /layout must be one of tile \| hero/,
-    );
-  });
-  it("puts the rules on the condition and the temperature rules on the temperature", () => {
-    const c = normalizeWeatherCardConfig({
-      entity: W,
+    expect(c.entities[c.condIdx]).toMatchObject({
+      name: "Home",
       color: "amber",
-      rules: [{ state: "rainy", color: "blue", tint_card: true }],
-      temperature_rules: [{ below: 5, color: "indigo", label: "Cold" }],
-      tap_action: "none",
+      rules: [{ state: "rainy", tintCard: true }],
+      tap: { action: "none" },
     });
-    const cond = c.entities[c.condIdx],
-      temp = c.entities[c.tempIdx];
-    expect(cond).toMatchObject({ color: "amber", rules: [{ state: "rainy", tintCard: true }] });
-    expect(cond.tap).toEqual({ action: "none" });
-    expect(temp.rules).toEqual([
-      {
-        below: 5,
-        above: null,
-        state: null,
-        color: "indigo",
-        icon: null,
-        label: "Cold",
-        tintCard: false,
-      },
+    expect(c.entities[c.tempIdx].rules).toMatchObject([
+      { below: 5, color: "indigo", label: "Cold" },
     ]);
+    expect(wantedForecasts(c)).toEqual({ hourly: false, daily: true });
+    expect(normalizeWeatherCardConfig({ entity: W, title: "x" })).toMatchObject({
+      layout: "tile",
+      hasHeader: true,
+    });
   });
-  it("turns attribute names into translated items of the weather entity and keeps entities", () => {
+  it("rejects unknown section types and needs a type", () => {
+    expect(() => normalizeWeatherCardConfig({ entity: W, sections: [{ type: "hourly" }] })).toThrow(
+      /sections\[0\].type must be one of hero \| row/,
+    );
+    expect(() =>
+      normalizeWeatherCardConfig({ entity: W, sections: [{ entities: ["humidity"] }] }),
+    ).toThrow(/sections\[0\].type/);
+  });
+  it("hero sections take name / secondary overrides and their own rules", () => {
     const c = normalizeWeatherCardConfig({
       entity: W,
-      attributes: [
-        "humidity",
-        "apparent_temperature",
-        "something_else",
-        { entity: "sensor.uv_index", name: "UV" },
-        { attribute: "visibility", decimals: 0 },
+      rules: [{ state: "rainy", color: "blue" }],
+      sections: [
+        { type: "hero" },
+        {
+          type: "hero",
+          title: "Garden",
+          name: "Garden",
+          secondary: "x",
+          temperature_rules: [{ above: 0, color: "red" }],
+        },
       ],
     });
-    expect(c.attrGroup).toMatchObject({ layout: "row", idxs: [5, 6, 7, 8, 9], align: "stretch" });
-    const [hum, feels, other, uv, vis] = c.attrGroup!.idxs.map((i) => c.entities[i]);
+    expect(c.layout).toBe("sections");
+    expect(c.sections[0]).toEqual({
+      kind: "hero",
+      title: null,
+      name: null,
+      secondary: null,
+      condIdx: 0,
+      tempIdx: 1,
+    });
+    expect(c.sections[1]).toMatchObject({
+      kind: "hero",
+      title: "Garden",
+      name: "Garden",
+      secondary: "x",
+      condIdx: 5,
+      tempIdx: 6,
+    });
+    // the section's pair: the card's condition rules (not overridden) and its own temperature rules
+    expect(c.entities[5].rules).toMatchObject([{ state: "rainy" }]);
+    expect(c.entities[6].rules).toMatchObject([{ above: 0, color: "red" }]);
+    expect(c.entities[6].valueSrc).toEqual({ kind: "attribute", key: "temperature" });
+  });
+  it("group sections are entity groups whose entries may name weather attributes", () => {
+    const c = normalizeWeatherCardConfig({
+      entity: W,
+      sections: [
+        {
+          type: "row",
+          title: "Now",
+          entities: [
+            "humidity",
+            "apparent_temperature",
+            "something_else",
+            "sensor.uv_index",
+            { attribute: "visibility", decimals: 0 },
+            { entity: "sensor.a", name: "A", visual: "ring" },
+          ],
+        },
+        { type: "table", entities: ["pressure"], align: "start" },
+        { type: "grid", columns: 3, entities: ["humidity", "wind_speed"] },
+        { type: "column", entities: ["cloud_coverage"] },
+        { type: "list", divider: true, entities: ["dew_point"] },
+      ],
+    });
+    expect(c.sections.map((s) => s.kind)).toEqual([
+      "entities",
+      "entities",
+      "entities",
+      "entities",
+      "entities",
+    ]);
+    const row = c.sections[0];
+    if (row.kind !== "entities") throw new Error();
+    expect(row.title).toBe("Now");
+    expect(row.group).toMatchObject({ layout: "row", align: "stretch", idxs: [5, 6, 7, 8, 9, 10] });
+    const [hum, feels, other, uv, vis, a] = row.group.idxs.map((i) => c.entities[i]);
     expect(hum).toMatchObject({
       entity: W,
       valueSrc: { kind: "attribute", key: "humidity" },
@@ -95,113 +148,136 @@ describe("weather-card config", () => {
       item: { showName: true, showValue: true, showIcon: true, namePosition: "below" },
     });
     expect(feels).toMatchObject({ unitAttr: "temperature_unit", unit: null });
-    expect(other).toMatchObject({ name: "something_else" });
+    expect(other).toMatchObject({ entity: W, name: "something_else" });
     expect(other.nameKey).toBeUndefined();
-    expect(uv).toMatchObject({ entity: "sensor.uv_index", name: "UV" });
-    expect(vis).toMatchObject({ entity: W, valueSrc: { kind: "attribute", key: "visibility" } });
-    const list = normalizeWeatherCardConfig({
+    expect(uv).toMatchObject({ entity: "sensor.uv_index", valueSrc: { kind: "state" } });
+    expect(vis).toMatchObject({
       entity: W,
-      attributes: ["humidity"],
-      attributes_layout: "list",
+      valueSrc: { kind: "attribute", key: "visibility" },
+      decimals: 0,
     });
-    expect(list.attrGroup).toMatchObject({ layout: "list", align: "start" });
-    expect(() =>
-      normalizeWeatherCardConfig({
-        entity: W,
-        attributes: ["humidity"],
-        attributes_layout: "grid",
-      }),
-    ).toThrow(/attributes_layout/);
-  });
-  it("normalises the sections with their defaults and limits", () => {
-    const c = normalizeWeatherCardConfig({
-      entity: W,
-      sections: [
-        { type: "hourly" },
-        { type: "hourly", hours_to_show: 99, visual: "columns", show: ["wind", "nope", "wind"] },
-        { type: "daily", days: 0, layout: "chart", show: [] },
-        { title: "Garden", layout: "row", entities: ["sensor.a"] },
-      ],
-    });
-    expect(c.sections[0]).toEqual({
-      kind: "hourly",
-      hours: 12,
-      bucketMin: 60,
-      visual: "chart",
-      show: ["temperature", "precipitation"],
-      quantity: null,
-      title: null,
-    });
-    expect(c.sections[1]).toMatchObject({ hours: 48, visual: "columns", show: ["wind"] });
-    expect(c.sections[2]).toEqual({
-      kind: "daily",
-      days: 1,
-      layout: "chart",
-      show: ["probability"],
-    });
-    expect(c.sections[3]).toMatchObject({
-      kind: "entities",
-      title: "Garden",
-      group: { layout: "row" },
-    });
-    expect(c.groups).toHaveLength(1);
-    expect(
-      c.entities[c.sections[3].kind === "entities" ? c.sections[3].group.idxs[0] : 0].entity,
-    ).toBe("sensor.a");
-    expect(wantedForecasts(c)).toEqual({ hourly: true, daily: true });
-    expect(wantedForecasts(normalizeWeatherCardConfig({ entity: W }))).toEqual({
-      hourly: false,
-      daily: false,
-    });
-    expect(() => normalizeWeatherCardConfig({ entity: W, sections: [{ type: "weekly" }] })).toThrow(
-      /sections\[0\].type/,
-    );
-    expect(() =>
-      normalizeWeatherCardConfig({ entity: W, sections: [{ type: "hourly", visual: "strip" }] }),
-    ).toThrow(/visual must be one of/);
-    expect(() =>
-      normalizeWeatherCardConfig({ entity: W, sections: [{ type: "daily", layout: "table" }] }),
-    ).toThrow(/layout must be one of/);
-    expect(() => normalizeWeatherCardConfig({ entity: W, sections: [{ layout: "row" }] })).toThrow(
+    expect(a).toMatchObject({ entity: "sensor.a", name: "A", visual: "ring" });
+    expect(c.groups).toHaveLength(5);
+    expect(c.groups[1]).toMatchObject({ layout: "table", align: "start" });
+    expect(c.groups[2]).toMatchObject({ layout: "grid", columns: 3 });
+    expect(c.groups[4]).toMatchObject({ layout: "list", divider: true });
+    expect(() => normalizeWeatherCardConfig({ entity: W, sections: [{ type: "row" }] })).toThrow(
       /entities/,
     );
   });
-  it("makes one quantity its own hourly section with a title", () => {
+  it("forecast sections: mode, layout, count, rain figures, rules", () => {
     const c = normalizeWeatherCardConfig({
       entity: W,
       sections: [
-        { type: "temperature" },
-        { type: "wind", hours_to_show: 24, visual: "sparkline", title: "Breeze", show: ["rain"] },
-        { type: "probability", visual: "columns" },
+        { type: "forecast" },
+        { type: "forecast", mode: "hourly", hours_to_show: 99, layout: "horizontal", show: [] },
+        {
+          type: "forecast",
+          days: 0,
+          show: ["precipitation", "nope", "precipitation"],
+          rules: [{ state: "rainy", icon: "mdi:umbrella" }],
+        },
       ],
     });
     expect(c.sections[0]).toEqual({
-      kind: "hourly",
-      hours: 12,
-      bucketMin: 60,
-      visual: "chart",
-      show: ["temperature"],
-      quantity: "temperature",
+      kind: "forecast",
+      mode: "daily",
+      layout: "vertical",
+      count: 7,
+      show: ["probability"],
       title: null,
+      condIdx: 0,
+      tempIdx: 1,
     });
     expect(c.sections[1]).toMatchObject({
-      kind: "hourly",
-      hours: 24,
-      visual: "sparkline",
-      show: ["wind"],
-      quantity: "wind",
-      title: "Breeze",
+      mode: "hourly",
+      layout: "horizontal",
+      count: 48,
+      show: [],
     });
-    expect(c.sections[2]).toMatchObject({ show: ["probability"], quantity: "probability" });
+    expect(c.sections[2]).toMatchObject({
+      count: 1,
+      show: ["precipitation"],
+      condIdx: 5,
+      tempIdx: 6,
+    });
+    expect(c.entities[5].rules).toMatchObject([{ state: "rainy", icon: "mdi:umbrella" }]);
     expect(wantedForecasts(c)).toEqual({ hourly: true, daily: true });
     expect(() =>
-      normalizeWeatherCardConfig({ entity: W, sections: [{ type: "wind", visual: "strip" }] }),
-    ).toThrow(/visual must be one of/);
+      normalizeWeatherCardConfig({ entity: W, sections: [{ type: "forecast", mode: "weekly" }] }),
+    ).toThrow(/mode must be one of hourly \| daily/);
+    expect(() =>
+      normalizeWeatherCardConfig({ entity: W, sections: [{ type: "forecast", layout: "grid" }] }),
+    ).toThrow(/layout must be one of vertical \| horizontal/);
   });
-  it("puts header entities last and makes the header show", () => {
-    const c = normalizeWeatherCardConfig({ entity: W, header_entities: ["sun.sun"] });
-    expect(c.headerIdxs).toEqual([5]);
-    expect(c).toMatchObject({ hasHeader: true, layout: "hero" });
+  it("trend sections: the multi trend options and show entries", () => {
+    const c = normalizeWeatherCardConfig({
+      entity: W,
+      sections: [
+        { type: "trend" },
+        {
+          type: "trend",
+          mode: "hourly",
+          hours_to_show: 6,
+          title: "Soon",
+          layout: "lanes",
+          x_axis: false,
+          y_axis: true,
+          show_legend: false,
+          show: [
+            { quantity: "wind", name: "Breeze", color: "teal" },
+            "temperature",
+            { quantity: "nope" },
+            "wind",
+            { quantity: "temperature", color: 3 },
+          ],
+          temperature_rules: [{ above: 25, color: "red" }],
+        },
+      ],
+    });
+    expect(c.sections[0]).toEqual({
+      kind: "trend",
+      mode: "daily",
+      count: 7,
+      show: [
+        { quantity: "temperature", name: null, color: null },
+        { quantity: "precipitation", name: null, color: null },
+      ],
+      layout: "auto",
+      xAxis: true,
+      yAxis: false,
+      showLegend: true,
+      title: null,
+      condIdx: 0,
+      tempIdx: 1,
+    });
+    expect(c.sections[1]).toMatchObject({
+      mode: "hourly",
+      count: 6,
+      title: "Soon",
+      layout: "lanes",
+      xAxis: false,
+      yAxis: true,
+      showLegend: false,
+      show: [
+        { quantity: "wind", name: "Breeze", color: "teal" },
+        { quantity: "temperature", name: null, color: null },
+      ],
+      tempIdx: 6,
+    });
+    expect(wantedForecasts(c)).toEqual({ hourly: true, daily: true });
+    expect(() =>
+      normalizeWeatherCardConfig({ entity: W, sections: [{ type: "trend", layout: "stack" }] }),
+    ).toThrow(/layout must be one of auto \| overlay \| lanes/);
+  });
+  it("puts header entities last", () => {
+    const c = normalizeWeatherCardConfig({
+      entity: W,
+      header_entities: ["sun.sun"],
+      sections: [{ type: "hero" }, { type: "row", entities: ["humidity"] }],
+    });
+    expect(c.headerIdxs).toEqual([6]);
+    expect(c.hasHeader).toBe(true);
   });
 });
 
@@ -244,6 +320,11 @@ describe("forecast", () => {
     expect(forecastPoints(fc, "temperature").map((p) => p.v)).toEqual([10, 11, 12, 13, 14]);
     expect(forecastPoints([entry(t0, { temperature: null })], "temperature")).toEqual([]);
     expect(forecastPoints(null, "temperature")).toEqual([]);
+    expect(hoursOf(fc, now, 2)).toMatchObject([
+      { t: t0, hi: 10, lo: null },
+      { t: t0 + H, hi: 11, lo: null },
+    ]);
+    expect(hoursOf(undefined, now, 2)).toEqual([]);
   });
   it("summarises daily and twice-daily forecasts per day", () => {
     const d0 = new Date(2026, 5, 21, 12).getTime();

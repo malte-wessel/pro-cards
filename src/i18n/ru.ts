@@ -32,7 +32,6 @@ const ru: Translation = {
   "weather.stub_title": "Погода",
   "weather.today": "Сегодня",
   "weather.next_hours": "Следующие {n} ч",
-  "weather.next_hours_short": "следующие {n} ч",
   "weather.days": "{n} дн.",
   "weather.temperature": "Температура",
   "weather.precipitation": "Дождь",

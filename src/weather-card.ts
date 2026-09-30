@@ -1,21 +1,19 @@
 /*
- * weather-card – current conditions, attributes and the forecast of one weather entity.
+ * weather-card – one weather entity as a tile, or as sections composed like the sections card.
  *
  *   type: custom:weather-card
  *   entity: weather.home                   # required
- *   layout: hero                           # tile | hero (default: tile unless there is more to show)
  *   title: Home / icon: mdi:home           # header like the group cards (template allowed)
  *   header_entities: [...]                 # compact icon + value items on the title line
- *   name: Home                             # tile: the name; hero: the first line (default: condition)
- *   secondary: "{{ ... }}"                 # the line under the temperature; template allowed
+ *   name / secondary / color               # of the lead (tile and hero); templates allowed
  *   rules:                                 # on the condition (state: rainy), colour / icon / label / tint_card
  *   temperature_rules:                     # on the temperature (below / above), colour + label of the value
- *   attributes: [humidity, wind_speed, pressure, { entity: sensor.uv_index }]
- *   attributes_layout: row                 # row | list
- *   sections:
- *     - { type: hourly, hours_to_show: 12, visual: chart, show: [temperature, precipitation] }
- *     - { type: daily, days: 7, layout: list, show: [probability] }
- *     - { type: entities, title: Garden, layout: row, entities: [...] }   # an entity group
+ *   sections:                              # none → a tile
+ *     - { type: hero }                                     # condition, big temperature, high / low
+ *     - { type: row, entities: [humidity, wind_speed, { entity: sensor.uv_index, visual: ring }] }
+ *     - { type: trend, mode: hourly, hours_to_show: 12, show: [temperature, precipitation] }
+ *     - { type: forecast, mode: daily, layout: vertical, days: 7 }
+ *     - { type: table, title: More, entities: [pressure, dew_point] }   # row | list | table | grid | column
  *   tap_action / hold_action / double_tap_action   # more-info / more-info / none
  */
 import { registerCard } from "./shared/card.ts";
@@ -36,18 +34,20 @@ import {
   wantedForecasts,
   type WeatherConfig,
 } from "./weather/config.ts";
-import { CARD_TYPE, LANE_H } from "./weather/constants.ts";
-import { dailyTypeOf, daysOf, isToday, supportsForecast, type Day } from "./weather/forecast.ts";
-import { chartTimeAt, showChartHover } from "./weather/render/chart.ts";
-import { fillCurrent } from "./weather/render/current.ts";
-import { buildDaily, drawDaily } from "./weather/render/daily.ts";
+import { CARD_TYPE } from "./weather/constants.ts";
 import {
-  buildHourly,
-  drawHourly,
-  prepareHourlyPlot,
-  sectionShell,
-  type ForecastChartEl,
-} from "./weather/render/hourly.ts";
+  dailyTypeOf,
+  daysOf,
+  hoursOf,
+  isToday,
+  supportsForecast,
+  type Day,
+} from "./weather/forecast.ts";
+import { showTrendHover, trendTimeAt } from "./shared/trend/plot.ts";
+import { fillCurrent } from "./weather/render/current.ts";
+import { buildForecast, drawForecast } from "./weather/render/forecast.ts";
+import { sectionShell } from "./weather/render/section.ts";
+import { buildTrend, drawTrendSection, type ForecastTrendEl } from "./weather/render/trend.ts";
 import { STYLE_WEATHER_CARD } from "./weather/styles.ts";
 
 type Unsubscribe = () => unknown;
@@ -62,8 +62,11 @@ export class WeatherCard extends EntityCardBase {
     return {
       entity: e,
       title: t(hass, "weather.stub_title"),
-      attributes: ["humidity", "wind_speed", "pressure"],
-      sections: [{ type: "daily" }],
+      sections: [
+        { type: "hero" },
+        { type: "row", entities: ["humidity", "wind_speed", "pressure"] },
+        { type: "forecast", mode: "daily" },
+      ],
     };
   }
 
@@ -72,7 +75,7 @@ export class WeatherCard extends EntityCardBase {
   _forecast: Partial<Record<WeatherForecastType, ForecastEntry[] | null>> = {};
   _fcUnsub = new Map<WeatherForecastType, Promise<Unsubscribe | null>>();
   _fcToken = new Map<WeatherForecastType, object>(); // identifies the live subscription per type
-  _chartHover: { el: ForecastChartEl; t: number } | null = null;
+  _chartHover: { el: ForecastTrendEl; t: number } | null = null;
   _chartHandlers = {
     move: this._onChartPointer.bind(this),
     up: (ev: PointerEvent) => ev.stopPropagation(),
@@ -94,14 +97,13 @@ export class WeatherCard extends EntityCardBase {
     const cfg = this._config;
     if (!cfg) return 2;
     if (cfg.layout === "tile") return 1;
-    let rows = (cfg.hasHeader ? 1 : 0) + 2;
-    if (cfg.attrGroup) rows += groupCardSize(cfg, cfg.attrGroup);
+    let rows = cfg.hasHeader ? 1 : 0;
     for (const s of cfg.sections) {
-      if (s.kind === "hourly")
-        rows +=
-          1 +
-          (s.visual === "chart" ? Math.ceil(s.show.reduce((a, k) => a + LANE_H[k], 0) / 56) : 1);
-      else if (s.kind === "daily") rows += 1 + (s.layout === "list" ? Math.ceil(s.days / 2) : 2);
+      if (s.kind === "hero") rows += 2;
+      else if (s.kind === "trend")
+        rows += 1 + (s.layout === "overlay" || s.show.length === 1 ? 2 : 1 + s.show.length);
+      else if (s.kind === "forecast")
+        rows += 1 + (s.layout === "vertical" ? Math.ceil(s.count / 2) : 3);
       else rows += (s.title ? 1 : 0) + groupCardSize(cfg, s.group);
     }
     return rows;
@@ -200,18 +202,24 @@ export class WeatherCard extends EntityCardBase {
   _buildBody(body: HTMLElement) {
     const cfg = this._config as WeatherConfig;
     const ctx = this._ctx();
-    body.appendChild(this._row(cfg.condIdx, cfg.layout === "tile" ? "wtile" : "whero"));
-    if (cfg.attrGroup) body.appendChild(this._buildGroup(cfg.attrGroup));
+    if (cfg.layout === "tile") {
+      body.appendChild(this._row(cfg.condIdx, "wtile"));
+      return;
+    }
     cfg.sections.forEach((sec, i) => {
       let el: HTMLElement;
-      if (sec.kind === "hourly") el = buildHourly(ctx, cfg, sec);
-      else if (sec.kind === "daily") el = buildDaily(ctx, sec);
+      if (sec.kind === "hero") {
+        el = sectionShell(sec.title);
+        el.appendChild(this._row(sec.condIdx, "whero"));
+      } else if (sec.kind === "trend") el = buildTrend(ctx, sec);
+      else if (sec.kind === "forecast") el = buildForecast(ctx, sec);
       else {
+        if (sec.group.divider && i > 0) body.appendChild(this._divider());
         el = sectionShell(sec.title);
         el.appendChild(this._buildGroup(sec.group));
       }
       el.dataset.sec = String(i);
-      const chart = el.querySelector<ForecastChartEl>(".wchart");
+      const chart = el.querySelector<ForecastTrendEl>(".trend");
       if (chart) {
         chart.addEventListener("pointermove", this._chartHandlers.move);
         chart.addEventListener("pointerdown", this._chartHandlers.move);
@@ -227,7 +235,10 @@ export class WeatherCard extends EntityCardBase {
     if (c.contains("wtile") || c.contains("whero")) {
       const days = this._days(1);
       const today = days?.find((d) => isToday(d.t, ctx.now)) ?? null;
-      const temp = modelOf(ctx, cfg.entities[cfg.tempIdx]);
+      const secEl = row.closest<HTMLElement>("[data-sec]");
+      const sec = secEl ? cfg.sections[Number(secEl.dataset.sec)] : undefined;
+      const tempIdx = sec?.kind === "hero" ? sec.tempIdx : cfg.tempIdx;
+      const temp = modelOf(ctx, cfg.entities[tempIdx]);
       fillCurrent(ctx, row, cfg, { cond: m, temp, today }, c.contains("wtile"));
       return;
     }
@@ -237,8 +248,14 @@ export class WeatherCard extends EntityCardBase {
   _tintColor(ctx: RenderCtx, models: EntityModel[], card: HTMLElement) {
     const base = super._tintColor(ctx, models, card);
     if (base !== null) return base;
-    const temp = models[(this._config as WeatherConfig).tempIdx];
-    return temp?.look.tint ? temp.look.color : null;
+    // the temperature items of the tile / the hero sections may tint too
+    const cfg = this._config as WeatherConfig;
+    const idxs =
+      cfg.layout === "tile"
+        ? [cfg.tempIdx]
+        : cfg.sections.flatMap((s) => (s.kind === "hero" ? [s.tempIdx] : []));
+    for (const i of idxs) if (models[i]?.look.tint) return models[i].look.color;
+    return null;
   }
   _render() {
     if (!this._root || !this._hass || !this._config) return;
@@ -246,31 +263,44 @@ export class WeatherCard extends EntityCardBase {
       card = this._root,
       ctx = this._ctx();
     const sections = [...card.querySelectorAll<HTMLElement>("[data-sec]")];
-    // hourly plots draw with the base's plots, so hand them their series first
-    sections.forEach((el) => {
-      const sec = cfg.sections[Number(el.dataset.sec)];
-      if (sec?.kind === "hourly" && sec.visual !== "chart")
-        prepareHourlyPlot(ctx, el, sec, this._forecast.hourly);
-    });
     super._render();
+    // an entity without an hourly forecast: "no forecast" rather than loading forever
+    const st = this._hass.states[cfg.entity];
+    const hourly = supportsForecast(st, "hourly") ? this._forecast.hourly : null;
+    const hours = (n: number) =>
+      hourly === undefined ? undefined : hourly === null ? null : hoursOf(hourly, ctx.now, n);
     sections.forEach((el) => {
       const sec = cfg.sections[Number(el.dataset.sec)];
-      if (sec?.kind === "hourly" && sec.visual === "chart")
-        drawHourly(ctx, el, cfg, sec, this._forecast.hourly);
-      else if (sec?.kind === "daily") drawDaily(ctx, el, cfg, sec, this._days(sec.days));
+      if (sec?.kind === "trend")
+        drawTrendSection(
+          ctx,
+          el,
+          cfg,
+          sec,
+          hourly,
+          sec.mode === "daily" ? this._days(sec.count) : undefined,
+        );
+      else if (sec?.kind === "forecast")
+        drawForecast(
+          ctx,
+          el,
+          cfg,
+          sec,
+          sec.mode === "hourly" ? hours(sec.count) : this._days(sec.count),
+        );
     });
     const h = this._chartHover;
-    if (h && h.el.isConnected) showChartHover(h.el, h.t, h.el._content ?? (() => null));
+    if (h && h.el.isConnected) showTrendHover(h.el, h.t, h.el._head);
   }
 
   // ----- chart hover -----
   _onChartPointer(ev: PointerEvent) {
     ev.stopPropagation();
-    const el = ev.currentTarget as ForecastChartEl;
-    const tt = chartTimeAt(el, ev);
+    const el = ev.currentTarget as ForecastTrendEl;
+    const tt = trendTimeAt(el, ev);
     if (tt === null) return;
     this._chartHover = { el, t: tt };
-    if (!showChartHover(el, tt, el._content ?? (() => null))) hideHover(el);
+    if (!showTrendHover(el, tt, el._head)) hideHover(el);
   }
   _onChartLeave(ev: PointerEvent) {
     if (ev.pointerType === "touch") return;
@@ -285,5 +315,5 @@ export class WeatherCard extends EntityCardBase {
 registerCard(WeatherCard, {
   name: "Weather Card",
   description:
-    "Current conditions, attributes and the hourly / daily forecast of a weather entity in the Pro Cards look",
+    "A weather entity as a tile or as sections: hero, attribute rows, forecast rows and trend charts",
 });

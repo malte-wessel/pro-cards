@@ -1,4 +1,4 @@
-// Scales and tick helpers of the multi trend card (pure).
+// Scales and tick helpers of the trend plot (multi trend card, weather forecasts), pure.
 
 export const DEFAULT_HOURS = 6;
 export const PALETTE = ["primary", "orange", "green", "purple", "cyan", "pink"];

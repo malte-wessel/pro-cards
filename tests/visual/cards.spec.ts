@@ -434,50 +434,71 @@ const CASES = {
       grid_options: { columns: 6 },
     },
   ],
-  "wc-hero-attributes": {
+  "wc-hero-rows": {
     type: "custom:weather-card",
     entity: "weather.home",
     title: "Home",
-    attributes: ["humidity", "wind_speed", "pressure"],
-    temperature_rules: [
-      { below: 12, color: "blue", label: "Cool" },
-      { below: 20, color: "green", label: "Mild" },
-      { above: 20, color: "amber", label: "Warm" },
-    ],
-  },
-  "wc-hourly-chart": {
-    type: "custom:weather-card",
-    entity: "weather.home",
-    sections: [
-      { type: "hourly", hours_to_show: 12, show: ["temperature", "precipitation", "wind"] },
-      { type: "hourly", hours_to_show: 24, visual: "sparkline" },
-      { type: "hourly", hours_to_show: 24, visual: "columns" },
-    ],
-  },
-  "wc-quantities": {
-    type: "custom:weather-card",
-    entity: "weather.home",
-    sections: [
-      { type: "temperature", hours_to_show: 12 },
-      { type: "daily", days: 3 },
-      { type: "precipitation", hours_to_show: 24, visual: "columns" },
-      { type: "probability", hours_to_show: 24 },
-      { type: "wind", visual: "sparkline", title: "Breeze" },
-    ],
-  },
-  "wc-daily": {
-    type: "custom:weather-card",
-    entity: "weather.home",
-    layout: "hero",
     temperature_rules: [
       { below: 12, color: "blue", label: "Cool" },
       { below: 20, color: "green", label: "Mild" },
       { above: 20, color: "amber", label: "Warm" },
     ],
     sections: [
-      { type: "daily", days: 5, show: ["probability", "precipitation"] },
-      { type: "daily", days: 6, layout: "columns" },
-      { type: "daily", days: 7, layout: "chart", show: ["precipitation"] },
+      { type: "hero" },
+      {
+        type: "row",
+        entities: [
+          "humidity",
+          "wind_speed",
+          { entity: "sensor.uv_index", name: "UV", visual: "ring", min: 0, max: 11 },
+        ],
+      },
+      { type: "table", title: "More", entities: ["pressure", "dew_point", "visibility"] },
+      { type: "grid", entities: ["humidity", "wind_speed"] },
+    ],
+  },
+  "wc-trend": {
+    type: "custom:weather-card",
+    entity: "weather.home",
+    sections: [
+      { type: "hero", name: "Garden" },
+      {
+        type: "trend",
+        mode: "hourly",
+        hours_to_show: 12,
+        show: ["temperature", "precipitation", { quantity: "wind", name: "Breeze", color: "teal" }],
+        y_axis: true,
+      },
+      { type: "trend", mode: "daily", days: 7, show: ["temperature", "precipitation"] },
+      {
+        type: "trend",
+        mode: "hourly",
+        hours_to_show: 6,
+        show: ["temperature"],
+        title: "Soon",
+        temperature_rules: [{ above: 0, color: "red" }],
+      },
+    ],
+  },
+  "wc-forecast": {
+    type: "custom:weather-card",
+    entity: "weather.home",
+    temperature_rules: [
+      { below: 12, color: "blue", label: "Cool" },
+      { below: 20, color: "green", label: "Mild" },
+      { above: 20, color: "amber", label: "Warm" },
+    ],
+    sections: [
+      {
+        type: "forecast",
+        mode: "daily",
+        days: 7,
+        show: ["probability", "precipitation"],
+        rules: [{ state: "rainy", color: "blue", icon: "mdi:umbrella" }],
+      },
+      { type: "forecast", mode: "daily", layout: "horizontal", days: 6 },
+      { type: "forecast", mode: "hourly", layout: "horizontal", hours_to_show: 6 },
+      { type: "forecast", mode: "hourly", hours_to_show: 4, title: "Soon" },
     ],
   },
   "wc-everything": {
@@ -500,28 +521,31 @@ const CASES = {
       { below: 20, color: "green", label: "Mild" },
       { above: 20, color: "amber", label: "Warm" },
     ],
-    attributes_layout: "list",
-    attributes: [
-      "humidity",
-      "wind_speed",
-      "pressure",
-      {
-        entity: "sensor.uv_index",
-        name: "UV index",
-        rules: [{ below: 3, color: "green", label: "Low" }],
-      },
-    ],
     sections: [
+      { type: "hero" },
       {
-        type: "hourly",
+        type: "list",
+        entities: [
+          "humidity",
+          "wind_speed",
+          "pressure",
+          {
+            entity: "sensor.uv_index",
+            name: "UV index",
+            rules: [{ below: 3, color: "green", label: "Low" }],
+          },
+        ],
+      },
+      {
+        type: "trend",
+        mode: "hourly",
         hours_to_show: 12,
         show: ["temperature", "precipitation", "probability", "wind"],
       },
-      { type: "daily", days: 7 },
+      { type: "forecast", mode: "daily", days: 7 },
       {
-        type: "entities",
+        type: "row",
         title: "Garden station",
-        layout: "row",
         entities: [
           { entity: "sensor.outdoor_temperature", visual: "ring", min: -10, max: 40 },
           { entity: "sensor.outdoor_humidity", visual: "ring" },

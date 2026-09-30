@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { niceStep, decimalsForStep, DEFAULT_HOURS } from "../../src/multi-trend/scale.ts";
+import { niceStep, decimalsForStep, DEFAULT_HOURS } from "../../src/shared/trend/scale.ts";
 import { configToForm, formToConfig, editorSchema } from "../../src/multi-trend/editor.ts";
 import { MultiTrendCard } from "../../src/multi-trend-card.ts";
 import type { MultiTrendCardConfig } from "../../src/multi-trend/config.ts";

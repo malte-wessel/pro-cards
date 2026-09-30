@@ -3,19 +3,28 @@ import type { StringKey } from "../shared/i18n.ts";
 
 export const CARD_TYPE = "weather-card";
 
-export const LAYOUTS = ["tile", "hero"] as const;
-export type WeatherLayout = (typeof LAYOUTS)[number];
-export const ATTRIBUTE_LAYOUTS = ["row", "list"] as const;
-export type AttributeLayout = (typeof ATTRIBUTE_LAYOUTS)[number];
-export const HOURLY_VISUALS = ["chart", "sparkline", "columns"] as const;
-export type HourlyVisual = (typeof HOURLY_VISUALS)[number];
-export const HOURLY_SHOW = ["temperature", "precipitation", "probability", "wind"] as const;
-export type HourlyShow = (typeof HOURLY_SHOW)[number];
-export const DAILY_LAYOUTS = ["list", "columns", "chart"] as const;
-export type DailyLayout = (typeof DAILY_LAYOUTS)[number];
-export const DAILY_SHOW = ["probability", "precipitation"] as const;
-export type DailyShow = (typeof DAILY_SHOW)[number];
-export const SECTION_TYPES = ["hourly", "daily", "entities"] as const;
+export const SECTION_TYPES = [
+  "hero",
+  "row",
+  "list",
+  "table",
+  "grid",
+  "column",
+  "forecast",
+  "trend",
+] as const;
+export type SectionType = (typeof SECTION_TYPES)[number];
+export const GROUP_TYPES = ["row", "list", "table", "grid", "column"] as const;
+export type GroupType = (typeof GROUP_TYPES)[number];
+export const FORECAST_MODES = ["hourly", "daily"] as const;
+export type ForecastMode = (typeof FORECAST_MODES)[number];
+export const FORECAST_LAYOUTS = ["vertical", "horizontal"] as const;
+export type ForecastLayout = (typeof FORECAST_LAYOUTS)[number];
+// the quantities of a trend section (the lines) and the rain figures of a forecast section
+export const QUANTITIES = ["temperature", "precipitation", "probability", "wind"] as const;
+export type Quantity = (typeof QUANTITIES)[number];
+export const RAIN_FIGURES = ["probability", "precipitation"] as const;
+export type RainFigure = (typeof RAIN_FIGURES)[number];
 
 // weather entity `supported_features` bits
 export const WEATHER_FEATURE = { daily: 1, hourly: 2, twice_daily: 4 } as const;
@@ -23,14 +32,11 @@ export const WEATHER_FEATURE = { daily: 1, hourly: 2, twice_daily: 4 } as const;
 export const DEFAULTS = {
   hours: 12,
   maxHours: 48,
-  bucketMin: 60,
   days: 7,
   maxDays: 10,
-  hourlyVisual: "chart",
-  hourlyShow: ["temperature", "precipitation"],
-  dailyLayout: "list",
-  dailyShow: ["probability"],
-  attributesLayout: "row",
+  forecastLayout: "vertical",
+  trendShow: ["temperature", "precipitation"],
+  rainFigures: ["probability"],
 } as const;
 
 // the weather entity attributes an `attributes` entry may name: icon, unit (or the attribute
@@ -78,14 +84,14 @@ export const ATTRIBUTES: Record<string, AttrDef> = {
   ozone: { icon: "mdi:molecule", nameKey: "weather.attr.ozone", unit: "DU" },
 };
 
-// chart geometry (px)
-export const LANE_H: Record<HourlyShow, number> = {
-  temperature: 72,
-  precipitation: 40,
-  probability: 40,
-  wind: 40,
+export const TREND_LAYOUTS = ["auto", "overlay", "lanes"] as const;
+export type TrendLayoutOption = (typeof TREND_LAYOUTS)[number];
+// default colours of the forecast quantities (temperature takes its rule colour)
+export const QUANTITY_COLOR: Record<Quantity, string> = {
+  temperature: "primary",
+  precipitation: "blue",
+  probability: "cyan",
+  wind: "grey",
 };
-export const DAILY_CHART_H = 96;
-export const X_AXIS_H = 16;
 export const RANGE_BAR_H = 8;
 export const DAY_COLUMN_H = 72;

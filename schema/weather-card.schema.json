@@ -2,19 +2,16 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://malte-wessel.github.io/pro-cards/schema/weather-card.schema.json",
   "title": "custom:weather-card",
-  "description": "Current conditions, attributes and the hourly / daily forecast of a weather entity: a tile, or a hero lead with attribute items and sections.",
+  "description": "A weather entity as a tile, or as sections composed like the entity sections card: hero, entity groups whose entries may name weather attributes, forecast rows / columns and trend charts.",
   "type": "object",
   "properties": {
-    "type": { "const": "custom:weather-card" },
+    "type": {
+      "const": "custom:weather-card"
+    },
     "entity": {
       "type": "string",
       "pattern": "^weather\\.[a-z0-9_]+$",
       "description": "The weather entity"
-    },
-    "layout": {
-      "type": "string",
-      "enum": ["tile", "hero"],
-      "description": "Default: tile, or hero once there is a title, attributes or sections"
     },
     "name": {
       "type": "string",
@@ -28,42 +25,36 @@
       "$ref": "defs.schema.json#/$defs/color",
       "description": "Fixed condition colour; overrides rules"
     },
-    "decimals": { "type": "integer", "minimum": 0, "maximum": 3 },
+    "decimals": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
+    },
     "rules": {
       "type": "array",
-      "items": { "$ref": "entity.schema.json#/$defs/rule" },
+      "items": {
+        "$ref": "entity.schema.json#/$defs/rule"
+      },
       "description": "On the condition (state: rainy …): colour, icon, label and tint; first match wins"
     },
     "temperature_rules": {
       "type": "array",
-      "items": { "$ref": "entity.schema.json#/$defs/rule" },
+      "items": {
+        "$ref": "entity.schema.json#/$defs/rule"
+      },
       "description": "On the temperature (below / above): colour of the temperature, bars and lines, label and tint"
     },
-    "attributes": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "oneOf": [
-          {
-            "type": "string",
-            "description": "An attribute of the weather entity (humidity, pressure, wind_speed, wind_gust_speed, wind_bearing, apparent_temperature, dew_point, uv_index, cloud_coverage, visibility, ozone …)"
-          },
-          { "$ref": "entity.schema.json#/$defs/entity" }
-        ]
-      },
-      "description": "Items under the lead: weather attributes by name or any entity"
-    },
-    "attributes_layout": {
+    "title": {
       "type": "string",
-      "enum": ["row", "list"],
-      "default": "row"
+      "description": "Header text. Template allowed."
     },
-    "title": { "type": "string", "description": "Header text. Template allowed." },
     "icon": {
       "$ref": "defs.schema.json#/$defs/icon",
       "description": "Header icon. Template allowed."
     },
-    "header_entities": { "$ref": "entity.schema.json#/$defs/headerEntities" },
+    "header_entities": {
+      "$ref": "entity.schema.json#/$defs/headerEntities"
+    },
     "columns": {
       "type": "integer",
       "minimum": 1,
@@ -77,95 +68,269 @@
     "sections": {
       "type": "array",
       "minItems": 1,
+      "description": "Rendered in this order; without sections the card is a tile",
       "items": {
         "oneOf": [
           {
             "type": "object",
-            "description": "The next hours as a chart, sparkline or columns",
+            "description": "The weather lead: condition icon, big temperature, today's high / low",
             "properties": {
-              "type": { "const": "hourly" },
-              "hours_to_show": { "type": "integer", "minimum": 1, "maximum": 48, "default": 12 },
-              "bucket_minutes": {
-                "type": "number",
-                "minimum": 60,
-                "default": 60,
-                "description": "columns: bucket size"
+              "type": {
+                "const": "hero"
               },
-              "visual": {
+              "title": {
                 "type": "string",
-                "enum": ["chart", "sparkline", "columns"],
-                "default": "chart",
-                "description": "chart: lanes per `show`; sparkline: temperature; columns: rain"
+                "description": "Line above the section"
+              },
+              "name": {
+                "type": "string",
+                "description": "Overrides the card's name. Template allowed."
+              },
+              "secondary": {
+                "type": "string",
+                "description": "Overrides the card's secondary. Template allowed."
+              },
+              "rules": {
+                "type": "array",
+                "items": {
+                  "$ref": "entity.schema.json#/$defs/rule"
+                },
+                "description": "Condition rules for this section only (default: the card's)"
+              },
+              "temperature_rules": {
+                "type": "array",
+                "items": {
+                  "$ref": "entity.schema.json#/$defs/rule"
+                },
+                "description": "Temperature rules for this section only (default: the card's)"
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "An entity group like a section of the entity sections card; entries may name attributes of the weather entity (humidity, pressure, wind_speed, wind_gust_speed, wind_bearing, apparent_temperature, dew_point, uv_index, cloud_coverage, visibility, ozone)",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["row", "list", "table", "grid", "column"]
+              },
+              "title": {
+                "type": "string",
+                "description": "Line above the section"
+              },
+              "divider": {
+                "type": "boolean",
+                "default": false,
+                "description": "Line above the section"
+              },
+              "entities": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "description": "A weather attribute name or an entity id"
+                    },
+                    {
+                      "allOf": [
+                        {
+                          "$ref": "entity.schema.json#/$defs/entityKeys"
+                        }
+                      ],
+                      "unevaluatedProperties": false,
+                      "description": "An entity item; without `entity` it reads the weather entity (with `attribute`)"
+                    }
+                  ]
+                }
+              },
+              "columns": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 4,
+                "description": "grid: cells per row"
+              },
+              "align": {
+                "$ref": "entity.schema.json#/$defs/align"
+              },
+              "show_name": {
+                "type": "boolean"
+              },
+              "show_value": {
+                "type": "boolean"
+              },
+              "show_icon": {
+                "type": "boolean"
+              },
+              "name_position": {
+                "type": "string",
+                "enum": ["above", "below"]
+              }
+            },
+            "required": ["type", "entities"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Forecast rows (vertical) or columns (horizontal): weekday / time, condition, rain figures and the temperature (days: a low → high bar on one scale)",
+            "properties": {
+              "type": {
+                "const": "forecast"
+              },
+              "title": {
+                "type": "string",
+                "description": "Line above the section"
+              },
+              "mode": {
+                "type": "string",
+                "enum": ["hourly", "daily"],
+                "default": "daily"
+              },
+              "layout": {
+                "type": "string",
+                "enum": ["vertical", "horizontal"],
+                "default": "vertical"
+              },
+              "hours_to_show": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 48,
+                "default": 12,
+                "description": "hourly: hours from the current hour"
+              },
+              "days": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10,
+                "default": 7,
+                "description": "daily: days, today first"
+              },
+              "show": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["probability", "precipitation"]
+                },
+                "description": "Rain figures per row (default: probability); an empty list hides them"
+              },
+              "rules": {
+                "type": "array",
+                "items": {
+                  "$ref": "entity.schema.json#/$defs/rule"
+                },
+                "description": "Condition rules for this section only (default: the card's)"
+              },
+              "temperature_rules": {
+                "type": "array",
+                "items": {
+                  "$ref": "entity.schema.json#/$defs/rule"
+                },
+                "description": "Temperature rules for this section only (default: the card's)"
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "The multi trend plot of the forecast: one line per quantity (daily: the temperature as high and low)",
+            "properties": {
+              "type": {
+                "const": "trend"
+              },
+              "title": {
+                "type": "string",
+                "description": "Line above the section"
+              },
+              "mode": {
+                "type": "string",
+                "enum": ["hourly", "daily"],
+                "default": "daily"
+              },
+              "hours_to_show": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 48,
+                "default": 12,
+                "description": "hourly: hours from the current hour"
+              },
+              "days": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10,
+                "default": 7,
+                "description": "daily: days, today first"
               },
               "show": {
                 "type": "array",
                 "minItems": 1,
                 "items": {
-                  "type": "string",
-                  "enum": ["temperature", "precipitation", "probability", "wind"]
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "enum": ["temperature", "precipitation", "probability", "wind"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "quantity": {
+                          "type": "string",
+                          "enum": ["temperature", "precipitation", "probability", "wind"]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "color": {
+                          "$ref": "defs.schema.json#/$defs/color"
+                        }
+                      },
+                      "required": ["quantity"],
+                      "additionalProperties": false
+                    }
+                  ]
                 },
-                "description": "chart lanes, in this order (default: temperature, precipitation)"
-              }
-            },
-            "required": ["type"],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "description": "One forecast quantity as its own section: an hourly chart, sparkline or columns with a title line",
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": ["temperature", "precipitation", "probability", "wind"]
+                "description": "The lines, in this order, like the multi trend card's entities (default: temperature, precipitation)"
               },
-              "title": { "type": "string", "description": "Default: the quantity's name" },
-              "hours_to_show": { "type": "integer", "minimum": 1, "maximum": 48, "default": 12 },
-              "bucket_minutes": {
-                "type": "number",
-                "minimum": 60,
-                "default": 60,
-                "description": "columns: bucket size"
-              },
-              "visual": {
-                "type": "string",
-                "enum": ["chart", "sparkline", "columns"],
-                "default": "chart"
-              }
-            },
-            "required": ["type"],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "description": "The next days as a list of range bars, columns or a chart",
-            "properties": {
-              "type": { "const": "daily" },
-              "days": { "type": "integer", "minimum": 1, "maximum": 10, "default": 7 },
               "layout": {
                 "type": "string",
-                "enum": ["list", "columns", "chart"],
-                "default": "list"
+                "enum": ["auto", "overlay", "lanes"],
+                "default": "auto",
+                "description": "auto = overlay when all shown quantities share a unit, else lanes"
               },
-              "show": {
+              "x_axis": {
+                "type": "boolean",
+                "default": true,
+                "description": "Time labels + vertical gridlines"
+              },
+              "y_axis": {
+                "type": "boolean",
+                "default": false,
+                "description": "Value labels + horizontal gridlines (per lane)"
+              },
+              "show_legend": {
+                "type": "boolean",
+                "default": true,
+                "description": "Legend line when overlaying several quantities"
+              },
+              "rules": {
                 "type": "array",
-                "items": { "type": "string", "enum": ["probability", "precipitation"] },
-                "description": "Rain figures per day (default: probability); an empty list hides them"
+                "items": {
+                  "$ref": "entity.schema.json#/$defs/rule"
+                },
+                "description": "Condition rules for this section only (default: the card's)"
+              },
+              "temperature_rules": {
+                "type": "array",
+                "items": {
+                  "$ref": "entity.schema.json#/$defs/rule"
+                },
+                "description": "Temperature rules for this section only (default: the card's)"
               }
             },
             "required": ["type"],
             "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "description": "An entity group, as in the entity-sections-card",
-            "properties": {
-              "type": { "const": "entities" },
-              "title": { "type": "string", "description": "Line above the group" },
-              "divider": { "type": "boolean", "default": false }
-            },
-            "required": ["entities"],
-            "allOf": [{ "$ref": "entity.schema.json#/$defs/groupKeys" }],
-            "unevaluatedProperties": false
           }
         ]
       }
@@ -173,10 +338,18 @@
   },
   "required": ["type", "entity"],
   "allOf": [
-    { "$ref": "entity.schema.json#/$defs/itemOptions" },
-    { "$ref": "entity.schema.json#/$defs/historyOptions" },
-    { "$ref": "entity.schema.json#/$defs/actionDefaults" },
-    { "$ref": "entity.schema.json#/$defs/haExtras" }
+    {
+      "$ref": "entity.schema.json#/$defs/itemOptions"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/historyOptions"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/actionDefaults"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/haExtras"
+    }
   ],
   "unevaluatedProperties": false
 }

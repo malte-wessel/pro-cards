@@ -32,7 +32,6 @@ const nb: Translation = {
   "weather.stub_title": "Vær",
   "weather.today": "I dag",
   "weather.next_hours": "Neste {n} timer",
-  "weather.next_hours_short": "neste {n} t",
   "weather.days": "{n} dager",
   "weather.temperature": "Temperatur",
   "weather.precipitation": "Regn",
