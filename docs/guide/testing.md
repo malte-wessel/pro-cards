@@ -16,7 +16,7 @@ A fourth, manual layer is a real Home Assistant in the repository's devcontainer
 
 `tests/unit/*.test.ts`, one file per card (the three entity cards share `entity-cards.test.ts`), `tests/unit/shared/` for the modules every card uses, `tests/unit/shared/entity/` for the entity layer the entity cards share, and one each for the docs' template engine, demo world and hass shim.
 
-Every card is built from plain ES modules: `src/shared/` (colours, formatting, history fetch and bucketing, the editor base), `src/shared/entity/` for the layer the entity cards share, and one folder per other card (`src/multi-trend/`, `src/sun-path/`, `src/illuminance/`). Tests import straight from `src/`:
+Every card is built from plain ES modules: `src/shared/` (colours, formatting, history fetch and bucketing, the editor base), `src/shared/entity/` for the layer the entity cards share, `src/shared/trend/` for the trend plot the multi trend and weather cards share, and one folder per other card (`src/multi-trend/`, `src/sun-path/`, `src/illuminance/`, `src/weather/`). Tests import straight from `src/`:
 
 ```js
 import { matchRule } from "../../src/shared/entity/look.ts";
@@ -80,7 +80,7 @@ Locators pierce the cards' shadow DOM, so `card(page).locator(".row")` works as 
 
 Determinism: `mount` freezes the browser clock at **21 June 2026, 12:00 Europe/Berlin** before loading the page, and the harness never starts the demo world's value drift. History is generated from a seed per entity, so the same window always yields the same series.
 
-What is covered: every layout, all eight visuals, rules updating live, templates, attribute values, prefix and suffix, missing and unavailable entities, toggles calling `homeassistant.toggle`, tap, hold, navigate, none and confirmed `perform-action`, hover tooltips, editor elements, config errors, sun events for the frozen day, illuminance modes.
+What is covered: every layout, all eight visuals, rules updating live, templates, attribute values, prefix and suffix, missing and unavailable entities, toggles calling `homeassistant.toggle`, tap, hold, navigate, none and confirmed `perform-action`, hover tooltips, editor elements, config errors, sun events for the frozen day, illuminance modes, every section type of the weather card with the forecast of the demo world.
 
 Run one file or test with the usual Playwright flags, for example `npx playwright test --project=integration tests/e2e/sun-path-card.spec.ts` or `-g "hold"`. Add `--ui` for the inspector.
 

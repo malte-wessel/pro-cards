@@ -12,6 +12,9 @@ hero:
       text: Entity cards
       link: /cards/entity-card
     - theme: alt
+      text: Weather card
+      link: /cards/weather-card
+    - theme: alt
       text: Playground
       link: /playground
 features:
@@ -36,6 +39,7 @@ Every example on these pages is the real card code running against a simulated h
 Each card page starts with the smallest possible configuration and adds one option at a time, so you can stop as soon as the card looks the way you want.
 
 <div class="live-strip">
+<LiveCard :config="{ type: 'custom:weather-card', entity: 'weather.home', title: 'Weather', temperature_rules: [ { below: 12, color: 'blue', label: 'Cool' }, { below: 20, color: 'green', label: 'Mild' }, { above: 20, color: 'amber', label: 'Warm' } ], sections: [ { type: 'hero' }, { type: 'row', entities: [ 'humidity', 'wind_speed' ] }, { type: 'forecast', mode: 'daily', days: 5 } ] }" width="full" />
 <LiveCard :config="{ type: 'custom:entity-group-card', layout: 'hero', title: 'Weather station', icon: 'mdi:weather-partly-cloudy', hours_to_show: 24, entities: [
   { entity: 'sensor.outdoor_temperature', name: 'Temperature', visual: 'sparkline', decimals: 1, rules: [ { below: 0, color: 'indigo', icon: 'mdi:snowflake', label: 'Frost', tint_card: true }, { below: 16, color: 'blue', icon: 'mdi:thermometer-low', label: 'Cool' }, { below: 26, color: 'green', icon: 'mdi:thermometer', label: 'Pleasant' }, { above: 26, color: 'orange', icon: 'mdi:thermometer-high', label: 'Hot', tint_card: true } ] },
   { entity: 'sensor.outdoor_humidity', name: 'Humidity', visual: 'badge' }, { entity: 'sensor.wind_speed', name: 'Wind', visual: 'badge' }, { entity: 'sensor.pressure', name: 'Pressure', visual: 'badge', decimals: 0 },
