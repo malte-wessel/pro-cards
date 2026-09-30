@@ -7,45 +7,16 @@
 // the base duration from the speed the field was built for, and a later speed change scales the
 // playback rate of the running animations (`rateOf`), so nothing restarts or jumps. The spec is
 // deterministic (seeded PRNG) so a paused frame is reproducible.
+import { norm, prng } from "../shared/flow/maths.ts";
 import { smoothPath } from "../shared/history.ts";
-import {
-  COMPASS,
-  DEFAULTS,
-  DENSITY,
-  UNIT_TO_KMH,
-  type Density,
-  type FlowStyle,
-} from "./constants.ts";
+import { DEFAULTS, DENSITY, type Density, type FlowStyle } from "./constants.ts";
 
-// ----- units and directions -----
+// ----- directions -----
 
-export const toKmh = (v: number, unit: string | null | undefined): number =>
-  v * (UNIT_TO_KMH[(unit ?? "").trim().toLowerCase()] ?? 1);
-
-const norm = (deg: number) => ((deg % 360) + 360) % 360;
-
-// a bearing in degrees from a number or an English compass point (N, NNE …); null otherwise
-export const parseBearing = (raw: string | number | null | undefined): number | null => {
-  if (raw === null || raw === undefined) return null;
-  const s = String(raw).trim();
-  if (s === "") return null;
-  const n = Number(s);
-  if (Number.isFinite(n)) return norm(n);
-  const i = (COMPASS as readonly string[]).indexOf(s.toUpperCase());
-  return i < 0 ? null : i * 22.5;
-};
-export const compassIndex = (deg: number) => Math.round(norm(deg) / 22.5) % 16;
 // the field's rotation: +x is where the wind blows (bearing = where it comes from)
 export const fieldRotation = (bearing: number) => norm(bearing + 90);
 // mdi:navigation points up; turned to where the wind blows
 export const arrowRotation = (bearing: number) => norm(bearing + 180);
-// the angle equal to `next` (mod 360) nearest to `prev`, so a CSS transition turns the short way
-// and never spins back across 0°: prev 350, next 10 → 370
-export const unwrapAngle = (prev: number | null, next: number) => {
-  if (prev === null) return next;
-  const d = (((next - prev) % 360) + 360) % 360;
-  return prev + (d > 180 ? d - 360 : d);
-};
 
 // ----- wind → motion -----
 
@@ -54,8 +25,6 @@ export const pxps = (kmh: number) => 16 + Math.max(0, kmh) * 5;
 // wave amplitude: gusts above the speed raise the waves
 export const amplitude = (kmh: number, gustKmh: number | null) =>
   3 + Math.min(16, Math.max(0, (gustKmh ?? kmh) - kmh) * 0.6 + Math.max(0, kmh) * 0.15);
-// the field is rebuilt only when the amplitude crosses a 4 px step: ordinary speed changes
-// re-time the running animation, a real change in the gusts redraws the waves
 // the playback rate of a field built at `builtKmh` and now shown at `kmh`
 export const rateOf = (kmh: number, builtKmh: number) => pxps(kmh) / pxps(builtKmh);
 // one cycle of the lead animation
@@ -68,14 +37,6 @@ export const gustDuration = (gustKmh: number | null) => (480 / pxps(gustKmh ?? 0
 
 // ----- geometry -----
 
-// a seeded linear congruential generator (Park–Miller), values in [0, 1)
-export const prng = (seed = 11) => {
-  let s = seed;
-  return () => {
-    s = (s * 16807) % 2147483647;
-    return (s - 1) / 2147483646;
-  };
-};
 const f1 = (v: number) => Math.round(v * 10) / 10;
 // a wave lane: points every L / 4 from x0 to x1 through a smooth path
 export const wavePath = (y: number, L: number, a: number, ph: number, x0: number, x1: number) => {

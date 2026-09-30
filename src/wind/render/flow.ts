@@ -1,6 +1,8 @@
 // The flow band: the animated field of the chosen style and the direction chip. The field's DOM
 // is rebuilt only when its geometry changes (style, density, size) or the waves moved enough to
 // be worth a redraw; a speed change only scales the playback rate of the running animations.
+import { setRate, vars } from "../../shared/flow/dom.ts";
+import { unwrapAngle } from "../../shared/flow/maths.ts";
 import type { Density, FlowStyle } from "../constants.ts";
 import {
   amplitude,
@@ -14,12 +16,10 @@ import {
   gustDuration,
   needsRedraw,
   rateOf,
-  unwrapAngle,
   type FieldSpec,
   type Lane,
   type Streak,
 } from "../flow.ts";
-import { arrowIcon } from "./lead.ts";
 
 const SVG = "http://www.w3.org/2000/svg";
 
@@ -32,23 +32,13 @@ export interface BandState {
   chip: string | null;
 }
 
-export const buildBand = (kind: "bg" | "band") => {
-  const band = document.createElement("div");
-  band.className = `wflow ${kind}`;
+// the field: a square that covers the band at any rotation
+export const fieldEl = () => {
   const field = document.createElement("div");
   field.className = "field";
-  band.appendChild(field);
-  const chip = document.createElement("div");
-  chip.className = "chip";
-  chip.appendChild(arrowIcon());
-  chip.appendChild(document.createElement("span"));
-  band.appendChild(chip);
-  return band;
+  return field;
 };
 
-const vars = (el: HTMLElement | SVGElement, v: Record<string, string | number>) => {
-  for (const [k, val] of Object.entries(v)) el.style.setProperty(k, String(val));
-};
 const lanesEl = (lanes: Lane[], cls: "pt" | "fa") => {
   const frag = document.createDocumentFragment();
   for (const l of lanes) {
@@ -131,16 +121,6 @@ export const buildField = (spec: FieldSpec) => {
   } else frag.appendChild(lanesEl(spec.lanes, spec.style === "dots" ? "pt" : "fa"));
   frag.appendChild(streaksEl(spec.streaks));
   return frag;
-};
-
-// scales every running animation under `root` (the field's particles, the lead's) so a speed
-// change is seen at once without restarting or jumping; the rate is kept on the element
-export const setRate = (root: HTMLElement, rate: number) => {
-  const r = rate.toFixed(3);
-  if (root.dataset.rate === r) return;
-  root.dataset.rate = r;
-  if (typeof root.getAnimations !== "function") return;
-  for (const a of root.getAnimations({ subtree: true })) a.playbackRate = rate;
 };
 
 // --rot (the field) and --arrow on `el`, unwrapped against the last values so the rotation

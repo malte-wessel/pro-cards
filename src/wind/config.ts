@@ -7,47 +7,34 @@ import {
   normalizeEntity,
   normalizeHeaderEntities,
   normalizeHistoryOptions,
-  type EntityCardConfig,
   type EntityItem,
-  type RawEntityCardBase,
 } from "../shared/entity/config.ts";
 import { DEFAULTS as ENTITY_DEFAULTS } from "../shared/entity/constants.ts";
-import { numOrNull, oneOf } from "../shared/util.ts";
+import {
+  bandHeight,
+  enumOf as enumOfType,
+  flowObject,
+  sensorId as sensorIdType,
+  type FlowCardConfig,
+  type RawFlowCardBase,
+} from "../shared/flow/config.ts";
+import { LAYOUTS, VISUALS } from "../shared/flow/constants.ts";
 import {
   CARD_TYPE,
   DEFAULTS,
   DENSITIES,
   FLOW_STYLES,
-  LAYOUTS,
   LEADS,
-  VISUALS,
   type Density,
   type FlowStyle,
-  type Layout,
   type Lead,
-  type WindVisual,
 } from "./constants.ts";
 
 // ----- the raw config as written in YAML -----
 
-export interface RawFlowOptions {
-  style?: unknown;
-  density?: unknown;
-  height?: unknown;
-}
-export interface RawWindCardConfig extends RawEntityCardBase {
-  entity?: string | null;
+export interface RawWindCardConfig extends RawFlowCardBase {
   direction?: string | null;
   gust?: string | null;
-  name?: string | null;
-  secondary?: string | null;
-  color?: string | null;
-  rules?: unknown;
-  decimals?: unknown;
-  layout?: unknown;
-  visual?: unknown;
-  lead?: unknown;
-  flow?: unknown;
 }
 
 // ----- the normalised config -----
@@ -57,31 +44,19 @@ export interface FlowOptions {
   density: Density;
   height: number; // the hero's band; the flow tile's band is DEFAULTS.tileBandH
 }
-export interface WindConfig extends EntityCardConfig {
-  layout: Layout;
-  visual: WindVisual; // tile only
+export interface WindConfig extends FlowCardConfig {
   lead: Lead;
   entity: string;
   source: "sensor" | "weather";
-  speedIdx: number; // the speed item: state or `wind_speed`; carries name / secondary / color / rules
+  speedIdx: number; // the speed item (= leadIdx): state or `wind_speed`; carries name / secondary / color / rules
   dirIdx: number | null; // the direction item: `direction` sensor or `wind_bearing`
   gustIdx: number | null; // the gust item: `gust` sensor or `wind_gust_speed`
   flow: FlowOptions;
 }
 
-const clampInt = (v: unknown, fallback: number, min: number, max: number) =>
-  Math.max(min, Math.min(max, Math.round(numOrNull(v) ?? fallback)));
-const enumOf = <T extends string>(list: readonly T[], v: unknown, key: string, dflt: T): T => {
-  if (v === undefined || v === null) return dflt;
-  if (!oneOf(list, v)) throw new Error(`${CARD_TYPE}: ${key} must be one of ${list.join(" | ")}`);
-  return v;
-};
-const sensorId = (v: unknown, key: string): string | null => {
-  if (v === undefined || v === null || v === "") return null;
-  if (typeof v !== "string" || !v.startsWith("sensor."))
-    throw new Error(`${CARD_TYPE}: '${key}' must be a sensor entity (sensor.*)`);
-  return v;
-};
+const enumOf = <T extends string>(list: readonly T[], v: unknown, key: string, dflt: T): T =>
+  enumOfType(CARD_TYPE, list, v, key, dflt);
+const sensorId = (v: unknown, key: string) => sensorIdType(CARD_TYPE, v, key);
 
 export const normalizeWindCardConfig = (input: unknown): WindConfig => {
   if (!input || typeof input !== "object") throw new Error(`${CARD_TYPE}: invalid config`);
@@ -101,14 +76,11 @@ export const normalizeWindCardConfig = (input: unknown): WindConfig => {
   const visual = enumOf(VISUALS, raw.visual, "visual", "icon");
   const lead =
     visual === "flow" && layout === "tile" ? "arrow" : enumOf(LEADS, raw.lead, "lead", "animated");
-  const fo: RawFlowOptions =
-    raw.flow && typeof raw.flow === "object" ? (raw.flow as RawFlowOptions) : {};
-  if (raw.flow !== undefined && raw.flow !== null && typeof raw.flow !== "object")
-    throw new Error(`${CARD_TYPE}: 'flow' must be an object`);
+  const fo = flowObject(CARD_TYPE, raw.flow);
   const flow: FlowOptions = {
     style: enumOf(FLOW_STYLES, fo.style, "flow.style", DEFAULTS.style),
     density: enumOf(DENSITIES, fo.density, "flow.density", DEFAULTS.density),
-    height: clampInt(fo.height, DEFAULTS.heroBandH, DEFAULTS.minBandH, DEFAULTS.maxBandH),
+    height: bandHeight(fo),
   };
 
   const entities: EntityItem[] = [];
@@ -171,6 +143,7 @@ export const normalizeWindCardConfig = (input: unknown): WindConfig => {
     groups: [],
     headerIdxs,
     hasHeader: !!(raw.title || raw.icon || header.length),
+    leadIdx: 0,
     speedIdx: 0,
     dirIdx,
     gustIdx,
