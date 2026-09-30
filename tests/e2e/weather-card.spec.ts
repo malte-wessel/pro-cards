@@ -1,11 +1,19 @@
 import { test, expect, mount, events, card, setLanguage } from "./util.ts";
 import type { WeatherCard } from "../../src/weather-card.ts";
-import type { Locator } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 const T = "custom:weather-card";
 const W = "weather.home";
 const cssVar = (loc: Locator, name: string) =>
   loc.evaluate((e, n) => e.style.getPropertyValue(n).trim(), name);
+// the clock label of the current hour + `offset` in the page's own time zone (CI runs in UTC)
+const hourLabel = (page: Page, offset: number) =>
+  page.evaluate((o) => {
+    const d = new Date();
+    d.setMinutes(0, 0, 0);
+    d.setHours(d.getHours() + o);
+    return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit" }).format(d);
+  }, offset);
 
 test.describe("weather card", () => {
   test("renders a tile without sections, sized like an entity card", async ({ page }) => {
@@ -213,14 +221,16 @@ test.describe("weather card", () => {
     const hours = c.locator(".wsec").nth(2).locator(".frow");
     await expect(hours).toHaveCount(3);
     await expect(hours.nth(0)).toHaveClass(/today/);
-    await expect(hours.nth(0).locator(".fname")).toHaveText("12:00");
+    await expect(hours.nth(0).locator(".fname")).toHaveText(await hourLabel(page, 0));
     await expect(hours.nth(0).locator(".ftemp")).toHaveText(/°C$/);
     await expect(hours.nth(0).locator(".range")).toHaveCount(0);
     const soon = c.locator(".wsec").nth(3);
     await expect(soon.locator(".wtitle")).toHaveText("Soon");
     await expect(c.locator(".body > .divider")).toHaveCount(1);
     await expect(soon.locator(".fcol")).toHaveCount(4);
-    await expect(soon.locator(".fcol").nth(1).locator(".fname")).toHaveText("13:00");
+    await expect(soon.locator(".fcol").nth(1).locator(".fname")).toHaveText(
+      await hourLabel(page, 1),
+    );
     await expect(soon.locator(".fcol").nth(1).locator(".hi")).toHaveText(/°C$/);
   });
 
