@@ -82,7 +82,7 @@ export default defineConfig({
     ["meta", { name: "twitter:description", content: description }],
     ["meta", { name: "twitter:image", content: `${site}og.png` }],
     ["meta", { name: "theme-color", content: "#ffffff", media: "(prefers-color-scheme: light)" }],
-    ["meta", { name: "theme-color", content: "#0b1020", media: "(prefers-color-scheme: dark)" }],
+    ["meta", { name: "theme-color", content: "#111111", media: "(prefers-color-scheme: dark)" }],
   ],
   markdown: { config: liveContainer },
   vite: {

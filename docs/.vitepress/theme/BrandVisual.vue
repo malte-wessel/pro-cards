@@ -175,7 +175,7 @@ const height = 4.6;
     height: 320px;
   }
 }
-/* #7AA8FF / #6A1BF0 at 60% over white, and over Night */
+/* #7AA8FF / #6A1BF0 at 60% over white, and over the dark ground #111111 */
 .mid-a {
   stop-color: #afcbff;
 }
@@ -183,9 +183,9 @@ const height = 4.6;
   stop-color: #a676f6;
 }
 .dark .mid-a {
-  stop-color: #4d6ba6;
+  stop-color: #506ca0;
 }
 .dark .mid-b {
-  stop-color: #44179d;
+  stop-color: #461797;
 }
 </style>

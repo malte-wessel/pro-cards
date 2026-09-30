@@ -28,17 +28,19 @@
   /* brand-1 is too light for white text, so the pressed button darkens instead */
   --vp-button-brand-active-bg: #2449d9;
 
-  /* Night ground, panels #151c30 */
-  --vp-c-bg: #0b1020;
-  --vp-c-bg-alt: #10162c;
-  --vp-c-bg-soft: #151c30;
-  --vp-c-bg-elv: #1b2440;
-  --vp-c-text-1: #eef2f8;
-  --vp-c-text-2: #a9b4c6;
-  --vp-c-text-3: #6f7b92;
-  --vp-c-divider: #232c48;
-  --vp-c-gutter: #060913;
-  --vp-c-border: #3a4664;
+  /* Home Assistant dark ground (color.globals.ts darkColorStyles): page #111111, cards #1c1c1c,
+     secondary #282828, text #e1e1e1 / #9b9b9b / #6f6f6f, divider rgba(225,225,225,.12).
+     The live example frames use the same values, so they blend into the page. */
+  --vp-c-bg: #111111;
+  --vp-c-bg-alt: #1c1c1c;
+  --vp-c-bg-soft: #1c1c1c;
+  --vp-c-bg-elv: #282828;
+  --vp-c-text-1: #e1e1e1;
+  --vp-c-text-2: #9b9b9b;
+  --vp-c-text-3: #6f6f6f;
+  --vp-c-divider: rgba(225, 225, 225, 0.12);
+  --vp-c-gutter: #000000;
+  --vp-c-border: rgba(225, 225, 225, 0.24);
 }
 
 /* home page feature icons: stroke icons in the mark's style, on a brand tint */
