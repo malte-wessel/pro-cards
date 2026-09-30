@@ -53,11 +53,7 @@ export const STYLE = `
   .tip .row b { font-weight: 600; font-variant-numeric: tabular-nums; }
   .tip .row span { color: var(--secondary-text-color); }
   .events { position: relative; height: 38px; margin-top: 6px; }
-  .events .ev {
-    position: absolute; top: 0; transform: translateX(-50%); text-align: center;
-  }
-  .events .ev.left { transform: none; text-align: left; }
-  .events .ev.rightmost { transform: translateX(-100%); text-align: right; }
+  .events .ev { position: absolute; top: 0; text-align: center; }
   .events .lbl { font-size: 12px; }
   .events .sm { font-size: 14px; line-height: 20px; font-weight: 500; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
 `;

@@ -1,6 +1,6 @@
 // The sun path card's curve (SVG) and the dawn / noon / dusk row under it.
 import { cssColor } from "../shared/color.ts";
-import { fmtNumber, fmtTime } from "../shared/format.ts";
+import { fmtNumber, fmtTime, textWidth } from "../shared/format.ts";
 import { smoothPath } from "../shared/history.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
 import { nearestPoint, placeTip } from "../shared/hover.ts";
@@ -72,8 +72,8 @@ export const drawCurve = (card: SunPathHost, day: PositionedDay, now: Date) => {
   // day wash: between past curve and horizon where above the horizon
   if (past.length > 1)
     html += `<path class="wash" fill="${dayC}" clip-path="url(#above-${uid})" d="${pastD} L${nowP[0]},${H} L0,${H} Z"/>`;
-  // ticks at dawn / noon / dusk (horizon → top)
-  for (const t of [day.dawn, day.noon, day.dusk]) {
+  // ticks at sunrise / solar noon / sunset (top → horizon); noon is the centre of the window
+  for (const t of [day.sunrise, day.noon, day.sunset]) {
     if (t == null) continue;
     const x = Math.round(xOf(t)) + 0.5;
     html += `<line class="tick" x1="${x}" x2="${x}" y1="${top}" y2="${hY}"/>`;
@@ -137,7 +137,12 @@ export const showHover = (card: SunPathHost, t: number): boolean => {
   return true;
 };
 
-// Bottom row: dawn / noon / dusk positioned under their x
+// fonts of the bottom row, for measuring (see styles.ts)
+const LBL_FONT = "12px Roboto, system-ui, sans-serif";
+const TIME_FONT = "500 14px Roboto, system-ui, sans-serif";
+
+// Bottom row: dawn / noon / dusk centred under their x; a label near an edge is shifted inward
+// only by the amount that would spill out of the card, so it stays with its position
 export const drawEvents = (
   card: SunPathHost,
   day: PositionedDay,
@@ -158,32 +163,25 @@ export const drawEvents = (
   // slot boundaries halfway between neighbours; each label may only use its own slot
   const bounds = [0, ...xs.slice(1).map((x, i) => (xs[i] + x) / 2), W];
   items.forEach(([key, t], i) => {
+    const label = card._labels[key],
+      time = fmt(card._hass, t);
+    const x = xs[i],
+      maxW = Math.max(24, Math.floor(bounds[i + 1] - bounds[i] - 8));
+    const w = Math.min(
+      maxW,
+      Math.ceil(Math.max(textWidth(label, LBL_FONT), textWidth(time, TIME_FONT))) + 2,
+    );
+    const left = Math.min(Math.max(x - w / 2, 0), W - w);
     const el = document.createElement("div");
     el.className = "ev";
-    const x = xs[i],
-      b0 = bounds[i],
-      b1 = bounds[i + 1];
-    let maxW: number;
-    // keep centred labels inside the card: pin to the edge when too close
-    if (x < W * 0.2) {
-      el.classList.add("left");
-      el.style.left = "0px";
-      maxW = b1 - 8;
-    } else if (x > W * 0.8) {
-      el.classList.add("rightmost");
-      el.style.left = `${W}px`;
-      maxW = W - b0 - 8;
-    } else {
-      el.style.left = `${x}px`;
-      maxW = 2 * Math.min(x - b0, b1 - x) - 8;
-    }
-    el.style.maxWidth = `${Math.max(24, Math.floor(maxW))}px`;
+    el.style.left = `${left}px`;
+    el.style.width = `${w}px`;
     const lbl = document.createElement("div");
     lbl.className = "lbl";
-    lbl.textContent = card._labels[key];
+    lbl.textContent = label;
     const val = document.createElement("div");
     val.className = "sm";
-    val.textContent = fmt(card._hass, t);
+    val.textContent = time;
     el.append(lbl, val);
     events.appendChild(el);
   });

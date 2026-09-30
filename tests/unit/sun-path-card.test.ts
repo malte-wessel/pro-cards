@@ -29,6 +29,11 @@ describe("sun-path-card solar math", () => {
     expect(day.sunset).toBeLessThan(day.dusk!);
     expect(day.maxElev).toBeGreaterThan(61);
     expect(day.samples.length).toBe(24 * 60 + 1);
+    // the window is centred on solar noon
+    expect(day.noon - day.start).toBe(12 * 3600e3);
+    expect(day.end - day.noon).toBe(12 * 3600e3);
+    expect(day.samples[0].t).toBe(day.start);
+    expect(day.samples[day.samples.length - 1].t).toBe(day.end);
     const hh = (t: number) => new Date(t).getHours() + new Date(t).getMinutes() / 60;
     // Düsseldorf on 21 June: sunrise ~05:15, sunset ~21:50 local (CEST); allow for the test machine's zone
     expect(day.sunset! - day.sunrise!).toBeGreaterThan(16 * 3600e3);

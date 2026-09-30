@@ -18,6 +18,21 @@ test("shows today's events for the frozen summer day", async ({ page }) => {
   await expect(c.locator("svg .curve")).toHaveCount(2);
   await expect(c.locator("svg circle.sun")).toBeAttached();
   await expect(c.locator("svg .tick")).toHaveCount(3);
+  // ticks mark sunrise, solar noon and sunset; noon is the centre of the plot
+  const W = parseFloat((await c.locator("svg").getAttribute("viewBox"))!.split(" ")[2]);
+  const tickXs = await c
+    .locator("svg .tick")
+    .evaluateAll((els) => els.map((el) => parseFloat(el.getAttribute("x1")!)));
+  expect(tickXs[1]).toBeGreaterThan(W / 2 - 2);
+  expect(tickXs[1]).toBeLessThan(W / 2 + 2);
+  expect(tickXs[1] - tickXs[0]).toBeCloseTo(tickXs[2] - tickXs[1], -1);
+  // the dawn / dusk labels stay centred under their positions (not pinned to the card edges)
+  const evs = c.locator(".events .ev");
+  const dawn = (await evs.nth(0).boundingBox())!,
+    dusk = (await evs.nth(2).boundingBox())!,
+    plot = (await c.locator(".plot").boundingBox())!;
+  expect(dawn.x + dawn.width / 2).toBeCloseTo(plot.x + (tickXs[0] / W) * plot.width, -1.5);
+  expect(dusk.x + dusk.width / 2).toBeCloseTo(plot.x + (tickXs[2] / W) * plot.width, -1.5);
 });
 
 test("hides the bottom row and uses custom colours", async ({ page }) => {
@@ -41,7 +56,7 @@ test("hover shows the time and elevation under the pointer", async ({ page }) =>
   const box = (await plot.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await expect(c.locator(".tip")).toHaveClass(/on/);
-  await expect(c.locator(".tip .time")).toHaveText(/^1[12]:\d\d$/); // middle of the day
+  await expect(c.locator(".tip .time")).toHaveText(/^13:[23]\d$/); // the centre of the plot is solar noon (~13:35 CEST)
   await expect(c.locator(".tip .row b")).toHaveText(/^-?\d+°$/);
   await expect(c.locator(".tip .row span")).toHaveText("elevation");
   await expect(c.locator("svg .hover")).toHaveClass(/on/);

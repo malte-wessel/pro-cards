@@ -9,6 +9,7 @@
  *   type: custom:sun-path-card
  *   title: Sun path               # optional; omit → no header
  *   show_dawn_dusk: true          # bottom row with dawn / solar noon / dusk
+ *   (the plot is a 24 h window centred on solar noon; ticks mark sunrise, noon and sunset)
  *   show_tooltip: true            # time + elevation tooltip when hovering / tapping the curve
  *   day_color: light-blue         # HA color token or hex
  *   night_color: indigo
@@ -155,13 +156,21 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
     this._render();
   }
 
-  // today's solar day for the home's position, recomputed at midnight or when the position changes
+  // the solar day (noon-centred window) that contains now, recomputed when now leaves it or the
+  // position changes; around midnight that can be the previous or the next calendar day's
   _dayOf(now: Date, lat: number, lon: number): PositionedDay {
-    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const t = now.getTime();
     const d = this._day;
-    if (!d || d.start !== dayStart.getTime() || d.lat !== lat || d.lon !== lon)
-      this._day = { ...solarDay(dayStart, lat, lon), lat, lon };
-    return this._day as PositionedDay;
+    if (d && d.lat === lat && d.lon === lon && t >= d.start && t < d.end) return d;
+    const dayOf = (offset: number) => {
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
+      return { ...solarDay(start, lat, lon), lat, lon };
+    };
+    let day = dayOf(0);
+    if (t < day.start) day = dayOf(-1);
+    else if (t >= day.end) day = dayOf(1);
+    this._day = day;
+    return day;
   }
 
   _render() {

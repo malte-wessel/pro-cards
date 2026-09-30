@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Sun path card: hover or tap the curve for a tooltip with the time and the sun's elevation; `show_tooltip: false` turns it off
+- Sun path card: the plot is a 24 hour window centred on solar noon, the ticks mark sunrise, solar noon and sunset (they marked dawn and dusk, which read as sunrise and sunset), and the dawn / dusk labels stay under their positions instead of jumping to the card edge
 
 ## 1.1.0 (2026-09-30)
 

@@ -83,4 +83,4 @@ show_dawn_dusk: false
 | `sun_color`      | `amber`      | Current position marker.                                                                                                                  |
 | `labels`         | see below    | Overrides for `sunrise` (Sunrise), `sunset` (Sunset), `dawn` (Dawn), `noon` (Solar noon), `dusk` (Dusk), for example in another language. |
 
-Dawn and dusk are civil (sun 6° below the horizon), sunrise and sunset use the standard −0.833° refraction. The default size is 12 columns with `rows: auto`. Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`, which are passed through to Home Assistant.
+The plot is a 24 hour window centred on solar noon; the vertical ticks mark sunrise, solar noon and sunset. Dawn and dusk are civil (sun 6° below the horizon), sunrise and sunset use the standard −0.833° refraction. The default size is 12 columns with `rows: auto`. Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`, which are passed through to Home Assistant.

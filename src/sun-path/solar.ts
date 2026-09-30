@@ -37,7 +37,8 @@ export const solarElevation = (date: Date, lat: number, lon: number): number => 
   return 90 - Math.acos(Math.max(-1, Math.min(1, cosZ))) / RAD;
 };
 
-// Today's timeline (local day): minute samples + event times found by threshold crossings
+// The solar day around a local calendar day: a 24 h window centred on that day's solar noon
+// (noon - 12 h .. noon + 12 h) with minute samples and the event times found by threshold crossings
 export interface SolarSample {
   t: number;
   e: number;
@@ -54,13 +55,23 @@ export interface SolarDay {
   maxElev: number;
   minElev: number;
 }
+export const SUNRISE_ELEV = -0.833; // standard refraction
+export const CIVIL_TWILIGHT_ELEV = -6; // civil dawn / dusk
+const HALF_DAY = 12 * 3600e3;
+
 export const solarDay = (dayStart: Date, lat: number, lon: number): SolarDay => {
-  const end = new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate() + 1);
-  const t0 = dayStart.getTime(),
-    t1 = end.getTime();
+  const dayEnd = new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate() + 1);
+  const sampleAt = (t: number): SolarSample => ({ t, e: solarElevation(new Date(t), lat, lon) });
+  // solar noon of the calendar day: the minute with the highest elevation
+  let noon = sampleAt(dayStart.getTime());
+  for (let t = dayStart.getTime(); t <= dayEnd.getTime(); t += 60000) {
+    const s = sampleAt(t);
+    if (s.e > noon.e) noon = s;
+  }
+  const t0 = noon.t - HALF_DAY,
+    t1 = noon.t + HALF_DAY;
   const samples: SolarSample[] = [];
-  for (let t = t0; t <= t1; t += 60000)
-    samples.push({ t, e: solarElevation(new Date(t), lat, lon) });
+  for (let t = t0; t <= t1; t += 60000) samples.push(sampleAt(t));
   const cross = (thr: number, rising: boolean): number | null => {
     for (let i = 1; i < samples.length; i++) {
       const a = samples[i - 1],
@@ -72,20 +83,16 @@ export const solarDay = (dayStart: Date, lat: number, lon: number): SolarDay => 
     }
     return null;
   };
-  let noon = samples[0],
-    min = samples[0];
-  for (const s of samples) {
-    if (s.e > noon.e) noon = s;
-    if (s.e < min.e) min = s;
-  }
+  let min = samples[0];
+  for (const s of samples) if (s.e < min.e) min = s;
   return {
     start: t0,
     end: t1,
     samples,
-    sunrise: cross(-0.833, true),
-    sunset: cross(-0.833, false),
-    dawn: cross(-6, true),
-    dusk: cross(-6, false),
+    sunrise: cross(SUNRISE_ELEV, true),
+    sunset: cross(SUNRISE_ELEV, false),
+    dawn: cross(CIVIL_TWILIGHT_ELEV, true),
+    dusk: cross(CIVIL_TWILIGHT_ELEV, false),
     noon: noon.t,
     maxElev: noon.e,
     minElev: min.e,
