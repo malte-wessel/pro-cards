@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.5.2 (2026-09-30)
 
 - Wind card: the flow turns smoothly to a new direction instead of snapping, the short way round
 
