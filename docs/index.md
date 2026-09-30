@@ -15,8 +15,8 @@ hero:
       text: Weather card
       link: /cards/weather-card
     - theme: alt
-      text: Wind card
-      link: /cards/wind-card
+      text: Power flow card
+      link: /cards/power-flow-card
     - theme: alt
       text: Playground
       link: /playground
@@ -31,8 +31,11 @@ features:
     title: Every detail adjustable
     details: One entity as a tile or many as list, grid, hero, row, column, table or sections. Icon, ring, gauge, bar, sparkline, columns, badge or strip. Tap, hold and double-tap actions.
   - icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M3 17l5-6 4 4 4-6 5 3"/><circle cx="19" cy="6" r="2.5"/><path d="M4 21h16"/></svg>'
-    title: Trends, sun, light, wind, rain and power
-    details: Multi sensor trend graphs with tooltips, today's sun path with dawn and dusk, illuminance on a log scale with zones, the weather with its hourly and daily forecast, the wind and the rain as animated flows, the home's power as an animated tree.
+    title: Trends, sun, light, wind and rain
+    details: Multi sensor trend graphs with tooltips, today's sun path with dawn and dusk, illuminance on a log scale with zones, the weather with its hourly and daily forecast, the wind and the rain as animated flows.
+  - icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><circle cx="5" cy="6" r="2.5"/><circle cx="5" cy="18" r="2.5"/><circle cx="12" cy="12" r="3"/><circle cx="19" cy="7" r="2.5"/><circle cx="19" cy="17" r="2.5"/><path d="M7.5 6h2a2 2 0 0 1 2 2v2M7.5 18h2a2 2 0 0 0 2-2v-2M15 12h1.5a2 2 0 0 0 2-2V9.5M15 12h1.5a2 2 0 0 1 2 2v.5"/></svg>'
+    title: Where the power goes
+    details: Solar, battery and grid on the left, your home in the middle, rooms and devices on the right, joined by lines that carry the power as moving dots. Import, export, on battery, grid outage and the low-carbon share, at a glance.
 ---
 
 ## Live on this site
@@ -43,6 +46,7 @@ Each card page starts with the smallest possible configuration and adds one opti
 
 <div class="live-strip">
 <LiveCard :config="{ type: 'custom:weather-card', entity: 'weather.home', title: 'Weather', temperature_rules: [ { below: 12, color: 'blue', label: 'Cool' }, { below: 20, color: 'green', label: 'Mild' }, { above: 20, color: 'amber', label: 'Warm' } ], sections: [ { type: 'hero' }, { type: 'row', entities: [ 'humidity', 'wind_speed' ] }, { type: 'forecast', mode: 'daily', days: 5 } ] }" width="full" />
+<LiveCard :config="{ type: 'custom:power-flow-card', title: 'Energy', icon: 'mdi:lightning-bolt', home: 'sensor.power_consumption', sources: [ { type: 'solar', entity: 'sensor.solar_power' }, { type: 'battery', power: 'sensor.battery_power', soc: 'sensor.battery_soc' }, { type: 'grid', power: 'sensor.grid_power' } ], consumers: [ { entity: 'sensor.heat_pump_power', name: 'Heat pump', icon: 'mdi:heat-pump' }, { entity: 'sensor.washer_power', name: 'Washer', icon: 'mdi:washing-machine' }, { entity: 'sensor.office_power', name: 'Office', icon: 'mdi:monitor' } ] }" width="full" />
 <LiveCard :config="{ type: 'custom:entity-group-card', layout: 'hero', title: 'Weather station', icon: 'mdi:weather-partly-cloudy', hours_to_show: 24, entities: [
   { entity: 'sensor.outdoor_temperature', name: 'Temperature', visual: 'sparkline', decimals: 1, rules: [ { below: 0, color: 'indigo', icon: 'mdi:snowflake', label: 'Frost', tint_card: true }, { below: 16, color: 'blue', icon: 'mdi:thermometer-low', label: 'Cool' }, { below: 26, color: 'green', icon: 'mdi:thermometer', label: 'Pleasant' }, { above: 26, color: 'orange', icon: 'mdi:thermometer-high', label: 'Hot', tint_card: true } ] },
   { entity: 'sensor.outdoor_humidity', name: 'Humidity', visual: 'badge' }, { entity: 'sensor.wind_speed', name: 'Wind', visual: 'badge' }, { entity: 'sensor.pressure', name: 'Pressure', visual: 'badge', decimals: 0 },
@@ -55,7 +59,6 @@ Each card page starts with the smallest possible configuration and adds one opti
   { entity: 'cover.living_room_blinds', name: 'Blinds', attribute: 'current_position', unit: '%', visual: 'bar', icon: 'mdi:window-shutter' } ] }" width="full" theme="graphite" />
 <LiveCard :config="{ type: 'custom:wind-card', entity: 'sensor.wind_speed', direction: 'sensor.wind_direction', gust: 'sensor.wind_gust', title: 'Wind', layout: 'hero', flow: { style: 'swoosh' }, rules: [ { below: 5, color: 'blue-grey', label: 'Calm' }, { below: 20, color: 'teal', label: 'Light breeze' }, { below: 35, color: 'amber', label: 'Fresh' }, { above: 35, color: 'red', label: 'Storm', tint_card: true } ] }" width="full" />
 <LiveCard :config="{ type: 'custom:rain-card', entity: 'sensor.rain_rate_roof', today: 'sensor.rain_today', wind: 'sensor.wind_speed', direction: 'sensor.wind_direction', title: 'Rain', layout: 'hero', rules: [ { below: 0.1, color: 'blue-grey', label: 'Dry' }, { below: 2.5, color: 'light-blue', label: 'Light rain' }, { below: 7.6, color: 'blue', label: 'Moderate rain' }, { above: 7.6, color: 'indigo', label: 'Heavy rain', tint_card: true } ] }" width="full" />
-<LiveCard :config="{ type: 'custom:power-flow-card', title: 'Energy', icon: 'mdi:lightning-bolt', home: 'sensor.power_consumption', sources: [ { type: 'solar', entity: 'sensor.solar_power' }, { type: 'battery', power: 'sensor.battery_power', soc: 'sensor.battery_soc' }, { type: 'grid', power: 'sensor.grid_power' } ], consumers: [ { entity: 'sensor.heat_pump_power', name: 'Heat pump', icon: 'mdi:heat-pump' }, { entity: 'sensor.washer_power', name: 'Washer', icon: 'mdi:washing-machine' }, { entity: 'sensor.office_power', name: 'Office', icon: 'mdi:monitor' } ] }" width="full" />
 <LiveCard :config="{ type: 'custom:multi-trend-card', title: 'Temperature & dew point', icon: 'mdi:thermometer', hours_to_show: 12, x_axis: true, entities: [ { entity: 'sensor.outdoor_temperature', name: 'Temperature', color: 'red' }, { entity: 'sensor.dew_point', name: 'Dew point', color: 'blue' } ] }" width="full" />
 <LiveCard :config="{ type: 'custom:sun-path-card', title: 'Sun today' }" width="full" />
 </div>

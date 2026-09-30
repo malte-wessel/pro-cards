@@ -252,7 +252,8 @@ export const layoutTree = (cfg: PowerFlowConfig, width: number, edges: EdgeFlow[
   const home = src("home");
   const rH = home.d / 2;
   const gapAlong = aH - rH - (aS + GEOM.dSolar / 2);
-  const bendBase = aS + GEOM.dSolar / 2 + gapAlong * 0.6;
+  // the lanes bend late, so a source's label fits beside its node on a narrow card
+  const bendBase = aS + GEOM.dSolar / 2 + gapAlong * 0.8;
   // the trunk sits nearer its origin, leaving room for the labels left of the targets
   const trunkOf = (from: LNode, to: LNode) =>
     A(from) +
