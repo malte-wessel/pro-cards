@@ -39,6 +39,13 @@ export const compassIndex = (deg: number) => Math.round(norm(deg) / 22.5) % 16;
 export const fieldRotation = (bearing: number) => norm(bearing + 90);
 // mdi:navigation points up; turned to where the wind blows
 export const arrowRotation = (bearing: number) => norm(bearing + 180);
+// the angle equal to `next` (mod 360) nearest to `prev`, so a CSS transition turns the short way
+// and never spins back across 0°: prev 350, next 10 → 370
+export const unwrapAngle = (prev: number | null, next: number) => {
+  if (prev === null) return next;
+  const d = (((next - prev) % 360) + 360) % 360;
+  return prev + (d > 180 ? d - 360 : d);
+};
 
 // ----- wind → motion -----
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Wind card: the flow turns smoothly to a new direction instead of snapping, the short way round
+
 ## 1.5.1 (2026-09-30)
 
 - Wind card: the flow no longer restarts every few seconds. Gusts drifting by a few km/h redrew the field, and a changed speed jumped the particles; the field is now redrawn only when the waves change by a real margin, and a new speed scales the running animation's playback rate, so the particles keep flowing and just speed up or slow down

@@ -14,6 +14,7 @@ import {
   gustDuration,
   needsRedraw,
   rateOf,
+  unwrapAngle,
   type FieldSpec,
   type Lane,
   type Streak,
@@ -142,6 +143,18 @@ export const setRate = (root: HTMLElement, rate: number) => {
   for (const a of root.getAnimations({ subtree: true })) a.playbackRate = rate;
 };
 
+// --rot (the field) and --arrow on `el`, unwrapped against the last values so the rotation
+// transition takes the short way round
+export const setAngles = (el: HTMLElement, bearing: number | null) => {
+  const prev = (k: string) => (el.dataset[k] === undefined ? null : Number(el.dataset[k]));
+  const rot = bearing === null ? 0 : unwrapAngle(prev("rot"), fieldRotation(bearing));
+  const arrow = bearing === null ? 0 : unwrapAngle(prev("arrow"), arrowRotation(bearing));
+  el.dataset.rot = String(rot);
+  el.dataset.arrow = String(arrow);
+  el.style.setProperty("--rot", `${rot}deg`);
+  el.style.setProperty("--arrow", `${arrow}deg`);
+};
+
 export const updateBand = (band: HTMLElement, s: BandState) => {
   const field = band.querySelector<HTMLElement>(".field");
   const chip = band.querySelector<HTMLElement>(".chip span");
@@ -173,8 +186,7 @@ export const updateBand = (band: HTMLElement, s: BandState) => {
     }
   }
   if (band.dataset.kmh !== undefined) setRate(band, rateOf(s.kmh, Number(band.dataset.kmh)));
-  band.style.setProperty("--rot", `${s.bearing === null ? 0 : fieldRotation(s.bearing)}deg`);
-  band.style.setProperty("--arrow", `${s.bearing === null ? 0 : arrowRotation(s.bearing)}deg`);
+  setAngles(band, s.bearing);
   band.classList.toggle("nodir", s.bearing === null);
   chip.textContent = s.chip ?? "";
 };

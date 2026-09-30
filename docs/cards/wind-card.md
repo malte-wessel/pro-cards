@@ -149,7 +149,7 @@ rules:
 
 `lead: arrow` puts the direction arrow in the round lead instead of the animation (the flow tile always shows the arrow). `flow.density` sets how many particles cross the field: `sparse`, `normal` or `dense`. Speeds in m/s, mph, kn and ft/s drive the animation the same way as km/h; the value is shown as the sensor reports it.
 
-The animation is CSS only, keeps flowing through sensor updates (a new speed changes its pace, only a real change in the gusts redraws the waves) and pauses when your system asks for reduced motion (`prefers-reduced-motion`), leaving a still field. A `dense` field on a wide card is the heaviest choice; `sparse` suits dashboards with many wind cards.
+The animation is CSS only, keeps flowing through sensor updates (a new speed changes its pace, a new direction turns the field smoothly, only a real change in the gusts redraws the waves) and pauses when your system asks for reduced motion (`prefers-reduced-motion`), leaving a still field. A `dense` field on a wide card is the heaviest choice; `sparse` suits dashboards with many wind cards.
 
 ::: live
 

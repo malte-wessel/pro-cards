@@ -110,6 +110,16 @@ test.describe("wind card", () => {
     await expect(row.locator(".wflow")).toHaveAttribute("data-rate", rate(60));
     await expect(row.locator(".pt").first()).toHaveAttribute("data-mark", "1");
     expect(await cssVar(row.locator(".wflow"), "--dur")).toBe(dur);
+    // a new direction turns the field the short way round, keeping the particles
+    await setState(page, D, "350");
+    await expect(row.locator(".wflow")).toHaveAttribute("data-rot", "440");
+    expect(await cssVar(row.locator(".wflow"), "--rot")).toBe("440deg");
+    expect(await cssVar(row, "--arrow")).toBe("170deg");
+    await setState(page, D, "10");
+    expect(await cssVar(row.locator(".wflow"), "--rot")).toBe("460deg");
+    expect(await cssVar(row, "--arrow")).toBe("190deg");
+    await expect(row.locator(".pt").first()).toHaveAttribute("data-mark", "1");
+    await setState(page, D, "225");
     // gusts drifting by a few km/h keep the field too
     await setState(page, G, "22");
     await expect(row.locator(".secondary:not(.narrow)")).toHaveText("Storm · gusts 22 km/h");

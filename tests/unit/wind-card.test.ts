@@ -18,6 +18,7 @@ import {
   prng,
   pxps,
   toKmh,
+  unwrapAngle,
   wavePath,
 } from "../../src/wind/flow.ts";
 
@@ -162,6 +163,14 @@ describe("wind flow maths", () => {
     expect(fieldRotation(225)).toBe(315);
     expect(fieldRotation(300)).toBe(30);
     expect(arrowRotation(225)).toBe(45);
+    // the transition turns the short way: never back across 0°
+    expect(unwrapAngle(null, 315)).toBe(315);
+    expect(unwrapAngle(350, 10)).toBe(370);
+    expect(unwrapAngle(10, 350)).toBe(-10);
+    expect(unwrapAngle(315, 80)).toBe(440);
+    expect(unwrapAngle(440, 100)).toBe(460);
+    expect(unwrapAngle(100, 100)).toBe(100);
+    expect(unwrapAngle(0, 180)).toBe(180);
   });
 
   it("maps the wind to motion", () => {
