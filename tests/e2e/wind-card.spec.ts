@@ -57,11 +57,19 @@ test.describe("wind card", () => {
       "Light breeze · from SW · gusts 18.2 km/h",
     );
     await expect(c.locator(".wflow .chip")).toHaveText("SW 225°");
-    // a speed in m/s drives the animation like the km/h it equals
+    // a speed in m/s drives the animation like the km/h it equals: the field, built for some
+    // speed, plays at the ratio of the travel speeds
     await setState(page, "weather.home", undefined, { wind_speed: 5, wind_speed_unit: "m/s" });
     await expect(c.locator(".row.whero .big")).toHaveText("5m/s");
-    const dur = await cssVar(c.locator(".wflow"), "--dur");
-    expect(Number.parseFloat(dur)).toBeCloseTo(480 / (16 + 18 * 5), 2);
+    const built = Number(await c.locator(".wflow").getAttribute("data-kmh"));
+    expect(Number.parseFloat(await cssVar(c.locator(".wflow"), "--dur"))).toBeCloseTo(
+      480 / (16 + built * 5),
+      2,
+    );
+    await expect(c.locator(".wflow")).toHaveAttribute(
+      "data-rate",
+      ((16 + 18 * 5) / (16 + built * 5)).toFixed(3),
+    );
   });
 
   test("flow tile: the field behind arrow, texts and big value; storm tints the card", async ({
@@ -82,25 +90,35 @@ test.describe("wind card", () => {
     await expect(row.locator(".secondary.narrow")).toHaveText("9.4 km/h · SW");
     await expect(row.locator(".end .big b")).toHaveText("9.4");
     await expect(row.locator(".wflow .chip")).toBeHidden();
-    // a state update re-times the running animation without rebuilding the field
+    // a state update scales the running animation's playback rate; the field is kept, even
+    // for a storm, and so is the position of every particle
     const first = row.locator(".pt").first();
     await first.evaluate((e) => ((e as HTMLElement).dataset.mark = "1"));
-    const key = await row.locator(".wflow").getAttribute("data-key");
-    const dur = Number.parseFloat(await cssVar(row.locator(".wflow"), "--dur"));
+    const dur = await cssVar(row.locator(".wflow"), "--dur");
+    const rate = (kmh: number) => ((16 + kmh * 5) / (16 + 9.4 * 5)).toFixed(3);
     await setState(page, S, "14");
     await expect(row.locator(".secondary.narrow")).toHaveText("14 km/h · SW");
-    expect(Number.parseFloat(await cssVar(row.locator(".wflow"), "--dur"))).toBeLessThan(dur);
-    await expect(row.locator(".pt").first()).toHaveAttribute("data-mark", "1");
-    expect(await row.locator(".wflow").getAttribute("data-key")).toBe(key);
+    await expect(row.locator(".wflow")).toHaveAttribute("data-rate", rate(14));
+    expect(await first.evaluate((e) => e.getAnimations()[0]?.playbackRate)).toBeCloseTo(
+      Number(rate(14)),
+      3,
+    );
     await setState(page, S, "60");
     await expect(row.locator(".secondary:not(.narrow)")).toHaveText("Storm · gusts 18.2 km/h");
     await expect(c.locator("ha-card")).toHaveClass(/tinted/);
     expect(await cssVar(c.locator("ha-card"), "--fe-tint")).toBe("var(--red-color)");
-    expect(Number.parseFloat(await cssVar(row.locator(".wflow"), "--dur"))).toBeLessThan(2);
-    // stronger gusts raise the waves: a new key, new paths
+    await expect(row.locator(".wflow")).toHaveAttribute("data-rate", rate(60));
+    await expect(row.locator(".pt").first()).toHaveAttribute("data-mark", "1");
+    expect(await cssVar(row.locator(".wflow"), "--dur")).toBe(dur);
+    // gusts drifting by a few km/h keep the field too
+    await setState(page, G, "22");
+    await expect(row.locator(".secondary:not(.narrow)")).toHaveText("Storm · gusts 22 km/h");
+    await expect(row.locator(".pt").first()).toHaveAttribute("data-mark", "1");
+    // much stronger gusts raise the waves: a redraw with more streaks, built for the new speed
     await setState(page, G, "95");
-    await expect(row.locator(".wflow")).not.toHaveAttribute("data-key", key!);
     await expect(row.locator(".wflow.bg .gs")).toHaveCount(6);
+    await expect(row.locator(".pt").first()).not.toHaveAttribute("data-mark", "1");
+    await expect(row.locator(".wflow")).toHaveAttribute("data-rate", "1.000");
   });
 
   test("hero: band height, card size, tap opens more-info on the lead row", async ({ page }) => {

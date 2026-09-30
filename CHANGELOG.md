@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Wind card: the flow no longer restarts every few seconds. Gusts drifting by a few km/h redrew the field, and a changed speed jumped the particles; the field is now redrawn only when the waves change by a real margin, and a new speed scales the running animation's playback rate, so the particles keep flowing and just speed up or slow down
+
 ## 1.5.0 (2026-09-30)
 
 - New wind card (`custom:wind-card`): wind speed, direction and gusts from sensors (`entity`, `direction`, `gust`) or from a weather entity's attributes, as a tile with a small animated lead, a flow tile (`visual: flow`, the whole tile is the animated field) or a hero (`layout: hero`, big value and a flow band with a direction chip). The field's particles travel where the wind blows, faster with the speed, on taller waves with the gusts, with gust streaks; `rules` on the speed colour them, label the value and may tint the card. `flow.style` picks dots, lines (streamlines), swoosh or vectors (an arrow field), `flow.density` sparse / normal / dense, `flow.height` the hero band. Direction sensors may report degrees or compass points; speeds in m/s, mph, kn and ft/s drive the animation like km/h. All motion is CSS and pauses with `prefers-reduced-motion`

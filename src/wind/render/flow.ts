@@ -1,6 +1,6 @@
 // The flow band: the animated field of the chosen style and the direction chip. The field's DOM
-// is rebuilt only when its geometry key changes (style, density, size, wave amplitude, streak
-// count); a speed change only re-times the running animations through --dur.
+// is rebuilt only when its geometry changes (style, density, size) or the waves moved enough to
+// be worth a redraw; a speed change only scales the playback rate of the running animations.
 import type { Density, FlowStyle } from "../constants.ts";
 import {
   amplitude,
@@ -12,6 +12,8 @@ import {
   fieldSpec,
   gustCount,
   gustDuration,
+  needsRedraw,
+  rateOf,
   type FieldSpec,
   type Lane,
   type Streak,
@@ -130,6 +132,16 @@ export const buildField = (spec: FieldSpec) => {
   return frag;
 };
 
+// scales every running animation under `root` (the field's particles, the lead's) so a speed
+// change is seen at once without restarting or jumping; the rate is kept on the element
+export const setRate = (root: HTMLElement, rate: number) => {
+  const r = rate.toFixed(3);
+  if (root.dataset.rate === r) return;
+  root.dataset.rate = r;
+  if (typeof root.getAnimations !== "function") return;
+  for (const a of root.getAnimations({ subtree: true })) a.playbackRate = rate;
+};
+
 export const updateBand = (band: HTMLElement, s: BandState) => {
   const field = band.querySelector<HTMLElement>(".field");
   const chip = band.querySelector<HTMLElement>(".chip span");
@@ -139,22 +151,28 @@ export const updateBand = (band: HTMLElement, s: BandState) => {
   // not laid out yet: the resize observer renders again once the band has a size
   if (w > 0 && h > 0) {
     const size = fieldSize(w, h);
-    const amp = amplitude(s.kmh, s.gustKmh);
-    const key = fieldKey(s.style, s.density, size, amp, gustCount(s.gustKmh));
-    if (band.dataset.key !== key) {
-      field.replaceChildren(buildField(fieldSpec(s.style, s.density, size, amp, s.gustKmh, s.kmh)));
+    const key = fieldKey(s.style, s.density, size);
+    const waves = { amp: amplitude(s.kmh, s.gustKmh), gusts: gustCount(s.gustKmh) };
+    const built =
+      band.dataset.amp === undefined
+        ? null
+        : { amp: Number(band.dataset.amp), gusts: Number(band.dataset.gusts) };
+    if (band.dataset.key !== key || needsRedraw(built, waves)) {
+      field.replaceChildren(
+        buildField(fieldSpec(s.style, s.density, size, waves.amp, s.gustKmh, s.kmh)),
+      );
       field.style.setProperty("--size", `${size}px`);
+      // the durations of the field as built; later speeds scale the playback rate instead
+      band.style.setProperty("--dur", `${baseDuration(s.kmh).toFixed(3)}s`);
+      band.style.setProperty("--gdur", `${gustDuration(s.gustKmh).toFixed(3)}s`);
       band.dataset.key = key;
+      band.dataset.amp = String(waves.amp);
+      band.dataset.gusts = String(waves.gusts);
+      band.dataset.kmh = String(s.kmh);
+      delete band.dataset.rate;
     }
   }
-  // re-time only on a real change, so a chatty sensor does not nudge the animations every second
-  const dur = baseDuration(s.kmh);
-  const prev = Number(band.dataset.dur ?? 0);
-  if (!prev || Math.abs(dur - prev) / prev > 0.05) {
-    band.style.setProperty("--dur", `${dur.toFixed(3)}s`);
-    band.dataset.dur = String(dur);
-  }
-  band.style.setProperty("--gdur", `${gustDuration(s.gustKmh).toFixed(3)}s`);
+  if (band.dataset.kmh !== undefined) setRate(band, rateOf(s.kmh, Number(band.dataset.kmh)));
   band.style.setProperty("--rot", `${s.bearing === null ? 0 : fieldRotation(s.bearing)}deg`);
   band.style.setProperty("--arrow", `${s.bearing === null ? 0 : arrowRotation(s.bearing)}deg`);
   band.classList.toggle("nodir", s.bearing === null);
