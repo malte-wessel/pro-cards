@@ -17,6 +17,10 @@ Requires Home Assistant 2025.3 or newer.
 
 ## Install with HACS
 
+[![Open your Home Assistant instance and open this repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=malte-wessel&repository=pro-cards&category=plugin)
+
+Or add it by hand:
+
 1. Open HACS, click the three-dot menu and choose **Custom repositories**.
 2. Add `https://github.com/malte-wessel/pro-cards` with the category **Dashboard**.
 3. Search for **Pro Cards**, download it and reload the browser when HACS asks.
