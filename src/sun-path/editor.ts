@@ -7,6 +7,7 @@ import { DEFAULTS, DEFAULT_LABELS, type SunEvent, type SunLabels } from "./const
 export const EDITOR_LABELS: Record<string, string> = {
   title: "Title",
   show_dawn_dusk: "Show dawn, solar noon and dusk",
+  show_tooltip: "Show tooltip on hover",
   day_color: "Day colour",
   night_color: "Night colour",
   sun_color: "Sun colour",
@@ -24,6 +25,7 @@ export const configToForm = (config: SunPathCardConfig): HaFormData => {
   const data: HaFormData = {
     title: config.title ?? "",
     show_dawn_dusk: config.show_dawn_dusk ?? DEFAULTS.show_dawn_dusk,
+    show_tooltip: config.show_tooltip ?? DEFAULTS.show_tooltip,
     day_color: config.day_color ?? "",
     night_color: config.night_color ?? "",
     sun_color: config.sun_color ?? "",
@@ -36,6 +38,7 @@ export const formToConfig = (data: HaFormData, prev: SunPathCardConfig): SunPath
   const config: SunPathCardConfig = { ...prev };
   setOrDrop(config, "title", data.title, !data.title);
   setOrDrop(config, "show_dawn_dusk", false, data.show_dawn_dusk !== false);
+  setOrDrop(config, "show_tooltip", false, data.show_tooltip !== false);
   for (const k of COLOR_KEYS) setOrDrop(config, k, data[k], !data[k] || data[k] === DEFAULTS[k]);
   const labels: Partial<SunLabels> = {};
   for (const k of SUN_EVENTS) {
@@ -49,6 +52,7 @@ export const formToConfig = (data: HaFormData, prev: SunPathCardConfig): SunPath
 export const EDITOR_SCHEMA: HaFormSchema[] = [
   { name: "title", selector: { text: {} } },
   { name: "show_dawn_dusk", selector: { boolean: {} } },
+  { name: "show_tooltip", selector: { boolean: {} } },
   {
     name: "",
     type: "grid",

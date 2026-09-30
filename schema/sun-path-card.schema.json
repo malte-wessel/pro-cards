@@ -8,6 +8,11 @@
     "type": { "const": "custom:sun-path-card" },
     "title": { "type": "string", "description": "Omit for no header" },
     "show_dawn_dusk": { "type": "boolean", "default": true },
+    "show_tooltip": {
+      "type": "boolean",
+      "default": true,
+      "description": "Time and elevation tooltip when hovering or tapping the curve"
+    },
     "day_color": { "$ref": "defs.schema.json#/$defs/color", "default": "light-blue" },
     "night_color": { "$ref": "defs.schema.json#/$defs/color", "default": "indigo" },
     "sun_color": { "$ref": "defs.schema.json#/$defs/color", "default": "amber" },

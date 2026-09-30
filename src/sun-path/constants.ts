@@ -15,6 +15,7 @@ export type SunEvent = keyof typeof DEFAULT_LABELS;
 export type SunLabels = Record<SunEvent, string>;
 export const DEFAULTS = {
   show_dawn_dusk: true,
+  show_tooltip: true,
   day_color: "light-blue",
   night_color: "indigo",
   sun_color: "amber",

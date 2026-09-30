@@ -6,6 +6,7 @@ import type { SolarDay } from "./solar.ts";
 export interface SunPathCardConfig extends CardConfigBase {
   title?: string;
   show_dawn_dusk?: boolean;
+  show_tooltip?: boolean;
   day_color?: string;
   night_color?: string;
   sun_color?: string;
@@ -14,6 +15,7 @@ export interface SunPathCardConfig extends CardConfigBase {
 export interface SunPathConfig extends CardConfigBase {
   title?: string;
   show_dawn_dusk: boolean;
+  show_tooltip: boolean;
   day_color: string;
   night_color: string;
   sun_color: string;
@@ -30,4 +32,9 @@ export interface SunPathHost {
   _hass?: HomeAssistant;
   _root?: HTMLElement;
   _uid?: string;
+  _day: PositionedDay | null;
+  // set by drawCurve for the hover tooltip
+  _xOf?: (t: number) => number;
+  _yOf?: (e: number) => number;
+  _plotW?: number;
 }

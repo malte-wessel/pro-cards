@@ -34,6 +34,35 @@ test("hides the bottom row and uses custom colours", async ({ page }) => {
   await expect(c.locator("ha-card")).not.toHaveAttribute("header");
 });
 
+test("hover shows the time and elevation under the pointer", async ({ page }) => {
+  await mount(page, { type: "custom:sun-path-card" });
+  const c = card(page);
+  const plot = c.locator(".plot");
+  const box = (await plot.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(c.locator(".tip")).toHaveClass(/on/);
+  await expect(c.locator(".tip .time")).toHaveText(/^1[12]:\d\d$/); // middle of the day
+  await expect(c.locator(".tip .row b")).toHaveText(/^-?\d+°$/);
+  await expect(c.locator(".tip .row span")).toHaveText("elevation");
+  await expect(c.locator("svg .hover")).toHaveClass(/on/);
+  // the dot sits on the curve, inside the plot
+  const cy = parseFloat((await c.locator("svg .hover .dot").getAttribute("cy"))!);
+  expect(cy).toBeGreaterThan(0);
+  expect(cy).toBeLessThan(120);
+  await page.mouse.move(box.x - 50, box.y - 50);
+  await expect(c.locator(".tip")).not.toHaveClass(/on/);
+  await expect(c.locator("svg .hover")).not.toHaveClass(/on/);
+});
+
+test("show_tooltip: false renders no hover layer", async ({ page }) => {
+  await mount(page, { type: "custom:sun-path-card", show_tooltip: false });
+  const c = card(page);
+  const box = (await c.locator(".plot").boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(c.locator("svg .hover")).toHaveCount(0);
+  await expect(c.locator(".tip")).not.toHaveClass(/on/);
+});
+
 test("moves the sun marker with time", async ({ page }) => {
   await mount(page, { type: "custom:sun-path-card" }, { time: new Date("2026-06-21T06:00:00") });
   const early = await card(page).locator("svg circle.sun").getAttribute("cx");

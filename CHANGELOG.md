@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Sun path card: hover or tap the curve for a tooltip with the time and the sun's elevation; `show_tooltip: false` turns it off
+
 ## 1.1.0 (2026-09-30)
 
 - Illuminance card: `band` is the default `mode` (was `trend`); set `mode: trend` to keep the line plot

@@ -1,8 +1,9 @@
 // The sun path card's curve (SVG) and the dawn / noon / dusk row under it.
 import { cssColor } from "../shared/color.ts";
-import { fmtTime } from "../shared/format.ts";
+import { fmtNumber, fmtTime } from "../shared/format.ts";
 import { smoothPath } from "../shared/history.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
+import { nearestPoint, placeTip } from "../shared/hover.ts";
 import { qs } from "../shared/util.ts";
 import type { PositionedDay, SunPathHost } from "./config.ts";
 import { CURVE_STEP_MIN, HORIZON_MAX, HORIZON_MIN, PLOT_H, type SunEvent } from "./constants.ts";
@@ -81,8 +82,59 @@ export const drawCurve = (card: SunPathHost, day: PositionedDay, now: Date) => {
   if (futureD) html += `<path class="curve future" stroke="${dayC}" d="${futureD}"/>`;
   if (pastD) html += `<path class="curve" stroke="${dayC}" d="${pastD}"/>`;
   html += `<circle class="sun" r="6" cx="${nowP[0]}" cy="${nowP[1]}" fill="${sunC}"/>`;
+  // hover layer: crosshair and a dot on the curve, shown by showHover
+  if (cfg.show_tooltip)
+    html += `<g class="hover"><line class="hair" y1="${top}" y2="${bottom}"/><circle class="dot" r="4" fill="${sunC}"/></g>`;
   svg.innerHTML = html;
+  card._xOf = xOf;
+  card._yOf = yOf;
+  card._plotW = W;
   return { xOf, W };
+};
+
+// the time of the day under plot x (0..W), clamped to the day
+export const timeAt = (day: { start: number; end: number }, x: number, W: number) => {
+  const f = Math.min(Math.max(x / W, 0), 1);
+  return day.start + f * (day.end - day.start);
+};
+
+// crosshair, dot and tooltip at time t; returns false when there is nothing to show
+export const showHover = (card: SunPathHost, t: number): boolean => {
+  const day = card._day,
+    xOf = card._xOf,
+    yOf = card._yOf;
+  if (!card._root || !day || !xOf || !yOf) return false;
+  const plot = qs(card._root, ".plot");
+  const g = plot.querySelector<SVGGElement>("svg .hover");
+  const tip = plot.querySelector<HTMLElement>(".tip");
+  if (!g || !tip) return false;
+  const p = nearestPoint(day.samples, t);
+  if (!p) return false;
+  const xs = xOf(p.t);
+
+  g.classList.add("on");
+  const hair = qs(g, ".hair");
+  hair.setAttribute("x1", xs.toFixed(1));
+  hair.setAttribute("x2", xs.toFixed(1));
+  const dot = qs(g, ".dot");
+  dot.setAttribute("cx", xs.toFixed(1));
+  dot.setAttribute("cy", yOf(p.e).toFixed(1));
+
+  tip.textContent = "";
+  const time = document.createElement("div");
+  time.className = "time";
+  time.textContent = fmtTime(card._hass, p.t);
+  const row = document.createElement("div");
+  row.className = "row";
+  const val = document.createElement("b");
+  val.textContent = `${fmtNumber(card._hass, p.e, 0)}°`;
+  const name = document.createElement("span");
+  name.textContent = "elevation";
+  row.append(val, name);
+  tip.append(time, row);
+  tip.classList.add("on");
+  placeTip(plot, tip, xs);
+  return true;
 };
 
 // Bottom row: dawn / noon / dusk positioned under their x

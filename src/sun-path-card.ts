@@ -9,6 +9,7 @@
  *   type: custom:sun-path-card
  *   title: Sun path               # optional; omit → no header
  *   show_dawn_dusk: true          # bottom row with dawn / solar noon / dusk
+ *   show_tooltip: true            # time + elevation tooltip when hovering / tapping the curve
  *   day_color: light-blue         # HA color token or hex
  *   night_color: indigo
  *   sun_color: amber
@@ -30,7 +31,8 @@ import type {
 } from "./sun-path/config.ts";
 import { DEFAULTS, DEFAULT_LABELS, type SunLabels } from "./sun-path/constants.ts";
 import { SunPathCardEditor } from "./sun-path/editor.ts";
-import { drawCurve, drawEvents, fmtEvent } from "./sun-path/plot.ts";
+import { hideHover } from "./shared/hover.ts";
+import { drawCurve, drawEvents, fmtEvent, showHover, timeAt } from "./sun-path/plot.ts";
 import { solarDay } from "./sun-path/solar.ts";
 import { STYLE } from "./sun-path/styles.ts";
 
@@ -47,9 +49,27 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
   _root?: HTMLElement;
   _uid?: string;
   _day: PositionedDay | null = null;
+  _xOf?: (t: number) => number;
+  _yOf?: (e: number) => number;
+  _plotW?: number;
+  _hoverT: number | null = null;
   _lastMinute?: number;
   _timer?: ReturnType<typeof setInterval>;
   _ro?: ResizeObserver;
+  _onPointer = (ev: PointerEvent) => {
+    if (!this._day || !this._root) return;
+    const plot = qs(this._root, ".plot");
+    const rect = plot.getBoundingClientRect();
+    this._hoverT = timeAt(this._day, ev.clientX - rect.left, this._plotW || rect.width);
+    if (!showHover(this, this._hoverT)) this._hideHover();
+  };
+  _onLeave = (ev: PointerEvent) => {
+    if (ev.pointerType === "touch") return; // keep the tooltip after a tap
+    this._hideHover();
+  };
+  _onDocPointer = (ev: PointerEvent) => {
+    if (!ev.composedPath().includes(this)) this._hideHover();
+  };
 
   static getConfigElement() {
     return document.createElement(`${CARD_TYPE}-editor`);
@@ -84,11 +104,13 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
     this._timer = setInterval(() => this._render(), 60000);
     this._ro = new ResizeObserver(() => this._render());
     if (this._root) this._ro.observe(qs(this._root, ".plot"));
+    document.addEventListener("pointerdown", this._onDocPointer);
   }
 
   disconnectedCallback() {
     clearInterval(this._timer);
     this._ro?.disconnect();
+    document.removeEventListener("pointerdown", this._onDocPointer);
   }
 
   getCardSize() {
@@ -113,11 +135,18 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
           <div class="ev"><div class="lbl"></div><div class="val"></div></div>
           <div class="ev right"><div class="lbl"></div><div class="val"></div></div>
         </div>
-        <div class="plot"><svg preserveAspectRatio="none"></svg></div>
+        <div class="plot"><svg preserveAspectRatio="none"></svg><div class="tip"></div></div>
         <div class="events"></div>
       </div>`;
     root.appendChild(card);
     this._root = card;
+    this._hoverT = null;
+    if (this._config.show_tooltip) {
+      const plot = qs(card, ".plot");
+      plot.addEventListener("pointermove", this._onPointer);
+      plot.addEventListener("pointerdown", this._onPointer);
+      plot.addEventListener("pointerleave", this._onLeave);
+    }
     const [rise, set] = card.querySelectorAll(".row .ev");
     qs(rise, ".lbl").textContent = this._labels.sunrise;
     qs(set, ".lbl").textContent = this._labels.sunset;
@@ -150,6 +179,13 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
 
     const { xOf, W } = drawCurve(this, day, now);
     drawEvents(this, day, xOf, W);
+    // the tooltip survives the per-minute re-render
+    if (this._hoverT !== null && !showHover(this, this._hoverT)) this._hideHover();
+  }
+
+  _hideHover() {
+    this._hoverT = null;
+    hideHover(this._root);
   }
 }
 

@@ -1,6 +1,6 @@
 # Sun Path Card
 
-`custom:sun-path-card` shows today's sun elevation as a curve with the sun's current position, sunrise and sunset, and optionally dawn, solar noon and dusk. It ships with a visual editor.
+`custom:sun-path-card` shows today's sun elevation as a curve with the sun's current position, sunrise and sunset, and optionally dawn, solar noon and dusk. Hover or tap the curve for the time and the sun's elevation at that point. It ships with a visual editor.
 
 ## Basic
 
@@ -77,6 +77,7 @@ show_dawn_dusk: false
 | ---------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | `title`          |              | Header. Omit for no header.                                                                                                               |
 | `show_dawn_dusk` | `true`       | Bottom row with dawn, solar noon and dusk.                                                                                                |
+| `show_tooltip`   | `true`       | Time and elevation tooltip when hovering or tapping the curve. `false` disables it.                                                       |
 | `day_color`      | `light-blue` | Curve and day wash.                                                                                                                       |
 | `night_color`    | `indigo`     | Night wash below the horizon.                                                                                                             |
 | `sun_color`      | `amber`      | Current position marker.                                                                                                                  |

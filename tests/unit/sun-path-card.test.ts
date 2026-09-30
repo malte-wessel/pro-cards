@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { solarElevation, solarDay } from "../../src/sun-path/solar.ts";
 import { configToForm, formToConfig } from "../../src/sun-path/editor.ts";
+import { timeAt } from "../../src/sun-path/plot.ts";
 import { DEFAULT_LABELS } from "../../src/sun-path/constants.ts";
 import { SunPathCard } from "../../src/sun-path-card.ts";
 
@@ -47,6 +48,7 @@ describe("sun-path-card editor and element", () => {
       type: "custom:sun-path-card",
       title: "Sun",
       show_dawn_dusk: false,
+      show_tooltip: false,
       day_color: "orange",
       labels: { sunrise: "Rise" },
     };
@@ -54,6 +56,7 @@ describe("sun-path-card editor and element", () => {
     expect(data).toMatchObject({
       title: "Sun",
       show_dawn_dusk: false,
+      show_tooltip: false,
       day_color: "orange",
       night_color: "",
       label_sunrise: "Rise",
@@ -64,6 +67,7 @@ describe("sun-path-card editor and element", () => {
       ...data,
       day_color: "light-blue",
       show_dawn_dusk: true,
+      show_tooltip: true,
       label_sunrise: DEFAULT_LABELS.sunrise,
       title: "",
     };
@@ -78,5 +82,18 @@ describe("sun-path-card editor and element", () => {
     expect(el.getCardSize()).toBe(6);
     el.setConfig({ show_dawn_dusk: false });
     expect(el.getCardSize()).toBe(5);
+  });
+});
+
+describe("sun-path-card hover", () => {
+  it("maps a plot x back to the time of day, clamped to the day", () => {
+    const start = local(2026, 6, 21).getTime(),
+      end = local(2026, 6, 22).getTime();
+    const day = { start, end };
+    expect(timeAt(day, 0, 400)).toBe(start);
+    expect(timeAt(day, 400, 400)).toBe(end);
+    expect(timeAt(day, 200, 400)).toBe((start + end) / 2);
+    expect(timeAt(day, -30, 400)).toBe(start);
+    expect(timeAt(day, 900, 400)).toBe(end);
   });
 });
