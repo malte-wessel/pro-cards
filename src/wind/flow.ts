@@ -4,8 +4,9 @@
 // A field is a square of `size` px centred in the band and rotated so that +x is where the wind
 // blows. Particles travel along wave lanes (a sine through a smooth path) from x = -40 to
 // size + 40. Every element carries a phase `p0` in [0, 1) and a duration factor `k`; the band sets
-// the base duration from the speed, so a speed change re-times the running animations without
-// rebuilding them. The spec is deterministic (seeded PRNG) so a paused frame is reproducible.
+// the base duration from the speed the field was built for, and a later speed change scales the
+// playback rate of the running animations (`rateOf`), so nothing restarts or jumps. The spec is
+// deterministic (seeded PRNG) so a paused frame is reproducible.
 import { smoothPath } from "../shared/history.ts";
 import {
   COMPASS,
@@ -48,7 +49,8 @@ export const amplitude = (kmh: number, gustKmh: number | null) =>
   3 + Math.min(16, Math.max(0, (gustKmh ?? kmh) - kmh) * 0.6 + Math.max(0, kmh) * 0.15);
 // the field is rebuilt only when the amplitude crosses a 4 px step: ordinary speed changes
 // re-time the running animation, a real change in the gusts redraws the waves
-export const ampBucket = (a: number) => Math.round(a / 4) * 4;
+// the playback rate of a field built at `builtKmh` and now shown at `kmh`
+export const rateOf = (kmh: number, builtKmh: number) => pxps(kmh) / pxps(builtKmh);
 // one cycle of the lead animation
 export const leadDuration = (px: number) => Math.max(0.35, 90 / px);
 // the base duration of the field: one 480 px crossing
@@ -84,14 +86,20 @@ export const fieldSize = (w: number, h: number) =>
       Math.ceil(Math.hypot(w, h) / DEFAULTS.fieldStep) * DEFAULTS.fieldStep,
     ),
   );
-// what the field DOM depends on; a change rebuilds it
-export const fieldKey = (
-  style: FlowStyle,
-  density: Density,
-  size: number,
-  amp: number,
-  gusts: number,
-) => `${style}/${density}/${size}/${ampBucket(amp)}/${gusts}`;
+// the geometry a field was built for: a change rebuilds it
+export const fieldKey = (style: FlowStyle, density: Density, size: number) =>
+  `${style}/${density}/${size}`;
+// the waves a field was drawn with. Redrawing restarts every particle, so noise in the sensors
+// must not trigger it: the amplitude has to move by 4 px, the streaks by two (or from none to some)
+export interface Waves {
+  amp: number;
+  gusts: number;
+}
+export const needsRedraw = (built: Waves | null, now: Waves) =>
+  !built ||
+  Math.abs(now.amp - built.amp) >= 4 ||
+  Math.abs(now.gusts - built.gusts) >= 2 ||
+  (now.gusts === 0) !== (built.gusts === 0);
 
 // a particle on a lane: phase, duration factor, opacity and size (dot diameter or arrow width)
 export interface Particle {

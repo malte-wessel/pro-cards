@@ -7,6 +7,8 @@ import {
   arrowRotation,
   compassIndex,
   fieldKey,
+  needsRedraw,
+  rateOf,
   fieldRotation,
   fieldSize,
   fieldSpec,
@@ -200,13 +202,23 @@ describe("wind flow maths", () => {
     expect(fieldSize(482, 88)).toBe(520);
     expect(fieldSize(100, 40)).toBe(480);
     expect(fieldSize(1000, 120)).toBe(960);
-    const k = fieldKey("dots", "normal", 480, 8.2, 2);
-    expect(fieldKey("dots", "normal", 480, 9.6, 2)).toBe(k);
-    expect(fieldKey("dots", "normal", 480, 12.1, 2)).not.toBe(k);
-    expect(fieldKey("lines", "normal", 480, 8.2, 2)).not.toBe(k);
-    expect(fieldKey("dots", "dense", 480, 8.2, 2)).not.toBe(k);
-    expect(fieldKey("dots", "normal", 520, 8.2, 2)).not.toBe(k);
-    expect(fieldKey("dots", "normal", 480, 8.2, 3)).not.toBe(k);
+    const k = fieldKey("dots", "normal", 480);
+    expect(fieldKey("lines", "normal", 480)).not.toBe(k);
+    expect(fieldKey("dots", "dense", 480)).not.toBe(k);
+    expect(fieldKey("dots", "normal", 520)).not.toBe(k);
+    // waves: sensor noise never redraws, a real change does
+    const built = { amp: 9.7, gusts: 2 };
+    expect(needsRedraw(null, built)).toBe(true);
+    expect(needsRedraw(built, { amp: 12.5, gusts: 3 })).toBe(false);
+    expect(needsRedraw(built, { amp: 6.9, gusts: 1 })).toBe(false);
+    expect(needsRedraw(built, { amp: 13.7, gusts: 2 })).toBe(true);
+    expect(needsRedraw(built, { amp: 9.7, gusts: 4 })).toBe(true);
+    expect(needsRedraw(built, { amp: 9.7, gusts: 0 })).toBe(true);
+    expect(needsRedraw({ amp: 4, gusts: 0 }, { amp: 5, gusts: 1 })).toBe(true);
+    // a speed change scales the playback rate of the field as built
+    expect(rateOf(9.4, 9.4)).toBe(1);
+    expect(rateOf(60, 9.4)).toBeCloseTo((16 + 300) / (16 + 47));
+    expect(rateOf(0, 20)).toBeCloseTo(16 / 116);
   });
 
   it("lays out every style at every density", () => {

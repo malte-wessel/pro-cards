@@ -24,6 +24,7 @@ import {
   pxps,
   toKmh,
 } from "../flow.ts";
+import { setRate } from "./flow.ts";
 import { animatedLead, arrowLead } from "./lead.ts";
 
 export type RowKind = "tile" | "flowtile" | "hero";
@@ -105,7 +106,13 @@ export const updateCurrent = (
   const px = pxps(now.kmh);
   row.style.setProperty("--rot", `${now.bearing === null ? 0 : fieldRotation(now.bearing)}deg`);
   row.style.setProperty("--arrow", `${now.bearing === null ? 0 : arrowRotation(now.bearing)}deg`);
-  row.style.setProperty("--ldur", `${leadDuration(px).toFixed(3)}s`);
+  // the lead's cycle as built; later speeds scale its playback rate
+  if (row.dataset.px === undefined) {
+    row.style.setProperty("--ldur", `${leadDuration(px).toFixed(3)}s`);
+    row.dataset.px = String(px);
+  }
+  const lead = row.querySelector<HTMLElement>(".lead");
+  if (lead) setRate(lead, px / Number(row.dataset.px));
   row.classList.toggle("nodir", now.bearing === null);
 
   const primary = row.querySelector<HTMLElement>(".primary");
