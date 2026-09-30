@@ -16,7 +16,7 @@ Beautiful, customizable cards for Home Assistant dashboards.
 Pro Cards are polished dashboard cards that look like they belong in Home Assistant: same spacing, typography and colours, dark mode included. Every detail can be adjusted, from icons, colours and labels driven by values and templates to layouts, graphs and actions. Themes change the look of all cards at once.
 
 - **High quality.** Crisp rendering, sensible defaults, smooth graphs, tested against a real Home Assistant and pixel by pixel in CI.
-- **Highly customizable.** Rules switch icon, colour, label and card tint by value or state; templates fill names and values; six layouts, eight visuals, a weather card with forecasts, every action Home Assistant offers.
+- **Highly customizable.** Rules switch icon, colour, label and card tint by value or state; templates fill names and values; six layouts, eight visuals, a weather card with forecasts, an animated wind card, every action Home Assistant offers.
 - **Home Assistant design.** The cards use the theme's colours, fonts, radii and state colours, so they blend in with the built-in tile cards, and a custom theme restyles them along with the rest of the dashboard.
 
 Pro Cards is built with the help of AI. Code, docs and tests are written together with AI coding agents, reviewed and tested by a human before each release.
@@ -35,6 +35,7 @@ Pro Cards is built with the help of AI. Code, docs and tests are written togethe
 | Sun Path Card        | `custom:sun-path-card`        | Today's sun elevation with sunrise, sunset, dawn, noon and dusk.                                                                              | Visual    |
 | Illuminance Card     | `custom:illuminance-card`     | Illuminance as gauge arc, log-scale trend with zones or a colour band.                                                                        | Visual    |
 | Weather Card         | `custom:weather-card`         | Current conditions, attributes and the hourly / daily forecast of a weather entity, with rules, sections and templates.                       | YAML only |
+| Wind Card            | `custom:wind-card`            | Wind speed, direction and gusts as a tile, a flow tile or a hero, with an animated wind field in four styles that rules colour.               | YAML only |
 
 All cards support the sections grid (`grid_options`). Requires Home Assistant 2025.3 or newer.
 
@@ -165,6 +166,25 @@ sections:
 ```
 
 [Weather Card docs](https://malte-wessel.github.io/pro-cards/cards/weather-card)
+
+### Wind Card
+
+Wind speed, direction and gusts from sensors or a weather entity, with an animated wind field: dots, streamlines, swooshes or an arrow field that travel where the wind blows, faster with the speed, wavier with the gusts, coloured by your rules.
+
+```yaml
+type: custom:wind-card
+entity: sensor.wind_speed
+direction: sensor.wind_direction
+gust: sensor.wind_gust
+layout: hero
+rules:
+  - { below: 5, color: blue-grey, label: Calm }
+  - { below: 20, color: teal, label: Light breeze }
+  - { below: 35, color: amber, label: Fresh }
+  - { above: 35, color: red, label: Storm, tint_card: true }
+```
+
+[Wind Card docs](https://malte-wessel.github.io/pro-cards/cards/wind-card)
 
 ## Config schema
 

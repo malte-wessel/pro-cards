@@ -15,6 +15,9 @@ hero:
       text: Weather card
       link: /cards/weather-card
     - theme: alt
+      text: Wind card
+      link: /cards/wind-card
+    - theme: alt
       text: Playground
       link: /playground
 features:
@@ -28,13 +31,13 @@ features:
     title: Every detail adjustable
     details: One entity as a tile or many as list, grid, hero, row, column, table or sections. Icon, ring, gauge, bar, sparkline, columns, badge or strip. Tap, hold and double-tap actions.
   - icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M3 17l5-6 4 4 4-6 5 3"/><circle cx="19" cy="6" r="2.5"/><path d="M4 21h16"/></svg>'
-    title: Trends, sun and light
-    details: Multi sensor trend graphs with tooltips, today's sun path with dawn and dusk, illuminance on a log scale with zones, the weather with its hourly and daily forecast.
+    title: Trends, sun, light and wind
+    details: Multi sensor trend graphs with tooltips, today's sun path with dawn and dusk, illuminance on a log scale with zones, the weather with its hourly and daily forecast, the wind as an animated flow.
 ---
 
 ## Live on this site
 
-Every example on these pages is the real card code running against a simulated home. Values drift, switches toggle, templates render. Hover the graphs, click the tiles, and use the picker in a frame's corner to see every example in a different theme (the second card here is pinned to [Graphite](https://github.com/TilmanGriesel/graphite)).
+Every example on these pages is the real card code running against a simulated home. Values drift, switches toggle, templates render, the wind blows. Hover the graphs, click the tiles, and use the picker in a frame's corner to see every example in a different theme (the second card here is pinned to [Graphite](https://github.com/TilmanGriesel/graphite)).
 
 Each card page starts with the smallest possible configuration and adds one option at a time, so you can stop as soon as the card looks the way you want.
 
@@ -50,6 +53,7 @@ Each card page starts with the smallest possible configuration and adds one opti
   { entity: 'sensor.living_room_temperature', name: 'Temperature', decimals: 1, rules: [ { below: 19, color: 'blue', label: 'Cold' }, { below: 24, color: 'green', label: 'Comfortable' }, { above: 24, color: 'orange', label: 'Warm' } ] },
   { entity: 'sensor.living_room_co2', name: 'CO₂', visual: 'strip', rules: [ { below: 800, color: 'green' }, { below: 1200, color: 'amber' }, { above: 1200, color: 'red' } ] },
   { entity: 'cover.living_room_blinds', name: 'Blinds', attribute: 'current_position', unit: '%', visual: 'bar', icon: 'mdi:window-shutter' } ] }" width="full" theme="graphite" />
+<LiveCard :config="{ type: 'custom:wind-card', entity: 'sensor.wind_speed', direction: 'sensor.wind_direction', gust: 'sensor.wind_gust', title: 'Wind', layout: 'hero', flow: { style: 'swoosh' }, rules: [ { below: 5, color: 'blue-grey', label: 'Calm' }, { below: 20, color: 'teal', label: 'Light breeze' }, { below: 35, color: 'amber', label: 'Fresh' }, { above: 35, color: 'red', label: 'Storm', tint_card: true } ] }" width="full" />
 <LiveCard :config="{ type: 'custom:multi-trend-card', title: 'Temperature & dew point', icon: 'mdi:thermometer', hours_to_show: 12, x_axis: true, entities: [ { entity: 'sensor.outdoor_temperature', name: 'Temperature', color: 'red' }, { entity: 'sensor.dew_point', name: 'Dew point', color: 'blue' } ] }" width="full" />
 <LiveCard :config="{ type: 'custom:sun-path-card', title: 'Sun today' }" width="full" />
 </div>

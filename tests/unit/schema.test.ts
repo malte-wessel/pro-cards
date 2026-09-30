@@ -137,6 +137,38 @@ describe("card config schemas", () => {
     expect(validate({ type: "custom:flexible-entity-card", entity: "sensor.a" })).toBeTruthy();
     expect(validate({ type: "custom:other-card", entity: "sensor.a" })).toBeTruthy();
   });
+  it("rejects wind card typos and wrong enums", () => {
+    const WIC = "custom:wind-card";
+    expect(validate({ type: WIC })).toMatch(/entity/);
+    expect(validate({ type: WIC, entity: "light.a" })).toMatch(/pattern/);
+    expect(validate({ type: WIC, entity: "sensor.a", direction: "weather.home" })).toMatch(
+      /pattern/,
+    );
+    expect(validate({ type: WIC, entity: "sensor.a", flow: { style: "waves" } })).toMatch(
+      /enum|allowed/,
+    );
+    expect(validate({ type: WIC, entity: "sensor.a", flow: { height: 10 } })).toMatch(/>= 40/);
+    expect(validate({ type: WIC, entity: "sensor.a", flow_style: "dots" })).toBeTruthy();
+    expect(validate({ type: WIC, entity: "sensor.a", layout: "compass" })).toMatch(/enum|allowed/);
+    expect(validate({ type: WIC, entity: "sensor.a", visual: "ring" })).toMatch(/enum|allowed/);
+    expect(
+      validate({
+        type: WIC,
+        entity: "weather.home",
+        direction: "sensor.wind_direction",
+        gust: "sensor.wind_gust",
+        layout: "hero",
+        lead: "arrow",
+        flow: { style: "vectors", density: "dense", height: 140 },
+        rules: [{ above: 50, color: "red", label: "Storm", tint_card: true }],
+        title: "Wind",
+        header_entities: [{ entity: "sensor.wind_gust" }],
+        tap_action: "none",
+        grid_options: { columns: 12 },
+      }),
+    ).toBeNull();
+  });
+
   it("accept the documented edge cases", () => {
     const EC = "custom:entity-card",
       EGC = "custom:entity-group-card",

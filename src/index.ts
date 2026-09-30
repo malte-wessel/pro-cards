@@ -6,6 +6,7 @@ import "./multi-trend-card.ts";
 import "./sun-path-card.ts";
 import "./illuminance-card.ts";
 import "./weather-card.ts";
+import "./wind-card.ts";
 
 console.info(
   `%c PRO-CARDS %c v${__VERSION__} `,

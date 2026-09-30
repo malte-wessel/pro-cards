@@ -128,6 +128,13 @@ def(
   { noise: 5, min: 0, decimals: 1 },
 );
 def(
+  "sensor.wind_direction",
+  225,
+  { unit_of_measurement: "°", icon: "mdi:compass-outline", friendly_name: "Wind direction" },
+  "flat",
+  { noise: 4, min: 0, max: 360, decimals: 0 },
+);
+def(
   "sensor.pressure",
   1016.3,
   {

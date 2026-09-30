@@ -10,6 +10,13 @@ const rules = [
   { above: 24, color: "orange", icon: "mdi:sun-thermometer", label: "Warm", tint_card: true },
 ];
 
+const windRules = [
+  { below: 5, color: "blue-grey", label: "Calm" },
+  { below: 20, color: "teal", label: "Light breeze" },
+  { below: 35, color: "amber", label: "Fresh" },
+  { above: 35, color: "red", label: "Storm", tint_card: true },
+];
+
 const CASES = {
   "ec-visuals": [
     {
@@ -516,6 +523,83 @@ const CASES = {
         icons: { sunny: "mdi:white-balance-sunny", partlycloudy: "mdi:weather-partly-cloudy" },
       },
     ],
+  },
+  "wic-tile": [
+    {
+      type: "custom:wind-card",
+      entity: "sensor.wind_speed",
+      direction: "sensor.wind_direction",
+      gust: "sensor.wind_gust",
+      rules: windRules,
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:wind-card",
+      entity: "weather.home",
+      title: "Wind",
+      lead: "arrow",
+      flow: { style: "lines" },
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:wind-card",
+      entity: "sensor.wind_speed",
+      direction: "sensor.wind_direction",
+      gust: "sensor.wind_gust",
+      visual: "flow",
+      rules: windRules,
+    },
+  ],
+  "wic-flow": [
+    {
+      type: "custom:wind-card",
+      entity: "sensor.wind_speed",
+      direction: "sensor.wind_direction",
+      gust: "sensor.wind_gust",
+      visual: "flow",
+      rules: windRules,
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:wind-card",
+      entity: "sensor.wind_speed",
+      direction: "sensor.wind_direction",
+      gust: "sensor.wind_gust",
+      visual: "flow",
+      flow: { style: "lines" },
+      rules: windRules,
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:wind-card",
+      entity: "sensor.wind_speed",
+      direction: "sensor.wind_direction",
+      gust: "sensor.wind_gust",
+      visual: "flow",
+      flow: { style: "swoosh" },
+      rules: windRules,
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:wind-card",
+      entity: "sensor.wind_gust",
+      direction: "sensor.wind_direction",
+      visual: "flow",
+      flow: { style: "vectors" },
+      rules: [{ above: 0, color: "red", label: "Storm", tint_card: true }],
+      grid_options: { columns: 6 },
+    },
+  ],
+  "wic-hero": {
+    type: "custom:wind-card",
+    entity: "sensor.wind_speed",
+    direction: "sensor.wind_direction",
+    gust: "sensor.wind_gust",
+    title: "Wind",
+    header_entities: [{ entity: "sensor.wind_gust", icon: "mdi:weather-windy", color: "orange" }],
+    layout: "hero",
+    flow: { style: "swoosh", height: 140, density: "dense" },
+    rules: windRules,
   },
   "wc-everything": {
     type: "custom:weather-card",
