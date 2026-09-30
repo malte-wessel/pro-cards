@@ -1,21 +1,22 @@
-// Base element of the three entity cards. Subclasses provide:
+// Base element of the entity cards (and the weather card). Subclasses provide:
 //   static cardType            – the custom element name
 //   _normalize(raw)            – the normalised config (see config.js)
 //   _styles()                  – the CSS string for the shadow root
 //   getGridOptions()           – the sections grid footprint
-import { fireAction } from "../shared/card.ts";
-import { cssColor } from "../shared/color.ts";
-import { REFRESH_MS } from "../shared/constants.ts";
-import { langOf } from "../shared/format.ts";
-import type { ActionConfig, ActionKind, GridOptions, HomeAssistant } from "../shared/ha.ts";
-import { fetchHistory, pointOf, type Point } from "../shared/history.ts";
-import { hideHover } from "../shared/hover.ts";
-import { clamp01, qs } from "../shared/util.ts";
+import { fireAction } from "../card.ts";
+import { cssColor } from "../color.ts";
+import { REFRESH_MS } from "../constants.ts";
+import { langOf } from "../format.ts";
+import type { ActionConfig, ActionKind, GridOptions, HomeAssistant } from "../ha.ts";
+import { fetchHistory, pointOf, type Point } from "../history.ts";
+import { hideHover } from "../hover.ts";
+import { clamp01, qs } from "../util.ts";
 import { BLOCK_VISUALS, DOUBLE_MS, HISTORY_VISUALS, HOLD_MS } from "./constants.ts";
 import { collectTemplates, type EntityCardConfig, type EntityItem, type Group } from "./config.ts";
 import { modelOf, tplOf, type PlotHandlers, type RenderCtx } from "./model.ts";
 import { fillByClass } from "./render/fill.ts";
-import { drawPlot, showHover, type PlotElement } from "./render/plots.ts";
+import { drawPlot, showHover, windowOf, type PlotElement } from "./render/plots.ts";
+import type { EntityModel } from "./model.ts";
 
 type Unsubscribe = () => unknown;
 
@@ -105,6 +106,10 @@ export abstract class EntityCardBase extends HTMLElement {
   }
 
   set hass(hass: HomeAssistant) {
+    this._setHass(hass);
+  }
+  // the hass update; a subclass wraps it to react to a new connection
+  _setHass(hass: HomeAssistant) {
     const prev = this._hass;
     this._hass = hass;
     if (!this._config) return;
@@ -306,19 +311,25 @@ export abstract class EntityCardBase extends HTMLElement {
     }
     const body = document.createElement("div");
     body.className = "body";
-    cfg.groups.forEach((g, k) => {
-      if (g.divider && k > 0) {
-        const div = document.createElement("div");
-        div.className = "divider";
-        body.appendChild(div);
-      }
-      body.appendChild(this._buildGroup(g));
-    });
+    this._buildBody(body);
     card.appendChild(body);
     root.appendChild(card);
     this._root = card;
     this._ro?.observe(card);
     this._render();
+  }
+  // the body: one container per group (a subclass may lay its body out differently)
+  _buildBody(body: HTMLElement) {
+    const cfg = this._config as EntityCardConfig;
+    cfg.groups.forEach((g, k) => {
+      if (g.divider && k > 0) body.appendChild(this._divider());
+      body.appendChild(this._buildGroup(g));
+    });
+  }
+  _divider() {
+    const div = document.createElement("div");
+    div.className = "divider";
+    return div;
   }
   // one group of the body: a container whose class says how its entity rows are laid out
   _buildGroup(g: Group) {
@@ -336,9 +347,7 @@ export abstract class EntityCardBase extends HTMLElement {
       el.appendChild(this._row(idxs[0], "hero"));
       const rest = idxs.slice(1);
       if (rest.length) {
-        const div = document.createElement("div");
-        div.className = "divider";
-        el.appendChild(div);
+        el.appendChild(this._divider());
         rest.forEach((i) => el.appendChild(this._row(i, "list")));
       }
     } else if (g.layout === "table") {
@@ -371,7 +380,6 @@ export abstract class EntityCardBase extends HTMLElement {
       qs(header, ".range").textContent = this._historyIds.length ? `${cfg.hours} h` : "";
       header.style.display = title || icon || cfg.headerIdxs.length ? "" : "none";
     }
-    let tint: string | null = null;
     const models = cfg.entities.map((ent) => modelOf(ctx, ent));
     for (const row of card.querySelectorAll<HTMLElement>(".row")) {
       const idx = Number(row.dataset.idx),
@@ -379,9 +387,9 @@ export abstract class EntityCardBase extends HTMLElement {
         m = models[idx];
       if (!ent || !m) continue;
       row.style.setProperty("--fe-color", cssColor(m.look.color, "var(--primary-color)"));
-      if (m.look.tint && tint === null) tint = m.look.color;
-      fillByClass(ctx, row, ent, idx, m);
+      this._fill(ctx, row, ent, idx, m);
     }
+    const tint = this._tintColor(ctx, models, card);
     card.classList.toggle("tinted", tint !== null);
     card.style.setProperty(
       "--fe-tint",
@@ -396,6 +404,18 @@ export abstract class EntityCardBase extends HTMLElement {
       );
       if (plot) showHover(ctx, plot, hover.t);
     }
+  }
+  // fills one row from its model; a subclass adds its own row kinds and falls back to this
+  _fill(ctx: RenderCtx, row: HTMLElement, ent: EntityItem, idx: number, m: EntityModel) {
+    fillByClass(ctx, row, ent, idx, m);
+  }
+  // the card tint: the colour of the first rendered row whose matching rule sets tint_card
+  _tintColor(_ctx: RenderCtx, models: EntityModel[], card: HTMLElement): string | null {
+    for (const row of card.querySelectorAll<HTMLElement>(".row")) {
+      const m = models[Number(row.dataset.idx)];
+      if (m?.look.tint) return m.look.color;
+    }
+    return null;
   }
   // shrink a grid cell's big value (down to 13 px) so short words like scene names stay whole
   _fitCells(card: HTMLElement) {
@@ -418,7 +438,8 @@ export abstract class EntityCardBase extends HTMLElement {
     const plot = ev.currentTarget as PlotElement;
     const rect = plot.getBoundingClientRect();
     const ctx = this._ctx();
-    const t = ctx.t0 + clamp01((ev.clientX - rect.left) / (rect.width || 1)) * (ctx.now - ctx.t0);
+    const { t0, t1 } = windowOf(ctx, plot);
+    const t = t0 + clamp01((ev.clientX - rect.left) / (rect.width || 1)) * (t1 - t0);
     this._hover = { idx: plot._ctx.idx, t };
     if (!showHover(ctx, plot, t)) this._hideHover();
   }

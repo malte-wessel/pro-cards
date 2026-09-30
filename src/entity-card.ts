@@ -22,8 +22,8 @@
  */
 import { registerCard } from "./shared/card.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
-import { EntityCardBase } from "./entity/base.ts";
-import { BLOCK_VISUALS, ITEM_DEFAULTS } from "./entity/constants.ts";
+import { EntityCardBase } from "./shared/entity/base.ts";
+import { BLOCK_VISUALS, ITEM_DEFAULTS } from "./shared/entity/constants.ts";
 import {
   normalizeActionDefaults,
   normalizeEntity,
@@ -31,8 +31,8 @@ import {
   type EntityCardConfig,
   type RawEntity,
   type RawEntityCardBase,
-} from "./entity/config.ts";
-import { STYLE_ENTITY_CARD } from "./entity/render/styles.ts";
+} from "./shared/entity/config.ts";
+import { STYLE_ENTITY_CARD } from "./shared/entity/render/styles.ts";
 import { isNum } from "./shared/util.ts";
 
 const CARD_TYPE = "entity-card";

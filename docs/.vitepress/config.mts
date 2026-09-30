@@ -50,7 +50,7 @@ const liveContainer = (md: MarkdownIt) => {
 const base = "/pro-cards/";
 const site = `https://malte-wessel.github.io${base}`;
 const description =
-  "Beautiful, customizable cards for Home Assistant dashboards: entity, group and sections cards, multi trend, sun path and illuminance cards that look like they belong in Home Assistant.";
+  "Beautiful, customizable cards for Home Assistant dashboards: entity, group and sections cards, multi trend, sun path, illuminance and weather cards that look like they belong in Home Assistant.";
 
 export default defineConfig({
   title: "Pro Cards",
@@ -108,6 +108,7 @@ export default defineConfig({
           { text: "Multi Trend Card", link: "/cards/multi-trend-card" },
           { text: "Sun Path Card", link: "/cards/sun-path-card" },
           { text: "Illuminance Card", link: "/cards/illuminance-card" },
+          { text: "Weather Card", link: "/cards/weather-card" },
         ],
       },
       {
@@ -142,6 +143,7 @@ export default defineConfig({
           { text: "Multi Trend Card", link: "/cards/multi-trend-card" },
           { text: "Sun Path Card", link: "/cards/sun-path-card" },
           { text: "Illuminance Card", link: "/cards/illuminance-card" },
+          { text: "Weather Card", link: "/cards/weather-card" },
         ],
       },
       {

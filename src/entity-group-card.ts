@@ -19,8 +19,8 @@
 import { registerCard } from "./shared/card.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
-import { EntityCardBase } from "./entity/base.ts";
-import { DEFAULTS } from "./entity/constants.ts";
+import { EntityCardBase } from "./shared/entity/base.ts";
+import { DEFAULTS } from "./shared/entity/constants.ts";
 import {
   clampColumns,
   normalizeActionDefaults,
@@ -30,8 +30,8 @@ import {
   type EntityCardConfig,
   type RawEntityCardBase,
   type RawGroup,
-} from "./entity/config.ts";
-import { STYLE_GROUP_CARD } from "./entity/render/styles.ts";
+} from "./shared/entity/config.ts";
+import { STYLE_GROUP_CARD } from "./shared/entity/render/styles.ts";
 
 const CARD_TYPE = "entity-group-card";
 

@@ -424,6 +424,151 @@ const CASES = {
       { entity: "sensor.pressure", name: "Pressure", color: "purple" },
     ],
   },
+  "wc-tile": [
+    { type: "custom:weather-card", entity: "weather.home", grid_options: { columns: 6 } },
+    {
+      type: "custom:weather-card",
+      entity: "weather.home",
+      name: "Garden",
+      rules: [{ state: "partlycloudy", color: "amber", label: "Some sun", tint_card: true }],
+      grid_options: { columns: 6 },
+    },
+  ],
+  "wc-hero-rows": {
+    type: "custom:weather-card",
+    entity: "weather.home",
+    title: "Home",
+    temperature_rules: [
+      { below: 12, color: "blue", label: "Cool" },
+      { below: 20, color: "green", label: "Mild" },
+      { above: 20, color: "amber", label: "Warm" },
+    ],
+    sections: [
+      { type: "hero" },
+      {
+        type: "row",
+        entities: [
+          "humidity",
+          "wind_speed",
+          { entity: "sensor.uv_index", name: "UV", visual: "ring", min: 0, max: 11 },
+        ],
+      },
+      { type: "table", title: "More", entities: ["pressure", "dew_point", "visibility"] },
+      { type: "grid", entities: ["humidity", "wind_speed"] },
+    ],
+  },
+  "wc-trend": {
+    type: "custom:weather-card",
+    entity: "weather.home",
+    sections: [
+      { type: "hero", name: "Garden" },
+      {
+        type: "trend",
+        mode: "hourly",
+        hours: 12,
+        show: ["temperature", "precipitation", { quantity: "wind", name: "Breeze", color: "teal" }],
+        y_axis: true,
+      },
+      { type: "trend", mode: "daily", days: 7, show: ["temperature", "precipitation"] },
+      {
+        type: "trend",
+        mode: "hourly",
+        hours: 6,
+        show: ["temperature"],
+        title: "Soon",
+        temperature_rules: [{ above: 0, color: "red" }],
+      },
+    ],
+  },
+  "wc-forecast": {
+    type: "custom:weather-card",
+    entity: "weather.home",
+    temperature_rules: [
+      { below: 12, color: "blue", label: "Cool" },
+      { below: 20, color: "green", label: "Mild" },
+      { above: 20, color: "amber", label: "Warm" },
+    ],
+    sections: [
+      {
+        type: "forecast",
+        mode: "daily",
+        days: 7,
+        show: ["probability", "precipitation"],
+        rules: [{ state: "rainy", color: "blue", icon: "mdi:umbrella" }],
+      },
+      { type: "forecast", mode: "daily", layout: "horizontal", days: 6 },
+      { type: "forecast", mode: "hourly", layout: "horizontal", hours: 6 },
+      { type: "forecast", mode: "hourly", hours: 4, title: "Soon" },
+    ],
+  },
+  "wc-icons": {
+    type: "custom:weather-card",
+    entity: "weather.home",
+    sections: [
+      { type: "hero", icon_size: 72 },
+      { type: "forecast", mode: "daily", days: 5, icon_size: 32 },
+      {
+        type: "forecast",
+        mode: "hourly",
+        layout: "horizontal",
+        hours: 6,
+        icon_size: 36,
+        icons: { sunny: "mdi:white-balance-sunny", partlycloudy: "mdi:weather-partly-cloudy" },
+      },
+    ],
+  },
+  "wc-everything": {
+    type: "custom:weather-card",
+    entity: "weather.home",
+    title: "Home",
+    header_entities: [
+      {
+        entity: "sun.sun",
+        attribute: "elevation",
+        icon: "mdi:weather-sunset-down",
+        color: "amber",
+      },
+    ],
+    secondary: "feels like {{ state_attr('weather.home', 'apparent_temperature') }}°",
+    rules: [{ state: "lightning-rainy", color: "red", label: "Storm warning", tint_card: true }],
+    temperature_rules: [
+      { below: 5, color: "blue", label: "Cold" },
+      { below: 12, color: "cyan", label: "Cool" },
+      { below: 20, color: "green", label: "Mild" },
+      { above: 20, color: "amber", label: "Warm" },
+    ],
+    sections: [
+      { type: "hero" },
+      {
+        type: "list",
+        entities: [
+          "humidity",
+          "wind_speed",
+          "pressure",
+          {
+            entity: "sensor.uv_index",
+            name: "UV index",
+            rules: [{ below: 3, color: "green", label: "Low" }],
+          },
+        ],
+      },
+      {
+        type: "trend",
+        mode: "hourly",
+        hours: 12,
+        show: ["temperature", "precipitation", "probability", "wind"],
+      },
+      { type: "forecast", mode: "daily", days: 7 },
+      {
+        type: "row",
+        title: "Garden station",
+        entities: [
+          { entity: "sensor.outdoor_temperature", visual: "ring", min: -10, max: 40 },
+          { entity: "sensor.outdoor_humidity", visual: "ring" },
+        ],
+      },
+    ],
+  },
   "spc-default": {
     type: "custom:sun-path-card",
     title: "Sun today",

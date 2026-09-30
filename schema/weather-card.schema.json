@@ -1,0 +1,637 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/weather-card.schema.json",
+  "title": "custom:weather-card",
+  "description": "A weather entity as a tile, or as sections composed like the entity sections card: hero, entity groups whose entries may name weather attributes, forecast rows / columns and trend charts.",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "custom:weather-card"
+    },
+    "entity": {
+      "type": "string",
+      "pattern": "^weather\\.[a-z0-9_]+$",
+      "description": "The weather entity"
+    },
+    "name": {
+      "type": "string",
+      "description": "tile: the name (default: friendly name); hero: the first line (default: the condition). Template allowed."
+    },
+    "secondary": {
+      "type": "string",
+      "description": "The line under the name / temperature (default: temperature · condition, or labels · high / low). Template allowed."
+    },
+    "color": {
+      "$ref": "defs.schema.json#/$defs/color",
+      "description": "Fixed condition colour; overrides rules"
+    },
+    "decimals": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "$ref": "entity.schema.json#/$defs/rule"
+      },
+      "description": "On the condition (state: rainy …): colour, icon, label and tint; first match wins"
+    },
+    "temperature_rules": {
+      "type": "array",
+      "items": {
+        "$ref": "entity.schema.json#/$defs/rule"
+      },
+      "description": "On the temperature (below / above): colour of the temperature, bars and lines, label and tint"
+    },
+    "title": {
+      "type": "string",
+      "description": "Header text. Template allowed."
+    },
+    "icon": {
+      "$ref": "defs.schema.json#/$defs/icon",
+      "description": "Header icon. Template allowed."
+    },
+    "header_entities": {
+      "$ref": "entity.schema.json#/$defs/headerEntities"
+    },
+    "columns": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4,
+      "description": "Default for grid sections"
+    },
+    "align": {
+      "$ref": "entity.schema.json#/$defs/align",
+      "description": "Default for every entity section"
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Rendered in this order; without sections the card is a tile",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "description": "The weather lead: condition icon, big temperature, today's high / low",
+            "properties": {
+              "type": {
+                "const": "hero"
+              },
+              "title": {
+                "type": "string",
+                "description": "Line above the section"
+              },
+              "name": {
+                "type": "string",
+                "description": "Overrides the card's name. Template allowed."
+              },
+              "secondary": {
+                "type": "string",
+                "description": "Overrides the card's secondary. Template allowed."
+              },
+              "rules": {
+                "type": "array",
+                "items": {
+                  "$ref": "entity.schema.json#/$defs/rule"
+                },
+                "description": "Condition rules for this section only (default: the card's)"
+              },
+              "temperature_rules": {
+                "type": "array",
+                "items": {
+                  "$ref": "entity.schema.json#/$defs/rule"
+                },
+                "description": "Temperature rules for this section only (default: the card's)"
+              },
+              "divider": {
+                "type": "boolean",
+                "default": false,
+                "description": "Line above the section (never drawn for the first)"
+              },
+              "icon_size": {
+                "type": "integer",
+                "minimum": 12,
+                "maximum": 160,
+                "default": 56,
+                "description": "Size of the condition icon (px)"
+              },
+              "icons": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "enum": ["mdi", "hass"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "clear-night": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "cloudy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "exceptional": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "fog": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "hail": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "lightning": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "lightning-rainy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "partlycloudy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "pouring": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "rainy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "snowy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "snowy-rainy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "sunny": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "windy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "windy-variant": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ],
+                "description": "Condition icons for this section only (default: the card's)"
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "An entity group like a section of the entity sections card (`type: row` or, as there, `layout: row` without `type`); entries may name attributes of the weather entity (humidity, pressure, wind_speed, wind_gust_speed, wind_bearing, apparent_temperature, dew_point, uv_index, cloud_coverage, visibility, ozone)",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["row", "list", "table", "grid", "column"]
+              },
+              "title": {
+                "type": "string",
+                "description": "Line above the section"
+              },
+              "divider": {
+                "type": "boolean",
+                "default": false,
+                "description": "Line above the section"
+              },
+              "entities": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "description": "A weather attribute name or an entity id"
+                    },
+                    {
+                      "allOf": [
+                        {
+                          "$ref": "entity.schema.json#/$defs/entityKeys"
+                        }
+                      ],
+                      "unevaluatedProperties": false,
+                      "description": "An entity item; without `entity` it reads the weather entity (with `attribute`)"
+                    }
+                  ]
+                }
+              },
+              "columns": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 4,
+                "description": "grid: cells per row"
+              },
+              "align": {
+                "$ref": "entity.schema.json#/$defs/align"
+              },
+              "show_name": {
+                "type": "boolean"
+              },
+              "show_value": {
+                "type": "boolean"
+              },
+              "show_icon": {
+                "type": "boolean"
+              },
+              "name_position": {
+                "type": "string",
+                "enum": ["above", "below"]
+              },
+              "layout": {
+                "type": "string",
+                "enum": ["row", "list", "table", "grid", "column"],
+                "default": "list",
+                "description": "The group layout when `type` is left out, as in the sections card"
+              }
+            },
+            "required": ["entities"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "Forecast rows (vertical) or columns (horizontal): weekday / time, condition, rain figures and the temperature (days: a low → high bar on one scale)",
+            "properties": {
+              "type": {
+                "const": "forecast"
+              },
+              "title": {
+                "type": "string",
+                "description": "Line above the section"
+              },
+              "mode": {
+                "type": "string",
+                "enum": ["hourly", "daily"],
+                "default": "daily"
+              },
+              "layout": {
+                "type": "string",
+                "enum": ["vertical", "horizontal"],
+                "default": "vertical"
+              },
+              "days": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10,
+                "default": 7,
+                "description": "daily: days, today first"
+              },
+              "show": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["probability", "precipitation"]
+                },
+                "description": "Rain figures per row (default: probability); an empty list hides them"
+              },
+              "rules": {
+                "type": "array",
+                "items": {
+                  "$ref": "entity.schema.json#/$defs/rule"
+                },
+                "description": "Condition rules for this section only (default: the card's)"
+              },
+              "temperature_rules": {
+                "type": "array",
+                "items": {
+                  "$ref": "entity.schema.json#/$defs/rule"
+                },
+                "description": "Temperature rules for this section only (default: the card's)"
+              },
+              "divider": {
+                "type": "boolean",
+                "default": false,
+                "description": "Line above the section (never drawn for the first)"
+              },
+              "icon_size": {
+                "type": "integer",
+                "minimum": 12,
+                "maximum": 160,
+                "default": 22,
+                "description": "Size of the condition icons (px)"
+              },
+              "icons": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "enum": ["mdi", "hass"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "clear-night": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "cloudy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "exceptional": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "fog": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "hail": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "lightning": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "lightning-rainy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "partlycloudy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "pouring": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "rainy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "snowy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "snowy-rainy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "sunny": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "windy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "windy-variant": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ],
+                "description": "Condition icons for this section only (default: the card's)"
+              },
+              "hours": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 48,
+                "default": 12,
+                "description": "hourly: hours from the current hour"
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "description": "The multi trend plot of the forecast: one line per quantity (daily: the temperature as high and low)",
+            "properties": {
+              "type": {
+                "const": "trend"
+              },
+              "title": {
+                "type": "string",
+                "description": "Line above the section"
+              },
+              "mode": {
+                "type": "string",
+                "enum": ["hourly", "daily"],
+                "default": "daily"
+              },
+              "days": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10,
+                "default": 7,
+                "description": "daily: days, today first"
+              },
+              "show": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "temperature",
+                        "precipitation",
+                        "probability",
+                        "wind",
+                        "wind_speed",
+                        "precipitation_probability"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "quantity": {
+                          "type": "string",
+                          "enum": [
+                            "temperature",
+                            "precipitation",
+                            "probability",
+                            "wind",
+                            "wind_speed",
+                            "precipitation_probability"
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "color": {
+                          "$ref": "defs.schema.json#/$defs/color"
+                        }
+                      },
+                      "required": ["quantity"],
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "description": "The lines, in this order, like the multi trend card's entities (default: temperature, precipitation)"
+              },
+              "layout": {
+                "type": "string",
+                "enum": ["auto", "overlay", "lanes"],
+                "default": "auto",
+                "description": "auto = overlay when all shown quantities share a unit, else lanes"
+              },
+              "x_axis": {
+                "type": "boolean",
+                "default": true,
+                "description": "Time labels + vertical gridlines"
+              },
+              "y_axis": {
+                "type": "boolean",
+                "default": false,
+                "description": "Value labels + horizontal gridlines (per lane)"
+              },
+              "show_legend": {
+                "type": "boolean",
+                "default": true,
+                "description": "Legend line when overlaying several quantities"
+              },
+              "rules": {
+                "type": "array",
+                "items": {
+                  "$ref": "entity.schema.json#/$defs/rule"
+                },
+                "description": "Condition rules for this section only (default: the card's)"
+              },
+              "temperature_rules": {
+                "type": "array",
+                "items": {
+                  "$ref": "entity.schema.json#/$defs/rule"
+                },
+                "description": "Temperature rules for this section only (default: the card's)"
+              },
+              "divider": {
+                "type": "boolean",
+                "default": false,
+                "description": "Line above the section (never drawn for the first)"
+              },
+              "hours": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 48,
+                "default": 12,
+                "description": "hourly: hours from the current hour"
+              }
+            },
+            "required": ["type"],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "icons": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["mdi", "hass"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "clear-night": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "cloudy": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "exceptional": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "fog": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "hail": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "lightning": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "lightning-rainy": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "partlycloudy": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "pouring": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "rainy": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "snowy": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "snowy-rainy": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "sunny": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "windy": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "windy-variant": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "default": "hass",
+      "description": "Condition icons: the Home Assistant weather pictures (default), mdi icons, or a map from condition to an mdi icon or image URL (conditions left out keep the pictures)"
+    },
+    "icon_size": {
+      "type": "integer",
+      "minimum": 12,
+      "maximum": 160,
+      "default": 40,
+      "description": "Size of the tile's condition icon (px)"
+    }
+  },
+  "required": ["type", "entity"],
+  "allOf": [
+    {
+      "$ref": "entity.schema.json#/$defs/itemOptions"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/historyOptions"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/actionDefaults"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/haExtras"
+    }
+  ],
+  "unevaluatedProperties": false
+}

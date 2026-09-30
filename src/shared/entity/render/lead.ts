@@ -1,6 +1,6 @@
 // Small DOM builders: icon lead, pills, text, the big value and the toggle switch.
-import { fireHaptic } from "../../shared/card.ts";
-import type { HassEntity } from "../../shared/ha.ts";
+import { fireHaptic } from "../../card.ts";
+import type { HassEntity } from "../../ha.ts";
 import type { EntityItem } from "../config.ts";
 import { OFF_STATES } from "../constants.ts";
 import type { Look } from "../look.ts";

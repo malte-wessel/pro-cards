@@ -152,3 +152,21 @@ views:
             entity: sensor.illuminance
             mode: band
             bucket_minutes: 30
+      - type: grid
+        cards:
+          - type: heading
+            heading: Weather card
+          - type: custom:weather-card
+            entity: weather.demo_weather_south
+          - type: custom:weather-card
+            entity: weather.demo_weather_south
+            title: Weather
+            temperature_rules:
+              - { below: 12, color: blue, label: Cool }
+              - { below: 20, color: green, label: Mild }
+              - { above: 20, color: amber, label: Warm }
+            sections:
+              - { type: hero }
+              - { type: row, entities: [humidity, wind_speed, pressure] }
+              - { type: trend, mode: hourly, hours: 12 }
+              - { type: forecast, mode: daily, days: 5 }

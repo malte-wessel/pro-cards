@@ -1,5 +1,6 @@
 // Minimal stand-ins for the Home Assistant elements the cards render into: ha-card, ha-icon, ha-state-icon.
 import type { HassEntity, HomeAssistant } from "../../../../src/shared/ha.ts";
+import { conditionIcon } from "../../../../src/weather/conditions.ts";
 
 // the `@mdi/js` namespace: `mdiLightbulb` → SVG path, indexed by the PascalCased icon name
 // (unknown rather than string because the namespace type also carries a synthetic `default`)
@@ -69,6 +70,7 @@ const DOMAIN_ICON: Record<string, (s: string) => string> = {
   script: () => "mdi:script-text",
   input_boolean: (s) => (s === "on" ? "mdi:check-circle-outline" : "mdi:close-circle-outline"),
   sun: (s) => (s === "above_horizon" ? "mdi:white-balance-sunny" : "mdi:weather-night"),
+  weather: (s) => conditionIcon(s),
   sensor: () => "mdi:eye",
   binary_sensor: () => "mdi:radiobox-blank",
 };

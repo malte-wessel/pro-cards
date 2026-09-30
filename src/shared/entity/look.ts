@@ -1,9 +1,9 @@
 // Value reading and look resolution (pure).
-import { stateColorCss } from "../shared/color.ts";
-import { DEVICE_CLASS_ICON } from "../shared/constants.ts";
-import type { HassEntity, HomeAssistant } from "../shared/ha.ts";
-import { t } from "../shared/i18n.ts";
-import { clamp01, isNum, isTemplate } from "../shared/util.ts";
+import { stateColorCss } from "../color.ts";
+import { DEVICE_CLASS_ICON } from "../constants.ts";
+import type { HassEntity, HomeAssistant } from "../ha.ts";
+import { t } from "../i18n.ts";
+import { clamp01, isNum, isTemplate } from "../util.ts";
 import type { EntityItem, Rule } from "./config.ts";
 import { OFF_STATES } from "./constants.ts";
 

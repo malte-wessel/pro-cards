@@ -1,6 +1,11 @@
 // Demo home: a small set of entities with plausible states, deterministic history and a slow drift,
 // so every example on the docs site is live without a real Home Assistant.
-import type { HassEntity, HassEntities } from "../../../../src/shared/ha.ts";
+import type {
+  ForecastEntry,
+  HassEntity,
+  HassEntities,
+  WeatherForecastType,
+} from "../../../../src/shared/ha.ts";
 
 // an entity of the demo home: its initial state plus how its history and drift are generated
 export interface EntityDef {
@@ -30,6 +35,8 @@ export interface World {
   set(id: string, state?: string | number, attributes?: Record<string, unknown>): void;
   subscribe(fn: () => void): () => void;
   history(ids: string[], start: number, end: number): HistoryResult;
+  // the forecast of a weather entity (`weather/subscribe_forecast`); null when it has none
+  forecast(id: string, type: WeatherForecastType): ForecastEntry[] | null;
   start(): void;
   _timer?: ReturnType<typeof setInterval>;
 }
@@ -166,6 +173,27 @@ def("binary_sensor.rain", "off", { device_class: "moisture", friendly_name: "Rai
   duty: 0.2,
 });
 def("sun.sun", "above_horizon", { friendly_name: "Sun", elevation: 38.2, azimuth: 190.4 });
+def("weather.home", "partlycloudy", {
+  friendly_name: "Home",
+  temperature: 17.4,
+  temperature_unit: "°C",
+  apparent_temperature: 16.1,
+  dew_point: 12.1,
+  humidity: 71,
+  pressure: 1016.3,
+  pressure_unit: "hPa",
+  wind_speed: 9.4,
+  wind_speed_unit: "km/h",
+  wind_bearing: 225,
+  wind_gust_speed: 18.2,
+  cloud_coverage: 45,
+  uv_index: 3.2,
+  visibility: 14,
+  visibility_unit: "km",
+  precipitation_unit: "mm",
+  supported_features: 3, // daily + hourly forecasts
+  attribution: "Demo data",
+});
 
 // rooms
 def(
@@ -557,6 +585,9 @@ export const world: World = {
     for (const id of ids) out[id] = series(id, start, end);
     return out;
   },
+  forecast(id, type) {
+    return forecast(id, type);
+  },
   start() {
     if (this._timer) return;
     this._timer = setInterval(() => {
@@ -630,5 +661,102 @@ function series(id: string, start: number, end: number): HistoryPoint[] {
     out.push({ s: v.toFixed(e.decimals ?? 1), lu: t / 1000 });
   }
   cache.set(key, out);
+  return out;
+}
+
+// ---------- forecast ----------
+
+const HOUR = 3600e3,
+  DAY = 86400e3;
+const fcCache = new Map<string, ForecastEntry[]>();
+// the demo forecast of weather.home: rain this evening (3.6 mm from 20:00), a wet day mid-week,
+// otherwise the temperature curve of the outdoor sensor; deterministic for a given hour
+function forecast(id: string, type: WeatherForecastType): ForecastEntry[] | null {
+  if (id !== "weather.home" || type === "twice_daily") return null;
+  const t = now();
+  const key = `${type}|${Math.floor(t / HOUR)}`;
+  const hit = fcCache.get(key);
+  if (hit) return hit;
+  const base = Number(states[id].attributes.temperature);
+  const nowH = new Date(t).getHours() + new Date(t).getMinutes() / 60;
+  const shape = shapes.temperature;
+  const out: ForecastEntry[] = [];
+  if (type === "hourly") {
+    const start = t - (t % HOUR);
+    const evening = [0.4, 1.2, 1.4, 0.6, 0.2, 0.1]; // 20:00 … 01:00 tonight
+    let eveningIdx = 0;
+    for (let i = 0; i < 48; i++) {
+      const ts = start + i * HOUR,
+        d = new Date(ts),
+        h = d.getHours();
+      const firstNight = i < 24 + (24 - nowH) && (h >= 20 || (h <= 1 && i > 6));
+      let precipitation = 0,
+        probability = 5 + (i % 5) * 3;
+      if (firstNight && eveningIdx < evening.length) {
+        precipitation = evening[eveningIdx++];
+        probability = 60 + Math.round(precipitation * 18);
+      } else if (i >= 38 && i <= 41) {
+        precipitation = 0.3;
+        probability = 40;
+      }
+      const night = h < 6 || h >= 21;
+      const condition =
+        precipitation > 0
+          ? "rainy"
+          : night
+            ? i % 5 === 0
+              ? "cloudy"
+              : "clear-night"
+            : h >= 11 && h <= 15
+              ? "sunny"
+              : "partlycloudy";
+      const temperature =
+        base + shape(h) - shape(nowH) + Math.sin(i / 7) * 0.6 - (i > 30 ? 1.5 : 0);
+      out.push({
+        datetime: iso(ts),
+        condition,
+        temperature: Number(temperature.toFixed(1)),
+        precipitation,
+        precipitation_probability: probability,
+        humidity: Math.round(60 + (precipitation > 0 ? 25 : 0) + Math.sin(i / 5) * 8),
+        wind_speed: Number((6 + shapes.wind(h) + (precipitation > 0 ? 6 : 0)).toFixed(1)),
+        wind_bearing: 225,
+        cloud_coverage: condition === "sunny" ? 10 : condition === "cloudy" ? 90 : 45,
+      });
+    }
+  } else {
+    const midnight = new Date(new Date(t).toDateString()).getTime();
+    const dHi = [0, 2, -3, -5, -1, 3, 4, 2, 0, 1],
+      rain = [3.6, 0, 8.2, 12.5, 1.1, 0, 0, 0.5, 0, 2.4],
+      prob = [85, 10, 90, 95, 40, 5, 5, 20, 10, 55],
+      cond = [
+        "partlycloudy",
+        "sunny",
+        "rainy",
+        "pouring",
+        "partlycloudy",
+        "sunny",
+        "sunny",
+        "partlycloudy",
+        "cloudy",
+        "rainy",
+      ];
+    for (let i = 0; i < 10; i++) {
+      const hi = Math.max(base + 1.5, 18 + dHi[i]),
+        lo = hi - 8 - (i % 3);
+      out.push({
+        datetime: iso(midnight + i * DAY + 12 * HOUR),
+        condition: cond[i],
+        temperature: Number(hi.toFixed(1)),
+        templow: Number(lo.toFixed(1)),
+        precipitation: rain[i],
+        precipitation_probability: prob[i],
+        humidity: 55 + Math.round(prob[i] / 4),
+        wind_speed: Number((8 + (i % 4) * 3).toFixed(1)),
+        wind_bearing: 200 + i * 10,
+      });
+    }
+  }
+  fcCache.set(key, out);
   return out;
 }

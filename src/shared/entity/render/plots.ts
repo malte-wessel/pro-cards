@@ -1,6 +1,6 @@
 // History plots: sparkline, columns and strip, plus the hover tooltip.
-import { cssColor } from "../../shared/color.ts";
-import type { HassEntity } from "../../shared/ha.ts";
+import { cssColor } from "../../color.ts";
+import type { HassEntity } from "../../ha.ts";
 import {
   bucketLast,
   bucketMean,
@@ -8,23 +8,33 @@ import {
   smoothPath,
   type LastBucket,
   type MeanBucket,
-} from "../../shared/history.ts";
-import { nearestPoint, placeTip } from "../../shared/hover.ts";
-import { t as tr } from "../../shared/i18n.ts";
-import { qs } from "../../shared/util.ts";
+  type Point,
+} from "../../history.ts";
+import { nearestPoint, placeTip } from "../../hover.ts";
+import { t as tr } from "../../i18n.ts";
+import { qs } from "../../util.ts";
 import type { EntityItem } from "../config.ts";
 import { PLOT_H, type HistoryVisual } from "../constants.ts";
 import { resolveLook } from "../look.ts";
 import { fmtNumber, fmtTime, tplGetter, type RenderCtx } from "../model.ts";
 
-// what a plot element knows about itself: entity, index, kind, state and height
+// what a plot element knows about itself: entity, index, kind, state and height. The optional
+// keys let a card plot something else than the entity's history window (a forecast: its own
+// series over a forward window, a fixed bucket count and its own loading state).
 export interface PlotCtx {
   ent: EntityItem;
   idx: number;
   kind: HistoryVisual;
   st: HassEntity | undefined;
   h: number;
+  window?: { t0: number; t1: number };
+  series?: Point[];
+  buckets?: number;
+  loaded?: boolean;
 }
+// the window a plot draws: the card's history window unless the plot brought its own
+export const windowOf = (ctx: RenderCtx, plot: PlotElement) =>
+  plot._ctx.window ?? { t0: ctx.t0, t1: ctx.now };
 // the plot element carries its render context and the layout results the hover needs
 export interface PlotElement extends HTMLDivElement {
   _ctx: PlotCtx;
@@ -63,21 +73,17 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement) => {
   if (W < 20) return; // not laid out yet; the ResizeObserver re-renders once the width is known
   const H = PLOT_H[kind];
   svg.setAttribute("viewBox", `0 0 ${W} ${plot._ctx.h}`);
-  const { now, t0 } = ctx;
-  const series = (ent.entity && ctx.series.get(ent.entity)) || [];
+  const { t0, t1: now } = windowOf(ctx, plot);
+  const series = plot._ctx.series ?? ((ent.entity && ctx.series.get(ent.entity)) || []);
+  const loaded = plot._ctx.loaded ?? ctx.fetched;
+  const hours = (now - t0) / 3600e3;
   labels.textContent = "";
   const xOf = (t: number) => ((t - t0) / (now - t0)) * W;
   plot._xOf = xOf;
   plot._W = W;
   const empty = () => {
     svg.innerHTML = "";
-    addLabel(
-      labels,
-      "",
-      tr(ctx.hass, ctx.fetched ? "common.no_data" : "common.loading"),
-      0,
-      H / 2 - 6,
-    );
+    addLabel(labels, "", tr(ctx.hass, loaded ? "common.no_data" : "common.loading"), 0, H / 2 - 6);
     plot._sampled = null;
     plot._buckets = null;
   };
@@ -114,7 +120,7 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement) => {
     plot._buckets = null;
     return;
   }
-  const nb = Math.max(1, Math.round((ctx.cfg.hours * 60) / ctx.cfg.bucketMin));
+  const nb = plot._ctx.buckets ?? Math.max(1, Math.round((ctx.cfg.hours * 60) / ctx.cfg.bucketMin));
   const bw = W / nb;
   plot._bw = bw;
   if (kind === "columns") {
@@ -189,8 +195,17 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement) => {
   html += `<g class="hover"><rect class="hl" y="0" width="${Math.max(1, bw - gap).toFixed(1)}" height="${H}" rx="2"/></g>`;
   svg.innerHTML = html;
   plot._hlOff = gap / 2;
-  addLabel(labels, "", `−${ctx.cfg.hours} h`, 0, H + 3);
-  addLabel(labels, "right", tr(ctx.hass, "common.now"), W, H + 3);
+  // history windows end now, forward windows (forecasts) start now
+  const forward = !!plot._ctx.window && t0 >= ctx.now - 3600e3;
+  const n = Math.round(hours);
+  addLabel(labels, "", forward ? tr(ctx.hass, "common.now") : `−${n} h`, 0, H + 3);
+  addLabel(
+    labels,
+    "right",
+    forward ? tr(ctx.hass, "common.plus_hours", { n }) : tr(ctx.hass, "common.now"),
+    W,
+    H + 3,
+  );
   plot._buckets = buckets;
   plot._sampled = null;
   plot._numeric = numeric;
@@ -221,7 +236,7 @@ export const showHover = (ctx: RenderCtx, plot: PlotElement, t: number): boolean
     const buckets = plot._buckets;
     const bw = plot._bw ?? 0;
     if (!buckets) return true;
-    const { now, t0 } = ctx;
+    const { t0, t1: now } = windowOf(ctx, plot);
     const i = Math.min(
       buckets.length - 1,
       Math.max(0, Math.floor(((t - t0) / (now - t0)) * buckets.length)),

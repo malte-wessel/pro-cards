@@ -5,6 +5,7 @@ import { renderTemplate } from "./templates.ts";
 import type {
   ActionConfig,
   ActionKind,
+  ForecastMessage,
   HassEntity,
   HomeAssistant,
 } from "../../../../src/shared/ha.ts";
@@ -308,6 +309,21 @@ export const snapshot = (): HassSnapshot => ({
   },
   connection: {
     subscribeMessage: async <Result>(cb: (result: Result) => void, msg: MessageBase) => {
+      if (msg.type === "weather/subscribe_forecast") {
+        if (!world.get(msg.entity_id)) throw new Error(`unknown entity ${msg.entity_id}`);
+        const push = () => {
+          const res: ForecastMessage = {
+            type: msg.forecast_type,
+            forecast: world.forecast(msg.entity_id, msg.forecast_type),
+          };
+          cb(res as Result);
+        };
+        push();
+        const off = world.subscribe(push);
+        return async () => {
+          off();
+        };
+      }
       if (msg.type !== "render_template") throw new Error("unsupported");
       const push = () => {
         const r = renderTemplate(msg.template, world.states);

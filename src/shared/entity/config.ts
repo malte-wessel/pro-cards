@@ -19,8 +19,9 @@ import {
   type NamePosition,
   type Visual,
 } from "./constants.ts";
-import type { ActionConfig, CardConfigBase } from "../shared/ha.ts";
-import { isTemplate, numOrNull, oneOf } from "../shared/util.ts";
+import type { ActionConfig, CardConfigBase } from "../ha.ts";
+import type { StringKey } from "../i18n.ts";
+import { isTemplate, numOrNull, oneOf } from "../util.ts";
 
 // ----- the raw config as written in YAML -----
 
@@ -116,6 +117,10 @@ export interface ActionDefaults {
 export interface EntityItem extends ActionDefaults {
   entity: string | null;
   name: string | null;
+  // set by cards that build items themselves: a translated default name and the attribute
+  // that holds the unit (`temperature_unit` for a weather entity's apparent_temperature)
+  nameKey?: StringKey;
+  unitAttr?: string;
   secondary: string | null;
   icon: string | null;
   color: string | null;

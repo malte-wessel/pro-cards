@@ -1,4 +1,4 @@
-// Constants shared by all six cards.
+// Constants shared by all cards.
 
 export const REFRESH_MS = 5 * 60 * 1000;
 export const AXIS_FONT = "10px Roboto, system-ui, sans-serif";

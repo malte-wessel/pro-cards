@@ -10,6 +10,7 @@ Pro Cards adds these cards to the dashboard editor:
 | [Multi Trend Card](/cards/multi-trend-card)         | `custom:multi-trend-card`     | Visual + YAML |
 | [Sun Path Card](/cards/sun-path-card)               | `custom:sun-path-card`        | Visual + YAML |
 | [Illuminance Card](/cards/illuminance-card)         | `custom:illuminance-card`     | Visual + YAML |
+| [Weather Card](/cards/weather-card)                 | `custom:weather-card`         | YAML          |
 
 Requires Home Assistant 2025.3 or newer.
 

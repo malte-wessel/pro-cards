@@ -3,7 +3,7 @@ import type { EntityItem } from "../config.ts";
 import { HISTORY_VISUALS, PLOT_H, STRIP_AXIS_H, type HistoryVisual } from "../constants.ts";
 import { scaleOf } from "../look.ts";
 import { langOf, type EntityModel, type RenderCtx } from "../model.ts";
-import type { PlotElement } from "./plots.ts";
+import type { PlotCtx, PlotElement } from "./plots.ts";
 
 export const barEl = (m: EntityModel) => {
   const d = document.createElement("div");
@@ -35,15 +35,22 @@ export const gaugeEl = (ctx: RenderCtx, ent: EntityItem, m: EntityModel) => {
   return d;
 };
 // the plot element carries its render context (entity index, kind, height); ctx.plotHandlers
-// holds the card's bound pointer handlers
-export const plotEl = (ctx: RenderCtx, ent: EntityItem, idx: number, m: EntityModel) => {
-  const kind = ent.visual as HistoryVisual;
+// holds the card's bound pointer handlers. `extra` overrides the kind and the window / series
+// (see PlotCtx) for plots that are not the entity's history.
+export const plotEl = (
+  ctx: RenderCtx,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+  extra: Partial<PlotCtx> = {},
+) => {
+  const kind = extra.kind ?? (ent.visual as HistoryVisual);
   const plot = document.createElement("div") as PlotElement;
   plot.className = "plot";
   const h = PLOT_H[kind] + (kind === "strip" ? STRIP_AXIS_H : 0);
   plot.style.height = `${h}px`;
   plot.innerHTML = `<svg class="abs" preserveAspectRatio="none"></svg><div class="labels"></div><div class="tip"></div>`;
-  plot._ctx = { ent, idx, kind, st: m.st, h };
+  plot._ctx = { ...extra, ent, idx, kind, st: m.st, h };
   const hs = ctx.plotHandlers;
   plot.addEventListener("pointermove", hs.move);
   plot.addEventListener("pointerdown", hs.move);

@@ -12,6 +12,9 @@ hero:
       text: Entity cards
       link: /cards/entity-card
     - theme: alt
+      text: Weather card
+      link: /cards/weather-card
+    - theme: alt
       text: Playground
       link: /playground
 features:
@@ -26,7 +29,7 @@ features:
     details: One entity as a tile or many as list, grid, hero, row, column, table or sections. Icon, ring, gauge, bar, sparkline, columns, badge or strip. Tap, hold and double-tap actions.
   - icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M3 17l5-6 4 4 4-6 5 3"/><circle cx="19" cy="6" r="2.5"/><path d="M4 21h16"/></svg>'
     title: Trends, sun and light
-    details: Multi sensor trend graphs with tooltips, today's sun path with dawn and dusk, illuminance on a log scale with zones.
+    details: Multi sensor trend graphs with tooltips, today's sun path with dawn and dusk, illuminance on a log scale with zones, the weather with its hourly and daily forecast.
 ---
 
 ## Live on this site
@@ -36,6 +39,7 @@ Every example on these pages is the real card code running against a simulated h
 Each card page starts with the smallest possible configuration and adds one option at a time, so you can stop as soon as the card looks the way you want.
 
 <div class="live-strip">
+<LiveCard :config="{ type: 'custom:weather-card', entity: 'weather.home', title: 'Weather', temperature_rules: [ { below: 12, color: 'blue', label: 'Cool' }, { below: 20, color: 'green', label: 'Mild' }, { above: 20, color: 'amber', label: 'Warm' } ], sections: [ { type: 'hero' }, { type: 'row', entities: [ 'humidity', 'wind_speed' ] }, { type: 'forecast', mode: 'daily', days: 5 } ] }" width="full" />
 <LiveCard :config="{ type: 'custom:entity-group-card', layout: 'hero', title: 'Weather station', icon: 'mdi:weather-partly-cloudy', hours_to_show: 24, entities: [
   { entity: 'sensor.outdoor_temperature', name: 'Temperature', visual: 'sparkline', decimals: 1, rules: [ { below: 0, color: 'indigo', icon: 'mdi:snowflake', label: 'Frost', tint_card: true }, { below: 16, color: 'blue', icon: 'mdi:thermometer-low', label: 'Cool' }, { below: 26, color: 'green', icon: 'mdi:thermometer', label: 'Pleasant' }, { above: 26, color: 'orange', icon: 'mdi:thermometer-high', label: 'Hot', tint_card: true } ] },
   { entity: 'sensor.outdoor_humidity', name: 'Humidity', visual: 'badge' }, { entity: 'sensor.wind_speed', name: 'Wind', visual: 'badge' }, { entity: 'sensor.pressure', name: 'Pressure', visual: 'badge', decimals: 0 },

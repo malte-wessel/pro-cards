@@ -32,6 +32,32 @@ export interface HomeAssistant {
 // the compact rows of `history/history_during_period` with minimal_response + no_attributes
 export type HistoryDuringPeriodResult = Record<string, { s?: string; lu?: number }[]>;
 
+// ----- weather -----
+
+export type WeatherForecastType = "hourly" | "daily" | "twice_daily";
+// one entry of a weather forecast (`weather/subscribe_forecast`); units are the entity's own
+export interface ForecastEntry {
+  datetime: string;
+  condition?: string | null;
+  temperature?: number | null;
+  templow?: number | null;
+  apparent_temperature?: number | null;
+  precipitation?: number | null;
+  precipitation_probability?: number | null;
+  humidity?: number | null;
+  wind_speed?: number | null;
+  wind_bearing?: number | string | null;
+  wind_gust_speed?: number | null;
+  cloud_coverage?: number | null;
+  uv_index?: number | null;
+  is_daytime?: boolean;
+}
+// what the subscription pushes on every forecast update
+export interface ForecastMessage {
+  type: WeatherForecastType;
+  forecast: ForecastEntry[] | null;
+}
+
 // ----- card API -----
 
 export type ActionKind = "tap" | "hold" | "double_tap";
