@@ -79,6 +79,7 @@ export interface TrendEntry {
 export interface SectionItems {
   condIdx: number;
   tempIdx: number;
+  divider: boolean; // a line above the section (never drawn for the first)
 }
 export type WeatherSection =
   | ({
@@ -226,7 +227,7 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
       sec.name == null &&
       sec.secondary == null
     )
-      return { condIdx: 0, tempIdx: 1 };
+      return { condIdx: 0, tempIdx: 1, divider: !!sec.divider };
     const c = normalizeEntity(
       {
         entity,
@@ -249,7 +250,7 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
       `${label}.temperature`,
     );
     entities.push(c, tt);
-    return { condIdx: entities.length - 2, tempIdx: entities.length - 1 };
+    return { condIdx: entities.length - 2, tempIdx: entities.length - 1, divider: !!sec.divider };
   };
 
   const sections: WeatherSection[] = [];

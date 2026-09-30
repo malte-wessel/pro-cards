@@ -103,6 +103,11 @@
                   "$ref": "entity.schema.json#/$defs/rule"
                 },
                 "description": "Temperature rules for this section only (default: the card's)"
+              },
+              "divider": {
+                "type": "boolean",
+                "default": false,
+                "description": "Line above the section (never drawn for the first)"
               }
             },
             "required": ["type"],
@@ -228,6 +233,11 @@
                   "$ref": "entity.schema.json#/$defs/rule"
                 },
                 "description": "Temperature rules for this section only (default: the card's)"
+              },
+              "divider": {
+                "type": "boolean",
+                "default": false,
+                "description": "Line above the section (never drawn for the first)"
               }
             },
             "required": ["type"],
@@ -327,6 +337,11 @@
                   "$ref": "entity.schema.json#/$defs/rule"
                 },
                 "description": "Temperature rules for this section only (default: the card's)"
+              },
+              "divider": {
+                "type": "boolean",
+                "default": false,
+                "description": "Line above the section (never drawn for the first)"
               }
             },
             "required": ["type"],

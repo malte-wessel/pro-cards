@@ -202,7 +202,13 @@ describe("card config schemas", () => {
             y_axis: true,
             show_legend: false,
           },
-          { type: "trend", mode: "daily", days: 5, show: ["temperature", "precipitation"] },
+          {
+            type: "trend",
+            mode: "daily",
+            days: 5,
+            show: ["temperature", "precipitation"],
+            divider: true,
+          },
         ],
       }),
     ).toBeNull();

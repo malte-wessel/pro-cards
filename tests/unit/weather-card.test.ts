@@ -91,6 +91,7 @@ describe("weather-card config", () => {
       secondary: null,
       condIdx: 0,
       tempIdx: 1,
+      divider: false,
     });
     expect(c.sections[1]).toMatchObject({
       kind: "hero",
@@ -170,7 +171,14 @@ describe("weather-card config", () => {
       entity: W,
       sections: [
         { type: "forecast" },
-        { type: "forecast", mode: "hourly", hours_to_show: 99, layout: "horizontal", show: [] },
+        {
+          type: "forecast",
+          mode: "hourly",
+          hours_to_show: 99,
+          layout: "horizontal",
+          show: [],
+          divider: true,
+        },
         {
           type: "forecast",
           days: 0,
@@ -188,6 +196,7 @@ describe("weather-card config", () => {
       title: null,
       condIdx: 0,
       tempIdx: 1,
+      divider: false,
     });
     expect(c.sections[1]).toMatchObject({
       mode: "hourly",
@@ -250,6 +259,7 @@ describe("weather-card config", () => {
       title: null,
       condIdx: 0,
       tempIdx: 1,
+      divider: false,
     });
     expect(c.sections[1]).toMatchObject({
       mode: "hourly",

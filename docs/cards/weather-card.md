@@ -32,7 +32,7 @@ sections:
 
 ## Rows of attributes and entities
 
-`row`, `list`, `table`, `grid` and `column` sections are entity groups exactly like the sections of the [sections card](/cards/entity-sections-card): `entities`, `align`, `columns`, the item options and a `title`. An entry that names an attribute of the weather entity gets a translated name, an icon and the entity's unit: `humidity`, `pressure`, `wind_speed`, `wind_gust_speed`, `wind_bearing`, `apparent_temperature`, `dew_point`, `uv_index`, `cloud_coverage`, `visibility`, `ozone`. Any other entry is an [entity](/cards/entity-options) with every option the entity cards know, so a sensor next to the weather station fits in with its own rules and visual.
+`row`, `list`, `table`, `grid` and `column` sections are entity groups exactly like the sections of the [sections card](/cards/entity-sections-card): `entities`, `align`, `columns`, the item options, a `title` and `divider: true` for a line above the section (every section type takes these two). An entry that names an attribute of the weather entity gets a translated name, an icon and the entity's unit: `humidity`, `pressure`, `wind_speed`, `wind_gust_speed`, `wind_bearing`, `apparent_temperature`, `dew_point`, `uv_index`, `cloud_coverage`, `visibility`, `ozone`. Any other entry is an [entity](/cards/entity-options) with every option the entity cards know, so a sensor next to the weather station fits in with its own rules and visual.
 
 ::: live
 
@@ -48,6 +48,7 @@ sections:
       - { entity: sensor.uv_index, name: UV, visual: ring, min: 0, max: 11, rules: [{ below: 3, color: green }, { above: 3, color: amber }] }
   - type: table
     title: More
+    divider: true
     entities: [pressure, dew_point, visibility]
 ```
 
@@ -75,6 +76,7 @@ sections:
   - type: trend
     mode: daily
     days: 7
+    divider: true
     show: [temperature, precipitation]
 ```
 
@@ -97,10 +99,12 @@ sections:
   - type: forecast
     mode: daily
     layout: horizontal
+    divider: true
     days: 6
   - type: forecast
     mode: hourly
     layout: horizontal
+    divider: true
     hours_to_show: 6
 ```
 
@@ -145,7 +149,7 @@ sections:
 
 ## Everything
 
-Sections render in the order written, so the forecast can sit between groups, and the header takes `title`, `icon` and `header_entities` like the group cards.
+Sections render in the order written, so the forecast can sit between groups; `divider: true` draws a line above a section, and the header takes `title`, `icon` and `header_entities` like the group cards.
 
 ::: live
 
@@ -172,6 +176,7 @@ sections:
     days: 7
   - type: row
     title: Garden station
+    divider: true
     entities:
       - { entity: sensor.outdoor_temperature, visual: ring, min: -10, max: 40 }
       - { entity: sensor.outdoor_humidity, visual: ring }
@@ -207,6 +212,7 @@ sections:
 | `title`                       |            | Line above the section.                                                        |
 | `name` / `secondary`          | the card's | Overrides of the card's `name` / `secondary` for this lead. Templates allowed. |
 | `rules` / `temperature_rules` | the card's | Condition / temperature rules for this section only.                           |
+| `divider`                     | `false`    | Line above the section (never drawn for the first).                            |
 
 ### Sections `row`, `list`, `table`, `grid`, `column`
 
@@ -222,6 +228,7 @@ The keys of a [sections card](/cards/entity-sections-card#section-options) secti
 | `layout` / `x_axis` / `y_axis` / `show_legend` | `auto` / `true` / `false` / `true` | The multi trend card's plot options.                                                                                                                     |
 | `title`                                        | "Next N hours" / "N days"          | Line above the section.                                                                                                                                  |
 | `rules` / `temperature_rules`                  | the card's                         | Condition / temperature rules for this section only.                                                                                                     |
+| `divider`                                      | `false`                            | Line above the section (never drawn for the first).                                                                                                      |
 
 ### Section `forecast`
 
@@ -233,5 +240,6 @@ The keys of a [sections card](/cards/entity-sections-card#section-options) secti
 | `show`                        | `[probability]`           | Rain figures per row: `probability`, `precipitation`; `[]` hides them. |
 | `title`                       | "Next N hours" / "N days" | Line above the section.                                                |
 | `rules` / `temperature_rules` | the card's                | Condition / temperature rules for this section only.                   |
+| `divider`                     | `false`                   | Line above the section (never drawn for the first).                    |
 
 The forecast comes from Home Assistant's forecast subscription, so it is the same data the built-in weather card shows, in the entity's own units; entities with a twice-daily forecast are summarised per day. An entity without an hourly or daily forecast shows "no forecast" in that section. Tapping the lead opens the more-info dialog of the weather entity. The card takes 6 columns × 1 row as a tile and 12 columns with `rows: auto` with sections; `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod` pass through.

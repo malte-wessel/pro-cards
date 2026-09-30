@@ -34,9 +34,10 @@ test.describe("weather card", () => {
       title: "Home",
       secondary: "feels like {{ state_attr('weather.home', 'apparent_temperature') }}°",
       sections: [
-        { type: "hero" },
+        { type: "hero", divider: true },
         {
           type: "hero",
+          divider: true,
           title: "Garden",
           name: "Garden",
           secondary: "{{ state_attr('weather.home', 'humidity') }} % humid",
@@ -55,6 +56,7 @@ test.describe("weather card", () => {
     await expect(c.locator(".wsec").nth(1).locator(".wtitle")).toHaveText("Garden");
     await expect(heroes.nth(1).locator(".primary")).toHaveText("Garden");
     await expect(heroes.nth(1).locator(".secondary")).toHaveText("71 % humid");
+    await expect(c.locator(".body > .divider")).toHaveCount(1); // never above the first
     await heroes.nth(0).click();
     expect(await events(page)).toEqual([{ type: "more-info", entityId: W }]);
   });
@@ -175,7 +177,14 @@ test.describe("weather card", () => {
         { type: "forecast", mode: "daily", days: 5, show: ["probability", "precipitation"] },
         { type: "forecast", mode: "daily", layout: "horizontal", days: 3, show: [] },
         { type: "forecast", mode: "hourly", hours_to_show: 3 },
-        { type: "forecast", mode: "hourly", layout: "horizontal", hours_to_show: 4, title: "Soon" },
+        {
+          type: "forecast",
+          mode: "hourly",
+          layout: "horizontal",
+          hours_to_show: 4,
+          title: "Soon",
+          divider: true,
+        },
       ],
     });
     const c = card(page);
@@ -202,6 +211,7 @@ test.describe("weather card", () => {
     await expect(hours.nth(0).locator(".range")).toHaveCount(0);
     const soon = c.locator(".wsec").nth(3);
     await expect(soon.locator(".wtitle")).toHaveText("Soon");
+    await expect(c.locator(".body > .divider")).toHaveCount(1);
     await expect(soon.locator(".fcol")).toHaveCount(4);
     await expect(soon.locator(".fcol").nth(1).locator(".fname")).toHaveText("13:00");
     await expect(soon.locator(".fcol").nth(1).locator(".hi")).toHaveText(/°C$/);

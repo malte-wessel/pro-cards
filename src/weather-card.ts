@@ -207,6 +207,8 @@ export class WeatherCard extends EntityCardBase {
       return;
     }
     cfg.sections.forEach((sec, i) => {
+      const divider = sec.kind === "entities" ? sec.group.divider : sec.divider;
+      if (divider && i > 0) body.appendChild(this._divider());
       let el: HTMLElement;
       if (sec.kind === "hero") {
         el = sectionShell(sec.title);
@@ -214,7 +216,6 @@ export class WeatherCard extends EntityCardBase {
       } else if (sec.kind === "trend") el = buildTrend(ctx, sec);
       else if (sec.kind === "forecast") el = buildForecast(ctx, sec);
       else {
-        if (sec.group.divider && i > 0) body.appendChild(this._divider());
         el = sectionShell(sec.title);
         el.appendChild(this._buildGroup(sec.group));
       }
