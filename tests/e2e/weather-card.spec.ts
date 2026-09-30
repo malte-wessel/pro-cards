@@ -9,7 +9,7 @@ const cssVar = (loc: Locator, name: string) =>
 
 test.describe("weather card", () => {
   test("renders a tile without sections, sized like an entity card", async ({ page }) => {
-    await mount(page, { type: T, entity: W });
+    await mount(page, { type: T, entity: W, icons: "mdi" });
     const c = card(page);
     await expect(c.locator("ha-card")).toHaveClass(/layout-tile/);
     await expect(c.locator(".row.wtile .primary")).toHaveText("Home");
@@ -221,6 +221,7 @@ test.describe("weather card", () => {
     await mount(page, {
       type: T,
       entity: W,
+      icons: "mdi",
       rules: [{ state: "partlycloudy", color: "amber", label: "Card", tint_card: true }],
       temperature_rules: [{ above: 0, color: "green", label: "Card temp" }],
       sections: [
@@ -256,6 +257,7 @@ test.describe("weather card", () => {
     expect(await cssVar(heroes.nth(1), "--fe-color")).toBe("var(--purple-color)");
     expect(await cssVar(heroes.nth(1), "--fe-temp")).toBe("var(--red-color)");
     await expect(heroes.nth(1).locator("ha-icon")).toHaveAttribute("icon", "mdi:emoticon");
+    await expect(heroes.nth(0).locator(".lead")).not.toHaveClass(/picture/);
     const own = c.locator(".wsec").nth(2).locator(".frow"),
       card2 = c.locator(".wsec").nth(3).locator(".frow");
     expect(await cssVar(own.nth(0), "--fe-color")).toBe("var(--orange-color)");
@@ -266,6 +268,66 @@ test.describe("weather card", () => {
     await expect(c.locator(".wsec").nth(4).locator(".trend svg path.line")).toHaveAttribute(
       "stroke",
       "var(--pink-color)",
+    );
+  });
+
+  test("icons: the hass pictures, a map of icons and images, rule icons, sizes", async ({
+    page,
+  }) => {
+    await mount(page, [
+      { type: T, entity: W, icon_size: 48 },
+      {
+        type: T,
+        entity: W,
+        icons: "mdi",
+        sections: [
+          { type: "hero", icon_size: 72, icons: "hass" },
+          {
+            type: "forecast",
+            mode: "daily",
+            days: 4,
+            icon_size: 30,
+            icons: "hass",
+            rules: [{ state: "pouring", icon: "mdi:umbrella" }],
+          },
+        ],
+      },
+      {
+        type: T,
+        entity: W,
+        icons: "mdi",
+        sections: [
+          { type: "hero", icons: { partlycloudy: "mdi:emoticon-happy" } },
+          { type: "forecast", mode: "daily", days: 4, icons: { rainy: "/local/rain.svg" } },
+        ],
+      },
+    ]);
+    const tile = card(page, 0).locator(".row.wtile .lead");
+    await expect(tile).toHaveClass(/picture/);
+    await expect(tile.locator("svg.wpic path.sun")).toHaveCount(1);
+    await expect(tile.locator("svg.wpic path.cloud-front")).toHaveCount(1);
+    expect(await cssVar(tile, "--lead")).toBe("48px");
+    const c1 = card(page, 1);
+    const lead = c1.locator(".row.whero .lead");
+    expect(await cssVar(lead, "--lead")).toBe("72px");
+    await expect(lead.locator("svg.wpic")).toHaveCount(1);
+    const rows = c1.locator(".frow");
+    await expect(rows.nth(0).locator(".ficon svg.wpic path.cloud-back")).toHaveCount(1);
+    await expect(rows.nth(1).locator(".ficon svg.wpic path.sun")).toHaveCount(1);
+    await expect(rows.nth(2).locator(".ficon svg.wpic path.rain")).toHaveCount(4);
+    await expect(rows.nth(3).locator(".ficon ha-icon")).toHaveAttribute("icon", "mdi:umbrella");
+    expect(await cssVar(c1.locator(".wfc"), "--fe-icon")).toBe("30px");
+    const c2 = card(page, 2);
+    await expect(c2.locator(".row.whero .lead ha-icon")).toHaveAttribute(
+      "icon",
+      "mdi:emoticon-happy",
+    );
+    await expect(c2.locator(".row.whero .lead")).not.toHaveClass(/picture/);
+    const rows2 = c2.locator(".frow");
+    await expect(rows2.nth(2).locator(".ficon img.wpic")).toHaveAttribute("src", "/local/rain.svg");
+    await expect(rows2.nth(1).locator(".ficon ha-icon")).toHaveAttribute(
+      "icon",
+      "mdi:weather-sunny",
     );
   });
 

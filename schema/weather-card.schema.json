@@ -108,6 +108,88 @@
                 "type": "boolean",
                 "default": false,
                 "description": "Line above the section (never drawn for the first)"
+              },
+              "icon_size": {
+                "type": "integer",
+                "minimum": 12,
+                "maximum": 160,
+                "default": 56,
+                "description": "Size of the condition icon (px)"
+              },
+              "icons": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "enum": ["mdi", "hass"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "clear-night": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "cloudy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "exceptional": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "fog": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "hail": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "lightning": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "lightning-rainy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "partlycloudy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "pouring": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "rainy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "snowy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "snowy-rainy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "sunny": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "windy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "windy-variant": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ],
+                "description": "Condition icons for this section only (default: the card's)"
               }
             },
             "required": ["type"],
@@ -238,6 +320,88 @@
                 "type": "boolean",
                 "default": false,
                 "description": "Line above the section (never drawn for the first)"
+              },
+              "icon_size": {
+                "type": "integer",
+                "minimum": 12,
+                "maximum": 160,
+                "default": 22,
+                "description": "Size of the condition icons (px)"
+              },
+              "icons": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "enum": ["mdi", "hass"]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "clear-night": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "cloudy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "exceptional": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "fog": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "hail": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "lightning": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "lightning-rainy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "partlycloudy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "pouring": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "rainy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "snowy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "snowy-rainy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "sunny": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "windy": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      },
+                      "windy-variant": {
+                        "type": "string",
+                        "description": "An mdi icon or an image URL"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ],
+                "description": "Condition icons for this section only (default: the card's)"
               }
             },
             "required": ["type"],
@@ -349,6 +513,89 @@
           }
         ]
       }
+    },
+    "icons": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["mdi", "hass"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "clear-night": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "cloudy": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "exceptional": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "fog": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "hail": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "lightning": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "lightning-rainy": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "partlycloudy": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "pouring": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "rainy": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "snowy": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "snowy-rainy": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "sunny": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "windy": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            },
+            "windy-variant": {
+              "type": "string",
+              "description": "An mdi icon or an image URL"
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "default": "hass",
+      "description": "Condition icons: the Home Assistant weather pictures (default), mdi icons, or a map from condition to an mdi icon or image URL (conditions left out use mdi)"
+    },
+    "icon_size": {
+      "type": "integer",
+      "minimum": 12,
+      "maximum": 160,
+      "default": 40,
+      "description": "Size of the tile's condition icon (px)"
     }
   },
   "required": ["type", "entity"],

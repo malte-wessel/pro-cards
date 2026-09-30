@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { WeatherCard } from "../../src/weather-card.ts";
 import { normalizeWeatherCardConfig, wantedForecasts } from "../../src/weather/config.ts";
+import { PICTURED, pictureSvg } from "../../src/weather/pictures.ts";
 import { conditionIcon, conditionText, isNight } from "../../src/weather/conditions.ts";
 import {
   dailyRange,
@@ -92,6 +93,8 @@ describe("weather-card config", () => {
       condIdx: 0,
       tempIdx: 1,
       divider: false,
+      iconSize: 56,
+      icons: null,
     });
     expect(c.sections[1]).toMatchObject({
       kind: "hero",
@@ -197,6 +200,8 @@ describe("weather-card config", () => {
       condIdx: 0,
       tempIdx: 1,
       divider: false,
+      iconSize: 22,
+      icons: null,
     });
     expect(c.sections[1]).toMatchObject({
       mode: "hourly",
@@ -280,6 +285,39 @@ describe("weather-card config", () => {
       normalizeWeatherCardConfig({ entity: W, sections: [{ type: "trend", layout: "stack" }] }),
     ).toThrow(/layout must be one of auto \| overlay \| lanes/);
   });
+  it("icons: the hass pictures by default, mdi, or a map, per card or section; icon sizes", () => {
+    const dflt = normalizeWeatherCardConfig({
+      entity: W,
+      sections: [{ type: "hero" }, { type: "forecast", icons: "mdi" }],
+    });
+    expect(dflt).toMatchObject({ icons: "hass", iconSize: 40 });
+    expect(dflt.sections[0]).toMatchObject({ iconSize: 56, icons: null });
+    expect(dflt.sections[1]).toMatchObject({ iconSize: 22, icons: "mdi" });
+    const c = normalizeWeatherCardConfig({
+      entity: W,
+      icons: { rainy: "/local/rain.svg", sunny: "mdi:x", nope: "mdi:y", cloudy: "" },
+      icon_size: 999,
+      sections: [
+        { type: "hero", icon_size: 1 },
+        { type: "forecast", icon_size: "30" },
+      ],
+    });
+    expect(c.icons).toEqual({ rainy: "/local/rain.svg", sunny: "mdi:x" });
+    expect(c.iconSize).toBe(160);
+    expect(c.sections[0]).toMatchObject({ iconSize: 12 });
+    expect(c.sections[1]).toMatchObject({ iconSize: 30 });
+    expect(normalizeWeatherCardConfig({ entity: W, icons: "mdi" }).icons).toBe("mdi");
+    expect(
+      normalizeWeatherCardConfig({
+        entity: W,
+        sections: [{ type: "hero", icons: { sunny: "mdi:s" } }],
+      }).sections[0],
+    ).toMatchObject({ icons: { sunny: "mdi:s" } });
+    expect(() => normalizeWeatherCardConfig({ entity: W, icons: "svg" })).toThrow(/icons must be/);
+    expect(() => normalizeWeatherCardConfig({ entity: W, icons: ["hass"] })).toThrow(
+      /icons must be/,
+    );
+  });
   it("puts header entities last", () => {
     const c = normalizeWeatherCardConfig({
       entity: W,
@@ -288,6 +326,28 @@ describe("weather-card config", () => {
     });
     expect(c.headerIdxs).toEqual([6]);
     expect(c.hasHeader).toBe(true);
+  });
+});
+
+describe("pictures", () => {
+  it("composes the Home Assistant pictures from their parts", () => {
+    expect(PICTURED.size).toBe(14);
+    expect(pictureSvg("exceptional")).toBeNull();
+    expect(pictureSvg("nope")).toBeNull();
+    const sunny = pictureSvg("sunny")!;
+    expect(sunny).toContain('class="sun"');
+    expect(sunny).not.toContain("cloud");
+    expect(pictureSvg("sunny", true)).toContain('class="moon"');
+    const rainy = pictureSvg("rainy")!;
+    expect(rainy).toContain("cloud-back");
+    expect(rainy).toContain("cloud-front");
+    expect(rainy.match(/class="rain"/g)).toHaveLength(4);
+    expect(pictureSvg("pouring")!.match(/class="rain"/g)).toHaveLength(6);
+    expect(pictureSvg("lightning-rainy")).toContain('class="sun"');
+    expect(pictureSvg("snowy-rainy")!.match(/class="snow"/g)).toHaveLength(3);
+    expect(pictureSvg("windy")!.match(/cloud-back/g)).toHaveLength(3);
+    expect(pictureSvg("partlycloudy", true)).toContain('class="moon"');
+    expect(pictureSvg("clear-night")).not.toContain('class="sun"');
   });
 });
 

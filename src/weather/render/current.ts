@@ -5,14 +5,17 @@ import type { EntityItem } from "../../shared/entity/config.ts";
 import { nameOf, tplOf, type EntityModel, type RenderCtx } from "../../shared/entity/model.ts";
 import { bigEl, leadEl, textEl } from "../../shared/entity/render/lead.ts";
 import { fmtNumber } from "../../shared/format.ts";
-import type { WeatherConfig } from "../config.ts";
+import type { WeatherConfig, WeatherIcons } from "../config.ts";
 import { conditionIcon, conditionText, isNight } from "../conditions.ts";
+import { conditionEl, iconFor } from "./icon.ts";
 import type { Day } from "../forecast.ts";
 
 export interface CurrentModel {
   cond: EntityModel;
   temp: EntityModel;
   today: Day | null;
+  iconSize: number;
+  icons: WeatherIcons;
 }
 
 // the condition colour: explicit, else the matching rule, else primary. Home Assistant's state
@@ -20,11 +23,19 @@ export interface CurrentModel {
 export const condColor = (ent: EntityItem, m: EntityModel): string =>
   !m.model.avail || ent.color ? m.look.color : (m.look.rule?.color ?? "primary");
 
-// the model with the condition icon as fallback (a rule icon still wins)
-const withIcon = (ctx: RenderCtx, m: EntityModel): EntityModel => ({
-  ...m,
-  look: { ...m.look, fallbackIcon: conditionIcon(m.st?.state, isNight(ctx.hass)) },
-});
+// the model with the condition icon: a rule icon, else an mdi icon from the `icons` map, else
+// the condition's own as fallback
+const withIcon = (ctx: RenderCtx, icons: WeatherIcons, m: EntityModel): EntityModel => {
+  const mapped = iconFor(icons, m.st?.state);
+  return {
+    ...m,
+    look: {
+      ...m.look,
+      icon: m.look.icon ?? (mapped?.startsWith("mdi:") ? mapped : null),
+      fallbackIcon: conditionIcon(m.st?.state, isNight(ctx.hass)),
+    },
+  };
+};
 
 const condText = (ctx: RenderCtx, m: EntityModel) =>
   m.model.avail ? conditionText(ctx.hass, m.st?.state) : (m.look.label ?? "");
@@ -65,7 +76,17 @@ export const fillCurrent = (
   row.style.setProperty("--fe-temp", cssColor(cm.temp.look.color, "var(--primary-color)"));
   const top = document.createElement("div");
   top.className = "top";
-  top.appendChild(leadEl(ctx, ent, withIcon(ctx, cm.cond), isTile ? 40 : 56));
+  const lead = leadEl(ctx, ent, withIcon(ctx, cm.icons, cm.cond), cm.iconSize);
+  // a picture or an image replaces the icon in the lead and stands alone, without the soft circle
+  if (cm.cond.model.avail) {
+    const icon = conditionEl(cm.icons, cm.cond.st?.state, isNight(ctx.hass), cm.cond.look.icon);
+    if (icon.tagName !== "HA-ICON") {
+      lead.classList.add("picture");
+      const shape = lead.querySelector(".shape");
+      shape?.replaceChildren(icon);
+    }
+  }
+  top.appendChild(lead);
   const main = document.createElement("div");
   main.className = "main";
   const line = document.createElement("div");

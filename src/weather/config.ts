@@ -20,6 +20,7 @@ import {
 } from "../shared/entity/config.ts";
 import { DEFAULTS as ENTITY_DEFAULTS } from "../shared/entity/constants.ts";
 import { numOrNull, oneOf } from "../shared/util.ts";
+import { isCondition, type Condition } from "./conditions.ts";
 import {
   ATTRIBUTES,
   CARD_TYPE,
@@ -54,8 +55,12 @@ export interface RawWeatherSection extends RawGroup {
   show_legend?: unknown;
   rules?: unknown;
   temperature_rules?: unknown;
+  icon_size?: unknown;
+  icons?: unknown;
 }
 export interface RawWeatherCardConfig extends RawEntityCardBase {
+  icons?: unknown;
+  icon_size?: unknown;
   entity?: string | null;
   name?: string | null;
   secondary?: string | null;
@@ -81,12 +86,17 @@ export interface SectionItems {
   tempIdx: number;
   divider: boolean; // a line above the section (never drawn for the first)
 }
+// the condition icons: Home Assistant's weather pictures (default), mdi icons, or a map from
+// condition to an mdi icon or an image URL
+export type WeatherIcons = "mdi" | "hass" | Partial<Record<Condition, string>>;
 export type WeatherSection =
   | ({
       kind: "hero";
       title: string | null;
       name: string | null;
       secondary: string | null;
+      iconSize: number;
+      icons: WeatherIcons | null; // null: the card's
     } & SectionItems)
   | { kind: "entities"; group: Group; title: string | null }
   | ({
@@ -96,6 +106,8 @@ export type WeatherSection =
       count: number; // hours or days
       show: RainFigure[];
       title: string | null;
+      iconSize: number;
+      icons: WeatherIcons | null;
     } & SectionItems)
   | ({
       kind: "trend";
@@ -117,6 +129,8 @@ export interface WeatherConfig extends EntityCardConfig {
   precipIdx: number; // precipitation, probability and wind items: unit and formatting of forecast values
   probIdx: number;
   windIdx: number;
+  icons: WeatherIcons;
+  iconSize: number; // the tile's lead
   sections: WeatherSection[];
 }
 
@@ -125,6 +139,18 @@ const clampInt = (v: unknown, fallback: number, min: number, max: number) =>
   Math.max(min, Math.min(max, Math.round(numOrNull(v) ?? fallback)));
 const bool = (v: unknown, d: boolean) => (v === undefined || v === null ? d : !!v);
 const text = (v: unknown): string | null => (typeof v === "string" && v ? v : null);
+const iconSize = (v: unknown, fallback: number) => clampInt(v, fallback, 12, 160);
+const iconsOf = (v: unknown): WeatherIcons => {
+  if (v === undefined || v === null || v === "hass") return "hass";
+  if (v === "mdi") return "mdi";
+  if (v && typeof v === "object" && !Array.isArray(v)) {
+    const map: Partial<Record<Condition, string>> = {};
+    for (const [k, val] of Object.entries(v as Record<string, unknown>))
+      if (isCondition(k) && typeof val === "string" && val) map[k] = val;
+    return map;
+  }
+  throw new Error(`${CARD_TYPE}: icons must be mdi, hass or a map of condition → icon`);
+};
 
 // `show` of a trend: quantity names or { quantity, name, color } objects (the multi trend
 // `entities` shape); unknown quantities are dropped, duplicates keep the first
@@ -268,6 +294,8 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
         title,
         name: sec.name ?? null,
         secondary: sec.secondary ?? null,
+        iconSize: iconSize(sec.icon_size, DEFAULTS.heroIconSize),
+        icons: sec.icons == null ? null : iconsOf(sec.icons),
         ...sectionItems(sec, label),
       });
     } else if (oneOf(GROUP_TYPES, type)) {
@@ -309,6 +337,8 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
         count: countOf(sec, mode),
         show: rainFigures(sec.show),
         title,
+        iconSize: iconSize(sec.icon_size, DEFAULTS.forecastIconSize),
+        icons: sec.icons == null ? null : iconsOf(sec.icons),
         ...sectionItems(sec, label),
       });
     } else {
@@ -353,6 +383,8 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
     precipIdx: 2,
     probIdx: 3,
     windIdx: 4,
+    icons: iconsOf(raw.icons),
+    iconSize: iconSize(raw.icon_size, DEFAULTS.tileIconSize),
     sections,
   };
 };

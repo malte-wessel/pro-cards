@@ -238,9 +238,11 @@ export class WeatherCard extends EntityCardBase {
       const today = days?.find((d) => isToday(d.t, ctx.now)) ?? null;
       const secEl = row.closest<HTMLElement>("[data-sec]");
       const sec = secEl ? cfg.sections[Number(secEl.dataset.sec)] : undefined;
-      const tempIdx = sec?.kind === "hero" ? sec.tempIdx : cfg.tempIdx;
-      const temp = modelOf(ctx, cfg.entities[tempIdx]);
-      fillCurrent(ctx, row, cfg, { cond: m, temp, today }, c.contains("wtile"));
+      const hero = sec?.kind === "hero" ? sec : null;
+      const temp = modelOf(ctx, cfg.entities[hero ? hero.tempIdx : cfg.tempIdx]);
+      const iconSize = hero ? hero.iconSize : cfg.iconSize;
+      const icons = hero?.icons ?? cfg.icons;
+      fillCurrent(ctx, row, cfg, { cond: m, temp, today, iconSize, icons }, c.contains("wtile"));
       return;
     }
     super._fill(ctx, row, ent, idx, m);

@@ -13,7 +13,8 @@ import { fmtNumber as fmtNum, fmtTime } from "../../shared/format.ts";
 import { t } from "../../shared/i18n.ts";
 import { qs } from "../../shared/util.ts";
 import type { WeatherConfig, WeatherSection } from "../config.ts";
-import { conditionIcon } from "../conditions.ts";
+import { isNight } from "../conditions.ts";
+import { conditionEl } from "./icon.ts";
 import { dailyRange, hourStart, isToday, type ForecastRow } from "../forecast.ts";
 import { emptyEl, sectionShell, setTitle } from "./section.ts";
 
@@ -79,9 +80,12 @@ export const drawForecast = (
     r.condition
       ? resolveLook(condEnt, { num: null, raw: r.condition, avail: true }, st, tplGet)
       : null;
+  const night = isNight(ctx.hass);
   const setCondition = (el: HTMLElement, r: ForecastRow) => {
     const look = condLook(r);
-    qs(el, "ha-icon").setAttribute("icon", look?.icon || conditionIcon(r.condition));
+    qs(el, ".ficon").replaceChildren(
+      conditionEl(sec.icons ?? cfg.icons, r.condition, night, look?.icon),
+    );
     const c = look?.rule?.color;
     el.style.setProperty(
       "--fe-cond",
@@ -110,6 +114,7 @@ export const drawForecast = (
   const showRain = sec.show.length > 0;
   body.replaceChildren();
   body.classList.toggle("with-rain", showRain);
+  body.style.setProperty("--fe-icon", `${sec.iconSize}px`);
 
   if (sec.layout === "vertical") {
     for (const r of list) {
@@ -118,8 +123,8 @@ export const drawForecast = (
       if (isNow(r)) row.classList.add("today");
       row.style.setProperty("--fe-color", colorOf(r));
       row.innerHTML = daily
-        ? `<div class="fname"></div><ha-icon></ha-icon>${showRain ? `<div class="rain"></div>` : ""}<div class="range"><span class="lo"></span><div class="track"><div class="fill"></div></div><span class="hi"></span></div>`
-        : `<div class="fname"></div><ha-icon></ha-icon>${showRain ? `<div class="rain"></div>` : ""}<div class="ftemp"></div>`;
+        ? `<div class="fname"></div><div class="ficon"></div>${showRain ? `<div class="rain"></div>` : ""}<div class="range"><span class="lo"></span><div class="track"><div class="fill"></div></div><span class="hi"></span></div>`
+        : `<div class="fname"></div><div class="ficon"></div>${showRain ? `<div class="rain"></div>` : ""}<div class="ftemp"></div>`;
       qs(row, ".fname").textContent = label(r);
       setCondition(row, r);
       if (showRain) qs(row, ".rain").textContent = rainText(r);
@@ -142,8 +147,8 @@ export const drawForecast = (
     if (isNow(r)) col.classList.add("today");
     col.style.setProperty("--fe-color", colorOf(r));
     col.innerHTML = daily
-      ? `<div class="fname"></div><ha-icon></ha-icon><span class="hi"></span><div class="vtrack"><div class="fill"></div></div><span class="lo"></span>${showRain ? `<span class="rain"></span>` : ""}`
-      : `<div class="fname"></div><ha-icon></ha-icon><span class="hi"></span>${showRain ? `<span class="rain"></span>` : ""}`;
+      ? `<div class="fname"></div><div class="ficon"></div><span class="hi"></span><div class="vtrack"><div class="fill"></div></div><span class="lo"></span>${showRain ? `<span class="rain"></span>` : ""}`
+      : `<div class="fname"></div><div class="ficon"></div><span class="hi"></span>${showRain ? `<span class="rain"></span>` : ""}`;
     qs(col, ".fname").textContent = label(r);
     setCondition(col, r);
     qs(col, ".hi").textContent = daily ? deg(r.hi) : temp(r.hi);

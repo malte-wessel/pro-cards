@@ -143,6 +143,9 @@ describe("card config schemas", () => {
       ESC = "custom:entity-sections-card";
     expect(validate({ type: "custom:weather-card", entity: "weather.home" })).toBeNull();
     expect(
+      validate({ type: "custom:weather-card", entity: "weather.home", icons: "hass" }),
+    ).toBeNull();
+    expect(
       validate({
         type: "custom:weather-card",
         entity: "weather.home",

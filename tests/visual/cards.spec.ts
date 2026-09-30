@@ -501,6 +501,22 @@ const CASES = {
       { type: "forecast", mode: "hourly", hours_to_show: 4, title: "Soon" },
     ],
   },
+  "wc-icons": {
+    type: "custom:weather-card",
+    entity: "weather.home",
+    sections: [
+      { type: "hero", icon_size: 72 },
+      { type: "forecast", mode: "daily", days: 5, icon_size: 32 },
+      {
+        type: "forecast",
+        mode: "hourly",
+        layout: "horizontal",
+        hours_to_show: 6,
+        icon_size: 36,
+        icons: { sunny: "mdi:white-balance-sunny", partlycloudy: "mdi:weather-partly-cloudy" },
+      },
+    ],
+  },
   "wc-everything": {
     type: "custom:weather-card",
     entity: "weather.home",

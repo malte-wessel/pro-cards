@@ -35,6 +35,9 @@ export const DEFAULTS = {
   days: 7,
   maxDays: 10,
   forecastLayout: "vertical",
+  tileIconSize: 40,
+  heroIconSize: 56,
+  forecastIconSize: 22,
   trendShow: ["temperature", "precipitation"],
   rainFigures: ["probability"],
 } as const;

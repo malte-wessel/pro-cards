@@ -110,6 +110,50 @@ sections:
 
 :::
 
+## Icons and sizes
+
+By default the conditions are the pictures of Home Assistant's own weather card (a yellow sun, grey clouds, blue drops), coloured by the theme's `--weather-icon-sun-color`, `--weather-icon-moon-color`, `--weather-icon-cloud-back-color`, `--weather-icon-cloud-front-color`, `--weather-icon-rain-color` and `--weather-icon-snow-color`. `icons: mdi` uses the mdi weather icons instead, and a map picks an icon per condition: an `mdi:` icon or the URL of an image (`/local/weather/rain.svg`); conditions left out keep their mdi icon. `icons` sits on the card, or on a `hero` / `forecast` section for that section only. A rule's `icon` still wins. `icon_size` sets the size of the condition icon in pixels: on the card for the tile, on `hero` and `forecast` sections for theirs.
+
+::: live
+
+```yaml
+type: custom:weather-card
+entity: weather.home
+sections:
+  - type: hero
+    icon_size: 72
+  - type: forecast
+    mode: daily
+    days: 5
+    icon_size: 32
+  - type: forecast
+    mode: hourly
+    layout: horizontal
+    hours_to_show: 6
+    icon_size: 36
+```
+
+:::
+
+::: live
+
+```yaml
+type: custom:weather-card
+entity: weather.home
+icons: mdi
+sections:
+  - type: hero
+  - type: forecast
+    mode: daily
+    days: 4
+    icons:
+      partlycloudy: mdi:emoticon-happy-outline
+      rainy: mdi:umbrella
+      pouring: mdi:umbrella
+```
+
+:::
+
 ## Rules and colours
 
 `rules` match the condition (`state: rainy`, `state: lightning-rainy` …) and set colour, icon and label of the lead, or tint the whole card. `temperature_rules` match the temperature with `below` / `above` and colour the value, the temperature line and the forecast bars, with a label next to the high and low. Both live on the card and apply to every section; a `hero`, `forecast` or `trend` section can carry its own `rules` / `temperature_rules`, which replace the card's for that section: a forecast with an umbrella for rainy days, a trend with stricter temperature colours.
