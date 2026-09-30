@@ -1,4 +1,4 @@
-import { test, expect, mount, setState, card } from "./util.ts";
+import { test, expect, mount, setState, card, setLanguage } from "./util.ts";
 
 const cfg = (mode: string, extra: Record<string, unknown> = {}) => ({
   type: "custom:illuminance-card",
@@ -59,6 +59,32 @@ test("band mode has one block per bucket and a gradient legend", async ({ page }
   await expect(c.locator(".tip")).toHaveClass(/on/);
   await expect(c.locator(".tip .time")).toHaveText(/\d\d:\d\d–\d\d:\d\d/);
   await expect(c.locator(".tip b")).toHaveText(/lx$/);
+});
+
+test("default zone names and axis words follow the Home Assistant language", async ({ page }) => {
+  await mount(page, {
+    type: "custom:illuminance-card",
+    entity: "sensor.illuminance",
+    mode: "trend",
+    zones: { sun: { label: "Bright" } },
+  });
+  const c = card(page);
+  await expect(c.locator(".valrow .pill")).toHaveText("Day");
+  await expect(c.locator(".label.x.last")).toHaveText("now");
+  await setLanguage(page, "de");
+  await expect(c.locator(".valrow .pill")).toHaveText("Tag");
+  await expect(c.locator(".label.x.last")).toHaveText("jetzt");
+  await expect(c.locator(".label.zone")).toContainText([
+    "Nacht",
+    "Dämmerung",
+    "Bedeckt",
+    "Tag",
+    "Bright",
+  ]);
+  await expect(c.locator(".secondary")).toHaveText(/^Max\. /);
+  await mount(page, { type: "custom:illuminance-card", entity: "sensor.nope" });
+  await setLanguage(page, "de");
+  await expect(card(page).locator(".empty")).toHaveText("sensor.nope nicht gefunden");
 });
 
 test("reports a missing entity instead of crashing", async ({ page }) => {

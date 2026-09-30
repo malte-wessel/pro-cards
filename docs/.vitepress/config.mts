@@ -128,6 +128,7 @@ export default defineConfig({
           { text: "Getting started", link: "/guide/getting-started" },
           { text: "Look & themes", link: "/guide/colours" },
           { text: "Sizing in sections", link: "/guide/sizing" },
+          { text: "Languages", link: "/guide/languages" },
         ],
       },
       { text: "Contributing", items: [{ text: "Testing", link: "/guide/testing" }] },

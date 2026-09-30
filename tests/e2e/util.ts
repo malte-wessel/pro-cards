@@ -41,6 +41,9 @@ export const state = (page: Page, id: string) =>
   page.evaluate((i) => window.pc.world.get(i)?.state, id);
 export const setState = (page: Page, id: string, s?: string, attrs?: Record<string, unknown>) =>
   page.evaluate(([i, v, a]) => window.pc.world.set(i, v, a), [id, s, attrs] as const);
+// switch the frontend language the mounted cards see (they re-render at once)
+export const setLanguage = (page: Page, language: string) =>
+  page.evaluate((l) => window.pc.setLanguage(l), language);
 export const card = (page: Page, i = 0): Locator =>
   page.locator("#root .cell").nth(i).locator("> *");
 export { test, expect };

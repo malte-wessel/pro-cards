@@ -1,4 +1,5 @@
 // Mode "arc": a half-circle gauge with the zones as segments and the value in the middle.
+import { t } from "../../shared/i18n.ts";
 import type { IlluminanceHost } from "../config.ts";
 import { posOf, zoneOf } from "../zones.ts";
 import { fmtLx, pillEl } from "./plot.ts";
@@ -44,7 +45,7 @@ export const renderArc = (card: IlluminanceHost, body: HTMLElement, v: number | 
     html += `<circle class="mark" cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="6"/>`;
   }
   html += `<text class="bigv" x="${cx}" y="104" text-anchor="middle">${v === null ? "–" : fmtLx(card._hass, v)}</text>`;
-  html += `<text class="unit" x="${cx}" y="130" text-anchor="middle">LUX</text>`;
+  html += `<text class="unit" x="${cx}" y="130" text-anchor="middle">${esc(t(card._hass, "illuminance.lux"))}</text>`;
   body.innerHTML = "";
   const wrap = document.createElement("div");
   wrap.className = "arcwrap";

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0 (unreleased)
+
+- The cards speak the language of the Home Assistant profile (English and German so far): the default sun path labels and tooltip word, the illuminance zone names, `Max` and `LUX`, the axis word `now`, `no data` / `loading …`, `Peak`, `unavailable`, `… not found` and every visual editor label. Your own `labels`, `zones`, rule `label`, `title` and `name` stay as written. See the Languages guide for adding a language
+- Entity group and sections cards: the title of a freshly added card was German
+
 ## 1.2.0 (2026-09-30)
 
 - Sun path card: hover or tap the curve for a tooltip with the time and the sun's elevation; `show_tooltip: false` turns it off

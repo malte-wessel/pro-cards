@@ -1,27 +1,28 @@
 // Visual editor of the multi trend card (ha-form).
 import { FormEditorBase, setOrDrop } from "../shared/editor.ts";
 import type { HaFormData, HaFormSchema, HomeAssistant } from "../shared/ha.ts";
+import { t, type StringKey } from "../shared/i18n.ts";
 import type { MultiTrendCardConfig, MultiTrendEntity } from "./config.ts";
 import { DEFAULT_HOURS } from "./scale.ts";
 
 const MAX_EDIT_ENTITIES = 8;
-export const EDITOR_LABELS: Record<string, string> = {
-  title: "Title",
-  icon: "Icon",
-  color: "Icon colour",
-  hours_to_show: "Hours to show",
-  layout: "Layout",
-  show_legend: "Show legend",
-  x_axis: "X axis (time)",
-  y_axis: "Y axis (values)",
-  entities: "Entities",
-  name: "Name",
-  ecolor: "Colour",
+export const EDITOR_LABELS: Record<string, StringKey> = {
+  title: "editor.multi_trend.title",
+  icon: "editor.multi_trend.icon",
+  color: "editor.multi_trend.color",
+  hours_to_show: "editor.multi_trend.hours_to_show",
+  layout: "editor.multi_trend.layout",
+  show_legend: "editor.multi_trend.show_legend",
+  x_axis: "editor.multi_trend.x_axis",
+  y_axis: "editor.multi_trend.y_axis",
+  entities: "editor.multi_trend.entities",
+  name: "editor.multi_trend.name",
+  ecolor: "editor.multi_trend.ecolor",
 };
-export const LAYOUT_OPTIONS = [
-  { value: "auto", label: "Auto (same unit: overlay, otherwise lanes)" },
-  { value: "overlay", label: "Overlay (one scale)" },
-  { value: "lanes", label: "Lanes (one scale per entity)" },
+export const layoutOptions = (hass?: HomeAssistant) => [
+  { value: "auto", label: t(hass, "editor.multi_trend.layout.auto") },
+  { value: "overlay", label: t(hass, "editor.multi_trend.layout.overlay") },
+  { value: "lanes", label: t(hass, "editor.multi_trend.layout.lanes") },
 ];
 
 // card config -> flat ha-form data
@@ -102,7 +103,10 @@ export const editorSchema = (hass: HomeAssistant | undefined, data: HaFormData):
             number: { min: 1, max: 168, step: 1, mode: "box", unit_of_measurement: "h" },
           },
         },
-        { name: "layout", selector: { select: { mode: "dropdown", options: LAYOUT_OPTIONS } } },
+        {
+          name: "layout",
+          selector: { select: { mode: "dropdown", options: layoutOptions(hass) } },
+        },
       ],
     },
     {
@@ -150,8 +154,8 @@ export class MultiTrendCardEditor extends FormEditorBase {
   static labels = EDITOR_LABELS;
   _label(sch: HaFormSchema) {
     const m = sch.name.match(/^ent__.+__(name|color)$/);
-    if (m) return EDITOR_LABELS[m[1] === "color" ? "ecolor" : "name"];
-    return EDITOR_LABELS[sch.name] ?? sch.name;
+    if (m) return t(this._hass, EDITOR_LABELS[m[1] === "color" ? "ecolor" : "name"]);
+    return super._label(sch);
   }
   _toForm(config: MultiTrendCardConfig) {
     return configToForm(config);

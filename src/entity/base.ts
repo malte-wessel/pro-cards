@@ -6,6 +6,7 @@
 import { fireAction } from "../shared/card.ts";
 import { cssColor } from "../shared/color.ts";
 import { REFRESH_MS } from "../shared/constants.ts";
+import { langOf } from "../shared/format.ts";
 import type { ActionConfig, ActionKind, GridOptions, HomeAssistant } from "../shared/ha.ts";
 import { fetchHistory, pointOf, type Point } from "../shared/history.ts";
 import { hideHover } from "../shared/hover.ts";
@@ -113,7 +114,8 @@ export abstract class EntityCardBase extends HTMLElement {
       this._fetchHistory();
       return;
     }
-    let changed = !prev;
+    // a new language (profile setting) re-renders too: words, times and numbers follow it
+    let changed = !prev || langOf(prev) !== langOf(hass);
     for (const id of this._entityIds) {
       const st = hass.states[id],
         pst = prev?.states[id];

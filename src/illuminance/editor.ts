@@ -1,23 +1,24 @@
 // Visual editor of the illuminance card (ha-form).
 import { FormEditorBase, setOrDrop } from "../shared/editor.ts";
 import type { HaFormData, HaFormSchema, HomeAssistant } from "../shared/ha.ts";
+import { t, type StringKey } from "../shared/i18n.ts";
 import type { IlluminanceCardConfig } from "./config.ts";
 import { DEFAULTS } from "./constants.ts";
-import { DEFAULT_ZONES, type ZoneOverride, type ZoneOverrides } from "./zones.ts";
+import { DEFAULT_ZONES, defaultZoneLabel, type ZoneOverride, type ZoneOverrides } from "./zones.ts";
 
-export const EDITOR_LABELS: Record<string, string> = {
-  entity: "Entity",
-  mode: "Mode",
-  name: "Name",
-  hours_to_show: "Hours to show",
-  bucket_minutes: "Bucket size (minutes)",
-  min_lx: "Scale from (lx)",
-  max_lx: "Scale to (lx)",
+export const EDITOR_LABELS: Record<string, StringKey> = {
+  entity: "editor.illuminance.entity",
+  mode: "editor.illuminance.mode",
+  name: "editor.illuminance.name",
+  hours_to_show: "editor.illuminance.hours_to_show",
+  bucket_minutes: "editor.illuminance.bucket_minutes",
+  min_lx: "editor.illuminance.min_lx",
+  max_lx: "editor.illuminance.max_lx",
 };
-export const MODE_OPTIONS = [
-  { value: "arc", label: "Arc (gauge with zones)" },
-  { value: "trend", label: "Trend with zones (24 h)" },
-  { value: "band", label: "Band (24 h colour blocks)" },
+export const modeOptions = (hass?: HomeAssistant) => [
+  { value: "arc", label: t(hass, "editor.illuminance.mode.arc") },
+  { value: "trend", label: t(hass, "editor.illuminance.mode.trend") },
+  { value: "band", label: t(hass, "editor.illuminance.mode.band") },
 ];
 
 const NUMBER_KEYS = ["hours_to_show", "bucket_minutes", "min_lx", "max_lx"] as const;
@@ -41,9 +42,11 @@ export const configToForm = (config: IlluminanceCardConfig): HaFormData => {
   return d;
 };
 
+// a zone label equal to its default in the user's language is not an override
 export const formToConfig = (
   data: HaFormData,
   prev: IlluminanceCardConfig,
+  hass?: HomeAssistant,
 ): IlluminanceCardConfig => {
   const config: IlluminanceCardConfig = { ...prev };
   config.entity = data.entity ? String(data.entity) : "";
@@ -68,7 +71,7 @@ export const formToConfig = (
     const l = data[`z_${z.key}_label`],
       m = data[`z_${z.key}_max`],
       c = data[`z_${z.key}_color`];
-    if (l && l !== z.label) o.label = String(l);
+    if (l && l !== defaultZoneLabel(hass, z.key)) o.label = String(l);
     if (
       m !== "" &&
       m !== null &&
@@ -84,7 +87,7 @@ export const formToConfig = (
   return config;
 };
 
-export const editorSchema = (data: HaFormData): HaFormSchema[] => {
+export const editorSchema = (data: HaFormData, hass?: HomeAssistant): HaFormSchema[] => {
   const s: HaFormSchema[] = [
     {
       name: "entity",
@@ -94,7 +97,7 @@ export const editorSchema = (data: HaFormData): HaFormSchema[] => {
       name: "",
       type: "grid",
       schema: [
-        { name: "mode", selector: { select: { mode: "dropdown", options: MODE_OPTIONS } } },
+        { name: "mode", selector: { select: { mode: "dropdown", options: modeOptions(hass) } } },
         { name: "name", selector: { text: {} } },
       ],
     },
@@ -140,7 +143,7 @@ export const editorSchema = (data: HaFormData): HaFormSchema[] => {
   s.push({
     name: "",
     type: "expandable",
-    title: "Zones",
+    title: t(hass, "editor.illuminance.section_zones"),
     flatten: true,
     schema: DEFAULT_ZONES.map((z) => ({
       name: "",
@@ -166,6 +169,11 @@ export const editorSchema = (data: HaFormData): HaFormSchema[] => {
 };
 
 const ZONE_FIELD = /^z_(\w+)_(label|max|color)$/;
+const ZONE_FIELD_KEY = {
+  label: "editor.illuminance.zone_label",
+  max: "editor.illuminance.zone_max",
+  color: "editor.illuminance.zone_color",
+} as const;
 
 export class IlluminanceCardEditor extends FormEditorBase {
   static labels = EDITOR_LABELS;
@@ -173,23 +181,30 @@ export class IlluminanceCardEditor extends FormEditorBase {
     const m = sch.name.match(ZONE_FIELD);
     const z = m && DEFAULT_ZONES.find((x) => x.key === m[1]);
     if (m && z) {
-      return `${z.label}: ${m[2] === "label" ? "label" : m[2] === "max" ? "up to" : "colour"}`;
+      const field = m[2] as keyof typeof ZONE_FIELD_KEY;
+      return t(this._hass, ZONE_FIELD_KEY[field], { zone: defaultZoneLabel(this._hass, z.key) });
     }
-    return EDITOR_LABELS[sch.name] ?? sch.name;
+    return super._label(sch);
   }
   _helper(sch: HaFormSchema) {
     const m = sch.name.match(ZONE_FIELD);
     const z = m && DEFAULT_ZONES.find((x) => x.key === m[1]);
     if (!m || !z) return undefined;
-    return `Default: ${m[2] === "label" ? z.label : m[2] === "max" ? z.max + " lx" : z.color}`;
+    const value =
+      m[2] === "label"
+        ? defaultZoneLabel(this._hass, z.key)
+        : m[2] === "max"
+          ? `${z.max} lx`
+          : z.color;
+    return t(this._hass, "editor.default", { value });
   }
   _toForm(config: IlluminanceCardConfig) {
     return configToForm(config);
   }
   _fromForm(data: HaFormData, prev: IlluminanceCardConfig) {
-    return formToConfig(data, prev);
+    return formToConfig(data, prev, this._hass);
   }
-  _schema(_hass: HomeAssistant, data: HaFormData) {
-    return editorSchema(data);
+  _schema(hass: HomeAssistant, data: HaFormData) {
+    return editorSchema(data, hass);
   }
 }

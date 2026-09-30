@@ -27,9 +27,10 @@ import type {
 } from "./illuminance/config.ts";
 import { cssColor, resolveHex } from "./shared/color.ts";
 import { REFRESH_MS } from "./shared/constants.ts";
-import { fmtTime } from "./shared/format.ts";
+import { fmtTime, langOf } from "./shared/format.ts";
 import { fetchHistory } from "./shared/history.ts";
 import { hideHover } from "./shared/hover.ts";
+import { t } from "./shared/i18n.ts";
 import { isNum, oneOf, qs } from "./shared/util.ts";
 import { DEFAULTS, MODES } from "./illuminance/constants.ts";
 import { IlluminanceCardEditor } from "./illuminance/editor.ts";
@@ -93,7 +94,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
       ...rest,
       entity: config.entity,
       mode: oneOf(MODES, mode) ? mode : DEFAULTS.mode,
-      zonesList: mergeZones(config.zones),
+      zonesList: mergeZones(config.zones, this._hass),
     };
     this._series = [];
     this._fetched = false;
@@ -118,7 +119,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
         if (s.length === 0 || t > s[s.length - 1].t) s.push({ t, v: Number(st.state) });
       }
       this._render();
-    } else if (!prev) this._render();
+    } else if (!prev || langOf(prev) !== langOf(hass)) this._render();
   }
 
   connectedCallback() {
@@ -192,7 +193,9 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
     if (!this._root || !this._hass) return;
     const card = this._root,
       cfg = this._config;
-    // resolve zone colours against the live theme: css (token var) for fills, hex for blending
+    // default labels in the user's language, then the zone colours against the live theme:
+    // css (token var) for fills, hex for blending
+    cfg.zonesList = mergeZones(cfg.zones, this._hass);
     cfg.zonesList.forEach((z) => {
       z.css = cssColor(z.color, "#888888");
       z.hex = resolveHex(z.color, this);
@@ -202,7 +205,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
     const body = qs(card, ".body");
     if (!st) {
       body.innerHTML = `<div class="empty"></div>`;
-      qs(body, ".empty").textContent = `${cfg.entity} not found`;
+      qs(body, ".empty").textContent = t(this._hass, "common.not_found", { entity: cfg.entity });
       return;
     }
     const v = this._value();
@@ -213,7 +216,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
       let best: LxPoint | null = null;
       for (const p of this._series) if (p.t >= t0 && (!best || p.v > best.v)) best = p;
       sec.textContent = best
-        ? `Max ${fmtLx(this._hass, best.v)} lx · ${fmtTime(this._hass, best.t)}`
+        ? `${t(this._hass, "illuminance.max")} ${fmtLx(this._hass, best.v)} lx · ${fmtTime(this._hass, best.t)}`
         : `${cfg.hours_to_show} h`;
     }
     if (cfg.mode === "arc") renderArc(this, body, v);

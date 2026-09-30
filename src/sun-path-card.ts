@@ -22,6 +22,7 @@
  *     dusk: Civil dusk
  */
 import { registerCard } from "./shared/card.ts";
+import { langOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { qs } from "./shared/util.ts";
 import type {
@@ -30,9 +31,10 @@ import type {
   SunPathConfig,
   SunPathHost,
 } from "./sun-path/config.ts";
-import { DEFAULTS, DEFAULT_LABELS, type SunLabels } from "./sun-path/constants.ts";
+import { DEFAULTS, defaultLabel, type SunEvent } from "./sun-path/constants.ts";
 import { SunPathCardEditor } from "./sun-path/editor.ts";
 import { hideHover } from "./shared/hover.ts";
+import { t } from "./shared/i18n.ts";
 import { drawCurve, drawEvents, fmtEvent, showHover, timeAt } from "./sun-path/plot.ts";
 import { solarDay } from "./sun-path/solar.ts";
 import { STYLE } from "./sun-path/styles.ts";
@@ -45,7 +47,6 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
   static cardType = CARD_TYPE;
 
   _config!: SunPathConfig;
-  _labels!: SunLabels;
   _hass?: HomeAssistant;
   _root?: HTMLElement;
   _uid?: string;
@@ -75,8 +76,8 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
   static getConfigElement() {
     return document.createElement(`${CARD_TYPE}-editor`);
   }
-  static getStubConfig() {
-    return { title: "Sun path" };
+  static getStubConfig(hass?: HomeAssistant) {
+    return { title: t(hass, "sun.stub_title") };
   }
 
   constructor() {
@@ -86,16 +87,17 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
 
   setConfig(config: SunPathCardConfig | null | undefined) {
     this._config = { ...DEFAULTS, ...(config || {}) };
-    this._labels = { ...DEFAULT_LABELS, ...(config?.labels || {}) };
     this._day = null;
     if (this._root) this._buildDom();
   }
 
   set hass(hass: HomeAssistant) {
+    const prev = this._hass;
     this._hass = hass;
     if (!this._root) this._buildDom();
     const minute = Math.floor(Date.now() / 60000);
-    if (minute !== this._lastMinute) {
+    // once a minute, and at once when the language changed (labels, times)
+    if (minute !== this._lastMinute || langOf(prev) !== langOf(hass)) {
       this._lastMinute = minute;
       this._render();
     }
@@ -148,9 +150,6 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
       plot.addEventListener("pointerdown", this._onPointer);
       plot.addEventListener("pointerleave", this._onLeave);
     }
-    const [rise, set] = card.querySelectorAll(".row .ev");
-    qs(rise, ".lbl").textContent = this._labels.sunrise;
-    qs(set, ".lbl").textContent = this._labels.sunset;
     if (!this._config.show_dawn_dusk) qs(card, ".events").style.display = "none";
     this._ro?.observe(qs(card, ".plot"));
     this._render();
@@ -173,16 +172,22 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
     return day;
   }
 
+  _label(key: SunEvent) {
+    return this._config.labels?.[key] || defaultLabel(this._hass, key);
+  }
+
   _render() {
     if (!this._root || !this._hass) return;
+    // Top row labels (here, not in _buildDom: they follow the user's language)
+    const [rise, set] = this._root.querySelectorAll(".row .ev");
+    qs(rise, ".lbl").textContent = this._label("sunrise");
+    qs(set, ".lbl").textContent = this._label("sunset");
     const lat = this._hass.config?.latitude,
       lon = this._hass.config?.longitude;
     if (typeof lat !== "number" || typeof lon !== "number") return;
     const now = new Date();
     const day = this._dayOf(now, lat, lon);
 
-    // Top row
-    const [rise, set] = this._root.querySelectorAll(".row .ev");
     qs(rise, ".val").textContent = fmtEvent(this._hass, day.sunrise);
     qs(set, ".val").textContent = fmtEvent(this._hass, day.sunset);
 

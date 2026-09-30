@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { solarElevation, solarDay } from "../../src/sun-path/solar.ts";
 import { configToForm, formToConfig } from "../../src/sun-path/editor.ts";
 import { timeAt } from "../../src/sun-path/plot.ts";
-import { DEFAULT_LABELS } from "../../src/sun-path/constants.ts";
+import { defaultLabel } from "../../src/sun-path/constants.ts";
 import { SunPathCard } from "../../src/sun-path-card.ts";
 
 const LAT = 51.23,
@@ -73,7 +73,7 @@ describe("sun-path-card editor and element", () => {
       day_color: "light-blue",
       show_dawn_dusk: true,
       show_tooltip: true,
-      label_sunrise: DEFAULT_LABELS.sunrise,
+      label_sunrise: defaultLabel(undefined, "sunrise"),
       title: "",
     };
     expect(formToConfig(d2, cfg)).toEqual({ type: "custom:sun-path-card" });

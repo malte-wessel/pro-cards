@@ -102,5 +102,7 @@ describe("model", () => {
     expect(missing.model).toMatchObject({ avail: false, missing: true });
     expect(missing.look).toMatchObject({ color: "grey", label: "sensor.x not found" });
     expect(missing.fmt.text).toBe("–");
+    const german = modelOf(ctx({}, { locale: { language: "de" } }), ent({}));
+    expect(german.look.label).toBe("sensor.x nicht gefunden");
   });
 });

@@ -1,6 +1,6 @@
 // Base of the visual editors: an ha-form whose data is a flat projection of the card config.
 // Subclasses provide:
-//   static labels        – { formKey: label } for computeLabel (optional with _label)
+//   static labels        – { formKey: stringKey } for computeLabel (optional with _label)
 //   _toForm(config)      – card config → flat ha-form data
 //   _fromForm(data, prev)– flat ha-form data → card config (keeps unknown keys such as grid_options)
 //   _schema(hass, data)  – the ha-form schema
@@ -13,6 +13,7 @@ import type {
   HaFormSchema,
   HomeAssistant,
 } from "./ha.ts";
+import { t, type StringKey } from "./i18n.ts";
 
 // set config[key] = val, or delete the key when the value is empty / the default
 export const setOrDrop = (
@@ -26,7 +27,7 @@ export const setOrDrop = (
 };
 
 export abstract class FormEditorBase extends HTMLElement {
-  static labels?: Record<string, string>;
+  static labels?: Record<string, StringKey>;
   _config?: CardConfigBase;
   _hass?: HomeAssistant;
   _form?: HaFormElement;
@@ -47,7 +48,8 @@ export abstract class FormEditorBase extends HTMLElement {
   }
 
   _label(sch: HaFormSchema): string {
-    return (this.constructor as typeof FormEditorBase).labels?.[sch.name] ?? sch.name;
+    const key = (this.constructor as typeof FormEditorBase).labels?.[sch.name];
+    return key ? t(this._hass, key) : sch.name;
   }
 
   _helper(_sch: HaFormSchema): string | undefined {

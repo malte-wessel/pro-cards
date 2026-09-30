@@ -1,4 +1,4 @@
-import { test, expect, mount, card } from "./util.ts";
+import { test, expect, mount, card, setLanguage } from "./util.ts";
 
 test("shows today's events for the frozen summer day", async ({ page }) => {
   await mount(page, {
@@ -67,6 +67,24 @@ test("hover shows the time and elevation under the pointer", async ({ page }) =>
   await page.mouse.move(box.x - 50, box.y - 50);
   await expect(c.locator(".tip")).not.toHaveClass(/on/);
   await expect(c.locator("svg .hover")).not.toHaveClass(/on/);
+});
+
+test("default labels follow the Home Assistant language, overrides stay", async ({ page }) => {
+  await mount(page, { type: "custom:sun-path-card", labels: { dusk: "Civil dusk" } });
+  const c = card(page);
+  await expect(c.locator(".row .lbl").first()).toHaveText("Sunrise");
+  await expect(c.locator(".events .lbl").nth(1)).toHaveText("Solar noon");
+  await setLanguage(page, "de-DE");
+  await expect(c.locator(".row .lbl").first()).toHaveText("Sonnenaufgang");
+  await expect(c.locator(".row .lbl").nth(1)).toHaveText("Sonnenuntergang");
+  await expect(c.locator(".events .lbl").nth(0)).toHaveText("Morgendämmerung");
+  await expect(c.locator(".events .lbl").nth(1)).toHaveText("Sonnenhöchststand");
+  await expect(c.locator(".events .lbl").nth(2)).toHaveText("Civil dusk");
+  const box = (await c.locator(".plot").boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(c.locator(".tip .row span")).toHaveText("Höhe");
+  await setLanguage(page, "fr");
+  await expect(c.locator(".row .lbl").first()).toHaveText("Sunrise");
 });
 
 test("show_tooltip: false renders no hover layer", async ({ page }) => {

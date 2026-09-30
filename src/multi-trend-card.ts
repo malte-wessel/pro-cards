@@ -30,7 +30,7 @@ import type {
 } from "./multi-trend/config.ts";
 import { cssColor } from "./shared/color.ts";
 import { DEVICE_CLASS_ICON, REFRESH_MS } from "./shared/constants.ts";
-import { fmtNumber } from "./shared/format.ts";
+import { fmtNumber, langOf } from "./shared/format.ts";
 import { fetchHistory, type Point } from "./shared/history.ts";
 import { hideHover } from "./shared/hover.ts";
 import { decimalsOf, isNum, qs } from "./shared/util.ts";
@@ -111,8 +111,8 @@ export class MultiTrendCard extends HTMLElement implements TrendHost {
       this._fetchHistory();
       return;
     }
-    // Live append of new states between refreshes
-    let changed = false;
+    // Live append of new states between refreshes; a new language re-renders the axis times
+    let changed = langOf(prev) !== langOf(hass);
     this._config.entities.forEach((e, i) => {
       const st = hass.states[e.entity];
       const pst = prev?.states[e.entity];

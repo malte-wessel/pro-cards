@@ -27,7 +27,25 @@ describe("illuminance-card zones and scale", () => {
     expect(z[3]).toMatchObject({ label: "Daylight", max: 40000, color: "orange" });
     expect(z[4]).toMatchObject({ label: "Sun", max: Infinity, color: "#ff0000" });
     expect(z[0].max).toBe(1);
-    expect(mergeZones()).toEqual(DEFAULT_ZONES);
+    expect(mergeZones().map(({ label: _label, ...z }) => z)).toEqual(DEFAULT_ZONES);
+    expect(mergeZones().map((z) => z.label)).toEqual([
+      "Night",
+      "Twilight",
+      "Overcast",
+      "Day",
+      "Sun",
+    ]);
+  });
+  it("labels the default zones in the user's language and keeps overrides", () => {
+    const de = { states: {}, locale: { language: "de-DE" } } as unknown as HomeAssistant;
+    expect(mergeZones(undefined, de).map((z) => z.label)).toEqual([
+      "Nacht",
+      "Dämmerung",
+      "Bedeckt",
+      "Tag",
+      "Sonne",
+    ]);
+    expect(mergeZones({ day: { label: "Daylight" } }, de)[3].label).toBe("Daylight");
   });
   it("finds zones by value", () => {
     const z = mergeZones();
@@ -108,6 +126,17 @@ describe("illuminance-card editor and element", () => {
       z_sun_label: "",
     });
     expect(formToConfig(data, cfg)).toEqual(cfg);
+    // a label equal to the default of the user's language is not an override
+    const de = { states: {}, locale: { language: "de" } } as unknown as HomeAssistant;
+    expect(formToConfig({ ...data, z_day_label: "Tag" }, {}, de)).toMatchObject({
+      zones: { day: { max: 25000 } },
+    });
+    expect(formToConfig({ ...data, z_day_label: "Tag" }, {}, de).zones?.day).not.toHaveProperty(
+      "label",
+    );
+    expect(formToConfig({ ...data, z_day_label: "Tag" }, {})).toMatchObject({
+      zones: { day: { label: "Tag", max: 25000 } },
+    });
     expect(
       editorSchema({ mode: "arc" }).some((s) =>
         s.schema?.some?.((x) => x.name === "hours_to_show"),

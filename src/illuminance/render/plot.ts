@@ -4,6 +4,7 @@
 import { fmtNumber, fmtTime, textWidth } from "../../shared/format.ts";
 import type { HomeAssistant } from "../../shared/ha.ts";
 import { nearestPoint, placeTip } from "../../shared/hover.ts";
+import { t } from "../../shared/i18n.ts";
 import { clockTicks, timeStep } from "../../shared/ticks.ts";
 import { qs } from "../../shared/util.ts";
 import type { IlluminanceHost, ThemedZone } from "../config.ts";
@@ -91,7 +92,7 @@ export const xTicks = (
   t0: number,
   now: number,
 ) => {
-  const nowLabel = "now",
+  const nowLabel = t(card._hass, "common.now"),
     nowW = textWidth(nowLabel);
   const x0 = xOf(t0);
   let lastRight = -Infinity;

@@ -8,7 +8,7 @@ import type {
 } from "../../../src/shared/ha.ts";
 
 class TestEditor extends FormEditorBase {
-  static labels = { title: "Title" };
+  static labels = { title: "editor.sun.title" as const };
   _toForm(config: CardConfigBase): HaFormData {
     return { title: config.title ?? "" };
   }

@@ -29,7 +29,7 @@ title: Sun today
 
 ## Labels
 
-`labels` overrides any of the five texts by key: `sunrise`, `sunset`, `dawn`, `noon` and `dusk`. Use it for another language or shorter words.
+The five texts default to the [language of your Home Assistant profile](../guide/languages). `labels` overrides any of them by key: `sunrise`, `sunset`, `dawn`, `noon` and `dusk`. Use it for shorter words or a language the cards do not ship.
 
 ::: live
 
@@ -73,14 +73,14 @@ show_dawn_dusk: false
 
 ## Reference
 
-| Option           | Default      | Description                                                                                                                               |
-| ---------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `title`          |              | Header. Omit for no header.                                                                                                               |
-| `show_dawn_dusk` | `true`       | Bottom row with dawn, solar noon and dusk.                                                                                                |
-| `show_tooltip`   | `true`       | Time and elevation tooltip when hovering or tapping the curve. `false` disables it.                                                       |
-| `day_color`      | `light-blue` | Curve and day wash.                                                                                                                       |
-| `night_color`    | `indigo`     | Night wash below the horizon.                                                                                                             |
-| `sun_color`      | `amber`      | Current position marker.                                                                                                                  |
-| `labels`         | see below    | Overrides for `sunrise` (Sunrise), `sunset` (Sunset), `dawn` (Dawn), `noon` (Solar noon), `dusk` (Dusk), for example in another language. |
+| Option           | Default      | Description                                                                                                                                        |
+| ---------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`          |              | Header. Omit for no header.                                                                                                                        |
+| `show_dawn_dusk` | `true`       | Bottom row with dawn, solar noon and dusk.                                                                                                         |
+| `show_tooltip`   | `true`       | Time and elevation tooltip when hovering or tapping the curve. `false` disables it.                                                                |
+| `day_color`      | `light-blue` | Curve and day wash.                                                                                                                                |
+| `night_color`    | `indigo`     | Night wash below the horizon.                                                                                                                      |
+| `sun_color`      | `amber`      | Current position marker.                                                                                                                           |
+| `labels`         | see below    | Overrides for `sunrise` (Sunrise), `sunset` (Sunset), `dawn` (Dawn), `noon` (Solar noon), `dusk` (Dusk); the defaults follow the profile language. |
 
 The plot is a 24 hour window centred on solar noon; the vertical ticks mark sunrise, solar noon and sunset. Dawn and dusk are civil (sun 6° below the horizon), sunrise and sunset use the standard −0.833° refraction. The default size is 12 columns with `rows: auto`. Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`, which are passed through to Home Assistant.

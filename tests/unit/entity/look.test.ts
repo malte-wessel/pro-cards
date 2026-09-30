@@ -5,7 +5,7 @@ import {
   type RawEntity,
   type Rule,
 } from "../../../src/entity/config.ts";
-import type { HassEntity } from "../../../src/shared/ha.ts";
+import type { HassEntity, HomeAssistant } from "../../../src/shared/ha.ts";
 import type { ValueModel } from "../../../src/entity/look.ts";
 import {
   asText,
@@ -277,5 +277,15 @@ describe("look resolution", () => {
       label: "Offline",
       tint: false,
     });
+    const de = { states: {}, locale: { language: "de-AT" } } as unknown as HomeAssistant;
+    expect(
+      resolveLook(
+        ent({}),
+        { raw: "unavailable", num: null, avail: false },
+        st("unavailable"),
+        tpl,
+        de,
+      ).label,
+    ).toBe("nicht verfügbar");
   });
 });

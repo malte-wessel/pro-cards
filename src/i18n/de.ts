@@ -1,0 +1,77 @@
+// German. Keys mirror en.ts; leave one out and the English text shows.
+import type { Translation } from "./en.ts";
+
+const de: Translation = {
+  "common.now": "jetzt",
+  "common.no_data": "keine Daten",
+  "common.loading": "lädt …",
+  "common.unavailable": "nicht verfügbar",
+  "common.not_found": "{entity} nicht gefunden",
+
+  "entity.peak": "Maximum",
+  "group.stub_title": "Gruppe",
+  "sections.stub_title": "Bereich",
+
+  "sun.label.sunrise": "Sonnenaufgang",
+  "sun.label.sunset": "Sonnenuntergang",
+  "sun.label.dawn": "Morgendämmerung",
+  "sun.label.noon": "Sonnenhöchststand",
+  "sun.label.dusk": "Abenddämmerung",
+  "sun.elevation": "Höhe",
+  "sun.stub_title": "Sonnenverlauf",
+
+  "illuminance.zone.night": "Nacht",
+  "illuminance.zone.twilight": "Dämmerung",
+  "illuminance.zone.overcast": "Bedeckt",
+  "illuminance.zone.day": "Tag",
+  "illuminance.zone.sun": "Sonne",
+  "illuminance.max": "Max.",
+  "illuminance.lux": "LUX",
+
+  "editor.default": "Standard: {value}",
+
+  "editor.sun.title": "Titel",
+  "editor.sun.show_dawn_dusk": "Morgendämmerung, Sonnenhöchststand und Abenddämmerung anzeigen",
+  "editor.sun.show_tooltip": "Tooltip beim Überfahren anzeigen",
+  "editor.sun.day_color": "Tagfarbe",
+  "editor.sun.night_color": "Nachtfarbe",
+  "editor.sun.sun_color": "Sonnenfarbe",
+  "editor.sun.label_sunrise": "Beschriftung Sonnenaufgang",
+  "editor.sun.label_sunset": "Beschriftung Sonnenuntergang",
+  "editor.sun.label_dawn": "Beschriftung Morgendämmerung",
+  "editor.sun.label_noon": "Beschriftung Sonnenhöchststand",
+  "editor.sun.label_dusk": "Beschriftung Abenddämmerung",
+  "editor.sun.section_labels": "Beschriftungen",
+
+  "editor.illuminance.entity": "Entität",
+  "editor.illuminance.mode": "Modus",
+  "editor.illuminance.name": "Name",
+  "editor.illuminance.hours_to_show": "Angezeigte Stunden",
+  "editor.illuminance.bucket_minutes": "Intervall (Minuten)",
+  "editor.illuminance.min_lx": "Skala von (lx)",
+  "editor.illuminance.max_lx": "Skala bis (lx)",
+  "editor.illuminance.mode.arc": "Bogen (Anzeige mit Zonen)",
+  "editor.illuminance.mode.trend": "Verlauf mit Zonen (24 h)",
+  "editor.illuminance.mode.band": "Band (24 h Farbblöcke)",
+  "editor.illuminance.section_zones": "Zonen",
+  "editor.illuminance.zone_label": "{zone}: Beschriftung",
+  "editor.illuminance.zone_max": "{zone}: bis",
+  "editor.illuminance.zone_color": "{zone}: Farbe",
+
+  "editor.multi_trend.title": "Titel",
+  "editor.multi_trend.icon": "Symbol",
+  "editor.multi_trend.color": "Symbolfarbe",
+  "editor.multi_trend.hours_to_show": "Angezeigte Stunden",
+  "editor.multi_trend.layout": "Layout",
+  "editor.multi_trend.show_legend": "Legende anzeigen",
+  "editor.multi_trend.x_axis": "X-Achse (Zeit)",
+  "editor.multi_trend.y_axis": "Y-Achse (Werte)",
+  "editor.multi_trend.entities": "Entitäten",
+  "editor.multi_trend.name": "Name",
+  "editor.multi_trend.ecolor": "Farbe",
+  "editor.multi_trend.layout.auto": "Automatisch (gleiche Einheit: überlagert, sonst Spuren)",
+  "editor.multi_trend.layout.overlay": "Überlagert (eine Skala)",
+  "editor.multi_trend.layout.lanes": "Spuren (eine Skala je Entität)",
+};
+
+export default de;

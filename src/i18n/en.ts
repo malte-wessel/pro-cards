@@ -1,0 +1,80 @@
+// English strings: the source of every translation and the fallback for a key a language lacks.
+// `{name}` is a placeholder filled by `t(hass, key, { name })`.
+const en = {
+  "common.now": "now",
+  "common.no_data": "no data",
+  "common.loading": "loading …",
+  "common.unavailable": "unavailable",
+  "common.not_found": "{entity} not found",
+
+  "entity.peak": "Peak",
+  "group.stub_title": "Group",
+  "sections.stub_title": "Section",
+
+  "sun.label.sunrise": "Sunrise",
+  "sun.label.sunset": "Sunset",
+  "sun.label.dawn": "Dawn",
+  "sun.label.noon": "Solar noon",
+  "sun.label.dusk": "Dusk",
+  "sun.elevation": "elevation",
+  "sun.stub_title": "Sun path",
+
+  "illuminance.zone.night": "Night",
+  "illuminance.zone.twilight": "Twilight",
+  "illuminance.zone.overcast": "Overcast",
+  "illuminance.zone.day": "Day",
+  "illuminance.zone.sun": "Sun",
+  "illuminance.max": "Max",
+  "illuminance.lux": "LUX",
+
+  "editor.default": "Default: {value}",
+
+  "editor.sun.title": "Title",
+  "editor.sun.show_dawn_dusk": "Show dawn, solar noon and dusk",
+  "editor.sun.show_tooltip": "Show tooltip on hover",
+  "editor.sun.day_color": "Day colour",
+  "editor.sun.night_color": "Night colour",
+  "editor.sun.sun_color": "Sun colour",
+  "editor.sun.label_sunrise": "Sunrise label",
+  "editor.sun.label_sunset": "Sunset label",
+  "editor.sun.label_dawn": "Dawn label",
+  "editor.sun.label_noon": "Solar noon label",
+  "editor.sun.label_dusk": "Dusk label",
+  "editor.sun.section_labels": "Labels",
+
+  "editor.illuminance.entity": "Entity",
+  "editor.illuminance.mode": "Mode",
+  "editor.illuminance.name": "Name",
+  "editor.illuminance.hours_to_show": "Hours to show",
+  "editor.illuminance.bucket_minutes": "Bucket size (minutes)",
+  "editor.illuminance.min_lx": "Scale from (lx)",
+  "editor.illuminance.max_lx": "Scale to (lx)",
+  "editor.illuminance.mode.arc": "Arc (gauge with zones)",
+  "editor.illuminance.mode.trend": "Trend with zones (24 h)",
+  "editor.illuminance.mode.band": "Band (24 h colour blocks)",
+  "editor.illuminance.section_zones": "Zones",
+  "editor.illuminance.zone_label": "{zone}: label",
+  "editor.illuminance.zone_max": "{zone}: up to",
+  "editor.illuminance.zone_color": "{zone}: colour",
+
+  "editor.multi_trend.title": "Title",
+  "editor.multi_trend.icon": "Icon",
+  "editor.multi_trend.color": "Icon colour",
+  "editor.multi_trend.hours_to_show": "Hours to show",
+  "editor.multi_trend.layout": "Layout",
+  "editor.multi_trend.show_legend": "Show legend",
+  "editor.multi_trend.x_axis": "X axis (time)",
+  "editor.multi_trend.y_axis": "Y axis (values)",
+  "editor.multi_trend.entities": "Entities",
+  "editor.multi_trend.name": "Name",
+  "editor.multi_trend.ecolor": "Colour",
+  "editor.multi_trend.layout.auto": "Auto (same unit: overlay, otherwise lanes)",
+  "editor.multi_trend.layout.overlay": "Overlay (one scale)",
+  "editor.multi_trend.layout.lanes": "Lanes (one scale per entity)",
+} as const;
+
+export type StringKey = keyof typeof en;
+// a language: any subset of the keys; a missing key falls back to English
+export type Translation = Partial<Record<StringKey, string>>;
+
+export default en;

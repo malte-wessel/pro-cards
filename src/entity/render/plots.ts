@@ -10,6 +10,7 @@ import {
   type MeanBucket,
 } from "../../shared/history.ts";
 import { nearestPoint, placeTip } from "../../shared/hover.ts";
+import { t as tr } from "../../shared/i18n.ts";
 import { qs } from "../../shared/util.ts";
 import type { EntityItem } from "../config.ts";
 import { PLOT_H, type HistoryVisual } from "../constants.ts";
@@ -70,7 +71,13 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement) => {
   plot._W = W;
   const empty = () => {
     svg.innerHTML = "";
-    addLabel(labels, "", ctx.fetched ? "no data" : "loading …", 0, H / 2 - 6);
+    addLabel(
+      labels,
+      "",
+      tr(ctx.hass, ctx.fetched ? "common.no_data" : "common.loading"),
+      0,
+      H / 2 - 6,
+    );
     plot._sampled = null;
     plot._buckets = null;
   };
@@ -183,7 +190,7 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement) => {
   svg.innerHTML = html;
   plot._hlOff = gap / 2;
   addLabel(labels, "", `−${ctx.cfg.hours} h`, 0, H + 3);
-  addLabel(labels, "right", "now", W, H + 3);
+  addLabel(labels, "right", tr(ctx.hass, "common.now"), W, H + 3);
   plot._buckets = buckets;
   plot._sampled = null;
   plot._numeric = numeric;
@@ -226,16 +233,22 @@ export const showHover = (ctx: RenderCtx, plot: PlotElement, t: number): boolean
     time = `${fmtTime(ctx, b.t1)}–${fmtTime(ctx, b.t2)}`;
     if (b.v !== null && b.v !== undefined) val = b.v;
     else if ("s" in b) stateText = b.s;
-    if (kind === "columns" && i === plot._peak) time += " · Peak";
+    if (kind === "columns" && i === plot._peak) time += ` · ${tr(ctx.hass, "entity.peak")}`;
   }
   const tplGet = tplGetter(ctx);
   let text: string, label: string | null;
   if (val !== null) {
-    const look = resolveLook(ent, { num: val, raw: String(val), avail: true }, st, tplGet);
+    const look = resolveLook(
+      ent,
+      { num: val, raw: String(val), avail: true },
+      st,
+      tplGet,
+      ctx.hass,
+    );
     label = look.label;
     text = fmtNumber(ctx, ent, val, st);
   } else {
-    const look = resolveLook(ent, { num: null, raw: stateText, avail: true }, st, tplGet);
+    const look = resolveLook(ent, { num: null, raw: stateText, avail: true }, st, tplGet, ctx.hass);
     label = look.label;
     text = stateText ?? "–";
   }

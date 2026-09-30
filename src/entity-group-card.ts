@@ -18,6 +18,7 @@
  */
 import { registerCard } from "./shared/card.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
+import { t } from "./shared/i18n.ts";
 import { EntityCardBase } from "./entity/base.ts";
 import { DEFAULTS } from "./entity/constants.ts";
 import {
@@ -62,8 +63,8 @@ export const normalizeEntityGroupCardConfig = (input: unknown): EntityCardConfig
 
 export class EntityGroupCard extends EntityCardBase {
   static cardType = CARD_TYPE;
-  static getStubConfig(_hass: HomeAssistant | undefined, entities?: string[]) {
-    return { title: "Gruppe", entities: (entities || []).slice(0, 3) };
+  static getStubConfig(hass: HomeAssistant | undefined, entities?: string[]) {
+    return { title: t(hass, "group.stub_title"), entities: (entities || []).slice(0, 3) };
   }
   _normalize(raw: unknown) {
     return normalizeEntityGroupCardConfig(raw);

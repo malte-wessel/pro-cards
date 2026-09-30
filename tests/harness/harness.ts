@@ -52,6 +52,8 @@ export interface PcApi {
   events: HarnessEvent[];
   actions: unknown[];
   snapshot(): HomeAssistant;
+  // the frontend language the mounted cards see (hass.locale.language), default en-GB
+  setLanguage(language: string): void;
   root: HTMLElement;
   card(i?: number): CardElement;
   reset(): void;
@@ -72,11 +74,14 @@ const calls: ServiceCall[] = [];
 const events: HarnessEvent[] = [];
 const actions: unknown[] = [];
 let unsub: (() => void) | null = null;
+let language = "en-GB";
+let mounted: CardElement[] = [];
 
 // wrap callService so tests can assert on it while the shim still applies the effect
 const baseSnapshot = hassMod.snapshot;
 const snapshot = (): HomeAssistant => {
   const h: HomeAssistant = baseSnapshot();
+  h.locale = { language };
   const orig = h.callService;
   h.callService = (d: string, s: string, data?: Record<string, unknown>, target?: unknown) => {
     calls.push({ domain: d, service: s, data: data || {}, target: target || null });
@@ -133,11 +138,18 @@ const mount = (cfgOrList: CardConfigBase | CardConfigBase[], opts: MountOptions 
     root.appendChild(cell);
     els.push(el);
   }
+  mounted = els;
   unsub = world.subscribe(() => {
     const h = snapshot();
     for (const el of els) el.hass = h;
   });
   return els.length;
+};
+
+const setLanguage = (lang: string) => {
+  language = lang;
+  const h = snapshot();
+  for (const el of mounted) el.hass = h;
 };
 
 // wait until every mounted card has rendered its ha-card and, for history visuals, finished fetching
@@ -160,12 +172,14 @@ window.pc = {
   events,
   actions,
   snapshot,
+  setLanguage,
   root,
   card: (i = 0) => root.querySelectorAll(".cell > *")[i] as CardElement,
   reset: () => {
     calls.length = 0;
     events.length = 0;
     actions.length = 0;
+    mounted = [];
   },
 };
 window.__pcReady = true;

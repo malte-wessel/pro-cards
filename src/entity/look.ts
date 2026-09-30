@@ -1,7 +1,8 @@
 // Value reading and look resolution (pure).
 import { stateColorCss } from "../shared/color.ts";
 import { DEVICE_CLASS_ICON } from "../shared/constants.ts";
-import type { HassEntity } from "../shared/ha.ts";
+import type { HassEntity, HomeAssistant } from "../shared/ha.ts";
+import { t } from "../shared/i18n.ts";
 import { clamp01, isNum, isTemplate } from "../shared/util.ts";
 import type { EntityItem, Rule } from "./config.ts";
 import { OFF_STATES } from "./constants.ts";
@@ -81,6 +82,7 @@ export const resolveLook = (
   model: ValueModel,
   st: HassEntity | undefined,
   tplGet: TplGet,
+  hass?: HomeAssistant,
 ): Look => {
   const rule = ent.rules.find((r) => matchRule(r, model)) ?? null;
   const explicitColor = ent.color
@@ -100,7 +102,7 @@ export const resolveLook = (
       color: explicitColor || "grey",
       icon: explicitIcon || rule?.icon || null,
       fallbackIcon: fallbackIcon || "mdi:help-circle-outline",
-      label: rule?.label || "unavailable",
+      label: rule?.label || t(hass, "common.unavailable"),
       tint: false,
       rule,
     };

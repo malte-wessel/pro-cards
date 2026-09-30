@@ -76,7 +76,7 @@ bucket_minutes: 15
 
 ## Zones and scale
 
-`zones` takes the five fixed keys `night`, `twilight`, `overcast`, `day` and `sun`. Every zone accepts a `label` (for another language or your own wording), an upper bound `max` in lux and a `color`. The last zone (`sun`) has no upper bound, so its `max` is ignored; other keys than the five are ignored too. `min_lx` and `max_lx` set the ends of the scale; the trend labels its y axis with the zone thresholds, and when the window's peak is higher than `max_lx` the top grows to the next round value (1, 2 or 5 times a power of ten) so the peak is never cut off.
+`zones` takes the five fixed keys `night`, `twilight`, `overcast`, `day` and `sun`. Every zone accepts a `label` (your own wording; the default names follow the [language of your Home Assistant profile](../guide/languages)), an upper bound `max` in lux and a `color`. The last zone (`sun`) has no upper bound, so its `max` is ignored; other keys than the five are ignored too. `min_lx` and `max_lx` set the ends of the scale; the trend labels its y axis with the zone thresholds, and when the window's peak is higher than `max_lx` the top grows to the next round value (1, 2 or 5 times a power of ten) so the peak is never cut off.
 
 ::: live
 
@@ -108,4 +108,4 @@ zones:
 | `min_lx` / `max_lx` | `0.1` / `100000` | Scale bounds; the trend's top grows above `max_lx` to fit the window's peak. |
 | `zones`             | see below        | Per key `{ label, max, color }`.                                             |
 
-Default zones: `night` < 1 lx (`indigo`), `twilight` < 100 lx (`blue`), `overcast` < 10 000 lx (`blue-grey`), `day` < 30 000 lx (`amber`), `sun` above (`orange`), with the labels Night, Twilight, Overcast, Day and Sun. The default size is 12 columns with `rows: auto`. Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`, which are passed through to Home Assistant.
+Default zones: `night` < 1 lx (`indigo`), `twilight` < 100 lx (`blue`), `overcast` < 10 000 lx (`blue-grey`), `day` < 30 000 lx (`amber`), `sun` above (`orange`), with the labels Night, Twilight, Overcast, Day and Sun (German when the profile language is German). The default size is 12 columns with `rows: auto`. Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`, which are passed through to Home Assistant.

@@ -5,6 +5,7 @@ import type { EntityCardConfig, EntityItem } from "./config.ts";
 import { fmtNumber as fmtNum, fmtTime as fmtT, langOf as lang } from "../shared/format.ts";
 import type { HassEntity, HomeAssistant } from "../shared/ha.ts";
 import type { Point } from "../shared/history.ts";
+import { t } from "../shared/i18n.ts";
 import { decimalsOf, isTemplate } from "../shared/util.ts";
 
 // the card's bound pointer handlers for the history plots
@@ -128,8 +129,8 @@ export const modelOf = (ctx: FormatCtx, ent: EntityItem): EntityModel => {
     model.avail = false;
     model.missing = true;
   }
-  const look = resolveLook(ent, model, st, tplGet);
-  if (model.missing) look.label = `${ent.entity} not found`;
+  const look = resolveLook(ent, model, st, tplGet, ctx.hass);
+  if (model.missing) look.label = t(ctx.hass, "common.not_found", { entity: ent.entity ?? "" });
   return {
     st,
     model,

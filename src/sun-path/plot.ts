@@ -4,6 +4,7 @@ import { fmtNumber, fmtTime, textWidth } from "../shared/format.ts";
 import { smoothPath } from "../shared/history.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
 import { nearestPoint, placeTip } from "../shared/hover.ts";
+import { t as tr } from "../shared/i18n.ts";
 import { qs } from "../shared/util.ts";
 import type { PositionedDay, SunPathHost } from "./config.ts";
 import { CURVE_STEP_MIN, HORIZON_MAX, HORIZON_MIN, PLOT_H, type SunEvent } from "./constants.ts";
@@ -129,7 +130,7 @@ export const showHover = (card: SunPathHost, t: number): boolean => {
   const val = document.createElement("b");
   val.textContent = `${fmtNumber(card._hass, p.e, 0)}°`;
   const name = document.createElement("span");
-  name.textContent = "elevation";
+  name.textContent = tr(card._hass, "sun.elevation");
   row.append(val, name);
   tip.append(time, row);
   tip.classList.add("on");
@@ -163,7 +164,7 @@ export const drawEvents = (
   // slot boundaries halfway between neighbours; each label may only use its own slot
   const bounds = [0, ...xs.slice(1).map((x, i) => (xs[i] + x) / 2), W];
   items.forEach(([key, t], i) => {
-    const label = card._labels[key],
+    const label = card._label(key),
       time = fmt(card._hass, t);
     const x = xs[i],
       maxW = Math.max(24, Math.floor(bounds[i + 1] - bounds[i] - 8));

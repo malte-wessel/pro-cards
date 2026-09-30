@@ -1,6 +1,6 @@
 // Config types of the sun path card and what its plot module reads from the card element.
 import type { CardConfigBase, HomeAssistant } from "../shared/ha.ts";
-import type { SunLabels } from "./constants.ts";
+import type { SunEvent, SunLabels } from "./constants.ts";
 import type { SolarDay } from "./solar.ts";
 
 export interface SunPathCardConfig extends CardConfigBase {
@@ -28,7 +28,8 @@ export interface PositionedDay extends SolarDay {
 }
 export interface SunPathHost {
   _config: SunPathConfig;
-  _labels: SunLabels;
+  // the label of an event: the config override or the default in the user's language
+  _label(key: SunEvent): string;
   _hass?: HomeAssistant;
   _root?: HTMLElement;
   _uid?: string;

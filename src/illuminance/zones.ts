@@ -1,12 +1,17 @@
 // Illuminance zones and the log scale (pure).
 import { mixHex } from "../shared/color.ts";
+import type { HomeAssistant } from "../shared/ha.ts";
+import { t } from "../shared/i18n.ts";
 
 export type ZoneKey = "night" | "twilight" | "overcast" | "day" | "sun";
-export interface Zone {
+// a zone's fixed part: its default label comes from the user's language (see mergeZones)
+export interface ZoneDef {
   key: ZoneKey;
-  label: string;
   max: number;
   color: string;
+}
+export interface Zone extends ZoneDef {
+  label: string;
   // the colour resolved against the live theme (set by the card, used for blending)
   hex?: string;
 }
@@ -23,21 +28,26 @@ export interface ColorAnchor {
 }
 
 // Zone colours are HA theme tokens (any HA colour name or a hex value works in config)
-export const DEFAULT_ZONES: readonly Zone[] = [
-  { key: "night", label: "Night", max: 1, color: "indigo" },
-  { key: "twilight", label: "Twilight", max: 100, color: "blue" },
-  { key: "overcast", label: "Overcast", max: 10000, color: "blue-grey" },
-  { key: "day", label: "Day", max: 30000, color: "amber" },
-  { key: "sun", label: "Sun", max: Infinity, color: "orange" },
+export const DEFAULT_ZONES: readonly ZoneDef[] = [
+  { key: "night", max: 1, color: "indigo" },
+  { key: "twilight", max: 100, color: "blue" },
+  { key: "overcast", max: 10000, color: "blue-grey" },
+  { key: "day", max: 30000, color: "amber" },
+  { key: "sun", max: Infinity, color: "orange" },
 ];
 
-export const mergeZones = (overrides?: ZoneOverrides | null): Zone[] =>
+// the default label of a zone in the user's language
+export const defaultZoneLabel = (hass: HomeAssistant | null | undefined, key: ZoneKey) =>
+  t(hass, `illuminance.zone.${key}`);
+
+// the zones with the config overrides applied; default labels in the user's language
+export const mergeZones = (overrides?: ZoneOverrides | null, hass?: HomeAssistant | null): Zone[] =>
   DEFAULT_ZONES.map((z) => {
     const o = overrides?.[z.key] || {};
     const max = o.max === undefined || o.max === null || o.max === "" ? z.max : Number(o.max);
     return {
       ...z,
-      label: o.label || z.label,
+      label: o.label || defaultZoneLabel(hass, z.key),
       max: Number.isFinite(max) ? max : z.max,
       color: o.color || z.color,
     };

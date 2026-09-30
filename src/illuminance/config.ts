@@ -26,6 +26,8 @@ export interface IlluminanceConfig extends CardConfigBase {
   bucket_minutes: number;
   min_lx: number;
   max_lx: number;
+  zones?: ZoneOverrides | null;
+  // `zones` merged with the defaults; rebuilt on render so the default labels follow the language
   zonesList: ThemedZone[];
 }
 export interface LxPoint {
