@@ -15,16 +15,8 @@ import { fmtNumber } from "../../shared/format.ts";
 import { t, type StringKey } from "../../shared/i18n.ts";
 import type { WindConfig } from "../config.ts";
 import { COMPASS, DEFAULTS } from "../constants.ts";
-import {
-  arrowRotation,
-  compassIndex,
-  fieldRotation,
-  leadDuration,
-  parseBearing,
-  pxps,
-  toKmh,
-} from "../flow.ts";
-import { setRate } from "./flow.ts";
+import { compassIndex, leadDuration, parseBearing, pxps, toKmh } from "../flow.ts";
+import { setAngles, setRate } from "./flow.ts";
 import { animatedLead, arrowLead } from "./lead.ts";
 
 export type RowKind = "tile" | "flowtile" | "hero";
@@ -104,8 +96,7 @@ export const updateCurrent = (
   const ent = cfg.entities[cfg.speedIdx];
   const now = windNow(ctx, cfg, cm);
   const px = pxps(now.kmh);
-  row.style.setProperty("--rot", `${now.bearing === null ? 0 : fieldRotation(now.bearing)}deg`);
-  row.style.setProperty("--arrow", `${now.bearing === null ? 0 : arrowRotation(now.bearing)}deg`);
+  setAngles(row, now.bearing);
   // the lead's cycle as built; later speeds scale its playback rate
   if (row.dataset.px === undefined) {
     row.style.setProperty("--ldur", `${leadDuration(px).toFixed(3)}s`);

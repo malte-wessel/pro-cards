@@ -132,7 +132,8 @@ def(
   225,
   { unit_of_measurement: "°", icon: "mdi:compass-outline", friendly_name: "Wind direction" },
   "flat",
-  { noise: 4, min: 0, max: 360, decimals: 0 },
+  // swings by up to 60° a step so the wind card visibly turns
+  { noise: 120, min: 0, max: 360, decimals: 0 },
 );
 def(
   "sensor.pressure",
