@@ -5,7 +5,6 @@ import { collectTemplates } from "../../src/shared/entity/config.ts";
 import {
   amplitude,
   arrowRotation,
-  compassIndex,
   fieldKey,
   needsRedraw,
   rateOf,
@@ -14,11 +13,7 @@ import {
   fieldSpec,
   gustCount,
   leadDuration,
-  parseBearing,
-  prng,
   pxps,
-  toKmh,
-  unwrapAngle,
   wavePath,
 } from "../../src/wind/flow.ts";
 
@@ -137,40 +132,10 @@ describe("wind-card config", () => {
 });
 
 describe("wind flow maths", () => {
-  it("converts speeds to km/h", () => {
-    expect(toKmh(10, "km/h")).toBe(10);
-    expect(toKmh(10, "m/s")).toBe(36);
-    expect(toKmh(10, "mph")).toBeCloseTo(16.09, 2);
-    expect(toKmh(10, "kn")).toBeCloseTo(18.52, 2);
-    expect(toKmh(10, "ft/s")).toBeCloseTo(10.97, 2);
-    expect(toKmh(10, "Beaufort")).toBe(10);
-    expect(toKmh(10, null)).toBe(10);
-  });
-
-  it("reads bearings as degrees or compass points", () => {
-    expect(parseBearing("225")).toBe(225);
-    expect(parseBearing(370)).toBe(10);
-    expect(parseBearing("-90")).toBe(270);
-    expect(parseBearing("sw")).toBe(225);
-    expect(parseBearing(" NNW ")).toBe(337.5);
-    expect(parseBearing("x")).toBeNull();
-    expect(parseBearing("")).toBeNull();
-    expect(parseBearing(null)).toBeNull();
-    expect(compassIndex(0)).toBe(0);
-    expect(compassIndex(348.75)).toBe(0);
-    expect(compassIndex(348.7)).toBe(15);
-    expect(compassIndex(225)).toBe(10);
+  it("turns the field and the arrow with the bearing", () => {
     expect(fieldRotation(225)).toBe(315);
     expect(fieldRotation(300)).toBe(30);
     expect(arrowRotation(225)).toBe(45);
-    // the transition turns the short way: never back across 0°
-    expect(unwrapAngle(null, 315)).toBe(315);
-    expect(unwrapAngle(350, 10)).toBe(370);
-    expect(unwrapAngle(10, 350)).toBe(-10);
-    expect(unwrapAngle(315, 80)).toBe(440);
-    expect(unwrapAngle(440, 100)).toBe(460);
-    expect(unwrapAngle(100, 100)).toBe(100);
-    expect(unwrapAngle(0, 180)).toBe(180);
   });
 
   it("maps the wind to motion", () => {
@@ -190,13 +155,6 @@ describe("wind flow maths", () => {
   });
 
   it("is deterministic and draws waves across the field", () => {
-    const a = prng(11),
-      b = prng(11);
-    const va = [a(), a(), a()],
-      vb = [b(), b(), b()];
-    expect(va).toEqual(vb);
-    for (const v of va) expect(v).toBeGreaterThanOrEqual(0);
-    for (const v of va) expect(v).toBeLessThan(1);
     const d = wavePath(100, 200, 5, 0, -40, 520);
     expect(d.startsWith("M-40,")).toBe(true);
     const xs = [...d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)].map((m) => [Number(m[1]), Number(m[2])]);

@@ -10,16 +10,19 @@ import {
   type EntityModel,
   type RenderCtx,
 } from "../../shared/entity/model.ts";
-import { bigEl, fillSecondary, pillEl, textEl } from "../../shared/entity/render/lead.ts";
+import { fillSecondary, pillEl } from "../../shared/entity/render/lead.ts";
+import { COMPASS } from "../../shared/flow/constants.ts";
+import { buildRow, setBig, setRate, type RowKind } from "../../shared/flow/dom.ts";
+import { compassIndex, parseBearing, toKmh } from "../../shared/flow/maths.ts";
 import { fmtNumber } from "../../shared/format.ts";
 import { t, type StringKey } from "../../shared/i18n.ts";
 import type { WindConfig } from "../config.ts";
-import { COMPASS, DEFAULTS } from "../constants.ts";
-import { compassIndex, leadDuration, parseBearing, pxps, toKmh } from "../flow.ts";
-import { setAngles, setRate } from "./flow.ts";
+import { DEFAULTS } from "../constants.ts";
+import { leadDuration, pxps } from "../flow.ts";
+import { setAngles } from "./flow.ts";
 import { animatedLead, arrowLead } from "./lead.ts";
 
-export type RowKind = "tile" | "flowtile" | "hero";
+export type { RowKind };
 export interface CurrentModels {
   speed: EntityModel;
   dir: EntityModel | null;
@@ -49,40 +52,9 @@ export const windNow = (ctx: RenderCtx, cfg: WindConfig, cm: CurrentModels): Win
   return { kmh, gustKmh, bearing, dirText, chip };
 };
 
-const build = (row: HTMLElement, cfg: WindConfig, kind: RowKind) => {
-  const top = document.createElement("div");
-  top.className = "top";
+const leadOf = (cfg: WindConfig, kind: RowKind) => {
   const size = kind === "hero" ? DEFAULTS.heroLead : DEFAULTS.tileLead;
-  top.appendChild(cfg.lead === "arrow" ? arrowLead(size) : animatedLead(cfg.flow.style, size));
-  const main = document.createElement("div");
-  main.className = "main";
-  const line = document.createElement("div");
-  line.className = "line";
-  const texts = document.createElement("div");
-  texts.className = "texts";
-  texts.appendChild(textEl("primary", ""));
-  if (kind === "hero") texts.appendChild(bigEl({ text: "", num: "", unit: "" }));
-  texts.appendChild(textEl("secondary", ""));
-  // the flow tile: a second line for narrow tiles (speed · direction), swapped in by CSS
-  if (kind === "flowtile") texts.appendChild(textEl("secondary narrow", ""));
-  const end = document.createElement("div");
-  end.className = "end";
-  if (kind === "flowtile") end.appendChild(bigEl({ text: "", num: "", unit: "" }));
-  line.append(texts, end);
-  main.appendChild(line);
-  top.appendChild(main);
-  row.appendChild(top);
-};
-
-const setBig = (big: HTMLElement | null, m: EntityModel) => {
-  if (!big) return;
-  const b = big.querySelector("b");
-  if (b) b.textContent = m.fmt.num;
-  let u = big.querySelector("span");
-  if (m.fmt.unit) {
-    if (!u) u = big.appendChild(document.createElement("span"));
-    u.textContent = m.fmt.unit;
-  } else u?.remove();
+  return cfg.lead === "arrow" ? arrowLead(size) : animatedLead(cfg.flow.style, size);
 };
 
 export const updateCurrent = (
@@ -92,7 +64,7 @@ export const updateCurrent = (
   cm: CurrentModels,
   kind: RowKind,
 ) => {
-  if (!row.querySelector(".top")) build(row, cfg, kind);
+  if (!row.querySelector(".top")) buildRow(row, kind, leadOf(cfg, kind));
   const ent = cfg.entities[cfg.speedIdx];
   const now = windNow(ctx, cfg, cm);
   const px = pxps(now.kmh);

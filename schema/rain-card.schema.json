@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/rain-card.schema.json",
+  "title": "custom:rain-card",
+  "description": "The rain rate as a tile, a flow tile or a hero, with falling drops, ripples or a filling gauge that rules colour.",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "custom:rain-card"
+    },
+    "entity": {
+      "type": "string",
+      "pattern": "^sensor\\.[a-z0-9_]+$",
+      "description": "The rain rate sensor (mm/h, in/h …)"
+    },
+    "today": {
+      "type": "string",
+      "pattern": "^sensor\\.[a-z0-9_]+$",
+      "description": "Today's total (mm, in): fills the gauge and shows as \"… today\""
+    },
+    "wind": {
+      "type": "string",
+      "pattern": "^sensor\\.[a-z0-9_]+$",
+      "description": "Wind speed sensor: slants the drops"
+    },
+    "direction": {
+      "type": "string",
+      "pattern": "^sensor\\.[a-z0-9_]+$",
+      "description": "Wind direction sensor (degrees or a compass point): which way the drops slant"
+    },
+    "name": {
+      "type": "string",
+      "description": "The name (default: the sensor's friendly name). Template allowed."
+    },
+    "secondary": {
+      "type": "string",
+      "description": "Replaces the line under the name (default: rate · total today, or label · total today). Template allowed."
+    },
+    "color": {
+      "$ref": "defs.schema.json#/$defs/color",
+      "description": "Fixed colour; overrides rules"
+    },
+    "decimals": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "$ref": "entity.schema.json#/$defs/rule"
+      },
+      "description": "On the rate (below / above): colour of the rain and the lead, label and tint; first match wins"
+    },
+    "layout": {
+      "type": "string",
+      "enum": ["tile", "hero"],
+      "default": "tile"
+    },
+    "visual": {
+      "type": "string",
+      "enum": ["icon", "flow"],
+      "default": "icon",
+      "description": "tile only: `flow` makes the whole tile the animated field"
+    },
+    "lead": {
+      "type": "string",
+      "enum": ["animated", "icon"],
+      "default": "animated",
+      "description": "The round lead: a small animation of the style, or the rain icon (the flow tile always shows the icon)"
+    },
+    "flow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "style": {
+          "type": "string",
+          "enum": ["drops", "ripples", "fill"],
+          "default": "drops"
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 40,
+          "maximum": 400,
+          "default": 120,
+          "description": "Height of the hero's flow band (px)"
+        }
+      }
+    },
+    "title": {
+      "type": "string",
+      "description": "Header text. Template allowed."
+    },
+    "icon": {
+      "$ref": "defs.schema.json#/$defs/icon",
+      "description": "Header icon. Template allowed."
+    },
+    "header_entities": {
+      "$ref": "entity.schema.json#/$defs/headerEntities"
+    }
+  },
+  "required": ["type", "entity"],
+  "allOf": [
+    {
+      "$ref": "entity.schema.json#/$defs/historyOptions"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/actionDefaults"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/haExtras"
+    }
+  ],
+  "unevaluatedProperties": false
+}

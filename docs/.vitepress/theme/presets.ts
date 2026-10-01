@@ -135,6 +135,21 @@ sections:
   - { type: trend, mode: hourly, hours: 12 }
   - { type: forecast, mode: daily, days: 7 }
 `,
+  "Rain card": `type: custom:rain-card
+entity: sensor.rain_rate_roof
+today: sensor.rain_today
+wind: sensor.wind_speed
+direction: sensor.wind_direction
+title: Rain
+layout: hero
+flow: { style: drops }
+rules:
+  - { below: 0.1, color: blue-grey, label: Dry }
+  - { below: 2.5, color: light-blue, label: Light rain }
+  - { below: 7.6, color: blue, label: Moderate rain }
+  - { below: 50, color: indigo, label: Heavy rain }
+  - { above: 50, color: deep-purple, label: Violent rain, tint_card: true }
+`,
   "Wind card": `type: custom:wind-card
 entity: sensor.wind_speed
 direction: sensor.wind_direction

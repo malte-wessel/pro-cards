@@ -180,6 +180,31 @@ views:
       - type: grid
         cards:
           - type: heading
+            heading: Rain card
+          - type: custom:rain-card
+            entity: sensor.rain_rate_roof
+            today: sensor.rain_today
+          - type: custom:rain-card
+            entity: sensor.rain_rate_roof
+            today: sensor.rain_today
+            visual: flow
+            flow: { style: ripples }
+          - type: custom:rain-card
+            entity: sensor.rain_rate_roof
+            today: sensor.rain_today
+            wind: sensor.wind_speed
+            direction: sensor.wind_direction
+            title: Rain
+            layout: hero
+            flow: { style: fill, height: 140 }
+            rules:
+              - { below: 0.1, color: blue-grey, label: Dry }
+              - { below: 2.5, color: light-blue, label: Light rain }
+              - { below: 7.6, color: blue, label: Moderate rain }
+              - { above: 7.6, color: indigo, label: Heavy rain, tint_card: true }
+      - type: grid
+        cards:
+          - type: heading
             heading: Weather card
           - type: custom:weather-card
             entity: weather.demo_weather_south

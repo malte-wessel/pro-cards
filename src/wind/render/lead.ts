@@ -1,13 +1,7 @@
 // The lead of the wind card: the direction arrow, or a small animation of the flow style inside
 // the soft circle. Built once; the row's CSS variables (--rot, --arrow, --ldur) drive it.
+import { animatedLeadShell, el, iconLead } from "../../shared/flow/dom.ts";
 import type { FlowStyle } from "../constants.ts";
-
-const el = (cls: string, vars: Record<string, string | number>) => {
-  const i = document.createElement("i");
-  i.className = cls;
-  for (const [k, v] of Object.entries(vars)) i.style.setProperty(k, String(v));
-  return i;
-};
 
 export const arrowIcon = () => {
   const icon = document.createElement("ha-icon");
@@ -16,25 +10,11 @@ export const arrowIcon = () => {
   return icon;
 };
 // the arrow lead: mdi:navigation in the soft circle, turned to where the wind blows
-export const arrowLead = (size: number) => {
-  const lead = document.createElement("div");
-  lead.className = "lead";
-  lead.style.setProperty("--lead", `${size}px`);
-  const shape = document.createElement("div");
-  shape.className = "shape";
-  shape.appendChild(arrowIcon());
-  lead.appendChild(shape);
-  return lead;
-};
+export const arrowLead = (size: number) => iconLead(size, arrowIcon());
 
 // the animated lead: three rows of particles crossing the circle in the wind's direction
 export const animatedLead = (style: FlowStyle, size: number) => {
-  const lead = document.createElement("div");
-  lead.className = "lead wlead";
-  lead.style.setProperty("--lead", `${size}px`);
-  const shape = document.createElement("div");
-  shape.className = "shape";
-  lead.appendChild(shape);
+  const lead = animatedLeadShell(size);
   if (style === "swoosh") {
     // the wind icon drawing itself
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");

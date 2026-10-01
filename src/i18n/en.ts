@@ -86,6 +86,10 @@ const en = {
   "wind.dir.nw": "NW",
   "wind.dir.nnw": "NNW",
 
+  "rain.stub_title": "Rain",
+  "rain.today": "{v} today",
+  "rain.today_name": "Rain today",
+
   "editor.default": "Default: {value}",
 
   "editor.sun.title": "Title",

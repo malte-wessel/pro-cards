@@ -110,6 +110,7 @@ export default defineConfig({
           { text: "Illuminance Card", link: "/cards/illuminance-card" },
           { text: "Weather Card", link: "/cards/weather-card" },
           { text: "Wind Card", link: "/cards/wind-card" },
+          { text: "Rain Card", link: "/cards/rain-card" },
         ],
       },
       {
@@ -146,6 +147,7 @@ export default defineConfig({
           { text: "Illuminance Card", link: "/cards/illuminance-card" },
           { text: "Weather Card", link: "/cards/weather-card" },
           { text: "Wind Card", link: "/cards/wind-card" },
+          { text: "Rain Card", link: "/cards/rain-card" },
         ],
       },
       {

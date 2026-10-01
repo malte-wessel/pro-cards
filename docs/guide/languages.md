@@ -7,6 +7,7 @@ The cards show their own words in the language of your Home Assistant profile (*
 - The default labels of the sun path card (Sunrise, Sunset, Dawn, Solar noon, Dusk) and the word in its tooltip (elevation).
 - The default zone names of the illuminance card (Night, Twilight, Overcast, Day, Sun), the `Max` of its header line and the `LUX` under the gauge value.
 - The weather card's condition names (Sunny, Partly cloudy, Thunderstorms …), the names of the weather attributes it lists (Humidity, Wind, Pressure, Feels like …), its section titles (`Next 12 hours`, `7 days`), `Today`, `High` / `Low` and `no forecast`.
+- The rain card's `… today`.
 - The wind card's compass points (N, NNE … in English; N, NNO … in German), `from …` and `gusts …`. A direction sensor whose state is a compass point is read in English only, as Home Assistant's integrations report it.
 - The axis word `now`, the placeholders `no data` and `loading …`, the tooltip marker `Peak` of the columns visual, the `unavailable` label and the `… not found` message of a missing entity.
 - Every label, option and helper of the three visual editors.
