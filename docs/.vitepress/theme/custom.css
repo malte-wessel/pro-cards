@@ -171,6 +171,15 @@
   gap: 8px;
   min-width: 0;
 }
+.ha-grid.sections > .section.span-2 {
+  grid-column: span 2;
+}
+/* fewer than three columns: a double section takes the row like any other */
+@container (max-width: 647px) {
+  .ha-grid.sections > .section.span-2 {
+    grid-column: auto;
+  }
+}
 .ha-grid.sections > .section > .cell {
   min-width: 0;
   display: flex;
@@ -247,15 +256,6 @@
   margin: 0;
 }
 
-.vp-doc .live-strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
-  margin: 32px 0;
-}
-.vp-doc .live-strip .live {
-  margin: 0;
-}
 .ha-grid > .cell:not(.fixed) > *,
 .ha-grid.sections > .section > .cell:not(.fixed) > * {
   flex: none;

@@ -40,7 +40,10 @@ onMounted(async () => {
       const sec = raw as SectionConfig;
       const el = document.createElement("div");
       el.className = "section";
-      if (Number(sec.column_span) > 1) el.style.gridColumn = "1 / -1";
+      // like HA: a span of 2 takes two of three columns, anything wider takes the row
+      const span = Number(sec.column_span) || 1;
+      if (span === 2) el.classList.add("span-2");
+      else if (span > 2) el.style.gridColumn = "1 / -1";
       root.appendChild(el);
       handles.push(await mountGrid(el, (sec.cards || raw) as unknown[], { fullWidth: false }));
     }
