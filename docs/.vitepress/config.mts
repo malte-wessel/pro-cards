@@ -77,6 +77,13 @@ const cardGroups = [
   },
 ];
 
+// the showcase dashboards, grown from the homepage examples
+const showcase = [
+  { text: "Energy", link: "/showcase/energy" },
+  { text: "Overview", link: "/showcase/overview" },
+  { text: "Weather", link: "/showcase/weather" },
+];
+
 export default defineConfig({
   title: "Pro Cards",
   description,
@@ -126,12 +133,7 @@ export default defineConfig({
       { text: "Cards", items: cardGroups },
       {
         text: "Showcase",
-        items: [
-          { text: "Weather station", link: "/showcase/weather-station" },
-          { text: "Home dashboard", link: "/showcase/home" },
-          { text: "Rooms & devices", link: "/showcase/rooms" },
-          { text: "Energy", link: "/showcase/energy" },
-        ],
+        items: showcase,
       },
       { text: "Playground", link: "/playground" },
       { text: `v${pkg.version}`, link: "https://github.com/malte-wessel/pro-cards/releases" },
@@ -149,12 +151,7 @@ export default defineConfig({
       { text: "Cards", items: cardGroups },
       {
         text: "Showcase",
-        items: [
-          { text: "Weather station", link: "/showcase/weather-station" },
-          { text: "Home dashboard", link: "/showcase/home" },
-          { text: "Rooms & devices", link: "/showcase/rooms" },
-          { text: "Energy", link: "/showcase/energy" },
-        ],
+        items: showcase,
       },
       { text: "Playground", link: "/playground" },
     ],

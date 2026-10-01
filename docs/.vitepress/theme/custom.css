@@ -260,8 +260,31 @@
 .ha-grid.sections > .section > .cell:not(.fixed) > * {
   flex: none;
 }
+/* showcase pages (pageClass: wide): as wide as the home layout */
+.wide .VPDoc .container,
+.wide .VPDoc:not(.has-sidebar) .container {
+  max-width: 1246px;
+}
+.wide .VPDoc .content,
+.wide .VPDoc:not(.has-sidebar) .content {
+  max-width: none;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+@media (min-width: 640px) {
+  .wide .VPDoc .content {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+}
+@media (min-width: 960px) {
+  .wide .VPDoc .content {
+    padding-left: 64px;
+    padding-right: 64px;
+  }
+}
 .wide .content-container {
-  max-width: none !important;
+  max-width: none;
 }
 .wide .vp-doc > div {
   max-width: none;
