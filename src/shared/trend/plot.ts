@@ -98,17 +98,23 @@ export const drawTrend = (plot: TrendPlotEl, spec: TrendSpec) => {
   const n = Math.max(1, ...laneOf.map((l) => l + 1));
   const lanes = spec.layout === "lanes";
   const W = Math.max(plot.clientWidth, 10);
-  const laneH = lanes ? LANE_PLOT_H : OVERLAY_PLOT_H;
-  const plotH = laneH * n;
   const showX = spec.xAxis,
     showY = spec.yAxis;
-  const H = plotH + (showX ? X_AXIS_H : 0);
-  plot.style.height = `${H}px`;
+  const axisH = showX ? X_AXIS_H : 0;
+  // The natural height is the plot's own size; a grid cell with fixed rows gives the card another
+  // height and the plot (flex: 1) follows it. The SVG is drawn at the measured height, never
+  // stretched to it: a stretched viewBox would turn dots into ellipses and thicken the gridlines
+  const natural = (lanes ? LANE_PLOT_H : OVERLAY_PLOT_H) * n + axisH;
+  plot.style.height = `${natural}px`;
+  const measured = plot.clientHeight;
+  const H = measured > 0 ? measured : natural;
+  const plotH = H - axisH;
+  const laneH = plotH / n;
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   plot._spec = spec;
   plot._laneOf = laneOf;
-  // The plot grows with the card (a tall grid cell stretches it) and the SVG stretches along,
-  // so vertical positions of the HTML labels are percentages of H, not pixels
+  // vertical positions of the HTML labels as percentages of H, so they follow a later resize
+  // until the next draw
   const pct = (y: number) => `${((y / H) * 100).toFixed(3)}%`;
 
   // Clamp to the window so line and fill always start and end exactly at the plot edges, then

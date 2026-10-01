@@ -113,6 +113,7 @@ const fr: Translation = {
   "editor.default": "Par défaut : {value}",
 
   "editor.sun.title": "Titre",
+  "editor.sun.icon": "Icône",
   "editor.sun.show_dawn_dusk": "Afficher l'aube, le midi solaire et le crépuscule",
   "editor.sun.show_tooltip": "Afficher l'infobulle au survol",
   "editor.sun.day_color": "Couleur du jour",

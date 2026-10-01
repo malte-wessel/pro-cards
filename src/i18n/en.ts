@@ -112,6 +112,7 @@ const en = {
   "editor.default": "Default: {value}",
 
   "editor.sun.title": "Title",
+  "editor.sun.icon": "Icon",
   "editor.sun.show_dawn_dusk": "Show dawn, solar noon and dusk",
   "editor.sun.show_tooltip": "Show tooltip on hover",
   "editor.sun.day_color": "Day colour",

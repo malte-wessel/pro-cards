@@ -18,7 +18,7 @@ const walk = (d: string): string[] =>
         : [];
   });
 
-// every card config the docs site renders: ::: live fences, DashboardGrid sections, home page LiveCard :config props are JS (skipped)
+// every card config the docs site renders: ::: live fences, DashboardGrid sections, the home page embeds DashboardGrids too
 const docExamples = () => {
   const out: { file: string; cfg: unknown }[] = [];
   for (const file of walk("docs")) {

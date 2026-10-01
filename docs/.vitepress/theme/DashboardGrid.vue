@@ -40,13 +40,17 @@ onMounted(async () => {
       const sec = raw as SectionConfig;
       const el = document.createElement("div");
       el.className = "section";
-      if (Number(sec.column_span) > 1) el.style.gridColumn = "1 / -1";
+      // like HA: a span of 2 takes two of three columns, anything wider takes the row
+      const span = Number(sec.column_span) || 1;
+      if (span === 2) el.classList.add("span-2");
+      else if (span > 2) el.style.gridColumn = "1 / -1";
       root.appendChild(el);
       handles.push(await mountGrid(el, (sec.cards || raw) as unknown[], { fullWidth: false }));
     }
   } catch (err) { error.value = err instanceof Error ? err.message : String(err); }
 });
 onBeforeUnmount(() => handles.forEach((h) => h.dispose()));
+const showYaml = ref(false);
 const cycle = () => { mode.value = nextMode(mode.value); };
 </script>
 
@@ -56,6 +60,15 @@ const cycle = () => { mode.value = nextMode(mode.value); };
       <div ref="host" class="ha-grid sections"></div>
     </div>
     <div class="tools">
+      <button
+        v-if="$slots.default"
+        type="button"
+        class="yaml-toggle"
+        :class="{ on: showYaml }"
+        @click="showYaml = !showYaml"
+      >
+        {{ showYaml ? "Hide YAML" : "Show YAML" }}
+      </button>
       <select v-if="!props.theme" v-model="siteTheme" title="Home Assistant theme of every example">
         <option v-for="t in THEMES" :key="t.id" :value="t.id">{{ t.label }}</option>
       </select>
@@ -72,9 +85,8 @@ const cycle = () => { mode.value = nextMode(mode.value); };
       </button>
     </div>
     <div v-if="error" class="error">{{ error }}</div>
-    <details v-if="$slots.default">
-      <summary>YAML</summary>
+    <div v-if="$slots.default && showYaml" class="yaml">
       <slot />
-    </details>
+    </div>
   </div>
 </template>

@@ -113,6 +113,7 @@ const cs: Translation = {
   "editor.default": "Výchozí: {value}",
 
   "editor.sun.title": "Název",
+  "editor.sun.icon": "Ikona",
   "editor.sun.show_dawn_dusk": "Zobrazit svítání, sluneční poledne a soumrak",
   "editor.sun.show_tooltip": "Zobrazit popisek při najetí",
   "editor.sun.day_color": "Barva dne",

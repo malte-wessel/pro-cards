@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Sun path card: the header is drawn like the other cards' (an icon and a 16 px title) instead of Home Assistant's card header; new `icon` option
+- Docs: the showcase has three full-width dashboards (Energy, Overview, Weather) grown from the homepage examples
+- Docs: the cards are grouped into Entities, Energy and Weather in the navigation, the getting started page and the README
+- Fix the multi trend card's plot in a cell taller or shorter than its natural height: the SVG was stretched to the card, which turned the hover dots into ellipses, thickened the gridlines and skewed the curves. The plot is now drawn at the height it gets, and the trend section of the weather card shares the fix
+- Docs: the homepage shows three live dashboards (Overview, Energy, Weather station) instead of a strip of single cards, and a new Energy showcase page
+
 ## 1.7.0 (2026-10-01)
 
 - New power flow card (`custom:power-flow-card`): where the home's power comes from and where it goes, as a tree with animated flow. Solar, battery and grid `sources` (signed `power` sensors or `import` / `export` and `charge` / `discharge` pairs, `soc`, `price`, `offline`), the `home` (a sensor, or computed from the sources) and optional `consumers` as devices or rooms (`group`), with an Other node for the rest. Solar covers the home first, then the battery, then the grid; surplus charges the battery and is exported. `flow_style` dots / lines / arrows, `direction` right / down, `consumer_style` nodes / list; the summary line names the state (importing, exporting, on battery, balanced, grid offline, expensive above `expensive_above`) and the self-sufficiency; `rules` on the home power label, colour and tint the card. The flow re-times on value changes instead of restarting and pauses with `prefers-reduced-motion`

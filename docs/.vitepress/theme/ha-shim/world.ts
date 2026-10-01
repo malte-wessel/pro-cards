@@ -612,6 +612,21 @@ def(
   { noise: 60, min: -3000, max: 7000, decimals: 0 },
 );
 def(
+  "sensor.ev_battery",
+  62,
+  { unit_of_measurement: "%", device_class: "battery", friendly_name: "EV battery" },
+  "battery",
+  { noise: 0.3, min: 0, max: 100, decimals: 0 },
+);
+def(
+  "sensor.ev_range",
+  248,
+  { unit_of_measurement: "km", friendly_name: "EV range", icon: "mdi:map-marker-distance" },
+  "flat",
+  { noise: 1, min: 0, max: 420, decimals: 0 },
+);
+def("binary_sensor.ev_plugged", "on", { device_class: "plug", friendly_name: "EV plugged in" });
+def(
   "sensor.generator_power",
   0,
   { unit_of_measurement: "W", device_class: "power", friendly_name: "Generator power" },

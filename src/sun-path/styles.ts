@@ -5,8 +5,11 @@ export const STYLE = `
   /* min-width/overflow: as a grid item the card must never grow past its column because of long text */
   :host { display: block; min-width: 0; }
   ha-card { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; contain: inline-size; }
-  .body { padding: 0 16px 12px 16px; flex: 1; display: flex; flex-direction: column; min-width: 0; }
-  ha-card:not([header]) .body { padding-top: 16px; }
+  .header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 0 16px; min-width: 0; }
+  .header ha-icon { flex: none; color: var(--secondary-text-color); --mdc-icon-size: 20px; }
+  .header .title { flex: 1; min-width: 0; font-size: 16px; font-weight: 500; line-height: 20px; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .body { padding: 16px 16px 12px 16px; flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .header:not([style*="none"]) + .body { padding-top: 12px; }
   .row { display: flex; justify-content: space-between; gap: 12px; }
   .row .ev { flex: 1 1 0; min-width: 0; overflow: hidden; }
   .ev.right { text-align: right; }

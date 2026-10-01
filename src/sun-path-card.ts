@@ -131,8 +131,13 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
     style.textContent = STYLE;
     root.appendChild(style);
     const card = document.createElement("ha-card");
-    if (this._config.title) card.setAttribute("header", this._config.title);
+    // the header is drawn like the entity cards' (icon and title), not HA's card header
+    const { title, icon } = this._config;
     card.innerHTML = `
+      <div class="header"${title || icon ? "" : ' style="display: none"'}>
+        <ha-icon${icon ? ` icon="${icon}"` : ' style="display: none"'}></ha-icon>
+        <div class="title"></div>
+      </div>
       <div class="body">
         <div class="row">
           <div class="ev"><div class="lbl"></div><div class="val"></div></div>
@@ -141,6 +146,7 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
         <div class="plot"><svg preserveAspectRatio="none"></svg><div class="tip"></div></div>
         <div class="events"></div>
       </div>`;
+    qs(card, ".title").textContent = title || "";
     root.appendChild(card);
     this._root = card;
     this._hoverT = null;

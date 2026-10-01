@@ -1,6 +1,6 @@
 # Testing
 
-Pro Cards has three test layers. They share one idea: the cards are plain web components, so they can run outside Home Assistant against the same simulated home that powers the live examples on this site.
+Pro Cards has three test layers. They share one idea: the cards are plain web components, so they can run outside Home Assistant against the same simulated home that powers the live examples on the docs site.
 
 | Layer             | Tool                  | Runs in                        | Command               |
 | ----------------- | --------------------- | ------------------------------ | --------------------- |
@@ -134,6 +134,6 @@ The three automated layers run against the docs' Home Assistant shim, which is f
 2. Open `http://localhost:8123` and log in as `dev` / `dev`.
 3. The **Pro Cards** dashboard in the sidebar (`test/ha/dashboards/pro-cards.yaml`) has one section per card; reload the page after editing the YAML or the bundle (append `?v=2` if the browser caches the old file).
 
-The image is amd64, so on Apple silicon Home Assistant takes a few minutes to boot under emulation; `docker logs -f pro-cards-ha` shows progress. `test/ha/configuration.yaml` sets the home location to the docs' demo coordinates (the sun path card needs one) and defines template entities named like the docs' demo world (`sensor.outdoor_temperature`, `light.living_room`, `sensor.illuminance`, `sensor.robot_battery`, …) so examples from these pages can be pasted into the dashboard as they are, and an automation moves their values every minute so the history visuals have data after a few minutes. The demo integration adds the rest of a house (`sun.sun`, demo lights, covers, climate, media players); those entities work too, under their own ids.
+The image is amd64, so on Apple silicon Home Assistant takes a few minutes to boot under emulation; `docker logs -f pro-cards-ha` shows progress. `test/ha/configuration.yaml` sets the home location to the docs' demo coordinates (the sun path card needs one) and defines template entities named like the docs' demo world (`sensor.outdoor_temperature`, `light.living_room`, `sensor.illuminance`, `sensor.robot_battery`, …) so examples from the docs can be pasted into the dashboard as they are, and an automation moves their values every minute so the history visuals have data after a few minutes. The demo integration adds the rest of a house (`sun.sun`, demo lights, covers, climate, media players); those entities work too, under their own ids.
 
 What to check there that the shim cannot: every card's visual editor opens and round-trips; `confirmation` shows HA's dialog and per-user `exemptions` skip it; `assist` opens the assist dialog; haptics fire in the companion app; the cards respect the grid in edit mode; a custom theme recolours the state colours.
