@@ -23,7 +23,7 @@ Pro Cards is built with the help of AI. Code, docs and tests are written togethe
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/malte-wessel/pro-cards/main/docs/public/readme/cards-dark.png">
-  <img alt="Pro Cards on a dashboard: weather station, living room, tiles, sun path, illuminance, kitchen, batteries and a trend graph" src="https://raw.githubusercontent.com/malte-wessel/pro-cards/main/docs/public/readme/cards-light.png" width="860">
+  <img alt="Pro Cards on a dashboard: weather station, living room, tiles, the power flow tree, sun path, illuminance, wind, batteries and a trend graph" src="https://raw.githubusercontent.com/malte-wessel/pro-cards/main/docs/public/readme/cards-light.png" width="860">
 </picture>
 
 | Card                 | Type                          | What it does                                                                                                                                  | Editor    |
