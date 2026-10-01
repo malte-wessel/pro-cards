@@ -83,3 +83,41 @@ describe("multi-trend-card helpers", () => {
     expect(stub.entities).toEqual([{ entity: "sensor.a" }]);
   });
 });
+
+describe("trend plot height", async () => {
+  const { trendPlotEl, drawTrend } = await import("../../src/shared/trend/plot.ts");
+  const spec = (layout: "overlay" | "lanes") => ({
+    hass: undefined,
+    t0: 0,
+    t1: 3600e3,
+    layout,
+    xAxis: true,
+    yAxis: false,
+    series: [
+      {
+        pts: [
+          { t: 0, v: 1 },
+          { t: 3600e3, v: 2 },
+        ],
+        color: "red",
+        name: "A",
+        fmt: String,
+      },
+    ],
+  });
+  it("draws the SVG at its natural height when nothing stretches it", () => {
+    const plot = trendPlotEl();
+    drawTrend(plot, spec("overlay"));
+    const h = parseFloat(plot.style.height);
+    expect(h).toBeGreaterThan(0);
+    expect(plot.querySelector("svg")!.getAttribute("viewBox")).toBe(`0 0 10 ${h}`);
+  });
+  it("draws the SVG at the measured height instead of stretching it in a taller cell", () => {
+    const plot = trendPlotEl();
+    Object.defineProperty(plot, "clientHeight", { value: 300 });
+    drawTrend(plot, spec("lanes"));
+    expect(plot.querySelector("svg")!.getAttribute("viewBox")).toBe("0 0 10 300");
+    const hair = plot.querySelector(".hair")!;
+    expect(hair.getAttribute("y2")).toBe(String(300 - 16));
+  });
+});

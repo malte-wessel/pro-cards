@@ -11,7 +11,10 @@ export const STYLE_TREND = `
   .legend span { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; }
   .legend span em { font-style: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .legend i { flex: none; display: inline-block; width: 14px; height: 2px; border-radius: 1px; background: var(--c); }
-  .trend { position: relative; flex: 1; margin: 6px 12px 12px 12px; touch-action: pan-y; }
+  /* the drawn height is the basis; a fixed-height card stretches or shrinks it (flex), and
+     min-height: 0 keeps the SVG's own size out of the layout, or a draw at the measured height
+     would grow the plot that the next draw measures */
+  .trend { position: relative; flex: 1 1 auto; min-height: 0; margin: 6px 12px 12px 12px; touch-action: pan-y; }
   .trend svg { display: block; width: 100%; height: 100%; overflow: hidden; border-radius: 4px; }
   .trend svg path.line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: butt; }
   .trend svg path.area { opacity: .12; }
