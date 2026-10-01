@@ -3,7 +3,7 @@ layout: home
 hero:
   name: Pro Cards
   text: High-quality, flexible cards for Home Assistant.
-  tagline: Ten cards that match the look and feel of Home Assistant and adapt to your dashboard with rules, templates, layouts and animated flows. Installed with HACS, styled by your theme.
+  tagline: Cards that match the look and feel of Home Assistant and adapt to your dashboard with rules, templates, layouts and animated flows. Installed with HACS, styled by your theme.
   actions:
     - theme: brand
       text: Get started
