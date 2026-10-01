@@ -33,7 +33,7 @@ import {
   rateOf,
 } from "../flow.ts";
 import { placeLabels, type LabelSize } from "../labels.ts";
-import type { LEdge, LNode, TreeLayout } from "../layout.ts";
+import { layoutTree, type LabelBox, type LEdge, type LNode, type TreeLayout } from "../layout.ts";
 import { edgeColor, fmtPower, sourceColor, type Flows, type PowerNow } from "../model.ts";
 import { arcPath, ringArcs } from "../path.ts";
 
@@ -321,16 +321,48 @@ const labelText = (
   return { v, n: name, s };
 };
 
-export const updateTree = (diag: HTMLElement, st: TreeState) => {
+// the label of every node, measured, from a preliminary layout (the texts need no geometry)
+const measureLabels = (st: TreeState, labelEls: Map<string, HTMLElement>) => {
+  const texts = new Map<string, LabelTexts>();
+  const sizes = new Map<string, LabelBox>();
+  for (const nd of st.layout.nodes) {
+    const el = labelEls.get(nd.id);
+    if (!el) continue;
+    const ent = nd.idx === null ? null : st.cfg.entities[nd.idx];
+    const m = nd.idx === null ? null : (st.models[nd.idx] ?? null);
+    const txt = labelText(st, nd, ent, m);
+    texts.set(nd.id, txt);
+    const small = el.classList.contains("small");
+    const nameFont = small ? FONT_SMALL_NAME : FONT_NAME;
+    const w =
+      Math.max(
+        textWidth(txt.v, small ? FONT_SMALL : FONT_VALUE),
+        textWidth(txt.n, nameFont),
+        textWidth(txt.s, nameFont),
+      ) + 2;
+    const h =
+      (small ? GEOM.labelSmallH : GEOM.labelH) + (txt.s ? (small ? 13 : GEOM.labelLine) : 0);
+    sizes.set(nd.id, { w, h });
+  }
+  return { texts, sizes };
+};
+
+export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
+  const labelEls = new Map<string, HTMLElement>();
+  for (const el of diag.querySelectorAll<HTMLElement>(".plabel"))
+    if (el.dataset.node) labelEls.set(el.dataset.node, el);
+  // the labels' sizes decide where the columns go: lay out again with them
+  const { texts, sizes } = measureLabels(prelim, labelEls);
+  const st: TreeState = {
+    ...prelim,
+    layout: layoutTree(prelim.cfg, prelim.layout.w, prelim.flows.edges, sizes),
+  };
   const { cfg, layout, flows, models } = st;
   const tracks = qs<SVGSVGElement>(diag, "svg.ptracks");
   const flow = qs(diag, ".pflow");
   const nodeEls = new Map<string, HTMLElement>();
   for (const el of diag.querySelectorAll<HTMLElement>(".pnode, .plist"))
     if (el.dataset.node) nodeEls.set(el.dataset.node, el);
-  const labelEls = new Map<string, HTMLElement>();
-  for (const el of diag.querySelectorAll<HTMLElement>(".plabel"))
-    if (el.dataset.node) labelEls.set(el.dataset.node, el);
   diag.classList.toggle("idle-hidden", cfg.idleLinks === "hidden");
   diag.classList.toggle("idle-faint", cfg.idleLinks === "faint");
 
@@ -458,27 +490,8 @@ export const updateTree = (diag: HTMLElement, st: TreeState) => {
   }
 
   // ----- labels -----
-  const sizes: LabelSize[] = [];
-  const texts = new Map<string, LabelTexts>();
-  for (const nd of layout.nodes) {
-    const el = labelEls.get(nd.id);
-    if (!el) continue;
-    const ent = nd.idx === null ? null : cfg.entities[nd.idx];
-    const m = nd.idx === null ? null : (models[nd.idx] ?? null);
-    const txt = labelText(st, nd, ent, m);
-    texts.set(nd.id, txt);
-    const small = el.classList.contains("small");
-    const nameFont = small ? FONT_SMALL_NAME : FONT_NAME;
-    const w =
-      Math.max(
-        textWidth(txt.v, small ? FONT_SMALL : FONT_VALUE),
-        textWidth(txt.n, nameFont),
-        textWidth(txt.s, nameFont),
-      ) + 2;
-    const h = (small ? 28 : GEOM.labelH) + (txt.s ? (small ? 13 : GEOM.labelLine) : 0);
-    sizes.push({ id: nd.id, w, h });
-  }
-  for (const p of placeLabels(layout, sizes, cfg.direction, hiddenEdges)) {
+  const labelSizes: LabelSize[] = [...sizes].map(([id, s]) => ({ id, ...s }));
+  for (const p of placeLabels(layout, labelSizes, cfg.direction, hiddenEdges)) {
     const el = labelEls.get(p.id);
     const txt = texts.get(p.id);
     if (!el || !txt) continue;

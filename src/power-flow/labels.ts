@@ -3,7 +3,7 @@
 // that overlaps no line, node, row or placed label and stays inside the diagram.
 import type { Direction } from "./constants.ts";
 import { GEOM } from "./constants.ts";
-import type { LNode, TreeLayout } from "./layout.ts";
+import { slotRise, type LNode, type TreeLayout } from "./layout.ts";
 import { segmentsOf, type Seg } from "./path.ts";
 
 export type Align = "l" | "r" | "c"; // left edge at x, right edge at x, centred on x
@@ -39,12 +39,13 @@ const candidates = (nd: LNode, dir: Direction, h: number): Cand[] => {
   const r = nd.d / 2,
     g = GEOM.labelGap,
     x = nd.x,
-    y = nd.y;
-  const rightAbove: Cand = [x + r + g, y - r - 4, "l"],
-    rightBelow: Cand = [x + r + g, y + r + 4, "l"],
+    y = nd.y,
+    rise = slotRise(nd.d, h); // beside the node, clear of its line
+  const rightAbove: Cand = [x + r + g, y - rise, "l"],
+    rightBelow: Cand = [x + r + g, y + rise, "l"],
     rightMid: Cand = [x + r + g, y, "l"],
-    leftAbove: Cand = [x - r - g, y - r - 4, "r"],
-    leftBelow: Cand = [x - r - g, y + r + 4, "r"],
+    leftAbove: Cand = [x - r - g, y - rise, "r"],
+    leftBelow: Cand = [x - r - g, y + rise, "r"],
     leftMid: Cand = [x - r - g, y, "r"],
     below: Cand = [x, y + r + 4, "c"],
     above: Cand = [x, y - r - 4 - h, "c"],
@@ -52,7 +53,10 @@ const candidates = (nd: LNode, dir: Direction, h: number): Cand[] => {
     belowRight: Cand = [x + g, y + r + 4 + h / 2, "l"],
     belowLeft: Cand = [x - g, y + r + 4 + h / 2, "r"],
     aboveRight: Cand = [x + g, y - r - 4 - h / 2, "l"],
-    aboveLeft: Cand = [x - g, y - r - 4 - h / 2, "r"];
+    aboveLeft: Cand = [x - g, y - r - 4 - h / 2, "r"],
+    // a second row below (direction: down, a narrow row of sources)
+    belowRight2: Cand = [x + g, y + r + 4 + h * 1.5 + 4, "l"],
+    belowLeft2: Cand = [x - g, y + r + 4 + h * 1.5 + 4, "r"];
   const all = [
     rightAbove,
     rightBelow,
@@ -66,6 +70,8 @@ const candidates = (nd: LNode, dir: Direction, h: number): Cand[] => {
     belowLeft,
     aboveRight,
     aboveLeft,
+    belowRight2,
+    belowLeft2,
   ];
   let pref: Cand[];
   if (dir === "right") {
@@ -78,7 +84,12 @@ const candidates = (nd: LNode, dir: Direction, h: number): Cand[] => {
     if (nd.kind === "home") pref = [rightMid, leftMid, belowRight, belowLeft];
     else if (nd.kind === "group" || nd.column === "group")
       pref = [rightMid, leftMid, belowRight, belowLeft];
-    else if (nd.kind === "consumer" || nd.kind === "other") pref = [below, above];
+    else if (nd.kind === "consumer" || nd.kind === "other")
+      // a narrow column: every other label goes above instead
+      pref = nd.tight && nd.alt ? [aboveRight, aboveLeft, below] : [below, above];
+    else if (nd.tight)
+      // a narrow row of sources: the labels go beside the vertical lines, in two rows
+      pref = nd.alt ? [belowRight2, belowLeft2, belowRight] : [belowRight, belowLeft, belowRight2];
     else pref = [rightMid, leftMid, belowRight, belowLeft, aboveRight, aboveLeft];
   }
   return pref.concat(all.filter((c) => !pref.includes(c)));
@@ -108,16 +119,15 @@ export const placeLabels = (
     !rowBoxes.some((r) => hits(b, r)) &&
     !placed.some((p) => hits(b, p, 3));
   const out: PlacedLabel[] = [];
-  // sources and the home first, groups and consumers after
+  // the home and the sources first, then the devices (one tight slot each), then the rooms and
+  // the consumers beside them (their labels have room above and below)
   const order = (id: string) => {
     const nd = layout.nodes.find((n) => n.id === id);
-    return nd?.kind === "home"
-      ? 0
-      : nd?.kind === "group"
-        ? 2
-        : nd && nd.idx !== null && id.startsWith("s")
-          ? 1
-          : 3;
+    if (!nd) return 9;
+    if (nd.kind === "home") return 0;
+    if (nd.column === "source") return 1;
+    if (nd.column === "leaf") return 2;
+    return 3;
   };
   for (const s of [...sizes].sort((p, q) => order(p.id) - order(q.id))) {
     const nd = layout.nodes.find((n) => n.id === s.id);

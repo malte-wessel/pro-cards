@@ -284,4 +284,4 @@ Values show in W below `kw_above` watts (default 1000) and in kW from there on, 
 | `secondary`                                  | all           | A line under the name; template allowed. Consumers take it too.                                                                            |
 | `name`, `icon`, `color`, `rules`, `decimals` | all           | As on every entity: the name (default Solar / Battery / Grid), a fixed icon or colour, rules on the sensor's value, decimals of the label. |
 
-The card takes the full width of a section (`rows: auto`) and sizes its height to the number of sources and consumers, not to the width; with many devices, rooms or `consumer_style: list` it reads best on a wide column.
+Every label has its own room: the card grows in height with the number of sources and consumers (and their secondary lines) rather than squeezing text between nodes, and the columns move along the flow so the labels clear the next column. The card takes the full width of a section (`rows: auto`) and sizes its height to the config, not to the width; with many devices, rooms or `consumer_style: list` it reads best on a wide column.

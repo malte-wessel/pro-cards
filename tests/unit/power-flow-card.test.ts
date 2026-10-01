@@ -764,9 +764,10 @@ describe("power flow layout", () => {
   });
 
   it("sizes the diagram from the config, never from the width", () => {
+    // every source owns a label slot: 42 margin, then 22 + 20 + 6 + 16 and 20 + 22 + 6 + 16
     const three = base();
-    expect(acrossOf(three)).toBe(GEOM.minAcross);
-    expect(diagramHeight(three)).toBe(190);
+    expect(acrossOf(three)).toBe(42 + 64 + 64 + 42);
+    expect(diagramHeight(three)).toBe(212);
     const five = normalizePowerFlowConfig({
       sources: [
         ...SRC,
@@ -774,19 +775,23 @@ describe("power flow layout", () => {
         { type: "solar", entity: "sensor.c" },
       ],
     });
-    expect(acrossOf(five)).toBe(2 * GEOM.srcMargin + 4 * GEOM.srcPitch);
+    expect(acrossOf(five)).toBe(42 + 64 + 64 + 66 + 66 + 42); // two 44 px nodes in a row: 66
     const withSecondary = normalizePowerFlowConfig({
       sources: [{ ...SRC[0], secondary: "roof" }, SRC[1], SRC[2]],
     });
-    expect(acrossOf(withSecondary)).toBe(2 * GEOM.srcMargin + 2 * (GEOM.srcPitch + 24));
+    // a secondary line on the solar label needs no extra pitch below it; one on the battery would
+    expect(acrossOf(withSecondary)).toBe(Math.ceil(51 + 64 + 64 + 42)); // a taller first margin
+    const batterySecondary = normalizePowerFlowConfig({
+      sources: [SRC[0], { ...SRC[1], secondary: "x" }, SRC[2]],
+    });
+    expect(acrossOf(batterySecondary)).toBe(42 + 75 + 64 + 42); // 22 + 2 + 27.5 + 23.5 above it
     const cons = base({ consumers: ["sensor.a", "sensor.b", "sensor.c", "sensor.d"] }); // + other
-    expect(acrossOf(cons)).toBe(4 * GEOM.consumerPitch + 2 * GEOM.consumerMargin);
+    expect(acrossOf(cons)).toBe(34 + 4 * GEOM.consumerPitch + 30); // 32 px nodes, 28 px labels
     const rooms = base({
       consumers: [{ group: "A", entities: ["sensor.a", "sensor.b"] }, "sensor.c"],
     });
-    expect(acrossOf(rooms)).toBe(
-      GEOM.itemPitch + 2 * (GEOM.itemPitch + GEOM.groupGap) + 2 * GEOM.consumerMargin,
-    );
+    // the first room's label above it (52), devices 44 apart, a room gap of 22 between blocks
+    expect(acrossOf(rooms)).toBe(52 + 46 + (52 + 22) + (54 + 22) + 30); // … then the other node
     expect(alongDownOf(three)).toBe(GEOM.minAcross);
     expect(alongDownOf(cons)).toBe(GEOM.srcAlong + 2 * GEOM.columnPitch + 56);
     expect(diagramHeight(base({ direction: "down", consumers: ["sensor.a"] }))).toBe(
@@ -799,7 +804,7 @@ describe("power flow layout", () => {
         allocate(three, powerNow(three, modelsOf(three, hassOf({})))).edges,
       );
       expect(l.w).toBe(w);
-      expect(l.h).toBe(190);
+      expect(l.h).toBe(212);
     }
   });
 
@@ -936,22 +941,26 @@ describe("power flow labels", () => {
     const { f } = flowsOf(cfg, {
       "sensor.solar": "0",
       "sensor.home": "1000",
-      "sensor.battery": "0",
       "sensor.grid": "1000",
     });
-    const l = layoutTree(cfg, 300, f.edges);
-    // a tall battery label wants the place above its idle link into the home
-    const sizes = l.nodes.map((n) => ({ id: n.id, w: 90, h: n.id === "s1" ? 60 : 32 }));
-    const idle = new Set(l.edges.filter((_, i) => !isActive(f.edges[i].w)).map((e) => e.id));
-    const battery = (p: ReturnType<typeof placeLabels>) => p.find((x) => x.id === "s1")!;
-    const drawn = battery(placeLabels(l, sizes, "right"));
-    const hidden = battery(placeLabels(l, sizes, "right", idle));
+    const l = layoutTree(cfg, 416, f.edges);
     const nd = l.nodes.find((n) => n.id === "s1")!;
-    expect(hidden).toMatchObject({
-      align: "l",
-      x: nd.x + nd.d / 2 + GEOM.labelGap,
-      y: nd.y - nd.d / 2 - 4,
-    });
+    // an idle link drawn right through the battery's slot (right of the node, above its line)
+    const slotY = nd.y - nd.d / 2 - 4;
+    const fake = {
+      ...l.edges[0],
+      id: "x",
+      pts: [
+        [nd.x + nd.d / 2 + 10, slotY],
+        [nd.x + 120, slotY],
+      ] as Pt[],
+    };
+    const withFake = { ...l, edges: [...l.edges, fake] };
+    const sizes = l.nodes.map((n) => ({ id: n.id, w: 90, h: 32 }));
+    const battery = (p: ReturnType<typeof placeLabels>) => p.find((x) => x.id === "s1")!;
+    const drawn = battery(placeLabels(withFake, sizes, "right"));
+    const hidden = battery(placeLabels(withFake, sizes, "right", new Set(["x"])));
+    expect(hidden).toMatchObject({ align: "l", x: nd.x + nd.d / 2 + GEOM.labelGap, y: slotY });
     expect([drawn.x, drawn.y, drawn.align]).not.toEqual([hidden.x, hidden.y, hidden.align]);
   });
 });

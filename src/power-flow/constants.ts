@@ -70,10 +70,10 @@ export const GEOM = {
   railGrid: 6, // the export rail (… → grid), along
   lane: 8, // distance between the lanes into the home
   radius: 12, // corner radius of every line
-  srcPitch: 52, // least distance between two sources
-  srcMargin: 40, // first / last source centre from the edge, across
-  consumerPitch: 50, // flat consumer nodes
-  itemPitch: 40, // devices inside a group
+  srcPitch: 52, // least distance between two sources (the label slots usually ask for more)
+  srcMargin: 42, // first / last source centre from the edge, across
+  consumerPitch: 52, // flat consumer nodes
+  itemPitch: 44, // devices inside a group
   groupGap: 22, // between two consumer blocks when groups exist
   consumerMargin: 30, // first / last consumer centre from the edge, across
   rowH: 36, // a list row
@@ -81,6 +81,7 @@ export const GEOM = {
   columnPitch: 142, // direction: down – distance between the columns along the flow
   downMargin: 70, // direction: down – first / last source centre from the edge
   labelH: 32, // a label: value over name
+  labelSmallH: 28, // a device's label
   labelLine: 15, // a label's extra line (secondary)
   labelGap: 6,
   summaryH: 40, // the summary line above the diagram (grid rows estimate)
