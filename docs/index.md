@@ -136,31 +136,69 @@ Solar, battery and grid feeding the home and its devices, the car next to it, to
 
 Who is home, what is running, the rooms and the scenes. Plain tiles next to group and sections cards.
 
-<DashboardGrid b64="LSBjb2x1bW5fc3BhbjogMQogIGNhcmRzOgogICAgLSB7IHR5cGU6IGhlYWRpbmcsIGhlYWRpbmc6IEhvbWUsIGljb246IG1kaTpob21lIH0KICAgIC0geyB0eXBlOiBjdXN0b206ZW50aXR5LWNhcmQsIGVudGl0eTogcGVyc29uLmFsZXgsIGdyaWRfb3B0aW9uczogeyBjb2x1bW5zOiA2IH0gfQogICAgLSB7IHR5cGU6IGN1c3RvbTplbnRpdHktY2FyZCwgZW50aXR5OiBwZXJzb24ua2ltLCBncmlkX29wdGlvbnM6IHsgY29sdW1uczogNiB9IH0KICAgIC0geyB0eXBlOiBjdXN0b206ZW50aXR5LWNhcmQsIGVudGl0eTogbGlnaHQubGl2aW5nX3Jvb20sIG5hbWU6IExpdmluZyByb29tLCB0b2dnbGU6IHRydWUsIGdyaWRfb3B0aW9uczogeyBjb2x1bW5zOiA2IH0gfQogICAgLSB7IHR5cGU6IGN1c3RvbTplbnRpdHktY2FyZCwgZW50aXR5OiBiaW5hcnlfc2Vuc29yLmRvb3JfZnJvbnQsIG5hbWU6IEZyb250IGRvb3IsIGdyaWRfb3B0aW9uczogeyBjb2x1bW5zOiA2IH0gfQogICAgLSB0eXBlOiBjdXN0b206ZW50aXR5LWNhcmQKICAgICAgZW50aXR5OiBzZW5zb3Iud2FzaGVyX3N0YXR1cwogICAgICBuYW1lOiBXYXNoaW5nIG1hY2hpbmUKICAgICAgc2Vjb25kYXJ5OiAie3sgc3RhdGVzKCdzZW5zb3Iud2FzaGVyX3JlbWFpbmluZycpIH19IG1pbiBsZWZ0IgogICAgICBydWxlczoKICAgICAgICAtIHsgc3RhdGU6IHJ1biwgY29sb3I6IGdyZWVuLCBpY29uOiBtZGk6d2FzaGluZy1tYWNoaW5lLCBsYWJlbDogUnVubmluZyB9CiAgICAgICAgLSB7IHN0YXRlOiBlbmQsIGNvbG9yOiB0ZWFsLCBpY29uOiBtZGk6d2FzaGluZy1tYWNoaW5lLWFsZXJ0LCBsYWJlbDogRG9uZSwgdGludF9jYXJkOiB0cnVlIH0KICAgICAgICAtIHsgc3RhdGU6IHBvd2VyX29mZiwgY29sb3I6IGdyZXksIGljb246IG1kaTp3YXNoaW5nLW1hY2hpbmUtb2ZmLCBsYWJlbDogIk9mZiIgfQogICAgLSB0eXBlOiBjdXN0b206ZW50aXR5LWNhcmQKICAgICAgZW50aXR5OiBjbGltYXRlLmxpdmluZ19yb29tCiAgICAgIG5hbWU6IEhlYXRpbmcKICAgICAgaWNvbjogbWRpOnJhZGlhdG9yCiAgICAgIGF0dHJpYnV0ZTogY3VycmVudF90ZW1wZXJhdHVyZQogICAgICB1bml0OiDCsEMKICAgICAgZGVjaW1hbHM6IDEKLSBjb2x1bW5fc3BhbjogMQogIGNhcmRzOgogICAgLSB7IHR5cGU6IGhlYWRpbmcsIGhlYWRpbmc6IFJvb21zLCBpY29uOiBtZGk6Zmxvb3ItcGxhbiB9CiAgICAtIHR5cGU6IGN1c3RvbTplbnRpdHktZ3JvdXAtY2FyZAogICAgICB0aXRsZTogTGl2aW5nIHJvb20KICAgICAgaWNvbjogbWRpOnNvZmEKICAgICAgZW50aXRpZXM6CiAgICAgICAgLSBlbnRpdHk6IHNlbnNvci5saXZpbmdfcm9vbV90ZW1wZXJhdHVyZQogICAgICAgICAgbmFtZTogVGVtcGVyYXR1cmUKICAgICAgICAgIGRlY2ltYWxzOiAxCiAgICAgICAgICBydWxlczoKICAgICAgICAgICAgLSB7IGJlbG93OiAxOSwgY29sb3I6IGJsdWUsIGxhYmVsOiBDb2xkIH0KICAgICAgICAgICAgLSB7IGJlbG93OiAyNCwgY29sb3I6IGdyZWVuLCBsYWJlbDogQ29tZm9ydGFibGUgfQogICAgICAgICAgICAtIHsgYWJvdmU6IDI0LCBjb2xvcjogb3JhbmdlLCBsYWJlbDogV2FybSB9CiAgICAgICAgLSBlbnRpdHk6IHNlbnNvci5saXZpbmdfcm9vbV9jbzIKICAgICAgICAgIG5hbWU6IENP4oKCCiAgICAgICAgICB2aXN1YWw6IHN0cmlwCiAgICAgICAgICBydWxlczoKICAgICAgICAgICAgLSB7IGJlbG93OiA4MDAsIGNvbG9yOiBncmVlbiB9CiAgICAgICAgICAgIC0geyBiZWxvdzogMTIwMCwgY29sb3I6IGFtYmVyIH0KICAgICAgICAgICAgLSB7IGFib3ZlOiAxMjAwLCBjb2xvcjogcmVkIH0KICAgICAgICAtIHsgZW50aXR5OiBjb3Zlci5saXZpbmdfcm9vbV9ibGluZHMsIG5hbWU6IEJsaW5kcywgaWNvbjogbWRpOndpbmRvdy1zaHV0dGVyLCBhdHRyaWJ1dGU6IGN1cnJlbnRfcG9zaXRpb24sIHVuaXQ6ICIlIiwgdmlzdWFsOiBiYXIgfQogICAgICAgIC0gZW50aXR5OiBtZWRpYV9wbGF5ZXIubGl2aW5nX3Jvb21fdHYKICAgICAgICAgIG5hbWU6IFRWCiAgICAgICAgICB2aXN1YWw6IGJhZGdlCiAgICAgICAgICBydWxlczoKICAgICAgICAgICAgLSB7IHN0YXRlOiBwbGF5aW5nLCBjb2xvcjogZ3JlZW4sIGljb246IG1kaTpwbGF5LWNpcmNsZSwgbGFiZWw6IFBsYXlpbmcgfQogICAgICAgICAgICAtIHsgc3RhdGU6IGlkbGUsIGNvbG9yOiBncmV5LCBpY29uOiBtZGk6dGVsZXZpc2lvbiwgbGFiZWw6IElkbGUgfQogICAgLSB0eXBlOiBjdXN0b206ZW50aXR5LXNlY3Rpb25zLWNhcmQKICAgICAgdGl0bGU6IE9mZmljZQogICAgICBpY29uOiBtZGk6ZGVzawogICAgICBoZWFkZXJfZW50aXRpZXM6CiAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLm9mZmljZV90ZW1wZXJhdHVyZSwgZGVjaW1hbHM6IDEgfQogICAgICAgIC0gZW50aXR5OiBzZW5zb3Iub2ZmaWNlX2NvMgogICAgICAgICAgZGVjaW1hbHM6IDAKICAgICAgICAgIHJ1bGVzOgogICAgICAgICAgICAtIHsgYmVsb3c6IDgwMCwgY29sb3I6IGdyZWVuIH0KICAgICAgICAgICAgLSB7IGJlbG93OiAxMjAwLCBjb2xvcjogYW1iZXIgfQogICAgICAgICAgICAtIHsgYWJvdmU6IDEyMDAsIGNvbG9yOiByZWQgfQogICAgICBzZWN0aW9uczoKICAgICAgICAtIGxheW91dDogcm93CiAgICAgICAgICBhbGlnbjogc3BhY2UtYmV0d2VlbgogICAgICAgICAgc2hvd19uYW1lOiBmYWxzZQogICAgICAgICAgZW50aXRpZXM6CiAgICAgICAgICAgIC0geyBlbnRpdHk6IGxpZ2h0Lm9mZmljZSwgdG9nZ2xlOiB0cnVlIH0KICAgICAgICAgICAgLSB7IGVudGl0eTogbGlnaHQuZGVza19sYW1wLCB0b2dnbGU6IHRydWUgfQogICAgICAgICAgICAtIHsgZW50aXR5OiBjb3Zlci5vZmZpY2VfYmxpbmRzLCBpY29uOiBtZGk6d2luZG93LXNodXR0ZXIsIGF0dHJpYnV0ZTogY3VycmVudF9wb3NpdGlvbiwgdW5pdDogIiUiIH0KLSBjb2x1bW5fc3BhbjogMQogIGNhcmRzOgogICAgLSB7IHR5cGU6IGhlYWRpbmcsIGhlYWRpbmc6IFNjZW5lcywgaWNvbjogbWRpOnBhbGV0dGUgfQogICAgLSB0eXBlOiBjdXN0b206ZW50aXR5LWdyb3VwLWNhcmQKICAgICAgbGF5b3V0OiBncmlkCiAgICAgIGNvbHVtbnM6IDIKICAgICAgZW50aXRpZXM6CiAgICAgICAgLSBlbnRpdHk6IHNjZW5lLm1vdmllX25pZ2h0CiAgICAgICAgICBuYW1lOiBNb3ZpZSBuaWdodAogICAgICAgICAgaWNvbjogbWRpOm1vdmllLW9wZW4KICAgICAgICAgIGNvbG9yOiBwdXJwbGUKICAgICAgICAgIHZhbHVlOiBBY3RpdmF0ZQogICAgICAgICAgdGFwX2FjdGlvbjogeyBhY3Rpb246IHBlcmZvcm0tYWN0aW9uLCBwZXJmb3JtX2FjdGlvbjogc2NlbmUudHVybl9vbiwgdGFyZ2V0OiB7IGVudGl0eV9pZDogc2NlbmUubW92aWVfbmlnaHQgfSB9CiAgICAgICAgLSBlbnRpdHk6IHNjZW5lLmRpbm5lcgogICAgICAgICAgbmFtZTogRGlubmVyCiAgICAgICAgICBpY29uOiBtZGk6c2lsdmVyd2FyZS1mb3JrLWtuaWZlCiAgICAgICAgICBjb2xvcjogb3JhbmdlCiAgICAgICAgICB2YWx1ZTogQWN0aXZhdGUKICAgICAgICAgIHRhcF9hY3Rpb246IHsgYWN0aW9uOiBwZXJmb3JtLWFjdGlvbiwgcGVyZm9ybV9hY3Rpb246IHNjZW5lLnR1cm5fb24sIHRhcmdldDogeyBlbnRpdHlfaWQ6IHNjZW5lLmRpbm5lciB9IH0KICAgICAgICAtIGVudGl0eTogc2NlbmUuYnJpZ2h0CiAgICAgICAgICBuYW1lOiBCcmlnaHQKICAgICAgICAgIGljb246IG1kaTp3aGl0ZS1iYWxhbmNlLXN1bm55CiAgICAgICAgICBjb2xvcjogYW1iZXIKICAgICAgICAgIHZhbHVlOiBBY3RpdmF0ZQogICAgICAgICAgdGFwX2FjdGlvbjogeyBhY3Rpb246IHBlcmZvcm0tYWN0aW9uLCBwZXJmb3JtX2FjdGlvbjogc2NlbmUudHVybl9vbiwgdGFyZ2V0OiB7IGVudGl0eV9pZDogc2NlbmUuYnJpZ2h0IH0gfQogICAgICAgIC0gZW50aXR5OiBzY2VuZS5nb29kX25pZ2h0CiAgICAgICAgICBuYW1lOiBHb29kIG5pZ2h0CiAgICAgICAgICBpY29uOiBtZGk6d2VhdGhlci1uaWdodAogICAgICAgICAgY29sb3I6IGluZGlnbwogICAgICAgICAgdmFsdWU6IEFjdGl2YXRlCiAgICAgICAgICB0YXBfYWN0aW9uOiB7IGFjdGlvbjogcGVyZm9ybS1hY3Rpb24sIHBlcmZvcm1fYWN0aW9uOiBzY2VuZS50dXJuX29uLCB0YXJnZXQ6IHsgZW50aXR5X2lkOiBzY2VuZS5nb29kX25pZ2h0IH0gfQogICAgLSB0eXBlOiBjdXN0b206ZW50aXR5LWdyb3VwLWNhcmQKICAgICAgdGl0bGU6IE1vZGVzCiAgICAgIGljb246IG1kaTp0b2dnbGUtc3dpdGNoCiAgICAgIGxheW91dDogZ3JpZAogICAgICBjb2x1bW5zOiAyCiAgICAgIGVudGl0aWVzOgogICAgICAgIC0geyBlbnRpdHk6IGlucHV0X2Jvb2xlYW4uZ3Vlc3RfbW9kZSwgbmFtZTogR3Vlc3RzLCBpY29uOiBtZGk6YWNjb3VudC1ncm91cCwgdG9nZ2xlOiB0cnVlIH0KICAgICAgICAtIHsgZW50aXR5OiBpbnB1dF9ib29sZWFuLm5pZ2h0X21vZGUsIG5hbWU6IE5pZ2h0LCBpY29uOiBtZGk6d2VhdGhlci1uaWdodCwgdG9nZ2xlOiB0cnVlIH0KICAgICAgICAtIHsgZW50aXR5OiBpbnB1dF9ib29sZWFuLmF3YXlfbW9kZSwgbmFtZTogQXdheSwgaWNvbjogbWRpOmhvbWUtZXhwb3J0LW91dGxpbmUsIHRvZ2dsZTogdHJ1ZSB9CiAgICAgICAgLSB7IGVudGl0eTogaW5wdXRfYm9vbGVhbi52YWNhdGlvbl9tb2RlLCBuYW1lOiBWYWNhdGlvbiwgaWNvbjogbWRpOmJlYWNoLCB0b2dnbGU6IHRydWUgfQo=">
+<DashboardGrid b64="LSBjb2x1bW5fc3BhbjogMQogIGNhcmRzOgogICAgLSB7IHR5cGU6IGhlYWRpbmcsIGhlYWRpbmc6IEhvbWUsIGljb246IG1kaTpob21lIH0KICAgIC0gdHlwZTogY3VzdG9tOmVudGl0eS1zZWN0aW9ucy1jYXJkCiAgICAgIHRpdGxlOiBXaG8ncyBob21lCiAgICAgIGljb246IG1kaTpzaGllbGQtaG9tZQogICAgICBzaG93X2ljb246IHRydWUKICAgICAgc2VjdGlvbnM6CiAgICAgICAgLSBsYXlvdXQ6IHJvdwogICAgICAgICAgYWxpZ246IHNwYWNlLWJldHdlZW4KICAgICAgICAgIGVudGl0aWVzOgogICAgICAgICAgICAtIHsgZW50aXR5OiBwZXJzb24uYWxleCwgbmFtZTogQWxleCwgdmlzdWFsOiBiYWRnZSwgcnVsZXM6ICZwIFt7IHN0YXRlOiBob21lLCBjb2xvcjogZ3JlZW4sIGxhYmVsOiBIb21lIH0sIHsgc3RhdGU6IG5vdF9ob21lLCBjb2xvcjogZ3JleSwgbGFiZWw6IEF3YXkgfV0gfQogICAgICAgICAgICAtIHsgZW50aXR5OiBwZXJzb24uc2FtLCBuYW1lOiBTYW0sIHZpc3VhbDogYmFkZ2UsIHJ1bGVzOiAqcCB9CiAgICAgICAgICAgIC0geyBlbnRpdHk6IHBlcnNvbi5raW0sIG5hbWU6IEtpbSwgdmlzdWFsOiBiYWRnZSwgcnVsZXM6ICpwIH0KICAgICAgICAtIGxheW91dDogdGFibGUKICAgICAgICAgIGRpdmlkZXI6IHRydWUKICAgICAgICAgIGVudGl0aWVzOgogICAgICAgICAgICAtIHsgZW50aXR5OiBiaW5hcnlfc2Vuc29yLmRvb3JfZnJvbnQsIG5hbWU6IEZyb250IGRvb3IsIHZpc3VhbDogYmFkZ2UsIHJ1bGVzOiBbeyBzdGF0ZTogIm9uIiwgY29sb3I6IHJlZCwgaWNvbjogbWRpOmRvb3Itb3BlbiwgbGFiZWw6IE9wZW4gfSwgeyBzdGF0ZTogIm9mZiIsIGNvbG9yOiBncmVlbiwgaWNvbjogbWRpOmRvb3ItY2xvc2VkLCBsYWJlbDogQ2xvc2VkIH1dIH0KICAgICAgICAgICAgLSB7IGVudGl0eTogYmluYXJ5X3NlbnNvci53aW5kb3dfa2l0Y2hlbiwgbmFtZTogS2l0Y2hlbiB3aW5kb3csIHZpc3VhbDogYmFkZ2UsIHJ1bGVzOiAmdyBbeyBzdGF0ZTogIm9uIiwgY29sb3I6IHJlZCwgaWNvbjogbWRpOndpbmRvdy1vcGVuLCBsYWJlbDogT3BlbiB9LCB7IHN0YXRlOiAib2ZmIiwgY29sb3I6IGdyZWVuLCBpY29uOiBtZGk6d2luZG93LWNsb3NlZCwgbGFiZWw6IENsb3NlZCB9XSB9CiAgICAgICAgICAgIC0geyBlbnRpdHk6IGJpbmFyeV9zZW5zb3Iud2luZG93X2JhdGhyb29tLCBuYW1lOiBCYXRocm9vbSB3aW5kb3csIHZpc3VhbDogYmFkZ2UsIHJ1bGVzOiAqdyB9CiAgICAgICAgICAgIC0geyBlbnRpdHk6IGJpbmFyeV9zZW5zb3IubW90aW9uX2hhbGx3YXksIG5hbWU6IEhhbGx3YXkgbW90aW9uLCB2aXN1YWw6IGJhZGdlLCBydWxlczogW3sgc3RhdGU6ICJvbiIsIGNvbG9yOiBhbWJlciwgaWNvbjogbWRpOm1vdGlvbi1zZW5zb3IsIGxhYmVsOiBEZXRlY3RlZCB9LCB7IHN0YXRlOiAib2ZmIiwgY29sb3I6IGdyZXksIGljb246IG1kaTptb3Rpb24tc2Vuc29yLW9mZiwgbGFiZWw6IENsZWFyIH1dIH0KICAgIC0gdHlwZTogY3VzdG9tOmVudGl0eS1jYXJkCiAgICAgIGVudGl0eTogYmluYXJ5X3NlbnNvci53aW5kb3dfa2l0Y2hlbgogICAgICBuYW1lOiBPcGVuIHdpbmRvd3MKICAgICAgaWNvbjogbWRpOndpbmRvdy1vcGVuLXZhcmlhbnQKICAgICAgdmFsdWU6ICJ7eyBzdGF0ZXMuYmluYXJ5X3NlbnNvciB8IHNlbGVjdGF0dHIoJ2F0dHJpYnV0ZXMuZGV2aWNlX2NsYXNzJywgJ2VxJywgJ3dpbmRvdycpIHwgc2VsZWN0YXR0cignc3RhdGUnLCAnZXEnLCAnb24nKSB8IGxpc3QgfCBjb3VudCB9fSIKICAgICAgcnVsZXM6CiAgICAgICAgLSB7IGJlbG93OiAxLCBjb2xvcjogZ3JlZW4sIGxhYmVsOiBBbGwgY2xvc2VkIH0KICAgICAgICAtIHsgYWJvdmU6IDEsIGNvbG9yOiByZWQsIGxhYmVsOiBBaXJpbmcsIHRpbnRfY2FyZDogdHJ1ZSB9CiAgICAgIGdyaWRfb3B0aW9uczogeyBjb2x1bW5zOiA2IH0KICAgIC0gdHlwZTogY3VzdG9tOmVudGl0eS1jYXJkCiAgICAgIGVudGl0eTogbGlnaHQubGl2aW5nX3Jvb20KICAgICAgbmFtZTogTGlnaHRzIG9uCiAgICAgIGljb246IG1kaTpsaWdodGJ1bGItZ3JvdXAKICAgICAgdmFsdWU6ICJ7eyBzdGF0ZXMubGlnaHQgfCBzZWxlY3RhdHRyKCdzdGF0ZScsICdlcScsICdvbicpIHwgbGlzdCB8IGNvdW50IH19IgogICAgICBzdWZmaXg6ICIgb2YgOCIKICAgICAgcnVsZXM6CiAgICAgICAgLSB7IGJlbG93OiAxLCBjb2xvcjogZ3JleSwgbGFiZWw6IEFsbCBvZmYgfQogICAgICAgIC0geyBhYm92ZTogMSwgY29sb3I6IGFtYmVyLCBsYWJlbDogU29tZSBvbiB9CiAgICAgIGdyaWRfb3B0aW9uczogeyBjb2x1bW5zOiA2IH0KICAgIC0gdHlwZTogY3VzdG9tOmVudGl0eS1jYXJkCiAgICAgIGVudGl0eTogc2Vuc29yLndhc2hlcl9zdGF0dXMKICAgICAgbmFtZTogV2FzaGluZyBtYWNoaW5lCiAgICAgIHNlY29uZGFyeTogInt7IHN0YXRlcygnc2Vuc29yLndhc2hlcl9yZW1haW5pbmcnKSB9fSBtaW4gbGVmdCIKICAgICAgdmlzdWFsOiBiYWRnZQogICAgICBydWxlczoKICAgICAgICAtIHsgc3RhdGU6IHJ1biwgY29sb3I6IGdyZWVuLCBpY29uOiBtZGk6d2FzaGluZy1tYWNoaW5lLCBsYWJlbDogUnVubmluZyB9CiAgICAgICAgLSB7IHN0YXRlOiBlbmQsIGNvbG9yOiB0ZWFsLCBpY29uOiBtZGk6d2FzaGluZy1tYWNoaW5lLWFsZXJ0LCBsYWJlbDogRG9uZSwgdGludF9jYXJkOiB0cnVlIH0KICAgICAgICAtIHsgc3RhdGU6IHBvd2VyX29mZiwgY29sb3I6IGdyZXksIGljb246IG1kaTp3YXNoaW5nLW1hY2hpbmUtb2ZmLCBsYWJlbDogIk9mZiIgfQogICAgICBncmlkX29wdGlvbnM6IHsgY29sdW1uczogNiB9CiAgICAtIHR5cGU6IGN1c3RvbTplbnRpdHktY2FyZAogICAgICBlbnRpdHk6IHZhY3V1bS5yb2JvdAogICAgICBuYW1lOiBSb2JvdCB2YWN1dW0KICAgICAgc2Vjb25kYXJ5OiAie3sgc3RhdGVzKCdzZW5zb3Iucm9ib3RfY3VycmVudF9yb29tJykgfX0gwrcge3sgc3RhdGVzKCdzZW5zb3Iucm9ib3RfYmF0dGVyeScpIH19ICUiCiAgICAgIHZpc3VhbDogYmFkZ2UKICAgICAgcnVsZXM6CiAgICAgICAgLSB7IHN0YXRlOiBkb2NrZWQsIGNvbG9yOiBncmVlbiwgaWNvbjogbWRpOnJvYm90LXZhY3V1bSwgbGFiZWw6IERvY2tlZCB9CiAgICAgICAgLSB7IHN0YXRlOiBjbGVhbmluZywgY29sb3I6IGJsdWUsIGljb246IG1kaTpyb2JvdC12YWN1dW0sIGxhYmVsOiBDbGVhbmluZyB9CiAgICAgICAgLSB7IHN0YXRlOiByZXR1cm5pbmcsIGNvbG9yOiB0ZWFsLCBpY29uOiBtZGk6aG9tZS1pbXBvcnQtb3V0bGluZSwgbGFiZWw6IFJldHVybmluZyB9CiAgICAgIGdyaWRfb3B0aW9uczogeyBjb2x1bW5zOiA2IH0KLSBjb2x1bW5fc3BhbjogMQogIGNhcmRzOgogICAgLSB7IHR5cGU6IGhlYWRpbmcsIGhlYWRpbmc6IFJvb21zLCBpY29uOiBtZGk6Zmxvb3ItcGxhbiB9CiAgICAtIHR5cGU6IGN1c3RvbTplbnRpdHktZ3JvdXAtY2FyZAogICAgICB0aXRsZTogTGl2aW5nIHJvb20KICAgICAgaWNvbjogbWRpOnNvZmEKICAgICAgZW50aXRpZXM6CiAgICAgICAgLSBlbnRpdHk6IGxpZ2h0LmxpdmluZ19yb29tCiAgICAgICAgICB0b2dnbGU6IHRydWUKICAgICAgICAgIHJ1bGVzOgogICAgICAgICAgICAtIHsgc3RhdGU6ICJvbiIsIGNvbG9yOiBhbWJlciwgbGFiZWw6ICJPbiIgfQogICAgICAgICAgICAtIHsgc3RhdGU6ICJvZmYiLCBjb2xvcjogZ3JleSwgbGFiZWw6ICJPZmYiIH0KICAgICAgICAtIGVudGl0eTogbGlnaHQuZGluaW5nX3RhYmxlCiAgICAgICAgICB0b2dnbGU6IHRydWUKICAgICAgICAgIHJ1bGVzOgogICAgICAgICAgICAtIHsgc3RhdGU6ICJvbiIsIGNvbG9yOiBhbWJlciwgbGFiZWw6ICJPbiIgfQogICAgICAgICAgICAtIHsgc3RhdGU6ICJvZmYiLCBjb2xvcjogZ3JleSwgbGFiZWw6ICJPZmYiIH0KICAgICAgICAtIGVudGl0eTogc2Vuc29yLmxpdmluZ19yb29tX3RlbXBlcmF0dXJlCiAgICAgICAgICBuYW1lOiBUZW1wZXJhdHVyZQogICAgICAgICAgZGVjaW1hbHM6IDEKICAgICAgICAgIHJ1bGVzOgogICAgICAgICAgICAtIHsgYmVsb3c6IDE5LCBjb2xvcjogYmx1ZSwgbGFiZWw6IENvbGQgfQogICAgICAgICAgICAtIHsgYmVsb3c6IDI0LCBjb2xvcjogZ3JlZW4sIGxhYmVsOiBDb21mb3J0YWJsZSB9CiAgICAgICAgICAgIC0geyBhYm92ZTogMjQsIGNvbG9yOiBvcmFuZ2UsIGxhYmVsOiBXYXJtIH0KICAgICAgICAtIGVudGl0eTogc2Vuc29yLmxpdmluZ19yb29tX2NvMgogICAgICAgICAgbmFtZTogQ0/igoIKICAgICAgICAgIHZpc3VhbDogc3RyaXAKICAgICAgICAgIHJ1bGVzOgogICAgICAgICAgICAtIHsgYmVsb3c6IDgwMCwgY29sb3I6IGdyZWVuIH0KICAgICAgICAgICAgLSB7IGJlbG93OiAxMjAwLCBjb2xvcjogYW1iZXIgfQogICAgICAgICAgICAtIHsgYWJvdmU6IDEyMDAsIGNvbG9yOiByZWQgfQogICAgICAgIC0geyBlbnRpdHk6IGNvdmVyLmxpdmluZ19yb29tX2JsaW5kcywgbmFtZTogQmxpbmRzLCBpY29uOiBtZGk6d2luZG93LXNodXR0ZXIsIGF0dHJpYnV0ZTogY3VycmVudF9wb3NpdGlvbiwgdW5pdDogIiUiLCB2aXN1YWw6IGJhciB9CiAgICAgICAgLSBlbnRpdHk6IG1lZGlhX3BsYXllci5saXZpbmdfcm9vbV90dgogICAgICAgICAgbmFtZTogVFYKICAgICAgICAgIHZpc3VhbDogYmFkZ2UKICAgICAgICAgIHJ1bGVzOgogICAgICAgICAgICAtIHsgc3RhdGU6IHBsYXlpbmcsIGNvbG9yOiBncmVlbiwgaWNvbjogbWRpOnBsYXktY2lyY2xlLCBsYWJlbDogUGxheWluZyB9CiAgICAgICAgICAgIC0geyBzdGF0ZTogaWRsZSwgY29sb3I6IGdyZXksIGljb246IG1kaTp0ZWxldmlzaW9uLCBsYWJlbDogSWRsZSB9CiAgICAtIHR5cGU6IGN1c3RvbTplbnRpdHktc2VjdGlvbnMtY2FyZAogICAgICB0aXRsZTogT2ZmaWNlCiAgICAgIGljb246IG1kaTpkZXNrCiAgICAgIGhlYWRlcl9lbnRpdGllczoKICAgICAgICAtIHsgZW50aXR5OiBzZW5zb3Iub2ZmaWNlX3RlbXBlcmF0dXJlLCBkZWNpbWFsczogMSB9CiAgICAgICAgLSBlbnRpdHk6IHNlbnNvci5vZmZpY2VfY28yCiAgICAgICAgICBkZWNpbWFsczogMAogICAgICAgICAgcnVsZXM6CiAgICAgICAgICAgIC0geyBiZWxvdzogODAwLCBjb2xvcjogZ3JlZW4gfQogICAgICAgICAgICAtIHsgYmVsb3c6IDEyMDAsIGNvbG9yOiBhbWJlciB9CiAgICAgICAgICAgIC0geyBhYm92ZTogMTIwMCwgY29sb3I6IHJlZCB9CiAgICAgIHNlY3Rpb25zOgogICAgICAgIC0gbGF5b3V0OiByb3cKICAgICAgICAgIGFsaWduOiBzcGFjZS1iZXR3ZWVuCiAgICAgICAgICBzaG93X25hbWU6IGZhbHNlCiAgICAgICAgICBlbnRpdGllczoKICAgICAgICAgICAgLSB7IGVudGl0eTogbGlnaHQub2ZmaWNlLCB0YXBfYWN0aW9uOiB0b2dnbGUsIHJ1bGVzOiBbeyBzdGF0ZTogIm9uIiwgY29sb3I6IGFtYmVyIH0sIHsgc3RhdGU6ICJvZmYiLCBjb2xvcjogZ3JleSB9XSB9CiAgICAgICAgICAgIC0geyBlbnRpdHk6IGxpZ2h0LmRlc2tfbGFtcCwgdGFwX2FjdGlvbjogdG9nZ2xlLCBydWxlczogW3sgc3RhdGU6ICJvbiIsIGNvbG9yOiBhbWJlciB9LCB7IHN0YXRlOiAib2ZmIiwgY29sb3I6IGdyZXkgfV0gfQogICAgICAgICAgICAtIHsgZW50aXR5OiBjb3Zlci5vZmZpY2VfYmxpbmRzLCBpY29uOiBtZGk6d2luZG93LXNodXR0ZXIsIGF0dHJpYnV0ZTogY3VycmVudF9wb3NpdGlvbiwgdW5pdDogIiUiIH0KICAgIC0gdHlwZTogY3VzdG9tOm11bHRpLXRyZW5kLWNhcmQKICAgICAgdGl0bGU6IEluZG9vciB0ZW1wZXJhdHVyZXMKICAgICAgaWNvbjogbWRpOmhvbWUtdGhlcm1vbWV0ZXIKICAgICAgaG91cnNfdG9fc2hvdzogMTIKICAgICAgbGF5b3V0OiBvdmVybGF5CiAgICAgIGVudGl0aWVzOgogICAgICAgIC0geyBlbnRpdHk6IHNlbnNvci5saXZpbmdfcm9vbV90ZW1wZXJhdHVyZSwgbmFtZTogTGl2aW5nIHJvb20sIGNvbG9yOiBvcmFuZ2UgfQogICAgICAgIC0geyBlbnRpdHk6IHNlbnNvci5iZWRyb29tX3RlbXBlcmF0dXJlLCBuYW1lOiBCZWRyb29tLCBjb2xvcjogYmx1ZSB9CiAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLm9mZmljZV90ZW1wZXJhdHVyZSwgbmFtZTogT2ZmaWNlLCBjb2xvcjogcmVkIH0KLSBjb2x1bW5fc3BhbjogMQogIGNhcmRzOgogICAgLSB7IHR5cGU6IGhlYWRpbmcsIGhlYWRpbmc6IFNjZW5lcyAmIG1vZGVzLCBpY29uOiBtZGk6cGFsZXR0ZSB9CiAgICAtIHR5cGU6IGN1c3RvbTplbnRpdHktc2VjdGlvbnMtY2FyZAogICAgICB0aXRsZTogTW9kZXMgJiBzY2VuZXMKICAgICAgaWNvbjogbWRpOnBhbGV0dGUKICAgICAgc2hvd19uYW1lOiB0cnVlCiAgICAgIHNlY3Rpb25zOgogICAgICAgIC0gbGF5b3V0OiByb3cKICAgICAgICAgIGFsaWduOiBzcGFjZS1iZXR3ZWVuCiAgICAgICAgICBlbnRpdGllczoKICAgICAgICAgICAgLSB7IGVudGl0eTogaW5wdXRfYm9vbGVhbi5uaWdodF9tb2RlLCBuYW1lOiBOaWdodCwgdGFwX2FjdGlvbjogdG9nZ2xlLCBydWxlczogW3sgc3RhdGU6ICJvbiIsIGNvbG9yOiBpbmRpZ28gfSwgeyBzdGF0ZTogIm9mZiIsIGNvbG9yOiBncmV5IH1dIH0KICAgICAgICAgICAgLSB7IGVudGl0eTogaW5wdXRfYm9vbGVhbi5ndWVzdF9tb2RlLCBuYW1lOiBHdWVzdHMsIHRhcF9hY3Rpb246IHRvZ2dsZSwgcnVsZXM6IFt7IHN0YXRlOiAib24iLCBjb2xvcjogcGluayB9LCB7IHN0YXRlOiAib2ZmIiwgY29sb3I6IGdyZXkgfV0gfQogICAgICAgICAgICAtIHsgZW50aXR5OiBpbnB1dF9ib29sZWFuLmF3YXlfbW9kZSwgbmFtZTogQXdheSwgdGFwX2FjdGlvbjogdG9nZ2xlLCBydWxlczogW3sgc3RhdGU6ICJvbiIsIGNvbG9yOiBibHVlIH0sIHsgc3RhdGU6ICJvZmYiLCBjb2xvcjogZ3JleSB9XSB9CiAgICAgICAgICAgIC0geyBlbnRpdHk6IGlucHV0X2Jvb2xlYW4udmFjYXRpb25fbW9kZSwgbmFtZTogVmFjYXRpb24sIHRhcF9hY3Rpb246IHRvZ2dsZSwgcnVsZXM6IFt7IHN0YXRlOiAib24iLCBjb2xvcjogdGVhbCwgdGludF9jYXJkOiB0cnVlIH0sIHsgc3RhdGU6ICJvZmYiLCBjb2xvcjogZ3JleSB9XSB9CiAgICAgICAgLSBsYXlvdXQ6IHJvdwogICAgICAgICAgZGl2aWRlcjogdHJ1ZQogICAgICAgICAgYWxpZ246IHNwYWNlLWJldHdlZW4KICAgICAgICAgIG5hbWVfcG9zaXRpb246IGJlbG93CiAgICAgICAgICBlbnRpdGllczoKICAgICAgICAgICAgLSB7IGVudGl0eTogc2NlbmUuYnJpZ2h0LCBuYW1lOiBCcmlnaHQsIGljb246IG1kaTp3aGl0ZS1iYWxhbmNlLXN1bm55LCBjb2xvcjogYW1iZXIsIHRhcF9hY3Rpb246IHsgYWN0aW9uOiBwZXJmb3JtLWFjdGlvbiwgcGVyZm9ybV9hY3Rpb246IHNjZW5lLnR1cm5fb24sIHRhcmdldDogeyBlbnRpdHlfaWQ6IHNjZW5lLmJyaWdodCB9IH0gfQogICAgICAgICAgICAtIHsgZW50aXR5OiBzY2VuZS5kaW1tZWQsIG5hbWU6IERpbW1lZCwgaWNvbjogbWRpOmxpZ2h0YnVsYi1vbi01MCwgY29sb3I6IG9yYW5nZSwgdGFwX2FjdGlvbjogeyBhY3Rpb246IHBlcmZvcm0tYWN0aW9uLCBwZXJmb3JtX2FjdGlvbjogc2NlbmUudHVybl9vbiwgdGFyZ2V0OiB7IGVudGl0eV9pZDogc2NlbmUuZGltbWVkIH0gfSB9CiAgICAgICAgICAgIC0geyBlbnRpdHk6IHNjZW5lLmRpbm5lciwgbmFtZTogRGlubmVyLCBpY29uOiBtZGk6c2lsdmVyd2FyZS1mb3JrLWtuaWZlLCBjb2xvcjogZGVlcC1vcmFuZ2UsIHRhcF9hY3Rpb246IHsgYWN0aW9uOiBwZXJmb3JtLWFjdGlvbiwgcGVyZm9ybV9hY3Rpb246IHNjZW5lLnR1cm5fb24sIHRhcmdldDogeyBlbnRpdHlfaWQ6IHNjZW5lLmRpbm5lciB9IH0gfQogICAgICAgICAgICAtIHsgZW50aXR5OiBzY2VuZS5tb3ZpZV9uaWdodCwgbmFtZTogTW92aWUsIGljb246IG1kaTptb3ZpZS1vcGVuLCBjb2xvcjogZGVlcC1wdXJwbGUsIHRhcF9hY3Rpb246IHsgYWN0aW9uOiBwZXJmb3JtLWFjdGlvbiwgcGVyZm9ybV9hY3Rpb246IHNjZW5lLnR1cm5fb24sIHRhcmdldDogeyBlbnRpdHlfaWQ6IHNjZW5lLm1vdmllX25pZ2h0IH0gfSB9CiAgICAgICAgICAgIC0geyBlbnRpdHk6IHNjZW5lLmdvb2RfbmlnaHQsIG5hbWU6IE5pZ2h0LCBpY29uOiBtZGk6d2VhdGhlci1uaWdodCwgY29sb3I6IGluZGlnbywgdGFwX2FjdGlvbjogeyBhY3Rpb246IHBlcmZvcm0tYWN0aW9uLCBwZXJmb3JtX2FjdGlvbjogc2NlbmUudHVybl9vbiwgdGFyZ2V0OiB7IGVudGl0eV9pZDogc2NlbmUuZ29vZF9uaWdodCB9IH0gfQogICAgLSB0eXBlOiBjdXN0b206ZW50aXR5LWdyb3VwLWNhcmQKICAgICAgdGl0bGU6IEFwcGxpYW5jZXMKICAgICAgaWNvbjogbWRpOnBvd2VyLXBsdWcKICAgICAgbGF5b3V0OiB0YWJsZQogICAgICBzaG93X2ljb246IHRydWUKICAgICAgZW50aXRpZXM6CiAgICAgICAgLSB7IGVudGl0eTogc3dpdGNoLmNvZmZlZV9tYWNoaW5lLCBuYW1lOiBDb2ZmZWUgbWFjaGluZSwgaWNvbjogbWRpOmNvZmZlZS1tYWtlciwgdG9nZ2xlOiB0cnVlLCBzaG93X3ZhbHVlOiBmYWxzZSB9CiAgICAgICAgLSBlbnRpdHk6IHNlbnNvci5kaXNod2FzaGVyX3N0YXR1cwogICAgICAgICAgbmFtZTogRGlzaHdhc2hlcgogICAgICAgICAgdmlzdWFsOiBiYWRnZQogICAgICAgICAgcnVsZXM6CiAgICAgICAgICAgIC0geyBzdGF0ZTogcnVuLCBjb2xvcjogZ3JlZW4sIGljb246IG1kaTpkaXNod2FzaGVyLCBsYWJlbDogUnVubmluZyB9CiAgICAgICAgICAgIC0geyBzdGF0ZTogZW5kLCBjb2xvcjogdGVhbCwgaWNvbjogbWRpOmRpc2h3YXNoZXItYWxlcnQsIGxhYmVsOiBEb25lIH0KICAgICAgICAgICAgLSB7IHN0YXRlOiBwb3dlcl9vZmYsIGNvbG9yOiBncmV5LCBpY29uOiBtZGk6ZGlzaHdhc2hlci1vZmYsIGxhYmVsOiAiT2ZmIiB9CiAgICAgICAgLSBlbnRpdHk6IG1lZGlhX3BsYXllci5raXRjaGVuX3NwZWFrZXIKICAgICAgICAgIG5hbWU6IEtpdGNoZW4gc3BlYWtlcgogICAgICAgICAgdmlzdWFsOiBiYWRnZQogICAgICAgICAgcnVsZXM6CiAgICAgICAgICAgIC0geyBzdGF0ZTogcGxheWluZywgY29sb3I6IGdyZWVuLCBpY29uOiBtZGk6c3BlYWtlci1wbGF5LCBsYWJlbDogUGxheWluZyB9CiAgICAgICAgICAgIC0geyBzdGF0ZTogaWRsZSwgY29sb3I6IGdyZXksIGljb246IG1kaTpzcGVha2VyLCBsYWJlbDogSWRsZSB9CiAgICAgICAgLSBlbnRpdHk6IHNlbnNvci5tb3Rpb25faGFsbHdheV9iYXR0ZXJ5CiAgICAgICAgICBuYW1lOiBNb3Rpb24gc2Vuc29yIGJhdHRlcnkKICAgICAgICAgIHZpc3VhbDogcmluZwogICAgICAgICAgcnVsZXM6CiAgICAgICAgICAgIC0geyBiZWxvdzogMjAsIGNvbG9yOiByZWQsIGxhYmVsOiBSZXBsYWNlIH0KICAgICAgICAgICAgLSB7IGJlbG93OiA1MCwgY29sb3I6IGFtYmVyIH0KICAgICAgICAgICAgLSB7IGFib3ZlOiA1MCwgY29sb3I6IGdyZWVuIH0K">
 
 ```yaml
 - column_span: 1
   cards:
     - { type: heading, heading: Home, icon: mdi:home }
-    - { type: custom:entity-card, entity: person.alex, grid_options: { columns: 6 } }
-    - { type: custom:entity-card, entity: person.kim, grid_options: { columns: 6 } }
-    - { type: custom:entity-card, entity: light.living_room, name: Living room, toggle: true, grid_options: { columns: 6 } }
-    - { type: custom:entity-card, entity: binary_sensor.door_front, name: Front door, grid_options: { columns: 6 } }
+    - type: custom:entity-sections-card
+      title: Who's home
+      icon: mdi:shield-home
+      show_icon: true
+      sections:
+        - layout: row
+          align: space-between
+          entities:
+            - { entity: person.alex, name: Alex, visual: badge, rules: &p [{ state: home, color: green, label: Home }, { state: not_home, color: grey, label: Away }] }
+            - { entity: person.sam, name: Sam, visual: badge, rules: *p }
+            - { entity: person.kim, name: Kim, visual: badge, rules: *p }
+        - layout: table
+          divider: true
+          entities:
+            - { entity: binary_sensor.door_front, name: Front door, visual: badge, rules: [{ state: "on", color: red, icon: mdi:door-open, label: Open }, { state: "off", color: green, icon: mdi:door-closed, label: Closed }] }
+            - { entity: binary_sensor.window_kitchen, name: Kitchen window, visual: badge, rules: &w [{ state: "on", color: red, icon: mdi:window-open, label: Open }, { state: "off", color: green, icon: mdi:window-closed, label: Closed }] }
+            - { entity: binary_sensor.window_bathroom, name: Bathroom window, visual: badge, rules: *w }
+            - { entity: binary_sensor.motion_hallway, name: Hallway motion, visual: badge, rules: [{ state: "on", color: amber, icon: mdi:motion-sensor, label: Detected }, { state: "off", color: grey, icon: mdi:motion-sensor-off, label: Clear }] }
+    - type: custom:entity-card
+      entity: binary_sensor.window_kitchen
+      name: Open windows
+      icon: mdi:window-open-variant
+      value: "{{ states.binary_sensor | selectattr('attributes.device_class', 'eq', 'window') | selectattr('state', 'eq', 'on') | list | count }}"
+      rules:
+        - { below: 1, color: green, label: All closed }
+        - { above: 1, color: red, label: Airing, tint_card: true }
+      grid_options: { columns: 6 }
+    - type: custom:entity-card
+      entity: light.living_room
+      name: Lights on
+      icon: mdi:lightbulb-group
+      value: "{{ states.light | selectattr('state', 'eq', 'on') | list | count }}"
+      suffix: " of 8"
+      rules:
+        - { below: 1, color: grey, label: All off }
+        - { above: 1, color: amber, label: Some on }
+      grid_options: { columns: 6 }
     - type: custom:entity-card
       entity: sensor.washer_status
       name: Washing machine
       secondary: "{{ states('sensor.washer_remaining') }} min left"
+      visual: badge
       rules:
         - { state: run, color: green, icon: mdi:washing-machine, label: Running }
         - { state: end, color: teal, icon: mdi:washing-machine-alert, label: Done, tint_card: true }
         - { state: power_off, color: grey, icon: mdi:washing-machine-off, label: "Off" }
+      grid_options: { columns: 6 }
     - type: custom:entity-card
-      entity: climate.living_room
-      name: Heating
-      icon: mdi:radiator
-      attribute: current_temperature
-      unit: °C
-      decimals: 1
+      entity: vacuum.robot
+      name: Robot vacuum
+      secondary: "{{ states('sensor.robot_current_room') }} · {{ states('sensor.robot_battery') }} %"
+      visual: badge
+      rules:
+        - { state: docked, color: green, icon: mdi:robot-vacuum, label: Docked }
+        - { state: cleaning, color: blue, icon: mdi:robot-vacuum, label: Cleaning }
+        - { state: returning, color: teal, icon: mdi:home-import-outline, label: Returning }
+      grid_options: { columns: 6 }
 - column_span: 1
   cards:
     - { type: heading, heading: Rooms, icon: mdi:floor-plan }
@@ -168,6 +206,16 @@ Who is home, what is running, the rooms and the scenes. Plain tiles next to grou
       title: Living room
       icon: mdi:sofa
       entities:
+        - entity: light.living_room
+          toggle: true
+          rules:
+            - { state: "on", color: amber, label: "On" }
+            - { state: "off", color: grey, label: "Off" }
+        - entity: light.dining_table
+          toggle: true
+          rules:
+            - { state: "on", color: amber, label: "On" }
+            - { state: "off", color: grey, label: "Off" }
         - entity: sensor.living_room_temperature
           name: Temperature
           decimals: 1
@@ -205,50 +253,70 @@ Who is home, what is running, the rooms and the scenes. Plain tiles next to grou
           align: space-between
           show_name: false
           entities:
-            - { entity: light.office, toggle: true }
-            - { entity: light.desk_lamp, toggle: true }
+            - { entity: light.office, tap_action: toggle, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
+            - { entity: light.desk_lamp, tap_action: toggle, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
             - { entity: cover.office_blinds, icon: mdi:window-shutter, attribute: current_position, unit: "%" }
+    - type: custom:multi-trend-card
+      title: Indoor temperatures
+      icon: mdi:home-thermometer
+      hours_to_show: 12
+      layout: overlay
+      entities:
+        - { entity: sensor.living_room_temperature, name: Living room, color: orange }
+        - { entity: sensor.bedroom_temperature, name: Bedroom, color: blue }
+        - { entity: sensor.office_temperature, name: Office, color: red }
 - column_span: 1
   cards:
-    - { type: heading, heading: Scenes, icon: mdi:palette }
+    - { type: heading, heading: Scenes & modes, icon: mdi:palette }
+    - type: custom:entity-sections-card
+      title: Modes & scenes
+      icon: mdi:palette
+      show_name: true
+      sections:
+        - layout: row
+          align: space-between
+          entities:
+            - { entity: input_boolean.night_mode, name: Night, tap_action: toggle, rules: [{ state: "on", color: indigo }, { state: "off", color: grey }] }
+            - { entity: input_boolean.guest_mode, name: Guests, tap_action: toggle, rules: [{ state: "on", color: pink }, { state: "off", color: grey }] }
+            - { entity: input_boolean.away_mode, name: Away, tap_action: toggle, rules: [{ state: "on", color: blue }, { state: "off", color: grey }] }
+            - { entity: input_boolean.vacation_mode, name: Vacation, tap_action: toggle, rules: [{ state: "on", color: teal, tint_card: true }, { state: "off", color: grey }] }
+        - layout: row
+          divider: true
+          align: space-between
+          name_position: below
+          entities:
+            - { entity: scene.bright, name: Bright, icon: mdi:white-balance-sunny, color: amber, tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.bright } } }
+            - { entity: scene.dimmed, name: Dimmed, icon: mdi:lightbulb-on-50, color: orange, tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.dimmed } } }
+            - { entity: scene.dinner, name: Dinner, icon: mdi:silverware-fork-knife, color: deep-orange, tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.dinner } } }
+            - { entity: scene.movie_night, name: Movie, icon: mdi:movie-open, color: deep-purple, tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.movie_night } } }
+            - { entity: scene.good_night, name: Night, icon: mdi:weather-night, color: indigo, tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.good_night } } }
     - type: custom:entity-group-card
-      layout: grid
-      columns: 2
+      title: Appliances
+      icon: mdi:power-plug
+      layout: table
+      show_icon: true
       entities:
-        - entity: scene.movie_night
-          name: Movie night
-          icon: mdi:movie-open
-          color: purple
-          value: Activate
-          tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.movie_night } }
-        - entity: scene.dinner
-          name: Dinner
-          icon: mdi:silverware-fork-knife
-          color: orange
-          value: Activate
-          tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.dinner } }
-        - entity: scene.bright
-          name: Bright
-          icon: mdi:white-balance-sunny
-          color: amber
-          value: Activate
-          tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.bright } }
-        - entity: scene.good_night
-          name: Good night
-          icon: mdi:weather-night
-          color: indigo
-          value: Activate
-          tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.good_night } }
-    - type: custom:entity-group-card
-      title: Modes
-      icon: mdi:toggle-switch
-      layout: grid
-      columns: 2
-      entities:
-        - { entity: input_boolean.guest_mode, name: Guests, icon: mdi:account-group, toggle: true }
-        - { entity: input_boolean.night_mode, name: Night, icon: mdi:weather-night, toggle: true }
-        - { entity: input_boolean.away_mode, name: Away, icon: mdi:home-export-outline, toggle: true }
-        - { entity: input_boolean.vacation_mode, name: Vacation, icon: mdi:beach, toggle: true }
+        - { entity: switch.coffee_machine, name: Coffee machine, icon: mdi:coffee-maker, toggle: true, show_value: false }
+        - entity: sensor.dishwasher_status
+          name: Dishwasher
+          visual: badge
+          rules:
+            - { state: run, color: green, icon: mdi:dishwasher, label: Running }
+            - { state: end, color: teal, icon: mdi:dishwasher-alert, label: Done }
+            - { state: power_off, color: grey, icon: mdi:dishwasher-off, label: "Off" }
+        - entity: media_player.kitchen_speaker
+          name: Kitchen speaker
+          visual: badge
+          rules:
+            - { state: playing, color: green, icon: mdi:speaker-play, label: Playing }
+            - { state: idle, color: grey, icon: mdi:speaker, label: Idle }
+        - entity: sensor.motion_hallway_battery
+          name: Motion sensor battery
+          visual: ring
+          rules:
+            - { below: 20, color: red, label: Replace }
+            - { below: 50, color: amber }
+            - { above: 50, color: green }
 ```
 
 </DashboardGrid>
