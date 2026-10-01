@@ -1,12 +1,12 @@
 # Changelog
 
-## Unreleased
+## 1.7.1 (2026-10-01)
 
+- Fix the multi trend card's plot in a cell taller or shorter than its natural height: the SVG was stretched to the card, which turned the hover dots into ellipses, thickened the gridlines and skewed the curves. The plot is now drawn at the height it gets, and the trend section of the weather card shares the fix
 - Sun path card: the header is drawn like the other cards' (an icon and a 16 px title) instead of Home Assistant's card header; new `icon` option
 - Docs: the showcase has three full-width dashboards (Energy, Overview, Weather) grown from the homepage examples
 - Docs: the cards are grouped into Entities, Energy and Weather in the navigation, the getting started page and the README
-- Fix the multi trend card's plot in a cell taller or shorter than its natural height: the SVG was stretched to the card, which turned the hover dots into ellipses, thickened the gridlines and skewed the curves. The plot is now drawn at the height it gets, and the trend section of the weather card shares the fix
-- Docs: the homepage shows three live dashboards (Overview, Energy, Weather station) instead of a strip of single cards, and a new Energy showcase page
+- Docs: the homepage shows three live dashboards (Energy, Overview, Weather) instead of a strip of single cards, and a new Energy showcase page
 
 ## 1.7.0 (2026-10-01)
 
