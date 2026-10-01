@@ -13,6 +13,7 @@ Pro Cards adds these cards to the dashboard editor:
 | [Weather Card](/cards/weather-card)                 | `custom:weather-card`         | YAML          |
 | [Wind Card](/cards/wind-card)                       | `custom:wind-card`            | YAML          |
 | [Rain Card](/cards/rain-card)                       | `custom:rain-card`            | YAML          |
+| [Power Flow Card](/cards/power-flow-card)           | `custom:power-flow-card`      | YAML          |
 
 Requires Home Assistant 2025.3 or newer.
 

@@ -199,6 +199,73 @@ describe("card config schemas", () => {
     ).toBeNull();
   });
 
+  it("rejects power flow card typos and wrong shapes", () => {
+    const PF = "custom:power-flow-card";
+    const src = [
+      { type: "solar", entity: "sensor.solar_power" },
+      { type: "battery", power: "sensor.battery_power", soc: "sensor.battery_soc" },
+      { type: "grid", power: "sensor.grid_power" },
+    ];
+    expect(validate({ type: PF })).toMatch(/sources/);
+    expect(validate({ type: PF, sources: [] })).toMatch(/fewer|minItems/);
+    expect(validate({ type: PF, sources: [{ type: "wind", entity: "sensor.a" }] })).toBeTruthy();
+    expect(validate({ type: PF, sources: [{ type: "battery", soc: "sensor.s" }] })).toBeTruthy();
+    expect(
+      validate({ type: PF, sources: [{ type: "grid", power: "sensor.g", export: "sensor.e" }] }),
+    ).toBeTruthy();
+    expect(validate({ type: PF, sources: src, direction: "up" })).toMatch(/enum|allowed/);
+    expect(validate({ type: PF, sources: src, flow_style: "waves" })).toMatch(/enum|allowed/);
+    expect(validate({ type: PF, sources: src, idle_links: "none" })).toMatch(/enum|allowed/);
+    expect(validate({ type: PF, sources: src, decimals: 5 })).toBeTruthy();
+    expect(validate({ type: PF, sources: src, animation: { speed: 3 } })).toBeTruthy();
+    expect(validate({ type: PF, sources: src, consumers: [{ name: "x" }] })).toBeTruthy();
+    expect(validate({ type: PF, sources: src, consumers: [{ group: "Room" }] })).toBeTruthy();
+    expect(validate({ type: PF, sources: src, flowstyle: "dots" })).toBeTruthy();
+    expect(
+      validate({
+        type: PF,
+        title: "Energy",
+        home: "sensor.power_consumption",
+        sources: [
+          { type: "solar", entity: "sensor.solar_east", name: "East", secondary: "roof" },
+          {
+            type: "battery",
+            charge: "sensor.a",
+            discharge: "sensor.b",
+            soc: "sensor.battery_soc",
+            invert: true,
+          },
+          {
+            type: "grid",
+            import: "sensor.i",
+            export: "sensor.e",
+            price: "sensor.electricity_price",
+            offline: { entity: "binary_sensor.grid_outage", state: "off" },
+            generator: "sensor.generator_power",
+            fossil: "sensor.grid_fossil_percentage",
+          },
+        ],
+        consumers: [
+          { group: "Laundry", icon: "mdi:washing-machine", entities: ["sensor.washer_power"] },
+          { entity: "sensor.ev_charger_power", name: "EV", invert: true, secondary: "{{ 1 }}" },
+        ],
+        consumer_style: "list",
+        other: false,
+        direction: "down",
+        flow_style: "arrows",
+        idle_links: "faint",
+        expensive_above: 0.35,
+        kw_above: 0,
+        decimals: { w: 0, kw: 1 },
+        animation: { slow_below: 100, fast_above: 5000 },
+        rules: [{ above: 3000, color: "red", label: "Heavy", tint_card: true }],
+        header_entities: [{ entity: "sensor.electricity_price" }],
+        tap_action: "none",
+        grid_options: { columns: 12 },
+      }),
+    ).toBeNull();
+  });
+
   it("accept the documented edge cases", () => {
     const EC = "custom:entity-card",
       EGC = "custom:entity-group-card",

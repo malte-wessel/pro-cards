@@ -24,6 +24,30 @@ const rainRules = [
   { above: 7.6, color: "indigo", label: "Heavy rain", tint_card: true },
 ];
 
+const PF = "custom:power-flow-card";
+const PF_SRC = [
+  { type: "solar", entity: "sensor.solar_power" },
+  { type: "battery", power: "sensor.battery_power", soc: "sensor.battery_soc" },
+  {
+    type: "grid",
+    power: "sensor.grid_power",
+    price: "sensor.electricity_price",
+    offline: "binary_sensor.grid_outage",
+    fossil: "sensor.grid_fossil_percentage",
+  },
+];
+const PF_CONS = [
+  {
+    entity: "sensor.heat_pump_power",
+    name: "Heat pump",
+    icon: "mdi:heat-pump",
+    secondary: "floor heating",
+  },
+  { entity: "sensor.ev_charger_power", name: "EV", icon: "mdi:car-electric" },
+  { entity: "sensor.washer_power", name: "Washer", icon: "mdi:washing-machine" },
+  { entity: "sensor.office_power", name: "Office", icon: "mdi:monitor" },
+];
+
 const CASES = {
   "ec-visuals": [
     {
@@ -797,6 +821,109 @@ const CASES = {
       sun: { label: "Sun" },
     },
   },
+  // power flow card: the demo noon (solar covers the home, charges the battery, exports the rest)
+  "pf-compact": {
+    type: PF,
+    home: "sensor.power_consumption",
+    expensive_above: 0.35,
+    sources: PF_SRC,
+  },
+  "pf-consumers": {
+    type: PF,
+    title: "Energy",
+    icon: "mdi:lightning-bolt",
+    home: "sensor.power_consumption",
+    sources: PF_SRC,
+    consumers: PF_CONS,
+  },
+  "pf-list": {
+    type: PF,
+    home: "sensor.power_consumption",
+    sources: PF_SRC,
+    consumers: PF_CONS,
+    consumer_style: "list",
+  },
+  "pf-rooms": {
+    type: PF,
+    home: "sensor.power_consumption",
+    sources: PF_SRC,
+    consumers: [
+      {
+        group: "Laundry",
+        icon: "mdi:washing-machine",
+        entities: [
+          { entity: "sensor.washer_power", name: "Washer", icon: "mdi:washing-machine" },
+          { entity: "sensor.dryer_power", name: "Dryer", icon: "mdi:tumble-dryer" },
+        ],
+      },
+      {
+        group: "Kitchen",
+        icon: "mdi:silverware-fork-knife",
+        entities: [
+          { entity: "sensor.range_hood_power", name: "Range hood", icon: "mdi:stove" },
+          { entity: "sensor.dining_light_power", name: "Lights", icon: "mdi:lightbulb" },
+        ],
+      },
+      { entity: "sensor.heat_pump_power", name: "Heat pump", icon: "mdi:heat-pump" },
+    ],
+  },
+  "pf-down": {
+    type: PF,
+    home: "sensor.power_consumption",
+    sources: PF_SRC,
+    consumers: PF_CONS,
+    direction: "down",
+  },
+  "pf-styles": [
+    {
+      type: PF,
+      home: "sensor.power_consumption",
+      sources: PF_SRC,
+      flow_style: "lines",
+      idle_links: "faint",
+    },
+    {
+      type: PF,
+      home: "sensor.power_consumption",
+      sources: PF_SRC,
+      flow_style: "arrows",
+      idle_links: "hidden",
+    },
+  ],
+  "pf-edge": [
+    {
+      // an outage (the demo outage sensor is off, so "off" means offline here) with a generator
+      type: PF,
+      home: "sensor.power_consumption",
+      sources: [
+        PF_SRC[0],
+        PF_SRC[1],
+        {
+          type: "grid",
+          power: "sensor.grid_power",
+          offline: { entity: "binary_sensor.grid_outage", state: "off" },
+          generator: "sensor.heat_pump_power",
+        },
+      ],
+    },
+    {
+      type: PF,
+      kw_above: 0,
+      decimals: { kw: 1 },
+      sources: [
+        { type: "solar", entity: "sensor.solar_east", name: "East" },
+        { type: "solar", entity: "sensor.solar_west", name: "West" },
+        {
+          type: "battery",
+          power: "sensor.battery_power",
+          soc: "sensor.battery_soc",
+          secondary: "{{ states('sensor.battery_temperature') }} °C",
+        },
+        { type: "grid", power: "sensor.grid_power", fossil: "sensor.grid_fossil_percentage" },
+      ],
+      rules: [{ above: 1000, color: "amber", label: "Busy" }],
+    },
+  ],
 };
 
 for (const [name, cfg] of Object.entries(CASES)) {

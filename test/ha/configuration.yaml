@@ -112,6 +112,64 @@ template:
         device_class: precipitation
         state_class: total_increasing
         state: "{{ (states('input_number.demo_drive') | float(50) / 6) | round(1) }}"
+      - name: Grid power
+        unique_id: pro_cards_grid_power
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        state: "{{ (1400 - states('input_number.demo_drive') | float(50) * 40) | round(0) }}"
+      - name: Battery power
+        unique_id: pro_cards_battery_power
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        state: "{{ ((50 - states('input_number.demo_drive') | float(50)) * 20) | round(0) }}"
+      - name: Battery state of charge
+        unique_id: pro_cards_battery_soc
+        unit_of_measurement: "%"
+        device_class: battery
+        state_class: measurement
+        state: "{{ states('input_number.demo_drive') | float(50) | round(0) }}"
+      - name: Electricity price
+        unique_id: pro_cards_electricity_price
+        unit_of_measurement: "€/kWh"
+        icon: mdi:currency-eur
+        state: "{{ (0.2 + states('input_number.demo_drive') | float(50) / 200) | round(2) }}"
+      - name: Heat pump power
+        unique_id: pro_cards_heat_pump_power
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        state: "{{ (200 + states('input_number.demo_drive') | float(50) * 6) | round(0) }}"
+      - name: Washer power
+        unique_id: pro_cards_washer_power
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        state: "{{ (states('input_number.demo_drive') | float(50) * 5) | round(0) }}"
+      - name: Dryer power
+        unique_id: pro_cards_dryer_power
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        state: "0"
+      - name: EV charger power
+        unique_id: pro_cards_ev_charger_power
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        state: "{{ ((states('input_number.demo_drive') | float(50) - 30) * 60) | round(0) }}"
+      - name: Generator power
+        unique_id: pro_cards_generator_power
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        state: "{{ 2200 if states('input_number.demo_drive') | float(50) > 92 else 0 }}"
+      - name: Grid fossil fuel percentage
+        unique_id: pro_cards_grid_fossil_percentage
+        unit_of_measurement: "%"
+        icon: mdi:leaf
+        state: "{{ (20 + states('input_number.demo_drive') | float(50) / 4) | round(0) }}"
       - name: Living room temperature
         unique_id: pro_cards_living_room_temperature
         unit_of_measurement: °C
@@ -158,6 +216,10 @@ template:
         unique_id: pro_cards_window_kitchen
         device_class: window
         state: "{{ states('input_number.demo_drive') | float(50) > 60 }}"
+      - name: Grid outage
+        unique_id: pro_cards_grid_outage
+        device_class: problem
+        state: "{{ states('input_number.demo_drive') | float(50) > 92 }}"
 
 light:
   - platform: template

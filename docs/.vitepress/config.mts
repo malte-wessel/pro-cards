@@ -50,7 +50,7 @@ const liveContainer = (md: MarkdownIt) => {
 const base = "/pro-cards/";
 const site = `https://malte-wessel.github.io${base}`;
 const description =
-  "Beautiful, customizable cards for Home Assistant dashboards: entity, group and sections cards, multi trend, sun path, illuminance and weather cards that look like they belong in Home Assistant.";
+  "Beautiful, customizable cards for Home Assistant dashboards: entity, group and sections cards, multi trend, sun path, illuminance, weather, wind, rain and power flow cards that look like they belong in Home Assistant.";
 
 export default defineConfig({
   title: "Pro Cards",
@@ -111,6 +111,7 @@ export default defineConfig({
           { text: "Weather Card", link: "/cards/weather-card" },
           { text: "Wind Card", link: "/cards/wind-card" },
           { text: "Rain Card", link: "/cards/rain-card" },
+          { text: "Power Flow Card", link: "/cards/power-flow-card" },
         ],
       },
       {
@@ -148,6 +149,7 @@ export default defineConfig({
           { text: "Weather Card", link: "/cards/weather-card" },
           { text: "Wind Card", link: "/cards/wind-card" },
           { text: "Rain Card", link: "/cards/rain-card" },
+          { text: "Power Flow Card", link: "/cards/power-flow-card" },
         ],
       },
       {

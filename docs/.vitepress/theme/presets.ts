@@ -150,6 +150,19 @@ rules:
   - { below: 50, color: indigo, label: Heavy rain }
   - { above: 50, color: deep-purple, label: Violent rain, tint_card: true }
 `,
+  "Power flow card": `type: custom:power-flow-card
+title: Energy
+icon: mdi:lightning-bolt
+home: sensor.power_consumption
+sources:
+  - { type: solar, entity: sensor.solar_power }
+  - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
+  - { type: grid, power: sensor.grid_power, price: sensor.electricity_price }
+consumers:
+  - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
+  - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
+  - { entity: sensor.office_power, name: Office, icon: mdi:monitor }
+`,
   "Wind card": `type: custom:wind-card
 entity: sensor.wind_speed
 direction: sensor.wind_direction

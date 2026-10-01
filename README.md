@@ -16,14 +16,14 @@ Beautiful, customizable cards for Home Assistant dashboards.
 Pro Cards are polished dashboard cards that look like they belong in Home Assistant: same spacing, typography and colours, dark mode included. Every detail can be adjusted, from icons, colours and labels driven by values and templates to layouts, graphs and actions. Themes change the look of all cards at once.
 
 - **High quality.** Crisp rendering, sensible defaults, smooth graphs, tested against a real Home Assistant and pixel by pixel in CI.
-- **Highly customizable.** Rules switch icon, colour, label and card tint by value or state; templates fill names and values; six layouts, eight visuals, a weather card with forecasts, animated wind and rain cards, every action Home Assistant offers.
+- **Highly customizable.** Rules switch icon, colour, label and card tint by value or state; templates fill names and values; six layouts, eight visuals, a weather card with forecasts, animated wind and rain cards, a power flow tree, every action Home Assistant offers.
 - **Home Assistant design.** The cards use the theme's colours, fonts, radii and state colours, so they blend in with the built-in tile cards, and a custom theme restyles them along with the rest of the dashboard.
 
 Pro Cards is built with the help of AI. Code, docs and tests are written together with AI coding agents, reviewed and tested by a human before each release.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/malte-wessel/pro-cards/main/docs/public/readme/cards-dark.png">
-  <img alt="Pro Cards on a dashboard: weather station, living room, tiles, sun path, illuminance, kitchen, batteries and a trend graph" src="https://raw.githubusercontent.com/malte-wessel/pro-cards/main/docs/public/readme/cards-light.png" width="860">
+  <img alt="Pro Cards on a dashboard: weather station, living room, tiles, the power flow tree, sun path, illuminance, wind, batteries and a trend graph" src="https://raw.githubusercontent.com/malte-wessel/pro-cards/main/docs/public/readme/cards-light.png" width="860">
 </picture>
 
 | Card                 | Type                          | What it does                                                                                                                                  | Editor    |
@@ -37,6 +37,7 @@ Pro Cards is built with the help of AI. Code, docs and tests are written togethe
 | Weather Card         | `custom:weather-card`         | Current conditions, attributes and the hourly / daily forecast of a weather entity, with rules, sections and templates.                       | YAML only |
 | Wind Card            | `custom:wind-card`            | Wind speed, direction and gusts as a tile, a flow tile or a hero, with an animated wind field in four styles that rules colour.               | YAML only |
 | Rain Card            | `custom:rain-card`            | Rain rate and today's total as a tile, a flow tile or a hero, with falling drops, ripples or a filling gauge that rules colour.               | YAML only |
+| Power Flow Card      | `custom:power-flow-card`      | Solar, battery and grid → home → rooms and devices as a tree with animated flow, the state of the home and its self-sufficiency.              | YAML only |
 
 All cards support the sections grid (`grid_options`). Requires Home Assistant 2025.3 or newer.
 
@@ -211,6 +212,24 @@ rules:
 ```
 
 [Rain Card docs](https://malte-wessel.github.io/pro-cards/cards/rain-card)
+
+### Power Flow Card
+
+Where the electricity comes from and where it goes: solar, battery and grid on the left, the home in the middle, rooms and devices on the right, joined by lines that carry the power as moving dots. The line above says whether the home imports, exports or runs on battery, and how self-sufficient it is.
+
+```yaml
+type: custom:power-flow-card
+home: sensor.power_consumption
+sources:
+  - { type: solar, entity: sensor.solar_power }
+  - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
+  - { type: grid, power: sensor.grid_power, price: sensor.electricity_price }
+consumers:
+  - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
+  - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
+```
+
+[Power Flow Card docs](https://malte-wessel.github.io/pro-cards/cards/power-flow-card)
 
 ## Config schema
 

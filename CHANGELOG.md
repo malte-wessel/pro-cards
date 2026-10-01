@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- New power flow card (`custom:power-flow-card`): where the home's power comes from and where it goes, as a tree with animated flow. Solar, battery and grid `sources` (signed `power` sensors or `import` / `export` and `charge` / `discharge` pairs, `soc`, `price`, `offline`), the `home` (a sensor, or computed from the sources) and optional `consumers` as devices or rooms (`group`), with an Other node for the rest. Solar covers the home first, then the battery, then the grid; surplus charges the battery and is exported. `flow_style` dots / lines / arrows, `direction` right / down, `consumer_style` nodes / list; the summary line names the state (importing, exporting, on battery, balanced, grid offline, expensive above `expensive_above`) and the self-sufficiency; `rules` on the home power label, colour and tint the card. The flow re-times on value changes instead of restarting and pauses with `prefers-reduced-motion`
+- Power flow card options: `idle_links` (dashed / hidden / faint), `kw_above` and `decimals`, a `secondary` line on every source and consumer, consumers that produce (a negative value flows back to the home, `invert` per consumer), a grid `generator` that takes the grid node's place during an outage, the grid's `fossil` / `non_fossil` share on the home ring and the grid label, `animation: { slow_below, fast_above }` for the flow's pace
+- Power flow card layout: every label owns a slot the tree reserves, so the card grows with the number of sources and consumers instead of squeezing text between nodes, and the columns keep the label widths clear
+
 ## 1.6.0 (2026-10-01)
 
 - New rain card (`custom:rain-card`): the rain rate (`entity`) and today's total (`today`) as a tile with a small animated lead, a flow tile (`visual: flow`) or a hero (`layout: hero`) with a band and a chip. Three animations (`flow.style`): `drops` fall and splash, more and faster the harder it rains and slanted by a `wind` speed and `direction`; `ripples` spread on a puddle; `fill` is a rain gauge that today's total fills (12 mm). `rules` on the rate colour the rain, label the value and may tint the card; below 0.1 the card is dry. The animation keeps flowing through sensor updates and pauses with `prefers-reduced-motion`
