@@ -2,18 +2,30 @@
 
 Pro Cards adds these cards to the dashboard editor:
 
+**Entities**
+
 | Card                                                | `type`                        | Editor        |
 | --------------------------------------------------- | ----------------------------- | ------------- |
 | [Entity Card](/cards/entity-card)                   | `custom:entity-card`          | YAML          |
 | [Entity Group Card](/cards/entity-group-card)       | `custom:entity-group-card`    | YAML          |
 | [Entity Sections Card](/cards/entity-sections-card) | `custom:entity-sections-card` | YAML          |
 | [Multi Trend Card](/cards/multi-trend-card)         | `custom:multi-trend-card`     | Visual + YAML |
-| [Sun Path Card](/cards/sun-path-card)               | `custom:sun-path-card`        | Visual + YAML |
-| [Illuminance Card](/cards/illuminance-card)         | `custom:illuminance-card`     | Visual + YAML |
-| [Weather Card](/cards/weather-card)                 | `custom:weather-card`         | YAML          |
-| [Wind Card](/cards/wind-card)                       | `custom:wind-card`            | YAML          |
-| [Rain Card](/cards/rain-card)                       | `custom:rain-card`            | YAML          |
-| [Power Flow Card](/cards/power-flow-card)           | `custom:power-flow-card`      | YAML          |
+
+**Energy**
+
+| Card                                      | `type`                   | Editor |
+| ----------------------------------------- | ------------------------ | ------ |
+| [Power Flow Card](/cards/power-flow-card) | `custom:power-flow-card` | YAML   |
+
+**Weather**
+
+| Card                                        | `type`                    | Editor        |
+| ------------------------------------------- | ------------------------- | ------------- |
+| [Weather Card](/cards/weather-card)         | `custom:weather-card`     | YAML          |
+| [Wind Card](/cards/wind-card)               | `custom:wind-card`        | YAML          |
+| [Rain Card](/cards/rain-card)               | `custom:rain-card`        | YAML          |
+| [Sun Path Card](/cards/sun-path-card)       | `custom:sun-path-card`    | Visual + YAML |
+| [Illuminance Card](/cards/illuminance-card) | `custom:illuminance-card` | Visual + YAML |
 
 Requires Home Assistant 2025.3 or newer.
 

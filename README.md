@@ -73,7 +73,9 @@ CSS variable. See [Look & themes](https://malte-wessel.github.io/pro-cards/guide
 Each card starts with two lines and grows with options. The docs pages take you from the basic example
 to the advanced ones step by step.
 
-### Entity Card
+### Entities
+
+#### Entity Card
 
 One entity as a tile. Rules pick colour, icon and label by value or state.
 
@@ -89,7 +91,7 @@ rules:
 [Entity Card docs](https://malte-wessel.github.io/pro-cards/cards/entity-card) ·
 [Entity options](https://malte-wessel.github.io/pro-cards/cards/entity-options)
 
-### Entity Group Card
+#### Entity Group Card
 
 Many entities in one layout: `list`, `grid`, `hero`, `row`, `column` or `table`.
 
@@ -104,7 +106,7 @@ entities:
 
 [Entity Group Card docs](https://malte-wessel.github.io/pro-cards/cards/entity-group-card)
 
-### Entity Sections Card
+#### Entity Sections Card
 
 Several groups with their own layout under one header: room and device cards.
 
@@ -120,7 +122,7 @@ sections:
 
 [Entity Sections Card docs](https://malte-wessel.github.io/pro-cards/cards/entity-sections-card)
 
-### Multi Trend Card
+#### Multi Trend Card
 
 Several sensors as smooth lines with a hover tooltip. Visual editor.
 
@@ -133,30 +135,29 @@ entities:
 
 [Multi Trend Card docs](https://malte-wessel.github.io/pro-cards/cards/multi-trend-card)
 
-### Sun Path Card
+### Energy
 
-Today's sun elevation with sunrise, sunset, dawn, noon and dusk, computed from your location. Visual editor.
+#### Power Flow Card
 
-```yaml
-type: custom:sun-path-card
-title: Sun today
-```
-
-[Sun Path Card docs](https://malte-wessel.github.io/pro-cards/cards/sun-path-card)
-
-### Illuminance Card
-
-An illuminance sensor on a log scale with zones, as gauge arc, trend or colour band. Visual editor.
+Where the electricity comes from and where it goes: solar, battery and grid on the left, the home in the middle, rooms and devices on the right, joined by lines that carry the power as moving dots. The line above says whether the home imports, exports or runs on battery, and how self-sufficient it is.
 
 ```yaml
-type: custom:illuminance-card
-entity: sensor.illuminance
-mode: arc
+type: custom:power-flow-card
+home: sensor.power_consumption
+sources:
+  - { type: solar, entity: sensor.solar_power }
+  - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
+  - { type: grid, power: sensor.grid_power, price: sensor.electricity_price }
+consumers:
+  - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
+  - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
 ```
 
-[Illuminance Card docs](https://malte-wessel.github.io/pro-cards/cards/illuminance-card)
+[Power Flow Card docs](https://malte-wessel.github.io/pro-cards/cards/power-flow-card)
 
-### Weather Card
+### Weather
+
+#### Weather Card
 
 A weather entity as a tile, or as sections you compose like the sections card: the hero lead, rows of attributes and entities, trend charts and forecast rows.
 
@@ -173,7 +174,7 @@ sections:
 
 [Weather Card docs](https://malte-wessel.github.io/pro-cards/cards/weather-card)
 
-### Wind Card
+#### Wind Card
 
 Wind speed, direction and gusts from sensors or a weather entity, with an animated wind field: dots, streamlines, swooshes or an arrow field that travel where the wind blows, faster with the speed, wavier with the gusts, coloured by your rules.
 
@@ -192,7 +193,7 @@ rules:
 
 [Wind Card docs](https://malte-wessel.github.io/pro-cards/cards/wind-card)
 
-### Rain Card
+#### Rain Card
 
 The rain rate and today's total, animated: drops that fall harder and slant with the wind, ripples on a puddle, or a rain gauge that fills through the day, coloured by your rules.
 
@@ -213,23 +214,28 @@ rules:
 
 [Rain Card docs](https://malte-wessel.github.io/pro-cards/cards/rain-card)
 
-### Power Flow Card
+#### Sun Path Card
 
-Where the electricity comes from and where it goes: solar, battery and grid on the left, the home in the middle, rooms and devices on the right, joined by lines that carry the power as moving dots. The line above says whether the home imports, exports or runs on battery, and how self-sufficient it is.
+Today's sun elevation with sunrise, sunset, dawn, noon and dusk, computed from your location. Visual editor.
 
 ```yaml
-type: custom:power-flow-card
-home: sensor.power_consumption
-sources:
-  - { type: solar, entity: sensor.solar_power }
-  - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
-  - { type: grid, power: sensor.grid_power, price: sensor.electricity_price }
-consumers:
-  - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
-  - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
+type: custom:sun-path-card
+title: Sun today
 ```
 
-[Power Flow Card docs](https://malte-wessel.github.io/pro-cards/cards/power-flow-card)
+[Sun Path Card docs](https://malte-wessel.github.io/pro-cards/cards/sun-path-card)
+
+#### Illuminance Card
+
+An illuminance sensor on a log scale with zones, as gauge arc, trend or colour band. Visual editor.
+
+```yaml
+type: custom:illuminance-card
+entity: sensor.illuminance
+mode: arc
+```
+
+[Illuminance Card docs](https://malte-wessel.github.io/pro-cards/cards/illuminance-card)
 
 ## Config schema
 
@@ -262,7 +268,7 @@ npm run test:visual      # visual regression (Playwright in Docker): screenshots
 npm run test:visual:update   # re-generate the baselines after an intended visual change
 ```
 
-Details, the harness API and how to add cases: https://malte-wessel.github.io/pro-cards/guide/testing
+Details, the harness API and how to add cases: [tests/README.md](tests/README.md)
 
 Visual baselines are rendered on Linux only, inside `mcr.microsoft.com/playwright`, so the same pixels are compared locally and in CI. Docker Desktop must be running for the two visual commands. The browser tests use `tests/harness/`, a tiny Vite page that loads the card sources and the docs' Home Assistant shim; the clock is frozen at 21 June 2026, 12:00 Europe/Berlin.
 

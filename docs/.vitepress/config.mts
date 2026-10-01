@@ -52,6 +52,31 @@ const site = `https://malte-wessel.github.io${base}`;
 const description =
   "Beautiful, customizable cards for Home Assistant dashboards: entity, group and sections cards, multi trend, sun path, illuminance, weather, wind, rain and power flow cards that look like they belong in Home Assistant.";
 
+// the cards by category; the nav dropdown and the sidebar both list them this way
+const cardGroups = [
+  {
+    text: "Entities",
+    items: [
+      { text: "Entity Card", link: "/cards/entity-card" },
+      { text: "Entity Group Card", link: "/cards/entity-group-card" },
+      { text: "Entity Sections Card", link: "/cards/entity-sections-card" },
+      { text: "Entity Options", link: "/cards/entity-options" },
+      { text: "Multi Trend Card", link: "/cards/multi-trend-card" },
+    ],
+  },
+  { text: "Energy", items: [{ text: "Power Flow Card", link: "/cards/power-flow-card" }] },
+  {
+    text: "Weather",
+    items: [
+      { text: "Weather Card", link: "/cards/weather-card" },
+      { text: "Wind Card", link: "/cards/wind-card" },
+      { text: "Rain Card", link: "/cards/rain-card" },
+      { text: "Sun Path Card", link: "/cards/sun-path-card" },
+      { text: "Illuminance Card", link: "/cards/illuminance-card" },
+    ],
+  },
+];
+
 export default defineConfig({
   title: "Pro Cards",
   description,
@@ -98,22 +123,7 @@ export default defineConfig({
     logo: "/logo.svg",
     nav: [
       { text: "Guide", link: "/guide/getting-started" },
-      {
-        text: "Cards",
-        items: [
-          { text: "Entity Card", link: "/cards/entity-card" },
-          { text: "Entity Group Card", link: "/cards/entity-group-card" },
-          { text: "Entity Sections Card", link: "/cards/entity-sections-card" },
-          { text: "Entity Options", link: "/cards/entity-options" },
-          { text: "Multi Trend Card", link: "/cards/multi-trend-card" },
-          { text: "Sun Path Card", link: "/cards/sun-path-card" },
-          { text: "Illuminance Card", link: "/cards/illuminance-card" },
-          { text: "Weather Card", link: "/cards/weather-card" },
-          { text: "Wind Card", link: "/cards/wind-card" },
-          { text: "Rain Card", link: "/cards/rain-card" },
-          { text: "Power Flow Card", link: "/cards/power-flow-card" },
-        ],
-      },
+      { text: "Cards", items: cardGroups },
       {
         text: "Showcase",
         items: [
@@ -136,23 +146,7 @@ export default defineConfig({
           { text: "Languages", link: "/guide/languages" },
         ],
       },
-      { text: "Contributing", items: [{ text: "Testing", link: "/guide/testing" }] },
-      {
-        text: "Cards",
-        items: [
-          { text: "Entity Card", link: "/cards/entity-card" },
-          { text: "Entity Group Card", link: "/cards/entity-group-card" },
-          { text: "Entity Sections Card", link: "/cards/entity-sections-card" },
-          { text: "Entity Options", link: "/cards/entity-options" },
-          { text: "Multi Trend Card", link: "/cards/multi-trend-card" },
-          { text: "Sun Path Card", link: "/cards/sun-path-card" },
-          { text: "Illuminance Card", link: "/cards/illuminance-card" },
-          { text: "Weather Card", link: "/cards/weather-card" },
-          { text: "Wind Card", link: "/cards/wind-card" },
-          { text: "Rain Card", link: "/cards/rain-card" },
-          { text: "Power Flow Card", link: "/cards/power-flow-card" },
-        ],
-      },
+      { text: "Cards", items: cardGroups },
       {
         text: "Showcase",
         items: [
