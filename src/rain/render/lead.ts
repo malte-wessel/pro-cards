@@ -1,7 +1,8 @@
 // The lead of the rain card: the rain icon, or a small animation of the style inside the soft
 // circle: drops falling through it, rings around a drop, or a filling gauge. Built once; the
-// row's CSS variables (--t, --sl, --ldur, --H, --lv) and its `dry` class drive it.
-import { animatedLeadShell, el, iconLead, vars } from "../../shared/flow/dom.ts";
+// row's CSS variables (--t, --sl, --ldur, --H, --lv) and its `dry` class drive it; --H is the
+// lead's size, less the water level for the gauge, so the drops stop at the surface.
+import { animatedLeadShell, el, iconLead } from "../../shared/flow/dom.ts";
 import { ICON, LEAD_ICON, type RainStyle } from "../constants.ts";
 import { wavePathD } from "../rain.ts";
 
@@ -85,7 +86,7 @@ export const animatedLead = (style: RainStyle, size: number) => {
         }),
       );
   }
-  vars(field, { "--H": `${size}px`, "--sb": "0px" });
+  // --H (the fall height, the water level deducted for the gauge) and --sb come from the row
   lead.appendChild(field);
   return lead;
 };

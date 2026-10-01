@@ -145,8 +145,12 @@ test.describe("rain card", () => {
     await expect(band.locator(".wtop path")).toHaveAttribute("d", /^M0,8 Q15,/);
     await expect(band.locator(".dr")).toHaveCount(9);
     await expect(c.locator(".lead.wlead .water")).toHaveCount(1);
+    // the lead's drops stop at its water surface: the fall height is the row's, not the field's
+    expect(await cssVar(c.locator(".row.whero"), "--H")).toBe("39px"); // 56 × (1 − 0.302)
+    expect(await cssVar(c.locator(".lead.wlead .rfield"), "--H")).toBe("");
     await setState(page, D, "12");
     expect(await cssVar(band, "--lv")).toBe("82.0%");
+    expect(await cssVar(c.locator(".row.whero"), "--H")).toBe("10px"); // 56 × (1 − 0.82)
     await expect(c.locator(".wflow .chip")).toHaveText("12 mm today");
     // no total: the gauge stays at its floor and the chip is hidden
     await mount(page, { type: T, entity: R, layout: "hero", flow: { style: "fill" } });
