@@ -113,6 +113,7 @@ const nb: Translation = {
   "editor.default": "Standard: {value}",
 
   "editor.sun.title": "Tittel",
+  "editor.sun.icon": "Ikon",
   "editor.sun.show_dawn_dusk": "Vis daggry, solmiddag og skumring",
   "editor.sun.show_tooltip": "Vis verktøytips ved peking",
   "editor.sun.day_color": "Dagfarge",

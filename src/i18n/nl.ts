@@ -113,6 +113,7 @@ const nl: Translation = {
   "editor.default": "Standaard: {value}",
 
   "editor.sun.title": "Titel",
+  "editor.sun.icon": "Pictogram",
   "editor.sun.show_dawn_dusk": "Dageraad, zonnemiddag en schemering tonen",
   "editor.sun.show_tooltip": "Tooltip tonen bij aanwijzen",
   "editor.sun.day_color": "Kleur dag",

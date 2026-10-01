@@ -5,6 +5,7 @@ import type { SolarDay } from "./solar.ts";
 
 export interface SunPathCardConfig extends CardConfigBase {
   title?: string;
+  icon?: string;
   show_dawn_dusk?: boolean;
   show_tooltip?: boolean;
   day_color?: string;
@@ -14,6 +15,7 @@ export interface SunPathCardConfig extends CardConfigBase {
 }
 export interface SunPathConfig extends CardConfigBase {
   title?: string;
+  icon?: string;
   show_dawn_dusk: boolean;
   show_tooltip: boolean;
   day_color: string;

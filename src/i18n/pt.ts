@@ -113,6 +113,7 @@ const pt: Translation = {
   "editor.default": "Padrão: {value}",
 
   "editor.sun.title": "Título",
+  "editor.sun.icon": "Ícone",
   "editor.sun.show_dawn_dusk": "Mostrar aurora, meio-dia solar e crepúsculo",
   "editor.sun.show_tooltip": "Mostrar dica ao passar o rato",
   "editor.sun.day_color": "Cor do dia",

@@ -113,6 +113,7 @@ const sv: Translation = {
   "editor.default": "Standard: {value}",
 
   "editor.sun.title": "Titel",
+  "editor.sun.icon": "Ikon",
   "editor.sun.show_dawn_dusk": "Visa gryning, solmiddag och skymning",
   "editor.sun.show_tooltip": "Visa verktygstips vid hovring",
   "editor.sun.day_color": "Dagfärg",

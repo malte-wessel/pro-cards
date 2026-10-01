@@ -7,6 +7,7 @@
   "properties": {
     "type": { "const": "custom:sun-path-card" },
     "title": { "type": "string", "description": "Omit for no header" },
+    "icon": { "$ref": "defs.schema.json#/$defs/icon", "description": "Header icon" },
     "show_dawn_dusk": { "type": "boolean", "default": true },
     "show_tooltip": {
       "type": "boolean",

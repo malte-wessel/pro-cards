@@ -113,6 +113,7 @@ const ru: Translation = {
   "editor.default": "По умолчанию: {value}",
 
   "editor.sun.title": "Заголовок",
+  "editor.sun.icon": "Значок",
   "editor.sun.show_dawn_dusk": "Показывать рассвет, солнечный полдень и сумерки",
   "editor.sun.show_tooltip": "Показывать подсказку при наведении",
   "editor.sun.day_color": "Цвет дня",

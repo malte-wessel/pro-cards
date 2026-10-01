@@ -52,6 +52,7 @@ describe("sun-path-card editor and element", () => {
     const cfg = {
       type: "custom:sun-path-card",
       title: "Sun",
+      icon: "mdi:weather-sunset",
       show_dawn_dusk: false,
       show_tooltip: false,
       day_color: "orange",
@@ -60,6 +61,7 @@ describe("sun-path-card editor and element", () => {
     const data = configToForm(cfg);
     expect(data).toMatchObject({
       title: "Sun",
+      icon: "mdi:weather-sunset",
       show_dawn_dusk: false,
       show_tooltip: false,
       day_color: "orange",
@@ -75,6 +77,7 @@ describe("sun-path-card editor and element", () => {
       show_tooltip: true,
       label_sunrise: defaultLabel(undefined, "sunrise"),
       title: "",
+      icon: "",
     };
     expect(formToConfig(d2, cfg)).toEqual({ type: "custom:sun-path-card" });
   });

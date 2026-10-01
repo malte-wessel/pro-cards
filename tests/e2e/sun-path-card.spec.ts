@@ -4,10 +4,12 @@ test("shows today's events for the frozen summer day", async ({ page }) => {
   await mount(page, {
     type: "custom:sun-path-card",
     title: "Sun",
+    icon: "mdi:weather-sunset",
     labels: { sunrise: "Sunrise", sunset: "Sunset", dawn: "Dawn", noon: "Noon", dusk: "Dusk" },
   });
   const c = card(page);
-  await expect(c.locator("ha-card")).toHaveAttribute("header", "Sun");
+  await expect(c.locator(".header .title")).toHaveText("Sun");
+  await expect(c.locator(".header ha-icon")).toHaveAttribute("icon", "mdi:weather-sunset");
   const vals = await c.locator(".row .val").allTextContents();
   expect(vals[0]).toMatch(/^0[45]:\d\d$/); // sunrise around 05:15 CEST in Düsseldorf on 21 June
   expect(vals[1]).toMatch(/^21:[45]\d$/); // sunset around 21:50
@@ -15,13 +17,13 @@ test("shows today's events for the frozen summer day", async ({ page }) => {
   await expect(c.locator(".events")).toContainText("Dawn");
   await expect(c.locator(".events")).toContainText("Noon");
   await expect(c.locator(".events .sm").nth(1)).toHaveText(/^13:[23]\d$/);
-  await expect(c.locator("svg .curve")).toHaveCount(2);
-  await expect(c.locator("svg circle.sun")).toBeAttached();
-  await expect(c.locator("svg .tick")).toHaveCount(3);
+  await expect(c.locator(".plot svg .curve")).toHaveCount(2);
+  await expect(c.locator(".plot svg circle.sun")).toBeAttached();
+  await expect(c.locator(".plot svg .tick")).toHaveCount(3);
   // ticks mark sunrise, solar noon and sunset; noon is the centre of the plot
-  const W = parseFloat((await c.locator("svg").getAttribute("viewBox"))!.split(" ")[2]);
+  const W = parseFloat((await c.locator(".plot svg").getAttribute("viewBox"))!.split(" ")[2]);
   const tickXs = await c
-    .locator("svg .tick")
+    .locator(".plot svg .tick")
     .evaluateAll((els) => els.map((el) => parseFloat(el.getAttribute("x1")!)));
   expect(tickXs[1]).toBeGreaterThan(W / 2 - 2);
   expect(tickXs[1]).toBeLessThan(W / 2 + 2);
@@ -45,8 +47,8 @@ test("hides the bottom row and uses custom colours", async ({ page }) => {
   const c = card(page);
   await expect(c.locator(".events")).toBeHidden();
   await expect(c.locator(".row .lbl").first()).toHaveText("Up");
-  await expect(c.locator("svg .curve").first()).toHaveAttribute("stroke", "#ff0000");
-  await expect(c.locator("ha-card")).not.toHaveAttribute("header");
+  await expect(c.locator(".plot svg .curve").first()).toHaveAttribute("stroke", "#ff0000");
+  await expect(c.locator(".header")).toBeHidden();
 });
 
 test("hover shows the time and elevation under the pointer", async ({ page }) => {
@@ -59,14 +61,14 @@ test("hover shows the time and elevation under the pointer", async ({ page }) =>
   await expect(c.locator(".tip .time")).toHaveText(/^13:[23]\d$/); // the centre of the plot is solar noon (~13:35 CEST)
   await expect(c.locator(".tip .row b")).toHaveText(/^-?\d+°$/);
   await expect(c.locator(".tip .row span")).toHaveText("elevation");
-  await expect(c.locator("svg .hover")).toHaveClass(/on/);
+  await expect(c.locator(".plot svg .hover")).toHaveClass(/on/);
   // the dot sits on the curve, inside the plot
-  const cy = parseFloat((await c.locator("svg .hover .dot").getAttribute("cy"))!);
+  const cy = parseFloat((await c.locator(".plot svg .hover .dot").getAttribute("cy"))!);
   expect(cy).toBeGreaterThan(0);
   expect(cy).toBeLessThan(120);
   await page.mouse.move(box.x - 50, box.y - 50);
   await expect(c.locator(".tip")).not.toHaveClass(/on/);
-  await expect(c.locator("svg .hover")).not.toHaveClass(/on/);
+  await expect(c.locator(".plot svg .hover")).not.toHaveClass(/on/);
 });
 
 test("default labels follow the Home Assistant language, overrides stay", async ({ page }) => {
@@ -92,16 +94,16 @@ test("show_tooltip: false renders no hover layer", async ({ page }) => {
   const c = card(page);
   const box = (await c.locator(".plot").boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await expect(c.locator("svg .hover")).toHaveCount(0);
+  await expect(c.locator(".plot svg .hover")).toHaveCount(0);
   await expect(c.locator(".tip")).not.toHaveClass(/on/);
 });
 
 test("moves the sun marker with time", async ({ page }) => {
   await mount(page, { type: "custom:sun-path-card" }, { time: new Date("2026-06-21T06:00:00") });
-  const early = await card(page).locator("svg circle.sun").getAttribute("cx");
+  const early = await card(page).locator(".plot svg circle.sun").getAttribute("cx");
   await page.clock.setFixedTime(new Date("2026-06-21T18:00:00"));
   await page.evaluate(() => window.pc.card(0)._render());
-  const late = await card(page).locator("svg circle.sun").getAttribute("cx");
+  const late = await card(page).locator(".plot svg circle.sun").getAttribute("cx");
   expect(parseFloat(late!)).toBeGreaterThan(parseFloat(early!) + 100);
 });
 
@@ -113,11 +115,11 @@ for (const [label, time] of [
   test(`keeps the whole curve inside the plot in ${label}`, async ({ page }) => {
     await mount(page, { type: "custom:sun-path-card" }, { time: new Date(time) });
     const c = card(page);
-    const cy = parseFloat((await c.locator("svg circle.sun").getAttribute("cy"))!);
+    const cy = parseFloat((await c.locator(".plot svg circle.sun").getAttribute("cy"))!);
     expect(cy).toBeGreaterThanOrEqual(0);
     expect(cy).toBeLessThanOrEqual(120);
     const ys = await c
-      .locator("svg .curve")
+      .locator(".plot svg .curve")
       .evaluateAll((els) =>
         els.flatMap((el) =>
           [...el.getAttribute("d")!.matchAll(/[ ,](-?[\d.]+)(?=[ C]|$)/g)].map((m) =>

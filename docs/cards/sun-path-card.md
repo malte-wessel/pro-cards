@@ -16,13 +16,14 @@ type: custom:sun-path-card
 
 ## Title
 
-`title` adds a header. Omit it for the bare curve.
+`title` adds a header like the other cards', `icon` an icon in front of it. Omit both for the bare curve.
 
 ::: live
 
 ```yaml
 type: custom:sun-path-card
 title: Sun today
+icon: mdi:weather-sunset
 ```
 
 :::
@@ -76,6 +77,7 @@ show_dawn_dusk: false
 | Option           | Default      | Description                                                                                                                                        |
 | ---------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `title`          |              | Header. Omit for no header.                                                                                                                        |
+| `icon`           |              | Header icon.                                                                                                                                       |
 | `show_dawn_dusk` | `true`       | Bottom row with dawn, solar noon and dusk.                                                                                                         |
 | `show_tooltip`   | `true`       | Time and elevation tooltip when hovering or tapping the curve. `false` disables it.                                                                |
 | `day_color`      | `light-blue` | Curve and day wash.                                                                                                                                |

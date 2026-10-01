@@ -113,6 +113,7 @@ const de: Translation = {
   "editor.default": "Standard: {value}",
 
   "editor.sun.title": "Titel",
+  "editor.sun.icon": "Symbol",
   "editor.sun.show_dawn_dusk": "Morgendämmerung, Sonnenhöchststand und Abenddämmerung anzeigen",
   "editor.sun.show_tooltip": "Tooltip beim Überfahren anzeigen",
   "editor.sun.day_color": "Tagfarbe",

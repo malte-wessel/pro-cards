@@ -24,6 +24,7 @@ const COLOR_KEYS = ["day_color", "night_color", "sun_color"] as const;
 export const configToForm = (config: SunPathCardConfig): HaFormData => {
   const data: HaFormData = {
     title: config.title ?? "",
+    icon: config.icon ?? "",
     show_dawn_dusk: config.show_dawn_dusk ?? DEFAULTS.show_dawn_dusk,
     show_tooltip: config.show_tooltip ?? DEFAULTS.show_tooltip,
     day_color: config.day_color ?? "",
@@ -42,6 +43,7 @@ export const formToConfig = (
 ): SunPathCardConfig => {
   const config: SunPathCardConfig = { ...prev };
   setOrDrop(config, "title", data.title, !data.title);
+  setOrDrop(config, "icon", data.icon, !data.icon);
   setOrDrop(config, "show_dawn_dusk", false, data.show_dawn_dusk !== false);
   setOrDrop(config, "show_tooltip", false, data.show_tooltip !== false);
   for (const k of COLOR_KEYS) setOrDrop(config, k, data[k], !data[k] || data[k] === DEFAULTS[k]);
@@ -56,6 +58,7 @@ export const formToConfig = (
 
 export const editorSchema = (hass?: HomeAssistant): HaFormSchema[] => [
   { name: "title", selector: { text: {} } },
+  { name: "icon", selector: { icon: {} } },
   { name: "show_dawn_dusk", selector: { boolean: {} } },
   { name: "show_tooltip", selector: { boolean: {} } },
   {
