@@ -62,6 +62,7 @@ const render = async () => {
 onMounted(() => { loadRuntime().then(render); });
 onBeforeUnmount(() => handle?.dispose?.());
 watch(source, () => { render(); });
+const showYaml = ref(false);
 const cycle = () => { mode.value = nextMode(mode.value); };
 </script>
 
@@ -71,6 +72,15 @@ const cycle = () => { mode.value = nextMode(mode.value); };
       <div class="frame" :style="{ width: frameWidth }"><div ref="host" class="ha-grid"></div></div>
     </div>
     <div class="tools">
+      <button
+        v-if="$slots.default"
+        type="button"
+        class="yaml-toggle"
+        :class="{ on: showYaml }"
+        @click="showYaml = !showYaml"
+      >
+        {{ showYaml ? "Hide YAML" : "Show YAML" }}
+      </button>
       <select v-if="!props.theme" v-model="siteTheme" title="Home Assistant theme of every example">
         <option v-for="t in THEMES" :key="t.id" :value="t.id">{{ t.label }}</option>
       </select>
@@ -87,9 +97,8 @@ const cycle = () => { mode.value = nextMode(mode.value); };
       </button>
     </div>
     <div v-if="error" class="error">{{ error }}</div>
-    <details v-if="$slots.default">
-      <summary>YAML</summary>
+    <div v-if="$slots.default && showYaml" class="yaml">
       <slot />
-    </details>
+    </div>
   </div>
 </template>
