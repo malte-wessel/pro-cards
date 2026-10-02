@@ -3,7 +3,7 @@ import type { SunAzimuthHost } from "../config.ts";
 import type { SunDay, SunSample } from "../day.ts";
 import { dialGeometry } from "../dial.ts";
 import type { Side } from "../sides.ts";
-import { compass } from "./text.ts";
+import { chipSvg, compass, deg } from "./text.ts";
 
 const f1 = (v: number) => v.toFixed(1);
 
@@ -23,6 +23,8 @@ export const renderDial = (
     <circle class="grid" cx="${c}" cy="${c}" r="${f1(g.r / 3)}"/>
     <path class="ticks" d="${g.ticks}"/>`;
   if (g.dayArc) html += `<path class="dayarc" d="${g.dayArc}"/>`;
+  html += `<path class="cardinals" d="${g.cardinalLines}"/>`;
+  if (g.azArc) html += `<path class="azarc" d="${g.azArc}"/>`;
   if (g.beam) html += `<path class="beam" d="${g.beam}"/>`;
   if (g.future) html += `<path class="future" d="${g.future}"/>`;
   if (g.past) html += `<path class="past" d="${g.past}"/>`;
@@ -35,6 +37,7 @@ export const renderDial = (
     html += `<text class="cl" x="${f1(l.x)}" y="${f1(l.y)}">${compass(card._hass, l.bearing)}</text>`;
   const sx = f1(g.sun[0]),
     sy = f1(g.sun[1]);
+  if (g.azChip) html += chipSvg(deg(card._hass, now.az), g.azChip[0], g.azChip[1]);
   html += `<circle class="pulse${up ? "" : " down"}" cx="${sx}" cy="${sy}" r="9"/><circle class="sun${up ? "" : " down"}" cx="${sx}" cy="${sy}" r="7"/></svg>`;
   host.innerHTML = html;
 };

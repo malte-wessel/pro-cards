@@ -6,7 +6,7 @@ import type { SunSample } from "../day.ts";
 import { CHIP_FONT } from "../constants.ts";
 import { sceneGeometry } from "../scene.ts";
 import type { Side } from "../sides.ts";
-import { compass, deg } from "./text.ts";
+import { chipSvg, compass, deg } from "./text.ts";
 
 const f1 = (v: number) => v.toFixed(1);
 
@@ -30,6 +30,8 @@ export const renderScene = (
   html += `<path class="ground" d="${g.ground}"/><path class="horizon back" d="${g.horizonBack}"/><path class="gticks" d="${g.groundTicks}"/>`;
   if (g.shadow) html += `<path class="shadow" d="${g.shadow}"/>`;
   if (g.ray) html += `<path class="ray" d="${g.ray}"/>`;
+  html += `<path class="cardinals" d="${g.cardinalLines}"/>`;
+  if (g.azArc) html += `<path class="azarc" d="${g.azArc}"/>`;
   for (const f of g.faces)
     html += `<path class="face${f.lit ? " lit" : ""}" style="--inc: ${Math.round(35 + f.incidence * 45)}%" d="${f.d}"/>`;
   html += `<path class="roof" d="${g.roof}"/>`;
@@ -44,12 +46,11 @@ export const renderScene = (
     html += `<text class="cl" x="${f1(c.x)}" y="${f1(c.y)}">${compass(hass, c.bearing)}</text>`;
   if (g.groundDot)
     html += `<circle class="gdot" cx="${f1(g.groundDot[0])}" cy="${f1(g.groundDot[1])}" r="3"/>`;
+  if (g.azChip) html += chipSvg(deg(hass, now.az), g.azChip[0], g.azChip[1]);
   if (g.chip) {
     const label = deg(hass, now.el),
-      w = Math.ceil(textWidth(label, CHIP_FONT)) + 16,
-      x = g.chip[0] + 8,
-      y = g.chip[1] - 10;
-    html += `<g class="chip"><rect x="${f1(x)}" y="${f1(y)}" width="${w}" height="20" rx="10"/><text x="${f1(x + w / 2)}" y="${f1(y + 10)}">${label}</text></g>`;
+      w = Math.ceil(textWidth(label, CHIP_FONT)) + 16;
+    html += chipSvg(label, g.chip[0] + 8 + w / 2, g.chip[1]);
   }
   if (g.sun)
     html += `<circle class="pulse" cx="${f1(g.sun[0])}" cy="${f1(g.sun[1])}" r="9"/><circle class="sun" cx="${f1(g.sun[0])}" cy="${f1(g.sun[1])}" r="7"/>`;
