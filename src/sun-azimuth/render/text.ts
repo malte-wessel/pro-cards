@@ -1,7 +1,8 @@
 // Words and numbers of the sun azimuth card in the user's language.
-import { fmtNumber, fmtTime } from "../../shared/format.ts";
+import { fmtNumber, fmtTime, textWidth } from "../../shared/format.ts";
 import type { HomeAssistant } from "../../shared/ha.ts";
 import { t } from "../../shared/i18n.ts";
+import { CHIP_FONT } from "../constants.ts";
 import { compassKey, isUp, type SunDay, type SunSample } from "../day.ts";
 
 type Hass = HomeAssistant | undefined;
@@ -40,4 +41,11 @@ export const status = (hass: Hass, day: SunDay, now: SunSample, withElevation: b
   return day.sunrise
     ? `${below} · ${t(hass, "azimuth.rises", { time: time(hass, day.sunrise.t) })}`
     : below;
+};
+
+// a rounded SVG chip with its text, centred on (x, y); the rect is sized by measuring the text
+export const chipSvg = (label: string, x: number, y: number) => {
+  const w = Math.ceil(textWidth(label, CHIP_FONT)) + 16,
+    f = (v: number) => v.toFixed(1);
+  return `<g class="chip"><rect x="${f(x - w / 2)}" y="${f(y - 10)}" width="${w}" height="20" rx="10"/><text x="${f(x)}" y="${f(y)}">${label}</text></g>`;
 };

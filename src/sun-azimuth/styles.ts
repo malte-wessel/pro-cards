@@ -84,13 +84,15 @@ export const STYLE = `
   .scene .future.back { opacity: .45; }
   .scene .shadow { fill: var(--primary-text-color); opacity: .12; }
   .scene .ray { fill: none; stroke: var(--saz-sun); stroke-width: 1.5; opacity: .6; }
+  .cardinals { fill: none; stroke: var(--secondary-text-color); stroke-width: 1; stroke-dasharray: 2 3; opacity: .6; }
+  .azarc { fill: none; stroke: var(--secondary-text-color); stroke-width: 1.2; opacity: .45; }
   .scene .face { fill: color-mix(in srgb, var(--blue-grey-color) 22%, ${CARD_BG}); stroke: ${CARD_BG}; stroke-width: 1; stroke-linejoin: round; }
   .scene .face.lit { fill: color-mix(in srgb, var(--saz-sun) var(--inc, 50%), ${CARD_BG}); }
   .scene .drop { fill: none; stroke: var(--saz-sun); stroke-width: 1.5; stroke-dasharray: 3 3; }
   .scene .poletop { fill: var(--secondary-text-color); }
   .scene .gdot { fill: var(--saz-sun); }
-  .scene .chip rect { fill: color-mix(in srgb, ${CARD_BG} 80%, transparent); }
-  .scene .chip text { font: ${CHIP_FONT}; fill: var(--primary-text-color); font-variant-numeric: tabular-nums; }
+  .chip rect { fill: color-mix(in srgb, ${CARD_BG} 80%, transparent); }
+  .chip text { font: ${CHIP_FONT}; fill: var(--primary-text-color); font-variant-numeric: tabular-nums; }
   /* the camera slider of the 3D view: a bar like the footer's, a round thumb, compass points below */
   .control { display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-top: -4px; }
   .control .row { display: flex; align-items: center; gap: 12px; min-width: 0; }
