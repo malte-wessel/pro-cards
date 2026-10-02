@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { solarElevation, solarDay } from "../../src/sun-path/solar.ts";
+import { solarElevation, solarDay } from "../../src/shared/solar.ts";
 import { configToForm, formToConfig } from "../../src/sun-path/editor.ts";
 import { timeAt } from "../../src/sun-path/plot.ts";
 import { defaultLabel } from "../../src/sun-path/constants.ts";

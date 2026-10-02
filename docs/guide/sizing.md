@@ -10,6 +10,7 @@ All cards report a default size to the sections grid through `getGridOptions`, s
 | Entity group card `row` / `column` / `table`, sections card | 12 columns, `rows: auto` | Height follows the sections                                             |
 | Multi trend card                                            | 12 columns × 3 rows      | Lanes layout: 2 rows + one row per entity                               |
 | Sun path card                                               | 12 columns, `rows: auto` |                                                                         |
+| Sun azimuth card                                            | 12 columns, `rows: auto` | Height follows the view and the sides footer                            |
 | Illuminance card                                            | 12 columns, `rows: auto` |                                                                         |
 
 Each card also reports minimum sizes (`min_columns`, `min_rows`) so the grid handles cannot make it unreadable: 3 columns for the entity card, 6 for everything else; an entity card with an icon is pinned to one row (`max_rows: 1`). `grid_options` can override any of these.
