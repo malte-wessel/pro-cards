@@ -12,6 +12,7 @@ const TYPES = [
   "entity-sections-card-pro",
   "multi-trend-card-pro",
   "sun-path-card-pro",
+  "sun-azimuth-card-pro",
   "illuminance-card-pro",
   "weather-card-pro",
   "wind-card-pro",
