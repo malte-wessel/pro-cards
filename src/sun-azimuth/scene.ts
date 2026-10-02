@@ -41,6 +41,9 @@ export interface SceneGeometry {
   sun: [number, number] | null; // null below the horizon
   groundDot: [number, number] | null;
   chip: [number, number] | null; // where the elevation chip sits (right of the drop line's middle)
+  cardinalLines: string; // on the ground, from the house to the N, E, S and W ticks
+  azArc: string; // on the ground, from north clockwise round to the sun's bearing
+  azChip: [number, number] | null; // where the azimuth chip sits (on the arc's bisector)
 }
 
 const { w, h, scale: SC, cx: GX, cy: GY, tilt: TILT, houseHalf: HH, houseHeight: HZ } = SCENE;
@@ -191,6 +194,19 @@ export const sceneGeometry = (
     shadow = "M" + lo.slice(0, -1).concat(hi.slice(0, -1)).map(P).join(" L") + " Z";
   }
   const up = now.el > 0;
+  // the azimuth on the ground: an arc from north round to the sun's bearing, its chip halfway
+  const AZ_R = 0.42;
+  let azArc = "";
+  for (let a = 0; a <= now.az; a += 4) {
+    const v = sv(Math.min(a, now.az), 0);
+    azArc += (a ? " L" : "M") + P(pj(v[0] * AZ_R, v[1] * AZ_R, 0));
+  }
+  if (now.az % 4) {
+    const v = sv(now.az, 0);
+    azArc += " L" + P(pj(v[0] * AZ_R, v[1] * AZ_R, 0));
+  }
+  const vm = sv(now.az / 2, 0),
+    azMid = pj(vm[0] * (AZ_R + 0.3), vm[1] * (AZ_R + 0.3), 0);
   const sunV = sv(now.az, now.el),
     sp = pv(sunV),
     gp = pj(sunV[0], sunV[1], 0);
@@ -215,6 +231,14 @@ export const sceneGeometry = (
     roofEdges,
     shadow,
     ray: up ? `M${P(origin)} L${P(gp)}` : "",
+    cardinalLines: [0, 90, 180, 270]
+      .map((a) => {
+        const v = sv(a, 0);
+        return `M${P(origin)} L${P(pj(v[0] * 0.9, v[1] * 0.9, 0))}`;
+      })
+      .join(" "),
+    azArc: up ? azArc : "",
+    azChip: up ? [azMid[0], azMid[1]] : null,
     drop: up ? `M${P(sp)} L${P(gp)}` : "",
     sun: up ? [sp[0], sp[1]] : null,
     groundDot: up ? [gp[0], gp[1]] : null,

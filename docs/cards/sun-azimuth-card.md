@@ -4,7 +4,7 @@
 
 ## Sky dial
 
-The default view looks down on the house: the outer ring is the horizon, the centre is straight up. Today's path of the sun is drawn in the sun colour, solid where it has passed and dashed where it is still to come, and the faint arc on the rim is the daylight sector from the sunrise bearing to the sunset bearing. The house in the middle lights up on every side the sun shines on right now, and a dashed beam joins the sun to it. The head shows the azimuth as an arrow, with the elevation and whether the sun is rising or sinking.
+The default view looks down on the house: the outer ring is the horizon, the centre is straight up. Today's path of the sun is drawn in the sun colour, solid where it has passed and dashed where it is still to come, and the faint arc on the rim is the daylight sector from the sunrise bearing to the sunset bearing. The house in the middle lights up on every side the sun shines on right now, a dashed beam joins the sun to it, and an arc from north round to the sun shows the azimuth with the angle in a chip. The head shows the azimuth as an arrow, with the elevation and whether the sun is rising or sinking.
 
 ::: live
 
@@ -19,7 +19,7 @@ house: { rotation: 20 }
 
 ## 3D
 
-`view: 3d` draws the sky as a see-through dome around a small house, seen from slightly above. The sun runs on its daily circle, hidden below the horizon at night; a dashed drop line shows its elevation with the angle in a chip, and the house casts its shadow on the ground. The walls and roof edges facing the sun light up, more the more directly it hits them. A pole marks the house's position under the dome; the back-most compass point is left out so it does not sit in the sky. `camera` is the bearing you look toward: the default 180 stands north of the house looking south, so that today's path lies ahead of you; 90 looks east, 270 west.
+`view: 3d` draws the sky as a see-through dome around a small house, seen from slightly above. The sun runs on its daily circle, hidden below the horizon at night; a dashed drop line shows its elevation with the angle in a chip, dotted lines on the ground run from the house to the four compass points and an arc from north to the sun shows its azimuth the same way, and the house casts its shadow on the ground. The walls and roof edges facing the sun light up, more the more directly it hits them. A pole marks the house's position under the dome; the back-most compass point is left out so it does not sit in the sky. `camera` is the bearing you look toward: the default 180 stands north of the house looking south, so that today's path lies ahead of you; 90 looks east, 270 west.
 
 ::: live
 

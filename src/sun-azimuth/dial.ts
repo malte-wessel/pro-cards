@@ -16,6 +16,9 @@ export interface DialGeometry {
   ticks: string;
   dayArc: string; // the daylight sector on the rim, sunrise bearing → sunset bearing
   beam: string; // from the sun to the house
+  cardinalLines: string; // from the centre to the N, E, S and W ticks
+  azArc: string; // from north clockwise round to the sun's bearing
+  azChip: Pt | null; // where the azimuth chip sits, outside the arc on its bisector
   past: string;
   future: string;
   housePoly: string;
@@ -27,6 +30,7 @@ export interface DialGeometry {
 }
 
 const { size, r: R, house: HW } = DIAL;
+const AZ_R = 56; // the azimuth arc's radius, outside the house footprint
 const C = size / 2;
 // a sky point at bearing az and elevation el (below the horizon lands on the rim)
 export const polar = (az: number, el: number, radius = R): Pt => {
@@ -88,6 +92,9 @@ export const dialGeometry = (
     ticks,
     dayArc: day.sunrise && day.sunset ? arc(day.sunrise.az, day.sunset.az, R + 7) : "",
     beam: up ? `M${P(sun)} L${C} ${C}` : "",
+    cardinalLines: [0, 90, 180, 270].map((a) => `M${C} ${C} L${P(rim(a, R))}`).join(" "),
+    azArc: up ? arc(0, now.az, AZ_R) : "",
+    azChip: up ? rim(now.az / 2, AZ_R + 22) : null,
     past: past.length > 1 ? pathOf(past) : "",
     future: future.length > 1 ? pathOf(future) : "",
     housePoly: pathOf(corners) + " Z",
