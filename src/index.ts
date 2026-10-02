@@ -4,6 +4,7 @@ import "./entity-group-card.ts";
 import "./entity-sections-card.ts";
 import "./multi-trend-card.ts";
 import "./sun-path-card.ts";
+import "./sun-azimuth-card.ts";
 import "./illuminance-card.ts";
 import "./weather-card.ts";
 import "./wind-card.ts";

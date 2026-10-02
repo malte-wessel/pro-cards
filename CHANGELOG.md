@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- New sun azimuth card (`custom:sun-azimuth-card-pro`): where the sun is around the house today, computed from the Home Assistant coordinates like the sun path card. Three views: `dial` (the sky seen from above: horizon ring, today's path, the house in the middle with its lit sides), `3d` (a see-through sky dome over a small house with its shadow, the sun's daily circle, a pole at the house and an elevation chip; `camera` orbits the scene and `camera_slider` puts a slider under the plot to do it by hand) and `ring` (a compass ring with the daylight sector and the sun, sunrise / now / sunset beside it). `house.rotation` turns the house, `house.sides` names its sides; the sides footer (`show_sides`) lists each side's sun window today on a timeline with a pill for its state, and the dial and 3D views carry a line naming the sides in the sun and what comes next (`show_house`) and the sunrise / noon / sunset row (`show_events`). Colours: `sun_color`, `night_color`, `sky_color`. Words in every language the cards speak
+- The solar maths moved to `src/shared/solar.ts` and gained the azimuth (no change for users)
+
 ## 2.2.0 (2026-10-06)
 
 - Controls on the entity, entity group and entity sections cards. `control: auto` draws what the entity's domain calls for: lights a switch and a brightness slider, switches and helpers a switch, covers open / stop / close buttons and a position slider, thermostats a temperature stepper, fans speed segments (a slider beyond six speeds), locks a hold-to-confirm button, scripts, scenes and buttons a Run chip, media players transport buttons and a volume slider, selects a menu, numbers a slider. `control: toggle | slider | stepper | segments | buttons | button | select | hold` picks one, `none` draws nothing; `toggle: true` keeps working as an alias of `control: toggle`

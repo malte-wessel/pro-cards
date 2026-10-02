@@ -1,7 +1,7 @@
 // Config types of the sun path card and what its plot module reads from the card element.
 import type { CardConfigBase, HomeAssistant } from "../shared/ha.ts";
 import type { SunEvent, SunLabels } from "./constants.ts";
-import type { SolarDay } from "./solar.ts";
+import type { SolarDay } from "../shared/solar.ts";
 
 export interface SunPathCardConfig extends CardConfigBase {
   title?: string;

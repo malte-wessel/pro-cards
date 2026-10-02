@@ -33,6 +33,7 @@ Pro Cards is built with the help of AI. Code, docs and tests are written togethe
 | Entity Sections Card Pro | `custom:entity-sections-card-pro` | Several groups with their own layout under one header: room and device cards.                                                                 | YAML only |
 | Multi Trend Card Pro     | `custom:multi-trend-card-pro`     | Tile-style trend graph for several sensors with a hover/touch tooltip.                                                                        | Visual    |
 | Sun Path Card Pro        | `custom:sun-path-card-pro`        | Today's sun elevation with sunrise, sunset, dawn, noon and dusk.                                                                              | Visual    |
+| Sun Azimuth Card Pro     | `custom:sun-azimuth-card-pro`     | Where the sun is around the house: sky dial, 3D scene or compass ring, and the sides it shines on today.                                      | YAML only |
 | Illuminance Card Pro     | `custom:illuminance-card-pro`     | Illuminance as gauge arc, log-scale trend with zones or a colour band.                                                                        | Visual    |
 | Weather Card Pro         | `custom:weather-card-pro`         | Current conditions, attributes and the hourly / daily forecast of a weather entity, with rules, sections and templates.                       | YAML only |
 | Wind Card Pro            | `custom:wind-card-pro`            | Wind speed, direction and gusts as a tile, a flow tile or a hero, with an animated wind field in four styles that rules colour.               | YAML only |
@@ -224,6 +225,21 @@ title: Sun today
 ```
 
 [Sun Path Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/sun-path-card)
+
+#### Sun Azimuth Card Pro
+
+Where the sun is around your house: a sky dial seen from above, a 3D scene with the house, its shadow and the sky dome, or a compass ring, and below it the sides of the house with their sun window today.
+
+```yaml
+type: custom:sun-azimuth-card-pro
+title: Sun
+view: dial
+house:
+  rotation: 20
+  sides: { north: Street, south: Garden }
+```
+
+[Sun Azimuth Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/sun-azimuth-card)
 
 #### Illuminance Card Pro
 
