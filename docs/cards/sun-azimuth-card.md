@@ -70,6 +70,8 @@ house: { rotation: 20 }
 
 `house.rotation` turns the house: it is the bearing the north side's outward normal points to, in degrees clockwise from north (a house whose front looks north-east has `rotation: 45`). The footer lists the four sides with the time the sun shines on them today, a pill for their state (Sun now, from 14:20, Shade or No sun today) and a timeline from just before sunrise to just after sunset. A side may get sun twice a day, for example the north side on a summer morning and evening; both windows are drawn. `house.sides` gives the sides your own names, which stay as written in every language.
 
+Move the pointer along a side's timeline (or tap it on a phone) and the plot above shows the sun at that time: where it stands, which sides it lights, its shadow. A hairline marks the time on every bar and the footer's heading shows it. `hover_preview: false` turns this off.
+
 ::: live
 
 ```yaml
@@ -133,6 +135,7 @@ sky_color: teal
 | `house.sides`    |              | Own names for `north`, `east`, `south` and `west`; the defaults follow the [profile language](../guide/languages). |
 | `camera`         | `180`        | 3D view: the bearing you look toward, 0–360.                                                                       |
 | `camera_slider`  | `false`      | 3D view: a slider under the plot to orbit the scene. The value is not saved.                                       |
+| `hover_preview`  | `true`       | Hovering or tapping a side's timeline shows the sun at that time in the plot.                                      |
 | `show_house`     | `true`       | Dial and 3D: the line naming the sides in the sun and what comes next.                                             |
 | `show_events`    | `true`       | Dial and 3D: the sunrise, solar noon and sunset row.                                                               |
 | `show_sides`     | `true`       | The sides of the house footer.                                                                                     |

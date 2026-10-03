@@ -12,6 +12,7 @@ export interface SunAzimuthCardConfig extends CardConfigBase {
   house?: { rotation?: number; sides?: SideNames | null } | null;
   camera?: number;
   camera_slider?: boolean;
+  hover_preview?: boolean;
   show_house?: boolean;
   show_events?: boolean;
   show_sides?: boolean;
@@ -27,6 +28,7 @@ export interface SunAzimuthConfig extends CardConfigBase {
   sides: SideNames;
   camera: number;
   camera_slider: boolean;
+  hover_preview: boolean;
   show_house: boolean;
   show_events: boolean;
   show_sides: boolean;
