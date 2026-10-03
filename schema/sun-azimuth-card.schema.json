@@ -66,6 +66,11 @@
       "default": false,
       "description": "3D view: a slider under the plot to orbit the scene; the value is not saved"
     },
+    "hover_preview": {
+      "type": "boolean",
+      "default": true,
+      "description": "Hovering or tapping a side's timeline in the footer shows the sun at that time in the plot"
+    },
     "show_house": {
       "type": "boolean",
       "default": true,

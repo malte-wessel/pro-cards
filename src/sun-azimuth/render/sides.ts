@@ -46,7 +46,7 @@ export const renderSides = (
       : t(hass, "azimuth.no_sun");
     row.innerHTML = `<div class="lead"><div class="rot"><ha-icon icon="mdi:navigation"></ha-icon></div></div>
       <div class="main"><div class="line"><div class="texts"><div class="primary"></div><div class="secondary"></div></div><div class="pill"></div></div>
-      <div class="lbar"><b></b></div></div>`;
+      <div class="lbar"><b></b><u class="hair"></u></div></div>`;
     (row.querySelector(".rot") as HTMLElement).style.transform = `rotate(${side.normal}deg)`;
     (row.querySelector(".primary") as HTMLElement).textContent = sideName(card, side);
     (row.querySelector(".secondary") as HTMLElement).textContent = sub;

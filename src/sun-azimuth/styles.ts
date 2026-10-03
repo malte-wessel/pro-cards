@@ -126,6 +126,10 @@ export const STYLE = `
   .side .pill.on { color: var(--saz-sun); background: color-mix(in srgb, var(--saz-sun) 20%, transparent); }
   .lbar { height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--primary-text-color) 8%, transparent); position: relative; }
   .lbar i { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--saz-sun); }
+  .lbar .hair { display: none; position: absolute; top: -4px; bottom: -4px; width: 1px; margin-left: -.5px; background: var(--secondary-text-color); opacity: .6; }
+  .sides.scrub .lbar .hair { display: block; }
+  .sides.scrub .side .main { cursor: crosshair; }
+  .side .main { touch-action: pan-y; }
   .lbar b { position: absolute; top: 50%; width: 6px; height: 6px; margin: -5px 0 0 -5px; border-radius: 50%; background: ${CARD_BG}; border: 2px solid var(--primary-text-color); }
   .axis { display: flex; justify-content: space-between; padding-left: 52px; margin-top: -4px; font: ${AXIS_FONT}; line-height: 12px; color: var(--secondary-text-color); font-variant-numeric: tabular-nums; }
   /* a narrow column: the rows keep their words, the small leads go (after .axis: same specificity) */
