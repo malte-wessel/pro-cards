@@ -36,7 +36,7 @@ import { SunPathCardEditor } from "./sun-path/editor.ts";
 import { hideHover } from "./shared/hover.ts";
 import { t } from "./shared/i18n.ts";
 import { drawCurve, drawEvents, fmtEvent, showHover, timeAt } from "./sun-path/plot.ts";
-import { solarDay } from "./sun-path/solar.ts";
+import { solarDay } from "./shared/solar.ts";
 import { STYLE } from "./sun-path/styles.ts";
 
 const CARD_TYPE = "sun-path-card";

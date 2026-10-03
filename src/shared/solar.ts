@@ -1,10 +1,15 @@
-// Solar math (NOAA solar position), pure. Times are computed locally from latitude/longitude
-// because sun.sun only exposes the *next* events.
+// Solar math (NOAA solar position), pure and shared by the sun path and sun azimuth cards.
+// Times are computed locally from latitude/longitude because sun.sun only exposes the *next* events.
 
 const RAD = Math.PI / 180;
 
-// Solar elevation in degrees (no refraction) for a Date at lat/lon
-export const solarElevation = (date: Date, lat: number, lon: number): number => {
+export interface SunPosition {
+  elevation: number; // degrees above the horizon (no refraction)
+  azimuth: number; // degrees from north, clockwise (0 N, 90 E, 180 S, 270 W)
+}
+
+// Solar elevation and azimuth for a Date at lat/lon
+export const solarPosition = (date: Date, lat: number, lon: number): SunPosition => {
   const jd = date.getTime() / 86400000 + 2440587.5;
   const T = (jd - 2451545) / 36525;
   const L0 = (((280.46646 + T * (36000.76983 + T * 0.0003032)) % 360) + 360) % 360;
@@ -30,12 +35,19 @@ export const solarElevation = (date: Date, lat: number, lon: number): number => 
   const minutesUTC = date.getUTCHours() * 60 + date.getUTCMinutes() + date.getUTCSeconds() / 60;
   let tst = (minutesUTC + eqt + 4 * lon) % 1440;
   if (tst < 0) tst += 1440;
-  const ha = tst / 4 < 0 ? tst / 4 + 180 : tst / 4 - 180;
-  const cosZ =
-    Math.sin(lat * RAD) * Math.sin(decl) +
-    Math.cos(lat * RAD) * Math.cos(decl) * Math.cos(ha * RAD);
-  return 90 - Math.acos(Math.max(-1, Math.min(1, cosZ))) / RAD;
+  const ha = (tst / 4 < 0 ? tst / 4 + 180 : tst / 4 - 180) * RAD;
+  const la = lat * RAD;
+  const cosZ = Math.sin(la) * Math.sin(decl) + Math.cos(la) * Math.cos(decl) * Math.cos(ha);
+  const elevation = 90 - Math.acos(Math.max(-1, Math.min(1, cosZ))) / RAD;
+  const az =
+    Math.atan2(Math.sin(ha), Math.cos(ha) * Math.sin(la) - Math.tan(decl) * Math.cos(la)) / RAD +
+    180;
+  return { elevation, azimuth: ((az % 360) + 360) % 360 };
 };
+
+// Solar elevation in degrees (no refraction) for a Date at lat/lon
+export const solarElevation = (date: Date, lat: number, lon: number): number =>
+  solarPosition(date, lat, lon).elevation;
 
 // The solar day around a local calendar day: a 24 h window centred on that day's solar noon
 // (noon - 12 h .. noon + 12 h) with minute samples and the event times found by threshold crossings

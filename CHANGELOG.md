@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.0 (unreleased)
+
+- New sun azimuth card (`custom:sun-azimuth-card`): where the sun is around the house today, computed from the Home Assistant coordinates like the sun path card. Three views: `dial` (the sky seen from above: horizon ring, today's path, the house in the middle with its lit sides), `3d` (a see-through sky dome over a small house with its shadow, the sun's daily circle, a pole at the house, the elevation and the azimuth as angles with chips; `camera` orbits the scene and `camera_slider` puts a slider under the plot to do it by hand) and `ring` (a compass ring with the daylight sector and the sun, sunrise / now / sunset beside it). `house.rotation` turns the house, `house.sides` names its sides; the sides footer (`show_sides`) lists each side's sun window today on a timeline with a pill for its state (hover or tap a timeline and the plot shows the sun at that time; `hover_preview: false` turns that off), and the dial and 3D views carry a line naming the sides in the sun and what comes next (`show_house`) and the sunrise / noon / sunset row (`show_events`). Colours: `sun_color`, `night_color`, `sky_color`. Words in every language the cards speak
+- The solar maths moved to `src/shared/solar.ts` and gained the azimuth (no change for users)
+
 ## 1.7.1 (2026-10-01)
 
 - Fix the multi trend card's plot in a cell taller or shorter than its natural height: the SVG was stretched to the card, which turned the hover dots into ellipses, thickened the gridlines and skewed the curves. The plot is now drawn at the height it gets, and the trend section of the weather card shares the fix

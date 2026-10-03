@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/sun-azimuth-card.schema.json",
+  "title": "custom:sun-azimuth-card",
+  "description": "Where the sun is around the house today: a sky dial seen from above, a 3D scene with the house, its shadow and the sky dome, or a compass ring, plus the sides of the house the sun shines on. Computed from the Home Assistant coordinates.",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "custom:sun-azimuth-card"
+    },
+    "title": {
+      "type": "string",
+      "description": "Omit for no header"
+    },
+    "icon": {
+      "$ref": "defs.schema.json#/$defs/icon",
+      "description": "Header icon"
+    },
+    "view": {
+      "type": "string",
+      "enum": ["dial", "3d", "ring"],
+      "default": "dial"
+    },
+    "house": {
+      "type": "object",
+      "description": "How the house stands and what its sides are called",
+      "properties": {
+        "rotation": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 360,
+          "default": 0,
+          "description": "Degrees clockwise from north that the north side's outward normal points to"
+        },
+        "sides": {
+          "type": "object",
+          "description": "Your own names for the sides (the defaults follow the profile language)",
+          "properties": {
+            "north": {
+              "type": "string"
+            },
+            "east": {
+              "type": "string"
+            },
+            "south": {
+              "type": "string"
+            },
+            "west": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "camera": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 360,
+      "default": 180,
+      "description": "3D view: the bearing the camera looks toward (180 = standing north of the house, looking south)"
+    },
+    "camera_slider": {
+      "type": "boolean",
+      "default": false,
+      "description": "3D view: a slider under the plot to orbit the scene; the value is not saved"
+    },
+    "hover_preview": {
+      "type": "boolean",
+      "default": true,
+      "description": "Hovering or tapping a side's timeline in the footer shows the sun at that time in the plot"
+    },
+    "show_house": {
+      "type": "boolean",
+      "default": true,
+      "description": "Dial and 3D: the line naming the sides in the sun and what comes next"
+    },
+    "show_events": {
+      "type": "boolean",
+      "default": true,
+      "description": "Dial and 3D: the sunrise, solar noon and sunset row"
+    },
+    "show_sides": {
+      "type": "boolean",
+      "default": true,
+      "description": "The sides of the house footer with each side's sun window today"
+    },
+    "sun_color": {
+      "$ref": "defs.schema.json#/$defs/color",
+      "default": "amber"
+    },
+    "night_color": {
+      "$ref": "defs.schema.json#/$defs/color",
+      "default": "indigo"
+    },
+    "sky_color": {
+      "$ref": "defs.schema.json#/$defs/color",
+      "default": "light-blue"
+    },
+    "grid_options": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/grid_options"
+    },
+    "visibility": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/visibility"
+    },
+    "layout_options": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/layout_options"
+    },
+    "view_layout": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/view_layout"
+    },
+    "card_mod": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/card_mod"
+    }
+  },
+  "required": ["type"],
+  "additionalProperties": false
+}
