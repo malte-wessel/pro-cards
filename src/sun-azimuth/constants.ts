@@ -18,6 +18,7 @@ export const DEFAULTS = {
   rotation: 0,
   camera: 180,
   camera_slider: false,
+  hover_preview: true,
   show_house: true,
   show_events: true,
   show_sides: true,
