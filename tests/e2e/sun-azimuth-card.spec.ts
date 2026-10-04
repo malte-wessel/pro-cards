@@ -2,14 +2,21 @@ import { test, expect, mount, card, setLanguage } from "./util.ts";
 
 // the frozen clock: 21 June 2026, 12:00 CEST in Düsseldorf. The sun stands at 138° (SE), 57° high,
 // an hour and a half before solar noon (13:35); sunrise 05:16 at 49°, sunset 21:52 at 311°.
+// The instant carries its offset: Playwright parses it in the Node process's zone (UTC on CI) while
+// the browser runs in Europe/Berlin, so a naive "12:00" would be 14:00 there.
+const NOON = new Date("2026-06-21T12:00:00+02:00");
 
 test("the sky dial shows the azimuth, the path and the lit sides", async ({ page }) => {
-  await mount(page, {
-    type: "custom:sun-azimuth-card-pro",
-    title: "Sun",
-    icon: "mdi:sun-compass",
-    house: { rotation: 20 },
-  });
+  await mount(
+    page,
+    {
+      type: "custom:sun-azimuth-card-pro",
+      title: "Sun",
+      icon: "mdi:sun-compass",
+      house: { rotation: 20 },
+    },
+    { time: NOON },
+  );
   const c = card(page);
   await expect(c.locator(".header .title")).toHaveText("Sun");
   await expect(c.locator(".header ha-icon")).toHaveAttribute("icon", "mdi:sun-compass");
@@ -47,7 +54,11 @@ test("the sky dial shows the azimuth, the path and the lit sides", async ({ page
 });
 
 test("the sides footer lists every side with its window, pill and timeline", async ({ page }) => {
-  await mount(page, { type: "custom:sun-azimuth-card-pro", house: { rotation: 20 } });
+  await mount(
+    page,
+    { type: "custom:sun-azimuth-card-pro", house: { rotation: 20 } },
+    { time: NOON },
+  );
   const c = card(page);
   await expect(c.locator(".header")).toBeHidden();
   await expect(c.locator(".sides .key")).toHaveText("Sides of the house");
@@ -96,10 +107,14 @@ test("the sides footer lists every side with its window, pill and timeline", asy
 });
 
 test("own side names stay as written in every language", async ({ page }) => {
-  await mount(page, {
-    type: "custom:sun-azimuth-card-pro",
-    house: { rotation: 45, sides: { north: "Street", south: "Garden" } },
-  });
+  await mount(
+    page,
+    {
+      type: "custom:sun-azimuth-card-pro",
+      house: { rotation: 45, sides: { north: "Street", south: "Garden" } },
+    },
+    { time: NOON },
+  );
   const c = card(page);
   const names = c.locator(".side .primary");
   await expect(names).toHaveText(["Street", "East side", "Garden", "West side"]);
@@ -115,7 +130,11 @@ test("own side names stay as written in every language", async ({ page }) => {
 });
 
 test("hovering a timeline previews the sun at that time", async ({ page }) => {
-  await mount(page, { type: "custom:sun-azimuth-card-pro", house: { rotation: 20 } });
+  await mount(
+    page,
+    { type: "custom:sun-azimuth-card-pro", house: { rotation: 20 } },
+    { time: NOON },
+  );
   const c = card(page);
   const footer = c.locator(".sides");
   const chip = c.locator("svg.dial .chip text");
@@ -147,7 +166,7 @@ test("hovering a timeline previews the sun at that time", async ({ page }) => {
 });
 
 test("hover_preview: false leaves the plot alone", async ({ page }) => {
-  await mount(page, { type: "custom:sun-azimuth-card-pro", hover_preview: false });
+  await mount(page, { type: "custom:sun-azimuth-card-pro", hover_preview: false }, { time: NOON });
   const c = card(page);
   const bar = c.locator(".side").nth(2).locator(".lbar");
   await bar.scrollIntoViewIfNeeded(); // the footer sits below the 800 px viewport
@@ -159,13 +178,17 @@ test("hover_preview: false leaves the plot alone", async ({ page }) => {
 });
 
 test("the 3D view draws the scene and the slider orbits it", async ({ page }) => {
-  await mount(page, {
-    type: "custom:sun-azimuth-card-pro",
-    view: "3d",
-    house: { rotation: 20 },
-    camera: 180,
-    camera_slider: true,
-  });
+  await mount(
+    page,
+    {
+      type: "custom:sun-azimuth-card-pro",
+      view: "3d",
+      house: { rotation: 20 },
+      camera: 180,
+      camera_slider: true,
+    },
+    { time: NOON },
+  );
   const c = card(page);
   await expect(c.locator(".head .primary")).toHaveText("Elevation");
   await expect(c.locator(".head .big b")).toHaveText("57°");
@@ -201,7 +224,11 @@ test("the 3D view draws the scene and the slider orbits it", async ({ page }) =>
 });
 
 test("the compass ring shows the daylight sector and the day's events", async ({ page }) => {
-  await mount(page, { type: "custom:sun-azimuth-card-pro", view: "ring", house: { rotation: 20 } });
+  await mount(
+    page,
+    { type: "custom:sun-azimuth-card-pro", view: "ring", house: { rotation: 20 } },
+    { time: NOON },
+  );
   const c = card(page);
   await expect(c.locator(".visual")).toHaveCount(0);
   await expect(c.locator(".items")).toHaveCount(0);
@@ -230,7 +257,7 @@ test("at night the sun is below the horizon everywhere", async ({ page }) => {
   await mount(
     page,
     { type: "custom:sun-azimuth-card-pro", house: { rotation: 20 } },
-    { time: new Date("2026-06-21T02:00:00") },
+    { time: new Date("2026-06-21T02:00:00+02:00") },
   );
   const c = card(page);
   await expect(c.locator(".head .big b")).toHaveText("6°");
@@ -259,7 +286,7 @@ test("the 3D view at night hides the sun and the shadow", async ({ page }) => {
   await mount(
     page,
     { type: "custom:sun-azimuth-card-pro", view: "3d" },
-    { time: new Date("2026-06-21T02:00:00") },
+    { time: new Date("2026-06-21T02:00:00+02:00") },
   );
   const scene = card(page).locator("svg.scene");
   await expect(scene.locator("circle.sun")).toHaveCount(0);
@@ -271,24 +298,28 @@ test("the 3D view at night hides the sun and the shadow", async ({ page }) => {
 });
 
 test("show_* options drop their sections and colours reach the card", async ({ page }) => {
-  await mount(page, [
-    {
-      type: "custom:sun-azimuth-card-pro",
-      show_sides: false,
-      show_house: false,
-      show_events: false,
-      sun_color: "#ff0000",
-      night_color: "teal",
-      sky_color: "rgb(1, 2, 3)",
-      grid_options: { columns: 6 },
-    },
-    {
-      type: "custom:sun-azimuth-card-pro",
-      view: "3d",
-      show_sides: false,
-      grid_options: { columns: 6 },
-    },
-  ]);
+  await mount(
+    page,
+    [
+      {
+        type: "custom:sun-azimuth-card-pro",
+        show_sides: false,
+        show_house: false,
+        show_events: false,
+        sun_color: "#ff0000",
+        night_color: "teal",
+        sky_color: "rgb(1, 2, 3)",
+        grid_options: { columns: 6 },
+      },
+      {
+        type: "custom:sun-azimuth-card-pro",
+        view: "3d",
+        show_sides: false,
+        grid_options: { columns: 6 },
+      },
+    ],
+    { time: NOON },
+  );
   const a = card(page, 0);
   await expect(a.locator(".sides")).toHaveCount(0);
   await expect(a.locator(".house")).toHaveCount(0);
@@ -319,12 +350,12 @@ test("moves the sun with time", async ({ page }) => {
   await mount(
     page,
     { type: "custom:sun-azimuth-card-pro" },
-    { time: new Date("2026-06-21T08:00:00") },
+    { time: new Date("2026-06-21T08:00:00+02:00") },
   );
   const c = card(page);
   await expect(c.locator(".head .big b")).toHaveText(/^(7|8)\d°$/);
   const early = parseFloat((await c.locator("svg.dial circle.sun").getAttribute("cx"))!);
-  await page.clock.setFixedTime(new Date("2026-06-21T18:00:00"));
+  await page.clock.setFixedTime(new Date("2026-06-21T18:00:00+02:00"));
   await page.evaluate(() => window.pc.card(0)._render());
   await expect(c.locator(".head .big b")).toHaveText(/^26\d°$/);
   await expect(c.locator(".head .accent")).toHaveText(/sinking$/);
