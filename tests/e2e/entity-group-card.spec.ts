@@ -140,7 +140,7 @@ test.describe("layouts", () => {
     await mount(page, { type: T, layout: "row", align: "center", entities: ["light.kitchen"] });
     expect(await style(card(page).locator(".section.layout-row"), "justifyContent")).toBe("center");
   });
-  test("column stacks items on the right by default", async ({ page }) => {
+  test("column stacks items on the left by default", async ({ page }) => {
     await mount(page, {
       type: T,
       layout: "column",
@@ -149,18 +149,40 @@ test.describe("layouts", () => {
       entities: ["light.bedroom", "cover.bedroom_blinds", "climate.bedroom"],
     });
     const sec = card(page).locator(".section.layout-column");
-    expect(await style(sec, "alignItems")).toBe("flex-end");
+    expect(await style(sec, "alignItems")).toBe("flex-start");
     const items = sec.locator(".row.item");
     await expect(items).toHaveCount(3);
     await expect(items.locator(".iname")).toHaveCount(0);
     const b0 = (await items.nth(0).boundingBox())!,
       b1 = (await items.nth(1).boundingBox())!;
     expect(b1.y).toBeGreaterThan(b0.y + b0.height - 1);
-    expect(Math.abs((await right(items.nth(0))) - (await right(sec)))).toBeLessThan(2);
-    await mount(page, { type: T, layout: "column", align: "start", entities: ["light.bedroom"] });
-    expect(await style(card(page).locator(".section.layout-column"), "alignItems")).toBe(
-      "flex-start",
-    );
+    expect(
+      Math.abs((await items.nth(0).boundingBox())!.x - (await sec.boundingBox())!.x),
+    ).toBeLessThan(2);
+    await mount(page, { type: T, layout: "column", align: "end", entities: ["light.bedroom"] });
+    const end = card(page).locator(".section.layout-column");
+    expect(await style(end, "alignItems")).toBe("flex-end");
+    expect(Math.abs((await right(end.locator(".row.item"))) - (await right(end)))).toBeLessThan(2);
+  });
+  test("column items put the name over the value beside the icon, whatever name_position", async ({
+    page,
+  }) => {
+    await mount(page, {
+      type: T,
+      layout: "column",
+      entities: [
+        { entity: "light.bedroom", name: "Bedroom" },
+        { entity: "cover.bedroom_blinds", name: "Blinds", name_position: "below" },
+      ],
+    });
+    const items = card(page).locator(".section.layout-column .row.item");
+    for (const i of [0, 1]) {
+      const lead = (await items.nth(i).locator(".lead").boundingBox())!,
+        name = (await items.nth(i).locator(".iname").boundingBox())!,
+        val = (await items.nth(i).locator(".state").boundingBox())!;
+      expect(name.x).toBeGreaterThan(lead.x + lead.width - 1); // texts right of the icon
+      expect(val.y).toBeGreaterThan(name.y + name.height - 1); // value under the name
+    }
   });
   test("table shows uppercase keys with right-aligned values and an optional icon column", async ({
     page,

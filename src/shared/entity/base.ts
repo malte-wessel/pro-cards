@@ -41,7 +41,7 @@ export const groupCardSize = (cfg: EntityCardConfig, group: Group) => {
     case "row":
       return Math.ceil(n / 5) * (ents.some((e) => e.item.showName || e.item.showValue) ? 2 : 1);
     case "column":
-      return n * (ents.some((e) => e.item.showName || e.item.showValue) ? 2 : 1);
+      return n;
     case "table":
       return Math.max(1, Math.ceil(n / 2));
     default:

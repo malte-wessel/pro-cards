@@ -83,6 +83,14 @@ export const STYLE_ITEM = `
   .item .state { font-size: 12px; line-height: 16px; font-weight: 400; color: var(--secondary-text-color); overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   .item .state.lone { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--primary-text-color); }
   .item .pill { max-width: 100%; }
+  /* a column item is list-like: the icon on the left, the name over the value on the right (name_position is ignored) */
+  .section.layout-column .row.item { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; row-gap: 2px; align-items: center; justify-items: start; text-align: left; }
+  .section.layout-column .item .lead { grid-column: 1; grid-row: 1 / span 2; }
+  .section.layout-column .item .iname { grid-column: 2; grid-row: 1; align-self: end; }
+  .section.layout-column .item .state, .section.layout-column .item .pill { grid-column: 2; grid-row: 2; align-self: start; }
+  .section.layout-column .item .lone { grid-row: 1 / span 2; align-self: center; }
+  .section.layout-column .row.item:not(:has(> .lead)) { grid-template-columns: minmax(0, 1fr); }
+  .section.layout-column .row.item:not(:has(> .lead)) > * { grid-column: 1; }
   .item:focus-visible { box-shadow: none; }
   .item:focus-visible .lead .shape { box-shadow: 0 0 0 2px var(--fe-color); }
 `;

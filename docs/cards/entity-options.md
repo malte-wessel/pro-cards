@@ -973,6 +973,6 @@ These two keys sit on the card, not on the entity, and apply to every history vi
 | Option                                   | Default    | Applies to                 | Description                                                   |
 | ---------------------------------------- | ---------- | -------------------------- | ------------------------------------------------------------- |
 | `show_name` / `show_value` / `show_icon` | per layout | row, column, table, header | What a compact item shows, see [Item options](#item-options). |
-| `name_position`                          | per layout | row, column                | `above` or `below` the icon: row `below`, column `above`.     |
+| `name_position`                          | `below`    | row                        | `above` or `below` the icon; columns ignore it.               |
 
 Every card also accepts the Home Assistant keys `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`; see [Sizing in sections](/guide/sizing).

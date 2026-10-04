@@ -160,7 +160,7 @@ describe("group", () => {
     ).toBe("above");
     expect(
       normalizeGroup({ layout: "column", entities: ["l.a"] }, ctx, {}, "entities", 0).group.align,
-    ).toBe("end");
+    ).toBe("start");
     const table = normalizeGroup({ layout: "table", entities: ["s.a"] }, ctx, {}, "entities", 0);
     expect(table.group).toMatchObject({ align: "end", hasIcon: false });
     expect(table.entities[0].item).toMatchObject({ showValue: true, showIcon: false });
