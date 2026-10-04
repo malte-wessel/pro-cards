@@ -1,9 +1,9 @@
 import { test, expect, mount } from "../e2e/util.ts";
 
 // All snapshots: frozen clock (21 June 2026, 12:00 Europe/Berlin), 400 px section column, light and dark.
-const EC = "custom:entity-card",
-  EGC = "custom:entity-group-card",
-  ESC = "custom:entity-sections-card";
+const EC = "custom:entity-card-pro",
+  EGC = "custom:entity-group-card-pro",
+  ESC = "custom:entity-sections-card-pro";
 const rules = [
   { below: 16, color: "blue", icon: "mdi:snowflake", label: "Cold" },
   { below: 24, color: "green", icon: "mdi:thermometer", label: "Comfortable" },
@@ -24,7 +24,7 @@ const rainRules = [
   { above: 7.6, color: "indigo", label: "Heavy rain", tint_card: true },
 ];
 
-const PF = "custom:power-flow-card";
+const PF = "custom:power-flow-card-pro";
 const PF_SRC = [
   { type: "solar", entity: "sensor.solar_power" },
   { type: "battery", power: "sensor.battery_power", soc: "sensor.battery_soc" },
@@ -440,7 +440,7 @@ const CASES = {
     },
   ],
   "mtc-overlay": {
-    type: "custom:multi-trend-card",
+    type: "custom:multi-trend-card-pro",
     title: "Temperature & dew point",
     icon: "mdi:thermometer",
     hours_to_show: 12,
@@ -450,7 +450,7 @@ const CASES = {
     ],
   },
   "mtc-lanes-axes": {
-    type: "custom:multi-trend-card",
+    type: "custom:multi-trend-card-pro",
     title: "Wind & pressure",
     icon: "mdi:weather-windy",
     color: "teal",
@@ -463,9 +463,9 @@ const CASES = {
     ],
   },
   "wc-tile": [
-    { type: "custom:weather-card", entity: "weather.home", grid_options: { columns: 6 } },
+    { type: "custom:weather-card-pro", entity: "weather.home", grid_options: { columns: 6 } },
     {
-      type: "custom:weather-card",
+      type: "custom:weather-card-pro",
       entity: "weather.home",
       name: "Garden",
       rules: [{ state: "partlycloudy", color: "amber", label: "Some sun", tint_card: true }],
@@ -473,7 +473,7 @@ const CASES = {
     },
   ],
   "wc-hero-rows": {
-    type: "custom:weather-card",
+    type: "custom:weather-card-pro",
     entity: "weather.home",
     title: "Home",
     temperature_rules: [
@@ -496,7 +496,7 @@ const CASES = {
     ],
   },
   "wc-trend": {
-    type: "custom:weather-card",
+    type: "custom:weather-card-pro",
     entity: "weather.home",
     sections: [
       { type: "hero", name: "Garden" },
@@ -519,7 +519,7 @@ const CASES = {
     ],
   },
   "wc-forecast": {
-    type: "custom:weather-card",
+    type: "custom:weather-card-pro",
     entity: "weather.home",
     temperature_rules: [
       { below: 12, color: "blue", label: "Cool" },
@@ -540,7 +540,7 @@ const CASES = {
     ],
   },
   "wc-icons": {
-    type: "custom:weather-card",
+    type: "custom:weather-card-pro",
     entity: "weather.home",
     sections: [
       { type: "hero", icon_size: 72 },
@@ -557,7 +557,7 @@ const CASES = {
   },
   "wic-tile": [
     {
-      type: "custom:wind-card",
+      type: "custom:wind-card-pro",
       entity: "sensor.wind_speed",
       direction: "sensor.wind_direction",
       gust: "sensor.wind_gust",
@@ -565,7 +565,7 @@ const CASES = {
       grid_options: { columns: 6 },
     },
     {
-      type: "custom:wind-card",
+      type: "custom:wind-card-pro",
       entity: "weather.home",
       title: "Wind",
       lead: "arrow",
@@ -573,7 +573,7 @@ const CASES = {
       grid_options: { columns: 6 },
     },
     {
-      type: "custom:wind-card",
+      type: "custom:wind-card-pro",
       entity: "sensor.wind_speed",
       direction: "sensor.wind_direction",
       gust: "sensor.wind_gust",
@@ -583,7 +583,7 @@ const CASES = {
   ],
   "wic-flow": [
     {
-      type: "custom:wind-card",
+      type: "custom:wind-card-pro",
       entity: "sensor.wind_speed",
       direction: "sensor.wind_direction",
       gust: "sensor.wind_gust",
@@ -592,7 +592,7 @@ const CASES = {
       grid_options: { columns: 6 },
     },
     {
-      type: "custom:wind-card",
+      type: "custom:wind-card-pro",
       entity: "sensor.wind_speed",
       direction: "sensor.wind_direction",
       gust: "sensor.wind_gust",
@@ -602,7 +602,7 @@ const CASES = {
       grid_options: { columns: 6 },
     },
     {
-      type: "custom:wind-card",
+      type: "custom:wind-card-pro",
       entity: "sensor.wind_speed",
       direction: "sensor.wind_direction",
       gust: "sensor.wind_gust",
@@ -612,7 +612,7 @@ const CASES = {
       grid_options: { columns: 6 },
     },
     {
-      type: "custom:wind-card",
+      type: "custom:wind-card-pro",
       entity: "sensor.wind_gust",
       direction: "sensor.wind_direction",
       visual: "flow",
@@ -622,7 +622,7 @@ const CASES = {
     },
   ],
   "wic-hero": {
-    type: "custom:wind-card",
+    type: "custom:wind-card-pro",
     entity: "sensor.wind_speed",
     direction: "sensor.wind_direction",
     gust: "sensor.wind_gust",
@@ -634,14 +634,14 @@ const CASES = {
   },
   "rc-tile": [
     {
-      type: "custom:rain-card",
+      type: "custom:rain-card-pro",
       entity: "sensor.rain_rate_roof",
       today: "sensor.rain_today",
       rules: rainRules,
       grid_options: { columns: 6 },
     },
     {
-      type: "custom:rain-card",
+      type: "custom:rain-card-pro",
       entity: "sensor.rain_rate_roof",
       today: "sensor.rain_today",
       title: "Rain",
@@ -650,7 +650,7 @@ const CASES = {
       grid_options: { columns: 6 },
     },
     {
-      type: "custom:rain-card",
+      type: "custom:rain-card-pro",
       entity: "sensor.rain_rate_roof",
       today: "sensor.rain_today",
       wind: "sensor.wind_speed",
@@ -661,7 +661,7 @@ const CASES = {
   ],
   "rc-flow": [
     {
-      type: "custom:rain-card",
+      type: "custom:rain-card-pro",
       entity: "sensor.rain_rate_roof",
       today: "sensor.rain_today",
       wind: "sensor.wind_speed",
@@ -671,7 +671,7 @@ const CASES = {
       grid_options: { columns: 6 },
     },
     {
-      type: "custom:rain-card",
+      type: "custom:rain-card-pro",
       entity: "sensor.rain_rate_roof",
       today: "sensor.rain_today",
       visual: "flow",
@@ -680,7 +680,7 @@ const CASES = {
       grid_options: { columns: 6 },
     },
     {
-      type: "custom:rain-card",
+      type: "custom:rain-card-pro",
       entity: "sensor.rain_rate_roof",
       today: "sensor.rain_today",
       visual: "flow",
@@ -689,7 +689,7 @@ const CASES = {
       grid_options: { columns: 6 },
     },
     {
-      type: "custom:rain-card",
+      type: "custom:rain-card-pro",
       entity: "sensor.rain_rate",
       today: "sensor.rain_today",
       visual: "flow",
@@ -698,7 +698,7 @@ const CASES = {
     },
   ],
   "rc-hero": {
-    type: "custom:rain-card",
+    type: "custom:rain-card-pro",
     entity: "sensor.rain_rate_roof",
     today: "sensor.rain_today",
     wind: "sensor.wind_speed",
@@ -710,7 +710,7 @@ const CASES = {
     rules: rainRules,
   },
   "wc-everything": {
-    type: "custom:weather-card",
+    type: "custom:weather-card-pro",
     entity: "weather.home",
     title: "Home",
     header_entities: [
@@ -762,7 +762,7 @@ const CASES = {
     ],
   },
   "spc-default": {
-    type: "custom:sun-path-card",
+    type: "custom:sun-path-card-pro",
     title: "Sun today",
     labels: {
       sunrise: "Sunrise",
@@ -773,7 +773,7 @@ const CASES = {
     },
   },
   "spc-custom": {
-    type: "custom:sun-path-card",
+    type: "custom:sun-path-card-pro",
     show_dawn_dusk: false,
     day_color: "orange",
     night_color: "deep-purple",
@@ -781,7 +781,7 @@ const CASES = {
     labels: { sunrise: "Rise", sunset: "Set" },
   },
   "ilc-arc": {
-    type: "custom:illuminance-card",
+    type: "custom:illuminance-card-pro",
     entity: "sensor.illuminance",
     mode: "arc",
     name: "Outdoor light",
@@ -794,7 +794,7 @@ const CASES = {
     },
   },
   "ilc-trend": {
-    type: "custom:illuminance-card",
+    type: "custom:illuminance-card-pro",
     entity: "sensor.illuminance",
     mode: "trend",
     name: "Outdoor light",
@@ -807,7 +807,7 @@ const CASES = {
     },
   },
   "ilc-band": {
-    type: "custom:illuminance-card",
+    type: "custom:illuminance-card-pro",
     entity: "sensor.illuminance",
     mode: "band",
     name: "Outdoor light",

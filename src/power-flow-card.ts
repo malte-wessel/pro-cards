@@ -1,8 +1,8 @@
 /*
- * power-flow-card – where a home's electricity comes from and where it goes, as a tree with
+ * power-flow-card-pro – where a home's electricity comes from and where it goes, as a tree with
  * animated flow: sources (solar, battery, grid) → home → rooms → consumers.
  *
- *   type: custom:power-flow-card
+ *   type: custom:power-flow-card-pro
  *   sources:                               # required: solar / battery / grid entries
  *     - { type: solar, entity: sensor.solar_power }
  *     - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }   # + = discharging
@@ -166,7 +166,7 @@ export class PowerFlowCard extends EntityCardBase {
 }
 
 registerCard(PowerFlowCard, {
-  name: "Power Flow Card",
+  name: "Power Flow Card Pro",
   description:
     "Where the power comes from and where it goes: solar, battery and grid → home → rooms and devices, as an animated tree",
 });

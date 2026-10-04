@@ -3,7 +3,7 @@ import type { MultiTrendCard } from "../../src/multi-trend-card.ts";
 import type { FormEditorBase } from "../../src/shared/editor.ts";
 
 const two = (extra = {}) => ({
-  type: "custom:multi-trend-card",
+  type: "custom:multi-trend-card-pro",
   title: "Temp",
   entities: [
     { entity: "sensor.outdoor_temperature", name: "Temperature", color: "red" },
@@ -122,7 +122,7 @@ test("hover shows a tooltip with every series and the header opens more-info", a
 test("editor element loads with a form", async ({ page }) => {
   await mount(page, two());
   const ok = await page.evaluate(() => {
-    const Card = customElements.get("multi-trend-card") as unknown as typeof MultiTrendCard;
+    const Card = customElements.get("multi-trend-card-pro") as unknown as typeof MultiTrendCard;
     const ed = Card.getConfigElement() as FormEditorBase;
     ed.setConfig({ entities: [{ entity: "sensor.outdoor_temperature" }] });
     ed.hass = window.pc.snapshot();
@@ -131,7 +131,7 @@ test("editor element loads with a form", async ({ page }) => {
     return { tag: ed.tagName.toLowerCase(), hasForm: !!form, entities: form?.data?.entities };
   });
   expect(ok).toEqual({
-    tag: "multi-trend-card-editor",
+    tag: "multi-trend-card-pro-editor",
     hasForm: true,
     entities: ["sensor.outdoor_temperature"],
   });

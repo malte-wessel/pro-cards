@@ -2,7 +2,7 @@ import { test, expect, mount, calls, events, actions, state, setState, card } fr
 import type { Locator } from "@playwright/test";
 import type { EntityCard } from "../../src/entity-card.ts";
 
-const T = "custom:entity-card";
+const T = "custom:entity-card-pro";
 const light = (extra = {}) => ({ type: T, entity: "light.living_room", ...extra });
 const feColor = (loc: Locator) =>
   loc.evaluate((e) => e.style.getPropertyValue("--fe-color").trim());
@@ -318,7 +318,7 @@ test.describe("config errors", () => {
   test("setConfig rejects bad configs with a readable message", async ({ page }) => {
     await mount(page, light());
     const msgs = await page.evaluate(() => {
-      const el = document.createElement("entity-card") as EntityCard;
+      const el = document.createElement("entity-card-pro") as EntityCard;
       const tryCfg = (c: unknown) => {
         try {
           el.setConfig(c);
@@ -329,7 +329,7 @@ test.describe("config errors", () => {
       };
       return [tryCfg({ name: "x" }), tryCfg(null), tryCfg({ entity: "light.a" })];
     });
-    expect(msgs[0]).toMatch(/entity-card: 'entity' or 'value' is required/);
+    expect(msgs[0]).toMatch(/entity-card-pro: 'entity' or 'value' is required/);
     expect(msgs[1]).toMatch(/invalid config/);
     expect(msgs[2]).toBeNull();
   });

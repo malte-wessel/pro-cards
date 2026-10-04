@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://malte-wessel.github.io/pro-cards/schema/entity-sections-card.schema.json",
-  "title": "custom:entity-sections-card",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/entity-sections-card-pro.schema.json",
+  "title": "custom:entity-sections-card-pro",
   "description": "Several groups of entities under one header, each section with its own layout. A section takes the same keys as an entity-group-card body plus divider.",
   "type": "object",
   "properties": {
-    "type": { "const": "custom:entity-sections-card" },
+    "type": { "const": "custom:entity-sections-card-pro" },
     "title": { "type": "string", "description": "Header text. Template allowed." },
     "icon": {
       "$ref": "defs.schema.json#/$defs/icon",

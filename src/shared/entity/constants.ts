@@ -1,4 +1,4 @@
-// Shared constants of the entity cards (entity-card, entity-group-card, entity-sections-card).
+// Shared constants of the entity cards (entity-card-pro, entity-group-card-pro, entity-sections-card-pro).
 
 export const GROUP_LAYOUTS = ["list", "grid", "hero", "row", "column", "table"] as const;
 export type GroupLayout = (typeof GROUP_LAYOUTS)[number];

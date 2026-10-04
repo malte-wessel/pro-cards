@@ -26,18 +26,18 @@ Pro Cards is built with the help of AI. Code, docs and tests are written togethe
   <img alt="Pro Cards on a dashboard: weather station, living room, tiles, the power flow tree, sun path, illuminance, wind, batteries and a trend graph" src="https://raw.githubusercontent.com/malte-wessel/pro-cards/main/docs/public/readme/cards-light.png" width="860">
 </picture>
 
-| Card                 | Type                          | What it does                                                                                                                                  | Editor    |
-| -------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| Entity Card          | `custom:entity-card`          | One entity as a tile with icon, ring, gauge, bar, sparkline, columns, badge or strip. Rules and Jinja templates drive colour, icon and label. | YAML only |
-| Entity Group Card    | `custom:entity-group-card`    | Many entities as list, grid, hero, row, column or table, with header entities on the title line.                                              | YAML only |
-| Entity Sections Card | `custom:entity-sections-card` | Several groups with their own layout under one header: room and device cards.                                                                 | YAML only |
-| Multi Trend Card     | `custom:multi-trend-card`     | Tile-style trend graph for several sensors with a hover/touch tooltip.                                                                        | Visual    |
-| Sun Path Card        | `custom:sun-path-card`        | Today's sun elevation with sunrise, sunset, dawn, noon and dusk.                                                                              | Visual    |
-| Illuminance Card     | `custom:illuminance-card`     | Illuminance as gauge arc, log-scale trend with zones or a colour band.                                                                        | Visual    |
-| Weather Card         | `custom:weather-card`         | Current conditions, attributes and the hourly / daily forecast of a weather entity, with rules, sections and templates.                       | YAML only |
-| Wind Card            | `custom:wind-card`            | Wind speed, direction and gusts as a tile, a flow tile or a hero, with an animated wind field in four styles that rules colour.               | YAML only |
-| Rain Card            | `custom:rain-card`            | Rain rate and today's total as a tile, a flow tile or a hero, with falling drops, ripples or a filling gauge that rules colour.               | YAML only |
-| Power Flow Card      | `custom:power-flow-card`      | Solar, battery and grid → home → rooms and devices as a tree with animated flow, the state of the home and its self-sufficiency.              | YAML only |
+| Card                     | Type                              | What it does                                                                                                                                  | Editor    |
+| ------------------------ | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| Entity Card Pro          | `custom:entity-card-pro`          | One entity as a tile with icon, ring, gauge, bar, sparkline, columns, badge or strip. Rules and Jinja templates drive colour, icon and label. | YAML only |
+| Entity Group Card Pro    | `custom:entity-group-card-pro`    | Many entities as list, grid, hero, row, column or table, with header entities on the title line.                                              | YAML only |
+| Entity Sections Card Pro | `custom:entity-sections-card-pro` | Several groups with their own layout under one header: room and device cards.                                                                 | YAML only |
+| Multi Trend Card Pro     | `custom:multi-trend-card-pro`     | Tile-style trend graph for several sensors with a hover/touch tooltip.                                                                        | Visual    |
+| Sun Path Card Pro        | `custom:sun-path-card-pro`        | Today's sun elevation with sunrise, sunset, dawn, noon and dusk.                                                                              | Visual    |
+| Illuminance Card Pro     | `custom:illuminance-card-pro`     | Illuminance as gauge arc, log-scale trend with zones or a colour band.                                                                        | Visual    |
+| Weather Card Pro         | `custom:weather-card-pro`         | Current conditions, attributes and the hourly / daily forecast of a weather entity, with rules, sections and templates.                       | YAML only |
+| Wind Card Pro            | `custom:wind-card-pro`            | Wind speed, direction and gusts as a tile, a flow tile or a hero, with an animated wind field in four styles that rules colour.               | YAML only |
+| Rain Card Pro            | `custom:rain-card-pro`            | Rain rate and today's total as a tile, a flow tile or a hero, with falling drops, ripples or a filling gauge that rules colour.               | YAML only |
+| Power Flow Card Pro      | `custom:power-flow-card-pro`      | Solar, battery and grid → home → rooms and devices as a tree with animated flow, the state of the home and its self-sufficiency.              | YAML only |
 
 All cards support the sections grid (`grid_options`). Requires Home Assistant 2025.3 or newer.
 
@@ -75,12 +75,12 @@ to the advanced ones step by step.
 
 ### Entities
 
-#### Entity Card
+#### Entity Card Pro
 
 One entity as a tile. Rules pick colour, icon and label by value or state.
 
 ```yaml
-type: custom:entity-card
+type: custom:entity-card-pro
 entity: sensor.living_room_temperature
 rules:
   - { below: 19, color: blue, icon: mdi:snowflake, label: Cold }
@@ -88,15 +88,15 @@ rules:
   - { above: 24, color: orange, icon: mdi:sun-thermometer, label: Warm }
 ```
 
-[Entity Card docs](https://malte-wessel.github.io/pro-cards/cards/entity-card) ·
+[Entity Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/entity-card) ·
 [Entity options](https://malte-wessel.github.io/pro-cards/cards/entity-options)
 
-#### Entity Group Card
+#### Entity Group Card Pro
 
 Many entities in one layout: `list`, `grid`, `hero`, `row`, `column` or `table`.
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Living room
 entities:
   - { entity: light.living_room, toggle: true }
@@ -104,14 +104,14 @@ entities:
   - { entity: sensor.living_room_temperature, visual: sparkline }
 ```
 
-[Entity Group Card docs](https://malte-wessel.github.io/pro-cards/cards/entity-group-card)
+[Entity Group Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/entity-group-card)
 
-#### Entity Sections Card
+#### Entity Sections Card Pro
 
 Several groups with their own layout under one header: room and device cards.
 
 ```yaml
-type: custom:entity-sections-card
+type: custom:entity-sections-card-pro
 title: Living room
 sections:
   - layout: row
@@ -120,29 +120,29 @@ sections:
     entities: [light.living_room, cover.living_room_blinds, media_player.living_room_tv]
 ```
 
-[Entity Sections Card docs](https://malte-wessel.github.io/pro-cards/cards/entity-sections-card)
+[Entity Sections Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/entity-sections-card)
 
-#### Multi Trend Card
+#### Multi Trend Card Pro
 
 Several sensors as smooth lines with a hover tooltip. Visual editor.
 
 ```yaml
-type: custom:multi-trend-card
+type: custom:multi-trend-card-pro
 entities:
   - { entity: sensor.outdoor_temperature, name: Temperature, color: red }
   - { entity: sensor.dew_point, name: Dew point, color: blue }
 ```
 
-[Multi Trend Card docs](https://malte-wessel.github.io/pro-cards/cards/multi-trend-card)
+[Multi Trend Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/multi-trend-card)
 
 ### Energy
 
-#### Power Flow Card
+#### Power Flow Card Pro
 
 Where the electricity comes from and where it goes: solar, battery and grid on the left, the home in the middle, rooms and devices on the right, joined by lines that carry the power as moving dots. The line above says whether the home imports, exports or runs on battery, and how self-sufficient it is.
 
 ```yaml
-type: custom:power-flow-card
+type: custom:power-flow-card-pro
 home: sensor.power_consumption
 sources:
   - { type: solar, entity: sensor.solar_power }
@@ -153,16 +153,16 @@ consumers:
   - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
 ```
 
-[Power Flow Card docs](https://malte-wessel.github.io/pro-cards/cards/power-flow-card)
+[Power Flow Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/power-flow-card)
 
 ### Weather
 
-#### Weather Card
+#### Weather Card Pro
 
 A weather entity as a tile, or as sections you compose like the sections card: the hero lead, rows of attributes and entities, trend charts and forecast rows.
 
 ```yaml
-type: custom:weather-card
+type: custom:weather-card-pro
 entity: weather.home
 title: Home
 sections:
@@ -172,14 +172,14 @@ sections:
   - { type: forecast, mode: daily, days: 7 }
 ```
 
-[Weather Card docs](https://malte-wessel.github.io/pro-cards/cards/weather-card)
+[Weather Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/weather-card)
 
-#### Wind Card
+#### Wind Card Pro
 
 Wind speed, direction and gusts from sensors or a weather entity, with an animated wind field: dots, streamlines, swooshes or an arrow field that travel where the wind blows, faster with the speed, wavier with the gusts, coloured by your rules.
 
 ```yaml
-type: custom:wind-card
+type: custom:wind-card-pro
 entity: sensor.wind_speed
 direction: sensor.wind_direction
 gust: sensor.wind_gust
@@ -191,14 +191,14 @@ rules:
   - { above: 35, color: red, label: Storm, tint_card: true }
 ```
 
-[Wind Card docs](https://malte-wessel.github.io/pro-cards/cards/wind-card)
+[Wind Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/wind-card)
 
-#### Rain Card
+#### Rain Card Pro
 
 The rain rate and today's total, animated: drops that fall harder and slant with the wind, ripples on a puddle, or a rain gauge that fills through the day, coloured by your rules.
 
 ```yaml
-type: custom:rain-card
+type: custom:rain-card-pro
 entity: sensor.rain_rate
 today: sensor.rain_today
 wind: sensor.wind_speed
@@ -212,30 +212,30 @@ rules:
   - { above: 7.6, color: indigo, label: Heavy rain, tint_card: true }
 ```
 
-[Rain Card docs](https://malte-wessel.github.io/pro-cards/cards/rain-card)
+[Rain Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/rain-card)
 
-#### Sun Path Card
+#### Sun Path Card Pro
 
 Today's sun elevation with sunrise, sunset, dawn, noon and dusk, computed from your location. Visual editor.
 
 ```yaml
-type: custom:sun-path-card
+type: custom:sun-path-card-pro
 title: Sun today
 ```
 
-[Sun Path Card docs](https://malte-wessel.github.io/pro-cards/cards/sun-path-card)
+[Sun Path Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/sun-path-card)
 
-#### Illuminance Card
+#### Illuminance Card Pro
 
 An illuminance sensor on a log scale with zones, as gauge arc, trend or colour band. Visual editor.
 
 ```yaml
-type: custom:illuminance-card
+type: custom:illuminance-card-pro
 entity: sensor.illuminance
 mode: arc
 ```
 
-[Illuminance Card docs](https://malte-wessel.github.io/pro-cards/cards/illuminance-card)
+[Illuminance Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/illuminance-card)
 
 ## Config schema
 

@@ -1,5 +1,5 @@
 export const PRESETS: Record<string, string> = {
-  "Tile with rules": `type: custom:entity-card
+  "Tile with rules": `type: custom:entity-card-pro
 entity: sensor.living_room_temperature
 name: Living room
 decimals: 1
@@ -8,7 +8,7 @@ rules:
   - { below: 24, color: green, icon: mdi:thermometer, label: Comfortable }
   - { above: 24, color: orange, icon: mdi:sun-thermometer, label: Warm, tint_card: true }
 `,
-  "Hero with sparkline": `type: custom:entity-group-card
+  "Hero with sparkline": `type: custom:entity-group-card-pro
 title: Weather station
 icon: mdi:weather-partly-cloudy
 layout: hero
@@ -37,7 +37,7 @@ entities:
       - { below: 8, color: orange, label: High }
       - { above: 8, color: red, label: Very high }
 `,
-  "List with toggles": `type: custom:entity-group-card
+  "List with toggles": `type: custom:entity-group-card-pro
 title: Living room
 icon: mdi:sofa
 entities:
@@ -62,7 +62,7 @@ entities:
       - { state: playing, color: green, icon: mdi:play-circle, label: Playing }
       - { state: idle, color: grey, label: Idle }
 `,
-  "Grid with gauges": `type: custom:entity-group-card
+  "Grid with gauges": `type: custom:entity-group-card-pro
 title: Air quality
 icon: mdi:air-filter
 layout: grid
@@ -94,14 +94,14 @@ entities:
       - { above: 60, color: red }
   - { entity: sensor.solar_power, name: Solar today, visual: columns }
 `,
-  "Template value": `type: custom:entity-card
+  "Template value": `type: custom:entity-card-pro
 entity: light.living_room
 name: Lights on
 icon: mdi:lightbulb-group
 color: amber
 value: "{{ states.light | selectattr('state', 'eq', 'on') | list | count }} of {{ states.light | list | count }}"
 `,
-  "Multi trend card": `type: custom:multi-trend-card
+  "Multi trend card": `type: custom:multi-trend-card-pro
 title: Temperature & dew point
 icon: mdi:thermometer
 hours_to_show: 12
@@ -111,18 +111,18 @@ entities:
   - { entity: sensor.outdoor_temperature, name: Temperature, color: red }
   - { entity: sensor.dew_point, name: Dew point, color: blue }
 `,
-  "Sun path card": `type: custom:sun-path-card
+  "Sun path card": `type: custom:sun-path-card-pro
 title: Sun today
 show_dawn_dusk: true
 labels: { sunrise: Sunrise, sunset: Sunset, dawn: Dawn, noon: Solar noon, dusk: Dusk }
 `,
-  "Illuminance card": `type: custom:illuminance-card
+  "Illuminance card": `type: custom:illuminance-card-pro
 entity: sensor.illuminance
 mode: trend
 name: Outdoor light
 zones: { night: { label: Night }, twilight: { label: Twilight }, overcast: { label: Overcast }, day: { label: Day }, sun: { label: Sun } }
 `,
-  "Weather card": `type: custom:weather-card
+  "Weather card": `type: custom:weather-card-pro
 entity: weather.home
 title: Home
 temperature_rules:
@@ -135,7 +135,7 @@ sections:
   - { type: trend, mode: hourly, hours: 12 }
   - { type: forecast, mode: daily, days: 7 }
 `,
-  "Rain card": `type: custom:rain-card
+  "Rain card": `type: custom:rain-card-pro
 entity: sensor.rain_rate_roof
 today: sensor.rain_today
 wind: sensor.wind_speed
@@ -150,7 +150,7 @@ rules:
   - { below: 50, color: indigo, label: Heavy rain }
   - { above: 50, color: deep-purple, label: Violent rain, tint_card: true }
 `,
-  "Power flow card": `type: custom:power-flow-card
+  "Power flow card": `type: custom:power-flow-card-pro
 title: Energy
 icon: mdi:lightning-bolt
 home: sensor.power_consumption
@@ -163,7 +163,7 @@ consumers:
   - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
   - { entity: sensor.office_power, name: Office, icon: mdi:monitor }
 `,
-  "Wind card": `type: custom:wind-card
+  "Wind card": `type: custom:wind-card-pro
 entity: sensor.wind_speed
 direction: sensor.wind_direction
 gust: sensor.wind_gust

@@ -32,7 +32,7 @@ Pick column counts that divide 12, 24 and 36 so rows stay full on every screen:
 `rows: auto` lets the card size itself to its content. Numbers pin the height: 56 px per row plus 8 px gaps. A tile with an icon fits one row; a tile with a bar or sparkline needs `auto`. The cards set this for you, override only when the layout needs it:
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Rooms
 entities: ["..."]
 grid_options: { columns: 12, rows: 4 }

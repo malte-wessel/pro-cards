@@ -1,35 +1,40 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://malte-wessel.github.io/pro-cards/schema/wind-card.schema.json",
-  "title": "custom:wind-card",
-  "description": "Wind speed, direction and gusts as a tile, a flow tile or a hero, with an animated wind field that rules colour.",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/rain-card-pro.schema.json",
+  "title": "custom:rain-card-pro",
+  "description": "The rain rate as a tile, a flow tile or a hero, with falling drops, ripples or a filling gauge that rules colour.",
   "type": "object",
   "properties": {
     "type": {
-      "const": "custom:wind-card"
+      "const": "custom:rain-card-pro"
     },
     "entity": {
       "type": "string",
-      "pattern": "^(sensor|weather)\\.[a-z0-9_]+$",
-      "description": "The wind speed sensor, or a weather entity (wind_speed, wind_bearing and wind_gust_speed attributes)"
+      "pattern": "^sensor\\.[a-z0-9_]+$",
+      "description": "The rain rate sensor (mm/h, in/h …)"
+    },
+    "today": {
+      "type": "string",
+      "pattern": "^sensor\\.[a-z0-9_]+$",
+      "description": "Today's total (mm, in): fills the gauge and shows as \"… today\""
+    },
+    "wind": {
+      "type": "string",
+      "pattern": "^sensor\\.[a-z0-9_]+$",
+      "description": "Wind speed sensor: slants the drops"
     },
     "direction": {
       "type": "string",
       "pattern": "^sensor\\.[a-z0-9_]+$",
-      "description": "Direction sensor: degrees or a compass point (N, NNE …). Overrides a weather entity's wind_bearing"
-    },
-    "gust": {
-      "type": "string",
-      "pattern": "^sensor\\.[a-z0-9_]+$",
-      "description": "Gust speed sensor. Overrides a weather entity's wind_gust_speed"
+      "description": "Wind direction sensor (degrees or a compass point): which way the drops slant"
     },
     "name": {
       "type": "string",
-      "description": "The name (default: the sensor's friendly name, or Wind). Template allowed."
+      "description": "The name (default: the sensor's friendly name). Template allowed."
     },
     "secondary": {
       "type": "string",
-      "description": "Replaces the line under the name (default: speed · direction, or label · from … · gusts …). Template allowed."
+      "description": "Replaces the line under the name (default: rate · total today, or label · total today). Template allowed."
     },
     "color": {
       "$ref": "defs.schema.json#/$defs/color",
@@ -45,7 +50,7 @@
       "items": {
         "$ref": "entity.schema.json#/$defs/rule"
       },
-      "description": "On the speed (below / above): colour of the particles and the lead, label and tint; first match wins"
+      "description": "On the rate (below / above): colour of the rain and the lead, label and tint; first match wins"
     },
     "layout": {
       "type": "string",
@@ -60,9 +65,9 @@
     },
     "lead": {
       "type": "string",
-      "enum": ["animated", "arrow"],
+      "enum": ["animated", "icon"],
       "default": "animated",
-      "description": "The round lead: a small animation of the flow style, or the direction arrow (the flow tile always shows the arrow)"
+      "description": "The round lead: a small animation of the style, or the rain icon (the flow tile always shows the icon)"
     },
     "flow": {
       "type": "object",
@@ -70,13 +75,8 @@
       "properties": {
         "style": {
           "type": "string",
-          "enum": ["dots", "lines", "swoosh", "vectors"],
-          "default": "dots"
-        },
-        "density": {
-          "type": "string",
-          "enum": ["sparse", "normal", "dense"],
-          "default": "normal"
+          "enum": ["drops", "ripples", "fill"],
+          "default": "drops"
         },
         "height": {
           "type": "integer",

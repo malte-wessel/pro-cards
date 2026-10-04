@@ -1,12 +1,26 @@
 // Card element helpers shared by all cards.
 import type { ActionConfig, ActionKind, CardConstructor, HapticType } from "./ha.ts";
 
+// defines an element unless the name is already taken (another resource, or this bundle loaded
+// twice): the define would throw and abort the whole bundle, taking every card after it down with
+// it. Returns whether the element was defined.
+export const defineElement = (tag: string, cls: CustomElementConstructor) => {
+  if (customElements.get(tag)) {
+    console.error(
+      `pro-cards: <${tag}> is already defined (by another resource, or this bundle is loaded twice)`,
+    );
+    return false;
+  }
+  customElements.define(tag, cls);
+  return true;
+};
+
 // registers the element (its static `cardType`) and its card picker entry
 export const registerCard = (
   cls: CardConstructor,
   { name, description }: { name: string; description: string },
 ) => {
-  customElements.define(cls.cardType, cls);
+  if (!defineElement(cls.cardType, cls)) return;
   window.customCards = window.customCards || [];
   window.customCards.push({ type: cls.cardType, name, description, preview: true });
 };

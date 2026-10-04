@@ -15,7 +15,7 @@ In the markdown page, wrap a YAML fence:
 
     ::: live
     ```yaml
-    type: custom:entity-card
+    type: custom:entity-card-pro
     entity: sensor.living_room_temperature
     ```
     :::

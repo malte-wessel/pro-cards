@@ -7,10 +7,10 @@ import {
 } from "../../src/entity-sections-card.ts";
 import type { HomeAssistant } from "../../src/shared/ha.ts";
 
-describe("entity-card", () => {
+describe("entity-card-pro", () => {
   it("is registered and normalises the entity keys on the card", () => {
-    expect(customElements.get("entity-card")).toBe(EntityCard);
-    expect(window.customCards?.some((c) => c.type === "entity-card")).toBe(true);
+    expect(customElements.get("entity-card-pro")).toBe(EntityCard);
+    expect(window.customCards?.some((c) => c.type === "entity-card-pro")).toBe(true);
     const c = normalizeEntityCardConfig({
       entity: "light.a",
       toggle: true,
@@ -18,7 +18,7 @@ describe("entity-card", () => {
       bucket_minutes: 1,
     });
     expect(c).toMatchObject({
-      type: "entity-card",
+      type: "entity-card-pro",
       layout: "tile",
       hours: 1,
       bucketMin: 5,
@@ -37,9 +37,9 @@ describe("entity-card", () => {
     expect(normalizeEntityCardConfig({ name: "Bins", value: "Tuesday" }).entities[0]).toMatchObject(
       { entity: null, valueSrc: { kind: "text", text: "Tuesday" } },
     );
-    expect(() => normalizeEntityCardConfig(null)).toThrow(/entity-card: invalid config/);
+    expect(() => normalizeEntityCardConfig(null)).toThrow(/entity-card-pro: invalid config/);
     expect(() => normalizeEntityCardConfig({ name: "x" })).toThrow(
-      /entity-card: 'entity' or 'value' is required/,
+      /entity-card-pro: 'entity' or 'value' is required/,
     );
     expect(
       EntityCard.getStubConfig(
@@ -69,9 +69,9 @@ describe("entity-card", () => {
   });
 });
 
-describe("entity-group-card", () => {
+describe("entity-group-card-pro", () => {
   it("is registered and normalises one group plus header entities", () => {
-    expect(customElements.get("entity-group-card")).toBe(EntityGroupCard);
+    expect(customElements.get("entity-group-card-pro")).toBe(EntityGroupCard);
     const c = normalizeEntityGroupCardConfig({
       title: "Rooms",
       layout: "row",
@@ -80,7 +80,7 @@ describe("entity-group-card", () => {
       columns: 9,
     });
     expect(c).toMatchObject({
-      type: "entity-group-card",
+      type: "entity-group-card-pro",
       layout: "row",
       title: "Rooms",
       hasHeader: true,
@@ -94,7 +94,7 @@ describe("entity-group-card", () => {
     expect(c.entities[2].item).toMatchObject({ showName: false, showValue: true, showIcon: true });
     expect(normalizeEntityGroupCardConfig({ entities: ["s.a"] }).layout).toBe("list");
     expect(() => normalizeEntityGroupCardConfig({ layout: "list" })).toThrow(
-      /entity-group-card: 'entities' must be a non-empty list/,
+      /entity-group-card-pro: 'entities' must be a non-empty list/,
     );
     expect(() => normalizeEntityGroupCardConfig({ layout: "tile", entities: ["s.a"] })).toThrow(
       /layout must be one of/,
@@ -149,9 +149,9 @@ describe("entity-group-card", () => {
   });
 });
 
-describe("entity-sections-card", () => {
+describe("entity-sections-card-pro", () => {
   it("is registered and flattens the sections into one entity list", () => {
-    expect(customElements.get("entity-sections-card")).toBe(EntitySectionsCard);
+    expect(customElements.get("entity-sections-card-pro")).toBe(EntitySectionsCard);
     const c = normalizeEntitySectionsCardConfig({
       title: "Living room",
       show_value: true,
@@ -164,7 +164,7 @@ describe("entity-sections-card", () => {
       ],
     });
     expect(c).toMatchObject({
-      type: "entity-sections-card",
+      type: "entity-sections-card-pro",
       layout: "sections",
       hasHeader: true,
       headerIdxs: [4],
@@ -183,7 +183,7 @@ describe("entity-sections-card", () => {
     ]);
     expect(c.entities[2].item.showValue).toBe(true);
     expect(() => normalizeEntitySectionsCardConfig({ title: "x" })).toThrow(
-      /entity-sections-card: 'sections' must be a non-empty list/,
+      /entity-sections-card-pro: 'sections' must be a non-empty list/,
     );
     expect(() => normalizeEntitySectionsCardConfig({ sections: [] })).toThrow(/'sections'/);
     expect(() => normalizeEntitySectionsCardConfig({ sections: [{ layout: "row" }] })).toThrow(

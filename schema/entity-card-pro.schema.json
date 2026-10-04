@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://malte-wessel.github.io/pro-cards/schema/entity-card.schema.json",
-  "title": "custom:entity-card",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/entity-card-pro.schema.json",
+  "title": "custom:entity-card-pro",
   "description": "One entity as a tile. The entity keys sit directly on the card; rules drive icon, colour, label and card tint. Strings containing {{ }} are Jinja templates rendered by Home Assistant (name, secondary, icon, color, value).",
   "type": "object",
-  "properties": { "type": { "const": "custom:entity-card" } },
+  "properties": { "type": { "const": "custom:entity-card-pro" } },
   "required": ["type"],
   "allOf": [
     { "$ref": "entity.schema.json#/$defs/entityKeys" },

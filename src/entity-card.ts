@@ -1,7 +1,7 @@
 /*
- * entity-card – one entity as a tile.
+ * entity-card-pro – one entity as a tile.
  *
- *   type: custom:entity-card
+ *   type: custom:entity-card-pro
  *   entity: sensor.living_room_temperature
  *   name: Living room                      # default: friendly name; template allowed
  *   secondary: "{{ ... }}"                 # text under the name (default: value · label); template allowed
@@ -35,7 +35,7 @@ import {
 import { STYLE_ENTITY_CARD } from "./shared/entity/render/styles.ts";
 import { isNum } from "./shared/util.ts";
 
-const CARD_TYPE = "entity-card";
+const CARD_TYPE = "entity-card-pro";
 
 // the raw config: the card itself is one entity, so it takes every entity key
 export interface RawEntityCardConfig extends RawEntityCardBase, RawEntity {}
@@ -91,7 +91,7 @@ export class EntityCard extends EntityCardBase {
 }
 
 registerCard(EntityCard, {
-  name: "Entity Card",
+  name: "Entity Card Pro",
   description:
     "One entity as a tile with icon, ring, gauge, bar, sparkline, columns, badge or status strip",
 });

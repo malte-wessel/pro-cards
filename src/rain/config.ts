@@ -1,4 +1,4 @@
-// Config normalisation of the rain card (pure). The result is an entity-card config whose first
+// Config normalisation of the rain card (pure). The result is an entity-card-pro config whose first
 // item is the rain rate; today's total, the wind speed and its direction follow when named.
 import {
   clampColumns,

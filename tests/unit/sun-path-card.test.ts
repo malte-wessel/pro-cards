@@ -50,7 +50,7 @@ describe("sun-path-card solar math", () => {
 describe("sun-path-card editor and element", () => {
   it("round-trips the form and drops defaults", () => {
     const cfg = {
-      type: "custom:sun-path-card",
+      type: "custom:sun-path-card-pro",
       title: "Sun",
       icon: "mdi:weather-sunset",
       show_dawn_dusk: false,
@@ -79,11 +79,11 @@ describe("sun-path-card editor and element", () => {
       title: "",
       icon: "",
     };
-    expect(formToConfig(d2, cfg)).toEqual({ type: "custom:sun-path-card" });
+    expect(formToConfig(d2, cfg)).toEqual({ type: "custom:sun-path-card-pro" });
   });
   it("registers and sizes", () => {
-    expect(customElements.get("sun-path-card")).toBe(SunPathCard);
-    expect(SunPathCard.getConfigElement().tagName.toLowerCase()).toBe("sun-path-card-editor");
+    expect(customElements.get("sun-path-card-pro")).toBe(SunPathCard);
+    expect(SunPathCard.getConfigElement().tagName.toLowerCase()).toBe("sun-path-card-pro-editor");
     const el = new SunPathCard();
     el.setConfig({});
     expect(el.getGridOptions()).toEqual({ columns: 12, rows: "auto", min_columns: 6 });

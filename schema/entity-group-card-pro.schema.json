@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://malte-wessel.github.io/pro-cards/schema/entity-group-card.schema.json",
-  "title": "custom:entity-group-card",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/entity-group-card-pro.schema.json",
+  "title": "custom:entity-group-card-pro",
   "description": "Many entities in one layout: list, grid, hero, row, column or table. Optional header with title, icon and header entities.",
   "type": "object",
   "properties": {
-    "type": { "const": "custom:entity-group-card" },
+    "type": { "const": "custom:entity-group-card-pro" },
     "title": { "type": "string", "description": "Header text. Template allowed." },
     "icon": {
       "$ref": "defs.schema.json#/$defs/icon",

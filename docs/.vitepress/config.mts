@@ -57,22 +57,22 @@ const cardGroups = [
   {
     text: "Entities",
     items: [
-      { text: "Entity Card", link: "/cards/entity-card" },
-      { text: "Entity Group Card", link: "/cards/entity-group-card" },
-      { text: "Entity Sections Card", link: "/cards/entity-sections-card" },
+      { text: "Entity Card Pro", link: "/cards/entity-card" },
+      { text: "Entity Group Card Pro", link: "/cards/entity-group-card" },
+      { text: "Entity Sections Card Pro", link: "/cards/entity-sections-card" },
       { text: "Entity Options", link: "/cards/entity-options" },
-      { text: "Multi Trend Card", link: "/cards/multi-trend-card" },
+      { text: "Multi Trend Card Pro", link: "/cards/multi-trend-card" },
     ],
   },
-  { text: "Energy", items: [{ text: "Power Flow Card", link: "/cards/power-flow-card" }] },
+  { text: "Energy", items: [{ text: "Power Flow Card Pro", link: "/cards/power-flow-card" }] },
   {
     text: "Weather",
     items: [
-      { text: "Weather Card", link: "/cards/weather-card" },
-      { text: "Wind Card", link: "/cards/wind-card" },
-      { text: "Rain Card", link: "/cards/rain-card" },
-      { text: "Sun Path Card", link: "/cards/sun-path-card" },
-      { text: "Illuminance Card", link: "/cards/illuminance-card" },
+      { text: "Weather Card Pro", link: "/cards/weather-card" },
+      { text: "Wind Card Pro", link: "/cards/wind-card" },
+      { text: "Rain Card Pro", link: "/cards/rain-card" },
+      { text: "Sun Path Card Pro", link: "/cards/sun-path-card" },
+      { text: "Illuminance Card Pro", link: "/cards/illuminance-card" },
     ],
   },
 ];
@@ -123,7 +123,10 @@ export default defineConfig({
   },
   vue: {
     template: {
-      compilerOptions: { isCustomElement: (tag) => tag.startsWith("ha-") || tag.endsWith("-card") },
+      compilerOptions: {
+        isCustomElement: (tag) =>
+          tag.startsWith("ha-") || tag.endsWith("-card") || tag.endsWith("-card-pro"),
+      },
     },
   },
   themeConfig: {

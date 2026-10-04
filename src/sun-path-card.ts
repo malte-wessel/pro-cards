@@ -1,12 +1,12 @@
 /*
- * sun-path-card
+ * sun-path-card-pro
  * Sun elevation over the current day with sunrise/sunset, dawn/noon/dusk and the
  * current sun position. Dependency-free (plain web component, inline SVG).
  * Times are computed locally (NOAA solar position) from hass.config latitude/longitude,
  * because sun.sun only exposes the *next* events.
  *
  * Config:
- *   type: custom:sun-path-card
+ *   type: custom:sun-path-card-pro
  *   title: Sun path               # optional; omit → no header
  *   show_dawn_dusk: true          # bottom row with dawn / solar noon / dusk
  *   (the plot is a 24 h window centred on solar noon; ticks mark sunrise, noon and sunset)
@@ -21,7 +21,7 @@
  *     noon: Noon
  *     dusk: Civil dusk
  */
-import { registerCard } from "./shared/card.ts";
+import { defineElement, registerCard } from "./shared/card.ts";
 import { langOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { qs } from "./shared/util.ts";
@@ -39,9 +39,9 @@ import { drawCurve, drawEvents, fmtEvent, showHover, timeAt } from "./sun-path/p
 import { solarDay } from "./sun-path/solar.ts";
 import { STYLE } from "./sun-path/styles.ts";
 
-const CARD_TYPE = "sun-path-card";
+const CARD_TYPE = "sun-path-card-pro";
 
-customElements.define(`${CARD_TYPE}-editor`, SunPathCardEditor);
+defineElement(`${CARD_TYPE}-editor`, SunPathCardEditor);
 
 export class SunPathCard extends HTMLElement implements SunPathHost {
   static cardType = CARD_TYPE;
@@ -210,6 +210,6 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
 }
 
 registerCard(SunPathCard, {
-  name: "Sun Path Card",
+  name: "Sun Path Card Pro",
   description: "Today's sun path: sunrise, sunset, dawn, dusk and the current position of the sun",
 });

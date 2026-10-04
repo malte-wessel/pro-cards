@@ -1,4 +1,4 @@
-// Config normalisation of the wind card (pure). The result is an entity-card config (the base
+// Config normalisation of the wind card (pure). The result is an entity-card-pro config (the base
 // element renders header, rows, tint and templates from it) whose first three items are the wind
 // speed, the direction and the gusts: sensor states, or attributes of a weather entity.
 import {

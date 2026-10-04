@@ -67,7 +67,7 @@ The harness exposes `window.pc`:
 import { test, expect, mount, setState, card } from "./util.ts";
 
 test("state rules follow the entity", async ({ page }) => {
-  await mount(page, { type: "custom:entity-card", entity: "vacuum.robot", visual: "badge",
+  await mount(page, { type: "custom:entity-card-pro", entity: "vacuum.robot", visual: "badge",
     rules: [{ state: "docked", label: "Parked" }, { state: "cleaning", label: "Busy" }] });
   await setState(page, "vacuum.robot", "docked");
   await expect(card(page).locator(".pill")).toHaveText("Parked");
@@ -102,7 +102,7 @@ When a visual test fails, `test-results/` holds the expected, actual and diff im
 To add a case, append an entry to `CASES` in `cards.spec.ts`. The key becomes the file name, and both themes are generated automatically:
 
 ```js
-"ec-my-case": { type: "custom:entity-card", entity: "sensor.pressure", visual: "gauge", min: 950, max: 1050 },
+"ec-my-case": { type: "custom:entity-card-pro", entity: "sensor.pressure", visual: "gauge", min: 950, max: 1050 },
 ```
 
 Never run `--update-snapshots` natively on macOS: the PNGs would be rendered with macOS fonts and CI would fail on every one of them. The `snapshotPathTemplate` in `playwright.config.ts` deliberately drops Playwright's platform suffix so there is exactly one baseline per case.

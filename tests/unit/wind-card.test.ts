@@ -21,8 +21,8 @@ const S = "sensor.wind_speed";
 
 describe("wind-card config", () => {
   it("is registered and needs a sensor or weather entity", () => {
-    expect(customElements.get("wind-card")).toBe(WindCard);
-    expect(window.customCards?.some((c) => c.type === "wind-card")).toBe(true);
+    expect(customElements.get("wind-card-pro")).toBe(WindCard);
+    expect(window.customCards?.some((c) => c.type === "wind-card-pro")).toBe(true);
     expect(() => normalizeWindCardConfig(null)).toThrow(/invalid config/);
     expect(() => normalizeWindCardConfig({})).toThrow(/sensor or weather entity/);
     expect(() => normalizeWindCardConfig({ entity: "light.a" })).toThrow(/sensor or weather/);

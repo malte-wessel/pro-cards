@@ -1,7 +1,7 @@
 /*
- * wind-card – a wind speed as a tile, a flow tile or a hero, with an animated wind field.
+ * wind-card-pro – a wind speed as a tile, a flow tile or a hero, with an animated wind field.
  *
- *   type: custom:wind-card
+ *   type: custom:wind-card-pro
  *   entity: sensor.wind_speed              # required: a speed sensor, or a weather entity
  *   direction: sensor.wind_direction       # optional: degrees or N / NNE …; a weather entity's wind_bearing otherwise
  *   gust: sensor.wind_gust                 # optional; a weather entity's wind_gust_speed otherwise
@@ -77,7 +77,7 @@ export class WindCard extends FlowCardBase {
 }
 
 registerCard(WindCard, {
-  name: "Wind Card",
+  name: "Wind Card Pro",
   description:
     "Wind speed, direction and gusts as a tile, a flow tile or a hero with an animated wind field",
 });

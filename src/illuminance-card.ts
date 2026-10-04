@@ -1,10 +1,10 @@
 /*
- * illuminance-card
+ * illuminance-card-pro
  * Outdoor illuminance in three looks: gauge arc (arc), 24 h log-scale trend over zone bands
  * (trend), or a 24 h colour band (band). Dependency-free (plain web component, inline SVG).
  *
  * Config:
- *   type: custom:illuminance-card
+ *   type: custom:illuminance-card-pro
  *   entity: sensor.xyz_illuminance   # required
  *   mode: band                       # arc | trend | band
  *   name: Outdoor light              # optional (default: friendly name)
@@ -15,7 +15,7 @@
  *   zones:                           # optional overrides per key: { label, max, color }
  *     day: { label: Daylight, max: 30000, color: amber }   # color = HA colour name or hex
  */
-import { registerCard } from "./shared/card.ts";
+import { defineElement, registerCard } from "./shared/card.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import type { MeanBucket, Point } from "./shared/history.ts";
 import type {
@@ -41,9 +41,9 @@ import { renderTrend } from "./illuminance/render/trend.ts";
 import { STYLE } from "./illuminance/styles.ts";
 import { mergeZones } from "./illuminance/zones.ts";
 
-const CARD_TYPE = "illuminance-card";
+const CARD_TYPE = "illuminance-card-pro";
 
-customElements.define(`${CARD_TYPE}-editor`, IlluminanceCardEditor);
+defineElement(`${CARD_TYPE}-editor`, IlluminanceCardEditor);
 
 export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
   static cardType = CARD_TYPE;
@@ -87,7 +87,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
   }
 
   setConfig(config: IlluminanceCardConfig | null | undefined) {
-    if (!config?.entity) throw new Error("illuminance-card: 'entity' is required");
+    if (!config?.entity) throw new Error(`${CARD_TYPE}: 'entity' is required`);
     const { mode, ...rest } = config;
     this._config = {
       ...DEFAULTS,
@@ -162,7 +162,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
       this._series = (res.get(id) || []).filter((p): p is Point & { v: number } => p.v !== null);
       this._fetched = true;
     } catch (err) {
-      console.error("illuminance-card: history fetch failed", err);
+      console.error(`${CARD_TYPE}: history fetch failed`, err);
     } finally {
       this._fetching = false;
       this._render();
@@ -246,6 +246,6 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
 }
 
 registerCard(IlluminanceCard, {
-  name: "Illuminance Card",
+  name: "Illuminance Card Pro",
   description: "Illuminance as a gauge arc, a trend with zones or a colour band",
 });

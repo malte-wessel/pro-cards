@@ -1,6 +1,6 @@
-# Multi Trend Card
+# Multi Trend Card Pro
 
-`custom:multi-trend-card` draws one or more sensors as smooth lines in a tile-style card. Hover or touch the plot for a crosshair that lists every value at that time. It ships with a visual editor.
+`custom:multi-trend-card-pro` draws one or more sensors as smooth lines in a tile-style card. Hover or touch the plot for a crosshair that lists every value at that time. It ships with a visual editor.
 
 ## Basic
 
@@ -9,7 +9,7 @@ The type and a list of sensors with numeric states. The header takes the first e
 ::: live
 
 ```yaml
-type: custom:multi-trend-card
+type: custom:multi-trend-card-pro
 entities:
   - sensor.outdoor_temperature
 ```
@@ -23,7 +23,7 @@ Every entity can be an object with a `name` and a `color`. Without a `color` the
 ::: live
 
 ```yaml
-type: custom:multi-trend-card
+type: custom:multi-trend-card-pro
 title: Temperature & dew point
 icon: mdi:thermometer
 entities:
@@ -40,7 +40,7 @@ entities:
 ::: live
 
 ```yaml
-type: custom:multi-trend-card
+type: custom:multi-trend-card-pro
 title: Temperature & dew point
 icon: mdi:thermometer
 hours_to_show: 24
@@ -58,7 +58,7 @@ With `layout: auto` the card overlays all series on one scale when every entity 
 ::: live
 
 ```yaml
-type: custom:multi-trend-card
+type: custom:multi-trend-card-pro
 title: Wind
 icon: mdi:weather-windy
 hours_to_show: 6
@@ -78,7 +78,7 @@ entities:
 ::: live
 
 ```yaml
-type: custom:multi-trend-card
+type: custom:multi-trend-card-pro
 title: Power
 icon: mdi:flash
 color: amber

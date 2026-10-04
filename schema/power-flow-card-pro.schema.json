@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://malte-wessel.github.io/pro-cards/schema/power-flow-card.schema.json",
-  "title": "custom:power-flow-card",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/power-flow-card-pro.schema.json",
+  "title": "custom:power-flow-card-pro",
   "description": "Where the power comes from and where it goes: solar, battery and grid → home → rooms and devices, as a tree with animated flow.",
   "type": "object",
   "$defs": {
@@ -164,7 +164,7 @@
     }
   },
   "properties": {
-    "type": { "const": "custom:power-flow-card" },
+    "type": { "const": "custom:power-flow-card-pro" },
     "sources": {
       "type": "array",
       "minItems": 1,

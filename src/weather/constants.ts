@@ -1,7 +1,7 @@
 // Constants of the weather card.
 import type { StringKey } from "../shared/i18n.ts";
 
-export const CARD_TYPE = "weather-card";
+export const CARD_TYPE = "weather-card-pro";
 
 export const SECTION_TYPES = [
   "hero",

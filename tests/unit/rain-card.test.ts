@@ -27,8 +27,8 @@ const R = "sensor.rain_rate_roof";
 
 describe("rain-card config", () => {
   it("is registered and needs a rain rate sensor", () => {
-    expect(customElements.get("rain-card")).toBe(RainCard);
-    expect(window.customCards?.some((c) => c.type === "rain-card")).toBe(true);
+    expect(customElements.get("rain-card-pro")).toBe(RainCard);
+    expect(window.customCards?.some((c) => c.type === "rain-card-pro")).toBe(true);
     expect(() => normalizeRainCardConfig(null)).toThrow(/invalid config/);
     expect(() => normalizeRainCardConfig({})).toThrow(/rain rate sensor/);
     expect(() => normalizeRainCardConfig({ entity: "weather.home" })).toThrow(/sensor\.\*/);
@@ -80,7 +80,7 @@ describe("rain-card config", () => {
 
   it("checks layout, visual, lead and flow options", () => {
     expect(() => normalizeRainCardConfig({ entity: R, layout: "gauge" })).toThrow(
-      /rain-card: layout must be one of tile \| hero/,
+      /rain-card-pro: layout must be one of tile \| hero/,
     );
     expect(() => normalizeRainCardConfig({ entity: R, visual: "drops" })).toThrow(/visual/);
     expect(() => normalizeRainCardConfig({ entity: R, lead: "arrow" })).toThrow(

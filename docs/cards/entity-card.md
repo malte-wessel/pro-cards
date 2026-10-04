@@ -1,6 +1,6 @@
-# Entity Card
+# Entity Card Pro
 
-`custom:entity-card` shows one entity as a tile: icon, name and value in one row of the sections grid, or with a gauge, bar or graph below. The entity keys sit directly on the card; the [entity options](/cards/entity-options) explain every one of them. This page builds a tile up option by option.
+`custom:entity-card-pro` shows one entity as a tile: icon, name and value in one row of the sections grid, or with a gauge, bar or graph below. The entity keys sit directly on the card; the [entity options](/cards/entity-options) explain every one of them. This page builds a tile up option by option.
 
 ## Basic
 
@@ -9,7 +9,7 @@ Two lines. The tile takes the entity's icon, friendly name and formatted state, 
 ::: live
 
 ```yaml
-type: custom:entity-card
+type: custom:entity-card-pro
 entity: sensor.living_room_temperature
 ```
 
@@ -22,7 +22,7 @@ entity: sensor.living_room_temperature
 ::: live
 
 ```yaml
-type: custom:entity-card
+type: custom:entity-card-pro
 entity: sensor.living_room_temperature
 name: Living room
 decimals: 1
@@ -38,7 +38,7 @@ suffix: " inside"
 ::: live
 
 ```yaml
-type: custom:entity-card
+type: custom:entity-card-pro
 entity: sensor.living_room_temperature
 name: Living room
 decimals: 1
@@ -55,7 +55,7 @@ State rules work the same way for anything that is not a number.
 ::: live
 
 ```yaml
-type: custom:entity-card
+type: custom:entity-card-pro
 entity: vacuum.robot
 name: Robot vacuum
 rules:
@@ -75,7 +75,7 @@ rules:
 ::: live
 
 ```yaml
-type: custom:entity-card
+type: custom:entity-card-pro
 entity: light.living_room
 rules:
   - { state: "on", color: amber, label: "On" }
@@ -93,7 +93,7 @@ grid_options: { columns: 6 }
 ::: live
 
 ```yaml
-type: custom:entity-card
+type: custom:entity-card-pro
 entity: sensor.robot_battery
 name: Robot battery
 visual: ring
@@ -110,7 +110,7 @@ All eight side by side. The history visuals (`sparkline`, `columns`, `strip`) re
 ::: live
 
 ```yaml
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.office_temperature
   name: Icon
   decimals: 1
@@ -120,7 +120,7 @@ All eight side by side. The history visuals (`sparkline`, `columns`, `strip`) re
     - { below: 24, color: green, icon: mdi:thermometer }
     - { above: 24, color: orange, icon: mdi:sun-thermometer }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.robot_battery
   name: Ring
   visual: ring
@@ -129,7 +129,7 @@ All eight side by side. The history visuals (`sparkline`, `columns`, `strip`) re
     - { below: 50, color: amber }
     - { above: 50, color: green }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.power_consumption
   name: Gauge
   decimals: 0
@@ -141,7 +141,7 @@ All eight side by side. The history visuals (`sparkline`, `columns`, `strip`) re
     - { below: 1500, color: amber }
     - { above: 1500, color: red }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.bathroom_humidity
   name: Bar
   decimals: 0
@@ -151,7 +151,7 @@ All eight side by side. The history visuals (`sparkline`, `columns`, `strip`) re
     - { below: 70, color: amber, label: Humid }
     - { above: 70, color: red, label: Ventilate }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.dew_point
   name: Sparkline
   color: purple
@@ -159,7 +159,7 @@ All eight side by side. The history visuals (`sparkline`, `columns`, `strip`) re
   visual: sparkline
   hours_to_show: 12
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.wind_gust
   name: Columns
   color: teal
@@ -168,7 +168,7 @@ All eight side by side. The history visuals (`sparkline`, `columns`, `strip`) re
   hours_to_show: 12
   bucket_minutes: 30
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: person.alex
   name: Badge
   visual: badge
@@ -176,7 +176,7 @@ All eight side by side. The history visuals (`sparkline`, `columns`, `strip`) re
     - { state: home, color: green, label: Home }
     - { state: not_home, color: grey, label: Away }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: binary_sensor.rain
   name: Strip
   visual: strip
@@ -199,7 +199,7 @@ Each visual, the options it reads and the layouts it is drawn in are explained o
 ::: live
 
 ```yaml
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.switch_temperature
   name: Kitchen switch
   decimals: 0
@@ -211,7 +211,7 @@ Each visual, the options it reads and the layouts it is drawn in are explained o
     - { below: 70, color: amber, icon: mdi:thermometer-alert, label: Warm, tint_card: true }
     - { above: 70, color: red, icon: mdi:fire-alert, label: Hot, tint_card: true }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.motion_hallway_battery
   name: Hallway motion
   decimals: 0
@@ -232,7 +232,7 @@ Each visual, the options it reads and the layouts it is drawn in are explained o
 ::: live
 
 ```yaml
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: light.living_room
   name: Brightness
   icon: mdi:brightness-6
@@ -243,7 +243,7 @@ Each visual, the options it reads and the layouts it is drawn in are explained o
   min: 0
   max: 255
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: cover.office_blinds
   name: Blind position
   icon: mdi:window-shutter
@@ -265,13 +265,13 @@ Each visual, the options it reads and the layouts it is drawn in are explained o
 ::: live
 
 ```yaml
-- type: custom:entity-card
+- type: custom:entity-card-pro
   name: Bins
   icon: mdi:recycle
   color: green
   value: Paper on Tuesday
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   name: Lights on
   icon: mdi:lightbulb-group
   color: amber
@@ -288,7 +288,7 @@ A tile is a button. `tap_action` runs a scene, opens a dashboard or a URL, or to
 ::: live
 
 ```yaml
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: scene.movie_night
   name: Movie night
   value: Activate
@@ -296,7 +296,7 @@ A tile is a button. `tap_action` runs a scene, opens a dashboard or a URL, or to
   color: deep-purple
   tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.movie_night } }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: light.living_room
   name: Sofa lamp
   rules:
@@ -305,7 +305,7 @@ A tile is a button. `tap_action` runs a scene, opens a dashboard or a URL, or to
   tap_action: { action: toggle }
   hold_action: { action: more-info }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.energy_today
   name: Energy dashboard
   icon: mdi:open-in-app
@@ -313,7 +313,7 @@ A tile is a button. `tap_action` runs a scene, opens a dashboard or a URL, or to
   value: Open
   tap_action: { action: navigate, navigation_path: /energy }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: script.check_windows
   name: Check windows
   icon: mdi:play-circle-outline
@@ -336,7 +336,7 @@ One card type, many tiles. Rules colour a battery ring, an attribute drives a ba
 ::: live
 
 ```yaml
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.kitchen_window_battery
   name: Window sensor
   visual: ring
@@ -345,7 +345,7 @@ One card type, many tiles. Rules colour a battery ring, an attribute drives a ba
     - { below: 50, color: amber }
     - { above: 50, color: green }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: light.living_room
   name: Brightness
   icon: mdi:brightness-6
@@ -356,14 +356,14 @@ One card type, many tiles. Rules colour a battery ring, an attribute drives a ba
   min: 0
   max: 255
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: person.kim
   visual: badge
   rules:
     - { state: home, color: green, icon: mdi:home-account, label: Home }
     - { state: not_home, color: grey, icon: mdi:account-arrow-right, label: Away }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.energy_today
   name: Energy
   icon: mdi:lightning-bolt
@@ -371,7 +371,7 @@ One card type, many tiles. Rules colour a battery ring, an attribute drives a ba
   decimals: 1
   suffix: " so far today"
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sun.sun
   name: Sun
   visual: badge
@@ -379,7 +379,7 @@ One card type, many tiles. Rules colour a battery ring, an attribute drives a ba
     - { state: above_horizon, color: amber, icon: mdi:white-balance-sunny, label: Up }
     - { state: below_horizon, color: indigo, icon: mdi:weather-night, label: Down }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.washer_status
   name: Washer
   secondary: "{{ states('sensor.washer_remaining') }} min left"
@@ -400,7 +400,7 @@ One card type, many tiles. Rules colour a battery ring, an attribute drives a ba
 ::: live
 
 ```yaml
-type: custom:entity-card
+type: custom:entity-card-pro
 entity: sensor.outdoor_temperature
 name: "{{ 'Warmer outside' if states('sensor.outdoor_temperature') | float(0) > states('sensor.living_room_temperature') | float(0) else 'Warmer inside' }}"
 secondary: "Outside {{ states('sensor.outdoor_temperature') }} °C · inside {{ states('sensor.living_room_temperature') }} °C"
@@ -417,7 +417,7 @@ A template value that looks like a number gets rules, decimals and a unit like a
 ::: live
 
 ```yaml
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: binary_sensor.window_kitchen
   name: Open windows
   icon: mdi:window-open-variant
@@ -426,7 +426,7 @@ A template value that looks like a number gets rules, decimals and a unit like a
     - { below: 1, color: green, label: All closed }
     - { above: 1, color: red, label: Airing, tint_card: true }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: light.living_room
   name: Lights on
   icon: mdi:lightbulb-group

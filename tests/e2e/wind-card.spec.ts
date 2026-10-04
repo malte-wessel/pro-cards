@@ -2,7 +2,7 @@ import { test, expect, mount, events, card, setState, setLanguage } from "./util
 import type { WindCard } from "../../src/wind-card.ts";
 import type { Locator } from "@playwright/test";
 
-const T = "custom:wind-card";
+const T = "custom:wind-card-pro";
 const S = "sensor.wind_speed",
   D = "sensor.wind_direction",
   G = "sensor.wind_gust";

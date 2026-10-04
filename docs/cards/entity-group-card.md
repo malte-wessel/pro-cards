@@ -1,6 +1,6 @@
-# Entity Group Card
+# Entity Group Card Pro
 
-`custom:entity-group-card` shows many entities in one card. Every entity takes the same [entity options](/cards/entity-options) as the entity card; `layout` decides how they are arranged. This page starts with a plain list and adds options one at a time, then walks through the other layouts.
+`custom:entity-group-card-pro` shows many entities in one card. Every entity takes the same [entity options](/cards/entity-options) as the entity card; `layout` decides how they are arranged. This page starts with a plain list and adds options one at a time, then walks through the other layouts.
 
 ## Basic
 
@@ -9,7 +9,7 @@ The type and a list of entity ids. Each row shows the entity's icon, friendly na
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 entities:
   - binary_sensor.window_kitchen
   - binary_sensor.window_bedroom
@@ -25,7 +25,7 @@ entities:
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Windows & doors
 icon: mdi:window-open-variant
 entities:
@@ -43,7 +43,7 @@ An entity becomes an object as soon as it needs options. `name` shortens the lab
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Windows & doors
 icon: mdi:window-open-variant
 entities:
@@ -73,7 +73,7 @@ Every row can have its own `visual` and its own controls: a toggle for the light
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Living room
 icon: mdi:sofa
 hours_to_show: 12
@@ -114,7 +114,7 @@ Batteries in one list: rings with the same rules (a YAML anchor keeps them in on
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Batteries
 icon: mdi:battery
 entities:
@@ -135,7 +135,7 @@ Compact cells, `columns` per row. Values scale down to fit the cell.
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Kitchen climate
 icon: mdi:home-thermometer
 layout: grid
@@ -174,7 +174,7 @@ Three columns of badges and rings make a compact status board; a grid of scenes 
 ::: live
 
 ```yaml
-- type: custom:entity-group-card
+- type: custom:entity-group-card-pro
   title: Status
   icon: mdi:home-analytics
   layout: grid
@@ -186,7 +186,7 @@ Three columns of badges and rings make a compact status board; a grid of scenes 
     - { entity: sensor.robot_battery, name: Robot, visual: ring, rules: [{ below: 20, color: red }, { above: 20, color: green }] }
     - { entity: sensor.robot_dustbin_remaining, name: Dustbin, visual: ring, rules: [{ below: 20, color: red }, { above: 20, color: blue }] }
     - { entity: sensor.washer_status, name: Washer, attribute: progress, unit: "%", visual: ring, min: 0, max: 100, color: green }
-- type: custom:entity-group-card
+- type: custom:entity-group-card-pro
   title: Scenes
   icon: mdi:palette
   layout: grid
@@ -207,7 +207,7 @@ The first entity is the lead with a big value and its visual; the rest are list 
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Weather station
 icon: mdi:weather-partly-cloudy
 layout: hero
@@ -244,7 +244,7 @@ An energy hero: columns for the solar production as the lead, consumption and to
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Energy
 icon: mdi:solar-power
 layout: hero
@@ -277,7 +277,7 @@ Entities side by side as compact items: a round icon with the name under it, opt
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Kitchen
 icon: mdi:silverware-fork-knife
 layout: row
@@ -301,7 +301,7 @@ entities:
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Living room climate
 icon: mdi:sofa
 layout: row
@@ -320,7 +320,7 @@ entities:
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Garden
 icon: mdi:flower
 layout: row
@@ -360,7 +360,7 @@ Icon-only controls with state colours make a compact switchboard; `align: center
 ::: live
 
 ```yaml
-- type: custom:entity-group-card
+- type: custom:entity-group-card-pro
   title: Lights
   icon: mdi:lightbulb-group
   layout: row
@@ -376,7 +376,7 @@ Icon-only controls with state colours make a compact switchboard; `align: center
     - { entity: light.desk_lamp, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
     - { entity: light.bedroom, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
     - { entity: light.garden, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
-- type: custom:entity-group-card
+- type: custom:entity-group-card-pro
   title: Outdoors
   icon: mdi:weather-partly-cloudy
   layout: row
@@ -399,7 +399,7 @@ The same items stacked vertically. They hug the right edge by default (`align: e
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Bedroom
 icon: mdi:bed
 layout: column
@@ -418,7 +418,7 @@ With names and `align: start` the column becomes a vertical menu; badges show th
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Office
 icon: mdi:desk
 layout: column
@@ -441,7 +441,7 @@ Key/value rows: the name on the left in small capitals, the value on the right. 
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Washing machine
 icon: mdi:washing-machine
 layout: table
@@ -463,7 +463,7 @@ entities:
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Kitchen window sensor
 icon: mdi:window-closed-variant
 layout: table
@@ -494,7 +494,7 @@ A table of modes with the switch in the value column, and a device sheet where e
 ::: live
 
 ```yaml
-- type: custom:entity-group-card
+- type: custom:entity-group-card-pro
   title: Modes
   icon: mdi:toggle-switch-outline
   layout: table
@@ -505,7 +505,7 @@ A table of modes with the switch in the value column, and a device sheet where e
     - { entity: input_boolean.away_mode, name: Away mode, toggle: true }
     - { entity: input_boolean.vacation_mode, name: Vacation mode, toggle: true }
   grid_options: { columns: 6 }
-- type: custom:entity-group-card
+- type: custom:entity-group-card-pro
   title: Living room TV
   icon: mdi:television
   layout: table
@@ -526,7 +526,7 @@ A table of modes with the switch in the value column, and a device sheet where e
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Great room
 icon: mdi:sofa
 layout: row
@@ -560,7 +560,7 @@ The header can carry badges and names too: a status badge next to the title of a
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Robot vacuum
 icon: mdi:robot-vacuum
 header_entities:

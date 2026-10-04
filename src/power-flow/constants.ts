@@ -1,6 +1,6 @@
 // Constants of the power flow card: the option enums, the energy colours (Home Assistant's energy
 // dashboard tokens with their default values) and the geometry of the tree, in design pixels.
-export const CARD_TYPE = "power-flow-card";
+export const CARD_TYPE = "power-flow-card-pro";
 
 export const DIRECTIONS = ["right", "down"] as const;
 export type Direction = (typeof DIRECTIONS)[number];

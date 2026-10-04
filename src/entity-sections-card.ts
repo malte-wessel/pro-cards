@@ -1,13 +1,13 @@
 /*
- * entity-sections-card – several groups under one header.
+ * entity-sections-card-pro – several groups under one header.
  *
- *   type: custom:entity-sections-card
+ *   type: custom:entity-sections-card-pro
  *   title: Living room / icon: mdi:sofa     # header (template allowed)
  *   header_entities: [...]                 # compact icon + value items on the title line
  *   hours_to_show: 24 / bucket_minutes: 60
  *   tap_action / hold_action / double_tap_action   # defaults for every entity
  *   align / columns / show_name / show_value / show_icon / name_position   # defaults for every section
- *   sections:                              # each section is an entity-group-card config
+ *   sections:                              # each section is an entity-group-card-pro config
  *     - layout: table                      # list | grid | hero | row | column | table
  *       divider: false                     # line above the section (never the first)
  *       entities: [...]
@@ -30,7 +30,7 @@ import {
 } from "./shared/entity/config.ts";
 import { STYLE_GROUP_CARD } from "./shared/entity/render/styles.ts";
 
-const CARD_TYPE = "entity-sections-card";
+const CARD_TYPE = "entity-sections-card-pro";
 
 // the raw config: the card keys plus a list of groups
 export interface RawEntitySectionsCardConfig extends RawEntityCardBase {
@@ -91,6 +91,6 @@ export class EntitySectionsCard extends EntityCardBase {
 }
 
 registerCard(EntitySectionsCard, {
-  name: "Entity Sections Card",
+  name: "Entity Sections Card Pro",
   description: "Several groups of entities, each with its own layout, in one card",
 });

@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://malte-wessel.github.io/pro-cards/schema/sun-path-card.schema.json",
-  "title": "custom:sun-path-card",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/sun-path-card-pro.schema.json",
+  "title": "custom:sun-path-card-pro",
   "description": "Today's sun elevation with sunrise, sunset, dawn, solar noon and dusk, computed from the Home Assistant coordinates.",
   "type": "object",
   "properties": {
-    "type": { "const": "custom:sun-path-card" },
+    "type": { "const": "custom:sun-path-card-pro" },
     "title": { "type": "string", "description": "Omit for no header" },
     "icon": { "$ref": "defs.schema.json#/$defs/icon", "description": "Header icon" },
     "show_dawn_dusk": { "type": "boolean", "default": true },

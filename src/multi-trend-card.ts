@@ -1,10 +1,10 @@
 /*
- * multi-trend-card
+ * multi-trend-card-pro
  * Tile-style trend card for several sensors with a hover/touch crosshair tooltip.
  * Dependency-free (plain web component, inline SVG). Includes a visual editor (ha-form).
  *
  * Config:
- *   type: custom:multi-trend-card
+ *   type: custom:multi-trend-card-pro
  *   title: Temperature & dew point    # optional (default: first entity name)
  *   icon: mdi:thermometer             # optional
  *   color: primary                    # optional icon color (HA color token or hex)
@@ -18,7 +18,7 @@
  *       name: A                       # optional
  *       color: red                    # optional (HA named color or hex)
  */
-import { fireAction, registerCard } from "./shared/card.ts";
+import { fireAction, defineElement, registerCard } from "./shared/card.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import type { MultiTrendCardConfig, TrendConfig, TrendPoint } from "./multi-trend/config.ts";
 import { cssColor } from "./shared/color.ts";
@@ -39,9 +39,9 @@ import {
 } from "./shared/trend/plot.ts";
 import { STYLE } from "./multi-trend/styles.ts";
 
-const CARD_TYPE = "multi-trend-card";
+const CARD_TYPE = "multi-trend-card-pro";
 
-customElements.define(`${CARD_TYPE}-editor`, MultiTrendCardEditor);
+defineElement(`${CARD_TYPE}-editor`, MultiTrendCardEditor);
 
 export class MultiTrendCard extends HTMLElement {
   static cardType = CARD_TYPE;
@@ -78,11 +78,11 @@ export class MultiTrendCard extends HTMLElement {
 
   setConfig(config: MultiTrendCardConfig) {
     if (!config || !Array.isArray(config.entities) || config.entities.length === 0) {
-      throw new Error("multi-trend-card: 'entities' must be a non-empty list");
+      throw new Error(`${CARD_TYPE}: 'entities' must be a non-empty list`);
     }
     const entities = config.entities.map((e, i) => {
       const o = typeof e === "string" ? { entity: e } : { ...e };
-      if (!o.entity) throw new Error(`multi-trend-card: entities[${i}] has no 'entity'`);
+      if (!o.entity) throw new Error(`${CARD_TYPE}: entities[${i}] has no 'entity'`);
       return { ...o, colorCss: cssColor(o.color, cssColor(PALETTE[i % PALETTE.length]) ?? "") };
     });
     this._config = {
@@ -186,7 +186,7 @@ export class MultiTrendCard extends HTMLElement {
       );
       this._fetched = true;
     } catch (err) {
-      console.error("multi-trend-card: history fetch failed", err);
+      console.error(`${CARD_TYPE}: history fetch failed`, err);
     } finally {
       this._fetching = false;
       this._render();
@@ -338,6 +338,6 @@ export class MultiTrendCard extends HTMLElement {
 }
 
 registerCard(MultiTrendCard, {
-  name: "Multi Trend Card",
+  name: "Multi Trend Card Pro",
   description: "Tile-style trend graph for several sensors with hover tooltip",
 });

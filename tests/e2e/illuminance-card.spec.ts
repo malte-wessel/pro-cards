@@ -1,7 +1,7 @@
 import { test, expect, mount, setState, card, setLanguage } from "./util.ts";
 
 const cfg = (mode: string, extra: Record<string, unknown> = {}) => ({
-  type: "custom:illuminance-card",
+  type: "custom:illuminance-card-pro",
   entity: "sensor.illuminance",
   mode,
   name: "Light",
@@ -63,7 +63,7 @@ test("band mode has one block per bucket and a gradient legend", async ({ page }
 
 test("default zone names and axis words follow the Home Assistant language", async ({ page }) => {
   await mount(page, {
-    type: "custom:illuminance-card",
+    type: "custom:illuminance-card-pro",
     entity: "sensor.illuminance",
     mode: "trend",
     zones: { sun: { label: "Bright" } },
@@ -82,7 +82,7 @@ test("default zone names and axis words follow the Home Assistant language", asy
     "Bright",
   ]);
   await expect(c.locator(".secondary")).toHaveText(/^Max\. /);
-  await mount(page, { type: "custom:illuminance-card", entity: "sensor.nope" });
+  await mount(page, { type: "custom:illuminance-card-pro", entity: "sensor.nope" });
   await setLanguage(page, "de");
   await expect(card(page).locator(".empty")).toHaveText("sensor.nope nicht gefunden");
 });

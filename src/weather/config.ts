@@ -2,7 +2,7 @@
 // entity sections card: the weather lead (`hero`), entity groups (`row`, `list`, `table`,
 // `grid`, `column`) whose entries may name attributes of the weather entity, forecast rows or
 // columns (`forecast`) and the multi trend plot of the forecast (`trend`). The result is an
-// entity-card config (the base element renders header, rows, tint and templates from it) plus
+// entity-card-pro config (the base element renders header, rows, tint and templates from it) plus
 // the weather-specific items and sections.
 import {
   clampColumns,

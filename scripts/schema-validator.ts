@@ -7,16 +7,16 @@ import Ajv2020, { type ErrorObject } from "ajv/dist/2020.js";
 const dir = join(dirname(fileURLToPath(import.meta.url)), "..", "schema");
 const BASE = "https://malte-wessel.github.io/pro-cards/schema/";
 const TYPES = [
-  "entity-card",
-  "entity-group-card",
-  "entity-sections-card",
-  "multi-trend-card",
-  "sun-path-card",
-  "illuminance-card",
-  "weather-card",
-  "wind-card",
-  "rain-card",
-  "power-flow-card",
+  "entity-card-pro",
+  "entity-group-card-pro",
+  "entity-sections-card-pro",
+  "multi-trend-card-pro",
+  "sun-path-card-pro",
+  "illuminance-card-pro",
+  "weather-card-pro",
+  "wind-card-pro",
+  "rain-card-pro",
+  "power-flow-card-pro",
 ];
 
 export const makeValidator = () => {

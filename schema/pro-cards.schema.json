@@ -5,34 +5,34 @@
   "description": "Any of the ten Pro Cards, discriminated by `type`.",
   "oneOf": [
     {
-      "$ref": "entity-card.schema.json"
+      "$ref": "entity-card-pro.schema.json"
     },
     {
-      "$ref": "entity-group-card.schema.json"
+      "$ref": "entity-group-card-pro.schema.json"
     },
     {
-      "$ref": "entity-sections-card.schema.json"
+      "$ref": "entity-sections-card-pro.schema.json"
     },
     {
-      "$ref": "multi-trend-card.schema.json"
+      "$ref": "multi-trend-card-pro.schema.json"
     },
     {
-      "$ref": "sun-path-card.schema.json"
+      "$ref": "sun-path-card-pro.schema.json"
     },
     {
-      "$ref": "illuminance-card.schema.json"
+      "$ref": "illuminance-card-pro.schema.json"
     },
     {
-      "$ref": "weather-card.schema.json"
+      "$ref": "weather-card-pro.schema.json"
     },
     {
-      "$ref": "wind-card.schema.json"
+      "$ref": "wind-card-pro.schema.json"
     },
     {
-      "$ref": "rain-card.schema.json"
+      "$ref": "rain-card-pro.schema.json"
     },
     {
-      "$ref": "power-flow-card.schema.json"
+      "$ref": "power-flow-card-pro.schema.json"
     }
   ]
 }

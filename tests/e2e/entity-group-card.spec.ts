@@ -2,7 +2,7 @@ import { test, expect, mount, calls, events, state, setState, card } from "./uti
 import type { Locator } from "@playwright/test";
 import type { EntityGroupCard } from "../../src/entity-group-card.ts";
 
-const T = "custom:entity-group-card";
+const T = "custom:entity-group-card-pro";
 const feColor = (loc: Locator) =>
   loc.evaluate((e) => e.style.getPropertyValue("--fe-color").trim());
 const style = (loc: Locator, prop: string) =>
@@ -314,7 +314,7 @@ test.describe("config errors", () => {
   test("setConfig rejects bad configs with a readable message", async ({ page }) => {
     await mount(page, { type: T, entities: ["light.kitchen"] });
     const msgs = await page.evaluate(() => {
-      const el = document.createElement("entity-group-card") as EntityGroupCard;
+      const el = document.createElement("entity-group-card-pro") as EntityGroupCard;
       const tryCfg = (c: unknown) => {
         try {
           el.setConfig(c);
@@ -330,7 +330,7 @@ test.describe("config errors", () => {
         tryCfg(null),
       ];
     });
-    expect(msgs[0]).toMatch(/entity-group-card: 'entities' must be a non-empty list/);
+    expect(msgs[0]).toMatch(/entity-group-card-pro: 'entities' must be a non-empty list/);
     expect(msgs[1]).toMatch(/entities\[0\] needs 'entity' or 'value'/);
     expect(msgs[2]).toMatch(/layout must be one of/);
     expect(msgs[3]).toMatch(/invalid config/);

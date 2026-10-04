@@ -1,6 +1,6 @@
-# Entity Sections Card
+# Entity Sections Card Pro
 
-`custom:entity-sections-card` stacks several groups of entities under one header. Each section is an [entity group](/cards/entity-group-card) body with its own `layout`, so one card can hold a hero on top of a row of controls, or a table over a grid. This page starts with two bare sections and adds options one at a time.
+`custom:entity-sections-card-pro` stacks several groups of entities under one header. Each section is an [entity group](/cards/entity-group-card) body with its own `layout`, so one card can hold a hero on top of a row of controls, or a table over a grid. This page starts with two bare sections and adds options one at a time.
 
 ## Basic
 
@@ -9,7 +9,7 @@ The type and a list of `sections`, each with its `entities`. Without a `layout` 
 ::: live
 
 ```yaml
-type: custom:entity-sections-card
+type: custom:entity-sections-card-pro
 sections:
   - entities: [sensor.living_room_temperature, sensor.living_room_humidity]
   - entities: [light.living_room, cover.living_room_blinds]
@@ -24,7 +24,7 @@ sections:
 ::: live
 
 ```yaml
-type: custom:entity-sections-card
+type: custom:entity-sections-card-pro
 title: Living room
 icon: mdi:sofa
 sections:
@@ -42,7 +42,7 @@ sections:
 ::: live
 
 ```yaml
-type: custom:entity-sections-card
+type: custom:entity-sections-card-pro
 title: Living room
 icon: mdi:sofa
 sections:
@@ -63,7 +63,7 @@ sections:
 ::: live
 
 ```yaml
-type: custom:entity-sections-card
+type: custom:entity-sections-card-pro
 title: Living room
 icon: mdi:sofa
 show_name: false
@@ -88,7 +88,7 @@ sections:
 ::: live
 
 ```yaml
-type: custom:entity-sections-card
+type: custom:entity-sections-card-pro
 title: Living room
 icon: mdi:sofa
 header_entities:
@@ -119,7 +119,7 @@ A device card: a table of facts and a footer with status icons and actions.
 ::: live
 
 ```yaml
-type: custom:entity-sections-card
+type: custom:entity-sections-card-pro
 title: Robot vacuum
 icon: mdi:robot-vacuum
 sections:
@@ -157,7 +157,7 @@ Sections can mix any of the layouts, a hero on top of a row for example.
 ::: live
 
 ```yaml
-type: custom:entity-sections-card
+type: custom:entity-sections-card-pro
 title: Office
 icon: mdi:desk
 sections:
@@ -187,7 +187,7 @@ A kitchen: climate in the header, appliances as a table, lights and windows as a
 ::: live
 
 ```yaml
-type: custom:entity-sections-card
+type: custom:entity-sections-card-pro
 title: Kitchen
 icon: mdi:silverware-fork-knife
 header_entities:
@@ -216,7 +216,7 @@ A bathroom: humidity as the hero with its trend, the window as a strip and a rig
 ::: live
 
 ```yaml
-type: custom:entity-sections-card
+type: custom:entity-sections-card-pro
 title: Bathroom
 icon: mdi:shower
 hours_to_show: 12
@@ -253,7 +253,7 @@ A security overview: doors and windows as a table with icons, presence as a row 
 ::: live
 
 ```yaml
-type: custom:entity-sections-card
+type: custom:entity-sections-card-pro
 title: Security
 icon: mdi:shield-home
 show_icon: true
@@ -282,7 +282,7 @@ Modes and scenes: two rows of icon buttons, one that toggles and one that runs s
 ::: live
 
 ```yaml
-type: custom:entity-sections-card
+type: custom:entity-sections-card-pro
 title: Modes & scenes
 icon: mdi:palette
 show_name: true
@@ -313,7 +313,7 @@ Energy: a table of live readings over a grid of charts.
 ::: live
 
 ```yaml
-type: custom:entity-sections-card
+type: custom:entity-sections-card-pro
 title: Energy
 icon: mdi:lightning-bolt
 hours_to_show: 12

@@ -1,6 +1,6 @@
-# Illuminance Card
+# Illuminance Card Pro
 
-`custom:illuminance-card` shows an outdoor illuminance sensor on a logarithmic scale that is split into zones: night, twilight, overcast, day and sun. It ships with a visual editor.
+`custom:illuminance-card-pro` shows an outdoor illuminance sensor on a logarithmic scale that is split into zones: night, twilight, overcast, day and sun. It ships with a visual editor.
 
 ## Basic
 
@@ -9,7 +9,7 @@ Two lines: the type and a sensor that reports lux. The default look is a 24 h co
 ::: live
 
 ```yaml
-type: custom:illuminance-card
+type: custom:illuminance-card-pro
 entity: sensor.illuminance
 ```
 
@@ -22,7 +22,7 @@ entity: sensor.illuminance
 ::: live
 
 ```yaml
-type: custom:illuminance-card
+type: custom:illuminance-card-pro
 entity: sensor.illuminance
 name: Outdoor light
 ```
@@ -36,7 +36,7 @@ name: Outdoor light
 ::: live
 
 ```yaml
-type: custom:illuminance-card
+type: custom:illuminance-card-pro
 entity: sensor.illuminance
 name: Outdoor light
 mode: trend
@@ -49,7 +49,7 @@ mode: trend
 ::: live
 
 ```yaml
-type: custom:illuminance-card
+type: custom:illuminance-card-pro
 entity: sensor.illuminance
 name: Outdoor light
 mode: arc
@@ -64,7 +64,7 @@ mode: arc
 ::: live
 
 ```yaml
-type: custom:illuminance-card
+type: custom:illuminance-card-pro
 entity: sensor.illuminance
 name: Last 12 hours
 mode: band
@@ -81,7 +81,7 @@ bucket_minutes: 15
 ::: live
 
 ```yaml
-type: custom:illuminance-card
+type: custom:illuminance-card-pro
 entity: sensor.illuminance
 name: Daylight
 min_lx: 1
