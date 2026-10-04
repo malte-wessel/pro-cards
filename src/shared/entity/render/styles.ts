@@ -77,11 +77,12 @@ export const STYLE_CELL = `
   .cell .lead { margin-bottom: 2px; }
 `;
 export const STYLE_ITEM = `
-  .row.item { flex-direction: column; align-items: center; gap: 6px; max-width: 100%; text-align: center; }
-  .item .iname { font-size: 12px; line-height: 16px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  .item .ibody { display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; overflow: hidden; }
-  /* a value that does not fit clips with an ellipsis but keeps its first characters */
-  .item .ibody .state, .item .ibody .pill { min-width: 2.5ch; overflow: hidden; text-overflow: ellipsis; }
+  .row.item { flex-direction: column; align-items: center; gap: 4px; max-width: 100%; text-align: center; }
+  .item .iname { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  /* the value stacks under the name as a plain line; one that does not fit clips with an ellipsis */
+  .item .state { font-size: 12px; line-height: 16px; font-weight: 400; color: var(--secondary-text-color); overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .item .state.lone { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--primary-text-color); }
+  .item .pill { max-width: 100%; }
   .item:focus-visible { box-shadow: none; }
   .item:focus-visible .lead .shape { box-shadow: 0 0 0 2px var(--fe-color); }
 `;

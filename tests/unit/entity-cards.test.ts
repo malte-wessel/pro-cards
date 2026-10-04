@@ -75,7 +75,7 @@ describe("entity-group-card-pro", () => {
     const c = normalizeEntityGroupCardConfig({
       title: "Rooms",
       layout: "row",
-      entities: ["light.a", { entity: "light.b", show_value: true }],
+      entities: ["light.a", { entity: "light.b", show_value: false }],
       header_entities: ["sensor.t"],
       columns: 9,
     });
@@ -88,9 +88,18 @@ describe("entity-group-card-pro", () => {
       headerIdxs: [2],
     });
     expect(c.groups).toEqual([
-      { layout: "row", idxs: [0, 1], align: "start", columns: 4, divider: false, hasIcon: false },
+      {
+        layout: "row",
+        idxs: [0, 1],
+        align: "space-between",
+        columns: 4,
+        divider: false,
+        hasIcon: false,
+      },
     ]);
     expect(c.entities.map((e) => e.entity)).toEqual(["light.a", "light.b", "sensor.t"]);
+    expect(c.entities[0].item).toMatchObject({ showName: true, showValue: true, showIcon: true });
+    expect(c.entities[1].item.showValue).toBe(false);
     expect(c.entities[2].item).toMatchObject({ showName: false, showValue: true, showIcon: true });
     expect(normalizeEntityGroupCardConfig({ entities: ["s.a"] }).layout).toBe("list");
     expect(() => normalizeEntityGroupCardConfig({ layout: "list" })).toThrow(

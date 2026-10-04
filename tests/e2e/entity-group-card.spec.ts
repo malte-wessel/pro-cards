@@ -83,7 +83,7 @@ test.describe("layouts", () => {
     await expect(c.locator(".row.list .end .pill")).toHaveCount(2);
     await expect(c.locator(".row.list .bar i")).toHaveCount(1);
   });
-  test("row lays entities out side by side as name-above-icon items", async ({ page }) => {
+  test("row lays entities out side by side as icon / name / value stacks", async ({ page }) => {
     await mount(page, {
       type: T,
       layout: "row",
@@ -91,24 +91,34 @@ test.describe("layouts", () => {
       entities: [
         { entity: "light.kitchen", name: "Light" },
         { entity: "light.dining_table", name: "Dining" },
-        { entity: "sensor.kitchen_temperature", name: "Temp", show_value: true },
-        { entity: "vacuum.robot", visual: "badge", show_value: true, show_name: false },
+        { entity: "sensor.kitchen_temperature", name: "Temp" },
+        { entity: "vacuum.robot", visual: "badge", show_name: false },
         { entity: "sensor.pressure", name: "Plot", visual: "sparkline", name_position: "above" },
+        { entity: "sensor.kitchen_humidity", show_name: false },
       ],
     });
     const c = card(page);
     const sec = c.locator(".section.layout-row");
-    await expect(sec).toHaveClass(/align-start/);
+    await expect(sec).toHaveClass(/align-space-between/); // the row default
     const items = sec.locator(".row.item");
-    await expect(items).toHaveCount(5);
+    await expect(items).toHaveCount(6);
     await expect(items.nth(0).locator(".iname")).toHaveText("Light");
-    await expect(items.nth(0).locator(".ibody .lead .shape ha-state-icon")).toHaveCount(1);
-    await expect(items.nth(0).locator(".state")).toHaveCount(0);
-    await expect(items.nth(0).locator(":scope > .ibody + .iname")).toHaveCount(1); // name below by default
-    await expect(items.nth(4).locator(":scope > .iname + .ibody")).toHaveCount(1); // name above
-    await expect(items.nth(2).locator(".ibody .state")).toHaveText(/°C$/);
+    await expect(items.nth(0).locator(":scope > .lead .shape ha-state-icon")).toHaveCount(1);
+    await expect(items.nth(0).locator(":scope > .iname + .state")).not.toHaveText(""); // value by default
+    await expect(items.nth(0).locator(":scope > .lead + .iname")).toHaveCount(1); // name below by default
+    await expect(items.nth(4).locator(":scope > .iname + .lead")).toHaveCount(1); // name above
+    // the value stacks under the name: a plain line under a bold one
+    await expect(items.nth(2).locator(":scope > .lead + .iname + .state")).toHaveText(/°C$/);
+    const nb = (await items.nth(2).locator(".iname").boundingBox())!,
+      vb = (await items.nth(2).locator(".state").boundingBox())!;
+    expect(vb.y).toBeGreaterThan(nb.y + nb.height - 1);
+    expect(await style(items.nth(2).locator(".iname"), "fontWeight")).toBe("500");
+    expect(await style(items.nth(2).locator(".state"), "fontWeight")).toBe("400");
     await expect(items.nth(3).locator(".iname")).toHaveCount(0);
-    await expect(items.nth(3).locator(".ibody .pill")).toHaveText(/Cleaning/i);
+    // without a name the value takes the name's bold style
+    await expect(items.nth(5).locator(".iname")).toHaveCount(0);
+    expect(await style(items.nth(5).locator(".state"), "fontWeight")).toBe("500");
+    await expect(items.nth(3).locator(":scope > .lead + .pill")).toHaveText(/Cleaning/i);
     await expect(items.nth(4).locator(".plot")).toHaveCount(0);
     const b0 = (await items.nth(0).boundingBox())!,
       b1 = (await items.nth(1).boundingBox())!;

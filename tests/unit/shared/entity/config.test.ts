@@ -115,7 +115,7 @@ describe("entity", () => {
         { show_name: 0 as unknown as boolean, name_position: "left" },
         ITEM_DEFAULTS.row!,
       ),
-    ).toEqual({ showName: false, showValue: false, showIcon: true, namePosition: "below" });
+    ).toEqual({ showName: false, showValue: true, showIcon: true, namePosition: "below" });
     expect(normalizeActionDefaults({ tap_action: "toggle" })).toMatchObject({
       tap: { action: "toggle" },
       hold: { action: "more-info" },
@@ -150,7 +150,7 @@ describe("group", () => {
     const row = normalizeGroup({ layout: "row", entities: ["light.a"] }, ctx, {}, "entities", 0);
     expect(row.entities[0].item).toEqual({
       showName: true,
-      showValue: false,
+      showValue: true,
       showIcon: true,
       namePosition: "below",
     });
@@ -219,7 +219,7 @@ describe("group", () => {
       showIcon: true,
       namePosition: "below",
     });
-    expect(b.group).toMatchObject({ align: "start", idxs: [2, 3] });
+    expect(b.group).toMatchObject({ align: "space-between", idxs: [2, 3] });
   });
   it("keeps block visuals out of items and clamps grid columns", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});

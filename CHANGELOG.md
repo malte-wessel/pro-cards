@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.0 (unreleased)
+
+- Row and column items (entity group and sections cards, the weather card's row sections) stack the value under the name instead of putting it next to the icon: icon, bold name, plain value (a badge pill stacks the same way). `name_position: above` gives name, icon, value. Row and column items show the value by default (`show_value: false` hides it); the weather card's row sections no longer need their own default. An item without a name shows its value in the name's bold style. Row items spread over the width by default (`align: space-between`)
+
 ## 2.0.0 (2026-10-04)
 
 - **Breaking:** every card type ends in `-pro`: `custom:entity-card-pro`, `custom:entity-group-card-pro`, `custom:entity-sections-card-pro`, `custom:multi-trend-card-pro`, `custom:sun-path-card-pro`, `custom:illuminance-card-pro`, `custom:weather-card-pro`, `custom:wind-card-pro`, `custom:rain-card-pro`, `custom:power-flow-card-pro`; the card picker lists them as "… Card Pro". The old generic names (`weather-card`, `power-flow-card` …) were also used by other custom cards, and a single collision disabled the whole bundle. Update the `type:` of every Pro Card in your dashboards (the getting started page has a note). The JSON schemas moved with the cards (`schema/<type>.schema.json`)
