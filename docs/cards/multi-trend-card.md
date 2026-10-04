@@ -1,4 +1,4 @@
-# Multi Trend Card
+# Multi Trend Card Pro
 
 `custom:multi-trend-card-pro` draws one or more sensors as smooth lines in a tile-style card. Hover or touch the plot for a crosshair that lists every value at that time. It ships with a visual editor.
 

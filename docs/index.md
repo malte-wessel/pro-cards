@@ -9,13 +9,13 @@ hero:
       text: Get started
       link: /guide/getting-started
     - theme: alt
-      text: Entity card
+      text: Entity Card Pro
       link: /cards/entity-card
     - theme: alt
-      text: Power flow card
+      text: Power Flow Card Pro
       link: /cards/power-flow-card
     - theme: alt
-      text: Weather card
+      text: Weather Card Pro
       link: /cards/weather-card
 features:
   - icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="26" height="26"><path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10v9.5h11V10"/><path d="M10 19.5v-5h4v5"/></svg>'

@@ -1,4 +1,4 @@
-# Sun Path Card
+# Sun Path Card Pro
 
 `custom:sun-path-card-pro` shows today's sun elevation as a curve with the sun's current position, sunrise and sunset, and optionally dawn, solar noon and dusk. Hover or tap the curve for the time and the sun's elevation at that point. It ships with a visual editor.
 

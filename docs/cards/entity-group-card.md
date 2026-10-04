@@ -1,4 +1,4 @@
-# Entity Group Card
+# Entity Group Card Pro
 
 `custom:entity-group-card-pro` shows many entities in one card. Every entity takes the same [entity options](/cards/entity-options) as the entity card; `layout` decides how they are arranged. This page starts with a plain list and adds options one at a time, then walks through the other layouts.
 

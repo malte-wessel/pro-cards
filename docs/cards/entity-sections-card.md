@@ -1,4 +1,4 @@
-# Entity Sections Card
+# Entity Sections Card Pro
 
 `custom:entity-sections-card-pro` stacks several groups of entities under one header. Each section is an [entity group](/cards/entity-group-card) body with its own `layout`, so one card can hold a hero on top of a row of controls, or a table over a grid. This page starts with two bare sections and adds options one at a time.
 

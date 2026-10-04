@@ -1,4 +1,4 @@
-# Wind Card
+# Wind Card Pro
 
 `custom:wind-card-pro` shows the wind: its speed, where it comes from and how hard it gusts, with an animated wind field whose particles travel where the wind blows. The speed sets their pace, the gusts raise the waves and send streaks across, and your `rules` colour them, label the value and may tint the card. Without options it is a tile like the [entity card](/cards/entity-card); `visual: flow` makes the whole tile the field, `layout: hero` adds the big value and a flow band. YAML only.
 

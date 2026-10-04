@@ -4,28 +4,28 @@ Pro Cards adds these cards to the dashboard editor:
 
 **Entities**
 
-| Card                                                | `type`                            | Editor        |
-| --------------------------------------------------- | --------------------------------- | ------------- |
-| [Entity Card](/cards/entity-card)                   | `custom:entity-card-pro`          | YAML          |
-| [Entity Group Card](/cards/entity-group-card)       | `custom:entity-group-card-pro`    | YAML          |
-| [Entity Sections Card](/cards/entity-sections-card) | `custom:entity-sections-card-pro` | YAML          |
-| [Multi Trend Card](/cards/multi-trend-card)         | `custom:multi-trend-card-pro`     | Visual + YAML |
+| Card                                                    | `type`                            | Editor        |
+| ------------------------------------------------------- | --------------------------------- | ------------- |
+| [Entity Card Pro](/cards/entity-card)                   | `custom:entity-card-pro`          | YAML          |
+| [Entity Group Card Pro](/cards/entity-group-card)       | `custom:entity-group-card-pro`    | YAML          |
+| [Entity Sections Card Pro](/cards/entity-sections-card) | `custom:entity-sections-card-pro` | YAML          |
+| [Multi Trend Card Pro](/cards/multi-trend-card)         | `custom:multi-trend-card-pro`     | Visual + YAML |
 
 **Energy**
 
-| Card                                      | `type`                       | Editor |
-| ----------------------------------------- | ---------------------------- | ------ |
-| [Power Flow Card](/cards/power-flow-card) | `custom:power-flow-card-pro` | YAML   |
+| Card                                          | `type`                       | Editor |
+| --------------------------------------------- | ---------------------------- | ------ |
+| [Power Flow Card Pro](/cards/power-flow-card) | `custom:power-flow-card-pro` | YAML   |
 
 **Weather**
 
-| Card                                        | `type`                        | Editor        |
-| ------------------------------------------- | ----------------------------- | ------------- |
-| [Weather Card](/cards/weather-card)         | `custom:weather-card-pro`     | YAML          |
-| [Wind Card](/cards/wind-card)               | `custom:wind-card-pro`        | YAML          |
-| [Rain Card](/cards/rain-card)               | `custom:rain-card-pro`        | YAML          |
-| [Sun Path Card](/cards/sun-path-card)       | `custom:sun-path-card-pro`    | Visual + YAML |
-| [Illuminance Card](/cards/illuminance-card) | `custom:illuminance-card-pro` | Visual + YAML |
+| Card                                            | `type`                        | Editor        |
+| ----------------------------------------------- | ----------------------------- | ------------- |
+| [Weather Card Pro](/cards/weather-card)         | `custom:weather-card-pro`     | YAML          |
+| [Wind Card Pro](/cards/wind-card)               | `custom:wind-card-pro`        | YAML          |
+| [Rain Card Pro](/cards/rain-card)               | `custom:rain-card-pro`        | YAML          |
+| [Sun Path Card Pro](/cards/sun-path-card)       | `custom:sun-path-card-pro`    | Visual + YAML |
+| [Illuminance Card Pro](/cards/illuminance-card) | `custom:illuminance-card-pro` | Visual + YAML |
 
 Requires Home Assistant 2025.3 or newer.
 

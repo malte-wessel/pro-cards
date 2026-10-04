@@ -1,4 +1,4 @@
-# Entity Card
+# Entity Card Pro
 
 `custom:entity-card-pro` shows one entity as a tile: icon, name and value in one row of the sections grid, or with a gauge, bar or graph below. The entity keys sit directly on the card; the [entity options](/cards/entity-options) explain every one of them. This page builds a tile up option by option.
 

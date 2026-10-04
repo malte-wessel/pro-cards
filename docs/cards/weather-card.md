@@ -1,4 +1,4 @@
-# Weather Card
+# Weather Card Pro
 
 `custom:weather-card-pro` shows one weather entity. Without `sections` it is a tile. With `sections` you compose the card like the [sections card](/cards/entity-sections-card): the hero lead, rows of weather attributes and entities, trend charts and forecast rows, in the order you write them. The parts are the ones the other Pro Cards use: rules, templates, header entities, the entity visuals and the multi trend plot. YAML only.
 

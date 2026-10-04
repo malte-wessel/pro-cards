@@ -1,4 +1,4 @@
-# Illuminance Card
+# Illuminance Card Pro
 
 `custom:illuminance-card-pro` shows an outdoor illuminance sensor on a logarithmic scale that is split into zones: night, twilight, overcast, day and sun. It ships with a visual editor.
 

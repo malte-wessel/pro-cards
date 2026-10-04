@@ -75,7 +75,7 @@ to the advanced ones step by step.
 
 ### Entities
 
-#### Entity Card
+#### Entity Card Pro
 
 One entity as a tile. Rules pick colour, icon and label by value or state.
 
@@ -88,10 +88,10 @@ rules:
   - { above: 24, color: orange, icon: mdi:sun-thermometer, label: Warm }
 ```
 
-[Entity Card docs](https://malte-wessel.github.io/pro-cards/cards/entity-card) ·
+[Entity Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/entity-card) ·
 [Entity options](https://malte-wessel.github.io/pro-cards/cards/entity-options)
 
-#### Entity Group Card
+#### Entity Group Card Pro
 
 Many entities in one layout: `list`, `grid`, `hero`, `row`, `column` or `table`.
 
@@ -104,9 +104,9 @@ entities:
   - { entity: sensor.living_room_temperature, visual: sparkline }
 ```
 
-[Entity Group Card docs](https://malte-wessel.github.io/pro-cards/cards/entity-group-card)
+[Entity Group Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/entity-group-card)
 
-#### Entity Sections Card
+#### Entity Sections Card Pro
 
 Several groups with their own layout under one header: room and device cards.
 
@@ -120,9 +120,9 @@ sections:
     entities: [light.living_room, cover.living_room_blinds, media_player.living_room_tv]
 ```
 
-[Entity Sections Card docs](https://malte-wessel.github.io/pro-cards/cards/entity-sections-card)
+[Entity Sections Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/entity-sections-card)
 
-#### Multi Trend Card
+#### Multi Trend Card Pro
 
 Several sensors as smooth lines with a hover tooltip. Visual editor.
 
@@ -133,11 +133,11 @@ entities:
   - { entity: sensor.dew_point, name: Dew point, color: blue }
 ```
 
-[Multi Trend Card docs](https://malte-wessel.github.io/pro-cards/cards/multi-trend-card)
+[Multi Trend Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/multi-trend-card)
 
 ### Energy
 
-#### Power Flow Card
+#### Power Flow Card Pro
 
 Where the electricity comes from and where it goes: solar, battery and grid on the left, the home in the middle, rooms and devices on the right, joined by lines that carry the power as moving dots. The line above says whether the home imports, exports or runs on battery, and how self-sufficient it is.
 
@@ -153,11 +153,11 @@ consumers:
   - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
 ```
 
-[Power Flow Card docs](https://malte-wessel.github.io/pro-cards/cards/power-flow-card)
+[Power Flow Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/power-flow-card)
 
 ### Weather
 
-#### Weather Card
+#### Weather Card Pro
 
 A weather entity as a tile, or as sections you compose like the sections card: the hero lead, rows of attributes and entities, trend charts and forecast rows.
 
@@ -172,9 +172,9 @@ sections:
   - { type: forecast, mode: daily, days: 7 }
 ```
 
-[Weather Card docs](https://malte-wessel.github.io/pro-cards/cards/weather-card)
+[Weather Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/weather-card)
 
-#### Wind Card
+#### Wind Card Pro
 
 Wind speed, direction and gusts from sensors or a weather entity, with an animated wind field: dots, streamlines, swooshes or an arrow field that travel where the wind blows, faster with the speed, wavier with the gusts, coloured by your rules.
 
@@ -191,9 +191,9 @@ rules:
   - { above: 35, color: red, label: Storm, tint_card: true }
 ```
 
-[Wind Card docs](https://malte-wessel.github.io/pro-cards/cards/wind-card)
+[Wind Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/wind-card)
 
-#### Rain Card
+#### Rain Card Pro
 
 The rain rate and today's total, animated: drops that fall harder and slant with the wind, ripples on a puddle, or a rain gauge that fills through the day, coloured by your rules.
 
@@ -212,9 +212,9 @@ rules:
   - { above: 7.6, color: indigo, label: Heavy rain, tint_card: true }
 ```
 
-[Rain Card docs](https://malte-wessel.github.io/pro-cards/cards/rain-card)
+[Rain Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/rain-card)
 
-#### Sun Path Card
+#### Sun Path Card Pro
 
 Today's sun elevation with sunrise, sunset, dawn, noon and dusk, computed from your location. Visual editor.
 
@@ -223,9 +223,9 @@ type: custom:sun-path-card-pro
 title: Sun today
 ```
 
-[Sun Path Card docs](https://malte-wessel.github.io/pro-cards/cards/sun-path-card)
+[Sun Path Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/sun-path-card)
 
-#### Illuminance Card
+#### Illuminance Card Pro
 
 An illuminance sensor on a log scale with zones, as gauge arc, trend or colour band. Visual editor.
 
@@ -235,7 +235,7 @@ entity: sensor.illuminance
 mode: arc
 ```
 
-[Illuminance Card docs](https://malte-wessel.github.io/pro-cards/cards/illuminance-card)
+[Illuminance Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/illuminance-card)
 
 ## Config schema
 

@@ -1,4 +1,4 @@
-# Rain Card
+# Rain Card Pro
 
 `custom:rain-card-pro` shows the rain: how hard it falls now and, with a second sensor, how much fell today. The card animates it in three styles: `drops` fall and splash on the bottom edge, more and faster the harder it rains and slanted by the wind; `ripples` spread where drops land on a puddle; `fill` is a rain gauge whose water rises with today's total. Your `rules` colour the rain, label the value and may tint the card. Without options it is a tile like the [entity card](/cards/entity-card); `visual: flow` makes the whole tile the field, `layout: hero` adds the big value and a band. YAML only.
 
