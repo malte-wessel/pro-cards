@@ -123,7 +123,10 @@ export default defineConfig({
   },
   vue: {
     template: {
-      compilerOptions: { isCustomElement: (tag) => tag.startsWith("ha-") || tag.endsWith("-card") },
+      compilerOptions: {
+        isCustomElement: (tag) =>
+          tag.startsWith("ha-") || tag.endsWith("-card") || tag.endsWith("-card-pro"),
+      },
     },
   },
   themeConfig: {

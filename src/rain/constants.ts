@@ -1,7 +1,7 @@
 // Constants of the rain card.
 import { BAND } from "../shared/flow/constants.ts";
 
-export const CARD_TYPE = "rain-card";
+export const CARD_TYPE = "rain-card-pro";
 
 export const LEADS = ["animated", "icon"] as const;
 export type Lead = (typeof LEADS)[number];

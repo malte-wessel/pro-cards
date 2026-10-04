@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://malte-wessel.github.io/pro-cards/schema/weather-card.schema.json",
-  "title": "custom:weather-card",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/weather-card-pro.schema.json",
+  "title": "custom:weather-card-pro",
   "description": "A weather entity as a tile, or as sections composed like the entity sections card: hero, entity groups whose entries may name weather attributes, forecast rows / columns and trend charts.",
   "type": "object",
   "properties": {
     "type": {
-      "const": "custom:weather-card"
+      "const": "custom:weather-card-pro"
     },
     "entity": {
       "type": "string",

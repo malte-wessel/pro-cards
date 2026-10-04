@@ -1,7 +1,7 @@
 /*
- * weather-card – one weather entity as a tile, or as sections composed like the sections card.
+ * weather-card-pro – one weather entity as a tile, or as sections composed like the sections card.
  *
- *   type: custom:weather-card
+ *   type: custom:weather-card-pro
  *   entity: weather.home                   # required
  *   title: Home / icon: mdi:home           # header like the group cards (template allowed)
  *   header_entities: [...]                 # compact icon + value items on the title line
@@ -320,7 +320,7 @@ export class WeatherCard extends EntityCardBase {
 }
 
 registerCard(WeatherCard, {
-  name: "Weather Card",
+  name: "Weather Card Pro",
   description:
     "A weather entity as a tile or as sections: hero, attribute rows, forecast rows and trend charts",
 });

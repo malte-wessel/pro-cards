@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://malte-wessel.github.io/pro-cards/schema/illuminance-card.schema.json",
-  "title": "custom:illuminance-card",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/illuminance-card-pro.schema.json",
+  "title": "custom:illuminance-card-pro",
   "description": "Illuminance on a log scale with zones: gauge arc, 24 h trend or colour band.",
   "type": "object",
   "properties": {
-    "type": { "const": "custom:illuminance-card" },
+    "type": { "const": "custom:illuminance-card-pro" },
     "entity": {
       "$ref": "defs.schema.json#/$defs/entityId",
       "description": "Illuminance sensor in lx"

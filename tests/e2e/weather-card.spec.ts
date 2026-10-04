@@ -2,7 +2,7 @@ import { test, expect, mount, events, card, setLanguage } from "./util.ts";
 import type { WeatherCard } from "../../src/weather-card.ts";
 import type { Locator, Page } from "@playwright/test";
 
-const T = "custom:weather-card";
+const T = "custom:weather-card-pro";
 const W = "weather.home";
 const cssVar = (loc: Locator, name: string) =>
   loc.evaluate((e, n) => e.style.getPropertyValue(n).trim(), name);

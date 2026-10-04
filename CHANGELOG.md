@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.0 (2026-10-04)
+
+- **Breaking:** every card type ends in `-pro`: `custom:entity-card-pro`, `custom:entity-group-card-pro`, `custom:entity-sections-card-pro`, `custom:multi-trend-card-pro`, `custom:sun-path-card-pro`, `custom:illuminance-card-pro`, `custom:weather-card-pro`, `custom:wind-card-pro`, `custom:rain-card-pro`, `custom:power-flow-card-pro`; the card picker lists them as "… Card Pro". The old generic names (`weather-card`, `power-flow-card` …) were also used by other custom cards, and a single collision disabled the whole bundle. Update the `type:` of every Pro Card in your dashboards (the getting started page has a note). The JSON schemas moved with the cards (`schema/<type>.schema.json`)
+- A card whose element name is already defined by another resource is reported in the console and skipped instead of taking every card after it down
+
 ## 1.7.1 (2026-10-01)
 
 - Fix the multi trend card's plot in a cell taller or shorter than its natural height: the SVG was stretched to the card, which turned the hover dots into ellipses, thickened the gridlines and skewed the curves. The plot is now drawn at the height it gets, and the trend section of the weather card shares the fix

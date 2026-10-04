@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { fireAction, fireEvent, fireHaptic, registerCard } from "../../../src/shared/card.ts";
 
 const listen = (el: EventTarget, type: string) => {
@@ -45,5 +45,19 @@ describe("card helpers", () => {
       description: "d",
       preview: true,
     });
+  });
+  it("skips a name another resource already defined instead of throwing", () => {
+    class Other extends HTMLElement {}
+    customElements.define("test-taken-card", Other);
+    class T extends HTMLElement {
+      static cardType = "test-taken-card";
+    }
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const before = window.customCards?.length ?? 0;
+    expect(() => registerCard(T, { name: "T", description: "d" })).not.toThrow();
+    expect(customElements.get("test-taken-card")).toBe(Other);
+    expect(window.customCards?.length ?? 0).toBe(before);
+    expect(errors.mock.calls[0][0]).toContain("test-taken-card");
+    errors.mockRestore();
   });
 });

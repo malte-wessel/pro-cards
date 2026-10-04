@@ -11,7 +11,7 @@ Try it on this site: every example has a theme picker in its top-right corner, a
 ::: live theme=graphite
 
 ```yaml
-- type: custom:entity-group-card
+- type: custom:entity-group-card-pro
   title: Living room
   icon: mdi:sofa
   entities:
@@ -19,7 +19,7 @@ Try it on this site: every example has a theme picker in its top-right corner, a
     - { entity: sensor.living_room_temperature, name: Temperature, decimals: 1, rules: [{ below: 19, color: blue, label: Cold }, { below: 24, color: green, label: Comfortable }, { above: 24, color: orange, label: Warm }] }
     - { entity: sensor.living_room_co2, name: CO₂, visual: strip, rules: [{ below: 800, color: green }, { below: 1200, color: amber }, { above: 1200, color: red }] }
     - { entity: sensor.robot_battery, name: Battery, visual: ring }
-- type: custom:multi-trend-card
+- type: custom:multi-trend-card-pro
   title: Outdoor
   icon: mdi:thermometer
   hours_to_show: 12
@@ -45,7 +45,7 @@ Named tokens resolve to the theme's `--<name>-color`, so a theme that redefines 
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: The same sensor in six colours
 layout: grid
 columns: 3
@@ -74,7 +74,7 @@ So set `color` only when the colour should never change; leave it out to let the
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Coloured like Home Assistant
 layout: grid
 columns: 3
@@ -99,7 +99,7 @@ entities:
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Batteries
 icon: mdi:battery-heart-variant
 entities:

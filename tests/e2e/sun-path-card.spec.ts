@@ -2,7 +2,7 @@ import { test, expect, mount, card, setLanguage } from "./util.ts";
 
 test("shows today's events for the frozen summer day", async ({ page }) => {
   await mount(page, {
-    type: "custom:sun-path-card",
+    type: "custom:sun-path-card-pro",
     title: "Sun",
     icon: "mdi:weather-sunset",
     labels: { sunrise: "Sunrise", sunset: "Sunset", dawn: "Dawn", noon: "Noon", dusk: "Dusk" },
@@ -39,7 +39,7 @@ test("shows today's events for the frozen summer day", async ({ page }) => {
 
 test("hides the bottom row and uses custom colours", async ({ page }) => {
   await mount(page, {
-    type: "custom:sun-path-card",
+    type: "custom:sun-path-card-pro",
     show_dawn_dusk: false,
     day_color: "#ff0000",
     labels: { sunrise: "Up" },
@@ -52,7 +52,7 @@ test("hides the bottom row and uses custom colours", async ({ page }) => {
 });
 
 test("hover shows the time and elevation under the pointer", async ({ page }) => {
-  await mount(page, { type: "custom:sun-path-card" });
+  await mount(page, { type: "custom:sun-path-card-pro" });
   const c = card(page);
   const plot = c.locator(".plot");
   const box = (await plot.boundingBox())!;
@@ -72,7 +72,7 @@ test("hover shows the time and elevation under the pointer", async ({ page }) =>
 });
 
 test("default labels follow the Home Assistant language, overrides stay", async ({ page }) => {
-  await mount(page, { type: "custom:sun-path-card", labels: { dusk: "Civil dusk" } });
+  await mount(page, { type: "custom:sun-path-card-pro", labels: { dusk: "Civil dusk" } });
   const c = card(page);
   await expect(c.locator(".row .lbl").first()).toHaveText("Sunrise");
   await expect(c.locator(".events .lbl").nth(1)).toHaveText("Solar noon");
@@ -90,7 +90,7 @@ test("default labels follow the Home Assistant language, overrides stay", async 
 });
 
 test("show_tooltip: false renders no hover layer", async ({ page }) => {
-  await mount(page, { type: "custom:sun-path-card", show_tooltip: false });
+  await mount(page, { type: "custom:sun-path-card-pro", show_tooltip: false });
   const c = card(page);
   const box = (await c.locator(".plot").boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -99,7 +99,11 @@ test("show_tooltip: false renders no hover layer", async ({ page }) => {
 });
 
 test("moves the sun marker with time", async ({ page }) => {
-  await mount(page, { type: "custom:sun-path-card" }, { time: new Date("2026-06-21T06:00:00") });
+  await mount(
+    page,
+    { type: "custom:sun-path-card-pro" },
+    { time: new Date("2026-06-21T06:00:00") },
+  );
   const early = await card(page).locator(".plot svg circle.sun").getAttribute("cx");
   await page.clock.setFixedTime(new Date("2026-06-21T18:00:00"));
   await page.evaluate(() => window.pc.card(0)._render());
@@ -113,7 +117,7 @@ for (const [label, time] of [
   ["winter", "2026-12-21T12:30:00"],
 ] as const) {
   test(`keeps the whole curve inside the plot in ${label}`, async ({ page }) => {
-    await mount(page, { type: "custom:sun-path-card" }, { time: new Date(time) });
+    await mount(page, { type: "custom:sun-path-card-pro" }, { time: new Date(time) });
     const c = card(page);
     const cy = parseFloat((await c.locator(".plot svg circle.sun").getAttribute("cy"))!);
     expect(cy).toBeGreaterThanOrEqual(0);

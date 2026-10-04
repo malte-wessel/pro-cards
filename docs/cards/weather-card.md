@@ -1,6 +1,6 @@
 # Weather Card
 
-`custom:weather-card` shows one weather entity. Without `sections` it is a tile. With `sections` you compose the card like the [sections card](/cards/entity-sections-card): the hero lead, rows of weather attributes and entities, trend charts and forecast rows, in the order you write them. The parts are the ones the other Pro Cards use: rules, templates, header entities, the entity visuals and the multi trend plot. YAML only.
+`custom:weather-card-pro` shows one weather entity. Without `sections` it is a tile. With `sections` you compose the card like the [sections card](/cards/entity-sections-card): the hero lead, rows of weather attributes and entities, trend charts and forecast rows, in the order you write them. The parts are the ones the other Pro Cards use: rules, templates, header entities, the entity visuals and the multi trend plot. YAML only.
 
 ## Tile
 
@@ -9,7 +9,7 @@ The entity alone makes a tile: the condition icon, the name and "temperature · 
 ::: live
 
 ```yaml
-type: custom:weather-card
+type: custom:weather-card-pro
 entity: weather.home
 ```
 
@@ -22,7 +22,7 @@ A `hero` section shows the condition, the big temperature and today's high and l
 ::: live
 
 ```yaml
-type: custom:weather-card
+type: custom:weather-card-pro
 entity: weather.home
 sections:
   - type: hero
@@ -37,7 +37,7 @@ sections:
 ::: live
 
 ```yaml
-type: custom:weather-card
+type: custom:weather-card-pro
 entity: weather.home
 sections:
   - type: hero
@@ -61,7 +61,7 @@ A `trend` section is the plot of the [multi trend card](/cards/multi-trend-card)
 ::: live
 
 ```yaml
-type: custom:weather-card
+type: custom:weather-card-pro
 entity: weather.home
 sections:
   - type: hero
@@ -89,7 +89,7 @@ A `forecast` section lists the next days or hours. `layout: vertical` draws one 
 ::: live
 
 ```yaml
-type: custom:weather-card
+type: custom:weather-card-pro
 entity: weather.home
 sections:
   - type: forecast
@@ -117,7 +117,7 @@ By default the conditions are the pictures of Home Assistant's own weather card 
 ::: live
 
 ```yaml
-type: custom:weather-card
+type: custom:weather-card-pro
 entity: weather.home
 sections:
   - type: hero
@@ -138,7 +138,7 @@ sections:
 ::: live
 
 ```yaml
-type: custom:weather-card
+type: custom:weather-card-pro
 entity: weather.home
 icons: mdi
 sections:
@@ -161,7 +161,7 @@ sections:
 ::: live
 
 ```yaml
-type: custom:weather-card
+type: custom:weather-card-pro
 entity: weather.home
 title: Home
 rules:
@@ -198,7 +198,7 @@ Sections render in the order written, so the forecast can sit between groups; `d
 ::: live
 
 ```yaml
-type: custom:weather-card
+type: custom:weather-card-pro
 entity: weather.home
 title: Home
 header_entities:

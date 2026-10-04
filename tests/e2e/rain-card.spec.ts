@@ -2,7 +2,7 @@ import { test, expect, mount, events, card, setState, setLanguage } from "./util
 import type { RainCard } from "../../src/rain-card.ts";
 import type { Locator } from "@playwright/test";
 
-const T = "custom:rain-card";
+const T = "custom:rain-card-pro";
 const R = "sensor.rain_rate_roof",
   D = "sensor.rain_today",
   W = "sensor.wind_speed",

@@ -11,7 +11,7 @@ test.describe("themes", () => {
     await mount(
       page,
       {
-        type: "custom:entity-card",
+        type: "custom:entity-card-pro",
         entity: "sensor.outdoor_humidity",
         visual: "ring",
         color: "amber",
@@ -36,7 +36,7 @@ test.describe("themes", () => {
   }) => {
     await mount(
       page,
-      { type: "custom:entity-card", entity: "sensor.outdoor_temperature" },
+      { type: "custom:entity-card-pro", entity: "sensor.outdoor_temperature" },
       { theme: "light", skin: "graphite" },
     );
     const c = card(page);
@@ -48,7 +48,7 @@ test.describe("themes", () => {
   test("without a skin the Home Assistant default theme applies", async ({ page }) => {
     await mount(
       page,
-      { type: "custom:entity-card", entity: "sensor.outdoor_temperature" },
+      { type: "custom:entity-card-pro", entity: "sensor.outdoor_temperature" },
       { theme: "dark" },
     );
     const c = card(page);

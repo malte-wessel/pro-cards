@@ -1,6 +1,6 @@
 # Power Flow Card
 
-`custom:power-flow-card` shows where your electricity comes from and where it goes: solar, battery and grid on the left, the home in the middle, your rooms and devices on the right, joined by lines that carry the power as moving dots. Solar covers the home first, then the battery, then the grid; surplus solar charges the battery and the rest is exported. The line above the tree names the state (importing, exporting, on battery, balanced) and how self-sufficient the home is right now. YAML only.
+`custom:power-flow-card-pro` shows where your electricity comes from and where it goes: solar, battery and grid on the left, the home in the middle, your rooms and devices on the right, joined by lines that carry the power as moving dots. Solar covers the home first, then the battery, then the grid; surplus solar charges the battery and the rest is exported. The line above the tree names the state (importing, exporting, on battery, balanced) and how self-sufficient the home is right now. YAML only.
 
 ## Sources and home
 
@@ -9,7 +9,7 @@ The smallest card names the sources and the home's consumption. Every source is 
 ::: live
 
 ```yaml
-type: custom:power-flow-card
+type: custom:power-flow-card-pro
 home: sensor.power_consumption
 sources:
   - { type: solar, entity: sensor.solar_power }
@@ -24,7 +24,7 @@ sources:
 ::: live
 
 ```yaml
-type: custom:power-flow-card
+type: custom:power-flow-card-pro
 sources:
   - { type: solar, entity: sensor.solar_east, name: Solar east }
   - { type: solar, entity: sensor.solar_west, name: Solar west }
@@ -43,7 +43,7 @@ A device that can produce, such as an EV giving power back or a plug-in panel on
 ::: live
 
 ```yaml
-type: custom:power-flow-card
+type: custom:power-flow-card-pro
 title: Energy
 icon: mdi:lightning-bolt
 home: sensor.power_consumption
@@ -63,7 +63,7 @@ consumers:
 ::: live
 
 ```yaml
-type: custom:power-flow-card
+type: custom:power-flow-card-pro
 home: sensor.power_consumption
 sources:
   - { type: solar, entity: sensor.solar_power }
@@ -86,7 +86,7 @@ A consumer with a `group` name and its own `entities` becomes a room: the home f
 ::: live
 
 ```yaml
-type: custom:power-flow-card
+type: custom:power-flow-card-pro
 home: sensor.power_consumption
 sources:
   - { type: solar, entity: sensor.solar_power }
@@ -119,7 +119,7 @@ consumers:
 ::: live
 
 ```yaml
-type: custom:power-flow-card
+type: custom:power-flow-card-pro
 home: sensor.power_consumption
 direction: down
 sources:
@@ -141,21 +141,21 @@ consumers:
 ::: live
 
 ```yaml
-- type: custom:power-flow-card
+- type: custom:power-flow-card-pro
   home: sensor.power_consumption
   flow_style: dots
   sources:
     - { type: solar, entity: sensor.solar_power }
     - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
     - { type: grid, power: sensor.grid_power }
-- type: custom:power-flow-card
+- type: custom:power-flow-card-pro
   home: sensor.power_consumption
   flow_style: lines
   sources:
     - { type: solar, entity: sensor.solar_power }
     - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
     - { type: grid, power: sensor.grid_power }
-- type: custom:power-flow-card
+- type: custom:power-flow-card-pro
   home: sensor.power_consumption
   flow_style: arrows
   sources:
@@ -175,7 +175,7 @@ A grid with a `generator` sensor keeps the home running during an outage: while 
 ::: live
 
 ```yaml
-type: custom:power-flow-card
+type: custom:power-flow-card-pro
 home: sensor.power_consumption
 sources:
   - { type: solar, entity: sensor.solar_power }
@@ -194,7 +194,7 @@ sources:
 ::: live
 
 ```yaml
-type: custom:power-flow-card
+type: custom:power-flow-card-pro
 home: sensor.power_consumption
 expensive_above: 0.35
 sources:
@@ -223,7 +223,7 @@ Values show in W below `kw_above` watts (default 1000) and in kW from there on, 
 ::: live
 
 ```yaml
-- type: custom:power-flow-card
+- type: custom:power-flow-card-pro
   home: sensor.power_consumption
   idle_links: hidden
   kw_above: 0
@@ -232,7 +232,7 @@ Values show in W below `kw_above` watts (default 1000) and in kW from there on, 
     - { type: solar, entity: sensor.solar_power }
     - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
     - { type: grid, power: sensor.grid_power }
-- type: custom:power-flow-card
+- type: custom:power-flow-card-pro
   home: sensor.power_consumption
   idle_links: faint
   animation: { fast_above: 1500 }

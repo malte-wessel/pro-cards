@@ -1,4 +1,4 @@
-// Config normalisation of the power flow card (pure). The result is an entity-card config (the
+// Config normalisation of the power flow card (pure). The result is an entity-card-pro config (the
 // base element renders header, header entities, tint and templates from it) whose items are the
 // home, every source's sensors and every consumer; `sources` and `consumers` point into that flat
 // list by index, so rules, templates, actions and formatting come from the entity layer.

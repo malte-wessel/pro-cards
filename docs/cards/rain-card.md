@@ -1,6 +1,6 @@
 # Rain Card
 
-`custom:rain-card` shows the rain: how hard it falls now and, with a second sensor, how much fell today. The card animates it in three styles: `drops` fall and splash on the bottom edge, more and faster the harder it rains and slanted by the wind; `ripples` spread where drops land on a puddle; `fill` is a rain gauge whose water rises with today's total. Your `rules` colour the rain, label the value and may tint the card. Without options it is a tile like the [entity card](/cards/entity-card); `visual: flow` makes the whole tile the field, `layout: hero` adds the big value and a band. YAML only.
+`custom:rain-card-pro` shows the rain: how hard it falls now and, with a second sensor, how much fell today. The card animates it in three styles: `drops` fall and splash on the bottom edge, more and faster the harder it rains and slanted by the wind; `ripples` spread where drops land on a puddle; `fill` is a rain gauge whose water rises with today's total. Your `rules` colour the rain, label the value and may tint the card. Without options it is a tile like the [entity card](/cards/entity-card); `visual: flow` makes the whole tile the field, `layout: hero` adds the big value and a band. YAML only.
 
 ## Tile
 
@@ -9,7 +9,7 @@ The rate sensor alone makes a tile: the name, the rate and, with `today`, the to
 ::: live
 
 ```yaml
-type: custom:rain-card
+type: custom:rain-card-pro
 entity: sensor.rain_rate_roof
 today: sensor.rain_today
 ```
@@ -23,7 +23,7 @@ today: sensor.rain_today
 ::: live
 
 ```yaml
-- type: custom:rain-card
+- type: custom:rain-card-pro
   entity: sensor.rain_rate_roof
   today: sensor.rain_today
   wind: sensor.wind_speed
@@ -32,7 +32,7 @@ today: sensor.rain_today
   rules:
     - { below: 2.5, color: light-blue, label: Light rain }
     - { above: 2.5, color: blue, label: Moderate rain }
-- type: custom:rain-card
+- type: custom:rain-card-pro
   entity: sensor.rain_rate_roof
   today: sensor.rain_today
   visual: flow
@@ -41,7 +41,7 @@ today: sensor.rain_today
   rules:
     - { below: 2.5, color: light-blue, label: Light rain }
     - { above: 2.5, color: blue, label: Moderate rain }
-- type: custom:rain-card
+- type: custom:rain-card-pro
   entity: sensor.rain_rate_roof
   today: sensor.rain_today
   visual: flow
@@ -61,7 +61,7 @@ today: sensor.rain_today
 ::: live
 
 ```yaml
-type: custom:rain-card
+type: custom:rain-card-pro
 entity: sensor.rain_rate_roof
 today: sensor.rain_today
 title: Rain
@@ -86,7 +86,7 @@ rules:
 ::: live
 
 ```yaml
-type: custom:rain-card
+type: custom:rain-card-pro
 entity: sensor.rain_rate_roof
 today: sensor.rain_today
 wind: sensor.wind_gust
@@ -103,14 +103,14 @@ layout: hero
 ::: live
 
 ```yaml
-- type: custom:rain-card
+- type: custom:rain-card-pro
   entity: sensor.rain_rate
   today: sensor.rain_today
   visual: flow
   rules:
     - { below: 0.1, color: blue-grey, label: Dry }
     - { above: 0.1, color: blue, label: Rain }
-- type: custom:rain-card
+- type: custom:rain-card-pro
   entity: sensor.rain_rate_roof
   visual: flow
   flow: { style: ripples }
@@ -127,12 +127,12 @@ layout: hero
 ::: live
 
 ```yaml
-- type: custom:rain-card
+- type: custom:rain-card-pro
   entity: sensor.rain_rate_roof
   today: sensor.rain_today
   lead: icon
   grid_options: { columns: 6 }
-- type: custom:rain-card
+- type: custom:rain-card-pro
   entity: sensor.rain_rate_roof
   today: sensor.rain_today
   flow: { style: fill }

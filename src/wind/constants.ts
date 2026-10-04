@@ -1,6 +1,6 @@
 // Constants of the wind card.
 
-export const CARD_TYPE = "wind-card";
+export const CARD_TYPE = "wind-card-pro";
 
 import { BAND } from "../shared/flow/constants.ts";
 

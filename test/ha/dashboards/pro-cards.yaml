@@ -11,7 +11,7 @@ views:
         cards:
           - type: heading
             heading: Entity card
-          - type: custom:entity-card
+          - type: custom:entity-card-pro
             entity: sensor.living_room_temperature
             name: Living room
             decimals: 1
@@ -25,19 +25,19 @@ views:
                   label: Warm,
                   tint_card: true,
                 }
-          - type: custom:entity-card
+          - type: custom:entity-card-pro
             entity: sensor.robot_battery
             name: Robot battery
             visual: ring
             rules:
               - { below: 20, color: red }
               - { above: 20, color: green }
-          - type: custom:entity-card
+          - type: custom:entity-card-pro
             entity: sensor.power_consumption
             name: Power
             visual: sparkline
             hours_to_show: 6
-          - type: custom:entity-card
+          - type: custom:entity-card-pro
             entity: binary_sensor.window_kitchen
             name: Kitchen window
             visual: strip
@@ -46,7 +46,7 @@ views:
             rules:
               - { state: "on", color: amber, label: Open }
               - { state: "off", color: grey, label: Closed }
-          - type: custom:entity-card
+          - type: custom:entity-card-pro
             entity: light.living_room
             name: Living room light
             toggle: true
@@ -55,7 +55,7 @@ views:
         cards:
           - type: heading
             heading: Entity group card
-          - type: custom:entity-group-card
+          - type: custom:entity-group-card-pro
             title: Living room
             icon: mdi:sofa
             layout: row
@@ -67,7 +67,7 @@ views:
               - { entity: light.dining_table, name: Dining, tap_action: toggle }
               - { entity: cover.living_room_blinds, name: Blinds }
               - { entity: switch.coffee_machine, name: Coffee, tap_action: toggle }
-          - type: custom:entity-group-card
+          - type: custom:entity-group-card-pro
             title: Energy
             layout: list
             hours_to_show: 12
@@ -80,7 +80,7 @@ views:
                 attribute: progress
                 unit: "%"
                 visual: bar
-          - type: custom:entity-group-card
+          - type: custom:entity-group-card-pro
             title: Actions run by Home Assistant
             entities:
               - entity: light.kitchen
@@ -98,7 +98,7 @@ views:
         cards:
           - type: heading
             heading: Entity sections card
-          - type: custom:entity-sections-card
+          - type: custom:entity-sections-card-pro
             title: Kitchen
             icon: mdi:silverware-fork-knife
             header_entities:
@@ -118,7 +118,7 @@ views:
         cards:
           - type: heading
             heading: Multi trend card
-          - type: custom:multi-trend-card
+          - type: custom:multi-trend-card-pro
             title: Outdoor
             hours_to_show: 6
             x_axis: true
@@ -126,7 +126,7 @@ views:
             entities:
               - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
               - { entity: sensor.outdoor_humidity, name: Humidity, color: blue }
-          - type: custom:multi-trend-card
+          - type: custom:multi-trend-card-pro
             title: Power (overlay)
             hours_to_show: 12
             entities:
@@ -135,20 +135,20 @@ views:
         cards:
           - type: heading
             heading: Sun path card
-          - type: custom:sun-path-card
+          - type: custom:sun-path-card-pro
             title: Sun
             labels: { sunrise: Sunrise, sunset: Sunset, dawn: Dawn, noon: Noon, dusk: Dusk }
       - type: grid
         cards:
           - type: heading
             heading: Illuminance card
-          - type: custom:illuminance-card
+          - type: custom:illuminance-card-pro
             entity: sensor.illuminance
             mode: arc
-          - type: custom:illuminance-card
+          - type: custom:illuminance-card-pro
             entity: sensor.illuminance
             mode: trend
-          - type: custom:illuminance-card
+          - type: custom:illuminance-card-pro
             entity: sensor.illuminance
             mode: band
             bucket_minutes: 30
@@ -156,17 +156,17 @@ views:
         cards:
           - type: heading
             heading: Wind card
-          - type: custom:wind-card
+          - type: custom:wind-card-pro
             entity: sensor.wind_speed
             direction: sensor.wind_direction
             gust: sensor.wind_gust
-          - type: custom:wind-card
+          - type: custom:wind-card-pro
             entity: sensor.wind_speed
             direction: sensor.wind_direction
             gust: sensor.wind_gust
             visual: flow
             flow: { style: lines }
-          - type: custom:wind-card
+          - type: custom:wind-card-pro
             entity: weather.demo_weather_south
             title: Wind
             layout: hero
@@ -181,15 +181,15 @@ views:
         cards:
           - type: heading
             heading: Rain card
-          - type: custom:rain-card
+          - type: custom:rain-card-pro
             entity: sensor.rain_rate_roof
             today: sensor.rain_today
-          - type: custom:rain-card
+          - type: custom:rain-card-pro
             entity: sensor.rain_rate_roof
             today: sensor.rain_today
             visual: flow
             flow: { style: ripples }
-          - type: custom:rain-card
+          - type: custom:rain-card-pro
             entity: sensor.rain_rate_roof
             today: sensor.rain_today
             wind: sensor.wind_speed
@@ -206,7 +206,7 @@ views:
         cards:
           - type: heading
             heading: Power flow card
-          - type: custom:power-flow-card
+          - type: custom:power-flow-card-pro
             home: sensor.power_consumption
             expensive_above: 0.35
             idle_links: faint
@@ -222,7 +222,7 @@ views:
             consumers:
               - { entity: sensor.ev_charger_power, name: EV, icon: mdi:car-electric }
               - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
-          - type: custom:power-flow-card
+          - type: custom:power-flow-card-pro
             title: Energy
             icon: mdi:lightning-bolt
             home: sensor.power_consumption
@@ -237,7 +237,7 @@ views:
                   - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
                   - { entity: sensor.dryer_power, name: Dryer, icon: mdi:tumble-dryer }
               - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
-          - type: custom:power-flow-card
+          - type: custom:power-flow-card-pro
             home: sensor.power_consumption
             direction: down
             flow_style: arrows
@@ -253,9 +253,9 @@ views:
         cards:
           - type: heading
             heading: Weather card
-          - type: custom:weather-card
+          - type: custom:weather-card-pro
             entity: weather.demo_weather_south
-          - type: custom:weather-card
+          - type: custom:weather-card-pro
             entity: weather.demo_weather_south
             title: Weather
             temperature_rules:

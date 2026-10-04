@@ -1,8 +1,8 @@
 /*
- * rain-card – the rain rate as a tile, a flow tile or a hero, with falling drops, ripples or a
+ * rain-card-pro – the rain rate as a tile, a flow tile or a hero, with falling drops, ripples or a
  * filling gauge.
  *
- *   type: custom:rain-card
+ *   type: custom:rain-card-pro
  *   entity: sensor.rain_rate               # required: the rain rate sensor
  *   today: sensor.rain_today               # optional: today's total; fills the gauge, "3.6 mm today"
  *   wind: sensor.wind_speed                # optional: slants the drops
@@ -75,7 +75,7 @@ export class RainCard extends FlowCardBase {
 }
 
 registerCard(RainCard, {
-  name: "Rain Card",
+  name: "Rain Card Pro",
   description:
     "Rain rate and today's total as a tile, a flow tile or a hero, with falling drops, ripples or a filling gauge",
 });

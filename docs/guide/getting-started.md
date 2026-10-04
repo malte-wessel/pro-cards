@@ -4,30 +4,34 @@ Pro Cards adds these cards to the dashboard editor:
 
 **Entities**
 
-| Card                                                | `type`                        | Editor        |
-| --------------------------------------------------- | ----------------------------- | ------------- |
-| [Entity Card](/cards/entity-card)                   | `custom:entity-card`          | YAML          |
-| [Entity Group Card](/cards/entity-group-card)       | `custom:entity-group-card`    | YAML          |
-| [Entity Sections Card](/cards/entity-sections-card) | `custom:entity-sections-card` | YAML          |
-| [Multi Trend Card](/cards/multi-trend-card)         | `custom:multi-trend-card`     | Visual + YAML |
+| Card                                                | `type`                            | Editor        |
+| --------------------------------------------------- | --------------------------------- | ------------- |
+| [Entity Card](/cards/entity-card)                   | `custom:entity-card-pro`          | YAML          |
+| [Entity Group Card](/cards/entity-group-card)       | `custom:entity-group-card-pro`    | YAML          |
+| [Entity Sections Card](/cards/entity-sections-card) | `custom:entity-sections-card-pro` | YAML          |
+| [Multi Trend Card](/cards/multi-trend-card)         | `custom:multi-trend-card-pro`     | Visual + YAML |
 
 **Energy**
 
-| Card                                      | `type`                   | Editor |
-| ----------------------------------------- | ------------------------ | ------ |
-| [Power Flow Card](/cards/power-flow-card) | `custom:power-flow-card` | YAML   |
+| Card                                      | `type`                       | Editor |
+| ----------------------------------------- | ---------------------------- | ------ |
+| [Power Flow Card](/cards/power-flow-card) | `custom:power-flow-card-pro` | YAML   |
 
 **Weather**
 
-| Card                                        | `type`                    | Editor        |
-| ------------------------------------------- | ------------------------- | ------------- |
-| [Weather Card](/cards/weather-card)         | `custom:weather-card`     | YAML          |
-| [Wind Card](/cards/wind-card)               | `custom:wind-card`        | YAML          |
-| [Rain Card](/cards/rain-card)               | `custom:rain-card`        | YAML          |
-| [Sun Path Card](/cards/sun-path-card)       | `custom:sun-path-card`    | Visual + YAML |
-| [Illuminance Card](/cards/illuminance-card) | `custom:illuminance-card` | Visual + YAML |
+| Card                                        | `type`                        | Editor        |
+| ------------------------------------------- | ----------------------------- | ------------- |
+| [Weather Card](/cards/weather-card)         | `custom:weather-card-pro`     | YAML          |
+| [Wind Card](/cards/wind-card)               | `custom:wind-card-pro`        | YAML          |
+| [Rain Card](/cards/rain-card)               | `custom:rain-card-pro`        | YAML          |
+| [Sun Path Card](/cards/sun-path-card)       | `custom:sun-path-card-pro`    | Visual + YAML |
+| [Illuminance Card](/cards/illuminance-card) | `custom:illuminance-card-pro` | Visual + YAML |
 
 Requires Home Assistant 2025.3 or newer.
+
+::: warning Upgrading from 1.x
+Since 2.0.0 every card type ends in `-pro` (`custom:weather-card` is now `custom:weather-card-pro`). The old generic names collided with other custom cards, and one collision silently disabled the whole bundle. Update the `type:` of every Pro Card in your dashboards: in the raw configuration editor, append `-pro` to each `type: custom:…-card` line.
+:::
 
 ## Install with HACS
 
@@ -54,7 +58,7 @@ Add a card in the dashboard editor, pick **Manual** and paste two lines:
 ::: live
 
 ```yaml
-type: custom:entity-card
+type: custom:entity-card-pro
 entity: sensor.living_room_temperature
 ```
 
@@ -65,7 +69,7 @@ That is a complete card: the entity's icon, name and value, coloured like Home A
 ::: live
 
 ```yaml
-type: custom:entity-card
+type: custom:entity-card-pro
 entity: sensor.living_room_temperature
 name: Living room
 decimals: 1
@@ -77,7 +81,7 @@ rules:
 
 :::
 
-Every card page continues like this: the smallest configuration first, then one option at a time. The three cards with visual editors also appear in the card picker under their names.
+Every card page continues like this: the smallest configuration first, then one option at a time. All ten cards appear in the card picker as "Entity Card Pro", "Weather Card Pro" and so on; the three with visual editors can be configured there without YAML.
 
 ## About the examples on this site
 

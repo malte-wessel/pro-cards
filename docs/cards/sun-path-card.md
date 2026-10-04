@@ -1,6 +1,6 @@
 # Sun Path Card
 
-`custom:sun-path-card` shows today's sun elevation as a curve with the sun's current position, sunrise and sunset, and optionally dawn, solar noon and dusk. Hover or tap the curve for the time and the sun's elevation at that point. It ships with a visual editor.
+`custom:sun-path-card-pro` shows today's sun elevation as a curve with the sun's current position, sunrise and sunset, and optionally dawn, solar noon and dusk. Hover or tap the curve for the time and the sun's elevation at that point. It ships with a visual editor.
 
 ## Basic
 
@@ -9,7 +9,7 @@ One line is enough. Times are computed locally from the Home Assistant latitude 
 ::: live
 
 ```yaml
-type: custom:sun-path-card
+type: custom:sun-path-card-pro
 ```
 
 :::
@@ -21,7 +21,7 @@ type: custom:sun-path-card
 ::: live
 
 ```yaml
-type: custom:sun-path-card
+type: custom:sun-path-card-pro
 title: Sun today
 icon: mdi:weather-sunset
 ```
@@ -35,7 +35,7 @@ The five texts default to the [language of your Home Assistant profile](../guide
 ::: live
 
 ```yaml
-type: custom:sun-path-card
+type: custom:sun-path-card-pro
 title: Sun today
 labels: { sunrise: Rise, sunset: Set, dawn: Civil dawn, noon: Noon, dusk: Civil dusk }
 ```
@@ -49,7 +49,7 @@ labels: { sunrise: Rise, sunset: Set, dawn: Civil dawn, noon: Noon, dusk: Civil 
 ::: live
 
 ```yaml
-type: custom:sun-path-card
+type: custom:sun-path-card-pro
 title: Sun today
 day_color: orange
 night_color: deep-purple
@@ -65,7 +65,7 @@ sun_color: yellow
 ::: live
 
 ```yaml
-type: custom:sun-path-card
+type: custom:sun-path-card-pro
 title: Sunrise & sunset
 show_dawn_dusk: false
 ```

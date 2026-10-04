@@ -1,6 +1,6 @@
 # Wind Card
 
-`custom:wind-card` shows the wind: its speed, where it comes from and how hard it gusts, with an animated wind field whose particles travel where the wind blows. The speed sets their pace, the gusts raise the waves and send streaks across, and your `rules` colour them, label the value and may tint the card. Without options it is a tile like the [entity card](/cards/entity-card); `visual: flow` makes the whole tile the field, `layout: hero` adds the big value and a flow band. YAML only.
+`custom:wind-card-pro` shows the wind: its speed, where it comes from and how hard it gusts, with an animated wind field whose particles travel where the wind blows. The speed sets their pace, the gusts raise the waves and send streaks across, and your `rules` colour them, label the value and may tint the card. Without options it is a tile like the [entity card](/cards/entity-card); `visual: flow` makes the whole tile the field, `layout: hero` adds the big value and a flow band. YAML only.
 
 ## Tile
 
@@ -9,7 +9,7 @@ The speed sensor alone makes a tile: the name, the speed and, with a `direction`
 ::: live
 
 ```yaml
-type: custom:wind-card
+type: custom:wind-card-pro
 entity: sensor.wind_speed
 direction: sensor.wind_direction
 ```
@@ -25,7 +25,7 @@ A weather entity brings speed, direction and gusts in one: the card reads `wind_
 ::: live
 
 ```yaml
-type: custom:wind-card
+type: custom:wind-card-pro
 entity: weather.home
 ```
 
@@ -38,7 +38,7 @@ entity: weather.home
 ::: live
 
 ```yaml
-type: custom:wind-card
+type: custom:wind-card-pro
 entity: sensor.wind_speed
 direction: sensor.wind_direction
 gust: sensor.wind_gust
@@ -55,7 +55,7 @@ rules:
 ::: live
 
 ```yaml
-- type: custom:wind-card
+- type: custom:wind-card-pro
   entity: sensor.wind_speed
   direction: sensor.wind_direction
   gust: sensor.wind_gust
@@ -63,7 +63,7 @@ rules:
   rules:
     - { below: 20, color: teal, label: Light breeze }
     - { above: 20, color: amber, label: Fresh }
-- type: custom:wind-card
+- type: custom:wind-card-pro
   entity: sensor.wind_speed
   direction: sensor.wind_direction
   gust: sensor.wind_gust
@@ -72,7 +72,7 @@ rules:
   rules:
     - { below: 20, color: teal, label: Light breeze }
     - { above: 20, color: amber, label: Fresh }
-- type: custom:wind-card
+- type: custom:wind-card-pro
   entity: sensor.wind_speed
   direction: sensor.wind_direction
   gust: sensor.wind_gust
@@ -81,7 +81,7 @@ rules:
   rules:
     - { below: 20, color: teal, label: Light breeze }
     - { above: 20, color: amber, label: Fresh }
-- type: custom:wind-card
+- type: custom:wind-card-pro
   entity: sensor.wind_speed
   direction: sensor.wind_direction
   gust: sensor.wind_gust
@@ -101,7 +101,7 @@ rules:
 ::: live
 
 ```yaml
-type: custom:wind-card
+type: custom:wind-card-pro
 entity: sensor.wind_speed
 direction: sensor.wind_direction
 gust: sensor.wind_gust
@@ -127,14 +127,14 @@ rules:
 ::: live
 
 ```yaml
-- type: custom:wind-card
+- type: custom:wind-card-pro
   entity: sensor.wind_speed
   direction: sensor.wind_direction
   visual: flow
   name: Calm
   rules:
     - { above: 0, color: blue-grey, label: Calm }
-- type: custom:wind-card
+- type: custom:wind-card-pro
   entity: sensor.wind_gust
   direction: sensor.wind_direction
   visual: flow
@@ -154,11 +154,11 @@ The animation is CSS only, keeps flowing through sensor updates (a new speed cha
 ::: live
 
 ```yaml
-- type: custom:wind-card
+- type: custom:wind-card-pro
   entity: sensor.wind_speed
   direction: sensor.wind_direction
   lead: arrow
-- type: custom:wind-card
+- type: custom:wind-card-pro
   entity: sensor.wind_speed
   direction: sensor.wind_direction
   gust: sensor.wind_gust

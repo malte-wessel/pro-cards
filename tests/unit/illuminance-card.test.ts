@@ -109,7 +109,7 @@ describe("illuminance-card zones and scale", () => {
 describe("illuminance-card editor and element", () => {
   it("round-trips the form", () => {
     const cfg = {
-      type: "custom:illuminance-card",
+      type: "custom:illuminance-card-pro",
       entity: "sensor.lx",
       mode: "trend",
       hours_to_show: 12,
@@ -149,9 +149,9 @@ describe("illuminance-card editor and element", () => {
     ).toBe(true);
   });
   it("registers, validates and sizes", () => {
-    expect(customElements.get("illuminance-card")).toBe(IlluminanceCard);
+    expect(customElements.get("illuminance-card-pro")).toBe(IlluminanceCard);
     expect(IlluminanceCard.getConfigElement().tagName.toLowerCase()).toBe(
-      "illuminance-card-editor",
+      "illuminance-card-pro-editor",
     );
     const el = new IlluminanceCard();
     expect(() => el.setConfig({})).toThrow(/entity/);

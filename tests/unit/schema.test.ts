@@ -52,9 +52,9 @@ describe("card config schemas", () => {
       expect(validate(yaml.load(text)), name).toBeNull();
   });
   it("reject typos, wrong enums and unknown card types", () => {
-    const EC = "custom:entity-card",
-      EGC = "custom:entity-group-card",
-      ESC = "custom:entity-sections-card";
+    const EC = "custom:entity-card-pro",
+      EGC = "custom:entity-group-card-pro",
+      ESC = "custom:entity-sections-card-pro";
     expect(validate({ type: EC, entity: "sensor.a", visula: "ring" })).toMatch(
       /unevaluated|additional/,
     );
@@ -89,19 +89,19 @@ describe("card config schemas", () => {
     expect(validate({ type: ESC, sections: [{ entities: ["s.a"], title: "no" }] })).toMatch(
       /unevaluated|additional/,
     );
-    expect(validate({ type: "custom:multi-trend-card" })).toMatch(/entities/);
-    expect(validate({ type: "custom:sun-path-card", labels: { midnight: "x" } })).toBeTruthy();
-    expect(validate({ type: "custom:illuminance-card", entity: "sensor.lx", mode: "bar" })).toMatch(
-      /enum|allowed/,
-    );
+    expect(validate({ type: "custom:multi-trend-card-pro" })).toMatch(/entities/);
+    expect(validate({ type: "custom:sun-path-card-pro", labels: { midnight: "x" } })).toBeTruthy();
+    expect(
+      validate({ type: "custom:illuminance-card-pro", entity: "sensor.lx", mode: "bar" }),
+    ).toMatch(/enum|allowed/);
     expect(
       validate({
-        type: "custom:illuminance-card",
+        type: "custom:illuminance-card-pro",
         entity: "sensor.lx",
         zones: { dusk: { label: "x" } },
       }),
     ).toBeTruthy();
-    const WC = "custom:weather-card";
+    const WC = "custom:weather-card-pro";
     expect(validate({ type: WC })).toMatch(/entity/);
     expect(validate({ type: WC, entity: "sensor.a" })).toMatch(/pattern/);
     expect(validate({ type: WC, entity: "weather.a", layout: "hero" })).toBeTruthy();
@@ -138,7 +138,7 @@ describe("card config schemas", () => {
     expect(validate({ type: "custom:other-card", entity: "sensor.a" })).toBeTruthy();
   });
   it("rejects wind card typos and wrong enums", () => {
-    const WIC = "custom:wind-card";
+    const WIC = "custom:wind-card-pro";
     expect(validate({ type: WIC })).toMatch(/entity/);
     expect(validate({ type: WIC, entity: "light.a" })).toMatch(/pattern/);
     expect(validate({ type: WIC, entity: "sensor.a", direction: "weather.home" })).toMatch(
@@ -170,7 +170,7 @@ describe("card config schemas", () => {
   });
 
   it("rejects rain card typos and wrong enums", () => {
-    const RC = "custom:rain-card";
+    const RC = "custom:rain-card-pro";
     expect(validate({ type: RC })).toMatch(/entity/);
     expect(validate({ type: RC, entity: "weather.home" })).toMatch(/pattern/);
     expect(validate({ type: RC, entity: "sensor.a", today: "weather.home" })).toMatch(/pattern/);
@@ -200,7 +200,7 @@ describe("card config schemas", () => {
   });
 
   it("rejects power flow card typos and wrong shapes", () => {
-    const PF = "custom:power-flow-card";
+    const PF = "custom:power-flow-card-pro";
     const src = [
       { type: "solar", entity: "sensor.solar_power" },
       { type: "battery", power: "sensor.battery_power", soc: "sensor.battery_soc" },
@@ -267,16 +267,16 @@ describe("card config schemas", () => {
   });
 
   it("accept the documented edge cases", () => {
-    const EC = "custom:entity-card",
-      EGC = "custom:entity-group-card",
-      ESC = "custom:entity-sections-card";
-    expect(validate({ type: "custom:weather-card", entity: "weather.home" })).toBeNull();
+    const EC = "custom:entity-card-pro",
+      EGC = "custom:entity-group-card-pro",
+      ESC = "custom:entity-sections-card-pro";
+    expect(validate({ type: "custom:weather-card-pro", entity: "weather.home" })).toBeNull();
     expect(
-      validate({ type: "custom:weather-card", entity: "weather.home", icons: "hass" }),
+      validate({ type: "custom:weather-card-pro", entity: "weather.home", icons: "hass" }),
     ).toBeNull();
     expect(
       validate({
-        type: "custom:weather-card",
+        type: "custom:weather-card-pro",
         entity: "weather.home",
         title: "Home",
         name: "Home",
@@ -418,16 +418,16 @@ describe("card config schemas", () => {
     ).toBeNull();
     expect(
       validate({
-        type: "custom:multi-trend-card",
+        type: "custom:multi-trend-card-pro",
         entities: ["sensor.a", { entity: "sensor.b", color: "#abc" }],
         layout: "lanes",
         y_axis: true,
       }),
     ).toBeNull();
-    expect(validate({ type: "custom:sun-path-card" })).toBeNull();
+    expect(validate({ type: "custom:sun-path-card-pro" })).toBeNull();
     expect(
       validate({
-        type: "custom:illuminance-card",
+        type: "custom:illuminance-card-pro",
         entity: "sensor.lx",
         zones: { sun: { label: "Sun", color: "orange" } },
       }),

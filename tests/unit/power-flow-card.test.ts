@@ -71,8 +71,8 @@ const edge = (f: ReturnType<typeof allocate>, from: string, to: string) =>
 
 describe("power-flow-card config", () => {
   it("is registered and needs sources", () => {
-    expect(customElements.get("power-flow-card")).toBe(PowerFlowCard);
-    expect(window.customCards?.some((c) => c.type === "power-flow-card")).toBe(true);
+    expect(customElements.get("power-flow-card-pro")).toBe(PowerFlowCard);
+    expect(window.customCards?.some((c) => c.type === "power-flow-card-pro")).toBe(true);
     expect(() => normalizePowerFlowConfig(null)).toThrow(/invalid config/);
     expect(() => normalizePowerFlowConfig({})).toThrow(/'sources' must be a non-empty list/);
     expect(() => normalizePowerFlowConfig({ sources: [] })).toThrow(/non-empty/);

@@ -7,12 +7,16 @@ body:
     attributes:
       label: Card
       options:
-        - entity-card
-        - entity-group-card
-        - entity-sections-card
-        - multi-trend-card
-        - sun-path-card
-        - illuminance-card
+        - entity-card-pro
+        - entity-group-card-pro
+        - entity-sections-card-pro
+        - multi-trend-card-pro
+        - sun-path-card-pro
+        - illuminance-card-pro
+        - weather-card-pro
+        - wind-card-pro
+        - rain-card-pro
+        - power-flow-card-pro
     validations:
       required: true
   - type: input

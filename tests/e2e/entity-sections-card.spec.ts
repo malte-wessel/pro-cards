@@ -1,7 +1,7 @@
 import { test, expect, mount, events, card } from "./util.ts";
 import type { EntitySectionsCard } from "../../src/entity-sections-card.ts";
 
-const T = "custom:entity-sections-card";
+const T = "custom:entity-sections-card-pro";
 
 test.describe("sections", () => {
   test("stack several layouts in one card with flat entity indices", async ({ page }) => {
@@ -78,7 +78,7 @@ test.describe("config errors", () => {
   test("setConfig rejects bad configs with a readable message", async ({ page }) => {
     await mount(page, { type: T, sections: [{ entities: ["light.kitchen"] }] });
     const msgs = await page.evaluate(() => {
-      const el = document.createElement("entity-sections-card") as EntitySectionsCard;
+      const el = document.createElement("entity-sections-card-pro") as EntitySectionsCard;
       const tryCfg = (c: unknown) => {
         try {
           el.setConfig(c);
@@ -93,7 +93,7 @@ test.describe("config errors", () => {
         tryCfg({ sections: [{ layout: "tile", entities: ["light.a"] }] }),
       ];
     });
-    expect(msgs[0]).toMatch(/entity-sections-card: 'sections' must be a non-empty list/);
+    expect(msgs[0]).toMatch(/entity-sections-card-pro: 'sections' must be a non-empty list/);
     expect(msgs[1]).toMatch(/'sections\[0\].entities' must be a non-empty list/);
     expect(msgs[2]).toMatch(/sections\[0\].layout must be one of/);
   });

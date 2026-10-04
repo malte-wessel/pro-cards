@@ -23,8 +23,8 @@ const hass = (states: Record<string, HassEntity>, language = "en") =>
 
 describe("weather-card config", () => {
   it("is registered and needs a weather entity", () => {
-    expect(customElements.get("weather-card")).toBe(WeatherCard);
-    expect(window.customCards?.some((c) => c.type === "weather-card")).toBe(true);
+    expect(customElements.get("weather-card-pro")).toBe(WeatherCard);
+    expect(window.customCards?.some((c) => c.type === "weather-card-pro")).toBe(true);
     expect(() => normalizeWeatherCardConfig(null)).toThrow(/invalid config/);
     expect(() => normalizeWeatherCardConfig({})).toThrow(/weather entity/);
     expect(() => normalizeWeatherCardConfig({ entity: "sensor.a" })).toThrow(/weather entity/);

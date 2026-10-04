@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://malte-wessel.github.io/pro-cards/schema/multi-trend-card.schema.json",
-  "title": "custom:multi-trend-card",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/multi-trend-card-pro.schema.json",
+  "title": "custom:multi-trend-card-pro",
   "description": "Tile-style trend graph for several numeric sensors with a hover/touch tooltip.",
   "type": "object",
   "properties": {
-    "type": { "const": "custom:multi-trend-card" },
+    "type": { "const": "custom:multi-trend-card-pro" },
     "title": { "type": "string", "description": "Default: first entity name" },
     "icon": { "$ref": "defs.schema.json#/$defs/icon" },
     "color": { "$ref": "defs.schema.json#/$defs/color", "description": "Header icon colour" },

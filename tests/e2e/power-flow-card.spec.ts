@@ -2,7 +2,7 @@ import { test, expect, mount, events, card, setState, setLanguage } from "./util
 import type { PowerFlowCard } from "../../src/power-flow-card.ts";
 import type { Locator, Page } from "@playwright/test";
 
-const T = "custom:power-flow-card";
+const T = "custom:power-flow-card-pro";
 const SOLAR = "sensor.solar_power", // kW in the demo world
   BATT = "sensor.battery_power",
   SOC = "sensor.battery_soc",

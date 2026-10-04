@@ -9,6 +9,8 @@ export default tseslint.config(
       "dist/",
       "docs/.vitepress/dist/",
       "docs/.vitepress/cache/",
+      "playwright-report/",
+      "test-results/",
       "node_modules/",
       "**/*.vue",
     ],

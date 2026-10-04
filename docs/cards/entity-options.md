@@ -5,7 +5,7 @@ The [entity card](/cards/entity-card), the [entity group card](/cards/entity-gro
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 entities:
   - sensor.living_room_temperature
   - entity: light.living_room
@@ -35,7 +35,7 @@ Any string containing <code v-pre>{{ }}</code> is rendered by Home Assistant. Te
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Computed values
 icon: mdi:calculator-variant
 layout: grid
@@ -81,7 +81,7 @@ entities:
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Robot vacuum
 icon: mdi:robot-vacuum
 layout: hero
@@ -113,7 +113,7 @@ Any other string is shown as is. Useful for scene rows where the value is a verb
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Scenes
 icon: mdi:palette
 entities:
@@ -148,7 +148,7 @@ A rule may combine `below` and `above` for a range. Numeric rules never match te
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Room temperatures
 icon: mdi:thermometer
 entities:
@@ -197,7 +197,7 @@ State rules label text states, on a badge or in the secondary line.
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Devices & modes
 icon: mdi:toggle-switch-outline
 entities:
@@ -256,7 +256,7 @@ entities:
 ::: live
 
 ```yaml
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.switch_temperature
   name: Kitchen switch
   decimals: 0
@@ -268,7 +268,7 @@ entities:
     - { below: 70, color: amber, icon: mdi:thermometer-alert, label: Warm, tint_card: true }
     - { above: 70, color: red, icon: mdi:fire-alert, label: Hot, tint_card: true }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.motion_hallway_battery
   name: Hallway motion
   decimals: 0
@@ -306,7 +306,7 @@ The default. The icon sits in a soft circle of the entity's colour, the value an
 ::: live
 
 ```yaml
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.office_temperature
   name: Office
   decimals: 1
@@ -315,12 +315,12 @@ The default. The icon sits in a soft circle of the entity's colour, the value an
     - { below: 24, color: green, icon: mdi:thermometer, label: Comfort }
     - { above: 24, color: orange, icon: mdi:sun-thermometer, label: Warm }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: light.kitchen
   name: Kitchen light
   toggle: true
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: climate.living_room
   name: Thermostat
   attribute: current_temperature
@@ -331,7 +331,7 @@ The default. The icon sits in a soft circle of the entity's colour, the value an
     - { below: 20, color: blue, label: Cool }
     - { above: 20, color: red, label: Warm }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: binary_sensor.door_front
   name: Front door
   rules:
@@ -351,7 +351,7 @@ A progress ring around the icon. Progress is `(value − min) / (max − min)`; 
 ::: live
 
 ```yaml
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.robot_battery
   name: Robot battery
   visual: ring
@@ -360,7 +360,7 @@ A progress ring around the icon. Progress is `(value − min) / (max − min)`; 
     - { below: 50, color: amber }
     - { above: 50, color: green }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.uv_index
   name: UV index
   visual: ring
@@ -373,7 +373,7 @@ A progress ring around the icon. Progress is `(value − min) / (max − min)`; 
     - { below: 8, color: orange, label: High }
     - { above: 8, color: red, label: Very high }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: light.living_room
   name: Brightness
   attribute: brightness
@@ -382,7 +382,7 @@ A progress ring around the icon. Progress is `(value − min) / (max − min)`; 
   min: 0
   max: 255
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.robot_current_room
   name: Robot room
   visual: ring
@@ -397,7 +397,7 @@ In a `grid` layout the ring grows and the value moves inside it, replacing the i
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Rings in a grid
 icon: mdi:battery-charging
 layout: grid
@@ -437,7 +437,7 @@ A half-circle gauge below the name with the formatted value in the arc and `min`
 ::: live
 
 ```yaml
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.power_consumption
   name: Power
   decimals: 0
@@ -449,7 +449,7 @@ A half-circle gauge below the name with the formatted value in the arc and `min`
     - { below: 1500, color: amber }
     - { above: 1500, color: red }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.uv_index
   name: UV index
   decimals: 1
@@ -462,7 +462,7 @@ A half-circle gauge below the name with the formatted value in the arc and `min`
     - { below: 8, color: orange, label: High }
     - { above: 8, color: red, label: Very high }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.bathroom_humidity
   name: Humidity
   decimals: 0
@@ -472,7 +472,7 @@ A half-circle gauge below the name with the formatted value in the arc and `min`
     - { below: 70, color: amber }
     - { above: 70, color: red }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: climate.living_room
   name: Room temperature
   attribute: current_temperature
@@ -499,7 +499,7 @@ A thin horizontal bar under the value, filled to the same `(value − min) / (ma
 ::: live
 
 ```yaml
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.bathroom_humidity
   name: Bathroom humidity
   decimals: 0
@@ -509,7 +509,7 @@ A thin horizontal bar under the value, filled to the same `(value − min) / (ma
     - { below: 70, color: amber, label: Humid }
     - { above: 70, color: red, label: Ventilate }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.robot_dustbin_remaining
   name: Dustbin
   decimals: 0
@@ -518,7 +518,7 @@ A thin horizontal bar under the value, filled to the same `(value − min) / (ma
     - { below: 40, color: red, label: Empty soon }
     - { above: 40, color: green, label: Fine }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: cover.living_room_blinds
   name: Blinds
   attribute: current_position
@@ -526,7 +526,7 @@ A thin horizontal bar under the value, filled to the same `(value − min) / (ma
   visual: bar
   color: amber
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.power_consumption
   name: Power
   decimals: 0
@@ -560,14 +560,14 @@ A smoothed line with a soft area below it and a dot at the last value, for tempe
 ::: live
 
 ```yaml
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.outdoor_temperature
   name: Last 6 hours
   decimals: 1
   visual: sparkline
   hours_to_show: 6
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.outdoor_temperature
   name: Last 2 days
   decimals: 1
@@ -575,7 +575,7 @@ A smoothed line with a soft area below it and a dot at the last value, for tempe
   hours_to_show: 48
   color: teal
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.dew_point
   name: Dew point
   decimals: 1
@@ -586,7 +586,7 @@ A smoothed line with a soft area below it and a dot at the last value, for tempe
     - { below: 16, color: teal }
     - { above: 16, color: orange }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.pressure
   name: Pressure
   decimals: 1
@@ -605,7 +605,7 @@ One bar per bucket, for quantities that come in portions: solar power, energy, r
 ::: live
 
 ```yaml
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.solar_power
   name: Solar 6 h / 15 min
   decimals: 1
@@ -614,7 +614,7 @@ One bar per bucket, for quantities that come in portions: solar power, energy, r
   hours_to_show: 6
   bucket_minutes: 15
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.solar_power
   name: Solar 24 h / 1 h
   decimals: 1
@@ -623,7 +623,7 @@ One bar per bucket, for quantities that come in portions: solar power, energy, r
   hours_to_show: 24
   bucket_minutes: 60
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.wind_gust
   name: Gusts 12 h / 30 min
   decimals: 1
@@ -632,7 +632,7 @@ One bar per bucket, for quantities that come in portions: solar power, energy, r
   hours_to_show: 12
   bucket_minutes: 30
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.power_consumption
   name: Power by rule
   decimals: 0
@@ -655,7 +655,7 @@ A coloured pill instead of the plain value. The pill shows the matching rule's `
 ::: live
 
 ```yaml
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: person.alex
   name: Presence
   visual: badge
@@ -663,14 +663,14 @@ A coloured pill instead of the plain value. The pill shows the matching rule's `
     - { state: home, color: green, label: Home }
     - { state: not_home, color: grey, label: Away }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.robot_current_room
   name: Robot room
   visual: badge
   icon: mdi:robot-vacuum
   color: primary
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.power_consumption
   name: Power
   decimals: 0
@@ -680,7 +680,7 @@ A coloured pill instead of the plain value. The pill shows the matching rule's `
     - { below: 1500, color: amber, label: Normal }
     - { above: 1500, color: red, label: High }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: sensor.washer_status
   name: Washer
   visual: badge
@@ -699,7 +699,7 @@ Badges in a row layout: `show_value: true` puts the pill next to the icon.
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Who is home
 icon: mdi:account-group
 layout: row
@@ -732,7 +732,7 @@ A timeline of the last `hours_to_show` hours, one block per `bucket_minutes` buc
 ::: live
 
 ```yaml
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: binary_sensor.rain
   name: Rain 24 h / 30 min
   visual: strip
@@ -742,7 +742,7 @@ A timeline of the last `hours_to_show` hours, one block per `bucket_minutes` buc
     - { state: "on", color: blue, icon: mdi:weather-rainy, label: Rain }
     - { state: "off", color: grey, icon: mdi:weather-cloudy, label: No rain }
   grid_options: { columns: 6 }
-- type: custom:entity-card
+- type: custom:entity-card-pro
   entity: binary_sensor.motion_hallway
   name: Motion 12 h / 15 min
   visual: strip
@@ -761,7 +761,7 @@ The same on numeric sensors, colouring every hourly bucket by the range its mean
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Last 24 h
 icon: mdi:chart-timeline
 hours_to_show: 24
@@ -810,7 +810,7 @@ The row, column and table layouts show every entity as a compact item, and `head
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Quick access
 icon: mdi:lightning-bolt
 tap_action: { action: more-info }
@@ -859,7 +859,7 @@ entities:
 ::: live
 
 ```yaml
-type: custom:entity-group-card
+type: custom:entity-group-card-pro
 title: Shortcuts
 icon: mdi:gesture-tap
 layout: row

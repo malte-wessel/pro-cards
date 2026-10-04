@@ -21,7 +21,7 @@ describe("multi-trend-card helpers", () => {
   });
   it("round-trips the editor form", () => {
     const cfg: MultiTrendCardConfig = {
-      type: "custom:multi-trend-card",
+      type: "custom:multi-trend-card-pro",
       title: "T",
       hours_to_show: 12,
       layout: "lanes",
@@ -62,9 +62,11 @@ describe("multi-trend-card helpers", () => {
     expect(schema.filter((s) => s.type === "expandable").length).toBe(2);
   });
   it("registers card and editor and sizes by layout", () => {
-    expect(customElements.get("multi-trend-card")).toBe(MultiTrendCard);
-    expect(customElements.get("multi-trend-card-editor")).toBeDefined();
-    expect(MultiTrendCard.getConfigElement().tagName.toLowerCase()).toBe("multi-trend-card-editor");
+    expect(customElements.get("multi-trend-card-pro")).toBe(MultiTrendCard);
+    expect(customElements.get("multi-trend-card-pro-editor")).toBeDefined();
+    expect(MultiTrendCard.getConfigElement().tagName.toLowerCase()).toBe(
+      "multi-trend-card-pro-editor",
+    );
     const el = new MultiTrendCard();
     el.setConfig({ entities: ["sensor.a", { entity: "sensor.b" }], layout: "lanes" });
     expect(el.getGridOptions()).toEqual({ columns: 12, rows: 4, min_columns: 6, min_rows: 2 });
