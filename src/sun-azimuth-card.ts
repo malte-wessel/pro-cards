@@ -1,12 +1,12 @@
 /*
- * sun-azimuth-card
+ * sun-azimuth-card-pro
  * Where the sun is around the house: a sky dial seen from above, a 3D scene with the house, its
  * shadow and the sky dome, or a compass ring; below, the sides of the house the sun shines on
  * today. Dependency-free (plain web component, inline SVG). The position is computed locally
  * (NOAA) from hass.config latitude/longitude, like the sun path card.
  *
  * Config:
- *   type: custom:sun-azimuth-card
+ *   type: custom:sun-azimuth-card-pro
  *   title: Sun                    # optional; omit → no header
  *   icon: mdi:sun-compass
  *   view: dial                    # dial | 3d | ring
@@ -47,7 +47,7 @@ import { compass, deg } from "./sun-azimuth/render/text.ts";
 import { sidesOf, timelineSpan } from "./sun-azimuth/sides.ts";
 import { STYLE } from "./sun-azimuth/styles.ts";
 
-const CARD_TYPE = "sun-azimuth-card";
+const CARD_TYPE = "sun-azimuth-card-pro";
 
 export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
   static cardType = CARD_TYPE;
@@ -295,7 +295,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
 }
 
 registerCard(SunAzimuthCard, {
-  name: "Sun Azimuth Card",
+  name: "Sun Azimuth Card Pro",
   description:
     "Where the sun is around the house: sky dial, 3D scene or compass ring, and the sides it shines on today",
 });

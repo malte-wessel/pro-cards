@@ -1,6 +1,6 @@
-# Sun Azimuth Card
+# Sun Azimuth Card Pro
 
-`custom:sun-azimuth-card` shows where the sun is around your house today: as a sky dial seen from above, as a 3D scene with the house, its shadow and the sky dome, or as a compass ring. Below, the sides of the house list when the sun shines on them. The position is computed locally from the Home Assistant latitude and longitude (NOAA solar position), so nothing besides the card is needed.
+`custom:sun-azimuth-card-pro` shows where the sun is around your house today: as a sky dial seen from above, as a 3D scene with the house, its shadow and the sky dome, or as a compass ring. Below, the sides of the house list when the sun shines on them. The position is computed locally from the Home Assistant latitude and longitude (NOAA solar position), so nothing besides the card is needed.
 
 ## Sky dial
 
@@ -9,7 +9,7 @@ The default view looks down on the house: the outer ring is the horizon, the cen
 ::: live
 
 ```yaml
-type: custom:sun-azimuth-card
+type: custom:sun-azimuth-card-pro
 title: Sun
 icon: mdi:sun-compass
 house: { rotation: 20 }
@@ -24,7 +24,7 @@ house: { rotation: 20 }
 ::: live
 
 ```yaml
-type: custom:sun-azimuth-card
+type: custom:sun-azimuth-card-pro
 title: Sun
 view: 3d
 house: { rotation: 20 }
@@ -40,7 +40,7 @@ camera: 150
 ::: live
 
 ```yaml
-type: custom:sun-azimuth-card
+type: custom:sun-azimuth-card-pro
 title: Sun
 view: 3d
 house: { rotation: 20 }
@@ -58,7 +58,7 @@ show_sides: false
 ::: live
 
 ```yaml
-type: custom:sun-azimuth-card
+type: custom:sun-azimuth-card-pro
 title: Sun
 view: ring
 house: { rotation: 20 }
@@ -75,7 +75,7 @@ Move the pointer along a side's timeline (or tap it on a phone) and the plot abo
 ::: live
 
 ```yaml
-type: custom:sun-azimuth-card
+type: custom:sun-azimuth-card-pro
 title: Sun
 house:
   rotation: 45
@@ -91,13 +91,13 @@ house:
 ::: live
 
 ```yaml
-- type: custom:sun-azimuth-card
+- type: custom:sun-azimuth-card-pro
   view: 3d
   house: { rotation: 20 }
   show_sides: false
   show_house: false
   grid_options: { columns: 6 }
-- type: custom:sun-azimuth-card
+- type: custom:sun-azimuth-card-pro
   view: ring
   house: { rotation: 20 }
   show_sides: false
@@ -113,7 +113,7 @@ house:
 ::: live
 
 ```yaml
-type: custom:sun-azimuth-card
+type: custom:sun-azimuth-card-pro
 title: Sun
 house: { rotation: 20 }
 show_sides: false

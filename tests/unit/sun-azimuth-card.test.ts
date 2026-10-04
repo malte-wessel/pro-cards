@@ -289,7 +289,7 @@ describe("sun-azimuth-card 3D scene", () => {
 
 describe("sun-azimuth-card element", () => {
   it("registers and sizes by view and sections", () => {
-    expect(customElements.get("sun-azimuth-card")).toBe(SunAzimuthCard);
+    expect(customElements.get("sun-azimuth-card-pro")).toBe(SunAzimuthCard);
     expect(SunAzimuthCard.getStubConfig()).toEqual({ title: "Sun azimuth" });
     const el = new SunAzimuthCard();
     el.setConfig({});
