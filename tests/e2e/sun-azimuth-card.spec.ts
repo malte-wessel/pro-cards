@@ -5,7 +5,7 @@ import { test, expect, mount, card, setLanguage } from "./util.ts";
 
 test("the sky dial shows the azimuth, the path and the lit sides", async ({ page }) => {
   await mount(page, {
-    type: "custom:sun-azimuth-card",
+    type: "custom:sun-azimuth-card-pro",
     title: "Sun",
     icon: "mdi:sun-compass",
     house: { rotation: 20 },
@@ -47,7 +47,7 @@ test("the sky dial shows the azimuth, the path and the lit sides", async ({ page
 });
 
 test("the sides footer lists every side with its window, pill and timeline", async ({ page }) => {
-  await mount(page, { type: "custom:sun-azimuth-card", house: { rotation: 20 } });
+  await mount(page, { type: "custom:sun-azimuth-card-pro", house: { rotation: 20 } });
   const c = card(page);
   await expect(c.locator(".header")).toBeHidden();
   await expect(c.locator(".sides .key")).toHaveText("Sides of the house");
@@ -97,7 +97,7 @@ test("the sides footer lists every side with its window, pill and timeline", asy
 
 test("own side names stay as written in every language", async ({ page }) => {
   await mount(page, {
-    type: "custom:sun-azimuth-card",
+    type: "custom:sun-azimuth-card-pro",
     house: { rotation: 45, sides: { north: "Street", south: "Garden" } },
   });
   const c = card(page);
@@ -115,7 +115,7 @@ test("own side names stay as written in every language", async ({ page }) => {
 });
 
 test("hovering a timeline previews the sun at that time", async ({ page }) => {
-  await mount(page, { type: "custom:sun-azimuth-card", house: { rotation: 20 } });
+  await mount(page, { type: "custom:sun-azimuth-card-pro", house: { rotation: 20 } });
   const c = card(page);
   const footer = c.locator(".sides");
   const chip = c.locator("svg.dial .chip text");
@@ -147,7 +147,7 @@ test("hovering a timeline previews the sun at that time", async ({ page }) => {
 });
 
 test("hover_preview: false leaves the plot alone", async ({ page }) => {
-  await mount(page, { type: "custom:sun-azimuth-card", hover_preview: false });
+  await mount(page, { type: "custom:sun-azimuth-card-pro", hover_preview: false });
   const c = card(page);
   const bar = c.locator(".side").nth(2).locator(".lbar");
   await bar.scrollIntoViewIfNeeded(); // the footer sits below the 800 px viewport
@@ -160,7 +160,7 @@ test("hover_preview: false leaves the plot alone", async ({ page }) => {
 
 test("the 3D view draws the scene and the slider orbits it", async ({ page }) => {
   await mount(page, {
-    type: "custom:sun-azimuth-card",
+    type: "custom:sun-azimuth-card-pro",
     view: "3d",
     house: { rotation: 20 },
     camera: 180,
@@ -201,7 +201,7 @@ test("the 3D view draws the scene and the slider orbits it", async ({ page }) =>
 });
 
 test("the compass ring shows the daylight sector and the day's events", async ({ page }) => {
-  await mount(page, { type: "custom:sun-azimuth-card", view: "ring", house: { rotation: 20 } });
+  await mount(page, { type: "custom:sun-azimuth-card-pro", view: "ring", house: { rotation: 20 } });
   const c = card(page);
   await expect(c.locator(".visual")).toHaveCount(0);
   await expect(c.locator(".items")).toHaveCount(0);
@@ -229,7 +229,7 @@ test("the compass ring shows the daylight sector and the day's events", async ({
 test("at night the sun is below the horizon everywhere", async ({ page }) => {
   await mount(
     page,
-    { type: "custom:sun-azimuth-card", house: { rotation: 20 } },
+    { type: "custom:sun-azimuth-card-pro", house: { rotation: 20 } },
     { time: new Date("2026-06-21T02:00:00") },
   );
   const c = card(page);
@@ -258,7 +258,7 @@ test("at night the sun is below the horizon everywhere", async ({ page }) => {
 test("the 3D view at night hides the sun and the shadow", async ({ page }) => {
   await mount(
     page,
-    { type: "custom:sun-azimuth-card", view: "3d" },
+    { type: "custom:sun-azimuth-card-pro", view: "3d" },
     { time: new Date("2026-06-21T02:00:00") },
   );
   const scene = card(page).locator("svg.scene");
@@ -273,7 +273,7 @@ test("the 3D view at night hides the sun and the shadow", async ({ page }) => {
 test("show_* options drop their sections and colours reach the card", async ({ page }) => {
   await mount(page, [
     {
-      type: "custom:sun-azimuth-card",
+      type: "custom:sun-azimuth-card-pro",
       show_sides: false,
       show_house: false,
       show_events: false,
@@ -283,7 +283,7 @@ test("show_* options drop their sections and colours reach the card", async ({ p
       grid_options: { columns: 6 },
     },
     {
-      type: "custom:sun-azimuth-card",
+      type: "custom:sun-azimuth-card-pro",
       view: "3d",
       show_sides: false,
       grid_options: { columns: 6 },
@@ -316,7 +316,11 @@ test("show_* options drop their sections and colours reach the card", async ({ p
 });
 
 test("moves the sun with time", async ({ page }) => {
-  await mount(page, { type: "custom:sun-azimuth-card" }, { time: new Date("2026-06-21T08:00:00") });
+  await mount(
+    page,
+    { type: "custom:sun-azimuth-card-pro" },
+    { time: new Date("2026-06-21T08:00:00") },
+  );
   const c = card(page);
   await expect(c.locator(".head .big b")).toHaveText(/^(7|8)\d°$/);
   const early = parseFloat((await c.locator("svg.dial circle.sun").getAttribute("cx"))!);
