@@ -38,7 +38,12 @@ export const readValue = (
   let raw: unknown;
   if (v.kind === "template") raw = tplGet(v.template);
   else if (v.kind === "text") raw = v.text;
-  else if (v.kind === "attribute") raw = st?.attributes?.[v.key];
+  // `attribute: hvac_mode` names the climate state (HA keeps the mode there, not in an attribute)
+  else if (v.kind === "attribute")
+    raw =
+      v.key === "hvac_mode" && st?.entity_id.startsWith("climate.")
+        ? st.state
+        : st?.attributes?.[v.key];
   else raw = st?.state;
   if (raw === undefined || raw === null) return { raw: null, num: null, avail: false };
   if (typeof raw === "object") {

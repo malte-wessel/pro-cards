@@ -68,20 +68,24 @@ rules:
 
 :::
 
-## Toggle
+## Controls
 
-`toggle: true` adds a switch on the right that calls `homeassistant.toggle`. `grid_options` here sizes the tile to half a section, see [Sizing in sections](/guide/sizing).
+`control: auto` adds the control the entity's domain calls for: a light gets a switch and a brightness slider, a cover its buttons and a position slider, a thermostat a stepper. `control: toggle` and the other names pick one; see [Controls](/cards/controls). `grid_options` here sizes the tiles to half a section, see [Sizing in sections](/guide/sizing).
 
 ::: live
 
 ```yaml
-type: custom:entity-card-pro
-entity: light.living_room
-rules:
-  - { state: "on", color: amber, label: "On" }
-  - { state: "off", color: grey, label: "Off" }
-toggle: true
-grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  entity: light.living_room
+  rules:
+    - { state: "on", color: amber, label: "On" }
+    - { state: "off", color: grey, label: "Off" }
+  control: auto
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  entity: switch.coffee_machine
+  control: toggle
+  grid_options: { columns: 6 }
 ```
 
 :::

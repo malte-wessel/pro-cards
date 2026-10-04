@@ -803,7 +803,7 @@ The row, column and table layouts show every entity as a compact item, and `head
 
 ## Actions
 
-`tap_action`, `hold_action` and `double_tap_action` accept every Home Assistant action: `more-info` (default for tap and hold), `toggle`, `navigate`, `url`, `perform-action` (also `call-service`), `assist`, `fire-dom-event` and `none`. Set them on the card as defaults or per entity, as an object or as a bare action name (`tap_action: toggle`). The card only detects the gesture; Home Assistant runs the action, so you get its confirmation dialog, haptic feedback in the companion app and any action HA adds later. `confirmation` asks before running; the switch from `toggle: true` never asks and always calls `homeassistant.toggle`.
+`tap_action`, `hold_action` and `double_tap_action` accept every Home Assistant action: `more-info` (default for tap and hold), `toggle`, `navigate`, `url`, `perform-action` (also `call-service`), `assist`, `fire-dom-event` and `none`. Set them on the card as defaults or per entity, as an object or as a bare action name (`tap_action: toggle`). The card only detects the gesture; Home Assistant runs the action, so you get its confirmation dialog, haptic feedback in the companion app and any action HA adds later. `confirmation` asks before running; the [controls](/cards/controls) never ask (use `confirm: true` for a hold to confirm) and call their own services.
 
 ::: live
 
@@ -963,10 +963,17 @@ These two keys sit on the card, not on the entity, and apply to every history vi
 
 ### Controls
 
-| Option                                             | Default       | Applies to                   | Description                                                  |
-| -------------------------------------------------- | ------------- | ---------------------------- | ------------------------------------------------------------ |
-| `toggle`                                           | `false`       | tile, list, hero lead, table | Switch on the right that calls `homeassistant.toggle`.       |
-| `tap_action` / `hold_action` / `double_tap_action` | card defaults | all                          | Per-entity overrides, see [Action options](#action-options). |
+See [Controls](/cards/controls) for what every control looks like and where it sits.
+
+| Option                                             | Default                           | Applies to              | Description                                                                                                                                                     |
+| -------------------------------------------------- | --------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `control`                                          |                                   | all but headers         | `auto` (or `true`) picks the domain default; `toggle`, `slider`, `stepper`, `segments`, `buttons`, `button`, `select` or `hold` pick one; `none` draws nothing. |
+| `control_position`                                 | per control                       | all but headers         | `end` (on the line), `block` (under it) or `lead` (the icon itself: toggle, button, hold).                                                                      |
+| `step`                                             | entity step, else 1 (climate 0.5) | slider, stepper         | Step of the value.                                                                                                                                              |
+| `options`                                          | entity modes / options            | segments, select        | List of values, or `{ value, label, icon }` objects.                                                                                                            |
+| `confirm`                                          | `false`                           | toggle, button, buttons | The primary control becomes hold to confirm.                                                                                                                    |
+| `toggle`                                           | `false`                           | all but headers         | Deprecated alias of `control: toggle`.                                                                                                                          |
+| `tap_action` / `hold_action` / `double_tap_action` | card defaults                     | all                     | Per-entity overrides, see [Action options](#action-options).                                                                                                    |
 
 ### Items
 

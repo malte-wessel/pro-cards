@@ -24,6 +24,7 @@ import { registerCard } from "./shared/card.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { EntityCardBase } from "./shared/entity/base.ts";
 import { BLOCK_VISUALS, ITEM_DEFAULTS } from "./shared/entity/constants.ts";
+import { hasBlockControl } from "./shared/entity/control.ts";
 import {
   normalizeActionDefaults,
   normalizeEntity,
@@ -84,7 +85,7 @@ export class EntityCard extends EntityCardBase {
     const cfg = this._config;
     if (!cfg) return { columns: 6, rows: 1 };
     // plain tile = exactly one 56 px row; tiles with a block visual size to their content
-    if (!BLOCK_VISUALS.has(cfg.entities[0].visual))
+    if (!BLOCK_VISUALS.has(cfg.entities[0].visual) && !hasBlockControl(cfg.entities[0]))
       return { columns: 6, rows: 1, min_columns: 3, min_rows: 1, max_rows: 1 };
     return { columns: 6, rows: "auto", min_columns: 3, min_rows: 1 };
   }

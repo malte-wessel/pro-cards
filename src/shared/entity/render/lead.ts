@@ -1,10 +1,8 @@
-// Small DOM builders: icon lead, pills, text, the big value and the toggle switch.
-import { fireHaptic } from "../../card.ts";
+// Small DOM builders: icon lead, pills, text and the big value.
 import type { HassEntity } from "../../ha.ts";
 import type { EntityItem } from "../config.ts";
-import { OFF_STATES } from "../constants.ts";
 import type { Look } from "../look.ts";
-import { nameOf, type EntityModel, type FmtValue, type RenderCtx } from "../model.ts";
+import type { EntityModel, FmtValue, RenderCtx } from "../model.ts";
 
 export const iconEl = (ctx: RenderCtx, look: Look, st: HassEntity | undefined): HTMLElement => {
   if (st && customElements.get("ha-state-icon")) {
@@ -102,25 +100,4 @@ export const valueEl = (ent: EntityItem, m: EntityModel) => {
   st.className = "state";
   st.textContent = m.fmt.text;
   return st;
-};
-export const toggleEl = (ctx: RenderCtx, ent: EntityItem, m: EntityModel) => {
-  const b = document.createElement("button");
-  b.type = "button";
-  b.className = "toggle";
-  const on = !!m.st && m.model.avail && !OFF_STATES.has(m.st.state);
-  if (on) b.classList.add("on");
-  b.setAttribute("aria-label", `Toggle ${nameOf(ctx, ent, m.st)}`);
-  b.setAttribute("aria-pressed", String(on));
-  b.innerHTML = "<i></i>";
-  const stop = (ev: Event) => ev.stopPropagation();
-  b.addEventListener("pointerdown", stop);
-  b.addEventListener("pointerup", stop);
-  b.addEventListener("keydown", stop);
-  b.addEventListener("click", (ev) => {
-    ev.stopPropagation();
-    if (!ent.entity) return;
-    ctx.hass?.callService("homeassistant", "toggle", { entity_id: ent.entity });
-    fireHaptic(b);
-  });
-  return b;
 };

@@ -3,16 +3,23 @@
 //   _normalize(raw)            – the normalised config (see config.js)
 //   _styles()                  – the CSS string for the shadow root
 //   getGridOptions()           – the sections grid footprint
-import { fireAction } from "../card.ts";
+import { fireAction, fireHaptic } from "../card.ts";
 import { cssColor } from "../color.ts";
 import { REFRESH_MS } from "../constants.ts";
 import { langOf } from "../format.ts";
-import type { ActionConfig, ActionKind, GridOptions, HomeAssistant } from "../ha.ts";
+import type { ActionConfig, ActionKind, GridOptions, HapticType, HomeAssistant } from "../ha.ts";
 import { fetchHistory, pointOf, type Point } from "../history.ts";
 import { hideHover } from "../hover.ts";
 import { clamp01, qs } from "../util.ts";
 import { BLOCK_VISUALS, DOUBLE_MS, HISTORY_VISUALS, HOLD_MS } from "./constants.ts";
 import { collectTemplates, type EntityCardConfig, type EntityItem, type Group } from "./config.ts";
+import {
+  hasBlockControl,
+  PENDING_MS,
+  type ControlHost,
+  type Pending,
+  type ServiceCall,
+} from "./control.ts";
 import { modelOf, tplOf, type PlotHandlers, type RenderCtx } from "./model.ts";
 import { fillByClass } from "./render/fill.ts";
 import { drawPlot, showHover, windowOf, type PlotElement } from "./render/plots.ts";
@@ -20,13 +27,13 @@ import type { EntityModel } from "./model.ts";
 
 type Unsubscribe = () => unknown;
 
-// grid rows a block visual adds below its row
+// grid rows a block visual (and a block control) adds below its row
 const blk = (e: EntityItem) =>
-  e.visual === "sparkline" || e.visual === "columns" || e.visual === "gauge"
+  (e.visual === "sparkline" || e.visual === "columns" || e.visual === "gauge"
     ? 2
     : BLOCK_VISUALS.has(e.visual)
       ? 1
-      : 0;
+      : 0) + (hasBlockControl(e) ? 1 : 0);
 // rough height of one group in grid rows (56 px)
 export const groupCardSize = (cfg: EntityCardConfig, group: Group) => {
   const ents = group.idxs.map((i) => cfg.entities[i]),
@@ -67,6 +74,13 @@ export abstract class EntityCardBase extends HTMLElement {
   _fetching = false;
   _timer?: ReturnType<typeof setInterval>;
   _ro?: ResizeObserver;
+  // controls: service calls in flight per entity index, the row being dragged, the host the
+  // builders talk to
+  _pending = new Map<number, Pending>();
+  _dragging: number | null = null;
+  _pendingTimer?: ReturnType<typeof setTimeout>;
+  _idxsByEntity = new Map<string, number[]>();
+  _ctl: ControlHost;
 
   abstract _normalize(raw: unknown): EntityCardConfig;
   abstract _styles(): string;
@@ -80,6 +94,23 @@ export abstract class EntityCardBase extends HTMLElement {
       move: this._onPointer.bind(this),
       up: (ev) => ev.stopPropagation(),
       leave: this._onLeave.bind(this),
+    };
+    const dragging = () => this._dragging;
+    this._ctl = {
+      pending: this._pending,
+      get dragging() {
+        return dragging();
+      },
+      call: (el, idx, ent, svc, pending, haptic) =>
+        this._callService(el, idx, ent, svc, pending, haptic),
+      beginDrag: (idx) => {
+        this._dragging = idx;
+      },
+      endDrag: (idx) => {
+        if (this._dragging === idx) this._dragging = null;
+        this._render();
+      },
+      runAction: (ent, a, kind) => this._runAction(ent, a, kind),
     };
   }
 
@@ -97,10 +128,17 @@ export abstract class EntityCardBase extends HTMLElement {
       ),
     ];
     this._templates = collectTemplates(cfg);
+    this._idxsByEntity = new Map();
+    cfg.entities.forEach((e, i) => {
+      if (e.entity)
+        this._idxsByEntity.set(e.entity, [...(this._idxsByEntity.get(e.entity) ?? []), i]);
+    });
     this._series = new Map();
     this._tplResult = new Map();
     this._fetched = false;
     this._hover = null;
+    this._pending.clear();
+    this._dragging = null;
     if (this._hass) this._subscribeTemplates();
     if (this._root) this._buildDom();
   }
@@ -126,6 +164,9 @@ export abstract class EntityCardBase extends HTMLElement {
         pst = prev?.states[id];
       if (st === pst) continue;
       changed = true;
+      // the device answered: its pending calls are over (a sticky one only expires)
+      for (const i of this._idxsByEntity.get(id) ?? [])
+        if (!this._pending.get(i)?.sticky) this._pending.delete(i);
       const s = st && this._series.get(id);
       if (s) {
         const t = new Date(st.last_updated).getTime();
@@ -148,6 +189,7 @@ export abstract class EntityCardBase extends HTMLElement {
   }
   disconnectedCallback() {
     clearInterval(this._timer);
+    clearTimeout(this._pendingTimer);
     this._ro?.disconnect();
     document.removeEventListener("pointerdown", this._onDocPointer);
     this._unsubscribeTemplates();
@@ -172,7 +214,55 @@ export abstract class EntityCardBase extends HTMLElement {
       now,
       t0: now - cfg.hours * 3600e3,
       plotHandlers: this._plotHandlers,
+      ctl: this._ctl,
     };
+  }
+
+  // ----- controls -----
+  // runs a control's service call and remembers it as pending until the entity answers
+  _callService(
+    el: HTMLElement,
+    idx: number,
+    ent: EntityItem,
+    svc: ServiceCall | null,
+    pending?: Pending,
+    haptic: HapticType = "light",
+  ) {
+    if (!svc) {
+      console.warn(`${this._cardType()}: no service for the control of '${ent.entity}'`);
+      return;
+    }
+    if (!this._hass) return;
+    Promise.resolve(this._hass.callService(svc.domain, svc.service, svc.data)).catch((err) => {
+      console.warn(`${this._cardType()}: ${svc.domain}.${svc.service} failed`, err);
+      this._pending.delete(idx);
+      this._render();
+    });
+    fireHaptic(el, haptic);
+    this._pending.set(idx, pending ?? { until: Date.now() + PENDING_MS });
+    this._sweepPending();
+    this._render();
+  }
+  // drops expired pending calls and re-renders when the next one expires
+  _sweepPending() {
+    clearTimeout(this._pendingTimer);
+    const now = Date.now();
+    let next = Infinity,
+      dropped = false;
+    for (const [idx, p] of this._pending)
+      if (p.until <= now) {
+        this._pending.delete(idx);
+        dropped = true;
+      } else next = Math.min(next, p.until);
+    if (next < Infinity)
+      this._pendingTimer = setTimeout(
+        () => {
+          this._sweepPending();
+          this._render();
+        },
+        next - now + 10,
+      );
+    return dropped;
   }
 
   // ----- templates -----
@@ -245,11 +335,13 @@ export abstract class EntityCardBase extends HTMLElement {
     el.tabIndex = 0;
     let holdTimer: ReturnType<typeof setTimeout> | undefined,
       held = false,
+      down = false,
       lastTap = 0,
       tapTimer: ReturnType<typeof setTimeout> | undefined;
     el.addEventListener("pointerdown", (ev) => {
       if (ev.button !== 0) return;
       held = false;
+      down = true;
       clearTimeout(holdTimer);
       holdTimer = setTimeout(() => {
         held = true;
@@ -260,7 +352,8 @@ export abstract class EntityCardBase extends HTMLElement {
     el.addEventListener("pointerleave", cancel);
     el.addEventListener("pointercancel", cancel);
     el.addEventListener("pointerup", (ev) => {
-      if (ev.button !== 0) return;
+      if (ev.button !== 0 || !down) return;
+      down = false;
       clearTimeout(holdTimer);
       if (held) return;
       if (has(ent.dbl)) {
@@ -387,6 +480,8 @@ export abstract class EntityCardBase extends HTMLElement {
         m = models[idx];
       if (!ent || !m) continue;
       row.style.setProperty("--fe-color", cssColor(m.look.color, "var(--primary-color)"));
+      // a row whose control is being dragged keeps its DOM until the drag ends
+      if (this._dragging === idx) continue;
       this._fill(ctx, row, ent, idx, m);
     }
     const tint = this._tintColor(ctx, models, card);
