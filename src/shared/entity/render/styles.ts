@@ -77,11 +77,20 @@ export const STYLE_CELL = `
   .cell .lead { margin-bottom: 2px; }
 `;
 export const STYLE_ITEM = `
-  .row.item { flex-direction: column; align-items: center; gap: 6px; max-width: 100%; text-align: center; }
-  .item .iname { font-size: 12px; line-height: 16px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  .item .ibody { display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; overflow: hidden; }
-  /* a value that does not fit clips with an ellipsis but keeps its first characters */
-  .item .ibody .state, .item .ibody .pill { min-width: 2.5ch; overflow: hidden; text-overflow: ellipsis; }
+  .row.item { flex-direction: column; align-items: center; gap: 4px; max-width: 100%; text-align: center; }
+  .item .iname { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  /* the value stacks under the name as a plain line; one that does not fit clips with an ellipsis */
+  .item .state { font-size: 12px; line-height: 16px; font-weight: 400; color: var(--secondary-text-color); overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .item .state.lone { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--primary-text-color); }
+  .item .pill { max-width: 100%; }
+  /* a column item is list-like: the icon on the left, the name over the value on the right (name_position is ignored) */
+  .section.layout-column .row.item { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; row-gap: 2px; align-items: center; justify-items: start; text-align: left; }
+  .section.layout-column .item .lead { grid-column: 1; grid-row: 1 / span 2; }
+  .section.layout-column .item .iname { grid-column: 2; grid-row: 1; align-self: end; }
+  .section.layout-column .item .state, .section.layout-column .item .pill { grid-column: 2; grid-row: 2; align-self: start; }
+  .section.layout-column .item .lone { grid-row: 1 / span 2; align-self: center; }
+  .section.layout-column .row.item:not(:has(> .lead)) { grid-template-columns: minmax(0, 1fr); }
+  .section.layout-column .row.item:not(:has(> .lead)) > * { grid-column: 1; }
   .item:focus-visible { box-shadow: none; }
   .item:focus-visible .lead .shape { box-shadow: 0 0 0 2px var(--fe-color); }
 `;

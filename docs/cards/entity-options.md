@@ -650,7 +650,7 @@ One bar per bucket, for quantities that come in portions: solar power, energy, r
 
 ### Badge
 
-A coloured pill instead of the plain value. The pill shows the matching rule's `label`, or the formatted value when no rule has a label, and takes the rule colour. Because the pill already carries the label, the badge has no secondary line unless you set `secondary`. It is made for states that have names (presence, appliance programs, modes) and works in items and headers too, where `show_value: true` shows the pill.
+A coloured pill instead of the plain value. The pill shows the matching rule's `label`, or the formatted value when no rule has a label, and takes the rule colour. Because the pill already carries the label, the badge has no secondary line unless you set `secondary`. It is made for states that have names (presence, appliance programs, modes) and works in items and headers too, where it stands in for the value.
 
 ::: live
 
@@ -694,7 +694,7 @@ A coloured pill instead of the plain value. The pill shows the matching rule's `
 
 :::
 
-Badges in a row layout: `show_value: true` puts the pill next to the icon.
+Badges in a row layout show the pill under the name.
 
 ::: live
 
@@ -703,8 +703,6 @@ type: custom:entity-group-card-pro
 title: Who is home
 icon: mdi:account-group
 layout: row
-align: space-between
-show_value: true
 entities:
   - entity: person.alex
     visual: badge
@@ -863,7 +861,6 @@ type: custom:entity-group-card-pro
 title: Shortcuts
 icon: mdi:gesture-tap
 layout: row
-align: space-between
 entities:
   - entity: light.living_room
     name: Dim
@@ -919,7 +916,7 @@ Row, column and table layouts and header entities show every entity as a compact
 | Option          | Row     | Column  | Table   | Header entities | Description                                        |
 | --------------- | ------- | ------- | ------- | --------------- | -------------------------------------------------- |
 | `show_name`     | `true`  | `true`  | `true`  | `false`         | The name, above or below the icon (table: the key) |
-| `show_value`    | `false` | `false` | `true`  | `true`          | The value next to the icon (badge: the pill)       |
+| `show_value`    | `true`  | `true`  | `true`  | `true`          | The value under the name (badge: the pill)         |
 | `show_icon`     | `true`  | `true`  | `false` | `true`          | The round icon (table: an icon column)             |
 | `name_position` | `below` | `above` |         |                 | `above` or `below` the icon                        |
 
@@ -976,6 +973,6 @@ These two keys sit on the card, not on the entity, and apply to every history vi
 | Option                                   | Default    | Applies to                 | Description                                                   |
 | ---------------------------------------- | ---------- | -------------------------- | ------------------------------------------------------------- |
 | `show_name` / `show_value` / `show_icon` | per layout | row, column, table, header | What a compact item shows, see [Item options](#item-options). |
-| `name_position`                          | per layout | row, column                | `above` or `below` the icon: row `below`, column `above`.     |
+| `name_position`                          | `below`    | row                        | `above` or `below` the icon; columns ignore it.               |
 
 Every card also accepts the Home Assistant keys `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`; see [Sizing in sections](/guide/sizing).

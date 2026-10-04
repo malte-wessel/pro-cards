@@ -118,14 +118,17 @@ export const fillCell = (
 export const fillItem = (ctx: RenderCtx, el: HTMLElement, ent: EntityItem, m: EntityModel) => {
   el.replaceChildren();
   const { item } = ent;
+  // a stack: name (above) / icon / name (below) / value
   const name = item.showName ? textEl("iname", nameOf(ctx, ent, m.st)) : null;
   if (name && item.namePosition === "above") el.appendChild(name);
-  const body = document.createElement("div");
-  body.className = "ibody";
-  if (item.showIcon) body.appendChild(leadEl(ctx, ent, m, 40));
-  if (item.showValue) body.appendChild(valueEl(ent, m));
-  if (body.children.length) el.appendChild(body);
+  if (item.showIcon) el.appendChild(leadEl(ctx, ent, m, 40));
   if (name && item.namePosition === "below") el.appendChild(name);
+  if (item.showValue) {
+    const val = valueEl(ent, m);
+    // without a name the value is the item's label and takes the name's style
+    if (!name) val.classList.add("lone");
+    el.appendChild(val);
+  }
   el.title = m.look.label ? `${m.fmt.text} · ${m.look.label}` : m.fmt.text;
 };
 

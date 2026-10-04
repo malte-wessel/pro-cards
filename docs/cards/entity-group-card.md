@@ -272,7 +272,7 @@ entities:
 
 ## Row
 
-Entities side by side as compact items: a round icon with the name under it, optionally the value next to it. Items wrap when the card is narrow. `align` spreads them (`start`, `center`, `end`, `space-between` or `stretch`). Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
+Entities side by side as compact items: a round icon with the name under it, optionally the value under the name. Items spread over the width (`align: space-between`) and wrap when the card is narrow; `align` packs them (`start`, `center`, `end`) or gives every item the same share (`stretch`). Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
 
 ::: live
 
@@ -281,7 +281,6 @@ type: custom:entity-group-card-pro
 title: Kitchen
 icon: mdi:silverware-fork-knife
 layout: row
-align: space-between
 entities:
   - { entity: light.kitchen, name: Light, tap_action: { action: toggle } }
   - { entity: light.dining_table, name: Dining, tap_action: { action: toggle } }
@@ -296,7 +295,7 @@ entities:
 
 :::
 
-`show_value: true` puts the value next to the icon and `show_name: false` drops the label. Gauge, bar and history visuals are not drawn in items; use `icon`, `ring` or `badge`.
+`show_value: false` hides the value and `show_name: false` drops the label, so icons alone or icons with a value remain. Gauge, bar and history visuals are not drawn in items; use `icon`, `ring` or `badge`.
 
 ::: live
 
@@ -306,7 +305,6 @@ title: Living room climate
 icon: mdi:sofa
 layout: row
 show_name: false
-show_value: true
 entities:
   - { entity: sensor.living_room_temperature, decimals: 1 }
   - { entity: sensor.living_room_humidity, decimals: 0 }
@@ -355,7 +353,7 @@ entities:
 
 :::
 
-Icon-only controls with state colours make a compact switchboard; `align: center` and `show_value: true` turn sensors into a readout.
+Icon-only controls with state colours make a compact switchboard; `align: center` and `show_name: false` turn sensors into a readout.
 
 ::: live
 
@@ -365,7 +363,6 @@ Icon-only controls with state colours make a compact switchboard; `align: center
   icon: mdi:lightbulb-group
   layout: row
   show_name: false
-  align: space-between
   tap_action: { action: toggle }
   entities:
     - { entity: light.living_room, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
@@ -382,7 +379,6 @@ Icon-only controls with state colours make a compact switchboard; `align: center
   layout: row
   align: center
   show_name: false
-  show_value: true
   entities:
     - { entity: sensor.outdoor_temperature, decimals: 1, rules: [{ below: 5, color: blue }, { below: 25, color: green }, { above: 25, color: orange }] }
     - { entity: sensor.outdoor_humidity, decimals: 0 }
@@ -394,7 +390,7 @@ Icon-only controls with state colours make a compact switchboard; `align: center
 
 ## Column
 
-The same items stacked vertically. They hug the right edge by default (`align: end`); `align: start` or `center` moves them. Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
+The same entities stacked vertically as list-like items: the icon with the name over the value beside it. They sit on the left by default (`align: start`); `align: center` or `end` moves them. Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
 
 ::: live
 
@@ -413,7 +409,7 @@ grid_options: { columns: 6 }
 
 :::
 
-With names and `align: start` the column becomes a vertical menu; badges show the state next to the icon.
+With names the column is a vertical menu; badges show the state beside the icon, and `name_position` has no effect here.
 
 ::: live
 
@@ -422,9 +418,6 @@ type: custom:entity-group-card-pro
 title: Office
 icon: mdi:desk
 layout: column
-align: start
-show_value: true
-name_position: below
 entities:
   - { entity: light.office, name: Ceiling, visual: badge, tap_action: { action: toggle }, rules: [{ state: "on", color: amber, label: "On" }, { state: "off", color: grey, label: "Off" }] }
   - { entity: light.desk_lamp, name: Desk lamp, visual: badge, tap_action: { action: toggle }, rules: [{ state: "on", color: amber, label: "On" }, { state: "off", color: grey, label: "Off" }] }
@@ -530,7 +523,6 @@ type: custom:entity-group-card-pro
 title: Great room
 icon: mdi:sofa
 layout: row
-align: space-between
 header_entities:
   - entity: sensor.living_room_temperature
     decimals: 1
@@ -584,25 +576,25 @@ entities:
 | `grid`           | Compact cells, `columns` per row, with the value big.                                  |
 | `hero`           | The first entity is the lead with a big value and its graph; the rest are list rows.   |
 | `row`            | Compact items side by side: a round icon with the name under it, optionally the value. |
-| `column`         | The same items stacked vertically, hugging the right edge.                             |
+| `column`         | Stacked list-like items: name and value beside the icon.                               |
 | `table`          | Key/value rows: small-caps name on the left, value on the right.                       |
 
 ### Card options
 
-| Option                                             | Default                      | Description                                                                                                                                                                                                                                                                               |
-| -------------------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entities`                                         |                              | List of entity ids or [entity objects](/cards/entity-options#entity-options) (required).                                                                                                                                                                                                  |
-| `layout`                                           | `list`                       | `list`, `grid`, `hero`, `row`, `column` or `table`.                                                                                                                                                                                                                                       |
-| `title`                                            |                              | Header text. Template allowed.                                                                                                                                                                                                                                                            |
-| `icon`                                             |                              | Header icon. Template allowed.                                                                                                                                                                                                                                                            |
-| `header_entities`                                  |                              | Entities shown as icon + value on the right of the title line. Defaults `show_icon: true`, `show_value: true`, `show_name: false`; visuals `icon` and `badge`.                                                                                                                            |
-| `columns`                                          | `2`                          | Grid: cells per row, 1 to 4 (not the sections grid `grid_options.columns`).                                                                                                                                                                                                               |
-| `align`                                            | per layout                   | Row: `start`, `center`, `end`, `space-between` or `stretch` (items share the width). Column: `start`, `center`, `end`. Table: `start`, `center`, `end` for the value. `stretch` and `space-between` act as `end` in columns and tables. Defaults: row `start`, column `end`, table `end`. |
-| `show_name` / `show_value` / `show_icon`           | per layout                   | [Item options](/cards/entity-options#item-options) for row, column and table; every entity can override them.                                                                                                                                                                             |
-| `name_position`                                    | per layout                   | `above` or `below` the icon in row (default `below`) and column (default `above`) items.                                                                                                                                                                                                  |
-| `hours_to_show`                                    | `24`                         | History window for `sparkline`, `columns` and `strip`, at least 1. One window per card.                                                                                                                                                                                                   |
-| `bucket_minutes`                                   | `60`                         | Bucket size for `columns` and `strip`, at least 5.                                                                                                                                                                                                                                        |
-| `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none | Defaults for every entity, see [Actions](/cards/entity-options#actions).                                                                                                                                                                                                                  |
+| Option                                             | Default                      | Description                                                                                                                                                                                                                                                                                         |
+| -------------------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entities`                                         |                              | List of entity ids or [entity objects](/cards/entity-options#entity-options) (required).                                                                                                                                                                                                            |
+| `layout`                                           | `list`                       | `list`, `grid`, `hero`, `row`, `column` or `table`.                                                                                                                                                                                                                                                 |
+| `title`                                            |                              | Header text. Template allowed.                                                                                                                                                                                                                                                                      |
+| `icon`                                             |                              | Header icon. Template allowed.                                                                                                                                                                                                                                                                      |
+| `header_entities`                                  |                              | Entities shown as icon + value on the right of the title line. Defaults `show_icon: true`, `show_value: true`, `show_name: false`; visuals `icon` and `badge`.                                                                                                                                      |
+| `columns`                                          | `2`                          | Grid: cells per row, 1 to 4 (not the sections grid `grid_options.columns`).                                                                                                                                                                                                                         |
+| `align`                                            | per layout                   | Row: `start`, `center`, `end`, `space-between` or `stretch` (items share the width). Column: `start`, `center`, `end`. Table: `start`, `center`, `end` for the value. `stretch` and `space-between` act as `end` in columns and tables. Defaults: row `space-between`, column `start`, table `end`. |
+| `show_name` / `show_value` / `show_icon`           | per layout                   | [Item options](/cards/entity-options#item-options) for row, column and table; every entity can override them.                                                                                                                                                                                       |
+| `name_position`                                    | per layout                   | `above` or `below` the icon in row items (default `below`); columns ignore it.                                                                                                                                                                                                                      |
+| `hours_to_show`                                    | `24`                         | History window for `sparkline`, `columns` and `strip`, at least 1. One window per card.                                                                                                                                                                                                             |
+| `bucket_minutes`                                   | `60`                         | Bucket size for `columns` and `strip`, at least 5.                                                                                                                                                                                                                                                  |
+| `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none | Defaults for every entity, see [Actions](/cards/entity-options#actions).                                                                                                                                                                                                                            |
 
 ### Grid defaults
 

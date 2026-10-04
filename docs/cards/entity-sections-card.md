@@ -50,7 +50,6 @@ sections:
     entities: [sensor.living_room_temperature, sensor.living_room_humidity]
   - layout: row
     divider: true
-    align: space-between
     entities: [light.living_room, cover.living_room_blinds, media_player.living_room_tv, vacuum.robot]
 ```
 
@@ -69,13 +68,11 @@ icon: mdi:sofa
 show_name: false
 sections:
   - layout: row
-    show_value: true
     entities:
       - { entity: sensor.living_room_temperature, decimals: 1 }
       - { entity: sensor.living_room_humidity, decimals: 0 }
   - layout: row
     divider: true
-    align: space-between
     entities: [light.living_room, cover.living_room_blinds, media_player.living_room_tv, vacuum.robot]
 ```
 
@@ -97,7 +94,6 @@ header_entities:
 sections:
   - layout: row
     show_name: false
-    show_value: true
     entities:
       - { entity: sensor.living_room_co2, decimals: 0 }
       - { entity: climate.living_room, icon: mdi:thermostat, attribute: temperature, unit: °C }
@@ -131,7 +127,6 @@ sections:
       - { entity: sensor.robot_last_area, name: Last area }
   - divider: true
     layout: row
-    align: space-between
     show_name: false
     entities:
       - entity: sensor.robot_battery
@@ -201,7 +196,6 @@ sections:
       - { entity: sensor.range_hood_power, name: Range hood, decimals: 0 }
   - layout: row
     divider: true
-    align: space-between
     entities:
       - { entity: light.kitchen, name: Light, tap_action: { action: toggle }, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
       - { entity: light.dining_table, name: Dining, tap_action: { action: toggle }, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
@@ -259,8 +253,6 @@ icon: mdi:shield-home
 show_icon: true
 sections:
   - layout: row
-    align: space-between
-    show_value: true
     entities:
       - { entity: person.alex, name: Alex, visual: badge, rules: &p [{ state: home, color: green, label: Home }, { state: not_home, color: grey, label: Away }] }
       - { entity: person.sam, name: Sam, visual: badge, rules: *p }
@@ -288,7 +280,6 @@ icon: mdi:palette
 show_name: true
 sections:
   - layout: row
-    align: space-between
     entities:
       - { entity: input_boolean.night_mode, name: Night, tap_action: toggle, rules: [{ state: "on", color: indigo }, { state: "off", color: grey }] }
       - { entity: input_boolean.guest_mode, name: Guests, tap_action: toggle, rules: [{ state: "on", color: pink }, { state: "off", color: grey }] }
@@ -296,7 +287,6 @@ sections:
       - { entity: input_boolean.vacation_mode, name: Vacation, tap_action: toggle, rules: [{ state: "on", color: teal, tint_card: true }, { state: "off", color: grey }] }
   - layout: row
     divider: true
-    align: space-between
     name_position: below
     entities:
       - { entity: scene.bright, name: Bright, icon: mdi:white-balance-sunny, color: amber, tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.bright } } }

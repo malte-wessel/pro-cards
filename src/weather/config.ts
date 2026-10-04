@@ -321,15 +321,9 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
       });
     } else if (oneOf(GROUP_TYPES, type)) {
       const rawEntities = list(sec.entities);
-      // row items show their value (the entity cards' row items show only icon + name) unless
-      // the section or the card says otherwise
-      const defaults =
-        type === "row" && sec.show_value == null && raw.show_value == null
-          ? { ...sec, show_value: true }
-          : sec;
       const r = normalizeGroup(
         {
-          ...defaults,
+          ...sec,
           layout: type,
           entities: rawEntities.map((e) => withWeatherEntity(e, entity)),
         },

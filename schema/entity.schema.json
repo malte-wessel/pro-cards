@@ -195,7 +195,7 @@
         },
         "align": {
           "$ref": "#/$defs/align",
-          "description": "row: justify the items; column: align them; table: place the value. Defaults: row start, column end, table end"
+          "description": "row: justify the items; column: align them; table: place the value. Defaults: row space-between, column start, table end"
         },
         "show_name": {
           "type": "boolean",
@@ -203,7 +203,7 @@
         },
         "show_value": {
           "type": "boolean",
-          "description": "Item option (default: false for row and column, true for table)"
+          "description": "Item option for row, column and table (default true)"
         },
         "show_icon": {
           "type": "boolean",
