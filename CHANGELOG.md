@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.1.0 (unreleased)
+## 2.1.0 (2026-10-04)
 
 - Row and column items (entity group and sections cards, the weather card's row sections) stack the value under the name instead of putting it next to the icon: icon, bold name, plain value (a badge pill stacks the same way). `name_position: above` gives name, icon, value. Row and column items show the value by default (`show_value: false` hides it); the weather card's row sections no longer need their own default. An item without a name shows its value in the name's bold style. Row items spread over the width by default (`align: space-between`). Column items are list-like instead: the icon on the left with the name over the value beside it (`name_position` only applies to rows) and sit on the left by default (`align: start`)
 
