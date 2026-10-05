@@ -23,6 +23,7 @@ const nb: Translation = {
   "control.next": "Neste",
   "control.run": "Kjør",
   "control.done": "Ferdig",
+  "control.off": "Av",
   "control.lock": "Lås",
   "control.unlock": "Lås opp",
   "control.hold_to": "Hold for å {action}",

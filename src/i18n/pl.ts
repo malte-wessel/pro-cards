@@ -23,6 +23,7 @@ const pl: Translation = {
   "control.next": "Następny",
   "control.run": "Uruchom",
   "control.done": "Gotowe",
+  "control.off": "Wyłączony",
   "control.lock": "Zablokuj",
   "control.unlock": "Odblokuj",
   "control.hold_to": "Przytrzymaj, aby {action}",

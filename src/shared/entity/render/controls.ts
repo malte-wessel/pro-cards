@@ -9,6 +9,7 @@ import type { EntityItem } from "../config.ts";
 import {
   ARM_MS,
   buttonsOf,
+  canControl,
   clampStep,
   currentOptionOf,
   DONE_MS,
@@ -322,7 +323,8 @@ export const segmentsEl = (
   const segs: HTMLButtonElement[] = [];
   for (const o of opts) {
     const text = optionText(o.value, o.label);
-    const b = button("seg", text);
+    // a segment drawn as an icon alone (the fan's power) still needs a name
+    const b = button("seg", text || t(ctx.hass, "control.off"));
     b.setAttribute("role", "radio");
     b.tabIndex = -1;
     segs.push(b);
@@ -336,7 +338,7 @@ export const segmentsEl = (
       s.textContent = text;
       b.appendChild(s);
     }
-    b.title = text || o.value;
+    b.title = text || t(ctx.hass, "control.off");
     b.addEventListener("click", () => {
       if (o.value === current) return;
       host.call(el, idx, ent, serviceFor(ent, m.st, { type: "option", value: o.value }), {
@@ -394,6 +396,8 @@ export const selectEl = (
     opt.selected = true;
     sel.appendChild(opt);
   }
+  // set the choice once every option is in (an option's own flag is not enough in every engine)
+  if (current !== null) sel.value = current;
   el.classList.toggle("pending", pend !== null);
   el.append(sel, icon("mdi:menu-down"));
   sel.addEventListener("change", () => {
@@ -442,7 +446,7 @@ export const buttonsEl = (
     // with confirm every button is a hold of its own (the ring fills around it)
     if (p.confirm && m.model.avail) {
       btn.classList.add("hold");
-      bindHold(btn, ctx, host, idx, t(ctx.hass, b.labelKey), run);
+      bindHold(btn, ctx, host, idx, `${idx}:${b.id}`, t(ctx.hass, b.labelKey), run);
     } else btn.addEventListener("click", run);
     el.appendChild(btn);
   }
@@ -489,7 +493,7 @@ export const buttonEl = (
       );
     else host.runAction(ent, ent.tap, "tap");
   });
-  if (!m.model.avail) disable(el);
+  if (!canControl(ent, m.st, m.model.avail)) disable(el);
   return el;
 };
 
@@ -508,16 +512,18 @@ const ringEl = () => {
 // press and hold: the ring fills for HOLD_CONFIRM_MS, then `run`; letting go earlier cancels.
 // The row keeps its DOM while the ring fills (beginDrag): an update of another entity in the card
 // must not rebuild the button under the finger. Assistive technology sends a bare click (no
-// pointer, no key): the first arms the button, a second within ARM_MS runs it.
+// pointer, no key): the first arms the button, a second within ARM_MS runs it. `armKey` names this
+// button alone: arming one button of a group must not confirm its neighbour.
 const bindHold = (
   el: HTMLElement,
   ctx: RenderCtx,
   host: ControlHost,
   idx: number,
+  armKey: string,
   action: string,
   run: () => void,
 ) => {
-  const isArmed = () => (host.armed.get(idx) ?? 0) > Date.now();
+  const isArmed = () => (host.armed.get(armKey) ?? 0) > Date.now();
   const label = (again: boolean) =>
     el.setAttribute(
       "aria-label",
@@ -532,7 +538,7 @@ const bindHold = (
     timer = undefined;
     fired = true;
     el.classList.remove("holding");
-    host.armed.delete(idx);
+    host.armed.delete(armKey);
     run();
     host.endDrag(idx);
   };
@@ -582,11 +588,11 @@ const bindHold = (
       fire();
       return;
     }
-    host.armed.set(idx, Date.now() + ARM_MS);
+    host.armed.set(armKey, Date.now() + ARM_MS);
     el.classList.add("armed");
     label(true);
     setTimeout(() => {
-      if ((host.armed.get(idx) ?? 0) <= Date.now()) host.armed.delete(idx);
+      if ((host.armed.get(armKey) ?? 0) <= Date.now()) host.armed.delete(armKey);
       if (el.isConnected) {
         el.classList.remove("armed");
         label(false);
@@ -614,11 +620,11 @@ export const holdEl = (
   el.setAttribute("aria-label", t(ctx.hass, "control.hold_to", { action }));
   el.append(ringEl(), holdIcon(ctx, ent, m));
   el.classList.toggle("pending", host.pending.has(idx));
-  if (!m.model.avail) {
+  if (!canControl(ent, m.st, m.model.avail)) {
     disable(el);
     return el;
   }
-  bindHold(el, ctx, host, idx, action, () =>
+  bindHold(el, ctx, host, idx, String(idx), action, () =>
     host.call(el, idx, ent, serviceFor(ent, m.st, { type: "hold" }), { until: later() }, "success"),
   );
   return el;

@@ -23,6 +23,7 @@ const pt: Translation = {
   "control.next": "Seguinte",
   "control.run": "Executar",
   "control.done": "Feito",
+  "control.off": "Desligado",
   "control.lock": "Trancar",
   "control.unlock": "Destrancar",
   "control.hold_to": "Manter premido para {action}",

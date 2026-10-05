@@ -253,3 +253,209 @@ test.describe("controls: pending and failure", () => {
     });
   });
 });
+
+// the active element's class inside the n-th card's shadow root
+const focusedIn = (page: Page, i: number) =>
+  page.evaluate((n) => {
+    const el = document.querySelectorAll("#root .cell > *")[n] as HTMLElement;
+    const a = el.shadowRoot?.activeElement as HTMLElement | null;
+    return a ? a.className : null;
+  }, i);
+// the centre of an element, or a point at fraction `fx` of its width
+const at = async (loc: ReturnType<typeof card>, fx = 0.5) => {
+  const b = (await loc.boundingBox())!;
+  return { x: b.x + b.width * fx, y: b.y + b.height / 2 };
+};
+
+test.describe("controls: slider with a pointer", () => {
+  test("a drag follows the pointer, shows the bubble and calls the service once on release", async ({
+    page,
+  }) => {
+    await mount(page, { type: T, entity: "cover.office_blinds", control: "slider" }, live);
+    const s = card(page).locator(".ctl-slider");
+    const track = s.locator(".track");
+    const from = await at(track, 0.4);
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await expect(s).toHaveClass(/dragging/);
+    await expect(s.locator(".bubble")).toBeVisible();
+    const to = await at(track, 0.8);
+    await page.mouse.move(to.x, to.y, { steps: 6 });
+    await expect(s).toHaveAttribute("aria-valuenow", "80");
+    await expect(s.locator(".bubble")).toHaveText("80 %");
+    expect(await calls(page)).toEqual([]);
+    await page.mouse.up();
+    await expect.poll(() => calls(page)).toHaveLength(1);
+    expect((await calls(page))[0]).toMatchObject({
+      domain: "cover",
+      service: "set_cover_position",
+      data: { entity_id: "cover.office_blinds", position: 80 },
+    });
+    await expect(s.locator(".bubble")).toBeHidden();
+  });
+
+  test("a tap on the track jumps there, past either end it clamps", async ({ page }) => {
+    await mount(page, { type: T, entity: "cover.office_blinds", control: "slider" }, live);
+    const track = card(page).locator(".ctl-slider .track");
+    const b = (await track.boundingBox())!;
+    await page.mouse.click(b.x + b.width * 0.25, b.y + b.height / 2);
+    await page.mouse.move(b.x + b.width * 0.5, b.y + b.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(b.x + b.width + 60, b.y + b.height / 2, { steps: 4 });
+    await page.mouse.up();
+    await expect.poll(() => calls(page)).toHaveLength(2);
+    expect((await calls(page)).map((c) => c.data.position)).toEqual([25, 100]);
+  });
+
+  test("the row keeps its DOM while dragging, even when other entities change", async ({
+    page,
+  }) => {
+    await mount(
+      page,
+      {
+        type: G,
+        entities: [
+          { entity: "cover.office_blinds", control: "slider" },
+          { entity: "sensor.pressure" },
+        ],
+      },
+      live,
+    );
+    const s = card(page).locator(".ctl-slider");
+    const handle = await s.elementHandle();
+    const p = await at(s.locator(".track"), 0.3);
+    await page.mouse.move(p.x, p.y);
+    await page.mouse.down();
+    await setState(page, "sensor.pressure", "1001");
+    await expect(card(page).locator(".row").nth(1)).toContainText("1,001");
+    expect(await handle!.evaluate((el) => el.isConnected)).toBe(true);
+    await page.mouse.up();
+    await expect.poll(() => calls(page)).toHaveLength(1);
+  });
+});
+
+test.describe("controls: keyboard", () => {
+  test("Tab reaches the row's own action first, then its controls in order", async ({ page }) => {
+    await mount(page, { type: T, entity: "light.living_room", control: "auto" }, live);
+    await card(page).locator(".hit").focus();
+    expect(await focusedIn(page, 0)).toBe("hit");
+    await page.keyboard.press("Tab");
+    expect(await focusedIn(page, 0)).toMatch(/toggle/);
+    await page.keyboard.press("Tab");
+    expect(await focusedIn(page, 0)).toMatch(/ctl-slider/);
+  });
+
+  test("a keyboard step keeps the focus ring on the slider", async ({ page }) => {
+    await mount(page, { type: T, entity: "light.living_room", control: "slider" }, live);
+    await card(page).locator(".hit").focus();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("ArrowRight");
+    await expect.poll(() => calls(page)).toHaveLength(1);
+    const ring = await card(page)
+      .locator(".ctl-slider")
+      .evaluate((el) => el.matches(":focus-visible") && getComputedStyle(el).boxShadow);
+    expect(ring).toMatch(/rgb/);
+  });
+
+  test("segments: Left wraps to the end, Home and End jump", async ({ page }) => {
+    await mount(
+      page,
+      { type: T, entity: "climate.living_room", attribute: "hvac_mode", control: "segments" },
+      live,
+    );
+    const segs = card(page).locator(".seg");
+    await expect(segs.nth(1)).toHaveAttribute("aria-checked", "true");
+    await segs.nth(1).focus();
+    await page.keyboard.press("Home");
+    await expect.poll(() => calls(page)).toHaveLength(1);
+    await page.keyboard.press("ArrowLeft");
+    await expect.poll(() => calls(page)).toHaveLength(2);
+    await page.keyboard.press("End");
+    expect((await calls(page)).map((c) => c.data.hvac_mode)).toEqual(["off", "auto"]);
+    await expect(segs.nth(2)).toHaveAttribute("aria-checked", "true");
+    await expect.poll(() => focusedIn(page, 0)).toMatch(/seg/);
+  });
+
+  test("a confirmed cover button runs when Space is held, not when tapped", async ({ page }) => {
+    await mount(
+      page,
+      { type: T, entity: "cover.office_blinds", control: "buttons", control_confirm: true },
+      live,
+    );
+    const stop = card(page).locator(".ctl-buttons .round").nth(1);
+    await stop.focus();
+    await page.keyboard.press("Space");
+    await page.waitForTimeout(1200);
+    expect(await calls(page)).toEqual([]);
+    await page.keyboard.down("Space");
+    await expect.poll(() => domainCalls(page), { timeout: 3000 }).toEqual(["cover.stop_cover"]);
+    await page.keyboard.up("Space");
+  });
+});
+
+test.describe("controls: in items and around the row", () => {
+  test("a hold on a row item's lead runs after a second", async ({ page }) => {
+    await mount(
+      page,
+      { type: G, layout: "row", entities: [{ entity: "lock.garage_side_door", control: "auto" }] },
+      live,
+    );
+    const h = card(page).locator(".ctl-hold.lead-size");
+    await expect(h).toHaveAttribute("aria-label", "Hold to lock");
+    const p = await at(h);
+    await page.mouse.move(p.x, p.y);
+    await page.mouse.down();
+    await expect.poll(() => domainCalls(page), { timeout: 3000 }).toEqual(["lock.lock"]);
+    await page.mouse.up();
+  });
+
+  test("the Run chip runs the script, says Done, then Run again", async ({ page }) => {
+    await mount(page, { type: T, entity: "script.check_windows", control: "auto" }, live);
+    const chip = card(page).locator(".ctl-chip");
+    await chip.click();
+    await expect(chip).toHaveText("Done");
+    expect(await domainCalls(page)).toEqual(["script.turn_on"]);
+    await expect(chip).toHaveText("Run", { timeout: 3000 });
+  });
+
+  test("the space around a control opens more-info, a disabled lead passes the tap through", async ({
+    page,
+  }) => {
+    await mount(
+      page,
+      [
+        { type: T, entity: "light.living_room", control: "auto" },
+        {
+          type: T,
+          entity: "sensor.washer_status",
+          value: "unavailable",
+          control: "toggle",
+          control_position: "lead",
+        },
+      ],
+      live,
+    );
+    const more = () => events(page).then((e) => e.filter((x) => x.type === "more-info"));
+    // the gap between the value and the switch belongs to the row
+    const row = (await card(page, 0).locator(".row").boundingBox())!;
+    await page.mouse.click(row.x + row.width * 0.55, row.y + 14);
+    await expect.poll(more).toEqual([{ type: "more-info", entityId: "light.living_room" }]);
+    expect(await calls(page)).toEqual([]);
+    await card(page, 1).locator(".lead.tap").click({ force: true });
+    await expect.poll(more).toHaveLength(2);
+    expect(await calls(page)).toEqual([]);
+  });
+});
+
+test.describe("controls: the docs' slow demo light", () => {
+  test("keeps its ghost until it answers a moment later", async ({ page }) => {
+    await mount(page, { type: T, entity: "light.attic", control: "toggle" }, live);
+    const t = card(page).locator(".toggle");
+    await t.click();
+    await expect(t).toHaveClass(/pending/);
+    await page.waitForTimeout(500);
+    await expect(t).toHaveClass(/pending/);
+    await expect(t).not.toHaveClass(/pending/, { timeout: 2000 });
+    await expect(t).toHaveAttribute("aria-checked", "false");
+  });
+});

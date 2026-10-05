@@ -7,6 +7,7 @@ import {
 import type { HassEntity, HomeAssistant } from "../../../../src/shared/ha.ts";
 import {
   buttonsOf,
+  canControl,
   clampStep,
   controlShowsValue,
   currentOptionOf,
@@ -462,5 +463,108 @@ describe("services", () => {
     // no silent toggle on a domain without an on / off meaning
     expect(svc("sensor.a", {}, undefined, { type: "hold" })).toBeNull();
     expect(svc("climate.a", {}, undefined, { type: "hold" })).toBeNull();
+  });
+});
+
+describe("more placements", () => {
+  it("puts each named control at its default slot in every row kind", () => {
+    const at = (control: string, row: Parameters<typeof placementsOf>[1], entity = "light.x") =>
+      kinds(placementsOf(ent({ entity, control }), row));
+    for (const row of ["tile", "list", "hero", "cell"] as const)
+      expect(at("slider", row)).toEqual(["slider@block"]);
+    for (const row of ["item-column", "field"] as const)
+      expect(at("slider", row)).toEqual(["slider@end"]);
+    for (const control of ["toggle", "stepper", "segments", "buttons", "button", "select", "hold"])
+      expect(at(control, "tile")).toEqual([`${control}@end`]);
+    expect(at("button", "item-row", "script.x")).toEqual(["button@lead"]);
+    expect(at("hold", "item-row", "lock.x")).toEqual(["hold@lead"]);
+  });
+  it("lets a button or hold take the lead of a tile, and keeps auto's toggle on the line", () => {
+    const lead = (o: RawEntity) =>
+      kinds(placementsOf(ent({ control_position: "lead", ...o }), "tile"));
+    expect(lead({ entity: "script.x", control: "button" })).toEqual(["button@lead"]);
+    expect(lead({ entity: "lock.x", control: "hold" })).toEqual(["hold@lead"]);
+    // control_position applies to a named control; auto keeps the domain's own slots
+    expect(lead({ control: "auto" })).toEqual(["toggle@end", "slider@block"]);
+  });
+  it("keeps one control per block or lead slot", () => {
+    const list = placementsOf(ent({ control: "slider", control_position: "block" }), "tile");
+    expect(list).toHaveLength(1);
+  });
+  it("marks a confirmed group of buttons for a hold of their own, in every row kind", () => {
+    for (const row of ["tile", "list", "cell", "item-column", "field"] as const)
+      expect(
+        placementsOf(ent({ entity: "cover.x", control: "buttons", control_confirm: true }), row)[0],
+      ).toMatchObject({ kind: "buttons", confirm: true });
+  });
+});
+
+describe("more ranges and services", () => {
+  it("lets min and max bound a light's brightness", () => {
+    expect(rangeOf(ent({ min: 10, max: 80 }), st("on", { brightness: 255 }))).toMatchObject({
+      min: 10,
+      max: 80,
+      value: 100,
+    });
+    expect(
+      serviceFor(ent({ min: 10, max: 80 }), st("on"), { type: "value", value: 95 }),
+    ).toMatchObject({ data: { brightness_pct: 80 } });
+  });
+  it("clamps volume to one and a step to the bounds", () => {
+    expect(
+      serviceFor(ent({ entity: "media_player.x" }), undefined, { type: "value", value: 140 }),
+    ).toMatchObject({ data: { volume_level: 1 } });
+    const s = st(5, { min: 5, max: 10, step: 1 }, "number.x");
+    expect(
+      serviceFor(ent({ entity: "number.x" }), s, { type: "step", dir: -1, from: 5 }),
+    ).toMatchObject({ data: { value: 5 } });
+  });
+  it("turns stringy and numeric options into strings and keeps their order", () => {
+    expect(ent({ control_options: [3, "b", 1] }).control?.options?.map((o) => o.value)).toEqual([
+      "3",
+      "b",
+      "1",
+    ]);
+  });
+  it("accepts an unset control_position and control_attribute", () => {
+    const c = ent({ control_position: null, control_attribute: null }).control;
+    expect(c).toMatchObject({ position: null, attribute: null });
+  });
+});
+
+describe("availability", () => {
+  it("keeps a never run script, scene or button usable", () => {
+    for (const id of ["script.x", "scene.x", "button.x", "input_button.x"])
+      expect(canControl(ent({ entity: id }), st("unknown", {}, id), false)).toBe(true);
+  });
+  it("greys out an unknown lock or light and anything unavailable", () => {
+    expect(canControl(ent({ entity: "lock.x" }), st("unknown", {}, "lock.x"), false)).toBe(false);
+    expect(canControl(ent({}), st("unknown"), false)).toBe(false);
+    expect(canControl(ent({ entity: "scene.x" }), st("unavailable", {}, "scene.x"), false)).toBe(
+      false,
+    );
+    expect(canControl(ent({ entity: "scene.x" }), undefined, false)).toBe(false);
+    expect(canControl(ent({}), st("on"), true)).toBe(true);
+  });
+  it("counts playing and open as on", () => {
+    expect(isOn(st("playing", {}, "media_player.x"))).toBe(true);
+    expect(isOn(st("open", {}, "cover.x"))).toBe(true);
+  });
+});
+
+describe("remaining mappings", () => {
+  it("skips to the previous and the next track", () => {
+    const mp = ent({ entity: "media_player.x" });
+    expect(serviceFor(mp, undefined, { type: "button", id: "previous" })).toMatchObject({
+      service: "media_previous_track",
+    });
+    expect(serviceFor(mp, undefined, { type: "button", id: "next" })).toMatchObject({
+      service: "media_next_track",
+    });
+  });
+  it("keeps the value beside a stepper on a domain it does not show", () => {
+    const stepper = { kind: "stepper", position: "end", small: false } as const;
+    expect(controlShowsValue(ent({}), stepper)).toBe(false);
+    expect(controlShowsValue(ent({ entity: "fan.x" }), stepper)).toBe(false);
   });
 });

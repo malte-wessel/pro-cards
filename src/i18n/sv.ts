@@ -23,6 +23,7 @@ const sv: Translation = {
   "control.next": "Nästa",
   "control.run": "Kör",
   "control.done": "Klart",
+  "control.off": "Av",
   "control.lock": "Lås",
   "control.unlock": "Lås upp",
   "control.hold_to": "Håll för att {action}",

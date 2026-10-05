@@ -93,8 +93,9 @@ export interface Pending {
 // what the control builders need from the card element
 export interface ControlHost {
   pending: ReadonlyMap<number, Pending>;
-  // hold buttons armed by a first press (screen readers), by entity index: until when
-  armed: Map<number, number>;
+  // hold buttons armed by a first press (screen readers): until when, by entity index, and by
+  // `index:button` for the buttons of a confirmed group
+  armed: Map<string, number>;
   readonly dragging: number | null;
   call(
     el: HTMLElement,
@@ -330,6 +331,11 @@ export const hasBlockControl = (ent: EntityItem) =>
 
 // ----- state helpers -----
 
+// a script, scene or button that was never run reports `unknown` (its state is the time of the
+// last run): that is no reason to grey its control out
+const PRESS_DOMAINS: ReadonlySet<string> = new Set(["script", "scene", "button", "input_button"]);
+export const canControl = (ent: EntityItem, st: HassEntity | undefined, avail: boolean) =>
+  avail || (st?.state === "unknown" && PRESS_DOMAINS.has(domainOf(ent.entity)));
 export const isOn = (st: HassEntity | undefined): boolean => {
   if (!st || st.state === "unavailable" || st.state === "unknown") return false;
   return stateActive(st) && !OFF_STATES.has(st.state);

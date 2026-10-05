@@ -23,6 +23,7 @@ const ru: Translation = {
   "control.next": "Далее",
   "control.run": "Запустить",
   "control.done": "Готово",
+  "control.off": "Выкл.",
   "control.lock": "Закрыть замок",
   "control.unlock": "Открыть замок",
   "control.hold_to": "Удерживайте, чтобы {action}",

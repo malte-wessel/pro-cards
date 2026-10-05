@@ -23,6 +23,7 @@ const nl: Translation = {
   "control.next": "Volgende",
   "control.run": "Uitvoeren",
   "control.done": "Klaar",
+  "control.off": "Uit",
   "control.lock": "Vergrendelen",
   "control.unlock": "Ontgrendelen",
   "control.hold_to": "Houd vast om te {action}",

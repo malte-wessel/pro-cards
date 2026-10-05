@@ -79,7 +79,7 @@ export abstract class EntityCardBase extends HTMLElement {
   // controls: service calls in flight per entity index, the row being dragged, the host the
   // builders talk to
   _pending = new Map<number, Pending>();
-  _armed = new Map<number, number>();
+  _armed = new Map<string, number>();
   _dragging: number | null = null;
   _pendingTimer?: ReturnType<typeof setTimeout>;
   _idxsByEntity = new Map<string, number[]>();
@@ -539,8 +539,13 @@ export abstract class EntityCardBase extends HTMLElement {
     const i = [...row.querySelectorAll<HTMLElement>(FOCUSABLE)].indexOf(a);
     return i < 0 ? null : { row, i };
   }
+  // a control that came back disabled (the entity went unavailable) cannot take the focus: the
+  // row's own action takes it instead, so the focus never falls out of the card
   _refocus(row: HTMLElement, i: number) {
-    row.querySelectorAll<HTMLElement>(FOCUSABLE)[i]?.focus({ preventScroll: true });
+    const el = row.querySelectorAll<HTMLElement>(FOCUSABLE)[i];
+    el?.focus({ preventScroll: true });
+    if (!el || this.shadowRoot?.activeElement !== el)
+      row.querySelector<HTMLElement>(":scope > .hit")?.focus({ preventScroll: true });
   }
   // fills one row from its model; a subclass adds its own row kinds and falls back to this
   _fill(ctx: RenderCtx, row: HTMLElement, ent: EntityItem, idx: number, m: EntityModel) {

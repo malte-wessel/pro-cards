@@ -23,6 +23,7 @@ const cs: Translation = {
   "control.next": "Další",
   "control.run": "Spustit",
   "control.done": "Hotovo",
+  "control.off": "Vypnuto",
   "control.lock": "Zamknout",
   "control.unlock": "Odemknout",
   "control.hold_to": "Podržte pro {action}",

@@ -22,6 +22,7 @@ const en = {
   "control.next": "Next",
   "control.run": "Run",
   "control.done": "Done",
+  "control.off": "Off",
   "control.lock": "lock",
   "control.unlock": "unlock",
   "control.hold_to": "Hold to {action}",

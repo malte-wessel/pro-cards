@@ -23,6 +23,7 @@ const it: Translation = {
   "control.next": "Successivo",
   "control.run": "Esegui",
   "control.done": "Fatto",
+  "control.off": "Spento",
   "control.lock": "Blocca",
   "control.unlock": "Sblocca",
   "control.hold_to": "Tieni premuto per {action}",

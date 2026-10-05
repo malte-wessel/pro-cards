@@ -895,6 +895,25 @@ const CASES = {
       grid_options: { columns: 6 },
     },
   ],
+  // every control greyed out while its entity is unavailable, small in a table
+  "egc-controls-unavailable": {
+    type: EGC,
+    title: "Unavailable",
+    entities: [
+      { entity: "light.living_room", value: "unavailable", control: "auto" },
+      { entity: "climate.living_room", value: "unavailable", control: "auto" },
+      { entity: "cover.office_blinds", value: "unavailable", control: "auto" },
+      { entity: "lock.front_door", value: "unavailable", control: "auto" },
+      { entity: "input_select.house_mode", value: "unavailable", control: "auto" },
+      { entity: "script.check_windows", value: "unavailable", control: "auto" },
+      {
+        entity: "climate.bedroom",
+        value: "unavailable",
+        control: "segments",
+        control_attribute: "hvac_mode",
+      },
+    ],
+  },
   "egc-controls": [
     {
       type: EGC,
