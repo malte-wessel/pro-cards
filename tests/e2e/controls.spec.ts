@@ -74,7 +74,7 @@ test.describe("controls: focus and gestures", () => {
       live,
     );
     const h = card(page).locator(".ctl-hold");
-    await expect(h).toHaveAttribute("aria-label", "Hold to Unlock");
+    await expect(h).toHaveAttribute("aria-label", "Hold to unlock");
     const box = (await h.boundingBox())!;
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
@@ -111,11 +111,33 @@ test.describe("controls: focus and gestures", () => {
     const h = card(page).locator(".ctl-hold");
     await h.dispatchEvent("click");
     await expect(h).toHaveClass(/armed/);
-    await expect(h).toHaveAttribute("aria-label", "Press again to Unlock");
+    await expect(h).toHaveAttribute("aria-label", "Press again to unlock");
     expect(await calls(page)).toEqual([]);
     await h.dispatchEvent("click");
     await expect.poll(() => domainCalls(page)).toEqual(["lock.unlock"]);
     await expect(h).not.toHaveClass(/armed/);
+  });
+});
+
+test.describe("controls: confirmed buttons", () => {
+  test("every button of a confirmed group needs a hold; a click does nothing", async ({ page }) => {
+    await mount(
+      page,
+      { type: T, entity: "cover.office_blinds", control: "buttons", control_confirm: true },
+      live,
+    );
+    const open = card(page).locator(".ctl-buttons .round").nth(0);
+    await expect(open).toHaveAttribute("aria-label", "Hold to Open");
+    await expect(card(page).locator(".ctl-buttons .ring")).toHaveCount(3);
+    await open.click();
+    await page.waitForTimeout(200);
+    expect(await calls(page)).toEqual([]);
+    const box = (await open.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await expect(open).toHaveClass(/holding/);
+    await expect.poll(() => domainCalls(page), { timeout: 3000 }).toEqual(["cover.open_cover"]);
+    await page.mouse.up();
   });
 });
 

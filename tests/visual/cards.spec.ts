@@ -880,6 +880,20 @@ const CASES = {
       control: "toggle",
       grid_options: { columns: 6 },
     },
+    {
+      type: EC,
+      entity: "cover.garage_door",
+      control: "buttons",
+      control_confirm: true,
+      grid_options: { columns: 6 },
+    },
+    {
+      type: EC,
+      entity: "climate.living_room",
+      attribute: "current_temperature",
+      control: "segments",
+      grid_options: { columns: 6 },
+    },
   ],
   "egc-controls": [
     {

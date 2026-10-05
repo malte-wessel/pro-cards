@@ -22,7 +22,7 @@ import {
 import type { ActionConfig, CardConfigBase } from "../ha.ts";
 import type { StringKey } from "../i18n.ts";
 import { isTemplate, numOrNull, oneOf } from "../util.ts";
-import { ITEM_CONTROLS, normalizeControl, type ControlConfig } from "./control.ts";
+import { ITEM_CONTROLS, normalizeControl, placementsOf, type ControlConfig } from "./control.ts";
 
 // ----- the raw config as written in YAML -----
 
@@ -71,9 +71,10 @@ export interface RawEntity extends RawItemOptions, RawActionDefaults {
   // controls: `control` (a kind, `true` = auto) and its options; `toggle` is the old spelling
   control?: unknown;
   control_position?: unknown;
-  step?: unknown;
-  options?: unknown;
-  confirm?: boolean;
+  control_attribute?: unknown;
+  control_step?: unknown;
+  control_options?: unknown;
+  control_confirm?: boolean;
   toggle?: boolean;
 }
 export type RawEntityInput = string | RawEntity;
@@ -301,10 +302,12 @@ export const normalizeGroup = (
       ent.visual = "icon";
     }
     if (isItem && ent.control && !ITEM_CONTROLS[layout]?.has(ent.control.kind)) {
-      console.warn(
-        `${ctx.type}: control '${ent.control.kind}' is not drawn in a ${layout}; using the domain default where it fits`,
-      );
+      const kind = ent.control.kind;
       ent.control = { ...ent.control, kind: "auto" };
+      const fits = placementsOf(ent, layout === "row" ? "item-row" : "item-column").length > 0;
+      console.warn(
+        `${ctx.type}: control '${kind}' is not drawn in a ${layout}; ${fits ? "using the domain default" : "the domain default does not fit either, no control is drawn"}`,
+      );
     }
     return ent;
   });

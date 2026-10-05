@@ -427,14 +427,23 @@ export const buttonsEl = (
     const btn = button(`round${b.primary ? " f" : ""}`, t(ctx.hass, b.labelKey));
     const ic =
       b.id === "play_pause" ? (m.st?.state === "playing" ? "mdi:pause" : "mdi:play") : b.icon;
+    if (p.confirm) btn.appendChild(ringEl());
     btn.appendChild(icon(ic));
     btn.classList.toggle("pending", pend === b.id);
-    btn.addEventListener("click", () => {
-      host.call(el, idx, ent, serviceFor(ent, m.st, { type: "button", id: b.id }), {
-        until: later(),
-        value: b.id,
-      });
-    });
+    const run = () =>
+      host.call(
+        el,
+        idx,
+        ent,
+        serviceFor(ent, m.st, { type: "button", id: b.id }),
+        { until: later(), value: b.id },
+        p.confirm ? "success" : "light",
+      );
+    // with confirm every button is a hold of its own (the ring fills around it)
+    if (p.confirm && m.model.avail) {
+      btn.classList.add("hold");
+      bindHold(btn, ctx, host, idx, t(ctx.hass, b.labelKey), run);
+    } else btn.addEventListener("click", run);
     el.appendChild(btn);
   }
   if (!m.model.avail) disable(el);
@@ -489,24 +498,25 @@ const holdIcon = (ctx: RenderCtx, ent: EntityItem, m: EntityModel) => {
   if (d === "lock") return icon(m.st?.state === "locked" ? "mdi:lock-open-variant" : "mdi:lock");
   return iconEl(ctx, m.look, m.st);
 };
-// press and hold: a ring fills, the service runs when it is full; letting go earlier cancels
-export const holdEl = (
+// the ring that fills around a held button
+const ringEl = () => {
+  const C = (2 * Math.PI * 17).toFixed(1);
+  const tpl = document.createElement("template");
+  tpl.innerHTML = `<svg class="ring" viewBox="0 0 40 40"><circle class="prog" cx="20" cy="20" r="17" transform="rotate(-90 20 20)" stroke-dasharray="${C}" style="--c:${C}"/></svg>`;
+  return tpl.content.firstElementChild as SVGElement;
+};
+// press and hold: the ring fills for HOLD_CONFIRM_MS, then `run`; letting go earlier cancels.
+// The row keeps its DOM while the ring fills (beginDrag): an update of another entity in the card
+// must not rebuild the button under the finger. Assistive technology sends a bare click (no
+// pointer, no key): the first arms the button, a second within ARM_MS runs it.
+const bindHold = (
+  el: HTMLElement,
   ctx: RenderCtx,
-  ent: EntityItem,
+  host: ControlHost,
   idx: number,
-  m: EntityModel,
-  p: Placement,
+  action: string,
+  run: () => void,
 ) => {
-  const host = ctx.ctl as ControlHost;
-  const d = String(ent.entity || "").split(".")[0];
-  const action =
-    d === "lock"
-      ? t(ctx.hass, m.st?.state === "locked" ? "control.unlock" : "control.lock")
-      : nameOf(ctx, ent, m.st);
-  const el = root("hold", p, idx, "button") as HTMLButtonElement;
-  el.type = "button";
-  if (p.position === "lead") el.classList.add("lead-size");
-  // armed: a screen reader pressed once, the next press within ARM_MS runs the service
   const isArmed = () => (host.armed.get(idx) ?? 0) > Date.now();
   const label = (again: boolean) =>
     el.setAttribute(
@@ -515,14 +525,6 @@ export const holdEl = (
     );
   label(isArmed());
   el.classList.toggle("armed", isArmed());
-  const C = (2 * Math.PI * 17).toFixed(1);
-  el.innerHTML = `<svg viewBox="0 0 40 40"><circle class="prog" cx="20" cy="20" r="17" transform="rotate(-90 20 20)" stroke-dasharray="${C}" style="--c:${C}"/></svg>`;
-  el.appendChild(holdIcon(ctx, ent, m));
-  el.classList.toggle("pending", host.pending.has(idx));
-  if (!m.model.avail) {
-    disable(el);
-    return el;
-  }
   let timer: ReturnType<typeof setTimeout> | undefined,
     fired = false,
     started = false;
@@ -531,11 +533,9 @@ export const holdEl = (
     fired = true;
     el.classList.remove("holding");
     host.armed.delete(idx);
-    host.call(el, idx, ent, serviceFor(ent, m.st, { type: "hold" }), { until: later() }, "success");
+    run();
     host.endDrag(idx);
   };
-  // the row keeps its DOM while the ring fills (beginDrag): an update of another entity in the
-  // card must not rebuild the button under the finger
   const start = () => {
     fired = false;
     started = true;
@@ -576,7 +576,6 @@ export const holdEl = (
     done();
   });
   el.addEventListener("blur", cancel);
-  // assistive technology sends a bare click (no pointer, no key): press twice to confirm
   el.addEventListener("click", (ev) => {
     if (started || ev.detail !== 0) return;
     if (isArmed()) {
@@ -594,6 +593,34 @@ export const holdEl = (
       }
     }, ARM_MS);
   });
+};
+// the hold-to-confirm button: locks, or any toggle / button with `control_confirm`
+export const holdEl = (
+  ctx: RenderCtx,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+  p: Placement,
+) => {
+  const host = ctx.ctl as ControlHost;
+  const d = String(ent.entity || "").split(".")[0];
+  const action =
+    d === "lock"
+      ? t(ctx.hass, m.st?.state === "locked" ? "control.unlock" : "control.lock")
+      : nameOf(ctx, ent, m.st);
+  const el = root("hold", p, idx, "button") as HTMLButtonElement;
+  el.type = "button";
+  if (p.position === "lead") el.classList.add("lead-size");
+  el.setAttribute("aria-label", t(ctx.hass, "control.hold_to", { action }));
+  el.append(ringEl(), holdIcon(ctx, ent, m));
+  el.classList.toggle("pending", host.pending.has(idx));
+  if (!m.model.avail) {
+    disable(el);
+    return el;
+  }
+  bindHold(el, ctx, host, idx, action, () =>
+    host.call(el, idx, ent, serviceFor(ent, m.st, { type: "hold" }), { until: later() }, "success"),
+  );
   return el;
 };
 

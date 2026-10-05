@@ -47,21 +47,36 @@ describe("control config", () => {
     expect(() => ent({ control_position: "top" })).toThrow(/control_position must be one of/);
   });
   it("keeps a positive step, drops the rest", () => {
-    expect(ent({ step: 2.5 }).control?.step).toBe(2.5);
-    expect(ent({ step: 0 }).control?.step).toBeNull();
-    expect(ent({ step: "x" }).control?.step).toBeNull();
+    expect(ent({ control_step: 2.5 }).control?.step).toBe(2.5);
+    expect(ent({ control_step: 0 }).control?.step).toBeNull();
+    expect(ent({ control_step: "x" }).control?.step).toBeNull();
   });
   it("normalises options to value / label / icon and drops junk", () => {
     const c = ent({
-      options: ["a", 2, null, { value: "b", label: "Bee", icon: "mdi:b" }, { label: "no value" }],
+      control_options: [
+        "a",
+        2,
+        null,
+        { value: "b", label: "Bee", icon: "mdi:b" },
+        { label: "no value" },
+      ],
     }).control;
     expect(c?.options).toEqual([
       { value: "a", label: null, icon: null },
       { value: "2", label: null, icon: null },
       { value: "b", label: "Bee", icon: "mdi:b" },
     ]);
-    expect(ent({ options: [] }).control?.options).toBeNull();
-    expect(ent({ confirm: true }).control?.confirm).toBe(true);
+    expect(ent({ control_options: [] }).control?.options).toBeNull();
+    expect(ent({ control_confirm: true }).control?.confirm).toBe(true);
+  });
+  it("targets the mode of control_attribute, else the displayed mode attribute", () => {
+    expect(ent({ control_attribute: "preset_mode" }).control?.attribute).toBe("preset_mode");
+    expect(ent({ attribute: "fan_mode" }).control?.attribute).toBe("fan_mode");
+    expect(
+      ent({ attribute: "temperature", control_attribute: "hvac_mode" }).control?.attribute,
+    ).toBe("hvac_mode");
+    expect(ent({ attribute: "current_temperature" }).control?.attribute).toBeNull();
+    expect(() => ent({ control_attribute: "swing" })).toThrow(/control_attribute must be one of/);
   });
 });
 
@@ -120,17 +135,18 @@ describe("placements", () => {
     expect(kinds(placementsOf(ent({ control: "slider" }), "item-row"))).toEqual([]);
   });
   it("confirm turns the primary into hold to confirm and leaves the slider", () => {
-    expect(kinds(placementsOf(ent({ confirm: true }), "tile"))).toEqual([
+    expect(kinds(placementsOf(ent({ control_confirm: true }), "tile"))).toEqual([
       "hold@end",
       "slider@block",
     ]);
-    expect(kinds(placementsOf(ent({ entity: "cover.a", confirm: true }), "tile"))).toEqual([
-      "hold@end",
-      "slider@block",
-    ]);
-    expect(kinds(placementsOf(ent({ entity: "sensor.a", confirm: true }), "tile"))).toEqual([
-      "hold@end",
-    ]);
+    // every button of a group holds on its own: stop stays available
+    const cover = placementsOf(ent({ entity: "cover.a", control_confirm: true }), "tile");
+    expect(kinds(cover)).toEqual(["buttons@end", "slider@block"]);
+    expect(cover[0].confirm).toBe(true);
+    expect(cover[1].confirm).toBeUndefined();
+    expect(kinds(placementsOf(ent({ entity: "sensor.a", control_confirm: true }), "tile"))).toEqual(
+      ["hold@end"],
+    );
   });
   it("knows when a tile grows by a block control", () => {
     expect(hasBlockControl(ent({}))).toBe(true);
@@ -188,7 +204,7 @@ describe("ranges", () => {
     expect(
       rangeOf(n, st(80, { min: 50, max: 100, step: 5, unit_of_measurement: "%" }, "number.a")),
     ).toEqual({ min: 50, max: 100, step: 5, value: 80, unit: "%" });
-    const o = ent({ entity: "number.a", min: 10, max: 20, step: 2 });
+    const o = ent({ entity: "number.a", min: 10, max: 20, control_step: 2 });
     expect(rangeOf(o, st(15, { min: 0, max: 100, step: 5 }, "number.a"))).toMatchObject({
       min: 10,
       max: 20,
@@ -241,6 +257,14 @@ describe("options", () => {
       { value: "heat", label: null, icon: HVAC_ICON.heat },
     ]);
     expect(currentOptionOf(hvac, s)).toBe("heat");
+    // the display may show something else: the control still targets the hvac mode
+    const shown = ent({
+      entity: "climate.a",
+      attribute: "current_temperature",
+      control: "segments",
+    });
+    expect(optionsOf(shown, s).map((o) => o.value)).toEqual(["off", "heat"]);
+    expect(currentOptionOf(shown, s)).toBe("heat");
     const preset = ent({ entity: "climate.a", attribute: "preset_mode" });
     expect(optionsOf(preset, s).map((o) => o.value)).toEqual(["eco", "boost"]);
     expect(currentOptionOf(preset, s)).toBe("eco");
@@ -267,7 +291,10 @@ describe("options", () => {
     expect(optionsOf(sel, s).map((o) => o.value)).toEqual(["Home", "Away"]);
     expect(currentOptionOf(sel, s)).toBe("Home");
     expect(currentOptionOf(sel, undefined)).toBeNull();
-    const own = ent({ entity: "input_select.a", options: [{ value: "Away", label: "Out" }] });
+    const own = ent({
+      entity: "input_select.a",
+      control_options: [{ value: "Away", label: "Out" }],
+    });
     expect(optionsOf(own, s)).toEqual([{ value: "Away", label: "Out", icon: null }]);
   });
   it("has transport buttons for covers and media players only", () => {
@@ -413,5 +440,8 @@ describe("services", () => {
       domain: "homeassistant",
       service: "toggle",
     });
+    // no silent toggle on a domain without an on / off meaning
+    expect(svc("sensor.a", {}, undefined, { type: "hold" })).toBeNull();
+    expect(svc("climate.a", {}, undefined, { type: "hold" })).toBeNull();
   });
 });

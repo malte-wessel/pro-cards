@@ -126,12 +126,14 @@ export const STYLE_CONTROLS = `
   .ctl-hold { position: relative; flex: none; width: 36px; height: 36px; border: 0; padding: 0; border-radius: 50%; background: var(--fe-soft); color: var(--fe-color); display: flex; align-items: center; justify-content: center; cursor: pointer; --mdc-icon-size: 20px; touch-action: none; -webkit-user-select: none; user-select: none; }
   .ctl-hold.sm { width: 30px; height: 30px; --mdc-icon-size: 18px; }
   .ctl-hold.lead-size { width: 40px; height: 40px; --mdc-icon-size: 22px; }
-  .ctl-hold svg { position: absolute; inset: -4px; width: calc(100% + 8px); height: calc(100% + 8px); overflow: visible; pointer-events: none; }
-  .ctl-hold .prog { fill: none; stroke: var(--fe-color); stroke-width: 2.5; stroke-linecap: round; stroke-dashoffset: var(--c); transition: none; }
-  .ctl-hold.holding .prog { stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear; }
-  .ctl-hold.armed { box-shadow: 0 0 0 2px var(--fe-soft); }
-  .ctl-hold.armed .prog { stroke-dashoffset: 0; opacity: .45; }
   .ctl-hold.pending { animation: ctl-pulse 1s ease-in-out infinite; }
+  /* the ring of a held button: the hold control, or every button of a confirmed group */
+  .ctl .round.hold { touch-action: none; -webkit-user-select: none; user-select: none; }
+  .ctl .ring { position: absolute; inset: -4px; width: calc(100% + 8px); height: calc(100% + 8px); overflow: visible; pointer-events: none; }
+  .ctl .ring .prog { fill: none; stroke: var(--fe-color); stroke-width: 2.5; stroke-linecap: round; stroke-dashoffset: var(--c); transition: none; }
+  .ctl .holding .ring .prog, .ctl.holding .ring .prog { stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear; }
+  .ctl .armed, .ctl.armed { box-shadow: 0 0 0 2px var(--fe-soft); }
+  .ctl .armed .ring .prog, .ctl.armed .ring .prog { stroke-dashoffset: 0; opacity: .45; }
   @keyframes ctl-pulse { 50% { opacity: .45; } }
   @media (prefers-reduced-motion: reduce) { .ctl, .ctl *, .toggle i, .lead.tap .shape { animation: none !important; transition: none !important; } }
 `;

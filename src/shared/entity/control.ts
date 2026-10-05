@@ -25,6 +25,9 @@ export type ControlName = (typeof CONTROLS)[number];
 export type ControlKind = Exclude<ControlName, "auto" | "none">;
 export const CONTROL_POSITIONS = ["end", "block", "lead"] as const;
 export type ControlPosition = (typeof CONTROL_POSITIONS)[number];
+// the mode a segments / select control sets on a climate or fan entity (`control_attribute`)
+export const CONTROL_ATTRIBUTES = ["hvac_mode", "preset_mode", "fan_mode"] as const;
+export type ControlAttribute = (typeof CONTROL_ATTRIBUTES)[number];
 
 export interface ControlOption {
   value: string;
@@ -35,15 +38,19 @@ export interface ControlOption {
 export interface ControlConfig {
   kind: "auto" | ControlKind;
   position: ControlPosition | null;
+  // what the control targets on a climate / fan: `control_attribute`, else the displayed
+  // attribute when it is a mode, else the domain's main mode
+  attribute: ControlAttribute | null;
   step: number | null;
   options: ControlOption[] | null;
   confirm: boolean;
 }
-// one drawn control: its kind, slot and size
+// one drawn control: its kind, slot and size; `confirm` makes every button of a group a hold
 export interface Placement {
   kind: ControlKind;
   position: ControlPosition;
   small: boolean;
+  confirm?: boolean;
 }
 // the row kinds the fill functions draw (the `.row` classes; items split by their layout)
 export type RowKind =
@@ -137,8 +144,8 @@ const normalizeOptions = (list: unknown): ControlOption[] | null => {
   return out.length ? out : null;
 };
 
-// `control` (a name, `true` = auto, `none` = nothing) with its position, step, options and
-// confirm; `toggle: true` is the old spelling of `control: toggle`
+// `control` (a name, `true` = auto, `none` = nothing) with its `control_*` options;
+// `toggle: true` is the old spelling of `control: toggle`
 export const normalizeControl = (
   raw: RawEntity,
   ctx: NormalizeCtx,
@@ -159,13 +166,20 @@ export const normalizeControl = (
     throw new Error(
       `${ctx.type}: ${label}.control_position must be one of ${CONTROL_POSITIONS.join(" | ")}`,
     );
-  const step = numOrNull(raw.step);
+  const ca = raw.control_attribute;
+  if (ca !== undefined && ca !== null && !oneOf(CONTROL_ATTRIBUTES, ca))
+    throw new Error(
+      `${ctx.type}: ${label}.control_attribute must be one of ${CONTROL_ATTRIBUTES.join(" | ")}`,
+    );
+  const shown = raw.attribute;
+  const step = numOrNull(raw.control_step);
   return {
     kind,
     position: oneOf(CONTROL_POSITIONS, pos) ? pos : null,
+    attribute: oneOf(CONTROL_ATTRIBUTES, ca) ? ca : oneOf(CONTROL_ATTRIBUTES, shown) ? shown : null,
     step: step !== null && step > 0 ? step : null,
-    options: normalizeOptions(raw.options),
-    confirm: !!raw.confirm,
+    options: normalizeOptions(raw.control_options),
+    confirm: !!raw.control_confirm,
   };
 };
 
@@ -202,7 +216,7 @@ export const ITEM_CONTROLS: Record<string, ReadonlySet<ControlName>> = {
   ]),
 };
 
-const modeAttr = (ent: EntityItem) => (ent.valueSrc.kind === "attribute" ? ent.valueSrc.key : null);
+const modeAttr = (ent: EntityItem) => ent.control?.attribute ?? null;
 
 // the domain default of `control: auto`, as (kind, position) pairs
 export const defaultPlacements = (ent: EntityItem): Placement[] => {
@@ -265,10 +279,12 @@ export const placementsOf = (ent: EntityItem, row: RowKind): Placement[] => {
       ? defaultPlacements(ent)
       : [{ kind: c.kind, position: c.position ?? defaultPosition(c.kind, row), small: false }];
   if (c.confirm) {
-    // hold to confirm replaces the primary (toggle / button / hold); a group of buttons keeps its
-    // own buttons and the slider stays
+    // hold to confirm replaces the primary (toggle / button / hold); every button of a group
+    // becomes a hold of its own; the slider stays
     const i = list.findIndex((x) => LEAD_KINDS.has(x.kind) || x.kind === "buttons");
-    if (i >= 0) list[i] = { ...list[i], kind: "hold" };
+    if (i >= 0)
+      list[i] =
+        list[i].kind === "buttons" ? { ...list[i], confirm: true } : { ...list[i], kind: "hold" };
     else if (list.length === 0) list = [{ kind: "hold", position: "end", small: false }];
   }
   const out: Placement[] = [];
@@ -281,10 +297,13 @@ export const placementsOf = (ent: EntityItem, row: RowKind): Placement[] => {
       if (!LEAD_KINDS.has(kind)) continue;
       position = "lead";
     }
-    if (position === "lead" && kind === "toggle" && c.kind === "auto" && row !== "item-row")
-      position = "end";
     if (out.some((o) => o.position === position && position !== "end")) continue;
-    out.push({ kind, position, small: SMALL_ROWS.has(row) });
+    out.push({
+      kind,
+      position,
+      small: SMALL_ROWS.has(row),
+      ...(x.confirm ? { confirm: true } : {}),
+    });
   }
   return out;
 };
@@ -422,7 +441,8 @@ export const currentOptionOf = (ent: EntityItem, st: HassEntity | undefined): st
         best = o;
     return best?.value ?? String(p);
   }
-  if (a && !(d === "climate" && a === "hvac_mode")) {
+  // the climate's hvac mode is its state; presets and fan modes are attributes
+  if (a && a !== "hvac_mode") {
     const v = st.attributes?.[a];
     return v === null || v === undefined ? null : String(v);
   }
@@ -554,8 +574,14 @@ export const serviceFor = (
         case "button":
         case "input_button":
           return serviceFor(ent, st, { type: "press" });
-        default:
+        case "light":
+        case "switch":
+        case "input_boolean":
+        case "fan":
+        case "media_player":
           return call("homeassistant", "toggle");
+        default:
+          return null;
       }
   }
 };

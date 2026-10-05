@@ -231,7 +231,7 @@ Each visual, the options it reads and the layouts it is drawn in are explained o
 
 ## Attribute
 
-`attribute` shows an attribute instead of the state; `unit`, `decimals` and `min` / `max` apply to it like to a state.
+`attribute` shows an attribute instead of the state; `unit`, `decimals` and `min` / `max` apply to it like to a state. On a thermostat, `attribute: hvac_mode` shows the HVAC mode, which Home Assistant keeps in the state rather than in an attribute.
 
 ::: live
 

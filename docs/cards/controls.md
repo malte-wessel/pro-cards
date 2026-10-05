@@ -24,13 +24,14 @@ entities:
 
 :::
 
-| Option             | Default                           | Description                                                                                                                                                     |
-| ------------------ | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `control`          |                                   | `auto` (or `true`) picks the domain default; `toggle`, `slider`, `stepper`, `segments`, `buttons`, `button`, `select` or `hold` pick one; `none` draws nothing. |
-| `control_position` | per control                       | `end` puts the control on the line, `block` under it, `lead` makes the icon the control (toggle, button, hold).                                                 |
-| `step`             | entity step, else 1 (climate 0.5) | Step of a slider or stepper.                                                                                                                                    |
-| `options`          | the entity's modes or options     | Options of segments and select: values, or `{ value, label, icon }`.                                                                                            |
-| `confirm`          | `false`                           | The primary control becomes hold to confirm.                                                                                                                    |
+| Option              | Default                           | Description                                                                                                                                                     |
+| ------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `control`           |                                   | `auto` (or `true`) picks the domain default; `toggle`, `slider`, `stepper`, `segments`, `buttons`, `button`, `select` or `hold` pick one; `none` draws nothing. |
+| `control_position`  | per control                       | `end` puts the control on the line, `block` under it, `lead` makes the icon the control (toggle, button, hold).                                                 |
+| `control_attribute` | the shown mode, else the main one | What segments or a select set on a thermostat or fan: `hvac_mode`, `preset_mode` or `fan_mode`.                                                                 |
+| `control_step`      | entity step, else 1 (climate 0.5) | Step of a slider or stepper.                                                                                                                                    |
+| `control_options`   | the entity's modes or options     | Options of segments and select: values, or `{ value, label, icon }`.                                                                                            |
+| `control_confirm`   | `false`                           | The primary control becomes hold to confirm; every button of a group holds on its own.                                                                          |
 
 `toggle: true` from earlier versions still works and means `control: toggle`.
 
@@ -82,13 +83,13 @@ The library switch, 48 × 28, a smaller one in grid cells, column items and tabl
 - type: custom:entity-card-pro
   entity: switch.garden_pump
   control: toggle
-  confirm: true
+  control_confirm: true
   grid_options: { columns: 6 }
 ```
 
 :::
 
-The last tile sets `confirm: true`: the switch becomes a hold-to-confirm button.
+The last tile sets `control_confirm: true`: the switch becomes a hold-to-confirm button.
 
 ### Slider
 
@@ -129,7 +130,7 @@ The 8 px bar with a knob. Drag it, or focus it and use the arrow keys; a bubble 
 
 ### Stepper
 
-`−` value `+` for setpoints and numbers. The step comes from the entity (`target_temp_step`, `step`) or `step`; the buttons stop at the entity's bounds.
+`−` value `+` for setpoints and numbers. The step comes from the entity (`target_temp_step`, `step`) or `control_step`; the buttons stop at the entity's bounds.
 
 ::: live
 
@@ -139,7 +140,7 @@ title: Setpoints
 icon: mdi:thermostat
 entities:
   - { entity: climate.living_room, name: Living room, attribute: current_temperature, secondary: "now", control: stepper }
-  - { entity: climate.bedroom, name: Bedroom, control: stepper, step: 1 }
+  - { entity: climate.bedroom, name: Bedroom, control: stepper, control_step: 1 }
   - { entity: input_number.heating_boost, control: stepper }
   - { entity: number.ev_charge_limit, control: stepper }
 ```
@@ -148,7 +149,7 @@ entities:
 
 ### Segments
 
-Modes, presets and speeds as a pill group; the active one is filled. Options come from the entity (`hvac_modes`, `preset_modes`, fan speeds from `percentage_step`) or from `options`, where every entry may carry a `label` and an `icon`.
+Modes, presets and speeds as a pill group; the active one is filled. Options come from the entity (`hvac_modes`, `preset_modes`, fan speeds from `percentage_step`) or from `control_options`, where every entry may carry a `label` and an `icon`. On a thermostat or fan, `control_attribute` says which mode the segments set; without it they follow the shown `attribute` when it is a mode, else the HVAC mode or the fan speed. The last row shows the current temperature and still switches the HVAC mode.
 
 ::: live
 
@@ -162,11 +163,12 @@ entities:
     name: Preset
     attribute: preset_mode
     control: segments
-    options:
+    control_options:
       - { value: eco, label: Eco, icon: mdi:leaf }
       - { value: comfort, label: Comfort, icon: mdi:sofa }
       - { value: boost, label: Boost, icon: mdi:fire }
   - { entity: fan.living_room, name: Fan speed, control: segments }
+  - { entity: climate.living_room, name: Now, attribute: current_temperature, control: segments, control_attribute: hvac_mode }
 ```
 
 :::
@@ -238,7 +240,7 @@ entities:
 
 ### Hold to confirm
 
-Press and hold for a second; a ring fills around the button and the service runs when it is full. Letting go earlier cancels. The default for locks; `confirm: true` turns any toggle or button into one.
+Press and hold for a second; a ring fills around the button and the service runs when it is full. Letting go earlier cancels. The default for locks; `control_confirm: true` turns any toggle or button into one, and gives every button of a group (the garage door's open, stop and close) a hold of its own. `control: hold` on a light, switch, fan or media player toggles it; other domains have nothing to hold and grey the button out.
 
 ::: live
 
@@ -250,7 +252,7 @@ Press and hold for a second; a ring fills around the button and the service runs
 - type: custom:entity-card-pro
   entity: cover.garage_door
   control: buttons
-  confirm: true
+  control_confirm: true
   grid_options: { columns: 6 }
 ```
 
