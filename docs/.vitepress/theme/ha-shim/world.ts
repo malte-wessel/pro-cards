@@ -401,6 +401,13 @@ def("fan.bedroom", "off", { friendly_name: "Bedroom fan", percentage: 0, percent
 def("fan.bathroom", "on", { friendly_name: "Bathroom fan" });
 def("lock.front_door", "locked", { friendly_name: "Front door" });
 def("lock.garage_side_door", "unlocked", { friendly_name: "Garage side door" });
+// the shed is offline: its devices show how a control greys out while its entity is unavailable
+def("light.shed", "unavailable", { friendly_name: "Shed light" });
+def("switch.shed_heater", "unavailable", { friendly_name: "Shed heater" });
+def("climate.shed", "unavailable", { friendly_name: "Shed thermostat" });
+def("cover.shed_door", "unavailable", { friendly_name: "Shed door" });
+def("lock.shed", "unavailable", { friendly_name: "Shed lock" });
+def("select.shed_program", "unavailable", { friendly_name: "Shed program" });
 def("input_number.target_humidity", 55, {
   friendly_name: "Target humidity",
   icon: "mdi:water-percent",

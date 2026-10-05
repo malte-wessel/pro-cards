@@ -427,8 +427,7 @@ test.describe("controls: in items and around the row", () => {
         { type: T, entity: "light.living_room", control: "auto" },
         {
           type: T,
-          entity: "sensor.washer_status",
-          value: "unavailable",
+          entity: "light.shed",
           control: "toggle",
           control_position: "lead",
         },

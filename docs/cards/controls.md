@@ -24,14 +24,14 @@ entities:
 
 :::
 
-| Option              | Default                           | Description                                                                                                                                                     |
-| ------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `control`           |                                   | `auto` (or `true`) picks the domain default; `toggle`, `slider`, `stepper`, `segments`, `buttons`, `button`, `select` or `hold` pick one; `none` draws nothing. |
-| `control_position`  | per control                       | `end` puts the control on the line, `block` under it, `lead` makes the icon the control (toggle, button, hold).                                                 |
-| `control_attribute` | the shown mode, else the main one | What segments or a select set on a thermostat or fan: `hvac_mode`, `preset_mode` or `fan_mode`.                                                                 |
-| `control_step`      | entity step, else 1 (climate 0.5) | Step of a slider or stepper.                                                                                                                                    |
-| `control_options`   | the entity's modes or options     | Options of segments and select: values, or `{ value, label, icon }`.                                                                                            |
-| `control_confirm`   | `false`                           | The primary control becomes hold to confirm; every button of a group holds on its own.                                                                          |
+| Option              | Default                           | Description                                                                                                                                                                     |
+| ------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `control`           |                                   | `auto` (or `true`) picks the domain default; `toggle`, `slider`, `stepper`, `segments`, `buttons`, `button`, `select` or `hold` pick one; `none` draws nothing.                 |
+| `control_position`  | per control                       | `end` puts the control on the line, `block` under it, `lead` makes the icon the control (toggle, button, hold); a table field or ring has no icon, the control goes to the end. |
+| `control_attribute` | the shown mode, else the main one | What segments or a select set on a thermostat or fan: `hvac_mode`, `preset_mode` or `fan_mode`.                                                                                 |
+| `control_step`      | entity step, else 1 (climate 0.5) | Step of a slider or stepper.                                                                                                                                                    |
+| `control_options`   | the entity's modes or options     | Options of segments and select: values, or `{ value, label, icon }`.                                                                                                            |
+| `control_confirm`   | `false`                           | The primary control becomes hold to confirm; every button of a group holds on its own.                                                                                          |
 
 `toggle: true` from earlier versions still works and means `control: toggle`.
 
@@ -93,7 +93,7 @@ The last tile sets `control_confirm: true`: the switch becomes a hold-to-confirm
 
 ### Slider
 
-The 8 px bar with a knob. Drag it, or focus it and use the arrow keys; a bubble shows the value while dragging. Under the line (`block`, the default in tiles, lists, grid cells and hero leads) it replaces a `visual: bar`; on the line (`end`) it is a short 6 px slider. The fill takes the entity colour, so rules colour the slider too.
+The 8 px bar with a knob. Drag it, or focus it and use the arrow keys; a bubble shows the value while dragging. Under the line (`block`, the default in tiles, lists, grid cells and hero leads) it replaces a `visual: bar`; on the line (`end`) it is a short 6 px slider. The fill takes the entity colour, so rules colour the slider too. Brightness, position, volume and fan speed are always 0 to 100 %; `min` and `max` scale the visuals only, and bound the slider of a number or a thermostat.
 
 ::: live
 
@@ -130,7 +130,7 @@ The 8 px bar with a knob. Drag it, or focus it and use the arrow keys; a bubble 
 
 ### Stepper
 
-`−` value `+` for setpoints and numbers. The step comes from the entity (`target_temp_step`, `step`) or `control_step`; the buttons stop at the entity's bounds.
+`−` value `+` for setpoints and numbers. The step comes from the entity (`target_temp_step`, `step`) or `control_step` and counts from the minimum, as Home Assistant counts it (min 1, step 2: 1, 3, 5 …); the buttons stop at the entity's bounds.
 
 ::: live
 
@@ -149,7 +149,7 @@ entities:
 
 ### Segments
 
-Modes, presets and speeds as a pill group; the active one is filled. Options come from the entity (`hvac_modes`, `preset_modes`, fan speeds from `percentage_step`) or from `control_options`, where every entry may carry a `label` and an `icon`. On a thermostat or fan, `control_attribute` says which mode the segments set; without it they follow the shown `attribute` when it is a mode, else the HVAC mode or the fan speed. The last row shows the current temperature and still switches the HVAC mode.
+Modes, presets and speeds as a pill group; the active one is filled. Options come from the entity (`hvac_modes`, `preset_modes`, fan speeds from `percentage_step`) or from `control_options`, where every entry may carry a `label` and an `icon`. On a thermostat or fan, `control_attribute` says which mode the segments set; without it they follow the shown `attribute` when it is a mode, else the HVAC mode or the fan speed. The last row shows the current temperature and still switches the HVAC mode. A fan with more than six speeds gets a slider instead of segments.
 
 ::: live
 
@@ -394,7 +394,7 @@ icon: mdi:gesture-tap-hold
 entities:
   - { entity: light.attic, name: Pending · tap or drag, control: auto }
   - { entity: lock.garage_side_door, name: Pending · hold to lock, control: hold }
-  - { entity: sensor.washer_status, name: Unavailable, value: unavailable, control: toggle }
+  - { entity: switch.shed_heater, name: Unavailable · offline, control: toggle }
 ```
 
 :::

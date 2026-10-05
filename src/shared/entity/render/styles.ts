@@ -122,10 +122,10 @@ export const STYLE_CONTROLS = `
   .ctl-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px 0 10px; border: 0; border-radius: 999px; background: var(--fe-soft); color: var(--fe-color); font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer; --mdc-icon-size: 18px; }
   .ctl-chip.sm { height: 28px; font-size: 12px; padding: 0 12px 0 8px; }
   .ctl-chip.done { background: var(--fe-color); color: var(--text-primary-color, #fff); }
-  .ctl-chip.round { width: 40px; height: 40px; padding: 0; justify-content: center; border-radius: 50%; --mdc-icon-size: 22px; }
+  .ctl-chip.round { width: var(--lead, 40px); height: var(--lead, 40px); padding: 0; justify-content: center; border-radius: 50%; --mdc-icon-size: 22px; }
   .ctl-hold { position: relative; flex: none; width: 36px; height: 36px; border: 0; padding: 0; border-radius: 50%; background: var(--fe-soft); color: var(--fe-color); display: flex; align-items: center; justify-content: center; cursor: pointer; --mdc-icon-size: 20px; touch-action: none; -webkit-user-select: none; user-select: none; }
   .ctl-hold.sm { width: 30px; height: 30px; --mdc-icon-size: 18px; }
-  .ctl-hold.lead-size { width: 40px; height: 40px; --mdc-icon-size: 22px; }
+  .ctl-hold.lead-size { width: var(--lead, 40px); height: var(--lead, 40px); --mdc-icon-size: 22px; }
   .ctl-hold.pending { animation: ctl-pulse 1s ease-in-out infinite; }
   /* the ring of a held button: the hold control, or every button of a confirmed group */
   .ctl .round.hold { touch-action: none; -webkit-user-select: none; user-select: none; }

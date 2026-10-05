@@ -20,6 +20,7 @@ import {
   rangeOf,
   serviceFor,
   sliderApplies,
+  speedsAsSlider,
   type ControlHost,
   type Pending,
   type Placement,
@@ -75,7 +76,7 @@ const toggleTarget = (ctx: RenderCtx, idx: number, m: EntityModel) => {
   const p = ctx.ctl?.pending.get(idx);
   const s = pendingStr(p);
   const pending = s === "on" || s === "off";
-  return { on: m.model.avail && (pending ? s === "on" : isOn(m.st)), pending };
+  return { on: pending ? s === "on" : isOn(m.st), pending };
 };
 const bindToggle = (
   el: HTMLElement,
@@ -112,7 +113,7 @@ export const toggleEl = (
   b.setAttribute("role", "switch");
   b.setAttribute("aria-checked", String(on));
   b.innerHTML = "<i></i>";
-  if (!m.model.avail) disable(b);
+  if (!canControl(ent, m.st)) disable(b);
   else bindToggle(b, ctx, ent, idx, m, on);
   return b;
 };
@@ -133,7 +134,7 @@ export const bindLeadTap = (
   lead.setAttribute("aria-checked", String(on));
   lead.tabIndex = 0;
   guard(lead);
-  if (!m.model.avail) {
+  if (!canControl(ent, m.st)) {
     disable(lead);
     return;
   }
@@ -181,7 +182,7 @@ export const sliderEl = (
     el.setAttribute("aria-valuenow", String(v));
     el.setAttribute("aria-valuetext", bubble.textContent);
   };
-  if (shown === null || !m.model.avail) {
+  if (shown === null || !canControl(ent, m.st)) {
     paint(r.min);
     disable(el);
     return el;
@@ -272,7 +273,7 @@ export const stepperEl = (
   inc.appendChild(icon("mdi:plus"));
   el.append(dec, val, inc);
   const shown = pendingNum(host.pending.get(idx)) ?? r.value;
-  if (shown === null || !m.model.avail) {
+  if (shown === null || !canControl(ent, m.st)) {
     val.textContent = m.fmt.text;
     disable(el);
     return el;
@@ -363,7 +364,7 @@ export const segmentsEl = (
     segs[to].focus();
     segs[to].click();
   });
-  if (!m.model.avail) disable(el);
+  if (!canControl(ent, m.st)) disable(el);
   return el;
 };
 
@@ -400,13 +401,15 @@ export const selectEl = (
   if (current !== null) sel.value = current;
   el.classList.toggle("pending", pend !== null);
   el.append(sel, icon("mdi:menu-down"));
+  // while the select has the focus its row is kept (an open list would close); catch up after
+  sel.addEventListener("blur", () => host.redraw());
   sel.addEventListener("change", () => {
     host.call(el, idx, ent, serviceFor(ent, m.st, { type: "option", value: sel.value }), {
       until: later(),
       value: sel.value,
     });
   });
-  if (!m.model.avail) {
+  if (!canControl(ent, m.st)) {
     disable(el);
     sel.disabled = true;
   }
@@ -444,13 +447,13 @@ export const buttonsEl = (
         p.confirm ? "success" : "light",
       );
     // with confirm every button is a hold of its own (the ring fills around it)
-    if (p.confirm && m.model.avail) {
+    if (p.confirm && canControl(ent, m.st)) {
       btn.classList.add("hold");
       bindHold(btn, ctx, host, idx, `${idx}:${b.id}`, t(ctx.hass, b.labelKey), run);
     } else btn.addEventListener("click", run);
     el.appendChild(btn);
   }
-  if (!m.model.avail) disable(el);
+  if (!canControl(ent, m.st)) disable(el);
   return el;
 };
 
@@ -493,7 +496,7 @@ export const buttonEl = (
       );
     else host.runAction(ent, ent.tap, "tap");
   });
-  if (!canControl(ent, m.st, m.model.avail)) disable(el);
+  if (!canControl(ent, m.st)) disable(el);
   return el;
 };
 
@@ -620,7 +623,7 @@ export const holdEl = (
   el.setAttribute("aria-label", t(ctx.hass, "control.hold_to", { action }));
   el.append(ringEl(), holdIcon(ctx, ent, m));
   el.classList.toggle("pending", host.pending.has(idx));
-  if (!canControl(ent, m.st, m.model.avail)) {
+  if (!canControl(ent, m.st)) {
     disable(el);
     return el;
   }
@@ -647,7 +650,10 @@ export const controlEl = (
     case "stepper":
       return stepperEl(ctx, ent, idx, m, p);
     case "segments":
-      return segmentsEl(ctx, ent, idx, m, p);
+      // a fan with more speeds than fit a pill group gets a slider in the same slot
+      return speedsAsSlider(ent, m.st)
+        ? sliderEl(ctx, ent, idx, m, { ...p, kind: "slider" })
+        : segmentsEl(ctx, ent, idx, m, p);
     case "select":
       return selectEl(ctx, ent, idx, m, p);
     case "buttons":

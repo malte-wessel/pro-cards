@@ -1,10 +1,16 @@
 // Fills one entity row for every row kind: tile / list rows, hero lead, grid cells, items,
 // table fields and header values. Each function rebuilds the row's children from the model.
 import type { EntityItem } from "../config.ts";
-import { controlShowsValue, placementsOf, type Placement, type RowKind } from "../control.ts";
+import {
+  canControl,
+  controlShowsValue,
+  placementsOf,
+  type Placement,
+  type RowKind,
+} from "../control.ts";
 import { nameOf, tplOf, type EntityModel, type RenderCtx } from "../model.ts";
 import { blockEl } from "./blocks.ts";
-import { appendControls, bindLeadTap, buttonEl, controlEl } from "./controls.ts";
+import { appendControls, bindLeadTap, controlEl } from "./controls.ts";
 import { bigEl, iconEl, leadEl, pillEl, textEl, valueEl } from "./lead.ts";
 
 // the controls of the row, split by slot; a card without a control host draws none
@@ -12,6 +18,47 @@ const slots = (ctx: RenderCtx, ent: EntityItem, kind: RowKind) => {
   const ps = ctx.ctl ? placementsOf(ent, kind) : [];
   const at = (pos: Placement["position"]) => ps.filter((p) => p.position === pos);
   return { end: at("end"), block: at("block"), lead: at("lead") };
+};
+// the icon slot: the icon, the icon as a switch, or a Run / hold button in its place (at the
+// icon's size); a confirmed control is a hold here too, never a plain tap
+const leadOf = (
+  ctx: RenderCtx,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+  size: number,
+  lead: Placement[],
+) => {
+  const p = lead[0];
+  if (p && p.kind !== "toggle") {
+    const b = controlEl(ctx, ent, idx, m, p);
+    if (b) {
+      b.style.setProperty("--lead", `${size}px`);
+      return b;
+    }
+  }
+  const el = leadEl(ctx, ent, m, size);
+  if (p?.kind === "toggle") bindLeadTap(el, ctx, ent, idx, m);
+  return el;
+};
+// the end controls, drawn; and whether one of them shows the value (so the text would repeat it):
+// only a control that was drawn and can be used counts, otherwise the value stays
+const endControls = (
+  ctx: RenderCtx,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+  end: Placement[],
+) => {
+  const els: HTMLElement[] = [];
+  let showsValue = false;
+  for (const p of end) {
+    const el = controlEl(ctx, ent, idx, m, p);
+    if (!el) continue;
+    els.push(el);
+    if (controlShowsValue(ent, p) && !el.classList.contains("ctl-slider")) showsValue = true;
+  }
+  return { els, showsValue: showsValue && canControl(ent, m.st) };
 };
 // a slider in the block slot is the bar with a knob, so the bar visual gives way to it
 const blockOf = (
@@ -35,9 +82,7 @@ export const fillRow = (
   const c = slots(ctx, ent, isTile ? "tile" : "list");
   const top = document.createElement("div");
   top.className = "top";
-  const lead = leadEl(ctx, ent, m, isTile ? 40 : 36);
-  if (c.lead.length) bindLeadTap(lead, ctx, ent, idx, m);
-  top.appendChild(lead);
+  top.appendChild(leadOf(ctx, ent, idx, m, isTile ? 40 : 36, c.lead));
   const main = document.createElement("div");
   main.className = "main";
   const line = document.createElement("div");
@@ -61,10 +106,11 @@ export const fillRow = (
       if (!sec && m.look.label && m.model.avail) el.classList.add("accent");
       texts.appendChild(el);
     }
-    // a control that shows the value itself gets no text beside it
-    if (!c.end.some((p) => controlShowsValue(ent, p))) end.appendChild(valueEl(ent, m));
   }
-  appendControls(ctx, ent, idx, m, c.end, end);
+  const ctls = endControls(ctx, ent, idx, m, c.end);
+  // a control that shows the value itself gets no text beside it
+  if (!isTile && !ctls.showsValue) end.appendChild(valueEl(ent, m));
+  end.append(...ctls.els);
   line.append(texts, end);
   main.appendChild(line);
   top.appendChild(main);
@@ -86,9 +132,7 @@ export const fillHero = (
   const c = slots(ctx, ent, "hero");
   const top = document.createElement("div");
   top.className = "top";
-  const lead = leadEl(ctx, ent, m, 56);
-  if (c.lead.length) bindLeadTap(lead, ctx, ent, idx, m);
-  top.appendChild(lead);
+  top.appendChild(leadOf(ctx, ent, idx, m, 56, c.lead));
   const main = document.createElement("div");
   main.className = "main";
   const line = document.createElement("div");
@@ -128,10 +172,17 @@ export const fillCell = (
 ) => {
   cell.replaceChildren();
   const c = slots(ctx, ent, "cell");
-  if (ent.visual === "ring") cell.appendChild(leadEl(ctx, ent, m, 64, "value"));
-  else {
-    const lead = leadEl(ctx, ent, m, 32);
-    if (c.lead.length) bindLeadTap(lead, ctx, ent, idx, m);
+  if (ent.visual === "ring") {
+    cell.appendChild(leadEl(ctx, ent, m, 64, "value"));
+    // the ring is the value: a control (also one asked for on the icon) sits under it
+    if (c.end.length) {
+      const end = document.createElement("div");
+      end.className = "end";
+      appendControls(ctx, ent, idx, m, c.end, end);
+      if (end.childElementCount) cell.appendChild(end);
+    }
+  } else {
+    const lead = leadOf(ctx, ent, idx, m, 32, c.lead);
     if (c.end.length) {
       // the lead and the small controls share the top line of the cell
       const top = document.createElement("div");
@@ -167,19 +218,7 @@ export const fillItem = (
   const name = item.showName ? textEl("iname", nameOf(ctx, ent, m.st)) : null;
   if (name && item.namePosition === "above") el.appendChild(name);
   // the lead: the icon, the icon as a tap toggle, or a round button / hold button in its place
-  const leadCtl = c.lead[0];
-  if (leadCtl && leadCtl.kind !== "toggle") {
-    const b =
-      leadCtl.kind === "button"
-        ? buttonEl(ctx, ent, idx, m, leadCtl)
-        : controlEl(ctx, ent, idx, m, leadCtl);
-    if (b) el.appendChild(b);
-    else if (item.showIcon) el.appendChild(leadEl(ctx, ent, m, 40));
-  } else if (item.showIcon || leadCtl) {
-    const lead = leadEl(ctx, ent, m, 40);
-    if (leadCtl) bindLeadTap(lead, ctx, ent, idx, m);
-    el.appendChild(lead);
-  }
+  if (item.showIcon || c.lead.length) el.appendChild(leadOf(ctx, ent, idx, m, 40, c.lead));
   if (name && item.namePosition === "below") el.appendChild(name);
   if (item.showValue) {
     const val = valueEl(ent, m);

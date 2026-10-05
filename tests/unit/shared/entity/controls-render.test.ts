@@ -1222,3 +1222,200 @@ describe("haptics", () => {
     expect(got).toEqual(["light", "selection", "selection", "success", "success", "light"]);
   });
 });
+
+describe("review fixes", () => {
+  describe("a control on the icon keeps its kind", () => {
+    it("a confirmed toggle on the icon is a hold, never a tap", () => {
+      const r = h.mount(EntityCard, {
+        entity: "switch.pump",
+        control: "toggle",
+        control_position: "lead",
+        control_confirm: true,
+      });
+      expect(r.querySelector(".lead.tap")).toBeNull();
+      const b = q(r, ".top > .ctl-hold.lead-size");
+      expect(b.style.getPropertyValue("--lead")).toBe("40px");
+      b.dispatchEvent(new MouseEvent("click", { detail: 1, bubbles: true }));
+      expect(h.calls).toEqual([]);
+      pointer(b, "pointerdown");
+      vi.advanceTimersByTime(HOLD_CONFIRM_MS + 10);
+      expect(h.svc()).toEqual(["homeassistant.toggle"]);
+    });
+    it("a lock's hold on the icon locks or unlocks, at the size of each row's icon", () => {
+      const r = h.mount(EntityGroupCard, {
+        layout: "hero",
+        entities: [
+          { entity: "lock.door", control: "hold", control_position: "lead" },
+          { entity: "lock.door", control: "hold", control_position: "lead" },
+        ],
+      });
+      const [hero, list] = qa(r, ".ctl-hold.lead-size");
+      expect(hero.style.getPropertyValue("--lead")).toBe("56px");
+      expect(list.style.getPropertyValue("--lead")).toBe("36px");
+      pointer(hero, "pointerdown");
+      vi.advanceTimersByTime(HOLD_CONFIRM_MS + 10);
+      expect(h.svc()).toEqual(["lock.unlock"]);
+    });
+    it("a scene's button on the icon runs the scene in a grid cell", () => {
+      h.def("scene.movie", "unknown", { friendly_name: "Movie" });
+      const r = h.mount(EntityGroupCard, {
+        layout: "grid",
+        entities: [{ entity: "scene.movie", control: "button", control_position: "lead" }],
+      });
+      const b = q(r, ".cell .ctl-chip.round");
+      expect(b.style.getPropertyValue("--lead")).toBe("32px");
+      b.click();
+      expect(h.svc()).toEqual(["scene.turn_on"]);
+    });
+  });
+
+  describe("availability follows the entity, not the shown value", () => {
+    it("an off light shown by its brightness can be switched on and dimmed", () => {
+      h.set("light.ceiling", "off", { brightness: undefined });
+      const r = h.mount(EntityCard, {
+        entity: "light.ceiling",
+        attribute: "brightness",
+        control: "auto",
+      });
+      const t = q<HTMLButtonElement>(r, ".toggle");
+      expect(t.disabled).toBe(false);
+      expect(q(r, ".ctl-slider").classList.contains("disabled")).toBe(false);
+      t.click();
+      expect(h.svc()).toEqual(["homeassistant.toggle"]);
+    });
+    it("an idle player shown by its title keeps its buttons", () => {
+      h.set("media_player.tv", "idle");
+      const r = h.mount(EntityCard, {
+        entity: "media_player.tv",
+        attribute: "media_title",
+        control: "buttons",
+      });
+      expect(qa<HTMLButtonElement>(r, ".ctl-buttons .round").every((b) => !b.disabled)).toBe(true);
+    });
+    it("an unavailable entity with a text value greys its controls out", () => {
+      h.set("switch.pump", "unavailable");
+      const r = h.mount(EntityCard, { entity: "switch.pump", value: "Garage", control: "toggle" });
+      expect(q<HTMLButtonElement>(r, ".toggle").disabled).toBe(true);
+    });
+  });
+
+  it("a fan with fine speed steps gets a slider, not a hundred segments", () => {
+    h.set("fan.ceiling", "on", { percentage: 37, percentage_step: 1 });
+    const r = h.mount(EntityCard, { entity: "fan.ceiling", control: "auto" });
+    expect(r.querySelector(".ctl-segments")).toBeNull();
+    const s = q(r, ".end > .ctl-slider");
+    expect(s.getAttribute("aria-valuenow")).toBe("37");
+    key(s, "ArrowRight");
+    vi.advanceTimersByTime(300);
+    expect(h.calls).toEqual([
+      {
+        domain: "fan",
+        service: "set_percentage",
+        data: { entity_id: "fan.ceiling", percentage: 38 },
+      },
+    ]);
+  });
+
+  describe("the value stays when no control shows it", () => {
+    it("a fan without speeds keeps its value beside the switch", () => {
+      h.set("fan.ceiling", "on", { percentage: undefined, percentage_step: undefined });
+      const r = h.mount(EntityGroupCard, {
+        entities: [{ entity: "fan.ceiling", control: "auto" }],
+      });
+      expect(r.querySelector(".ctl-segments")).toBeNull();
+      expect(q(r, ".row.list .end > .state").textContent).toBe("on");
+    });
+    it("an unavailable select shows that it is unavailable", () => {
+      h.def("input_select.mode", "unavailable", { friendly_name: "Mode" });
+      const r = h.mount(EntityGroupCard, {
+        entities: [{ entity: "input_select.mode", control: "select" }],
+      });
+      expect(r.querySelector(".ctl-select")).toBeNull();
+      expect(q(r, ".row.list .end > .state").textContent).toBe("–");
+    });
+    it("a disabled select next to stale options keeps the value text too", () => {
+      h.set("input_select.mode", "unavailable");
+      const r = h.mount(EntityGroupCard, {
+        entities: [{ entity: "input_select.mode", control: "select" }],
+      });
+      expect(q<HTMLSelectElement>(r, "select").disabled).toBe(true);
+      expect(r.querySelector(".row.list .end > .state")).toBeTruthy();
+    });
+  });
+
+  it("a ghost that expired while the card was away is gone when it comes back", () => {
+    const r = h.mount(EntityCard, { entity: "script.night", control: "button" });
+    const el = h.cards[0];
+    q(r, ".ctl-chip").click();
+    expect(q(r, ".ctl-chip").textContent).toBe("Done");
+    el.remove();
+    vi.advanceTimersByTime(5000);
+    document.body.appendChild(el);
+    expect(q(r, ".ctl-chip").textContent).toBe("Run");
+  });
+  it("a ghost still running when the card comes back expires on time", () => {
+    const r = h.mount(EntityCard, { entity: "switch.pump", control: "toggle" });
+    const el = h.cards[0];
+    q(r, ".toggle").click();
+    el.remove();
+    vi.advanceTimersByTime(1000);
+    document.body.appendChild(el);
+    expect(q(r, ".toggle").classList.contains("pending")).toBe(true);
+    vi.advanceTimersByTime(PENDING_MS);
+    expect(q(r, ".toggle").classList.contains("pending")).toBe(false);
+  });
+
+  it("an open select keeps its row through other updates and catches up when it closes", () => {
+    const r = h.mount(EntityGroupCard, {
+      entities: [{ entity: "input_select.mode", control: "select" }, { entity: "sensor.temp" }],
+    });
+    const sel = q<HTMLSelectElement>(r, "select");
+    sel.focus();
+    h.set("sensor.temp", 30);
+    h.set("input_select.mode", "Away");
+    expect(q(r, "select")).toBe(sel);
+    expect(qa(r, ".state").some((s) => s.textContent?.includes("30"))).toBe(true);
+    sel.blur();
+    sel.dispatchEvent(new FocusEvent("blur"));
+    expect(q(r, "select")).not.toBe(sel);
+    expect(chosen(q<HTMLSelectElement>(r, "select"))).toBe("Away");
+  });
+
+  it("a fan's own options show the nearest one as chosen", () => {
+    h.set("fan.ceiling", "on", { percentage: 50 });
+    const r = h.mount(EntityCard, {
+      entity: "fan.ceiling",
+      control: "segments",
+      control_options: [0, 50, 100],
+    });
+    expect(qa(r, ".seg").map((s) => s.getAttribute("aria-checked"))).toEqual([
+      "false",
+      "true",
+      "false",
+    ]);
+  });
+
+  describe("controls asked for on the icon where there is none", () => {
+    it("a ring cell draws them under the ring, with its block slider", () => {
+      const r = h.mount(EntityGroupCard, {
+        layout: "grid",
+        entities: [{ entity: "light.ceiling", visual: "ring", control: "auto" }],
+      });
+      expect(q(r, ".cell > .end > .toggle.sm")).toBeTruthy();
+      expect(q(r, ".cell > .ctl-slider")).toBeTruthy();
+    });
+    it("a table field draws them beside the value", () => {
+      const r = h.mount(EntitySectionsCard, {
+        sections: [
+          {
+            layout: "table",
+            show_icon: true,
+            entities: [{ entity: "switch.pump", control: "toggle", control_position: "lead" }],
+          },
+        ],
+      });
+      expect(q(r, ".row.field .val > .toggle.sm")).toBeTruthy();
+      expect(r.querySelector(".lead.tap")).toBeNull();
+    });
+  });
+});

@@ -107,6 +107,7 @@ export abstract class EntityCardBase extends HTMLElement {
       },
       call: (el, idx, ent, svc, pending, haptic) =>
         this._callService(el, idx, ent, svc, pending, haptic),
+      redraw: () => this._render(),
       beginDrag: (idx) => {
         this._dragging = idx;
       },
@@ -189,6 +190,8 @@ export abstract class EntityCardBase extends HTMLElement {
     this._ro = new ResizeObserver(() => this._render());
     if (this._root) this._ro.observe(this._root);
     document.addEventListener("pointerdown", this._onDocPointer);
+    // ghosts that expired while the card was away (another view) go now, the rest get their timer
+    if (this._pending.size && this._sweepPending()) this._render();
     if (this._hass && this._templates?.size && this._tplUnsub.size === 0)
       this._subscribeTemplates();
   }
@@ -505,6 +508,8 @@ export abstract class EntityCardBase extends HTMLElement {
       row.style.setProperty("--fe-color", cssColor(m.look.color, "var(--primary-color)"));
       // a row whose control is being dragged or held keeps its DOM until the gesture ends
       if (this._dragging === idx) continue;
+      // a focused select keeps its row too: rebuilding it would close its open list
+      if (focus?.row === row && focus.select) continue;
       const hit = row.querySelector<HTMLElement>(":scope > .hit");
       this._fill(ctx, row, ent, idx, m);
       if (hit) {
@@ -532,12 +537,12 @@ export abstract class EntityCardBase extends HTMLElement {
   }
   // the focused element of a row, as its index among the row's focusable elements: a rebuilt row
   // has the same elements in the same order, so the same index is the same control
-  _focusWithin(): { row: HTMLElement; i: number } | null {
+  _focusWithin(): { row: HTMLElement; i: number; select: boolean } | null {
     const a = this.shadowRoot?.activeElement as HTMLElement | null;
     const row = a?.closest<HTMLElement>(".row");
     if (!a || !row) return null;
     const i = [...row.querySelectorAll<HTMLElement>(FOCUSABLE)].indexOf(a);
-    return i < 0 ? null : { row, i };
+    return i < 0 ? null : { row, i, select: a.tagName === "SELECT" };
   }
   // a control that came back disabled (the entity went unavailable) cannot take the focus: the
   // row's own action takes it instead, so the focus never falls out of the card

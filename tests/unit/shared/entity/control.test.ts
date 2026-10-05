@@ -8,6 +8,8 @@ import type { HassEntity, HomeAssistant } from "../../../../src/shared/ha.ts";
 import {
   buttonsOf,
   canControl,
+  MAX_SPEED_SEGMENTS,
+  speedsAsSlider,
   clampStep,
   controlShowsValue,
   currentOptionOf,
@@ -231,6 +233,18 @@ describe("ranges", () => {
       step: 2,
     });
   });
+  it("counts steps from the minimum", () => {
+    const r = { min: 1, max: 9, step: 2, value: null, unit: "" };
+    expect(clampStep(5, r)).toBe(5);
+    expect(clampStep(6, r)).toBe(7);
+    expect(clampStep(3.9, r)).toBe(3);
+    expect(clampStep(0, r)).toBe(1);
+    expect(clampStep(0.75, { min: 0.25, max: 2, step: 0.5, value: null, unit: "" })).toBe(0.75);
+    const s = st(3, { min: 1, max: 9, step: 2 }, "input_number.x");
+    expect(
+      serviceFor(ent({ entity: "input_number.x" }), s, { type: "step", dir: 1, from: 3 }),
+    ).toMatchObject({ data: { value: 5 } });
+  });
   it("clamps and rounds to the step", () => {
     const r = { min: 0, max: 100, step: 0.5, value: null, unit: "" };
     expect(clampStep(20.3, r)).toBe(20.5);
@@ -304,6 +318,29 @@ describe("options", () => {
     expect(
       optionsOf(preset, st("on", { preset_modes: ["auto"], preset_mode: "auto" }, "fan.a")),
     ).toEqual([{ value: "auto", label: null, icon: null }]);
+  });
+  it("draws a slider instead of more speed segments than fit", () => {
+    const fan = ent({ entity: "fan.a", control: "segments" });
+    const fine = st("on", { percentage: 37, percentage_step: 1 }, "fan.a");
+    expect(optionsOf(fan, fine)).toEqual([]);
+    expect(speedsAsSlider(fan, fine)).toBe(true);
+    const six = st("on", { percentage: 50, percentage_step: 100 / 6 }, "fan.a");
+    expect(optionsOf(fan, six)).toHaveLength(MAX_SPEED_SEGMENTS + 1);
+    expect(speedsAsSlider(fan, six)).toBe(false);
+    expect(speedsAsSlider(fan, st("on", { percentage_step: 100 / 7 }, "fan.a"))).toBe(true);
+    // own options, presets and other domains never switch
+    expect(speedsAsSlider(ent({ entity: "fan.a", control_options: [0, 50] }), fine)).toBe(false);
+    expect(speedsAsSlider(ent({ entity: "fan.a", attribute: "preset_mode" }), fine)).toBe(false);
+    expect(speedsAsSlider(ent({}), fine)).toBe(false);
+  });
+  it("matches a fan's own options to its speed", () => {
+    const fan = ent({ entity: "fan.a", control: "segments", control_options: [0, 50, 100] });
+    const s = (state: string, percentage: number) =>
+      st(state, { percentage, percentage_step: 33.333 }, "fan.a");
+    expect(currentOptionOf(fan, s("on", 50))).toBe("50");
+    expect(currentOptionOf(fan, s("on", 66))).toBe("50");
+    expect(currentOptionOf(fan, s("on", 90))).toBe("100");
+    expect(currentOptionOf(fan, s("off", 0))).toBe("0");
   });
   it("lists a select's options and the state as current; config options win", () => {
     const sel = ent({ entity: "input_select.a" });
@@ -467,6 +504,15 @@ describe("services", () => {
 });
 
 describe("more placements", () => {
+  it("moves a control asked for on the icon to the end in a table and on a ring", () => {
+    const lead = { control: "toggle", control_position: "lead" };
+    expect(kinds(placementsOf(ent(lead), "field"))).toEqual(["toggle@end"]);
+    expect(kinds(placementsOf(ent({ ...lead, visual: "ring" }), "cell"))).toEqual(["toggle@end"]);
+    expect(kinds(placementsOf(ent(lead), "cell"))).toEqual(["toggle@lead"]);
+    expect(kinds(placementsOf(ent({ ...lead, control_confirm: true }), "field"))).toEqual([
+      "hold@end",
+    ]);
+  });
   it("puts each named control at its default slot in every row kind", () => {
     const at = (control: string, row: Parameters<typeof placementsOf>[1], entity = "light.x") =>
       kinds(placementsOf(ent({ entity, control }), row));
@@ -500,15 +546,26 @@ describe("more placements", () => {
 });
 
 describe("more ranges and services", () => {
-  it("lets min and max bound a light's brightness", () => {
-    expect(rangeOf(ent({ min: 10, max: 80 }), st("on", { brightness: 255 }))).toMatchObject({
-      min: 10,
-      max: 80,
-      value: 100,
+  it("keeps the display's min and max out of a percentage control", () => {
+    // max: 255 scales a brightness bar; the slider still sends a percentage
+    for (const entity of ["light.x", "cover.x", "fan.x", "media_player.x"])
+      expect(rangeOf(ent({ entity, min: 10, max: 255 }), undefined)).toMatchObject({
+        min: 0,
+        max: 100,
+      });
+    expect(serviceFor(ent({ max: 255 }), st("on"), { type: "value", value: 255 })).toMatchObject({
+      data: { brightness_pct: 100 },
     });
-    expect(
-      serviceFor(ent({ min: 10, max: 80 }), st("on"), { type: "value", value: 95 }),
-    ).toMatchObject({ data: { brightness_pct: 80 } });
+  });
+  it("lets min and max bound a number and a thermostat", () => {
+    expect(rangeOf(ent({ entity: "number.x", min: 10, max: 20 }), undefined)).toMatchObject({
+      min: 10,
+      max: 20,
+    });
+    expect(rangeOf(ent({ entity: "climate.x", min: 16, max: 24 }), undefined)).toMatchObject({
+      min: 16,
+      max: 24,
+    });
   });
   it("clamps volume to one and a step to the bounds", () => {
     expect(
@@ -533,18 +590,21 @@ describe("more ranges and services", () => {
 });
 
 describe("availability", () => {
+  it("follows the entity's state, never the value the row shows", () => {
+    expect(canControl(ent({}), st("on"))).toBe(true);
+    expect(canControl(ent({}), st("off"))).toBe(true);
+    expect(canControl(ent({ attribute: "brightness" }), st("off"))).toBe(true);
+    expect(canControl(ent({ value: "Garage" }), st("unavailable"))).toBe(false);
+    expect(canControl(ent({}), undefined)).toBe(false);
+  });
   it("keeps a never run script, scene or button usable", () => {
     for (const id of ["script.x", "scene.x", "button.x", "input_button.x"])
-      expect(canControl(ent({ entity: id }), st("unknown", {}, id), false)).toBe(true);
+      expect(canControl(ent({ entity: id }), st("unknown", {}, id))).toBe(true);
   });
   it("greys out an unknown lock or light and anything unavailable", () => {
-    expect(canControl(ent({ entity: "lock.x" }), st("unknown", {}, "lock.x"), false)).toBe(false);
-    expect(canControl(ent({}), st("unknown"), false)).toBe(false);
-    expect(canControl(ent({ entity: "scene.x" }), st("unavailable", {}, "scene.x"), false)).toBe(
-      false,
-    );
-    expect(canControl(ent({ entity: "scene.x" }), undefined, false)).toBe(false);
-    expect(canControl(ent({}), st("on"), true)).toBe(true);
+    expect(canControl(ent({ entity: "lock.x" }), st("unknown", {}, "lock.x"))).toBe(false);
+    expect(canControl(ent({}), st("unknown"))).toBe(false);
+    expect(canControl(ent({ entity: "scene.x" }), st("unavailable", {}, "scene.x"))).toBe(false);
   });
   it("counts playing and open as on", () => {
     expect(isOn(st("playing", {}, "media_player.x"))).toBe(true);

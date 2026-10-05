@@ -106,6 +106,8 @@ export interface ControlHost {
     haptic?: HapticType,
   ): void;
   beginDrag(idx: number): void;
+  // redraws the card (a select that kept its row while it was open)
+  redraw(): void;
   endDrag(idx: number): void;
   runAction(ent: EntityItem, a: ActionConfig | undefined, kind: ActionKind): void;
 }
@@ -298,6 +300,9 @@ export const placementsOf = (ent: EntityItem, row: RowKind): Placement[] => {
       if (!LEAD_KINDS.has(kind)) continue;
       position = "lead";
     }
+    // a table field and a ring cell have no icon to stand in for: the control goes to the end
+    if (position === "lead" && (row === "field" || (row === "cell" && ent.visual === "ring")))
+      position = "end";
     if (out.some((o) => o.position === position && position !== "end")) continue;
     out.push({
       kind,
@@ -334,8 +339,12 @@ export const hasBlockControl = (ent: EntityItem) =>
 // a script, scene or button that was never run reports `unknown` (its state is the time of the
 // last run): that is no reason to grey its control out
 const PRESS_DOMAINS: ReadonlySet<string> = new Set(["script", "scene", "button", "input_button"]);
-export const canControl = (ent: EntityItem, st: HassEntity | undefined, avail: boolean) =>
-  avail || (st?.state === "unknown" && PRESS_DOMAINS.has(domainOf(ent.entity)));
+// whether the entity can take a call: its state decides, never the value the row shows (an off
+// light shown by its brightness attribute has no value, and is still a light to turn on)
+export const canControl = (ent: EntityItem, st: HassEntity | undefined) =>
+  !!st &&
+  st.state !== "unavailable" &&
+  (st.state !== "unknown" || PRESS_DOMAINS.has(domainOf(ent.entity)));
 export const isOn = (st: HassEntity | undefined): boolean => {
   if (!st || st.state === "unavailable" || st.state === "unknown") return false;
   return stateActive(st) && !OFF_STATES.has(st.state);
@@ -352,12 +361,14 @@ export const sliderApplies = (ent: EntityItem, st: HassEntity | undefined): bool
   return true;
 };
 
-const round = (v: number, step: number) => {
-  const dec = Math.min(4, (String(step).split(".")[1] || "").length);
-  return Number((Math.round(v / step) * step).toFixed(dec));
+const decimalsOf = (n: number) => Math.min(4, (String(n).split(".")[1] || "").length);
+// the nearest valid value: steps are counted from the minimum, as Home Assistant counts them
+// (min 1, step 2: 1, 3, 5 …), then held inside the bounds
+export const clampStep = (v: number, r: Range) => {
+  const dec = Math.max(decimalsOf(r.step), decimalsOf(r.min));
+  const snapped = r.min + Math.round((v - r.min) / r.step) * r.step;
+  return Number(Math.min(r.max, Math.max(r.min, snapped)).toFixed(dec));
 };
-export const clampStep = (v: number, r: Range) =>
-  Math.min(r.max, Math.max(r.min, round(v, r.step)));
 
 // the slider / stepper range of the entity: value, bounds, step and unit by domain
 export const rangeOf = (
@@ -367,9 +378,10 @@ export const rangeOf = (
 ): Range => {
   const step = ent.control?.step;
   const d = domainOf(ent.entity);
+  // brightness, position, volume and speed are percentages: the display's min / max never apply
   const pct = (value: number | null, s: number | null) => ({
-    min: ent.min ?? 0,
-    max: ent.max ?? 100,
+    min: 0,
+    max: 100,
     step: step ?? s ?? 1,
     value,
     unit: "%",
@@ -416,11 +428,22 @@ export const rangeOf = (
 
 const strList = (v: unknown): string[] =>
   Array.isArray(v) ? v.filter((x) => x !== null && x !== undefined).map(String) : [];
+// more speeds than this do not fit a pill group: the fan gets a slider instead
+export const MAX_SPEED_SEGMENTS = 6;
+const speedCount = (st: HassEntity | undefined) => {
+  const s = numAttr(st, "percentage_step");
+  return s === null || s <= 0 ? 0 : Math.max(1, Math.round(100 / s));
+};
+// a fan's speed segments would be too many (percentage_step 1 makes 100): draw a slider
+export const speedsAsSlider = (ent: EntityItem, st: HassEntity | undefined) =>
+  domainOf(ent.entity) === "fan" &&
+  modeAttr(ent) !== "preset_mode" &&
+  !ent.control?.options &&
+  speedCount(st) > MAX_SPEED_SEGMENTS;
 // fan speeds from percentage_step: 0 (off), then every step up to 100
 const fanSpeeds = (st: HassEntity | undefined): ControlOption[] => {
-  const s = numAttr(st, "percentage_step");
-  if (s === null || s <= 0) return [];
-  const n = Math.max(1, Math.round(100 / s));
+  const n = speedCount(st);
+  if (n === 0 || n > MAX_SPEED_SEGMENTS) return [];
   const out: ControlOption[] = [{ value: "0", label: "", icon: "mdi:power" }];
   for (let i = 1; i <= n; i++)
     out.push({ value: String(Math.round((100 * i) / n)), label: String(i), icon: null });
@@ -454,14 +477,15 @@ export const currentOptionOf = (ent: EntityItem, st: HassEntity | undefined): st
   const d = domainOf(ent.entity),
     a = modeAttr(ent);
   if (d === "fan" && a !== "preset_mode") {
-    // the speed segment nearest to the fan's percentage
-    if (st.state === "off") return "0";
-    const p = numAttr(st, "percentage");
+    // the segment nearest to the fan's percentage, among the options drawn (own or speeds)
+    const p = st.state === "off" ? 0 : numAttr(st, "percentage");
     if (p === null) return null;
     let best: ControlOption | null = null;
-    for (const o of fanSpeeds(st))
-      if (best === null || Math.abs(Number(o.value) - p) < Math.abs(Number(best.value) - p))
-        best = o;
+    for (const o of optionsOf(ent, st)) {
+      const v = Number(o.value);
+      if (!Number.isFinite(v)) continue;
+      if (best === null || Math.abs(v - p) < Math.abs(Number(best.value) - p)) best = o;
+    }
     return best?.value ?? String(p);
   }
   // the climate's hvac mode is its state; presets and fan modes are attributes
