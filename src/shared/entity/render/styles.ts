@@ -96,8 +96,11 @@ export const STYLE_CONTROLS = `
   .ctl-stepper .val { min-width: 48px; text-align: center; font-size: 14px; font-weight: 500; line-height: 20px; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .ctl-stepper.sm .val { min-width: 40px; font-size: 13px; }
   .ctl-stepper.pending .val { color: var(--fe-color); }
-  .ctl-segments { display: flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--fe-track); min-width: 0; max-width: 100%; box-sizing: border-box; }
-  .ctl-segments .seg { flex: 1 1 0; min-width: 0; height: 30px; border: 0; padding: 0 10px; border-radius: 999px; background: transparent; color: var(--secondary-text-color); display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; overflow: hidden; --mdc-icon-size: 18px; }
+  .ctl-segments { display: flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--fe-track); flex: none; max-width: 100%; box-sizing: border-box; }
+  .ctl-segments .seg { flex: 0 0 auto; height: 30px; border: 0; padding: 0 10px; border-radius: 999px; background: transparent; color: var(--secondary-text-color); display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; overflow: hidden; --mdc-icon-size: 18px; }
+  /* in the block slot the segments share the width */
+  .row > .ctl-segments, .main > .ctl-segments, .cell > .ctl-segments { align-self: stretch; }
+  .row > .ctl-segments .seg, .main > .ctl-segments .seg, .cell > .ctl-segments .seg { flex: 1 1 0; min-width: 0; }
   .ctl-segments .seg span { overflow: hidden; text-overflow: ellipsis; }
   .ctl-segments .seg.on { background: var(--fe-soft); color: var(--fe-color); }
   .ctl-segments .seg.pending { box-shadow: inset 0 0 0 1px var(--fe-color); animation: ctl-pulse 1s ease-in-out infinite; }

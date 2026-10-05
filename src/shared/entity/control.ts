@@ -376,7 +376,7 @@ const fanSpeeds = (st: HassEntity | undefined): ControlOption[] => {
   const s = numAttr(st, "percentage_step");
   if (s === null || s <= 0) return [];
   const n = Math.max(1, Math.round(100 / s));
-  const out: ControlOption[] = [{ value: "0", label: null, icon: "mdi:power" }];
+  const out: ControlOption[] = [{ value: "0", label: "", icon: "mdi:power" }];
   for (let i = 1; i <= n; i++)
     out.push({ value: String(Math.round((100 * i) / n)), label: String(i), icon: null });
   return out;

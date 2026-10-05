@@ -315,6 +315,8 @@ export const segmentsEl = (
   el.setAttribute("aria-label", t(ctx.hass, "control.choose", { name: nameOf(ctx, ent, m.st) }));
   const pend = pendingStr(host.pending.get(idx));
   const current = pend ?? currentOptionOf(ent, m.st);
+  // on the line the segments are icons where they have one; the text stays for the block
+  const compact = p.small || p.position !== "block";
   for (const o of opts) {
     const text = optionText(o.value, o.label);
     const b = button("seg", text);
@@ -324,12 +326,12 @@ export const segmentsEl = (
     b.classList.toggle("on", on);
     b.classList.toggle("pending", on && pend !== null);
     if (o.icon) b.appendChild(icon(o.icon));
-    if (!o.icon || !p.small) {
+    if (text && (!o.icon || !compact)) {
       const s = document.createElement("span");
       s.textContent = text;
       b.appendChild(s);
     }
-    b.title = text;
+    b.title = text || o.value;
     b.addEventListener("click", () => {
       if (o.value === current) return;
       host.call(el, idx, ent, serviceFor(ent, m.st, { type: "option", value: o.value }), {
