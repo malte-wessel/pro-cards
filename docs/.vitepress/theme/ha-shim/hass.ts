@@ -149,6 +149,10 @@ const COVER_OPEN = (pos: number) => (pos <= 0 ? "closed" : "open");
 const TRACKS = ["Planet Earth III", "Radio Eins", "Morning Mix", "Jazz Hour"];
 const setTimeoutState = (id: string, state: string, attrs: Record<string, unknown>, ms: number) =>
   setTimeout(() => world.set(id, state, attrs), ms);
+// devices that take a moment to answer, so a control's pending ghost can be seen (the controls
+// page's States example); everything else answers at once
+const SLOW = new Set(["light.attic"]);
+const SLOW_MS = 900;
 const callService = async (
   domain: string,
   service: string,
@@ -158,6 +162,8 @@ const callService = async (
   const ids = ([] as string[]).concat(
     (data.entity_id || target?.entity_id || []) as string | string[],
   );
+  if (ids.length && ids.every((id) => SLOW.has(id)))
+    await new Promise((resolve) => setTimeout(resolve, SLOW_MS));
   const num = (k: string) => (typeof data[k] === "number" ? (data[k] as number) : Number(data[k]));
   const each = (fn: (id: string, st: HassEntity) => void) =>
     ids.forEach((id) => {

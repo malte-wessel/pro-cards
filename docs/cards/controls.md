@@ -383,7 +383,7 @@ sections:
 
 ## States
 
-A control shows what it asked for right away, as a ghost: the knob pulses, the fill is translucent, the segment is outlined, until the entity's state changes (or five seconds pass, when the device never answers). An unavailable entity greys its control out. The demo lock takes a moment to lock, so its ghost is easy to see.
+A control shows what it asked for right away, as a ghost: the knob pulses, the fill is translucent, the segment is outlined, until the entity's state changes (or five seconds pass, when the device never answers). An unavailable entity greys its control out. The demo's attic light and lock take a moment to answer, so their ghosts are easy to see; the rest of the demo home answers at once.
 
 ::: live
 
@@ -392,7 +392,7 @@ type: custom:entity-group-card-pro
 title: States
 icon: mdi:gesture-tap-hold
 entities:
-  - { entity: light.living_room, name: Idle · drag the slider, control: auto }
+  - { entity: light.attic, name: Pending · tap or drag, control: auto }
   - { entity: lock.garage_side_door, name: Pending · hold to lock, control: hold }
   - { entity: sensor.washer_status, name: Unavailable, value: unavailable, control: toggle }
 ```

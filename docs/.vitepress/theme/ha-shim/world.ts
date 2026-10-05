@@ -314,6 +314,13 @@ def("light.living_room", "on", {
   supported_color_modes: ["brightness"],
 });
 def("light.kitchen", "off", { friendly_name: "Kitchen", supported_color_modes: ["brightness"] });
+// answers its services after a moment (see SLOW in hass.ts): shows a control's pending ghost
+def("light.attic", "on", {
+  friendly_name: "Attic",
+  brightness: 120,
+  color_mode: "brightness",
+  supported_color_modes: ["brightness"],
+});
 def("light.dining_table", "on", {
   friendly_name: "Dining table",
   brightness: 120,
