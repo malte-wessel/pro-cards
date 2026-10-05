@@ -61,8 +61,8 @@ export const fillRow = (
       if (!sec && m.look.label && m.model.avail) el.classList.add("accent");
       texts.appendChild(el);
     }
-    // segments and a select show the value themselves, the text next to them would repeat it
-    if (!c.end.some((p) => p.kind === "segments" || p.kind === "select"))
+    // segments and a select show the value themselves, a Run chip is the value: no text beside them
+    if (!c.end.some((p) => p.kind === "segments" || p.kind === "select" || p.kind === "button"))
       end.appendChild(valueEl(ent, m));
   }
   appendControls(ctx, ent, idx, m, c.end, end);

@@ -57,6 +57,12 @@ export const STYLE_ROW = `
 export const STYLE_CONTROLS = `
   .ctl, .toggle { --fe-track: color-mix(in srgb, var(--primary-text-color) 8%, transparent); }
   .ctl button, .ctl-chip, .ctl-hold, .toggle { font: inherit; }
+  /* an icon keeps its box while Home Assistant still loads it, so a control never changes width */
+  /* a line with a control: the control keeps its size, the value text and the name give way */
+  .end:has(> .ctl), .val:has(> .ctl) { max-width: none; flex: 0 1 auto; min-width: 0; }
+  .end:has(> .ctl) > .state, .val:has(> .ctl) > .state { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .end > .ctl-segments, .val > .ctl-segments { flex: 0 1 auto; min-width: 0; overflow: hidden; }
+  .ctl ha-icon, .ctl ha-state-icon { display: inline-flex; flex: none; width: var(--mdc-icon-size, 24px); height: var(--mdc-icon-size, 24px); }
   .ctl.disabled, .lead.tap.disabled { opacity: .4; pointer-events: none; }
   .ctl button:disabled { opacity: .38; cursor: default; }
   .ctl:focus-visible, .ctl button:focus-visible, .ctl select:focus-visible, .toggle:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--fe-color); }
@@ -174,7 +180,7 @@ export const STYLE_TABLE = `
   .row.field { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; }
   .section.with-icon .row.field { grid-template-columns: auto minmax(0, 1fr) auto; }
   .field .key { font-size: 11px; line-height: 16px; letter-spacing: .08em; text-transform: uppercase; font-weight: 500; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .field .val { display: flex; align-items: center; gap: 8px; min-width: 0; justify-self: end; }
+  .field .val { display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; justify-self: end; }
   .field .val .state { font-weight: 600; }
   .field .val:empty { display: none; }
   .section.layout-table.align-start .row.field { grid-template-columns: fit-content(60%) minmax(0, 1fr); }
