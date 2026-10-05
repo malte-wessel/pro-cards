@@ -26,6 +26,7 @@ const de: Translation = {
   "control.lock": "Verriegeln",
   "control.unlock": "Entriegeln",
   "control.hold_to": "Halten zum {action}",
+  "control.press_again": "Erneut drücken zum {action}",
   "group.stub_title": "Gruppe",
   "sections.stub_title": "Bereich",
 

@@ -26,6 +26,7 @@ const pl: Translation = {
   "control.lock": "Zablokuj",
   "control.unlock": "Odblokuj",
   "control.hold_to": "Przytrzymaj, aby {action}",
+  "control.press_again": "Naciśnij ponownie, aby {action}",
   "group.stub_title": "Grupa",
   "sections.stub_title": "Sekcja",
 

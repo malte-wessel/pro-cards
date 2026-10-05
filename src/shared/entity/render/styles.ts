@@ -28,8 +28,12 @@ export const STYLE_HEADER = `
 export const STYLE_ROW = `
   .row { --fe-color: var(--primary-color); --fe-soft: color-mix(in srgb, var(--fe-color) 20%, transparent); }
   .row { display: flex; flex-direction: column; gap: 10px; min-width: 0; border-radius: 8px; outline: none; }
-  .row.actionable { cursor: pointer; position: relative; }
-  .row.actionable:focus-visible { box-shadow: 0 0 0 2px var(--fe-color); }
+  .row.actionable { cursor: pointer; position: relative; isolation: isolate; }
+  /* the row's own action: a layer behind the content; the controls (and plots) stay on top of it */
+  .hit { position: absolute; inset: 0; z-index: -1; border-radius: inherit; outline: none; }
+  .row.actionable > :not(.hit) { pointer-events: none; }
+  .row.actionable :is(.ctl, .toggle, .lead.tap, .plot):not(.disabled) { pointer-events: auto; }
+  .row.actionable > .hit:focus-visible { box-shadow: 0 0 0 2px var(--fe-color); }
   .top { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .lead { position: relative; flex: none; width: var(--lead, 40px); height: var(--lead, 40px); }
   .lead svg { position: absolute; inset: 0; width: 100%; height: 100%; }
@@ -125,6 +129,8 @@ export const STYLE_CONTROLS = `
   .ctl-hold svg { position: absolute; inset: -4px; width: calc(100% + 8px); height: calc(100% + 8px); overflow: visible; pointer-events: none; }
   .ctl-hold .prog { fill: none; stroke: var(--fe-color); stroke-width: 2.5; stroke-linecap: round; stroke-dashoffset: var(--c); transition: none; }
   .ctl-hold.holding .prog { stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear; }
+  .ctl-hold.armed { box-shadow: 0 0 0 2px var(--fe-soft); }
+  .ctl-hold.armed .prog { stroke-dashoffset: 0; opacity: .45; }
   .ctl-hold.pending { animation: ctl-pulse 1s ease-in-out infinite; }
   @keyframes ctl-pulse { 50% { opacity: .45; } }
   @media (prefers-reduced-motion: reduce) { .ctl, .ctl *, .toggle i, .lead.tap .shape { animation: none !important; transition: none !important; } }
@@ -148,6 +154,7 @@ export const STYLE_CELL = `
   .cell .big b { font-size: 22px; line-height: 26px; letter-spacing: -.3px; }
   .cell .big.fit b { font-size: var(--fit, 22px); }
   .cell .lead { margin-bottom: 2px; }
+  .cell > .hit:focus-visible { box-shadow: inset 0 0 0 2px var(--fe-color); }
   .cell .gtop { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; margin-bottom: 2px; }
   .cell .gtop .lead { margin-bottom: 0; }
   .cell .gtop .end { max-width: none; }
@@ -172,8 +179,8 @@ export const STYLE_ITEM = `
   .section.layout-column .row.item:not(:has(> .lead)):has(> .end) { grid-template-columns: minmax(0, 1fr) auto; }
   .section.layout-column .row.item > .end { grid-column: -2 / -1; grid-row: 1 / span 2; align-self: center; max-width: none; }
   .item .ctl-chip.round, .item .ctl-hold.lead-size { margin: 0 auto; }
-  .item:focus-visible { box-shadow: none; }
-  .item:focus-visible .lead .shape { box-shadow: 0 0 0 2px var(--fe-color); }
+  .item > .hit:focus-visible { box-shadow: none; }
+  .item > .hit:focus-visible ~ .lead .shape { box-shadow: 0 0 0 2px var(--fe-color); }
 `;
 export const STYLE_TABLE = `
   .section.layout-table { gap: 8px; }

@@ -26,6 +26,7 @@ const sv: Translation = {
   "control.lock": "Lås",
   "control.unlock": "Lås upp",
   "control.hold_to": "Håll för att {action}",
+  "control.press_again": "Tryck igen för att {action}",
   "group.stub_title": "Grupp",
   "sections.stub_title": "Sektion",
 

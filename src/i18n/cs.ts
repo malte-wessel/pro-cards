@@ -26,6 +26,7 @@ const cs: Translation = {
   "control.lock": "Zamknout",
   "control.unlock": "Odemknout",
   "control.hold_to": "Podržte pro {action}",
+  "control.press_again": "Stiskněte znovu pro {action}",
   "group.stub_title": "Skupina",
   "sections.stub_title": "Sekce",
 

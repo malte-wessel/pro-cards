@@ -86,6 +86,8 @@ export interface Pending {
 // what the control builders need from the card element
 export interface ControlHost {
   pending: ReadonlyMap<number, Pending>;
+  // hold buttons armed by a first press (screen readers), by entity index: until when
+  armed: Map<number, number>;
   readonly dragging: number | null;
   call(
     el: HTMLElement,
@@ -101,6 +103,7 @@ export interface ControlHost {
 }
 
 export const HOLD_CONFIRM_MS = 1000;
+export const ARM_MS = 5000;
 export const PENDING_MS = 5000;
 export const DONE_MS = 1500;
 

@@ -26,6 +26,7 @@ const nb: Translation = {
   "control.lock": "Lås",
   "control.unlock": "Lås opp",
   "control.hold_to": "Hold for å {action}",
+  "control.press_again": "Trykk igjen for å {action}",
   "group.stub_title": "Gruppe",
   "sections.stub_title": "Seksjon",
 

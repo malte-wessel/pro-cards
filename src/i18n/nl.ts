@@ -26,6 +26,7 @@ const nl: Translation = {
   "control.lock": "Vergrendelen",
   "control.unlock": "Ontgrendelen",
   "control.hold_to": "Houd vast om te {action}",
+  "control.press_again": "Druk nogmaals om te {action}",
   "group.stub_title": "Groep",
   "sections.stub_title": "Sectie",
 

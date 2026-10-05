@@ -7,6 +7,7 @@ import { t } from "../../i18n.ts";
 import { clamp01 } from "../../util.ts";
 import type { EntityItem } from "../config.ts";
 import {
+  ARM_MS,
   buttonsOf,
   clampStep,
   currentOptionOf,
@@ -107,7 +108,8 @@ export const toggleEl = (
   const { on, pending } = toggleTarget(ctx, idx, m);
   b.classList.toggle("on", on);
   b.classList.toggle("pending", pending);
-  b.setAttribute("aria-pressed", String(on));
+  b.setAttribute("role", "switch");
+  b.setAttribute("aria-checked", String(on));
   b.innerHTML = "<i></i>";
   if (!m.model.avail) disable(b);
   else bindToggle(b, ctx, ent, idx, m, on);
@@ -125,9 +127,9 @@ export const bindLeadTap = (
   const { on, pending } = toggleTarget(ctx, idx, m);
   lead.classList.toggle("off", !on);
   lead.classList.toggle("pending", pending);
-  lead.setAttribute("role", "button");
+  lead.setAttribute("role", "switch");
   lead.setAttribute("aria-label", t(ctx.hass, "control.toggle", { name: nameOf(ctx, ent, m.st) }));
-  lead.setAttribute("aria-pressed", String(on));
+  lead.setAttribute("aria-checked", String(on));
   lead.tabIndex = 0;
   guard(lead);
   if (!m.model.avail) {
@@ -317,10 +319,13 @@ export const segmentsEl = (
   const current = pend ?? currentOptionOf(ent, m.st);
   // on the line the segments are icons where they have one; the text stays for the block
   const compact = p.small || p.position !== "block";
+  const segs: HTMLButtonElement[] = [];
   for (const o of opts) {
     const text = optionText(o.value, o.label);
     const b = button("seg", text);
     b.setAttribute("role", "radio");
+    b.tabIndex = -1;
+    segs.push(b);
     const on = o.value === current;
     b.setAttribute("aria-checked", String(on));
     b.classList.toggle("on", on);
@@ -341,6 +346,21 @@ export const segmentsEl = (
     });
     el.appendChild(b);
   }
+  // one tab stop (the checked segment); the arrow keys move and choose, like a radio group
+  (segs.find((b) => b.classList.contains("on")) ?? segs[0]).tabIndex = 0;
+  el.addEventListener("keydown", (ev) => {
+    const n = segs.length,
+      i = segs.findIndex((b) => b.matches(":focus"));
+    let to = -1;
+    if (ev.key === "ArrowRight" || ev.key === "ArrowDown") to = (i + 1) % n;
+    else if (ev.key === "ArrowLeft" || ev.key === "ArrowUp") to = (i - 1 + n) % n;
+    else if (ev.key === "Home") to = 0;
+    else if (ev.key === "End") to = n - 1;
+    if (i < 0 || to < 0) return;
+    ev.preventDefault();
+    segs[to].focus();
+    segs[to].click();
+  });
   if (!m.model.avail) disable(el);
   return el;
 };
@@ -486,7 +506,15 @@ export const holdEl = (
   const el = root("hold", p, idx, "button") as HTMLButtonElement;
   el.type = "button";
   if (p.position === "lead") el.classList.add("lead-size");
-  el.setAttribute("aria-label", t(ctx.hass, "control.hold_to", { action }));
+  // armed: a screen reader pressed once, the next press within ARM_MS runs the service
+  const isArmed = () => (host.armed.get(idx) ?? 0) > Date.now();
+  const label = (again: boolean) =>
+    el.setAttribute(
+      "aria-label",
+      t(ctx.hass, again ? "control.press_again" : "control.hold_to", { action }),
+    );
+  label(isArmed());
+  el.classList.toggle("armed", isArmed());
   const C = (2 * Math.PI * 17).toFixed(1);
   el.innerHTML = `<svg viewBox="0 0 40 40"><circle class="prog" cx="20" cy="20" r="17" transform="rotate(-90 20 20)" stroke-dasharray="${C}" style="--c:${C}"/></svg>`;
   el.appendChild(holdIcon(ctx, ent, m));
@@ -496,28 +524,35 @@ export const holdEl = (
     return el;
   }
   let timer: ReturnType<typeof setTimeout> | undefined,
-    fired = false;
+    fired = false,
+    started = false;
+  const fire = () => {
+    timer = undefined;
+    fired = true;
+    el.classList.remove("holding");
+    host.armed.delete(idx);
+    host.call(el, idx, ent, serviceFor(ent, m.st, { type: "hold" }), { until: later() }, "success");
+    host.endDrag(idx);
+  };
+  // the row keeps its DOM while the ring fills (beginDrag): an update of another entity in the
+  // card must not rebuild the button under the finger
   const start = () => {
     fired = false;
+    started = true;
+    host.beginDrag(idx);
     el.classList.add("holding");
     clearTimeout(timer);
-    timer = setTimeout(() => {
-      fired = true;
-      el.classList.remove("holding");
-      host.call(
-        el,
-        idx,
-        ent,
-        serviceFor(ent, m.st, { type: "hold" }),
-        { until: later() },
-        "success",
-      );
-    }, HOLD_CONFIRM_MS);
+    timer = setTimeout(fire, HOLD_CONFIRM_MS);
   };
   const cancel = () => {
+    if (timer === undefined) return;
     clearTimeout(timer);
+    timer = undefined;
     el.classList.remove("holding");
+    host.endDrag(idx);
   };
+  // the click that follows a pointer or key gesture is not a press of its own
+  const done = () => setTimeout(() => (started = false), 0);
   el.addEventListener("pointerdown", (ev) => {
     if (ev.button !== 0) return;
     el.setPointerCapture(ev.pointerId);
@@ -526,6 +561,7 @@ export const holdEl = (
   for (const type of ["pointerup", "pointercancel", "lostpointercapture"])
     el.addEventListener(type, () => {
       if (!fired) cancel();
+      done();
     });
   el.addEventListener("keydown", (ev) => {
     if ((ev.key === "Enter" || ev.key === " ") && !ev.repeat) {
@@ -534,9 +570,30 @@ export const holdEl = (
     }
   });
   el.addEventListener("keyup", (ev) => {
-    if ((ev.key === "Enter" || ev.key === " ") && !fired) cancel();
+    if (ev.key !== "Enter" && ev.key !== " ") return;
+    ev.preventDefault();
+    if (!fired) cancel();
+    done();
   });
   el.addEventListener("blur", cancel);
+  // assistive technology sends a bare click (no pointer, no key): press twice to confirm
+  el.addEventListener("click", (ev) => {
+    if (started || ev.detail !== 0) return;
+    if (isArmed()) {
+      fire();
+      return;
+    }
+    host.armed.set(idx, Date.now() + ARM_MS);
+    el.classList.add("armed");
+    label(true);
+    setTimeout(() => {
+      if ((host.armed.get(idx) ?? 0) <= Date.now()) host.armed.delete(idx);
+      if (el.isConnected) {
+        el.classList.remove("armed");
+        label(false);
+      }
+    }, ARM_MS);
+  });
   return el;
 };
 

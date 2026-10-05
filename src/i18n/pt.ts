@@ -26,6 +26,7 @@ const pt: Translation = {
   "control.lock": "Trancar",
   "control.unlock": "Destrancar",
   "control.hold_to": "Manter premido para {action}",
+  "control.press_again": "Prima novamente para {action}",
   "group.stub_title": "Grupo",
   "sections.stub_title": "Secção",
 

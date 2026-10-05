@@ -25,6 +25,7 @@ const en = {
   "control.lock": "Lock",
   "control.unlock": "Unlock",
   "control.hold_to": "Hold to {action}",
+  "control.press_again": "Press again to {action}",
   "group.stub_title": "Group",
   "sections.stub_title": "Section",
 

@@ -26,6 +26,7 @@ const ru: Translation = {
   "control.lock": "Закрыть замок",
   "control.unlock": "Открыть замок",
   "control.hold_to": "Удерживайте, чтобы {action}",
+  "control.press_again": "Нажмите ещё раз, чтобы {action}",
   "group.stub_title": "Группа",
   "sections.stub_title": "Раздел",
 

@@ -397,4 +397,17 @@ entities:
 
 :::
 
+## Keyboard and screen readers
+
+Every control works without a pointer. Tab reaches the row's own action first (a button behind the content, named after the entity), then the row's controls in order; the focus stays where it is while the card updates.
+
+- **Switch and lead tap**: a switch (`role="switch"`), Space or Enter flips it.
+- **Slider**: the arrow keys step, PageUp and PageDown jump ten steps, Home and End go to the ends; the call follows a short pause.
+- **Segments**: a radio group with one tab stop; the arrow keys move along the segments and choose, Home and End jump to the ends.
+- **Stepper, buttons, Run**: plain buttons.
+- **Select**: the browser's own menu.
+- **Hold to confirm**: keep Space or Enter pressed for a second. A screen reader cannot hold, so it presses twice: the first press arms the button ("Press again to …"), a second press within five seconds runs it.
+
+A failed service call shows Home Assistant's toast with the error and fires the failure haptic.
+
 Controls never ask for confirmation through Home Assistant's dialog; `confirm: true` is their way of asking. `tap_action`, `hold_action` and `double_tap_action` on the row keep working next to a control: the control swallows its own gestures, the rest of the row runs the actions.

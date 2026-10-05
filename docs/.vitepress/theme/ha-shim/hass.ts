@@ -188,8 +188,8 @@ const callService = async (
     !["off", "closed", "locked", "idle", "standby"].includes(st.state);
   // locks take a moment, like a real one
   const lock = (id: string, locked: boolean) => {
-    world.set(id, locked ? "locking" : "unlocking");
-    setTimeoutState(id, locked ? "locked" : "unlocked", {}, 700);
+    setTimeoutState(id, locked ? "locking" : "unlocking", {}, 250);
+    setTimeoutState(id, locked ? "locked" : "unlocked", {}, 950);
   };
   const toastCall = () =>
     toast(`Service called: ${domain}.${service} ${JSON.stringify({ ...data, ...(target || {}) })}`);

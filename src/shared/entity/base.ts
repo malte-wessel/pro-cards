@@ -3,7 +3,7 @@
 //   _normalize(raw)            – the normalised config (see config.js)
 //   _styles()                  – the CSS string for the shadow root
 //   getGridOptions()           – the sections grid footprint
-import { fireAction, fireHaptic } from "../card.ts";
+import { fireAction, fireEvent, fireHaptic } from "../card.ts";
 import { cssColor } from "../color.ts";
 import { REFRESH_MS } from "../constants.ts";
 import { langOf } from "../format.ts";
@@ -20,12 +20,14 @@ import {
   type Pending,
   type ServiceCall,
 } from "./control.ts";
-import { modelOf, tplOf, type PlotHandlers, type RenderCtx } from "./model.ts";
+import { modelOf, nameOf, tplOf, type PlotHandlers, type RenderCtx } from "./model.ts";
 import { fillByClass } from "./render/fill.ts";
 import { drawPlot, showHover, windowOf, type PlotElement } from "./render/plots.ts";
 import type { EntityModel } from "./model.ts";
 
 type Unsubscribe = () => unknown;
+// what a row may hold that takes focus (the hit layer, buttons, a select, the slider)
+const FOCUSABLE = "[tabindex], button, select";
 
 // grid rows a block visual (and a block control) adds below its row
 const blk = (e: EntityItem) =>
@@ -77,6 +79,7 @@ export abstract class EntityCardBase extends HTMLElement {
   // controls: service calls in flight per entity index, the row being dragged, the host the
   // builders talk to
   _pending = new Map<number, Pending>();
+  _armed = new Map<number, number>();
   _dragging: number | null = null;
   _pendingTimer?: ReturnType<typeof setTimeout>;
   _idxsByEntity = new Map<string, number[]>();
@@ -98,6 +101,7 @@ export abstract class EntityCardBase extends HTMLElement {
     const dragging = () => this._dragging;
     this._ctl = {
       pending: this._pending,
+      armed: this._armed,
       get dragging() {
         return dragging();
       },
@@ -138,6 +142,7 @@ export abstract class EntityCardBase extends HTMLElement {
     this._fetched = false;
     this._hover = null;
     this._pending.clear();
+    this._armed.clear();
     this._dragging = null;
     if (this._hass) this._subscribeTemplates();
     if (this._root) this._buildDom();
@@ -233,14 +238,20 @@ export abstract class EntityCardBase extends HTMLElement {
       return;
     }
     if (!this._hass) return;
-    Promise.resolve(this._hass.callService(svc.domain, svc.service, svc.data)).catch((err) => {
-      console.warn(`${this._cardType()}: ${svc.domain}.${svc.service} failed`, err);
-      this._pending.delete(idx);
-      this._render();
-    });
-    fireHaptic(el, haptic);
+    // pending first: the entity may answer synchronously (the docs shim does) and clear it
     this._pending.set(idx, pending ?? { until: Date.now() + PENDING_MS });
     this._sweepPending();
+    fireHaptic(el, haptic);
+    Promise.resolve(this._hass.callService(svc.domain, svc.service, svc.data)).catch((err) => {
+      const name = `${svc.domain}.${svc.service}`;
+      console.warn(`${this._cardType()}: ${name} failed`, err);
+      this._pending.delete(idx);
+      // on the card, not the control: the control may have been rebuilt since
+      fireHaptic(this, "failure");
+      const msg = err instanceof Error && err.message ? err.message : String(err ?? "failed");
+      fireEvent(this, "hass-notification", { message: `${name}: ${msg}` });
+      this._render();
+    });
     this._render();
   }
   // drops expired pending calls and re-renders when the next one expires
@@ -327,12 +338,13 @@ export abstract class EntityCardBase extends HTMLElement {
     const { entity, ...action } = a;
     fireAction(this, entity ?? ent.entity, action, kind);
   }
+  _hasActions(ent: EntityItem) {
+    const has = (a: ActionConfig | undefined) => a && a.action !== "none";
+    return !!(has(ent.tap) || has(ent.hold) || has(ent.dbl));
+  }
+  // binds the gestures to `el`: the hit layer behind the row's content (see _row)
   _bindActions(el: HTMLElement, ent: EntityItem) {
     const has = (a: ActionConfig | undefined) => a && a.action !== "none";
-    if (!has(ent.tap) && !has(ent.hold) && !has(ent.dbl)) return;
-    el.classList.add("actionable");
-    el.setAttribute("role", "button");
-    el.tabIndex = 0;
     let holdTimer: ReturnType<typeof setTimeout> | undefined,
       held = false,
       down = false,
@@ -382,7 +394,17 @@ export abstract class EntityCardBase extends HTMLElement {
     r.className = `row ${cls}`;
     r.dataset.idx = String(idx);
     const ent = this._config?.entities[idx];
-    if (ent) this._bindActions(r, ent);
+    if (ent && this._hasActions(ent)) {
+      // the row's own action lives on a layer behind the content, so the controls on the row are
+      // never nested inside a button (Home Assistant's tile does the same); _render keeps it first
+      r.classList.add("actionable");
+      const hit = document.createElement("div");
+      hit.className = "hit";
+      hit.setAttribute("role", "button");
+      hit.tabIndex = 0;
+      this._bindActions(hit, ent);
+      r.appendChild(hit);
+    }
     return r;
   }
   _buildDom() {
@@ -474,15 +496,23 @@ export abstract class EntityCardBase extends HTMLElement {
       header.style.display = title || icon || cfg.headerIdxs.length ? "" : "none";
     }
     const models = cfg.entities.map((ent) => modelOf(ctx, ent));
+    const focus = this._focusWithin();
     for (const row of card.querySelectorAll<HTMLElement>(".row")) {
       const idx = Number(row.dataset.idx),
         ent = cfg.entities[idx],
         m = models[idx];
       if (!ent || !m) continue;
       row.style.setProperty("--fe-color", cssColor(m.look.color, "var(--primary-color)"));
-      // a row whose control is being dragged keeps its DOM until the drag ends
+      // a row whose control is being dragged or held keeps its DOM until the gesture ends
       if (this._dragging === idx) continue;
+      const hit = row.querySelector<HTMLElement>(":scope > .hit");
       this._fill(ctx, row, ent, idx, m);
+      if (hit) {
+        // re-inserting an element that is still first would drop its focus (rows filled in place)
+        if (row.firstElementChild !== hit) row.prepend(hit);
+        hit.setAttribute("aria-label", nameOf(ctx, ent, m.st));
+      }
+      if (focus?.row === row) this._refocus(row, focus.i);
     }
     const tint = this._tintColor(ctx, models, card);
     card.classList.toggle("tinted", tint !== null);
@@ -499,6 +529,18 @@ export abstract class EntityCardBase extends HTMLElement {
       );
       if (plot) showHover(ctx, plot, hover.t);
     }
+  }
+  // the focused element of a row, as its index among the row's focusable elements: a rebuilt row
+  // has the same elements in the same order, so the same index is the same control
+  _focusWithin(): { row: HTMLElement; i: number } | null {
+    const a = this.shadowRoot?.activeElement as HTMLElement | null;
+    const row = a?.closest<HTMLElement>(".row");
+    if (!a || !row) return null;
+    const i = [...row.querySelectorAll<HTMLElement>(FOCUSABLE)].indexOf(a);
+    return i < 0 ? null : { row, i };
+  }
+  _refocus(row: HTMLElement, i: number) {
+    row.querySelectorAll<HTMLElement>(FOCUSABLE)[i]?.focus({ preventScroll: true });
   }
   // fills one row from its model; a subclass adds its own row kinds and falls back to this
   _fill(ctx: RenderCtx, row: HTMLElement, ent: EntityItem, idx: number, m: EntityModel) {
