@@ -37,7 +37,7 @@ entities:
       - { below: 8, color: orange, label: High }
       - { above: 8, color: red, label: Very high }
 `,
-  "List with toggles": `type: custom:entity-group-card-pro
+  "List with controls": `type: custom:entity-group-card-pro
 title: Living room
 icon: mdi:sofa
 entities:
@@ -45,19 +45,20 @@ entities:
     rules:
       - { state: "on", color: amber, label: "On" }
       - { state: "off", color: grey, label: "Off" }
-    toggle: true
+    control: auto
   - entity: light.dining_table
     rules:
       - { state: "on", color: amber, label: "On" }
       - { state: "off", color: grey, label: "Off" }
-    toggle: true
+    control: toggle
   - entity: cover.living_room_blinds
     icon: mdi:window-shutter
     attribute: current_position
     unit: "%"
-    visual: bar
+    control: auto
   - entity: media_player.living_room_tv
     visual: badge
+    control: auto
     rules:
       - { state: playing, color: green, icon: mdi:play-circle, label: Playing }
       - { state: idle, color: grey, label: Idle }

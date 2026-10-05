@@ -1,7 +1,7 @@
 // Fills one entity row for every row kind: tile / list rows, hero lead, grid cells, items,
 // table fields and header values. Each function rebuilds the row's children from the model.
 import type { EntityItem } from "../config.ts";
-import { placementsOf, type Placement, type RowKind } from "../control.ts";
+import { controlShowsValue, placementsOf, type Placement, type RowKind } from "../control.ts";
 import { nameOf, tplOf, type EntityModel, type RenderCtx } from "../model.ts";
 import { blockEl } from "./blocks.ts";
 import { appendControls, bindLeadTap, buttonEl, controlEl } from "./controls.ts";
@@ -61,9 +61,8 @@ export const fillRow = (
       if (!sec && m.look.label && m.model.avail) el.classList.add("accent");
       texts.appendChild(el);
     }
-    // segments and a select show the value themselves, a Run chip is the value: no text beside them
-    if (!c.end.some((p) => p.kind === "segments" || p.kind === "select" || p.kind === "button"))
-      end.appendChild(valueEl(ent, m));
+    // a control that shows the value itself gets no text beside it
+    if (!c.end.some((p) => controlShowsValue(ent, p))) end.appendChild(valueEl(ent, m));
   }
   appendControls(ctx, ent, idx, m, c.end, end);
   line.append(texts, end);

@@ -8,6 +8,7 @@ import type { HassEntity, HomeAssistant } from "../../../../src/shared/ha.ts";
 import {
   buttonsOf,
   clampStep,
+  controlShowsValue,
   currentOptionOf,
   defaultPlacements,
   hasBlockControl,
@@ -146,6 +147,24 @@ describe("placements", () => {
     expect(cover[1].confirm).toBeUndefined();
     expect(kinds(placementsOf(ent({ entity: "sensor.a", control_confirm: true }), "tile"))).toEqual(
       ["hold@end"],
+    );
+  });
+  it("knows when a control on the line already shows the value", () => {
+    const stepper = { kind: "stepper", position: "end", small: false } as const;
+    expect(controlShowsValue(ent({ entity: "climate.a", attribute: "temperature" }), stepper)).toBe(
+      true,
+    );
+    expect(
+      controlShowsValue(ent({ entity: "climate.a", attribute: "current_temperature" }), stepper),
+    ).toBe(false);
+    expect(controlShowsValue(ent({ entity: "climate.a" }), stepper)).toBe(false);
+    expect(controlShowsValue(ent({ entity: "number.a" }), stepper)).toBe(true);
+    expect(controlShowsValue(ent({ entity: "number.a", attribute: "max" }), stepper)).toBe(false);
+    expect(controlShowsValue(ent({}), { kind: "segments", position: "end", small: false })).toBe(
+      true,
+    );
+    expect(controlShowsValue(ent({}), { kind: "toggle", position: "end", small: false })).toBe(
+      false,
     );
   });
   it("knows when a tile grows by a block control", () => {

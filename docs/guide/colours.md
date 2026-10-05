@@ -15,7 +15,7 @@ Try it on this site: every example has a theme picker in its top-right corner, a
   title: Living room
   icon: mdi:sofa
   entities:
-    - { entity: light.living_room, toggle: true, rules: [{ state: "on", color: amber, label: On }, { state: "off", color: grey, label: Off }] }
+    - { entity: light.living_room, control: toggle, rules: [{ state: "on", color: amber, label: On }, { state: "off", color: grey, label: Off }] }
     - { entity: sensor.living_room_temperature, name: Temperature, decimals: 1, rules: [{ below: 19, color: blue, label: Cold }, { below: 24, color: green, label: Comfortable }, { above: 24, color: orange, label: Warm }] }
     - { entity: sensor.living_room_co2, name: CO₂, visual: strip, rules: [{ below: 800, color: green }, { below: 1200, color: amber }, { above: 1200, color: red }] }
     - { entity: sensor.robot_battery, name: Battery, visual: ring }

@@ -308,6 +308,23 @@ export const placementsOf = (ent: EntityItem, row: RowKind): Placement[] => {
   return out;
 };
 // whether the entity draws a control below its line in a tile (for the card height)
+// whether a control on the line shows the row's own value itself (segments and a select show the
+// mode, a Run chip is the value, a stepper shows the number it sets), so the text beside it would
+// repeat it
+export const controlShowsValue = (ent: EntityItem, p: Placement): boolean => {
+  if (p.kind === "segments" || p.kind === "select" || p.kind === "button") return true;
+  if (p.kind !== "stepper") return false;
+  const v = ent.valueSrc;
+  switch (domainOf(ent.entity)) {
+    case "climate":
+      return v.kind === "attribute" && v.key === "temperature";
+    case "number":
+    case "input_number":
+      return v.kind === "state";
+    default:
+      return false;
+  }
+};
 export const hasBlockControl = (ent: EntityItem) =>
   placementsOf(ent, "tile").some((p) => p.position === "block");
 

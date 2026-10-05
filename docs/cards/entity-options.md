@@ -238,13 +238,13 @@ entities:
     rules:
       - { state: "on", color: indigo, icon: mdi:weather-night, label: Active }
       - { state: "off", color: grey, icon: mdi:weather-sunny, label: Inactive }
-    toggle: true
+    control: toggle
   - entity: input_boolean.vacation_mode
     name: Vacation mode
     rules:
       - { state: "on", color: teal, icon: mdi:beach, label: Active, tint_card: true }
       - { state: "off", color: grey, icon: mdi:home, label: Inactive }
-    toggle: true
+    control: toggle
 ```
 
 :::
@@ -318,7 +318,7 @@ The default. The icon sits in a soft circle of the entity's colour, the value an
 - type: custom:entity-card-pro
   entity: light.kitchen
   name: Kitchen light
-  toggle: true
+  control: toggle
   grid_options: { columns: 6 }
 - type: custom:entity-card-pro
   entity: climate.living_room
