@@ -16,7 +16,7 @@ A fourth, manual layer is a real Home Assistant in the repository's devcontainer
 
 `tests/unit/*.test.ts`, one file per card (the three entity cards share `entity-cards.test.ts`), `tests/unit/shared/` for the modules every card uses, `tests/unit/shared/entity/` for the entity layer the entity cards share, and one each for the docs' template engine, demo world and hass shim.
 
-Every card is built from plain ES modules: `src/shared/` (colours, formatting, history fetch and bucketing, the editor base), `src/shared/entity/` for the layer the entity cards share, `src/shared/trend/` for the trend plot the multi trend and weather cards share, and one folder per other card (`src/multi-trend/`, `src/sun-path/`, `src/illuminance/`, `src/weather/`). Tests import straight from `src/`:
+Every card is built from plain ES modules: `src/shared/` (colours, formatting, history fetch and bucketing, the editor base), `src/shared/entity/` for the layer the entity cards share, `src/shared/trend/` for the trend plot the multi trend and weather cards share, and one folder per other card (`src/multi-trend/`, `src/sun-path/`, `src/sun-azimuth/`, `src/illuminance/`, `src/weather/`). Tests import straight from `src/`:
 
 ```js
 import { matchRule } from "../../src/shared/entity/look.ts";
@@ -36,6 +36,7 @@ What is covered:
 - **Entity cards**: rule matching and order, value sources (state, `attribute`, template, text), config normalisation and errors of all three cards, look resolution (explicit colour beats a matching rule, tint only on a match, grey for unavailable), formatting, grid options.
 - **Multi trend card**: tick steps, time steps, editor form round trip, layout rows.
 - **Sun path card**: solar elevation against known solstice values, event ordering, polar day and night.
+- **Sun azimuth card**: the azimuth against known bearings (noon due south, sunrise and sunset bearings of the solstices), the sides of the house (lit sides, two windows a day for the north side in summer, none in winter, rotation), the footer timeline span, the sky dial and 3D scene geometry (sun inside the disc, night without beam or shadow, visible walls per camera bearing), config normalisation and card size per view.
 - **Illuminance card**: zone merging, log scale, colour blending, editor round trip.
 - **Docs shim**: the Jinja subset (filters, precedence, tests, conditionals, error fallback), deterministic history, state updates, service calls, template subscriptions.
 
@@ -80,7 +81,7 @@ Locators pierce the cards' shadow DOM, so `card(page).locator(".row")` works as 
 
 Determinism: `mount` freezes the browser clock at **21 June 2026, 12:00 Europe/Berlin** before loading the page, and the harness never starts the demo world's value drift. History is generated from a seed per entity, so the same window always yields the same series.
 
-What is covered: every layout, all eight visuals, rules updating live, templates, attribute values, prefix and suffix, missing and unavailable entities, toggles calling `homeassistant.toggle`, tap, hold, navigate, none and confirmed `perform-action`, hover tooltips, editor elements, config errors, sun events for the frozen day, illuminance modes, every section type of the weather card with the forecast of the demo world.
+What is covered: every layout, all eight visuals, rules updating live, templates, attribute values, prefix and suffix, missing and unavailable entities, toggles calling `homeassistant.toggle`, tap, hold, navigate, none and confirmed `perform-action`, hover tooltips, editor elements, config errors, sun events for the frozen day, the sun azimuth card's three views with the sides footer (pills, windows, hover preview, the camera slider, night, languages), illuminance modes, every section type of the weather card with the forecast of the demo world.
 
 Run one file or test with the usual Playwright flags, for example `npx playwright test --project=integration tests/e2e/sun-path-card.spec.ts` or `-g "hold"`. Add `--ui` for the inspector.
 
@@ -121,7 +122,7 @@ Failed browser jobs upload the Playwright report and the diff images as artifact
 ## Known limits
 
 - The template engine in the shim covers `{{ }}` expressions only. Templates with `{% %}` statements render as their raw text in the examples and tests.
-- The sun path unit test derives day boundaries from the machine's local timezone; it passes in Europe and on CI's UTC runners because it only checks ordering and day length.
+- The sun path and sun azimuth unit tests derive day boundaries from the machine's local timezone; they pass in Europe and on CI's UTC runners because they only check ordering, day length and bearings.
 - Visual tests cover the cards at one width (400 px, a Home Assistant section column). Narrow layouts are exercised by the integration tests, not by screenshots.
 
 ## Real Home Assistant

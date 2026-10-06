@@ -780,6 +780,42 @@ const CASES = {
     sun_color: "yellow",
     labels: { sunrise: "Rise", sunset: "Set" },
   },
+  "saz-dial": {
+    type: "custom:sun-azimuth-card-pro",
+    title: "Sun",
+    icon: "mdi:sun-compass",
+    house: { rotation: 20 },
+  },
+  "saz-3d": {
+    type: "custom:sun-azimuth-card-pro",
+    title: "Sun",
+    view: "3d",
+    house: { rotation: 20, sides: { north: "Street", south: "Garden" } },
+    camera: 150,
+    camera_slider: true,
+  },
+  "saz-ring": {
+    type: "custom:sun-azimuth-card-pro",
+    view: "ring",
+    house: { rotation: 45 },
+    sun_color: "orange",
+    night_color: "deep-purple",
+  },
+  "saz-less": [
+    {
+      type: "custom:sun-azimuth-card-pro",
+      view: "3d",
+      show_sides: false,
+      show_house: false,
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:sun-azimuth-card-pro",
+      view: "ring",
+      show_sides: false,
+      grid_options: { columns: 6 },
+    },
+  ],
   "ilc-arc": {
     type: "custom:illuminance-card-pro",
     entity: "sensor.illuminance",

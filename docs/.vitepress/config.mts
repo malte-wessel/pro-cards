@@ -73,6 +73,7 @@ const cardGroups = [
       { text: "Wind Card Pro", link: "/cards/wind-card" },
       { text: "Rain Card Pro", link: "/cards/rain-card" },
       { text: "Sun Path Card Pro", link: "/cards/sun-path-card" },
+      { text: "Sun Azimuth Card Pro", link: "/cards/sun-azimuth-card" },
       { text: "Illuminance Card Pro", link: "/cards/illuminance-card" },
     ],
   },

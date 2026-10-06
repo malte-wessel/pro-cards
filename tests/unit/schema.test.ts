@@ -91,6 +91,15 @@ describe("card config schemas", () => {
     );
     expect(validate({ type: "custom:multi-trend-card-pro" })).toMatch(/entities/);
     expect(validate({ type: "custom:sun-path-card-pro", labels: { midnight: "x" } })).toBeTruthy();
+    const SAZ = "custom:sun-azimuth-card-pro";
+    expect(validate({ type: SAZ, view: "panorama" })).toMatch(/enum|allowed/);
+    expect(validate({ type: SAZ, house: { rotation: 400 } })).toMatch(/maximum|<=/);
+    expect(validate({ type: SAZ, house: { sides: { front: "Street" } } })).toMatch(
+      /unevaluated|additional/,
+    );
+    expect(validate({ type: SAZ, house: { rotate: 20 } })).toMatch(/unevaluated|additional/);
+    expect(validate({ type: SAZ, camera_slider: "yes" })).toMatch(/boolean|type/);
+    expect(validate({ type: SAZ, show_side: false })).toMatch(/unevaluated|additional/);
     expect(
       validate({ type: "custom:illuminance-card-pro", entity: "sensor.lx", mode: "bar" }),
     ).toMatch(/enum|allowed/);
@@ -425,6 +434,26 @@ describe("card config schemas", () => {
       }),
     ).toBeNull();
     expect(validate({ type: "custom:sun-path-card-pro" })).toBeNull();
+    expect(validate({ type: "custom:sun-azimuth-card-pro" })).toBeNull();
+    expect(
+      validate({
+        type: "custom:sun-azimuth-card-pro",
+        title: "Sun",
+        icon: "mdi:sun-compass",
+        view: "3d",
+        house: { rotation: 45, sides: { north: "Street", south: "Garden" } },
+        camera: 150,
+        camera_slider: true,
+        hover_preview: false,
+        show_house: false,
+        show_events: false,
+        show_sides: false,
+        sun_color: "orange",
+        night_color: "#123456",
+        sky_color: "rgb(1, 2, 3)",
+        grid_options: { columns: 6 },
+      }),
+    ).toBeNull();
     expect(
       validate({
         type: "custom:illuminance-card-pro",

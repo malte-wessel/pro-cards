@@ -4,7 +4,7 @@
 // the row's own tap / hold actions never fire.
 import { fmtNumber } from "../../format.ts";
 import { t } from "../../i18n.ts";
-import { clamp01 } from "../../util.ts";
+import { slider } from "../../slider.ts";
 import type { EntityItem } from "../config.ts";
 import {
   ARM_MS,
@@ -158,97 +158,36 @@ export const sliderEl = (
 ) => {
   const host = ctx.ctl as ControlHost;
   const r = rangeOf(ent, m.st, ctx.hass);
-  const el = root("slider", p, idx);
-  el.setAttribute("role", "slider");
-  el.tabIndex = 0;
-  el.setAttribute("aria-label", t(ctx.hass, "control.set", { name: nameOf(ctx, ent, m.st) }));
-  el.setAttribute("aria-valuemin", String(r.min));
-  el.setAttribute("aria-valuemax", String(r.max));
-  el.innerHTML = `<div class="track"><i class="fill"></i><b class="knob"></b><u class="bubble"></u></div>`;
-  const track = el.firstElementChild as HTMLElement,
-    fill = track.children[0] as HTMLElement,
-    knob = track.children[1] as HTMLElement,
-    bubble = track.children[2] as HTMLElement;
-  const pend = host.pending.get(idx),
-    pv = pendingNum(pend);
+  const pv = pendingNum(host.pending.get(idx));
   const shown = pv ?? r.value;
-  const span = r.max - r.min || 1;
-  const paint = (v: number) => {
-    const pct = `${(clamp01((v - r.min) / span) * 100).toFixed(1)}%`;
-    fill.style.width = pct;
-    knob.style.left = pct;
-    bubble.style.left = pct;
-    bubble.textContent = fmtRange(ctx, r, v);
-    el.setAttribute("aria-valuenow", String(v));
-    el.setAttribute("aria-valuetext", bubble.textContent);
-  };
-  if (shown === null || !canControl(ent, m.st)) {
-    paint(r.min);
-    disable(el);
-    return el;
-  }
-  paint(shown);
-  el.classList.toggle("pending", pv !== null);
-  let v = shown;
-  const valueAt = (ev: PointerEvent) => {
-    const rect = track.getBoundingClientRect();
-    const f = clamp01((ev.clientX - rect.left) / (rect.width || 1));
-    return clampStep(r.min + f * span, r);
-  };
-  const commit = () => {
-    host.call(
-      el,
-      idx,
-      ent,
-      serviceFor(ent, m.st, { type: "value", value: v }),
-      { until: later(), value: v },
-      "selection",
-    );
-  };
-  el.addEventListener("pointerdown", (ev) => {
-    if (ev.button !== 0) return;
-    el.setPointerCapture(ev.pointerId);
-    host.beginDrag(idx);
-    el.classList.add("dragging");
-    v = valueAt(ev);
-    paint(v);
-  });
-  el.addEventListener("pointermove", (ev) => {
-    if (!el.classList.contains("dragging")) return;
-    v = valueAt(ev);
-    paint(v);
-  });
-  const release = (ev: PointerEvent) => {
-    if (!el.classList.contains("dragging")) return;
-    el.classList.remove("dragging");
-    if (el.hasPointerCapture(ev.pointerId)) el.releasePointerCapture(ev.pointerId);
-    if (ev.type !== "pointercancel") commit();
-    host.endDrag(idx);
-  };
-  el.addEventListener("pointerup", release);
-  el.addEventListener("pointercancel", release);
-  // keyboard: arrows step, PageUp / PageDown jump, Home / End; the call follows a short pause
-  let keyTimer: ReturnType<typeof setTimeout> | undefined;
-  el.addEventListener("keydown", (ev) => {
-    const big = r.step * 10;
-    let next: number | null = null;
-    if (ev.key === "ArrowRight" || ev.key === "ArrowUp") next = v + r.step;
-    else if (ev.key === "ArrowLeft" || ev.key === "ArrowDown") next = v - r.step;
-    else if (ev.key === "PageUp") next = v + big;
-    else if (ev.key === "PageDown") next = v - big;
-    else if (ev.key === "Home") next = r.min;
-    else if (ev.key === "End") next = r.max;
-    if (next === null) return;
-    ev.preventDefault();
-    v = clampStep(next, r);
-    paint(v);
-    host.beginDrag(idx);
-    clearTimeout(keyTimer);
-    keyTimer = setTimeout(() => {
-      commit();
-      host.endDrag(idx);
-    }, 250);
-  });
+  const off = shown === null || !canControl(ent, m.st);
+  const { el } = slider(
+    {
+      min: r.min,
+      max: r.max,
+      step: r.step,
+      value: off ? r.min : shown,
+      label: t(ctx.hass, "control.set", { name: nameOf(ctx, ent, m.st) }),
+      text: (v) => fmtRange(ctx, r, v),
+      disabled: off,
+      onStart: () => host.beginDrag(idx),
+      onEnd: (v) => {
+        if (v !== null)
+          host.call(
+            el,
+            idx,
+            ent,
+            serviceFor(ent, m.st, { type: "value", value: v }),
+            { until: later(), value: v },
+            "selection",
+          );
+        host.endDrag(idx);
+      },
+    },
+    root("slider", p, idx),
+  );
+  if (off) disable(el);
+  else el.classList.toggle("pending", pv !== null);
   return el;
 };
 

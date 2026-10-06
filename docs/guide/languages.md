@@ -5,6 +5,7 @@ The cards show their own words in the language of your Home Assistant profile (*
 ## What is translated
 
 - The default labels of the sun path card (Sunrise, Sunset, Dawn, Solar noon, Dusk) and the word in its tooltip (elevation).
+- The sun azimuth card's words (Azimuth, Elevation, rising / sinking, below the horizon …), its default side names (North side …), the pills of the sides footer (Sun now, Shade …) and `Sides of the house`.
 - The default zone names of the illuminance card (Night, Twilight, Overcast, Day, Sun), the `Max` of its header line and the `LUX` under the gauge value.
 - The weather card's condition names (Sunny, Partly cloudy, Thunderstorms …), the names of the weather attributes it lists (Humidity, Wind, Pressure, Feels like …), its section titles (`Next 12 hours`, `7 days`), `Today`, `High` / `Low` and `no forecast`.
 - The rain card's `… today`.
@@ -13,7 +14,7 @@ The cards show their own words in the language of your Home Assistant profile (*
 - The axis word `now`, the placeholders `no data` and `loading …`, the tooltip marker `Peak` of the columns visual, the `unavailable` label and the `… not found` message of a missing entity.
 - Every label, option and helper of the three visual editors.
 
-Everything you write yourself stays as written: `title`, `name`, rule `label`, `labels` of the sun path card and `zones` of the illuminance card override the defaults in any language. Units (`h`, `min`, `lx`, `°`) and the entries in the card picker are the same in every language, as are the messages for an invalid configuration.
+Everything you write yourself stays as written: `title`, `name`, rule `label`, `labels` of the sun path card, `house.sides` of the sun azimuth card and `zones` of the illuminance card override the defaults in any language. Units (`h`, `min`, `lx`, `°`) and the entries in the card picker are the same in every language, as are the messages for an invalid configuration.
 
 ## Available languages
 
