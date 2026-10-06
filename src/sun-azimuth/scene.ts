@@ -1,6 +1,6 @@
 // The 3D view, pure geometry: the sky as a see-through dome around a small box house, seen from
 // slightly above (orthographic, tilted down by SCENE.tilt, orbiting with `camera`). Everything is
-// path data in a SCENE.w × SCENE.h box.
+// path data in a px box as wide as the column (sceneBox), so the labels keep their size.
 import { PATH_STEP, SCENE } from "./constants.ts";
 import type { SunDay, SunSample } from "./day.ts";
 import type { Side } from "./sides.ts";
@@ -46,7 +46,21 @@ export interface SceneGeometry {
   azChip: [number, number] | null; // where the azimuth chip sits (on the arc's bisector)
 }
 
-const { w, h, scale: SC, cx: GX, cy: GY, tilt: TILT, houseHalf: HH, houseHeight: HZ } = SCENE;
+const { tilt: TILT, houseHalf: HH, houseHeight: HZ, label: LABEL } = SCENE;
+
+// the box for a column `width` px wide: the sphere at maxScale, centred; in a column too narrow for
+// it, the largest sphere whose E / W labels still fit beside it, so it fills the width, never below
+// minScale (the box is then wider than the column and the
+// SVG shrinks to fit)
+export const sceneBox = (width: number) => {
+  const scale = Math.floor(
+    Math.max(SCENE.minScale, Math.min(SCENE.maxScale, (width / 2 - SCENE.side) / LABEL)),
+  );
+  const w = Math.max(Math.round(width), Math.ceil(2 * (scale * LABEL + SCENE.side)));
+  const cy = SCENE.top + scale;
+  const h = Math.round(cy + scale * Math.sin(TILT * RAD) * LABEL + SCENE.bottom);
+  return { w, h, scale, cx: w / 2, cy };
+};
 
 export const sceneGeometry = (
   day: SunDay,
@@ -55,7 +69,9 @@ export const sceneGeometry = (
   rotation: number,
   camera: number,
   sides: Side[],
+  width: number,
 ): SceneGeometry => {
+  const { w, h, scale: SC, cx: GX, cy: GY } = sceneBox(width);
   const view = camera * RAD,
     tilt = TILT * RAD;
   // world → screen: x east, y north, z up; the camera sits at bearing `camera`, looking inward
@@ -134,7 +150,7 @@ export const sceneGeometry = (
   // the cardinal points on the ground, the one farthest back left out (it would sit in the sky)
   const cards = [0, 90, 180, 270].map((bearing) => {
     const v = sv(bearing, 0),
-      p = pj(v[0] * 1.12, v[1] * 1.12, 0);
+      p = pj(v[0] * LABEL, v[1] * LABEL, 0);
     return { bearing, x: p[0], y: p[1], depth: p[2] };
   });
   const back = cards.reduce((m, c) => (c.depth < m.depth ? c : m), cards[0]);

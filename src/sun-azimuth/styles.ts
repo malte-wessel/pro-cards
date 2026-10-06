@@ -51,7 +51,6 @@ export const STYLE = `
   .visual { display: flex; justify-content: center; min-width: 0; }
   .visual svg { display: block; width: 100%; overflow: visible; }
   svg.dial { max-width: 300px; }
-  svg.scene { max-width: 416px; }
   svg text { font: ${AXIS_FONT}; font-weight: 500; fill: var(--secondary-text-color); text-anchor: middle; dominant-baseline: central; }
   .dial .disc { fill: color-mix(in srgb, var(--saz-sky) 5%, transparent); stroke: var(--divider-color); stroke-width: 2; }
   .dial .grid { fill: none; stroke: var(--divider-color); stroke-width: 1; stroke-dasharray: 3 4; }

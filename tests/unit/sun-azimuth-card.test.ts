@@ -10,12 +10,13 @@ import {
 } from "../../src/sun-azimuth/day.ts";
 import { litSides, nextSide, sidesOf, timelineSpan } from "../../src/sun-azimuth/sides.ts";
 import { dialGeometry, polar } from "../../src/sun-azimuth/dial.ts";
-import { sceneGeometry } from "../../src/sun-azimuth/scene.ts";
+import { sceneBox, sceneGeometry } from "../../src/sun-azimuth/scene.ts";
 import { DIAL, SCENE } from "../../src/sun-azimuth/constants.ts";
 import { SunAzimuthCard } from "../../src/sun-azimuth-card.ts";
 
 const LAT = 51.23,
   LON = 6.78; // Düsseldorf
+const W = 416; // the 3D scene's column width
 const local = (y: number, m: number, d: number, h = 0, min = 0) => new Date(y, m - 1, d, h, min);
 const utc = (y: number, m: number, d: number, h: number, min = 0) => Date.UTC(y, m - 1, d, h, min);
 const HOUR = 3600e3;
@@ -221,20 +222,40 @@ describe("sun-azimuth-card sky dial", () => {
 });
 
 describe("sun-azimuth-card 3D scene", () => {
+  it("sizes the sphere to the column, with room for the labels beside it", () => {
+    // a small column: the widest sphere whose E / W labels still fit, the box as wide as the column
+    const small = sceneBox(260);
+    expect(small).toMatchObject({ w: 260, scale: 103, cx: 130 });
+    expect(2 * small.scale * SCENE.label + 2 * SCENE.side).toBeLessThanOrEqual(260);
+    expect(small.cy).toBe(SCENE.top + 103);
+    // from about 290 px on: the sphere at its full size, the box as before, centred in wider ones
+    expect(sceneBox(416)).toMatchObject({
+      w: 416,
+      h: 206,
+      scale: SCENE.maxScale,
+      cx: 208,
+      cy: 134,
+    });
+    expect(sceneBox(800)).toMatchObject({ w: 800, scale: SCENE.maxScale, cx: 400 });
+    expect(sceneBox(800).h).toBe(sceneBox(416).h);
+    // too narrow: never below minScale, the box gets wider than the column and the SVG shrinks
+    const tiny = sceneBox(100);
+    expect(tiny.scale).toBe(SCENE.minScale);
+    expect(tiny.w).toBeGreaterThan(100);
+  });
   it("shows the walls facing the camera and drops the back-most compass point", () => {
     const sides = sidesOf(summer, 20, forenoon);
-    const g = sceneGeometry(summer, forenoon, LAT, 20, 180, sides);
-    expect(g.w).toBe(SCENE.w);
-    expect(g.h).toBe(SCENE.h);
+    const g = sceneGeometry(summer, forenoon, LAT, 20, 180, sides, W);
+    expect([g.w, g.h]).toEqual([W, sceneBox(W).h]);
     // from the north looking south, two walls show: the north and one of east / west
     expect(g.faces.length).toBe(2);
     expect(g.roofEdges.length).toBe(4);
     expect(g.cardinals.map((c) => c.bearing)).toEqual([0, 90, 270]);
     expect(
-      sceneGeometry(summer, forenoon, LAT, 20, 0, sides).cardinals.map((c) => c.bearing),
+      sceneGeometry(summer, forenoon, LAT, 20, 0, sides, W).cardinals.map((c) => c.bearing),
     ).toEqual([90, 180, 270]);
     expect(
-      sceneGeometry(summer, forenoon, LAT, 20, 90, sides).cardinals.map((c) => c.bearing),
+      sceneGeometry(summer, forenoon, LAT, 20, 90, sides, W).cardinals.map((c) => c.bearing),
     ).toEqual([0, 180, 270]);
     // the sun is up: drawn with its drop line, ground dot, chips and the shadow
     expect(g.sun).not.toBeNull();
@@ -250,13 +271,13 @@ describe("sun-azimuth-card 3D scene", () => {
       [...d.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)].map((m) => [+m[1], +m[2]]);
     for (const [x, y] of nums(g.ground + g.shadow + g.roof)) {
       expect(x).toBeGreaterThanOrEqual(0);
-      expect(x).toBeLessThanOrEqual(SCENE.w);
+      expect(x).toBeLessThanOrEqual(g.w);
       expect(y).toBeGreaterThanOrEqual(0);
-      expect(y).toBeLessThanOrEqual(SCENE.h);
+      expect(y).toBeLessThanOrEqual(g.h);
     }
   });
   it("hides the sun and its lines below the horizon", () => {
-    const g = sceneGeometry(summer, night, LAT, 20, 180, sidesOf(summer, 20, night));
+    const g = sceneGeometry(summer, night, LAT, 20, 180, sidesOf(summer, 20, night), W);
     expect(g.sun).toBeNull();
     expect(g.groundDot).toBeNull();
     expect(g.chip).toBeNull();
@@ -281,8 +302,8 @@ describe("sun-azimuth-card 3D scene", () => {
       }
       return Math.abs(a) / 2;
     };
-    const high = sceneGeometry(summer, forenoon, LAT, 0, 180, sidesOf(summer, 0, forenoon));
-    const low = sceneGeometry(summer, morning, LAT, 0, 180, sidesOf(summer, 0, morning));
+    const high = sceneGeometry(summer, forenoon, LAT, 0, 180, sidesOf(summer, 0, forenoon), W);
+    const low = sceneGeometry(summer, morning, LAT, 0, 180, sidesOf(summer, 0, morning), W);
     expect(area(low.shadow)).toBeGreaterThan(area(high.shadow));
   });
 });

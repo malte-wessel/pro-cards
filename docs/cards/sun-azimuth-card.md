@@ -19,7 +19,7 @@ house: { rotation: 20 }
 
 ## 3D
 
-`view: 3d` draws the sky as a see-through dome around a small house, seen from slightly above. The sun runs on its daily circle, hidden below the horizon at night; a dashed drop line shows its elevation with the angle in a chip, dotted lines on the ground run from the house to the four compass points and an arc from north to the sun shows its azimuth the same way, and the house casts its shadow on the ground. The walls and roof edges facing the sun light up, more the more directly it hits them. A pole marks the house's position under the dome; the back-most compass point is left out so it does not sit in the sky. `camera` is the bearing you look toward: the default 180 stands north of the house looking south, so that today's path lies ahead of you; 90 looks east, 270 west.
+`view: 3d` draws the sky as a see-through dome around a small house, seen from slightly above. The sun runs on its daily circle, hidden below the horizon at night; a dashed drop line shows its elevation with the angle in a chip, dotted lines on the ground run from the house to the four compass points and an arc from north to the sun shows its azimuth the same way, and the house casts its shadow on the ground. The walls and roof edges facing the sun light up, more the more directly it hits them. A pole marks the house's position under the dome; the back-most compass point is left out so it does not sit in the sky. `camera` is the bearing you look toward: the default 180 stands north of the house looking south, so that today's path lies ahead of you; 90 looks east, 270 west. In a narrow card the dome grows to fill the width; its labels keep their size.
 
 ::: live
 

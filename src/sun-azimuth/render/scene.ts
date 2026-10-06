@@ -1,4 +1,4 @@
-// The 3D view as one SVG that scales with the column.
+// The 3D view as one SVG as wide as the column (px units, so the labels keep their size).
 import { textWidth } from "../../shared/format.ts";
 import type { SunAzimuthHost } from "../config.ts";
 import type { PositionedDay } from "../config.ts";
@@ -17,10 +17,11 @@ export const renderScene = (
   now: SunSample,
   sides: Side[],
   camera: number,
+  width: number,
 ) => {
   const cfg = card._config,
     hass = card._hass;
-  const g = sceneGeometry(day, now, day.lat, cfg.rotation, camera, sides);
+  const g = sceneGeometry(day, now, day.lat, cfg.rotation, camera, sides, width);
   const uid = card._uid || (card._uid = Math.random().toString(36).slice(2, 8));
   let html = `<svg class="scene" viewBox="0 0 ${g.w} ${g.h}">
     <defs><radialGradient id="sky-${uid}" cx="38%" cy="32%" r="75%"><stop offset="0" class="sky0"/><stop offset="1" class="sky1"/></radialGradient></defs>
@@ -50,7 +51,9 @@ export const renderScene = (
   if (g.chip) {
     const label = deg(hass, now.el),
       w = Math.ceil(textWidth(label, CHIP_FONT)) + 16;
-    html += chipSvg(label, g.chip[0] + 8 + w / 2, g.chip[1]);
+    // right of the drop line, or left of it where the right edge would cut it
+    const right = g.chip[0] + 8 + w / 2;
+    html += chipSvg(label, right + w / 2 > g.w ? g.chip[0] - 8 - w / 2 : right, g.chip[1]);
   }
   if (g.sun)
     html += `<circle class="pulse" cx="${f1(g.sun[0])}" cy="${f1(g.sun[1])}" r="9"/><circle class="sun" cx="${f1(g.sun[0])}" cy="${f1(g.sun[1])}" r="7"/>`;

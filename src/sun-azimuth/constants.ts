@@ -32,16 +32,21 @@ export const PATH_STEP = 10; // the drawn paths use every tenth sample
 
 // the sky dial: a 300 box, the horizon ring at R
 export const DIAL = { size: 300, r: 124, house: 20 } as const;
-// the 3D scene: an orthographic view of the unit sphere, tilted down by `tilt`
+// the 3D scene: an orthographic view of the unit sphere, tilted down by `tilt`. The sphere's
+// radius in px is maxScale; a column too narrow for it shrinks it down to minScale (sceneBox); `side` is the
+// room beside the E / W labels, `top` above the dome (the sun's halo), `bottom` under the ground's
+// labels. `width` stands in for the column until it is laid out
 export const SCENE = {
-  w: 416,
-  h: 206,
-  scale: 118,
-  cx: 208,
-  cy: 134,
+  minScale: 60,
+  maxScale: 118,
+  side: 14,
+  top: 16,
+  bottom: 22,
+  width: 416,
   tilt: 22,
   houseHalf: 0.1,
   houseHeight: 0.11,
+  label: 1.12, // the compass points sit at 1.12 × the radius
 } as const;
 
 // the elevation chip of the 3D view: the font the text is measured and drawn with

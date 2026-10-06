@@ -196,7 +196,22 @@ test("the 3D view draws the scene and the slider orbits it", async ({ page }) =>
   await expect(c.locator(".head .accent")).toHaveText("rising");
   await expect(c.locator(".head .rest")).toHaveText(" · shadow 0.7 × height");
   const scene = c.locator("svg.scene");
-  await expect(scene).toHaveAttribute("viewBox", "0 0 416 206");
+  // drawn in px at the column's width: wide enough for the dome's full size, the labels keep theirs
+  const box = await c.locator(".visual").evaluate((visual) => {
+    const svg = visual.querySelector("svg.scene") as SVGSVGElement;
+    const vb = svg.viewBox.baseVal;
+    const dome = (svg.querySelector(".dome") as SVGGraphicsElement).getBBox();
+    const label = (svg.querySelector("text.cl") as SVGTextElement).getBoundingClientRect();
+    return {
+      vb: vb.width,
+      column: visual.clientWidth,
+      dome: dome.width,
+      label: label.height,
+    };
+  });
+  expect(box.vb).toBe(box.column);
+  expect(box.dome).toBe(236);
+  expect(box.label).toBeLessThan(16);
   await expect(scene.locator(".dome")).toHaveCount(1);
   await expect(scene.locator(".face")).toHaveCount(2);
   await expect(scene.locator(".redge")).toHaveCount(4);
@@ -236,6 +251,43 @@ test("the 3D view draws the scene and the slider orbits it", async ({ page }) =>
   // the head and the footer do not depend on the camera
   await expect(c.locator(".head .big b")).toHaveText("57°");
   await expect(c.locator(".side")).toHaveCount(4);
+});
+
+test("the 3D scene fills a narrow column, keeps its size in a wide one and follows a resize", async ({
+  page,
+}) => {
+  const cfg = { type: "custom:sun-azimuth-card-pro", view: "3d", show_sides: false };
+  // from the column, which stays while the observer redraws the SVG inside it
+  const measure = () =>
+    card(page)
+      .locator(".visual")
+      .evaluate((visual) => {
+        const svg = visual.querySelector("svg.scene") as SVGSVGElement;
+        const dome = (svg.querySelector(".dome") as SVGGraphicsElement).getBBox();
+        return {
+          vb: svg.viewBox.baseVal.width,
+          column: visual.clientWidth,
+          dome: dome.width,
+          centre: dome.x + dome.width / 2,
+        };
+      });
+  await mount(page, cfg, { time: NOON, width: 260 });
+  let m = await measure();
+  expect(m.vb).toBe(m.column);
+  expect(m.dome / m.column).toBeGreaterThan(0.75);
+  await mount(page, cfg, { time: NOON, width: 1000 });
+  m = await measure();
+  expect(m.vb).toBe(m.column);
+  expect(m.dome).toBe(236);
+  expect(m.centre).toBe(m.column / 2);
+  // the card is redrawn at its new width
+  await page.locator("#root").evaluate((el) => (el.style.width = "300px"));
+  await expect
+    .poll(async () => {
+      const r = await measure();
+      return r.vb === r.column && r.column < 300 && r.dome / r.column > 0.75;
+    })
+    .toBe(true);
 });
 
 test("the compass ring shows the daylight sector and the day's events", async ({ page }) => {
