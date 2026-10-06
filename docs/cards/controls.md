@@ -260,7 +260,9 @@ Press and hold for a second; a ring fills around the button and the service runs
 
 ## Where a control sits
 
-Controls use the slots the entities already have. In tiles, lists and hero leads the `end` slot is where the toggle used to be and the `block` slot is under the line. Grid cells put small controls next to the icon and sliders under the value. Row items draw only lead controls (tap the icon, a round button, a hold button); column items and table fields put small controls on the right.
+Controls use the slots the entities already have. In tiles, lists and hero leads the `end` slot is where the toggle used to be and the `block` slot is under the line. Grid cells put small controls next to the icon and sliders under the value. Row items draw only lead controls (tap the icon, a round button, a hold button); column items and table fields put small controls on the right, and keep only the primary control of `control: auto` (a cover's buttons, a light's switch).
+
+When a card gets narrow, a control on the line wraps under the name instead of squeezing it away, and in a narrow column a wide control goes under the name. A tile with a control sizes to its content, and asks the sections grid for room: at least 4 columns for a switch or hold button on its line, 6 for anything wider. Segments shrink to their icons and, as a last resort, scroll sideways, so no option is ever cut off.
 
 ### Grid
 

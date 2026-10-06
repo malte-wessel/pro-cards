@@ -124,10 +124,17 @@ window.addEventListener("location-changed", () =>
   events.push({ type: "location-changed", path: location.pathname }),
 );
 
+// like Home Assistant (computeCardGridSize): the columns stay within the card's min / max
+const clampColumns = (g: GridOptions) => {
+  let c = Number(g.columns) || 12;
+  if (typeof g.min_columns === "number") c = Math.max(c, g.min_columns);
+  if (typeof g.max_columns === "number") c = Math.min(c, g.max_columns);
+  return Math.min(12, Math.max(1, c));
+};
 const gridOf = (el: CardElement, cfg: CardConfigBase) => {
   const g: GridOptions = { ...(el.getGridOptions?.() || {}), ...(cfg.grid_options || {}) };
   return {
-    columns: Math.min(12, Math.max(1, Number(g.columns) || 12)),
+    columns: clampColumns(g),
     rows: g.rows === "auto" || g.rows === undefined ? "auto" : Number(g.rows) || 1,
   };
 };

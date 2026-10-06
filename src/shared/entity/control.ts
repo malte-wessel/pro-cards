@@ -294,6 +294,10 @@ export const placementsOf = (ent: EntityItem, row: RowKind): Placement[] => {
   for (const x of list) {
     const { kind } = x;
     let { position } = x;
+    // a row without room under the line keeps auto's primary control alone (a cover's buttons,
+    // not a slider squeezed beside them)
+    if (c.kind === "auto" && position === "block" && !BLOCK_ROWS.has(row) && list.length > 1)
+      continue;
     if (position === "lead" && !LEAD_KINDS.has(kind)) position = "end";
     if (position === "block" && !BLOCK_ROWS.has(row)) position = "end";
     if (row === "item-row") {
@@ -312,6 +316,26 @@ export const placementsOf = (ent: EntityItem, row: RowKind): Placement[] => {
     });
   }
   return out;
+};
+// whether the entity draws any control in a tile (its height follows the content then: a control
+// on the line wraps under the name when the tile is narrow)
+export const hasTileControl = (ent: EntityItem) => placementsOf(ent, "tile").length > 0;
+// controls on a tile's line wider than a switch: below 6 columns they do not fit beside the icon
+const WIDE_ON_LINE: ReadonlySet<ControlKind> = new Set([
+  "stepper",
+  "segments",
+  "buttons",
+  "select",
+  "button",
+  "slider",
+]);
+// the narrowest a tile may get in a sections grid (min_columns): what sits on its line decides
+// (a switch or hold needs 4 columns, anything wider 6); controls under the line or on the icon
+// need nothing more than the tile itself (3)
+export const tileMinColumns = (ent: EntityItem) => {
+  const end = placementsOf(ent, "tile").filter((p) => p.position === "end");
+  if (end.some((p) => WIDE_ON_LINE.has(p.kind))) return 6;
+  return end.length ? 4 : 3;
 };
 // whether the entity draws a control below its line in a tile (for the card height)
 // whether a control on the line shows the row's own value itself (segments and a select show the

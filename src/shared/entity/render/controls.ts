@@ -500,10 +500,16 @@ export const buttonEl = (
   return el;
 };
 
-const holdIcon = (ctx: RenderCtx, ent: EntityItem, m: EntityModel) => {
+// what holding does: a lock's next state, a run, a cover's travel, else power; on the icon (the
+// button replaces it) the entity's own icon
+const holdIcon = (ctx: RenderCtx, ent: EntityItem, m: EntityModel, p: Placement) => {
   const d = String(ent.entity || "").split(".")[0];
   if (d === "lock") return icon(m.st?.state === "locked" ? "mdi:lock-open-variant" : "mdi:lock");
-  return iconEl(ctx, m.look, m.st);
+  if (p.position === "lead") return iconEl(ctx, m.look, m.st);
+  if (d === "script" || d === "scene" || d === "button" || d === "input_button")
+    return icon("mdi:play");
+  if (d === "cover") return icon("mdi:arrow-up-down");
+  return icon("mdi:power");
 };
 // the ring that fills around a held button
 const ringEl = () => {
@@ -621,7 +627,7 @@ export const holdEl = (
   el.type = "button";
   if (p.position === "lead") el.classList.add("lead-size");
   el.setAttribute("aria-label", t(ctx.hass, "control.hold_to", { action }));
-  el.append(ringEl(), holdIcon(ctx, ent, m));
+  el.append(ringEl(), holdIcon(ctx, ent, m, p));
   el.classList.toggle("pending", host.pending.has(idx));
   if (!canControl(ent, m.st)) {
     disable(el);

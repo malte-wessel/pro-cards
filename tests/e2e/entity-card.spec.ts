@@ -334,3 +334,43 @@ test.describe("config errors", () => {
     expect(msgs[2]).toBeNull();
   });
 });
+
+test.describe("gauge", () => {
+  test("a long value shrinks to fit inside the arc, a short one keeps its size", async ({
+    page,
+  }) => {
+    await mount(page, [
+      {
+        type: T,
+        entity: "sensor.uv_index",
+        decimals: 1,
+        visual: "gauge",
+        min: 0,
+        max: 11,
+        grid_options: { columns: 6 },
+      },
+      {
+        type: T,
+        entity: "sensor.bathroom_humidity",
+        decimals: 0,
+        visual: "gauge",
+        grid_options: { columns: 6 },
+      },
+    ]);
+    const fit = (i: number) =>
+      card(page, i)
+        .locator(".gauge")
+        .evaluate((g) => {
+          const svg = g.querySelector("svg")!.getBoundingClientRect();
+          const t = g.querySelector("text.val") as SVGTextElement;
+          return {
+            ratio: t.getBoundingClientRect().width / svg.width,
+            font: t.style.fontSize,
+          };
+        });
+    const uv = await fit(0);
+    expect(uv.ratio).toBeLessThanOrEqual(76 / 120 + 0.01);
+    expect(uv.font).toMatch(/px$/);
+    expect((await fit(1)).font).toBe("");
+  });
+});

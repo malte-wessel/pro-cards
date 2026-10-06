@@ -895,6 +895,43 @@ const CASES = {
     },
   ],
   // every control greyed out while its entity is unavailable, small in a table
+  // narrow: tiles a third of a section wide and a list at half width; a control that does not fit
+  // beside the name wraps under it instead of spilling past the card
+  "ec-controls-narrow": [
+    ...[
+      { entity: "light.living_room", name: "Living room ceiling light", control: "toggle" },
+      { entity: "climate.living_room", control: "stepper" },
+      { entity: "climate.living_room", attribute: "hvac_mode", control: "segments" },
+      { entity: "cover.office_blinds", control: "buttons" },
+      { entity: "input_select.house_mode", control: "select" },
+      { entity: "media_player.kitchen_speaker", control: "slider", control_position: "end" },
+      { entity: "lock.front_door", control: "hold" },
+      { entity: "script.check_windows", control: "button" },
+      { entity: "fan.living_room", control: "segments" },
+    ].map((e) => ({ type: EC, ...e, grid_options: { columns: 4 } })),
+    {
+      type: EGC,
+      title: "Half width",
+      grid_options: { columns: 6 },
+      entities: [
+        { entity: "light.living_room", control: "auto" },
+        { entity: "cover.living_room_blinds", control: "auto" },
+        { entity: "climate.living_room", control: "auto" },
+        { entity: "media_player.living_room_tv", control: "auto" },
+      ],
+    },
+    {
+      type: EGC,
+      title: "Column",
+      layout: "column",
+      grid_options: { columns: 6 },
+      entities: [
+        { entity: "light.office", control: "toggle" },
+        { entity: "cover.office_blinds", name: "Blinds", control: "auto" },
+        { entity: "climate.living_room", control: "stepper" },
+      ],
+    },
+  ],
   "egc-controls-unavailable": {
     type: EGC,
     title: "Unavailable",

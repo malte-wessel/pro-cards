@@ -628,3 +628,19 @@ describe("remaining mappings", () => {
     expect(controlShowsValue(ent({ entity: "fan.x" }), stepper)).toBe(false);
   });
 });
+
+describe("rows without room under the line", () => {
+  it("keep auto's primary control alone; a named slider stays", () => {
+    for (const row of ["item-column", "field"] as const) {
+      expect(kinds(placementsOf(ent({ entity: "cover.x" }), row))).toEqual(["buttons@end"]);
+      expect(kinds(placementsOf(ent({}), row))).toEqual(["toggle@end"]);
+      expect(kinds(placementsOf(ent({ entity: "media_player.x" }), row))).toEqual(["buttons@end"]);
+      expect(kinds(placementsOf(ent({ entity: "number.x" }), row))).toEqual(["slider@end"]);
+      expect(kinds(placementsOf(ent({ control: "slider" }), row))).toEqual(["slider@end"]);
+    }
+    expect(kinds(placementsOf(ent({ entity: "cover.x" }), "cell"))).toEqual([
+      "buttons@end",
+      "slider@block",
+    ]);
+  });
+});

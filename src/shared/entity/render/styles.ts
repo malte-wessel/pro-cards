@@ -26,7 +26,7 @@ export const STYLE_HEADER = `
   .hval .secondary { font-size: 12px; }
 `;
 export const STYLE_ROW = `
-  .row { --fe-color: var(--primary-color); --fe-soft: color-mix(in srgb, var(--fe-color) 20%, transparent); }
+  .row { --fe-color: var(--primary-color); --fe-soft: color-mix(in srgb, var(--fe-color) 20%, transparent); --fe-track: color-mix(in srgb, var(--primary-text-color) 8%, transparent); }
   .row { display: flex; flex-direction: column; gap: 10px; min-width: 0; border-radius: 8px; outline: none; }
   .row.actionable { cursor: pointer; position: relative; isolation: isolate; }
   /* the row's own action: a layer behind the content; the controls (and plots) stay on top of it */
@@ -59,13 +59,23 @@ export const STYLE_ROW = `
 // the controls (render/controls.ts): every size and colour comes from the library the cards draw
 // (the 8 px bar, the round lead, the pill), coloured by --fe-color like the visuals
 export const STYLE_CONTROLS = `
-  .ctl, .toggle { --fe-track: color-mix(in srgb, var(--primary-text-color) 8%, transparent); }
   .ctl button, .ctl-chip, .ctl-hold, .toggle { font: inherit; }
   /* an icon keeps its box while Home Assistant still loads it, so a control never changes width */
   /* a line with a control: the control keeps its size, the value text and the name give way */
   .end:has(> .ctl), .val:has(> .ctl) { max-width: none; flex: 0 1 auto; min-width: 0; }
+  /* when the control and a short name (40 px) do not fit side by side, the control wraps under it:
+     a switch or hold button stays on the line of a 6-column tile, buttons, steppers and segments wrap */
+  .line:has(> .end > .ctl) { flex-wrap: wrap; row-gap: 8px; }
+  .line:has(> .end > .ctl) > .texts { min-width: min(40px, 100%); }
+  /* and a value text beside the control goes above it rather than squeeze it out */
+  .end:has(> .ctl) { flex-wrap: wrap; row-gap: 6px; }
+  /* a tile or hero lead keeps its icon level with the name, also when the control wraps under it
+     (as a control under the line already does) */
+  .row.tile > .top:has(> .main > .line > .end > .ctl), .row.hero > .top:has(> .main > .line > .end > .ctl) { align-items: flex-start; }
   .end:has(> .ctl) > .state, .val:has(> .ctl) > .state { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .end > .ctl-segments, .val > .ctl-segments { flex: 0 1 auto; min-width: 0; overflow: hidden; }
+  /* segments shrink to their icons; past that they scroll sideways, so no option is ever cut off */
+  .end > .ctl-segments, .val > .ctl-segments { flex: 0 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .end > .ctl-segments::-webkit-scrollbar, .val > .ctl-segments::-webkit-scrollbar { display: none; }
   .ctl ha-icon, .ctl ha-state-icon { display: inline-flex; flex: none; width: var(--mdc-icon-size, 24px); height: var(--mdc-icon-size, 24px); }
   .ctl.disabled, .lead.tap.disabled { opacity: .4; pointer-events: none; }
   .ctl button:disabled { opacity: .38; cursor: default; }
@@ -107,7 +117,7 @@ export const STYLE_CONTROLS = `
   .ctl-stepper.sm .val { min-width: 40px; font-size: 13px; }
   .ctl-stepper.pending .val { color: var(--fe-color); }
   .ctl-segments { display: flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--fe-track); flex: none; max-width: 100%; box-sizing: border-box; }
-  .ctl-segments .seg { flex: 0 0 auto; height: 30px; border: 0; padding: 0 10px; border-radius: 999px; background: transparent; color: var(--secondary-text-color); display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; overflow: hidden; --mdc-icon-size: 18px; }
+  .ctl-segments .seg { flex: 0 1 auto; min-width: 26px; height: 30px; border: 0; padding: 0 10px; border-radius: 999px; background: transparent; color: var(--secondary-text-color); display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; overflow: hidden; --mdc-icon-size: 18px; }
   /* in the block slot the segments share the width */
   .row > .ctl-segments, .main > .ctl-segments, .cell > .ctl-segments { align-self: stretch; }
   .row > .ctl-segments .seg, .main > .ctl-segments .seg, .cell > .ctl-segments .seg { flex: 1 1 0; min-width: 0; }
@@ -180,6 +190,15 @@ export const STYLE_ITEM = `
   .section.layout-column .row.item:has(> .end) { grid-template-columns: auto minmax(0, 1fr) auto; }
   .section.layout-column .row.item:not(:has(> .lead)):has(> .end) { grid-template-columns: minmax(0, 1fr) auto; }
   .section.layout-column .row.item > .end { grid-column: -2 / -1; grid-row: 1 / span 2; align-self: center; max-width: none; }
+  /* an item with a control spans the column, so the controls line up on the right */
+  .section.layout-column .row.item:has(> .end) { align-self: stretch; }
+  /* in a narrow column a wide control goes under the name instead of squeezing it away */
+  .section.layout-column { container-type: inline-size; }
+  @container (max-width: 300px) {
+    .section.layout-column .row.item:has(> .end > :is(.ctl-buttons, .ctl-stepper, .ctl-segments, .ctl-select, .ctl-slider)) { grid-template-columns: auto minmax(0, 1fr); }
+    .section.layout-column .row.item:not(:has(> .lead)):has(> .end > :is(.ctl-buttons, .ctl-stepper, .ctl-segments, .ctl-select, .ctl-slider)) { grid-template-columns: minmax(0, 1fr); }
+    .section.layout-column .row.item > .end:has(> :is(.ctl-buttons, .ctl-stepper, .ctl-segments, .ctl-select, .ctl-slider)) { grid-column: -2 / -1; grid-row: 3; justify-self: start; }
+  }
   .item .ctl-chip.round, .item .ctl-hold.lead-size { margin: 0 auto; }
   .item > .hit:focus-visible { box-shadow: none; }
   .item > .hit:focus-visible ~ .lead .shape { box-shadow: 0 0 0 2px var(--fe-color); }

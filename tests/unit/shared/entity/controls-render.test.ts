@@ -991,15 +991,34 @@ describe("layouts", () => {
 });
 
 describe("sizing", () => {
-  it("a tile with a control under the line grows to its content", () => {
+  it("a tile with a control sizes to its content, so a wrapped control is never cut off", () => {
     const el = new EntityCard();
     el.setConfig({ entity: "light.ceiling", control: "auto" });
     expect(el.getGridOptions()).toMatchObject({ rows: "auto" });
     expect(el.getCardSize()).toBe(2);
     el.setConfig({ entity: "switch.pump", control: "auto" });
+    expect(el.getGridOptions()).toMatchObject({ rows: "auto" });
+    expect(el.getGridOptions()).not.toHaveProperty("max_rows");
+    expect(el.getCardSize()).toBe(1);
+    el.setConfig({ entity: "light.ceiling" });
     expect(el.getGridOptions()).toMatchObject({ rows: 1, max_rows: 1 });
-    el.setConfig({ entity: "light.ceiling", control: "toggle" });
-    expect(el.getGridOptions()).toMatchObject({ rows: 1 });
+  });
+  it("a tile never gets narrower than what sits on its line needs", () => {
+    const el = new EntityCard();
+    const min = (cfg: Record<string, unknown>) => {
+      el.setConfig(cfg);
+      return el.getGridOptions().min_columns;
+    };
+    expect(min({ entity: "sensor.temp" })).toBe(3);
+    expect(min({ entity: "switch.pump", control: "toggle" })).toBe(4);
+    expect(min({ entity: "lock.door", control: "hold" })).toBe(4);
+    for (const control of ["stepper", "segments", "buttons", "select", "button"])
+      expect(min({ entity: "cover.blinds", control })).toBe(6);
+    expect(min({ entity: "cover.blinds", control: "slider", control_position: "end" })).toBe(6);
+    // under the line or on the icon the control needs no room on the line
+    expect(min({ entity: "cover.blinds", control: "slider" })).toBe(3);
+    expect(min({ entity: "switch.pump", control: "toggle", control_position: "lead" })).toBe(3);
+    expect(min({ entity: "light.ceiling", control: "auto" })).toBe(4);
   });
   it("a list counts one more row per block control", () => {
     const el = new EntityGroupCard();
@@ -1417,5 +1436,27 @@ describe("review fixes", () => {
       expect(q(r, ".row.field .val > .toggle.sm")).toBeTruthy();
       expect(r.querySelector(".lead.tap")).toBeNull();
     });
+  });
+});
+
+describe("the hold button's icon", () => {
+  const iconOf = (cfg: Record<string, unknown>) =>
+    q(h.mount(EntityCard, cfg), ".ctl-hold ha-icon, .ctl-hold ha-state-icon").getAttribute("icon");
+  it("shows what holding does, never the icon the row already shows", () => {
+    expect(iconOf({ entity: "switch.pump", control: "toggle", control_confirm: true })).toBe(
+      "mdi:power",
+    );
+    expect(iconOf({ entity: "script.night", control: "hold" })).toBe("mdi:play");
+    expect(iconOf({ entity: "cover.garage", control: "hold" })).toBe("mdi:arrow-up-down");
+    expect(iconOf({ entity: "lock.door", control: "hold" })).toBe("mdi:lock-open-variant");
+  });
+  it("is the entity's own icon when it replaces the icon", () => {
+    const r = h.mount(EntityCard, {
+      entity: "switch.pump",
+      icon: "mdi:water-pump",
+      control: "hold",
+      control_position: "lead",
+    });
+    expect(q(r, ".ctl-hold.lead-size ha-icon").getAttribute("icon")).toBe("mdi:water-pump");
   });
 });

@@ -458,3 +458,71 @@ test.describe("controls: the docs' slow demo light", () => {
     await expect(t).toHaveAttribute("aria-checked", "false");
   });
 });
+
+test.describe("controls: wrapping only when needed", () => {
+  // whether the control sits beside the name (its middle within the name block's height)
+  const besideName = (page: Page, i: number, sel: string) =>
+    card(page, i).evaluate((el, s) => {
+      const root = el.shadowRoot!;
+      const texts = root.querySelector(".texts")!.getBoundingClientRect();
+      const c = root.querySelector(s)!.getBoundingClientRect();
+      const mid = c.top + c.height / 2;
+      return mid >= texts.top && mid <= texts.bottom;
+    }, sel);
+  test("a switch and a hold button stay on the line of a half-width tile, buttons wrap", async ({
+    page,
+  }) => {
+    await mount(
+      page,
+      [
+        { type: T, entity: "light.kitchen", control: "toggle", grid_options: { columns: 6 } },
+        { type: T, entity: "lock.front_door", control: "hold", grid_options: { columns: 6 } },
+        {
+          type: T,
+          entity: "switch.garden_pump",
+          control: "toggle",
+          control_confirm: true,
+          grid_options: { columns: 6 },
+        },
+        { type: T, entity: "cover.garage_door", control: "buttons", grid_options: { columns: 6 } },
+      ],
+      live,
+    );
+    expect(await besideName(page, 0, ".toggle")).toBe(true);
+    expect(await besideName(page, 1, ".ctl-hold")).toBe(true);
+    expect(await besideName(page, 2, ".ctl-hold")).toBe(true);
+    expect(await besideName(page, 3, ".ctl-buttons")).toBe(false);
+  });
+
+  test("a wrapped control leaves the icon level with the name", async ({ page }) => {
+    await mount(
+      page,
+      [
+        { type: T, entity: "cover.garage_door", control: "buttons", grid_options: { columns: 6 } },
+        { type: T, entity: "light.kitchen", control: "toggle", grid_options: { columns: 6 } },
+      ],
+      live,
+    );
+    const offset = (i: number) =>
+      card(page, i).evaluate((el) => {
+        const root = el.shadowRoot!;
+        const lead = root.querySelector(".lead")!.getBoundingClientRect();
+        const texts = root.querySelector(".texts")!.getBoundingClientRect();
+        return Math.abs(lead.top - texts.top);
+      });
+    expect(await offset(0)).toBeLessThanOrEqual(2);
+    expect(await offset(1)).toBeLessThanOrEqual(2);
+  });
+
+  test("an icon switch that is off keeps its grey circle", async ({ page }) => {
+    await mount(
+      page,
+      { type: T, entity: "light.hallway", control: "toggle", control_position: "lead" },
+      live,
+    );
+    const bg = await card(page)
+      .locator(".lead.tap.off .shape")
+      .evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(bg).not.toBe("rgba(0, 0, 0, 0)");
+  });
+});

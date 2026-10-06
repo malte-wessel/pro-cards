@@ -26,6 +26,9 @@ import { drawPlot, showHover, windowOf, type PlotElement } from "./render/plots.
 import type { EntityModel } from "./model.ts";
 
 type Unsubscribe = () => unknown;
+// the room inside a gauge's arc for its value (viewBox units) and the value's own font size
+const GAUGE_TEXT_W = 76;
+const GAUGE_FONT = 17;
 // what a row may hold that takes focus (the hit layer, buttons, a select, the slider)
 const FOCUSABLE = "[tabindex], button, select";
 
@@ -435,6 +438,10 @@ export abstract class EntityCardBase extends HTMLElement {
     this._root = card;
     this._ro?.observe(card);
     this._render();
+    // text fitted before the web font arrived is measured again once it is there
+    document.fonts?.ready.then(() => {
+      if (this._root === card) this._fitCells(card);
+    });
   }
   // the body: one container per group (a subclass may lay its body out differently)
   _buildBody(body: HTMLElement) {
@@ -566,6 +573,17 @@ export abstract class EntityCardBase extends HTMLElement {
   }
   // shrink a grid cell's big value (down to 13 px) so short words like scene names stay whole
   _fitCells(card: HTMLElement) {
+    // a gauge's value sits inside its arc: a long one (a unit like "UV index") steps its font down
+    // until its drawn box fits (glyph widths do not scale exactly with the size)
+    for (const t of card.querySelectorAll<SVGTextElement>(".gauge text.val")) {
+      t.style.fontSize = "";
+      if (typeof t.getBBox !== "function") continue;
+      let size = GAUGE_FONT;
+      while (size > 9 && t.getBBox().width > GAUGE_TEXT_W) {
+        size -= 0.5;
+        t.style.fontSize = `${size}px`;
+      }
+    }
     for (const big of card.querySelectorAll<HTMLElement>(".cell .big")) {
       const b = big.querySelector("b");
       if (!b) continue;
