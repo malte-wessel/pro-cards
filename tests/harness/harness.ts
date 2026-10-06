@@ -26,7 +26,10 @@ export interface ServiceCall {
   target: unknown;
 }
 export type HarnessEvent =
-  { type: "more-info"; entityId: string } | { type: "location-changed"; path: string };
+  | { type: "more-info"; entityId: string }
+  | { type: "location-changed"; path: string }
+  | { type: "notification"; message: string }
+  | { type: "haptic"; kind: string };
 // the slice of the docs shim's demo world the tests touch
 export interface ShimWorld {
   states: Record<string, HassEntity>;
@@ -56,6 +59,11 @@ export interface PcApi {
   setLanguage(language: string): void;
   root: HTMLElement;
   card(i?: number): CardElement;
+  // every service call rejects (the shim does nothing) while on
+  failCalls(on: boolean): void;
+  // service calls are recorded but their effect waits for release()
+  holdCalls(on: boolean): void;
+  release(): void;
   reset(): void;
 }
 
@@ -76,6 +84,9 @@ const actions: unknown[] = [];
 let unsub: (() => void) | null = null;
 let language = "en-GB";
 let mounted: CardElement[] = [];
+let failing = false,
+  holding = false;
+let held: (() => void)[] = [];
 
 // wrap callService so tests can assert on it while the shim still applies the effect
 const baseSnapshot = hassMod.snapshot;
@@ -85,6 +96,14 @@ const snapshot = (): HomeAssistant => {
   const orig = h.callService;
   h.callService = (d: string, s: string, data?: Record<string, unknown>, target?: unknown) => {
     calls.push({ domain: d, service: s, data: data || {}, target: target || null });
+    if (failing) return Promise.reject(new Error("boom"));
+    if (holding)
+      return new Promise<void>((resolve) => {
+        held.push(() => {
+          orig(d, s, data, target);
+          resolve();
+        });
+      });
     return orig(d, s, data, target);
   };
   return h;
@@ -95,14 +114,27 @@ hassMod.setActionHass(snapshot);
 hassMod.setMoreInfo((entityId: string) => events.push({ type: "more-info", entityId }));
 hassMod.wire();
 document.addEventListener("hass-action", (ev) => actions.push((ev as CustomEvent).detail));
+document.addEventListener("hass-notification", (ev) =>
+  events.push({ type: "notification", message: String((ev as CustomEvent).detail?.message) }),
+);
+document.addEventListener("haptic", (ev) =>
+  events.push({ type: "haptic", kind: String((ev as CustomEvent).detail) }),
+);
 window.addEventListener("location-changed", () =>
   events.push({ type: "location-changed", path: location.pathname }),
 );
 
+// like Home Assistant (computeCardGridSize): the columns stay within the card's min / max
+const clampColumns = (g: GridOptions) => {
+  let c = Number(g.columns) || 12;
+  if (typeof g.min_columns === "number") c = Math.max(c, g.min_columns);
+  if (typeof g.max_columns === "number") c = Math.min(c, g.max_columns);
+  return Math.min(12, Math.max(1, c));
+};
 const gridOf = (el: CardElement, cfg: CardConfigBase) => {
   const g: GridOptions = { ...(el.getGridOptions?.() || {}), ...(cfg.grid_options || {}) };
   return {
-    columns: Math.min(12, Math.max(1, Number(g.columns) || 12)),
+    columns: clampColumns(g),
     rows: g.rows === "auto" || g.rows === undefined ? "auto" : Number(g.rows) || 1,
   };
 };
@@ -175,11 +207,24 @@ window.pc = {
   setLanguage,
   root,
   card: (i = 0) => root.querySelectorAll(".cell > *")[i] as CardElement,
+  failCalls: (on) => {
+    failing = on;
+  },
+  holdCalls: (on) => {
+    holding = on;
+  },
+  release: () => {
+    const fns = held;
+    held = [];
+    fns.forEach((fn) => fn());
+  },
   reset: () => {
     calls.length = 0;
     events.length = 0;
     actions.length = 0;
     mounted = [];
+    failing = holding = false;
+    held = [];
   },
 };
 window.__pcReady = true;

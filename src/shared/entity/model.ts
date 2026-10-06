@@ -2,6 +2,7 @@
 // ctx = { hass, tplResult, ... } so it runs without a DOM element.
 import { asText, progressOf, readValue, resolveLook, type Look, type ValueModel } from "./look.ts";
 import type { EntityCardConfig, EntityItem } from "./config.ts";
+import type { ControlHost } from "./control.ts";
 import { fmtNumber as fmtNum, fmtTime as fmtT, langOf as lang } from "../format.ts";
 import type { HassEntity, HomeAssistant } from "../ha.ts";
 import type { Point } from "../history.ts";
@@ -26,6 +27,8 @@ export interface RenderCtx extends FormatCtx {
   now: number;
   t0: number;
   plotHandlers: PlotHandlers;
+  // the controls' host (pending calls, drag state); cards without controls leave it out
+  ctl?: ControlHost;
 }
 export interface FmtValue {
   text: string;

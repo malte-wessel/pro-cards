@@ -149,10 +149,71 @@
           "items": { "$ref": "#/$defs/rule" },
           "description": "Colour, icon, label and tint by value; first match wins"
         },
+        "control": {
+          "oneOf": [
+            { "type": "boolean" },
+            {
+              "type": "string",
+              "enum": [
+                "auto",
+                "toggle",
+                "slider",
+                "stepper",
+                "segments",
+                "buttons",
+                "button",
+                "select",
+                "hold",
+                "none"
+              ]
+            }
+          ],
+          "description": "The control drawn for the entity: auto (or true) picks the domain default, a name picks one, none draws nothing"
+        },
+        "control_position": {
+          "type": "string",
+          "enum": ["end", "block", "lead"],
+          "description": "Where the control sits: at the end of the line, in a block under it, or as the lead icon (toggle, button, hold)"
+        },
+        "control_attribute": {
+          "type": "string",
+          "enum": ["hvac_mode", "preset_mode", "fan_mode"],
+          "description": "The mode a segments or select control sets on a climate or fan entity (default: the displayed attribute when it is one of these, else hvac_mode / the fan speed)"
+        },
+        "control_step": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Step of a slider or stepper (default: the entity's step attribute, else 1; climate 0.5)"
+        },
+        "control_options": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "number" },
+              {
+                "type": "object",
+                "properties": {
+                  "value": { "type": ["string", "number"] },
+                  "label": { "type": "string" },
+                  "icon": { "$ref": "defs.schema.json#/$defs/icon" }
+                },
+                "required": ["value"],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "description": "Options of segments and select (default: the entity's modes or options)"
+        },
+        "control_confirm": {
+          "type": "boolean",
+          "default": false,
+          "description": "The primary control (toggle, button) becomes hold to confirm; every button of a group becomes a hold of its own"
+        },
         "toggle": {
           "type": "boolean",
           "default": false,
-          "description": "Switch on the right calling homeassistant.toggle (entity-card, list, hero lead, table)"
+          "description": "Deprecated alias of control: toggle"
         },
         "show_name": { "type": "boolean" },
         "show_value": { "type": "boolean" },

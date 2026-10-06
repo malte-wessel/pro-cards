@@ -26,6 +26,7 @@ export const STYLE_FLOW = `
     .row.wtile.flow .end { display: flex; }
   }
   .row.wtile.flow .wflow.bg { position: absolute; inset: -8px -12px; border-radius: 0; }
+  .row.wtile.flow > .hit { inset: -8px -12px; }
   .row.wtile.flow .top { position: relative; }
   .row.wtile.flow .lead .shape { background: color-mix(in srgb, var(--fe-color) 20%, var(--ha-card-background, var(--card-background-color))); }
   .row.wtile.flow .end .big b { font-size: 26px; line-height: 30px; }

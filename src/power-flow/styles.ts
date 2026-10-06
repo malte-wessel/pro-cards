@@ -40,8 +40,8 @@ const STYLE_POWER = `
 
   .pdiag .pnode { position: absolute; display: flex; flex-direction: column; transform: translate(-50%, -50%); gap: 0; z-index: 2; }
   .pnode .lead .shape { background: color-mix(in srgb, var(--fe-color) 20%, ${CARD_BG}); }
-  .pnode.actionable:focus-visible { box-shadow: none; }
-  .pnode.actionable:focus-visible .lead .shape { box-shadow: 0 0 0 2px var(--fe-color); }
+  .pnode > .hit:focus-visible { box-shadow: none; }
+  .pnode > .hit:focus-visible ~ .lead .shape { box-shadow: 0 0 0 2px var(--fe-color); }
   .pnode .lead .prog { transition: stroke-dashoffset .4s, d .4s; }
 
   .plabel { position: absolute; z-index: 2; white-space: nowrap; line-height: 1.2; pointer-events: none; }

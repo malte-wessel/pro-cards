@@ -68,7 +68,7 @@ entities:
 
 ## Mixed visuals
 
-Every row can have its own `visual` and its own controls: a toggle for the light, a bar for the blind position (an `attribute`), a sparkline for the temperature and a badge for the TV. `hours_to_show` sets one history window for the whole card.
+Every row can have its own `visual` and its own [control](/cards/controls): a switch and brightness slider for the light, buttons and a position slider for the blinds (`control: auto` picks them by domain), a sparkline for the temperature and a badge for the TV. `hours_to_show` sets one history window for the whole card.
 
 ::: live
 
@@ -79,7 +79,7 @@ icon: mdi:sofa
 hours_to_show: 12
 entities:
   - entity: light.living_room
-    toggle: true
+    control: auto
     rules:
       - { state: "on", color: amber, label: "On" }
       - { state: "off", color: grey, label: "Off" }
@@ -353,7 +353,7 @@ entities:
 
 :::
 
-Icon-only controls with state colours make a compact switchboard; `align: center` and `show_name: false` turn sensors into a readout.
+Icon switches (`control: toggle` on a row item makes the icon the switch) with state colours make a compact switchboard; `align: center` and `show_name: false` turn sensors into a readout.
 
 ::: live
 
@@ -363,16 +363,15 @@ Icon-only controls with state colours make a compact switchboard; `align: center
   icon: mdi:lightbulb-group
   layout: row
   show_name: false
-  tap_action: { action: toggle }
   entities:
-    - { entity: light.living_room, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
-    - { entity: light.dining_table, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
-    - { entity: light.kitchen, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
-    - { entity: light.hallway, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
-    - { entity: light.office, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
-    - { entity: light.desk_lamp, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
-    - { entity: light.bedroom, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
-    - { entity: light.garden, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
+    - { entity: light.living_room, control: toggle, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
+    - { entity: light.dining_table, control: toggle, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
+    - { entity: light.kitchen, control: toggle, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
+    - { entity: light.hallway, control: toggle, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
+    - { entity: light.office, control: toggle, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
+    - { entity: light.desk_lamp, control: toggle, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
+    - { entity: light.bedroom, control: toggle, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
+    - { entity: light.garden, control: toggle, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
 - type: custom:entity-group-card-pro
   title: Outdoors
   icon: mdi:weather-partly-cloudy
@@ -419,9 +418,9 @@ title: Office
 icon: mdi:desk
 layout: column
 entities:
-  - { entity: light.office, name: Ceiling, visual: badge, tap_action: { action: toggle }, rules: [{ state: "on", color: amber, label: "On" }, { state: "off", color: grey, label: "Off" }] }
-  - { entity: light.desk_lamp, name: Desk lamp, visual: badge, tap_action: { action: toggle }, rules: [{ state: "on", color: amber, label: "On" }, { state: "off", color: grey, label: "Off" }] }
-  - { entity: cover.office_blinds, name: Blinds, icon: mdi:window-shutter, attribute: current_position, unit: "%" }
+  - { entity: light.office, name: Ceiling, visual: badge, control: toggle, rules: [{ state: "on", color: amber, label: "On" }, { state: "off", color: grey, label: "Off" }] }
+  - { entity: light.desk_lamp, name: Desk lamp, visual: badge, control: toggle, rules: [{ state: "on", color: amber, label: "On" }, { state: "off", color: grey, label: "Off" }] }
+  - { entity: cover.office_blinds, name: Blinds, icon: mdi:window-shutter, attribute: current_position, unit: "%", control: auto }
 grid_options: { columns: 6 }
 ```
 
@@ -429,7 +428,7 @@ grid_options: { columns: 6 }
 
 ## Table
 
-Key/value rows: the name on the left in small capitals, the value on the right. `show_icon: true` adds an icon column; `align: start` puts the value right after the name, `align: center` in the middle. `toggle: true` puts the switch in the value column. Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
+Key/value rows: the name on the left in small capitals, the value on the right. `show_icon: true` adds an icon column; `align: start` puts the value right after the name, `align: center` in the middle. `control: toggle` puts the switch in the value column. Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
 
 ::: live
 
@@ -477,7 +476,7 @@ entities:
       - { below: 50, color: amber }
       - { above: 50, color: green }
   - { entity: sensor.kitchen_temperature, name: Temperature, decimals: 1 }
-  - { entity: light.kitchen, name: Light, toggle: true, show_value: false, show_icon: false }
+  - { entity: light.kitchen, name: Light, control: toggle, show_value: false, show_icon: false }
 ```
 
 :::
@@ -493,10 +492,10 @@ A table of modes with the switch in the value column, and a device sheet where e
   layout: table
   show_value: false
   entities:
-    - { entity: input_boolean.night_mode, name: Night mode, toggle: true }
-    - { entity: input_boolean.guest_mode, name: Guest mode, toggle: true }
-    - { entity: input_boolean.away_mode, name: Away mode, toggle: true }
-    - { entity: input_boolean.vacation_mode, name: Vacation mode, toggle: true }
+    - { entity: input_boolean.night_mode, name: Night mode, control: toggle }
+    - { entity: input_boolean.guest_mode, name: Guest mode, control: toggle }
+    - { entity: input_boolean.away_mode, name: Away mode, control: toggle }
+    - { entity: input_boolean.vacation_mode, name: Vacation mode, control: toggle }
   grid_options: { columns: 6 }
 - type: custom:entity-group-card-pro
   title: Living room TV

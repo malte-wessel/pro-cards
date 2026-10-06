@@ -81,6 +81,18 @@ rules:
 
 :::
 
+An entity that can be operated gets its control with one more key: `control: auto` adds a switch and brightness slider to a light, buttons and a position slider to a cover, a stepper to a thermostat, see [Controls](/cards/controls).
+
+::: live
+
+```yaml
+type: custom:entity-card-pro
+entity: light.living_room
+control: auto
+```
+
+:::
+
 Every card page continues like this: the smallest configuration first, then one option at a time. All ten cards appear in the card picker as "Entity Card Pro", "Weather Card Pro" and so on; the three with visual editors can be configured there without YAML.
 
 ## About the examples on this site

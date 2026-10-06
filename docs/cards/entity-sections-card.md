@@ -192,13 +192,13 @@ sections:
   - layout: table
     entities:
       - { entity: sensor.dishwasher_status, name: Dishwasher, visual: badge, rules: [{ state: run, color: green, label: Running }, { state: end, color: teal, label: Done }, { state: "off", color: grey, label: "Off" }] }
-      - { entity: switch.coffee_machine, name: Coffee machine, toggle: true, show_value: false }
+      - { entity: switch.coffee_machine, name: Coffee machine, control: toggle, show_value: false }
       - { entity: sensor.range_hood_power, name: Range hood, decimals: 0 }
   - layout: row
     divider: true
     entities:
-      - { entity: light.kitchen, name: Light, tap_action: { action: toggle }, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
-      - { entity: light.dining_table, name: Dining, tap_action: { action: toggle }, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
+      - { entity: light.kitchen, name: Light, control: toggle, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
+      - { entity: light.dining_table, name: Dining, control: toggle, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
       - { entity: media_player.kitchen_speaker, name: Speaker, icon: mdi:speaker, rules: [{ state: playing, color: green }, { state: idle, color: grey }] }
       - { entity: binary_sensor.window_kitchen, name: Window, rules: [{ state: "on", color: red, icon: mdi:window-open }, { state: "off", color: green, icon: mdi:window-closed }] }
 ```
@@ -281,19 +281,19 @@ show_name: true
 sections:
   - layout: row
     entities:
-      - { entity: input_boolean.night_mode, name: Night, tap_action: toggle, rules: [{ state: "on", color: indigo }, { state: "off", color: grey }] }
-      - { entity: input_boolean.guest_mode, name: Guests, tap_action: toggle, rules: [{ state: "on", color: pink }, { state: "off", color: grey }] }
-      - { entity: input_boolean.away_mode, name: Away, tap_action: toggle, rules: [{ state: "on", color: blue }, { state: "off", color: grey }] }
-      - { entity: input_boolean.vacation_mode, name: Vacation, tap_action: toggle, rules: [{ state: "on", color: teal, tint_card: true }, { state: "off", color: grey }] }
+      - { entity: input_boolean.night_mode, name: Night, control: toggle, rules: [{ state: "on", color: indigo }, { state: "off", color: grey }] }
+      - { entity: input_boolean.guest_mode, name: Guests, control: toggle, rules: [{ state: "on", color: pink }, { state: "off", color: grey }] }
+      - { entity: input_boolean.away_mode, name: Away, control: toggle, rules: [{ state: "on", color: blue }, { state: "off", color: grey }] }
+      - { entity: input_boolean.vacation_mode, name: Vacation, control: toggle, rules: [{ state: "on", color: teal, tint_card: true }, { state: "off", color: grey }] }
   - layout: row
     divider: true
     name_position: below
     entities:
-      - { entity: scene.bright, name: Bright, icon: mdi:white-balance-sunny, color: amber, tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.bright } } }
-      - { entity: scene.dimmed, name: Dimmed, icon: mdi:lightbulb-on-50, color: orange, tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.dimmed } } }
-      - { entity: scene.dinner, name: Dinner, icon: mdi:silverware-fork-knife, color: deep-orange, tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.dinner } } }
-      - { entity: scene.movie_night, name: Movie, icon: mdi:movie-open, color: deep-purple, tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.movie_night } } }
-      - { entity: scene.good_night, name: Night, icon: mdi:weather-night, color: indigo, tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.good_night } } }
+      - { entity: scene.bright, name: Bright, icon: mdi:white-balance-sunny, color: amber, control: button }
+      - { entity: scene.dimmed, name: Dimmed, icon: mdi:lightbulb-on-50, color: orange, control: button }
+      - { entity: scene.dinner, name: Dinner, icon: mdi:silverware-fork-knife, color: deep-orange, control: button }
+      - { entity: scene.movie_night, name: Movie, icon: mdi:movie-open, color: deep-purple, control: button }
+      - { entity: scene.good_night, name: Night, icon: mdi:weather-night, color: indigo, control: button }
 ```
 
 :::

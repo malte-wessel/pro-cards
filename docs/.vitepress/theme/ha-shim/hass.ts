@@ -110,6 +110,10 @@ const formatEntityState = (st: HassEntity): string => {
     auto: "Auto",
     playing: "Playing",
     paused: "Paused",
+    locked: "Locked",
+    unlocked: "Unlocked",
+    locking: "Locking",
+    unlocking: "Unlocking",
     idle: "Idle",
     standby: "Standby",
     docked: "Docked",
@@ -140,6 +144,15 @@ export interface ServiceTarget {
   entity_id?: string | string[];
 }
 
+// the demo's state machine for service calls: what a real Home Assistant would make the device do
+const COVER_OPEN = (pos: number) => (pos <= 0 ? "closed" : "open");
+const TRACKS = ["Planet Earth III", "Radio Eins", "Morning Mix", "Jazz Hour"];
+const setTimeoutState = (id: string, state: string, attrs: Record<string, unknown>, ms: number) =>
+  setTimeout(() => world.set(id, state, attrs), ms);
+// devices that take a moment to answer, so a control's pending ghost can be seen (the controls
+// page's States example); everything else answers at once
+const SLOW = new Set(["light.attic"]);
+const SLOW_MS = 900;
 const callService = async (
   domain: string,
   service: string,
@@ -149,56 +162,176 @@ const callService = async (
   const ids = ([] as string[]).concat(
     (data.entity_id || target?.entity_id || []) as string | string[],
   );
-  const flip = (id: string) => {
-    const st = world.get(id);
-    if (!st) return;
-    world.set(id, st.state === "on" ? "off" : "on");
+  if (ids.length && ids.every((id) => SLOW.has(id)))
+    await new Promise((resolve) => setTimeout(resolve, SLOW_MS));
+  const num = (k: string) => (typeof data[k] === "number" ? (data[k] as number) : Number(data[k]));
+  const each = (fn: (id: string, st: HassEntity) => void) =>
+    ids.forEach((id) => {
+      const st = world.get(id);
+      if (st) fn(id, st);
+    });
+  const onOff = (id: string, st: HassEntity, on: boolean) => {
+    const d = id.split(".")[0];
+    if (d === "cover") world.set(id, on ? "open" : "closed", { current_position: on ? 100 : 0 });
+    else if (d === "lock") lock(id, !on);
+    else if (d === "media_player") world.set(id, on ? "playing" : "off");
+    else if (d === "fan")
+      world.set(
+        id,
+        on ? "on" : "off",
+        on && st.attributes.percentage === 0 ? { percentage: 100 } : {},
+      );
+    else if (
+      d === "light" &&
+      on &&
+      st.attributes.supported_color_modes &&
+      !st.attributes.brightness
+    )
+      world.set(id, "on", { brightness: 255 });
+    else world.set(id, on ? "on" : "off");
   };
+  const isOn = (st: HassEntity) =>
+    !["off", "closed", "locked", "idle", "standby"].includes(st.state);
+  // locks take a moment, like a real one
+  const lock = (id: string, locked: boolean) => {
+    setTimeoutState(id, locked ? "locking" : "unlocking", {}, 250);
+    setTimeoutState(id, locked ? "locked" : "unlocked", {}, 950);
+  };
+  const toastCall = () =>
+    toast(`Service called: ${domain}.${service} ${JSON.stringify({ ...data, ...(target || {}) })}`);
   switch (`${domain}.${service}`) {
     case "homeassistant.toggle":
     case "light.toggle":
     case "switch.toggle":
     case "input_boolean.toggle":
-      ids.forEach(flip);
+    case "fan.toggle":
+    case "cover.toggle":
+    case "media_player.toggle":
+      each((id, st) => onOff(id, st, !isOn(st)));
       break;
     case "homeassistant.turn_on":
-    case "light.turn_on":
     case "switch.turn_on":
     case "input_boolean.turn_on":
-      ids.forEach((id) => world.set(id, "on"));
+    case "media_player.turn_on":
+      each((id, st) => onOff(id, st, true));
       break;
     case "homeassistant.turn_off":
     case "light.turn_off":
     case "switch.turn_off":
     case "input_boolean.turn_off":
-      ids.forEach((id) => world.set(id, "off"));
+    case "fan.turn_off":
+    case "media_player.turn_off":
+      each((id, st) => onOff(id, st, false));
+      break;
+    case "light.turn_on":
+      each((id, st) => {
+        const pct = num("brightness_pct");
+        if (Number.isFinite(pct)) world.set(id, "on", { brightness: Math.round(pct * 2.55) });
+        else onOff(id, st, true);
+      });
+      break;
+    case "fan.turn_on":
+      each((id) => {
+        const pct = num("percentage");
+        world.set(id, "on", Number.isFinite(pct) ? { percentage: pct } : {});
+      });
+      break;
+    case "fan.set_percentage":
+      each((id) => {
+        const pct = num("percentage");
+        world.set(id, pct > 0 ? "on" : "off", { percentage: pct });
+      });
+      break;
+    case "fan.set_preset_mode":
+      each((id) => world.set(id, "on", { preset_mode: data.preset_mode }));
       break;
     case "cover.open_cover":
-      ids.forEach((id) => world.set(id, "open", { current_position: 100 }));
+      each((id) => world.set(id, "open", { current_position: 100 }));
       break;
     case "cover.close_cover":
-      ids.forEach((id) => world.set(id, "closed", { current_position: 0 }));
+      each((id) => world.set(id, "closed", { current_position: 0 }));
       break;
-    case "cover.toggle":
-      ids.forEach((id) => {
-        const st = world.get(id);
-        if (st?.state === "open") world.set(id, "closed", { current_position: 0 });
-        else world.set(id, "open", { current_position: 100 });
+    case "cover.stop_cover":
+      toast(`Cover stopped: ${ids.join(", ")}`);
+      break;
+    case "cover.set_cover_position":
+      each((id) => {
+        const pos = num("position");
+        world.set(id, COVER_OPEN(pos), { current_position: pos });
       });
+      break;
+    case "climate.set_temperature":
+      each((id) => world.set(id, undefined, { temperature: num("temperature") }));
+      break;
+    case "climate.set_hvac_mode":
+      each((id) => {
+        const mode = String(data.hvac_mode);
+        world.set(id, mode, {
+          hvac_action: mode === "off" ? "off" : mode === "cool" ? "cooling" : "heating",
+        });
+      });
+      break;
+    case "climate.set_preset_mode":
+      each((id) => world.set(id, undefined, { preset_mode: data.preset_mode }));
+      break;
+    case "climate.set_fan_mode":
+      each((id) => world.set(id, undefined, { fan_mode: data.fan_mode }));
+      break;
+    case "media_player.volume_set":
+      each((id) => world.set(id, undefined, { volume_level: num("volume_level") }));
+      break;
+    case "media_player.media_play_pause":
+      each((id, st) => world.set(id, st.state === "playing" ? "paused" : "playing"));
+      break;
+    case "media_player.media_play":
+      each((id) => world.set(id, "playing"));
+      break;
+    case "media_player.media_pause":
+      each((id) => world.set(id, "paused"));
+      break;
+    case "media_player.media_next_track":
+    case "media_player.media_previous_track":
+      each((id, st) => {
+        const i = TRACKS.indexOf(String(st.attributes.media_title));
+        const n = TRACKS.length;
+        const next = (i + (service.endsWith("next_track") ? 1 : n - 1) + n) % n;
+        world.set(id, "playing", { media_title: TRACKS[next] });
+      });
+      break;
+    case "lock.lock":
+      each((id) => lock(id, true));
+      break;
+    case "lock.unlock":
+      each((id) => lock(id, false));
+      break;
+    case "number.set_value":
+    case "input_number.set_value":
+      each((id) => world.set(id, num("value")));
+      break;
+    case "select.select_option":
+    case "input_select.select_option":
+      each((id) => world.set(id, String(data.option)));
+      break;
+    case "button.press":
+    case "input_button.press":
+      each((id) => world.set(id, new Date().toISOString()));
+      toast(`Button pressed: ${ids.join(", ")}`);
       break;
     case "scene.turn_on":
     case "hue.activate_scene":
+      each((id) => world.set(id, new Date().toISOString()));
       toast(`Scene activated: ${ids.join(", ") || data.scene || "?"}`);
       break;
     case "script.turn_on":
+      each((id) => {
+        world.set(id, "on");
+        setTimeoutState(id, "off", { last_triggered: new Date().toISOString() }, 1500);
+      });
       toast(`Script started: ${ids.join(", ")}`);
       break;
     default:
       if (domain === "script") toast(`Script started: ${domain}.${service}`);
-      else
-        toast(
-          `Service called: ${domain}.${service} ${JSON.stringify({ ...data, ...(target || {}) })}`,
-        );
+      else toastCall();
   }
 };
 

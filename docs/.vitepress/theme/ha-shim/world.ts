@@ -314,6 +314,13 @@ def("light.living_room", "on", {
   supported_color_modes: ["brightness"],
 });
 def("light.kitchen", "off", { friendly_name: "Kitchen", supported_color_modes: ["brightness"] });
+// answers its services after a moment (see SLOW in hass.ts): shows a control's pending ghost
+def("light.attic", "on", {
+  friendly_name: "Attic",
+  brightness: 120,
+  color_mode: "brightness",
+  supported_color_modes: ["brightness"],
+});
 def("light.dining_table", "on", {
   friendly_name: "Dining table",
   brightness: 120,
@@ -356,6 +363,7 @@ def("cover.awning", "open", {
   device_class: "awning",
   current_position: 65,
 });
+def("cover.garage_door", "closed", { friendly_name: "Garage door", device_class: "garage" });
 def("climate.living_room", "heat", {
   friendly_name: "Living room thermostat",
   temperature: 21,
@@ -364,6 +372,9 @@ def("climate.living_room", "heat", {
   hvac_modes: ["off", "heat", "auto"],
   min_temp: 5,
   max_temp: 30,
+  target_temp_step: 0.5,
+  preset_modes: ["none", "eco", "comfort", "boost"],
+  preset_mode: "comfort",
 });
 def("climate.bedroom", "off", {
   friendly_name: "Bedroom thermostat",
@@ -373,6 +384,71 @@ def("climate.bedroom", "off", {
   hvac_modes: ["off", "heat", "auto"],
   min_temp: 5,
   max_temp: 30,
+  target_temp_step: 0.5,
+  preset_modes: ["none", "eco", "comfort", "boost"],
+  preset_mode: "eco",
+});
+
+// fans, locks, helpers (controls)
+def("fan.living_room", "on", {
+  friendly_name: "Living room fan",
+  percentage: 66,
+  percentage_step: 33.333,
+  preset_modes: ["auto", "sleep"],
+  preset_mode: null,
+});
+def("fan.bedroom", "off", { friendly_name: "Bedroom fan", percentage: 0, percentage_step: 25 });
+def("fan.bathroom", "on", { friendly_name: "Bathroom fan" });
+def("lock.front_door", "locked", { friendly_name: "Front door" });
+def("lock.garage_side_door", "unlocked", { friendly_name: "Garage side door" });
+// the shed is offline: its devices show how a control greys out while its entity is unavailable
+def("light.shed", "unavailable", { friendly_name: "Shed light" });
+def("switch.shed_heater", "unavailable", { friendly_name: "Shed heater" });
+def("climate.shed", "unavailable", { friendly_name: "Shed thermostat" });
+def("cover.shed_door", "unavailable", { friendly_name: "Shed door" });
+def("lock.shed", "unavailable", { friendly_name: "Shed lock" });
+def("select.shed_program", "unavailable", { friendly_name: "Shed program" });
+def("input_number.target_humidity", 55, {
+  friendly_name: "Target humidity",
+  icon: "mdi:water-percent",
+  min: 30,
+  max: 70,
+  step: 5,
+  unit_of_measurement: "%",
+});
+def("input_number.heating_boost", 30, {
+  friendly_name: "Heating boost",
+  icon: "mdi:radiator",
+  min: 0,
+  max: 120,
+  step: 15,
+  unit_of_measurement: "min",
+});
+def("number.ev_charge_limit", 80, {
+  friendly_name: "EV charge limit",
+  icon: "mdi:battery-charging-80",
+  min: 50,
+  max: 100,
+  step: 5,
+  unit_of_measurement: "%",
+});
+def("input_select.house_mode", "Home", {
+  friendly_name: "House mode",
+  icon: "mdi:home-switch",
+  options: ["Home", "Away", "Night", "Guest"],
+});
+def("select.thermostat_schedule", "Comfort", {
+  friendly_name: "Thermostat schedule",
+  icon: "mdi:calendar-clock",
+  options: ["Eco", "Comfort", "Boost"],
+});
+def("input_button.ring_doorbell", "2026-09-20T18:12:00+00:00", {
+  friendly_name: "Ring doorbell",
+  icon: "mdi:bell-ring",
+});
+def("button.restart_router", "2026-09-20T18:12:00+00:00", {
+  friendly_name: "Restart router",
+  icon: "mdi:router-wireless",
 });
 
 // people & modes
@@ -487,6 +563,7 @@ def("media_player.living_room_tv", "playing", {
 });
 def("media_player.kitchen_speaker", "idle", {
   friendly_name: "Kitchen speaker",
+  media_title: "Radio Eins",
   volume_level: 0.2,
 });
 
