@@ -414,4 +414,4 @@ Every control works without a pointer. Tab reaches the row's own action first (a
 
 A failed service call shows Home Assistant's toast with the error and fires the failure haptic.
 
-Controls never ask for confirmation through Home Assistant's dialog; `confirm: true` is their way of asking. `tap_action`, `hold_action` and `double_tap_action` on the row keep working next to a control: the control swallows its own gestures, the rest of the row runs the actions.
+Controls never ask for confirmation through Home Assistant's dialog; `control_confirm: true` is their way of asking. `tap_action`, `hold_action` and `double_tap_action` on the row keep working next to a control: the control swallows its own gestures, the rest of the row runs the actions.

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- The JSON Schemas ship with the docs site, so `https://malte-wessel.github.io/pro-cards/schema/pro-cards.schema.json` resolves. The README has named that URL for editor completion since the schemas landed, but nothing ever copied `schema/` into the published site, so the YAML language server got a 404 and silently did nothing. The getting started guide now explains the one comment line it takes
+- Docs: the sizing guide covers all ten cards. The weather, wind, rain and power flow cards were missing from its table although they report a size like the rest, its minimums were wrong for the three weather tiles (3 columns, not 6) and for a tile with a control (4 or 6, not 3), and a masonry or panel view was not mentioned at all
+- Docs: the languages page lists the words the controls show (`Run`, `Done`, `Off`, `Hold to lock`, `Press again to …`) and the accessible names a screen reader reads out, the power flow card's generator and low-carbon strings, and the `title` a card picked from the picker arrives with. The controls' strings have been translated since they landed; only the page did not say so
+- Docs: the weather card page lists Home Assistant's fifteen condition states with their names and mdi icons. They are the keys of an `icons` map and what a `rules` entry matches, and eight of them appeared nowhere on the site
+- Docs: `control_confirm: true`, not `confirm: true`, in the last paragraph of the controls page; `name_position` is described the same way in all three places that mention it (row items only); the weather card's reference lists `name_position`; and the playground's entity list includes `light.attic`, the one entity of the demo home it left out
+
 ## 2.2.1 (2026-10-06)
 
 - Docs: a changelog page on the site, so what a version brought is one click from the cards instead of a trip to GitHub. The page includes the repository's `CHANGELOG.md`, so a release is still written once; the guide, the playground and the changelog share one list that feeds both the nav dropdown and the sidebar, so the playground and the changelog sit under Guide instead of standing on their own
