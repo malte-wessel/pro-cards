@@ -78,6 +78,16 @@ const cardGroups = [
   },
 ];
 
+// the guide, the playground and the changelog; the nav dropdown and the sidebar both list them
+const guide = [
+  { text: "Getting started", link: "/guide/getting-started" },
+  { text: "Look & themes", link: "/guide/colours" },
+  { text: "Sizing in sections", link: "/guide/sizing" },
+  { text: "Languages", link: "/guide/languages" },
+  { text: "Playground", link: "/playground" },
+  { text: "Changelog", link: "/changelog" },
+];
+
 // the showcase dashboards, grown from the homepage examples
 const showcase = [
   { text: "Energy", link: "/showcase/energy" },
@@ -133,31 +143,21 @@ export default defineConfig({
   themeConfig: {
     logo: "/logo.svg",
     nav: [
-      { text: "Guide", link: "/guide/getting-started" },
+      { text: "Guide", items: guide },
       { text: "Cards", items: cardGroups },
       {
         text: "Showcase",
         items: showcase,
       },
-      { text: "Playground", link: "/playground" },
       { text: `v${pkg.version}`, link: "https://github.com/malte-wessel/pro-cards/releases" },
     ],
     sidebar: [
-      {
-        text: "Guide",
-        items: [
-          { text: "Getting started", link: "/guide/getting-started" },
-          { text: "Look & themes", link: "/guide/colours" },
-          { text: "Sizing in sections", link: "/guide/sizing" },
-          { text: "Languages", link: "/guide/languages" },
-        ],
-      },
+      { text: "Guide", items: guide },
       { text: "Cards", items: cardGroups },
       {
         text: "Showcase",
         items: showcase,
       },
-      { text: "Playground", link: "/playground" },
     ],
     socialLinks: [{ icon: "github", link: "https://github.com/malte-wessel/pro-cards" }],
     search: { provider: "local" },
