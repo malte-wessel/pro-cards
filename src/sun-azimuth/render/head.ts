@@ -25,8 +25,8 @@ export const headHtml = (view: string) => {
       </div></div>`;
   const lead =
     view === "3d"
-      ? `<div class="lead xl">${icon("mdi:sun-angle")}</div>`
-      : `<div class="lead xl"><div class="rot">${icon("mdi:navigation")}</div></div>`;
+      ? `<div class="lead">${icon("mdi:sun-angle")}</div>`
+      : `<div class="lead"><div class="rot">${icon("mdi:navigation")}</div></div>`;
   return `<div class="top">${lead}<div class="texts"><div class="primary"></div><div class="big"><b></b><span></span></div><div class="secondary"><span class="accent"></span><span class="rest"></span></div></div></div>`;
 };
 

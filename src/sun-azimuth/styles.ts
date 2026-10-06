@@ -16,7 +16,6 @@ export const STYLE = `
   .divider { height: 1px; background: var(--divider-color); flex: none; }
   .top { display: flex; align-items: center; gap: 12px; min-width: 0; --c: var(--saz-sun); }
   .lead { position: relative; flex: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--c); background: color-mix(in srgb, var(--c) 20%, transparent); --mdc-icon-size: 22px; }
-  .lead.xl { width: 56px; height: 56px; --mdc-icon-size: 30px; }
   .lead.s36 { width: 36px; height: 36px; --mdc-icon-size: 20px; }
   .lead.s32 { width: 32px; height: 32px; --mdc-icon-size: 18px; }
   .lead ha-icon { display: block; }
@@ -26,7 +25,7 @@ export const STYLE = `
   .secondary { font-size: 12px; line-height: 16px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .secondary .accent { color: var(--c); font-weight: 500; }
   .big { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; min-width: 0; }
-  .big b { font-size: 32px; font-weight: 500; line-height: 36px; letter-spacing: -.6px; color: var(--primary-text-color); font-variant-numeric: tabular-nums; }
+  .big b { font-size: 26px; font-weight: 500; line-height: 30px; letter-spacing: -.4px; color: var(--primary-text-color); font-variant-numeric: tabular-nums; }
   .big span { font-size: 14px; color: var(--secondary-text-color); }
   .main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
   .line { display: flex; align-items: center; gap: 10px; min-width: 0; }
