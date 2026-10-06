@@ -1,6 +1,7 @@
 // Styles of the sun azimuth card. --saz-sun / --saz-night / --saz-sky are set on the card from
 // the config colours; --c is the colour of a lead or row (the sun's while it is up).
 import { AXIS_FONT } from "../shared/constants.ts";
+import { STYLE_SLIDER } from "../shared/slider.ts";
 import { CHIP_FONT } from "./constants.ts";
 
 const CARD_BG = "var(--ha-card-background, var(--card-background-color))";
@@ -93,26 +94,17 @@ export const STYLE = `
   .scene .gdot { fill: var(--saz-sun); }
   .chip rect { fill: color-mix(in srgb, ${CARD_BG} 80%, transparent); }
   .chip text { font: ${CHIP_FONT}; fill: var(--primary-text-color); font-variant-numeric: tabular-nums; }
-  /* the camera slider of the 3D view: a bar like the footer's, a round thumb, compass points below */
-  .control { display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-top: -4px; }
-  .control .row { display: flex; align-items: center; gap: 12px; min-width: 0; }
-  .control input { flex: 1; min-width: 0; margin: 0; height: 20px; appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer; touch-action: none; }
-  .control input:focus { outline: none; }
-  .control input::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--primary-text-color) 8%, transparent); }
-  .control input::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; margin-top: -5px; border-radius: 50%; box-sizing: border-box; background: var(--saz-sun); border: 2px solid ${CARD_BG}; }
-  .control input::-moz-range-track { height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--primary-text-color) 8%, transparent); }
-  .control input::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; box-sizing: border-box; background: var(--saz-sun); border: 2px solid ${CARD_BG}; }
-  .control input:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px color-mix(in srgb, var(--saz-sun) 35%, transparent); }
-  .control input:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px color-mix(in srgb, var(--saz-sun) 35%, transparent); }
-  .control .cv { flex: none; width: 4ch; text-align: right; font-size: 12px; line-height: 16px; color: var(--secondary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  /* the points sit under the thumb's centre: 8 px in from either end of the track */
-  .caxis { position: relative; height: 12px; margin-right: calc(4ch + 12px); }
+  /* the camera slider of the 3D view: the controls' slider in the sun colour, compass points below */
+  .control { --fe-color: var(--saz-sun); display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-top: -4px; }
+  ${STYLE_SLIDER}
+  /* the points sit under the knob's centre, which runs from one end of the track to the other */
+  .caxis { position: relative; height: 12px; }
   .caxis span { position: absolute; top: 0; transform: translateX(-50%); font: ${AXIS_FONT}; line-height: 12px; color: var(--secondary-text-color); white-space: nowrap; }
-  .caxis span:nth-child(1) { left: 8px; }
-  .caxis span:nth-child(2) { left: calc(8px + (100% - 16px) * .25); }
-  .caxis span:nth-child(3) { left: calc(8px + (100% - 16px) * .5); }
-  .caxis span:nth-child(4) { left: calc(8px + (100% - 16px) * .75); }
-  .caxis span:nth-child(5) { left: calc(100% - 8px); }
+  .caxis span:nth-child(1) { left: 0; }
+  .caxis span:nth-child(2) { left: 25%; }
+  .caxis span:nth-child(3) { left: 50%; }
+  .caxis span:nth-child(4) { left: 75%; }
+  .caxis span:nth-child(5) { left: 100%; }
   /* sunrise / noon / sunset */
   .items { display: flex; justify-content: space-between; gap: 8px; }
   .item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }

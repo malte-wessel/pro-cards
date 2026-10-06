@@ -28,6 +28,7 @@ import { cssColor } from "./shared/color.ts";
 import { fmtTime, langOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
+import { slider, type Slider } from "./shared/slider.ts";
 import { numOrNull, oneOf, qs } from "./shared/util.ts";
 import type {
   PositionedDay,
@@ -61,6 +62,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
   _camera = DEFAULTS.camera;
   // the time under the pointer on a side's timeline, previewed in the plot; null = now
   _hoverT: number | null = null;
+  _cameraSlider?: Slider;
   _onScrub = (ev: PointerEvent) => {
     const footer = this._root?.querySelector<HTMLElement>(".sides"),
       day = this._day;
@@ -178,23 +180,35 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
       <div class="body">
         <div class="head">${headHtml(cfg.view)}</div>
         ${dialOr3d ? '<div class="visual"></div>' : ""}
-        ${cfg.view === "3d" && cfg.camera_slider ? '<div class="control"><div class="row"><input type="range" min="0" max="359" step="1"><span class="cv"></span></div><div class="caxis"><span></span><span></span><span></span><span></span><span></span></div></div>' : ""}
+        ${cfg.view === "3d" && cfg.camera_slider ? '<div class="control"><div class="cslider"></div><div class="caxis"><span></span><span></span><span></span><span></span><span></span></div></div>' : ""}
         ${dialOr3d && cfg.show_house ? houseHtml() : ""}
         ${dialOr3d && cfg.show_events ? `<div class="divider"></div>${eventsHtml()}` : ""}
         ${cfg.show_sides ? '<div class="divider"></div><div class="sides"></div>' : ""}
       </div>`;
     qs(card, ".title").textContent = title || "";
-    const slider = card.querySelector<HTMLInputElement>(".control input");
-    if (slider) {
-      slider.value = String(Math.round(this._camera));
+    this._cameraSlider = undefined;
+    const track = card.querySelector<HTMLElement>(".control .cslider");
+    if (track) {
+      // the controls' slider, turning the camera instead of calling a service
+      this._cameraSlider = slider(
+        {
+          min: 0,
+          max: 359,
+          step: 1,
+          value: Math.round(this._camera),
+          label: t(this._hass, "azimuth.camera"),
+          text: (v) => deg(this._hass, v),
+          onInput: (v) => {
+            this._camera = v;
+            this._renderScene();
+          },
+        },
+        track,
+      );
       // the slider is the card's own control: the section's drag handles never see it
       const stop = (ev: Event) => ev.stopPropagation();
-      slider.addEventListener("pointerdown", stop);
-      slider.addEventListener("pointerup", stop);
-      slider.addEventListener("input", () => {
-        this._camera = Number(slider.value);
-        this._renderScene();
-      });
+      track.addEventListener("pointerdown", stop);
+      track.addEventListener("pointerup", stop);
     }
     const footer = card.querySelector<HTMLElement>(".sides");
     if (footer && cfg.hover_preview) {
@@ -252,8 +266,9 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     const control = this._root?.querySelector<HTMLElement>(".control");
     if (!control) return;
     const hass = this._hass;
-    qs(control, "input").setAttribute("aria-label", t(hass, "azimuth.camera"));
-    qs(control, ".cv").textContent = deg(hass, this._camera);
+    qs(control, ".ctl-slider").setAttribute("aria-label", t(hass, "azimuth.camera"));
+    // the bearing in the current language
+    this._cameraSlider?.paint(this._camera);
     // the compass points under the track: N E S W and N again at the far end
     control.querySelectorAll(".caxis span").forEach((el, i) => {
       el.textContent = compass(hass, (i * 90) % 360);
