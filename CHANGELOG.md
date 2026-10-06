@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 2.2.1 (2026-10-06)
 
+- Docs: a changelog page on the site, so what a version brought is one click from the cards instead of a trip to GitHub. The page includes the repository's `CHANGELOG.md`, so a release is still written once; the guide, the playground and the changelog share one list that feeds both the nav dropdown and the sidebar, so the playground and the changelog sit under Guide instead of standing on their own
 - Docs: the pages no longer scroll by themselves on an iPhone. Safari ties the scroll position to a box near the top of the viewport; the live examples rewriting their rows moved that box, so the page stepped down a few hundred pixels every few seconds while reading. The site opts out of that anchoring
 
 ## 2.2.0 (2026-10-06)
