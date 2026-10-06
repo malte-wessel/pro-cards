@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Docs: the pages no longer scroll by themselves on an iPhone. Safari ties the scroll position to a box near the top of the viewport; the live examples rewriting their rows moved that box, so the page stepped down a few hundred pixels every few seconds while reading. The site opts out of that anchoring
+
 ## 2.2.0 (2026-10-06)
 
 - Controls on the entity, entity group and entity sections cards. `control: auto` draws what the entity's domain calls for: lights a switch and a brightness slider, switches and helpers a switch, covers open / stop / close buttons and a position slider, thermostats a temperature stepper, fans speed segments (a slider beyond six speeds), locks a hold-to-confirm button, scripts, scenes and buttons a Run chip, media players transport buttons and a volume slider, selects a menu, numbers a slider. `control: toggle | slider | stepper | segments | buttons | button | select | hold` picks one, `none` draws nothing; `toggle: true` keeps working as an alias of `control: toggle`

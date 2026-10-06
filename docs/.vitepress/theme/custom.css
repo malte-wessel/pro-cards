@@ -43,6 +43,15 @@
   --vp-c-border: rgba(225, 225, 225, 0.24);
 }
 
+/* Safari (iOS above all) ties the scroll position to a box near the top of the viewport and
+   re-adjusts it whenever that box moves. The live examples rewrite their rows as the demo world
+   drifts, and Safari then scrolls the page by itself, a few hundred pixels at a time, a few times
+   a minute. The page opts out: the examples are laid out long before a reader can scroll, so
+   anchoring has nothing to earn here. */
+html {
+  overflow-anchor: none;
+}
+
 /* home page feature icons: stroke icons in the mark's style, on a brand tint */
 .VPFeature .icon {
   background: var(--vp-c-brand-soft);
