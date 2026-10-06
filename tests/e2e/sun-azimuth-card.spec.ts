@@ -207,17 +207,32 @@ test("the 3D view draws the scene and the slider orbits it", async ({ page }) =>
   await expect(scene.locator(".chip text")).toHaveText(["138°", "57°"]);
   // from the north looking south: N, E and W on the ground, S left out behind the dome
   await expect(scene.locator("text.cl")).toHaveText(["N", "E", "W"]);
-  // the slider
-  const slider = c.locator(".control input");
-  await expect(slider).toHaveValue("180");
-  await expect(c.locator(".control .cv")).toHaveText("180°");
+  // the slider: the controls' slider, in the sun colour
+  const slider = c.locator(".control .ctl-slider");
+  await expect(slider).toHaveAttribute("role", "slider");
+  await expect(slider).toHaveAttribute("aria-label", "Camera");
+  await expect(slider).toHaveAttribute("aria-valuenow", "180");
+  await expect(slider).toHaveAttribute("aria-valuetext", "180°");
   await expect(c.locator(".caxis span")).toHaveText(["N", "E", "S", "W", "N"]);
-  await slider.evaluate((el) => {
-    (el as HTMLInputElement).value = "90";
-    el.dispatchEvent(new Event("input"));
-  });
-  await expect(c.locator(".control .cv")).toHaveText("90°");
+  // the compass points sit under the knob at their bearings
+  const track = (await slider.locator(".track").boundingBox())!;
+  const east = (await c.locator(".caxis span").nth(1).boundingBox())!;
+  expect(Math.abs(east.x + east.width / 2 - (track.x + track.width * 0.25))).toBeLessThan(1.5);
+  // a drag turns the scene as it goes, with the bearing in the bubble
+  await page.mouse.move(track.x + track.width * 0.5, track.y + track.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(track.x + track.width * 0.25, track.y + track.height / 2, { steps: 4 });
+  await expect(slider.locator(".bubble")).toHaveText("90°");
+  await expect(slider).toHaveAttribute("aria-valuetext", "90°");
   await expect(scene.locator("text.cl")).toHaveText(["N", "S", "W"]);
+  await page.mouse.up();
+  await expect(slider.locator(".bubble")).toBeHidden();
+  // the keys step it
+  await slider.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(slider).toHaveAttribute("aria-valuetext", "91°");
+  await page.keyboard.press("End");
+  await expect(slider).toHaveAttribute("aria-valuenow", "359");
   // the head and the footer do not depend on the camera
   await expect(c.locator(".head .big b")).toHaveText("57°");
   await expect(c.locator(".side")).toHaveCount(4);

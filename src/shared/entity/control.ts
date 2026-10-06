@@ -4,7 +4,7 @@
 import { domainOf, stateActive } from "../color.ts";
 import type { ActionConfig, ActionKind, HapticType, HassEntity, HomeAssistant } from "../ha.ts";
 import type { StringKey } from "../i18n.ts";
-import { isNum, numOrNull, oneOf } from "../util.ts";
+import { isNum, numOrNull, oneOf, snapTo } from "../util.ts";
 import type { EntityItem, NormalizeCtx, RawEntity } from "./config.ts";
 import { OFF_STATES } from "./constants.ts";
 import { numAttr, scaleOf } from "./look.ts";
@@ -385,14 +385,9 @@ export const sliderApplies = (ent: EntityItem, st: HassEntity | undefined): bool
   return true;
 };
 
-const decimalsOf = (n: number) => Math.min(4, (String(n).split(".")[1] || "").length);
 // the nearest valid value: steps are counted from the minimum, as Home Assistant counts them
 // (min 1, step 2: 1, 3, 5 …), then held inside the bounds
-export const clampStep = (v: number, r: Range) => {
-  const dec = Math.max(decimalsOf(r.step), decimalsOf(r.min));
-  const snapped = r.min + Math.round((v - r.min) / r.step) * r.step;
-  return Number(Math.min(r.max, Math.max(r.min, snapped)).toFixed(dec));
-};
+export const clampStep = (v: number, r: Range) => snapTo(v, r.min, r.max, r.step);
 
 // the slider / stepper range of the entity: value, bounds, step and unit by domain
 export const rangeOf = (

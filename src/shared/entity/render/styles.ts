@@ -1,6 +1,7 @@
 // CSS of the entity cards, in pieces so every card ships only what it renders.
 // Colours come from HA theme tokens; --fe-color is set per row from the resolved look.
 import { AXIS_FONT } from "../../constants.ts";
+import { STYLE_SLIDER } from "../../slider.ts";
 
 export const STYLE_BASE = `
   :host { display: block; min-width: 0; }
@@ -94,16 +95,8 @@ export const STYLE_CONTROLS = `
   .lead.tap:focus-visible .shape { box-shadow: 0 0 0 2px var(--fe-color); }
   .lead.tap.off .shape { color: var(--secondary-text-color); background: var(--fe-track); }
   .lead.tap.pending .shape { animation: ctl-pulse 1s ease-in-out infinite; }
-  .ctl-slider { display: flex; align-items: center; height: 24px; flex: 1 1 auto; width: 100%; min-width: 0; touch-action: pan-y; cursor: pointer; outline: none; border-radius: 12px; }
+  ${STYLE_SLIDER}
   .end .ctl-slider, .val .ctl-slider { flex: 0 1 120px; width: 120px; min-width: 64px; }
-  .ctl-slider .track { position: relative; flex: 1; height: 8px; border-radius: 4px; background: var(--fe-track); }
-  .ctl-slider.sm .track { height: 6px; }
-  .ctl-slider .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--fe-color); }
-  .ctl-slider .knob { position: absolute; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; box-sizing: border-box; background: var(--ha-card-background, var(--card-background-color)); box-shadow: 0 1px 3px rgba(0,0,0,.3), inset 0 0 0 2px var(--fe-color); }
-  .ctl-slider.sm .knob { width: 16px; height: 16px; margin: -8px 0 0 -8px; }
-  .ctl-slider.dragging .knob { width: 24px; height: 24px; margin: -12px 0 0 -12px; box-shadow: 0 1px 3px rgba(0,0,0,.3), inset 0 0 0 2px var(--fe-color), 0 0 0 7px var(--fe-soft); }
-  .ctl-slider .bubble { display: none; position: absolute; bottom: 18px; transform: translateX(-50%); padding: 3px 8px; border-radius: 999px; background: var(--primary-text-color); color: var(--ha-card-background, var(--card-background-color)); font-size: 12px; line-height: 14px; font-weight: 500; white-space: nowrap; text-decoration: none; font-variant-numeric: tabular-nums; z-index: 1; pointer-events: none; }
-  .ctl-slider.dragging .bubble { display: block; }
   .ctl-slider.pending .fill { opacity: .55; }
   .ctl-slider.pending .knob { background: transparent; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--fe-color) 55%, transparent); animation: ctl-pulse 1s ease-in-out infinite; }
   .ctl .round { flex: none; position: relative; width: 32px; height: 32px; border: 0; padding: 0; border-radius: 50%; background: var(--fe-track); color: var(--primary-text-color); display: flex; align-items: center; justify-content: center; cursor: pointer; --mdc-icon-size: 20px; }
