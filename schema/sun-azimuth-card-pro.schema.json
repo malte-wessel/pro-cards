@@ -78,12 +78,12 @@
     },
     "show_events": {
       "type": "boolean",
-      "default": true,
+      "default": false,
       "description": "Dial and 3D: the sunrise, solar noon and sunset row"
     },
     "show_sides": {
       "type": "boolean",
-      "default": true,
+      "default": false,
       "description": "The sides of the house footer with each side's sun window today"
     },
     "sun_color": {

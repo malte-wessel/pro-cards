@@ -14,6 +14,8 @@ test("the sky dial shows the azimuth, the path and the lit sides", async ({ page
       title: "Sun",
       icon: "mdi:sun-compass",
       house: { rotation: 20 },
+      show_events: true,
+      show_sides: true,
     },
     { time: NOON },
   );
@@ -56,7 +58,12 @@ test("the sky dial shows the azimuth, the path and the lit sides", async ({ page
 test("the sides footer lists every side with its window, pill and timeline", async ({ page }) => {
   await mount(
     page,
-    { type: "custom:sun-azimuth-card-pro", house: { rotation: 20 } },
+    {
+      type: "custom:sun-azimuth-card-pro",
+      house: { rotation: 20 },
+      show_events: true,
+      show_sides: true,
+    },
     { time: NOON },
   );
   const c = card(page);
@@ -112,6 +119,8 @@ test("own side names stay as written in every language", async ({ page }) => {
     {
       type: "custom:sun-azimuth-card-pro",
       house: { rotation: 45, sides: { north: "Street", south: "Garden" } },
+      show_sides: true,
+      show_events: true,
     },
     { time: NOON },
   );
@@ -132,7 +141,12 @@ test("own side names stay as written in every language", async ({ page }) => {
 test("hovering a timeline previews the sun at that time", async ({ page }) => {
   await mount(
     page,
-    { type: "custom:sun-azimuth-card-pro", house: { rotation: 20 } },
+    {
+      type: "custom:sun-azimuth-card-pro",
+      house: { rotation: 20 },
+      show_events: true,
+      show_sides: true,
+    },
     { time: NOON },
   );
   const c = card(page);
@@ -166,7 +180,11 @@ test("hovering a timeline previews the sun at that time", async ({ page }) => {
 });
 
 test("hover_preview: false leaves the plot alone", async ({ page }) => {
-  await mount(page, { type: "custom:sun-azimuth-card-pro", hover_preview: false }, { time: NOON });
+  await mount(
+    page,
+    { type: "custom:sun-azimuth-card-pro", hover_preview: false, show_sides: true },
+    { time: NOON },
+  );
   const c = card(page);
   const bar = c.locator(".side").nth(2).locator(".lbar");
   await bar.scrollIntoViewIfNeeded(); // the footer sits below the 800 px viewport
@@ -186,6 +204,7 @@ test("the 3D view draws the scene and the slider orbits it", async ({ page }) =>
       house: { rotation: 20 },
       camera: 180,
       camera_slider: true,
+      show_sides: true,
     },
     { time: NOON },
   );
@@ -293,7 +312,12 @@ test("the 3D scene fills a narrow column, keeps its size in a wide one and follo
 test("the compass ring shows the daylight sector and the day's events", async ({ page }) => {
   await mount(
     page,
-    { type: "custom:sun-azimuth-card-pro", view: "ring", house: { rotation: 20 } },
+    {
+      type: "custom:sun-azimuth-card-pro",
+      view: "ring",
+      house: { rotation: 20 },
+      show_sides: true,
+    },
     { time: NOON },
   );
   const c = card(page);
@@ -323,7 +347,12 @@ test("the compass ring shows the daylight sector and the day's events", async ({
 test("at night the sun is below the horizon everywhere", async ({ page }) => {
   await mount(
     page,
-    { type: "custom:sun-azimuth-card-pro", house: { rotation: 20 } },
+    {
+      type: "custom:sun-azimuth-card-pro",
+      house: { rotation: 20 },
+      show_events: true,
+      show_sides: true,
+    },
     { time: new Date("2026-06-21T02:00:00+02:00") },
   );
   const c = card(page);
@@ -364,15 +393,15 @@ test("the 3D view at night hides the sun and the shadow", async ({ page }) => {
   await expect(card(page).locator(".head .rest")).toHaveText("");
 });
 
-test("show_* options drop their sections and colours reach the card", async ({ page }) => {
+test("the events and sides are opt-in, show_house drops its line, colours reach the card", async ({
+  page,
+}) => {
   await mount(
     page,
     [
       {
         type: "custom:sun-azimuth-card-pro",
-        show_sides: false,
         show_house: false,
-        show_events: false,
         sun_color: "#ff0000",
         night_color: "teal",
         sky_color: "rgb(1, 2, 3)",
@@ -381,7 +410,7 @@ test("show_* options drop their sections and colours reach the card", async ({ p
       {
         type: "custom:sun-azimuth-card-pro",
         view: "3d",
-        show_sides: false,
+        show_events: true,
         grid_options: { columns: 6 },
       },
     ],

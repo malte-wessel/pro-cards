@@ -226,7 +226,7 @@ title: Sun today
 
 #### Sun Azimuth Card Pro
 
-Where the sun is around your house: a sky dial seen from above, a 3D scene with the house, its shadow and the sky dome, or a compass ring, and below it the sides of the house with their sun window today.
+Where the sun is around your house: a sky dial seen from above, a 3D scene with the house, its shadow and the sky dome, or a compass ring. On request, sunrise, noon and sunset, and the sides of the house with their sun window today.
 
 ```yaml
 type: custom:sun-azimuth-card-pro
@@ -235,6 +235,8 @@ view: dial
 house:
   rotation: 20
   sides: { north: Street, south: Garden }
+show_events: true
+show_sides: true
 ```
 
 [Sun Azimuth Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/sun-azimuth-card)

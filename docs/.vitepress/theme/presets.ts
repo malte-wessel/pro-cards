@@ -121,6 +121,8 @@ labels: { sunrise: Sunrise, sunset: Sunset, dawn: Dawn, noon: Solar noon, dusk: 
 title: Sun
 view: dial
 house: { rotation: 20, sides: { north: Street, south: Garden } }
+show_events: true
+show_sides: true
 `,
   "Illuminance card": `type: custom:illuminance-card-pro
 entity: sensor.illuminance

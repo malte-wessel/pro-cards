@@ -315,12 +315,16 @@ describe("sun-azimuth-card element", () => {
     const el = new SunAzimuthCard();
     el.setConfig({});
     expect(el.getGridOptions()).toEqual({ columns: 12, rows: "auto", min_columns: 6 });
-    expect(el.getCardSize()).toBe(14); // dial 7 + house 1 + events 1 + sides 5
+    expect(el.getCardSize()).toBe(8); // dial 7 + house 1
+    el.setConfig({ show_events: true, show_sides: true });
+    expect(el.getCardSize()).toBe(14); // + events 1 + sides 5
     el.setConfig({ view: "ring" });
+    expect(el.getCardSize()).toBe(3);
+    el.setConfig({ view: "ring", show_sides: true });
     expect(el.getCardSize()).toBe(8); // ring 3 + sides 5
     el.setConfig({ view: "3d", title: "Sun", camera_slider: true });
-    expect(el.getCardSize()).toBe(15);
-    el.setConfig({ view: "3d", show_sides: false, show_house: false, show_events: false });
+    expect(el.getCardSize()).toBe(9); // header 1 + 3d 6 + slider 1 + house 1
+    el.setConfig({ view: "3d", show_house: false });
     expect(el.getCardSize()).toBe(6);
   });
   it("normalises the config", () => {
@@ -334,8 +338,8 @@ describe("sun-azimuth-card element", () => {
       camera_slider: false,
       hover_preview: true,
       show_house: true,
-      show_events: true,
-      show_sides: true,
+      show_events: false,
+      show_sides: false,
       sun_color: "amber",
       night_color: "indigo",
       sky_color: "light-blue",

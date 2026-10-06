@@ -845,6 +845,8 @@ const CASES = {
     title: "Sun",
     icon: "mdi:sun-compass",
     house: { rotation: 20 },
+    show_events: true,
+    show_sides: true,
   },
   "saz-3d": {
     type: "custom:sun-azimuth-card-pro",
@@ -853,6 +855,8 @@ const CASES = {
     house: { rotation: 20, sides: { north: "Street", south: "Garden" } },
     camera: 150,
     camera_slider: true,
+    show_events: true,
+    show_sides: true,
   },
   "saz-ring": {
     type: "custom:sun-azimuth-card-pro",
@@ -865,14 +869,12 @@ const CASES = {
     {
       type: "custom:sun-azimuth-card-pro",
       view: "3d",
-      show_sides: false,
       show_house: false,
       grid_options: { columns: 6 },
     },
     {
       type: "custom:sun-azimuth-card-pro",
       view: "ring",
-      show_sides: false,
       grid_options: { columns: 6 },
     },
   ],

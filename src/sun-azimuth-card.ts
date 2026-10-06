@@ -17,8 +17,8 @@
  *   camera_slider: true           # 3d: a slider under the plot orbits the scene (not saved)
  *   hover_preview: true           # hovering a side's timeline shows the sun at that time in the plot
  *   show_house: true              # dial / 3d: which sides are in the sun, what comes next
- *   show_events: true             # dial / 3d: sunrise, noon and sunset
- *   show_sides: true              # the sides of the house footer
+ *   show_events: true             # dial / 3d: sunrise, noon and sunset (off by default)
+ *   show_sides: true              # the sides of the house footer (off by default)
  *   sun_color: amber
  *   night_color: indigo
  *   sky_color: light-blue

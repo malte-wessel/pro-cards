@@ -1,18 +1,15 @@
 # Sun Azimuth Card Pro
 
-`custom:sun-azimuth-card-pro` shows where the sun is around your house today: as a sky dial seen from above, as a 3D scene with the house, its shadow and the sky dome, or as a compass ring. Below, the sides of the house list when the sun shines on them. The position is computed locally from the Home Assistant latitude and longitude (NOAA solar position), so nothing besides the card is needed.
+`custom:sun-azimuth-card-pro` shows where the sun is around your house today: as a sky dial seen from above, as a 3D scene with the house, its shadow and the sky dome, or as a compass ring. Two sections can be added: a sunrise / noon / sunset row, and the sides of the house with the times the sun shines on each. The position is computed locally from the Home Assistant latitude and longitude (NOAA solar position), so nothing besides the card is needed.
 
 ## Sky dial
 
-The default view looks down on the house: the outer ring is the horizon, the centre is straight up. Today's path of the sun is drawn in the sun colour, solid where it has passed and dashed where it is still to come, and the faint arc on the rim is the daylight sector from the sunrise bearing to the sunset bearing. The house in the middle lights up on every side the sun shines on right now, a dashed beam joins the sun to it, and an arc from north round to the sun shows the azimuth with the angle in a chip. The head shows the azimuth as an arrow, with the elevation and whether the sun is rising or sinking.
+All the card needs is its type. The default view looks down on the house: the outer ring is the horizon, the centre is straight up. Today's path of the sun is drawn in the sun colour, solid where it has passed and dashed where it is still to come, and the faint arc on the rim is the daylight sector from the sunrise bearing to the sunset bearing. The house in the middle lights up on every side the sun shines on right now, a dashed beam joins the sun to it, and an arc from north round to the sun shows the azimuth with the angle in a chip. The head shows the azimuth as an arrow, with the elevation and whether the sun is rising or sinking.
 
 ::: live
 
 ```yaml
 type: custom:sun-azimuth-card-pro
-title: Sun
-icon: mdi:sun-compass
-house: { rotation: 20 }
 ```
 
 :::
@@ -46,7 +43,6 @@ view: 3d
 house: { rotation: 20 }
 camera: 150
 camera_slider: true
-show_sides: false
 ```
 
 :::
@@ -66,9 +62,25 @@ house: { rotation: 20 }
 
 :::
 
+## Sunrise and sunset
+
+`show_events: true` adds a row under the dial or the 3D scene: sunrise and sunset with their bearings, and solar noon with the height the sun reaches. The ring always shows them beside the ring.
+
+::: live
+
+```yaml
+type: custom:sun-azimuth-card-pro
+title: Sun
+icon: mdi:sun-compass
+house: { rotation: 20 }
+show_events: true
+```
+
+:::
+
 ## Sides of the house
 
-`house.rotation` turns the house: it is the bearing the north side's outward normal points to, in degrees clockwise from north (a house whose front looks north-east has `rotation: 45`). The footer lists the four sides with the time the sun shines on them today, a pill for their state (Sun now, from 14:20, Shade or No sun today) and a timeline from just before sunrise to just after sunset. A side may get sun twice a day, for example the north side on a summer morning and evening; both windows are drawn. `house.sides` gives the sides your own names, which stay as written in every language.
+`house.rotation` turns the house: it is the bearing the north side's outward normal points to, in degrees clockwise from north (a house whose front looks north-east has `rotation: 45`). `show_sides: true` adds a footer that lists the four sides with the time the sun shines on them today, a pill for their state (Sun now, from 14:20, Shade or No sun today) and a timeline from just before sunrise to just after sunset. A side may get sun twice a day, for example the north side on a summer morning and evening; both windows are drawn. `house.sides` gives the sides your own names, which stay as written in every language.
 
 Move the pointer along a side's timeline (or tap it on a phone) and the plot above shows the sun at that time: where it stands, which sides it lights, its shadow. A hairline marks the time on every bar and the footer's heading shows it. `hover_preview: false` turns this off.
 
@@ -77,16 +89,19 @@ Move the pointer along a side's timeline (or tap it on a phone) and the plot abo
 ```yaml
 type: custom:sun-azimuth-card-pro
 title: Sun
+icon: mdi:sun-compass
 house:
   rotation: 45
   sides: { north: Street, east: Driveway, south: Garden, west: Terrace }
+show_events: true
+show_sides: true
 ```
 
 :::
 
 ## Less
 
-`show_sides: false` drops the footer, `show_events: false` the sunrise / noon / sunset row and `show_house: false` the line naming the sides in the sun (the last two are part of the dial and 3D views; the ring shows the events beside the ring). Two narrow cards side by side:
+`show_house: false` drops the line under the dial and the 3D scene naming the sides in the sun and what comes next, leaving just the plot. Two narrow cards side by side:
 
 ::: live
 
@@ -94,13 +109,11 @@ house:
 - type: custom:sun-azimuth-card-pro
   view: 3d
   house: { rotation: 20 }
-  show_sides: false
   show_house: false
   grid_options: { columns: 6 }
 - type: custom:sun-azimuth-card-pro
   view: ring
   house: { rotation: 20 }
-  show_sides: false
   grid_options: { columns: 6 }
 ```
 
@@ -116,7 +129,6 @@ house:
 type: custom:sun-azimuth-card-pro
 title: Sun
 house: { rotation: 20 }
-show_sides: false
 sun_color: orange
 night_color: deep-purple
 sky_color: teal
@@ -137,8 +149,8 @@ sky_color: teal
 | `camera_slider`  | `false`      | 3D view: a slider under the plot to orbit the scene. The value is not saved.                                       |
 | `hover_preview`  | `true`       | Hovering or tapping a side's timeline shows the sun at that time in the plot.                                      |
 | `show_house`     | `true`       | Dial and 3D: the line naming the sides in the sun and what comes next.                                             |
-| `show_events`    | `true`       | Dial and 3D: the sunrise, solar noon and sunset row.                                                               |
-| `show_sides`     | `true`       | The sides of the house footer.                                                                                     |
+| `show_events`    | `false`      | Dial and 3D: the sunrise, solar noon and sunset row.                                                               |
+| `show_sides`     | `false`      | The sides of the house footer.                                                                                     |
 | `sun_color`      | `amber`      | The sun, its path and what it lights.                                                                              |
 | `night_color`    | `indigo`     | The sun below the horizon and the sunset marker.                                                                   |
 | `sky_color`      | `light-blue` | The dial's disc and the 3D dome.                                                                                   |
