@@ -95,10 +95,18 @@ control: auto
 
 Every card page continues like this: the smallest configuration first, then one option at a time. All ten cards appear in the card picker as "Entity Card Pro", "Weather Card Pro" and so on; the three with visual editors can be configured there without YAML.
 
+## Completion and validation in your editor
+
+Every card has a JSON Schema, so an editor with a YAML language server can complete the options and underline a typo before the card reaches a dashboard. Point it at the bundle schema with one comment line at the top of the file:
+
+```yaml
+# yaml-language-server: $schema=https://malte-wessel.github.io/pro-cards/schema/pro-cards.schema.json
+type: custom:entity-card-pro
+entity: sensor.living_room_temperature
+```
+
+It accepts any of the ten cards and picks the right one by `type`. Home Assistant's own keys (`grid_options`, `visibility`, `layout_options`, `view_layout`, `card_mod`) are allowed; anything else unknown is an error, so `visula: ring` surfaces as you type it instead of as a card that ignores your option. A single card's schema is `https://malte-wessel.github.io/pro-cards/schema/<type>.schema.json`, for example `entity-card-pro.schema.json`.
+
 ## About the examples on this site
 
-The examples run the real card code against a simulated home with about 80 entities (`sensor.outdoor_temperature`, `light.living_room`, `person.alex` and so on). Values drift every few seconds, switches really toggle, history is generated with a daily pattern, and Jinja templates are evaluated with a small subset of the template engine. Hover a graph or click a tile to see the interactions. Every example carries its YAML underneath, ready to paste.
-
-## Built with AI
-
-Pro Cards is built with the help of AI. Code, docs and tests are written together with AI coding agents, reviewed and tested by a human before each release.
+The examples run the real card code against a simulated home with about 120 entities (`sensor.outdoor_temperature`, `light.living_room`, `person.alex` and so on). Values drift every few seconds, switches really toggle, history is generated with a daily pattern, and Jinja templates are evaluated with a small subset of the template engine. Hover a graph or click a tile to see the interactions. Every example carries its YAML underneath, ready to paste.

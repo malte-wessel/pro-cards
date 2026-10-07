@@ -51,7 +51,7 @@
         "name_position": {
           "type": "string",
           "enum": ["above", "below"],
-          "description": "row / column items"
+          "description": "row items; the other layouts ignore it"
         }
       }
     },
@@ -273,8 +273,8 @@
         "name_position": {
           "type": "string",
           "enum": ["above", "below"],
-          "default": "above",
-          "description": "Where the name sits relative to the icon in row and column items"
+          "default": "below",
+          "description": "Where the name sits relative to the icon in row items; the other layouts ignore it"
         }
       }
     }

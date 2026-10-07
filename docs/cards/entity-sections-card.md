@@ -57,7 +57,7 @@ sections:
 
 ## Item options
 
-`show_name`, `show_value`, `show_icon` and `name_position` set how row, column and table items look. Put them on the card for every section, on a section for its items, or on an entity; the closer setting wins.
+`show_name`, `show_value` and `show_icon` set how row, column and table items look, `name_position` where a row item's name sits. Put them on the card for every section, on a section for its items, or on an entity; the closer setting wins.
 
 ::: live
 
@@ -338,7 +338,7 @@ sections:
 | `columns`                                          | `2`                          | Default for grid sections.                                                                                                                                     |
 | `align`                                            | per layout                   | Default for every section, see the [group card](/cards/entity-group-card#card-options).                                                                        |
 | `show_name` / `show_value` / `show_icon`           | per layout                   | Default [item options](/cards/entity-options#item-options) for every section.                                                                                  |
-| `name_position`                                    | per layout                   | Default for every section: `below` in rows, `above` in columns.                                                                                                |
+| `name_position`                                    | `below`                      | Default for every section: `above` or `below` the icon in row items; the other layouts ignore it.                                                              |
 | `hours_to_show`                                    | `24`                         | History window for `sparkline`, `columns` and `strip`, at least 1. One window per card.                                                                        |
 | `bucket_minutes`                                   | `60`                         | Bucket size for `columns` and `strip`, at least 5.                                                                                                             |
 | `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none | Defaults for every entity, see [Actions](/cards/entity-options#actions).                                                                                       |
@@ -353,7 +353,7 @@ sections:
 | `columns`                                | card `columns` | Cells per row in a grid section.                                                 |
 | `align`                                  | card `align`   | Overrides the card value for this section.                                       |
 | `show_name` / `show_value` / `show_icon` | card values    | Item options for this section; entities can override them again.                 |
-| `name_position`                          | card value     |                                                                                  |
+| `name_position`                          | card value     | Where a row item's name sits; entities can override it again.                    |
 
 ### Grid defaults
 

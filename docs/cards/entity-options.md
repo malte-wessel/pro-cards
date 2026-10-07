@@ -913,12 +913,12 @@ entities:
 
 Row, column and table layouts and header entities show every entity as a compact item. Four keys decide what an item shows; they cascade from the card to the section to the entity.
 
-| Option          | Row     | Column  | Table   | Header entities | Description                                        |
-| --------------- | ------- | ------- | ------- | --------------- | -------------------------------------------------- |
-| `show_name`     | `true`  | `true`  | `true`  | `false`         | The name, above or below the icon (table: the key) |
-| `show_value`    | `true`  | `true`  | `true`  | `true`          | The value under the name (badge: the pill)         |
-| `show_icon`     | `true`  | `true`  | `false` | `true`          | The round icon (table: an icon column)             |
-| `name_position` | `below` | `above` |         |                 | `above` or `below` the icon                        |
+| Option          | Row     | Column | Table   | Header entities | Description                                        |
+| --------------- | ------- | ------ | ------- | --------------- | -------------------------------------------------- |
+| `show_name`     | `true`  | `true` | `true`  | `false`         | The name, above or below the icon (table: the key) |
+| `show_value`    | `true`  | `true` | `true`  | `true`          | The value under the name (badge: the pill)         |
+| `show_icon`     | `true`  | `true` | `false` | `true`          | The round icon (table: an icon column)             |
+| `name_position` | `below` | –      | –       | –               | `above` or `below` the icon; rows only             |
 
 ## Entity options
 
@@ -976,6 +976,6 @@ See [Controls](/cards/controls) for what every control looks like and where it s
 | Option                                   | Default    | Applies to                 | Description                                                   |
 | ---------------------------------------- | ---------- | -------------------------- | ------------------------------------------------------------- |
 | `show_name` / `show_value` / `show_icon` | per layout | row, column, table, header | What a compact item shows, see [Item options](#item-options). |
-| `name_position`                          | `below`    | row                        | `above` or `below` the icon; columns ignore it.               |
+| `name_position`                          | `below`    | row                        | `above` or `below` the icon; the other layouts ignore it.     |
 
 Every card also accepts the Home Assistant keys `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`; see [Sizing in sections](/guide/sizing).

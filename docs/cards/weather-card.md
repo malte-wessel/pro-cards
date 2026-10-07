@@ -112,7 +112,7 @@ sections:
 
 ## Icons and sizes
 
-By default the conditions are the pictures of Home Assistant's own weather card (a yellow sun, grey clouds, blue drops), coloured by the theme's `--weather-icon-sun-color`, `--weather-icon-moon-color`, `--weather-icon-cloud-back-color`, `--weather-icon-cloud-front-color`, `--weather-icon-rain-color` and `--weather-icon-snow-color`. `icons: mdi` uses the mdi weather icons instead, and a map picks an icon per condition: an `mdi:` icon or the URL of an image (`/local/weather/rain.svg`); conditions left out keep the pictures. `icons` sits on the card, or on a `hero` / `forecast` section, where it merges over the card's: a map adds its conditions, `hass` or `mdi` switches the rest. A rule's `icon` still wins. `icon_size` sets the size of the condition icon in pixels: on the card for the tile, on `hero` and `forecast` sections for theirs.
+By default the conditions are the pictures of Home Assistant's own weather card (a yellow sun, grey clouds, blue drops), coloured by the theme's `--weather-icon-sun-color`, `--weather-icon-moon-color`, `--weather-icon-cloud-back-color`, `--weather-icon-cloud-front-color`, `--weather-icon-rain-color` and `--weather-icon-snow-color`. `icons: mdi` uses the mdi weather icons instead, and a map picks an icon per condition (the [conditions](#conditions) table lists the keys): an `mdi:` icon or the URL of an image (`/local/weather/rain.svg`); conditions left out keep the pictures. `icons` sits on the card, or on a `hero` / `forecast` section, where it merges over the card's: a map adds its conditions, `hass` or `mdi` switches the rest. A rule's `icon` still wins. `icon_size` sets the size of the condition icon in pixels: on the card for the tile, on `hero` and `forecast` sections for theirs.
 
 ::: live
 
@@ -156,7 +156,7 @@ sections:
 
 ## Rules and colours
 
-`rules` match the condition (`state: rainy`, `state: lightning-rainy` …) and set colour, icon and label of the lead, or tint the whole card. `temperature_rules` match the temperature with `below` / `above` and colour the value, the temperature line and the forecast bars, with a label next to the high and low. Both live on the card and apply to every section; a `hero`, `forecast` or `trend` section can carry its own `rules` / `temperature_rules`, which replace the card's for that section: a forecast with an umbrella for rainy days, a trend with stricter temperature colours.
+`rules` match the condition (`state: rainy`, `state: lightning-rainy` …; the [conditions](#conditions) table lists all fifteen) and set colour, icon and label of the lead, or tint the whole card. `temperature_rules` match the temperature with `below` / `above` and colour the value, the temperature line and the forecast bars, with a label next to the high and low. Both live on the card and apply to every section; a `hero`, `forecast` or `trend` section can carry its own `rules` / `temperature_rules`, which replace the card's for that section: a forecast with an umbrella for rainy days, a trend with stricter temperature colours.
 
 ::: live
 
@@ -231,6 +231,30 @@ sections:
 
 ## Reference
 
+### Conditions
+
+Home Assistant's fifteen condition states. They are the keys of an `icons` map and the `state` a `rules` entry matches; the name is what the card prints, in the [profile language](/guide/languages).
+
+| `state`           | Name          | `icons: mdi`                  |
+| ----------------- | ------------- | ----------------------------- |
+| `clear-night`     | Clear night   | `mdi:weather-night`           |
+| `cloudy`          | Cloudy        | `mdi:weather-cloudy`          |
+| `exceptional`     | Exceptional   | `mdi:alert-circle-outline`    |
+| `fog`             | Fog           | `mdi:weather-fog`             |
+| `hail`            | Hail          | `mdi:weather-hail`            |
+| `lightning`       | Lightning     | `mdi:weather-lightning`       |
+| `lightning-rainy` | Thunderstorms | `mdi:weather-lightning-rainy` |
+| `partlycloudy`    | Partly cloudy | `mdi:weather-partly-cloudy`   |
+| `pouring`         | Pouring       | `mdi:weather-pouring`         |
+| `rainy`           | Rainy         | `mdi:weather-rainy`           |
+| `snowy`           | Snowy         | `mdi:weather-snowy`           |
+| `snowy-rainy`     | Sleet         | `mdi:weather-snowy-rainy`     |
+| `sunny`           | Sunny         | `mdi:weather-sunny`           |
+| `windy`           | Windy         | `mdi:weather-windy`           |
+| `windy-variant`   | Windy         | `mdi:weather-windy-variant`   |
+
+`sunny` and `partlycloudy` take their night variant after sunset. A condition the entity reports that is not in this list is shown as written, with a question-mark icon (`mdi:help-circle-outline`).
+
 ### Card options
 
 | Option                                   | Default         | Description                                                                                                                                                          |
@@ -249,6 +273,7 @@ sections:
 | `tap_action` …                           | `more-info`     | Actions of the lead and defaults for every entity, see the [entity options](/cards/entity-options#actions).                                                          |
 | `columns` / `align`                      | per layout      | Defaults for the entity sections, see the [group card](/cards/entity-group-card#card-options).                                                                       |
 | `show_name` / `show_value` / `show_icon` | per layout      | Default [item options](/cards/entity-options#item-options) for every entity section.                                                                                 |
+| `name_position`                          | `below`         | Default `above` or `below` the icon in row items; the other layouts ignore it, see the [item options](/cards/entity-options#item-options).                           |
 | `hours_to_show` / `bucket_minutes`       | `24` / `60`     | History window of sparklines, columns and strips inside entity sections.                                                                                             |
 
 ### Section `hero`
