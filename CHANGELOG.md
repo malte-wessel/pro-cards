@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.2.2 (2026-10-07)
 
 - The JSON Schemas ship with the docs site, so `https://malte-wessel.github.io/pro-cards/schema/pro-cards.schema.json` resolves. The README has named that URL for editor completion since the schemas landed, but nothing ever copied `schema/` into the published site, so the YAML language server got a 404 and silently did nothing. The getting started guide now explains the one comment line it takes
 - Docs: the sizing guide covers all ten cards. The weather, wind, rain and power flow cards were missing from its table although they report a size like the rest, its minimums were wrong for the three weather tiles (3 columns, not 6) and for a tile with a control (4 or 6, not 3), and a masonry or panel view was not mentioned at all
