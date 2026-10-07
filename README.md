@@ -19,8 +19,6 @@ Pro Cards are polished dashboard cards that look like they belong in Home Assist
 - **Highly customizable.** Rules switch icon, colour, label and card tint by value or state; templates fill names and values; six layouts, eight visuals, a weather card with forecasts, animated wind and rain cards, a power flow tree, every action Home Assistant offers.
 - **Home Assistant design.** The cards use the theme's colours, fonts, radii and state colours, so they blend in with the built-in tile cards, and a custom theme restyles them along with the rest of the dashboard.
 
-Pro Cards is built with the help of AI. Code, docs and tests are written together with AI coding agents, reviewed and tested by a human before each release.
-
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/malte-wessel/pro-cards/main/docs/public/readme/cards-dark.png">
   <img alt="Pro Cards on a dashboard: weather station, living room, tiles, the power flow tree, sun path, illuminance, wind, batteries and a trend graph" src="https://raw.githubusercontent.com/malte-wessel/pro-cards/main/docs/public/readme/cards-light.png" width="860">
@@ -251,7 +249,7 @@ npm run docs:dev    # docs site with live examples at http://localhost:5173/pro-
 npm run docs:build  # static site in docs/.vitepress/dist (deployed to GitHub Pages on push to main)
 ```
 
-`AGENTS.md` lists the project rules for coding agents and humans alike; `.claude/skills/` holds step-by-step workflows (docs example, visual case, release).
+`AGENTS.md` lists the project rules; `.claude/skills/` holds step-by-step workflows (docs example, visual case, release).
 
 The docs run the real card sources against a simulated home (`docs/.vitepress/theme/ha-shim/`). To add a live example to a page, wrap a YAML code block in a `::: live` container.
 

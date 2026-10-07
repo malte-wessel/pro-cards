@@ -9,6 +9,4 @@ Thanks for helping with Pro Cards. The short version:
 5. Run `npm run check` before opening the pull request. Run `npm run test:visual` (Docker) if anything rendered changed, and commit updated baselines only when the change is intended.
 6. Add a line to `CHANGELOG.md` under the next version.
 
-Working with an AI coding agent? `AGENTS.md` holds the project rules and `.claude/skills/` the common workflows.
-
 Card design rules: dependency-free web components, theme tokens only, no fixed widths, `getGridOptions` for every layout, no breaking changes to existing YAML options without a changelog note.

@@ -109,8 +109,4 @@ It accepts any of the ten cards and picks the right one by `type`. Home Assistan
 
 ## About the examples on this site
 
-The examples run the real card code against a simulated home with about 80 entities (`sensor.outdoor_temperature`, `light.living_room`, `person.alex` and so on). Values drift every few seconds, switches really toggle, history is generated with a daily pattern, and Jinja templates are evaluated with a small subset of the template engine. Hover a graph or click a tile to see the interactions. Every example carries its YAML underneath, ready to paste.
-
-## Built with AI
-
-Pro Cards is built with the help of AI. Code, docs and tests are written together with AI coding agents, reviewed and tested by a human before each release.
+The examples run the real card code against a simulated home with about 120 entities (`sensor.outdoor_temperature`, `light.living_room`, `person.alex` and so on). Values drift every few seconds, switches really toggle, history is generated with a daily pattern, and Jinja templates are evaluated with a small subset of the template engine. Hover a graph or click a tile to see the interactions. Every example carries its YAML underneath, ready to paste.

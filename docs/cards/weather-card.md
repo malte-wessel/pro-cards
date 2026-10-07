@@ -253,7 +253,7 @@ Home Assistant's fifteen condition states. They are the keys of an `icons` map a
 | `windy`           | Windy         | `mdi:weather-windy`           |
 | `windy-variant`   | Windy         | `mdi:weather-windy-variant`   |
 
-`sunny` and `partlycloudy` take their night variant after sunset. A condition the entity reports that is not in this list is shown as written, with no icon of its own.
+`sunny` and `partlycloudy` take their night variant after sunset. A condition the entity reports that is not in this list is shown as written, with a question-mark icon (`mdi:help-circle-outline`).
 
 ### Card options
 
@@ -273,7 +273,7 @@ Home Assistant's fifteen condition states. They are the keys of an `icons` map a
 | `tap_action` …                           | `more-info`     | Actions of the lead and defaults for every entity, see the [entity options](/cards/entity-options#actions).                                                          |
 | `columns` / `align`                      | per layout      | Defaults for the entity sections, see the [group card](/cards/entity-group-card#card-options).                                                                       |
 | `show_name` / `show_value` / `show_icon` | per layout      | Default [item options](/cards/entity-options#item-options) for every entity section.                                                                                 |
-| `name_position`                          | per layout      | Default `above` or `below` the icon in the row sections, see the [item options](/cards/entity-options#item-options).                                                 |
+| `name_position`                          | `below`         | Default `above` or `below` the icon in row items; the other layouts ignore it, see the [item options](/cards/entity-options#item-options).                           |
 | `hours_to_show` / `bucket_minutes`       | `24` / `60`     | History window of sparklines, columns and strips inside entity sections.                                                                                             |
 
 ### Section `hero`

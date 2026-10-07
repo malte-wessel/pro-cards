@@ -456,6 +456,6 @@ The wind and rain cards as heroes with animated flows, the weather card with an 
 
 </DashboardGrid>
 
-## Built with AI
+## Found something off?
 
-Pro Cards is built with the help of AI. Code, docs and tests are written together with AI coding agents, reviewed and tested by a human before each release. Found something off? [Open an issue](https://github.com/malte-wessel/pro-cards/issues).
+[Open an issue](https://github.com/malte-wessel/pro-cards/issues).
