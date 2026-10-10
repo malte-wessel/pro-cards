@@ -24,14 +24,14 @@ entities:
 
 :::
 
-| Option              | Default                           | Description                                                                                                                                                                     |
-| ------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `control`           |                                   | `auto` (or `true`) picks the domain default; `toggle`, `slider`, `stepper`, `segments`, `buttons`, `button`, `select` or `hold` pick one; `none` draws nothing.                 |
-| `control_position`  | per control                       | `end` puts the control on the line, `block` under it, `lead` makes the icon the control (toggle, button, hold); a table field or ring has no icon, the control goes to the end. |
-| `control_attribute` | the shown mode, else the main one | What segments or a select set on a thermostat or fan: `hvac_mode`, `preset_mode` or `fan_mode`.                                                                                 |
-| `control_step`      | entity step, else 1 (climate 0.5) | Step of a slider or stepper.                                                                                                                                                    |
-| `control_options`   | the entity's modes or options     | Options of segments and select: values, or `{ value, label, icon }`.                                                                                                            |
-| `control_confirm`   | `false`                           | The primary control becomes hold to confirm; every button of a group holds on its own.                                                                                          |
+| Option              | Default                           | Description                                                                                                                                                                                          |
+| ------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `control`           |                                   | `auto` (or `true`) picks the domain default; `toggle`, `slider`, `stepper`, `segments`, `buttons`, `button`, `select` or `hold` pick one; `none` draws nothing.                                      |
+| `control_position`  | per control                       | `end` puts the control on the line, `block` under it, `lead` makes the icon the control (toggle, button, hold); a table field or ring has no icon, the control goes to the end.                      |
+| `control_attribute` | the shown mode, else the main one | What segments or a select set on a thermostat or fan: `hvac_mode`, `preset_mode` or `fan_mode`.                                                                                                      |
+| `control_step`      | entity step, else 1 (climate 0.5) | Step of a slider or stepper.                                                                                                                                                                         |
+| `control_options`   | the entity's modes or options     | Options of segments and select: values, or `{ value, label, icon }`. With `control: buttons`, your own buttons: `{ entity, icon, label, color, action }`, see [Your own buttons](#your-own-buttons). |
+| `control_confirm`   | `false`                           | The primary control becomes hold to confirm; every button of a group holds on its own.                                                                                                               |
 
 `toggle: true` from earlier versions still works and means `control: toggle`.
 
@@ -190,6 +190,54 @@ entities:
 ```
 
 :::
+
+#### Your own buttons
+
+With `control: buttons`, `control_options` replaces the domain's buttons with a list of your own, for the scenes of a room, a few scripts or the lights next to it. A button runs its `entity` (scenes and scripts turn on, buttons press) or switches it (a light, a switch, a fan: the button is filled while it is on); an `action` (any [Home Assistant action](https://www.home-assistant.io/dashboards/actions/), the shape of `tap_action`) runs instead; the button's `entity` is the entity of `more-info` and `toggle`, and the target of a `perform-action` that names none of its own. Every button takes its own `color` (default: the row's colour) and `icon` (default: the entity's icon); with a `label` it is a chip with text, without one a round icon button. A row of buttons needs no entity of its own: a `name` and an `icon` are enough.
+
+::: live
+
+```yaml
+type: custom:entity-group-card-pro
+title: Living room
+icon: mdi:sofa
+entities:
+  - name: Scenes
+    icon: mdi:palette
+    control: buttons
+    control_options:
+      - { entity: scene.bright, color: amber }
+      - { entity: scene.dinner, color: orange }
+      - { entity: scene.movie_night, color: deep-purple }
+      - { entity: scene.good_night, color: indigo }
+  - entity: light.living_room
+    name: Lights
+    control: buttons
+    control_options:
+      - { entity: light.living_room, label: Ceiling, color: amber }
+      - { entity: light.desk_lamp, label: Desk, color: orange }
+      - { entity: switch.coffee_machine, label: Coffee, icon: mdi:coffee, color: brown }
+  - name: Routines
+    icon: mdi:script-text-outline
+    control_position: block
+    control: buttons
+    control_options:
+      - { entity: script.check_windows, label: Windows, color: teal }
+      - { entity: scene.dimmed, label: Dimmed, color: deep-orange }
+      - { icon: mdi:cog, label: Settings, action: { action: navigate, navigation_path: /config } }
+```
+
+:::
+
+| Key      | Default           | Description                                                                                                                                            |
+| -------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `entity` |                   | What the button runs or switches; the entity of `action` (the target of a `perform-action` without one). Each button needs an `entity` or an `action`. |
+| `action` | the entity's own  | A Home Assistant action, run instead of the entity's service (`perform-action`, `navigate`, `more-info` …).                                            |
+| `color`  | the row's colour  | Colour token, hex or `var()`; the button is a soft tint of it, filled while its entity is on (a lock unlocked, a cover open).                          |
+| `icon`   | the entity's icon | `mdi:` icon.                                                                                                                                           |
+| `label`  | none (icon only)  | Text beside the icon; the name a screen reader reads is the label, else the entity's name.                                                             |
+
+An entity with nothing to run or switch (a sensor) opens its more-info dialog. `control_confirm: true` makes every button a hold of its own: round buttons fill their ring, chips fill from the left. `control_position: block` puts the buttons under the line, where many of them wrap.
 
 ### Button
 

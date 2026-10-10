@@ -244,10 +244,13 @@ export const normalizeEntity = (
       console.warn(`${ctx.type}: ${label} sets both 'attribute' and 'value'; using the attribute`);
     valueSrc = { kind: "attribute", key: String(o.attribute) };
   } else valueSrc = normalizeValue(o.value) ?? { kind: "state" };
+  const control = normalizeControl(o, ctx, label);
+  // a row of custom buttons needs nothing else: a name and the buttons
+  if (!o.entity && valueSrc.kind === "state" && control?.buttons)
+    valueSrc = { kind: "text", text: "" };
   if (!o.entity && valueSrc.kind !== "template" && valueSrc.kind !== "text")
     throw new Error(`${ctx.type}: ${label} needs 'entity' or 'value'`);
   const dec = numOrNull(o.decimals);
-  const control = normalizeControl(o, ctx, label);
   return {
     entity: o.entity || null,
     name: o.name ?? null,
@@ -303,7 +306,7 @@ export const normalizeGroup = (
     }
     if (isItem && ent.control && !ITEM_CONTROLS[layout]?.has(ent.control.kind)) {
       const kind = ent.control.kind;
-      ent.control = { ...ent.control, kind: "auto" };
+      ent.control = { ...ent.control, kind: "auto", buttons: null };
       const fits = placementsOf(ent, layout === "row" ? "item-row" : "item-column").length > 0;
       console.warn(
         `${ctx.type}: control '${kind}' is not drawn in a ${layout}; ${fits ? "using the domain default" : "the domain default does not fit either, no control is drawn"}`,
@@ -329,7 +332,11 @@ export const normalizeGroup = (
 export const normalizeHeaderEntities = (raw: unknown, ctx: NormalizeCtx): EntityItem[] => {
   if (!Array.isArray(raw)) return [];
   return (raw as (RawEntityInput | null | undefined)[]).map((e, i) => {
-    const ent = normalizeEntity(e, ctx, `header_entities[${i}]`, ITEM_DEFAULTS.header);
+    const label = `header_entities[${i}]`;
+    const ent = normalizeEntity(e, ctx, label, ITEM_DEFAULTS.header);
+    // buttons are not drawn in the header: an item of buttons alone would be empty
+    if (!ent.entity && ent.control?.buttons && ent.valueSrc.kind === "text" && !ent.valueSrc.text)
+      throw new Error(`${ctx.type}: ${label} needs 'entity' or 'value'`);
     if (!HEADER_VISUALS.has(ent.visual)) {
       console.warn(`${ctx.type}: visual '${ent.visual}' is not drawn in the header; using icon`);
       ent.visual = "icon";

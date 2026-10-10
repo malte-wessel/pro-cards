@@ -595,6 +595,137 @@ describe("buttons", () => {
   });
 });
 
+describe("custom buttons", () => {
+  const SCENES = [
+    { entity: "script.night", color: "indigo" },
+    { entity: "light.porch", label: "Porch", color: "amber" },
+    { entity: "button.router", icon: "mdi:router" },
+  ];
+  it("draw a round button per entry, a chip with a label, each in its own colour", () => {
+    const r = h.mount(EntityCard, { name: "Scenes", control: "buttons", control_options: SCENES });
+    const bs = qa(r, ".ctl-buttons.custom > button");
+    expect(bs.map((b) => b.className)).toEqual(["round", "chip", "round"]);
+    expect(bs.map((b) => b.getAttribute("aria-label"))).toEqual([
+      "Night routine",
+      "Porch",
+      "Router",
+    ]);
+    expect(bs.map((b) => b.style.getPropertyValue("--fe-color"))).toEqual([
+      "var(--indigo-color)",
+      "var(--amber-color)",
+      "",
+    ]);
+    expect(q(bs[1], "span").textContent).toBe("Porch");
+    expect(bs[2].querySelector("ha-icon")?.getAttribute("icon")).toBe("mdi:router");
+    expect(q(r, ".row").textContent).not.toContain("Unavailable");
+  });
+  it("run a script or a button, flash filled, and switch a light, filled while on", () => {
+    const r = h.mount(EntityCard, { name: "Scenes", control: "buttons", control_options: SCENES });
+    let bs = qa(r, ".ctl-buttons.custom > button");
+    expect(bs[1].classList.contains("on")).toBe(false);
+    expect(bs[1].getAttribute("aria-pressed")).toBe("false");
+    bs[0].click();
+    expect(h.svc()).toEqual(["script.turn_on"]);
+    bs = qa(r, ".ctl-buttons.custom > button");
+    expect(bs[0].classList.contains("on")).toBe(true);
+    vi.advanceTimersByTime(2000);
+    bs = qa(r, ".ctl-buttons.custom > button");
+    expect(bs[0].classList.contains("on")).toBe(false);
+    bs[1].click();
+    expect(h.calls[1]).toEqual({
+      domain: "homeassistant",
+      service: "toggle",
+      data: { entity_id: "light.porch" },
+    });
+    bs = qa(r, ".ctl-buttons.custom > button");
+    expect(bs[1].classList.contains("on")).toBe(true);
+    expect(bs[1].classList.contains("pending")).toBe(true);
+    h.set("light.porch", "on");
+    bs = qa(r, ".ctl-buttons.custom > button");
+    expect(bs[1].classList.contains("on")).toBe(true);
+    expect(bs[1].classList.contains("pending")).toBe(false);
+  });
+  it("run their own action instead, with their entity as the target", () => {
+    const fired: { config: Record<string, unknown> }[] = [];
+    document.addEventListener("hass-action", (e) =>
+      fired.push((e as CustomEvent).detail as { config: Record<string, unknown> }),
+    );
+    const r = h.mount(EntityCard, {
+      entity: "light.ceiling",
+      control: "buttons",
+      control_options: [
+        { entity: "script.night", action: { action: "more-info" } },
+        { icon: "mdi:home", action: { action: "navigate", navigation_path: "/home" } },
+        { entity: "sensor.temp" },
+      ],
+    });
+    qa(r, ".ctl-buttons.custom > button").forEach((b) => b.click());
+    expect(h.calls).toEqual([]);
+    expect(fired.map((f) => [f.config.entity, f.config.tap_action])).toEqual([
+      ["script.night", { action: "more-info" }],
+      ["light.ceiling", { action: "navigate", navigation_path: "/home" }],
+      ["sensor.temp", { action: "more-info" }],
+    ]);
+  });
+  it("say pressed for a switch, not for a lock that is filled while unlocked", () => {
+    h.set("lock.door", "unlocked");
+    const r = h.mount(EntityCard, {
+      name: "Doors",
+      control: "buttons",
+      control_options: [{ entity: "switch.pump" }, { entity: "lock.door" }],
+    });
+    const bs = qa(r, ".ctl-buttons.custom > button");
+    expect(bs.map((b) => b.getAttribute("aria-pressed"))).toEqual(["false", null]);
+    expect(bs[1].classList.contains("on")).toBe(true);
+  });
+  it("warn in a row layout, where they are not drawn", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    h.mount(EntityGroupCard, {
+      layout: "row",
+      entities: [
+        { name: "Scenes", control: "buttons", control_options: [{ entity: "script.night" }] },
+      ],
+    });
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringMatching(/control 'buttons' is not drawn in a row/),
+    );
+  });
+  it("are disabled one by one by their own entity, never by the row's", () => {
+    h.set("light.ceiling", "unavailable");
+    h.set("light.porch", "unavailable");
+    const r = h.mount(EntityCard, {
+      entity: "light.ceiling",
+      control: "buttons",
+      control_options: SCENES,
+    });
+    const bs = qa<HTMLButtonElement>(r, ".ctl-buttons.custom > button");
+    expect(bs.map((b) => b.disabled)).toEqual([false, true, false]);
+  });
+  it("each need a hold of their own with control_confirm", () => {
+    const r = h.mount(EntityCard, {
+      name: "Scenes",
+      control: "buttons",
+      control_options: SCENES,
+      control_confirm: true,
+    });
+    const bs = qa(r, ".ctl-buttons.custom > button");
+    expect(bs.every((b) => b.classList.contains("hold"))).toBe(true);
+    expect(bs.map((b) => !!b.querySelector(".ring"))).toEqual([true, false, true]);
+    bs[0].dispatchEvent(new MouseEvent("click", { detail: 1, bubbles: true }));
+    expect(h.calls).toEqual([]);
+    pointer(bs[0], "pointerdown");
+    vi.advanceTimersByTime(HOLD_CONFIRM_MS + 10);
+    expect(h.svc()).toEqual(["script.turn_on"]);
+  });
+  it("sit in a column item and a table field", () => {
+    const r = h.mount(EntityGroupCard, {
+      layout: "table",
+      entities: [{ name: "Scenes", control: "buttons", control_options: SCENES }],
+    });
+    expect(qa(r, ".ctl-buttons.custom.sm > button")).toHaveLength(3);
+  });
+});
+
 describe("Run chip", () => {
   it("runs a script, says Done for a moment and keeps saying it through state changes", () => {
     const r = h.mount(EntityCard, { entity: "script.night", control: "button" });

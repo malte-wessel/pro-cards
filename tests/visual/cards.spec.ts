@@ -932,6 +932,64 @@ const CASES = {
       ],
     },
   ],
+  // custom buttons: round and chips in their own colours, on the line and under it, a row
+  // without an entity, a switched light filled while on, and a confirmed group of holds
+  "egc-controls-custom-buttons": [
+    {
+      type: EGC,
+      title: "Living room",
+      entities: [
+        {
+          name: "Scenes",
+          icon: "mdi:palette",
+          control: "buttons",
+          control_options: [
+            { entity: "scene.bright", color: "amber" },
+            { entity: "scene.dinner", color: "orange" },
+            { entity: "scene.movie_night", color: "deep-purple" },
+            { entity: "scene.good_night", color: "indigo" },
+          ],
+        },
+        {
+          entity: "light.living_room",
+          name: "Lights",
+          control: "buttons",
+          control_options: [
+            { entity: "light.living_room", label: "Ceiling", color: "amber" },
+            { entity: "light.kitchen", label: "Kitchen", color: "orange" },
+          ],
+        },
+        {
+          name: "Routines",
+          icon: "mdi:script-text-outline",
+          control_position: "block",
+          control: "buttons",
+          control_options: [
+            { entity: "script.check_windows", label: "Windows", color: "teal" },
+            { entity: "scene.dimmed", label: "Dimmed", color: "deep-orange" },
+            { icon: "mdi:cog", label: "Settings", action: { action: "navigate" } },
+          ],
+        },
+      ],
+    },
+    {
+      type: EGC,
+      title: "Confirm",
+      layout: "table",
+      entities: [
+        {
+          name: "Garage",
+          control_confirm: true,
+          control: "buttons",
+          control_options: [
+            { entity: "cover.garage_door", icon: "mdi:garage-open", color: "orange" },
+            { entity: "lock.front_door", label: "Front door", color: "red" },
+            { entity: "light.living_room", label: "Ceiling", color: "amber" },
+          ],
+        },
+      ],
+    },
+  ],
   "egc-controls-unavailable": {
     type: EGC,
     title: "Unavailable",

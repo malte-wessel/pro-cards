@@ -141,6 +141,10 @@ describe("value reading", () => {
       avail: false,
     });
     expect(readValue(ent({}), undefined, tpl)).toEqual({ raw: null, num: null, avail: false });
+    // an empty text is blank, with or without an entity
+    const blank = { raw: "", num: null, avail: true };
+    expect(readValue(ent({ value: "" }), st("on"), tpl)).toEqual(blank);
+    expect(readValue(ent({ value: "" }), undefined, tpl)).toEqual(blank);
     expect(readValue(ent({ attribute: "obj" }), st("1", { obj: { a: 1 } }), tpl).raw).toBe(
       '{"a":1}',
     );

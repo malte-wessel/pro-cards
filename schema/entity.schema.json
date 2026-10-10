@@ -200,10 +200,38 @@
                 },
                 "required": ["value"],
                 "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "description": "A button of control: buttons",
+                "properties": {
+                  "entity": {
+                    "$ref": "defs.schema.json#/$defs/entityId",
+                    "description": "Entity the button runs (scene, script, button) or switches (light, switch …; filled while on)"
+                  },
+                  "label": {
+                    "type": "string",
+                    "description": "Text beside the icon; without it the button is a round icon button"
+                  },
+                  "icon": {
+                    "$ref": "defs.schema.json#/$defs/icon",
+                    "description": "Icon (default: the entity's icon)"
+                  },
+                  "color": {
+                    "$ref": "defs.schema.json#/$defs/color",
+                    "description": "Colour of the button (default: the row's colour)"
+                  },
+                  "action": {
+                    "$ref": "defs.schema.json#/$defs/action",
+                    "description": "Action run instead of the entity's own service"
+                  }
+                },
+                "anyOf": [{ "required": ["entity"] }, { "required": ["action"] }],
+                "additionalProperties": false
               }
             ]
           },
-          "description": "Options of segments and select (default: the entity's modes or options)"
+          "description": "Options of segments and select (default: the entity's modes or options); with control: buttons, the buttons: { entity, icon, label, color, action }"
         },
         "control_confirm": {
           "type": "boolean",
@@ -226,7 +254,14 @@
     },
     "entity": {
       "allOf": [{ "$ref": "#/$defs/entityKeys" }],
-      "anyOf": [{ "required": ["entity"] }, { "required": ["value"] }],
+      "anyOf": [
+        { "required": ["entity"] },
+        { "required": ["value"] },
+        {
+          "required": ["control", "control_options"],
+          "properties": { "control": { "const": "buttons" } }
+        }
+      ],
       "unevaluatedProperties": false
     },
     "entityList": {

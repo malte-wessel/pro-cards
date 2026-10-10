@@ -35,6 +35,8 @@ export const readValue = (
   tplGet: TplGet,
 ): ValueModel => {
   const v = ent.valueSrc;
+  // an empty text is a blank value, not a missing one (a row of custom buttons without an entity)
+  if (v.kind === "text" && v.text === "") return { raw: "", num: null, avail: true };
   let raw: unknown;
   if (v.kind === "template") raw = tplGet(v.template);
   else if (v.kind === "text") raw = v.text;

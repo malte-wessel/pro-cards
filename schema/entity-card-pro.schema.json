@@ -12,6 +12,13 @@
     { "$ref": "entity.schema.json#/$defs/actionDefaults" },
     { "$ref": "entity.schema.json#/$defs/haExtras" }
   ],
-  "anyOf": [{ "required": ["entity"] }, { "required": ["value"] }],
+  "anyOf": [
+    { "required": ["entity"] },
+    { "required": ["value"] },
+    {
+      "required": ["control", "control_options"],
+      "properties": { "control": { "const": "buttons" } }
+    }
+  ],
   "unevaluatedProperties": false
 }

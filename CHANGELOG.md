@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Your own buttons: `control: buttons` takes `control_options` as a list of buttons, e.g. every scene of a room in one row. Each entry runs its `entity` (scenes and scripts turn on, buttons press) or switches it (lights, switches, fans: filled while on), or runs its own `action`; each takes its own `color` and `icon`, and a `label` turns it into a chip with text. A row of buttons needs no entity of its own, and `control_confirm` makes each button a hold
+- A literal empty `value: ""` is a blank value instead of an unavailable one
+
 ## 2.2.2 (2026-10-07)
 
 - The JSON Schemas ship with the docs site, so `https://malte-wessel.github.io/pro-cards/schema/pro-cards.schema.json` resolves. The README has named that URL for editor completion since the schemas landed, but nothing ever copied `schema/` into the published site, so the YAML language server got a 404 and silently did nothing. The getting started guide now explains the one comment line it takes

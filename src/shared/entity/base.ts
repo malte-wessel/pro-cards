@@ -125,9 +125,12 @@ export abstract class EntityCardBase extends HTMLElement {
   setConfig(config: unknown) {
     const cfg = this._normalize(config);
     this._config = cfg;
-    this._entityIds = [
-      ...new Set(cfg.entities.map((e) => e.entity).filter((e): e is string => !!e)),
-    ];
+    // the entities a row follows: its own and those of its custom buttons
+    const idsOf = (e: EntityItem) =>
+      [e.entity, ...(e.control?.buttons ?? []).map((b) => b.entity)].filter(
+        (id): id is string => !!id,
+      );
+    this._entityIds = [...new Set(cfg.entities.flatMap(idsOf))];
     this._historyIds = [
       ...new Set(
         cfg.entities
@@ -138,8 +141,8 @@ export abstract class EntityCardBase extends HTMLElement {
     this._templates = collectTemplates(cfg);
     this._idxsByEntity = new Map();
     cfg.entities.forEach((e, i) => {
-      if (e.entity)
-        this._idxsByEntity.set(e.entity, [...(this._idxsByEntity.get(e.entity) ?? []), i]);
+      for (const id of new Set(idsOf(e)))
+        this._idxsByEntity.set(id, [...(this._idxsByEntity.get(id) ?? []), i]);
     });
     this._series = new Map();
     this._tplResult = new Map();
