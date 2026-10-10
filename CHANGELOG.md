@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Icons sit centred in Home Assistant. Its icon aligns to the middle of the text line, so wherever a card's icon inherited a line height it sat below centre: by 1–2 px in the custom buttons and their labelled chips, by a pixel or less in header items, card title icons, the direction and rain chips of the wind and rain cards, and the Run and hold buttons of row items. Cards with a header get about 1 px shorter, as their title line no longer grows around the icon
+- Docs: the live examples build icons as Home Assistant does, so the heading icons on the site sit centred too, and a test measures that every icon of every card sits centred in its box
+
 ## 2.3.0 (2026-10-10)
 
 - Your own buttons: `control: buttons` takes `control_options` as a list of buttons, e.g. every scene of a room in one row. Each entry runs its `entity` (scenes and scripts turn on, buttons press) or switches it (lights, switches, fans: filled while on), or runs its own `action`; each takes its own `color` and `icon`, and a `label` turns it into a chip with text. A row of buttons needs no entity of its own, and `control_confirm` makes each button a hold

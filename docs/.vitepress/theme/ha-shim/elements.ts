@@ -1,4 +1,7 @@
-// Minimal stand-ins for the Home Assistant elements the cards render into: ha-card, ha-icon, ha-state-icon.
+// Minimal stand-ins for the Home Assistant elements the cards render into: ha-card, ha-icon,
+// ha-state-icon. The icons are built as Home Assistant builds them: an unstyled ha-state-icon
+// around an inline ha-icon around an ha-svg-icon that is inline-flex and aligned to the middle of
+// the text line, so a card that leaves a line box around its icon shows the same offset here.
 import type { HassEntity, HomeAssistant } from "../../../../src/shared/ha.ts";
 import { conditionIcon } from "../../../../src/weather/conditions.ts";
 
@@ -22,6 +25,19 @@ const iconPath = (name: string | null): string | null => {
   return typeof path === "string" ? path : null;
 };
 
+// ha-svg-icon: the box of the icon, with Home Assistant's host styles
+class HaSvgIcon extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" }).innerHTML =
+      `<style>:host{display:var(--ha-icon-display,inline-flex);align-items:center;justify-content:center;position:relative;vertical-align:middle;fill:var(--icon-primary-color,currentcolor);width:var(--mdc-icon-size,24px);height:var(--mdc-icon-size,24px)}svg{width:100%;height:100%;pointer-events:none;display:block}</style><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" role="img" aria-hidden="true"><path d=""/></svg>`;
+  }
+  set path(d: string) {
+    this.shadowRoot!.querySelector("path")!.setAttribute("d", d);
+  }
+}
+
+// ha-icon: an inline wrapper (only `fill`, as in Home Assistant) that draws its mdi icon
 class HaIcon extends HTMLElement {
   _root: ShadowRoot;
   static get observedAttributes() {
@@ -30,7 +46,7 @@ class HaIcon extends HTMLElement {
   constructor() {
     super();
     this._root = this.attachShadow({ mode: "open" });
-    this._root.innerHTML = `<style>:host{display:inline-flex;align-items:center;justify-content:center;width:var(--mdc-icon-size,24px);height:var(--mdc-icon-size,24px);vertical-align:middle}svg{width:100%;height:100%;fill:currentColor;display:block}</style><svg viewBox="0 0 24 24"><path d=""/></svg>`;
+    this._root.innerHTML = `<style>:host{fill:currentcolor}</style><ha-svg-icon></ha-svg-icon>`;
   }
   set icon(v: string | null | undefined) {
     if (v) this.setAttribute("icon", v);
@@ -48,7 +64,7 @@ class HaIcon extends HTMLElement {
   _draw() {
     const set = () => {
       const p = iconPath(this.getAttribute("icon")) || iconPath("mdi:help-circle-outline");
-      this._root.querySelector("path")!.setAttribute("d", p || "");
+      (this._root.querySelector("ha-svg-icon") as HaSvgIcon).path = p || "";
     };
     if (mdi) set();
     else
@@ -122,7 +138,8 @@ class HaStateIcon extends HTMLElement {
   constructor() {
     super();
     this._root = this.attachShadow({ mode: "open" });
-    this._root.innerHTML = `<style>:host{display:inline-flex}</style><ha-icon></ha-icon>`;
+    // no host styles, as in Home Assistant
+    this._root.innerHTML = `<ha-icon></ha-icon>`;
   }
   set hass(v: HomeAssistant | undefined) {
     this._hass = v;
@@ -185,6 +202,8 @@ class HaCard extends HTMLElement {
 
 export const defineElements = () => {
   if (typeof customElements === "undefined") return;
+  // ha-svg-icon first: ha-icon's shadow root upgrades it when ha-icon is built
+  if (!customElements.get("ha-svg-icon")) customElements.define("ha-svg-icon", HaSvgIcon);
   if (!customElements.get("ha-icon")) customElements.define("ha-icon", HaIcon);
   if (!customElements.get("ha-state-icon")) customElements.define("ha-state-icon", HaStateIcon);
   if (!customElements.get("ha-card")) customElements.define("ha-card", HaCard);

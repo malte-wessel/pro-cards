@@ -27,3 +27,8 @@ export const DEVICE_CLASS_ICON: Record<string, string> = {
   timestamp: "mdi:clock-outline",
   signal_strength: "mdi:wifi",
 };
+
+// every card's icons: Home Assistant's ha-svg-icon is inline-flex and aligned to the middle of
+// the text line, so an ha-icon / ha-state-icon that inherits a line height lays out a line box
+// around it and the icon sits a pixel or two below centre (2 px at Home Assistant's 1.5)
+export const STYLE_ICONS = `ha-icon, ha-state-icon { line-height: 0; }`;

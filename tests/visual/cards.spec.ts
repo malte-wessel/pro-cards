@@ -1162,13 +1162,19 @@ for (const [name, cfg] of Object.entries(CASES)) {
   for (const theme of ["light", "dark"]) {
     test(`${name} (${theme})`, async ({ page }) => {
       await mount(page, cfg, { theme });
-      // fonts + icons settled: every ha-icon has a path, then one more frame
+      // fonts + icons settled: every ha-icon has a path (in its ha-svg-icon), then one more frame
       await page.waitForFunction(() =>
         [...document.querySelectorAll("*")].every(
           (e) =>
             !e.shadowRoot ||
             [...e.shadowRoot.querySelectorAll("ha-icon")].every(
-              (i) => (i.shadowRoot?.querySelector("path")?.getAttribute("d") || "").length > 5,
+              (i) =>
+                (
+                  i.shadowRoot
+                    ?.querySelector("ha-svg-icon")
+                    ?.shadowRoot?.querySelector("path")
+                    ?.getAttribute("d") || ""
+                ).length > 5,
             ),
         ),
       );
