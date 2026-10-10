@@ -8,22 +8,34 @@ export const STYLE_BASE = `
   ha-card { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; contain: inline-size; --fe-tint: transparent; }
   ha-card.tinted { background: color-mix(in srgb, var(--fe-tint) 12%, var(--ha-card-background, var(--card-background-color))); }
   .body { display: flex; flex-direction: column; gap: 14px; padding: 12px 16px 14px 16px; min-width: 0; }
-  .divider { height: 1px; background: var(--divider-color); }
+  /* dividers run from edge to edge, through the body's side padding */
+  .divider { height: 1px; margin: 0 -16px; background: var(--divider-color); }
 `;
 export const STYLE_TILE = `
   .layout-tile .body { padding: 8px 12px; gap: 8px; flex: 1; justify-content: center; }
 `;
 export const STYLE_HEADER = `
-  .header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 0 16px; min-width: 0; }
+  /* 4 px here and the body's 12 px: the title line sits 16 px above the first row */
+  .header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 4px 16px; min-width: 0; }
   .header ha-icon { flex: none; color: var(--secondary-text-color); --mdc-icon-size: 20px; }
   .header .title { flex: 1; min-width: 0; font-size: 16px; font-weight: 500; line-height: 20px; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .header .range { flex: none; font-size: 12px; color: var(--secondary-text-color); white-space: nowrap; }
   .header .hvals { display: flex; align-items: center; gap: 10px; flex: 0 1 auto; min-width: 0; max-width: 60%; }
   .header .hvals:empty { display: none; }
+  /* title_tap_action: the title and its icon are the button */
+  .header.tappable .title, .header.tappable > ha-icon { cursor: pointer; }
+  .header.tappable .title:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; border-radius: 4px; }
+  /* without history there is no range: it must not keep a gap after the header items */
+  .header .range:empty { display: none; }
   .row.hval { flex: 0 1 auto; flex-direction: row; align-items: center; gap: 4px; border-radius: 6px; min-width: 0; }
   .hval .state, .hval .secondary { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .hval ha-icon, .hval ha-state-icon { --mdc-icon-size: 18px; color: var(--fe-color); }
   .hval .state, .hval .pill { font-size: 13px; line-height: 16px; }
+  /* a header badge carries its icon; with nothing to say it is the icon in a circle */
+  .hval .pill.badge { display: inline-flex; align-items: center; gap: 4px; padding-left: 6px; }
+  .hval .pill.badge > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .hval .pill.badge ha-icon, .hval .pill.badge ha-state-icon { flex: none; --mdc-icon-size: 16px; }
+  .hval .pill.badge.round { flex: none; width: 24px; height: 24px; padding: 0; justify-content: center; }
   .hval .secondary { font-size: 12px; }
 `;
 export const STYLE_ROW = `

@@ -249,23 +249,24 @@ Values show in W below `kw_above` watts (default 1000) and in kW from there on, 
 
 ### Card options
 
-| Option            | Default                               | Description                                                                                                    |
-| ----------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `sources`         | required                              | Solar, battery and grid entries (below), in drawing order.                                                     |
-| `home`            | sum of the sources                    | The home's consumption sensor (W or kW), or an entity object with `name`, `icon`, `rules` and actions.         |
-| `consumers`       | –                                     | Devices (`{ entity, name, icon }`) or rooms (`{ group, icon, entities }`), in drawing order.                   |
-| `consumer_style`  | `nodes`                               | `nodes` or `list` (rows with a bar). Rows need the `right` direction.                                          |
-| `other`           | `true` with consumers                 | The **Other** node for the home's consumption the consumers do not account for.                                |
-| `direction`       | `right`                               | `right` (sources → home → consumers) or `down`.                                                                |
-| `flow_style`      | `dots`                                | `dots`, `lines` or `arrows`.                                                                                   |
-| `idle_links`      | `dashed`                              | Links that carry nothing: `dashed`, `hidden` or `faint`.                                                       |
-| `animation`       | `{ slow_below: 0, fast_above: 3600 }` | The loads (W) between which the flow goes from slowest to fastest.                                             |
-| `kw_above`        | `1000`                                | Watts from which values show in kW; `0` shows every value in kW.                                               |
-| `decimals`        | `{ w: 0, kw: 2 }`                     | Decimals of the values: one number for both units, or `{ w, kw }`.                                             |
-| `expensive_above` | –                                     | Price at or above which importing shows the Expensive state and tints the card (in the price sensor's unit).   |
-| `rules`           | –                                     | `[{ below, above, color, label, tint_card }]` on the home's power in W; first match wins.                      |
-| `title`, `icon`   | –                                     | Header, templates allowed. `header_entities` as in the [group card](/cards/entity-group-card#header-entities). |
-| `tap_action` …    | `more-info`                           | `tap_action`, `hold_action`, `double_tap_action` on every node with an entity.                                 |
+| Option             | Default                               | Description                                                                                                                                                                                     |
+| ------------------ | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sources`          | required                              | Solar, battery and grid entries (below), in drawing order.                                                                                                                                      |
+| `home`             | sum of the sources                    | The home's consumption sensor (W or kW), or an entity object with `name`, `icon`, `rules` and actions.                                                                                          |
+| `consumers`        | –                                     | Devices (`{ entity, name, icon }`) or rooms (`{ group, icon, entities }`), in drawing order.                                                                                                    |
+| `consumer_style`   | `nodes`                               | `nodes` or `list` (rows with a bar). Rows need the `right` direction.                                                                                                                           |
+| `other`            | `true` with consumers                 | The **Other** node for the home's consumption the consumers do not account for.                                                                                                                 |
+| `direction`        | `right`                               | `right` (sources → home → consumers) or `down`.                                                                                                                                                 |
+| `flow_style`       | `dots`                                | `dots`, `lines` or `arrows`.                                                                                                                                                                    |
+| `idle_links`       | `dashed`                              | Links that carry nothing: `dashed`, `hidden` or `faint`.                                                                                                                                        |
+| `animation`        | `{ slow_below: 0, fast_above: 3600 }` | The loads (W) between which the flow goes from slowest to fastest.                                                                                                                              |
+| `kw_above`         | `1000`                                | Watts from which values show in kW; `0` shows every value in kW.                                                                                                                                |
+| `decimals`         | `{ w: 0, kw: 2 }`                     | Decimals of the values: one number for both units, or `{ w, kw }`.                                                                                                                              |
+| `expensive_above`  | –                                     | Price at or above which importing shows the Expensive state and tints the card (in the price sensor's unit).                                                                                    |
+| `rules`            | –                                     | `[{ below, above, color, label, tint_card }]` on the home's power in W; first match wins.                                                                                                       |
+| `title`, `icon`    | –                                     | Header, templates allowed. `header_entities` as in the [group card](/cards/entity-group-card#header-entities).                                                                                  |
+| `title_tap_action` | none                                  | Action when the title or its icon is tapped, e.g. `{ action: navigate, navigation_path: /dashboard-rooms/kitchen }` to open the room's dashboard; see [Actions](/cards/entity-options#actions). |
+| `tap_action` …     | `more-info`                           | `tap_action`, `hold_action`, `double_tap_action` on every node with an entity.                                                                                                                  |
 
 ### Sources
 

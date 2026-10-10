@@ -11,7 +11,7 @@ import {
 import { nameOf, tplOf, type EntityModel, type RenderCtx } from "../model.ts";
 import { blockEl } from "./blocks.ts";
 import { appendControls, bindLeadTap, controlEl } from "./controls.ts";
-import { bigEl, iconEl, leadEl, pillEl, textEl, valueEl } from "./lead.ts";
+import { bigEl, headerBadgeEl, iconEl, leadEl, pillEl, textEl, valueEl } from "./lead.ts";
 
 // the controls of the row, split by slot; a card without a control host draws none
 const slots = (ctx: RenderCtx, ent: EntityItem, kind: RowKind) => {
@@ -265,7 +265,9 @@ export const fillField = (
 export const fillHval = (ctx: RenderCtx, el: HTMLElement, ent: EntityItem, m: EntityModel) => {
   el.replaceChildren();
   const { item } = ent;
-  if (item.showIcon) el.appendChild(iconEl(ctx, m.look, m.st));
+  // a badge carries its own icon (see headerBadgeEl); the name stays before it
+  const badge = ent.visual === "badge";
+  if (item.showIcon && !badge) el.appendChild(iconEl(ctx, m.look, m.st));
   const name = nameOf(ctx, ent, m.st);
   if (item.showName) {
     const n = document.createElement("span");
@@ -273,7 +275,10 @@ export const fillHval = (ctx: RenderCtx, el: HTMLElement, ent: EntityItem, m: En
     n.textContent = name;
     el.appendChild(n);
   }
-  if (item.showValue) el.appendChild(valueEl(ent, m));
+  if (badge) {
+    const b = headerBadgeEl(ctx, ent, m);
+    if (b) el.appendChild(b);
+  } else if (item.showValue) el.appendChild(valueEl(ent, m));
   el.title = m.look.label ? `${name} · ${m.look.label}` : name;
 };
 

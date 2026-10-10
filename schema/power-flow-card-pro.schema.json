@@ -253,6 +253,10 @@
       "description": "On the home power in W (below / above): label pill, colour of the home node, tint; first match wins"
     },
     "title": { "type": "string", "description": "Header text. Template allowed." },
+    "title_tap_action": {
+      "$ref": "defs.schema.json#/$defs/action",
+      "description": "Action when the title or its icon is tapped, e.g. navigate to the room's dashboard (default: none)"
+    },
     "icon": {
       "$ref": "defs.schema.json#/$defs/icon",
       "description": "Header icon. Template allowed."

@@ -650,7 +650,7 @@ One bar per bucket, for quantities that come in portions: solar power, energy, r
 
 ### Badge
 
-A coloured pill instead of the plain value. The pill shows the matching rule's `label`, or the formatted value when no rule has a label, and takes the rule colour. Because the pill already carries the label, the badge has no secondary line unless you set `secondary`. It is made for states that have names (presence, appliance programs, modes) and works in items and headers too, where it stands in for the value.
+A coloured pill instead of the plain value. The pill shows the matching rule's `label`, or the formatted value when no rule has a label, and takes the rule colour. Because the pill already carries the label, the badge has no secondary line unless you set `secondary`. It is made for states that have names (presence, appliance programs, modes) and works in items and headers too, where it stands in for the value. In `header_entities` the badge carries the icon inside the pill; with `show_value: false`, or a value that renders empty, it is just the icon in a coloured circle. See the [header example](/cards/entity-group-card#header-entities) on the group card.
 
 ::: live
 
@@ -913,12 +913,12 @@ entities:
 
 Row, column and table layouts and header entities show every entity as a compact item. Four keys decide what an item shows; they cascade from the card to the section to the entity.
 
-| Option          | Row     | Column | Table   | Header entities | Description                                        |
-| --------------- | ------- | ------ | ------- | --------------- | -------------------------------------------------- |
-| `show_name`     | `true`  | `true` | `true`  | `false`         | The name, above or below the icon (table: the key) |
-| `show_value`    | `true`  | `true` | `true`  | `true`          | The value under the name (badge: the pill)         |
-| `show_icon`     | `true`  | `true` | `false` | `true`          | The round icon (table: an icon column)             |
-| `name_position` | `below` | –      | –       | –               | `above` or `below` the icon; rows only             |
+| Option          | Row     | Column | Table   | Header entities | Description                                                                                     |
+| --------------- | ------- | ------ | ------- | --------------- | ----------------------------------------------------------------------------------------------- |
+| `show_name`     | `true`  | `true` | `true`  | `false`         | The name, above or below the icon (table: the key)                                              |
+| `show_value`    | `true`  | `true` | `true`  | `true`          | The value under the name (badge: the pill; a header badge without it is a circle with the icon) |
+| `show_icon`     | `true`  | `true` | `false` | `true`          | The round icon (table: an icon column; header badge: the icon inside the pill)                  |
+| `name_position` | `below` | –      | –       | –               | `above` or `below` the icon; rows only                                                          |
 
 ## Entity options
 

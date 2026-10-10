@@ -58,6 +58,22 @@ export const pillEl = (text: string) => {
   s.textContent = text;
   return s;
 };
+// the badge of a header item: one pill that carries the icon and the label or value; with an icon
+// and nothing to say (show_value: false, or an empty text) it is the icon in a circle
+export const headerBadgeEl = (ctx: RenderCtx, ent: EntityItem, m: EntityModel) => {
+  const text = ent.item.showValue ? (m.look.label ?? m.fmt.text) : "";
+  const icon = ent.item.showIcon ? iconEl(ctx, m.look, m.st) : null;
+  if (!icon && !text.trim()) return null;
+  const s = document.createElement("span");
+  s.className = "pill badge";
+  if (icon) s.appendChild(icon);
+  if (text.trim()) {
+    const t = document.createElement("span");
+    t.textContent = text;
+    s.appendChild(t);
+  } else s.classList.add("round");
+  return s;
+};
 export const textEl = (cls: string, text: string | null | undefined) => {
   const d = document.createElement("div");
   d.className = cls;

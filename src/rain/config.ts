@@ -1,6 +1,7 @@
 // Config normalisation of the rain card (pure). The result is an entity-card-pro config whose first
 // item is the rain rate; today's total, the wind speed and its direction follow when named.
 import {
+  normalizeTitleAction,
   clampColumns,
   normalizeActionDefaults,
   normalizeEntity,
@@ -100,6 +101,7 @@ export const normalizeRainCardConfig = (input: unknown): RainConfig => {
     lead,
     entity,
     title: raw.title ?? null,
+    titleTap: normalizeTitleAction(raw),
     icon: raw.icon ?? null,
     ...normalizeHistoryOptions(raw),
     ...ctx,

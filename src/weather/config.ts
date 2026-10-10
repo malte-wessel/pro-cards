@@ -5,6 +5,7 @@
 // entity-card-pro config (the base element renders header, rows, tint and templates from it) plus
 // the weather-specific items and sections.
 import {
+  normalizeTitleAction,
   clampColumns,
   normalizeActionDefaults,
   normalizeEntity,
@@ -386,6 +387,7 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
     layout: sections.length ? "sections" : "tile",
     entity,
     title: raw.title ?? null,
+    titleTap: normalizeTitleAction(raw),
     icon: raw.icon ?? null,
     ...normalizeHistoryOptions(raw),
     ...ctx,

@@ -546,7 +546,7 @@ entities:
 
 :::
 
-The header can carry badges and names too: a status badge next to the title of a device list.
+The header can carry badges and names too: a status badge next to the title of a device list. A header badge carries its icon inside the pill; with `show_value: false` it is just the icon in a circle, here the dustbin.
 
 ::: live
 
@@ -557,10 +557,31 @@ icon: mdi:robot-vacuum
 header_entities:
   - { entity: vacuum.robot, visual: badge, rules: [{ state: cleaning, color: blue, label: Cleaning }, { state: docked, color: green, label: Docked }, { state: returning, color: teal, label: Returning }] }
   - { entity: sensor.robot_battery, decimals: 0, rules: [{ below: 20, color: red }, { above: 20, color: green }] }
+  - { entity: sensor.robot_dustbin_remaining, visual: badge, show_value: false, icon: mdi:delete-variant, rules: [{ below: 20, color: red }, { above: 20, color: grey }] }
 entities:
   - { entity: sensor.robot_current_room, name: Current room, icon: mdi:map-marker }
   - { entity: sensor.robot_progress, name: Progress, visual: bar, color: blue, decimals: 0 }
   - { entity: sensor.robot_dustbin_remaining, name: Dustbin, visual: bar, decimals: 0, rules: [{ below: 20, color: red, label: Empty soon }, { above: 20, color: grey }] }
+```
+
+:::
+
+## Title action
+
+`title_tap_action` makes the title and its icon tappable, for example to open the room's own dashboard from a summary card. It takes any [action](/cards/entity-options#actions); without it the title is plain text. The header entities keep their own actions.
+
+::: live
+
+```yaml
+type: custom:entity-group-card-pro
+title: Kitchen
+icon: mdi:silverware-fork-knife
+title_tap_action: { action: navigate, navigation_path: /dashboard-rooms/kitchen }
+header_entities:
+  - { entity: sensor.kitchen_temperature, decimals: 1 }
+entities:
+  - { entity: light.kitchen, control: toggle }
+  - { entity: sensor.kitchen_humidity, decimals: 0 }
 ```
 
 :::
@@ -585,6 +606,7 @@ entities:
 | `entities`                                         |                              | List of entity ids or [entity objects](/cards/entity-options#entity-options) (required).                                                                                                                                                                                                            |
 | `layout`                                           | `list`                       | `list`, `grid`, `hero`, `row`, `column` or `table`.                                                                                                                                                                                                                                                 |
 | `title`                                            |                              | Header text. Template allowed.                                                                                                                                                                                                                                                                      |
+| `title_tap_action`                                 | none                         | Action when the title or its icon is tapped, e.g. `{ action: navigate, navigation_path: /dashboard-rooms/kitchen }` to open the room's dashboard; see [Actions](/cards/entity-options#actions).                                                                                                     |
 | `icon`                                             |                              | Header icon. Template allowed.                                                                                                                                                                                                                                                                      |
 | `header_entities`                                  |                              | Entities shown as icon + value on the right of the title line. Defaults `show_icon: true`, `show_value: true`, `show_name: false`; visuals `icon` and `badge`.                                                                                                                                      |
 | `columns`                                          | `2`                          | Grid: cells per row, 1 to 4 (not the sections grid `grid_options.columns`).                                                                                                                                                                                                                         |
