@@ -200,10 +200,11 @@
                 },
                 "required": ["value"],
                 "additionalProperties": false
-              }
+              },
+              { "$ref": "#/$defs/buttonOption" }
             ]
           },
-          "description": "Options of segments and select (default: the entity's modes or options)"
+          "description": "Options of segments and select (default: the entity's modes or options); with control: buttons, the buttons: { entity, icon, label, color, action }"
         },
         "control_confirm": {
           "type": "boolean",
@@ -222,9 +223,56 @@
         "tap_action": { "$ref": "defs.schema.json#/$defs/action" },
         "hold_action": { "$ref": "defs.schema.json#/$defs/action" },
         "double_tap_action": { "$ref": "defs.schema.json#/$defs/action" }
+      },
+      "if": { "required": ["control"], "properties": { "control": { "const": "buttons" } } },
+      "then": {
+        "properties": {
+          "control_options": { "minItems": 1, "items": { "$ref": "#/$defs/buttonOption" } }
+        }
       }
     },
+    "buttonOption": {
+      "type": "object",
+      "description": "A button of control: buttons",
+      "properties": {
+        "entity": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "Entity the button runs (scene, script, button) or switches (light, switch …; filled while on)"
+        },
+        "label": {
+          "type": "string",
+          "description": "Text beside the icon; without it the button is a round icon button"
+        },
+        "icon": {
+          "$ref": "defs.schema.json#/$defs/icon",
+          "description": "Icon (default: the entity's icon)"
+        },
+        "color": {
+          "$ref": "defs.schema.json#/$defs/color",
+          "description": "Colour of the button (default: the row's colour)"
+        },
+        "action": {
+          "$ref": "defs.schema.json#/$defs/action",
+          "description": "Action run instead of the entity's own service"
+        }
+      },
+      "anyOf": [{ "required": ["entity"] }, { "required": ["action"] }],
+      "additionalProperties": false
+    },
     "entity": {
+      "allOf": [{ "$ref": "#/$defs/entityKeys" }],
+      "anyOf": [
+        { "required": ["entity"] },
+        { "required": ["value"] },
+        {
+          "required": ["control", "control_options"],
+          "properties": { "control": { "const": "buttons" } }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "headerEntity": {
+      "description": "An entity of the header: buttons are not drawn there, so it needs an entity or a value",
       "allOf": [{ "$ref": "#/$defs/entityKeys" }],
       "anyOf": [{ "required": ["entity"] }, { "required": ["value"] }],
       "unevaluatedProperties": false
@@ -239,7 +287,10 @@
     "headerEntities": {
       "type": "array",
       "items": {
-        "oneOf": [{ "$ref": "defs.schema.json#/$defs/entityId" }, { "$ref": "#/$defs/entity" }]
+        "oneOf": [
+          { "$ref": "defs.schema.json#/$defs/entityId" },
+          { "$ref": "#/$defs/headerEntity" }
+        ]
       },
       "description": "Compact icon + value items on the right of the title line (visual: icon, ring or badge)"
     },
@@ -275,6 +326,17 @@
           "enum": ["above", "below"],
           "default": "below",
           "description": "Where the name sits relative to the icon in row items; the other layouts ignore it"
+        }
+      },
+      "if": { "required": ["layout"], "properties": { "layout": { "const": "row" } } },
+      "then": {
+        "description": "Row items draw no buttons: an item of buttons alone needs an entity or a value",
+        "properties": {
+          "entities": {
+            "items": {
+              "anyOf": [{ "type": "string" }, { "required": ["entity"] }, { "required": ["value"] }]
+            }
+          }
         }
       }
     }

@@ -4,7 +4,11 @@ import type { EntityItem } from "../config.ts";
 import type { Look } from "../look.ts";
 import type { EntityModel, FmtValue, RenderCtx } from "../model.ts";
 
-export const iconEl = (ctx: RenderCtx, look: Look, st: HassEntity | undefined): HTMLElement => {
+export const iconEl = (
+  ctx: RenderCtx,
+  look: Pick<Look, "icon" | "fallbackIcon">,
+  st: HassEntity | undefined,
+): HTMLElement => {
   if (st && customElements.get("ha-state-icon")) {
     const el = document.createElement("ha-state-icon");
     el.hass = ctx.hass;

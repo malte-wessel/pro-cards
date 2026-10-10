@@ -112,6 +112,22 @@ export const STYLE_CONTROLS = `
   .ctl .round.f { background: var(--fe-color); color: var(--text-primary-color, #fff); }
   .ctl .round.pending { animation: ctl-pulse 1s ease-in-out infinite; }
   .ctl-buttons { display: flex; align-items: center; gap: 6px; flex: none; }
+  /* custom buttons: each in its own colour (its --fe-color), soft until on, many of them wrap */
+  .ctl-buttons.custom { flex: 0 1 auto; flex-wrap: wrap; min-width: 0; }
+  .end > .ctl-buttons.custom, .val > .ctl-buttons.custom { justify-content: flex-end; }
+  .ctl-buttons.custom > button { background: color-mix(in srgb, var(--fe-color) 20%, transparent); color: var(--fe-color); transition: background-color .2s, color .2s; }
+  .ctl-buttons.custom > button.on { background: var(--fe-color); color: var(--text-primary-color, #fff); }
+  .ctl-buttons.custom > button.pending { animation: ctl-pulse 1s ease-in-out infinite; }
+  .ctl-buttons.custom > .chip { flex: 0 1 auto; display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; height: 32px; padding: 0 14px 0 10px; border: 0; border-radius: 999px; font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer; --mdc-icon-size: 18px; }
+  .ctl-buttons.custom > .chip span { overflow: hidden; text-overflow: ellipsis; }
+  /* the colour stays on the icon and the tint; the label reads in the text colour until filled */
+  .ctl-buttons.custom > .chip:not(.on) span { color: var(--primary-text-color); }
+  .ctl-buttons.custom.sm > .chip { height: 28px; font-size: 12px; padding: 0 12px 0 8px; --mdc-icon-size: 16px; }
+  /* a chip to hold fills from the left instead of a ring */
+  .ctl-buttons.custom > .chip.hold { --fill: var(--fe-color); background-image: linear-gradient(var(--fill), var(--fill)); background-repeat: no-repeat; background-size: 0 100%; touch-action: none; -webkit-user-select: none; user-select: none; }
+  .ctl-buttons.custom > .chip.hold.on { --fill: color-mix(in srgb, var(--fe-color) 45%, var(--ha-card-background, var(--card-background-color, #fff))); }
+  .ctl-buttons.custom > .chip.hold.armed { background-size: 100% 100%; --fill: color-mix(in srgb, var(--fe-color) 45%, transparent); }
+  .ctl-buttons.custom > .chip.hold.holding { background-size: 100% 100%; transition: background-size 1s linear; }
   .ctl-stepper { display: flex; align-items: center; gap: 4px; flex: none; }
   .ctl-stepper .val { min-width: 48px; text-align: center; font-size: 14px; font-weight: 500; line-height: 20px; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .ctl-stepper.sm .val { min-width: 40px; font-size: 13px; }

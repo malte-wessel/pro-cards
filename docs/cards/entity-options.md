@@ -926,16 +926,16 @@ All keys an entity accepts, grouped by what they do. "Applies to" names the visu
 
 ### Identity and value
 
-| Option              | Default       | Applies to      | Description                                                                                                    |
-| ------------------- | ------------- | --------------- | -------------------------------------------------------------------------------------------------------------- |
-| `entity`            |               | all             | Entity id. Optional when `value` is plain text or a template.                                                  |
-| `name`              | friendly name | all             | Text or template.                                                                                              |
-| `secondary`         |               | tile, hero lead | Line under the name instead of the value and label. Template allowed.                                          |
-| `attribute`         |               | all             | Show this attribute instead of the state (`hvac_mode` shows a thermostat's mode, which HA keeps in the state). |
-| `value`             |               | all             | A template or plain text instead of the state; see [Value and attribute](#value-and-attribute).                |
-| `unit`              | entity unit   | all             | Unit text after the value.                                                                                     |
-| `decimals`          | as reported   | all             | 0 to 3.                                                                                                        |
-| `prefix` / `suffix` |               | all             | Text around the value.                                                                                         |
+| Option              | Default       | Applies to      | Description                                                                                                                         |
+| ------------------- | ------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `entity`            |               | all             | Entity id. Optional when `value` is plain text or a template, or for a row of [your own buttons](/cards/controls#your-own-buttons). |
+| `name`              | friendly name | all             | Text or template.                                                                                                                   |
+| `secondary`         |               | tile, hero lead | Line under the name instead of the value and label. Template allowed.                                                               |
+| `attribute`         |               | all             | Show this attribute instead of the state (`hvac_mode` shows a thermostat's mode, which HA keeps in the state).                      |
+| `value`             |               | all             | A template or plain text instead of the state; see [Value and attribute](#value-and-attribute).                                     |
+| `unit`              | entity unit   | all             | Unit text after the value.                                                                                                          |
+| `decimals`          | as reported   | all             | 0 to 3.                                                                                                                             |
+| `prefix` / `suffix` |               | all             | Text around the value.                                                                                                              |
 
 ### Look
 
@@ -965,11 +965,11 @@ These two keys sit on the card, not on the entity, and apply to every history vi
 
 See [Controls](/cards/controls) for what every control looks like and where it sits.
 
-| Option                                             | Default       | Applies to      | Description                                                                                                                                                                                                                             |
-| -------------------------------------------------- | ------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `control`                                          |               | all but headers | `auto` (or `true`) picks the domain default, a name picks one, `none` draws nothing. `control_position`, `control_attribute`, `control_step`, `control_options` and `control_confirm` tune it: see [Controls](/cards/controls#one-key). |
-| `toggle`                                           | `false`       | all but headers | Deprecated alias of `control: toggle`.                                                                                                                                                                                                  |
-| `tap_action` / `hold_action` / `double_tap_action` | card defaults | all             | Per-entity overrides, see [Action options](#action-options).                                                                                                                                                                            |
+| Option                                             | Default       | Applies to      | Description                                                                                                                                                                                                                                                                                                                                   |
+| -------------------------------------------------- | ------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `control`                                          |               | all but headers | `auto` (or `true`) picks the domain default, a name picks one, `none` draws nothing. `control_position`, `control_attribute`, `control_step`, `control_options` and `control_confirm` tune it: see [Controls](/cards/controls#one-key); `control: buttons` with `control_options` draws [your own buttons](/cards/controls#your-own-buttons). |
+| `toggle`                                           | `false`       | all but headers | Deprecated alias of `control: toggle`.                                                                                                                                                                                                                                                                                                        |
+| `tap_action` / `hold_action` / `double_tap_action` | card defaults | all             | Per-entity overrides, see [Action options](#action-options).                                                                                                                                                                                                                                                                                  |
 
 ### Items
 

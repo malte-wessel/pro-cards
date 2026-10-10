@@ -34,6 +34,14 @@ export interface ControlOption {
   label: string | null;
   icon: string | null;
 }
+// a button of `control: buttons` from `control_options`: runs its entity (or its own action), in its own colour
+export interface CustomButton {
+  entity: string | null;
+  icon: string | null;
+  label: string | null;
+  color: string | null;
+  action: ActionConfig | null;
+}
 // the control as written in YAML, after normalisation (`auto` is resolved at render time)
 export interface ControlConfig {
   kind: "auto" | ControlKind;
@@ -43,6 +51,8 @@ export interface ControlConfig {
   attribute: ControlAttribute | null;
   step: number | null;
   options: ControlOption[] | null;
+  // `control: buttons` with `control_options`: the buttons drawn (null: the domain's own)
+  buttons: CustomButton[] | null;
   confirm: boolean;
 }
 // one drawn control: its kind, slot and size; `confirm` makes every button of a group a hold
@@ -89,10 +99,15 @@ export interface Pending {
   until: number;
   value?: number | string;
   sticky?: boolean;
+  // a custom button's own call: its key (`c<i>`) and the entity whose answer ends it
+  key?: string;
+  entity?: string | null;
 }
 // what the control builders need from the card element
 export interface ControlHost {
   pending: ReadonlyMap<number, Pending>;
+  // the calls of custom buttons, one per button (`index:c<i>`)
+  buttonPending: ReadonlyMap<string, Pending>;
   // hold buttons armed by a first press (screen readers): until when, by entity index, and by
   // `index:button` for the buttons of a confirmed group
   armed: Map<string, number>;
@@ -148,7 +163,8 @@ const normalizeOptions = (list: unknown): ControlOption[] | null => {
 };
 
 // `control` (a name, `true` = auto, `none` = nothing) with its `control_*` options;
-// `toggle: true` is the old spelling of `control: toggle`
+// `toggle: true` is the old spelling of `control: toggle`; `control_options` are the options of
+// segments and select, or the buttons of `control: buttons`
 export const normalizeControl = (
   raw: RawEntity,
   ctx: NormalizeCtx,
@@ -181,7 +197,9 @@ export const normalizeControl = (
     position: oneOf(CONTROL_POSITIONS, pos) ? pos : null,
     attribute: oneOf(CONTROL_ATTRIBUTES, ca) ? ca : oneOf(CONTROL_ATTRIBUTES, shown) ? shown : null,
     step: step !== null && step > 0 ? step : null,
-    options: normalizeOptions(raw.control_options),
+    options: kind === "buttons" ? null : normalizeOptions(raw.control_options),
+    // filled in by normalizeEntity, which parses the actions of the buttons
+    buttons: null,
     confirm: !!raw.control_confirm,
   };
 };
@@ -360,15 +378,30 @@ export const hasBlockControl = (ent: EntityItem) =>
 
 // ----- state helpers -----
 
-// a script, scene or button that was never run reports `unknown` (its state is the time of the
-// last run): that is no reason to grey its control out
-const PRESS_DOMAINS: ReadonlySet<string> = new Set(["script", "scene", "button", "input_button"]);
+// what pressing an entity does, by domain: run it (its state is the time of the last run) or
+// switch it (its state says on or off)
+const PRESS_KINDS: Record<string, "run" | "switch"> = {
+  script: "run",
+  scene: "run",
+  button: "run",
+  input_button: "run",
+  light: "switch",
+  switch: "switch",
+  input_boolean: "switch",
+  fan: "switch",
+  media_player: "switch",
+  cover: "switch",
+  lock: "switch",
+};
+export const pressKindOf = (id: string | null | undefined) =>
+  (id && PRESS_KINDS[domainOf(id)]) || null;
 // whether the entity can take a call: its state decides, never the value the row shows (an off
 // light shown by its brightness attribute has no value, and is still a light to turn on)
+export const canControlId = (id: string | null, st: HassEntity | undefined) =>
+  // a script, scene or button that was never run reports `unknown`: no reason to grey it out
+  !!st && st.state !== "unavailable" && (st.state !== "unknown" || pressKindOf(id) === "run");
 export const canControl = (ent: EntityItem, st: HassEntity | undefined) =>
-  !!st &&
-  st.state !== "unavailable" &&
-  (st.state !== "unknown" || PRESS_DOMAINS.has(domainOf(ent.entity)));
+  canControlId(ent.entity, st);
 export const isOn = (st: HassEntity | undefined): boolean => {
   if (!st || st.state === "unavailable" || st.state === "unknown") return false;
   return stateActive(st) && !OFF_STATES.has(st.state);
@@ -520,6 +553,32 @@ export const currentOptionOf = (ent: EntityItem, st: HassEntity | undefined): st
   return st.state;
 };
 
+// whether a custom button shows its entity as on (a scene's state is a time, never "on")
+export const buttonActive = (b: CustomButton, st: HassEntity | undefined) =>
+  pressKindOf(b.entity) === "switch" && isOn(st);
+// the keys that name what a service call acts on, in `target` or in its data
+const TARGET_KEYS = ["entity_id", "device_id", "area_id", "floor_id", "label_id"];
+const namesTarget = (o: unknown) =>
+  !!o && typeof o === "object" && TARGET_KEYS.some((k) => k in (o as object));
+// the action a custom button runs: its entity is the action's entity (more-info, toggle) and, for
+// a service call that names no target of its own, the target
+export const actionOf = (b: CustomButton): ActionConfig => {
+  const a = { ...(b.action as ActionConfig) };
+  if (!b.entity) return a;
+  a.entity ??= b.entity;
+  // a call that names anything to act on keeps it: the button's entity would be added to it
+  if (
+    (a.action === "perform-action" || a.action === "call-service") &&
+    !a.target &&
+    !namesTarget(a.data) &&
+    !namesTarget(a.service_data)
+  )
+    a.target = { entity_id: b.entity };
+  return a;
+};
+// whether pressing a custom button runs something rather than switching it (a "done" flash)
+export const buttonRuns = (b: CustomButton) => pressKindOf(b.entity) !== "switch";
+
 export const buttonsOf = (ent: EntityItem): ControlButton[] => {
   switch (domainOf(ent.entity)) {
     case "cover":
@@ -540,6 +599,27 @@ export const buttonsOf = (ent: EntityItem): ControlButton[] => {
 };
 
 // ----- services -----
+
+// what pressing an entity does: a run for scripts, scenes and buttons, a lock's next state, a
+// cover's travel, power for the rest; null when the domain has nothing to press
+export const actionServiceFor = (
+  id: string | null,
+  st: HassEntity | undefined,
+): ServiceCall | null => {
+  const kind = pressKindOf(id);
+  if (!id || !kind) return null;
+  const d = domainOf(id);
+  const call = (domain: string, service: string) => ({
+    domain,
+    service,
+    data: { entity_id: id },
+  });
+  if (kind === "run")
+    return d === "script" || d === "scene" ? call(d, "turn_on") : call(d, "press");
+  if (d === "lock") return st?.state === "locked" ? call("lock", "unlock") : call("lock", "lock");
+  if (d === "cover") return call("cover", "toggle");
+  return call("homeassistant", "toggle");
+};
 
 // the service a control calls for `input`, or null when the domain has none that fits
 export const serviceFor = (
@@ -635,24 +715,6 @@ export const serviceFor = (
           return null;
       }
     case "hold":
-      switch (d) {
-        case "lock":
-          return st?.state === "locked" ? call("lock", "unlock") : call("lock", "lock");
-        case "cover":
-          return call("cover", "toggle");
-        case "script":
-        case "scene":
-        case "button":
-        case "input_button":
-          return serviceFor(ent, st, { type: "press" });
-        case "light":
-        case "switch":
-        case "input_boolean":
-        case "fan":
-        case "media_player":
-          return call("homeassistant", "toggle");
-        default:
-          return null;
-      }
+      return actionServiceFor(id, st);
   }
 };

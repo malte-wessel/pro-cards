@@ -329,7 +329,7 @@ test.describe("config errors", () => {
       };
       return [tryCfg({ name: "x" }), tryCfg(null), tryCfg({ entity: "light.a" })];
     });
-    expect(msgs[0]).toMatch(/entity-card-pro: 'entity' or 'value' is required/);
+    expect(msgs[0]).toMatch(/entity-card-pro: the card needs 'entity' or 'value'/);
     expect(msgs[1]).toMatch(/invalid config/);
     expect(msgs[2]).toBeNull();
   });

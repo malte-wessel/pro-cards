@@ -1,11 +1,16 @@
 import { describe, it, expect } from "vitest";
 import {
   normalizeEntity,
+  normalizeHeaderEntities,
   type NormalizeCtx,
   type RawEntity,
 } from "../../../../src/shared/entity/config.ts";
 import type { HassEntity, HomeAssistant } from "../../../../src/shared/ha.ts";
 import {
+  actionOf,
+  actionServiceFor,
+  buttonActive,
+  buttonRuns,
   buttonsOf,
   canControl,
   MAX_SPEED_SEGMENTS,
@@ -642,5 +647,137 @@ describe("rows without room under the line", () => {
       "buttons@end",
       "slider@block",
     ]);
+  });
+});
+
+describe("custom buttons", () => {
+  const raw = (o: RawEntity) => normalizeEntity(o, ctx, "e", undefined, { buttons: true });
+  it("come from control_options with control: buttons; entries need an entity or an action", () => {
+    const c = raw({
+      name: "Scenes",
+      control: "buttons",
+      control_options: [
+        { entity: "scene.bright", color: "amber" },
+        { entity: "light.desk", label: "Desk", icon: "mdi:lamp" },
+        { action: "navigate", label: "Away" },
+        { icon: "mdi:x", action: { navigation_path: "/x" } },
+        { icon: "mdi:x" },
+        "plain",
+        null,
+      ],
+    }).control;
+    expect(c?.kind).toBe("buttons");
+    expect(c?.options).toBeNull();
+    expect(c?.buttons).toEqual([
+      { entity: "scene.bright", icon: null, label: null, color: "amber", action: null },
+      { entity: "light.desk", icon: "mdi:lamp", label: "Desk", color: null, action: null },
+      { entity: null, icon: null, label: "Away", color: null, action: { action: "navigate" } },
+      // an action object without `action` defaults to more-info, as the row's own actions do
+      {
+        entity: null,
+        icon: "mdi:x",
+        label: null,
+        color: null,
+        action: { action: "more-info", navigation_path: "/x" },
+      },
+    ]);
+  });
+  it("stay options of segments and select for every other control", () => {
+    const opts = [{ value: "eco", label: "Eco" }];
+    const seg = raw({ entity: "climate.x", control: "segments", control_options: opts }).control;
+    expect(seg?.buttons).toBeNull();
+    expect(seg?.options).toEqual([{ value: "eco", label: "Eco", icon: null }]);
+    // buttons without usable entries keep the domain's own (a cover's open / stop / close)
+    const cover = raw({ entity: "cover.x", control: "buttons", control_options: opts }).control;
+    expect(cover?.buttons).toBeNull();
+    expect(raw({ entity: "cover.x", control: "buttons" }).control?.buttons).toBeNull();
+  });
+  it("stand without an entity or a value only where they are drawn", () => {
+    const list = [{ entity: "scene.bright" }];
+    const e = raw({ name: "Scenes", control: "buttons", control_options: list });
+    expect(e.entity).toBeNull();
+    expect(e.valueSrc).toEqual({ kind: "text", text: "" });
+    // other cards and places do not draw buttons: no blank value there
+    expect(() =>
+      normalizeEntity({ name: "Scenes", control: "buttons", control_options: list }, ctx, "e"),
+    ).toThrow(/^t: e needs 'entity' or 'value'$/);
+    expect(() =>
+      normalizeHeaderEntities([{ control: "buttons", control_options: list }], ctx),
+    ).toThrow(
+      /header_entities\[0\] needs 'entity' or 'value' \(buttons are not drawn in the header\)/,
+    );
+    // a value the user wrote stays valid in the header, buttons or not
+    const header = normalizeHeaderEntities(
+      [{ value: "", control: "buttons", control_options: list }],
+      ctx,
+    );
+    expect(header[0].valueSrc).toEqual({ kind: "text", text: "" });
+    expect(header[0].control).toBeNull();
+    expect(() => raw({ name: "Scenes", control_options: list })).toThrow(
+      /needs 'entity' or 'value'/,
+    );
+    expect(() =>
+      raw({ name: "Scenes", control: "buttons", control_options: [{ icon: "mdi:x" }] }),
+    ).toThrow(/needs 'entity' or 'value'/);
+  });
+  it("run scenes, scripts and buttons, switch the rest", () => {
+    const svc = (id: string, s = "off") => {
+      const c = actionServiceFor(id, st(s, {}, id));
+      return c && `${c.domain}.${c.service}`;
+    };
+    expect(svc("scene.a")).toBe("scene.turn_on");
+    expect(svc("script.a")).toBe("script.turn_on");
+    expect(svc("input_button.a")).toBe("input_button.press");
+    expect(svc("light.a")).toBe("homeassistant.toggle");
+    expect(svc("cover.a")).toBe("cover.toggle");
+    expect(svc("lock.a", "locked")).toBe("lock.unlock");
+    expect(svc("sensor.a")).toBeNull();
+    expect(actionServiceFor(null, undefined)).toBeNull();
+  });
+  it("hand their entity to the action, and as the target of a service call without one", () => {
+    const b = (entity: string | null, action: Record<string, unknown>) => ({
+      entity,
+      icon: null,
+      label: null,
+      color: null,
+      action: action as { action: string },
+    });
+    const perform = { action: "perform-action", perform_action: "light.turn_on" };
+    expect(actionOf(b("light.a", perform))).toEqual({
+      ...perform,
+      entity: "light.a",
+      target: { entity_id: "light.a" },
+    });
+    const own = { ...perform, target: { area_id: "kitchen" } };
+    expect(actionOf(b("light.a", own)).target).toEqual({ area_id: "kitchen" });
+    // anything the call names to act on, in its data or the old service_data, stays alone
+    for (const data of [{ entity_id: "light.b" }, { area_id: "kitchen" }, { device_id: "d1" }]) {
+      expect(actionOf(b("light.a", { ...perform, data })).target).toBeUndefined();
+      const legacy = { action: "call-service", service: "light.turn_on", service_data: data };
+      expect(actionOf(b("light.a", legacy)).target).toBeUndefined();
+    }
+    expect(actionOf(b("light.a", { ...perform, data: { brightness_pct: 30 } })).target).toEqual({
+      entity_id: "light.a",
+    });
+    expect(actionOf(b("light.a", { action: "more-info" }))).toEqual({
+      action: "more-info",
+      entity: "light.a",
+    });
+    expect(actionOf(b(null, perform))).toEqual(perform);
+  });
+  it("are on only for entities that switch", () => {
+    const b = (entity: string | null) => ({
+      entity,
+      icon: null,
+      label: null,
+      color: null,
+      action: null,
+    });
+    expect(buttonActive(b("light.a"), st("on", {}, "light.a"))).toBe(true);
+    expect(buttonActive(b("light.a"), st("off", {}, "light.a"))).toBe(false);
+    expect(buttonActive(b("scene.a"), st("2026-06-21T10:00:00Z", {}, "scene.a"))).toBe(false);
+    expect(buttonRuns(b("scene.a"))).toBe(true);
+    expect(buttonRuns(b("switch.a"))).toBe(false);
+    expect(buttonRuns(b(null))).toBe(true);
   });
 });
