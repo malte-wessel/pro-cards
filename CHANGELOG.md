@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.3.1 (beta)
 
 - Icons sit centred in Home Assistant. Its icon aligns to the middle of the text line, so wherever a card's icon inherited a line height it sat below centre: by 1–2 px in the custom buttons and their labelled chips, by a pixel or less in header items, card title icons, the direction and rain chips of the wind and rain cards, and the Run and hold buttons of row items. Cards with a header get about 1 px shorter, as their title line no longer grows around the icon
 - Docs: the live examples build icons as Home Assistant does, so the heading icons on the site sit centred too, and a test measures that every icon of every card sits centred in its box
