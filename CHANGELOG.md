@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Header badges carry their icon inside the pill instead of beside it. A header badge with `show_value: false`, or a value that renders empty, is just the icon in a coloured circle; an unavailable entity keeps its text. Badges in row, column and table items are unchanged
 - Header items end at the card's right padding. A card without history visuals kept an empty range after them, and the header's 10 px gap before it showed as space after the last item
 
 ## 2.3.1 (2026-10-10)

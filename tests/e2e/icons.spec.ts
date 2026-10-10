@@ -19,7 +19,11 @@ const CARDS = [
     type: G,
     title: "Living room",
     icon: "mdi:sofa",
-    header_entities: [{ entity: "sensor.living_room_temperature" }],
+    header_entities: [
+      { entity: "sensor.living_room_temperature" },
+      { entity: "vacuum.robot", visual: "badge" },
+      { entity: "vacuum.robot", visual: "badge", show_value: false },
+    ],
     entities: [
       {
         name: "Scenes",
@@ -143,6 +147,8 @@ test("every icon sits centred in the box the card draws it in", async ({ page })
     ["entity-card-pro", "ha-state-icon in button.round"],
     ["entity-group-card-pro", "ha-icon in div.header"],
     ["entity-group-card-pro", "ha-state-icon in div.row.hval"],
+    ["entity-group-card-pro", "ha-state-icon in span.pill.badge"],
+    ["entity-group-card-pro", "ha-state-icon in span.pill.badge.round"],
     ["entity-group-card-pro", "ha-state-icon in button.round"],
     ["entity-group-card-pro", "ha-state-icon in button.chip"],
     ["entity-group-card-pro", "ha-icon in button.round.hold"],

@@ -26,6 +26,11 @@ export const STYLE_HEADER = `
   .hval .state, .hval .secondary { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .hval ha-icon, .hval ha-state-icon { --mdc-icon-size: 18px; color: var(--fe-color); }
   .hval .state, .hval .pill { font-size: 13px; line-height: 16px; }
+  /* a header badge carries its icon; with nothing to say it is the icon in a circle */
+  .hval .pill.badge { display: inline-flex; align-items: center; gap: 4px; padding-left: 6px; }
+  .hval .pill.badge > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .hval .pill.badge ha-icon, .hval .pill.badge ha-state-icon { flex: none; --mdc-icon-size: 16px; }
+  .hval .pill.badge.round { flex: none; width: 24px; height: 24px; padding: 0; justify-content: center; }
   .hval .secondary { font-size: 12px; }
 `;
 export const STYLE_ROW = `

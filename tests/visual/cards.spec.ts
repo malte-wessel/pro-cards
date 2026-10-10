@@ -990,6 +990,50 @@ const CASES = {
       ],
     },
   ],
+  // header badges carry their icon; with nothing to say they are the icon in a circle
+  "egc-header-badges": [
+    {
+      type: EGC,
+      title: "Robot",
+      icon: "mdi:robot-vacuum",
+      header_entities: [
+        {
+          entity: "vacuum.robot",
+          visual: "badge",
+          rules: [{ state: "cleaning", color: "blue", label: "Cleaning" }],
+        },
+        {
+          entity: "sensor.robot_battery",
+          visual: "badge",
+          decimals: 0,
+          rules: [{ above: 20, color: "green" }],
+        },
+        {
+          entity: "sensor.robot_dustbin_remaining",
+          visual: "badge",
+          icon: "mdi:delete-variant",
+          color: "amber",
+          show_value: false,
+        },
+      ],
+      entities: ["sensor.robot_current_room"],
+    },
+    {
+      type: EGC,
+      title: "Rooms",
+      header_entities: [
+        {
+          entity: "sensor.robot_current_room",
+          name: "In",
+          visual: "badge",
+          show_name: true,
+          color: "teal",
+        },
+        { entity: "sensor.robot_total_cleanings", visual: "badge", show_icon: false },
+      ],
+      entities: ["sensor.robot_progress"],
+    },
+  ],
   "egc-controls-unavailable": {
     type: EGC,
     title: "Unavailable",

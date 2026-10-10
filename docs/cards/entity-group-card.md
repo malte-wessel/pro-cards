@@ -546,7 +546,7 @@ entities:
 
 :::
 
-The header can carry badges and names too: a status badge next to the title of a device list.
+The header can carry badges and names too: a status badge next to the title of a device list. A header badge carries its icon inside the pill; with `show_value: false` it is just the icon in a circle, here the dustbin.
 
 ::: live
 
@@ -557,6 +557,7 @@ icon: mdi:robot-vacuum
 header_entities:
   - { entity: vacuum.robot, visual: badge, rules: [{ state: cleaning, color: blue, label: Cleaning }, { state: docked, color: green, label: Docked }, { state: returning, color: teal, label: Returning }] }
   - { entity: sensor.robot_battery, decimals: 0, rules: [{ below: 20, color: red }, { above: 20, color: green }] }
+  - { entity: sensor.robot_dustbin_remaining, visual: badge, show_value: false, icon: mdi:delete-variant, rules: [{ below: 20, color: red }, { above: 20, color: grey }] }
 entities:
   - { entity: sensor.robot_current_room, name: Current room, icon: mdi:map-marker }
   - { entity: sensor.robot_progress, name: Progress, visual: bar, color: blue, decimals: 0 }
