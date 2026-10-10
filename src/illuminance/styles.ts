@@ -1,7 +1,8 @@
 // Styles of the illuminance card.
-import { AXIS_FONT } from "../shared/constants.ts";
+import { AXIS_FONT, STYLE_ICONS } from "../shared/constants.ts";
 
 export const STYLE = `
+  ${STYLE_ICONS}
   :host { display: block; min-width: 0; }
   ha-card { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; contain: inline-size; }
   .header { display: flex; align-items: center; gap: 12px; padding: 12px 16px 0 16px; min-width: 0; }

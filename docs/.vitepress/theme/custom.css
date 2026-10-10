@@ -231,6 +231,8 @@ html {
 .ha-heading ha-icon {
   --mdc-icon-size: 20px;
   color: var(--secondary-text-color);
+  /* Home Assistant's icon aligns to the middle of the text line: no line box around it */
+  line-height: 0;
 }
 
 /* playground */

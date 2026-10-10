@@ -1,7 +1,9 @@
 // Styles of the sun path card.
+import { STYLE_ICONS } from "../shared/constants.ts";
 import { PLOT_H } from "./constants.ts";
 
 export const STYLE = `
+  ${STYLE_ICONS}
   /* min-width/overflow: as a grid item the card must never grow past its column because of long text */
   :host { display: block; min-width: 0; }
   ha-card { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; contain: inline-size; }

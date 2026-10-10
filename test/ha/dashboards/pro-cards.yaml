@@ -267,3 +267,41 @@ views:
               - { type: row, entities: [humidity, wind_speed, pressure] }
               - { type: trend, mode: hourly, hours: 12 }
               - { type: forecast, mode: daily, days: 5 }
+      - type: grid
+        cards:
+          - type: heading
+            heading: Controls · icons
+          # icons inside controls: Home Assistant's icon aligns to the middle of the text line, so
+          # every round button, chip, lead button and header icon here must sit centred. The tile
+          # loads Home Assistant's ha-state-icon, which the cards then use (as on most dashboards)
+          - type: tile
+            entity: light.living_room
+          - type: custom:entity-group-card-pro
+            title: Buttons
+            icon: mdi:palette
+            header_entities:
+              - { entity: light.living_room }
+            entities:
+              - name: Scenes
+                icon: mdi:palette
+                control: buttons
+                control_options:
+                  - { entity: light.living_room, icon: mdi:sofa-single, color: orange }
+                  - { entity: light.kitchen, icon: mdi:weather-sunset-down, color: orange }
+                  - { entity: light.office, icon: mdi:white-balance-sunny, color: amber }
+                  - { entity: light.dining_table, color: indigo }
+                  - { icon: mdi:cog, action: { action: navigate, navigation_path: /config } }
+              - name: Chips
+                icon: mdi:gesture-tap-button
+                control: buttons
+                control_position: block
+                control_options:
+                  - { entity: light.kitchen, label: Kitchen, icon: mdi:silverware, color: teal }
+                  - { entity: switch.coffee_machine, label: Coffee, color: brown }
+              - { entity: cover.living_room_blinds, control: buttons }
+          - type: custom:entity-group-card-pro
+            layout: row
+            entities:
+              - { entity: light.living_room, name: Ceiling, control: button }
+              - { entity: light.kitchen, name: Kitchen, control: hold, control_position: lead }
+              - { entity: switch.coffee_machine, name: Coffee, control: toggle }

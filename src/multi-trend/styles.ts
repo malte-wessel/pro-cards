@@ -1,9 +1,11 @@
 // Styles of the multi trend card: the header on top of the shared trend plot styles.
+import { STYLE_ICONS } from "../shared/constants.ts";
 import { STYLE_TREND } from "../shared/trend/styles.ts";
 
 export const STYLE =
   STYLE_TREND +
   `
+  ${STYLE_ICONS}
   :host { display: block; }
   ha-card {
     height: 100%;

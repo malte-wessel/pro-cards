@@ -1,8 +1,9 @@
 // CSS of the entity cards, in pieces so every card ships only what it renders.
 // Colours come from HA theme tokens; --fe-color is set per row from the resolved look.
-import { AXIS_FONT } from "../../constants.ts";
+import { AXIS_FONT, STYLE_ICONS } from "../../constants.ts";
 
 export const STYLE_BASE = `
+  ${STYLE_ICONS}
   :host { display: block; min-width: 0; }
   ha-card { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; contain: inline-size; --fe-tint: transparent; }
   ha-card.tinted { background: color-mix(in srgb, var(--fe-tint) 12%, var(--ha-card-background, var(--card-background-color))); }
