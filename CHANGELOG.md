@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.4.0 (beta)
 
 - `title_tap_action` on the entity group, entity sections, power flow, weather, wind and rain cards: the title and its icon run an action, e.g. navigate to the room's dashboard. Without it the title stays plain text; header entities keep their own actions
 - The title line sits 16 px above the first row (was 12 px), so the header reads as a block of its own
