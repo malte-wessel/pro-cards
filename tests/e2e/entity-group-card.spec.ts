@@ -1,4 +1,4 @@
-import { test, expect, mount, calls, events, state, setState, card } from "./util.ts";
+import { test, expect, mount, actions, calls, events, state, setState, card } from "./util.ts";
 import type { Locator } from "@playwright/test";
 import type { EntityGroupCard } from "../../src/entity-group-card.ts";
 
@@ -317,6 +317,69 @@ test.describe("values and header entities", () => {
     expect(
       await rightGap(card(page).locator(".header"), card(page).locator(".header .row.hval").last()),
     ).toBeLessThan(1);
+  });
+});
+
+test.describe("header and dividers", () => {
+  test("title_tap_action makes the title and its icon a button; header items keep their own", async ({
+    page,
+  }) => {
+    const NAV = { action: "navigate", navigation_path: "/rooms/kitchen" };
+    await mount(page, {
+      type: T,
+      title: "Kitchen",
+      icon: "mdi:silverware-fork-knife",
+      title_tap_action: NAV,
+      header_entities: ["sensor.kitchen_humidity"],
+      entities: ["light.kitchen"],
+    });
+    const c = card(page);
+    const title = c.locator(".header .title");
+    await expect(title).toHaveAttribute("role", "button");
+    await expect(title).toHaveAttribute("aria-label", "Kitchen");
+    await title.click();
+    await c.locator(".header > ha-icon").click();
+    await title.focus();
+    await page.keyboard.press("Enter");
+    const tap = { action: "tap", config: { entity: null, tap_action: NAV } };
+    expect(await actions(page)).toEqual([tap, tap, tap]);
+    // a header item runs its own action, never the title's
+    await c.locator(".header .row.hval").click();
+    const all = await actions(page);
+    expect(all).toHaveLength(4);
+    expect(all[3]).toMatchObject({ config: { entity: "sensor.kitchen_humidity" } });
+    // without the option the title is plain text
+    await mount(page, { type: T, title: "Kitchen", entities: ["light.kitchen"] });
+    const plain = card(page).locator(".header .title");
+    expect(await plain.getAttribute("role")).toBeNull();
+    expect(await plain.getAttribute("tabindex")).toBeNull();
+  });
+  test("the title line sits 16 px above the first row, and dividers run edge to edge", async ({
+    page,
+  }) => {
+    await mount(page, {
+      type: "custom:entity-sections-card-pro",
+      title: "Living room",
+      icon: "mdi:sofa",
+      sections: [
+        { entities: ["light.living_room"] },
+        { divider: true, entities: ["light.kitchen"] },
+      ],
+    });
+    const c = card(page);
+    const header = c.locator(".header");
+    const hb = (await header.boundingBox())!;
+    const padBottom = await header.evaluate((e) => parseFloat(getComputedStyle(e).paddingBottom));
+    const row = (await c.locator(".body .row").first().boundingBox())!;
+    expect(Math.abs(row.y - (hb.y + hb.height - padBottom) - 16)).toBeLessThan(1);
+    // the divider spans the card inside its border
+    const cardBox = (await c.locator("ha-card").boundingBox())!;
+    const border = await c
+      .locator("ha-card")
+      .evaluate((e) => parseFloat(getComputedStyle(e).borderLeftWidth));
+    const d = (await c.locator(".divider").first().boundingBox())!;
+    expect(Math.abs(d.x - (cardBox.x + border))).toBeLessThan(1);
+    expect(Math.abs(d.width - (cardBox.width - 2 * border))).toBeLessThan(1);
   });
 });
 

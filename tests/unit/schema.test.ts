@@ -73,6 +73,17 @@ describe("card config schemas", () => {
       /enum|allowed/,
     );
     expect(validate({ type: EGC, layout: "tile", entities: ["sensor.a"] })).toMatch(/enum|allowed/);
+    expect(validate({ type: EGC, title_tap: "navigate", entities: ["sensor.a"] })).toBeTruthy();
+    expect(
+      validate({ type: EGC, title_tap_action: { action: "navigate" }, entities: ["sensor.a"] }),
+    ).toMatch(/navigation_path/);
+    expect(
+      validate({
+        type: ESC,
+        title_tap_action: "more-info",
+        sections: [{ entities: ["sensor.a"] }],
+      }),
+    ).toBeNull();
     expect(validate({ type: EGC, entities: [{ entity: "not an id" }] })).toMatch(/pattern/);
     expect(validate({ type: EGC, entities: [] })).toMatch(/fewer|minItems/);
     expect(validate({ type: EGC, layout: "row" })).toMatch(/entities/);

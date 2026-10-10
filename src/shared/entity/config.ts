@@ -95,6 +95,8 @@ export interface RawGroup extends RawItemOptions {
 export interface RawEntityCardBase
   extends CardConfigBase, RawActionDefaults, RawHistoryOptions, RawItemOptions {
   title?: string | null;
+  // what tapping the title (or its icon) does, e.g. navigate to the room's dashboard
+  title_tap_action?: RawAction;
   icon?: string | null;
   align?: unknown;
   columns?: unknown;
@@ -169,6 +171,8 @@ export interface EntityCardConfig extends ActionDefaults {
   type: string;
   layout: GroupLayout | "tile" | "sections";
   title: string | null;
+  // the action of the title and its icon (null: they are plain text)
+  titleTap: ActionConfig | null;
   icon: string | null;
   hours: number;
   bucketMin: number;
@@ -183,6 +187,13 @@ export const normalizeAction = (a: RawAction | undefined, fallback: ActionConfig
   if (a === undefined || a === null) return fallback;
   if (typeof a === "string") return { action: a };
   return { action: "more-info", ...a };
+};
+// `title_tap_action`: null when unset or `none`, so the title stays plain text
+export const normalizeTitleAction = (raw: { title_tap_action?: RawAction }) => {
+  const a = raw.title_tap_action;
+  if (a === undefined || a === null) return null;
+  const action = normalizeAction(a, { action: "none" });
+  return action.action === "none" ? null : action;
 };
 export const normalizeActionDefaults = (raw: RawActionDefaults): ActionDefaults => ({
   tap: normalizeAction(raw.tap_action, { action: "more-info" }),

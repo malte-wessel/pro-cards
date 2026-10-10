@@ -3,6 +3,7 @@
 // home, every source's sensors and every consumer; `sources` and `consumers` point into that flat
 // list by index, so rules, templates, actions and formatting come from the entity layer.
 import {
+  normalizeTitleAction,
   clampColumns,
   normalizeActionDefaults,
   normalizeEntity,
@@ -350,6 +351,7 @@ export const normalizePowerFlowConfig = (input: unknown): PowerFlowConfig => {
   return {
     layout: "hero",
     title: raw.title ?? null,
+    titleTap: normalizeTitleAction(raw),
     icon: raw.icon ?? null,
     ...normalizeHistoryOptions(raw),
     ...ctx,

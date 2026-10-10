@@ -447,6 +447,7 @@ export abstract class EntityCardBase extends HTMLElement {
       header.innerHTML = `<ha-icon></ha-icon><div class="title"></div><div class="hvals"></div><div class="range"></div>`;
       const hvals = qs(header, ".hvals");
       for (const i of cfg.headerIdxs) hvals.appendChild(this._row(i, "hval"));
+      if (cfg.titleTap) this._bindTitle(header, cfg.titleTap);
       card.appendChild(header);
     }
     const body = document.createElement("div");
@@ -460,6 +461,25 @@ export abstract class EntityCardBase extends HTMLElement {
     // text fitted before the web font arrived is measured again once it is there
     document.fonts?.ready.then(() => {
       if (this._root === card) this._fitCells(card);
+    });
+  }
+  // `title_tap_action`: the title is the button, its icon taps the same; the header items keep
+  // their own actions, so the header itself is not one (no button inside a button)
+  _bindTitle(header: HTMLElement, a: ActionConfig) {
+    header.classList.add("tappable");
+    const title = qs(header, ".title");
+    title.setAttribute("role", "button");
+    title.tabIndex = 0;
+    const run = () => {
+      const { entity, ...action } = a;
+      fireAction(this, entity ?? null, action, "tap");
+    };
+    title.addEventListener("click", run);
+    qs(header, "ha-icon").addEventListener("click", run);
+    title.addEventListener("keydown", (ev) => {
+      if (ev.key !== "Enter" && ev.key !== " ") return;
+      ev.preventDefault();
+      run();
     });
   }
   // the body: one container per group (a subclass may lay its body out differently)
@@ -520,7 +540,9 @@ export abstract class EntityCardBase extends HTMLElement {
         hi.setAttribute("icon", icon);
         hi.style.display = "";
       } else hi.style.display = "none";
-      qs(header, ".title").textContent = title || "";
+      const t = qs(header, ".title");
+      t.textContent = title || "";
+      if (cfg.titleTap) t.setAttribute("aria-label", title || "");
       qs(header, ".range").textContent = this._historyIds.length ? `${cfg.hours} h` : "";
       header.style.display = title || icon || cfg.headerIdxs.length ? "" : "none";
     }

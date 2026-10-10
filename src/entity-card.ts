@@ -49,6 +49,7 @@ export const normalizeEntityCardConfig = (input: unknown): EntityCardConfig => {
   return {
     layout: "tile",
     title: null,
+    titleTap: null,
     icon: null,
     ...normalizeHistoryOptions(raw),
     columns: 1,

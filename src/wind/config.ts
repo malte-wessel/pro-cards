@@ -2,6 +2,7 @@
 // element renders header, rows, tint and templates from it) whose first three items are the wind
 // speed, the direction and the gusts: sensor states, or attributes of a weather entity.
 import {
+  normalizeTitleAction,
   clampColumns,
   normalizeActionDefaults,
   normalizeEntity,
@@ -136,6 +137,7 @@ export const normalizeWindCardConfig = (input: unknown): WindConfig => {
     entity,
     source,
     title: raw.title ?? null,
+    titleTap: normalizeTitleAction(raw),
     icon: raw.icon ?? null,
     ...normalizeHistoryOptions(raw),
     ...ctx,

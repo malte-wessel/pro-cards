@@ -566,6 +566,26 @@ entities:
 
 :::
 
+## Title action
+
+`title_tap_action` makes the title and its icon tappable, for example to open the room's own dashboard from a summary card. It takes any [action](/cards/entity-options#actions); without it the title is plain text. The header entities keep their own actions.
+
+::: live
+
+```yaml
+type: custom:entity-group-card-pro
+title: Kitchen
+icon: mdi:silverware-fork-knife
+title_tap_action: { action: navigate, navigation_path: /dashboard-rooms/kitchen }
+header_entities:
+  - { entity: sensor.kitchen_temperature, decimals: 1 }
+entities:
+  - { entity: light.kitchen, control: toggle }
+  - { entity: sensor.kitchen_humidity, decimals: 0 }
+```
+
+:::
+
 ## Reference
 
 ### Layouts
@@ -586,6 +606,7 @@ entities:
 | `entities`                                         |                              | List of entity ids or [entity objects](/cards/entity-options#entity-options) (required).                                                                                                                                                                                                            |
 | `layout`                                           | `list`                       | `list`, `grid`, `hero`, `row`, `column` or `table`.                                                                                                                                                                                                                                                 |
 | `title`                                            |                              | Header text. Template allowed.                                                                                                                                                                                                                                                                      |
+| `title_tap_action`                                 | none                         | Action when the title or its icon is tapped, e.g. `{ action: navigate, navigation_path: /dashboard-rooms/kitchen }` to open the room's dashboard; see [Actions](/cards/entity-options#actions).                                                                                                     |
 | `icon`                                             |                              | Header icon. Template allowed.                                                                                                                                                                                                                                                                      |
 | `header_entities`                                  |                              | Entities shown as icon + value on the right of the title line. Defaults `show_icon: true`, `show_value: true`, `show_name: false`; visuals `icon` and `badge`.                                                                                                                                      |
 | `columns`                                          | `2`                          | Grid: cells per row, 1 to 4 (not the sections grid `grid_options.columns`).                                                                                                                                                                                                                         |

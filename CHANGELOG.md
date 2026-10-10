@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- `title_tap_action` on the entity group, entity sections, power flow, weather, wind and rain cards: the title and its icon run an action, e.g. navigate to the room's dashboard. Without it the title stays plain text; header entities keep their own actions
+- The title line sits 16 px above the first row (was 12 px), so the header reads as a block of its own
+- Dividers between sections and below a hero lead run from edge to edge of the card
 - Header badges carry their icon inside the pill instead of beside it. A header badge with `show_value: false`, or a value that renders empty, is just the icon in a coloured circle; an unavailable entity keeps its text. Badges in row, column and table items are unchanged
 - Header items end at the card's right padding. A card without history visuals kept an empty range after them, and the header's 10 px gap before it showed as space after the last item
 

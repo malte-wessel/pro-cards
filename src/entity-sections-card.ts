@@ -18,6 +18,7 @@ import { t } from "./shared/i18n.ts";
 import { EntityCardBase } from "./shared/entity/base.ts";
 import { DEFAULTS } from "./shared/entity/constants.ts";
 import {
+  normalizeTitleAction,
   clampColumns,
   normalizeActionDefaults,
   normalizeGroup,
@@ -58,6 +59,7 @@ export const normalizeEntitySectionsCardConfig = (input: unknown): EntityCardCon
   return {
     layout: "sections",
     title: raw.title ?? null,
+    titleTap: normalizeTitleAction(raw),
     icon: raw.icon ?? null,
     ...normalizeHistoryOptions(raw),
     ...ctx,
