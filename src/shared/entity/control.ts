@@ -99,10 +99,15 @@ export interface Pending {
   until: number;
   value?: number | string;
   sticky?: boolean;
+  // a custom button's own call: its key (`c<i>`) and the entity whose answer ends it
+  key?: string;
+  entity?: string | null;
 }
 // what the control builders need from the card element
 export interface ControlHost {
   pending: ReadonlyMap<number, Pending>;
+  // the calls of custom buttons, one per button (`index:c<i>`)
+  buttonPending: ReadonlyMap<string, Pending>;
   // hold buttons armed by a first press (screen readers): until when, by entity index, and by
   // `index:button` for the buttons of a confirmed group
   armed: Map<string, number>;
@@ -157,30 +162,6 @@ const normalizeOptions = (list: unknown): ControlOption[] | null => {
   return out.length ? out : null;
 };
 
-// the `control_options` of `control: buttons`: entries with an entity or an action (a bare action name or an action object)
-export const normalizeButtons = (list: unknown, ctx: NormalizeCtx, label: string) => {
-  if (!Array.isArray(list)) return null;
-  const out: CustomButton[] = [];
-  const str = (v: unknown) => (typeof v === "string" && v ? v : null);
-  list.forEach((x, i) => {
-    const o = (x && typeof x === "object" ? x : {}) as Record<string, unknown>;
-    const a = o.action;
-    const action: ActionConfig | null =
-      typeof a === "string" && a
-        ? { action: a }
-        : a && typeof a === "object" && typeof (a as ActionConfig).action === "string"
-          ? { ...(a as ActionConfig) }
-          : null;
-    const entity = str(o.entity);
-    if (!entity && !action) {
-      console.warn(`${ctx.type}: ${label}.control_options[${i}] needs 'entity' or 'action'`);
-      return;
-    }
-    out.push({ entity, icon: str(o.icon), label: str(o.label), color: str(o.color), action });
-  });
-  return out.length ? out : null;
-};
-
 // `control` (a name, `true` = auto, `none` = nothing) with its `control_*` options;
 // `toggle: true` is the old spelling of `control: toggle`; `control_options` are the options of
 // segments and select, or the buttons of `control: buttons`
@@ -217,7 +198,8 @@ export const normalizeControl = (
     attribute: oneOf(CONTROL_ATTRIBUTES, ca) ? ca : oneOf(CONTROL_ATTRIBUTES, shown) ? shown : null,
     step: step !== null && step > 0 ? step : null,
     options: kind === "buttons" ? null : normalizeOptions(raw.control_options),
-    buttons: kind === "buttons" ? normalizeButtons(raw.control_options, ctx, label) : null,
+    // filled in by normalizeEntity, which parses the actions of the buttons
+    buttons: null,
     confirm: !!raw.control_confirm,
   };
 };
@@ -396,13 +378,28 @@ export const hasBlockControl = (ent: EntityItem) =>
 
 // ----- state helpers -----
 
-// a script, scene or button that was never run reports `unknown` (its state is the time of the
-// last run): that is no reason to grey its control out
-const PRESS_DOMAINS: ReadonlySet<string> = new Set(["script", "scene", "button", "input_button"]);
+// what pressing an entity does, by domain: run it (its state is the time of the last run) or
+// switch it (its state says on or off)
+const PRESS_KINDS: Record<string, "run" | "switch"> = {
+  script: "run",
+  scene: "run",
+  button: "run",
+  input_button: "run",
+  light: "switch",
+  switch: "switch",
+  input_boolean: "switch",
+  fan: "switch",
+  media_player: "switch",
+  cover: "switch",
+  lock: "switch",
+};
+export const pressKindOf = (id: string | null | undefined) =>
+  (id && PRESS_KINDS[domainOf(id)]) || null;
 // whether the entity can take a call: its state decides, never the value the row shows (an off
 // light shown by its brightness attribute has no value, and is still a light to turn on)
 export const canControlId = (id: string | null, st: HassEntity | undefined) =>
-  !!st && st.state !== "unavailable" && (st.state !== "unknown" || PRESS_DOMAINS.has(domainOf(id)));
+  // a script, scene or button that was never run reports `unknown`: no reason to grey it out
+  !!st && st.state !== "unavailable" && (st.state !== "unknown" || pressKindOf(id) === "run");
 export const canControl = (ent: EntityItem, st: HassEntity | undefined) =>
   canControlId(ent.entity, st);
 export const isOn = (st: HassEntity | undefined): boolean => {
@@ -556,36 +553,31 @@ export const currentOptionOf = (ent: EntityItem, st: HassEntity | undefined): st
   return st.state;
 };
 
-// domains a custom button switches (filled while on); the rest run (scene, script, button)
-const SWITCH_DOMAINS: ReadonlySet<string> = new Set([
-  "light",
-  "switch",
-  "input_boolean",
-  "fan",
-  "media_player",
-  "cover",
-  "lock",
-]);
 // whether a custom button shows its entity as on (a scene's state is a time, never "on")
 export const buttonActive = (b: CustomButton, st: HassEntity | undefined) =>
-  !!b.entity && SWITCH_DOMAINS.has(domainOf(b.entity)) && isOn(st);
+  pressKindOf(b.entity) === "switch" && isOn(st);
+// the keys that name what a service call acts on, in `target` or in its data
+const TARGET_KEYS = ["entity_id", "device_id", "area_id", "floor_id", "label_id"];
+const namesTarget = (o: unknown) =>
+  !!o && typeof o === "object" && TARGET_KEYS.some((k) => k in (o as object));
 // the action a custom button runs: its entity is the action's entity (more-info, toggle) and, for
 // a service call that names no target of its own, the target
 export const actionOf = (b: CustomButton): ActionConfig => {
   const a = { ...(b.action as ActionConfig) };
   if (!b.entity) return a;
   a.entity ??= b.entity;
-  const data = a.data as Record<string, unknown> | undefined;
+  // a call that names anything to act on keeps it: the button's entity would be added to it
   if (
     (a.action === "perform-action" || a.action === "call-service") &&
     !a.target &&
-    !data?.entity_id
+    !namesTarget(a.data) &&
+    !namesTarget(a.service_data)
   )
     a.target = { entity_id: b.entity };
   return a;
 };
 // whether pressing a custom button runs something rather than switching it (a "done" flash)
-export const buttonRuns = (b: CustomButton) => !b.entity || !SWITCH_DOMAINS.has(domainOf(b.entity));
+export const buttonRuns = (b: CustomButton) => pressKindOf(b.entity) !== "switch";
 
 export const buttonsOf = (ent: EntityItem): ControlButton[] => {
   switch (domainOf(ent.entity)) {
@@ -614,33 +606,19 @@ export const actionServiceFor = (
   id: string | null,
   st: HassEntity | undefined,
 ): ServiceCall | null => {
-  if (!id) return null;
+  const kind = pressKindOf(id);
+  if (!id || !kind) return null;
   const d = domainOf(id);
   const call = (domain: string, service: string) => ({
     domain,
     service,
     data: { entity_id: id },
   });
-  switch (d) {
-    case "script":
-    case "scene":
-      return call(d, "turn_on");
-    case "button":
-    case "input_button":
-      return call(d, "press");
-    case "lock":
-      return st?.state === "locked" ? call("lock", "unlock") : call("lock", "lock");
-    case "cover":
-      return call("cover", "toggle");
-    case "light":
-    case "switch":
-    case "input_boolean":
-    case "fan":
-    case "media_player":
-      return call("homeassistant", "toggle");
-    default:
-      return null;
-  }
+  if (kind === "run")
+    return d === "script" || d === "scene" ? call(d, "turn_on") : call(d, "press");
+  if (d === "lock") return st?.state === "locked" ? call("lock", "unlock") : call("lock", "lock");
+  if (d === "cover") return call("cover", "toggle");
+  return call("homeassistant", "toggle");
 };
 
 // the service a control calls for `input`, or null when the domain has none that fits

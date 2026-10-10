@@ -651,7 +651,7 @@ describe("rows without room under the line", () => {
 });
 
 describe("custom buttons", () => {
-  const raw = (o: RawEntity) => normalizeEntity(o, ctx, "e");
+  const raw = (o: RawEntity) => normalizeEntity(o, ctx, "e", undefined, { buttons: true });
   it("come from control_options with control: buttons; entries need an entity or an action", () => {
     const c = raw({
       name: "Scenes",
@@ -660,6 +660,7 @@ describe("custom buttons", () => {
         { entity: "scene.bright", color: "amber" },
         { entity: "light.desk", label: "Desk", icon: "mdi:lamp" },
         { action: "navigate", label: "Away" },
+        { icon: "mdi:x", action: { navigation_path: "/x" } },
         { icon: "mdi:x" },
         "plain",
         null,
@@ -671,6 +672,14 @@ describe("custom buttons", () => {
       { entity: "scene.bright", icon: null, label: null, color: "amber", action: null },
       { entity: "light.desk", icon: "mdi:lamp", label: "Desk", color: null, action: null },
       { entity: null, icon: null, label: "Away", color: null, action: { action: "navigate" } },
+      // an action object without `action` defaults to more-info, as the row's own actions do
+      {
+        entity: null,
+        icon: "mdi:x",
+        label: null,
+        color: null,
+        action: { action: "more-info", navigation_path: "/x" },
+      },
     ]);
   });
   it("stay options of segments and select for every other control", () => {
@@ -683,14 +692,27 @@ describe("custom buttons", () => {
     expect(cover?.buttons).toBeNull();
     expect(raw({ entity: "cover.x", control: "buttons" }).control?.buttons).toBeNull();
   });
-  it("make a row without entity or value valid, with a blank value", () => {
+  it("stand without an entity or a value only where they are drawn", () => {
     const list = [{ entity: "scene.bright" }];
     const e = raw({ name: "Scenes", control: "buttons", control_options: list });
     expect(e.entity).toBeNull();
     expect(e.valueSrc).toEqual({ kind: "text", text: "" });
+    // other cards and places do not draw buttons: no blank value there
+    expect(() =>
+      normalizeEntity({ name: "Scenes", control: "buttons", control_options: list }, ctx, "e"),
+    ).toThrow(/^t: e needs 'entity' or 'value'$/);
     expect(() =>
       normalizeHeaderEntities([{ control: "buttons", control_options: list }], ctx),
-    ).toThrow(/header_entities\[0\] needs 'entity' or 'value'/);
+    ).toThrow(
+      /header_entities\[0\] needs 'entity' or 'value' \(buttons are not drawn in the header\)/,
+    );
+    // a value the user wrote stays valid in the header, buttons or not
+    const header = normalizeHeaderEntities(
+      [{ value: "", control: "buttons", control_options: list }],
+      ctx,
+    );
+    expect(header[0].valueSrc).toEqual({ kind: "text", text: "" });
+    expect(header[0].control).toBeNull();
     expect(() => raw({ name: "Scenes", control_options: list })).toThrow(
       /needs 'entity' or 'value'/,
     );
@@ -728,8 +750,15 @@ describe("custom buttons", () => {
     });
     const own = { ...perform, target: { area_id: "kitchen" } };
     expect(actionOf(b("light.a", own)).target).toEqual({ area_id: "kitchen" });
-    const inData = { ...perform, data: { entity_id: "light.b" } };
-    expect(actionOf(b("light.a", inData)).target).toBeUndefined();
+    // anything the call names to act on, in its data or the old service_data, stays alone
+    for (const data of [{ entity_id: "light.b" }, { area_id: "kitchen" }, { device_id: "d1" }]) {
+      expect(actionOf(b("light.a", { ...perform, data })).target).toBeUndefined();
+      const legacy = { action: "call-service", service: "light.turn_on", service_data: data };
+      expect(actionOf(b("light.a", legacy)).target).toBeUndefined();
+    }
+    expect(actionOf(b("light.a", { ...perform, data: { brightness_pct: 30 } })).target).toEqual({
+      entity_id: "light.a",
+    });
     expect(actionOf(b("light.a", { action: "more-info" }))).toEqual({
       action: "more-info",
       entity: "light.a",

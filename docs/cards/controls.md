@@ -193,7 +193,7 @@ entities:
 
 #### Your own buttons
 
-With `control: buttons`, `control_options` replaces the domain's buttons with a list of your own, for the scenes of a room, a few scripts or the lights next to it. A button runs its `entity` (scenes and scripts turn on, buttons press) or switches it (a light, a switch, a fan: the button is filled while it is on); an `action` (any [Home Assistant action](https://www.home-assistant.io/dashboards/actions/), the shape of `tap_action`) runs instead; the button's `entity` is the entity of `more-info` and `toggle`, and the target of a `perform-action` that names none of its own. Every button takes its own `color` (default: the row's colour) and `icon` (default: the entity's icon); with a `label` it is a chip with text, without one a round icon button. A row of buttons needs no entity of its own: a `name` and an `icon` are enough.
+With `control: buttons`, `control_options` replaces the domain's buttons with a list of your own, for the scenes of a room, a few scripts or the lights next to it. A button runs its `entity` (scenes and scripts turn on, buttons press) or switches it (a light, a switch, a fan: the button is filled while it is on); an `action` (any [Home Assistant action](https://www.home-assistant.io/dashboards/actions/), the shape of `tap_action`) runs instead; the button's `entity` is the entity of `more-info` and `toggle`, and the target of a `perform-action` that names nothing to act on itself (no `target`, and no `entity_id`, `device_id`, `area_id`, `floor_id` or `label_id` in its `data`). Every button takes its own `color` (default: the row's colour) and `icon` (default: the entity's icon); with a `label` it is a chip with text, without one a round icon button. A row of buttons needs no entity of its own: a `name` and an `icon` are enough.
 
 ::: live
 
@@ -237,7 +237,7 @@ entities:
 | `icon`   | the entity's icon | `mdi:` icon.                                                                                                                                           |
 | `label`  | none (icon only)  | Text beside the icon; the name a screen reader reads is the label, else the entity's name.                                                             |
 
-An entity with nothing to run or switch (a sensor) opens its more-info dialog. `control_confirm: true` makes every button a hold of its own: round buttons fill their ring, chips fill from the left. `control_position: block` puts the buttons under the line, where many of them wrap.
+An entity with nothing to run or switch (a sensor) opens its more-info dialog. `control_confirm: true` makes every button a hold of its own: round buttons fill their ring, chips fill from the left. `control_position: block` puts the buttons under the line, where many of them wrap. Row items and the header draw no buttons: there an item needs an `entity` or a `value` of its own.
 
 ### Button
 

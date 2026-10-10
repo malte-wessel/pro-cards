@@ -678,17 +678,57 @@ describe("custom buttons", () => {
     expect(bs.map((b) => b.getAttribute("aria-pressed"))).toEqual(["false", null]);
     expect(bs[1].classList.contains("on")).toBe(true);
   });
-  it("warn in a row layout, where they are not drawn", () => {
+  it("are not drawn in a row layout: alone they are a config error, beside an entity a warning", () => {
+    const options = [{ entity: "script.night" }];
+    expect(() =>
+      h.mount(EntityGroupCard, {
+        layout: "row",
+        entities: [{ name: "Scenes", control: "buttons", control_options: options }],
+      }),
+    ).toThrow(/entities\[0\] needs 'entity' or 'value' \(buttons are not drawn in a row\)/);
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     h.mount(EntityGroupCard, {
       layout: "row",
-      entities: [
-        { name: "Scenes", control: "buttons", control_options: [{ entity: "script.night" }] },
-      ],
+      entities: [{ entity: "light.ceiling", control: "buttons", control_options: options }],
     });
     expect(warn).toHaveBeenCalledWith(
       expect.stringMatching(/control 'buttons' is not drawn in a row/),
     );
+  });
+  it("keep their own call in flight: a neighbour's call or answer leaves it alone", () => {
+    const r = h.mount(EntityCard, {
+      entity: "light.ceiling",
+      control: "buttons",
+      control_options: [
+        { entity: "light.porch", label: "Porch" },
+        { entity: "switch.pump", label: "Pump" },
+      ],
+    });
+    const bs = () => qa(r, ".ctl-buttons.custom > button");
+    bs()[0].click();
+    bs()[1].click();
+    expect(bs().map((b) => b.classList.contains("pending"))).toEqual([true, true]);
+    // the row's own light and the pump answer; the porch is still on its way
+    h.set("light.ceiling", "off");
+    h.set("switch.pump", "on");
+    expect(bs().map((b) => b.classList.contains("pending"))).toEqual([true, false]);
+    expect(bs()[0].classList.contains("on")).toBe(true);
+    h.set("light.porch", "on");
+    expect(bs()[0].classList.contains("pending")).toBe(false);
+  });
+  it("drop the ghost of a failed call, and only that one", async () => {
+    const r = h.mount(EntityCard, {
+      name: "Scenes",
+      control: "buttons",
+      control_options: [{ entity: "light.porch" }, { entity: "switch.pump" }],
+    });
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    qa(r, ".ctl-buttons.custom > button")[0].click();
+    h.fail = true;
+    qa(r, ".ctl-buttons.custom > button")[1].click();
+    await settle();
+    const bs = qa(r, ".ctl-buttons.custom > button");
+    expect(bs.map((b) => b.classList.contains("pending"))).toEqual([true, false]);
   });
   it("are disabled one by one by their own entity, never by the row's", () => {
     h.set("light.ceiling", "unavailable");

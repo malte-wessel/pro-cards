@@ -22,7 +22,13 @@ import {
 import type { ActionConfig, CardConfigBase } from "../ha.ts";
 import type { StringKey } from "../i18n.ts";
 import { isTemplate, numOrNull, oneOf } from "../util.ts";
-import { ITEM_CONTROLS, normalizeControl, placementsOf, type ControlConfig } from "./control.ts";
+import {
+  ITEM_CONTROLS,
+  normalizeControl,
+  placementsOf,
+  type ControlConfig,
+  type CustomButton,
+} from "./control.ts";
 
 // ----- the raw config as written in YAML -----
 
@@ -196,6 +202,33 @@ export const normalizeValue = (v: unknown): ValueSrc | null => {
   const s = String(v);
   return isTemplate(s) ? { kind: "template", template: s } : { kind: "text", text: s };
 };
+// the `control_options` of `control: buttons`: entries with an entity or an action (parsed as any
+// other action: a bare name, or an object that defaults to more-info); null when none is usable
+export const normalizeButtons = (
+  list: unknown,
+  ctx: NormalizeCtx,
+  label: string,
+): CustomButton[] | null => {
+  if (!Array.isArray(list)) return null;
+  const out: CustomButton[] = [];
+  const str = (v: unknown) => (typeof v === "string" && v ? v : null);
+  list.forEach((x, i) => {
+    const o = (x && typeof x === "object" ? x : {}) as Record<string, unknown>;
+    const a = o.action;
+    const action =
+      a === undefined || a === null || a === ""
+        ? null
+        : normalizeAction(a as RawAction, { action: "none" });
+    const entity = str(o.entity);
+    if (!entity && !action) {
+      console.warn(`${ctx.type}: ${label}.control_options[${i}] needs 'entity' or 'action'`);
+      return;
+    }
+    out.push({ entity, icon: str(o.icon), label: str(o.label), color: str(o.color), action });
+  });
+  return out.length ? out : null;
+};
+
 // rules: [{ state | below | above, color, icon, label, tint_card }], kept in author order
 export const normalizeRules = (list: unknown): Rule[] => {
   if (!Array.isArray(list)) return [];
@@ -236,6 +269,9 @@ export const normalizeEntity = (
   ctx: NormalizeCtx,
   label: string,
   itemDefaults: ItemDefaults = ITEM_DEFAULTS.other,
+  // where the item sits: whether custom buttons are drawn there (only then does an item of buttons
+  // alone stand without an entity or a value), else the place, for the error
+  place: { buttons: true } | { buttons: false; name?: string } = { buttons: false },
 ): EntityItem => {
   const o: RawEntity = typeof raw === "string" ? { entity: raw } : { ...(raw || {}) };
   let valueSrc: ValueSrc;
@@ -245,11 +281,17 @@ export const normalizeEntity = (
     valueSrc = { kind: "attribute", key: String(o.attribute) };
   } else valueSrc = normalizeValue(o.value) ?? { kind: "state" };
   const control = normalizeControl(o, ctx, label);
+  if (control?.kind === "buttons")
+    control.buttons = normalizeButtons(o.control_options, ctx, label);
+  const onlyButtons = !o.entity && valueSrc.kind === "state" && !!control?.buttons;
   // a row of custom buttons needs nothing else: a name and the buttons
-  if (!o.entity && valueSrc.kind === "state" && control?.buttons)
-    valueSrc = { kind: "text", text: "" };
-  if (!o.entity && valueSrc.kind !== "template" && valueSrc.kind !== "text")
-    throw new Error(`${ctx.type}: ${label} needs 'entity' or 'value'`);
+  if (onlyButtons && place.buttons) valueSrc = { kind: "text", text: "" };
+  if (!o.entity && valueSrc.kind !== "template" && valueSrc.kind !== "text") {
+    const where = onlyButtons && !place.buttons && place.name;
+    throw new Error(
+      `${ctx.type}: ${label} needs 'entity' or 'value'${where ? ` (buttons are not drawn in ${where})` : ""}`,
+    );
+  }
   const dec = numOrNull(o.decimals);
   return {
     entity: o.entity || null,
@@ -299,7 +341,13 @@ export const normalizeGroup = (
   const itemDefaults = normalizeItemOptions(g, normalizeItemOptions(cardRaw, base));
   const isItem = ITEM_LAYOUTS.has(layout);
   const entities = (list as (RawEntityInput | null | undefined)[]).map((e, i) => {
-    const ent = normalizeEntity(e, ctx, `${entLabel}[${i}]`, itemDefaults);
+    const ent = normalizeEntity(
+      e,
+      ctx,
+      `${entLabel}[${i}]`,
+      itemDefaults,
+      layout === "row" ? { buttons: false, name: "a row" } : { buttons: true },
+    );
     if (isItem && BLOCK_VISUALS.has(ent.visual)) {
       console.warn(`${ctx.type}: visual '${ent.visual}' is not drawn in a ${layout}; using icon`);
       ent.visual = "icon";
@@ -332,11 +380,10 @@ export const normalizeGroup = (
 export const normalizeHeaderEntities = (raw: unknown, ctx: NormalizeCtx): EntityItem[] => {
   if (!Array.isArray(raw)) return [];
   return (raw as (RawEntityInput | null | undefined)[]).map((e, i) => {
-    const label = `header_entities[${i}]`;
-    const ent = normalizeEntity(e, ctx, label, ITEM_DEFAULTS.header);
-    // buttons are not drawn in the header: an item of buttons alone would be empty
-    if (!ent.entity && ent.control?.buttons && ent.valueSrc.kind === "text" && !ent.valueSrc.text)
-      throw new Error(`${ctx.type}: ${label} needs 'entity' or 'value'`);
+    const ent = normalizeEntity(e, ctx, `header_entities[${i}]`, ITEM_DEFAULTS.header, {
+      buttons: false,
+      name: "the header",
+    });
     if (!HEADER_VISUALS.has(ent.visual)) {
       console.warn(`${ctx.type}: visual '${ent.visual}' is not drawn in the header; using icon`);
       ent.visual = "icon";

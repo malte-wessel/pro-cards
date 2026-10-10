@@ -6,7 +6,6 @@ import { cssColor, domainOf } from "../../color.ts";
 import { fmtNumber } from "../../format.ts";
 import { t } from "../../i18n.ts";
 import { clamp01 } from "../../util.ts";
-import type { HassEntity } from "../../ha.ts";
 import type { EntityItem } from "../config.ts";
 import {
   actionOf,
@@ -466,22 +465,11 @@ export const buttonsEl = (
   return el;
 };
 
-// the icon of a custom button: its own, else its entity's (from the state), else a generic one
-const customIcon = (ctx: RenderCtx, b: CustomButton, st: HassEntity | undefined) => {
-  if (b.icon) return icon(b.icon);
-  if (st && customElements.get("ha-state-icon")) {
-    const el = document.createElement("ha-state-icon");
-    el.hass = ctx.hass;
-    el.stateObj = st;
-    return el;
-  }
-  const own = st?.attributes?.icon;
-  return icon(typeof own === "string" && own ? own : "mdi:gesture-tap-button");
-};
 // a lock or cover is filled while unlocked / open: that is no "pressed"
 const OPEN_DOMAINS: ReadonlySet<string> = new Set(["lock", "cover"]);
-// `control: buttons` with `control_options`: one round button (or a chip with its label) per entry, in its own colour; a
-// button runs its entity (a scene, a script) or switches it (filled while on), or runs its action
+// `control: buttons` with `control_options`: one round button (or a chip with its label) per
+// entry, in its own colour; a button runs its entity (a scene, a script) or switches it (filled
+// while on), or runs its action. Each button keeps its own call in flight (host.buttonPending).
 const customButtonsEl = (
   ctx: RenderCtx,
   ent: EntityItem,
@@ -492,13 +480,12 @@ const customButtonsEl = (
   const host = ctx.ctl as ControlHost;
   const el = root("buttons", p, idx);
   el.classList.add("custom");
-  const pend = pendingStr(host.pending.get(idx));
   list.forEach((b, i) => {
     const st = b.entity ? ctx.hass?.states[b.entity] : undefined;
     const name = b.label ?? st?.attributes?.friendly_name ?? b.entity ?? t(ctx.hass, "control.run");
     const key = `c${i}`,
       runs = buttonRuns(b),
-      pending = pend === key;
+      pending = host.buttonPending.has(`${idx}:${key}`);
     const btn = button(b.label ? "chip" : "round", name);
     if (!p.confirm) btn.title = name;
     const color = cssColor(b.color);
@@ -510,7 +497,8 @@ const customButtonsEl = (
     if (b.entity && !runs && !OPEN_DOMAINS.has(domainOf(b.entity)))
       btn.setAttribute("aria-pressed", String(active));
     if (p.confirm && !b.label) btn.appendChild(ringEl());
-    btn.appendChild(customIcon(ctx, b, st));
+    // its own icon, else its entity's, else a generic one
+    btn.appendChild(iconEl(ctx, { icon: b.icon, fallbackIcon: "mdi:gesture-tap-button" }, st));
     if (b.label) {
       const s = document.createElement("span");
       s.textContent = b.label;
@@ -528,12 +516,13 @@ const customButtonsEl = (
         host.runAction(ent, { action: "more-info", entity: b.entity ?? undefined }, "tap");
         return;
       }
+      const until = later(runs ? DONE_MS : PENDING_MS);
       host.call(
         btn,
         idx,
         ent,
         svc,
-        runs ? { until: later(DONE_MS), value: key, sticky: true } : { until: later(), value: key },
+        { until, key, entity: b.entity, ...(runs ? { sticky: true } : {}) },
         p.confirm || runs ? "success" : "light",
       );
     };

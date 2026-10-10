@@ -82,6 +82,8 @@ export abstract class EntityCardBase extends HTMLElement {
   // controls: service calls in flight per entity index, the row being dragged, the host the
   // builders talk to
   _pending = new Map<number, Pending>();
+  // the calls of custom buttons, one per button (`index:c<i>`), each ended by its own entity
+  _buttonPending = new Map<string, Pending>();
   _armed = new Map<string, number>();
   _dragging: number | null = null;
   _pendingTimer?: ReturnType<typeof setTimeout>;
@@ -104,6 +106,7 @@ export abstract class EntityCardBase extends HTMLElement {
     const dragging = () => this._dragging;
     this._ctl = {
       pending: this._pending,
+      buttonPending: this._buttonPending,
       armed: this._armed,
       get dragging() {
         return dragging();
@@ -149,6 +152,7 @@ export abstract class EntityCardBase extends HTMLElement {
     this._fetched = false;
     this._hover = null;
     this._pending.clear();
+    this._buttonPending.clear();
     this._armed.clear();
     this._dragging = null;
     if (this._hass) this._subscribeTemplates();
@@ -179,6 +183,8 @@ export abstract class EntityCardBase extends HTMLElement {
       // the device answered: its pending calls are over (a sticky one only expires)
       for (const i of this._idxsByEntity.get(id) ?? [])
         if (!this._pending.get(i)?.sticky) this._pending.delete(i);
+      for (const [k, p] of this._buttonPending)
+        if (p.entity === id && !p.sticky) this._buttonPending.delete(k);
       const s = st && this._series.get(id);
       if (s) {
         const t = new Date(st.last_updated).getTime();
@@ -197,7 +203,7 @@ export abstract class EntityCardBase extends HTMLElement {
     if (this._root) this._ro.observe(this._root);
     document.addEventListener("pointerdown", this._onDocPointer);
     // ghosts that expired while the card was away (another view) go now, the rest get their timer
-    if (this._pending.size && this._sweepPending()) this._render();
+    if ((this._pending.size || this._buttonPending.size) && this._sweepPending()) this._render();
     if (this._hass && this._templates?.size && this._tplUnsub.size === 0)
       this._subscribeTemplates();
   }
@@ -247,14 +253,23 @@ export abstract class EntityCardBase extends HTMLElement {
       return;
     }
     if (!this._hass) return;
-    // pending first: the entity may answer synchronously (the docs shim does) and clear it
-    this._pending.set(idx, pending ?? { until: Date.now() + PENDING_MS });
+    // pending first: the entity may answer synchronously (the docs shim does) and clear it; a
+    // custom button keeps its own, so its neighbours' calls and answers leave it alone
+    let forget: () => void;
+    if (pending?.key) {
+      const key = `${idx}:${pending.key}`;
+      this._buttonPending.set(key, pending);
+      forget = () => this._buttonPending.delete(key);
+    } else {
+      this._pending.set(idx, pending ?? { until: Date.now() + PENDING_MS });
+      forget = () => this._pending.delete(idx);
+    }
     this._sweepPending();
     fireHaptic(el, haptic);
     Promise.resolve(this._hass.callService(svc.domain, svc.service, svc.data)).catch((err) => {
       const name = `${svc.domain}.${svc.service}`;
       console.warn(`${this._cardType()}: ${name} failed`, err);
-      this._pending.delete(idx);
+      forget();
       // on the card, not the control: the control may have been rebuilt since
       fireHaptic(this, "failure");
       const msg = err instanceof Error && err.message ? err.message : String(err ?? "failed");
@@ -269,11 +284,12 @@ export abstract class EntityCardBase extends HTMLElement {
     const now = Date.now();
     let next = Infinity,
       dropped = false;
-    for (const [idx, p] of this._pending)
-      if (p.until <= now) {
-        this._pending.delete(idx);
-        dropped = true;
-      } else next = Math.min(next, p.until);
+    for (const map of [this._pending, this._buttonPending] as Map<unknown, Pending>[])
+      for (const [k, p] of map)
+        if (p.until <= now) {
+          map.delete(k);
+          dropped = true;
+        } else next = Math.min(next, p.until);
     if (next < Infinity)
       this._pendingTimer = setTimeout(
         () => {

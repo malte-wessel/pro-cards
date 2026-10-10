@@ -44,11 +44,8 @@ export interface RawEntityCardConfig extends RawEntityCardBase, RawEntity {}
 export const normalizeEntityCardConfig = (input: unknown): EntityCardConfig => {
   if (!input || typeof input !== "object") throw new Error(`${CARD_TYPE}: invalid config`);
   const raw = input as RawEntityCardConfig;
-  // a tile of custom buttons needs neither (control: buttons with control_options)
-  if (!raw.entity && raw.value === undefined && raw.control !== "buttons")
-    throw new Error(`${CARD_TYPE}: 'entity' or 'value' is required`);
   const ctx = { type: CARD_TYPE, ...normalizeActionDefaults(raw) };
-  const ent = normalizeEntity(raw, ctx, "the card", ITEM_DEFAULTS.other);
+  const ent = normalizeEntity(raw, ctx, "the card", ITEM_DEFAULTS.other, { buttons: true });
   return {
     layout: "tile",
     title: null,

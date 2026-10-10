@@ -39,8 +39,19 @@ describe("entity-card-pro", () => {
     );
     expect(() => normalizeEntityCardConfig(null)).toThrow(/entity-card-pro: invalid config/);
     expect(() => normalizeEntityCardConfig({ name: "x" })).toThrow(
-      /entity-card-pro: 'entity' or 'value' is required/,
+      /entity-card-pro: the card needs 'entity' or 'value'/,
     );
+    // buttons without a usable entry are no buttons: the same message
+    expect(() =>
+      normalizeEntityCardConfig({ name: "x", control: "buttons", control_options: ["scene.a"] }),
+    ).toThrow(/entity-card-pro: the card needs 'entity' or 'value'/);
+    expect(
+      normalizeEntityCardConfig({
+        name: "Scenes",
+        control: "buttons",
+        control_options: [{ entity: "scene.a" }],
+      }).entities[0].valueSrc,
+    ).toEqual({ kind: "text", text: "" });
     expect(
       EntityCard.getStubConfig(
         { states: { "sensor.a": { state: "1" } } } as unknown as HomeAssistant,

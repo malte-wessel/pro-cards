@@ -266,6 +266,36 @@ describe("card config schemas", () => {
     ).toBeNull();
   });
 
+  it("hold custom buttons to what the cards draw", () => {
+    const EC = "custom:entity-card-pro",
+      EGC = "custom:entity-group-card-pro",
+      ESC = "custom:entity-sections-card-pro";
+    const scenes = [
+      { entity: "scene.a", color: "amber" },
+      { icon: "mdi:cog", action: "none" },
+    ];
+    const row = { name: "Scenes", control: "buttons", control_options: scenes };
+    expect(validate({ type: EC, ...row })).toBeNull();
+    expect(validate({ type: EGC, entities: [row] })).toBeNull();
+    expect(validate({ type: ESC, sections: [{ layout: "grid", entities: [row] }] })).toBeNull();
+    // the buttons of control: buttons are button entries, at least one
+    for (const control_options of [["scene.a"], [{ value: "a" }], [{ icon: "mdi:x" }], []])
+      expect(validate({ type: EC, ...row, control_options })).toBeTruthy();
+    // values stay the options of segments and select
+    expect(
+      validate({ type: EC, entity: "climate.a", control: "segments", control_options: ["eco"] }),
+    ).toBeNull();
+    // a row layout and the header draw no buttons: an item of buttons alone is invalid there
+    expect(validate({ type: EGC, layout: "row", entities: [row] })).toBeTruthy();
+    expect(validate({ type: ESC, sections: [{ layout: "row", entities: [row] }] })).toBeTruthy();
+    expect(
+      validate({ type: EGC, layout: "row", entities: [{ ...row, entity: "light.a" }] }),
+    ).toBeNull();
+    expect(validate({ type: EGC, entities: ["sensor.a"], header_entities: [row] })).toBeTruthy();
+    expect(
+      validate({ type: EGC, entities: ["sensor.a"], header_entities: [{ ...row, value: "" }] }),
+    ).toBeNull();
+  });
   it("accept the documented edge cases", () => {
     const EC = "custom:entity-card-pro",
       EGC = "custom:entity-group-card-pro",
