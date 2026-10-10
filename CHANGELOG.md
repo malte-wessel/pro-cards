@@ -1,9 +1,12 @@
 # Changelog
 
-## Unreleased
+## 2.3.0 (2026-10-10)
 
 - Your own buttons: `control: buttons` takes `control_options` as a list of buttons, e.g. every scene of a room in one row. Each entry runs its `entity` (scenes and scripts turn on, buttons press) or switches it (lights, switches, fans: filled while on), or runs its own `action`; each takes its own `color` and `icon`, and a `label` turns it into a chip with text. A row of buttons needs no entity of its own, and `control_confirm` makes each button a hold
+- A custom button's `action` targets the button's entity when the call names nothing to act on itself; a `perform-action` with its own `target`, `entity_id`, `area_id` or other target in its data is left alone. Each button keeps its own call in flight, so pressing two in a row or a neighbour answering first never drops a button's ghost
+- Row items and the header draw no buttons: an item of buttons alone is a config error there, and the JSON Schema says so too
 - A literal empty `value: ""` is a blank value instead of an unavailable one
+- Docs: a "Your own buttons" section on the Controls page with a live example, and the entity options reference lists the new buttons
 
 ## 2.2.2 (2026-10-07)
 
