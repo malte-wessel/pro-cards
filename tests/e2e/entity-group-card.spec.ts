@@ -2,6 +2,14 @@ import { test, expect, mount, calls, events, state, setState, card } from "./uti
 import type { Locator } from "@playwright/test";
 import type { EntityGroupCard } from "../../src/entity-group-card.ts";
 
+// how far `item` ends before the right padding of `box` (0 when flush)
+const rightGap = async (box: Locator, item: Locator) => {
+  const b = (await box.boundingBox())!,
+    i = (await item.boundingBox())!;
+  const pad = await box.evaluate((e) => parseFloat(getComputedStyle(e).paddingRight));
+  return Math.abs(b.x + b.width - pad - (i.x + i.width));
+};
+
 const T = "custom:entity-group-card-pro";
 const feColor = (loc: Locator) =>
   loc.evaluate((e) => e.style.getPropertyValue("--fe-color").trim());
@@ -287,6 +295,8 @@ test.describe("values and header entities", () => {
     await expect(hv.nth(2).locator(".secondary")).toHaveText("Robot vacuum");
     await expect(hv.nth(2).locator(".pill")).toBeVisible();
     await expect(c.locator(".header .range")).toHaveText("24 h");
+    // the last item of the header ends at its right padding
+    expect(await rightGap(c.locator(".header"), c.locator(".header .range"))).toBeLessThan(1);
     const tb = (await c.locator(".header .title").boundingBox())!,
       hb = (await hv.nth(0).boundingBox())!;
     expect(hb.x).toBeGreaterThan(tb.x);
@@ -302,6 +312,11 @@ test.describe("values and header entities", () => {
     });
     await expect(card(page).locator(".header")).toBeVisible();
     await expect(card(page).locator(".header .title")).toHaveText("");
+    // without history there is no range: the header items end at the padding, no gap after them
+    await expect(card(page).locator(".header .range")).toBeHidden();
+    expect(
+      await rightGap(card(page).locator(".header"), card(page).locator(".header .row.hval").last()),
+    ).toBeLessThan(1);
   });
 });
 

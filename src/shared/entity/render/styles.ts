@@ -20,6 +20,8 @@ export const STYLE_HEADER = `
   .header .range { flex: none; font-size: 12px; color: var(--secondary-text-color); white-space: nowrap; }
   .header .hvals { display: flex; align-items: center; gap: 10px; flex: 0 1 auto; min-width: 0; max-width: 60%; }
   .header .hvals:empty { display: none; }
+  /* without history there is no range: it must not keep a gap after the header items */
+  .header .range:empty { display: none; }
   .row.hval { flex: 0 1 auto; flex-direction: row; align-items: center; gap: 4px; border-radius: 6px; min-width: 0; }
   .hval .state, .hval .secondary { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .hval ha-icon, .hval ha-state-icon { --mdc-icon-size: 18px; color: var(--fe-color); }
