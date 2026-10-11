@@ -234,6 +234,38 @@ test.describe("visibility: empty cards", () => {
     await setState(page, "light.kitchen", "on");
     await expect(rows).toHaveCount(2);
   });
+
+  test("a row of buttons with a value of its own stays when its buttons are hidden", async ({
+    page,
+  }) => {
+    await mount(page, {
+      type: G,
+      entities: [
+        {
+          name: "Lights",
+          value: "{{ states.light | selectattr('state', 'eq', 'on') | list | count }} on",
+          control: "buttons",
+          control_options: [{ entity: "light.living_room", visibility: kitchenOn }],
+        },
+      ],
+    });
+    const row = card(page).locator(".row.list");
+    await expect(row).toHaveCount(1);
+    await expect(row).toContainText(" on");
+    await expect(row.locator(".ctl-buttons")).toHaveCount(0);
+  });
+
+  test("the card size counts the header only while it is drawn", async ({ page }) => {
+    await mount(page, {
+      type: G,
+      header_entities: [{ entity: "sensor.living_room_humidity", visibility: kitchenOn }],
+      entities: ["light.office"],
+    });
+    const hidden = await size(card(page));
+    await setState(page, "light.kitchen", "on");
+    await expect(card(page).locator(".header")).toBeVisible();
+    expect(await size(card(page))).toBe(hidden + 1);
+  });
 });
 
 test.describe("visibility: custom buttons", () => {
@@ -332,7 +364,8 @@ test.describe("visibility: conditions", () => {
   });
 
   test("time: shown from the window's start, without a state change", async ({ page }) => {
-    await page.clock.install({ time: new Date("2026-06-21T11:59:30") });
+    // the browser runs in Europe/Berlin (playwright.config.ts), whatever zone the runner has
+    await page.clock.install({ time: new Date("2026-06-21T11:59:30+02:00") });
     await mount(
       page,
       {

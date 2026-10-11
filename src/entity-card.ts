@@ -64,7 +64,6 @@ export const normalizeEntityCardConfig = (input: unknown): EntityCardConfig => {
         align: "start",
         columns: 1,
         divider: false,
-        hasIcon: false,
         visibility: null,
       },
     ],

@@ -27,8 +27,8 @@ export abstract class FlowCardBase extends EntityCardBase {
   getCardSize() {
     const cfg = this._config;
     if (!cfg) return 1;
-    if (cfg.layout !== "hero") return cfg.hasHeader ? 2 : 1;
-    return (cfg.hasHeader ? 1 : 0) + 2 + Math.ceil((cfg.flow.height + 16) / 56);
+    if (cfg.layout !== "hero") return this._headerRows() + 1;
+    return this._headerRows() + 2 + Math.ceil((cfg.flow.height + 16) / 56);
   }
 
   _buildBody(body: HTMLElement) {

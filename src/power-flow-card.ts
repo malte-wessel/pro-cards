@@ -103,7 +103,7 @@ export class PowerFlowCard extends EntityCardBase {
     if (!cfg) return 3;
     // the tree as drawn now: hidden nodes take no room
     const view = this._computed?.view ?? cfg;
-    return (cfg.hasHeader ? 1 : 0) + Math.ceil((GEOM.summaryH + diagramHeight(view) + 36) / 56);
+    return this._headerRows() + Math.ceil((GEOM.summaryH + diagramHeight(view) + 36) / 56);
   }
 
   // ----- visibility: the tree's nodes have conditions of their own -----

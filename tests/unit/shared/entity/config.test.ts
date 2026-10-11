@@ -9,6 +9,7 @@ import {
   normalizeActionDefaults,
   normalizeHistoryOptions,
   collectTemplates,
+  visibilityTrees,
 } from "../../../../src/shared/entity/config.ts";
 import { ITEM_DEFAULTS } from "../../../../src/shared/entity/constants.ts";
 import type {
@@ -144,7 +145,6 @@ describe("group", () => {
       align: "start",
       columns: 2,
       divider: false,
-      hasIcon: false,
       visibility: null,
     });
     expect(entities.map((e) => e.entity)).toEqual(["light.a", "light.b"]);
@@ -163,7 +163,7 @@ describe("group", () => {
       normalizeGroup({ layout: "column", entities: ["l.a"] }, ctx, {}, "entities", 0).group.align,
     ).toBe("start");
     const table = normalizeGroup({ layout: "table", entities: ["s.a"] }, ctx, {}, "entities", 0);
-    expect(table.group).toMatchObject({ align: "end", hasIcon: false });
+    expect(table.group).toMatchObject({ align: "end" });
     expect(table.entities[0].item).toMatchObject({ showValue: true, showIcon: false });
     expect(() =>
       normalizeGroup({ layout: "tile", entities: ["s.a"] }, ctx, {}, "entities", 0),
@@ -259,7 +259,8 @@ describe("group", () => {
       "entities",
       0,
     );
-    expect(t.group.hasIcon).toBe(true);
+    // the table draws its icon column while a shown item has an icon
+    expect(t.entities.map((e) => e.item.showIcon)).toEqual([true, false]);
   });
 });
 
@@ -347,10 +348,13 @@ describe("visibility", () => {
       normalizeGroup({ entities: ["light.a"], visibility: on }, ctx, {}, "sections[1]", 0),
     ).toThrow("'sections[1].visibility[0]' needs 'entity'");
   });
-  it("adds the templates of its conditions to the subscribed ones", () => {
+  it("lists every condition tree: items, their buttons, groups", () => {
     const tpl = "{{ is_state('light.a', 'on') }}";
     const e = ent({ visibility: [{ condition: "template", value_template: tpl }] });
-    const cfg = { title: null, icon: null, entities: [e], groups: [] };
-    expect([...collectTemplates(cfg as unknown as EntityCardConfig)]).toEqual([tpl]);
+    const cfg = { title: null, icon: null, entities: [e], groups: [{ visibility: null }] };
+    const trees = visibilityTrees(cfg as unknown as EntityCardConfig);
+    expect(trees).toEqual([e.visibility, null]);
+    // the card subscribes their templates itself (with those of its own parts)
+    expect([...collectTemplates(cfg as unknown as EntityCardConfig)]).toEqual([]);
   });
 });

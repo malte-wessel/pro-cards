@@ -7,6 +7,10 @@ type Unsubscribe = () => unknown;
 export class TemplateSubscriptions {
   results = new Map<string, unknown>();
   _unsub = new Map<string, Promise<Unsubscribe | null>>();
+  // the connection the subscriptions run on, and the templates wanted now (a push for one that
+  // was just dropped, before its unsubscribe went through, is ignored)
+  _conn?: HomeAssistant["connection"];
+  _wanted = new Set<string>();
   _type: string;
   _onChange: () => void;
 
@@ -23,8 +27,14 @@ export class TemplateSubscriptions {
   // their results; a template still wanted keeps its result, the server only pushes changes)
   sync(conn: HomeAssistant["connection"] | undefined, wanted: Set<string> | undefined) {
     if (!wanted) return;
+    this._wanted = new Set(wanted);
     for (const tpl of [...this.results.keys()]) if (!wanted.has(tpl)) this.results.delete(tpl);
     if (!conn) return;
+    // a new connection: the old one's subscriptions end, every template subscribes again
+    if (conn !== this._conn) {
+      this.clear();
+      this._conn = conn;
+    }
     for (const [tpl, p] of [...this._unsub])
       if (!wanted.has(tpl)) {
         this._unsub.delete(tpl);
@@ -35,6 +45,7 @@ export class TemplateSubscriptions {
       const p: Promise<Unsubscribe | null> = conn
         .subscribeMessage<{ result?: unknown }>(
           (msg) => {
+            if (!this._wanted.has(tpl)) return;
             const r = msg?.result;
             if (this.results.get(tpl) !== r) {
               this.results.set(tpl, r);
@@ -55,5 +66,6 @@ export class TemplateSubscriptions {
   clear() {
     for (const p of this._unsub.values()) p.then((u) => u && u()).catch(() => {});
     this._unsub = new Map();
+    this._conn = undefined;
   }
 }

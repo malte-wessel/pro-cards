@@ -32,7 +32,6 @@ describe("entity-card-pro", () => {
         align: "start",
         columns: 1,
         divider: false,
-        hasIcon: false,
         visibility: null,
       },
     ]);
@@ -113,7 +112,6 @@ describe("entity-group-card-pro", () => {
         align: "space-between",
         columns: 4,
         divider: false,
-        hasIcon: false,
         visibility: null,
       },
     ]);
@@ -205,10 +203,10 @@ describe("entity-sections-card-pro", () => {
       "light.d",
       "sensor.t",
     ]);
-    expect(c.groups.map((g) => [g.layout, g.idxs, g.align, g.divider, g.hasIcon])).toEqual([
-      ["table", [0, 1], "center", false, true],
-      ["row", [2], "end", true, false],
-      ["list", [3], "center", false, false],
+    expect(c.groups.map((g) => [g.layout, g.idxs, g.align, g.divider])).toEqual([
+      ["table", [0, 1], "center", false],
+      ["row", [2], "end", true],
+      ["list", [3], "center", false],
     ]);
     expect(c.entities[2].item.showValue).toBe(true);
     expect(() => normalizeEntitySectionsCardConfig({ title: "x" })).toThrow(

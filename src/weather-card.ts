@@ -104,8 +104,8 @@ export class WeatherCard extends EntityCardBase {
   getCardSize() {
     const cfg = this._config;
     if (!cfg) return 2;
-    if (cfg.layout === "tile") return cfg.hasHeader ? 2 : 1;
-    let rows = cfg.hasHeader ? 1 : 0;
+    if (cfg.layout === "tile") return this._headerRows() + 1;
+    let rows = this._headerRows();
     const vis = this._vis as WeatherVis | undefined;
     for (const [i, s] of cfg.sections.entries()) {
       // the sections as shown now (as written before the first render)

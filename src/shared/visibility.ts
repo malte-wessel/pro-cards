@@ -168,11 +168,12 @@ const conditionOf = (raw: unknown, ctx: VisibilityCtx, at: string): Condition | 
       return { kind: "template", template: o.value_template as string };
     default: {
       const k = kind as "and" | "or" | "not";
+      // none written, or all of them disabled: no condition (true), as at the top level
       const conditions =
         o.conditions === undefined || o.conditions === null
-          ? null
+          ? []
           : conditionsOf(o.conditions, ctx, `${at}.conditions`);
-      return { kind: k, conditions };
+      return { kind: k, conditions: conditions.length ? conditions : null };
     }
   }
 };

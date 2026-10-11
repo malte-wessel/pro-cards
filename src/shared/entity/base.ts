@@ -275,7 +275,15 @@ export abstract class EntityCardBase extends HTMLElement {
             : 0),
       0,
     );
-    return (cfg.hasHeader ? 1 : 0) + rows;
+    return this._headerRows() + rows;
+  }
+  // the header's row in the card size: only while it is drawn (a title, an icon or a shown
+  // header entity; before the first render, as written)
+  _headerRows(): number {
+    const cfg = this._config,
+      vis = this._vis;
+    if (!cfg?.hasHeader) return 0;
+    return cfg.title || cfg.icon || !vis || cfg.headerIdxs.some((i) => vis.items[i]) ? 1 : 0;
   }
 
   // ----- visibility -----
@@ -305,11 +313,14 @@ export abstract class EntityCardBase extends HTMLElement {
   // what is shown now; a card with parts of its own extends it (and its key)
   _computeVis(): VisState {
     const cfg = this._config as EntityCardConfig;
-    // a row of buttons alone (no entity) whose buttons are all hidden has nothing to show either
+    // a row of buttons alone (no entity, no value of its own) whose buttons are all hidden has
+    // nothing to show either
+    const buttonsOnly = (e: EntityItem) =>
+      !e.entity && e.valueSrc.kind === "text" && e.valueSrc.text === "" && !!e.control?.buttons;
     const items = cfg.entities.map(
       (e) =>
         this._shown(e.visibility) &&
-        !(!e.entity && e.control?.buttons?.every((b) => !this._shown(b.visibility))),
+        !(buttonsOnly(e) && e.control?.buttons?.every((b) => !this._shown(b.visibility))),
     );
     const visIdxs = cfg.groups.map((g) =>
       this._shown(g.visibility) ? g.idxs.filter((i) => items[i]) : [],

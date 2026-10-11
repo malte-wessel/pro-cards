@@ -66,3 +66,27 @@ describe("template subscriptions", () => {
     expect(t.results.size).toBe(0);
   });
 });
+
+describe("template subscriptions across connections", () => {
+  it("moves every subscription to a new connection", async () => {
+    const a = fakeConnection(),
+      b = fakeConnection();
+    const t = new TemplateSubscriptions("test-card", () => {});
+    t.sync(a.conn, new Set(["{{ x }}"]));
+    t.sync(b.conn, new Set(["{{ x }}"]));
+    await flush();
+    expect(a.unsubscribed).toEqual(["{{ x }}"]);
+    expect(b.subs.has("{{ x }}")).toBe(true);
+  });
+  it("ignores a push for a template that was just dropped", () => {
+    const { conn, subs } = fakeConnection();
+    const onChange = vi.fn();
+    const t = new TemplateSubscriptions("test-card", onChange);
+    t.sync(conn, new Set(["{{ a }}"]));
+    const late = subs.get("{{ a }}")!;
+    t.sync(conn, new Set());
+    late({ result: "stale" });
+    expect(t.results.has("{{ a }}")).toBe(false);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+});

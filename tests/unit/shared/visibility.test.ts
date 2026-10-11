@@ -140,6 +140,10 @@ describe("checkVisibility (Home Assistant's semantics)", () => {
   });
   it("reads a missing entity or attribute as unknown", () => {
     expect(shown([{ condition: "state", entity: "light.gone", state: "unknown" }])).toBe(true);
+    // HA's checkStateCondition: a missing entity is unknown, not unavailable
+    expect(shown([{ condition: "state", entity: "light.gone", state_not: "unavailable" }])).toBe(
+      true,
+    );
     expect(shown([{ condition: "state", attribute: "color", state_not: "unknown" }])).toBe(false);
   });
   it("lets a state value name another entity whose state counts", () => {
@@ -209,8 +213,12 @@ describe("checkVisibility (Home Assistant's semantics)", () => {
     // NOT(all of them), so one false child makes it true
     expect(shown([{ condition: "not", conditions: [on, off] }])).toBe(true);
     expect(shown([{ condition: "not", conditions: [on] }])).toBe(false);
-    // an and / or / not without conditions is true, as in HA
+    // an and / or / not without conditions is true, as in HA, and so is one whose conditions
+    // are all disabled
     expect(shown([{ condition: "or" }])).toBe(true);
+    const disabled = { condition: "state", state: "off", enabled: false };
+    expect(shown([{ condition: "or", conditions: [disabled] }])).toBe(true);
+    expect(shown([{ condition: "not", conditions: [disabled] }])).toBe(true);
   });
 });
 

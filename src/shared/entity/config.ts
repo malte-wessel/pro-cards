@@ -2,7 +2,7 @@
 //
 // Every card ends up with the same normalised shape (`EntityCardConfig`):
 //   { type, title, icon, hours, bucketMin, columns, tap, hold, dbl,
-//     entities: [Entity], groups: [{ layout, idxs, align, columns, divider, hasIcon }], headerIdxs, hasHeader }
+//     entities: [Entity], groups: [{ layout, idxs, align, columns, divider, visibility }], headerIdxs, hasHeader }
 // `entities` is one flat list; groups and header entities point into it by index.
 import {
   ALIGNS,
@@ -22,7 +22,7 @@ import {
 import type { ActionConfig, CardConfigBase } from "../ha.ts";
 import type { StringKey } from "../i18n.ts";
 import { isTemplate, numOrNull, oneOf } from "../util.ts";
-import { normalizeVisibility, visibilityDeps, type Visibility } from "../visibility.ts";
+import { normalizeVisibility, type Visibility } from "../visibility.ts";
 import {
   ITEM_CONTROLS,
   normalizeControl,
@@ -165,7 +165,6 @@ export interface Group {
   align: Align | undefined;
   columns: number;
   divider: boolean;
-  hasIcon: boolean;
   // drawn only while its conditions hold and one of its items is shown (null: the items decide)
   visibility: Visibility;
 }
@@ -407,7 +406,6 @@ export const normalizeGroup = (
       align: oneOf(ALIGNS, align) ? align : base.align,
       columns: clampColumns(g.columns, ctx.columns ?? DEFAULTS.columns),
       divider: !!g.divider,
-      hasIcon: layout === "table" && entities.some((e) => e.item.showIcon),
       visibility: normalizeVisibility(g.visibility, { type: ctx.type, label, entity: null }),
     },
     entities,
@@ -459,6 +457,5 @@ export const collectTemplates = (cfg: EntityCardConfig): Set<string> => {
     add(e.color);
     if (e.valueSrc.kind === "template") add(e.valueSrc.template);
   }
-  for (const tpl of visibilityDeps(visibilityTrees(cfg)).templates) s.add(tpl);
   return s;
 };
