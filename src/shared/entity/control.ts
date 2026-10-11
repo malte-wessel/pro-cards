@@ -3,6 +3,7 @@
 // in render/controls.ts draw what these functions decide.
 import { domainOf, stateActive } from "../color.ts";
 import type { ActionConfig, ActionKind, HapticType, HassEntity, HomeAssistant } from "../ha.ts";
+import type { Visibility } from "../visibility.ts";
 import type { StringKey } from "../i18n.ts";
 import { isNum, numOrNull, oneOf } from "../util.ts";
 import type { EntityItem, NormalizeCtx, RawEntity } from "./config.ts";
@@ -41,6 +42,8 @@ export interface CustomButton {
   label: string | null;
   color: string | null;
   action: ActionConfig | null;
+  // drawn only while its conditions hold (null: always)
+  visibility: Visibility;
 }
 // the control as written in YAML, after normalisation (`auto` is resolved at render time)
 export interface ControlConfig {

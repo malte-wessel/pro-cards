@@ -102,6 +102,7 @@ describe("weather-card config", () => {
     });
     expect(c.layout).toBe("sections");
     expect(c.sections[0]).toEqual({
+      visibility: null,
       kind: "hero",
       title: null,
       name: null,
@@ -207,6 +208,7 @@ describe("weather-card config", () => {
       ],
     });
     expect(c.sections[0]).toEqual({
+      visibility: null,
       kind: "forecast",
       mode: "daily",
       layout: "vertical",
@@ -266,6 +268,7 @@ describe("weather-card config", () => {
       ],
     });
     expect(c.sections[0]).toEqual({
+      visibility: null,
       kind: "trend",
       mode: "daily",
       count: 7,
@@ -363,6 +366,27 @@ describe("weather-card config", () => {
     });
     expect(c.headerIdxs).toEqual([6]);
     expect(c.hasHeader).toBe(true);
+  });
+  it("sections take visibility conditions that read the weather entity by default", () => {
+    const rainy = [{ condition: "state", state: "rainy" }];
+    const c = normalizeWeatherCardConfig({
+      entity: W,
+      sections: [
+        { type: "hero", visibility: rainy },
+        { type: "row", entities: ["humidity"], visibility: rainy },
+        { type: "forecast", mode: "daily" },
+      ],
+    });
+    const expected = [
+      { kind: "state", entity: W, attribute: null, values: ["rainy"], negate: false },
+    ];
+    expect(c.sections.map((s) => s.visibility)).toEqual([expected, expected, null]);
+    // an entity section's conditions are the section's, not its group's
+    const group = c.sections[1].kind === "entities" ? c.sections[1].group : null;
+    expect(group?.visibility).toBeNull();
+    expect(() =>
+      normalizeWeatherCardConfig({ entity: W, sections: [{ type: "hero", visibility: [{}] }] }),
+    ).toThrow("'sections[0].visibility[0]' needs 'condition'");
   });
 });
 

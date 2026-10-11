@@ -36,7 +36,8 @@
             "type": "boolean",
             "default": false,
             "description": "Line above the section (never drawn for the first)"
-          }
+          },
+          "visibility": { "$ref": "defs.schema.json#/$defs/visibility" }
         },
         "required": ["entities"],
         "allOf": [{ "$ref": "entity.schema.json#/$defs/groupKeys" }],

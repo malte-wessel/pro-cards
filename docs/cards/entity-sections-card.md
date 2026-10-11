@@ -346,15 +346,16 @@ sections:
 
 ### Section options
 
-| Option                                   | Default        | Description                                                                      |
-| ---------------------------------------- | -------------- | -------------------------------------------------------------------------------- |
-| `entities`                               |                | Entity ids or [entity objects](/cards/entity-options#entity-options) (required). |
-| `layout`                                 | `list`         | `list`, `grid`, `hero`, `row`, `column` or `table`.                              |
-| `divider`                                | `false`        | Draws a line above the section (never for the first one).                        |
-| `columns`                                | card `columns` | Cells per row in a grid section.                                                 |
-| `align`                                  | card `align`   | Overrides the card value for this section.                                       |
-| `show_name` / `show_value` / `show_icon` | card values    | Item options for this section; entities can override them again.                 |
-| `name_position`                          | card value     | Where a row item's name sits; entities can override it again.                    |
+| Option                                   | Default        | Description                                                                          |
+| ---------------------------------------- | -------------- | ------------------------------------------------------------------------------------ |
+| `entities`                               |                | Entity ids or [entity objects](/cards/entity-options#entity-options) (required).     |
+| `layout`                                 | `list`         | `list`, `grid`, `hero`, `row`, `column` or `table`.                                  |
+| `divider`                                | `false`        | Draws a line above the section (never for the first one).                            |
+| `columns`                                | card `columns` | Cells per row in a grid section.                                                     |
+| `align`                                  | card `align`   | Overrides the card value for this section.                                           |
+| `show_name` / `show_value` / `show_icon` | card values    | Item options for this section; entities can override them again.                     |
+| `name_position`                          | card value     | Where a row item's name sits; entities can override it again.                        |
+| `visibility`                             |                | Drawn only while the [conditions](/guide/visibility) hold (and one entity is shown). |
 
 ### Grid defaults
 
@@ -362,4 +363,4 @@ sections:
 
 ### Home Assistant options
 
-Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`. They are passed through to Home Assistant; see [Sizing in sections](/guide/sizing) for `grid_options`.
+Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`. They are passed through to Home Assistant; see [Sizing in sections](/guide/sizing) for `grid_options`. The card's own `visibility` hides the whole card; its entities, header entities and sections take their own, see [Visibility](/guide/visibility).

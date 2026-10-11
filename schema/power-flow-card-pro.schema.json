@@ -8,6 +8,7 @@
     "sourceKeys": {
       "type": "object",
       "properties": {
+        "visibility": { "$ref": "defs.schema.json#/$defs/visibility" },
         "name": { "type": "string", "description": "Template allowed." },
         "secondary": {
           "type": "string",
@@ -131,6 +132,18 @@
       ],
       "unevaluatedProperties": false
     },
+    "home": {
+      "type": "object",
+      "allOf": [{ "$ref": "entity.schema.json#/$defs/entityKeys" }],
+      "properties": {
+        "invert": {
+          "type": "boolean",
+          "description": "Flips the sensor's sign"
+        }
+      },
+      "required": ["entity"],
+      "unevaluatedProperties": false
+    },
     "consumer": {
       "type": "object",
       "allOf": [{ "$ref": "entity.schema.json#/$defs/entityKeys" }],
@@ -138,7 +151,13 @@
         "invert": {
           "type": "boolean",
           "description": "Flips the sensor's sign; a negative value is power the device produces, flowing back to the home"
-        }
+        },
+        "hide_below": {
+          "type": "number",
+          "minimum": 0,
+          "description": "This consumer's own hide_consumers_below (W); 0 never hides it"
+        },
+        "visibility": { "$ref": "defs.schema.json#/$defs/visibility" }
       },
       "required": ["entity"],
       "unevaluatedProperties": false
@@ -148,6 +167,12 @@
       "properties": {
         "group": { "type": "string", "description": "The room's name" },
         "icon": { "$ref": "defs.schema.json#/$defs/icon" },
+        "hide_below": {
+          "type": "number",
+          "minimum": 0,
+          "description": "hide_consumers_below for the room's devices (W); a device's own wins"
+        },
+        "visibility": { "$ref": "defs.schema.json#/$defs/visibility" },
         "entities": {
           "type": "array",
           "minItems": 1,
@@ -178,7 +203,7 @@
       "description": "The sources, in drawing order: solar arrays, batteries and grid connections"
     },
     "home": {
-      "oneOf": [{ "$ref": "defs.schema.json#/$defs/entityId" }, { "$ref": "#/$defs/consumer" }],
+      "oneOf": [{ "$ref": "defs.schema.json#/$defs/entityId" }, { "$ref": "#/$defs/home" }],
       "description": "The home's consumption (W or kW). Without it the home is computed from the sources"
     },
     "consumers": {
@@ -246,6 +271,11 @@
     "expensive_above": {
       "type": "number",
       "description": "Price at or above which importing shows the Expensive state and tints the card (the price sensor's unit)"
+    },
+    "hide_consumers_below": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Hide a consumer while its power stays below this many watts (whatever its sensor's unit); it comes back clearly above (20 %). Its watts count in Other. 0 never hides"
     },
     "rules": {
       "type": "array",

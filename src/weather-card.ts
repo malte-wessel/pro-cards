@@ -17,7 +17,7 @@
  *   tap_action / hold_action / double_tap_action   # more-info / more-info / none
  */
 import { registerCard } from "./shared/card.ts";
-import { EntityCardBase, groupCardSize } from "./shared/entity/base.ts";
+import { EntityCardBase, groupCardSize, type VisState } from "./shared/entity/base.ts";
 import type { EntityItem } from "./shared/entity/config.ts";
 import { modelOf, type EntityModel, type RenderCtx } from "./shared/entity/model.ts";
 import type {
@@ -29,6 +29,7 @@ import type {
 } from "./shared/ha.ts";
 import { hideHover } from "./shared/hover.ts";
 import { t } from "./shared/i18n.ts";
+import type { Visibility } from "./shared/visibility.ts";
 import {
   normalizeWeatherCardConfig,
   wantedForecasts,
@@ -51,6 +52,11 @@ import { buildTrend, drawTrendSection, type ForecastTrendEl } from "./weather/re
 import { STYLE_WEATHER_CARD } from "./weather/styles.ts";
 
 type Unsubscribe = () => unknown;
+
+// what is shown, with a flag per section
+interface WeatherVis extends VisState {
+  sections: boolean[];
+}
 
 export class WeatherCard extends EntityCardBase {
   static cardType = CARD_TYPE;
@@ -100,15 +106,42 @@ export class WeatherCard extends EntityCardBase {
     if (!cfg) return 2;
     if (cfg.layout === "tile") return cfg.hasHeader ? 2 : 1;
     let rows = cfg.hasHeader ? 1 : 0;
-    for (const s of cfg.sections) {
+    const vis = this._vis as WeatherVis | undefined;
+    for (const [i, s] of cfg.sections.entries()) {
+      // the sections as shown now (as written before the first render)
+      if (vis && !vis.sections[i]) continue;
       if (s.kind === "hero") rows += 2;
       else if (s.kind === "trend")
         rows += 1 + (s.layout === "overlay" || s.show.length === 1 ? 2 : 1 + s.show.length);
       else if (s.kind === "forecast")
         rows += 1 + (s.layout === "vertical" ? Math.ceil(s.count / 2) : 3);
-      else rows += (s.title ? 1 : 0) + groupCardSize(cfg, s.group);
+      else {
+        const idxs = vis ? s.group.idxs.filter((k) => vis.items[k]) : s.group.idxs;
+        rows += (s.title ? 1 : 0) + groupCardSize(cfg, { ...s.group, idxs });
+      }
     }
     return rows;
+  }
+
+  // ----- visibility: the sections have conditions of their own -----
+  _visibilityTrees(): Visibility[] {
+    const cfg = this._config as WeatherConfig;
+    return [...super._visibilityTrees(), ...cfg.sections.map((s) => s.visibility)];
+  }
+  // an entity section shows while its conditions hold and one of its items is shown
+  _computeVis(): WeatherVis {
+    const cfg = this._config as WeatherConfig;
+    const vis = super._computeVis();
+    const sections = cfg.sections.map(
+      (s) =>
+        this._shown(s.visibility) &&
+        (s.kind !== "entities" || s.group.idxs.some((i) => vis.items[i])),
+    );
+    return { ...vis, sections, key: `${vis.key}#${sections.map(Number).join("")}` };
+  }
+  _bodyShown(vis: VisState) {
+    const cfg = this._config as WeatherConfig;
+    return cfg.layout === "tile" || (vis as WeatherVis).sections.some(Boolean);
   }
 
   // ----- lifecycle: the forecast subscriptions follow config, hass and connection -----
@@ -209,9 +242,14 @@ export class WeatherCard extends EntityCardBase {
       body.appendChild(this._row(cfg.condIdx, "wtile"));
       return;
     }
+    // only the shown sections, a divider only between them
+    const vis = this._vis as WeatherVis;
+    let first = true;
     cfg.sections.forEach((sec, i) => {
+      if (!vis.sections[i]) return;
       const divider = sec.kind === "entities" ? sec.group.divider : sec.divider;
-      if (divider && i > 0) body.appendChild(this._divider());
+      if (divider && !first) body.appendChild(this._divider());
+      first = false;
       let el: HTMLElement;
       if (sec.kind === "hero") {
         el = sectionShell(sec.title);
@@ -260,7 +298,9 @@ export class WeatherCard extends EntityCardBase {
     const idxs =
       cfg.layout === "tile"
         ? [cfg.tempIdx]
-        : cfg.sections.flatMap((s) => (s.kind === "hero" ? [s.tempIdx] : []));
+        : cfg.sections.flatMap((s, i) =>
+            s.kind === "hero" && (this._vis as WeatherVis).sections[i] ? [s.tempIdx] : [],
+          );
     for (const i of idxs) if (models[i]?.look.tint) return models[i].look.color;
     return null;
   }
@@ -269,8 +309,9 @@ export class WeatherCard extends EntityCardBase {
     const cfg = this._config,
       card = this._root,
       ctx = this._ctx();
-    const sections = [...card.querySelectorAll<HTMLElement>("[data-sec]")];
     super._render();
+    // after the base: a visibility flip may have rebuilt the body
+    const sections = [...card.querySelectorAll<HTMLElement>("[data-sec]")];
     // an entity without an hourly forecast: "no forecast" rather than loading forever
     const st = this._hass.states[cfg.entity];
     const hourly = supportsForecast(st, "hourly") ? this._forecast.hourly : null;

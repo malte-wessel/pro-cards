@@ -245,28 +245,61 @@ Values show in W below `kw_above` watts (default 1000) and in kW from there on, 
 
 :::
 
+## Visibility
+
+A source, a consumer, a room or a device with [`visibility`](/guide/visibility) is drawn only while its conditions hold; a condition without `entity` reads the node's own sensor. `hide_consumers_below` hides every consumer that draws less than that many watts, whatever unit its sensor reports, and shows it again only once it draws clearly more (20 % above, at least 2 W), so a device idling around the threshold does not blink. A room's `hide_below` sets it for its devices, a consumer's or device's own `hide_below` overrides it, and `0` never hides. A producing device counts by its size; an unavailable one as 0 W.
+
+What a hidden consumer or room draws counts in **Other**, so the shown numbers still add up to the home; a room counts its hidden devices in its own total. A hidden source changes no number, only its node and links are left out. With no consumer left, Other goes too. The tree is drawn without the hidden nodes, so the card's height follows them.
+
+::: live
+
+```yaml
+type: custom:power-flow-card-pro
+title: Energy
+icon: mdi:lightning-bolt
+home: sensor.power_consumption
+hide_consumers_below: 20
+sources:
+  - type: solar
+    entity: sensor.solar_power
+    visibility: [{ condition: state, entity: sun.sun, state: above_horizon }]
+  - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
+  - { type: grid, power: sensor.grid_power }
+consumers:
+  - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
+  - entity: sensor.ev_charger_power
+    name: EV
+    icon: mdi:car-electric
+    visibility: [{ condition: state, entity: binary_sensor.ev_plugged, state: "on" }]
+  - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
+  - { entity: sensor.office_power, name: Office, icon: mdi:monitor, hide_below: 0 }
+```
+
+:::
+
 ## Reference
 
 ### Card options
 
-| Option             | Default                               | Description                                                                                                                                                                                     |
-| ------------------ | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sources`          | required                              | Solar, battery and grid entries (below), in drawing order.                                                                                                                                      |
-| `home`             | sum of the sources                    | The home's consumption sensor (W or kW), or an entity object with `name`, `icon`, `rules` and actions.                                                                                          |
-| `consumers`        | –                                     | Devices (`{ entity, name, icon }`) or rooms (`{ group, icon, entities }`), in drawing order.                                                                                                    |
-| `consumer_style`   | `nodes`                               | `nodes` or `list` (rows with a bar). Rows need the `right` direction.                                                                                                                           |
-| `other`            | `true` with consumers                 | The **Other** node for the home's consumption the consumers do not account for.                                                                                                                 |
-| `direction`        | `right`                               | `right` (sources → home → consumers) or `down`.                                                                                                                                                 |
-| `flow_style`       | `dots`                                | `dots`, `lines` or `arrows`.                                                                                                                                                                    |
-| `idle_links`       | `dashed`                              | Links that carry nothing: `dashed`, `hidden` or `faint`.                                                                                                                                        |
-| `animation`        | `{ slow_below: 0, fast_above: 3600 }` | The loads (W) between which the flow goes from slowest to fastest.                                                                                                                              |
-| `kw_above`         | `1000`                                | Watts from which values show in kW; `0` shows every value in kW.                                                                                                                                |
-| `decimals`         | `{ w: 0, kw: 2 }`                     | Decimals of the values: one number for both units, or `{ w, kw }`.                                                                                                                              |
-| `expensive_above`  | –                                     | Price at or above which importing shows the Expensive state and tints the card (in the price sensor's unit).                                                                                    |
-| `rules`            | –                                     | `[{ below, above, color, label, tint_card }]` on the home's power in W; first match wins.                                                                                                       |
-| `title`, `icon`    | –                                     | Header, templates allowed. `header_entities` as in the [group card](/cards/entity-group-card#header-entities).                                                                                  |
-| `title_tap_action` | none                                  | Action when the title or its icon is tapped, e.g. `{ action: navigate, navigation_path: /dashboard-rooms/kitchen }` to open the room's dashboard; see [Actions](/cards/entity-options#actions). |
-| `tap_action` …     | `more-info`                           | `tap_action`, `hold_action`, `double_tap_action` on every node with an entity.                                                                                                                  |
+| Option                 | Default                               | Description                                                                                                                                                                                     |
+| ---------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sources`              | required                              | Solar, battery and grid entries (below), in drawing order.                                                                                                                                      |
+| `home`                 | sum of the sources                    | The home's consumption sensor (W or kW), or an entity object with `name`, `icon`, `rules` and actions.                                                                                          |
+| `consumers`            | –                                     | Devices (`{ entity, name, icon }`) or rooms (`{ group, icon, entities }`), in drawing order.                                                                                                    |
+| `consumer_style`       | `nodes`                               | `nodes` or `list` (rows with a bar). Rows need the `right` direction.                                                                                                                           |
+| `other`                | `true` with consumers                 | The **Other** node for the home's consumption the consumers do not account for.                                                                                                                 |
+| `direction`            | `right`                               | `right` (sources → home → consumers) or `down`.                                                                                                                                                 |
+| `flow_style`           | `dots`                                | `dots`, `lines` or `arrows`.                                                                                                                                                                    |
+| `idle_links`           | `dashed`                              | Links that carry nothing: `dashed`, `hidden` or `faint`.                                                                                                                                        |
+| `animation`            | `{ slow_below: 0, fast_above: 3600 }` | The loads (W) between which the flow goes from slowest to fastest.                                                                                                                              |
+| `kw_above`             | `1000`                                | Watts from which values show in kW; `0` shows every value in kW.                                                                                                                                |
+| `decimals`             | `{ w: 0, kw: 2 }`                     | Decimals of the values: one number for both units, or `{ w, kw }`.                                                                                                                              |
+| `expensive_above`      | –                                     | Price at or above which importing shows the Expensive state and tints the card (in the price sensor's unit).                                                                                    |
+| `hide_consumers_below` | –                                     | Hides a consumer while it draws less than this many watts; see [Visibility](#visibility). A room or consumer's own `hide_below` overrides it, `0` never hides.                                  |
+| `rules`                | –                                     | `[{ below, above, color, label, tint_card }]` on the home's power in W; first match wins.                                                                                                       |
+| `title`, `icon`        | –                                     | Header, templates allowed. `header_entities` as in the [group card](/cards/entity-group-card#header-entities).                                                                                  |
+| `title_tap_action`     | none                                  | Action when the title or its icon is tapped, e.g. `{ action: navigate, navigation_path: /dashboard-rooms/kitchen }` to open the room's dashboard; see [Actions](/cards/entity-options#actions). |
+| `tap_action` …         | `more-info`                           | `tap_action`, `hold_action`, `double_tap_action` on every node with an entity.                                                                                                                  |
 
 ### Sources
 
@@ -284,5 +317,6 @@ Values show in W below `kw_above` watts (default 1000) and in kW from there on, 
 | `fossil`, `non_fossil`                       | grid          | The grid's fossil fuel (or low-carbon) percentage: the home ring's grid share splits, the grid label names it.                             |
 | `secondary`                                  | all           | A line under the name; template allowed. Consumers take it too.                                                                            |
 | `name`, `icon`, `color`, `rules`, `decimals` | all           | As on every entity: the name (default Solar / Battery / Grid), a fixed icon or colour, rules on the sensor's value, decimals of the label. |
+| `visibility`                                 | all           | Drawn only while the [conditions](/guide/visibility) hold. Consumers, rooms and devices take it too, with `hide_below`.                    |
 
-Every label has its own room: the card grows in height with the number of sources and consumers (and their secondary lines) rather than squeezing text between nodes, and the columns move along the flow so the labels clear the next column. The card takes the full width of a section (`rows: auto`) and sizes its height to the config, not to the width; with many devices, rooms or `consumer_style: list` it reads best on a wide column.
+Every label has its own room: the card grows in height with the number of sources and consumers (and their secondary lines) rather than squeezing text between nodes, and the columns move along the flow so the labels clear the next column. The card takes the full width of a section (`rows: auto`) and sizes its height to the config (and what of it is [shown](#visibility)), not to the width; with many devices, rooms or `consumer_style: list` it reads best on a wide column.

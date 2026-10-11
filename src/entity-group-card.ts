@@ -47,7 +47,9 @@ export const normalizeEntityGroupCardConfig = (input: unknown): EntityCardConfig
     ...normalizeActionDefaults(raw),
     columns: clampColumns(raw.columns, DEFAULTS.columns),
   };
-  const { group, entities } = normalizeGroup(raw, ctx, raw, "entities", 0);
+  // a card-level `visibility` is Home Assistant's (it hides the whole card), not the group's
+  const own = { ...raw, visibility: undefined };
+  const { group, entities } = normalizeGroup(own, ctx, raw, "entities", 0);
   const header = normalizeHeaderEntities(raw.header_entities, ctx);
   return {
     layout: group.layout,

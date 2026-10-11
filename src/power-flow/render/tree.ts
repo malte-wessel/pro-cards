@@ -351,6 +351,10 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
   const labelEls = new Map<string, HTMLElement>();
   for (const el of diag.querySelectorAll<HTMLElement>(".plabel"))
     if (el.dataset.node) labelEls.set(el.dataset.node, el);
+  // a consumer beside rooms reads like a room: whether rooms are shown decides its label's size
+  for (const leaf of leavesOf(prelim.cfg))
+    if (!leaf.id.includes("."))
+      labelEls.get(leaf.id)?.classList.toggle("small", !prelim.cfg.hasGroups);
   // the labels' sizes decide where the columns go: lay out again with them
   const { texts, sizes } = measureLabels(prelim, labelEls);
   const st: TreeState = {
@@ -365,6 +369,10 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
     if (el.dataset.node) nodeEls.set(el.dataset.node, el);
   diag.classList.toggle("idle-hidden", cfg.idleLinks === "hidden");
   diag.classList.toggle("idle-faint", cfg.idleLinks === "faint");
+  // what the layout leaves out (a hidden node) is not drawn: its node, row and label
+  const drawn = new Set([...layout.nodes.map((n) => n.id), ...layout.rows.map((r) => r.id)]);
+  for (const [id, el] of nodeEls) el.hidden = !drawn.has(id);
+  for (const [id, el] of labelEls) el.hidden = !drawn.has(id);
 
   // ----- geometry -----
   if (diag.dataset.key !== layout.key) {
@@ -396,8 +404,8 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
   const laneEls = new Map<string, HTMLElement>();
   for (const l of flow.querySelectorAll<HTMLElement>(".lane")) laneEls.set(l.dataset.edge ?? "", l);
   const hiddenEdges = new Set<string>();
-  layout.edges.forEach((e, i) => {
-    const w = flows.edges[i]?.w ?? 0;
+  layout.edges.forEach((e) => {
+    const w = flows.edges[e.fi]?.w ?? 0;
     const active = isActive(w);
     const color = edgeColor(e.kind, w);
     const track = trackEls.get(e.id);

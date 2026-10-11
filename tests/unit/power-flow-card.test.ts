@@ -1,11 +1,18 @@
 import { describe, it, expect } from "vitest";
 import { PowerFlowCard } from "../../src/power-flow-card.ts";
-import { leavesOf, normalizePowerFlowConfig } from "../../src/power-flow/config.ts";
+import {
+  hiddenNodes,
+  leavesOf,
+  normalizePowerFlowConfig,
+  viewConfig,
+} from "../../src/power-flow/config.ts";
+import type { Visibility } from "../../src/shared/visibility.ts";
 import { collectTemplates } from "../../src/shared/entity/config.ts";
 import { modelOf, type FormatCtx } from "../../src/shared/entity/model.ts";
 import type { HomeAssistant } from "../../src/shared/ha.ts";
 import {
   allocate,
+  thresholdShown,
   edgeColor,
   fmtPower,
   powerNow,
@@ -169,9 +176,19 @@ describe("power-flow-card config", () => {
     expect(c.entities[1].name).toBe("Roof");
     expect(c.entities[1].nameKey).toBe("power.solar");
     expect(c.sources).toEqual([
-      { kind: "solar", idx: 1 },
-      { kind: "battery", idx: 2, secondIdx: 3, socIdx: 4, invert: false },
+      { id: "s0", visibility: null, kind: "solar", idx: 1 },
       {
+        id: "s1",
+        visibility: null,
+        kind: "battery",
+        idx: 2,
+        secondIdx: 3,
+        socIdx: 4,
+        invert: false,
+      },
+      {
+        id: "s2",
+        visibility: null,
         kind: "grid",
         idx: 5,
         secondIdx: 7,
@@ -191,11 +208,12 @@ describe("power-flow-card config", () => {
         name: "Laundry",
         icon: "mdi:washing-machine",
         items: [
-          { kind: "item", id: "c0.0", idx: 11, invert: false },
-          { kind: "item", id: "c0.1", idx: 12, invert: false },
+          { kind: "item", id: "c0.0", idx: 11, invert: false, visibility: null, hideBelow: null },
+          { kind: "item", id: "c0.1", idx: 12, invert: false, visibility: null, hideBelow: null },
         ],
+        visibility: null,
       },
-      { kind: "item", id: "c1", idx: 13, invert: true },
+      { kind: "item", id: "c1", idx: 13, invert: true, visibility: null, hideBelow: null },
       { kind: "other", id: "other" },
     ]);
     expect(leavesOf(c).map((l) => l.id)).toEqual(["c0.0", "c0.1", "c1", "other"]);
@@ -962,5 +980,209 @@ describe("power flow labels", () => {
     const hidden = battery(placeLabels(withFake, sizes, "right", new Set(["x"])));
     expect(hidden).toMatchObject({ align: "l", x: nd.x + nd.d / 2 + GEOM.labelGap, y: slotY });
     expect([drawn.x, drawn.y, drawn.align]).not.toEqual([hidden.x, hidden.y, hidden.align]);
+  });
+});
+
+describe("power flow visibility", () => {
+  const never = [{ condition: "state", state: "never" }];
+  const cfgOf = () =>
+    normalizePowerFlowConfig({
+      home: "sensor.home",
+      sources: [
+        { type: "solar", entity: "sensor.solar", visibility: never },
+        { type: "grid", power: "sensor.grid" },
+        { type: "battery", power: "sensor.battery" },
+      ],
+      consumers: [
+        {
+          group: "Laundry",
+          entities: ["sensor.washer", { entity: "sensor.dryer", visibility: never }],
+        },
+        {
+          group: "Garage",
+          visibility: [{ condition: "state", entity: "sensor.ev", state: "never" }],
+          entities: ["sensor.ev"],
+        },
+        { entity: "sensor.plug", visibility: never },
+        "sensor.lamp",
+      ],
+    });
+  // a condition holds unless it is `never`
+  const shown = (v: Visibility) => !v;
+  const STATES = {
+    "sensor.solar": "800",
+    "sensor.home": "3000",
+    "sensor.grid": "2200",
+    "sensor.battery": "0",
+    "sensor.washer": "300",
+    "sensor.dryer": "200",
+    "sensor.ev": "1000",
+    "sensor.plug": "50",
+    "sensor.lamp": "40",
+  };
+
+  it("parses the conditions of sources, consumers, rooms and devices with their sensor as default", () => {
+    const cfg = cfgOf();
+    expect(cfg.sources[0]).toMatchObject({ id: "s0", visibility: [{ entity: "sensor.solar" }] });
+    expect(cfg.sources[1]).toMatchObject({ id: "s1", visibility: null });
+    const [laundry, garage, plug] = cfg.consumers;
+    expect(laundry.kind === "group" && laundry.items[1].visibility).toMatchObject([
+      { entity: "sensor.dryer" },
+    ]);
+    expect(garage.kind === "group" && garage.visibility).toBeTruthy();
+    expect(plug.kind === "item" && plug.visibility).toMatchObject([{ entity: "sensor.plug" }]);
+    // the home's sensor row never carries the node's conditions
+    expect(cfg.entities.every((e) => e.visibility === null)).toBe(true);
+    // a room has no sensor to fall back to
+    expect(() =>
+      normalizePowerFlowConfig({
+        sources: SRC,
+        consumers: [
+          { group: "X", entities: ["sensor.a"], visibility: [{ condition: "state", state: "on" }] },
+        ],
+      }),
+    ).toThrow("'consumers[0].visibility[0]' needs 'entity'");
+  });
+
+  it("hides sources, consumers and devices, and rooms whose devices are all hidden", () => {
+    const cfg = cfgOf();
+    expect([...hiddenNodes(cfg, shown)].sort()).toEqual(["c1.0", "c2", "g1", "s0", "c0.1"].sort());
+    const allGone = normalizePowerFlowConfig({
+      sources: SRC,
+      consumers: [{ group: "Laundry", entities: [{ entity: "sensor.washer", visibility: never }] }],
+    });
+    expect([...hiddenNodes(allGone, shown)].sort()).toEqual(["c0.0", "g0"]);
+    // `hide` hides leaves too (the threshold of hide_consumers_below)
+    expect([...hiddenNodes(cfgOf(), shown, (leaf) => leaf.id === "c3")]).toContain("c3");
+  });
+
+  it("draws the config without the hidden nodes, ids unchanged", () => {
+    const cfg = cfgOf();
+    const view = viewConfig(cfg, hiddenNodes(cfg, shown));
+    expect(view.sources.map((s) => s.id)).toEqual(["s1", "s2"]);
+    expect(leavesOf(view).map((l) => l.id)).toEqual(["c0.0", "c3", "other"]);
+    expect(view.hasGroups).toBe(true);
+    expect(viewConfig(cfg, new Set())).toBe(cfg);
+    // with no consumer left, the other node goes too
+    const lone = normalizePowerFlowConfig({ sources: SRC, consumers: ["sensor.lamp"] });
+    expect(viewConfig(lone, new Set(["c0"])).consumers).toEqual([]);
+  });
+
+  it("counts hidden consumers and rooms in other; a room keeps its hidden devices", () => {
+    const cfg = cfgOf();
+    const hidden = hiddenNodes(cfg, shown);
+    const now = powerNow(cfg, modelsOf(cfg, hassOf(STATES)));
+    const f = allocate(cfg, now, hidden);
+    // Laundry 500 (its hidden dryer included) and the lamp 40 are shown; the EV and the plug not
+    expect(f.groupW.get("g0")).toBe(500);
+    expect(f.leafW.get("other")).toBe(3000 - 500 - 40);
+    // nothing hidden: every consumer counts
+    expect(allocate(cfg, now).leafW.get("other")).toBe(3000 - 500 - 1000 - 50 - 40);
+    // a hidden source changes no number
+    expect(f.H).toBe(3000);
+    expect(f.S).toBe(800);
+  });
+
+  it("lays out only the shown nodes, reads each link's own flow, and shrinks", () => {
+    const cfg = cfgOf();
+    const hidden = hiddenNodes(cfg, shown);
+    const view = viewConfig(cfg, hidden);
+    const now = powerNow(cfg, modelsOf(cfg, hassOf(STATES)));
+    const f = allocate(cfg, now, hidden);
+    const full = layoutTree(cfg, 600, f.edges);
+    const lay = layoutTree(view, 600, f.edges);
+    expect(lay.nodes.map((n) => n.id)).not.toContain("s0");
+    expect(lay.nodes.map((n) => n.id)).not.toContain("g1");
+    // every drawn link still knows its own flow, though links before it were left out
+    for (const e of lay.edges) {
+      expect(f.edges[e.fi].from).toBe(e.from);
+      expect(f.edges[e.fi].to).toBe(e.to);
+    }
+    expect(lay.edges.length).toBeLessThan(full.edges.length);
+    expect(diagramHeight(view)).toBeLessThan(diagramHeight(cfg));
+    expect(lay.key).not.toBe(full.key);
+    // one consumer hidden instead of another: the same count, another layout
+    const a = layoutTree(viewConfig(cfg, new Set(["c2"])), 600, f.edges);
+    const b = layoutTree(viewConfig(cfg, new Set(["c3"])), 600, f.edges);
+    expect(a.nodes.length).toBe(b.nodes.length);
+    expect(a.key).not.toBe(b.key);
+  });
+
+  it("lays out a tree whose sources are all hidden", () => {
+    const cfg = normalizePowerFlowConfig({
+      home: "sensor.home",
+      sources: [{ type: "solar", entity: "sensor.solar", visibility: never }],
+      consumers: ["sensor.lamp"],
+    });
+    const view = viewConfig(cfg, hiddenNodes(cfg, shown));
+    const now = powerNow(cfg, modelsOf(cfg, hassOf(STATES)));
+    const lay = layoutTree(view, 600, allocate(cfg, now).edges);
+    expect(lay.nodes.map((n) => n.id)).toEqual(["home", "c0", "other"]);
+    expect(Number.isFinite(diagramHeight(view))).toBe(true);
+  });
+});
+
+describe("power flow hide_consumers_below", () => {
+  it("cascades card → room → device, 0 never hides, and rejects nonsense", () => {
+    const cfg = normalizePowerFlowConfig({
+      sources: SRC,
+      hide_consumers_below: 10,
+      consumers: [
+        {
+          group: "Laundry",
+          hide_below: 50,
+          entities: ["sensor.washer", { entity: "sensor.dryer", hide_below: 0 }],
+        },
+        "sensor.ev",
+        { entity: "sensor.plug", hide_below: 5 },
+      ],
+    });
+    const below = leavesOf(cfg).flatMap((l) => (l.kind === "item" ? [[l.id, l.hideBelow]] : []));
+    expect(below).toEqual([
+      ["c0.0", 50],
+      ["c0.1", null],
+      ["c1", 10],
+      ["c2", 5],
+    ]);
+    expect(leavesOf(base({ consumers: ["sensor.a"] }))[0]).toMatchObject({ hideBelow: null });
+    expect(() => base({ consumers: ["sensor.a"], hide_consumers_below: "lots" })).toThrow(
+      "'hide_consumers_below' must be a number of watts",
+    );
+    expect(() => base({ consumers: [{ entity: "sensor.a", hide_below: -1 }] })).toThrow(
+      "'consumers[0].hide_below' must be a number of watts",
+    );
+  });
+
+  it("hides below the threshold and shows again only clearly above it", () => {
+    // first decision: the threshold itself
+    expect(thresholdShown(undefined, 9.9, 10)).toBe(false);
+    expect(thresholdShown(undefined, 10, 10)).toBe(true);
+    // shown: hides below it
+    expect(thresholdShown(true, 9, 10)).toBe(false);
+    expect(thresholdShown(true, 10.5, 10)).toBe(true);
+    // hidden: back from 12 W (20 %), and at least 2 W above for small thresholds
+    expect(thresholdShown(false, 11.9, 10)).toBe(false);
+    expect(thresholdShown(false, 12, 10)).toBe(true);
+    expect(thresholdShown(false, 2.9, 1)).toBe(false);
+    expect(thresholdShown(false, 3, 1)).toBe(true);
+    expect(thresholdShown(false, 1200, 1000)).toBe(true);
+    // a producer counts by its size; unavailable as 0
+    expect(thresholdShown(undefined, -400, 10)).toBe(true);
+    expect(thresholdShown(true, null, 10)).toBe(false);
+  });
+
+  it("reads the threshold in watts whatever the sensor's unit", () => {
+    const cfg = normalizePowerFlowConfig({
+      home: "sensor.home",
+      sources: SRC,
+      hide_consumers_below: 500,
+      consumers: ["sensor.ev"],
+    });
+    const now = powerNow(
+      cfg,
+      modelsOf(cfg, hassOf({ "sensor.ev": ["0.4", { unit_of_measurement: "kW" }] })),
+    );
+    expect(now.leaves.get("c0")).toBe(400);
+    expect(thresholdShown(undefined, now.leaves.get("c0") ?? null, 500)).toBe(false);
   });
 });

@@ -1,5 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
-import { fireAction, fireEvent, fireHaptic, registerCard } from "../../../src/shared/card.ts";
+import {
+  fireAction,
+  fireEvent,
+  fireHaptic,
+  freshShadow,
+  registerCard,
+} from "../../../src/shared/card.ts";
 
 const listen = (el: EventTarget, type: string) => {
   const seen: CustomEvent[] = [];
@@ -59,5 +65,26 @@ describe("card helpers", () => {
     expect(window.customCards?.length ?? 0).toBe(before);
     expect(errors.mock.calls[0][0]).toContain("test-taken-card");
     errors.mockRestore();
+  });
+});
+
+describe("freshShadow", () => {
+  it("replaces the card's own style and ha-card, and keeps what UIX or card-mod put there", () => {
+    const host = document.createElement("div");
+    const root = host.attachShadow({ mode: "open" });
+    const first = freshShadow(root, "a { color: red; }");
+    first.textContent = "old";
+    // what UIX adds next to the card's nodes
+    const foreign = document.createElement("uix-node");
+    root.appendChild(foreign);
+    const card = freshShadow(root, "b { color: blue; }");
+    expect(card.parentNode).toBe(root);
+    expect(card.textContent).toBe("");
+    expect(root.querySelectorAll("ha-card").length).toBe(1);
+    expect(root.querySelectorAll("style[data-pro]").length).toBe(1);
+    expect(root.querySelector("style[data-pro]")?.textContent).toBe("b { color: blue; }");
+    expect(foreign.parentNode).toBe(root);
+    // ours first: a foreign style wins at equal specificity
+    expect(root.firstElementChild?.matches("style[data-pro]")).toBe(true);
   });
 });

@@ -17,8 +17,9 @@
  *     - entity: sensor.a
  *       name: A                       # optional
  *       color: red                    # optional (HA named color or hex)
+ *       visibility: [...]             # optional: drawn only while the conditions hold
  */
-import { fireAction, defineElement, registerCard } from "./shared/card.ts";
+import { fireAction, defineElement, registerCard, freshShadow } from "./shared/card.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import type { MultiTrendCardConfig, TrendConfig, TrendPoint } from "./multi-trend/config.ts";
 import { cssColor } from "./shared/color.ts";
@@ -26,7 +27,16 @@ import { DEVICE_CLASS_ICON, REFRESH_MS } from "./shared/constants.ts";
 import { fmtNumber, langOf } from "./shared/format.ts";
 import { fetchHistory, type Point } from "./shared/history.ts";
 import { hideHover } from "./shared/hover.ts";
+import { TemplateSubscriptions } from "./shared/templates.ts";
 import { decimalsOf, isNum, qs } from "./shared/util.ts";
+import {
+  checkVisibility,
+  normalizeVisibility,
+  userPerson,
+  visibilityDeps,
+  type VisibilityDeps,
+} from "./shared/visibility.ts";
+import { VisibilityWatch } from "./shared/visibility-watch.ts";
 import { MultiTrendCardEditor } from "./multi-trend/editor.ts";
 import { DEFAULT_HOURS, PALETTE } from "./shared/trend/scale.ts";
 import {
@@ -56,6 +66,11 @@ export class MultiTrendCard extends HTMLElement {
   _fetching = false;
   _timer?: ReturnType<typeof setInterval>;
   _ro?: ResizeObserver;
+  // visibility of the series: what the conditions read, their templates, screen and time
+  _visDeps: VisibilityDeps = visibilityDeps([]);
+  _tpl: TemplateSubscriptions;
+  _visWatch: VisibilityWatch;
+  _person: { user: string | undefined; id: string | null } | null = null;
 
   static getConfigElement() {
     return document.createElement(`${CARD_TYPE}-editor`);
@@ -74,6 +89,8 @@ export class MultiTrendCard extends HTMLElement {
     this._onPointer = this._onPointer.bind(this);
     this._onLeave = this._onLeave.bind(this);
     this._onDocPointer = this._onDocPointer.bind(this);
+    this._tpl = new TemplateSubscriptions(CARD_TYPE, () => this._render());
+    this._visWatch = new VisibilityWatch(() => this._render());
   }
 
   setConfig(config: MultiTrendCardConfig) {
@@ -83,7 +100,15 @@ export class MultiTrendCard extends HTMLElement {
     const entities = config.entities.map((e, i) => {
       const o = typeof e === "string" ? { entity: e } : { ...e };
       if (!o.entity) throw new Error(`${CARD_TYPE}: entities[${i}] has no 'entity'`);
-      return { ...o, colorCss: cssColor(o.color, cssColor(PALETTE[i % PALETTE.length]) ?? "") };
+      // the colour stays the config position's, so a hidden series never shifts the others'
+      const colorCss = cssColor(o.color, cssColor(PALETTE[i % PALETTE.length]) ?? "");
+      const label = `entities[${i}]`;
+      const visibility = normalizeVisibility(o.visibility, {
+        type: CARD_TYPE,
+        label,
+        entity: o.entity,
+      });
+      return { ...o, colorCss, visibility };
     });
     this._config = {
       hours_to_show: DEFAULT_HOURS,
@@ -96,12 +121,17 @@ export class MultiTrendCard extends HTMLElement {
     };
     this._series = entities.map(() => []);
     this._fetched = false;
+    this._visDeps = visibilityDeps(entities.map((e) => e.visibility));
+    this._visWatch.set(this._visDeps);
+    this._tpl.sync(this._hass?.connection, this._visDeps.templates);
     if (this._root) this._buildDom();
   }
 
   set hass(hass: HomeAssistant) {
     const prev = this._hass;
     this._hass = hass;
+    if (!prev || prev.connection !== hass.connection)
+      this._tpl.sync(hass.connection, this._visDeps.templates);
     if (!this._root) this._buildDom();
     if (!this._fetched && !this._fetching) {
       this._fetchHistory();
@@ -121,6 +151,12 @@ export class MultiTrendCard extends HTMLElement {
         }
       }
     });
+    // what the visibility conditions read: their entities, the user, the user's person
+    const deps = this._visDeps;
+    if (deps.user && prev?.user?.id !== hass.user?.id) changed = true;
+    const person = deps.location ? this._personOf(hass) : null;
+    for (const id of person ? [...deps.entities, person] : deps.entities)
+      if (prev?.states[id] !== hass.states[id]) changed = true;
     if (changed || !prev) this._render();
   }
 
@@ -129,21 +165,52 @@ export class MultiTrendCard extends HTMLElement {
     this._ro = new ResizeObserver(() => this._render());
     if (this._root) this._ro.observe(qs(this._root, ".plot"));
     document.addEventListener("pointerdown", this._onDocPointer);
+    this._visWatch.connect();
+    if (this._hass && this._tpl.size === 0)
+      this._tpl.sync(this._hass.connection, this._visDeps.templates);
   }
 
   disconnectedCallback() {
     clearInterval(this._timer);
     this._ro?.disconnect();
     document.removeEventListener("pointerdown", this._onDocPointer);
+    this._visWatch.disconnect();
+    this._tpl.clear();
   }
 
+  // the series shown now
   getCardSize() {
-    return this._layout() === "lanes" ? 2 + this._config.entities.length : 3;
+    const shown = this._shown();
+    return this._layout(shown) === "lanes" ? 2 + shown.length : 3;
   }
 
+  // the grid footprint as written (HA asks once): every series
   getGridOptions(): GridOptions {
-    const rows = this._layout() === "lanes" ? 2 + this._config.entities.length : 3;
+    const all = this._config.entities.map((_, i) => i);
+    const rows = this._layout(all) === "lanes" ? 2 + all.length : 3;
     return { columns: 12, rows, min_columns: 6, min_rows: 2 };
+  }
+
+  // the indices of the series whose conditions hold (all of them before hass arrives)
+  _shown(): number[] {
+    const hass = this._hass;
+    const env = hass && {
+      hass,
+      tpl: (t: string) => this._tpl.results.get(t),
+      media: this._visWatch.media,
+      now: Date.now(),
+      person: this._visDeps.location ? this._personOf(hass) : null,
+    };
+    return this._config.entities.flatMap((e, i) =>
+      !env || checkVisibility(e.visibility, env) ? [i] : [],
+    );
+  }
+
+  // the user's person entity (for location conditions), looked up again when the user changes
+  _personOf(hass: HomeAssistant): string | null {
+    const user = hass.user?.id;
+    if (!this._person || this._person.user !== user) this._person = { user, id: userPerson(hass) };
+    return this._person.id;
   }
 
   // ---------- helpers ----------
@@ -161,10 +228,11 @@ export class MultiTrendCard extends HTMLElement {
     return e.name || this._state(i)?.attributes.friendly_name || e.entity;
   }
 
-  _layout(): "overlay" | "lanes" {
+  // `auto` overlays the series when their units match (of the shown ones)
+  _layout(idxs = this._shown()): "overlay" | "lanes" {
     const l = this._config.layout;
     if (l === "overlay" || l === "lanes") return l;
-    const units = new Set(this._config.entities.map((_, i) => this._unit(i)));
+    const units = new Set(idxs.map((i) => this._unit(i)));
     return units.size <= 1 ? "overlay" : "lanes";
   }
 
@@ -196,13 +264,7 @@ export class MultiTrendCard extends HTMLElement {
   // ---------- DOM ----------
 
   _buildDom() {
-    const root = this.shadowRoot as ShadowRoot;
-    root.innerHTML = "";
-    const style = document.createElement("style");
-    style.textContent = STYLE;
-    root.appendChild(style);
-
-    const card = document.createElement("ha-card");
+    const card = freshShadow(this.shadowRoot as ShadowRoot, STYLE);
     card.innerHTML = `
       <div class="header" role="button" tabindex="0">
         <div class="shape"><ha-icon></ha-icon></div>
@@ -211,7 +273,6 @@ export class MultiTrendCard extends HTMLElement {
       </div>
       <div class="legend"></div>`;
     card.appendChild(trendPlotEl());
-    root.appendChild(card);
     this._root = card;
 
     const header = qs(card, ".header");
@@ -243,6 +304,9 @@ export class MultiTrendCard extends HTMLElement {
     if (!this._root || !this._hass) return;
     const card = this._root;
     const st0 = this._state(0);
+    // the shown series; the title, icon and more-info stay the first entity's (the card's)
+    const shown = this._shown();
+    const layout = this._layout(shown);
 
     // Header text
     qs(card, ".primary").textContent = this._config.title || this._name(0);
@@ -257,9 +321,9 @@ export class MultiTrendCard extends HTMLElement {
 
     const sec = qs(card, ".secondary");
     sec.textContent = "";
-    this._config.entities.forEach((e, i) => {
+    shown.forEach((i, k) => {
       const st = this._state(i);
-      if (i > 0) {
+      if (k > 0) {
         const s = document.createElement("span");
         s.className = "sep";
         s.textContent = "·";
@@ -272,11 +336,11 @@ export class MultiTrendCard extends HTMLElement {
     // Legend: only for >=2 overlaid series (lanes carry their own labels)
     const legend = qs(card, ".legend");
     legend.textContent = "";
-    const showLegend =
-      this._config.show_legend && this._config.entities.length > 1 && this._layout() === "overlay";
+    const showLegend = this._config.show_legend && shown.length > 1 && layout === "overlay";
     legend.style.display = showLegend ? "" : "none";
     if (showLegend) {
-      this._config.entities.forEach((e, i) => {
+      shown.forEach((i) => {
+        const e = this._config.entities[i];
         const span = document.createElement("span");
         const bar = document.createElement("i");
         bar.style.setProperty("--c", e.colorCss);
@@ -287,27 +351,32 @@ export class MultiTrendCard extends HTMLElement {
       });
     }
 
-    drawTrend(this._plot as TrendPlotEl, this._spec());
+    drawTrend(this._plot as TrendPlotEl, this._spec(shown));
     if (this._hoverT !== null && !showTrendHover(this._plot as TrendPlotEl, this._hoverT))
       this._hideHover();
+    this._visWatch.arm(this._hass);
   }
 
-  // what the plot draws: the history window and one series per entity
-  _spec(): TrendSpec {
+  // what the plot draws: the history window and one series per shown entity (the history of
+  // every entity is kept, so a series shown again has its line at once)
+  _spec(shown = this._shown()): TrendSpec {
     const now = Date.now();
     return {
       hass: this._hass,
       t0: now - this._config.hours_to_show * 3600e3,
       t1: now,
-      layout: this._layout(),
+      layout: this._layout(shown),
       xAxis: this._config.x_axis,
       yAxis: this._config.y_axis,
-      series: this._config.entities.map((e, i) => ({
-        pts: this._series[i],
-        color: e.colorCss,
-        name: this._name(i),
-        fmt: (v) => this._fmt(i, v),
-      })),
+      series: shown.map((i) => {
+        const e = this._config.entities[i];
+        return {
+          pts: this._series[i],
+          color: e.colorCss,
+          name: this._name(i),
+          fmt: (v: number) => this._fmt(i, v),
+        };
+      }),
     };
   }
 

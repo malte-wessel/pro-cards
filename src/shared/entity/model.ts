@@ -8,6 +8,7 @@ import type { HassEntity, HomeAssistant } from "../ha.ts";
 import type { Point } from "../history.ts";
 import { t } from "../i18n.ts";
 import { decimalsOf, isTemplate } from "../util.ts";
+import type { Visibility } from "../visibility.ts";
 
 // the card's bound pointer handlers for the history plots
 export interface PlotHandlers {
@@ -29,6 +30,8 @@ export interface RenderCtx extends FormatCtx {
   plotHandlers: PlotHandlers;
   // the controls' host (pending calls, drag state); cards without controls leave it out
   ctl?: ControlHost;
+  // whether a part with these visibility conditions is shown now; without it everything is
+  shown?: (v: Visibility) => boolean;
 }
 export interface FmtValue {
   text: string;

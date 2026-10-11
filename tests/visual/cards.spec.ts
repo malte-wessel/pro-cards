@@ -24,6 +24,8 @@ const rainRules = [
   { above: 7.6, color: "indigo", label: "Heavy rain", tint_card: true },
 ];
 
+const KITCHEN_ON = [{ condition: "state", entity: "light.kitchen", state: "on" }];
+
 const PF = "custom:power-flow-card-pro";
 const PF_SRC = [
   { type: "solar", entity: "sensor.solar_power" },
@@ -1200,6 +1202,57 @@ const CASES = {
       rules: [{ above: 1000, color: "amber", label: "Busy" }],
     },
   ],
+  // visibility: hidden parts take no room (the kitchen light is off in the frozen world)
+  "vis-sections": {
+    type: ESC,
+    title: "Living room",
+    icon: "mdi:sofa",
+    sections: [
+      { layout: "row", visibility: KITCHEN_ON, entities: ["light.kitchen"] },
+      { layout: "row", divider: true, entities: ["light.living_room", "cover.living_room_blinds"] },
+      { layout: "grid", divider: true, visibility: KITCHEN_ON, entities: ["light.bedroom"] },
+      {
+        layout: "table",
+        divider: true,
+        entities: [
+          "sensor.living_room_temperature",
+          { entity: "sensor.living_room_humidity", show_icon: true, visibility: KITCHEN_ON },
+        ],
+      },
+    ],
+  },
+  "vis-hero": {
+    type: EGC,
+    layout: "hero",
+    title: "Climate",
+    header_entities: [{ entity: "sensor.living_room_humidity", visibility: KITCHEN_ON }],
+    entities: [
+      { entity: "sensor.kitchen_temperature", visibility: KITCHEN_ON },
+      { entity: "sensor.living_room_temperature", rules },
+      "sensor.bedroom_temperature",
+    ],
+  },
+  "vis-weather": {
+    type: "custom:weather-card-pro",
+    entity: "weather.home",
+    sections: [
+      { type: "hero", visibility: KITCHEN_ON },
+      { type: "row", divider: true, entities: ["humidity", "wind_speed", "pressure"] },
+      { type: "forecast", mode: "daily", divider: true, days: 3 },
+    ],
+  },
+  "vis-power-flow": {
+    type: PF,
+    home: "sensor.power_consumption",
+    hide_consumers_below: 20,
+    sources: PF_SRC,
+    consumers: [
+      PF_CONS[0],
+      { ...PF_CONS[1], visibility: KITCHEN_ON },
+      PF_CONS[2],
+      { ...PF_CONS[3], hide_below: 0 },
+    ],
+  },
 };
 
 for (const [name, cfg] of Object.entries(CASES)) {

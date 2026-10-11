@@ -5,6 +5,8 @@ import { AXIS_FONT, STYLE_ICONS } from "../../constants.ts";
 export const STYLE_BASE = `
   ${STYLE_ICONS}
   :host { display: block; min-width: 0; }
+  /* what a visibility condition hides; beats the display of rows, cells and fields */
+  [hidden] { display: none !important; }
   ha-card { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; contain: inline-size; --fe-tint: transparent; }
   ha-card.tinted { background: color-mix(in srgb, var(--fe-tint) 12%, var(--ha-card-background, var(--card-background-color))); }
   .body { display: flex; flex-direction: column; gap: 14px; padding: 12px 16px 14px 16px; min-width: 0; }

@@ -978,4 +978,10 @@ See [Controls](/cards/controls) for what every control looks like and where it s
 | `show_name` / `show_value` / `show_icon` | per layout | row, column, table, header | What a compact item shows, see [Item options](#item-options). |
 | `name_position`                          | `below`    | row                        | `above` or `below` the icon; the other layouts ignore it.     |
 
-Every card also accepts the Home Assistant keys `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`; see [Sizing in sections](/guide/sizing).
+### Visibility
+
+| Option       | Default | Applies to                  | Description                                                                                                                                             |
+| ------------ | ------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `visibility` |         | entities in groups, headers | Drawn only while every condition holds (Home Assistant's conditions); a condition without `entity` reads this one. See [Visibility](/guide/visibility). |
+
+Every card also accepts the Home Assistant keys `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`; see [Sizing in sections](/guide/sizing). On the card itself `visibility` is Home Assistant's and hides the whole card.

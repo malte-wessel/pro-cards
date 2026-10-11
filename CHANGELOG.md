@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- `visibility` on the parts of a card: entities, header entities, sections and custom buttons of the entity cards, every section of the weather card, sources, consumers, rooms and devices of the power flow card, and the series of the multi trend card. A part is drawn only while its conditions hold. The conditions are Home Assistant's (`state`, `numeric_state`, `screen`, `user`, `location`, `time`, `and`, `or`, `not`) plus `template`; a state condition without `entity` reads the part's own. The card's own `visibility` stays Home Assistant's
+- A hidden part takes no room: the first shown entity leads a hero, dividers stay between shown sections, a section or room whose entities are all hidden goes with them, a hidden row never tints the card, and a card with nothing left shows nothing (its grid cell stays; the card's own `visibility` removes it)
+- Power flow: `hide_consumers_below` hides consumers that draw less than that many watts and shows them again only clearly above it, so an idling device does not blink; `hide_below` sets it per room or consumer. Hidden consumers count in Other, so the numbers still add up, and the tree's height follows the shown nodes
+- Styles that UIX or card-mod put into a card stay through a config change; the cards used to clear their whole shadow root on every rebuild
+- A template that stays in a changed config keeps its value instead of going blank until it next changes
+- Docs: a Visibility guide with live examples, and the reference tables list the new keys
+
 ## 2.4.0 (2026-10-10)
 
 - `title_tap_action` on the entity group, entity sections, power flow, weather, wind and rain cards: the title and its icon run an action, e.g. navigate to the room's dashboard. Without it the title stays plain text; header entities keep their own actions

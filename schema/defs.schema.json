@@ -23,6 +23,381 @@
       "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
       "description": "a number (numeric strings accepted)"
     },
+    "visibilityCondition": {
+      "description": "A Home Assistant visibility condition",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "condition": {
+              "const": "state"
+            },
+            "enabled": {
+              "type": "boolean",
+              "description": "false skips the condition"
+            },
+            "entity": {
+              "$ref": "#/$defs/entityId"
+            },
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/entityId"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/entityId"
+                  },
+                  "minItems": 1
+                }
+              ]
+            },
+            "attribute": {
+              "type": "string"
+            },
+            "state": {
+              "anyOf": [
+                {
+                  "type": ["string", "number", "boolean"]
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": ["string", "number", "boolean"]
+                  },
+                  "minItems": 1
+                }
+              ]
+            },
+            "state_not": {
+              "anyOf": [
+                {
+                  "type": ["string", "number", "boolean"]
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": ["string", "number", "boolean"]
+                  },
+                  "minItems": 1
+                }
+              ]
+            }
+          },
+          "required": ["condition"],
+          "additionalProperties": false,
+          "anyOf": [
+            {
+              "required": ["state"]
+            },
+            {
+              "required": ["state_not"]
+            }
+          ],
+          "description": "the entity (default: the item's own) is in / not in the given states"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "condition": {
+              "const": "numeric_state"
+            },
+            "enabled": {
+              "type": "boolean",
+              "description": "false skips the condition"
+            },
+            "entity": {
+              "$ref": "#/$defs/entityId"
+            },
+            "entity_id": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/entityId"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/entityId"
+                  },
+                  "minItems": 1
+                }
+              ]
+            },
+            "attribute": {
+              "type": "string"
+            },
+            "above": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "#/$defs/numberish"
+                },
+                {
+                  "$ref": "#/$defs/entityId"
+                }
+              ]
+            },
+            "below": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "#/$defs/numberish"
+                },
+                {
+                  "$ref": "#/$defs/entityId"
+                }
+              ]
+            }
+          },
+          "required": ["condition"],
+          "additionalProperties": false,
+          "anyOf": [
+            {
+              "required": ["above"]
+            },
+            {
+              "required": ["below"]
+            }
+          ],
+          "description": "the entity's number (default: the item's own) is strictly above / below; a bound may be an entity id"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "condition": {
+              "const": "screen"
+            },
+            "enabled": {
+              "type": "boolean",
+              "description": "false skips the condition"
+            },
+            "media_query": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": ["condition", "media_query"],
+          "additionalProperties": false,
+          "description": "a CSS media query matches the viewport"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "condition": {
+              "const": "user"
+            },
+            "enabled": {
+              "type": "boolean",
+              "description": "false skips the condition"
+            },
+            "users": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            }
+          },
+          "required": ["condition", "users"],
+          "additionalProperties": false,
+          "description": "the logged-in user is one of these user ids"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "condition": {
+              "const": "location"
+            },
+            "enabled": {
+              "type": "boolean",
+              "description": "false skips the condition"
+            },
+            "locations": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            }
+          },
+          "required": ["condition", "locations"],
+          "additionalProperties": false,
+          "description": "the logged-in user's person is in one of these zones (home, not_home, a zone name)"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "condition": {
+              "const": "time"
+            },
+            "enabled": {
+              "type": "boolean",
+              "description": "false skips the condition"
+            },
+            "after": {
+              "type": "string",
+              "pattern": "^\\d{1,2}:\\d{2}(:\\d{2})?$"
+            },
+            "before": {
+              "type": "string",
+              "pattern": "^\\d{1,2}:\\d{2}(:\\d{2})?$"
+            },
+            "weekdays": {
+              "type": "array",
+              "items": {
+                "enum": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+              },
+              "minItems": 1
+            }
+          },
+          "required": ["condition"],
+          "additionalProperties": false,
+          "description": "the time of day is in the window (both ends included; before < after crosses midnight) and the weekday is listed"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "condition": {
+              "const": "template"
+            },
+            "enabled": {
+              "type": "boolean",
+              "description": "false skips the condition"
+            },
+            "value_template": {
+              "type": "string",
+              "pattern": "\\{\\{|\\{%"
+            }
+          },
+          "required": ["condition", "value_template"],
+          "additionalProperties": false,
+          "description": "the template renders true (true, yes, on, enable, 1 or a non-zero number)"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "condition": {
+              "const": "and"
+            },
+            "enabled": {
+              "type": "boolean",
+              "description": "false skips the condition"
+            },
+            "conditions": {
+              "$ref": "#/$defs/visibility"
+            }
+          },
+          "required": ["condition"],
+          "additionalProperties": false,
+          "description": "all of the conditions"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "condition": {
+              "const": "or"
+            },
+            "enabled": {
+              "type": "boolean",
+              "description": "false skips the condition"
+            },
+            "conditions": {
+              "$ref": "#/$defs/visibility"
+            }
+          },
+          "required": ["condition"],
+          "additionalProperties": false,
+          "description": "any of the conditions"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "condition": {
+              "const": "not"
+            },
+            "enabled": {
+              "type": "boolean",
+              "description": "false skips the condition"
+            },
+            "conditions": {
+              "$ref": "#/$defs/visibility"
+            }
+          },
+          "required": ["condition"],
+          "additionalProperties": false,
+          "description": "not all of the conditions"
+        },
+        {
+          "type": "object",
+          "description": "the legacy shape: state / state_not without condition (the entity defaults to the part's own)",
+          "properties": {
+            "entity": {
+              "$ref": "#/$defs/entityId"
+            },
+            "state": {
+              "anyOf": [
+                {
+                  "type": ["string", "number", "boolean"]
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": ["string", "number", "boolean"]
+                  },
+                  "minItems": 1
+                }
+              ]
+            },
+            "state_not": {
+              "anyOf": [
+                {
+                  "type": ["string", "number", "boolean"]
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": ["string", "number", "boolean"]
+                  },
+                  "minItems": 1
+                }
+              ]
+            },
+            "enabled": {
+              "type": "boolean",
+              "description": "false skips the condition"
+            }
+          },
+          "anyOf": [
+            {
+              "required": ["state"]
+            },
+            {
+              "required": ["state_not"]
+            }
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "visibility": {
+      "description": "Show this part only while every condition holds (Home Assistant's visibility conditions); without it the part is always shown",
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/visibilityCondition"
+          }
+        },
+        {
+          "$ref": "#/$defs/visibilityCondition"
+        }
+      ]
+    },
     "haCardExtras": {
       "description": "Keys Home Assistant adds to any card; not interpreted by the cards",
       "grid_options": {

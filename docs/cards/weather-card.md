@@ -277,19 +277,22 @@ Home Assistant's fifteen condition states. They are the keys of an `icons` map a
 | `name_position`                          | `below`         | Default `above` or `below` the icon in row items; the other layouts ignore it, see the [item options](/cards/entity-options#item-options).                                                      |
 | `hours_to_show` / `bucket_minutes`       | `24` / `60`     | History window of sparklines, columns and strips inside entity sections.                                                                                                                        |
 
+Every section, whatever its type, also takes [`visibility`](/guide/visibility): it is drawn only while its conditions hold, which read the weather entity unless they name another.
+
 ### Section `hero`
 
-| Option                        | Default           | Description                                                                    |
-| ----------------------------- | ----------------- | ------------------------------------------------------------------------------ |
-| `title`                       |                   | Line above the section.                                                        |
-| `name` / `secondary`          | the card's        | Overrides of the card's `name` / `secondary` for this lead. Templates allowed. |
-| `icons` / `icon_size`         | the card's / `56` | Condition icons for this section only, and their size (px).                    |
-| `rules` / `temperature_rules` | the card's        | Condition / temperature rules for this section only.                           |
-| `divider`                     | `false`           | Line above the section (never drawn for the first).                            |
+| Option                        | Default           | Description                                                                                                       |
+| ----------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `title`                       |                   | Line above the section.                                                                                           |
+| `name` / `secondary`          | the card's        | Overrides of the card's `name` / `secondary` for this lead. Templates allowed.                                    |
+| `icons` / `icon_size`         | the card's / `56` | Condition icons for this section only, and their size (px).                                                       |
+| `rules` / `temperature_rules` | the card's        | Condition / temperature rules for this section only.                                                              |
+| `divider`                     | `false`           | Line above the section (never drawn for the first).                                                               |
+| `visibility`                  |                   | Drawn only while the [conditions](/guide/visibility) hold; they read the weather entity unless they name another. |
 
 ### Sections `row`, `list`, `table`, `grid`, `column`
 
-The keys of a [sections card](/cards/entity-sections-card#section-options) section (`entities`, `align`, `columns`, `divider`, item options) plus `title`. Entries: a weather attribute name, an entity id, or an entity item (without `entity` it reads the weather entity, with `attribute`). Row items show their value by default.
+The keys of a [sections card](/cards/entity-sections-card#section-options) section (`entities`, `align`, `columns`, `divider`, `visibility`, item options) plus `title`. Entries: a weather attribute name, an entity id, or an entity item (without `entity` it reads the weather entity, with `attribute`). Row items show their value by default.
 
 ### Section `trend`
 
@@ -302,18 +305,20 @@ The keys of a [sections card](/cards/entity-sections-card#section-options) secti
 | `title`                                        | "Next N hours" / "N days"          | Line above the section.                                                                                                                                  |
 | `rules` / `temperature_rules`                  | the card's                         | Condition / temperature rules for this section only.                                                                                                     |
 | `divider`                                      | `false`                            | Line above the section (never drawn for the first).                                                                                                      |
+| `visibility`                                   |                                    | Drawn only while the [conditions](/guide/visibility) hold; they read the weather entity unless they name another.                                        |
 
 ### Section `forecast`
 
-| Option                        | Default                   | Description                                                            |
-| ----------------------------- | ------------------------- | ---------------------------------------------------------------------- |
-| `mode`                        | `daily`                   | `hourly` or `daily`.                                                   |
-| `layout`                      | `vertical`                | `vertical` (rows) or `horizontal` (columns).                           |
-| `hours` / `days`              | `12` / `7`                | 1 to 48 hours from the current hour / 1 to 10 days, today first.       |
-| `show`                        | `[probability]`           | Rain figures per row: `probability`, `precipitation`; `[]` hides them. |
-| `icons` / `icon_size`         | the card's / `22`         | Condition icons for this section only, and their size (px).            |
-| `title`                       | "Next N hours" / "N days" | Line above the section.                                                |
-| `rules` / `temperature_rules` | the card's                | Condition / temperature rules for this section only.                   |
-| `divider`                     | `false`                   | Line above the section (never drawn for the first).                    |
+| Option                        | Default                   | Description                                                                                                       |
+| ----------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `mode`                        | `daily`                   | `hourly` or `daily`.                                                                                              |
+| `layout`                      | `vertical`                | `vertical` (rows) or `horizontal` (columns).                                                                      |
+| `hours` / `days`              | `12` / `7`                | 1 to 48 hours from the current hour / 1 to 10 days, today first.                                                  |
+| `show`                        | `[probability]`           | Rain figures per row: `probability`, `precipitation`; `[]` hides them.                                            |
+| `icons` / `icon_size`         | the card's / `22`         | Condition icons for this section only, and their size (px).                                                       |
+| `title`                       | "Next N hours" / "N days" | Line above the section.                                                                                           |
+| `rules` / `temperature_rules` | the card's                | Condition / temperature rules for this section only.                                                              |
+| `divider`                     | `false`                   | Line above the section (never drawn for the first).                                                               |
+| `visibility`                  |                           | Drawn only while the [conditions](/guide/visibility) hold; they read the weather entity unless they name another. |
 
 The forecast comes from Home Assistant's forecast subscription, so it is the same data the built-in weather card shows, in the entity's own units; entities with a twice-daily forecast are summarised per day. An entity without an hourly or daily forecast shows "no forecast" in that section. Tapping the lead opens the more-info dialog of the weather entity. The card takes 6 columns × 1 row as a tile and 12 columns with `rows: auto` with sections; `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod` pass through.

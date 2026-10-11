@@ -38,7 +38,8 @@
             "properties": {
               "entity": { "$ref": "defs.schema.json#/$defs/entityId" },
               "name": { "type": "string" },
-              "color": { "$ref": "defs.schema.json#/$defs/color" }
+              "color": { "$ref": "defs.schema.json#/$defs/color" },
+              "visibility": { "$ref": "defs.schema.json#/$defs/visibility" }
             },
             "required": ["entity"],
             "additionalProperties": false

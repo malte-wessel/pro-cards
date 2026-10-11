@@ -3,16 +3,31 @@
 //   _normalize(raw)            – the normalised config (see config.js)
 //   _styles()                  – the CSS string for the shadow root
 //   getGridOptions()           – the sections grid footprint
-import { fireAction, fireEvent, fireHaptic } from "../card.ts";
+import { fireAction, fireEvent, fireHaptic, freshShadow } from "../card.ts";
 import { cssColor } from "../color.ts";
 import { REFRESH_MS } from "../constants.ts";
 import { langOf } from "../format.ts";
 import type { ActionConfig, ActionKind, GridOptions, HapticType, HomeAssistant } from "../ha.ts";
 import { fetchHistory, pointOf, type Point } from "../history.ts";
 import { hideHover } from "../hover.ts";
+import { TemplateSubscriptions } from "../templates.ts";
 import { clamp01, qs } from "../util.ts";
+import {
+  checkVisibility,
+  userPerson,
+  visibilityDeps,
+  type Visibility,
+  type VisibilityDeps,
+} from "../visibility.ts";
+import { VisibilityWatch } from "../visibility-watch.ts";
 import { BLOCK_VISUALS, DOUBLE_MS, HISTORY_VISUALS, HOLD_MS } from "./constants.ts";
-import { collectTemplates, type EntityCardConfig, type EntityItem, type Group } from "./config.ts";
+import {
+  collectTemplates,
+  visibilityTrees,
+  type EntityCardConfig,
+  type EntityItem,
+  type Group,
+} from "./config.ts";
 import {
   hasBlockControl,
   PENDING_MS,
@@ -25,12 +40,20 @@ import { fillByClass } from "./render/fill.ts";
 import { drawPlot, showHover, windowOf, type PlotElement } from "./render/plots.ts";
 import type { EntityModel } from "./model.ts";
 
-type Unsubscribe = () => unknown;
 // the room inside a gauge's arc for its value (viewBox units) and the value's own font size
 const GAUGE_TEXT_W = 76;
 const GAUGE_FONT = 17;
 // what a row may hold that takes focus (the hit layer, buttons, a select, the slider)
 const FOCUSABLE = "[tabindex], button, select";
+
+// what is shown now: per item, per group (its own conditions and at least one shown item) and the
+// shown items of each group; `key` names the body's structure, a new key rebuilds the body
+export interface VisState {
+  items: boolean[];
+  groups: boolean[];
+  visIdxs: number[][];
+  key: string;
+}
 
 // grid rows a block visual (and a block control) adds below its row
 const blk = (e: EntityItem) =>
@@ -65,8 +88,7 @@ export abstract class EntityCardBase extends HTMLElement {
   static cardType: string;
 
   _series = new Map<string, Point[]>();
-  _tplResult = new Map<string, unknown>();
-  _tplUnsub = new Map<string, Promise<Unsubscribe | null>>();
+  _tpl: TemplateSubscriptions;
   _hover: { idx: number; t: number } | null = null;
   _plotHandlers: PlotHandlers;
   _config?: EntityCardConfig;
@@ -89,6 +111,14 @@ export abstract class EntityCardBase extends HTMLElement {
   _pendingTimer?: ReturnType<typeof setTimeout>;
   _idxsByEntity = new Map<string, number[]>();
   _ctl: ControlHost;
+  // visibility: the entities its conditions read besides the items' own (`_watchIds` is both),
+  // what else they depend on, the listeners for screen / time, what is shown and the body's key
+  _watchIds: string[] = [];
+  _visDeps: VisibilityDeps = visibilityDeps([]);
+  _visWatch: VisibilityWatch;
+  _vis?: VisState;
+  _bodyKey: string | null = null;
+  _person: { user: string | undefined; id: string | null } | null = null;
 
   abstract _normalize(raw: unknown): EntityCardConfig;
   abstract _styles(): string;
@@ -97,6 +127,8 @@ export abstract class EntityCardBase extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
+    this._tpl = new TemplateSubscriptions(this._cardType(), () => this._render());
+    this._visWatch = new VisibilityWatch(() => this._render());
     this._onDocPointer = this._onDocPointer.bind(this);
     this._plotHandlers = {
       move: this._onPointer.bind(this),
@@ -142,20 +174,25 @@ export abstract class EntityCardBase extends HTMLElement {
       ),
     ];
     this._templates = collectTemplates(cfg);
+    this._visDeps = visibilityDeps(this._visibilityTrees());
+    for (const tpl of this._visDeps.templates) this._templates.add(tpl);
+    this._watchIds = [...new Set([...this._entityIds, ...this._visDeps.entities])];
+    this._visWatch.set(this._visDeps);
+    this._person = null;
+    this._vis = undefined;
     this._idxsByEntity = new Map();
     cfg.entities.forEach((e, i) => {
       for (const id of new Set(idsOf(e)))
         this._idxsByEntity.set(id, [...(this._idxsByEntity.get(id) ?? []), i]);
     });
     this._series = new Map();
-    this._tplResult = new Map();
     this._fetched = false;
     this._hover = null;
     this._pending.clear();
     this._buttonPending.clear();
     this._armed.clear();
     this._dragging = null;
-    if (this._hass) this._subscribeTemplates();
+    this._subscribeTemplates();
     if (this._root) this._buildDom();
   }
 
@@ -175,7 +212,14 @@ export abstract class EntityCardBase extends HTMLElement {
     }
     // a new language (profile setting) re-renders too: words, times and numbers follow it
     let changed = !prev || langOf(prev) !== langOf(hass);
-    for (const id of this._entityIds) {
+    // conditions on the user (or the user's whereabouts) look again when they change
+    const deps = this._visDeps;
+    if (deps.user && prev?.user?.id !== hass.user?.id) changed = true;
+    if (deps.location) {
+      const person = this._personOf(hass);
+      if (person && prev?.states[person] !== hass.states[person]) changed = true;
+    }
+    for (const id of this._watchIds) {
       const st = hass.states[id],
         pst = prev?.states[id];
       if (st === pst) continue;
@@ -202,23 +246,84 @@ export abstract class EntityCardBase extends HTMLElement {
     this._ro = new ResizeObserver(() => this._render());
     if (this._root) this._ro.observe(this._root);
     document.addEventListener("pointerdown", this._onDocPointer);
+    this._visWatch.connect();
     // ghosts that expired while the card was away (another view) go now, the rest get their timer
     if ((this._pending.size || this._buttonPending.size) && this._sweepPending()) this._render();
-    if (this._hass && this._templates?.size && this._tplUnsub.size === 0)
-      this._subscribeTemplates();
+    if (this._hass && this._templates?.size && this._tpl.size === 0) this._subscribeTemplates();
   }
   disconnectedCallback() {
     clearInterval(this._timer);
     clearTimeout(this._pendingTimer);
     this._ro?.disconnect();
     document.removeEventListener("pointerdown", this._onDocPointer);
-    this._unsubscribeTemplates();
+    this._visWatch.disconnect();
+    this._tpl.clear();
   }
 
   getCardSize() {
     const cfg = this._config;
     if (!cfg) return 2;
-    return (cfg.hasHeader ? 1 : 0) + cfg.groups.reduce((a, g) => a + groupCardSize(cfg, g), 0);
+    // the groups as shown now (as written before the first render)
+    const vis = this._vis;
+    const rows = cfg.groups.reduce(
+      (a, g, k) =>
+        a +
+        (!vis
+          ? groupCardSize(cfg, g)
+          : vis.groups[k]
+            ? groupCardSize(cfg, { ...g, idxs: vis.visIdxs[k] })
+            : 0),
+      0,
+    );
+    return (cfg.hasHeader ? 1 : 0) + rows;
+  }
+
+  // ----- visibility -----
+  // every condition tree of the config; a card with parts of its own adds theirs
+  _visibilityTrees(): Visibility[] {
+    return visibilityTrees(this._config as EntityCardConfig);
+  }
+  // whether a part with these conditions is shown now (everything is, before hass arrives)
+  _shown(v: Visibility): boolean {
+    if (!v) return true;
+    const hass = this._hass;
+    if (!hass) return true;
+    return checkVisibility(v, {
+      hass,
+      tpl: (t) => this._tpl.results.get(t),
+      media: this._visWatch.media,
+      now: Date.now(),
+      person: this._visDeps.location ? this._personOf(hass) : null,
+    });
+  }
+  // the user's person entity (for location conditions), looked up again when the user changes
+  _personOf(hass: HomeAssistant): string | null {
+    const user = hass.user?.id;
+    if (!this._person || this._person.user !== user) this._person = { user, id: userPerson(hass) };
+    return this._person.id;
+  }
+  // what is shown now; a card with parts of its own extends it (and its key)
+  _computeVis(): VisState {
+    const cfg = this._config as EntityCardConfig;
+    // a row of buttons alone (no entity) whose buttons are all hidden has nothing to show either
+    const items = cfg.entities.map(
+      (e) =>
+        this._shown(e.visibility) &&
+        !(!e.entity && e.control?.buttons?.every((b) => !this._shown(b.visibility))),
+    );
+    const visIdxs = cfg.groups.map((g) =>
+      this._shown(g.visibility) ? g.idxs.filter((i) => items[i]) : [],
+    );
+    return {
+      items,
+      groups: visIdxs.map((v) => v.length > 0),
+      visIdxs,
+      key: visIdxs.map((v) => v.join(",")).join("|"),
+    };
+  }
+  // whether the body has anything to show (a card without groups draws its own body)
+  _bodyShown(vis: VisState): boolean {
+    return !(this._config as EntityCardConfig).groups.length || vis.groups.some(Boolean);
   }
 
   // the context the render helpers work on
@@ -227,7 +332,7 @@ export abstract class EntityCardBase extends HTMLElement {
     const cfg = this._config as EntityCardConfig;
     return {
       hass: this._hass,
-      tplResult: this._tplResult,
+      tplResult: this._tpl.results,
       series: this._series,
       fetched: this._fetched,
       cfg,
@@ -235,6 +340,7 @@ export abstract class EntityCardBase extends HTMLElement {
       t0: now - cfg.hours * 3600e3,
       plotHandlers: this._plotHandlers,
       ctl: this._ctl,
+      shown: (v) => this._shown(v),
     };
   }
 
@@ -302,38 +408,8 @@ export abstract class EntityCardBase extends HTMLElement {
   }
 
   // ----- templates -----
-  async _subscribeTemplates() {
-    const conn = this._hass?.connection;
-    if (!conn || !this._templates) return;
-    const wanted = this._templates;
-    for (const [tpl, p] of [...this._tplUnsub])
-      if (!wanted.has(tpl)) {
-        this._tplUnsub.delete(tpl);
-        p.then((u) => u && u()).catch(() => {});
-      }
-    for (const tpl of wanted) {
-      if (this._tplUnsub.has(tpl)) continue;
-      const p: Promise<Unsubscribe | null> = conn
-        .subscribeMessage<{ result?: unknown }>(
-          (msg) => {
-            const r = msg?.result;
-            if (this._tplResult.get(tpl) !== r) {
-              this._tplResult.set(tpl, r);
-              this._render();
-            }
-          },
-          { type: "render_template", template: tpl, timeout: 3, report_errors: false },
-        )
-        .catch((e) => {
-          console.warn(`${this._cardType()}: template failed`, tpl, e);
-          return null;
-        });
-      this._tplUnsub.set(tpl, p);
-    }
-  }
-  _unsubscribeTemplates() {
-    for (const p of this._tplUnsub.values()) p.then((u) => u && u()).catch(() => {});
-    this._tplUnsub = new Map();
+  _subscribeTemplates() {
+    this._tpl.sync(this._hass?.connection, this._templates);
   }
   _cardType() {
     return (this.constructor as typeof EntityCardBase).cardType;
@@ -433,13 +509,8 @@ export abstract class EntityCardBase extends HTMLElement {
     return r;
   }
   _buildDom() {
-    const root = this.shadowRoot as ShadowRoot,
-      cfg = this._config as EntityCardConfig;
-    root.innerHTML = "";
-    const style = document.createElement("style");
-    style.textContent = this._styles();
-    root.appendChild(style);
-    const card = document.createElement("ha-card");
+    const cfg = this._config as EntityCardConfig;
+    const card = freshShadow(this.shadowRoot as ShadowRoot, this._styles());
     card.className = `layout-${cfg.layout}`;
     if (cfg.hasHeader) {
       const header = document.createElement("div");
@@ -452,9 +523,10 @@ export abstract class EntityCardBase extends HTMLElement {
     }
     const body = document.createElement("div");
     body.className = "body";
+    this._vis = this._computeVis();
     this._buildBody(body);
+    this._bodyKey = this._vis.key;
     card.appendChild(body);
-    root.appendChild(card);
     this._root = card;
     this._ro?.observe(card);
     this._render();
@@ -482,22 +554,39 @@ export abstract class EntityCardBase extends HTMLElement {
       run();
     });
   }
-  // the body: one container per group (a subclass may lay its body out differently)
+  // the body: one container per shown group (a subclass may lay its body out differently); a
+  // divider only between shown groups, so a hidden first group leaves none on top
   _buildBody(body: HTMLElement) {
-    const cfg = this._config as EntityCardConfig;
+    const cfg = this._config as EntityCardConfig,
+      vis = this._vis as VisState;
+    let first = true;
     cfg.groups.forEach((g, k) => {
-      if (g.divider && k > 0) body.appendChild(this._divider());
-      body.appendChild(this._buildGroup(g));
+      if (!vis.groups[k]) return;
+      if (g.divider && !first) body.appendChild(this._divider());
+      body.appendChild(this._buildGroup(g, vis.visIdxs[k]));
+      first = false;
     });
+  }
+  // the body again, for what is shown now (a visibility flip); the focus stays on its control
+  _rebuildBody(card: HTMLElement) {
+    const body = card.querySelector<HTMLElement>(":scope > .body");
+    if (!body) return null;
+    const f = this._focusWithin();
+    const keep = f && body.contains(f.row) ? { idx: f.row.dataset.idx, i: f.i } : null;
+    body.replaceChildren();
+    this._buildBody(body);
+    this._bodyKey = (this._vis as VisState).key;
+    return keep;
   }
   _divider() {
     const div = document.createElement("div");
     div.className = "divider";
     return div;
   }
-  // one group of the body: a container whose class says how its entity rows are laid out
-  _buildGroup(g: Group) {
-    const { idxs } = g;
+  // one group of the body: a container whose class says how its entity rows are laid out; `idxs`
+  // are its shown items (the first shown one leads a hero)
+  _buildGroup(g: Group, idxs = g.idxs.filter((i) => this._vis?.items[i] ?? true)) {
+    const cfg = this._config as EntityCardConfig;
     if (g.layout === "tile") return this._row(idxs[0], "tile");
     const el = document.createElement("div");
     el.className = `section layout-${g.layout}`;
@@ -516,7 +605,8 @@ export abstract class EntityCardBase extends HTMLElement {
       }
     } else if (g.layout === "table") {
       el.classList.add(`align-${g.align}`);
-      if (g.hasIcon) el.classList.add("with-icon");
+      // the icon column only while a shown item has an icon
+      if (idxs.some((i) => cfg.entities[i].item.showIcon)) el.classList.add("with-icon");
       idxs.forEach((i) => el.appendChild(this._row(i, "field")));
     } else {
       el.classList.add(`align-${g.align}`);
@@ -531,6 +621,12 @@ export abstract class EntityCardBase extends HTMLElement {
     const cfg = this._config,
       card = this._root,
       ctx = this._ctx();
+    // what is shown: a new body structure is built now, unless a gesture or an open select would
+    // be cut off (the end of the gesture renders again)
+    const vis = (this._vis = this._computeVis());
+    let refocus: { idx: string | undefined; i: number } | null = null;
+    if (vis.key !== this._bodyKey && this._dragging === null && !this._focusWithin()?.select)
+      refocus = this._rebuildBody(card);
     const header = card.querySelector<HTMLElement>(".header");
     if (header) {
       const title = tplOf(ctx, cfg.title),
@@ -544,8 +640,11 @@ export abstract class EntityCardBase extends HTMLElement {
       t.textContent = title || "";
       if (cfg.titleTap) t.setAttribute("aria-label", title || "");
       qs(header, ".range").textContent = this._historyIds.length ? `${cfg.hours} h` : "";
-      header.style.display = title || icon || cfg.headerIdxs.length ? "" : "none";
+      header.style.display =
+        title || icon || cfg.headerIdxs.some((i) => vis.items[i]) ? "" : "none";
     }
+    // nothing shown at all: the card takes no room (its own `visibility` is HA's way to hide it)
+    card.hidden = (!header || header.style.display === "none") && !this._bodyShown(vis);
     const models = cfg.entities.map((ent) => modelOf(ctx, ent));
     const focus = this._focusWithin();
     for (const row of card.querySelectorAll<HTMLElement>(".row")) {
@@ -553,6 +652,9 @@ export abstract class EntityCardBase extends HTMLElement {
         ent = cfg.entities[idx],
         m = models[idx];
       if (!ent || !m) continue;
+      // a header item (or a body row whose rebuild waits for a gesture) hides in place
+      row.hidden = !vis.items[idx];
+      if (row.hidden) continue;
       row.style.setProperty("--fe-color", cssColor(m.look.color, "var(--primary-color)"));
       // a row whose control is being dragged or held keeps its DOM until the gesture ends
       if (this._dragging === idx) continue;
@@ -566,6 +668,10 @@ export abstract class EntityCardBase extends HTMLElement {
         hit.setAttribute("aria-label", nameOf(ctx, ent, m.st));
       }
       if (focus?.row === row) this._refocus(row, focus.i);
+      else if (refocus && row.dataset.idx === refocus.idx && !row.classList.contains("hval")) {
+        this._refocus(row, refocus.i);
+        refocus = null;
+      }
     }
     const tint = this._tintColor(ctx, models, card);
     card.classList.toggle("tinted", tint !== null);
@@ -575,6 +681,7 @@ export abstract class EntityCardBase extends HTMLElement {
     );
     for (const plot of card.querySelectorAll<PlotElement>(".plot")) drawPlot(ctx, plot);
     this._fitCells(card);
+    this._visWatch.arm(this._hass);
     if (this._hover) {
       const hover = this._hover;
       const plot = [...card.querySelectorAll<PlotElement>(".plot")].find(
@@ -604,9 +711,10 @@ export abstract class EntityCardBase extends HTMLElement {
   _fill(ctx: RenderCtx, row: HTMLElement, ent: EntityItem, idx: number, m: EntityModel) {
     fillByClass(ctx, row, ent, idx, m);
   }
-  // the card tint: the colour of the first rendered row whose matching rule sets tint_card
+  // the card tint: the colour of the first shown row whose matching rule sets tint_card
   _tintColor(_ctx: RenderCtx, models: EntityModel[], card: HTMLElement): string | null {
     for (const row of card.querySelectorAll<HTMLElement>(".row")) {
+      if (row.closest("[hidden]")) continue;
       const m = models[Number(row.dataset.idx)];
       if (m?.look.tint) return m.look.color;
     }

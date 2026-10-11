@@ -27,6 +27,7 @@ export interface LNode {
 }
 export interface LEdge {
   id: string;
+  fi: number; // its flow: the index in the edges the layout was given (some may not be drawn)
   from: string;
   to: string;
   kind: EdgeKind;
@@ -94,6 +95,9 @@ interface Stack {
   extent: number;
 }
 const sourceStack = (cfg: PowerFlowConfig): Stack => {
+  // every source hidden: an empty column
+  if (!cfg.sources.length)
+    return { bs: [], first: GEOM.srcMargin, last: GEOM.srcMargin, extent: 0 };
   const ds = cfg.sources.map((s) => nodeD(s.kind));
   const hs = cfg.sources.map((s) => labelHeightOf(cfg, s.idx, false));
   const bs: number[] = [];
@@ -226,7 +230,7 @@ export const layoutTree = (
   const map = (a: number, b: number): Pt => (right ? [a, b] : [b, a]);
   const widthOf = (id: string) => sizes.get(id)?.w ?? 0;
   const leaves = leavesOf(cfg);
-  const maxSrcW = Math.max(0, ...cfg.sources.map((_, i) => widthOf(`s${i}`)));
+  const maxSrcW = Math.max(0, ...cfg.sources.map((s) => widthOf(s.id)));
   const rS = GEOM.dSolar / 2,
     rH = GEOM.dHome / 2;
   const maxLeafW = Math.max(
@@ -265,7 +269,7 @@ export const layoutTree = (
         const h = labelHeightOf(cfg, s.idx, false),
           mid = bS[i] - nodeD(s.kind) / 2 - 4;
         const inBand = mid + h / 2 > bandH[0] && mid - h / 2 < bandH[1];
-        return inBand ? aS + rS + GEOM.labelGap + widthOf(`s${i}`) + 10 + rH : 0;
+        return inBand ? aS + rS + GEOM.labelGap + widthOf(s.id) + 10 + rH : 0;
       }),
     );
     const minH = Math.max(aS + rS + 40, clearH);
@@ -321,7 +325,7 @@ export const layoutTree = (
     return nd;
   };
   cfg.sources.forEach((s, i) => {
-    const nd = add(`s${i}`, s.kind, s.idx, aS, bS[i], null);
+    const nd = add(s.id, s.kind, s.idx, aS, bS[i], null);
     if (srcTight) {
       nd.tight = true;
       nd.alt = i % 2 === 1;
@@ -384,6 +388,8 @@ export const layoutTree = (
   const A = (nd: LNode) => (right ? nd.x : nd.y),
     Bof = (nd: LNode) => (right ? nd.y : nd.x);
   const offsets = laneOffsets(bS, bH);
+  // a source's lane by its id (its position in the drawn column, not its config index)
+  const srcPos = new Map(cfg.sources.map((s, i) => [s.id, i]));
   const home = src("home");
   const gapAlong = aH - rH - (aS + rS);
   // the lanes bend late, so a source's label fits beside its node on a narrow card
@@ -405,14 +411,14 @@ export const layoutTree = (
     return Math.max(t, a0 + 10);
   };
   let k = 0;
-  for (const e of edges) {
+  edges.forEach((e, fi) => {
     const from = byId.get(e.from),
       to = byId.get(e.to);
-    if (!from || !to) continue;
+    // a link of a hidden node is not drawn
+    if (!from || !to) return;
     let pts: Pt[];
     if (e.to === "home") {
-      const i = Number(e.from.slice(1));
-      const off = offsets[i] ?? 0;
+      const off = offsets[srcPos.get(e.from) ?? -1] ?? 0;
       const aBend = bendBase + Math.abs(off) * 1.5;
       pts = [
         map(A(from) + from.d / 2, Bof(from)),
@@ -441,6 +447,7 @@ export const layoutTree = (
     pts = dedupe(pts);
     out.push({
       id: `e${k++}`,
+      fi,
       from: e.from,
       to: e.to,
       kind: e.kind,
@@ -448,12 +455,13 @@ export const layoutTree = (
       d: orthoPath(pts, GEOM.radius),
       len: pathLength(pts),
     });
-  }
+  });
   void home;
 
   const [w, h] = right ? [along, across] : [across, along];
   return {
-    key: `${dir}/${cfg.flowStyle}/${cfg.consumerStyle}/${w}/${h}/${nodes.length}/${out.length}/${Math.round(aH)}/${Math.round(aG)}`,
+    // the drawn nodes by id: one hidden node swapped for another lays the tree out again
+    key: `${dir}/${cfg.flowStyle}/${cfg.consumerStyle}/${w}/${h}/${[...byId.keys()].join(",")}/${out.length}/${Math.round(aH)}/${Math.round(aG)}`,
     w,
     h,
     nodes,

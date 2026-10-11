@@ -45,7 +45,9 @@ export const normalizeEntityCardConfig = (input: unknown): EntityCardConfig => {
   if (!input || typeof input !== "object") throw new Error(`${CARD_TYPE}: invalid config`);
   const raw = input as RawEntityCardConfig;
   const ctx = { type: CARD_TYPE, ...normalizeActionDefaults(raw) };
-  const ent = normalizeEntity(raw, ctx, "the card", ITEM_DEFAULTS.other, { buttons: true });
+  // a card-level `visibility` is Home Assistant's (it hides the whole card), not the item's
+  const item = { ...raw, visibility: undefined };
+  const ent = normalizeEntity(item, ctx, "the card", ITEM_DEFAULTS.other, { buttons: true });
   return {
     layout: "tile",
     title: null,
@@ -56,7 +58,15 @@ export const normalizeEntityCardConfig = (input: unknown): EntityCardConfig => {
     ...ctx,
     entities: [ent],
     groups: [
-      { layout: "tile", idxs: [0], align: "start", columns: 1, divider: false, hasIcon: false },
+      {
+        layout: "tile",
+        idxs: [0],
+        align: "start",
+        columns: 1,
+        divider: false,
+        hasIcon: false,
+        visibility: null,
+      },
     ],
     headerIdxs: [],
     hasHeader: false,

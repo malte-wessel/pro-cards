@@ -21,6 +21,7 @@ import {
 } from "../shared/entity/config.ts";
 import { DEFAULTS as ENTITY_DEFAULTS } from "../shared/entity/constants.ts";
 import { numOrNull, oneOf } from "../shared/util.ts";
+import { normalizeVisibility, type Visibility } from "../shared/visibility.ts";
 import { isCondition, type Condition } from "./conditions.ts";
 import {
   ATTRIBUTES,
@@ -94,37 +95,43 @@ export interface WeatherIcons {
   base: "hass" | "mdi";
   map: Partial<Record<Condition, string>>;
 }
-export type WeatherSection =
-  | ({
-      kind: "hero";
-      title: string | null;
-      name: string | null;
-      secondary: string | null;
-      iconSize: number;
-      icons: WeatherIcons; // the card's, merged with the section's
-    } & SectionItems)
-  | { kind: "entities"; group: Group; title: string | null }
-  | ({
-      kind: "forecast";
-      mode: ForecastMode;
-      layout: ForecastLayout;
-      count: number; // hours or days
-      show: RainFigure[];
-      title: string | null;
-      iconSize: number;
-      icons: WeatherIcons;
-    } & SectionItems)
-  | ({
-      kind: "trend";
-      mode: ForecastMode;
-      count: number;
-      show: TrendEntry[];
-      layout: TrendLayoutOption;
-      xAxis: boolean;
-      yAxis: boolean;
-      showLegend: boolean;
-      title: string | null;
-    } & SectionItems);
+// every section kind: drawn only while its conditions hold (null: always)
+interface SectionBase {
+  visibility: Visibility;
+}
+export type WeatherSection = SectionBase &
+  (
+    | ({
+        kind: "hero";
+        title: string | null;
+        name: string | null;
+        secondary: string | null;
+        iconSize: number;
+        icons: WeatherIcons; // the card's, merged with the section's
+      } & SectionItems)
+    | { kind: "entities"; group: Group; title: string | null }
+    | ({
+        kind: "forecast";
+        mode: ForecastMode;
+        layout: ForecastLayout;
+        count: number; // hours or days
+        show: RainFigure[];
+        title: string | null;
+        iconSize: number;
+        icons: WeatherIcons;
+      } & SectionItems)
+    | ({
+        kind: "trend";
+        mode: ForecastMode;
+        count: number;
+        show: TrendEntry[];
+        layout: TrendLayoutOption;
+        xAxis: boolean;
+        yAxis: boolean;
+        showLegend: boolean;
+        title: string | null;
+      } & SectionItems)
+  );
 
 export interface WeatherConfig extends EntityCardConfig {
   layout: "tile" | "sections";
@@ -310,8 +317,11 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
     if (!oneOf(SECTION_TYPES, type))
       throw new Error(`${CARD_TYPE}: ${label}.type must be one of ${SECTION_TYPES.join(" | ")}`);
     const title = sec.title ?? null;
+    // the section's conditions; a state condition without an entity reads the weather entity
+    const visibility = normalizeVisibility(sec.visibility, { type: CARD_TYPE, label, entity });
     if (type === "hero") {
       sections.push({
+        visibility,
         kind: "hero",
         title,
         name: sec.name ?? null,
@@ -327,6 +337,8 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
           ...sec,
           layout: type,
           entities: rawEntities.map((e) => withWeatherEntity(e, entity)),
+          // the section's, not its group's (read above)
+          visibility: undefined,
         },
         ctx,
         raw,
@@ -338,7 +350,7 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
         r.group.align = "stretch";
       entities.push(...r.entities);
       groups.push(r.group);
-      sections.push({ kind: "entities", group: r.group, title });
+      sections.push({ visibility, kind: "entities", group: r.group, title });
     } else if (type === "forecast") {
       const mode = modeOf(sec, label);
       const layout = sec.layout ?? DEFAULTS.forecastLayout;
@@ -347,6 +359,7 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
           `${CARD_TYPE}: ${label}.layout must be one of ${FORECAST_LAYOUTS.join(" | ")}`,
         );
       sections.push({
+        visibility,
         kind: "forecast",
         mode,
         layout,
@@ -365,6 +378,7 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
           `${CARD_TYPE}: ${label}.layout must be one of ${TREND_LAYOUTS.join(" | ")}`,
         );
       sections.push({
+        visibility,
         kind: "trend",
         mode,
         count: countOf(sec, mode),

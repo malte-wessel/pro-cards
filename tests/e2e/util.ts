@@ -44,6 +44,9 @@ export const setState = (page: Page, id: string, s?: string, attrs?: Record<stri
 // switch the frontend language the mounted cards see (they re-render at once)
 export const setLanguage = (page: Page, language: string) =>
   page.evaluate((l) => window.pc.setLanguage(l), language);
+// log a user in (by id) or out (null); the mounted cards re-render at once
+export const setUser = (page: Page, id: string | null) =>
+  page.evaluate((u) => window.pc.setUser(u), id);
 export const card = (page: Page, i = 0): Locator =>
   page.locator("#root .cell").nth(i).locator("> *");
 export { test, expect };

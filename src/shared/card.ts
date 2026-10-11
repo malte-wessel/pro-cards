@@ -47,3 +47,18 @@ export const fireAction = (
 // haptic feedback on the companion app (types from HA: light, medium, heavy, selection, success, warning, failure)
 export const fireHaptic = (el: EventTarget, type: HapticType = "light") =>
   fireEvent(el, "haptic", type);
+
+// Replaces the card's own nodes in its shadow root, its <style> and its <ha-card>, with fresh ones
+// and returns the new (empty, connected) <ha-card>. Anything else there stays: UIX and card-mod
+// put their styles into the same shadow root and would lose them on every rebuild. Our <style>
+// goes first, so their rules win at equal specificity.
+export const freshShadow = (root: ShadowRoot, css: string): HTMLElement => {
+  for (const el of [...root.children]) if (el.matches("style[data-pro], ha-card")) el.remove();
+  const style = document.createElement("style");
+  style.dataset.pro = "";
+  style.textContent = css;
+  root.prepend(style);
+  const card = document.createElement("ha-card");
+  root.appendChild(card);
+  return card;
+};

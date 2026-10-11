@@ -481,6 +481,8 @@ const customButtonsEl = (
   const el = root("buttons", p, idx);
   el.classList.add("custom");
   list.forEach((b, i) => {
+    // a hidden button is left out; the others keep their index (their calls are keyed by it)
+    if (ctx.shown && !ctx.shown(b.visibility)) return;
     const st = b.entity ? ctx.hass?.states[b.entity] : undefined;
     const name = b.label ?? st?.attributes?.friendly_name ?? b.entity ?? t(ctx.hass, "control.run");
     const key = `c${i}`,
@@ -533,7 +535,7 @@ const customButtonsEl = (
     } else btn.addEventListener("click", run);
     el.appendChild(btn);
   });
-  return el;
+  return el.childElementCount ? el : null;
 };
 
 // a text chip ("Run"), or a round icon button in the lead of a row item; shows "Done" for a moment

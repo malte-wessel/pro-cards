@@ -15,7 +15,7 @@
  *   zones:                           # optional overrides per key: { label, max, color }
  *     day: { label: Daylight, max: 30000, color: amber }   # color = HA colour name or hex
  */
-import { defineElement, registerCard } from "./shared/card.ts";
+import { defineElement, registerCard, freshShadow } from "./shared/card.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import type { MeanBucket, Point } from "./shared/history.ts";
 import type {
@@ -171,19 +171,13 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
 
   // ----- DOM -----
   _buildDom() {
-    const root = this.shadowRoot as ShadowRoot;
-    root.innerHTML = "";
-    const style = document.createElement("style");
-    style.textContent = STYLE;
-    root.appendChild(style);
-    const card = document.createElement("ha-card");
+    const card = freshShadow(this.shadowRoot as ShadowRoot, STYLE);
     card.innerHTML = `
       <div class="header">
         <div class="shape"><ha-icon icon="mdi:white-balance-sunny"></ha-icon></div>
         <div class="info"><div class="primary"></div><div class="secondary"></div></div>
       </div>
       <div class="body"></div>`;
-    root.appendChild(card);
     this._root = card;
     this._ro?.observe(qs(card, ".body"));
     this._render();
