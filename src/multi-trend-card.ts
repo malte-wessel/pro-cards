@@ -207,9 +207,11 @@ export class MultiTrendCard extends HTMLElement {
   }
 
   // the user's person entity (for location conditions), looked up again when the user changes
+  // or none was found (a person may appear, or get its user, later)
   _personOf(hass: HomeAssistant): string | null {
     const user = hass.user?.id;
-    if (!this._person || this._person.user !== user) this._person = { user, id: userPerson(hass) };
+    if (!this._person || this._person.user !== user || this._person.id === null)
+      this._person = { user, id: userPerson(hass) };
     return this._person.id;
   }
 

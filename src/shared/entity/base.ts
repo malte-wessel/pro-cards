@@ -305,9 +305,11 @@ export abstract class EntityCardBase extends HTMLElement {
     });
   }
   // the user's person entity (for location conditions), looked up again when the user changes
+  // or none was found (a person may appear, or get its user, later)
   _personOf(hass: HomeAssistant): string | null {
     const user = hass.user?.id;
-    if (!this._person || this._person.user !== user) this._person = { user, id: userPerson(hass) };
+    if (!this._person || this._person.user !== user || this._person.id === null)
+      this._person = { user, id: userPerson(hass) };
     return this._person.id;
   }
   // what is shown now; a card with parts of its own extends it (and its key)
@@ -584,6 +586,8 @@ export abstract class EntityCardBase extends HTMLElement {
     if (!body) return null;
     const f = this._focusWithin();
     const keep = f && body.contains(f.row) ? { idx: f.row.dataset.idx, i: f.i } : null;
+    // the plot a tooltip belonged to goes with the body
+    this._hideHover();
     body.replaceChildren();
     this._buildBody(body);
     this._bodyKey = (this._vis as VisState).key;

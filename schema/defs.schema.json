@@ -339,6 +339,12 @@
             "entity": {
               "$ref": "#/$defs/entityId"
             },
+            "entity_id": {
+              "anyOf": [
+                { "$ref": "#/$defs/entityId" },
+                { "type": "array", "items": { "$ref": "#/$defs/entityId" }, "minItems": 1 }
+              ]
+            },
             "state": {
               "anyOf": [
                 {

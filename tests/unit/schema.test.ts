@@ -499,6 +499,7 @@ describe("card config schemas", () => {
               { condition: "state", entity_id: ["light.a", "light.b"], state: "on" },
               { condition: "state", state: "on", enabled: false },
               { state_not: "unavailable" },
+              { entity_id: "light.b", state: "on" },
             ],
           },
           {

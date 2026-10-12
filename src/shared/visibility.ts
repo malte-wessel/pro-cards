@@ -168,7 +168,9 @@ const conditionOf = (raw: unknown, ctx: VisibilityCtx, at: string): Condition | 
       return { kind: "template", template: o.value_template as string };
     default: {
       const k = kind as "and" | "or" | "not";
-      // none written, or all of them disabled: no condition (true), as at the top level
+      // none written, or all of them disabled: no condition (true), as at the top level. HA's
+      // checkConditionsMet would make an explicit empty `or` / `not` false; here disabling the
+      // only child of an `or` switches the condition off rather than hiding the part
       const conditions =
         o.conditions === undefined || o.conditions === null
           ? []

@@ -344,6 +344,21 @@ test.describe("visibility: conditions", () => {
     await expect(rows).toHaveCount(1);
   });
 
+  test("location: a person that gets the user later counts from then on", async ({ page }) => {
+    await mount(page, {
+      type: G,
+      entities: [
+        "light.office",
+        { entity: "light.hallway", visibility: [{ condition: "location", locations: ["home"] }] },
+      ],
+    });
+    const rows = card(page).locator(".row.list");
+    await setUser(page, "demo-new");
+    await expect(rows).toHaveCount(1);
+    await setState(page, "person.kim", "home", { user_id: "demo-new" });
+    await expect(rows).toHaveCount(2);
+  });
+
   test("template: shown once the template renders true", async ({ page }) => {
     await mount(page, {
       type: G,

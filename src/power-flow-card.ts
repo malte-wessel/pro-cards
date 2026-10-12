@@ -191,6 +191,8 @@ export class PowerFlowCard extends EntityCardBase {
     if (!this._root || !this._hass || !this._config) return;
     const cfg = this._config,
       ctx = this._ctx();
+    // before super._render: the base's _computeVis reads the hidden set from _computed, and
+    // getCardSize its view
     const c = (this._computed = this._compute(ctx, cfg));
     super._render();
     const card = this._root;
