@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.5.0 (beta)
 
 - `visibility` on the parts of a card: entities, header entities, sections and custom buttons of the entity cards, every section of the weather card, sources, consumers, rooms and devices of the power flow card, and the series of the multi trend card. A part is drawn only while its conditions hold. The conditions are Home Assistant's (`state`, `numeric_state`, `screen`, `user`, `location`, `time`, `and`, `or`, `not`) plus `template`; a state condition without `entity` reads the part's own. The card's own `visibility` stays Home Assistant's
 - A hidden part takes no room: the first shown entity leads a hero, dividers stay between shown sections, a section or room whose entities are all hidden goes with them, a hidden row never tints the card, and a card with nothing left shows nothing (its grid cell stays; the card's own `visibility` removes it)
