@@ -67,8 +67,17 @@ export const formToConfig = (
   setOrDrop(config, "show_legend", !!data.show_legend, data.show_legend !== false);
   setOrDrop(config, "x_axis", true, !data.x_axis);
   setOrDrop(config, "y_axis", true, !data.y_axis);
+  // each entity starts from the one it was (the first unused with its id), so the keys the form
+  // does not show (visibility) stay
+  const before = (prev.entities || []).map((e) => (typeof e === "string" ? { entity: e } : e));
+  const used = new Set<number>();
   config.entities = entityIds(data).map((id) => {
-    const o: MultiTrendEntity = { entity: id };
+    const k = before.findIndex((e, i) => e.entity === id && !used.has(i));
+    if (k >= 0) used.add(k);
+    // name and colour come from the form
+    const o: MultiTrendEntity = { ...(k >= 0 ? before[k] : {}), entity: id };
+    delete o.name;
+    delete o.color;
     const name = data[`ent__${id}__name`],
       color = data[`ent__${id}__color`];
     if (name) o.name = String(name);

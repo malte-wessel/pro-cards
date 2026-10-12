@@ -6,6 +6,7 @@ import type {
   HassConfig,
   HassEntities,
   HassEntity,
+  HassUser,
   MessageBase,
 } from "home-assistant-js-websocket";
 
@@ -24,7 +25,10 @@ export interface HomeAssistant {
   config: Pick<HassConfig, "latitude" | "longitude" | "time_zone" | "version"> & {
     unit_system?: Partial<HassConfig["unit_system"]>;
   };
-  locale?: { language: string };
+  // `time_zone`: the profile's choice between the server's zone and the browser's
+  locale?: { language: string; time_zone?: "local" | "server" };
+  // the logged-in user (visibility's `user` and `location` conditions)
+  user?: Pick<HassUser, "id" | "name" | "is_admin">;
   // frontend versions without it fall back to the card's own formatting
   formatEntityState?: (st: HassEntity) => string;
 }

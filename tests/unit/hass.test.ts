@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { snapshot, world } from "../../docs/.vitepress/theme/ha-shim/hass.ts";
+import { DEMO_USER, snapshot, world } from "../../docs/.vitepress/theme/ha-shim/hass.ts";
 import type { HassEntity } from "../../src/shared/ha.ts";
 
 const st = (id: string, state: string, attributes: Record<string, unknown> = {}) =>
@@ -27,6 +27,11 @@ describe("hass shim", () => {
     );
     expect(hass.formatEntityState(st("scene.x", "2026-09-20T18:12:00+00:00"))).toBe("Scene");
     expect(hass.formatEntityState(st("vacuum.x", "some_state"))).toBe("Some state");
+  });
+  it("logs in the demo user, whose person entity names it", () => {
+    expect(hass.user?.id).toBe(DEMO_USER);
+    expect(hass.locale.time_zone).toBe("server");
+    expect(world.get("person.alex")?.attributes.user_id).toBe(DEMO_USER);
   });
   it("returns a fresh object per snapshot with the same world", () => {
     const a = snapshot(),

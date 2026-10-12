@@ -94,6 +94,15 @@ export const powerNow = (
   };
 };
 
+// `hide_below`: whether a consumer of `w` watts is shown, given whether it was (undefined: not
+// decided yet). It hides below `x` and comes back only clearly above it (20 %, at least 2 W), so a
+// device idling around the threshold does not blink; a producer counts by its size, unavailable as 0
+export const thresholdShown = (prev: boolean | undefined, w: number | null, x: number): boolean => {
+  const a = Math.abs(w ?? 0);
+  if (prev === false) return a >= Math.max(x * 1.2, x + 2);
+  return a >= x;
+};
+
 export type EdgeKind = "solar" | "battIn" | "battOut" | "gridIn" | "gridOut" | "generator" | "home";
 export interface EdgeFlow {
   from: string; // node id: s<i> (source), home, g<i> (group), c<i> / c<i>.<j> / other
@@ -130,7 +139,13 @@ const shares = (parts: number[], total: number, eligible: boolean[]) => {
   return parts.map((p, i) => (!eligible[i] ? 0 : sum > 0 ? (total * p) / sum : n ? total / n : 0));
 };
 
-export const allocate = (cfg: PowerFlowConfig, now: PowerNow): Flows => {
+// `hidden`: the nodes not drawn (hiddenNodes); a hidden consumer or room counts in the other node,
+// so the shown numbers still add up to the home (a room keeps its hidden devices in its total)
+export const allocate = (
+  cfg: PowerFlowConfig,
+  now: PowerNow,
+  hidden: ReadonlySet<string> = new Set(),
+): Flows => {
   const src = now.sources;
   const isSolar = src.map((s) => s.kind === "solar"),
     isBatt = src.map((s) => s.kind === "battery"),
@@ -212,7 +227,8 @@ export const allocate = (cfg: PowerFlowConfig, now: PowerNow): Flows => {
   });
 
   // the consumers: leaves take their watts, a group the sum of its items, "other" the rest of
-  // what the home draws (a producing consumer feeds the home and counts for nothing here)
+  // what the home draws (a producing consumer feeds the home and counts for nothing here, a
+  // hidden one counts there)
   const leafW = new Map<string, number>(),
     groupW = new Map<string, number>();
   let used = 0;
@@ -223,7 +239,7 @@ export const allocate = (cfg: PowerFlowConfig, now: PowerNow): Flows => {
         const w = now.leaves.get(it.id) ?? 0;
         leafW.set(it.id, w);
         sum += w;
-        used += Math.max(0, w);
+        if (!hidden.has(c.id)) used += Math.max(0, w);
         push(c.id, it.id, w, "home");
       }
       groupW.set(c.id, sum);
@@ -231,7 +247,7 @@ export const allocate = (cfg: PowerFlowConfig, now: PowerNow): Flows => {
     } else if (c.kind === "item") {
       const w = now.leaves.get(c.id) ?? 0;
       leafW.set(c.id, w);
-      used += Math.max(0, w);
+      if (!hidden.has(c.id)) used += Math.max(0, w);
       push("home", c.id, w, "home");
     }
   }

@@ -13,22 +13,33 @@
  *   direction: right                       # right | down
  *   flow_style: dots                       # dots | lines | arrows
  *   expensive_above: 0.35                  # price threshold of the "Expensive" state
+ *   hide_consumers_below: 20               # hide consumers drawing less (W); hide_below per room / consumer
+ *   visibility: [...]                      # on a source, consumer, room or device: drawn while it holds
  *   rules: [...]                           # on the home power in W: label, colour, tint_card
  *   title / icon / header_entities / tap_action / hold_action / double_tap_action
  */
 import { registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
-import { EntityCardBase } from "./shared/entity/base.ts";
+import { EntityCardBase, type VisState } from "./shared/entity/base.ts";
 import type { EntityItem } from "./shared/entity/config.ts";
 import { resolveLook, type Look } from "./shared/entity/look.ts";
 import { modelOf, tplGetter, type EntityModel, type RenderCtx } from "./shared/entity/model.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
-import { normalizePowerFlowConfig, type PowerFlowConfig } from "./power-flow/config.ts";
+import type { Visibility } from "./shared/visibility.ts";
+import {
+  hiddenNodes,
+  leavesOf,
+  nodeVisibilities,
+  normalizePowerFlowConfig,
+  viewConfig,
+  type PowerFlowConfig,
+} from "./power-flow/config.ts";
 import { CARD_TYPE, COLORS, GEOM } from "./power-flow/constants.ts";
 import { diagramHeight, layoutTree } from "./power-flow/layout.ts";
 import {
   allocate,
+  thresholdShown,
   powerNow,
   summaryState,
   type Flows,
@@ -42,6 +53,8 @@ import { STYLE_POWER_FLOW_CARD } from "./power-flow/styles.ts";
 interface Computed {
   models: EntityModel[];
   now: PowerNow;
+  hidden: Set<string>; // the nodes not drawn now
+  view: PowerFlowConfig; // the config as drawn: without them
   flows: Flows;
   state: SummaryState;
   homeLook: Look;
@@ -67,7 +80,15 @@ export class PowerFlowCard extends EntityCardBase {
 
   declare _config?: PowerFlowConfig;
   _computed?: Computed;
+  // `hide_below`: whether each consumer was shown by its power (the threshold's memory)
+  _byPower = new Map<string, boolean>();
 
+  setConfig(config: unknown) {
+    // what the old config hid says nothing about the new one's nodes
+    this._computed = undefined;
+    this._byPower = new Map();
+    super.setConfig(config);
+  }
   _normalize(raw: unknown) {
     return normalizePowerFlowConfig(raw);
   }
@@ -80,7 +101,26 @@ export class PowerFlowCard extends EntityCardBase {
   getCardSize() {
     const cfg = this._config;
     if (!cfg) return 3;
-    return (cfg.hasHeader ? 1 : 0) + Math.ceil((GEOM.summaryH + diagramHeight(cfg) + 36) / 56);
+    // the tree as drawn now: hidden nodes take no room
+    const view = this._computed?.view ?? cfg;
+    return this._headerRows() + Math.ceil((GEOM.summaryH + diagramHeight(view) + 36) / 56);
+  }
+
+  // ----- visibility: the tree's nodes have conditions of their own -----
+  _visibilityTrees(): Visibility[] {
+    return [...super._visibilityTrees(), ...nodeVisibilities(this._config as PowerFlowConfig)];
+  }
+  // the rows of hidden nodes count as hidden items, so the base hides them and never tints from them
+  _computeVis(): VisState {
+    const vis = super._computeVis();
+    const cfg = this._config as PowerFlowConfig,
+      hidden = this._computed?.hidden;
+    if (!hidden?.size) return vis;
+    const items = [...vis.items];
+    for (const s of cfg.sources) if (hidden.has(s.id)) items[s.idx] = false;
+    for (const leaf of leavesOf(cfg))
+      if (leaf.kind === "item" && hidden.has(leaf.id)) items[leaf.idx] = false;
+    return { ...vis, items };
   }
 
   // ----- DOM -----
@@ -112,7 +152,25 @@ export class PowerFlowCard extends EntityCardBase {
   _compute(ctx: RenderCtx, cfg: PowerFlowConfig): Computed {
     const models = cfg.entities.map((ent) => modelOf(ctx, ent));
     const now = powerNow(cfg, models);
-    const flows = allocate(cfg, now);
+    // the consumers below their threshold: decided for every one on every render (the memory
+    // follows the power), then hidden with those whose conditions fail
+    const below = new Set<string>();
+    for (const leaf of leavesOf(cfg)) {
+      if (leaf.kind !== "item" || leaf.hideBelow === null) continue;
+      const shown = thresholdShown(
+        this._byPower.get(leaf.id),
+        now.leaves.get(leaf.id) ?? null,
+        leaf.hideBelow,
+      );
+      this._byPower.set(leaf.id, shown);
+      if (!shown) below.add(leaf.id);
+    }
+    const hidden = hiddenNodes(
+      cfg,
+      (v) => this._shown(v),
+      (leaf) => below.has(leaf.id),
+    );
+    const flows = allocate(cfg, now, hidden);
     const state = summaryState(cfg, now, flows);
     // the home rules match the home power in watts, whatever unit the sensor reports
     const homeEnt = cfg.entities[cfg.homeIdx],
@@ -127,12 +185,14 @@ export class PowerFlowCard extends EntityCardBase {
     );
     homeLook.color =
       homeEnt.color || homeLook.rule?.color ? cssColor(homeLook.color, COLORS.home) : COLORS.home;
-    return { models, now, flows, state, homeLook };
+    return { models, now, hidden, view: viewConfig(cfg, hidden), flows, state, homeLook };
   }
   _render() {
     if (!this._root || !this._hass || !this._config) return;
     const cfg = this._config,
       ctx = this._ctx();
+    // before super._render: the base's _computeVis reads the hidden set from _computed, and
+    // getCardSize its view
     const c = (this._computed = this._compute(ctx, cfg));
     super._render();
     const card = this._root;
@@ -149,12 +209,14 @@ export class PowerFlowCard extends EntityCardBase {
       );
     const diag = card.querySelector<HTMLElement>(".pdiag");
     if (!diag) return;
+    // the height follows the config and what of it is shown, never the width
+    diag.style.setProperty("--diag-h", `${diagramHeight(c.view)}px`);
     const width = diag.clientWidth;
     // not laid out yet: the resize observer renders again once the diagram has a size
     if (width <= 0) return;
-    const layout = layoutTree(cfg, width, c.flows.edges);
+    const layout = layoutTree(c.view, width, c.flows.edges);
     updateTree(diag, {
-      cfg,
+      cfg: c.view,
       ctx,
       models: c.models,
       now: c.now,

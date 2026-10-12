@@ -29,8 +29,14 @@ export interface TemplateResult {
 }
 // the demo's hass object: HA's interface plus the frontend fields the cards may read
 export interface HassSnapshot extends HomeAssistant {
-  locale: { language: string; number_format: string; time_format: string };
+  locale: {
+    language: string;
+    number_format: string;
+    time_format: string;
+    time_zone: "local" | "server";
+  };
   language: string;
+  user: { id: string; name: string; is_admin: boolean };
   themes: { darkMode: boolean };
   formatEntityState: (st: HassEntity) => string;
 }
@@ -44,6 +50,8 @@ declare global {
 
 const LAT = 51.23,
   LON = 6.78; // Düsseldorf-ish, used by the sun path card
+// the id of the demo's logged-in user (Alex); person.alex names it in `user_id`
+export const DEMO_USER = "demo-alex";
 let toastEl: (HTMLDivElement & { _t?: ReturnType<typeof setTimeout> }) | null = null,
   popEl: HTMLDivElement | null = null;
 
@@ -413,8 +421,10 @@ export const wire = () => {
 // A fresh hass object (new identity so cards detect the change) over the shared demo world.
 export const snapshot = (): HassSnapshot => ({
   states: { ...world.states },
-  locale: { language: "en-GB", number_format: "language", time_format: "24" },
+  locale: { language: "en-GB", number_format: "language", time_format: "24", time_zone: "server" },
   language: "en-GB",
+  // the demo's logged-in user is Alex (person.alex carries the id, for `location` conditions)
+  user: { id: DEMO_USER, name: "Alex", is_admin: true },
   config: {
     latitude: LAT,
     longitude: LON,

@@ -85,6 +85,7 @@ const guide = [
   { text: "Look & themes", link: "/guide/colours" },
   { text: "Sizing in sections", link: "/guide/sizing" },
   { text: "Languages", link: "/guide/languages" },
+  { text: "Visibility", link: "/guide/visibility" },
   { text: "Playground", link: "/playground" },
   { text: "Changelog", link: "/changelog" },
 ];

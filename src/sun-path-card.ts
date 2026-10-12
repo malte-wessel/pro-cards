@@ -21,7 +21,7 @@
  *     noon: Noon
  *     dusk: Civil dusk
  */
-import { defineElement, registerCard } from "./shared/card.ts";
+import { defineElement, registerCard, freshShadow } from "./shared/card.ts";
 import { langOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { qs } from "./shared/util.ts";
@@ -125,12 +125,7 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
   }
 
   _buildDom() {
-    const root = this.shadowRoot as ShadowRoot;
-    root.innerHTML = "";
-    const style = document.createElement("style");
-    style.textContent = STYLE;
-    root.appendChild(style);
-    const card = document.createElement("ha-card");
+    const card = freshShadow(this.shadowRoot as ShadowRoot, STYLE);
     // the header is drawn like the entity cards' (icon and title), not HA's card header
     const { title, icon } = this._config;
     card.innerHTML = `
@@ -147,7 +142,6 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
         <div class="events"></div>
       </div>`;
     qs(card, ".title").textContent = title || "";
-    root.appendChild(card);
     this._root = card;
     this._hoverT = null;
     if (this._config.show_tooltip) {

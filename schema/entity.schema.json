@@ -254,13 +254,15 @@
         "action": {
           "$ref": "defs.schema.json#/$defs/action",
           "description": "Action run instead of the entity's own service"
-        }
+        },
+        "visibility": { "$ref": "defs.schema.json#/$defs/visibility" }
       },
       "anyOf": [{ "required": ["entity"] }, { "required": ["action"] }],
       "additionalProperties": false
     },
     "entity": {
       "allOf": [{ "$ref": "#/$defs/entityKeys" }],
+      "properties": { "visibility": { "$ref": "defs.schema.json#/$defs/visibility" } },
       "anyOf": [
         { "required": ["entity"] },
         { "required": ["value"] },
@@ -274,6 +276,7 @@
     "headerEntity": {
       "description": "An entity of the header: buttons are not drawn there, so it needs an entity or a value",
       "allOf": [{ "$ref": "#/$defs/entityKeys" }],
+      "properties": { "visibility": { "$ref": "defs.schema.json#/$defs/visibility" } },
       "anyOf": [{ "required": ["entity"] }, { "required": ["value"] }],
       "unevaluatedProperties": false
     },

@@ -57,6 +57,8 @@ export interface PcApi {
   snapshot(): HomeAssistant;
   // the frontend language the mounted cards see (hass.locale.language), default en-GB
   setLanguage(language: string): void;
+  // the logged-in user the mounted cards see (hass.user), by id; null logs out. Default demo-alex
+  setUser(id: string | null): void;
   root: HTMLElement;
   card(i?: number): CardElement;
   // every service call rejects (the shim does nothing) while on
@@ -83,6 +85,7 @@ const events: HarnessEvent[] = [];
 const actions: unknown[] = [];
 let unsub: (() => void) | null = null;
 let language = "en-GB";
+let user: string | null = hassMod.DEMO_USER;
 let mounted: CardElement[] = [];
 let failing = false,
   holding = false;
@@ -92,7 +95,8 @@ let held: (() => void)[] = [];
 const baseSnapshot = hassMod.snapshot;
 const snapshot = (): HomeAssistant => {
   const h: HomeAssistant = baseSnapshot();
-  h.locale = { language };
+  h.locale = { language, time_zone: "server" };
+  h.user = user === null ? undefined : { id: user, name: user, is_admin: true };
   const orig = h.callService;
   h.callService = (d: string, s: string, data?: Record<string, unknown>, target?: unknown) => {
     calls.push({ domain: d, service: s, data: data || {}, target: target || null });
@@ -178,10 +182,17 @@ const mount = (cfgOrList: CardConfigBase | CardConfigBase[], opts: MountOptions 
   return els.length;
 };
 
-const setLanguage = (lang: string) => {
-  language = lang;
+const push = () => {
   const h = snapshot();
   for (const el of mounted) el.hass = h;
+};
+const setLanguage = (lang: string) => {
+  language = lang;
+  push();
+};
+const setUser = (id: string | null) => {
+  user = id;
+  push();
 };
 
 // wait until every mounted card has rendered its ha-card and, for history visuals, finished fetching
@@ -205,6 +216,7 @@ window.pc = {
   actions,
   snapshot,
   setLanguage,
+  setUser,
   root,
   card: (i = 0) => root.querySelectorAll(".cell > *")[i] as CardElement,
   failCalls: (on) => {
@@ -225,6 +237,7 @@ window.pc = {
     mounted = [];
     failing = holding = false;
     held = [];
+    user = hassMod.DEMO_USER;
   },
 };
 window.__pcReady = true;

@@ -669,9 +669,30 @@ describe("custom buttons", () => {
     expect(c?.kind).toBe("buttons");
     expect(c?.options).toBeNull();
     expect(c?.buttons).toEqual([
-      { entity: "scene.bright", icon: null, label: null, color: "amber", action: null },
-      { entity: "light.desk", icon: "mdi:lamp", label: "Desk", color: null, action: null },
-      { entity: null, icon: null, label: "Away", color: null, action: { action: "navigate" } },
+      {
+        entity: "scene.bright",
+        icon: null,
+        label: null,
+        color: "amber",
+        action: null,
+        visibility: null,
+      },
+      {
+        entity: "light.desk",
+        icon: "mdi:lamp",
+        label: "Desk",
+        color: null,
+        action: null,
+        visibility: null,
+      },
+      {
+        entity: null,
+        icon: null,
+        label: "Away",
+        color: null,
+        action: { action: "navigate" },
+        visibility: null,
+      },
       // an action object without `action` defaults to more-info, as the row's own actions do
       {
         entity: null,
@@ -679,6 +700,7 @@ describe("custom buttons", () => {
         label: null,
         color: null,
         action: { action: "more-info", navigation_path: "/x" },
+        visibility: null,
       },
     ]);
   });
@@ -741,6 +763,7 @@ describe("custom buttons", () => {
       label: null,
       color: null,
       action: action as { action: string },
+      visibility: null,
     });
     const perform = { action: "perform-action", perform_action: "light.turn_on" };
     expect(actionOf(b("light.a", perform))).toEqual({
@@ -772,6 +795,7 @@ describe("custom buttons", () => {
       label: null,
       color: null,
       action: null,
+      visibility: null,
     });
     expect(buttonActive(b("light.a"), st("on", {}, "light.a"))).toBe(true);
     expect(buttonActive(b("light.a"), st("off", {}, "light.a"))).toBe(false);

@@ -113,6 +113,7 @@
                 "default": false,
                 "description": "Line above the section (never drawn for the first)"
               },
+              "visibility": { "$ref": "defs.schema.json#/$defs/visibility" },
               "icon_size": {
                 "type": "integer",
                 "minimum": 12,
@@ -216,6 +217,7 @@
                 "default": false,
                 "description": "Line above the section"
               },
+              "visibility": { "$ref": "defs.schema.json#/$defs/visibility" },
               "entities": {
                 "type": "array",
                 "minItems": 1,
@@ -231,6 +233,9 @@
                           "$ref": "entity.schema.json#/$defs/entityKeys"
                         }
                       ],
+                      "properties": {
+                        "visibility": { "$ref": "defs.schema.json#/$defs/visibility" }
+                      },
                       "unevaluatedProperties": false,
                       "description": "An entity item; without `entity` it reads the weather entity (with `attribute`)"
                     }
@@ -324,6 +329,7 @@
                 "default": false,
                 "description": "Line above the section (never drawn for the first)"
               },
+              "visibility": { "$ref": "defs.schema.json#/$defs/visibility" },
               "icon_size": {
                 "type": "integer",
                 "minimum": 12,
@@ -524,6 +530,7 @@
                 "default": false,
                 "description": "Line above the section (never drawn for the first)"
               },
+              "visibility": { "$ref": "defs.schema.json#/$defs/visibility" },
               "hours": {
                 "type": "integer",
                 "minimum": 1,

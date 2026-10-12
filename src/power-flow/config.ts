@@ -18,6 +18,7 @@ import {
 import { DEFAULTS as ENTITY_DEFAULTS } from "../shared/entity/constants.ts";
 import { enumOf } from "../shared/flow/config.ts";
 import { numOrNull, oneOf } from "../shared/util.ts";
+import { normalizeVisibility, type Visibility } from "../shared/visibility.ts";
 import {
   CARD_TYPE,
   CONSUMER_STYLES,
@@ -57,6 +58,7 @@ export interface RawConsumer extends RawEntity {
   group?: string | null;
   entities?: unknown;
   invert?: boolean | null;
+  hide_below?: unknown;
 }
 export interface RawPowerFlowConfig extends RawEntityCardBase {
   sources?: unknown;
@@ -69,6 +71,7 @@ export interface RawPowerFlowConfig extends RawEntityCardBase {
   other?: boolean | null;
   rules?: unknown;
   expensive_above?: unknown;
+  hide_consumers_below?: unknown;
   kw_above?: unknown;
   decimals?: unknown;
   animation?: unknown;
@@ -76,18 +79,23 @@ export interface RawPowerFlowConfig extends RawEntityCardBase {
 
 // ----- the normalised config -----
 
-export interface SolarSource {
+// every source: its node id (s<i>, the config index) and its conditions (null: always drawn)
+interface SourceBase {
+  id: string;
+  visibility: Visibility;
+}
+export interface SolarSource extends SourceBase {
   kind: "solar";
   idx: number;
 }
-export interface BatterySource {
+export interface BatterySource extends SourceBase {
   kind: "battery";
   idx: number; // signed power (+ = discharging), or the charge item of a pair
   secondIdx: number | null; // the discharge item of a pair
   socIdx: number | null;
   invert: boolean;
 }
-export interface GridSource {
+export interface GridSource extends SourceBase {
   kind: "grid";
   idx: number; // signed power (+ = import), or the import item of a pair
   secondIdx: number | null; // the export item of a pair
@@ -106,6 +114,9 @@ export interface ConsumerItem {
   id: string;
   idx: number;
   invert: boolean;
+  visibility: Visibility; // null: always drawn
+  // hidden while its power stays below this many watts (null: never by its power)
+  hideBelow: number | null;
 }
 export interface ConsumerGroup {
   kind: "group";
@@ -113,6 +124,7 @@ export interface ConsumerGroup {
   name: string;
   icon: string | null;
   items: ConsumerItem[];
+  visibility: Visibility; // null: drawn while one of its devices is
 }
 export interface OtherConsumer {
   kind: "other";
@@ -142,7 +154,8 @@ const entityId = (v: unknown, key: string): string | null => {
   return v;
 };
 const item = (raw: RawEntity, ctx: NormalizeCtx, label: string) => {
-  const ent = normalizeEntity({ ...raw, visual: "icon" }, ctx, label);
+  // a node's `visibility` is the node's (hidden from the tree), not its sensor row's
+  const ent = normalizeEntity({ ...raw, visual: "icon", visibility: undefined }, ctx, label);
   ent.visual = "icon"; // never a history visual: the tree draws every item itself
   return ent;
 };
@@ -183,6 +196,15 @@ const normalizeSource = (
     return entities.push(ent) - 1;
   };
   const sub = (id: string, l: string) => entities.push(item({ entity: id }, ctx, l)) - 1;
+  // the node's conditions; a state condition without an entity reads the source's sensor
+  const own = (entity: string | null | undefined) => ({
+    id: `s${i}`,
+    visibility: normalizeVisibility(o.visibility, {
+      type: CARD_TYPE,
+      label,
+      entity: entity ?? null,
+    }),
+  });
   const subOf = (v: unknown, key: string) => {
     const id = entityId(v, `${label}.${key}`);
     return id ? sub(id, `${label}.${key}`) : null;
@@ -190,7 +212,7 @@ const normalizeSource = (
   if (type === "solar") {
     if (!base.entity && base.value === undefined)
       throw new Error(`${CARD_TYPE}: ${label} needs 'entity'`);
-    return { kind: "solar", idx: push(base, label, "power.solar") };
+    return { ...own(base.entity), kind: "solar", idx: push(base, label, "power.solar") };
   }
   if (type === "battery") {
     const p = entityId(power, `${label}.power`),
@@ -200,6 +222,7 @@ const normalizeSource = (
       throw new Error(`${CARD_TYPE}: ${label} needs 'power' or both 'charge' and 'discharge'`);
     const idx = push({ ...base, entity: p ?? c }, label, "power.battery");
     return {
+      ...own(p ?? c),
       kind: "battery",
       idx,
       secondIdx: p ? null : sub(d as string, `${label}.discharge`),
@@ -224,6 +247,7 @@ const normalizeSource = (
   if (fossil && non_fossil)
     throw new Error(`${CARD_TYPE}: ${label} takes 'fossil' or 'non_fossil', not both`);
   return {
+    ...own(p ?? im),
     kind: "grid",
     idx,
     secondIdx: p ? null : ex ? sub(ex, `${label}.export`) : null,
@@ -237,19 +261,37 @@ const normalizeSource = (
   };
 };
 
+// `hide_below` / `hide_consumers_below`: watts, 0 (or nothing) never hides
+const wattsBelow = (v: unknown, key: string): number | null | undefined => {
+  if (v === undefined || v === null) return undefined;
+  const n = numOrNull(v);
+  if (n === null || n < 0) throw new Error(`${CARD_TYPE}: '${key}' must be a number of watts`);
+  return n === 0 ? null : n;
+};
+
 const normalizeConsumers = (
   raw: unknown,
   ctx: NormalizeCtx,
   entities: EntityItem[],
+  // the card's `hide_consumers_below`
+  hideBelow: number | null,
 ): Consumer[] => {
   if (raw === undefined || raw === null) return [];
   if (!Array.isArray(raw)) throw new Error(`${CARD_TYPE}: 'consumers' must be a list`);
-  const leaf = (e: unknown, id: string, label: string): ConsumerItem => {
+  // a device's own `hide_below` wins over its room's, which wins over the card's
+  const leaf = (e: unknown, id: string, label: string, fallback: number | null): ConsumerItem => {
     const o: RawConsumer =
       typeof e === "string" ? { entity: e } : e && typeof e === "object" ? { ...e } : {};
-    const { invert, ...ent } = o;
+    const { invert, hide_below, ...ent } = o;
+    const own = wattsBelow(hide_below, `${label}.hide_below`);
     const idx = entities.push(item(ent, ctx, label)) - 1;
-    return { kind: "item", id, idx, invert: !!invert };
+    const visibility = normalizeVisibility(o.visibility, {
+      type: CARD_TYPE,
+      label,
+      entity: ent.entity ?? null,
+    });
+    const below = own === undefined ? fallback : own;
+    return { kind: "item", id, idx, invert: !!invert, visibility, hideBelow: below };
   };
   return raw.map((c, i): Consumer => {
     const label = `consumers[${i}]`;
@@ -259,10 +301,24 @@ const normalizeConsumers = (
       const { group, entities: list, icon } = o;
       if (!Array.isArray(list) || list.length === 0)
         throw new Error(`${CARD_TYPE}: '${label}.entities' must be a non-empty list`);
-      const items = list.map((e, j) => leaf(e, `c${i}.${j}`, `${label}.entities[${j}]`));
-      return { kind: "group", id: `g${i}`, name: String(group), icon: icon ?? null, items };
+      const room = wattsBelow(o.hide_below, `${label}.hide_below`);
+      const fallback = room === undefined ? hideBelow : room;
+      const items = list.map((e, j) => leaf(e, `c${i}.${j}`, `${label}.entities[${j}]`, fallback));
+      const visibility = normalizeVisibility(o.visibility, {
+        type: CARD_TYPE,
+        label,
+        entity: null,
+      });
+      return {
+        kind: "group",
+        id: `g${i}`,
+        name: String(group),
+        icon: icon ?? null,
+        items,
+        visibility,
+      };
     }
-    return leaf(c, `c${i}`, label);
+    return leaf(c, `c${i}`, label, hideBelow);
   });
 };
 
@@ -340,7 +396,12 @@ export const normalizePowerFlowConfig = (input: unknown): PowerFlowConfig => {
     throw new Error(`${CARD_TYPE}: 'sources' must be a non-empty list`);
   const sources = raw.sources.map((s, i) => normalizeSource(s, i, ctx, entities));
 
-  const consumers = normalizeConsumers(raw.consumers, ctx, entities);
+  const consumers = normalizeConsumers(
+    raw.consumers,
+    ctx,
+    entities,
+    wattsBelow(raw.hide_consumers_below, "hide_consumers_below") ?? null,
+  );
   const other = raw.other === undefined || raw.other === null ? consumers.length > 0 : !!raw.other;
   if (other && consumers.length) consumers.push({ kind: "other", id: "other" });
 
@@ -377,3 +438,58 @@ export const normalizePowerFlowConfig = (input: unknown): PowerFlowConfig => {
 // every consumer leaf (flat items, group members, the other node) in drawing order
 export const leavesOf = (cfg: PowerFlowConfig): (ConsumerItem | OtherConsumer)[] =>
   cfg.consumers.flatMap((c) => (c.kind === "group" ? c.items : [c]));
+
+// ----- visibility -----
+
+// every condition tree of the tree's nodes
+export const nodeVisibilities = (cfg: PowerFlowConfig): Visibility[] => [
+  ...cfg.sources.map((s) => s.visibility),
+  ...cfg.consumers.flatMap((c) =>
+    c.kind === "group"
+      ? [c.visibility, ...c.items.map((it) => it.visibility)]
+      : c.kind === "item"
+        ? [c.visibility]
+        : [],
+  ),
+];
+
+// The nodes hidden now: sources, consumers and devices whose conditions fail (or that `hide`
+// says so), and rooms whose own conditions fail or whose devices are all hidden (a hidden room
+// hides its devices). The home and the other node are never hidden here.
+export const hiddenNodes = (
+  cfg: PowerFlowConfig,
+  shown: (v: Visibility) => boolean,
+  hide: (leaf: ConsumerItem) => boolean = () => false,
+): Set<string> => {
+  const hidden = new Set<string>();
+  const leafHidden = (it: ConsumerItem) => !shown(it.visibility) || hide(it);
+  for (const s of cfg.sources) if (!shown(s.visibility)) hidden.add(s.id);
+  for (const c of cfg.consumers) {
+    if (c.kind === "item" && leafHidden(c)) hidden.add(c.id);
+    if (c.kind !== "group") continue;
+    const gone = c.items.filter(leafHidden);
+    if (!shown(c.visibility) || gone.length === c.items.length) {
+      hidden.add(c.id);
+      for (const it of c.items) hidden.add(it.id);
+    } else for (const it of gone) hidden.add(it.id);
+  }
+  return hidden;
+};
+
+// The config as the tree draws it: without the hidden nodes (a room keeps its shown devices), and
+// without the other node when no consumer is left; the ids stay those of the full config.
+export const viewConfig = (cfg: PowerFlowConfig, hidden: ReadonlySet<string>): PowerFlowConfig => {
+  if (!hidden.size) return cfg;
+  const consumers = cfg.consumers.flatMap((c): Consumer[] => {
+    if (hidden.has(c.id)) return [];
+    if (c.kind === "group") return [{ ...c, items: c.items.filter((it) => !hidden.has(it.id)) }];
+    return [c];
+  });
+  const real = consumers.some((c) => c.kind !== "other");
+  return {
+    ...cfg,
+    sources: cfg.sources.filter((s) => !hidden.has(s.id)),
+    consumers: real ? consumers : [],
+    hasGroups: consumers.some((c) => c.kind === "group"),
+  };
+};

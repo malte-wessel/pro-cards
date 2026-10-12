@@ -474,6 +474,60 @@ describe("card config schemas", () => {
       }),
     ).toBeNull();
   });
+  it("take visibility conditions on items, header items, buttons and sections", () => {
+    const EGC = "custom:entity-group-card-pro",
+      ESC = "custom:entity-sections-card-pro";
+    const on = [{ condition: "state", state: "on" }];
+    expect(
+      validate({
+        type: EGC,
+        // the card's own visibility is Home Assistant's, with its own conditions
+        visibility: [{ condition: "sun", after: "sunset" }],
+        header_entities: [{ entity: "sensor.a", visibility: on }],
+        entities: [
+          {
+            entity: "light.a",
+            visibility: [
+              { condition: "numeric_state", above: 10, below: "sensor.limit" },
+              { condition: "screen", media_query: "(min-width: 600px)" },
+              { condition: "user", users: ["abc"] },
+              { condition: "location", locations: ["home"] },
+              { condition: "time", after: "07:00", before: "22:30:00", weekdays: ["mon"] },
+              { condition: "template", value_template: "{{ true }}" },
+              { condition: "or", conditions: [{ entity: "light.b", state_not: "off" }] },
+              { condition: "not", conditions: { condition: "state", state: ["on", "off"] } },
+              { condition: "state", entity_id: ["light.a", "light.b"], state: "on" },
+              { condition: "state", state: "on", enabled: false },
+              { state_not: "unavailable" },
+              { entity_id: "light.b", state: "on" },
+            ],
+          },
+          {
+            name: "Scenes",
+            control: "buttons",
+            control_options: [{ entity: "scene.a", visibility: on }],
+          },
+        ],
+      }),
+    ).toBeNull();
+    expect(
+      validate({ type: ESC, sections: [{ entities: ["light.a"], visibility: on }] }),
+    ).toBeNull();
+    const item = (visibility: unknown) => ({
+      type: EGC,
+      entities: [{ entity: "light.a", visibility }],
+    });
+    expect(validate({ type: EGC, entities: [{ entity: "light.a", visibilty: on }] })).toMatch(
+      /unevaluated|additional/,
+    );
+    expect(validate(item([{ condition: "sun" }]))).toBeTruthy();
+    expect(validate(item([{ condition: "state" }]))).toBeTruthy();
+    expect(validate(item([{ condition: "numeric_state", entity: "light.a" }]))).toBeTruthy();
+    expect(validate(item([{ condition: "time", after: "7 am" }]))).toBeTruthy();
+    expect(validate(item([{ condition: "time", weekdays: ["monday"] }]))).toBeTruthy();
+    expect(validate(item([{ condition: "template", value_template: "true" }]))).toBeTruthy();
+    expect(validate(item([{ condition: "screen", media: "(min-width: 1px)" }]))).toBeTruthy();
+  });
 });
 
 describe("docs showcases", () => {

@@ -26,7 +26,14 @@ describe("entity-card-pro", () => {
       headerIdxs: [],
     });
     expect(c.groups).toEqual([
-      { layout: "tile", idxs: [0], align: "start", columns: 1, divider: false, hasIcon: false },
+      {
+        layout: "tile",
+        idxs: [0],
+        align: "start",
+        columns: 1,
+        divider: false,
+        visibility: null,
+      },
     ]);
     expect(c.entities[0]).toMatchObject({
       entity: "light.a",
@@ -105,7 +112,7 @@ describe("entity-group-card-pro", () => {
         align: "space-between",
         columns: 4,
         divider: false,
-        hasIcon: false,
+        visibility: null,
       },
     ]);
     expect(c.entities.map((e) => e.entity)).toEqual(["light.a", "light.b", "sensor.t"]);
@@ -196,10 +203,10 @@ describe("entity-sections-card-pro", () => {
       "light.d",
       "sensor.t",
     ]);
-    expect(c.groups.map((g) => [g.layout, g.idxs, g.align, g.divider, g.hasIcon])).toEqual([
-      ["table", [0, 1], "center", false, true],
-      ["row", [2], "end", true, false],
-      ["list", [3], "center", false, false],
+    expect(c.groups.map((g) => [g.layout, g.idxs, g.align, g.divider])).toEqual([
+      ["table", [0, 1], "center", false],
+      ["row", [2], "end", true],
+      ["list", [3], "center", false],
     ]);
     expect(c.entities[2].item.showValue).toBe(true);
     expect(() => normalizeEntitySectionsCardConfig({ title: "x" })).toThrow(
@@ -229,5 +236,26 @@ describe("entity-sections-card-pro", () => {
     });
     expect(el.getGridOptions()).toMatchObject({ min_rows: 3 });
     expect(el.getCardSize()).toBeGreaterThan(one);
+  });
+});
+
+describe("card-level visibility", () => {
+  // Home Assistant hides the whole card with it; the cards never read it as their item's
+  const hidden = [{ condition: "state", entity: "light.a", state: "never" }];
+  it("is not the entity card's item visibility", () => {
+    const c = normalizeEntityCardConfig({ entity: "light.a", visibility: hidden });
+    expect(c.entities[0].visibility).toBeNull();
+  });
+  it("is not the group card's group visibility", () => {
+    const c = normalizeEntityGroupCardConfig({ entities: ["light.a"], visibility: hidden });
+    expect(c.groups[0].visibility).toBeNull();
+  });
+  it("accepts HA's own conditions there without an error", () => {
+    expect(() =>
+      normalizeEntityGroupCardConfig({
+        entities: ["light.a"],
+        visibility: [{ condition: "view_columns", min: 2 }],
+      }),
+    ).not.toThrow();
   });
 });

@@ -2,7 +2,7 @@
 //
 // Every card ends up with the same normalised shape (`EntityCardConfig`):
 //   { type, title, icon, hours, bucketMin, columns, tap, hold, dbl,
-//     entities: [Entity], groups: [{ layout, idxs, align, columns, divider, hasIcon }], headerIdxs, hasHeader }
+//     entities: [Entity], groups: [{ layout, idxs, align, columns, divider, visibility }], headerIdxs, hasHeader }
 // `entities` is one flat list; groups and header entities point into it by index.
 import {
   ALIGNS,
@@ -22,6 +22,7 @@ import {
 import type { ActionConfig, CardConfigBase } from "../ha.ts";
 import type { StringKey } from "../i18n.ts";
 import { isTemplate, numOrNull, oneOf } from "../util.ts";
+import { normalizeVisibility, type Visibility } from "../visibility.ts";
 import {
   ITEM_CONTROLS,
   normalizeControl,
@@ -82,6 +83,7 @@ export interface RawEntity extends RawItemOptions, RawActionDefaults {
   control_options?: unknown;
   control_confirm?: boolean;
   toggle?: boolean;
+  visibility?: unknown;
 }
 export type RawEntityInput = string | RawEntity;
 export interface RawGroup extends RawItemOptions {
@@ -90,6 +92,7 @@ export interface RawGroup extends RawItemOptions {
   align?: unknown;
   columns?: unknown;
   divider?: boolean;
+  visibility?: unknown;
 }
 // keys every entity card accepts at the top level
 export interface RawEntityCardBase
@@ -153,6 +156,8 @@ export interface EntityItem extends ActionDefaults {
   control: ControlConfig | null;
   toggle: boolean;
   item: ItemOptions;
+  // drawn only while its conditions hold (null: always)
+  visibility: Visibility;
 }
 export interface Group {
   layout: GroupLayout | "tile";
@@ -160,7 +165,8 @@ export interface Group {
   align: Align | undefined;
   columns: number;
   divider: boolean;
-  hasIcon: boolean;
+  // drawn only while its conditions hold and one of its items is shown (null: the items decide)
+  visibility: Visibility;
 }
 // ctx carries the card type (for error messages) and the action defaults
 export interface NormalizeCtx extends ActionDefaults {
@@ -219,6 +225,8 @@ export const normalizeButtons = (
   list: unknown,
   ctx: NormalizeCtx,
   label: string,
+  // the row's entity: what a button's conditions look at when neither names one
+  rowEntity: string | null = null,
 ): CustomButton[] | null => {
   if (!Array.isArray(list)) return null;
   const out: CustomButton[] = [];
@@ -235,7 +243,19 @@ export const normalizeButtons = (
       console.warn(`${ctx.type}: ${label}.control_options[${i}] needs 'entity' or 'action'`);
       return;
     }
-    out.push({ entity, icon: str(o.icon), label: str(o.label), color: str(o.color), action });
+    const visibility = normalizeVisibility(o.visibility, {
+      type: ctx.type,
+      label: `${label}.control_options[${i}]`,
+      entity: entity ?? rowEntity,
+    });
+    out.push({
+      entity,
+      icon: str(o.icon),
+      label: str(o.label),
+      color: str(o.color),
+      action,
+      visibility,
+    });
   });
   return out.length ? out : null;
 };
@@ -293,7 +313,7 @@ export const normalizeEntity = (
   } else valueSrc = normalizeValue(o.value) ?? { kind: "state" };
   const control = normalizeControl(o, ctx, label);
   if (control?.kind === "buttons")
-    control.buttons = normalizeButtons(o.control_options, ctx, label);
+    control.buttons = normalizeButtons(o.control_options, ctx, label, o.entity || null);
   const onlyButtons = !o.entity && valueSrc.kind === "state" && !!control?.buttons;
   // a row of custom buttons needs nothing else: a name and the buttons
   if (onlyButtons && place.buttons) valueSrc = { kind: "text", text: "" };
@@ -325,6 +345,11 @@ export const normalizeEntity = (
     hold: normalizeAction(o.hold_action, ctx.hold),
     dbl: normalizeAction(o.double_tap_action, ctx.dbl),
     item: normalizeItemOptions(o, itemDefaults),
+    visibility: normalizeVisibility(o.visibility, {
+      type: ctx.type,
+      label,
+      entity: o.entity || null,
+    }),
   };
 };
 
@@ -381,7 +406,7 @@ export const normalizeGroup = (
       align: oneOf(ALIGNS, align) ? align : base.align,
       columns: clampColumns(g.columns, ctx.columns ?? DEFAULTS.columns),
       divider: !!g.divider,
-      hasIcon: layout === "table" && entities.some((e) => e.item.showIcon),
+      visibility: normalizeVisibility(g.visibility, { type: ctx.type, label, entity: null }),
     },
     entities,
   };
@@ -407,6 +432,16 @@ export const normalizeHeaderEntities = (raw: unknown, ctx: NormalizeCtx): Entity
     return ent;
   });
 };
+
+// every visibility condition tree of the config: items, their custom buttons and groups (cards
+// with parts of their own add theirs)
+export const visibilityTrees = (cfg: EntityCardConfig): Visibility[] => [
+  ...cfg.entities.flatMap((e) => [
+    e.visibility,
+    ...(e.control?.buttons ?? []).map((b) => b.visibility),
+  ]),
+  ...cfg.groups.map((g) => g.visibility),
+];
 
 export const collectTemplates = (cfg: EntityCardConfig): Set<string> => {
   const s = new Set<string>();

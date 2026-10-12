@@ -9,6 +9,7 @@ import {
   normalizeActionDefaults,
   normalizeHistoryOptions,
   collectTemplates,
+  visibilityTrees,
 } from "../../../../src/shared/entity/config.ts";
 import { ITEM_DEFAULTS } from "../../../../src/shared/entity/constants.ts";
 import type {
@@ -144,7 +145,7 @@ describe("group", () => {
       align: "start",
       columns: 2,
       divider: false,
-      hasIcon: false,
+      visibility: null,
     });
     expect(entities.map((e) => e.entity)).toEqual(["light.a", "light.b"]);
     const row = normalizeGroup({ layout: "row", entities: ["light.a"] }, ctx, {}, "entities", 0);
@@ -162,7 +163,7 @@ describe("group", () => {
       normalizeGroup({ layout: "column", entities: ["l.a"] }, ctx, {}, "entities", 0).group.align,
     ).toBe("start");
     const table = normalizeGroup({ layout: "table", entities: ["s.a"] }, ctx, {}, "entities", 0);
-    expect(table.group).toMatchObject({ align: "end", hasIcon: false });
+    expect(table.group).toMatchObject({ align: "end" });
     expect(table.entities[0].item).toMatchObject({ showValue: true, showIcon: false });
     expect(() =>
       normalizeGroup({ layout: "tile", entities: ["s.a"] }, ctx, {}, "entities", 0),
@@ -258,7 +259,8 @@ describe("group", () => {
       "entities",
       0,
     );
-    expect(t.group.hasIcon).toBe(true);
+    // the table draws its icon column while a shown item has an icon
+    expect(t.entities.map((e) => e.item.showIcon)).toEqual([true, false]);
   });
 });
 
@@ -301,8 +303,58 @@ describe("header entities and templates", () => {
           title: "{{ a }}",
           icon: "mdi:x",
           entities,
+          groups: [],
         } as unknown as EntityCardConfig),
       ].sort(),
     ).toEqual(["{{ a }}", "{{ b }}", "{{ c }}", "{{ d }}"]);
+  });
+});
+
+describe("visibility", () => {
+  const on = [{ condition: "state", state: "on" }];
+  it("is parsed on items with the item's entity as the default", () => {
+    expect(ent({}).visibility).toBeNull();
+    expect(ent({ visibility: on }).visibility).toEqual([
+      { kind: "state", entity: "sensor.x", attribute: null, values: ["on"], negate: false },
+    ]);
+    // without an entity there is nothing to fall back to
+    expect(() => normalizeEntity({ value: "x", visibility: on }, ctx, "entities[3]")).toThrow(
+      "test-card: 'entities[3].visibility[0]' needs 'entity'",
+    );
+  });
+  it("is parsed on custom buttons, falling back to the button's entity, then the row's", () => {
+    const row = ent({
+      entity: "light.row",
+      control: "buttons",
+      control_options: [
+        { entity: "scene.a", visibility: on },
+        { action: "navigate", label: "Away", visibility: on },
+      ],
+    });
+    const [a, b] = row.control?.buttons ?? [];
+    expect(a.visibility).toMatchObject([{ entity: "scene.a" }]);
+    expect(b.visibility).toMatchObject([{ entity: "light.row" }]);
+  });
+  it("is parsed on groups (sections), which have no entity of their own", () => {
+    const { group } = normalizeGroup(
+      { entities: ["light.a"], visibility: [{ condition: "user", users: ["u"] }] },
+      ctx,
+      {},
+      "sections[1]",
+      0,
+    );
+    expect(group.visibility).toEqual([{ kind: "user", users: ["u"] }]);
+    expect(() =>
+      normalizeGroup({ entities: ["light.a"], visibility: on }, ctx, {}, "sections[1]", 0),
+    ).toThrow("'sections[1].visibility[0]' needs 'entity'");
+  });
+  it("lists every condition tree: items, their buttons, groups", () => {
+    const tpl = "{{ is_state('light.a', 'on') }}";
+    const e = ent({ visibility: [{ condition: "template", value_template: tpl }] });
+    const cfg = { title: null, icon: null, entities: [e], groups: [{ visibility: null }] };
+    const trees = visibilityTrees(cfg as unknown as EntityCardConfig);
+    expect(trees).toEqual([e.visibility, null]);
+    // the card subscribes their templates itself (with those of its own parts)
+    expect([...collectTemplates(cfg as unknown as EntityCardConfig)]).toEqual([]);
   });
 });

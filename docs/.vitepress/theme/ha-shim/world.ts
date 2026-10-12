@@ -452,9 +452,9 @@ def("button.restart_router", "2026-09-20T18:12:00+00:00", {
 });
 
 // people & modes
-def("person.alex", "home", { friendly_name: "Alex", entity_picture: null });
-def("person.sam", "not_home", { friendly_name: "Sam" });
-def("person.kim", "home", { friendly_name: "Kim" });
+def("person.alex", "home", { friendly_name: "Alex", entity_picture: null, user_id: "demo-alex" });
+def("person.sam", "not_home", { friendly_name: "Sam", user_id: "demo-sam" });
+def("person.kim", "home", { friendly_name: "Kim", user_id: "demo-kim" });
 def("input_boolean.night_mode", "off", { friendly_name: "Night mode", icon: "mdi:weather-night" });
 def("input_boolean.vacation_mode", "off", { friendly_name: "Vacation mode", icon: "mdi:beach" });
 def("input_boolean.guest_mode", "on", { friendly_name: "Guest mode", icon: "mdi:account-group" });
