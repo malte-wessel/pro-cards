@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.6.0 (unreleased)
+## 2.6.0 (beta)
 
 - Power flow: `charge_from: solar` on a battery whose panels feed it (a plug-in battery, a DC-coupled hybrid): solar charges it before it covers the home, so the card no longer draws grid power into a battery the grid cannot reach as long as the sensors agree
 - `rules` on the series of the multi trend card: the first rule the current value matches (`below`, `above`, `state`) colours the line, its legend swatch and its tooltip swatch, as on the entity cards. A series' `color` may be a template and wins over the rules
