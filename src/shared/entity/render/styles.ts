@@ -66,6 +66,8 @@ export const STYLE_ROW = `
   .end { flex: 0 1 auto; min-width: 0; max-width: 60%; display: flex; align-items: center; gap: 8px; }
   .end:empty { display: none; }
   .state { font-size: 14px; font-weight: 500; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  /* a rule label in the value's place (items, fields, header entities) takes the rule's colour */
+  .state.accent { color: var(--fe-color); font-weight: 500; }
   .pill { font-size: 12px; font-weight: 500; line-height: 16px; padding: 4px 10px; border-radius: 999px; color: var(--fe-color); background: var(--fe-soft); white-space: nowrap; letter-spacing: .02em; min-width: 0; max-width: 100%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; }
   .big { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; min-width: 0; max-width: 100%; }
   .big b { font-size: 32px; font-weight: 500; line-height: 36px; letter-spacing: -.6px; color: var(--primary-text-color); font-variant-numeric: tabular-nums; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -208,6 +210,7 @@ export const STYLE_ITEM = `
   /* the value stacks under the name as a plain line; one that does not fit clips with an ellipsis */
   .item .state { font-size: 12px; line-height: 16px; font-weight: 400; color: var(--secondary-text-color); overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   .item .state.lone { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--primary-text-color); }
+  .item .state.accent, .item .state.lone.accent { color: var(--fe-color); font-weight: 500; }
   .item .pill { max-width: 100%; }
   /* a column item is list-like: the icon on the left, the name over the value on the right (name_position is ignored) */
   .section.layout-column .row.item { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; row-gap: 2px; align-items: center; justify-items: start; text-align: left; }

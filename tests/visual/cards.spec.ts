@@ -366,6 +366,64 @@ const CASES = {
       },
     ],
   },
+  // rule labels stand in for the value of row, table and header items (no badge needed)
+  "esc-rule-labels": {
+    type: ESC,
+    title: "Windows",
+    icon: "mdi:window-closed-variant",
+    header_entities: [
+      {
+        entity: "binary_sensor.door_front",
+        rules: [
+          { state: "on", color: "red", label: "Open" },
+          { state: "off", color: "green", label: "Locked up" },
+        ],
+      },
+    ],
+    sections: [
+      {
+        layout: "row",
+        align: "space-between",
+        entities: [
+          {
+            entity: "binary_sensor.window_kitchen",
+            name: "Kitchen",
+            rules: [
+              { state: "on", color: "red", icon: "mdi:window-open-variant", label: "Open" },
+              { state: "off", color: "green", icon: "mdi:window-closed-variant", label: "Closed" },
+            ],
+          },
+          {
+            entity: "binary_sensor.window_bedroom",
+            name: "Bedroom",
+            rules: [
+              { state: "on", color: "red", icon: "mdi:window-open-variant", label: "Open" },
+              { state: "off", color: "green", icon: "mdi:window-closed-variant", label: "Closed" },
+            ],
+          },
+          { entity: "binary_sensor.window_office", name: "Office" },
+          { entity: "binary_sensor.window_bathroom", name: "Bath", visual: "badge" },
+        ],
+      },
+      {
+        layout: "table",
+        divider: true,
+        entities: [
+          {
+            entity: "sensor.living_room_humidity",
+            name: "Humidity",
+            decimals: 0,
+            rules: [
+              { below: 60, color: "green", label: "Dry enough" },
+              { above: 60, color: "amber", label: "Humid" },
+            ],
+          },
+          { entity: "sensor.living_room_temperature", name: "Temperature", decimals: 1 },
+        ],
+      },
+    ],
+    grid_options: { columns: 6 },
+  },
   "egc-row-column": [
     {
       type: EGC,

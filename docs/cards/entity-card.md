@@ -33,7 +33,7 @@ suffix: " inside"
 
 ## Rules
 
-`rules` pick colour, icon and label by value (`below` / `above`) or by `state`. The first rule that matches wins. The label sits next to the value.
+`rules` pick colour, icon and label by value (`below` / `above`) or by `state`. The first rule that matches wins. The label sits next to the value (in the compact items of the group card it stands in for the value, see [Rules](/cards/entity-options#rules)).
 
 ::: live
 

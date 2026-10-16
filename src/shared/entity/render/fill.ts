@@ -221,7 +221,7 @@ export const fillItem = (
   if (item.showIcon || c.lead.length) el.appendChild(leadOf(ctx, ent, idx, m, 40, c.lead));
   if (name && item.namePosition === "below") el.appendChild(name);
   if (item.showValue) {
-    const val = valueEl(ent, m);
+    const val = valueEl(ent, m, true);
     // without a name the value is the item's label and takes the name's style
     if (!name) val.classList.add("lone");
     el.appendChild(val);
@@ -257,7 +257,7 @@ export const fillField = (
   el.appendChild(textEl("key", item.showName ? nameOf(ctx, ent, m.st) : ""));
   const val = document.createElement("div");
   val.className = "val";
-  if (item.showValue) val.appendChild(valueEl(ent, m));
+  if (item.showValue) val.appendChild(valueEl(ent, m, true));
   appendControls(ctx, ent, idx, m, c.end, val);
   el.appendChild(val);
 };
@@ -278,7 +278,7 @@ export const fillHval = (ctx: RenderCtx, el: HTMLElement, ent: EntityItem, m: En
   if (badge) {
     const b = headerBadgeEl(ctx, ent, m);
     if (b) el.appendChild(b);
-  } else if (item.showValue) el.appendChild(valueEl(ent, m));
+  } else if (item.showValue) el.appendChild(valueEl(ent, m, true));
   el.title = m.look.label ? `${name} · ${m.look.label}` : name;
 };
 
