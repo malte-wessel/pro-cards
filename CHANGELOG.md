@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.6.0 (unreleased)
+
+- `rules` on the series of the multi trend card: the first rule the current value matches (`below`, `above`, `state`) colours the line, its legend swatch and its tooltip swatch, as on the entity cards. A series' `color` may be a template and wins over the rules
+
 ## 2.5.0 (2026-10-12)
 
 - `visibility` on the parts of a card: entities, header entities, sections and custom buttons of the entity cards, every section of the weather card, sources, consumers, rooms and devices of the power flow card, and the series of the multi trend card. A part is drawn only while its conditions hold. The conditions are Home Assistant's (`state`, `numeric_state`, `screen`, `user`, `location`, `time`, `and`, `or`, `not`) plus `template`; a state condition without `entity` reads the part's own. The card's own `visibility` stays Home Assistant's

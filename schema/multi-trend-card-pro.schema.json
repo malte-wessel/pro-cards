@@ -38,7 +38,15 @@
             "properties": {
               "entity": { "$ref": "defs.schema.json#/$defs/entityId" },
               "name": { "type": "string" },
-              "color": { "$ref": "defs.schema.json#/$defs/color" },
+              "color": {
+                "$ref": "defs.schema.json#/$defs/color",
+                "description": "Fixed colour of the series (or a template); wins over the rules"
+              },
+              "rules": {
+                "type": "array",
+                "items": { "$ref": "#/$defs/rule" },
+                "description": "The first rule the current value matches colours the series"
+              },
               "visibility": { "$ref": "defs.schema.json#/$defs/visibility" }
             },
             "required": ["entity"],
@@ -54,5 +62,20 @@
     "card_mod": { "$ref": "defs.schema.json#/$defs/haCardExtras/card_mod" }
   },
   "required": ["type", "entities"],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "description": "A colour rule on the series' current value: state (text equality), below (exclusive) or above (inclusive). First match wins, in the order written.",
+      "properties": {
+        "state": { "type": ["string", "number", "boolean"] },
+        "below": { "$ref": "defs.schema.json#/$defs/numberish" },
+        "above": { "$ref": "defs.schema.json#/$defs/numberish" },
+        "color": { "$ref": "defs.schema.json#/$defs/color" }
+      },
+      "required": ["color"],
+      "anyOf": [{ "required": ["state"] }, { "required": ["below"] }, { "required": ["above"] }],
+      "additionalProperties": false
+    }
+  }
 }

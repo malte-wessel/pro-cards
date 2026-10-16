@@ -101,6 +101,25 @@ describe("card config schemas", () => {
       /unevaluated|additional/,
     );
     expect(validate({ type: "custom:multi-trend-card-pro" })).toMatch(/entities/);
+    const MT = "custom:multi-trend-card-pro";
+    expect(
+      validate({ type: MT, entities: [{ entity: "sensor.a", rules: [{ color: "red" }] }] }),
+    ).toBeTruthy();
+    expect(
+      validate({
+        type: MT,
+        entities: [{ entity: "sensor.a", rules: [{ above: 1, color: "red", label: "x" }] }],
+      }),
+    ).toBeTruthy();
+    expect(
+      validate({ type: MT, entities: [{ entity: "sensor.a", rules: [{ above: 1 }] }] }),
+    ).toMatch(/color/);
+    expect(
+      validate({
+        type: MT,
+        entities: [{ entity: "sensor.a", rules: [{ above: 1, color: "red" }] }],
+      }),
+    ).toBeNull();
     expect(validate({ type: "custom:sun-path-card-pro", labels: { midnight: "x" } })).toBeTruthy();
     expect(
       validate({ type: "custom:illuminance-card-pro", entity: "sensor.lx", mode: "bar" }),

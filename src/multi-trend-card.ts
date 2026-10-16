@@ -16,7 +16,9 @@
  *   entities:
  *     - entity: sensor.a
  *       name: A                       # optional
- *       color: red                    # optional (HA named color or hex)
+ *       color: red                    # optional (HA named color, hex or template); wins over rules
+ *       rules:                        # optional: the first match on the current state colours the line
+ *         - { above: 25, color: red }
  *       visibility: [...]             # optional: drawn only while the conditions hold
  */
 import { fireAction, defineElement, registerCard, freshShadow } from "./shared/card.ts";
@@ -24,11 +26,12 @@ import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import type { MultiTrendCardConfig, TrendConfig, TrendPoint } from "./multi-trend/config.ts";
 import { cssColor } from "./shared/color.ts";
 import { DEVICE_CLASS_ICON, REFRESH_MS } from "./shared/constants.ts";
+import { normalizeRules } from "./shared/entity/config.ts";
 import { fmtNumber, langOf } from "./shared/format.ts";
 import { fetchHistory, type Point } from "./shared/history.ts";
 import { hideHover } from "./shared/hover.ts";
 import { TemplateSubscriptions } from "./shared/templates.ts";
-import { decimalsOf, isNum, qs } from "./shared/util.ts";
+import { decimalsOf, isNum, isTemplate, qs } from "./shared/util.ts";
 import {
   checkVisibility,
   normalizeVisibility,
@@ -38,6 +41,7 @@ import {
 } from "./shared/visibility.ts";
 import { VisibilityWatch } from "./shared/visibility-watch.ts";
 import { MultiTrendCardEditor } from "./multi-trend/editor.ts";
+import { seriesColor } from "./multi-trend/color.ts";
 import { DEFAULT_HOURS, PALETTE } from "./shared/trend/scale.ts";
 import {
   drawTrend,
@@ -68,7 +72,11 @@ export class MultiTrendCard extends HTMLElement {
   _ro?: ResizeObserver;
   // visibility of the series: what the conditions read, their templates, screen and time
   _visDeps: VisibilityDeps = visibilityDeps([]);
+  // every template the card renders: the conditions' and the series' colours
+  _templates = new Set<string>();
   _tpl: TemplateSubscriptions;
+  // the state text of each entity at the last render (a rule may match a new state)
+  _lastStates: (string | undefined)[] = [];
   _visWatch: VisibilityWatch;
   _person: { user: string | undefined; id: string | null } | null = null;
 
@@ -100,15 +108,15 @@ export class MultiTrendCard extends HTMLElement {
     const entities = config.entities.map((e, i) => {
       const o = typeof e === "string" ? { entity: e } : { ...e };
       if (!o.entity) throw new Error(`${CARD_TYPE}: entities[${i}] has no 'entity'`);
-      // the colour stays the config position's, so a hidden series never shifts the others'
-      const colorCss = cssColor(o.color, cssColor(PALETTE[i % PALETTE.length]) ?? "");
+      // the palette colour stays the config position's, so a hidden series never shifts the others'
+      const fallbackCss = cssColor(PALETTE[i % PALETTE.length]) ?? "";
       const label = `entities[${i}]`;
       const visibility = normalizeVisibility(o.visibility, {
         type: CARD_TYPE,
         label,
         entity: o.entity,
       });
-      return { ...o, colorCss, visibility };
+      return { ...o, fallbackCss, rules: normalizeRules(o.rules), visibility };
     });
     this._config = {
       hours_to_show: DEFAULT_HOURS,
@@ -123,7 +131,11 @@ export class MultiTrendCard extends HTMLElement {
     this._fetched = false;
     this._visDeps = visibilityDeps(entities.map((e) => e.visibility));
     this._visWatch.set(this._visDeps);
-    this._tpl.sync(this._hass?.connection, this._visDeps.templates);
+    this._templates = new Set([
+      ...this._visDeps.templates,
+      ...entities.flatMap((e) => (isTemplate(e.color) ? [e.color] : [])),
+    ]);
+    this._tpl.sync(this._hass?.connection, this._templates);
     if (this._root) this._buildDom();
   }
 
@@ -131,7 +143,7 @@ export class MultiTrendCard extends HTMLElement {
     const prev = this._hass;
     this._hass = hass;
     if (!prev || prev.connection !== hass.connection)
-      this._tpl.sync(hass.connection, this._visDeps.templates);
+      this._tpl.sync(hass.connection, this._templates);
     if (!this._root) this._buildDom();
     if (!this._fetched && !this._fetching) {
       this._fetchHistory();
@@ -150,6 +162,8 @@ export class MultiTrendCard extends HTMLElement {
           changed = true;
         }
       }
+      // a ruled series takes the colour of its current state, numeric or not
+      if (e.rules.length && st?.state !== this._lastStates[i]) changed = true;
     });
     // what the visibility conditions read: their entities, the user, the user's person
     const deps = this._visDeps;
@@ -166,8 +180,7 @@ export class MultiTrendCard extends HTMLElement {
     if (this._root) this._ro.observe(qs(this._root, ".plot"));
     document.addEventListener("pointerdown", this._onDocPointer);
     this._visWatch.connect();
-    if (this._hass && this._tpl.size === 0)
-      this._tpl.sync(this._hass.connection, this._visDeps.templates);
+    if (this._hass && this._tpl.size === 0) this._tpl.sync(this._hass.connection, this._templates);
   }
 
   disconnectedCallback() {
@@ -228,6 +241,15 @@ export class MultiTrendCard extends HTMLElement {
   _name(i: number): string {
     const e = this._config.entities[i];
     return e.name || this._state(i)?.attributes.friendly_name || e.entity;
+  }
+
+  // the CSS colour of a series now: explicit colour, else its first matching rule, else palette
+  _color(i: number): string {
+    return seriesColor(
+      this._config.entities[i],
+      this._state(i),
+      (t) => this._tpl.results.get(t) ?? null,
+    );
   }
 
   // `auto` overlays the series when their units match (of the shown ones)
@@ -309,6 +331,7 @@ export class MultiTrendCard extends HTMLElement {
     // the shown series; the title, icon and more-info stay the first entity's (the card's)
     const shown = this._shown();
     const layout = this._layout(shown);
+    this._lastStates = this._config.entities.map((e) => this._hass?.states[e.entity]?.state);
 
     // Header text
     qs(card, ".primary").textContent = this._config.title || this._name(0);
@@ -342,10 +365,9 @@ export class MultiTrendCard extends HTMLElement {
     legend.style.display = showLegend ? "" : "none";
     if (showLegend) {
       shown.forEach((i) => {
-        const e = this._config.entities[i];
         const span = document.createElement("span");
         const bar = document.createElement("i");
-        bar.style.setProperty("--c", e.colorCss);
+        bar.style.setProperty("--c", this._color(i));
         const nm = document.createElement("em");
         nm.textContent = this._name(i);
         span.append(bar, nm);
@@ -370,15 +392,12 @@ export class MultiTrendCard extends HTMLElement {
       layout: this._layout(shown),
       xAxis: this._config.x_axis,
       yAxis: this._config.y_axis,
-      series: shown.map((i) => {
-        const e = this._config.entities[i];
-        return {
-          pts: this._series[i],
-          color: e.colorCss,
-          name: this._name(i),
-          fmt: (v: number) => this._fmt(i, v),
-        };
-      }),
+      series: shown.map((i) => ({
+        pts: this._series[i],
+        color: this._color(i),
+        name: this._name(i),
+        fmt: (v: number) => this._fmt(i, v),
+      })),
     };
   }
 

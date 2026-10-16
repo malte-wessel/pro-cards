@@ -61,22 +61,23 @@ describe("multi-trend-card helpers", () => {
     expect(schema.some((s) => s.name === "entities")).toBe(true);
     expect(schema.filter((s) => s.type === "expandable").length).toBe(2);
   });
-  it("keeps an entity's keys the form does not show, such as visibility", () => {
+  it("keeps an entity's keys the form does not show, such as visibility and rules", () => {
     const vis = [{ condition: "state", entity: "light.a", state: "on" }];
+    const rules = [{ above: 20, color: "red" }];
     const cfg: MultiTrendCardConfig = {
-      entities: [{ entity: "sensor.a", name: "A", visibility: vis }, "sensor.b"],
+      entities: [{ entity: "sensor.a", name: "A", visibility: vis, rules }, "sensor.b"],
     };
     const data = configToForm(cfg);
     data["ent__sensor.a__name"] = "Renamed";
     expect(formToConfig(data, cfg).entities).toEqual([
-      { entity: "sensor.a", name: "Renamed", visibility: vis },
+      { entity: "sensor.a", name: "Renamed", visibility: vis, rules },
       { entity: "sensor.b" },
     ]);
     // an entity added in the form starts empty; a moved one keeps its keys
     data.entities = ["sensor.c", "sensor.a"];
     expect(formToConfig(data, cfg).entities).toEqual([
       { entity: "sensor.c" },
-      { entity: "sensor.a", name: "Renamed", visibility: vis },
+      { entity: "sensor.a", name: "Renamed", visibility: vis, rules },
     ]);
   });
   it("registers card and editor and sizes by layout", () => {
