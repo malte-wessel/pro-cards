@@ -133,6 +133,42 @@ test.describe("layouts", () => {
     expect(b1.x).toBeGreaterThan(b0.x + b0.width - 1);
     expect(Math.abs(b1.y - b0.y)).toBeLessThan(2);
   });
+  test("a rule label stands in for the value of items, fields and header entities", async ({
+    page,
+  }) => {
+    const rules = [
+      { state: "on", color: "red", label: "Open" },
+      { state: "off", color: "green", label: "Closed" },
+    ];
+    for (const layout of ["row", "column", "table"]) {
+      await mount(page, {
+        type: T,
+        layout,
+        title: "Windows",
+        header_entities: [{ entity: "binary_sensor.window_kitchen", rules }],
+        entities: [
+          { entity: "binary_sensor.window_kitchen", name: "Kitchen", rules },
+          { entity: "binary_sensor.window_kitchen", name: "Plain" },
+        ],
+      });
+      const c = card(page);
+      const vals = c.locator(`.section .row .state`);
+      await expect(vals).toHaveCount(2);
+      // the label replaces the value and takes the rule's colour; a tooltip keeps the value
+      await expect(vals.nth(0)).toHaveText("Open");
+      await expect(vals.nth(0)).toHaveClass(/accent/);
+      await expect(vals.nth(1)).toHaveText("Open"); // the device class text, not a label
+      await expect(vals.nth(1)).not.toHaveClass(/accent/);
+      expect(await style(vals.nth(0), "color")).not.toBe(await style(vals.nth(1), "color"));
+      const hv = c.locator(".header .hvals .row.hval .state");
+      await expect(hv).toHaveText("Open");
+      await expect(hv).toHaveClass(/accent/);
+      await setState(page, "binary_sensor.window_kitchen", "off");
+      await expect(vals.nth(0)).toHaveText("Closed");
+      await expect(hv).toHaveText("Closed");
+      await setState(page, "binary_sensor.window_kitchen", "on");
+    }
+  });
   test("row align spreads or centres the items", async ({ page }) => {
     await mount(page, {
       type: T,

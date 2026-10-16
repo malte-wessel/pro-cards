@@ -113,11 +113,16 @@ export const bigEl = (fmt: FmtValue) => {
   }
   return big;
 };
-// value element for items, fields and header entities: pill for badges, plain state otherwise
-export const valueEl = (ent: EntityItem, m: EntityModel) => {
+// value element for items, fields and header entities: pill for badges, plain state otherwise.
+// With `label` a matching rule's label stands in for the value, in the rule's colour, as the pill
+// does; the list row keeps the plain value as it shows the label on its own line
+export const valueEl = (ent: EntityItem, m: EntityModel, label = false) => {
   if (ent.visual === "badge") return pillEl(m.look.label ?? m.fmt.text);
   const st = document.createElement("span");
   st.className = "state";
-  st.textContent = m.fmt.text;
+  if (label && m.look.label) {
+    st.classList.add("accent");
+    st.textContent = m.look.label;
+  } else st.textContent = m.fmt.text;
   return st;
 };

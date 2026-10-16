@@ -272,7 +272,7 @@ entities:
 
 ## Row
 
-Entities side by side as compact items: a round icon with the name under it, optionally the value under the name. Items spread over the width (`align: space-between`) and wrap when the card is narrow; `align` packs them (`start`, `center`, `end`) or gives every item the same share (`stretch`). Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
+Entities side by side as compact items: a round icon with the name under it, optionally the value under the name. A matching rule's `label` stands in for the value, in the rule's colour (the window below reads Open or Closed instead of its state). Items spread over the width (`align: space-between`) and wrap when the card is narrow; `align` packs them (`start`, `center`, `end`) or gives every item the same share (`stretch`). Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
 
 ::: live
 
@@ -389,7 +389,7 @@ Icon switches (`control: toggle` on a row item makes the icon the switch) with s
 
 ## Column
 
-The same entities stacked vertically as list-like items: the icon with the name over the value beside it. They sit on the left by default (`align: start`); `align: center` or `end` moves them. Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
+The same entities stacked vertically as list-like items: the icon with the name over the value beside it, where a rule `label` stands in for the value. They sit on the left by default (`align: start`); `align: center` or `end` moves them. Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
 
 ::: live
 
@@ -428,7 +428,7 @@ grid_options: { columns: 6 }
 
 ## Table
 
-Key/value rows: the name on the left in small capitals, the value on the right. `show_icon: true` adds an icon column; `align: start` puts the value right after the name, `align: center` in the middle. `control: toggle` puts the switch in the value column. Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
+Key/value rows: the name on the left in small capitals, the value on the right, where a rule `label` stands in for the value. `show_icon: true` adds an icon column; `align: start` puts the value right after the name, `align: center` in the middle. `control: toggle` puts the switch in the value column. Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
 
 ::: live
 
@@ -513,7 +513,7 @@ A table of modes with the switch in the value column, and a device sheet where e
 
 ## Header entities
 
-`header_entities` puts compact values on the right of the title line: the icon in the entity's colour and the value. Rules work as everywhere; `show_icon: false` shows the value alone, `show_name: true` adds the name. Visuals are limited to `icon` and `badge` (a pill instead of the value); the others fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
+`header_entities` puts compact values on the right of the title line: the icon in the entity's colour and the value. Rules work as everywhere, and a rule `label` stands in for the value; `show_icon: false` shows the value alone, `show_name: true` adds the name. Visuals are limited to `icon` and `badge` (a pill instead of the value); the others fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
 
 ::: live
 

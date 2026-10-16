@@ -143,6 +143,8 @@ entities:
 | `above` | the value is numeric and `>= above`                                            |
 | `state` | the state (or attribute, or value) text equals `state`; quote `"on"` / `"off"` |
 
+Where the label goes depends on the layout: list rows and tiles show it next to the value, as a line under the name; row, column and table items and `header_entities` have one line for the value, so there the label stands in for it, in the rule's colour, and the value stays in the item's tooltip. A `badge` always shows the label in its pill.
+
 A rule may combine `below` and `above` for a range. Numeric rules never match text, so numeric and state rules can share one list. States that no rule matches keep the entity icon and use `primary`, or `grey` for off-like states (`off`, `closed`, `idle`, `standby`, `docked`, `not_home`, `disarmed`, `clear`). An explicit `color` or `icon` on the entity always wins over the rules.
 
 ::: live
