@@ -1,4 +1,4 @@
-import { test, expect, mount, events, card } from "./util.ts";
+import { test, expect, mount, events, card, setState } from "./util.ts";
 import type { MultiTrendCard } from "../../src/multi-trend-card.ts";
 import type { FormEditorBase } from "../../src/shared/editor.ts";
 
@@ -135,4 +135,40 @@ test("editor element loads with a form", async ({ page }) => {
     hasForm: true,
     entities: ["sensor.outdoor_temperature"],
   });
+});
+
+test("colours a series by the rule its current value matches", async ({ page }) => {
+  await mount(
+    page,
+    two({
+      entities: [
+        {
+          entity: "sensor.outdoor_temperature",
+          name: "Temperature",
+          rules: [
+            { below: 10, color: "blue" },
+            { above: 10, color: "orange" },
+          ],
+        },
+        { entity: "sensor.dew_point", name: "Dew point", color: "purple" },
+      ],
+    }),
+  );
+  const c = card(page);
+  const swatch = c.locator(".legend span").first().locator("i");
+  const colorOf = () => swatch.evaluate((e) => e.style.getPropertyValue("--c"));
+  // the demo outdoor temperature is 17.4 °C
+  expect(await colorOf()).toBe("var(--orange-color)");
+  await expect(c.locator("svg path.line").first()).toHaveAttribute("stroke", "var(--orange-color)");
+  await setState(page, "sensor.outdoor_temperature", "4.2");
+  await expect.poll(colorOf).toBe("var(--blue-color)");
+  await expect(c.locator("svg path.line").first()).toHaveAttribute("stroke", "var(--blue-color)");
+  // the fixed colour of the second series is untouched
+  expect(
+    await c
+      .locator(".legend span")
+      .nth(1)
+      .locator("i")
+      .evaluate((e) => e.style.getPropertyValue("--c")),
+  ).toBe("var(--purple-color)");
 });

@@ -33,6 +33,30 @@ entities:
 
 :::
 
+## Rules
+
+`rules` colour a series by its current value, like the [rules of the entity cards](/cards/entity-options#rules): the first entry whose `below` (exclusive), `above` (inclusive) or `state` matches decides the colour of the whole line, its legend swatch and its tooltip swatch. A fixed `color` wins over the rules and may be a template. A series with neither, no matching rule or an unavailable value keeps its palette colour.
+
+::: live
+
+```yaml
+type: custom:multi-trend-card-pro
+title: Outdoor
+icon: mdi:thermometer
+entities:
+  - entity: sensor.outdoor_temperature
+    name: Temperature
+    rules:
+      - { below: 10, color: blue }
+      - { below: 20, color: teal }
+      - { above: 20, color: orange }
+  - entity: sensor.dew_point
+    name: Dew point
+    color: "{{ 'purple' if states('sensor.dew_point') | float(0) > 10 else 'grey' }}"
+```
+
+:::
+
 ## Time window
 
 `hours_to_show` sets the history window from 1 to 168 hours. The default is 6.
@@ -95,16 +119,16 @@ entities:
 
 ## Reference
 
-| Option          | Default           | Description                                                                                                                                                                                                                                                                            |
-| --------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entities`      |                   | List of entity ids or `{ entity, name, color, visibility }` (required, sensors with numeric states). Colours default to `primary`, `orange`, `green`, `purple`, `cyan`, `pink` in that order. A series with [`visibility`](/guide/visibility) is drawn only while its conditions hold. |
-| `title`         | first entity name | Header text.                                                                                                                                                                                                                                                                           |
-| `icon`          | entity icon       | Header icon: `icon`, else the first entity's icon, else by device class.                                                                                                                                                                                                               |
-| `color`         | state icon colour | Header icon colour.                                                                                                                                                                                                                                                                    |
-| `hours_to_show` | `6`               | History window, 1 to 168 hours.                                                                                                                                                                                                                                                        |
-| `layout`        | `auto`            | `auto`, `overlay` or `lanes`.                                                                                                                                                                                                                                                          |
-| `show_legend`   | `true`            | Legend for overlaid series with two or more entities.                                                                                                                                                                                                                                  |
-| `x_axis`        | `false`           | Time labels and vertical gridlines.                                                                                                                                                                                                                                                    |
-| `y_axis`        | `false`           | Value labels and horizontal gridlines.                                                                                                                                                                                                                                                 |
+| Option          | Default           | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| --------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entities`      |                   | List of entity ids or `{ entity, name, color, rules, visibility }` (required, sensors with numeric states). `color` fixes the series colour (template allowed) and wins over `rules`, a list of `{ state, below, above, color }` whose first match on the current value colours the series (see [Rules](#rules)). Without either the series take `primary`, `orange`, `green`, `purple`, `cyan`, `pink` in that order. A series with [`visibility`](/guide/visibility) is drawn only while its conditions hold. |
+| `title`         | first entity name | Header text.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `icon`          | entity icon       | Header icon: `icon`, else the first entity's icon, else by device class.                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `color`         | state icon colour | Header icon colour.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `hours_to_show` | `6`               | History window, 1 to 168 hours.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `layout`        | `auto`            | `auto`, `overlay` or `lanes`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `show_legend`   | `true`            | Legend for overlaid series with two or more entities.                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `x_axis`        | `false`           | Time labels and vertical gridlines.                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `y_axis`        | `false`           | Value labels and horizontal gridlines.                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 Tapping the header opens the more-info dialog of the first entity. The default size is 12 columns × 3 rows; the lanes layout uses 2 rows plus one per entity. `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod` are passed through to Home Assistant.
