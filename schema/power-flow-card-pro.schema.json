@@ -66,7 +66,7 @@
         "charge_from": {
           "enum": ["any", "solar"],
           "default": "any",
-          "description": "`solar`: the panels feed this battery, so solar charges it before it covers the home and the grid never charges it (unless the sensors disagree)"
+          "description": "`solar`: the panels feed this battery, so solar charges it before it covers the home and the grid never charges it (unless the sensors disagree); with a charge / discharge pair the battery charges from solar and feeds the home at once."
         }
       },
       "required": ["type"],

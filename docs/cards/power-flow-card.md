@@ -36,13 +36,19 @@ sources:
 
 A plug-in battery (a balcony system, a DC-coupled hybrid) is fed by its panels: solar goes into the battery first and the grid cannot charge it. `charge_from: solar` on the battery tells the card so. Solar then charges that battery before it covers the home, and grid power runs to the home; the grid only tops the battery up when the sensors disagree (the panels report less than the battery takes). With several solar sources the charge is shared across them. Without the option the card follows the usual order and would draw the grid charging the battery whenever the battery takes more than the solar surplus.
 
+Such a unit usually reports two numbers: what the panels put in and what its inverter gives out. Given as the `charge` / `discharge` pair, the card draws both flows at once, the panels into the battery and the battery into the home, while the node shows the net value. With a single `power` sensor it only knows the net value, so part of the solar runs to the home directly. The inverter's output is not the battery's `power`: it already contains the solar share and would count it twice.
+
 ::: live
 
 ```yaml
 type: custom:power-flow-card-pro
 sources:
   - { type: solar, entity: sensor.balcony_solar_power, name: Balcony }
-  - { type: battery, power: sensor.balcony_battery_power, soc: sensor.balcony_battery_soc, charge_from: solar }
+  - type: battery
+    charge: sensor.balcony_battery_charge_power
+    discharge: sensor.balcony_battery_discharge_power
+    soc: sensor.balcony_battery_soc
+    charge_from: solar
   - { type: grid, power: sensor.balcony_grid_power }
 ```
 
@@ -317,21 +323,21 @@ consumers:
 
 ### Sources
 
-| Option                                       | Applies to    | Description                                                                                                                                |
-| -------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `type`                                       | all           | `solar`, `battery` or `grid`.                                                                                                              |
-| `entity`                                     | solar         | Production sensor (W or kW).                                                                                                               |
-| `power`                                      | battery, grid | Signed sensor: battery positive while discharging, grid positive while importing. `invert: true` flips it.                                 |
-| `charge`, `discharge`                        | battery       | A pair of sensors instead of `power`.                                                                                                      |
-| `import`, `export`                           | grid          | A pair of sensors instead of `power` (`export` optional).                                                                                  |
-| `soc`                                        | battery       | State of charge in %, shown as the node's ring.                                                                                            |
-| `charge_from`                                | battery       | `solar` when the panels feed this battery: solar charges it before the home, the grid only when the sensors disagree. Default `any`.       |
-| `price`                                      | grid          | Price sensor, shown in the Expensive state.                                                                                                |
-| `offline`                                    | grid          | An entity id (offline when `on`) or `{ entity, state }`.                                                                                   |
-| `generator`                                  | grid          | A generator's power sensor: takes the grid node's place while offline.                                                                     |
-| `fossil`, `non_fossil`                       | grid          | The grid's fossil fuel (or low-carbon) percentage: the home ring's grid share splits, the grid label names it.                             |
-| `secondary`                                  | all           | A line under the name; template allowed. Consumers take it too.                                                                            |
-| `name`, `icon`, `color`, `rules`, `decimals` | all           | As on every entity: the name (default Solar / Battery / Grid), a fixed icon or colour, rules on the sensor's value, decimals of the label. |
-| `visibility`                                 | all           | Drawn only while the [conditions](/guide/visibility) hold. Consumers, rooms and devices take it too, with `hide_below`.                    |
+| Option                                       | Applies to    | Description                                                                                                                                                                                                    |
+| -------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`                                       | all           | `solar`, `battery` or `grid`.                                                                                                                                                                                  |
+| `entity`                                     | solar         | Production sensor (W or kW).                                                                                                                                                                                   |
+| `power`                                      | battery, grid | Signed sensor: battery positive while discharging, grid positive while importing. `invert: true` flips it.                                                                                                     |
+| `charge`, `discharge`                        | battery       | A pair of sensors instead of `power`; on a solar-fed battery both flows are drawn at once.                                                                                                                     |
+| `import`, `export`                           | grid          | A pair of sensors instead of `power` (`export` optional).                                                                                                                                                      |
+| `soc`                                        | battery       | State of charge in %, shown as the node's ring.                                                                                                                                                                |
+| `charge_from`                                | battery       | `solar` when the panels feed this battery: solar charges it before the home, the grid only when the sensors disagree; with a `charge` / `discharge` pair it charges and feeds the home at once. Default `any`. |
+| `price`                                      | grid          | Price sensor, shown in the Expensive state.                                                                                                                                                                    |
+| `offline`                                    | grid          | An entity id (offline when `on`) or `{ entity, state }`.                                                                                                                                                       |
+| `generator`                                  | grid          | A generator's power sensor: takes the grid node's place while offline.                                                                                                                                         |
+| `fossil`, `non_fossil`                       | grid          | The grid's fossil fuel (or low-carbon) percentage: the home ring's grid share splits, the grid label names it.                                                                                                 |
+| `secondary`                                  | all           | A line under the name; template allowed. Consumers take it too.                                                                                                                                                |
+| `name`, `icon`, `color`, `rules`, `decimals` | all           | As on every entity: the name (default Solar / Battery / Grid), a fixed icon or colour, rules on the sensor's value, decimals of the label.                                                                     |
+| `visibility`                                 | all           | Drawn only while the [conditions](/guide/visibility) hold. Consumers, rooms and devices take it too, with `hide_below`.                                                                                        |
 
 Every label has its own room: the card grows in height with the number of sources and consumers (and their secondary lines) rather than squeezing text between nodes, and the columns move along the flow so the labels clear the next column. The card takes the full width of a section (`rows: auto`) and sizes its height to the config (and what of it is [shown](#visibility)), not to the width; with many devices, rooms or `consumer_style: list` it reads best on a wide column.
