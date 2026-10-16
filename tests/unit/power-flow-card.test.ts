@@ -12,6 +12,7 @@ import { modelOf, type FormatCtx } from "../../src/shared/entity/model.ts";
 import type { HomeAssistant } from "../../src/shared/ha.ts";
 import {
   allocate,
+  type EdgeFlow,
   thresholdShown,
   edgeColor,
   fmtPower,
@@ -550,6 +551,127 @@ describe("power flow numbers", () => {
     expect(out).toBe(1000);
   });
 
+  it("draws both flows of a solar-fed battery given as a pair: the panels fill it while it feeds the home", () => {
+    // a plug-in unit reports what the panels put in and what the inverter gives out (simon42, post 55)
+    const cfg = normalizePowerFlowConfig({
+      sources: [
+        { type: "grid", import: "sensor.in", export: "sensor.out" },
+        { type: "battery", charge: "sensor.chg", discharge: "sensor.ac", charge_from: "solar" },
+        { type: "solar", entity: "sensor.pv" },
+      ],
+    });
+    const day = flowsOf(cfg, {
+      "sensor.in": "70",
+      "sensor.out": "0",
+      "sensor.pv": "374",
+      "sensor.chg": "374",
+      "sensor.ac": "189",
+    });
+    // the label keeps the net value, the links carry the gross flows
+    expect(day.now.sources[1]).toMatchObject({ w: -185, charge: 374, discharge: 189 });
+    expect(day.f).toMatchObject({ H: 259, sB: 374, sH: 0, bH: 189, gH: 70, dB: 0, gB: 0, bG: 0 });
+    expect(edge(day.f, "s2", "s1")).toMatchObject({ w: 374, kind: "battIn" });
+    expect(edge(day.f, "s1", "home")).toMatchObject({ w: 189, kind: "battOut" });
+    expect(edge(day.f, "s2", "home")?.w).toBe(0);
+    expect(edge(day.f, "s0", "home")?.w).toBe(70);
+    // the panels report less than the battery takes: the rest comes from the grid, the discharge
+    // the home does not take is exported, and the battery never charges itself
+    const odd = flowsOf(cfg, {
+      "sensor.in": "70",
+      "sensor.out": "0",
+      "sensor.pv": "300",
+      "sensor.chg": "374",
+      "sensor.ac": "189",
+    });
+    expect(odd.f).toMatchObject({ H: 185, sB: 300, bH: 185, dB: 0, gB: 74, bG: 4 });
+    expect(odd.f.edges.some((e) => e.from === "s1" && e.to === "s1")).toBe(false);
+    const sum = (pred: (e: EdgeFlow) => boolean) =>
+      odd.f.edges.filter(pred).reduce((a, e) => a + e.w, 0);
+    expect(sum((e) => e.to === "s1")).toBeCloseTo(374);
+    expect(sum((e) => e.from === "s1")).toBeCloseTo(189);
+    // without charge_from the pair is netted, as every other battery, and the default order
+    // sends solar to the home first and the grid into the battery
+    const net = normalizePowerFlowConfig({
+      sources: [
+        { type: "grid", import: "sensor.in", export: "sensor.out" },
+        { type: "battery", charge: "sensor.pv", discharge: "sensor.ac" },
+        { type: "solar", entity: "sensor.pv" },
+      ],
+    });
+    const n = flowsOf(net, {
+      "sensor.in": "70",
+      "sensor.out": "0",
+      "sensor.pv": "374",
+      "sensor.ac": "189",
+    });
+    expect(n.now.sources[1]).toMatchObject({ w: -185, charge: 185, discharge: 0 });
+    expect(n.f).toMatchObject({ H: 259, sH: 259, sB: 115, gB: 70, bH: 0 });
+    expect(edge(n.f, "s1", "home")?.w).toBe(0);
+  });
+  it("splits the charge over the giving batteries pro rata, whatever their order", () => {
+    const sources = (swap: boolean) => {
+      const a = { type: "battery", power: "sensor.b1" },
+        b = { type: "battery", power: "sensor.b2" };
+      return [
+        { type: "solar", entity: "sensor.solar" },
+        ...(swap ? [b, a] : [a, b]),
+        { type: "battery", power: "sensor.b3" },
+        { type: "grid", power: "sensor.grid" },
+      ];
+    };
+    const states = {
+      "sensor.solar": "0",
+      "sensor.home": "0",
+      "sensor.b1": "100",
+      "sensor.b2": "100",
+      "sensor.b3": "-100",
+      "sensor.grid": "-100",
+    };
+    const { f } = flowsOf(
+      normalizePowerFlowConfig({ home: "sensor.home", sources: sources(false) }),
+      states,
+    );
+    expect(f).toMatchObject({ dB: 100, bG: 100, gB: 0, grid: -100 });
+    expect(edge(f, "s1", "s3")?.w).toBe(50);
+    expect(edge(f, "s2", "s3")?.w).toBe(50);
+    expect(edge(f, "s1", "s4")?.w).toBe(50);
+    expect(edge(f, "s2", "s4")?.w).toBe(50);
+    const swapped = flowsOf(
+      normalizePowerFlowConfig({ home: "sensor.home", sources: sources(true) }),
+      states,
+    ).f;
+    expect(edge(swapped, "s1", "s3")?.w).toBe(50);
+    expect(edge(swapped, "s2", "s3")?.w).toBe(50);
+  });
+  it("lets a solar-fed pair's surplus charge another battery, never itself", () => {
+    const cfg = normalizePowerFlowConfig({
+      home: "sensor.home",
+      sources: [
+        { type: "solar", entity: "sensor.pv" },
+        { type: "battery", charge: "sensor.pv", discharge: "sensor.ac", charge_from: "solar" },
+        { type: "battery", power: "sensor.b2" },
+        { type: "grid", power: "sensor.grid" },
+      ],
+    });
+    const { f } = flowsOf(cfg, {
+      "sensor.pv": "400",
+      "sensor.ac": "300",
+      "sensor.home": "100",
+      "sensor.b2": "-150",
+      "sensor.grid": "-50",
+    });
+    // the pair: 400 in from its panels; 300 out, 100 to the home, 150 to the other battery, 50 exported
+    expect(f).toMatchObject({ sB: 400, sH: 0, bH: 100, dB: 150, gB: 0, bG: 50, grid: -50 });
+    expect(edge(f, "s0", "s1")?.w).toBe(400);
+    expect(edge(f, "s1", "s2")).toMatchObject({ w: 150, kind: "battIn" });
+    expect(edge(f, "s2", "s1")?.w).toBe(0);
+    expect(f.edges.some((e) => e.from === e.to)).toBe(false);
+    const sum = (pred: (e: EdgeFlow) => boolean) =>
+      f.edges.filter(pred).reduce((a, e) => a + e.w, 0);
+    expect(sum((e) => e.to === "s1")).toBe(400);
+    expect(sum((e) => e.from === "s1")).toBe(300);
+    expect(sum((e) => e.to === "s2")).toBe(150);
+  });
   it("charges a solar-fed battery before the home and never from the grid", () => {
     // a plug-in battery: the panels feed the battery, the battery feeds the home
     const cfg = normalizePowerFlowConfig({

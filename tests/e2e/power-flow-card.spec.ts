@@ -307,3 +307,45 @@ test.describe("power flow card", () => {
     expect(spread).toBeGreaterThan(1);
   });
 });
+
+test("a solar-fed battery given as a pair charges from its panels and feeds the home at once", async ({
+  page,
+}) => {
+  const B = "sensor.balcony_battery_";
+  await mount(page, {
+    type: T,
+    sources: [
+      { type: "solar", entity: "sensor.balcony_solar_power", name: "Balcony" },
+      {
+        type: "battery",
+        charge: `${B}charge_power`,
+        discharge: `${B}discharge_power`,
+        soc: `${B}soc`,
+        charge_from: "solar",
+      },
+      { type: "grid", power: "sensor.balcony_grid_power" },
+    ],
+  });
+  // the reported case: 374 W from the panels into the battery, 189 W out of it, 70 W imported
+  for (const [id, st] of Object.entries({
+    "sensor.balcony_solar_power": "374",
+    [`${B}charge_power`]: "374",
+    [`${B}discharge_power`]: "189",
+    [`${B}soc`]: "42",
+    "sensor.balcony_grid_power": "70",
+  }))
+    await setState(page, id, st);
+  const c = card(page);
+  await expect(label(c, "home")).toHaveText("259 W");
+  // the node keeps the net value and the charging colour, the links carry both gross flows
+  await expect(label(c, "s1")).toHaveText(/185 W\s*Battery · 42 %/);
+  expect(await cssVar(c.locator(".pnode[data-node='s1']"), "--fe-color")).toContain(
+    "--energy-battery-in",
+  );
+  await expect(c.locator("path.link.active")).toHaveCount(3);
+  await expect(link(c, 1)).toHaveClass(/active/); // solar → battery
+  await expect(link(c, 3)).toHaveClass(/active/); // battery → home
+  await expect(link(c, 5)).toHaveClass(/active/); // grid → home
+  await expect(link(c, 0)).not.toHaveClass(/active/); // solar → home stays idle
+  await expect(link(c, 6)).not.toHaveClass(/active/); // the grid never charges it
+});
