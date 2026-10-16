@@ -105,6 +105,16 @@ describe("power-flow-card config", () => {
         sources: [{ type: "grid", power: "sensor.g", fossil: "sensor.f", non_fossil: "sensor.n" }],
       }),
     ).toThrow(/'fossil' or 'non_fossil', not both/);
+    expect(() =>
+      normalizePowerFlowConfig({
+        sources: [{ type: "battery", power: "sensor.b", charge_from: "grid" }],
+      }),
+    ).toThrow(/charge_from must be one of any \| solar/);
+    expect(
+      normalizePowerFlowConfig({
+        sources: [{ type: "battery", power: "sensor.b", charge_from: "solar" }],
+      }).sources[0],
+    ).toMatchObject({ kind: "battery", chargeFrom: "solar" });
     expect(() => normalizePowerFlowConfig({ sources: SRC, home: 42 })).toThrow(/'home' must be/);
     expect(() => normalizePowerFlowConfig({ sources: SRC, direction: "up" })).toThrow(
       /direction must be one of right \| down/,
@@ -184,6 +194,7 @@ describe("power-flow-card config", () => {
         idx: 2,
         secondIdx: 3,
         socIdx: 4,
+        chargeFrom: "any",
         invert: false,
       },
       {
@@ -537,6 +548,87 @@ describe("power flow numbers", () => {
     // every link of a battery adds up to its label
     const out = f.edges.filter((e) => e.from === "s1").reduce((a, e) => a + e.w, 0);
     expect(out).toBe(1000);
+  });
+
+  it("charges a solar-fed battery before the home and never from the grid", () => {
+    // a plug-in battery: the panels feed the battery, the battery feeds the home
+    const cfg = normalizePowerFlowConfig({
+      home: "sensor.home",
+      sources: [
+        { type: "solar", entity: "sensor.solar" },
+        { type: "battery", power: "sensor.battery", charge_from: "solar" },
+        { type: "grid", power: "sensor.grid" },
+      ],
+    });
+    // the default order would send 300 W of grid into the battery here
+    const day = flowsOf(cfg, {
+      "sensor.solar": "800",
+      "sensor.home": "500",
+      "sensor.battery": "-600",
+      "sensor.grid": "300",
+    });
+    expect(day.f).toMatchObject({ sB: 600, sH: 200, bH: 0, gH: 300, gB: 0, sG: 0, grid: 300 });
+    expect(edge(day.f, "s0", "s1")).toMatchObject({ w: 600, kind: "battIn" });
+    expect(edge(day.f, "s0", "home")?.w).toBe(200);
+    expect(edge(day.f, "s2", "home")?.w).toBe(300);
+    expect(edge(day.f, "s2", "s1")?.w).toBe(0);
+    // the panels report less than the battery takes: the rest still comes from the grid
+    const odd = flowsOf(cfg, {
+      "sensor.solar": "400",
+      "sensor.home": "500",
+      "sensor.battery": "-600",
+      "sensor.grid": "700",
+    });
+    expect(odd.f).toMatchObject({ sB: 400, sH: 0, gH: 500, gB: 200 });
+    expect(edge(odd.f, "s2", "s1")?.w).toBe(200);
+    // next to an ordinary battery: the solar-fed one is filled first, the other takes the grid
+    const two = normalizePowerFlowConfig({
+      home: "sensor.home",
+      sources: [
+        { type: "solar", entity: "sensor.solar" },
+        { type: "battery", power: "sensor.b1", charge_from: "solar" },
+        { type: "battery", power: "sensor.b2" },
+        { type: "grid", power: "sensor.grid" },
+      ],
+    });
+    const { f } = flowsOf(two, {
+      "sensor.solar": "1000",
+      "sensor.home": "600",
+      "sensor.b1": "-800",
+      "sensor.b2": "-1000",
+      "sensor.grid": "1400",
+    });
+    // the solar-fed battery first, then the home, nothing is left for the other battery
+    expect(f).toMatchObject({ sB: 800, sH: 200, gH: 400, gB: 1000, grid: 1400 });
+    expect(edge(f, "s0", "s1")?.w).toBe(800);
+    expect(edge(f, "s0", "s2")?.w).toBe(0);
+    expect(edge(f, "s3", "s1")?.w).toBe(0);
+    expect(edge(f, "s3", "s2")?.w).toBe(1000);
+    // every battery's links add up to its label
+    for (const b of ["s1", "s2"]) {
+      const into = f.edges.filter((e) => e.to === b).reduce((a, e) => a + e.w, 0);
+      expect(into).toBe(b === "s1" ? 800 : 1000);
+    }
+    // several solar sources share the charge pro rata
+    const arrays = normalizePowerFlowConfig({
+      home: "sensor.home",
+      sources: [
+        { type: "solar", entity: "sensor.roof" },
+        { type: "solar", entity: "sensor.balcony" },
+        { type: "battery", power: "sensor.battery", charge_from: "solar" },
+        { type: "grid", power: "sensor.grid" },
+      ],
+    });
+    const mixed = flowsOf(arrays, {
+      "sensor.roof": "3000",
+      "sensor.balcony": "1000",
+      "sensor.home": "3000",
+      "sensor.battery": "-800",
+      "sensor.grid": "-200",
+    });
+    expect(mixed.f).toMatchObject({ sB: 800, sH: 3000, sG: 200, gB: 0 });
+    expect(edge(mixed.f, "s0", "s2")?.w).toBe(600);
+    expect(edge(mixed.f, "s1", "s2")?.w).toBe(200);
   });
 
   it("reads the grid's low-carbon share from a fossil or a non-fossil percentage", () => {

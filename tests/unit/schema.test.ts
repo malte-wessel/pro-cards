@@ -241,6 +241,18 @@ describe("card config schemas", () => {
     expect(validate({ type: PF, sources: [{ type: "wind", entity: "sensor.a" }] })).toBeTruthy();
     expect(validate({ type: PF, sources: [{ type: "battery", soc: "sensor.s" }] })).toBeTruthy();
     expect(
+      validate({
+        type: PF,
+        sources: [{ type: "battery", power: "sensor.b", charge_from: "grid" }],
+      }),
+    ).toMatch(/enum|allowed/);
+    expect(
+      validate({
+        type: PF,
+        sources: [{ type: "solar", entity: "sensor.a", charge_from: "solar" }],
+      }),
+    ).toBeTruthy();
+    expect(
       validate({ type: PF, sources: [{ type: "grid", power: "sensor.g", export: "sensor.e" }] }),
     ).toBeTruthy();
     expect(validate({ type: PF, sources: src, direction: "up" })).toMatch(/enum|allowed/);
