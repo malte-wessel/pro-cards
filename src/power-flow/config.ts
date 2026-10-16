@@ -47,6 +47,7 @@ export interface RawSource extends RawEntity {
   import?: string | null; // grid pair
   export?: string | null;
   soc?: string | null; // battery state of charge (%)
+  charge_from?: unknown; // battery: "solar" when the panels feed it (default "any")
   price?: string | null; // grid price sensor
   offline?: string | { entity?: string | null; state?: string | null } | null;
   generator?: string | null; // grid: the generator's power while offline
@@ -84,6 +85,8 @@ interface SourceBase {
   id: string;
   visibility: Visibility;
 }
+export const CHARGE_FROM = ["any", "solar"] as const;
+export type ChargeFrom = (typeof CHARGE_FROM)[number];
 export interface SolarSource extends SourceBase {
   kind: "solar";
   idx: number;
@@ -93,6 +96,7 @@ export interface BatterySource extends SourceBase {
   idx: number; // signed power (+ = discharging), or the charge item of a pair
   secondIdx: number | null; // the discharge item of a pair
   socIdx: number | null;
+  chargeFrom: ChargeFrom; // "solar": solar charges it before the home, the grid never does
   invert: boolean;
 }
 export interface GridSource extends SourceBase {
@@ -179,6 +183,7 @@ const normalizeSource = (
     charge,
     discharge,
     soc,
+    charge_from,
     price,
     offline,
     generator,
@@ -220,6 +225,11 @@ const normalizeSource = (
       d = entityId(discharge, `${label}.discharge`);
     if (p ? c || d : !(c && d))
       throw new Error(`${CARD_TYPE}: ${label} needs 'power' or both 'charge' and 'discharge'`);
+    const chargeFrom = charge_from ?? "any";
+    if (!oneOf(CHARGE_FROM, chargeFrom))
+      throw new Error(
+        `${CARD_TYPE}: ${label}.charge_from must be one of ${CHARGE_FROM.join(" | ")}`,
+      );
     const idx = push({ ...base, entity: p ?? c }, label, "power.battery");
     return {
       ...own(p ?? c),
@@ -227,6 +237,7 @@ const normalizeSource = (
       idx,
       secondIdx: p ? null : sub(d as string, `${label}.discharge`),
       socIdx: subOf(soc, "soc"),
+      chargeFrom,
       invert: !!invert,
     };
   }

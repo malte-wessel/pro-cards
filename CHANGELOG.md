@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.6.0 (unreleased)
+
+- Power flow: `charge_from: solar` on a battery whose panels feed it (a plug-in battery, a DC-coupled hybrid): solar charges it before it covers the home, so the card no longer draws grid power into a battery the grid cannot reach as long as the sensors agree
+
 ## 2.5.0 (2026-10-12)
 
 - `visibility` on the parts of a card: entities, header entities, sections and custom buttons of the entity cards, every section of the weather card, sources, consumers, rooms and devices of the power flow card, and the series of the multi trend card. A part is drawn only while its conditions hold. The conditions are Home Assistant's (`state`, `numeric_state`, `screen`, `user`, `location`, `time`, `and`, `or`, `not`) plus `template`; a state condition without `entity` reads the part's own. The card's own `visibility` stays Home Assistant's

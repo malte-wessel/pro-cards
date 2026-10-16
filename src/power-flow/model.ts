@@ -1,7 +1,8 @@
 // The numbers of the power flow (pure): every node's watts from its entity models, the allocation
 // of the flows between the sources, the home and the consumers (the order Home Assistant's energy
 // dashboard uses: solar covers the home first, then the battery, then the grid; surplus solar
-// charges the battery before it is exported), the summary state and the W / kW formatting.
+// charges the battery before it is exported; a battery fed by its own panels, `charge_from:
+// solar`, is charged before solar covers the home), the summary state and the W / kW formatting.
 import { unitOf, type EntityModel } from "../shared/entity/model.ts";
 import { fmtNumber } from "../shared/format.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
@@ -170,14 +171,19 @@ export const allocate = (
     D = discharging.reduce((a, b) => a + b, 0),
     C = charging.reduce((a, b) => a + b, 0);
   const H = now.homeW ?? Math.max(0, S + B + G);
+  // the batteries the panels feed (`charge_from: solar`) take their solar before the home does
+  const solarFed = cfg.sources.map((s) => s.kind === "battery" && s.chargeFrom === "solar");
+  const C0 = charging.reduce((a, c, i) => a + (solarFed[i] ? c : 0), 0);
+  const sB0 = Math.min(S, C0);
   // the home: solar first, then the batteries, then the grid
-  const sH = Math.min(S, H);
+  const sH = Math.min(S - sB0, H);
   let rest = H - sH;
   const bH = Math.min(D, rest);
   rest -= bH;
   const gH = gridAvail ? Math.max(0, rest) : 0;
   // charging: solar surplus first, then other batteries' surplus, then the grid
-  const sB = Math.min(S - sH, C);
+  const sB1 = Math.min(S - sB0 - sH, C - C0);
+  const sB = sB0 + sB1;
   const dB = Math.min(D - bH, C - sB);
   const gB = now.offline ? 0 : C - sB - dB;
   // export: whatever is left
@@ -190,16 +196,30 @@ export const allocate = (
   const push = (from: string, to: string, w: number, kind: EdgeKind) =>
     edges.push({ from, to, w, kind });
   const solarShare = shares(solar, 1, isSolar);
+  // what solar puts into each battery: the solar-fed ones first, then the others from the surplus
+  const fedIn = shares(
+      charging,
+      sB0,
+      isCharging.map((c, j) => c && solarFed[j]),
+    ),
+    restIn = shares(
+      charging,
+      sB1,
+      isCharging.map((c, j) => c && !solarFed[j]),
+    );
+  const solarIn = fedIn.map((w, j) => w + restIn[j]);
   src.forEach((s, i) => {
     if (s.kind !== "solar") return;
     push(ids[i], "home", sH * solarShare[i], "solar");
-    shares(charging, sB * solarShare[i], isCharging).forEach((w, j) => {
-      if (isBatt[j]) push(ids[i], ids[j], w, "battIn");
+    solarIn.forEach((w, j) => {
+      if (isBatt[j]) push(ids[i], ids[j], w * solarShare[i], "battIn");
     });
     shares(exporting, sG * solarShare[i], isGrid).forEach((w, j) => {
       if (isGrid[j]) push(ids[i], ids[j], w, "gridOut");
     });
   });
+  // the charge solar did not cover comes from other batteries and the grid, pro rata to what is left
+  const remaining = charging.map((c, j) => Math.max(0, c - solarIn[j]));
   const dis = shares(discharging, bH, isDischarging),
     bCh = shares(discharging, dB, isDischarging),
     bExp = shares(discharging, bG, isDischarging);
@@ -210,7 +230,7 @@ export const allocate = (
   src.forEach((s, i) => {
     if (s.kind === "battery") {
       push(ids[i], "home", dis[i], "battOut");
-      shares(charging, bCh[i], isCharging).forEach((w, j) => {
+      shares(remaining, bCh[i], isCharging).forEach((w, j) => {
         if (isBatt[j] && j !== i) push(ids[i], ids[j], w, "battIn");
       });
       shares(exporting, bExp[i], isGrid).forEach((w, j) => {
@@ -220,7 +240,7 @@ export const allocate = (
       push(ids[i], "home", imp[i], s.generator ? "generator" : "gridIn");
       if (s.lowCarbon !== null) gHClean += imp[i] * s.lowCarbon;
       if (s.generator) gHGen += imp[i];
-      shares(charging, gCh[i], isCharging).forEach((w, j) => {
+      shares(remaining, gCh[i], isCharging).forEach((w, j) => {
         if (isBatt[j]) push(ids[i], ids[j], w, "battIn");
       });
     }
