@@ -627,6 +627,49 @@ def(
   "battery",
   { noise: 0.4, min: 0, max: 100, decimals: 0 },
 );
+// a plug-in battery: the panels feed the battery, the battery feeds the home
+def(
+  "sensor.balcony_solar_power",
+  800,
+  { unit_of_measurement: "W", device_class: "power", friendly_name: "Balcony solar power" },
+  "flat",
+  { noise: 30, min: 0, decimals: 0 },
+);
+def(
+  "sensor.balcony_battery_power",
+  -600,
+  {
+    unit_of_measurement: "W",
+    device_class: "power",
+    state_class: "measurement",
+    friendly_name: "Balcony battery power",
+  },
+  "flat",
+  { noise: 20, min: -800, max: 800, decimals: 0 },
+);
+def(
+  "sensor.balcony_battery_soc",
+  42,
+  {
+    unit_of_measurement: "%",
+    device_class: "battery",
+    friendly_name: "Balcony battery state of charge",
+  },
+  "battery",
+  { noise: 0.3, min: 0, max: 100, decimals: 0 },
+);
+def(
+  "sensor.balcony_grid_power",
+  300,
+  {
+    unit_of_measurement: "W",
+    device_class: "power",
+    state_class: "measurement",
+    friendly_name: "Balcony grid power",
+  },
+  "flat",
+  { noise: 40, min: -800, max: 3000, decimals: 0 },
+);
 def(
   "sensor.electricity_price",
   0.28,

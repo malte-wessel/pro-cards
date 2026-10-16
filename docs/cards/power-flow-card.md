@@ -34,6 +34,20 @@ sources:
 
 :::
 
+A plug-in battery (a balcony system, a DC-coupled hybrid) is fed by its panels: solar goes into the battery first and the grid cannot charge it. `charge_from: solar` on the battery tells the card so. Solar then charges that battery before it covers the home, and grid power runs to the home; the grid only tops the battery up when the sensors disagree (the panels report less than the battery takes). With several solar sources the charge is shared across them. Without the option the card follows the usual order and would draw the grid charging the battery whenever the battery takes more than the solar surplus.
+
+::: live
+
+```yaml
+type: custom:power-flow-card-pro
+sources:
+  - { type: solar, entity: sensor.balcony_solar_power, name: Balcony }
+  - { type: battery, power: sensor.balcony_battery_power, soc: sensor.balcony_battery_soc, charge_from: solar }
+  - { type: grid, power: sensor.balcony_grid_power }
+```
+
+:::
+
 ## Consumers
 
 `consumers` lists the devices the home feeds. Each is an entity with a power sensor and, like everywhere else, a `name`, an `icon` and a `secondary` line (a template is fine); an **Other** node takes whatever the home uses beyond them (`other: false` leaves it out). `consumer_style: list` shows them as rows with a bar instead of nodes.
@@ -311,6 +325,7 @@ consumers:
 | `charge`, `discharge`                        | battery       | A pair of sensors instead of `power`.                                                                                                      |
 | `import`, `export`                           | grid          | A pair of sensors instead of `power` (`export` optional).                                                                                  |
 | `soc`                                        | battery       | State of charge in %, shown as the node's ring.                                                                                            |
+| `charge_from`                                | battery       | `solar` when the panels feed this battery: solar charges it before the home, the grid only when the sensors disagree. Default `any`.       |
 | `price`                                      | grid          | Price sensor, shown in the Expensive state.                                                                                                |
 | `offline`                                    | grid          | An entity id (offline when `on`) or `{ entity, state }`.                                                                                   |
 | `generator`                                  | grid          | A generator's power sensor: takes the grid node's place while offline.                                                                     |

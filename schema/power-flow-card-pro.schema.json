@@ -62,6 +62,11 @@
         "soc": {
           "$ref": "defs.schema.json#/$defs/entityId",
           "description": "State of charge in %: the ring of the node"
+        },
+        "charge_from": {
+          "enum": ["any", "solar"],
+          "default": "any",
+          "description": "`solar`: the panels feed this battery, so solar charges it before it covers the home and the grid never charges it (unless the sensors disagree)"
         }
       },
       "required": ["type"],
