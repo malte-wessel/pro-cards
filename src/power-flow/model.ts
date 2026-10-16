@@ -21,6 +21,10 @@ export const wattsOf = (ent: EntityItem, m: EntityModel | undefined): number | n
 export interface SourceNow {
   kind: "solar" | "battery" | "grid";
   w: number | null; // solar ≥ 0; battery + = discharging; grid + = import (the generator while offline)
+  // a battery's gross flows (W, ≥ 0): one sign of `w`, except a solar-fed battery given as a
+  // charge / discharge pair, which may do both at once (the panels fill it while it feeds the home)
+  charge: number;
+  discharge: number;
   soc: number | null;
   avail: boolean;
   generator: boolean; // a grid that runs on its generator during an outage
@@ -42,7 +46,7 @@ export const powerNow = (
   const w = (idx: number | null) => (idx === null ? null : wattsOf(entities[idx], models[idx]));
   let offline = false,
     price: PowerNow["price"] = null;
-  const none = { soc: null, generator: false, lowCarbon: null };
+  const none = { soc: null, generator: false, lowCarbon: null, charge: 0, discharge: 0 };
   const sources = cfg.sources.map((s): SourceNow => {
     if (s.kind === "solar") {
       const v = w(s.idx);
@@ -56,7 +60,11 @@ export const powerNow = (
     else v = a === null && b === null ? null : (a ?? 0) - (b ?? 0);
     if (s.kind === "battery") {
       const soc = s.socIdx === null ? null : (models[s.socIdx]?.model.num ?? null);
-      return { kind: "battery", w: v, avail: v !== null, ...none, soc };
+      // a pair on a solar-fed battery keeps both gross flows; every other battery one sign of the net
+      const gross = s.secondIdx !== null && s.chargeFrom === "solar";
+      const charge = gross ? Math.max(0, a ?? 0) : Math.max(0, -(v ?? 0)),
+        discharge = gross ? Math.max(0, b ?? 0) : Math.max(0, v ?? 0);
+      return { kind: "battery", w: v, avail: v !== null, ...none, soc, charge, discharge };
     }
     const down = s.offlineIdx !== null && models[s.offlineIdx]?.model.raw === s.offlineState;
     if (down) offline = true;
@@ -152,24 +160,24 @@ export const allocate = (
     isBatt = src.map((s) => s.kind === "battery"),
     isGrid = src.map((s) => s.kind === "grid");
   const solar = src.map((s) => (s.kind === "solar" ? (s.w ?? 0) : 0));
-  const batt = src.map((s) => (s.kind === "battery" ? (s.w ?? 0) : 0));
   // an offline grid carries nothing, unless its generator runs
   const gridW = src.map((s) =>
     s.kind === "grid" && (!now.offline || s.generator) ? (s.w ?? 0) : 0,
   );
   const gridAvail = !now.offline || src.some((s) => s.generator);
-  // batteries charge and discharge separately: one may feed another
-  const charging = batt.map((b) => Math.max(0, -b)),
-    discharging = batt.map((b) => Math.max(0, b));
+  // batteries charge and discharge separately: one may feed another, and a solar-fed one given
+  // as a pair may do both at once
+  const charging = src.map((s) => (s.kind === "battery" ? s.charge : 0)),
+    discharging = src.map((s) => (s.kind === "battery" ? s.discharge : 0));
   const isCharging = charging.map((c, i) => isBatt[i] && c > 0),
     isDischarging = discharging.map((d, i) => isBatt[i] && d > 0);
   const importing = gridW.map((g) => Math.max(0, g)),
     exporting = gridW.map((g) => Math.max(0, -g));
   const S = solar.reduce((a, b) => a + b, 0),
-    B = batt.reduce((a, b) => a + b, 0),
     G = gridW.reduce((a, b) => a + b, 0),
     D = discharging.reduce((a, b) => a + b, 0),
-    C = charging.reduce((a, b) => a + b, 0);
+    C = charging.reduce((a, b) => a + b, 0),
+    B = D - C;
   const H = now.homeW ?? Math.max(0, S + B + G);
   // the batteries the panels feed (`charge_from: solar`) take their solar before the home does
   const solarFed = cfg.sources.map((s) => s.kind === "battery" && s.chargeFrom === "solar");
@@ -184,12 +192,7 @@ export const allocate = (
   // charging: solar surplus first, then other batteries' surplus, then the grid
   const sB1 = Math.min(S - sB0 - sH, C - C0);
   const sB = sB0 + sB1;
-  const dB = Math.min(D - bH, C - sB);
-  const gB = now.offline ? 0 : C - sB - dB;
-  // export: whatever is left
   const sG = now.offline ? 0 : Math.max(0, S - sH - sB);
-  const bG = now.offline ? 0 : Math.max(0, D - bH - dB);
-  const grid = gH + gB - sG - bG;
 
   const edges: EdgeFlow[] = [];
   const ids = src.map((_, i) => `s${i}`);
@@ -218,11 +221,37 @@ export const allocate = (
       if (isGrid[j]) push(ids[i], ids[j], w, "gridOut");
     });
   });
-  // the charge solar did not cover comes from other batteries and the grid, pro rata to what is left
+  // the charge solar did not cover comes from other batteries and the grid, pro rata to what is
+  // left: the discharge the home did not take is split over the batteries still charging, each
+  // giver over the others (never itself); what finds no room is exported, the rest comes from
+  // the grid. Nothing depends on the order the batteries are written in.
   const remaining = charging.map((c, j) => Math.max(0, c - solarIn[j]));
-  const dis = shares(discharging, bH, isDischarging),
-    bCh = shares(discharging, dB, isDischarging),
-    bExp = shares(discharging, bG, isDischarging);
+  const dis = shares(discharging, bH, isDischarging);
+  const give = discharging.map((d, i) => Math.max(0, d - dis[i]));
+  const sumOf = (xs: number[], on: boolean[]) => xs.reduce((a, x, j) => a + (on[j] ? x : 0), 0);
+  const bCh = shares(
+    give,
+    Math.min(sumOf(give, isDischarging), sumOf(remaining, isCharging)),
+    isDischarging,
+  );
+  // battery i → battery j (every pair, so the drawn links never come and go with the values)
+  const battIn = src.map((_, i) => {
+    const others = isCharging.map((c, j) => c && j !== i);
+    return shares(remaining, Math.min(bCh[i], sumOf(remaining, others)), others);
+  });
+  // a battery offered more than its room (a giver that is itself charging skews the shares)
+  // takes its room pro rata from the givers; their rest is exported
+  remaining.forEach((r, j) => {
+    const offered = battIn.reduce((a, row) => a + row[j], 0);
+    if (offered > r) battIn.forEach((row) => (row[j] *= r / offered));
+  });
+  const given = battIn.map((row) => row.reduce((a, b) => a + b, 0));
+  const dB = given.reduce((a, b) => a + b, 0);
+  const bExp = give.map((g, i) => (now.offline ? 0 : Math.max(0, g - given[i])));
+  battIn.forEach((row) => row.forEach((w, j) => (remaining[j] -= w)));
+  const gB = now.offline ? 0 : remaining.reduce((a, b) => a + b, 0);
+  const bG = bExp.reduce((a, b) => a + b, 0);
+  const grid = gH + gB - sG - bG;
   const imp = shares(importing, gH, isGrid),
     gCh = shares(importing, gB, isGrid);
   let gHClean = 0,
@@ -230,7 +259,7 @@ export const allocate = (
   src.forEach((s, i) => {
     if (s.kind === "battery") {
       push(ids[i], "home", dis[i], "battOut");
-      shares(remaining, bCh[i], isCharging).forEach((w, j) => {
+      battIn[i].forEach((w, j) => {
         if (isBatt[j] && j !== i) push(ids[i], ids[j], w, "battIn");
       });
       shares(exporting, bExp[i], isGrid).forEach((w, j) => {

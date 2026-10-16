@@ -1299,6 +1299,21 @@ const CASES = {
       { type: "forecast", mode: "daily", divider: true, days: 3 },
     ],
   },
+  // a plug-in battery as a charge / discharge pair: the panels fill it while it feeds the home
+  "pf-balcony-pair": {
+    type: PF,
+    sources: [
+      { type: "solar", entity: "sensor.balcony_solar_power", name: "Balcony" },
+      {
+        type: "battery",
+        charge: "sensor.balcony_battery_charge_power",
+        discharge: "sensor.balcony_battery_discharge_power",
+        soc: "sensor.balcony_battery_soc",
+        charge_from: "solar",
+      },
+      { type: "grid", power: "sensor.balcony_grid_power" },
+    ],
+  },
   "vis-power-flow": {
     type: PF,
     home: "sensor.power_consumption",

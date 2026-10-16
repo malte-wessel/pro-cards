@@ -647,6 +647,31 @@ def(
   "flat",
   { noise: 20, min: -800, max: 800, decimals: 0 },
 );
+// the same battery as a pair: what the panels put in and what its inverter gives out
+def(
+  "sensor.balcony_battery_charge_power",
+  650,
+  {
+    unit_of_measurement: "W",
+    device_class: "power",
+    state_class: "measurement",
+    friendly_name: "Balcony battery charge power",
+  },
+  "flat",
+  { noise: 20, min: 0, decimals: 0 },
+);
+def(
+  "sensor.balcony_battery_discharge_power",
+  250,
+  {
+    unit_of_measurement: "W",
+    device_class: "power",
+    state_class: "measurement",
+    friendly_name: "Balcony battery discharge power",
+  },
+  "flat",
+  { noise: 15, min: 0, decimals: 0 },
+);
 def(
   "sensor.balcony_battery_soc",
   42,
