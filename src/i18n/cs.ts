@@ -163,6 +163,7 @@ const cs: Translation = {
   "editor.multi_trend.icon": "Ikona",
   "editor.multi_trend.color": "Barva ikony",
   "editor.multi_trend.hours_to_show": "Zobrazené hodiny",
+  "editor.multi_trend.smoothing_minutes": "Vyhlazení",
   "editor.multi_trend.layout": "Rozvržení",
   "editor.multi_trend.show_legend": "Zobrazit legendu",
   "editor.multi_trend.x_axis": "Osa X (čas)",

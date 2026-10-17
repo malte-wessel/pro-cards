@@ -163,6 +163,7 @@ const sv: Translation = {
   "editor.multi_trend.icon": "Ikon",
   "editor.multi_trend.color": "Ikonfärg",
   "editor.multi_trend.hours_to_show": "Visade timmar",
+  "editor.multi_trend.smoothing_minutes": "Utjämning",
   "editor.multi_trend.layout": "Layout",
   "editor.multi_trend.show_legend": "Visa förklaring",
   "editor.multi_trend.x_axis": "X-axel (tid)",

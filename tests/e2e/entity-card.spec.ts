@@ -182,6 +182,27 @@ test.describe("visuals", () => {
       .evaluateAll((r) => [...new Set(r.map((x) => x.getAttribute("fill")))]);
     for (const f of numFills) expect(["var(--amber-color)", "var(--green-color)"]).toContain(f);
   });
+  test("the sparkline is averaged by width unless smoothing_minutes is set", async ({ page }) => {
+    const spark = { type: T, entity: "sensor.outdoor_temperature", visual: "sparkline" };
+    await mount(page, [
+      { ...spark, hours_to_show: 6 },
+      { ...spark, hours_to_show: 6, smoothing_minutes: 60 },
+      { ...spark, hours_to_show: 6, smoothing_minutes: 10 },
+    ]);
+    // the curve has one segment fewer than it has points
+    const segments = async (i: number) => {
+      const line = card(page, i).locator(".plot svg path.line");
+      await expect(line).toHaveAttribute("d", /C/);
+      return ((await line.getAttribute("d"))!.match(/C/g) || []).length;
+    };
+    const width = await card(page, 0)
+      .locator(".plot")
+      .evaluate((e) => e.clientWidth);
+    const cap = Math.floor(width / 2);
+    expect(await segments(0)).toBe(Math.min(cap, Math.floor(width / 12)) - 1); // one point per 12 px
+    expect(await segments(1)).toBe(5); // 6 one-hour buckets
+    expect(await segments(2)).toBe(Math.min(cap, 36) - 1); // 36 ten-minute buckets
+  });
   test("ring, gauge, bar and badge render their parts", async ({ page }) => {
     await mount(page, [
       { type: T, entity: "sensor.robot_battery", visual: "ring" },

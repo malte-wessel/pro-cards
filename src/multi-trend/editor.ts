@@ -11,6 +11,7 @@ export const EDITOR_LABELS: Record<string, StringKey> = {
   icon: "editor.multi_trend.icon",
   color: "editor.multi_trend.color",
   hours_to_show: "editor.multi_trend.hours_to_show",
+  smoothing_minutes: "editor.multi_trend.smoothing_minutes",
   layout: "editor.multi_trend.layout",
   show_legend: "editor.multi_trend.show_legend",
   x_axis: "editor.multi_trend.x_axis",
@@ -33,6 +34,7 @@ export const configToForm = (config: MultiTrendCardConfig): HaFormData => {
     icon: config.icon ?? "",
     color: config.color ?? "",
     hours_to_show: config.hours_to_show ?? DEFAULT_HOURS,
+    smoothing_minutes: config.smoothing_minutes,
     layout: config.layout ?? "auto",
     show_legend: config.show_legend ?? true,
     x_axis: !!config.x_axis,
@@ -62,6 +64,12 @@ export const formToConfig = (
     "hours_to_show",
     Number(data.hours_to_show),
     !data.hours_to_show || Number(data.hours_to_show) === DEFAULT_HOURS,
+  );
+  setOrDrop(
+    config,
+    "smoothing_minutes",
+    Number(data.smoothing_minutes),
+    !data.smoothing_minutes || !(Number(data.smoothing_minutes) > 0),
   );
   setOrDrop(config, "layout", data.layout, !data.layout || data.layout === "auto");
   setOrDrop(config, "show_legend", !!data.show_legend, data.show_legend !== false);
@@ -110,6 +118,12 @@ export const editorSchema = (hass: HomeAssistant | undefined, data: HaFormData):
           name: "hours_to_show",
           selector: {
             number: { min: 1, max: 168, step: 1, mode: "box", unit_of_measurement: "h" },
+          },
+        },
+        {
+          name: "smoothing_minutes",
+          selector: {
+            number: { min: 5, step: 1, mode: "box", unit_of_measurement: "min" },
           },
         },
         {

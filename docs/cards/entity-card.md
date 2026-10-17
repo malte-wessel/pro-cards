@@ -448,13 +448,14 @@ A template value that looks like a number gets rules, decimals and a unit like a
 
 All [entity options](/cards/entity-options#entity-options) plus:
 
-| Option                                             | Default                      | Description                                                           |
-| -------------------------------------------------- | ---------------------------- | --------------------------------------------------------------------- |
-| `toggle`                                           | `false`                      | Switch on the right that calls `homeassistant.toggle`.                |
-| `secondary`                                        |                              | Line under the name instead of the value and label. Template allowed. |
-| `hours_to_show`                                    | `24`                         | History window for `sparkline`, `columns` and `strip`, at least 1.    |
-| `bucket_minutes`                                   | `60`                         | Bucket size for `columns` and `strip`, at least 5.                    |
-| `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none | See [Actions](/cards/entity-options#actions).                         |
+| Option                                             | Default                      | Description                                                                                     |
+| -------------------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------- |
+| `toggle`                                           | `false`                      | Switch on the right that calls `homeassistant.toggle`.                                          |
+| `secondary`                                        |                              | Line under the name instead of the value and label. Template allowed.                           |
+| `hours_to_show`                                    | `24`                         | History window for `sparkline`, `columns` and `strip`, at least 1.                              |
+| `bucket_minutes`                                   | `60`                         | Bucket size for `columns` and `strip`, at least 5.                                              |
+| `smoothing_minutes`                                |                              | Averaging bucket of `sparkline` in minutes, at least 5 (default: one point per 12 px of width). |
+| `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none | See [Actions](/cards/entity-options#actions).                                                   |
 
 ### Grid defaults
 

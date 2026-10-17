@@ -162,6 +162,7 @@ const en = {
   "editor.multi_trend.icon": "Icon",
   "editor.multi_trend.color": "Icon colour",
   "editor.multi_trend.hours_to_show": "Hours to show",
+  "editor.multi_trend.smoothing_minutes": "Smoothing",
   "editor.multi_trend.layout": "Layout",
   "editor.multi_trend.show_legend": "Show legend",
   "editor.multi_trend.x_axis": "X axis (time)",

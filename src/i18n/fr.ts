@@ -163,6 +163,7 @@ const fr: Translation = {
   "editor.multi_trend.icon": "Icône",
   "editor.multi_trend.color": "Couleur de l'icône",
   "editor.multi_trend.hours_to_show": "Heures affichées",
+  "editor.multi_trend.smoothing_minutes": "Lissage",
   "editor.multi_trend.layout": "Disposition",
   "editor.multi_trend.show_legend": "Afficher la légende",
   "editor.multi_trend.x_axis": "Axe X (temps)",

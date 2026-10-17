@@ -163,6 +163,7 @@ const pt: Translation = {
   "editor.multi_trend.icon": "Ícone",
   "editor.multi_trend.color": "Cor do ícone",
   "editor.multi_trend.hours_to_show": "Horas mostradas",
+  "editor.multi_trend.smoothing_minutes": "Suavização",
   "editor.multi_trend.layout": "Disposição",
   "editor.multi_trend.show_legend": "Mostrar legenda",
   "editor.multi_trend.x_axis": "Eixo X (tempo)",

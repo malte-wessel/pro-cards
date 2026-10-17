@@ -4,7 +4,14 @@
 // hover needs (scales, x mapping, gutter) stay on the plot element.
 import { fmtNumber, fmtTime, textWidth } from "../format.ts";
 import type { HomeAssistant } from "../ha.ts";
-import { bucketMean, clampedSeries, smoothPath, type MeanBucket } from "../history.ts";
+import {
+  bucketMean,
+  clampedSeries,
+  lineBuckets,
+  lineMeans,
+  smoothPath,
+  type MeanBucket,
+} from "../history.ts";
 import { nearestPoint, placeTip } from "../hover.ts";
 import { clockTicks, timeStep } from "../ticks.ts";
 import { qs } from "../util.ts";
@@ -41,6 +48,9 @@ export interface TrendSpec {
   yAxis: boolean;
   series: TrendSeries[];
   timeFmt?: (t: number) => string; // tooltip time (default: clock, with the weekday if not today)
+  // history lines: averaged per `lineBuckets` (minutes null: the default spacing); without it
+  // (forecasts) the points are drawn as they are unless there are more than one per 2 px
+  smoothing?: { minutes: number | null };
 }
 export interface TrendPlotEl extends HTMLDivElement {
   _spec?: TrendSpec;
@@ -118,11 +128,14 @@ export const drawTrend = (plot: TrendPlotEl, spec: TrendSpec) => {
   const pct = (y: number) => `${((y / H) * 100).toFixed(3)}%`;
 
   // Clamp to the window so line and fill always start and end exactly at the plot edges, then
-  // downsample to ~1 point per 2px (bucket mean) when there are more points than buckets
-  const nb = Math.max(1, Math.floor(W / 2));
+  // average into buckets (bucket mean) when there are more points than buckets
+  const nb = spec.smoothing
+    ? lineBuckets(now - t0, spec.smoothing.minutes, W)
+    : Math.max(1, Math.floor(W / 2));
   const sampled = series.map((s) => {
     const pts = clampedSeries(s.pts, t0, now);
-    return pts.length <= nb ? pts : bucketMean(pts, t0, now, nb);
+    if (pts.length <= nb) return pts;
+    return spec.smoothing ? lineMeans(pts, t0, now, nb) : bucketMean(pts, t0, now, nb);
   });
   plot._sampled = sampled;
 

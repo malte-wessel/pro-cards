@@ -546,18 +546,19 @@ A thin horizontal bar under the value, filled to the same `(value − min) / (ma
 
 ### History window
 
-`sparkline`, `columns` and `strip` fetch the recorder history of their entity and redraw it every five minutes. Two card-level keys shape the window; they apply to every history visual on the card (or on all sections of a sections card):
+`sparkline`, `columns` and `strip` fetch the recorder history of their entity and redraw it every five minutes. Three card-level keys shape the window; they apply to every history visual on the card (or on all sections of a sections card):
 
-| Option           | Default | Description                                                                                                            |
-| ---------------- | ------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `hours_to_show`  | `24`    | Length of the window in hours, at least 1. Shown as a small chip in the group header and as the left label of a strip. |
-| `bucket_minutes` | `60`    | Bucket size for `columns` and `strip`, at least 5. The number of buckets is `hours_to_show × 60 / bucket_minutes`.     |
+| Option              | Default | Description                                                                                                            |
+| ------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `hours_to_show`     | `24`    | Length of the window in hours, at least 1. Shown as a small chip in the group header and as the left label of a strip. |
+| `bucket_minutes`    | `60`    | Bucket size for `columns` and `strip`, at least 5. The number of buckets is `hours_to_show × 60 / bucket_minutes`.     |
+| `smoothing_minutes` |         | Averaging bucket of the `sparkline` in minutes, at least 5. Without it the line has one point per 12 px of width.      |
 
-Entities without recorder history draw an empty plot. Hovering (or touching) a plot shows the value at that point and the time.
+Entities without recorder history draw an empty plot. Hovering (or touching) a plot shows the value at that point and the time; on a sparkline that value is the mean of the point's bucket.
 
 ### Sparkline
 
-A smoothed line with a soft area below it and a dot at the last value, for temperatures, prices and anything else that drifts. It reads `hours_to_show` only: the line is sampled to the width of the card, so `bucket_minutes` has no effect, and the vertical scale fits the data (with 10 % padding), so `min` / `max` are ignored too. Colour comes from the current value's rule or the fixed `color`; the whole line takes that colour.
+A smoothed line with a soft area below it and a dot at the last value, for temperatures, prices and anything else that drifts. It reads `hours_to_show` and `smoothing_minutes`: each point of the line is the mean of the history in its bucket, one point per 12 px of width unless `smoothing_minutes` sets the bucket in minutes, so sensor noise does not show as a zigzag. The line runs from edge to edge through the means, so its dot shows the mean of the last bucket; the value in the row stays the current reading. `bucket_minutes` has no effect, and the vertical scale fits the data (with 10 % padding), so `min` / `max` are ignored too. Colour comes from the current value's rule or the fixed `color`; the whole line takes that colour.
 
 ::: live
 
@@ -595,6 +596,29 @@ A smoothed line with a soft area below it and a dot at the last value, for tempe
   visual: sparkline
   color: indigo
   hours_to_show: 24
+  grid_options: { columns: 6 }
+```
+
+:::
+
+`smoothing_minutes` sets the averaging bucket for every sparkline on the card. Larger buckets give a calmer line that shows the trend of the day; small buckets keep short swings, down to one point per 2 px.
+
+::: live
+
+```yaml
+- type: custom:entity-card-pro
+  entity: sensor.power_consumption
+  name: 10-minute buckets
+  decimals: 0
+  visual: sparkline
+  smoothing_minutes: 10
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  entity: sensor.power_consumption
+  name: 2-hour buckets
+  decimals: 0
+  visual: sparkline
+  smoothing_minutes: 120
   grid_options: { columns: 6 }
 ```
 
@@ -956,12 +980,13 @@ All keys an entity accepts, grouped by what they do. "Applies to" names the visu
 
 ### History
 
-These two keys sit on the card, not on the entity, and apply to every history visual on it; see [History window](#history-window).
+These keys sit on the card, not on the entity, and apply to every history visual on it; see [History window](#history-window).
 
-| Option           | Default | Applies to                | Description                                               |
-| ---------------- | ------- | ------------------------- | --------------------------------------------------------- |
-| `hours_to_show`  | `24`    | sparkline, columns, strip | Window in hours, at least 1.                              |
-| `bucket_minutes` | `60`    | columns, strip            | Bucket size in minutes, at least 5. Sparklines ignore it. |
+| Option              | Default | Applies to                | Description                                                             |
+| ------------------- | ------- | ------------------------- | ----------------------------------------------------------------------- |
+| `hours_to_show`     | `24`    | sparkline, columns, strip | Window in hours, at least 1.                                            |
+| `bucket_minutes`    | `60`    | columns, strip            | Bucket size in minutes, at least 5. Sparklines ignore it.               |
+| `smoothing_minutes` |         | sparkline                 | Averaging bucket in minutes, at least 5 (default: one point per 12 px). |
 
 ### Controls
 

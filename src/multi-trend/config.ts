@@ -16,6 +16,7 @@ export interface MultiTrendCardConfig extends CardConfigBase {
   icon?: string;
   color?: string;
   hours_to_show?: number;
+  smoothing_minutes?: number;
   layout?: TrendLayout;
   show_legend?: boolean;
   x_axis?: boolean;
@@ -34,6 +35,8 @@ export interface TrendConfig extends CardConfigBase {
   icon?: string;
   color?: string;
   hours_to_show: number;
+  // averaging bucket of the lines in minutes (null: one point per LINE_POINT_PX)
+  smoothing_minutes: number | null;
   layout: TrendLayout;
   show_legend: boolean;
   x_axis: boolean;

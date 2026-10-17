@@ -163,6 +163,7 @@ const nb: Translation = {
   "editor.multi_trend.icon": "Ikon",
   "editor.multi_trend.color": "Ikonfarge",
   "editor.multi_trend.hours_to_show": "Viste timer",
+  "editor.multi_trend.smoothing_minutes": "Utjevning",
   "editor.multi_trend.layout": "Oppsett",
   "editor.multi_trend.show_legend": "Vis forklaring",
   "editor.multi_trend.x_axis": "X-akse (tid)",

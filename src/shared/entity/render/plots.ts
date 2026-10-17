@@ -5,6 +5,8 @@ import {
   bucketLast,
   bucketMean,
   clampedSeries,
+  lineBuckets,
+  lineMeans,
   smoothPath,
   type LastBucket,
   type MeanBucket,
@@ -93,7 +95,7 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement) => {
       t0,
       now,
     );
-    const sampled = bucketMean(pts, t0, now, Math.max(1, Math.floor(W / 2)));
+    const sampled = lineMeans(pts, t0, now, lineBuckets(now - t0, ctx.cfg.smoothMin, W));
     if (sampled.length < 2) return empty();
     let lo = Infinity,
       hi = -Infinity;

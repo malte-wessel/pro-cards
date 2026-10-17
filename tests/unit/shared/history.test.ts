@@ -5,6 +5,9 @@ import {
   clampedSeries,
   smoothPath,
   fetchHistory,
+  lineBuckets,
+  lineMeans,
+  normalizeSmoothing,
   pointOf,
 } from "../../../src/shared/history.ts";
 import type { HomeAssistant } from "../../../src/shared/ha.ts";
@@ -92,6 +95,38 @@ describe("history helpers", () => {
     expect(smoothPath(pts)).toBe(
       "M0,10 C1.7,8.3 6.7,0.3 10,0 C13.3,0.0 16.7,4.7 20,8 C23.3,11.3 28.3,18.0 30,20",
     );
+  });
+  it("spaces history lines by width unless smoothing_minutes is set", () => {
+    const day = 24 * 3600e3;
+    // default: one point per 12 px
+    expect(lineBuckets(day, null, 240)).toBe(20);
+    expect(lineBuckets(day, null, 600)).toBe(50);
+    // smoothing_minutes: one point per bucket over the window
+    expect(lineBuckets(day, 60, 240)).toBe(24);
+    expect(lineBuckets(6 * 3600e3, 15, 600)).toBe(24);
+    // never finer than one point per 2 px, never fewer than 2
+    expect(lineBuckets(day, 5, 240)).toBe(120);
+    expect(lineBuckets(3600e3, 60, 240)).toBe(2);
+    expect(lineBuckets(day, null, 10)).toBe(2);
+  });
+  it("draws a smoothed line from bucket means only, stretched to the window", () => {
+    // a sensor flipping between two readings: every mean sits between them, the ends too
+    const flip = Array.from({ length: 40 }, (_, i) => ({ t: i * 10, v: i % 2 ? 20.1 : 20 }));
+    const line = lineMeans(flip, 0, 400, 4);
+    expect(line.map((p) => p.t)).toEqual([0, 150, 250, 400]);
+    for (const p of line) expect(p.v).toBeCloseTo(20.05, 5);
+    // an empty bucket carries the previous mean
+    expect(lineMeans(pts, 0, 100, 4).map((p) => p.v)).toEqual([3, 7, 7, 9]);
+    expect(lineMeans([], 0, 100, 4)).toEqual([]);
+  });
+  it("reads smoothing_minutes as null when unset and at least 5 otherwise", () => {
+    expect(normalizeSmoothing(undefined)).toBeNull();
+    expect(normalizeSmoothing(null)).toBeNull();
+    expect(normalizeSmoothing("abc")).toBeNull();
+    expect(normalizeSmoothing(0)).toBeNull();
+    expect(normalizeSmoothing(-10)).toBeNull();
+    expect(normalizeSmoothing(1)).toBe(5);
+    expect(normalizeSmoothing("30")).toBe(30);
   });
   it("fetches recorder history and appends the newer current state", async () => {
     const callWS = vi.fn().mockResolvedValue({

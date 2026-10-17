@@ -163,6 +163,7 @@ const nl: Translation = {
   "editor.multi_trend.icon": "Pictogram",
   "editor.multi_trend.color": "Kleur pictogram",
   "editor.multi_trend.hours_to_show": "Getoonde uren",
+  "editor.multi_trend.smoothing_minutes": "Afvlakking",
   "editor.multi_trend.layout": "Indeling",
   "editor.multi_trend.show_legend": "Legenda tonen",
   "editor.multi_trend.x_axis": "X-as (tijd)",

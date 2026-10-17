@@ -276,6 +276,7 @@ Home Assistant's fifteen condition states. They are the keys of an `icons` map a
 | `show_name` / `show_value` / `show_icon` | per layout      | Default [item options](/cards/entity-options#item-options) for every entity section.                                                                                                            |
 | `name_position`                          | `below`         | Default `above` or `below` the icon in row items; the other layouts ignore it, see the [item options](/cards/entity-options#item-options).                                                      |
 | `hours_to_show` / `bucket_minutes`       | `24` / `60`     | History window of sparklines, columns and strips inside entity sections.                                                                                                                        |
+| `smoothing_minutes`                      |                 | Averaging bucket of sparklines inside entity sections, in minutes (default: one point per 12 px).                                                                                               |
 
 Every section, whatever its type, also takes [`visibility`](/guide/visibility): it is drawn only while its conditions hold, which read the weather entity unless they name another.
 

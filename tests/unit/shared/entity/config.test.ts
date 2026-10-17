@@ -122,11 +122,15 @@ describe("entity", () => {
       hold: { action: "more-info" },
       dbl: { action: "none" },
     });
-    expect(normalizeHistoryOptions({ hours_to_show: "0", bucket_minutes: 1 })).toEqual({
+    expect(
+      normalizeHistoryOptions({ hours_to_show: "0", bucket_minutes: 1, smoothing_minutes: 2 }),
+    ).toEqual({
       hours: 1,
       bucketMin: 5,
+      smoothMin: 5,
     });
-    expect(normalizeHistoryOptions({})).toEqual({ hours: 24, bucketMin: 60 });
+    expect(normalizeHistoryOptions({ smoothing_minutes: "30" })).toMatchObject({ smoothMin: 30 });
+    expect(normalizeHistoryOptions({})).toEqual({ hours: 24, bucketMin: 60, smoothMin: null });
   });
 });
 
