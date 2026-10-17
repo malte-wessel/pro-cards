@@ -149,6 +149,7 @@ const pl: Translation = {
   "editor.illuminance.name": "Nazwa",
   "editor.illuminance.hours_to_show": "Wyświetlane godziny",
   "editor.illuminance.bucket_minutes": "Rozmiar przedziału (minuty)",
+  "editor.illuminance.smoothing_minutes": "Wygładzanie",
   "editor.illuminance.min_lx": "Skala od (lx)",
   "editor.illuminance.max_lx": "Skala do (lx)",
   "editor.illuminance.mode.arc": "Łuk (wskaźnik ze strefami)",

@@ -15,6 +15,20 @@ const cfg = (mode: string, extra: Record<string, unknown> = {}) => ({
   ...extra,
 });
 
+test("the trend line is averaged by width unless smoothing_minutes is set", async ({ page }) => {
+  await mount(page, [cfg("trend"), cfg("trend", { smoothing_minutes: 60 })]);
+  const segments = async (i: number) => {
+    const line = card(page, i).locator("svg path.line");
+    await expect(line).toHaveAttribute("d", /C/);
+    return ((await line.getAttribute("d"))!.match(/C/g) || []).length;
+  };
+  const width = await card(page, 0)
+    .locator("svg:has(path.line)")
+    .evaluate((e) => e.clientWidth);
+  expect(await segments(0)).toBeLessThanOrEqual(Math.floor(width / 12) - 1);
+  expect(await segments(1)).toBe(23); // 24 one-hour buckets
+});
+
 test("trend mode draws zones, the series and the current zone pill", async ({ page }) => {
   await setState(page, "sensor.illuminance", "24600").catch(() => {});
   await mount(page, cfg("trend"));

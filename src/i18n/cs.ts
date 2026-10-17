@@ -149,6 +149,7 @@ const cs: Translation = {
   "editor.illuminance.name": "Název",
   "editor.illuminance.hours_to_show": "Zobrazené hodiny",
   "editor.illuminance.bucket_minutes": "Velikost intervalu (minuty)",
+  "editor.illuminance.smoothing_minutes": "Vyhlazení",
   "editor.illuminance.min_lx": "Stupnice od (lx)",
   "editor.illuminance.max_lx": "Stupnice do (lx)",
   "editor.illuminance.mode.arc": "Oblouk (ukazatel se zónami)",

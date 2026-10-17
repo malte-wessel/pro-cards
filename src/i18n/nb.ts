@@ -149,6 +149,7 @@ const nb: Translation = {
   "editor.illuminance.name": "Navn",
   "editor.illuminance.hours_to_show": "Viste timer",
   "editor.illuminance.bucket_minutes": "Intervallstørrelse (minutter)",
+  "editor.illuminance.smoothing_minutes": "Utjevning",
   "editor.illuminance.min_lx": "Skala fra (lx)",
   "editor.illuminance.max_lx": "Skala til (lx)",
   "editor.illuminance.mode.arc": "Bue (måler med soner)",

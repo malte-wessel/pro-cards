@@ -3,6 +3,7 @@ import {
   mergeZones,
   zoneOf,
   logOf,
+  logLineMeans,
   posOf,
   colorAnchors,
   colorAt,
@@ -53,6 +54,25 @@ describe("illuminance-card zones and scale", () => {
     expect(zoneOf(z, 1).key).toBe("twilight");
     expect(zoneOf(z, 9999).key).toBe("overcast");
     expect(zoneOf(z, 1e6).key).toBe("sun");
+  });
+  it("averages the trend line on the log scale, with 0 lx staying 0", () => {
+    // a bucket of 100 and 10,000 lx: about 1,000 on the log scale, not 5,050
+    const bright = logLineMeans(
+      [
+        { t: 0, v: 100 },
+        { t: 10, v: 10000 },
+        { t: 50, v: 0 },
+        { t: 60, v: 0 },
+      ],
+      0,
+      100,
+      2,
+    );
+    expect(bright).toHaveLength(2);
+    expect(bright[0].v).toBeGreaterThan(900);
+    expect(bright[0].v).toBeLessThan(1100);
+    expect(bright[1].v).toBe(0);
+    expect(bright.map((p) => p.t)).toEqual([0, 100]);
   });
   it("positions on a clamped log scale", () => {
     expect(logOf(0.01)).toBe(-1);
@@ -113,6 +133,7 @@ describe("illuminance-card editor and element", () => {
       entity: "sensor.lx",
       mode: "trend",
       hours_to_show: 12,
+      smoothing_minutes: 30,
       zones: { day: { label: "Daylight", max: 25000 } },
     };
     const data = configToForm(cfg);
@@ -121,6 +142,7 @@ describe("illuminance-card editor and element", () => {
       mode: "trend",
       hours_to_show: 12,
       bucket_minutes: 30,
+      smoothing_minutes: 30,
       z_day_label: "Daylight",
       z_day_max: 25000,
       z_sun_label: "",
@@ -147,6 +169,16 @@ describe("illuminance-card editor and element", () => {
         s.schema?.some?.((x) => x.name === "hours_to_show"),
       ),
     ).toBe(true);
+    // the trend has a smoothing field, the band its block size
+    const fields = (mode: string) =>
+      editorSchema({ mode }).flatMap((s) => (s.schema ?? []).map((x) => x.name));
+    expect(fields("trend")).toContain("smoothing_minutes");
+    expect(fields("trend")).not.toContain("bucket_minutes");
+    expect(fields("band")).toContain("bucket_minutes");
+    expect(fields("band")).not.toContain("smoothing_minutes");
+    expect(formToConfig({ ...data, smoothing_minutes: undefined }, cfg)).not.toHaveProperty(
+      "smoothing_minutes",
+    );
   });
   it("registers, validates and sizes", () => {
     expect(customElements.get("illuminance-card-pro")).toBe(IlluminanceCard);

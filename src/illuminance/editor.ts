@@ -12,6 +12,7 @@ export const EDITOR_LABELS: Record<string, StringKey> = {
   name: "editor.illuminance.name",
   hours_to_show: "editor.illuminance.hours_to_show",
   bucket_minutes: "editor.illuminance.bucket_minutes",
+  smoothing_minutes: "editor.illuminance.smoothing_minutes",
   min_lx: "editor.illuminance.min_lx",
   max_lx: "editor.illuminance.max_lx",
 };
@@ -30,6 +31,7 @@ export const configToForm = (config: IlluminanceCardConfig): HaFormData => {
     name: config.name ?? "",
     hours_to_show: config.hours_to_show ?? DEFAULTS.hours_to_show,
     bucket_minutes: config.bucket_minutes ?? DEFAULTS.bucket_minutes,
+    smoothing_minutes: config.smoothing_minutes,
     min_lx: config.min_lx ?? DEFAULTS.min_lx,
     max_lx: config.max_lx ?? DEFAULTS.max_lx,
   };
@@ -65,6 +67,12 @@ export const formToConfig = (
         n === DEFAULTS[k],
     );
   }
+  setOrDrop(
+    config,
+    "smoothing_minutes",
+    Number(data.smoothing_minutes),
+    !data.smoothing_minutes || !(Number(data.smoothing_minutes) > 0),
+  );
   const zones: ZoneOverrides = {};
   for (const z of DEFAULT_ZONES) {
     const o: ZoneOverride = {};
@@ -113,12 +121,17 @@ export const editorSchema = (data: HaFormData, hass?: HomeAssistant): HaFormSche
             number: { min: 1, max: 168, step: 1, mode: "box", unit_of_measurement: "h" },
           },
         },
-        {
-          name: "bucket_minutes",
-          selector: {
-            number: { min: 5, max: 240, step: 5, mode: "box", unit_of_measurement: "min" },
-          },
-        },
+        data.mode === "trend"
+          ? {
+              name: "smoothing_minutes",
+              selector: { number: { min: 5, step: 1, mode: "box", unit_of_measurement: "min" } },
+            }
+          : {
+              name: "bucket_minutes",
+              selector: {
+                number: { min: 5, max: 240, step: 5, mode: "box", unit_of_measurement: "min" },
+              },
+            },
       ],
     });
   }

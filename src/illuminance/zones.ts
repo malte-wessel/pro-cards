@@ -1,6 +1,7 @@
 // Illuminance zones and the log scale (pure).
 import { mixHex } from "../shared/color.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
+import { lineMeans, type MeanBucket } from "../shared/history.ts";
 import { t } from "../shared/i18n.ts";
 
 export type ZoneKey = "night" | "twilight" | "overcast" | "day" | "sun";
@@ -55,6 +56,21 @@ export const mergeZones = (overrides?: ZoneOverrides | null, hass?: HomeAssistan
 export const zoneOf = (zones: readonly Zone[], v: number): Zone =>
   zones.find((z) => v < z.max) || zones[zones.length - 1];
 export const logOf = (v: number) => Math.log10(Math.max(v, 0.1));
+// The trend's smoothed line, averaged on the log scale it is drawn on: the mean of log10(lx + 1),
+// back in lux. A plain mean would pull a bucket with a bright moment towards it (100 and 10,000 lx
+// average to about 5,000, the log mean is about 1,000); the + 1 keeps 0 lx at 0.
+export const logLineMeans = (
+  pts: readonly { t: number; v: number }[],
+  t0: number,
+  now: number,
+  nb: number,
+): MeanBucket[] =>
+  lineMeans(
+    pts.map((p) => ({ t: p.t, v: Math.log10(Math.max(0, p.v) + 1) })),
+    t0,
+    now,
+    nb,
+  ).map((b) => ({ ...b, v: 10 ** b.v - 1 }));
 // the smallest of 1 / 2 / 5 x 10^n that is >= v (154652 -> 200000)
 export const niceCeilLog = (v: number) => {
   if (!(v > 0)) return 0;

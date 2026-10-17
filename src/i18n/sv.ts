@@ -149,6 +149,7 @@ const sv: Translation = {
   "editor.illuminance.name": "Namn",
   "editor.illuminance.hours_to_show": "Visade timmar",
   "editor.illuminance.bucket_minutes": "Intervallstorlek (minuter)",
+  "editor.illuminance.smoothing_minutes": "Utjämning",
   "editor.illuminance.min_lx": "Skala från (lx)",
   "editor.illuminance.max_lx": "Skala till (lx)",
   "editor.illuminance.mode.arc": "Båge (mätare med zoner)",

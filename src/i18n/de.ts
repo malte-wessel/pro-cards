@@ -149,6 +149,7 @@ const de: Translation = {
   "editor.illuminance.name": "Name",
   "editor.illuminance.hours_to_show": "Angezeigte Stunden",
   "editor.illuminance.bucket_minutes": "Intervall (Minuten)",
+  "editor.illuminance.smoothing_minutes": "Glättung",
   "editor.illuminance.min_lx": "Skala von (lx)",
   "editor.illuminance.max_lx": "Skala bis (lx)",
   "editor.illuminance.mode.arc": "Bogen (Anzeige mit Zonen)",

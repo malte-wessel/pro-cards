@@ -148,6 +148,7 @@ const en = {
   "editor.illuminance.name": "Name",
   "editor.illuminance.hours_to_show": "Hours to show",
   "editor.illuminance.bucket_minutes": "Bucket size (minutes)",
+  "editor.illuminance.smoothing_minutes": "Smoothing",
   "editor.illuminance.min_lx": "Scale from (lx)",
   "editor.illuminance.max_lx": "Scale to (lx)",
   "editor.illuminance.mode.arc": "Arc (gauge with zones)",

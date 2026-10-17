@@ -1,9 +1,9 @@
 // Mode "trend": the log-scale history line over the zone bands.
 import { textWidth } from "../../shared/format.ts";
-import { bucketMean, clampedSeries, smoothPath } from "../../shared/history.ts";
+import { clampedSeries, lineBuckets, smoothPath } from "../../shared/history.ts";
 import { qs } from "../../shared/util.ts";
 import type { IlluminanceHost } from "../config.ts";
-import { posOf, scaleTop, yLabels } from "../zones.ts";
+import { logLineMeans, posOf, scaleTop, yLabels } from "../zones.ts";
 import { addLabel, plotShell, windowOf, xTicks } from "./plot.ts";
 
 const LABEL_H = 12; // line height of the axis and zone labels
@@ -19,7 +19,7 @@ export const renderTrend = (card: IlluminanceHost, body: HTMLElement, v: number 
   const W = Math.max(plot.clientWidth, 10);
   svg.setAttribute("viewBox", `0 0 ${W} ${plotH + xAxisH}`);
   const { now, t0 } = windowOf(card);
-  // series: clamp to window, downsample to ~2 px buckets
+  // series: clamp to window, average into buckets (see lineBuckets)
   const pts = clampedSeries(card._series, t0, now);
   // the scale spans [min_lx, max_lx], grown to a nice ceiling when the window's peak is higher
   let peak = 0;
@@ -66,8 +66,8 @@ export const renderTrend = (card: IlluminanceHost, body: HTMLElement, v: number 
     addLabel(labels, "y", tk.txt, 0, y, gutter - 6);
     lastY = y;
   });
-  const nb = Math.max(1, Math.floor(PW / 2));
-  const sampled = bucketMean(pts, t0, now, nb);
+  const nb = lineBuckets(now - t0, cfg.smoothing_minutes, PW);
+  const sampled = logLineMeans(pts, t0, now, nb);
   card._sampled = sampled;
   card._xOf = xOf;
   card._yOf = yOf;

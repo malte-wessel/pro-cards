@@ -149,6 +149,7 @@ const nl: Translation = {
   "editor.illuminance.name": "Naam",
   "editor.illuminance.hours_to_show": "Getoonde uren",
   "editor.illuminance.bucket_minutes": "Intervalgrootte (minuten)",
+  "editor.illuminance.smoothing_minutes": "Afvlakking",
   "editor.illuminance.min_lx": "Schaal van (lx)",
   "editor.illuminance.max_lx": "Schaal tot (lx)",
   "editor.illuminance.mode.arc": "Boog (meter met zones)",

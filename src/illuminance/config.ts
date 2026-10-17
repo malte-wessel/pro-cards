@@ -10,6 +10,7 @@ export interface IlluminanceCardConfig extends CardConfigBase {
   name?: string;
   hours_to_show?: number;
   bucket_minutes?: number;
+  smoothing_minutes?: number;
   min_lx?: number;
   max_lx?: number;
   zones?: ZoneOverrides | null;
@@ -24,6 +25,8 @@ export interface IlluminanceConfig extends CardConfigBase {
   name?: string;
   hours_to_show: number;
   bucket_minutes: number;
+  // averaging bucket of the trend line in minutes (null: one point per LINE_POINT_PX)
+  smoothing_minutes: number | null;
   min_lx: number;
   max_lx: number;
   zones?: ZoneOverrides | null;

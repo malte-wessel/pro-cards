@@ -149,6 +149,7 @@ const fr: Translation = {
   "editor.illuminance.name": "Nom",
   "editor.illuminance.hours_to_show": "Heures affichées",
   "editor.illuminance.bucket_minutes": "Taille des intervalles (minutes)",
+  "editor.illuminance.smoothing_minutes": "Lissage",
   "editor.illuminance.min_lx": "Échelle de (lx)",
   "editor.illuminance.max_lx": "Échelle à (lx)",
   "editor.illuminance.mode.arc": "Arc (jauge avec zones)",

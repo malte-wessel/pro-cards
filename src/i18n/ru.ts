@@ -149,6 +149,7 @@ const ru: Translation = {
   "editor.illuminance.name": "Название",
   "editor.illuminance.hours_to_show": "Показывать часов",
   "editor.illuminance.bucket_minutes": "Размер интервала (минуты)",
+  "editor.illuminance.smoothing_minutes": "Сглаживание",
   "editor.illuminance.min_lx": "Шкала от (лк)",
   "editor.illuminance.max_lx": "Шкала до (лк)",
   "editor.illuminance.mode.arc": "Дуга (шкала с зонами)",
