@@ -69,6 +69,11 @@
           "minimum": 5,
           "default": 60,
           "description": "Bucket size for columns and strip"
+        },
+        "smoothing_minutes": {
+          "type": "number",
+          "minimum": 5,
+          "description": "Averaging bucket of the sparkline in minutes (default: one point per 12 px)"
         }
       }
     },

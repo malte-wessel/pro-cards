@@ -9,6 +9,7 @@
  *   show_name / show_value / show_icon / name_position       # item options for row / column / table (card → entity)
  *   header_entities: [...]                 # compact icon + value items on the title line
  *   hours_to_show: 24 / bucket_minutes: 60 # history window for sparkline / columns / strip
+ *   smoothing_minutes: 30                  # sparkline averaging bucket (default: one point per 12 px)
  *   tap_action / hold_action / double_tap_action   # defaults for every entity
  *   entities:                              # entity ids or entity objects (see entity-card-pro for the keys)
  *     - sensor.wohnzimmer_temperatur

@@ -24,6 +24,7 @@ describe("multi-trend-card helpers", () => {
       type: "custom:multi-trend-card-pro",
       title: "T",
       hours_to_show: 12,
+      smoothing_minutes: 30,
       layout: "lanes",
       x_axis: true,
       entities: [{ entity: "sensor.a", name: "A", color: "red" }, { entity: "sensor.b" }],
@@ -33,6 +34,7 @@ describe("multi-trend-card helpers", () => {
     expect(data).toMatchObject({
       title: "T",
       hours_to_show: 12,
+      smoothing_minutes: 30,
       layout: "lanes",
       x_axis: true,
       y_axis: false,
@@ -52,6 +54,10 @@ describe("multi-trend-card helpers", () => {
       {},
     );
     expect(defaults).toEqual({ entities: [{ entity: "sensor.a" }] });
+    // a cleared smoothing field drops the key
+    expect(formToConfig({ ...data, smoothing_minutes: undefined }, cfg)).not.toHaveProperty(
+      "smoothing_minutes",
+    );
     const schema = editorSchema(
       {
         states: { "sensor.a": { attributes: { friendly_name: "A" } } },

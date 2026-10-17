@@ -9,6 +9,7 @@
  *   icon: mdi:thermometer             # optional
  *   color: primary                    # optional icon color (HA color token or hex)
  *   hours_to_show: 6                  # default 6
+ *   smoothing_minutes: 15             # optional: averaging bucket (default: one point per 12 px)
  *   layout: auto | overlay | lanes    # auto = overlay when all units match, else lanes
  *   show_legend: true
  *   x_axis: false                     # time labels + vertical gridlines
@@ -28,7 +29,7 @@ import { cssColor } from "./shared/color.ts";
 import { DEVICE_CLASS_ICON, REFRESH_MS } from "./shared/constants.ts";
 import { normalizeRules } from "./shared/entity/config.ts";
 import { fmtNumber, langOf } from "./shared/format.ts";
-import { fetchHistory, type Point } from "./shared/history.ts";
+import { fetchHistory, normalizeSmoothing, type Point } from "./shared/history.ts";
 import { hideHover } from "./shared/hover.ts";
 import { TemplateSubscriptions } from "./shared/templates.ts";
 import { decimalsOf, isNum, isTemplate, qs } from "./shared/util.ts";
@@ -125,6 +126,7 @@ export class MultiTrendCard extends HTMLElement {
       x_axis: false,
       y_axis: false,
       ...config,
+      smoothing_minutes: normalizeSmoothing(config.smoothing_minutes),
       entities,
     };
     this._series = entities.map(() => []);
@@ -392,6 +394,7 @@ export class MultiTrendCard extends HTMLElement {
       layout: this._layout(shown),
       xAxis: this._config.x_axis,
       yAxis: this._config.y_axis,
+      smoothing: { minutes: this._config.smoothing_minutes },
       series: shown.map((i) => ({
         pts: this._series[i],
         color: this._color(i),

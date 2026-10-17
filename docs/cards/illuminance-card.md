@@ -61,6 +61,8 @@ mode: arc
 
 `hours_to_show` sets the history window for the trend and the band, `bucket_minutes` the width of a band block.
 
+The trend's line is averaged into buckets so passing clouds do not draw a jagged line: one point per 12 px of width by default, or one per `smoothing_minutes` when set. Each bucket is averaged on the log scale it is drawn on, so a bright moment does not lift a dim bucket (100 lx and 10,000 lx average to about 1,000 lx). Hovering the trend shows that average.
+
 ::: live
 
 ```yaml
@@ -98,14 +100,15 @@ zones:
 
 ## Reference
 
-| Option              | Default          | Description                                                                  |
-| ------------------- | ---------------- | ---------------------------------------------------------------------------- |
-| `entity`            |                  | Illuminance sensor in lx (required).                                         |
-| `mode`              | `band`           | `arc`, `trend` or `band`.                                                    |
-| `name`              | friendly name    | Header text.                                                                 |
-| `hours_to_show`     | `24`             | Window for trend and band, up to 168; `arc` fetches no history.              |
-| `bucket_minutes`    | `30`             | Band block size, 5 to 240.                                                   |
-| `min_lx` / `max_lx` | `0.1` / `100000` | Scale bounds; the trend's top grows above `max_lx` to fit the window's peak. |
-| `zones`             | see below        | Per key `{ label, max, color }`.                                             |
+| Option              | Default          | Description                                                                                         |
+| ------------------- | ---------------- | --------------------------------------------------------------------------------------------------- |
+| `entity`            |                  | Illuminance sensor in lx (required).                                                                |
+| `mode`              | `band`           | `arc`, `trend` or `band`.                                                                           |
+| `name`              | friendly name    | Header text.                                                                                        |
+| `hours_to_show`     | `24`             | Window for trend and band, up to 168; `arc` fetches no history.                                     |
+| `bucket_minutes`    | `30`             | Band block size, 5 to 240.                                                                          |
+| `smoothing_minutes` |                  | Averaging bucket of the trend line in minutes, at least 5. Without it one point per 12 px of width. |
+| `min_lx` / `max_lx` | `0.1` / `100000` | Scale bounds; the trend's top grows above `max_lx` to fit the window's peak.                        |
+| `zones`             | see below        | Per key `{ label, max, color }`.                                                                    |
 
 Default zones: `night` < 1 lx (`indigo`), `twilight` < 100 lx (`blue`), `overcast` < 10 000 lx (`blue-grey`), `day` < 30 000 lx (`amber`), `sun` above (`orange`), with the labels Night, Twilight, Overcast, Day and Sun in the profile language. The default size is 12 columns with `rows: auto`. Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`, which are passed through to Home Assistant.

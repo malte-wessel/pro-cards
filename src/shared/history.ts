@@ -1,6 +1,6 @@
 // History helpers: series points are { t, v: number|null, s: state }.
 import type { HistoryDuringPeriodResult, HomeAssistant } from "./ha.ts";
-import { isNum } from "./util.ts";
+import { isNum, numOrNull } from "./util.ts";
 
 export interface Point {
   t: number;
@@ -90,6 +90,20 @@ export const clampedSeries = <P extends { t: number }>(
   if (last && last.t < now) pts.push({ ...last, t: now });
   return pts;
 };
+// History lines (sparkline, multi trend) are averaged into buckets: `smoothing_minutes` wide when
+// set, else one point per LINE_POINT_PX, so the line is equally calm on a small tile and a wide plot.
+// Never finer than one point per 2 px, never fewer than 2.
+export const LINE_POINT_PX = 12;
+export const lineBuckets = (spanMs: number, minutes: number | null, width: number) => {
+  const max = Math.max(2, Math.floor(width / 2));
+  const n = minutes ? Math.round(spanMs / (minutes * 60e3)) : Math.floor(width / LINE_POINT_PX);
+  return Math.max(2, Math.min(max, n));
+};
+// `smoothing_minutes` as written: null when unset or not positive, else at least 5
+export const normalizeSmoothing = (v: unknown) => {
+  const n = numOrNull(v);
+  return n === null || n <= 0 ? null : Math.max(5, n);
+};
 // mean of numeric points per bucket over [t0, now]; keepNull → nb entries, empty buckets carry the previous value
 type Acc = { sum: number; cnt: number; ts: number };
 export function bucketMean(
@@ -156,6 +170,23 @@ export function bucketMean(
   }
   return filtered;
 }
+// A smoothed history line: the bucket means at the bucket centres (an empty bucket carries the
+// previous mean), the first and last stretched to the window's edges. Means only, never a raw
+// reading at the ends: a raw end point would hook away from a line of means by up to one sensor
+// step, which the fitted scale stretches to the full height.
+export const lineMeans = (
+  pts: readonly { t: number; v: number | null }[],
+  t0: number,
+  now: number,
+  nb: number,
+): MeanBucket[] => {
+  const out = bucketMean(pts, t0, now, nb, true).filter((b): b is MeanBucket => b !== null);
+  if (out.length) {
+    out[0] = { ...out[0], t: Math.max(t0, out[0].t1) };
+    out[out.length - 1] = { ...out[out.length - 1], t: now };
+  }
+  return out;
+};
 // last state per bucket (for non-numeric strips), carried forward into empty buckets
 export const bucketLast = (
   pts: readonly { t: number; s: string; v?: number | null }[],

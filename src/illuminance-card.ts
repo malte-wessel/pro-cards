@@ -10,6 +10,7 @@
  *   name: Outdoor light              # optional (default: friendly name)
  *   hours_to_show: 24                # trend / band
  *   bucket_minutes: 30               # band
+ *   smoothing_minutes: 30            # trend: averaging bucket (default: one point per 12 px)
  *   min_lx: 0.1
  *   max_lx: 100000
  *   zones:                           # optional overrides per key: { label, max, color }
@@ -28,7 +29,7 @@ import type {
 import { cssColor, resolveHex } from "./shared/color.ts";
 import { REFRESH_MS } from "./shared/constants.ts";
 import { fmtTime, langOf } from "./shared/format.ts";
-import { fetchHistory } from "./shared/history.ts";
+import { fetchHistory, normalizeSmoothing } from "./shared/history.ts";
 import { hideHover } from "./shared/hover.ts";
 import { t } from "./shared/i18n.ts";
 import { isNum, oneOf, qs } from "./shared/util.ts";
@@ -94,6 +95,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
       ...rest,
       entity: config.entity,
       mode: oneOf(MODES, mode) ? mode : DEFAULTS.mode,
+      smoothing_minutes: normalizeSmoothing(config.smoothing_minutes),
       zonesList: mergeZones(config.zones, this._hass),
     };
     this._series = [];

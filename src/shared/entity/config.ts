@@ -1,7 +1,7 @@
 // Config normalisation (pure) shared by the entity cards.
 //
 // Every card ends up with the same normalised shape (`EntityCardConfig`):
-//   { type, title, icon, hours, bucketMin, columns, tap, hold, dbl,
+//   { type, title, icon, hours, bucketMin, smoothMin, columns, tap, hold, dbl,
 //     entities: [Entity], groups: [{ layout, idxs, align, columns, divider, visibility }], headerIdxs, hasHeader }
 // `entities` is one flat list; groups and header entities point into it by index.
 import {
@@ -21,6 +21,7 @@ import {
 } from "./constants.ts";
 import type { ActionConfig, CardConfigBase } from "../ha.ts";
 import type { StringKey } from "../i18n.ts";
+import { normalizeSmoothing } from "../history.ts";
 import { isTemplate, numOrNull, oneOf } from "../util.ts";
 import { normalizeVisibility, type Visibility } from "../visibility.ts";
 import {
@@ -43,6 +44,7 @@ export interface RawActionDefaults {
 export interface RawHistoryOptions {
   hours_to_show?: unknown;
   bucket_minutes?: unknown;
+  smoothing_minutes?: unknown;
 }
 export interface RawItemOptions {
   show_name?: boolean | null;
@@ -182,6 +184,8 @@ export interface EntityCardConfig extends ActionDefaults {
   icon: string | null;
   hours: number;
   bucketMin: number;
+  // bucket size of the sparkline in minutes (null: one point per LINE_POINT_PX)
+  smoothMin: number | null;
   columns: number;
   entities: EntityItem[];
   groups: Group[];
@@ -209,6 +213,7 @@ export const normalizeActionDefaults = (raw: RawActionDefaults): ActionDefaults 
 export const normalizeHistoryOptions = (raw: RawHistoryOptions) => ({
   hours: Math.max(1, numOrNull(raw.hours_to_show) ?? DEFAULTS.hours_to_show),
   bucketMin: Math.max(5, numOrNull(raw.bucket_minutes) ?? DEFAULTS.bucket_minutes),
+  smoothMin: normalizeSmoothing(raw.smoothing_minutes),
 });
 export const clampColumns = (v: unknown, fallback: number) =>
   Math.max(1, Math.min(4, Math.round(numOrNull(v) ?? fallback)));
