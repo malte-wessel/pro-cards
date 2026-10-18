@@ -23,7 +23,8 @@ export interface LNode {
   consumerId: string | null; // group / consumer: the config id
   column: "source" | "home" | "group" | "leaf"; // where it sits along the flow
   tight?: boolean; // direction: down – the column is too narrow for the labels beside the nodes
-  alt?: boolean; // direction: down, tight – every other node puts its label on the other side
+  labelMax?: number; // direction: down, a crowded row – the widest name that clears its neighbours
+  slot?: SourceSlot; // direction: down – where the sources' labels go, the same for the whole row
 }
 export interface LEdge {
   id: string;
@@ -55,6 +56,8 @@ export interface TreeLayout {
 export interface LabelBox {
   w: number;
   h: number;
+  vw?: number; // the value line alone: never cut
+  nw?: number; // the name lines alone
 }
 export type LabelSizes = ReadonlyMap<string, LabelBox>;
 
@@ -174,6 +177,30 @@ const columnPlan = (cfg: PowerFlowConfig, scale = 1): Column => {
   return { leaves, groups, first, last, extent: b };
 };
 
+// direction: down – the row of sources across the top, centred over the home, and their labels
+// in one line: right of the icons when every name fits there, otherwise below them, beside each
+// source's line. The choice reads the names and a fixed room for the value (`srcValueW`), so a
+// changing value never moves the labels. Names that do not fit are cut (`caps`), values never.
+export type SourceSlot = "right" | "below";
+export const sourceRow = (ds: number[], nws: number[], across: number) => {
+  const n = ds.length,
+    g = GEOM.labelGap;
+  const pitch = n < 2 ? 0 : Math.max(44, Math.min(126, (across - 2 * GEOM.downMargin) / (n - 1)));
+  const bs = ds.map((_, i) => across / 2 + (i - (n - 1) / 2) * pitch);
+  const want = nws.map((w) => Math.max(w, GEOM.srcValueW));
+  // right of the icon: up to the next icon; below: up to the next source's line
+  const roomRight = bs.map(
+    (b, i) => (i < n - 1 ? bs[i + 1] - ds[i + 1] / 2 - 8 : across - 4) - (b + ds[i] / 2 + g),
+  );
+  if (want.every((w, i) => w <= roomRight[i])) return { bs, slot: "right" as SourceSlot, caps: [] };
+  const roomBelow = bs.map((b, i) => (i < n - 1 ? bs[i + 1] - 6 : across - 4) - (b + g));
+  return {
+    bs,
+    slot: "below" as SourceSlot,
+    caps: nws.map((w, i) => (w > roomBelow[i] ? Math.max(0, roomBelow[i]) : undefined)),
+  };
+};
+
 // the diagram's extent across the flow (its height for `right`): a function of the config
 export const acrossOf = (cfg: PowerFlowConfig): number => {
   const st = sourceStack(cfg);
@@ -187,7 +214,9 @@ const alongColumns = (cfg: PowerFlowConfig) =>
   1 + (cfg.hasGroups ? 1 : 0) + (cfg.consumers.length ? 1 : 0);
 export const alongDownOf = (cfg: PowerFlowConfig): number => {
   if (!cfg.consumers.length) return GEOM.minAcross;
-  return GEOM.srcAlong + GEOM.columnPitch * alongColumns(cfg) + 56;
+  // room below the consumer column for its tallest label (a secondary line adds one)
+  const below = Math.max(56, ...columnPlan(cfg).leaves.map((l) => l.d / 2 + 4 + l.h + 8));
+  return GEOM.srcAlong + GEOM.columnPitch * alongColumns(cfg) + below;
 };
 // the diagram's height in px for the card's size
 export const diagramHeight = (cfg: PowerFlowConfig) =>
@@ -230,7 +259,6 @@ export const layoutTree = (
   const map = (a: number, b: number): Pt => (right ? [a, b] : [b, a]);
   const widthOf = (id: string) => sizes.get(id)?.w ?? 0;
   const leaves = leavesOf(cfg);
-  const maxSrcW = Math.max(0, ...cfg.sources.map((s) => widthOf(s.id)));
   const rS = GEOM.dSolar / 2,
     rH = GEOM.dHome / 2;
   const maxLeafW = Math.max(
@@ -239,10 +267,10 @@ export const layoutTree = (
   );
 
   // ----- across positions -----
-  const n = cfg.sources.length;
   const stack = sourceStack(cfg);
   let bS: number[];
-  let srcTight = false;
+  let srcCaps: (number | undefined)[] = [];
+  let srcSlot: SourceSlot | undefined;
   if (right) {
     // the stack, spread a little when the consumers made the diagram taller, centred
     const room = across - stack.first - stack.last;
@@ -250,9 +278,14 @@ export const layoutTree = (
     const b0 = (across - stack.extent * scale) / 2;
     bS = stack.bs.map((b) => b0 + b * scale);
   } else {
-    const pitch = n < 2 ? 0 : Math.max(44, Math.min(126, (across - 2 * GEOM.downMargin) / (n - 1)));
-    bS = cfg.sources.map((_, i) => across / 2 + (i - (n - 1) / 2) * pitch);
-    srcTight = n > 1 && pitch < GEOM.dSolar + maxSrcW + 12;
+    const row = sourceRow(
+      cfg.sources.map((s) => nodeD(s.kind)),
+      cfg.sources.map((s) => sizes.get(s.id)?.nw ?? 0),
+      across,
+    );
+    bS = row.bs;
+    srcCaps = row.caps;
+    srcSlot = row.slot;
   }
   const bH = across / 2;
   // ----- along positions -----
@@ -326,10 +359,8 @@ export const layoutTree = (
   };
   cfg.sources.forEach((s, i) => {
     const nd = add(s.id, s.kind, s.idx, aS, bS[i], null);
-    if (srcTight) {
-      nd.tight = true;
-      nd.alt = i % 2 === 1;
-    }
+    nd.labelMax = srcCaps[i];
+    nd.slot = srcSlot;
   });
   add("home", "home", cfg.homeIdx, aH, bH, null);
 
@@ -377,7 +408,23 @@ export const layoutTree = (
       if (asRoom) nd.column = "group";
       if (consTight) {
         nd.tight = true;
-        nd.alt = k % 2 === 1;
+        // every label centred below its node, its name cut to its room: of the gap to a
+        // neighbour, the neighbour keeps half (less when its label is narrower, more when its
+        // value is wider: values are never cut) and the rest, less the labels' 3 px spacing and
+        // a pixel of rounding, is this one's; the edges bound it as well
+        const b = b0 + lf.b,
+          prev = plan.leaves[k - 1],
+          next = plan.leaves[k + 1];
+        const side = (gap: number, id: string) =>
+          gap - Math.max(sizes.get(id)?.vw ?? 0, Math.min(widthOf(id), gap)) / 2 - 4;
+        nd.labelMax =
+          2 *
+          Math.min(
+            prev ? side(lf.b - prev.b, prev.id) : Infinity,
+            next ? side(next.b - lf.b, next.id) : Infinity,
+            b,
+            across - b,
+          );
       }
     }
   });

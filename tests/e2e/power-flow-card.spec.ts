@@ -274,6 +274,79 @@ test.describe("power flow card", () => {
     expect(Number.parseFloat(await cssVar(h.locator(".lane").first(), "--dur"))).toBeLessThan(3);
   });
 
+  test("labels keep their places when hidden idle links switch on and off", async ({ page }) => {
+    // a narrow column of sources: a hidden line used to free the place beside it
+    await mount(
+      page,
+      {
+        type: T,
+        sources: [SRC[2], SRC[1], SRC[0]],
+        home: HOME,
+        consumers: CONS,
+        direction: "down",
+        idle_links: "hidden",
+        kw_above: 0,
+        decimals: { kw: 1 },
+      },
+      { width: 520 },
+    );
+    const c = card(page);
+    // every label as wide at night as at noon: the places alone may tell them apart
+    const places = () =>
+      c
+        .locator(".plabel:not([hidden])")
+        .evaluateAll((els) =>
+          els.map((e) => [
+            (e as HTMLElement).dataset.node,
+            e.className,
+            (e as HTMLElement).style.left,
+            (e as HTMLElement).style.right,
+            (e as HTMLElement).style.top,
+          ]),
+        );
+    await pin(page, { [SOLAR]: "0", [BATT]: "1300", [GRID]: "0", [HOME]: "1300" });
+    await expect(label(c, "s2")).toHaveText(/0\.0 kW/);
+    const night = await places();
+    await pin(page);
+    await expect(label(c, "s2")).toHaveText(/3\.4 kW/);
+    expect(await places()).toEqual(night);
+  });
+
+  test("a narrow row of consumers keeps its labels below and cuts long names", async ({ page }) => {
+    const consumers = [
+      { ...CONS[0], name: "Heat pump in the cellar" },
+      CONS[1],
+      CONS[2],
+      { entity: "sensor.dryer_power", name: "Dryer" },
+      { entity: "sensor.office_power", name: "Office" },
+      { entity: "sensor.dining_light_power", name: "Dining" },
+    ];
+    await mount(
+      page,
+      { type: T, sources: SRC, home: HOME, consumers, direction: "down" },
+      {
+        width: 520,
+      },
+    );
+    await pin(page);
+    const c = card(page);
+    const ids = ["c0", "c1", "c2", "c3", "c4", "c5", "other"];
+    for (const id of ids) {
+      const node = await c.locator(`.pnode[data-node='${id}']`).boundingBox();
+      const lab = await label(c, id).boundingBox();
+      expect(lab!.y).toBeGreaterThan(node!.y + node!.height / 2);
+      await expect(label(c, id)).toHaveClass(/\bc\b/);
+    }
+    const name = label(c, "c0").locator(".name");
+    await expect(label(c, "c0")).toHaveClass(/cut/);
+    expect(await name.evaluate((e) => e.scrollWidth > e.clientWidth)).toBe(true);
+    await expect(label(c, "c0").locator(".state")).toHaveText("430 W");
+    // no two labels meet
+    const boxes = await Promise.all(ids.map((id) => label(c, id).boundingBox()));
+    for (let k = 1; k < boxes.length; k++)
+      expect(boxes[k - 1]!.x + boxes[k - 1]!.width).toBeLessThanOrEqual(boxes[k]!.x);
+  });
+
   test("secondary lines, tap on a node, the profile language and reduced motion", async ({
     page,
   }) => {

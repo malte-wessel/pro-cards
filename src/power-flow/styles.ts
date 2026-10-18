@@ -53,6 +53,8 @@ const STYLE_POWER = `
   .plabel.l { transform: translateY(-50%); text-align: left; }
   .plabel.r { transform: translateY(-50%); text-align: right; }
   .plabel.c { transform: translateX(-50%); text-align: center; }
+  .plabel.cut .secondary { display: block; max-width: var(--pl-max); overflow: hidden; text-overflow: ellipsis; }
+  .plabel.c.cut .secondary { margin-inline: auto; }
 
   .pdiag .plist { position: absolute; display: flex; flex-direction: row; align-items: center; gap: 10px; box-sizing: border-box; z-index: 2; }
   .pdiag.narrow .plist .lead { display: none; }

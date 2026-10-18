@@ -134,7 +134,7 @@ consumers:
 
 ## Direction
 
-`direction: down` turns the tree: sources across the top, the home in the middle, consumers along the bottom, for tall layouts.
+`direction: down` turns the tree: sources across the top, the home in the middle, consumers along the bottom, for tall layouts. The sources' labels share one line: right of the icons when every name fits there, otherwise below them, beside each source's line, with a name that still does not fit cut short.
 
 ::: live
 
@@ -150,6 +150,29 @@ consumers:
   - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
   - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
   - { entity: sensor.office_power, name: Office, icon: mdi:monitor }
+```
+
+:::
+
+When the row of consumers is too narrow for their labels side by side, every label stays below its node and a long name ends in an ellipsis where it would meet its neighbour's (it may take the room a shorter neighbour leaves). Values are never cut; only when not even the values fit side by side does a label move above.
+
+::: live width=400
+
+```yaml
+type: custom:power-flow-card-pro
+home: sensor.power_consumption
+direction: down
+sources:
+  - { type: solar, entity: sensor.solar_power }
+  - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
+  - { type: grid, power: sensor.grid_power }
+consumers:
+  - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
+  - { entity: sensor.ev_charger_power, name: Car, icon: mdi:car-electric }
+  - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
+  - { entity: sensor.dryer_power, name: Dryer, icon: mdi:tumble-dryer }
+  - { entity: sensor.office_power, name: Office, icon: mdi:monitor }
+  - { entity: sensor.range_hood_power, name: Range hood, icon: mdi:stove }
 ```
 
 :::
@@ -236,7 +259,7 @@ rules:
 
 Every active link carries dots: more and faster the more power it carries, from a slow trickle at `animation.slow_below` watts (default 0) to a steady stream at `animation.fast_above` (default 3600). A workshop with a 20 kW peak raises `fast_above`; a flat that never draws more than a kilowatt lowers it so the flow still shows the difference between the kettle and the standby load. A changed value re-times the running dots instead of restarting them, so sensor noise never makes the flow jump; a link only gets new dots when it switches on or off or its load changes by a real margin. With `prefers-reduced-motion` the dots stand still along their links.
 
-Links that carry nothing are dashed tracks by default. `idle_links: hidden` leaves them out, and the labels take the room; `faint` draws them as faint solid lines.
+Links that carry nothing are dashed tracks by default. `idle_links: hidden` leaves them out (the labels keep clear of them all the same, so no label moves when a link switches on or off); `faint` draws them as faint solid lines.
 
 Values show in W below `kw_above` watts (default 1000) and in kW from there on, whatever unit the sensors report; `kw_above: 0` shows every value in kW. `decimals` sets the decimals of both units (`decimals: 1`) or each (`decimals: { w: 0, kw: 1 }`); a source's or consumer's own `decimals` wins for its label.
 

@@ -38,6 +38,7 @@ import {
   diagramHeight,
   laneOffsets,
   layoutTree,
+  sourceRow,
 } from "../../src/power-flow/layout.ts";
 import { placeLabels } from "../../src/power-flow/labels.ts";
 import { COLORS, DEFAULT_UNITS, GEOM } from "../../src/power-flow/constants.ts";
@@ -1092,6 +1093,59 @@ describe("power flow layout", () => {
     }
   });
 
+  it("centres the row of sources and puts their labels in one line, right or below", () => {
+    const ds = [44, 40, 44];
+    // room for every name right of its icon: the labels go there, nothing cut
+    const wide = sourceRow(ds, [40, 60, 60], 600);
+    expect(wide.slot).toBe("right");
+    expect(wide.caps).toEqual([]);
+    expect(wide.bs[1]).toBe(300); // centred over the home
+    expect(wide.bs[2] - wide.bs[1]).toBe(wide.bs[1] - wide.bs[0]);
+    // a name too long for the room right of its icon: every label goes below, the row unchanged
+    const long = sourceRow(ds, [40, 110, 60], 600);
+    expect(long.slot).toBe("below");
+    expect(long.bs).toEqual(wide.bs);
+    expect(long.caps).toEqual([undefined, undefined, undefined]);
+    // narrow: below, the names that still do not fit are cut to the next source's line
+    const narrow = sourceRow(ds, [40, 130, 130], 380);
+    expect(narrow.slot).toBe("below");
+    expect(narrow.caps[0]).toBeUndefined();
+    expect(narrow.caps[1]).toBe(narrow.bs[2] - 6 - (narrow.bs[1] + GEOM.labelGap));
+    expect(narrow.caps[2]).toBe(380 - 4 - (narrow.bs[2] + GEOM.labelGap));
+    // the value's room counts even for a short name, so a changing value never moves the labels
+    const short = sourceRow([44, 44], [10, 10], 200);
+    expect(short.slot).toBe(
+      200 - 4 - (short.bs[1] + 22 + GEOM.labelGap) >= GEOM.srcValueW ? "right" : "below",
+    );
+  });
+
+  it("keeps the labels of a narrow consumer row below, cut to their room", () => {
+    const consumers = ["sensor.a", "sensor.b", "sensor.c", "sensor.d", "sensor.e", "sensor.f"];
+    // one long name, the others short
+    const sizes = new Map(
+      ["c0", "c1", "c2", "c3", "c4", "c5", "other"].map((id) => [
+        id,
+        { w: id === "c0" ? 80 : 34, h: 28, vw: 30 },
+      ]),
+    );
+    const cfg = base({ direction: "down", consumers });
+    const l = layoutTree(cfg, 360, flowsOf(cfg, { "sensor.home": "1000" }).f.edges, sizes);
+    const leaves = l.nodes.filter((n) => n.column === "leaf").sort((p, q) => p.x - q.x);
+    expect(leaves.every((n) => n.tight)).toBe(true);
+    const w = (n: (typeof leaves)[number]) => Math.min(sizes.get(n.id)!.w, n.labelMax!);
+    for (let k = 1; k < leaves.length; k++) {
+      // two neighbours' labels, centred below their nodes, never meet
+      const gap = leaves[k].x - leaves[k - 1].x;
+      expect(w(leaves[k - 1]) / 2 + w(leaves[k]) / 2).toBeLessThanOrEqual(gap);
+    }
+    // the long name takes what its short neighbour leaves: more than half the gap
+    expect(leaves[0].labelMax!).toBeGreaterThan(leaves[1].x - leaves[0].x);
+    // short names side by side: nothing is tight, nothing cut
+    const short = new Map([...sizes].map(([id, z]) => [id, { ...z, w: 34 }]));
+    const wide = layoutTree(cfg, 1200, flowsOf(cfg, { "sensor.home": "1000" }).f.edges, short);
+    expect(wide.nodes.some((n) => n.tight || n.labelMax !== undefined)).toBe(false);
+  });
+
   it("turns the tree for direction: down and puts lone consumers beside the rooms", () => {
     const cfg = base({ direction: "down", consumers: ["sensor.a"] });
     const { f } = flowsOf(cfg, { "sensor.home": "1000", "sensor.a": "300" });
@@ -1166,34 +1220,6 @@ describe("power flow labels", () => {
     // sources and the home are placed first and take their preferred side
     expect(placed.find((p) => p.id === "home")?.align).toBe("c");
     expect(placed.find((p) => p.id === "s0")?.align).toBe("l");
-  });
-
-  it("uses the room of hidden idle links", () => {
-    const cfg = base();
-    const { f } = flowsOf(cfg, {
-      "sensor.solar": "0",
-      "sensor.home": "1000",
-      "sensor.grid": "1000",
-    });
-    const l = layoutTree(cfg, 416, f.edges);
-    const nd = l.nodes.find((n) => n.id === "s1")!;
-    // an idle link drawn right through the battery's slot (right of the node, above its line)
-    const slotY = nd.y - nd.d / 2 - 4;
-    const fake = {
-      ...l.edges[0],
-      id: "x",
-      pts: [
-        [nd.x + nd.d / 2 + 10, slotY],
-        [nd.x + 120, slotY],
-      ] as Pt[],
-    };
-    const withFake = { ...l, edges: [...l.edges, fake] };
-    const sizes = l.nodes.map((n) => ({ id: n.id, w: 90, h: 32 }));
-    const battery = (p: ReturnType<typeof placeLabels>) => p.find((x) => x.id === "s1")!;
-    const drawn = battery(placeLabels(withFake, sizes, "right"));
-    const hidden = battery(placeLabels(withFake, sizes, "right", new Set(["x"])));
-    expect(hidden).toMatchObject({ align: "l", x: nd.x + nd.d / 2 + GEOM.labelGap, y: slotY });
-    expect([drawn.x, drawn.y, drawn.align]).not.toEqual([hidden.x, hidden.y, hidden.align]);
   });
 });
 

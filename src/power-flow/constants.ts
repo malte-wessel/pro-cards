@@ -80,6 +80,7 @@ export const GEOM = {
   minAcross: 190, // least diagram extent across the flow
   columnPitch: 142, // direction: down – distance between the columns along the flow
   downMargin: 70, // direction: down – first / last source centre from the edge
+  srcValueW: 60, // direction: down – the room a source's value is given when its labels' place is chosen
   labelH: 32, // a label: value over name
   labelSmallH: 28, // a device's label
   labelLine: 15, // a label's extra line (secondary)

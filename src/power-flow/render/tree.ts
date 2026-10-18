@@ -334,15 +334,12 @@ const measureLabels = (st: TreeState, labelEls: Map<string, HTMLElement>) => {
     texts.set(nd.id, txt);
     const small = el.classList.contains("small");
     const nameFont = small ? FONT_SMALL_NAME : FONT_NAME;
-    const w =
-      Math.max(
-        textWidth(txt.v, small ? FONT_SMALL : FONT_VALUE),
-        textWidth(txt.n, nameFont),
-        textWidth(txt.s, nameFont),
-      ) + 2;
+    const vw = textWidth(txt.v, small ? FONT_SMALL : FONT_VALUE) + 2;
+    const nw = Math.max(textWidth(txt.n, nameFont), textWidth(txt.s, nameFont)) + 2;
+    const w = Math.max(vw, nw);
     const h =
       (small ? GEOM.labelSmallH : GEOM.labelH) + (txt.s ? (small ? 13 : GEOM.labelLine) : 0);
-    sizes.set(nd.id, { w, h });
+    sizes.set(nd.id, { w, h, vw, nw });
   }
   return { texts, sizes };
 };
@@ -403,7 +400,6 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
     trackEls.set(p.dataset.edge ?? "", p);
   const laneEls = new Map<string, HTMLElement>();
   for (const l of flow.querySelectorAll<HTMLElement>(".lane")) laneEls.set(l.dataset.edge ?? "", l);
-  const hiddenEdges = new Set<string>();
   layout.edges.forEach((e) => {
     const w = flows.edges[e.fi]?.w ?? 0;
     const active = isActive(w);
@@ -416,7 +412,6 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
     const lane = laneEls.get(e.id);
     if (!active) {
       lane?.remove();
-      if (cfg.idleLinks === "hidden") hiddenEdges.add(e.id);
       return;
     }
     const n = particles(e.len, w, cfg.animation);
@@ -498,11 +493,19 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
   }
 
   // ----- labels -----
-  const labelSizes: LabelSize[] = [...sizes].map(([id, s]) => ({ id, ...s }));
-  for (const p of placeLabels(layout, labelSizes, cfg.direction, hiddenEdges)) {
+  // a name cut to its room (a tight row of consumers); the value is never cut
+  const labelMax = new Map(layout.nodes.map((n) => [n.id, n.labelMax]));
+  const labelSizes: LabelSize[] = [...sizes].map(([id, { w, h, vw = 0 }]) => {
+    const max = labelMax.get(id);
+    return { id, h, w: max === undefined ? w : Math.min(w, Math.max(max, vw)) };
+  });
+  for (const p of placeLabels(layout, labelSizes, cfg.direction)) {
     const el = labelEls.get(p.id);
     const txt = texts.get(p.id);
     if (!el || !txt) continue;
+    const max = labelMax.get(p.id);
+    el.classList.toggle("cut", max !== undefined);
+    el.style.setProperty("--pl-max", max === undefined ? "" : `${Math.floor(max)}px`);
     qs(el, ".state").textContent = txt.v;
     const name = qs(el, ".name");
     name.textContent = txt.n;
