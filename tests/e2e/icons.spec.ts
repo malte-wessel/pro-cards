@@ -100,6 +100,14 @@ const CARDS = [
     consumers: [{ entity: "sensor.heat_pump_power", name: "Heat pump", icon: "mdi:heat-pump" }],
   },
   { type: "custom:sun-path-card-pro", title: "Sun today", icon: "mdi:weather-sunny" },
+  {
+    type: "custom:sun-azimuth-card-pro",
+    title: "Sun",
+    icon: "mdi:sun-compass",
+    show_events: true,
+    show_sides: true,
+  },
+  { type: "custom:sun-azimuth-card-pro", view: "ring" },
   { type: "custom:illuminance-card-pro", entity: "sensor.illuminance", title: "Light" },
   {
     type: "custom:multi-trend-card-pro",
@@ -161,6 +169,10 @@ test("every icon sits centred in the box the card draws it in", async ({ page })
     ["weather-card-pro", "ha-icon in div.ficon"],
     ["power-flow-card-pro", "ha-icon in div.header"],
     ["sun-path-card-pro", "ha-icon in div.header"],
+    ["sun-azimuth-card-pro", "ha-icon in div.header"],
+    ["sun-azimuth-card-pro", "ha-icon in div.rot"],
+    ["sun-azimuth-card-pro", "ha-icon in div.lead.s36"],
+    ["sun-azimuth-card-pro", "ha-icon in div.lead.s32"],
     ["illuminance-card-pro", "ha-icon in div.shape"],
     ["multi-trend-card-pro", "ha-icon in div.shape"],
   ])

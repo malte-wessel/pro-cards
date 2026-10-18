@@ -23,7 +23,7 @@
  *   night_color: indigo
  *   sky_color: light-blue
  */
-import { registerCard } from "./shared/card.ts";
+import { freshShadow, registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
 import { fmtTime, langOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
@@ -170,13 +170,8 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
   }
 
   _buildDom() {
-    const root = this.shadowRoot as ShadowRoot,
-      cfg = this._config;
-    root.innerHTML = "";
-    const style = document.createElement("style");
-    style.textContent = STYLE;
-    root.appendChild(style);
-    const card = document.createElement("ha-card");
+    const cfg = this._config;
+    const card = freshShadow(this.shadowRoot as ShadowRoot, STYLE);
     card.style.setProperty("--saz-sun", cssColor(cfg.sun_color, "var(--amber-color)"));
     card.style.setProperty("--saz-night", cssColor(cfg.night_color, "var(--indigo-color)"));
     card.style.setProperty("--saz-sky", cssColor(cfg.sky_color, "var(--light-blue-color)"));
@@ -227,7 +222,6 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
       footer.addEventListener("pointerleave", this._onScrubLeave);
     }
     this._hoverT = null;
-    root.appendChild(card);
     this._root = card;
     this._observe();
     this._render();

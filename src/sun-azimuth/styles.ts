@@ -1,19 +1,22 @@
 // Styles of the sun azimuth card. --saz-sun / --saz-night / --saz-sky are set on the card from
 // the config colours; --c is the colour of a lead or row (the sun's while it is up).
-import { AXIS_FONT } from "../shared/constants.ts";
+import { AXIS_FONT, STYLE_ICONS } from "../shared/constants.ts";
 import { STYLE_SLIDER } from "../shared/slider.ts";
 import { CHIP_FONT } from "./constants.ts";
 
 const CARD_BG = "var(--ha-card-background, var(--card-background-color))";
 
 export const STYLE = `
+  ${STYLE_ICONS}
   :host { display: block; min-width: 0; }
   ha-card { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; contain: inline-size; container-type: inline-size; }
-  .header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 0 16px; min-width: 0; }
+  /* 4 px here and the body's 12 px: the title line sits 16 px above the first row, as on the entity cards */
+  .header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 4px 16px; min-width: 0; }
   .header ha-icon { flex: none; color: var(--secondary-text-color); --mdc-icon-size: 20px; }
   .header .title { flex: 1; min-width: 0; font-size: 16px; font-weight: 500; line-height: 20px; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .body { padding: 12px 16px 14px 16px; flex: 1; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-  .divider { height: 1px; background: var(--divider-color); flex: none; }
+  /* dividers run from edge to edge, through the body's side padding */
+  .divider { height: 1px; margin: 0 -16px; background: var(--divider-color); flex: none; }
   .top { display: flex; align-items: center; gap: 12px; min-width: 0; --c: var(--saz-sun); }
   .lead { position: relative; flex: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--c); background: color-mix(in srgb, var(--c) 20%, transparent); --mdc-icon-size: 22px; }
   .lead.s36 { width: 36px; height: 36px; --mdc-icon-size: 20px; }
