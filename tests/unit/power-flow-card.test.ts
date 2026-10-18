@@ -874,10 +874,37 @@ describe("power flow numbers", () => {
 });
 
 describe("power flow animation", () => {
+  it("reads idle_below as watts, 20 by default", () => {
+    expect(base().idleBelow).toBe(20);
+    expect(base({ idle_below: 1 }).idleBelow).toBe(1);
+    expect(base({ idle_below: 0 }).idleBelow).toBe(0);
+    expect(() => base({ idle_below: -5 })).toThrow(/'idle_below' must be a number of watts/);
+    // a trickle below the default is a state and a colour once the threshold is lower
+    const states = {
+      "sensor.solar": "8",
+      "sensor.battery": "0",
+      "sensor.grid": "-8",
+      "sensor.home": "0",
+    };
+    const quiet = flowsOf(base(), states);
+    expect(summaryState(base(), quiet.now, quiet.f).key).toBe("power.state.balanced");
+    expect(sourceColor(quiet.now.sources[0], false)).toBe(COLORS.idle);
+    const low = base({ idle_below: 5 });
+    const lowF = flowsOf(low, states);
+    expect(summaryState(low, lowF.now, lowF.f).key).toBe("power.state.exporting");
+    expect(sourceColor(lowF.now.sources[0], false, low.idleBelow)).toBe(COLORS.solar);
+    expect(sourceColor(lowF.now.sources[2], false, low.idleBelow)).toBe(COLORS.gridOut);
+  });
+
   it("is idle below 20 W either way and reads the load against the bounds", () => {
     expect(isActive(19)).toBe(false);
     expect(isActive(20)).toBe(true);
     expect(isActive(-300)).toBe(true);
+    // idle_below moves the threshold; nothing is never a flow
+    expect(isActive(3, 1)).toBe(true);
+    expect(isActive(0.5, 1)).toBe(false);
+    expect(isActive(0.2, 0)).toBe(true);
+    expect(isActive(0, 0)).toBe(false);
     expect(loadOf(0)).toBe(0);
     expect(loadOf(1800)).toBeCloseTo(0.5);
     expect(loadOf(9000)).toBe(1);

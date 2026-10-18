@@ -235,7 +235,7 @@ const colorFor = (st: TreeState, nd: LNode, ent: EntityItem | null, look: Look |
   if (nd.kind === "consumer")
     return (st.flows.leafW.get(nd.id) ?? 0) < 0 ? COLORS.solar : COLORS.home;
   const s = sourceOf(st, nd);
-  return s ? sourceColor(s, st.now.offline) : COLORS.idle;
+  return s ? sourceColor(s, st.now.offline, st.cfg.idleBelow) : COLORS.idle;
 };
 
 const fillShape = (st: TreeState, shape: HTMLElement, icon: string, m: EntityModel | null) => {
@@ -402,7 +402,7 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
   for (const l of flow.querySelectorAll<HTMLElement>(".lane")) laneEls.set(l.dataset.edge ?? "", l);
   layout.edges.forEach((e) => {
     const w = flows.edges[e.fi]?.w ?? 0;
-    const active = isActive(w);
+    const active = isActive(w, cfg.idleBelow);
     const color = edgeColor(e.kind, w);
     const track = trackEls.get(e.id);
     if (track) {

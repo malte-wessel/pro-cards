@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Power flow: `idle_below` sets the watts below which a link is idle (default 20, as before). `idle_below: 1` lets a 3 W standby load flow instead of drawing a dashed track; the node colours and the summary line follow the same threshold
 - Power flow: every link takes the colour of where its power comes from. Solar charging the battery or exported to the grid runs in the solar colour, a battery feeding another battery or the grid in the battery colour, the grid charging a battery in the grid colour. Links between sources used to take the colour of where the power went, so the solar line into a battery was pink (charging) next to a battery shown discharging
 - Power flow: labels keep their places with `idle_links: hidden`. A hidden idle link used to free the room beside it, so a label moved whenever its link switched on or off (sources and consumers jumped between two places as the values changed). The labels now keep clear of every link, hidden or not
 - Power flow: with `direction: down`, the sources' labels share one line, so the values read across: right of the icons when every name fits there, otherwise below them, beside each source's line, a name that still does not fit cut with an ellipsis (values are never cut). The choice depends on the names only, so a changing value never moves the labels. They used to go wherever there was room, in two rows when the card was narrow

@@ -28,6 +28,7 @@ import {
   FLOW_STYLES,
   ICONS,
   IDLE_LINKS,
+  IDLE_W,
   SOURCE_KINDS,
   type Animation,
   type ConsumerStyle,
@@ -69,6 +70,7 @@ export interface RawPowerFlowConfig extends RawEntityCardBase {
   flow_style?: unknown;
   consumer_style?: unknown;
   idle_links?: unknown;
+  idle_below?: unknown;
   other?: boolean | null;
   rules?: unknown;
   expensive_above?: unknown;
@@ -141,6 +143,7 @@ export interface PowerFlowConfig extends EntityCardConfig {
   flowStyle: FlowStyle;
   consumerStyle: ConsumerStyle;
   idleLinks: IdleLinks;
+  idleBelow: number; // W: a flow below it is idle (no motion, no state)
   homeIdx: number;
   homeEntity: boolean; // false: the home is computed from the sources; the item carries name / icon / rules
   sources: Source[];
@@ -435,6 +438,10 @@ export const normalizePowerFlowConfig = (input: unknown): PowerFlowConfig => {
     flowStyle,
     consumerStyle,
     idleLinks,
+    // watts; 0 lets every trickle flow
+    idleBelow:
+      wattsBelow(raw.idle_below, "idle_below") ??
+      (raw.idle_below === undefined || raw.idle_below === null ? IDLE_W : 0),
     homeIdx,
     homeEntity,
     sources,

@@ -258,6 +258,7 @@ describe("card config schemas", () => {
     expect(validate({ type: PF, sources: src, direction: "up" })).toMatch(/enum|allowed/);
     expect(validate({ type: PF, sources: src, flow_style: "waves" })).toMatch(/enum|allowed/);
     expect(validate({ type: PF, sources: src, idle_links: "none" })).toMatch(/enum|allowed/);
+    expect(validate({ type: PF, sources: src, idle_below: -1 })).toBeTruthy();
     expect(validate({ type: PF, sources: src, decimals: 5 })).toBeTruthy();
     expect(validate({ type: PF, sources: src, animation: { speed: 3 } })).toBeTruthy();
     expect(validate({ type: PF, sources: src, consumers: [{ name: "x" }] })).toBeTruthy();
@@ -296,6 +297,7 @@ describe("card config schemas", () => {
         direction: "down",
         flow_style: "arrows",
         idle_links: "faint",
+        idle_below: 1,
         expensive_above: 0.35,
         kw_above: 0,
         decimals: { w: 0, kw: 1 },

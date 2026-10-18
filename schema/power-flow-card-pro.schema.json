@@ -228,6 +228,12 @@
       "description": "An \"Other\" node for the home's consumption the consumers do not account for (default: true when consumers are given)"
     },
     "direction": { "type": "string", "enum": ["right", "down"], "default": "right" },
+    "idle_below": {
+      "type": "number",
+      "minimum": 0,
+      "default": 20,
+      "description": "Watts below which a link is idle (no motion) and a flow names no state; 0 lets every trickle flow"
+    },
     "idle_links": {
       "type": "string",
       "enum": ["dashed", "hidden", "faint"],
