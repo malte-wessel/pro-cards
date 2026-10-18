@@ -4,7 +4,7 @@
 
 ## Sources and home
 
-The smallest card names the sources and the home's consumption. Every source is a `sensor` in W or kW; the battery's `power` is positive while discharging and negative while charging, the grid's `power` is positive while importing and negative while exporting. Idle links stay as dashed tracks, active links flow, each in the colour of where its power comes from: solar into the battery or out to the grid runs in the solar colour, the battery's discharge in the battery colour, the grid's import in the grid colour. The nodes keep the colour of their state (a charging battery, an exporting grid).
+The smallest card names the sources and the home's consumption. Every source is a `sensor` in W or kW; the battery's `power` is positive while discharging and negative while charging, the grid's `power` is positive while importing and negative while exporting. Idle links stay as dashed tracks, active links flow.
 
 ::: live
 
