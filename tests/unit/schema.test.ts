@@ -259,6 +259,9 @@ describe("card config schemas", () => {
     expect(validate({ type: PF, sources: src, flow_style: "waves" })).toMatch(/enum|allowed/);
     expect(validate({ type: PF, sources: src, idle_links: "none" })).toMatch(/enum|allowed/);
     expect(validate({ type: PF, sources: src, idle_below: -1 })).toBeTruthy();
+    expect(
+      validate({ type: PF, sources: [{ type: "solar", entity: "sensor.a", peak: 0 }] }),
+    ).toBeTruthy();
     expect(validate({ type: PF, sources: src, decimals: 5 })).toBeTruthy();
     expect(validate({ type: PF, sources: src, animation: { speed: 3 } })).toBeTruthy();
     expect(validate({ type: PF, sources: src, consumers: [{ name: "x" }] })).toBeTruthy();

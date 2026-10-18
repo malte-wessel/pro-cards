@@ -55,6 +55,7 @@ export interface RawSource extends RawEntity {
   fossil?: string | null; // grid: fossil fuel percentage of the grid's power
   non_fossil?: string | null; // grid: low-carbon percentage instead
   invert?: boolean | null;
+  peak?: unknown; // solar: the panels' peak power (W), drawn as a ring
 }
 export interface RawConsumer extends RawEntity {
   group?: string | null;
@@ -92,6 +93,7 @@ export type ChargeFrom = (typeof CHARGE_FROM)[number];
 export interface SolarSource extends SourceBase {
   kind: "solar";
   idx: number;
+  peak: number | null; // W: the ring shows the production against it
 }
 export interface BatterySource extends SourceBase {
   kind: "battery";
@@ -193,6 +195,7 @@ const normalizeSource = (
     fossil,
     non_fossil,
     invert,
+    peak,
     ...rest
   } = o;
   const base: RawEntity = { ...rest };
@@ -220,7 +223,15 @@ const normalizeSource = (
   if (type === "solar") {
     if (!base.entity && base.value === undefined)
       throw new Error(`${CARD_TYPE}: ${label} needs 'entity'`);
-    return { ...own(base.entity), kind: "solar", idx: push(base, label, "power.solar") };
+    const pk = peak === undefined || peak === null ? null : numOrNull(peak);
+    if (pk !== null ? pk <= 0 : peak !== undefined && peak !== null)
+      throw new Error(`${CARD_TYPE}: ${label}.peak must be a number of watts above 0`);
+    return {
+      ...own(base.entity),
+      kind: "solar",
+      idx: push(base, label, "power.solar"),
+      peak: pk,
+    };
   }
   if (type === "battery") {
     const p = entityId(power, `${label}.power`),

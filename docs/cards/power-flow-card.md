@@ -12,14 +12,14 @@ The smallest card names the sources and the home's consumption. Every source is 
 type: custom:power-flow-card-pro
 home: sensor.power_consumption
 sources:
-  - { type: solar, entity: sensor.solar_power }
+  - { type: solar, entity: sensor.solar_power, peak: 8000 }
   - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
   - { type: grid, power: sensor.grid_power }
 ```
 
 :::
 
-`soc` puts the battery's state of charge on its node as a ring; the home's ring shows the mix of solar, battery and grid it runs on. Without `home` the card adds the sources up. Integrations that report the grid or the battery as two sensors name them as a pair: `import` / `export` for the grid, `charge` / `discharge` for the battery. A signed sensor with the opposite convention takes `invert: true`.
+`soc` puts the battery's state of charge on its node as a ring, and `peak` (W) on a solar source puts its production against the panels' peak power there; the home's ring shows the mix of solar, battery and grid it runs on. Without `home` the card adds the sources up. Integrations that report the grid or the battery as two sensors name them as a pair: `import` / `export` for the grid, `charge` / `discharge` for the battery. A signed sensor with the opposite convention takes `invert: true`.
 
 ::: live
 
@@ -213,7 +213,7 @@ consumers:
 
 The line above the tree says what the home runs on: **Exporting**, **On battery**, **Importing** or **Balanced**, with the self-sufficiency of the moment. A grid source with `price` and a card-level `expensive_above` adds **Expensive** when importing at or above that price, and `offline` names an entity whose state (`on` by default, or `{ entity, state }`) means the grid is down: the grid node turns red, the card tints and the line says what keeps the home running (**Grid offline · on battery**, **· on solar**, or **Grid offline** alone). Both take the red state colour.
 
-A grid with a `generator` sensor keeps the home running during an outage: while `offline`, the grid node becomes the generator, its power flows to the home in amber and the line reads **Grid offline · on generator**. A grid with the `fossil` percentage of the [CO2 Signal](https://www.home-assistant.io/integrations/co2signal/) integration (or a `non_fossil` percentage) splits the grid's share of the home ring into a low-carbon and a fossil part and names the share on the grid label.
+A grid with a `generator` sensor keeps the home running during an outage: while `offline`, the grid node becomes the generator, its power flows to the home in amber and the line reads **Grid offline · on generator**. A grid with the `fossil` percentage of the [CO2 Signal](https://www.home-assistant.io/integrations/co2signal/) integration (or a `non_fossil` percentage) splits the grid's share of the home ring into a low-carbon and a fossil part, names the share on the grid label and draws it as the grid node's ring.
 
 ::: live
 
@@ -355,11 +355,12 @@ consumers:
 | `charge`, `discharge`                        | battery       | A pair of sensors instead of `power`; on a solar-fed battery both flows are drawn at once.                                                                                                                     |
 | `import`, `export`                           | grid          | A pair of sensors instead of `power` (`export` optional).                                                                                                                                                      |
 | `soc`                                        | battery       | State of charge in %, shown as the node's ring.                                                                                                                                                                |
+| `peak`                                       | solar         | The panels' peak power in W: the node's ring shows the production against it.                                                                                                                                  |
 | `charge_from`                                | battery       | `solar` when the panels feed this battery: solar charges it before the home, the grid only when the sensors disagree; with a `charge` / `discharge` pair it charges and feeds the home at once. Default `any`. |
 | `price`                                      | grid          | Price sensor, shown in the Expensive state.                                                                                                                                                                    |
 | `offline`                                    | grid          | An entity id (offline when `on`) or `{ entity, state }`.                                                                                                                                                       |
 | `generator`                                  | grid          | A generator's power sensor: takes the grid node's place while offline.                                                                                                                                         |
-| `fossil`, `non_fossil`                       | grid          | The grid's fossil fuel (or low-carbon) percentage: the home ring's grid share splits, the grid label names it.                                                                                                 |
+| `fossil`, `non_fossil`                       | grid          | The grid's fossil fuel (or low-carbon) percentage: the home ring's grid share splits, the grid label names it, the grid node's ring shows the low-carbon share.                                                |
 | `secondary`                                  | all           | A line under the name; template allowed. Consumers take it too.                                                                                                                                                |
 | `name`, `icon`, `color`, `rules`, `decimals` | all           | As on every entity: the name (default Solar / Battery / Grid), a fixed icon or colour, rules on the sensor's value, decimals of the label.                                                                     |
 | `visibility`                                 | all           | Drawn only while the [conditions](/guide/visibility) hold. Consumers, rooms and devices take it too, with `hide_below`.                                                                                        |

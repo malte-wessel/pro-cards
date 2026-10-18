@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Power flow: the grid and solar nodes get a ring like the battery's when there is something to show. A grid with `fossil` / `non_fossil` draws its low-carbon share; a solar source with the new `peak` (W) draws its production against the panels' peak power. Without that data the node stays a plain circle
 - Power flow: `idle_below` sets the watts below which a link is idle (default 20, as before). `idle_below: 1` lets a 3 W standby load flow instead of drawing a dashed track; the node colours and the summary line follow the same threshold
 - Power flow: every link takes the colour of where its power comes from. Solar charging the battery or exported to the grid runs in the solar colour, a battery feeding another battery or the grid in the battery colour, the grid charging a battery in the grid colour. Links between sources used to take the colour of where the power went, so the solar line into a battery was pink (charging) next to a battery shown discharging
 - Power flow: labels keep their places with `idle_links: hidden`. A hidden idle link used to free the room beside it, so a label moved whenever its link switched on or off (sources and consumers jumped between two places as the values changed). The labels now keep clear of every link, hidden or not

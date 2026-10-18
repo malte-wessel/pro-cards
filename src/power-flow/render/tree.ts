@@ -141,9 +141,14 @@ export const buildTree = (
   const listRows = cfg.direction === "right" && cfg.consumerStyle === "list";
   cfg.sources.forEach((s, i) => {
     const d = s.kind === "solar" ? GEOM.dSolar : s.kind === "battery" ? GEOM.dBattery : GEOM.dGrid;
-    diag.appendChild(
-      nodeEl(`s${i}`, d, s.kind === "battery" && s.socIdx !== null, rowOf(s.idx, "")),
-    );
+    // a ring where there is something to show: the charge, the low-carbon share, the peak
+    const ring =
+      s.kind === "battery"
+        ? s.socIdx !== null
+        : s.kind === "grid"
+          ? s.fossilIdx !== null
+          : s.peak !== null;
+    diag.appendChild(nodeEl(`s${i}`, d, ring, rowOf(s.idx, "")));
     diag.appendChild(labelEl(`s${i}`, false));
   });
   diag.appendChild(nodeEl("home", GEOM.dHome, true, rowOf(cfg.homeIdx, "")));
@@ -453,9 +458,20 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
             ]
           : [],
       );
-    } else if (nd.kind === "battery" && lead.classList.contains("ring")) {
-      const soc = sourceOf(st, nd)?.soc ?? null;
-      setRing(lead, nd.d, soc === null ? [] : [{ color, f: Math.max(0, Math.min(1, soc / 100)) }]);
+    } else if (lead.classList.contains("ring")) {
+      const src = sourceOf(st, nd),
+        cfgSrc = cfg.sources.find((s) => s.id === nd.id);
+      const clamp = (f: number) => Math.max(0, Math.min(1, f));
+      // battery: its charge; grid: the low-carbon share of its power; solar: its peak
+      const seg =
+        nd.kind === "battery" && src?.soc != null
+          ? { color, f: clamp(src.soc / 100) }
+          : nd.kind === "grid" && src?.lowCarbon != null && !st.now.offline
+            ? { color: COLORS.nonFossil, f: clamp(src.lowCarbon) }
+            : cfgSrc?.kind === "solar" && cfgSrc.peak !== null && src?.w != null
+              ? { color: COLORS.solar, f: clamp(src.w / cfgSrc.peak) }
+              : null;
+      setRing(lead, nd.d, seg ? [seg] : []);
     }
   }
 

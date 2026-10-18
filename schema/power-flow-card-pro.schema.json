@@ -38,6 +38,11 @@
         "entity": {
           "$ref": "defs.schema.json#/$defs/entityId",
           "description": "Production (W or kW)"
+        },
+        "peak": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "The panels' peak power (W): a ring shows the production against it"
         }
       },
       "required": ["type", "entity"],

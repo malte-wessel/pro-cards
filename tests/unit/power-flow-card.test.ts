@@ -117,6 +117,15 @@ describe("power-flow-card config", () => {
         sources: [{ type: "battery", power: "sensor.b", charge_from: "solar" }],
       }).sources[0],
     ).toMatchObject({ kind: "battery", chargeFrom: "solar" });
+    expect(
+      normalizePowerFlowConfig({ sources: [{ type: "solar", entity: "sensor.s", peak: 6800 }] })
+        .sources[0],
+    ).toMatchObject({ kind: "solar", peak: 6800 });
+    expect(normalizePowerFlowConfig({ sources: SRC }).sources[0]).toMatchObject({ peak: null });
+    for (const peak of [0, -1, "lots"])
+      expect(() =>
+        normalizePowerFlowConfig({ sources: [{ type: "solar", entity: "sensor.s", peak }] }),
+      ).toThrow(/peak must be a number of watts above 0/);
     expect(() => normalizePowerFlowConfig({ sources: SRC, home: 42 })).toThrow(/'home' must be/);
     expect(() => normalizePowerFlowConfig({ sources: SRC, direction: "up" })).toThrow(
       /direction must be one of right \| down/,
@@ -188,7 +197,7 @@ describe("power-flow-card config", () => {
     expect(c.entities[1].name).toBe("Roof");
     expect(c.entities[1].nameKey).toBe("power.solar");
     expect(c.sources).toEqual([
-      { id: "s0", visibility: null, kind: "solar", idx: 1 },
+      { id: "s0", visibility: null, kind: "solar", idx: 1, peak: null },
       {
         id: "s1",
         visibility: null,

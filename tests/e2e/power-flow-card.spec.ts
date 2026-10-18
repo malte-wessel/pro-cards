@@ -274,6 +274,37 @@ test.describe("power flow card", () => {
     expect(Number.parseFloat(await cssVar(h.locator(".lane").first(), "--dur"))).toBeLessThan(3);
   });
 
+  test("grid and solar rings show the low-carbon share and the peak", async ({ page }) => {
+    await mount(page, {
+      type: T,
+      sources: [{ ...SRC[0], peak: 6800 }, SRC[1], SRC[2]],
+      home: HOME,
+    });
+    await pin(page); // solar 3.4 kW, fossil 38 %
+    const c = card(page);
+    const arc = (id: string) =>
+      c
+        .locator(`.pnode[data-node='${id}'] path.prog`)
+        .evaluateAll((ps) =>
+          ps.filter((p) => p.getAttribute("d")).map((p) => (p as SVGPathElement).style.stroke),
+        );
+    expect(await arc("s0")).toEqual([expect.stringContaining("--energy-solar")]);
+    expect(await arc("s2")).toEqual([expect.stringContaining("--energy-non-fossil")]);
+    // half the peak, 62 % low-carbon: the arcs' lengths follow
+    const len = (id: string) =>
+      c
+        .locator(`.pnode[data-node='${id}'] path.prog`)
+        .first()
+        .evaluate((p) => (p as SVGPathElement).getTotalLength());
+    const r = (d: number) => d / 2 - 1.5;
+    expect(await len("s0")).toBeCloseTo(2 * Math.PI * r(44) * 0.5, 0);
+    expect(await len("s2")).toBeCloseTo(2 * Math.PI * r(44) * 0.62, 0);
+    // without the data a node stays a plain circle
+    await mount(page, { type: T, sources: [SRC[0], SRC[1], { type: "grid", power: GRID }] });
+    await expect(card(page).locator(".pnode[data-node='s0'] .lead.ring")).toHaveCount(0);
+    await expect(card(page).locator(".pnode[data-node='s2'] .lead.ring")).toHaveCount(0);
+  });
+
   test("idle_below lets a standby load flow", async ({ page }) => {
     const cfg = { type: T, sources: SRC, home: HOME, consumers: CONS };
     await mount(page, cfg);
