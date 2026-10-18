@@ -1,6 +1,7 @@
 // The "Sides of the house" footer: one row per side with its sun window today on a timeline.
 import { t } from "../../shared/i18n.ts";
 import type { SunAzimuthHost } from "../config.ts";
+import { SIDE_ORDER } from "../constants.ts";
 import type { SunDay, SunSample } from "../day.ts";
 import { timelineSpan, type Side } from "../sides.ts";
 import { sideName } from "./events.ts";
@@ -26,7 +27,11 @@ export const renderSides = (
   head.children[0].textContent = t(hass, "azimuth.sides");
   head.children[1].textContent = t(hass, "weather.today");
   frag.appendChild(head);
-  for (const side of sides) {
+  // front, right, back, left; a shared wall is left out
+  const listed = SIDE_ORDER.map((key) => sides.find((s) => s.key === key)).filter(
+    (s): s is Side => !!s && !s.hidden,
+  );
+  for (const side of listed) {
     const row = document.createElement("div");
     row.className = `top side${side.litNow ? " lit" : ""}`;
     row.style.setProperty("--c", side.litNow ? "var(--saz-sun)" : "var(--blue-grey-color)");

@@ -12,6 +12,7 @@ export interface SideWindow {
 }
 export interface Side {
   key: SideKey;
+  hidden: boolean; // a shared wall: never lit, not listed
   normal: number; // bearing of the outward normal
   windows: SideWindow[]; // when the sun shines on it today (may be two: morning and evening)
   litNow: boolean;
@@ -22,9 +23,26 @@ export interface Side {
 // a side faces the sun when the sun is up and within 90° of its normal
 const lit = (s: SunSample, normal: number) => s.el > 0 && angleDiff(s.az, normal) < 90;
 
-export const sidesOf = (day: SunDay, rotation: number, now: SunSample): Side[] =>
+// every side, clockwise from the front; a hidden side keeps its normal (the house is drawn with
+// all four walls) but never gets sun
+export const sidesOf = (
+  day: SunDay,
+  front: number,
+  now: SunSample,
+  hidden: readonly SideKey[] = [],
+): Side[] =>
   SIDES.map((key) => {
-    const normal = (((SIDE_ANGLE[key] + rotation) % 360) + 360) % 360;
+    const normal = (((SIDE_ANGLE[key] + front) % 360) + 360) % 360;
+    if (hidden.includes(key))
+      return {
+        key,
+        hidden: true,
+        normal,
+        windows: [],
+        litNow: false,
+        incidence: 0,
+        nextFrom: null,
+      };
     const windows: SideWindow[] = [];
     let open: SideWindow | null = null;
     for (const s of day.samples) {
@@ -38,10 +56,18 @@ export const sidesOf = (day: SunDay, rotation: number, now: SunSample): Side[] =
       ? Math.cos(angleDiff(now.az, normal) * RAD) * Math.cos(now.el * RAD)
       : 0;
     const next = windows.find((w) => w.from > now.t);
-    return { key, normal, windows, litNow, incidence, nextFrom: next ? next.from : null };
+    return {
+      key,
+      hidden: false,
+      normal,
+      windows,
+      litNow,
+      incidence,
+      nextFrom: next ? next.from : null,
+    };
   });
 
-// the sides lit now, in the order written
+// the sides lit now, clockwise from the front
 export const litSides = (sides: Side[]) => sides.filter((s) => s.litNow);
 // the side whose next window comes first
 export const nextSide = (sides: Side[]): Side | null =>

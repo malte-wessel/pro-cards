@@ -23,30 +23,30 @@
     },
     "house": {
       "type": "object",
-      "description": "How the house stands and what its sides are called",
+      "description": "Where the house faces and what its sides are called",
       "properties": {
-        "rotation": {
+        "front": {
           "type": "number",
           "minimum": 0,
           "maximum": 360,
           "default": 0,
-          "description": "Degrees clockwise from north that the north side's outward normal points to"
+          "description": "The bearing the front of the house faces, degrees clockwise from north"
         },
         "sides": {
           "type": "object",
-          "description": "Your own names for the sides (the defaults follow the profile language)",
+          "description": "Your own names for the sides, left and right as you look at the front; false for a wall that never gets sun (shared with the neighbour). Unnamed sides are called by where they face, in the profile language",
           "properties": {
-            "north": {
-              "type": "string"
+            "front": {
+              "$ref": "#/$defs/side"
             },
-            "east": {
-              "type": "string"
+            "right": {
+              "$ref": "#/$defs/side"
             },
-            "south": {
-              "type": "string"
+            "back": {
+              "$ref": "#/$defs/side"
             },
-            "west": {
-              "type": "string"
+            "left": {
+              "$ref": "#/$defs/side"
             }
           },
           "additionalProperties": false
@@ -115,5 +115,18 @@
     }
   },
   "required": ["type"],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "side": {
+      "description": "A name, or false for a wall that never gets sun",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "const": false
+        }
+      ]
+    }
+  }
 }

@@ -233,8 +233,8 @@ type: custom:sun-azimuth-card-pro
 title: Sun
 view: dial
 house:
-  rotation: 20
-  sides: { north: Street, south: Garden }
+  front: 20
+  sides: { front: Street, back: Garden }
 show_events: true
 show_sides: true
 ```

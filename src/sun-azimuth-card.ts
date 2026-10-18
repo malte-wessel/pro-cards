@@ -11,8 +11,9 @@
  *   icon: mdi:sun-compass
  *   view: dial                    # dial | 3d | ring
  *   house:
- *     rotation: 20                # degrees clockwise; the north side's outward normal points there
- *     sides: { north: Street }    # own names per side (north, east, south, west)
+ *     front: 110                  # the bearing the front faces, degrees clockwise from north
+ *     sides: { front: Street, left: false }   # own names (front, right, back, left); false: a
+ *                                 # shared wall, never lit and not listed
  *   camera: 180                   # 3d: the bearing the camera looks toward
  *   camera_slider: true           # 3d: a slider under the plot orbits the scene (not saved)
  *   hover_preview: true           # hovering a side's timeline shows the sun at that time in the plot
@@ -32,12 +33,11 @@ import { slider, type Slider } from "./shared/slider.ts";
 import { numOrNull, oneOf, qs } from "./shared/util.ts";
 import type {
   PositionedDay,
-  SideNames,
   SunAzimuthCardConfig,
   SunAzimuthConfig,
   SunAzimuthHost,
 } from "./sun-azimuth/config.ts";
-import { DEFAULTS, SCENE, SIDES, VIEWS } from "./sun-azimuth/constants.ts";
+import { DEFAULTS, SCENE, SIDES, VIEWS, type SideKey } from "./sun-azimuth/constants.ts";
 import { sunAt, sunDay, type SunSample } from "./sun-azimuth/day.ts";
 import { renderDial } from "./sun-azimuth/render/dial.ts";
 import { eventsHtml, fillEvents, fillHouse, houseHtml } from "./sun-azimuth/render/events.ts";
@@ -101,17 +101,20 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
   setConfig(config: SunAzimuthCardConfig | null | undefined) {
     const c = config || {};
     const { view, house, camera, ...rest } = c;
-    const sides: SideNames = {};
+    const sides: Partial<Record<SideKey, string>> = {},
+      hidden: SideKey[] = [];
     for (const k of SIDES) {
       const v = house?.sides?.[k];
       if (typeof v === "string" && v) sides[k] = v;
+      else if (v === false) hidden.push(k);
     }
     this._config = {
       ...DEFAULTS,
       ...rest,
       view: oneOf(VIEWS, view) ? view : DEFAULTS.view,
-      rotation: numOrNull(house?.rotation) ?? DEFAULTS.rotation,
+      front: (((numOrNull(house?.front) ?? DEFAULTS.front) % 360) + 360) % 360,
       sides,
+      hidden,
       camera: numOrNull(camera) ?? DEFAULTS.camera,
       camera_slider: c.camera_slider ?? DEFAULTS.camera_slider,
       hover_preview: c.hover_preview ?? DEFAULTS.hover_preview,
@@ -237,7 +240,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     const card = this._root as HTMLElement,
       visual = card.querySelector<HTMLElement>(".visual");
     if (!visual) return;
-    const sides = sidesOf(day, this._config.rotation, at);
+    const sides = sidesOf(day, this._config.front, at, this._config.hidden);
     if (this._config.view === "3d") {
       // not laid out yet: drawn at a stand-in width, the observer redraws at the real one
       this._sceneWidth = visual.clientWidth;
@@ -307,10 +310,10 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     const nowDate = new Date();
     const day = this._dayOf(nowDate, lat, lon);
     const now = sunAt(nowDate.getTime(), lat, lon);
-    const sides = sidesOf(day, cfg.rotation, now);
+    const sides = sidesOf(day, cfg.front, now, cfg.hidden);
     fillHead(this, qs(card, ".head"), day, now);
     this._renderVisual(day, now);
-    const house = card.querySelector<HTMLElement>(".top.house");
+    const house = card.querySelector<HTMLElement>(".house");
     if (house) fillHouse(this, house, day, now, sides);
     const items = card.querySelector<HTMLElement>(".items");
     if (items) fillEvents(this, items, day);

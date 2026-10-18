@@ -13,7 +13,7 @@ test("the sky dial shows the azimuth, the path and the lit sides", async ({ page
       type: "custom:sun-azimuth-card-pro",
       title: "Sun",
       icon: "mdi:sun-compass",
-      house: { rotation: 20 },
+      house: { front: 20 },
       show_events: true,
       show_sides: true,
     },
@@ -22,11 +22,9 @@ test("the sky dial shows the azimuth, the path and the lit sides", async ({ page
   const c = card(page);
   await expect(c.locator(".header .title")).toHaveText("Sun");
   await expect(c.locator(".header ha-icon")).toHaveAttribute("icon", "mdi:sun-compass");
-  // the head
-  await expect(c.locator(".head .primary")).toHaveText("Azimuth");
-  await expect(c.locator(".head .big b")).toHaveText("138°");
-  await expect(c.locator(".head .big span")).toHaveText("SE");
-  await expect(c.locator(".head .accent")).toHaveText("Elevation 57° · rising");
+  // the head: where the sun stands, its angles below
+  await expect(c.locator(".head .primary")).toHaveText("South-East");
+  await expect(c.locator(".head .secondary")).toHaveText("138° · Elevation 57°");
   await expect(c.locator(".head .rot")).toHaveCSS("transform", /matrix/);
   // the dial
   const dial = c.locator("svg.dial");
@@ -38,7 +36,7 @@ test("the sky dial shows the azimuth, the path and the lit sides", async ({ page
   await expect(dial.locator(".azarc")).toHaveCount(1);
   await expect(dial.locator(".chip text")).toHaveText("138°");
   await expect(dial.locator(".edge")).toHaveCount(4);
-  // the house is turned 20°: the sun at 138° lights its east (110°) and south (200°) sides
+  // the front faces 20°: the sun at 138° lights the left (110°) and the back (200°)
   await expect(dial.locator(".edge.lit")).toHaveCount(2);
   await expect(dial.locator(".mark.rise")).toHaveCount(1);
   await expect(dial.locator(".mark.set")).toHaveCount(1);
@@ -50,7 +48,7 @@ test("the sky dial shows the azimuth, the path and the lit sides", async ({ page
   await expect(c.locator(".items .v.rise")).toHaveText(/^05:1\d$/);
   await expect(c.locator(".items .n.rise")).toHaveText("49° NE");
   await expect(c.locator(".items .v.noon")).toHaveText(/^13:3\d$/);
-  await expect(c.locator(".items .n.noon")).toHaveText("noon · 62° high");
+  await expect(c.locator(".items .n.noon")).toHaveText("62° high");
   await expect(c.locator(".items .v.set")).toHaveText(/^21:5\d$/);
   await expect(c.locator(".items .n.set")).toHaveText("311° NW");
 });
@@ -60,7 +58,7 @@ test("the sides footer lists every side with its window, pill and timeline", asy
     page,
     {
       type: "custom:sun-azimuth-card-pro",
-      house: { rotation: 20 },
+      house: { front: 20 },
       show_events: true,
       show_sides: true,
     },
@@ -72,26 +70,27 @@ test("the sides footer lists every side with its window, pill and timeline", asy
   await expect(c.locator(".sides .sechead .secondary")).toHaveText("Today");
   const rows = c.locator(".side");
   await expect(rows).toHaveCount(4);
+  // front, right, back, left, each called by where it faces
   await expect(rows.locator(".primary")).toHaveText([
-    "North side",
-    "East side",
-    "South side",
-    "West side",
+    "North side", // the front, 20°
+    "West side", // the right, 290°
+    "South side", // the back, 200°
+    "East side", // the left, 110°
   ]);
-  await expect(rows.nth(1)).toHaveClass(/lit/);
   await expect(rows.nth(2)).toHaveClass(/lit/);
+  await expect(rows.nth(3)).toHaveClass(/lit/);
   await expect(rows.nth(0)).not.toHaveClass(/lit/);
   await expect(rows.locator(".pill")).toHaveText([
-    /^from 2\d:\d\d$/, // the north side (20°) catches the sun again in the evening
-    "Sun now",
-    "Sun now",
+    /^from 2\d:\d\d$/, // the front (20°) catches the sun again in the evening
     /^from 1[2345]:\d\d$/,
+    "Sun now",
+    "Sun now",
   ]);
-  await expect(rows.nth(1).locator(".pill")).toHaveClass(/on/);
+  await expect(rows.nth(3).locator(".pill")).toHaveClass(/on/);
   await expect(rows.nth(0).locator(".pill")).not.toHaveClass(/on/);
-  // the north side's two windows, the others' one
+  // the front's two windows, the others' one
   await expect(rows.nth(0).locator(".lbar i")).toHaveCount(2);
-  await expect(rows.nth(1).locator(".lbar i")).toHaveCount(1);
+  await expect(rows.nth(3).locator(".lbar i")).toHaveCount(1);
   await expect(rows.nth(0).locator(".secondary")).toHaveText(
     /^sun \d\d:\d\d–\d\d:\d\d · \d\d:\d\d–\d\d:\d\d · \d+ h \d+ min$/,
   );
@@ -110,7 +109,8 @@ test("the sides footer lists every side with its window, pill and timeline", asy
     /^2[23]:00$/,
   ]);
   // the arrow of each side points along its normal
-  await expect(rows.nth(1).locator(".rot")).toHaveAttribute("style", /rotate\(110deg\)/);
+  await expect(rows.nth(1).locator(".rot")).toHaveAttribute("style", /rotate\(290deg\)/);
+  await expect(rows.nth(3).locator(".rot")).toHaveAttribute("style", /rotate\(110deg\)/);
 });
 
 test("own side names stay as written in every language", async ({ page }) => {
@@ -118,7 +118,7 @@ test("own side names stay as written in every language", async ({ page }) => {
     page,
     {
       type: "custom:sun-azimuth-card-pro",
-      house: { rotation: 45, sides: { north: "Street", south: "Garden" } },
+      house: { front: 45, sides: { front: "Street", back: "Garden" } },
       show_sides: true,
       show_events: true,
     },
@@ -126,16 +126,36 @@ test("own side names stay as written in every language", async ({ page }) => {
   );
   const c = card(page);
   const names = c.locator(".side .primary");
-  await expect(names).toHaveText(["Street", "East side", "Garden", "West side"]);
+  // the unnamed right (315°) and left (135°) sides are called by where they face
+  await expect(names).toHaveText(["Street", "North-West side", "Garden", "South-East side"]);
   await setLanguage(page, "de-DE");
-  await expect(names).toHaveText(["Street", "Ostseite", "Garden", "Westseite"]);
+  await expect(names).toHaveText(["Street", "Nordwestseite", "Garden", "Südostseite"]);
   await expect(c.locator(".sides .key")).toHaveText("Seiten des Hauses");
-  await expect(c.locator(".head .primary")).toHaveText("Azimut");
-  await expect(c.locator(".head .accent")).toHaveText("Höhe 57° · steigend");
-  await expect(c.locator(".house .primary")).toHaveText(/^Sonne auf /);
-  await expect(c.locator(".items .n.noon")).toHaveText("Mittag · 62° hoch");
+  await expect(c.locator(".head .primary")).toHaveText("Südost");
+  await expect(c.locator(".head .secondary")).toHaveText("138° · Höhe 57°");
+  await expect(c.locator(".house .primary")).toHaveText("Sonne auf Südostseite + Garden");
+  await expect(c.locator(".items .n.noon")).toHaveText("62° hoch");
   await setLanguage(page, "fi");
   await expect(c.locator(".sides .key")).toHaveText("Sides of the house");
+});
+
+test("a wall set to false stays dark and drops out of the lists", async ({ page }) => {
+  await mount(
+    page,
+    {
+      type: "custom:sun-azimuth-card-pro",
+      house: { front: 20, sides: { front: "Street", left: false } },
+      show_sides: true,
+    },
+    { time: NOON },
+  );
+  const c = card(page);
+  // the left (110°) would be in the sun: drawn, but plain
+  const dial = c.locator("svg.dial");
+  await expect(dial.locator(".edge")).toHaveCount(4);
+  await expect(dial.locator(".edge.lit")).toHaveCount(1);
+  await expect(c.locator(".house .primary")).toHaveText("Sun on South side");
+  await expect(c.locator(".side .primary")).toHaveText(["Street", "West side", "South side"]);
 });
 
 test("hovering a timeline previews the sun at that time", async ({ page }) => {
@@ -143,7 +163,7 @@ test("hovering a timeline previews the sun at that time", async ({ page }) => {
     page,
     {
       type: "custom:sun-azimuth-card-pro",
-      house: { rotation: 20 },
+      house: { front: 20 },
       show_events: true,
       show_sides: true,
     },
@@ -170,7 +190,7 @@ test("hovering a timeline previews the sun at that time", async ({ page }) => {
   expect(new Set(lefts).size).toBe(1);
   expect(parseFloat(lefts[0])).toBeGreaterThan(90);
   // the head keeps the real time
-  await expect(c.locator(".head .big b")).toHaveText("138°");
+  await expect(c.locator(".head .secondary")).toHaveText("138° · Elevation 57°");
   // leaving puts the sun back
   await page.mouse.move(box.x - 100, box.y - 300);
   await expect(footer).not.toHaveClass(/scrub/);
@@ -201,7 +221,7 @@ test("the 3D view draws the scene and the slider orbits it", async ({ page }) =>
     {
       type: "custom:sun-azimuth-card-pro",
       view: "3d",
-      house: { rotation: 20 },
+      house: { front: 20 },
       camera: 180,
       camera_slider: true,
       show_sides: true,
@@ -209,11 +229,8 @@ test("the 3D view draws the scene and the slider orbits it", async ({ page }) =>
     { time: NOON },
   );
   const c = card(page);
-  await expect(c.locator(".head .primary")).toHaveText("Elevation");
-  await expect(c.locator(".head .big b")).toHaveText("57°");
-  await expect(c.locator(".head .big span")).toHaveText("SE · 138°");
-  await expect(c.locator(".head .accent")).toHaveText("rising");
-  await expect(c.locator(".head .rest")).toHaveText(" · shadow 0.7 × height");
+  await expect(c.locator(".head .primary")).toHaveText("South-East");
+  await expect(c.locator(".head .secondary")).toHaveText("138° · Elevation 57°");
   const scene = c.locator("svg.scene");
   // drawn in px at the column's width: wide enough for the dome's full size, the labels keep theirs
   const box = await c.locator(".visual").evaluate((visual) => {
@@ -268,7 +285,7 @@ test("the 3D view draws the scene and the slider orbits it", async ({ page }) =>
   await page.keyboard.press("End");
   await expect(slider).toHaveAttribute("aria-valuenow", "359");
   // the head and the footer do not depend on the camera
-  await expect(c.locator(".head .big b")).toHaveText("57°");
+  await expect(c.locator(".head .secondary")).toHaveText("138° · Elevation 57°");
   await expect(c.locator(".side")).toHaveCount(4);
 });
 
@@ -315,7 +332,7 @@ test("the compass ring shows the daylight sector and the day's events", async ({
     {
       type: "custom:sun-azimuth-card-pro",
       view: "ring",
-      house: { rotation: 20 },
+      house: { front: 20 },
       show_sides: true,
     },
     { time: NOON },
@@ -349,15 +366,15 @@ test("at night the sun is below the horizon everywhere", async ({ page }) => {
     page,
     {
       type: "custom:sun-azimuth-card-pro",
-      house: { rotation: 20 },
+      house: { front: 20 },
       show_events: true,
       show_sides: true,
     },
     { time: new Date("2026-06-21T02:00:00+02:00") },
   );
   const c = card(page);
-  await expect(c.locator(".head .big b")).toHaveText("6°");
-  await expect(c.locator(".head .accent")).toHaveText(/^below the horizon · rises 05:1\d$/);
+  await expect(c.locator(".head .primary")).toHaveText("North");
+  await expect(c.locator(".head .secondary")).toHaveText(/^6° · below the horizon · rises 05:1\d$/);
   const dial = c.locator("svg.dial");
   await expect(dial.locator("circle.sun")).toHaveClass(/down/);
   await expect(dial.locator(".beam")).toHaveCount(0);
@@ -369,10 +386,10 @@ test("at night the sun is below the horizon everywhere", async ({ page }) => {
   await expect(c.locator(".house .primary")).toHaveText("No side in the sun");
   await expect(c.locator(".house .secondary")).toHaveText(/^next: North side from 05:\d\d$/);
   await expect(c.locator(".side .pill")).toHaveText([
-    /^from 05:\d\d$/,
-    /^from 05:\d\d$/,
-    /^from 1\d:\d\d$/, // the south side (200°) waits for the forenoon
-    /^from 1\d:\d\d$/,
+    /^from 05:\d\d$/, // the front (20°)
+    /^from 1\d:\d\d$/, // the right (290°) waits for the afternoon
+    /^from 1\d:\d\d$/, // the back (200°) for the forenoon
+    /^from 05:\d\d$/, // the left (110°)
   ]);
   // the now dot is outside the timeline
   await expect(c.locator(".side").first().locator(".lbar b")).toBeHidden();
@@ -390,7 +407,7 @@ test("the 3D view at night hides the sun and the shadow", async ({ page }) => {
   await expect(scene.locator(".drop")).toHaveCount(0);
   await expect(scene.locator(".chip")).toHaveCount(0);
   await expect(scene.locator(".face.lit")).toHaveCount(0);
-  await expect(card(page).locator(".head .rest")).toHaveText("");
+  await expect(card(page).locator(".head .secondary")).toHaveText(/^\d+° · below the horizon/);
 });
 
 test("the events and sides are opt-in, show_house drops its line, colours reach the card", async ({
@@ -449,12 +466,13 @@ test("moves the sun with time", async ({ page }) => {
     { time: new Date("2026-06-21T08:00:00+02:00") },
   );
   const c = card(page);
-  await expect(c.locator(".head .big b")).toHaveText(/^(7|8)\d°$/);
+  await expect(c.locator(".head .primary")).toHaveText("East");
+  await expect(c.locator(".head .secondary")).toHaveText(/^(7|8)\d° · Elevation /);
   const early = parseFloat((await c.locator("svg.dial circle.sun").getAttribute("cx"))!);
   await page.clock.setFixedTime(new Date("2026-06-21T18:00:00+02:00"));
   await page.evaluate(() => window.pc.card(0)._render());
-  await expect(c.locator(".head .big b")).toHaveText(/^26\d°$/);
-  await expect(c.locator(".head .accent")).toHaveText(/sinking$/);
+  await expect(c.locator(".head .primary")).toHaveText("West");
+  await expect(c.locator(".head .secondary")).toHaveText(/^26\d° · Elevation /);
   const late = parseFloat((await c.locator("svg.dial circle.sun").getAttribute("cx"))!);
   expect(early).toBeGreaterThan(150); // east of the house in the morning
   expect(late).toBeLessThan(150); // west in the evening

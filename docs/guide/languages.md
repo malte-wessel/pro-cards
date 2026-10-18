@@ -5,7 +5,7 @@ The cards show their own words in the language of your Home Assistant profile (*
 ## What is translated
 
 - The default labels of the sun path card (Sunrise, Sunset, Dawn, Solar noon, Dusk) and the word in its tooltip (elevation).
-- The sun azimuth card's words (Azimuth, Elevation, rising / sinking, below the horizon …), its default side names (North side …), the pills of the sides footer (Sun now, Shade …) and `Sides of the house`.
+- The sun azimuth card's words (the directions North, South-West …, Elevation, below the horizon …), its default side names, which say where a side faces (North side, South-West side …), the pills of the sides footer (Sun now, Shade …) and `Sides of the house`.
 - The default zone names of the illuminance card (Night, Twilight, Overcast, Day, Sun), the `Max` of its header line and the `LUX` under the gauge value.
 - The weather card's condition names (Sunny, Partly cloudy, Thunderstorms …), the names of the weather attributes it lists (Humidity, Wind, Pressure, Feels like …), its section titles (`Next 12 hours`, `7 days`), `Today`, `High` / `Low` and `no forecast`.
 - The rain card's `… today`.

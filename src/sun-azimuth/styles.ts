@@ -19,6 +19,8 @@ export const STYLE = `
   .divider { height: 1px; margin: 0 -16px; background: var(--divider-color); flex: none; }
   .top { display: flex; align-items: center; gap: 12px; min-width: 0; --c: var(--saz-sun); }
   .lead { position: relative; flex: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--c); background: color-mix(in srgb, var(--c) 20%, transparent); --mdc-icon-size: 22px; }
+  /* the head's lead is the tile shape of the other cards: 40 px, a 24 px icon */
+  .head .top > .lead { --mdc-icon-size: 24px; }
   .lead.s36 { width: 36px; height: 36px; --mdc-icon-size: 20px; }
   .lead.s32 { width: 32px; height: 32px; --mdc-icon-size: 18px; }
   .lead ha-icon { display: block; }
@@ -26,10 +28,6 @@ export const STYLE = `
   .texts { flex: 1 1 0; min-width: 24px; display: flex; flex-direction: column; gap: 2px; }
   .primary { font-size: 14px; font-weight: 500; line-height: 20px; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .secondary { font-size: 12px; line-height: 16px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .secondary .accent { color: var(--c); font-weight: 500; }
-  .big { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; min-width: 0; }
-  .big b { font-size: 26px; font-weight: 500; line-height: 30px; letter-spacing: -.4px; color: var(--primary-text-color); font-variant-numeric: tabular-nums; }
-  .big span { font-size: 14px; color: var(--secondary-text-color); }
   .main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
   .line { display: flex; align-items: center; gap: 10px; min-width: 0; }
   .pill { flex: none; font-size: 12px; font-weight: 500; line-height: 16px; padding: 4px 10px; border-radius: 999px; color: var(--c); background: color-mix(in srgb, var(--c) 20%, transparent); white-space: nowrap; letter-spacing: .02em; max-width: 45%; overflow: hidden; text-overflow: ellipsis; }
@@ -106,10 +104,17 @@ export const STYLE = `
   .caxis span:nth-child(3) { left: 50%; }
   .caxis span:nth-child(4) { left: 75%; }
   .caxis span:nth-child(5) { left: 100%; }
+  /* the house line: a caption under the plot, quieter than the head */
+  .house { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; margin-top: -4px; text-align: center; }
+  .house .primary { max-width: 100%; font-size: 13px; font-weight: 400; line-height: 18px; }
+  .house .secondary { max-width: 100%; }
   /* sunrise / noon / sunset */
   .items { display: flex; justify-content: space-between; gap: 8px; }
-  .item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
-  .ribody { display: flex; align-items: center; gap: 6px; }
+  /* each event as a small tile: the lead, the time and its line under it */
+  .item { flex: none; display: flex; align-items: center; gap: 8px; min-width: 0; }
+  /* sunrise and sunset keep their short lines; only the noon line (long in some languages) gives way */
+  .item:nth-child(2) { flex: 0 1 auto; }
+  .itexts { display: flex; flex-direction: column; min-width: 0; }
   .item .v { font-size: 14px; font-weight: 500; line-height: 18px; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .item .n { font-size: 12px; line-height: 16px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   /* the sides of the house */

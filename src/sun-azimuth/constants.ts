@@ -5,17 +5,26 @@ import { t } from "../shared/i18n.ts";
 export const VIEWS = ["dial", "3d", "ring"] as const;
 export type View = (typeof VIEWS)[number];
 
-// the four sides of the house, clockwise; the outward normal of `north` points to the house rotation
-export const SIDES = ["north", "east", "south", "west"] as const;
+// the four sides of the house, clockwise from the front as the dial and the 3D scene walk their
+// edges; left and right as you stand in front of the house looking at it, so with the front
+// facing north the left side faces east
+export const SIDES = ["front", "left", "back", "right"] as const;
 export type SideKey = (typeof SIDES)[number];
-export const SIDE_ANGLE: Record<SideKey, number> = { north: 0, east: 90, south: 180, west: 270 };
-// the default name of a side in the user's language
-export const defaultSideName = (hass: HomeAssistant | null | undefined, key: SideKey) =>
-  t(hass, `azimuth.side.${key}`);
+// the bearing of each side's outward normal relative to the front
+export const SIDE_ANGLE: Record<SideKey, number> = { front: 0, left: 90, back: 180, right: 270 };
+// the order the footer lists them in
+export const SIDE_ORDER: readonly SideKey[] = ["front", "right", "back", "left"];
+
+// the nearest of the eight compass points to a bearing: n, ne, e … nw
+const POINTS = ["n", "ne", "e", "se", "s", "sw", "w", "nw"] as const;
+export const pointOf = (az: number) => POINTS[Math.round((((az % 360) + 360) % 360) / 45) % 8];
+// the default name of a side in the user's language: where it faces ("South-West side")
+export const defaultSideName = (hass: HomeAssistant | null | undefined, normal: number) =>
+  t(hass, `azimuth.side.${pointOf(normal)}`);
 
 export const DEFAULTS = {
   view: "dial" as View,
-  rotation: 0,
+  front: 0,
   camera: 180,
   camera_slider: false,
   hover_preview: true,

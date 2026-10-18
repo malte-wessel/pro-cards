@@ -66,7 +66,7 @@ export const sceneGeometry = (
   day: SunDay,
   now: SunSample,
   lat: number,
-  rotation: number,
+  front: number, // the bearing the house's front faces
   camera: number,
   sides: Side[],
   width: number,
@@ -155,7 +155,7 @@ export const sceneGeometry = (
   });
   const back = cards.reduce((m, c) => (c.depth < m.depth ? c : m), cards[0]);
   // the house: a box rotated with the house; a wall shows when its normal faces the camera
-  const hr = rotation * RAD;
+  const hr = front * RAD;
   const cw = (u: number, v: number): [number, number] => [
     u * Math.cos(hr) + v * Math.sin(hr),
     -u * Math.sin(hr) + v * Math.cos(hr),

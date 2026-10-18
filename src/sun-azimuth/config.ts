@@ -3,13 +3,14 @@ import type { CardConfigBase, HomeAssistant } from "../shared/ha.ts";
 import type { SideKey, View } from "./constants.ts";
 import type { SunDay } from "./day.ts";
 
-export type SideNames = Partial<Record<SideKey, string>>;
+// a side's own name, or false for a wall that never gets sun (shared with the neighbour)
+export type SideNames = Partial<Record<SideKey, string | false>>;
 
 export interface SunAzimuthCardConfig extends CardConfigBase {
   title?: string;
   icon?: string;
   view?: string;
-  house?: { rotation?: number; sides?: SideNames | null } | null;
+  house?: { front?: number; sides?: SideNames | null } | null;
   camera?: number;
   camera_slider?: boolean;
   hover_preview?: boolean;
@@ -24,8 +25,11 @@ export interface SunAzimuthConfig extends CardConfigBase {
   title?: string;
   icon?: string;
   view: View;
-  rotation: number;
-  sides: SideNames;
+  // the bearing the front faces, 0..360
+  front: number;
+  // own names of the sides; `hidden` lists the ones set to false
+  sides: Partial<Record<SideKey, string>>;
+  hidden: SideKey[];
   camera: number;
   camera_slider: boolean;
   hover_preview: boolean;

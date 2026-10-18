@@ -49,7 +49,7 @@ const arc = (a1: number, a2: number, radius: number) => {
 export const dialGeometry = (
   day: SunDay,
   now: SunSample,
-  rotation: number,
+  front: number, // the bearing the house's front faces
   sides: Side[],
 ): DialGeometry => {
   let ticks = "";
@@ -71,8 +71,8 @@ export const dialGeometry = (
     future.unshift(polar(now.az, now.el));
   }
   const sun = polar(now.az, now.el);
-  // the house footprint, rotated with the house; its edges follow the sides' order
-  const a = rotation * RAD;
+  // the house footprint, turned so its first edge faces the front; its edges follow the sides' order
+  const a = front * RAD;
   const corner = (dx: number, dy: number): Pt => [
     C + dx * Math.cos(a) - dy * Math.sin(a),
     C + dx * Math.sin(a) + dy * Math.cos(a),

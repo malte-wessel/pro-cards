@@ -21,7 +21,7 @@ export const renderScene = (
 ) => {
   const cfg = card._config,
     hass = card._hass;
-  const g = sceneGeometry(day, now, day.lat, cfg.rotation, camera, sides, width);
+  const g = sceneGeometry(day, now, day.lat, cfg.front, camera, sides, width);
   const uid = card._uid || (card._uid = Math.random().toString(36).slice(2, 8));
   let html = `<svg class="scene" viewBox="0 0 ${g.w} ${g.h}">
     <defs><radialGradient id="sky-${uid}" cx="38%" cy="32%" r="75%"><stop offset="0" class="sky0"/><stop offset="1" class="sky1"/></radialGradient></defs>

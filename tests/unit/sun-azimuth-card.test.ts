@@ -3,15 +3,16 @@ import { solarPosition } from "../../src/shared/solar.ts";
 import {
   angleDiff,
   compassKey,
+  directionKey,
   isUp,
-  shadowRatio,
   sunAt,
   sunDay,
 } from "../../src/sun-azimuth/day.ts";
 import { litSides, nextSide, sidesOf, timelineSpan } from "../../src/sun-azimuth/sides.ts";
 import { dialGeometry, polar } from "../../src/sun-azimuth/dial.ts";
 import { sceneBox, sceneGeometry } from "../../src/sun-azimuth/scene.ts";
-import { DIAL, SCENE } from "../../src/sun-azimuth/constants.ts";
+import { defaultSideName, DIAL, pointOf, SCENE } from "../../src/sun-azimuth/constants.ts";
+import type { HomeAssistant } from "../../src/shared/ha.ts";
 import { SunAzimuthCard } from "../../src/sun-azimuth-card.ts";
 
 const LAT = 51.23,
@@ -80,30 +81,41 @@ describe("sun-azimuth-card solar position", () => {
     expect(polarNight.sunrise).toBeNull();
     expect(polarNight.noon.el).toBeLessThan(0);
   });
-  it("has small helpers for angles, the horizon and shadows", () => {
+  it("has small helpers for angles, the horizon and compass points", () => {
     expect(angleDiff(10, 350)).toBe(20);
     expect(angleDiff(0, 180)).toBe(180);
     expect(angleDiff(90, 90)).toBe(0);
     expect(compassKey(0)).toBe("wind.dir.n");
     expect(compassKey(137.8)).toBe("wind.dir.se");
     expect(compassKey(359)).toBe("wind.dir.n");
+    // the head and the side names round to eight points
+    expect([0, 22.4, 22.5, 192, 337.4, 337.6, 359.9, -10, 370].map(pointOf)).toEqual([
+      "n",
+      "n",
+      "ne",
+      "s",
+      "nw",
+      "n",
+      "n",
+      "n",
+      "n",
+    ]);
+    expect(directionKey(225)).toBe("azimuth.dir.sw");
     expect(isUp({ t: 0, az: 0, el: -0.5 })).toBe(true);
     expect(isUp({ t: 0, az: 0, el: -1 })).toBe(false);
-    expect(shadowRatio(45)).toBeCloseTo(1, 5);
-    expect(shadowRatio(26.57)).toBeCloseTo(2, 1);
-    expect(shadowRatio(0.2)).toBeNull();
-    expect(shadowRatio(-5)).toBeNull();
   });
 });
 
 describe("sun-azimuth-card sides of the house", () => {
   it("lights the sides the sun faces and finds their windows", () => {
+    // the front faces north: clockwise from it the left side (east), the back, the right side
     const sides = sidesOf(summer, 0, forenoon);
-    expect(sides.map((s) => s.key)).toEqual(["north", "east", "south", "west"]);
+    expect(sides.map((s) => s.key)).toEqual(["front", "left", "back", "right"]);
     expect(sides.map((s) => s.normal)).toEqual([0, 90, 180, 270]);
+    expect(sides.some((s) => s.hidden)).toBe(false);
     // at 12:00 CEST the sun stands south-east: the east and south sides are lit
     expect(sides.map((s) => s.litNow)).toEqual([false, true, true, false]);
-    expect(litSides(sides).map((s) => s.key)).toEqual(["east", "south"]);
+    expect(litSides(sides).map((s) => s.key)).toEqual(["left", "back"]);
     // the midsummer sun rises and sets north of east / west: the north side gets sun twice
     const [north, east, south, west] = sides;
     expect(north.windows.length).toBe(2);
@@ -119,7 +131,7 @@ describe("sun-azimuth-card sides of the house", () => {
     expect(west.nextFrom).toBe(west.windows[0].from);
     expect(north.nextFrom).toBe(north.windows[1].from);
     expect(east.nextFrom).toBeNull();
-    expect(nextSide(sides)!.key).toBe("west");
+    expect(nextSide(sides)!.key).toBe("right");
     // how directly the sun hits: a lit side between 0 and 1, an unlit one 0
     expect(east.incidence).toBeGreaterThan(0);
     expect(east.incidence).toBeLessThan(1);
@@ -138,12 +150,37 @@ describe("sun-azimuth-card sides of the house", () => {
     expect(sides[0].windows).toEqual([]);
     expect(sides[0].nextFrom).toBeNull();
     expect(sides[2].litNow).toBe(true);
-    expect(nextSide(sides)!.key).toBe("west");
+    expect(nextSide(sides)!.key).toBe("right"); // the west side
+  });
+  it("keeps a shared wall dark: no windows, never lit, never next", () => {
+    // the left side faces east and would be lit at noon and first to catch the evening sun
+    // when it is the right one; hidden, both drop out while the house keeps its four walls
+    const sides = sidesOf(summer, 0, forenoon, ["left", "right"]);
+    expect(sides.map((s) => s.normal)).toEqual([0, 90, 180, 270]);
+    expect(sides.map((s) => s.hidden)).toEqual([false, true, false, true]);
+    const [, left, , right] = sides;
+    for (const s of [left, right]) {
+      expect(s.windows).toEqual([]);
+      expect(s.litNow).toBe(false);
+      expect(s.incidence).toBe(0);
+      expect(s.nextFrom).toBeNull();
+    }
+    expect(litSides(sides).map((s) => s.key)).toEqual(["back"]);
+    expect(nextSide(sides)!.key).toBe("front"); // the north side's evening window
+  });
+  it("names a side by where it faces", () => {
+    const de = { locale: { language: "de" } } as HomeAssistant;
+    expect(defaultSideName(undefined, 0)).toBe("North side");
+    expect(defaultSideName(undefined, 200)).toBe("South side");
+    expect(defaultSideName(undefined, 225)).toBe("South-West side");
+    expect(defaultSideName(de, 110)).toBe("Ostseite");
+    expect(defaultSideName(de, 290)).toBe("Westseite");
+    expect(defaultSideName(de, 315)).toBe("Nordwestseite");
   });
   it("lights nothing at night and after sunset nothing is next", () => {
     const sides = sidesOf(summer, 0, night);
     expect(litSides(sides)).toEqual([]);
-    expect(nextSide(sides)!.key).toBe("north"); // the first to catch the rising sun
+    expect(nextSide(sides)!.key).toBe("front"); // the north side, first to catch the rising sun
     const late = sidesOf(summer, 0, sunAt(utc(2026, 6, 21, 21), LAT, LON));
     expect(nextSide(late)).toBeNull();
   });
@@ -332,8 +369,9 @@ describe("sun-azimuth-card element", () => {
     el.setConfig({});
     expect(el._config).toMatchObject({
       view: "dial",
-      rotation: 0,
+      front: 0,
       sides: {},
+      hidden: [],
       camera: 180,
       camera_slider: false,
       hover_preview: true,
@@ -346,19 +384,24 @@ describe("sun-azimuth-card element", () => {
     });
     el.setConfig({
       view: "bogus",
-      house: { rotation: 45, sides: { north: "Street", east: "", south: 3 as never } },
+      house: {
+        front: 405,
+        sides: { front: "Street", right: "", back: 3 as never, left: false, north: "x" } as never,
+      },
       camera: -90,
       hover_preview: false,
     });
     expect(el._config.view).toBe("dial"); // an unknown view falls back
-    expect(el._config.rotation).toBe(45);
-    expect(el._config.sides).toEqual({ north: "Street" }); // only non-empty strings count
+    expect(el._config.front).toBe(45); // normalised to 0..360
+    expect(el._config.sides).toEqual({ front: "Street" }); // only non-empty strings name a side
+    expect(el._config.hidden).toEqual(["left"]); // false hides it; other keys are ignored
     expect(el._config.camera).toBe(-90);
     expect(el._camera).toBe(270); // the live camera is normalised to 0..360
     expect(el._config.hover_preview).toBe(false);
     el.setConfig({ view: "3d", house: null, camera: "x" as never });
     expect(el._config.view).toBe("3d");
-    expect(el._config.rotation).toBe(0);
+    expect(el._config.front).toBe(0);
+    expect(el._config.hidden).toEqual([]);
     expect(el._config.camera).toBe(180);
   });
 });

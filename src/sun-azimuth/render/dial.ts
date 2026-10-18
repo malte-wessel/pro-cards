@@ -14,7 +14,7 @@ export const renderDial = (
   now: SunSample,
   sides: Side[],
 ) => {
-  const g = dialGeometry(day, now, card._config.rotation, sides);
+  const g = dialGeometry(day, now, card._config.front, sides);
   const c = g.size / 2;
   const up = now.el > 0;
   let html = `<svg class="dial" viewBox="0 0 ${g.size} ${g.size}">

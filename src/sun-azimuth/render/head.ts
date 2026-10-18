@@ -1,10 +1,11 @@
-// The lead row at the top of the card: the azimuth arrow (dial), the elevation (3D) or the
-// compass ring with the day's events beside it (ring).
+// The lead row at the top of the card, drawn like the other cards' tile heads: the direction the
+// sun stands in with its angles below, behind the azimuth arrow (dial) or the sun angle (3D); or
+// the compass ring with the day's events beside it (ring).
 import { t } from "../../shared/i18n.ts";
 import { qs } from "../../shared/util.ts";
 import type { SunAzimuthHost } from "../config.ts";
-import { isUp, shadowRatio, type SunDay, type SunSample } from "../day.ts";
-import { compass, deg, set, status, time } from "./text.ts";
+import { isUp, type SunDay, type SunSample } from "../day.ts";
+import { compass, deg, direction, set, status, time } from "./text.ts";
 
 const RAD = Math.PI / 180;
 const RING = 36, // the ring's viewBox
@@ -27,7 +28,7 @@ export const headHtml = (view: string) => {
     view === "3d"
       ? `<div class="lead">${icon("mdi:sun-angle")}</div>`
       : `<div class="lead"><div class="rot">${icon("mdi:navigation")}</div></div>`;
-  return `<div class="top">${lead}<div class="texts"><div class="primary"></div><div class="big"><b></b><span></span></div><div class="secondary"><span class="accent"></span><span class="rest"></span></div></div></div>`;
+  return `<div class="top">${lead}<div class="texts"><div class="primary"></div><div class="secondary"></div></div></div>`;
 };
 
 export const fillHead = (card: SunAzimuthHost, head: HTMLElement, day: SunDay, now: SunSample) => {
@@ -65,7 +66,7 @@ export const fillHead = (card: SunAzimuthHost, head: HTMLElement, day: SunDay, n
       ".l2",
       now.el > 0
         ? `${t(hass, "azimuth.now")} · ${t(hass, "azimuth.high", { value: deg(hass, now.el) })}`
-        : `${t(hass, "azimuth.now")} · ${status(hass, day, now, false)}`,
+        : `${t(hass, "azimuth.now")} · ${status(hass, day, now)}`,
     );
     set(
       head,
@@ -84,23 +85,8 @@ export const fillHead = (card: SunAzimuthHost, head: HTMLElement, day: SunDay, n
     );
     return;
   }
-  if (view === "3d") {
-    set(head, ".primary", t(hass, "azimuth.elevation"));
-    set(head, ".big b", deg(hass, now.el));
-    set(head, ".big span", `${compass(hass, now.az)} · ${deg(hass, now.az)}`);
-    set(head, ".accent", status(hass, day, now, false));
-    const ratio = shadowRatio(now.el);
-    set(
-      head,
-      ".rest",
-      ratio === null ? "" : ` · ${t(hass, "azimuth.shadow", { ratio: ratio.toFixed(1) })}`,
-    );
-    return;
-  }
-  qs(head, ".rot").style.transform = `rotate(${now.az.toFixed(1)}deg)`;
-  set(head, ".primary", t(hass, "azimuth.azimuth"));
-  set(head, ".big b", deg(hass, now.az));
-  set(head, ".big span", compass(hass, now.az));
-  set(head, ".accent", status(hass, day, now, true));
-  set(head, ".rest", "");
+  // "South-West", then "192° · Elevation 62°"
+  if (view !== "3d") qs(head, ".rot").style.transform = `rotate(${now.az.toFixed(1)}deg)`;
+  set(head, ".primary", direction(hass, now.az));
+  set(head, ".secondary", `${deg(hass, now.az)} · ${status(hass, day, now)}`);
 };

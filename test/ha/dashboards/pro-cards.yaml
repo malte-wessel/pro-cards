@@ -146,18 +146,18 @@ views:
             title: Sun
             icon: mdi:sun-compass
             house:
-              rotation: 20
-              sides: { north: Street, south: Garden }
+              front: 20
+              sides: { front: Street, back: Garden }
             show_events: true
             show_sides: true
           - type: custom:sun-azimuth-card-pro
             view: 3d
-            house: { rotation: 20 }
+            house: { front: 20 }
             camera: 150
             camera_slider: true
           - type: custom:sun-azimuth-card-pro
             view: ring
-            house: { rotation: 20 }
+            house: { front: 20 }
       - type: grid
         cards:
           - type: heading

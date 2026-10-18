@@ -3,7 +3,7 @@ import { fmtNumber, fmtTime, textWidth } from "../../shared/format.ts";
 import type { HomeAssistant } from "../../shared/ha.ts";
 import { t } from "../../shared/i18n.ts";
 import { CHIP_FONT } from "../constants.ts";
-import { compassKey, isUp, type SunDay, type SunSample } from "../day.ts";
+import { compassKey, directionKey, isUp, type SunDay, type SunSample } from "../day.ts";
 
 type Hass = HomeAssistant | undefined;
 
@@ -11,6 +11,8 @@ export const deg = (hass: Hass, v: number) => `${fmtNumber(hass, v, 0)}°`;
 export const time = (hass: Hass, v: number | null | undefined) =>
   v == null ? "–" : fmtTime(hass, v);
 export const compass = (hass: Hass, az: number) => t(hass, compassKey(az));
+// the direction written out, eight points: "South-West"
+export const direction = (hass: Hass, az: number) => t(hass, directionKey(az));
 // "4 h 28 min" (units are the same in every language)
 export const duration = (ms: number) => {
   const m = Math.round(ms / 60000),
@@ -23,19 +25,9 @@ export const set = (root: ParentNode, sel: string, text: string) => {
   if (el) el.textContent = text;
 };
 
-// "rising" / "sinking", by the time relative to solar noon
-export const trend = (hass: Hass, day: SunDay, now: SunSample) =>
-  t(hass, now.t < day.noon.t ? "azimuth.rising" : "azimuth.sinking");
-
-// the status line: elevation and trend while the sun is up, otherwise where it stands
-export const status = (hass: Hass, day: SunDay, now: SunSample, withElevation: boolean) => {
-  if (now.el > 0)
-    return withElevation
-      ? t(hass, "azimuth.elevation_status", {
-          value: deg(hass, now.el),
-          trend: trend(hass, day, now),
-        })
-      : trend(hass, day, now);
+// the head's status: the elevation while the sun is up, otherwise where it stands
+export const status = (hass: Hass, day: SunDay, now: SunSample) => {
+  if (now.el > 0) return t(hass, "azimuth.elevation", { value: deg(hass, now.el) });
   if (isUp(now)) return t(hass, "azimuth.on_horizon");
   const below = t(hass, "azimuth.below_horizon");
   return day.sunrise

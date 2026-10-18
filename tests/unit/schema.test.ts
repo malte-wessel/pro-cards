@@ -123,10 +123,13 @@ describe("card config schemas", () => {
     expect(validate({ type: "custom:sun-path-card-pro", labels: { midnight: "x" } })).toBeTruthy();
     const SAZ = "custom:sun-azimuth-card-pro";
     expect(validate({ type: SAZ, view: "panorama" })).toMatch(/enum|allowed/);
-    expect(validate({ type: SAZ, house: { rotation: 400 } })).toMatch(/maximum|<=/);
-    expect(validate({ type: SAZ, house: { sides: { front: "Street" } } })).toMatch(
+    expect(validate({ type: SAZ, house: { front: 400 } })).toMatch(/maximum|<=/);
+    // the sides are front / right / back / left, a name or false
+    expect(validate({ type: SAZ, house: { sides: { north: "Street" } } })).toMatch(
       /unevaluated|additional/,
     );
+    expect(validate({ type: SAZ, house: { sides: { left: true } } })).toMatch(/const|type/);
+    expect(validate({ type: SAZ, house: { rotation: 20 } })).toMatch(/unevaluated|additional/);
     expect(validate({ type: SAZ, house: { rotate: 20 } })).toMatch(/unevaluated|additional/);
     expect(validate({ type: SAZ, camera_slider: "yes" })).toMatch(/boolean|type/);
     expect(validate({ type: SAZ, show_side: false })).toMatch(/unevaluated|additional/);
@@ -518,7 +521,7 @@ describe("card config schemas", () => {
         title: "Sun",
         icon: "mdi:sun-compass",
         view: "3d",
-        house: { rotation: 45, sides: { north: "Street", south: "Garden" } },
+        house: { front: 45, sides: { front: "Street", back: "Garden", left: false } },
         camera: 150,
         camera_slider: true,
         hover_preview: false,
