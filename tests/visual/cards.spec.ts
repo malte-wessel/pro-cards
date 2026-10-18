@@ -862,11 +862,13 @@ const CASES = {
     {
       type: "custom:sun-azimuth-card-pro",
       view: "3d",
+      house: { roof: "hip" },
       show_house: false,
       grid_options: { columns: 6 },
     },
     {
       type: "custom:sun-azimuth-card-pro",
+      house: { roof: "gable_front" },
       show_house: false,
       grid_options: { columns: 6 },
     },

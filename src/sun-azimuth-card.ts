@@ -12,6 +12,7 @@
  *   view: dial                    # dial | 3d
  *   house:
  *     front: 110                  # the bearing the front faces, degrees clockwise from north
+ *     roof: gable                 # 3d / dial: gable (ridge left–right) | gable_front | hip | flat
  *     sides: { front: Street, left: false }   # own names (front, right, back, left); false: a
  *                                 # shared wall, never lit and not listed
  *   camera: 180                   # 3d: the bearing the camera looks toward
@@ -37,7 +38,15 @@ import type {
   SunAzimuthConfig,
   SunAzimuthHost,
 } from "./sun-azimuth/config.ts";
-import { DEFAULTS, SCENE, SIDES, VIEWS, type SideKey } from "./sun-azimuth/constants.ts";
+import {
+  DEFAULTS,
+  DIAL,
+  ROOFS,
+  SCENE,
+  SIDES,
+  VIEWS,
+  type SideKey,
+} from "./sun-azimuth/constants.ts";
 import { sunAt, sunDay, type SunSample } from "./sun-azimuth/day.ts";
 import { renderDial } from "./sun-azimuth/render/dial.ts";
 import { eventsHtml, fillEvents, fillHouse, houseHtml } from "./sun-azimuth/render/events.ts";
@@ -85,9 +94,9 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
   };
   _lastMinute?: number;
   _timer?: ReturnType<typeof setInterval>;
-  // the 3D scene is drawn in px at the column's width: redrawn when the width changes
+  // the dial and the 3D scene are drawn in px at the column's width: redrawn when it changes
   _ro?: ResizeObserver;
-  _sceneWidth = 0;
+  _visualWidth = 0;
 
   static getStubConfig(hass?: HomeAssistant) {
     return { title: t(hass, "azimuth.stub_title") };
@@ -113,6 +122,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
       ...rest,
       view: oneOf(VIEWS, view) ? view : DEFAULTS.view,
       front: (((numOrNull(house?.front) ?? DEFAULTS.front) % 360) + 360) % 360,
+      roof: oneOf(ROOFS, house?.roof) ? house.roof : DEFAULTS.roof,
       sides,
       hidden,
       camera: numOrNull(camera) ?? DEFAULTS.camera,
@@ -143,8 +153,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     this._timer = setInterval(() => this._render(), 60000);
     this._ro = new ResizeObserver(() => {
       const visual = this._root?.querySelector<HTMLElement>(".visual");
-      if (this._config.view === "3d" && visual && visual.clientWidth !== this._sceneWidth)
-        this._renderScene();
+      if (visual && visual.clientWidth !== this._visualWidth) this._renderPlot();
     });
     this._observe();
     document.addEventListener("pointerdown", this._onDocPointer);
@@ -206,7 +215,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
           text: (v) => deg(this._hass, v),
           onInput: (v) => {
             this._camera = v;
-            this._renderScene();
+            this._renderPlot();
           },
         },
         track,
@@ -230,7 +239,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
   _observe() {
     this._ro?.disconnect();
     const visual = this._root?.querySelector(".visual");
-    if (visual && this._config.view === "3d") this._ro?.observe(visual);
+    if (visual) this._ro?.observe(visual);
   }
 
   // the plot (dial or 3D scene) at an instant, with the sides as they are then
@@ -239,12 +248,12 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
       visual = card.querySelector<HTMLElement>(".visual");
     if (!visual) return;
     const sides = sidesOf(day, this._config.front, at, this._config.hidden);
+    // not laid out yet: drawn at a stand-in width, the observer redraws at the real one
+    this._visualWidth = visual.clientWidth;
     if (this._config.view === "3d") {
-      // not laid out yet: drawn at a stand-in width, the observer redraws at the real one
-      this._sceneWidth = visual.clientWidth;
-      renderScene(this, visual, day, at, sides, this._camera, this._sceneWidth || SCENE.width);
+      renderScene(this, visual, day, at, sides, this._camera, this._visualWidth || SCENE.width);
       this._fillControl();
-    } else renderDial(this, visual, day, at, sides);
+    } else renderDial(this, visual, day, at, sides, this._visualWidth || DIAL.size);
   }
   // the hovered time: the sun moves there in the plot, a hair marks it on every bar and the
   // footer's heading shows it
@@ -268,8 +277,9 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     this._render();
   }
 
-  // the 3D scene alone (the slider turns it; the rest of the card does not depend on the camera)
-  _renderScene() {
+  // the plot alone: a new width, or the slider turning the 3D scene (the rest of the card depends
+  // on neither)
+  _renderPlot() {
     const card = this._root,
       day = this._day;
     if (!card || !day || !this._hass) return;

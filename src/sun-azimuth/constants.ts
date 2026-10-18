@@ -4,6 +4,10 @@ import { t } from "../shared/i18n.ts";
 
 export const VIEWS = ["dial", "3d"] as const;
 export type View = (typeof VIEWS)[number];
+// the roof of the house: a gable with its ridge from left to right (eaves at the front and the
+// back), a gable facing the front (ridge from front to back), a hip roof, or a flat one
+export const ROOFS = ["gable", "gable_front", "hip", "flat"] as const;
+export type Roof = (typeof ROOFS)[number];
 
 // the four sides of the house, clockwise from the front as the dial and the 3D scene walk their
 // edges; left and right as you stand in front of the house looking at it, so with the front
@@ -25,6 +29,7 @@ export const defaultSideName = (hass: HomeAssistant | null | undefined, normal: 
 export const DEFAULTS = {
   view: "dial" as View,
   front: 0,
+  roof: "gable" as Roof,
   camera: 180,
   camera_slider: false,
   hover_preview: true,
@@ -39,8 +44,14 @@ export const DEFAULTS = {
 export const SAMPLE_MS = 60000; // one sample per minute over the day
 export const PATH_STEP = 10; // the drawn paths use every tenth sample
 
-// the sky dial: a 300 box, the horizon ring at R
+// the sky dial at full size: a 300 box, the horizon ring at r (dialBox shrinks it to the column)
 export const DIAL = { size: 300, r: 124, house: 20 } as const;
+// strokes and dots follow the size of the picture: its radius over the full-size one, but no
+// thinner than LINE_MIN, so a narrow card keeps lines that read
+export const LINE_MIN = 0.7;
+// how thick the walls of the house are drawn, in px at full size: in the sun and in the shade
+export const WALL = { lit: 4, plain: 2 } as const;
+export const lineScale = (r: number, full: number) => Math.max(LINE_MIN, Math.min(1, r / full));
 // the 3D scene: an orthographic view of the unit sphere, tilted down by `tilt`. The sphere's
 // radius in px is maxScale; a column too narrow for it shrinks it down to minScale (sceneBox); `side` is the
 // room beside the E / W labels, `top` above the dome (the sun's halo), `bottom` under the ground's
@@ -53,8 +64,8 @@ export const SCENE = {
   bottom: 22,
   width: 416,
   tilt: 22,
-  houseHalf: 0.1,
-  houseHeight: 0.11,
+  houseHalf: 0.17,
+  houseHeight: 0.15,
   label: 1.12, // the compass points sit at 1.12 × the radius
 } as const;
 

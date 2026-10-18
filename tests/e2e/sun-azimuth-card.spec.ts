@@ -29,15 +29,16 @@ test("the sky dial shows the azimuth, the path and the lit sides", async ({ page
   // the dial
   const dial = c.locator("svg.dial");
   await expect(dial).toHaveAttribute("viewBox", "0 0 300 300");
+  await expect(dial).toHaveAttribute("style", "--k: 1.00"); // full size, full line weight
   await expect(dial.locator(".past")).toHaveCount(1);
   await expect(dial.locator(".future")).toHaveCount(1);
   await expect(dial.locator(".dayarc")).toHaveCount(1);
   await expect(dial.locator(".beam")).toHaveCount(1);
   await expect(dial.locator(".azarc")).toHaveCount(1);
   await expect(dial.locator(".chip text")).toHaveText("138°");
-  await expect(dial.locator(".edge")).toHaveCount(4);
+  await expect(dial.locator(".wall")).toHaveCount(4);
   // the front faces 20°: the sun at 138° lights the left (110°) and the back (200°)
-  await expect(dial.locator(".edge.lit")).toHaveCount(2);
+  await expect(dial.locator(".wall.lit")).toHaveCount(2);
   await expect(dial.locator(".mark.rise")).toHaveCount(1);
   await expect(dial.locator(".mark.set")).toHaveCount(1);
   await expect(dial.locator("text.cl")).toHaveText(["N", "E", "S", "W"]);
@@ -152,8 +153,8 @@ test("a wall set to false stays dark and drops out of the lists", async ({ page 
   const c = card(page);
   // the left (110°) would be in the sun: drawn, but plain
   const dial = c.locator("svg.dial");
-  await expect(dial.locator(".edge")).toHaveCount(4);
-  await expect(dial.locator(".edge.lit")).toHaveCount(1);
+  await expect(dial.locator(".wall")).toHaveCount(4);
+  await expect(dial.locator(".wall.lit")).toHaveCount(1); // the back alone
   await expect(c.locator(".house .primary")).toHaveText("Sun on South side");
   await expect(c.locator(".side .primary")).toHaveText(["Street", "West side", "South side"]);
 });
@@ -249,9 +250,10 @@ test("the 3D view draws the scene and the slider orbits it", async ({ page }) =>
   expect(box.dome).toBe(236);
   expect(box.label).toBeLessThan(16);
   await expect(scene.locator(".dome")).toHaveCount(1);
-  await expect(scene.locator(".face")).toHaveCount(2);
-  await expect(scene.locator(".redge")).toHaveCount(4);
-  await expect(scene.locator(".redge.lit")).toHaveCount(2);
+  // the house: two walls and the front slope of its gable roof face the camera
+  await expect(scene.locator(".face:not(.roof)")).toHaveCount(2);
+  await expect(scene.locator(".face.roof")).toHaveCount(1);
+  await expect(scene.locator(".face.roof")).toHaveClass(/lit/);
   await expect(scene.locator(".shadow")).toHaveCount(1);
   await expect(scene.locator(".drop")).toHaveCount(1);
   await expect(scene.locator("circle.sun")).toHaveCount(1);
@@ -289,6 +291,49 @@ test("the 3D view draws the scene and the slider orbits it", async ({ page }) =>
   await expect(c.locator(".side")).toHaveCount(4);
 });
 
+test("the dial is drawn at a narrow column's width: labels keep their size, lines thin down", async ({
+  page,
+}) => {
+  const cfg = { type: "custom:sun-azimuth-card-pro", show_house: false };
+  const measure = () =>
+    card(page)
+      .locator(".visual")
+      .evaluate((visual) => {
+        const svg = visual.querySelector("svg.dial") as SVGSVGElement;
+        const label = (svg.querySelector("text.cl") as SVGTextElement).getBoundingClientRect();
+        const past = getComputedStyle(svg.querySelector(".past") as SVGPathElement).strokeWidth;
+        return {
+          vb: svg.viewBox.baseVal.width,
+          column: visual.clientWidth,
+          k: parseFloat(svg.style.getPropertyValue("--k")),
+          label: label.height,
+          past: parseFloat(past),
+        };
+      });
+  await mount(page, cfg, { time: NOON, width: 400 });
+  const wide = await measure();
+  expect(wide.vb).toBe(300);
+  expect(wide.k).toBe(1);
+  expect(wide.past).toBe(2.5);
+  await mount(page, cfg, { time: NOON, width: 200 });
+  const narrow = await measure();
+  // one px per unit: the box is the column, the labels as tall as in the wide card
+  expect(narrow.vb).toBe(narrow.column);
+  expect(Math.abs(narrow.label - wide.label)).toBeLessThan(0.5);
+  // the lines thin with the picture, but no further than LINE_MIN (0.7)
+  expect(narrow.k).toBeLessThan(1);
+  expect(narrow.k).toBeGreaterThanOrEqual(0.7);
+  expect(narrow.past).toBeCloseTo(2.5 * narrow.k, 1);
+  // a resize redraws the dial at the new width
+  await page.locator("#root").evaluate((el) => (el.style.width = "300px"));
+  await expect
+    .poll(async () => {
+      const r = await measure();
+      return r.vb === r.column && r.column > narrow.column;
+    })
+    .toBe(true);
+});
+
 test("the 3D scene fills a narrow column, keeps its size in a wide one and follows a resize", async ({
   page,
 }) => {
@@ -305,17 +350,21 @@ test("the 3D scene fills a narrow column, keeps its size in a wide one and follo
           column: visual.clientWidth,
           dome: dome.width,
           centre: dome.x + dome.width / 2,
+          k: parseFloat(svg.style.getPropertyValue("--k")),
         };
       });
   await mount(page, cfg, { time: NOON, width: 260 });
   let m = await measure();
   expect(m.vb).toBe(m.column);
   expect(m.dome / m.column).toBeGreaterThan(0.75);
+  // a smaller sphere, thinner lines
+  expect(m.k).toBeLessThan(1);
   await mount(page, cfg, { time: NOON, width: 1000 });
   m = await measure();
   expect(m.vb).toBe(m.column);
   expect(m.dome).toBe(236);
   expect(m.centre).toBe(m.column / 2);
+  expect(m.k).toBe(1);
   // the card is redrawn at its new width
   await page.locator("#root").evaluate((el) => (el.style.width = "300px"));
   await expect
@@ -347,7 +396,7 @@ test("at night the sun is below the horizon everywhere", async ({ page }) => {
   await expect(dial.locator(".chip")).toHaveCount(0);
   await expect(dial.locator(".past")).toHaveCount(0);
   await expect(dial.locator(".future")).toHaveCount(1);
-  await expect(dial.locator(".edge.lit")).toHaveCount(0);
+  await expect(dial.locator(".wall.lit")).toHaveCount(0);
   await expect(c.locator(".house .primary")).toHaveText("No side in the sun");
   await expect(c.locator(".house .secondary")).toHaveText(/^next: North side from 05:\d\d$/);
   await expect(c.locator(".side .pill")).toHaveText([
@@ -358,6 +407,33 @@ test("at night the sun is below the horizon everywhere", async ({ page }) => {
   ]);
   // the now dot is outside the timeline
   await expect(c.locator(".side").first().locator(".lbar b")).toBeHidden();
+});
+
+test("house.roof shapes the house in both views", async ({ page }) => {
+  await mount(
+    page,
+    [
+      { type: "custom:sun-azimuth-card-pro", view: "3d", house: { roof: "flat" } },
+      { type: "custom:sun-azimuth-card-pro", house: { roof: "flat" } },
+      { type: "custom:sun-azimuth-card-pro", view: "3d", house: { roof: "gable_front" } },
+      { type: "custom:sun-azimuth-card-pro", house: { roof: "hip" } },
+    ],
+    { time: NOON },
+  );
+  // flat: one roof, in the sun at noon, and no lines on the dial's footprint
+  await expect(card(page, 0).locator("svg.scene .face.roof")).toHaveCount(1);
+  await expect(card(page, 0).locator("svg.scene .face.roof")).toHaveClass(/lit/);
+  await expect(card(page, 1).locator("svg.dial .ridge")).toHaveCount(0);
+  // from the default camera (north, looking south) the front's gable shows: five corners
+  const walls = await card(page, 2)
+    .locator("svg.scene .face:not(.roof)")
+    .evaluateAll((els) => els.map((el) => el.getAttribute("d")!.split(" L").length));
+  expect(walls).toContain(5);
+  // a hip roof on the dial: the ridge and the four hips
+  await expect(card(page, 3).locator("svg.dial .ridge")).toHaveAttribute(
+    "d",
+    /^M[^M]+(M[^M]+){4}$/,
+  );
 });
 
 test("the 3D view at night hides the sun and the shadow", async ({ page }) => {

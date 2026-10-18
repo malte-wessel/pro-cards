@@ -9,9 +9,18 @@ import {
   sunDay,
 } from "../../src/sun-azimuth/day.ts";
 import { litSides, nextSide, sidesOf, timelineSpan } from "../../src/sun-azimuth/sides.ts";
-import { dialGeometry, polar } from "../../src/sun-azimuth/dial.ts";
+import { dialBox, dialGeometry, polar } from "../../src/sun-azimuth/dial.ts";
+import { wallBands } from "../../src/sun-azimuth/edges.ts";
+import { houseSolid } from "../../src/sun-azimuth/house.ts";
 import { sceneBox, sceneGeometry } from "../../src/sun-azimuth/scene.ts";
-import { defaultSideName, DIAL, pointOf, SCENE } from "../../src/sun-azimuth/constants.ts";
+import {
+  defaultSideName,
+  DIAL,
+  LINE_MIN,
+  lineScale,
+  pointOf,
+  SCENE,
+} from "../../src/sun-azimuth/constants.ts";
 import type { HomeAssistant } from "../../src/shared/ha.ts";
 import { SunAzimuthCard } from "../../src/sun-azimuth-card.ts";
 
@@ -201,6 +210,78 @@ describe("sun-azimuth-card sides of the house", () => {
   });
 });
 
+describe("sun-azimuth-card roofs", () => {
+  const corners = (pts: unknown[][]) => pts.map((p) => p.length);
+  it("builds each roof on the same four walls", () => {
+    const gable = houseSolid("gable", 1, 1, 2);
+    // the gables are the left and the right walls, the ridge runs between them
+    expect(corners(gable.walls)).toEqual([4, 5, 4, 5]);
+    expect(gable.roofs).toHaveLength(2);
+    expect(gable.top).toBe(2);
+    expect(gable.ridge).toEqual([
+      [
+        [1, 0],
+        [-1, 0],
+      ],
+    ]);
+    // turned: the gables face the front and the back
+    const front = houseSolid("gable_front", 1, 1, 2);
+    expect(corners(front.walls)).toEqual([5, 4, 5, 4]);
+    expect(front.walls[0][3]).toEqual([0, 1, 2]); // the front gable's apex, over its middle
+    // a hip roof: no gables, two trapezoids and two triangles, the ridge and four hips from above
+    const hip = houseSolid("hip", 1, 1, 2);
+    expect(corners(hip.walls)).toEqual([4, 4, 4, 4]);
+    expect(corners(hip.roofs)).toEqual([4, 3, 4, 3]);
+    expect(hip.ridge).toHaveLength(5);
+    // flat: one roof at the walls' height, nothing to draw from above
+    const flat = houseSolid("flat", 1, 1, 2);
+    expect(flat.roofs).toHaveLength(1);
+    expect(flat.top).toBe(1);
+    expect(flat.roofs[0].every((p) => p[2] === 1)).toBe(true);
+    expect(flat.ridge).toEqual([]);
+  });
+  it("shows and lights the roof the camera and the sun see", () => {
+    const sides = sidesOf(summer, 20, forenoon);
+    for (const roof of ["gable", "gable_front", "hip", "flat"] as const)
+      for (const camera of [0, 90, 150, 180, 270]) {
+        const g = sceneGeometry(summer, forenoon, LAT, 20, camera, sides, W, roof);
+        // seen from above, part of the roof always shows; never more than two walls
+        expect(g.faces.some((f) => f.roof)).toBe(true);
+        expect(g.faces.filter((f) => !f.roof).length).toBeLessThanOrEqual(2);
+      }
+    // a flat roof faces straight up: hit as directly as the sun is high
+    const flat = sceneGeometry(summer, forenoon, LAT, 20, 180, sides, W, "flat");
+    const top = flat.faces.find((f) => f.roof)!;
+    expect(top.lit).toBe(true);
+    expect(top.incidence).toBeCloseTo(Math.sin(forenoon.el * (Math.PI / 180)), 5);
+    // the dial draws the roof's lines inside the footprint; a flat roof has none
+    expect(dialGeometry(summer, forenoon, 20, sides, 300, "hip").roofLines.split("M")).toHaveLength(
+      6,
+    );
+    expect(dialGeometry(summer, forenoon, 20, sides, 300, "flat").roofLines).toBe("");
+  });
+});
+
+describe("sun-azimuth-card house walls", () => {
+  it("draws the walls as bands inside the outline that meet on the diagonal", () => {
+    const b = wallBands(10, [4, 2, 2, 2]);
+    expect(b).toHaveLength(4);
+    // wall 0 (the top edge, 4 thick): outer corners, then the inner ones 4 in
+    expect(b[0]).toEqual([
+      [-10, -10],
+      [10, -10],
+      [8, -6],
+      [-8, -6],
+    ]);
+    // wall 1 (the right edge, 2 thick) shares the corner and the diagonal with wall 0
+    expect(b[1][0]).toEqual(b[0][1]);
+    expect(b[1][3]).toEqual(b[0][2]);
+    // nothing reaches outside the square
+    for (const band of b)
+      for (const [x, y] of band) expect(Math.max(Math.abs(x), Math.abs(y))).toBeLessThanOrEqual(10);
+  });
+});
+
 describe("sun-azimuth-card sky dial", () => {
   const C = DIAL.size / 2;
   it("maps the sky to the disc: zenith at the centre, horizon on the rim", () => {
@@ -230,9 +311,9 @@ describe("sun-azimuth-card sky dial", () => {
     expect(g.rise![1]).toBeLessThan(C);
     expect(g.set![0]).toBeLessThan(C);
     expect(Math.hypot(g.rise![0] - C, g.rise![1] - C)).toBeCloseTo(DIAL.r, 5);
-    // one edge per side, lit like the sides
-    expect(g.edges.length).toBe(4);
-    expect(g.edges.map((e) => e.lit)).toEqual(sides.map((s) => s.litNow));
+    // one band per side, lit like the sides
+    expect(g.walls.map((w) => w.lit)).toEqual(sides.map((s) => s.litNow));
+    expect(g.walls.every((w) => w.d.endsWith(" Z"))).toBe(true);
     expect(g.labels.map((l) => l.bearing)).toEqual([0, 90, 180, 270]);
     expect(g.ticks.split("M").length - 1).toBe(36);
   });
@@ -255,6 +336,36 @@ describe("sun-azimuth-card sky dial", () => {
     expect(g.rise).toBeNull();
     expect(g.set).toBeNull();
     expect(g.past.length).toBeGreaterThan(0);
+  });
+  it("thins the lines with the picture, never below LINE_MIN", () => {
+    expect(lineScale(124, 124)).toBe(1);
+    expect(lineScale(200, 124)).toBe(1);
+    expect(lineScale(99.2, 124)).toBeCloseTo(0.8, 5);
+    expect(lineScale(30, 124)).toBe(LINE_MIN);
+  });
+  it("draws a narrow column in px: the labels keep their room, the sky shrinks inside", () => {
+    // at most 300 px, as before; a wider column centres the same dial
+    expect(dialBox(300)).toEqual({ size: 300, r: 124, k: 1 });
+    expect(dialBox(400)).toEqual({ size: 300, r: 124, k: 1 });
+    expect(dialBox(270)).toMatchObject({ size: 270, r: 109 });
+    expect(dialBox(270).k).toBeCloseTo(109 / 124, 5);
+    // a narrow column: the rim keeps 26 px for the labels, the lines thin down to LINE_MIN
+    expect(dialBox(160)).toEqual({ size: 160, r: 54, k: LINE_MIN });
+    const sides = sidesOf(summer, 20, forenoon);
+    const g = dialGeometry(summer, forenoon, 20, sides, 160);
+    const c = 80;
+    expect(g.size).toBe(160);
+    expect(g.k).toBe(LINE_MIN);
+    expect(g.beam).toContain(`L${c} ${c}`);
+    // the labels 18 px outside the rim and inside the box
+    for (const l of g.labels) {
+      expect(Math.hypot(l.x - c, l.y - c)).toBeCloseTo(g.r + 18, 0);
+      expect(Math.min(l.x, l.y)).toBeGreaterThan(0);
+      expect(Math.max(l.x, l.y)).toBeLessThan(160);
+    }
+    // the sunrise mark on the smaller rim, the sun inside it
+    expect(Math.hypot(g.rise![0] - c, g.rise![1] - c)).toBeCloseTo(g.r, 0);
+    expect(Math.hypot(g.sun[0] - c, g.sun[1] - c)).toBeLessThan(g.r);
   });
 });
 
@@ -279,14 +390,28 @@ describe("sun-azimuth-card 3D scene", () => {
     const tiny = sceneBox(100);
     expect(tiny.scale).toBe(SCENE.minScale);
     expect(tiny.w).toBeGreaterThan(100);
+    // the lines follow the sphere: full at full size, LINE_MIN at the smallest
+    const sides = sidesOf(summer, 20, forenoon);
+    expect(sceneGeometry(summer, forenoon, LAT, 20, 180, sides, W).k).toBe(1);
+    expect(sceneGeometry(summer, forenoon, LAT, 20, 180, sides, 100).k).toBe(LINE_MIN);
   });
   it("shows the walls facing the camera and drops the back-most compass point", () => {
     const sides = sidesOf(summer, 20, forenoon);
     const g = sceneGeometry(summer, forenoon, LAT, 20, 180, sides, W);
     expect([g.w, g.h]).toEqual([W, sceneBox(W).h]);
-    // from the north looking south, two walls show: the north and one of east / west
-    expect(g.faces.length).toBe(2);
-    expect(g.roofEdges.length).toBe(4);
+    // from the north looking south, two walls show: the front (20°) and the right gable (290°),
+    // both in the shade at noon; of the roof, the slope down to the front, lit by the high sun
+    const walls = g.faces.filter((f) => !f.roof),
+      roofs = g.faces.filter((f) => f.roof);
+    expect(walls).toHaveLength(2);
+    expect(walls.every((f) => !f.lit)).toBe(true);
+    expect(walls.find((f) => f.d.split(" L").length === 5)).toBeDefined(); // the gable: five corners
+    expect(roofs).toHaveLength(1);
+    expect(roofs[0].lit).toBe(true);
+    expect(roofs[0].incidence).toBeGreaterThan(0);
+    expect(roofs[0].incidence).toBeLessThan(1);
+    // the soft light tells the shaded surfaces apart
+    expect(walls[0].shade).not.toBeCloseTo(walls[1].shade, 2);
     expect(g.cardinals.map((c) => c.bearing)).toEqual([0, 90, 270]);
     expect(
       sceneGeometry(summer, forenoon, LAT, 20, 0, sides, W).cardinals.map((c) => c.bearing),
@@ -306,7 +431,7 @@ describe("sun-azimuth-card 3D scene", () => {
     // everything drawn stays inside the box
     const nums = (d: string) =>
       [...d.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)].map((m) => [+m[1], +m[2]]);
-    for (const [x, y] of nums(g.ground + g.shadow + g.roof)) {
+    for (const [x, y] of nums(g.ground + g.shadow + g.faces.map((f) => f.d).join(" "))) {
       expect(x).toBeGreaterThanOrEqual(0);
       expect(x).toBeLessThanOrEqual(g.w);
       expect(y).toBeGreaterThanOrEqual(0);
@@ -368,6 +493,7 @@ describe("sun-azimuth-card element", () => {
     expect(el._config).toMatchObject({
       view: "dial",
       front: 0,
+      roof: "gable",
       sides: {},
       hidden: [],
       camera: 180,
@@ -384,6 +510,7 @@ describe("sun-azimuth-card element", () => {
       view: "bogus",
       house: {
         front: 405,
+        roof: "pagoda",
         sides: { front: "Street", right: "", back: 3 as never, left: false, north: "x" } as never,
       },
       camera: -90,
@@ -391,6 +518,7 @@ describe("sun-azimuth-card element", () => {
     });
     expect(el._config.view).toBe("dial"); // an unknown view falls back
     expect(el._config.front).toBe(45); // normalised to 0..360
+    expect(el._config.roof).toBe("gable"); // an unknown roof falls back
     expect(el._config.sides).toEqual({ front: "Street" }); // only non-empty strings name a side
     expect(el._config.hidden).toEqual(["left"]); // false hides it; other keys are ignored
     expect(el._config.camera).toBe(-90);

@@ -1,6 +1,6 @@
 // Config types of the sun azimuth card and what its render modules read from the card element.
 import type { CardConfigBase, HomeAssistant } from "../shared/ha.ts";
-import type { SideKey, View } from "./constants.ts";
+import type { Roof, SideKey, View } from "./constants.ts";
 import type { SunDay } from "./day.ts";
 
 // a side's own name, or false for a wall that never gets sun (shared with the neighbour)
@@ -10,7 +10,7 @@ export interface SunAzimuthCardConfig extends CardConfigBase {
   title?: string;
   icon?: string;
   view?: string;
-  house?: { front?: number; sides?: SideNames | null } | null;
+  house?: { front?: number; roof?: string; sides?: SideNames | null } | null;
   camera?: number;
   camera_slider?: boolean;
   hover_preview?: boolean;
@@ -27,6 +27,7 @@ export interface SunAzimuthConfig extends CardConfigBase {
   view: View;
   // the bearing the front faces, 0..360
   front: number;
+  roof: Roof;
   // own names of the sides; `hidden` lists the ones set to false
   sides: Partial<Record<SideKey, string>>;
   hidden: SideKey[];

@@ -124,6 +124,7 @@ describe("card config schemas", () => {
     const SAZ = "custom:sun-azimuth-card-pro";
     expect(validate({ type: SAZ, view: "panorama" })).toMatch(/enum|allowed/);
     expect(validate({ type: SAZ, house: { front: 400 } })).toMatch(/maximum|<=/);
+    expect(validate({ type: SAZ, house: { roof: "dome" } })).toMatch(/enum|allowed/);
     // the sides are front / right / back / left, a name or false
     expect(validate({ type: SAZ, house: { sides: { north: "Street" } } })).toMatch(
       /unevaluated|additional/,
@@ -521,7 +522,7 @@ describe("card config schemas", () => {
         title: "Sun",
         icon: "mdi:sun-compass",
         view: "3d",
-        house: { front: 45, sides: { front: "Street", back: "Garden", left: false } },
+        house: { front: 45, roof: "hip", sides: { front: "Street", back: "Garden", left: false } },
         camera: 150,
         camera_slider: true,
         hover_preview: false,

@@ -16,7 +16,7 @@ type: custom:sun-azimuth-card-pro
 
 ## 3D
 
-`view: 3d` draws the sky as a see-through dome around a small house, seen from slightly above. The sun runs on its daily circle, hidden below the horizon at night; a dashed drop line shows its elevation with the angle in a chip, dotted lines on the ground run from the house to the four compass points and an arc from north to the sun shows its azimuth the same way, and the house casts its shadow on the ground. The walls and roof edges facing the sun light up, more the more directly it hits them. A pole marks the house's position under the dome; the back-most compass point is left out so it does not sit in the sky. `camera` is the bearing you look toward: the default 180 stands north of the house looking south, so that today's path lies ahead of you; 90 looks east, 270 west. In a narrow card the dome grows to fill the width; its labels keep their size.
+`view: 3d` draws the sky as a see-through dome around a small house, seen from slightly above. The sun runs on its daily circle, hidden below the horizon at night; a dashed drop line shows its elevation with the angle in a chip, dotted lines on the ground run from the house to the four compass points and an arc from north to the sun shows its azimuth the same way, and the house casts its shadow on the ground. The walls and roof slopes facing the sun light up, more the more directly it hits them. A pole marks the house's position under the dome; the back-most compass point is left out so it does not sit in the sky. `camera` is the bearing you look toward: the default 180 stands north of the house looking south, so that today's path lies ahead of you; 90 looks east, 270 west. In a narrow card the dome grows to fill the width; its labels keep their size.
 
 ::: live
 
@@ -26,6 +26,62 @@ title: Sun
 view: 3d
 house: { front: 20 }
 camera: 150
+```
+
+:::
+
+### Roof
+
+`house.roof` gives the house its roof, in the 3D scene and as lines on the dial's footprint: `gable` (the default) has its ridge from the left side to the right, so the eaves run along the front and the back; `gable_front` turns the ridge from the front to the back, with the gable facing the street; `hip` slopes down to all four sides; `flat` is flat. The roof slopes catch the sun like the walls, and the shadow follows the roof's shape.
+
+::: live
+
+```yaml
+type: custom:sun-azimuth-card-pro
+title: Gable
+view: 3d
+house: { front: 20, roof: gable }
+camera: 150
+show_house: false
+```
+
+:::
+
+::: live
+
+```yaml
+type: custom:sun-azimuth-card-pro
+title: Gable to the front
+view: 3d
+house: { front: 20, roof: gable_front }
+camera: 150
+show_house: false
+```
+
+:::
+
+::: live
+
+```yaml
+type: custom:sun-azimuth-card-pro
+title: Hip
+view: 3d
+house: { front: 20, roof: hip }
+camera: 150
+show_house: false
+```
+
+:::
+
+::: live
+
+```yaml
+type: custom:sun-azimuth-card-pro
+title: Flat
+view: 3d
+house: { front: 20, roof: flat }
+camera: 150
+show_house: false
 ```
 
 :::
@@ -131,6 +187,7 @@ sky_color: teal
 | `icon`          |              | Header icon.                                                                                                                                                                                                         |
 | `view`          | `dial`       | `dial` or `3d`.                                                                                                                                                                                                      |
 | `house.front`   | `0`          | The bearing the front of the house faces, 0–360 degrees clockwise from north.                                                                                                                                        |
+| `house.roof`    | `gable`      | `gable` (ridge from left to right), `gable_front` (the gable faces the front), `hip` or `flat`.                                                                                                                      |
 | `house.sides`   |              | Own names for `front`, `right`, `back` and `left` (as you look at the front), or `false` for a wall that never gets sun. Unnamed sides are called by where they face, in the [profile language](../guide/languages). |
 | `camera`        | `180`        | 3D view: the bearing you look toward, 0–360.                                                                                                                                                                         |
 | `camera_slider` | `false`      | 3D view: a slider under the plot to orbit the scene. The value is not saved.                                                                                                                                         |

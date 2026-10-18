@@ -5,6 +5,17 @@ import { STYLE_SLIDER } from "../shared/slider.ts";
 import { CHIP_FONT } from "./constants.ts";
 
 const CARD_BG = "var(--ha-card-background, var(--card-background-color))";
+// a stroke width of the pictures: full at full size, thinner as the picture shrinks (--k is set
+// on each <svg> from its size); hairlines of 1 px stay as they are
+const sw = (px: number) => `calc(${px}px * var(--k, 1))`;
+// a faded line as a solid colour: the colour mixed into the card, as it would look at that
+// opacity. Overlapping strokes (the ring and its ticks, the house's corners) stay even, where
+// opacity or a translucent colour like --divider-color would darken every overlap
+const solid = (color: string, pct: number) => `color-mix(in srgb, ${color} ${pct}%, ${CARD_BG})`;
+const SEC = "var(--secondary-text-color)",
+  SUN = "var(--saz-sun)",
+  // what --divider-color (12 % of the text colour) looks like on the card
+  DIVIDER = solid("var(--primary-text-color)", 12);
 
 export const STYLE = `
   ${STYLE_ICONS}
@@ -40,43 +51,46 @@ export const STYLE = `
   .visual svg { display: block; width: 100%; overflow: visible; }
   svg.dial { max-width: 300px; }
   svg text { font: ${AXIS_FONT}; font-weight: 500; fill: var(--secondary-text-color); text-anchor: middle; dominant-baseline: central; }
-  .dial .disc { fill: color-mix(in srgb, var(--saz-sky) 5%, transparent); stroke: var(--divider-color); stroke-width: 2; }
-  .dial .grid { fill: none; stroke: var(--divider-color); stroke-width: 1; stroke-dasharray: 3 4; }
-  .dial .ticks, .scene .gticks { stroke: var(--secondary-text-color); stroke-width: 1.5; opacity: .55; }
-  .dial .dayarc { fill: none; stroke: var(--saz-sun); stroke-width: 4; stroke-linecap: round; opacity: .3; }
-  .dial .beam { fill: none; stroke: var(--saz-sun); stroke-width: 1.5; stroke-dasharray: 2 4; opacity: .7; }
-  .future { fill: none; stroke: var(--saz-sun); stroke-width: 2; stroke-dasharray: 4 4; opacity: .45; }
-  .past { fill: none; stroke: var(--saz-sun); stroke-width: 2.5; stroke-linecap: round; }
-  .dial .footprint, .scene .roof { fill: ${CARD_BG}; }
-  .dial .edge, .scene .redge { stroke: var(--divider-color); stroke-width: 2; stroke-linecap: round; }
-  .dial .edge.lit { stroke: var(--saz-sun); stroke-width: 4; }
-  .scene .redge { stroke-width: 1.5; }
-  .scene .redge.lit { stroke: var(--saz-sun); stroke-width: 3; }
-  .dial .mark { fill: ${CARD_BG}; stroke-width: 2; }
+  /* the horizon ring in the ticks' colour */
+  .dial .disc { fill: color-mix(in srgb, var(--saz-sky) 5%, transparent); stroke: ${solid(SEC, 55)}; stroke-width: ${sw(2)}; }
+  .dial .grid { fill: none; stroke: ${DIVIDER}; stroke-width: 1; stroke-dasharray: 3 4; }
+  .dial .ticks, .scene .gticks { stroke: ${solid(SEC, 55)}; stroke-width: ${sw(1.5)}; }
+  .dial .dayarc { fill: none; stroke: ${solid(SUN, 30)}; stroke-width: ${sw(4)}; stroke-linecap: round; }
+  .dial .beam { fill: none; stroke: ${solid(SUN, 70)}; stroke-width: ${sw(1.5)}; stroke-dasharray: 2 4; }
+  .future { fill: none; stroke: ${solid(SUN, 45)}; stroke-width: ${sw(2)}; stroke-dasharray: 4 4; }
+  .past { fill: none; stroke: var(--saz-sun); stroke-width: ${sw(2.5)}; stroke-linecap: round; }
+  /* the house: in the dial its walls are filled bands inside the footprint (no strokes) */
+  .dial .footprint { fill: ${CARD_BG}; }
+  /* the roof seen from above, under the walls so its ends tuck under them */
+  .dial .ridge { fill: none; stroke: ${DIVIDER}; stroke-width: ${sw(1.5)}; stroke-linecap: round; }
+  .wall { fill: ${DIVIDER}; }
+  .wall.lit { fill: var(--saz-sun); }
+  .dial .mark { fill: ${CARD_BG}; stroke-width: ${sw(2)}; }
   .dial .mark.rise { stroke: var(--saz-sun); }
   .dial .mark.set { stroke: var(--saz-night); }
-  .sun { fill: var(--saz-sun); stroke: ${CARD_BG}; stroke-width: 3; }
+  .sun { fill: var(--saz-sun); stroke: ${CARD_BG}; stroke-width: ${sw(3)}; }
   .sun.down { fill: var(--saz-night); }
-  .pulse { fill: none; stroke: var(--saz-sun); stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: saz-pulse 2.4s ease-out infinite; }
+  .pulse { fill: none; stroke: var(--saz-sun); stroke-width: ${sw(2)}; transform-box: fill-box; transform-origin: center; animation: saz-pulse 2.4s ease-out infinite; }
   .pulse.down { stroke: var(--saz-night); }
   @keyframes saz-pulse { 0% { transform: scale(.8); opacity: .6; } 100% { transform: scale(2.2); opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .pulse { animation: none; opacity: 0; } .rot { transition: none; } }
   .scene .sky0 { stop-color: var(--saz-sky); stop-opacity: .02; }
   .scene .sky1 { stop-color: var(--saz-sky); stop-opacity: .14; }
-  .scene .domearc { fill: none; stroke: var(--divider-color); stroke-width: 1.5; }
+  .scene .domearc { fill: none; stroke: ${DIVIDER}; stroke-width: ${sw(1.5)}; }
   .scene .ground { fill: color-mix(in srgb, ${CARD_BG} 70%, var(--saz-sky) 8%); opacity: .9; }
-  .scene .horizon { fill: none; stroke: var(--secondary-text-color); stroke-width: 1.5; opacity: .7; }
-  .scene .horizon.back { stroke-width: 1.2; opacity: .4; }
-  .scene .pole { fill: none; stroke: var(--secondary-text-color); stroke-width: 1.2; opacity: .6; }
-  .scene .past.back { opacity: .85; }
-  .scene .future.back { opacity: .45; }
+  .scene .horizon { fill: none; stroke: ${solid(SEC, 70)}; stroke-width: ${sw(1.5)}; }
+  .scene .horizon.back { stroke: ${solid(SEC, 40)}; stroke-width: ${sw(1.2)}; }
+  .scene .pole { fill: none; stroke: ${solid(SEC, 60)}; stroke-width: ${sw(1.2)}; }
+  .scene .past.back { stroke: ${solid(SUN, 85)}; }
   .scene .shadow { fill: var(--primary-text-color); opacity: .12; }
-  .scene .ray { fill: none; stroke: var(--saz-sun); stroke-width: 1.5; opacity: .6; }
-  .cardinals { fill: none; stroke: var(--secondary-text-color); stroke-width: 1; stroke-dasharray: 2 3; opacity: .6; }
-  .azarc { fill: none; stroke: var(--secondary-text-color); stroke-width: 1.2; opacity: .45; }
-  .scene .face { fill: color-mix(in srgb, var(--blue-grey-color) 22%, ${CARD_BG}); stroke: ${CARD_BG}; stroke-width: 1; stroke-linejoin: round; }
-  .scene .face.lit { fill: color-mix(in srgb, var(--saz-sun) var(--inc, 50%), ${CARD_BG}); }
-  .scene .drop { fill: none; stroke: var(--saz-sun); stroke-width: 1.5; stroke-dasharray: 3 3; }
+  .scene .ray { fill: none; stroke: ${solid(SUN, 60)}; stroke-width: ${sw(1.5)}; }
+  .cardinals { fill: none; stroke: ${solid(SEC, 60)}; stroke-width: 1; stroke-dasharray: 2 3; }
+  .azarc { fill: none; stroke: ${solid(SEC, 45)}; stroke-width: ${sw(1.2)}; }
+  /* the 3D house: no outlines, the surfaces' shades make its edges. The sun's colour by how
+     directly it hits (--inc) over a grey by how the surface turns from the soft light (--shade);
+     the stroke in the same colour closes the hairline seams between neighbours */
+  .scene .face { --face: color-mix(in srgb, var(--saz-sun) var(--inc, 0%), color-mix(in srgb, var(--blue-grey-color) var(--shade, 20%), ${CARD_BG})); fill: var(--face); stroke: var(--face); stroke-width: .6; stroke-linejoin: round; }
+  .scene .drop { fill: none; stroke: var(--saz-sun); stroke-width: ${sw(1.5)}; stroke-dasharray: 3 3; }
   .scene .poletop { fill: var(--secondary-text-color); }
   .scene .gdot { fill: var(--saz-sun); }
   .chip rect { fill: color-mix(in srgb, ${CARD_BG} 80%, transparent); }

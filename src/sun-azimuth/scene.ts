@@ -1,7 +1,8 @@
 // The 3D view, pure geometry: the sky as a see-through dome around a small box house, seen from
 // slightly above (orthographic, tilted down by SCENE.tilt, orbiting with `camera`). Everything is
 // path data in a px box as wide as the column (sceneBox), so the labels keep their size.
-import { PATH_STEP, SCENE } from "./constants.ts";
+import { lineScale, PATH_STEP, SCENE, type Roof } from "./constants.ts";
+import { houseSolid, type P3 } from "./house.ts";
 import type { SunDay, SunSample } from "./day.ts";
 import type { Side } from "./sides.ts";
 
@@ -13,12 +14,15 @@ const P = (p: Pt | [number, number]) => `${f1(p[0])} ${f1(p[1])}`;
 
 export interface SceneFace {
   d: string;
+  roof: boolean; // a roof plane (else a wall)
   lit: boolean;
-  incidence: number;
+  incidence: number; // 0..1, how directly the sun hits it
+  shade: number; // 0..1, how much it turns away from the soft light from the viewer's upper left
 }
 export interface SceneGeometry {
   w: number;
   h: number;
+  k: number; // the line scale: strokes and dots follow the sphere's size
   dome: string;
   domeArc: string;
   ground: string;
@@ -32,9 +36,7 @@ export interface SceneGeometry {
   pathFrontFuture: string;
   pathBackPast: string;
   pathBackFuture: string;
-  faces: SceneFace[]; // the visible walls, back to front
-  roof: string;
-  roofEdges: { d: string; lit: boolean }[];
+  faces: SceneFace[]; // the visible walls and roof planes (a convex house: they never overlap)
   shadow: string;
   ray: string; // on the ground, from the house to under the sun
   drop: string; // from the sun down to the ground
@@ -47,6 +49,13 @@ export interface SceneGeometry {
 }
 
 const { tilt: TILT, houseHalf: HH, houseHeight: HZ, label: LABEL } = SCENE;
+// the ridge of a pitched roof over the middle of the house
+const HR = HZ + HH * 0.75;
+const dot = (a: V3, b: V3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const unit = (v: V3) => {
+  const n = Math.hypot(...v) || 1;
+  return v.map((c) => c / n) as V3;
+};
 
 // the box for a column `width` px wide: the sphere at maxScale, centred; in a column too narrow for
 // it, the largest sphere whose E / W labels still fit beside it, so it fills the width, never below
@@ -70,6 +79,7 @@ export const sceneGeometry = (
   camera: number,
   sides: Side[],
   width: number,
+  roof: Roof = "gable",
 ): SceneGeometry => {
   const { w, h, scale: SC, cx: GX, cy: GY } = sceneBox(width);
   const view = camera * RAD,
@@ -143,10 +153,12 @@ export const sceneGeometry = (
       lastKey = key;
     }
   }
-  // a straight pole marking the house's position: from its roof to three times its height
+  // the house as a solid: walls and the configured roof
+  const solid = houseSolid(roof, HH, HZ, HR);
+  // a straight pole marking the house's position: up from the middle of its roof
   const origin = pj(0, 0, 0),
-    poleTop = pj(0, 0, HZ * 4);
-  const pole = `M${P(pj(0, 0, HZ))} L${P(poleTop)}`;
+    poleTop = pj(0, 0, Math.max(0.44, solid.top + 0.12));
+  const pole = `M${P(pj(0, 0, solid.top))} L${P(poleTop)}`;
   // the cardinal points on the ground, the one farthest back left out (it would sit in the sky)
   const cards = [0, 90, 180, 270].map((bearing) => {
     const v = sv(bearing, 0),
@@ -154,44 +166,74 @@ export const sceneGeometry = (
     return { bearing, x: p[0], y: p[1], depth: p[2] };
   });
   const back = cards.reduce((m, c) => (c.depth < m.depth ? c : m), cards[0]);
-  // the house: a box rotated with the house; a wall shows when its normal faces the camera
+  // the house, turned with its front. It is convex, so a surface shows when its outward normal
+  // points at the viewer and the visible ones never overlap
   const hr = front * RAD;
   const cw = (u: number, v: number): [number, number] => [
     u * Math.cos(hr) + v * Math.sin(hr),
     -u * Math.sin(hr) + v * Math.cos(hr),
   ];
+  const world = ([u, v, z]: P3): V3 => [...cw(u, v), z];
   const fp = [cw(-HH, HH), cw(HH, HH), cw(HH, -HH), cw(-HH, -HH)];
-  const walls = sides.map((side, k) => {
-    const a = fp[k],
-      b = fp[(k + 1) % 4];
-    const poly = [pj(a[0], a[1], 0), pj(b[0], b[1], 0), pj(b[0], b[1], HZ), pj(a[0], a[1], HZ)];
-    const n = side.normal * RAD,
-      facing = Math.sin(n) * Math.sin(view) + Math.cos(n) * Math.cos(view);
+  // towards the viewer, and a soft light from the viewer's upper left: shades the surfaces the
+  // sun does not reach, so neighbouring ones stay apart without outlines
+  const toViewer: V3 = [
+    -Math.sin(view) * Math.cos(tilt),
+    -Math.cos(view) * Math.cos(tilt),
+    Math.sin(tilt),
+  ];
+  const fill = unit([
+    toViewer[0] - Math.cos(view) * 0.6,
+    toViewer[1] + Math.sin(view) * 0.6,
+    toViewer[2] + 0.4,
+  ]);
+  const sunDir = sv(now.az, now.el);
+  // a surface's outward normal from its first three corners, turned away from the middle
+  const normalOf = (pts: P3[]): V3 => {
+    const [a, b, c] = pts.map(world);
+    const n = unit([
+      (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]),
+      (b[2] - a[2]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[2] - a[2]),
+      (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]),
+    ]);
+    // from the house's middle to the surface's centroid: the outward side
+    const out = pts
+      .map(world)
+      .reduce<V3>((m, p) => [m[0] + p[0], m[1] + p[1], m[2] + p[2]], [0, 0, 0])
+      .map((x, i) => x / pts.length - (i === 2 ? HZ / 2 : 0)) as V3;
+    return dot(n, out) < 0 ? (n.map((x) => -x) as V3) : n;
+  };
+  const face = (pts: P3[], roof: boolean, lit: boolean, inc: number) => {
+    const n = normalOf(pts);
     return {
-      visible: facing < 0.02,
-      d: "M" + poly.map(P).join(" L") + " Z",
-      lit: side.litNow,
-      incidence: side.incidence,
-      depth: (poly[0][2] + poly[1][2]) / 2,
+      visible: dot(n, toViewer) > 0.001,
+      d: "M" + pts.map((p) => P(pj(...world(p)))).join(" L") + " Z",
+      roof,
+      lit,
+      incidence: inc,
+      shade: (1 - dot(n, fill)) / 2,
     };
+  };
+  // the walls light as their sides do (a shared wall never); the roof planes by their slope
+  const walls = sides.map((side, k) => face(solid.walls[k], false, side.litNow, side.incidence));
+  const roofs = solid.roofs.map((pts) => {
+    const inc = now.el > 0 ? Math.max(0, dot(normalOf(pts), sunDir)) : 0;
+    return face(pts, true, inc > 0, inc);
   });
-  const faces = walls
+  const faces = [...walls, ...roofs]
     .filter((f) => f.visible)
-    .sort((a, b) => a.depth - b.depth)
-    .map(({ d, lit, incidence }) => ({ d, lit, incidence }));
-  const roof = "M" + fp.map((c) => P(pj(c[0], c[1], HZ))).join(" L") + " Z";
-  const roofEdges = sides.map((side, k) => ({
-    d: `M${P(pj(fp[k][0], fp[k][1], HZ))} L${P(pj(fp[(k + 1) % 4][0], fp[(k + 1) % 4][1], HZ))}`,
-    lit: side.litNow,
-  }));
+    .map(({ d, roof, lit, incidence, shade }) => ({ d, roof, lit, incidence, shade }));
   // the shadow: the hull of the footprint and the footprint shifted away from the sun
   let shadow = "";
   if (now.el > 0.5) {
-    const L = Math.min(0.85, HZ / Math.tan(now.el * RAD)),
-      dx = -Math.sin(now.az * RAD) * L,
-      dy = -Math.cos(now.az * RAD) * L;
+    // a point h high falls h / tan(elevation) away from the sun (capped near the horizon)
+    const away = (c: [number, number], h: number): [number, number] => {
+      const L = Math.min((0.75 * h) / solid.top, h / Math.tan(now.el * RAD));
+      return [c[0] - Math.sin(now.az * RAD) * L, c[1] - Math.cos(now.az * RAD) * L];
+    };
+    // the footprint and every corner of the roof, each cast from its own height
     const pts = fp
-      .concat(fp.map((c) => [c[0] + dx, c[1] + dy] as [number, number]))
+      .concat(solid.roofs.flat().map(([u, v, z]) => away(cw(u, v), z)))
       .map((c) => pj(c[0], c[1], 0))
       .sort((a, b) => a[0] - b[0] || a[1] - b[1]);
     const cross = (o: Pt, a: Pt, b: Pt) =>
@@ -229,6 +271,7 @@ export const sceneGeometry = (
   return {
     w,
     h,
+    k: lineScale(SC, SCENE.maxScale),
     dome,
     domeArc,
     ground,
@@ -243,8 +286,6 @@ export const sceneGeometry = (
     pathBackPast: paths.bp,
     pathBackFuture: paths.bf,
     faces,
-    roof,
-    roofEdges,
     shadow,
     ray: up ? `M${P(origin)} L${P(gp)}` : "",
     cardinalLines: [0, 90, 180, 270]

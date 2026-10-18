@@ -32,6 +32,12 @@
           "default": 0,
           "description": "The bearing the front of the house faces, degrees clockwise from north"
         },
+        "roof": {
+          "type": "string",
+          "enum": ["gable", "gable_front", "hip", "flat"],
+          "default": "gable",
+          "description": "The roof: gable (ridge from the left side to the right, eaves at the front and the back), gable_front (the gable faces the front), hip or flat"
+        },
         "sides": {
           "type": "object",
           "description": "Your own names for the sides, left and right as you look at the front; false for a wall that never gets sun (shared with the neighbour). Unnamed sides are called by where they face, in the profile language",
