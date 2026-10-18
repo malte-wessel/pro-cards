@@ -375,8 +375,8 @@ describe("power flow numbers", () => {
     });
     expect(noon.f.selfSufficiency).toBe(1);
     expect(edge(noon.f, "s0", "home")?.w).toBe(1300);
-    expect(edge(noon.f, "s0", "s1")).toMatchObject({ w: 1500, kind: "battIn" });
-    expect(edge(noon.f, "s0", "s2")).toMatchObject({ w: 1400, kind: "gridOut" });
+    expect(edge(noon.f, "s0", "s1")).toMatchObject({ w: 1500, kind: "solar" });
+    expect(edge(noon.f, "s0", "s2")).toMatchObject({ w: 1400, kind: "solar" });
     // evening: the battery covers the home, the grid is idle
     const evening = flowsOf(cfg, {
       "sensor.solar": "0",
@@ -394,7 +394,7 @@ describe("power flow numbers", () => {
       "sensor.grid": "1600",
     });
     expect(night.f).toMatchObject({ gH: 600, gB: 1000, bH: 0 });
-    expect(edge(night.f, "s2", "s1")).toMatchObject({ w: 1000, kind: "battIn" });
+    expect(edge(night.f, "s2", "s1")).toMatchObject({ w: 1000, kind: "gridIn" });
     expect(night.f.selfSufficiency).toBe(0);
   });
 
@@ -545,7 +545,7 @@ describe("power flow numbers", () => {
     });
     expect(f).toMatchObject({ bH: 500, dB: 500, gH: 0, sB: 0, gB: 0, bG: 0 });
     expect(edge(f, "s1", "home")?.w).toBe(500);
-    expect(edge(f, "s1", "s2")).toMatchObject({ w: 500, kind: "battIn" });
+    expect(edge(f, "s1", "s2")).toMatchObject({ w: 500, kind: "battOut" });
     expect(edge(f, "s2", "home")?.w).toBe(0);
     // every link of a battery adds up to its label
     const out = f.edges.filter((e) => e.from === "s1").reduce((a, e) => a + e.w, 0);
@@ -571,7 +571,7 @@ describe("power flow numbers", () => {
     // the label keeps the net value, the links carry the gross flows
     expect(day.now.sources[1]).toMatchObject({ w: -185, charge: 374, discharge: 189 });
     expect(day.f).toMatchObject({ H: 259, sB: 374, sH: 0, bH: 189, gH: 70, dB: 0, gB: 0, bG: 0 });
-    expect(edge(day.f, "s2", "s1")).toMatchObject({ w: 374, kind: "battIn" });
+    expect(edge(day.f, "s2", "s1")).toMatchObject({ w: 374, kind: "solar" });
     expect(edge(day.f, "s1", "home")).toMatchObject({ w: 189, kind: "battOut" });
     expect(edge(day.f, "s2", "home")?.w).toBe(0);
     expect(edge(day.f, "s0", "home")?.w).toBe(70);
@@ -664,7 +664,7 @@ describe("power flow numbers", () => {
     // the pair: 400 in from its panels; 300 out, 100 to the home, 150 to the other battery, 50 exported
     expect(f).toMatchObject({ sB: 400, sH: 0, bH: 100, dB: 150, gB: 0, bG: 50, grid: -50 });
     expect(edge(f, "s0", "s1")?.w).toBe(400);
-    expect(edge(f, "s1", "s2")).toMatchObject({ w: 150, kind: "battIn" });
+    expect(edge(f, "s1", "s2")).toMatchObject({ w: 150, kind: "battOut" });
     expect(edge(f, "s2", "s1")?.w).toBe(0);
     expect(f.edges.some((e) => e.from === e.to)).toBe(false);
     const sum = (pred: (e: EdgeFlow) => boolean) =>
@@ -691,7 +691,7 @@ describe("power flow numbers", () => {
       "sensor.grid": "300",
     });
     expect(day.f).toMatchObject({ sB: 600, sH: 200, bH: 0, gH: 300, gB: 0, sG: 0, grid: 300 });
-    expect(edge(day.f, "s0", "s1")).toMatchObject({ w: 600, kind: "battIn" });
+    expect(edge(day.f, "s0", "s1")).toMatchObject({ w: 600, kind: "solar" });
     expect(edge(day.f, "s0", "home")?.w).toBe(200);
     expect(edge(day.f, "s2", "home")?.w).toBe(300);
     expect(edge(day.f, "s2", "s1")?.w).toBe(0);
@@ -1072,7 +1072,7 @@ describe("power flow layout", () => {
       expect(e.d).toMatch(/^M/);
     }
     // rails run behind the source column; lanes into the home never cross each other
-    const rail = l.edges.find((e) => e.kind === "battIn")!;
+    const rail = l.edges.find((e) => e.from === "s0" && e.to === "s1")!; // solar → battery
     expect(rail.pts.some((p) => p[0] === GEOM.railBattery)).toBe(true);
     const lanes = l.edges.filter((e) => e.to === "home");
     expect(crossings(lanes)).toBe(0);

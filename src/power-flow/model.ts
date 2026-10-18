@@ -112,7 +112,8 @@ export const thresholdShown = (prev: boolean | undefined, w: number | null, x: n
   return a >= x;
 };
 
-export type EdgeKind = "solar" | "battIn" | "battOut" | "gridIn" | "gridOut" | "generator" | "home";
+// a link is coloured by where its power comes from
+export type EdgeKind = "solar" | "battOut" | "gridIn" | "generator" | "home";
 export interface EdgeFlow {
   from: string; // node id: s<i> (source), home, g<i> (group), c<i> / c<i>.<j> / other
   to: string;
@@ -215,10 +216,10 @@ export const allocate = (
     if (s.kind !== "solar") return;
     push(ids[i], "home", sH * solarShare[i], "solar");
     solarIn.forEach((w, j) => {
-      if (isBatt[j]) push(ids[i], ids[j], w * solarShare[i], "battIn");
+      if (isBatt[j]) push(ids[i], ids[j], w * solarShare[i], "solar");
     });
     shares(exporting, sG * solarShare[i], isGrid).forEach((w, j) => {
-      if (isGrid[j]) push(ids[i], ids[j], w, "gridOut");
+      if (isGrid[j]) push(ids[i], ids[j], w, "solar");
     });
   });
   // the charge solar did not cover comes from other batteries and the grid, pro rata to what is
@@ -260,17 +261,17 @@ export const allocate = (
     if (s.kind === "battery") {
       push(ids[i], "home", dis[i], "battOut");
       battIn[i].forEach((w, j) => {
-        if (isBatt[j] && j !== i) push(ids[i], ids[j], w, "battIn");
+        if (isBatt[j] && j !== i) push(ids[i], ids[j], w, "battOut");
       });
       shares(exporting, bExp[i], isGrid).forEach((w, j) => {
-        if (isGrid[j]) push(ids[i], ids[j], w, "gridOut");
+        if (isGrid[j]) push(ids[i], ids[j], w, "battOut");
       });
     } else if (s.kind === "grid") {
       push(ids[i], "home", imp[i], s.generator ? "generator" : "gridIn");
       if (s.lowCarbon !== null) gHClean += imp[i] * s.lowCarbon;
       if (s.generator) gHGen += imp[i];
       shares(remaining, gCh[i], isCharging).forEach((w, j) => {
-        if (isBatt[j]) push(ids[i], ids[j], w, "battIn");
+        if (isBatt[j]) push(ids[i], ids[j], w, s.generator ? "generator" : "gridIn");
       });
     }
   });
@@ -405,14 +406,10 @@ export const edgeColor = (kind: EdgeKind, w = 0): string => {
   switch (kind) {
     case "solar":
       return COLORS.solar;
-    case "battIn":
-      return COLORS.battIn;
     case "battOut":
       return COLORS.battOut;
     case "gridIn":
       return COLORS.gridIn;
-    case "gridOut":
-      return COLORS.gridOut;
     case "generator":
       return COLORS.generator;
     default:
