@@ -500,6 +500,22 @@ test("the events and sides are opt-in, show_house drops its line, colours reach 
   expect(sceneBox.x + sceneBox.width).toBeLessThanOrEqual(cardBox.x + cardBox.width + 1);
 });
 
+test("the pictures follow the theme's mode", async ({ page }) => {
+  const cfg = { type: "custom:sun-azimuth-card-pro", view: "3d" };
+  const shade = () =>
+    card(page)
+      .locator("ha-card")
+      .evaluate((el) => [
+        el.classList.contains("dark"),
+        getComputedStyle(el).getPropertyValue("--saz-fade").trim(),
+      ]);
+  await mount(page, cfg, { time: NOON, theme: "light" });
+  expect(await shade()).toEqual([false, "1"]);
+  // dark: the sun's tints mixed stronger, so they stay amber on the dark card
+  await mount(page, cfg, { time: NOON, theme: "dark" });
+  expect(await shade()).toEqual([true, ".7"]);
+});
+
 test("moves the sun with time", async ({ page }) => {
   await mount(
     page,

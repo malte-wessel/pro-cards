@@ -141,6 +141,8 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     const prev = this._hass;
     this._hass = hass;
     if (!this._root) this._buildDom();
+    // the pictures' colours follow the theme's mode (styles: ha-card.dark)
+    this._root?.classList.toggle("dark", !!hass.themes?.darkMode);
     const minute = Math.floor(Date.now() / 60000);
     // once a minute, and at once when the language changed (words, times)
     if (minute !== this._lastMinute || langOf(prev) !== langOf(hass)) {
@@ -186,6 +188,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     card.style.setProperty("--saz-sun", cssColor(cfg.sun_color, "var(--amber-color)"));
     card.style.setProperty("--saz-night", cssColor(cfg.night_color, "var(--indigo-color)"));
     card.style.setProperty("--saz-sky", cssColor(cfg.sky_color, "var(--light-blue-color)"));
+    card.classList.toggle("dark", !!this._hass?.themes?.darkMode);
     const { title, icon } = cfg;
     card.innerHTML = `
       <div class="header"${title || icon ? "" : ' style="display: none"'}>

@@ -31,6 +31,8 @@ export interface HomeAssistant {
   user?: Pick<HassUser, "id" | "name" | "is_admin">;
   // frontend versions without it fall back to the card's own formatting
   formatEntityState?: (st: HassEntity) => string;
+  // the theme's mode (cards that draw pictures tune their colours for a dark one)
+  themes?: { darkMode?: boolean };
 }
 
 // the compact rows of `history/history_during_period` with minimal_response + no_attributes
