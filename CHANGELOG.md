@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.6.0 (beta)
+## 2.6.0 (2026-10-18)
 
 - Sparklines, the lines of the multi trend card and the illuminance trend are calmer: the history is averaged to one point per 12 px of width (it was one per 2 px), so sensor noise no longer draws a jagged line and a sensor that flickers between two readings draws a smooth wave instead of a zigzag. A smoothed line runs through bucket means from edge to edge (the tooltip shows the mean). `smoothing_minutes` on the entity cards, the multi trend card and the illuminance card sets the averaging bucket in minutes instead; the multi trend and illuminance editors have a field for it. The illuminance trend averages on its log scale, so a bright moment does not lift a dim bucket
 - A rule `label` shows in row, column and table items and in `header_entities` without `visual: badge`: it stands in for the value, in the rule's colour, as the badge pill does there (a window item reads Closed instead of off). The value stays in the item's tooltip. Items used to show the label only in the tooltip, so a row needed badges on every entity to read as words
