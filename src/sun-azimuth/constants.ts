@@ -2,7 +2,7 @@
 import type { HomeAssistant } from "../shared/ha.ts";
 import { t } from "../shared/i18n.ts";
 
-export const VIEWS = ["dial", "3d", "ring"] as const;
+export const VIEWS = ["dial", "3d"] as const;
 export type View = (typeof VIEWS)[number];
 
 // the four sides of the house, clockwise from the front as the dial and the 3D scene walk their

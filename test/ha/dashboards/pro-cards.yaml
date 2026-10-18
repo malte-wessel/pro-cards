@@ -155,9 +155,6 @@ views:
             house: { front: 20 }
             camera: 150
             camera_slider: true
-          - type: custom:sun-azimuth-card-pro
-            view: ring
-            house: { front: 20 }
       - type: grid
         cards:
           - type: heading

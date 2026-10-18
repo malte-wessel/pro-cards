@@ -1,6 +1,6 @@
 # Sun Azimuth Card Pro
 
-`custom:sun-azimuth-card-pro` shows where the sun is around your house today: as a sky dial seen from above, as a 3D scene with the house, its shadow and the sky dome, or as a compass ring. Two sections can be added: a sunrise / noon / sunset row, and the sides of the house with the times the sun shines on each. The position is computed locally from the Home Assistant latitude and longitude (NOAA solar position), so nothing besides the card is needed.
+`custom:sun-azimuth-card-pro` shows where the sun is around your house today: as a sky dial seen from above or as a 3D scene with the house, its shadow and the sky dome. Two sections can be added: a sunrise / noon / sunset row, and the sides of the house with the times the sun shines on each. The position is computed locally from the Home Assistant latitude and longitude (NOAA solar position), so nothing besides the card is needed.
 
 ## Sky dial
 
@@ -47,24 +47,9 @@ camera_slider: true
 
 :::
 
-## Compass ring
-
-`view: ring` is the compact one: a ring whose arc is the daylight sector from sunrise to sunset and whose dot is the sun now, with the azimuth inside. Beside it sunrise, now and sunset with their bearings and the height of the sun at solar noon.
-
-::: live
-
-```yaml
-type: custom:sun-azimuth-card-pro
-title: Sun
-view: ring
-house: { front: 20 }
-```
-
-:::
-
 ## Sunrise and sunset
 
-`show_events: true` adds a row under the dial or the 3D scene: sunrise and sunset with their bearings, and solar noon with the height the sun reaches. The ring always shows them beside the ring.
+`show_events: true` adds a row under the dial or the 3D scene: sunrise and sunset with their bearings, and solar noon with the height the sun reaches.
 
 ::: live
 
@@ -114,8 +99,8 @@ show_sides: true
   show_house: false
   grid_options: { columns: 6 }
 - type: custom:sun-azimuth-card-pro
-  view: ring
   house: { front: 20 }
+  show_house: false
   grid_options: { columns: 6 }
 ```
 
@@ -144,7 +129,7 @@ sky_color: teal
 | --------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `title`         |              | Header. Omit for no header.                                                                                                                                                                                          |
 | `icon`          |              | Header icon.                                                                                                                                                                                                         |
-| `view`          | `dial`       | `dial`, `3d` or `ring`.                                                                                                                                                                                              |
+| `view`          | `dial`       | `dial` or `3d`.                                                                                                                                                                                                      |
 | `house.front`   | `0`          | The bearing the front of the house faces, 0–360 degrees clockwise from north.                                                                                                                                        |
 | `house.sides`   |              | Own names for `front`, `right`, `back` and `left` (as you look at the front), or `false` for a wall that never gets sun. Unnamed sides are called by where they face, in the [profile language](../guide/languages). |
 | `camera`        | `180`        | 3D view: the bearing you look toward, 0–360.                                                                                                                                                                         |

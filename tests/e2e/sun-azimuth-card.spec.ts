@@ -326,41 +326,6 @@ test("the 3D scene fills a narrow column, keeps its size in a wide one and follo
     .toBe(true);
 });
 
-test("the compass ring shows the daylight sector and the day's events", async ({ page }) => {
-  await mount(
-    page,
-    {
-      type: "custom:sun-azimuth-card-pro",
-      view: "ring",
-      house: { front: 20 },
-      show_sides: true,
-    },
-    { time: NOON },
-  );
-  const c = card(page);
-  await expect(c.locator(".visual")).toHaveCount(0);
-  await expect(c.locator(".items")).toHaveCount(0);
-  await expect(c.locator(".house")).toHaveCount(0);
-  await expect(c.locator(".lead.ring .az")).toHaveText("138°");
-  await expect(c.locator(".lead.ring .cp")).toHaveText("SE");
-  // the arc covers the sunrise → sunset bearings: 262° of 360°
-  const arc = c.locator(".lead.ring .arc");
-  const dash = await arc.evaluate((el) => (el as SVGElement).style.strokeDasharray);
-  const [on, total] = dash.split(" ").map(parseFloat);
-  expect(on / total).toBeGreaterThan(0.71);
-  expect(on / total).toBeLessThan(0.75);
-  const dot = c.locator(".lead.ring .dot");
-  expect(parseFloat((await dot.getAttribute("cx"))!)).toBeGreaterThan(18); // east of centre
-  expect(parseFloat((await dot.getAttribute("cy"))!)).toBeGreaterThan(18); // south of centre
-  await expect(c.locator(".lines .l1")).toHaveText(/^Sunrise 05:1\d$/);
-  await expect(c.locator(".lines .l1s")).toHaveText("49° · NE");
-  await expect(c.locator(".lines .l2")).toHaveText("Now · 57° high");
-  await expect(c.locator(".lines .l2s")).toHaveText(/^noon 13:3\d · 62° at 180°$/);
-  await expect(c.locator(".lines .l3")).toHaveText(/^Sunset 21:5\d$/);
-  await expect(c.locator(".lines .l3s")).toHaveText("311° · NW");
-  await expect(c.locator(".side")).toHaveCount(4);
-});
-
 test("at night the sun is below the horizon everywhere", async ({ page }) => {
   await mount(
     page,

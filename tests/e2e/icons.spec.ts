@@ -107,7 +107,6 @@ const CARDS = [
     show_events: true,
     show_sides: true,
   },
-  { type: "custom:sun-azimuth-card-pro", view: "ring" },
   { type: "custom:illuminance-card-pro", entity: "sensor.illuminance", title: "Light" },
   {
     type: "custom:multi-trend-card-pro",
@@ -172,7 +171,6 @@ test("every icon sits centred in the box the card draws it in", async ({ page })
     ["sun-azimuth-card-pro", "ha-icon in div.header"],
     ["sun-azimuth-card-pro", "ha-icon in div.rot"],
     ["sun-azimuth-card-pro", "ha-icon in div.lead.s36"],
-    ["sun-azimuth-card-pro", "ha-icon in div.lead.s32"],
     ["illuminance-card-pro", "ha-icon in div.shape"],
     ["multi-trend-card-pro", "ha-icon in div.shape"],
   ])

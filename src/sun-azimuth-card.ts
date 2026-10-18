@@ -1,7 +1,7 @@
 /*
  * sun-azimuth-card-pro
  * Where the sun is around the house: a sky dial seen from above, a 3D scene with the house, its
- * shadow and the sky dome, or a compass ring; below, the sides of the house the sun shines on
+ * shadow and the sky dome; below, the sides of the house the sun shines on
  * today. Dependency-free (plain web component, inline SVG). The position is computed locally
  * (NOAA) from hass.config latitude/longitude, like the sun path card.
  *
@@ -9,7 +9,7 @@
  *   type: custom:sun-azimuth-card-pro
  *   title: Sun                    # optional; omit → no header
  *   icon: mdi:sun-compass
- *   view: dial                    # dial | 3d | ring
+ *   view: dial                    # dial | 3d
  *   house:
  *     front: 110                  # the bearing the front faces, degrees clockwise from north
  *     sides: { front: Street, left: false }   # own names (front, right, back, left); false: a
@@ -157,13 +157,12 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
 
   getCardSize() {
     const cfg = this._config;
-    const visual = cfg.view === "ring" ? 3 : cfg.view === "3d" ? 6 : 7;
     return (
       (cfg.title || cfg.icon ? 1 : 0) +
-      visual +
+      (cfg.view === "3d" ? 6 : 7) +
       (cfg.view === "3d" && cfg.camera_slider ? 1 : 0) +
-      (cfg.view !== "ring" && cfg.show_house ? 1 : 0) +
-      (cfg.view !== "ring" && cfg.show_events ? 1 : 0) +
+      (cfg.show_house ? 1 : 0) +
+      (cfg.show_events ? 1 : 0) +
       (cfg.show_sides ? 5 : 0)
     );
   }
@@ -179,7 +178,6 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     card.style.setProperty("--saz-night", cssColor(cfg.night_color, "var(--indigo-color)"));
     card.style.setProperty("--saz-sky", cssColor(cfg.sky_color, "var(--light-blue-color)"));
     const { title, icon } = cfg;
-    const dialOr3d = cfg.view !== "ring";
     card.innerHTML = `
       <div class="header"${title || icon ? "" : ' style="display: none"'}>
         <ha-icon${icon ? ` icon="${icon}"` : ' style="display: none"'}></ha-icon>
@@ -187,10 +185,10 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
       </div>
       <div class="body">
         <div class="head">${headHtml(cfg.view)}</div>
-        ${dialOr3d ? '<div class="visual"></div>' : ""}
+        <div class="visual"></div>
         ${cfg.view === "3d" && cfg.camera_slider ? '<div class="control"><div class="cslider"></div><div class="caxis"><span></span><span></span><span></span><span></span><span></span></div></div>' : ""}
-        ${dialOr3d && cfg.show_house ? houseHtml() : ""}
-        ${dialOr3d && cfg.show_events ? `<div class="divider"></div>${eventsHtml()}` : ""}
+        ${cfg.show_house ? houseHtml() : ""}
+        ${cfg.show_events ? `<div class="divider"></div>${eventsHtml()}` : ""}
         ${cfg.show_sides ? '<div class="divider"></div><div class="sides"></div>' : ""}
       </div>`;
     qs(card, ".title").textContent = title || "";
@@ -327,5 +325,5 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
 registerCard(SunAzimuthCard, {
   name: "Sun Azimuth Card Pro",
   description:
-    "Where the sun is around the house: sky dial, 3D scene or compass ring, and the sides it shines on today",
+    "Where the sun is around the house: sky dial or 3D scene, and the sides it shines on today",
 });

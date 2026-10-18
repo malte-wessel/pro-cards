@@ -355,10 +355,8 @@ describe("sun-azimuth-card element", () => {
     expect(el.getCardSize()).toBe(8); // dial 7 + house 1
     el.setConfig({ show_events: true, show_sides: true });
     expect(el.getCardSize()).toBe(14); // + events 1 + sides 5
-    el.setConfig({ view: "ring" });
-    expect(el.getCardSize()).toBe(3);
-    el.setConfig({ view: "ring", show_sides: true });
-    expect(el.getCardSize()).toBe(8); // ring 3 + sides 5
+    el.setConfig({ view: "ring" as never }); // the ring view is gone: an unknown view is the dial
+    expect(el._config.view).toBe("dial");
     el.setConfig({ view: "3d", title: "Sun", camera_slider: true });
     expect(el.getCardSize()).toBe(9); // header 1 + 3d 6 + slider 1 + house 1
     el.setConfig({ view: "3d", show_house: false });

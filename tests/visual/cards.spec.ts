@@ -858,13 +858,6 @@ const CASES = {
     show_events: true,
     show_sides: true,
   },
-  "saz-ring": {
-    type: "custom:sun-azimuth-card-pro",
-    view: "ring",
-    house: { front: 45 },
-    sun_color: "orange",
-    night_color: "deep-purple",
-  },
   "saz-less": [
     {
       type: "custom:sun-azimuth-card-pro",
@@ -874,7 +867,7 @@ const CASES = {
     },
     {
       type: "custom:sun-azimuth-card-pro",
-      view: "ring",
+      show_house: false,
       grid_options: { columns: 6 },
     },
   ],

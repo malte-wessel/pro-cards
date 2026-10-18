@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://malte-wessel.github.io/pro-cards/schema/sun-azimuth-card-pro.schema.json",
   "title": "custom:sun-azimuth-card-pro",
-  "description": "Where the sun is around the house today: a sky dial seen from above, a 3D scene with the house, its shadow and the sky dome, or a compass ring, plus the sides of the house the sun shines on. Computed from the Home Assistant coordinates.",
+  "description": "Where the sun is around the house today: a sky dial seen from above, or a 3D scene with the house, its shadow and the sky dome, plus the sides of the house the sun shines on. Computed from the Home Assistant coordinates.",
   "type": "object",
   "properties": {
     "type": {
@@ -18,7 +18,7 @@
     },
     "view": {
       "type": "string",
-      "enum": ["dial", "3d", "ring"],
+      "enum": ["dial", "3d"],
       "default": "dial"
     },
     "house": {

@@ -22,7 +22,6 @@ export const STYLE = `
   /* the head's lead is the tile shape of the other cards: 40 px, a 24 px icon */
   .head .top > .lead { --mdc-icon-size: 24px; }
   .lead.s36 { width: 36px; height: 36px; --mdc-icon-size: 20px; }
-  .lead.s32 { width: 32px; height: 32px; --mdc-icon-size: 18px; }
   .lead ha-icon { display: block; }
   .rot { display: flex; transition: transform .6s; }
   .texts { flex: 1 1 0; min-width: 24px; display: flex; flex-direction: column; gap: 2px; }
@@ -33,17 +32,6 @@ export const STYLE = `
   .pill { flex: none; font-size: 12px; font-weight: 500; line-height: 16px; padding: 4px 10px; border-radius: 999px; color: var(--c); background: color-mix(in srgb, var(--c) 20%, transparent); white-space: nowrap; letter-spacing: .02em; max-width: 45%; overflow: hidden; text-overflow: ellipsis; }
   .key { font-size: 11px; line-height: 16px; letter-spacing: .08em; text-transform: uppercase; font-weight: 500; color: var(--secondary-text-color); white-space: nowrap; }
   .sechead { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  /* the lead ring of the ring view */
-  .ringrow { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; min-width: 0; --c: var(--saz-sun); }
-  .lead.ring { width: 132px; height: 132px; background: transparent; }
-  .lead.ring svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-  .lead.ring .track { fill: none; stroke: color-mix(in srgb, var(--c) 20%, transparent); stroke-width: 3; }
-  .lead.ring .arc { fill: none; stroke: var(--saz-sun); stroke-width: 3; stroke-linecap: round; }
-  .lead.ring .dot { fill: var(--c); stroke: ${CARD_BG}; stroke-width: 1.2; }
-  .lead.ring .in { position: absolute; inset: 16%; border-radius: 50%; background: color-mix(in srgb, var(--c) 20%, transparent); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--primary-text-color); }
-  .lead.ring .az { font-size: 26px; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; }
-  .lead.ring .cp { font-size: 12px; color: var(--secondary-text-color); margin-top: 3px; }
-  .lines { flex: 1 1 180px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
   .lead.rise { --c: var(--saz-sun); }
   .lead.noon { --c: var(--orange-color); }
   .lead.set { --c: var(--saz-night); }
