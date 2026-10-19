@@ -75,7 +75,7 @@
     "hover_preview": {
       "type": "boolean",
       "default": true,
-      "description": "Hovering or tapping a side's timeline in the footer shows the sun at that time in the plot"
+      "description": "Hovering or tapping a side's timeline in the footer or the sun's path in the plot shows the sun at that time"
     },
     "show_house": {
       "type": "boolean",

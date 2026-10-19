@@ -209,6 +209,35 @@ test("hovering a timeline previews the sun at that time", async ({ page }) => {
   await expect(chip).toHaveText("138°");
 });
 
+test("following the sun's path previews the sun at that time", async ({ page }) => {
+  for (const view of ["dial", "3d"]) {
+    await mount(
+      page,
+      { type: "custom:sun-azimuth-card-pro", view, house: { front: 20 }, show_sides: true },
+      { time: NOON },
+    );
+    const c = card(page);
+    // a point on the afternoon path, where the card drew it
+    const at = await page.evaluate(() => {
+      const el = window.pc.card(0) as unknown as { _track: { x: number; y: number }[] };
+      const svg = window.pc.card(0).shadowRoot!.querySelector(".visual svg") as SVGSVGElement;
+      const r = svg.getBoundingClientRect(),
+        s = r.width / svg.viewBox.baseVal.width,
+        p = el._track[Math.floor(el._track.length * 0.8)];
+      return { x: r.left + p.x * s, y: r.top + p.y * s };
+    });
+    await page.mouse.move(at.x + 4, at.y + 3); // close to the path, not on it
+    // the time in a chip above the sun and in the footer's heading; the plot shows the evening
+    await expect(c.locator(".visual svg .chip text").last()).toHaveText(/^1[89]:\d\d$/);
+    await expect(c.locator(".sides .sechead .secondary")).toHaveText(/^1[89]:\d\d$/);
+    await expect(c.locator(".visual")).toHaveClass(/near/);
+    // away from the path: now again
+    await page.mouse.move(at.x - 200, at.y - 400);
+    await expect(c.locator(".sides .sechead .secondary")).toHaveText("Today");
+    await expect(c.locator(".visual")).not.toHaveClass(/near/);
+  }
+});
+
 test("hover_preview: false leaves the plot alone", async ({ page }) => {
   await mount(
     page,
@@ -223,6 +252,11 @@ test("hover_preview: false leaves the plot alone", async ({ page }) => {
   await expect(c.locator(".sides")).not.toHaveClass(/scrub/);
   await expect(c.locator(".sides .sechead .secondary")).toHaveText("Today");
   await expect(c.locator("svg.dial circle.sun")).not.toHaveClass(/down/);
+  // nor does the sun's path
+  const past = (await c.locator("svg.dial .past").boundingBox())!;
+  await page.mouse.move(past.x + past.width / 2, past.y + past.height / 2);
+  await expect(c.locator(".visual")).not.toHaveClass(/near/);
+  await expect(c.locator(".sides .sechead .secondary")).toHaveText("Today");
 });
 
 test("the 3D view draws the scene and the slider orbits it", async ({ page }) => {

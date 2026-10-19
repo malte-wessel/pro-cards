@@ -144,6 +144,8 @@ export const STYLE = `
   .lbar i { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--saz-sun); }
   .lbar .hair { display: none; position: absolute; top: -4px; bottom: -4px; width: 1px; margin-left: -.5px; background: var(--secondary-text-color); opacity: .6; }
   .sides.scrub .lbar .hair { display: block; }
+  /* hover_preview: near the sun's path the plot previews too */
+  .visual.near { cursor: crosshair; }
   /* hover_preview: the bar is what previews; its hit area reaches 6 px above and below it */
   .sides.preview .lbar { cursor: crosshair; touch-action: pan-y; }
   .sides.preview .lbar::after { content: ""; position: absolute; inset: -6px 0; }

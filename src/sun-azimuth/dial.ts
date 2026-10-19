@@ -5,6 +5,7 @@ import { DIAL, lineScale, PATH_STEP, WALL, type Roof } from "./constants.ts";
 import type { SunDay, SunSample } from "./day.ts";
 import { wallBands } from "./edges.ts";
 import { houseSolid } from "./house.ts";
+import { trackOf, type TrackPoint } from "./track.ts";
 import type { Side } from "./sides.ts";
 
 const RAD = Math.PI / 180;
@@ -28,6 +29,7 @@ export interface DialGeometry {
   housePoly: string;
   walls: { d: string; lit: boolean }[]; // one band per side, inside the footprint
   roofLines: string; // the roof seen from above: its ridge and, on a hip roof, the hips
+  track: TrackPoint[]; // the day's path above the horizon with its times (the hover preview)
   sun: Pt;
   rise: Pt | null;
   set: Pt | null;
@@ -126,6 +128,7 @@ export const dialGeometry = (
     future: future.length > 1 ? pathOf(future) : "",
     housePoly: pathOf(corners) + " Z",
     walls,
+    track: trackOf(day, (s) => sky(s.az, s.el)),
     // the house's (u, v) is the footprint's (x, -y): v points to the front, up on the page at 0°
     roofLines: houseSolid(roof, HW, 0, 0)
       .ridge.map((l) => pathOf(l.map(([u, v]) => corner(u, -v))))

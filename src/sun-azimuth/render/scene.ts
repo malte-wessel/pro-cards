@@ -7,7 +7,7 @@ import type { SunSample } from "../day.ts";
 import { CHIP_FONT } from "../constants.ts";
 import { sceneGeometry } from "../scene.ts";
 import type { Side } from "../sides.ts";
-import { chipSvg, compass, deg } from "./text.ts";
+import { chipSvg, compass, deg, timeChip } from "./text.ts";
 
 const f1 = (v: number) => v.toFixed(1);
 
@@ -20,6 +20,7 @@ export const renderScene = (
   camera: number,
   width: number,
   height = Infinity,
+  timeLabel?: string, // a preview's time, in a chip above the sun
 ) => {
   const cfg = card._config,
     hass = card._hass;
@@ -63,6 +64,8 @@ export const renderScene = (
   }
   if (g.sun)
     html += `<circle class="pulse" cx="${f1(g.sun[0])}" cy="${f1(g.sun[1])}" r="${f1(9 * k)}"/><circle class="sun" cx="${f1(g.sun[0])}" cy="${f1(g.sun[1])}" r="${f1(7 * k)}"/>`;
+  if (timeLabel && g.sun) html += timeChip(timeLabel, g.sun[0], g.sun[1] - 9 * k - 14, g.w);
   html += "</svg>";
   host.innerHTML = html;
+  return g.track;
 };

@@ -17,7 +17,7 @@
  *                                 # shared wall, never lit and not listed
  *   camera: 180                   # 3d: the bearing the camera looks toward
  *   camera_slider: true           # 3d: a slider under the plot orbits the scene (not saved)
- *   hover_preview: true           # hovering a side's timeline shows the sun at that time in the plot
+ *   hover_preview: true           # hovering a timeline or the sun's path shows the sun at that time
  *   show_house: true              # dial / 3d: which sides are in the sun, what comes next
  *   show_events: true             # dial / 3d: sunrise, noon and sunset (off by default)
  *   show_sides: true              # the sides of the house footer (off by default)
@@ -56,6 +56,7 @@ import { renderSides } from "./sun-azimuth/render/sides.ts";
 import { compass, deg } from "./sun-azimuth/render/text.ts";
 import { sidesOf, timelineSpan } from "./sun-azimuth/sides.ts";
 import { STYLE } from "./sun-azimuth/styles.ts";
+import { nearestOnTrack, type TrackPoint } from "./sun-azimuth/track.ts";
 
 const CARD_TYPE = "sun-azimuth-card-pro";
 
@@ -69,8 +70,40 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
   _day: PositionedDay | null = null;
   // the camera bearing of the 3D view: the config's, turned by the slider while the card lives
   _camera = DEFAULTS.camera;
-  // the time under the pointer on a side's timeline, previewed in the plot; null = now
+  // the time under the pointer on a side's timeline or on the sun's path, previewed in the plot;
+  // null = now
   _hoverT: number | null = null;
+  // the sun's path in the plot as drawn last, with its times (the path's hover preview)
+  _track: TrackPoint[] = [];
+  // the path previews when the pointer is this close to it (css px)
+  static PATH_REACH = 14;
+  _onPath = (ev: PointerEvent) => {
+    const visual = ev.currentTarget as HTMLElement,
+      svg = visual.querySelector("svg");
+    if (!svg || !this._day) return;
+    const rect = svg.getBoundingClientRect(),
+      s = svg.viewBox.baseVal.width / (rect.width || 1);
+    const t = nearestOnTrack(
+      this._track,
+      (ev.clientX - rect.left) * s,
+      (ev.clientY - rect.top) * s,
+      SunAzimuthCard.PATH_REACH * s,
+    );
+    visual.classList.toggle("near", t !== null);
+    // off the path the plot shows now again (a preview from a timeline lives in the footer)
+    if (t === null) {
+      if (this._hoverFrom === "path") this._endHover();
+      return;
+    }
+    this._hoverFrom = "path";
+    this._hoverT = t;
+    this._previewHover();
+  };
+  _onPathLeave = (ev: PointerEvent) => {
+    (ev.currentTarget as HTMLElement).classList.remove("near");
+    if (ev.pointerType !== "touch" && this._hoverFrom === "path") this._endHover();
+  };
+  _hoverFrom: "path" | "timeline" | null = null;
   _cameraSlider?: Slider;
   _onScrub = (ev: PointerEvent) => {
     const footer = this._root?.querySelector<HTMLElement>(".sides"),
@@ -82,6 +115,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
       this._endHover();
       return;
     }
+    this._hoverFrom = "timeline";
     const rect = bar.getBoundingClientRect(),
       span = timelineSpan(day);
     const f = Math.max(0, Math.min(1, (ev.clientX - rect.left) / (rect.width || 1)));
@@ -246,6 +280,12 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
       footer.addEventListener("pointerdown", this._onScrub);
       footer.addEventListener("pointerleave", this._onScrubLeave);
     }
+    const plot = card.querySelector<HTMLElement>(".visual");
+    if (plot && cfg.hover_preview) {
+      plot.addEventListener("pointermove", this._onPath);
+      plot.addEventListener("pointerdown", this._onPath);
+      plot.addEventListener("pointerleave", this._onPathLeave);
+    }
     this._hoverT = null;
     this._root = card;
     this._observe();
@@ -263,14 +303,35 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
       visual = card.querySelector<HTMLElement>(".visual");
     if (!visual) return;
     const sides = sidesOf(day, this._config.front, at, this._config.hidden);
+    // a preview names its time in a chip above the sun
+    const label = this._hoverT !== null ? fmtTime(this._hass, at.t) : undefined;
     // not laid out yet: drawn at a stand-in width, the observer redraws at the real one
     this._visualWidth = visual.clientWidth;
     this._plotHeight = this._visualHeight(visual);
     const width = this._visualWidth || (this._config.view === "3d" ? SCENE.width : DIAL.size);
     if (this._config.view === "3d") {
-      renderScene(this, visual, day, at, sides, this._camera, width, this._plotHeight);
+      this._track = renderScene(
+        this,
+        visual,
+        day,
+        at,
+        sides,
+        this._camera,
+        width,
+        this._plotHeight,
+        label,
+      );
       this._fillControl();
-    } else renderDial(this, visual, day, at, sides, Math.min(width, this._plotHeight));
+    } else
+      this._track = renderDial(
+        this,
+        visual,
+        day,
+        at,
+        sides,
+        Math.min(width, this._plotHeight),
+        label,
+      );
   }
   // the room for the plot in a card of a fixed height; unlimited when the card sizes to its content
   _visualHeight(visual: HTMLElement) {
@@ -286,8 +347,10 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
       t = this._hoverT;
     if (!card || !day || t === null) return;
     this._renderVisual(day, sunAt(t, day.lat, day.lon));
-    const footer = qs(card, ".sides"),
-      span = timelineSpan(day);
+    // the footer, when shown, marks the time on every bar and names it in its heading
+    const footer = card.querySelector<HTMLElement>(".sides");
+    if (!footer) return;
+    const span = timelineSpan(day);
     footer.classList.add("scrub");
     const left = `${(((t - span.from) / (span.to - span.from)) * 100).toFixed(2)}%`;
     for (const hair of footer.querySelectorAll<HTMLElement>(".lbar .hair")) hair.style.left = left;
@@ -296,6 +359,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
   _endHover() {
     if (this._hoverT === null) return;
     this._hoverT = null;
+    this._hoverFrom = null;
     this._root?.querySelector(".sides")?.classList.remove("scrub");
     this._render();
   }

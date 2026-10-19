@@ -35,6 +35,12 @@ export const status = (hass: Hass, day: SunDay, now: SunSample) => {
     : below;
 };
 
+// a preview's time in a chip centred on (x, y), kept inside a box `w` wide and below its top
+export const timeChip = (label: string, x: number, y: number, w: number) => {
+  const half = (Math.ceil(textWidth(label, CHIP_FONT)) + 16) / 2;
+  return chipSvg(label, Math.max(half, Math.min(w - half, x)), Math.max(10, y));
+};
+
 // a rounded SVG chip with its text, centred on (x, y); the rect is sized by measuring the text
 export const chipSvg = (label: string, x: number, y: number) => {
   const w = Math.ceil(textWidth(label, CHIP_FONT)) + 16,

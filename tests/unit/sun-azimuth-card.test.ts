@@ -12,6 +12,7 @@ import { litSides, nextSide, sidesOf, timelineSpan } from "../../src/sun-azimuth
 import { dialBox, dialGeometry, polar } from "../../src/sun-azimuth/dial.ts";
 import { wallBands } from "../../src/sun-azimuth/edges.ts";
 import { houseSolid } from "../../src/sun-azimuth/house.ts";
+import { nearestOnTrack, TRACK_STEP, trackOf } from "../../src/sun-azimuth/track.ts";
 import { sceneBox, sceneGeometry } from "../../src/sun-azimuth/scene.ts";
 import {
   defaultSideName,
@@ -207,6 +208,35 @@ describe("sun-azimuth-card sides of the house", () => {
     // polar day: the whole day
     const polar = sunDay(local(2026, 6, 21), 80, 20);
     expect(timelineSpan(polar)).toEqual({ from: polar.start, to: polar.end });
+  });
+});
+
+describe("sun-azimuth-card path preview", () => {
+  it("lays the day's path above the horizon out with its times", () => {
+    const track = trackOf(summer, (s) => [s.az, s.el]);
+    expect(track.length).toBeGreaterThan(100);
+    expect(track.every((p) => p.y > 0)).toBe(true); // only above the horizon
+    expect(track[0].t).toBeGreaterThanOrEqual(summer.sunrise!.t - TRACK_STEP * 60e3);
+    // both pictures carry it
+    const sides = sidesOf(summer, 20, forenoon);
+    expect(dialGeometry(summer, forenoon, 20, sides).track.length).toBe(track.length);
+    expect(sceneGeometry(summer, forenoon, LAT, 20, 180, sides, W).track.length).toBe(track.length);
+  });
+  it("finds the time on the path nearest to the pointer, within reach", () => {
+    const step = TRACK_STEP * 60e3;
+    const track = [
+      { t: 0, x: 0, y: 0 },
+      { t: step, x: 10, y: 0 },
+      // a gap in time: no segment across it
+      { t: 10 * step, x: 30, y: 0 },
+    ];
+    // between two neighbours: interpolated
+    expect(nearestOnTrack(track, 5, 2, 4)).toBeCloseTo(step / 2, 5);
+    // too far
+    expect(nearestOnTrack(track, 5, 10, 4)).toBeNull();
+    // in the gap: the nearer point, not a time in between
+    expect(nearestOnTrack(track, 22, 0, 10)).toBe(10 * step);
+    expect(nearestOnTrack([], 0, 0, 10)).toBeNull();
   });
 });
 

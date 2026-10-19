@@ -125,7 +125,7 @@ show_events: true
 
 `show_sides: true` adds a footer that lists the sides with the time the sun shines on them today, a pill for their state (Sun now, from 14:20, Shade or No sun today) and a timeline from just before sunrise to just after sunset. A side may get sun twice a day, for example a north side on a summer morning and evening; both windows are drawn.
 
-Move the pointer along a side's timeline (or tap it on a phone) and the plot above shows the sun at that time: where it stands, which sides it lights, its shadow. A hairline marks the time on every bar and the footer's heading shows it. `hover_preview: false` turns this off.
+Move the pointer along a side's timeline (or tap it on a phone) and the plot above shows the sun at that time: where it stands, which sides it lights, its shadow. A hairline marks the time on every bar and the footer's heading shows it. Following the sun's path in the dial or the 3D scene does the same, with the time in a chip above the sun. `hover_preview: false` turns both off.
 
 ::: live
 
@@ -191,7 +191,7 @@ sky_color: teal
 | `house.sides`   |              | Own names for `front`, `right`, `back` and `left` (as you look at the front), or `false` for a wall that never gets sun. Unnamed sides are called by where they face, in the [profile language](../guide/languages). |
 | `camera`        | `180`        | 3D view: the bearing you look toward, 0–360.                                                                                                                                                                         |
 | `camera_slider` | `false`      | 3D view: a slider under the plot to orbit the scene. The value is not saved.                                                                                                                                         |
-| `hover_preview` | `true`       | Hovering or tapping a side's timeline shows the sun at that time in the plot.                                                                                                                                        |
+| `hover_preview` | `true`       | Hovering or tapping a side's timeline or the sun's path shows the sun at that time in the plot.                                                                                                                      |
 | `show_house`    | `true`       | Dial and 3D: the line naming the sides in the sun and what comes next.                                                                                                                                               |
 | `show_events`   | `false`      | Dial and 3D: the sunrise, solar noon and sunset row.                                                                                                                                                                 |
 | `show_sides`    | `false`      | The sides of the house footer.                                                                                                                                                                                       |

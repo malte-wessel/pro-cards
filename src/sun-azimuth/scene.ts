@@ -3,6 +3,7 @@
 // path data in a px box as wide as the column (sceneBox), so the labels keep their size.
 import { lineScale, PATH_STEP, SCENE, type Roof } from "./constants.ts";
 import { houseSolid, type P3 } from "./house.ts";
+import { trackOf, type TrackPoint } from "./track.ts";
 import type { SunDay, SunSample } from "./day.ts";
 import type { Side } from "./sides.ts";
 
@@ -36,6 +37,7 @@ export interface SceneGeometry {
   pathFrontFuture: string;
   pathBackPast: string;
   pathBackFuture: string;
+  track: TrackPoint[]; // the day's path above the horizon on screen with its times (hover preview)
   faces: SceneFace[]; // the visible walls and roof planes (a convex house: they never overlap)
   shadow: string;
   ray: string; // on the ground, from the house to under the sun
@@ -296,6 +298,10 @@ export const sceneGeometry = (
     pathBackPast: paths.bp,
     pathBackFuture: paths.bf,
     faces,
+    track: trackOf(day, (s) => {
+      const p = pv(sv(s.az, s.el));
+      return [p[0], p[1]];
+    }),
     shadow,
     ray: up ? `M${P(origin)} L${P(gp)}` : "",
     cardinalLines: [0, 90, 180, 270]

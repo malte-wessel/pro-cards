@@ -4,7 +4,7 @@ import type { SunAzimuthHost } from "../config.ts";
 import type { SunDay, SunSample } from "../day.ts";
 import { dialGeometry } from "../dial.ts";
 import type { Side } from "../sides.ts";
-import { chipSvg, compass, deg } from "./text.ts";
+import { chipSvg, compass, deg, timeChip } from "./text.ts";
 
 const f1 = (v: number) => v.toFixed(1);
 
@@ -15,6 +15,7 @@ export const renderDial = (
   now: SunSample,
   sides: Side[],
   width: number,
+  timeLabel?: string, // a preview's time, in a chip above the sun
 ) => {
   const g = dialGeometry(day, now, card._config.front, sides, width, card._config.roof);
   const c = g.size / 2,
@@ -43,6 +44,8 @@ export const renderDial = (
   const sx = f1(g.sun[0]),
     sy = f1(g.sun[1]);
   if (g.azChip) html += chipSvg(deg(card._hass, now.az), g.azChip[0], g.azChip[1]);
+  if (timeLabel) html += timeChip(timeLabel, g.sun[0], g.sun[1] - 9 * k - 14, g.size);
   html += `<circle class="pulse${up ? "" : " down"}" cx="${sx}" cy="${sy}" r="${f1(9 * k)}"/><circle class="sun${up ? "" : " down"}" cx="${sx}" cy="${sy}" r="${f1(7 * k)}"/></svg>`;
   host.innerHTML = html;
+  return g.track;
 };
