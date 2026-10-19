@@ -37,6 +37,7 @@ export default tseslint.config(
       "*.ts",
       "*.mts",
       "scripts/**/*.ts",
+      "scripts/**/*.mjs",
       "docs/.vitepress/config.mts",
       "tests/e2e/**/*.ts",
       "tests/visual/**/*.ts",

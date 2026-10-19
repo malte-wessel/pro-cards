@@ -1,6 +1,6 @@
-# Home Assistant configuration of the devcontainer: the demo integration for a house full of
-# entities, plus template entities named like the docs' demo world so the docs examples can be
-# pasted as they are. An automation moves `input_number.demo_drive` every minute so the history
+# Home Assistant configuration of the dev instance (`npm run ha`): the demo integration for a
+# house full of entities, plus template entities named like the docs' demo world so the docs
+# examples can be pasted as they are. An automation moves `input_number.demo_drive` every minute so the history
 # visuals (sparkline, columns, strip, trend) have something to draw.
 default_config:
 
@@ -220,34 +220,32 @@ template:
         unique_id: pro_cards_grid_outage
         device_class: problem
         state: "{{ states('input_number.demo_drive') | float(50) > 92 }}"
-
-light:
-  - platform: template
-    lights:
-      living_room:
-        friendly_name: Living room
-        value_template: "{{ is_state('input_boolean.living_room_light', 'on') }}"
+  # lights, a switch and a cover backed by input booleans, so their controls work
+  - light:
+      - name: Living room
+        unique_id: pro_cards_living_room_light
+        state: "{{ is_state('input_boolean.living_room_light', 'on') }}"
         turn_on:
           { action: input_boolean.turn_on, target: { entity_id: input_boolean.living_room_light } }
         turn_off:
           { action: input_boolean.turn_off, target: { entity_id: input_boolean.living_room_light } }
-      kitchen:
-        friendly_name: Kitchen
-        value_template: "{{ is_state('input_boolean.kitchen_light', 'on') }}"
+      - name: Kitchen
+        unique_id: pro_cards_kitchen_light
+        state: "{{ is_state('input_boolean.kitchen_light', 'on') }}"
         turn_on:
           { action: input_boolean.turn_on, target: { entity_id: input_boolean.kitchen_light } }
         turn_off:
           { action: input_boolean.turn_off, target: { entity_id: input_boolean.kitchen_light } }
-      office:
-        friendly_name: Office
-        value_template: "{{ is_state('input_boolean.office_light', 'on') }}"
+      - name: Office
+        unique_id: pro_cards_office_light
+        state: "{{ is_state('input_boolean.office_light', 'on') }}"
         turn_on:
           { action: input_boolean.turn_on, target: { entity_id: input_boolean.office_light } }
         turn_off:
           { action: input_boolean.turn_off, target: { entity_id: input_boolean.office_light } }
-      dining_table:
-        friendly_name: Dining table
-        value_template: "{{ is_state('input_boolean.dining_table_light', 'on') }}"
+      - name: Dining table
+        unique_id: pro_cards_dining_table_light
+        state: "{{ is_state('input_boolean.dining_table_light', 'on') }}"
         turn_on:
           { action: input_boolean.turn_on, target: { entity_id: input_boolean.dining_table_light } }
         turn_off:
@@ -255,25 +253,19 @@ light:
             action: input_boolean.turn_off,
             target: { entity_id: input_boolean.dining_table_light },
           }
-
-switch:
-  - platform: template
-    switches:
-      coffee_machine:
-        friendly_name: Coffee machine
-        value_template: "{{ is_state('input_boolean.coffee_machine', 'on') }}"
+  - switch:
+      - name: Coffee machine
+        unique_id: pro_cards_coffee_machine
+        state: "{{ is_state('input_boolean.coffee_machine', 'on') }}"
         turn_on:
           { action: input_boolean.turn_on, target: { entity_id: input_boolean.coffee_machine } }
         turn_off:
           { action: input_boolean.turn_off, target: { entity_id: input_boolean.coffee_machine } }
-
-cover:
-  - platform: template
-    covers:
-      living_room_blinds:
-        friendly_name: Living room blinds
+  - cover:
+      - name: Living room blinds
+        unique_id: pro_cards_living_room_blinds
         device_class: shutter
-        value_template: "{{ is_state('input_boolean.living_room_blinds', 'on') }}"
+        state: "{{ is_state('input_boolean.living_room_blinds', 'on') }}"
         open_cover:
           { action: input_boolean.turn_on, target: { entity_id: input_boolean.living_room_blinds } }
         close_cover:
