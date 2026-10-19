@@ -2,6 +2,8 @@
 // the flow tile (the band behind the texts, with a narrow and a wide text variant), the chip and
 // the reduced-motion pause. The `w` prefix of the class names is historical (the wind card came
 // first); the rain card uses the same ones. Each card appends its own particles and keyframes.
+import { BAND } from "./constants.ts";
+
 export const STYLE_FLOW = `
   .row.wtile { flex: 1; justify-content: center; }
   .whero .big b { font-size: 40px; line-height: 44px; letter-spacing: -1px; }
@@ -16,6 +18,10 @@ export const STYLE_FLOW = `
   /* the band: the animation behind a chip */
   .wflow { position: relative; overflow: hidden; border-radius: 10px; background: color-mix(in srgb, var(--fe-color) 7%, transparent); contain: layout paint; }
   .wflow.band { flex: none; height: var(--band-h, 120px); }
+  /* a cell with fixed rows: the hero's band takes the room the lead leaves (flow.height is its
+     basis), down to the smallest band; the field follows the band's measured box */
+  :host([fit-rows]) .body:has(> .wflow.band) { flex: 1 1 auto; min-height: 0; }
+  :host([fit-rows]) .wflow.band { flex: 1 1 auto; min-height: ${BAND.minBandH}px; }
   .row.wtile.flow { position: relative; container-type: inline-size; }
   .wflow.bg .chip { display: none; }
   /* a narrow flow tile shows the plain tile's line; a wide one the label line and the big value */

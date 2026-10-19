@@ -1266,6 +1266,56 @@ const CASES = {
     other: false,
     grid_options: { columns: 12, rows },
   })),
+  // a fixed number of grid rows: the plots take the room the card has (sparkline, columns), a
+  // smaller cell shrinks them, a strip keeps its height
+  "ec-fill": [
+    { entity: "sensor.power_consumption", name: "Power", visual: "sparkline", rows: 3 },
+    { entity: "sensor.outdoor_temperature", name: "Outside", visual: "columns", rows: 3 },
+    { entity: "sensor.power_consumption", name: "Power", visual: "sparkline", rows: 2 },
+    { entity: "binary_sensor.window_kitchen", name: "Window", visual: "strip", rows: 2 },
+  ].map(({ rows, ...e }) => ({ type: EC, ...e, grid_options: { columns: 6, rows } })),
+  // the plots of a list share the room evenly, the lead stays up by its name, a plain row keeps
+  // its height; a grid's cells grow alike
+  "egc-fill": [
+    {
+      type: EGC,
+      title: "Living room",
+      entities: [
+        { entity: "sensor.power_consumption", name: "Power", visual: "sparkline" },
+        { entity: "sensor.outdoor_temperature", name: "Outside", visual: "columns" },
+        { entity: "light.kitchen" },
+      ],
+      grid_options: { columns: 12, rows: 7 },
+    },
+    {
+      type: EGC,
+      layout: "grid",
+      entities: [
+        { entity: "sensor.power_consumption", name: "Power", visual: "sparkline" },
+        { entity: "sensor.outdoor_temperature", name: "Outside", visual: "sparkline" },
+      ],
+      grid_options: { columns: 12, rows: 4 },
+    },
+  ],
+  // the weather trend, the wind and rain heroes' bands, the sun path plot and the illuminance
+  // trend fill a fixed height too
+  "wx-fill": {
+    type: "custom:weather-card-pro",
+    entity: "weather.home",
+    sections: [{ type: "hero" }, { type: "trend", mode: "hourly", hours: 12 }],
+    grid_options: { columns: 12, rows: 7 },
+  },
+  "flow-fill": [
+    { type: "custom:wind-card-pro", entity: "sensor.wind_speed", layout: "hero" },
+    { type: "custom:rain-card-pro", entity: "sensor.rain_rate_roof", layout: "hero" },
+  ].map((c) => ({ ...c, grid_options: { columns: 12, rows: 4 } })),
+  "sp-fill": { type: "custom:sun-path-card-pro", grid_options: { columns: 12, rows: 5 } },
+  "lux-fill": {
+    type: "custom:illuminance-card-pro",
+    entity: "sensor.illuminance",
+    mode: "trend",
+    grid_options: { columns: 12, rows: 6 },
+  },
   "pf-styles": [
     {
       type: PF,

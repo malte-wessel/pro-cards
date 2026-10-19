@@ -2,26 +2,26 @@
 
 All cards report a default size to the sections grid through `getGridOptions`, so they land with a sensible footprint and you can resize them with the grid handles or `grid_options`.
 
-| Card                                         | Default                  | Minimum           | Notes                                                          |
-| -------------------------------------------- | ------------------------ | ----------------- | -------------------------------------------------------------- |
-| Entity card, plain tile                      | 6 columns × 1 row        | 3 columns         | Pinned to one row (`max_rows: 1`)                              |
-| Entity card with a block visual or a control | 6 columns, `rows: auto`  | 3 / 4 / 6         | Block visuals: gauge, bar, sparkline, columns, strip           |
-| Entity group card, every layout but `hero`   | 12 columns, `rows: auto` | 6 columns, 2 rows | Height follows the number of entities                          |
-| Entity group card, `hero`                    | 12 columns, `rows: auto` | 6 columns, 3 rows |                                                                |
-| Entity sections card                         | 12 columns, `rows: auto` | 6 columns, 2 rows | 3 rows when a section is a `hero`; height follows the sections |
-| Multi trend card                             | 12 columns × 3 rows      | 6 columns, 2 rows | Lanes layout: 2 rows + one row per entity                      |
-| Sun path card                                | 12 columns, `rows: auto` | 6 columns         |                                                                |
-| Sun azimuth card                             | 12 columns, `rows: auto` | 6 columns         | Height follows the view and the sides footer                   |
-| Illuminance card                             | 12 columns, `rows: auto` | 6 columns         |                                                                |
-| Weather card, tile                           | 6 columns × 1 row        | 3 columns         | 2 rows with a header; the rows are pinned                      |
-| Weather card with `sections`                 | 12 columns, `rows: auto` | 6 columns, 2 rows |                                                                |
-| Wind and rain card, tile                     | 6 columns × 1 row        | 3 columns         | 2 rows with a header; the rows are pinned                      |
-| Wind and rain card, `layout: hero`           | 12 columns, `rows: auto` | 6 columns, 3 rows |                                                                |
-| Power flow card                              | 12 columns, `rows: auto` | 6 columns, 3 rows | Height follows the config, not the width                       |
+| Card                                         | Default                  | Minimum           | Notes                                                                                             |
+| -------------------------------------------- | ------------------------ | ----------------- | ------------------------------------------------------------------------------------------------- |
+| Entity card, plain tile                      | 6 columns × 1 row        | 3 columns         | Pinned to one row (`max_rows: 1`)                                                                 |
+| Entity card with a block visual or a control | 6 columns, `rows: auto`  | 3 / 4 / 6         | Block visuals: gauge, bar, sparkline, columns, strip; 2 rows at least with a sparkline or columns |
+| Entity group card, every layout but `hero`   | 12 columns, `rows: auto` | 6 columns, 2 rows | Height follows the number of entities                                                             |
+| Entity group card, `hero`                    | 12 columns, `rows: auto` | 6 columns, 3 rows |                                                                                                   |
+| Entity sections card                         | 12 columns, `rows: auto` | 6 columns, 2 rows | 3 rows when a section is a `hero`; height follows the sections                                    |
+| Multi trend card                             | 12 columns × 3 rows      | 6 columns, 2 rows | Lanes layout: 2 rows + one row per entity                                                         |
+| Sun path card                                | 12 columns, `rows: auto` | 6 columns         |                                                                                                   |
+| Sun azimuth card                             | 12 columns, `rows: auto` | 6 columns         | Height follows the view and the sides footer                                                      |
+| Illuminance card                             | 12 columns, `rows: auto` | 6 columns         |                                                                                                   |
+| Weather card, tile                           | 6 columns × 1 row        | 3 columns         | 2 rows with a header; the rows are pinned                                                         |
+| Weather card with `sections`                 | 12 columns, `rows: auto` | 6 columns, 2 rows |                                                                                                   |
+| Wind and rain card, tile                     | 6 columns × 1 row        | 3 columns         | 2 rows with a header; the rows are pinned                                                         |
+| Wind and rain card, `layout: hero`           | 12 columns, `rows: auto` | 6 columns, 3 rows |                                                                                                   |
+| Power flow card                              | 12 columns, `rows: auto` | 6 columns, 3 rows | Height follows the config, not the width                                                          |
 
 The minimums (`min_columns`, `min_rows`) keep the grid handles from making a card unreadable; `grid_options` can override any of them. A tile with a control needs more room than a plain one: 4 columns for a switch or a hold button on its line, 6 for anything wider, 3 when the control sits under the line. The plain tiles also pin their height (`max_rows`), since they are exactly one 56 px row — a block visual or a control switches them to `rows: auto` so they size to their content.
 
-Besides `grid_options`, every card accepts the Home Assistant keys `visibility`, `layout_options`, `view_layout` and `card_mod`. The cards ignore them; Home Assistant applies them.
+Besides `grid_options`, every card accepts the Home Assistant keys `visibility`, `layout_options` (the older spelling of `grid_options`), `view_layout` and `card_mod`. Home Assistant applies them; the cards read `grid_options` and `layout_options` only to know whether their rows are fixed.
 
 ## Columns in spanned sections
 
@@ -36,7 +36,7 @@ Pick column counts that divide 12, 24 and 36 so rows stay full on every screen:
 
 ## Rows
 
-`rows: auto` lets the card size itself to its content. Numbers pin the height: 56 px per row plus 8 px gaps. A tile with an icon fits one row; a tile with a bar or sparkline needs `auto`. The cards set this for you, override only when the layout needs it:
+`rows: auto` lets the card size itself to its content. Numbers pin the height: 56 px per row plus 8 px gaps. A tile with an icon fits one row; a tile with a block visual sizes to its content. The cards set this for you, override only when the layout needs it:
 
 ```yaml
 type: custom:entity-group-card-pro
@@ -44,6 +44,40 @@ title: Rooms
 entities: ["..."]
 grid_options: { columns: 12, rows: 4 }
 ```
+
+### Fixed rows
+
+With a number of rows the card takes exactly that height, and the part of it that can stretch fills it: a plot grows into the room the rest of the card leaves and is drawn at that height, so the card lines up with its neighbours, a core sensor card among them. In a smaller cell the plot shrinks, down to a floor.
+
+::: live
+
+```yaml
+- type: custom:entity-card-pro
+  entity: sensor.power_consumption
+  name: Power
+  visual: sparkline
+  grid_options: { columns: 6, rows: 3 }
+- type: custom:entity-card-pro
+  entity: sensor.outdoor_temperature
+  name: Outside
+  visual: columns
+  grid_options: { columns: 6, rows: 3 }
+```
+
+:::
+
+| Card                                          | What fills the height                                                                             |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Entity, entity group and entity sections card | The `sparkline` and `columns` plots, an even share each; a `strip`, bar or gauge keeps its height |
+| Weather card with `sections`                  | The trends and the plots of its entity sections                                                   |
+| Wind and rain card, `layout: hero`            | The band; `flow.height` is its height everywhere else                                             |
+| Multi trend card                              | The plot                                                                                          |
+| Sun path card                                 | The plot                                                                                          |
+| Sun azimuth card                              | The picture, centred                                                                              |
+| Illuminance card                              | The trend (`mode: trend`); the arc and the band keep their size                                   |
+| Power flow card                               | The tree: spread out in a taller cell, scaled down as a whole in a smaller one                    |
+
+The tiles that pin their rows (a plain entity tile, the weather, wind and rain tiles) are always exactly their cell. Wherever the height follows the content (`rows: auto`, masonry and panel views, stacks), every card keeps its own height.
 
 ## Masonry and panel views
 

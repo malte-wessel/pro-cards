@@ -158,26 +158,24 @@ html {
   margin-bottom: 0;
 }
 
-/* HA-like sections grid */
+/* HA-like sections grid (hui-grid-section): auto row tracks; a cell with fixed rows gets a
+   definite height (56 px rows, 8 px gaps), which the card takes only if it asks for it (the
+   fit-rows attribute), as in Home Assistant, where it sits in an inline hui-card */
 .ha-grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  grid-auto-rows: minmax(56px, auto);
+  grid-auto-rows: auto;
   gap: 8px;
   width: 100%;
   box-sizing: border-box;
 }
 .ha-grid > .cell {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
+  position: relative;
 }
-.ha-grid > .cell.fixed > * {
-  height: 100%;
-}
-.ha-grid > .cell > * {
-  flex: 1;
-  min-height: 0;
+.ha-grid > .cell.fixed,
+.ha-grid.sections > .section > .cell.fixed {
+  height: calc(var(--rows) * 64px - 8px);
 }
 .ha-grid.sections {
   display: grid;
@@ -188,7 +186,7 @@ html {
 .ha-grid.sections > .section {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  grid-auto-rows: minmax(56px, auto);
+  grid-auto-rows: auto;
   gap: 8px;
   min-width: 0;
 }
@@ -203,12 +201,7 @@ html {
 }
 .ha-grid.sections > .section > .cell {
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-.ha-grid.sections > .section > .cell > * {
-  flex: 1;
-  min-height: 0;
+  position: relative;
 }
 .ha-heading {
   grid-column: span 12;
@@ -279,10 +272,6 @@ html {
   margin: 0;
 }
 
-.ha-grid > .cell:not(.fixed) > *,
-.ha-grid.sections > .section > .cell:not(.fixed) > * {
-  flex: none;
-}
 /* showcase pages (pageClass: wide): as wide as the home layout */
 .wide .VPDoc .container,
 .wide .VPDoc:not(.has-sidebar) .container {

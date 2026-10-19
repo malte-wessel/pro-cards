@@ -8,6 +8,7 @@ import type {
   HassEntity,
   HomeAssistant,
 } from "../../src/shared/ha.ts";
+import { configGridOptions } from "../../src/shared/grid.ts";
 import "../../src/index.ts";
 import "../../docs/.vitepress/theme/ha.css";
 
@@ -18,6 +19,9 @@ export interface MountOptions {
   skin?: string; // a Home Assistant theme from ha.css, e.g. "graphite"; default when empty
   width?: number | string;
   fullWidth?: boolean;
+  // what Home Assistant hands the card as `layout`: "grid" (a sections grid, the default) or
+  // null for a masonry or panel view or a stack, where `grid_options` is ignored
+  layout?: string | null;
 }
 export interface ServiceCall {
   domain: string;
@@ -42,6 +46,7 @@ export interface ShimWorld {
 export interface CardElement extends HTMLElement {
   setConfig(config: unknown): void;
   hass: HomeAssistant;
+  layout?: string;
   getGridOptions(): GridOptions;
   getCardSize(): number;
   _render(): void;
@@ -137,12 +142,17 @@ const clampColumns = (g: GridOptions) => {
   if (typeof g.max_columns === "number") c = Math.min(c, g.max_columns);
   return Math.min(12, Math.max(1, c));
 };
+// the rows too: a number within min / max, anything else "auto"
+const clampRows = (g: GridOptions) => {
+  if (typeof g.rows !== "number") return "auto";
+  let r = g.rows;
+  if (typeof g.min_rows === "number") r = Math.max(r, g.min_rows);
+  if (typeof g.max_rows === "number") r = Math.min(r, g.max_rows);
+  return r;
+};
 const gridOf = (el: CardElement, cfg: CardConfigBase) => {
-  const g: GridOptions = { ...(el.getGridOptions?.() || {}), ...(cfg.grid_options || {}) };
-  return {
-    columns: clampColumns(g),
-    rows: g.rows === "auto" || g.rows === undefined ? "auto" : Number(g.rows) || 1,
-  };
+  const g: GridOptions = { ...(el.getGridOptions?.() || {}), ...configGridOptions(cfg) };
+  return { columns: clampColumns(g), rows: clampRows(g) };
 };
 
 const mount = (cfgOrList: CardConfigBase | CardConfigBase[], opts: MountOptions = {}) => {
@@ -164,12 +174,15 @@ const mount = (cfgOrList: CardConfigBase | CardConfigBase[], opts: MountOptions 
     const el = document.createElement(type) as CardElement;
     el.setConfig(JSON.parse(JSON.stringify(cfg)));
     el.hass = snapshot();
+    const layout = opts.layout === undefined ? "grid" : opts.layout;
+    if (layout !== null) el.layout = layout;
     const cell = document.createElement("div");
     cell.className = "cell";
     const g = gridOf(el, cfg);
     cell.style.gridColumn = `span ${opts.fullWidth === false ? g.columns : Array.isArray(cfgOrList) ? g.columns : 12}`;
-    if (g.rows !== "auto") {
+    if (layout === "grid" && g.rows !== "auto") {
       cell.style.gridRow = `span ${g.rows}`;
+      cell.style.setProperty("--rows", String(g.rows));
       cell.classList.add("fixed");
     }
     cell.appendChild(el);

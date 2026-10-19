@@ -3,7 +3,7 @@
 //   _normalize(raw)            – the normalised config (see config.js)
 //   _styles()                  – the CSS string for the shadow root
 //   getGridOptions()           – the sections grid footprint
-import { fireAction, fireEvent, fireHaptic, freshShadow } from "../card.ts";
+import { fireAction, fireEvent, fireHaptic, freshShadow, GridCardElement } from "../card.ts";
 import { cssColor } from "../color.ts";
 import { REFRESH_MS } from "../constants.ts";
 import { langOf } from "../format.ts";
@@ -84,7 +84,7 @@ export const groupCardSize = (cfg: EntityCardConfig, group: Group) => {
   }
 };
 
-export abstract class EntityCardBase extends HTMLElement {
+export abstract class EntityCardBase extends GridCardElement {
   static cardType: string;
 
   _series = new Map<string, Point[]>();
@@ -193,6 +193,7 @@ export abstract class EntityCardBase extends HTMLElement {
     this._armed.clear();
     this._dragging = null;
     this._subscribeTemplates();
+    this._syncFitRows(config);
     if (this._root) this._buildDom();
   }
 
@@ -694,6 +695,13 @@ export abstract class EntityCardBase extends HTMLElement {
       "--fe-tint",
       tint === null ? "transparent" : cssColor(tint, "transparent"),
     );
+    // in a cell with fixed rows the room is shared per plot (a weather trend counts as one): a
+    // section passes on its count
+    for (const sec of card.querySelectorAll<HTMLElement>(".section, .wsec")) {
+      const n = sec.querySelectorAll(".plot.grow, .trend").length;
+      if (n > 1) sec.style.setProperty("--grow", String(n));
+      else sec.style.removeProperty("--grow");
+    }
     for (const plot of card.querySelectorAll<PlotElement>(".plot")) drawPlot(ctx, plot);
     this._fitCells(card);
     this._visWatch.arm(this._hass);

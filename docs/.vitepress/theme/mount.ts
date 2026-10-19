@@ -1,4 +1,5 @@
 // Mounts card configs into an HA-like grid container. Shared by LiveCard and DashboardGrid.
+import { configGridOptions } from "../../../src/shared/grid.ts";
 import type { CardConfigBase, GridOptions, HomeAssistant } from "../../../src/shared/ha.ts";
 
 type HassModule = typeof import("./ha-shim/hass.ts");
@@ -7,6 +8,7 @@ type HassModule = typeof import("./ha-shim/hass.ts");
 export interface CardElement extends HTMLElement {
   setConfig(config: unknown): void;
   hass: HomeAssistant;
+  layout?: string;
   getGridOptions?(): GridOptions;
 }
 export interface MountHandle {
@@ -36,13 +38,17 @@ const clampColumns = (g: GridOptions) => {
   if (typeof g.max_columns === "number") c = Math.min(c, g.max_columns);
   return Math.min(12, Math.max(1, c));
 };
+// the rows too: a number within min / max, anything else "auto"
+const clampRows = (g: GridOptions) => {
+  if (typeof g.rows !== "number") return "auto";
+  let r = g.rows;
+  if (typeof g.min_rows === "number") r = Math.max(r, g.min_rows);
+  if (typeof g.max_rows === "number") r = Math.min(r, g.max_rows);
+  return Math.max(1, r);
+};
 const rowsOf = (el: CardElement, cfg: CardConfigBase) => {
-  const g: GridOptions = { ...(el.getGridOptions?.() || {}), ...(cfg.grid_options || {}) };
-  const rows = g.rows;
-  return {
-    columns: clampColumns(g),
-    rows: rows === "auto" || rows === undefined ? "auto" : Math.max(1, Number(rows) || 1),
-  };
+  const g: GridOptions = { ...(el.getGridOptions?.() || {}), ...configGridOptions(cfg) };
+  return { columns: clampColumns(g), rows: clampRows(g) };
 };
 
 export const createCard = (cfg: CardConfigBase): CardElement => {
@@ -83,11 +89,14 @@ export const mountGrid = async (
     cell.className = "cell";
     const el = createCard(cfg);
     el.hass = hass.snapshot();
+    // as in Home Assistant's sections grid: the card learns it sits in one
+    el.layout = "grid";
     const { columns, rows } = rowsOf(el, cfg);
     cell.style.gridColumn = `span ${fullWidth ? 12 : columns}`;
     cell.dataset.cols = String(fullWidth ? 12 : columns);
     if (rows !== "auto") {
       cell.style.gridRow = `span ${rows}`;
+      cell.style.setProperty("--rows", String(rows));
       cell.classList.add("fixed");
     }
     cell.appendChild(el);

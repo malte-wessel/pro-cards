@@ -98,7 +98,9 @@ export class EntityCard extends EntityCardBase {
     const ent = cfg.entities[0];
     if (!BLOCK_VISUALS.has(ent.visual) && !hasTileControl(ent))
       return { columns: 6, rows: 1, min_columns: 3, min_rows: 1, max_rows: 1 };
-    return { columns: 6, rows: "auto", min_columns: tileMinColumns(ent), min_rows: 1 };
+    // a sparkline or columns plot needs two rows: in one it would have no room at all
+    const plot = ent.visual === "sparkline" || ent.visual === "columns";
+    return { columns: 6, rows: "auto", min_columns: tileMinColumns(ent), min_rows: plot ? 2 : 1 };
   }
 }
 

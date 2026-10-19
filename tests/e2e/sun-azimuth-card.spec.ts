@@ -576,7 +576,7 @@ test("with grid_options.rows the card takes that height and the plot fits in", a
         visual = c.querySelector(".visual") as HTMLElement,
         svg = visual.querySelector("svg") as SVGSVGElement;
       return {
-        fill: c.classList.contains("fill"),
+        fill: el.hasAttribute("fit-rows"),
         card: Math.round(c.getBoundingClientRect().height),
         room: visual.clientHeight,
         plot: Math.round(svg.getBoundingClientRect().height),
@@ -595,6 +595,24 @@ test("with grid_options.rows the card takes that height and the plot fits in", a
   // without rows the card sizes to its content as before
   await mount(page, { type: "custom:sun-azimuth-card-pro", view: "dial" }, { time: NOON });
   expect((await box(0)).fill).toBe(false);
+  // rows in the config, but a masonry view or a stack: the card keeps its own height and the
+  // picture stays whole
+  const plain = { house: cfg.house, show_summary: false };
+  await mount(
+    page,
+    { type: "custom:sun-azimuth-card-pro", view: "dial", ...plain },
+    { time: NOON },
+  );
+  const auto = await box(0);
+  await mount(
+    page,
+    { type: "custom:sun-azimuth-card-pro", view: "dial", ...cfg },
+    { time: NOON, layout: null },
+  );
+  const m = await box(0);
+  expect(m.fill).toBe(false);
+  expect(m.plot).toBe(auto.plot);
+  expect(m.card).toBe(auto.card);
 });
 
 test("the pictures follow the theme's mode", async ({ page }) => {

@@ -25,7 +25,7 @@
  *   night_color: indigo
  *   sky_color: light-blue
  */
-import { freshShadow, registerCard } from "./shared/card.ts";
+import { freshShadow, GridCardElement, registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
 import { fmtTime, langOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
@@ -60,7 +60,7 @@ import { nearestOnTrack, type TrackPoint } from "./sun-azimuth/track.ts";
 
 const CARD_TYPE = "sun-azimuth-card-pro";
 
-export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
+export class SunAzimuthCard extends GridCardElement implements SunAzimuthHost {
   static cardType = CARD_TYPE;
 
   _config!: SunAzimuthConfig;
@@ -172,6 +172,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     };
     this._camera = ((this._config.camera % 360) + 360) % 360;
     this._day = null;
+    this._syncFitRows(config);
     if (this._root) this._buildDom();
   }
 
@@ -234,8 +235,6 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     card.style.setProperty("--saz-night", cssColor(cfg.night_color, "var(--indigo-color)"));
     card.style.setProperty("--saz-sky", cssColor(cfg.sky_color, "var(--light-blue-color)"));
     card.classList.toggle("dark", !!this._hass?.themes?.darkMode);
-    // a fixed height (grid_options.rows): the plot takes the room the rest leaves and fits into it
-    card.classList.toggle("fill", typeof cfg.grid_options?.rows === "number");
     const { title, icon } = cfg;
     card.innerHTML = `
       <div class="header"${title || icon ? "" : ' style="display: none"'}>
@@ -352,11 +351,10 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
         label,
       );
   }
-  // the room for the plot in a card of a fixed height; unlimited when the card sizes to its content
+  // the room for the plot in a cell with fixed rows (the fit-rows attribute, src/shared/grid.ts);
+  // unlimited when the card sizes to its content
   _visualHeight(visual: HTMLElement) {
-    return this._root?.classList.contains("fill") && visual.clientHeight
-      ? visual.clientHeight
-      : Infinity;
+    return this.hasAttribute("fit-rows") && visual.clientHeight ? visual.clientHeight : Infinity;
   }
   // the hovered time: the sun moves there in the plot, a hair marks it on every bar and the
   // footer's heading shows it

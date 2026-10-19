@@ -32,3 +32,6 @@ export const DEVICE_CLASS_ICON: Record<string, string> = {
 // the text line, so an ha-icon / ha-state-icon that inherits a line height lays out a line box
 // around it and the icon sits a pixel or two below centre (2 px at Home Assistant's 1.5)
 export const STYLE_ICONS = `ha-icon, ha-state-icon { line-height: 0; }`;
+// a card in a sections grid cell with fixed rows takes the cell's height (src/shared/grid.ts sets
+// the attribute); everywhere else the host keeps the height of its content
+export const STYLE_FIT_ROWS = `:host([fit-rows]) { height: 100%; }`;

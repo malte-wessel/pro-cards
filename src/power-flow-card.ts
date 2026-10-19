@@ -210,20 +210,13 @@ export class PowerFlowCard extends EntityCardBase {
     const diag = card.querySelector<HTMLElement>(".pdiag");
     const box = diag?.querySelector<HTMLElement>(".pscale");
     if (!diag || !box) return;
-    // the height follows the config and what of it is shown, never the width. A card whose
-    // cell has a fixed height (a sections grid with fixed rows, however they are written) fills
-    // it instead: with the fill styles the diagram takes what the cell leaves, and measures 0
-    // wherever the card's height follows its content (rows: auto, masonry, panel, stacks), which
-    // drops the fill styles again. All of it happens in this one render, and the cell's size
-    // never depends on the tree, so the resize observer cannot loop.
+    // the height follows the config and what of it is shown, never the width. A card in a cell
+    // with fixed rows (the fit-rows attribute, src/shared/grid.ts) fills it instead: the diagram
+    // takes what the rest of the card leaves. The cell's size never depends on the tree, so the
+    // resize observer cannot loop.
     const natural = diagramHeight(c.view);
     diag.style.setProperty("--diag-h", `${natural}px`);
-    card.classList.add("fill");
-    let avail = diag.clientHeight;
-    if (avail <= 0) {
-      card.classList.remove("fill");
-      avail = natural;
-    }
+    const avail = (this.hasAttribute("fit-rows") && diag.clientHeight) || natural;
     const width = diag.clientWidth;
     // not laid out yet: the resize observer renders again once the diagram has a size
     if (width <= 0) return;

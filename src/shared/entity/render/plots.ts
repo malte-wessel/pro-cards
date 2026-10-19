@@ -73,8 +73,11 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement) => {
     labels = qs(plot, ".labels");
   const W = Math.max(plot.clientWidth, 10);
   if (W < 20) return; // not laid out yet; the ResizeObserver re-renders once the width is known
-  const H = PLOT_H[kind];
-  svg.setAttribute("viewBox", `0 0 ${W} ${plot._ctx.h}`);
+  // a growing plot is drawn at the height it has (its own as the basis, more or less in a cell
+  // with fixed rows), never stretched to it: that would turn the dots into ellipses
+  const grow = plot.classList.contains("grow");
+  const H = (grow && plot.clientHeight) || PLOT_H[kind];
+  svg.setAttribute("viewBox", `0 0 ${W} ${grow ? H : plot._ctx.h}`);
   const { t0, t1: now } = windowOf(ctx, plot);
   const series = plot._ctx.series ?? ((ent.entity && ctx.series.get(ent.entity)) || []);
   const loaded = plot._ctx.loaded ?? ctx.fetched;

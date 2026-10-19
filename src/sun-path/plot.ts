@@ -18,8 +18,9 @@ export const drawCurve = (card: SunPathHost, day: PositionedDay, now: Date) => {
   const cfg = card._config;
   const plot = qs(card._root as HTMLElement, ".plot");
   const svg = qs<SVGSVGElement>(plot, "svg");
+  // drawn at the height the plot has: its own, or what a cell with fixed rows gives it
   const W = Math.max(plot.clientWidth, 10),
-    H = PLOT_H;
+    H = plot.clientHeight || PLOT_H;
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   const top = 8,
     bottom = H - 6;

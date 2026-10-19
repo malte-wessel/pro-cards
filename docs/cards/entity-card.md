@@ -459,7 +459,7 @@ All [entity options](/cards/entity-options#entity-options) plus:
 
 ### Grid defaults
 
-6 columns × 1 row; `rows: auto` for the block visuals (`gauge`, `bar`, `sparkline`, `columns`, `strip`). See [Sizing in sections](/guide/sizing).
+6 columns × 1 row; `rows: auto` for the block visuals (`gauge`, `bar`, `sparkline`, `columns`, `strip`), at least 2 rows with a `sparkline` or `columns`. With a fixed number of rows the plot fills the card, see [Fixed rows](/guide/sizing#fixed-rows).
 
 ### Home Assistant options
 

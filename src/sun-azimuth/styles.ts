@@ -1,6 +1,6 @@
 // Styles of the sun azimuth card. --saz-sun / --saz-night / --saz-sky are set on the card from
 // the config colours; --c is the colour of a lead or row (the sun's while it is up).
-import { AXIS_FONT, STYLE_ICONS } from "../shared/constants.ts";
+import { AXIS_FONT, STYLE_FIT_ROWS, STYLE_ICONS } from "../shared/constants.ts";
 import { STYLE_SLIDER } from "../shared/slider.ts";
 import { CHIP_FONT } from "./constants.ts";
 
@@ -29,6 +29,7 @@ const HOUSE = "var(--saz-house)",
 export const STYLE = `
   ${STYLE_ICONS}
   :host { display: block; min-width: 0; }
+  ${STYLE_FIT_ROWS}
   ha-card { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; contain: inline-size; container-type: inline-size; }
   ha-card { --saz-fade: 1; --saz-skyk: 1; --saz-shadow: .13; --saz-house: ${CARD_BG}; --saz-sky0: 2%; --saz-sky1: 14%; --saz-ground: 10%; }
   ha-card.dark { --saz-fade: .7; --saz-skyk: 2; --saz-shadow: .4; --saz-house: color-mix(in srgb, var(--primary-text-color) 18%, ${CARD_BG}); --saz-sky0: 14%; --saz-sky1: 20%; --saz-ground: 9%; }
@@ -60,9 +61,9 @@ export const STYLE = `
   /* the pictures */
   .visual { display: flex; justify-content: center; min-width: 0; }
   .visual svg { display: block; width: 100%; overflow: visible; }
-  /* a fixed height (grid_options.rows): the plot takes the room the rest of the card leaves, centred */
-  ha-card.fill .body { min-height: 0; }
-  ha-card.fill .visual { flex: 1 1 0; min-height: 0; align-items: center; overflow: hidden; }
+  /* a cell with fixed rows: the plot takes the room the rest of the card leaves, centred */
+  :host([fit-rows]) .body { min-height: 0; }
+  :host([fit-rows]) .visual { flex: 1 1 0; min-height: 0; align-items: center; overflow: hidden; }
   svg.dial { max-width: 300px; }
   svg text { font: ${AXIS_FONT}; font-weight: 500; fill: var(--secondary-text-color); text-anchor: middle; dominant-baseline: central; }
   /* the horizon ring in the ticks' colour */

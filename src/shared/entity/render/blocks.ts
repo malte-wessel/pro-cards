@@ -46,7 +46,9 @@ export const plotEl = (
 ) => {
   const kind = extra.kind ?? (ent.visual as HistoryVisual);
   const plot = document.createElement("div") as PlotElement;
-  plot.className = "plot";
+  // sparkline and columns grow into a cell with fixed rows; a strip is a timeline and keeps its
+  // height (styles: STYLE_PLOT)
+  plot.className = kind === "strip" ? "plot" : "plot grow";
   const h = PLOT_H[kind] + (kind === "strip" ? STRIP_AXIS_H : 0);
   plot.style.height = `${h}px`;
   plot.innerHTML = `<svg class="abs" preserveAspectRatio="none"></svg><div class="labels"></div><div class="tip"></div>`;

@@ -22,7 +22,13 @@
  *         - { above: 25, color: red }
  *       visibility: [...]             # optional: drawn only while the conditions hold
  */
-import { fireAction, defineElement, registerCard, freshShadow } from "./shared/card.ts";
+import {
+  fireAction,
+  defineElement,
+  GridCardElement,
+  registerCard,
+  freshShadow,
+} from "./shared/card.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import type { MultiTrendCardConfig, TrendConfig, TrendPoint } from "./multi-trend/config.ts";
 import { cssColor } from "./shared/color.ts";
@@ -58,7 +64,7 @@ const CARD_TYPE = "multi-trend-card-pro";
 
 defineElement(`${CARD_TYPE}-editor`, MultiTrendCardEditor);
 
-export class MultiTrendCard extends HTMLElement {
+export class MultiTrendCard extends GridCardElement {
   static cardType = CARD_TYPE;
 
   _config!: TrendConfig;
@@ -138,6 +144,7 @@ export class MultiTrendCard extends HTMLElement {
       ...entities.flatMap((e) => (isTemplate(e.color) ? [e.color] : [])),
     ]);
     this._tpl.sync(this._hass?.connection, this._templates);
+    this._syncFitRows(config);
     if (this._root) this._buildDom();
   }
 

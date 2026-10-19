@@ -360,7 +360,7 @@ sections:
 
 ### Grid defaults
 
-12 columns, `rows: auto`; at least 6 columns and 2 rows (3 when a section is a hero). See [Sizing in sections](/guide/sizing).
+12 columns, `rows: auto`; at least 6 columns and 2 rows (3 when a section is a hero). See [Sizing in sections](/guide/sizing). With a fixed number of rows the `sparkline` and `columns` plots share the extra height, see [Fixed rows](/guide/sizing#fixed-rows).
 
 ### Home Assistant options
 

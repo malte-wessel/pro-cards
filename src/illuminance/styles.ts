@@ -1,9 +1,10 @@
 // Styles of the illuminance card.
-import { AXIS_FONT, STYLE_ICONS } from "../shared/constants.ts";
+import { AXIS_FONT, STYLE_FIT_ROWS, STYLE_ICONS } from "../shared/constants.ts";
 
 export const STYLE = `
   ${STYLE_ICONS}
   :host { display: block; min-width: 0; }
+  ${STYLE_FIT_ROWS}
   ha-card { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; contain: inline-size; }
   .header { display: flex; align-items: center; gap: 12px; padding: 12px 16px 0 16px; min-width: 0; }
   .shape {
@@ -23,6 +24,10 @@ export const STYLE = `
     color: var(--primary-text-color); background: color-mix(in srgb, var(--pill) 12%, transparent); white-space: nowrap;
   }
   .plot { position: relative; min-width: 0; touch-action: pan-y; }
+  /* a cell with fixed rows: the trend takes the room the rest of the card leaves, down to a
+     floor (the band and the arc keep their size) */
+  :host([fit-rows]) .body:has(> .plot.grow) { flex: 1 1 auto; min-height: 0; }
+  :host([fit-rows]) .plot.grow { flex: 1 1 auto; min-height: 64px; }
   svg.abs { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
   .hair { stroke: var(--secondary-text-color); stroke-width: 1; opacity: .6; }
   .grid { stroke: var(--divider-color); stroke-width: 1; }

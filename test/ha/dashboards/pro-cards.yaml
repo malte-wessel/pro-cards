@@ -323,3 +323,70 @@ views:
               - { entity: light.living_room, name: Ceiling, control: button }
               - { entity: light.kitchen, name: Kitchen, control: hold, control_position: lead }
               - { entity: switch.coffee_machine, name: Coffee, control: toggle }
+      - type: grid
+        cards:
+          - type: heading
+            heading: Fixed rows
+          # every card here has a numeric `rows`: the card must take exactly its cell (the core
+          # sensor card beside the sparkline tile shows the height to match)
+          - type: sensor
+            entity: sensor.power_consumption
+            graph: line
+            grid_options: { columns: 6, rows: 3 }
+          - type: custom:entity-card-pro
+            entity: sensor.power_consumption
+            name: Power
+            visual: sparkline
+            hours_to_show: 6
+            grid_options: { columns: 6, rows: 3 }
+          - type: custom:sun-azimuth-card-pro
+            view: 3d
+            house: { front: 20 }
+            grid_options: { columns: 6, rows: 4 }
+          - type: custom:sun-azimuth-card-pro
+            view: dial
+            house: { front: 20 }
+            grid_options: { columns: 6, rows: 4 }
+          - type: custom:power-flow-card-pro
+            home: sensor.power_consumption
+            sources:
+              - { type: solar, entity: sensor.solar_power }
+              - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
+              - { type: grid, power: sensor.grid_power }
+            consumers:
+              - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
+            grid_options: { columns: 12, rows: 6 }
+          - type: custom:multi-trend-card-pro
+            title: Outdoor
+            hours_to_show: 6
+            entities:
+              - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
+              - { entity: sensor.outdoor_humidity, name: Humidity, color: blue }
+            grid_options: { columns: 12, rows: 5 }
+          - type: custom:entity-group-card-pro
+            title: Living room
+            entities:
+              - { entity: sensor.power_consumption, name: Power, visual: sparkline }
+              - { entity: sensor.outdoor_temperature, name: Outside, visual: columns }
+              - { entity: light.living_room }
+            grid_options: { columns: 12, rows: 7 }
+          - type: custom:weather-card-pro
+            entity: weather.demo_weather_south
+            title: Weather
+            sections:
+              - { type: hero }
+              - { type: trend, mode: daily, days: 5 }
+            grid_options: { columns: 12, rows: 7 }
+          - type: custom:wind-card-pro
+            entity: sensor.wind_speed
+            direction: sensor.wind_direction
+            gust: sensor.wind_gust
+            layout: hero
+            grid_options: { columns: 6, rows: 5 }
+          - type: custom:sun-path-card-pro
+            title: Sun
+            grid_options: { columns: 6, rows: 5 }
+          - type: custom:illuminance-card-pro
+            entity: sensor.illuminance
+            mode: trend
+            grid_options: { columns: 12, rows: 6 }
