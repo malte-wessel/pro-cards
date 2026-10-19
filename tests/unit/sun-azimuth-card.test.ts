@@ -373,13 +373,13 @@ describe("sun-azimuth-card 3D scene", () => {
   it("sizes the sphere to the column, with room for the labels beside it", () => {
     // a small column: the widest sphere whose E / W labels still fit, the box as wide as the column
     const small = sceneBox(260);
-    expect(small).toMatchObject({ w: 260, scale: 105, cx: 130 });
+    expect(small).toMatchObject({ w: 260, scale: 112, cx: 130 });
     expect(2 * (small.scale + SCENE.labelGap + SCENE.side)).toBeLessThanOrEqual(260);
-    expect(small.cy).toBe(SCENE.top + 105);
+    expect(small.cy).toBe(SCENE.top + 112);
     // from about 290 px on: the sphere at its full size, the box as before, centred in wider ones
     expect(sceneBox(416)).toMatchObject({
       w: 416,
-      h: 205,
+      h: 198,
       scale: SCENE.maxScale,
       cx: 208,
       cy: 134,
