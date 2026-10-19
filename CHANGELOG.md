@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.7.0 (beta)
 
 - Power flow: the grid and solar nodes get a ring like the battery's when there is something to show. A grid with `fossil` / `non_fossil` draws its low-carbon share; a solar source with the new `peak` (W) draws its production against the panels' peak power. Without that data the node stays a plain circle
 - Power flow: `idle_below` sets the watts below which a link is idle (default 20, as before). `idle_below: 1` lets a 3 W standby load flow instead of drawing a dashed track; the node colours and the summary line follow the same threshold
