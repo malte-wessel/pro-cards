@@ -11,6 +11,7 @@ All cards report a default size to the sections grid through `getGridOptions`, s
 | Entity sections card                         | 12 columns, `rows: auto` | 6 columns, 2 rows | 3 rows when a section is a `hero`; height follows the sections |
 | Multi trend card                             | 12 columns × 3 rows      | 6 columns, 2 rows | Lanes layout: 2 rows + one row per entity                      |
 | Sun path card                                | 12 columns, `rows: auto` | 6 columns         |                                                                |
+| Sun azimuth card                             | 12 columns, `rows: auto` | 6 columns         | Height follows the view and the sides footer                   |
 | Illuminance card                             | 12 columns, `rows: auto` | 6 columns         |                                                                |
 | Weather card, tile                           | 6 columns × 1 row        | 3 columns         | 2 rows with a header; the rows are pinned                      |
 | Weather card with `sections`                 | 12 columns, `rows: auto` | 6 columns, 2 rows |                                                                |

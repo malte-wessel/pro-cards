@@ -5,6 +5,7 @@ The cards show their own words in the language of your Home Assistant profile (*
 ## What is translated
 
 - The default labels of the sun path card (Sunrise, Sunset, Dawn, Solar noon, Dusk) and the word in its tooltip (elevation).
+- The sun azimuth card's words (the directions North, South-West …, Elevation, below the horizon …), its default side names, which say where a side faces (North side, South-West side …), the pills of the sides footer (Sun now, Shade …) and `Sides of the house`.
 - The default zone names of the illuminance card (Night, Twilight, Overcast, Day, Sun), the `Max` of its header line and the `LUX` under the gauge value.
 - The weather card's condition names (Sunny, Partly cloudy, Thunderstorms …), the names of the weather attributes it lists (Humidity, Wind, Pressure, Feels like …), its section titles (`Next 12 hours`, `7 days`), `Today`, `High` / `Low` and `no forecast`.
 - The rain card's `… today`.
@@ -16,7 +17,7 @@ The cards show their own words in the language of your Home Assistant profile (*
 - Every label, option and helper of the three visual editors.
 - The `title` a card gets when you add it from the card picker (Group, Section, Weather, Wind, Rain, Sun path, Power flow). It lands in your configuration as plain text, so it stays as it was written once the card exists.
 
-Everything you write yourself stays as written: `title`, `name`, rule `label`, `labels` of the sun path card and `zones` of the illuminance card override the defaults in any language. Units (`h`, `min`, `lx`, `°`) and the names and descriptions in the card picker are the same in every language, as are the messages for an invalid configuration.
+Everything you write yourself stays as written: `title`, `name`, rule `label`, `labels` of the sun path card, `house.sides` of the sun azimuth card and `zones` of the illuminance card override the defaults in any language. Units (`h`, `min`, `lx`, `°`) and the names and descriptions in the card picker are the same in every language, as are the messages for an invalid configuration.
 
 ## Available languages
 

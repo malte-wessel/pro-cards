@@ -15,6 +15,15 @@ export const decimalsOf = (s: unknown) => {
   const m = String(s ?? "").match(/\.(\d+)$/);
   return m ? Math.min(m[1].length, 2) : 0;
 };
+// the decimals a step (or a grid start) is written with, at most four
+export const stepDecimals = (n: number) => Math.min(4, (String(n).split(".")[1] || "").length);
+// the nearest value on a grid of steps counted from min (min 1, step 2: 1, 3, 5 …), held inside
+// the bounds; rounded to the grid's own decimals so float noise never shows
+export const snapTo = (v: number, min: number, max: number, step: number) => {
+  const dec = Math.max(stepDecimals(step), stepDecimals(min));
+  const snapped = min + Math.round((v - min) / step) * step;
+  return Number(Math.min(max, Math.max(min, snapped)).toFixed(dec));
+};
 // whether `v` is one of the literals in `list` (narrows to the literal union)
 export const oneOf = <T extends string>(list: readonly T[], v: unknown): v is T =>
   typeof v === "string" && (list as readonly string[]).includes(v);

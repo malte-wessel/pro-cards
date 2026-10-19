@@ -141,6 +141,24 @@ views:
       - type: grid
         cards:
           - type: heading
+            heading: Sun azimuth card
+          - type: custom:sun-azimuth-card-pro
+            title: Sun
+            icon: mdi:sun-compass
+            view: dial
+            house:
+              front: 20
+              sides: { front: Street, back: Garden }
+            show_sun_times: true
+            show_sides: true
+          - type: custom:sun-azimuth-card-pro
+            view: 3d
+            house: { front: 20 }
+            camera: 150
+            camera_slider: true
+      - type: grid
+        cards:
+          - type: heading
             heading: Illuminance card
           - type: custom:illuminance-card-pro
             entity: sensor.illuminance

@@ -31,6 +31,7 @@ Pro Cards are polished dashboard cards that look like they belong in Home Assist
 | Entity Sections Card Pro | `custom:entity-sections-card-pro` | Several groups with their own layout under one header: room and device cards.                                                                 | YAML only |
 | Multi Trend Card Pro     | `custom:multi-trend-card-pro`     | Tile-style trend graph for several sensors with a hover/touch tooltip.                                                                        | Visual    |
 | Sun Path Card Pro        | `custom:sun-path-card-pro`        | Today's sun elevation with sunrise, sunset, dawn, noon and dusk.                                                                              | Visual    |
+| Sun Azimuth Card Pro     | `custom:sun-azimuth-card-pro`     | Where the sun is around the house: 3D scene or sky dial, and the sides it shines on today.                                                    | YAML only |
 | Illuminance Card Pro     | `custom:illuminance-card-pro`     | Illuminance as gauge arc, log-scale trend with zones or a colour band.                                                                        | Visual    |
 | Weather Card Pro         | `custom:weather-card-pro`         | Current conditions, attributes and the hourly / daily forecast of a weather entity, with rules, sections and templates.                       | YAML only |
 | Wind Card Pro            | `custom:wind-card-pro`            | Wind speed, direction and gusts as a tile, a flow tile or a hero, with an animated wind field in four styles that rules colour.               | YAML only |
@@ -222,6 +223,22 @@ title: Sun today
 ```
 
 [Sun Path Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/sun-path-card)
+
+#### Sun Azimuth Card Pro
+
+Where the sun is around your house: a 3D scene with the house, its shadow and the sky dome, or a sky dial seen from above. On request, sunrise, noon and sunset, and the sides of the house with their sun window today.
+
+```yaml
+type: custom:sun-azimuth-card-pro
+title: Sun
+house:
+  front: 20
+  sides: { front: Street, back: Garden }
+show_sun_times: true
+show_sides: true
+```
+
+[Sun Azimuth Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/sun-azimuth-card)
 
 #### Illuminance Card Pro
 

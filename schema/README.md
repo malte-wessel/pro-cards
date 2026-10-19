@@ -1,6 +1,6 @@
 # Card config schemas
 
-JSON Schema (draft 2020-12) for every Pro Cards card. `pro-cards.schema.json` accepts any of the ten, discriminated by `type`.
+JSON Schema (draft 2020-12) for every Pro Cards card. `pro-cards.schema.json` accepts any of the eleven, discriminated by `type`.
 
 Uses:
 

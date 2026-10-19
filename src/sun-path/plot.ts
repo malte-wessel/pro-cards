@@ -8,7 +8,7 @@ import { t as tr } from "../shared/i18n.ts";
 import { qs } from "../shared/util.ts";
 import type { PositionedDay, SunPathHost } from "./config.ts";
 import { CURVE_STEP_MIN, HORIZON_MAX, HORIZON_MIN, PLOT_H, type SunEvent } from "./constants.ts";
-import { solarElevation } from "./solar.ts";
+import { solarElevation } from "../shared/solar.ts";
 
 const fmt = (hass: HomeAssistant | undefined, t: number | null | undefined) =>
   t == null ? "–" : fmtTime(hass, t);

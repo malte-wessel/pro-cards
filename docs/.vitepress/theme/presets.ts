@@ -117,6 +117,12 @@ title: Sun today
 show_dawn_dusk: true
 labels: { sunrise: Sunrise, sunset: Sunset, dawn: Dawn, noon: Solar noon, dusk: Dusk }
 `,
+  "Sun azimuth card": `type: custom:sun-azimuth-card-pro
+title: Sun
+house: { front: 20, sides: { front: Street, back: Garden } }
+show_sun_times: true
+show_sides: true
+`,
   "Illuminance card": `type: custom:illuminance-card-pro
 entity: sensor.illuminance
 mode: trend

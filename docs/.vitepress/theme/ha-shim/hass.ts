@@ -418,6 +418,10 @@ export const wire = () => {
   world.start();
 };
 
+// the site's mode: VitePress's `dark` class on <html>
+const isDark = () =>
+  typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+
 // A fresh hass object (new identity so cards detect the change) over the shared demo world.
 export const snapshot = (): HassSnapshot => ({
   states: { ...world.states },
@@ -432,10 +436,7 @@ export const snapshot = (): HassSnapshot => ({
     unit_system: { temperature: "°C", length: "km" },
     version: "2026.9.3",
   },
-  themes: {
-    darkMode:
-      typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
-  },
+  themes: { darkMode: isDark() },
   formatEntityState,
   callService,
   // HA's callWS / subscribeMessage are generic in the caller's result type, so the shim asserts
@@ -482,8 +483,22 @@ export const snapshot = (): HassSnapshot => ({
   },
 });
 
+// a change of the world, or of the site's mode: Home Assistant hands the cards a fresh hass when
+// the user switches between light and dark, so the shim does too
 export const subscribe = (fn: () => void) => {
   wire();
-  return world.subscribe(fn);
+  const off = world.subscribe(fn);
+  if (typeof MutationObserver === "undefined") return off;
+  let dark = isDark();
+  const mode = new MutationObserver(() => {
+    if (isDark() === dark) return;
+    dark = isDark();
+    fn();
+  });
+  mode.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  return () => {
+    off();
+    mode.disconnect();
+  };
 };
 export { world };

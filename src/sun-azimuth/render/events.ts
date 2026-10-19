@@ -1,0 +1,74 @@
+// The house line (which sides the sun is on, what comes next) and the sunrise / noon / sunset row.
+import { t } from "../../shared/i18n.ts";
+import type { SunAzimuthHost } from "../config.ts";
+import { defaultSideName } from "../constants.ts";
+import { upcomingSunrise, type SunDay, type SunSample } from "../day.ts";
+import { litSides, nextSide, type Side } from "../sides.ts";
+import { compass, deg, set, time } from "./text.ts";
+
+const icon = (name: string) => `<ha-icon icon="${name}"></ha-icon>`;
+
+// a caption under the plot: no lead, so it does not compete with the head
+export const houseHtml = () =>
+  `<div class="house"><div class="primary"></div><div class="secondary"></div></div>`;
+
+export const eventsHtml = () =>
+  `<div class="items">
+    <div class="item"><div class="lead s36 rise">${icon("mdi:weather-sunset-up")}</div><div class="itexts"><div class="v rise"></div><div class="n rise"></div></div></div>
+    <div class="item"><div class="lead s36 noon">${icon("mdi:white-balance-sunny")}</div><div class="itexts"><div class="v noon"></div><div class="n noon"></div></div></div>
+    <div class="item"><div class="lead s36 set">${icon("mdi:weather-sunset-down")}</div><div class="itexts"><div class="v set"></div><div class="n set"></div></div></div>
+  </div>`;
+
+export const sideName = (card: SunAzimuthHost, side: Side) =>
+  card._config.sides[side.key] || defaultSideName(card._hass, side.normal);
+
+export const fillHouse = (
+  card: SunAzimuthHost,
+  el: HTMLElement,
+  day: SunDay,
+  now: SunSample,
+  sides: Side[],
+) => {
+  const hass = card._hass;
+  const lit = litSides(sides);
+  set(
+    el,
+    ".primary",
+    lit.length
+      ? t(hass, "azimuth.sun_on", { sides: lit.map((s) => sideName(card, s)).join(" + ") })
+      : t(hass, "azimuth.sun_on_none"),
+  );
+  const next = nextSide(sides);
+  let secondary: string;
+  if (next)
+    secondary = t(hass, "azimuth.next_side", {
+      side: sideName(card, next),
+      time: time(hass, next.nextFrom),
+    });
+  else if (day.sunset && now.t < day.sunset.t)
+    secondary = t(hass, "azimuth.next_sunset", { time: time(hass, day.sunset.t) });
+  else {
+    // this morning's sunrise before it, tomorrow's once the sun has set
+    const rise = upcomingSunrise(day, now.t);
+    secondary = rise ? t(hass, "azimuth.next_sunrise", { time: time(hass, rise.t) }) : "";
+  }
+  set(el, ".secondary", secondary);
+};
+
+export const fillEvents = (card: SunAzimuthHost, el: HTMLElement, day: SunDay) => {
+  const hass = card._hass;
+  set(el, ".v.rise", time(hass, day.sunrise?.t));
+  set(
+    el,
+    ".n.rise",
+    day.sunrise ? `${deg(hass, day.sunrise.az)} ${compass(hass, day.sunrise.az)}` : "–",
+  );
+  set(el, ".v.noon", time(hass, day.noon.t));
+  set(el, ".n.noon", t(hass, "azimuth.high", { value: deg(hass, day.noon.el) }));
+  set(el, ".v.set", time(hass, day.sunset?.t));
+  set(
+    el,
+    ".n.set",
+    day.sunset ? `${deg(hass, day.sunset.az)} ${compass(hass, day.sunset.az)}` : "–",
+  );
+};

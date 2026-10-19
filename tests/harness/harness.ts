@@ -97,6 +97,8 @@ const snapshot = (): HomeAssistant => {
   const h: HomeAssistant = baseSnapshot();
   h.locale = { language, time_zone: "server" };
   h.user = user === null ? undefined : { id: user, name: user, is_admin: true };
+  // the mode of the mounted theme, as Home Assistant reports it
+  h.themes = { darkMode: root.classList.contains("dark") };
   const orig = h.callService;
   h.callService = (d: string, s: string, data?: Record<string, unknown>, target?: unknown) => {
     calls.push({ domain: d, service: s, data: data || {}, target: target || null });
