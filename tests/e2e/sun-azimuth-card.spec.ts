@@ -198,6 +198,15 @@ test("hovering a timeline previews the sun at that time", async ({ page }) => {
   await expect(footer.locator(".sechead .secondary")).toHaveText("Today");
   await expect(chip).toHaveText("138°");
   await expect(c.locator("svg.dial circle.sun")).not.toHaveClass(/down/);
+  // only the bar previews: its row's name and pill do not, and moving onto them ends a preview
+  const name = (await c.locator(".side").nth(2).locator(".primary").boundingBox())!;
+  await page.mouse.move(name.x + 10, name.y + name.height / 2);
+  await expect(footer).not.toHaveClass(/scrub/);
+  await page.mouse.move(box.x + box.width * 0.95, box.y + box.height / 2);
+  await expect(footer).toHaveClass(/scrub/);
+  await page.mouse.move(name.x + 10, name.y + name.height / 2);
+  await expect(footer).not.toHaveClass(/scrub/);
+  await expect(chip).toHaveText("138°");
 });
 
 test("hover_preview: false leaves the plot alone", async ({ page }) => {

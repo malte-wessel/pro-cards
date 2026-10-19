@@ -76,9 +76,12 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     const footer = this._root?.querySelector<HTMLElement>(".sides"),
       day = this._day;
     if (!footer || !day) return;
-    const main = (ev.target as Element).closest(".side .main");
-    const bar = main?.querySelector(".lbar");
-    if (!bar) return;
+    // only the bar previews: off it (its name, times, pill) the plot shows now again
+    const bar = (ev.target as Element).closest(".side .lbar");
+    if (!bar) {
+      this._endHover();
+      return;
+    }
     const rect = bar.getBoundingClientRect(),
       span = timelineSpan(day);
     const f = Math.max(0, Math.min(1, (ev.clientX - rect.left) / (rect.width || 1)));
@@ -238,6 +241,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     }
     const footer = card.querySelector<HTMLElement>(".sides");
     if (footer && cfg.hover_preview) {
+      footer.classList.add("preview");
       footer.addEventListener("pointermove", this._onScrub);
       footer.addEventListener("pointerdown", this._onScrub);
       footer.addEventListener("pointerleave", this._onScrubLeave);
