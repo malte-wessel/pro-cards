@@ -336,9 +336,36 @@ test.describe("power flow card", () => {
       const n = await box(s.locator(`.pnode[data-node='${id}']`));
       expect(n.y + n.height).toBeLessThanOrEqual(sBox.y + sBox.height);
     }
+    // a right-to-left document: the scaled tree stays anchored where the diagram starts
+    await page.evaluate(() => (document.documentElement.dir = "rtl"));
+    await mount(page, { ...cfg, grid_options: { columns: 12, rows: 4 } });
+    await pin(page);
+    const r = card(page);
+    const [rBox, rDiag] = [await box(r.locator(".pscale")), await box(r.locator(".pdiag"))];
+    expect(Math.abs(rBox.x - rDiag.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(rBox.width - rDiag.width)).toBeLessThanOrEqual(1);
+    await page.evaluate(() => (document.documentElement.dir = ""));
     // rows: auto (the default): the card is as tall as its tree
     await mount(page, cfg);
     await expect(card(page).locator("ha-card")).not.toHaveClass(/\bfill\b/);
+    // rows in the config, but a container whose height follows the card (masonry, a stack):
+    // the tree keeps its own height and stays visible
+    await mount(page, { ...cfg, grid_options: { columns: 12, rows: 6 } });
+    await pin(page);
+    await page.evaluate(() => {
+      const cell = document.querySelector<HTMLElement>("#root > .cell")!;
+      cell.style.gridRow = "";
+      cell.classList.remove("fixed");
+    });
+    const m = card(page);
+    await expect(m.locator("ha-card")).not.toHaveClass(/\bfill\b/);
+    const natural = await m
+      .locator(".pdiag")
+      .evaluate((e) => (e as HTMLElement).style.getPropertyValue("--diag-h"));
+    await expect(m.locator(".pdiag")).toHaveCSS("height", natural);
+    const mBox = await box(m.locator("ha-card"));
+    const grid = await box(m.locator(".pnode[data-node='s2']"));
+    expect(grid.y + grid.height).toBeLessThanOrEqual(mBox.y + mBox.height);
   });
 
   test("idle_below lets a standby load flow", async ({ page }) => {

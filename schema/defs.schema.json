@@ -405,7 +405,7 @@
       ]
     },
     "haCardExtras": {
-      "description": "Keys Home Assistant adds to any card; not interpreted by the cards",
+      "description": "Keys Home Assistant adds to any card; the cards do not read them, but a card in a cell of fixed height may fill it (power flow)",
       "grid_options": {
         "type": "object",
         "properties": {

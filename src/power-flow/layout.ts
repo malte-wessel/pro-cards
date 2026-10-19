@@ -248,7 +248,7 @@ export const layoutTree = (
   width: number,
   edges: EdgeFlow[],
   sizes: LabelSizes = new Map(),
-  // a fixed card height (`fill`): the tree spreads to it; less than the tree needs is ignored
+  // the height of a card with a fixed size: the tree spreads to it; less than it needs is ignored
   height = 0,
 ): TreeLayout => {
   const dir: Direction = cfg.direction;
@@ -298,7 +298,7 @@ export const layoutTree = (
   const extra = right ? 0 : along - natural,
     cols = alongColumns(cfg),
     grow = hasCons ? Math.min(extra, 0.5 * GEOM.columnPitch * cols) : 0,
-    pitch = GEOM.columnPitch + grow / cols;
+    levelPitch = GEOM.columnPitch + grow / cols;
   const aS = GEOM.srcAlong + (extra - grow) / 2;
   let aH: number, aG: number, aC: number, aRow: number;
   if (right) {
@@ -336,9 +336,9 @@ export const layoutTree = (
     aRow = cfg.hasGroups ? aG + Math.max(50, along * 0.18) : Math.max(aH + 80, along * 0.62);
     if (listRows) aC = aRow;
   } else {
-    aH = hasCons ? aS + pitch : aS + natural - 44 - GEOM.srcAlong;
-    aG = aH + pitch;
-    aC = aH + pitch * (cfg.hasGroups ? 2 : 1);
+    aH = hasCons ? aS + levelPitch : aS + natural - 44 - GEOM.srcAlong;
+    aG = aH + levelPitch;
+    aC = aH + levelPitch * (cfg.hasGroups ? 2 : 1);
     aRow = aC;
   }
 

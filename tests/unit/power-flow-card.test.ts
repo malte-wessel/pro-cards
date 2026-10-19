@@ -1221,12 +1221,6 @@ describe("power flow layout", () => {
     expect(inside(lots)).toBe(true);
   });
 
-  it("fills the card only with a fixed number of grid rows", () => {
-    expect(base({ grid_options: { rows: 6 } }).fill).toBe(true);
-    expect(base({ grid_options: { rows: "auto" } }).fill).toBe(false);
-    expect(base().fill).toBe(false);
-  });
-
   it("turns the tree for direction: down and puts lone consumers beside the rooms", () => {
     const cfg = base({ direction: "down", consumers: ["sensor.a"] });
     const { f } = flowsOf(cfg, { "sensor.home": "1000", "sensor.a": "300" });
