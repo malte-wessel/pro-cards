@@ -248,12 +248,16 @@ export const layoutTree = (
   width: number,
   edges: EdgeFlow[],
   sizes: LabelSizes = new Map(),
+  // the height of a card with a fixed size: the tree spreads to it; less than it needs is ignored
+  height = 0,
 ): TreeLayout => {
   const dir: Direction = cfg.direction;
   const right = dir === "right";
   const W = Math.max(1, Math.round(width));
-  const across = right ? acrossOf(cfg) : W;
-  const along = right ? W : alongDownOf(cfg);
+  const natural = diagramHeight(cfg);
+  const H = Math.max(natural, Math.round(height));
+  const across = right ? H : W;
+  const along = right ? W : H;
   const listRows = right && cfg.consumerStyle === "list" && cfg.consumers.length > 0;
   const hasCons = cfg.consumers.length > 0;
   const map = (a: number, b: number): Pt => (right ? [a, b] : [b, a]);
@@ -289,7 +293,13 @@ export const layoutTree = (
   }
   const bH = across / 2;
   // ----- along positions -----
-  const aS = GEOM.srcAlong;
+  // direction: down – a taller card first moves the levels apart (up to half a pitch more), the
+  // rest centres the tree
+  const extra = right ? 0 : along - natural,
+    cols = alongColumns(cfg),
+    grow = hasCons ? Math.min(extra, 0.5 * GEOM.columnPitch * cols) : 0,
+    levelPitch = GEOM.columnPitch + grow / cols;
+  const aS = GEOM.srcAlong + (extra - grow) / 2;
   let aH: number, aG: number, aC: number, aRow: number;
   if (right) {
     // the home column clears the source labels; the columns keep a least distance on narrow
@@ -326,9 +336,9 @@ export const layoutTree = (
     aRow = cfg.hasGroups ? aG + Math.max(50, along * 0.18) : Math.max(aH + 80, along * 0.62);
     if (listRows) aC = aRow;
   } else {
-    aH = hasCons ? aS + GEOM.columnPitch : along - 44;
-    aG = aH + GEOM.columnPitch;
-    aC = aH + GEOM.columnPitch * (cfg.hasGroups ? 2 : 1);
+    aH = hasCons ? aS + levelPitch : aS + natural - 44 - GEOM.srcAlong;
+    aG = aH + levelPitch;
+    aC = aH + levelPitch * (cfg.hasGroups ? 2 : 1);
     aRow = aC;
   }
 
@@ -373,8 +383,11 @@ export const layoutTree = (
     const pitch = plan.leaves.length > 1 ? plan.extent / (plan.leaves.length - 1) : Infinity;
     consTight = pitch < maxLeafW + 8;
   }
-  // the column centred with its margins, so the first label keeps its room
-  const b0 = (across - plan.first - plan.extent - plan.last) / 2 + plan.first;
+  // the column centred on the home, so a lone consumer's line runs straight; the margins (the
+  // first label's room, the last node's) only bound it, and split the room when it is short
+  const lo = plan.first,
+    hi = across - plan.last - plan.extent;
+  const b0 = hi < lo ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, across / 2 - plan.extent / 2));
   const leafKind = (id: string): NodeKind => (id === "other" ? "other" : "consumer");
   for (const g of plan.groups) {
     const grp = cfg.consumers.find((c) => c.id === g.id);

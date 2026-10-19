@@ -133,11 +133,15 @@ export const buildTree = (
 ): HTMLElement => {
   const diag = document.createElement("div");
   diag.className = "pdiag";
+  // everything drawn sits in one box, scaled down as a whole when a fixed card is too small
+  const box = document.createElement("div");
+  box.className = "pscale";
+  diag.appendChild(box);
   const tracks = svgEl("svg", { class: "abs ptracks" });
-  diag.appendChild(tracks);
+  box.appendChild(tracks);
   const flow = document.createElement("div");
   flow.className = "pflow";
-  diag.appendChild(flow);
+  box.appendChild(flow);
   const listRows = cfg.direction === "right" && cfg.consumerStyle === "list";
   cfg.sources.forEach((s, i) => {
     const d = s.kind === "solar" ? GEOM.dSolar : s.kind === "battery" ? GEOM.dBattery : GEOM.dGrid;
@@ -148,24 +152,24 @@ export const buildTree = (
         : s.kind === "grid"
           ? s.fossilIdx !== null
           : s.peak !== null;
-    diag.appendChild(nodeEl(`s${i}`, d, ring, rowOf(s.idx, "")));
-    diag.appendChild(labelEl(`s${i}`, false));
+    box.appendChild(nodeEl(`s${i}`, d, ring, rowOf(s.idx, "")));
+    box.appendChild(labelEl(`s${i}`, false));
   });
-  diag.appendChild(nodeEl("home", GEOM.dHome, true, rowOf(cfg.homeIdx, "")));
-  diag.appendChild(labelEl("home", false));
+  box.appendChild(nodeEl("home", GEOM.dHome, true, rowOf(cfg.homeIdx, "")));
+  box.appendChild(labelEl("home", false));
   for (const c of cfg.consumers)
     if (c.kind === "group") {
-      diag.appendChild(nodeEl(c.id, GEOM.dGroup, false, null));
-      diag.appendChild(labelEl(c.id, false));
+      box.appendChild(nodeEl(c.id, GEOM.dGroup, false, null));
+      box.appendChild(labelEl(c.id, false));
     }
   for (const leaf of leavesOf(cfg)) {
     const row = leaf.kind === "item" ? rowOf(leaf.idx, "") : null;
-    if (listRows) diag.appendChild(rowEl(leaf.id, row));
+    if (listRows) box.appendChild(rowEl(leaf.id, row));
     else {
       const device = leaf.id.includes(".");
-      diag.appendChild(nodeEl(leaf.id, device ? GEOM.dDevice : GEOM.dConsumer, false, row));
+      box.appendChild(nodeEl(leaf.id, device ? GEOM.dDevice : GEOM.dConsumer, false, row));
       // a device's label is small; a consumer beside the rooms reads like a room
-      diag.appendChild(labelEl(leaf.id, device || !cfg.hasGroups));
+      box.appendChild(labelEl(leaf.id, device || !cfg.hasGroups));
     }
   }
   return diag;
@@ -361,7 +365,7 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
   const { texts, sizes } = measureLabels(prelim, labelEls);
   const st: TreeState = {
     ...prelim,
-    layout: layoutTree(prelim.cfg, prelim.layout.w, prelim.flows.edges, sizes),
+    layout: layoutTree(prelim.cfg, prelim.layout.w, prelim.flows.edges, sizes, prelim.layout.h),
   };
   const { cfg, layout, flows, models } = st;
   const tracks = qs<SVGSVGElement>(diag, "svg.ptracks");

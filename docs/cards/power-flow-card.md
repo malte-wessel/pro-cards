@@ -320,6 +320,16 @@ consumers:
 
 :::
 
+## Card size
+
+By default the card is as tall as its tree, and it grows or shrinks when nodes come and go (`visibility`, `hide_consumers_below`). In a sections dashboard with a fixed number of rows in `grid_options`, the card keeps the size of its cell and the tree fills it: more room spreads the tree out, less room scales the whole tree down so nothing is cut off. That keeps the card level with its neighbours. Wherever the card's height follows its content (`rows: auto`, masonry and panel views, stacks), the tree keeps its own height.
+
+```yaml
+grid_options:
+  columns: 12
+  rows: 6
+```
+
 ## Reference
 
 ### Card options

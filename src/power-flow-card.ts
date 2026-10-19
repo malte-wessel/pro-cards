@@ -208,13 +208,33 @@ export class PowerFlowCard extends EntityCardBase {
         cfg.units,
       );
     const diag = card.querySelector<HTMLElement>(".pdiag");
-    if (!diag) return;
-    // the height follows the config and what of it is shown, never the width
-    diag.style.setProperty("--diag-h", `${diagramHeight(c.view)}px`);
+    const box = diag?.querySelector<HTMLElement>(".pscale");
+    if (!diag || !box) return;
+    // the height follows the config and what of it is shown, never the width. A card whose
+    // cell has a fixed height (a sections grid with fixed rows, however they are written) fills
+    // it instead: with the fill styles the diagram takes what the cell leaves, and measures 0
+    // wherever the card's height follows its content (rows: auto, masonry, panel, stacks), which
+    // drops the fill styles again. All of it happens in this one render, and the cell's size
+    // never depends on the tree, so the resize observer cannot loop.
+    const natural = diagramHeight(c.view);
+    diag.style.setProperty("--diag-h", `${natural}px`);
+    card.classList.add("fill");
+    let avail = diag.clientHeight;
+    if (avail <= 0) {
+      card.classList.remove("fill");
+      avail = natural;
+    }
     const width = diag.clientWidth;
     // not laid out yet: the resize observer renders again once the diagram has a size
     if (width <= 0) return;
-    const layout = layoutTree(c.view, width, c.flows.edges);
+    // too small a cell: the tree is laid out at its own height and scaled down as a whole
+    const scale = Math.min(1, avail / natural);
+    if (scale < 1) {
+      box.style.width = `${width / scale}px`;
+      box.style.height = `${natural}px`;
+      box.style.transform = `scale(${scale})`;
+    } else box.style.width = box.style.height = box.style.transform = "";
+    const layout = layoutTree(c.view, width / scale, c.flows.edges, undefined, avail);
     updateTree(diag, {
       cfg: c.view,
       ctx,
