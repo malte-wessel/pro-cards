@@ -12,14 +12,14 @@ The smallest card names the sources and the home's consumption. Every source is 
 type: custom:power-flow-card-pro
 home: sensor.power_consumption
 sources:
-  - { type: solar, entity: sensor.solar_power }
+  - { type: solar, entity: sensor.solar_power, peak: 8000 }
   - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
   - { type: grid, power: sensor.grid_power }
 ```
 
 :::
 
-`soc` puts the battery's state of charge on its node as a ring; the home's ring shows the mix of solar, battery and grid it runs on. Without `home` the card adds the sources up. Integrations that report the grid or the battery as two sensors name them as a pair: `import` / `export` for the grid, `charge` / `discharge` for the battery. A signed sensor with the opposite convention takes `invert: true`.
+`soc` puts the battery's state of charge on its node as a ring, and `peak` (W) on a solar source puts its production against the panels' peak power there; the home's ring shows the mix of solar, battery and grid it runs on. Without `home` the card adds the sources up. Integrations that report the grid or the battery as two sensors name them as a pair: `import` / `export` for the grid, `charge` / `discharge` for the battery. A signed sensor with the opposite convention takes `invert: true`.
 
 ::: live
 
@@ -134,7 +134,7 @@ consumers:
 
 ## Direction
 
-`direction: down` turns the tree: sources across the top, the home in the middle, consumers along the bottom, for tall layouts.
+`direction: down` turns the tree: sources across the top, the home in the middle, consumers along the bottom, for tall layouts. The sources' labels share one line: right of the icons when every name fits there, otherwise below them, beside each source's line, with a name that still does not fit cut short.
 
 ::: live
 
@@ -150,6 +150,29 @@ consumers:
   - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
   - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
   - { entity: sensor.office_power, name: Office, icon: mdi:monitor }
+```
+
+:::
+
+When the row of consumers is too narrow for their labels side by side, every label stays below its node and a long name ends in an ellipsis where it would meet its neighbour's (it may take the room a shorter neighbour leaves). Values are never cut; only when not even the values fit side by side does a label move above.
+
+::: live width=400
+
+```yaml
+type: custom:power-flow-card-pro
+home: sensor.power_consumption
+direction: down
+sources:
+  - { type: solar, entity: sensor.solar_power }
+  - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
+  - { type: grid, power: sensor.grid_power }
+consumers:
+  - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
+  - { entity: sensor.ev_charger_power, name: Car, icon: mdi:car-electric }
+  - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
+  - { entity: sensor.dryer_power, name: Dryer, icon: mdi:tumble-dryer }
+  - { entity: sensor.office_power, name: Office, icon: mdi:monitor }
+  - { entity: sensor.range_hood_power, name: Range hood, icon: mdi:stove }
 ```
 
 :::
@@ -190,7 +213,7 @@ consumers:
 
 The line above the tree says what the home runs on: **Exporting**, **On battery**, **Importing** or **Balanced**, with the self-sufficiency of the moment. A grid source with `price` and a card-level `expensive_above` adds **Expensive** when importing at or above that price, and `offline` names an entity whose state (`on` by default, or `{ entity, state }`) means the grid is down: the grid node turns red, the card tints and the line says what keeps the home running (**Grid offline · on battery**, **· on solar**, or **Grid offline** alone). Both take the red state colour.
 
-A grid with a `generator` sensor keeps the home running during an outage: while `offline`, the grid node becomes the generator, its power flows to the home in amber and the line reads **Grid offline · on generator**. A grid with the `fossil` percentage of the [CO2 Signal](https://www.home-assistant.io/integrations/co2signal/) integration (or a `non_fossil` percentage) splits the grid's share of the home ring into a low-carbon and a fossil part and names the share on the grid label.
+A grid with a `generator` sensor keeps the home running during an outage: while `offline`, the grid node becomes the generator, its power flows to the home in amber and the line reads **Grid offline · on generator**. A grid with the `fossil` percentage of the [CO2 Signal](https://www.home-assistant.io/integrations/co2signal/) integration (or a `non_fossil` percentage) splits the grid's share of the home ring into a low-carbon and a fossil part, names the share on the grid label and draws it as the grid node's ring.
 
 ::: live
 
@@ -236,7 +259,7 @@ rules:
 
 Every active link carries dots: more and faster the more power it carries, from a slow trickle at `animation.slow_below` watts (default 0) to a steady stream at `animation.fast_above` (default 3600). A workshop with a 20 kW peak raises `fast_above`; a flat that never draws more than a kilowatt lowers it so the flow still shows the difference between the kettle and the standby load. A changed value re-times the running dots instead of restarting them, so sensor noise never makes the flow jump; a link only gets new dots when it switches on or off or its load changes by a real margin. With `prefers-reduced-motion` the dots stand still along their links.
 
-Links that carry nothing are dashed tracks by default. `idle_links: hidden` leaves them out, and the labels take the room; `faint` draws them as faint solid lines.
+A link carrying less than `idle_below` watts (default 20) counts as carrying nothing, so standby noise around 0 W never makes the flow blink; `idle_below: 1` shows every trickle, `0` anything that is not exactly nothing. The same threshold decides the node colours and the summary line. Links that carry nothing are dashed tracks by default. `idle_links: hidden` leaves them out (the labels keep clear of them all the same, so no label moves when a link switches on or off); `faint` draws them as faint solid lines.
 
 Values show in W below `kw_above` watts (default 1000) and in kW from there on, whatever unit the sensors report; `kw_above: 0` shows every value in kW. `decimals` sets the decimals of both units (`decimals: 1`) or each (`decimals: { w: 0, kw: 1 }`); a source's or consumer's own `decimals` wins for its label.
 
@@ -311,6 +334,7 @@ consumers:
 | `direction`            | `right`                               | `right` (sources → home → consumers) or `down`.                                                                                                                                                 |
 | `flow_style`           | `dots`                                | `dots`, `lines` or `arrows`.                                                                                                                                                                    |
 | `idle_links`           | `dashed`                              | Links that carry nothing: `dashed`, `hidden` or `faint`.                                                                                                                                        |
+| `idle_below`           | `20`                                  | Watts below which a link is idle (no motion) and names no state; `0` lets every trickle flow.                                                                                                   |
 | `animation`            | `{ slow_below: 0, fast_above: 3600 }` | The loads (W) between which the flow goes from slowest to fastest.                                                                                                                              |
 | `kw_above`             | `1000`                                | Watts from which values show in kW; `0` shows every value in kW.                                                                                                                                |
 | `decimals`             | `{ w: 0, kw: 2 }`                     | Decimals of the values: one number for both units, or `{ w, kw }`.                                                                                                                              |
@@ -331,11 +355,12 @@ consumers:
 | `charge`, `discharge`                        | battery       | A pair of sensors instead of `power`; on a solar-fed battery both flows are drawn at once.                                                                                                                     |
 | `import`, `export`                           | grid          | A pair of sensors instead of `power` (`export` optional).                                                                                                                                                      |
 | `soc`                                        | battery       | State of charge in %, shown as the node's ring.                                                                                                                                                                |
+| `peak`                                       | solar         | The panels' peak power in W: the node's ring shows the production against it.                                                                                                                                  |
 | `charge_from`                                | battery       | `solar` when the panels feed this battery: solar charges it before the home, the grid only when the sensors disagree; with a `charge` / `discharge` pair it charges and feeds the home at once. Default `any`. |
 | `price`                                      | grid          | Price sensor, shown in the Expensive state.                                                                                                                                                                    |
 | `offline`                                    | grid          | An entity id (offline when `on`) or `{ entity, state }`.                                                                                                                                                       |
 | `generator`                                  | grid          | A generator's power sensor: takes the grid node's place while offline.                                                                                                                                         |
-| `fossil`, `non_fossil`                       | grid          | The grid's fossil fuel (or low-carbon) percentage: the home ring's grid share splits, the grid label names it.                                                                                                 |
+| `fossil`, `non_fossil`                       | grid          | The grid's fossil fuel (or low-carbon) percentage: the home ring's grid share splits, the grid label names it, the grid node's ring shows the low-carbon share.                                                |
 | `secondary`                                  | all           | A line under the name; template allowed. Consumers take it too.                                                                                                                                                |
 | `name`, `icon`, `color`, `rules`, `decimals` | all           | As on every entity: the name (default Solar / Battery / Grid), a fixed icon or colour, rules on the sensor's value, decimals of the label.                                                                     |
 | `visibility`                                 | all           | Drawn only while the [conditions](/guide/visibility) hold. Consumers, rooms and devices take it too, with `hide_below`.                                                                                        |

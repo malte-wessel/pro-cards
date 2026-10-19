@@ -28,6 +28,7 @@ import {
   FLOW_STYLES,
   ICONS,
   IDLE_LINKS,
+  IDLE_W,
   SOURCE_KINDS,
   type Animation,
   type ConsumerStyle,
@@ -54,6 +55,7 @@ export interface RawSource extends RawEntity {
   fossil?: string | null; // grid: fossil fuel percentage of the grid's power
   non_fossil?: string | null; // grid: low-carbon percentage instead
   invert?: boolean | null;
+  peak?: unknown; // solar: the panels' peak power (W), drawn as a ring
 }
 export interface RawConsumer extends RawEntity {
   group?: string | null;
@@ -69,6 +71,7 @@ export interface RawPowerFlowConfig extends RawEntityCardBase {
   flow_style?: unknown;
   consumer_style?: unknown;
   idle_links?: unknown;
+  idle_below?: unknown;
   other?: boolean | null;
   rules?: unknown;
   expensive_above?: unknown;
@@ -90,6 +93,7 @@ export type ChargeFrom = (typeof CHARGE_FROM)[number];
 export interface SolarSource extends SourceBase {
   kind: "solar";
   idx: number;
+  peak: number | null; // W: the ring shows the production against it
 }
 export interface BatterySource extends SourceBase {
   kind: "battery";
@@ -141,6 +145,7 @@ export interface PowerFlowConfig extends EntityCardConfig {
   flowStyle: FlowStyle;
   consumerStyle: ConsumerStyle;
   idleLinks: IdleLinks;
+  idleBelow: number; // W: a flow below it is idle (no motion, no state)
   homeIdx: number;
   homeEntity: boolean; // false: the home is computed from the sources; the item carries name / icon / rules
   sources: Source[];
@@ -190,6 +195,7 @@ const normalizeSource = (
     fossil,
     non_fossil,
     invert,
+    peak,
     ...rest
   } = o;
   const base: RawEntity = { ...rest };
@@ -217,7 +223,15 @@ const normalizeSource = (
   if (type === "solar") {
     if (!base.entity && base.value === undefined)
       throw new Error(`${CARD_TYPE}: ${label} needs 'entity'`);
-    return { ...own(base.entity), kind: "solar", idx: push(base, label, "power.solar") };
+    const pk = peak === undefined || peak === null ? null : numOrNull(peak);
+    if (pk !== null ? pk <= 0 : peak !== undefined && peak !== null)
+      throw new Error(`${CARD_TYPE}: ${label}.peak must be a number of watts above 0`);
+    return {
+      ...own(base.entity),
+      kind: "solar",
+      idx: push(base, label, "power.solar"),
+      peak: pk,
+    };
   }
   if (type === "battery") {
     const p = entityId(power, `${label}.power`),
@@ -435,6 +449,10 @@ export const normalizePowerFlowConfig = (input: unknown): PowerFlowConfig => {
     flowStyle,
     consumerStyle,
     idleLinks,
+    // watts; 0 lets every trickle flow
+    idleBelow:
+      wattsBelow(raw.idle_below, "idle_below") ??
+      (raw.idle_below === undefined || raw.idle_below === null ? IDLE_W : 0),
     homeIdx,
     homeEntity,
     sources,

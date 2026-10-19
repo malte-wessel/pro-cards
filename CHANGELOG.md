@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Power flow: the grid and solar nodes get a ring like the battery's when there is something to show. A grid with `fossil` / `non_fossil` draws its low-carbon share; a solar source with the new `peak` (W) draws its production against the panels' peak power. Without that data the node stays a plain circle
+- Power flow: `idle_below` sets the watts below which a link is idle (default 20, as before). `idle_below: 1` lets a 3 W standby load flow instead of drawing a dashed track; the node colours and the summary line follow the same threshold
+- Power flow: labels keep their places with `idle_links: hidden`. A hidden idle link used to free the room beside it, so a label moved whenever its link switched on or off (sources and consumers jumped between two places as the values changed). The labels now keep clear of every link, hidden or not
+- Power flow: with `direction: down`, the sources' labels share one line, so the values read across: right of the icons when every name fits there, otherwise below them, beside each source's line, a name that still does not fit cut with an ellipsis (values are never cut). The choice depends on the names only, so a changing value never moves the labels. They used to go wherever there was room, in two rows when the card was narrow
+- Power flow: with `direction: down`, the labels of a narrow consumer row stay below their nodes instead of alternating above and below. A long name ends in an ellipsis where it would meet its neighbour's label and may take the room a shorter neighbour leaves; the values are never cut, and only when not even they fit side by side does a label move above
+- Power flow: with `direction: down`, a consumer whose label has a `secondary` line keeps its label below its node. The tree left room for two lines only, so such a label went above; the tree is now as tall as its tallest consumer label needs
+
 ## 2.6.0 (2026-10-18)
 
 - Sparklines, the lines of the multi trend card and the illuminance trend are calmer: the history is averaged to one point per 12 px of width (it was one per 2 px), so sensor noise no longer draws a jagged line and a sensor that flickers between two readings draws a smooth wave instead of a zigzag. A smoothed line runs through bucket means from edge to edge (the tooltip shows the mean). `smoothing_minutes` on the entity cards, the multi trend card and the illuminance card sets the averaging bucket in minutes instead; the multi trend and illuminance editors have a field for it. The illuminance trend averages on its log scale, so a bright moment does not lift a dim bucket

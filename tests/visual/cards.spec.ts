@@ -1210,6 +1210,17 @@ const CASES = {
     consumers: PF_CONS,
     direction: "down",
   },
+  // a narrow row of consumers: every label below its node, a long name cut
+  "pf-labels-below": {
+    type: PF,
+    home: "sensor.power_consumption",
+    sources: PF_SRC,
+    consumers: [
+      ...PF_CONS,
+      { entity: "sensor.dryer_power", name: "Tumble dryer", icon: "mdi:tumble-dryer" },
+    ],
+    direction: "down",
+  },
   "pf-styles": [
     {
       type: PF,

@@ -34,8 +34,13 @@ const segBox = (s: Seg, pad: number): Box => [
   Math.max(s[0][1], s[1][1]) + pad,
 ];
 
+// the row of source labels (direction: down): the tallest label and the largest icon radius
+interface Row {
+  h: number;
+  r: number;
+}
 // the candidate places of a label, best first
-const candidates = (nd: LNode, dir: Direction, h: number): Cand[] => {
+const candidates = (nd: LNode, dir: Direction, h: number, row: Row): Cand[] => {
   const r = nd.d / 2,
     g = GEOM.labelGap,
     x = nd.x,
@@ -54,9 +59,10 @@ const candidates = (nd: LNode, dir: Direction, h: number): Cand[] => {
     belowLeft: Cand = [x - g, y + r + 4 + h / 2, "r"],
     aboveRight: Cand = [x + g, y - r - 4 - h / 2, "l"],
     aboveLeft: Cand = [x - g, y - r - 4 - h / 2, "r"],
-    // a second row below (direction: down, a narrow row of sources)
-    belowRight2: Cand = [x + g, y + r + 4 + h * 1.5 + 4, "l"],
-    belowLeft2: Cand = [x - g, y + r + 4 + h * 1.5 + 4, "r"];
+    // a source's label, its top level with the others' (direction: down): the values in a line,
+    // right of the icons or below them, beside the line
+    rowRight: Cand = [x + r + g, y - row.h / 2 + h / 2, "l"],
+    rowBelow: Cand = [x + g, y + row.r + 4 + h / 2, "l"];
   const all = [
     rightAbove,
     rightBelow,
@@ -70,8 +76,6 @@ const candidates = (nd: LNode, dir: Direction, h: number): Cand[] => {
     belowLeft,
     aboveRight,
     aboveLeft,
-    belowRight2,
-    belowLeft2,
   ];
   let pref: Cand[];
   if (dir === "right") {
@@ -84,13 +88,9 @@ const candidates = (nd: LNode, dir: Direction, h: number): Cand[] => {
     if (nd.kind === "home") pref = [rightMid, leftMid, belowRight, belowLeft];
     else if (nd.kind === "group" || nd.column === "group")
       pref = [rightMid, leftMid, belowRight, belowLeft];
-    else if (nd.kind === "consumer" || nd.kind === "other")
-      // a narrow column: every other label goes above instead
-      pref = nd.tight && nd.alt ? [aboveRight, aboveLeft, below] : [below, above];
-    else if (nd.tight)
-      // a narrow row of sources: the labels go beside the vertical lines, in two rows
-      pref = nd.alt ? [belowRight2, belowLeft2, belowRight] : [belowRight, belowLeft, belowRight2];
-    else pref = [rightMid, leftMid, belowRight, belowLeft, aboveRight, aboveLeft];
+    else if (nd.kind === "consumer" || nd.kind === "other") pref = [below, above];
+    // a source: where the row put its labels, the names cut to fit
+    else return [nd.slot === "below" ? rowBelow : rowRight];
   }
   return pref.concat(all.filter((c) => !pref.includes(c)));
 };
@@ -99,12 +99,9 @@ export const placeLabels = (
   layout: TreeLayout,
   sizes: LabelSize[],
   dir: Direction,
-  hiddenEdges: ReadonlySet<string> = new Set(),
 ): PlacedLabel[] => {
-  // a hidden idle link frees its space
-  const segs = layout.edges
-    .filter((e) => !hiddenEdges.has(e.id))
-    .flatMap((e) => segmentsOf(e.pts).map((s) => segBox(s, 3)));
+  // every link, hidden idle ones too: a label keeps its place when a link switches on or off
+  const segs = layout.edges.flatMap((e) => segmentsOf(e.pts).map((s) => segBox(s, 3)));
   const nodeBoxes = layout.nodes
     .filter((n) => n.d > 0)
     .map((n): Box => [n.x - n.d / 2 - 2, n.y - n.d / 2 - 2, n.x + n.d / 2 + 2, n.y + n.d / 2 + 2]);
@@ -118,6 +115,11 @@ export const placeLabels = (
     !nodeBoxes.some((n) => hits(b, n)) &&
     !rowBoxes.some((r) => hits(b, r)) &&
     !placed.some((p) => hits(b, p, 3));
+  const sources = layout.nodes.filter((n) => n.column === "source");
+  const row: Row = {
+    h: Math.max(0, ...sizes.filter((s) => sources.some((n) => n.id === s.id)).map((s) => s.h)),
+    r: Math.max(0, ...sources.map((n) => n.d / 2)),
+  };
   const out: PlacedLabel[] = [];
   // the home and the sources first, then the devices (one tight slot each), then the rooms and
   // the consumers beside them (their labels have room above and below)
@@ -132,7 +134,7 @@ export const placeLabels = (
   for (const s of [...sizes].sort((p, q) => order(p.id) - order(q.id))) {
     const nd = layout.nodes.find((n) => n.id === s.id);
     if (!nd) continue;
-    const cands = candidates(nd, dir, s.h);
+    const cands = candidates(nd, dir, s.h, row);
     let pick = cands.find((c) => ok(boxOf(c[0], c[1], c[2], s.w, s.h)));
     if (!pick) {
       // least overlap when nothing is free

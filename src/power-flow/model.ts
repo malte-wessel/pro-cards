@@ -8,6 +8,7 @@ import { fmtNumber } from "../shared/format.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
 import type { EntityItem } from "../shared/entity/config.ts";
 import { COLORS, DEFAULT_UNITS, IDLE_W, type Units } from "./constants.ts";
+import { isActive } from "./flow.ts";
 import { leavesOf, type PowerFlowConfig } from "./config.ts";
 
 const UNIT_TO_W: Record<string, number> = { W: 1, kW: 1000, MW: 1e6, mW: 1e-3 };
@@ -347,31 +348,30 @@ export interface SummaryState {
 }
 
 export const summaryState = (cfg: PowerFlowConfig, now: PowerNow, f: Flows): SummaryState => {
+  const on = (w: number) => isActive(w, cfg.idleBelow);
   if (now.offline) {
-    const onGenerator = f.gH > IDLE_W && now.sources.some((s) => s.generator);
+    const onGenerator = on(f.gH) && now.sources.some((s) => s.generator);
     if (onGenerator)
       return { key: "power.state.generator", color: COLORS.generator, w: null, tint: true };
-    const key =
-      f.bH > IDLE_W
-        ? "power.state.offline_battery"
-        : f.sH > IDLE_W
-          ? "power.state.offline_solar"
-          : "power.state.offline";
+    const key = on(f.bH)
+      ? "power.state.offline_battery"
+      : on(f.sH)
+        ? "power.state.offline_solar"
+        : "power.state.offline";
     return { key, color: COLORS.offline, w: null, tint: true };
   }
   const expensive =
     cfg.expensiveAbove !== null &&
     now.price !== null &&
     now.price.num >= cfg.expensiveAbove &&
-    f.gH > IDLE_W;
+    on(f.gH);
   if (expensive)
     return { key: "power.state.expensive", color: COLORS.offline, w: null, tint: true };
-  if (f.sG + f.bG > IDLE_W)
+  if (on(f.sG + f.bG))
     return { key: "power.state.exporting", color: COLORS.gridOut, w: f.sG + f.bG, tint: false };
-  if (f.bH > IDLE_W && f.bH >= f.gH)
+  if (on(f.bH) && f.bH >= f.gH)
     return { key: "power.state.battery", color: COLORS.battOut, w: null, tint: false };
-  if (f.gH > IDLE_W)
-    return { key: "power.state.importing", color: COLORS.gridIn, w: f.gH, tint: false };
+  if (on(f.gH)) return { key: "power.state.importing", color: COLORS.gridIn, w: f.gH, tint: false };
   return { key: "power.state.balanced", color: COLORS.balanced, w: null, tint: false };
 };
 
@@ -391,14 +391,15 @@ export const fmtPower = (
 };
 
 // the colour of a source node for its current flow
-export const sourceColor = (s: SourceNow, offline: boolean): string => {
+export const sourceColor = (s: SourceNow, offline: boolean, idle: number = IDLE_W): string => {
+  const w = s.w ?? 0,
+    on = isActive(w, idle);
   if (s.kind === "grid" && offline)
-    return s.generator && (s.w ?? 0) > IDLE_W ? COLORS.generator : COLORS.offline;
-  if (s.w === null) return COLORS.idle;
-  if (s.kind === "solar") return s.w > IDLE_W ? COLORS.solar : COLORS.idle;
-  if (s.kind === "battery")
-    return s.w > IDLE_W ? COLORS.battOut : s.w < -IDLE_W ? COLORS.battIn : COLORS.idle;
-  return s.w > IDLE_W ? COLORS.gridIn : s.w < -IDLE_W ? COLORS.gridOut : COLORS.idle;
+    return s.generator && on && w > 0 ? COLORS.generator : COLORS.offline;
+  if (s.w === null || !on) return COLORS.idle;
+  if (s.kind === "solar") return w > 0 ? COLORS.solar : COLORS.idle;
+  if (s.kind === "battery") return w > 0 ? COLORS.battOut : COLORS.battIn;
+  return w > 0 ? COLORS.gridIn : COLORS.gridOut;
 };
 // the colour of a link; a consumer link running backwards carries what the device produces
 export const edgeColor = (kind: EdgeKind, w = 0): string => {

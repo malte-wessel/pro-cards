@@ -274,6 +274,122 @@ test.describe("power flow card", () => {
     expect(Number.parseFloat(await cssVar(h.locator(".lane").first(), "--dur"))).toBeLessThan(3);
   });
 
+  test("grid and solar rings show the low-carbon share and the peak", async ({ page }) => {
+    await mount(page, {
+      type: T,
+      sources: [{ ...SRC[0], peak: 6800 }, SRC[1], SRC[2]],
+      home: HOME,
+    });
+    await pin(page); // solar 3.4 kW, fossil 38 %
+    const c = card(page);
+    const arc = (id: string) =>
+      c
+        .locator(`.pnode[data-node='${id}'] path.prog`)
+        .evaluateAll((ps) =>
+          ps.filter((p) => p.getAttribute("d")).map((p) => (p as SVGPathElement).style.stroke),
+        );
+    expect(await arc("s0")).toEqual([expect.stringContaining("--energy-solar")]);
+    expect(await arc("s2")).toEqual([expect.stringContaining("--energy-non-fossil")]);
+    // half the peak, 62 % low-carbon: the arcs' lengths follow
+    const len = (id: string) =>
+      c
+        .locator(`.pnode[data-node='${id}'] path.prog`)
+        .first()
+        .evaluate((p) => (p as SVGPathElement).getTotalLength());
+    const r = (d: number) => d / 2 - 1.5;
+    expect(await len("s0")).toBeCloseTo(2 * Math.PI * r(44) * 0.5, 0);
+    expect(await len("s2")).toBeCloseTo(2 * Math.PI * r(44) * 0.62, 0);
+    // without the data a node stays a plain circle
+    await mount(page, { type: T, sources: [SRC[0], SRC[1], { type: "grid", power: GRID }] });
+    await expect(card(page).locator(".pnode[data-node='s0'] .lead.ring")).toHaveCount(0);
+    await expect(card(page).locator(".pnode[data-node='s2'] .lead.ring")).toHaveCount(0);
+  });
+
+  test("idle_below lets a standby load flow", async ({ page }) => {
+    const cfg = { type: T, sources: SRC, home: HOME, consumers: CONS };
+    await mount(page, cfg);
+    await pin(page, { "sensor.washer_power": "3" });
+    const c = card(page);
+    await expect(label(c, "c2")).toHaveText(/3 W/);
+    const idle = await c.locator("path.link.active").count();
+    await mount(page, { ...cfg, idle_below: 1 });
+    await pin(page, { "sensor.washer_power": "3" });
+    await expect(card(page).locator("path.link.active")).toHaveCount(idle + 1);
+  });
+
+  test("labels keep their places when hidden idle links switch on and off", async ({ page }) => {
+    // a narrow column of sources: a hidden line used to free the place beside it
+    await mount(
+      page,
+      {
+        type: T,
+        sources: [SRC[2], SRC[1], SRC[0]],
+        home: HOME,
+        consumers: CONS,
+        direction: "down",
+        idle_links: "hidden",
+        kw_above: 0,
+        decimals: { kw: 1 },
+      },
+      { width: 520 },
+    );
+    const c = card(page);
+    // every label as wide at night as at noon: the places alone may tell them apart
+    const places = () =>
+      c
+        .locator(".plabel:not([hidden])")
+        .evaluateAll((els) =>
+          els.map((e) => [
+            (e as HTMLElement).dataset.node,
+            e.className,
+            (e as HTMLElement).style.left,
+            (e as HTMLElement).style.right,
+            (e as HTMLElement).style.top,
+          ]),
+        );
+    await pin(page, { [SOLAR]: "0", [BATT]: "1300", [GRID]: "0", [HOME]: "1300" });
+    await expect(label(c, "s2")).toHaveText(/0\.0 kW/);
+    const night = await places();
+    await pin(page);
+    await expect(label(c, "s2")).toHaveText(/3\.4 kW/);
+    expect(await places()).toEqual(night);
+  });
+
+  test("a narrow row of consumers keeps its labels below and cuts long names", async ({ page }) => {
+    const consumers = [
+      { ...CONS[0], name: "Heat pump in the cellar" },
+      CONS[1],
+      CONS[2],
+      { entity: "sensor.dryer_power", name: "Dryer" },
+      { entity: "sensor.office_power", name: "Office" },
+      { entity: "sensor.dining_light_power", name: "Dining" },
+    ];
+    await mount(
+      page,
+      { type: T, sources: SRC, home: HOME, consumers, direction: "down" },
+      {
+        width: 520,
+      },
+    );
+    await pin(page);
+    const c = card(page);
+    const ids = ["c0", "c1", "c2", "c3", "c4", "c5", "other"];
+    for (const id of ids) {
+      const node = await c.locator(`.pnode[data-node='${id}']`).boundingBox();
+      const lab = await label(c, id).boundingBox();
+      expect(lab!.y).toBeGreaterThan(node!.y + node!.height / 2);
+      await expect(label(c, id)).toHaveClass(/\bc\b/);
+    }
+    const name = label(c, "c0").locator(".name");
+    await expect(label(c, "c0")).toHaveClass(/cut/);
+    expect(await name.evaluate((e) => e.scrollWidth > e.clientWidth)).toBe(true);
+    await expect(label(c, "c0").locator(".state")).toHaveText("430 W");
+    // no two labels meet
+    const boxes = await Promise.all(ids.map((id) => label(c, id).boundingBox()));
+    for (let k = 1; k < boxes.length; k++)
+      expect(boxes[k - 1]!.x + boxes[k - 1]!.width).toBeLessThanOrEqual(boxes[k]!.x);
+  });
+
   test("secondary lines, tap on a node, the profile language and reduced motion", async ({
     page,
   }) => {
