@@ -6,6 +6,7 @@ import { cssColor, domainOf } from "../../color.ts";
 import { fmtNumber } from "../../format.ts";
 import { t } from "../../i18n.ts";
 import { slider } from "../../slider.ts";
+import { stepDecimals } from "../../util.ts";
 import type { EntityItem } from "../config.ts";
 import {
   actionOf,
@@ -68,7 +69,6 @@ const disable = (el: HTMLElement) => {
   if (el.tagName === "BUTTON") (el as HTMLButtonElement).disabled = true;
   if (el.hasAttribute("tabindex")) el.tabIndex = -1;
 };
-const stepDecimals = (step: number) => Math.min(4, (String(step).split(".")[1] || "").length);
 const fmtRange = (ctx: RenderCtx, r: Range, v: number) => {
   const n = fmtNumber(ctx.hass, v, stepDecimals(r.step));
   return r.unit ? `${n} ${r.unit}` : n;

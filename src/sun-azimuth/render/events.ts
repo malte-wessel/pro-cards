@@ -2,7 +2,7 @@
 import { t } from "../../shared/i18n.ts";
 import type { SunAzimuthHost } from "../config.ts";
 import { defaultSideName } from "../constants.ts";
-import type { SunDay, SunSample } from "../day.ts";
+import { upcomingSunrise, type SunDay, type SunSample } from "../day.ts";
 import { litSides, nextSide, type Side } from "../sides.ts";
 import { compass, deg, set, time } from "./text.ts";
 
@@ -47,10 +47,11 @@ export const fillHouse = (
     });
   else if (day.sunset && now.t < day.sunset.t)
     secondary = t(hass, "azimuth.next_sunset", { time: time(hass, day.sunset.t) });
-  else
-    secondary = day.sunrise
-      ? t(hass, "azimuth.next_sunrise", { time: time(hass, day.sunrise.t) })
-      : "";
+  else {
+    // this morning's sunrise before it, tomorrow's once the sun has set
+    const rise = upcomingSunrise(day, now.t);
+    secondary = rise ? t(hass, "azimuth.next_sunrise", { time: time(hass, rise.t) }) : "";
+  }
   set(el, ".secondary", secondary);
 };
 

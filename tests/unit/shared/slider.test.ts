@@ -58,6 +58,9 @@ describe("slider", () => {
     paint(90);
     expect(el.getAttribute("aria-valuenow")).toBe("90");
     expect(log).toEqual([]);
+    // the keys step from the painted value, not from the one the slider was made with
+    key(el, "ArrowRight");
+    expect(el.getAttribute("aria-valuenow")).toBe("91");
   });
   it("steps with the keys and ends a burst after a pause", () => {
     const { el, log } = make();

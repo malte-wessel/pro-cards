@@ -53,7 +53,8 @@ export const solarElevation = (date: Date, lat: number, lon: number): number =>
 // (noon - 12 h .. noon + 12 h) with minute samples and the event times found by threshold crossings
 export interface SolarSample {
   t: number;
-  e: number;
+  e: number; // elevation
+  a: number; // azimuth
 }
 export interface SolarDay {
   start: number;
@@ -73,7 +74,10 @@ const HALF_DAY = 12 * 3600e3;
 
 export const solarDay = (dayStart: Date, lat: number, lon: number): SolarDay => {
   const dayEnd = new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate() + 1);
-  const sampleAt = (t: number): SolarSample => ({ t, e: solarElevation(new Date(t), lat, lon) });
+  const sampleAt = (t: number): SolarSample => {
+    const p = solarPosition(new Date(t), lat, lon);
+    return { t, e: p.elevation, a: p.azimuth };
+  };
   // solar noon of the calendar day: the minute with the highest elevation
   let noon = sampleAt(dayStart.getTime());
   for (let t = dayStart.getTime(); t <= dayEnd.getTime(); t += 60000) {

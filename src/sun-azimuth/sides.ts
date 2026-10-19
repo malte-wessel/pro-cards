@@ -1,7 +1,7 @@
 // Which sides of the house the sun shines on, pure: the lit windows of each side over the day,
 // whether it is lit now and how directly, plus the timeline the footer draws them on.
 import { SIDE_ANGLE, SIDES, type SideKey } from "./constants.ts";
-import { angleDiff, type SunDay, type SunSample } from "./day.ts";
+import { angleDiff, isUp, type SunDay, type SunSample } from "./day.ts";
 
 const RAD = Math.PI / 180;
 const HOUR = 3600e3;
@@ -20,29 +20,20 @@ export interface Side {
   nextFrom: number | null; // the next window still to come
 }
 
-// a side faces the sun when the sun is up and within 90° of its normal
-const lit = (s: SunSample, normal: number) => s.el > 0 && angleDiff(s.az, normal) < 90;
+// a side faces the sun when the sun is up (above the refracted horizon, as for sunrise and
+// sunset) and within 90° of its normal
+const lit = (s: SunSample, normal: number) => isUp(s) && angleDiff(s.az, normal) < 90;
+
+// a side over the whole day: where it faces and when the sun is on it; it depends only on the
+// day and the house, so a card works it out once per day
+export type SideDay = Pick<Side, "key" | "hidden" | "normal" | "windows">;
 
 // every side, clockwise from the front; a hidden side keeps its normal (the house is drawn with
 // all four walls) but never gets sun
-export const sidesOf = (
-  day: SunDay,
-  front: number,
-  now: SunSample,
-  hidden: readonly SideKey[] = [],
-): Side[] =>
+export const sideDays = (day: SunDay, front: number, hidden: readonly SideKey[] = []): SideDay[] =>
   SIDES.map((key) => {
     const normal = (((SIDE_ANGLE[key] + front) % 360) + 360) % 360;
-    if (hidden.includes(key))
-      return {
-        key,
-        hidden: true,
-        normal,
-        windows: [],
-        litNow: false,
-        incidence: 0,
-        nextFrom: null,
-      };
+    if (hidden.includes(key)) return { key, hidden: true, normal, windows: [] };
     const windows: SideWindow[] = [];
     let open: SideWindow | null = null;
     for (const s of day.samples) {
@@ -51,21 +42,28 @@ export const sidesOf = (
         else windows.push((open = { from: s.t, to: s.t }));
       } else open = null;
     }
-    const litNow = lit(now, normal);
-    const incidence = litNow
-      ? Math.cos(angleDiff(now.az, normal) * RAD) * Math.cos(now.el * RAD)
-      : 0;
-    const next = windows.find((w) => w.from > now.t);
+    return { key, hidden: false, normal, windows };
+  });
+
+// the sides at an instant: lit or not, how directly, and the next window still to come
+export const sidesAt = (days: readonly SideDay[], now: SunSample): Side[] =>
+  days.map((d) => {
+    const litNow = !d.hidden && lit(now, d.normal);
+    const next = d.windows.find((w) => w.from > now.t);
     return {
-      key,
-      hidden: false,
-      normal,
-      windows,
+      ...d,
       litNow,
-      incidence,
+      incidence: litNow ? Math.cos(angleDiff(now.az, d.normal) * RAD) * Math.cos(now.el * RAD) : 0,
       nextFrom: next ? next.from : null,
     };
   });
+
+export const sidesOf = (
+  day: SunDay,
+  front: number,
+  now: SunSample,
+  hidden: readonly SideKey[] = [],
+): Side[] => sidesAt(sideDays(day, front, hidden), now);
 
 // the sides lit now, clockwise from the front
 export const litSides = (sides: Side[]) => sides.filter((s) => s.litNow);

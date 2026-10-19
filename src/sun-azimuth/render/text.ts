@@ -3,7 +3,14 @@ import { fmtNumber, fmtTime, textWidth } from "../../shared/format.ts";
 import type { HomeAssistant } from "../../shared/ha.ts";
 import { t } from "../../shared/i18n.ts";
 import { CHIP_FONT } from "../constants.ts";
-import { compassKey, directionKey, isUp, type SunDay, type SunSample } from "../day.ts";
+import {
+  compassKey,
+  directionKey,
+  isUp,
+  upcomingSunrise,
+  type SunDay,
+  type SunSample,
+} from "../day.ts";
 
 type Hass = HomeAssistant | undefined;
 
@@ -29,10 +36,10 @@ export const set = (root: ParentNode, sel: string, text: string) => {
 export const status = (hass: Hass, day: SunDay, now: SunSample) => {
   if (now.el > 0) return t(hass, "azimuth.elevation", { value: deg(hass, now.el) });
   if (isUp(now)) return t(hass, "azimuth.on_horizon");
-  const below = t(hass, "azimuth.below_horizon");
-  return day.sunrise
-    ? `${below} · ${t(hass, "azimuth.rises", { time: time(hass, day.sunrise.t) })}`
-    : below;
+  // this morning's sunrise before it, tomorrow's once the sun has set
+  const below = t(hass, "azimuth.below_horizon"),
+    rise = upcomingSunrise(day, now.t);
+  return rise ? `${below} · ${t(hass, "azimuth.rises", { time: time(hass, rise.t) })}` : below;
 };
 
 // a preview's time in a chip centred on (x, y), kept inside a box `w` wide and below its top

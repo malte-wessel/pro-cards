@@ -45,7 +45,10 @@ export const renderDial = (
     sy = f1(g.sun[1]);
   if (g.azChip) html += chipSvg(deg(card._hass, now.az), g.azChip[0], g.azChip[1]);
   if (timeLabel) html += timeChip(timeLabel, g.sun[0], g.sun[1] - 9 * k - 14, g.size);
-  html += `<circle class="pulse${up ? "" : " down"}" cx="${sx}" cy="${sy}" r="${f1(9 * k)}"/><circle class="sun${up ? "" : " down"}" cx="${sx}" cy="${sy}" r="${f1(7 * k)}"/></svg>`;
+  // the pulse marks now: a preview (redrawn as the pointer moves) shows the sun without it
+  if (!timeLabel)
+    html += `<circle class="pulse${up ? "" : " down"}" cx="${sx}" cy="${sy}" r="${f1(9 * k)}"/>`;
+  html += `<circle class="sun${up ? "" : " down"}" cx="${sx}" cy="${sy}" r="${f1(7 * k)}"/></svg>`;
   host.innerHTML = html;
   return g.track;
 };

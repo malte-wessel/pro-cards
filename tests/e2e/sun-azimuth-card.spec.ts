@@ -485,6 +485,25 @@ test("house.roof shapes the house in both views", async ({ page }) => {
   );
 });
 
+test("after sunset the card names tomorrow's sunrise", async ({ page }) => {
+  await mount(
+    page,
+    { type: "custom:sun-azimuth-card-pro", house: { front: 20 } },
+    { time: new Date("2026-06-21T23:00:00+02:00") },
+  );
+  const c = card(page);
+  // today's sunrise (05:1x) has passed: tomorrow's comes at about the same time
+  await expect(c.locator(".head .secondary")).toHaveText(/below the horizon · rises 05:1\d$/);
+  await expect(c.locator(".house .secondary")).toHaveText(
+    /^next: (sunrise 05:1\d|.+ from 05:\d\d)$/,
+  );
+  const tomorrow = await page.evaluate(() => {
+    const el = window.pc.card(0) as unknown as { _day: { nextSunrise: { t: number } } };
+    return el._day.nextSunrise.t;
+  });
+  expect(tomorrow).toBeGreaterThan(new Date("2026-06-21T23:00:00+02:00").getTime());
+});
+
 test("the 3D view at night hides the sun and the shadow", async ({ page }) => {
   await mount(
     page,

@@ -54,7 +54,7 @@ import { fillHead, headHtml } from "./sun-azimuth/render/head.ts";
 import { renderScene } from "./sun-azimuth/render/scene.ts";
 import { renderSides } from "./sun-azimuth/render/sides.ts";
 import { compass, deg } from "./sun-azimuth/render/text.ts";
-import { sidesOf, timelineSpan } from "./sun-azimuth/sides.ts";
+import { sideDays, sidesAt, timelineSpan, type Side, type SideDay } from "./sun-azimuth/sides.ts";
 import { STYLE } from "./sun-azimuth/styles.ts";
 import { nearestOnTrack, type TrackPoint } from "./sun-azimuth/track.ts";
 
@@ -97,7 +97,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     }
     this._hoverFrom = "path";
     this._hoverT = t;
-    this._previewHover();
+    this._queuePreview();
   };
   _onPathLeave = (ev: PointerEvent) => {
     (ev.currentTarget as HTMLElement).classList.remove("near");
@@ -120,7 +120,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
       span = timelineSpan(day);
     const f = Math.max(0, Math.min(1, (ev.clientX - rect.left) / (rect.width || 1)));
     this._hoverT = span.from + f * (span.to - span.from);
-    this._previewHover();
+    this._queuePreview();
   };
   _onScrubLeave = (ev: PointerEvent) => {
     if (ev.pointerType === "touch") return; // a tap keeps its preview until the next tap elsewhere
@@ -205,6 +205,8 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
   }
   disconnectedCallback() {
     clearInterval(this._timer);
+    cancelAnimationFrame(this._frame);
+    this._frame = 0;
     this._ro?.disconnect();
     document.removeEventListener("pointerdown", this._onDocPointer);
   }
@@ -258,7 +260,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
           min: 0,
           max: 359,
           step: 1,
-          value: Math.round(this._camera),
+          value: this._sliderCamera(),
           label: t(this._hass, "azimuth.camera"),
           text: (v) => deg(this._hass, v),
           onInput: (v) => {
@@ -297,12 +299,29 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     if (visual) this._ro?.observe(visual);
   }
 
+  // the sides over the day depend only on the day and the house (a new config makes a new day):
+  // worked out once, then only placed at each instant
+  _sideDays?: { day: PositionedDay; sides: SideDay[] };
+  _sidesAt(day: PositionedDay, at: SunSample): Side[] {
+    if (this._sideDays?.day !== day)
+      this._sideDays = { day, sides: sideDays(day, this._config.front, this._config.hidden) };
+    return sidesAt(this._sideDays.sides, at);
+  }
+  // a hover preview, at most once per frame: pointer moves come faster than the plot redraws
+  _frame = 0;
+  _queuePreview() {
+    if (this._frame) return;
+    this._frame = requestAnimationFrame(() => {
+      this._frame = 0;
+      this._previewHover();
+    });
+  }
+
   // the plot (dial or 3D scene) at an instant, with the sides as they are then
-  _renderVisual(day: PositionedDay, at: SunSample) {
+  _renderVisual(day: PositionedDay, at: SunSample, sides = this._sidesAt(day, at)) {
     const card = this._root as HTMLElement,
       visual = card.querySelector<HTMLElement>(".visual");
     if (!visual) return;
-    const sides = sidesOf(day, this._config.front, at, this._config.hidden);
     // a preview names its time in a chip above the sun
     const label = this._hoverT !== null ? fmtTime(this._hass, at.t) : undefined;
     // not laid out yet: drawn at a stand-in width, the observer redraws at the real one
@@ -358,6 +377,8 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
   }
   _endHover() {
     if (this._hoverT === null) return;
+    cancelAnimationFrame(this._frame);
+    this._frame = 0;
     this._hoverT = null;
     this._hoverFrom = null;
     this._root?.querySelector(".sides")?.classList.remove("scrub");
@@ -372,27 +393,39 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     if (!card || !day || !this._hass) return;
     this._renderVisual(day, sunAt(this._hoverT ?? Date.now(), day.lat, day.lon));
   }
+  // the camera as the slider shows it: whole degrees on its 0–359 scale (359.6 is 0, not 360)
+  _sliderCamera() {
+    return Math.round(this._camera) % 360;
+  }
   _fillControl() {
     const control = this._root?.querySelector<HTMLElement>(".control");
     if (!control) return;
     const hass = this._hass;
     qs(control, ".ctl-slider").setAttribute("aria-label", t(hass, "azimuth.camera"));
     // the bearing in the current language
-    this._cameraSlider?.paint(this._camera);
+    this._cameraSlider?.paint(this._sliderCamera());
     // the compass points under the track: N E S W and N again at the far end
     control.querySelectorAll(".caxis span").forEach((el, i) => {
       el.textContent = compass(hass, (i * 90) % 360);
     });
   }
 
-  // today (the local calendar day) at the home's position, recomputed when either changes
+  // today's solar day at the home's position, recomputed when either changes
   _dayOf(now: Date, lat: number, lon: number): PositionedDay {
     const tms = now.getTime(),
       d = this._day;
     if (d && d.lat === lat && d.lon === lon && tms >= d.start && tms < d.end) return d;
-    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    this._day = { ...sunDay(start, lat, lon), lat, lon };
-    return this._day;
+    // the solar day runs from noon - 12 h to noon + 12 h: around midnight, now may belong to the
+    // one before or after the calendar day's
+    const dayOf = (offset: number): PositionedDay => {
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
+      return { ...sunDay(start, lat, lon), lat, lon };
+    };
+    let day = dayOf(0);
+    if (tms < day.start) day = dayOf(-1);
+    else if (tms >= day.end) day = dayOf(1);
+    this._day = day;
+    return day;
   }
 
   _render() {
@@ -400,14 +433,13 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     const lat = this._hass.config?.latitude,
       lon = this._hass.config?.longitude;
     if (typeof lat !== "number" || typeof lon !== "number") return;
-    const card = this._root,
-      cfg = this._config;
+    const card = this._root;
     const nowDate = new Date();
     const day = this._dayOf(nowDate, lat, lon);
     const now = sunAt(nowDate.getTime(), lat, lon);
-    const sides = sidesOf(day, cfg.front, now, cfg.hidden);
+    const sides = this._sidesAt(day, now);
     fillHead(this, qs(card, ".head"), day, now);
-    this._renderVisual(day, now);
+    this._renderVisual(day, now, sides);
     const house = card.querySelector<HTMLElement>(".house");
     if (house) fillHouse(this, house, day, now, sides);
     const items = card.querySelector<HTMLElement>(".items");

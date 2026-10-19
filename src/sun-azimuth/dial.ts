@@ -53,6 +53,14 @@ export const polar = (az: number, el: number, radius: number = DIAL.r, c = DIAL.
   return [c + r * Math.sin(az * RAD), c - r * Math.cos(az * RAD)];
 };
 
+// the daylight sector on the rim as bearings to draw clockwise: from sunrise to sunset the way
+// the sun goes, through its noon bearing. North of the tropic that is through south; where the
+// sun passes north at noon (the southern hemisphere, the tropics in summer) it is the other way
+export const daylightArc = (rise: number, set: number, noon: number): [number, number] => {
+  const cw = (from: number, to: number) => (((to - from) % 360) + 360) % 360;
+  return cw(rise, noon) <= cw(rise, set) ? [rise, set] : [set, rise];
+};
+
 export const dialGeometry = (
   day: SunDay,
   now: SunSample,
@@ -118,7 +126,10 @@ export const dialGeometry = (
     r: R,
     k,
     ticks,
-    dayArc: day.sunrise && day.sunset ? arc(day.sunrise.az, day.sunset.az, R + 7) : "",
+    dayArc:
+      day.sunrise && day.sunset
+        ? arc(...daylightArc(day.sunrise.az, day.sunset.az, day.noon.az), R + 7)
+        : "",
     beam: up ? `M${P(sun)} L${C} ${C}` : "",
     cardinalLines: [0, 90, 180, 270].map((a) => `M${C} ${C} L${P(rim(a, R))}`).join(" "),
     azArc: up ? arc(0, now.az, azR) : "",

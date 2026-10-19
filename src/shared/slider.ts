@@ -49,7 +49,10 @@ export const slider = (
     knob = track.children[1] as HTMLElement,
     bubble = track.children[2] as HTMLElement;
   const span = max - min || 1;
-  const paint = (v: number) => {
+  // the value shown is the one the keys step from, also when the owner paints a new one
+  let v = spec.value;
+  const paint = (value: number) => {
+    v = value;
     const pct = `${(clamp01((v - min) / span) * 100).toFixed(1)}%`;
     fill.style.width = pct;
     knob.style.left = pct;
@@ -61,10 +64,8 @@ export const slider = (
   paint(spec.value);
   if (spec.disabled) return { el, paint };
 
-  let v = spec.value;
   const set = (next: number) => {
-    v = snapTo(next, min, max, step);
-    paint(v);
+    paint(snapTo(next, min, max, step));
     spec.onInput?.(v);
   };
   const valueAt = (ev: PointerEvent) => {

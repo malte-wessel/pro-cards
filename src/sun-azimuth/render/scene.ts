@@ -63,7 +63,12 @@ export const renderScene = (
     html += chipSvg(label, right + w / 2 > g.w ? g.chip[0] - 8 - w / 2 : right, g.chip[1]);
   }
   if (g.sun)
-    html += `<circle class="pulse" cx="${f1(g.sun[0])}" cy="${f1(g.sun[1])}" r="${f1(9 * k)}"/><circle class="sun" cx="${f1(g.sun[0])}" cy="${f1(g.sun[1])}" r="${f1(7 * k)}"/>`;
+    // the pulse marks now: a preview (redrawn as the pointer moves) shows the sun without it
+    html +=
+      (timeLabel
+        ? ""
+        : `<circle class="pulse" cx="${f1(g.sun[0])}" cy="${f1(g.sun[1])}" r="${f1(9 * k)}"/>`) +
+      `<circle class="sun" cx="${f1(g.sun[0])}" cy="${f1(g.sun[1])}" r="${f1(7 * k)}"/>`;
   if (timeLabel && g.sun) html += timeChip(timeLabel, g.sun[0], g.sun[1] - 9 * k - 14, g.w);
   html += "</svg>";
   host.innerHTML = html;

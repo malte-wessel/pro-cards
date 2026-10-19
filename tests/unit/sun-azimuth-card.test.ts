@@ -4,12 +4,20 @@ import {
   angleDiff,
   compassKey,
   directionKey,
+  upcomingSunrise,
   isUp,
   sunAt,
   sunDay,
 } from "../../src/sun-azimuth/day.ts";
-import { litSides, nextSide, sidesOf, timelineSpan } from "../../src/sun-azimuth/sides.ts";
-import { dialBox, dialGeometry, polar } from "../../src/sun-azimuth/dial.ts";
+import {
+  litSides,
+  nextSide,
+  sideDays,
+  sidesAt,
+  sidesOf,
+  timelineSpan,
+} from "../../src/sun-azimuth/sides.ts";
+import { daylightArc, dialBox, dialGeometry, polar } from "../../src/sun-azimuth/dial.ts";
 import { wallBands } from "../../src/sun-azimuth/edges.ts";
 import { houseSolid } from "../../src/sun-azimuth/house.ts";
 import { nearestOnTrack, TRACK_STEP, trackOf } from "../../src/sun-azimuth/track.ts";
@@ -32,8 +40,8 @@ const local = (y: number, m: number, d: number, h = 0, min = 0) => new Date(y, m
 const utc = (y: number, m: number, d: number, h: number, min = 0) => Date.UTC(y, m - 1, d, h, min);
 const HOUR = 3600e3;
 
-// the local calendar day of 21 June and a few instants of it (built in UTC, so the bearings hold
-// on any machine; the day window itself follows the machine's zone like the card's)
+// the solar day of 21 June (noon ± 12 h) and a few instants of it (built in UTC, so the bearings
+// hold on any machine; the calendar day the window centres on follows the machine's zone)
 const summer = sunDay(local(2026, 6, 21), LAT, LON);
 const winter = sunDay(local(2026, 12, 21), LAT, LON);
 const morning = sunAt(utc(2026, 6, 21, 4), LAT, LON); // 06:00 CEST, just after sunrise
@@ -208,6 +216,49 @@ describe("sun-azimuth-card sides of the house", () => {
     // polar day: the whole day
     const polar = sunDay(local(2026, 6, 21), 80, 20);
     expect(timelineSpan(polar)).toEqual({ from: polar.start, to: polar.end });
+  });
+});
+
+describe("sun-azimuth-card far from home", () => {
+  it("draws the daylight arc the way the sun goes, also where it passes north at noon", () => {
+    // Düsseldorf: through south
+    expect(daylightArc(49, 311, 180)).toEqual([49, 311]);
+    // Sydney at midsummer: rises 119°, passes north (359°), sets 241°; drawn from 241° round to 119°
+    expect(daylightArc(119, 241, 359)).toEqual([241, 119]);
+    const sydney = sunDay(local(2026, 12, 20), -33.87, 151.21);
+    expect(sydney.noon.az > 270 || sydney.noon.az < 90).toBe(true);
+    const [from, to] = daylightArc(sydney.sunrise!.az, sydney.sunset!.az, sydney.noon.az);
+    const sweep = (((to - from) % 360) + 360) % 360,
+      toNoon = (((sydney.noon.az - from) % 360) + 360) % 360;
+    expect(toNoon).toBeLessThanOrEqual(sweep);
+  });
+  it("finds a sunset after midnight on its own evening (Reykjavik in June)", () => {
+    const day = sunDay(local(2026, 6, 20), 64.15, -21.94);
+    expect(day.sunrise).not.toBeNull();
+    expect(day.sunset).not.toBeNull();
+    // the evening's sunset, a good 20 hours after sunrise, not the one left from the night before
+    expect(day.sunset!.t - day.sunrise!.t).toBeGreaterThan(20 * HOUR);
+    const span = timelineSpan(day);
+    expect(span.to).toBeGreaterThan(span.from);
+    expect(span.from).toBeGreaterThanOrEqual(day.start);
+    expect(span.to).toBeLessThanOrEqual(day.end);
+  });
+  it("names tomorrow's sunrise once the sun has set", () => {
+    // before sunrise: this morning's
+    expect(upcomingSunrise(summer, night.t)).toBe(summer.sunrise);
+    // after sunset (23:00 CEST): tomorrow's, about a day later
+    const late = utc(2026, 6, 21, 21);
+    const next = upcomingSunrise(summer, late)!;
+    expect(next.t).toBeGreaterThan(late);
+    expect(Math.abs(next.t - summer.sunrise!.t - 24 * HOUR)).toBeLessThan(5 * 60e3);
+  });
+  it("counts a side as lit from the refracted horizon on, like sunrise and sunset", () => {
+    // the sun just below the true horizon but above the refracted one, straight north
+    const low = { t: forenoon.t, az: 0, el: -0.5 };
+    expect(isUp(low)).toBe(true);
+    expect(sidesOf(summer, 0, low)[0].litNow).toBe(true);
+    // the day's sides, worked out once, place at any instant as sidesOf does
+    expect(sidesAt(sideDays(summer, 20), forenoon)).toEqual(sidesOf(summer, 20, forenoon));
   });
 });
 
