@@ -1256,6 +1256,16 @@ const CASES = {
     ],
     direction: "down",
   },
+  // a fixed number of grid rows: the tree fills a taller cell and scales down in a smaller one;
+  // a lone consumer sits on the home's axis
+  "pf-fill": [8, 4].map((rows) => ({
+    type: PF,
+    home: "sensor.power_consumption",
+    sources: PF_SRC,
+    consumers: [PF_CONS[1]],
+    other: false,
+    grid_options: { columns: 12, rows },
+  })),
   "pf-styles": [
     {
       type: PF,

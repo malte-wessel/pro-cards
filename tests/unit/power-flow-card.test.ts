@@ -1182,6 +1182,51 @@ describe("power flow layout", () => {
     expect(wide.nodes.some((n) => n.tight || n.labelMax !== undefined)).toBe(false);
   });
 
+  it("puts a lone consumer on the home's axis, so its line runs straight", () => {
+    const states = { "sensor.home": "1000", "sensor.a": "300" };
+    for (const direction of ["right", "down"]) {
+      const cfg = base({ direction, consumers: ["sensor.a"], other: false });
+      const l = layoutTree(cfg, 400, flowsOf(cfg, states).f.edges);
+      const home = l.nodes.find((n) => n.id === "home")!,
+        c0 = l.nodes.find((n) => n.id === "c0")!;
+      if (direction === "right") expect(c0.y).toBe(home.y);
+      else expect(c0.x).toBe(home.x);
+    }
+  });
+
+  it("spreads the tree to a fixed card height and ignores a smaller one", () => {
+    const states = { "sensor.home": "1000", "sensor.a": "300", "sensor.b": "200" };
+    const inside = (l: ReturnType<typeof layoutTree>) =>
+      l.nodes.every((n) => n.y - n.d / 2 >= 0 && n.y + n.d / 2 <= l.h);
+    // right: the tree is as tall as the card, centred on the home
+    const right = base({ consumers: ["sensor.a", "sensor.b"] });
+    const natural = diagramHeight(right);
+    const tall = layoutTree(right, 416, flowsOf(right, states).f.edges, undefined, natural + 120);
+    expect(tall.h).toBe(natural + 120);
+    expect(tall.nodes.find((n) => n.id === "home")!.y).toBe(tall.h / 2);
+    expect(inside(tall)).toBe(true);
+    expect(layoutTree(right, 416, [], undefined, natural - 50).h).toBe(natural);
+    // down: the levels move apart, by half a pitch at most, the rest centres the tree
+    const down = base({ direction: "down", consumers: ["sensor.a", "sensor.b"] });
+    const nat = diagramHeight(down);
+    const node = (l: ReturnType<typeof layoutTree>, id: string) =>
+      l.nodes.find((n) => n.id === id)!;
+    const some = layoutTree(down, 400, flowsOf(down, states).f.edges, undefined, nat + 100);
+    expect(some.h).toBe(nat + 100);
+    expect(node(some, "home").y - node(some, "s0").y).toBe(GEOM.columnPitch + 50);
+    expect(node(some, "s0").y).toBe(GEOM.srcAlong);
+    const lots = layoutTree(down, 400, flowsOf(down, states).f.edges, undefined, nat + 600);
+    expect(node(lots, "home").y - node(lots, "s0").y).toBe(GEOM.columnPitch * 1.5);
+    expect(node(lots, "s0").y).toBeGreaterThan(GEOM.srcAlong);
+    expect(inside(lots)).toBe(true);
+  });
+
+  it("fills the card only with a fixed number of grid rows", () => {
+    expect(base({ grid_options: { rows: 6 } }).fill).toBe(true);
+    expect(base({ grid_options: { rows: "auto" } }).fill).toBe(false);
+    expect(base().fill).toBe(false);
+  });
+
   it("turns the tree for direction: down and puts lone consumers beside the rooms", () => {
     const cfg = base({ direction: "down", consumers: ["sensor.a"] });
     const { f } = flowsOf(cfg, { "sensor.home": "1000", "sensor.a": "300" });

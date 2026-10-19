@@ -208,13 +208,24 @@ export class PowerFlowCard extends EntityCardBase {
         cfg.units,
       );
     const diag = card.querySelector<HTMLElement>(".pdiag");
-    if (!diag) return;
-    // the height follows the config and what of it is shown, never the width
-    diag.style.setProperty("--diag-h", `${diagramHeight(c.view)}px`);
+    const box = diag?.querySelector<HTMLElement>(".pscale");
+    if (!diag || !box) return;
+    // the height follows the config and what of it is shown, never the width; with a fixed
+    // number of grid rows the card's cell decides it instead (the tree fills it, its content
+    // never sizes the cell, so the resize observer cannot loop)
+    const natural = diagramHeight(c.view);
+    card.classList.toggle("fill", cfg.fill);
+    diag.style.setProperty("--diag-h", `${natural}px`);
     const width = diag.clientWidth;
     // not laid out yet: the resize observer renders again once the diagram has a size
     if (width <= 0) return;
-    const layout = layoutTree(c.view, width, c.flows.edges);
+    const avail = cfg.fill && diag.clientHeight > 0 ? diag.clientHeight : natural;
+    // too small a cell: the tree is laid out at its own height and scaled down as a whole
+    const scale = avail < natural ? avail / natural : 1;
+    box.style.width = scale < 1 ? `${width / scale}px` : "";
+    box.style.height = scale < 1 ? `${natural}px` : "";
+    box.style.transform = scale < 1 ? `scale(${scale})` : "";
+    const layout = layoutTree(c.view, width / scale, c.flows.edges, undefined, avail);
     updateTree(diag, {
       cfg: c.view,
       ctx,

@@ -20,6 +20,9 @@ const STYLE_POWER = `
   .psummary .pill { flex: none; }
 
   .pdiag { position: relative; width: 100%; min-width: 0; height: var(--diag-h, 190px); contain: layout; }
+  .pscale { position: absolute; inset: 0; transform-origin: 0 0; }
+  ha-card.fill .body { flex: 1 1 0; min-height: 0; }
+  ha-card.fill .pdiag { flex: 1 1 0; min-height: 0; height: auto; }
   .pdiag svg.abs { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
   .link { fill: none; stroke: var(--divider-color); stroke-width: 2; stroke-dasharray: 4 4; stroke-linejoin: round; }
   .link.active { stroke: color-mix(in srgb, var(--pf-c) 45%, ${CARD_BG}); stroke-dasharray: none; }

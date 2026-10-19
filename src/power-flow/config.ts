@@ -146,6 +146,7 @@ export interface PowerFlowConfig extends EntityCardConfig {
   consumerStyle: ConsumerStyle;
   idleLinks: IdleLinks;
   idleBelow: number; // W: a flow below it is idle (no motion, no state)
+  fill: boolean; // a fixed number of grid rows: the tree fills the card's height
   homeIdx: number;
   homeEntity: boolean; // false: the home is computed from the sources; the item carries name / icon / rules
   sources: Source[];
@@ -449,6 +450,7 @@ export const normalizePowerFlowConfig = (input: unknown): PowerFlowConfig => {
     flowStyle,
     consumerStyle,
     idleLinks,
+    fill: typeof raw.grid_options?.rows === "number",
     // watts; 0 lets every trickle flow
     idleBelow:
       wattsBelow(raw.idle_below, "idle_below") ??

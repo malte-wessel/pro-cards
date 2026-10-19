@@ -305,6 +305,42 @@ test.describe("power flow card", () => {
     await expect(card(page).locator(".pnode[data-node='s2'] .lead.ring")).toHaveCount(0);
   });
 
+  test("a fixed number of grid rows: the tree fills the card or scales down", async ({ page }) => {
+    const cfg = { type: T, sources: SRC, home: HOME, consumers: [CONS[0]], other: false };
+    const box = (l: Locator) => l.boundingBox().then((b) => b!);
+    // taller than the tree: the diagram reaches the card's bottom padding
+    await mount(page, { ...cfg, grid_options: { columns: 12, rows: 8 } });
+    await pin(page);
+    const c = card(page);
+    await expect(c.locator("ha-card")).toHaveClass(/\bfill\b/);
+    const [cardBox, diagBox] = [await box(c.locator("ha-card")), await box(c.locator(".pdiag"))];
+    expect(cardBox.height).toBe(8 * 56 + 7 * 8);
+    expect(cardBox.y + cardBox.height - (diagBox.y + diagBox.height)).toBeLessThanOrEqual(16);
+    const viewH = await c
+      .locator("svg.ptracks")
+      .evaluate((e) => Number(e.getAttribute("viewBox")?.split(" ")[3]));
+    expect(viewH).toBe(Math.round(diagBox.height));
+    expect(await c.locator(".pscale").evaluate((e) => (e as HTMLElement).style.transform)).toBe("");
+    // smaller than the tree: scaled down as a whole, nothing cut off
+    await mount(page, { ...cfg, grid_options: { columns: 12, rows: 4 } });
+    await pin(page);
+    const s = card(page);
+    const transform = await s
+      .locator(".pscale")
+      .evaluate((e) => (e as HTMLElement).style.transform);
+    const k = Number(/scale\(([\d.]+)\)/.exec(transform)?.[1]);
+    expect(k).toBeGreaterThan(0.3);
+    expect(k).toBeLessThan(1);
+    const sBox = await box(s.locator("ha-card"));
+    for (const id of ["s0", "s2", "c0"]) {
+      const n = await box(s.locator(`.pnode[data-node='${id}']`));
+      expect(n.y + n.height).toBeLessThanOrEqual(sBox.y + sBox.height);
+    }
+    // rows: auto (the default): the card is as tall as its tree
+    await mount(page, cfg);
+    await expect(card(page).locator("ha-card")).not.toHaveClass(/\bfill\b/);
+  });
+
   test("idle_below lets a standby load flow", async ({ page }) => {
     const cfg = { type: T, sources: SRC, home: HOME, consumers: CONS };
     await mount(page, cfg);
