@@ -25,7 +25,7 @@ test("the sky dial shows the azimuth, the path and the lit sides", async ({ page
   // the head: where the sun stands, its angles below
   await expect(c.locator(".head .primary")).toHaveText("South-East");
   await expect(c.locator(".head .secondary")).toHaveText("138° · Elevation 57°");
-  await expect(c.locator(".head .rot")).toHaveCSS("transform", /matrix/);
+  await expect(c.locator(".head .lead ha-icon")).toHaveAttribute("icon", "mdi:sun-angle");
   // the dial
   const dial = c.locator("svg.dial");
   await expect(dial).toHaveAttribute("viewBox", "0 0 300 300");

@@ -204,7 +204,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
         <div class="title"></div>
       </div>
       <div class="body">
-        <div class="head">${headHtml(cfg.view)}</div>
+        <div class="head">${headHtml()}</div>
         <div class="visual"></div>
         ${cfg.view === "3d" && cfg.camera_slider ? '<div class="control"><div class="cslider"></div><div class="caxis"><span></span><span></span><span></span><span></span><span></span></div></div>' : ""}
         ${cfg.show_house ? houseHtml() : ""}

@@ -4,7 +4,7 @@
 
 ## Sky dial
 
-All the card needs is its type. The default view looks down on the house: the outer ring is the horizon, the centre is straight up. Today's path of the sun is drawn in the sun colour, solid where it has passed and dashed where it is still to come, and the faint arc on the rim is the daylight sector from the sunrise bearing to the sunset bearing. The house in the middle lights up on every side the sun shines on right now, a dashed beam joins the sun to it, and an arc from north round to the sun shows the azimuth with the angle in a chip. The head reads like the other cards' tiles: the direction the sun stands in (South-West), and under it the azimuth and the elevation, behind an arrow pointing where the sun is.
+All the card needs is its type. The default view looks down on the house: the outer ring is the horizon, the centre is straight up. Today's path of the sun is drawn in the sun colour, solid where it has passed and dashed where it is still to come, and the faint arc on the rim is the daylight sector from the sunrise bearing to the sunset bearing. The house in the middle lights up on every side the sun shines on right now, a dashed beam joins the sun to it, and an arc from north round to the sun shows the azimuth with the angle in a chip. The head reads like the other cards' tiles: the direction the sun stands in (South-West), and under it the azimuth and the elevation; the 3D view has the same head.
 
 ::: live
 
