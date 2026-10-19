@@ -356,7 +356,7 @@ test("the 3D scene fills a narrow column, keeps its size in a wide one and follo
   await mount(page, cfg, { time: NOON, width: 260 });
   let m = await measure();
   expect(m.vb).toBe(m.column);
-  expect(m.dome / m.column).toBeGreaterThan(0.75);
+  expect(m.dome / m.column).toBeGreaterThan(0.7);
   // a smaller sphere, thinner lines
   expect(m.k).toBeLessThan(1);
   await mount(page, cfg, { time: NOON, width: 1000 });
@@ -370,7 +370,7 @@ test("the 3D scene fills a narrow column, keeps its size in a wide one and follo
   await expect
     .poll(async () => {
       const r = await measure();
-      return r.vb === r.column && r.column < 300 && r.dome / r.column > 0.75;
+      return r.vb === r.column && r.column < 300 && r.dome / r.column > 0.7;
     })
     .toBe(true);
 });

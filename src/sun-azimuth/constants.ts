@@ -53,20 +53,21 @@ export const LINE_MIN = 0.7;
 export const WALL = { lit: 4, plain: 2 } as const;
 export const lineScale = (r: number, full: number) => Math.max(LINE_MIN, Math.min(1, r / full));
 // the 3D scene: an orthographic view of the unit sphere, tilted down by `tilt`. The sphere's
-// radius in px is maxScale; a column too narrow for it shrinks it down to minScale (sceneBox); `side` is the
-// room beside the E / W labels, `top` above the dome (the sun's halo), `bottom` under the ground's
-// labels. `width` stands in for the column until it is laid out
+// radius in px is maxScale; a column too narrow for it shrinks it down to minScale (sceneBox); the
+// compass labels sit `labelGap` px outside the rim (on screen, so the gap holds at any size and
+// tilt), `side` is the room beside the E / W labels, `top` above the dome (the sun's halo),
+// `bottom` under the front label. `width` stands in for the column until it is laid out
 export const SCENE = {
   minScale: 60,
   maxScale: 118,
   side: 14,
   top: 16,
-  bottom: 22,
+  bottom: 16,
   width: 416,
   tilt: 22,
   houseHalf: 0.17,
   houseHeight: 0.15,
-  label: 1.12, // the compass points sit at 1.12 × the radius
+  labelGap: 11,
 } as const;
 
 // the elevation chip of the 3D view: the font the text is measured and drawn with

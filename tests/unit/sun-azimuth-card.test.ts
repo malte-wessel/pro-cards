@@ -373,13 +373,13 @@ describe("sun-azimuth-card 3D scene", () => {
   it("sizes the sphere to the column, with room for the labels beside it", () => {
     // a small column: the widest sphere whose E / W labels still fit, the box as wide as the column
     const small = sceneBox(260);
-    expect(small).toMatchObject({ w: 260, scale: 103, cx: 130 });
-    expect(2 * small.scale * SCENE.label + 2 * SCENE.side).toBeLessThanOrEqual(260);
-    expect(small.cy).toBe(SCENE.top + 103);
+    expect(small).toMatchObject({ w: 260, scale: 105, cx: 130 });
+    expect(2 * (small.scale + SCENE.labelGap + SCENE.side)).toBeLessThanOrEqual(260);
+    expect(small.cy).toBe(SCENE.top + 105);
     // from about 290 px on: the sphere at its full size, the box as before, centred in wider ones
     expect(sceneBox(416)).toMatchObject({
       w: 416,
-      h: 206,
+      h: 205,
       scale: SCENE.maxScale,
       cx: 208,
       cy: 134,
@@ -419,6 +419,17 @@ describe("sun-azimuth-card 3D scene", () => {
     // the soft light tells the shaded surfaces apart
     expect(walls[0].shade).not.toBeCloseTo(walls[1].shade, 2);
     expect(g.cardinals.map((c) => c.bearing)).toEqual([0, 90, 270]);
+    // the front label sits labelGap px below the rim on screen, whatever the tilt squashes
+    const box = sceneBox(W),
+      north = g.cardinals.find((c) => c.bearing === 0)!;
+    expect(north.y - (box.cy + box.scale * Math.sin((SCENE.tilt * Math.PI) / 180))).toBeCloseTo(
+      SCENE.labelGap,
+      5,
+    );
+    // a diagonal view: the points on the far half (east, south) are left out, not drawn in the dome
+    expect(
+      sceneGeometry(summer, forenoon, LAT, 20, 150, sides, W).cardinals.map((c) => c.bearing),
+    ).toEqual([0, 270]);
     expect(
       sceneGeometry(summer, forenoon, LAT, 20, 0, sides, W).cardinals.map((c) => c.bearing),
     ).toEqual([90, 180, 270]);

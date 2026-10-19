@@ -31,7 +31,7 @@ export interface SceneGeometry {
   horizonBack: string;
   pole: string; // a straight pole at the house, up from the roof
   poleTop: [number, number];
-  cardinals: { bearing: number; x: number; y: number }[]; // the one farthest back left out
+  cardinals: { bearing: number; x: number; y: number }[]; // those on the far half left out
   pathFrontPast: string;
   pathFrontFuture: string;
   pathBackPast: string;
@@ -48,7 +48,7 @@ export interface SceneGeometry {
   azChip: [number, number] | null; // where the azimuth chip sits (on the arc's bisector)
 }
 
-const { tilt: TILT, houseHalf: HH, houseHeight: HZ, label: LABEL } = SCENE;
+const { tilt: TILT, houseHalf: HH, houseHeight: HZ, labelGap: GAP } = SCENE;
 // the ridge of a pitched roof over the middle of the house
 const HR = HZ + HH * 0.75;
 const dot = (a: V3, b: V3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -63,13 +63,13 @@ const unit = (v: V3) => {
 // SVG shrinks to fit). A card of a fixed height (grid_options.rows) also passes the `height` there
 // is: the sphere then shrinks until the dome and the ground's labels fit it too
 export const sceneBox = (width: number, height = Infinity) => {
-  const byHeight = (height - SCENE.top - SCENE.bottom) / (1 + Math.sin(TILT * RAD) * LABEL);
+  const byHeight = (height - SCENE.top - GAP - SCENE.bottom) / (1 + Math.sin(TILT * RAD));
   const scale = Math.floor(
-    Math.max(SCENE.minScale, Math.min(SCENE.maxScale, (width / 2 - SCENE.side) / LABEL, byHeight)),
+    Math.max(SCENE.minScale, Math.min(SCENE.maxScale, width / 2 - GAP - SCENE.side, byHeight)),
   );
-  const w = Math.max(Math.round(width), Math.ceil(2 * (scale * LABEL + SCENE.side)));
+  const w = Math.max(Math.round(width), Math.ceil(2 * (scale + GAP + SCENE.side)));
   const cy = SCENE.top + scale;
-  const h = Math.round(cy + scale * Math.sin(TILT * RAD) * LABEL + SCENE.bottom);
+  const h = Math.round(cy + scale * Math.sin(TILT * RAD) + GAP + SCENE.bottom);
   return { w, h, scale, cx: w / 2, cy };
 };
 
@@ -162,13 +162,20 @@ export const sceneGeometry = (
   const origin = pj(0, 0, 0),
     poleTop = pj(0, 0, Math.max(0.44, solid.top + 0.12));
   const pole = `M${P(pj(0, 0, solid.top))} L${P(poleTop)}`;
-  // the cardinal points on the ground, the one farthest back left out (it would sit in the sky)
-  const cards = [0, 90, 180, 270].map((bearing) => {
-    const v = sv(bearing, 0),
-      p = pj(v[0] * LABEL, v[1] * LABEL, 0);
-    return { bearing, x: p[0], y: p[1], depth: p[2] };
-  });
-  const back = cards.reduce((m, c) => (c.depth < m.depth ? c : m), cards[0]);
+  // the compass points: GAP px outside the rim, along the point's direction on screen (the
+  // ground is squashed, so a fixed share of the radius would put the front label on the rim). A
+  // point on the far half of the rim is left out: its label would sit in the dome, behind the
+  // sun's path; the sides (depth 0 when the camera looks along an axis) stay
+  const cards = [0, 90, 180, 270]
+    .map((bearing) => {
+      const v = sv(bearing, 0),
+        p = pj(v[0], v[1], 0),
+        dx = p[0] - GX,
+        dy = p[1] - GY,
+        n = Math.hypot(dx, dy) || 1;
+      return { bearing, x: p[0] + (dx / n) * GAP, y: p[1] + (dy / n) * GAP, depth: p[2] };
+    })
+    .filter((c) => c.depth > -0.15);
   // the house, turned with its front. It is convex, so a surface shows when its outward normal
   // points at the viewer and the visible ones never overlap
   const hr = front * RAD;
@@ -283,7 +290,7 @@ export const sceneGeometry = (
     horizonBack: H.back,
     pole,
     poleTop: [poleTop[0], poleTop[1]],
-    cardinals: cards.filter((c) => c !== back).map(({ bearing, x, y }) => ({ bearing, x, y })),
+    cardinals: cards.map(({ bearing, x, y }) => ({ bearing, x, y })),
     pathFrontPast: paths.fp,
     pathFrontFuture: paths.ff,
     pathBackPast: paths.bp,
