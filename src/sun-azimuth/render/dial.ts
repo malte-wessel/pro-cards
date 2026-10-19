@@ -20,7 +20,7 @@ export const renderDial = (
   const c = g.size / 2,
     k = g.k;
   const up = now.el > 0;
-  let html = `<svg class="dial" viewBox="0 0 ${g.size} ${g.size}" style="--k: ${k.toFixed(2)}">
+  let html = `<svg class="dial" viewBox="0 0 ${g.size} ${g.size}" style="--k: ${k.toFixed(2)}; width: ${g.size}px">
     <circle class="disc" cx="${c}" cy="${c}" r="${f1(g.r)}"/>
     <circle class="grid" cx="${c}" cy="${c}" r="${f1((g.r * 2) / 3)}"/>
     <circle class="grid" cx="${c}" cy="${c}" r="${f1(g.r / 3)}"/>

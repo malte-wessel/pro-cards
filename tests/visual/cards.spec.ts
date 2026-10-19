@@ -864,13 +864,13 @@ const CASES = {
       view: "3d",
       house: { roof: "hip" },
       show_house: false,
-      grid_options: { columns: 6 },
+      grid_options: { columns: 6, rows: 4 },
     },
     {
       type: "custom:sun-azimuth-card-pro",
       house: { roof: "gable_front" },
       show_house: false,
-      grid_options: { columns: 6 },
+      grid_options: { columns: 6, rows: 4 },
     },
   ],
   "ilc-arc": {

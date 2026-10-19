@@ -144,7 +144,7 @@ show_sides: true
 
 ## Less
 
-`show_house: false` drops the line under the dial and the 3D scene naming the sides in the sun and what comes next, leaving just the plot. Two narrow cards side by side:
+`show_house: false` drops the line under the dial and the 3D scene naming the sides in the sun and what comes next, leaving just the plot. The card sizes itself to its content; give it `rows` in `grid_options` and it takes that height instead, with the plot shrinking to fit and centred in the room the rest leaves. Two narrow cards side by side, of the same height:
 
 ::: live
 
@@ -153,11 +153,11 @@ show_sides: true
   view: 3d
   house: { front: 20 }
   show_house: false
-  grid_options: { columns: 6 }
+  grid_options: { columns: 6, rows: 4 }
 - type: custom:sun-azimuth-card-pro
   house: { front: 20 }
   show_house: false
-  grid_options: { columns: 6 }
+  grid_options: { columns: 6, rows: 4 }
 ```
 
 :::

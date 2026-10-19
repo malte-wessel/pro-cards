@@ -19,10 +19,11 @@ export const renderScene = (
   sides: Side[],
   camera: number,
   width: number,
+  height = Infinity,
 ) => {
   const cfg = card._config,
     hass = card._hass;
-  const g = sceneGeometry(day, now, day.lat, cfg.front, camera, sides, width, cfg.roof);
+  const g = sceneGeometry(day, now, day.lat, cfg.front, camera, sides, width, cfg.roof, height);
   const uid = card._uid || (card._uid = Math.random().toString(36).slice(2, 8));
   const k = g.k;
   let html = `<svg class="scene" viewBox="0 0 ${g.w} ${g.h}" style="--k: ${k.toFixed(2)}">

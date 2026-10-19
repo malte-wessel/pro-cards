@@ -60,6 +60,9 @@ export const STYLE = `
   /* the pictures */
   .visual { display: flex; justify-content: center; min-width: 0; }
   .visual svg { display: block; width: 100%; overflow: visible; }
+  /* a fixed height (grid_options.rows): the plot takes the room the rest of the card leaves, centred */
+  ha-card.fill .body { min-height: 0; }
+  ha-card.fill .visual { flex: 1 1 0; min-height: 0; align-items: center; overflow: hidden; }
   svg.dial { max-width: 300px; }
   svg text { font: ${AXIS_FONT}; font-weight: 500; fill: var(--secondary-text-color); text-anchor: middle; dominant-baseline: central; }
   /* the horizon ring in the ticks' colour */

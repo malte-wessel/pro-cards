@@ -97,6 +97,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
   // the dial and the 3D scene are drawn in px at the column's width: redrawn when it changes
   _ro?: ResizeObserver;
   _visualWidth = 0;
+  _plotHeight = Infinity;
 
   static getStubConfig(hass?: HomeAssistant) {
     return { title: t(hass, "azimuth.stub_title") };
@@ -155,7 +156,12 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     this._timer = setInterval(() => this._render(), 60000);
     this._ro = new ResizeObserver(() => {
       const visual = this._root?.querySelector<HTMLElement>(".visual");
-      if (visual && visual.clientWidth !== this._visualWidth) this._renderPlot();
+      if (
+        visual &&
+        (visual.clientWidth !== this._visualWidth ||
+          this._visualHeight(visual) !== this._plotHeight)
+      )
+        this._renderPlot();
     });
     this._observe();
     document.addEventListener("pointerdown", this._onDocPointer);
@@ -189,6 +195,8 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     card.style.setProperty("--saz-night", cssColor(cfg.night_color, "var(--indigo-color)"));
     card.style.setProperty("--saz-sky", cssColor(cfg.sky_color, "var(--light-blue-color)"));
     card.classList.toggle("dark", !!this._hass?.themes?.darkMode);
+    // a fixed height (grid_options.rows): the plot takes the room the rest leaves and fits into it
+    card.classList.toggle("fill", typeof cfg.grid_options?.rows === "number");
     const { title, icon } = cfg;
     card.innerHTML = `
       <div class="header"${title || icon ? "" : ' style="display: none"'}>
@@ -253,10 +261,18 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     const sides = sidesOf(day, this._config.front, at, this._config.hidden);
     // not laid out yet: drawn at a stand-in width, the observer redraws at the real one
     this._visualWidth = visual.clientWidth;
+    this._plotHeight = this._visualHeight(visual);
+    const width = this._visualWidth || (this._config.view === "3d" ? SCENE.width : DIAL.size);
     if (this._config.view === "3d") {
-      renderScene(this, visual, day, at, sides, this._camera, this._visualWidth || SCENE.width);
+      renderScene(this, visual, day, at, sides, this._camera, width, this._plotHeight);
       this._fillControl();
-    } else renderDial(this, visual, day, at, sides, this._visualWidth || DIAL.size);
+    } else renderDial(this, visual, day, at, sides, Math.min(width, this._plotHeight));
+  }
+  // the room for the plot in a card of a fixed height; unlimited when the card sizes to its content
+  _visualHeight(visual: HTMLElement) {
+    return this._root?.classList.contains("fill") && visual.clientHeight
+      ? visual.clientHeight
+      : Infinity;
   }
   // the hovered time: the sun moves there in the plot, a hair marks it on every bar and the
   // footer's heading shows it

@@ -29,7 +29,7 @@ test("the sky dial shows the azimuth, the path and the lit sides", async ({ page
   // the dial
   const dial = c.locator("svg.dial");
   await expect(dial).toHaveAttribute("viewBox", "0 0 300 300");
-  await expect(dial).toHaveAttribute("style", "--k: 1.00"); // full size, full line weight
+  await expect(dial).toHaveAttribute("style", /--k: 1\.00/); // full size, full line weight
   await expect(dial.locator(".past")).toHaveCount(1);
   await expect(dial.locator(".future")).toHaveCount(1);
   await expect(dial.locator(".dayarc")).toHaveCount(1);
@@ -498,6 +498,34 @@ test("the events and sides are opt-in, show_house drops its line, colours reach 
   const sceneBox = (await b.locator("svg.scene").boundingBox())!;
   expect(sceneBox.x).toBeGreaterThanOrEqual(cardBox.x);
   expect(sceneBox.x + sceneBox.width).toBeLessThanOrEqual(cardBox.x + cardBox.width + 1);
+});
+
+test("with grid_options.rows the card takes that height and the plot fits in", async ({ page }) => {
+  const box = (i: number) =>
+    card(page, i).evaluate((el) => {
+      const c = el.shadowRoot!.querySelector("ha-card") as HTMLElement,
+        visual = c.querySelector(".visual") as HTMLElement,
+        svg = visual.querySelector("svg") as SVGSVGElement;
+      return {
+        fill: c.classList.contains("fill"),
+        card: Math.round(c.getBoundingClientRect().height),
+        room: visual.clientHeight,
+        plot: Math.round(svg.getBoundingClientRect().height),
+      };
+    });
+  const cfg = { house: { front: 20 }, show_house: false, grid_options: { columns: 6, rows: 4 } };
+  // each alone, full width (as on a phone): the dial would be taller than four rows
+  for (const view of ["3d", "dial"]) {
+    await mount(page, { type: "custom:sun-azimuth-card-pro", view, ...cfg }, { time: NOON });
+    const b = await box(0);
+    expect(b.fill).toBe(true);
+    expect(b.card).toBe(4 * 56 + 3 * 8); // four rows of Home Assistant's grid
+    expect(b.plot).toBeLessThanOrEqual(b.room); // the plot shrinks into the room it has
+    expect(b.plot).toBeGreaterThan(b.room * 0.8); // and uses it
+  }
+  // without rows the card sizes to its content as before
+  await mount(page, { type: "custom:sun-azimuth-card-pro" }, { time: NOON });
+  expect((await box(0)).fill).toBe(false);
 });
 
 test("the pictures follow the theme's mode", async ({ page }) => {

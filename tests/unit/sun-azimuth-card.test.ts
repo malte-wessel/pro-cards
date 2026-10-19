@@ -387,6 +387,12 @@ describe("sun-azimuth-card 3D scene", () => {
     expect(sceneBox(800)).toMatchObject({ w: 800, scale: SCENE.maxScale, cx: 400 });
     expect(sceneBox(800).h).toBe(sceneBox(416).h);
     // too narrow: never below minScale, the box gets wider than the column and the SVG shrinks
+    // a card of a fixed height: the sphere shrinks until the dome and the labels fit it too
+    const short = sceneBox(800, 150);
+    expect(short.scale).toBeLessThan(SCENE.maxScale);
+    expect(short.h).toBeLessThanOrEqual(150);
+    expect(short.w).toBe(800);
+    expect(sceneBox(800, 1000)).toEqual(sceneBox(800));
     const tiny = sceneBox(100);
     expect(tiny.scale).toBe(SCENE.minScale);
     expect(tiny.w).toBeGreaterThan(100);

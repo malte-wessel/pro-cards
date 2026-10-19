@@ -60,10 +60,12 @@ const unit = (v: V3) => {
 // the box for a column `width` px wide: the sphere at maxScale, centred; in a column too narrow for
 // it, the largest sphere whose E / W labels still fit beside it, so it fills the width, never below
 // minScale (the box is then wider than the column and the
-// SVG shrinks to fit)
-export const sceneBox = (width: number) => {
+// SVG shrinks to fit). A card of a fixed height (grid_options.rows) also passes the `height` there
+// is: the sphere then shrinks until the dome and the ground's labels fit it too
+export const sceneBox = (width: number, height = Infinity) => {
+  const byHeight = (height - SCENE.top - SCENE.bottom) / (1 + Math.sin(TILT * RAD) * LABEL);
   const scale = Math.floor(
-    Math.max(SCENE.minScale, Math.min(SCENE.maxScale, (width / 2 - SCENE.side) / LABEL)),
+    Math.max(SCENE.minScale, Math.min(SCENE.maxScale, (width / 2 - SCENE.side) / LABEL, byHeight)),
   );
   const w = Math.max(Math.round(width), Math.ceil(2 * (scale * LABEL + SCENE.side)));
   const cy = SCENE.top + scale;
@@ -80,8 +82,9 @@ export const sceneGeometry = (
   sides: Side[],
   width: number,
   roof: Roof = "gable",
+  height = Infinity, // a card of a fixed height: the room there is for the scene
 ): SceneGeometry => {
-  const { w, h, scale: SC, cx: GX, cy: GY } = sceneBox(width);
+  const { w, h, scale: SC, cx: GX, cy: GY } = sceneBox(width, height);
   const view = camera * RAD,
     tilt = TILT * RAD;
   // world → screen: x east, y north, z up; the camera sits at bearing `camera`, looking inward
