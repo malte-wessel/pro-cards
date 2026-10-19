@@ -526,13 +526,13 @@ describe("sun-azimuth-card element", () => {
     expect(el.getGridOptions()).toEqual({ columns: 12, rows: "auto", min_columns: 6 });
     expect(el._config.view).toBe("3d"); // the default view
     expect(el.getCardSize()).toBe(7); // 3d 6 + house 1
-    el.setConfig({ view: "dial", show_events: true, show_sides: true });
+    el.setConfig({ view: "dial", show_sun_times: true, show_sides: true });
     expect(el.getCardSize()).toBe(14); // dial 7 + house 1 + events 1 + sides 5
     el.setConfig({ view: "ring" as never }); // the ring view is gone: an unknown view is the default
     expect(el._config.view).toBe("3d");
     el.setConfig({ view: "3d", title: "Sun", camera_slider: true });
     expect(el.getCardSize()).toBe(9); // header 1 + 3d 6 + slider 1 + house 1
-    el.setConfig({ view: "3d", show_house: false });
+    el.setConfig({ view: "3d", show_summary: false });
     expect(el.getCardSize()).toBe(6);
   });
   it("normalises the config", () => {
@@ -547,8 +547,8 @@ describe("sun-azimuth-card element", () => {
       camera: 180,
       camera_slider: false,
       hover_preview: true,
-      show_house: true,
-      show_events: false,
+      show_summary: true,
+      show_sun_times: false,
       show_sides: false,
       sun_color: "amber",
       night_color: "indigo",

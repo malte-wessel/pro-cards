@@ -134,6 +134,9 @@ describe("card config schemas", () => {
     expect(validate({ type: SAZ, house: { rotate: 20 } })).toMatch(/unevaluated|additional/);
     expect(validate({ type: SAZ, camera_slider: "yes" })).toMatch(/boolean|type/);
     expect(validate({ type: SAZ, show_side: false })).toMatch(/unevaluated|additional/);
+    // the earlier names of the summary and the sun times rows
+    expect(validate({ type: SAZ, show_house: false })).toMatch(/unevaluated|additional/);
+    expect(validate({ type: SAZ, show_events: true })).toMatch(/unevaluated|additional/);
     expect(
       validate({ type: "custom:illuminance-card-pro", entity: "sensor.lx", mode: "bar" }),
     ).toMatch(/enum|allowed/);
@@ -526,8 +529,8 @@ describe("card config schemas", () => {
         camera: 150,
         camera_slider: true,
         hover_preview: false,
-        show_house: false,
-        show_events: false,
+        show_summary: false,
+        show_sun_times: false,
         show_sides: false,
         sun_color: "orange",
         night_color: "#123456",

@@ -104,7 +104,7 @@ const CARDS = [
     type: "custom:sun-azimuth-card-pro",
     title: "Sun",
     icon: "mdi:sun-compass",
-    show_events: true,
+    show_sun_times: true,
     show_sides: true,
   },
   { type: "custom:illuminance-card-pro", entity: "sensor.illuminance", title: "Light" },

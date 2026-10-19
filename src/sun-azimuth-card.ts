@@ -18,8 +18,8 @@
  *   camera: 180                   # 3d: the bearing the camera looks toward
  *   camera_slider: true           # 3d: a slider under the plot orbits the scene (not saved)
  *   hover_preview: true           # hovering a timeline or the sun's path shows the sun at that time
- *   show_house: true              # dial / 3d: which sides are in the sun, what comes next
- *   show_events: true             # dial / 3d: sunrise, noon and sunset (off by default)
+ *   show_summary: true            # the line under the plot: the sides in the sun, what comes next
+ *   show_sun_times: true          # the sunrise, noon and sunset row (off by default)
  *   show_sides: true              # the sides of the house footer (off by default)
  *   sun_color: amber
  *   night_color: indigo
@@ -166,8 +166,8 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
       camera: numOrNull(camera) ?? DEFAULTS.camera,
       camera_slider: c.camera_slider ?? DEFAULTS.camera_slider,
       hover_preview: c.hover_preview ?? DEFAULTS.hover_preview,
-      show_house: c.show_house ?? DEFAULTS.show_house,
-      show_events: c.show_events ?? DEFAULTS.show_events,
+      show_summary: c.show_summary ?? DEFAULTS.show_summary,
+      show_sun_times: c.show_sun_times ?? DEFAULTS.show_sun_times,
       show_sides: c.show_sides ?? DEFAULTS.show_sides,
     };
     this._camera = ((this._config.camera % 360) + 360) % 360;
@@ -215,8 +215,8 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
       (cfg.title || cfg.icon ? 1 : 0) +
       (cfg.view === "3d" ? 6 : 7) +
       (cfg.view === "3d" && cfg.camera_slider ? 1 : 0) +
-      (cfg.show_house ? 1 : 0) +
-      (cfg.show_events ? 1 : 0) +
+      (cfg.show_summary ? 1 : 0) +
+      (cfg.show_sun_times ? 1 : 0) +
       (cfg.show_sides ? 5 : 0)
     );
   }
@@ -244,8 +244,8 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
         <div class="head">${headHtml()}</div>
         <div class="visual"></div>
         ${cfg.view === "3d" && cfg.camera_slider ? '<div class="control"><div class="cslider"></div><div class="caxis"><span></span><span></span><span></span><span></span><span></span></div></div>' : ""}
-        ${cfg.show_house ? houseHtml() : ""}
-        ${cfg.show_events ? `<div class="divider"></div>${eventsHtml()}` : ""}
+        ${cfg.show_summary ? houseHtml() : ""}
+        ${cfg.show_sun_times ? `<div class="divider"></div>${eventsHtml()}` : ""}
         ${cfg.show_sides ? '<div class="divider"></div><div class="sides"></div>' : ""}
       </div>`;
     qs(card, ".title").textContent = title || "";

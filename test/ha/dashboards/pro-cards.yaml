@@ -149,7 +149,7 @@ views:
             house:
               front: 20
               sides: { front: Street, back: Garden }
-            show_events: true
+            show_sun_times: true
             show_sides: true
           - type: custom:sun-azimuth-card-pro
             view: 3d

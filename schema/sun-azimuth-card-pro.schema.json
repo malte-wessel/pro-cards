@@ -77,15 +77,15 @@
       "default": true,
       "description": "Hovering or tapping a side's timeline in the footer or the sun's path in the plot shows the sun at that time"
     },
-    "show_house": {
+    "show_summary": {
       "type": "boolean",
       "default": true,
-      "description": "Dial and 3D: the line naming the sides in the sun and what comes next"
+      "description": "The summary under the plot: the sides in the sun and what comes next"
     },
-    "show_events": {
+    "show_sun_times": {
       "type": "boolean",
       "default": false,
-      "description": "Dial and 3D: the sunrise, solar noon and sunset row"
+      "description": "The sunrise, solar noon and sunset row under the plot"
     },
     "show_sides": {
       "type": "boolean",

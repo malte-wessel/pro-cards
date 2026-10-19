@@ -120,7 +120,7 @@ labels: { sunrise: Sunrise, sunset: Sunset, dawn: Dawn, noon: Solar noon, dusk: 
   "Sun azimuth card": `type: custom:sun-azimuth-card-pro
 title: Sun
 house: { front: 20, sides: { front: Street, back: Garden } }
-show_events: true
+show_sun_times: true
 show_sides: true
 `,
   "Illuminance card": `type: custom:illuminance-card-pro

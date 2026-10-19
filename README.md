@@ -234,7 +234,7 @@ title: Sun
 house:
   front: 20
   sides: { front: Street, back: Garden }
-show_events: true
+show_sun_times: true
 show_sides: true
 ```
 

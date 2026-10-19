@@ -14,8 +14,8 @@ export interface SunAzimuthCardConfig extends CardConfigBase {
   camera?: number;
   camera_slider?: boolean;
   hover_preview?: boolean;
-  show_house?: boolean;
-  show_events?: boolean;
+  show_summary?: boolean;
+  show_sun_times?: boolean;
   show_sides?: boolean;
   sun_color?: string;
   night_color?: string;
@@ -34,8 +34,8 @@ export interface SunAzimuthConfig extends CardConfigBase {
   camera: number;
   camera_slider: boolean;
   hover_preview: boolean;
-  show_house: boolean;
-  show_events: boolean;
+  show_summary: boolean;
+  show_sun_times: boolean;
   show_sides: boolean;
   sun_color: string;
   night_color: string;

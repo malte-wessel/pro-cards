@@ -15,7 +15,7 @@ test("the sky dial shows the azimuth, the path and the lit sides", async ({ page
       title: "Sun",
       icon: "mdi:sun-compass",
       house: { front: 20 },
-      show_events: true,
+      show_sun_times: true,
       show_sides: true,
     },
     { time: NOON },
@@ -62,7 +62,7 @@ test("the sides footer lists every side with its window, pill and timeline", asy
       type: "custom:sun-azimuth-card-pro",
       view: "dial",
       house: { front: 20 },
-      show_events: true,
+      show_sun_times: true,
       show_sides: true,
     },
     { time: NOON },
@@ -124,7 +124,7 @@ test("own side names stay as written in every language", async ({ page }) => {
       view: "dial",
       house: { front: 45, sides: { front: "Street", back: "Garden" } },
       show_sides: true,
-      show_events: true,
+      show_sun_times: true,
     },
     { time: NOON },
   );
@@ -170,7 +170,7 @@ test("hovering a timeline previews the sun at that time", async ({ page }) => {
       type: "custom:sun-azimuth-card-pro",
       view: "dial",
       house: { front: 20 },
-      show_events: true,
+      show_sun_times: true,
       show_sides: true,
     },
     { time: NOON },
@@ -342,7 +342,7 @@ test("the 3D view draws the scene and the slider orbits it", async ({ page }) =>
 test("the dial is drawn at a narrow column's width: labels keep their size, lines thin down", async ({
   page,
 }) => {
-  const cfg = { type: "custom:sun-azimuth-card-pro", view: "dial", show_house: false };
+  const cfg = { type: "custom:sun-azimuth-card-pro", view: "dial", show_summary: false };
   const measure = () =>
     card(page)
       .locator(".visual")
@@ -430,7 +430,7 @@ test("at night the sun is below the horizon everywhere", async ({ page }) => {
       type: "custom:sun-azimuth-card-pro",
       view: "dial",
       house: { front: 20 },
-      show_events: true,
+      show_sun_times: true,
       show_sides: true,
     },
     { time: new Date("2026-06-21T02:00:00+02:00") },
@@ -500,7 +500,7 @@ test("the 3D view at night hides the sun and the shadow", async ({ page }) => {
   await expect(card(page).locator(".head .secondary")).toHaveText(/^\d+° · below the horizon/);
 });
 
-test("the events and sides are opt-in, show_house drops its line, colours reach the card", async ({
+test("the events and sides are opt-in, show_summary drops its line, colours reach the card", async ({
   page,
 }) => {
   await mount(
@@ -509,7 +509,7 @@ test("the events and sides are opt-in, show_house drops its line, colours reach 
       {
         type: "custom:sun-azimuth-card-pro",
         view: "dial",
-        show_house: false,
+        show_summary: false,
         sun_color: "#ff0000",
         night_color: "teal",
         sky_color: "rgb(1, 2, 3)",
@@ -518,7 +518,7 @@ test("the events and sides are opt-in, show_house drops its line, colours reach 
       {
         type: "custom:sun-azimuth-card-pro",
         view: "3d",
-        show_events: true,
+        show_sun_times: true,
         grid_options: { columns: 6 },
       },
     ],
@@ -563,7 +563,7 @@ test("with grid_options.rows the card takes that height and the plot fits in", a
         plot: Math.round(svg.getBoundingClientRect().height),
       };
     });
-  const cfg = { house: { front: 20 }, show_house: false, grid_options: { columns: 6, rows: 4 } };
+  const cfg = { house: { front: 20 }, show_summary: false, grid_options: { columns: 6, rows: 4 } };
   // each alone, full width (as on a phone): the dial would be taller than four rows
   for (const view of ["3d", "dial"]) {
     await mount(page, { type: "custom:sun-azimuth-card-pro", view, ...cfg }, { time: NOON });

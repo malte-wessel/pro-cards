@@ -29,7 +29,7 @@ title: Gable
 view: 3d
 house: { front: 20, roof: gable }
 camera: 150
-show_house: false
+show_summary: false
 ```
 
 :::
@@ -42,7 +42,7 @@ title: Gable to the front
 view: 3d
 house: { front: 20, roof: gable_front }
 camera: 150
-show_house: false
+show_summary: false
 ```
 
 :::
@@ -55,7 +55,7 @@ title: Hip
 view: 3d
 house: { front: 20, roof: hip }
 camera: 150
-show_house: false
+show_summary: false
 ```
 
 :::
@@ -68,7 +68,7 @@ title: Flat
 view: 3d
 house: { front: 20, roof: flat }
 camera: 150
-show_house: false
+show_summary: false
 ```
 
 :::
@@ -105,7 +105,7 @@ view: dial
 
 ## Sunrise and sunset
 
-`show_events: true` adds a row under the dial or the 3D scene: sunrise and sunset with their bearings, and solar noon with the height the sun reaches.
+`show_sun_times: true` adds a row under the dial or the 3D scene: sunrise and sunset with their bearings, and solar noon with the height the sun reaches.
 
 ::: live
 
@@ -114,7 +114,7 @@ type: custom:sun-azimuth-card-pro
 title: Sun
 icon: mdi:sun-compass
 house: { front: 20 }
-show_events: true
+show_sun_times: true
 ```
 
 :::
@@ -136,7 +136,7 @@ icon: mdi:sun-compass
 house:
   front: 45
   sides: { front: Street, right: Terrace, back: Garden, left: false }
-show_events: true
+show_sun_times: true
 show_sides: true
 ```
 
@@ -144,7 +144,7 @@ show_sides: true
 
 ## Less
 
-`show_house: false` drops the line under the dial and the 3D scene naming the sides in the sun and what comes next, leaving just the plot. The card sizes itself to its content; give it `rows` in `grid_options` and it takes that height instead, with the plot shrinking to fit and centred in the room the rest leaves. Two narrow cards side by side, of the same height:
+`show_summary: false` drops the summary under the plot (the sides in the sun and what comes next), leaving just the plot. The card sizes itself to its content; give it `rows` in `grid_options` and it takes that height instead, with the plot shrinking to fit and centred in the room the rest leaves. Two narrow cards side by side, of the same height:
 
 ::: live
 
@@ -152,12 +152,12 @@ show_sides: true
 - type: custom:sun-azimuth-card-pro
   view: 3d
   house: { front: 20 }
-  show_house: false
+  show_summary: false
   grid_options: { columns: 6, rows: 4 }
 - type: custom:sun-azimuth-card-pro
   view: dial
   house: { front: 20 }
-  show_house: false
+  show_summary: false
   grid_options: { columns: 6, rows: 4 }
 ```
 
@@ -182,22 +182,22 @@ sky_color: teal
 
 ## Reference
 
-| Option          | Default      | Description                                                                                                                                                                                                          |
-| --------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `title`         |              | Header. Omit for no header.                                                                                                                                                                                          |
-| `icon`          |              | Header icon.                                                                                                                                                                                                         |
-| `view`          | `3d`         | `3d` or `dial`.                                                                                                                                                                                                      |
-| `house.front`   | `0`          | The bearing the front of the house faces, 0–360 degrees clockwise from north.                                                                                                                                        |
-| `house.roof`    | `gable`      | `gable` (ridge from left to right), `gable_front` (the gable faces the front), `hip` or `flat`.                                                                                                                      |
-| `house.sides`   |              | Own names for `front`, `right`, `back` and `left` (as you look at the front), or `false` for a wall that never gets sun. Unnamed sides are called by where they face, in the [profile language](../guide/languages). |
-| `camera`        | `180`        | 3D view: the bearing you look toward, 0–360.                                                                                                                                                                         |
-| `camera_slider` | `false`      | 3D view: a slider under the plot to orbit the scene. The value is not saved.                                                                                                                                         |
-| `hover_preview` | `true`       | Hovering or tapping a side's timeline or the sun's path shows the sun at that time in the plot.                                                                                                                      |
-| `show_house`    | `true`       | Dial and 3D: the line naming the sides in the sun and what comes next.                                                                                                                                               |
-| `show_events`   | `false`      | Dial and 3D: the sunrise, solar noon and sunset row.                                                                                                                                                                 |
-| `show_sides`    | `false`      | The sides of the house footer.                                                                                                                                                                                       |
-| `sun_color`     | `amber`      | The sun, its path and what it lights.                                                                                                                                                                                |
-| `night_color`   | `indigo`     | The sun below the horizon and the sunset marker.                                                                                                                                                                     |
-| `sky_color`     | `light-blue` | The dial's disc and the 3D dome.                                                                                                                                                                                     |
+| Option           | Default      | Description                                                                                                                                                                                                          |
+| ---------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`          |              | Header. Omit for no header.                                                                                                                                                                                          |
+| `icon`           |              | Header icon.                                                                                                                                                                                                         |
+| `view`           | `3d`         | `3d` or `dial`.                                                                                                                                                                                                      |
+| `house.front`    | `0`          | The bearing the front of the house faces, 0–360 degrees clockwise from north.                                                                                                                                        |
+| `house.roof`     | `gable`      | `gable` (ridge from left to right), `gable_front` (the gable faces the front), `hip` or `flat`.                                                                                                                      |
+| `house.sides`    |              | Own names for `front`, `right`, `back` and `left` (as you look at the front), or `false` for a wall that never gets sun. Unnamed sides are called by where they face, in the [profile language](../guide/languages). |
+| `camera`         | `180`        | 3D view: the bearing you look toward, 0–360.                                                                                                                                                                         |
+| `camera_slider`  | `false`      | 3D view: a slider under the plot to orbit the scene. The value is not saved.                                                                                                                                         |
+| `hover_preview`  | `true`       | Hovering or tapping a side's timeline or the sun's path shows the sun at that time in the plot.                                                                                                                      |
+| `show_summary`   | `true`       | The summary under the plot: the sides in the sun and what comes next.                                                                                                                                                |
+| `show_sun_times` | `false`      | The sunrise, solar noon and sunset row under the plot.                                                                                                                                                               |
+| `show_sides`     | `false`      | The sides of the house footer.                                                                                                                                                                                       |
+| `sun_color`      | `amber`      | The sun, its path and what it lights.                                                                                                                                                                                |
+| `night_color`    | `indigo`     | The sun below the horizon and the sunset marker.                                                                                                                                                                     |
+| `sky_color`      | `light-blue` | The dial's disc and the 3D dome.                                                                                                                                                                                     |
 
 The card follows the local calendar day and refreshes every minute. Sunrise and sunset use the standard −0.833° refraction; a side counts as sunlit while the sun is above the horizon and within 90° of the side's outward normal. The default size is 12 columns with `rows: auto`. Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`, which are passed through to Home Assistant.
