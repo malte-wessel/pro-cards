@@ -11,6 +11,7 @@ test("the sky dial shows the azimuth, the path and the lit sides", async ({ page
     page,
     {
       type: "custom:sun-azimuth-card-pro",
+      view: "dial",
       title: "Sun",
       icon: "mdi:sun-compass",
       house: { front: 20 },
@@ -59,6 +60,7 @@ test("the sides footer lists every side with its window, pill and timeline", asy
     page,
     {
       type: "custom:sun-azimuth-card-pro",
+      view: "dial",
       house: { front: 20 },
       show_events: true,
       show_sides: true,
@@ -119,6 +121,7 @@ test("own side names stay as written in every language", async ({ page }) => {
     page,
     {
       type: "custom:sun-azimuth-card-pro",
+      view: "dial",
       house: { front: 45, sides: { front: "Street", back: "Garden" } },
       show_sides: true,
       show_events: true,
@@ -145,6 +148,7 @@ test("a wall set to false stays dark and drops out of the lists", async ({ page 
     page,
     {
       type: "custom:sun-azimuth-card-pro",
+      view: "dial",
       house: { front: 20, sides: { front: "Street", left: false } },
       show_sides: true,
     },
@@ -164,6 +168,7 @@ test("hovering a timeline previews the sun at that time", async ({ page }) => {
     page,
     {
       type: "custom:sun-azimuth-card-pro",
+      view: "dial",
       house: { front: 20 },
       show_events: true,
       show_sides: true,
@@ -241,7 +246,7 @@ test("following the sun's path previews the sun at that time", async ({ page }) 
 test("hover_preview: false leaves the plot alone", async ({ page }) => {
   await mount(
     page,
-    { type: "custom:sun-azimuth-card-pro", hover_preview: false, show_sides: true },
+    { type: "custom:sun-azimuth-card-pro", view: "dial", hover_preview: false, show_sides: true },
     { time: NOON },
   );
   const c = card(page);
@@ -337,7 +342,7 @@ test("the 3D view draws the scene and the slider orbits it", async ({ page }) =>
 test("the dial is drawn at a narrow column's width: labels keep their size, lines thin down", async ({
   page,
 }) => {
-  const cfg = { type: "custom:sun-azimuth-card-pro", show_house: false };
+  const cfg = { type: "custom:sun-azimuth-card-pro", view: "dial", show_house: false };
   const measure = () =>
     card(page)
       .locator(".visual")
@@ -423,6 +428,7 @@ test("at night the sun is below the horizon everywhere", async ({ page }) => {
     page,
     {
       type: "custom:sun-azimuth-card-pro",
+      view: "dial",
       house: { front: 20 },
       show_events: true,
       show_sides: true,
@@ -457,9 +463,9 @@ test("house.roof shapes the house in both views", async ({ page }) => {
     page,
     [
       { type: "custom:sun-azimuth-card-pro", view: "3d", house: { roof: "flat" } },
-      { type: "custom:sun-azimuth-card-pro", house: { roof: "flat" } },
+      { type: "custom:sun-azimuth-card-pro", view: "dial", house: { roof: "flat" } },
       { type: "custom:sun-azimuth-card-pro", view: "3d", house: { roof: "gable_front" } },
-      { type: "custom:sun-azimuth-card-pro", house: { roof: "hip" } },
+      { type: "custom:sun-azimuth-card-pro", view: "dial", house: { roof: "hip" } },
     ],
     { time: NOON },
   );
@@ -502,6 +508,7 @@ test("the events and sides are opt-in, show_house drops its line, colours reach 
     [
       {
         type: "custom:sun-azimuth-card-pro",
+        view: "dial",
         show_house: false,
         sun_color: "#ff0000",
         night_color: "teal",
@@ -567,7 +574,7 @@ test("with grid_options.rows the card takes that height and the plot fits in", a
     expect(b.plot).toBeGreaterThan(b.room * 0.8); // and uses it
   }
   // without rows the card sizes to its content as before
-  await mount(page, { type: "custom:sun-azimuth-card-pro" }, { time: NOON });
+  await mount(page, { type: "custom:sun-azimuth-card-pro", view: "dial" }, { time: NOON });
   expect((await box(0)).fill).toBe(false);
 });
 
@@ -590,7 +597,7 @@ test("the pictures follow the theme's mode", async ({ page }) => {
 test("moves the sun with time", async ({ page }) => {
   await mount(
     page,
-    { type: "custom:sun-azimuth-card-pro" },
+    { type: "custom:sun-azimuth-card-pro", view: "dial" },
     { time: new Date("2026-06-21T08:00:00+02:00") },
   );
   const c = card(page);

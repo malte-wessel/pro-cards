@@ -145,6 +145,7 @@ views:
           - type: custom:sun-azimuth-card-pro
             title: Sun
             icon: mdi:sun-compass
+            view: dial
             house:
               front: 20
               sides: { front: Street, back: Garden }

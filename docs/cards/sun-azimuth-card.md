@@ -1,29 +1,16 @@
 # Sun Azimuth Card Pro
 
-`custom:sun-azimuth-card-pro` shows where the sun is around your house today: as a sky dial seen from above or as a 3D scene with the house, its shadow and the sky dome. Two sections can be added: a sunrise / noon / sunset row, and the sides of the house with the times the sun shines on each. The position is computed locally from the Home Assistant latitude and longitude (NOAA solar position), so nothing besides the card is needed.
-
-## Sky dial
-
-All the card needs is its type. The default view looks down on the house: the outer ring is the horizon, the centre is straight up. Today's path of the sun is drawn in the sun colour, solid where it has passed and dashed where it is still to come, and the faint arc on the rim is the daylight sector from the sunrise bearing to the sunset bearing. The house in the middle lights up on every side the sun shines on right now, a dashed beam joins the sun to it, and an arc from north round to the sun shows the azimuth with the angle in a chip. The head reads like the other cards' tiles: the direction the sun stands in (South-West), and under it the azimuth and the elevation; the 3D view has the same head.
-
-::: live
-
-```yaml
-type: custom:sun-azimuth-card-pro
-```
-
-:::
+`custom:sun-azimuth-card-pro` shows where the sun is around your house today: as a 3D scene with the house, its shadow and the sky dome, or as a sky dial seen from above. Two sections can be added: a sunrise / noon / sunset row, and the sides of the house with the times the sun shines on each. The position is computed locally from the Home Assistant latitude and longitude (NOAA solar position), so nothing besides the card is needed.
 
 ## 3D
 
-`view: 3d` draws the sky as a see-through dome around a small house, seen from slightly above. The sun runs on its daily circle, hidden below the horizon at night; a dashed drop line shows its elevation with the angle in a chip, dotted lines on the ground run from the house to the four compass points and an arc from north to the sun shows its azimuth the same way, and the house casts its shadow on the ground. The walls and roof slopes facing the sun light up, more the more directly it hits them. A pole marks the house's position under the dome; compass points on the far side of the ground are left out so they do not sit in the sky. `camera` is the bearing you look toward: the default 180 stands north of the house looking south, so that today's path lies ahead of you; 90 looks east, 270 west. In a narrow card the dome grows to fill the width; its labels keep their size.
+All the card needs is its type. The default view draws the sky as a see-through dome around a small house, seen from slightly above. The sun runs on its daily circle, hidden below the horizon at night; a dashed drop line shows its elevation with the angle in a chip, dotted lines on the ground run from the house to the four compass points and an arc from north to the sun shows its azimuth the same way, and the house casts its shadow on the ground. The walls and roof slopes facing the sun light up, more the more directly it hits them. A pole marks the house's position under the dome; compass points on the far side of the ground are left out so they do not sit in the sky. `camera` is the bearing you look toward: the default 180 stands north of the house looking south, so that today's path lies ahead of you; 90 looks east, 270 west. In a narrow card the dome grows to fill the width; its labels keep their size. The head reads like the other cards' tiles: the direction the sun stands in (South-West), and under it the azimuth and the elevation.
 
 ::: live
 
 ```yaml
 type: custom:sun-azimuth-card-pro
 title: Sun
-view: 3d
 house: { front: 20 }
 camera: 150
 ```
@@ -103,6 +90,19 @@ camera_slider: true
 
 :::
 
+## Sky dial
+
+`view: dial` looks down on the house instead: the outer ring is the horizon, the centre is straight up. Today's path of the sun is drawn in the sun colour, solid where it has passed and dashed where it is still to come, and the faint arc on the rim is the daylight sector from the sunrise bearing to the sunset bearing. The house in the middle lights up on every side the sun shines on right now, a dashed beam joins the sun to it, and an arc from north round to the sun shows the azimuth with the angle in a chip. The head is the same as in the 3D view.
+
+::: live
+
+```yaml
+type: custom:sun-azimuth-card-pro
+view: dial
+```
+
+:::
+
 ## Sunrise and sunset
 
 `show_events: true` adds a row under the dial or the 3D scene: sunrise and sunset with their bearings, and solar noon with the height the sun reaches.
@@ -155,6 +155,7 @@ show_sides: true
   show_house: false
   grid_options: { columns: 6, rows: 4 }
 - type: custom:sun-azimuth-card-pro
+  view: dial
   house: { front: 20 }
   show_house: false
   grid_options: { columns: 6, rows: 4 }
@@ -185,7 +186,7 @@ sky_color: teal
 | --------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `title`         |              | Header. Omit for no header.                                                                                                                                                                                          |
 | `icon`          |              | Header icon.                                                                                                                                                                                                         |
-| `view`          | `dial`       | `dial` or `3d`.                                                                                                                                                                                                      |
+| `view`          | `3d`         | `3d` or `dial`.                                                                                                                                                                                                      |
 | `house.front`   | `0`          | The bearing the front of the house faces, 0–360 degrees clockwise from north.                                                                                                                                        |
 | `house.roof`    | `gable`      | `gable` (ridge from left to right), `gable_front` (the gable faces the front), `hip` or `flat`.                                                                                                                      |
 | `house.sides`   |              | Own names for `front`, `right`, `back` and `left` (as you look at the front), or `false` for a wall that never gets sun. Unnamed sides are called by where they face, in the [profile language](../guide/languages). |

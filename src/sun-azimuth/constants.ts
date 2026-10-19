@@ -27,7 +27,7 @@ export const defaultSideName = (hass: HomeAssistant | null | undefined, normal: 
   t(hass, `azimuth.side.${pointOf(normal)}`);
 
 export const DEFAULTS = {
-  view: "dial" as View,
+  view: "3d" as View,
   front: 0,
   roof: "gable" as Roof,
   camera: 180,

@@ -9,7 +9,7 @@
  *   type: custom:sun-azimuth-card-pro
  *   title: Sun                    # optional; omit → no header
  *   icon: mdi:sun-compass
- *   view: dial                    # dial | 3d
+ *   view: 3d                      # 3d | dial
  *   house:
  *     front: 110                  # the bearing the front faces, degrees clockwise from north
  *     roof: gable                 # 3d / dial: gable (ridge left–right) | gable_front | hip | flat
@@ -422,5 +422,5 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
 registerCard(SunAzimuthCard, {
   name: "Sun Azimuth Card Pro",
   description:
-    "Where the sun is around the house: sky dial or 3D scene, and the sides it shines on today",
+    "Where the sun is around the house: 3D scene or sky dial, and the sides it shines on today",
 });

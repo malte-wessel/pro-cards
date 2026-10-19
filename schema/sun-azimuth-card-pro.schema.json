@@ -19,7 +19,7 @@
     "view": {
       "type": "string",
       "enum": ["dial", "3d"],
-      "default": "dial"
+      "default": "3d"
     },
     "house": {
       "type": "object",

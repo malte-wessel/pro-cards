@@ -524,11 +524,12 @@ describe("sun-azimuth-card element", () => {
     const el = new SunAzimuthCard();
     el.setConfig({});
     expect(el.getGridOptions()).toEqual({ columns: 12, rows: "auto", min_columns: 6 });
-    expect(el.getCardSize()).toBe(8); // dial 7 + house 1
-    el.setConfig({ show_events: true, show_sides: true });
-    expect(el.getCardSize()).toBe(14); // + events 1 + sides 5
-    el.setConfig({ view: "ring" as never }); // the ring view is gone: an unknown view is the dial
-    expect(el._config.view).toBe("dial");
+    expect(el._config.view).toBe("3d"); // the default view
+    expect(el.getCardSize()).toBe(7); // 3d 6 + house 1
+    el.setConfig({ view: "dial", show_events: true, show_sides: true });
+    expect(el.getCardSize()).toBe(14); // dial 7 + house 1 + events 1 + sides 5
+    el.setConfig({ view: "ring" as never }); // the ring view is gone: an unknown view is the default
+    expect(el._config.view).toBe("3d");
     el.setConfig({ view: "3d", title: "Sun", camera_slider: true });
     expect(el.getCardSize()).toBe(9); // header 1 + 3d 6 + slider 1 + house 1
     el.setConfig({ view: "3d", show_house: false });
@@ -538,7 +539,7 @@ describe("sun-azimuth-card element", () => {
     const el = new SunAzimuthCard();
     el.setConfig({});
     expect(el._config).toMatchObject({
-      view: "dial",
+      view: "3d",
       front: 0,
       roof: "gable",
       sides: {},
@@ -563,7 +564,7 @@ describe("sun-azimuth-card element", () => {
       camera: -90,
       hover_preview: false,
     });
-    expect(el._config.view).toBe("dial"); // an unknown view falls back
+    expect(el._config.view).toBe("3d"); // an unknown view falls back to the default
     expect(el._config.front).toBe(45); // normalised to 0..360
     expect(el._config.roof).toBe("gable"); // an unknown roof falls back
     expect(el._config.sides).toEqual({ front: "Street" }); // only non-empty strings name a side

@@ -842,6 +842,7 @@ const CASES = {
   },
   "saz-dial": {
     type: "custom:sun-azimuth-card-pro",
+    view: "dial",
     title: "Sun",
     icon: "mdi:sun-compass",
     house: { front: 20 },
@@ -868,6 +869,7 @@ const CASES = {
     },
     {
       type: "custom:sun-azimuth-card-pro",
+      view: "dial",
       house: { roof: "gable_front" },
       show_house: false,
       grid_options: { columns: 6, rows: 4 },
