@@ -8,7 +8,7 @@ Pro Cards has three test layers. They share one idea: the cards are plain web co
 | Integration       | Playwright, Chromium  | a real browser on your machine | `npm run test:e2e`    |
 | Visual regression | Playwright, Chromium  | the Playwright Docker image    | `npm run test:visual` |
 
-A fourth, manual layer is a real Home Assistant in the repository's devcontainer, see [Real Home Assistant](#real-home-assistant) below.
+A fourth, manual layer is a real Home Assistant in Docker (`npm run ha`), see [Real Home Assistant](#real-home-assistant) below.
 
 `npm run test:all` runs all three in that order; `npm run check` runs Prettier, ESLint, the TypeScript type check, the build, the unit and integration tests and the docs build, which is the definition of done before a commit. CI runs the same commands on every push and pull request (`.github/workflows/validate.yml`).
 
@@ -129,12 +129,12 @@ Failed browser jobs upload the Playwright report and the diff images as artifact
 
 The three automated layers run against the docs' Home Assistant shim, which is fast and deterministic but a stand-in. Some things only a real Home Assistant shows: the visual editors inside the card editor, the sections grid with `grid_options`, the dialogs and haptics behind `hass-action`, the companion app, custom themes and real recorder data.
 
-`.devcontainer/` runs Home Assistant with the repository mounted as a dashboard resource (image `thomasloven/hass-custom-devcontainer`). In VS Code choose **Reopen in Container**; without VS Code, `npm run ha` starts the same image and mounts as a plain Docker container (`npm run ha:stop` removes it). Then:
+`npm run ha` runs the official Home Assistant image (`ghcr.io/home-assistant/home-assistant`, the version pinned as `HA_VERSION` in `test/ha/.env`) with `dist/` mounted at `/config/www/pro-cards`. `scripts/ha-setup.mjs` then finishes onboarding with the user `dev` / `dev` and registers `/local/pro-cards/pro-cards.js` as a dashboard resource; both steps are skipped when already done. The config (`.storage`, the recorder's history) lives in the Docker volume `pro-cards-ha-config` and survives restarts: `npm run ha:stop` removes the container, `npm run ha:reset` the container and the volume. `HA_VERSION=<version> npm run ha` runs another version, e.g. a beta. Then:
 
 1. `npm run watch` rebuilds `dist/pro-cards.js` on every change.
 2. Open `http://localhost:8123` and log in as `dev` / `dev`.
 3. The **Pro Cards** dashboard in the sidebar (`test/ha/dashboards/pro-cards.yaml`) has one section per card; reload the page after editing the YAML or the bundle (append `?v=2` if the browser caches the old file).
 
-The image is amd64, so on Apple silicon Home Assistant takes a few minutes to boot under emulation; `docker logs -f pro-cards-ha` shows progress. `test/ha/configuration.yaml` sets the home location to the docs' demo coordinates (the sun path card needs one) and defines template entities named like the docs' demo world (`sensor.outdoor_temperature`, `light.living_room`, `sensor.illuminance`, `sensor.robot_battery`, …) so examples from the docs can be pasted into the dashboard as they are, and an automation moves their values every minute so the history visuals have data after a few minutes. The demo integration adds the rest of a house (`sun.sun`, demo lights, covers, climate, media players); those entities work too, under their own ids.
+`test/ha/configuration.yaml` sets the home location to the docs' demo coordinates (the sun path card needs one) and defines template entities named like the docs' demo world (`sensor.outdoor_temperature`, `light.living_room`, `sensor.illuminance`, `sensor.robot_battery`, …) so examples from the docs can be pasted into the dashboard as they are, and an automation moves their values every minute so the history visuals have data after a few minutes. The demo integration adds the rest of a house (`sun.sun`, demo lights, covers, climate, media players); those entities work too, under their own ids. `docker logs -f pro-cards-ha` shows Home Assistant's log.
 
 What to check there that the shim cannot: every card's visual editor opens and round-trips; `confirmation` shows HA's dialog and per-user `exemptions` skip it; `assist` opens the assist dialog; haptics fire in the companion app; the cards respect the grid in edit mode; a custom theme recolours the state colours.

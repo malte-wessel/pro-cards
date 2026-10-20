@@ -32,6 +32,7 @@
     "test:visual:update": "sh scripts/visual.sh --update-snapshots",
     "ha": "sh scripts/ha.sh",
     "ha:stop": "sh scripts/ha.sh stop",
+    "ha:reset": "sh scripts/ha.sh reset",
     "test:all": "npm run test:unit && npm run test:e2e && npm run test:visual",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run build && npm run test:unit && npm run test:e2e && npm run docs:build",
     "format": "prettier --write .",
