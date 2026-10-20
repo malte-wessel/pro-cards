@@ -28,6 +28,10 @@ const ru: Translation = {
   "control.unlock": "Открыть замок",
   "control.hold_to": "Удерживайте, чтобы {action}",
   "control.press_again": "Нажмите ещё раз, чтобы {action}",
+  "layout.more": "Ещё {count}",
+  "layout.less": "Свернуть",
+  "layout.empty": "Добавьте карточки в этот макет",
+  "layout.unavailable": "Элементы карточек Home Assistant не загрузились",
   "group.stub_title": "Группа",
   "sections.stub_title": "Раздел",
 

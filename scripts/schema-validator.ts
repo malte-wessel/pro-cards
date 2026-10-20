@@ -18,6 +18,7 @@ const TYPES = [
   "wind-card-pro",
   "rain-card-pro",
   "power-flow-card-pro",
+  "layout-card-pro",
 ];
 
 export const makeValidator = () => {

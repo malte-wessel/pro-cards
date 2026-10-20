@@ -1,0 +1,1026 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/layout-card-pro.schema.json",
+  "title": "custom:layout-card-pro",
+  "description": "Any cards in a grid, a stack or masonry, with breakpoints of the card's own width, media rules, spacing, a seamless style, per-card placement in view_layout and priority folding.",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "#/$defs/layoutOptions"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "custom:layout-card-pro"
+    },
+    "container": {
+      "type": "boolean",
+      "default": true,
+      "description": "Breakpoints measure the layout's own width (true) or the window"
+    },
+    "breakpoints": {
+      "type": "object",
+      "description": "The breakpoints above the base (phone), each from a min width, with the options that change there. Defaults: tablet 600, desktop 1024, wide 1440; false drops one",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*$",
+        "not": {
+          "const": "phone"
+        }
+      },
+      "properties": {
+        "tablet": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "const": false
+            },
+            {
+              "type": "object",
+              "allOf": [
+                {
+                  "$ref": "#/$defs/layoutOptions"
+                }
+              ],
+              "properties": {
+                "min_width": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "From this width of the layout (px)"
+                }
+              },
+              "unevaluatedProperties": false
+            }
+          ]
+        },
+        "desktop": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "const": false
+            },
+            {
+              "type": "object",
+              "allOf": [
+                {
+                  "$ref": "#/$defs/layoutOptions"
+                }
+              ],
+              "properties": {
+                "min_width": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "From this width of the layout (px)"
+                }
+              },
+              "unevaluatedProperties": false
+            }
+          ]
+        },
+        "wide": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "const": false
+            },
+            {
+              "type": "object",
+              "allOf": [
+                {
+                  "$ref": "#/$defs/layoutOptions"
+                }
+              ],
+              "properties": {
+                "min_width": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "From this width of the layout (px)"
+                }
+              },
+              "unevaluatedProperties": false
+            }
+          ]
+        }
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "integer",
+            "minimum": 1
+          },
+          {
+            "const": false
+          },
+          {
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/$defs/layoutOptions"
+              }
+            ],
+            "properties": {
+              "min_width": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "From this width of the layout (px)"
+              }
+            },
+            "required": ["min_width"],
+            "unevaluatedProperties": false
+          }
+        ]
+      }
+    },
+    "media": {
+      "type": "array",
+      "description": "Options for CSS media queries the breakpoints do not cover; the first match applies, unless it says merge: true",
+      "items": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/$defs/layoutOptions"
+          }
+        ],
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1
+          },
+          "merge": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": ["query"],
+        "unevaluatedProperties": false
+      }
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/card"
+      },
+      "description": "The cards, in order"
+    },
+    "grid_options": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/grid_options"
+    },
+    "fill_height": {
+      "$ref": "defs.schema.json#/$defs/fillHeight"
+    },
+    "visibility": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/visibility"
+    },
+    "layout_options": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/layout_options"
+    },
+    "view_layout": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/view_layout"
+    },
+    "card_mod": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/card_mod"
+    }
+  },
+  "required": ["type"],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "length": {
+      "description": "A length: a number is px; or a string with px, rem, em, %, vw, vh, or var(--x), calc(), min(), max(), clamp()",
+      "oneOf": [
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "type": "string",
+          "pattern": "^\\s*(\\d*\\.?\\d+(px|rem|em|%|vw|vh|svh|dvh)?|(var|calc|min|max|clamp)\\(.+\\))\\s*$"
+        }
+      ]
+    },
+    "signedLength": {
+      "description": "A length that may be negative (a margin below 0 lets the layout bleed)",
+      "oneOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string",
+          "pattern": "^\\s*(-?\\d*\\.?\\d+(px|rem|em|%|vw|vh|svh|dvh)?|(var|calc|min|max|clamp)\\(.+\\))\\s*$"
+        }
+      ]
+    },
+    "sides": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/length"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/length"
+          },
+          "minItems": 1,
+          "maxItems": 4,
+          "not": {
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "top": {
+              "$ref": "#/$defs/length"
+            },
+            "right": {
+              "$ref": "#/$defs/length"
+            },
+            "bottom": {
+              "$ref": "#/$defs/length"
+            },
+            "left": {
+              "$ref": "#/$defs/length"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "signedSides": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/signedLength"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/signedLength"
+          },
+          "minItems": 1,
+          "maxItems": 4,
+          "not": {
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "top": {
+              "$ref": "#/$defs/signedLength"
+            },
+            "right": {
+              "$ref": "#/$defs/signedLength"
+            },
+            "bottom": {
+              "$ref": "#/$defs/signedLength"
+            },
+            "left": {
+              "$ref": "#/$defs/signedLength"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "track": {
+      "description": "A column: Nfr, a length, or minmax(a, b) of those (auto and max-content are not allowed)",
+      "oneOf": [
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "type": "string",
+          "pattern": "^\\s*(\\d*\\.?\\d+fr|minmax\\((?!\\s*\\d*\\.?\\d+fr)[^,]+,[^,]+\\)|\\d*\\.?\\d+(px|rem|em|%|vw|vh|svh|dvh)?|(var|calc|min|max|clamp)\\(.+\\))\\s*$"
+        }
+      ]
+    },
+    "layoutOptions": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "enum": ["grid", "stack", "masonry"],
+          "default": "grid",
+          "description": "grid: columns and rows, cards can span; stack: one after another (direction); masonry: columns filled by card size"
+        },
+        "columns": {
+          "description": "How many equal columns, or the columns' widths like grid-template-columns",
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 24
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/track"
+              },
+              "minItems": 1
+            }
+          ],
+          "default": 1
+        },
+        "min_column_width": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/length"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "As many columns as fit, none narrower than this (instead of a count); null in a breakpoint goes back to `columns`"
+        },
+        "max_columns": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 24
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "With min_column_width: at most this many columns"
+        },
+        "max_width": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/length"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Keeps the layout readable on big screens"
+        },
+        "align": {
+          "enum": ["start", "center", "end"],
+          "default": "center",
+          "description": "Where a layout narrower than its card sits (max_width)"
+        },
+        "row_height": {
+          "oneOf": [
+            {
+              "const": "auto"
+            },
+            {
+              "$ref": "#/$defs/length"
+            }
+          ],
+          "default": "auto",
+          "description": "auto: rows as tall as their cards; a length: the height of one row for cards that span rows (like the sections grid's 56 px)"
+        },
+        "dense": {
+          "type": "boolean",
+          "default": false,
+          "description": "Later small cards fill the holes big ones leave (changes the order)"
+        },
+        "align_items": {
+          "enum": ["start", "center", "end", "stretch"],
+          "default": "stretch",
+          "description": "How cards sit in their row: stretch to the tallest, or keep their own height"
+        },
+        "direction": {
+          "enum": ["down", "across"],
+          "default": "down",
+          "description": "Stack: one below the other, or side by side"
+        },
+        "wrap": {
+          "type": "boolean",
+          "default": false,
+          "description": "Stack across: wrap onto new lines (each card at least min_column_width)"
+        },
+        "gap": {
+          "description": "Space between cards: one length, or [row, column]",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/length"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/length"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          ]
+        },
+        "row_gap": {
+          "$ref": "#/$defs/length"
+        },
+        "column_gap": {
+          "$ref": "#/$defs/length"
+        },
+        "padding": {
+          "$ref": "#/$defs/sides",
+          "description": "Inside the layout, around the cards: 1, 2 or 4 values, or per side"
+        },
+        "margin": {
+          "$ref": "#/$defs/signedSides",
+          "description": "Outside the layout; negative values bleed to the edge"
+        },
+        "density": {
+          "enum": ["compact", "default", "roomy", "auto"],
+          "default": "default",
+          "description": "The gaps: compact 4 px, default as the sections grid, roomy 16 px; auto is roomy on touch screens"
+        },
+        "card_style": {
+          "enum": ["cards", "seamless"],
+          "default": "cards",
+          "description": "seamless: the cards share one surface with dividers"
+        },
+        "fold": {
+          "description": "Fold the surplus cards into a \"+N more\" row (low priority first, high never): false, a card count, or { max_cards, label }",
+          "oneOf": [
+            {
+              "const": false
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "object",
+              "properties": {
+                "max_cards": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "label": {
+                  "type": "string",
+                  "description": "The row's text; {count} is the number of folded cards"
+                }
+              },
+              "required": ["max_cards"],
+              "additionalProperties": false
+            }
+          ]
+        }
+      }
+    },
+    "viewLayout": {
+      "type": "object",
+      "description": "Where and how a card sits in a layout card; every value but priority, show_on and hidden_below may be a map by breakpoint",
+      "properties": {
+        "span": {
+          "oneOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 24
+                },
+                {
+                  "const": "full"
+                },
+                {
+                  "type": "array",
+                  "prefixItems": [
+                    {
+                      "oneOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 24
+                        },
+                        {
+                          "const": "full"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 48
+                    }
+                  ],
+                  "minItems": 2,
+                  "maxItems": 2
+                }
+              ]
+            },
+            {
+              "type": "object",
+              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
+              "propertyNames": {
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 24
+                  },
+                  {
+                    "const": "full"
+                  },
+                  {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "oneOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 24
+                          },
+                          {
+                            "const": "full"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 48
+                      }
+                    ],
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "minProperties": 1
+            }
+          ],
+          "description": "Columns, or [columns, rows], or full (the whole row)"
+        },
+        "column": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 24
+            },
+            {
+              "type": "object",
+              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
+              "propertyNames": {
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 24
+              },
+              "minProperties": 1
+            }
+          ],
+          "description": "Grid: the column the card starts in; masonry: the column it goes to"
+        },
+        "row": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 48
+            },
+            {
+              "type": "object",
+              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
+              "propertyNames": {
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 48
+              },
+              "minProperties": 1
+            }
+          ],
+          "description": "Grid: the row the card starts in"
+        },
+        "order": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "object",
+              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
+              "propertyNames": {
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "minProperties": 1
+            }
+          ],
+          "description": "Move the card without moving its YAML; negative = earlier"
+        },
+        "align": {
+          "oneOf": [
+            {
+              "enum": ["start", "center", "end", "stretch"]
+            },
+            {
+              "type": "object",
+              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
+              "propertyNames": {
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "additionalProperties": {
+                "enum": ["start", "center", "end", "stretch"]
+              },
+              "minProperties": 1
+            }
+          ],
+          "description": "How this card sits in its cell"
+        },
+        "sticky": {
+          "oneOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "const": "top"
+                },
+                {
+                  "$ref": "#/$defs/length"
+                }
+              ]
+            },
+            {
+              "type": "object",
+              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
+              "propertyNames": {
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "const": "top"
+                  },
+                  {
+                    "$ref": "#/$defs/length"
+                  }
+                ]
+              },
+              "minProperties": 1
+            }
+          ],
+          "description": "Stays in view while the page scrolls, within the layout card; true / top under the header, or an offset"
+        },
+        "aspect": {
+          "oneOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                {
+                  "type": "string",
+                  "pattern": "^\\s*\\d*\\.?\\d+\\s*([/:]\\s*\\d*\\.?\\d+)?\\s*$"
+                }
+              ]
+            },
+            {
+              "type": "object",
+              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
+              "propertyNames": {
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^\\s*\\d*\\.?\\d+\\s*([/:]\\s*\\d*\\.?\\d+)?\\s*$"
+                  }
+                ]
+              },
+              "minProperties": 1
+            }
+          ],
+          "description": "A fixed shape such as 16/9"
+        },
+        "min_height": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/length"
+            },
+            {
+              "type": "object",
+              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
+              "propertyNames": {
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "additionalProperties": {
+                "$ref": "#/$defs/length"
+              },
+              "minProperties": 1
+            }
+          ]
+        },
+        "max_height": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/length"
+            },
+            {
+              "type": "object",
+              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
+              "propertyNames": {
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "additionalProperties": {
+                "$ref": "#/$defs/length"
+              },
+              "minProperties": 1
+            }
+          ]
+        },
+        "bleed": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
+              "propertyNames": {
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "additionalProperties": {
+                "type": "boolean"
+              },
+              "minProperties": 1
+            }
+          ],
+          "description": "Ignore the layout's side padding"
+        },
+        "priority": {
+          "enum": ["high", "normal", "low"],
+          "default": "normal",
+          "description": "What folds first when the layout has a fold: low, then normal; high never"
+        },
+        "show_on": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "minItems": 1
+            }
+          ],
+          "description": "Only on these breakpoints (of the layout's own width)"
+        },
+        "hidden_below": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Not below this breakpoint"
+        },
+        "position": {
+          "description": "Home Assistant's own (sidebar view), ignored here"
+        },
+        "grid-area": {
+          "description": "layout-card's, ignored here"
+        },
+        "grid-column": {
+          "description": "layout-card's, ignored here"
+        },
+        "grid-row": {
+          "description": "layout-card's, ignored here"
+        },
+        "show": {
+          "description": "layout-card's, ignored here"
+        }
+      },
+      "additionalProperties": false
+    },
+    "card": {
+      "type": "object",
+      "description": "Any card; a Pro card is checked against its own schema",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "view_layout": {
+          "$ref": "#/$defs/viewLayout"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "type": "string",
+                "pattern": "^custom:[a-z-]+-card-pro$"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "custom:entity-card-pro",
+                  "custom:entity-group-card-pro",
+                  "custom:entity-sections-card-pro",
+                  "custom:multi-trend-card-pro",
+                  "custom:sun-path-card-pro",
+                  "custom:sun-azimuth-card-pro",
+                  "custom:illuminance-card-pro",
+                  "custom:weather-card-pro",
+                  "custom:wind-card-pro",
+                  "custom:rain-card-pro",
+                  "custom:power-flow-card-pro",
+                  "custom:layout-card-pro"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:entity-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "entity-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:entity-group-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "entity-group-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:entity-sections-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "entity-sections-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:multi-trend-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "multi-trend-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:sun-path-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "sun-path-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:sun-azimuth-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "sun-azimuth-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:illuminance-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "illuminance-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:weather-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "weather-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:wind-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "wind-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:rain-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "rain-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:power-flow-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "power-flow-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:layout-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "layout-card-pro.schema.json"
+          }
+        }
+      ]
+    }
+  }
+}

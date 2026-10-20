@@ -28,6 +28,10 @@ const cs: Translation = {
   "control.unlock": "Odemknout",
   "control.hold_to": "Podržte pro {action}",
   "control.press_again": "Stiskněte znovu pro {action}",
+  "layout.more": "Další: {count}",
+  "layout.less": "Zobrazit méně",
+  "layout.empty": "Přidejte do tohoto rozvržení karty",
+  "layout.unavailable": "Prvky karet Home Assistantu se nenačetly",
   "group.stub_title": "Skupina",
   "sections.stub_title": "Sekce",
 

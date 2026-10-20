@@ -67,6 +67,7 @@ const cardGroups = [
     ],
   },
   { text: "Energy", items: [{ text: "Power Flow Card Pro", link: "/cards/power-flow-card" }] },
+  { text: "Layout", items: [{ text: "Layout Card Pro", link: "/cards/layout-card" }] },
   {
     text: "Weather",
     items: [

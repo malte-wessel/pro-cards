@@ -66,6 +66,8 @@ export interface PcApi {
   setUser(id: string | null): void;
   root: HTMLElement;
   card(i?: number): CardElement;
+  // every card on show, through layout cards to the cards inside them
+  cards(): Element[];
   // every service call rejects (the shim does nothing) while on
   failCalls(on: boolean): void;
   // service calls are recorded but their effect waits for release()
@@ -189,11 +191,24 @@ const setUser = (id: string | null) => {
   push();
 };
 
+// the cards a mounted card shows: a layout card's own cards (each inside a hui-card), else itself
+const leaves = (el: Element): Element[] =>
+  el.localName === "layout-card-pro"
+    ? [...(el.shadowRoot?.querySelectorAll("hui-card") ?? [])].flatMap((h) =>
+        h.firstElementChild ? leaves(h.firstElementChild) : [],
+      )
+    : [el];
+const cards = () => [...root.querySelectorAll(".cell > *")].flatMap(leaves);
+// a card that has drawn: its ha-card, or a heading / error box (no ha-card of their own)
+const drawn = (el: Element) =>
+  !!el.shadowRoot?.querySelector("ha-card") ||
+  el.localName === "hui-heading-card" ||
+  el.classList.contains("hui-error");
+
 // wait until every mounted card has rendered its ha-card and, for history visuals, finished fetching
 const settled = async () => {
-  const els = [...root.querySelectorAll(".cell > *")];
   for (let i = 0; i < 50; i++) {
-    if (els.every((el) => el.shadowRoot?.querySelector("ha-card"))) break;
+    if (cards().every(drawn)) break;
     await new Promise((r) => setTimeout(r, 20));
   }
   await new Promise((r) => setTimeout(r, 120));
@@ -213,6 +228,7 @@ window.pc = {
   setUser,
   root,
   card: (i = 0) => root.querySelectorAll(".cell > *")[i] as CardElement,
+  cards,
   failCalls: (on) => {
     failing = on;
   },

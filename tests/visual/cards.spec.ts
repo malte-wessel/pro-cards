@@ -1557,6 +1557,58 @@ const CASES = {
       { ...PF_CONS[3], hide_below: 0 },
     ],
   },
+  // the layout card: a grid with a full-width span and the fold row, a seamless grid with
+  // dividers, and masonry over two tracks filled by the cards' sizes
+  "lc-grid": {
+    type: "custom:layout-card-pro",
+    columns: 2,
+    cards: [
+      {
+        type: "custom:entity-card-pro",
+        entity: "sensor.outdoor_temperature",
+        view_layout: { span: "full" },
+      },
+      { type: "custom:entity-card-pro", entity: "light.kitchen" },
+      { type: "custom:entity-card-pro", entity: "light.living_room" },
+      {
+        type: "custom:entity-card-pro",
+        entity: "cover.garage_door",
+        view_layout: { priority: "low" },
+      },
+      {
+        type: "custom:entity-card-pro",
+        entity: "lock.front_door",
+        view_layout: { priority: "low" },
+      },
+    ],
+    fold: { max_cards: 3 },
+  },
+  "lc-seamless": {
+    type: "custom:layout-card-pro",
+    columns: 2,
+    card_style: "seamless",
+    cards: [
+      { type: "custom:entity-card-pro", entity: "light.kitchen" },
+      { type: "custom:entity-card-pro", entity: "light.living_room" },
+      { type: "custom:entity-card-pro", entity: "cover.living_room_blinds" },
+      { type: "custom:entity-card-pro", entity: "climate.living_room" },
+    ],
+  },
+  "lc-masonry": {
+    type: "custom:layout-card-pro",
+    layout: "masonry",
+    columns: ["3fr", "2fr"],
+    cards: [
+      {
+        type: "custom:weather-card-pro",
+        entity: "weather.home",
+        sections: [{ type: "forecast", mode: "daily", days: 5 }],
+      },
+      { type: "custom:entity-card-pro", entity: "light.kitchen" },
+      { type: "custom:entity-card-pro", entity: "light.living_room" },
+      { type: "custom:entity-card-pro", entity: "light.office" },
+    ],
+  },
 };
 
 // cases rendered under a Home Assistant theme from ha.css instead of the default one

@@ -245,6 +245,58 @@ describe("card config schemas", () => {
     ).toBeNull();
   });
 
+  it("checks layout cards, their breakpoints and the cards inside", () => {
+    const LC = "custom:layout-card-pro";
+    const EC = { type: "custom:entity-card-pro", entity: "sensor.outdoor_temperature" };
+    expect(
+      validate({
+        type: LC,
+        layout: "grid",
+        columns: [320, "1fr", "minmax(200px, 2fr)"],
+        gap: [8, 12],
+        padding: [0, 16],
+        margin: [0, -16],
+        card_style: "seamless",
+        fold: { max_cards: 4, label: "{count} more" },
+        breakpoints: {
+          tablet: { columns: 2 },
+          wide: false,
+          kiosk: { min_width: 1800, columns: 6 },
+        },
+        media: [{ query: "(orientation: portrait)", columns: 1 }],
+        cards: [
+          {
+            ...EC,
+            view_layout: { span: { phone: 1, desktop: [2, 2] }, priority: "high", sticky: true },
+          },
+          { type: "tile", entity: "light.kitchen", view_layout: { hidden_below: "tablet" } },
+          { type: "heading", heading: "Rooms" },
+          { type: LC, layout: "stack", cards: [EC] },
+        ],
+      }),
+    ).toBeNull();
+    expect(validate({ type: LC, colums: 2 })).toMatch(/unevaluated/);
+    // a breakpoint goes back from "as many as fit" to a column count
+    expect(
+      validate({
+        type: LC,
+        min_column_width: 180,
+        breakpoints: { tablet: { min_column_width: null, columns: 3 } },
+      }),
+    ).toBeNull();
+    expect(validate({ type: LC, columns: ["minmax(1fr, 2fr)"] })).not.toBeNull();
+    expect(validate({ type: LC, columns: ["auto", "1fr"] })).not.toBeNull();
+    expect(validate({ type: LC, breakpoints: { tablet: { colums: 2 } } })).not.toBeNull();
+    // a breakpoint of your own needs its width
+    expect(validate({ type: LC, breakpoints: { kiosk: { columns: 6 } } })).not.toBeNull();
+    expect(validate({ type: LC, breakpoints: { phone: { columns: 2 } } })).not.toBeNull();
+    expect(validate({ type: LC, cards: [{ ...EC, view_layout: { spam: 2 } }] })).not.toBeNull();
+    // a Pro card inside is checked against its own schema, any other card loosely
+    expect(validate({ type: LC, cards: [{ ...EC, visula: "ring" }] })).not.toBeNull();
+    expect(validate({ type: LC, cards: [{ type: "tile", whatever: 1 }] })).toBeNull();
+    expect(validate({ type: LC, cards: [{ entity: "light.kitchen" }] })).not.toBeNull();
+  });
+
   it("rejects power flow card typos and wrong shapes", () => {
     const PF = "custom:power-flow-card-pro";
     const src = [

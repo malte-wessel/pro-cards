@@ -28,6 +28,10 @@ const pl: Translation = {
   "control.unlock": "Odblokuj",
   "control.hold_to": "Przytrzymaj, aby {action}",
   "control.press_again": "Naciśnij ponownie, aby {action}",
+  "layout.more": "Więcej: {count}",
+  "layout.less": "Pokaż mniej",
+  "layout.empty": "Dodaj karty do tego układu",
+  "layout.unavailable": "Nie wczytano elementów kart Home Assistant",
   "group.stub_title": "Grupa",
   "sections.stub_title": "Sekcja",
 

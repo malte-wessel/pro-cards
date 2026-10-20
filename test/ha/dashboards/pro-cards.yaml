@@ -286,6 +286,62 @@ views:
               - { type: trend, mode: hourly, hours: 12 }
               - { type: forecast, mode: daily, days: 5 }
       - type: grid
+        column_span: 2
+        cards:
+          - type: heading
+            heading: Layout card
+          # Pro and core cards inside, each in Home Assistant's own hui-card: visibility (the
+          # kitchen card shows while the kitchen light is on), the editor's preview (all cards,
+          # the ones the fold or show_on hides faded), core cards loaded lazily, the fold, a sticky card and a
+          # nested layout. The breakpoints measure the layout: two columns from tablet (600 px)
+          - type: custom:layout-card-pro
+            columns: 1
+            fold: { max_cards: 4 }
+            breakpoints:
+              tablet: { columns: 2, fold: false }
+            cards:
+              - type: custom:entity-card-pro
+                entity: sensor.outdoor_temperature
+                visual: sparkline
+                view_layout: { span: { tablet: [1, 2] }, priority: high, sticky: true }
+              - type: tile
+                entity: light.living_room
+              - type: tile
+                entity: light.kitchen
+                visibility:
+                  - { condition: state, entity: light.kitchen, state: "on" }
+              - type: heading
+                heading: Nested stack
+                view_layout: { span: full }
+              - type: custom:layout-card-pro
+                layout: stack
+                direction: across
+                card_style: seamless
+                cards:
+                  - type: custom:entity-card-pro
+                    entity: sensor.outdoor_humidity
+                  - type: custom:entity-card-pro
+                    entity: sensor.power_consumption
+              - type: markdown
+                content: A lazily loaded core card (markdown), low priority
+                view_layout: { priority: low }
+              - type: custom:entity-card-pro
+                entity: light.office
+                view_layout: { priority: low }
+          - type: custom:layout-card-pro
+            layout: masonry
+            min_column_width: 200
+            cards:
+              - type: custom:weather-card-pro
+                entity: weather.demo_weather_south
+                sections: [{ type: forecast, mode: daily, days: 5 }]
+              - type: tile
+                entity: light.living_room
+              - type: tile
+                entity: light.kitchen
+              - type: custom:entity-card-pro
+                entity: sensor.power_consumption
+      - type: grid
         cards:
           - type: heading
             heading: Controls · icons

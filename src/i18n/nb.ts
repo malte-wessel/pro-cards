@@ -28,6 +28,10 @@ const nb: Translation = {
   "control.unlock": "Lås opp",
   "control.hold_to": "Hold for å {action}",
   "control.press_again": "Trykk igjen for å {action}",
+  "layout.more": "{count} til",
+  "layout.less": "Vis mindre",
+  "layout.empty": "Legg til kort i dette oppsettet",
+  "layout.unavailable": "Kortelementene i Home Assistant ble ikke lastet",
   "group.stub_title": "Gruppe",
   "sections.stub_title": "Seksjon",
 

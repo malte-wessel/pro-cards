@@ -101,6 +101,23 @@ export interface CardConstructor {
   cardType: string;
 }
 
+// Home Assistant's wrapper around one card of a view, a section or a stack: it creates the card
+// (lazily for core cards, an error card for a broken config), evaluates its `visibility`, hides
+// it and fires `card-visibility-changed`, and passes hass / preview / layout on
+export interface HuiCardElement extends HTMLElement {
+  hass?: HomeAssistant;
+  preview?: boolean;
+  layout?: string;
+  config?: CardConfigBase;
+  load(): void;
+  getCardSize?(): number | Promise<number>;
+  getGridOptions?(): GridOptions;
+}
+// what window.loadCardHelpers() resolves to (the slice the layout card uses)
+export interface CardHelpers {
+  createCardElement(config: CardConfigBase): HTMLElement;
+}
+
 // ----- ha-form -----
 
 export interface HaFormSchema {
@@ -134,6 +151,7 @@ declare global {
   interface HTMLElementTagNameMap {
     "ha-form": HaFormElement;
     "ha-state-icon": HaStateIconElement;
+    "hui-card": HuiCardElement;
   }
   interface HTMLElementEventMap {
     "value-changed": CustomEvent<{ value: HaFormData }>;

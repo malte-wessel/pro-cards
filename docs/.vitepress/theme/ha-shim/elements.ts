@@ -4,6 +4,7 @@
 // the text line, so a card that leaves a line box around its icon shows the same offset here.
 import type { HassEntity, HomeAssistant } from "../../../../src/shared/ha.ts";
 import { conditionIcon } from "../../../../src/weather/conditions.ts";
+import { defineHuiElements } from "./hui-card.ts";
 
 // the `@mdi/js` namespace: `mdiLightbulb` → SVG path, indexed by the PascalCased icon name
 // (unknown rather than string because the namespace type also carries a synthetic `default`)
@@ -207,5 +208,7 @@ export const defineElements = () => {
   if (!customElements.get("ha-icon")) customElements.define("ha-icon", HaIcon);
   if (!customElements.get("ha-state-icon")) customElements.define("ha-state-icon", HaStateIcon);
   if (!customElements.get("ha-card")) customElements.define("ha-card", HaCard);
+  // the wrapper the layout card hosts its cards in
+  defineHuiElements();
   loadMdi();
 };
