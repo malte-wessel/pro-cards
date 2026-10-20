@@ -1316,6 +1316,37 @@ const CASES = {
     mode: "trend",
     grid_options: { columns: 12, rows: 6 },
   },
+  // cards side by side share their grid row's height: a list keeps its rows at the top, a plot
+  // card grows its plots, the power flow tree spreads beside a taller sun azimuth card
+  "fill-rows": [
+    {
+      type: EGC,
+      title: "List",
+      entities: ["light.living_room", "light.kitchen"],
+      grid_options: { columns: 6 },
+    },
+    {
+      type: EGC,
+      title: "Plots",
+      entities: [
+        { entity: "sensor.power_consumption", visual: "sparkline" },
+        { entity: "sensor.outdoor_temperature", visual: "columns" },
+      ],
+      grid_options: { columns: 6 },
+    },
+    {
+      type: PF,
+      home: "sensor.power_consumption",
+      sources: [PF_SRC[0], { type: "grid", power: "sensor.grid_power" }],
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:sun-azimuth-card-pro",
+      house: { front: 20 },
+      show_sides: true,
+      grid_options: { columns: 6 },
+    },
+  ],
   "pf-styles": [
     {
       type: PF,

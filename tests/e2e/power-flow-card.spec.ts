@@ -312,7 +312,6 @@ test.describe("power flow card", () => {
     await mount(page, { ...cfg, grid_options: { columns: 12, rows: 8 } });
     await pin(page);
     const c = card(page);
-    await expect(c).toHaveAttribute("fit-rows");
     const [cardBox, diagBox] = [await box(c.locator("ha-card")), await box(c.locator(".pdiag"))];
     expect(cardBox.height).toBe(8 * 56 + 7 * 8);
     expect(cardBox.y + cardBox.height - (diagBox.y + diagBox.height)).toBeLessThanOrEqual(16);
@@ -347,13 +346,16 @@ test.describe("power flow card", () => {
     await page.evaluate(() => (document.documentElement.dir = ""));
     // rows: auto (the default): the card is as tall as its tree
     await mount(page, cfg);
-    await expect(card(page)).not.toHaveAttribute("fit-rows");
-    // rows in the config, but a masonry or panel view or a stack (Home Assistant hands the card
-    // no grid layout): the tree keeps its own height and stays visible
+    const auto = card(page).locator(".pdiag");
+    await expect(auto).toHaveCSS(
+      "height",
+      await auto.evaluate((e) => (e as HTMLElement).style.getPropertyValue("--diag-h")),
+    );
+    // rows in the config, but a masonry view or a vertical stack (the height follows the
+    // content): the tree keeps its own height and stays visible
     await mount(page, { ...cfg, grid_options: { columns: 12, rows: 6 } }, { layout: null });
     await pin(page);
     const m = card(page);
-    await expect(m).not.toHaveAttribute("fit-rows");
     const natural = await m
       .locator(".pdiag")
       .evaluate((e) => (e as HTMLElement).style.getPropertyValue("--diag-h"));

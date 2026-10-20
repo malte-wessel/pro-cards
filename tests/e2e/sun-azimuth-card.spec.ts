@@ -576,7 +576,6 @@ test("with grid_options.rows the card takes that height and the plot fits in", a
         visual = c.querySelector(".visual") as HTMLElement,
         svg = visual.querySelector("svg") as SVGSVGElement;
       return {
-        fill: el.hasAttribute("fit-rows"),
         card: Math.round(c.getBoundingClientRect().height),
         room: visual.clientHeight,
         plot: Math.round(svg.getBoundingClientRect().height),
@@ -587,14 +586,14 @@ test("with grid_options.rows the card takes that height and the plot fits in", a
   for (const view of ["3d", "dial"]) {
     await mount(page, { type: "custom:sun-azimuth-card-pro", view, ...cfg }, { time: NOON });
     const b = await box(0);
-    expect(b.fill).toBe(true);
     expect(b.card).toBe(4 * 56 + 3 * 8); // four rows of Home Assistant's grid
     expect(b.plot).toBeLessThanOrEqual(b.room); // the plot shrinks into the room it has
     expect(b.plot).toBeGreaterThan(b.room * 0.8); // and uses it
   }
-  // without rows the card sizes to its content as before
+  // without rows the card sizes to its content as before: the room is the picture
   await mount(page, { type: "custom:sun-azimuth-card-pro", view: "dial" }, { time: NOON });
-  expect((await box(0)).fill).toBe(false);
+  const own = await box(0);
+  expect(Math.abs(own.plot - own.room)).toBeLessThanOrEqual(1);
   // rows in the config, but a masonry view or a stack: the card keeps its own height and the
   // picture stays whole
   const plain = { house: cfg.house, show_summary: false };
@@ -610,7 +609,6 @@ test("with grid_options.rows the card takes that height and the plot fits in", a
     { time: NOON, layout: null },
   );
   const m = await box(0);
-  expect(m.fill).toBe(false);
   expect(m.plot).toBe(auto.plot);
   expect(m.card).toBe(auto.card);
 });

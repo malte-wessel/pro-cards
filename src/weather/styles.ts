@@ -31,10 +31,9 @@ const STYLE_WEATHER = `
 
   /* the trend plot (multi trend card look) inside a section */
   .wsec .legend { padding: 0; }
-  .wsec .trend { margin: 0; flex: none; }
-  /* a cell with fixed rows: a trend grows like the entity plots (STYLE_PLOT), down to a floor */
-  :host([fit-rows]) :is(.body, .wsec):has(.trend) { flex: var(--grow, 1) 1 auto; min-height: 0; }
-  :host([fit-rows]) .wsec .trend { flex: 1 1 auto; min-height: 48px; }
+  /* a taller card: a trend grows like the entity plots (STYLE_PLOT), down to a floor */
+  .wsec .trend { margin: 0; flex: 1 1 auto; min-height: 48px; }
+  :is(.body, .wsec):has(.trend) { flex: var(--grow, 1) 1 auto; min-height: 0; }
 
   /* forecast rows: one grid for the whole list (rows are subgrids) so the columns line up */
   .wfc.layout-vertical { display: grid; grid-template-columns: 3.4em var(--fe-icon, 22px) minmax(0, 1fr); column-gap: 10px; row-gap: 6px; min-width: 0; }

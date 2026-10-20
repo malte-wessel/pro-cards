@@ -25,7 +25,7 @@
  *   night_color: indigo
  *   sky_color: light-blue
  */
-import { freshShadow, GridCardElement, registerCard } from "./shared/card.ts";
+import { freshShadow, registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
 import { fmtTime, langOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
@@ -48,6 +48,7 @@ import {
   type SideKey,
 } from "./sun-azimuth/constants.ts";
 import { sunAt, sunDay, type SunSample } from "./sun-azimuth/day.ts";
+import { dialBox } from "./sun-azimuth/dial.ts";
 import { renderDial } from "./sun-azimuth/render/dial.ts";
 import { eventsHtml, fillEvents, fillHouse, houseHtml } from "./sun-azimuth/render/events.ts";
 import { fillHead, headHtml } from "./sun-azimuth/render/head.ts";
@@ -56,11 +57,12 @@ import { renderSides } from "./sun-azimuth/render/sides.ts";
 import { compass, deg } from "./sun-azimuth/render/text.ts";
 import { sideDays, sidesAt, timelineSpan, type Side, type SideDay } from "./sun-azimuth/sides.ts";
 import { STYLE } from "./sun-azimuth/styles.ts";
+import { sceneBox } from "./sun-azimuth/scene.ts";
 import { nearestOnTrack, type TrackPoint } from "./sun-azimuth/track.ts";
 
 const CARD_TYPE = "sun-azimuth-card-pro";
 
-export class SunAzimuthCard extends GridCardElement implements SunAzimuthHost {
+export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
   static cardType = CARD_TYPE;
 
   _config!: SunAzimuthConfig;
@@ -135,6 +137,7 @@ export class SunAzimuthCard extends GridCardElement implements SunAzimuthHost {
   _ro?: ResizeObserver;
   _visualWidth = 0;
   _plotHeight = Infinity;
+  _naturalHeight = 0;
 
   static getStubConfig(hass?: HomeAssistant) {
     return { title: t(hass, "azimuth.stub_title") };
@@ -172,7 +175,6 @@ export class SunAzimuthCard extends GridCardElement implements SunAzimuthHost {
     };
     this._camera = ((this._config.camera % 360) + 360) % 360;
     this._day = null;
-    this._syncFitRows(config);
     if (this._root) this._buildDom();
   }
 
@@ -325,8 +327,12 @@ export class SunAzimuthCard extends GridCardElement implements SunAzimuthHost {
     const label = this._hoverT !== null ? fmtTime(this._hass, at.t) : undefined;
     // not laid out yet: drawn at a stand-in width, the observer redraws at the real one
     this._visualWidth = visual.clientWidth;
-    this._plotHeight = this._visualHeight(visual);
     const width = this._visualWidth || (this._config.view === "3d" ? SCENE.width : DIAL.size);
+    // the picture's own height at this width is the room's basis: it never follows the drawing,
+    // so the observer cannot loop, and the card counts its full height in a grid row
+    this._naturalHeight = this._naturalAt(width);
+    visual.style.height = `${this._naturalHeight}px`;
+    this._plotHeight = this._visualHeight(visual);
     if (this._config.view === "3d") {
       this._track = renderScene(
         this,
@@ -351,10 +357,20 @@ export class SunAzimuthCard extends GridCardElement implements SunAzimuthHost {
         label,
       );
   }
-  // the room for the plot in a cell with fixed rows (the fit-rows attribute, src/shared/grid.ts);
-  // unlimited when the card sizes to its content
+  // the picture's height at a width when nothing limits it: the scene as drawn (scaled when it
+  // is wider than the room), the dial (it never grows past its full size)
+  _naturalAt(width: number) {
+    if (this._config.view === "3d") {
+      const box = sceneBox(width);
+      return Math.round((box.h * Math.min(width, box.w)) / box.w);
+    }
+    return dialBox(width).size;
+  }
+  // the room for the plot when the card is given less height than the picture's own; unlimited
+  // otherwise (a taller card centres the picture)
   _visualHeight(visual: HTMLElement) {
-    return this.hasAttribute("fit-rows") && visual.clientHeight ? visual.clientHeight : Infinity;
+    const h = visual.clientHeight;
+    return h && h < this._naturalHeight ? h : Infinity;
   }
   // the hovered time: the sun moves there in the plot, a hair marks it on every bar and the
   // footer's heading shows it

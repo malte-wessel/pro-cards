@@ -1,9 +1,12 @@
-// The sections grid's fixed rows: Home Assistant gives the height to the cell, and every card
-// takes it (the fit-rows attribute); elsewhere a card keeps the height of its content.
+// The height a card is given: Home Assistant's sections grid gives a cell with fixed rows a
+// height, and stretches an auto cell to its grid row; every card takes that height, as Home
+// Assistant's own cards do. Where the height follows the content (masonry, a vertical stack) a
+// card keeps the height of its content.
 import { test, expect, mount, card } from "./util.ts";
 
+type Page = import("@playwright/test").Page;
 const cell = (rows: number) => rows * 56 + (rows - 1) * 8;
-const height = (page: import("@playwright/test").Page, i: number) =>
+const height = (page: Page, i: number) =>
   card(page, i)
     .locator("ha-card")
     .boundingBox()
@@ -24,12 +27,39 @@ const CARDS = [
   { type: "custom:weather-card-pro", entity: "weather.home", sections: [{ type: "hero" }] },
   { type: "custom:wind-card-pro", entity: "sensor.wind_speed", layout: "hero" },
 ];
+// the rest of the cards and the tiles, for the stretched grid row
+const MORE = [
+  { type: "custom:entity-card-pro", entity: "sensor.outdoor_temperature" },
+  { type: "custom:entity-card-pro", entity: "sensor.robot_battery", visual: "bar" },
+  { type: "custom:entity-card-pro", entity: "sensor.power_consumption", visual: "gauge" },
+  { type: "custom:entity-card-pro", entity: "light.kitchen", control: "auto" },
+  { type: "custom:entity-sections-card-pro", sections: [{ entities: ["light.kitchen"] }] },
+  { type: "custom:sun-azimuth-card-pro", view: "3d" },
+  { type: "custom:illuminance-card-pro", entity: "sensor.illuminance", mode: "arc" },
+  { type: "custom:weather-card-pro", entity: "weather.home" },
+  { type: "custom:wind-card-pro", entity: "sensor.wind_speed", visual: "flow" },
+  { type: "custom:rain-card-pro", entity: "sensor.rain_rate_roof", layout: "hero" },
+];
+// a list as tall as most cards: eight rows
+const TALL = {
+  type: "custom:entity-group-card-pro",
+  entities: [
+    "sensor.power_consumption",
+    "sensor.outdoor_temperature",
+    "light.kitchen",
+    "sensor.illuminance",
+    "sensor.robot_battery",
+    "light.living_room",
+    "sensor.wind_speed",
+    "sensor.grid_power",
+  ],
+};
+const half = <T extends object>(c: T) => ({ ...c, grid_options: { columns: 6 } });
 
 test("with fixed rows every card takes exactly its cell", async ({ page }) => {
   for (const cfg of CARDS) {
     for (const rows of [3, 7]) {
       await mount(page, { ...cfg, grid_options: { columns: 12, rows } });
-      await expect(card(page), cfg.type).toHaveAttribute("fit-rows");
       expect(await height(page, 0), `${cfg.type} rows ${rows}`).toBe(cell(rows));
     }
   }
@@ -48,31 +78,56 @@ test("a card's own numeric rows clamp like Home Assistant's", async ({ page }) =
   expect(await height(page, 0)).toBe(cell(3));
 });
 
-test("auto rows: cards side by side keep their own heights", async ({ page }) => {
-  await mount(
-    page,
-    [
-      { ...CARDS[1], grid_options: { columns: 6 } },
-      {
-        type: "custom:entity-group-card-pro",
-        entities: ["sensor.power_consumption", "sensor.outdoor_temperature", "light.kitchen"],
-        grid_options: { columns: 6 },
-      },
-    ],
-    { fullWidth: false },
-  );
-  await expect(card(page, 0)).not.toHaveAttribute("fit-rows");
-  expect(await height(page, 1)).toBeGreaterThan((await height(page, 0)) + 50);
+test("in a grid row every card takes the row's height, the tallest keeps its own", async ({
+  page,
+}) => {
+  // each card alone, then beside the tall list: both fill the row, which is as tall as the
+  // taller of the two (a card that fills never shrinks its own row: power flow, sun azimuth)
+  const alone = async (cfg: object) => {
+    await mount(page, [half(cfg)], { fullWidth: false });
+    return height(page, 0);
+  };
+  const tall = await alone(TALL);
+  // the multi trend card asks for fixed rows itself: like any card with fixed rows its cell
+  // keeps that height
+  for (const cfg of [...CARDS, ...MORE].filter((c) => c.type !== "custom:multi-trend-card-pro")) {
+    const own = await alone(cfg);
+    await mount(page, [half(cfg), half(TALL)], { fullWidth: false });
+    const row = Math.max(own, tall);
+    expect(await height(page, 0), `${cfg.type} beside the list`).toBe(row);
+    expect(await height(page, 1), `the list beside ${cfg.type}`).toBe(row);
+  }
 });
 
-test("masonry, panel views and stacks ignore the rows", async ({ page }) => {
+test("a stretched tile centres its content, a list keeps its rows at the top", async ({ page }) => {
+  const middle = (i: number, sel: string) =>
+    card(page, i).evaluate((el, s) => {
+      const c = el.shadowRoot!.querySelector("ha-card")!.getBoundingClientRect();
+      const b = el.shadowRoot!.querySelector(s)!.getBoundingClientRect();
+      return { centre: b.top + b.height / 2 - (c.top + c.height / 2), top: b.top - c.top };
+    }, sel);
+  // a plain tile alone is exactly one row; beside a gauge tile it stretches, centred
+  for (const tile of [MORE[0], MORE[1]]) {
+    await mount(page, [half(tile)], { fullWidth: false });
+    if (tile === MORE[0]) expect(await height(page, 0)).toBe(56);
+    await mount(page, [half(tile), half(MORE[2])], { fullWidth: false });
+    expect(await height(page, 0)).toBeGreaterThan(56 * 2);
+    expect(Math.abs((await middle(0, ".body")).centre)).toBeLessThanOrEqual(1);
+  }
+  // a list without plots: its first row stays where it is in a card of its own height
+  const list = { type: "custom:entity-group-card-pro", entities: ["light.kitchen"] };
+  await mount(page, [half(list)], { fullWidth: false });
+  const own = await middle(0, ".row");
+  await mount(page, [half(list), half(TALL)], { fullWidth: false });
+  expect((await middle(0, ".row")).top).toBeCloseTo(own.top, 0);
+});
+
+test("masonry views and vertical stacks ignore the rows", async ({ page }) => {
   await mount(page, { ...CARDS[1], grid_options: { rows: 6 } }, { layout: null });
-  await expect(card(page)).not.toHaveAttribute("fit-rows");
   expect(await height(page, 0)).toBeLessThan(cell(3));
 });
 
 test.describe("entity plots fill the cell", () => {
-  type Page = import("@playwright/test").Page;
   // the boxes of the card and of its plots, and each plot's drawn height
   const boxes = (page: Page, i = 0) =>
     card(page, i).evaluate((el) => {
@@ -176,7 +231,6 @@ test.describe("entity plots fill the cell", () => {
 });
 
 test.describe("trends and bands fill the cell", () => {
-  type Page = import("@playwright/test").Page;
   const box = (page: Page, sel: string) =>
     card(page)
       .locator(sel)
@@ -240,7 +294,6 @@ test.describe("trends and bands fill the cell", () => {
 });
 
 test.describe("sun path and illuminance plots fill the cell", () => {
-  type Page = import("@playwright/test").Page;
   const plot = (page: Page) =>
     card(page)
       .locator(".plot")

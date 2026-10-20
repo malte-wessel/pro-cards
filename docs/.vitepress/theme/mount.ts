@@ -1,5 +1,5 @@
 // Mounts card configs into an HA-like grid container. Shared by LiveCard and DashboardGrid.
-import { configGridOptions } from "../../../src/shared/grid.ts";
+import { cellSize } from "./grid.ts";
 import type { CardConfigBase, GridOptions, HomeAssistant } from "../../../src/shared/ha.ts";
 
 type HassModule = typeof import("./ha-shim/hass.ts");
@@ -8,7 +8,6 @@ type HassModule = typeof import("./ha-shim/hass.ts");
 export interface CardElement extends HTMLElement {
   setConfig(config: unknown): void;
   hass: HomeAssistant;
-  layout?: string;
   getGridOptions?(): GridOptions;
 }
 export interface MountHandle {
@@ -29,26 +28,6 @@ export const loadRuntime = (): Promise<HassModule> => {
     });
   }
   return ready;
-};
-
-// like Home Assistant (computeCardGridSize): the columns stay within the card's min / max
-const clampColumns = (g: GridOptions) => {
-  let c = Number(g.columns) || 12;
-  if (typeof g.min_columns === "number") c = Math.max(c, g.min_columns);
-  if (typeof g.max_columns === "number") c = Math.min(c, g.max_columns);
-  return Math.min(12, Math.max(1, c));
-};
-// the rows too: a number within min / max, anything else "auto"
-const clampRows = (g: GridOptions) => {
-  if (typeof g.rows !== "number") return "auto";
-  let r = g.rows;
-  if (typeof g.min_rows === "number") r = Math.max(r, g.min_rows);
-  if (typeof g.max_rows === "number") r = Math.min(r, g.max_rows);
-  return Math.max(1, r);
-};
-const rowsOf = (el: CardElement, cfg: CardConfigBase) => {
-  const g: GridOptions = { ...(el.getGridOptions?.() || {}), ...configGridOptions(cfg) };
-  return { columns: clampColumns(g), rows: clampRows(g) };
 };
 
 export const createCard = (cfg: CardConfigBase): CardElement => {
@@ -89,9 +68,7 @@ export const mountGrid = async (
     cell.className = "cell";
     const el = createCard(cfg);
     el.hass = hass.snapshot();
-    // as in Home Assistant's sections grid: the card learns it sits in one
-    el.layout = "grid";
-    const { columns, rows } = rowsOf(el, cfg);
+    const { columns, rows } = cellSize(el.getGridOptions?.(), cfg);
     cell.style.gridColumn = `span ${fullWidth ? 12 : columns}`;
     cell.dataset.cols = String(fullWidth ? 12 : columns);
     if (rows !== "auto") {

@@ -17,11 +17,10 @@ export const STYLE_FLOW = `
 
   /* the band: the animation behind a chip */
   .wflow { position: relative; overflow: hidden; border-radius: 10px; background: color-mix(in srgb, var(--fe-color) 7%, transparent); contain: layout paint; }
-  .wflow.band { flex: none; height: var(--band-h, 120px); }
-  /* a cell with fixed rows: the hero's band takes the room the lead leaves (flow.height is its
-     basis), down to the smallest band; the field follows the band's measured box */
-  :host([fit-rows]) .body:has(> .wflow.band) { flex: 1 1 auto; min-height: 0; }
-  :host([fit-rows]) .wflow.band { flex: 1 1 auto; min-height: ${BAND.minBandH}px; }
+  /* the hero's band: flow.height is its height and its basis; a taller card gives it the room the
+     lead leaves, down to the smallest band (the field follows the band's measured box) */
+  .wflow.band { flex: 1 1 auto; height: var(--band-h, 120px); min-height: ${BAND.minBandH}px; }
+  .body:has(> .wflow.band) { flex: 1 1 auto; min-height: 0; }
   .row.wtile.flow { position: relative; container-type: inline-size; }
   .wflow.bg .chip { display: none; }
   /* a narrow flow tile shows the plain tile's line; a wide one the label line and the big value */
@@ -31,8 +30,8 @@ export const STYLE_FLOW = `
     .row.wtile.flow .secondary.narrow { display: none; }
     .row.wtile.flow .end { display: flex; }
   }
-  .row.wtile.flow .wflow.bg { position: absolute; inset: -8px -12px; border-radius: 0; }
-  .row.wtile.flow > .hit { inset: -8px -12px; }
+  .row.wtile.flow .wflow.bg { position: absolute; inset: -7px -12px; border-radius: 0; }
+  .row.wtile.flow > .hit { inset: -7px -12px; }
   .row.wtile.flow .top { position: relative; }
   .row.wtile.flow .lead .shape { background: color-mix(in srgb, var(--fe-color) 20%, var(--ha-card-background, var(--card-background-color))); }
   .row.wtile.flow .end .big b { font-size: 26px; line-height: 30px; }

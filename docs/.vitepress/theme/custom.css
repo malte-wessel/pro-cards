@@ -159,8 +159,8 @@ html {
 }
 
 /* HA-like sections grid (hui-grid-section): auto row tracks; a cell with fixed rows gets a
-   definite height (56 px rows, 8 px gaps), which the card takes only if it asks for it (the
-   fit-rows attribute), as in Home Assistant, where it sits in an inline hui-card */
+   definite height (56 px rows, 8 px gaps), an auto cell stretches to its grid row, and the card
+   takes the cell's height, as in Home Assistant */
 .ha-grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));

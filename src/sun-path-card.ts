@@ -21,7 +21,7 @@
  *     noon: Noon
  *     dusk: Civil dusk
  */
-import { defineElement, GridCardElement, registerCard, freshShadow } from "./shared/card.ts";
+import { defineElement, registerCard, freshShadow } from "./shared/card.ts";
 import { langOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { qs } from "./shared/util.ts";
@@ -43,7 +43,7 @@ const CARD_TYPE = "sun-path-card-pro";
 
 defineElement(`${CARD_TYPE}-editor`, SunPathCardEditor);
 
-export class SunPathCard extends GridCardElement implements SunPathHost {
+export class SunPathCard extends HTMLElement implements SunPathHost {
   static cardType = CARD_TYPE;
 
   _config!: SunPathConfig;
@@ -88,7 +88,6 @@ export class SunPathCard extends GridCardElement implements SunPathHost {
   setConfig(config: SunPathCardConfig | null | undefined) {
     this._config = { ...DEFAULTS, ...(config || {}) };
     this._day = null;
-    this._syncFitRows(config);
     if (this._root) this._buildDom();
   }
 

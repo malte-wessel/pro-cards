@@ -1,12 +1,11 @@
 // CSS of the entity cards, in pieces so every card ships only what it renders.
 // Colours come from HA theme tokens; --fe-color is set per row from the resolved look.
-import { AXIS_FONT, STYLE_FIT_ROWS, STYLE_ICONS } from "../../constants.ts";
+import { AXIS_FONT, STYLE_HOST, STYLE_ICONS } from "../../constants.ts";
 import { STYLE_SLIDER } from "../../slider.ts";
 
 export const STYLE_BASE = `
   ${STYLE_ICONS}
-  :host { display: block; min-width: 0; }
-  ${STYLE_FIT_ROWS}
+  ${STYLE_HOST}
   /* what a visibility condition hides; beats the display of rows, cells and fields */
   [hidden] { display: none !important; }
   ha-card { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; contain: inline-size; --fe-tint: transparent; }
@@ -16,7 +15,10 @@ export const STYLE_BASE = `
   .divider { height: 1px; margin: 0 -16px; background: var(--divider-color); }
 `;
 export const STYLE_TILE = `
-  .layout-tile .body { padding: 8px 12px; gap: 8px; flex: 1; justify-content: center; }
+  /* a tile is one 56 px row (40 px lead, 7 px padding, the border), two with a header; a taller
+     tile (a stretched grid row, fixed rows) centres its content */
+  .layout-tile .body { padding: 7px 12px; gap: 8px; flex: 1; justify-content: center; }
+  ha-card.layout-tile:has(> .header:not([hidden])) { min-height: 120px; }
 `;
 export const STYLE_HEADER = `
   /* 4 px here and the body's 12 px: the title line sits 16 px above the first row */
@@ -257,14 +259,14 @@ export const STYLE_BLOCKS = `
 `;
 export const STYLE_PLOT = `
   .plot { position: relative; width: 100%; min-width: 0; touch-action: pan-y; }
-  /* a cell with fixed rows: the sparkline and columns plots take the room the card leaves, their
-     own height as the basis, down to a floor; the containers that hold one pass it on (a
-     section by its number of plots, --grow), the rest of the card keeps its size */
-  :host([fit-rows]) :is(.body, .wsec, .section, .row, .top):has(.plot.grow) { flex: var(--grow, 1) 1 auto; min-height: 0; }
+  /* a card taller than its content (fixed rows, a stretched grid row, a stack): the sparkline and
+     columns plots take the room, their own height as the basis, down to a floor; the containers
+     that hold one pass it on (a section by its number of plots, --grow), the rest keeps its size */
+  :is(.body, .wsec, .section, .row, .top):has(.plot.grow) { flex: var(--grow, 1) 1 auto; min-height: 0; }
   /* a list row's plot sits beside the lead: the lead stays up by its name */
-  :host([fit-rows]) .top:has(> .main > .plot.grow) { align-items: flex-start; }
-  :host([fit-rows]) .top:has(> .main > .plot.grow) > .main { align-self: stretch; }
-  :host([fit-rows]) .plot.grow { flex: 1 1 auto; min-height: 24px; }
+  .top:has(> .main > .plot.grow) { align-items: flex-start; }
+  .top:has(> .main > .plot.grow) > .main { align-self: stretch; }
+  .plot.grow { flex: 1 1 auto; min-height: 24px; }
   svg.abs { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
   .plot .line { fill: none; stroke: var(--fe-color); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
   .plot .area { fill: var(--fe-color); opacity: .12; }

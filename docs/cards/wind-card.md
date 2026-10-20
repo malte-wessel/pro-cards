@@ -96,7 +96,7 @@ rules:
 
 ## Hero
 
-`layout: hero` shows the big value with the label, the direction and the gusts on the second line, then the flow band with a chip that names the direction. `flow.height` sets the band's height (40 to 400 px, default 120); with a fixed number of rows the band fills the card instead ([Fixed rows](/guide/sizing#fixed-rows)). `title`, `icon` and `header_entities` add a header like every entity card.
+`layout: hero` shows the big value with the label, the direction and the gusts on the second line, then the flow band with a chip that names the direction. `flow.height` sets the band's height (40 to 400 px, default 120); given more height (fixed rows, a taller card beside it), the band fills the card instead ([Filling the height](/guide/sizing#filling-the-height)). `title`, `icon` and `header_entities` add a header like every entity card.
 
 ::: live
 

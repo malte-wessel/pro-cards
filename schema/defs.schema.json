@@ -405,7 +405,7 @@
       ]
     },
     "haCardExtras": {
-      "description": "Keys Home Assistant adds to any card and applies itself; the cards read grid_options and layout_options only to know whether their rows are fixed, and then fill their cell",
+      "description": "Keys Home Assistant adds to any card; the cards do not read them, Home Assistant applies them",
       "grid_options": {
         "type": "object",
         "properties": {

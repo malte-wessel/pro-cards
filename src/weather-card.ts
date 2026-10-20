@@ -95,10 +95,9 @@ export class WeatherCard extends EntityCardBase {
     return STYLE_WEATHER_CARD;
   }
   getGridOptions(): GridOptions {
-    if (this._config?.layout === "tile") {
-      const rows = this._config.hasHeader ? 2 : 1;
-      return { columns: 6, rows, min_columns: 3, min_rows: rows, max_rows: rows };
-    }
+    // a tile sizes to its content (one row, two with a header), so it stretches with its grid row
+    if (this._config?.layout === "tile")
+      return { columns: 6, rows: "auto", min_columns: 3, min_rows: this._config.hasHeader ? 2 : 1 };
     return { columns: 12, rows: "auto", min_columns: 6, min_rows: 2 };
   }
   getCardSize() {

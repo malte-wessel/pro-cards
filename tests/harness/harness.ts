@@ -8,7 +8,7 @@ import type {
   HassEntity,
   HomeAssistant,
 } from "../../src/shared/ha.ts";
-import { configGridOptions } from "../../src/shared/grid.ts";
+import { cellSize } from "../../docs/.vitepress/theme/grid.ts";
 import "../../src/index.ts";
 import "../../docs/.vitepress/theme/ha.css";
 
@@ -19,8 +19,9 @@ export interface MountOptions {
   skin?: string; // a Home Assistant theme from ha.css, e.g. "graphite"; default when empty
   width?: number | string;
   fullWidth?: boolean;
-  // what Home Assistant hands the card as `layout`: "grid" (a sections grid, the default) or
-  // null for a masonry or panel view or a stack, where `grid_options` is ignored
+  // where the card sits: "grid" (a sections grid, the default: fixed rows give the cell a height,
+  // an auto cell stretches to its grid row) or null for a masonry view or a vertical stack, where
+  // `grid_options` is ignored and the card keeps the height of its content
   layout?: string | null;
 }
 export interface ServiceCall {
@@ -46,7 +47,6 @@ export interface ShimWorld {
 export interface CardElement extends HTMLElement {
   setConfig(config: unknown): void;
   hass: HomeAssistant;
-  layout?: string;
   getGridOptions(): GridOptions;
   getCardSize(): number;
   _render(): void;
@@ -135,26 +135,6 @@ window.addEventListener("location-changed", () =>
   events.push({ type: "location-changed", path: location.pathname }),
 );
 
-// like Home Assistant (computeCardGridSize): the columns stay within the card's min / max
-const clampColumns = (g: GridOptions) => {
-  let c = Number(g.columns) || 12;
-  if (typeof g.min_columns === "number") c = Math.max(c, g.min_columns);
-  if (typeof g.max_columns === "number") c = Math.min(c, g.max_columns);
-  return Math.min(12, Math.max(1, c));
-};
-// the rows too: a number within min / max, anything else "auto"
-const clampRows = (g: GridOptions) => {
-  if (typeof g.rows !== "number") return "auto";
-  let r = g.rows;
-  if (typeof g.min_rows === "number") r = Math.max(r, g.min_rows);
-  if (typeof g.max_rows === "number") r = Math.min(r, g.max_rows);
-  return r;
-};
-const gridOf = (el: CardElement, cfg: CardConfigBase) => {
-  const g: GridOptions = { ...(el.getGridOptions?.() || {}), ...configGridOptions(cfg) };
-  return { columns: clampColumns(g), rows: clampRows(g) };
-};
-
 const mount = (cfgOrList: CardConfigBase | CardConfigBase[], opts: MountOptions = {}) => {
   unsub?.();
   root.textContent = "";
@@ -175,10 +155,9 @@ const mount = (cfgOrList: CardConfigBase | CardConfigBase[], opts: MountOptions 
     el.setConfig(JSON.parse(JSON.stringify(cfg)));
     el.hass = snapshot();
     const layout = opts.layout === undefined ? "grid" : opts.layout;
-    if (layout !== null) el.layout = layout;
     const cell = document.createElement("div");
-    cell.className = "cell";
-    const g = gridOf(el, cfg);
+    cell.className = layout === "grid" ? "cell" : "cell masonry";
+    const g = cellSize(el.getGridOptions?.(), cfg);
     cell.style.gridColumn = `span ${opts.fullWidth === false ? g.columns : Array.isArray(cfgOrList) ? g.columns : 12}`;
     if (layout === "grid" && g.rows !== "auto") {
       cell.style.gridRow = `span ${g.rows}`;

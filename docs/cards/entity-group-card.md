@@ -620,7 +620,7 @@ entities:
 
 ### Grid defaults
 
-12 columns, `rows: auto`; the sections grid will not shrink it below 6 columns and 2 rows (3 for a hero). See [Sizing in sections](/guide/sizing). With a fixed number of rows the `sparkline` and `columns` plots share the extra height, see [Fixed rows](/guide/sizing#fixed-rows).
+12 columns, `rows: auto`; the sections grid will not shrink it below 6 columns and 2 rows (3 for a hero). See [Sizing in sections](/guide/sizing). Given more height (fixed rows, a taller card beside it), the `sparkline` and `columns` plots share it; without them the rows stay at the top, see [Filling the height](/guide/sizing#filling-the-height).
 
 ### Home Assistant options
 
