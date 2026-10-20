@@ -195,7 +195,7 @@ cards:
 
 :::
 
-A card that draws its own background without these variables keeps it.
+With `padding`, the padding is inside the surface, around the cards, and a card with `bleed: true` reaches the surface's edge (a camera picture across the top, for example). A card that draws its own background without these variables keeps it.
 
 ## Breakpoints
 
@@ -250,7 +250,7 @@ Every card may carry a `view_layout`. All of its options except `priority`, `sho
 | `align`        | `start`, `center`, `end` or `stretch`: how this card sits in its cell.                                           |
 | `sticky`       | `true` stays in view under the header while the page scrolls, within the layout card; or an offset such as `64`. |
 | `aspect`       | A fixed shape, such as `16/9`, for cameras and pictures.                                                         |
-| `min_height`   | At least this tall. `max_height`: at most.                                                                       |
+| `min_height`   | At least this tall. `max_height`: at most, the card cut off there.                                               |
 | `bleed`        | Ignores the layout's side `padding`.                                                                             |
 | `priority`     | `high`, `normal` or `low`: what folds first (see below).                                                         |
 | `show_on`      | Only on these breakpoints, e.g. `[tablet, desktop]`.                                                             |
@@ -336,7 +336,7 @@ cards:
 
 ## Sizing
 
-In a section the layout card takes the full width of the section, whatever its `column_span`, and sizes to its cards (`rows: auto`); a fixed row count (`grid_options: { rows: 6 }`) gives it a height its grid fills. Its `getCardSize`, which masonry views use, is an estimate from its cards' sizes: the tallest card of each row for a grid (spans not counted), the sum or the tallest for a stack, the tallest column for masonry. See [Sizing](/guide/sizing).
+In a section the layout card takes the full width of the section, whatever its `column_span`, and sizes to its cards (`rows: auto`); a fixed row count (`grid_options: { rows: 6 }`) gives it a height its grid fills. Its `getCardSize`, which masonry views use, is an estimate from its cards' sizes: the tallest card of each row for a grid (spans not counted), the sum or the tallest for a stack, the tallest column for masonry. As a panel view's only card it fills the view, and the cards inside keep their borders, as in Home Assistant's stacks (the panel view takes the border of its one card away). See [Sizing](/guide/sizing).
 
 ## Reference
 

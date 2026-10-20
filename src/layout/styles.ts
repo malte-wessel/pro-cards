@@ -14,6 +14,18 @@ export const STYLE = `
     --pl-border-color: var(--ha-card-border-color, var(--divider-color));
     --pl-shadow: var(--ha-card-box-shadow, none);
   }
+  /* a panel view's only card: the theme's card look is in the --restore-card-* variables (HA's
+     panel view resets the --ha-card-* ones), for the cards inside and the seamless surface */
+  :host([panel]) {
+    --pl-radius: var(--restore-card-border-radius, var(--ha-border-radius-lg, 12px));
+    --pl-border-width: var(--restore-card-border-width, 1px);
+    --pl-shadow: var(--restore-card-box-shadow, none);
+  }
+  :host([panel]) .root:not(.seamless) .body {
+    --ha-card-border-radius: var(--restore-card-border-radius);
+    --ha-card-border-width: var(--restore-card-border-width);
+    --ha-card-box-shadow: var(--restore-card-box-shadow);
+  }
   /* the root fills the height the host is given; the body keeps its own height as its basis
      (never 0: in a stretched grid row that would drop the layout's share of the row's height) */
   .root { box-sizing: border-box; height: 100%; display: flex; flex-direction: column; min-width: 0; }

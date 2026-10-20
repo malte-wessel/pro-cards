@@ -63,6 +63,7 @@ export class LayoutCard extends HTMLElement {
   _cfg?: LayoutConfig;
   _hass?: HomeAssistant;
   _preview = false;
+  _layout?: string;
   _kids: Kid[] = [];
   _root?: HTMLElement;
   _body?: HTMLElement;
@@ -133,6 +134,16 @@ export class LayoutCard extends HTMLElement {
   }
   get preview(): boolean {
     return this._preview;
+  }
+
+  // where Home Assistant puts the card: "grid" in a section, "panel" as a panel view's only card,
+  // which takes the card's border away; the cards inside get theirs back, as in HA's stacks
+  set layout(v: string | undefined) {
+    this._layout = v;
+    this.toggleAttribute("panel", v === "panel");
+  }
+  get layout(): string | undefined {
+    return this._layout;
   }
 
   connectedCallback() {

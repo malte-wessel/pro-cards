@@ -78,6 +78,9 @@ const marginInline = (o: LayoutOptions): Style =>
         "margin-right": o.align === "end" ? "0" : "auto",
       };
 
+const surfacePad = (o: LayoutOptions): Style =>
+  o.card_style === "seamless" && o.padding ? { padding: o.padding.join(" ") } : {};
+
 export const planLayout = (o: LayoutOptions, kids: KidState[], ctx: PlanCtx): Plan => {
   const gap = gapsOf(o);
   const atBp = kids.map((k) => shownAt(k.place, ctx.active, ctx.order));
@@ -91,7 +94,9 @@ export const planLayout = (o: LayoutOptions, kids: KidState[], ctx: PlanCtx): Pl
   const p = <T>(v: { all?: T; by: Record<string, T> }) => pick(v, ctx.active, ctx.order);
 
   const root: Style = {
-    padding: o.padding ? o.padding.join(" ") : "0",
+    // seamless: the padding is inside the surface, around the cards (a bleeding card reaches the
+    // surface's edge); otherwise around the layout
+    padding: o.padding && o.card_style !== "seamless" ? o.padding.join(" ") : "0",
     margin: o.margin ? o.margin.join(" ") : "0",
     "--pl-row-gap": gap.row,
     "--pl-col-gap": gap.col,
@@ -119,7 +124,10 @@ export const planLayout = (o: LayoutOptions, kids: KidState[], ctx: PlanCtx): Pl
     const minH = p(k.place.min_height);
     if (minH) s["min-height"] = minH;
     const maxH = p(k.place.max_height);
-    if (maxH) s["max-height"] = maxH;
+    if (maxH) {
+      s["max-height"] = maxH;
+      s.overflow = "clip"; // the card is cut off at the cap, not spilled over the next row
+    }
     if (p(k.place.bleed) && o.padding) {
       s["margin-left"] = `calc(-1 * ${o.padding[3]})`;
       s["margin-right"] = `calc(-1 * ${o.padding[1]})`;
@@ -148,6 +156,7 @@ export const planLayout = (o: LayoutOptions, kids: KidState[], ctx: PlanCtx): Pl
       "column-gap": gap.col,
       "align-items": o.align_items,
       ...marginInline(o),
+      ...surfacePad(o),
     };
     const items = kids.map((k, i) => {
       const s = common(k);
@@ -177,6 +186,7 @@ export const planLayout = (o: LayoutOptions, kids: KidState[], ctx: PlanCtx): Pl
       "column-gap": gap.col,
       "align-items": "start",
       ...marginInline(o),
+      ...surfacePad(o),
     };
     // the order option sorts the cards before they are dealt out to the columns
     const sequence = kids
@@ -214,6 +224,7 @@ export const planLayout = (o: LayoutOptions, kids: KidState[], ctx: PlanCtx): Pl
     "column-gap": gap.col,
     "align-items": o.align_items,
     ...marginInline(o),
+    ...surfacePad(o),
   };
   const items = kids.map((k, i) => {
     const s = common(k);

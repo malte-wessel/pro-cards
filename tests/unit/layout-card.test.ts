@@ -307,6 +307,12 @@ describe("layout-card plan", () => {
       "calc(2 * 56px + 1 * var(--ha-section-grid-row-gap, 8px))",
     );
     expect(plan.items[1].style["grid-row"]).toBe("span 3");
+    // a capped card is cut off at the cap
+    const capped = cfg({ cards: [{ type: "a", view_layout: { max_height: 80 } }] });
+    expect(planLayout(capped.base, [kid(capped, 0)], ctx()).items[0].style).toMatchObject({
+      "max-height": "80px",
+      overflow: "clip",
+    });
     // HA's grid mode only for the cards the rows give a height
     expect(plan.items.map((i) => i.gridLayout)).toEqual([true, true, false]);
   });
@@ -372,6 +378,10 @@ describe("layout-card plan", () => {
     expect(plan.body["flex-direction"]).toBe("row");
     expect(plan.items.map((i) => i.style.flex)).toEqual(["1 1 0px", "2 1 0px"]);
     expect(plan.root["--pl-col-gap"]).toBe("0px");
+    // seamless: the padding goes inside the surface
+    const padded = cfg({ card_style: "seamless", padding: [8, 16], cards: [{ type: "a" }] });
+    const pp = planLayout(padded.base, [kid(padded, 0)], ctx());
+    expect([pp.root.padding, pp.body.padding]).toEqual(["0", "8px 16px 8px 16px"]);
   });
   it("deals masonry cards in their order", () => {
     const c = cfg({
@@ -423,6 +433,11 @@ describe("layout-card-pro element", () => {
     const el = make({ cards: [] });
     expect(el.getGridOptions()).toEqual({ columns: "full", rows: "auto" });
     expect(el.connectedWhileHidden).toBe(true);
+    // a panel view's only card: the cards inside get their border back (--restore-card-*)
+    el.layout = "panel";
+    expect(el.hasAttribute("panel")).toBe(true);
+    el.layout = "grid";
+    expect(el.hasAttribute("panel")).toBe(false);
     expect(() => el.setConfig({ type: "custom:layout-card-pro", columns: "x" })).toThrow(
       "layout-card-pro:",
     );
