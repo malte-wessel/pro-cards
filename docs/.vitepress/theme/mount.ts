@@ -8,7 +8,6 @@ type HassModule = typeof import("./ha-shim/hass.ts");
 export interface CardElement extends HTMLElement {
   setConfig(config: unknown): void;
   hass: HomeAssistant;
-  layout?: string;
   getGridOptions?(): GridOptions;
 }
 export interface MountHandle {
@@ -69,8 +68,6 @@ export const mountGrid = async (
     cell.className = "cell";
     const el = createCard(cfg);
     el.hass = hass.snapshot();
-    // as in Home Assistant's sections grid: the card learns it sits in one
-    el.layout = "grid";
     const { columns, rows } = cellSize(el.getGridOptions?.(), cfg);
     cell.style.gridColumn = `span ${fullWidth ? 12 : columns}`;
     cell.dataset.cols = String(fullWidth ? 12 : columns);

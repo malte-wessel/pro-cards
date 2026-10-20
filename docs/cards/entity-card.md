@@ -463,4 +463,4 @@ All [entity options](/cards/entity-options#entity-options) plus:
 
 ### Home Assistant options
 
-Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height). They are passed through to Home Assistant; see [Sizing in sections](/guide/sizing) for `grid_options`.
+Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`. They are passed through to Home Assistant; see [Sizing in sections](/guide/sizing) for `grid_options`. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height).

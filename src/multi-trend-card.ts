@@ -25,7 +25,7 @@
 import {
   fireAction,
   defineElement,
-  GridCardElement,
+  syncKeepHeight,
   registerCard,
   freshShadow,
 } from "./shared/card.ts";
@@ -64,7 +64,7 @@ const CARD_TYPE = "multi-trend-card-pro";
 
 defineElement(`${CARD_TYPE}-editor`, MultiTrendCardEditor);
 
-export class MultiTrendCard extends GridCardElement {
+export class MultiTrendCard extends HTMLElement {
   static cardType = CARD_TYPE;
 
   _config!: TrendConfig;
@@ -144,7 +144,7 @@ export class MultiTrendCard extends GridCardElement {
       ...entities.flatMap((e) => (isTemplate(e.color) ? [e.color] : [])),
     ]);
     this._tpl.sync(this._hass?.connection, this._templates);
-    this._syncFill(config);
+    syncKeepHeight(this, config);
     if (this._root) this._buildDom();
   }
 
@@ -206,7 +206,6 @@ export class MultiTrendCard extends GridCardElement {
     return this._layout(shown) === "lanes" ? 2 + shown.length : 3;
   }
 
-  // the grid footprint as written (HA asks once): every series
   // sizes to its content, so it stretches with its grid row like every card (the plot grows)
   getGridOptions(): GridOptions {
     return { columns: 12, rows: "auto", min_columns: 6, min_rows: 2 };

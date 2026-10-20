@@ -1,11 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { cellSize } from "../../docs/.vitepress/theme/grid.ts";
 import {
+  cellSize,
   configGridOptions,
-  fillsHeight,
-  fitRows,
   migrateLayoutOptions,
-} from "../../src/shared/grid.ts";
+} from "../../docs/.vitepress/theme/grid.ts";
 import { EntityCard } from "../../src/entity-card.ts";
 import { EntityGroupCard } from "../../src/entity-group-card.ts";
 import { IlluminanceCard } from "../../src/illuminance-card.ts";
@@ -69,30 +67,8 @@ describe("tiles size to their content", () => {
 });
 
 describe("the height a card takes", () => {
-  it("knows a cell with fixed rows as Home Assistant does", () => {
-    const own = { columns: 12, rows: "auto" as const };
-    expect(fitRows("grid", own, { grid_options: { rows: 4 } })).toBe(true);
-    expect(fitRows("grid", own, { layout_options: { grid_rows: 4 } })).toBe(true);
-    expect(fitRows("grid", own, {})).toBe(false);
-    // the card's own numeric default counts, and the config's "auto" overrides it
-    expect(fitRows("grid", { rows: 3 }, {})).toBe(true);
-    expect(fitRows("grid", { rows: 3 }, { grid_options: { rows: "auto" } })).toBe(false);
-    // masonry and panel views and stacks ignore grid_options
-    for (const layout of ["masonry", "panel", undefined])
-      expect(fitRows(layout, own, { grid_options: { rows: 4 } })).toBe(false);
-  });
-  it("fills by default; fill_height: false keeps its own height except in fixed rows", () => {
-    const own = { columns: 12, rows: "auto" as const };
-    expect(fillsHeight("grid", own, {})).toBe(true);
-    expect(fillsHeight(undefined, own, {})).toBe(true);
-    expect(fillsHeight("grid", own, { fill_height: false })).toBe(false);
-    expect(fillsHeight("grid", own, { fill_height: false, grid_options: { rows: 4 } })).toBe(true);
-    expect(fillsHeight("masonry", own, { fill_height: false, grid_options: { rows: 4 } })).toBe(
-      false,
-    );
-  });
-  it("sets the fill-height attribute on every card", () => {
-    const cards: [HTMLElement & { setConfig(c: unknown): void; layout?: string }, object][] = [
+  it("fills by default; fill_height: false sets keep-height, from the config alone", () => {
+    const cards: [HTMLElement & { setConfig(c: unknown): void }, object][] = [
       [new EntityCard(), { entity: "sensor.a" }],
       [new EntityGroupCard(), { entities: ["sensor.a"] }],
       [new MultiTrendCard(), { entities: ["sensor.a"] }],
@@ -105,15 +81,17 @@ describe("the height a card takes", () => {
     ];
     for (const [el, cfg] of cards) {
       el.setConfig(cfg);
-      expect(el.hasAttribute("fill-height"), el.localName).toBe(true);
-      el.setConfig({ ...cfg, fill_height: false });
-      el.layout = "grid";
-      expect(el.hasAttribute("fill-height"), el.localName).toBe(false);
+      expect(el.hasAttribute("keep-height"), el.localName).toBe(false);
       el.setConfig({ ...cfg, fill_height: false, grid_options: { rows: 4 } });
-      expect(el.hasAttribute("fill-height"), el.localName).toBe(true);
-      el.layout = undefined;
-      expect(el.hasAttribute("fill-height"), el.localName).toBe(false);
+      expect(el.hasAttribute("keep-height"), el.localName).toBe(true);
+      el.setConfig(cfg);
+      expect(el.hasAttribute("keep-height"), el.localName).toBe(false);
     }
+    // a card that takes no config keeps no stale opt-out
+    const sun = new SunPathCard();
+    sun.setConfig({ fill_height: false });
+    sun.setConfig(null);
+    expect(sun.hasAttribute("keep-height")).toBe(false);
   });
   it("the multi trend card sizes to its content like every card", () => {
     const el = new MultiTrendCard();

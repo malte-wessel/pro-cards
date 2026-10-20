@@ -2,6 +2,7 @@
 // height, and stretches an auto cell to its grid row; every card takes that height, as Home
 // Assistant's own cards do. Where the height follows the content (masonry, a vertical stack) a
 // card keeps the height of its content.
+import type { CardConfigBase } from "../../src/shared/ha.ts";
 import { test, expect, mount, card } from "./util.ts";
 
 type Page = import("@playwright/test").Page;
@@ -95,9 +96,7 @@ test("in a grid row every card takes the row's height, the tallest keeps its own
   }
 });
 
-test("fill_height: false keeps a card at its own height; fixed rows still fill", async ({
-  page,
-}) => {
+test("fill_height: false keeps a card at its own height, at most its cell's", async ({ page }) => {
   const alone = async (cfg: object) => {
     await mount(page, [half(cfg)], { fullWidth: false });
     return height(page, 0);
@@ -110,10 +109,51 @@ test("fill_height: false keeps a card at its own height; fixed rows still fill",
     await mount(page, [half(own), half(TALL)], { fullWidth: false });
     expect(await height(page, 0), `${cfg.type} beside the list`).toBe(natural);
     expect(await height(page, 1), `the list beside ${cfg.type}`).toBe(tall);
-    // a cell with fixed rows has that height whatever the card wants
-    await mount(page, { ...own, grid_options: { columns: 12, rows: 7 } });
-    expect(await height(page, 0), `${cfg.type} in fixed rows`).toBe(cell(7));
+    // a cell with fixed rows: its own height when that fits, the cell's when the cell is smaller
+    await mount(page, [{ ...own, grid_options: { columns: 6, rows: 9 } }], { fullWidth: false });
+    expect(await height(page, 0), `${cfg.type} in a tall cell`).toBe(Math.min(natural, cell(9)));
+    await mount(page, [{ ...own, grid_options: { columns: 6, rows: 1 } }], { fullWidth: false });
+    const small = await page
+      .locator("#root .cell")
+      .first()
+      .boundingBox()
+      .then((b) => Math.round(b!.height));
+    expect(await height(page, 0), `${cfg.type} in a small cell`).toBeLessThanOrEqual(small);
   }
+});
+
+test("in a horizontal stack fill_height: false keeps a card at its own height", async ({
+  page,
+}) => {
+  // Home Assistant's horizontal stack: each card is a flex item of a row (hui-card is
+  // display: contents), stretched by default
+  const stack = async (first: CardConfigBase) => {
+    await mount(page, [first, TALL], { fullWidth: false });
+    return page.evaluate(() => {
+      const row = document.createElement("div");
+      row.style.cssText = "display: flex; gap: 8px; grid-column: span 12";
+      const cards = [...document.querySelectorAll<HTMLElement>("#root .cell > *")];
+      for (const c of cards) {
+        c.style.flex = "1 1 0";
+        c.style.minWidth = "0";
+        row.appendChild(c);
+      }
+      document.querySelector("#root")!.replaceChildren(row);
+      return new Promise<number[]>((r) =>
+        requestAnimationFrame(() =>
+          r(
+            cards.map(
+              (c) => c.shadowRoot!.querySelector("ha-card")!.getBoundingClientRect().height,
+            ),
+          ),
+        ),
+      );
+    });
+  };
+  const [filled, tall] = await stack(CARDS[1]);
+  expect(Math.round(filled)).toBe(Math.round(tall));
+  const [kept, tall2] = await stack({ ...CARDS[1], fill_height: false });
+  expect(kept).toBeLessThan(tall2 - 50);
 });
 
 test("a multi trend card sizes to its content and fills a taller row", async ({ page }) => {

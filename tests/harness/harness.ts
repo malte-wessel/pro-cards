@@ -47,7 +47,6 @@ export interface ShimWorld {
 export interface CardElement extends HTMLElement {
   setConfig(config: unknown): void;
   hass: HomeAssistant;
-  layout?: string;
   getGridOptions(): GridOptions;
   getCardSize(): number;
   _render(): void;
@@ -156,8 +155,6 @@ const mount = (cfgOrList: CardConfigBase | CardConfigBase[], opts: MountOptions 
     el.setConfig(JSON.parse(JSON.stringify(cfg)));
     el.hass = snapshot();
     const layout = opts.layout === undefined ? "grid" : opts.layout;
-    // as Home Assistant does: a card in a sections grid learns it sits in one
-    if (layout !== null) el.layout = layout;
     const cell = document.createElement("div");
     cell.className = layout === "grid" ? "cell" : "cell masonry";
     const g = cellSize(el.getGridOptions?.(), cfg);

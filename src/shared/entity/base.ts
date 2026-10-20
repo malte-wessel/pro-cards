@@ -3,7 +3,7 @@
 //   _normalize(raw)            – the normalised config (see config.js)
 //   _styles()                  – the CSS string for the shadow root
 //   getGridOptions()           – the sections grid footprint
-import { fireAction, fireEvent, fireHaptic, freshShadow, GridCardElement } from "../card.ts";
+import { fireAction, fireEvent, fireHaptic, freshShadow, syncKeepHeight } from "../card.ts";
 import { cssColor } from "../color.ts";
 import { REFRESH_MS } from "../constants.ts";
 import { langOf } from "../format.ts";
@@ -85,7 +85,7 @@ export const groupCardSize = (cfg: EntityCardConfig, group: Group) => {
   }
 };
 
-export abstract class EntityCardBase extends GridCardElement {
+export abstract class EntityCardBase extends HTMLElement {
   static cardType: string;
 
   _series = new Map<string, Point[]>();
@@ -194,7 +194,7 @@ export abstract class EntityCardBase extends GridCardElement {
     this._armed.clear();
     this._dragging = null;
     this._subscribeTemplates();
-    this._syncFill(config);
+    syncKeepHeight(this, config);
     if (this._root) this._buildDom();
   }
 

@@ -1,11 +1,9 @@
 // Card element helpers shared by all cards.
-import { fillsHeight } from "./grid.ts";
 import type {
   ActionConfig,
   ActionKind,
   CardConfigBase,
   CardConstructor,
-  GridOptions,
   HapticType,
 } from "./ha.ts";
 
@@ -71,38 +69,10 @@ export const freshShadow = (root: ShadowRoot, css: string): HTMLElement => {
   return card;
 };
 
-// The base of every card element: takes HA's `layout` and sets the `fill-height` attribute the
-// host rule keys on (see grid.ts). A card calls `_syncFill(config)` at the end of setConfig.
-export abstract class GridCardElement extends HTMLElement {
-  _haLayout?: string;
-  _gridConfig?: CardConfigBase;
-
-  abstract getGridOptions(): GridOptions;
-
-  constructor() {
-    super();
-    // a `layout` set before the element was defined is an own property hiding the setter
-    if (Object.prototype.hasOwnProperty.call(this, "layout")) {
-      const v = (this as { layout?: string }).layout;
-      delete (this as { layout?: string }).layout;
-      this.layout = v;
-    }
-  }
-
-  get layout() {
-    return this._haLayout;
-  }
-  set layout(v: string | undefined) {
-    this._haLayout = v;
-    this._syncFill();
-  }
-
-  _syncFill(config?: unknown) {
-    if (config && typeof config === "object") this._gridConfig = config as CardConfigBase;
-    const cfg = this._gridConfig;
-    this.toggleAttribute(
-      "fill-height",
-      !!cfg && fillsHeight(this._haLayout, this.getGridOptions(), cfg),
-    );
-  }
-}
+// `fill_height: false` keeps the card at its own height (STYLE_HOST, `keep-height`); a card sets
+// it from its raw config in setConfig. The default needs no script: the host fills.
+export const syncKeepHeight = (el: HTMLElement, config: unknown) =>
+  el.toggleAttribute(
+    "keep-height",
+    !!config && typeof config === "object" && (config as CardConfigBase).fill_height === false,
+  );

@@ -82,7 +82,7 @@ Wherever the height follows the content (a masonry view, a vertical stack, a car
 
 #### Keeping a card's own height
 
-`fill_height: false` keeps a card at its own height in a taller grid row or a horizontal stack, with the room left under it, for example a short room list beside longer ones. A cell with a number of rows still has that height, so there the card fills it all the same.
+`fill_height: false` keeps a card at its own height in a taller grid row or a horizontal stack, with the room left under it, for example a short room list beside longer ones. It does the same in a cell with a number of rows and in a panel view; a cell smaller than the card cuts it off at the cell's bottom.
 
 ::: live
 
