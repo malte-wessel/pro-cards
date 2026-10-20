@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.7.0 (beta)
+## 2.7.0 (2026-10-20)
 
 - Every card takes the height it is given, as Home Assistant's own cards do: the height of its cell with a fixed number of rows, the height of its grid row with `rows: auto` (cards side by side are all as tall as the tallest of them), and the height of a horizontal stack. Home Assistant gives that height to the wrapper around a card, not to the card, and the cards kept the height of their content: they ended short of their neighbours, a one-row tile ran 2 px past its cell, and the sun azimuth card lost its picture with fixed rows. Masonry views and vertical stacks, where the height follows the content, are unchanged
 - `fill_height: false` keeps a card at its own height in a taller grid row, a horizontal stack, a cell with fixed rows or a panel view, with the room left under it (a short room list beside longer ones); a cell smaller than the card cuts it off at the bottom. The visual editors of the illuminance, multi trend and sun path cards have a switch for it
