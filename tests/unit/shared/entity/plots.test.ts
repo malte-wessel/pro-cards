@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { plotEl } from "../../../../src/shared/entity/render/blocks.ts";
+import { plotEl, plotRows } from "../../../../src/shared/entity/render/blocks.ts";
 import { drawPlot } from "../../../../src/shared/entity/render/plots.ts";
 import type { EntityModel, RenderCtx } from "../../../../src/shared/entity/model.ts";
 import { normalizeEntityCardConfig } from "../../../../src/entity-card.ts";
@@ -65,5 +65,21 @@ describe("history plots in a cell with fixed rows", () => {
   });
   it("keeps a strip at its height in a taller cell", () => {
     expect(viewH(plotOf("strip", { w: 200, h: 140 }))).toBe(22 + 14);
+  });
+});
+
+describe("the share of a taller card a group asks for", () => {
+  it("counts each list or hero row with a growing plot", () => {
+    expect(plotRows("list", 2, ["sparkline", "icon", "columns", "strip"])).toBe(2);
+    expect(plotRows("hero", 2, ["sparkline", "sparkline"])).toBe(2);
+  });
+  it("counts a grid row once, however many plots sit side by side", () => {
+    expect(plotRows("grid", 2, ["sparkline", "sparkline", "icon", "icon"])).toBe(1);
+    expect(plotRows("grid", 2, ["sparkline", "icon", "icon", "columns"])).toBe(2);
+    expect(plotRows("grid", 3, ["icon", "icon", "icon"])).toBe(0);
+  });
+  it("leaves out layouts that draw no plots", () => {
+    expect(plotRows("row", 2, ["sparkline"])).toBe(0);
+    expect(plotRows("table", 2, ["sparkline"])).toBe(0);
   });
 });

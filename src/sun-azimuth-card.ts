@@ -330,8 +330,12 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     const width = this._visualWidth || (this._config.view === "3d" ? SCENE.width : DIAL.size);
     // the picture's own height at this width is the room's basis: it never follows the drawing,
     // so the observer cannot loop, and the card counts its full height in a grid row
-    this._naturalHeight = this._naturalAt(width);
-    visual.style.height = `${this._naturalHeight}px`;
+    const natural = this._naturalAt(width);
+    // written only when it changes: a hover preview redraws every frame and must not relayout
+    if (natural !== this._naturalHeight || !visual.style.height) {
+      this._naturalHeight = natural;
+      visual.style.height = `${natural}px`;
+    }
     this._plotHeight = this._visualHeight(visual);
     if (this._config.view === "3d") {
       this._track = renderScene(
@@ -364,7 +368,8 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
       const box = sceneBox(width);
       return Math.round((box.h * Math.min(width, box.w)) / box.w);
     }
-    return dialBox(width).size;
+    // a card narrower than the smallest dial scales it down to its width
+    return Math.min(dialBox(width).size, width);
   }
   // the room for the plot when the card is given less height than the picture's own; unlimited
   // otherwise (a taller card centres the picture)

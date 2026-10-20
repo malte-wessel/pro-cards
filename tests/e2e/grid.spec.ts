@@ -161,7 +161,7 @@ test.describe("entity plots fill the cell", () => {
     const b = await boxes(page);
     expect(b.h).toBe(cell(2));
     const [p] = b.plots;
-    expect(p.h).toBeLessThan(56);
+    expect(p.h).toBeLessThanOrEqual(56);
     expect(p.h).toBeGreaterThanOrEqual(24);
     expect(p.bottom).toBeLessThanOrEqual(b.bottom);
     // one row would leave no room for the plot: the tile asks for two at least
@@ -333,5 +333,72 @@ test.describe("sun path and illuminance plots fill the cell", () => {
     const natural = (await plot(page)).h;
     await mount(page, { ...cfg, grid_options: { rows: 6 } });
     expect((await plot(page)).h).toBe(natural);
+  });
+});
+
+test.describe("edges of filling", () => {
+  test("a tile whose header has nothing to show is one row again", async ({ page }) => {
+    // the header holds only a header entity, hidden while the kitchen light is off
+    const tile = {
+      type: "custom:wind-card-pro",
+      entity: "sensor.wind_speed",
+      header_entities: [
+        {
+          entity: "sensor.outdoor_temperature",
+          visibility: [{ condition: "state", entity: "light.kitchen", state: "on" }],
+        },
+      ],
+    };
+    await page.goto("/");
+    await page.evaluate(() => window.pc.world.set("light.kitchen", "off"));
+    await mount(page, tile, { layout: null });
+    expect(await height(page, 0)).toBe(56);
+    await page.evaluate(() => window.pc.world.set("light.kitchen", "on"));
+    await expect(card(page).locator(".header")).toBeVisible();
+    // ha-card eases its size changes (Home Assistant's transition)
+    await expect.poll(() => height(page, 0)).toBe(120);
+  });
+
+  test("a tile is one row under a theme without a card border", async ({ page }) => {
+    for (const cfg of [MORE[0], { type: "custom:weather-card-pro", entity: "weather.home" }]) {
+      await mount(page, cfg, { layout: null, skin: "graphite" });
+      expect(await height(page, 0), cfg.type).toBe(56);
+    }
+  });
+
+  test("power flow in a cell too small for it still draws its tree", async ({ page }) => {
+    await mount(page, { ...CARDS[6], grid_options: { columns: 12, rows: 2, min_rows: 1 } });
+    const diag = card(page).locator(".pdiag");
+    expect((await diag.boundingBox())!.height).toBeGreaterThanOrEqual(64);
+    const transform = await card(page)
+      .locator(".pscale")
+      .evaluate((e) => (e as HTMLElement).style.transform);
+    expect(Number(/scale\(([\d.]+)\)/.exec(transform)?.[1])).toBeGreaterThan(0.2);
+  });
+
+  test("plots side by side in a grid count as one row of the card's room", async ({ page }) => {
+    // a grid section with two sparklines in one row and a list section with one: both rows of
+    // plots get the same share
+    await mount(page, {
+      type: "custom:entity-sections-card-pro",
+      sections: [
+        {
+          layout: "grid",
+          columns: 2,
+          entities: [
+            { entity: "sensor.power_consumption", visual: "sparkline" },
+            { entity: "sensor.outdoor_temperature", visual: "sparkline" },
+          ],
+        },
+        { entities: [{ entity: "sensor.power_consumption", visual: "sparkline" }] },
+      ],
+      grid_options: { columns: 12, rows: 10 },
+    });
+    const heights = await card(page)
+      .locator(".plot")
+      .evaluateAll((ps) => ps.map((p) => p.getBoundingClientRect().height));
+    expect(heights).toHaveLength(3);
+    expect(heights[0]).toBeGreaterThan(80);
+    expect(Math.abs(heights[0] - heights[2])).toBeLessThanOrEqual(24);
   });
 });

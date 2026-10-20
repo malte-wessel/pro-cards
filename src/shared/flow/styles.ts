@@ -30,8 +30,8 @@ export const STYLE_FLOW = `
     .row.wtile.flow .secondary.narrow { display: none; }
     .row.wtile.flow .end { display: flex; }
   }
-  .row.wtile.flow .wflow.bg { position: absolute; inset: -7px -12px; border-radius: 0; }
-  .row.wtile.flow > .hit { inset: -7px -12px; }
+  .row.wtile.flow .wflow.bg { position: absolute; inset: -6px -12px; border-radius: 0; }
+  .row.wtile.flow > .hit { inset: -6px -12px; }
   .row.wtile.flow .top { position: relative; }
   .row.wtile.flow .lead .shape { background: color-mix(in srgb, var(--fe-color) 20%, var(--ha-card-background, var(--card-background-color))); }
   .row.wtile.flow .end .big b { font-size: 26px; line-height: 30px; }

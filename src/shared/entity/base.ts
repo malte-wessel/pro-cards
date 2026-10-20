@@ -36,6 +36,7 @@ import {
   type ServiceCall,
 } from "./control.ts";
 import { modelOf, nameOf, tplOf, type PlotHandlers, type RenderCtx } from "./model.ts";
+import { plotRows } from "./render/blocks.ts";
 import { fillByClass } from "./render/fill.ts";
 import { drawPlot, showHover, windowOf, type PlotElement } from "./render/plots.ts";
 import type { EntityModel } from "./model.ts";
@@ -627,7 +628,19 @@ export abstract class EntityCardBase extends HTMLElement {
       el.classList.add(`align-${g.align}`);
       idxs.forEach((i) => el.appendChild(this._row(i, "item")));
     }
+    // a card given more height shares it per row of plots: the section passes on its count
+    const n = this._plotRows(g, idxs);
+    if (n > 1) el.style.setProperty("--grow", String(n));
     return el;
+  }
+  // the rows of a group's shown items that hold a growing plot (a grid row counts once)
+  _plotRows(g: Group, idxs: number[]) {
+    const cfg = this._config as EntityCardConfig;
+    return plotRows(
+      g.layout,
+      g.columns,
+      idxs.map((i) => cfg.entities[i].visual),
+    );
   }
 
   // ----- render -----
@@ -655,11 +668,10 @@ export abstract class EntityCardBase extends HTMLElement {
       t.textContent = title || "";
       if (cfg.titleTap) t.setAttribute("aria-label", title || "");
       qs(header, ".range").textContent = this._historyIds.length ? `${cfg.hours} h` : "";
-      header.style.display =
-        title || icon || cfg.headerIdxs.some((i) => vis.items[i]) ? "" : "none";
+      header.hidden = !(title || icon || cfg.headerIdxs.some((i) => vis.items[i]));
     }
     // nothing shown at all: the card takes no room (its own `visibility` is HA's way to hide it)
-    card.hidden = (!header || header.style.display === "none") && !this._bodyShown(vis);
+    card.hidden = (!header || header.hidden) && !this._bodyShown(vis);
     const models = cfg.entities.map((ent) => modelOf(ctx, ent));
     const focus = this._focusWithin();
     for (const row of card.querySelectorAll<HTMLElement>(".row")) {
@@ -694,13 +706,6 @@ export abstract class EntityCardBase extends HTMLElement {
       "--fe-tint",
       tint === null ? "transparent" : cssColor(tint, "transparent"),
     );
-    // in a cell with fixed rows the room is shared per plot (a weather trend counts as one): a
-    // section passes on its count
-    for (const sec of card.querySelectorAll<HTMLElement>(".section, .wsec")) {
-      const n = sec.querySelectorAll(".plot.grow, .trend").length;
-      if (n > 1) sec.style.setProperty("--grow", String(n));
-      else sec.style.removeProperty("--grow");
-    }
     for (const plot of card.querySelectorAll<PlotElement>(".plot")) drawPlot(ctx, plot);
     this._fitCells(card);
     this._visWatch.arm(this._hass);

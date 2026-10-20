@@ -1347,6 +1347,37 @@ const CASES = {
       grid_options: { columns: 6 },
     },
   ],
+  // a tile whose header has nothing to show is one row; with a header it is two
+  "fill-header": [
+    {
+      type: "custom:wind-card-pro",
+      entity: "sensor.wind_speed",
+      header_entities: [
+        {
+          entity: "sensor.outdoor_temperature",
+          visibility: [
+            { condition: "numeric_state", entity: "sensor.outdoor_temperature", above: 100 },
+          ],
+        },
+      ],
+    },
+    { type: "custom:wind-card-pro", entity: "sensor.wind_speed", title: "Wind" },
+  ].map((c) => ({ ...c, grid_options: { columns: 12 } })),
+  // tiles stay one row under a theme without a card border (Graphite, see SKINS)
+  "fill-graphite": [
+    { type: EC, entity: "sensor.outdoor_temperature", name: "Plain" },
+    { type: EC, entity: "light.kitchen", control: "toggle" },
+    { type: "custom:weather-card-pro", entity: "weather.home" },
+    { type: "custom:wind-card-pro", entity: "sensor.wind_speed", visual: "flow" },
+  ].map((c) => ({ ...c, grid_options: { columns: 6 } })),
+  // power flow in a cell too small for its tree: scaled down into the diagram's floor
+  "pf-small": {
+    type: PF,
+    home: "sensor.power_consumption",
+    sources: PF_SRC,
+    consumers: [PF_CONS[1]],
+    grid_options: { columns: 12, rows: 2, min_rows: 1 },
+  },
   "pf-styles": [
     {
       type: PF,
@@ -1465,10 +1496,13 @@ const CASES = {
   },
 };
 
+// cases rendered under a Home Assistant theme from ha.css instead of the default one
+const SKINS: Record<string, string> = { "fill-graphite": "graphite" };
+
 for (const [name, cfg] of Object.entries(CASES)) {
   for (const theme of ["light", "dark"]) {
     test(`${name} (${theme})`, async ({ page }) => {
-      await mount(page, cfg, { theme });
+      await mount(page, cfg, { theme, skin: SKINS[name] });
       // fonts + icons settled: every ha-icon has a path (in its ha-svg-icon), then one more frame
       await page.waitForFunction(() =>
         [...document.querySelectorAll("*")].every(

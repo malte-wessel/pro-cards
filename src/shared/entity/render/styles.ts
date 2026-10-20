@@ -15,9 +15,12 @@ export const STYLE_BASE = `
   .divider { height: 1px; margin: 0 -16px; background: var(--divider-color); }
 `;
 export const STYLE_TILE = `
-  /* a tile is one 56 px row (40 px lead, 7 px padding, the border), two with a header; a taller
-     tile (a stretched grid row, fixed rows) centres its content */
-  .layout-tile .body { padding: 7px 12px; gap: 8px; flex: 1; justify-content: center; }
+  /* a tile is one 56 px row, two with a header: the floor holds it there whatever the theme's
+     border (the 40 px lead, 6 px padding and a border up to 2 px fit; a calc on the border width
+     would break on a unitless 0); a taller tile (a stretched grid row, fixed rows) centres its
+     content */
+  .layout-tile .body { padding: 6px 12px; gap: 8px; flex: 1; justify-content: center; }
+  ha-card.layout-tile { min-height: 56px; }
   ha-card.layout-tile:has(> .header:not([hidden])) { min-height: 120px; }
 `;
 export const STYLE_HEADER = `
