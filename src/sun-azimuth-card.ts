@@ -25,7 +25,7 @@
  *   night_color: indigo
  *   sky_color: light-blue
  */
-import { freshShadow, registerCard } from "./shared/card.ts";
+import { freshShadow, syncKeepHeight, registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
 import { fmtTime, langOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
@@ -175,6 +175,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     };
     this._camera = ((this._config.camera % 360) + 360) % 360;
     this._day = null;
+    syncKeepHeight(this, config);
     if (this._root) this._buildDom();
   }
 

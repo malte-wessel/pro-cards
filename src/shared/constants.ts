@@ -32,7 +32,13 @@ export const DEVICE_CLASS_ICON: Record<string, string> = {
 // the text line, so an ha-icon / ha-state-icon that inherits a line height lays out a line box
 // around it and the icon sits a pixel or two below centre (2 px at Home Assistant's 1.5)
 export const STYLE_ICONS = `ha-icon, ha-state-icon { line-height: 0; }`;
-// every card's host, as Home Assistant's own cards: the card takes the height its container gives
-// (a cell with fixed rows, a grid row stretched by a taller neighbour, a horizontal stack); where
-// that height follows the content (masonry, a vertical stack) 100% is the content's height
-export const STYLE_HOST = `:host { display: block; min-width: 0; height: 100%; }`;
+// every card's host takes the height its container gives, as Home Assistant's own cards do (a cell
+// with fixed rows, a grid row stretched by a taller neighbour, a horizontal stack); where that
+// height follows the content (masonry, a vertical stack) 100% is the content's height anyway.
+// `fill_height: false` (the keep-height attribute, syncKeepHeight in card.ts) keeps the content's
+// height instead: not stretched as a flex item (a horizontal stack makes the host one), and at
+// most the container's height, ha-card (overflow: hidden) shrinking into a cell that is smaller
+export const STYLE_HOST = `
+  :host { display: block; min-width: 0; height: 100%; }
+  :host([keep-height]) { height: auto; max-height: 100%; align-self: flex-start; display: flex; flex-direction: column; }
+`;

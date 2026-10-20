@@ -1011,4 +1011,4 @@ See [Controls](/cards/controls) for what every control looks like and where it s
 | ------------ | ------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `visibility` |         | entities in groups, headers | Drawn only while every condition holds (Home Assistant's conditions); a condition without `entity` reads this one. See [Visibility](/guide/visibility). |
 
-Every card also accepts the Home Assistant keys `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`; see [Sizing in sections](/guide/sizing). On the card itself `visibility` is Home Assistant's and hides the whole card.
+Every card also accepts the Home Assistant keys `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`; see [Sizing in sections](/guide/sizing). On the card itself `visibility` is Home Assistant's and hides the whole card. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height).

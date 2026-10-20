@@ -22,7 +22,13 @@
  *         - { above: 25, color: red }
  *       visibility: [...]             # optional: drawn only while the conditions hold
  */
-import { fireAction, defineElement, registerCard, freshShadow } from "./shared/card.ts";
+import {
+  fireAction,
+  defineElement,
+  syncKeepHeight,
+  registerCard,
+  freshShadow,
+} from "./shared/card.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import type { MultiTrendCardConfig, TrendConfig, TrendPoint } from "./multi-trend/config.ts";
 import { cssColor } from "./shared/color.ts";
@@ -138,6 +144,7 @@ export class MultiTrendCard extends HTMLElement {
       ...entities.flatMap((e) => (isTemplate(e.color) ? [e.color] : [])),
     ]);
     this._tpl.sync(this._hass?.connection, this._templates);
+    syncKeepHeight(this, config);
     if (this._root) this._buildDom();
   }
 
@@ -199,11 +206,9 @@ export class MultiTrendCard extends HTMLElement {
     return this._layout(shown) === "lanes" ? 2 + shown.length : 3;
   }
 
-  // the grid footprint as written (HA asks once): every series
+  // sizes to its content, so it stretches with its grid row like every card (the plot grows)
   getGridOptions(): GridOptions {
-    const all = this._config.entities.map((_, i) => i);
-    const rows = this._layout(all) === "lanes" ? 2 + all.length : 3;
-    return { columns: 12, rows, min_columns: 6, min_rows: 2 };
+    return { columns: 12, rows: "auto", min_columns: 6, min_rows: 2 };
   }
 
   // the indices of the series whose conditions hold (all of them before hass arrives)

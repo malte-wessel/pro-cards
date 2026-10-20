@@ -94,9 +94,9 @@ describe("multi-trend-card helpers", () => {
     );
     const el = new MultiTrendCard();
     el.setConfig({ entities: ["sensor.a", { entity: "sensor.b" }], layout: "lanes" });
-    expect(el.getGridOptions()).toEqual({ columns: 12, rows: 4, min_columns: 6, min_rows: 2 });
+    expect(el.getGridOptions()).toEqual({ columns: 12, rows: "auto", min_columns: 6, min_rows: 2 });
     el.setConfig({ entities: ["sensor.a"], layout: "overlay" });
-    expect(el.getGridOptions().rows).toBe(3);
+    expect(el.getGridOptions().rows).toBe("auto");
     expect(() => el.setConfig({ entities: [] })).toThrow();
     expect(() =>
       el.setConfig({ entities: [{ name: "x" }] } as unknown as MultiTrendCardConfig),

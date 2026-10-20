@@ -3,7 +3,7 @@
 //   _normalize(raw)            – the normalised config (see config.js)
 //   _styles()                  – the CSS string for the shadow root
 //   getGridOptions()           – the sections grid footprint
-import { fireAction, fireEvent, fireHaptic, freshShadow } from "../card.ts";
+import { fireAction, fireEvent, fireHaptic, freshShadow, syncKeepHeight } from "../card.ts";
 import { cssColor } from "../color.ts";
 import { REFRESH_MS } from "../constants.ts";
 import { langOf } from "../format.ts";
@@ -194,6 +194,7 @@ export abstract class EntityCardBase extends HTMLElement {
     this._armed.clear();
     this._dragging = null;
     this._subscribeTemplates();
+    syncKeepHeight(this, config);
     if (this._root) this._buildDom();
   }
 

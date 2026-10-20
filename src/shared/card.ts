@@ -1,5 +1,11 @@
 // Card element helpers shared by all cards.
-import type { ActionConfig, ActionKind, CardConstructor, HapticType } from "./ha.ts";
+import type {
+  ActionConfig,
+  ActionKind,
+  CardConfigBase,
+  CardConstructor,
+  HapticType,
+} from "./ha.ts";
 
 // defines an element unless the name is already taken (another resource, or this bundle loaded
 // twice): the define would throw and abort the whole bundle, taking every card after it down with
@@ -62,3 +68,11 @@ export const freshShadow = (root: ShadowRoot, css: string): HTMLElement => {
   root.appendChild(card);
   return card;
 };
+
+// `fill_height: false` keeps the card at its own height (STYLE_HOST, `keep-height`); a card sets
+// it from its raw config in setConfig. The default needs no script: the host fills.
+export const syncKeepHeight = (el: HTMLElement, config: unknown) =>
+  el.toggleAttribute(
+    "keep-height",
+    !!config && typeof config === "object" && (config as CardConfigBase).fill_height === false,
+  );

@@ -16,7 +16,7 @@
  *   zones:                           # optional overrides per key: { label, max, color }
  *     day: { label: Daylight, max: 30000, color: amber }   # color = HA colour name or hex
  */
-import { defineElement, registerCard, freshShadow } from "./shared/card.ts";
+import { defineElement, syncKeepHeight, registerCard, freshShadow } from "./shared/card.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import type { MeanBucket, Point } from "./shared/history.ts";
 import type {
@@ -101,6 +101,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
     this._series = [];
     this._fetched = false;
     this._hoverT = null;
+    syncKeepHeight(this, config);
     if (this._root) this._buildDom();
   }
 

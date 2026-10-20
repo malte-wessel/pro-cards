@@ -21,7 +21,7 @@
  *     noon: Noon
  *     dusk: Civil dusk
  */
-import { defineElement, registerCard, freshShadow } from "./shared/card.ts";
+import { defineElement, syncKeepHeight, registerCard, freshShadow } from "./shared/card.ts";
 import { langOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { qs } from "./shared/util.ts";
@@ -88,6 +88,7 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
   setConfig(config: SunPathCardConfig | null | undefined) {
     this._config = { ...DEFAULTS, ...(config || {}) };
     this._day = null;
+    syncKeepHeight(this, config);
     if (this._root) this._buildDom();
   }
 
