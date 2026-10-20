@@ -11,9 +11,12 @@ const LABEL_H = 12; // line height of the axis and zone labels
 export const renderTrend = (card: IlluminanceHost, body: HTMLElement, v: number | null) => {
   const cfg = card._config,
     zones = cfg.zonesList;
-  const plotH = 160,
-    xAxisH = 18;
-  const plot = plotShell(card, body, v, plotH + xAxisH);
+  const xAxisH = 18,
+    natural = 160 + xAxisH;
+  const plot = plotShell(card, body, v, natural);
+  // the trend grows into a cell with fixed rows (styles) and is drawn at the height it has
+  plot.classList.add("grow");
+  const plotH = (plot.clientHeight || natural) - xAxisH;
   const svg = qs<SVGSVGElement>(plot, "svg"),
     labels = qs(plot, ".labels");
   const W = Math.max(plot.clientWidth, 10);

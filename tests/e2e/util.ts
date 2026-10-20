@@ -27,7 +27,13 @@ export async function mount(
     },
     [
       cfg,
-      { theme: opts.theme, skin: opts.skin, width: opts.width, fullWidth: opts.fullWidth },
+      {
+        theme: opts.theme,
+        skin: opts.skin,
+        width: opts.width,
+        fullWidth: opts.fullWidth,
+        layout: opts.layout,
+      },
     ] as const,
   );
   await page.evaluate(() => window.pc.settled());

@@ -48,6 +48,7 @@ import {
   type SideKey,
 } from "./sun-azimuth/constants.ts";
 import { sunAt, sunDay, type SunSample } from "./sun-azimuth/day.ts";
+import { dialBox } from "./sun-azimuth/dial.ts";
 import { renderDial } from "./sun-azimuth/render/dial.ts";
 import { eventsHtml, fillEvents, fillHouse, houseHtml } from "./sun-azimuth/render/events.ts";
 import { fillHead, headHtml } from "./sun-azimuth/render/head.ts";
@@ -56,6 +57,7 @@ import { renderSides } from "./sun-azimuth/render/sides.ts";
 import { compass, deg } from "./sun-azimuth/render/text.ts";
 import { sideDays, sidesAt, timelineSpan, type Side, type SideDay } from "./sun-azimuth/sides.ts";
 import { STYLE } from "./sun-azimuth/styles.ts";
+import { sceneBox } from "./sun-azimuth/scene.ts";
 import { nearestOnTrack, type TrackPoint } from "./sun-azimuth/track.ts";
 
 const CARD_TYPE = "sun-azimuth-card-pro";
@@ -135,6 +137,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
   _ro?: ResizeObserver;
   _visualWidth = 0;
   _plotHeight = Infinity;
+  _naturalHeight = 0;
 
   static getStubConfig(hass?: HomeAssistant) {
     return { title: t(hass, "azimuth.stub_title") };
@@ -234,8 +237,6 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     card.style.setProperty("--saz-night", cssColor(cfg.night_color, "var(--indigo-color)"));
     card.style.setProperty("--saz-sky", cssColor(cfg.sky_color, "var(--light-blue-color)"));
     card.classList.toggle("dark", !!this._hass?.themes?.darkMode);
-    // a fixed height (grid_options.rows): the plot takes the room the rest leaves and fits into it
-    card.classList.toggle("fill", typeof cfg.grid_options?.rows === "number");
     const { title, icon } = cfg;
     card.innerHTML = `
       <div class="header"${title || icon ? "" : ' style="display: none"'}>
@@ -326,8 +327,16 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     const label = this._hoverT !== null ? fmtTime(this._hass, at.t) : undefined;
     // not laid out yet: drawn at a stand-in width, the observer redraws at the real one
     this._visualWidth = visual.clientWidth;
-    this._plotHeight = this._visualHeight(visual);
     const width = this._visualWidth || (this._config.view === "3d" ? SCENE.width : DIAL.size);
+    // the picture's own height at this width is the room's basis: it never follows the drawing,
+    // so the observer cannot loop, and the card counts its full height in a grid row
+    const natural = this._naturalAt(width);
+    // written only when it changes: a hover preview redraws every frame and must not relayout
+    if (natural !== this._naturalHeight || !visual.style.height) {
+      this._naturalHeight = natural;
+      visual.style.height = `${natural}px`;
+    }
+    this._plotHeight = this._visualHeight(visual);
     if (this._config.view === "3d") {
       this._track = renderScene(
         this,
@@ -352,11 +361,21 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
         label,
       );
   }
-  // the room for the plot in a card of a fixed height; unlimited when the card sizes to its content
+  // the picture's height at a width when nothing limits it: the scene as drawn (scaled when it
+  // is wider than the room), the dial (it never grows past its full size)
+  _naturalAt(width: number) {
+    if (this._config.view === "3d") {
+      const box = sceneBox(width);
+      return Math.round((box.h * Math.min(width, box.w)) / box.w);
+    }
+    // a card narrower than the smallest dial scales it down to its width
+    return Math.min(dialBox(width).size, width);
+  }
+  // the room for the plot when the card is given less height than the picture's own; unlimited
+  // otherwise (a taller card centres the picture)
   _visualHeight(visual: HTMLElement) {
-    return this._root?.classList.contains("fill") && visual.clientHeight
-      ? visual.clientHeight
-      : Infinity;
+    const h = visual.clientHeight;
+    return h && h < this._naturalHeight ? h : Infinity;
   }
   // the hovered time: the sun moves there in the plot, a hair marks it on every bar and the
   // footer's heading shows it

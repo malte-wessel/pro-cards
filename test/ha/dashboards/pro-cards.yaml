@@ -323,3 +323,203 @@ views:
               - { entity: light.living_room, name: Ceiling, control: button }
               - { entity: light.kitchen, name: Kitchen, control: hold, control_position: lead }
               - { entity: switch.coffee_machine, name: Coffee, control: toggle }
+      - type: grid
+        cards:
+          - type: heading
+            heading: Fixed rows
+          # every card here has a numeric `rows`: the card must take exactly its cell (the core
+          # sensor card beside the sparkline tile shows the height to match)
+          - type: sensor
+            entity: sensor.power_consumption
+            graph: line
+            grid_options: { columns: 6, rows: 3 }
+          - type: custom:entity-card-pro
+            entity: sensor.power_consumption
+            name: Power
+            visual: sparkline
+            hours_to_show: 6
+            grid_options: { columns: 6, rows: 3 }
+          - type: custom:sun-azimuth-card-pro
+            view: 3d
+            house: { front: 20 }
+            grid_options: { columns: 6, rows: 4 }
+          - type: custom:sun-azimuth-card-pro
+            view: dial
+            house: { front: 20 }
+            grid_options: { columns: 6, rows: 4 }
+          - type: custom:power-flow-card-pro
+            home: sensor.power_consumption
+            sources:
+              - { type: solar, entity: sensor.solar_power }
+              - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
+              - { type: grid, power: sensor.grid_power }
+            consumers:
+              - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
+            grid_options: { columns: 12, rows: 6 }
+          - type: custom:multi-trend-card-pro
+            title: Outdoor
+            hours_to_show: 6
+            entities:
+              - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
+              - { entity: sensor.outdoor_humidity, name: Humidity, color: blue }
+            grid_options: { columns: 12, rows: 5 }
+          - type: custom:entity-group-card-pro
+            title: Living room
+            entities:
+              - { entity: sensor.power_consumption, name: Power, visual: sparkline }
+              - { entity: sensor.outdoor_temperature, name: Outside, visual: columns }
+              - { entity: light.living_room }
+            grid_options: { columns: 12, rows: 7 }
+          - type: custom:weather-card-pro
+            entity: weather.demo_weather_south
+            title: Weather
+            sections:
+              - { type: hero }
+              - { type: trend, mode: daily, days: 5 }
+            grid_options: { columns: 12, rows: 7 }
+          - type: custom:wind-card-pro
+            entity: sensor.wind_speed
+            direction: sensor.wind_direction
+            gust: sensor.wind_gust
+            layout: hero
+            grid_options: { columns: 6, rows: 5 }
+          - type: custom:sun-path-card-pro
+            title: Sun
+            grid_options: { columns: 6, rows: 5 }
+          - type: custom:illuminance-card-pro
+            entity: sensor.illuminance
+            mode: trend
+            grid_options: { columns: 12, rows: 6 }
+      - type: grid
+        cards:
+          - type: heading
+            heading: Filling
+          # every card takes the height its grid row or stack gives it, as Home Assistant's own
+          # cards do: tiles centre, a list keeps its rows at the top, plots and trees grow
+          - type: custom:entity-card-pro
+            entity: sensor.power_consumption
+            name: Gauge
+            visual: gauge
+          - type: custom:entity-card-pro
+            entity: sensor.robot_battery
+            name: Bar
+            visual: bar
+          - type: custom:entity-card-pro
+            entity: sensor.outdoor_temperature
+            name: Plain
+          - type: tile
+            entity: sensor.outdoor_temperature
+          - type: custom:entity-group-card-pro
+            title: List
+            entities: [light.living_room, light.kitchen]
+            grid_options: { columns: 6 }
+          - type: custom:entity-group-card-pro
+            title: Plots
+            entities:
+              - { entity: sensor.power_consumption, visual: sparkline }
+              - { entity: sensor.outdoor_temperature, visual: columns }
+            grid_options: { columns: 6 }
+          - type: horizontal-stack
+            cards:
+              - type: custom:entity-card-pro
+                entity: sensor.outdoor_temperature
+                name: In a stack
+              - type: custom:entity-card-pro
+                entity: sensor.power_consumption
+                name: Sparkline
+                visual: sparkline
+          - type: custom:power-flow-card-pro
+            home: sensor.power_consumption
+            sources:
+              - { type: solar, entity: sensor.solar_power }
+              - { type: grid, power: sensor.grid_power }
+            grid_options: { columns: 6 }
+          - type: custom:sun-azimuth-card-pro
+            view: 3d
+            house: { front: 20 }
+            show_sides: true
+            grid_options: { columns: 6 }
+      - type: grid
+        cards:
+          - type: heading
+            heading: Core cards, filling
+          # Home Assistant's own cards beside taller cards, to compare with the Filling section
+          - type: custom:entity-card-pro
+            entity: sensor.power_consumption
+            name: Gauge
+            visual: gauge
+          - type: tile
+            entity: sensor.outdoor_temperature
+          - type: custom:entity-card-pro
+            entity: sensor.power_consumption
+            name: Gauge
+            visual: gauge
+          - type: entity
+            entity: sensor.outdoor_temperature
+          - type: entities
+            title: Entities
+            entities: [light.living_room, light.kitchen]
+            grid_options: { columns: 6 }
+          - type: custom:entity-group-card-pro
+            title: Tall
+            entities:
+              - light.living_room
+              - light.kitchen
+              - light.office
+              - sensor.outdoor_temperature
+              - sensor.power_consumption
+            grid_options: { columns: 6 }
+          - type: sensor
+            entity: sensor.power_consumption
+            graph: line
+            grid_options: { columns: 6 }
+          - type: custom:entity-group-card-pro
+            title: Tall
+            entities:
+              - light.living_room
+              - light.kitchen
+              - light.office
+              - sensor.outdoor_temperature
+              - sensor.power_consumption
+            grid_options: { columns: 6 }
+          - type: horizontal-stack
+            cards:
+              - type: tile
+                entity: sensor.outdoor_temperature
+              - type: custom:entity-card-pro
+                entity: sensor.power_consumption
+                name: Sparkline
+                visual: sparkline
+          - type: horizontal-stack
+            cards:
+              - type: entity
+                entity: sensor.outdoor_temperature
+              - type: custom:entity-card-pro
+                entity: sensor.power_consumption
+                name: Sparkline
+                visual: sparkline
+      - type: grid
+        cards:
+          - type: heading
+            heading: Core auto cards
+          - type: markdown
+            content: "Markdown, rows: auto"
+            grid_options: { columns: 6 }
+          - type: custom:entity-group-card-pro
+            title: Tall
+            entities: [light.living_room, light.kitchen, light.office, sensor.outdoor_temperature]
+            grid_options: { columns: 6 }
+          - type: glance
+            entities: [light.living_room, light.kitchen]
+            grid_options: { columns: 6 }
+          - type: custom:entity-group-card-pro
+            title: Tall
+            entities: [light.living_room, light.kitchen, light.office, sensor.outdoor_temperature]
+            grid_options: { columns: 6 }
+          - type: entities
+            entities: [light.living_room]
+            grid_options: { columns: 6, min_columns: 6 }
+          - type: custom:entity-group-card-pro
+            title: Tall
+            entities: [light.living_room, light.kitchen, light.office, sensor.outdoor_temperature]
+            grid_options: { columns: 6 }

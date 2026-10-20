@@ -6,10 +6,13 @@
     <style>
       html, body { margin: 0; padding: 0; }
       body { padding: 16px; font-family: Roboto, "Segoe UI", system-ui, sans-serif; }
-      #root { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-rows: minmax(56px, auto); gap: 8px; width: 400px; box-sizing: border-box; padding: 16px; border-radius: 12px; }
-      #root > .cell { min-width: 0; display: flex; flex-direction: column; }
-      #root > .cell.fixed > * { height: 100%; }
-      #root > .cell:not(.fixed) > * { flex: none; }
+      /* like Home Assistant's sections grid (hui-grid-section): auto row tracks, a cell with fixed
+         rows gets a definite height (56 px rows, 8 px gaps), an auto cell stretches to its grid
+         row, and the card takes the cell's height; a masonry cell keeps the card's own height */
+      #root { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-rows: auto; gap: 8px; width: 400px; box-sizing: border-box; padding: 16px; border-radius: 12px; }
+      #root > .cell { min-width: 0; position: relative; }
+      #root > .cell.fixed { height: calc(var(--rows) * 64px - 8px); }
+      #root > .cell.masonry { align-self: start; }
     </style>
   </head>
   <body class="ha-theme">

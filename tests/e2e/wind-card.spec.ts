@@ -36,7 +36,9 @@ test.describe("wind card", () => {
     expect(await cssVar(c.locator(".row.wtile"), "--rot")).toBe("315deg");
     expect(await cssVar(c.locator(".row.wtile"), "--arrow")).toBe("45deg");
     await expect(c.locator(".lead.wlead .ld")).toHaveCount(6);
-    expect((await grid(page)).rows).toBe(1);
+    // sized to its content, exactly one row (two with a header): it stretches with its grid row
+    expect(await grid(page)).toMatchObject({ rows: "auto", min_rows: 1 });
+    await expect(card(page).locator("ha-card")).toHaveCSS("height", "56px");
     // without a direction sensor: no compass point, the field flows to the right
     await mount(page, { type: T, entity: S, title: "Wind" });
     await pin(page);
@@ -44,7 +46,8 @@ test.describe("wind card", () => {
     await expect(p.locator(".row.wtile .secondary")).toHaveText("9.4 km/h");
     await expect(p.locator(".row.wtile")).toHaveClass(/nodir/);
     await expect(p.locator(".pill")).toHaveCount(0);
-    expect((await grid(page)).rows).toBe(2);
+    expect(await grid(page)).toMatchObject({ rows: "auto", min_rows: 2 });
+    await expect(card(page).locator("ha-card")).toHaveCSS("height", "120px");
   });
 
   test("reads a weather entity's wind attributes", async ({ page }) => {

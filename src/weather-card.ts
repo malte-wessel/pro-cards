@@ -95,10 +95,9 @@ export class WeatherCard extends EntityCardBase {
     return STYLE_WEATHER_CARD;
   }
   getGridOptions(): GridOptions {
-    if (this._config?.layout === "tile") {
-      const rows = this._config.hasHeader ? 2 : 1;
-      return { columns: 6, rows, min_columns: 3, min_rows: rows, max_rows: rows };
-    }
+    // a tile sizes to its content (one row, two with a header), so it stretches with its grid row
+    if (this._config?.layout === "tile")
+      return { columns: 6, rows: "auto", min_columns: 3, min_rows: this._config.hasHeader ? 2 : 1 };
     return { columns: 12, rows: "auto", min_columns: 6, min_rows: 2 };
   }
   getCardSize() {
@@ -259,6 +258,12 @@ export class WeatherCard extends EntityCardBase {
       else {
         el = sectionShell(sec.title);
         el.appendChild(this._buildGroup(sec.group));
+        // a taller card shares its room per row of plots, a trend counting as one
+        const n = this._plotRows(
+          sec.group,
+          sec.group.idxs.filter((k) => vis.items[k] ?? true),
+        );
+        if (n > 1) el.style.setProperty("--grow", String(n));
       }
       el.dataset.sec = String(i);
       const chart = el.querySelector<ForecastTrendEl>(".trend");

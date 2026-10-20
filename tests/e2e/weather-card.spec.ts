@@ -29,7 +29,9 @@ test.describe("weather card", () => {
     const grid = await page.evaluate(() =>
       (window.pc.card(0) as unknown as WeatherCard).getGridOptions(),
     );
-    expect(grid.rows).toBe(1);
+    // sized to its content, exactly one row: it stretches with its grid row
+    expect(grid).toMatchObject({ rows: "auto", min_rows: 1 });
+    await expect(c.locator("ha-card")).toHaveCSS("height", "56px");
     await expect(c.locator(".header")).toHaveCount(0);
     // a title adds the header and a second row
     await mount(page, { type: T, entity: W, title: "Home" });
@@ -37,7 +39,8 @@ test.describe("weather card", () => {
     const titled = await page.evaluate(() =>
       (window.pc.card(0) as unknown as WeatherCard).getGridOptions(),
     );
-    expect(titled.rows).toBe(2);
+    expect(titled).toMatchObject({ rows: "auto", min_rows: 2 });
+    await expect(card(page).locator("ha-card")).toHaveCSS("height", "120px");
   });
 
   test("hero: condition, big temperature, high / low, overrides, tap opens more-info", async ({

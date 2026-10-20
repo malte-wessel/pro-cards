@@ -34,6 +34,19 @@ export const gaugeEl = (ctx: RenderCtx, ent: EntityItem, m: EntityModel) => {
   ts[2].textContent = fmt(sc.max);
   return d;
 };
+// the visuals whose plot grows into a taller card
+export const GROW_VISUALS: ReadonlySet<string> = new Set(["sparkline", "columns"]);
+// how many rows of a group hold a growing plot, the share of a taller card the group asks for:
+// each list or hero row with one, each grid row (of `columns` cells) with one at least
+export const plotRows = (layout: string, columns: number, visuals: string[]) => {
+  if (layout === "list" || layout === "hero")
+    return visuals.filter((v) => GROW_VISUALS.has(v)).length;
+  if (layout !== "grid") return 0;
+  let n = 0;
+  for (let i = 0; i < visuals.length; i += columns)
+    if (visuals.slice(i, i + columns).some((v) => GROW_VISUALS.has(v))) n++;
+  return n;
+};
 // the plot element carries its render context (entity index, kind, height); ctx.plotHandlers
 // holds the card's bound pointer handlers. `extra` overrides the kind and the window / series
 // (see PlotCtx) for plots that are not the entity's history.
@@ -46,7 +59,9 @@ export const plotEl = (
 ) => {
   const kind = extra.kind ?? (ent.visual as HistoryVisual);
   const plot = document.createElement("div") as PlotElement;
-  plot.className = "plot";
+  // sparkline and columns grow into a taller card; a strip is a timeline and keeps its height
+  // (styles: STYLE_PLOT)
+  plot.className = GROW_VISUALS.has(kind) ? "plot grow" : "plot";
   const h = PLOT_H[kind] + (kind === "strip" ? STRIP_AXIS_H : 0);
   plot.style.height = `${h}px`;
   plot.innerHTML = `<svg class="abs" preserveAspectRatio="none"></svg><div class="labels"></div><div class="tip"></div>`;

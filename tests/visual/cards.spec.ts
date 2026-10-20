@@ -1266,6 +1266,118 @@ const CASES = {
     other: false,
     grid_options: { columns: 12, rows },
   })),
+  // a fixed number of grid rows: the plots take the room the card has (sparkline, columns), a
+  // smaller cell shrinks them, a strip keeps its height
+  "ec-fill": [
+    { entity: "sensor.power_consumption", name: "Power", visual: "sparkline", rows: 3 },
+    { entity: "sensor.outdoor_temperature", name: "Outside", visual: "columns", rows: 3 },
+    { entity: "sensor.power_consumption", name: "Power", visual: "sparkline", rows: 2 },
+    { entity: "binary_sensor.window_kitchen", name: "Window", visual: "strip", rows: 2 },
+  ].map(({ rows, ...e }) => ({ type: EC, ...e, grid_options: { columns: 6, rows } })),
+  // the plots of a list share the room evenly, the lead stays up by its name, a plain row keeps
+  // its height; a grid's cells grow alike
+  "egc-fill": [
+    {
+      type: EGC,
+      title: "Living room",
+      entities: [
+        { entity: "sensor.power_consumption", name: "Power", visual: "sparkline" },
+        { entity: "sensor.outdoor_temperature", name: "Outside", visual: "columns" },
+        { entity: "light.kitchen" },
+      ],
+      grid_options: { columns: 12, rows: 7 },
+    },
+    {
+      type: EGC,
+      layout: "grid",
+      entities: [
+        { entity: "sensor.power_consumption", name: "Power", visual: "sparkline" },
+        { entity: "sensor.outdoor_temperature", name: "Outside", visual: "sparkline" },
+      ],
+      grid_options: { columns: 12, rows: 4 },
+    },
+  ],
+  // the weather trend, the wind and rain heroes' bands, the sun path plot and the illuminance
+  // trend fill a fixed height too
+  "wx-fill": {
+    type: "custom:weather-card-pro",
+    entity: "weather.home",
+    sections: [{ type: "hero" }, { type: "trend", mode: "hourly", hours: 12 }],
+    grid_options: { columns: 12, rows: 7 },
+  },
+  "flow-fill": [
+    { type: "custom:wind-card-pro", entity: "sensor.wind_speed", layout: "hero" },
+    { type: "custom:rain-card-pro", entity: "sensor.rain_rate_roof", layout: "hero" },
+  ].map((c) => ({ ...c, grid_options: { columns: 12, rows: 4 } })),
+  "sp-fill": { type: "custom:sun-path-card-pro", grid_options: { columns: 12, rows: 5 } },
+  "lux-fill": {
+    type: "custom:illuminance-card-pro",
+    entity: "sensor.illuminance",
+    mode: "trend",
+    grid_options: { columns: 12, rows: 6 },
+  },
+  // cards side by side share their grid row's height: a list keeps its rows at the top, a plot
+  // card grows its plots, the power flow tree spreads beside a taller sun azimuth card
+  "fill-rows": [
+    {
+      type: EGC,
+      title: "List",
+      entities: ["light.living_room", "light.kitchen"],
+      grid_options: { columns: 6 },
+    },
+    {
+      type: EGC,
+      title: "Plots",
+      entities: [
+        { entity: "sensor.power_consumption", visual: "sparkline" },
+        { entity: "sensor.outdoor_temperature", visual: "columns" },
+      ],
+      grid_options: { columns: 6 },
+    },
+    {
+      type: PF,
+      home: "sensor.power_consumption",
+      sources: [PF_SRC[0], { type: "grid", power: "sensor.grid_power" }],
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:sun-azimuth-card-pro",
+      house: { front: 20 },
+      show_sides: true,
+      grid_options: { columns: 6 },
+    },
+  ],
+  // a tile whose header has nothing to show is one row; with a header it is two
+  "fill-header": [
+    {
+      type: "custom:wind-card-pro",
+      entity: "sensor.wind_speed",
+      header_entities: [
+        {
+          entity: "sensor.outdoor_temperature",
+          visibility: [
+            { condition: "numeric_state", entity: "sensor.outdoor_temperature", above: 100 },
+          ],
+        },
+      ],
+    },
+    { type: "custom:wind-card-pro", entity: "sensor.wind_speed", title: "Wind" },
+  ].map((c) => ({ ...c, grid_options: { columns: 12 } })),
+  // tiles stay one row under a theme without a card border (Graphite, see SKINS)
+  "fill-graphite": [
+    { type: EC, entity: "sensor.outdoor_temperature", name: "Plain" },
+    { type: EC, entity: "light.kitchen", control: "toggle" },
+    { type: "custom:weather-card-pro", entity: "weather.home" },
+    { type: "custom:wind-card-pro", entity: "sensor.wind_speed", visual: "flow" },
+  ].map((c) => ({ ...c, grid_options: { columns: 6 } })),
+  // power flow in a cell too small for its tree: scaled down into the diagram's floor
+  "pf-small": {
+    type: PF,
+    home: "sensor.power_consumption",
+    sources: PF_SRC,
+    consumers: [PF_CONS[1]],
+    grid_options: { columns: 12, rows: 2, min_rows: 1 },
+  },
   "pf-styles": [
     {
       type: PF,
@@ -1384,10 +1496,13 @@ const CASES = {
   },
 };
 
+// cases rendered under a Home Assistant theme from ha.css instead of the default one
+const SKINS: Record<string, string> = { "fill-graphite": "graphite" };
+
 for (const [name, cfg] of Object.entries(CASES)) {
   for (const theme of ["light", "dark"]) {
     test(`${name} (${theme})`, async ({ page }) => {
-      await mount(page, cfg, { theme });
+      await mount(page, cfg, { theme, skin: SKINS[name] });
       // fonts + icons settled: every ha-icon has a path (in its ha-svg-icon), then one more frame
       await page.waitForFunction(() =>
         [...document.querySelectorAll("*")].every(

@@ -8,6 +8,7 @@ import type {
   HassEntity,
   HomeAssistant,
 } from "../../src/shared/ha.ts";
+import { cellSize } from "../../docs/.vitepress/theme/grid.ts";
 import "../../src/index.ts";
 import "../../docs/.vitepress/theme/ha.css";
 
@@ -18,6 +19,10 @@ export interface MountOptions {
   skin?: string; // a Home Assistant theme from ha.css, e.g. "graphite"; default when empty
   width?: number | string;
   fullWidth?: boolean;
+  // where the card sits: "grid" (a sections grid, the default: fixed rows give the cell a height,
+  // an auto cell stretches to its grid row) or null for a masonry view or a vertical stack, where
+  // `grid_options` is ignored and the card keeps the height of its content
+  layout?: string | null;
 }
 export interface ServiceCall {
   domain: string;
@@ -130,21 +135,6 @@ window.addEventListener("location-changed", () =>
   events.push({ type: "location-changed", path: location.pathname }),
 );
 
-// like Home Assistant (computeCardGridSize): the columns stay within the card's min / max
-const clampColumns = (g: GridOptions) => {
-  let c = Number(g.columns) || 12;
-  if (typeof g.min_columns === "number") c = Math.max(c, g.min_columns);
-  if (typeof g.max_columns === "number") c = Math.min(c, g.max_columns);
-  return Math.min(12, Math.max(1, c));
-};
-const gridOf = (el: CardElement, cfg: CardConfigBase) => {
-  const g: GridOptions = { ...(el.getGridOptions?.() || {}), ...(cfg.grid_options || {}) };
-  return {
-    columns: clampColumns(g),
-    rows: g.rows === "auto" || g.rows === undefined ? "auto" : Number(g.rows) || 1,
-  };
-};
-
 const mount = (cfgOrList: CardConfigBase | CardConfigBase[], opts: MountOptions = {}) => {
   unsub?.();
   root.textContent = "";
@@ -164,12 +154,14 @@ const mount = (cfgOrList: CardConfigBase | CardConfigBase[], opts: MountOptions 
     const el = document.createElement(type) as CardElement;
     el.setConfig(JSON.parse(JSON.stringify(cfg)));
     el.hass = snapshot();
+    const layout = opts.layout === undefined ? "grid" : opts.layout;
     const cell = document.createElement("div");
-    cell.className = "cell";
-    const g = gridOf(el, cfg);
+    cell.className = layout === "grid" ? "cell" : "cell masonry";
+    const g = cellSize(el.getGridOptions?.(), cfg);
     cell.style.gridColumn = `span ${opts.fullWidth === false ? g.columns : Array.isArray(cfgOrList) ? g.columns : 12}`;
-    if (g.rows !== "auto") {
+    if (layout === "grid" && g.rows !== "auto") {
       cell.style.gridRow = `span ${g.rows}`;
+      cell.style.setProperty("--rows", String(g.rows));
       cell.classList.add("fixed");
     }
     cell.appendChild(el);

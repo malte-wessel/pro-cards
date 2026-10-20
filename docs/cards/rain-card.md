@@ -56,7 +56,7 @@ today: sensor.rain_today
 
 ## Hero
 
-`layout: hero` shows the big rate with the label and today's total on the second line, then the band with a chip that repeats the total. `flow.height` sets the band's height (40 to 400 px, default 120). `title`, `icon` and `header_entities` add a header like every entity card. The gauge below is full at 12 mm.
+`layout: hero` shows the big rate with the label and today's total on the second line, then the band with a chip that repeats the total. `flow.height` sets the band's height (40 to 400 px, default 120); given more height (fixed rows, a taller card beside it), the band fills the card instead ([Filling the height](/guide/sizing#filling-the-height)). `title`, `icon` and `header_entities` add a header like every entity card. The gauge below is full at 12 mm.
 
 ::: live
 

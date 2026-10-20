@@ -18,10 +18,14 @@ export abstract class FlowCardBase extends EntityCardBase {
   abstract _updateBand(ctx: RenderCtx, band: HTMLElement, lead: EntityModel): void;
 
   getGridOptions(): GridOptions {
-    if (this._config?.layout !== "hero") {
-      const rows = this._config?.hasHeader ? 2 : 1;
-      return { columns: 6, rows, min_columns: 3, min_rows: rows, max_rows: rows };
-    }
+    // a tile sizes to its content (one row, two with a header), so it stretches with its grid row
+    if (this._config?.layout !== "hero")
+      return {
+        columns: 6,
+        rows: "auto",
+        min_columns: 3,
+        min_rows: this._config?.hasHeader ? 2 : 1,
+      };
     return { columns: 12, rows: "auto", min_columns: 6, min_rows: 3 };
   }
   getCardSize() {

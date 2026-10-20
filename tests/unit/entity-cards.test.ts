@@ -66,16 +66,10 @@ describe("entity-card-pro", () => {
       ),
     ).toEqual({ entity: "sensor.a" });
   });
-  it("reports one grid row for plain tiles and auto rows for block visuals", () => {
+  it("sizes every tile to its content: a plain tile is one row, block visuals more", () => {
     const el = new EntityCard();
     el.setConfig({ entity: "sensor.a" });
-    expect(el.getGridOptions()).toEqual({
-      columns: 6,
-      rows: 1,
-      min_columns: 3,
-      min_rows: 1,
-      max_rows: 1,
-    });
+    expect(el.getGridOptions()).toEqual({ columns: 6, rows: "auto", min_columns: 3, min_rows: 1 });
     expect(el.getCardSize()).toBe(1);
     el.setConfig({ entity: "sensor.a", visual: "bar" });
     expect(el.getGridOptions()).toMatchObject({ columns: 6, rows: "auto" });

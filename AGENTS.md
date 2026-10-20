@@ -59,6 +59,7 @@ Then update `CHANGELOG.md` under the next version and, for behaviour changes, th
 
 ## Things that look wrong but are intended
 
+- Every card's host takes the height its container gives (`STYLE_HOST`: `height: 100%`), as Home Assistant's own cards do: HA gives the height to the wrapper around an inline `hui-card`, fixed for fixed rows and stretched to the grid row for `rows: auto`, and a horizontal stack stretches its cards too; where the height follows the content (masonry, a vertical stack) 100% is the content's height. Whatever grows into that height keeps an explicit natural height (from the config or the width, never from its own drawing) as its flex basis (`flex: 1 1 auto`, a `min-height` floor) and is drawn at its measured height, never stretched. Never use a flex basis of 0 for it: in a stretched grid row that drops the card's own contribution to the row's height, and the tallest card collapses to the next one. Tiles without a plot centre their content, lists keep their rows at the top. The test harness and the docs grid (`docs/.vitepress/theme/grid.ts`) lay cards out as HA does: auto row tracks, a definite height on a fixed cell, auto cells stretched to their row.
 - `state: "on"` / `"off"` in rules are quoted in YAML on purpose (YAML 1.1 booleans).
 - Explicit `color` / `icon` on an entity **override** the rules (fixed look); leave them out to let the value drive the look.
 - `tint_card` lives on a rule and does nothing unless that rule matches. Rules match in the order written, first match wins (no sorting).

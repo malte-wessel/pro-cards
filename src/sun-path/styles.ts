@@ -1,11 +1,11 @@
 // Styles of the sun path card.
-import { STYLE_ICONS } from "../shared/constants.ts";
+import { STYLE_HOST, STYLE_ICONS } from "../shared/constants.ts";
 import { PLOT_H } from "./constants.ts";
 
 export const STYLE = `
   ${STYLE_ICONS}
   /* min-width/overflow: as a grid item the card must never grow past its column because of long text */
-  :host { display: block; min-width: 0; }
+  ${STYLE_HOST}
   ha-card { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; contain: inline-size; }
   .header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 0 16px; min-width: 0; }
   .header ha-icon { flex: none; color: var(--secondary-text-color); --mdc-icon-size: 20px; }
@@ -24,6 +24,10 @@ export const STYLE = `
     font-variant-numeric: tabular-nums; white-space: nowrap;
   }
   .plot { position: relative; height: ${PLOT_H}px; margin-top: 4px; min-width: 0; touch-action: pan-y; }
+  /* a taller card: the plot takes the room the rest of the card leaves; a smaller one shrinks it,
+     down to a floor */
+  .body { min-height: 0; }
+  .plot { flex: 1 1 auto; min-height: 48px; }
   /* absolutely positioned so the SVG's viewBox never feeds back into the card's intrinsic width */
   svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
   .horizon, .tick { stroke: var(--divider-color); stroke-width: 1; }

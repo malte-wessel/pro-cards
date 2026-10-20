@@ -1172,7 +1172,8 @@ describe("sizing", () => {
     expect(el.getGridOptions()).not.toHaveProperty("max_rows");
     expect(el.getCardSize()).toBe(1);
     el.setConfig({ entity: "light.ceiling" });
-    expect(el.getGridOptions()).toMatchObject({ rows: 1, max_rows: 1 });
+    expect(el.getGridOptions()).toMatchObject({ rows: "auto", min_rows: 1 });
+    expect(el.getGridOptions()).not.toHaveProperty("max_rows");
   });
   it("a tile never gets narrower than what sits on its line needs", () => {
     const el = new EntityCard();

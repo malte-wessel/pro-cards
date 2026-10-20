@@ -21,8 +21,11 @@ const STYLE_POWER = `
 
   .pdiag { position: relative; width: 100%; min-width: 0; height: var(--diag-h, 190px); contain: layout; }
   .pscale { position: absolute; left: 0; top: 0; width: 100%; height: 100%; transform-origin: 0 0; }
-  ha-card.fill .body { flex: 1 1 0; min-height: 0; }
-  ha-card.fill .pdiag { flex: 1 1 0; min-height: 0; height: auto; }
+  /* a taller card: the diagram takes the room the rest of the card leaves (the tree's own height
+     is its basis, never 0, so the card still counts its height in a grid row); a smaller one
+     scales the tree down, into 64 px at least */
+  .body { flex: 1 1 auto; min-height: 0; }
+  .pdiag { flex: 1 1 auto; min-height: 64px; }
   .pdiag svg.abs { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
   .link { fill: none; stroke: var(--divider-color); stroke-width: 2; stroke-dasharray: 4 4; stroke-linejoin: round; }
   .link.active { stroke: color-mix(in srgb, var(--pf-c) 45%, ${CARD_BG}); stroke-dasharray: none; }

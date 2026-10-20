@@ -554,7 +554,7 @@ A thin horizontal bar under the value, filled to the same `(value − min) / (ma
 | `bucket_minutes`    | `60`    | Bucket size for `columns` and `strip`, at least 5. The number of buckets is `hours_to_show × 60 / bucket_minutes`.     |
 | `smoothing_minutes` |         | Averaging bucket of the `sparkline` in minutes, at least 5. Without it the line has one point per 12 px of width.      |
 
-Entities without recorder history draw an empty plot. Hovering (or touching) a plot shows the value at that point and the time; on a sparkline that value is the mean of the point's bucket.
+In a card given more height (fixed rows, a taller card beside it) a `sparkline` or `columns` plot takes the height the card has to spare ([Filling the height](/guide/sizing#filling-the-height)); a `strip` keeps its own. Entities without recorder history draw an empty plot. Hovering (or touching) a plot shows the value at that point and the time; on a sparkline that value is the mean of the point's bucket.
 
 ### Sparkline
 

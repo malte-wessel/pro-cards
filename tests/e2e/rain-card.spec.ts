@@ -39,14 +39,17 @@ test.describe("rain card", () => {
     expect(await cssVar(c.locator(".row.wtile"), "--fe-color")).toBe("var(--light-blue-color)");
     await expect(c.locator(".lead.wlead .dr")).toHaveCount(5);
     await expect(c.locator(".row.wtile")).not.toHaveClass(/dry/);
-    expect((await grid(page)).rows).toBe(1);
+    // sized to its content, exactly one row (two with a header): it stretches with its grid row
+    expect(await grid(page)).toMatchObject({ rows: "auto", min_rows: 1 });
+    await expect(card(page).locator("ha-card")).toHaveCSS("height", "56px");
     // without a total or rules, with a title: just the rate, no pill, two rows
     await mount(page, { type: T, entity: R, title: "Rain" });
     await pin(page);
     const p = card(page);
     await expect(p.locator(".row.wtile .secondary")).toHaveText("2.4 mm/h");
     await expect(p.locator(".pill")).toHaveCount(0);
-    expect((await grid(page)).rows).toBe(2);
+    expect(await grid(page)).toMatchObject({ rows: "auto", min_rows: 2 });
+    await expect(card(page).locator("ha-card")).toHaveCSS("height", "120px");
   });
 
   test("flow tile: drops slanted by the wind; rate changes re-time, rebuild or dry the field", async ({

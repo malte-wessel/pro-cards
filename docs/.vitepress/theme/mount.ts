@@ -1,4 +1,5 @@
 // Mounts card configs into an HA-like grid container. Shared by LiveCard and DashboardGrid.
+import { cellSize } from "./grid.ts";
 import type { CardConfigBase, GridOptions, HomeAssistant } from "../../../src/shared/ha.ts";
 
 type HassModule = typeof import("./ha-shim/hass.ts");
@@ -27,22 +28,6 @@ export const loadRuntime = (): Promise<HassModule> => {
     });
   }
   return ready;
-};
-
-// like Home Assistant (computeCardGridSize): the columns stay within the card's min / max
-const clampColumns = (g: GridOptions) => {
-  let c = Number(g.columns) || 12;
-  if (typeof g.min_columns === "number") c = Math.max(c, g.min_columns);
-  if (typeof g.max_columns === "number") c = Math.min(c, g.max_columns);
-  return Math.min(12, Math.max(1, c));
-};
-const rowsOf = (el: CardElement, cfg: CardConfigBase) => {
-  const g: GridOptions = { ...(el.getGridOptions?.() || {}), ...(cfg.grid_options || {}) };
-  const rows = g.rows;
-  return {
-    columns: clampColumns(g),
-    rows: rows === "auto" || rows === undefined ? "auto" : Math.max(1, Number(rows) || 1),
-  };
 };
 
 export const createCard = (cfg: CardConfigBase): CardElement => {
@@ -83,11 +68,12 @@ export const mountGrid = async (
     cell.className = "cell";
     const el = createCard(cfg);
     el.hass = hass.snapshot();
-    const { columns, rows } = rowsOf(el, cfg);
+    const { columns, rows } = cellSize(el.getGridOptions?.(), cfg);
     cell.style.gridColumn = `span ${fullWidth ? 12 : columns}`;
     cell.dataset.cols = String(fullWidth ? 12 : columns);
     if (rows !== "auto") {
       cell.style.gridRow = `span ${rows}`;
+      cell.style.setProperty("--rows", String(rows));
       cell.classList.add("fixed");
     }
     cell.appendChild(el);
