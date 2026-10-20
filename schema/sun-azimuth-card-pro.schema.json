@@ -107,6 +107,9 @@
     "grid_options": {
       "$ref": "defs.schema.json#/$defs/haCardExtras/grid_options"
     },
+    "fill_height": {
+      "$ref": "defs.schema.json#/$defs/fillHeight"
+    },
     "visibility": {
       "$ref": "defs.schema.json#/$defs/haCardExtras/visibility"
     },

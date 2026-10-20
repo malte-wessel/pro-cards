@@ -25,7 +25,7 @@
  *   night_color: indigo
  *   sky_color: light-blue
  */
-import { freshShadow, registerCard } from "./shared/card.ts";
+import { freshShadow, GridCardElement, registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
 import { fmtTime, langOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
@@ -62,7 +62,7 @@ import { nearestOnTrack, type TrackPoint } from "./sun-azimuth/track.ts";
 
 const CARD_TYPE = "sun-azimuth-card-pro";
 
-export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
+export class SunAzimuthCard extends GridCardElement implements SunAzimuthHost {
   static cardType = CARD_TYPE;
 
   _config!: SunAzimuthConfig;
@@ -175,6 +175,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     };
     this._camera = ((this._config.camera % 360) + 360) % 360;
     this._day = null;
+    this._syncFill(config);
     if (this._root) this._buildDom();
   }
 

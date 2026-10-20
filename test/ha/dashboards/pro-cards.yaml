@@ -523,3 +523,46 @@ views:
             title: Tall
             entities: [light.living_room, light.kitchen, light.office, sensor.outdoor_temperature]
             grid_options: { columns: 6 }
+      - type: grid
+        column_span: 2
+        cards:
+          - type: heading
+            heading: Fill height option
+          # a short list kept at its own height beside a longer one (fill_height: false), and the
+          # weather station row: a multi trend card beside wind and rain tiles fills its row
+          - type: custom:entity-group-card-pro
+            title: Short
+            fill_height: false
+            entities: [light.living_room, light.kitchen]
+            grid_options: { columns: 12 }
+          - type: custom:entity-group-card-pro
+            title: Long
+            entities:
+              - light.living_room
+              - light.kitchen
+              - light.office
+              - sensor.outdoor_temperature
+              - sensor.power_consumption
+            grid_options: { columns: 12 }
+          - type: custom:wind-card-pro
+            entity: sensor.wind_speed
+            title: Wind
+            grid_options: { columns: 12 }
+          - type: custom:multi-trend-card-pro
+            title: Temperatur & Taupunkt
+            x_axis: true
+            entities:
+              - { entity: sensor.outdoor_temperature, name: Temperatur, color: red }
+              - { entity: sensor.outdoor_humidity, name: Feuchte, color: blue }
+            grid_options: { columns: 12 }
+          - type: custom:rain-card-pro
+            entity: sensor.rain_rate_roof
+            title: Regen
+            grid_options: { columns: 12 }
+          - type: custom:multi-trend-card-pro
+            title: Wind
+            layout: lanes
+            entities:
+              - { entity: sensor.wind_speed, name: Wind, color: teal }
+              - { entity: sensor.wind_gust, name: Böen, color: orange }
+            grid_options: { columns: 12 }

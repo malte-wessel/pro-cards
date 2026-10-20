@@ -1,5 +1,13 @@
 // Card element helpers shared by all cards.
-import type { ActionConfig, ActionKind, CardConstructor, HapticType } from "./ha.ts";
+import { fillsHeight } from "./grid.ts";
+import type {
+  ActionConfig,
+  ActionKind,
+  CardConfigBase,
+  CardConstructor,
+  GridOptions,
+  HapticType,
+} from "./ha.ts";
 
 // defines an element unless the name is already taken (another resource, or this bundle loaded
 // twice): the define would throw and abort the whole bundle, taking every card after it down with
@@ -62,3 +70,39 @@ export const freshShadow = (root: ShadowRoot, css: string): HTMLElement => {
   root.appendChild(card);
   return card;
 };
+
+// The base of every card element: takes HA's `layout` and sets the `fill-height` attribute the
+// host rule keys on (see grid.ts). A card calls `_syncFill(config)` at the end of setConfig.
+export abstract class GridCardElement extends HTMLElement {
+  _haLayout?: string;
+  _gridConfig?: CardConfigBase;
+
+  abstract getGridOptions(): GridOptions;
+
+  constructor() {
+    super();
+    // a `layout` set before the element was defined is an own property hiding the setter
+    if (Object.prototype.hasOwnProperty.call(this, "layout")) {
+      const v = (this as { layout?: string }).layout;
+      delete (this as { layout?: string }).layout;
+      this.layout = v;
+    }
+  }
+
+  get layout() {
+    return this._haLayout;
+  }
+  set layout(v: string | undefined) {
+    this._haLayout = v;
+    this._syncFill();
+  }
+
+  _syncFill(config?: unknown) {
+    if (config && typeof config === "object") this._gridConfig = config as CardConfigBase;
+    const cfg = this._gridConfig;
+    this.toggleAttribute(
+      "fill-height",
+      !!cfg && fillsHeight(this._haLayout, this.getGridOptions(), cfg),
+    );
+  }
+}

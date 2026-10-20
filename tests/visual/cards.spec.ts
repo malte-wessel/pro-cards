@@ -1347,6 +1347,45 @@ const CASES = {
       grid_options: { columns: 6 },
     },
   ],
+  // fill_height: false keeps a card at its own height beside a taller one (a short room list
+  // beside longer ones); a multi trend card sizes to its content and fills a taller row
+  "fill-off": [
+    {
+      type: EGC,
+      title: "Short",
+      fill_height: false,
+      entities: ["light.living_room", "light.kitchen"],
+      grid_options: { columns: 6 },
+    },
+    {
+      type: EGC,
+      title: "Long",
+      entities: [
+        "light.living_room",
+        "light.kitchen",
+        "light.office",
+        "sensor.outdoor_temperature",
+      ],
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:multi-trend-card-pro",
+      title: "Outdoor",
+      entities: ["sensor.outdoor_temperature", "sensor.outdoor_humidity"],
+      grid_options: { columns: 6 },
+    },
+    {
+      type: EGC,
+      title: "Long",
+      entities: [
+        "light.living_room",
+        "light.kitchen",
+        "light.office",
+        "sensor.outdoor_temperature",
+      ],
+      grid_options: { columns: 6 },
+    },
+  ],
   // a tile whose header has nothing to show is one row; with a header it is two
   "fill-header": [
     {

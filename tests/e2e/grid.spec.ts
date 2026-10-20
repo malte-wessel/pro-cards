@@ -70,10 +70,8 @@ test("the old layout_options count like grid_options", async ({ page }) => {
   expect(await height(page, 0)).toBe(cell(4));
 });
 
-test("a card's own numeric rows clamp like Home Assistant's", async ({ page }) => {
-  // the multi trend card asks for 3 rows itself; min_rows lifts a smaller count
-  await mount(page, CARDS[2]);
-  expect(await height(page, 0)).toBe(cell(3));
+test("a numeric row count clamps like Home Assistant's", async ({ page }) => {
+  // min_rows lifts a smaller count
   await mount(page, { ...CARDS[1], grid_options: { rows: 1, min_rows: 3 } });
   expect(await height(page, 0)).toBe(cell(3));
 });
@@ -88,15 +86,55 @@ test("in a grid row every card takes the row's height, the tallest keeps its own
     return height(page, 0);
   };
   const tall = await alone(TALL);
-  // the multi trend card asks for fixed rows itself: like any card with fixed rows its cell
-  // keeps that height
-  for (const cfg of [...CARDS, ...MORE].filter((c) => c.type !== "custom:multi-trend-card-pro")) {
+  for (const cfg of [...CARDS, ...MORE]) {
     const own = await alone(cfg);
     await mount(page, [half(cfg), half(TALL)], { fullWidth: false });
     const row = Math.max(own, tall);
     expect(await height(page, 0), `${cfg.type} beside the list`).toBe(row);
     expect(await height(page, 1), `the list beside ${cfg.type}`).toBe(row);
   }
+});
+
+test("fill_height: false keeps a card at its own height; fixed rows still fill", async ({
+  page,
+}) => {
+  const alone = async (cfg: object) => {
+    await mount(page, [half(cfg)], { fullWidth: false });
+    return height(page, 0);
+  };
+  const tall = await alone(TALL);
+  for (const cfg of [...CARDS, ...MORE]) {
+    const own = { ...cfg, fill_height: false };
+    const natural = await alone(own);
+    if (natural >= tall) continue;
+    await mount(page, [half(own), half(TALL)], { fullWidth: false });
+    expect(await height(page, 0), `${cfg.type} beside the list`).toBe(natural);
+    expect(await height(page, 1), `the list beside ${cfg.type}`).toBe(tall);
+    // a cell with fixed rows has that height whatever the card wants
+    await mount(page, { ...own, grid_options: { columns: 12, rows: 7 } });
+    expect(await height(page, 0), `${cfg.type} in fixed rows`).toBe(cell(7));
+  }
+});
+
+test("a multi trend card sizes to its content and fills a taller row", async ({ page }) => {
+  // about the three rows it used to pin on its own
+  await mount(page, [half(CARDS[2])], { fullWidth: false });
+  const own = await height(page, 0);
+  expect(own).toBeGreaterThan(cell(2));
+  expect(own).toBeLessThan(cell(4));
+  const trend = await card(page, 0)
+    .locator(".trend")
+    .boundingBox()
+    .then((b) => b!.height);
+  // beside a taller card (the weather station's tiles) it fills the row and its plot grows
+  await mount(page, [half(CARDS[2]), half(TALL)], { fullWidth: false });
+  expect(await height(page, 0)).toBe(await height(page, 1));
+  expect(
+    await card(page, 0)
+      .locator(".trend")
+      .boundingBox()
+      .then((b) => b!.height),
+  ).toBeGreaterThan(trend);
 });
 
 test("a stretched tile centres its content, a list keeps its rows at the top", async ({ page }) => {

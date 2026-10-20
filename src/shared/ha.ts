@@ -90,6 +90,8 @@ export interface GridOptions {
 export interface CardConfigBase {
   type?: string;
   grid_options?: GridOptions;
+  // false: keep the card's own height in a taller grid row or a stack (fixed rows still fill)
+  fill_height?: boolean;
   [key: string]: unknown;
 }
 

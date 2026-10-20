@@ -9,7 +9,7 @@ All cards report a default size to the sections grid through `getGridOptions`, s
 | Entity group card, every layout but `hero`   | 12 columns, `rows: auto` | 6 columns, 2 rows | Height follows the number of entities                                                             |
 | Entity group card, `hero`                    | 12 columns, `rows: auto` | 6 columns, 3 rows |                                                                                                   |
 | Entity sections card                         | 12 columns, `rows: auto` | 6 columns, 2 rows | 3 rows when a section is a `hero`; height follows the sections                                    |
-| Multi trend card                             | 12 columns × 3 rows      | 6 columns, 2 rows | Lanes layout: 2 rows + one row per entity                                                         |
+| Multi trend card                             | 12 columns, `rows: auto` | 6 columns, 2 rows | Height follows the plot: one band, or one lane per entity                                         |
 | Sun path card                                | 12 columns, `rows: auto` | 6 columns         |                                                                                                   |
 | Sun azimuth card                             | 12 columns, `rows: auto` | 6 columns         | Height follows the view and the sides footer                                                      |
 | Illuminance card                             | 12 columns, `rows: auto` | 6 columns         |                                                                                                   |
@@ -79,6 +79,26 @@ Like Home Assistant's own cards, every card takes the height it is given. That i
 | Power flow card                       | The tree: spread out in a taller cell, scaled down as a whole in a smaller one                 |
 
 Wherever the height follows the content (a masonry view, a vertical stack, a card alone in its row), every card keeps its own height. In a panel view the card takes the whole view.
+
+#### Keeping a card's own height
+
+`fill_height: false` keeps a card at its own height in a taller grid row or a horizontal stack, with the room left under it, for example a short room list beside longer ones. A cell with a number of rows still has that height, so there the card fills it all the same.
+
+::: live
+
+```yaml
+- type: custom:entity-group-card-pro
+  title: Bedroom
+  fill_height: false
+  entities: [light.living_room, light.kitchen]
+  grid_options: { columns: 6 }
+- type: custom:entity-group-card-pro
+  title: Studio
+  entities: [light.living_room, light.kitchen, light.office, sensor.outdoor_temperature]
+  grid_options: { columns: 6 }
+```
+
+:::
 
 ## Masonry and panel views
 

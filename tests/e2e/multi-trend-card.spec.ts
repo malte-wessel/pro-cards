@@ -53,10 +53,17 @@ test("uses lanes for mixed units and honours the layout override", async ({ page
   await expect(card(page, 0).locator("svg .lane-sep")).toHaveCount(1);
   await expect(card(page, 1).locator(".lane-label")).toHaveCount(2);
   await expect(card(page, 2).locator(".lane-label")).toHaveCount(0);
+  // every layout sizes to its content: two lanes are taller than an overlay
   const rows = await page.evaluate(() =>
     [0, 1, 2].map((i) => window.pc.card(i).getGridOptions().rows),
   );
-  expect(rows).toEqual([4, 4, 3]);
+  expect(rows).toEqual(["auto", "auto", "auto"]);
+  const h = (i: number) =>
+    card(page, i)
+      .locator("ha-card")
+      .boundingBox()
+      .then((b) => b!.height);
+  expect(await h(0)).toBeGreaterThan(await h(2));
 });
 
 test("lane and axis labels stay in their lanes when the card is taller than its content", async ({

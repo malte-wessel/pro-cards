@@ -9,6 +9,7 @@ export const EDITOR_LABELS: Record<string, StringKey> = {
   title: "editor.sun.title",
   show_dawn_dusk: "editor.sun.show_dawn_dusk",
   show_tooltip: "editor.sun.show_tooltip",
+  fill_height: "editor.sun.fill_height",
   day_color: "editor.sun.day_color",
   night_color: "editor.sun.night_color",
   sun_color: "editor.sun.sun_color",
@@ -27,6 +28,7 @@ export const configToForm = (config: SunPathCardConfig): HaFormData => {
     icon: config.icon ?? "",
     show_dawn_dusk: config.show_dawn_dusk ?? DEFAULTS.show_dawn_dusk,
     show_tooltip: config.show_tooltip ?? DEFAULTS.show_tooltip,
+    fill_height: config.fill_height ?? true,
     day_color: config.day_color ?? "",
     night_color: config.night_color ?? "",
     sun_color: config.sun_color ?? "",
@@ -46,6 +48,7 @@ export const formToConfig = (
   setOrDrop(config, "icon", data.icon, !data.icon);
   setOrDrop(config, "show_dawn_dusk", false, data.show_dawn_dusk !== false);
   setOrDrop(config, "show_tooltip", false, data.show_tooltip !== false);
+  setOrDrop(config, "fill_height", false, data.fill_height !== false);
   for (const k of COLOR_KEYS) setOrDrop(config, k, data[k], !data[k] || data[k] === DEFAULTS[k]);
   const labels: Partial<SunLabels> = {};
   for (const k of SUN_EVENTS) {
@@ -61,6 +64,7 @@ export const editorSchema = (hass?: HomeAssistant): HaFormSchema[] => [
   { name: "icon", selector: { icon: {} } },
   { name: "show_dawn_dusk", selector: { boolean: {} } },
   { name: "show_tooltip", selector: { boolean: {} } },
+  { name: "fill_height", selector: { boolean: {} } },
   {
     name: "",
     type: "grid",
