@@ -134,7 +134,7 @@ consumers:
 
 ## Node sizes
 
-Every node's circle has a size by kind: 44 px for solar and grid, 40 px for a battery, 46 px for the home, 32 px for consumers and rooms, 24 px for a room's devices. `icon_size` on a source, the home, a consumer, a room or a device sets its diameter in pixels (16 to 96), and the icon follows: two thirds of a small circle, at most 24 px until the circle passes 44 px, then 55 % of it. A ring, the gap inside it and its icon keep their proportions at any size. The tree gives a bigger node more room, so labels stay clear of it. In `consumer_style: list` a row's circle is at most 36 px, the row's height.
+Every node's circle has a size by kind: 44 px for solar and grid, 40 px for a battery, 46 px for the home, 32 px for consumers and rooms, 24 px for a room's devices. `icon_size` on a source, the home, a consumer, a room or a device sets its diameter in pixels (16 to 96), and the icon follows: 55 % of the circle, 42 % inside a ring. A ring, the gap inside it and its icon keep their proportions at any size. The tree gives a bigger node more room, so labels stay clear of it. In `consumer_style: list` a row's circle is at most 36 px, the row's height.
 
 ::: live
 

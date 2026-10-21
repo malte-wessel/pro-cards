@@ -321,9 +321,9 @@ test.describe("power flow card", () => {
     expect((await lead("home").boundingBox())!.width).toBe(60);
     expect((await lead("c0").boundingBox())!.width).toBe(48);
     expect((await lead("c1").boundingBox())!.width).toBe(32);
-    // two thirds of a small circle, at most 24 px; a ring keeps its old proportions (42 %)
-    expect(await icon("c1")).toBeCloseTo(21.4, 0);
-    expect(await icon("c0")).toBeCloseTo(26.4, 0);
+    // 55 % of the circle, 42 % in a ring
+    expect(await icon("c1")).toBeCloseTo(32 * 0.55, 0);
+    expect(await icon("c0")).toBeCloseTo(48 * 0.55, 0);
     await expect(lead("s0")).toHaveClass(/\bring\b/);
     await expect(lead("s2")).not.toHaveClass(/\bring\b/);
     expect(await icon("s0")).toBeCloseTo(44 * 0.42, 0);
@@ -331,7 +331,7 @@ test.describe("power flow card", () => {
     // … and its stroke scales with the node: 3 px on the home's own 46 px
     const sw = await lead("home").locator("circle.track").getAttribute("stroke-width");
     expect(Number(sw)).toBeCloseTo((3 * 60) / 46, 2);
-    expect(await icon("s2")).toBeCloseTo(24.2, 0);
+    expect(await icon("s2")).toBeCloseTo(44 * 0.55, 0);
   });
 
   test("a fixed number of grid rows: the tree fills the card or scales down", async ({ page }) => {

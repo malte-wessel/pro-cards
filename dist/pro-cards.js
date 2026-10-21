@@ -927,6 +927,9 @@
 
   .pdiag .pnode { position: absolute; display: flex; flex-direction: column; transform: translate(-50%, -50%); gap: 0; z-index: 2; }
   .pnode .lead .shape { background: color-mix(in srgb, var(--fe-color) 20%, ${Ea}); }
+  /* a diagram, not a tile: the icons stay lighter than the entity cards' (55 % of the circle, 42 %
+     in a ring), so the home and the sources keep the weight; both scale with icon_size */
+  :is(.pnode, .plist) .lead:not(.ring) .shape { --mdc-icon-size: calc(var(--lead) * .55); }
   .pnode > .hit:focus-visible { box-shadow: none; }
   .pnode > .hit:focus-visible ~ .lead .shape { box-shadow: 0 0 0 2px var(--fe-color); }
   .pnode .lead .prog { transition: stroke-dashoffset .4s, d .4s; }
