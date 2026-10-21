@@ -2,6 +2,7 @@
 import { fmtNumber, fmtTime, textWidth } from "../../shared/format.ts";
 import type { HomeAssistant } from "../../shared/ha.ts";
 import { t } from "../../shared/i18n.ts";
+import { escapeHtml } from "../../shared/util.ts";
 import { CHIP_FONT } from "../constants.ts";
 import {
   compassKey,
@@ -52,5 +53,5 @@ export const timeChip = (label: string, x: number, y: number, w: number) => {
 export const chipSvg = (label: string, x: number, y: number) => {
   const w = Math.ceil(textWidth(label, CHIP_FONT)) + 16,
     f = (v: number) => v.toFixed(1);
-  return `<g class="chip"><rect x="${f(x - w / 2)}" y="${f(y - 10)}" width="${w}" height="20" rx="10"/><text x="${f(x)}" y="${f(y)}">${label}</text></g>`;
+  return `<g class="chip"><rect x="${f(x - w / 2)}" y="${f(y - 10)}" width="${w}" height="20" rx="10"/><text x="${f(x)}" y="${f(y)}">${escapeHtml(label)}</text></g>`;
 };

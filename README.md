@@ -46,13 +46,13 @@ All cards support the sections grid (`grid_options`). Requires Home Assistant 20
 
 [![Open your Home Assistant instance and open this repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=malte-wessel&repository=pro-cards&category=plugin)
 
-Or add it by hand:
+Or open HACS, search for **Pro Cards**, download it and reload the browser. HACS registers the resource `/hacsfiles/pro-cards/pro-cards.js` automatically.
+
+If HACS does not list it yet, add it as a custom repository first:
 
 1. HACS → three-dot menu → **Custom repositories**.
 2. Add `https://github.com/malte-wessel/pro-cards` with category **Dashboard**.
-3. Search for **Pro Cards**, install it and reload the browser.
-
-HACS registers the resource `/hacsfiles/pro-cards/pro-cards.js` automatically.
+3. Search for **Pro Cards**, download it and reload the browser.
 
 ### Manual
 

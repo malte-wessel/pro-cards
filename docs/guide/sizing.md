@@ -66,17 +66,17 @@ Like Home Assistant's own cards, every card takes the height it is given. That i
 
 :::
 
-| Card                                  | What fills the height                                                                          |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Entity card, tiles                    | The `sparkline` or `columns` plot; any other tile centres its content                          |
-| Entity group and entity sections card | The `sparkline` and `columns` plots, an even share each; without them the rows stay at the top |
-| Weather card                          | The trends and the plots of its entity sections; the tile centres its content                  |
-| Wind and rain card                    | The hero's band (`flow.height` is its height everywhere else); the tile centres its content    |
-| Multi trend card                      | The plot                                                                                       |
-| Sun path card                         | The plot                                                                                       |
-| Sun azimuth card                      | The picture, centred                                                                           |
-| Illuminance card                      | The trend (`mode: trend`); the arc and the band keep their size, centred                       |
-| Power flow card                       | The tree: spread out in a taller cell, scaled down as a whole in a smaller one                 |
+| Card                                  | What fills the height                                                                                            |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Entity card, tiles                    | The `sparkline` or `columns` plot; a `gauge` centres under the icon and name; any other tile centres its content |
+| Entity group and entity sections card | The `sparkline` and `columns` plots, an even share each; without them the rows stay at the top                   |
+| Weather card                          | The trends and the plots of its entity sections; the tile centres its content                                    |
+| Wind and rain card                    | The hero's band (`flow.height` is its height everywhere else); the tile centres its content                      |
+| Multi trend card                      | The plot                                                                                                         |
+| Sun path card                         | The plot                                                                                                         |
+| Sun azimuth card                      | The picture, centred                                                                                             |
+| Illuminance card                      | The trend (`mode: trend`); the arc and the band keep their size, centred                                         |
+| Power flow card                       | The tree: spread out in a taller cell, scaled down as a whole in a smaller one                                   |
 
 Wherever the height follows the content (a masonry view, a vertical stack, a card alone in its row), every card keeps its own height. In a panel view the card takes the whole view.
 

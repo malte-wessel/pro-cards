@@ -153,6 +153,30 @@ const CASES = {
       { state: "off", color: "grey", label: "Off" },
     ],
   },
+  // fixed rows: the icon and name keep the top left, the gauge centres in the room below
+  "ec-gauge-tall": [
+    {
+      type: EC,
+      entity: "sensor.bathroom_humidity",
+      decimals: 0,
+      visual: "gauge",
+      rules: [
+        { below: 60, color: "green", label: "OK" },
+        { below: 70, color: "amber", label: "Humid" },
+        { above: 70, color: "red", label: "Ventilate" },
+      ],
+      grid_options: { columns: 6, rows: 4 },
+    },
+    {
+      type: EC,
+      entity: "sensor.power_consumption",
+      visual: "gauge",
+      min: 0,
+      max: 3000,
+      decimals: 0,
+      grid_options: { columns: 12, rows: 4 },
+    },
+  ],
   "egc-list": {
     type: EGC,
     layout: "list",

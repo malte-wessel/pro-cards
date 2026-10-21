@@ -394,4 +394,39 @@ test.describe("gauge", () => {
     expect(uv.font).toMatch(/px$/);
     expect((await fit(1)).font).toBe("");
   });
+  test("a tile keeps its icon at the top left and centres the gauge in the room below", async ({
+    page,
+  }) => {
+    await mount(page, {
+      type: T,
+      entity: "sensor.bathroom_humidity",
+      visual: "gauge",
+      grid_options: { columns: 6, rows: 4 },
+    });
+    const p = await card(page)
+      .locator(".row.tile")
+      .evaluate((row) => {
+        const body = row.parentElement as HTMLElement;
+        const cs = getComputedStyle(body);
+        const b = body.getBoundingClientRect();
+        const lead = (
+          row.querySelector(":scope > .top > .lead") as HTMLElement
+        ).getBoundingClientRect();
+        const top = (row.querySelector(":scope > .top") as HTMLElement).getBoundingClientRect();
+        const g = (row.querySelector(":scope > .gauge") as HTMLElement).getBoundingClientRect();
+        const contentTop = b.top + parseFloat(cs.paddingTop);
+        return {
+          leadTop: lead.top - contentTop,
+          leadLeft: lead.left - b.left - parseFloat(cs.paddingLeft),
+          off: g.left + g.width / 2 - (b.left + b.width / 2),
+          above: g.top - top.bottom - parseFloat(getComputedStyle(row).rowGap),
+          below: b.bottom - parseFloat(cs.paddingBottom) - g.bottom,
+        };
+      });
+    expect(Math.abs(p.leadTop)).toBeLessThanOrEqual(1);
+    expect(Math.abs(p.leadLeft)).toBeLessThanOrEqual(1);
+    expect(Math.abs(p.off)).toBeLessThanOrEqual(1);
+    expect(p.above).toBeGreaterThan(4);
+    expect(Math.abs(p.above - p.below)).toBeLessThanOrEqual(1);
+  });
 });

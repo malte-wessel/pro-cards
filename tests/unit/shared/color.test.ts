@@ -1,9 +1,12 @@
 import { describe, it, expect } from "vitest";
 import {
+  cssColor,
+  domainOf,
+  resolveHex,
+  safeColor,
   stateActive,
   stateColorCss,
   stateColorProperties,
-  domainOf,
 } from "../../../src/shared/color.ts";
 import type { HassEntity } from "../../../src/shared/ha.ts";
 
@@ -75,5 +78,55 @@ describe("Home Assistant state colours", () => {
     expect(stateColorCss(st("light.a", "on"), "off")).toBe(
       "var(--state-light-off-color, var(--state-light-inactive-color, var(--state-inactive-color)))",
     );
+  });
+});
+
+describe("colours that reach markup", () => {
+  const evil = [
+    'red" onload="alert(1)',
+    '#fff"><script>alert(1)</script>',
+    'rgb(1,2,3)" x="',
+    "var(--x); background: red",
+    "url(#a)",
+    "<b>",
+    "red'",
+  ];
+  it("pass plain colour tokens through", () => {
+    for (const c of [
+      "amber",
+      "deep-purple",
+      "#7e57c2",
+      "#7e57c280",
+      "rgb(1, 2, 3)",
+      "rgba(0,0,0,.5)",
+    ])
+      expect(safeColor(c)).toBe(c);
+    expect(safeColor("hsl(200deg 50% 40% / 80%)")).toBe("hsl(200deg 50% 40% / 80%)");
+    expect(safeColor("var(--my-color)")).toBe("var(--my-color)");
+    expect(safeColor("color-mix(in srgb, var(--red-color) 20%, transparent)")).not.toBe(null);
+  });
+  it("count anything else as no colour", () => {
+    for (const c of evil) {
+      expect(safeColor(c)).toBe(null);
+      expect(cssColor(c, "var(--primary-color)")).toBe("var(--primary-color)");
+      expect(cssColor(c)).toBe(undefined);
+      expect(resolveHex(c)).toBe("#888888");
+    }
+    expect(safeColor(42)).toBe(null);
+  });
+  it("resolve only well-formed hex values", () => {
+    expect(resolveHex("#abc")).toBe("#abc");
+    expect(resolveHex("#abcdef")).toBe("#abcdef");
+    expect(resolveHex("#ab-cd")).toBe("#888888");
+    expect(resolveHex("amber")).toBe("#ffc107");
+  });
+  it("slug the device class into the theme property name", () => {
+    const props = stateColorProperties(
+      st("binary_sensor.a", "on", { device_class: 'door") x="1' }),
+    );
+    expect(props?.[0]).toBe("--state-binary_sensor-door_x_1-on-color");
+    expect(
+      safeColor(stateColorCss(st("binary_sensor.a", "on", { device_class: '"><b>' }))),
+    ).not.toBe(null);
   });
 });

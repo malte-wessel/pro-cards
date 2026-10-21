@@ -593,7 +593,7 @@ entities:
 | `layout`         | Arrangement                                                                            |
 | ---------------- | -------------------------------------------------------------------------------------- |
 | `list` (default) | One row per entity: icon, name, value, optional toggle; graphs below the name.         |
-| `grid`           | Compact cells, `columns` per row, with the value big.                                  |
+| `grid`           | Compact cells, `columns` per row, with the value big; a `ring` or `gauge` is centred.  |
 | `hero`           | The first entity is the lead with a big value and its graph; the rest are list rows.   |
 | `row`            | Compact items side by side: a round icon with the name under it, optionally the value. |
 | `column`         | Stacked list-like items: name and value beside the icon.                               |

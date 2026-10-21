@@ -1,5 +1,5 @@
 // Illuminance zones and the log scale (pure).
-import { mixHex } from "../shared/color.ts";
+import { mixHex, resolveHex } from "../shared/color.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
 import { lineMeans, type MeanBucket } from "../shared/history.ts";
 import { t } from "../shared/i18n.ts";
@@ -99,7 +99,7 @@ export const colorAnchors = (zones: readonly Zone[], min: number, max: number): 
     const zhi = Math.min(logOf(z.max), hi);
     const mid = (lo + zhi) / 2;
     lo = zhi;
-    return { p: (mid - logOf(min)) / (hi - logOf(min)), color: z.hex || z.color };
+    return { p: (mid - logOf(min)) / (hi - logOf(min)), color: z.hex || resolveHex(z.color) };
   });
 };
 export const colorAt = (anchors: readonly ColorAnchor[], p: number): string => {

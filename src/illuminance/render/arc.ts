@@ -1,10 +1,9 @@
 // Mode "arc": a half-circle gauge with the zones as segments and the value in the middle.
 import { t } from "../../shared/i18n.ts";
+import { escapeHtml as esc } from "../../shared/util.ts";
 import type { IlluminanceHost } from "../config.ts";
 import { posOf, zoneOf } from "../zones.ts";
 import { fmtLx, pillEl } from "./plot.ts";
-
-const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
 
 export const renderArc = (card: IlluminanceHost, body: HTMLElement, v: number | null) => {
   const cfg = card._config,

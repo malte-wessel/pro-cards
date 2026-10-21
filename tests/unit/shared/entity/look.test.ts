@@ -189,7 +189,15 @@ describe("look resolution", () => {
       label: null,
       rule: null,
     });
-    expect(resolveLook(ent({ color: "{{ c }}" }), num(5), st("5"), tpl).color).toBe("T({{ c }})");
+    // a template's colour is its rendered result; one that is no plain colour token counts as none
+    const rendered = (out: string) => () => out;
+    expect(resolveLook(ent({ color: "{{ c }}" }), num(5), st("5"), rendered("teal")).color).toBe(
+      "teal",
+    );
+    const rules = [{ above: 0, color: "green" }];
+    expect(
+      resolveLook(ent({ color: "{{ c }}", rules }), num(5), st("5"), rendered('red" x="1')).color,
+    ).toBe("green");
   });
   it("uses state rules for text values and greys out off-like states", () => {
     const e = ent({
