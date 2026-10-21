@@ -28,6 +28,8 @@ const sv: Translation = {
   "control.unlock": "Lås upp",
   "control.hold_to": "Håll för att {action}",
   "control.press_again": "Tryck igen för att {action}",
+  "layout.empty": "Lägg till kort i den här layouten",
+  "layout.unavailable": "Home Assistants kortelement lästes inte in",
   "group.stub_title": "Grupp",
   "sections.stub_title": "Sektion",
 

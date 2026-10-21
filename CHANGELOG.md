@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- New layout card (`custom:layout-card-pro`): cards, Pro Cards and Home Assistant's own, arranged inside a section in a `grid` (a count of columns or tracks such as `[1fr, 2fr]` and `[320px, 1fr]`, spans of columns and rows, start columns; a card that asks for rows gets them in the sections grid's row height) or in `masonry` (filled by the cards' own sizes, a card pinned to its column). The breakpoints are view columns: `breakpoints: { 2: { columns: 4 } }` changes the layout once its section spans two view columns, read from the span Home Assistant gives the section (outside a section, from the card's width in the sections view's 500 px columns). Spacing (`gap`, `padding`) and `card_style: seamless` for one surface with dividers. Each card's `view_layout` places it (span, column, order, align), per view columns where it is a map. The cards keep Home Assistant's own `visibility`; a hidden card leaves no gap. YAML only for now
+- Docs: the layout card's page starts with when to use it and six recipes (a room card, more columns where there is room, a main card with a side column, a toolbar, rooms of different lengths, energy at a glance), and a new layout showcase puts the same card in a narrow and a wide section. The showcase dashboards no longer run past the right edge on a phone
+
 ## 2.7.1 (2026-10-21)
 
 - Colours and icons from the config, rendered templates and entity attributes can no longer add markup to the dashboard. A colour is checked before it reaches the cards' SVG: only a plain colour token counts (a name, a hex, `rgb()` / `hsl()` / `var()` of numbers, commas, slashes and spaces); one with a quote, an angle bracket, `;`, `:` or `url()` counts as no colour, so a template that renders something else falls back to the rules. The integration's `device_class` is slugged before it names a theme colour, and the sun path and sun azimuth cards set the header `icon` as an attribute. A value with a `"` in it used to close the SVG attribute it was written into

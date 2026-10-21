@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://malte-wessel.github.io/pro-cards/schema/pro-cards.schema.json",
   "title": "Pro Cards card config",
-  "description": "Any of the eleven Pro Cards, discriminated by `type`.",
+  "description": "Any of the twelve Pro Cards, discriminated by `type`.",
   "oneOf": [
     {
       "$ref": "entity-card-pro.schema.json"
@@ -36,6 +36,9 @@
     },
     {
       "$ref": "power-flow-card-pro.schema.json"
+    },
+    {
+      "$ref": "layout-card-pro.schema.json"
     }
   ]
 }

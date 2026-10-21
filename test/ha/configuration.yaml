@@ -26,6 +26,12 @@ lovelace:
       icon: mdi:cards-outline
       show_in_sidebar: true
       filename: test/dashboards/pro-cards.yaml
+    pro-cards-layout:
+      mode: yaml
+      title: Layout card
+      icon: mdi:view-dashboard-variant-outline
+      show_in_sidebar: true
+      filename: test/dashboards/layout.yaml
 
 input_number:
   demo_drive:

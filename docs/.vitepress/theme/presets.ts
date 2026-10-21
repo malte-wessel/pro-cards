@@ -170,6 +170,22 @@ consumers:
   - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
   - { entity: sensor.office_power, name: Office, icon: mdi:monitor }
 `,
+  "Layout card": `type: custom:layout-card-pro
+columns: 2
+breakpoints:
+  2: { columns: 4 }
+cards:
+  - type: custom:entity-card-pro
+    entity: sensor.outdoor_temperature
+    visual: sparkline
+    view_layout: { span: { 1: full, 2: [2, 2] } }
+  - type: custom:entity-card-pro
+    entity: light.kitchen
+  - type: custom:entity-card-pro
+    entity: light.living_room
+  - type: custom:entity-card-pro
+    entity: cover.living_room_blinds
+`,
   "Wind card": `type: custom:wind-card-pro
 entity: sensor.wind_speed
 direction: sensor.wind_direction

@@ -286,6 +286,62 @@ views:
               - { type: trend, mode: hourly, hours: 12 }
               - { type: forecast, mode: daily, days: 5 }
       - type: grid
+        column_span: 2
+        cards:
+          - type: heading
+            heading: Layout card
+          # Pro and core cards inside, each in Home Assistant's own hui-card: visibility (the
+          # kitchen card shows while the kitchen light is on, the office card while the view has
+          # two columns), the editor's preview, core cards loaded lazily and a nested layout. The
+          # breakpoints are view columns: two columns once the section spans two (column_span 2)
+          - type: custom:layout-card-pro
+            columns: 1
+            breakpoints:
+              2: { columns: 2 }
+            cards:
+              - type: custom:entity-card-pro
+                entity: sensor.outdoor_temperature
+                visual: sparkline
+                view_layout: { span: { 2: [1, 2] } }
+              - type: tile
+                entity: light.living_room
+              - type: tile
+                entity: light.kitchen
+                visibility:
+                  - { condition: state, entity: light.kitchen, state: "on" }
+              - type: heading
+                heading: Nested layout
+                view_layout: { span: full }
+              - type: custom:layout-card-pro
+                columns: 2
+                card_style: seamless
+                cards:
+                  - type: custom:entity-card-pro
+                    entity: sensor.outdoor_humidity
+                  - type: custom:entity-card-pro
+                    entity: sensor.power_consumption
+              - type: markdown
+                content: A lazily loaded core card (markdown)
+              - type: custom:entity-card-pro
+                entity: light.office
+                visibility:
+                  - { condition: view_columns, min: 2 }
+          - type: custom:layout-card-pro
+            layout: masonry
+            columns: 2
+            breakpoints:
+              2: { columns: 3 }
+            cards:
+              - type: custom:weather-card-pro
+                entity: weather.demo_weather_south
+                sections: [{ type: forecast, mode: daily, days: 5 }]
+              - type: tile
+                entity: light.living_room
+              - type: tile
+                entity: light.kitchen
+              - type: custom:entity-card-pro
+                entity: sensor.power_consumption
+      - type: grid
         cards:
           - type: heading
             heading: Controls · icons

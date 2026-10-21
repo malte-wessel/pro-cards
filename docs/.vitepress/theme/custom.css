@@ -179,7 +179,7 @@ html {
 }
 .ha-grid.sections {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   gap: 24px;
   align-items: start;
 }
@@ -190,13 +190,25 @@ html {
   gap: 8px;
   min-width: 0;
 }
+/* like HA's sections view, every section says how many view columns it spans (--column-span) */
+.ha-grid.sections > .section {
+  --column-span: 1;
+}
 .ha-grid.sections > .section.span-2 {
   grid-column: span 2;
+  --column-span: 2;
+}
+.ha-grid.sections > .section.span-wide {
+  --column-span: 3;
 }
 /* fewer than three columns: a double section takes the row like any other */
 @container (max-width: 647px) {
   .ha-grid.sections > .section.span-2 {
     grid-column: auto;
+    --column-span: 1;
+  }
+  .ha-grid.sections > .section.span-wide {
+    --column-span: 1;
   }
 }
 .ha-grid.sections > .section > .cell {

@@ -1,6 +1,7 @@
 // Every card the docs site renders (`::: live` fences and DashboardGrid dashboards) mounts in the
 // harness without a console error and without an entity the demo home lacks: a broken example
-// looks like a bug in the card. The schema test only checks the YAML; this one runs it.
+// looks like a bug in the card. The schema test only checks the YAML; this one runs it. The cards
+// inside a layout card are checked as the cards they are.
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import yaml from "js-yaml";
@@ -54,7 +55,8 @@ for (const file of walk("docs")) {
       const n = await mount(page, cards, { liveClock: true, width });
       expect(n).toBe(cards.length);
       const missing = await page.evaluate(() =>
-        [...document.querySelectorAll("#root .cell > *")]
+        window.pc
+          .cards()
           .map((el) => el.shadowRoot?.textContent ?? "")
           .filter((t) => / not found/.test(t)),
       );
@@ -62,7 +64,7 @@ for (const file of walk("docs")) {
       expect(errors).toEqual([]);
       // no control spills past its card (clipped by the card's overflow) at a section's width
       const spilled = await page.evaluate(() =>
-        [...document.querySelectorAll("#root .cell > *")].flatMap((el, i) => {
+        window.pc.cards().flatMap((el, i) => {
           const root = el.shadowRoot;
           const card = root?.querySelector("ha-card")?.getBoundingClientRect();
           if (!root || !card) return [];

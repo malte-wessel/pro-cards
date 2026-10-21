@@ -67,6 +67,7 @@ const cardGroups = [
     ],
   },
   { text: "Energy", items: [{ text: "Power Flow Card Pro", link: "/cards/power-flow-card" }] },
+  { text: "Layout", items: [{ text: "Layout Card Pro", link: "/cards/layout-card" }] },
   {
     text: "Weather",
     items: [
@@ -94,6 +95,7 @@ const guide = [
 // the showcase dashboards, grown from the homepage examples
 const showcase = [
   { text: "Energy", link: "/showcase/energy" },
+  { text: "Layout", link: "/showcase/layout" },
   { text: "Overview", link: "/showcase/overview" },
   { text: "Weather", link: "/showcase/weather" },
 ];

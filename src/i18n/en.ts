@@ -27,6 +27,8 @@ const en = {
   "control.unlock": "unlock",
   "control.hold_to": "Hold to {action}",
   "control.press_again": "Press again to {action}",
+  "layout.empty": "Add cards to this layout",
+  "layout.unavailable": "Home Assistant's card elements did not load",
   "group.stub_title": "Group",
   "sections.stub_title": "Section",
 

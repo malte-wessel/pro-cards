@@ -28,6 +28,8 @@ const nl: Translation = {
   "control.unlock": "Ontgrendelen",
   "control.hold_to": "Houd vast om te {action}",
   "control.press_again": "Druk nogmaals om te {action}",
+  "layout.empty": "Voeg kaarten toe aan deze indeling",
+  "layout.unavailable": "De kaartelementen van Home Assistant zijn niet geladen",
   "group.stub_title": "Groep",
   "sections.stub_title": "Sectie",
 

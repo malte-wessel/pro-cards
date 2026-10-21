@@ -1,0 +1,953 @@
+# Layout Card Pro: every option of the layout card on a real dashboard, with Pro Cards and Home
+# Assistant's own cards inside. One view per topic; each section starts with a heading and a note
+# on what to look for. The panel view at the end gives one layout the whole width, so it counts
+# breakpoints show.
+title: Layout card
+views:
+  # ---------------------------------------------------------------------------------------------
+  - title: Grid
+    path: grid
+    icon: mdi:view-grid-outline
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Column count
+          - type: markdown
+            content: >-
+              `columns: 2`. Every card takes one column; `span: full` takes the row,
+              `span: 2` two columns.
+          - type: custom:layout-card-pro
+            columns: 2
+            cards:
+              - type: custom:entity-card-pro
+                entity: sensor.outdoor_temperature
+                view_layout: { span: full }
+              - type: tile
+                entity: light.living_room
+              - type: tile
+                entity: light.kitchen
+              - type: tile
+                entity: light.office
+              - type: tile
+                entity: light.dining_table
+              - type: custom:entity-card-pro
+                entity: sensor.power_consumption
+                visual: bar
+                min: 0
+                max: 3000
+                view_layout: { span: 2 }
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Tracks
+          - type: markdown
+            content: >-
+              Columns of their own widths, like `grid-template-columns`:
+              `[1fr, 2fr]`, `[120px, 1fr]` and `[minmax(140px, 1fr), 1fr, 1fr]`.
+          - type: custom:layout-card-pro
+            columns: [1fr, 2fr]
+            cards:
+              - type: tile
+                entity: lock.front_door
+              - type: custom:entity-card-pro
+                entity: sensor.living_room_temperature
+                visual: sparkline
+          - type: custom:layout-card-pro
+            columns: [120px, 1fr]
+            cards:
+              - type: tile
+                entity: switch.coffee_machine
+                vertical: true
+              - type: custom:entity-card-pro
+                entity: sensor.washer_status
+          - type: custom:layout-card-pro
+            columns: ["minmax(140px, 1fr)", 1fr, 1fr]
+            cards:
+              - type: tile
+                entity: cover.garage_door
+              - type: tile
+                entity: cover.hall_window
+                hide_state: true
+              - type: tile
+                entity: cover.kitchen_window
+                hide_state: true
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Rows
+          - type: markdown
+            content: >-
+              A card that asks for rows, by `span: [1, 3]` or by its own `grid_options` rows (the
+              tile with a feature asks for 2), gets them in the sections grid's row height and
+              fills them.
+          - type: custom:layout-card-pro
+            columns: 2
+            cards:
+              - type: custom:entity-card-pro
+                entity: sensor.outdoor_temperature
+                visual: sparkline
+                view_layout: { span: [1, 3] }
+              - type: tile
+                entity: light.ceiling_lights
+                features:
+                  - type: light-brightness
+              - type: tile
+                entity: light.bed_light
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Align items
+          - type: markdown
+            content: >-
+              In a row with a tall card: `stretch` (the default) makes the others as tall,
+              `start` keeps their own height, `center` centres them.
+          - type: custom:layout-card-pro
+            columns: 2
+            cards:
+              - &tall_card
+                type: custom:entity-card-pro
+                entity: sensor.power_consumption
+                visual: sparkline
+              - type: custom:entity-card-pro
+                entity: light.kitchen
+                name: stretch
+          - type: custom:layout-card-pro
+            columns: 2
+            align_items: start
+            cards:
+              - *tall_card
+              - type: custom:entity-card-pro
+                entity: light.kitchen
+                name: start
+          - type: custom:layout-card-pro
+            columns: 2
+            align_items: center
+            cards:
+              - *tall_card
+              - type: custom:entity-card-pro
+                entity: light.kitchen
+                name: center
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Start column
+          - type: markdown
+            content: >-
+              `column: 3` starts a card in the third column, `column: 1` back at the start of a
+              row; the others flow around them.
+          - type: custom:layout-card-pro
+            columns: 3
+            cards:
+              - type: tile
+                entity: lock.front_door
+                name: column 3
+                view_layout: { column: 3 }
+              - type: tile
+                entity: lock.kitchen_door
+              - type: tile
+                entity: lock.openable_lock
+              - type: tile
+                entity: lock.poorly_installed_door
+              - type: tile
+                entity: cover.garage_door
+                name: column 1, span 2
+                view_layout: { column: 1, span: 2 }
+
+  # ---------------------------------------------------------------------------------------------
+  - title: Stack & masonry
+    path: stack-masonry
+    icon: mdi:view-dashboard-outline
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        column_span: 2
+        cards:
+          - type: heading
+            heading: Masonry
+          - type: markdown
+            content: >-
+              `layout: masonry` fills columns by height: each card goes to the shortest column,
+              measured by the cards' own size (their `getCardSize`), so a card that changes
+              height does not reshuffle the rest.
+          - type: custom:layout-card-pro
+            layout: masonry
+            columns: 3
+            cards:
+              - type: custom:weather-card-pro
+                entity: weather.demo_weather_south
+                sections:
+                  - type: hero
+                  - type: forecast
+                    mode: daily
+                    days: 5
+              - type: tile
+                entity: light.living_room
+              - type: tile
+                entity: light.kitchen
+              - type: entities
+                title: Climate
+                entities:
+                  - climate.ecobee
+                  - climate.heatpump
+                  - climate.hvac
+              - type: tile
+                entity: lock.front_door
+              - type: glance
+                entities:
+                  - sensor.outdoor_temperature
+                  - sensor.outdoor_humidity
+                  - sensor.wind_speed
+              - type: tile
+                entity: media_player.living_room
+              - type: tile
+                entity: cover.garage_door
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Masonry pins and order
+          - type: markdown
+            content: >-
+              `column: 2` pins the battery to the second column; `order: -1` deals the lock out
+              first, whatever its place in the YAML.
+          - type: custom:layout-card-pro
+            layout: masonry
+            columns: 2
+            cards:
+              - type: tile
+                entity: light.office
+              - type: tile
+                entity: light.dining_table
+              - type: custom:entity-card-pro
+                entity: sensor.battery_state_of_charge
+                visual: ring
+                view_layout: { column: 2 }
+              - type: tile
+                entity: light.bed_light
+              - type: tile
+                entity: lock.front_door
+                view_layout: { order: -1 }
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Masonry tracks
+          - type: markdown
+            content: >-
+              `columns: [2fr, 1fr]` gives the columns their own widths; below, three columns
+              from two view columns and one in one.
+          - type: custom:layout-card-pro
+            layout: masonry
+            columns: [2fr, 1fr]
+            cards:
+              - type: custom:entity-card-pro
+                entity: sensor.power_consumption
+                visual: sparkline
+              - type: tile
+                entity: switch.ac
+                vertical: true
+              - type: tile
+                entity: switch.decorative_lights
+                vertical: true
+          - type: custom:layout-card-pro
+            layout: masonry
+            columns: 1
+            breakpoints:
+              2: { columns: 3 }
+            cards:
+              - type: tile
+                entity: media_player.kitchen
+              - type: tile
+                entity: media_player.bedroom
+              - type: tile
+                entity: media_player.lounge_room
+
+  # ---------------------------------------------------------------------------------------------
+  - title: Spacing & style
+    path: spacing
+    icon: mdi:arrow-expand-horizontal
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Gaps
+          - type: markdown
+            content: >-
+              `gap: 16`, then `gap: [2, 24]` (row, column), then `gap: [0, 8]`: no space between
+              the rows. Without `gap` the layout uses the theme's sections grid gap.
+          - type: custom:layout-card-pro
+            columns: 2
+            gap: 16
+            cards: &four_tiles
+              - type: tile
+                entity: light.living_room
+              - type: tile
+                entity: light.kitchen
+              - type: tile
+                entity: light.office
+              - type: tile
+                entity: light.dining_table
+          - type: custom:layout-card-pro
+            columns: 2
+            gap: [2, 24]
+            cards: *four_tiles
+          - type: custom:layout-card-pro
+            columns: 2
+            gap: [0, 8]
+            cards: *four_tiles
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Padding
+          - type: markdown
+            content: >-
+              `padding: [16, 32]` insets the cards; `padding: { top: 24 }` only at the top.
+          - type: custom:layout-card-pro
+            columns: 2
+            padding: [16, 32]
+            cards: *four_tiles
+          - type: custom:layout-card-pro
+            columns: 2
+            padding: { top: 24 }
+            cards: *four_tiles
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Seamless
+          - type: markdown
+            content: >-
+              `card_style: seamless` merges the cards into one surface with dividers: two
+              columns, three, and one.
+          - type: custom:layout-card-pro
+            columns: 2
+            card_style: seamless
+            cards: *four_tiles
+          - type: custom:layout-card-pro
+            columns: 3
+            card_style: seamless
+            cards:
+              - type: custom:entity-card-pro
+                entity: sensor.outdoor_temperature
+              - type: custom:entity-card-pro
+                entity: sensor.outdoor_humidity
+              - type: custom:entity-card-pro
+                entity: sensor.wind_speed
+          - type: custom:layout-card-pro
+            card_style: seamless
+            cards:
+              - type: tile
+                entity: climate.heatpump
+                features:
+                  - type: target-temperature
+              - type: tile
+                entity: cover.living_room_window
+                features:
+                  - type: cover-open-close
+              - type: tile
+                entity: media_player.living_room
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Seamless with padding
+          - type: markdown
+            content: >-
+              A seamless surface with `padding: [8, 16]`: the padding is inside the surface,
+              around the cards. The camera keeps its shape with its own `aspect_ratio`.
+          - type: custom:layout-card-pro
+            card_style: seamless
+            padding: [8, 16]
+            cards:
+              - type: picture-entity
+                entity: camera.demo_camera
+                show_state: false
+                show_name: false
+                aspect_ratio: 16x9
+              - type: tile
+                entity: binary_sensor.movement_backyard
+              - type: tile
+                entity: light.entrance_color_white_lights
+
+  # ---------------------------------------------------------------------------------------------
+  - title: Responsive
+    path: responsive
+    icon: mdi:responsive
+    type: sections
+    max_columns: 4
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: One view column
+          - type: markdown
+            content: >-
+              The breakpoints are view columns. This layout and the wide one beside it are the
+              same: one column, two once its section spans two view columns, three from three.
+              This section spans one, so it shows one column.
+          - type: custom:layout-card-pro
+            columns: 1
+            breakpoints: &responsive_bps
+              2: { columns: 2 }
+              3: { columns: 3, gap: 12 }
+            cards: &responsive_cards
+              - type: custom:entity-card-pro
+                entity: sensor.outdoor_temperature
+              - type: custom:entity-card-pro
+                entity: sensor.outdoor_humidity
+              - type: custom:entity-card-pro
+                entity: sensor.wind_speed
+              - type: custom:entity-card-pro
+                entity: sensor.illuminance
+              - type: custom:entity-card-pro
+                entity: sensor.rain_today
+              - type: custom:entity-card-pro
+                entity: sensor.carbon_dioxide
+
+      - type: grid
+        column_span: 3
+        cards:
+          - type: heading
+            heading: Three view columns
+          - type: markdown
+            content: >-
+              The same layout in a section with `column_span: 3`. On a desktop with room for
+              three or four view columns it shows three columns; make the window narrower and
+              Home Assistant gives the section two view columns, then one, and the layout follows.
+          - type: custom:layout-card-pro
+            columns: 1
+            breakpoints: *responsive_bps
+            cards: *responsive_cards
+
+      - type: grid
+        column_span: 2
+        cards:
+          - type: heading
+            heading: Skipping a breakpoint
+          - type: markdown
+            content: >-
+              Only `3` is set here: in one and two view columns the layout keeps its two
+              columns, from three it has six.
+          - type: custom:layout-card-pro
+            columns: 2
+            breakpoints:
+              3: { columns: 6 }
+            cards: *responsive_cards
+
+      - type: grid
+        column_span: 2
+        cards:
+          - type: heading
+            heading: Spans per view columns
+          - type: markdown
+            content: >-
+              `span: { 1: full, 2: 2 }`: the weather card takes the row in one view column and two
+              of four columns from two; `span: { 2: [1, 2] }` gives the sparkline two rows from
+              two view columns.
+          - type: custom:layout-card-pro
+            columns: 2
+            breakpoints:
+              2: { columns: 4 }
+            cards:
+              - type: custom:weather-card-pro
+                entity: weather.demo_weather_north
+                view_layout: { span: { 1: full, 2: 2 } }
+              - type: custom:entity-card-pro
+                entity: sensor.outdoor_temperature
+                visual: sparkline
+                view_layout: { span: { 2: [1, 2] } }
+              - type: tile
+                entity: light.living_room
+              - type: tile
+                entity: light.kitchen
+              - type: tile
+                entity: lock.front_door
+
+      - type: grid
+        column_span: 2
+        cards:
+          - type: heading
+            heading: Cards by view columns
+          - type: markdown
+            content: >-
+              Home Assistant's `view_columns` condition shows a card by the columns the view has:
+              the compact glance in one view column, the full entities list from two.
+          - type: custom:layout-card-pro
+            columns: 1
+            cards:
+              - type: glance
+                entities: [light.living_room, light.kitchen, light.office, light.bed_light]
+                visibility:
+                  - { condition: view_columns, max: 1 }
+              - type: entities
+                title: Lights
+                entities: [light.living_room, light.kitchen, light.office, light.bed_light]
+                visibility:
+                  - { condition: view_columns, min: 2 }
+
+  # ---------------------------------------------------------------------------------------------
+  - title: Visibility
+    path: visibility
+    icon: mdi:eye-outline
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Home Assistant's visibility
+          - type: markdown
+            content: >-
+              Each card keeps its own `visibility`. The kitchen card shows while the kitchen
+              light is on, the temperature only above 15 °C, the AC card only to the `dev` user,
+              the backyard camera only on screens 600 px and wider. Toggle the kitchen light: the
+              others close the gap.
+          - type: tile
+            entity: light.kitchen
+            name: Toggle me
+            features:
+              - type: toggle
+          - type: custom:layout-card-pro
+            columns: 2
+            cards:
+              - type: tile
+                entity: light.kitchen
+                name: Kitchen is on
+                visibility:
+                  - { condition: state, entity: light.kitchen, state: "on" }
+              - type: custom:entity-card-pro
+                entity: sensor.outdoor_temperature
+                visibility:
+                  - { condition: numeric_state, entity: sensor.outdoor_temperature, above: 15 }
+              - type: tile
+                entity: switch.ac
+                visibility:
+                  - { condition: user, users: [d55343a997084a3ca08a8bab4113f41a] }
+              - type: picture-entity
+                entity: camera.demo_camera
+                show_state: false
+                aspect_ratio: 16x9
+                view_layout: { span: full }
+                visibility:
+                  - { condition: screen, media_query: "(min-width: 600px)" }
+              - type: tile
+                entity: light.living_room
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: When every card is hidden
+          - type: markdown
+            content: >-
+              With every card inside hidden the layout hides too and leaves no gap in the
+              section: the layout below holds only the kitchen card and disappears while the
+              kitchen light is off.
+          - type: custom:layout-card-pro
+            columns: 2
+            cards:
+              - type: tile
+                entity: light.kitchen
+                name: Only while on
+                visibility:
+                  - { condition: state, entity: light.kitchen, state: "on" }
+          - type: markdown
+            content: This note sits right under it either way.
+
+  # ---------------------------------------------------------------------------------------------
+  - title: Placement
+    path: placement
+    icon: mdi:cursor-move
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Order
+          - type: markdown
+            content: >-
+              `order: -1` moves a card to the front without moving its YAML, `order: 1` to the
+              back. The YAML lists them 1, 2, 3, 4.
+          - type: custom:layout-card-pro
+            columns: 2
+            cards:
+              - type: tile
+                entity: light.living_room
+                name: "1 (order 1)"
+                view_layout: { order: 1 }
+              - type: tile
+                entity: light.kitchen
+                name: "2"
+              - type: tile
+                entity: light.office
+                name: "3"
+              - type: tile
+                entity: light.bed_light
+                name: "4 (order -1)"
+                view_layout: { order: -1 }
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Align one card
+          - type: markdown
+            content: >-
+              Beside a tall card, `align: start`, `center`, `end` and `stretch` set how each card
+              sits in its cell.
+          - type: custom:layout-card-pro
+            columns: 3
+            cards:
+              - type: custom:entity-card-pro
+                entity: sensor.power_consumption
+                visual: sparkline
+                view_layout: { span: [1, 3] }
+              - type: tile
+                entity: light.kitchen
+                name: start
+                view_layout: { align: start }
+              - type: tile
+                entity: light.office
+                name: end
+                view_layout: { align: end }
+              - type: tile
+                entity: light.bed_light
+                name: center
+                view_layout: { align: center }
+              - type: tile
+                entity: light.dining_table
+                name: stretch
+                view_layout: { align: stretch }
+
+  # ---------------------------------------------------------------------------------------------
+  - title: Patterns
+    path: patterns
+    icon: mdi:puzzle-outline
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: A room card
+          - type: markdown
+            content: >-
+              A seamless column of a heading row, a tile with a feature and a row of three
+              buttons: one card to the eye, separate cards to Home Assistant.
+          - type: custom:layout-card-pro
+            card_style: seamless
+            cards:
+              - type: custom:entity-card-pro
+                entity: sensor.living_room_temperature
+                name: Living room
+                visual: sparkline
+              - type: tile
+                entity: light.living_room_rgbww_lights
+                features:
+                  - type: light-brightness
+              - type: custom:layout-card-pro
+                columns: 3
+                card_style: seamless
+                cards:
+                  - type: tile
+                    entity: cover.living_room_window
+                    vertical: true
+                    hide_state: true
+                  - type: tile
+                    entity: fan.living_room_fan
+                    vertical: true
+                    hide_state: true
+                  - type: tile
+                    entity: media_player.living_room
+                    vertical: true
+                    hide_state: true
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: A toolbar
+          - type: markdown
+            content: >-
+              A row of small buttons over a seamless strip of states: the top of a room or a
+              dashboard.
+          - type: custom:layout-card-pro
+            gap: 4
+            cards:
+              - type: custom:layout-card-pro
+                columns: 4
+                gap: 4
+                cards:
+                  - type: button
+                    icon: mdi:weather-night
+                    name: Night
+                    tap_action: { action: toggle }
+                    entity: switch.decorative_lights
+                  - type: button
+                    icon: mdi:coffee
+                    name: Coffee
+                    entity: switch.coffee_machine
+                  - type: button
+                    icon: mdi:air-conditioner
+                    name: AC
+                    entity: switch.ac
+                  - type: button
+                    icon: mdi:robot-vacuum
+                    name: Vacuum
+                    entity: vacuum.demo_vacuum_0_ground_floor
+              - type: custom:layout-card-pro
+                columns: 3
+                card_style: seamless
+                cards:
+                  - type: custom:entity-card-pro
+                    entity: sensor.outdoor_temperature
+                  - type: custom:entity-card-pro
+                    entity: sensor.power_consumption
+                  - type: custom:entity-card-pro
+                    entity: lock.front_door
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Energy at a glance
+          - type: markdown
+            content: >-
+              The power flow takes the row, two rings share the next, and the plugs show only
+              when the view has two columns (Home Assistant's `view_columns` condition).
+          - type: custom:layout-card-pro
+            columns: 2
+            cards:
+              - type: custom:power-flow-card-pro
+                home: sensor.power_consumption
+                sources:
+                  - { type: solar, entity: sensor.solar_power }
+                  - {
+                      type: battery,
+                      power: sensor.battery_power,
+                      soc: sensor.battery_state_of_charge,
+                    }
+                  - { type: grid, power: sensor.grid_power, price: sensor.electricity_price }
+                consumers:
+                  - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
+                  - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
+                view_layout: { span: full }
+              - type: custom:entity-card-pro
+                entity: sensor.battery_state_of_charge
+                visual: ring
+              - type: custom:entity-card-pro
+                entity: sensor.grid_fossil_fuel_percentage
+                visual: ring
+              - type: custom:entity-card-pro
+                entity: sensor.washer_power
+                visibility:
+                  - { condition: view_columns, min: 2 }
+              - type: custom:entity-card-pro
+                entity: sensor.dryer_power
+                visibility:
+                  - { condition: view_columns, min: 2 }
+              - type: custom:entity-card-pro
+                entity: sensor.ev_charger_power
+                visibility:
+                  - { condition: view_columns, min: 2 }
+
+      - type: grid
+        column_span: 3
+        cards:
+          - type: heading
+            heading: Rooms in masonry
+          - type: markdown
+            content: >-
+              A masonry of room layouts, two columns and four from three view columns: each room
+              is a seamless column, so the rooms of different lengths pack without gaps.
+          - type: custom:layout-card-pro
+            layout: masonry
+            columns: 2
+            breakpoints:
+              3: { columns: 4 }
+            cards:
+              - type: custom:layout-card-pro
+                card_style: seamless
+                cards:
+                  - type: heading
+                    heading: Kitchen
+                    icon: mdi:fridge-outline
+                  - type: tile
+                    entity: light.kitchen_lights
+                  - type: tile
+                    entity: cover.kitchen_window
+                  - type: tile
+                    entity: lock.kitchen_door
+                  - type: tile
+                    entity: media_player.kitchen
+              - type: custom:layout-card-pro
+                card_style: seamless
+                cards:
+                  - type: heading
+                    heading: Bedroom
+                    icon: mdi:bed-outline
+                  - type: tile
+                    entity: light.bed_light
+                  - type: tile
+                    entity: media_player.bedroom
+              - type: custom:layout-card-pro
+                card_style: seamless
+                cards:
+                  - type: heading
+                    heading: Office
+                    icon: mdi:desk
+                  - type: tile
+                    entity: light.office_rgbw_lights
+                  - type: tile
+                    entity: light.office
+                  - type: thermostat
+                    entity: climate.ecobee
+              - type: custom:layout-card-pro
+                card_style: seamless
+                cards:
+                  - type: heading
+                    heading: Outside
+                    icon: mdi:tree-outline
+                  - type: custom:wind-card-pro
+                    entity: sensor.wind_speed
+                    direction: sensor.wind_direction
+                  - type: custom:rain-card-pro
+                    entity: sensor.roof_rain_rate
+                    today: sensor.rain_today
+                  - type: tile
+                    entity: binary_sensor.movement_backyard
+
+      - type: grid
+        column_span: 3
+        cards:
+          - type: heading
+            heading: Split
+          - type: markdown
+            content: >-
+              `columns: [300px, 1fr]` with a column of cards on the side and a grid of cameras and
+              controls in the main area; in one view column the side goes on top.
+          - type: custom:layout-card-pro
+            columns: 1
+            breakpoints:
+              2: { columns: [300px, 1fr] }
+            cards:
+              - type: custom:layout-card-pro
+                cards:
+                  - type: custom:weather-card-pro
+                    entity: weather.demo_weather_south
+                  - type: tile
+                    entity: lock.front_door
+                  - type: tile
+                    entity: cover.garage_door
+                  - type: tile
+                    entity: binary_sensor.window_kitchen
+              - type: custom:layout-card-pro
+                columns: 2
+                cards:
+                  - type: picture-entity
+                    entity: camera.demo_camera
+                    show_state: false
+                    aspect_ratio: 16x9
+                  - type: picture-entity
+                    entity: camera.demo_camera_png
+                    show_state: false
+                    aspect_ratio: 16x9
+                  - type: tile
+                    entity: light.entrance_color_white_lights
+                    features:
+                      - type: light-brightness
+                  - type: tile
+                    entity: cover.pergola_roof
+                    features:
+                      - type: cover-open-close
+
+  # ---------------------------------------------------------------------------------------------
+  - title: Panel
+    path: panel
+    icon: mdi:monitor
+    type: panel
+    cards:
+      # one layout for the whole view: outside a section it counts its view columns from its width
+      # (500 px each), so a desktop window gives it three, with the overview on the left
+      - type: custom:layout-card-pro
+        columns: 1
+        padding: 8
+        breakpoints:
+          2: { columns: 2 }
+          3: { columns: [320px, 1fr], gap: 12, padding: 16 }
+        cards:
+          - type: custom:layout-card-pro
+            view_layout: { span: { 2: full, 3: 1 } }
+            cards:
+              - type: custom:weather-card-pro
+                entity: weather.demo_weather_south
+                sections:
+                  - type: hero
+                  - type: forecast
+                    mode: daily
+                    days: 5
+              - type: custom:layout-card-pro
+                columns: 2
+                card_style: seamless
+                cards:
+                  - type: custom:entity-card-pro
+                    entity: sensor.outdoor_temperature
+                  - type: custom:entity-card-pro
+                    entity: sensor.outdoor_humidity
+                  - type: custom:entity-card-pro
+                    entity: sensor.power_consumption
+                  - type: custom:entity-card-pro
+                    entity: sensor.battery_state_of_charge
+                    visual: ring
+          - type: custom:layout-card-pro
+            columns: 2
+            breakpoints:
+              2: { columns: 3 }
+              3: { columns: 4 }
+            view_layout: { span: { 2: full, 3: 1 } }
+            cards:
+              - type: tile
+                entity: light.living_room
+              - type: tile
+                entity: light.kitchen
+              - type: tile
+                entity: light.office
+              - type: tile
+                entity: light.bed_light
+              - type: tile
+                entity: light.dining_table
+              - type: tile
+                entity: light.ceiling_lights
+              - type: tile
+                entity: cover.living_room_blinds
+              - type: tile
+                entity: cover.garage_door
+              - type: tile
+                entity: climate.heatpump
+              - type: tile
+                entity: climate.ecobee
+              - type: tile
+                entity: lock.front_door
+              - type: tile
+                entity: lock.kitchen_door
+              - type: picture-entity
+                entity: camera.demo_camera
+                show_state: false
+                aspect_ratio: 16x9
+                view_layout: { span: 2 }
+              - type: custom:entity-card-pro
+                entity: sensor.power_consumption
+                visual: sparkline
+                view_layout: { span: 2 }
+              - type: history-graph
+                hours_to_show: 12
+                entities: [sensor.outdoor_temperature, sensor.living_room_temperature]
+                view_layout: { span: full }

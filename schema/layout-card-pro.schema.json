@@ -1,0 +1,553 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/layout-card-pro.schema.json",
+  "title": "custom:layout-card-pro",
+  "description": "Any cards in a grid, a stack or masonry, with breakpoints of the card's own width, spacing, a seamless style, and per-card placement in view_layout.",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "#/$defs/layoutOptions"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "custom:layout-card-pro"
+    },
+    "breakpoints": {
+      "type": "object",
+      "description": "The options that change once the layout's section spans this many view columns (2 to 12); the top-level options apply in one. Outside a section the view columns are counted from the card's width, by the sections view's 500 px columns",
+      "propertyNames": {
+        "pattern": "^([2-9]|1[0-2])$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/$defs/layoutOptions"
+          }
+        ],
+        "unevaluatedProperties": false
+      }
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/card"
+      },
+      "description": "The cards, in order"
+    },
+    "grid_options": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/grid_options"
+    },
+    "fill_height": {
+      "$ref": "defs.schema.json#/$defs/fillHeight"
+    },
+    "visibility": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/visibility"
+    },
+    "layout_options": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/layout_options"
+    },
+    "view_layout": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/view_layout"
+    },
+    "card_mod": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/card_mod"
+    }
+  },
+  "required": ["type"],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "length": {
+      "description": "A length: a number is px; or a string with px, rem, em, %, vw, vh, or var(--x), calc(), min(), max(), clamp()",
+      "oneOf": [
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "type": "string",
+          "pattern": "^\\s*(\\d*\\.?\\d+(px|rem|em|%|vw|vh|svh|dvh)?|(var|calc|min|max|clamp)\\(.+\\))\\s*$"
+        }
+      ]
+    },
+    "sides": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/length"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/length"
+          },
+          "minItems": 1,
+          "maxItems": 4,
+          "not": {
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "top": {
+              "$ref": "#/$defs/length"
+            },
+            "right": {
+              "$ref": "#/$defs/length"
+            },
+            "bottom": {
+              "$ref": "#/$defs/length"
+            },
+            "left": {
+              "$ref": "#/$defs/length"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "track": {
+      "description": "A column: Nfr, a length, or minmax(a, b) of those (auto and max-content are not allowed)",
+      "oneOf": [
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "type": "string",
+          "pattern": "^\\s*(\\d*\\.?\\d+fr|minmax\\((?!\\s*\\d*\\.?\\d+fr)[^,]+,[^,]+\\)|\\d*\\.?\\d+(px|rem|em|%|vw|vh|svh|dvh)?|(var|calc|min|max|clamp)\\(.+\\))\\s*$"
+        }
+      ]
+    },
+    "layoutOptions": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "enum": ["grid", "masonry"],
+          "default": "grid",
+          "description": "grid: columns and rows, cards can span; masonry: columns filled by card size"
+        },
+        "columns": {
+          "description": "How many equal columns, or the columns' widths like grid-template-columns",
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 24
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/track"
+              },
+              "minItems": 1
+            }
+          ],
+          "default": 1
+        },
+        "align_items": {
+          "enum": ["start", "center", "end", "stretch"],
+          "default": "stretch",
+          "description": "How cards sit in their row: stretch to the tallest, or keep their own height"
+        },
+        "gap": {
+          "description": "Space between cards: one length, or [row, column]",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/length"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/length"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          ]
+        },
+        "padding": {
+          "$ref": "#/$defs/sides",
+          "description": "Inside the layout, around the cards: 1, 2 or 4 values, or per side"
+        },
+        "card_style": {
+          "enum": ["cards", "seamless"],
+          "default": "cards",
+          "description": "seamless: the cards share one surface with dividers"
+        }
+      }
+    },
+    "viewLayout": {
+      "type": "object",
+      "description": "Where and how a card sits in a layout card; every value may be a map by view columns ({ 1: full, 2: 2 })",
+      "properties": {
+        "span": {
+          "oneOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 24
+                },
+                {
+                  "const": "full"
+                },
+                {
+                  "type": "array",
+                  "prefixItems": [
+                    {
+                      "oneOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 24
+                        },
+                        {
+                          "const": "full"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 48
+                    }
+                  ],
+                  "minItems": 2,
+                  "maxItems": 2
+                }
+              ]
+            },
+            {
+              "type": "object",
+              "description": "By view columns: 1, 2, 3 …",
+              "propertyNames": {
+                "pattern": "^([1-9]|1[0-2])$"
+              },
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 24
+                  },
+                  {
+                    "const": "full"
+                  },
+                  {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "oneOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 24
+                          },
+                          {
+                            "const": "full"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 48
+                      }
+                    ],
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                ]
+              },
+              "minProperties": 1
+            }
+          ],
+          "description": "Columns, or [columns, rows], or full (the whole row)"
+        },
+        "column": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 24
+            },
+            {
+              "type": "object",
+              "description": "By view columns: 1, 2, 3 …",
+              "propertyNames": {
+                "pattern": "^([1-9]|1[0-2])$"
+              },
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 24
+              },
+              "minProperties": 1
+            }
+          ],
+          "description": "Grid: the column the card starts in; masonry: the column it goes to"
+        },
+        "order": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "object",
+              "description": "By view columns: 1, 2, 3 …",
+              "propertyNames": {
+                "pattern": "^([1-9]|1[0-2])$"
+              },
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "minProperties": 1
+            }
+          ],
+          "description": "Move the card without moving its YAML; negative = earlier"
+        },
+        "align": {
+          "oneOf": [
+            {
+              "enum": ["start", "center", "end", "stretch"]
+            },
+            {
+              "type": "object",
+              "description": "By view columns: 1, 2, 3 …",
+              "propertyNames": {
+                "pattern": "^([1-9]|1[0-2])$"
+              },
+              "additionalProperties": {
+                "enum": ["start", "center", "end", "stretch"]
+              },
+              "minProperties": 1
+            }
+          ],
+          "description": "How this card sits in its cell"
+        },
+        "position": {
+          "description": "Home Assistant's own (sidebar view), ignored here"
+        },
+        "grid-area": {
+          "description": "layout-card's, ignored here"
+        },
+        "grid-column": {
+          "description": "layout-card's, ignored here"
+        },
+        "grid-row": {
+          "description": "layout-card's, ignored here"
+        },
+        "show": {
+          "description": "layout-card's, ignored here"
+        }
+      },
+      "additionalProperties": false
+    },
+    "card": {
+      "type": "object",
+      "description": "Any card; a Pro card is checked against its own schema",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "view_layout": {
+          "$ref": "#/$defs/viewLayout"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "type": "string",
+                "pattern": "^custom:[a-z-]+-card-pro$"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "custom:entity-card-pro",
+                  "custom:entity-group-card-pro",
+                  "custom:entity-sections-card-pro",
+                  "custom:multi-trend-card-pro",
+                  "custom:sun-path-card-pro",
+                  "custom:sun-azimuth-card-pro",
+                  "custom:illuminance-card-pro",
+                  "custom:weather-card-pro",
+                  "custom:wind-card-pro",
+                  "custom:rain-card-pro",
+                  "custom:power-flow-card-pro",
+                  "custom:layout-card-pro"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:entity-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "entity-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:entity-group-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "entity-group-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:entity-sections-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "entity-sections-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:multi-trend-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "multi-trend-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:sun-path-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "sun-path-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:sun-azimuth-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "sun-azimuth-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:illuminance-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "illuminance-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:weather-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "weather-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:wind-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "wind-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:rain-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "rain-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:power-flow-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "power-flow-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:layout-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "layout-card-pro.schema.json"
+          }
+        }
+      ]
+    }
+  }
+}

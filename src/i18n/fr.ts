@@ -28,6 +28,8 @@ const fr: Translation = {
   "control.unlock": "Déverrouiller",
   "control.hold_to": "Maintenir pour {action}",
   "control.press_again": "Appuyer à nouveau pour {action}",
+  "layout.empty": "Ajoutez des cartes à cette disposition",
+  "layout.unavailable": "Les éléments de carte de Home Assistant n'ont pas été chargés",
   "group.stub_title": "Groupe",
   "sections.stub_title": "Section",
 

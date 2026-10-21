@@ -37,6 +37,7 @@ Pro Cards are polished dashboard cards that look like they belong in Home Assist
 | Wind Card Pro            | `custom:wind-card-pro`            | Wind speed, direction and gusts as a tile, a flow tile or a hero, with an animated wind field in four styles that rules colour.               | YAML only |
 | Rain Card Pro            | `custom:rain-card-pro`            | Rain rate and today's total as a tile, a flow tile or a hero, with falling drops, ripples or a filling gauge that rules colour.               | YAML only |
 | Power Flow Card Pro      | `custom:power-flow-card-pro`      | Solar, battery and grid → home → rooms and devices as a tree with animated flow, the state of the home and its self-sufficiency.              | YAML only |
+| Layout Card Pro          | `custom:layout-card-pro`          | Cards inside a section in a grid or masonry, arranged by how many view columns the section spans, as separate cards or one seamless surface.  | YAML only |
 
 All cards support the sections grid (`grid_options`). Requires Home Assistant 2025.3 or newer.
 
@@ -153,6 +154,27 @@ consumers:
 ```
 
 [Power Flow Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/power-flow-card)
+
+### Layout
+
+#### Layout Card Pro
+
+Cards, Pro Cards and Home Assistant's own, arranged inside a section in a grid or masonry, as separate cards or one seamless surface. The breakpoints are view columns: the cards can take two columns when the section spans one view column (a phone) and four when it spans two. Each card's `view_layout` sets its span and order, per view columns, and the cards keep their own `visibility`.
+
+```yaml
+type: custom:layout-card-pro
+columns: 2
+breakpoints:
+  2: { columns: 4 }
+cards:
+  - type: custom:weather-card-pro
+    entity: weather.home
+    view_layout: { span: { 1: full, 2: [2, 2] } }
+  - type: tile
+    entity: light.kitchen
+```
+
+[Layout Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/layout-card)
 
 ### Weather
 

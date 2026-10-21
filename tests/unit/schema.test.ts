@@ -245,6 +245,79 @@ describe("card config schemas", () => {
     ).toBeNull();
   });
 
+  it("checks layout cards, their breakpoints and the cards inside", () => {
+    const LC = "custom:layout-card-pro";
+    const EC = { type: "custom:entity-card-pro", entity: "sensor.outdoor_temperature" };
+    expect(
+      validate({
+        type: LC,
+        layout: "grid",
+        columns: [320, "1fr", "minmax(200px, 2fr)"],
+        gap: [8, 12],
+        padding: [0, 16],
+        card_style: "seamless",
+        align_items: "start",
+        breakpoints: { 2: { columns: 2 }, 4: { layout: "masonry", columns: 6 } },
+        cards: [
+          { ...EC, view_layout: { span: { 1: "full", 3: [2, 2] }, order: -1, align: "center" } },
+          { type: "tile", entity: "light.kitchen", view_layout: { column: 2 } },
+          { type: "heading", heading: "Rooms" },
+          { type: LC, cards: [EC] },
+        ],
+      }),
+    ).toBeNull();
+    expect(validate({ type: LC, colums: 2 })).toMatch(/unevaluated/);
+    // breakpoints are view columns from 2; the base is one
+    for (const key of ["tablet", "phone", "1", "13"])
+      expect(validate({ type: LC, breakpoints: { [key]: { columns: 2 } } }), key).not.toBeNull();
+    expect(validate({ type: LC, breakpoints: { 2: { colums: 2 } } })).not.toBeNull();
+    expect(
+      validate({ type: LC, cards: [{ ...EC, view_layout: { span: { desktop: 2 } } }] }),
+    ).not.toBeNull();
+    // the options the card no longer has
+    for (const gone of [
+      "fold",
+      "min_column_width",
+      "max_columns",
+      "wrap",
+      "margin",
+      "density",
+      "row_gap",
+      "column_gap",
+      "media",
+      "container",
+      "max_width",
+      "align",
+      "dense",
+      "direction",
+      "row_height",
+    ])
+      expect(validate({ type: LC, [gone]: 1 }), gone).toMatch(/unevaluated/);
+    expect(validate({ type: LC, layout: "stack" })).not.toBeNull();
+    for (const gone of [
+      "priority",
+      "sticky",
+      "bleed",
+      "aspect",
+      "min_height",
+      "max_height",
+      "row",
+      "show_on",
+      "hidden_below",
+    ])
+      expect(
+        validate({ type: LC, cards: [{ ...EC, view_layout: { [gone]: 1 } }] }),
+        gone,
+      ).not.toBeNull();
+    expect(validate({ type: LC, columns: ["minmax(1fr, 2fr)"] })).not.toBeNull();
+    expect(validate({ type: LC, columns: ["auto", "1fr"] })).not.toBeNull();
+    expect(validate({ type: LC, cards: [{ ...EC, view_layout: { spam: 2 } }] })).not.toBeNull();
+    // a Pro card inside is checked against its own schema, any other card loosely
+    expect(validate({ type: LC, cards: [{ ...EC, visula: "ring" }] })).not.toBeNull();
+    expect(validate({ type: LC, cards: [{ type: "tile", whatever: 1 }] })).toBeNull();
+    expect(validate({ type: LC, cards: [{ entity: "light.kitchen" }] })).not.toBeNull();
+  });
+
   it("rejects power flow card typos and wrong shapes", () => {
     const PF = "custom:power-flow-card-pro";
     const src = [
