@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.7.1 (unreleased)
+
+- Grid cells with a `ring` or `gauge` centre it, with the name and label under it, across the cell and, beside a taller cell in the same row, down it (a gauge's icon stays in the top corner, the gauge centres in the room below it). They hugged the top left, leaving an empty strip on the right of a wide cell and under a short one
+
 ## 2.7.0 (2026-10-20)
 
 - Every card takes the height it is given, as Home Assistant's own cards do: the height of its cell with a fixed number of rows, the height of its grid row with `rows: auto` (cards side by side are all as tall as the tallest of them), and the height of a horizontal stack. Home Assistant gives that height to the wrapper around a card, not to the card, and the cards kept the height of their content: they ended short of their neighbours, a one-row tile ran 2 px past its cell, and the sun azimuth card lost its picture with fixed rows. Masonry views and vertical stacks, where the height follows the content, are unchanged

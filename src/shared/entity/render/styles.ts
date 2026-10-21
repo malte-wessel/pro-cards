@@ -202,6 +202,18 @@ export const STYLE_CELL = `
   .cell .gtop { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; margin-bottom: 2px; }
   .cell .gtop .lead { margin-bottom: 0; }
   .cell .gtop .end { max-width: none; }
+  /* a ring or a gauge is the cell's picture: the cell centres it, with its name and label, also
+     in a cell stretched by a taller one beside it */
+  .cell:has(> .lead.ring, > .gauge) { align-items: center; justify-content: center; text-align: center; }
+  /* centred, a line still ends in an ellipsis and controls shrink or scroll at the cell's edge */
+  .cell:has(> .lead.ring, > .gauge) > :is(.secondary, .end, .ctl-buttons) { max-width: 100%; }
+  /* a gauge's icon (or the control in its place) stays in the corner, alone or with the small
+     controls across the top */
+  .cell:has(> .gauge) > :is(.lead, .ctl-chip.round, .ctl-hold.lead-size) { align-self: flex-start; }
+  .cell:has(> .gauge) > .gtop { align-self: stretch; }
+  /* the icon keeps the top: the gauge and what follows it centre in the room below */
+  .cell > .gauge { margin-top: auto; }
+  .cell:has(> .gauge) > :last-child { margin-bottom: auto; }
 `;
 export const STYLE_ITEM = `
   .row.item { flex-direction: column; align-items: center; gap: 4px; max-width: 100%; text-align: center; }

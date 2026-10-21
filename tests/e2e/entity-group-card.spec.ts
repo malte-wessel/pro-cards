@@ -69,6 +69,143 @@ test.describe("layouts", () => {
     for (const b of await fits.all())
       expect(await b.evaluate((e) => e.scrollWidth - e.clientWidth)).toBeLessThanOrEqual(1);
   });
+  test("grid centres a ring or a gauge in its cell, other cells stay at the start", async ({
+    page,
+  }) => {
+    // cells wider than the gauge's 170 px, so it has room to move
+    await mount(
+      page,
+      {
+        type: T,
+        layout: "grid",
+        columns: 3,
+        entities: [
+          { entity: "sensor.living_room_co2", visual: "gauge", min: 400, max: 2000 },
+          { entity: "sensor.robot_battery", visual: "ring" },
+          "sensor.solar_power",
+          {
+            entity: "lock.front_door",
+            visual: "gauge",
+            control: "hold",
+            control_position: "lead",
+          },
+        ],
+      },
+      { width: 760 },
+    );
+    const cells = card(page).locator(".grid .row.cell");
+    // horizontal offset of an element's centre (or its text's) from its cell's centre, and its
+    // left inset
+    const place = (i: number, sel: string) =>
+      cells
+        .nth(i)
+        .locator(sel)
+        .first()
+        .evaluate((e) => {
+          const range = document.createRange();
+          range.selectNodeContents(e);
+          const r = e.matches(".secondary")
+            ? range.getBoundingClientRect()
+            : e.getBoundingClientRect();
+          const c = (e.closest(".cell") as HTMLElement).getBoundingClientRect();
+          return { off: r.left + r.width / 2 - (c.left + c.width / 2), inset: r.left - c.left };
+        });
+    for (const [i, sel] of [
+      [0, ":scope > .gauge"],
+      [0, ":scope > .secondary"],
+      [1, ":scope > .lead.ring"],
+      [1, ":scope > .secondary"],
+    ] as const)
+      expect(Math.abs((await place(i, sel)).off)).toBeLessThanOrEqual(1);
+    // the gauge's icon, or the control in its place, stays in the corner (the cell's 12 px
+    // padding); a plain cell keeps everything at the start
+    for (const [i, sel] of [
+      [0, ":scope > .lead"],
+      [3, ":scope > .ctl-hold"],
+      [2, ":scope > .lead"],
+      [2, ":scope > .secondary"],
+    ] as const)
+      expect((await place(i, sel)).inset).toBeLessThanOrEqual(13);
+  });
+  test("grid keeps a control under a centred ring inside its cell", async ({ page }) => {
+    await mount(page, {
+      type: T,
+      layout: "grid",
+      columns: 3,
+      entities: [
+        {
+          entity: "climate.living_room",
+          attribute: "hvac_mode",
+          visual: "ring",
+          control: "segments",
+        },
+        "sensor.solar_power",
+        "sensor.solar_power",
+      ],
+    });
+    const cell = card(page).locator(".grid .row.cell").first();
+    const box = await cell.evaluate((c) => {
+      const r = c.getBoundingClientRect();
+      const e = (c.querySelector(":scope > .end") as HTMLElement).getBoundingClientRect();
+      const s = c.querySelector(".ctl-segments") as HTMLElement;
+      return {
+        left: e.left - r.left,
+        right: r.right - e.right,
+        scrolls: s.scrollWidth > s.clientWidth,
+      };
+    });
+    // the segments fit the cell and scroll sideways, so no option is cut off
+    expect(box.left).toBeGreaterThanOrEqual(0);
+    expect(box.right).toBeGreaterThanOrEqual(0);
+    expect(box.scrolls).toBe(true);
+  });
+  test("grid centres a ring or a gauge vertically in a cell stretched by a taller one", async ({
+    page,
+  }) => {
+    // the columns cell is the tallest of the row, the other two stretch to it
+    await mount(page, {
+      type: T,
+      layout: "grid",
+      columns: 3,
+      entities: [
+        { entity: "sensor.living_room_co2", visual: "gauge", min: 400, max: 2000 },
+        { entity: "sensor.robot_battery", visual: "ring" },
+        { entity: "sensor.solar_power", visual: "columns" },
+      ],
+    });
+    // the room above the centred part (below the icon, if any) and below it, in the content box
+    const room = (i: number) =>
+      card(page)
+        .locator(".grid .row.cell")
+        .nth(i)
+        .evaluate((c) => {
+          const r = c.getBoundingClientRect();
+          const cs = getComputedStyle(c);
+          const pad = parseFloat(cs.paddingTop);
+          const box = (sel: string) =>
+            (c.querySelector(sel) as HTMLElement | null)?.getBoundingClientRect();
+          const first = box(":scope > .gauge") ?? box(":scope > .lead") ?? r;
+          const mb = (sel: string) =>
+            parseFloat(getComputedStyle(c.querySelector(sel) as HTMLElement).marginBottom);
+          const lead = box(":scope > .gauge") ? box(":scope > .lead") : null;
+          const kids = [...c.children].filter((e) => !e.classList.contains("hit"));
+          const last = kids[kids.length - 1].getBoundingClientRect();
+          return {
+            above:
+              first.top -
+              (lead ? lead.bottom + parseFloat(cs.rowGap) + mb(":scope > .lead") : r.top + pad),
+            below: r.bottom - pad - last.bottom,
+            leadInset: lead ? lead.top - r.top : null,
+          };
+        });
+    for (const i of [0, 1]) {
+      const p = await room(i);
+      expect(p.above).toBeGreaterThan(4);
+      expect(Math.abs(p.above - p.below)).toBeLessThanOrEqual(1);
+    }
+    // the gauge's icon keeps the top
+    expect((await room(0)).leadInset).toBeLessThanOrEqual(13);
+  });
   test("hero has a lead with a sparkline and list rows for the rest", async ({ page }) => {
     await mount(page, {
       type: T,
