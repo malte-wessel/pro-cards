@@ -3,6 +3,7 @@
 ## 2.7.1 (unreleased)
 
 - Grid cells with a `ring` or `gauge` centre it, with the name and label under it, across the cell and, beside a taller cell in the same row, down it (a gauge's icon stays in the top corner, the gauge centres in the room below it). They hugged the top left, leaving an empty strip on the right of a wide cell and under a short one
+- Entity card: a tile with a `gauge` keeps its icon and name at the top left and centres the gauge in the room below, across the tile and down it when the tile is taller than its content (fixed rows, a taller card beside it). The whole tile used to centre as a block, the gauge at its left edge
 
 ## 2.7.0 (2026-10-20)
 

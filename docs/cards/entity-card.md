@@ -459,7 +459,7 @@ All [entity options](/cards/entity-options#entity-options) plus:
 
 ### Grid defaults
 
-6 columns, `rows: auto`: one row for a plain tile, more for the block visuals (`gauge`, `bar`, `sparkline`, `columns`, `strip`), at least 2 rows with a `sparkline` or `columns`. Given more height (fixed rows, a taller card beside it), a `sparkline` or `columns` plot fills the card and any other tile centres its content, see [Filling the height](/guide/sizing#filling-the-height).
+6 columns, `rows: auto`: one row for a plain tile, more for the block visuals (`gauge`, `bar`, `sparkline`, `columns`, `strip`), at least 2 rows with a `sparkline` or `columns`. Given more height (fixed rows, a taller card beside it), a `sparkline` or `columns` plot fills the card, a `gauge` centres in the room under the icon and name, and any other tile centres its content, see [Filling the height](/guide/sizing#filling-the-height).
 
 ### Home Assistant options
 

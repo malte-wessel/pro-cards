@@ -37,6 +37,11 @@
   .layout-tile .body { padding: 6px 12px; gap: 8px; flex: 1; justify-content: center; }
   ha-card.layout-tile { min-height: 56px; }
   ha-card.layout-tile:has(> .header:not([hidden])) { min-height: 120px; }
+  /* a gauge is the tile's picture: the icon and name keep the top left, the gauge (and what
+     follows it) centres in the room below, across and down */
+  .row.tile:has(> .gauge) { flex: 1 1 auto; }
+  .row.tile > .gauge { align-self: center; margin-top: auto; }
+  .row.tile:has(> .gauge) > :last-child { margin-bottom: auto; }
 `,Ur=`
   /* 4 px here and the body's 12 px: the title line sits 16 px above the first row */
   .header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 4px 16px; min-width: 0; }
