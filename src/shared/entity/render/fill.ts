@@ -82,7 +82,7 @@ export const fillRow = (
   const c = slots(ctx, ent, isTile ? "tile" : "list");
   const top = document.createElement("div");
   top.className = "top";
-  top.appendChild(leadOf(ctx, ent, idx, m, isTile ? 40 : 36, c.lead));
+  top.appendChild(leadOf(ctx, ent, idx, m, 36, c.lead));
   const main = document.createElement("div");
   main.className = "main";
   const line = document.createElement("div");
@@ -218,7 +218,7 @@ export const fillItem = (
   const name = item.showName ? textEl("iname", nameOf(ctx, ent, m.st)) : null;
   if (name && item.namePosition === "above") el.appendChild(name);
   // the lead: the icon, the icon as a tap toggle, or a round button / hold button in its place
-  if (item.showIcon || c.lead.length) el.appendChild(leadOf(ctx, ent, idx, m, 40, c.lead));
+  if (item.showIcon || c.lead.length) el.appendChild(leadOf(ctx, ent, idx, m, 36, c.lead));
   if (name && item.namePosition === "below") el.appendChild(name);
   if (item.showValue) {
     const val = valueEl(ent, m, true);

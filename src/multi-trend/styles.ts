@@ -28,8 +28,8 @@ export const STYLE =
   .header:focus-visible { box-shadow: inset 0 0 0 2px var(--tile-color); border-radius: var(--ha-card-border-radius, 12px); }
   .shape {
     flex: none;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     display: flex;
     align-items: center;

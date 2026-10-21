@@ -10,7 +10,7 @@ const STYLE_RAIN = `
   .wflow, .row { --fall: .9s; --wp: 3s; --t: 0; --sl: 0deg; --H: 120px; --sb: 0px; --lv: 8%; }
   .rfield { position: absolute; inset: 0; pointer-events: none; }
   /* the lead: the icon shows on a dry day and always for ripples; the rain is clipped to the circle */
-  .lead.wlead .rico { display: none; --mdc-icon-size: calc(var(--lead, 40px) * .36); position: relative; }
+  .lead.wlead .rico { display: none; --mdc-icon-size: calc(var(--lead, 36px) * .36); position: relative; }
   .dry .lead.wlead .rico, .lead.wlead.ripples .rico { display: block; }
   .dry .dr, .dry .sp, .dry .rp { display: none; }
 

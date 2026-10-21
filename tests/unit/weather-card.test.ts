@@ -320,7 +320,7 @@ describe("weather-card config", () => {
       entity: W,
       sections: [{ type: "hero" }, { type: "forecast", icons: "mdi" }],
     });
-    expect(dflt).toMatchObject({ icons: { base: "hass", map: {} }, iconSize: 40 });
+    expect(dflt).toMatchObject({ icons: { base: "hass", map: {} }, iconSize: 36 });
     expect(dflt.sections[0]).toMatchObject({ iconSize: 56, icons: { base: "hass", map: {} } });
     expect(dflt.sections[1]).toMatchObject({ iconSize: 22, icons: { base: "mdi", map: {} } });
     const c = normalizeWeatherCardConfig({

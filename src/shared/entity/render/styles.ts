@@ -16,7 +16,8 @@ export const STYLE_BASE = `
 `;
 export const STYLE_TILE = `
   /* a tile is one 56 px row, two with a header: the floor holds it there whatever the theme's
-     border (the 40 px lead, 6 px padding and a border up to 2 px fit; a calc on the border width
+     border (the 38 px of two text lines beside the 36 px lead, 6 px padding and a border up to
+     2 px fit; a calc on the border width
      would break on a unitless 0); a taller tile (a stretched grid row, fixed rows) centres its
      content */
   .layout-tile .body { padding: 6px 12px; gap: 8px; flex: 1; justify-content: center; }
@@ -62,11 +63,13 @@ export const STYLE_ROW = `
   .row.actionable :is(.ctl, .toggle, .lead.tap, .plot):not(.disabled) { pointer-events: auto; }
   .row.actionable > .hit:focus-visible { box-shadow: 0 0 0 2px var(--fe-color); }
   .top { display: flex; align-items: center; gap: 12px; min-width: 0; }
-  .lead { position: relative; flex: none; width: var(--lead, 40px); height: var(--lead, 40px); }
+  .lead { position: relative; flex: none; width: var(--lead, 36px); height: var(--lead, 36px); }
   .lead svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .lead .shape { position: absolute; inset: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--fe-color); background: var(--fe-soft); --mdc-icon-size: calc(var(--lead, 40px) * .55); font-size: calc(var(--lead, 40px) * .24); font-weight: 500; line-height: 1; white-space: nowrap; overflow: hidden; font-variant-numeric: tabular-nums; }
+  /* the icon is two thirds of a small lead, at most 24 px (Home Assistant's tile: a 24 px icon in
+     a 36 px circle); a bigger lead (the hero's 56 px) keeps 55 % */
+  .lead .shape { position: absolute; inset: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--fe-color); background: var(--fe-soft); --mdc-icon-size: clamp(calc(var(--lead, 36px) * .55), 24px, calc(var(--lead, 36px) * .67)); font-size: calc(var(--lead, 36px) * .24); font-weight: 500; line-height: 1; white-space: nowrap; overflow: hidden; font-variant-numeric: tabular-nums; }
   .lead .shape.value { color: var(--primary-text-color); background: transparent; }
-  .lead.ring .shape { inset: 16%; --mdc-icon-size: calc(var(--lead, 40px) * .42); }
+  .lead.ring .shape { inset: 16%; --mdc-icon-size: calc(var(--lead, 36px) * .42); }
   .lead .track { fill: none; stroke: var(--fe-soft); }
   .lead .prog { fill: none; stroke: var(--fe-color); stroke-linecap: round; transition: stroke-dashoffset .4s; }
   .main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -169,10 +172,10 @@ export const STYLE_CONTROLS = `
   .ctl-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px 0 10px; border: 0; border-radius: 999px; background: var(--fe-soft); color: var(--fe-color); font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer; --mdc-icon-size: 18px; }
   .ctl-chip.sm { height: 28px; font-size: 12px; padding: 0 12px 0 8px; }
   .ctl-chip.done { background: var(--fe-color); color: var(--text-primary-color, #fff); }
-  .ctl-chip.round { width: var(--lead, 40px); height: var(--lead, 40px); padding: 0; justify-content: center; border-radius: 50%; --mdc-icon-size: 22px; }
+  .ctl-chip.round { width: var(--lead, 36px); height: var(--lead, 36px); padding: 0; justify-content: center; border-radius: 50%; --mdc-icon-size: 24px; }
   .ctl-hold { position: relative; flex: none; width: 36px; height: 36px; border: 0; padding: 0; border-radius: 50%; background: var(--fe-soft); color: var(--fe-color); display: flex; align-items: center; justify-content: center; cursor: pointer; --mdc-icon-size: 20px; touch-action: none; -webkit-user-select: none; user-select: none; }
   .ctl-hold.sm { width: 30px; height: 30px; --mdc-icon-size: 18px; }
-  .ctl-hold.lead-size { width: var(--lead, 40px); height: var(--lead, 40px); --mdc-icon-size: 22px; }
+  .ctl-hold.lead-size { width: var(--lead, 36px); height: var(--lead, 36px); --mdc-icon-size: 24px; }
   .ctl-hold.pending { animation: ctl-pulse 1s ease-in-out infinite; }
   /* the ring of a held button: the hold control, or every button of a confirmed group */
   .ctl .round.hold { touch-action: none; -webkit-user-select: none; user-select: none; }

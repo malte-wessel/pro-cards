@@ -1425,7 +1425,7 @@ describe("review fixes", () => {
       });
       expect(r.querySelector(".lead.tap")).toBeNull();
       const b = q(r, ".top > .ctl-hold.lead-size");
-      expect(b.style.getPropertyValue("--lead")).toBe("40px");
+      expect(b.style.getPropertyValue("--lead")).toBe("36px");
       b.dispatchEvent(new MouseEvent("click", { detail: 1, bubbles: true }));
       expect(h.calls).toEqual([]);
       pointer(b, "pointerdown");

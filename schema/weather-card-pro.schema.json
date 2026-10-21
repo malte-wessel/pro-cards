@@ -625,7 +625,7 @@
       "type": "integer",
       "minimum": 12,
       "maximum": 160,
-      "default": 40,
+      "default": 36,
       "description": "Size of the tile's condition icon (px)"
     }
   },
