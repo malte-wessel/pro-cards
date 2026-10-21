@@ -3,11 +3,19 @@ import type { HassEntity } from "./ha.ts";
 
 type Color = string | null | undefined;
 
-// a config colour (HA token name, hex, rgb()/hsl()/var()) as a CSS value
+// colours from the config, rendered templates and the theme land in SVG markup and style
+// attributes, so only plain colour tokens pass: a name, a hex, rgb() / hsl() / var() of numbers,
+// commas, slashes and spaces. Never a quote, an angle bracket, `;`, `:` or url(); anything else is no colour
+const SAFE_COLOR = /^[a-z0-9#(),./%\s_-]+$/i;
+const HEX = /^#[0-9a-f]{3,8}$/i;
+export const safeColor = (c: unknown): string | null =>
+  typeof c === "string" && SAFE_COLOR.test(c) && !/url\(/i.test(c) ? c : null;
+
+// a config colour (HA token name, hex, rgb()/hsl()/var()) as a CSS value; an unsafe one is none
 export function cssColor(c: Color, fallback: string): string;
 export function cssColor(c: Color): string | undefined;
 export function cssColor(c: Color, fallback?: string) {
-  if (!c) return fallback;
+  if (!c || !safeColor(c)) return fallback;
   if (c === "primary") return "var(--primary-color)";
   if (c === "accent") return "var(--accent-color)";
   if (/^(#|rgb|hsl|var\()/.test(c)) return c;
@@ -73,14 +81,14 @@ export const mixHex = (a: string, b: string, f: number) => {
 
 // resolve a colour (token name, hex, rgb()) to a hex string for blending; reads the live theme when possible
 export const resolveHex = (c: Color, el?: Element | null): string => {
-  if (!c) return "#888888";
-  if (/^#/.test(c)) return c;
+  if (!c || !safeColor(c)) return "#888888";
+  if (c.startsWith("#")) return HEX.test(c) ? c : "#888888";
   const m = c.match(/^rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/);
   if (m) return rgbToHex(+m[1], +m[2], +m[3]);
   const varName =
     c === "primary" ? "--primary-color" : c === "accent" ? "--accent-color" : `--${c}-color`;
   const live = el ? getComputedStyle(el).getPropertyValue(varName).trim() : "";
-  if (/^#/.test(live))
+  if (HEX.test(live))
     return live.length === 4
       ? "#" +
           live
@@ -207,7 +215,8 @@ export const stateColorProperties = (
   if (!STATE_COLORED_DOMAIN.has(domain)) return null;
   const active = stateActive(st, s) ? "active" : "inactive";
   const props: string[] = [];
-  if (dc) props.push(`--state-${domain}-${dc}-${slug(s)}-color`);
+  // the attribute is the integration's string: slugged like the state, it stays a property name
+  if (dc) props.push(`--state-${domain}-${slug(dc)}-${slug(s)}-color`);
   props.push(
     `--state-${domain}-${slug(s)}-color`,
     `--state-${domain}-${active}-color`,

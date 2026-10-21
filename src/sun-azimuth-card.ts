@@ -241,7 +241,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     const { title, icon } = cfg;
     card.innerHTML = `
       <div class="header"${title || icon ? "" : ' style="display: none"'}>
-        <ha-icon${icon ? ` icon="${icon}"` : ' style="display: none"'}></ha-icon>
+        <ha-icon${icon ? "" : ' style="display: none"'}></ha-icon>
         <div class="title"></div>
       </div>
       <div class="body">
@@ -253,6 +253,8 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
         ${cfg.show_sides ? '<div class="divider"></div><div class="sides"></div>' : ""}
       </div>`;
     qs(card, ".title").textContent = title || "";
+    // the icon is the user's string: an attribute, never markup
+    if (icon) qs(card, ".header > ha-icon").setAttribute("icon", icon);
     this._cameraSlider = undefined;
     const track = card.querySelector<HTMLElement>(".control .cslider");
     if (track) {

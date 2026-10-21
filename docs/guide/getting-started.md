@@ -38,11 +38,13 @@ Since 2.0.0 every card type ends in `-pro` (`custom:weather-card` is now `custom
 
 [![Open your Home Assistant instance and open this repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=malte-wessel&repository=pro-cards&category=plugin)
 
-Or add it by hand:
+Or open HACS, search for **Pro Cards**, download it and reload the browser when HACS asks.
+
+If HACS does not list it yet, add it as a custom repository first:
 
 1. Open HACS, click the three-dot menu and choose **Custom repositories**.
 2. Add `https://github.com/malte-wessel/pro-cards` with the category **Dashboard**.
-3. Search for **Pro Cards**, download it and reload the browser when HACS asks.
+3. Search for **Pro Cards** and download it.
 
 HACS registers the resource `/hacsfiles/pro-cards/pro-cards.js` for you. Updates arrive through HACS like any other card; pre-releases (`x.y.z-beta.n`) appear only when you enable **Show beta versions** for Pro Cards in HACS.
 

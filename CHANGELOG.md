@@ -2,6 +2,8 @@
 
 ## 2.7.1 (unreleased)
 
+- Colours and icons from the config, rendered templates and entity attributes can no longer add markup to the dashboard. A colour is checked before it reaches the cards' SVG: only a plain colour token counts (a name, a hex, `rgb()` / `hsl()` / `var()` of numbers, commas, slashes and spaces); one with a quote, an angle bracket, `;`, `:` or `url()` counts as no colour, so a template that renders something else falls back to the rules. The integration's `device_class` is slugged before it names a theme colour, and the sun path and sun azimuth cards set the header `icon` as an attribute. A value with a `"` in it used to close the SVG attribute it was written into
+- Docs: installing through HACS starts with searching for Pro Cards; the custom repository is the fallback
 - Grid cells with a `ring` or `gauge` centre it, with the name and label under it, across the cell and, beside a taller cell in the same row, down it (a gauge's icon stays in the top corner, the gauge centres in the room below it). They hugged the top left, leaving an empty strip on the right of a wide cell and under a short one
 - Entity card: a tile with a `gauge` keeps its icon and name at the top left and centres the gauge in the room below, across the tile and down it when the tile is taller than its content (fixed rows, a taller card beside it). The whole tile used to centre as a block, the gauge at its left edge
 

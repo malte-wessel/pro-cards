@@ -1,5 +1,5 @@
 // Value reading and look resolution (pure).
-import { stateColorCss } from "../color.ts";
+import { safeColor, stateColorCss } from "../color.ts";
 import { DEVICE_CLASS_ICON } from "../constants.ts";
 import type { HassEntity, HomeAssistant } from "../ha.ts";
 import { t } from "../i18n.ts";
@@ -92,11 +92,10 @@ export const resolveLook = (
   hass?: HomeAssistant,
 ): Look => {
   const rule = ent.rules.find((r) => matchRule(r, model)) ?? null;
-  const explicitColor = ent.color
-    ? isTemplate(ent.color)
-      ? asText(tplGet(ent.color))
-      : ent.color
-    : null;
+  // a colour that is no plain colour token (a template rendering markup) counts as none
+  const explicitColor = safeColor(
+    ent.color ? (isTemplate(ent.color) ? asText(tplGet(ent.color)) : ent.color) : null,
+  );
   const explicitIcon = ent.icon
     ? isTemplate(ent.icon)
       ? asText(tplGet(ent.icon))

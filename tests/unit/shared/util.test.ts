@@ -1,5 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { isNum, isTemplate, numOrNull, decimalsOf, oneOf, qs } from "../../../src/shared/util.ts";
+import {
+  isNum,
+  isTemplate,
+  numOrNull,
+  decimalsOf,
+  oneOf,
+  qs,
+  escapeHtml,
+} from "../../../src/shared/util.ts";
 import { cssColor } from "../../../src/shared/color.ts";
 
 describe("small helpers", () => {
@@ -47,5 +55,9 @@ describe("small helpers", () => {
     root.innerHTML = '<span class="x">1</span><span class="x">2</span>';
     expect(qs(root, ".x").textContent).toBe("1");
     expect(qs(root, ".missing")).toBe(null);
+  });
+  it("escapeHtml keeps text text, in a node and in a quoted attribute", () => {
+    expect(escapeHtml(`a < b & "c" > 'd'`)).toBe("a &lt; b &amp; &quot;c&quot; &gt; &#39;d&#39;");
+    expect(escapeHtml("21 °C")).toBe("21 °C");
   });
 });

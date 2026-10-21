@@ -27,6 +27,14 @@ export const snapTo = (v: number, min: number, max: number, step: number) => {
 // whether `v` is one of the literals in `list` (narrows to the literal union)
 export const oneOf = <T extends string>(list: readonly T[], v: unknown): v is T =>
   typeof v === "string" && (list as readonly string[]).includes(v);
+// text for markup built as a string (an SVG label): safe in a text node and in a quoted attribute
+export const escapeHtml = (s: string) =>
+  s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 // the first element matching `sel`; the caller knows the markup, so a missing element is a bug
 export const qs = <E extends Element = HTMLElement>(root: ParentNode, sel: string): E =>
   root.querySelector(sel) as E;

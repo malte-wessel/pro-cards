@@ -131,7 +131,7 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
     const { title, icon } = this._config;
     card.innerHTML = `
       <div class="header"${title || icon ? "" : ' style="display: none"'}>
-        <ha-icon${icon ? ` icon="${icon}"` : ' style="display: none"'}></ha-icon>
+        <ha-icon${icon ? "" : ' style="display: none"'}></ha-icon>
         <div class="title"></div>
       </div>
       <div class="body">
@@ -143,6 +143,8 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
         <div class="events"></div>
       </div>`;
     qs(card, ".title").textContent = title || "";
+    // the icon is the user's string: an attribute, never markup
+    if (icon) qs(card, ".header > ha-icon").setAttribute("icon", icon);
     this._root = card;
     this._hoverT = null;
     if (this._config.show_tooltip) {
