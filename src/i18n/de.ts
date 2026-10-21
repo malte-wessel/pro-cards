@@ -28,8 +28,6 @@ const de: Translation = {
   "control.unlock": "Entriegeln",
   "control.hold_to": "Halten zum {action}",
   "control.press_again": "Erneut drücken zum {action}",
-  "layout.more": "{count} weitere",
-  "layout.less": "Weniger anzeigen",
   "layout.empty": "Karten zu diesem Layout hinzufügen",
   "layout.unavailable": "Die Kartenelemente von Home Assistant wurden nicht geladen",
   "group.stub_title": "Gruppe",

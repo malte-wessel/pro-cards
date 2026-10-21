@@ -292,18 +292,16 @@ views:
             heading: Layout card
           # Pro and core cards inside, each in Home Assistant's own hui-card: visibility (the
           # kitchen card shows while the kitchen light is on), the editor's preview (all cards,
-          # the ones the fold or show_on hides faded), core cards loaded lazily, the fold, a sticky card and a
-          # nested layout. The breakpoints measure the layout: two columns from tablet (600 px)
+          # the ones show_on hides faded), core cards loaded lazily and a nested layout. The breakpoints measure the layout: two columns from tablet (600 px)
           - type: custom:layout-card-pro
             columns: 1
-            fold: { max_cards: 4 }
             breakpoints:
-              tablet: { columns: 2, fold: false }
+              tablet: { columns: 2 }
             cards:
               - type: custom:entity-card-pro
                 entity: sensor.outdoor_temperature
                 visual: sparkline
-                view_layout: { span: { tablet: [1, 2] }, priority: high, sticky: true }
+                view_layout: { span: { tablet: [1, 2] } }
               - type: tile
                 entity: light.living_room
               - type: tile
@@ -323,14 +321,15 @@ views:
                   - type: custom:entity-card-pro
                     entity: sensor.power_consumption
               - type: markdown
-                content: A lazily loaded core card (markdown), low priority
-                view_layout: { priority: low }
+                content: A lazily loaded core card (markdown)
               - type: custom:entity-card-pro
                 entity: light.office
-                view_layout: { priority: low }
+                view_layout: { hidden_below: tablet }
           - type: custom:layout-card-pro
             layout: masonry
-            min_column_width: 200
+            columns: 2
+            breakpoints:
+              tablet: { columns: 3 }
             cards:
               - type: custom:weather-card-pro
                 entity: weather.demo_weather_south

@@ -1557,7 +1557,7 @@ const CASES = {
       { ...PF_CONS[3], hide_below: 0 },
     ],
   },
-  // the layout card: a grid with a full-width span and the fold row, a seamless grid with
+  // the layout card: a grid with a full-width span, a seamless grid with
   // dividers, and masonry over two tracks filled by the cards' sizes
   "lc-grid": {
     type: "custom:layout-card-pro",
@@ -1570,18 +1570,9 @@ const CASES = {
       },
       { type: "custom:entity-card-pro", entity: "light.kitchen" },
       { type: "custom:entity-card-pro", entity: "light.living_room" },
-      {
-        type: "custom:entity-card-pro",
-        entity: "cover.garage_door",
-        view_layout: { priority: "low" },
-      },
-      {
-        type: "custom:entity-card-pro",
-        entity: "lock.front_door",
-        view_layout: { priority: "low" },
-      },
+      { type: "custom:entity-card-pro", entity: "cover.garage_door" },
+      { type: "custom:entity-card-pro", entity: "lock.front_door" },
     ],
-    fold: { max_cards: 3 },
   },
   "lc-seamless": {
     type: "custom:layout-card-pro",

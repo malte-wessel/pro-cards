@@ -28,8 +28,6 @@ const es: Translation = {
   "control.unlock": "Desbloquear",
   "control.hold_to": "Mantén pulsado para {action}",
   "control.press_again": "Pulsa de nuevo para {action}",
-  "layout.more": "{count} más",
-  "layout.less": "Mostrar menos",
   "layout.empty": "Añade tarjetas a este diseño",
   "layout.unavailable": "No se cargaron los elementos de tarjeta de Home Assistant",
   "group.stub_title": "Grupo",

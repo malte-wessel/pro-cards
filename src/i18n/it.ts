@@ -28,8 +28,6 @@ const it: Translation = {
   "control.unlock": "Sblocca",
   "control.hold_to": "Tieni premuto per {action}",
   "control.press_again": "Premi di nuovo per {action}",
-  "layout.more": "Altre {count}",
-  "layout.less": "Mostra meno",
   "layout.empty": "Aggiungi schede a questo layout",
   "layout.unavailable": "Gli elementi delle schede di Home Assistant non sono stati caricati",
   "group.stub_title": "Gruppo",

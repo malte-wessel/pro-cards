@@ -28,8 +28,6 @@ const pt: Translation = {
   "control.unlock": "Destrancar",
   "control.hold_to": "Manter premido para {action}",
   "control.press_again": "Prima novamente para {action}",
-  "layout.more": "Mais {count}",
-  "layout.less": "Mostrar menos",
   "layout.empty": "Adicione cartões a este layout",
   "layout.unavailable": "Os elementos de cartão do Home Assistant não foram carregados",
   "group.stub_title": "Grupo",

@@ -1,5 +1,5 @@
 // Styles of the layout card. It draws no ha-card of its own (as Home Assistant's stacks): no
-// border around the cards and no overflow clipping, so a sticky card can stick.
+// border around the cards; the cards inside bring their own.
 import { STYLE_HOST } from "../shared/constants.ts";
 
 export const STYLE = `
@@ -46,7 +46,7 @@ export const STYLE = `
     border: var(--pl-border-width) solid var(--pl-border-color);
     border-radius: var(--pl-radius);
     box-shadow: var(--pl-shadow);
-    overflow: clip;
+    overflow: hidden;
     --ha-card-background: transparent;
     --ha-card-border-width: 0px;
     --ha-card-border-radius: 0px;
@@ -56,17 +56,6 @@ export const STYLE = `
   .seamless .item, .seamless .col { box-shadow: 1px 0 0 var(--divider-color), 0 1px 0 var(--divider-color); }
   .seamless .col > .item:last-child { box-shadow: none; }
 
-  .fold {
-    flex: none; display: flex; align-items: center; justify-content: center; gap: 4px;
-    margin-top: var(--pl-row-gap); min-height: 36px; padding: 0 12px; box-sizing: border-box;
-    border: none; border-radius: var(--pl-radius); cursor: pointer;
-    background: var(--secondary-background-color); color: var(--secondary-text-color);
-    font: 500 14px/20px var(--ha-font-family-body, Roboto, system-ui, sans-serif);
-  }
-  .fold:hover { color: var(--primary-text-color); }
-  .fold:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
-  .fold ha-icon { --mdc-icon-size: 18px; line-height: 0; }
-  .fold[hidden] { display: none; }
   .note { padding: 16px; text-align: center; color: var(--secondary-text-color); font: 400 14px/20px var(--ha-font-family-body, Roboto, system-ui, sans-serif); }
   .note[hidden] { display: none; }
 `;

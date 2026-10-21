@@ -1,10 +1,9 @@
 /*
  * layout-card-pro
- * A container for any cards: a grid (counts, tracks or as many columns as fit, spans, fixed rows),
- * a stack (down or across) or masonry, with named breakpoints that measure the card itself (or the
- * window), media rules, spacing and density, a seamless style, per-card placement in each card's
- * `view_layout`, and low-priority cards folding into a "+N more" row. Every child is a Home
- * Assistant <hui-card>, so its own `visibility` works as anywhere else.
+ * A container for any cards: a grid (counts or tracks, spans, fixed rows), a stack (down or
+ * across) or masonry, with named breakpoints that measure the card itself, spacing, a seamless
+ * style and per-card placement in each card's `view_layout`. Every
+ * child is a Home Assistant <hui-card>, so its own `visibility` works as anywhere else.
  *
  * Config (see docs/cards/layout-card.md):
  *   type: custom:layout-card-pro
@@ -15,20 +14,17 @@
  *   cards:
  *     - type: custom:entity-card-pro
  *       entity: sensor.outdoor_temperature
- *       view_layout: { span: { phone: 1, tablet: 2 }, priority: high }
+ *       view_layout: { span: { phone: 1, tablet: 2 } }
  */
 import { fireEvent, registerCard, syncKeepHeight } from "./shared/card.ts";
 import { langOf } from "./shared/format.ts";
 import type { CardConfigBase, GridOptions, HomeAssistant, HuiCardElement } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
-import { qs } from "./shared/util.ts";
-import { VisibilityWatch } from "./shared/visibility-watch.ts";
-import { activeBreakpoint, resolveOptions, watchedQueries } from "./layout/breakpoints.ts";
+import { activeBreakpoint, resolveOptions } from "./layout/breakpoints.ts";
 import { childKey, createHuiCard, ensureHuiCard, reconcile } from "./layout/children.ts";
 import { CARD_TYPE, normalizeLayoutConfig, type LayoutConfig } from "./layout/config.ts";
 import { cardSize, planLayout, type KidState, type Plan, type Style } from "./layout/place.ts";
 import { STYLE } from "./layout/styles.ts";
-import { autoFitCount, toPx, trackCount } from "./layout/units.ts";
 
 interface Kid {
   key: string;
@@ -67,12 +63,9 @@ export class LayoutCard extends HTMLElement {
   _kids: Kid[] = [];
   _root?: HTMLElement;
   _body?: HTMLElement;
-  _fold?: HTMLButtonElement;
   _note?: HTMLElement;
   _width = 0;
   _active?: string;
-  _cols: number | null = null;
-  _expanded = false;
   _selfHidden = false;
   _ready = false;
   _failed = false;
@@ -81,7 +74,6 @@ export class LayoutCard extends HTMLElement {
   _frame = 0;
   _ro?: ResizeObserver;
   _styles = new WeakMap<HTMLElement, Style>();
-  _watch = new VisibilityWatch(() => this._schedule());
 
   static getStubConfig() {
     return { layout: "grid", columns: 2, cards: [] };
@@ -96,7 +88,6 @@ export class LayoutCard extends HTMLElement {
     const cfg = normalizeLayoutConfig(config);
     syncKeepHeight(this, config);
     this._cfg = cfg;
-    this._watch.set({ media: new Set(watchedQueries(cfg)), times: [] });
     if (!this._root) this._buildDom();
     if (this._ready || customElements.get("hui-card")) {
       this._ready = true;
@@ -124,8 +115,8 @@ export class LayoutCard extends HTMLElement {
     return this._hass;
   }
 
-  // the dashboard editor's preview: every card shows, the ones the layout's breakpoints or fold
-  // would hide are faded (hui-card shows the ones its visibility hides)
+  // the dashboard editor's preview: every card shows, the ones the layout's breakpoints would
+  // hide are faded (hui-card shows the ones its visibility hides)
   set preview(v: boolean) {
     if (this._preview === !!v) return;
     this._preview = !!v;
@@ -155,13 +146,11 @@ export class LayoutCard extends HTMLElement {
       }
     });
     this._ro.observe(this);
-    this._watch.connect();
     this._schedule();
   }
 
   disconnectedCallback() {
     this._ro?.disconnect();
-    this._watch.disconnect();
     cancelAnimationFrame(this._frame);
     this._frame = 0;
   }
@@ -187,16 +176,11 @@ export class LayoutCard extends HTMLElement {
     root.prepend(style);
     const wrap = document.createElement("div");
     wrap.className = "root";
-    wrap.innerHTML = `<div class="body"></div><button class="fold" type="button" hidden><span></span><ha-icon></ha-icon></button><div class="note" hidden></div>`;
+    wrap.innerHTML = `<div class="body"></div><div class="note" hidden></div>`;
     root.appendChild(wrap);
     this._root = wrap;
     this._body = wrap.querySelector<HTMLElement>(".body")!;
-    this._fold = wrap.querySelector<HTMLButtonElement>(".fold")!;
     this._note = wrap.querySelector<HTMLElement>(".note")!;
-    this._fold.addEventListener("click", () => {
-      this._expanded = !this._expanded;
-      this._relayout();
-    });
     // a child shows or hides: hui-card fires this after changing its hidden state; it is ours to
     // act on, the dashboard must not read it as the layout's own
     wrap.addEventListener("card-visibility-changed", (ev) => {
@@ -279,14 +263,9 @@ export class LayoutCard extends HTMLElement {
   _plan(): { plan: Plan; states: KidState[]; opts: ReturnType<typeof resolveOptions> } | null {
     const cfg = this._cfg;
     if (!cfg) return null;
-    const width = cfg.container ? this._width : window.innerWidth;
-    const active = activeBreakpoint(width, cfg.breakpoints, this._active);
+    const active = activeBreakpoint(this._width, cfg.breakpoints, this._active);
     this._active = active;
-    const opts = resolveOptions(cfg, {
-      active,
-      media: this._watch.media,
-      coarse: this._watch.media("(pointer: coarse)"),
-    });
+    const opts = resolveOptions(cfg, active);
     const states: KidState[] = this._kids.map((k, i) => ({
       place: cfg.children[i].place,
       visible: !(k.hui.hidden || k.hui.style.display === "none"),
@@ -297,49 +276,22 @@ export class LayoutCard extends HTMLElement {
       active,
       order: cfg.order,
       preview: this._preview,
-      expanded: this._expanded,
-      width: this._body?.clientWidth || width,
-      cols: this._cols,
     });
     return { plan, states, opts };
   }
 
   _relayout() {
     if (!this._body || !this._root) return;
-    let p = this._plan();
+    const p = this._plan();
     if (!p) return;
     this._apply(p.plan);
-    // as many columns as fit: spans and start columns are clamped to the columns there are,
-    // counted from the width and the gap as laid out (the count follows the width only)
-    if (p.opts.layout === "grid" && p.opts.min_column_width) {
-      const cs = getComputedStyle(this._body);
-      const minPx = toPx(p.opts.min_column_width);
-      const n =
-        minPx !== null
-          ? autoFitCount(
-              this._body.clientWidth,
-              minPx,
-              parseFloat(cs.columnGap) || 0,
-              p.opts.max_columns,
-            )
-          : trackCount(cs.gridTemplateColumns);
-      if (n !== this._cols) {
-        this._cols = n;
-        p = this._plan()!;
-        this._apply(p.plan);
-      }
-    }
     this._size = cardSize(p.opts, p.states, p.plan);
     this._note!.hidden = !(this._failed || (this._preview && !this._kids.length));
     this._note!.textContent = this._failed
       ? t(this._hass, "layout.unavailable")
       : t(this._hass, "layout.empty");
     // every card hidden: the layout hides too (it leaves no gap in the section)
-    const hide =
-      !this._preview &&
-      this._kids.length > 0 &&
-      !p.plan.items.some((it) => it.shown) &&
-      !p.plan.folded;
+    const hide = !this._preview && this._kids.length > 0 && !p.plan.items.some((it) => it.shown);
     if (hide !== this._selfHidden) {
       this._selfHidden = hide;
       this.toggleAttribute("hidden", hide);
@@ -385,27 +337,10 @@ export class LayoutCard extends HTMLElement {
       const layout = it.gridLayout ? "grid" : undefined;
       if (kid.hui.layout !== layout) kid.hui.layout = layout;
     });
-    const fold = this._fold!;
-    fold.hidden = !plan.folded;
-    if (plan.folded) {
-      const label = plan.foldLabel;
-      const n = String(plan.folded);
-      qs(fold, "span").textContent = this._expanded
-        ? t(this._hass, "layout.less")
-        : label
-          ? label.replace("{count}", n)
-          : t(this._hass, "layout.more", { count: n });
-      qs(fold, "ha-icon").setAttribute(
-        "icon",
-        this._expanded ? "mdi:chevron-up" : "mdi:chevron-down",
-      );
-      fold.setAttribute("aria-expanded", String(this._expanded));
-    } else this._expanded = false;
   }
 }
 
 registerCard(LayoutCard, {
   name: "Layout Card Pro",
-  description:
-    "Any cards in a grid, a stack or masonry, with breakpoints, spacing, spans and priority folding",
+  description: "Any cards in a grid, a stack or masonry, with breakpoints, spacing and spans",
 });

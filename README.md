@@ -37,7 +37,7 @@ Pro Cards are polished dashboard cards that look like they belong in Home Assist
 | Wind Card Pro            | `custom:wind-card-pro`            | Wind speed, direction and gusts as a tile, a flow tile or a hero, with an animated wind field in four styles that rules colour.               | YAML only |
 | Rain Card Pro            | `custom:rain-card-pro`            | Rain rate and today's total as a tile, a flow tile or a hero, with falling drops, ripples or a filling gauge that rules colour.               | YAML only |
 | Power Flow Card Pro      | `custom:power-flow-card-pro`      | Solar, battery and grid → home → rooms and devices as a tree with animated flow, the state of the home and its self-sufficiency.              | YAML only |
-| Layout Card Pro          | `custom:layout-card-pro`          | Any cards in a grid, a stack or masonry, with breakpoints of its own width, spans, a seamless style and low-priority cards folding away.      | YAML only |
+| Layout Card Pro          | `custom:layout-card-pro`          | Any cards in a grid, a stack or masonry, with breakpoints of its own width, spans, a seamless style and per-breakpoint visibility.            | YAML only |
 
 All cards support the sections grid (`grid_options`). Requires Home Assistant 2025.3 or newer.
 
@@ -159,7 +159,7 @@ consumers:
 
 #### Layout Card Pro
 
-Any cards, Pro Cards and Home Assistant's own, in a grid, a stack or masonry. The breakpoints measure the card's own width, so the layout reflows wherever it sits; each card's `view_layout` sets its span, order, stickiness and priority, and the cards keep their own `visibility`.
+Any cards, Pro Cards and Home Assistant's own, in a grid, a stack or masonry. The breakpoints measure the card's own width, so the layout reflows wherever it sits; each card's `view_layout` sets its span, order and the breakpoints it shows on, and the cards keep their own `visibility`.
 
 ```yaml
 type: custom:layout-card-pro
@@ -167,14 +167,13 @@ columns: 1
 breakpoints:
   tablet: { columns: 2 }
   desktop: { columns: 4 }
-fold: { max_cards: 4 }
 cards:
   - type: custom:weather-card-pro
     entity: weather.home
-    view_layout: { span: { phone: 1, desktop: [2, 2] }, priority: high }
+    view_layout: { span: { phone: 1, desktop: [2, 2] } }
   - type: tile
     entity: light.kitchen
-    view_layout: { priority: low }
+    view_layout: { hidden_below: tablet }
 ```
 
 [Layout Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/layout-card)

@@ -1,7 +1,7 @@
 // The layout card in a browser: its cards in hui-cards, laid out by the breakpoints of its own
-// width, with Home Assistant's visibility, the fold, seamless surfaces and fixed rows.
+// width, with Home Assistant's visibility, seamless surfaces and fixed rows.
 import type { Page } from "@playwright/test";
-import { test, expect, mount, setState, setLanguage } from "./util";
+import { test, expect, mount, setState } from "./util";
 
 const LC = "custom:layout-card-pro";
 const ec = (
@@ -55,21 +55,21 @@ test.describe("layout-card-pro", () => {
     expect(Math.abs(y.w - 2 * x.w)).toBeLessThanOrEqual(1);
   });
 
-  test("fits as many columns as there is room for and clamps spans", async ({ page }) => {
+  test("shrinks a span wider than the grid and moves a start column so the card fits", async ({
+    page,
+  }) => {
     const cfg = {
       type: LC,
-      min_column_width: 180,
-      cards: [ec(T, { span: 3 }), ec(H), ec(K)],
+      columns: 2,
+      cards: [ec(T, { span: 3 }), ec(H), ec(K, { column: 3 })],
     };
     await mount(page, cfg, { width: 432 });
-    let [a, b, c] = await items(page);
-    // 400 px inside: two columns; the span of 3 fills the row without overflowing
-    expect(a.w).toBe(b.w + c.w + 8);
-    expect(b.y).toBe(c.y);
-    await resize(page, 232);
-    [a, b, c] = await items(page);
-    expect(a.w).toBe(b.w);
-    expect(c.y).toBeGreaterThan(b.y);
+    const [a, b, c] = await items(page);
+    // 400 px inside, two columns: the span of 3 fills the row without overflowing
+    expect(a.w).toBe(400);
+    expect(b.w).toBe(196);
+    // column 3 does not exist: the card goes to the last one
+    expect(c.x).toBe(a.x + 196 + 8);
   });
 
   test("switches its layout at the breakpoints of its own width", async ({ page }) => {
@@ -85,14 +85,6 @@ test.describe("layout-card-pro", () => {
     await resize(page, 700);
     r = await items(page);
     expect(new Set(r.map((b) => b.y)).size).toBe(1);
-    // a media rule applies on top
-    await mount(
-      page,
-      { ...cfg, media: [{ query: "(min-width: 1px)", columns: 2 }] },
-      { width: 700 },
-    );
-    r = await items(page);
-    expect(new Set(r.map((b) => b.x)).size).toBe(2);
   });
 
   test("gives fixed rows a definite height the card fills", async ({ page }) => {
@@ -178,29 +170,6 @@ test.describe("layout-card-pro", () => {
     expect(shown).toEqual([true, true, false]);
   });
 
-  test("folds low-priority cards into a row that opens", async ({ page }) => {
-    const cfg = {
-      type: LC,
-      fold: { max_cards: 2 },
-      cards: [ec(T), ec(H, { priority: "low" }), ec(K, { priority: "low" }), ec(P)],
-    };
-    await mount(page, cfg, { width: 432 });
-    const fold = page.locator("layout-card-pro .fold");
-    await expect(fold).toHaveText("2 more");
-    expect(await items(page)).toHaveLength(2);
-    // folded cards stay on the page
-    expect(
-      await page.evaluate(() =>
-        [...window.pc.card(0).shadowRoot!.querySelectorAll("hui-card")].every((h) => h.isConnected),
-      ),
-    ).toBe(true);
-    await fold.click();
-    await expect(fold).toHaveText("Show less");
-    expect(await items(page)).toHaveLength(4);
-    await setLanguage(page, "de");
-    await expect(fold).toHaveText("Weniger anzeigen");
-  });
-
   test("draws one surface for seamless cards", async ({ page }) => {
     await mount(
       page,
@@ -218,16 +187,13 @@ test.describe("layout-card-pro", () => {
     expect(b.x).toBe(a.x + a.w); // no gap: the divider sits between them
   });
 
-  test("nests layouts and keeps a sticky card's position", async ({ page }) => {
+  test("nests layouts", async ({ page }) => {
     await mount(
       page,
       {
         type: LC,
         columns: 2,
-        cards: [
-          ec(T, { sticky: true }),
-          { type: LC, layout: "stack", cards: [ec(H), ec(K)], view_layout: {} },
-        ],
+        cards: [ec(T), { type: LC, layout: "stack", cards: [ec(H), ec(K)], view_layout: {} }],
       },
       { width: 432 },
     );
@@ -236,12 +202,6 @@ test.describe("layout-card-pro", () => {
       "entity-card-pro",
       "entity-card-pro",
     ]);
-    const pos = await page.evaluate(
-      () =>
-        getComputedStyle(window.pc.card(0).shadowRoot!.querySelector<HTMLElement>(".item")!)
-          .position,
-    );
-    expect(pos).toBe("sticky");
   });
 
   test("hides itself when every card is hidden", async ({ page }) => {

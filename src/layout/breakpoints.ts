@@ -27,25 +27,12 @@ export const activeBreakpoint = (width: number, bps: Breakpoint[], prev?: string
   return name;
 };
 
-export interface ResolveCtx {
-  active: string;
-  media: (query: string) => boolean;
-  coarse: boolean; // a touch screen: density auto is roomy
-}
-
-// The base options, then every breakpoint up to the active one, then the media rules in order: a
-// matching rule applies and ends the list, unless it says `merge: true`.
-export const resolveOptions = (cfg: LayoutConfig, ctx: ResolveCtx): LayoutOptions => {
+// The base options, then every breakpoint up to the active one.
+export const resolveOptions = (cfg: LayoutConfig, active: string): LayoutOptions => {
   const o: LayoutOptions = { ...cfg.base };
-  const upto = cfg.order.indexOf(ctx.active);
+  const upto = cfg.order.indexOf(active);
   for (const b of cfg.breakpoints)
     if (cfg.order.indexOf(b.name) <= upto) Object.assign(o, b.overrides);
-  for (const m of cfg.media) {
-    if (!ctx.media(m.query)) continue;
-    Object.assign(o, m.overrides);
-    if (!m.merge) break;
-  }
-  if (o.density === "auto") o.density = ctx.coarse ? "roomy" : "default";
   return o;
 };
 
@@ -60,18 +47,4 @@ export const shownAt = (p: ChildPlace, active: string, order: string[]): boolean
   if (p.show_on && !p.show_on.includes(active)) return false;
   if (p.hidden_below && order.indexOf(active) < order.indexOf(p.hidden_below)) return false;
   return true;
-};
-
-// the media queries the card listens to: its media rules, the pointer for density auto, and the
-// breakpoints' widths when they measure the window
-export const watchedQueries = (cfg: LayoutConfig): string[] => {
-  const qs = cfg.media.map((m) => m.query);
-  const levels = [
-    cfg.base,
-    ...cfg.breakpoints.map((b) => b.overrides),
-    ...cfg.media.map((m) => m.overrides),
-  ];
-  if (levels.some((l) => l.density === "auto")) qs.push("(pointer: coarse)");
-  if (!cfg.container) for (const b of cfg.breakpoints) qs.push(`(min-width: ${b.min}px)`);
-  return [...new Set(qs)];
 };

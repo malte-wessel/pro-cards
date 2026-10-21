@@ -172,21 +172,20 @@ consumers:
 `,
   "Layout card": `type: custom:layout-card-pro
 columns: 1
-fold: { max_cards: 3 }
 breakpoints:
-  tablet: { columns: 2, fold: false }
+  tablet: { columns: 2 }
 cards:
   - type: custom:entity-card-pro
     entity: sensor.outdoor_temperature
     visual: sparkline
-    view_layout: { span: { tablet: [1, 2] }, priority: high }
+    view_layout: { span: { tablet: [1, 2] } }
   - type: custom:entity-card-pro
     entity: light.kitchen
   - type: custom:entity-card-pro
     entity: light.living_room
   - type: custom:entity-card-pro
     entity: cover.living_room_blinds
-    view_layout: { priority: low }
+    view_layout: { hidden_below: tablet }
 `,
   "Wind card": `type: custom:wind-card-pro
 entity: sensor.wind_speed

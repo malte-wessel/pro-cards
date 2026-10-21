@@ -79,41 +79,6 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: As many as fit
-          - type: markdown
-            content: >-
-              `min_column_width: 150` makes as many columns as fit, no breakpoints needed.
-              The second one caps them at `max_columns: 2`; a `span: 3` shrinks to the row.
-          - type: custom:layout-card-pro
-            min_column_width: 150
-            cards:
-              - type: custom:entity-card-pro
-                entity: sensor.outdoor_temperature
-              - type: custom:entity-card-pro
-                entity: sensor.outdoor_humidity
-              - type: custom:entity-card-pro
-                entity: sensor.wind_speed
-              - type: custom:entity-card-pro
-                entity: sensor.illuminance
-              - type: custom:entity-card-pro
-                entity: sensor.rain_today
-          - type: custom:layout-card-pro
-            min_column_width: 100
-            max_columns: 2
-            cards:
-              - type: custom:entity-card-pro
-                entity: sensor.carbon_dioxide
-                view_layout: { span: 3 }
-              - type: custom:entity-card-pro
-                entity: sensor.robot_battery
-                visual: ring
-              - type: custom:entity-card-pro
-                entity: sensor.battery_state_of_charge
-                visual: ring
-
-      - type: grid
-        cards:
-          - type: heading
             heading: Fixed rows
           - type: markdown
             content: >-
@@ -167,44 +132,6 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: Dense packing
-          - type: markdown
-            content: >-
-              The same cards twice. Without `dense` the grid keeps the order and leaves a hole
-              after the wide card; `dense: true` lets the small card after it fill the hole.
-          - type: custom:layout-card-pro
-            columns: 3
-            cards: &dense_cards
-              - type: tile
-                entity: light.kitchen
-                name: "1"
-              - type: tile
-                entity: light.office
-                name: "2 (span 2)"
-                view_layout: { span: 2 }
-              - type: tile
-                entity: light.living_room
-                name: "3 (span 3)"
-                view_layout: { span: 3 }
-              - type: tile
-                entity: light.bed_light
-                name: "4 (span 2)"
-                view_layout: { span: 2 }
-              - type: tile
-                entity: light.dining_table
-                name: "5 (span 2)"
-                view_layout: { span: 2 }
-              - type: tile
-                entity: light.ceiling_lights
-                name: "6"
-          - type: custom:layout-card-pro
-            columns: 3
-            dense: true
-            cards: *dense_cards
-
-      - type: grid
-        cards:
-          - type: heading
             heading: Align items
           - type: markdown
             content: >-
@@ -240,18 +167,18 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: Start column and row
+            heading: Start column
           - type: markdown
             content: >-
-              `column: 3` and `row: 2` put a card in a cell of its own choosing; the others flow
-              around it.
+              `column: 3` starts a card in the third column, `column: 1` back at the start of a
+              row; the others flow around them.
           - type: custom:layout-card-pro
             columns: 3
             cards:
               - type: tile
                 entity: lock.front_door
-                name: column 3, row 2
-                view_layout: { column: 3, row: 2 }
+                name: column 3
+                view_layout: { column: 3 }
               - type: tile
                 entity: lock.kitchen_door
               - type: tile
@@ -321,36 +248,6 @@ views:
                 view_layout: { span: 2 }
               - type: tile
                 entity: fan.living_room_fan
-
-      - type: grid
-        cards:
-          - type: heading
-            heading: Stack across, wrapping
-          - type: markdown
-            content: >-
-              `wrap: true` with `min_column_width: 120` wraps onto new lines; each card is at
-              least 120 px and the cards of a line share what is left.
-          - type: custom:layout-card-pro
-            layout: stack
-            direction: across
-            wrap: true
-            min_column_width: 120
-            cards:
-              - type: tile
-                entity: vacuum.demo_vacuum_0_ground_floor
-                name: Ground
-              - type: tile
-                entity: vacuum.demo_vacuum_1_first_floor
-                name: First
-              - type: tile
-                entity: vacuum.demo_vacuum_2_second_floor
-                name: Second
-              - type: tile
-                entity: vacuum.demo_vacuum_3_third_floor
-                name: Third
-              - type: tile
-                entity: vacuum.demo_vacuum_4_fourth_floor
-                name: Fourth
 
       - type: grid
         column_span: 2
@@ -424,11 +321,11 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: Masonry tracks and auto columns
+            heading: Masonry tracks
           - type: markdown
             content: >-
-              `columns: [2fr, 1fr]` gives the columns their own widths; `min_column_width: 160`
-              counts the columns from the width instead.
+              `columns: [2fr, 1fr]` gives the columns their own widths; below, three columns
+              from `tablet` and one on a phone.
           - type: custom:layout-card-pro
             layout: masonry
             columns: [2fr, 1fr]
@@ -444,7 +341,9 @@ views:
                 vertical: true
           - type: custom:layout-card-pro
             layout: masonry
-            min_column_width: 160
+            columns: 1
+            breakpoints:
+              tablet: { columns: 3 }
             cards:
               - type: tile
                 entity: media_player.kitchen
@@ -466,8 +365,8 @@ views:
             heading: Gaps
           - type: markdown
             content: >-
-              `gap: 16`, then `gap: [2, 24]` (row, column), then `row_gap: 0` with the default
-              column gap.
+              `gap: 16`, then `gap: [2, 24]` (row, column), then `gap: [0, 8]`: no space between
+              the rows. Without `gap` the layout uses the theme's sections grid gap.
           - type: custom:layout-card-pro
             columns: 2
             gap: 16
@@ -486,38 +385,16 @@ views:
             cards: *four_tiles
           - type: custom:layout-card-pro
             columns: 2
-            row_gap: 0
+            gap: [0, 8]
             cards: *four_tiles
 
       - type: grid
         cards:
           - type: heading
-            heading: Density
+            heading: Padding
           - type: markdown
             content: >-
-              `density: compact` (4 px), `roomy` (16 px) and `auto`, which is roomy on a touch
-              screen and the sections grid's gap with a mouse.
-          - type: custom:layout-card-pro
-            columns: 2
-            density: compact
-            cards: *four_tiles
-          - type: custom:layout-card-pro
-            columns: 2
-            density: roomy
-            cards: *four_tiles
-          - type: custom:layout-card-pro
-            columns: 2
-            density: auto
-            cards: *four_tiles
-
-      - type: grid
-        cards:
-          - type: heading
-            heading: Padding and margin
-          - type: markdown
-            content: >-
-              `padding: [16, 32]` insets the cards; `padding: { top: 24 }` only at the top;
-              `margin: [0, -16]` lets the layout bleed past the section's sides.
+              `padding: [16, 32]` insets the cards; `padding: { top: 24 }` only at the top.
           - type: custom:layout-card-pro
             columns: 2
             padding: [16, 32]
@@ -525,33 +402,6 @@ views:
           - type: custom:layout-card-pro
             columns: 2
             padding: { top: 24 }
-            cards: *four_tiles
-          - type: custom:layout-card-pro
-            columns: 2
-            margin: [0, -16]
-            cards: *four_tiles
-
-      - type: grid
-        cards:
-          - type: heading
-            heading: Max width and align
-          - type: markdown
-            content: >-
-              `max_width: 240` keeps the layout narrower than its card; `align` puts it at the
-              `start`, the `center` (default) or the `end`.
-          - type: custom:layout-card-pro
-            columns: 2
-            max_width: 240
-            align: start
-            cards: *four_tiles
-          - type: custom:layout-card-pro
-            columns: 2
-            max_width: 240
-            cards: *four_tiles
-          - type: custom:layout-card-pro
-            columns: 2
-            max_width: 240
-            align: end
             cards: *four_tiles
 
       - type: grid
@@ -595,11 +445,11 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: Seamless with padding and bleed
+            heading: Seamless with padding
           - type: markdown
             content: >-
-              A seamless surface with `padding: [8, 16]`; the card with `bleed: true` ignores the
-              side padding and runs edge to edge.
+              A seamless surface with `padding: [8, 16]`: the padding is inside the surface,
+              around the cards. The camera keeps its shape with its own `aspect_ratio`.
           - type: custom:layout-card-pro
             layout: stack
             card_style: seamless
@@ -609,7 +459,7 @@ views:
                 entity: camera.demo_camera
                 show_state: false
                 show_name: false
-                view_layout: { bleed: true, aspect: 16/9 }
+                aspect_ratio: 16x9
               - type: tile
                 entity: binary_sensor.movement_backyard
               - type: tile
@@ -731,49 +581,8 @@ views:
                 entities: [light.living_room, light.kitchen, light.office, light.bed_light]
                 view_layout: { hidden_below: tablet }
 
-      - type: grid
-        column_span: 2
-        cards:
-          - type: heading
-            heading: The window instead of the card
-          - type: markdown
-            content: >-
-              `container: false` measures the window, like media queries do: on a wide screen
-              this layout is in `desktop` even in its narrow section, and its columns get narrow.
-          - type: custom:layout-card-pro
-            container: false
-            columns: 1
-            breakpoints:
-              tablet: { columns: 2 }
-              desktop: { columns: 3 }
-            cards: *four_tiles
-
-      - type: grid
-        column_span: 2
-        cards:
-          - type: heading
-            heading: Media rules
-          - type: markdown
-            content: >-
-              CSS media queries for what the breakpoints do not cover. In portrait the layout
-              has one column; in a dark theme it turns seamless (`merge: true` goes on to the
-              next rule); on a touch screen it is roomy.
-          - type: custom:layout-card-pro
-            columns: 3
-            media:
-              - { query: "(prefers-color-scheme: dark)", merge: true, card_style: seamless }
-              - { query: "(orientation: portrait)", merge: true, columns: 1 }
-              - { query: "(pointer: coarse)", density: roomy }
-            cards:
-              - type: tile
-                entity: climate.ecobee
-              - type: tile
-                entity: climate.heatpump
-              - type: tile
-                entity: climate.hvac
-
   # ---------------------------------------------------------------------------------------------
-  - title: Visibility & fold
+  - title: Visibility
     path: visibility
     icon: mdi:eye-outline
     type: sections
@@ -813,7 +622,8 @@ views:
               - type: picture-entity
                 entity: camera.demo_camera
                 show_state: false
-                view_layout: { span: full, aspect: 16/9 }
+                aspect_ratio: 16x9
+                view_layout: { span: full }
                 visibility:
                   - { condition: screen, media_query: "(min-width: 600px)" }
               - type: tile
@@ -838,74 +648,6 @@ views:
                   - { condition: state, entity: light.kitchen, state: "on" }
           - type: markdown
             content: This note sits right under it either way.
-
-      - type: grid
-        cards:
-          - type: heading
-            heading: Fold
-          - type: markdown
-            content: >-
-              `fold: { max_cards: 3 }` shows three cards and folds the rest into a "+N more"
-              row: low priority first from the end, then normal ones; `priority: high` never
-              folds.
-          - type: custom:layout-card-pro
-            columns: 1
-            fold: { max_cards: 3 }
-            cards:
-              - type: tile
-                entity: lock.front_door
-                view_layout: { priority: high }
-              - type: tile
-                entity: light.entrance_color_white_lights
-                view_layout: { priority: low }
-              - type: tile
-                entity: cover.garage_door
-              - type: tile
-                entity: light.living_room
-              - type: tile
-                entity: switch.decorative_lights
-                view_layout: { priority: low }
-              - type: tile
-                entity: fan.ceiling_fan
-                view_layout: { priority: low }
-
-      - type: grid
-        cards:
-          - type: heading
-            heading: Fold label and per breakpoint
-          - type: markdown
-            content: >-
-              `fold: 2` is short for `{ max_cards: 2 }`; `label` is the row's text with
-              `{count}`. The second layout folds only on a phone (`tablet: { fold: false }`): in
-              this column it folds, on the responsive view's wide sections it would not.
-          - type: custom:layout-card-pro
-            columns: 2
-            fold: { max_cards: 2, label: "Show {count} other rooms" }
-            cards:
-              - type: tile
-                entity: light.living_room
-              - type: tile
-                entity: light.kitchen
-              - type: tile
-                entity: light.office
-              - type: tile
-                entity: light.bed_light
-              - type: tile
-                entity: light.dining_table
-          - type: custom:layout-card-pro
-            columns: 2
-            fold: 2
-            breakpoints:
-              tablet: { fold: false }
-            cards:
-              - type: tile
-                entity: media_player.living_room
-              - type: tile
-                entity: media_player.kitchen
-              - type: tile
-                entity: media_player.bedroom
-              - type: tile
-                entity: media_player.lounge_room
 
   # ---------------------------------------------------------------------------------------------
   - title: Placement
@@ -971,79 +713,6 @@ views:
                 entity: light.dining_table
                 name: stretch
                 view_layout: { align: stretch }
-
-      - type: grid
-        cards:
-          - type: heading
-            heading: Aspect and heights
-          - type: markdown
-            content: >-
-              `aspect: 16/9` gives the camera a fixed shape; `min_height: 120` makes the tile at
-              least that tall, `max_height: 80` caps the list.
-          - type: custom:layout-card-pro
-            columns: 2
-            align_items: start
-            cards:
-              - type: picture-entity
-                entity: camera.demo_camera_png
-                show_state: false
-                view_layout: { span: full, aspect: 16/9 }
-              - type: tile
-                entity: light.ceiling_lights
-                vertical: true
-                view_layout: { min_height: 120 }
-              - type: entities
-                entities: [sensor.outdoor_temperature, sensor.outdoor_humidity, sensor.wind_speed]
-                view_layout: { max_height: 80 }
-
-      - type: grid
-        column_span: 3
-        cards:
-          - type: heading
-            heading: Sticky
-          - type: markdown
-            content: >-
-              `sticky: true` keeps the remote in view under the header while the page scrolls
-              past the long column beside it, within the layout card. `sticky: 120` would stick
-              120 px lower.
-          - type: custom:layout-card-pro
-            columns: [1fr, 2fr]
-            cards:
-              - type: custom:layout-card-pro
-                layout: stack
-                card_style: seamless
-                view_layout: { sticky: true }
-                cards:
-                  - type: media-control
-                    entity: media_player.living_room
-                  - type: tile
-                    entity: light.living_room
-                    features:
-                      - type: light-brightness
-              - type: custom:layout-card-pro
-                layout: stack
-                cards:
-                  - type: custom:weather-card-pro
-                    entity: weather.demo_weather_south
-                    sections:
-                      - type: hero
-                      - type: forecast
-                        mode: daily
-                        days: 7
-                  - type: custom:entity-card-pro
-                    entity: sensor.power_consumption
-                    visual: sparkline
-                  - type: custom:entity-card-pro
-                    entity: sensor.outdoor_temperature
-                    visual: sparkline
-                  - type: history-graph
-                    hours_to_show: 24
-                    entities: [sensor.outdoor_temperature, sensor.living_room_temperature]
-                  - type: custom:wind-card-pro
-                    entity: sensor.wind_speed
-                    direction: sensor.wind_direction
-                    gust: sensor.wind_gust
-                    layout: hero
 
   # ---------------------------------------------------------------------------------------------
   - title: Patterns
@@ -1142,12 +811,10 @@ views:
           - type: markdown
             content: >-
               Twelve columns like a section: the power flow takes the row, two rings share the
-              next, and the plugs fold away behind "more" on a phone.
+              next, and the plugs show only from tablet (`hidden_below: tablet`), so not in this
+              narrow column.
           - type: custom:layout-card-pro
             columns: 12
-            fold: { max_cards: 4 }
-            breakpoints:
-              tablet: { fold: false }
             cards:
               - type: custom:power-flow-card-pro
                 home: sensor.power_consumption
@@ -1162,25 +829,23 @@ views:
                 consumers:
                   - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
                   - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
-                view_layout: { priority: high }
               - type: custom:entity-card-pro
                 entity: sensor.battery_state_of_charge
                 visual: ring
                 grid_options: { columns: 6 }
-                view_layout: { priority: high }
               - type: custom:entity-card-pro
                 entity: sensor.grid_fossil_fuel_percentage
                 visual: ring
                 grid_options: { columns: 6 }
               - type: custom:entity-card-pro
                 entity: sensor.washer_power
-                view_layout: { priority: low }
+                view_layout: { hidden_below: tablet }
               - type: custom:entity-card-pro
                 entity: sensor.dryer_power
-                view_layout: { priority: low }
+                view_layout: { hidden_below: tablet }
               - type: custom:entity-card-pro
                 entity: sensor.ev_charger_power
-                view_layout: { priority: low }
+                view_layout: { hidden_below: tablet }
 
       - type: grid
         column_span: 3
@@ -1189,11 +854,13 @@ views:
             heading: Rooms in masonry
           - type: markdown
             content: >-
-              A masonry of room layouts, as many columns as fit at 280 px: each room is a
+              A masonry of room layouts, two columns and four from `desktop`: each room is a
               seamless stack, so the rooms of different lengths pack without gaps.
           - type: custom:layout-card-pro
             layout: masonry
-            min_column_width: 280
+            columns: 2
+            breakpoints:
+              desktop: { columns: 4 }
             cards:
               - type: custom:layout-card-pro
                 layout: stack
@@ -1254,10 +921,10 @@ views:
         column_span: 3
         cards:
           - type: heading
-            heading: Split with a sticky side
+            heading: Split
           - type: markdown
             content: >-
-              `columns: [300px, 1fr]` with a sticky stack on the side and a grid of cameras and
+              `columns: [300px, 1fr]` with a stack on the side and a grid of cameras and
               controls in the main area; below `tablet` the side goes on top.
           - type: custom:layout-card-pro
             columns: 1
@@ -1266,7 +933,6 @@ views:
             cards:
               - type: custom:layout-card-pro
                 layout: stack
-                view_layout: { sticky: { tablet: true } }
                 cards:
                   - type: custom:weather-card-pro
                     entity: weather.demo_weather_south
@@ -1277,16 +943,16 @@ views:
                   - type: tile
                     entity: binary_sensor.window_kitchen
               - type: custom:layout-card-pro
-                min_column_width: 220
+                columns: 2
                 cards:
                   - type: picture-entity
                     entity: camera.demo_camera
                     show_state: false
-                    view_layout: { aspect: 16/9 }
+                    aspect_ratio: 16x9
                   - type: picture-entity
                     entity: camera.demo_camera_png
                     show_state: false
-                    view_layout: { aspect: 16/9 }
+                    aspect_ratio: 16x9
                   - type: tile
                     entity: light.entrance_color_white_lights
                     features:
@@ -1303,18 +969,17 @@ views:
     type: panel
     cards:
       # one layout for the whole view: on a desktop screen the wide breakpoints show (four columns
-      # from desktop, six from wide), with a sticky overview on the left from desktop
+      # from desktop, six from wide), with the overview on the left from desktop
       - type: custom:layout-card-pro
         columns: 1
         padding: 8
-        max_width: 1800
         breakpoints:
           tablet: { columns: 2 }
           desktop: { columns: [320px, 1fr], gap: 12, padding: 16 }
         cards:
           - type: custom:layout-card-pro
             layout: stack
-            view_layout: { sticky: { desktop: true }, span: { tablet: full, desktop: 1 } }
+            view_layout: { span: { tablet: full, desktop: 1 } }
             cards:
               - type: custom:weather-card-pro
                 entity: weather.demo_weather_south
@@ -1337,9 +1002,10 @@ views:
                     entity: sensor.battery_state_of_charge
                     visual: ring
           - type: custom:layout-card-pro
-            min_column_width: 240
-            max_columns: 6
-            dense: true
+            columns: 2
+            breakpoints:
+              tablet: { columns: 3 }
+              desktop: { columns: 4 }
             view_layout: { span: { tablet: full, desktop: 1 } }
             cards:
               - type: tile
@@ -1369,7 +1035,8 @@ views:
               - type: picture-entity
                 entity: camera.demo_camera
                 show_state: false
-                view_layout: { span: 2, aspect: 16/9 }
+                aspect_ratio: 16x9
+                view_layout: { span: 2 }
               - type: custom:entity-card-pro
                 entity: sensor.power_consumption
                 visual: sparkline

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://malte-wessel.github.io/pro-cards/schema/layout-card-pro.schema.json",
   "title": "custom:layout-card-pro",
-  "description": "Any cards in a grid, a stack or masonry, with breakpoints of the card's own width, media rules, spacing, a seamless style, per-card placement in view_layout and priority folding.",
+  "description": "Any cards in a grid, a stack or masonry, with breakpoints of the card's own width, spacing, a seamless style, and per-card placement in view_layout.",
   "type": "object",
   "allOf": [
     {
@@ -12,11 +12,6 @@
   "properties": {
     "type": {
       "const": "custom:layout-card-pro"
-    },
-    "container": {
-      "type": "boolean",
-      "default": true,
-      "description": "Breakpoints measure the layout's own width (true) or the window"
     },
     "breakpoints": {
       "type": "object",
@@ -139,30 +134,6 @@
         ]
       }
     },
-    "media": {
-      "type": "array",
-      "description": "Options for CSS media queries the breakpoints do not cover; the first match applies, unless it says merge: true",
-      "items": {
-        "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/$defs/layoutOptions"
-          }
-        ],
-        "properties": {
-          "query": {
-            "type": "string",
-            "minLength": 1
-          },
-          "merge": {
-            "type": "boolean",
-            "default": false
-          }
-        },
-        "required": ["query"],
-        "unevaluatedProperties": false
-      }
-    },
     "cards": {
       "type": "array",
       "items": {
@@ -205,18 +176,6 @@
         }
       ]
     },
-    "signedLength": {
-      "description": "A length that may be negative (a margin below 0 lets the layout bleed)",
-      "oneOf": [
-        {
-          "type": "number"
-        },
-        {
-          "type": "string",
-          "pattern": "^\\s*(-?\\d*\\.?\\d+(px|rem|em|%|vw|vh|svh|dvh)?|(var|calc|min|max|clamp)\\(.+\\))\\s*$"
-        }
-      ]
-    },
     "sides": {
       "oneOf": [
         {
@@ -248,43 +207,6 @@
             },
             "left": {
               "$ref": "#/$defs/length"
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
-    },
-    "signedSides": {
-      "oneOf": [
-        {
-          "$ref": "#/$defs/signedLength"
-        },
-        {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/signedLength"
-          },
-          "minItems": 1,
-          "maxItems": 4,
-          "not": {
-            "minItems": 3,
-            "maxItems": 3
-          }
-        },
-        {
-          "type": "object",
-          "properties": {
-            "top": {
-              "$ref": "#/$defs/signedLength"
-            },
-            "right": {
-              "$ref": "#/$defs/signedLength"
-            },
-            "bottom": {
-              "$ref": "#/$defs/signedLength"
-            },
-            "left": {
-              "$ref": "#/$defs/signedLength"
             }
           },
           "additionalProperties": false
@@ -330,46 +252,6 @@
           ],
           "default": 1
         },
-        "min_column_width": {
-          "oneOf": [
-            {
-              "$ref": "#/$defs/length"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "As many columns as fit, none narrower than this (instead of a count); null in a breakpoint goes back to `columns`"
-        },
-        "max_columns": {
-          "oneOf": [
-            {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 24
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "With min_column_width: at most this many columns"
-        },
-        "max_width": {
-          "oneOf": [
-            {
-              "$ref": "#/$defs/length"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "Keeps the layout readable on big screens"
-        },
-        "align": {
-          "enum": ["start", "center", "end"],
-          "default": "center",
-          "description": "Where a layout narrower than its card sits (max_width)"
-        },
         "row_height": {
           "oneOf": [
             {
@@ -382,11 +264,6 @@
           "default": "auto",
           "description": "auto: rows as tall as their cards; a length: the height of one row for cards that span rows (like the sections grid's 56 px)"
         },
-        "dense": {
-          "type": "boolean",
-          "default": false,
-          "description": "Later small cards fill the holes big ones leave (changes the order)"
-        },
         "align_items": {
           "enum": ["start", "center", "end", "stretch"],
           "default": "stretch",
@@ -396,11 +273,6 @@
           "enum": ["down", "across"],
           "default": "down",
           "description": "Stack: one below the other, or side by side"
-        },
-        "wrap": {
-          "type": "boolean",
-          "default": false,
-          "description": "Stack across: wrap onto new lines (each card at least min_column_width)"
         },
         "gap": {
           "description": "Space between cards: one length, or [row, column]",
@@ -418,62 +290,20 @@
             }
           ]
         },
-        "row_gap": {
-          "$ref": "#/$defs/length"
-        },
-        "column_gap": {
-          "$ref": "#/$defs/length"
-        },
         "padding": {
           "$ref": "#/$defs/sides",
           "description": "Inside the layout, around the cards: 1, 2 or 4 values, or per side"
-        },
-        "margin": {
-          "$ref": "#/$defs/signedSides",
-          "description": "Outside the layout; negative values bleed to the edge"
-        },
-        "density": {
-          "enum": ["compact", "default", "roomy", "auto"],
-          "default": "default",
-          "description": "The gaps: compact 4 px, default as the sections grid, roomy 16 px; auto is roomy on touch screens"
         },
         "card_style": {
           "enum": ["cards", "seamless"],
           "default": "cards",
           "description": "seamless: the cards share one surface with dividers"
-        },
-        "fold": {
-          "description": "Fold the surplus cards into a \"+N more\" row (low priority first, high never): false, a card count, or { max_cards, label }",
-          "oneOf": [
-            {
-              "const": false
-            },
-            {
-              "type": "integer",
-              "minimum": 0
-            },
-            {
-              "type": "object",
-              "properties": {
-                "max_cards": {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                "label": {
-                  "type": "string",
-                  "description": "The row's text; {count} is the number of folded cards"
-                }
-              },
-              "required": ["max_cards"],
-              "additionalProperties": false
-            }
-          ]
         }
       }
     },
     "viewLayout": {
       "type": "object",
-      "description": "Where and how a card sits in a layout card; every value but priority, show_on and hidden_below may be a map by breakpoint",
+      "description": "Where and how a card sits in a layout card; every value but show_on and hidden_below may be a map by breakpoint",
       "properties": {
         "span": {
           "oneOf": [
@@ -583,29 +413,6 @@
           ],
           "description": "Grid: the column the card starts in; masonry: the column it goes to"
         },
-        "row": {
-          "oneOf": [
-            {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 48
-            },
-            {
-              "type": "object",
-              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
-              "propertyNames": {
-                "pattern": "^[a-z][a-z0-9_]*$"
-              },
-              "additionalProperties": {
-                "type": "integer",
-                "minimum": 1,
-                "maximum": 48
-              },
-              "minProperties": 1
-            }
-          ],
-          "description": "Grid: the row the card starts in"
-        },
         "order": {
           "oneOf": [
             {
@@ -643,142 +450,6 @@
             }
           ],
           "description": "How this card sits in its cell"
-        },
-        "sticky": {
-          "oneOf": [
-            {
-              "oneOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "const": "top"
-                },
-                {
-                  "$ref": "#/$defs/length"
-                }
-              ]
-            },
-            {
-              "type": "object",
-              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
-              "propertyNames": {
-                "pattern": "^[a-z][a-z0-9_]*$"
-              },
-              "additionalProperties": {
-                "oneOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "const": "top"
-                  },
-                  {
-                    "$ref": "#/$defs/length"
-                  }
-                ]
-              },
-              "minProperties": 1
-            }
-          ],
-          "description": "Stays in view while the page scrolls, within the layout card; true / top under the header, or an offset"
-        },
-        "aspect": {
-          "oneOf": [
-            {
-              "oneOf": [
-                {
-                  "type": "number",
-                  "exclusiveMinimum": 0
-                },
-                {
-                  "type": "string",
-                  "pattern": "^\\s*\\d*\\.?\\d+\\s*([/:]\\s*\\d*\\.?\\d+)?\\s*$"
-                }
-              ]
-            },
-            {
-              "type": "object",
-              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
-              "propertyNames": {
-                "pattern": "^[a-z][a-z0-9_]*$"
-              },
-              "additionalProperties": {
-                "oneOf": [
-                  {
-                    "type": "number",
-                    "exclusiveMinimum": 0
-                  },
-                  {
-                    "type": "string",
-                    "pattern": "^\\s*\\d*\\.?\\d+\\s*([/:]\\s*\\d*\\.?\\d+)?\\s*$"
-                  }
-                ]
-              },
-              "minProperties": 1
-            }
-          ],
-          "description": "A fixed shape such as 16/9"
-        },
-        "min_height": {
-          "oneOf": [
-            {
-              "$ref": "#/$defs/length"
-            },
-            {
-              "type": "object",
-              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
-              "propertyNames": {
-                "pattern": "^[a-z][a-z0-9_]*$"
-              },
-              "additionalProperties": {
-                "$ref": "#/$defs/length"
-              },
-              "minProperties": 1
-            }
-          ]
-        },
-        "max_height": {
-          "oneOf": [
-            {
-              "$ref": "#/$defs/length"
-            },
-            {
-              "type": "object",
-              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
-              "propertyNames": {
-                "pattern": "^[a-z][a-z0-9_]*$"
-              },
-              "additionalProperties": {
-                "$ref": "#/$defs/length"
-              },
-              "minProperties": 1
-            }
-          ]
-        },
-        "bleed": {
-          "oneOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "object",
-              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
-              "propertyNames": {
-                "pattern": "^[a-z][a-z0-9_]*$"
-              },
-              "additionalProperties": {
-                "type": "boolean"
-              },
-              "minProperties": 1
-            }
-          ],
-          "description": "Ignore the layout's side padding"
-        },
-        "priority": {
-          "enum": ["high", "normal", "low"],
-          "default": "normal",
-          "description": "What folds first when the layout has a fold: low, then normal; high never"
         },
         "show_on": {
           "oneOf": [

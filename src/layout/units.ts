@@ -1,23 +1,22 @@
 // Layout Card Pro: lengths, sides, column tracks and gaps as CSS (pure).
-import type { Density, Sides } from "./config.ts";
+import type { Sides } from "./config.ts";
 
 const err = (msg: string) => new Error(`layout-card-pro: ${msg}`);
 const LENGTH_RE = /^-?\d*\.?\d+(px|rem|em|%|vw|vh|svh|dvh)$/;
 const FN_RE = /^(var|calc|min|max|clamp)\(.+\)$/;
 
 // a CSS length: a number is px; units px, rem, em, %, vw, vh; var(--x), calc(), min(), max(), clamp()
-export const cssLength = (v: unknown, at: string, { negative = false } = {}): string => {
-  const bad = () =>
-    err(`'${at}' must be a length (8, 0.5rem, 4%, var(--x))${negative ? "" : " of at least 0"}`);
+export const cssLength = (v: unknown, at: string): string => {
+  const bad = () => err(`'${at}' must be a length (8, 0.5rem, 4%, var(--x)) of at least 0`);
   if (typeof v === "number" && Number.isFinite(v)) {
-    if (v < 0 && !negative) throw bad();
+    if (v < 0) throw bad();
     return `${v}px`;
   }
   if (typeof v !== "string") throw bad();
   const s = v.trim();
-  if (/^-?\d*\.?\d+$/.test(s)) return cssLength(Number(s), at, { negative });
+  if (/^-?\d*\.?\d+$/.test(s)) return cssLength(Number(s), at);
   if (LENGTH_RE.test(s)) {
-    if (s.startsWith("-") && !negative) throw bad();
+    if (s.startsWith("-")) throw bad();
     return s;
   }
   if (FN_RE.test(s)) return s;
@@ -25,8 +24,8 @@ export const cssLength = (v: unknown, at: string, { negative = false } = {}): st
 };
 
 // 1, 2 or 4 values as CSS shorthand does, or { top, right, bottom, left } (missing sides 0)
-export const boxSides = (v: unknown, at: string, negative: boolean): Sides => {
-  const len = (x: unknown, a = at) => cssLength(x, a, { negative });
+export const boxSides = (v: unknown, at: string): Sides => {
+  const len = (x: unknown, a = at) => cssLength(x, a);
   if (Array.isArray(v)) {
     if (v.length === 1) return [len(v[0]), len(v[0]), len(v[0]), len(v[0])];
     if (v.length === 2) {
@@ -80,39 +79,6 @@ export const trackList = (cols: number | string[]): string =>
   Array.isArray(cols) ? cols.join(" ") : `repeat(${cols}, minmax(0, 1fr))`;
 export const trackCountOf = (cols: number | string[]) => (Array.isArray(cols) ? cols.length : cols);
 
-// As many columns as fit, none narrower than `min` (nor wider than the card) and at most `max`.
-// auto-fill keeps the column width when there are fewer cards than columns.
-export const autoFitTemplate = (min: string, max: number | null, colGap: string): string => {
-  const floor = `min(100%, ${min})`;
-  const w = max ? `max(${floor}, calc((100% - ${max - 1} * ${colGap}) / ${max}))` : floor;
-  return `repeat(auto-fill, minmax(${w}, 1fr))`;
-};
-
-// how many columns of at least `minPx` fit into `width` (masonry, which lays its columns out itself)
-export const autoFitCount = (width: number, minPx: number, gapPx: number, max: number | null) => {
-  const n = Math.max(1, Math.floor((width + gapPx) / (Math.max(1, minPx) + gapPx)));
-  return max ? Math.min(max, n) : n;
-};
-
-// a length in px where that can be known without the page (px, and rem / em at 16 px)
-export const toPx = (len: string | null): number | null => {
-  if (!len) return null;
-  const m = /^(-?\d*\.?\d+)(px|rem|em)$/.exec(len);
-  if (!m) return null;
-  return Number(m[1]) * (m[2] === "px" ? 1 : 16);
-};
-
-// the columns of a computed grid-template-columns ("120px 120px 120px"), null when not resolved
-export const trackCount = (computed: string | null | undefined): number | null => {
-  if (!computed || computed === "none" || /repeat|minmax|fr/.test(computed)) return null;
-  // an implicit column a span made (no card in it) is 0 px wide
-  const n = computed
-    .trim()
-    .split(/\s+/)
-    .filter((t) => t !== "0px").length;
-  return n > 0 ? n : null;
-};
-
-// the gap of a density; the default follows the theme's sections grid
-export const densityGap = (d: Exclude<Density, "auto">, axis: "row" | "column"): string =>
-  d === "compact" ? "4px" : d === "roomy" ? "16px" : `var(--ha-section-grid-${axis}-gap, 8px)`;
+// the gap without one of the layout's own: the theme's sections grid gap
+export const themeGap = (axis: "row" | "column"): string =>
+  `var(--ha-section-grid-${axis}-gap, 8px)`;
