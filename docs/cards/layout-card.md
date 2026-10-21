@@ -1,6 +1,246 @@
 # Layout Card Pro
 
-`custom:layout-card-pro` arranges cards, Pro Cards and Home Assistant's own, inside a section: in a grid or in masonry, as one surface or as separate cards, and differently depending on how many view columns the section spans. Home Assistant sizes the cards of a section by twelfths of it, the same on a phone and on a desktop; the layout card lets them take two columns in one view column and four in two, for example. The cards keep their own `visibility`. YAML only for now.
+`custom:layout-card-pro` arranges cards, Pro Cards and Home Assistant's own, inside a section: in a grid or in masonry, as one surface or as separate cards, and differently depending on how many view columns the section spans. The cards keep their own `visibility`. YAML only for now. The [layout showcase](/showcase/layout) shows whole dashboards built with it.
+
+## When to use it
+
+- **The cards of a section should rearrange with its width.** Home Assistant sizes the cards of a section by twelfths of it, so two tiles share a row both when the section spans one view column on a phone and when it spans two on a desktop. The layout card gives them two columns in one view column and four in two (see [Breakpoints](#breakpoints)).
+- **Cards that belong together should look like one card.** `card_style: seamless` merges them into one surface with dividers, what stack-in-card and vertical-stack-in-card are used for, while each card stays its own card with its own editor and visibility (see [Seamless](#seamless)).
+- **A section needs columns Home Assistant does not have:** a fixed side next to a flexible main area (`[320px, 1fr]`), three equal columns, or masonry for cards of different heights, which in a section would stretch to the tallest card of their row (see [Tracks](#tracks) and [Masonry](#masonry)).
+
+You do not need it to put cards one above the other or side by side at fixed shares: Home Assistant's vertical stack, horizontal stack and grid card do that, and a card's own `grid_options` size it in a section.
+
+## Recipes
+
+Complete cards to copy; the sections after them explain each option. The examples on this page show Pro Cards, but any card works inside, Home Assistant's tile, thermostat or picture cards too.
+
+### A room card
+
+The room's header, its light with a slider and three buttons in a row, merged into one card. Each part is a card of its own, so its tap actions, controls and `visibility` work as anywhere else.
+
+::: live
+
+```yaml
+type: custom:layout-card-pro
+card_style: seamless
+cards:
+  - type: custom:entity-card-pro
+    entity: sensor.living_room_temperature
+    name: Living room
+    visual: sparkline
+  - type: custom:entity-card-pro
+    entity: light.living_room
+    control: auto
+  - type: custom:layout-card-pro
+    columns: 3
+    card_style: seamless
+    cards:
+      - type: custom:entity-card-pro
+        entity: cover.living_room_blinds
+        name: Blinds
+      - type: custom:entity-card-pro
+        entity: media_player.living_room_tv
+        name: TV
+      - type: custom:entity-card-pro
+        entity: climate.living_room
+        name: Heating
+```
+
+:::
+
+### More columns where there is room
+
+The lights of the house: two columns on a phone, four once the section spans two view columns. This frame is as wide as two view columns, so it shows four; the [showcase](/showcase/layout) has the same card in a narrow and a wide section.
+
+::: live width=full
+
+```yaml
+type: custom:layout-card-pro
+columns: 2
+breakpoints:
+  2: { columns: 4 }
+cards:
+  - type: custom:entity-card-pro
+    entity: light.living_room
+  - type: custom:entity-card-pro
+    entity: light.kitchen
+  - type: custom:entity-card-pro
+    entity: light.dining_table
+  - type: custom:entity-card-pro
+    entity: light.office
+  - type: custom:entity-card-pro
+    entity: light.desk_lamp
+  - type: custom:entity-card-pro
+    entity: light.bedroom
+  - type: custom:entity-card-pro
+    entity: light.hallway
+  - type: custom:entity-card-pro
+    entity: light.garden
+```
+
+:::
+
+### A main card with a side column
+
+The forecast takes two thirds and the doors line up beside it; on a phone the doors go below. Home Assistant's twelfths would give the same shares, but not the column of cards next to one tall card.
+
+::: live width=full
+
+```yaml
+type: custom:layout-card-pro
+columns: 1
+breakpoints:
+  2: { columns: [2fr, 1fr] }
+cards:
+  - type: custom:weather-card-pro
+    entity: weather.home
+    sections:
+      - type: hero
+      - type: forecast
+        mode: daily
+        days: 5
+  - type: custom:layout-card-pro
+    cards:
+      - type: custom:entity-card-pro
+        entity: lock.front_door
+      - type: custom:entity-card-pro
+        entity: cover.garage_door
+      - type: custom:entity-card-pro
+        entity: lock.garage_side_door
+      - type: custom:entity-card-pro
+        entity: cover.awning
+```
+
+:::
+
+### A toolbar
+
+Small cards over a strip of readings, the top of a room or a dashboard: two in a row on a phone, four once there is room, where a section would give each card a fixed share. The strip is one card to the eye.
+
+::: live width=full
+
+```yaml
+type: custom:layout-card-pro
+gap: 4
+cards:
+  - type: custom:layout-card-pro
+    columns: 2
+    breakpoints:
+      2: { columns: 4 }
+    gap: 4
+    cards:
+      - type: custom:entity-card-pro
+        entity: light.living_room
+        name: Lights
+        tap_action: { action: toggle }
+      - type: custom:entity-card-pro
+        entity: switch.coffee_machine
+        name: Coffee
+        tap_action: { action: toggle }
+      - type: custom:entity-card-pro
+        entity: vacuum.robot
+        name: Robot
+      - type: custom:entity-card-pro
+        entity: lock.front_door
+        name: Door
+  - type: custom:layout-card-pro
+    columns: 3
+    card_style: seamless
+    cards:
+      - type: custom:entity-card-pro
+        entity: sensor.outdoor_temperature
+      - type: custom:entity-card-pro
+        entity: sensor.power_consumption
+      - type: custom:entity-card-pro
+        entity: sensor.battery_soc
+```
+
+:::
+
+### Rooms of different lengths
+
+A masonry of room cards: each room is a seamless column, and each goes to the shorter column, so a long room next to a short one leaves no gap under the short one, as it would in a grid row.
+
+::: live width=full
+
+```yaml
+type: custom:layout-card-pro
+layout: masonry
+columns: 1
+breakpoints:
+  2: { columns: 2 }
+cards:
+  - type: custom:layout-card-pro
+    card_style: seamless
+    cards:
+      - type: custom:entity-card-pro
+        entity: sensor.kitchen_temperature
+        name: Kitchen
+      - type: custom:entity-card-pro
+        entity: light.kitchen
+      - type: custom:entity-card-pro
+        entity: light.dining_table
+      - type: custom:entity-card-pro
+        entity: media_player.kitchen_speaker
+      - type: custom:entity-card-pro
+        entity: switch.coffee_machine
+  - type: custom:layout-card-pro
+    card_style: seamless
+    cards:
+      - type: custom:entity-card-pro
+        entity: sensor.bedroom_temperature
+        name: Bedroom
+      - type: custom:entity-card-pro
+        entity: light.bedroom
+  - type: custom:layout-card-pro
+    card_style: seamless
+    cards:
+      - type: custom:entity-card-pro
+        entity: sensor.office_temperature
+        name: Office
+      - type: custom:entity-card-pro
+        entity: light.office
+      - type: custom:entity-card-pro
+        entity: light.desk_lamp
+```
+
+:::
+
+### Energy at a glance
+
+The power flow over the battery and the big consumers on a phone; from two view columns the flow takes half the width, three rows high, and the tiles fill the other half beside it.
+
+::: live width=full
+
+```yaml
+type: custom:layout-card-pro
+columns: 2
+breakpoints:
+  2: { columns: 4 }
+cards:
+  - type: custom:power-flow-card-pro
+    home: sensor.power_consumption
+    sources:
+      - { type: solar, entity: sensor.solar_power }
+      - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
+      - { type: grid, power: sensor.grid_power }
+    view_layout: { span: { 1: full, 2: [2, 3] } }
+  - type: custom:entity-card-pro
+    entity: sensor.battery_soc
+    visual: ring
+  - type: custom:entity-card-pro
+    entity: sensor.heat_pump_power
+  - type: custom:entity-card-pro
+    entity: sensor.ev_charger_power
+  - type: custom:entity-card-pro
+    entity: sensor.washer_power
+  - type: custom:entity-card-pro
+    entity: sensor.solar_power
+  - type: custom:entity-card-pro
+    entity: sensor.grid_power
+```
+
+:::
 
 ## Grid
 
