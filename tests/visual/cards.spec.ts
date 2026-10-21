@@ -1254,6 +1254,21 @@ const CASES = {
     consumers: PF_CONS,
     consumer_style: "list",
   },
+  "pf-icon-sizes": {
+    type: PF,
+    home: { entity: "sensor.power_consumption", icon_size: 60 },
+    sources: [{ ...PF_SRC[0], icon_size: 52 }, PF_SRC[1], { ...PF_SRC[2], icon_size: 36 }],
+    consumers: [
+      { ...PF_CONS[0], icon_size: 44 },
+      PF_CONS[1],
+      {
+        group: "Office",
+        icon: "mdi:desk",
+        icon_size: 40,
+        entities: [{ ...PF_CONS[3], icon_size: 32 }],
+      },
+    ],
+  },
   "pf-rooms": {
     type: PF,
     home: "sensor.power_consumption",

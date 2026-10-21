@@ -26,6 +26,7 @@ import {
   DEFAULT_UNITS,
   DIRECTIONS,
   FLOW_STYLES,
+  GEOM,
   ICONS,
   IDLE_LINKS,
   IDLE_W,
@@ -40,7 +41,11 @@ import {
 
 // ----- the raw config as written in YAML -----
 
-export interface RawSource extends RawEntity {
+// every node of the tree: `icon_size` is the diameter of its circle (px)
+export interface RawNode {
+  icon_size?: unknown;
+}
+export interface RawSource extends RawEntity, RawNode {
   type?: unknown;
   power?: string | null; // battery (+ discharging) / grid (+ import), signed
   charge?: string | null; // battery pair
@@ -57,7 +62,7 @@ export interface RawSource extends RawEntity {
   invert?: boolean | null;
   peak?: unknown; // solar: the panels' peak power (W), drawn as a ring
 }
-export interface RawConsumer extends RawEntity {
+export interface RawConsumer extends RawEntity, RawNode {
   group?: string | null;
   entities?: unknown;
   invert?: boolean | null;
@@ -65,7 +70,7 @@ export interface RawConsumer extends RawEntity {
 }
 export interface RawPowerFlowConfig extends RawEntityCardBase {
   sources?: unknown;
-  home?: string | RawEntity | null;
+  home?: string | (RawEntity & RawNode) | null;
   consumers?: unknown;
   direction?: unknown;
   flow_style?: unknown;
@@ -86,6 +91,7 @@ export interface RawPowerFlowConfig extends RawEntityCardBase {
 // every source: its node id (s<i>, the config index) and its conditions (null: always drawn)
 interface SourceBase {
   id: string;
+  d: number; // the node's diameter (px)
   visibility: Visibility;
 }
 export const CHARGE_FROM = ["any", "solar"] as const;
@@ -121,6 +127,7 @@ export interface ConsumerItem {
   kind: "item";
   id: string;
   idx: number;
+  d: number; // the node's diameter (px): a device in a group is smaller
   invert: boolean;
   visibility: Visibility; // null: always drawn
   // hidden while its power stays below this many watts (null: never by its power)
@@ -129,6 +136,7 @@ export interface ConsumerItem {
 export interface ConsumerGroup {
   kind: "group";
   id: string;
+  d: number;
   name: string;
   icon: string | null;
   items: ConsumerItem[];
@@ -137,6 +145,7 @@ export interface ConsumerGroup {
 export interface OtherConsumer {
   kind: "other";
   id: string;
+  d: number;
 }
 export type Consumer = ConsumerItem | ConsumerGroup | OtherConsumer;
 
@@ -147,6 +156,7 @@ export interface PowerFlowConfig extends EntityCardConfig {
   idleLinks: IdleLinks;
   idleBelow: number; // W: a flow below it is idle (no motion, no state)
   homeIdx: number;
+  homeD: number; // the home node's diameter (px)
   homeEntity: boolean; // false: the home is computed from the sources; the item carries name / icon / rules
   sources: Source[];
   consumers: Consumer[];
@@ -167,6 +177,11 @@ const item = (raw: RawEntity, ctx: NormalizeCtx, label: string) => {
   const ent = normalizeEntity({ ...raw, visual: "icon", visibility: undefined }, ctx, label);
   ent.visual = "icon"; // never a history visual: the tree draws every item itself
   return ent;
+};
+// a node's diameter: its `icon_size` (px, 16 to 96), else its kind's own
+export const nodeSize = (v: unknown, dflt: number) => {
+  const n = v === null || v === undefined || v === "" ? null : numOrNull(v);
+  return n === null ? dflt : Math.max(16, Math.min(96, Math.round(n)));
 };
 const clampDec = (v: unknown, dflt: number) =>
   Math.max(0, Math.min(3, Math.round(numOrNull(v) ?? dflt)));
@@ -196,6 +211,7 @@ const normalizeSource = (
     non_fossil,
     invert,
     peak,
+    icon_size,
     ...rest
   } = o;
   const base: RawEntity = { ...rest };
@@ -208,8 +224,9 @@ const normalizeSource = (
   };
   const sub = (id: string, l: string) => entities.push(item({ entity: id }, ctx, l)) - 1;
   // the node's conditions; a state condition without an entity reads the source's sensor
-  const own = (entity: string | null | undefined) => ({
+  const own = (entity: string | null | undefined, d: number) => ({
     id: `s${i}`,
+    d: nodeSize(icon_size, d),
     visibility: normalizeVisibility(o.visibility, {
       type: CARD_TYPE,
       label,
@@ -227,7 +244,7 @@ const normalizeSource = (
     if (pk !== null ? pk <= 0 : peak !== undefined && peak !== null)
       throw new Error(`${CARD_TYPE}: ${label}.peak must be a number of watts above 0`);
     return {
-      ...own(base.entity),
+      ...own(base.entity, GEOM.dSolar),
       kind: "solar",
       idx: push(base, label, "power.solar"),
       peak: pk,
@@ -246,7 +263,7 @@ const normalizeSource = (
       );
     const idx = push({ ...base, entity: p ?? c }, label, "power.battery");
     return {
-      ...own(p ?? c),
+      ...own(p ?? c, GEOM.dBattery),
       kind: "battery",
       idx,
       secondIdx: p ? null : sub(d as string, `${label}.discharge`),
@@ -272,7 +289,7 @@ const normalizeSource = (
   if (fossil && non_fossil)
     throw new Error(`${CARD_TYPE}: ${label} takes 'fossil' or 'non_fossil', not both`);
   return {
-    ...own(p ?? im),
+    ...own(p ?? im, GEOM.dGrid),
     kind: "grid",
     idx,
     secondIdx: p ? null : ex ? sub(ex, `${label}.export`) : null,
@@ -304,10 +321,16 @@ const normalizeConsumers = (
   if (raw === undefined || raw === null) return [];
   if (!Array.isArray(raw)) throw new Error(`${CARD_TYPE}: 'consumers' must be a list`);
   // a device's own `hide_below` wins over its room's, which wins over the card's
-  const leaf = (e: unknown, id: string, label: string, fallback: number | null): ConsumerItem => {
+  const leaf = (
+    e: unknown,
+    id: string,
+    label: string,
+    fallback: number | null,
+    d: number,
+  ): ConsumerItem => {
     const o: RawConsumer =
       typeof e === "string" ? { entity: e } : e && typeof e === "object" ? { ...e } : {};
-    const { invert, hide_below, ...ent } = o;
+    const { invert, hide_below, icon_size, ...ent } = o;
     const own = wattsBelow(hide_below, `${label}.hide_below`);
     const idx = entities.push(item(ent, ctx, label)) - 1;
     const visibility = normalizeVisibility(o.visibility, {
@@ -316,7 +339,15 @@ const normalizeConsumers = (
       entity: ent.entity ?? null,
     });
     const below = own === undefined ? fallback : own;
-    return { kind: "item", id, idx, invert: !!invert, visibility, hideBelow: below };
+    return {
+      kind: "item",
+      id,
+      idx,
+      d: nodeSize(icon_size, d),
+      invert: !!invert,
+      visibility,
+      hideBelow: below,
+    };
   };
   return raw.map((c, i): Consumer => {
     const label = `consumers[${i}]`;
@@ -328,7 +359,9 @@ const normalizeConsumers = (
         throw new Error(`${CARD_TYPE}: '${label}.entities' must be a non-empty list`);
       const room = wattsBelow(o.hide_below, `${label}.hide_below`);
       const fallback = room === undefined ? hideBelow : room;
-      const items = list.map((e, j) => leaf(e, `c${i}.${j}`, `${label}.entities[${j}]`, fallback));
+      const items = list.map((e, j) =>
+        leaf(e, `c${i}.${j}`, `${label}.entities[${j}]`, fallback, GEOM.dDevice),
+      );
       const visibility = normalizeVisibility(o.visibility, {
         type: CARD_TYPE,
         label,
@@ -337,13 +370,14 @@ const normalizeConsumers = (
       return {
         kind: "group",
         id: `g${i}`,
+        d: nodeSize(o.icon_size, GEOM.dGroup),
         name: String(group),
         icon: icon ?? null,
         items,
         visibility,
       };
     }
-    return leaf(c, `c${i}`, label, hideBelow);
+    return leaf(c, `c${i}`, label, hideBelow, GEOM.dConsumer);
   });
 };
 
@@ -399,7 +433,7 @@ export const normalizePowerFlowConfig = (input: unknown): PowerFlowConfig => {
 
   // the home: a sensor, an entity object, or nothing (computed); the card's rules live on it
   const h = raw.home;
-  const homeRaw: RawEntity =
+  const { icon_size: homeSize, ...homeRaw }: RawEntity & RawNode =
     typeof h === "string" ? { entity: h } : h && typeof h === "object" ? { ...h } : {};
   if (h !== undefined && h !== null && typeof h !== "string" && typeof h !== "object")
     throw new Error(`${CARD_TYPE}: 'home' must be a sensor entity or an entity object`);
@@ -428,7 +462,7 @@ export const normalizePowerFlowConfig = (input: unknown): PowerFlowConfig => {
     wattsBelow(raw.hide_consumers_below, "hide_consumers_below") ?? null,
   );
   const other = raw.other === undefined || raw.other === null ? consumers.length > 0 : !!raw.other;
-  if (other && consumers.length) consumers.push({ kind: "other", id: "other" });
+  if (other && consumers.length) consumers.push({ kind: "other", id: "other", d: GEOM.dConsumer });
 
   const header = normalizeHeaderEntities(raw.header_entities, ctx);
   const headerIdxs = header.map((_, i) => entities.length + i);
@@ -454,6 +488,7 @@ export const normalizePowerFlowConfig = (input: unknown): PowerFlowConfig => {
       wattsBelow(raw.idle_below, "idle_below") ??
       (raw.idle_below === undefined || raw.idle_below === null ? IDLE_W : 0),
     homeIdx,
+    homeD: nodeSize(homeSize, GEOM.dHome),
     homeEntity,
     sources,
     consumers,

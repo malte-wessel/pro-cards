@@ -3,6 +3,7 @@ import { PowerFlowCard } from "../../src/power-flow-card.ts";
 import {
   hiddenNodes,
   leavesOf,
+  nodeSize,
   normalizePowerFlowConfig,
   viewConfig,
 } from "../../src/power-flow/config.ts";
@@ -38,6 +39,7 @@ import {
   diagramHeight,
   laneOffsets,
   layoutTree,
+  ringWidth,
   sourceRow,
 } from "../../src/power-flow/layout.ts";
 import { placeLabels } from "../../src/power-flow/labels.ts";
@@ -197,9 +199,10 @@ describe("power-flow-card config", () => {
     expect(c.entities[1].name).toBe("Roof");
     expect(c.entities[1].nameKey).toBe("power.solar");
     expect(c.sources).toEqual([
-      { id: "s0", visibility: null, kind: "solar", idx: 1, peak: null },
+      { id: "s0", d: 44, visibility: null, kind: "solar", idx: 1, peak: null },
       {
         id: "s1",
+        d: 40,
         visibility: null,
         kind: "battery",
         idx: 2,
@@ -210,6 +213,7 @@ describe("power-flow-card config", () => {
       },
       {
         id: "s2",
+        d: 44,
         visibility: null,
         kind: "grid",
         idx: 5,
@@ -227,16 +231,33 @@ describe("power-flow-card config", () => {
       {
         kind: "group",
         id: "g0",
+        d: 32,
         name: "Laundry",
         icon: "mdi:washing-machine",
         items: [
-          { kind: "item", id: "c0.0", idx: 11, invert: false, visibility: null, hideBelow: null },
-          { kind: "item", id: "c0.1", idx: 12, invert: false, visibility: null, hideBelow: null },
+          {
+            kind: "item",
+            id: "c0.0",
+            idx: 11,
+            d: 24,
+            invert: false,
+            visibility: null,
+            hideBelow: null,
+          },
+          {
+            kind: "item",
+            id: "c0.1",
+            idx: 12,
+            d: 24,
+            invert: false,
+            visibility: null,
+            hideBelow: null,
+          },
         ],
         visibility: null,
       },
-      { kind: "item", id: "c1", idx: 13, invert: true, visibility: null, hideBelow: null },
-      { kind: "other", id: "other" },
+      { kind: "item", id: "c1", idx: 13, d: 32, invert: true, visibility: null, hideBelow: null },
+      { kind: "other", id: "other", d: 32 },
     ]);
     expect(leavesOf(c).map((l) => l.id)).toEqual(["c0.0", "c0.1", "c1", "other"]);
     expect(c.hasGroups).toBe(true);
@@ -1219,6 +1240,60 @@ describe("power flow layout", () => {
     expect(node(lots, "home").y - node(lots, "s0").y).toBe(GEOM.columnPitch * 1.5);
     expect(node(lots, "s0").y).toBeGreaterThan(GEOM.srcAlong);
     expect(inside(lots)).toBe(true);
+  });
+
+  it("gives every node the circle of its icon_size; the slots follow it", () => {
+    expect([nodeSize(undefined, 32), nodeSize(null, 32), nodeSize("x", 32)]).toEqual([32, 32, 32]);
+    expect([nodeSize(10, 32), nodeSize("48", 32), nodeSize(40.4, 32), nodeSize(200, 32)]).toEqual([
+      16, 48, 40, 96,
+    ]);
+    // the defaults: each kind its own circle, a room's device smaller
+    const plain = base({ consumers: [{ group: "A", entities: ["sensor.a"] }, "sensor.b"] });
+    expect(plain.homeD).toBe(GEOM.dHome);
+    expect(plain.sources.map((s) => s.d)).toEqual([GEOM.dSolar, GEOM.dBattery, GEOM.dGrid]);
+    expect(plain.consumers.map((c) => c.d)).toEqual([GEOM.dGroup, GEOM.dConsumer, GEOM.dConsumer]);
+    expect(leavesOf(plain)[0].d).toBe(GEOM.dDevice);
+    const cfg = base({
+      home: { entity: "sensor.home", icon_size: 60 },
+      sources: [{ ...SRC[0], icon_size: 30 }, SRC[1], { ...SRC[2], icon_size: 200 }],
+      consumers: [
+        {
+          group: "A",
+          icon_size: 40,
+          entities: [{ entity: "sensor.a", icon_size: 30 }, "sensor.b"],
+        },
+        { entity: "sensor.c", icon_size: "big" },
+      ],
+    });
+    expect(cfg.homeD).toBe(60);
+    expect(cfg.sources.map((s) => s.d)).toEqual([30, GEOM.dBattery, 96]);
+    expect(cfg.consumers.map((c) => c.d)).toEqual([40, GEOM.dConsumer, GEOM.dConsumer]);
+    expect(leavesOf(cfg).map((l) => l.d)).toEqual([
+      30,
+      GEOM.dDevice,
+      GEOM.dConsumer,
+      GEOM.dConsumer,
+    ]);
+    // the layout draws each node at its own size …
+    const l = layoutTree(cfg, 416, []);
+    const d = (id: string) => l.nodes.find((n) => n.id === id)!.d;
+    expect([d("home"), d("s0"), d("s2"), d("g0"), d("c0.0"), d("c0.1")]).toEqual([
+      60,
+      30,
+      96,
+      40,
+      30,
+      GEOM.dDevice,
+    ]);
+    // a ring's stroke: 3 px on the kind's own circle, scaled with the node
+    expect(ringWidth("solar", GEOM.dSolar)).toBe(3);
+    expect(ringWidth("home", GEOM.dHome)).toBe(3);
+    expect(ringWidth("battery", 80)).toBe(6);
+    // … and gives a bigger node more room across the flow
+    const two = (size?: number) =>
+      acrossOf(base({ consumers: [{ entity: "sensor.a", icon_size: size }, "sensor.b"] }));
+    expect(two(80)).toBeGreaterThan(two());
+    expect(two(GEOM.dConsumer)).toBe(two());
   });
 
   it("turns the tree for direction: down and puts lone consumers beside the rooms", () => {
