@@ -3,6 +3,7 @@
 // row's CSS variables (--t, --sl, --ldur, --H, --lv) and its `dry` class drive it; --H is the
 // lead's size, less the water level for the gauge, so the drops stop at the surface.
 import { animatedLeadShell, el, iconLead } from "../../shared/flow/dom.ts";
+import type { IconStyle } from "../../shared/entity/constants.ts";
 import { ICON, LEAD_ICON, type RainStyle } from "../constants.ts";
 import { wavePathD } from "../rain.ts";
 
@@ -13,7 +14,7 @@ export const rainIcon = (icon = ICON) => {
   i.setAttribute("icon", icon);
   return i;
 };
-export const rainLead = (size: number) => iconLead(size, rainIcon());
+export const rainLead = (size: number, style?: IconStyle) => iconLead(size, rainIcon(), style);
 
 // the water and its waving surface (the gauge); used by the lead and the band
 export const waterEl = (amp: number) => {

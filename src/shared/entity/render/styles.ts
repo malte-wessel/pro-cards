@@ -53,6 +53,9 @@ export const STYLE_HEADER = `
   .hval .pill.badge.round { flex: none; width: 24px; height: 24px; padding: 0; justify-content: center; }
   .hval .secondary { font-size: 12px; }
 `;
+// the icon in a lead (and in a button in its place) is two thirds of a small lead, at most 24 px
+// (Home Assistant's tile: a 24 px icon in a 36 px circle); a bigger lead (the hero's 56 px) keeps 55 %
+const LEAD_ICON = "clamp(calc(var(--lead, 36px) * .55), 24px, calc(var(--lead, 36px) * .67))";
 export const STYLE_ROW = `
   .row { --fe-color: var(--primary-color); --fe-soft: color-mix(in srgb, var(--fe-color) 20%, transparent); --fe-track: color-mix(in srgb, var(--primary-text-color) 8%, transparent); }
   .row { display: flex; flex-direction: column; gap: 10px; min-width: 0; border-radius: 8px; outline: none; }
@@ -65,9 +68,7 @@ export const STYLE_ROW = `
   .top { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .lead { position: relative; flex: none; width: var(--lead, 36px); height: var(--lead, 36px); }
   .lead svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-  /* the icon is two thirds of a small lead, at most 24 px (Home Assistant's tile: a 24 px icon in
-     a 36 px circle); a bigger lead (the hero's 56 px) keeps 55 % */
-  .lead .shape { position: absolute; inset: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--fe-color); background: var(--fe-soft); --mdc-icon-size: clamp(calc(var(--lead, 36px) * .55), 24px, calc(var(--lead, 36px) * .67)); font-size: calc(var(--lead, 36px) * .24); font-weight: 500; line-height: 1; white-space: nowrap; overflow: hidden; font-variant-numeric: tabular-nums; }
+  .lead .shape { position: absolute; inset: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--fe-color); background: var(--fe-soft); --mdc-icon-size: ${LEAD_ICON}; font-size: calc(var(--lead, 36px) * .24); font-weight: 500; line-height: 1; white-space: nowrap; overflow: hidden; font-variant-numeric: tabular-nums; }
   .lead .shape.value { color: var(--primary-text-color); background: transparent; }
   /* icon_style: plain, the icon without its circle (also a lead toggle that is off) */
   .lead.plain .shape, .lead.plain.tap.off .shape { background: transparent; }
@@ -174,10 +175,10 @@ export const STYLE_CONTROLS = `
   .ctl-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px 0 10px; border: 0; border-radius: 999px; background: var(--fe-soft); color: var(--fe-color); font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer; --mdc-icon-size: 18px; }
   .ctl-chip.sm { height: 28px; font-size: 12px; padding: 0 12px 0 8px; }
   .ctl-chip.done { background: var(--fe-color); color: var(--text-primary-color, #fff); }
-  .ctl-chip.round { width: var(--lead, 36px); height: var(--lead, 36px); padding: 0; justify-content: center; border-radius: 50%; --mdc-icon-size: 24px; }
+  .ctl-chip.round { width: var(--lead, 36px); height: var(--lead, 36px); padding: 0; justify-content: center; border-radius: 50%; --mdc-icon-size: ${LEAD_ICON}; }
   .ctl-hold { position: relative; flex: none; width: 36px; height: 36px; border: 0; padding: 0; border-radius: 50%; background: var(--fe-soft); color: var(--fe-color); display: flex; align-items: center; justify-content: center; cursor: pointer; --mdc-icon-size: 20px; touch-action: none; -webkit-user-select: none; user-select: none; }
   .ctl-hold.sm { width: 30px; height: 30px; --mdc-icon-size: 18px; }
-  .ctl-hold.lead-size { width: var(--lead, 36px); height: var(--lead, 36px); --mdc-icon-size: 24px; }
+  .ctl-hold.lead-size { width: var(--lead, 36px); height: var(--lead, 36px); --mdc-icon-size: ${LEAD_ICON}; }
   .ctl-hold.pending { animation: ctl-pulse 1s ease-in-out infinite; }
   /* the ring of a held button: the hold control, or every button of a confirmed group */
   .ctl .round.hold { touch-action: none; -webkit-user-select: none; user-select: none; }

@@ -989,7 +989,7 @@ All keys an entity accepts, grouped by what they do. "Applies to" names the visu
 | ------------ | ----------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `visual`     | `icon`      | all        | `icon`, `ring`, `gauge`, `bar`, `sparkline`, `columns`, `badge` or `strip`; see [Visuals](#visuals). Block visuals fall back to `icon` in items and headers.                            |
 | `icon`       | entity icon | all        | Fixed icon that overrides rule icons. Template allowed.                                                                                                                                 |
-| `icon_style` | `circle`    | all        | `circle` draws the icon in a soft circle of its colour, `plain` the icon alone; see [Icon](#icon).                                                                                      |
+| `icon_style` | `circle`    | all        | `circle` draws the icon in a soft circle of its colour, `plain` the icon alone; see [Icon](#icon). Header items have no circle, so it changes nothing there.                            |
 | `color`      | HA state    | all        | Fixed colour that overrides rule colours. Without it the entity uses Home Assistant's state colour (see the [colour guide](/guide/colours)), plain sensors `primary`. Template allowed. |
 | `rules`      |             | all        | List of `{ state, below, above, color, icon, label, tint_card }`, first match wins; see [Rules](#rules). `below` and `above` may be numeric strings.                                    |
 
