@@ -47,14 +47,23 @@ export const STYLE = `
     border-radius: var(--pl-radius);
     box-shadow: var(--pl-shadow);
     overflow: hidden;
-    --ha-card-background: transparent;
+    /* the cards inside keep a background, the surface's own: a card may use the variable for
+       more than its own surface (a slider's knob, the text of its value bubble), and
+       transparent there would let the fill show through the knob */
+    --ha-card-background: var(--pl-bg);
     --ha-card-border-width: 0px;
     --ha-card-border-radius: 0px;
     --ha-card-box-shadow: none;
   }
-  /* dividers on the right and bottom of every card; the surface clips the ones at its edge */
-  .seamless .item, .seamless .col { box-shadow: 1px 0 0 var(--divider-color), 0 1px 0 var(--divider-color); }
-  .seamless .col > .item:last-child { box-shadow: none; }
+  /* the dividers: a line on the right and the bottom of every card, drawn above the cards next
+     to it (their backgrounds are opaque); the surface clips the ones at its edge */
+  .seamless .item, .seamless .col { position: relative; }
+  .seamless .item::after, .seamless .col::after {
+    content: ""; position: absolute; inset: 0 -1px -1px 0; z-index: 1; pointer-events: none;
+    border-right: 1px solid var(--divider-color); border-bottom: 1px solid var(--divider-color);
+  }
+  .seamless .col > .item:last-child::after { border-bottom: none; }
+  .seamless .col > .item::after { border-right: none; }
 
   .note { padding: 16px; text-align: center; color: var(--secondary-text-color); font: 400 14px/20px var(--ha-font-family-body, Roboto, system-ui, sans-serif); }
   .note[hidden] { display: none; }

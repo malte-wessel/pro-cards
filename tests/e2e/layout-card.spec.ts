@@ -181,16 +181,31 @@ test.describe("layout-card-pro", () => {
   test("draws one surface for seamless cards", async ({ page }) => {
     await mount(
       page,
-      { type: LC, columns: 2, card_style: "seamless", cards: [ec(T), ec(H)] },
+      {
+        type: LC,
+        columns: 2,
+        card_style: "seamless",
+        cards: [ec("light.living_room", undefined, { control: "auto" }), ec(H)],
+      },
       { width: 432 },
     );
     const look = await page.evaluate(() => {
       const card = window.pc.cards()[0] as HTMLElement;
       const cs = getComputedStyle(card.shadowRoot!.querySelector("ha-card")!);
-      return { border: cs.borderTopWidth, bg: cs.backgroundColor };
+      const body = window.pc.card(0).shadowRoot!.querySelector(".body")!;
+      const knob = card.shadowRoot!.querySelector(".knob");
+      return {
+        border: cs.borderTopWidth,
+        bg: cs.backgroundColor,
+        surface: getComputedStyle(body).backgroundColor,
+        knob: knob ? getComputedStyle(knob).backgroundColor : null,
+      };
     });
     expect(look.border).toBe("0px");
-    expect(look.bg).toBe("rgba(0, 0, 0, 0)");
+    // the cards keep a background, the surface's own: what uses it (a slider's knob) stays opaque
+    expect(look.bg).toBe(look.surface);
+    expect(look.bg).not.toBe("rgba(0, 0, 0, 0)");
+    expect(look.knob).toBe(look.surface);
     const [a, b] = await items(page);
     expect(b.x).toBe(a.x + a.w); // no gap: the divider sits between them
   });
