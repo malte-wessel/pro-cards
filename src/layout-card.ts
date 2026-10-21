@@ -20,7 +20,7 @@ import { fireEvent, registerCard, syncKeepHeight } from "./shared/card.ts";
 import { langOf } from "./shared/format.ts";
 import type { CardConfigBase, GridOptions, HomeAssistant, HuiCardElement } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
-import { activeBreakpoint, resolveOptions } from "./layout/breakpoints.ts";
+import { activeColumns, resolveOptions } from "./layout/breakpoints.ts";
 import { childKey, createHuiCard, ensureHuiCard, reconcile } from "./layout/children.ts";
 import { CARD_TYPE, normalizeLayoutConfig, type LayoutConfig } from "./layout/config.ts";
 import { cardSize, planLayout, type KidState, type Plan, type Style } from "./layout/place.ts";
@@ -65,7 +65,7 @@ export class LayoutCard extends HTMLElement {
   _body?: HTMLElement;
   _note?: HTMLElement;
   _width = 0;
-  _active?: string;
+  _columns?: number; // the view columns the layout spans now
   _selfHidden = false;
   _ready = false;
   _failed = false;
@@ -115,8 +115,7 @@ export class LayoutCard extends HTMLElement {
     return this._hass;
   }
 
-  // the dashboard editor's preview: every card shows, the ones the layout's breakpoints would
-  // hide are faded (hui-card shows the ones its visibility hides)
+  // the dashboard editor's preview: hui-card shows every card, the layout does not hide itself
   set preview(v: boolean) {
     if (this._preview === !!v) return;
     this._preview = !!v;
@@ -263,20 +262,26 @@ export class LayoutCard extends HTMLElement {
   _plan(): { plan: Plan; states: KidState[]; opts: ReturnType<typeof resolveOptions> } | null {
     const cfg = this._cfg;
     if (!cfg) return null;
-    const active = activeBreakpoint(this._width, cfg.breakpoints, this._active);
-    this._active = active;
-    const opts = resolveOptions(cfg, active);
+    // the view columns: Home Assistant's --column-span of the section (a layout card resets it
+    // for the layouts inside it), else counted from the width with the theme's section columns
+    const cs = getComputedStyle(this);
+    const px = (name: string) => Number.parseFloat(cs.getPropertyValue(name)) || undefined;
+    const columns = activeColumns(
+      cs.getPropertyValue("--column-span"),
+      this._width,
+      this._columns,
+      px("--ha-view-sections-column-max-width"),
+      px("--ha-view-sections-column-gap"),
+    );
+    this._columns = columns;
+    const opts = resolveOptions(cfg, columns);
     const states: KidState[] = this._kids.map((k, i) => ({
       place: cfg.children[i].place,
       visible: !(k.hui.hidden || k.hui.style.display === "none"),
       size: k.size,
       grid: k.hui.getGridOptions?.(),
     }));
-    const plan = planLayout(opts, states, {
-      active,
-      order: cfg.order,
-      preview: this._preview,
-    });
+    const plan = planLayout(opts, states, columns);
     return { plan, states, opts };
   }
 
@@ -333,7 +338,6 @@ export class LayoutCard extends HTMLElement {
       const kid = this._kids[i];
       applyStyle(kid.item, it.style, this._styles);
       kid.item.classList.toggle("off", !it.shown);
-      kid.item.classList.toggle("ghost", it.ghost);
       const layout = it.gridLayout ? "grid" : undefined;
       if (kid.hui.layout !== layout) kid.hui.layout = layout;
     });

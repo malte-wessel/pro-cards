@@ -256,51 +256,61 @@ describe("card config schemas", () => {
         gap: [8, 12],
         padding: [0, 16],
         card_style: "seamless",
-        breakpoints: {
-          tablet: { columns: 2 },
-          wide: false,
-          kiosk: { min_width: 1800, columns: 6 },
-        },
+        align_items: "start",
+        breakpoints: { 2: { columns: 2 }, 4: { layout: "masonry", columns: 6 } },
         cards: [
-          {
-            ...EC,
-            view_layout: { span: { phone: 1, desktop: [2, 2] }, order: -1 },
-          },
-          { type: "tile", entity: "light.kitchen", view_layout: { hidden_below: "tablet" } },
+          { ...EC, view_layout: { span: { 1: "full", 3: [2, 2] }, order: -1, align: "center" } },
+          { type: "tile", entity: "light.kitchen", view_layout: { column: 2 } },
           { type: "heading", heading: "Rooms" },
-          { type: LC, layout: "stack", cards: [EC] },
+          { type: LC, cards: [EC] },
         ],
       }),
     ).toBeNull();
     expect(validate({ type: LC, colums: 2 })).toMatch(/unevaluated/);
-    // the fold and priorities are gone
-    expect(validate({ type: LC, fold: 3 })).toMatch(/unevaluated/);
+    // breakpoints are view columns from 2; the base is one
+    for (const key of ["tablet", "phone", "1", "13"])
+      expect(validate({ type: LC, breakpoints: { [key]: { columns: 2 } } }), key).not.toBeNull();
+    expect(validate({ type: LC, breakpoints: { 2: { colums: 2 } } })).not.toBeNull();
     expect(
-      validate({ type: LC, cards: [{ ...EC, view_layout: { priority: "low" } }] }),
+      validate({ type: LC, cards: [{ ...EC, view_layout: { span: { desktop: 2 } } }] }),
     ).not.toBeNull();
-    // the options that went
-    for (const gone of [{ media: [] }, { container: false }, { max_width: 600 }, { dense: true }])
-      expect(validate({ type: LC, ...gone })).toMatch(/unevaluated/);
-    expect(validate({ type: LC, cards: [{ ...EC, view_layout: { row: 2 } }] })).not.toBeNull();
-    for (const gone of [{ margin: 8 }, { density: "roomy" }, { row_gap: 4 }, { column_gap: 4 }])
-      expect(validate({ type: LC, ...gone })).toMatch(/unevaluated/);
+    // the options the card no longer has
     for (const gone of [
-      { sticky: true },
-      { bleed: true },
-      { aspect: "16/9" },
-      { min_height: 80 },
-      { max_height: 80 },
+      "fold",
+      "min_column_width",
+      "max_columns",
+      "wrap",
+      "margin",
+      "density",
+      "row_gap",
+      "column_gap",
+      "media",
+      "container",
+      "max_width",
+      "align",
+      "dense",
+      "direction",
+      "row_height",
     ])
-      expect(validate({ type: LC, cards: [{ ...EC, view_layout: gone }] })).not.toBeNull();
-    // as many columns as fit and wrapping are gone
-    expect(validate({ type: LC, min_column_width: 180 })).toMatch(/unevaluated/);
-    expect(validate({ type: LC, layout: "stack", wrap: true })).toMatch(/unevaluated/);
+      expect(validate({ type: LC, [gone]: 1 }), gone).toMatch(/unevaluated/);
+    expect(validate({ type: LC, layout: "stack" })).not.toBeNull();
+    for (const gone of [
+      "priority",
+      "sticky",
+      "bleed",
+      "aspect",
+      "min_height",
+      "max_height",
+      "row",
+      "show_on",
+      "hidden_below",
+    ])
+      expect(
+        validate({ type: LC, cards: [{ ...EC, view_layout: { [gone]: 1 } }] }),
+        gone,
+      ).not.toBeNull();
     expect(validate({ type: LC, columns: ["minmax(1fr, 2fr)"] })).not.toBeNull();
     expect(validate({ type: LC, columns: ["auto", "1fr"] })).not.toBeNull();
-    expect(validate({ type: LC, breakpoints: { tablet: { colums: 2 } } })).not.toBeNull();
-    // a breakpoint of your own needs its width
-    expect(validate({ type: LC, breakpoints: { kiosk: { columns: 6 } } })).not.toBeNull();
-    expect(validate({ type: LC, breakpoints: { phone: { columns: 2 } } })).not.toBeNull();
     expect(validate({ type: LC, cards: [{ ...EC, view_layout: { spam: 2 } }] })).not.toBeNull();
     // a Pro card inside is checked against its own schema, any other card loosely
     expect(validate({ type: LC, cards: [{ ...EC, visula: "ring" }] })).not.toBeNull();

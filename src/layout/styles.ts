@@ -30,16 +30,16 @@ export const STYLE = `
      (never 0: in a stretched grid row that would drop the layout's share of the row's height) */
   .root { box-sizing: border-box; height: 100%; display: flex; flex-direction: column; min-width: 0; }
   .body { flex: 1 1 auto; min-width: 0; box-sizing: border-box; }
+  /* a layout card inside this one is not its section's width: it counts its view columns from
+     its own width (Home Assistant's --column-span inherits from the section otherwise) */
+  .body { --column-span: initial; }
   /* a card never widens its column, whatever it holds (the Pro Cards contain their own ha-card,
      core and other cards may not) */
   .item { min-width: 0; contain: inline-size; box-sizing: border-box; display: flex; flex-direction: column; }
   .item > hui-card { display: block; flex: 1 1 auto; min-width: 0; height: 100%; }
   .item.off { display: none; }
-  .item.ghost { opacity: 0.45; }
   .col { display: flex; flex-direction: column; gap: var(--pl-row-gap); min-width: 0; contain: inline-size; }
   .col > .item > hui-card { height: auto; }
-  .layout-stack .item > hui-card { height: auto; }
-  .layout-stack.across .item > hui-card { height: 100%; }
 
   .seamless .body {
     background: var(--pl-bg);

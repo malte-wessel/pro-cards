@@ -171,21 +171,20 @@ consumers:
   - { entity: sensor.office_power, name: Office, icon: mdi:monitor }
 `,
   "Layout card": `type: custom:layout-card-pro
-columns: 1
+columns: 2
 breakpoints:
-  tablet: { columns: 2 }
+  2: { columns: 4 }
 cards:
   - type: custom:entity-card-pro
     entity: sensor.outdoor_temperature
     visual: sparkline
-    view_layout: { span: { tablet: [1, 2] } }
+    view_layout: { span: { 1: full, 2: [2, 2] } }
   - type: custom:entity-card-pro
     entity: light.kitchen
   - type: custom:entity-card-pro
     entity: light.living_room
   - type: custom:entity-card-pro
     entity: cover.living_room_blinds
-    view_layout: { hidden_below: tablet }
 `,
   "Wind card": `type: custom:wind-card-pro
 entity: sensor.wind_speed

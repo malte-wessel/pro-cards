@@ -15,123 +15,18 @@
     },
     "breakpoints": {
       "type": "object",
-      "description": "The breakpoints above the base (phone), each from a min width, with the options that change there. Defaults: tablet 600, desktop 1024, wide 1440; false drops one",
+      "description": "The options that change once the layout's section spans this many view columns (2 to 12); the top-level options apply in one. Outside a section the view columns are counted from the card's width, by the sections view's 500 px columns",
       "propertyNames": {
-        "pattern": "^[a-z][a-z0-9_]*$",
-        "not": {
-          "const": "phone"
-        }
-      },
-      "properties": {
-        "tablet": {
-          "oneOf": [
-            {
-              "type": "integer",
-              "minimum": 1
-            },
-            {
-              "const": false
-            },
-            {
-              "type": "object",
-              "allOf": [
-                {
-                  "$ref": "#/$defs/layoutOptions"
-                }
-              ],
-              "properties": {
-                "min_width": {
-                  "type": "integer",
-                  "minimum": 1,
-                  "description": "From this width of the layout (px)"
-                }
-              },
-              "unevaluatedProperties": false
-            }
-          ]
-        },
-        "desktop": {
-          "oneOf": [
-            {
-              "type": "integer",
-              "minimum": 1
-            },
-            {
-              "const": false
-            },
-            {
-              "type": "object",
-              "allOf": [
-                {
-                  "$ref": "#/$defs/layoutOptions"
-                }
-              ],
-              "properties": {
-                "min_width": {
-                  "type": "integer",
-                  "minimum": 1,
-                  "description": "From this width of the layout (px)"
-                }
-              },
-              "unevaluatedProperties": false
-            }
-          ]
-        },
-        "wide": {
-          "oneOf": [
-            {
-              "type": "integer",
-              "minimum": 1
-            },
-            {
-              "const": false
-            },
-            {
-              "type": "object",
-              "allOf": [
-                {
-                  "$ref": "#/$defs/layoutOptions"
-                }
-              ],
-              "properties": {
-                "min_width": {
-                  "type": "integer",
-                  "minimum": 1,
-                  "description": "From this width of the layout (px)"
-                }
-              },
-              "unevaluatedProperties": false
-            }
-          ]
-        }
+        "pattern": "^([2-9]|1[0-2])$"
       },
       "additionalProperties": {
-        "oneOf": [
+        "type": "object",
+        "allOf": [
           {
-            "type": "integer",
-            "minimum": 1
-          },
-          {
-            "const": false
-          },
-          {
-            "type": "object",
-            "allOf": [
-              {
-                "$ref": "#/$defs/layoutOptions"
-              }
-            ],
-            "properties": {
-              "min_width": {
-                "type": "integer",
-                "minimum": 1,
-                "description": "From this width of the layout (px)"
-              }
-            },
-            "required": ["min_width"],
-            "unevaluatedProperties": false
+            "$ref": "#/$defs/layoutOptions"
           }
-        ]
+        ],
+        "unevaluatedProperties": false
       }
     },
     "cards": {
@@ -230,9 +125,9 @@
       "type": "object",
       "properties": {
         "layout": {
-          "enum": ["grid", "stack", "masonry"],
+          "enum": ["grid", "masonry"],
           "default": "grid",
-          "description": "grid: columns and rows, cards can span; stack: one after another (direction); masonry: columns filled by card size"
+          "description": "grid: columns and rows, cards can span; masonry: columns filled by card size"
         },
         "columns": {
           "description": "How many equal columns, or the columns' widths like grid-template-columns",
@@ -252,27 +147,10 @@
           ],
           "default": 1
         },
-        "row_height": {
-          "oneOf": [
-            {
-              "const": "auto"
-            },
-            {
-              "$ref": "#/$defs/length"
-            }
-          ],
-          "default": "auto",
-          "description": "auto: rows as tall as their cards; a length: the height of one row for cards that span rows (like the sections grid's 56 px)"
-        },
         "align_items": {
           "enum": ["start", "center", "end", "stretch"],
           "default": "stretch",
           "description": "How cards sit in their row: stretch to the tallest, or keep their own height"
-        },
-        "direction": {
-          "enum": ["down", "across"],
-          "default": "down",
-          "description": "Stack: one below the other, or side by side"
         },
         "gap": {
           "description": "Space between cards: one length, or [row, column]",
@@ -303,7 +181,7 @@
     },
     "viewLayout": {
       "type": "object",
-      "description": "Where and how a card sits in a layout card; every value but show_on and hidden_below may be a map by breakpoint",
+      "description": "Where and how a card sits in a layout card; every value may be a map by view columns ({ 1: full, 2: 2 })",
       "properties": {
         "span": {
           "oneOf": [
@@ -345,9 +223,9 @@
             },
             {
               "type": "object",
-              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
+              "description": "By view columns: 1, 2, 3 …",
               "propertyNames": {
-                "pattern": "^[a-z][a-z0-9_]*$"
+                "pattern": "^([1-9]|1[0-2])$"
               },
               "additionalProperties": {
                 "oneOf": [
@@ -399,9 +277,9 @@
             },
             {
               "type": "object",
-              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
+              "description": "By view columns: 1, 2, 3 …",
               "propertyNames": {
-                "pattern": "^[a-z][a-z0-9_]*$"
+                "pattern": "^([1-9]|1[0-2])$"
               },
               "additionalProperties": {
                 "type": "integer",
@@ -420,9 +298,9 @@
             },
             {
               "type": "object",
-              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
+              "description": "By view columns: 1, 2, 3 …",
               "propertyNames": {
-                "pattern": "^[a-z][a-z0-9_]*$"
+                "pattern": "^([1-9]|1[0-2])$"
               },
               "additionalProperties": {
                 "type": "integer"
@@ -439,9 +317,9 @@
             },
             {
               "type": "object",
-              "description": "Per breakpoint: phone, tablet, desktop, wide or your own names",
+              "description": "By view columns: 1, 2, 3 …",
               "propertyNames": {
-                "pattern": "^[a-z][a-z0-9_]*$"
+                "pattern": "^([1-9]|1[0-2])$"
               },
               "additionalProperties": {
                 "enum": ["start", "center", "end", "stretch"]
@@ -450,28 +328,6 @@
             }
           ],
           "description": "How this card sits in its cell"
-        },
-        "show_on": {
-          "oneOf": [
-            {
-              "type": "string",
-              "pattern": "^[a-z][a-z0-9_]*$"
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "pattern": "^[a-z][a-z0-9_]*$"
-              },
-              "minItems": 1
-            }
-          ],
-          "description": "Only on these breakpoints (of the layout's own width)"
-        },
-        "hidden_below": {
-          "type": "string",
-          "pattern": "^[a-z][a-z0-9_]*$",
-          "description": "Not below this breakpoint"
         },
         "position": {
           "description": "Home Assistant's own (sidebar view), ignored here"

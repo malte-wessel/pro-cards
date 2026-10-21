@@ -1,5 +1,5 @@
-// The layout card in a browser: its cards in hui-cards, laid out by the breakpoints of its own
-// width, with Home Assistant's visibility, seamless surfaces and fixed rows.
+// The layout card in a browser: its cards in hui-cards, laid out by the view columns its section
+// spans (or its own width), with Home Assistant's visibility, seamless surfaces and fixed rows.
 import type { Page } from "@playwright/test";
 import { test, expect, mount, setState } from "./util";
 
@@ -72,25 +72,66 @@ test.describe("layout-card-pro", () => {
     expect(c.x).toBe(a.x + 196 + 8);
   });
 
-  test("switches its layout at the breakpoints of its own width", async ({ page }) => {
+  test("switches its layout at the view columns of its section", async ({ page }) => {
     const cfg = {
       type: LC,
       columns: 1,
-      breakpoints: { tablet: { min_width: 500, columns: 3 } },
+      breakpoints: { 2: { columns: 3 } },
       cards: [ec(T), ec(H), ec(K)],
     };
+    const xs = async () => new Set((await items(page)).map((b) => b.x)).size;
     await mount(page, cfg, { width: 432 });
-    let r = await items(page);
-    expect(new Set(r.map((b) => b.x)).size).toBe(1);
-    await resize(page, 700);
-    r = await items(page);
-    expect(new Set(r.map((b) => b.y)).size).toBe(1);
+    expect(await xs()).toBe(1);
+    // Home Assistant's sections view sets --column-span on the section: two view columns
+    await page.evaluate(() => window.pc.root.style.setProperty("--column-span", "2"));
+    await resize(page, 431);
+    expect(await xs()).toBe(3);
   });
 
-  test("gives fixed rows a definite height the card fills", async ({ page }) => {
+  test("counts view columns from its width outside a section", async ({ page }) => {
+    const cfg = {
+      type: LC,
+      columns: 1,
+      breakpoints: { 2: { columns: 2 }, 3: { columns: 3 } },
+      cards: [ec(T), ec(H), ec(K)],
+    };
+    const xs = async () => new Set((await items(page)).map((b) => b.x)).size;
+    // 400 px inside: one of the sections view's 500 px columns
+    await mount(page, cfg, { width: 432 });
+    expect(await xs()).toBe(1);
+    await resize(page, 700);
+    expect(await xs()).toBe(2);
+    await resize(page, 1200);
+    expect(await xs()).toBe(3);
+  });
+
+  test("counts a layout inside a layout by its own width, not its section's span", async ({
+    page,
+  }) => {
+    const inner = {
+      type: LC,
+      columns: 1,
+      breakpoints: { 2: { columns: 2 } },
+      cards: [ec(H), ec(K)],
+    };
+    await mount(page, { type: LC, columns: 2, cards: [ec(T), inner] }, { width: 1100 });
+    await page.evaluate(() => window.pc.root.style.setProperty("--column-span", "2"));
+    await resize(page, 1099);
+    // the inner layout is about 530 px wide: two view columns by its width, side by side
+    const inner2 = await page.evaluate(() => {
+      const outer = window.pc.card(0).shadowRoot!;
+      const nested = outer.querySelectorAll("hui-card")[1].firstElementChild as HTMLElement & {
+        _columns?: number;
+      };
+      return nested._columns;
+    });
+    expect(inner2).toBe(2);
+  });
+
+  test("gives a card the rows it asks for, in the sections grid's row height", async ({ page }) => {
     await mount(
       page,
-      { type: LC, columns: 2, row_height: 56, gap: 8, cards: [ec(T, { span: [1, 2] }), ec(H)] },
+      { type: LC, columns: 2, gap: 8, cards: [ec(T, { span: [1, 2] }), ec(H)] },
       { width: 432 },
     );
     const [a] = await items(page);
@@ -100,21 +141,6 @@ test.describe("layout-card-pro", () => {
       return Math.round(hui.firstElementChild!.getBoundingClientRect().height);
     });
     expect(card).toBe(120);
-  });
-
-  test("stacks down and across", async ({ page }) => {
-    await mount(page, { type: LC, layout: "stack", cards: [ec(T), ec(H)] }, { width: 432 });
-    let [a, b] = await items(page);
-    expect(b.y).toBeGreaterThan(a.y);
-    expect(a.w).toBe(b.w);
-    await mount(
-      page,
-      { type: LC, layout: "stack", direction: "across", cards: [ec(T), ec(H, { span: 2 })] },
-      { width: 432 },
-    );
-    [a, b] = await items(page);
-    expect(a.y).toBe(b.y);
-    expect(Math.abs(b.w - 2 * a.w)).toBeLessThanOrEqual(1);
   });
 
   test("deals masonry cards to the shortest column, pins first", async ({ page }) => {
@@ -152,24 +178,6 @@ test.describe("layout-card-pro", () => {
     expect(r).toHaveLength(3);
   });
 
-  test("shows a card only on its breakpoints", async ({ page }) => {
-    const cfg = {
-      type: LC,
-      breakpoints: { tablet: 500 },
-      cards: [ec(T), ec(H, { hidden_below: "tablet" }), ec(K, { show_on: ["phone"] })],
-    };
-    await mount(page, cfg, { width: 432 });
-    expect(await items(page)).toHaveLength(2);
-    await resize(page, 700);
-    expect(await items(page)).toHaveLength(2);
-    const shown = await page.evaluate(() =>
-      [...window.pc.card(0).shadowRoot!.querySelectorAll(".item")].map(
-        (i) => !i.classList.contains("off"),
-      ),
-    );
-    expect(shown).toEqual([true, true, false]);
-  });
-
   test("draws one surface for seamless cards", async ({ page }) => {
     await mount(
       page,
@@ -193,7 +201,7 @@ test.describe("layout-card-pro", () => {
       {
         type: LC,
         columns: 2,
-        cards: [ec(T), { type: LC, layout: "stack", cards: [ec(H), ec(K)], view_layout: {} }],
+        cards: [ec(T), { type: LC, cards: [ec(H), ec(K)], view_layout: {} }],
       },
       { width: 432 },
     );

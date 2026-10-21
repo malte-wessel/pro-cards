@@ -1,22 +1,18 @@
-// Layout Card Pro: config types and normalization (pure). The YAML's base options are the
-// smallest screen ("phone"); each breakpoint under `breakpoints` lists only what changes from the
-// next smaller one. Each child card's own placement lives in its
-// `view_layout`, which Home Assistant's card editors keep (a key of their own would make them
-// refuse the config); per-child values may be maps by breakpoint name.
+// Layout Card Pro: config types and normalization (pure). The breakpoints are view columns, the
+// unit Home Assistant's sections view places sections in: the top-level options apply in one view
+// column (a phone, or a section of `column_span: 1`), each breakpoint under `breakpoints` (2, 3 …)
+// lists only what changes once the layout's section spans that many view columns. Each child
+// card's own placement lives in its `view_layout`, which Home Assistant's card editors keep (a key
+// of their own would make them refuse the config); per-child values may be maps by view columns.
 import type { CardConfigBase } from "../shared/ha.ts";
 import { boxSides, cssLength, trackTokens } from "./units.ts";
 
 export const CARD_TYPE = "layout-card-pro";
-export const BASE = "phone";
-export const LAYOUTS = ["grid", "stack", "masonry"] as const;
+export const LAYOUTS = ["grid", "masonry"] as const;
 export const ITEM_ALIGNS = ["start", "center", "end", "stretch"] as const;
-export const DIRECTIONS = ["down", "across"] as const;
 export const CARD_STYLES = ["cards", "seamless"] as const;
-export const DEFAULT_BREAKPOINTS: Record<string, number> = {
-  tablet: 600,
-  desktop: 1024,
-  wide: 1440,
-};
+// the widest a breakpoint can be: Home Assistant's sections view shows at most this many columns
+export const MAX_VIEW_COLUMNS = 12;
 
 export type LayoutType = (typeof LAYOUTS)[number];
 export type ItemAlign = (typeof ITEM_ALIGNS)[number];
@@ -26,9 +22,7 @@ export type Sides = [string, string, string, string];
 export interface LayoutOptions {
   layout: LayoutType;
   columns: number | string[]; // a count, or CSS tracks (fr already as minmax(0, Nfr))
-  row_height: string | null; // null: rows as tall as their content
   align_items: ItemAlign;
-  direction: (typeof DIRECTIONS)[number];
   row_gap: string | null; // from `gap`; null: the theme's gap
   column_gap: string | null;
   padding: Sides | null;
@@ -37,15 +31,14 @@ export interface LayoutOptions {
 export type Overrides = Partial<LayoutOptions>;
 
 export interface Breakpoint {
-  name: string;
-  min: number;
+  columns: number; // the view columns it applies from (2 …)
   overrides: Overrides;
 }
 
-// a per-child value: one for every breakpoint, or a map by breakpoint name (inherited upwards)
+// a per-child value: one for every width, or a map by view columns (inherited upwards)
 export interface Responsive<T> {
   all?: T;
-  by: Record<string, T>;
+  by: Record<number, T>;
 }
 export interface Span {
   cols: number | "full";
@@ -56,8 +49,6 @@ export interface ChildPlace {
   column: Responsive<number>;
   order: Responsive<number>;
   align: Responsive<ItemAlign>;
-  show_on: string[] | null;
-  hidden_below: string | null;
 }
 export interface ChildConfig {
   config: CardConfigBase;
@@ -65,17 +56,14 @@ export interface ChildConfig {
 }
 export interface LayoutConfig {
   base: LayoutOptions;
-  breakpoints: Breakpoint[]; // ascending by min width, without the base
-  order: string[]; // every breakpoint name, the base first
+  breakpoints: Breakpoint[]; // ascending by view columns
   children: ChildConfig[];
 }
 
 export const DEFAULT_OPTIONS: LayoutOptions = {
   layout: "grid",
   columns: 1,
-  row_height: null,
   align_items: "stretch",
-  direction: "down",
   row_gap: null,
   column_gap: null,
   padding: null,
@@ -83,14 +71,13 @@ export const DEFAULT_OPTIONS: LayoutOptions = {
 };
 
 const OPTION_KEYS = [...Object.keys(DEFAULT_OPTIONS), "gap"] as readonly string[];
-const PLACE_KEYS = ["span", "column", "order", "align", "show_on", "hidden_below"] as const;
+const PLACE_KEYS = ["span", "column", "order", "align"] as const;
 // keys of view_layout that belong to Home Assistant's views or other layouts: kept, not ours
 const FOREIGN_PLACE_KEYS = ["position", "grid-area", "grid-column", "grid-row", "show"];
 
 const err = (msg: string) => new Error(`${CARD_TYPE}: ${msg}`);
 const isObj = (v: unknown): v is Record<string, unknown> =>
   !!v && typeof v === "object" && !Array.isArray(v);
-const NAME_RE = /^[a-z][a-z0-9_]*$/;
 
 const pickOf = <T extends string>(list: readonly T[], v: unknown, at: string): T => {
   if (typeof v === "string" && (list as readonly string[]).includes(v)) return v as T;
@@ -102,6 +89,15 @@ const int = (v: unknown, at: string, min: number, max = Infinity) => {
       `'${at}' must be a whole number${max === Infinity ? ` of at least ${min}` : ` from ${min} to ${max}`}`,
     );
   return v;
+};
+// a key of a breakpoint map: a number of view columns ("2" in YAML's { 2: … } is a string here)
+const viewColumns = (key: string, at: string, min: number): number => {
+  const n = /^\d+$/.test(key) ? Number(key) : NaN;
+  if (!(n >= min && n <= MAX_VIEW_COLUMNS))
+    throw err(
+      `${at} is keyed by view columns, ${min} to ${MAX_VIEW_COLUMNS} (how many columns of the view the section spans), not '${key}'`,
+    );
+  return n;
 };
 
 // the options of one level (the base or a breakpoint): only the keys it sets
@@ -117,14 +113,8 @@ export const parseOptions = (raw: Record<string, unknown>, at: string): Override
       case "columns":
         o.columns = typeof v === "number" ? int(v, p(k), 1, 24) : trackTokens(v, p(k));
         break;
-      case "row_height":
-        o.row_height = v === "auto" || v === null ? null : cssLength(v, p(k));
-        break;
       case "align_items":
         o.align_items = pickOf(ITEM_ALIGNS, v, p(k));
-        break;
-      case "direction":
-        o.direction = pickOf(DIRECTIONS, v, p(k));
         break;
       case "gap": {
         const pair = Array.isArray(v) ? v : [v, v];
@@ -148,34 +138,16 @@ export const parseOptions = (raw: Record<string, unknown>, at: string): Override
 };
 
 const parseBreakpoints = (raw: unknown): Breakpoint[] => {
-  if (raw !== undefined && raw !== null && !isObj(raw))
-    throw err(`'breakpoints' must map names to a min width or { min_width, …options }`);
-  const given = (raw || {}) as Record<string, unknown>;
-  const names = [...new Set([...Object.keys(DEFAULT_BREAKPOINTS), ...Object.keys(given)])];
-  const out: Breakpoint[] = [];
-  for (const name of names) {
-    const v = given[name];
-    if (name === BASE) throw err(`'${BASE}' is the base, put its options at the top level`);
-    if (!NAME_RE.test(name))
-      throw err(`breakpoint '${name}' needs a name of lower-case letters, digits and _`);
-    if (v === false) continue;
-    const def = DEFAULT_BREAKPOINTS[name];
-    let min: unknown = def;
-    let overrides: Overrides = {};
-    if (typeof v === "number") min = v;
-    else if (isObj(v)) {
-      const { min_width, ...rest } = v;
-      if (min_width !== undefined) min = min_width;
-      overrides = parseOptions(rest, `breakpoints.${name}`);
-    } else if (v !== undefined && v !== null)
-      throw err(`'breakpoints.${name}' must be a min width, { min_width, …options } or false`);
-    if (min === undefined)
-      throw err(
-        `breakpoint '${name}' needs a min_width (the defaults are ${Object.keys(DEFAULT_BREAKPOINTS).join(", ")})`,
-      );
-    out.push({ name, min: int(min, `breakpoints.${name}.min_width`, 1), overrides });
-  }
-  return out.sort((a, b) => a.min - b.min);
+  if (raw === undefined || raw === null) return [];
+  if (!isObj(raw))
+    throw err(`'breakpoints' must map view columns to options, as { 2: { columns: 4 } }`);
+  return Object.entries(raw)
+    .map(([key, v]) => {
+      const columns = viewColumns(key, "'breakpoints'", 2);
+      if (!isObj(v)) throw err(`'breakpoints.${key}' must be the options that change there`);
+      return { columns, overrides: parseOptions(v, `breakpoints.${key}`) };
+    })
+    .sort((a, b) => a.columns - b.columns);
 };
 
 // ----- per child (view_layout) -----
@@ -183,17 +155,12 @@ const parseBreakpoints = (raw: unknown): Breakpoint[] => {
 const responsive = <T>(
   v: unknown,
   at: string,
-  names: string[],
   one: (x: unknown, at: string) => T,
 ): Responsive<T> => {
   if (v === undefined || v === null) return { by: {} };
   if (!isObj(v)) return { all: one(v, at), by: {} };
-  const by: Record<string, T> = {};
-  for (const [name, x] of Object.entries(v)) {
-    if (!names.includes(name))
-      throw err(`${at} names an unknown breakpoint '${name}' (known: ${names.join(", ")})`);
-    by[name] = one(x, `${at}.${name}`);
-  }
+  const by: Record<number, T> = {};
+  for (const [key, x] of Object.entries(v)) by[viewColumns(key, at, 1)] = one(x, `${at}.${key}`);
   return { by };
 };
 
@@ -203,15 +170,8 @@ const span = (v: unknown, at: string): Span => {
   if (Array.isArray(v) && v.length === 2) return { cols: cols(v[0]), rows: int(v[1], at, 1, 48) };
   throw err(`${at} must be a number, [columns, rows] or full`);
 };
-const nameList = (v: unknown, at: string, names: string[]): string[] => {
-  const list = Array.isArray(v) ? v : [v];
-  for (const n of list)
-    if (typeof n !== "string" || !names.includes(n))
-      throw err(`${at} names an unknown breakpoint '${String(n)}' (known: ${names.join(", ")})`);
-  return list as string[];
-};
 
-export const normalizeViewLayout = (raw: unknown, names: string[], label: string): ChildPlace => {
+export const normalizeViewLayout = (raw: unknown, label: string): ChildPlace => {
   const at = (k: string) => `${label}.view_layout.${k}`;
   const v = isObj(raw) ? raw : {};
   if (raw !== undefined && raw !== null && !isObj(raw))
@@ -219,8 +179,7 @@ export const normalizeViewLayout = (raw: unknown, names: string[], label: string
   for (const k of Object.keys(v))
     if (!(PLACE_KEYS as readonly string[]).includes(k) && !FOREIGN_PLACE_KEYS.includes(k))
       throw err(`${at(k)} is not a placement option (${PLACE_KEYS.join(", ")})`);
-  const r = <T>(k: string, one: (x: unknown, at: string) => T) =>
-    responsive(v[k], at(k), names, one);
+  const r = <T>(k: string, one: (x: unknown, at: string) => T) => responsive(v[k], at(k), one);
   return {
     span: r("span", span),
     column: r("column", (x, a) => int(x, a, 1, 24)),
@@ -229,15 +188,6 @@ export const normalizeViewLayout = (raw: unknown, names: string[], label: string
       return x;
     }),
     align: r("align", (x, a) => pickOf(ITEM_ALIGNS, x, a)),
-    show_on: v.show_on === undefined ? null : nameList(v.show_on, at("show_on"), names),
-    hidden_below:
-      v.hidden_below === undefined
-        ? null
-        : typeof v.hidden_below === "string"
-          ? nameList(v.hidden_below, at("hidden_below"), names)[0]
-          : (() => {
-              throw err(`${at("hidden_below")} must be one breakpoint name`);
-            })(),
   };
 };
 
@@ -245,8 +195,6 @@ export const normalizeViewLayout = (raw: unknown, names: string[], label: string
 
 export const normalizeLayoutConfig = (raw: unknown): LayoutConfig => {
   if (!isObj(raw)) throw err("the config must be an object");
-  const breakpoints = parseBreakpoints(raw.breakpoints);
-  const order = [BASE, ...breakpoints.map((b) => b.name)];
   const cards = raw.cards ?? [];
   if (!Array.isArray(cards)) throw err("'cards' must be a list of card configs");
   const children = cards.map((c, i): ChildConfig => {
@@ -254,15 +202,14 @@ export const normalizeLayoutConfig = (raw: unknown): LayoutConfig => {
       throw err(`cards[${i}] must be a card config with a 'type'`);
     return {
       config: c as CardConfigBase,
-      place: normalizeViewLayout(c.view_layout, order, `cards[${i}]`),
+      place: normalizeViewLayout(c.view_layout, `cards[${i}]`),
     };
   });
   const own: Record<string, unknown> = {};
   for (const k of OPTION_KEYS) if (raw[k] !== undefined) own[k] = raw[k];
   return {
     base: { ...DEFAULT_OPTIONS, ...parseOptions(own, "") },
-    breakpoints,
-    order,
+    breakpoints: parseBreakpoints(raw.breakpoints),
     children,
   };
 };

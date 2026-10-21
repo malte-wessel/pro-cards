@@ -4,16 +4,16 @@ import { snapshot } from "../../docs/.vitepress/theme/ha-shim/hass.ts";
 import { LayoutCard } from "../../src/layout-card.ts";
 import "../../src/entity-card.ts";
 import {
-  activeBreakpoint,
+  activeColumns,
+  columnsForWidth,
   HYSTERESIS_PX,
   pick,
   resolveOptions,
-  shownAt,
 } from "../../src/layout/breakpoints.ts";
 import { childKey, reconcile } from "../../src/layout/children.ts";
 import { normalizeLayoutConfig, type LayoutConfig } from "../../src/layout/config.ts";
 import { distribute, tallest } from "../../src/layout/masonry.ts";
-import { cardSize, planLayout, type KidState, type PlanCtx } from "../../src/layout/place.ts";
+import { cardSize, planLayout, type KidState } from "../../src/layout/place.ts";
 import { boxSides, cssLength, trackList, trackTokens } from "../../src/layout/units.ts";
 import type { HuiCardElement } from "../../src/shared/ha.ts";
 
@@ -21,7 +21,7 @@ defineHuiElements();
 
 const cfg = (raw: Record<string, unknown>) =>
   normalizeLayoutConfig({ type: "custom:layout-card-pro", ...raw });
-const at = (c: LayoutConfig, active: string) => resolveOptions(c, active);
+const at = (c: LayoutConfig, columns: number) => resolveOptions(c, columns);
 
 describe("layout-card units", () => {
   it("reads lengths", () => {
@@ -56,121 +56,113 @@ describe("layout-card units", () => {
 });
 
 describe("layout-card config", () => {
-  it("has a mobile-first base with the default breakpoints", () => {
-    const c = cfg({ cards: [] });
-    expect(c.order).toEqual(["phone", "tablet", "desktop", "wide"]);
-    expect(c.base).toMatchObject({ layout: "grid", columns: 1, card_style: "cards" });
-  });
-  it("lets breakpoints be renamed, moved and dropped", () => {
-    const c = cfg({
-      breakpoints: { tablet: 500, wide: false, kiosk: { min_width: 1800, columns: 6 } },
-    });
-    expect(c.breakpoints.map((b) => [b.name, b.min])).toEqual([
-      ["tablet", 500],
-      ["desktop", 1024],
-      ["kiosk", 1800],
+  it("has its base options in one view column and breakpoints by view columns", () => {
+    const c = cfg({ columns: 2, breakpoints: { 3: { columns: 6 }, 2: { columns: 4 } }, cards: [] });
+    expect(c.base).toMatchObject({ layout: "grid", columns: 2, card_style: "cards" });
+    expect(c.breakpoints).toEqual([
+      { columns: 2, overrides: { columns: 4 } },
+      { columns: 3, overrides: { columns: 6 } },
     ]);
-    expect(c.breakpoints[2].overrides).toEqual({ columns: 6 });
   });
   it("explains a bad config in English", () => {
     expect(() => cfg({ cards: {} })).toThrow(
       "layout-card-pro: 'cards' must be a list of card configs",
     );
     expect(() => cfg({ columns: 0 })).toThrow("'columns' must be a whole number from 1 to 24");
-    expect(() => cfg({ breakpoints: { tabelt: { columns: 2 } } })).toThrow(
-      "breakpoint 'tabelt' needs a min_width (the defaults are tablet, desktop, wide)",
+    // the earlier named breakpoints say what the keys are now
+    expect(() => cfg({ breakpoints: { tablet: { columns: 2 } } })).toThrow(
+      "'breakpoints' is keyed by view columns, 2 to 12 (how many columns of the view the section spans), not 'tablet'",
     );
-    expect(() => cfg({ breakpoints: { phone: { columns: 2 } } })).toThrow("'phone' is the base");
-    expect(() => cfg({ breakpoints: { tablet: { colums: 2 } } })).toThrow(
-      "'breakpoints.tablet.colums' is not a layout option",
+    expect(() => cfg({ breakpoints: { 1: { columns: 2 } } })).toThrow("not '1'");
+    expect(() => cfg({ breakpoints: { 2: 600 } })).toThrow(
+      "'breakpoints.2' must be the options that change there",
+    );
+    expect(() => cfg({ breakpoints: { 2: { colums: 2 } } })).toThrow(
+      "'breakpoints.2.colums' is not a layout option",
     );
     expect(() => cfg({ cards: [{ type: "tile", view_layout: { span: [1, 2, 3] } }] })).toThrow(
       "cards[0].view_layout.span must be a number, [columns, rows] or full",
     );
-    expect(() => cfg({ cards: [{ type: "tile", view_layout: { show_on: ["desk"] } }] })).toThrow(
-      "cards[0].view_layout.show_on names an unknown breakpoint 'desk'",
+    expect(() => cfg({ cards: [{ type: "tile", view_layout: { span: { desktop: 2 } } }] })).toThrow(
+      "cards[0].view_layout.span is keyed by view columns, 1 to 12",
     );
     expect(() => cfg({ cards: [{ type: "tile", view_layout: { spam: 2 } }] })).toThrow(
       "cards[0].view_layout.spam is not a placement option",
     );
     expect(() => cfg({ cards: ["tile"] })).toThrow("cards[0] must be a card config with a 'type'");
-    expect(() =>
-      cfg({ cards: [{ type: "tile", view_layout: { hidden_below: ["tablet"] } }] }),
-    ).toThrow("cards[0].view_layout.hidden_below must be one breakpoint name");
   });
   it("splits gap into its two directions", () => {
     expect(cfg({ gap: [8, 12] }).base).toMatchObject({ row_gap: "8px", column_gap: "12px" });
     expect(cfg({ gap: 8 }).base).toMatchObject({ row_gap: "8px", column_gap: "8px" });
-    expect(() => cfg({ breakpoints: { tablet: { row_gap: 4 } } })).toThrow(
-      "is not a layout option",
-    );
   });
-  it("reads per-card placement, per breakpoint where it is a map", () => {
+  it("takes none of the options that went", () => {
+    for (const gone of [
+      { layout: "stack" },
+      { direction: "across" },
+      { row_height: 56 },
+      { dense: true },
+    ])
+      expect(() => cfg({ breakpoints: { 2: gone } })).toThrow();
+    for (const gone of ["show_on", "hidden_below", "row", "sticky"])
+      expect(() => cfg({ cards: [{ type: "a", view_layout: { [gone]: 2 } }] })).toThrow(
+        `cards[0].view_layout.${gone} is not a placement option`,
+      );
+  });
+  it("reads per-card placement, per view columns where it is a map", () => {
     const c = cfg({
       cards: [
         {
           type: "tile",
           view_layout: {
-            span: { phone: 1, desktop: [2, 2] },
-            hidden_below: "tablet",
+            span: { 1: "full", 3: [2, 2] },
             position: "main", // Home Assistant's own, kept
           },
         },
       ],
     });
-    const p = c.children[0].place;
-    expect(p.span.by).toEqual({ phone: { cols: 1, rows: null }, desktop: { cols: 2, rows: 2 } });
-    expect(p.hidden_below).toBe("tablet");
+    expect(c.children[0].place.span.by).toEqual({
+      1: { cols: "full", rows: null },
+      3: { cols: 2, rows: 2 },
+    });
   });
 });
 
-describe("layout-card breakpoints", () => {
+describe("layout-card view columns", () => {
   const c = cfg({
     columns: 1,
     gap: 6,
-    breakpoints: { tablet: { columns: 2, gap: 8 }, desktop: { columns: 4 } },
+    breakpoints: { 2: { columns: 2, gap: 8 }, 3: { columns: 4 } },
   });
-  it("picks the widest breakpoint reached", () => {
-    expect(activeBreakpoint(0, c.breakpoints)).toBe("phone");
-    expect(activeBreakpoint(600, c.breakpoints)).toBe("tablet");
-    expect(activeBreakpoint(1100, c.breakpoints)).toBe("desktop");
-    expect(activeBreakpoint(1500, c.breakpoints)).toBe("wide");
+  it("takes Home Assistant's column span of the section", () => {
+    expect(activeColumns("1", 9999)).toBe(1);
+    expect(activeColumns(" 3", 100)).toBe(3);
   });
-  it("keeps the wider breakpoint while a scrollbar takes a few pixels", () => {
-    expect(activeBreakpoint(600 - 10, c.breakpoints, "tablet")).toBe("tablet");
-    expect(activeBreakpoint(600 - HYSTERESIS_PX - 1, c.breakpoints, "tablet")).toBe("phone");
+  it("counts the sections view's widest columns from the width outside a section", () => {
+    // a column is at most 500 px, 32 px between them
+    expect(activeColumns("", 374)).toBe(1);
+    expect(columnsForWidth(500)).toBe(1);
+    expect(columnsForWidth(501)).toBe(2);
+    expect(columnsForWidth(1032)).toBe(2);
+    expect(columnsForWidth(1033)).toBe(3);
+    // the theme's own column width
+    expect(columnsForWidth(700, undefined, 320, 8)).toBe(3);
+  });
+  it("keeps more columns while a scrollbar takes a few pixels", () => {
+    expect(columnsForWidth(501 - 10, 2)).toBe(2);
+    expect(columnsForWidth(501 - HYSTERESIS_PX - 1, 2)).toBe(1);
     // growing is not delayed
-    expect(activeBreakpoint(600, c.breakpoints, "phone")).toBe("tablet");
+    expect(columnsForWidth(501, 1)).toBe(2);
   });
-  it("cascades from the base up to the active breakpoint", () => {
-    expect(at(c, "phone")).toMatchObject({ columns: 1, row_gap: "6px" });
-    expect(at(c, "tablet")).toMatchObject({ columns: 2, row_gap: "8px" });
-    expect(at(c, "wide")).toMatchObject({ columns: 4, row_gap: "8px" });
+  it("cascades from the base up to the view columns there are", () => {
+    expect(at(c, 1)).toMatchObject({ columns: 1, row_gap: "6px" });
+    expect(at(c, 2)).toMatchObject({ columns: 2, row_gap: "8px" });
+    expect(at(c, 4)).toMatchObject({ columns: 4, row_gap: "8px" });
   });
-  it("takes no window breakpoints, media rules or max width any more", () => {
-    for (const gone of [{ dense: true }, { max_width: 600 }, { align: "start" }])
-      expect(() => cfg({ breakpoints: { tablet: gone } })).toThrow("is not a layout option");
-    expect(() => cfg({ cards: [{ type: "a", view_layout: { row: 2 } }] })).toThrow(
-      "cards[0].view_layout.row is not a placement option",
-    );
-  });
-  it("inherits a card's value from the nearest smaller breakpoint", () => {
-    const order = ["phone", "tablet", "desktop"];
-    expect(pick({ by: { phone: 1, desktop: 3 } }, "tablet", order)).toBe(1);
-    expect(pick({ by: { desktop: 3 } }, "tablet", order)).toBeUndefined();
-    expect(pick({ all: 2, by: {} }, "desktop", order)).toBe(2);
-  });
-  it("shows a card only on its breakpoints", () => {
-    const [a, b] = cfg({
-      cards: [
-        { type: "tile", view_layout: { show_on: ["tablet", "wide"] } },
-        { type: "tile", view_layout: { hidden_below: "desktop" } },
-      ],
-    }).children.map((x) => x.place);
-    expect(shownAt(a, "tablet", c.order)).toBe(true);
-    expect(shownAt(a, "desktop", c.order)).toBe(false);
-    expect(shownAt(b, "tablet", c.order)).toBe(false);
-    expect(shownAt(b, "wide", c.order)).toBe(true);
+  it("inherits a card's value from the nearest smaller count", () => {
+    expect(pick({ by: { 1: 1, 3: 3 } }, 2)).toBe(1);
+    expect(pick({ by: { 1: 1, 3: 3 } }, 4)).toBe(3);
+    expect(pick({ by: { 3: 3 } }, 2)).toBeUndefined();
+    expect(pick({ all: 2, by: {} }, 3)).toBe(2);
   });
 });
 
@@ -191,12 +183,6 @@ describe("layout-card plan", () => {
     size: 2,
     ...over,
   });
-  const ctx = (over: Partial<PlanCtx> = {}): PlanCtx => ({
-    active: "phone",
-    order: ["phone", "tablet", "desktop", "wide"],
-    preview: false,
-    ...over,
-  });
   it("lays a grid out with spans clamped to the columns", () => {
     const c = cfg({
       columns: 3,
@@ -206,7 +192,7 @@ describe("layout-card plan", () => {
         { type: "c", view_layout: { column: 3, span: 2 } },
       ],
     });
-    const plan = planLayout(c.base, [kid(c, 0), kid(c, 1), kid(c, 2)], ctx());
+    const plan = planLayout(c.base, [kid(c, 0), kid(c, 1), kid(c, 2)], 1);
     expect(plan.body["grid-template-columns"]).toBe("repeat(3, minmax(0, 1fr))");
     expect(plan.items.map((i) => i.style["grid-column"])).toEqual([
       "span 3",
@@ -216,79 +202,40 @@ describe("layout-card plan", () => {
     // HA's grid mode only where the rows are fixed
     expect(plan.items.every((i) => !i.gridLayout)).toBe(true);
   });
-  it("sizes fixed rows like the sections grid", () => {
+  it("reads a card's span at the view columns there are", () => {
+    const c = cfg({
+      columns: 4,
+      cards: [{ type: "a", view_layout: { span: { 1: "full", 2: 2 } } }],
+    });
+    expect(planLayout(c.base, [kid(c, 0)], 1).items[0].style["grid-column"]).toBe("1 / -1");
+    expect(planLayout(c.base, [kid(c, 0)], 3).items[0].style["grid-column"]).toBe("span 2");
+  });
+  it("gives a card the rows it asks for in the sections grid's row height", () => {
     const c = cfg({
       columns: 2,
-      row_height: 56,
       cards: [{ type: "a", view_layout: { span: [1, 2] } }, { type: "b" }],
     });
     const plan = planLayout(
       c.base,
       [kid(c, 0), kid(c, 1, { grid: { rows: 3 } }), kid(c, 1, { grid: { rows: "auto" } })],
-      ctx(),
+      1,
     );
     expect(plan.items[0].style.height).toBe(
-      "calc(2 * 56px + 1 * var(--ha-section-grid-row-gap, 8px))",
+      "calc(2 * var(--ha-section-grid-row-height, 56px) + 1 * var(--ha-section-grid-row-gap, 8px))",
     );
     expect(plan.items[1].style["grid-row"]).toBe("span 3");
-    // HA's grid mode only for the cards the rows give a height
+    expect(plan.items[2].style["grid-row"]).toBeUndefined();
+    // HA's grid mode only for the cards with fixed rows
     expect(plan.items.map((i) => i.gridLayout)).toEqual([true, true, false]);
   });
-  it("sizes cards by their own grid options in 12 columns", () => {
-    const c = cfg({ columns: 12, cards: [{ type: "tile" }, { type: "heading" }] });
-    const plan = planLayout(
-      c.base,
-      [
-        kid(c, 0, { grid: { columns: 6 } }),
-        kid(c, 1, { grid: { columns: "full" } }),
-        kid(c, 0, { grid: {} }), // none named: the whole row, as in a section
-        kid(c, 0, { grid: { columns: 2, min_columns: 4 } }),
-      ],
-      ctx(),
-    );
-    expect(plan.items.map((i) => i.style["grid-column"])).toEqual([
-      "span 6",
-      "1 / -1",
-      "span 12",
-      "span 4",
-    ]);
-  });
-  it("hides cards without a gap", () => {
-    const c = cfg({
-      cards: [
-        { type: "a" },
-        { type: "b" },
-        { type: "c" },
-        { type: "d", view_layout: { hidden_below: "tablet" } },
-      ],
-    });
-    const kids = [kid(c, 0), kid(c, 1), kid(c, 2, { visible: false }), kid(c, 3)];
-    const plan = planLayout(c.base, kids, ctx());
-    expect(plan.items.map((i) => i.shown)).toEqual([true, true, false, false]);
-    // the editor shows everything, faded where the layout's breakpoints would hide it
-    const prev = planLayout(c.base, kids, ctx({ preview: true }));
-    expect(prev.items.map((i) => [i.shown, i.ghost])).toEqual([
-      [true, false],
-      [true, false],
-      [true, false],
-      [true, true],
-    ]);
-  });
-  it("stacks across with equal widths and seamless surfaces", () => {
-    const c = cfg({
-      layout: "stack",
-      direction: "across",
-      card_style: "seamless",
-      cards: [{ type: "a" }, { type: "b", view_layout: { span: 2 } }],
-    });
-    const plan = planLayout(c.base, [kid(c, 0), kid(c, 1)], ctx());
-    expect(plan.rootClass).toEqual(["layout-stack", "seamless", "across"]);
-    expect(plan.body["flex-direction"]).toBe("row");
-    expect(plan.items.map((i) => i.style.flex)).toEqual(["1 1 0px", "2 1 0px"]);
-    expect(plan.root["--pl-col-gap"]).toBe("0px");
-    // seamless: the padding goes inside the surface
+  it("hides cards without a gap and pads inside a seamless surface", () => {
+    const c = cfg({ cards: [{ type: "a" }, { type: "b" }, { type: "c" }] });
+    const plan = planLayout(c.base, [kid(c, 0), kid(c, 1, { visible: false }), kid(c, 2)], 1);
+    expect(plan.items.map((i) => i.shown)).toEqual([true, false, true]);
     const padded = cfg({ card_style: "seamless", padding: [8, 16], cards: [{ type: "a" }] });
-    const pp = planLayout(padded.base, [kid(padded, 0)], ctx());
+    const pp = planLayout(padded.base, [kid(padded, 0)], 1);
+    expect(pp.rootClass).toEqual(["layout-grid", "seamless"]);
+    expect(pp.root["--pl-col-gap"]).toBe("0px");
     expect([pp.root.padding, pp.body.padding]).toEqual(["0", "8px 16px 8px 16px"]);
   });
   it("deals masonry cards in their order", () => {
@@ -297,17 +244,15 @@ describe("layout-card plan", () => {
       columns: 2,
       cards: [{ type: "a" }, { type: "b" }, { type: "c", view_layout: { order: -1 } }],
     });
-    const plan = planLayout(c.base, [kid(c, 0, { size: 4 }), kid(c, 1), kid(c, 2)], ctx());
+    const plan = planLayout(c.base, [kid(c, 0, { size: 4 }), kid(c, 1), kid(c, 2)], 1);
     expect(plan.sequence).toEqual([2, 0, 1]);
     expect(plan.items.map((i) => i.column)).toEqual([1, 0, 0]);
     expect(cardSize(c.base, [kid(c, 0, { size: 4 }), kid(c, 1), kid(c, 2)], plan)).toBe(4);
   });
-  it("counts the card size per layout", () => {
+  it("counts the card size by rows of the grid", () => {
     const c = cfg({ columns: 2, cards: [{ type: "a" }, { type: "b" }, { type: "c" }] });
     const kids = [kid(c, 0, { size: 3 }), kid(c, 1, { size: 1 }), kid(c, 2, { size: 2 })];
-    expect(cardSize(c.base, kids, planLayout(c.base, kids, ctx()))).toBe(5);
-    const s = cfg({ layout: "stack", cards: [{ type: "a" }, { type: "b" }, { type: "c" }] });
-    expect(cardSize(s.base, kids, planLayout(s.base, kids, ctx()))).toBe(6);
+    expect(cardSize(c.base, kids, planLayout(c.base, kids, 1))).toBe(5);
   });
 });
 

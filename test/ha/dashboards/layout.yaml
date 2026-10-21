@@ -1,6 +1,6 @@
 # Layout Card Pro: every option of the layout card on a real dashboard, with Pro Cards and Home
 # Assistant's own cards inside. One view per topic; each section starts with a heading and a note
-# on what to look for. The panel view at the end gives one layout the whole width, so the wide
+# on what to look for. The panel view at the end gives one layout the whole width, so it counts
 # breakpoints show.
 title: Layout card
 views:
@@ -79,15 +79,14 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: Fixed rows
+            heading: Rows
           - type: markdown
             content: >-
-              `row_height: 56` gives rows a fixed height, as in the sections grid. A card spans
-              rows by `span: [1, 3]` or by its own `grid_options` rows (the tile with a feature
-              asks for 2) and fills that height.
+              A card that asks for rows, by `span: [1, 3]` or by its own `grid_options` rows (the
+              tile with a feature asks for 2), gets them in the sections grid's row height and
+              fills them.
           - type: custom:layout-card-pro
             columns: 2
-            row_height: 56
             cards:
               - type: custom:entity-card-pro
                 entity: sensor.outdoor_temperature
@@ -99,35 +98,6 @@ views:
                   - type: light-brightness
               - type: tile
                 entity: light.bed_light
-
-      - type: grid
-        cards:
-          - type: heading
-            heading: Twelve columns, like a section
-          - type: markdown
-            content: >-
-              With `columns: 12` the cards size themselves by their own `grid_options`, as in a
-              section: tiles take 6, a heading the row, a card with `grid_options: { columns: 4 }`
-              a third.
-          - type: custom:layout-card-pro
-            columns: 12
-            cards:
-              - type: heading
-                heading: Living room
-                heading_style: subtitle
-              - type: tile
-                entity: light.living_room
-              - type: tile
-                entity: cover.living_room_blinds
-              - type: tile
-                entity: fan.ceiling_fan
-                grid_options: { columns: 4 }
-              - type: tile
-                entity: switch.ac
-                grid_options: { columns: 4 }
-              - type: tile
-                entity: switch.decorative_lights
-                grid_options: { columns: 4 }
 
       - type: grid
         cards:
@@ -197,58 +167,6 @@ views:
     type: sections
     max_columns: 3
     sections:
-      - type: grid
-        cards:
-          - type: heading
-            heading: Stack down
-          - type: markdown
-            content: >-
-              `layout: stack` puts the cards one below the other, like a vertical stack, with the
-              layout's gap (here `gap: 4`).
-          - type: custom:layout-card-pro
-            layout: stack
-            gap: 4
-            cards:
-              - type: custom:weather-card-pro
-                entity: weather.demo_weather_south
-              - type: tile
-                entity: light.kitchen_lights
-              - type: entities
-                entities:
-                  - sensor.outdoor_temperature
-                  - sensor.outdoor_humidity
-                  - sensor.wind_speed
-
-      - type: grid
-        cards:
-          - type: heading
-            heading: Stack across
-          - type: markdown
-            content: >-
-              `direction: across` shares the width equally; a `span: 2` takes twice the share.
-          - type: custom:layout-card-pro
-            layout: stack
-            direction: across
-            cards:
-              - type: button
-                entity: light.living_room
-                show_state: true
-              - type: button
-                entity: light.kitchen
-                show_state: true
-              - type: button
-                entity: switch.coffee_machine
-                show_state: true
-          - type: custom:layout-card-pro
-            layout: stack
-            direction: across
-            cards:
-              - type: tile
-                entity: climate.heatpump
-                view_layout: { span: 2 }
-              - type: tile
-                entity: fan.living_room_fan
-
       - type: grid
         column_span: 2
         cards:
@@ -325,7 +243,7 @@ views:
           - type: markdown
             content: >-
               `columns: [2fr, 1fr]` gives the columns their own widths; below, three columns
-              from `tablet` and one on a phone.
+              from two view columns and one in one.
           - type: custom:layout-card-pro
             layout: masonry
             columns: [2fr, 1fr]
@@ -343,7 +261,7 @@ views:
             layout: masonry
             columns: 1
             breakpoints:
-              tablet: { columns: 3 }
+              2: { columns: 3 }
             cards:
               - type: tile
                 entity: media_player.kitchen
@@ -410,15 +328,14 @@ views:
             heading: Seamless
           - type: markdown
             content: >-
-              `card_style: seamless` merges the cards into one surface with dividers: a grid, a
-              stack across and a stack down.
+              `card_style: seamless` merges the cards into one surface with dividers: two
+              columns, three, and one.
           - type: custom:layout-card-pro
             columns: 2
             card_style: seamless
             cards: *four_tiles
           - type: custom:layout-card-pro
-            layout: stack
-            direction: across
+            columns: 3
             card_style: seamless
             cards:
               - type: custom:entity-card-pro
@@ -428,7 +345,6 @@ views:
               - type: custom:entity-card-pro
                 entity: sensor.wind_speed
           - type: custom:layout-card-pro
-            layout: stack
             card_style: seamless
             cards:
               - type: tile
@@ -451,7 +367,6 @@ views:
               A seamless surface with `padding: [8, 16]`: the padding is inside the surface,
               around the cards. The camera keeps its shape with its own `aspect_ratio`.
           - type: custom:layout-card-pro
-            layout: stack
             card_style: seamless
             padding: [8, 16]
             cards:
@@ -475,17 +390,17 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: One column of the view
+            heading: One view column
           - type: markdown
             content: >-
-              The layout below is the same as the wide one beside it: `columns: 1`, two columns
-              from `tablet`, three from `desktop`. Its breakpoints measure the layout's own width,
-              and a sections column is 320 to 500 px wide, so here it is always `phone`.
+              The breakpoints are view columns. This layout and the wide one beside it are the
+              same: one column, two once its section spans two view columns, three from three.
+              This section spans one, so it shows one column.
           - type: custom:layout-card-pro
             columns: 1
             breakpoints: &responsive_bps
-              tablet: { columns: 2 }
-              desktop: { min_width: 900, columns: 3, gap: 12 }
+              2: { columns: 2 }
+              3: { columns: 3, gap: 12 }
             cards: &responsive_cards
               - type: custom:entity-card-pro
                 entity: sensor.outdoor_temperature
@@ -504,11 +419,12 @@ views:
         column_span: 3
         cards:
           - type: heading
-            heading: Three columns of the view
+            heading: Three view columns
           - type: markdown
             content: >-
-              The same layout in a section with `column_span: 3`: wide enough for `tablet` (600
-              px) or `desktop` (here moved to 900 px). Make the window narrower and it steps down.
+              The same layout in a section with `column_span: 3`. On a desktop with room for
+              three or four view columns it shows three columns; make the window narrower and
+              Home Assistant gives the section two view columns, then one, and the layout follows.
           - type: custom:layout-card-pro
             columns: 1
             breakpoints: *responsive_bps
@@ -518,42 +434,39 @@ views:
         column_span: 2
         cards:
           - type: heading
-            heading: Breakpoints of your own
+            heading: Skipping a breakpoint
           - type: markdown
             content: >-
-              `tablet: 500` moves a default, `wide: false` drops one, and `huge` is a breakpoint
-              of its own (`min_width: 1100`). Each lists only what changes there.
+              Only `3` is set here: in one and two view columns the layout keeps its two
+              columns, from three it has six.
           - type: custom:layout-card-pro
             columns: 2
             breakpoints:
-              tablet: 500
-              wide: false
-              desktop: { columns: 3 }
-              huge: { min_width: 1100, columns: 6 }
+              3: { columns: 6 }
             cards: *responsive_cards
 
       - type: grid
         column_span: 2
         cards:
           - type: heading
-            heading: Spans per breakpoint
+            heading: Spans per view columns
           - type: markdown
             content: >-
-              `span: { phone: full, tablet: 2 }`: the weather card takes the row on a phone and
-              two of four columns from tablet; `span: { tablet: [1, 2] }` gives the sparkline two
-              rows from tablet.
+              `span: { 1: full, 2: 2 }`: the weather card takes the row in one view column and two
+              of four columns from two; `span: { 2: [1, 2] }` gives the sparkline two rows from
+              two view columns.
           - type: custom:layout-card-pro
             columns: 2
             breakpoints:
-              tablet: { columns: 4 }
+              2: { columns: 4 }
             cards:
               - type: custom:weather-card-pro
                 entity: weather.demo_weather_north
-                view_layout: { span: { phone: full, tablet: 2 } }
+                view_layout: { span: { 1: full, 2: 2 } }
               - type: custom:entity-card-pro
                 entity: sensor.outdoor_temperature
                 visual: sparkline
-                view_layout: { span: { tablet: [1, 2] } }
+                view_layout: { span: { 2: [1, 2] } }
               - type: tile
                 entity: light.living_room
               - type: tile
@@ -565,21 +478,23 @@ views:
         column_span: 2
         cards:
           - type: heading
-            heading: Shown on some breakpoints
+            heading: Cards by view columns
           - type: markdown
             content: >-
-              `show_on: [phone]` and `hidden_below: tablet` decide by the layout's breakpoint:
-              the compact glance shows only on a phone, the full entities list from tablet.
+              Home Assistant's `view_columns` condition shows a card by the columns the view has:
+              the compact glance in one view column, the full entities list from two.
           - type: custom:layout-card-pro
             columns: 1
             cards:
               - type: glance
                 entities: [light.living_room, light.kitchen, light.office, light.bed_light]
-                view_layout: { show_on: [phone] }
+                visibility:
+                  - { condition: view_columns, max: 1 }
               - type: entities
                 title: Lights
                 entities: [light.living_room, light.kitchen, light.office, light.bed_light]
-                view_layout: { hidden_below: tablet }
+                visibility:
+                  - { condition: view_columns, min: 2 }
 
   # ---------------------------------------------------------------------------------------------
   - title: Visibility
@@ -727,10 +642,9 @@ views:
             heading: A room card
           - type: markdown
             content: >-
-              A seamless stack of a heading row, a tile with a feature and a grid of three
+              A seamless column of a heading row, a tile with a feature and a row of three
               buttons: one card to the eye, separate cards to Home Assistant.
           - type: custom:layout-card-pro
-            layout: stack
             card_style: seamless
             cards:
               - type: custom:entity-card-pro
@@ -764,15 +678,13 @@ views:
             heading: A toolbar
           - type: markdown
             content: >-
-              A stack across of small buttons over a seamless strip of states: the top of a room
-              or a dashboard.
+              A row of small buttons over a seamless strip of states: the top of a room or a
+              dashboard.
           - type: custom:layout-card-pro
-            layout: stack
             gap: 4
             cards:
               - type: custom:layout-card-pro
-                layout: stack
-                direction: across
+                columns: 4
                 gap: 4
                 cards:
                   - type: button
@@ -793,8 +705,7 @@ views:
                     name: Vacuum
                     entity: vacuum.demo_vacuum_0_ground_floor
               - type: custom:layout-card-pro
-                layout: stack
-                direction: across
+                columns: 3
                 card_style: seamless
                 cards:
                   - type: custom:entity-card-pro
@@ -810,11 +721,10 @@ views:
             heading: Energy at a glance
           - type: markdown
             content: >-
-              Twelve columns like a section: the power flow takes the row, two rings share the
-              next, and the plugs show only from tablet (`hidden_below: tablet`), so not in this
-              narrow column.
+              The power flow takes the row, two rings share the next, and the plugs show only
+              when the view has two columns (Home Assistant's `view_columns` condition).
           - type: custom:layout-card-pro
-            columns: 12
+            columns: 2
             cards:
               - type: custom:power-flow-card-pro
                 home: sensor.power_consumption
@@ -829,23 +739,25 @@ views:
                 consumers:
                   - { entity: sensor.heat_pump_power, name: Heat pump, icon: mdi:heat-pump }
                   - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
+                view_layout: { span: full }
               - type: custom:entity-card-pro
                 entity: sensor.battery_state_of_charge
                 visual: ring
-                grid_options: { columns: 6 }
               - type: custom:entity-card-pro
                 entity: sensor.grid_fossil_fuel_percentage
                 visual: ring
-                grid_options: { columns: 6 }
               - type: custom:entity-card-pro
                 entity: sensor.washer_power
-                view_layout: { hidden_below: tablet }
+                visibility:
+                  - { condition: view_columns, min: 2 }
               - type: custom:entity-card-pro
                 entity: sensor.dryer_power
-                view_layout: { hidden_below: tablet }
+                visibility:
+                  - { condition: view_columns, min: 2 }
               - type: custom:entity-card-pro
                 entity: sensor.ev_charger_power
-                view_layout: { hidden_below: tablet }
+                visibility:
+                  - { condition: view_columns, min: 2 }
 
       - type: grid
         column_span: 3
@@ -854,16 +766,15 @@ views:
             heading: Rooms in masonry
           - type: markdown
             content: >-
-              A masonry of room layouts, two columns and four from `desktop`: each room is a
-              seamless stack, so the rooms of different lengths pack without gaps.
+              A masonry of room layouts, two columns and four from three view columns: each room
+              is a seamless column, so the rooms of different lengths pack without gaps.
           - type: custom:layout-card-pro
             layout: masonry
             columns: 2
             breakpoints:
-              desktop: { columns: 4 }
+              3: { columns: 4 }
             cards:
               - type: custom:layout-card-pro
-                layout: stack
                 card_style: seamless
                 cards:
                   - type: heading
@@ -878,7 +789,6 @@ views:
                   - type: tile
                     entity: media_player.kitchen
               - type: custom:layout-card-pro
-                layout: stack
                 card_style: seamless
                 cards:
                   - type: heading
@@ -889,7 +799,6 @@ views:
                   - type: tile
                     entity: media_player.bedroom
               - type: custom:layout-card-pro
-                layout: stack
                 card_style: seamless
                 cards:
                   - type: heading
@@ -902,7 +811,6 @@ views:
                   - type: thermostat
                     entity: climate.ecobee
               - type: custom:layout-card-pro
-                layout: stack
                 card_style: seamless
                 cards:
                   - type: heading
@@ -924,15 +832,14 @@ views:
             heading: Split
           - type: markdown
             content: >-
-              `columns: [300px, 1fr]` with a stack on the side and a grid of cameras and
-              controls in the main area; below `tablet` the side goes on top.
+              `columns: [300px, 1fr]` with a column of cards on the side and a grid of cameras and
+              controls in the main area; in one view column the side goes on top.
           - type: custom:layout-card-pro
             columns: 1
             breakpoints:
-              tablet: { columns: [300px, 1fr] }
+              2: { columns: [300px, 1fr] }
             cards:
               - type: custom:layout-card-pro
-                layout: stack
                 cards:
                   - type: custom:weather-card-pro
                     entity: weather.demo_weather_south
@@ -968,18 +875,17 @@ views:
     icon: mdi:monitor
     type: panel
     cards:
-      # one layout for the whole view: on a desktop screen the wide breakpoints show (four columns
-      # from desktop, six from wide), with the overview on the left from desktop
+      # one layout for the whole view: outside a section it counts its view columns from its width
+      # (500 px each), so a desktop window gives it three, with the overview on the left
       - type: custom:layout-card-pro
         columns: 1
         padding: 8
         breakpoints:
-          tablet: { columns: 2 }
-          desktop: { columns: [320px, 1fr], gap: 12, padding: 16 }
+          2: { columns: 2 }
+          3: { columns: [320px, 1fr], gap: 12, padding: 16 }
         cards:
           - type: custom:layout-card-pro
-            layout: stack
-            view_layout: { span: { tablet: full, desktop: 1 } }
+            view_layout: { span: { 2: full, 3: 1 } }
             cards:
               - type: custom:weather-card-pro
                 entity: weather.demo_weather_south
@@ -1004,9 +910,9 @@ views:
           - type: custom:layout-card-pro
             columns: 2
             breakpoints:
-              tablet: { columns: 3 }
-              desktop: { columns: 4 }
-            view_layout: { span: { tablet: full, desktop: 1 } }
+              2: { columns: 3 }
+              3: { columns: 4 }
+            view_layout: { span: { 2: full, 3: 1 } }
             cards:
               - type: tile
                 entity: light.living_room

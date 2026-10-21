@@ -1,10 +1,10 @@
 # Layout Card Pro
 
-`custom:layout-card-pro` arranges any cards, Pro Cards and Home Assistant's own, in a grid, a stack or masonry. Its breakpoints measure the card's own width, so the same layout reflows inside a wide section, a narrow column or another layout. Each card says where it sits in its `view_layout`: how many columns and rows it spans, its order, and on which breakpoints it shows. The cards keep their own `visibility`. YAML only for now.
+`custom:layout-card-pro` arranges cards, Pro Cards and Home Assistant's own, inside a section: in a grid or in masonry, as one surface or as separate cards, and differently depending on how many view columns the section spans. Home Assistant sizes the cards of a section by twelfths of it, the same on a phone and on a desktop; the layout card lets them take two columns in one view column and four in two, for example. The cards keep their own `visibility`. YAML only for now.
 
 ## Grid
 
-`columns` is a count of equal columns. Every card takes one column unless its `view_layout` says otherwise: `span: 2` takes two columns, `span: [1, 2]` one column and two rows, `span: full` the whole row. A span wider than the grid shrinks to it, and a start column moves so the card fits.
+`columns` is a count of equal columns. Every card takes one column unless its `view_layout` says otherwise: `span: 2` takes two columns, `span: [1, 2]` one column and two rows, `span: full` the whole row. A span wider than the grid shrinks to it, and a start column (`column: 3`) moves so the card fits.
 
 ::: live
 
@@ -46,16 +46,15 @@ cards:
 
 :::
 
-### Fixed rows
+### Rows
 
-By default a row is as tall as its tallest card and the cards stretch to it (`align_items: start` keeps their own heights). `row_height` makes rows of a fixed height as in Home Assistant's sections grid: a card that spans rows, by its `span` or by its own `grid_options` rows, is exactly that tall and fills it.
+A row is as tall as its tallest card and the cards stretch to it (`align_items: start` keeps their own heights). A card that asks for a number of rows, by its `span` (`[1, 3]`) or by its own `grid_options` rows (a tile with a feature asks for 2), gets them in the height of Home Assistant's sections grid rows (56 px each) and fills them.
 
 ::: live
 
 ```yaml
 type: custom:layout-card-pro
 columns: 2
-row_height: 56
 cards:
   - type: custom:entity-card-pro
     entity: sensor.outdoor_temperature
@@ -71,30 +70,9 @@ cards:
 
 :::
 
-With `columns: 12` the cards take the columns of their own `grid_options` as they do in a section: a tile with `columns: 6` takes half the row.
-
-## Stack
-
-`layout: stack` puts the cards one below the other (`direction: down`) or side by side (`direction: across`). Across, the cards share the width equally and a `span` of 2 takes twice the share.
-
-::: live
-
-```yaml
-type: custom:layout-card-pro
-layout: stack
-direction: across
-cards:
-  - type: custom:entity-card-pro
-    entity: sensor.outdoor_temperature
-  - type: custom:entity-card-pro
-    entity: sensor.outdoor_humidity
-```
-
-:::
-
 ## Masonry
 
-`layout: masonry` fills columns by height, like Home Assistant's masonry view, but with the column count and the order yours. Each card goes to the shortest column, measured by the cards' own size (their `getCardSize`), never by their drawn height, so a card that changes height does not reshuffle the others. `view_layout.column` pins a card to a column.
+`layout: masonry` fills columns by height, like Home Assistant's masonry view, but inside a section and with the column count and the order yours. Each card goes to the shortest column, measured by the cards' own size (their `getCardSize`), never by their drawn height, so a card that changes height does not reshuffle the others. `view_layout.column` pins a card to a column.
 
 ::: live
 
@@ -118,6 +96,58 @@ cards:
   - type: custom:entity-card-pro
     entity: sensor.outdoor_temperature
     view_layout: { column: 1 }
+```
+
+:::
+
+## Breakpoints
+
+The breakpoints are view columns, the unit Home Assistant's sections view places sections in. The top-level options apply in one view column: on a phone, or in a section with `column_span: 1`. Each breakpoint under `breakpoints` names a number of view columns (2, 3 …) and lists only what changes once the layout's section spans that many, inherited by every wider one.
+
+```yaml
+type: custom:layout-card-pro
+columns: 2 # one view column
+breakpoints:
+  2: { columns: 4 } # the section spans two view columns
+  3: { columns: 6, gap: 12 } # three or more
+```
+
+In a sections view the layout reads the span Home Assistant gives its section, which already counts the columns the view shows: a section of `column_span: 2` spans two view columns on a desktop and one on a phone, where the view has one. Outside a section (a panel view, a stack, another layout card) it counts its own width in the sections view's columns, 500 px at most each: up to 500 px is one, up to 1032 px two, and so on.
+
+The same layout in a narrow frame and in a wide one:
+
+::: live
+
+```yaml
+type: custom:layout-card-pro
+columns: 1
+breakpoints:
+  2: { columns: 3 }
+cards:
+  - type: custom:entity-card-pro
+    entity: sensor.outdoor_temperature
+  - type: custom:entity-card-pro
+    entity: sensor.outdoor_humidity
+  - type: custom:entity-card-pro
+    entity: sensor.pressure
+```
+
+:::
+
+::: live width=760
+
+```yaml
+type: custom:layout-card-pro
+columns: 1
+breakpoints:
+  2: { columns: 3 }
+cards:
+  - type: custom:entity-card-pro
+    entity: sensor.outdoor_temperature
+  - type: custom:entity-card-pro
+    entity: sensor.outdoor_humidity
+  - type: custom:entity-card-pro
+    entity: sensor.pressure
 ```
 
 :::
@@ -169,51 +199,22 @@ cards:
 
 :::
 
-With `padding`, the padding is inside the surface, around the cards. A card that draws its own background without these variables keeps it.
-
-## Breakpoints
-
-The top-level options are the smallest layout (`phone`). Each breakpoint under `breakpoints` starts at a width and lists only what changes there, inherited by every wider one: `tablet` (600 px), `desktop` (1024 px) and `wide` (1440 px) by default. Give one a number to move it, `false` to drop it, or a name of your own with a `min_width`.
-
-::: live width=760
-
-```yaml
-type: custom:layout-card-pro
-columns: 1
-breakpoints:
-  tablet: { columns: 2 }
-  desktop: { min_width: 720, columns: 3, gap: 12 }
-cards:
-  - type: custom:entity-card-pro
-    entity: sensor.outdoor_temperature
-  - type: custom:entity-card-pro
-    entity: sensor.outdoor_humidity
-  - type: custom:entity-card-pro
-    entity: sensor.pressure
-```
-
-:::
-
-The width is the layout card's own, not the screen's, so a layout inside a narrow column or inside another layout reflows by itself. That also means a layout card in a single sections column, which is 320 to 500 px wide, is always `phone`: give its section a larger `column_span`, or use a panel or sidebar view, for the wider breakpoints. To hide a card by the size of the screen instead, use Home Assistant's `screen` visibility condition.
-
-A breakpoint holds a little below its width (24 px) once it applies, so a page scrollbar that appears with the taller layout does not switch it back and forth.
+With `padding`, the padding is inside the surface, around the cards. A card that draws its own background without these variables keeps it. For one column of cards, use `columns: 1`.
 
 ## Placing cards
 
-Every card may carry a `view_layout`. All of its options except `show_on` and `hidden_below` take one value or a map by breakpoint, inherited upwards: `span: { phone: 1, desktop: [2, 2] }` spans one column up to tablet and two columns and two rows from desktop.
+Every card may carry a `view_layout`. Each of its options takes one value or a map by view columns, inherited upwards: `span: { 1: full, 2: 2 }` takes the whole row in one view column and two columns from two.
 
-| Option         | Description                                                                              |
-| -------------- | ---------------------------------------------------------------------------------------- |
-| `span`         | Columns (`2`), `[columns, rows]` or `full`. Stack across: the card's share of the width. |
-| `column`       | Grid: the column the card starts in. Masonry: the column it goes to.                     |
-| `order`        | Moves the card without moving its YAML; negative values come first.                      |
-| `align`        | `start`, `center`, `end` or `stretch`: how this card sits in its cell.                   |
-| `show_on`      | Only on these breakpoints, e.g. `[tablet, desktop]`.                                     |
-| `hidden_below` | Not below this breakpoint, e.g. `tablet`.                                                |
+| Option   | Description                                                           |
+| -------- | --------------------------------------------------------------------- |
+| `span`   | Columns (`2`), `[columns, rows]` or `full`.                           |
+| `column` | Grid: the column the card starts in. Masonry: the column it goes to.  |
+| `order`  | Moves the card without moving its YAML; negative values come first.   |
+| `align`  | `start`, `center`, `end` or `stretch`: how this card sits in its row. |
 
 `view_layout` is the key Home Assistant keeps for this; its own `position` is left alone.
 
-Here the lock comes first whatever its place in the YAML, the kitchen card sits in the middle of its row, and the office card shows only from `tablet`, which this narrow layout never reaches:
+Here the lock comes first whatever its place in the YAML, the kitchen card sits in the middle of its row, and the outdoor temperature takes the row in one view column and half of it from two:
 
 ::: live
 
@@ -225,22 +226,20 @@ cards:
   - type: custom:entity-card-pro
     entity: sensor.outdoor_temperature
     visual: sparkline
+    view_layout: { span: { 1: full, 2: 1 } }
   - type: custom:entity-card-pro
     entity: light.kitchen
     view_layout: { align: center }
   - type: custom:entity-card-pro
     entity: lock.front_door
     view_layout: { order: -1, span: full }
-  - type: custom:entity-card-pro
-    entity: light.office
-    view_layout: { hidden_below: tablet }
 ```
 
 :::
 
 ## Visibility
 
-Every card inside keeps Home Assistant's own `visibility`, with all its conditions (state, numeric state, screen, user, time, location …) and its editor. A hidden card leaves no gap: the cards after it move up. When every card is hidden the layout hides too. `show_on` and `hidden_below` add the layout's own breakpoints to that. In the dashboard editor every card shows; the ones the layout's own breakpoints (`show_on`, `hidden_below`) would hide are faded. A card that Home Assistant's `visibility` hides shows there as on any dashboard, unfaded.
+Every card inside keeps Home Assistant's own `visibility`, with all its conditions and its editor. A hidden card leaves no gap: the cards after it move up. When every card is hidden the layout hides too. To show a card only when the view has room, use Home Assistant's `view_columns` condition (`{ condition: view_columns, min: 2 }`); by screen size, its `screen` condition.
 
 ::: live
 
@@ -262,7 +261,7 @@ cards:
 
 ## Sizing
 
-In a section the layout card takes the full width of the section, whatever its `column_span`, and sizes to its cards (`rows: auto`); a fixed row count (`grid_options: { rows: 6 }`) gives it a height its grid fills. Its `getCardSize`, which masonry views use, is an estimate from its cards' sizes: the tallest card of each row for a grid (spans not counted), the sum or the tallest for a stack, the tallest column for masonry. As a panel view's only card it fills the view, and the cards inside keep their borders, as in Home Assistant's stacks (the panel view takes the border of its one card away). See [Sizing](/guide/sizing).
+In a section the layout card takes the full width of the section, whatever its `column_span`, and sizes to its cards (`rows: auto`); a fixed row count (`grid_options: { rows: 6 }`) gives it a height its grid fills. Its `getCardSize`, which masonry views use, is an estimate from its cards' sizes: the tallest card of each row for a grid (spans not counted), the tallest column for masonry. As a panel view's only card it fills the view, and the cards inside keep their borders, as in Home Assistant's stacks (the panel view takes the border of its one card away). See [Sizing](/guide/sizing).
 
 ## Reference
 
@@ -270,15 +269,13 @@ In a section the layout card takes the full width of the section, whatever its `
 
 Every option but `breakpoints` and `cards` may change in a breakpoint.
 
-| Option        | Default   | Description                                                                                                      |
-| ------------- | --------- | ---------------------------------------------------------------------------------------------------------------- |
-| `layout`      | `grid`    | `grid`, `stack` or `masonry`.                                                                                    |
-| `columns`     | `1`       | A count (1 to 24) or a list of tracks (`[1fr, 2fr]`, `[320px, 1fr]`). Masonry: the column count or their widths. |
-| `row_height`  | `auto`    | Grid: `auto`, or the height of one row (e.g. `56`) for cards that span rows.                                     |
-| `align_items` | `stretch` | `stretch`, `start`, `center` or `end`: how cards sit in their row.                                               |
-| `direction`   | `down`    | Stack: `down` or `across`.                                                                                       |
-| `gap`         | theme     | One length or `[row, column]`.                                                                                   |
-| `padding`     | `0`       | Inside the layout: 1, 2 or 4 values, or `{ top, right, bottom, left }`.                                          |
-| `card_style`  | `cards`   | `cards` or `seamless` (one surface with dividers).                                                               |
-| `breakpoints` | see above | `name: min width`, `name: { min_width, …options }` or `name: false`. The base is `phone`.                        |
-| `cards`       | `[]`      | The cards, each with an optional `view_layout`.                                                                  |
+| Option        | Default   | Description                                                                                                              |
+| ------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `layout`      | `grid`    | `grid` or `masonry`.                                                                                                     |
+| `columns`     | `1`       | A count (1 to 24) or a list of tracks (`[1fr, 2fr]`, `[320px, 1fr]`). Masonry: the column count or their widths.         |
+| `align_items` | `stretch` | `stretch`, `start`, `center` or `end`: how cards sit in their row.                                                       |
+| `gap`         | theme     | One length or `[row, column]`.                                                                                           |
+| `padding`     | `0`       | Inside the layout: 1, 2 or 4 values, or `{ top, right, bottom, left }`.                                                  |
+| `card_style`  | `cards`   | `cards` or `seamless` (one surface with dividers).                                                                       |
+| `breakpoints` | –         | `{ 2: { …options }, 3: { … } }`: the options that change once the section spans that many view columns. The base is one. |
+| `cards`       | `[]`      | The cards, each with an optional `view_layout`.                                                                          |

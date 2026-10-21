@@ -291,17 +291,18 @@ views:
           - type: heading
             heading: Layout card
           # Pro and core cards inside, each in Home Assistant's own hui-card: visibility (the
-          # kitchen card shows while the kitchen light is on), the editor's preview (all cards,
-          # the ones show_on hides faded), core cards loaded lazily and a nested layout. The breakpoints measure the layout: two columns from tablet (600 px)
+          # kitchen card shows while the kitchen light is on, the office card while the view has
+          # two columns), the editor's preview, core cards loaded lazily and a nested layout. The
+          # breakpoints are view columns: two columns once the section spans two (column_span 2)
           - type: custom:layout-card-pro
             columns: 1
             breakpoints:
-              tablet: { columns: 2 }
+              2: { columns: 2 }
             cards:
               - type: custom:entity-card-pro
                 entity: sensor.outdoor_temperature
                 visual: sparkline
-                view_layout: { span: { tablet: [1, 2] } }
+                view_layout: { span: { 2: [1, 2] } }
               - type: tile
                 entity: light.living_room
               - type: tile
@@ -309,11 +310,10 @@ views:
                 visibility:
                   - { condition: state, entity: light.kitchen, state: "on" }
               - type: heading
-                heading: Nested stack
+                heading: Nested layout
                 view_layout: { span: full }
               - type: custom:layout-card-pro
-                layout: stack
-                direction: across
+                columns: 2
                 card_style: seamless
                 cards:
                   - type: custom:entity-card-pro
@@ -324,12 +324,13 @@ views:
                 content: A lazily loaded core card (markdown)
               - type: custom:entity-card-pro
                 entity: light.office
-                view_layout: { hidden_below: tablet }
+                visibility:
+                  - { condition: view_columns, min: 2 }
           - type: custom:layout-card-pro
             layout: masonry
             columns: 2
             breakpoints:
-              tablet: { columns: 3 }
+              2: { columns: 3 }
             cards:
               - type: custom:weather-card-pro
                 entity: weather.demo_weather_south
