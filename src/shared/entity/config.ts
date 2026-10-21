@@ -10,11 +10,13 @@ import {
   DEFAULTS,
   GROUP_LAYOUTS,
   HEADER_VISUALS,
+  ICON_STYLES,
   ITEM_DEFAULTS,
   ITEM_LAYOUTS,
   VISUALS,
   type Align,
   type GroupLayout,
+  type IconStyle,
   type ItemDefaults,
   type NamePosition,
   type Visual,
@@ -74,6 +76,7 @@ export interface RawEntity extends RawItemOptions, RawActionDefaults {
   prefix?: string;
   suffix?: string;
   visual?: string;
+  icon_style?: unknown;
   min?: unknown;
   max?: unknown;
   rules?: unknown;
@@ -151,6 +154,7 @@ export interface EntityItem extends ActionDefaults {
   prefix: string;
   suffix: string;
   visual: Visual;
+  iconStyle: IconStyle;
   min: number | null;
   max: number | null;
   rules: Rule[];
@@ -341,6 +345,7 @@ export const normalizeEntity = (
     prefix: o.prefix ?? "",
     suffix: o.suffix ?? "",
     visual: oneOf(VISUALS, o.visual) ? o.visual : "icon",
+    iconStyle: oneOf(ICON_STYLES, o.icon_style) ? o.icon_style : "circle",
     min: numOrNull(o.min),
     max: numOrNull(o.max),
     rules: normalizeRules(o.rules),

@@ -142,6 +142,12 @@
           "enum": ["icon", "ring", "gauge", "bar", "sparkline", "columns", "badge", "strip"],
           "default": "icon"
         },
+        "icon_style": {
+          "type": "string",
+          "enum": ["circle", "plain"],
+          "default": "circle",
+          "description": "The icon in its soft circle, or plain: the icon alone (also the inside of a ring); a control on the icon keeps its circle"
+        },
         "min": {
           "type": "number",
           "description": "Scale start for ring, gauge and bar (default: entity min, else 0)"

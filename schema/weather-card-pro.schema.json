@@ -25,6 +25,12 @@
       "$ref": "defs.schema.json#/$defs/color",
       "description": "Fixed condition colour; overrides rules"
     },
+    "icon_style": {
+      "type": "string",
+      "enum": ["circle", "plain"],
+      "default": "circle",
+      "description": "The condition icon in its soft circle, or plain: the icon alone (a picture never has one)"
+    },
     "decimals": {
       "type": "integer",
       "minimum": 0,

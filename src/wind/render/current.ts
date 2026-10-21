@@ -54,7 +54,11 @@ export const windNow = (ctx: RenderCtx, cfg: WindConfig, cm: CurrentModels): Win
 
 const leadOf = (cfg: WindConfig, kind: RowKind) => {
   const size = kind === "hero" ? DEFAULTS.heroLead : DEFAULTS.tileLead;
-  return cfg.lead === "arrow" ? arrowLead(size) : animatedLead(cfg.flow.style, size);
+  if (cfg.lead !== "arrow") return animatedLead(cfg.flow.style, size);
+  // the plain arrow drops its circle; the animation is drawn in it and keeps it
+  const lead = arrowLead(size);
+  if (cfg.entities[cfg.speedIdx].iconStyle === "plain") lead.classList.add("plain");
+  return lead;
 };
 
 export const updateCurrent = (

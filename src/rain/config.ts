@@ -67,6 +67,7 @@ export const normalizeRainCardConfig = (input: unknown): RainConfig => {
       name: raw.name,
       secondary: raw.secondary,
       color: raw.color,
+      icon_style: raw.icon_style,
       rules: raw.rules,
       decimals: raw.decimals,
     },

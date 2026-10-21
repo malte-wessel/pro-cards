@@ -9,6 +9,7 @@ export interface RawFlowCardBase extends RawEntityCardBase {
   name?: string | null;
   secondary?: string | null;
   color?: string | null;
+  icon_style?: unknown;
   rules?: unknown;
   decimals?: unknown;
   layout?: unknown;

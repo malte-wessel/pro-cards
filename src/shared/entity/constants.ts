@@ -17,6 +17,9 @@ export const VISUALS = [
   "strip",
 ] as const;
 export type Visual = (typeof VISUALS)[number];
+// the soft circle behind the icon, or the icon alone
+export const ICON_STYLES = ["circle", "plain"] as const;
+export type IconStyle = (typeof ICON_STYLES)[number];
 export type HistoryVisual = "sparkline" | "columns" | "strip";
 export const HISTORY_VISUALS: ReadonlySet<Visual> = new Set(["sparkline", "columns", "strip"]);
 export const BLOCK_VISUALS: ReadonlySet<Visual> = new Set([

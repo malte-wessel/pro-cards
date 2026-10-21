@@ -89,6 +89,7 @@ describe("entity", () => {
       entity: "sensor.a",
       name: null,
       visual: "icon",
+      iconStyle: "circle",
       rules: [],
       toggle: false,
       decimals: null,
@@ -105,6 +106,8 @@ describe("entity", () => {
       tap: { action: "toggle" },
       toggle: true,
     });
+    expect(ent({ icon_style: "plain" }).iconStyle).toBe("plain");
+    expect(ent({ icon_style: "square" }).iconStyle).toBe("circle");
     expect(ent({ tap_action: { navigation_path: "/x" } }).tap).toEqual({
       action: "more-info",
       navigation_path: "/x",

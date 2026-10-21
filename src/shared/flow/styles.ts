@@ -34,6 +34,7 @@ export const STYLE_FLOW = `
   .row.wtile.flow > .hit { inset: -6px -12px; }
   .row.wtile.flow .top { position: relative; }
   .row.wtile.flow .lead .shape { background: color-mix(in srgb, var(--fe-color) 20%, var(--ha-card-background, var(--card-background-color))); }
+  .row.wtile.flow .lead.plain .shape { background: transparent; }
   .row.wtile.flow .end .big b { font-size: 26px; line-height: 30px; }
 
   /* the chip on the band */

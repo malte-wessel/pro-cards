@@ -69,6 +69,8 @@ export const STYLE_ROW = `
      a 36 px circle); a bigger lead (the hero's 56 px) keeps 55 % */
   .lead .shape { position: absolute; inset: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--fe-color); background: var(--fe-soft); --mdc-icon-size: clamp(calc(var(--lead, 36px) * .55), 24px, calc(var(--lead, 36px) * .67)); font-size: calc(var(--lead, 36px) * .24); font-weight: 500; line-height: 1; white-space: nowrap; overflow: hidden; font-variant-numeric: tabular-nums; }
   .lead .shape.value { color: var(--primary-text-color); background: transparent; }
+  /* icon_style: plain, the icon without its circle (also a lead toggle that is off) */
+  .lead.plain .shape, .lead.plain.tap.off .shape { background: transparent; }
   .lead.ring .shape { inset: 16%; --mdc-icon-size: calc(var(--lead, 36px) * .42); }
   .lead .track { fill: none; stroke: var(--fe-soft); }
   .lead .prog { fill: none; stroke: var(--fe-color); stroke-linecap: round; transition: stroke-dashoffset .4s; }

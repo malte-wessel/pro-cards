@@ -50,7 +50,11 @@ export const rainNow = (ctx: RenderCtx, cfg: RainConfig, cm: CurrentModels): Rai
 
 const leadOf = (cfg: RainConfig, kind: RowKind) => {
   const size = kind === "hero" ? DEFAULTS.heroLead : DEFAULTS.tileLead;
-  return cfg.lead === "icon" ? rainLead(size) : animatedLead(cfg.flow.style, size);
+  if (cfg.lead !== "icon") return animatedLead(cfg.flow.style, size);
+  // the plain icon drops its circle; the animation is drawn in it and keeps it
+  const lead = rainLead(size);
+  if (cfg.entities[cfg.rateIdx].iconStyle === "plain") lead.classList.add("plain");
+  return lead;
 };
 
 export const updateCurrent = (

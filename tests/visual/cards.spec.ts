@@ -1153,6 +1153,22 @@ const CASES = {
       entities: ["sensor.robot_progress"],
     },
   ],
+  "egc-icon-plain": {
+    type: EGC,
+    title: "Plain icons",
+    entities: [
+      { entity: "light.living_room", icon_style: "plain" },
+      { entity: "cover.living_room_blinds", icon_style: "plain" },
+      { entity: "climate.living_room", name: "Thermostat" },
+      { entity: "sensor.robot_battery", name: "Robot", visual: "ring", icon_style: "plain" },
+      {
+        entity: "light.kitchen",
+        icon_style: "plain",
+        control: "toggle",
+        control_position: "lead",
+      },
+    ],
+  },
   "egc-controls-unavailable": {
     type: EGC,
     title: "Unavailable",
