@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.7.1 (unreleased)
+## 2.7.1 (2026-10-21)
 
 - Colours and icons from the config, rendered templates and entity attributes can no longer add markup to the dashboard. A colour is checked before it reaches the cards' SVG: only a plain colour token counts (a name, a hex, `rgb()` / `hsl()` / `var()` of numbers, commas, slashes and spaces); one with a quote, an angle bracket, `;`, `:` or `url()` counts as no colour, so a template that renders something else falls back to the rules. The integration's `device_class` is slugged before it names a theme colour, and the sun path and sun azimuth cards set the header `icon` as an attribute. A value with a `"` in it used to close the SVG attribute it was written into
 - Docs: installing through HACS starts with searching for Pro Cards; the custom repository is the fallback
