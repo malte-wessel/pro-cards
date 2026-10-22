@@ -5,7 +5,7 @@ import { smoothPath } from "../shared/history.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
 import { nearestPoint, placeTip } from "../shared/hover.ts";
 import { t as tr } from "../shared/i18n.ts";
-import { textStyle } from "../shared/typography.ts";
+import { measure } from "../shared/typography.ts";
 import { qs } from "../shared/util.ts";
 import type { PositionedDay, SunPathHost } from "./config.ts";
 import { CURVE_STEP_MIN, HORIZON_MAX, HORIZON_MIN, PLOT_H, type SunEvent } from "./constants.ts";
@@ -162,8 +162,8 @@ export const drawEvents = (
   // slot boundaries halfway between neighbours; each label may only use its own slot
   const bounds = [0, ...xs.slice(1).map((x, i) => (xs[i] + x) / 2), W];
   // the labels' fonts as styled (styles.ts), at the theme's text size
-  const lblFont = textStyle(events, ["ev", "lbl"], [12, 18]).font,
-    timeFont = textStyle(events, ["ev", "sm"], [14, 20, 500]).font;
+  const lblFont = measure(card._textCache, events, ["ev", "lbl"], [12, 18]).font,
+    timeFont = measure(card._textCache, events, ["ev", "sm"], [14, 20, 500]).font;
   items.forEach(([key, t], i) => {
     const label = card._label(key),
       time = fmt(card._hass, t);

@@ -211,7 +211,7 @@ export class PowerFlowCard extends EntityCardBase {
     const box = diag?.querySelector<HTMLElement>(".pscale");
     if (!diag || !box) return;
     // the labels' lines at the theme's text size: their heights take part in the tree's height
-    c.view = { ...c.view, lines: labelLines(diag) };
+    c.view = { ...c.view, lines: labelLines(diag, this._textCache) };
     // the height follows the config and what of it is shown, never the width. A card given more
     // or less height (fixed rows, a stretched grid row, a stack) lays the tree out in what the
     // diagram measures: the natural height stays its basis, so the card's own height never

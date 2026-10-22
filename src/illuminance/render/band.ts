@@ -1,6 +1,6 @@
 // Mode "band": one coloured block per bucket, blended between the zone colours.
 import { bucketMean, clampedSeries } from "../../shared/history.ts";
-import { textStyle } from "../../shared/typography.ts";
+import { measure } from "../../shared/typography.ts";
 import { qs } from "../../shared/util.ts";
 import type { IlluminanceHost } from "../config.ts";
 import { colorAnchors, colorAt, posOf } from "../zones.ts";
@@ -10,7 +10,7 @@ export const renderBand = (card: IlluminanceHost, body: HTMLElement, v: number |
   const cfg = card._config,
     zones = cfg.zonesList;
   // the time labels below follow the theme's text size
-  const ax = textStyle(body, ["label"], [10, 12]);
+  const ax = measure(card._textCache, body, ["label"], [10, 12]);
   const barH = 44,
     xAxisH = Math.ceil(ax.line) + 8;
   const plot = plotShell(card, body, v, barH + xAxisH);

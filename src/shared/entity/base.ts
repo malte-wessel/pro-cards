@@ -40,7 +40,7 @@ import { plotRows } from "./render/blocks.ts";
 import { fillByClass } from "./render/fill.ts";
 import { drawPlot, showHover, windowOf, type PlotElement } from "./render/plots.ts";
 import type { EntityModel } from "./model.ts";
-import { themeChanged } from "../typography.ts";
+import { TextCache, themeChanged } from "../typography.ts";
 
 // the room inside a gauge's arc for its value (viewBox units) and the value's own font size
 const GAUGE_TEXT_W = 76;
@@ -93,6 +93,7 @@ export abstract class EntityCardBase extends HTMLElement {
   _tpl: TemplateSubscriptions;
   _hover: { idx: number; t: number } | null = null;
   _plotHandlers: PlotHandlers;
+  _textCache = new TextCache();
   _config?: EntityCardConfig;
   _hass?: HomeAssistant;
   _root?: HTMLElement;
@@ -239,10 +240,15 @@ export abstract class EntityCardBase extends HTMLElement {
       }
     }
     if (changed) this._render();
-    if (themeChanged(prev, hass)) requestAnimationFrame(() => this._render());
+    if (themeChanged(prev, hass)) {
+      this._textCache.clear();
+      requestAnimationFrame(() => this._render());
+    }
   }
 
   connectedCallback() {
+    // another place may have another theme (a view's own)
+    this._textCache.clear();
     this._timer = setInterval(() => {
       if (this._historyIds?.length) this._fetchHistory();
       else this._render();
@@ -358,6 +364,7 @@ export abstract class EntityCardBase extends HTMLElement {
       plotHandlers: this._plotHandlers,
       ctl: this._ctl,
       shown: (v) => this._shown(v),
+      text: this._textCache,
     };
   }
 

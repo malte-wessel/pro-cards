@@ -77,7 +77,7 @@ export const STYLE_ROW = `
   .top { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .lead { position: relative; flex: none; width: var(--lead, 36px); height: var(--lead, 36px); }
   .lead svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .lead .shape { position: absolute; inset: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--fe-color); background: var(--fe-soft); --mdc-icon-size: ${LEAD_ICON}; font-size: calc(var(--lead, 36px) * .24); font-weight: 500; line-height: 1; white-space: nowrap; overflow: hidden; font-variant-numeric: tabular-nums; }
+  .lead .shape { position: absolute; inset: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--fe-color); background: var(--fe-soft); --mdc-icon-size: ${LEAD_ICON}; font-size: calc(var(--lead, 36px) * .24); font-weight: ${fw("medium")}; line-height: 1; white-space: nowrap; overflow: hidden; font-variant-numeric: tabular-nums; }
   .lead .shape.value { color: var(--primary-text-color); background: transparent; }
   /* icon_style: plain, the icon without its circle (also a lead toggle that is off) */
   .lead.plain .shape, .lead.plain.tap.off .shape { background: transparent; }

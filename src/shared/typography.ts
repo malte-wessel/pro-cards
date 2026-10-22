@@ -17,15 +17,26 @@ const SCALE: Record<number, string> = {
   40: "5xl",
 };
 
-// a font size: the token when `px` is on Home Assistant's scale, else `px` times the scale
-export const fs = (px: number) =>
-  SCALE[px]
-    ? `var(--ha-font-size-${SCALE[px]}, ${px}px)`
-    : `calc(${px}px * var(--ha-font-size-scale, 1))`;
+const STEPS = Object.keys(SCALE).map(Number);
+// the step nearest to `px` (the smaller one of two as near)
+const nearest = (px: number) =>
+  STEPS.reduce((a, b) => (Math.abs(b - px) < Math.abs(a - px) ? b : a));
 
-// a font size and its line height, which grows with the text (exactly `linePx` at the default)
+// a font size: the token when `px` is on Home Assistant's scale, else the nearest step's token in
+// proportion, so every size follows the steps alike (the scale resolves where Home Assistant
+// defines the steps, a theme may set one step alone)
+export const fs = (px: number) => {
+  if (SCALE[px]) return `var(--ha-font-size-${SCALE[px]}, ${px}px)`;
+  const step = nearest(px);
+  return `calc(var(--ha-font-size-${SCALE[step]}, ${step}px) * ${px} / ${step})`;
+};
+
+// the line height of `px` text that grows with it: exactly `linePx` at the default size
+export const lh = (px: number, linePx: number) => `calc(${fs(px)} * ${linePx} / ${px})`;
+
+// a font size and its line height
 export const type = (px: number, linePx: number) =>
-  `font-size: ${fs(px)}; line-height: calc(${fs(px)} * ${linePx} / ${px});`;
+  `font-size: ${fs(px)}; line-height: ${lh(px, linePx)};`;
 
 const WEIGHT = { normal: 400, medium: 500, bold: 700 } as const;
 export const fw = (w: keyof typeof WEIGHT) => `var(--ha-font-weight-${w}, ${WEIGHT[w]})`;
@@ -35,7 +46,7 @@ export const FONT_FAMILY = "var(--ha-font-family-body, Roboto, system-ui, sans-s
 // the font shorthand (it resets what it does not name, as a literal font did): size, an optional
 // line height that grows with it, weight, the theme's family
 export const font = (px: number, linePx?: number, weight: keyof typeof WEIGHT = "normal") =>
-  `font: ${fw(weight)} ${fs(px)}${linePx ? `/calc(${fs(px)} * ${linePx} / ${px})` : ""} ${FONT_FAMILY};`;
+  `font: ${fw(weight)} ${fs(px)}${linePx ? `/${lh(px, linePx)}` : ""} ${FONT_FAMILY};`;
 
 // a tile's two lines, as Home Assistant's tile card (ha-tile-info): its --ha-tile-info-* variables
 // win, our own look is the fallback (the secondary line keeps the secondary text colour)
@@ -123,3 +134,28 @@ export const textStyle = (
     line: lh ?? (size * dLine) / dSize,
   };
 };
+
+// A card's text styles, each measured once (a probe makes the browser recompute styles, which a
+// render must not pay on every update): kept only when measured on the page (a card gets its
+// first hass before it is connected), cleared when the card reconnects or the theme changes.
+export class TextCache {
+  _styles = new Map<string, TextStyle>();
+  get(container: Element, path: string[], dflt: [number, number, number?]): TextStyle {
+    const key = path.join("|");
+    const hit = this._styles.get(key);
+    if (hit) return hit;
+    const st = textStyle(container, path, dflt);
+    if (container.isConnected) this._styles.set(key, st);
+    return st;
+  }
+  clear() {
+    this._styles.clear();
+  }
+}
+// a text style through a card's cache, or measured now without one
+export const measure = (
+  cache: TextCache | undefined,
+  container: Element,
+  path: string[],
+  dflt: [number, number, number?],
+) => (cache ? cache.get(container, path, dflt) : textStyle(container, path, dflt));

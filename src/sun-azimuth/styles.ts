@@ -7,7 +7,7 @@ import {
   TILE_PRIMARY,
   TILE_SECONDARY,
   font,
-  fs,
+  lh,
   fw,
   type,
 } from "../shared/typography.ts";
@@ -71,7 +71,8 @@ export const STYLE = `
   .body { min-height: 0; }
   .visual { flex: 1 1 auto; min-height: 0; align-items: center; overflow: hidden; }
   svg.dial { max-width: 300px; }
-  svg text { ${font(10, undefined, "medium")} fill: var(--secondary-text-color); text-anchor: middle; dominant-baseline: central; }
+  /* .cl-probe: the compass labels' font where the card reads it (an SVG text cannot be probed) */
+  svg text, .cl-probe { ${font(10, undefined, "medium")} fill: var(--secondary-text-color); text-anchor: middle; dominant-baseline: central; }
   /* the horizon ring in the ticks' colour */
   .dial .disc { fill: ${sky(5)}; stroke: ${solid(SEC, 55)}; stroke-width: ${sw(2)}; }
   .dial .grid { fill: none; stroke: ${DIVIDER}; stroke-width: 1; stroke-dasharray: 3 4; }
@@ -123,7 +124,7 @@ export const STYLE = `
   .control { --fe-color: var(--saz-sun); display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-top: -4px; }
   ${STYLE_SLIDER}
   /* the points sit under the knob's centre, which runs from one end of the track to the other */
-  .caxis { position: relative; height: calc(${fs(10)} * 12 / 10); }
+  .caxis { position: relative; height: ${lh(10, 12)}; }
   .caxis span { position: absolute; top: 0; transform: translateX(-50%); ${font(10, 12)} color: var(--secondary-text-color); white-space: nowrap; }
   .caxis span:nth-child(1) { left: 0; }
   .caxis span:nth-child(2) { left: 25%; }

@@ -6,6 +6,7 @@ import type { ControlHost } from "./control.ts";
 import { fmtNumber as fmtNum, fmtTime as fmtT, langOf as lang } from "../format.ts";
 import type { HassEntity, HomeAssistant } from "../ha.ts";
 import type { Point } from "../history.ts";
+import type { TextCache } from "../typography.ts";
 import { t } from "../i18n.ts";
 import { decimalsOf, isTemplate } from "../util.ts";
 import type { Visibility } from "../visibility.ts";
@@ -32,6 +33,8 @@ export interface RenderCtx extends FormatCtx {
   ctl?: ControlHost;
   // whether a part with these visibility conditions is shown now; without it everything is
   shown?: (v: Visibility) => boolean;
+  // the card's text styles, measured once per theme (typography.ts)
+  text?: TextCache;
 }
 export interface FmtValue {
   text: string;

@@ -14,7 +14,7 @@ import {
 } from "../history.ts";
 import { nearestPoint, placeTip } from "../hover.ts";
 import { clockTicks, timeStep } from "../ticks.ts";
-import { textStyle } from "../typography.ts";
+import { measure, type TextCache } from "../typography.ts";
 import { qs } from "../util.ts";
 import {
   LANE_LABEL_PAD,
@@ -52,6 +52,7 @@ export interface TrendSpec {
   // history lines: averaged per `lineBuckets` (minutes null: the default spacing); without it
   // (forecasts) the points are drawn as they are unless there are more than one per 2 px
   smoothing?: { minutes: number | null };
+  text?: TextCache; // the card's text styles (the axis and lane labels)
 }
 export interface TrendPlotEl extends HTMLDivElement {
   _spec?: TrendSpec;
@@ -114,8 +115,9 @@ export const drawTrend = (plot: TrendPlotEl, spec: TrendSpec) => {
   // the labels' size follows the theme (ha-font-size-*): the strips and gutter around them too
   const axes = qs(plot, ".axes"),
     laneEls = qs(plot, ".lanes");
-  const ax = textStyle(axes, ["axis-label"], [10, 12]);
-  const laneLabelH = Math.ceil(textStyle(laneEls, ["lane-label"], [10, 12]).line) + LANE_LABEL_PAD;
+  const ax = measure(spec.text, axes, ["axis-label"], [10, 12]);
+  const laneLabel = measure(spec.text, laneEls, ["lane-label"], [10, 12]);
+  const laneLabelH = Math.ceil(laneLabel.line) + LANE_LABEL_PAD;
   const axisH = showX ? Math.ceil(ax.line) + X_AXIS_PAD : 0;
   // The natural height is the plot's own size; a grid cell with fixed rows gives the card another
   // height and the plot (flex: 1) follows it. The SVG is drawn at the measured height, never

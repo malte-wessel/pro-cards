@@ -41,13 +41,15 @@ import { fmtLx, showHover, timeAt, windowOf } from "./illuminance/render/plot.ts
 import { renderTrend } from "./illuminance/render/trend.ts";
 import { STYLE } from "./illuminance/styles.ts";
 import { mergeZones } from "./illuminance/zones.ts";
-import { themeChanged } from "./shared/typography.ts";
+import { TextCache, themeChanged } from "./shared/typography.ts";
 
 const CARD_TYPE = "illuminance-card-pro";
 
 defineElement(`${CARD_TYPE}-editor`, IlluminanceCardEditor);
 
 export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
+  // the card's text styles, measured once per theme (typography.ts)
+  _textCache = new TextCache();
   static cardType = CARD_TYPE;
 
   _config!: IlluminanceConfig;
@@ -124,10 +126,15 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
       }
       this._render();
     } else if (!prev || langOf(prev) !== langOf(hass)) this._render();
-    if (themeChanged(prev, hass)) requestAnimationFrame(() => this._render());
+    if (themeChanged(prev, hass)) {
+      this._textCache.clear();
+      requestAnimationFrame(() => this._render());
+    }
   }
 
   connectedCallback() {
+    // another place may have another theme (a view's own)
+    this._textCache.clear();
     this._timer = setInterval(() => {
       if (this._config?.mode !== "arc") this._fetchHistory();
       else this._render();

@@ -12,7 +12,7 @@ import { iconEl, textEl } from "../../shared/entity/render/lead.ts";
 import { el as iEl, setRate, vars } from "../../shared/flow/dom.ts";
 import { fmtNumber, textWidth } from "../../shared/format.ts";
 import { t } from "../../shared/i18n.ts";
-import { textStyle } from "../../shared/typography.ts";
+import { measure, type TextCache } from "../../shared/typography.ts";
 import { qs } from "../../shared/util.ts";
 import { leavesOf, type PowerFlowConfig } from "../config.ts";
 import { COLORS, ICONS, type LabelLines } from "../constants.ts";
@@ -333,11 +333,11 @@ const labelText = (
 };
 
 // the labels' lines as styled (`.plabel`), at the theme's text size
-export const labelLines = (diag: HTMLElement): LabelLines => ({
-  value: textStyle(diag, ["plabel", "state"], [14, 17, 500]),
-  name: textStyle(diag, ["plabel", "secondary"], [12, 15]),
-  smallValue: textStyle(diag, ["plabel small", "state"], [12, 15, 500]),
-  smallName: textStyle(diag, ["plabel small", "secondary"], [11, 13]),
+export const labelLines = (diag: HTMLElement, cache?: TextCache): LabelLines => ({
+  value: measure(cache, diag, ["plabel", "state"], [14, 17, 500]),
+  name: measure(cache, diag, ["plabel", "secondary"], [12, 15]),
+  smallValue: measure(cache, diag, ["plabel small", "state"], [12, 15, 500]),
+  smallName: measure(cache, diag, ["plabel small", "secondary"], [11, 13]),
 });
 
 // the label of every node, measured, from a preliminary layout (the texts need no geometry)

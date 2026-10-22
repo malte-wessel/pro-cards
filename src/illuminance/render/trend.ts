@@ -1,7 +1,7 @@
 // Mode "trend": the log-scale history line over the zone bands.
 import { textWidth } from "../../shared/format.ts";
 import { clampedSeries, lineBuckets, smoothPath } from "../../shared/history.ts";
-import { textStyle } from "../../shared/typography.ts";
+import { measure } from "../../shared/typography.ts";
 import { qs } from "../../shared/util.ts";
 import type { IlluminanceHost } from "../config.ts";
 import { logLineMeans, posOf, scaleTop, yLabels } from "../zones.ts";
@@ -12,7 +12,7 @@ export const renderTrend = (card: IlluminanceHost, body: HTMLElement, v: number 
     zones = cfg.zonesList;
   // the axis and zone labels follow the theme's text size: the axis strip, the gutter and the
   // least room for a label too
-  const ax = textStyle(body, ["label"], [10, 12]),
+  const ax = measure(card._textCache, body, ["label"], [10, 12]),
     labelH = ax.line;
   const xAxisH = Math.ceil(labelH) + 6,
     natural = 160 + xAxisH;

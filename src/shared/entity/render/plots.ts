@@ -14,7 +14,7 @@ import {
 } from "../../history.ts";
 import { nearestPoint, placeTip } from "../../hover.ts";
 import { t as tr } from "../../i18n.ts";
-import { textStyle } from "../../typography.ts";
+import { measure } from "../../typography.ts";
 import { qs } from "../../util.ts";
 import type { EntityItem } from "../config.ts";
 import { PLOT_H, type HistoryVisual } from "../constants.ts";
@@ -79,8 +79,8 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement) => {
   const H = (grow && plot.clientHeight) || PLOT_H[kind];
   // a strip keeps its own height: the timeline and its labels below (STRIP_AXIS_CSS), whose line
   // follows the theme's text
-  const label = textStyle(labels, ["label"], [10, 12]);
-  svg.setAttribute("viewBox", `0 0 ${W} ${grow ? H : PLOT_H[kind] + label.line + 2}`);
+  const labelLine = () => measure(ctx.text, labels, ["label"], [10, 12]).line;
+  svg.setAttribute("viewBox", `0 0 ${W} ${grow ? H : PLOT_H[kind] + labelLine() + 2}`);
   const { t0, t1: now } = windowOf(ctx, plot);
   const series = plot._ctx.series ?? ((ent.entity && ctx.series.get(ent.entity)) || []);
   const loaded = plot._ctx.loaded ?? ctx.fetched;
@@ -91,7 +91,7 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement) => {
   plot._W = W;
   const empty = () => {
     svg.innerHTML = "";
-    const half = label.line / 2;
+    const half = labelLine() / 2;
     addLabel(
       labels,
       "",

@@ -31,7 +31,7 @@ import { fmtTime, langOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
 import { slider, type Slider } from "./shared/slider.ts";
-import { textStyle, themeChanged } from "./shared/typography.ts";
+import { TextCache, themeChanged } from "./shared/typography.ts";
 import { numOrNull, oneOf, qs } from "./shared/util.ts";
 import type {
   PositionedDay,
@@ -65,6 +65,8 @@ import { nearestOnTrack, type TrackPoint } from "./sun-azimuth/track.ts";
 const CARD_TYPE = "sun-azimuth-card-pro";
 
 export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
+  // the card's text styles, measured once per theme (typography.ts)
+  _textCache = new TextCache();
   static cardType = CARD_TYPE;
 
   _config!: SunAzimuthConfig;
@@ -194,10 +196,15 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
       this._lastMinute = minute;
       this._render();
     }
-    if (themeChanged(prev, hass)) requestAnimationFrame(() => this._render());
+    if (themeChanged(prev, hass)) {
+      this._textCache.clear();
+      requestAnimationFrame(() => this._render());
+    }
   }
 
   connectedCallback() {
+    // another place may have another theme (a view's own)
+    this._textCache.clear();
     this._timer = setInterval(() => this._render(), 60000);
     this._ro = new ResizeObserver(() => {
       const visual = this._root?.querySelector<HTMLElement>(".visual");
@@ -332,9 +339,8 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     if (!visual) return;
     // a preview names its time in a chip above the sun
     const label = this._hoverT !== null ? fmtTime(this._hass, at.t) : undefined;
-    // the pictures' text at the theme's size: read by a full render (a preview and the camera
-    // slider draw every frame)
-    if (!this._text) this._text = this._textOf(visual);
+    // the pictures' text at the theme's size (measured once per theme, typography.ts)
+    this._text = this._textOf(visual);
     // not laid out yet: drawn at a stand-in width, the observer redraws at the real one
     this._visualWidth = visual.clientWidth;
     const width = this._visualWidth || (this._config.view === "3d" ? SCENE.width : DIAL.size);
@@ -371,11 +377,11 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
         label,
       );
   }
-  // the compass labels' size (styles: `svg text`, as `.axis`) and the chips' font (`.chip text`,
+  // the compass labels' size (styles: `svg text`, as `.cl-probe`) and the chips' font (`.chip text`,
   // as `.chip-probe`), which follow the theme's text size
   _textOf(visual: HTMLElement): SunText {
-    const label = textStyle(visual, ["axis"], [10, 12]),
-      chip = textStyle(visual, ["chip-probe"], [12, 16, 500]);
+    const label = this._textCache.get(visual, ["cl-probe"], [10, 12, 500]),
+      chip = this._textCache.get(visual, ["chip-probe"], [12, 16, 500]);
     return { scale: label.size / 10, chipFont: chip.font, chipH: Math.ceil(chip.line) + 4 };
   }
   // the picture's height at a width when nothing limits it: the scene as drawn (scaled when it
@@ -476,8 +482,6 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     const now = sunAt(nowDate.getTime(), lat, lon);
     const sides = this._sidesAt(day, now);
     fillHead(this, qs(card, ".head"), day, now);
-    const visual = card.querySelector<HTMLElement>(".visual");
-    if (visual) this._text = this._textOf(visual);
     this._renderVisual(day, now, sides);
     const house = card.querySelector<HTMLElement>(".house");
     if (house) fillHouse(this, house, day, now, sides);

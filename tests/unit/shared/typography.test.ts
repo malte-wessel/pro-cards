@@ -5,6 +5,8 @@ import {
   font,
   fs,
   fw,
+  lh,
+  TextCache,
   textStyle,
   themeChanged,
   type,
@@ -18,8 +20,14 @@ describe("typography tokens", () => {
     expect(fs(14)).toBe("var(--ha-font-size-m, 14px)");
     expect(fs(40)).toBe("var(--ha-font-size-5xl, 40px)");
   });
-  it("a size between the steps is scaled by the theme's text scale", () => {
-    expect(fs(13)).toBe("calc(13px * var(--ha-font-size-scale, 1))");
+  it("a size between the steps follows the nearest step in proportion", () => {
+    expect(fs(13)).toBe("calc(var(--ha-font-size-s, 12px) * 13 / 12)");
+    expect(fs(9)).toBe("calc(var(--ha-font-size-xs, 10px) * 9 / 10)");
+    expect(fs(22)).toBe("calc(var(--ha-font-size-xl, 20px) * 22 / 20)");
+    expect(fs(34)).toBe("calc(var(--ha-font-size-4xl, 32px) * 34 / 32)");
+  });
+  it("a line height alone grows with its size too", () => {
+    expect(lh(10, 12)).toBe("calc(var(--ha-font-size-xs, 10px) * 12 / 10)");
   });
   it("a line height grows with its size and is the px height at the default", () => {
     expect(type(12, 16)).toBe(
@@ -55,6 +63,23 @@ describe("textStyle", () => {
     document.body.appendChild(el);
     textStyle(el, ["plabel", "state"], [14, 17, 500]);
     expect(el.childElementCount).toBe(0);
+    el.remove();
+  });
+});
+
+describe("TextCache", () => {
+  it("measures a style once on the page, never before", () => {
+    const cache = new TextCache();
+    const el = document.createElement("div");
+    const off = cache.get(el, ["label"], [10, 12]);
+    expect(off.size).toBe(10);
+    expect(cache._styles.size).toBe(0); // not kept: measured off the page
+    document.body.appendChild(el);
+    cache.get(el, ["label"], [10, 12]);
+    expect(cache._styles.size).toBe(1);
+    expect(cache.get(el, ["label"], [10, 12])).toBe(cache._styles.get("label"));
+    cache.clear();
+    expect(cache._styles.size).toBe(0);
     el.remove();
   });
 });

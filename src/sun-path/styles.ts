@@ -1,7 +1,7 @@
 // Styles of the sun path card.
 import { STYLE_HOST, STYLE_ICONS } from "../shared/constants.ts";
 import { PLOT_H } from "./constants.ts";
-import { HEADER_TITLE, fs, fw, type } from "../shared/typography.ts";
+import { HEADER_TITLE, fs, fw, lh, type } from "../shared/typography.ts";
 
 export const STYLE = `
   ${STYLE_ICONS}
@@ -63,7 +63,7 @@ export const STYLE = `
   .tip .row b { font-weight: 600; font-variant-numeric: tabular-nums; }
   .tip .row span { color: var(--secondary-text-color); }
   /* the label's line and the time's: 38 px at the default text size */
-  .events { position: relative; height: calc(${fs(12)} * 18 / 12 + ${fs(14)} * 20 / 14); margin-top: 6px; }
+  .events { position: relative; height: calc(${lh(12, 18)} + ${lh(14, 20)}); margin-top: 6px; }
   .events .ev { position: absolute; top: 0; text-align: center; }
   .events .lbl { font-size: ${fs(12)}; }
   .events .sm { ${type(14, 20)} font-weight: ${fw("medium")}; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }

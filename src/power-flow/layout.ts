@@ -171,10 +171,7 @@ const columnPlan = (cfg: PowerFlowConfig, scale = 1): Column => {
   // with rooms, the first block's label sits centred above its node in the room column
   const c0 = cfg.consumers[0];
   if (cfg.hasGroups && c0) {
-    const h =
-      c0.kind === "group"
-        ? labelHeightOf(cfg, null, false)
-        : labelHeightOf(cfg, c0.kind === "item" ? c0.idx : null, false);
+    const h = labelHeightOf(cfg, c0.kind === "item" ? c0.idx : null, false);
     first = Math.max(first, c0.d / 2 + 4 + h);
   }
   const last = lastLeaf ? Math.max(GEOM.consumerMargin, lastLeaf.d / 2 + 14) : 0;

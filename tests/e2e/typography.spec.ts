@@ -89,6 +89,30 @@ test.describe("typography", () => {
     }
   });
 
+  test("the sun azimuth's dial keeps room for larger compass labels", async ({ page }) => {
+    const SAZ = { type: "custom:sun-azimuth-card-pro", view: "dial" };
+    const rim = async () => {
+      await mount(page, SAZ, { width: 400 });
+      const r = Number(await card(page).locator("circle.disc").getAttribute("r"));
+      await mount(page, SAZ, { width: 400, skin: "large" });
+      return [r, Number(await card(page).locator("circle.disc").getAttribute("r"))];
+    };
+    // measured on the page, not before it (Home Assistant sets hass first): 2.5 px more each side
+    const [normal, large] = await rim();
+    expect(normal - large).toBeCloseTo(2.5, 1);
+  });
+
+  test("the tile card's letter spacing stays out of the power flow's measured labels", async ({
+    page,
+  }) => {
+    await mount(page, FLOW, { width: 520 });
+    await page.evaluate(() =>
+      document.body.style.setProperty("--ha-tile-info-secondary-letter-spacing", "1px"),
+    );
+    const name = card(page).locator(".plabel .secondary").first();
+    expect(await style(name, "letter-spacing")).toBe("normal");
+  });
+
   test("the power flow's labels do not overlap at a larger size", async ({ page }) => {
     for (const skin of [undefined, "large"]) {
       await mount(page, FLOW, { skin, width: 520 });
