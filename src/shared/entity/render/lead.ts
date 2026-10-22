@@ -20,6 +20,22 @@ export const iconEl = (
   el.setAttribute("icon", look.icon || look.fallbackIcon || "mdi:eye");
   return el;
 };
+// the entity's picture where it has one to show (show_entity_picture), else its icon; the
+// buttons that stand in for the icon keep the icon, as it marks them as buttons
+export const iconOrPictureEl = (
+  ctx: RenderCtx,
+  look: Pick<Look, "icon" | "fallbackIcon" | "picture">,
+  st: HassEntity | undefined,
+): HTMLElement => {
+  if (!look.picture) return iconEl(ctx, look, st);
+  const img = document.createElement("img");
+  img.className = "picture";
+  // the name sits beside it
+  img.alt = "";
+  img.draggable = false;
+  img.src = ctx.hass?.hassUrl ? ctx.hass.hassUrl(look.picture) : look.picture;
+  return img;
+};
 // round lead of `size` px: icon (or the value) in a soft circle, a progress ring for visual: ring
 export const leadEl = (
   ctx: RenderCtx,
@@ -49,7 +65,7 @@ export const leadEl = (
   if (inner === "value") {
     shape.classList.add("value");
     shape.textContent = m.fmt.text;
-  } else shape.appendChild(iconEl(ctx, m.look, m.st));
+  } else shape.appendChild(iconOrPictureEl(ctx, m.look, m.st));
   el.appendChild(shape);
   return el;
 };
@@ -63,7 +79,7 @@ export const pillEl = (text: string) => {
 // and nothing to say (show_value: false, or an empty text) it is the icon in a circle
 export const headerBadgeEl = (ctx: RenderCtx, ent: EntityItem, m: EntityModel) => {
   const text = ent.item.showValue ? (m.look.label ?? m.fmt.text) : "";
-  const icon = ent.item.showIcon ? iconEl(ctx, m.look, m.st) : null;
+  const icon = ent.item.showIcon ? iconOrPictureEl(ctx, m.look, m.st) : null;
   if (!icon && !text.trim()) return null;
   const s = document.createElement("span");
   s.className = "pill badge";

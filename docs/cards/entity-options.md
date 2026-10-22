@@ -366,6 +366,32 @@ entities:
 
 :::
 
+#### Picture
+
+`show_entity_picture: true` draws the entity's picture in place of its icon, in the icon's place and shape: a person's photo makes a tile for each member of the household, and a media player's cover or a camera's snapshot work the same way. Everything else stays: the value, the rules and their colour, the actions. An entity without a picture keeps its icon, as Kim does below, and a [control on the icon](/cards/controls#where-a-control-sits) that is a button keeps its icon too. As on Home Assistant's tile card, the picture is off unless you ask for it.
+
+::: live
+
+```yaml
+- type: custom:entity-card-pro
+  entity: person.alex
+  show_entity_picture: true
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  entity: person.sam
+  show_entity_picture: true
+  grid_options: { columns: 6 }
+- type: custom:entity-group-card-pro
+  title: People
+  layout: row
+  entities:
+    - { entity: person.alex, show_entity_picture: true }
+    - { entity: person.sam, show_entity_picture: true }
+    - { entity: person.kim, show_entity_picture: true }
+```
+
+:::
+
 ### Ring
 
 A progress ring around the icon. Progress is `(value − min) / (max − min)`; `min` and `max` default to the entity's `min` / `max` (or `min_value` / `max_value`) attributes and otherwise to 0 and 100, so percentage sensors need no configuration. The ring is not drawn when the value is not numeric or `max` is not above `min`; the icon stays. Colour follows the rules like everywhere else.
@@ -985,13 +1011,14 @@ All keys an entity accepts, grouped by what they do. "Applies to" names the visu
 
 ### Look
 
-| Option       | Default     | Applies to | Description                                                                                                                                                                             |
-| ------------ | ----------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `visual`     | `icon`      | all        | `icon`, `ring`, `gauge`, `bar`, `sparkline`, `columns`, `badge` or `strip`; see [Visuals](#visuals). Block visuals fall back to `icon` in items and headers.                            |
-| `icon`       | entity icon | all        | Fixed icon that overrides rule icons. Template allowed.                                                                                                                                 |
-| `icon_style` | `circle`    | all        | `circle` draws the icon in a soft circle of its colour, `plain` the icon alone; see [Icon](#icon). Header items have no circle, so it changes nothing there.                            |
-| `color`      | HA state    | all        | Fixed colour that overrides rule colours. Without it the entity uses Home Assistant's state colour (see the [colour guide](/guide/colours)), plain sensors `primary`. Template allowed. |
-| `rules`      |             | all        | List of `{ state, below, above, color, icon, label, tint_card }`, first match wins; see [Rules](#rules). `below` and `above` may be numeric strings.                                    |
+| Option                | Default     | Applies to | Description                                                                                                                                                                             |
+| --------------------- | ----------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `visual`              | `icon`      | all        | `icon`, `ring`, `gauge`, `bar`, `sparkline`, `columns`, `badge` or `strip`; see [Visuals](#visuals). Block visuals fall back to `icon` in items and headers.                            |
+| `icon`                | entity icon | all        | Fixed icon that overrides rule icons. Template allowed.                                                                                                                                 |
+| `icon_style`          | `circle`    | all        | `circle` draws the icon in a soft circle of its colour, `plain` the icon alone; see [Icon](#icon). Header items have no circle, so it changes nothing there.                            |
+| `show_entity_picture` | `false`     | all        | The entity's picture (a person's photo) in place of its icon; an entity without one keeps its icon. See [Picture](#picture).                                                            |
+| `color`               | HA state    | all        | Fixed colour that overrides rule colours. Without it the entity uses Home Assistant's state colour (see the [colour guide](/guide/colours)), plain sensors `primary`. Template allowed. |
+| `rules`               |             | all        | List of `{ state, below, above, color, icon, label, tint_card }`, first match wins; see [Rules](#rules). `below` and `above` may be numeric strings.                                    |
 
 ### Scale
 

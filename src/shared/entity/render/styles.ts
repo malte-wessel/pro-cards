@@ -60,6 +60,9 @@ export const STYLE_HEADER = `
   .hval .pill.badge > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .hval .pill.badge ha-icon, .hval .pill.badge ha-state-icon { flex: none; --mdc-icon-size: 16px; }
   .hval .pill.badge.round { flex: none; width: 24px; height: 24px; padding: 0; justify-content: center; }
+  /* a picture in the icon's place, at the icon's size and in the icon's shape */
+  .hval img.picture { flex: none; width: 18px; height: 18px; border-radius: ${ICON_RADIUS}; object-fit: cover; }
+  .hval .pill.badge img.picture { width: 16px; height: 16px; }
   .hval .secondary { font-size: ${fs(12)}; }
 `;
 // the icon in a lead (and in a button in its place) is two thirds of a small lead, at most 24 px
@@ -83,6 +86,8 @@ export const STYLE_ROW = `
   .lead.plain .shape, .lead.plain.tap.off .shape { background: transparent; }
   /* a ring's icon stays round, inside its arc */
   .lead.ring .shape { inset: 16%; border-radius: 50%; --mdc-icon-size: calc(var(--lead, 36px) * .42); }
+  /* show_entity_picture: the picture fills the shape (in a ring, the inside of the ring) */
+  .lead .shape > img.picture { display: block; width: 100%; height: 100%; object-fit: cover; }
   .lead .track { fill: none; stroke: var(--fe-soft); }
   .lead .prog { fill: none; stroke: var(--fe-color); stroke-linecap: round; transition: stroke-dashoffset .4s; }
   .main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }

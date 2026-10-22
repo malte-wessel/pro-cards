@@ -10,6 +10,8 @@ const STATES: Record<string, [string, Record<string, unknown>]> = {
   "sensor.battery": ["72", { friendly_name: "Battery", unit_of_measurement: "%" }],
   "sensor.offline": ["unavailable", { friendly_name: "Offline" }],
   "sensor.temp": ["21.5", { friendly_name: "Temperature", unit_of_measurement: "°C" }],
+  "person.alex": ["home", { friendly_name: "Alex", entity_picture: "/api/image/alex.jpg" }],
+  "person.kim": ["home", { friendly_name: "Kim" }],
 };
 const hass = () =>
   ({
@@ -41,16 +43,19 @@ const header = (header_entities: unknown[]) => {
   cards.push(el);
   return [...(el.shadowRoot as ShadowRoot).querySelectorAll<HTMLElement>(".header .row.hval")];
 };
+// an icon, or a picture in its place by its source
+const iconOf = (el: Element) =>
+  el instanceof HTMLImageElement ? `picture(${el.getAttribute("src")})` : "icon";
 // what a header item holds, in order: its own icon, the name, the plain value, the badge
 const parts = (hv: HTMLElement) =>
   [...hv.children]
     .filter((c) => !c.classList.contains("hit"))
     .map((c) =>
       c.classList.contains("badge")
-        ? `badge(${[...c.children].map((x) => (x.tagName === "SPAN" ? x.textContent : "icon")).join(", ")})${c.classList.contains("round") ? ".round" : ""}`
+        ? `badge(${[...c.children].map((x) => (x.tagName === "SPAN" ? x.textContent : iconOf(x))).join(", ")})${c.classList.contains("round") ? ".round" : ""}`
         : c.tagName === "SPAN"
           ? `${c.className}:${c.textContent}`
-          : "icon",
+          : iconOf(c),
     );
 
 describe("header badges", () => {
@@ -93,5 +98,35 @@ describe("header badges", () => {
   it("leave icon items as they were: icon, then the plain value", () => {
     const [temp] = header(["sensor.temp"]);
     expect(parts(temp)).toEqual(["icon", "state:21.5 °C"]);
+  });
+});
+
+describe("header pictures", () => {
+  it("stand in for the icon with show_entity_picture, in a plain item and in a badge", () => {
+    const [plain, badge, kim, off] = header([
+      { entity: "person.alex", show_entity_picture: true },
+      { entity: "person.alex", show_entity_picture: true, visual: "badge" },
+      { entity: "person.kim", show_entity_picture: true },
+      "person.alex",
+    ]);
+    expect(parts(plain)).toEqual(["picture(/api/image/alex.jpg)", "state:home"]);
+    expect(parts(badge)).toEqual(["badge(picture(/api/image/alex.jpg), home)"]);
+    // without a picture, or without the option, the icon stays
+    expect(parts(kim)).toEqual(["icon", "state:home"]);
+    expect(parts(off)).toEqual(["icon", "state:home"]);
+  });
+  it("load from Home Assistant's own URL where it gives one (a cast device)", () => {
+    const el = new EntityGroupCard();
+    el.setConfig({
+      title: "People",
+      header_entities: [{ entity: "person.alex", show_entity_picture: true }],
+      entities: ["sensor.temp"],
+    });
+    document.body.appendChild(el);
+    el.hass = { ...hass(), hassUrl: (p = "") => `http://ha.local:8123${p}` };
+    cards.push(el);
+    const img = (el.shadowRoot as ShadowRoot).querySelector(".header img.picture");
+    expect(img?.getAttribute("src")).toBe("http://ha.local:8123/api/image/alex.jpg");
+    expect(img?.getAttribute("alt")).toBe("");
   });
 });

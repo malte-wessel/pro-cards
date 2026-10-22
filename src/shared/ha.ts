@@ -31,6 +31,8 @@ export interface HomeAssistant {
   user?: Pick<HassUser, "id" | "name" | "is_admin">;
   // frontend versions without it fall back to the card's own formatting
   formatEntityState?: (st: HassEntity) => string;
+  // a path on the Home Assistant server as a full URL (an entity picture on a cast device)
+  hassUrl?: (path?: string) => string;
   // the theme's mode (cards that draw pictures tune their colours for a dark one)
   themes?: { darkMode?: boolean };
 }

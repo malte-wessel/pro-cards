@@ -10,6 +10,7 @@ import type { ValueModel } from "../../../../src/shared/entity/look.ts";
 import {
   asText,
   matchRule,
+  pictureOf,
   readValue,
   progressOf,
   scaleOf,
@@ -255,6 +256,34 @@ describe("look resolution", () => {
     expect(
       resolveLook(ent({ rules: [{ state: "0", color: "red" }] }), num(0), st("0"), tpl).color,
     ).toBe("red");
+  });
+  it("takes the entity's picture only when asked, the local copy first", () => {
+    const alex = st("home", { entity_picture: "/api/image/alex.jpg" }, "person.alex");
+    const local = st("home", { entity_picture: "https://x/a.jpg", entity_picture_local: "/l.jpg" });
+    expect(pictureOf(alex)).toBe("/api/image/alex.jpg");
+    expect(pictureOf(local)).toBe("/l.jpg");
+    expect(pictureOf(st("home", { entity_picture: null }))).toBeNull();
+    expect(pictureOf(st("home", { entity_picture: 3 }))).toBeNull();
+    expect(pictureOf(undefined)).toBeNull();
+    const asked = ent({ entity: "person.alex", show_entity_picture: true });
+    expect(resolveLook(ent({ entity: "person.alex" }), txt("home"), alex, tpl).picture).toBeNull();
+    expect(resolveLook(asked, txt("home"), alex, tpl).picture).toBe("/api/image/alex.jpg");
+    // the rules still colour and label the entity, and its icon stays for where no picture fits
+    const ruled = ent({
+      entity: "person.alex",
+      show_entity_picture: true,
+      rules: [{ state: "home", color: "green", icon: "mdi:home", label: "Home" }],
+    });
+    expect(resolveLook(ruled, txt("home"), alex, tpl)).toMatchObject({
+      picture: "/api/image/alex.jpg",
+      color: "green",
+      icon: "mdi:home",
+      label: "Home",
+    });
+    // an unavailable entity keeps its picture; one without a picture has none
+    const gone = { raw: "unavailable", num: null, avail: false };
+    expect(resolveLook(asked, gone, alex, tpl).picture).toBe("/api/image/alex.jpg");
+    expect(resolveLook(asked, txt("home"), st("home"), tpl).picture).toBeNull();
   });
   it("tints only when the matched rule asks for it", () => {
     const e = ent({ rules: [{ above: 10, tint_card: true }, { below: 10 }] });

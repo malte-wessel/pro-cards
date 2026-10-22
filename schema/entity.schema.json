@@ -148,6 +148,11 @@
           "default": "circle",
           "description": "The icon in its soft circle, or plain: the icon alone (also the inside of a ring); a control on the icon keeps its circle"
         },
+        "show_entity_picture": {
+          "type": "boolean",
+          "default": false,
+          "description": "Draw the entity's picture (a person's photo, entity_picture) in place of its icon; an entity without a picture keeps its icon, a button on the icon keeps the icon"
+        },
         "min": {
           "type": "number",
           "description": "Scale start for ring, gauge and bar (default: entity min, else 0)"

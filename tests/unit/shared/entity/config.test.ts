@@ -90,6 +90,7 @@ describe("entity", () => {
       name: null,
       visual: "icon",
       iconStyle: "circle",
+      picture: false,
       rules: [],
       toggle: false,
       decimals: null,
@@ -108,6 +109,8 @@ describe("entity", () => {
     });
     expect(ent({ icon_style: "plain" }).iconStyle).toBe("plain");
     expect(ent({ icon_style: "square" }).iconStyle).toBe("circle");
+    expect(ent({ show_entity_picture: true }).picture).toBe(true);
+    expect(ent({ show_entity_picture: null }).picture).toBe(false);
     expect(ent({ tap_action: { navigation_path: "/x" } }).tap).toEqual({
       action: "more-info",
       navigation_path: "/x",
