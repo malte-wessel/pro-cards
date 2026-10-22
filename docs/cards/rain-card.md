@@ -162,6 +162,7 @@ layout: hero
 | `title`, `icon`     | –                         | Header, templates allowed. `header_entities` as in the [group card](/cards/entity-group-card#header-entities).                                                                                  |
 | `title_tap_action`  | none                      | Action when the title or its icon is tapped, e.g. `{ action: navigate, navigation_path: /dashboard-rooms/kitchen }` to open the room's dashboard; see [Actions](/cards/entity-options#actions). |
 | `tap_action` …      | `more-info`               | `tap_action`, `hold_action`, `double_tap_action` on the lead row.                                                                                                                               |
+| `hover`             | `false`                   | Home Assistant's hover and press layers on the lead row; see [Hover](/cards/entity-options#hover).                                                                                              |
 
 ### Flow options
 

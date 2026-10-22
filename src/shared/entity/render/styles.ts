@@ -321,8 +321,37 @@ export const STYLE_PLOT = `
   .tip .lbl { color: var(--secondary-text-color); }
 `;
 
+// `hover: true` (the host's `hover` attribute, syncHover): Home Assistant's state layers on what a
+// click runs. A row with an action gets the tile's layer in its colour (4 % on hover, 12 % pressed),
+// an icon with its own action the tile icon's (its circle from --tile-icon-opacity to
+// --tile-icon-hover-opacity, 20 to 35 % by default; a press grows it). Hover only for a pointer
+// that hovers, so a tap leaves nothing behind on a phone. Over a control the row's `.hit` is not
+// hovered: the layer shows only where a click runs the row's action.
+export const STYLE_HOVER = `
+  :host([hover]) .hit::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--fe-color); opacity: 0; pointer-events: none; }
+  /* the layer reaches into the room around the content (the click area stays the row): a tile's to
+     the card's edges (ha-card clips it), a list row's halfway into the gap */
+  :host([hover]) ha-card.layout-tile .row:is(.tile, .wtile) > .hit::before { inset: -6px -12px; border-radius: 0; }
+  :host([hover]) ha-card.layout-tile .row.wtile.flow > .hit::before { inset: 0; }
+  :host([hover]) .row:is(.list, .hero, .whero) > .hit::before { inset: -4px -8px; border-radius: 12px; }
+  :host([hover]) .row.field > .hit::before { inset: -2px -6px; }
+  /* an item or a power flow node is its icon: the icon answers, as it shows the focus ring */
+  :host([hover]) :is(.item, .pnode) > .hit::before { content: none; }
+  :host([hover]) :is(.lead.tap, :is(.item, .pnode) > .hit ~ .lead) .shape { transition: background-color 180ms ease-in-out, transform 180ms ease-in-out; }
+  @media (hover: hover) {
+    :host([hover]) .hit:hover::before { opacity: .04; }
+    /* as Home Assistant's tile icon: the hover opacity takes the place of the icon's, so every
+       background drawn with iconBg follows (an off toggle's fainter one, a node's on the card) */
+    :host([hover]) :is(.lead.tap:not(.disabled):hover, :is(.item, .pnode) > .hit:hover ~ .lead) { --tile-icon-opacity: var(--tile-icon-hover-opacity, 0.35); }
+  }
+  /* pressed after hovered: the same specificity, the later rule wins */
+  :host([hover]) .hit:active::before { opacity: .12; }
+  :host([hover]) .lead.tap:not(.disabled):active .shape { transform: scale(1.2); }
+  @media (prefers-reduced-motion: reduce) { :host([hover]) .lead.tap:active .shape { transform: none; } }
+`;
+
 export const STYLE_ENTITY_CARD =
-  STYLE_BASE + STYLE_TILE + STYLE_ROW + STYLE_CONTROLS + STYLE_BLOCKS + STYLE_PLOT;
+  STYLE_BASE + STYLE_TILE + STYLE_ROW + STYLE_CONTROLS + STYLE_BLOCKS + STYLE_PLOT + STYLE_HOVER;
 export const STYLE_GROUP_CARD =
   STYLE_BASE +
   STYLE_HEADER +
@@ -333,4 +362,5 @@ export const STYLE_GROUP_CARD =
   STYLE_ITEM +
   STYLE_TABLE +
   STYLE_BLOCKS +
-  STYLE_PLOT;
+  STYLE_PLOT +
+  STYLE_HOVER;

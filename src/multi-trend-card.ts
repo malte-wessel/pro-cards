@@ -25,6 +25,7 @@
 import {
   fireAction,
   defineElement,
+  syncHover,
   syncKeepHeight,
   registerCard,
   freshShadow,
@@ -148,6 +149,7 @@ export class MultiTrendCard extends HTMLElement {
     ]);
     this._tpl.sync(this._hass?.connection, this._templates);
     syncKeepHeight(this, config);
+    syncHover(this, config);
     if (this._root) this._buildDom();
   }
 

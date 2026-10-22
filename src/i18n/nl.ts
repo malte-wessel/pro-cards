@@ -224,6 +224,7 @@ const nl: Translation = {
   "editor.multi_trend.hours_to_show": "Getoonde uren",
   "editor.multi_trend.smoothing_minutes": "Afvlakking",
   "editor.multi_trend.fill_height": "Hoogte vullen",
+  "editor.multi_trend.hover": "Hover-effect",
   "editor.multi_trend.layout": "Indeling",
   "editor.multi_trend.show_legend": "Legenda tonen",
   "editor.multi_trend.x_axis": "X-as (tijd)",

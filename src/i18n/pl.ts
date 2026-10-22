@@ -224,6 +224,7 @@ const pl: Translation = {
   "editor.multi_trend.hours_to_show": "Wyświetlane godziny",
   "editor.multi_trend.smoothing_minutes": "Wygładzanie",
   "editor.multi_trend.fill_height": "Wypełnij wysokość",
+  "editor.multi_trend.hover": "Efekt najechania",
   "editor.multi_trend.layout": "Układ",
   "editor.multi_trend.show_legend": "Pokaż legendę",
   "editor.multi_trend.x_axis": "Oś X (czas)",

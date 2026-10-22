@@ -95,6 +95,8 @@ const guide = [
   { text: "Languages", link: "/guide/languages" },
   { text: "Visibility", link: "/guide/visibility" },
   { text: "Playground", link: "/playground" },
+  // temporary: review of `hover: true`, remove before the release
+  { text: "Hover preview", link: "/hover-preview" },
   { text: "Changelog", link: "/changelog/" },
 ];
 
