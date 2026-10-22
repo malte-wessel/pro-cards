@@ -1,5 +1,6 @@
 // Mode "band": one coloured block per bucket, blended between the zone colours.
 import { bucketMean, clampedSeries } from "../../shared/history.ts";
+import { measure } from "../../shared/typography.ts";
 import { qs } from "../../shared/util.ts";
 import type { IlluminanceHost } from "../config.ts";
 import { colorAnchors, colorAt, posOf } from "../zones.ts";
@@ -8,8 +9,10 @@ import { fmtLx, plotShell, windowOf, xTicks } from "./plot.ts";
 export const renderBand = (card: IlluminanceHost, body: HTMLElement, v: number | null) => {
   const cfg = card._config,
     zones = cfg.zonesList;
+  // the time labels below follow the theme's text size
+  const ax = measure(card._textCache, body, ["label"], [10, 12]);
   const barH = 44,
-    xAxisH = 20;
+    xAxisH = Math.ceil(ax.line) + 8;
   const plot = plotShell(card, body, v, barH + xAxisH);
   const svg = qs<SVGSVGElement>(plot, "svg"),
     labels = qs(plot, ".labels");
@@ -36,7 +39,7 @@ export const renderBand = (card: IlluminanceHost, body: HTMLElement, v: number |
   html += `<g class="hover"><rect class="hl" y="-2" width="${bw}" height="${barH + 4}" rx="3" fill="none" stroke="var(--primary-text-color)" stroke-width="1.5"/></g>`;
   svg.innerHTML = html;
   const xOf = (t: number) => ((t - t0) / (now - t0)) * W;
-  xTicks(card, labels, xOf, W, barH, t0, now);
+  xTicks(card, labels, xOf, W, barH, t0, now, ax);
   card._buckets = buckets;
   card._bw = bw;
   card._xOf = xOf;

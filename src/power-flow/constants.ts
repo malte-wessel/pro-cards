@@ -1,5 +1,7 @@
 // Constants of the power flow card: the option enums, the energy colours (Home Assistant's energy
 // dashboard tokens with their default values) and the geometry of the tree, in design pixels.
+import type { TextStyle } from "../shared/typography.ts";
+
 export const CARD_TYPE = "power-flow-card-pro";
 
 export const DIRECTIONS = ["right", "down"] as const;
@@ -81,9 +83,6 @@ export const GEOM = {
   columnPitch: 142, // direction: down – distance between the columns along the flow
   downMargin: 70, // direction: down – first / last source centre from the edge
   srcValueW: 60, // direction: down – the room a source's value is given when its labels' place is chosen
-  labelH: 32, // a label: value over name
-  labelSmallH: 28, // a device's label
-  labelLine: 15, // a label's extra line (secondary)
   labelGap: 6,
   summaryH: 40, // the summary line above the diagram (grid rows estimate)
 } as const;
@@ -95,7 +94,19 @@ export const NODE_D = {
   home: GEOM.dHome,
 } as const;
 
-export const FONT_VALUE = "500 14px Roboto, system-ui, sans-serif";
-export const FONT_NAME = "12px Roboto, system-ui, sans-serif";
-export const FONT_SMALL = "500 12px Roboto, system-ui, sans-serif";
-export const FONT_SMALL_NAME = "11px Roboto, system-ui, sans-serif";
+// a label's lines (styles: `.plabel`): the value over the name (and a secondary line like the
+// name), smaller for a device. These are the default size; the card reads the theme's
+// (render/tree.ts labelLines), so a label's height and width follow the theme's text
+export interface LabelLines {
+  value: TextStyle;
+  name: TextStyle;
+  smallValue: TextStyle;
+  smallName: TextStyle;
+}
+const FAMILY = "Roboto, system-ui, sans-serif";
+export const LABEL_LINES: LabelLines = {
+  value: { font: `500 14px ${FAMILY}`, size: 14, line: 17 },
+  name: { font: `400 12px ${FAMILY}`, size: 12, line: 15 },
+  smallValue: { font: `500 12px ${FAMILY}`, size: 12, line: 15 },
+  smallName: { font: `400 11px ${FAMILY}`, size: 11, line: 13 },
+};

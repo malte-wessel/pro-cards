@@ -1,8 +1,16 @@
 // Styles of the sun azimuth card. --saz-sun / --saz-night / --saz-sky are set on the card from
 // the config colours; --c is the colour of a lead or row (the sun's while it is up).
-import { AXIS_FONT, STYLE_HOST, STYLE_ICONS } from "../shared/constants.ts";
+import { STYLE_HOST, STYLE_ICONS } from "../shared/constants.ts";
 import { STYLE_SLIDER } from "../shared/slider.ts";
-import { CHIP_FONT } from "./constants.ts";
+import {
+  HEADER_TITLE,
+  TILE_PRIMARY,
+  TILE_SECONDARY,
+  font,
+  lh,
+  fw,
+  type,
+} from "../shared/typography.ts";
 
 const CARD_BG = "var(--ha-card-background, var(--card-background-color))";
 // a stroke width of the pictures: full at full size, thinner as the picture shrinks (--k is set
@@ -35,7 +43,7 @@ export const STYLE = `
   /* 4 px here and the body's 12 px: the title line sits 16 px above the first row, as on the entity cards */
   .header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 4px 16px; min-width: 0; }
   .header ha-icon { flex: none; color: var(--secondary-text-color); --mdc-icon-size: 20px; }
-  .header .title { flex: 1; min-width: 0; font-size: 16px; font-weight: 500; line-height: 20px; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .header .title { flex: 1; min-width: 0; ${HEADER_TITLE} color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .body { padding: 12px 16px 14px 16px; flex: 1; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
   /* dividers run from edge to edge, through the body's side padding */
   .divider { height: 1px; margin: 0 -16px; background: var(--divider-color); flex: none; }
@@ -45,12 +53,12 @@ export const STYLE = `
   .lead ha-icon { display: block; }
   .rot { display: flex; transition: transform .6s; }
   .texts { flex: 1 1 0; min-width: 24px; display: flex; flex-direction: column; gap: 2px; }
-  .primary { font-size: 14px; font-weight: 500; line-height: 20px; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .secondary { font-size: 12px; line-height: 16px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .primary { ${TILE_PRIMARY} white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .secondary { ${TILE_SECONDARY} white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
   .line { display: flex; align-items: center; gap: 10px; min-width: 0; }
-  .pill { flex: none; font-size: 12px; font-weight: 500; line-height: 16px; padding: 4px 10px; border-radius: 999px; color: var(--c); background: color-mix(in srgb, var(--c) 20%, transparent); white-space: nowrap; letter-spacing: .02em; max-width: 45%; overflow: hidden; text-overflow: ellipsis; }
-  .key { font-size: 11px; line-height: 16px; letter-spacing: .08em; text-transform: uppercase; font-weight: 500; color: var(--secondary-text-color); white-space: nowrap; }
+  .pill { flex: none; ${type(12, 16)} font-weight: ${fw("medium")}; padding: 4px 10px; border-radius: 999px; color: var(--c); background: color-mix(in srgb, var(--c) 20%, transparent); white-space: nowrap; letter-spacing: .02em; max-width: 45%; overflow: hidden; text-overflow: ellipsis; }
+  .key { ${type(11, 16)} letter-spacing: .08em; text-transform: uppercase; font-weight: ${fw("medium")}; color: var(--secondary-text-color); white-space: nowrap; }
   .sechead { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .lead.rise { --c: var(--saz-sun); }
   .lead.noon { --c: var(--orange-color); }
@@ -63,7 +71,8 @@ export const STYLE = `
   .body { min-height: 0; }
   .visual { flex: 1 1 auto; min-height: 0; align-items: center; overflow: hidden; }
   svg.dial { max-width: 300px; }
-  svg text { font: ${AXIS_FONT}; font-weight: 500; fill: var(--secondary-text-color); text-anchor: middle; dominant-baseline: central; }
+  /* .cl-probe: the compass labels' font where the card reads it (an SVG text cannot be probed) */
+  svg text, .cl-probe { ${font(10, undefined, "medium")} fill: var(--secondary-text-color); text-anchor: middle; dominant-baseline: central; }
   /* the horizon ring in the ticks' colour */
   .dial .disc { fill: ${sky(5)}; stroke: ${solid(SEC, 55)}; stroke-width: ${sw(2)}; }
   .dial .grid { fill: none; stroke: ${DIVIDER}; stroke-width: 1; stroke-dasharray: 3 4; }
@@ -109,13 +118,14 @@ export const STYLE = `
   .scene .poletop { fill: ${SEC}; }
   .scene .gdot { fill: ${SUN}; }
   .chip rect { fill: color-mix(in srgb, ${CARD_BG} 80%, transparent); }
-  .chip text { font: ${CHIP_FONT}; fill: var(--primary-text-color); font-variant-numeric: tabular-nums; }
+  /* .chip-probe: the chip text's font where the card reads it (an SVG text cannot be probed) */
+  .chip text, .chip-probe { ${font(12, 16, "medium")} fill: var(--primary-text-color); font-variant-numeric: tabular-nums; }
   /* the camera slider of the 3D view: the controls' slider in the sun colour, compass points below */
   .control { --fe-color: var(--saz-sun); display: flex; flex-direction: column; gap: 2px; min-width: 0; margin-top: -4px; }
   ${STYLE_SLIDER}
   /* the points sit under the knob's centre, which runs from one end of the track to the other */
-  .caxis { position: relative; height: 12px; }
-  .caxis span { position: absolute; top: 0; transform: translateX(-50%); font: ${AXIS_FONT}; line-height: 12px; color: var(--secondary-text-color); white-space: nowrap; }
+  .caxis { position: relative; height: ${lh(10, 12)}; }
+  .caxis span { position: absolute; top: 0; transform: translateX(-50%); ${font(10, 12)} color: var(--secondary-text-color); white-space: nowrap; }
   .caxis span:nth-child(1) { left: 0; }
   .caxis span:nth-child(2) { left: 25%; }
   .caxis span:nth-child(3) { left: 50%; }
@@ -123,7 +133,7 @@ export const STYLE = `
   .caxis span:nth-child(5) { left: 100%; }
   /* the house line: a caption under the plot, quieter than the head */
   .house { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; margin-top: -4px; text-align: center; }
-  .house .primary { max-width: 100%; font-size: 13px; font-weight: 400; line-height: 18px; }
+  .house .primary { max-width: 100%; ${type(13, 18)} font-weight: ${fw("normal")}; }
   .house .secondary { max-width: 100%; }
   /* sunrise / noon / sunset */
   .items { display: flex; justify-content: space-between; gap: 8px; }
@@ -132,8 +142,8 @@ export const STYLE = `
   /* sunrise and sunset keep their short lines; only the noon line (long in some languages) gives way */
   .item:nth-child(2) { flex: 0 1 auto; }
   .itexts { display: flex; flex-direction: column; min-width: 0; }
-  .item .v { font-size: 14px; font-weight: 500; line-height: 18px; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .item .n { font-size: 12px; line-height: 16px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .item .v { ${type(14, 18)} font-weight: ${fw("medium")}; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .item .n { ${type(12, 16)} color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   /* the sides of the house */
   .sides { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
   .side { align-items: flex-start; }
@@ -149,7 +159,7 @@ export const STYLE = `
   .sides.preview .lbar { cursor: crosshair; touch-action: pan-y; }
   .sides.preview .lbar::after { content: ""; position: absolute; inset: -6px 0; }
   .lbar b { position: absolute; top: 50%; width: 6px; height: 6px; margin: -5px 0 0 -5px; border-radius: 50%; background: ${CARD_BG}; border: 2px solid var(--primary-text-color); }
-  .axis { display: flex; justify-content: space-between; padding-left: 52px; margin-top: -4px; font: ${AXIS_FONT}; line-height: 12px; color: var(--secondary-text-color); font-variant-numeric: tabular-nums; }
+  .axis { display: flex; justify-content: space-between; padding-left: 52px; margin-top: -4px; ${font(10, 12)} color: var(--secondary-text-color); font-variant-numeric: tabular-nums; }
   /* a narrow column: the rows keep their words, the small leads go (after .axis: same specificity) */
   @container (max-width: 340px) { .item .lead, .side .lead { display: none; } .axis { padding-left: 0; } }
 `;

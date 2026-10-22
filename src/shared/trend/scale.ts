@@ -4,8 +4,10 @@ export const DEFAULT_HOURS = 6;
 export const PALETTE = ["primary", "orange", "green", "purple", "cyan", "pink"];
 export const OVERLAY_PLOT_H = 80;
 export const LANE_PLOT_H = 60;
-export const LANE_LABEL_H = 18; // strip reserved for the lane label; the line never enters it
-export const X_AXIS_H = 16; // strip below the plot for time labels
+// the strip reserved for a lane's label (its line height and this), which the line never enters
+export const LANE_LABEL_PAD = 6;
+// the strip below the plot for the time labels: their line height and this
+export const X_AXIS_PAD = 4;
 
 // "nice" step for value ticks: 1, 2, 2.5, 5 x 10^n
 export const niceStep = (range: number, target: number) => {

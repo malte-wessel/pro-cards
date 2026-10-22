@@ -3,7 +3,7 @@ import { fmtNumber, fmtTime, textWidth } from "../../shared/format.ts";
 import type { HomeAssistant } from "../../shared/ha.ts";
 import { t } from "../../shared/i18n.ts";
 import { escapeHtml } from "../../shared/util.ts";
-import { CHIP_FONT } from "../constants.ts";
+import { SUN_TEXT, type SunText } from "../constants.ts";
 import {
   compassKey,
   directionKey,
@@ -43,15 +43,28 @@ export const status = (hass: Hass, day: SunDay, now: SunSample) => {
   return rise ? `${below} · ${t(hass, "azimuth.rises", { time: time(hass, rise.t) })}` : below;
 };
 
-// a preview's time in a chip centred on (x, y), kept inside a box `w` wide and below its top
-export const timeChip = (label: string, x: number, y: number, w: number) => {
-  const half = (Math.ceil(textWidth(label, CHIP_FONT)) + 16) / 2;
-  return chipSvg(label, Math.max(half, Math.min(w - half, x)), Math.max(10, y));
+// a chip's width for its text, in the theme's chip font
+export const chipWidth = (label: string, tx: SunText = SUN_TEXT) =>
+  Math.ceil(textWidth(label, tx.chipFont)) + 16;
+
+// a preview's time in a chip whose foot is `y`: above (x, y), kept inside a box `w` wide and below
+// its top
+export const timeChip = (
+  label: string,
+  x: number,
+  y: number,
+  w: number,
+  tx: SunText = SUN_TEXT,
+) => {
+  const half = chipWidth(label, tx) / 2,
+    hh = tx.chipH / 2;
+  return chipSvg(label, Math.max(half, Math.min(w - half, x)), Math.max(hh, y - 4 - hh), tx);
 };
 
 // a rounded SVG chip with its text, centred on (x, y); the rect is sized by measuring the text
-export const chipSvg = (label: string, x: number, y: number) => {
-  const w = Math.ceil(textWidth(label, CHIP_FONT)) + 16,
+export const chipSvg = (label: string, x: number, y: number, tx: SunText = SUN_TEXT) => {
+  const w = chipWidth(label, tx),
+    h = tx.chipH,
     f = (v: number) => v.toFixed(1);
-  return `<g class="chip"><rect x="${f(x - w / 2)}" y="${f(y - 10)}" width="${w}" height="20" rx="10"/><text x="${f(x)}" y="${f(y)}">${escapeHtml(label)}</text></g>`;
+  return `<g class="chip"><rect x="${f(x - w / 2)}" y="${f(y - h / 2)}" width="${w}" height="${h}" rx="${h / 2}"/><text x="${f(x)}" y="${f(y)}">${escapeHtml(label)}</text></g>`;
 };

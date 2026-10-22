@@ -14,6 +14,7 @@ import {
 } from "../../history.ts";
 import { nearestPoint, placeTip } from "../../hover.ts";
 import { t as tr } from "../../i18n.ts";
+import { measure } from "../../typography.ts";
 import { qs } from "../../util.ts";
 import type { EntityItem } from "../config.ts";
 import { PLOT_H, type HistoryVisual } from "../constants.ts";
@@ -28,7 +29,6 @@ export interface PlotCtx {
   idx: number;
   kind: HistoryVisual;
   st: HassEntity | undefined;
-  h: number;
   window?: { t0: number; t1: number };
   series?: Point[];
   buckets?: number;
@@ -77,7 +77,10 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement) => {
   // with fixed rows), never stretched to it: that would turn the dots into ellipses
   const grow = plot.classList.contains("grow");
   const H = (grow && plot.clientHeight) || PLOT_H[kind];
-  svg.setAttribute("viewBox", `0 0 ${W} ${grow ? H : plot._ctx.h}`);
+  // a strip keeps its own height: the timeline and its labels below (STRIP_AXIS_CSS), whose line
+  // follows the theme's text
+  const labelLine = () => measure(ctx.text, labels, ["label"], [10, 12]).line;
+  svg.setAttribute("viewBox", `0 0 ${W} ${grow ? H : PLOT_H[kind] + labelLine() + 2}`);
   const { t0, t1: now } = windowOf(ctx, plot);
   const series = plot._ctx.series ?? ((ent.entity && ctx.series.get(ent.entity)) || []);
   const loaded = plot._ctx.loaded ?? ctx.fetched;
@@ -88,7 +91,14 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement) => {
   plot._W = W;
   const empty = () => {
     svg.innerHTML = "";
-    addLabel(labels, "", tr(ctx.hass, loaded ? "common.no_data" : "common.loading"), 0, H / 2 - 6);
+    const half = labelLine() / 2;
+    addLabel(
+      labels,
+      "",
+      tr(ctx.hass, loaded ? "common.no_data" : "common.loading"),
+      0,
+      H / 2 - half,
+    );
     plot._sampled = null;
     plot._buckets = null;
   };

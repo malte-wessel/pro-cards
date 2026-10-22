@@ -31,6 +31,7 @@ import { fmtTime, langOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
 import { slider, type Slider } from "./shared/slider.ts";
+import { TextCache, themeChanged } from "./shared/typography.ts";
 import { numOrNull, oneOf, qs } from "./shared/util.ts";
 import type {
   PositionedDay,
@@ -46,6 +47,7 @@ import {
   SIDES,
   VIEWS,
   type SideKey,
+  type SunText,
 } from "./sun-azimuth/constants.ts";
 import { sunAt, sunDay, type SunSample } from "./sun-azimuth/day.ts";
 import { dialBox } from "./sun-azimuth/dial.ts";
@@ -63,12 +65,15 @@ import { nearestOnTrack, type TrackPoint } from "./sun-azimuth/track.ts";
 const CARD_TYPE = "sun-azimuth-card-pro";
 
 export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
+  // the card's text styles, measured once per theme (typography.ts)
+  _textCache = new TextCache();
   static cardType = CARD_TYPE;
 
   _config!: SunAzimuthConfig;
   _hass?: HomeAssistant;
   _root?: HTMLElement;
   _uid?: string;
+  _text?: SunText;
   _day: PositionedDay | null = null;
   // the camera bearing of the 3D view: the config's, turned by the slider while the card lives
   _camera = DEFAULTS.camera;
@@ -191,9 +196,15 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
       this._lastMinute = minute;
       this._render();
     }
+    if (themeChanged(prev, hass)) {
+      this._textCache.clear();
+      requestAnimationFrame(() => this._render());
+    }
   }
 
   connectedCallback() {
+    // another place may have another theme (a view's own)
+    this._textCache.clear();
     this._timer = setInterval(() => this._render(), 60000);
     this._ro = new ResizeObserver(() => {
       const visual = this._root?.querySelector<HTMLElement>(".visual");
@@ -328,6 +339,8 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     if (!visual) return;
     // a preview names its time in a chip above the sun
     const label = this._hoverT !== null ? fmtTime(this._hass, at.t) : undefined;
+    // the pictures' text at the theme's size (measured once per theme, typography.ts)
+    this._text = this._textOf(visual);
     // not laid out yet: drawn at a stand-in width, the observer redraws at the real one
     this._visualWidth = visual.clientWidth;
     const width = this._visualWidth || (this._config.view === "3d" ? SCENE.width : DIAL.size);
@@ -364,15 +377,23 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
         label,
       );
   }
+  // the compass labels' size (styles: `svg text`, as `.cl-probe`) and the chips' font (`.chip text`,
+  // as `.chip-probe`), which follow the theme's text size
+  _textOf(visual: HTMLElement): SunText {
+    const label = this._textCache.get(visual, ["cl-probe"], [10, 12, 500]),
+      chip = this._textCache.get(visual, ["chip-probe"], [12, 16, 500]);
+    return { scale: label.size / 10, chipFont: chip.font, chipH: Math.ceil(chip.line) + 4 };
+  }
   // the picture's height at a width when nothing limits it: the scene as drawn (scaled when it
   // is wider than the room), the dial (it never grows past its full size)
   _naturalAt(width: number) {
+    const ts = this._text?.scale;
     if (this._config.view === "3d") {
-      const box = sceneBox(width);
+      const box = sceneBox(width, Infinity, ts);
       return Math.round((box.h * Math.min(width, box.w)) / box.w);
     }
     // a card narrower than the smallest dial scales it down to its width
-    return Math.min(dialBox(width).size, width);
+    return Math.min(dialBox(width, ts).size, width);
   }
   // the room for the plot when the card is given less height than the picture's own; unlimited
   // otherwise (a taller card centres the picture)

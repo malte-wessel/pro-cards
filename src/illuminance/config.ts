@@ -1,6 +1,7 @@
 // Config types of the illuminance card and what its render modules read from the card element.
 import type { CardConfigBase, HomeAssistant } from "../shared/ha.ts";
 import type { MeanBucket } from "../shared/history.ts";
+import type { TextCache } from "../shared/typography.ts";
 import type { IlluminanceMode } from "./constants.ts";
 import type { Zone, ZoneOverrides } from "./zones.ts";
 
@@ -43,6 +44,7 @@ export type SampledLx = LxPoint | MeanBucket;
 // stored on it (`_mode`, `_sampled`, `_buckets`, `_xOf`, `_yOf`, `_bw`, `_gutter`, `_plotW`)
 export interface IlluminanceHost {
   _config: IlluminanceConfig;
+  _textCache?: TextCache;
   _hass?: HomeAssistant;
   _root?: HTMLElement;
   _series: LxPoint[];

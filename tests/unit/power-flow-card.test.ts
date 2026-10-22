@@ -37,6 +37,7 @@ import {
   acrossOf,
   alongDownOf,
   diagramHeight,
+  labelHeightOf,
   laneOffsets,
   layoutTree,
   ringWidth,
@@ -1185,6 +1186,34 @@ describe("power flow layout", () => {
     expect(short.slot).toBe(
       200 - 4 - (short.bs[1] + 22 + GEOM.labelGap) >= GEOM.srcValueW ? "right" : "below",
     );
+  });
+
+  it("gives a value more room in the row when the theme's text is larger", () => {
+    // names that fit beside the default value's room, not beside a value 25 % wider
+    const ds = [44, 44];
+    expect(sourceRow(ds, [10, 10], 340).slot).toBe("right");
+    expect(sourceRow(ds, [10, 10], 340, GEOM.srcValueW * 1.25).slot).toBe("below");
+  });
+
+  it("sizes a label by its lines: the theme's where the tree is drawn", () => {
+    const cfg = base({ consumers: [{ entity: "sensor.washer", secondary: "Laundry" }] });
+    // the default lines: value 17 + name 15, a device's 15 + 13, a secondary line like the name
+    expect(labelHeightOf(cfg, cfg.sources[0].idx, false)).toBe(32);
+    expect(labelHeightOf(cfg, null, true)).toBe(28);
+    const washer = leavesOf(cfg)[0];
+    expect(labelHeightOf(cfg, washer.kind === "item" ? washer.idx : null, false)).toBe(47);
+    // the theme's lines (25 % larger text)
+    const at = (size: number, line: number) => ({ font: `${size}px Roboto`, size, line });
+    const lines = {
+      value: at(17.5, 21.25),
+      name: at(15, 18.75),
+      smallValue: at(15, 18.75),
+      smallName: at(13.75, 16.25),
+    };
+    const big = { ...cfg, lines };
+    expect(labelHeightOf(big, null, false)).toBe(40);
+    expect(labelHeightOf(big, null, true)).toBe(35);
+    expect(diagramHeight(big)).toBeGreaterThan(diagramHeight(cfg));
   });
 
   it("keeps the labels of a narrow consumer row below, cut to their room", () => {

@@ -1,6 +1,16 @@
 // CSS of the entity cards, in pieces so every card ships only what it renders.
 // Colours come from HA theme tokens; --fe-color is set per row from the resolved look.
-import { AXIS_FONT, STYLE_HOST, STYLE_ICONS } from "../../constants.ts";
+import { STYLE_HOST, STYLE_ICONS } from "../../constants.ts";
+import {
+  FONT_FAMILY,
+  HEADER_TITLE,
+  TILE_PRIMARY,
+  TILE_SECONDARY,
+  font,
+  fs,
+  fw,
+  type,
+} from "../../typography.ts";
 import { STYLE_SLIDER } from "../../slider.ts";
 
 export const STYLE_BASE = `
@@ -32,8 +42,8 @@ export const STYLE_HEADER = `
   /* 4 px here and the body's 12 px: the title line sits 16 px above the first row */
   .header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 4px 16px; min-width: 0; }
   .header ha-icon { flex: none; color: var(--secondary-text-color); --mdc-icon-size: 20px; }
-  .header .title { flex: 1; min-width: 0; font-size: 16px; font-weight: 500; line-height: 20px; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .header .range { flex: none; font-size: 12px; color: var(--secondary-text-color); white-space: nowrap; }
+  .header .title { flex: 1; min-width: 0; ${HEADER_TITLE} color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .header .range { flex: none; font-size: ${fs(12)}; color: var(--secondary-text-color); white-space: nowrap; }
   .header .hvals { display: flex; align-items: center; gap: 10px; flex: 0 1 auto; min-width: 0; max-width: 60%; }
   .header .hvals:empty { display: none; }
   /* title_tap_action: the title and its icon are the button */
@@ -44,13 +54,13 @@ export const STYLE_HEADER = `
   .row.hval { flex: 0 1 auto; flex-direction: row; align-items: center; gap: 4px; border-radius: 6px; min-width: 0; }
   .hval .state, .hval .secondary { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .hval ha-icon, .hval ha-state-icon { --mdc-icon-size: 18px; color: var(--fe-color); }
-  .hval .state, .hval .pill { font-size: 13px; line-height: 16px; }
+  .hval .state, .hval .pill { ${type(13, 16)} }
   /* a header badge carries its icon; with nothing to say it is the icon in a circle */
   .hval .pill.badge { display: inline-flex; align-items: center; gap: 4px; padding-left: 6px; }
   .hval .pill.badge > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .hval .pill.badge ha-icon, .hval .pill.badge ha-state-icon { flex: none; --mdc-icon-size: 16px; }
   .hval .pill.badge.round { flex: none; width: 24px; height: 24px; padding: 0; justify-content: center; }
-  .hval .secondary { font-size: 12px; }
+  .hval .secondary { font-size: ${fs(12)}; }
 `;
 // the icon in a lead (and in a button in its place) is two thirds of a small lead, at most 24 px
 // (Home Assistant's tile: a 24 px icon in a 36 px circle); a bigger lead (the hero's 56 px) keeps 55 %
@@ -67,7 +77,7 @@ export const STYLE_ROW = `
   .top { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .lead { position: relative; flex: none; width: var(--lead, 36px); height: var(--lead, 36px); }
   .lead svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .lead .shape { position: absolute; inset: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--fe-color); background: var(--fe-soft); --mdc-icon-size: ${LEAD_ICON}; font-size: calc(var(--lead, 36px) * .24); font-weight: 500; line-height: 1; white-space: nowrap; overflow: hidden; font-variant-numeric: tabular-nums; }
+  .lead .shape { position: absolute; inset: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--fe-color); background: var(--fe-soft); --mdc-icon-size: ${LEAD_ICON}; font-size: calc(var(--lead, 36px) * .24); font-weight: ${fw("medium")}; line-height: 1; white-space: nowrap; overflow: hidden; font-variant-numeric: tabular-nums; }
   .lead .shape.value { color: var(--primary-text-color); background: transparent; }
   /* icon_style: plain, the icon without its circle (also a lead toggle that is off) */
   .lead.plain .shape, .lead.plain.tap.off .shape { background: transparent; }
@@ -77,18 +87,18 @@ export const STYLE_ROW = `
   .main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
   .line { display: flex; align-items: center; gap: 10px; min-width: 0; }
   .texts { flex: 1 1 0; min-width: 24px; display: flex; flex-direction: column; gap: 2px; }
-  .primary { font-size: 14px; font-weight: 500; line-height: 20px; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .secondary { font-size: 12px; line-height: 16px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .secondary.accent { color: var(--fe-color); font-weight: 500; }
+  .primary { ${TILE_PRIMARY} white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .secondary { ${TILE_SECONDARY} white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .secondary.accent { color: var(--fe-color); font-weight: ${fw("medium")}; }
   .end { flex: 0 1 auto; min-width: 0; max-width: 60%; display: flex; align-items: center; gap: 8px; }
   .end:empty { display: none; }
-  .state { font-size: 14px; font-weight: 500; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .state { font-size: ${fs(14)}; font-weight: ${fw("medium")}; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
   /* a rule label in the value's place (items, fields, header entities) takes the rule's colour */
-  .state.accent { color: var(--fe-color); font-weight: 500; }
-  .pill { font-size: 12px; font-weight: 500; line-height: 16px; padding: 4px 10px; border-radius: 999px; color: var(--fe-color); background: var(--fe-soft); white-space: nowrap; letter-spacing: .02em; min-width: 0; max-width: 100%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; }
+  .state.accent { color: var(--fe-color); font-weight: ${fw("medium")}; }
+  .pill { ${type(12, 16)} font-weight: ${fw("medium")}; padding: 4px 10px; border-radius: 999px; color: var(--fe-color); background: var(--fe-soft); white-space: nowrap; letter-spacing: .02em; min-width: 0; max-width: 100%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; }
   .big { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; min-width: 0; max-width: 100%; }
-  .big b { font-size: 32px; font-weight: 500; line-height: 36px; letter-spacing: -.6px; color: var(--primary-text-color); font-variant-numeric: tabular-nums; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .big span { font-size: 14px; color: var(--secondary-text-color); }
+  .big b { ${type(32, 36)} font-weight: ${fw("medium")}; letter-spacing: -.6px; color: var(--primary-text-color); font-variant-numeric: tabular-nums; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .big span { font-size: ${fs(14)}; color: var(--secondary-text-color); }
 `;
 // the controls (render/controls.ts): every size and colour comes from the library the cards draw
 // (the 8 px bar, the round lead, the pill), coloured by --fe-color like the visuals
@@ -144,22 +154,22 @@ export const STYLE_CONTROLS = `
   .ctl-buttons.custom > button { background: color-mix(in srgb, var(--fe-color) 20%, transparent); color: var(--fe-color); transition: background-color .2s, color .2s; }
   .ctl-buttons.custom > button.on { background: var(--fe-color); color: var(--text-primary-color, #fff); }
   .ctl-buttons.custom > button.pending { animation: ctl-pulse 1s ease-in-out infinite; }
-  .ctl-buttons.custom > .chip { flex: 0 1 auto; display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; height: 32px; padding: 0 14px 0 10px; border: 0; border-radius: 999px; font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer; --mdc-icon-size: 18px; }
+  .ctl-buttons.custom > .chip { flex: 0 1 auto; display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; height: 32px; padding: 0 14px 0 10px; border: 0; border-radius: 999px; font-size: ${fs(13)}; font-weight: ${fw("medium")}; white-space: nowrap; cursor: pointer; --mdc-icon-size: 18px; }
   .ctl-buttons.custom > .chip span { overflow: hidden; text-overflow: ellipsis; }
   /* the colour stays on the icon and the tint; the label reads in the text colour until filled */
   .ctl-buttons.custom > .chip:not(.on) span { color: var(--primary-text-color); }
-  .ctl-buttons.custom.sm > .chip { height: 28px; font-size: 12px; padding: 0 12px 0 8px; --mdc-icon-size: 16px; }
+  .ctl-buttons.custom.sm > .chip { height: 28px; font-size: ${fs(12)}; padding: 0 12px 0 8px; --mdc-icon-size: 16px; }
   /* a chip to hold fills from the left instead of a ring */
   .ctl-buttons.custom > .chip.hold { --fill: var(--fe-color); background-image: linear-gradient(var(--fill), var(--fill)); background-repeat: no-repeat; background-size: 0 100%; touch-action: none; -webkit-user-select: none; user-select: none; }
   .ctl-buttons.custom > .chip.hold.on { --fill: color-mix(in srgb, var(--fe-color) 45%, var(--ha-card-background, var(--card-background-color, #fff))); }
   .ctl-buttons.custom > .chip.hold.armed { background-size: 100% 100%; --fill: color-mix(in srgb, var(--fe-color) 45%, transparent); }
   .ctl-buttons.custom > .chip.hold.holding { background-size: 100% 100%; transition: background-size 1s linear; }
   .ctl-stepper { display: flex; align-items: center; gap: 4px; flex: none; }
-  .ctl-stepper .val { min-width: 48px; text-align: center; font-size: 14px; font-weight: 500; line-height: 20px; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .ctl-stepper.sm .val { min-width: 40px; font-size: 13px; }
+  .ctl-stepper .val { min-width: 48px; text-align: center; ${type(14, 20)} font-weight: ${fw("medium")}; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ctl-stepper.sm .val { min-width: 40px; font-size: ${fs(13)}; }
   .ctl-stepper.pending .val { color: var(--fe-color); }
   .ctl-segments { display: flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--fe-track); flex: none; max-width: 100%; box-sizing: border-box; }
-  .ctl-segments .seg { flex: 0 1 auto; min-width: 26px; height: 30px; border: 0; padding: 0 10px; border-radius: 999px; background: transparent; color: var(--secondary-text-color); display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; font-weight: 500; white-space: nowrap; cursor: pointer; overflow: hidden; --mdc-icon-size: 18px; }
+  .ctl-segments .seg { flex: 0 1 auto; min-width: 26px; height: 30px; border: 0; padding: 0 10px; border-radius: 999px; background: transparent; color: var(--secondary-text-color); display: flex; align-items: center; justify-content: center; gap: 4px; font-size: ${fs(12)}; font-weight: ${fw("medium")}; white-space: nowrap; cursor: pointer; overflow: hidden; --mdc-icon-size: 18px; }
   /* in the block slot the segments share the width */
   .row > .ctl-segments, .main > .ctl-segments, .cell > .ctl-segments { align-self: stretch; }
   .row > .ctl-segments .seg, .main > .ctl-segments .seg, .cell > .ctl-segments .seg { flex: 1 1 0; min-width: 0; }
@@ -168,11 +178,11 @@ export const STYLE_CONTROLS = `
   .ctl-segments .seg.pending { box-shadow: inset 0 0 0 1px var(--fe-color); animation: ctl-pulse 1s ease-in-out infinite; }
   .ctl-segments.sm .seg { height: 24px; padding: 0 8px; --mdc-icon-size: 16px; }
   .ctl-select { position: relative; display: inline-flex; align-items: center; height: 28px; border-radius: 999px; background: var(--fe-track); padding: 0 4px 0 12px; max-width: 100%; box-sizing: border-box; flex: 0 1 auto; min-width: 0; }
-  .ctl-select select { appearance: none; -webkit-appearance: none; border: 0; background: transparent; color: var(--primary-text-color); font: inherit; font-size: 12px; font-weight: 500; line-height: 28px; height: 28px; padding: 0 22px 0 0; cursor: pointer; min-width: 0; max-width: 100%; outline: none; text-overflow: ellipsis; }
+  .ctl-select select { appearance: none; -webkit-appearance: none; border: 0; background: transparent; color: var(--primary-text-color); font: inherit; font-size: ${fs(12)}; font-weight: ${fw("medium")}; line-height: 28px; height: 28px; padding: 0 22px 0 0; cursor: pointer; min-width: 0; max-width: 100%; outline: none; text-overflow: ellipsis; }
   .ctl-select ha-icon { position: absolute; right: 4px; pointer-events: none; color: var(--secondary-text-color); --mdc-icon-size: 18px; }
   .ctl-select.pending select { color: var(--fe-color); }
-  .ctl-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px 0 10px; border: 0; border-radius: 999px; background: var(--fe-soft); color: var(--fe-color); font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer; --mdc-icon-size: 18px; }
-  .ctl-chip.sm { height: 28px; font-size: 12px; padding: 0 12px 0 8px; }
+  .ctl-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px 0 10px; border: 0; border-radius: 999px; background: var(--fe-soft); color: var(--fe-color); font-size: ${fs(13)}; font-weight: ${fw("medium")}; white-space: nowrap; cursor: pointer; --mdc-icon-size: 18px; }
+  .ctl-chip.sm { height: 28px; font-size: ${fs(12)}; padding: 0 12px 0 8px; }
   .ctl-chip.done { background: var(--fe-color); color: var(--text-primary-color, #fff); }
   .ctl-chip.round { width: var(--lead, 36px); height: var(--lead, 36px); padding: 0; justify-content: center; border-radius: 50%; --mdc-icon-size: ${LEAD_ICON}; }
   .ctl-hold { position: relative; flex: none; width: 36px; height: 36px; border: 0; padding: 0; border-radius: 50%; background: var(--fe-soft); color: var(--fe-color); display: flex; align-items: center; justify-content: center; cursor: pointer; --mdc-icon-size: 20px; touch-action: none; -webkit-user-select: none; user-select: none; }
@@ -205,7 +215,7 @@ export const STYLE_GROUP = `
 export const STYLE_CELL = `
   .grid { display: grid; gap: 10px; grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); }
   .cell { padding: 12px; background: color-mix(in srgb, var(--primary-text-color) 5%, transparent); border-radius: 10px; gap: 6px; min-width: 0; overflow: hidden; }
-  .cell .big b { font-size: 22px; line-height: 26px; letter-spacing: -.3px; }
+  .cell .big b { ${type(22, 26)} letter-spacing: -.3px; }
   .cell .big.fit b { font-size: var(--fit, 22px); }
   .cell .lead { margin-bottom: 2px; }
   .cell > .hit:focus-visible { box-shadow: inset 0 0 0 2px var(--fe-color); }
@@ -227,11 +237,11 @@ export const STYLE_CELL = `
 `;
 export const STYLE_ITEM = `
   .row.item { flex-direction: column; align-items: center; gap: 4px; max-width: 100%; text-align: center; }
-  .item .iname { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .item .iname { ${type(13, 18)} font-weight: ${fw("medium")}; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   /* the value stacks under the name as a plain line; one that does not fit clips with an ellipsis */
-  .item .state { font-size: 12px; line-height: 16px; font-weight: 400; color: var(--secondary-text-color); overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  .item .state.lone { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--primary-text-color); }
-  .item .state.accent, .item .state.lone.accent { color: var(--fe-color); font-weight: 500; }
+  .item .state { ${type(12, 16)} font-weight: ${fw("normal")}; color: var(--secondary-text-color); overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .item .state.lone { ${type(13, 18)} font-weight: ${fw("medium")}; color: var(--primary-text-color); }
+  .item .state.accent, .item .state.lone.accent { color: var(--fe-color); font-weight: ${fw("medium")}; }
   .item .pill { max-width: 100%; }
   /* a column item is list-like: the icon on the left, the name over the value on the right (name_position is ignored) */
   .section.layout-column .row.item { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; row-gap: 2px; align-items: center; justify-items: start; text-align: left; }
@@ -262,7 +272,7 @@ export const STYLE_TABLE = `
   .section.layout-table { gap: 8px; }
   .row.field { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; }
   .section.with-icon .row.field { grid-template-columns: auto minmax(0, 1fr) auto; }
-  .field .key { font-size: 11px; line-height: 16px; letter-spacing: .08em; text-transform: uppercase; font-weight: 500; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .field .key { ${type(11, 16)} letter-spacing: .08em; text-transform: uppercase; font-weight: ${fw("medium")}; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .field .val { display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; justify-self: end; }
   .field .val .state { font-weight: 600; }
   .field .val:empty { display: none; }
@@ -279,8 +289,8 @@ export const STYLE_BLOCKS = `
   .gauge svg { display: block; width: 100%; height: auto; overflow: visible; }
   .gauge .track { fill: none; stroke: color-mix(in srgb, var(--primary-text-color) 9%, transparent); stroke-linecap: round; }
   .gauge .prog { fill: none; stroke: var(--fe-color); stroke-linecap: round; transition: stroke-dashoffset .4s; }
-  .gauge .val { font: 500 17px Roboto, system-ui, sans-serif; fill: var(--primary-text-color); font-variant-numeric: tabular-nums; }
-  .gauge .sub { font: ${AXIS_FONT}; fill: var(--secondary-text-color); }
+  .gauge .val { font: ${fw("medium")} 17px ${FONT_FAMILY}; fill: var(--primary-text-color); font-variant-numeric: tabular-nums; }
+  .gauge .sub { font: 10px ${FONT_FAMILY}; fill: var(--secondary-text-color); }
 `;
 export const STYLE_PLOT = `
   .plot { position: relative; width: 100%; min-width: 0; touch-action: pan-y; }
@@ -300,12 +310,12 @@ export const STYLE_PLOT = `
   .plot .col { fill: var(--fe-color); }
   .plot .hl { fill: none; stroke: var(--primary-text-color); stroke-width: 1.5; }
   .hover { display: none; } .hover.on { display: block; }
-  .label { position: absolute; font: ${AXIS_FONT}; line-height: 12px; color: var(--secondary-text-color); white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
+  .label { position: absolute; ${font(10, 12)} color: var(--secondary-text-color); white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
   .label.right { transform: translateX(-100%); }
   .tip {
     position: absolute; top: 4px; pointer-events: none; display: none; z-index: 1; box-sizing: border-box; max-width: calc(100% - 8px);
     background: var(--ha-card-background, var(--card-background-color)); color: var(--primary-text-color);
-    border: 1px solid var(--divider-color); border-radius: 8px; padding: 6px 8px; font-size: 12px; line-height: 16px;
+    border: 1px solid var(--divider-color); border-radius: 8px; padding: 6px 8px; ${type(12, 16)}
     box-shadow: var(--ha-card-box-shadow, 0 2px 6px rgba(0,0,0,.2)); white-space: nowrap;
   }
   .tip.on { display: block; }

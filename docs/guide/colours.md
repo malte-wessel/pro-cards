@@ -31,6 +31,57 @@ Try it on this site: every example has a theme picker in its top-right corner, a
 
 :::
 
+## Text size
+
+The text follows Home Assistant's typography variables, the same ones the built-in cards read. A theme that changes them changes the Pro Cards with the rest of the dashboard, with no card_mod and no per-card option:
+
+| Variable                                             | What it changes                                                                                                                                                |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ha-font-size-scale`                                 | every text size at once (`1.15` makes everything 15 % larger)                                                                                                  |
+| `ha-font-size-xs` … `ha-font-size-5xl`               | one step of the scale (10, 12, 14, 16, 20, 24, 28, 32 and 40 px by default)                                                                                    |
+| `ha-font-weight-normal`, `-medium`                   | the weights                                                                                                                                                    |
+| `ha-font-family-body`                                | the font                                                                                                                                                       |
+| `ha-tile-info-primary-*`, `ha-tile-info-secondary-*` | the name and the secondary line of tiles and list rows, as on Home Assistant's tile card: `font-size`, `font-weight`, `line-height`, `letter-spacing`, `color` |
+
+For example, a theme that makes all text a little larger and the secondary line of tiles clearly larger:
+
+```yaml
+frontend:
+  themes:
+    Tablet:
+      ha-font-size-scale: 1.15
+      ha-tile-info-secondary-font-size: 15px
+```
+
+Whatever sits around the text grows with it: axis labels keep their room, the power flow's labels their place beside the nodes, a tile its two lines (so a tile with larger text can be taller than one row). Text inside a drawing that scales as a whole, such as the gauge's value, the illuminance arc and the value in an icon's circle, keeps its proportion to the drawing.
+
+Pick **Large text** in an example's theme picker to see any example at `ha-font-size-scale: 1.25`, or look at this one:
+
+::: live theme=large
+
+```yaml
+- type: custom:entity-group-card-pro
+  title: Living room
+  icon: mdi:sofa
+  entities:
+    - { entity: light.living_room, control: toggle }
+    - { entity: sensor.living_room_temperature, name: Temperature, decimals: 1 }
+    - { entity: sensor.living_room_co2, name: CO₂, visual: strip }
+- type: custom:multi-trend-card-pro
+  title: Outdoor
+  icon: mdi:thermometer
+  hours_to_show: 12
+  x_axis: true
+  y_axis: true
+  entities:
+    - { entity: sensor.outdoor_temperature, name: Temperature, color: red }
+    - { entity: sensor.dew_point, name: Dew point, color: blue }
+```
+
+:::
+
+card_mod and UIX can still style the cards, but the class names inside them are not a stable interface and can change with any release. Prefer the variables above where they cover what you want.
+
 ## Colour values
 
 Wherever a card accepts a colour you can use:

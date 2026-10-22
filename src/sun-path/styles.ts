@@ -1,6 +1,7 @@
 // Styles of the sun path card.
 import { STYLE_HOST, STYLE_ICONS } from "../shared/constants.ts";
 import { PLOT_H } from "./constants.ts";
+import { HEADER_TITLE, fs, fw, lh, type } from "../shared/typography.ts";
 
 export const STYLE = `
   ${STYLE_ICONS}
@@ -9,18 +10,18 @@ export const STYLE = `
   ha-card { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; contain: inline-size; }
   .header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 0 16px; min-width: 0; }
   .header ha-icon { flex: none; color: var(--secondary-text-color); --mdc-icon-size: 20px; }
-  .header .title { flex: 1; min-width: 0; font-size: 16px; font-weight: 500; line-height: 20px; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .header .title { flex: 1; min-width: 0; ${HEADER_TITLE} color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .body { padding: 16px 16px 12px 16px; flex: 1; display: flex; flex-direction: column; min-width: 0; }
   .header:not([style*="none"]) + .body { padding-top: 12px; }
   .row { display: flex; justify-content: space-between; gap: 12px; }
   .row .ev { flex: 1 1 0; min-width: 0; overflow: hidden; }
   .ev.right { text-align: right; }
   .lbl {
-    font-size: 12px; line-height: 16px; color: var(--secondary-text-color);
+    ${type(12, 16)} color: var(--secondary-text-color);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .val {
-    font-size: 24px; line-height: 32px; font-weight: 500; color: var(--primary-text-color);
+    ${type(24, 32)} font-weight: ${fw("medium")}; color: var(--primary-text-color);
     font-variant-numeric: tabular-nums; white-space: nowrap;
   }
   .plot { position: relative; height: ${PLOT_H}px; margin-top: 4px; min-width: 0; touch-action: pan-y; }
@@ -48,7 +49,7 @@ export const STYLE = `
     border: 1px solid var(--divider-color);
     border-radius: 8px;
     padding: 6px 8px;
-    font-size: 12px; line-height: 16px;
+    ${type(12, 16)}
     box-shadow: var(--ha-card-box-shadow, 0 2px 6px rgba(0,0,0,.2));
     white-space: nowrap;
     max-width: calc(100% - 8px);
@@ -61,8 +62,9 @@ export const STYLE = `
   .tip .row { display: flex; align-items: center; gap: 6px; }
   .tip .row b { font-weight: 600; font-variant-numeric: tabular-nums; }
   .tip .row span { color: var(--secondary-text-color); }
-  .events { position: relative; height: 38px; margin-top: 6px; }
+  /* the label's line and the time's: 38 px at the default text size */
+  .events { position: relative; height: calc(${lh(12, 18)} + ${lh(14, 20)}); margin-top: 6px; }
   .events .ev { position: absolute; top: 0; text-align: center; }
-  .events .lbl { font-size: 12px; }
-  .events .sm { font-size: 14px; line-height: 20px; font-weight: 500; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .events .lbl { font-size: ${fs(12)}; }
+  .events .sm { ${type(14, 20)} font-weight: ${fw("medium")}; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
 `;

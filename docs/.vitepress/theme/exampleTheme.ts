@@ -5,6 +5,7 @@ import { ref, watch, onMounted } from "vue";
 export const THEMES = [
   { id: "default", label: "Home Assistant" },
   { id: "graphite", label: "Graphite" },
+  { id: "large", label: "Large text" },
 ] as const;
 export type ThemeId = (typeof THEMES)[number]["id"];
 

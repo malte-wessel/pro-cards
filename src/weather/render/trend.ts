@@ -234,5 +234,6 @@ export const drawTrendSection = (
     yAxis: sec.yAxis,
     series,
     timeFmt,
+    text: ctx.text,
   });
 };

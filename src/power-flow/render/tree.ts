@@ -12,17 +12,10 @@ import { iconEl, textEl } from "../../shared/entity/render/lead.ts";
 import { el as iEl, setRate, vars } from "../../shared/flow/dom.ts";
 import { fmtNumber, textWidth } from "../../shared/format.ts";
 import { t } from "../../shared/i18n.ts";
+import { measure, type TextCache } from "../../shared/typography.ts";
 import { qs } from "../../shared/util.ts";
 import { leavesOf, type PowerFlowConfig } from "../config.ts";
-import {
-  COLORS,
-  FONT_NAME,
-  FONT_SMALL,
-  FONT_SMALL_NAME,
-  FONT_VALUE,
-  GEOM,
-  ICONS,
-} from "../constants.ts";
+import { COLORS, ICONS, type LabelLines } from "../constants.ts";
 import {
   arrowLength,
   dashOf,
@@ -35,6 +28,7 @@ import {
 import { placeLabels, type LabelSize } from "../labels.ts";
 import {
   layoutTree,
+  linesOf,
   ringWidth,
   type LabelBox,
   type LEdge,
@@ -338,8 +332,17 @@ const labelText = (
   return { v, n: name, s };
 };
 
+// the labels' lines as styled (`.plabel`), at the theme's text size
+export const labelLines = (diag: HTMLElement, cache?: TextCache): LabelLines => ({
+  value: measure(cache, diag, ["plabel", "state"], [14, 17, 500]),
+  name: measure(cache, diag, ["plabel", "secondary"], [12, 15]),
+  smallValue: measure(cache, diag, ["plabel small", "state"], [12, 15, 500]),
+  smallName: measure(cache, diag, ["plabel small", "secondary"], [11, 13]),
+});
+
 // the label of every node, measured, from a preliminary layout (the texts need no geometry)
 const measureLabels = (st: TreeState, labelEls: Map<string, HTMLElement>) => {
+  const lines = linesOf(st.cfg);
   const texts = new Map<string, LabelTexts>();
   const sizes = new Map<string, LabelBox>();
   for (const nd of st.layout.nodes) {
@@ -350,12 +353,12 @@ const measureLabels = (st: TreeState, labelEls: Map<string, HTMLElement>) => {
     const txt = labelText(st, nd, ent, m);
     texts.set(nd.id, txt);
     const small = el.classList.contains("small");
-    const nameFont = small ? FONT_SMALL_NAME : FONT_NAME;
-    const vw = textWidth(txt.v, small ? FONT_SMALL : FONT_VALUE) + 2;
-    const nw = Math.max(textWidth(txt.n, nameFont), textWidth(txt.s, nameFont)) + 2;
+    const value = small ? lines.smallValue : lines.value,
+      name = small ? lines.smallName : lines.name;
+    const vw = textWidth(txt.v, value.font) + 2;
+    const nw = Math.max(textWidth(txt.n, name.font), textWidth(txt.s, name.font)) + 2;
     const w = Math.max(vw, nw);
-    const h =
-      (small ? GEOM.labelSmallH : GEOM.labelH) + (txt.s ? (small ? 13 : GEOM.labelLine) : 0);
+    const h = value.line + name.line + (txt.s ? name.line : 0);
     sizes.set(nd.id, { w, h, vw, nw });
   }
   return { texts, sizes };

@@ -1,17 +1,20 @@
 // Mode "trend": the log-scale history line over the zone bands.
 import { textWidth } from "../../shared/format.ts";
 import { clampedSeries, lineBuckets, smoothPath } from "../../shared/history.ts";
+import { measure } from "../../shared/typography.ts";
 import { qs } from "../../shared/util.ts";
 import type { IlluminanceHost } from "../config.ts";
 import { logLineMeans, posOf, scaleTop, yLabels } from "../zones.ts";
 import { addLabel, plotShell, windowOf, xTicks } from "./plot.ts";
 
-const LABEL_H = 12; // line height of the axis and zone labels
-
 export const renderTrend = (card: IlluminanceHost, body: HTMLElement, v: number | null) => {
   const cfg = card._config,
     zones = cfg.zonesList;
-  const xAxisH = 18,
+  // the axis and zone labels follow the theme's text size: the axis strip, the gutter and the
+  // least room for a label too
+  const ax = measure(card._textCache, body, ["label"], [10, 12]),
+    labelH = ax.line;
+  const xAxisH = Math.ceil(labelH) + 6,
     natural = 160 + xAxisH;
   const plot = plotShell(card, body, v, natural);
   // the trend grows into a cell with fixed rows (styles) and is drawn at the height it has
@@ -32,7 +35,7 @@ export const renderTrend = (card: IlluminanceHost, body: HTMLElement, v: number 
   const yTicks = yLabels(zones, cfg.min_lx, top);
   let gutter = 0;
   yTicks.forEach((tk) => {
-    gutter = Math.max(gutter, textWidth(tk.txt));
+    gutter = Math.max(gutter, textWidth(tk.txt, ax.font));
   });
   gutter = Math.ceil(gutter) + 8;
   const PW = W - gutter;
@@ -50,7 +53,7 @@ export const renderTrend = (card: IlluminanceHost, body: HTMLElement, v: number 
     html += `<rect x="${gutter}" y="${y1.toFixed(1)}" width="${PW}" height="${(y2 - y1).toFixed(1)}" fill="${z.css}" opacity=".12"/>`;
     if (i > 0)
       html += `<line class="grid" x1="${gutter}" x2="${W}" y1="${Math.round(y2) + 0.5}" y2="${Math.round(y2) + 0.5}"/>`;
-    if (y2 - y1 >= LABEL_H) {
+    if (y2 - y1 >= labelH) {
       const el = document.createElement("div");
       el.className = "label zone";
       el.textContent = z.label;
@@ -65,7 +68,7 @@ export const renderTrend = (card: IlluminanceHost, body: HTMLElement, v: number 
   let lastY = Infinity;
   yTicks.forEach((tk) => {
     const y = yOf(tk.val);
-    if (lastY - y < LABEL_H) return;
+    if (lastY - y < labelH) return;
     addLabel(labels, "y", tk.txt, 0, y, gutter - 6);
     lastY = y;
   });
@@ -84,6 +87,6 @@ export const renderTrend = (card: IlluminanceHost, body: HTMLElement, v: number 
   }
   html += `<g class="hover"><line class="hair" y1="0" y2="${plotH}"/><circle class="dot" r="4"/></g>`;
   svg.innerHTML = html;
-  xTicks(card, labels, xOf, W, plotH, t0, now);
+  xTicks(card, labels, xOf, W, plotH, t0, now, ax);
   card._mode = "trend";
 };

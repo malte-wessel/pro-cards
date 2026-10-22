@@ -8,7 +8,7 @@
 // config alone (the card's height never depends on its width); along the flow through the column
 // positions, which keep the measured label widths clear of the next column and the trunks.
 import { leavesOf, type PowerFlowConfig } from "./config.ts";
-import { GEOM, NODE_D, type Direction } from "./constants.ts";
+import { GEOM, LABEL_LINES, NODE_D, type Direction } from "./constants.ts";
 import type { EdgeFlow, EdgeKind } from "./model.ts";
 import { dedupe, orthoPath, pathLength, type Pt } from "./path.ts";
 
@@ -68,10 +68,14 @@ const srcAlongOf = (cfg: PowerFlowConfig) =>
 
 // ----- label slots -----
 
+// the labels' lines: the theme's where the tree is drawn, the default size otherwise
+export const linesOf = (cfg: PowerFlowConfig) => cfg.lines ?? LABEL_LINES;
 // the height of a node's label from the config: value and name, a secondary line when set
 export const labelHeightOf = (cfg: PowerFlowConfig, idx: number | null, small: boolean) => {
   const sec = idx !== null && !!cfg.entities[idx]?.secondary;
-  return (small ? GEOM.labelSmallH : GEOM.labelH) + (sec ? (small ? 13 : GEOM.labelLine) : 0);
+  const l = linesOf(cfg),
+    name = small ? l.smallName : l.name;
+  return (small ? l.smallValue : l.value).line + name.line + (sec ? name.line : 0);
 };
 // a label beside its node sits above the node's line: centred `max(r, h/2) + 4` above the
 // centre, so its bottom clears the line by 4 px however small the node is
@@ -167,10 +171,7 @@ const columnPlan = (cfg: PowerFlowConfig, scale = 1): Column => {
   // with rooms, the first block's label sits centred above its node in the room column
   const c0 = cfg.consumers[0];
   if (cfg.hasGroups && c0) {
-    const h =
-      c0.kind === "group"
-        ? GEOM.labelH
-        : labelHeightOf(cfg, c0.kind === "item" ? c0.idx : null, false);
+    const h = labelHeightOf(cfg, c0.kind === "item" ? c0.idx : null, false);
     first = Math.max(first, c0.d / 2 + 4 + h);
   }
   const last = lastLeaf ? Math.max(GEOM.consumerMargin, lastLeaf.d / 2 + 14) : 0;
@@ -179,10 +180,16 @@ const columnPlan = (cfg: PowerFlowConfig, scale = 1): Column => {
 
 // direction: down – the row of sources across the top, centred over the home, and their labels
 // in one line: right of the icons when every name fits there, otherwise below them, beside each
-// source's line. The choice reads the names and a fixed room for the value (`srcValueW`), so a
-// changing value never moves the labels. Names that do not fit are cut (`caps`), values never.
+// source's line. The choice reads the names and a fixed room for the value (`valueW`: `srcValueW`
+// at the default text size), so a changing value never moves the labels. Names that do not fit
+// are cut (`caps`), values never.
 export type SourceSlot = "right" | "below";
-export const sourceRow = (ds: number[], nws: number[], across: number) => {
+export const sourceRow = (
+  ds: number[],
+  nws: number[],
+  across: number,
+  valueW: number = GEOM.srcValueW,
+) => {
   const n = ds.length,
     g = GEOM.labelGap;
   // at least 44 px, and never less than two neighbours' radii (big icon_size)
@@ -190,7 +197,7 @@ export const sourceRow = (ds: number[], nws: number[], across: number) => {
   const pitch =
     n < 2 ? 0 : Math.max(44, touch, Math.min(126, (across - 2 * GEOM.downMargin) / (n - 1)));
   const bs = ds.map((_, i) => across / 2 + (i - (n - 1) / 2) * pitch);
-  const want = nws.map((w) => Math.max(w, GEOM.srcValueW));
+  const want = nws.map((w) => Math.max(w, valueW));
   // right of the icon: up to the next icon; below: up to the next source's line
   const roomRight = bs.map(
     (b, i) => (i < n - 1 ? bs[i + 1] - ds[i + 1] / 2 - 8 : across - 4) - (b + ds[i] / 2 + g),
@@ -291,6 +298,7 @@ export const layoutTree = (
       cfg.sources.map((s) => s.d),
       cfg.sources.map((s) => sizes.get(s.id)?.nw ?? 0),
       across,
+      (GEOM.srcValueW * linesOf(cfg).value.size) / LABEL_LINES.value.size,
     );
     bS = row.bs;
     srcCaps = row.caps;

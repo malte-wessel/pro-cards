@@ -32,6 +32,7 @@ import {
 } from "../../src/sun-azimuth/constants.ts";
 import type { HomeAssistant } from "../../src/shared/ha.ts";
 import { SunAzimuthCard } from "../../src/sun-azimuth-card.ts";
+import { chipSvg, timeChip } from "../../src/sun-azimuth/render/text.ts";
 
 const LAT = 51.23,
   LON = 6.78; // Düsseldorf
@@ -447,6 +448,26 @@ describe("sun-azimuth-card sky dial", () => {
     // the sunrise mark on the smaller rim, the sun inside it
     expect(Math.hypot(g.rise![0] - c, g.rise![1] - c)).toBeCloseTo(g.r, 0);
     expect(Math.hypot(g.sun[0] - c, g.sun[1] - c)).toBeLessThan(g.r);
+  });
+});
+
+describe("sun-azimuth-card text at the theme's size", () => {
+  it("gives the compass labels more room around the dial and beside the scene", () => {
+    // 25 % larger text: the rim keeps 2.5 px more on each side, the scene a taller box
+    expect(dialBox(300, 1.25).r).toBe(121.5);
+    expect(dialBox(300, 1).r).toBe(124);
+    expect(sceneBox(416, Infinity, 1.25).h - sceneBox(416).h).toBe(5);
+    expect(sceneBox(260, Infinity, 1.25).scale).toBeLessThan(sceneBox(260).scale);
+  });
+  it("sizes a chip to its font and height, a preview's above the given foot", () => {
+    const big = { scale: 1.25, chipFont: "500 15px Roboto", chipH: 24 };
+    expect(chipSvg("62°", 100, 50, big)).toContain('y="38.0" width="');
+    expect(chipSvg("62°", 100, 50, big)).toContain('height="24" rx="12"');
+    expect(chipSvg("62°", 100, 50)).toContain('height="20" rx="10"');
+    // the time chip's centre sits 4 px plus half its height above the foot, never above the top
+    expect(timeChip("12:00", 100, 100, 300)).toContain('<text x="100.0" y="86.0">');
+    expect(timeChip("12:00", 100, 100, 300, big)).toContain('<text x="100.0" y="84.0">');
+    expect(timeChip("12:00", 100, 5, 300, big)).toContain('y="12.0">');
   });
 });
 

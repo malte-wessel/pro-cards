@@ -64,15 +64,19 @@ const unit = (v: V3) => {
 // minScale (the box is then wider than the column and the
 // SVG shrinks to fit). A card of a fixed height (grid_options.rows) also passes the `height` there
 // is: the sphere then shrinks until the dome and the ground's labels fit it too
-export const sceneBox = (width: number, height = Infinity) => {
-  const byHeight = (height - SCENE.top - GAP - SCENE.bottom) / (1 + Math.sin(TILT * RAD));
+// `ts`, the theme's text scale, grows the labels' gap and room with the letters
+export const sceneBox = (width: number, height = Infinity, ts = 1) => {
+  const gap = GAP * ts,
+    side = SCENE.side * ts,
+    bottom = SCENE.bottom * ts;
+  const byHeight = (height - SCENE.top - gap - bottom) / (1 + Math.sin(TILT * RAD));
   const scale = Math.floor(
-    Math.max(SCENE.minScale, Math.min(SCENE.maxScale, width / 2 - GAP - SCENE.side, byHeight)),
+    Math.max(SCENE.minScale, Math.min(SCENE.maxScale, width / 2 - gap - side, byHeight)),
   );
-  const w = Math.max(Math.round(width), Math.ceil(2 * (scale + GAP + SCENE.side)));
+  const w = Math.max(Math.round(width), Math.ceil(2 * (scale + gap + side)));
   const cy = SCENE.top + scale;
-  const h = Math.round(cy + scale * Math.sin(TILT * RAD) + GAP + SCENE.bottom);
-  return { w, h, scale, cx: w / 2, cy };
+  const h = Math.round(cy + scale * Math.sin(TILT * RAD) + gap + bottom);
+  return { w, h, scale, cx: w / 2, cy, gap };
 };
 
 export const sceneGeometry = (
@@ -85,8 +89,9 @@ export const sceneGeometry = (
   width: number,
   roof: Roof = "gable",
   height = Infinity, // a card of a fixed height: the room there is for the scene
+  ts = 1, // the theme's text scale
 ): SceneGeometry => {
-  const { w, h, scale: SC, cx: GX, cy: GY } = sceneBox(width, height);
+  const { w, h, scale: SC, cx: GX, cy: GY, gap } = sceneBox(width, height, ts);
   const view = camera * RAD,
     tilt = TILT * RAD;
   // world → screen: x east, y north, z up; the camera sits at bearing `camera`, looking inward
@@ -164,7 +169,7 @@ export const sceneGeometry = (
   const origin = pj(0, 0, 0),
     poleTop = pj(0, 0, Math.max(0.44, solid.top + 0.12));
   const pole = `M${P(pj(0, 0, solid.top))} L${P(poleTop)}`;
-  // the compass points: GAP px outside the rim, along the point's direction on screen (the
+  // the compass points: `gap` px outside the rim, along the point's direction on screen (the
   // ground is squashed, so a fixed share of the radius would put the front label on the rim). A
   // point on the far half of the rim is left out: its label would sit in the dome, behind the
   // sun's path; the sides (depth 0 when the camera looks along an axis) stay
@@ -175,7 +180,7 @@ export const sceneGeometry = (
         dx = p[0] - GX,
         dy = p[1] - GY,
         n = Math.hypot(dx, dy) || 1;
-      return { bearing, x: p[0] + (dx / n) * GAP, y: p[1] + (dy / n) * GAP, depth: p[2] };
+      return { bearing, x: p[0] + (dx / n) * gap, y: p[1] + (dy / n) * gap, depth: p[2] };
     })
     .filter((c) => c.depth > -0.15);
   // the house, turned with its front. It is convex, so a surface shows when its outward normal

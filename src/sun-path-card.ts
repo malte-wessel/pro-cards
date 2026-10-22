@@ -38,12 +38,15 @@ import { t } from "./shared/i18n.ts";
 import { drawCurve, drawEvents, fmtEvent, showHover, timeAt } from "./sun-path/plot.ts";
 import { solarDay } from "./shared/solar.ts";
 import { STYLE } from "./sun-path/styles.ts";
+import { TextCache, themeChanged } from "./shared/typography.ts";
 
 const CARD_TYPE = "sun-path-card-pro";
 
 defineElement(`${CARD_TYPE}-editor`, SunPathCardEditor);
 
 export class SunPathCard extends HTMLElement implements SunPathHost {
+  // the card's text styles, measured once per theme (typography.ts)
+  _textCache = new TextCache();
   static cardType = CARD_TYPE;
 
   _config!: SunPathConfig;
@@ -102,9 +105,15 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
       this._lastMinute = minute;
       this._render();
     }
+    if (themeChanged(prev, hass)) {
+      this._textCache.clear();
+      requestAnimationFrame(() => this._render());
+    }
   }
 
   connectedCallback() {
+    // another place may have another theme (a view's own)
+    this._textCache.clear();
     this._timer = setInterval(() => this._render(), 60000);
     this._ro = new ResizeObserver(() => this._render());
     if (this._root) this._ro.observe(qs(this._root, ".plot"));

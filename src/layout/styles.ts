@@ -1,6 +1,7 @@
 // Styles of the layout card. It draws no ha-card of its own (as Home Assistant's stacks): no
 // border around the cards; the cards inside bring their own.
 import { STYLE_HOST } from "../shared/constants.ts";
+import { font } from "../shared/typography.ts";
 
 export const STYLE = `
   ${STYLE_HOST}
@@ -65,6 +66,6 @@ export const STYLE = `
   .seamless .col > .item:last-child::after { border-bottom: none; }
   .seamless .col > .item::after { border-right: none; }
 
-  .note { padding: 16px; text-align: center; color: var(--secondary-text-color); font: 400 14px/20px var(--ha-font-family-body, Roboto, system-ui, sans-serif); }
+  .note { padding: 16px; text-align: center; color: var(--secondary-text-color); ${font(14, 20)} }
   .note[hidden] { display: none; }
 `;

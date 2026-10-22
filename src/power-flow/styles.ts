@@ -9,6 +9,7 @@ import {
   STYLE_HEADER,
   STYLE_ROW,
 } from "../shared/entity/render/styles.ts";
+import { fs, fw, type } from "../shared/typography.ts";
 
 const CARD_BG = "var(--ha-card-background, var(--card-background-color))";
 
@@ -16,7 +17,7 @@ const STYLE_POWER = `
   .body { gap: 10px; }
   .psummary { --fe-color: var(--primary-color); }
   .psummary .secondary { white-space: normal; }
-  .psummary .secondary .accent { color: var(--fe-color); font-weight: 500; }
+  .psummary .secondary .accent { color: var(--fe-color); font-weight: ${fw("medium")}; }
   .psummary .pill { flex: none; }
 
   .pdiag { position: relative; width: 100%; min-width: 0; height: var(--diag-h, 190px); contain: layout; }
@@ -54,11 +55,13 @@ const STYLE_POWER = `
   .pnode .lead .prog { transition: stroke-dashoffset .4s, d .4s; }
 
   .plabel { position: absolute; z-index: 2; white-space: nowrap; line-height: 1.2; pointer-events: none; }
-  .plabel .state { display: block; font-size: 14px; line-height: 17px; }
-  .plabel .secondary { line-height: 15px; }
+  .plabel .state { display: block; ${type(14, 17)} }
+  /* a label is not a tile: the tile card's variables (spacing, weight) stay out of it, as its
+     width is measured without them */
+  .plabel .secondary { ${type(12, 15)} font-weight: ${fw("normal")}; letter-spacing: normal; }
   .plabel .sec2 { opacity: .85; }
-  .plabel.small .state { font-size: 12px; line-height: 15px; }
-  .plabel.small .secondary { font-size: 11px; line-height: 13px; }
+  .plabel.small .state { ${type(12, 15)} }
+  .plabel.small .secondary { ${type(11, 13)} }
   .plabel.l { transform: translateY(-50%); text-align: left; }
   .plabel.r { transform: translateY(-50%); text-align: right; }
   .plabel.c { transform: translateX(-50%); text-align: center; }
@@ -69,9 +72,9 @@ const STYLE_POWER = `
   .pdiag.narrow .plist .lead { display: none; }
   .plist .texts { gap: 3px; }
   .plist .line { gap: 6px; }
-  .plist .primary { font-size: 13px; line-height: 16px; }
-  .plist .state { font-size: 13px; }
-  .plist .secondary { font-size: 11px; line-height: 13px; margin-top: -2px; }
+  .plist .primary { ${type(13, 16)} }
+  .plist .state { font-size: ${fs(13)}; }
+  .plist .secondary { ${type(11, 13)} margin-top: -2px; }
   .plist .bar { height: 4px; }
   .plist .bar i { border-radius: 2px; }
 

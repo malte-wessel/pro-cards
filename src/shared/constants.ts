@@ -1,7 +1,6 @@
 // Constants shared by all cards.
 
 export const REFRESH_MS = 5 * 60 * 1000;
-export const AXIS_FONT = "10px Roboto, system-ui, sans-serif";
 
 export const DEVICE_CLASS_ICON: Record<string, string> = {
   temperature: "mdi:thermometer",

@@ -59,12 +59,15 @@ import {
   type TrendSpec,
 } from "./shared/trend/plot.ts";
 import { STYLE } from "./multi-trend/styles.ts";
+import { TextCache, themeChanged } from "./shared/typography.ts";
 
 const CARD_TYPE = "multi-trend-card-pro";
 
 defineElement(`${CARD_TYPE}-editor`, MultiTrendCardEditor);
 
 export class MultiTrendCard extends HTMLElement {
+  // the card's text styles, measured once per theme (typography.ts)
+  _textCache = new TextCache();
   static cardType = CARD_TYPE;
 
   _config!: TrendConfig;
@@ -181,9 +184,15 @@ export class MultiTrendCard extends HTMLElement {
     for (const id of person ? [...deps.entities, person] : deps.entities)
       if (prev?.states[id] !== hass.states[id]) changed = true;
     if (changed || !prev) this._render();
+    if (themeChanged(prev, hass)) {
+      this._textCache.clear();
+      requestAnimationFrame(() => this._render());
+    }
   }
 
   connectedCallback() {
+    // another place may have another theme (a view's own)
+    this._textCache.clear();
     this._timer = setInterval(() => this._fetchHistory(), REFRESH_MS);
     this._ro = new ResizeObserver(() => this._render());
     if (this._root) this._ro.observe(qs(this._root, ".plot"));
@@ -400,6 +409,7 @@ export class MultiTrendCard extends HTMLElement {
       xAxis: this._config.x_axis,
       yAxis: this._config.y_axis,
       smoothing: { minutes: this._config.smoothing_minutes },
+      text: this._textCache,
       series: shown.map((i) => ({
         pts: this._series[i],
         color: this._color(i),

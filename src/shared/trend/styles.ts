@@ -1,12 +1,12 @@
 // Styles of the trend plot (`.plot.trend`) and its legend, shared by the multi trend card and the
 // weather card. Theme tokens only.
-import { AXIS_FONT } from "../constants.ts";
+import { font, fw, type } from "../typography.ts";
 
 export const STYLE_TREND = `
   .legend {
     display: flex; flex-wrap: wrap; gap: 4px 14px;
     padding: 4px 12px 0 12px;
-    font-size: 12px; line-height: 16px; color: var(--secondary-text-color);
+    ${type(12, 16)} color: var(--secondary-text-color);
   }
   .legend span { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; }
   .legend span em { font-style: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -24,13 +24,13 @@ export const STYLE_TREND = `
     position: absolute; left: 4px; max-width: calc(100% - 8px); box-sizing: border-box;
     padding: 0 3px; border-radius: 3px;
     background: color-mix(in srgb, var(--ha-card-background, var(--card-background-color)) 75%, transparent);
-    font-size: 10px; line-height: 12px; color: var(--secondary-text-color);
+    ${type(10, 12)} color: var(--secondary-text-color);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;
   }
   .trend svg .lane-sep { stroke: var(--divider-color); stroke-width: 1; }
   .trend svg .grid { stroke: var(--divider-color); stroke-width: 1; }
   .trend .axis-label {
-    position: absolute; font: ${AXIS_FONT}; line-height: 12px; color: var(--secondary-text-color);
+    position: absolute; ${font(10, 12)} color: var(--secondary-text-color);
     white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums;
   }
   .trend .axis-label.x { transform: translateX(-50%); }
@@ -47,7 +47,7 @@ export const STYLE_TREND = `
     border: 1px solid var(--divider-color);
     border-radius: 8px;
     padding: 6px 8px;
-    font-size: 12px; line-height: 16px;
+    ${type(12, 16)}
     box-shadow: var(--ha-card-box-shadow, 0 2px 6px rgba(0,0,0,.2));
     white-space: nowrap;
     max-width: calc(100% - 8px);
@@ -57,7 +57,7 @@ export const STYLE_TREND = `
   }
   .trend .tip.on { display: block; }
   .trend .tip .time { color: var(--secondary-text-color); margin-bottom: 2px; }
-  .trend .tip .head { font-weight: 500; margin-bottom: 2px; }
+  .trend .tip .head { font-weight: ${fw("medium")}; margin-bottom: 2px; }
   .trend .tip .row { display: flex; align-items: center; gap: 6px; }
   .trend .tip .row i { flex: none; display: inline-block; width: 10px; height: 2px; border-radius: 1px; background: var(--c); }
   .trend .tip .row b { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; }

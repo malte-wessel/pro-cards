@@ -5,6 +5,7 @@ import { smoothPath } from "../shared/history.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
 import { nearestPoint, placeTip } from "../shared/hover.ts";
 import { t as tr } from "../shared/i18n.ts";
+import { measure } from "../shared/typography.ts";
 import { qs } from "../shared/util.ts";
 import type { PositionedDay, SunPathHost } from "./config.ts";
 import { CURVE_STEP_MIN, HORIZON_MAX, HORIZON_MIN, PLOT_H, type SunEvent } from "./constants.ts";
@@ -139,10 +140,6 @@ export const showHover = (card: SunPathHost, t: number): boolean => {
   return true;
 };
 
-// fonts of the bottom row, for measuring (see styles.ts)
-const LBL_FONT = "12px Roboto, system-ui, sans-serif";
-const TIME_FONT = "500 14px Roboto, system-ui, sans-serif";
-
 // Bottom row: dawn / noon / dusk centred under their x; a label near an edge is shifted inward
 // only by the amount that would spill out of the card, so it stays with its position
 export const drawEvents = (
@@ -164,6 +161,9 @@ export const drawEvents = (
   const xs = items.map(([, t]) => xOf(t));
   // slot boundaries halfway between neighbours; each label may only use its own slot
   const bounds = [0, ...xs.slice(1).map((x, i) => (xs[i] + x) / 2), W];
+  // the labels' fonts as styled (styles.ts), at the theme's text size
+  const lblFont = measure(card._textCache, events, ["ev", "lbl"], [12, 18]).font,
+    timeFont = measure(card._textCache, events, ["ev", "sm"], [14, 20, 500]).font;
   items.forEach(([key, t], i) => {
     const label = card._label(key),
       time = fmt(card._hass, t);
@@ -171,7 +171,7 @@ export const drawEvents = (
       maxW = Math.max(24, Math.floor(bounds[i + 1] - bounds[i] - 8));
     const w = Math.min(
       maxW,
-      Math.ceil(Math.max(textWidth(label, LBL_FONT), textWidth(time, TIME_FONT))) + 2,
+      Math.ceil(Math.max(textWidth(label, lblFont), textWidth(time, timeFont))) + 2,
     );
     const left = Math.min(Math.max(x - w / 2, 0), W - w);
     const el = document.createElement("div");
