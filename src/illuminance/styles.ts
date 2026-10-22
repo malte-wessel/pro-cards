@@ -1,5 +1,5 @@
 // Styles of the illuminance card.
-import { STYLE_HOST, STYLE_ICONS } from "../shared/constants.ts";
+import { ICON_RADIUS, STYLE_HOST, STYLE_ICONS, iconBg } from "../shared/constants.ts";
 import { TILE_PRIMARY, TILE_SECONDARY, font, fs, fw, type } from "../shared/typography.ts";
 
 export const STYLE = `
@@ -8,8 +8,8 @@ export const STYLE = `
   ha-card { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; contain: inline-size; }
   .header { display: flex; align-items: center; gap: 12px; padding: 12px 16px 0 16px; min-width: 0; }
   .shape {
-    flex: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    color: var(--amber-color); background: color-mix(in srgb, var(--amber-color) 20%, transparent); --mdc-icon-size: 24px;
+    flex: none; width: 36px; height: 36px; border-radius: ${ICON_RADIUS}; display: flex; align-items: center; justify-content: center;
+    color: var(--amber-color); background: ${iconBg("var(--amber-color)")}; --mdc-icon-size: 24px;
   }
   .info { min-width: 0; flex: 1; }
   .primary { ${TILE_PRIMARY} white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

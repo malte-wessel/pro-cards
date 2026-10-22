@@ -31,6 +31,57 @@ Try it on this site: every example has a theme picker in its top-right corner, a
 
 :::
 
+## Theme variables
+
+These are the variables of a Home Assistant theme the cards read. Set them in a theme (without the leading `--`, as Home Assistant's themes do) and every Pro Card follows, together with the built-in cards that read them too.
+
+**Card**
+
+| Variable                                       | What it changes                                                                      |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `ha-card-background`, `card-background-color`  | the card's background (also behind the power flow's nodes and the flow cards' icons) |
+| `ha-card-border-radius`                        | the card's corners                                                                   |
+| `ha-card-border-width`, `ha-card-border-color` | the card's border                                                                    |
+| `ha-card-box-shadow`                           | the card's shadow                                                                    |
+
+**Colours**
+
+| Variable                                                                                                                                                            | What it changes                                                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `primary-color`                                                                                                                                                     | the default colour of an entity, the power flow's home and summary                 |
+| `primary-text-color`, `secondary-text-color`                                                                                                                        | the text                                                                           |
+| `text-primary-color`                                                                                                                                                | the text on a filled button (a pressed control)                                    |
+| `divider-color`                                                                                                                                                     | dividers, grid lines, tooltips' borders, the power flow's idle links               |
+| `disabled-color`                                                                                                                                                    | the power flow's idle nodes                                                        |
+| `red-color`, `amber-color`, … (every [named token](#colour-values))                                                                                                 | the colour of that name wherever a card uses it                                    |
+| `state-<domain>-<state>-color`, `state-icon-color`, `state-unavailable-color`                                                                                       | the [colour of an entity by its state](#where-colour-comes-from), as on tile cards |
+| `energy-solar-color`, `energy-grid-consumption-color`, `energy-grid-return-color`, `energy-battery-in-color`, `energy-battery-out-color`, `energy-non-fossil-color` | the power flow's sources and links, as on the energy dashboard                     |
+| `weather-icon-sun-color`, `-moon-color`, `-cloud-front-color`, `-cloud-back-color`, `-rain-color`, `-snow-color`, `-snow-stroke-color`                              | the weather card's condition icons, as on the weather forecast card                |
+| `switch-unchecked-track-color`                                                                                                                                      | a toggle that is off                                                               |
+
+**Icons**
+
+| Variable                     | What it changes                                                                                                             |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `ha-tile-icon-border-radius` | the shape behind an icon, as on Home Assistant's tile card (round by default; a ring and the power flow's nodes stay round) |
+| `tile-icon-opacity`          | how strong the soft colour behind an icon is (`0.2` by default; `0` leaves the icon alone on the card)                      |
+
+For example, a theme with rounded-square icons on a transparent background:
+
+```yaml
+frontend:
+  themes:
+    Flat icons:
+      ha-tile-icon-border-radius: 10px
+      tile-icon-opacity: 0
+```
+
+Home Assistant's own tile card keeps its icon background at 20 %: it sets `tile-icon-opacity` on the icon itself, so only the shape follows a theme there.
+
+**Text**: the typography variables, see [Text size](#text-size) below.
+
+card_mod and UIX can still style the cards, but the class names inside them are not a stable interface and can change with any release. Prefer the variables above where they cover what you want.
+
 ## Text size
 
 The text follows Home Assistant's typography variables, the same ones the built-in cards read. A theme that changes them changes the Pro Cards with the rest of the dashboard, with no card_mod and no per-card option:
@@ -79,8 +130,6 @@ Pick **Large text** in an example's theme picker to see any example at `ha-font-
 ```
 
 :::
-
-card_mod and UIX can still style the cards, but the class names inside them are not a stable interface and can change with any release. Prefer the variables above where they cover what you want.
 
 ## Colour values
 

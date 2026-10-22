@@ -1,6 +1,6 @@
 // CSS of the entity cards, in pieces so every card ships only what it renders.
 // Colours come from HA theme tokens; --fe-color is set per row from the resolved look.
-import { STYLE_HOST, STYLE_ICONS } from "../../constants.ts";
+import { ICON_RADIUS, STYLE_HOST, STYLE_ICONS, iconBg } from "../../constants.ts";
 import {
   FONT_FAMILY,
   HEADER_TITLE,
@@ -77,11 +77,12 @@ export const STYLE_ROW = `
   .top { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .lead { position: relative; flex: none; width: var(--lead, 36px); height: var(--lead, 36px); }
   .lead svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .lead .shape { position: absolute; inset: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--fe-color); background: var(--fe-soft); --mdc-icon-size: ${LEAD_ICON}; font-size: calc(var(--lead, 36px) * .24); font-weight: ${fw("medium")}; line-height: 1; white-space: nowrap; overflow: hidden; font-variant-numeric: tabular-nums; }
+  .lead .shape { position: absolute; inset: 0; border-radius: ${ICON_RADIUS}; display: flex; align-items: center; justify-content: center; color: var(--fe-color); background: ${iconBg("var(--fe-color)")}; --mdc-icon-size: ${LEAD_ICON}; font-size: calc(var(--lead, 36px) * .24); font-weight: ${fw("medium")}; line-height: 1; white-space: nowrap; overflow: hidden; font-variant-numeric: tabular-nums; }
   .lead .shape.value { color: var(--primary-text-color); background: transparent; }
   /* icon_style: plain, the icon without its circle (also a lead toggle that is off) */
   .lead.plain .shape, .lead.plain.tap.off .shape { background: transparent; }
-  .lead.ring .shape { inset: 16%; --mdc-icon-size: calc(var(--lead, 36px) * .42); }
+  /* a ring's icon stays round, inside its arc */
+  .lead.ring .shape { inset: 16%; border-radius: 50%; --mdc-icon-size: calc(var(--lead, 36px) * .42); }
   .lead .track { fill: none; stroke: var(--fe-soft); }
   .lead .prog { fill: none; stroke: var(--fe-color); stroke-linecap: round; transition: stroke-dashoffset .4s; }
   .main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -134,9 +135,9 @@ export const STYLE_CONTROLS = `
   .toggle.pending { background: color-mix(in srgb, var(--fe-color) 45%, transparent); }
   .toggle.pending i { left: 13px; animation: ctl-pulse 1s ease-in-out infinite; }
   .toggle.sm.pending i { left: 10px; }
-  .lead.tap { cursor: pointer; border-radius: 50%; outline: none; }
+  .lead.tap { cursor: pointer; border-radius: ${ICON_RADIUS}; outline: none; }
   .lead.tap:focus-visible .shape { box-shadow: 0 0 0 2px var(--fe-color); }
-  .lead.tap.off .shape { color: var(--secondary-text-color); background: var(--fe-track); }
+  .lead.tap.off .shape { color: var(--secondary-text-color); background: ${iconBg("var(--primary-text-color)", "transparent", 0.4)}; }
   .lead.tap.pending .shape { animation: ctl-pulse 1s ease-in-out infinite; }
   ${STYLE_SLIDER}
   .end .ctl-slider, .val .ctl-slider { flex: 0 1 120px; width: 120px; min-width: 64px; }

@@ -1,6 +1,6 @@
 // Styles of the sun azimuth card. --saz-sun / --saz-night / --saz-sky are set on the card from
 // the config colours; --c is the colour of a lead or row (the sun's while it is up).
-import { STYLE_HOST, STYLE_ICONS } from "../shared/constants.ts";
+import { ICON_RADIUS, STYLE_HOST, STYLE_ICONS, iconBg } from "../shared/constants.ts";
 import { STYLE_SLIDER } from "../shared/slider.ts";
 import {
   HEADER_TITLE,
@@ -49,7 +49,7 @@ export const STYLE = `
   .divider { height: 1px; margin: 0 -16px; background: var(--divider-color); flex: none; }
   .top { display: flex; align-items: center; gap: 12px; min-width: 0; --c: var(--saz-sun); }
   /* the tile shape of the other cards: 36 px, a 24 px icon */
-  .lead { position: relative; flex: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--c); background: color-mix(in srgb, var(--c) 20%, transparent); --mdc-icon-size: 24px; }
+  .lead { position: relative; flex: none; width: 36px; height: 36px; border-radius: ${ICON_RADIUS}; display: flex; align-items: center; justify-content: center; color: var(--c); background: ${iconBg("var(--c)")}; --mdc-icon-size: 24px; }
   .lead ha-icon { display: block; }
   .rot { display: flex; transition: transform .6s; }
   .texts { flex: 1 1 0; min-width: 24px; display: flex; flex-direction: column; gap: 2px; }
