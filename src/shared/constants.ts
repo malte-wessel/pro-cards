@@ -31,6 +31,12 @@ export const DEVICE_CLASS_ICON: Record<string, string> = {
 // the text line, so an ha-icon / ha-state-icon that inherits a line height lays out a line box
 // around it and the icon sits a pixel or two below centre (2 px at Home Assistant's 1.5)
 export const STYLE_ICONS = `ha-icon, ha-state-icon { line-height: 0; }`;
+// an icon's shape and its soft background, as Home Assistant's tile icon: a theme's
+// --ha-tile-icon-border-radius and --tile-icon-opacity (0.2 there) restyle them. `k` scales the
+// share for a fainter background (an off toggle's 8 % at the default), which still reaches 0 with it
+export const ICON_RADIUS = "var(--ha-tile-icon-border-radius, 50%)";
+export const iconBg = (color: string, base = "transparent", k = 1) =>
+  `color-mix(in srgb, ${color} calc(var(--tile-icon-opacity, 0.2) * ${100 * k}%), ${base})`;
 // every card's host takes the height its container gives, as Home Assistant's own cards do (a cell
 // with fixed rows, a grid row stretched by a taller neighbour, a horizontal stack); where that
 // height follows the content (masonry, a vertical stack) 100% is the content's height anyway.

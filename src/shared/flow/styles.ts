@@ -3,6 +3,7 @@
 // the reduced-motion pause. The `w` prefix of the class names is historical (the wind card came
 // first); the rain card uses the same ones. Each card appends its own particles and keyframes.
 import { BAND } from "./constants.ts";
+import { ICON_RADIUS, iconBg } from "../constants.ts";
 import { fs, fw, type } from "../typography.ts";
 
 export const STYLE_FLOW = `
@@ -13,8 +14,8 @@ export const STYLE_FLOW = `
   .whero .secondary { white-space: normal; }
   .secondary .accent { color: var(--fe-color); font-weight: ${fw("medium")}; }
 
-  /* the animated lead: whatever the card draws, clipped to the soft circle */
-  .lead.wlead { overflow: hidden; border-radius: 50%; }
+  /* the animated lead: whatever the card draws, clipped to the icon's soft shape */
+  .lead.wlead { overflow: hidden; border-radius: ${ICON_RADIUS}; }
 
   /* the band: the animation behind a chip */
   .wflow { position: relative; overflow: hidden; border-radius: 10px; background: color-mix(in srgb, var(--fe-color) 7%, transparent); contain: layout paint; }
@@ -34,7 +35,7 @@ export const STYLE_FLOW = `
   .row.wtile.flow .wflow.bg { position: absolute; inset: -6px -12px; border-radius: 0; }
   .row.wtile.flow > .hit { inset: -6px -12px; }
   .row.wtile.flow .top { position: relative; }
-  .row.wtile.flow .lead .shape { background: color-mix(in srgb, var(--fe-color) 20%, var(--ha-card-background, var(--card-background-color))); }
+  .row.wtile.flow .lead .shape { background: ${iconBg("var(--fe-color)", "var(--ha-card-background, var(--card-background-color))")}; }
   .row.wtile.flow .lead.plain .shape { background: transparent; }
   .row.wtile.flow .end .big b { ${type(26, 30)} }
 

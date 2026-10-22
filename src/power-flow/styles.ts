@@ -9,6 +9,7 @@ import {
   STYLE_HEADER,
   STYLE_ROW,
 } from "../shared/entity/render/styles.ts";
+import { iconBg } from "../shared/constants.ts";
 import { fs, fw, type } from "../shared/typography.ts";
 
 const CARD_BG = "var(--ha-card-background, var(--card-background-color))";
@@ -46,7 +47,8 @@ const STYLE_POWER = `
   .lane.back .fa { offset-rotate: reverse; }
 
   .pdiag .pnode { position: absolute; display: flex; flex-direction: column; transform: translate(-50%, -50%); gap: 0; z-index: 2; }
-  .pnode .lead .shape { background: color-mix(in srgb, var(--fe-color) 20%, ${CARD_BG}); }
+  /* a node stays round whatever the theme's icon shape: the links meet its circle */
+  .pnode .lead .shape { border-radius: 50%; background: ${iconBg("var(--fe-color)", CARD_BG)}; }
   /* a diagram, not a tile: the icons stay lighter than the entity cards' (55 % of the circle, 42 %
      in a ring), so the home and the sources keep the weight; both scale with icon_size */
   :is(.pnode, .plist) .lead:not(.ring) .shape { --mdc-icon-size: calc(var(--lead) * .55); }

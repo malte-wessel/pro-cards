@@ -1,5 +1,5 @@
 // Styles of the multi trend card: the header on top of the shared trend plot styles.
-import { STYLE_HOST, STYLE_ICONS } from "../shared/constants.ts";
+import { ICON_RADIUS, STYLE_HOST, STYLE_ICONS, iconBg } from "../shared/constants.ts";
 import { STYLE_TREND } from "../shared/trend/styles.ts";
 import { TILE_PRIMARY, TILE_SECONDARY, fs } from "../shared/typography.ts";
 
@@ -31,12 +31,12 @@ export const STYLE =
     flex: none;
     width: 36px;
     height: 36px;
-    border-radius: 50%;
+    border-radius: ${ICON_RADIUS};
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--tile-color);
-    background: color-mix(in srgb, var(--tile-color) 20%, transparent);
+    background: ${iconBg("var(--tile-color)")};
     --mdc-icon-size: 24px;
   }
   .info { min-width: 0; flex: 1; }
