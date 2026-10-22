@@ -41,6 +41,7 @@ import { fmtLx, showHover, timeAt, windowOf } from "./illuminance/render/plot.ts
 import { renderTrend } from "./illuminance/render/trend.ts";
 import { STYLE } from "./illuminance/styles.ts";
 import { mergeZones } from "./illuminance/zones.ts";
+import { themeChanged } from "./shared/typography.ts";
 
 const CARD_TYPE = "illuminance-card-pro";
 
@@ -123,6 +124,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
       }
       this._render();
     } else if (!prev || langOf(prev) !== langOf(hass)) this._render();
+    if (themeChanged(prev, hass)) requestAnimationFrame(() => this._render());
   }
 
   connectedCallback() {

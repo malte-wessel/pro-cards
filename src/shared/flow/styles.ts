@@ -3,14 +3,15 @@
 // the reduced-motion pause. The `w` prefix of the class names is historical (the wind card came
 // first); the rain card uses the same ones. Each card appends its own particles and keyframes.
 import { BAND } from "./constants.ts";
+import { fs, fw, type } from "../typography.ts";
 
 export const STYLE_FLOW = `
   .row.wtile { flex: 1; justify-content: center; }
-  .whero .big b { font-size: 40px; line-height: 44px; letter-spacing: -1px; }
-  .whero .big span { font-size: 16px; }
-  .whero .primary { font-size: 15px; }
+  .whero .big b { ${type(40, 44)} letter-spacing: -1px; }
+  .whero .big span { font-size: ${fs(16)}; }
+  .whero .primary { font-size: ${fs(15)}; }
   .whero .secondary { white-space: normal; }
-  .secondary .accent { color: var(--fe-color); font-weight: 500; }
+  .secondary .accent { color: var(--fe-color); font-weight: ${fw("medium")}; }
 
   /* the animated lead: whatever the card draws, clipped to the soft circle */
   .lead.wlead { overflow: hidden; border-radius: 50%; }
@@ -35,10 +36,10 @@ export const STYLE_FLOW = `
   .row.wtile.flow .top { position: relative; }
   .row.wtile.flow .lead .shape { background: color-mix(in srgb, var(--fe-color) 20%, var(--ha-card-background, var(--card-background-color))); }
   .row.wtile.flow .lead.plain .shape { background: transparent; }
-  .row.wtile.flow .end .big b { font-size: 26px; line-height: 30px; }
+  .row.wtile.flow .end .big b { ${type(26, 30)} }
 
   /* the chip on the band */
-  .chip { position: absolute; left: 8px; top: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 4px; border-radius: 999px; background: color-mix(in srgb, var(--ha-card-background, var(--card-background-color)) 80%, transparent); font-size: 12px; line-height: 16px; font-weight: 500; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .chip { position: absolute; left: 8px; top: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 4px; border-radius: 999px; background: color-mix(in srgb, var(--ha-card-background, var(--card-background-color)) 80%, transparent); ${type(12, 16)} font-weight: ${fw("medium")}; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .chip ha-icon { --mdc-icon-size: 14px; color: var(--fe-color); }
 `;
 // appended last by every flow card: the `animation` shorthands of the particles would reset the

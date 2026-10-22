@@ -100,12 +100,23 @@ let held: (() => void)[] = [];
 
 // wrap callService so tests can assert on it while the shim still applies the effect
 const baseSnapshot = hassMod.snapshot;
+// the mounted theme as Home Assistant reports it: a new object only when the theme (its mode or
+// skin) changes, so the cards measure their text again then and only then
+let themes = { darkMode: false },
+  themesKey = "";
+const themesNow = () => {
+  const key = `${root.classList.contains("dark")}:${root.dataset.theme ?? ""}`;
+  if (key !== themesKey) {
+    themesKey = key;
+    themes = { darkMode: root.classList.contains("dark") };
+  }
+  return themes;
+};
 const snapshot = (): HomeAssistant => {
   const h: HomeAssistant = baseSnapshot();
   h.locale = { language, time_zone: "server" };
   h.user = user === null ? undefined : { id: user, name: user, is_admin: true };
-  // the mode of the mounted theme, as Home Assistant reports it
-  h.themes = { darkMode: root.classList.contains("dark") };
+  h.themes = themesNow();
   const orig = h.callService;
   h.callService = (d: string, s: string, data?: Record<string, unknown>, target?: unknown) => {
     calls.push({ domain: d, service: s, data: data || {}, target: target || null });

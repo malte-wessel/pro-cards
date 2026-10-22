@@ -59,6 +59,7 @@ import {
   type TrendSpec,
 } from "./shared/trend/plot.ts";
 import { STYLE } from "./multi-trend/styles.ts";
+import { themeChanged } from "./shared/typography.ts";
 
 const CARD_TYPE = "multi-trend-card-pro";
 
@@ -181,6 +182,7 @@ export class MultiTrendCard extends HTMLElement {
     for (const id of person ? [...deps.entities, person] : deps.entities)
       if (prev?.states[id] !== hass.states[id]) changed = true;
     if (changed || !prev) this._render();
+    if (themeChanged(prev, hass)) requestAnimationFrame(() => this._render());
   }
 
   connectedCallback() {

@@ -70,5 +70,15 @@ export const SCENE = {
   labelGap: 10,
 } as const;
 
-// the elevation chip of the 3D view: the font the text is measured and drawn with
-export const CHIP_FONT = "500 12px Roboto, system-ui, sans-serif";
+// the text of the pictures at the default size: the compass labels' scale (1 = 10 px), the chips'
+// font (measured, styles: `.chip text`) and height. The card reads the theme's (sun-azimuth-card.ts)
+export interface SunText {
+  scale: number;
+  chipFont: string;
+  chipH: number;
+}
+export const SUN_TEXT: SunText = {
+  scale: 1,
+  chipFont: "500 12px Roboto, system-ui, sans-serif",
+  chipH: 20,
+};

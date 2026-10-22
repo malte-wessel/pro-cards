@@ -1,6 +1,6 @@
 // Config types of the sun azimuth card and what its render modules read from the card element.
 import type { CardConfigBase, HomeAssistant } from "../shared/ha.ts";
-import type { Roof, SideKey, View } from "./constants.ts";
+import type { Roof, SideKey, SunText, View } from "./constants.ts";
 import type { SunDay } from "./day.ts";
 
 // a side's own name, or false for a wall that never gets sun (shared with the neighbour)
@@ -52,4 +52,5 @@ export interface SunAzimuthHost {
   _root?: HTMLElement;
   _day: PositionedDay | null;
   _uid?: string;
+  _text?: SunText; // the pictures' text at the theme's size
 }

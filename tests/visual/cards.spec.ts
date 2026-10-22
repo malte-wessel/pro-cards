@@ -1648,12 +1648,18 @@ const CASES = {
 };
 
 // cases rendered under a Home Assistant theme from ha.css instead of the default one
-const SKINS: Record<string, string> = { "fill-graphite": "graphite" };
+const SKINS: Record<string, string> = { "fill-graphite": "graphite", "large-text": "large" };
+// one case under the Large text theme (ha-font-size-scale: 1.25): a list's lines and a trend's
+// axis strips and gutter grow with the theme's text
+const ALL: Record<string, Parameters<typeof mount>[1]> = {
+  ...CASES,
+  "large-text": [CASES["egc-list"], CASES["mtc-lanes-axes"]],
+};
 // cases that need a wider column than the 400 px section (list rows show their circles from 380 px
 // of tree, after the card's padding)
 const WIDTHS: Record<string, number> = { "pf-list-rooms": 640 };
 
-for (const [name, cfg] of Object.entries(CASES)) {
+for (const [name, cfg] of Object.entries(ALL)) {
   for (const theme of ["light", "dark"]) {
     test(`${name} (${theme})`, async ({ page }) => {
       await mount(page, cfg, { theme, skin: SKINS[name], width: WIDTHS[name] });

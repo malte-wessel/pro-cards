@@ -1,5 +1,4 @@
 // Locale formatting and text measurement shared by all cards.
-import { AXIS_FONT } from "./constants.ts";
 import type { HomeAssistant } from "./ha.ts";
 
 export const langOf = (hass: HomeAssistant | null | undefined) =>
@@ -19,8 +18,9 @@ export const fmtNumber = (hass: HomeAssistant | null | undefined, v: number, dec
   }).format(v);
 
 let _measureCtx: CanvasRenderingContext2D | null = null;
-// width of `txt` in px when drawn with `font` (canvas measurement, cached context)
-export const textWidth = (txt: string, font: string = AXIS_FONT) => {
+// width of `txt` in px when drawn with `font` (canvas measurement, cached context); the font is
+// the one the text is styled with (typography.ts textStyle), so it follows the theme
+export const textWidth = (txt: string, font: string) => {
   _measureCtx ??= document.createElement("canvas").getContext("2d");
   if (!_measureCtx) return 0;
   _measureCtx.font = font;

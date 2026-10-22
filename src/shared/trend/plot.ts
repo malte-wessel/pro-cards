@@ -14,12 +14,13 @@ import {
 } from "../history.ts";
 import { nearestPoint, placeTip } from "../hover.ts";
 import { clockTicks, timeStep } from "../ticks.ts";
+import { textStyle } from "../typography.ts";
 import { qs } from "../util.ts";
 import {
-  LANE_LABEL_H,
+  LANE_LABEL_PAD,
   LANE_PLOT_H,
   OVERLAY_PLOT_H,
-  X_AXIS_H,
+  X_AXIS_PAD,
   decimalsForStep,
   mkScale,
   niceStep,
@@ -110,7 +111,12 @@ export const drawTrend = (plot: TrendPlotEl, spec: TrendSpec) => {
   const W = Math.max(plot.clientWidth, 10);
   const showX = spec.xAxis,
     showY = spec.yAxis;
-  const axisH = showX ? X_AXIS_H : 0;
+  // the labels' size follows the theme (ha-font-size-*): the strips and gutter around them too
+  const axes = qs(plot, ".axes"),
+    laneEls = qs(plot, ".lanes");
+  const ax = textStyle(axes, ["axis-label"], [10, 12]);
+  const laneLabelH = Math.ceil(textStyle(laneEls, ["lane-label"], [10, 12]).line) + LANE_LABEL_PAD;
+  const axisH = showX ? Math.ceil(ax.line) + X_AXIS_PAD : 0;
   // The natural height is the plot's own size; a grid cell with fixed rows gives the card another
   // height and the plot (flex: 1) follows it. The SVG is drawn at the measured height, never
   // stretched to it: a stretched viewBox would turn dots into ellipses and thicken the gridlines
@@ -145,7 +151,7 @@ export const drawTrend = (plot: TrendPlotEl, spec: TrendSpec) => {
     const mine = sampled.filter((_, i) => laneOf[i] === li);
     scales.push(
       lanes
-        ? mkScale(...rangeOf(mine), li * laneH, laneH, LANE_LABEL_H)
+        ? mkScale(...rangeOf(mine), li * laneH, laneH, laneLabelH)
         : mkScale(...rangeOf(mine), 0, laneH, 6),
     );
   }
@@ -159,7 +165,8 @@ export const drawTrend = (plot: TrendPlotEl, spec: TrendSpec) => {
         const ticks: { v: number; y: number; label: string }[] = [];
         for (let v = Math.ceil(sc.min / step) * step; v <= sc.max + 1e-9; v += step) {
           const y = sc.y(v);
-          if (y < sc.top + sc.topPad - 1 || y > sc.top + sc.h - 5) continue; // stay inside the drawable band
+          // stay inside the drawable band (half a label above its foot)
+          if (y < sc.top + sc.topPad - 1 || y > sc.top + sc.h - (ax.line / 2 - 1)) continue;
           ticks.push({ v, y, label: fmtNumber(hass, v === 0 ? 0 : v, dec) });
         }
         return ticks;
@@ -168,7 +175,7 @@ export const drawTrend = (plot: TrendPlotEl, spec: TrendSpec) => {
   let gutter = 0;
   yTicks.forEach((ts) =>
     ts.forEach((tk) => {
-      gutter = Math.max(gutter, textWidth(tk.label));
+      gutter = Math.max(gutter, textWidth(tk.label, ax.font));
     }),
   );
   if (showY) gutter = Math.ceil(gutter) + 8;
@@ -184,7 +191,6 @@ export const drawTrend = (plot: TrendPlotEl, spec: TrendSpec) => {
     for (let li = 1; li < n; li++)
       html += `<line class="lane-sep" x1="${gutter}" x2="${W}" y1="${li * laneH + 0.5}" y2="${li * laneH + 0.5}"/>`;
   // Axes: recessive hairline gridlines in the SVG, labels as HTML
-  const axes = qs(plot, ".axes");
   axes.textContent = "";
   const addLabel = (cls: string, txt: string, left: number, top: string, width?: number) => {
     const el = document.createElement("div");
@@ -220,7 +226,7 @@ export const drawTrend = (plot: TrendPlotEl, spec: TrendSpec) => {
     let lastShownX = -Infinity;
     xTicks.forEach((tk) => {
       const label = dayStep ? fmtDay(hass, tk.t) : fmtClock(hass, tk.t, true);
-      const w = textWidth(label);
+      const w = textWidth(label, ax.font);
       if (tk.x - lastShownX < w + 8) return; // would collide with the previous label
       let cls = "x";
       if (tk.x - w / 2 < gutter) cls += " first";
@@ -249,7 +255,6 @@ export const drawTrend = (plot: TrendPlotEl, spec: TrendSpec) => {
   svg.innerHTML = html;
 
   // Lane labels as HTML so long names clip with an ellipsis inside their lane
-  const laneEls = qs(plot, ".lanes");
   laneEls.textContent = "";
   if (lanes)
     for (let li = 0; li < n; li++) {

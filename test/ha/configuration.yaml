@@ -17,6 +17,15 @@ homeassistant:
 
 demo:
 
+# a theme that raises the text size (profile → theme): the cards' text and what sits around it
+# grow with Home Assistant's own; the secondary line alone as on the tile card
+frontend:
+  themes:
+    Pro Cards large text:
+      ha-font-size-scale: 1.25
+    Pro Cards large secondary:
+      ha-tile-info-secondary-font-size: 16px
+
 lovelace:
   mode: storage
   dashboards:

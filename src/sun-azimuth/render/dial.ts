@@ -17,7 +17,8 @@ export const renderDial = (
   width: number,
   timeLabel?: string, // a preview's time, in a chip above the sun
 ) => {
-  const g = dialGeometry(day, now, card._config.front, sides, width, card._config.roof);
+  const tx = card._text;
+  const g = dialGeometry(day, now, card._config.front, sides, width, card._config.roof, tx);
   const c = g.size / 2,
     k = g.k;
   const up = now.el > 0;
@@ -43,8 +44,8 @@ export const renderDial = (
     html += `<text class="cl" x="${f1(l.x)}" y="${f1(l.y)}">${compass(card._hass, l.bearing)}</text>`;
   const sx = f1(g.sun[0]),
     sy = f1(g.sun[1]);
-  if (g.azChip) html += chipSvg(deg(card._hass, now.az), g.azChip[0], g.azChip[1]);
-  if (timeLabel) html += timeChip(timeLabel, g.sun[0], g.sun[1] - 9 * k - 14, g.size);
+  if (g.azChip) html += chipSvg(deg(card._hass, now.az), g.azChip[0], g.azChip[1], tx);
+  if (timeLabel) html += timeChip(timeLabel, g.sun[0], g.sun[1] - 9 * k, g.size, tx);
   // the pulse marks now: a preview (redrawn as the pointer moves) shows the sun without it
   if (!timeLabel)
     html += `<circle class="pulse${up ? "" : " down"}" cx="${sx}" cy="${sy}" r="${f1(9 * k)}"/>`;

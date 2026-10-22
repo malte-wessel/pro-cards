@@ -1,6 +1,6 @@
 // Block visuals below the name line: bar, gauge and the plot skeleton for history visuals.
 import type { EntityItem } from "../config.ts";
-import { HISTORY_VISUALS, PLOT_H, STRIP_AXIS_H, type HistoryVisual } from "../constants.ts";
+import { HISTORY_VISUALS, PLOT_H, STRIP_AXIS_CSS, type HistoryVisual } from "../constants.ts";
 import { scaleOf } from "../look.ts";
 import { langOf, type EntityModel, type RenderCtx } from "../model.ts";
 import type { PlotCtx, PlotElement } from "./plots.ts";
@@ -62,10 +62,10 @@ export const plotEl = (
   // sparkline and columns grow into a taller card; a strip is a timeline and keeps its height
   // (styles: STYLE_PLOT)
   plot.className = GROW_VISUALS.has(kind) ? "plot grow" : "plot";
-  const h = PLOT_H[kind] + (kind === "strip" ? STRIP_AXIS_H : 0);
-  plot.style.height = `${h}px`;
+  plot.style.height =
+    kind === "strip" ? `calc(${PLOT_H.strip}px + ${STRIP_AXIS_CSS})` : `${PLOT_H[kind]}px`;
   plot.innerHTML = `<svg class="abs" preserveAspectRatio="none"></svg><div class="labels"></div><div class="tip"></div>`;
-  plot._ctx = { ...extra, ent, idx, kind, st: m.st, h };
+  plot._ctx = { ...extra, ent, idx, kind, st: m.st };
   const hs = ctx.plotHandlers;
   plot.addEventListener("pointermove", hs.move);
   plot.addEventListener("pointerdown", hs.move);

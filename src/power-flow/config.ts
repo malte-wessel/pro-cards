@@ -37,6 +37,7 @@ import {
   type Direction,
   type FlowStyle,
   type IdleLinks,
+  type LabelLines,
   type Units,
 } from "./constants.ts";
 
@@ -167,6 +168,7 @@ export interface PowerFlowConfig extends EntityCardConfig {
   expensiveAbove: number | null;
   units: Units;
   animation: Animation;
+  lines?: LabelLines; // the labels' lines at the theme's text size, set where the tree is drawn
 }
 
 const entityId = (v: unknown, key: string): string | null => {

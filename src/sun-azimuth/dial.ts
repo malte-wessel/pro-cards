@@ -1,7 +1,15 @@
 // The sky dial seen from above, pure geometry in a px box as wide as the column (at most 300):
 // the horizon is the outer ring, the zenith the centre, so a point of the sky lands at a radius
 // that follows its elevation. The labels keep their room and size; the picture shrinks inside.
-import { DIAL, lineScale, PATH_STEP, WALL, type Roof } from "./constants.ts";
+import {
+  DIAL,
+  lineScale,
+  PATH_STEP,
+  SUN_TEXT,
+  WALL,
+  type Roof,
+  type SunText,
+} from "./constants.ts";
 import type { SunDay, SunSample } from "./day.ts";
 import { wallBands } from "./edges.ts";
 import { houseSolid } from "./house.ts";
@@ -39,10 +47,12 @@ export interface DialGeometry {
 const AZ_R = 56; // the azimuth arc's radius at full size, outside the house footprint
 const LABEL_ROOM = DIAL.size / 2 - DIAL.r; // around the rim: the compass labels and the day arc
 
-// the dial's box for a column: at most 300 px; the rim keeps the labels' room, the rest is sky
-export const dialBox = (width: number) => {
-  const size = Math.floor(Math.max(2 * LABEL_ROOM + 40, Math.min(DIAL.size, width)));
-  const r = size / 2 - LABEL_ROOM;
+// the dial's box for a column: at most 300 px; the rim keeps the labels' room (a letter more for
+// each 10 px the theme's text grows, `ts` its scale), the rest is sky
+export const dialBox = (width: number, ts = 1) => {
+  const room = LABEL_ROOM + 10 * (ts - 1);
+  const size = Math.floor(Math.max(2 * room + 40, Math.min(DIAL.size, width)));
+  const r = size / 2 - room;
   return { size, r, k: lineScale(r, DIAL.r) };
 };
 
@@ -68,8 +78,9 @@ export const dialGeometry = (
   sides: Side[],
   width: number = DIAL.size,
   roof: Roof = "gable",
+  text: SunText = SUN_TEXT, // the theme's text: the labels' room and the chip's
 ): DialGeometry => {
-  const { size, r: R, k } = dialBox(width);
+  const { size, r: R, k } = dialBox(width, text.scale);
   const C = size / 2,
     f = R / DIAL.r, // the picture's scale: the house and the azimuth arc shrink with the sky
     HW = DIAL.house * f,
@@ -118,7 +129,7 @@ export const dialGeometry = (
     lit: side.litNow,
   }));
   const labels = [0, 90, 180, 270].map((bearing) => {
-    const p = rim(bearing, R + 18);
+    const p = rim(bearing, R + 18 + 5 * (text.scale - 1));
     return { bearing, x: p[0], y: p[1] };
   });
   return {
@@ -134,7 +145,7 @@ export const dialGeometry = (
     cardinalLines: [0, 90, 180, 270].map((a) => `M${C} ${C} L${P(rim(a, R))}`).join(" "),
     azArc: up ? arc(0, now.az, azR) : "",
     // the chip keeps its text size: in a small dial it stays inside the rim, clear of the labels
-    azChip: up ? rim(now.az / 2, Math.min(azR + 22, R - 14)) : null,
+    azChip: up ? rim(now.az / 2, Math.min(azR + 22, R - 4 - text.chipH / 2)) : null,
     past: past.length > 1 ? pathOf(past) : "",
     future: future.length > 1 ? pathOf(future) : "",
     housePoly: pathOf(corners) + " Z",

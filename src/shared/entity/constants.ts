@@ -1,4 +1,5 @@
 // Shared constants of the entity cards (entity-card-pro, entity-group-card-pro, entity-sections-card-pro).
+import { fs } from "../typography.ts";
 
 export const GROUP_LAYOUTS = ["list", "grid", "hero", "row", "column", "table"] as const;
 export type GroupLayout = (typeof GROUP_LAYOUTS)[number];
@@ -80,4 +81,6 @@ export const OFF_STATES: ReadonlySet<string> = new Set([
   "clear",
 ]);
 export const PLOT_H: Record<HistoryVisual, number> = { sparkline: 56, columns: 56, strip: 22 };
-export const STRIP_AXIS_H = 14;
+// the strip's time labels below it: their line height (STYLE_PLOT `.label`, which grows with the
+// theme's text) and 2 px; 14 px at the default size
+export const STRIP_AXIS_CSS = `(${fs(10)} * 12 / 10 + 2px)`;

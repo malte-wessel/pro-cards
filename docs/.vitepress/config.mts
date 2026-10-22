@@ -13,7 +13,7 @@ type Token = ReturnType<MarkdownIt["parse"]>[number];
 // to the other although they describe the same object
 const containerPlugin = container as unknown as Parameters<MarkdownIt["use"]>[0];
 
-// ::: live [width=<px|full>] [mode=auto|light|dark] [theme=default|graphite] [height=<px>]
+// ::: live [width=<px|full>] [mode=auto|light|dark] [theme=default|graphite|large] [height=<px>]
 //   ```yaml … ```
 // :::
 // renders the fenced YAML as a live card above the (highlighted) code block.

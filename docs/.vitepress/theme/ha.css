@@ -16,6 +16,23 @@
   --ha-card-border-color: var(--divider-color);
   --ha-card-box-shadow: none;
   --mdc-icon-size: 24px;
+  /* typography, as Home Assistant defines it (src/resources/theme/typography.globals.ts); the
+     cards read these, so a theme can scale their text */
+  --ha-font-family-body: Roboto, "Segoe UI", system-ui, -apple-system, sans-serif;
+  --ha-font-size-scale: 1;
+  --ha-font-size-xs: calc(10px * var(--ha-font-size-scale));
+  --ha-font-size-s: calc(12px * var(--ha-font-size-scale));
+  --ha-font-size-m: calc(14px * var(--ha-font-size-scale));
+  --ha-font-size-l: calc(16px * var(--ha-font-size-scale));
+  --ha-font-size-xl: calc(20px * var(--ha-font-size-scale));
+  --ha-font-size-2xl: calc(24px * var(--ha-font-size-scale));
+  --ha-font-size-3xl: calc(28px * var(--ha-font-size-scale));
+  --ha-font-size-4xl: calc(32px * var(--ha-font-size-scale));
+  --ha-font-size-5xl: calc(40px * var(--ha-font-size-scale));
+  --ha-font-weight-light: 300;
+  --ha-font-weight-normal: 400;
+  --ha-font-weight-medium: 500;
+  --ha-font-weight-bold: 700;
   --red-color: #f44336;
   --pink-color: #e91e63;
   --purple-color: #926bc7;
@@ -123,12 +140,7 @@
   --state-weather-windy-color: var(--green-color);
   color: var(--primary-text-color);
   background: var(--primary-background-color);
-  font-family:
-    Roboto,
-    "Segoe UI",
-    system-ui,
-    -apple-system,
-    sans-serif;
+  font-family: var(--ha-font-family-body);
   font-size: 14px;
   line-height: 20px;
   color-scheme: light;
@@ -190,7 +202,10 @@ html.dark .ha-theme:not(.light),
   --blue-grey-color: rgb(96, 125, 139);
   --black-color: rgb(0, 0, 0);
   --white-color: rgb(240, 243, 255);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* Graphite's stack, with the generic system-ui where it names BlinkMacSystemFont: Chrome
+     resolves that alias in a font-family but not through a variable */
+  --ha-font-family-body: -apple-system, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--ha-font-family-body);
 }
 html.dark .ha-theme[data-theme="graphite"]:not(.light),
 .ha-theme[data-theme="graphite"].dark {
@@ -226,6 +241,12 @@ html.dark .ha-theme[data-theme="graphite"]:not(.light),
   --grey-color: rgb(158, 158, 158);
   --blue-grey-color: rgb(96, 125, 139);
   color-scheme: dark;
+}
+
+/* Large text: the default theme with Home Assistant's text scale raised, as a theme that sets
+   `ha-font-size-scale: 1.25` does. Every size token follows it. */
+.ha-theme[data-theme="large"] {
+  --ha-font-size-scale: 1.25;
 }
 
 /* toast + more-info dialog used by the hass shim */

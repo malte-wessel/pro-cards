@@ -1,5 +1,6 @@
 // Styles of the illuminance card.
-import { AXIS_FONT, STYLE_HOST, STYLE_ICONS } from "../shared/constants.ts";
+import { STYLE_HOST, STYLE_ICONS } from "../shared/constants.ts";
+import { TILE_PRIMARY, TILE_SECONDARY, font, fs, fw, type } from "../shared/typography.ts";
 
 export const STYLE = `
   ${STYLE_ICONS}
@@ -11,15 +12,15 @@ export const STYLE = `
     color: var(--amber-color); background: color-mix(in srgb, var(--amber-color) 20%, transparent); --mdc-icon-size: 24px;
   }
   .info { min-width: 0; flex: 1; }
-  .primary { font-size: 14px; font-weight: 500; line-height: 20px; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .secondary { font-size: 12px; line-height: 16px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .primary { ${TILE_PRIMARY} white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .secondary { ${TILE_SECONDARY} white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .body { padding: 8px 16px 14px 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
   .valrow { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; min-width: 0; }
   .big { display: flex; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap; }
-  .big b { font-size: 34px; font-weight: 500; line-height: 40px; letter-spacing: -0.8px; color: var(--primary-text-color); font-variant-numeric: tabular-nums; }
-  .big span { font-size: 14px; color: var(--secondary-text-color); }
+  .big b { ${type(34, 40)} font-weight: ${fw("medium")}; letter-spacing: -0.8px; color: var(--primary-text-color); font-variant-numeric: tabular-nums; }
+  .big span { font-size: ${fs(14)}; color: var(--secondary-text-color); }
   .pill {
-    flex: none; font-size: 12px; font-weight: 500; line-height: 16px; padding: 4px 12px; border-radius: 999px;
+    flex: none; ${type(12, 16)} font-weight: ${fw("medium")}; padding: 4px 12px; border-radius: 999px;
     color: var(--primary-text-color); background: color-mix(in srgb, var(--pill) 12%, transparent); white-space: nowrap;
   }
   .plot { position: relative; min-width: 0; touch-action: pan-y; }
@@ -33,10 +34,10 @@ export const STYLE = `
   .grid { stroke: var(--divider-color); stroke-width: 1; }
   .line { fill: none; stroke: color-mix(in srgb, var(--primary-text-color) 80%, transparent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: butt; }
   .dot { stroke: var(--ha-card-background, var(--card-background-color)); stroke-width: 2; fill: var(--primary-text-color); }
-  .label { position: absolute; font: ${AXIS_FONT}; line-height: 12px; color: var(--secondary-text-color); white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
+  .label { position: absolute; ${font(10, 12)} color: var(--secondary-text-color); white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
   .label.zone {
     transform: translateY(-50%);
-    font-size: 9px; letter-spacing: .9px; text-transform: uppercase;
+    font-size: ${fs(9)}; letter-spacing: .9px; text-transform: uppercase;
     --halo: var(--ha-card-background, var(--card-background-color));
     text-shadow: 0 0 2px var(--halo), 0 0 2px var(--halo), 0 0 3px var(--halo);
   }
@@ -48,7 +49,7 @@ export const STYLE = `
   .tip {
     position: absolute; top: 4px; pointer-events: none; display: none; z-index: 1; box-sizing: border-box; max-width: calc(100% - 8px);
     background: var(--ha-card-background, var(--card-background-color)); color: var(--primary-text-color);
-    border: 1px solid var(--divider-color); border-radius: 8px; padding: 6px 8px; font-size: 12px; line-height: 16px;
+    border: 1px solid var(--divider-color); border-radius: 8px; padding: 6px 8px; ${type(12, 16)}
     box-shadow: var(--ha-card-box-shadow, 0 2px 6px rgba(0,0,0,.2)); white-space: nowrap;
   }
   .tip.on { display: block; }
@@ -62,7 +63,7 @@ export const STYLE = `
   .arcwrap .unit { font-size: 13px; letter-spacing: 1.2px; fill: var(--secondary-text-color); }
   .arcwrap .mark { stroke: var(--ha-card-background, var(--card-background-color)); stroke-width: 4; fill: var(--primary-text-color); }
   /* band */
-  .legend { display: flex; align-items: center; gap: 8px; font: ${AXIS_FONT}; color: var(--secondary-text-color); }
+  .legend { display: flex; align-items: center; gap: 8px; ${font(10)} color: var(--secondary-text-color); }
   .legend i { display: inline-block; width: 104px; height: 6px; border-radius: 3px; background: var(--grad); opacity: .6; }
-  .empty { font-size: 12px; color: var(--secondary-text-color); padding: 8px 0; }
+  .empty { font-size: ${fs(12)}; color: var(--secondary-text-color); padding: 8px 0; }
 `;

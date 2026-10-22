@@ -422,6 +422,20 @@ export const wire = () => {
 const isDark = () =>
   typeof document !== "undefined" && document.documentElement.classList.contains("dark");
 
+// Home Assistant hands a new `themes` only when the theme changes, and the cards measure their
+// text again then: here when the site's mode or an example's theme (its data-theme) changes
+let themesVersion = 0,
+  themesKey = "",
+  themes = { darkMode: false };
+const themesNow = () => {
+  const key = `${isDark()}:${themesVersion}`;
+  if (key !== themesKey) {
+    themesKey = key;
+    themes = { darkMode: isDark() };
+  }
+  return themes;
+};
+
 // A fresh hass object (new identity so cards detect the change) over the shared demo world.
 export const snapshot = (): HassSnapshot => ({
   states: { ...world.states },
@@ -436,7 +450,7 @@ export const snapshot = (): HassSnapshot => ({
     unit_system: { temperature: "°C", length: "km" },
     version: "2026.9.3",
   },
-  themes: { darkMode: isDark() },
+  themes: themesNow(),
   formatEntityState,
   callService,
   // HA's callWS / subscribeMessage are generic in the caller's result type, so the shim asserts
@@ -496,9 +510,16 @@ export const subscribe = (fn: () => void) => {
     fn();
   });
   mode.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  // an example switched to another theme (the theme picker): its text may have another size
+  const skin = new MutationObserver(() => {
+    themesVersion++;
+    fn();
+  });
+  skin.observe(document.body, { attributes: true, attributeFilter: ["data-theme"], subtree: true });
   return () => {
     off();
     mode.disconnect();
+    skin.disconnect();
   };
 };
 export { world };

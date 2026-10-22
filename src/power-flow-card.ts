@@ -47,7 +47,7 @@ import {
   type SummaryState,
 } from "./power-flow/model.ts";
 import { buildSummary, updateSummary } from "./power-flow/render/summary.ts";
-import { buildTree, updateTree } from "./power-flow/render/tree.ts";
+import { buildTree, labelLines, updateTree } from "./power-flow/render/tree.ts";
 import { STYLE_POWER_FLOW_CARD } from "./power-flow/styles.ts";
 
 interface Computed {
@@ -210,6 +210,8 @@ export class PowerFlowCard extends EntityCardBase {
     const diag = card.querySelector<HTMLElement>(".pdiag");
     const box = diag?.querySelector<HTMLElement>(".pscale");
     if (!diag || !box) return;
+    // the labels' lines at the theme's text size: their heights take part in the tree's height
+    c.view = { ...c.view, lines: labelLines(diag) };
     // the height follows the config and what of it is shown, never the width. A card given more
     // or less height (fixed rows, a stretched grid row, a stack) lays the tree out in what the
     // diagram measures: the natural height stays its basis, so the card's own height never

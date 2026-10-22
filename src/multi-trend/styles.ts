@@ -1,6 +1,7 @@
 // Styles of the multi trend card: the header on top of the shared trend plot styles.
 import { STYLE_HOST, STYLE_ICONS } from "../shared/constants.ts";
 import { STYLE_TREND } from "../shared/trend/styles.ts";
+import { TILE_PRIMARY, TILE_SECONDARY, fs } from "../shared/typography.ts";
 
 export const STYLE =
   STYLE_TREND +
@@ -40,15 +41,13 @@ export const STYLE =
   }
   .info { min-width: 0; flex: 1; }
   .primary {
-    font-size: 14px; font-weight: 500; line-height: 20px;
-    color: var(--primary-text-color);
+    ${TILE_PRIMARY}
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .secondary {
-    font-size: 12px; font-weight: 400; line-height: 16px;
-    color: var(--secondary-text-color);
+    ${TILE_SECONDARY}
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .secondary .sep { opacity: .5; margin: 0 4px; }
-  .range { flex: none; font-size: 12px; color: var(--secondary-text-color); align-self: flex-start; padding-top: 2px; }
+  .range { flex: none; font-size: ${fs(12)}; color: var(--secondary-text-color); align-self: flex-start; padding-top: 2px; }
 `;

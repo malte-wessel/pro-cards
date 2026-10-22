@@ -38,6 +38,7 @@ import { t } from "./shared/i18n.ts";
 import { drawCurve, drawEvents, fmtEvent, showHover, timeAt } from "./sun-path/plot.ts";
 import { solarDay } from "./shared/solar.ts";
 import { STYLE } from "./sun-path/styles.ts";
+import { themeChanged } from "./shared/typography.ts";
 
 const CARD_TYPE = "sun-path-card-pro";
 
@@ -102,6 +103,7 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
       this._lastMinute = minute;
       this._render();
     }
+    if (themeChanged(prev, hass)) requestAnimationFrame(() => this._render());
   }
 
   connectedCallback() {

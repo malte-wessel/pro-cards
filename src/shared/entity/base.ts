@@ -40,6 +40,7 @@ import { plotRows } from "./render/blocks.ts";
 import { fillByClass } from "./render/fill.ts";
 import { drawPlot, showHover, windowOf, type PlotElement } from "./render/plots.ts";
 import type { EntityModel } from "./model.ts";
+import { themeChanged } from "../typography.ts";
 
 // the room inside a gauge's arc for its value (viewBox units) and the value's own font size
 const GAUGE_TEXT_W = 76;
@@ -238,6 +239,7 @@ export abstract class EntityCardBase extends HTMLElement {
       }
     }
     if (changed) this._render();
+    if (themeChanged(prev, hass)) requestAnimationFrame(() => this._render());
   }
 
   connectedCallback() {
@@ -748,7 +750,8 @@ export abstract class EntityCardBase extends HTMLElement {
     }
     return null;
   }
-  // shrink a grid cell's big value (down to 13 px) so short words like scene names stay whole
+  // shrink a grid cell's big value (down to 13 px at the default text size; it starts from its
+  // styled size, which follows the theme's) so short words like scene names stay whole
   _fitCells(card: HTMLElement) {
     // a gauge's value sits inside its arc: a long one (a unit like "UV index") steps its font down
     // until its drawn box fits (glyph widths do not scale exactly with the size)
@@ -761,13 +764,20 @@ export abstract class EntityCardBase extends HTMLElement {
         t.style.fontSize = `${size}px`;
       }
     }
+    // every cell's value has the same styled size: read once
+    let full = 0;
     for (const big of card.querySelectorAll<HTMLElement>(".cell .big")) {
       const b = big.querySelector("b");
       if (!b) continue;
+      if (!full) {
+        big.classList.remove("fit");
+        full = parseFloat(getComputedStyle(b).fontSize) || 22;
+      }
+      const least = (13 * full) / 22;
       big.classList.add("fit");
-      let size = 22;
+      let size = full;
       big.style.setProperty("--fit", `${size}px`);
-      while (size > 13 && b.scrollWidth > b.clientWidth + 1) {
+      while (size > least && b.scrollWidth > b.clientWidth + 1) {
         size -= 1;
         big.style.setProperty("--fit", `${size}px`);
       }
