@@ -111,6 +111,11 @@ describe("wind-card config", () => {
       flow: { style: "swoosh", density: "dense", height: 400 },
     });
     expect(normalizeWindCardConfig({ entity: S, flow: { height: 3 } }).flow.height).toBe(40);
+    // icon_style belongs to the speed, the lead's item
+    expect(normalizeWindCardConfig({ entity: S }).entities[0].iconStyle).toBe("circle");
+    expect(normalizeWindCardConfig({ entity: S, icon_style: "plain" }).entities[0].iconStyle).toBe(
+      "plain",
+    );
     // the flow tile always shows the arrow
     expect(normalizeWindCardConfig({ entity: S, visual: "flow" }).lead).toBe("arrow");
     expect(normalizeWindCardConfig({ entity: S, layout: "hero", visual: "flow" }).lead).toBe(

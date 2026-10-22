@@ -203,6 +203,25 @@ test.describe("visuals", () => {
     expect(await segments(1)).toBe(5); // 6 one-hour buckets
     expect(await segments(2)).toBe(Math.min(cap, 36) - 1); // 36 ten-minute buckets
   });
+  test("icon_style: plain drops the circle and keeps the box", async ({ page }) => {
+    const bg = (loc: Locator) => loc.evaluate((e) => getComputedStyle(e).backgroundColor);
+    await mount(page, light());
+    const shape = card(page).locator(".lead .shape");
+    expect(await bg(shape)).not.toBe("rgba(0, 0, 0, 0)");
+    await mount(page, light({ icon_style: "plain" }));
+    const c = card(page);
+    await expect(c.locator(".lead")).toHaveClass(/\bplain\b/);
+    expect(await bg(c.locator(".lead .shape"))).toBe("rgba(0, 0, 0, 0)");
+    const box = (await c.locator(".lead").boundingBox())!;
+    expect(box.width).toBe(36);
+    expect(box.height).toBe(36);
+    // a lead toggle that is off has no grey circle either
+    await mount(page, light({ icon_style: "plain", control: "toggle", control_position: "lead" }));
+    await setState(page, "light.living_room", "off");
+    const off = card(page).locator(".lead.tap.off .shape");
+    await expect(off).toHaveCount(1);
+    expect(await bg(off)).toBe("rgba(0, 0, 0, 0)");
+  });
   test("ring, gauge, bar and badge render their parts", async ({ page }) => {
     await mount(page, [
       { type: T, entity: "sensor.robot_battery", visual: "ring" },

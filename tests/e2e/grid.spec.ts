@@ -239,7 +239,8 @@ test.describe("entity plots fill the cell", () => {
     const b = await boxes(page);
     expect(b.h).toBe(cell(2));
     const [p] = b.plots;
-    expect(p.h).toBeLessThanOrEqual(56);
+    // about its own 56 px: two rows hold the tile's top line and its plot
+    expect(p.h).toBeLessThanOrEqual(60);
     expect(p.h).toBeGreaterThanOrEqual(24);
     expect(p.bottom).toBeLessThanOrEqual(b.bottom);
     // one row would leave no room for the plot: the tile asks for two at least

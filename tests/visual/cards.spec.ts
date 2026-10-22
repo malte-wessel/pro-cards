@@ -1153,6 +1153,22 @@ const CASES = {
       entities: ["sensor.robot_progress"],
     },
   ],
+  "egc-icon-plain": {
+    type: EGC,
+    title: "Plain icons",
+    entities: [
+      { entity: "light.living_room", icon_style: "plain" },
+      { entity: "cover.living_room_blinds", icon_style: "plain" },
+      { entity: "climate.living_room", name: "Thermostat" },
+      { entity: "sensor.robot_battery", name: "Robot", visual: "ring", icon_style: "plain" },
+      {
+        entity: "light.kitchen",
+        icon_style: "plain",
+        control: "toggle",
+        control_position: "lead",
+      },
+    ],
+  },
   "egc-controls-unavailable": {
     type: EGC,
     title: "Unavailable",
@@ -1237,6 +1253,35 @@ const CASES = {
     sources: PF_SRC,
     consumers: PF_CONS,
     consumer_style: "list",
+  },
+  "pf-list-rooms": {
+    type: PF,
+    home: "sensor.power_consumption",
+    sources: PF_SRC,
+    consumer_style: "list",
+    consumers: [
+      { group: "Living", icon: "mdi:sofa", entities: [PF_CONS[0], PF_CONS[1]] },
+      PF_CONS[2],
+    ],
+  },
+  "pf-icon-sizes": {
+    type: PF,
+    home: { entity: "sensor.power_consumption", icon_size: 60 },
+    sources: [
+      { ...PF_SRC[0], icon_size: 52 },
+      { ...PF_SRC[1], icon_size: 64 },
+      { ...PF_SRC[2], icon_size: 36 },
+    ],
+    consumers: [
+      { ...PF_CONS[0], icon_size: 44 },
+      PF_CONS[1],
+      {
+        group: "Office",
+        icon: "mdi:desk",
+        icon_size: 40,
+        entities: [{ ...PF_CONS[3], icon_size: 32 }],
+      },
+    ],
   },
   "pf-rooms": {
     type: PF,
@@ -1604,11 +1649,14 @@ const CASES = {
 
 // cases rendered under a Home Assistant theme from ha.css instead of the default one
 const SKINS: Record<string, string> = { "fill-graphite": "graphite" };
+// cases that need a wider column than the 400 px section (list rows show their circles from 380 px
+// of tree, after the card's padding)
+const WIDTHS: Record<string, number> = { "pf-list-rooms": 640 };
 
 for (const [name, cfg] of Object.entries(CASES)) {
   for (const theme of ["light", "dark"]) {
     test(`${name} (${theme})`, async ({ page }) => {
-      await mount(page, cfg, { theme, skin: SKINS[name] });
+      await mount(page, cfg, { theme, skin: SKINS[name], width: WIDTHS[name] });
       // fonts + icons settled: every ha-icon has a path (in its ha-svg-icon), then one more frame
       await page.waitForFunction(() =>
         [...document.querySelectorAll("*")].every(

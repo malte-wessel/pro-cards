@@ -8,7 +8,7 @@
 // config alone (the card's height never depends on its width); along the flow through the column
 // positions, which keep the measured label widths clear of the next column and the trunks.
 import { leavesOf, type PowerFlowConfig } from "./config.ts";
-import { GEOM, type Direction } from "./constants.ts";
+import { GEOM, NODE_D, type Direction } from "./constants.ts";
 import type { EdgeFlow, EdgeKind } from "./model.ts";
 import { dedupe, orthoPath, pathLength, type Pt } from "./path.ts";
 
@@ -61,18 +61,10 @@ export interface LabelBox {
 }
 export type LabelSizes = ReadonlyMap<string, LabelBox>;
 
-const nodeD = (kind: NodeKind) =>
-  kind === "solar"
-    ? GEOM.dSolar
-    : kind === "battery"
-      ? GEOM.dBattery
-      : kind === "grid"
-        ? GEOM.dGrid
-        : kind === "home"
-          ? GEOM.dHome
-          : kind === "group"
-            ? GEOM.dGroup
-            : GEOM.dConsumer;
+// the source column's centre along the flow: a source bigger than the default solar node moves
+// it in, so the charging and export rails behind it (and the card's edge) stay clear
+const srcAlongOf = (cfg: PowerFlowConfig) =>
+  GEOM.srcAlong + Math.max(0, ...cfg.sources.map((s) => (s.d - GEOM.dSolar) / 2));
 
 // ----- label slots -----
 
@@ -90,6 +82,11 @@ export const slotPitch = (dPrev: number, d: number, h: number) =>
 // the distance of the first node's centre from the edge for the same reason
 export const slotMargin = (d: number, h: number) => slotRise(d, h) + h / 2;
 
+// a ring's stroke: 3 px on its kind's own circle, scaled with the node, so ring, gap and icon
+// (both proportional already) keep their proportions at any icon_size
+export const ringWidth = (kind: NodeKind, d: number) =>
+  (3 * d) / (kind in NODE_D ? NODE_D[kind as keyof typeof NODE_D] : d);
+
 // the source column: every source's position across (relative to the first) and the margins
 interface Stack {
   bs: number[];
@@ -101,7 +98,7 @@ const sourceStack = (cfg: PowerFlowConfig): Stack => {
   // every source hidden: an empty column
   if (!cfg.sources.length)
     return { bs: [], first: GEOM.srcMargin, last: GEOM.srcMargin, extent: 0 };
-  const ds = cfg.sources.map((s) => nodeD(s.kind));
+  const ds = cfg.sources.map((s) => s.d);
   const hs = cfg.sources.map((s) => labelHeightOf(cfg, s.idx, false));
   const bs: number[] = [];
   let b = 0;
@@ -126,6 +123,8 @@ interface Column {
 const columnPlan = (cfg: PowerFlowConfig, scale = 1): Column => {
   const leaves: Column["leaves"] = [],
     groups: Column["groups"] = [];
+  // a list row draws its circle within the row: a bigger icon_size asks for no more room
+  const rows = cfg.direction === "right" && cfg.consumerStyle === "list";
   let b = 0,
     prevD = 0;
   const place = (
@@ -136,6 +135,7 @@ const columnPlan = (cfg: PowerFlowConfig, scale = 1): Column => {
     small: boolean,
   ) => {
     const h = labelHeightOf(cfg, idx, small);
+    if (rows) d = Math.min(d, GEOM.rowH);
     if (leaves.length) {
       // the gap between two blocks (rooms or lone consumers) on top of the slot pitch
       const sameBlock = group !== null && leaves[leaves.length - 1].group === group;
@@ -151,14 +151,14 @@ const columnPlan = (cfg: PowerFlowConfig, scale = 1): Column => {
     if (c.kind === "group") {
       let start = 0;
       c.items.forEach((it, j) => {
-        place(it.id, it.idx, c.id, GEOM.dDevice, true);
+        place(it.id, it.idx, c.id, it.d, true);
         if (j === 0) start = leaves[leaves.length - 1].b;
       });
       groups.push({ id: c.id, b: (start + b) / 2 });
     } else {
       // a lone consumer beside rooms reads like a room (a normal label, centred above)
       const small = !cfg.hasGroups;
-      place(c.id, c.kind === "item" ? c.idx : null, null, GEOM.dConsumer, small);
+      place(c.id, c.kind === "item" ? c.idx : null, null, c.d, small);
     }
   }
   const firstLeaf = leaves[0],
@@ -171,7 +171,7 @@ const columnPlan = (cfg: PowerFlowConfig, scale = 1): Column => {
       c0.kind === "group"
         ? GEOM.labelH
         : labelHeightOf(cfg, c0.kind === "item" ? c0.idx : null, false);
-    first = Math.max(first, GEOM.dGroup / 2 + 4 + h);
+    first = Math.max(first, c0.d / 2 + 4 + h);
   }
   const last = lastLeaf ? Math.max(GEOM.consumerMargin, lastLeaf.d / 2 + 14) : 0;
   return { leaves, groups, first, last, extent: b };
@@ -185,7 +185,10 @@ export type SourceSlot = "right" | "below";
 export const sourceRow = (ds: number[], nws: number[], across: number) => {
   const n = ds.length,
     g = GEOM.labelGap;
-  const pitch = n < 2 ? 0 : Math.max(44, Math.min(126, (across - 2 * GEOM.downMargin) / (n - 1)));
+  // at least 44 px, and never less than two neighbours' radii (big icon_size)
+  const touch = Math.max(0, ...ds.slice(1).map((d, i) => (ds[i] + d) / 2));
+  const pitch =
+    n < 2 ? 0 : Math.max(44, touch, Math.min(126, (across - 2 * GEOM.downMargin) / (n - 1)));
   const bs = ds.map((_, i) => across / 2 + (i - (n - 1) / 2) * pitch);
   const want = nws.map((w) => Math.max(w, GEOM.srcValueW));
   // right of the icon: up to the next icon; below: up to the next source's line
@@ -213,10 +216,10 @@ export const acrossOf = (cfg: PowerFlowConfig): number => {
 const alongColumns = (cfg: PowerFlowConfig) =>
   1 + (cfg.hasGroups ? 1 : 0) + (cfg.consumers.length ? 1 : 0);
 export const alongDownOf = (cfg: PowerFlowConfig): number => {
-  if (!cfg.consumers.length) return GEOM.minAcross;
+  if (!cfg.consumers.length) return GEOM.minAcross + srcAlongOf(cfg) - GEOM.srcAlong;
   // room below the consumer column for its tallest label (a secondary line adds one)
   const below = Math.max(56, ...columnPlan(cfg).leaves.map((l) => l.d / 2 + 4 + l.h + 8));
-  return GEOM.srcAlong + GEOM.columnPitch * alongColumns(cfg) + below;
+  return srcAlongOf(cfg) + GEOM.columnPitch * alongColumns(cfg) + below;
 };
 // the diagram's height in px for the card's size
 export const diagramHeight = (cfg: PowerFlowConfig) =>
@@ -263,12 +266,14 @@ export const layoutTree = (
   const map = (a: number, b: number): Pt => (right ? [a, b] : [b, a]);
   const widthOf = (id: string) => sizes.get(id)?.w ?? 0;
   const leaves = leavesOf(cfg);
-  const rS = GEOM.dSolar / 2,
-    rH = GEOM.dHome / 2;
-  const maxLeafW = Math.max(
-    0,
-    ...leaves.filter((l) => !cfg.hasGroups || l.id.includes(".")).map((l) => widthOf(l.id)),
-  );
+  // the radii the columns keep clear: the sources' (at least the default solar node's), the
+  // home's, the leaves' at the far end (the devices when there are rooms) and the rooms'
+  const rS = Math.max(GEOM.dSolar, ...cfg.sources.map((s) => s.d)) / 2,
+    rH = cfg.homeD / 2;
+  const farLeaves = leaves.filter((l) => !cfg.hasGroups || l.id.includes("."));
+  const rLeaf = Math.max(...farLeaves.map((l) => l.d), farLeaves.length ? 0 : GEOM.dConsumer) / 2;
+  const rRoom = Math.max(0, ...cfg.consumers.map((c) => (c.kind === "group" ? c.d : 0))) / 2;
+  const maxLeafW = Math.max(0, ...farLeaves.map((l) => widthOf(l.id)));
 
   // ----- across positions -----
   const stack = sourceStack(cfg);
@@ -283,7 +288,7 @@ export const layoutTree = (
     bS = stack.bs.map((b) => b0 + b * scale);
   } else {
     const row = sourceRow(
-      cfg.sources.map((s) => nodeD(s.kind)),
+      cfg.sources.map((s) => s.d),
       cfg.sources.map((s) => sizes.get(s.id)?.nw ?? 0),
       across,
     );
@@ -299,7 +304,8 @@ export const layoutTree = (
     cols = alongColumns(cfg),
     grow = hasCons ? Math.min(extra, 0.5 * GEOM.columnPitch * cols) : 0,
     levelPitch = GEOM.columnPitch + grow / cols;
-  const aS = GEOM.srcAlong + (extra - grow) / 2;
+  const sA = srcAlongOf(cfg);
+  const aS = sA + (extra - grow) / 2;
   let aH: number, aG: number, aC: number, aRow: number;
   if (right) {
     // the home column clears the source labels; the columns keep a least distance on narrow
@@ -310,7 +316,7 @@ export const layoutTree = (
       0,
       ...cfg.sources.map((s, i) => {
         const h = labelHeightOf(cfg, s.idx, false),
-          mid = bS[i] - nodeD(s.kind) / 2 - 4;
+          mid = bS[i] - s.d / 2 - 4;
         const inBand = mid + h / 2 > bandH[0] && mid - h / 2 < bandH[1];
         return inBand ? aS + rS + GEOM.labelGap + widthOf(s.id) + 10 + rH : 0;
       }),
@@ -320,7 +326,7 @@ export const layoutTree = (
     else if (listRows) aH = Math.max(minH, along * (cfg.hasGroups ? 0.3 : 0.42));
     else aH = Math.max(minH, along * (cfg.hasGroups ? 0.38 : 0.5));
     aH = Math.min(aH, along - rH - 2);
-    aC = along - (cfg.hasGroups ? GEOM.dDevice / 2 + 14 : GEOM.dConsumer / 2 + 14);
+    aC = along - (rLeaf + 14);
     aG = listRows ? aH + Math.max(55, along * 0.16) : aH + (aC - aH) * 0.36;
     // the room column: its labels sit centred above the rooms, right of the home's trunk
     const maxRoomW = Math.max(
@@ -330,13 +336,13 @@ export const layoutTree = (
     if (cfg.hasGroups) {
       // … and left of the device labels; when both cannot hold, the devices win
       const lower = aH + rH + 16 + maxRoomW / 2 + 6;
-      const upper = aC - GEOM.dDevice / 2 - GEOM.labelGap - maxLeafW - 6 - maxRoomW / 2;
+      const upper = aC - rLeaf - GEOM.labelGap - maxLeafW - 6 - maxRoomW / 2;
       aG = Math.max(aH + rH + 26, Math.min(Math.max(aG, lower), upper));
     }
     aRow = cfg.hasGroups ? aG + Math.max(50, along * 0.18) : Math.max(aH + 80, along * 0.62);
     if (listRows) aC = aRow;
   } else {
-    aH = hasCons ? aS + levelPitch : aS + natural - 44 - GEOM.srcAlong;
+    aH = hasCons ? aS + levelPitch : aS + natural - 44 - sA;
     aG = aH + levelPitch;
     aC = aH + levelPitch * (cfg.hasGroups ? 2 : 1);
     aRow = aC;
@@ -349,6 +355,7 @@ export const layoutTree = (
     id: string,
     kind: NodeKind,
     idx: number | null,
+    d: number,
     a: number,
     b: number,
     cid: string | null,
@@ -362,17 +369,17 @@ export const layoutTree = (
           : idx !== null && id.startsWith("s")
             ? "source"
             : "leaf";
-    const nd: LNode = { id, kind, idx, x, y, d: nodeD(kind), consumerId: cid, column };
+    const nd: LNode = { id, kind, idx, x, y, d, consumerId: cid, column };
     nodes.push(nd);
     byId.set(id, nd);
     return nd;
   };
   cfg.sources.forEach((s, i) => {
-    const nd = add(s.id, s.kind, s.idx, aS, bS[i], null);
+    const nd = add(s.id, s.kind, s.idx, s.d, aS, bS[i], null);
     nd.labelMax = srcCaps[i];
     nd.slot = srcSlot;
   });
-  add("home", "home", cfg.homeIdx, aH, bH, null);
+  add("home", "home", cfg.homeIdx, cfg.homeD, aH, bH, null);
 
   // the consumer column, centred across; `down` spreads it to the width
   let plan = columnPlan(cfg);
@@ -391,7 +398,7 @@ export const layoutTree = (
   const leafKind = (id: string): NodeKind => (id === "other" ? "other" : "consumer");
   for (const g of plan.groups) {
     const grp = cfg.consumers.find((c) => c.id === g.id);
-    add(g.id, "group", null, aG, b0 + g.b, grp ? grp.id : null);
+    add(g.id, "group", null, grp ? grp.d : GEOM.dGroup, aG, b0 + g.b, grp ? grp.id : null);
   }
   plan.leaves.forEach((lf, k) => {
     const leaf = leaves.find((l) => l.id === lf.id);
@@ -400,7 +407,7 @@ export const layoutTree = (
     // home like a room, so its line never crosses a room's
     const asRoom = cfg.hasGroups && !lf.group;
     if (listRows) {
-      const a0 = asRoom ? aG - GEOM.dGroup / 2 : aRow;
+      const a0 = asRoom ? aG - rRoom : aRow;
       const [x, y] = map(a0, b0 + lf.b);
       rows.push({ id: lf.id, idx, x, y: y - GEOM.rowH / 2, w: along - a0, h: GEOM.rowH });
       // a row's node is virtual: the edge ends at the row's left edge
@@ -416,8 +423,7 @@ export const layoutTree = (
       });
     } else {
       const kind = leafKind(lf.id);
-      const nd = add(lf.id, kind, idx, asRoom ? aG : aC, b0 + lf.b, lf.id);
-      nd.d = lf.d;
+      const nd = add(lf.id, kind, idx, lf.d, asRoom ? aG : aC, b0 + lf.b, lf.id);
       if (asRoom) nd.column = "group";
       if (consTight) {
         nd.tight = true;

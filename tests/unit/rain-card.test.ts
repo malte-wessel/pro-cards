@@ -97,6 +97,11 @@ describe("rain-card config", () => {
       flow: { style: "fill", height: 1000 },
     });
     expect(c).toMatchObject({ layout: "hero", lead: "icon", flow: { style: "fill", height: 400 } });
+    // icon_style belongs to the rate, the lead's item
+    expect(normalizeRainCardConfig({ entity: R }).entities[0].iconStyle).toBe("circle");
+    expect(normalizeRainCardConfig({ entity: R, icon_style: "plain" }).entities[0].iconStyle).toBe(
+      "plain",
+    );
     // the flow tile always shows the icon
     expect(normalizeRainCardConfig({ entity: R, visual: "flow" }).lead).toBe("icon");
     expect(normalizeRainCardConfig({ entity: R, layout: "hero", visual: "flow" }).lead).toBe(

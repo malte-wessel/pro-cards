@@ -173,6 +173,13 @@ test.describe("wind card", () => {
     }
     await mount(page, { type: T, entity: S, direction: D, lead: "arrow" });
     await expect(card(page).locator(".lead ha-icon.arrow")).toHaveCount(1);
+    await expect(card(page).locator(".lead.plain")).toHaveCount(0);
+    // icon_style: plain drops the arrow's circle, also over the flow tile's field
+    await mount(page, { type: T, entity: S, direction: D, visual: "flow", icon_style: "plain" });
+    const shape = card(page).locator(".lead.plain .shape");
+    expect(await shape.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe(
+      "rgba(0, 0, 0, 0)",
+    );
   });
 
   test("speaks the profile language and pauses with reduced motion", async ({ page }) => {

@@ -33,7 +33,14 @@ import {
   rateOf,
 } from "../flow.ts";
 import { placeLabels, type LabelSize } from "../labels.ts";
-import { layoutTree, type LabelBox, type LEdge, type LNode, type TreeLayout } from "../layout.ts";
+import {
+  layoutTree,
+  ringWidth,
+  type LabelBox,
+  type LEdge,
+  type LNode,
+  type TreeLayout,
+} from "../layout.ts";
 import { edgeColor, fmtPower, sourceColor, type Flows, type PowerNow } from "../model.ts";
 import { arcPath, ringArcs } from "../path.ts";
 
@@ -64,13 +71,13 @@ const svgEl = (tag: string, attrs: Record<string, string | number> = {}) => {
 
 const RING_SEGMENTS = 5; // solar, battery, generator, low-carbon grid, grid
 
-const leadEl = (d: number, ring: boolean) => {
+// the lead; a ring's stroke is `sw` (ringWidth)
+const leadEl = (d: number, sw: number | null) => {
   const lead = document.createElement("div");
-  lead.className = ring ? "lead ring" : "lead";
+  lead.className = sw !== null ? "lead ring" : "lead";
   lead.style.setProperty("--lead", `${d}px`);
-  if (ring) {
-    const sw = 3,
-      r = d / 2 - sw / 2;
+  if (sw !== null) {
+    const r = d / 2 - sw / 2;
     const svg = svgEl("svg", { viewBox: `0 0 ${d} ${d}`, class: "ring" });
     svg.appendChild(
       svgEl("circle", { class: "track", cx: d / 2, cy: d / 2, r, "stroke-width": sw }),
@@ -85,11 +92,11 @@ const leadEl = (d: number, ring: boolean) => {
   return lead;
 };
 
-const nodeEl = (id: string, d: number, ring: boolean, row: HTMLElement | null) => {
+const nodeEl = (id: string, d: number, sw: number | null, row: HTMLElement | null) => {
   const el = row ?? document.createElement("div");
   el.classList.add("pnode");
   el.dataset.node = id;
-  el.appendChild(leadEl(d, ring));
+  el.appendChild(leadEl(d, sw));
   return el;
 };
 
@@ -103,11 +110,12 @@ const labelEl = (id: string, small: boolean) => {
   return el;
 };
 
-const rowEl = (id: string, row: HTMLElement | null) => {
+// a list row's lead: its own circle (rowD), within the row's height
+const rowEl = (id: string, d: number, row: HTMLElement | null) => {
   const el = row ?? document.createElement("div");
   el.classList.add("plist");
   el.dataset.node = id;
-  el.appendChild(leadEl(32, false));
+  el.appendChild(leadEl(d, null));
   const texts = document.createElement("div");
   texts.className = "texts";
   const line = document.createElement("div");
@@ -144,7 +152,6 @@ export const buildTree = (
   box.appendChild(flow);
   const listRows = cfg.direction === "right" && cfg.consumerStyle === "list";
   cfg.sources.forEach((s, i) => {
-    const d = s.kind === "solar" ? GEOM.dSolar : s.kind === "battery" ? GEOM.dBattery : GEOM.dGrid;
     // a ring where there is something to show: the charge, the low-carbon share, the peak
     const ring =
       s.kind === "battery"
@@ -152,22 +159,22 @@ export const buildTree = (
         : s.kind === "grid"
           ? s.fossilIdx !== null
           : s.peak !== null;
-    box.appendChild(nodeEl(`s${i}`, d, ring, rowOf(s.idx, "")));
+    box.appendChild(nodeEl(`s${i}`, s.d, ring ? ringWidth(s.kind, s.d) : null, rowOf(s.idx, "")));
     box.appendChild(labelEl(`s${i}`, false));
   });
-  box.appendChild(nodeEl("home", GEOM.dHome, true, rowOf(cfg.homeIdx, "")));
+  box.appendChild(nodeEl("home", cfg.homeD, ringWidth("home", cfg.homeD), rowOf(cfg.homeIdx, "")));
   box.appendChild(labelEl("home", false));
   for (const c of cfg.consumers)
     if (c.kind === "group") {
-      box.appendChild(nodeEl(c.id, GEOM.dGroup, false, null));
+      box.appendChild(nodeEl(c.id, c.d, null, null));
       box.appendChild(labelEl(c.id, false));
     }
   for (const leaf of leavesOf(cfg)) {
     const row = leaf.kind === "item" ? rowOf(leaf.idx, "") : null;
-    if (listRows) box.appendChild(rowEl(leaf.id, row));
+    if (listRows) box.appendChild(rowEl(leaf.id, leaf.rowD, row));
     else {
       const device = leaf.id.includes(".");
-      box.appendChild(nodeEl(leaf.id, device ? GEOM.dDevice : GEOM.dConsumer, false, row));
+      box.appendChild(nodeEl(leaf.id, leaf.d, null, row));
       // a device's label is small; a consumer beside the rooms reads like a room
       box.appendChild(labelEl(leaf.id, device || !cfg.hasGroups));
     }
@@ -262,8 +269,9 @@ const fillShape = (st: TreeState, shape: HTMLElement, icon: string, m: EntityMod
   shape.replaceChildren(iconEl(st.ctx, look, m?.st));
 };
 
-const setRing = (lead: HTMLElement, d: number, segs: { color: string; f: number }[]) => {
-  const r = d / 2 - 1.5;
+const setRing = (lead: HTMLElement, nd: LNode, segs: { color: string; f: number }[]) => {
+  const d = nd.d,
+    r = d / 2 - ringWidth(nd.kind, d) / 2;
   const arcs = ringArcs(
     segs.map((s) => s.f),
     r,
@@ -451,7 +459,7 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
       const H = flows.H;
       setRing(
         lead,
-        nd.d,
+        nd,
         H > 0
           ? [
               { color: COLORS.solar, f: flows.sH / H },
@@ -475,7 +483,7 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
             : cfgSrc?.kind === "solar" && cfgSrc.peak !== null && src?.w != null
               ? { color: COLORS.solar, f: clamp(src.w / cfgSrc.peak) }
               : null;
-      setRing(lead, nd.d, seg ? [seg] : []);
+      setRing(lead, nd, seg ? [seg] : []);
     }
   }
 

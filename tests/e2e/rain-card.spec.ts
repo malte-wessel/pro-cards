@@ -182,6 +182,13 @@ test.describe("rain card", () => {
       "icon",
       "mdi:weather-pouring",
     );
+    await expect(card(page).locator(".lead.plain")).toHaveCount(0);
+    // icon_style: plain drops the icon's circle; the animation keeps its own
+    await mount(page, { type: T, entity: R, lead: "icon", icon_style: "plain" });
+    await expect(card(page).locator(".lead.plain ha-icon")).toHaveCount(1);
+    await mount(page, { type: T, entity: R, icon_style: "plain" });
+    await expect(card(page).locator(".lead.wlead")).toHaveCount(1);
+    await expect(card(page).locator(".lead.plain")).toHaveCount(0);
   });
 
   test("speaks the profile language and pauses with reduced motion", async ({ page }) => {

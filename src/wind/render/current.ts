@@ -54,7 +54,9 @@ export const windNow = (ctx: RenderCtx, cfg: WindConfig, cm: CurrentModels): Win
 
 const leadOf = (cfg: WindConfig, kind: RowKind) => {
   const size = kind === "hero" ? DEFAULTS.heroLead : DEFAULTS.tileLead;
-  return cfg.lead === "arrow" ? arrowLead(size) : animatedLead(cfg.flow.style, size);
+  return cfg.lead === "arrow"
+    ? arrowLead(size, cfg.entities[cfg.speedIdx].iconStyle)
+    : animatedLead(cfg.flow.style, size);
 };
 
 export const updateCurrent = (

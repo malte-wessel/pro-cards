@@ -170,7 +170,7 @@ test("every icon sits centred in the box the card draws it in", async ({ page })
     ["sun-path-card-pro", "ha-icon in div.header"],
     ["sun-azimuth-card-pro", "ha-icon in div.header"],
     ["sun-azimuth-card-pro", "ha-icon in div.rot"],
-    ["sun-azimuth-card-pro", "ha-icon in div.lead.s36"],
+    ["sun-azimuth-card-pro", "ha-icon in div.lead"],
     ["illuminance-card-pro", "ha-icon in div.shape"],
     ["multi-trend-card-pro", "ha-icon in div.shape"],
   ])

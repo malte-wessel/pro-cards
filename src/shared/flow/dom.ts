@@ -1,6 +1,7 @@
 // DOM pieces shared by the flow cards: the band, the row skeleton of tile / flow tile / hero,
 // the lead shells and the playback-rate scaling that lets a value change re-time running
 // animations without restarting them.
+import type { IconStyle } from "../entity/constants.ts";
 import type { EntityModel } from "../entity/model.ts";
 import { bigEl, textEl } from "../entity/render/lead.ts";
 
@@ -39,10 +40,11 @@ export const setRate = (root: HTMLElement, rate: number) => {
   for (const a of root.getAnimations({ subtree: true })) a.playbackRate = rate;
 };
 
-// the lead: an icon in the soft circle
-export const iconLead = (size: number, icon: HTMLElement) => {
+// the lead: an icon in the soft circle, or alone (icon_style: plain); the animated lead below
+// keeps its circle, the animation is drawn in it
+export const iconLead = (size: number, icon: HTMLElement, style: IconStyle = "circle") => {
   const lead = document.createElement("div");
-  lead.className = "lead";
+  lead.className = style === "plain" ? "lead plain" : "lead";
   lead.style.setProperty("--lead", `${size}px`);
   const shape = document.createElement("div");
   shape.className = "shape";

@@ -290,7 +290,7 @@ entities:
 
 | Visual      | Draws                                                              | Options                                    | Drawn in               |
 | ----------- | ------------------------------------------------------------------ | ------------------------------------------ | ---------------------- |
-| `icon`      | the entity icon in a coloured circle                               |                                            | everywhere             |
+| `icon`      | the entity icon in a coloured circle (or alone, `icon_style`)      | `icon_style`                               | everywhere             |
 | `ring`      | a progress ring around the icon (grid cells: around the value)     | `min` / `max`                              | everywhere but headers |
 | `gauge`     | a half-circle gauge with the value inside and `min` / `max` labels | `min` / `max`                              | tile, list, grid, hero |
 | `bar`       | a horizontal progress bar under the value                          | `min` / `max`                              | tile, list, grid, hero |
@@ -345,6 +345,26 @@ The default. The icon sits in a soft circle of the entity's colour, the value an
 :::
 
 The thermostat tile shows the override: a fixed `icon` or `color` on the entity wins over the rules, which then only contribute the label.
+
+`icon_style: plain` draws the icon without its circle, in the same place and at the same size, so plain and circled entities line up. It works in every layout and with `ring`, where only the fill inside the ring goes. A lead toggle that is off loses its grey circle too and shows a grey icon. A [control on the icon](/cards/controls#where-a-control-sits) that is a button (Run, a confirmed hold) keeps its circle, since that is what marks it as a button.
+
+::: live
+
+```yaml
+type: custom:entity-group-card-pro
+title: Living room
+entities:
+  - entity: light.living_room
+    icon_style: plain
+  - entity: cover.living_room_blinds
+    icon_style: plain
+  - entity: fan.living_room
+    icon_style: plain
+  - entity: climate.living_room
+    name: Thermostat
+```
+
+:::
 
 ### Ring
 
@@ -965,12 +985,13 @@ All keys an entity accepts, grouped by what they do. "Applies to" names the visu
 
 ### Look
 
-| Option   | Default     | Applies to | Description                                                                                                                                                                             |
-| -------- | ----------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `visual` | `icon`      | all        | `icon`, `ring`, `gauge`, `bar`, `sparkline`, `columns`, `badge` or `strip`; see [Visuals](#visuals). Block visuals fall back to `icon` in items and headers.                            |
-| `icon`   | entity icon | all        | Fixed icon that overrides rule icons. Template allowed.                                                                                                                                 |
-| `color`  | HA state    | all        | Fixed colour that overrides rule colours. Without it the entity uses Home Assistant's state colour (see the [colour guide](/guide/colours)), plain sensors `primary`. Template allowed. |
-| `rules`  |             | all        | List of `{ state, below, above, color, icon, label, tint_card }`, first match wins; see [Rules](#rules). `below` and `above` may be numeric strings.                                    |
+| Option       | Default     | Applies to | Description                                                                                                                                                                             |
+| ------------ | ----------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `visual`     | `icon`      | all        | `icon`, `ring`, `gauge`, `bar`, `sparkline`, `columns`, `badge` or `strip`; see [Visuals](#visuals). Block visuals fall back to `icon` in items and headers.                            |
+| `icon`       | entity icon | all        | Fixed icon that overrides rule icons. Template allowed.                                                                                                                                 |
+| `icon_style` | `circle`    | all        | `circle` draws the icon in a soft circle of its colour, `plain` the icon alone; see [Icon](#icon). Header items have no circle, so it changes nothing there.                            |
+| `color`      | HA state    | all        | Fixed colour that overrides rule colours. Without it the entity uses Home Assistant's state colour (see the [colour guide](/guide/colours)), plain sensors `primary`. Template allowed. |
+| `rules`      |             | all        | List of `{ state, below, above, color, icon, label, tint_card }`, first match wins; see [Rules](#rules). `below` and `above` may be numeric strings.                                    |
 
 ### Scale
 

@@ -50,7 +50,9 @@ export const rainNow = (ctx: RenderCtx, cfg: RainConfig, cm: CurrentModels): Rai
 
 const leadOf = (cfg: RainConfig, kind: RowKind) => {
   const size = kind === "hero" ? DEFAULTS.heroLead : DEFAULTS.tileLead;
-  return cfg.lead === "icon" ? rainLead(size) : animatedLead(cfg.flow.style, size);
+  return cfg.lead === "icon"
+    ? rainLead(size, cfg.entities[cfg.rateIdx].iconStyle)
+    : animatedLead(cfg.flow.style, size);
 };
 
 export const updateCurrent = (

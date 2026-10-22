@@ -12,7 +12,7 @@ export const BAND = {
   heroBandH: 120,
   minBandH: 40,
   maxBandH: 400,
-  tileLead: 40,
+  tileLead: 36,
   heroLead: 56,
 } as const;
 

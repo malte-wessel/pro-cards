@@ -31,6 +31,7 @@ export const leadEl = (
   const el = document.createElement("div");
   el.className = "lead";
   el.style.setProperty("--lead", `${size}px`);
+  if (ent.iconStyle === "plain") el.classList.add("plain");
   if (ent.visual === "ring") {
     el.classList.add("ring");
     const sw = Math.max(3, Math.round(size * 0.09)),

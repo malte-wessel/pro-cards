@@ -5,6 +5,12 @@
   "description": "Where the power comes from and where it goes: solar, battery and grid → home → rooms and devices, as a tree with animated flow.",
   "type": "object",
   "$defs": {
+    "iconSize": {
+      "type": "integer",
+      "minimum": 16,
+      "maximum": 96,
+      "description": "Diameter of the node's circle (px); the icon follows. Defaults: solar and grid 44, battery 40, home 46, consumer and room 32, a room's device 24; a list row's at most 36"
+    },
     "sourceKeys": {
       "type": "object",
       "properties": {
@@ -15,6 +21,7 @@
           "description": "A line under the name. Template allowed."
         },
         "icon": { "$ref": "defs.schema.json#/$defs/icon" },
+        "icon_size": { "$ref": "#/$defs/iconSize" },
         "color": {
           "$ref": "defs.schema.json#/$defs/color",
           "description": "Fixed colour of the node; overrides the flow colour and the rules"
@@ -146,6 +153,8 @@
       "type": "object",
       "allOf": [{ "$ref": "entity.schema.json#/$defs/entityKeys" }],
       "properties": {
+        "icon_size": { "$ref": "#/$defs/iconSize" },
+        "icon_style": false,
         "invert": {
           "type": "boolean",
           "description": "Flips the sensor's sign"
@@ -158,6 +167,8 @@
       "type": "object",
       "allOf": [{ "$ref": "entity.schema.json#/$defs/entityKeys" }],
       "properties": {
+        "icon_size": { "$ref": "#/$defs/iconSize" },
+        "icon_style": false,
         "invert": {
           "type": "boolean",
           "description": "Flips the sensor's sign; a negative value is power the device produces, flowing back to the home"
@@ -177,6 +188,7 @@
       "properties": {
         "group": { "type": "string", "description": "The room's name" },
         "icon": { "$ref": "defs.schema.json#/$defs/icon" },
+        "icon_size": { "$ref": "#/$defs/iconSize" },
         "hide_below": {
           "type": "number",
           "minimum": 0,

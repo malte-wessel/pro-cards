@@ -14,9 +14,9 @@ export const houseHtml = () =>
 
 export const eventsHtml = () =>
   `<div class="items">
-    <div class="item"><div class="lead s36 rise">${icon("mdi:weather-sunset-up")}</div><div class="itexts"><div class="v rise"></div><div class="n rise"></div></div></div>
-    <div class="item"><div class="lead s36 noon">${icon("mdi:white-balance-sunny")}</div><div class="itexts"><div class="v noon"></div><div class="n noon"></div></div></div>
-    <div class="item"><div class="lead s36 set">${icon("mdi:weather-sunset-down")}</div><div class="itexts"><div class="v set"></div><div class="n set"></div></div></div>
+    <div class="item"><div class="lead rise">${icon("mdi:weather-sunset-up")}</div><div class="itexts"><div class="v rise"></div><div class="n rise"></div></div></div>
+    <div class="item"><div class="lead noon">${icon("mdi:white-balance-sunny")}</div><div class="itexts"><div class="v noon"></div><div class="n noon"></div></div></div>
+    <div class="item"><div class="lead set">${icon("mdi:weather-sunset-down")}</div><div class="itexts"><div class="v set"></div><div class="n set"></div></div></div>
   </div>`;
 
 export const sideName = (card: SunAzimuthHost, side: Side) =>

@@ -40,10 +40,8 @@ export const STYLE = `
   /* dividers run from edge to edge, through the body's side padding */
   .divider { height: 1px; margin: 0 -16px; background: var(--divider-color); flex: none; }
   .top { display: flex; align-items: center; gap: 12px; min-width: 0; --c: var(--saz-sun); }
-  .lead { position: relative; flex: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--c); background: color-mix(in srgb, var(--c) 20%, transparent); --mdc-icon-size: 22px; }
-  /* the head's lead is the tile shape of the other cards: 40 px, a 24 px icon */
-  .head .top > .lead { --mdc-icon-size: 24px; }
-  .lead.s36 { width: 36px; height: 36px; --mdc-icon-size: 20px; }
+  /* the tile shape of the other cards: 36 px, a 24 px icon */
+  .lead { position: relative; flex: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--c); background: color-mix(in srgb, var(--c) 20%, transparent); --mdc-icon-size: 24px; }
   .lead ha-icon { display: block; }
   .rot { display: flex; transition: transform .6s; }
   .texts { flex: 1 1 0; min-width: 24px; display: flex; flex-direction: column; gap: 2px; }

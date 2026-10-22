@@ -35,6 +35,12 @@
       "$ref": "defs.schema.json#/$defs/color",
       "description": "Fixed colour; overrides rules"
     },
+    "icon_style": {
+      "type": "string",
+      "enum": ["circle", "plain"],
+      "default": "circle",
+      "description": "The arrow lead (lead: arrow) in its soft circle, or plain: the arrow alone; the animated lead keeps its circle"
+    },
     "decimals": {
       "type": "integer",
       "minimum": 0,

@@ -1,6 +1,7 @@
 // The lead of the wind card: the direction arrow, or a small animation of the flow style inside
 // the soft circle. Built once; the row's CSS variables (--rot, --arrow, --ldur) drive it.
 import { animatedLeadShell, el, iconLead } from "../../shared/flow/dom.ts";
+import type { IconStyle } from "../../shared/entity/constants.ts";
 import type { FlowStyle } from "../constants.ts";
 
 export const arrowIcon = () => {
@@ -10,7 +11,7 @@ export const arrowIcon = () => {
   return icon;
 };
 // the arrow lead: mdi:navigation in the soft circle, turned to where the wind blows
-export const arrowLead = (size: number) => iconLead(size, arrowIcon());
+export const arrowLead = (size: number, style?: IconStyle) => iconLead(size, arrowIcon(), style);
 
 // the animated lead: three rows of particles crossing the circle in the wind's direction
 export const animatedLead = (style: FlowStyle, size: number) => {

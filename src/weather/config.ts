@@ -67,6 +67,7 @@ export interface RawWeatherCardConfig extends RawEntityCardBase {
   name?: string | null;
   secondary?: string | null;
   color?: string | null;
+  icon_style?: unknown;
   rules?: unknown;
   temperature_rules?: unknown;
   decimals?: unknown;
@@ -246,7 +247,14 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
   // the condition: the state with the card's rules; the temperature: an attribute with its own;
   // rain, rain chance and wind: items that know the units and formatting of forecast values
   const cond = normalizeEntity(
-    { entity, name: raw.name, secondary: raw.secondary, color: raw.color, rules: raw.rules },
+    {
+      entity,
+      name: raw.name,
+      secondary: raw.secondary,
+      color: raw.color,
+      icon_style: raw.icon_style,
+      rules: raw.rules,
+    },
     ctx,
     "the card",
   );
@@ -280,6 +288,7 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
         name: sec.name ?? raw.name,
         secondary: sec.secondary ?? raw.secondary,
         color: raw.color,
+        icon_style: raw.icon_style,
         rules: sec.rules ?? raw.rules,
       },
       ctx,

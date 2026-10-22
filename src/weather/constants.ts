@@ -35,7 +35,7 @@ export const DEFAULTS = {
   days: 7,
   maxDays: 10,
   forecastLayout: "vertical",
-  tileIconSize: 40,
+  tileIconSize: 36,
   heroIconSize: 56,
   forecastIconSize: 22,
   trendShow: ["temperature", "precipitation"],
