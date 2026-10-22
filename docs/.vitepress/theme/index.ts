@@ -3,6 +3,7 @@ import type { Theme } from "vitepress";
 import LiveCard from "./LiveCard.vue";
 import DashboardGrid from "./DashboardGrid.vue";
 import Playground from "./Playground.vue";
+import ChangelogPager from "./ChangelogPager.vue";
 import Layout from "./Layout.vue";
 import "./ha.css";
 import "./custom.css";
@@ -14,5 +15,6 @@ export default {
     app.component("LiveCard", LiveCard);
     app.component("DashboardGrid", DashboardGrid);
     app.component("Playground", Playground);
+    app.component("ChangelogPager", ChangelogPager);
   },
 } satisfies Theme;

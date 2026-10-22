@@ -1,183 +1,186 @@
 # Changelog
 
-## 2.8.0 (beta)
+## 2.8.0 – Layout card and theme-aware sizing
 
-- New layout card (`custom:layout-card-pro`): cards, Pro Cards and Home Assistant's own, arranged inside a section in a `grid` (a count of columns or tracks such as `[1fr, 2fr]` and `[320px, 1fr]`, spans of columns and rows, start columns; a card that asks for rows gets them in the sections grid's row height) or in `masonry` (filled by the cards' own sizes, a card pinned to its column). The breakpoints are view columns: `breakpoints: { 2: { columns: 4 } }` changes the layout once its section spans two view columns, read from the span Home Assistant gives the section (outside a section, from the card's width in the sections view's 500 px columns). Spacing (`gap`, `padding`) and `card_style: seamless` for one surface with dividers. Each card's `view_layout` places it (span, column, order, align), per view columns where it is a map. The cards keep Home Assistant's own `visibility`; a hidden card leaves no gap. YAML only for now
-- Docs: the layout card's page starts with when to use it and six recipes (a room card, more columns where there is room, a main card with a side column, a toolbar, rooms of different lengths, energy at a glance), and a new layout showcase puts the same card in a narrow and a wide section. The showcase dashboards no longer run past the right edge on a phone
-- Icons are sized like Home Assistant's tile card: a 24 px icon in a 36 px circle in the tiles of the entity cards, the items of the group and sections cards, the wind, rain and weather tiles (the weather card's `icon_size` defaults to 36) and the illuminance, multi trend and sun azimuth cards. List rows keep their 36 px circle with a 24 px icon. The circles were 40 px with a 22 px icon, so a Pro tile next to one of Home Assistant's looked heavier while its icon was smaller. Grid cells and table fields keep their smaller circles (32 and 24 px) and take the same proportion, two thirds, so their icons grow a little too, as do the icons of a Run or hold button on the icon, which follow the lead's size instead of a fixed 22 px. Heroes and the power flow keep their sizes
-- Power flow: `icon_size` on a source, the home, a consumer, a room or a device sets the diameter of its circle (16 to 96 px) and the icon follows (55 % of it, 42 % in a ring); a ring, its gap and the icon inside keep their proportions at any size, and the tree makes room for the node; the **Other** node takes it as `other: { icon_size: 44 }`. A list row's circle stays within the row (36 px)
-- `icon_style: plain` on an entity draws its icon without the circle, in the same place and at the same size, so it lines up with circled entities: in every layout of the entity, group and sections cards, inside a `ring`, on a lead toggle that is off, and on the weather card's condition icon and the icon / arrow lead of the rain and wind cards (their animated leads keep the circle). A control on the icon that is a button keeps its circle
-- Text follows Home Assistant's typography variables, so a theme sizes the Pro Cards' text as it sizes the built-in cards': `ha-font-size-scale` scales every size, `ha-font-size-xs` … `ha-font-size-5xl`, `ha-font-weight-*` and `ha-font-family-body` set a step, a weight or the font, and `ha-tile-info-primary-*` / `ha-tile-info-secondary-*` style the name and secondary line of tiles and list rows as on Home Assistant's tile card. The sizes were fixed in px, so a theme could not make the 12 px secondary line larger on a tablet, only card_mod or UIX could. What sits around the text makes room for it: axis gutters and strips, the power flow's labels, the sun path's event row, the sun azimuth's compass labels and chips. At Home Assistant's default sizes nothing changes
-- Docs: "Look & themes" explains the text size variables, and the examples' theme picker has a **Large text** theme (`ha-font-size-scale: 1.25`)
-- Icons follow a theme's `ha-tile-icon-border-radius` (the shape behind an icon, as on Home Assistant's tile card) and `tile-icon-opacity` (how strong its soft background is; `0` for none). A ring and the power flow's nodes stay round. The background was a fixed 20 %, so a theme could only make it transparent with card_mod or UIX
-- Docs: "Look & themes" lists every theme variable the cards read
+_Beta_
 
-## 2.7.1 (2026-10-21)
+- **New layout card** (`custom:layout-card-pro`): arrange any cards inside a section as a `grid` (columns, tracks, spans) or as `masonry`. Breakpoints count view columns, each card is placed through its `view_layout`, and `card_style: seamless` joins the cards into one surface. YAML only for now
+- Icons are sized like Home Assistant's tile card (a 24 px icon in a 36 px circle), so Pro tiles match the built-in ones
+- `icon_style: plain` draws an icon without its circle, still aligned with circled icons
+- Power flow: `icon_size` on any node, including `other`
+- Text follows Home Assistant's typography variables (`ha-font-size-*`, `ha-font-weight-*`, `ha-tile-info-*`), so a theme can size the cards' text
+- Icons follow a theme's `ha-tile-icon-border-radius` and `tile-icon-opacity`
+- Docs: recipes and a showcase for the layout card, a list of every theme variable the cards read, and a **Large text** example theme
 
-- Colours and icons from the config, rendered templates and entity attributes can no longer add markup to the dashboard. A colour is checked before it reaches the cards' SVG: only a plain colour token counts (a name, a hex, `rgb()` / `hsl()` / `var()` of numbers, commas, slashes and spaces); one with a quote, an angle bracket, `;`, `:` or `url()` counts as no colour, so a template that renders something else falls back to the rules. The integration's `device_class` is slugged before it names a theme colour, and the sun path and sun azimuth cards set the header `icon` as an attribute. A value with a `"` in it used to close the SVG attribute it was written into
-- Docs: installing through HACS starts with searching for Pro Cards; the custom repository is the fallback
-- Grid cells with a `ring` or `gauge` centre it, with the name and label under it, across the cell and, beside a taller cell in the same row, down it (a gauge's icon stays in the top corner, the gauge centres in the room below it). They hugged the top left, leaving an empty strip on the right of a wide cell and under a short one
-- Entity card: a tile with a `gauge` keeps its icon and name at the top left and centres the gauge in the room below, across the tile and down it when the tile is taller than its content (fixed rows, a taller card beside it). The whole tile used to centre as a block, the gauge at its left edge
+## 2.7.1 – Safer colours, centred gauges
 
-## 2.7.0 (2026-10-20)
+_2026-10-21_
 
-- Every card takes the height it is given, as Home Assistant's own cards do: the height of its cell with a fixed number of rows, the height of its grid row with `rows: auto` (cards side by side are all as tall as the tallest of them), and the height of a horizontal stack. Home Assistant gives that height to the wrapper around a card, not to the card, and the cards kept the height of their content: they ended short of their neighbours, a one-row tile ran 2 px past its cell, and the sun azimuth card lost its picture with fixed rows. Masonry views and vertical stacks, where the height follows the content, are unchanged
-- `fill_height: false` keeps a card at its own height in a taller grid row, a horizontal stack, a cell with fixed rows or a panel view, with the room left under it (a short room list beside longer ones); a cell smaller than the card cuts it off at the bottom. The visual editors of the illuminance, multi trend and sun path cards have a switch for it
-- The plots fill that height: the `sparkline` and `columns` plots of the entity, entity group and entity sections cards, the weather card's trends, the band of the wind and rain heroes, the sun path plot and the illuminance trend take the room the rest of the card leaves and are drawn at that height, so a card lines up with its neighbours, a core sensor card among them. Several plots share the room evenly; in a smaller cell they shrink down to a floor. Tiles without a plot (icon, ring, badge, bar, gauge, strip, controls, and the weather, wind and rain tiles) centre their content; lists without plots keep their rows at the top; the illuminance arc and band sit in the middle. In a list row with a plot the lead sits by its name
-- Tiles size to their content (`rows: auto`) instead of being pinned to one row (two with a header), so they stretch with their grid row; a plain tile is still exactly one row on its own. An entity tile with a `sparkline` or `columns` asks for 2 rows at least, since one leaves its plot no room
-- Multi trend: the card sizes to its content (`rows: auto`, 2 rows at least) instead of pinning 3 rows (2 plus one per lane). A pinned card keeps exactly its rows, so beside taller cards it ended early with a gap below; now it fills the row like every card, its plot taking the room
-- Docs: the sizing guide explains filling the height card by card, and the examples on the site lay cards out as Home Assistant's sections grid does
-- Power flow: in a cell of fixed height (a sections dashboard with a fixed number of rows) the tree fills the card. A taller cell spreads it, a smaller one scales the whole tree down so nothing is cut off; the card used to keep its tree's own height, leaving an empty strip or cutting off the bottom, so it did not line up with its neighbours. Like every card it also fills a grid row stretched by a taller card beside it; masonry views and vertical stacks are unchanged
-- Power flow: a lone consumer sits on the home's axis, so its line runs straight. The consumer column used to be centred between unequal margins, 2 px off, and its line had a small step
-- New sun azimuth card (`custom:sun-azimuth-card-pro`): where the sun is around the house today, computed from the Home Assistant coordinates like the sun path card. Two views, `3d` by default: `dial` (the sky seen from above: horizon ring, today's path, the house in the middle with its lit sides) and `3d` (a see-through sky dome over a small gabled house, lit by the sun, with its shadow, the sun's daily circle, a pole at the house, the elevation and the azimuth as angles with chips, the dome filling the width of a narrow card; `camera` orbits the scene and `camera_slider` puts a slider under the plot to do it by hand, the same slider as the entity cards' controls). `house.front` is the bearing the front faces, `house.roof` gives the house a `gable`, `gable_front`, `hip` or `flat` roof, `house.sides` names the front, right, back and left sides or sets a wall shared with the neighbour to `false` (unnamed sides are called by where they face); the sides footer (`show_sides: true`) lists each side's sun window today on a timeline with a pill for its state (hover or tap a timeline, or the sun's path in the plot, and the plot shows the sun at that time; `hover_preview: false` turns that off), and under the plot sit a summary of the sides in the sun and what comes next (`show_summary`) and, with `show_sun_times: true`, the sunrise / noon / sunset row. The events row and the sides footer are off by default. With `rows` in `grid_options` the card takes that height and the plot shrinks to fit. Colours: `sun_color`, `night_color`, `sky_color`. Words in every language the cards speak
-- The solar maths moved to `src/shared/solar.ts` and gained the azimuth (no change for users)
-- The controls' slider moved to `src/shared/slider.ts` so every card can draw it (no change for users)
-- Power flow: the grid and solar nodes get a ring like the battery's when there is something to show. A grid with `fossil` / `non_fossil` draws its low-carbon share; a solar source with the new `peak` (W) draws its production against the panels' peak power. Without that data the node stays a plain circle
-- Power flow: `idle_below` sets the watts below which a link is idle (default 20, as before). `idle_below: 1` lets a 3 W standby load flow instead of drawing a dashed track; the node colours and the summary line follow the same threshold
-- Power flow: labels keep their places with `idle_links: hidden`. A hidden idle link used to free the room beside it, so a label moved whenever its link switched on or off (sources and consumers jumped between two places as the values changed). The labels now keep clear of every link, hidden or not
-- Power flow: with `direction: down`, the sources' labels share one line, so the values read across: right of the icons when every name fits there, otherwise below them, beside each source's line, a name that still does not fit cut with an ellipsis (values are never cut). The choice depends on the names only, so a changing value never moves the labels. They used to go wherever there was room, in two rows when the card was narrow
-- Power flow: with `direction: down`, the labels of a narrow consumer row stay below their nodes instead of alternating above and below. A long name ends in an ellipsis where it would meet its neighbour's label and may take the room a shorter neighbour leaves; the values are never cut, and only when not even they fit side by side does a label move above
-- Power flow: with `direction: down`, a consumer whose label has a `secondary` line keeps its label below its node. The tree left room for two lines only, so such a label went above; the tree is now as tall as its tallest consumer label needs
+- Colours and icons from configs, templates and attributes can no longer inject markup; a colour must be a plain colour token
+- Grid cells and entity tiles centre a `ring` or `gauge` in the room they have
+- Docs: install through HACS by searching for Pro Cards
 
-## 2.6.0 (2026-10-18)
+## 2.7.0 – Sun azimuth card, cards fill their height
 
-- Sparklines, the lines of the multi trend card and the illuminance trend are calmer: the history is averaged to one point per 12 px of width (it was one per 2 px), so sensor noise no longer draws a jagged line and a sensor that flickers between two readings draws a smooth wave instead of a zigzag. A smoothed line runs through bucket means from edge to edge (the tooltip shows the mean). `smoothing_minutes` on the entity cards, the multi trend card and the illuminance card sets the averaging bucket in minutes instead; the multi trend and illuminance editors have a field for it. The illuminance trend averages on its log scale, so a bright moment does not lift a dim bucket
-- A rule `label` shows in row, column and table items and in `header_entities` without `visual: badge`: it stands in for the value, in the rule's colour, as the badge pill does there (a window item reads Closed instead of off). The value stays in the item's tooltip. Items used to show the label only in the tooltip, so a row needed badges on every entity to read as words
-- Power flow: `charge_from: solar` on a battery whose panels feed it (a plug-in battery, a DC-coupled hybrid): solar charges it before it covers the home, so the card no longer draws grid power into a battery the grid cannot reach as long as the sensors agree. Given as a `charge` / `discharge` pair, such a battery charges from its panels and feeds the home at once, as the unit does; a battery never charges itself
-- `rules` on the series of the multi trend card: the first rule the current value matches (`below`, `above`, `state`) colours the line, its legend swatch and its tooltip swatch, as on the entity cards. A series' `color` may be a template and wins over the rules
+_2026-10-20_
 
-## 2.5.0 (2026-10-12)
+- **New sun azimuth card** (`custom:sun-azimuth-card-pro`): where the sun is around your house today, as a sky `dial` or a `3d` scene with the house, its roof and its lit sides
+- Every card takes the height it is given, as Home Assistant's cards do, so cards side by side line up. `fill_height: false` keeps a card at its own height
+- Plots (sparklines, columns, trends, flow bands) grow into that height; tiles without a plot centre their content
+- Tiles and the multi trend card size to their content (`rows: auto`)
+- Power flow: rings on the grid (low-carbon share) and solar (`peak`) nodes, `idle_below`, and calmer label placement with `direction: down`
 
-- `visibility` on the parts of a card: entities, header entities, sections and custom buttons of the entity cards, every section of the weather card, sources, consumers, rooms and devices of the power flow card, and the series of the multi trend card. A part is drawn only while its conditions hold. The conditions are Home Assistant's (`state`, `numeric_state`, `screen`, `user`, `location`, `time`, `and`, `or`, `not`) plus `template`; a state condition without `entity` reads the part's own. The card's own `visibility` stays Home Assistant's
-- A hidden part takes no room: the first shown entity leads a hero, dividers stay between shown sections, a section or room whose entities are all hidden goes with them, a hidden row never tints the card, and a card with nothing left shows nothing (its grid cell stays; the card's own `visibility` removes it)
-- Power flow: `hide_consumers_below` hides consumers that draw less than that many watts and shows them again only clearly above it, so an idling device does not blink; `hide_below` sets it per room or consumer. Hidden consumers count in Other, so the numbers still add up, and the tree's height follows the shown nodes
-- Styles that UIX or card-mod put into a card stay through a config change; the cards used to clear their whole shadow root on every rebuild
-- A template that stays in a changed config keeps its value instead of going blank until it next changes
-- Docs: a Visibility guide with live examples, and the reference tables list the new keys
+## 2.6.0 – Smoother lines
 
-## 2.4.0 (2026-10-10)
+_2026-10-18_
 
-- `title_tap_action` on the entity group, entity sections, power flow, weather, wind and rain cards: the title and its icon run an action, e.g. navigate to the room's dashboard. Without it the title stays plain text; header entities keep their own actions
-- The title line sits 16 px above the first row (was 12 px), so the header reads as a block of its own
-- Dividers between sections and below a hero lead run from edge to edge of the card
-- Header badges carry their icon inside the pill instead of beside it. A header badge with `show_value: false`, or a value that renders empty, is just the icon in a coloured circle; an unavailable entity keeps its text. Badges in row, column and table items are unchanged
-- Header items end at the card's right padding. A card without history visuals kept an empty range after them, and the header's 10 px gap before it showed as space after the last item
+- Sparklines and trends average the history into wider buckets, so noisy sensors draw calm lines; `smoothing_minutes` sets the bucket
+- A rule `label` shows in row, column and table items and in header entities
+- Power flow: `charge_from: solar` for batteries fed by their own panels
+- Multi trend: `rules` colour a series by its current value
 
-## 2.3.1 (2026-10-10)
+## 2.5.0 – Visibility for parts of a card
 
-- Icons sit centred in Home Assistant. Its icon aligns to the middle of the text line, so wherever a card's icon inherited a line height it sat below centre: by 1–2 px in the custom buttons and their labelled chips, by a pixel or less in header items, card title icons, the direction and rain chips of the wind and rain cards, and the Run and hold buttons of row items. Cards with a header get about 1 px shorter, as their title line no longer grows around the icon
-- Docs: the live examples build icons as Home Assistant does, so the heading icons on the site sit centred too, and a test measures that every icon of every card sits centred in its box
+_2026-10-12_
 
-## 2.3.0 (2026-10-10)
+- `visibility` on entities, sections, header items, buttons, power flow nodes and multi trend series, with Home Assistant's conditions plus `template`. Hidden parts take no room
+- Power flow: `hide_consumers_below` / `hide_below` hide idle consumers without blinking
+- Styles from UIX or card-mod survive a config change
+- Docs: a Visibility guide
 
-- Your own buttons: `control: buttons` takes `control_options` as a list of buttons, e.g. every scene of a room in one row. Each entry runs its `entity` (scenes and scripts turn on, buttons press) or switches it (lights, switches, fans: filled while on), or runs its own `action`; each takes its own `color` and `icon`, and a `label` turns it into a chip with text. A row of buttons needs no entity of its own, and `control_confirm` makes each button a hold
-- A custom button's `action` targets the button's entity when the call names nothing to act on itself; a `perform-action` with its own `target`, `entity_id`, `area_id` or other target in its data is left alone. Each button keeps its own call in flight, so pressing two in a row or a neighbour answering first never drops a button's ghost
-- Row items and the header draw no buttons: an item of buttons alone is a config error there, and the JSON Schema says so too
-- A literal empty `value: ""` is a blank value instead of an unavailable one
-- Docs: a "Your own buttons" section on the Controls page with a live example, and the entity options reference lists the new buttons
+## 2.4.0 – Title actions
 
-## 2.2.2 (2026-10-07)
+_2026-10-10_
 
-- The JSON Schemas ship with the docs site, so `https://malte-wessel.github.io/pro-cards/schema/pro-cards.schema.json` resolves. The README has named that URL for editor completion since the schemas landed, but nothing ever copied `schema/` into the published site, so the YAML language server got a 404 and silently did nothing. The getting started guide now explains the one comment line it takes
-- Docs: the sizing guide covers all ten cards. The weather, wind, rain and power flow cards were missing from its table although they report a size like the rest, its minimums were wrong for the three weather tiles (3 columns, not 6) and for a tile with a control (4 or 6, not 3), and a masonry or panel view was not mentioned at all
-- Docs: the languages page lists the words the controls show (`Run`, `Done`) and the accessible names a screen reader reads out (`Off`, `Hold to lock`, `Press again to …` among them), the power flow card's generator and low-carbon strings, and the `title` a card picked from the picker arrives with. The controls' strings have been translated since they landed; only the page did not say so
-- Docs: the weather card page lists Home Assistant's fifteen condition states with their names and mdi icons. They are the keys of an `icons` map and what a `rules` entry matches, and eight of them appeared nowhere on the site
-- Docs: `control_confirm: true`, not `confirm: true`, in the last paragraph of the controls page; `name_position` is described the same way in all three places that mention it (row items only); the weather card's reference lists `name_position`; and the playground's entity list includes `light.attic`, the one entity of the demo home it left out
+- `title_tap_action` makes a card's title run an action, e.g. open the room's dashboard
+- Header badges carry their icon inside the pill; dividers run edge to edge
 
-## 2.2.1 (2026-10-06)
+## 2.3.1 – Centred icons
 
-- Docs: a changelog page on the site, so what a version brought is one click from the cards instead of a trip to GitHub. The page includes the repository's `CHANGELOG.md`, so a release is still written once; the guide, the playground and the changelog share one list that feeds both the nav dropdown and the sidebar, so the playground and the changelog sit under Guide instead of standing on their own
-- Docs: the pages no longer scroll by themselves on an iPhone. Safari ties the scroll position to a box near the top of the viewport; the live examples rewriting their rows moved that box, so the page stepped down a few hundred pixels every few seconds while reading. The site opts out of that anchoring
+_2026-10-10_
 
-## 2.2.0 (2026-10-06)
+- Icons sit exactly centred in buttons, chips and headers (they were 1–2 px low)
 
-- Controls on the entity, entity group and entity sections cards. `control: auto` draws what the entity's domain calls for: lights a switch and a brightness slider, switches and helpers a switch, covers open / stop / close buttons and a position slider, thermostats a temperature stepper, fans speed segments (a slider beyond six speeds), locks a hold-to-confirm button, scripts, scenes and buttons a Run chip, media players transport buttons and a volume slider, selects a menu, numbers a slider. `control: toggle | slider | stepper | segments | buttons | button | select | hold` picks one, `none` draws nothing; `toggle: true` keeps working as an alias of `control: toggle`
-- `control_position` puts a control on the line, under it or on the icon (tap the icon to toggle; a Run or hold button takes the icon's place). `control_attribute` names the mode segments set on a thermostat or fan, `control_step` and `control_options` tune sliders, steppers, segments and menus, and `control_confirm` turns the primary control into hold to confirm (every button of a group holds on its own)
-- Controls sit in every layout: tiles, lists, hero leads, grid cells, row and column items and table fields. A control that shows the value itself (segments, a menu, the Run chip, a stepper on the number it sets) replaces the value text beside it. In narrow cards a control wraps under the name; tiles with a control size to their content and ask the sections grid for at least 4 columns (6 for wide controls)
-- A control shows the value it asked for until the device answers, greys out while its entity is unavailable, and steps from the entity's minimum as Home Assistant does. A failed call shows Home Assistant's toast and fires the failure haptic
-- Keyboard and screen readers: the focus survives card updates, a switch is a `switch`, a slider takes the arrow, page and Home / End keys, segments are a radio group (one tab stop, arrows choose), and hold to confirm takes Space or Enter held, or two presses from a screen reader
-- A tile with `toggle: true` now sizes to its content and needs at least 4 columns, so its switch never spills past a narrow card
-- The row's own tap / hold / double tap action lives on a layer behind the row's content, so a control is never nested in it; a hold that starts on a plot no longer counts as the row's hold
-- `attribute: hvac_mode` on a climate entity shows its HVAC mode (Home Assistant keeps the mode in the state, not in an attribute)
-- A gauge's value shrinks to fit inside its arc when it is long (a unit like "UV index" ran over the arc)
-- Docs: a Controls page with every control and slot; the homepage and showcase dashboards, the card pages, the getting-started guide and the playground preset use controls; the demo home gained fans, locks, number, select and button helpers, a garage door and a few offline devices
+## 2.3.0 – Your own buttons
 
-## 2.1.0 (2026-10-04)
+_2026-10-10_
 
-- Row and column items (entity group and sections cards, the weather card's row sections) stack the value under the name instead of putting it next to the icon: icon, bold name, plain value (a badge pill stacks the same way). `name_position: above` gives name, icon, value. Row and column items show the value by default (`show_value: false` hides it); the weather card's row sections no longer need their own default. An item without a name shows its value in the name's bold style. Row items spread over the width by default (`align: space-between`). Column items are list-like instead: the icon on the left with the name over the value beside it (`name_position` only applies to rows) and sit on the left by default (`align: start`)
+- `control: buttons` with a list in `control_options`: a row of scene, script or switch buttons, each with its own action, colour, icon and label
+- A literal `value: ""` is a blank value instead of unavailable
 
-## 2.0.0 (2026-10-04)
+## 2.2.2 – Schemas online
 
-- **Breaking:** every card type ends in `-pro`: `custom:entity-card-pro`, `custom:entity-group-card-pro`, `custom:entity-sections-card-pro`, `custom:multi-trend-card-pro`, `custom:sun-path-card-pro`, `custom:illuminance-card-pro`, `custom:weather-card-pro`, `custom:wind-card-pro`, `custom:rain-card-pro`, `custom:power-flow-card-pro`; the card picker lists them as "… Card Pro". The old generic names (`weather-card`, `power-flow-card` …) were also used by other custom cards, and a single collision disabled the whole bundle. Update the `type:` of every Pro Card in your dashboards (the getting started page has a note). The JSON schemas moved with the cards (`schema/<type>.schema.json`)
-- A card whose element name is already defined by another resource is reported in the console and skipped instead of taking every card after it down
+_2026-10-07_
 
-## 1.7.1 (2026-10-01)
+- The JSON Schemas are published with the docs site, so editor completion works with the URL the README names
+- Docs: the sizing guide covers every card; fixes across the languages, weather and controls pages
 
-- Fix the multi trend card's plot in a cell taller or shorter than its natural height: the SVG was stretched to the card, which turned the hover dots into ellipses, thickened the gridlines and skewed the curves. The plot is now drawn at the height it gets, and the trend section of the weather card shares the fix
-- Sun path card: the header is drawn like the other cards' (an icon and a 16 px title) instead of Home Assistant's card header; new `icon` option
-- Docs: the showcase has three full-width dashboards (Energy, Overview, Weather) grown from the homepage examples
-- Docs: the cards are grouped into Entities, Energy and Weather in the navigation, the getting started page and the README
-- Docs: the homepage shows three live dashboards (Energy, Overview, Weather) instead of a strip of single cards, and a new Energy showcase page
+## 2.2.1 – Changelog on the site
 
-## 1.7.0 (2026-10-01)
+_2026-10-06_
 
-- New power flow card (`custom:power-flow-card`): where the home's power comes from and where it goes, as a tree with animated flow. Solar, battery and grid `sources` (signed `power` sensors or `import` / `export` and `charge` / `discharge` pairs, `soc`, `price`, `offline`), the `home` (a sensor, or computed from the sources) and optional `consumers` as devices or rooms (`group`), with an Other node for the rest. Solar covers the home first, then the battery, then the grid; surplus charges the battery and is exported. `flow_style` dots / lines / arrows, `direction` right / down, `consumer_style` nodes / list; the summary line names the state (importing, exporting, on battery, balanced, grid offline, expensive above `expensive_above`) and the self-sufficiency; `rules` on the home power label, colour and tint the card. The flow re-times on value changes instead of restarting and pauses with `prefers-reduced-motion`
-- Power flow card options: `idle_links` (dashed / hidden / faint), `kw_above` and `decimals`, a `secondary` line on every source and consumer, consumers that produce (a negative value flows back to the home, `invert` per consumer), a grid `generator` that takes the grid node's place during an outage, the grid's `fossil` / `non_fossil` share on the home ring and the grid label, `animation: { slow_below, fast_above }` for the flow's pace
-- Power flow card layout: every label owns a slot the tree reserves, so the card grows with the number of sources and consumers instead of squeezing text between nodes, and the columns keep the label widths clear
+- Docs: a changelog page
+- Docs: pages no longer scroll by themselves on an iPhone
 
-## 1.6.0 (2026-10-01)
+## 2.2.0 – Controls
 
-- New rain card (`custom:rain-card`): the rain rate (`entity`) and today's total (`today`) as a tile with a small animated lead, a flow tile (`visual: flow`) or a hero (`layout: hero`) with a band and a chip. Three animations (`flow.style`): `drops` fall and splash, more and faster the harder it rains and slanted by a `wind` speed and `direction`; `ripples` spread on a puddle; `fill` is a rain gauge that today's total fills (12 mm). `rules` on the rate colour the rain, label the value and may tint the card; below 0.1 the card is dry. The animation keeps flowing through sensor updates and pauses with `prefers-reduced-motion`
-- The wind card's animation engine moved to `src/shared/flow/` and is shared with the rain card (no change for users)
+_2026-10-06_
 
-## 1.5.2 (2026-09-30)
+- Controls on the entity cards: `control: auto` picks what the domain needs (switches, sliders, steppers, covers, fans, locks, scripts, media, selects), or choose one with `control`. Placed on the line, under it or on the icon
+- Optimistic values, hold to confirm, and full keyboard and screen reader support
+- Docs: a Controls page; the demo home gained fans, locks, helpers and a garage door
 
-- Wind card: the flow turns smoothly to a new direction instead of snapping, the short way round
+## 2.1.0 – Stacked row items
 
-## 1.5.1 (2026-09-30)
+_2026-10-04_
 
-- Wind card: the flow no longer restarts every few seconds. Gusts drifting by a few km/h redrew the field, and a changed speed jumped the particles; the field is now redrawn only when the waves change by a real margin, and a new speed scales the running animation's playback rate, so the particles keep flowing and just speed up or slow down
+- Row and column items stack the value under the name and show it by default; rows spread over the width, columns sit at the start
 
-## 1.5.0 (2026-09-30)
+## 2.0.0 – New card names
 
-- New wind card (`custom:wind-card`): wind speed, direction and gusts from sensors (`entity`, `direction`, `gust`) or from a weather entity's attributes, as a tile with a small animated lead, a flow tile (`visual: flow`, the whole tile is the animated field) or a hero (`layout: hero`, big value and a flow band with a direction chip). The field's particles travel where the wind blows, faster with the speed, on taller waves with the gusts, with gust streaks; `rules` on the speed colour them, label the value and may tint the card. `flow.style` picks dots, lines (streamlines), swoosh or vectors (an arrow field), `flow.density` sparse / normal / dense, `flow.height` the hero band. Direction sensors may report degrees or compass points; speeds in m/s, mph, kn and ft/s drive the animation like km/h. All motion is CSS and pauses with `prefers-reduced-motion`
-- The entity layer's secondary line builder (`secondaryEl`) is shared by the weather and wind cards (no change for users)
+_2026-10-04_
 
-## 1.4.0 (2026-09-30)
+- **Breaking:** every card type ends in `-pro` (e.g. `custom:entity-card-pro`), so the names no longer collide with other custom cards. Update the `type:` of every Pro Card in your dashboards
+- A card whose name is already taken is skipped with a console message instead of breaking the whole bundle
 
-- New weather card (`custom:weather-card`): a weather entity as a tile, or as sections composed like the sections card: `hero` (condition icon, big temperature, today's high / low), entity groups `row` / `list` / `table` / `grid` / `column` whose entries may name attributes of the weather entity (humidity, wind speed, pressure …) next to any entity with rules and every entity-card visual, `trend` (the multi trend plot of the hourly or daily forecast, with `hours` / `days`, `layout`, `x_axis`, `y_axis`, `show_legend` and `show` entries of `{ quantity, name, color }`) and `forecast` (hourly or daily rows or columns with condition, rain figures and temperature; days as low → high bars on one scale). Forecasts come from Home Assistant's forecast subscription. `rules` on the condition, `temperature_rules` on the temperature (on the card, or per `hero` / `forecast` / `trend` section, which also take `divider` and `title` like the sections card), header entities and templates. the conditions are the Home Assistant weather card's pictures (`icons: mdi` for the mdi icons, or a map with an mdi icon or an image per condition, on the card or per section), and `icon_size` sets the icon size of the tile, the hero and the forecast rows. Condition and attribute names come in every language the cards speak
-- Entity cards: the value of a row or column item clips with an ellipsis instead of running into its neighbour when the section is narrow
-- Multi trend card: a value axis no longer shows a `-0` tick
-- The entity layer moved from `src/entity/` to `src/shared/entity/` and the multi trend plot to `src/shared/trend/` (no change for users)
+## 1.7.1 – Undistorted trends
 
-## 1.3.0 (2026-09-30)
+_2026-10-01_
 
-- The cards speak the language of the Home Assistant profile (English, Czech, German, Spanish, French, Italian, Norwegian Bokmål, Dutch, Polish, Portuguese, Russian and Swedish): the default sun path labels and tooltip word, the illuminance zone names, `Max` and `LUX`, the axis word `now`, `no data` / `loading …`, `Peak`, `unavailable`, `… not found` and every visual editor label. Your own `labels`, `zones`, rule `label`, `title` and `name` stay as written. See the Languages guide for adding a language
-- Entity group and sections cards: the title of a freshly added card was German
+- Multi trend and weather trends are drawn at their real height instead of being stretched
+- Sun path: a header like the other cards', with an `icon` option
+- Docs: three showcase dashboards and cards grouped into Entities, Energy and Weather
 
-## 1.2.0 (2026-09-30)
+## 1.7.0 – Power flow card
 
-- Sun path card: hover or tap the curve for a tooltip with the time and the sun's elevation; `show_tooltip: false` turns it off
-- Sun path card: the plot is a 24 hour window centred on solar noon, the ticks mark sunrise, solar noon and sunset (they marked dawn and dusk, which read as sunrise and sunset), and the dawn / dusk labels stay under their positions instead of jumping to the card edge
+_2026-10-01_
 
-## 1.1.0 (2026-09-30)
+- **New power flow card** (`custom:power-flow-card`): solar, battery and grid feeding the home and its consumers as a tree with animated flow, a summary line and self-sufficiency
 
-- Illuminance card: `band` is the default `mode` (was `trend`); set `mode: trend` to keep the line plot
-- Illuminance card: the trend plot labels its time axis at whole clock hours, its y axis with the zone thresholds (1, 100, 10k, 30k) instead of even decades, keeps the zone names right aligned and clear of the line, grows the scale to the window's peak instead of cutting it off, tints the bands more visibly and no longer clips the current-value dot at the right edge
+## 1.6.0 – Rain card
 
-## 1.0.2 (2026-09-29)
+_2026-10-01_
 
-- Row items show the name below the icon by default (`name_position: below`); columns keep `above`
-- Entity cards: the hover ring of the strip visual sits exactly on the hovered bar and the one of the columns visual frames its column evenly; the toggle button label and the peak marker of the tooltip were German
-- Multi trend card: lane names and axis labels stay with their lanes when a grid row makes the card taller than its content
-- The entity, sun path and illuminance cards no longer clip the card shadow a theme sets (`--ha-card-box-shadow`)
-- Docs: a theme picker on every live example (Home Assistant default or Graphite, remembered across pages) and an extended Look & themes guide with the tokens the cards read, a sample theme and per-card tweaks
-- New brand identity: isometric card-stack logo and Signal Blue palette across the docs site (light and dark), favicon, README and the console banner; social preview image for links to the docs
+- **New rain card** (`custom:rain-card`): rain rate and today's total as a tile or hero with falling drops, ripples or a filling gauge
 
-## 1.0.1 (2026-09-29)
+## 1.5.2 – Wind turns smoothly
 
-- Entity rows and the multi trend header no longer show Home Assistant's ripple on hover and press
+_2026-09-30_
 
-## 1.0.0 (2026-09-29)
+- Wind card: the flow turns smoothly to a new direction
 
-Initial release.
+## 1.5.1 – Steady wind flow
+
+_2026-09-30_
+
+- Wind card: the flow no longer restarts when the speed or gusts change
+
+## 1.5.0 – Wind card
+
+_2026-09-30_
+
+- **New wind card** (`custom:wind-card`): speed, direction and gusts as a tile or hero with an animated particle field in four styles
+
+## 1.4.0 – Weather card
+
+_2026-09-30_
+
+- **New weather card** (`custom:weather-card`): a weather entity as a tile or as sections: hero, entity groups, a forecast trend and forecast rows
+- Row and column values end in an ellipsis instead of overlapping
+
+## 1.3.0 – Languages
+
+_2026-09-30_
+
+- The cards speak the language of your Home Assistant profile: twelve languages, editors included
+
+## 1.2.0 – Sun path tooltip
+
+_2026-09-30_
+
+- Sun path: a tooltip with time and elevation, a 24 hour window around solar noon, ticks at sunrise, noon and sunset
+
+## 1.1.0 – Illuminance band
+
+_2026-09-30_
+
+- Illuminance: `band` is the default `mode`; the trend plot got clearer axes and zones
+
+## 1.0.2 – Polish and new brand
+
+_2026-09-29_
+
+- Row items show the name below the icon; fixes to hover rings, lane labels and card shadows
+- New logo and colours; a theme picker on every docs example
+
+## 1.0.1 – No ripple
+
+_2026-09-29_
+
+- Entity rows and the multi trend header no longer show Home Assistant's ripple
+
+## 1.0.0 – Initial release
+
+_2026-09-29_
+
+- Entity, entity group, entity sections, multi trend, sun path and illuminance cards

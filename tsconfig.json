@@ -20,6 +20,7 @@
     "docs/.vitepress/*.mts",
     "docs/.vitepress/theme/**/*.ts",
     "docs/.vitepress/theme/**/*.vue",
+    "docs/**/*.paths.ts",
     "*.ts",
     "*.mts"
   ],

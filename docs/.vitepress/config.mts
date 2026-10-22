@@ -89,7 +89,7 @@ const guide = [
   { text: "Languages", link: "/guide/languages" },
   { text: "Visibility", link: "/guide/visibility" },
   { text: "Playground", link: "/playground" },
-  { text: "Changelog", link: "/changelog" },
+  { text: "Changelog", link: "/changelog/" },
 ];
 
 // the showcase dashboards, grown from the homepage examples
