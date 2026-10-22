@@ -241,8 +241,15 @@
     },
     "consumer_style": { "type": "string", "enum": ["nodes", "list"], "default": "nodes" },
     "other": {
-      "type": "boolean",
-      "description": "An \"Other\" node for the home's consumption the consumers do not account for (default: true when consumers are given)"
+      "oneOf": [
+        { "type": "boolean" },
+        {
+          "type": "object",
+          "properties": { "icon_size": { "$ref": "#/$defs/iconSize" } },
+          "additionalProperties": false
+        }
+      ],
+      "description": "An \"Other\" node for the home's consumption the consumers do not account for (default: true when consumers are given); an object shows it and sets its icon_size"
     },
     "direction": { "type": "string", "enum": ["right", "down"], "default": "right" },
     "idle_below": {

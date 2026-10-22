@@ -79,7 +79,7 @@ export interface RawPowerFlowConfig extends RawEntityCardBase {
   consumer_style?: unknown;
   idle_links?: unknown;
   idle_below?: unknown;
-  other?: boolean | null;
+  other?: boolean | RawNode | null;
   rules?: unknown;
   expensive_above?: unknown;
   hide_consumers_below?: unknown;
@@ -464,9 +464,18 @@ export const normalizePowerFlowConfig = (input: unknown): PowerFlowConfig => {
     entities,
     wattsBelow(raw.hide_consumers_below, "hide_consumers_below") ?? null,
   );
-  const other = raw.other === undefined || raw.other === null ? consumers.length > 0 : !!raw.other;
-  if (other && consumers.length)
-    consumers.push({ kind: "other", id: "other", d: GEOM.dConsumer, rowD: GEOM.dConsumer });
+  // the other node: on with consumers, `false` leaves it out, an object sizes it (`icon_size`)
+  const o = raw.other;
+  const other = o === undefined || o === null ? consumers.length > 0 : !!o;
+  if (other && consumers.length) {
+    const size = typeof o === "object" && o ? o.icon_size : undefined;
+    consumers.push({
+      kind: "other",
+      id: "other",
+      d: nodeSize(size, GEOM.dConsumer),
+      rowD: Math.min(nodeSize(size, GEOM.dConsumer), GEOM.rowH),
+    });
+  }
 
   const header = normalizeHeaderEntities(raw.header_entities, ctx);
   const headerIdxs = header.map((_, i) => entities.length + i);
