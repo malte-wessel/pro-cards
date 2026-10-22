@@ -965,6 +965,45 @@ entities:
 
 :::
 
+### Hover
+
+`hover: true` on a card shows what a click will do, as Home Assistant's tile does. A row with an action takes a light layer in its colour under the pointer and a stronger one while pressed. In a tile the layer reaches the card's edges. An icon with its own action (`control_position: lead`, the items of a row layout, the power flow's nodes) brightens its circle instead, and a pressed lead toggle grows a little. Over a control on the row the layer gives way to the control. Touch screens show only the press. `hover` is off by default and changes nothing else.
+
+::: live
+
+```yaml
+- type: custom:entity-card-pro
+  entity: light.kitchen
+  hover: true
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  entity: light.hallway
+  name: Hallway · tap the icon
+  control: toggle
+  control_position: lead
+  hover: true
+  grid_options: { columns: 6 }
+- type: custom:entity-group-card-pro
+  title: Living room
+  icon: mdi:sofa
+  hover: true
+  entities:
+    - light.living_room
+    - { entity: cover.living_room_blinds, control: auto }
+    - climate.living_room
+- type: custom:entity-group-card-pro
+  title: Kitchen
+  icon: mdi:silverware-fork-knife
+  layout: row
+  hover: true
+  entities:
+    - { entity: light.kitchen, name: Light, tap_action: { action: toggle } }
+    - { entity: light.dining_table, name: Dining, tap_action: { action: toggle } }
+    - { entity: fan.living_room, name: Fan, tap_action: { action: toggle } }
+```
+
+:::
+
 ### Action options
 
 | Field                        | Actions           | Description                                                                                                                                             |
@@ -1059,4 +1098,4 @@ See [Controls](/cards/controls) for what every control looks like and where it s
 | ------------ | ------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `visibility` |         | entities in groups, headers | Drawn only while every condition holds (Home Assistant's conditions); a condition without `entity` reads this one. See [Visibility](/guide/visibility). |
 
-Every card also accepts the Home Assistant keys `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`; see [Sizing in sections](/guide/sizing). On the card itself `visibility` is Home Assistant's and hides the whole card. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height).
+Every card also accepts the Home Assistant keys `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`; see [Sizing in sections](/guide/sizing). On the card itself `visibility` is Home Assistant's and hides the whole card. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height). `hover: true` shows Home Assistant's hover and press layers on what a click runs; see [Hover](#hover).

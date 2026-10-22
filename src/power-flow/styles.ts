@@ -7,6 +7,7 @@ import {
   STYLE_BASE,
   STYLE_BLOCKS,
   STYLE_HEADER,
+  STYLE_HOVER,
   STYLE_ROW,
 } from "../shared/entity/render/styles.ts";
 import { CARD_BG, iconBg } from "../shared/constants.ts";
@@ -87,4 +88,4 @@ const STYLE_POWER = `
 `;
 
 export const STYLE_POWER_FLOW_CARD =
-  STYLE_BASE + STYLE_HEADER + STYLE_ROW + STYLE_BLOCKS + STYLE_POWER;
+  STYLE_BASE + STYLE_HEADER + STYLE_ROW + STYLE_BLOCKS + STYLE_HOVER + STYLE_POWER;
