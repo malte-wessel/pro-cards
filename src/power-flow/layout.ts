@@ -8,7 +8,7 @@
 // config alone (the card's height never depends on its width); along the flow through the column
 // positions, which keep the measured label widths clear of the next column and the trunks.
 import { leavesOf, type PowerFlowConfig } from "./config.ts";
-import { GEOM, type Direction } from "./constants.ts";
+import { GEOM, NODE_D, type Direction } from "./constants.ts";
 import type { EdgeFlow, EdgeKind } from "./model.ts";
 import { dedupe, orthoPath, pathLength, type Pt } from "./path.ts";
 
@@ -61,6 +61,11 @@ export interface LabelBox {
 }
 export type LabelSizes = ReadonlyMap<string, LabelBox>;
 
+// the source column's centre along the flow: a source bigger than the default solar node moves
+// it in, so the charging and export rails behind it (and the card's edge) stay clear
+const srcAlongOf = (cfg: PowerFlowConfig) =>
+  GEOM.srcAlong + Math.max(0, ...cfg.sources.map((s) => (s.d - GEOM.dSolar) / 2));
+
 // ----- label slots -----
 
 // the height of a node's label from the config: value and name, a secondary line when set
@@ -79,13 +84,8 @@ export const slotMargin = (d: number, h: number) => slotRise(d, h) + h / 2;
 
 // a ring's stroke: 3 px on its kind's own circle, scaled with the node, so ring, gap and icon
 // (both proportional already) keep their proportions at any icon_size
-const RING_D: Partial<Record<NodeKind, number>> = {
-  solar: GEOM.dSolar,
-  battery: GEOM.dBattery,
-  grid: GEOM.dGrid,
-  home: GEOM.dHome,
-};
-export const ringWidth = (kind: NodeKind, d: number) => (3 * d) / (RING_D[kind] ?? d);
+export const ringWidth = (kind: NodeKind, d: number) =>
+  (3 * d) / (kind in NODE_D ? NODE_D[kind as keyof typeof NODE_D] : d);
 
 // the source column: every source's position across (relative to the first) and the margins
 interface Stack {
@@ -123,6 +123,8 @@ interface Column {
 const columnPlan = (cfg: PowerFlowConfig, scale = 1): Column => {
   const leaves: Column["leaves"] = [],
     groups: Column["groups"] = [];
+  // a list row draws its circle within the row: a bigger icon_size asks for no more room
+  const rows = cfg.direction === "right" && cfg.consumerStyle === "list";
   let b = 0,
     prevD = 0;
   const place = (
@@ -133,6 +135,7 @@ const columnPlan = (cfg: PowerFlowConfig, scale = 1): Column => {
     small: boolean,
   ) => {
     const h = labelHeightOf(cfg, idx, small);
+    if (rows) d = Math.min(d, GEOM.rowH);
     if (leaves.length) {
       // the gap between two blocks (rooms or lone consumers) on top of the slot pitch
       const sameBlock = group !== null && leaves[leaves.length - 1].group === group;
@@ -182,7 +185,10 @@ export type SourceSlot = "right" | "below";
 export const sourceRow = (ds: number[], nws: number[], across: number) => {
   const n = ds.length,
     g = GEOM.labelGap;
-  const pitch = n < 2 ? 0 : Math.max(44, Math.min(126, (across - 2 * GEOM.downMargin) / (n - 1)));
+  // at least 44 px, and never less than two neighbours' radii (big icon_size)
+  const touch = Math.max(0, ...ds.slice(1).map((d, i) => (ds[i] + d) / 2));
+  const pitch =
+    n < 2 ? 0 : Math.max(44, touch, Math.min(126, (across - 2 * GEOM.downMargin) / (n - 1)));
   const bs = ds.map((_, i) => across / 2 + (i - (n - 1) / 2) * pitch);
   const want = nws.map((w) => Math.max(w, GEOM.srcValueW));
   // right of the icon: up to the next icon; below: up to the next source's line
@@ -210,10 +216,10 @@ export const acrossOf = (cfg: PowerFlowConfig): number => {
 const alongColumns = (cfg: PowerFlowConfig) =>
   1 + (cfg.hasGroups ? 1 : 0) + (cfg.consumers.length ? 1 : 0);
 export const alongDownOf = (cfg: PowerFlowConfig): number => {
-  if (!cfg.consumers.length) return GEOM.minAcross;
+  if (!cfg.consumers.length) return GEOM.minAcross + srcAlongOf(cfg) - GEOM.srcAlong;
   // room below the consumer column for its tallest label (a secondary line adds one)
   const below = Math.max(56, ...columnPlan(cfg).leaves.map((l) => l.d / 2 + 4 + l.h + 8));
-  return GEOM.srcAlong + GEOM.columnPitch * alongColumns(cfg) + below;
+  return srcAlongOf(cfg) + GEOM.columnPitch * alongColumns(cfg) + below;
 };
 // the diagram's height in px for the card's size
 export const diagramHeight = (cfg: PowerFlowConfig) =>
@@ -298,7 +304,8 @@ export const layoutTree = (
     cols = alongColumns(cfg),
     grow = hasCons ? Math.min(extra, 0.5 * GEOM.columnPitch * cols) : 0,
     levelPitch = GEOM.columnPitch + grow / cols;
-  const aS = GEOM.srcAlong + (extra - grow) / 2;
+  const sA = srcAlongOf(cfg);
+  const aS = sA + (extra - grow) / 2;
   let aH: number, aG: number, aC: number, aRow: number;
   if (right) {
     // the home column clears the source labels; the columns keep a least distance on narrow
@@ -335,7 +342,7 @@ export const layoutTree = (
     aRow = cfg.hasGroups ? aG + Math.max(50, along * 0.18) : Math.max(aH + 80, along * 0.62);
     if (listRows) aC = aRow;
   } else {
-    aH = hasCons ? aS + levelPitch : aS + natural - 44 - GEOM.srcAlong;
+    aH = hasCons ? aS + levelPitch : aS + natural - 44 - sA;
     aG = aH + levelPitch;
     aC = aH + levelPitch * (cfg.hasGroups ? 2 : 1);
     aRow = aC;

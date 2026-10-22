@@ -16,7 +16,7 @@ import {
   type RawEntityCardBase,
 } from "../shared/entity/config.ts";
 import { DEFAULTS as ENTITY_DEFAULTS } from "../shared/entity/constants.ts";
-import { enumOf } from "../shared/flow/config.ts";
+import { clampInt, enumOf } from "../shared/flow/config.ts";
 import { numOrNull, oneOf } from "../shared/util.ts";
 import { normalizeVisibility, type Visibility } from "../shared/visibility.ts";
 import {
@@ -28,6 +28,7 @@ import {
   FLOW_STYLES,
   GEOM,
   ICONS,
+  NODE_D,
   IDLE_LINKS,
   IDLE_W,
   SOURCE_KINDS,
@@ -128,6 +129,7 @@ export interface ConsumerItem {
   id: string;
   idx: number;
   d: number; // the node's diameter (px): a device in a group is smaller
+  rowD: number; // consumer_style: list – the row's circle: 32 px, or the icon_size within the row
   invert: boolean;
   visibility: Visibility; // null: always drawn
   // hidden while its power stays below this many watts (null: never by its power)
@@ -146,6 +148,7 @@ export interface OtherConsumer {
   kind: "other";
   id: string;
   d: number;
+  rowD: number;
 }
 export type Consumer = ConsumerItem | ConsumerGroup | OtherConsumer;
 
@@ -179,10 +182,7 @@ const item = (raw: RawEntity, ctx: NormalizeCtx, label: string) => {
   return ent;
 };
 // a node's diameter: its `icon_size` (px, 16 to 96), else its kind's own
-export const nodeSize = (v: unknown, dflt: number) => {
-  const n = v === null || v === undefined || v === "" ? null : numOrNull(v);
-  return n === null ? dflt : Math.max(16, Math.min(96, Math.round(n)));
-};
+export const nodeSize = (v: unknown, dflt: number) => clampInt(v, dflt, 16, 96);
 const clampDec = (v: unknown, dflt: number) =>
   Math.max(0, Math.min(3, Math.round(numOrNull(v) ?? dflt)));
 
@@ -244,7 +244,7 @@ const normalizeSource = (
     if (pk !== null ? pk <= 0 : peak !== undefined && peak !== null)
       throw new Error(`${CARD_TYPE}: ${label}.peak must be a number of watts above 0`);
     return {
-      ...own(base.entity, GEOM.dSolar),
+      ...own(base.entity, NODE_D.solar),
       kind: "solar",
       idx: push(base, label, "power.solar"),
       peak: pk,
@@ -263,7 +263,7 @@ const normalizeSource = (
       );
     const idx = push({ ...base, entity: p ?? c }, label, "power.battery");
     return {
-      ...own(p ?? c, GEOM.dBattery),
+      ...own(p ?? c, NODE_D.battery),
       kind: "battery",
       idx,
       secondIdx: p ? null : sub(d as string, `${label}.discharge`),
@@ -289,7 +289,7 @@ const normalizeSource = (
   if (fossil && non_fossil)
     throw new Error(`${CARD_TYPE}: ${label} takes 'fossil' or 'non_fossil', not both`);
   return {
-    ...own(p ?? im, GEOM.dGrid),
+    ...own(p ?? im, NODE_D.grid),
     kind: "grid",
     idx,
     secondIdx: p ? null : ex ? sub(ex, `${label}.export`) : null,
@@ -344,6 +344,7 @@ const normalizeConsumers = (
       id,
       idx,
       d: nodeSize(icon_size, d),
+      rowD: Math.min(nodeSize(icon_size, GEOM.dConsumer), GEOM.rowH),
       invert: !!invert,
       visibility,
       hideBelow: below,
@@ -462,7 +463,8 @@ export const normalizePowerFlowConfig = (input: unknown): PowerFlowConfig => {
     wattsBelow(raw.hide_consumers_below, "hide_consumers_below") ?? null,
   );
   const other = raw.other === undefined || raw.other === null ? consumers.length > 0 : !!raw.other;
-  if (other && consumers.length) consumers.push({ kind: "other", id: "other", d: GEOM.dConsumer });
+  if (other && consumers.length)
+    consumers.push({ kind: "other", id: "other", d: GEOM.dConsumer, rowD: GEOM.dConsumer });
 
   const header = normalizeHeaderEntities(raw.header_entities, ctx);
   const headerIdxs = header.map((_, i) => entities.length + i);
@@ -488,7 +490,7 @@ export const normalizePowerFlowConfig = (input: unknown): PowerFlowConfig => {
       wattsBelow(raw.idle_below, "idle_below") ??
       (raw.idle_below === undefined || raw.idle_below === null ? IDLE_W : 0),
     homeIdx,
-    homeD: nodeSize(homeSize, GEOM.dHome),
+    homeD: nodeSize(homeSize, NODE_D.home),
     homeEntity,
     sources,
     consumers,

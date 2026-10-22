@@ -240,6 +240,7 @@ describe("power-flow-card config", () => {
             id: "c0.0",
             idx: 11,
             d: 24,
+            rowD: 32,
             invert: false,
             visibility: null,
             hideBelow: null,
@@ -249,6 +250,7 @@ describe("power-flow-card config", () => {
             id: "c0.1",
             idx: 12,
             d: 24,
+            rowD: 32,
             invert: false,
             visibility: null,
             hideBelow: null,
@@ -256,8 +258,17 @@ describe("power-flow-card config", () => {
         ],
         visibility: null,
       },
-      { kind: "item", id: "c1", idx: 13, d: 32, invert: true, visibility: null, hideBelow: null },
-      { kind: "other", id: "other", d: 32 },
+      {
+        kind: "item",
+        id: "c1",
+        idx: 13,
+        d: 32,
+        rowD: 32,
+        invert: true,
+        visibility: null,
+        hideBelow: null,
+      },
+      { kind: "other", id: "other", d: 32, rowD: 32 },
     ]);
     expect(leavesOf(c).map((l) => l.id)).toEqual(["c0.0", "c0.1", "c1", "other"]);
     expect(c.hasGroups).toBe(true);
@@ -1285,6 +1296,31 @@ describe("power flow layout", () => {
       30,
       GEOM.dDevice,
     ]);
+    // a list row draws 32 px, or its icon_size within the 36 px row, and is spaced by that
+    expect(leavesOf(plain).map((l) => l.rowD)).toEqual([32, 32, 32]);
+    const list = (size?: number) =>
+      base({
+        consumer_style: "list",
+        consumers: [{ entity: "sensor.a", icon_size: size }, "sensor.b"],
+      });
+    expect(leavesOf(list(96))[0].rowD).toBe(GEOM.rowH);
+    expect(leavesOf(list(20))[0].rowD).toBe(20);
+    expect(acrossOf(list(96))).toBe(acrossOf(list(GEOM.rowH)));
+    // a big source moves the column in, clear of the charging and export rails
+    const big = base({
+      sources: [SRC[0], { ...SRC[1], icon_size: 80 }, { ...SRC[2], icon_size: 96 }],
+    });
+    const lb = layoutTree(big, 416, allocate(big, powerNow(big, modelsOf(big, hassOf({})))).edges);
+    for (const id of ["s0", "s1", "s2"]) {
+      const n = lb.nodes.find((x) => x.id === id)!;
+      expect(n.x - n.d / 2).toBeGreaterThan(GEOM.railBattery);
+    }
+    expect(lb.nodes.find((x) => x.id === "s0")!.x).toBe(GEOM.srcAlong + (96 - GEOM.dSolar) / 2);
+    // direction: down – neighbours never overlap, however narrow the card
+    const row = sourceRow([80, 80, 44], [0, 0, 0], 160);
+    expect(row.bs[1] - row.bs[0]).toBeGreaterThanOrEqual(80);
+    // default nodes keep the 44 px least pitch
+    expect(sourceRow([44, 40, 44], [0, 0, 0], 160).bs).toEqual([36, 80, 124]);
     // a ring's stroke: 3 px on the kind's own circle, scaled with the node
     expect(ringWidth("solar", GEOM.dSolar)).toBe(3);
     expect(ringWidth("home", GEOM.dHome)).toBe(3);

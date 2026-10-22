@@ -110,12 +110,12 @@ const labelEl = (id: string, small: boolean) => {
   return el;
 };
 
-// a list row's lead: the consumer's own circle, at most the row's height
+// a list row's lead: its own circle (rowD), within the row's height
 const rowEl = (id: string, d: number, row: HTMLElement | null) => {
   const el = row ?? document.createElement("div");
   el.classList.add("plist");
   el.dataset.node = id;
-  el.appendChild(leadEl(Math.min(d, GEOM.rowH), null));
+  el.appendChild(leadEl(d, null));
   const texts = document.createElement("div");
   texts.className = "texts";
   const line = document.createElement("div");
@@ -171,7 +171,7 @@ export const buildTree = (
     }
   for (const leaf of leavesOf(cfg)) {
     const row = leaf.kind === "item" ? rowOf(leaf.idx, "") : null;
-    if (listRows) box.appendChild(rowEl(leaf.id, leaf.d, row));
+    if (listRows) box.appendChild(rowEl(leaf.id, leaf.rowD, row));
     else {
       const device = leaf.id.includes(".");
       box.appendChild(nodeEl(leaf.id, leaf.d, null, row));

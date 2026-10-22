@@ -356,6 +356,15 @@ describe("card config schemas", () => {
     expect(validate({ type: PF, sources: src, consumers: [{ name: "x" }] })).toBeTruthy();
     expect(validate({ type: PF, sources: src, consumers: [{ group: "Room" }] })).toBeTruthy();
     expect(validate({ type: PF, sources: src, flowstyle: "dots" })).toBeTruthy();
+    // icon_size on every node, within 16 to 96; icon_style is the entity cards' only
+    const cons = (c: Record<string, unknown>) =>
+      validate({ type: PF, sources: src, consumers: [{ entity: "sensor.a", ...c }] });
+    expect(cons({ icon_size: 40 })).toBeNull();
+    expect(cons({ icon_size: 120 })).toBeTruthy();
+    expect(cons({ icon_style: "plain" })).toBeTruthy();
+    expect(
+      validate({ type: PF, sources: src, home: { entity: "sensor.h", icon_style: "plain" } }),
+    ).toBeTruthy();
     expect(
       validate({
         type: PF,

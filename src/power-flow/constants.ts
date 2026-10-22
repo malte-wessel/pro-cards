@@ -87,6 +87,13 @@ export const GEOM = {
   labelGap: 6,
   summaryH: 40, // the summary line above the diagram (grid rows estimate)
 } as const;
+// the sources' and the home's own circles (px): an icon_size replaces them, a ring scales from them
+export const NODE_D = {
+  solar: GEOM.dSolar,
+  battery: GEOM.dBattery,
+  grid: GEOM.dGrid,
+  home: GEOM.dHome,
+} as const;
 
 export const FONT_VALUE = "500 14px Roboto, system-ui, sans-serif";
 export const FONT_NAME = "12px Roboto, system-ui, sans-serif";

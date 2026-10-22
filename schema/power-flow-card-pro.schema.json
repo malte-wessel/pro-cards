@@ -154,6 +154,7 @@
       "allOf": [{ "$ref": "entity.schema.json#/$defs/entityKeys" }],
       "properties": {
         "icon_size": { "$ref": "#/$defs/iconSize" },
+        "icon_style": false,
         "invert": {
           "type": "boolean",
           "description": "Flips the sensor's sign"
@@ -167,6 +168,7 @@
       "allOf": [{ "$ref": "entity.schema.json#/$defs/entityKeys" }],
       "properties": {
         "icon_size": { "$ref": "#/$defs/iconSize" },
+        "icon_style": false,
         "invert": {
           "type": "boolean",
           "description": "Flips the sensor's sign; a negative value is power the device produces, flowing back to the home"
