@@ -365,6 +365,9 @@ describe("power-flow-card config", () => {
     expect(base({ consumers: ["sensor.a"], other: false }).consumers.map((c) => c.kind)).toEqual([
       "item",
     ]);
+    // an object shows it at its own size
+    const sized = leavesOf(base({ consumers: ["sensor.a"], other: { icon_size: 48 } }))[1];
+    expect([sized.kind, sized.d, sized.rowD]).toEqual(["other", 48, GEOM.rowH]);
   });
 
   it("collects the templates of names and secondary lines", () => {
