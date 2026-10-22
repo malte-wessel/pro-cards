@@ -77,6 +77,7 @@ export interface RawEntity extends RawItemOptions, RawActionDefaults {
   suffix?: string;
   visual?: string;
   icon_style?: unknown;
+  show_entity_picture?: boolean | null;
   min?: unknown;
   max?: unknown;
   rules?: unknown;
@@ -155,6 +156,8 @@ export interface EntityItem extends ActionDefaults {
   suffix: string;
   visual: Visual;
   iconStyle: IconStyle;
+  // the entity's picture (a person's photo) in place of its icon, where it has one
+  picture: boolean;
   min: number | null;
   max: number | null;
   rules: Rule[];
@@ -346,6 +349,7 @@ export const normalizeEntity = (
     suffix: o.suffix ?? "",
     visual: oneOf(VISUALS, o.visual) ? o.visual : "icon",
     iconStyle: oneOf(ICON_STYLES, o.icon_style) ? o.icon_style : "circle",
+    picture: !!o.show_entity_picture,
     min: numOrNull(o.min),
     max: numOrNull(o.max),
     rules: normalizeRules(o.rules),

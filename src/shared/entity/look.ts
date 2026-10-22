@@ -24,6 +24,8 @@ export interface Look {
   color: string;
   icon: string | null;
   fallbackIcon: string;
+  // the entity's picture in place of the icon (show_entity_picture), null: the icon
+  picture: string | null;
   label: string | null;
   tint: boolean;
   rule: Rule | null;
@@ -81,7 +83,14 @@ export const matchRule = (rule: Rule, model: ValueModel) =>
   (rule.below === null || (model.num !== null && model.num < rule.below)) &&
   (rule.above === null || (model.num !== null && model.num >= rule.above));
 
-// { color, icon, fallbackIcon, label, tint, rule }: explicit colour / icon win, then the first
+// the entity's picture: the local copy Home Assistant keeps, else the integration's URL
+export const pictureOf = (st: HassEntity | undefined): string | null => {
+  const a = st?.attributes;
+  const url = a?.entity_picture_local || a?.entity_picture;
+  return typeof url === "string" && url ? url : null;
+};
+
+// { color, icon, fallbackIcon, picture, label, tint, rule }: explicit colour / icon win, then the first
 // matching rule (author order), then Home Assistant's state colour for the value (lights amber,
 // locks green / red, batteries by level …), then grey for off-like states, else primary
 export const resolveLook = (
@@ -101,6 +110,7 @@ export const resolveLook = (
       ? asText(tplGet(ent.icon))
       : ent.icon
     : null;
+  const picture = ent.picture ? pictureOf(st) : null;
   const fallbackIcon =
     st?.attributes?.icon || DEVICE_CLASS_ICON[st?.attributes?.device_class ?? ""] || null;
   if (!model.avail) {
@@ -108,6 +118,7 @@ export const resolveLook = (
       color: explicitColor || "grey",
       icon: explicitIcon || rule?.icon || null,
       fallbackIcon: fallbackIcon || "mdi:help-circle-outline",
+      picture,
       label: rule?.label || t(hass, "common.unavailable"),
       tint: false,
       rule,
@@ -120,6 +131,7 @@ export const resolveLook = (
     color: explicitColor || rule?.color || stateColor || (offish ? "grey" : "primary"),
     icon: explicitIcon || rule?.icon || null,
     fallbackIcon: fallbackIcon || "mdi:eye",
+    picture,
     label: rule?.label || null,
     tint: !!(rule && rule.tintCard),
     rule,

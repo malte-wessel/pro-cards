@@ -7,6 +7,7 @@ _Beta_
 - **New layout card** (`custom:layout-card-pro`): arrange any cards inside a section as a `grid` (columns, tracks, spans) or as `masonry`. Breakpoints count view columns, each card is placed through its `view_layout`, and `card_style: seamless` joins the cards into one surface. YAML only for now
 - Icons are sized like Home Assistant's tile card (a 24 px icon in a 36 px circle), so Pro tiles match the built-in ones
 - `icon_style: plain` draws an icon without its circle, still aligned with circled icons
+- `show_entity_picture: true` shows an entity's picture (a person's photo, a cover, a snapshot) in place of its icon, as on Home Assistant's tile card
 - Power flow: `icon_size` on any node, including `other`
 - Text follows Home Assistant's typography variables (`ha-font-size-*`, `ha-font-weight-*`, `ha-tile-info-*`), so a theme can size the cards' text
 - Icons follow a theme's `ha-tile-icon-border-radius` and `tile-icon-opacity`

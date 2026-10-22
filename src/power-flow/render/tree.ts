@@ -256,6 +256,7 @@ const fillShape = (st: TreeState, shape: HTMLElement, icon: string, m: EntityMod
     color: "",
     icon,
     fallbackIcon: icon,
+    picture: null,
     label: null,
     tint: false,
     rule: null,

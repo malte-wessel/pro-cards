@@ -222,6 +222,59 @@ test.describe("visuals", () => {
     await expect(off).toHaveCount(1);
     expect(await bg(off)).toBe("rgba(0, 0, 0, 0)");
   });
+  test("show_entity_picture puts the picture in the icon's place and shape", async ({ page }) => {
+    const radius = (loc: Locator) => loc.evaluate((e) => getComputedStyle(e).borderRadius);
+    await mount(page, [
+      { type: T, entity: "person.alex", show_entity_picture: true },
+      { type: T, entity: "person.alex" },
+      { type: T, entity: "person.kim", show_entity_picture: true },
+      { type: T, entity: "person.alex", show_entity_picture: true, visual: "ring" },
+    ]);
+    const alex = card(page, 0);
+    const img = alex.locator(".lead .shape > img.picture");
+    await expect(img).toHaveAttribute("src", /^data:image\/svg\+xml,/);
+    await expect(alex.locator(".lead ha-state-icon")).toHaveCount(0);
+    // it fills the 36 px shape, clipped to the icon's round shape; name and value stay
+    const box = (await img.boundingBox())!;
+    expect([box.width, box.height]).toEqual([36, 36]);
+    expect(await radius(alex.locator(".lead .shape"))).toBe("50%");
+    await expect(alex.locator(".texts .primary")).toHaveText("Alex");
+    await expect(alex.locator(".texts .secondary")).toHaveText("Home");
+    // off unless asked for; an entity without a picture keeps its icon
+    await expect(card(page, 1).locator(".lead img")).toHaveCount(0);
+    await expect(card(page, 1).locator(".lead ha-state-icon")).toHaveCount(1);
+    await expect(card(page, 2).locator(".lead img")).toHaveCount(0);
+    await expect(card(page, 2).locator(".lead ha-state-icon")).toHaveCount(1);
+    // inside a ring it fills the ring's inside
+    const ring = card(page, 3);
+    await expect(ring.locator(".lead.ring svg")).toHaveCount(1);
+    const inner = (await ring.locator(".lead.ring .shape > img.picture").boundingBox())!;
+    expect(inner.width).toBeLessThan(36);
+    expect(inner.width).toBe(inner.height);
+    // the picture follows the entity: a new one replaces it, none brings the icon back
+    await setState(page, "person.alex", undefined, { entity_picture: "/local/alex-2.png" });
+    await expect(img).toHaveAttribute("src", "/local/alex-2.png");
+    await setState(page, "person.alex", undefined, { entity_picture: null });
+    await expect(alex.locator(".lead img")).toHaveCount(0);
+    await expect(alex.locator(".lead ha-state-icon")).toHaveCount(1);
+  });
+  test("a row item shows the picture; a button in the icon's place keeps its icon", async ({
+    page,
+  }) => {
+    await mount(page, {
+      type: "custom:entity-group-card-pro",
+      layout: "row",
+      entities: [
+        { entity: "person.sam", show_entity_picture: true },
+        { entity: "script.check_windows", show_entity_picture: true, control: "auto" },
+      ],
+    });
+    await setState(page, "script.check_windows", undefined, { entity_picture: "/local/s.png" });
+    const [sam, run] = [0, 1].map((i) => card(page).locator(".row.item").nth(i));
+    await expect(sam.locator(".lead .shape > img.picture")).toHaveCount(1);
+    await expect(run.locator(".ctl-chip.round ha-state-icon")).toHaveCount(1);
+    await expect(run.locator("img")).toHaveCount(0);
+  });
   test("ring, gauge, bar and badge render their parts", async ({ page }) => {
     await mount(page, [
       { type: T, entity: "sensor.robot_battery", visual: "ring" },

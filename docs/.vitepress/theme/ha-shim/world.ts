@@ -452,8 +452,37 @@ def("button.restart_router", "2026-09-20T18:12:00+00:00", {
 });
 
 // people & modes
-def("person.alex", "home", { friendly_name: "Alex", entity_picture: null, user_id: "demo-alex" });
-def("person.sam", "not_home", { friendly_name: "Sam", user_id: "demo-sam" });
+// a drawn portrait as a person's picture (show_entity_picture); Kim has none, so shows the icon
+const avatar = (bg: string, skin: string, shirt: string, hair: string, hairPath: string) =>
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="${bg}"/>` +
+      `<path d="M10 64c0-13 10-20 22-20s22 7 22 20z" fill="${shirt}"/>` +
+      `<rect x="27" y="34" width="10" height="12" rx="3" fill="${skin}"/>` +
+      `<circle cx="32" cy="27" r="12" fill="${skin}"/><path d="${hairPath}" fill="${hair}"/></svg>`,
+  );
+def("person.alex", "home", {
+  friendly_name: "Alex",
+  entity_picture: avatar(
+    "#8fb8de",
+    "#f1c7a3",
+    "#2f5d8a",
+    "#4a3426",
+    "M20 27c0-9 5-15 12-15s12 6 12 15c-2-6-7-8-12-8s-10 2-12 8z",
+  ),
+  user_id: "demo-alex",
+});
+def("person.sam", "not_home", {
+  friendly_name: "Sam",
+  entity_picture: avatar(
+    "#e8b27a",
+    "#c68c5f",
+    "#6b4c9a",
+    "#2a1f1a",
+    "M19 33c-2-13 4-21 13-21s15 8 13 21l-2-9c-6 0-12-3-15-7-2 4-5 6-7 7z",
+  ),
+  user_id: "demo-sam",
+});
 def("person.kim", "home", { friendly_name: "Kim", user_id: "demo-kim" });
 def("input_boolean.night_mode", "off", { friendly_name: "Night mode", icon: "mdi:weather-night" });
 def("input_boolean.vacation_mode", "off", { friendly_name: "Vacation mode", icon: "mdi:beach" });
