@@ -404,8 +404,11 @@ describe("power-flow-card config", () => {
     expect(battery(undefined)).toMatchObject({ chargeFrom: "any", panels: null });
     for (const e of ["sensor.grid", "sensor.nowhere"])
       expect(() => battery(e)).toThrow(`sources[2].charge_from: ${e} is not a solar source`);
-    for (const bad of [[], [42], "Balcony"])
+    for (const bad of [[], "Balcony", 42])
       expect(() => battery(bad)).toThrow(/charge_from must be one of any \| solar/);
+    // a bad entry of a list is named
+    for (const bad of [[42], ["sensor.roof", "Balcony"]])
+      expect(() => battery(bad)).toThrow(/'sources\[2\]\.charge_from\[\d\]' must be an entity id/);
 
     const grid = (g: Record<string, unknown>) =>
       normalizePowerFlowConfig({ sources: [{ type: "grid", ...g }] }).sources[0];
@@ -1029,8 +1032,8 @@ describe("power flow numbers", () => {
       key: "power.state.exporting",
       w: 1500,
     });
-    // an import that charges a battery counts as well: it outweighs the export, and the battery
-    // that feeds nothing does not name the state
+    // as with every grid, the summary reads the home's import: an import into a battery does
+    // not outweigh the export
     const charging = normalizePowerFlowConfig({
       sources: [...sources, { type: "battery", power: "sensor.battery" }],
     });
@@ -1042,6 +1045,14 @@ describe("power flow numbers", () => {
     });
     expect(c.f).toMatchObject({ H: 100, sG: 400, gH: 0, gB: 1200 });
     expect(summaryState(charging, c.now, c.f)).toMatchObject({
+      key: "power.state.exporting",
+      w: 400,
+    });
+    // an export no source covers was never the home's: the whole import runs to the home
+    const night = flowsOf(cfg, { "sensor.pv": "0", "sensor.in": "1200", "sensor.out": "400" });
+    expect(night.f).toMatchObject({ H: 1200, gH: 1200, sG: 0, bG: 0 });
+    expect(edge(night.f, "s1", "home")?.w).toBe(1200);
+    expect(summaryState(cfg, night.now, night.f)).toMatchObject({
       key: "power.state.importing",
       w: 1200,
     });
@@ -1084,9 +1095,10 @@ describe("power flow numbers", () => {
     // more export than there is to give: what the sources have, no more
     const odd = flowsOf(cfg, { ...states, "sensor.battery": "0", "sensor.out": "2000" }).f;
     expect(odd).toMatchObject({ sG: 100, bG: 0 });
-    // offline the grid carries nothing either way
-    const off = flowsOf(cfg, { ...states, "binary_sensor.outage": "on" }).f;
-    expect(off).toMatchObject({ sG: 0, bG: 0, gH: 0, gB: 0 });
+    // offline the grid carries nothing either way, and its sensors' last values are not two flows
+    const off = flowsOf(cfg, { ...states, "binary_sensor.outage": "on" });
+    expect(off.f).toMatchObject({ sG: 0, bG: 0, gH: 0, gB: 0 });
+    expect(off.now.sources[2]).toMatchObject({ w: 300, import: 300, export: 0 });
   });
   it("reads the grid's low-carbon share from a fossil or a non-fossil percentage", () => {
     const fossil = normalizePowerFlowConfig({

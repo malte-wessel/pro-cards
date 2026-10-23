@@ -75,7 +75,7 @@ sources:
 
 :::
 
-Most meters net their phases: the home imports or exports, never both. A meter that counts every phase on its own can import on one phase while it exports on another. `both_ways: true` on an `import` / `export` pair tells the card so. The export then comes from the panels (then the batteries) before they cover the home, the import covers what is left of the home and of the batteries' charge, and the grid node shows both values: `400 W ↓` over `1.20 kW ↑`, into the grid and out of it. The summary names the larger of the two. Without the option the pair is netted.
+Most meters net their phases: the home imports or exports, never both. A meter that counts every phase on its own can import on one phase while it exports on another. `both_ways: true` on an `import` / `export` pair tells the card so. The export then comes from the panels (then the batteries) before they cover the home, the import covers what is left of the home and of the batteries' charge, and the grid node shows both values: `400 W ↓` over `1.20 kW ↑`, into the grid and out of it. The summary reads the export when it outweighs what the home imports. Without the option the pair is netted.
 
 ::: live
 

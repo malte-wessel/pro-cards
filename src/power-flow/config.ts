@@ -265,15 +265,21 @@ const normalizeSource = (
       throw new Error(`${CARD_TYPE}: ${label} needs 'power' or both 'charge' and 'discharge'`);
     // `any`, `solar` or the solar entities that feed it (resolved once every source is known)
     const cf = charge_from ?? "any";
-    const listed = Array.isArray(cf) ? cf : oneOf(CHARGE_FROM, cf) ? null : [cf];
-    if (
-      listed
-        ? !listed.length || listed.some((e) => typeof e !== "string" || !ENTITY_ID.test(e))
-        : !oneOf(CHARGE_FROM, cf)
-    )
+    const one = typeof cf === "string" && ENTITY_ID.test(cf) && !oneOf(CHARGE_FROM, cf);
+    if (Array.isArray(cf) ? !cf.length : !one && !oneOf(CHARGE_FROM, cf))
       throw new Error(
         `${CARD_TYPE}: ${label}.charge_from must be one of ${CHARGE_FROM.join(" | ")} or the entities of solar sources`,
       );
+    const listed = Array.isArray(cf)
+      ? cf.map((e, k) => {
+          const key = `${label}.charge_from[${k}]`;
+          const id = entityId(e, key);
+          if (!id) throw new Error(`${CARD_TYPE}: '${key}' must be an entity id`);
+          return id;
+        })
+      : one
+        ? [cf]
+        : null;
     const idx = push({ ...base, entity: p ?? c }, label, "power.battery");
     return {
       ...own(p ?? c, NODE_D.battery),
@@ -282,7 +288,7 @@ const normalizeSource = (
       secondIdx: p ? null : sub(d as string, `${label}.discharge`),
       socIdx: subOf(soc, "soc"),
       chargeFrom: listed ? "solar" : (cf as ChargeFrom),
-      panels: listed ? [...new Set(listed as string[])] : null,
+      panels: listed ? [...new Set(listed)] : null,
       invert: !!invert,
     };
   }

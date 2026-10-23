@@ -62,7 +62,8 @@ const STYLE_POWER = `
      width is measured without them */
   .plabel .secondary { ${type(12, 15)} font-weight: ${fw("normal")}; letter-spacing: normal; }
   .plabel .sec2 { opacity: .85; }
-  .plabel .v2 { display: none; }
+  /* the second value: styled as the first (the cards' .state), which the label is measured by */
+  .plabel .v2 { display: none; font-weight: ${fw("medium")}; color: var(--primary-text-color); font-variant-numeric: tabular-nums; }
   .plabel.two { display: flex; flex-direction: column; }
   .plabel.two .v2 { display: block; }
   .plabel.two .v2.blank { order: 1; }
