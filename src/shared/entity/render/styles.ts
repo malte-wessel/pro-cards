@@ -1,7 +1,7 @@
 // CSS of the entity cards, in pieces so every card ships only what it renders.
 // Colours come from HA theme tokens; --fe-color is set per row from the resolved look.
 import { tipStyle } from "../../hover.ts";
-import { ICON_RADIUS, STYLE_HOST, STYLE_ICONS, iconBg } from "../../constants.ts";
+import { CARD_BG, ICON_RADIUS, STYLE_HOST, STYLE_ICONS, iconBg } from "../../constants.ts";
 import {
   FONT_FAMILY,
   HEADER_TITLE,
@@ -165,7 +165,7 @@ export const STYLE_CONTROLS = `
   .ctl-buttons.custom.sm > .chip { height: 28px; font-size: ${fs(12)}; padding: 0 12px 0 8px; --mdc-icon-size: 16px; }
   /* a chip to hold fills from the left instead of a ring */
   .ctl-buttons.custom > .chip.hold { --fill: var(--fe-color); background-image: linear-gradient(var(--fill), var(--fill)); background-repeat: no-repeat; background-size: 0 100%; touch-action: none; -webkit-user-select: none; user-select: none; }
-  .ctl-buttons.custom > .chip.hold.on { --fill: color-mix(in srgb, var(--fe-color) 45%, var(--ha-card-background, var(--card-background-color, #fff))); }
+  .ctl-buttons.custom > .chip.hold.on { --fill: color-mix(in srgb, var(--fe-color) 45%, ${CARD_BG}); }
   .ctl-buttons.custom > .chip.hold.armed { background-size: 100% 100%; --fill: color-mix(in srgb, var(--fe-color) 45%, transparent); }
   .ctl-buttons.custom > .chip.hold.holding { background-size: 100% 100%; transition: background-size 1s linear; }
   .ctl-stepper { display: flex; align-items: center; gap: 4px; flex: none; }
@@ -309,7 +309,7 @@ export const STYLE_PLOT = `
   svg.abs { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
   .plot .line { fill: none; stroke: var(--fe-color); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
   .plot .area { fill: var(--fe-color); opacity: .12; }
-  .plot .dot { fill: var(--fe-color); stroke: var(--ha-card-background, var(--card-background-color)); stroke-width: 2; }
+  .plot .dot { fill: var(--fe-color); stroke: ${CARD_BG}; stroke-width: 2; }
   .plot .hair { stroke: var(--secondary-text-color); stroke-width: 1; opacity: .6; }
   .plot .col { fill: var(--fe-color); }
   .plot .hl { fill: none; stroke: var(--primary-text-color); stroke-width: 1.5; }

@@ -3,7 +3,7 @@
 // the reduced-motion pause. The `w` prefix of the class names is historical (the wind card came
 // first); the rain card uses the same ones. Each card appends its own particles and keyframes.
 import { BAND } from "./constants.ts";
-import { ICON_RADIUS, iconBg } from "../constants.ts";
+import { CARD_BG, ICON_RADIUS, iconBg } from "../constants.ts";
 import { fs, fw, type } from "../typography.ts";
 
 export const STYLE_FLOW = `
@@ -36,12 +36,12 @@ export const STYLE_FLOW = `
   .row.wtile.flow .wflow.bg { position: absolute; inset: -6px -12px; border-radius: 0; }
   .row.wtile.flow > .hit { inset: -6px -12px; }
   .row.wtile.flow .top { position: relative; }
-  .row.wtile.flow .lead .shape { background: ${iconBg("var(--fe-color)", "var(--ha-card-background, var(--card-background-color))")}; }
+  .row.wtile.flow .lead .shape { background: ${iconBg("var(--fe-color)", CARD_BG)}; }
   .row.wtile.flow .lead.plain .shape { background: transparent; }
   .row.wtile.flow .end .big b { ${type(26, 30)} }
 
   /* the chip on the band */
-  .chip { position: absolute; left: 8px; top: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 4px; border-radius: 999px; background: color-mix(in srgb, var(--ha-card-background, var(--card-background-color)) 80%, transparent); ${type(12, 16)} font-weight: ${fw("medium")}; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .chip { position: absolute; left: 8px; top: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 4px; border-radius: 999px; background: color-mix(in srgb, ${CARD_BG} 80%, transparent); ${type(12, 16)} font-weight: ${fw("medium")}; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .chip ha-icon { --mdc-icon-size: 14px; color: var(--fe-color); }
 `;
 // appended last by every flow card: the `animation` shorthands of the particles would reset the

@@ -1,4 +1,5 @@
 // Hover tooltip helpers shared by the plots of all cards.
+import { CARD_BG } from "./constants.ts";
 import { type } from "./typography.ts";
 
 // the crosshair group and the tooltip box of every plot (`scope` narrows them, ".trend " for the
@@ -8,7 +9,7 @@ export const tipStyle = (scope = "") => `
   ${scope}.hover.on { display: block; }
   ${scope}.tip {
     position: absolute; top: 4px; pointer-events: none; display: none; z-index: 1; box-sizing: border-box; max-width: calc(100% - 8px);
-    background: var(--ha-card-background, var(--card-background-color)); color: var(--primary-text-color);
+    background: ${CARD_BG}; color: var(--primary-text-color);
     border: 1px solid var(--divider-color); border-radius: 8px; padding: 6px 8px; ${type(12, 16)}
     box-shadow: var(--ha-card-box-shadow, 0 2px 6px rgba(0,0,0,.2)); white-space: nowrap;
   }

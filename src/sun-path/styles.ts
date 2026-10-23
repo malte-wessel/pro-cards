@@ -1,6 +1,6 @@
 // Styles of the sun path card.
 import { tipStyle } from "../shared/hover.ts";
-import { STYLE_HOST, STYLE_ICONS } from "../shared/constants.ts";
+import { CARD_BG, STYLE_HOST, STYLE_ICONS } from "../shared/constants.ts";
 import { PLOT_H } from "./constants.ts";
 import { HEADER_TITLE, fs, fw, lh, type } from "../shared/typography.ts";
 
@@ -36,10 +36,10 @@ export const STYLE = `
   .curve { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: butt; }
   .curve.future { opacity: .35; }
   .wash { opacity: .12; }
-  .sun { stroke: var(--ha-card-background, var(--card-background-color)); stroke-width: 2; }
+  .sun { stroke: ${CARD_BG}; stroke-width: 2; }
   /* hover: crosshair + dot on the curve, tooltip with time and elevation */
   .hair { stroke: var(--divider-color); stroke-width: 1; }
-  .dot { stroke: var(--ha-card-background, var(--card-background-color)); stroke-width: 2; }
+  .dot { stroke: ${CARD_BG}; stroke-width: 2; }
   ${tipStyle()}
   .tip .time { color: var(--secondary-text-color); margin-bottom: 2px; }
   .tip .row { display: flex; align-items: center; gap: 6px; }

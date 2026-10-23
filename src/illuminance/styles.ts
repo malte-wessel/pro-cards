@@ -1,6 +1,6 @@
 // Styles of the illuminance card.
 import { tipStyle } from "../shared/hover.ts";
-import { ICON_RADIUS, STYLE_HOST, STYLE_ICONS, iconBg } from "../shared/constants.ts";
+import { CARD_BG, ICON_RADIUS, STYLE_HOST, STYLE_ICONS, iconBg } from "../shared/constants.ts";
 import { TILE_PRIMARY, TILE_SECONDARY, font, fs, fw, type } from "../shared/typography.ts";
 
 export const STYLE = `
@@ -34,12 +34,12 @@ export const STYLE = `
   .hair { stroke: var(--secondary-text-color); stroke-width: 1; opacity: .6; }
   .grid { stroke: var(--divider-color); stroke-width: 1; }
   .line { fill: none; stroke: color-mix(in srgb, var(--primary-text-color) 80%, transparent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: butt; }
-  .dot { stroke: var(--ha-card-background, var(--card-background-color)); stroke-width: 2; fill: var(--primary-text-color); }
+  .dot { stroke: ${CARD_BG}; stroke-width: 2; fill: var(--primary-text-color); }
   .label { position: absolute; ${font(10, 12)} color: var(--secondary-text-color); white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
   .label.zone {
     transform: translateY(-50%);
     font-size: ${fs(9)}; letter-spacing: .9px; text-transform: uppercase;
-    --halo: var(--ha-card-background, var(--card-background-color));
+    --halo: ${CARD_BG};
     text-shadow: 0 0 2px var(--halo), 0 0 2px var(--halo), 0 0 3px var(--halo);
   }
   .label.x { transform: translateX(-50%); }
@@ -55,7 +55,7 @@ export const STYLE = `
   .arcwrap .zl { font-size: 9px; letter-spacing: .9px; fill: var(--secondary-text-color); text-transform: uppercase; }
   .arcwrap .bigv { font-size: 40px; font-weight: 500; letter-spacing: -1px; fill: var(--primary-text-color); font-variant-numeric: tabular-nums; }
   .arcwrap .unit { font-size: 13px; letter-spacing: 1.2px; fill: var(--secondary-text-color); }
-  .arcwrap .mark { stroke: var(--ha-card-background, var(--card-background-color)); stroke-width: 4; fill: var(--primary-text-color); }
+  .arcwrap .mark { stroke: ${CARD_BG}; stroke-width: 4; fill: var(--primary-text-color); }
   /* band */
   .legend { display: flex; align-items: center; gap: 8px; ${font(10)} color: var(--secondary-text-color); }
   .legend i { display: inline-block; width: 104px; height: 6px; border-radius: 3px; background: var(--grad); opacity: .6; }

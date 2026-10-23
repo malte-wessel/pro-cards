@@ -189,23 +189,32 @@ test.describe("layout-card-pro", () => {
       },
       { width: 432 },
     );
-    const look = await page.evaluate(() => {
-      const card = window.pc.cards()[0] as HTMLElement;
-      const cs = getComputedStyle(card.shadowRoot!.querySelector("ha-card")!);
-      const body = window.pc.card(0).shadowRoot!.querySelector(".body")!;
-      const knob = card.shadowRoot!.querySelector(".knob");
-      return {
-        border: cs.borderTopWidth,
-        bg: cs.backgroundColor,
-        surface: getComputedStyle(body).backgroundColor,
-        knob: knob ? getComputedStyle(knob).backgroundColor : null,
-      };
-    });
-    expect(look.border).toBe("0px");
-    // the cards keep a background, the surface's own: what uses it (a slider's knob) stays opaque
-    expect(look.bg).toBe(look.surface);
-    expect(look.bg).not.toBe("rgba(0, 0, 0, 0)");
-    expect(look.knob).toBe(look.surface);
+    const look = (theme?: string) =>
+      page.evaluate((theme) => {
+        if (theme) window.pc.card(0).style.setProperty("--ha-card-background", theme);
+        const card = window.pc.cards()[0] as HTMLElement;
+        const cs = getComputedStyle(card.shadowRoot!.querySelector("ha-card")!);
+        const body = window.pc.card(0).shadowRoot!.querySelector(".body")!;
+        const knob = card.shadowRoot!.querySelector(".knob");
+        return {
+          border: cs.borderTopWidth,
+          bg: cs.backgroundColor,
+          surface: getComputedStyle(body).backgroundColor,
+          knob: knob ? getComputedStyle(knob).backgroundColor : null,
+        };
+      }, theme);
+    const opaque = await look();
+    expect(opaque.border).toBe("0px");
+    // the surface is painted once: the cards paint none of their own, what draws in the surface
+    // colour (a slider's knob) still has it
+    expect(opaque.bg).toBe("rgba(0, 0, 0, 0)");
+    expect(opaque.surface).not.toBe("rgba(0, 0, 0, 0)");
+    expect(opaque.knob).toBe(opaque.surface);
+    // a translucent theme colour does not stack over the surface
+    const glass = await look("rgba(200, 0, 0, 0.4)");
+    expect(glass.surface).toBe("rgba(200, 0, 0, 0.4)");
+    expect(glass.bg).toBe("rgba(0, 0, 0, 0)");
+    expect(glass.knob).toBe("rgba(200, 0, 0, 0.4)");
     const [a, b] = await items(page);
     expect(b.x).toBe(a.x + a.w); // no gap: the divider sits between them
   });
@@ -237,6 +246,41 @@ test.describe("layout-card-pro", () => {
       [false, "0px"],
       [true, "0px"],
     ]);
+  });
+
+  test("paints a seamless layout inside a seamless one once", async ({ page }) => {
+    await mount(
+      page,
+      {
+        type: LC,
+        card_style: "seamless",
+        cards: [
+          ec(H),
+          {
+            type: LC,
+            columns: 2,
+            card_style: "seamless",
+            cards: [ec("light.living_room", undefined, { control: "auto" }), ec(K)],
+          },
+        ],
+      },
+      { width: 432 },
+    );
+    const look = await page.evaluate(() => {
+      const bg = (el: Element) => getComputedStyle(el).backgroundColor;
+      const outer = window.pc.card(0).shadowRoot!.querySelector(".body")!;
+      const light = window.pc.cards().find((c) => c.shadowRoot!.querySelector(".knob"))!;
+      // its hui-card is in the inner layout's shadow root
+      const inner = (light.getRootNode() as ShadowRoot).querySelector(".body")!;
+      return {
+        outer: bg(outer),
+        inner: bg(inner),
+        knob: bg(light.shadowRoot!.querySelector(".knob")!),
+      };
+    });
+    expect(look.outer).not.toBe("rgba(0, 0, 0, 0)");
+    expect(look.inner).toBe("rgba(0, 0, 0, 0)");
+    expect(look.knob).toBe(look.outer);
   });
 
   test("nests layouts", async ({ page }) => {
