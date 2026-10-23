@@ -9,8 +9,10 @@ import { REFRESH_MS } from "../constants.ts";
 import { langOf } from "../format.ts";
 import type { ActionConfig, ActionKind, GridOptions, HapticType, HomeAssistant } from "../ha.ts";
 import { fetchHistory, pointOf, type Point } from "../history.ts";
-import { hideHover } from "../hover.ts";
+import { HistoryFeed } from "../history-feed.ts";
+import { hideHover, leaveHides, outsideHides } from "../hover.ts";
 import { TemplateSubscriptions } from "../templates.ts";
+import { depsChanged } from "../deps.ts";
 import { clamp01, qs } from "../util.ts";
 import {
   checkVisibility,
@@ -23,6 +25,7 @@ import { VisibilityWatch } from "../visibility-watch.ts";
 import { BLOCK_VISUALS, DOUBLE_MS, HISTORY_VISUALS, HOLD_MS } from "./constants.ts";
 import {
   collectTemplates,
+  itemTemplates,
   visibilityTrees,
   type EntityCardConfig,
   type EntityItem,
@@ -91,6 +94,7 @@ export abstract class EntityCardBase extends HTMLElement {
 
   _series = new Map<string, Point[]>();
   _tpl: TemplateSubscriptions;
+  _history: HistoryFeed;
   _hover: { idx: number; t: number } | null = null;
   _plotHandlers: PlotHandlers;
   _textCache = new TextCache();
@@ -100,8 +104,6 @@ export abstract class EntityCardBase extends HTMLElement {
   _entityIds: string[] = [];
   _historyIds: string[] = [];
   _templates?: Set<string>;
-  _fetched = false;
-  _fetching = false;
   _timer?: ReturnType<typeof setInterval>;
   _ro?: ResizeObserver;
   // controls: service calls in flight per entity index, the row being dragged, the host the
@@ -122,6 +124,22 @@ export abstract class EntityCardBase extends HTMLElement {
   _vis?: VisState;
   _bodyKey: string | null = null;
   _person: { user: string | undefined; id: string | null } | null = null;
+  _onDocPointer = outsideHides(this, () => this._hideHover());
+  // what each item's model, each row and each plot were last drawn from (deps.ts): a render
+  // recomputes and redraws only what its inputs changed. Per item: the ids it reads (its entity,
+  // its buttons') and whether it has templates; `_fillEpoch` moves on what every row depends on
+  // without naming it (the refresh, a theme, a config); `_resized` asks for a full refit
+  _idsByItem: string[][] = [];
+  _itemTpl: boolean[] = [];
+  _itemModels: EntityModel[] = [];
+  _modelInputs = new WeakMap<object, readonly unknown[]>();
+  _rowInputsDrawn = new WeakMap<object, readonly unknown[]>();
+  _plotInputs = new WeakMap<object, readonly unknown[]>();
+  _fillEpoch = 0;
+  _resized = true;
+  // hass.locale by value, read once per render (Home Assistant keeps the object, a test double
+  // may not)
+  _localeKey = "";
 
   abstract _normalize(raw: unknown): EntityCardConfig;
   abstract _styles(): string;
@@ -131,12 +149,12 @@ export abstract class EntityCardBase extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this._tpl = new TemplateSubscriptions(this._cardType(), () => this._render());
+    this._history = new HistoryFeed(this._cardType());
     this._visWatch = new VisibilityWatch(() => this._render());
-    this._onDocPointer = this._onDocPointer.bind(this);
     this._plotHandlers = {
       move: this._onPointer.bind(this),
       up: (ev) => ev.stopPropagation(),
-      leave: this._onLeave.bind(this),
+      leave: leaveHides(() => this._hideHover()),
     };
     const dragging = () => this._dragging;
     this._ctl = {
@@ -154,6 +172,11 @@ export abstract class EntityCardBase extends HTMLElement {
       },
       endDrag: (idx) => {
         if (this._dragging === idx) this._dragging = null;
+        // the row is filled again whatever its inputs say: a gesture that made no call (cancelled
+        // by a scroll) left its control where the finger was, not at the entity's value
+        for (const row of this._root?.querySelectorAll<HTMLElement>(`.row[data-idx="${idx}"]`) ??
+          [])
+          this._rowInputsDrawn.delete(row);
         this._render();
       },
       runAction: (ent, a, kind) => this._runAction(ent, a, kind),
@@ -168,6 +191,11 @@ export abstract class EntityCardBase extends HTMLElement {
       [e.entity, ...(e.control?.buttons ?? []).map((b) => b.entity)].filter(
         (id): id is string => !!id,
       );
+    this._idsByItem = cfg.entities.map(idsOf);
+    this._itemTpl = cfg.entities.map((e) => itemTemplates(e).length > 0);
+    this._itemModels = [];
+    this._fillEpoch++;
+    this._resized = true;
     this._entityIds = [...new Set(cfg.entities.flatMap(idsOf))];
     this._historyIds = [
       ...new Set(
@@ -189,7 +217,7 @@ export abstract class EntityCardBase extends HTMLElement {
         this._idxsByEntity.set(id, [...(this._idxsByEntity.get(id) ?? []), i]);
     });
     this._series = new Map();
-    this._fetched = false;
+    this._history.reset();
     this._hover = null;
     this._pending.clear();
     this._buttonPending.clear();
@@ -210,10 +238,9 @@ export abstract class EntityCardBase extends HTMLElement {
     if (!this._config) return;
     if (!this._root) this._buildDom();
     if (!prev || prev.connection !== hass.connection) this._subscribeTemplates();
-    if (this._historyIds.length && !this._fetched && !this._fetching) {
-      this._fetchHistory();
-      return;
-    }
+    // the history arrives later and renders then; the update below runs meanwhile, so a device's
+    // answer still ends its pending call
+    if (this._historyIds.length && this._history.due()) this._fetchHistory();
     // a new language (profile setting) re-renders too: words, times and numbers follow it
     let changed = !prev || langOf(prev) !== langOf(hass);
     // conditions on the user (or the user's whereabouts) look again when they change
@@ -242,6 +269,8 @@ export abstract class EntityCardBase extends HTMLElement {
     if (changed) this._render();
     if (themeChanged(prev, hass)) {
       this._textCache.clear();
+      this._fillEpoch++;
+      this._resized = true;
       requestAnimationFrame(() => this._render());
     }
   }
@@ -249,11 +278,17 @@ export abstract class EntityCardBase extends HTMLElement {
   connectedCallback() {
     // another place may have another theme (a view's own)
     this._textCache.clear();
+    this._fillEpoch++;
+    this._resized = true;
     this._timer = setInterval(() => {
+      this._fillEpoch++;
       if (this._historyIds?.length) this._fetchHistory();
       else this._render();
     }, REFRESH_MS);
-    this._ro = new ResizeObserver(() => this._render());
+    this._ro = new ResizeObserver(() => {
+      this._resized = true;
+      this._render();
+    });
     if (this._root) this._ro.observe(this._root);
     document.addEventListener("pointerdown", this._onDocPointer);
     this._visWatch.connect();
@@ -264,6 +299,9 @@ export abstract class EntityCardBase extends HTMLElement {
   disconnectedCallback() {
     clearInterval(this._timer);
     clearTimeout(this._pendingTimer);
+    // a gesture cut off by leaving the page never ends: its row is filled again on return
+    this._dragging = null;
+    this._armed.clear();
     this._ro?.disconnect();
     document.removeEventListener("pointerdown", this._onDocPointer);
     this._visWatch.disconnect();
@@ -357,7 +395,7 @@ export abstract class EntityCardBase extends HTMLElement {
       hass: this._hass,
       tplResult: this._tpl.results,
       series: this._series,
-      fetched: this._fetched,
+      fetched: this._history.loaded,
       cfg,
       now,
       t0: now - cfg.hours * 3600e3,
@@ -440,19 +478,18 @@ export abstract class EntityCardBase extends HTMLElement {
   }
 
   // ----- history -----
-  async _fetchHistory() {
-    if (!this._hass || !this._config || !this._historyIds.length) return;
-    this._fetching = true;
-    try {
-      const res = await fetchHistory(this._hass, this._historyIds, this._config.hours);
-      for (const [id, pts] of res) this._series.set(id, pts);
-      this._fetched = true;
-    } catch (err) {
-      console.error(`${this._cardType()}: history fetch failed`, err);
-    } finally {
-      this._fetching = false;
-      this._render();
-    }
+  _fetchHistory() {
+    const hass = this._hass,
+      cfg = this._config,
+      ids = this._historyIds;
+    if (!hass || !cfg || !ids.length) return;
+    return this._history.run(
+      () => fetchHistory(hass, ids, cfg.hours),
+      (res) => {
+        for (const [id, pts] of res) this._series.set(id, pts);
+      },
+      () => this._render(),
+    );
   }
 
   // ----- actions -----
@@ -485,7 +522,12 @@ export abstract class EntityCardBase extends HTMLElement {
         if (has(ent.hold)) this._runAction(ent, ent.hold, "hold");
       }, HOLD_MS);
     });
-    const cancel = () => clearTimeout(holdTimer);
+    // a press that left the row or was taken over (a scroll) is over: a later release here is not
+    // its end
+    const cancel = () => {
+      clearTimeout(holdTimer);
+      down = false;
+    };
     el.addEventListener("pointerleave", cancel);
     el.addEventListener("pointercancel", cancel);
     el.addEventListener("pointerup", (ev) => {
@@ -551,12 +593,14 @@ export abstract class EntityCardBase extends HTMLElement {
     this._buildBody(body);
     this._bodyKey = this._vis.key;
     card.appendChild(body);
+    // the observer follows the new card, not the one setConfig replaced (it would keep it alive)
+    if (this._root) this._ro?.unobserve(this._root);
     this._root = card;
     this._ro?.observe(card);
     this._render();
     // text fitted before the web font arrived is measured again once it is there
     document.fonts?.ready.then(() => {
-      if (this._root === card) this._fitCells(card);
+      if (this._root === card) this._fitCells([card]);
     });
   }
   // `title_tap_action`: the title is the button, its icon taps the same; the header items keep
@@ -656,6 +700,7 @@ export abstract class EntityCardBase extends HTMLElement {
   // ----- render -----
   _render() {
     if (!this._root || !this._hass || !this._config) return;
+    this._localeKey = JSON.stringify(this._hass.locale ?? null);
     const cfg = this._config,
       card = this._root,
       ctx = this._ctx();
@@ -681,8 +726,10 @@ export abstract class EntityCardBase extends HTMLElement {
     }
     // nothing shown at all: the card takes no room (its own `visibility` is HA's way to hide it)
     card.hidden = (!header || header.hidden) && !this._bodyShown(vis);
-    const models = cfg.entities.map((ent) => modelOf(ctx, ent));
+    const models = cfg.entities.map((_, i) => this._modelAt(ctx, i));
     const focus = this._focusWithin();
+    // the rows filled now: only they are fitted again (all of them after a resize)
+    const filled: HTMLElement[] = [];
     for (const row of card.querySelectorAll<HTMLElement>(".row")) {
       const idx = Number(row.dataset.idx),
         ent = cfg.entities[idx],
@@ -696,6 +743,10 @@ export abstract class EntityCardBase extends HTMLElement {
       if (this._dragging === idx) continue;
       // a focused select keeps its row too: rebuilding it would close its open list
       if (focus?.row === row && focus.select) continue;
+      // a row whose inputs are the ones it was filled from keeps its DOM
+      const inputs = this._rowInputs(ctx, row, idx, m);
+      if (inputs && !depsChanged(this._rowInputsDrawn, row, inputs)) continue;
+      filled.push(row);
       const hit = row.querySelector<HTMLElement>(":scope > .hit");
       this._fill(ctx, row, ent, idx, m);
       if (hit) {
@@ -715,8 +766,9 @@ export abstract class EntityCardBase extends HTMLElement {
       "--fe-tint",
       tint === null ? "transparent" : cssColor(tint, "transparent"),
     );
-    for (const plot of card.querySelectorAll<PlotElement>(".plot")) drawPlot(ctx, plot);
-    this._fitCells(card);
+    this._drawPlots(ctx, card);
+    this._fitCells(this._resized ? [card] : filled);
+    this._resized = false;
     this._visWatch.arm(this._hass);
     if (this._hover) {
       const hover = this._hover;
@@ -725,6 +777,69 @@ export abstract class EntityCardBase extends HTMLElement {
       );
       if (plot) showHover(ctx, plot, hover.t);
     }
+  }
+  // an item's model, computed again only when what it reads changed: the states of its entity and
+  // its buttons' entities, its templates, the language and Home Assistant's formatting
+  _modelAt(ctx: RenderCtx, idx: number): EntityModel {
+    const ent = (this._config as EntityCardConfig).entities[idx],
+      hass = ctx.hass;
+    const inputs = [
+      ...this._idsByItem[idx].map((id) => hass?.states[id]),
+      this._itemTpl[idx] ? this._tpl.version : 0,
+      langOf(hass),
+      this._localeKey,
+      hass?.formatEntityState,
+    ];
+    const changed = depsChanged(this._modelInputs, ent, inputs);
+    if (!changed && this._itemModels[idx]) return this._itemModels[idx];
+    return (this._itemModels[idx] = modelOf(ctx, ent));
+  }
+  // what a row is filled from: its model, its pending calls, its armed buttons, which of its
+  // buttons are shown, and what every row reads (the refresh, the theme, the user). A subclass
+  // returns null for a row it fills from more than its own item: that row is filled every time
+  _rowInputs(ctx: RenderCtx, _row: HTMLElement, idx: number, m: EntityModel): unknown[] | null {
+    const ent = (this._config as EntityCardConfig).entities[idx];
+    const own = (map: Map<string, unknown>) => {
+      const out: unknown[] = [];
+      for (const [k, v] of map) if (k.startsWith(`${idx}:`)) out.push(k, v);
+      return out;
+    };
+    return [
+      m,
+      this._pending.get(idx),
+      ...own(this._buttonPending),
+      ...own(this._armed),
+      ...(ent.control?.buttons ?? []).map((b) => this._shown(b.visibility)),
+      this._fillEpoch,
+      ctx.hass?.user?.id,
+      ctx.hass?.user?.is_admin,
+    ];
+  }
+  // the plots: every size read first, then drawn (one layout for all of them); a plot whose
+  // inputs are the same and that would move by less than a pixel keeps its drawing
+  _drawPlots(ctx: RenderCtx, card: HTMLElement) {
+    const plots = [...card.querySelectorAll<PlotElement>(".plot")];
+    const sizes = plots.map((p) => ({ w: p.clientWidth, h: p.clientHeight }));
+    plots.forEach((plot, i) => {
+      const { w, h } = sizes[i];
+      const { t0, t1 } = windowOf(ctx, plot);
+      const pc = plot._ctx;
+      const series = pc.series ?? (pc.ent.entity ? ctx.series.get(pc.ent.entity) : undefined);
+      const msPerPx = Math.max(1, (t1 - t0) / Math.max(w, 1));
+      const inputs = [
+        w,
+        h,
+        series,
+        series?.length,
+        pc.loaded ?? ctx.fetched,
+        pc.st,
+        Math.floor(t0 / msPerPx),
+        Math.floor(t1 / msPerPx),
+        langOf(ctx.hass),
+        this._fillEpoch,
+      ];
+      if (depsChanged(this._plotInputs, plot, inputs)) drawPlot(ctx, plot, { w, h });
+    });
   }
   // the focused element of a row, as its index among the row's focusable elements: a rebuilt row
   // has the same elements in the same order, so the same index is the same control
@@ -758,10 +873,15 @@ export abstract class EntityCardBase extends HTMLElement {
   }
   // shrink a grid cell's big value (down to 13 px at the default text size; it starts from its
   // styled size, which follows the theme's) so short words like scene names stay whole
-  _fitCells(card: HTMLElement) {
+  _fitCells(roots: readonly HTMLElement[]) {
+    const all = <E extends Element>(sel: string) =>
+      roots.flatMap((r) => [
+        ...(r.matches(sel) ? [r as unknown as E] : []),
+        ...r.querySelectorAll<E>(sel),
+      ]);
     // a gauge's value sits inside its arc: a long one (a unit like "UV index") steps its font down
     // until its drawn box fits (glyph widths do not scale exactly with the size)
-    for (const t of card.querySelectorAll<SVGTextElement>(".gauge text.val")) {
+    for (const t of all<SVGTextElement>(".gauge text.val")) {
       t.style.fontSize = "";
       if (typeof t.getBBox !== "function") continue;
       let size = GAUGE_FONT;
@@ -772,7 +892,7 @@ export abstract class EntityCardBase extends HTMLElement {
     }
     // every cell's value has the same styled size: read once
     let full = 0;
-    for (const big of card.querySelectorAll<HTMLElement>(".cell .big")) {
+    for (const big of all<HTMLElement>(".cell .big")) {
       const b = big.querySelector("b");
       if (!b) continue;
       if (!full) {
@@ -800,13 +920,6 @@ export abstract class EntityCardBase extends HTMLElement {
     const t = t0 + clamp01((ev.clientX - rect.left) / (rect.width || 1)) * (t1 - t0);
     this._hover = { idx: plot._ctx.idx, t };
     if (!showHover(ctx, plot, t)) this._hideHover();
-  }
-  _onLeave(ev: PointerEvent) {
-    if (ev.pointerType === "touch") return;
-    this._hideHover();
-  }
-  _onDocPointer(ev: PointerEvent) {
-    if (!ev.composedPath().includes(this)) this._hideHover();
   }
   _hideHover() {
     this._hover = null;

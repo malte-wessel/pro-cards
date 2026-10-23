@@ -20,9 +20,7 @@ export interface LNode {
   x: number;
   y: number;
   d: number; // diameter
-  consumerId: string | null; // group / consumer: the config id
   column: "source" | "home" | "group" | "leaf"; // where it sits along the flow
-  tight?: boolean; // direction: down – the column is too narrow for the labels beside the nodes
   labelMax?: number; // direction: down, a crowded row – the widest name that clears its neighbours
   slot?: SourceSlot; // direction: down – where the sources' labels go, the same for the whole row
 }
@@ -45,7 +43,6 @@ export interface LRow {
   h: number;
 }
 export interface TreeLayout {
-  key: string;
   w: number;
   h: number;
   nodes: LNode[];
@@ -368,15 +365,7 @@ export const layoutTree = (
   const nodes: LNode[] = [];
   const rows: LRow[] = [];
   const byId = new Map<string, LNode>();
-  const add = (
-    id: string,
-    kind: NodeKind,
-    idx: number | null,
-    d: number,
-    a: number,
-    b: number,
-    cid: string | null,
-  ) => {
+  const add = (id: string, kind: NodeKind, idx: number | null, d: number, a: number, b: number) => {
     const [x, y] = map(a, b);
     const column: LNode["column"] =
       kind === "home"
@@ -386,17 +375,17 @@ export const layoutTree = (
           : idx !== null && id.startsWith("s")
             ? "source"
             : "leaf";
-    const nd: LNode = { id, kind, idx, x, y, d, consumerId: cid, column };
+    const nd: LNode = { id, kind, idx, x, y, d, column };
     nodes.push(nd);
     byId.set(id, nd);
     return nd;
   };
   cfg.sources.forEach((s, i) => {
-    const nd = add(s.id, s.kind, s.idx, s.d, aS, bS[i], null);
+    const nd = add(s.id, s.kind, s.idx, s.d, aS, bS[i]);
     nd.labelMax = srcCaps[i];
     nd.slot = srcSlot;
   });
-  add("home", "home", cfg.homeIdx, cfg.homeD, aH, bH, null);
+  add("home", "home", cfg.homeIdx, cfg.homeD, aH, bH);
 
   // the consumer column, centred across; `down` spreads it to the width
   let plan = columnPlan(cfg);
@@ -415,7 +404,7 @@ export const layoutTree = (
   const leafKind = (id: string): NodeKind => (id === "other" ? "other" : "consumer");
   for (const g of plan.groups) {
     const grp = cfg.consumers.find((c) => c.id === g.id);
-    add(g.id, "group", null, grp ? grp.d : GEOM.dGroup, aG, b0 + g.b, grp ? grp.id : null);
+    add(g.id, "group", null, grp ? grp.d : GEOM.dGroup, aG, b0 + g.b);
   }
   plan.leaves.forEach((lf, k) => {
     const leaf = leaves.find((l) => l.id === lf.id);
@@ -435,15 +424,13 @@ export const layoutTree = (
         x,
         y,
         d: 0,
-        consumerId: lf.id,
         column: asRoom ? "group" : "leaf",
       });
     } else {
       const kind = leafKind(lf.id);
-      const nd = add(lf.id, kind, idx, lf.d, asRoom ? aG : aC, b0 + lf.b, lf.id);
+      const nd = add(lf.id, kind, idx, lf.d, asRoom ? aG : aC, b0 + lf.b);
       if (asRoom) nd.column = "group";
       if (consTight) {
-        nd.tight = true;
         // every label centred below its node, its name cut to its room: of the gap to a
         // neighbour, the neighbour keeps half (less when its label is narrower, more when its
         // value is wider: values are never cut) and the rest, less the labels' 3 px spacing and
@@ -467,13 +454,11 @@ export const layoutTree = (
 
   // ----- edges -----
   const out: LEdge[] = [];
-  const src = (id: string) => byId.get(id) as LNode;
   const A = (nd: LNode) => (right ? nd.x : nd.y),
     Bof = (nd: LNode) => (right ? nd.y : nd.x);
   const offsets = laneOffsets(bS, bH);
   // a source's lane by its id (its position in the drawn column, not its config index)
   const srcPos = new Map(cfg.sources.map((s, i) => [s.id, i]));
-  const home = src("home");
   const gapAlong = aH - rH - (aS + rS);
   // the lanes bend late, so a source's label fits beside its node on a narrow card
   const bendBase = aS + rS + gapAlong * 0.8;
@@ -493,7 +478,6 @@ export const layoutTree = (
     }
     return Math.max(t, a0 + 10);
   };
-  let k = 0;
   edges.forEach((e, fi) => {
     const from = byId.get(e.from),
       to = byId.get(e.to);
@@ -529,7 +513,9 @@ export const layoutTree = (
     }
     pts = dedupe(pts);
     out.push({
-      id: `e${k++}`,
+      // its flow's index: the flows are the same for one config whatever the values, so a link
+      // keeps its id (and its drawn lane) when another node is hidden
+      id: `e${fi}`,
       fi,
       from: e.from,
       to: e.to,
@@ -539,12 +525,9 @@ export const layoutTree = (
       len: pathLength(pts),
     });
   });
-  void home;
 
   const [w, h] = right ? [along, across] : [across, along];
   return {
-    // the drawn nodes by id: one hidden node swapped for another lays the tree out again
-    key: `${dir}/${cfg.flowStyle}/${cfg.consumerStyle}/${w}/${h}/${[...byId.keys()].join(",")}/${out.length}/${Math.round(aH)}/${Math.round(aG)}`,
     w,
     h,
     nodes,

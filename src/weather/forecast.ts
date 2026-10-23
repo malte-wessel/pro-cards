@@ -62,6 +62,8 @@ export interface Day {
   precipitation: number | null;
   probability: number | null;
   wind: number | null;
+  // an hour's own `is_daytime` when the forecast carries it (hours only: a day is collapsed)
+  daytime?: boolean | null;
 }
 
 const dayOf = (e: ForecastEntry): Day => ({
@@ -122,7 +124,7 @@ export const hoursOf = (
   n: number,
 ): ForecastRow[] => {
   const { t0, t1 } = hourlyWindow(now, n);
-  return hoursIn(fc, t0, t1).map((e) => ({ ...dayOf(e), lo: null }));
+  return hoursIn(fc, t0, t1).map((e) => ({ ...dayOf(e), lo: null, daytime: e.is_daytime ?? null }));
 };
 
 // the temperature span the daily bars share
@@ -138,5 +140,15 @@ export const dailyRange = (days: readonly Day[]): { min: number; max: number } |
   return { min, max };
 };
 
-export const isToday = (t: number, now: number) =>
-  new Date(t).toDateString() === new Date(now).toDateString();
+// the calendar day a daily forecast entry is for: a stamp at exactly midnight UTC names that UTC
+// date (integrations that work in UTC stamp their days so: in New York, Tuesday's 00:00Z is
+// still Monday evening), any other stamp the local date it falls on
+export const entryDate = (t: number): Date => {
+  const d = new Date(t);
+  return t % 86400e3 === 0
+    ? new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+    : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+};
+// whether a daily forecast entry is today's
+export const isTodayEntry = (t: number, now: number) =>
+  entryDate(t).toDateString() === new Date(now).toDateString();

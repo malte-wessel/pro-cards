@@ -1,6 +1,7 @@
 // Shared plot scaffolding of the trend and band modes, plus the value row, formatting and the
 // hover tooltip. Functions take the card element; the layout results the hover needs are kept
 // on the element (`_mode`, `_sampled`, `_buckets`, `_xOf`, `_yOf`, `_bw`, `_gutter`, `_plotW`).
+import { addLabel } from "../../shared/entity/render/plots.ts";
 import { fmtNumber, fmtTime, textWidth } from "../../shared/format.ts";
 import type { HomeAssistant } from "../../shared/ha.ts";
 import { nearestPoint, placeTip } from "../../shared/hover.ts";
@@ -15,10 +16,17 @@ import { zoneOf } from "../zones.ts";
 export const fmtLx = (hass: HomeAssistant | undefined, v: number) =>
   fmtNumber(hass, v, v >= 100 ? 0 : v >= 10 ? 1 : 2);
 
-// the card's window: [t0, now]
+// the card's window: [t0, now]; the hover reads the one the plot was drawn with (`_window`), so
+// the crosshair lands where the drawing put the time
 export const windowOf = (card: IlluminanceHost) => {
+  if (card._window) return card._window;
   const now = Date.now();
   return { now, t0: now - card._config.hours_to_show * 3600e3 };
+};
+// a fresh window for a drawing
+export const drawWindow = (card: IlluminanceHost) => {
+  const now = Date.now();
+  return (card._window = { now, t0: now - card._config.hours_to_show * 3600e3 });
 };
 
 export const pillEl = (zone: ThemedZone) => {
@@ -66,22 +74,8 @@ export const plotShell = (
   return plot;
 };
 
-export const addLabel = (
-  container: HTMLElement,
-  cls: string,
-  txt: string,
-  left: number,
-  top: number,
-  width?: number,
-) => {
-  const el = document.createElement("div");
-  el.className = `label ${cls}`;
-  el.textContent = txt;
-  el.style.left = `${left}px`;
-  el.style.top = `${top}px`;
-  if (width) el.style.width = `${width}px`;
-  container.appendChild(el);
-};
+// the plot labels are the entity cards' (the same markup and classes)
+export { addLabel };
 
 // time labels at clock boundaries of the window's tick step, plus "now" at the right edge, in
 // the labels' style `ax` (they follow the theme's text size)

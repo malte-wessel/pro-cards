@@ -51,7 +51,8 @@ export const mkScale = (
   min -= pad;
   max += pad;
   const innerTop = top + topPad,
-    innerH = h - topPad - 6;
+    // at least a pixel: a lane shorter than its label would otherwise draw the scale upside down
+    innerH = Math.max(1, h - topPad - 6);
   return {
     top,
     h,

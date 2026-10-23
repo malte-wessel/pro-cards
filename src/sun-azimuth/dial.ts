@@ -1,6 +1,7 @@
 // The sky dial seen from above, pure geometry in a px box as wide as the column (at most 300):
 // the horizon is the outer ring, the zenith the centre, so a point of the sky lands at a radius
 // that follows its elevation. The labels keep their room and size; the picture shrinks inside.
+import { f1, P, RAD } from "./svg.ts";
 import {
   DIAL,
   lineScale,
@@ -10,16 +11,13 @@ import {
   type Roof,
   type SunText,
 } from "./constants.ts";
-import type { SunDay, SunSample } from "./day.ts";
+import { isUp, type SunDay, type SunSample } from "./day.ts";
 import { wallBands } from "./edges.ts";
 import { houseSolid } from "./house.ts";
 import { trackOf, type TrackPoint } from "./track.ts";
 import type { Side } from "./sides.ts";
 
-const RAD = Math.PI / 180;
-const f1 = (v: number) => (Math.round(v * 10) / 10).toString();
 type Pt = [number, number];
-const P = (p: Pt) => `${f1(p[0])} ${f1(p[1])}`;
 const pathOf = (pts: Pt[]) => pts.map((p, i) => (i ? "L" : "M") + P(p)).join(" ");
 
 export interface DialGeometry {
@@ -107,7 +105,8 @@ export const dialGeometry = (
     if (s.el <= 0) continue;
     (s.t <= now.t ? past : future).push(sky(s.az, s.el));
   }
-  const up = now.el > 0;
+  // up as the header says it (refraction included): the dot, the beam and the text agree
+  const up = isUp(now);
   if (up) {
     past.push(sky(now.az, now.el));
     future.unshift(sky(now.az, now.el));

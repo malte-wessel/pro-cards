@@ -30,7 +30,9 @@ import { cssColor, resolveHex } from "./shared/color.ts";
 import { REFRESH_MS } from "./shared/constants.ts";
 import { fmtTime, langOf } from "./shared/format.ts";
 import { fetchHistory, normalizeSmoothing } from "./shared/history.ts";
-import { hideHover } from "./shared/hover.ts";
+import { HistoryFeed } from "./shared/history-feed.ts";
+import { depsChanged } from "./shared/deps.ts";
+import { hideHover, leaveHides, outsideHides } from "./shared/hover.ts";
 import { t } from "./shared/i18n.ts";
 import { isNum, oneOf, qs } from "./shared/util.ts";
 import { DEFAULTS, MODES } from "./illuminance/constants.ts";
@@ -57,6 +59,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
   _root?: HTMLElement;
   _series: LxPoint[] = [];
   _mode?: "trend" | "band";
+  _window?: { now: number; t0: number };
   _sampled?: SampledLx[];
   _buckets?: (MeanBucket | null)[];
   _xOf?: (t: number) => number;
@@ -65,8 +68,11 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
   _gutter?: number;
   _plotW?: number;
   _hoverT: number | null = null;
-  _fetched = false;
-  _fetching = false;
+  _history = new HistoryFeed(CARD_TYPE);
+  _onLeave = leaveHides(() => this._hideHover());
+  _onDocPointer = outsideHides(this, () => this._hideHover());
+  // what the body and the zone colours were last drawn from (deps.ts)
+  _drawn = new WeakMap<object, readonly unknown[]>();
   _timer?: ReturnType<typeof setInterval>;
   _ro?: ResizeObserver;
 
@@ -86,23 +92,30 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
     super();
     this.attachShadow({ mode: "open" });
     this._onPointer = this._onPointer.bind(this);
-    this._onLeave = this._onLeave.bind(this);
-    this._onDocPointer = this._onDocPointer.bind(this);
   }
 
   setConfig(config: IlluminanceCardConfig | null | undefined) {
     if (!config?.entity) throw new Error(`${CARD_TYPE}: 'entity' is required`);
     const { mode, ...rest } = config;
+    // the scale's ends: a log scale needs a positive bottom below its top
+    const minLx = Number(config.min_lx ?? DEFAULTS.min_lx),
+      maxLx = Number(config.max_lx ?? DEFAULTS.max_lx);
+    if (!(minLx > 0) || !(maxLx > minLx))
+      throw new Error(`${CARD_TYPE}: 'min_lx' must be above 0 and below 'max_lx'`);
     this._config = {
       ...DEFAULTS,
       ...rest,
       entity: config.entity,
       mode: oneOf(MODES, mode) ? mode : DEFAULTS.mode,
+      min_lx: minLx,
+      max_lx: maxLx,
       smoothing_minutes: normalizeSmoothing(config.smoothing_minutes),
-      zonesList: mergeZones(config.zones, this._hass),
+      // the zones in the user's language and the live theme's colours: resolved at render
+      zonesList: [],
     };
     this._series = [];
-    this._fetched = false;
+    this._resetPlot();
+    this._history.reset();
     this._hoverT = null;
     syncKeepHeight(this, config);
     if (this._root) this._buildDom();
@@ -112,7 +125,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
     const prev = this._hass;
     this._hass = hass;
     if (!this._root) this._buildDom();
-    if (this._config.mode !== "arc" && !this._fetched && !this._fetching) {
+    if (this._config.mode !== "arc" && this._history.due()) {
       this._fetchHistory();
       return;
     }
@@ -128,7 +141,12 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
     } else if (!prev || langOf(prev) !== langOf(hass)) this._render();
     if (themeChanged(prev, hass)) {
       this._textCache.clear();
-      requestAnimationFrame(() => this._render());
+      // drawn again in the next frame, once the theme's variables apply: a render in this update
+      // (a new reading came with the theme) still saw the old ones
+      requestAnimationFrame(() => {
+        this._drawn = new WeakMap();
+        this._render();
+      });
     }
   }
 
@@ -165,20 +183,18 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
     return st && isNum(st.state) ? Number(st.state) : null;
   }
 
-  async _fetchHistory() {
-    if (!this._hass || !this._config) return;
-    this._fetching = true;
-    try {
-      const id = this._config.entity;
-      const res = await fetchHistory(this._hass, [id], this._config.hours_to_show);
-      this._series = (res.get(id) || []).filter((p): p is Point & { v: number } => p.v !== null);
-      this._fetched = true;
-    } catch (err) {
-      console.error(`${CARD_TYPE}: history fetch failed`, err);
-    } finally {
-      this._fetching = false;
-      this._render();
-    }
+  _fetchHistory() {
+    const hass = this._hass,
+      cfg = this._config;
+    if (!hass || !cfg) return;
+    const id = cfg.entity;
+    return this._history.run(
+      () => fetchHistory(hass, [id], cfg.hours_to_show),
+      (res) => {
+        this._series = (res.get(id) || []).filter((p): p is Point & { v: number } => p.v !== null);
+      },
+      () => this._render(),
+    );
   }
 
   // ----- DOM -----
@@ -198,17 +214,46 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
   _render() {
     if (!this._root || !this._hass) return;
     const card = this._root,
-      cfg = this._config;
+      cfg = this._config,
+      hass = this._hass;
+    const body = qs(card, ".body");
+    // drawn again only when what it shows changed: the state, the history, the size, the mode,
+    // the language, the theme, and the time by a pixel of the window (a minute for the arc)
+    const w = body.clientWidth,
+      now = Date.now();
+    const last = this._series[this._series.length - 1];
+    const step = cfg.mode === "arc" ? 60e3 : (cfg.hours_to_show * 3600e3) / Math.max(w, 1);
+    const changed = depsChanged(this._drawn, body, [
+      this._state(),
+      this._series,
+      this._series.length,
+      last?.t,
+      w,
+      body.clientHeight,
+      cfg,
+      langOf(hass),
+      hass.themes,
+      Math.floor(now / Math.max(step, 1)),
+    ]);
+    if (!changed) {
+      if (cfg.mode !== "arc" && this._hoverT !== null && !showHover(this, this._hoverT))
+        this._hideHover();
+      return;
+    }
     // default labels in the user's language, then the zone colours against the live theme:
-    // css (token var) for fills, hex for blending
-    cfg.zonesList = mergeZones(cfg.zones, this._hass);
-    cfg.zonesList.forEach((z) => {
-      z.css = cssColor(z.color, "#888888");
-      z.hex = resolveHex(z.color, this);
-    });
+    // css (token var) for fills, hex for blending (a style read: only when either changed)
+    if (depsChanged(this._drawn, this, [cfg, langOf(hass), hass.themes])) {
+      cfg.zonesList = mergeZones(cfg.zones, hass);
+      cfg.zonesList.forEach((z) => {
+        z.css = cssColor(z.color, "#888888");
+        z.hex = resolveHex(z.color, this);
+      });
+    }
+    // what the hover reads is the drawing's: a renderer that stops early (no width yet) leaves
+    // none, never the last mode's
+    this._resetPlot();
     const st = this._state();
     qs(card, ".primary").textContent = cfg.name || st?.attributes.friendly_name || cfg.entity;
-    const body = qs(card, ".body");
     if (!st) {
       body.innerHTML = `<div class="empty"></div>`;
       qs(body, ".empty").textContent = t(this._hass, "common.not_found", { entity: cfg.entity });
@@ -232,18 +277,20 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
       this._hideHover();
   }
 
+  _resetPlot() {
+    this._mode = undefined;
+    this._sampled = undefined;
+    this._buckets = undefined;
+    this._xOf = undefined;
+    this._yOf = undefined;
+    this._window = undefined;
+  }
+
   // ----- hover -----
   _onPointer(ev: PointerEvent) {
     if (!this._xOf || this._config.mode === "arc") return;
     this._hoverT = timeAt(this, ev);
     if (!showHover(this, this._hoverT)) this._hideHover();
-  }
-  _onLeave(ev: PointerEvent) {
-    if (ev.pointerType === "touch") return;
-    this._hideHover();
-  }
-  _onDocPointer(ev: PointerEvent) {
-    if (!ev.composedPath().includes(this)) this._hideHover();
   }
   _hideHover() {
     this._hoverT = null;

@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { setRate } from "../../../src/shared/flow/dom.ts";
 import { bandHeight, enumOf, flowObject, sensorId } from "../../../src/shared/flow/config.ts";
 import {
   compassIndex,
@@ -15,7 +16,9 @@ describe("flow engine maths", () => {
     expect(toKmh(10, "mph")).toBeCloseTo(16.09, 2);
     expect(toKmh(10, "kn")).toBeCloseTo(18.52, 2);
     expect(toKmh(10, "ft/s")).toBeCloseTo(10.97, 2);
-    expect(toKmh(10, "Beaufort")).toBe(10);
+    // a scale: force 4 (moderate breeze) is about 24 km/h, force 10 about 95
+    expect(toKmh(4, "Beaufort")).toBeCloseTo(24.08, 1);
+    expect(toKmh(10, "Beaufort")).toBeCloseTo(95.17, 1);
     expect(toKmh(10, null)).toBe(10);
   });
 
@@ -70,5 +73,39 @@ describe("flow engine config checks", () => {
     expect(bandHeight({})).toBe(120);
     expect(bandHeight({ height: 3 })).toBe(40);
     expect(bandHeight({ height: 1000 })).toBe(400);
+  });
+});
+
+describe("setRate", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  // an element whose running animations are the given objects
+  const withAnimations = (anims: { playbackRate: number }[]) => {
+    const el = document.createElement("div");
+    el.getAnimations = (() => anims) as unknown as typeof el.getAnimations;
+    return el;
+  };
+
+  it("scales the animations, not for a change of less than half a percent", () => {
+    const a = { playbackRate: 1 };
+    const el = withAnimations([a]);
+    setRate(el, 1.2);
+    expect(a.playbackRate).toBe(1.2);
+    expect(el.dataset.rate).toBe("1.200");
+    setRate(el, 1.203);
+    expect(a.playbackRate).toBe(1.2);
+    setRate(el, 1.21);
+    expect(a.playbackRate).toBe(1.21);
+  });
+
+  it("leaves transitions at their own pace", () => {
+    class FakeTransition {
+      playbackRate = 1;
+    }
+    vi.stubGlobal("CSSTransition", FakeTransition);
+    const anim = { playbackRate: 1 },
+      turn = new FakeTransition();
+    setRate(withAnimations([anim, turn]), 2);
+    expect(anim.playbackRate).toBe(2);
+    expect(turn.playbackRate).toBe(1);
   });
 });

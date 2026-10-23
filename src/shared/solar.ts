@@ -35,7 +35,8 @@ export const solarPosition = (date: Date, lat: number, lon: number): SunPosition
   const minutesUTC = date.getUTCHours() * 60 + date.getUTCMinutes() + date.getUTCSeconds() / 60;
   let tst = (minutesUTC + eqt + 4 * lon) % 1440;
   if (tst < 0) tst += 1440;
-  const ha = (tst / 4 < 0 ? tst / 4 + 180 : tst / 4 - 180) * RAD;
+  // tst is in [0, 1440): the hour angle runs from -180° to 180°
+  const ha = (tst / 4 - 180) * RAD;
   const la = lat * RAD;
   const cosZ = Math.sin(la) * Math.sin(decl) + Math.cos(la) * Math.cos(decl) * Math.cos(ha);
   const elevation = 90 - Math.acos(Math.max(-1, Math.min(1, cosZ))) / RAD;
@@ -113,4 +114,19 @@ export const solarDay = (dayStart: Date, lat: number, lon: number): SolarDay => 
     maxElev: noon.e,
     minElev: min.e,
   };
+};
+
+// the solar day `make` builds for now's calendar day, or for the day before or after: a solar day
+// runs from noon - 12 h to noon + 12 h, so around midnight now may belong to its neighbour
+export const solarDayAround = <D extends { start: number; end: number }>(
+  now: Date,
+  make: (dayStart: Date) => D,
+): D => {
+  const t = now.getTime();
+  const at = (offset: number) =>
+    make(new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset));
+  const day = at(0);
+  if (t < day.start) return at(-1);
+  if (t >= day.end) return at(1);
+  return day;
 };

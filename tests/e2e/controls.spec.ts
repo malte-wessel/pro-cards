@@ -294,6 +294,26 @@ test.describe("controls: slider with a pointer", () => {
     await expect(s.locator(".bubble")).toBeHidden();
   });
 
+  test("a drag the browser takes over shows the entity's value again", async ({ page }) => {
+    await mount(page, { type: T, entity: "cover.office_blinds", control: "slider" }, live);
+    const s = card(page).locator(".ctl-slider");
+    const before = await s.getAttribute("aria-valuenow");
+    const track = s.locator(".track");
+    const from = await at(track, 0.4);
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    const to = await at(track, 0.8);
+    await page.mouse.move(to.x, to.y, { steps: 4 });
+    await expect(s).toHaveAttribute("aria-valuenow", "80");
+    // a scroll takes the touch over: no call, and the knob goes back to where the cover is
+    await s.evaluate((el) =>
+      el.dispatchEvent(new PointerEvent("pointercancel", { bubbles: true, pointerId: 1 })),
+    );
+    await expect(s).toHaveAttribute("aria-valuenow", before!);
+    expect(await calls(page)).toEqual([]);
+    await page.mouse.up();
+  });
+
   test("a tap on the track jumps there, past either end it clamps", async ({ page }) => {
     await mount(page, { type: T, entity: "cover.office_blinds", control: "slider" }, live);
     const track = card(page).locator(".ctl-slider .track");

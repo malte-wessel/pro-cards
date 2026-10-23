@@ -192,6 +192,9 @@ const laneOf = (st: TreeState, e: LEdge, w: number, color: string) => {
   vars(lane, { "--p": `path('${e.d}')`, "--pf-c": color, "--dur": `${dur.toFixed(3)}s` });
   lane.dataset.n = String(n);
   lane.dataset.w = String(Math.round(w));
+  // the path and its length as built: a moved link changes its path in place (moveLane)
+  lane.dataset.d = e.d;
+  lane.dataset.len = String(e.len);
   const style = st.cfg.flowStyle;
   if (style === "lines") {
     const svg = svgEl("svg", { class: "abs", viewBox: `0 0 ${st.layout.w} ${st.layout.h}` });
@@ -218,6 +221,18 @@ const laneOf = (st: TreeState, e: LEdge, w: number, color: string) => {
   return lane;
 };
 
+// a lane whose link moved takes the new path in place: the dots (or the dashes of the lines)
+// keep their phase and run on along it
+const moveLane = (lane: HTMLElement, e: LEdge, w: number, h: number) => {
+  lane.dataset.d = e.d;
+  lane.style.setProperty("--p", `path('${e.d}')`);
+  const svg = lane.querySelector("svg");
+  if (svg) {
+    svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    svg.querySelector("path")?.setAttribute("d", e.d);
+  }
+};
+
 const place = (el: HTMLElement, nd: LNode) => {
   el.style.left = `${nd.x}px`;
   el.style.top = `${nd.y}px`;
@@ -237,7 +252,7 @@ const iconFor = (st: TreeState, nd: LNode, look: Look | null): string => {
   if (nd.kind === "home") return ICONS.home;
   if (nd.kind === "other") return ICONS.other;
   if (nd.kind === "group") {
-    const g = st.cfg.consumers.find((c) => c.id === nd.consumerId);
+    const g = st.cfg.consumers.find((c) => c.id === nd.id);
     return (g && g.kind === "group" && g.icon) || ICONS.group;
   }
   return look?.fallbackIcon || ICONS.consumer;
@@ -303,7 +318,7 @@ const labelText = (
   const s = ent ? (tplOf(st.ctx, ent.secondary) ?? "") : "";
   if (nd.kind === "home") return { v: fmtPower(hass, f.H, u, dec), n: "", s };
   if (nd.kind === "group") {
-    const g = st.cfg.consumers.find((c) => c.id === nd.consumerId);
+    const g = st.cfg.consumers.find((c) => c.id === nd.id);
     return {
       v: fmtPower(hass, f.groupW.get(nd.id) ?? 0, u),
       n: g && g.kind === "group" ? g.name : "",
@@ -412,43 +427,51 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
   for (const [id, el] of labelEls) el.hidden = !drawn.has(id);
 
   // ----- geometry -----
-  if (diag.dataset.key !== layout.key) {
-    diag.dataset.key = layout.key;
-    tracks.setAttribute("viewBox", `0 0 ${layout.w} ${layout.h}`);
-    diag.classList.toggle("narrow", layout.w < 380);
-    tracks.replaceChildren(
-      ...layout.edges.map((e) => svgEl("path", { class: "link", d: e.d, "data-edge": e.id })),
-    );
-    flow.replaceChildren();
-    for (const nd of layout.nodes) {
-      const el = nodeEls.get(nd.id);
-      if (el) place(el, nd);
-    }
-    for (const r of layout.rows) {
-      const el = nodeEls.get(r.id);
-      if (!el) continue;
-      el.style.left = `${r.x}px`;
-      el.style.top = `${r.y}px`;
-      el.style.width = `${r.w}px`;
-      el.style.height = `${r.h}px`;
-    }
+  // on every render: where the columns and the links go follows the measured label widths, so a
+  // value that changes its width may move them
+  const viewBox = `0 0 ${layout.w} ${layout.h}`;
+  if (tracks.getAttribute("viewBox") !== viewBox) tracks.setAttribute("viewBox", viewBox);
+  diag.classList.toggle("narrow", layout.w < 380);
+  for (const nd of layout.nodes) {
+    const el = nodeEls.get(nd.id);
+    if (el) place(el, nd);
+  }
+  for (const r of layout.rows) {
+    const el = nodeEls.get(r.id);
+    if (!el) continue;
+    el.style.left = `${r.x}px`;
+    el.style.top = `${r.y}px`;
+    el.style.width = `${r.w}px`;
+    el.style.height = `${r.h}px`;
   }
 
   // ----- links -----
+  // a track and a lane per drawn link, kept by the link's id: a link that moved takes its new
+  // path in place, so its dots keep running; the links of a hidden node go
+  const drawnEdges = new Set(layout.edges.map((e) => e.id));
   const trackEls = new Map<string, SVGPathElement>();
-  for (const p of tracks.querySelectorAll<SVGPathElement>("path.link"))
-    trackEls.set(p.dataset.edge ?? "", p);
+  for (const p of tracks.querySelectorAll<SVGPathElement>("path.link")) {
+    const id = p.dataset.edge ?? "";
+    if (drawnEdges.has(id)) trackEls.set(id, p);
+    else p.remove();
+  }
   const laneEls = new Map<string, HTMLElement>();
-  for (const l of flow.querySelectorAll<HTMLElement>(".lane")) laneEls.set(l.dataset.edge ?? "", l);
+  for (const l of flow.querySelectorAll<HTMLElement>(".lane")) {
+    const id = l.dataset.edge ?? "";
+    if (drawnEdges.has(id)) laneEls.set(id, l);
+    else l.remove();
+  }
   layout.edges.forEach((e) => {
     const w = flows.edges[e.fi]?.w ?? 0;
     const active = isActive(w, cfg.idleBelow);
     const color = edgeColor(e.kind, w);
-    const track = trackEls.get(e.id);
-    if (track) {
-      track.classList.toggle("active", active);
-      track.style.setProperty("--pf-c", color);
-    }
+    let track = trackEls.get(e.id);
+    if (!track) {
+      track = svgEl("path", { class: "link", d: e.d, "data-edge": e.id }) as SVGPathElement;
+      tracks.appendChild(track);
+    } else if (track.getAttribute("d") !== e.d) track.setAttribute("d", e.d);
+    track.classList.toggle("active", active);
+    track.style.setProperty("--pf-c", color);
     const lane = laneEls.get(e.id);
     if (!active) {
       lane?.remove();
@@ -463,7 +486,13 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
       else flow.appendChild(fresh);
     } else {
       lane.style.setProperty("--pf-c", color);
-      setRate(lane, rateOf(w, Number(lane.dataset.w), cfg.animation));
+      if (lane.dataset.d !== e.d) moveLane(lane, e, layout.w, layout.h);
+      // the lines' box is the diagram's: it follows a new height even when this path did not move
+      const svg = lane.querySelector("svg");
+      if (svg && svg.getAttribute("viewBox") !== viewBox) svg.setAttribute("viewBox", viewBox);
+      // the speed in px/s follows the load; a longer path takes as much longer
+      const longer = e.len > 0 ? Number(lane.dataset.len) / e.len : 1;
+      setRate(lane, rateOf(w, Number(lane.dataset.w), cfg.animation) * longer);
     }
   });
 
@@ -530,7 +559,6 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
       x: 0,
       y: 0,
       d: 32,
-      consumerId: r.id,
     };
     el.style.setProperty("--fe-color", colorFor(st, nd, ent, m?.look ?? null));
     fillShape(st, qs(el, ".shape"), iconFor(st, nd, m?.look ?? null), m);

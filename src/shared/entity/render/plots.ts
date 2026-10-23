@@ -51,32 +51,36 @@ export interface PlotElement extends HTMLDivElement {
   _numeric?: boolean;
 }
 
+// a text label over a plot at (left, top), `width` wide when given (a right-aligned y label)
 export const addLabel = (
   container: HTMLElement,
   cls: string,
   txt: string,
   left: number,
   top: number,
+  width?: number,
 ) => {
   const el = document.createElement("div");
   el.className = `label ${cls}`;
   el.textContent = txt;
   el.style.left = `${left}px`;
   el.style.top = `${top}px`;
+  if (width) el.style.width = `${width}px`;
   container.appendChild(el);
 };
 
-// ctx also needs { cfg, series, fetched, now, t0 }
-export const drawPlot = (ctx: RenderCtx, plot: PlotElement) => {
+// ctx also needs { cfg, series, fetched, now, t0 }; `size` is the plot's box when the caller
+// measured it already (the card reads every plot first, so drawing them costs one layout)
+export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; h: number }) => {
   const { ent, kind } = plot._ctx;
   const svg = qs<SVGSVGElement>(plot, "svg"),
     labels = qs(plot, ".labels");
-  const W = Math.max(plot.clientWidth, 10);
+  const W = Math.max(size?.w ?? plot.clientWidth, 10);
   if (W < 20) return; // not laid out yet; the ResizeObserver re-renders once the width is known
   // a growing plot is drawn at the height it has (its own as the basis, more or less in a cell
   // with fixed rows), never stretched to it: that would turn the dots into ellipses
   const grow = plot.classList.contains("grow");
-  const H = (grow && plot.clientHeight) || PLOT_H[kind];
+  const H = (grow && (size?.h ?? plot.clientHeight)) || PLOT_H[kind];
   // a strip keeps its own height: the timeline and its labels below (STRIP_AXIS_CSS), whose line
   // follows the theme's text
   const labelLine = () => measure(ctx.text, labels, ["label"], [10, 12]).line;
@@ -135,7 +139,12 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement) => {
     plot._buckets = null;
     return;
   }
-  const nb = plot._ctx.buckets ?? Math.max(1, Math.round((ctx.cfg.hours * 60) / ctx.cfg.bucketMin));
+  // never finer than one bucket per 2 px (as lineBuckets for the sparkline): a week of 5 minute
+  // buckets would otherwise draw thousands of bars into a small plot
+  const nb = Math.min(
+    plot._ctx.buckets ?? Math.max(1, Math.round((ctx.cfg.hours * 60) / ctx.cfg.bucketMin)),
+    Math.max(1, Math.floor(W / 2)),
+  );
   const bw = W / nb;
   plot._bw = bw;
   if (kind === "columns") {

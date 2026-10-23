@@ -1,16 +1,17 @@
 // Small pure helpers shared by all cards.
-export const isNum = (s: unknown): boolean =>
-  s !== undefined &&
-  s !== null &&
-  s !== "unavailable" &&
-  s !== "unknown" &&
-  s !== "" &&
-  typeof s !== "object" &&
-  !Number.isNaN(Number(s));
+
+// a number from a state, an attribute or a config value: a finite number, or a string that is
+// one; null for anything else (booleans, blanks, objects, "unavailable") – Number() would read
+// true as 1 and " " as 0
+export const numOrNull = (v: unknown): number | null => {
+  if (typeof v === "number") return Number.isFinite(v) ? v : null;
+  if (typeof v !== "string" || v.trim() === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+export const isNum = (s: unknown): boolean => numOrNull(s) !== null;
 export const isTemplate = (s: unknown): s is string => typeof s === "string" && /\{\{|\{%/.test(s);
 export const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
-export const numOrNull = (v: unknown): number | null =>
-  v === undefined || v === null || v === "" || !Number.isFinite(Number(v)) ? null : Number(v);
 export const decimalsOf = (s: unknown) => {
   const m = String(s ?? "").match(/\.(\d+)$/);
   return m ? Math.min(m[1].length, 2) : 0;

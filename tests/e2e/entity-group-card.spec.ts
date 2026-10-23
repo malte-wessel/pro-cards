@@ -1,4 +1,15 @@
-import { test, expect, mount, actions, calls, events, state, setState, card } from "./util.ts";
+import {
+  test,
+  expect,
+  mount,
+  actions,
+  calls,
+  events,
+  state,
+  setState,
+  setLanguage,
+  card,
+} from "./util.ts";
 import type { Locator } from "@playwright/test";
 import type { EntityGroupCard } from "../../src/entity-group-card.ts";
 
@@ -614,5 +625,79 @@ test.describe("config errors", () => {
     expect(msgs[1]).toMatch(/entities\[0\] needs 'entity' or 'value'/);
     expect(msgs[2]).toMatch(/layout must be one of/);
     expect(msgs[3]).toMatch(/invalid config/);
+  });
+});
+
+test.describe("updates", () => {
+  test("an update fills again only the rows it changes", async ({ page }) => {
+    await mount(page, {
+      type: T,
+      entities: [
+        "sensor.kitchen_temperature",
+        "sensor.bedroom_temperature",
+        {
+          entity: "sensor.office_temperature",
+          secondary: "{{ states('sensor.outdoor_temperature') }} outside",
+        },
+        { entity: "light.kitchen", toggle: true },
+      ],
+    });
+    const c = card(page);
+    const rows = c.locator(".row.list");
+    // a mark on each row's content: a row filled again has new content, without the mark
+    const mark = () =>
+      rows.evaluateAll((els) =>
+        els.forEach((r) => r.querySelector(".top")!.setAttribute("data-mark", "1")),
+      );
+    const marked = () =>
+      rows.evaluateAll((els) => els.map((r) => r.querySelector(".top")!.hasAttribute("data-mark")));
+    await mark();
+    // another state of one entity: its row only
+    await setState(page, "sensor.kitchen_temperature", "23.4");
+    await expect(rows.nth(0)).toContainText("23.4");
+    expect(await marked()).toEqual([false, true, true, true]);
+    // a template's result: the row that shows it only
+    await mark();
+    await setState(page, "sensor.outdoor_temperature", "3.3");
+    await expect(rows.nth(2).locator(".secondary")).toHaveText("3.3 outside");
+    expect(await marked()).toEqual([true, true, false, true]);
+    // an entity no row shows: nothing
+    await mark();
+    await setState(page, "sensor.bathroom_humidity", "61");
+    expect(await marked()).toEqual([true, true, true, true]);
+    // a pending call (the device has not answered yet): its row shows it at once
+    await page.evaluate(() => window.pc.holdCalls(true));
+    await rows.nth(3).locator(".ctl.toggle").click();
+    await expect(rows.nth(3).locator(".ctl.toggle")).toHaveClass(/pending/);
+    expect((await marked())[3]).toBe(false);
+    expect((await marked()).slice(0, 3)).toEqual([true, true, true]);
+    await page.evaluate(() => window.pc.release());
+    // another language: every row
+    await mark();
+    await setLanguage(page, "de");
+    expect(await marked()).toEqual([false, false, false, false]);
+  });
+});
+
+test.describe("gestures", () => {
+  test("a press cut off by a scroll is no tap when a pointer is released over the row later", async ({
+    page,
+  }) => {
+    await mount(page, { type: T, entities: ["sensor.pressure"] });
+    await card(page)
+      .locator(".row .hit")
+      .first()
+      .evaluate((el) => {
+        const fire = (type: string) =>
+          el.dispatchEvent(
+            new PointerEvent(type, { bubbles: true, composed: true, button: 0, pointerId: 1 }),
+          );
+        fire("pointerdown");
+        fire("pointercancel");
+        fire("pointerup");
+      });
+    await page.waitForTimeout(300);
+    expect(await actions(page)).toEqual([]);
+    expect(await events(page)).toEqual([]);
   });
 });

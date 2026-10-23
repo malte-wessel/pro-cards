@@ -27,7 +27,9 @@ import type {
   HomeAssistant,
   WeatherForecastType,
 } from "./shared/ha.ts";
-import { hideHover } from "./shared/hover.ts";
+import { depsChanged } from "./shared/deps.ts";
+import { langOf } from "./shared/format.ts";
+import { hideHover, leaveHides } from "./shared/hover.ts";
 import { t } from "./shared/i18n.ts";
 import type { Visibility } from "./shared/visibility.ts";
 import {
@@ -36,12 +38,14 @@ import {
   type WeatherConfig,
 } from "./weather/config.ts";
 import { CARD_TYPE } from "./weather/constants.ts";
+import { RETRY_MS } from "./shared/constants.ts";
 import {
   dailyTypeOf,
   daysOf,
+  hourStart,
   hoursOf,
-  isToday,
   supportsForecast,
+  isTodayEntry,
   type Day,
 } from "./weather/forecast.ts";
 import { showTrendHover, trendTimeAt } from "./shared/trend/plot.ts";
@@ -81,11 +85,15 @@ export class WeatherCard extends EntityCardBase {
   _forecast: Partial<Record<WeatherForecastType, ForecastEntry[] | null>> = {};
   _fcUnsub = new Map<WeatherForecastType, Promise<Unsubscribe | null>>();
   _fcToken = new Map<WeatherForecastType, object>(); // identifies the live subscription per type
+  // when a type's subscription was refused: it is asked for again after RETRY_MS, not at once
+  _fcFailedAt = new Map<WeatherForecastType, number>();
   _chartHover: { el: ForecastTrendEl; t: number } | null = null;
+  // what each forecast and trend section was last drawn from (deps.ts)
+  _sectionInputs = new WeakMap<object, readonly unknown[]>();
   _chartHandlers = {
     move: this._onChartPointer.bind(this),
     up: (ev: PointerEvent) => ev.stopPropagation(),
-    leave: this._onChartLeave.bind(this),
+    leave: leaveHides(() => this._hideHover()),
   };
 
   _normalize(raw: unknown) {
@@ -148,6 +156,8 @@ export class WeatherCard extends EntityCardBase {
     this._unsubscribeForecasts();
     this._forecast = {};
     super.setConfig(config);
+    // the condition takes its night icon at sunset: the sun is watched like an item
+    this._watchIds = [...new Set([...this._watchIds, "sun.sun"])];
     if (this._hass) this._subscribeForecasts();
   }
   _setHass(hass: HomeAssistant) {
@@ -194,6 +204,8 @@ export class WeatherCard extends EntityCardBase {
       }
     for (const type of wanted) {
       if (this._fcUnsub.has(type)) continue;
+      const failed = this._fcFailedAt.get(type);
+      if (failed !== undefined && Date.now() - failed < RETRY_MS) continue;
       // a message of a subscription that was replaced meanwhile (new config or connection) is dropped
       const token = {};
       this._fcToken.set(type, token);
@@ -201,6 +213,7 @@ export class WeatherCard extends EntityCardBase {
         .subscribeMessage<ForecastMessage>(
           (msg) => {
             if (this._fcToken.get(type) !== token) return;
+            this._fcFailedAt.delete(type);
             this._forecast[type] = msg?.forecast ?? null;
             this._render();
           },
@@ -209,6 +222,10 @@ export class WeatherCard extends EntityCardBase {
         .catch((e) => {
           if (this._fcToken.get(type) !== token) return null; // replaced meanwhile
           console.warn(`${CARD_TYPE}: forecast subscription failed`, type, e);
+          // "no forecast" until a later hass update asks again (the entity may come back)
+          this._fcUnsub.delete(type);
+          this._fcToken.delete(type);
+          this._fcFailedAt.set(type, Date.now());
           this._forecast[type] = null;
           this._render();
           return null;
@@ -220,6 +237,7 @@ export class WeatherCard extends EntityCardBase {
     for (const p of this._fcUnsub.values()) p.then((u) => u && u()).catch(() => {});
     this._fcUnsub = new Map();
     this._fcToken = new Map();
+    this._fcFailedAt = new Map();
   }
   // the days of the daily forecast (undefined while loading, null when there is none)
   _days(n: number): Day[] | null | undefined {
@@ -282,7 +300,7 @@ export class WeatherCard extends EntityCardBase {
     if (c.contains("wtile") || c.contains("whero")) {
       // the hero shows today's high / low; the tile does not read the forecast
       const days = c.contains("whero") ? this._days(1) : null;
-      const today = days?.find((d) => isToday(d.t, ctx.now)) ?? null;
+      const today = days?.find((d) => isTodayEntry(d.t, ctx.now)) ?? null;
       const secEl = row.closest<HTMLElement>("[data-sec]");
       const sec = secEl ? cfg.sections[Number(secEl.dataset.sec)] : undefined;
       const hero = sec?.kind === "hero" ? sec : null;
@@ -293,6 +311,11 @@ export class WeatherCard extends EntityCardBase {
       return;
     }
     super._fill(ctx, row, ent, idx, m);
+  }
+  // the tile and the hero read the temperature item and the forecast too: filled every time
+  _rowInputs(ctx: RenderCtx, row: HTMLElement, idx: number, m: EntityModel) {
+    const c = row.classList;
+    return c.contains("wtile") || c.contains("whero") ? null : super._rowInputs(ctx, row, idx, m);
   }
   // temperature rules may tint the card too
   _tintColor(ctx: RenderCtx, models: EntityModel[], card: HTMLElement) {
@@ -322,8 +345,31 @@ export class WeatherCard extends EntityCardBase {
     const hourly = supportsForecast(st, "hourly") ? this._forecast.hourly : null;
     const hours = (n: number) =>
       hourly === undefined ? undefined : hourly === null ? null : hoursOf(hourly, ctx.now, n);
+    // a section is drawn again only when what it shows changed: its forecast, the entity (its
+    // rules read it), the language, the templates, the hour or the day, its size (a trend)
+    const daily = dailyTypeOf(st);
+    const drawn = (el: HTMLElement, mode: "hourly" | "daily", chart: HTMLElement | null) =>
+      !depsChanged(this._sectionInputs, el, [
+        mode === "hourly" ? hourly : daily && this._forecast[daily],
+        st,
+        langOf(this._hass),
+        // the location (night hours) and units; by value, a test double rebuilds the object
+        this._hass?.config?.latitude,
+        this._hass?.config?.longitude,
+        JSON.stringify(this._hass?.config?.unit_system ?? null),
+        this._tpl.version,
+        mode === "hourly" ? hourStart(ctx.now) : new Date(ctx.now).toDateString(),
+        this._fillEpoch,
+        chart?.clientWidth,
+        chart?.clientHeight,
+      ]);
     sections.forEach((el) => {
       const sec = cfg.sections[Number(el.dataset.sec)];
+      if (
+        (sec?.kind === "trend" || sec?.kind === "forecast") &&
+        drawn(el, sec.mode, sec.kind === "trend" ? el.querySelector<HTMLElement>(".trend") : null)
+      )
+        return;
       if (sec?.kind === "trend")
         drawTrendSection(
           ctx,
@@ -354,10 +400,6 @@ export class WeatherCard extends EntityCardBase {
     if (tt === null) return;
     this._chartHover = { el, t: tt };
     if (!showTrendHover(el, tt, el._head)) hideHover(el);
-  }
-  _onChartLeave(ev: PointerEvent) {
-    if (ev.pointerType === "touch") return;
-    this._hideHover();
   }
   _hideHover() {
     this._chartHover = null;

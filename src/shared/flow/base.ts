@@ -4,13 +4,15 @@
 import { cssColor } from "../color.ts";
 import { EntityCardBase } from "../entity/base.ts";
 import type { EntityItem } from "../entity/config.ts";
-import { modelOf, type EntityModel, type RenderCtx } from "../entity/model.ts";
+import type { EntityModel, RenderCtx } from "../entity/model.ts";
 import type { GridOptions } from "../ha.ts";
 import type { FlowCardConfig } from "./config.ts";
 import { buildBand, type RowKind } from "./dom.ts";
 
 export abstract class FlowCardBase extends EntityCardBase {
   declare _config?: FlowCardConfig;
+  // what the card's wind or rain was last worked out from (deps.ts)
+  _nowInputs = new WeakMap<object, readonly unknown[]>();
 
   abstract _chip(): HTMLElement;
   abstract _field(): HTMLElement;
@@ -60,6 +62,11 @@ export abstract class FlowCardBase extends EntityCardBase {
     }
     super._fill(ctx, row, ent, idx, m);
   }
+  // the lead row reads the other items too (direction, gust, today, wind): filled every time
+  _rowInputs(ctx: RenderCtx, row: HTMLElement, idx: number, m: EntityModel) {
+    const c = row.classList;
+    return c.contains("wtile") || c.contains("whero") ? null : super._rowInputs(ctx, row, idx, m);
+  }
   _render() {
     if (!this._root || !this._hass || !this._config) return;
     super._render();
@@ -67,7 +74,7 @@ export abstract class FlowCardBase extends EntityCardBase {
       ctx = this._ctx();
     const band = this._root.querySelector<HTMLElement>(".wflow");
     if (!band) return;
-    const lead = modelOf(ctx, cfg.entities[cfg.leadIdx]);
+    const lead = this._modelAt(ctx, cfg.leadIdx);
     // the hero band is outside the row: it takes the lead item's colour itself
     band.style.setProperty("--fe-color", cssColor(lead.look.color, "var(--primary-color)"));
     this._updateBand(ctx, band, lead);

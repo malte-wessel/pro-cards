@@ -1,4 +1,5 @@
 // Styles of the sun path card.
+import { tipStyle } from "../shared/hover.ts";
 import { CARD_BG, STYLE_HOST, STYLE_ICONS } from "../shared/constants.ts";
 import { PLOT_H } from "./constants.ts";
 import { HEADER_TITLE, fs, fw, lh, type } from "../shared/typography.ts";
@@ -37,27 +38,9 @@ export const STYLE = `
   .wash { opacity: .12; }
   .sun { stroke: ${CARD_BG}; stroke-width: 2; }
   /* hover: crosshair + dot on the curve, tooltip with time and elevation */
-  .hover { display: none; }
-  .hover.on { display: block; }
   .hair { stroke: var(--divider-color); stroke-width: 1; }
   .dot { stroke: ${CARD_BG}; stroke-width: 2; }
-  .tip {
-    position: absolute; top: 4px;
-    pointer-events: none;
-    background: ${CARD_BG};
-    color: var(--primary-text-color);
-    border: 1px solid var(--divider-color);
-    border-radius: 8px;
-    padding: 6px 8px;
-    ${type(12, 16)}
-    box-shadow: var(--ha-card-box-shadow, 0 2px 6px rgba(0,0,0,.2));
-    white-space: nowrap;
-    max-width: calc(100% - 8px);
-    box-sizing: border-box;
-    z-index: 1;
-    display: none;
-  }
-  .tip.on { display: block; }
+  ${tipStyle()}
   .tip .time { color: var(--secondary-text-color); margin-bottom: 2px; }
   .tip .row { display: flex; align-items: center; gap: 6px; }
   .tip .row b { font-weight: 600; font-variant-numeric: tabular-nums; }

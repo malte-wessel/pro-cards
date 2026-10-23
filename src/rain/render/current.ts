@@ -3,20 +3,21 @@
 // "label · total today"). Built once per row; every render updates texts and CSS variables so
 // the running animations keep their phase.
 import type { EntityItem } from "../../shared/entity/config.ts";
+import { tplOf, unitOf, type EntityModel, type RenderCtx } from "../../shared/entity/model.ts";
 import {
-  nameOf,
-  tplOf,
-  unitOf,
-  type EntityModel,
-  type RenderCtx,
-} from "../../shared/entity/model.ts";
-import { fillSecondary, pillEl } from "../../shared/entity/render/lead.ts";
-import { buildRow, setBig, setRate, vars, type RowKind } from "../../shared/flow/dom.ts";
+  buildRow,
+  builtLead,
+  fillFlowTexts,
+  setRate,
+  vars,
+  type RowKind,
+  type TextPart,
+} from "../../shared/flow/dom.ts";
 import { parseBearing, toKmh } from "../../shared/flow/maths.ts";
 import { t } from "../../shared/i18n.ts";
 import type { RainConfig } from "../config.ts";
 import { DEFAULTS } from "../constants.ts";
-import { fallRate, isWet, leadFall, levelOf, slantOf, tanOf } from "../rain.ts";
+import { fallRate, isWet, leadFall, levelOf, slantOf, tanOf, toMm, toMmH } from "../rain.ts";
 import { animatedLead, rainLead } from "./lead.ts";
 
 export interface CurrentModels {
@@ -25,6 +26,7 @@ export interface CurrentModels {
   wind: EntityModel | null;
   dir: EntityModel | null;
 }
+// the rate in mm/h and today's total in mm, whatever unit the sensors report (the texts keep it)
 export interface RainNow {
   rate: number;
   today: number | null;
@@ -35,8 +37,13 @@ export interface RainNow {
 const numOf = (m: EntityModel | null) => (m && m.model.avail ? m.model.num : null);
 
 export const rainNow = (ctx: RenderCtx, cfg: RainConfig, cm: CurrentModels): RainNow => {
-  const rate = numOf(cm.rate) ?? 0;
-  const today = numOf(cm.today);
+  const rateNum = numOf(cm.rate) ?? 0;
+  const rate = toMmH(rateNum, unitOf(cfg.entities[cfg.rateIdx], cm.rate.st));
+  const todayNum = numOf(cm.today);
+  const today =
+    todayNum === null || cfg.todayIdx === null
+      ? null
+      : toMm(todayNum, unitOf(cfg.entities[cfg.todayIdx], cm.today?.st));
   const windEnt: EntityItem | undefined =
     cfg.windIdx === null ? undefined : cfg.entities[cfg.windIdx];
   const windNum = numOf(cm.wind);
@@ -61,10 +68,10 @@ export const updateCurrent = (
   cfg: RainConfig,
   cm: CurrentModels,
   kind: RowKind,
+  now: RainNow,
 ) => {
   if (!row.querySelector(".top")) buildRow(row, kind, leadOf(cfg, kind));
   const ent = cfg.entities[cfg.rateIdx];
-  const now = rainNow(ctx, cfg, cm);
   const size = kind === "hero" ? DEFAULTS.heroLead : DEFAULTS.tileLead;
   const level = levelOf(now.today);
   vars(row, {
@@ -73,49 +80,30 @@ export const updateCurrent = (
     "--lv": `${(level * 100).toFixed(1)}%`,
     "--H": `${cfg.flow.style === "fill" ? Math.round(size * (1 - level)) : size}px`,
   });
-  // the lead's fall as built; later rates scale its playback rate
-  if (row.dataset.rate0 === undefined) {
-    row.style.setProperty("--ldur", `${leadFall(now.rate).toFixed(3)}s`);
-    row.dataset.rate0 = String(now.rate);
-  }
-  const lead = row.querySelector<HTMLElement>(".lead");
-  if (lead) setRate(lead, fallRate(now.rate, Number(row.dataset.rate0)));
+  const built = builtLead(row, "rate0", now.rate, leadFall(now.rate));
+  // dry first: a dry lead's drops are not drawn and have no animations to scale, so a lead that
+  // gets wet again is scaled once its drops run
   row.classList.toggle("dry", !isWet(now.rate));
+  const lead = row.querySelector<HTMLElement>(".lead");
+  if (lead) {
+    if (!isWet(now.rate)) delete lead.dataset.rate;
+    else setRate(lead, fallRate(now.rate, built));
+  }
 
-  const primary = row.querySelector<HTMLElement>(".primary");
-  if (primary) primary.textContent = nameOf(ctx, ent, cm.rate.st);
   const sec = tplOf(ctx, ent.secondary);
   const label = cm.rate.look.label;
   const todayText = now.chip;
-  const parts: { text: string; accent?: boolean }[] = [];
-  if (sec) parts.push({ text: sec });
+  const wide: TextPart[] = [];
+  if (sec) wide.push({ text: sec });
   else if (kind === "tile") {
-    parts.push({ text: cm.rate.fmt.text });
-    if (todayText) parts.push({ text: todayText });
+    wide.push({ text: cm.rate.fmt.text });
+    if (todayText) wide.push({ text: todayText });
   } else {
-    if (label) parts.push({ text: label, accent: cm.rate.model.avail });
-    if (todayText) parts.push({ text: todayText });
+    if (label) wide.push({ text: label, accent: cm.rate.model.avail });
+    if (todayText) wide.push({ text: todayText });
   }
-  const secondary = row.querySelector<HTMLElement>(".secondary:not(.narrow)");
-  if (secondary) {
-    fillSecondary(secondary, parts);
-    secondary.style.display = parts.length ? "" : "none";
-  }
-  const narrow = row.querySelector<HTMLElement>(".secondary.narrow");
-  if (narrow)
-    fillSecondary(
-      narrow,
-      sec
-        ? [{ text: sec }]
-        : [{ text: cm.rate.fmt.text }, ...(todayText ? [{ text: todayText }] : [])],
-    );
-  setBig(row.querySelector<HTMLElement>(".big"), cm.rate);
-  if (kind === "tile") {
-    const end = row.querySelector<HTMLElement>(".end");
-    let pill = end?.querySelector<HTMLElement>(".pill") ?? null;
-    if (label && end) {
-      if (!pill) pill = end.appendChild(pillEl(""));
-      pill.textContent = label;
-    } else pill?.remove();
-  }
+  const narrow = sec
+    ? [{ text: sec }]
+    : [{ text: cm.rate.fmt.text }, ...(todayText ? [{ text: todayText }] : [])];
+  fillFlowTexts(ctx, row, ent, cm.rate, kind, wide, narrow);
 };

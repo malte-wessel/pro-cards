@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { RainCard } from "../../src/rain-card.ts";
 import { normalizeRainCardConfig } from "../../src/rain/config.ts";
 import { collectTemplates } from "../../src/shared/entity/config.ts";
+import { snapshot, world } from "../../docs/.vitepress/theme/ha-shim/hass.ts";
 import {
   countOf,
   dropCount,
@@ -18,6 +19,8 @@ import {
   rippleSpec,
   slantOf,
   tanOf,
+  toMm,
+  toMmH,
   waveAmp,
   wavePathD,
   wavePeriod,
@@ -206,7 +209,43 @@ describe("rain maths", () => {
     expect(needsRebuild(built, { n: 24, wet: true })).toBe(false);
     expect(needsRebuild(built, { n: 36, wet: true })).toBe(true);
     expect(needsRebuild(built, { n: 0, wet: false })).toBe(true);
-    expect(needsRebuild({ n: 3, wet: true }, { n: 5, wet: true })).toBe(true);
-    expect(needsRebuild({ n: 3, wet: true }, { n: 4, wet: true })).toBe(false);
+    expect(needsRebuild({ n: 3, wet: true }, { n: 6, wet: true })).toBe(true);
+    expect(needsRebuild({ n: 3, wet: true }, { n: 5, wet: true })).toBe(false);
+  });
+});
+
+describe("rain units", () => {
+  it("converts Home Assistant's rate and depth units to mm/h and mm", () => {
+    expect(toMmH(2, "mm/h")).toBe(2);
+    expect(toMmH(0.1, "in/h")).toBeCloseTo(2.54);
+    expect(toMmH(24, "mm/d")).toBeCloseTo(1);
+    expect(toMmH(24, "in/d")).toBeCloseTo(25.4);
+    expect(toMmH(3, "")).toBe(3);
+    expect(toMmH(3, undefined)).toBe(3);
+    expect(toMm(0.5, "in")).toBeCloseTo(12.7);
+    expect(toMm(1.2, "cm")).toBeCloseTo(12);
+    expect(toMm(4, "mm")).toBe(4);
+  });
+
+  it("animates an in/h sensor by its rate in mm/h and fills the gauge from inches", () => {
+    const rate = world.get(R)!,
+      today = world.get("sensor.rain_today")!;
+    world.set(R, "0.08", { unit_of_measurement: "in/h" });
+    world.set("sensor.rain_today", "0.5", { unit_of_measurement: "in" });
+    try {
+      const el = new RainCard();
+      el.setConfig({ entity: R, today: "sensor.rain_today", layout: "hero", style: "fill" });
+      el.hass = snapshot();
+      const row = el.shadowRoot!.querySelector<HTMLElement>(".row.whero")!;
+      // 0.08 in/h is about 2 mm/h: it rains
+      expect(row.classList.contains("dry")).toBe(false);
+      // 0.5 in is 12.7 mm: more than the 12 mm that fill the gauge
+      expect(row.style.getPropertyValue("--lv")).toBe(`${(levelOf(12.7) * 100).toFixed(1)}%`);
+      // the texts keep the sensor's unit
+      expect(row.textContent).toContain("in/h");
+    } finally {
+      world.set(R, rate.state, rate.attributes);
+      world.set("sensor.rain_today", today.state, today.attributes);
+    }
   });
 });

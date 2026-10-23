@@ -436,6 +436,44 @@ const themesNow = () => {
   return themes;
 };
 
+// the websocket connection: one object for the page's life, as Home Assistant keeps one (a new
+// object tells the cards the connection was replaced, and they subscribe everything again)
+const connection = {
+  subscribeMessage: async <Result>(cb: (result: Result) => void, msg: MessageBase) => {
+    if (msg.type === "weather/subscribe_forecast") {
+      if (!world.get(msg.entity_id)) throw new Error(`unknown entity ${msg.entity_id}`);
+      // Home Assistant sends a forecast when it changed, not on every state change
+      let last = "";
+      const push = () => {
+        const res: ForecastMessage = {
+          type: msg.forecast_type,
+          forecast: world.forecast(msg.entity_id, msg.forecast_type),
+        };
+        const json = JSON.stringify(res.forecast);
+        if (json === last) return;
+        last = json;
+        cb(res as Result);
+      };
+      push();
+      const off = world.subscribe(push);
+      return async () => {
+        off();
+      };
+    }
+    if (msg.type !== "render_template") throw new Error("unsupported");
+    const push = () => {
+      const r = renderTemplate(msg.template, world.states);
+      const res: TemplateResult = { result: r.ok ? r.result : msg.template, listeners: {} };
+      cb(res as Result);
+    };
+    push();
+    const off = world.subscribe(push);
+    return async () => {
+      off();
+    };
+  },
+};
+
 // A fresh hass object (new identity so cards detect the change) over the shared demo world.
 export const snapshot = (): HassSnapshot => ({
   states: { ...world.states },
@@ -465,36 +503,7 @@ export const snapshot = (): HassSnapshot => ({
     }
     throw new Error(`unsupported ws ${msg.type}`);
   },
-  connection: {
-    subscribeMessage: async <Result>(cb: (result: Result) => void, msg: MessageBase) => {
-      if (msg.type === "weather/subscribe_forecast") {
-        if (!world.get(msg.entity_id)) throw new Error(`unknown entity ${msg.entity_id}`);
-        const push = () => {
-          const res: ForecastMessage = {
-            type: msg.forecast_type,
-            forecast: world.forecast(msg.entity_id, msg.forecast_type),
-          };
-          cb(res as Result);
-        };
-        push();
-        const off = world.subscribe(push);
-        return async () => {
-          off();
-        };
-      }
-      if (msg.type !== "render_template") throw new Error("unsupported");
-      const push = () => {
-        const r = renderTemplate(msg.template, world.states);
-        const res: TemplateResult = { result: r.ok ? r.result : msg.template, listeners: {} };
-        cb(res as Result);
-      };
-      push();
-      const off = world.subscribe(push);
-      return async () => {
-        off();
-      };
-    },
-  },
+  connection,
 });
 
 // a change of the world, or of the site's mode: Home Assistant hands the cards a fresh hass when

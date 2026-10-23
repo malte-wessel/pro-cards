@@ -13,6 +13,7 @@ import type {
   HaFormSchema,
   HomeAssistant,
 } from "./ha.ts";
+import { langOf } from "./format.ts";
 import { t, type StringKey } from "./i18n.ts";
 
 // set config[key] = val, or delete the key when the value is empty / the default
@@ -31,6 +32,7 @@ export abstract class FormEditorBase extends HTMLElement {
   _config?: CardConfigBase;
   _hass?: HomeAssistant;
   _form?: HaFormElement;
+  _formKey?: string;
 
   abstract _toForm(config: CardConfigBase): HaFormData;
   abstract _fromForm(data: HaFormData, prev: CardConfigBase): CardConfigBase;
@@ -41,10 +43,16 @@ export abstract class FormEditorBase extends HTMLElement {
     this._render();
   }
 
+  // Home Assistant sets hass on every state change: the form only needs the new one, its data
+  // and schema follow the config, the language of the labels and what `_schemaInputs` names
   set hass(hass: HomeAssistant) {
     this._hass = hass;
-    if (this._form) this._form.hass = hass;
     this._render();
+  }
+  // what the schema reads from hass besides the language (a subclass that shows friendly names
+  // returns them): a change rebuilds the form
+  _schemaInputs(_hass: HomeAssistant): unknown {
+    return null;
   }
 
   _label(sch: HaFormSchema): string {
@@ -76,8 +84,13 @@ export abstract class FormEditorBase extends HTMLElement {
       });
       this.appendChild(this._form);
     }
-    const data = this._toForm(this._config);
     this._form.hass = this._hass;
+    // the form's data and schema again only for another config or language: a value change
+    // renders here and in the setConfig that follows it, a new schema re-renders every field
+    const key = JSON.stringify([langOf(this._hass), this._config, this._schemaInputs(this._hass)]);
+    if (key === this._formKey) return;
+    this._formKey = key;
+    const data = this._toForm(this._config);
     this._form.data = data;
     this._form.schema = this._schema(this._hass, data);
   }

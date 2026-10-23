@@ -4,7 +4,7 @@
 // time, and / or / not, plus `template` (HA's core template condition, `value_template`), rendered
 // by the cards' own template subscriptions. A list means all of them; `not` is not-all (as in HA).
 import type { HomeAssistant } from "./ha.ts";
-import { isTemplate } from "./util.ts";
+import { isTemplate, numOrNull } from "./util.ts";
 
 export const WEEKDAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 export type Weekday = (typeof WEEKDAYS)[number];
@@ -259,8 +259,7 @@ const stateOf = (hass: HomeAssistant, entity: string, attribute: string | null) 
   const st = hass.states[entity];
   return attribute ? st?.attributes[attribute] : st?.state;
 };
-const numOrNaN = (v: unknown) =>
-  v === undefined || v === null || v === "" || typeof v === "boolean" ? NaN : Number(v);
+const numOrNaN = (v: unknown) => numOrNull(v) ?? NaN;
 
 const check = (c: Condition, env: VisibilityEnv): boolean => {
   const { hass } = env;

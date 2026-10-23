@@ -253,7 +253,7 @@ Home Assistant's fifteen condition states. They are the keys of an `icons` map a
 | `windy`           | Windy         | `mdi:weather-windy`           |
 | `windy-variant`   | Windy         | `mdi:weather-windy-variant`   |
 
-`sunny` and `partlycloudy` take their night variant after sunset. A condition the entity reports that is not in this list is shown as written, with a question-mark icon (`mdi:help-circle-outline`).
+`sunny` and `partlycloudy` take their night variant after sunset: the current condition while `sun.sun` is below the horizon (with any icon set), a forecast hour when the sun is down at that hour at your home's location (or when the forecast marks the hour as night). Forecast days always show the day icon. A condition the entity reports that is not in this list is shown as written, with a question-mark icon (`mdi:help-circle-outline`).
 
 ### Card options
 

@@ -111,6 +111,40 @@ describe("multi-trend-card helpers", () => {
   });
 });
 
+describe("multi-trend-card history", () => {
+  const st = (state: string) => ({
+    state,
+    attributes: {},
+    last_changed: "2026-06-21T10:00:00Z",
+    last_updated: "2026-06-21T10:00:00Z",
+  });
+  // a hass whose history requests the test answers by hand
+  const hassWith = (calls: { ids: string[]; answer: (r: unknown) => void }[]) =>
+    ({
+      states: { "sensor.a": st("1"), "sensor.b": st("2") },
+      locale: { language: "en" },
+      connection: { subscribeMessage: async () => () => {} },
+      callWS: (msg: { entity_ids: string[] }) =>
+        new Promise((answer) => calls.push({ ids: msg.entity_ids, answer })),
+    }) as unknown as HomeAssistant;
+
+  it("drops a history that arrives after the entities changed and fetches the new ones", async () => {
+    const calls: { ids: string[]; answer: (r: unknown) => void }[] = [];
+    const hass = hassWith(calls);
+    const el = new MultiTrendCard();
+    el.setConfig({ entities: ["sensor.a"] });
+    el.hass = hass;
+    expect(calls.map((c) => c.ids)).toEqual([["sensor.a"]]);
+    el.setConfig({ entities: ["sensor.a", "sensor.b"] });
+    calls[0].answer({ "sensor.a": [{ s: "1", lu: 1 }] });
+    await new Promise((r) => setTimeout(r, 0));
+    // the old answer is not taken for the new entities: one series per entity, none fetched yet
+    expect(el._series.length).toBe(2);
+    el.hass = { ...hass };
+    expect(calls.map((c) => c.ids)).toEqual([["sensor.a"], ["sensor.a", "sensor.b"]]);
+  });
+});
+
 describe("trend plot height", async () => {
   const { trendPlotEl, drawTrend } = await import("../../src/shared/trend/plot.ts");
   const spec = (layout: "overlay" | "lanes") => ({
@@ -146,5 +180,38 @@ describe("trend plot height", async () => {
     expect(plot.querySelector("svg")!.getAttribute("viewBox")).toBe("0 0 10 300");
     const hair = plot.querySelector(".hair")!;
     expect(hair.getAttribute("y2")).toBe(String(300 - 16));
+  });
+});
+
+describe("trend scale", async () => {
+  const { mkScale } = await import("../../src/shared/trend/scale.ts");
+  it("never turns upside down in a lane shorter than its label", () => {
+    const s = mkScale(0, 10, 0, 10, 16);
+    expect(s.y(10)).toBeLessThanOrEqual(s.y(0));
+  });
+});
+
+describe("multi-trend-card editor titles", () => {
+  it("shows an entity's new name after a rename", () => {
+    const ed = MultiTrendCard.getConfigElement() as HTMLElement & {
+      setConfig(c: unknown): void;
+      hass: HomeAssistant;
+    };
+    const hass = (name: string) =>
+      ({
+        states: { "sensor.a": { state: "1", attributes: { friendly_name: name } } },
+        locale: { language: "en" },
+      }) as unknown as HomeAssistant;
+    ed.setConfig({ entities: ["sensor.a"] });
+    ed.hass = hass("Outdoor");
+    const form = ed.querySelector("ha-form") as unknown as { schema: { title?: string }[] };
+    const titles = () => form.schema.map((s) => s.title).filter(Boolean);
+    expect(titles()).toEqual(["Outdoor"]);
+    const schema = form.schema;
+    // another update with the same name: the form stays
+    ed.hass = hass("Outdoor");
+    expect(form.schema).toBe(schema);
+    ed.hass = hass("Garden");
+    expect(titles()).toEqual(["Garden"]);
   });
 });

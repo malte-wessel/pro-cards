@@ -457,19 +457,18 @@ export const visibilityTrees = (cfg: EntityCardConfig): Visibility[] => [
   ...cfg.groups.map((g) => g.visibility),
 ];
 
+// the templates of one item: its name, secondary line, icon, colour and value
+export const itemTemplates = (e: EntityItem): string[] =>
+  [
+    e.name,
+    e.secondary,
+    e.icon,
+    e.color,
+    e.valueSrc.kind === "template" ? e.valueSrc.template : null,
+  ].filter((x): x is string => isTemplate(x));
 export const collectTemplates = (cfg: EntityCardConfig): Set<string> => {
   const s = new Set<string>();
-  const add = (x: unknown) => {
-    if (isTemplate(x)) s.add(x);
-  };
-  add(cfg.title);
-  add(cfg.icon);
-  for (const e of cfg.entities) {
-    add(e.name);
-    add(e.secondary);
-    add(e.icon);
-    add(e.color);
-    if (e.valueSrc.kind === "template") add(e.valueSrc.template);
-  }
+  for (const x of [cfg.title, cfg.icon]) if (isTemplate(x)) s.add(x);
+  for (const e of cfg.entities) for (const x of itemTemplates(e)) s.add(x);
   return s;
 };

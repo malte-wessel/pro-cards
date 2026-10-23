@@ -513,3 +513,49 @@ describe("forecast", () => {
     expect(dailyRange([])).toBeNull();
   });
 });
+
+describe("weather forecast night icons", async () => {
+  const { nightAt, rowNight } = await import("../../src/weather/conditions.ts");
+  const LAT = 51.2277,
+    LON = 6.7735; // Düsseldorf
+  const at = (iso: string) => new Date(iso).getTime();
+  const hass = { config: { latitude: LAT, longitude: LON } } as unknown as HomeAssistant;
+
+  it("knows night from the sun's elevation at a place", () => {
+    expect(nightAt(at("2026-06-21T12:00:00+02:00"), LAT, LON)).toBe(false);
+    expect(nightAt(at("2026-06-21T23:30:00+02:00"), LAT, LON)).toBe(true);
+    expect(nightAt(at("2026-12-21T17:30:00+01:00"), LAT, LON)).toBe(true);
+  });
+
+  it("gives a forecast day the day icon and an hour the night icon only while the sun is down", () => {
+    const evening = at("2026-06-21T23:00:00+02:00"),
+      morning = at("2026-06-22T09:00:00+02:00");
+    // a day never takes the night variant, whatever the time
+    expect(rowNight(hass, true, { t: evening })).toBe(false);
+    // an hour follows the sun at that hour
+    expect(rowNight(hass, false, { t: evening, daytime: null })).toBe(true);
+    expect(rowNight(hass, false, { t: morning, daytime: null })).toBe(false);
+    // the forecast's own is_daytime wins
+    expect(rowNight(hass, false, { t: morning, daytime: false })).toBe(true);
+    expect(rowNight(hass, false, { t: evening, daytime: true })).toBe(false);
+    // no location: day
+    expect(rowNight({ config: {} } as unknown as HomeAssistant, false, { t: evening })).toBe(false);
+  });
+});
+
+describe("the date of a forecast day", async () => {
+  const { entryDate, isTodayEntry } = await import("../../src/weather/forecast.ts");
+  it("reads a stamp at UTC midnight as that UTC date, any other as its local date", () => {
+    // the unit tests run in Berlin: UTC midnight is 02:00 there, the same date either way;
+    // the e2e tests check New York, where it is the evening before
+    expect(entryDate(Date.UTC(2026, 5, 22)).toDateString()).toBe(
+      new Date(2026, 5, 22).toDateString(),
+    );
+    // local midnight (22:00 UTC the day before) and local noon: their local date
+    expect(entryDate(new Date(2026, 5, 22).getTime()).getDate()).toBe(22);
+    expect(entryDate(new Date(2026, 5, 22, 12).getTime()).getDate()).toBe(22);
+    const now = new Date(2026, 5, 22, 10).getTime();
+    expect(isTodayEntry(Date.UTC(2026, 5, 22), now)).toBe(true);
+    expect(isTodayEntry(Date.UTC(2026, 5, 23), now)).toBe(false);
+  });
+});

@@ -61,3 +61,20 @@ describe("small helpers", () => {
     expect(escapeHtml("21 °C")).toBe("21 °C");
   });
 });
+
+describe("numbers", () => {
+  it("reads numbers and numeric strings, never booleans or blanks", () => {
+    expect([1, "2", " 3 ", "-1.5", "1e3"].map(numOrNull)).toEqual([1, 2, 3, -1.5, 1000]);
+    expect([true, false, " ", "", NaN, Infinity, [], "on"].map(numOrNull)).toEqual([
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+    ]);
+    expect([true, false, " "].map(isNum)).toEqual([false, false, false]);
+  });
+});

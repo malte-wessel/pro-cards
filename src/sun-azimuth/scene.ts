@@ -1,17 +1,15 @@
 // The 3D view, pure geometry: the sky as a see-through dome around a small box house, seen from
 // slightly above (orthographic, tilted down by SCENE.tilt, orbiting with `camera`). Everything is
 // path data in a px box as wide as the column (sceneBox), so the labels keep their size.
+import { f1, P, RAD } from "./svg.ts";
 import { lineScale, PATH_STEP, SCENE, type Roof } from "./constants.ts";
 import { houseSolid, type P3 } from "./house.ts";
 import { trackOf, type TrackPoint } from "./track.ts";
-import type { SunDay, SunSample } from "./day.ts";
+import { isUp, type SunDay, type SunSample } from "./day.ts";
 import type { Side } from "./sides.ts";
 
-const RAD = Math.PI / 180;
-const f1 = (v: number) => (Math.round(v * 10) / 10).toString();
 type V3 = [number, number, number];
 type Pt = [number, number, number]; // screen x, screen y, depth (positive = towards the viewer)
-const P = (p: Pt | [number, number]) => `${f1(p[0])} ${f1(p[1])}`;
 
 export interface SceneFace {
   d: string;
@@ -82,7 +80,6 @@ export const sceneBox = (width: number, height = Infinity, ts = 1) => {
 export const sceneGeometry = (
   day: SunDay,
   now: SunSample,
-  lat: number,
   front: number, // the bearing the house's front faces
   camera: number,
   sides: Side[],
@@ -268,7 +265,8 @@ export const sceneGeometry = (
     }
     shadow = "M" + lo.slice(0, -1).concat(hi.slice(0, -1)).map(P).join(" L") + " Z";
   }
-  const up = now.el > 0;
+  // up as the header says it (refraction included): the dot, the beam and the text agree
+  const up = isUp(now);
   // the azimuth on the ground: an arc from north round to the sun's bearing, its chip halfway
   const AZ_R = 0.42;
   let azArc = "";

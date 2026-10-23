@@ -49,6 +49,29 @@ describe("FormEditorBase", () => {
     expect(form.schema?.[1].name).toBe("y");
     expect(ed.querySelectorAll("ha-form").length).toBe(1);
   });
+  it("only hands a new hass to the form; data and schema follow the config and the language", () => {
+    const ed = document.createElement("test-form-editor") as TestEditor;
+    ed.setConfig({ type: "custom:x", title: "A" });
+    const hass = (language: string) =>
+      ({ states: {}, locale: { language } }) as unknown as HomeAssistant;
+    ed.hass = hass("en");
+    const form = ed.querySelector("ha-form")!;
+    const { data, schema } = form;
+    const next = hass("en");
+    ed.hass = next;
+    expect(form.hass).toBe(next);
+    expect(form.data).toBe(data);
+    expect(form.schema).toBe(schema);
+    // the same config again (HA's setConfig after a change): nothing to redo
+    ed.setConfig({ type: "custom:x", title: "A" });
+    expect(form.schema).toBe(schema);
+    // another config, another language: a new form
+    ed.setConfig({ type: "custom:x", title: "B" });
+    expect(form.data).toEqual({ title: "B" });
+    const schemaB = form.schema;
+    ed.hass = hass("de");
+    expect(form.schema).not.toBe(schemaB);
+  });
   it("setOrDrop sets or deletes a key", () => {
     const c: Record<string, unknown> = { a: 1, b: 2 };
     setOrDrop(c, "a", 5, false);

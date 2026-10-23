@@ -4,7 +4,7 @@ import { measure } from "../../shared/typography.ts";
 import { qs } from "../../shared/util.ts";
 import type { IlluminanceHost } from "../config.ts";
 import { colorAnchors, colorAt, posOf } from "../zones.ts";
-import { fmtLx, plotShell, windowOf, xTicks } from "./plot.ts";
+import { drawWindow, fmtLx, plotShell, xTicks } from "./plot.ts";
 
 export const renderBand = (card: IlluminanceHost, body: HTMLElement, v: number | null) => {
   const cfg = card._config,
@@ -18,7 +18,7 @@ export const renderBand = (card: IlluminanceHost, body: HTMLElement, v: number |
     labels = qs(plot, ".labels");
   const W = Math.max(plot.clientWidth, 10);
   svg.setAttribute("viewBox", `0 0 ${W} ${barH + xAxisH}`);
-  const { now, t0 } = windowOf(card);
+  const { now, t0 } = drawWindow(card);
   if (W < 20) return; // not laid out yet
   const nb = Math.max(1, Math.round((cfg.hours_to_show * 60) / cfg.bucket_minutes));
   const bw = W / nb,

@@ -13,9 +13,9 @@ import { fmtNumber as fmtNum, fmtTime } from "../../shared/format.ts";
 import { t } from "../../shared/i18n.ts";
 import { qs } from "../../shared/util.ts";
 import type { WeatherConfig, WeatherSection } from "../config.ts";
-import { isNight } from "../conditions.ts";
+import { rowNight } from "../conditions.ts";
 import { conditionEl } from "./icon.ts";
-import { dailyRange, hourStart, isToday, type ForecastRow } from "../forecast.ts";
+import { dailyRange, entryDate, hourStart, isTodayEntry, type ForecastRow } from "../forecast.ts";
 import { emptyEl, sectionShell, setTitle } from "./section.ts";
 
 export type ForecastSection = Extract<WeatherSection, { kind: "forecast" }>;
@@ -81,9 +81,9 @@ export const drawForecast = (
     r.condition
       ? resolveLook(condEnt, { num: null, raw: r.condition, avail: true }, st, tplGet)
       : null;
-  const night = isNight(ctx.hass);
   const setCondition = (el: HTMLElement, r: ForecastRow) => {
     const look = condLook(r);
+    const night = rowNight(ctx.hass, daily, r);
     qs(el, ".ficon").replaceChildren(conditionEl(sec.icons, r.condition, night, look?.icon));
     const c = look?.rule?.color;
     el.style.setProperty(
@@ -101,13 +101,15 @@ export const drawForecast = (
       parts.push(fmtNumber(ctx, precipEnt, r.precipitation, st));
     return parts.join(" · ");
   };
+  // a day under the date the forecast means (entryDate)
   const label = (r: ForecastRow) =>
     daily
-      ? isToday(r.t, ctx.now)
+      ? isTodayEntry(r.t, ctx.now)
         ? t(ctx.hass, "weather.today")
-        : fmtTime(ctx.hass, r.t, { weekday: "short" })
+        : fmtTime(ctx.hass, entryDate(r.t), { weekday: "short" })
       : fmtTime(ctx.hass, r.t);
-  const isNow = (r: ForecastRow) => (daily ? isToday(r.t, ctx.now) : r.t === hourStart(ctx.now));
+  const isNow = (r: ForecastRow) =>
+    daily ? isTodayEntry(r.t, ctx.now) : r.t === hourStart(ctx.now);
   const span = range ? range.max - range.min : 1;
   const pct = (v: number) => `${(((v - (range?.min ?? 0)) / span) * 100).toFixed(1)}%`;
   const showRain = sec.show.length > 0;

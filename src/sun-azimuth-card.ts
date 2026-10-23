@@ -29,6 +29,8 @@ import { freshShadow, syncKeepHeight, registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
 import { fmtTime, langOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
+import { leaveHides, outsideHides } from "./shared/hover.ts";
+import { solarDayAround } from "./shared/solar.ts";
 import { t } from "./shared/i18n.ts";
 import { slider, type Slider } from "./shared/slider.ts";
 import { TextCache, themeChanged } from "./shared/typography.ts";
@@ -129,13 +131,11 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     this._hoverT = span.from + f * (span.to - span.from);
     this._queuePreview();
   };
-  _onScrubLeave = (ev: PointerEvent) => {
-    if (ev.pointerType === "touch") return; // a tap keeps its preview until the next tap elsewhere
-    this._endHover();
-  };
-  _onDocPointer = (ev: PointerEvent) => {
-    if (this._hoverT !== null && !ev.composedPath().includes(this)) this._endHover();
-  };
+  // a tap keeps its preview until the next tap elsewhere
+  _onScrubLeave = leaveHides(() => this._endHover());
+  _onDocPointer = outsideHides(this, () => {
+    if (this._hoverT !== null) this._endHover();
+  });
   _lastMinute?: number;
   _timer?: ReturnType<typeof setInterval>;
   // the dial and the 3D scene are drawn in px at the column's width: redrawn when it changes
@@ -458,17 +458,11 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     const tms = now.getTime(),
       d = this._day;
     if (d && d.lat === lat && d.lon === lon && tms >= d.start && tms < d.end) return d;
-    // the solar day runs from noon - 12 h to noon + 12 h: around midnight, now may belong to the
-    // one before or after the calendar day's
-    const dayOf = (offset: number): PositionedDay => {
-      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
-      return { ...sunDay(start, lat, lon), lat, lon };
-    };
-    let day = dayOf(0);
-    if (tms < day.start) day = dayOf(-1);
-    else if (tms >= day.end) day = dayOf(1);
-    this._day = day;
-    return day;
+    return (this._day = solarDayAround(now, (start): PositionedDay => ({
+      ...sunDay(start, lat, lon),
+      lat,
+      lon,
+    })));
   }
 
   _render() {

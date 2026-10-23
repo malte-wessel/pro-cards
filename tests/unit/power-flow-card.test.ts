@@ -560,6 +560,21 @@ describe("power flow numbers", () => {
     });
     expect(sourceColor(on.now.sources[2], true)).toBe(COLORS.generator);
     expect(edgeColor("generator")).toBe(COLORS.generator);
+    // a grid with a fossil sensor running on its generator: the generator's power, not the grid mix
+    const genFossil = normalizePowerFlowConfig({
+      home: "sensor.home",
+      sources: [SRC[0], SRC[1], { ...SRC[2], generator: "sensor.gen", fossil: "sensor.fossil" }],
+    });
+    const mixed = flowsOf(genFossil, {
+      "sensor.solar": "400",
+      "sensor.home": "2600",
+      "sensor.battery": "0",
+      "sensor.grid": "0",
+      "binary_sensor.outage": "on",
+      "sensor.gen": "2200",
+      "sensor.fossil": "40",
+    });
+    expect(mixed.f).toMatchObject({ gH: 2200, gHGen: 2200, gHClean: 0 });
   });
 
   it("names what the home runs on during an outage", () => {
@@ -1558,7 +1573,7 @@ describe("power flow layout", () => {
     const cfg = base({ direction: "down", consumers });
     const l = layoutTree(cfg, 360, flowsOf(cfg, { "sensor.home": "1000" }).f.edges, sizes);
     const leaves = l.nodes.filter((n) => n.column === "leaf").sort((p, q) => p.x - q.x);
-    expect(leaves.every((n) => n.tight)).toBe(true);
+    expect(leaves.every((n) => n.labelMax !== undefined)).toBe(true);
     const w = (n: (typeof leaves)[number]) => Math.min(sizes.get(n.id)!.w, n.labelMax!);
     for (let k = 1; k < leaves.length; k++) {
       // two neighbours' labels, centred below their nodes, never meet
@@ -1570,7 +1585,7 @@ describe("power flow layout", () => {
     // short names side by side: nothing is tight, nothing cut
     const short = new Map([...sizes].map(([id, z]) => [id, { ...z, w: 34 }]));
     const wide = layoutTree(cfg, 1200, flowsOf(cfg, { "sensor.home": "1000" }).f.edges, short);
-    expect(wide.nodes.some((n) => n.tight || n.labelMax !== undefined)).toBe(false);
+    expect(wide.nodes.some((n) => n.labelMax !== undefined)).toBe(false);
   });
 
   it("puts a lone consumer on the home's axis, so its line runs straight", () => {
@@ -1897,12 +1912,13 @@ describe("power flow visibility", () => {
     }
     expect(lay.edges.length).toBeLessThan(full.edges.length);
     expect(diagramHeight(view)).toBeLessThan(diagramHeight(cfg));
-    expect(lay.key).not.toBe(full.key);
-    // one consumer hidden instead of another: the same count, another layout
-    const a = layoutTree(viewConfig(cfg, new Set(["c2"])), 600, f.edges);
-    const b = layoutTree(viewConfig(cfg, new Set(["c3"])), 600, f.edges);
-    expect(a.nodes.length).toBe(b.nodes.length);
-    expect(a.key).not.toBe(b.key);
+    // a drawn link keeps the id of its flow, whatever else is hidden: its lane stays its own
+    for (const e of lay.edges) expect(full.edges.find((x) => x.id === e.id)?.fi).toBe(e.fi);
+    // one consumer hidden instead of another: the same count, other nodes
+    const ids = (hide: string) =>
+      layoutTree(viewConfig(cfg, new Set([hide])), 600, f.edges).nodes.map((n) => n.id);
+    expect(ids("c2").length).toBe(ids("c3").length);
+    expect(ids("c2")).not.toEqual(ids("c3"));
   });
 
   it("lays out a tree whose sources are all hidden", () => {

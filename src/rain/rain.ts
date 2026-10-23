@@ -4,7 +4,13 @@
 // was built for and a later rate scales the playback rate (`fallRate`), so nothing restarts.
 // Deterministic (seeded PRNG) so a paused frame is reproducible.
 import { prng } from "../shared/flow/maths.ts";
-import { DEFAULTS, type RainStyle } from "./constants.ts";
+import { DEFAULTS, DEPTH_TO_MM, RATE_TO_MMH, type RainStyle } from "./constants.ts";
+
+// a rate in the sensor's unit as mm/h, a depth as mm (an unknown unit is taken as it is)
+const factor = (table: Record<string, number>, unit: string | null | undefined) =>
+  table[(unit ?? "").trim().toLowerCase()] ?? 1;
+export const toMmH = (v: number, unit: string | null | undefined) => v * factor(RATE_TO_MMH, unit);
+export const toMm = (v: number, unit: string | null | undefined) => v * factor(DEPTH_TO_MM, unit);
 
 export const isWet = (rate: number) => rate >= DEFAULTS.wetMin;
 // the drops lean away from where the wind comes from: +1 leans to the right
@@ -114,10 +120,11 @@ export const rainSpec = (style: RainStyle, rate: number, todayMm: number | null)
 };
 
 // what a field was built with; a rebuild restarts every drop, so only a real change triggers it:
-// rain starting or stopping, or the count moving by a quarter (at least two)
+// rain starting or stopping, or the count moving by a quarter (at least three: at a drizzle, two
+// drops are about 0.2 mm/h, the noise of a rain sensor)
 export interface Built {
   n: number;
   wet: boolean;
 }
 export const needsRebuild = (built: Built | null, now: Built) =>
-  !built || built.wet !== now.wet || Math.abs(now.n - built.n) >= Math.max(2, built.n * 0.25);
+  !built || built.wet !== now.wet || Math.abs(now.n - built.n) >= Math.max(3, built.n * 0.25);

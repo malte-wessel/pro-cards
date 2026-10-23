@@ -14,7 +14,6 @@ import {
   nextSide,
   sideDays,
   sidesAt,
-  sidesOf,
   timelineSpan,
 } from "../../src/sun-azimuth/sides.ts";
 import { daylightArc, dialBox, dialGeometry, polar } from "../../src/sun-azimuth/dial.ts";
@@ -49,6 +48,14 @@ const morning = sunAt(utc(2026, 6, 21, 4), LAT, LON); // 06:00 CEST, just after 
 const forenoon = sunAt(utc(2026, 6, 21, 10), LAT, LON); // 12:00 CEST, the frozen test time
 const evening = sunAt(utc(2026, 6, 21, 16), LAT, LON); // 18:00 CEST
 const night = sunAt(utc(2026, 6, 21, 0), LAT, LON); // 02:00 CEST
+
+// the sides at a moment, as the card builds them: their windows over the day, then lit or not now
+const sidesOf = (
+  day: Parameters<typeof sideDays>[0],
+  front: number,
+  now: Parameters<typeof sidesAt>[1],
+  hidden: Parameters<typeof sideDays>[2] = [],
+) => sidesAt(sideDays(day, front, hidden), now);
 
 describe("sun-azimuth-card solar position", () => {
   it("gives the azimuth clockwise from north", () => {
@@ -272,7 +279,7 @@ describe("sun-azimuth-card path preview", () => {
     // both pictures carry it
     const sides = sidesOf(summer, 20, forenoon);
     expect(dialGeometry(summer, forenoon, 20, sides).track.length).toBe(track.length);
-    expect(sceneGeometry(summer, forenoon, LAT, 20, 180, sides, W).track.length).toBe(track.length);
+    expect(sceneGeometry(summer, forenoon, 20, 180, sides, W).track.length).toBe(track.length);
   });
   it("finds the time on the path nearest to the pointer, within reach", () => {
     const step = TRACK_STEP * 60e3;
@@ -326,13 +333,13 @@ describe("sun-azimuth-card roofs", () => {
     const sides = sidesOf(summer, 20, forenoon);
     for (const roof of ["gable", "gable_front", "hip", "flat"] as const)
       for (const camera of [0, 90, 150, 180, 270]) {
-        const g = sceneGeometry(summer, forenoon, LAT, 20, camera, sides, W, roof);
+        const g = sceneGeometry(summer, forenoon, 20, camera, sides, W, roof);
         // seen from above, part of the roof always shows; never more than two walls
         expect(g.faces.some((f) => f.roof)).toBe(true);
         expect(g.faces.filter((f) => !f.roof).length).toBeLessThanOrEqual(2);
       }
     // a flat roof faces straight up: hit as directly as the sun is high
-    const flat = sceneGeometry(summer, forenoon, LAT, 20, 180, sides, W, "flat");
+    const flat = sceneGeometry(summer, forenoon, 20, 180, sides, W, "flat");
     const top = flat.faces.find((f) => f.roof)!;
     expect(top.lit).toBe(true);
     expect(top.incidence).toBeCloseTo(Math.sin(forenoon.el * (Math.PI / 180)), 5);
@@ -500,12 +507,12 @@ describe("sun-azimuth-card 3D scene", () => {
     expect(tiny.w).toBeGreaterThan(100);
     // the lines follow the sphere: full at full size, LINE_MIN at the smallest
     const sides = sidesOf(summer, 20, forenoon);
-    expect(sceneGeometry(summer, forenoon, LAT, 20, 180, sides, W).k).toBe(1);
-    expect(sceneGeometry(summer, forenoon, LAT, 20, 180, sides, 100).k).toBe(LINE_MIN);
+    expect(sceneGeometry(summer, forenoon, 20, 180, sides, W).k).toBe(1);
+    expect(sceneGeometry(summer, forenoon, 20, 180, sides, 100).k).toBe(LINE_MIN);
   });
   it("shows the walls facing the camera and drops the back-most compass point", () => {
     const sides = sidesOf(summer, 20, forenoon);
-    const g = sceneGeometry(summer, forenoon, LAT, 20, 180, sides, W);
+    const g = sceneGeometry(summer, forenoon, 20, 180, sides, W);
     expect([g.w, g.h]).toEqual([W, sceneBox(W).h]);
     // from the north looking south, two walls show: the front (20°) and the right gable (290°),
     // both in the shade at noon; of the roof, the slope down to the front, lit by the high sun
@@ -530,13 +537,13 @@ describe("sun-azimuth-card 3D scene", () => {
     );
     // a diagonal view: the points on the far half (east, south) are left out, not drawn in the dome
     expect(
-      sceneGeometry(summer, forenoon, LAT, 20, 150, sides, W).cardinals.map((c) => c.bearing),
+      sceneGeometry(summer, forenoon, 20, 150, sides, W).cardinals.map((c) => c.bearing),
     ).toEqual([0, 270]);
     expect(
-      sceneGeometry(summer, forenoon, LAT, 20, 0, sides, W).cardinals.map((c) => c.bearing),
+      sceneGeometry(summer, forenoon, 20, 0, sides, W).cardinals.map((c) => c.bearing),
     ).toEqual([90, 180, 270]);
     expect(
-      sceneGeometry(summer, forenoon, LAT, 20, 90, sides, W).cardinals.map((c) => c.bearing),
+      sceneGeometry(summer, forenoon, 20, 90, sides, W).cardinals.map((c) => c.bearing),
     ).toEqual([0, 180, 270]);
     // the sun is up: drawn with its drop line, ground dot, chips and the shadow
     expect(g.sun).not.toBeNull();
@@ -558,7 +565,7 @@ describe("sun-azimuth-card 3D scene", () => {
     }
   });
   it("hides the sun and its lines below the horizon", () => {
-    const g = sceneGeometry(summer, night, LAT, 20, 180, sidesOf(summer, 20, night), W);
+    const g = sceneGeometry(summer, night, 20, 180, sidesOf(summer, 20, night), W);
     expect(g.sun).toBeNull();
     expect(g.groundDot).toBeNull();
     expect(g.chip).toBeNull();
@@ -583,8 +590,8 @@ describe("sun-azimuth-card 3D scene", () => {
       }
       return Math.abs(a) / 2;
     };
-    const high = sceneGeometry(summer, forenoon, LAT, 0, 180, sidesOf(summer, 0, forenoon), W);
-    const low = sceneGeometry(summer, morning, LAT, 0, 180, sidesOf(summer, 0, morning), W);
+    const high = sceneGeometry(summer, forenoon, 0, 180, sidesOf(summer, 0, forenoon), W);
+    const low = sceneGeometry(summer, morning, 0, 180, sidesOf(summer, 0, morning), W);
     expect(area(low.shadow)).toBeGreaterThan(area(high.shadow));
   });
 });

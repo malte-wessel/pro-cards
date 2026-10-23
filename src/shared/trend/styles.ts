@@ -1,5 +1,6 @@
 // Styles of the trend plot (`.plot.trend`) and its legend, shared by the multi trend card and the
 // weather card. Theme tokens only.
+import { tipStyle } from "../hover.ts";
 import { CARD_BG } from "../constants.ts";
 import { font, fw, type } from "../typography.ts";
 
@@ -38,25 +39,7 @@ export const STYLE_TREND = `
   .trend .axis-label.x.first { transform: none; }
   .trend .axis-label.x.last { transform: translateX(-100%); }
   .trend .axis-label.y { text-align: right; transform: translateY(-50%); }
-  .trend .hover { display: none; }
-  .trend .hover.on { display: block; }
-  .trend .tip {
-    position: absolute; top: 4px;
-    pointer-events: none;
-    background: ${CARD_BG};
-    color: var(--primary-text-color);
-    border: 1px solid var(--divider-color);
-    border-radius: 8px;
-    padding: 6px 8px;
-    ${type(12, 16)}
-    box-shadow: var(--ha-card-box-shadow, 0 2px 6px rgba(0,0,0,.2));
-    white-space: nowrap;
-    max-width: calc(100% - 8px);
-    box-sizing: border-box;
-    z-index: 1;
-    display: none;
-  }
-  .trend .tip.on { display: block; }
+  ${tipStyle(".trend ")}
   .trend .tip .time { color: var(--secondary-text-color); margin-bottom: 2px; }
   .trend .tip .head { font-weight: ${fw("medium")}; margin-bottom: 2px; }
   .trend .tip .row { display: flex; align-items: center; gap: 6px; }

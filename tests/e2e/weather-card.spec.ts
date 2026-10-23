@@ -1,4 +1,4 @@
-import { test, expect, mount, events, card, setLanguage } from "./util.ts";
+import { test, expect, mount, events, card, setLanguage, setState, FROZEN } from "./util.ts";
 import type { WeatherCard } from "../../src/weather-card.ts";
 import type { Locator, Page } from "@playwright/test";
 
@@ -358,6 +358,91 @@ test.describe("weather card", () => {
     );
   });
 
+  test("an update keeps the forecast rows unless the forecast or the entity changed", async ({
+    page,
+  }) => {
+    await mount(page, {
+      type: T,
+      entity: W,
+      sections: [
+        { type: "row", entities: [{ entity: "sensor.outdoor_humidity" }] },
+        { type: "forecast", mode: "daily", days: 3 },
+      ],
+    });
+    const c = card(page);
+    const rows = c.locator(".frow");
+    await expect(rows).toHaveCount(3);
+    await rows.first().evaluate((e) => e.setAttribute("data-mark", "1"));
+    // the card renders for its sensor; the forecast did not change
+    await setState(page, "sensor.outdoor_humidity", "64");
+    await expect(c.locator(".section").first()).toContainText("64");
+    await expect(rows.first()).toHaveAttribute("data-mark", "1");
+    // the weather entity changed (its rules and units are read): drawn again
+    await setState(page, W, undefined, { temperature: 18.2 });
+    await expect(rows.first()).not.toHaveAttribute("data-mark", "1");
+  });
+
+  test("the lead takes the night icon at sunset, with mdi icons too", async ({ page }) => {
+    await mount(page, { type: T, entity: W, icons: "mdi" });
+    const icon = card(page).locator(".row.wtile ha-icon");
+    await expect(icon).toHaveAttribute("icon", "mdi:weather-partly-cloudy");
+    await setState(page, "sun.sun", "below_horizon");
+    await expect(icon).toHaveAttribute("icon", "mdi:weather-night-partly-cloudy");
+  });
+
+  test("asks for a refused forecast again a minute later", async ({ page }) => {
+    await mount(page, { type: T, entity: W });
+    // the next forecast subscriptions are refused (the entity is not ready yet)
+    await page.evaluate(() => {
+      const w = window as unknown as { __refuse: boolean };
+      const conn = window.pc.snapshot().connection as unknown as {
+        subscribeMessage: (cb: unknown, msg: { type: string }) => Promise<unknown>;
+      };
+      const orig = conn.subscribeMessage;
+      w.__refuse = true;
+      conn.subscribeMessage = (cb, msg) =>
+        w.__refuse && msg.type === "weather/subscribe_forecast"
+          ? Promise.reject(new Error("not now"))
+          : orig(cb, msg);
+    });
+    await mount(page, {
+      type: T,
+      entity: W,
+      sections: [{ type: "forecast", mode: "daily", days: 3 }],
+    });
+    const c = card(page);
+    await expect(c.locator(".wempty")).toHaveText("no forecast");
+    await page.evaluate(() => {
+      (window as unknown as { __refuse: boolean }).__refuse = false;
+    });
+    // an update within the minute does not ask again
+    await setState(page, W, undefined, { probe: 1 });
+    await expect(c.locator(".frow")).toHaveCount(0);
+    // a minute later it does
+    await page.clock.setFixedTime(new Date(FROZEN.getTime() + 61_000));
+    await setState(page, W, undefined, { probe: 2 });
+    await expect(c.locator(".frow")).toHaveCount(3);
+  });
+
+  test("forecast days keep the day icon after sunset", async ({ page }) => {
+    const cfg = {
+      type: T,
+      entity: W,
+      icons: "mdi",
+      sections: [{ type: "forecast", mode: "daily", days: 3 }],
+    };
+    const time = new Date("2026-06-21T23:00:00");
+    await mount(page, cfg, { time });
+    // the sun set before the card was drawn
+    await setState(page, "sun.sun", "below_horizon");
+    await mount(page, cfg, { time });
+    const c = card(page);
+    // tomorrow is sunny: a day, so the sun, whatever the time now
+    await expect(c.locator(".frow").nth(1).locator(".ficon ha-icon")).toHaveAttribute(
+      "icon",
+      "mdi:weather-sunny",
+    );
+  });
   test("shows a missing entity, no forecast for an entity without one, and follows the language", async ({
     page,
   }) => {
@@ -376,5 +461,51 @@ test.describe("weather card", () => {
     await setLanguage(page, "de");
     await expect(c.locator(".wsec .wtitle")).toHaveText(["7 Tage", "Nächste 12 Stunden"]);
     await expect(c.locator(".wempty").first()).toHaveText("keine Vorhersage");
+  });
+});
+
+// an integration that stamps its days at midnight UTC, seen from New York
+test.describe("forecast days stamped at midnight UTC", () => {
+  test.use({ timezoneId: "America/New_York" });
+  const utcDays = (first: string) =>
+    [0, 1, 2].map((i) => ({
+      datetime: new Date(Date.parse(first) + i * 86400e3).toISOString(),
+      condition: "sunny",
+      temperature: 25 + i,
+      templow: 15 + i,
+    }));
+  const labels = async (page: Page, time: string, first: string) => {
+    await mount(page, { type: T, entity: W }, { time: new Date(time) });
+    await page.evaluate((days) => {
+      const world = window.pc.world as unknown as {
+        forecast: (id: string, type: string) => unknown;
+      };
+      const orig = world.forecast.bind(world);
+      world.forecast = (id, type) => (type === "daily" ? days : orig(id, type));
+    }, utcDays(first));
+    await mount(
+      page,
+      { type: T, entity: W, sections: [{ type: "forecast", mode: "daily", days: 3 }] },
+      { time: new Date(time) },
+    );
+    return card(page).locator(".frow .fname").allTextContents();
+  };
+
+  test("in the morning, today's day is today", async ({ page }) => {
+    // Monday 10:00: the forecast starts with Monday (Sunday 20:00 in New York)
+    expect(await labels(page, "2026-06-22T10:00:00-04:00", "2026-06-22T00:00:00Z")).toEqual([
+      "Today",
+      "Tue",
+      "Wed",
+    ]);
+  });
+
+  test("in the evening, tomorrow's day is not today", async ({ page }) => {
+    // Monday 21:00, past midnight UTC: the forecast starts with Tuesday (Monday 20:00 here)
+    expect(await labels(page, "2026-06-22T21:00:00-04:00", "2026-06-23T00:00:00Z")).toEqual([
+      "Tue",
+      "Wed",
+      "Thu",
+    ]);
   });
 });

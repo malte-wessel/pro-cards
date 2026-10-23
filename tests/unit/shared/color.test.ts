@@ -130,3 +130,14 @@ describe("colours that reach markup", () => {
     ).not.toBe(null);
   });
 });
+
+describe("hex colours", async () => {
+  const { hexToRgb } = await import("../../../src/shared/color.ts");
+  it("reads every hex length, dropping the alpha", () => {
+    expect(hexToRgb("#f00")).toEqual([255, 0, 0]);
+    expect(hexToRgb("#f008")).toEqual([255, 0, 0]);
+    expect(hexToRgb("#ff0000")).toEqual([255, 0, 0]);
+    expect(hexToRgb("#ff000080")).toEqual([255, 0, 0]);
+    expect(hexToRgb("#0080ff")).toEqual([0, 128, 255]);
+  });
+});

@@ -10,8 +10,10 @@ import {
   rateOf,
   fieldRotation,
   fieldSize,
+  fieldSizeFor,
   fieldSpec,
   gustCount,
+  gustsFor,
   leadDuration,
   pxps,
   wavePath,
@@ -168,6 +170,27 @@ describe("wind flow maths", () => {
     expect(fieldSpec("dots", "normal", 480, 8, 18, 9)).toEqual(
       fieldSpec("dots", "normal", 480, 8, 18, 9),
     );
+  });
+
+  it("holds the streaks and the field size against sensor noise", () => {
+    // a fresh field: the plain count
+    expect(gustsFor(13, null)).toBe(gustCount(13));
+    expect(gustsFor(13, null)).toBe(1);
+    // none built: streaks only above 16 km/h
+    expect(gustsFor(14, 0)).toBe(0);
+    expect(gustsFor(18, 0)).toBe(2);
+    // some built: they stay down to 8 km/h, then go
+    expect(gustsFor(11, 1)).toBe(1);
+    expect(gustsFor(9, 2)).toBe(1);
+    expect(gustsFor(7, 1)).toBe(0);
+    expect(gustsFor(30, 1)).toBe(3);
+    // the field grows at once, shrinks only by two steps
+    expect(fieldSizeFor(482, 88, null)).toBe(520);
+    expect(fieldSizeFor(482, 88, 480)).toBe(520);
+    expect(fieldSizeFor(470, 88, 520)).toBe(520);
+    expect(fieldSizeFor(560, 120, 640)).toBe(640); // needs 600: one step less, kept
+    expect(fieldSizeFor(520, 120, 640)).toBe(560); // needs 560: two steps less
+    expect(fieldSizeFor(470, 88, 640)).toBe(480);
   });
 
   it("sizes the field to cover the band and keys the rebuild", () => {

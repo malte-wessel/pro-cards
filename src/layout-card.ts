@@ -73,6 +73,8 @@ export class LayoutCard extends HTMLElement {
   _sizes: Promise<unknown> = Promise.resolve();
   _frame = 0;
   _ro?: ResizeObserver;
+  // the element the observer watches: as wide as the card, never any height (see connectedCallback)
+  _probe?: HTMLElement;
   _styles = new WeakMap<HTMLElement, Style>();
 
   static getStubConfig() {
@@ -90,7 +92,9 @@ export class LayoutCard extends HTMLElement {
     this._cfg = cfg;
     if (!this._root) this._buildDom();
     if (this._ready || customElements.get("hui-card")) {
+      // hui-card came after all (a late frontend): the note that it did not goes
       this._ready = true;
+      this._failed = false;
       this._sync();
       return;
     }
@@ -139,15 +143,22 @@ export class LayoutCard extends HTMLElement {
   connectedCallback() {
     // laid out at once, not in the next frame: the browser lays the page out again before it
     // paints, so the first frame already shows the columns of the real width (setConfig ran with
-    // none), and a layout inside, deeper in the tree, is observed and laid out in the same frame
-    this._ro = new ResizeObserver((entries) => {
-      const w = entries[entries.length - 1].contentRect.width;
+    // none), and a layout inside, deeper in the tree, is observed and laid out in the same frame.
+    // The observer watches a probe of no height across the card, not the host: a relayout changes
+    // the host's height, which the browser would report as a size change it could not deliver
+    // ("ResizeObserver loop completed with undelivered notifications"). The width is read live,
+    // not from the notification: a layout inside another one is notified in the same pass, after
+    // its parent laid out, with the size it had before that. offsetWidth is the layout width: a
+    // dialog that opens by scaling up must not count as a narrower card (and no observation
+    // follows when its transform ends)
+    this._ro = new ResizeObserver(() => {
+      const w = this._probe?.offsetWidth ?? 0;
       if (w > 0 && Math.round(w) !== Math.round(this._width)) {
         this._width = w;
         this._relayout();
       }
     });
-    this._ro.observe(this);
+    if (this._probe) this._ro.observe(this._probe);
     this._schedule();
   }
 
@@ -178,15 +189,17 @@ export class LayoutCard extends HTMLElement {
     root.prepend(style);
     const wrap = document.createElement("div");
     wrap.className = "root";
-    wrap.innerHTML = `<div class="body"></div><div class="note" hidden></div>`;
+    wrap.innerHTML = `<div class="probe"></div><div class="body"></div><div class="note" hidden></div>`;
     root.appendChild(wrap);
     this._root = wrap;
+    if (this._probe) this._ro?.unobserve(this._probe);
+    this._probe = wrap.querySelector<HTMLElement>(".probe")!;
+    this._ro?.observe(this._probe);
     this._body = wrap.querySelector<HTMLElement>(".body")!;
     this._note = wrap.querySelector<HTMLElement>(".note")!;
     // a child shows or hides: hui-card fires this after changing its hidden state; it is ours to
     // act on, the dashboard must not read it as the layout's own
     wrap.addEventListener("card-visibility-changed", (ev) => {
-      if (ev.target === this) return;
       ev.stopPropagation();
       this._relayout();
     });

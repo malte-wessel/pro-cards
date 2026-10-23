@@ -33,6 +33,16 @@ export const leadDuration = (px: number) => Math.max(0.35, 90 / px);
 export const baseDuration = (kmh: number) => 480 / pxps(kmh);
 export const gustCount = (gustKmh: number | null) =>
   gustKmh !== null && gustKmh > 12 ? Math.min(6, Math.round(gustKmh / 10)) : 0;
+// the streaks a field is (re)built with: a fresh field takes gustCount; a built one holds against
+// a gust sensor hovering around the 12 km/h threshold: streaks come only above 16 km/h, and the
+// ones there go only below 8
+export const gustsFor = (gustKmh: number | null, built: number | null) => {
+  const n = gustCount(gustKmh),
+    g = gustKmh ?? 0;
+  if (built === null) return n;
+  if (built === 0) return g > 16 ? n : 0;
+  return g < 8 ? 0 : Math.max(1, n);
+};
 export const gustDuration = (gustKmh: number | null) => (480 / pxps(gustKmh ?? 0)) * 3.2;
 
 // ----- geometry -----
@@ -54,6 +64,14 @@ export const fieldSize = (w: number, h: number) =>
       Math.ceil(Math.hypot(w, h) / DEFAULTS.fieldStep) * DEFAULTS.fieldStep,
     ),
   );
+// the size of a field already built for a size: a larger band takes the larger step at once (the
+// field must cover it), a smaller one only when two steps smaller would do, so a band whose
+// diagonal sits on a step (a scrollbar coming and going) keeps its field
+export const fieldSizeFor = (w: number, h: number, built: number | null) => {
+  const need = fieldSize(w, h);
+  if (built === null || need > built) return need;
+  return need <= built - 2 * DEFAULTS.fieldStep ? need : built;
+};
 // the geometry a field was built for: a change rebuilds it
 export const fieldKey = (style: FlowStyle, density: Density, size: number) =>
   `${style}/${density}/${size}`;
@@ -115,9 +133,14 @@ const PACKET = [
 ] as const;
 const frac = (x: number) => ((x % 1) + 1) % 1;
 
-const streaksOf = (rnd: () => number, size: number, amp: number, gustKmh: number | null) => {
+const streaksOf = (
+  rnd: () => number,
+  size: number,
+  amp: number,
+  gustKmh: number | null,
+  n: number,
+) => {
   const out: Streak[] = [];
-  const n = gustCount(gustKmh);
   const w = Math.round(14 + (gustKmh ?? 0) * 0.5);
   for (let g = 0; g < n; g++)
     out.push({
@@ -135,6 +158,7 @@ export const fieldSpec = (
   amp: number,
   gustKmh: number | null,
   speedKmh: number,
+  gusts: number = gustCount(gustKmh),
 ): FieldSpec => {
   const rnd = prng(11);
   const scale = size / 480;
@@ -160,7 +184,7 @@ export const fieldSpec = (
       }
       lanes.push({ d: wavePath(y, 150 + rnd() * 110, amp, i * 0.45, -40, size + 40), parts });
     }
-    return { style, size, lanes, streaks: streaksOf(rnd, size, amp, gustKmh) };
+    return { style, size, lanes, streaks: streaksOf(rnd, size, amp, gustKmh, gusts) };
   }
   if (style === "lines") {
     const lines: StreamLine[] = [];
@@ -174,7 +198,7 @@ export const fieldSpec = (
         o = f1(0.35 + rnd() * 0.55);
       lines.push({ d, dash, w, o, k, p0: rnd() }, { d, dash, w, o, k, p0: rnd() });
     }
-    return { style, size, lines, streaks: streaksOf(rnd, size, amp, gustKmh) };
+    return { style, size, lines, streaks: streaksOf(rnd, size, amp, gustKmh, gusts) };
   }
   // swoosh: curly strokes in the middle third of the field, ending in a three-quarter curl
   const strokes: Swoosh[] = [];
@@ -204,5 +228,5 @@ export const fieldSpec = (
       p0: rnd(),
     });
   }
-  return { style: "swoosh", size, strokes, streaks: streaksOf(rnd, size, amp, gustKmh) };
+  return { style: "swoosh", size, strokes, streaks: streaksOf(rnd, size, amp, gustKmh, gusts) };
 };

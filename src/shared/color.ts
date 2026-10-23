@@ -59,17 +59,15 @@ export const rgbToHex = (r: number, g: number, b: number) =>
     )
     .join("");
 
+// #rgb, #rgba, #rrggbb or #rrggbbaa as red, green, blue (the alpha is dropped: blends are opaque)
 export const hexToRgb = (hex: string): [number, number, number] => {
-  const h = hex.replace("#", "");
-  const n = parseInt(
-    h.length === 3
-      ? h
-          .split("")
-          .map((c) => c + c)
-          .join("")
-      : h,
-    16,
-  );
+  let h = hex.replace("#", "");
+  if (h.length === 3 || h.length === 4)
+    h = h
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  const n = parseInt(h.slice(0, 6), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 };
 

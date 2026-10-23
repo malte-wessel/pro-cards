@@ -25,4 +25,37 @@ describe("time ticks", () => {
     const t1 = new Date(2026, 8, 28, 12, 0).getTime();
     expect(clockTicks(t1, t1 + 2 * h, h)[0]).toBe(t1);
   });
+  it("keeps the ticks on clock boundaries across a DST change", () => {
+    const h = 3600e3;
+    // a week ending after the autumn change (25 Oct 2026, 03:00 → 02:00 in Berlin)
+    const now = new Date(2026, 9, 28, 12, 0).getTime();
+    const days = clockTicks(now - 168 * h, now, 24 * h);
+    expect(days.length).toBe(7);
+    for (const t of days) {
+      expect(new Date(t).getHours()).toBe(0);
+      expect(new Date(t).getMinutes()).toBe(0);
+    }
+    // a day across the change: every 4 h tick on an hour divisible by 4 (24 h from 20:30 end at
+    // 19:30 on the clock, the hour 02:00–03:00 runs twice: 00, 04, 08, 12, 16)
+    const t0 = new Date(2026, 9, 24, 20, 30).getTime();
+    const fours = clockTicks(t0, t0 + 24 * h, 4 * h);
+    expect(fours.map((t) => new Date(t).getHours())).toEqual([0, 4, 8, 12, 16]);
+    expect(fours.every((t) => new Date(t).getHours() % 4 === 0)).toBe(true);
+    // the spring change (29 Mar 2026, 02:00 → 03:00): no tick twice, every one on the half hour
+    const s0 = new Date(2026, 2, 29, 1, 0).getTime();
+    const halves = clockTicks(s0, s0 + 2 * h, 0.5 * h);
+    expect(new Set(halves).size).toBe(halves.length);
+    expect(halves.every((t, i) => i === 0 || t > halves[i - 1])).toBe(true);
+    expect(halves.every((t) => new Date(t).getMinutes() % 30 === 0)).toBe(true);
+  });
+  it("has no ticks for a time that is not one, and never loops past its window", () => {
+    const h = 3600e3,
+      now = new Date(2026, 5, 21, 12).getTime();
+    expect(clockTicks(NaN, now, 4 * h)).toEqual([]);
+    expect(clockTicks(now - 24 * h, NaN, 4 * h)).toEqual([]);
+    expect(clockTicks(now - 24 * h, now, NaN)).toEqual([]);
+    expect(clockTicks(now - 24 * h, now, 0)).toEqual([]);
+    expect(clockTicks(now, now - h, h)).toEqual([]);
+    expect(clockTicks(now - 24 * h, Infinity, 4 * h)).toEqual([]);
+  });
 });

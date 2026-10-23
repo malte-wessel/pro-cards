@@ -33,6 +33,8 @@ export const STYLE = `
      (never 0: in a stretched grid row that would drop the layout's share of the row's height) */
   .root { box-sizing: border-box; height: 100%; display: flex; flex-direction: column; min-width: 0; }
   .body { flex: 1 1 auto; min-width: 0; box-sizing: border-box; }
+  /* what the resize observer watches: the card's width, no height of its own */
+  .probe { flex: none; height: 0; }
   /* a layout card inside this one is not its section's width: it counts its view columns from
      its own width (Home Assistant's --column-span inherits from the section otherwise) */
   .body { --column-span: initial; }
@@ -68,7 +70,10 @@ export const STYLE = `
     content: ""; position: absolute; inset: 0 -1px -1px 0; z-index: 1; pointer-events: none;
     border-right: 1px solid var(--divider-color); border-bottom: 1px solid var(--divider-color);
   }
-  .seamless .col > .item:last-child::after { border-bottom: none; }
+  /* the last card of a column has no line below it: the last one shown, a hidden one after it
+     does not count */
+  .seamless .col > .item:last-child::after,
+  .seamless .col > .item:nth-last-child(1 of :not(.off))::after { border-bottom: none; }
   .seamless .col > .item::after { border-right: none; }
 
   .note { padding: 16px; text-align: center; color: var(--secondary-text-color); ${font(14, 20)} }

@@ -43,11 +43,8 @@ export interface PowerNow {
   price: { num: number; text: string } | null;
 }
 
-export const powerNow = (
-  cfg: PowerFlowConfig,
-  models: EntityModel[],
-  entities: EntityItem[] = cfg.entities,
-): PowerNow => {
+export const powerNow = (cfg: PowerFlowConfig, models: EntityModel[]): PowerNow => {
+  const entities = cfg.entities;
   const w = (idx: number | null) => (idx === null ? null : wattsOf(entities[idx], models[idx]));
   let offline = false,
     price: PowerNow["price"] = null;
@@ -148,6 +145,10 @@ export interface EdgeFlow {
   w: number; // negative on a consumer link whose device produces
   kind: EdgeKind;
 }
+// What the allocation gives: the flows between the nodes (`edges`) and the totals the card draws
+// (H, sH, bH, gH, the ring's gHClean / gHGen, sG, bG, the leaf and group watts). S, B, sB, dB, gB
+// and grid are no drawn quantity: the unit tests check through them that the allocation adds up
+// (what goes in comes out), so they stay.
 export interface Flows {
   S: number;
   H: number;
@@ -381,8 +382,10 @@ export const allocate = (
       });
     } else if (s.kind === "grid") {
       push(ids[i], "home", imp[i], s.generator ? "generator" : "gridIn");
-      if (s.lowCarbon !== null) gHClean += imp[i] * s.lowCarbon;
+      // a grid on its generator: its power is the generator's, not the grid mix its fossil
+      // sensor describes
       if (s.generator) gHGen += imp[i];
+      else if (s.lowCarbon !== null) gHClean += imp[i] * s.lowCarbon;
       shares(remaining, gCh[i], isCharging).forEach((w, j) => {
         if (isBatt[j]) push(ids[i], ids[j], w, "battIn");
       });
