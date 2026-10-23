@@ -48,4 +48,14 @@ describe("time ticks", () => {
     expect(halves.every((t, i) => i === 0 || t > halves[i - 1])).toBe(true);
     expect(halves.every((t) => new Date(t).getMinutes() % 30 === 0)).toBe(true);
   });
+  it("has no ticks for a time that is not one, and never loops past its window", () => {
+    const h = 3600e3,
+      now = new Date(2026, 5, 21, 12).getTime();
+    expect(clockTicks(NaN, now, 4 * h)).toEqual([]);
+    expect(clockTicks(now - 24 * h, NaN, 4 * h)).toEqual([]);
+    expect(clockTicks(now - 24 * h, now, NaN)).toEqual([]);
+    expect(clockTicks(now - 24 * h, now, 0)).toEqual([]);
+    expect(clockTicks(now, now - h, h)).toEqual([]);
+    expect(clockTicks(now - 24 * h, Infinity, 4 * h)).toEqual([]);
+  });
 });

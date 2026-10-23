@@ -190,3 +190,28 @@ describe("trend scale", async () => {
     expect(s.y(10)).toBeLessThanOrEqual(s.y(0));
   });
 });
+
+describe("multi-trend-card editor titles", () => {
+  it("shows an entity's new name after a rename", () => {
+    const ed = MultiTrendCard.getConfigElement() as HTMLElement & {
+      setConfig(c: unknown): void;
+      hass: HomeAssistant;
+    };
+    const hass = (name: string) =>
+      ({
+        states: { "sensor.a": { state: "1", attributes: { friendly_name: name } } },
+        locale: { language: "en" },
+      }) as unknown as HomeAssistant;
+    ed.setConfig({ entities: ["sensor.a"] });
+    ed.hass = hass("Outdoor");
+    const form = ed.querySelector("ha-form") as unknown as { schema: { title?: string }[] };
+    const titles = () => form.schema.map((s) => s.title).filter(Boolean);
+    expect(titles()).toEqual(["Outdoor"]);
+    const schema = form.schema;
+    // another update with the same name: the form stays
+    ed.hass = hass("Outdoor");
+    expect(form.schema).toBe(schema);
+    ed.hass = hass("Garden");
+    expect(titles()).toEqual(["Garden"]);
+  });
+});

@@ -140,13 +140,15 @@ export const dailyRange = (days: readonly Day[]): { min: number; max: number } |
   return { min, max };
 };
 
-export const isToday = (t: number, now: number) =>
-  new Date(t).toDateString() === new Date(now).toDateString();
-// how much later a daily forecast's dates are read: an integration that stamps its days at a UTC
-// midnight starts each one on the evening before for a user west of UTC (20:00 the day before in
-// New York), so today's forecast reads as yesterday's and tomorrow's as today's. A forecast that
-// starts on the evening before today is read 12 h later; 0 for one whose first day is today.
-export const todayShift = (days: readonly { t: number }[], now: number) =>
-  days.length > 0 && !isToday(days[0].t, now) && isToday(days[0].t + 12 * 3600e3, now)
-    ? 12 * 3600e3
-    : 0;
+// the calendar day a daily forecast entry is for: a stamp at exactly midnight UTC names that UTC
+// date (integrations that work in UTC stamp their days so: in New York, Tuesday's 00:00Z is
+// still Monday evening), any other stamp the local date it falls on
+export const entryDate = (t: number): Date => {
+  const d = new Date(t);
+  return t % 86400e3 === 0
+    ? new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+    : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+};
+// whether a daily forecast entry is today's
+export const isTodayEntry = (t: number, now: number) =>
+  entryDate(t).toDateString() === new Date(now).toDateString();

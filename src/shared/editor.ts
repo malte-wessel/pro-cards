@@ -44,12 +44,15 @@ export abstract class FormEditorBase extends HTMLElement {
   }
 
   // Home Assistant sets hass on every state change: the form only needs the new one, its data
-  // and schema follow the config (and the language of the labels)
+  // and schema follow the config, the language of the labels and what `_schemaInputs` names
   set hass(hass: HomeAssistant) {
-    const lang = langOf(this._hass) !== langOf(hass);
     this._hass = hass;
-    if (this._form && !lang) this._form.hass = hass;
-    else this._render();
+    this._render();
+  }
+  // what the schema reads from hass besides the language (a subclass that shows friendly names
+  // returns them): a change rebuilds the form
+  _schemaInputs(_hass: HomeAssistant): unknown {
+    return null;
   }
 
   _label(sch: HaFormSchema): string {
@@ -84,7 +87,7 @@ export abstract class FormEditorBase extends HTMLElement {
     this._form.hass = this._hass;
     // the form's data and schema again only for another config or language: a value change
     // renders here and in the setConfig that follows it, a new schema re-renders every field
-    const key = `${langOf(this._hass)}|${JSON.stringify(this._config)}`;
+    const key = JSON.stringify([langOf(this._hass), this._config, this._schemaInputs(this._hass)]);
     if (key === this._formKey) return;
     this._formKey = key;
     const data = this._toForm(this._config);

@@ -44,9 +44,8 @@ import {
   daysOf,
   hourStart,
   hoursOf,
-  isToday,
   supportsForecast,
-  todayShift,
+  isTodayEntry,
   type Day,
 } from "./weather/forecast.ts";
 import { showTrendHover, trendTimeAt } from "./shared/trend/plot.ts";
@@ -301,8 +300,7 @@ export class WeatherCard extends EntityCardBase {
     if (c.contains("wtile") || c.contains("whero")) {
       // the hero shows today's high / low; the tile does not read the forecast
       const days = c.contains("whero") ? this._days(1) : null;
-      const shift = days ? todayShift(days, ctx.now) : 0;
-      const today = days?.find((d) => isToday(d.t + shift, ctx.now)) ?? null;
+      const today = days?.find((d) => isTodayEntry(d.t, ctx.now)) ?? null;
       const secEl = row.closest<HTMLElement>("[data-sec]");
       const sec = secEl ? cfg.sections[Number(secEl.dataset.sec)] : undefined;
       const hero = sec?.kind === "hero" ? sec : null;

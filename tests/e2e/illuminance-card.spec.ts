@@ -123,3 +123,27 @@ test("draws its body again only when what it shows changed", async ({ page }) =>
   await setState(page, "sensor.illuminance", "12345");
   await expect(c.locator(".plot")).not.toHaveAttribute("data-mark", "1");
 });
+
+test("draws again once a new theme applies, though a reading came with it", async ({ page }) => {
+  await mount(page, {
+    type: "custom:illuminance-card-pro",
+    entity: "sensor.illuminance",
+    mode: "trend",
+  });
+  const c = card(page);
+  await c.locator(".plot").evaluate((e) => e.setAttribute("data-mark", "1"));
+  const redrawn = await page.evaluate(async () => {
+    const el = window.pc.card(0);
+    // Home Assistant hands over the new theme with a new reading; its CSS applies a moment later
+    const h = window.pc.snapshot();
+    const st = h.states["sensor.illuminance"];
+    h.states = { ...h.states, "sensor.illuminance": { ...st, state: "4321" } };
+    h.themes = { ...h.themes };
+    el.hass = h;
+    const plot = () => el.shadowRoot!.querySelector(".plot")!;
+    plot().setAttribute("data-mark", "2");
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    return plot().getAttribute("data-mark");
+  });
+  expect(redrawn).toBeNull();
+});

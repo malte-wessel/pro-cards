@@ -193,4 +193,12 @@ export class MultiTrendCardEditor extends FormEditorBase {
   _schema(hass: HomeAssistant, data: HaFormData) {
     return editorSchema(hass, data);
   }
+  // the entities' sections are titled by their friendly names: a rename shows
+  _schemaInputs(hass: HomeAssistant) {
+    const ents = (this._config as MultiTrendCardConfig | undefined)?.entities ?? [];
+    return ents.map((e) => {
+      const id = typeof e === "string" ? e : e.entity;
+      return hass.states?.[id]?.attributes.friendly_name ?? null;
+    });
+  }
 }

@@ -543,26 +543,19 @@ describe("weather forecast night icons", async () => {
   });
 });
 
-describe("forecast days stamped at a UTC midnight", async () => {
-  const { isToday, todayShift } = await import("../../src/weather/forecast.ts");
-  it("reads them 12 hours later when the first one falls on the evening before", () => {
-    const now = new Date(2026, 5, 21, 10, 0).getTime();
-    const day = 86400e3;
-    // the evening before (as a UTC midnight west of UTC reads in a local zone)
-    const evening = new Date(2026, 5, 20, 19, 0).getTime();
-    const late = [0, 1, 2].map((i) => ({ t: evening + i * day }));
-    const shift = todayShift(late, now);
-    expect(shift).toBe(12 * 3600e3);
-    // today's forecast reads as today, tomorrow's (20:00 today, local) no longer does
-    expect(isToday(late[0].t + shift, now)).toBe(true);
-    expect(isToday(late[1].t, now)).toBe(true);
-    expect(isToday(late[1].t + shift, now)).toBe(false);
-    // days that fall on their own date: nothing to shift
-    const noon = [0, 1, 2].map((i) => ({ t: new Date(2026, 5, 21, 12).getTime() + i * day }));
-    expect(todayShift(noon, now)).toBe(0);
-    // a forecast that starts tomorrow: no day is today, none is shifted into it
-    const later = [1, 2].map((i) => ({ t: new Date(2026, 5, 21, 12).getTime() + i * day }));
-    expect(todayShift(later, now)).toBe(0);
-    expect(todayShift([], now)).toBe(0);
+describe("the date of a forecast day", async () => {
+  const { entryDate, isTodayEntry } = await import("../../src/weather/forecast.ts");
+  it("reads a stamp at UTC midnight as that UTC date, any other as its local date", () => {
+    // the unit tests run in Berlin: UTC midnight is 02:00 there, the same date either way;
+    // the e2e tests check New York, where it is the evening before
+    expect(entryDate(Date.UTC(2026, 5, 22)).toDateString()).toBe(
+      new Date(2026, 5, 22).toDateString(),
+    );
+    // local midnight (22:00 UTC the day before) and local noon: their local date
+    expect(entryDate(new Date(2026, 5, 22).getTime()).getDate()).toBe(22);
+    expect(entryDate(new Date(2026, 5, 22, 12).getTime()).getDate()).toBe(22);
+    const now = new Date(2026, 5, 22, 10).getTime();
+    expect(isTodayEntry(Date.UTC(2026, 5, 22), now)).toBe(true);
+    expect(isTodayEntry(Date.UTC(2026, 5, 23), now)).toBe(false);
   });
 });

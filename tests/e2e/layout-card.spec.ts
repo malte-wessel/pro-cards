@@ -345,6 +345,27 @@ test.describe("layout-card-pro", () => {
     expect(res.mounted).toEqual([1]);
   });
 
+  test("counts its columns from its layout width inside a scaled dialog", async ({ page }) => {
+    await mount(page, ec(T));
+    const cfg = {
+      type: LC,
+      columns: 1,
+      breakpoints: { 3: { columns: 3 } },
+      cards: [ec(T), ec(H), ec(P)],
+    };
+    const columns = await page.evaluate(async (c) => {
+      // a dialog half way through its opening animation
+      window.pc.root.style.transform = "scale(0.5)";
+      window.pc.reset();
+      window.pc.mount(c, { width: 1200 });
+      await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
+      const columns = (window.pc.card(0) as HTMLElement & { _columns?: number })._columns;
+      window.pc.root.style.transform = "";
+      return columns;
+    }, cfg);
+    expect(columns).toBe(3);
+  });
+
   test("hides itself when every card is hidden", async ({ page }) => {
     const cfg = {
       type: LC,

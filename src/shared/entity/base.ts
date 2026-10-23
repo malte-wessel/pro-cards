@@ -137,6 +137,9 @@ export abstract class EntityCardBase extends HTMLElement {
   _plotInputs = new WeakMap<object, readonly unknown[]>();
   _fillEpoch = 0;
   _resized = true;
+  // hass.locale by value, read once per render (Home Assistant keeps the object, a test double
+  // may not)
+  _localeKey = "";
 
   abstract _normalize(raw: unknown): EntityCardConfig;
   abstract _styles(): string;
@@ -169,6 +172,11 @@ export abstract class EntityCardBase extends HTMLElement {
       },
       endDrag: (idx) => {
         if (this._dragging === idx) this._dragging = null;
+        // the row is filled again whatever its inputs say: a gesture that made no call (cancelled
+        // by a scroll) left its control where the finger was, not at the entity's value
+        for (const row of this._root?.querySelectorAll<HTMLElement>(`.row[data-idx="${idx}"]`) ??
+          [])
+          this._rowInputsDrawn.delete(row);
         this._render();
       },
       runAction: (ent, a, kind) => this._runAction(ent, a, kind),
@@ -692,6 +700,7 @@ export abstract class EntityCardBase extends HTMLElement {
   // ----- render -----
   _render() {
     if (!this._root || !this._hass || !this._config) return;
+    this._localeKey = JSON.stringify(this._hass.locale ?? null);
     const cfg = this._config,
       card = this._root,
       ctx = this._ctx();
@@ -778,8 +787,7 @@ export abstract class EntityCardBase extends HTMLElement {
       ...this._idsByItem[idx].map((id) => hass?.states[id]),
       this._itemTpl[idx] ? this._tpl.version : 0,
       langOf(hass),
-      // by value: Home Assistant keeps the object, a test double may not
-      JSON.stringify(hass?.locale ?? null),
+      this._localeKey,
       hass?.formatEntityState,
     ];
     const changed = depsChanged(this._modelInputs, ent, inputs);

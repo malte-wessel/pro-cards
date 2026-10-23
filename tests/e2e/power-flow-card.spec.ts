@@ -192,6 +192,45 @@ test.describe("power flow card", () => {
     for (const [d, p] of pairs) expect(p).toBe(`path('${d}')`);
   });
 
+  test("lines keep to their tracks when the diagram changes height", async ({ page }) => {
+    const shown = [{ condition: "state", entity: "light.kitchen", state: "on" }];
+    await mount(page, {
+      type: T,
+      sources: SRC,
+      home: HOME,
+      flow_style: "lines",
+      // a room's links keep their paths when a consumer beside it goes, the diagram gets shorter
+      consumers: [
+        { group: "Laundry", entities: ["sensor.washer_power", "sensor.dryer_power"] },
+        {
+          group: "Garage",
+          entities: [
+            "sensor.ev_charger_power",
+            { entity: "sensor.heat_pump_power", visibility: shown },
+          ],
+        },
+      ],
+    });
+    await setState(page, "light.kitchen", "on");
+    await pin(page, { "sensor.washer_power": "290", "sensor.dryer_power": "640" });
+    const c = card(page);
+    await expect(c.locator('.pnode[data-node="c1.1"]')).toBeVisible();
+    const boxes = () =>
+      c.locator(".pdiag").evaluate((d) => ({
+        tracks: d.querySelector("svg.ptracks")!.getAttribute("viewBox"),
+        lanes: [...d.querySelectorAll(".lane svg")].map((s) => s.getAttribute("viewBox")),
+      }));
+    const before = await boxes();
+    expect(before.lanes.length).toBeGreaterThan(0);
+    for (const box of before.lanes) expect(box).toBe(before.tracks);
+    // the heat pump goes: the diagram is laid out over fewer nodes
+    await setState(page, "light.kitchen", "off");
+    await expect(c.locator('.pnode[data-node="c1.1"]')).toBeHidden();
+    const after = await boxes();
+    expect(after.tracks).not.toBe(before.tracks);
+    for (const box of after.lanes) expect(box).toBe(after.tracks);
+  });
+
   test("consumers as nodes, a producing device, rooms and list rows", async ({ page }) => {
     await mount(page, { type: T, sources: SRC, home: HOME, consumers: CONS });
     await pin(page);

@@ -487,6 +487,9 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
     } else {
       lane.style.setProperty("--pf-c", color);
       if (lane.dataset.d !== e.d) moveLane(lane, e, layout.w, layout.h);
+      // the lines' box is the diagram's: it follows a new height even when this path did not move
+      const svg = lane.querySelector("svg");
+      if (svg && svg.getAttribute("viewBox") !== viewBox) svg.setAttribute("viewBox", viewBox);
       // the speed in px/s follows the load; a longer path takes as much longer
       const longer = e.len > 0 ? Number(lane.dataset.len) / e.len : 1;
       setRate(lane, rateOf(w, Number(lane.dataset.w), cfg.animation) * longer);

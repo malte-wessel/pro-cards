@@ -463,3 +463,49 @@ test.describe("weather card", () => {
     await expect(c.locator(".wempty").first()).toHaveText("keine Vorhersage");
   });
 });
+
+// an integration that stamps its days at midnight UTC, seen from New York
+test.describe("forecast days stamped at midnight UTC", () => {
+  test.use({ timezoneId: "America/New_York" });
+  const utcDays = (first: string) =>
+    [0, 1, 2].map((i) => ({
+      datetime: new Date(Date.parse(first) + i * 86400e3).toISOString(),
+      condition: "sunny",
+      temperature: 25 + i,
+      templow: 15 + i,
+    }));
+  const labels = async (page: Page, time: string, first: string) => {
+    await mount(page, { type: T, entity: W }, { time: new Date(time) });
+    await page.evaluate((days) => {
+      const world = window.pc.world as unknown as {
+        forecast: (id: string, type: string) => unknown;
+      };
+      const orig = world.forecast.bind(world);
+      world.forecast = (id, type) => (type === "daily" ? days : orig(id, type));
+    }, utcDays(first));
+    await mount(
+      page,
+      { type: T, entity: W, sections: [{ type: "forecast", mode: "daily", days: 3 }] },
+      { time: new Date(time) },
+    );
+    return card(page).locator(".frow .fname").allTextContents();
+  };
+
+  test("in the morning, today's day is today", async ({ page }) => {
+    // Monday 10:00: the forecast starts with Monday (Sunday 20:00 in New York)
+    expect(await labels(page, "2026-06-22T10:00:00-04:00", "2026-06-22T00:00:00Z")).toEqual([
+      "Today",
+      "Tue",
+      "Wed",
+    ]);
+  });
+
+  test("in the evening, tomorrow's day is not today", async ({ page }) => {
+    // Monday 21:00, past midnight UTC: the forecast starts with Tuesday (Monday 20:00 here)
+    expect(await labels(page, "2026-06-22T21:00:00-04:00", "2026-06-23T00:00:00Z")).toEqual([
+      "Tue",
+      "Wed",
+      "Thu",
+    ]);
+  });
+});

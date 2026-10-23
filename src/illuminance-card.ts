@@ -141,7 +141,12 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
     } else if (!prev || langOf(prev) !== langOf(hass)) this._render();
     if (themeChanged(prev, hass)) {
       this._textCache.clear();
-      requestAnimationFrame(() => this._render());
+      // drawn again in the next frame, once the theme's variables apply: a render in this update
+      // (a new reading came with the theme) still saw the old ones
+      requestAnimationFrame(() => {
+        this._drawn = new WeakMap();
+        this._render();
+      });
     }
   }
 

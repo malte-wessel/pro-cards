@@ -148,9 +148,11 @@ export class LayoutCard extends HTMLElement {
     // the host's height, which the browser would report as a size change it could not deliver
     // ("ResizeObserver loop completed with undelivered notifications"). The width is read live,
     // not from the notification: a layout inside another one is notified in the same pass, after
-    // its parent laid out, with the size it had before that
+    // its parent laid out, with the size it had before that. offsetWidth is the layout width: a
+    // dialog that opens by scaling up must not count as a narrower card (and no observation
+    // follows when its transform ends)
     this._ro = new ResizeObserver(() => {
-      const w = this._probe?.getBoundingClientRect().width ?? 0;
+      const w = this._probe?.offsetWidth ?? 0;
       if (w > 0 && Math.round(w) !== Math.round(this._width)) {
         this._width = w;
         this._relayout();
