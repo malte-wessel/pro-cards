@@ -5,8 +5,8 @@
 import { DEFAULT_ANIMATION, IDLE_W, type Animation } from "./constants.ts";
 
 // a link is active when it carries a real load either way: `idle` W or more (the card's
-// `idle_below`), never nothing
-export const isActive = (w: number, idle: number = IDLE_W) => w !== 0 && Math.abs(w) >= idle;
+// `idle_below`; a rounding remainder below it still counts), never nothing
+export const isActive = (w: number, idle: number = IDLE_W) => w !== 0 && Math.abs(w) >= idle - 1e-9;
 
 // the load between the bounds, 0 … 1
 export const loadOf = (w: number, a: Animation = DEFAULT_ANIMATION) =>

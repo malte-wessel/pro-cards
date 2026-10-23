@@ -83,6 +83,7 @@ export const GEOM = {
   columnPitch: 142, // direction: down – distance between the columns along the flow
   downMargin: 70, // direction: down – first / last source centre from the edge
   srcValueW: 60, // direction: down – the room a source's value is given when its labels' place is chosen
+  srcArrowW: 16, // … and the arrow after each value of a source that shows two
   labelGap: 6,
   summaryH: 40, // the summary line above the diagram (grid rows estimate)
 } as const;

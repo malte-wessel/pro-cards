@@ -14,7 +14,7 @@ import { fmtNumber, textWidth } from "../../shared/format.ts";
 import { t } from "../../shared/i18n.ts";
 import { measure, type TextCache } from "../../shared/typography.ts";
 import { qs } from "../../shared/util.ts";
-import { leavesOf, type PowerFlowConfig } from "../config.ts";
+import { leavesOf, twoValued, type PowerFlowConfig } from "../config.ts";
 import { COLORS, ICONS, type LabelLines } from "../constants.ts";
 import {
   arrowLength,
@@ -48,9 +48,13 @@ export interface TreeState {
   flows: Flows;
   layout: TreeLayout;
   homeLook: Look;
+  split: ReadonlySet<string>; // the sources that show both their flows
 }
 interface LabelTexts {
   v: string; // the value
+  // a second value line for a source that may run two ways (its out ↑), "" while it shows one:
+  // the line is kept, so the tree's height follows the config, never the values
+  v2?: string;
   n: string; // the name
   s: string; // the secondary line
 }
@@ -99,6 +103,7 @@ const labelEl = (id: string, small: boolean) => {
   el.className = small ? "plabel small" : "plabel";
   el.dataset.node = id;
   el.appendChild(textEl("state", ""));
+  el.appendChild(textEl("v2", ""));
   el.appendChild(textEl("secondary name", ""));
   el.appendChild(textEl("secondary sec2", ""));
   return el;
@@ -316,21 +321,34 @@ const labelText = (
   const src = sourceOf(st, nd);
   const name = ent && m ? nameOf(st.ctx, ent, m.st) : "";
   if (!src) return { v: "–", n: name, s };
-  const v = src.w === null ? "–" : fmtPower(hass, src.w, u, dec);
+  // both flows of a node that runs two ways at once, one over the other: into it ↓, out of it ↑
+  const [into, out] =
+    src.kind === "battery" ? [src.charge, src.discharge] : [src.export, src.import];
+  const split = src.w !== null && st.split.has(nd.id);
+  const cfgSrc = st.cfg.sources.find((c) => c.id === nd.id);
+  const v =
+    src.w === null
+      ? "–"
+      : split
+        ? `${fmtPower(hass, into, u, dec)} ↓`
+        : fmtPower(hass, src.w, u, dec);
+  const v2 =
+    cfgSrc && twoValued(cfgSrc) ? (split ? `${fmtPower(hass, out, u, dec)} ↑` : "") : undefined;
   if (src.kind === "battery" && src.soc !== null)
-    return { v, n: `${name} · ${fmtNumber(hass, Math.round(src.soc), 0)} %`, s };
+    return { v, v2, n: `${name} · ${fmtNumber(hass, Math.round(src.soc), 0)} %`, s };
   if (src.kind === "grid") {
-    if (src.generator) return { v, n: t(hass, "power.generator"), s };
+    if (src.generator) return { v, v2, n: t(hass, "power.generator"), s };
     if (src.lowCarbon !== null && !st.now.offline)
       return {
         v,
+        v2,
         n: `${name} · ${t(hass, "power.low_carbon", {
           pct: `${fmtNumber(hass, Math.round(src.lowCarbon * 100), 0)} %`,
         })}`,
         s,
       };
   }
-  return { v, n: name, s };
+  return { v, v2, n: name, s };
 };
 
 // the labels' lines as styled (`.plabel`), at the theme's text size
@@ -356,10 +374,11 @@ const measureLabels = (st: TreeState, labelEls: Map<string, HTMLElement>) => {
     const small = el.classList.contains("small");
     const value = small ? lines.smallValue : lines.value,
       name = small ? lines.smallName : lines.name;
-    const vw = textWidth(txt.v, value.font) + 2;
+    const vw = Math.max(textWidth(txt.v, value.font), textWidth(txt.v2 ?? "", value.font)) + 2;
     const nw = Math.max(textWidth(txt.n, name.font), textWidth(txt.s, name.font)) + 2;
     const w = Math.max(vw, nw);
-    const h = value.line + name.line + (txt.s ? name.line : 0);
+    const h =
+      value.line + (txt.v2 !== undefined ? value.line : 0) + name.line + (txt.s ? name.line : 0);
     sizes.set(nd.id, { w, h, vw, nw });
   }
   return { texts, sizes };
@@ -539,6 +558,12 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
     el.classList.toggle("cut", max !== undefined);
     el.style.setProperty("--pl-max", max === undefined ? "" : `${Math.floor(max)}px`);
     qs(el, ".state").textContent = txt.v;
+    // the second value line: kept while it shows one value, below the name, so the value stays
+    // over the name and the label keeps its height
+    const v2 = qs(el, ".v2");
+    el.classList.toggle("two", txt.v2 !== undefined);
+    v2.classList.toggle("blank", !txt.v2);
+    v2.textContent = txt.v2 || "\u00a0";
     const name = qs(el, ".name");
     name.textContent = txt.n;
     name.style.display = txt.n ? "" : "none";
