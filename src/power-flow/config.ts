@@ -54,8 +54,9 @@ export interface RawSource extends RawEntity, RawNode {
   discharge?: string | null;
   import?: string | null; // grid pair
   export?: string | null;
+  both_ways?: boolean | null; // grid pair: the meter counts import and export apart, both may run at once
   soc?: string | null; // battery state of charge (%)
-  charge_from?: unknown; // battery: "solar" when the panels feed it (default "any")
+  charge_from?: unknown; // battery: "solar" when the panels feed it, or the solar entities that do (default "any")
   price?: string | null; // grid price sensor
   offline?: string | { entity?: string | null; state?: string | null } | null;
   generator?: string | null; // grid: the generator's power while offline
@@ -109,12 +110,14 @@ export interface BatterySource extends SourceBase {
   secondIdx: number | null; // the discharge item of a pair
   socIdx: number | null;
   chargeFrom: ChargeFrom; // "solar": solar charges it before the home, the grid never does
+  panels: string[] | null; // the solar sources (ids) that feed it (`charge_from: <entities>`); null: every one
   invert: boolean;
 }
 export interface GridSource extends SourceBase {
   kind: "grid";
   idx: number; // signed power (+ = import), or the import item of a pair
   secondIdx: number | null; // the export item of a pair
+  bothWays: boolean; // a pair that may import and export at once (`both_ways`)
   priceIdx: number | null;
   offlineIdx: number | null;
   offlineState: string;
@@ -171,9 +174,10 @@ export interface PowerFlowConfig extends EntityCardConfig {
   lines?: LabelLines; // the labels' lines at the theme's text size, set where the tree is drawn
 }
 
+const ENTITY_ID = /^[a-z_]+\.[a-z0-9_]+$/;
 const entityId = (v: unknown, key: string): string | null => {
   if (v === undefined || v === null || v === "") return null;
-  if (typeof v !== "string" || !/^[a-z_]+\.[a-z0-9_]+$/.test(v))
+  if (typeof v !== "string" || !ENTITY_ID.test(v))
     throw new Error(`${CARD_TYPE}: '${key}' must be an entity id`);
   return v;
 };
@@ -206,6 +210,7 @@ const normalizeSource = (
     discharge,
     soc,
     charge_from,
+    both_ways,
     price,
     offline,
     generator,
@@ -258,10 +263,16 @@ const normalizeSource = (
       d = entityId(discharge, `${label}.discharge`);
     if (p ? c || d : !(c && d))
       throw new Error(`${CARD_TYPE}: ${label} needs 'power' or both 'charge' and 'discharge'`);
-    const chargeFrom = charge_from ?? "any";
-    if (!oneOf(CHARGE_FROM, chargeFrom))
+    // `any`, `solar` or the solar entities that feed it (resolved once every source is known)
+    const cf = charge_from ?? "any";
+    const listed = Array.isArray(cf) ? cf : oneOf(CHARGE_FROM, cf) ? null : [cf];
+    if (
+      listed
+        ? !listed.length || listed.some((e) => typeof e !== "string" || !ENTITY_ID.test(e))
+        : !oneOf(CHARGE_FROM, cf)
+    )
       throw new Error(
-        `${CARD_TYPE}: ${label}.charge_from must be one of ${CHARGE_FROM.join(" | ")}`,
+        `${CARD_TYPE}: ${label}.charge_from must be one of ${CHARGE_FROM.join(" | ")} or the entities of solar sources`,
       );
     const idx = push({ ...base, entity: p ?? c }, label, "power.battery");
     return {
@@ -270,7 +281,8 @@ const normalizeSource = (
       idx,
       secondIdx: p ? null : sub(d as string, `${label}.discharge`),
       socIdx: subOf(soc, "soc"),
-      chargeFrom,
+      chargeFrom: listed ? "solar" : (cf as ChargeFrom),
+      panels: listed ? [...new Set(listed as string[])] : null,
       invert: !!invert,
     };
   }
@@ -278,6 +290,8 @@ const normalizeSource = (
     im = entityId(o.import, `${label}.import`),
     ex = entityId(o.export, `${label}.export`);
   if (p ? im || ex : !im) throw new Error(`${CARD_TYPE}: ${label} needs 'power' or 'import'`);
+  if (both_ways && !(im && ex))
+    throw new Error(`${CARD_TYPE}: ${label}.both_ways needs an 'import' / 'export' pair`);
   const idx = push({ ...base, entity: p ?? im }, label, "power.grid");
   let offlineIdx: number | null = null,
     offlineState = "on";
@@ -295,6 +309,7 @@ const normalizeSource = (
     kind: "grid",
     idx,
     secondIdx: p ? null : ex ? sub(ex, `${label}.export`) : null,
+    bothWays: !!both_ways,
     priceIdx: subOf(price, "price"),
     offlineIdx,
     offlineState,
@@ -457,6 +472,16 @@ export const normalizePowerFlowConfig = (input: unknown): PowerFlowConfig => {
   if (!Array.isArray(raw.sources) || raw.sources.length === 0)
     throw new Error(`${CARD_TYPE}: 'sources' must be a non-empty list`);
   const sources = raw.sources.map((s, i) => normalizeSource(s, i, ctx, entities));
+  // a battery's `charge_from` entities: the solar sources that carry them
+  sources.forEach((s, i) => {
+    if (s.kind !== "battery" || !s.panels) return;
+    s.panels = s.panels.flatMap((e) => {
+      const ids = sources.filter((p) => p.kind === "solar" && entities[p.idx].entity === e);
+      if (!ids.length)
+        throw new Error(`${CARD_TYPE}: sources[${i}].charge_from: ${e} is not a solar source`);
+      return ids.map((p) => p.id);
+    });
+  });
 
   const consumers = normalizeConsumers(
     raw.consumers,
@@ -511,6 +536,12 @@ export const normalizePowerFlowConfig = (input: unknown): PowerFlowConfig => {
     animation: normalizeAnimation(raw.animation),
   };
 };
+
+// a source that may run two ways at once and then shows both values: a solar-fed battery given
+// as a pair, a grid with `both_ways`
+export const twoValued = (s: Source) =>
+  (s.kind === "battery" && s.secondIdx !== null && s.chargeFrom === "solar") ||
+  (s.kind === "grid" && s.bothWays);
 
 // every consumer leaf (flat items, group members, the other node) in drawing order
 export const leavesOf = (cfg: PowerFlowConfig): (ConsumerItem | OtherConsumer)[] =>

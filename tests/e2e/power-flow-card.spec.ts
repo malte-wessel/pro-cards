@@ -542,8 +542,8 @@ test("a solar-fed battery given as a pair charges from its panels and feeds the 
     await setState(page, id, st);
   const c = card(page);
   await expect(label(c, "home")).toHaveText("259 W");
-  // the node keeps the net value and the charging colour, the links carry both gross flows
-  await expect(label(c, "s1")).toHaveText(/185 W\s*Battery · 42 %/);
+  // the node shows both flows, its colour follows the net value, the links carry both
+  await expect(label(c, "s1")).toHaveText(/374 W ↓ · 189 W ↑\s*Battery · 42 %/);
   expect(await cssVar(c.locator(".pnode[data-node='s1']"), "--fe-color")).toContain(
     "--energy-battery-in",
   );
@@ -553,4 +553,83 @@ test("a solar-fed battery given as a pair charges from its panels and feeds the 
   await expect(link(c, 5)).toHaveClass(/active/); // grid → home
   await expect(link(c, 0)).not.toHaveClass(/active/); // solar → home stays idle
   await expect(link(c, 6)).not.toHaveClass(/active/); // the grid never charges it
+});
+
+test("a node with two flows shows its net value below the idle threshold, both again only clearly above", async ({
+  page,
+}) => {
+  const B = "sensor.balcony_battery_";
+  await mount(page, {
+    type: T,
+    sources: [
+      { type: "solar", entity: "sensor.balcony_solar_power" },
+      {
+        type: "battery",
+        charge: `${B}charge_power`,
+        discharge: `${B}discharge_power`,
+        charge_from: "sensor.balcony_solar_power",
+      },
+      {
+        type: "grid",
+        import: "sensor.grid_import_power",
+        export: "sensor.grid_export_power",
+        both_ways: true,
+      },
+    ],
+  });
+  const set = async (states: Record<string, string>) => {
+    for (const [id, st] of Object.entries(states)) await setState(page, id, st);
+  };
+  await set({
+    "sensor.balcony_solar_power": "400",
+    [`${B}charge_power`]: "400",
+    [`${B}discharge_power`]: "250",
+    "sensor.grid_import_power": "1200",
+    "sensor.grid_export_power": "300",
+  });
+  const c = card(page);
+  // the grid: into it ↓ (export), out of it ↑ (import)
+  await expect(label(c, "s2")).toHaveText(/300 W ↓ · 1\.20 kW ↑\s*Grid/);
+  await expect(label(c, "s1")).toHaveText(/400 W ↓ · 250 W ↑/);
+  // at idle_below (20 W) the two values stay, below it the net value returns
+  await set({ [`${B}discharge_power`]: "20" });
+  await expect(label(c, "s1")).toHaveText(/400 W ↓ · 20 W ↑/);
+  await set({ [`${B}discharge_power`]: "15" });
+  await expect(label(c, "s1")).toHaveText(/^385 W/);
+  // and the two values come back only clearly above it
+  await set({ [`${B}discharge_power`]: "22" });
+  await expect(label(c, "s1")).toHaveText(/^378 W/);
+  await set({ [`${B}discharge_power`]: "30" });
+  await expect(label(c, "s1")).toHaveText(/400 W ↓ · 30 W ↑/);
+  // direction: down – one value over the other, the second line kept while it shows one
+  await mount(page, {
+    type: T,
+    direction: "down",
+    sources: [
+      { type: "solar", entity: "sensor.balcony_solar_power" },
+      {
+        type: "battery",
+        charge: `${B}charge_power`,
+        discharge: `${B}discharge_power`,
+        charge_from: "solar",
+      },
+    ],
+  });
+  const d = label(card(page), "s1");
+  await expect(d.locator(".state")).toHaveText("400 W ↓");
+  await expect(d.locator(".v2")).toHaveText("30 W ↑");
+  const h = await d.evaluate((e) => e.getBoundingClientRect().height);
+  await set({ [`${B}discharge_power`]: "0" });
+  await expect(d.locator(".state")).toHaveText("400 W");
+  await expect(d.locator(".v2")).toHaveClass(/blank/);
+  expect(await d.evaluate((e) => e.getBoundingClientRect().height)).toBe(h);
+  // a grid without both_ways keeps its net value
+  await mount(page, {
+    type: T,
+    sources: [
+      { type: "solar", entity: "sensor.balcony_solar_power" },
+      { type: "grid", import: "sensor.grid_import_power", export: "sensor.grid_export_power" },
+    ],
+  });
+  await expect(label(card(page), "s1")).toHaveText(/^900 W\s*Grid/);
 });

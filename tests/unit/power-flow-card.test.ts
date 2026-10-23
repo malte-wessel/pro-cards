@@ -15,6 +15,7 @@ import {
   allocate,
   type EdgeFlow,
   thresholdShown,
+  bothFlows,
   edgeColor,
   fmtPower,
   powerNow,
@@ -210,6 +211,7 @@ describe("power-flow-card config", () => {
         secondIdx: 3,
         socIdx: 4,
         chargeFrom: "any",
+        panels: null,
         invert: false,
       },
       {
@@ -219,6 +221,7 @@ describe("power-flow-card config", () => {
         kind: "grid",
         idx: 5,
         secondIdx: 7,
+        bothWays: false,
         priceIdx: 8,
         offlineIdx: 6,
         offlineState: "off",
@@ -379,6 +382,40 @@ describe("power-flow-card config", () => {
       "{{ states('sensor.x') }}",
       "{{ states('sensor.t') }} °C",
     ]);
+  });
+
+  it("names the panels that feed a battery and lets a grid pair run both ways", () => {
+    const sources = (chargeFrom: unknown, grid: Record<string, unknown> = {}) => [
+      { type: "solar", entity: "sensor.roof" },
+      { type: "solar", entity: "sensor.balcony" },
+      { type: "battery", charge: "sensor.bc", discharge: "sensor.bd", charge_from: chargeFrom },
+      { type: "grid", power: "sensor.grid", ...grid },
+    ];
+    const battery = (chargeFrom: unknown) =>
+      normalizePowerFlowConfig({ sources: sources(chargeFrom) }).sources[2];
+    expect(battery("sensor.balcony")).toMatchObject({ chargeFrom: "solar", panels: ["s1"] });
+    expect(battery(["sensor.roof", "sensor.balcony", "sensor.roof"])).toMatchObject({
+      chargeFrom: "solar",
+      panels: ["s0", "s1"],
+    });
+    // `solar` and `any` keep their meaning: every panel, or the usual order
+    expect(battery("solar")).toMatchObject({ chargeFrom: "solar", panels: null });
+    expect(battery(undefined)).toMatchObject({ chargeFrom: "any", panels: null });
+    for (const e of ["sensor.grid", "sensor.nowhere"])
+      expect(() => battery(e)).toThrow(`sources[2].charge_from: ${e} is not a solar source`);
+    for (const bad of [[], [42], "Balcony"])
+      expect(() => battery(bad)).toThrow(/charge_from must be one of any \| solar/);
+
+    const grid = (g: Record<string, unknown>) =>
+      normalizePowerFlowConfig({ sources: [{ type: "grid", ...g }] }).sources[0];
+    expect(grid({ import: "sensor.in", export: "sensor.out", both_ways: true })).toMatchObject({
+      bothWays: true,
+    });
+    expect(grid({ import: "sensor.in", export: "sensor.out" })).toMatchObject({ bothWays: false });
+    for (const g of [{ power: "sensor.g" }, { import: "sensor.in" }])
+      expect(() => grid({ ...g, both_ways: true })).toThrow(
+        /both_ways needs an 'import' \/ 'export' pair/,
+      );
   });
 });
 
@@ -799,6 +836,189 @@ describe("power flow numbers", () => {
     expect(edge(mixed.f, "s1", "s2")?.w).toBe(200);
   });
 
+  it("charges a battery that names its panels from those panels only", () => {
+    // two arrays, two batteries: the balcony panels feed only the balcony battery (simon42, post 94)
+    const cfg = normalizePowerFlowConfig({
+      home: "sensor.home",
+      sources: [
+        { type: "solar", entity: "sensor.roof" },
+        { type: "solar", entity: "sensor.balcony" },
+        { type: "battery", power: "sensor.b1" },
+        {
+          type: "battery",
+          charge: "sensor.bc",
+          discharge: "sensor.bd",
+          charge_from: "sensor.balcony",
+        },
+        { type: "grid", power: "sensor.grid" },
+      ],
+    });
+    const states = {
+      "sensor.roof": "3000",
+      "sensor.balcony": "400",
+      "sensor.b1": "0",
+      "sensor.bc": "400",
+      "sensor.bd": "0",
+      "sensor.home": "3200",
+      "sensor.grid": "200",
+    };
+    const { f } = flowsOf(cfg, states);
+    expect(f).toMatchObject({ sB: 400, sH: 3000, gH: 200, gB: 0, sG: 0 });
+    expect(edge(f, "s1", "s3")).toMatchObject({ w: 400, kind: "battIn" });
+    expect(edge(f, "s0", "home")?.w).toBe(3000);
+    // the roof has no link to the balcony battery at all, but still one to the other battery
+    expect(edge(f, "s0", "s3")).toBeUndefined();
+    expect(edge(f, "s0", "s2")).toBeDefined();
+    // `solar` shares the same charge over both arrays
+    const shared = normalizePowerFlowConfig({
+      home: "sensor.home",
+      sources: [
+        { type: "solar", entity: "sensor.roof" },
+        { type: "solar", entity: "sensor.balcony" },
+        { type: "battery", power: "sensor.b1" },
+        { type: "battery", charge: "sensor.bc", discharge: "sensor.bd", charge_from: "solar" },
+        { type: "grid", power: "sensor.grid" },
+      ],
+    });
+    expect(edge(flowsOf(shared, states).f, "s0", "s3")?.w).toBeCloseTo(352.94, 1);
+
+    // the panels report less than the battery takes: the grid fills in, never the other array
+    const short = flowsOf(cfg, {
+      ...states,
+      "sensor.balcony": "300",
+      "sensor.home": "3000",
+      "sensor.grid": "100",
+    }).f;
+    expect(short).toMatchObject({ sB: 300, sH: 3000, gH: 0, gB: 100 });
+    expect(edge(short, "s1", "s3")?.w).toBe(300);
+    expect(edge(short, "s4", "s3")?.w).toBe(100);
+  });
+  it("keeps two batteries on their own arrays", () => {
+    const cfg = normalizePowerFlowConfig({
+      home: "sensor.home",
+      sources: [
+        { type: "solar", entity: "sensor.a" },
+        { type: "solar", entity: "sensor.b" },
+        { type: "battery", charge: "sensor.ac", discharge: "sensor.ad", charge_from: "sensor.a" },
+        { type: "battery", power: "sensor.bb", charge_from: ["sensor.b"] },
+        { type: "grid", power: "sensor.grid" },
+      ],
+    });
+    const { f } = flowsOf(cfg, {
+      "sensor.a": "500",
+      "sensor.b": "200",
+      "sensor.ac": "300",
+      "sensor.ad": "0",
+      "sensor.bb": "-400",
+      "sensor.home": "1000",
+      "sensor.grid": "1000",
+    });
+    expect(f).toMatchObject({ sB: 500, sH: 200, gH: 800, gB: 200, grid: 1000 });
+    expect(edge(f, "s0", "s2")?.w).toBe(300);
+    expect(edge(f, "s1", "s3")?.w).toBe(200);
+    expect(edge(f, "s0", "home")?.w).toBe(200);
+    expect(edge(f, "s4", "s3")?.w).toBe(200);
+    expect(edge(f, "s0", "s3")).toBeUndefined();
+    expect(edge(f, "s1", "s2")).toBeUndefined();
+  });
+  it("draws a battery that names every panel as one fed by `solar`", () => {
+    const cfgOf = (chargeFrom: unknown) =>
+      normalizePowerFlowConfig({
+        home: "sensor.home",
+        sources: [
+          { type: "solar", entity: "sensor.roof" },
+          { type: "solar", entity: "sensor.balcony" },
+          { type: "battery", power: "sensor.battery", charge_from: chargeFrom },
+          { type: "battery", power: "sensor.b2" },
+          { type: "grid", power: "sensor.grid" },
+        ],
+      });
+    const all = cfgOf(["sensor.roof", "sensor.balcony"]),
+      solar = cfgOf("solar");
+    for (const states of [
+      { "sensor.roof": "3000", "sensor.balcony": "1000", "sensor.battery": "-800" },
+      { "sensor.roof": "300", "sensor.balcony": "100", "sensor.battery": "-800" },
+      { "sensor.roof": "2000", "sensor.balcony": "0", "sensor.battery": "500" },
+    ]) {
+      const s = { ...states, "sensor.home": "1500", "sensor.b2": "-300", "sensor.grid": "200" };
+      const a = flowsOf(all, s).f,
+        b = flowsOf(solar, s).f;
+      for (const k of ["sB", "sH", "bH", "gH", "gB", "sG", "bG", "dB", "grid"] as const)
+        expect(a[k]).toBeCloseTo(b[k], 6);
+      expect(a.edges.map((e) => [e.from, e.to, e.kind])).toEqual(
+        b.edges.map((e) => [e.from, e.to, e.kind]),
+      );
+      a.edges.forEach((e, i) => expect(e.w).toBeCloseTo(b.edges[i].w, 6));
+    }
+  });
+  it("lets a grid with both_ways import and export at once", () => {
+    const sources = [
+      { type: "solar", entity: "sensor.pv" },
+      { type: "grid", import: "sensor.in", export: "sensor.out", both_ways: true },
+    ];
+    const cfg = normalizePowerFlowConfig({ sources });
+    // a meter that does not net its phases: 1000 W in on one, 300 W out on another
+    const { now, f } = flowsOf(cfg, {
+      "sensor.pv": "800",
+      "sensor.in": "1000",
+      "sensor.out": "300",
+    });
+    expect(now.sources[1]).toMatchObject({ w: 700, import: 1000, export: 300 });
+    expect(f).toMatchObject({ H: 1500, sG: 300, sH: 500, gH: 1000, grid: 700 });
+    expect(edge(f, "s0", "s1")).toMatchObject({ w: 300, kind: "gridOut" });
+    expect(edge(f, "s0", "home")?.w).toBe(500);
+    expect(edge(f, "s1", "home")).toMatchObject({ w: 1000, kind: "gridIn" });
+    // the larger flow names the state; self-sufficiency counts the import
+    expect(summaryState(cfg, now, f)).toMatchObject({ key: "power.state.importing", w: 1000 });
+    expect(f.selfSufficiency).toBeCloseTo(1 / 3);
+    const out = flowsOf(cfg, { "sensor.pv": "2000", "sensor.in": "100", "sensor.out": "1500" });
+    expect(summaryState(cfg, out.now, out.f)).toMatchObject({
+      key: "power.state.exporting",
+      w: 1500,
+    });
+    // without both_ways the pair is netted, as before
+    const net = normalizePowerFlowConfig({
+      sources: [sources[0], { type: "grid", import: "sensor.in", export: "sensor.out" }],
+    });
+    const n = flowsOf(net, { "sensor.pv": "800", "sensor.in": "1000", "sensor.out": "300" });
+    expect(n.now.sources[1]).toMatchObject({ w: 700, import: 700, export: 0 });
+    expect(n.f).toMatchObject({ sG: 0, sH: 800, gH: 700 });
+  });
+  it("takes a two-way grid's export from solar first, then from the batteries", () => {
+    const cfg = normalizePowerFlowConfig({
+      home: "sensor.home",
+      sources: [
+        { type: "solar", entity: "sensor.pv" },
+        { type: "battery", power: "sensor.battery" },
+        {
+          type: "grid",
+          import: "sensor.in",
+          export: "sensor.out",
+          both_ways: true,
+          offline: "binary_sensor.outage",
+        },
+      ],
+    });
+    const states = {
+      "sensor.pv": "100",
+      "sensor.battery": "500",
+      "sensor.in": "600",
+      "sensor.out": "300",
+      "sensor.home": "900",
+      "binary_sensor.outage": "off",
+    };
+    const { f } = flowsOf(cfg, states);
+    expect(f).toMatchObject({ sG: 100, bG: 200, bH: 300, gH: 600, sH: 0, grid: 300 });
+    expect(edge(f, "s0", "s2")?.w).toBe(100);
+    expect(edge(f, "s1", "s2")?.w).toBe(200);
+    expect(edge(f, "s1", "home")?.w).toBe(300);
+    // more export than there is to give: what the sources have, no more
+    const odd = flowsOf(cfg, { ...states, "sensor.battery": "0", "sensor.out": "2000" }).f;
+    expect(odd).toMatchObject({ sG: 100, bG: 0 });
+    // offline the grid carries nothing either way
+    const off = flowsOf(cfg, { ...states, "binary_sensor.outage": "on" }).f;
+    expect(off).toMatchObject({ sG: 0, bG: 0, gH: 0, gB: 0 });
+  });
   it("reads the grid's low-carbon share from a fossil or a non-fossil percentage", () => {
     const fossil = normalizePowerFlowConfig({
       home: "sensor.home",
@@ -1438,6 +1658,18 @@ describe("power flow labels", () => {
     // sources and the home are placed first and take their preferred side
     expect(placed.find((p) => p.id === "home")?.align).toBe("c");
     expect(placed.find((p) => p.id === "s0")?.align).toBe("l");
+  });
+  it("shows both flows of a node from the idle threshold on, again only clearly above it", () => {
+    // charge, discharge (or export, import) at idle_below 20
+    expect(bothFlows(undefined, 30, 30, 20)).toBe(true);
+    expect(bothFlows(undefined, 0, 900, 20)).toBe(false);
+    expect(bothFlows(true, 20, 900, 20)).toBe(true);
+    expect(bothFlows(true, 19, 900, 20)).toBe(false);
+    expect(bothFlows(false, 22, 900, 20)).toBe(false);
+    expect(bothFlows(false, 25, 900, 20)).toBe(true);
+    // idle_below 0: any two real flows, never a missing one
+    expect(bothFlows(undefined, 1, 900, 0)).toBe(true);
+    expect(bothFlows(undefined, 0, 900, 0)).toBe(false);
   });
 });
 

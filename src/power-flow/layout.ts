@@ -7,7 +7,7 @@
 // across the flow through the pitch between nodes, which follows the label heights and so the
 // config alone (the card's height never depends on its width); along the flow through the column
 // positions, which keep the measured label widths clear of the next column and the trunks.
-import { leavesOf, type PowerFlowConfig } from "./config.ts";
+import { leavesOf, twoValued, type PowerFlowConfig } from "./config.ts";
 import { GEOM, LABEL_LINES, NODE_D, type Direction } from "./constants.ts";
 import type { EdgeFlow, EdgeKind } from "./model.ts";
 import { dedupe, orthoPath, pathLength, type Pt } from "./path.ts";
@@ -181,14 +181,17 @@ const columnPlan = (cfg: PowerFlowConfig, scale = 1): Column => {
 // direction: down – the row of sources across the top, centred over the home, and their labels
 // in one line: right of the icons when every name fits there, otherwise below them, beside each
 // source's line. The choice reads the names and a fixed room for the value (`valueW`: `srcValueW`
-// at the default text size), so a changing value never moves the labels. Names that do not fit
-// are cut (`caps`), values never.
+// at the default text size; `srcArrowW` more for a source that shows two values, one over the
+// other), so a changing value never moves the labels. Names that do not fit are cut (`caps`),
+// values never.
 export type SourceSlot = "right" | "below";
 export const sourceRow = (
   ds: number[],
   nws: number[],
   across: number,
   valueW: number = GEOM.srcValueW,
+  // the sources that may show two values (their lines carry an arrow)
+  arrows: boolean[] = [],
 ) => {
   const n = ds.length,
     g = GEOM.labelGap;
@@ -197,7 +200,8 @@ export const sourceRow = (
   const pitch =
     n < 2 ? 0 : Math.max(44, touch, Math.min(126, (across - 2 * GEOM.downMargin) / (n - 1)));
   const bs = ds.map((_, i) => across / 2 + (i - (n - 1) / 2) * pitch);
-  const want = nws.map((w) => Math.max(w, valueW));
+  const arrowW = (GEOM.srcArrowW * valueW) / GEOM.srcValueW;
+  const want = nws.map((w, i) => Math.max(w, valueW + (arrows[i] ? arrowW : 0)));
   // right of the icon: up to the next icon; below: up to the next source's line
   const roomRight = bs.map(
     (b, i) => (i < n - 1 ? bs[i + 1] - ds[i + 1] / 2 - 8 : across - 4) - (b + ds[i] / 2 + g),
@@ -299,6 +303,7 @@ export const layoutTree = (
       cfg.sources.map((s) => sizes.get(s.id)?.nw ?? 0),
       across,
       (GEOM.srcValueW * linesOf(cfg).value.size) / LABEL_LINES.value.size,
+      cfg.sources.map(twoValued),
     );
     bS = row.bs;
     srcCaps = row.caps;

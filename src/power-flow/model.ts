@@ -26,6 +26,10 @@ export interface SourceNow {
   // charge / discharge pair, which may do both at once (the panels fill it while it feeds the home)
   charge: number;
   discharge: number;
+  // a grid's gross flows (W, ≥ 0): one sign of `w`, except a pair with `both_ways`, which may
+  // import and export at once (a meter that does not net its phases)
+  import: number;
+  export: number;
   soc: number | null;
   avail: boolean;
   generator: boolean; // a grid that runs on its generator during an outage
@@ -47,7 +51,15 @@ export const powerNow = (
   const w = (idx: number | null) => (idx === null ? null : wattsOf(entities[idx], models[idx]));
   let offline = false,
     price: PowerNow["price"] = null;
-  const none = { soc: null, generator: false, lowCarbon: null, charge: 0, discharge: 0 };
+  const none = {
+    soc: null,
+    generator: false,
+    lowCarbon: null,
+    charge: 0,
+    discharge: 0,
+    import: 0,
+    export: 0,
+  };
   const sources = cfg.sources.map((s): SourceNow => {
     if (s.kind === "solar") {
       const v = w(s.idx);
@@ -84,9 +96,18 @@ export const powerNow = (
     // during an outage a running generator takes the grid's place: its power feeds the home
     if (down && s.generatorIdx !== null) {
       const g = Math.max(0, w(s.generatorIdx) ?? 0);
-      if (g > 0) return { kind: "grid", w: g, avail: true, ...none, generator: true };
+      if (g > 0) return { kind: "grid", w: g, avail: true, ...none, generator: true, import: g };
     }
-    return { kind: "grid", w: v, avail: v !== null, ...none, lowCarbon };
+    const gross = s.bothWays && s.secondIdx !== null;
+    return {
+      kind: "grid",
+      w: v,
+      avail: v !== null,
+      ...none,
+      lowCarbon,
+      import: gross ? Math.max(0, a ?? 0) : Math.max(0, v ?? 0),
+      export: gross ? Math.max(0, b ?? 0) : Math.max(0, -(v ?? 0)),
+    };
   });
   const leaves = new Map<string, number | null>();
   for (const leaf of leavesOf(cfg))
@@ -112,6 +133,12 @@ export const thresholdShown = (prev: boolean | undefined, w: number | null, x: n
   if (prev === false) return a >= Math.max(x * 1.2, x + 2);
   return a >= x;
 };
+
+// whether a node with two flows at once (a solar-fed battery given as a pair, a grid with
+// `both_ways`) shows both values, given whether it did: from the idle threshold on, and once
+// below it again only clearly above it, so the label (and the columns it moves) does not flicker
+export const bothFlows = (prev: boolean | undefined, a: number, b: number, idle: number) =>
+  Math.min(a, b) > 0 && thresholdShown(prev, Math.min(a, b), idle);
 
 export type EdgeKind = "solar" | "battIn" | "battOut" | "gridIn" | "gridOut" | "generator" | "home";
 export interface EdgeFlow {
@@ -172,8 +199,13 @@ export const allocate = (
     discharging = src.map((s) => (s.kind === "battery" ? s.discharge : 0));
   const isCharging = charging.map((c, i) => isBatt[i] && c > 0),
     isDischarging = discharging.map((d, i) => isBatt[i] && d > 0);
-  const importing = gridW.map((g) => Math.max(0, g)),
-    exporting = gridW.map((g) => Math.max(0, -g));
+  // a grid that runs both ways (`both_ways`) imports and exports its gross flows, every other
+  // grid one sign of its net
+  const twoWay = cfg.sources.map(
+    (c, i) => c.kind === "grid" && c.bothWays && !now.offline && !src[i].generator,
+  );
+  const importing = gridW.map((g, i) => (twoWay[i] ? src[i].import : Math.max(0, g))),
+    exporting = gridW.map((g, i) => (twoWay[i] ? src[i].export : Math.max(0, -g)));
   const S = solar.reduce((a, b) => a + b, 0),
     G = gridW.reduce((a, b) => a + b, 0),
     D = discharging.reduce((a, b) => a + b, 0),
@@ -183,42 +215,129 @@ export const allocate = (
   // the batteries the panels feed (`charge_from: solar`) take their solar before the home does
   const solarFed = cfg.sources.map((s) => s.kind === "battery" && s.chargeFrom === "solar");
   const C0 = charging.reduce((a, c, i) => a + (solarFed[i] ? c : 0), 0);
-  const sB0 = Math.min(S, C0);
-  // the home: solar first, then the batteries, then the grid
-  const sH = Math.min(S - sB0, H);
-  let rest = H - sH;
-  const bH = Math.min(D, rest);
+  // whether panel i may charge battery j: a battery that names its panels takes none of the others
+  const feeds = cfg.sources.map((s) => (s.kind === "battery" ? s.panels : null));
+  const canFeed = (i: number, j: number) => !feeds[j] || feeds[j].includes(cfg.sources[i].id);
+
+  // what each panel gives: home[i], batt[i][j], export[i] (the grid's reported export first,
+  // then what is left over); resB: each battery's discharge the grid's reported export takes
+  const zeros = () => src.map(() => 0);
+  const toHome = zeros(),
+    toBatt = src.map(zeros),
+    toGridRes = zeros(),
+    toGridRest = zeros();
+  let resB = zeros(),
+    solarIn: number[];
+  let sB0: number, sH: number, sB1: number, sG: number, bH: number;
+  let rest: number;
+  const restIn = (sB1: number) =>
+    shares(
+      charging,
+      sB1,
+      isCharging.map((c, j) => c && !solarFed[j]),
+    );
+  if (!feeds.some(Boolean) && !twoWay.some(Boolean)) {
+    // every panel counts alike: totals first, each panel's part pro rata to its output
+    sB0 = Math.min(S, C0);
+    // the home: solar first, then the batteries, then the grid
+    sH = Math.min(S - sB0, H);
+    rest = H - sH;
+    bH = Math.min(D, rest);
+    // charging: solar surplus first, then other batteries' surplus, then the grid
+    sB1 = Math.min(S - sB0 - sH, C - C0);
+    const sB = sB0 + sB1;
+    sG = now.offline ? 0 : Math.max(0, S - sH - sB);
+    const solarShare = shares(solar, 1, isSolar);
+    // what solar puts into each battery: the solar-fed ones first, then the others from the surplus
+    const fedIn = shares(
+      charging,
+      sB0,
+      isCharging.map((c, j) => c && solarFed[j]),
+    );
+    const others = restIn(sB1);
+    solarIn = fedIn.map((w, j) => w + others[j]);
+    src.forEach((_, i) => {
+      if (!isSolar[i]) return;
+      toHome[i] = sH * solarShare[i];
+      solarIn.forEach((w, j) => (toBatt[i][j] = w * solarShare[i]));
+      toGridRest[i] = sG * solarShare[i];
+    });
+  } else {
+    // panel by panel: each step takes from the panels pro rata to what each has left
+    const left = solar.slice();
+    const take = (total: number, into: number[]) => {
+      const sum = left.reduce((a, w) => a + Math.max(0, w), 0);
+      left.forEach((w, i) => {
+        const x = sum > 0 ? (total * Math.max(0, w)) / sum : 0;
+        into[i] += x;
+        left[i] -= x;
+      });
+    };
+    const leftSum = () => left.reduce((a, w) => a + Math.max(0, w), 0);
+    // a solar-fed battery asks its own panels pro rata to their output; a panel asked for more
+    // than it gives serves every ask in proportion
+    const asks = src.map((_, i) =>
+      src.map((_, j) => {
+        if (!isSolar[i] || !isCharging[j] || !solarFed[j] || !canFeed(i, j)) return 0;
+        const own = solar.reduce((a, w, k) => a + (isSolar[k] && canFeed(k, j) ? w : 0), 0);
+        return own > 0 ? (charging[j] * solar[i]) / own : 0;
+      }),
+    );
+    asks.forEach((row, i) => {
+      const want = row.reduce((a, b) => a + b, 0);
+      const k = want > 0 ? Math.min(1, solar[i] / want) : 0;
+      row.forEach((a, j) => {
+        toBatt[i][j] = a * k;
+        left[i] -= a * k;
+      });
+    });
+    sB0 = toBatt.reduce((a, row) => a + row.reduce((x, y) => x + y, 0), 0);
+    // the export a two-way grid reports: from the panels' rest first, then from the batteries
+    const E = exporting.reduce((a, e, j) => a + (twoWay[j] ? e : 0), 0);
+    const sGx = Math.min(E, leftSum());
+    take(sGx, toGridRes);
+    resB = shares(discharging, Math.min(E - sGx, D), isDischarging);
+    const bGx = resB.reduce((a, b) => a + b, 0);
+    // the home: solar first, then the batteries, then the grid
+    sH = Math.min(leftSum(), H);
+    take(sH, toHome);
+    rest = H - sH;
+    bH = Math.min(D - bGx, rest);
+    // charging: solar surplus first, then other batteries' surplus, then the grid
+    sB1 = Math.min(leftSum(), C - C0);
+    const surplus = zeros();
+    take(sB1, surplus);
+    const others = restIn(sB1);
+    surplus.forEach((x, i) =>
+      others.forEach((w, j) => (toBatt[i][j] += sB1 > 0 ? (x * w) / sB1 : 0)),
+    );
+    if (!now.offline) left.forEach((w, i) => (toGridRest[i] = Math.max(0, w)));
+    sG = sGx + toGridRest.reduce((a, b) => a + b, 0);
+    solarIn = src.map((_, j) => toBatt.reduce((a, row) => a + row[j], 0));
+  }
   rest -= bH;
   const gH = gridAvail ? Math.max(0, rest) : 0;
-  // charging: solar surplus first, then other batteries' surplus, then the grid
-  const sB1 = Math.min(S - sB0 - sH, C - C0);
   const sB = sB0 + sB1;
-  const sG = now.offline ? 0 : Math.max(0, S - sH - sB);
 
   const edges: EdgeFlow[] = [];
   const ids = src.map((_, i) => `s${i}`);
   const push = (from: string, to: string, w: number, kind: EdgeKind) =>
     edges.push({ from, to, w, kind });
-  const solarShare = shares(solar, 1, isSolar);
-  // what solar puts into each battery: the solar-fed ones first, then the others from the surplus
-  const fedIn = shares(
-      charging,
-      sB0,
-      isCharging.map((c, j) => c && solarFed[j]),
-    ),
-    restIn = shares(
-      charging,
-      sB1,
-      isCharging.map((c, j) => c && !solarFed[j]),
-    );
-  const solarIn = fedIn.map((w, j) => w + restIn[j]);
+  // the export of a source over the grids: the reported part to the two-way grids, the rest pro
+  // rata to what each grid exports
+  const toGrids = (res: number, other: number) => {
+    const a = shares(exporting, res, twoWay),
+      b = shares(exporting, other, isGrid);
+    return b.map((w, j) => w + a[j]);
+  };
+  // a battery that names its panels has no link from the others
   src.forEach((s, i) => {
     if (s.kind !== "solar") return;
-    push(ids[i], "home", sH * solarShare[i], "solar");
-    solarIn.forEach((w, j) => {
-      if (isBatt[j]) push(ids[i], ids[j], w * solarShare[i], "battIn");
+    push(ids[i], "home", toHome[i], "solar");
+    toBatt[i].forEach((w, j) => {
+      if (isBatt[j] && canFeed(i, j)) push(ids[i], ids[j], w, "battIn");
     });
-    shares(exporting, sG * solarShare[i], isGrid).forEach((w, j) => {
+    toGrids(toGridRes[i], toGridRest[i]).forEach((w, j) => {
       if (isGrid[j]) push(ids[i], ids[j], w, "gridOut");
     });
   });
@@ -227,8 +346,9 @@ export const allocate = (
   // giver over the others (never itself); what finds no room is exported, the rest comes from
   // the grid. Nothing depends on the order the batteries are written in.
   const remaining = charging.map((c, j) => Math.max(0, c - solarIn[j]));
-  const dis = shares(discharging, bH, isDischarging);
-  const give = discharging.map((d, i) => Math.max(0, d - dis[i]));
+  const free = discharging.map((d, i) => d - resB[i]);
+  const dis = shares(free, bH, isDischarging);
+  const give = free.map((d, i) => Math.max(0, d - dis[i]));
   const sumOf = (xs: number[], on: boolean[]) => xs.reduce((a, x, j) => a + (on[j] ? x : 0), 0);
   const bCh = shares(
     give,
@@ -251,7 +371,7 @@ export const allocate = (
   const bExp = give.map((g, i) => (now.offline ? 0 : Math.max(0, g - given[i])));
   battIn.forEach((row) => row.forEach((w, j) => (remaining[j] -= w)));
   const gB = now.offline ? 0 : remaining.reduce((a, b) => a + b, 0);
-  const bG = bExp.reduce((a, b) => a + b, 0);
+  const bG = bExp.reduce((a, b, i) => a + b + resB[i], 0);
   const grid = gH + gB - sG - bG;
   const imp = shares(importing, gH, isGrid),
     gCh = shares(importing, gB, isGrid);
@@ -263,7 +383,7 @@ export const allocate = (
       battIn[i].forEach((w, j) => {
         if (isBatt[j] && j !== i) push(ids[i], ids[j], w, "battIn");
       });
-      shares(exporting, bExp[i], isGrid).forEach((w, j) => {
+      toGrids(resB[i], bExp[i]).forEach((w, j) => {
         if (isGrid[j]) push(ids[i], ids[j], w, "gridOut");
       });
     } else if (s.kind === "grid") {
@@ -367,7 +487,9 @@ export const summaryState = (cfg: PowerFlowConfig, now: PowerNow, f: Flows): Sum
     on(f.gH);
   if (expensive)
     return { key: "power.state.expensive", color: COLORS.offline, w: null, tint: true };
-  if (on(f.sG + f.bG))
+  // a grid that runs both ways may export while it imports: the larger flow names the state
+  const twoWay = cfg.sources.some((s) => s.kind === "grid" && s.bothWays);
+  if (on(f.sG + f.bG) && (!twoWay || f.sG + f.bG >= f.gH + f.gB))
     return { key: "power.state.exporting", color: COLORS.gridOut, w: f.sG + f.bG, tint: false };
   if (on(f.bH) && f.bH >= f.gH)
     return { key: "power.state.battery", color: COLORS.battOut, w: null, tint: false };

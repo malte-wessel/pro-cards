@@ -57,12 +57,16 @@ const STYLE_POWER = `
   .pnode .lead .prog { transition: stroke-dashoffset .4s, d .4s; }
 
   .plabel { position: absolute; z-index: 2; white-space: nowrap; line-height: 1.2; pointer-events: none; }
-  .plabel .state { display: block; ${type(14, 17)} }
+  .plabel .state, .plabel .v2 { display: block; ${type(14, 17)} }
   /* a label is not a tile: the tile card's variables (spacing, weight) stay out of it, as its
      width is measured without them */
   .plabel .secondary { ${type(12, 15)} font-weight: ${fw("normal")}; letter-spacing: normal; }
   .plabel .sec2 { opacity: .85; }
-  .plabel.small .state { ${type(12, 15)} }
+  .plabel .v2 { display: none; }
+  .plabel.two { display: flex; flex-direction: column; }
+  .plabel.two .v2 { display: block; }
+  .plabel.two .v2.blank { order: 1; }
+  .plabel.small .state, .plabel.small .v2 { ${type(12, 15)} }
   .plabel.small .secondary { ${type(11, 13)} }
   .plabel.l { transform: translateY(-50%); text-align: left; }
   .plabel.r { transform: translateY(-50%); text-align: right; }

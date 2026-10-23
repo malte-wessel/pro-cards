@@ -34,12 +34,14 @@ import {
   normalizePowerFlowConfig,
   viewConfig,
   type PowerFlowConfig,
+  twoValued,
 } from "./power-flow/config.ts";
 import { CARD_TYPE, COLORS, GEOM } from "./power-flow/constants.ts";
 import { diagramHeight, layoutTree } from "./power-flow/layout.ts";
 import {
   allocate,
   thresholdShown,
+  bothFlows,
   powerNow,
   summaryState,
   type Flows,
@@ -58,6 +60,7 @@ interface Computed {
   flows: Flows;
   state: SummaryState;
   homeLook: Look;
+  split: Set<string>; // the sources that show both their flows
 }
 
 export class PowerFlowCard extends EntityCardBase {
@@ -82,11 +85,14 @@ export class PowerFlowCard extends EntityCardBase {
   _computed?: Computed;
   // `hide_below`: whether each consumer was shown by its power (the threshold's memory)
   _byPower = new Map<string, boolean>();
+  // whether each source showed both its flows (the two values' memory)
+  _byBoth = new Map<string, boolean>();
 
   setConfig(config: unknown) {
     // what the old config hid says nothing about the new one's nodes
     this._computed = undefined;
     this._byPower = new Map();
+    this._byBoth = new Map();
     super.setConfig(config);
   }
   _normalize(raw: unknown) {
@@ -170,6 +176,17 @@ export class PowerFlowCard extends EntityCardBase {
       (v) => this._shown(v),
       (leaf) => below.has(leaf.id),
     );
+    // a battery that charges while it discharges, a grid that imports while it exports: both
+    // values while both run, the net value below the idle threshold (both again only clearly above)
+    const split = new Set<string>();
+    cfg.sources.forEach((s, i) => {
+      const n = now.sources[i];
+      if (n.kind === "solar" || !twoValued(s)) return;
+      const [a, b] = n.kind === "battery" ? [n.charge, n.discharge] : [n.export, n.import];
+      const both = bothFlows(this._byBoth.get(s.id), a, b, cfg.idleBelow);
+      this._byBoth.set(s.id, both);
+      if (both) split.add(s.id);
+    });
     const flows = allocate(cfg, now, hidden);
     const state = summaryState(cfg, now, flows);
     // the home rules match the home power in watts, whatever unit the sensor reports
@@ -185,7 +202,7 @@ export class PowerFlowCard extends EntityCardBase {
     );
     homeLook.color =
       homeEnt.color || homeLook.rule?.color ? cssColor(homeLook.color, COLORS.home) : COLORS.home;
-    return { models, now, hidden, view: viewConfig(cfg, hidden), flows, state, homeLook };
+    return { models, now, hidden, view: viewConfig(cfg, hidden), flows, state, homeLook, split };
   }
   _render() {
     if (!this._root || !this._hass || !this._config) return;
@@ -238,6 +255,7 @@ export class PowerFlowCard extends EntityCardBase {
       flows: c.flows,
       layout,
       homeLook: c.homeLook,
+      split: c.split,
     });
   }
 }

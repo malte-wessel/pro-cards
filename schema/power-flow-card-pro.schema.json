@@ -76,9 +76,17 @@
           "description": "State of charge in %: the ring of the node"
         },
         "charge_from": {
-          "enum": ["any", "solar"],
+          "anyOf": [
+            { "enum": ["any", "solar"] },
+            { "$ref": "defs.schema.json#/$defs/entityId" },
+            {
+              "type": "array",
+              "items": { "$ref": "defs.schema.json#/$defs/entityId" },
+              "minItems": 1
+            }
+          ],
           "default": "any",
-          "description": "`solar`: the panels feed this battery, so solar charges it before it covers the home and the grid never charges it (unless the sensors disagree); with a charge / discharge pair the battery charges from solar and feeds the home at once."
+          "description": "`solar`: the panels feed this battery, so solar charges it before it covers the home and the grid never charges it (unless the sensors disagree); with a charge / discharge pair the battery charges from solar and feeds the home at once. The entity of a solar source (or a list of them) instead: only those panels feed it."
         }
       },
       "required": ["type"],
@@ -104,6 +112,11 @@
           "description": "Import power (with an optional `export`)"
         },
         "export": { "$ref": "defs.schema.json#/$defs/entityId", "description": "Export power" },
+        "both_ways": {
+          "type": "boolean",
+          "default": false,
+          "description": "With an `import` / `export` pair: the meter counts both apart (it does not net its phases), so the grid may import and export at once"
+        },
         "price": {
           "$ref": "defs.schema.json#/$defs/entityId",
           "description": "Price sensor: shown in the Expensive state (see `expensive_above`)"
@@ -147,6 +160,8 @@
         },
         { "required": ["import"], "not": { "required": ["power"] } }
       ],
+      "if": { "properties": { "both_ways": { "const": true } }, "required": ["both_ways"] },
+      "then": { "required": ["import", "export"] },
       "unevaluatedProperties": false
     },
     "home": {
