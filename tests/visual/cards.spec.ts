@@ -38,6 +38,27 @@ const PF_SRC = [
     fossil: "sensor.grid_fossil_percentage",
   },
 ];
+const PF_TWO_WAY = {
+  type: PF,
+  sources: [
+    { type: "solar", entity: "sensor.solar_power", name: "Roof" },
+    { type: "solar", entity: "sensor.balcony_solar_power", name: "Balcony" },
+    { type: "battery", power: "sensor.battery_power", soc: "sensor.battery_soc" },
+    {
+      type: "battery",
+      charge: "sensor.balcony_battery_charge_power",
+      discharge: "sensor.balcony_battery_discharge_power",
+      soc: "sensor.balcony_battery_soc",
+      charge_from: "sensor.balcony_solar_power",
+    },
+    {
+      type: "grid",
+      import: "sensor.grid_import_power",
+      export: "sensor.grid_export_power",
+      both_ways: true,
+    },
+  ],
+};
 const PF_CONS = [
   {
     entity: "sensor.heat_pump_power",
@@ -1590,6 +1611,15 @@ const CASES = {
       { type: "grid", power: "sensor.balcony_grid_power" },
     ],
   },
+  // two arrays, the balcony battery fed by its own panels only, a meter that imports and
+  // exports at once: both nodes show both values, the roof has no link to the balcony battery
+  "pf-two-way": PF_TWO_WAY,
+  // a narrow column, the source row's labels side by side: two values each still fit
+  "pf-two-way-down": {
+    ...PF_TWO_WAY,
+    direction: "down",
+    sources: [PF_TWO_WAY.sources[1], PF_TWO_WAY.sources[3], PF_TWO_WAY.sources[4]],
+  },
   "vis-power-flow": {
     type: PF,
     home: "sensor.power_consumption",
@@ -1657,7 +1687,7 @@ const ALL: Record<string, Parameters<typeof mount>[1]> = {
 };
 // cases that need a wider column than the 400 px section (list rows show their circles from 380 px
 // of tree, after the card's padding)
-const WIDTHS: Record<string, number> = { "pf-list-rooms": 640 };
+const WIDTHS: Record<string, number> = { "pf-list-rooms": 640, "pf-two-way-down": 340 };
 
 for (const [name, cfg] of Object.entries(ALL)) {
   for (const theme of ["light", "dark"]) {

@@ -539,7 +539,7 @@ export abstract class EntityCardBase extends HTMLElement {
     if (cfg.hasHeader) {
       const header = document.createElement("div");
       header.className = "header";
-      header.innerHTML = `<ha-icon></ha-icon><div class="title"></div><div class="hvals"></div><div class="range"></div>`;
+      header.innerHTML = `<ha-icon></ha-icon><div class="title"></div><div class="hvals"></div>`;
       const hvals = qs(header, ".hvals");
       for (const i of cfg.headerIdxs) hvals.appendChild(this._row(i, "hval"));
       if (cfg.titleTap) this._bindTitle(header, cfg.titleTap);
@@ -677,7 +677,6 @@ export abstract class EntityCardBase extends HTMLElement {
       const t = qs(header, ".title");
       t.textContent = title || "";
       if (cfg.titleTap) t.setAttribute("aria-label", title || "");
-      qs(header, ".range").textContent = this._historyIds.length ? `${cfg.hours} h` : "";
       header.hidden = !(title || icon || cfg.headerIdxs.some((i) => vis.items[i]));
     }
     // nothing shown at all: the card takes no room (its own `visibility` is HA's way to hide it)

@@ -7,7 +7,7 @@
 // across the flow through the pitch between nodes, which follows the label heights and so the
 // config alone (the card's height never depends on its width); along the flow through the column
 // positions, which keep the measured label widths clear of the next column and the trunks.
-import { leavesOf, type PowerFlowConfig } from "./config.ts";
+import { leavesOf, twoValued, type PowerFlowConfig, type Source } from "./config.ts";
 import { GEOM, LABEL_LINES, NODE_D, type Direction } from "./constants.ts";
 import type { EdgeFlow, EdgeKind } from "./model.ts";
 import { dedupe, orthoPath, pathLength, type Pt } from "./path.ts";
@@ -77,6 +77,10 @@ export const labelHeightOf = (cfg: PowerFlowConfig, idx: number | null, small: b
     name = small ? l.smallName : l.name;
   return (small ? l.smallValue : l.value).line + name.line + (sec ? name.line : 0);
 };
+// a source's label: a source that may show two values keeps a line for the second (the config
+// decides, not the values)
+const srcLabelHeight = (cfg: PowerFlowConfig, s: Source) =>
+  labelHeightOf(cfg, s.idx, false) + (twoValued(s) ? linesOf(cfg).value.line : 0);
 // a label beside its node sits above the node's line: centred `max(r, h/2) + 4` above the
 // centre, so its bottom clears the line by 4 px however small the node is
 export const slotRise = (d: number, h: number) => Math.max(d / 2, h / 2) + 4;
@@ -103,7 +107,7 @@ const sourceStack = (cfg: PowerFlowConfig): Stack => {
   if (!cfg.sources.length)
     return { bs: [], first: GEOM.srcMargin, last: GEOM.srcMargin, extent: 0 };
   const ds = cfg.sources.map((s) => s.d);
-  const hs = cfg.sources.map((s) => labelHeightOf(cfg, s.idx, false));
+  const hs = cfg.sources.map((s) => srcLabelHeight(cfg, s));
   const bs: number[] = [];
   let b = 0;
   ds.forEach((d, i) => {
@@ -181,14 +185,17 @@ const columnPlan = (cfg: PowerFlowConfig, scale = 1): Column => {
 // direction: down – the row of sources across the top, centred over the home, and their labels
 // in one line: right of the icons when every name fits there, otherwise below them, beside each
 // source's line. The choice reads the names and a fixed room for the value (`valueW`: `srcValueW`
-// at the default text size), so a changing value never moves the labels. Names that do not fit
-// are cut (`caps`), values never.
+// at the default text size; `srcArrowW` more for a source that shows two values, one over the
+// other), so a changing value never moves the labels. Names that do not fit are cut (`caps`),
+// values never.
 export type SourceSlot = "right" | "below";
 export const sourceRow = (
   ds: number[],
   nws: number[],
   across: number,
   valueW: number = GEOM.srcValueW,
+  // the sources that may show two values (their lines carry an arrow)
+  arrows: boolean[] = [],
 ) => {
   const n = ds.length,
     g = GEOM.labelGap;
@@ -197,7 +204,8 @@ export const sourceRow = (
   const pitch =
     n < 2 ? 0 : Math.max(44, touch, Math.min(126, (across - 2 * GEOM.downMargin) / (n - 1)));
   const bs = ds.map((_, i) => across / 2 + (i - (n - 1) / 2) * pitch);
-  const want = nws.map((w) => Math.max(w, valueW));
+  const arrowW = (GEOM.srcArrowW * valueW) / GEOM.srcValueW;
+  const want = nws.map((w, i) => Math.max(w, valueW + (arrows[i] ? arrowW : 0)));
   // right of the icon: up to the next icon; below: up to the next source's line
   const roomRight = bs.map(
     (b, i) => (i < n - 1 ? bs[i + 1] - ds[i + 1] / 2 - 8 : across - 4) - (b + ds[i] / 2 + g),
@@ -299,6 +307,7 @@ export const layoutTree = (
       cfg.sources.map((s) => sizes.get(s.id)?.nw ?? 0),
       across,
       (GEOM.srcValueW * linesOf(cfg).value.size) / LABEL_LINES.value.size,
+      cfg.sources.map(twoValued),
     );
     bS = row.bs;
     srcCaps = row.caps;
@@ -323,7 +332,7 @@ export const layoutTree = (
     const clearH = Math.max(
       0,
       ...cfg.sources.map((s, i) => {
-        const h = labelHeightOf(cfg, s.idx, false),
+        const h = srcLabelHeight(cfg, s),
           mid = bS[i] - s.d / 2 - 4;
         const inBand = mid + h / 2 > bandH[0] && mid - h / 2 < bandH[1];
         return inBand ? aS + rS + GEOM.labelGap + widthOf(s.id) + 10 + rH : 0;

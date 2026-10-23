@@ -724,6 +724,31 @@ def(
   "flat",
   { noise: 40, min: -800, max: 3000, decimals: 0 },
 );
+// a meter that does not net its phases: it imports on one while it exports on another
+def(
+  "sensor.grid_import_power",
+  1200,
+  {
+    unit_of_measurement: "W",
+    device_class: "power",
+    state_class: "measurement",
+    friendly_name: "Grid import power",
+  },
+  "flat",
+  { noise: 60, min: 0, decimals: 0 },
+);
+def(
+  "sensor.grid_export_power",
+  400,
+  {
+    unit_of_measurement: "W",
+    device_class: "power",
+    state_class: "measurement",
+    friendly_name: "Grid export power",
+  },
+  "flat",
+  { noise: 30, min: 0, decimals: 0 },
+);
 def(
   "sensor.electricity_price",
   0.28,

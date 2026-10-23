@@ -344,6 +344,21 @@ describe("card config schemas", () => {
     expect(
       validate({ type: PF, sources: [{ type: "grid", power: "sensor.g", export: "sensor.e" }] }),
     ).toBeTruthy();
+    // charge_from names the panels that feed a battery; both_ways needs an import / export pair
+    const battery = (chargeFrom: unknown) =>
+      validate({
+        type: PF,
+        sources: [{ type: "battery", power: "sensor.b", charge_from: chargeFrom }],
+      });
+    expect(battery("sensor.balcony_solar_power")).toBeNull();
+    expect(battery(["sensor.a", "sensor.b"])).toBeNull();
+    expect(battery([])).toBeTruthy();
+    expect(battery(["Balcony"])).toBeTruthy();
+    const grid = (g: Record<string, unknown>) =>
+      validate({ type: PF, sources: [{ type: "grid", ...g, both_ways: true }] });
+    expect(grid({ import: "sensor.i", export: "sensor.e" })).toBeNull();
+    expect(grid({ import: "sensor.i" })).toBeTruthy();
+    expect(grid({ power: "sensor.g" })).toBeTruthy();
     expect(validate({ type: PF, sources: src, direction: "up" })).toMatch(/enum|allowed/);
     expect(validate({ type: PF, sources: src, flow_style: "waves" })).toMatch(/enum|allowed/);
     expect(validate({ type: PF, sources: src, idle_links: "none" })).toMatch(/enum|allowed/);
