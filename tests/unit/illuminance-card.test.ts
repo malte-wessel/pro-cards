@@ -204,3 +204,16 @@ describe("illuminance-card editor and element", () => {
     ).toBe("sensor.lx");
   });
 });
+
+describe("illuminance scale ends", async () => {
+  const { IlluminanceCard } = await import("../../src/illuminance-card.ts");
+  it("takes a bottom below 0.1 lx and rejects a scale without room", () => {
+    // the bottom is min_lx, not a fixed 0.1
+    expect(posOf(0.01, 0.01, 100)).toBe(0);
+    expect(posOf(0.1, 0.01, 100)).toBeCloseTo(0.25, 5);
+    const el = new IlluminanceCard();
+    expect(() => el.setConfig({ entity: "sensor.lx", min_lx: 0.01 })).not.toThrow();
+    expect(() => el.setConfig({ entity: "sensor.lx", min_lx: 0 })).toThrow(/min_lx/);
+    expect(() => el.setConfig({ entity: "sensor.lx", min_lx: 500, max_lx: 100 })).toThrow(/min_lx/);
+  });
+});

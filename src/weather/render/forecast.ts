@@ -15,7 +15,7 @@ import { qs } from "../../shared/util.ts";
 import type { WeatherConfig, WeatherSection } from "../config.ts";
 import { rowNight } from "../conditions.ts";
 import { conditionEl } from "./icon.ts";
-import { dailyRange, hourStart, isToday, type ForecastRow } from "../forecast.ts";
+import { dailyRange, hourStart, isToday, todayShift, type ForecastRow } from "../forecast.ts";
 import { emptyEl, sectionShell, setTitle } from "./section.ts";
 
 export type ForecastSection = Extract<WeatherSection, { kind: "forecast" }>;
@@ -101,13 +101,16 @@ export const drawForecast = (
       parts.push(fmtNumber(ctx, precipEnt, r.precipitation, st));
     return parts.join(" · ");
   };
+  // a day's date as the forecast means it (see todayShift)
+  const shift = daily ? todayShift(list, ctx.now) : 0;
   const label = (r: ForecastRow) =>
     daily
-      ? isToday(r.t, ctx.now)
+      ? isToday(r.t + shift, ctx.now)
         ? t(ctx.hass, "weather.today")
-        : fmtTime(ctx.hass, r.t, { weekday: "short" })
+        : fmtTime(ctx.hass, r.t + shift, { weekday: "short" })
       : fmtTime(ctx.hass, r.t);
-  const isNow = (r: ForecastRow) => (daily ? isToday(r.t, ctx.now) : r.t === hourStart(ctx.now));
+  const isNow = (r: ForecastRow) =>
+    daily ? isToday(r.t + shift, ctx.now) : r.t === hourStart(ctx.now);
   const span = range ? range.max - range.min : 1;
   const pct = (v: number) => `${(((v - (range?.min ?? 0)) / span) * 100).toFixed(1)}%`;
   const showRain = sec.show.length > 0;

@@ -16,7 +16,9 @@ describe("flow engine maths", () => {
     expect(toKmh(10, "mph")).toBeCloseTo(16.09, 2);
     expect(toKmh(10, "kn")).toBeCloseTo(18.52, 2);
     expect(toKmh(10, "ft/s")).toBeCloseTo(10.97, 2);
-    expect(toKmh(10, "Beaufort")).toBe(10);
+    // a scale: force 4 (moderate breeze) is about 24 km/h, force 10 about 95
+    expect(toKmh(4, "Beaufort")).toBeCloseTo(24.08, 1);
+    expect(toKmh(10, "Beaufort")).toBeCloseTo(95.17, 1);
     expect(toKmh(10, null)).toBe(10);
   });
 

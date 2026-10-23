@@ -23,6 +23,15 @@ _Beta_
 - Fix: history axes keep their ticks on the hour and the days on midnight across a daylight saving change
 - Faster updates: an entity card redraws only the rows a state change touches, weather forecasts and charts only when the forecast changes, and numbers and times are formatted without rebuilding a formatter each time
 - Wind and rain: off-screen bands stop animating, the wind lead moves without layout work, and a sensor hovering at a threshold no longer rebuilds the field over and over
+- Fix: a row tapped by a pointer released over it after a cancelled press (a scroll) no longer runs its action
+- Fix: a value from a template shows blank until Home Assistant answers, not "Unavailable"
+- Fix: weather: a refused forecast is asked for again a minute later; days stamped at a UTC midnight show under their own date; the condition takes its night icon at sunset with any icon set, and an icon set like `phu:` shows on the tile and hero too
+- Fix: the rain card's lead follows the rate again after a dry spell
+- Fix: the wind card animates a Beaufort force by the speed it stands for
+- Fix: illuminance: `min_lx` below 0.1 sets the bottom of the scale, and a `min_lx` that is not below `max_lx` is a config error
+- Fix: power flow: a grid running on its generator counts in the home ring as generator power only
+- Fix: sun azimuth: the sun's dot and beam agree with the text around sunrise and sunset
+- Fix: colours given as `#rgba` or `#rrggbbaa` blend correctly; `true` and blank values no longer count as numbers
 
 ## 2.7.1 – Safer colours, centred gauges
 

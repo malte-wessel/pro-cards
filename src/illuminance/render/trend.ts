@@ -5,7 +5,7 @@ import { measure } from "../../shared/typography.ts";
 import { qs } from "../../shared/util.ts";
 import type { IlluminanceHost } from "../config.ts";
 import { logLineMeans, posOf, scaleTop, yLabels } from "../zones.ts";
-import { addLabel, plotShell, windowOf, xTicks } from "./plot.ts";
+import { addLabel, drawWindow, plotShell, xTicks } from "./plot.ts";
 
 export const renderTrend = (card: IlluminanceHost, body: HTMLElement, v: number | null) => {
   const cfg = card._config,
@@ -24,7 +24,7 @@ export const renderTrend = (card: IlluminanceHost, body: HTMLElement, v: number 
     labels = qs(plot, ".labels");
   const W = Math.max(plot.clientWidth, 10);
   svg.setAttribute("viewBox", `0 0 ${W} ${plotH + xAxisH}`);
-  const { now, t0 } = windowOf(card);
+  const { now, t0 } = drawWindow(card);
   // series: clamp to window, average into buckets (see lineBuckets)
   const pts = clampedSeries(card._series, t0, now);
   // the scale spans [min_lx, max_lx], grown to a nice ceiling when the window's peak is higher

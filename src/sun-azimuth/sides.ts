@@ -1,9 +1,9 @@
 // Which sides of the house the sun shines on, pure: the lit windows of each side over the day,
 // whether it is lit now and how directly, plus the timeline the footer draws them on.
+import { RAD } from "./svg.ts";
 import { SIDE_ANGLE, SIDES, type SideKey } from "./constants.ts";
 import { angleDiff, isUp, type SunDay, type SunSample } from "./day.ts";
 
-const RAD = Math.PI / 180;
 const HOUR = 3600e3;
 
 export interface SideWindow {
@@ -57,13 +57,6 @@ export const sidesAt = (days: readonly SideDay[], now: SunSample): Side[] =>
       nextFrom: next ? next.from : null,
     };
   });
-
-export const sidesOf = (
-  day: SunDay,
-  front: number,
-  now: SunSample,
-  hidden: readonly SideKey[] = [],
-): Side[] => sidesAt(sideDays(day, front, hidden), now);
 
 // the sides lit now, clockwise from the front
 export const litSides = (sides: Side[]) => sides.filter((s) => s.litNow);

@@ -330,3 +330,16 @@ describe("look resolution", () => {
     ).toBe("nicht verfügbar");
   });
 });
+
+describe("a template value before its result", () => {
+  it("is blank, not unavailable", () => {
+    const pending = () => undefined;
+    expect(readValue(ent({ value: "{{ x }}" }), undefined, pending)).toEqual({
+      raw: "",
+      num: null,
+      avail: true,
+    });
+    // a result of nothing stays a missing value
+    expect(readValue(ent({ value: "{{ x }}" }), undefined, () => null).avail).toBe(false);
+  });
+});

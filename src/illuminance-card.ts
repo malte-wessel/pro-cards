@@ -32,7 +32,7 @@ import { fmtTime, langOf } from "./shared/format.ts";
 import { fetchHistory, normalizeSmoothing } from "./shared/history.ts";
 import { HistoryFeed } from "./shared/history-feed.ts";
 import { depsChanged } from "./shared/deps.ts";
-import { hideHover } from "./shared/hover.ts";
+import { hideHover, leaveHides, outsideHides } from "./shared/hover.ts";
 import { t } from "./shared/i18n.ts";
 import { isNum, oneOf, qs } from "./shared/util.ts";
 import { DEFAULTS, MODES } from "./illuminance/constants.ts";
@@ -59,6 +59,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
   _root?: HTMLElement;
   _series: LxPoint[] = [];
   _mode?: "trend" | "band";
+  _window?: { now: number; t0: number };
   _sampled?: SampledLx[];
   _buckets?: (MeanBucket | null)[];
   _xOf?: (t: number) => number;
@@ -68,6 +69,8 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
   _plotW?: number;
   _hoverT: number | null = null;
   _history = new HistoryFeed(CARD_TYPE);
+  _onLeave = leaveHides(() => this._hideHover());
+  _onDocPointer = outsideHides(this, () => this._hideHover());
   // what the body and the zone colours were last drawn from (deps.ts)
   _drawn = new WeakMap<object, readonly unknown[]>();
   _timer?: ReturnType<typeof setInterval>;
@@ -89,22 +92,29 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
     super();
     this.attachShadow({ mode: "open" });
     this._onPointer = this._onPointer.bind(this);
-    this._onLeave = this._onLeave.bind(this);
-    this._onDocPointer = this._onDocPointer.bind(this);
   }
 
   setConfig(config: IlluminanceCardConfig | null | undefined) {
     if (!config?.entity) throw new Error(`${CARD_TYPE}: 'entity' is required`);
     const { mode, ...rest } = config;
+    // the scale's ends: a log scale needs a positive bottom below its top
+    const minLx = Number(config.min_lx ?? DEFAULTS.min_lx),
+      maxLx = Number(config.max_lx ?? DEFAULTS.max_lx);
+    if (!(minLx > 0) || !(maxLx > minLx))
+      throw new Error(`${CARD_TYPE}: 'min_lx' must be above 0 and below 'max_lx'`);
     this._config = {
       ...DEFAULTS,
       ...rest,
       entity: config.entity,
       mode: oneOf(MODES, mode) ? mode : DEFAULTS.mode,
+      min_lx: minLx,
+      max_lx: maxLx,
       smoothing_minutes: normalizeSmoothing(config.smoothing_minutes),
-      zonesList: mergeZones(config.zones, this._hass),
+      // the zones in the user's language and the live theme's colours: resolved at render
+      zonesList: [],
     };
     this._series = [];
+    this._resetPlot();
     this._history.reset();
     this._hoverT = null;
     syncKeepHeight(this, config);
@@ -234,6 +244,9 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
         z.hex = resolveHex(z.color, this);
       });
     }
+    // what the hover reads is the drawing's: a renderer that stops early (no width yet) leaves
+    // none, never the last mode's
+    this._resetPlot();
     const st = this._state();
     qs(card, ".primary").textContent = cfg.name || st?.attributes.friendly_name || cfg.entity;
     if (!st) {
@@ -259,18 +272,20 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
       this._hideHover();
   }
 
+  _resetPlot() {
+    this._mode = undefined;
+    this._sampled = undefined;
+    this._buckets = undefined;
+    this._xOf = undefined;
+    this._yOf = undefined;
+    this._window = undefined;
+  }
+
   // ----- hover -----
   _onPointer(ev: PointerEvent) {
     if (!this._xOf || this._config.mode === "arc") return;
     this._hoverT = timeAt(this, ev);
     if (!showHover(this, this._hoverT)) this._hideHover();
-  }
-  _onLeave(ev: PointerEvent) {
-    if (ev.pointerType === "touch") return;
-    this._hideHover();
-  }
-  _onDocPointer(ev: PointerEvent) {
-    if (!ev.composedPath().includes(this)) this._hideHover();
   }
   _hideHover() {
     this._hoverT = null;

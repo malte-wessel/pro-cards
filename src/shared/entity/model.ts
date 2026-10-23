@@ -51,7 +51,8 @@ export interface EntityModel {
 }
 
 export const langOf = (ctx: FormatCtx) => lang(ctx.hass);
-export const tplGetter = (ctx: FormatCtx) => (t: string) => ctx.tplResult.get(t) ?? null;
+// a template's result: undefined while Home Assistant has not answered yet
+export const tplGetter = (ctx: FormatCtx) => (t: string) => ctx.tplResult.get(t);
 // a config string: the rendered result for templates (null until Home Assistant answered)
 export const tplOf = (ctx: FormatCtx, t: string | null): string | null =>
   isTemplate(t) ? asText(ctx.tplResult.get(t)) : t;

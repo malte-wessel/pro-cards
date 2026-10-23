@@ -10,6 +10,9 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 // what `icons` says for a condition: an mdi icon name, an image URL, or null for the default
 export const iconFor = (icons: WeatherIcons, condition: unknown): string | null =>
   isCondition(condition) ? (icons.map[condition] ?? null) : null;
+// an image URL rather than an icon name (mdi:…, phu:…)
+export const isImageIcon = (icon: string) =>
+  !icon.startsWith("mdi:") && (icon.includes("/") || icon.includes("."));
 
 export const conditionEl = (
   icons: WeatherIcons,
@@ -18,7 +21,7 @@ export const conditionEl = (
   ruleIcon: string | null | undefined,
 ): HTMLElement | SVGElement => {
   const custom = ruleIcon || iconFor(icons, condition);
-  if (custom && !custom.startsWith("mdi:") && (custom.includes("/") || custom.includes("."))) {
+  if (custom && isImageIcon(custom)) {
     const img = document.createElement("img");
     img.className = "wpic";
     img.alt = "";

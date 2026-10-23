@@ -252,7 +252,7 @@ const iconFor = (st: TreeState, nd: LNode, look: Look | null): string => {
   if (nd.kind === "home") return ICONS.home;
   if (nd.kind === "other") return ICONS.other;
   if (nd.kind === "group") {
-    const g = st.cfg.consumers.find((c) => c.id === nd.consumerId);
+    const g = st.cfg.consumers.find((c) => c.id === nd.id);
     return (g && g.kind === "group" && g.icon) || ICONS.group;
   }
   return look?.fallbackIcon || ICONS.consumer;
@@ -318,7 +318,7 @@ const labelText = (
   const s = ent ? (tplOf(st.ctx, ent.secondary) ?? "") : "";
   if (nd.kind === "home") return { v: fmtPower(hass, f.H, u, dec), n: "", s };
   if (nd.kind === "group") {
-    const g = st.cfg.consumers.find((c) => c.id === nd.consumerId);
+    const g = st.cfg.consumers.find((c) => c.id === nd.id);
     return {
       v: fmtPower(hass, f.groupW.get(nd.id) ?? 0, u),
       n: g && g.kind === "group" ? g.name : "",
@@ -556,7 +556,6 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
       x: 0,
       y: 0,
       d: 32,
-      consumerId: r.id,
     };
     el.style.setProperty("--fe-color", colorFor(st, nd, ent, m?.look ?? null));
     fillShape(st, qs(el, ".shape"), iconFor(st, nd, m?.look ?? null), m);

@@ -92,7 +92,9 @@ export class LayoutCard extends HTMLElement {
     this._cfg = cfg;
     if (!this._root) this._buildDom();
     if (this._ready || customElements.get("hui-card")) {
+      // hui-card came after all (a late frontend): the note that it did not goes
       this._ready = true;
+      this._failed = false;
       this._sync();
       return;
     }
@@ -196,7 +198,6 @@ export class LayoutCard extends HTMLElement {
     // a child shows or hides: hui-card fires this after changing its hidden state; it is ours to
     // act on, the dashboard must not read it as the layout's own
     wrap.addEventListener("card-visibility-changed", (ev) => {
-      if (ev.target === this) return;
       ev.stopPropagation();
       this._relayout();
     });

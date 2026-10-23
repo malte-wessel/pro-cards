@@ -52,6 +52,23 @@ test.describe("rain card", () => {
     await expect(card(page).locator("ha-card")).toHaveCSS("height", "120px");
   });
 
+  test("the lead keeps following the rate after a dry spell", async ({ page }) => {
+    await mount(page, { type: T, entity: R });
+    await pin(page);
+    const row = card(page).locator(".row.wtile");
+    const built = Number(await row.getAttribute("data-rate0"));
+    await setState(page, R, "0");
+    await expect(row).toHaveClass(/dry/);
+    await setState(page, R, "20");
+    await expect(row).not.toHaveClass(/dry/);
+    // its drops run again, at the pace of 20 mm/h
+    const rate = await row
+      .locator(".lead .dr")
+      .first()
+      .evaluate((e) => e.getAnimations()[0]?.playbackRate);
+    expect(rate).toBeCloseTo(fall(built) / fall(20), 3);
+  });
+
   test("flow tile: drops slanted by the wind; rate changes re-time, rebuild or dry the field", async ({
     page,
   }) => {

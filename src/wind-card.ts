@@ -14,14 +14,16 @@
  *   title / icon / header_entities / tap_action / hold_action / double_tap_action
  */
 import { registerCard } from "./shared/card.ts";
-import { modelOf, type EntityModel, type RenderCtx } from "./shared/entity/model.ts";
+import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
+import { depsChanged } from "./shared/deps.ts";
+import { langOf } from "./shared/format.ts";
 import { FlowCardBase } from "./shared/flow/base.ts";
 import type { RowKind } from "./shared/flow/dom.ts";
 import type { HomeAssistant } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
 import { normalizeWindCardConfig, type WindConfig } from "./wind/config.ts";
 import { CARD_TYPE } from "./wind/constants.ts";
-import { updateCurrent, windNow, type CurrentModels } from "./wind/render/current.ts";
+import { updateCurrent, windNow, type CurrentModels, type WindNow } from "./wind/render/current.ts";
 import { fieldEl, updateBand } from "./wind/render/flow.ts";
 import { arrowIcon } from "./wind/render/lead.ts";
 import { STYLE_WIND_CARD } from "./wind/styles.ts";
@@ -51,20 +53,24 @@ export class WindCard extends FlowCardBase {
   _field() {
     return fieldEl();
   }
-  _models(ctx: RenderCtx, cfg: WindConfig, speed: EntityModel): CurrentModels {
-    return {
-      speed,
-      dir: cfg.dirIdx === null ? null : modelOf(ctx, cfg.entities[cfg.dirIdx]),
-      gust: cfg.gustIdx === null ? null : modelOf(ctx, cfg.entities[cfg.gustIdx]),
-    };
+  // the items the row and the band read (the cached models) and the wind they make, worked out
+  // once for both: again only when one of the models or the language changed
+  _windNow?: WindNow;
+  _current(ctx: RenderCtx, speed: EntityModel) {
+    const cfg = this._config as WindConfig;
+    const at = (i: number | null) => (i === null ? null : this._modelAt(ctx, i));
+    const cm: CurrentModels = { speed, dir: at(cfg.dirIdx), gust: at(cfg.gustIdx) };
+    if (depsChanged(this._nowInputs, this, [cm.speed, cm.dir, cm.gust, langOf(ctx.hass)]))
+      this._windNow = windNow(ctx, cfg, cm);
+    return { cm, now: this._windNow as WindNow };
   }
   _updateCurrent(ctx: RenderCtx, row: HTMLElement, kind: RowKind, m: EntityModel) {
-    const cfg = this._config as WindConfig;
-    updateCurrent(ctx, row, cfg, this._models(ctx, cfg, m), kind);
+    const { cm, now } = this._current(ctx, m);
+    updateCurrent(ctx, row, this._config as WindConfig, cm, kind, now);
   }
   _updateBand(ctx: RenderCtx, band: HTMLElement, speed: EntityModel) {
     const cfg = this._config as WindConfig;
-    const now = windNow(ctx, cfg, this._models(ctx, cfg, speed));
+    const { now } = this._current(ctx, speed);
     updateBand(band, {
       style: cfg.flow.style,
       density: cfg.flow.density,

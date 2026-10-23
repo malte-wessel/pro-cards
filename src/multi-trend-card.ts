@@ -37,7 +37,7 @@ import { normalizeRules } from "./shared/entity/config.ts";
 import { fmtNumber, langOf } from "./shared/format.ts";
 import { fetchHistory, normalizeSmoothing, type Point } from "./shared/history.ts";
 import { HistoryFeed } from "./shared/history-feed.ts";
-import { hideHover } from "./shared/hover.ts";
+import { hideHover, leaveHides, outsideHides } from "./shared/hover.ts";
 import { TemplateSubscriptions } from "./shared/templates.ts";
 import { decimalsOf, isNum, isTemplate, qs } from "./shared/util.ts";
 import {
@@ -78,6 +78,8 @@ export class MultiTrendCard extends HTMLElement {
   _series: TrendPoint[][] = [];
   _hoverT: number | null = null;
   _history = new HistoryFeed(CARD_TYPE);
+  _onLeave = leaveHides(() => this._hideHover());
+  _onDocPointer = outsideHides(this, () => this._hideHover());
   _timer?: ReturnType<typeof setInterval>;
   _ro?: ResizeObserver;
   // visibility of the series: what the conditions read, their templates, screen and time
@@ -105,8 +107,6 @@ export class MultiTrendCard extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this._onPointer = this._onPointer.bind(this);
-    this._onLeave = this._onLeave.bind(this);
-    this._onDocPointer = this._onDocPointer.bind(this);
     this._tpl = new TemplateSubscriptions(CARD_TYPE, () => this._render());
     this._visWatch = new VisibilityWatch(() => this._render());
   }
@@ -426,15 +426,6 @@ export class MultiTrendCard extends HTMLElement {
     if (t === null) return;
     this._hoverT = t;
     if (!showTrendHover(plot, t)) this._hideHover();
-  }
-
-  _onLeave(ev: PointerEvent) {
-    if (ev.pointerType === "touch") return; // keep tooltip after tap
-    this._hideHover();
-  }
-
-  _onDocPointer(ev: PointerEvent) {
-    if (!ev.composedPath().includes(this)) this._hideHover();
   }
 
   _hideHover() {

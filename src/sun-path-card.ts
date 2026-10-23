@@ -33,10 +33,10 @@ import type {
 } from "./sun-path/config.ts";
 import { DEFAULTS, defaultLabel, type SunEvent } from "./sun-path/constants.ts";
 import { SunPathCardEditor } from "./sun-path/editor.ts";
-import { hideHover } from "./shared/hover.ts";
+import { hideHover, leaveHides, outsideHides } from "./shared/hover.ts";
 import { t } from "./shared/i18n.ts";
 import { drawCurve, drawEvents, fmtEvent, showHover, timeAt } from "./sun-path/plot.ts";
-import { solarDay } from "./shared/solar.ts";
+import { solarDay, solarDayAround } from "./shared/solar.ts";
 import { STYLE } from "./sun-path/styles.ts";
 import { TextCache, themeChanged } from "./shared/typography.ts";
 
@@ -68,13 +68,8 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
     this._hoverT = timeAt(this._day, ev.clientX - rect.left, this._plotW || rect.width);
     if (!showHover(this, this._hoverT)) this._hideHover();
   };
-  _onLeave = (ev: PointerEvent) => {
-    if (ev.pointerType === "touch") return; // keep the tooltip after a tap
-    this._hideHover();
-  };
-  _onDocPointer = (ev: PointerEvent) => {
-    if (!ev.composedPath().includes(this)) this._hideHover();
-  };
+  _onLeave = leaveHides(() => this._hideHover());
+  _onDocPointer = outsideHides(this, () => this._hideHover());
 
   static getConfigElement() {
     return document.createElement(`${CARD_TYPE}-editor`);
@@ -173,15 +168,11 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
     const t = now.getTime();
     const d = this._day;
     if (d && d.lat === lat && d.lon === lon && t >= d.start && t < d.end) return d;
-    const dayOf = (offset: number) => {
-      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
-      return { ...solarDay(start, lat, lon), lat, lon };
-    };
-    let day = dayOf(0);
-    if (t < day.start) day = dayOf(-1);
-    else if (t >= day.end) day = dayOf(1);
-    this._day = day;
-    return day;
+    return (this._day = solarDayAround(now, (start) => ({
+      ...solarDay(start, lat, lon),
+      lat,
+      lon,
+    })));
   }
 
   _label(key: SunEvent) {

@@ -58,4 +58,5 @@ export interface IlluminanceHost {
   _bw?: number;
   _gutter?: number;
   _plotW?: number;
+  _window?: { now: number; t0: number };
 }

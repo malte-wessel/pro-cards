@@ -2,8 +2,12 @@
 // animation is deterministic and a paused frame reproducible.
 import { COMPASS, UNIT_TO_KMH } from "./constants.ts";
 
-export const toKmh = (v: number, unit: string | null | undefined): number =>
-  v * (UNIT_TO_KMH[(unit ?? "").trim().toLowerCase()] ?? 1);
+// a speed in km/h; Beaufort is a scale, not a unit: its force B is about 0.836 · B^1.5 m/s
+export const toKmh = (v: number, unit: string | null | undefined): number => {
+  const u = (unit ?? "").trim().toLowerCase();
+  if (u === "beaufort" || u === "bft") return 0.836 * Math.pow(Math.max(0, v), 1.5) * 3.6;
+  return v * (UNIT_TO_KMH[u] ?? 1);
+};
 
 export const norm = (deg: number) => ((deg % 360) + 360) % 360;
 

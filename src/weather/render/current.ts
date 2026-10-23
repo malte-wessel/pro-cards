@@ -6,8 +6,8 @@ import { nameOf, tplOf, type EntityModel, type RenderCtx } from "../../shared/en
 import { bigEl, leadEl, secondaryEl, textEl } from "../../shared/entity/render/lead.ts";
 import { fmtNumber } from "../../shared/format.ts";
 import type { WeatherConfig, WeatherIcons } from "../config.ts";
-import { conditionIcon, conditionText, isNight } from "../conditions.ts";
-import { conditionEl, iconFor } from "./icon.ts";
+import { conditionIcon, conditionText, isCondition, isNight } from "../conditions.ts";
+import { conditionEl, iconFor, isImageIcon } from "./icon.ts";
 import type { Day } from "../forecast.ts";
 
 export interface CurrentModel {
@@ -23,16 +23,19 @@ export interface CurrentModel {
 export const condColor = (ent: EntityItem, m: EntityModel): string =>
   !m.model.avail || ent.color ? m.look.color : (m.look.rule?.color ?? "primary");
 
-// the model with the condition icon: a rule icon, else an mdi icon from the `icons` map, else
-// the condition's own as fallback
+// the model with the condition icon: a rule icon, else the `icons` map's (any icon set; an
+// image is drawn by conditionEl instead), else the condition's own, its night variant while the
+// sun is down. Named, never left to the entity's state icon, which knows no night.
 const withIcon = (ctx: RenderCtx, icons: WeatherIcons, m: EntityModel): EntityModel => {
-  const mapped = iconFor(icons, m.st?.state);
+  const state = m.st?.state;
+  const mapped = iconFor(icons, state);
+  const own = isCondition(state) ? conditionIcon(state, isNight(ctx.hass)) : null;
   return {
     ...m,
     look: {
       ...m.look,
-      icon: m.look.icon ?? (mapped?.startsWith("mdi:") ? mapped : null),
-      fallbackIcon: conditionIcon(m.st?.state, isNight(ctx.hass)),
+      icon: m.look.icon ?? (mapped && !isImageIcon(mapped) ? mapped : own),
+      fallbackIcon: conditionIcon(state, isNight(ctx.hass)),
     },
   };
 };

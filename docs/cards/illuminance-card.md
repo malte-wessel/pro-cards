@@ -78,7 +78,7 @@ bucket_minutes: 15
 
 ## Zones and scale
 
-`zones` takes the five fixed keys `night`, `twilight`, `overcast`, `day` and `sun`. Every zone accepts a `label` (your own wording; the default names follow the [language of your Home Assistant profile](../guide/languages)), an upper bound `max` in lux and a `color`. The last zone (`sun`) has no upper bound, so its `max` is ignored; other keys than the five are ignored too. `min_lx` and `max_lx` set the ends of the scale; the trend labels its y axis with the zone thresholds, and when the window's peak is higher than `max_lx` the top grows to the next round value (1, 2 or 5 times a power of ten) so the peak is never cut off.
+`zones` takes the five fixed keys `night`, `twilight`, `overcast`, `day` and `sun`. Every zone accepts a `label` (your own wording; the default names follow the [language of your Home Assistant profile](../guide/languages)), an upper bound `max` in lux and a `color`. The last zone (`sun`) has no upper bound, so its `max` is ignored; other keys than the five are ignored too. `min_lx` and `max_lx` set the ends of the scale (`min_lx` above 0 and below `max_lx`); the trend labels its y axis with the zone thresholds, and when the window's peak is higher than `max_lx` the top grows to the next round value (1, 2 or 5 times a power of ten) so the peak is never cut off.
 
 ::: live
 

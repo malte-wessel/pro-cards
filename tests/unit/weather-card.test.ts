@@ -542,3 +542,27 @@ describe("weather forecast night icons", async () => {
     expect(rowNight({ config: {} } as unknown as HomeAssistant, false, { t: evening })).toBe(false);
   });
 });
+
+describe("forecast days stamped at a UTC midnight", async () => {
+  const { isToday, todayShift } = await import("../../src/weather/forecast.ts");
+  it("reads them 12 hours later when the first one falls on the evening before", () => {
+    const now = new Date(2026, 5, 21, 10, 0).getTime();
+    const day = 86400e3;
+    // the evening before (as a UTC midnight west of UTC reads in a local zone)
+    const evening = new Date(2026, 5, 20, 19, 0).getTime();
+    const late = [0, 1, 2].map((i) => ({ t: evening + i * day }));
+    const shift = todayShift(late, now);
+    expect(shift).toBe(12 * 3600e3);
+    // today's forecast reads as today, tomorrow's (20:00 today, local) no longer does
+    expect(isToday(late[0].t + shift, now)).toBe(true);
+    expect(isToday(late[1].t, now)).toBe(true);
+    expect(isToday(late[1].t + shift, now)).toBe(false);
+    // days that fall on their own date: nothing to shift
+    const noon = [0, 1, 2].map((i) => ({ t: new Date(2026, 5, 21, 12).getTime() + i * day }));
+    expect(todayShift(noon, now)).toBe(0);
+    // a forecast that starts tomorrow: no day is today, none is shifted into it
+    const later = [1, 2].map((i) => ({ t: new Date(2026, 5, 21, 12).getTime() + i * day }));
+    expect(todayShift(later, now)).toBe(0);
+    expect(todayShift([], now)).toBe(0);
+  });
+});

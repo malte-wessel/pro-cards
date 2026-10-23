@@ -678,3 +678,26 @@ test.describe("updates", () => {
     expect(await marked()).toEqual([false, false, false, false]);
   });
 });
+
+test.describe("gestures", () => {
+  test("a press cut off by a scroll is no tap when a pointer is released over the row later", async ({
+    page,
+  }) => {
+    await mount(page, { type: T, entities: ["sensor.pressure"] });
+    await card(page)
+      .locator(".row .hit")
+      .first()
+      .evaluate((el) => {
+        const fire = (type: string) =>
+          el.dispatchEvent(
+            new PointerEvent(type, { bubbles: true, composed: true, button: 0, pointerId: 1 }),
+          );
+        fire("pointerdown");
+        fire("pointercancel");
+        fire("pointerup");
+      });
+    await page.waitForTimeout(300);
+    expect(await actions(page)).toEqual([]);
+    expect(await events(page)).toEqual([]);
+  });
+});

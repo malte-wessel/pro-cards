@@ -210,6 +210,35 @@ test.describe("layout-card-pro", () => {
     expect(b.x).toBe(a.x + a.w); // no gap: the divider sits between them
   });
 
+  test("a seamless column draws no line below its last shown card", async ({ page }) => {
+    await mount(
+      page,
+      {
+        type: LC,
+        layout: "masonry",
+        columns: 1,
+        card_style: "seamless",
+        cards: [
+          ec(T),
+          ec(H),
+          ec(K, undefined, { visibility: [{ condition: "state", entity: K, state: "nope" }] }),
+        ],
+      },
+      { width: 432 },
+    );
+    const lines = await page.evaluate(() =>
+      [...window.pc.card(0).shadowRoot!.querySelectorAll(".col > .item")].map((i) => [
+        i.classList.contains("off"),
+        getComputedStyle(i, "::after").borderBottomWidth,
+      ]),
+    );
+    expect(lines).toEqual([
+      [false, "1px"],
+      [false, "0px"],
+      [true, "0px"],
+    ]);
+  });
+
   test("nests layouts", async ({ page }) => {
     await mount(
       page,

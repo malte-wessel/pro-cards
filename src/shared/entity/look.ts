@@ -40,8 +40,11 @@ export const readValue = (
   // an empty text is a blank value, not a missing one (a row of custom buttons without an entity)
   if (v.kind === "text" && v.text === "") return { raw: "", num: null, avail: true };
   let raw: unknown;
-  if (v.kind === "template") raw = tplGet(v.template);
-  else if (v.kind === "text") raw = v.text;
+  if (v.kind === "template") {
+    raw = tplGet(v.template);
+    // no result yet: a blank value, not an unavailable one (it is on its way)
+    if (raw === undefined) return { raw: "", num: null, avail: true };
+  } else if (v.kind === "text") raw = v.text;
   // `attribute: hvac_mode` names the climate state (HA keeps the mode there, not in an attribute)
   else if (v.kind === "attribute")
     raw =

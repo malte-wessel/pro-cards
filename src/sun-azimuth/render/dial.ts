@@ -1,12 +1,11 @@
 // The sky dial as one SVG drawn in px at the column's width (at most 300), so the labels keep
 // their size and the lines their weight, scaled by the picture's size (--k).
+import { f1 } from "../svg.ts";
 import type { SunAzimuthHost } from "../config.ts";
-import type { SunDay, SunSample } from "../day.ts";
+import { isUp, type SunDay, type SunSample } from "../day.ts";
 import { dialGeometry } from "../dial.ts";
 import type { Side } from "../sides.ts";
 import { chipSvg, compass, deg, timeChip } from "./text.ts";
-
-const f1 = (v: number) => v.toFixed(1);
 
 export const renderDial = (
   card: SunAzimuthHost,
@@ -21,7 +20,8 @@ export const renderDial = (
   const g = dialGeometry(day, now, card._config.front, sides, width, card._config.roof, tx);
   const c = g.size / 2,
     k = g.k;
-  const up = now.el > 0;
+  // up as the header says it (refraction included): the dot, the beam and the text agree
+  const up = isUp(now);
   let html = `<svg class="dial" viewBox="0 0 ${g.size} ${g.size}" style="--k: ${k.toFixed(2)}; width: ${g.size}px">
     <circle class="disc" cx="${c}" cy="${c}" r="${f1(g.r)}"/>
     <circle class="grid" cx="${c}" cy="${c}" r="${f1((g.r * 2) / 3)}"/>

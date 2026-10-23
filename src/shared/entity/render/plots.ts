@@ -51,18 +51,21 @@ export interface PlotElement extends HTMLDivElement {
   _numeric?: boolean;
 }
 
+// a text label over a plot at (left, top), `width` wide when given (a right-aligned y label)
 export const addLabel = (
   container: HTMLElement,
   cls: string,
   txt: string,
   left: number,
   top: number,
+  width?: number,
 ) => {
   const el = document.createElement("div");
   el.className = `label ${cls}`;
   el.textContent = txt;
   el.style.left = `${left}px`;
   el.style.top = `${top}px`;
+  if (width) el.style.width = `${width}px`;
   container.appendChild(el);
 };
 

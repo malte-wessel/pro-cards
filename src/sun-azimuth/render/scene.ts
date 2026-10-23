@@ -1,13 +1,12 @@
 // The 3D view as one SVG as wide as the column (px units, so the labels keep their size; the
 // lines and dots follow the sphere's size through --k).
+import { f1 } from "../svg.ts";
 import type { SunAzimuthHost } from "../config.ts";
 import type { PositionedDay } from "../config.ts";
 import type { SunSample } from "../day.ts";
 import { sceneGeometry } from "../scene.ts";
 import type { Side } from "../sides.ts";
 import { chipSvg, chipWidth, compass, deg, timeChip } from "./text.ts";
-
-const f1 = (v: number) => v.toFixed(1);
 
 export const renderScene = (
   card: SunAzimuthHost,
@@ -23,18 +22,7 @@ export const renderScene = (
   const cfg = card._config,
     hass = card._hass;
   const tx = card._text;
-  const g = sceneGeometry(
-    day,
-    now,
-    day.lat,
-    cfg.front,
-    camera,
-    sides,
-    width,
-    cfg.roof,
-    height,
-    tx?.scale,
-  );
+  const g = sceneGeometry(day, now, cfg.front, camera, sides, width, cfg.roof, height, tx?.scale);
   const uid = card._uid || (card._uid = Math.random().toString(36).slice(2, 8));
   const k = g.k;
   let html = `<svg class="scene" viewBox="0 0 ${g.w} ${g.h}" style="--k: ${k.toFixed(2)}">

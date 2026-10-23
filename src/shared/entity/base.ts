@@ -10,7 +10,7 @@ import { langOf } from "../format.ts";
 import type { ActionConfig, ActionKind, GridOptions, HapticType, HomeAssistant } from "../ha.ts";
 import { fetchHistory, pointOf, type Point } from "../history.ts";
 import { HistoryFeed } from "../history-feed.ts";
-import { hideHover } from "../hover.ts";
+import { hideHover, leaveHides, outsideHides } from "../hover.ts";
 import { TemplateSubscriptions } from "../templates.ts";
 import { depsChanged } from "../deps.ts";
 import { clamp01, qs } from "../util.ts";
@@ -124,6 +124,7 @@ export abstract class EntityCardBase extends HTMLElement {
   _vis?: VisState;
   _bodyKey: string | null = null;
   _person: { user: string | undefined; id: string | null } | null = null;
+  _onDocPointer = outsideHides(this, () => this._hideHover());
   // what each item's model, each row and each plot were last drawn from (deps.ts): a render
   // recomputes and redraws only what its inputs changed. Per item: the ids it reads (its entity,
   // its buttons') and whether it has templates; `_fillEpoch` moves on what every row depends on
@@ -147,11 +148,10 @@ export abstract class EntityCardBase extends HTMLElement {
     this._tpl = new TemplateSubscriptions(this._cardType(), () => this._render());
     this._history = new HistoryFeed(this._cardType());
     this._visWatch = new VisibilityWatch(() => this._render());
-    this._onDocPointer = this._onDocPointer.bind(this);
     this._plotHandlers = {
       move: this._onPointer.bind(this),
       up: (ev) => ev.stopPropagation(),
-      leave: this._onLeave.bind(this),
+      leave: leaveHides(() => this._hideHover()),
     };
     const dragging = () => this._dragging;
     this._ctl = {
@@ -291,6 +291,9 @@ export abstract class EntityCardBase extends HTMLElement {
   disconnectedCallback() {
     clearInterval(this._timer);
     clearTimeout(this._pendingTimer);
+    // a gesture cut off by leaving the page never ends: its row is filled again on return
+    this._dragging = null;
+    this._armed.clear();
     this._ro?.disconnect();
     document.removeEventListener("pointerdown", this._onDocPointer);
     this._visWatch.disconnect();
@@ -511,7 +514,12 @@ export abstract class EntityCardBase extends HTMLElement {
         if (has(ent.hold)) this._runAction(ent, ent.hold, "hold");
       }, HOLD_MS);
     });
-    const cancel = () => clearTimeout(holdTimer);
+    // a press that left the row or was taken over (a scroll) is over: a later release here is not
+    // its end
+    const cancel = () => {
+      clearTimeout(holdTimer);
+      down = false;
+    };
     el.addEventListener("pointerleave", cancel);
     el.addEventListener("pointercancel", cancel);
     el.addEventListener("pointerup", (ev) => {
@@ -577,6 +585,8 @@ export abstract class EntityCardBase extends HTMLElement {
     this._buildBody(body);
     this._bodyKey = this._vis.key;
     card.appendChild(body);
+    // the observer follows the new card, not the one setConfig replaced (it would keep it alive)
+    if (this._root) this._ro?.unobserve(this._root);
     this._root = card;
     this._ro?.observe(card);
     this._render();
@@ -902,13 +912,6 @@ export abstract class EntityCardBase extends HTMLElement {
     const t = t0 + clamp01((ev.clientX - rect.left) / (rect.width || 1)) * (t1 - t0);
     this._hover = { idx: plot._ctx.idx, t };
     if (!showHover(ctx, plot, t)) this._hideHover();
-  }
-  _onLeave(ev: PointerEvent) {
-    if (ev.pointerType === "touch") return;
-    this._hideHover();
-  }
-  _onDocPointer(ev: PointerEvent) {
-    if (!ev.composedPath().includes(this)) this._hideHover();
   }
   _hideHover() {
     this._hover = null;

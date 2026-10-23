@@ -55,7 +55,8 @@ export const mergeZones = (overrides?: ZoneOverrides | null, hass?: HomeAssistan
   });
 export const zoneOf = (zones: readonly Zone[], v: number): Zone =>
   zones.find((z) => v < z.max) || zones[zones.length - 1];
-export const logOf = (v: number) => Math.log10(Math.max(v, 0.1));
+// log10 of a lux value, floored at the scale's bottom (0 lx has no log)
+export const logOf = (v: number, floor = 0.1) => Math.log10(Math.max(v, floor));
 // The trend's smoothed line, averaged on the log scale it is drawn on: the mean of log10(lx + 1),
 // back in lux. A plain mean would pull a bucket with a bright moment towards it (100 and 10,000 lx
 // average to about 5,000, the log mean is about 1,000); the + 1 keeps 0 lx at 0.
@@ -90,16 +91,19 @@ export const yLabels = (zones: readonly Zone[], min: number, max: number) =>
     .map((z) => ({ val: z.max, txt: fmtAxisLx(z.max) }));
 // 0..1 position of v on the log scale [min, max]
 export const posOf = (v: number, min: number, max: number) =>
-  Math.max(0, Math.min(1, (logOf(v) - logOf(min)) / (logOf(max) - logOf(min))));
+  Math.max(0, Math.min(1, (logOf(v, min) - logOf(min, min)) / (logOf(max, min) - logOf(min, min))));
 // colour anchors: each zone's colour at the log-midpoint of its range (clamped to the scale)
 export const colorAnchors = (zones: readonly Zone[], min: number, max: number): ColorAnchor[] => {
-  let lo = logOf(min);
-  const hi = logOf(max);
+  let lo = logOf(min, min);
+  const hi = logOf(max, min);
   return zones.map((z) => {
-    const zhi = Math.min(logOf(z.max), hi);
+    const zhi = Math.min(logOf(z.max, min), hi);
     const mid = (lo + zhi) / 2;
     lo = zhi;
-    return { p: (mid - logOf(min)) / (hi - logOf(min)), color: z.hex || resolveHex(z.color) };
+    return {
+      p: (mid - logOf(min, min)) / (hi - logOf(min, min)),
+      color: z.hex || resolveHex(z.color),
+    };
   });
 };
 export const colorAt = (anchors: readonly ColorAnchor[], p: number): string => {

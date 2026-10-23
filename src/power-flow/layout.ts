@@ -20,9 +20,7 @@ export interface LNode {
   x: number;
   y: number;
   d: number; // diameter
-  consumerId: string | null; // group / consumer: the config id
   column: "source" | "home" | "group" | "leaf"; // where it sits along the flow
-  tight?: boolean; // direction: down – the column is too narrow for the labels beside the nodes
   labelMax?: number; // direction: down, a crowded row – the widest name that clears its neighbours
   slot?: SourceSlot; // direction: down – where the sources' labels go, the same for the whole row
 }
@@ -367,15 +365,7 @@ export const layoutTree = (
   const nodes: LNode[] = [];
   const rows: LRow[] = [];
   const byId = new Map<string, LNode>();
-  const add = (
-    id: string,
-    kind: NodeKind,
-    idx: number | null,
-    d: number,
-    a: number,
-    b: number,
-    cid: string | null,
-  ) => {
+  const add = (id: string, kind: NodeKind, idx: number | null, d: number, a: number, b: number) => {
     const [x, y] = map(a, b);
     const column: LNode["column"] =
       kind === "home"
@@ -385,17 +375,17 @@ export const layoutTree = (
           : idx !== null && id.startsWith("s")
             ? "source"
             : "leaf";
-    const nd: LNode = { id, kind, idx, x, y, d, consumerId: cid, column };
+    const nd: LNode = { id, kind, idx, x, y, d, column };
     nodes.push(nd);
     byId.set(id, nd);
     return nd;
   };
   cfg.sources.forEach((s, i) => {
-    const nd = add(s.id, s.kind, s.idx, s.d, aS, bS[i], null);
+    const nd = add(s.id, s.kind, s.idx, s.d, aS, bS[i]);
     nd.labelMax = srcCaps[i];
     nd.slot = srcSlot;
   });
-  add("home", "home", cfg.homeIdx, cfg.homeD, aH, bH, null);
+  add("home", "home", cfg.homeIdx, cfg.homeD, aH, bH);
 
   // the consumer column, centred across; `down` spreads it to the width
   let plan = columnPlan(cfg);
@@ -414,7 +404,7 @@ export const layoutTree = (
   const leafKind = (id: string): NodeKind => (id === "other" ? "other" : "consumer");
   for (const g of plan.groups) {
     const grp = cfg.consumers.find((c) => c.id === g.id);
-    add(g.id, "group", null, grp ? grp.d : GEOM.dGroup, aG, b0 + g.b, grp ? grp.id : null);
+    add(g.id, "group", null, grp ? grp.d : GEOM.dGroup, aG, b0 + g.b);
   }
   plan.leaves.forEach((lf, k) => {
     const leaf = leaves.find((l) => l.id === lf.id);
@@ -434,15 +424,13 @@ export const layoutTree = (
         x,
         y,
         d: 0,
-        consumerId: lf.id,
         column: asRoom ? "group" : "leaf",
       });
     } else {
       const kind = leafKind(lf.id);
-      const nd = add(lf.id, kind, idx, lf.d, asRoom ? aG : aC, b0 + lf.b, lf.id);
+      const nd = add(lf.id, kind, idx, lf.d, asRoom ? aG : aC, b0 + lf.b);
       if (asRoom) nd.column = "group";
       if (consTight) {
-        nd.tight = true;
         // every label centred below its node, its name cut to its room: of the gap to a
         // neighbour, the neighbour keeps half (less when its label is narrower, more when its
         // value is wider: values are never cut) and the rest, less the labels' 3 px spacing and

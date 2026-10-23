@@ -1,9 +1,10 @@
 // DOM pieces shared by the flow cards: the band, the row skeleton of tile / flow tile / hero,
 // the lead shells and the playback-rate scaling that lets a value change re-time running
 // animations without restarting them.
+import type { EntityItem } from "../entity/config.ts";
 import type { IconStyle } from "../entity/constants.ts";
-import type { EntityModel } from "../entity/model.ts";
-import { bigEl, textEl } from "../entity/render/lead.ts";
+import { nameOf, type EntityModel, type RenderCtx } from "../entity/model.ts";
+import { bigEl, fillSecondary, pillEl, textEl } from "../entity/render/lead.ts";
 
 export type RowKind = "tile" | "flowtile" | "hero";
 
@@ -102,4 +103,49 @@ export const setBig = (big: HTMLElement | null, m: EntityModel) => {
     if (!u) u = big.appendChild(document.createElement("span"));
     u.textContent = m.fmt.unit;
   } else u?.remove();
+};
+
+// a part of a secondary line; an accent part takes the row's colour
+export interface TextPart {
+  text: string;
+  accent?: boolean;
+}
+// the lead's animation as built: its cycle (`--ldur`) and the value it was built for stay on the
+// row (`key`); a later value scales its playback rate. Returns the value it was built for.
+export const builtLead = (row: HTMLElement, key: string, value: number, durationS: number) => {
+  if (row.dataset[key] === undefined) {
+    row.style.setProperty("--ldur", `${durationS.toFixed(3)}s`);
+    row.dataset[key] = String(value);
+  }
+  return Number(row.dataset[key]);
+};
+// the texts of a flow card's row: the name, the secondary line (`wide`; the flow tile's narrow
+// line, `narrow`, for small widths), the big value and, on a tile, the label pill
+export const fillFlowTexts = (
+  ctx: RenderCtx,
+  row: HTMLElement,
+  ent: EntityItem,
+  m: EntityModel,
+  kind: RowKind,
+  wide: TextPart[],
+  narrow: TextPart[],
+) => {
+  const primary = row.querySelector<HTMLElement>(".primary");
+  if (primary) primary.textContent = nameOf(ctx, ent, m.st);
+  const secondary = row.querySelector<HTMLElement>(".secondary:not(.narrow)");
+  if (secondary) {
+    fillSecondary(secondary, wide);
+    secondary.style.display = wide.length ? "" : "none";
+  }
+  const narrowEl = row.querySelector<HTMLElement>(".secondary.narrow");
+  if (narrowEl) fillSecondary(narrowEl, narrow);
+  setBig(row.querySelector<HTMLElement>(".big"), m);
+  if (kind !== "tile") return;
+  const label = m.look.label;
+  const end = row.querySelector<HTMLElement>(".end");
+  let pill = end?.querySelector<HTMLElement>(".pill") ?? null;
+  if (label && end) {
+    if (!pill) pill = end.appendChild(pillEl(""));
+    pill.textContent = label;
+  } else pill?.remove();
 };

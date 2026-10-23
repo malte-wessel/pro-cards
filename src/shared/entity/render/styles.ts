@@ -1,5 +1,6 @@
 // CSS of the entity cards, in pieces so every card ships only what it renders.
 // Colours come from HA theme tokens; --fe-color is set per row from the resolved look.
+import { tipStyle } from "../../hover.ts";
 import { ICON_RADIUS, STYLE_HOST, STYLE_ICONS, iconBg } from "../../constants.ts";
 import {
   FONT_FAMILY,
@@ -312,16 +313,9 @@ export const STYLE_PLOT = `
   .plot .hair { stroke: var(--secondary-text-color); stroke-width: 1; opacity: .6; }
   .plot .col { fill: var(--fe-color); }
   .plot .hl { fill: none; stroke: var(--primary-text-color); stroke-width: 1.5; }
-  .hover { display: none; } .hover.on { display: block; }
   .label { position: absolute; ${font(10, 12)} color: var(--secondary-text-color); white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
   .label.right { transform: translateX(-100%); }
-  .tip {
-    position: absolute; top: 4px; pointer-events: none; display: none; z-index: 1; box-sizing: border-box; max-width: calc(100% - 8px);
-    background: var(--ha-card-background, var(--card-background-color)); color: var(--primary-text-color);
-    border: 1px solid var(--divider-color); border-radius: 8px; padding: 6px 8px; ${type(12, 16)}
-    box-shadow: var(--ha-card-box-shadow, 0 2px 6px rgba(0,0,0,.2)); white-space: nowrap;
-  }
-  .tip.on { display: block; }
+  ${tipStyle()}
   .tip .time { color: var(--secondary-text-color); }
   .tip b { font-weight: 600; font-variant-numeric: tabular-nums; }
   .tip .lbl { color: var(--secondary-text-color); }

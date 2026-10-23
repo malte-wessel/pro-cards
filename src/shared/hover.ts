@@ -1,4 +1,19 @@
 // Hover tooltip helpers shared by the plots of all cards.
+import { type } from "./typography.ts";
+
+// the crosshair group and the tooltip box of every plot (`scope` narrows them, ".trend " for the
+// trend plot); a card adds the rules for what its tooltip holds
+export const tipStyle = (scope = "") => `
+  ${scope}.hover { display: none; }
+  ${scope}.hover.on { display: block; }
+  ${scope}.tip {
+    position: absolute; top: 4px; pointer-events: none; display: none; z-index: 1; box-sizing: border-box; max-width: calc(100% - 8px);
+    background: var(--ha-card-background, var(--card-background-color)); color: var(--primary-text-color);
+    border: 1px solid var(--divider-color); border-radius: 8px; padding: 6px 8px; ${type(12, 16)}
+    box-shadow: var(--ha-card-box-shadow, 0 2px 6px rgba(0,0,0,.2)); white-space: nowrap;
+  }
+  ${scope}.tip.on { display: block; }
+`;
 
 // the point of `pts` (ascending t) closest to t, or null for an empty series
 export const nearestPoint = <P extends { t: number }>(
@@ -32,4 +47,14 @@ export const placeTip = (plot: HTMLElement, tip: HTMLElement, xs: number, gutter
 export const hideHover = (root: ParentNode | null | undefined) => {
   root?.querySelectorAll(".hover.on").forEach((g) => g.classList.remove("on"));
   root?.querySelectorAll(".tip.on").forEach((t) => t.classList.remove("on"));
+};
+
+// a plot's pointerleave: a mouse that leaves hides the tooltip, a finger's tap keeps it
+export const leaveHides = (hide: () => void) => (ev: PointerEvent) => {
+  if (ev.pointerType !== "touch") hide();
+};
+// a pointerdown anywhere on the page: one outside `host` hides it (a tapped tooltip goes with the
+// next tap elsewhere)
+export const outsideHides = (host: Element, hide: () => void) => (ev: PointerEvent) => {
+  if (!ev.composedPath().includes(host)) hide();
 };

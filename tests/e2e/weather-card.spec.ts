@@ -1,4 +1,4 @@
-import { test, expect, mount, events, card, setLanguage, setState } from "./util.ts";
+import { test, expect, mount, events, card, setLanguage, setState, FROZEN } from "./util.ts";
 import type { WeatherCard } from "../../src/weather-card.ts";
 import type { Locator, Page } from "@playwright/test";
 
@@ -380,6 +380,48 @@ test.describe("weather card", () => {
     // the weather entity changed (its rules and units are read): drawn again
     await setState(page, W, undefined, { temperature: 18.2 });
     await expect(rows.first()).not.toHaveAttribute("data-mark", "1");
+  });
+
+  test("the lead takes the night icon at sunset, with mdi icons too", async ({ page }) => {
+    await mount(page, { type: T, entity: W, icons: "mdi" });
+    const icon = card(page).locator(".row.wtile ha-icon");
+    await expect(icon).toHaveAttribute("icon", "mdi:weather-partly-cloudy");
+    await setState(page, "sun.sun", "below_horizon");
+    await expect(icon).toHaveAttribute("icon", "mdi:weather-night-partly-cloudy");
+  });
+
+  test("asks for a refused forecast again a minute later", async ({ page }) => {
+    await mount(page, { type: T, entity: W });
+    // the next forecast subscriptions are refused (the entity is not ready yet)
+    await page.evaluate(() => {
+      const w = window as unknown as { __refuse: boolean };
+      const conn = window.pc.snapshot().connection as unknown as {
+        subscribeMessage: (cb: unknown, msg: { type: string }) => Promise<unknown>;
+      };
+      const orig = conn.subscribeMessage;
+      w.__refuse = true;
+      conn.subscribeMessage = (cb, msg) =>
+        w.__refuse && msg.type === "weather/subscribe_forecast"
+          ? Promise.reject(new Error("not now"))
+          : orig(cb, msg);
+    });
+    await mount(page, {
+      type: T,
+      entity: W,
+      sections: [{ type: "forecast", mode: "daily", days: 3 }],
+    });
+    const c = card(page);
+    await expect(c.locator(".wempty")).toHaveText("no forecast");
+    await page.evaluate(() => {
+      (window as unknown as { __refuse: boolean }).__refuse = false;
+    });
+    // an update within the minute does not ask again
+    await setState(page, W, undefined, { probe: 1 });
+    await expect(c.locator(".frow")).toHaveCount(0);
+    // a minute later it does
+    await page.clock.setFixedTime(new Date(FROZEN.getTime() + 61_000));
+    await setState(page, W, undefined, { probe: 2 });
+    await expect(c.locator(".frow")).toHaveCount(3);
   });
 
   test("forecast days keep the day icon after sunset", async ({ page }) => {

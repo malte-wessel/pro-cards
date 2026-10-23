@@ -182,3 +182,11 @@ describe("trend plot height", async () => {
     expect(hair.getAttribute("y2")).toBe(String(300 - 16));
   });
 });
+
+describe("trend scale", async () => {
+  const { mkScale } = await import("../../src/shared/trend/scale.ts");
+  it("never turns upside down in a lane shorter than its label", () => {
+    const s = mkScale(0, 10, 0, 10, 16);
+    expect(s.y(10)).toBeLessThanOrEqual(s.y(0));
+  });
+});

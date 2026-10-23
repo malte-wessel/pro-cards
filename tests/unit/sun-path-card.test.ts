@@ -105,3 +105,18 @@ describe("sun-path-card hover", () => {
     expect(timeAt(day, 900, 400)).toBe(end);
   });
 });
+
+describe("the solar day around a moment", async () => {
+  const { solarDayAround } = await import("../../src/shared/solar.ts");
+  it("takes the calendar day's, or the neighbour's around midnight", () => {
+    // a stand-in day: from 01:00 on its date to 01:00 the day after
+    const make = (start: Date) => ({
+      date: start.getDate(),
+      start: start.getTime() + 3600e3,
+      end: start.getTime() + 25 * 3600e3,
+    });
+    expect(solarDayAround(new Date(2026, 5, 21, 12), make).date).toBe(21);
+    expect(solarDayAround(new Date(2026, 5, 21, 0, 30), make).date).toBe(20);
+    expect(solarDayAround(new Date(2026, 5, 21, 23, 0), make).date).toBe(21);
+  });
+});
