@@ -227,6 +227,37 @@ test.describe("layout-card-pro", () => {
     ]);
   });
 
+  test("paints its first frame in the columns of its width, a layout inside too", async ({
+    page,
+  }) => {
+    await mount(page, ec(T));
+    const inner = {
+      type: LC,
+      columns: 1,
+      breakpoints: { 2: { columns: 2 } },
+      cards: [ec(H), ec(K)],
+    };
+    const cfg = {
+      type: LC,
+      columns: 1,
+      breakpoints: { 3: { columns: 3 } },
+      cards: [ec(T), inner, ec(P)],
+    };
+    const first = await page.evaluate(async (c) => {
+      window.pc.reset();
+      window.pc.mount(c, { width: 1200 });
+      // a frame callback queued before the first frame runs first in the next one: it sees what
+      // the first frame painted, before anything the cards queued for the next one
+      await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
+      const outer = window.pc.card(0) as HTMLElement & { _columns?: number };
+      const nested = outer.shadowRoot!.querySelectorAll("hui-card")[1]
+        .firstElementChild as HTMLElement & { _columns?: number };
+      return [outer._columns, nested._columns];
+    }, cfg);
+    // about 1170 px: three view columns; the inner layout, about 380 px, one
+    expect(first).toEqual([3, 1]);
+  });
+
   test("hides itself when every card is hidden", async ({ page }) => {
     const cfg = {
       type: LC,
