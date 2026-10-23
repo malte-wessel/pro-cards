@@ -8,6 +8,7 @@ _Beta_
 - Icons are sized like Home Assistant's tile card (a 24 px icon in a 36 px circle), so Pro tiles match the built-in ones
 - `icon_style: plain` draws an icon without its circle, still aligned with circled icons
 - `show_entity_picture: true` shows an entity's picture (a person's photo, a cover, a snapshot) in place of its icon, as on Home Assistant's tile card
+- Entity cards no longer show the history window (`12 h`) in the header; a strip still labels its own axis
 - Power flow: `icon_size` on any node, including `other`
 - Text follows Home Assistant's typography variables (`ha-font-size-*`, `ha-font-weight-*`, `ha-tile-info-*`), so a theme can size the cards' text
 - Icons follow a theme's `ha-tile-icon-border-radius` and `tile-icon-opacity`

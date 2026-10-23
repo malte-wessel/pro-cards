@@ -221,7 +221,6 @@ test.describe("layouts", () => {
       ],
     });
     const c = card(page);
-    await expect(c.locator(".header .range")).toHaveText("24 h");
     await expect(c.locator(".row.hero .big b")).toHaveText(/^\d+\.\d$/);
     await expect(c.locator(".row.hero .plot svg path").first()).toHaveAttribute("d", /^M/);
     await expect(c.locator(".row.list")).toHaveCount(4);
@@ -467,9 +466,8 @@ test.describe("values and header entities", () => {
     await expect(hv.nth(1).locator(".state")).toHaveText(/%$/);
     await expect(hv.nth(2).locator(".secondary")).toHaveText("Robot vacuum");
     await expect(hv.nth(2).locator(".pill")).toBeVisible();
-    await expect(c.locator(".header .range")).toHaveText("24 h");
     // the last item of the header ends at its right padding
-    expect(await rightGap(c.locator(".header"), c.locator(".header .range"))).toBeLessThan(1);
+    expect(await rightGap(c.locator(".header"), hv.nth(2))).toBeLessThan(1);
     const tb = (await c.locator(".header .title").boundingBox())!,
       hb = (await hv.nth(0).boundingBox())!;
     expect(hb.x).toBeGreaterThan(tb.x);
@@ -485,8 +483,7 @@ test.describe("values and header entities", () => {
     });
     await expect(card(page).locator(".header")).toBeVisible();
     await expect(card(page).locator(".header .title")).toHaveText("");
-    // without history there is no range: the header items end at the padding, no gap after them
-    await expect(card(page).locator(".header .range")).toBeHidden();
+    // the header items end at the padding, no gap after them
     expect(
       await rightGap(card(page).locator(".header"), card(page).locator(".header .row.hval").last()),
     ).toBeLessThan(1);
