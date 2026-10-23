@@ -154,6 +154,44 @@ test.describe("power flow card", () => {
     await expect(link(c, 0)).not.toHaveClass(/active/);
   });
 
+  test("a label that changes its width moves the links in place, their dots keep running", async ({
+    page,
+  }) => {
+    await mount(page, { type: T, sources: SRC, home: HOME, consumers: CONS }, { width: 320 });
+    await pin(page, { "sensor.heat_pump_power": "990" });
+    const c = card(page);
+    const lanes = c.locator(".lane");
+    const count = await lanes.count();
+    expect(count).toBeGreaterThan(0);
+    // every lane's first dot and every track, marked
+    await c
+      .locator(".lane > :first-child, path.link")
+      .evaluateAll((els) => els.forEach((e) => e.setAttribute("data-mark", "1")));
+    const paths = () =>
+      c.locator("path.link").evaluateAll((els) => els.map((e) => e.getAttribute("d")));
+    const before = await paths();
+    // the battery's charge and the heat pump's value grow wider (64 % → 100 %, 990 W → 1.01 kW)
+    // without a real change of load
+    await pin(page, { [SOC]: "100", "sensor.heat_pump_power": "1010" });
+    await expect(label(c, "s1")).toHaveText(/Battery · 100 %/);
+    // the tree moved: some link has a new path
+    expect(await paths()).not.toEqual(before);
+    // the same tracks and the same dots
+    await expect(c.locator("path.link:not([data-mark])")).toHaveCount(0);
+    await expect(lanes).toHaveCount(count);
+    await expect(c.locator(".lane > :first-child[data-mark]")).toHaveCount(count);
+    // each lane runs on its track's new path
+    const pairs = await c.locator(".lane").evaluateAll((els) =>
+      els.map((l) => {
+        const lane = l as HTMLElement;
+        const root = lane.getRootNode() as ShadowRoot;
+        const track = root.querySelector(`path.link[data-edge="${lane.dataset.edge}"]`);
+        return [track?.getAttribute("d"), lane.style.getPropertyValue("--p")];
+      }),
+    );
+    for (const [d, p] of pairs) expect(p).toBe(`path('${d}')`);
+  });
+
   test("consumers as nodes, a producing device, rooms and list rows", async ({ page }) => {
     await mount(page, { type: T, sources: SRC, home: HOME, consumers: CONS });
     await pin(page);

@@ -513,3 +513,32 @@ describe("forecast", () => {
     expect(dailyRange([])).toBeNull();
   });
 });
+
+describe("weather forecast night icons", async () => {
+  const { nightAt, rowNight } = await import("../../src/weather/conditions.ts");
+  const LAT = 51.2277,
+    LON = 6.7735; // Düsseldorf
+  const at = (iso: string) => new Date(iso).getTime();
+  const hass = { config: { latitude: LAT, longitude: LON } } as unknown as HomeAssistant;
+
+  it("knows night from the sun's elevation at a place", () => {
+    expect(nightAt(at("2026-06-21T12:00:00+02:00"), LAT, LON)).toBe(false);
+    expect(nightAt(at("2026-06-21T23:30:00+02:00"), LAT, LON)).toBe(true);
+    expect(nightAt(at("2026-12-21T17:30:00+01:00"), LAT, LON)).toBe(true);
+  });
+
+  it("gives a forecast day the day icon and an hour the night icon only while the sun is down", () => {
+    const evening = at("2026-06-21T23:00:00+02:00"),
+      morning = at("2026-06-22T09:00:00+02:00");
+    // a day never takes the night variant, whatever the time
+    expect(rowNight(hass, true, { t: evening })).toBe(false);
+    // an hour follows the sun at that hour
+    expect(rowNight(hass, false, { t: evening, daytime: null })).toBe(true);
+    expect(rowNight(hass, false, { t: morning, daytime: null })).toBe(false);
+    // the forecast's own is_daytime wins
+    expect(rowNight(hass, false, { t: morning, daytime: false })).toBe(true);
+    expect(rowNight(hass, false, { t: evening, daytime: true })).toBe(false);
+    // no location: day
+    expect(rowNight({ config: {} } as unknown as HomeAssistant, false, { t: evening })).toBe(false);
+  });
+});

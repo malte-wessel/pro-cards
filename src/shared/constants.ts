@@ -1,6 +1,8 @@
 // Constants shared by all cards.
 
 export const REFRESH_MS = 5 * 60 * 1000;
+// a failed history fetch is tried again after this long (history-feed.ts)
+export const RETRY_MS = 60 * 1000;
 
 export const DEVICE_CLASS_ICON: Record<string, string> = {
   temperature: "mdi:thermometer",

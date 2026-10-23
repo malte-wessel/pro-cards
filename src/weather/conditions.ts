@@ -1,5 +1,6 @@
 // Weather conditions (pure): Home Assistant's condition states, their icons and names.
 import type { HomeAssistant } from "../shared/ha.ts";
+import { solarElevation, SUNRISE_ELEV } from "../shared/solar.ts";
 import { t, type StringKey } from "../shared/i18n.ts";
 
 export const CONDITIONS = [
@@ -62,3 +63,24 @@ export const conditionText = (hass: HomeAssistant | undefined, c: unknown): stri
 // night when the sun entity says so (the weather entity has no notion of day / night)
 export const isNight = (hass: HomeAssistant | undefined): boolean =>
   hass?.states["sun.sun"]?.state === "below_horizon";
+
+// night at time `t` at a place: the sun below the horizon (refraction included), as sun.sun says
+export const nightAt = (t: number, lat: number, lon: number): boolean =>
+  solarElevation(new Date(t), lat, lon) < SUNRISE_ELEV;
+
+// whether a forecast row takes the night variant: a day never does; an hour does when its entry
+// says it is not daytime or, without that, when the sun is down at that hour at the home's place
+// (sun.sun only knows now). Without a location an hour is day.
+export const rowNight = (
+  hass: HomeAssistant | undefined,
+  daily: boolean,
+  row: { t: number; daytime?: boolean | null },
+): boolean => {
+  if (daily) return false;
+  if (row.daytime === false) return true;
+  if (row.daytime === true) return false;
+  const lat = hass?.config?.latitude,
+    lon = hass?.config?.longitude;
+  if (typeof lat !== "number" || typeof lon !== "number") return false;
+  return nightAt(row.t, lat, lon);
+};

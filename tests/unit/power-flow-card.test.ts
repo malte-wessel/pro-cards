@@ -1897,12 +1897,13 @@ describe("power flow visibility", () => {
     }
     expect(lay.edges.length).toBeLessThan(full.edges.length);
     expect(diagramHeight(view)).toBeLessThan(diagramHeight(cfg));
-    expect(lay.key).not.toBe(full.key);
-    // one consumer hidden instead of another: the same count, another layout
-    const a = layoutTree(viewConfig(cfg, new Set(["c2"])), 600, f.edges);
-    const b = layoutTree(viewConfig(cfg, new Set(["c3"])), 600, f.edges);
-    expect(a.nodes.length).toBe(b.nodes.length);
-    expect(a.key).not.toBe(b.key);
+    // a drawn link keeps the id of its flow, whatever else is hidden: its lane stays its own
+    for (const e of lay.edges) expect(full.edges.find((x) => x.id === e.id)?.fi).toBe(e.fi);
+    // one consumer hidden instead of another: the same count, other nodes
+    const ids = (hide: string) =>
+      layoutTree(viewConfig(cfg, new Set([hide])), 600, f.edges).nodes.map((n) => n.id);
+    expect(ids("c2").length).toBe(ids("c3").length);
+    expect(ids("c2")).not.toEqual(ids("c3"));
   });
 
   it("lays out a tree whose sources are all hidden", () => {

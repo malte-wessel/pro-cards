@@ -62,6 +62,8 @@ export interface Day {
   precipitation: number | null;
   probability: number | null;
   wind: number | null;
+  // an hour's own `is_daytime` when the forecast carries it (hours only: a day is collapsed)
+  daytime?: boolean | null;
 }
 
 const dayOf = (e: ForecastEntry): Day => ({
@@ -122,7 +124,7 @@ export const hoursOf = (
   n: number,
 ): ForecastRow[] => {
   const { t0, t1 } = hourlyWindow(now, n);
-  return hoursIn(fc, t0, t1).map((e) => ({ ...dayOf(e), lo: null }));
+  return hoursIn(fc, t0, t1).map((e) => ({ ...dayOf(e), lo: null, daytime: e.is_daytime ?? null }));
 };
 
 // the temperature span the daily bars share

@@ -45,7 +45,6 @@ export interface LRow {
   h: number;
 }
 export interface TreeLayout {
-  key: string;
   w: number;
   h: number;
   nodes: LNode[];
@@ -467,13 +466,11 @@ export const layoutTree = (
 
   // ----- edges -----
   const out: LEdge[] = [];
-  const src = (id: string) => byId.get(id) as LNode;
   const A = (nd: LNode) => (right ? nd.x : nd.y),
     Bof = (nd: LNode) => (right ? nd.y : nd.x);
   const offsets = laneOffsets(bS, bH);
   // a source's lane by its id (its position in the drawn column, not its config index)
   const srcPos = new Map(cfg.sources.map((s, i) => [s.id, i]));
-  const home = src("home");
   const gapAlong = aH - rH - (aS + rS);
   // the lanes bend late, so a source's label fits beside its node on a narrow card
   const bendBase = aS + rS + gapAlong * 0.8;
@@ -493,7 +490,6 @@ export const layoutTree = (
     }
     return Math.max(t, a0 + 10);
   };
-  let k = 0;
   edges.forEach((e, fi) => {
     const from = byId.get(e.from),
       to = byId.get(e.to);
@@ -529,7 +525,9 @@ export const layoutTree = (
     }
     pts = dedupe(pts);
     out.push({
-      id: `e${k++}`,
+      // its flow's index: the flows are the same for one config whatever the values, so a link
+      // keeps its id (and its drawn lane) when another node is hidden
+      id: `e${fi}`,
       fi,
       from: e.from,
       to: e.to,
@@ -539,12 +537,9 @@ export const layoutTree = (
       len: pathLength(pts),
     });
   });
-  void home;
 
   const [w, h] = right ? [along, across] : [across, along];
   return {
-    // the drawn nodes by id: one hidden node swapped for another lays the tree out again
-    key: `${dir}/${cfg.flowStyle}/${cfg.consumerStyle}/${w}/${h}/${[...byId.keys()].join(",")}/${out.length}/${Math.round(aH)}/${Math.round(aG)}`,
     w,
     h,
     nodes,

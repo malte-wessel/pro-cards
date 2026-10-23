@@ -30,6 +30,7 @@ import { cssColor, resolveHex } from "./shared/color.ts";
 import { REFRESH_MS } from "./shared/constants.ts";
 import { fmtTime, langOf } from "./shared/format.ts";
 import { fetchHistory, normalizeSmoothing } from "./shared/history.ts";
+import { HistoryFeed } from "./shared/history-feed.ts";
 import { hideHover } from "./shared/hover.ts";
 import { t } from "./shared/i18n.ts";
 import { isNum, oneOf, qs } from "./shared/util.ts";
@@ -65,8 +66,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
   _gutter?: number;
   _plotW?: number;
   _hoverT: number | null = null;
-  _fetched = false;
-  _fetching = false;
+  _history = new HistoryFeed(CARD_TYPE);
   _timer?: ReturnType<typeof setInterval>;
   _ro?: ResizeObserver;
 
@@ -102,7 +102,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
       zonesList: mergeZones(config.zones, this._hass),
     };
     this._series = [];
-    this._fetched = false;
+    this._history.reset();
     this._hoverT = null;
     syncKeepHeight(this, config);
     if (this._root) this._buildDom();
@@ -112,7 +112,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
     const prev = this._hass;
     this._hass = hass;
     if (!this._root) this._buildDom();
-    if (this._config.mode !== "arc" && !this._fetched && !this._fetching) {
+    if (this._config.mode !== "arc" && this._history.due()) {
       this._fetchHistory();
       return;
     }
@@ -165,20 +165,18 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
     return st && isNum(st.state) ? Number(st.state) : null;
   }
 
-  async _fetchHistory() {
-    if (!this._hass || !this._config) return;
-    this._fetching = true;
-    try {
-      const id = this._config.entity;
-      const res = await fetchHistory(this._hass, [id], this._config.hours_to_show);
-      this._series = (res.get(id) || []).filter((p): p is Point & { v: number } => p.v !== null);
-      this._fetched = true;
-    } catch (err) {
-      console.error(`${CARD_TYPE}: history fetch failed`, err);
-    } finally {
-      this._fetching = false;
-      this._render();
-    }
+  _fetchHistory() {
+    const hass = this._hass,
+      cfg = this._config;
+    if (!hass || !cfg) return;
+    const id = cfg.entity;
+    return this._history.run(
+      () => fetchHistory(hass, [id], cfg.hours_to_show),
+      (res) => {
+        this._series = (res.get(id) || []).filter((p): p is Point & { v: number } => p.v !== null);
+      },
+      () => this._render(),
+    );
   }
 
   // ----- DOM -----

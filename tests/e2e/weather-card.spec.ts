@@ -1,4 +1,4 @@
-import { test, expect, mount, events, card, setLanguage } from "./util.ts";
+import { test, expect, mount, events, card, setLanguage, setState } from "./util.ts";
 import type { WeatherCard } from "../../src/weather-card.ts";
 import type { Locator, Page } from "@playwright/test";
 
@@ -358,6 +358,25 @@ test.describe("weather card", () => {
     );
   });
 
+  test("forecast days keep the day icon after sunset", async ({ page }) => {
+    const cfg = {
+      type: T,
+      entity: W,
+      icons: "mdi",
+      sections: [{ type: "forecast", mode: "daily", days: 3 }],
+    };
+    const time = new Date("2026-06-21T23:00:00");
+    await mount(page, cfg, { time });
+    // the sun set before the card was drawn
+    await setState(page, "sun.sun", "below_horizon");
+    await mount(page, cfg, { time });
+    const c = card(page);
+    // tomorrow is sunny: a day, so the sun, whatever the time now
+    await expect(c.locator(".frow").nth(1).locator(".ficon ha-icon")).toHaveAttribute(
+      "icon",
+      "mdi:weather-sunny",
+    );
+  });
   test("shows a missing entity, no forecast for an entity without one, and follows the language", async ({
     page,
   }) => {

@@ -62,6 +62,8 @@ for (const file of walk("docs")) {
       );
       expect(missing).toEqual([]);
       expect(errors).toEqual([]);
+      // and none the browser reports past the console (a ResizeObserver loop)
+      expect(await page.evaluate(() => window.pc.errors)).toEqual([]);
       // no control spills past its card (clipped by the card's overflow) at a section's width
       const spilled = await page.evaluate(() =>
         window.pc.cards().flatMap((el, i) => {

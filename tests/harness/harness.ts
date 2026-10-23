@@ -58,6 +58,9 @@ export interface PcApi {
   hass: typeof hassMod;
   calls: ServiceCall[];
   events: HarnessEvent[];
+  // what reached window.onerror since the last reset, the browser's own reports too (a
+  // "ResizeObserver loop" error is one: it never reaches the console)
+  errors: string[];
   actions: unknown[];
   snapshot(): HomeAssistant;
   // the frontend language the mounted cards see (hass.locale.language), default en-GB
@@ -90,6 +93,7 @@ const root = document.getElementById("root")!;
 const calls: ServiceCall[] = [];
 const events: HarnessEvent[] = [];
 const actions: unknown[] = [];
+const errors: string[] = [];
 let unsub: (() => void) | null = null;
 let language = "en-GB";
 let user: string | null = hassMod.DEMO_USER;
@@ -144,6 +148,7 @@ document.addEventListener("hass-notification", (ev) =>
 document.addEventListener("haptic", (ev) =>
   events.push({ type: "haptic", kind: String((ev as CustomEvent).detail) }),
 );
+window.addEventListener("error", (ev) => errors.push(ev.message));
 window.addEventListener("location-changed", () =>
   events.push({ type: "location-changed", path: location.pathname }),
 );
@@ -233,6 +238,7 @@ window.pc = {
   hass: hassMod,
   calls,
   events,
+  errors,
   actions,
   snapshot,
   setLanguage,
@@ -254,6 +260,7 @@ window.pc = {
   reset: () => {
     calls.length = 0;
     events.length = 0;
+    errors.length = 0;
     actions.length = 0;
     mounted = [];
     failing = holding = false;

@@ -39,6 +39,8 @@ describe("hass shim", () => {
     expect(a).not.toBe(b);
     expect(a.states).not.toBe(b.states);
     expect(a.states["light.living_room"]).toBe(b.states["light.living_room"]);
+    // one connection for the page's life, as Home Assistant's: a new one means a reconnect
+    expect(a.connection).toBe(b.connection);
     expect(a.config.latitude).toBeTypeOf("number");
     expect(a.locale.language).toBe("en-GB");
   });

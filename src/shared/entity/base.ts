@@ -9,6 +9,7 @@ import { REFRESH_MS } from "../constants.ts";
 import { langOf } from "../format.ts";
 import type { ActionConfig, ActionKind, GridOptions, HapticType, HomeAssistant } from "../ha.ts";
 import { fetchHistory, pointOf, type Point } from "../history.ts";
+import { HistoryFeed } from "../history-feed.ts";
 import { hideHover } from "../hover.ts";
 import { TemplateSubscriptions } from "../templates.ts";
 import { clamp01, qs } from "../util.ts";
@@ -91,6 +92,7 @@ export abstract class EntityCardBase extends HTMLElement {
 
   _series = new Map<string, Point[]>();
   _tpl: TemplateSubscriptions;
+  _history: HistoryFeed;
   _hover: { idx: number; t: number } | null = null;
   _plotHandlers: PlotHandlers;
   _textCache = new TextCache();
@@ -100,8 +102,6 @@ export abstract class EntityCardBase extends HTMLElement {
   _entityIds: string[] = [];
   _historyIds: string[] = [];
   _templates?: Set<string>;
-  _fetched = false;
-  _fetching = false;
   _timer?: ReturnType<typeof setInterval>;
   _ro?: ResizeObserver;
   // controls: service calls in flight per entity index, the row being dragged, the host the
@@ -131,6 +131,7 @@ export abstract class EntityCardBase extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this._tpl = new TemplateSubscriptions(this._cardType(), () => this._render());
+    this._history = new HistoryFeed(this._cardType());
     this._visWatch = new VisibilityWatch(() => this._render());
     this._onDocPointer = this._onDocPointer.bind(this);
     this._plotHandlers = {
@@ -189,7 +190,7 @@ export abstract class EntityCardBase extends HTMLElement {
         this._idxsByEntity.set(id, [...(this._idxsByEntity.get(id) ?? []), i]);
     });
     this._series = new Map();
-    this._fetched = false;
+    this._history.reset();
     this._hover = null;
     this._pending.clear();
     this._buttonPending.clear();
@@ -210,10 +211,9 @@ export abstract class EntityCardBase extends HTMLElement {
     if (!this._config) return;
     if (!this._root) this._buildDom();
     if (!prev || prev.connection !== hass.connection) this._subscribeTemplates();
-    if (this._historyIds.length && !this._fetched && !this._fetching) {
-      this._fetchHistory();
-      return;
-    }
+    // the history arrives later and renders then; the update below runs meanwhile, so a device's
+    // answer still ends its pending call
+    if (this._historyIds.length && this._history.due()) this._fetchHistory();
     // a new language (profile setting) re-renders too: words, times and numbers follow it
     let changed = !prev || langOf(prev) !== langOf(hass);
     // conditions on the user (or the user's whereabouts) look again when they change
@@ -357,7 +357,7 @@ export abstract class EntityCardBase extends HTMLElement {
       hass: this._hass,
       tplResult: this._tpl.results,
       series: this._series,
-      fetched: this._fetched,
+      fetched: this._history.loaded,
       cfg,
       now,
       t0: now - cfg.hours * 3600e3,
@@ -440,19 +440,18 @@ export abstract class EntityCardBase extends HTMLElement {
   }
 
   // ----- history -----
-  async _fetchHistory() {
-    if (!this._hass || !this._config || !this._historyIds.length) return;
-    this._fetching = true;
-    try {
-      const res = await fetchHistory(this._hass, this._historyIds, this._config.hours);
-      for (const [id, pts] of res) this._series.set(id, pts);
-      this._fetched = true;
-    } catch (err) {
-      console.error(`${this._cardType()}: history fetch failed`, err);
-    } finally {
-      this._fetching = false;
-      this._render();
-    }
+  _fetchHistory() {
+    const hass = this._hass,
+      cfg = this._config,
+      ids = this._historyIds;
+    if (!hass || !cfg || !ids.length) return;
+    return this._history.run(
+      () => fetchHistory(hass, ids, cfg.hours),
+      (res) => {
+        for (const [id, pts] of res) this._series.set(id, pts);
+      },
+      () => this._render(),
+    );
   }
 
   // ----- actions -----

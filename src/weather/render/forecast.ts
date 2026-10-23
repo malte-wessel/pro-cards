@@ -13,7 +13,7 @@ import { fmtNumber as fmtNum, fmtTime } from "../../shared/format.ts";
 import { t } from "../../shared/i18n.ts";
 import { qs } from "../../shared/util.ts";
 import type { WeatherConfig, WeatherSection } from "../config.ts";
-import { isNight } from "../conditions.ts";
+import { rowNight } from "../conditions.ts";
 import { conditionEl } from "./icon.ts";
 import { dailyRange, hourStart, isToday, type ForecastRow } from "../forecast.ts";
 import { emptyEl, sectionShell, setTitle } from "./section.ts";
@@ -81,9 +81,9 @@ export const drawForecast = (
     r.condition
       ? resolveLook(condEnt, { num: null, raw: r.condition, avail: true }, st, tplGet)
       : null;
-  const night = isNight(ctx.hass);
   const setCondition = (el: HTMLElement, r: ForecastRow) => {
     const look = condLook(r);
+    const night = rowNight(ctx.hass, daily, r);
     qs(el, ".ficon").replaceChildren(conditionEl(sec.icons, r.condition, night, look?.icon));
     const c = look?.rule?.color;
     el.style.setProperty(

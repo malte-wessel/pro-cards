@@ -98,7 +98,7 @@ layout: hero
 
 ## Rules and colours
 
-`rules` work on the rate like the [entity rules](/cards/entity-options#rules): `below` / `above` thresholds in the sensor's unit, first match wins. The matching rule's `color` paints the rain, the lead and the chip icon; its `label` is the pill of the tile and the accent of the second line; `tint_card: true` tints the whole card. A fixed `color` overrides the rules. Below 0.1 the card counts as dry: no drops, the icon in the lead.
+`rules` work on the rate like the [entity rules](/cards/entity-options#rules): `below` / `above` thresholds in the sensor's unit, first match wins. The matching rule's `color` paints the rain, the lead and the chip icon; its `label` is the pill of the tile and the accent of the second line; `tint_card: true` tints the whole card. A fixed `color` overrides the rules. Below 0.1 mm/h the card counts as dry: no drops, the icon in the lead. The animation reads the rate in mm/h and the total in mm, whatever the sensors report (in/h, mm/d, in/d; in, cm): the texts stay in the sensor's unit.
 
 ::: live
 

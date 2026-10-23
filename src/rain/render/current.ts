@@ -16,7 +16,7 @@ import { parseBearing, toKmh } from "../../shared/flow/maths.ts";
 import { t } from "../../shared/i18n.ts";
 import type { RainConfig } from "../config.ts";
 import { DEFAULTS } from "../constants.ts";
-import { fallRate, isWet, leadFall, levelOf, slantOf, tanOf } from "../rain.ts";
+import { fallRate, isWet, leadFall, levelOf, slantOf, tanOf, toMm, toMmH } from "../rain.ts";
 import { animatedLead, rainLead } from "./lead.ts";
 
 export interface CurrentModels {
@@ -25,6 +25,7 @@ export interface CurrentModels {
   wind: EntityModel | null;
   dir: EntityModel | null;
 }
+// the rate in mm/h and today's total in mm, whatever unit the sensors report (the texts keep it)
 export interface RainNow {
   rate: number;
   today: number | null;
@@ -35,8 +36,13 @@ export interface RainNow {
 const numOf = (m: EntityModel | null) => (m && m.model.avail ? m.model.num : null);
 
 export const rainNow = (ctx: RenderCtx, cfg: RainConfig, cm: CurrentModels): RainNow => {
-  const rate = numOf(cm.rate) ?? 0;
-  const today = numOf(cm.today);
+  const rateNum = numOf(cm.rate) ?? 0;
+  const rate = toMmH(rateNum, unitOf(cfg.entities[cfg.rateIdx], cm.rate.st));
+  const todayNum = numOf(cm.today);
+  const today =
+    todayNum === null || cfg.todayIdx === null
+      ? null
+      : toMm(todayNum, unitOf(cfg.entities[cfg.todayIdx], cm.today?.st));
   const windEnt: EntityItem | undefined =
     cfg.windIdx === null ? undefined : cfg.entities[cfg.windIdx];
   const windNum = numOf(cm.wind);

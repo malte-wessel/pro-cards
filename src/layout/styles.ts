@@ -31,6 +31,8 @@ export const STYLE = `
      (never 0: in a stretched grid row that would drop the layout's share of the row's height) */
   .root { box-sizing: border-box; height: 100%; display: flex; flex-direction: column; min-width: 0; }
   .body { flex: 1 1 auto; min-width: 0; box-sizing: border-box; }
+  /* what the resize observer watches: the card's width, no height of its own */
+  .probe { flex: none; height: 0; }
   /* a layout card inside this one is not its section's width: it counts its view columns from
      its own width (Home Assistant's --column-span inherits from the section otherwise) */
   .body { --column-span: initial; }

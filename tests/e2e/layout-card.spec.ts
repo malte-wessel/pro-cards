@@ -258,6 +258,64 @@ test.describe("layout-card-pro", () => {
     expect(first).toEqual([3, 1]);
   });
 
+  test("lays a masonry inside a layout out once, without a resize observer error", async ({
+    page,
+  }) => {
+    await mount(page, ec(T));
+    const inner = {
+      type: LC,
+      layout: "masonry",
+      columns: 1,
+      breakpoints: { 2: { columns: 2 } },
+      cards: [ec(H), ec(K), ec(P), ec(T)],
+    };
+    const cfg = {
+      type: LC,
+      columns: 1,
+      breakpoints: { 3: { columns: 3 } },
+      cards: [ec(T), inner, ec(P)],
+    };
+    const res = await page.evaluate(async (c) => {
+      const frames = (n: number) =>
+        new Promise<void>((res) => {
+          const step = (i: number) => (i ? requestAnimationFrame(() => step(i - 1)) : res());
+          step(n);
+        });
+      // the columns of every relayout of the masonry inside: one at a stale width deals its
+      // cards out to columns and back, each move reconnecting a hui-card and its card
+      type Lay = { _cfg?: { base: { layout: string } }; _columns?: number; _relayout(): void };
+      const proto = customElements.get("layout-card-pro")!.prototype as Lay;
+      const orig = proto._relayout;
+      const seen: number[] = [];
+      proto._relayout = function (this: Lay) {
+        orig.call(this);
+        if (this._cfg?.base.layout === "masonry" && seen.at(-1) !== this._columns)
+          seen.push(this._columns ?? 0);
+      };
+      const errors: string[] = [];
+      const onError = (ev: ErrorEvent) => errors.push(ev.message);
+      window.addEventListener("error", onError);
+      try {
+        window.pc.reset();
+        window.pc.mount(c, { width: 1200 });
+        await frames(4);
+        const mounted = [...seen];
+        // across the outer breakpoint and back
+        window.pc.root.style.width = "500px";
+        await frames(3);
+        window.pc.root.style.width = "1200px";
+        await frames(3);
+        return { mounted, errors };
+      } finally {
+        proto._relayout = orig;
+        window.removeEventListener("error", onError);
+      }
+    }, cfg);
+    expect(res.errors).toEqual([]);
+    // the inner masonry is about 380 px wide at 1200 px: one column, never more on the way
+    expect(res.mounted).toEqual([1]);
+  });
+
   test("hides itself when every card is hidden", async ({ page }) => {
     const cfg = {
       type: LC,

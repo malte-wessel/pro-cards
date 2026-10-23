@@ -36,6 +36,7 @@ import { DEVICE_CLASS_ICON, REFRESH_MS } from "./shared/constants.ts";
 import { normalizeRules } from "./shared/entity/config.ts";
 import { fmtNumber, langOf } from "./shared/format.ts";
 import { fetchHistory, normalizeSmoothing, type Point } from "./shared/history.ts";
+import { HistoryFeed } from "./shared/history-feed.ts";
 import { hideHover } from "./shared/hover.ts";
 import { TemplateSubscriptions } from "./shared/templates.ts";
 import { decimalsOf, isNum, isTemplate, qs } from "./shared/util.ts";
@@ -76,8 +77,7 @@ export class MultiTrendCard extends HTMLElement {
   _plot?: TrendPlotEl;
   _series: TrendPoint[][] = [];
   _hoverT: number | null = null;
-  _fetched = false;
-  _fetching = false;
+  _history = new HistoryFeed(CARD_TYPE);
   _timer?: ReturnType<typeof setInterval>;
   _ro?: ResizeObserver;
   // visibility of the series: what the conditions read, their templates, screen and time
@@ -139,7 +139,7 @@ export class MultiTrendCard extends HTMLElement {
       entities,
     };
     this._series = entities.map(() => []);
-    this._fetched = false;
+    this._history.reset();
     this._visDeps = visibilityDeps(entities.map((e) => e.visibility));
     this._visWatch.set(this._visDeps);
     this._templates = new Set([
@@ -157,7 +157,7 @@ export class MultiTrendCard extends HTMLElement {
     if (!prev || prev.connection !== hass.connection)
       this._tpl.sync(hass.connection, this._templates);
     if (!this._root) this._buildDom();
-    if (!this._fetched && !this._fetching) {
+    if (this._history.due()) {
       this._fetchHistory();
       return;
     }
@@ -283,22 +283,20 @@ export class MultiTrendCard extends HTMLElement {
     return u ? `${n} ${u}` : n;
   }
 
-  async _fetchHistory() {
-    if (!this._hass || !this._config) return;
-    this._fetching = true;
-    try {
-      const ids = this._config.entities.map((e) => e.entity);
-      const res = await fetchHistory(this._hass, ids, this._config.hours_to_show);
-      this._series = ids.map((id) =>
-        (res.get(id) || []).filter((p): p is Point & { v: number } => p.v !== null),
-      );
-      this._fetched = true;
-    } catch (err) {
-      console.error(`${CARD_TYPE}: history fetch failed`, err);
-    } finally {
-      this._fetching = false;
-      this._render();
-    }
+  _fetchHistory() {
+    const hass = this._hass,
+      cfg = this._config;
+    if (!hass || !cfg) return;
+    const ids = cfg.entities.map((e) => e.entity);
+    return this._history.run(
+      () => fetchHistory(hass, ids, cfg.hours_to_show),
+      (res) => {
+        this._series = ids.map((id) =>
+          (res.get(id) || []).filter((p): p is Point & { v: number } => p.v !== null),
+        );
+      },
+      () => this._render(),
+    );
   }
 
   // ---------- DOM ----------

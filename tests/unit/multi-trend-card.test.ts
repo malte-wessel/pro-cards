@@ -111,6 +111,40 @@ describe("multi-trend-card helpers", () => {
   });
 });
 
+describe("multi-trend-card history", () => {
+  const st = (state: string) => ({
+    state,
+    attributes: {},
+    last_changed: "2026-06-21T10:00:00Z",
+    last_updated: "2026-06-21T10:00:00Z",
+  });
+  // a hass whose history requests the test answers by hand
+  const hassWith = (calls: { ids: string[]; answer: (r: unknown) => void }[]) =>
+    ({
+      states: { "sensor.a": st("1"), "sensor.b": st("2") },
+      locale: { language: "en" },
+      connection: { subscribeMessage: async () => () => {} },
+      callWS: (msg: { entity_ids: string[] }) =>
+        new Promise((answer) => calls.push({ ids: msg.entity_ids, answer })),
+    }) as unknown as HomeAssistant;
+
+  it("drops a history that arrives after the entities changed and fetches the new ones", async () => {
+    const calls: { ids: string[]; answer: (r: unknown) => void }[] = [];
+    const hass = hassWith(calls);
+    const el = new MultiTrendCard();
+    el.setConfig({ entities: ["sensor.a"] });
+    el.hass = hass;
+    expect(calls.map((c) => c.ids)).toEqual([["sensor.a"]]);
+    el.setConfig({ entities: ["sensor.a", "sensor.b"] });
+    calls[0].answer({ "sensor.a": [{ s: "1", lu: 1 }] });
+    await new Promise((r) => setTimeout(r, 0));
+    // the old answer is not taken for the new entities: one series per entity, none fetched yet
+    expect(el._series.length).toBe(2);
+    el.hass = { ...hass };
+    expect(calls.map((c) => c.ids)).toEqual([["sensor.a"], ["sensor.a", "sensor.b"]]);
+  });
+});
+
 describe("trend plot height", async () => {
   const { trendPlotEl, drawTrend } = await import("../../src/shared/trend/plot.ts");
   const spec = (layout: "overlay" | "lanes") => ({
