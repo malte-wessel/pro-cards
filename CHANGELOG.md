@@ -8,6 +8,7 @@ _Beta_
 - Icons are sized like Home Assistant's tile card (a 24 px icon in a 36 px circle), so Pro tiles match the built-in ones
 - `icon_style: plain` draws an icon without its circle, still aligned with circled icons
 - `show_entity_picture: true` shows an entity's picture (a person's photo, a cover, a snapshot) in place of its icon, as on Home Assistant's tile card
+- Entity cards no longer show the history window (`12 h`) in the header; a strip still labels its own axis
 - Power flow: `icon_size` on any node, including `other`
 - Power flow: a solar-fed battery given as a `charge` / `discharge` pair shows both values while it charges and discharges at once (`252 W ↓` over `221 W ↑`) instead of the net value; its label keeps a line for the second value, so such a card is one line taller
 - Power flow: `charge_from` takes the entity of a solar source (or a list of them), so a battery is charged only by its own panels and the other arrays get no link to it
