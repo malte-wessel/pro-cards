@@ -52,8 +52,8 @@ export interface TreeState {
 }
 interface LabelTexts {
   v: string; // the value
-  // direction: down – a second value line for a source with two flows (its out ↑), "" while it
-  // shows one: the line is kept, so the row's height follows the config, never the values
+  // a second value line for a source that may run two ways (its out ↑), "" while it shows one:
+  // the line is kept, so the tree's height follows the config, never the values
   v2?: string;
   n: string; // the name
   s: string; // the secondary line
@@ -321,24 +321,19 @@ const labelText = (
   const src = sourceOf(st, nd);
   const name = ent && m ? nameOf(st.ctx, ent, m.st) : "";
   if (!src) return { v: "–", n: name, s };
-  // both flows of a node that runs two ways at once: into it ↓, out of it ↑; in one line
-  // beside the node, one over the other in the row of sources (direction: down)
+  // both flows of a node that runs two ways at once, one over the other: into it ↓, out of it ↑
   const [into, out] =
     src.kind === "battery" ? [src.charge, src.discharge] : [src.export, src.import];
   const split = src.w !== null && st.split.has(nd.id);
   const cfgSrc = st.cfg.sources.find((c) => c.id === nd.id);
-  const stack = st.cfg.direction === "down" && !!cfgSrc && twoValued(cfgSrc);
-  const inV = `${fmtPower(hass, into, u, dec)} ↓`,
-    outV = `${fmtPower(hass, out, u, dec)} ↑`;
   const v =
     src.w === null
       ? "–"
       : split
-        ? stack
-          ? inV
-          : `${inV} · ${outV}`
+        ? `${fmtPower(hass, into, u, dec)} ↓`
         : fmtPower(hass, src.w, u, dec);
-  const v2 = stack ? (split ? outV : "") : undefined;
+  const v2 =
+    cfgSrc && twoValued(cfgSrc) ? (split ? `${fmtPower(hass, out, u, dec)} ↑` : "") : undefined;
   if (src.kind === "battery" && src.soc !== null)
     return { v, v2, n: `${name} · ${fmtNumber(hass, Math.round(src.soc), 0)} %`, s };
   if (src.kind === "grid") {

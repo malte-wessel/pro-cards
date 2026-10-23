@@ -103,7 +103,11 @@ const sourceStack = (cfg: PowerFlowConfig): Stack => {
   if (!cfg.sources.length)
     return { bs: [], first: GEOM.srcMargin, last: GEOM.srcMargin, extent: 0 };
   const ds = cfg.sources.map((s) => s.d);
-  const hs = cfg.sources.map((s) => labelHeightOf(cfg, s.idx, false));
+  // a source that may show two values keeps a line for the second (the config decides, not the
+  // values)
+  const hs = cfg.sources.map(
+    (s) => labelHeightOf(cfg, s.idx, false) + (twoValued(s) ? linesOf(cfg).value.line : 0),
+  );
   const bs: number[] = [];
   let b = 0;
   ds.forEach((d, i) => {

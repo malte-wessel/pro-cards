@@ -543,7 +543,7 @@ test("a solar-fed battery given as a pair charges from its panels and feeds the 
   const c = card(page);
   await expect(label(c, "home")).toHaveText("259 W");
   // the node shows both flows, its colour follows the net value, the links carry both
-  await expect(label(c, "s1")).toHaveText(/374 W ↓ · 189 W ↑\s*Battery · 42 %/);
+  await expect(label(c, "s1")).toHaveText(/374 W ↓\s*189 W ↑\s*Battery · 42 %/);
   expect(await cssVar(c.locator(".pnode[data-node='s1']"), "--fe-color")).toContain(
     "--energy-battery-in",
   );
@@ -588,20 +588,20 @@ test("a node with two flows shows its net value below the idle threshold, both a
     "sensor.grid_export_power": "300",
   });
   const c = card(page);
-  // the grid: into it ↓ (export), out of it ↑ (import)
-  await expect(label(c, "s2")).toHaveText(/300 W ↓ · 1\.20 kW ↑\s*Grid/);
-  await expect(label(c, "s1")).toHaveText(/400 W ↓ · 250 W ↑/);
+  // one value over the other: into the node ↓, out of it ↑ (the grid: export, import)
+  await expect(label(c, "s2")).toHaveText(/300 W ↓\s*1\.20 kW ↑\s*Grid/);
+  await expect(label(c, "s1")).toHaveText(/400 W ↓\s*250 W ↑/);
   // at idle_below (20 W) the two values stay, below it the net value returns
   await set({ [`${B}discharge_power`]: "20" });
-  await expect(label(c, "s1")).toHaveText(/400 W ↓ · 20 W ↑/);
+  await expect(label(c, "s1")).toHaveText(/400 W ↓\s*20 W ↑/);
   await set({ [`${B}discharge_power`]: "15" });
   await expect(label(c, "s1")).toHaveText(/^385 W/);
   // and the two values come back only clearly above it
   await set({ [`${B}discharge_power`]: "22" });
   await expect(label(c, "s1")).toHaveText(/^378 W/);
   await set({ [`${B}discharge_power`]: "30" });
-  await expect(label(c, "s1")).toHaveText(/400 W ↓ · 30 W ↑/);
-  // direction: down – one value over the other, the second line kept while it shows one
+  await expect(label(c, "s1")).toHaveText(/400 W ↓\s*30 W ↑/);
+  // direction: down as well; the second line is kept while the node shows one value
   await mount(page, {
     type: T,
     direction: "down",

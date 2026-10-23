@@ -274,23 +274,43 @@ export const allocate = (
       });
     };
     const leftSum = () => left.reduce((a, w) => a + Math.max(0, w), 0);
-    // a solar-fed battery asks its own panels pro rata to their output; a panel asked for more
-    // than it gives serves every ask in proportion
-    const asks = src.map((_, i) =>
-      src.map((_, j) => {
-        if (!isSolar[i] || !isCharging[j] || !solarFed[j] || !canFeed(i, j)) return 0;
-        const own = solar.reduce((a, w, k) => a + (isSolar[k] && canFeed(k, j) ? w : 0), 0);
-        return own > 0 ? (charging[j] * solar[i]) / own : 0;
-      }),
-    );
-    asks.forEach((row, i) => {
-      const want = row.reduce((a, b) => a + b, 0);
-      const k = want > 0 ? Math.min(1, solar[i] / want) : 0;
-      row.forEach((a, j) => {
-        toBatt[i][j] = a * k;
-        left[i] -= a * k;
-      });
-    });
+    // the solar-fed batteries take their charge from their own panels, those with the fewest
+    // panels first: a panel goes to the battery that has no other before one that has. Batteries
+    // with as many panels ask together, each its panels pro rata to the power they have left
+    // (a panel asked for more serves every ask in proportion), and ask again while a battery
+    // still takes more and one of its panels has power left
+    const EPS = 1e-9;
+    const panelsOf = src.map((_, j) => src.map((_, i) => isSolar[i] && canFeed(i, j)));
+    const fed = src.map((_, j) => j).filter((j) => isCharging[j] && solarFed[j]);
+    const count = (j: number) => panelsOf[j].filter(Boolean).length;
+    const need = charging.slice();
+    for (const n of [...new Set(fed.map(count))].sort((a, b) => a - b)) {
+      const group = fed.filter((j) => count(j) === n);
+      // every round fills the group or spends a panel
+      for (let round = 0; round <= src.length; round++) {
+        const asks = src.map(zeros);
+        let asked = false;
+        for (const j of group) {
+          const own = left.reduce((a, w, i) => a + (panelsOf[j][i] && w > EPS ? w : 0), 0);
+          if (need[j] <= EPS || own <= 0) continue;
+          left.forEach((w, i) => {
+            if (!panelsOf[j][i] || w <= EPS) return;
+            asks[i][j] = (need[j] * w) / own;
+            asked = true;
+          });
+        }
+        if (!asked) break;
+        asks.forEach((row, i) => {
+          const want = row.reduce((a, b) => a + b, 0);
+          const k = want > 0 ? Math.min(1, left[i] / want) : 0;
+          row.forEach((a, j) => {
+            toBatt[i][j] += a * k;
+            need[j] -= a * k;
+            left[i] -= a * k;
+          });
+        });
+      }
+    }
     sB0 = toBatt.reduce((a, row) => a + row.reduce((x, y) => x + y, 0), 0);
     // the export a two-way grid reports: from the panels' rest first, then from the batteries
     const E = exporting.reduce((a, e, j) => a + (twoWay[j] ? e : 0), 0);
@@ -487,9 +507,19 @@ export const summaryState = (cfg: PowerFlowConfig, now: PowerNow, f: Flows): Sum
     on(f.gH);
   if (expensive)
     return { key: "power.state.expensive", color: COLORS.offline, w: null, tint: true };
-  // a grid that runs both ways may export while it imports: the larger flow names the state
-  const twoWay = cfg.sources.some((s) => s.kind === "grid" && s.bothWays);
-  if (on(f.sG + f.bG) && (!twoWay || f.sG + f.bG >= f.gH + f.gB))
+  // a grid that runs both ways may export while it imports: the larger flow names the state,
+  // the import counted whole (into the home and the batteries)
+  if (cfg.sources.some((s) => s.kind === "grid" && s.bothWays)) {
+    const exp = f.sG + f.bG,
+      imp = f.gH + f.gB;
+    if (on(exp) && exp >= imp)
+      return { key: "power.state.exporting", color: COLORS.gridOut, w: exp, tint: false };
+    if (on(f.bH) && f.bH >= imp)
+      return { key: "power.state.battery", color: COLORS.battOut, w: null, tint: false };
+    if (on(imp)) return { key: "power.state.importing", color: COLORS.gridIn, w: imp, tint: false };
+    return { key: "power.state.balanced", color: COLORS.balanced, w: null, tint: false };
+  }
+  if (on(f.sG + f.bG))
     return { key: "power.state.exporting", color: COLORS.gridOut, w: f.sG + f.bG, tint: false };
   if (on(f.bH) && f.bH >= f.gH)
     return { key: "power.state.battery", color: COLORS.battOut, w: null, tint: false };

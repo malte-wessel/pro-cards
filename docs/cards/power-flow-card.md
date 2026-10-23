@@ -36,7 +36,7 @@ sources:
 
 A plug-in battery (a balcony system, a DC-coupled hybrid) is fed by its panels: solar goes into the battery first and the grid cannot charge it. `charge_from: solar` on the battery tells the card so. Solar then charges that battery before it covers the home, and grid power runs to the home; the grid only tops the battery up when the sensors disagree (the panels report less than the battery takes). With several solar sources the charge is shared across them. Without the option the card follows the usual order and would draw the grid charging the battery whenever the battery takes more than the solar surplus.
 
-Such a unit usually reports two numbers: what the panels put in and what its inverter gives out. Given as the `charge` / `discharge` pair, the card draws both flows at once, the panels into the battery and the battery into the home, and the node shows both values while both run: `650 W ↓ · 250 W ↑`, into the battery and out of it (with `direction: down` one over the other, in the row of sources). Once one of them drops below `idle_below` the node shows the net value again (and both again only clearly above it, so the label does not flicker). With a single `power` sensor it only knows the net value, so part of the solar runs to the home directly. The inverter's output is not the battery's `power`: it already contains the solar share and would count it twice.
+Such a unit usually reports two numbers: what the panels put in and what its inverter gives out. Given as the `charge` / `discharge` pair, the card draws both flows at once, the panels into the battery and the battery into the home, and the node shows both values while both run: `650 W ↓` over `250 W ↑`, into the battery and out of it. The label keeps the second line while it shows one value, so the card's height never changes with the flows. Once one of them drops below `idle_below` the node shows the net value again (and both again only clearly above it, so the label does not flicker). With a single `power` sensor it only knows the net value, so part of the solar runs to the home directly. The inverter's output is not the battery's `power`: it already contains the solar share and would count it twice.
 
 ::: live
 
@@ -75,7 +75,7 @@ sources:
 
 :::
 
-Most meters net their phases: the home imports or exports, never both. A meter that counts every phase on its own can import on one phase while it exports on another. `both_ways: true` on an `import` / `export` pair tells the card so. The export then comes from the panels (then the batteries) before they cover the home, the import runs to the home, and the grid node shows both values: `400 W ↓ · 1.20 kW ↑`, into the grid and out of it. The summary names the larger of the two. Without the option the pair is netted.
+Most meters net their phases: the home imports or exports, never both. A meter that counts every phase on its own can import on one phase while it exports on another. `both_ways: true` on an `import` / `export` pair tells the card so. The export then comes from the panels (then the batteries) before they cover the home, the import covers what is left of the home and of the batteries' charge, and the grid node shows both values: `400 W ↓` over `1.20 kW ↑`, into the grid and out of it. The summary names the larger of the two. Without the option the pair is netted.
 
 ::: live
 

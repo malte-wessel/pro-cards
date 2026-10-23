@@ -5,6 +5,7 @@ import {
   leavesOf,
   nodeSize,
   normalizePowerFlowConfig,
+  twoValued,
   viewConfig,
 } from "../../src/power-flow/config.ts";
 import type { Visibility } from "../../src/shared/visibility.ts";
@@ -921,6 +922,58 @@ describe("power flow numbers", () => {
     expect(edge(f, "s0", "s3")).toBeUndefined();
     expect(edge(f, "s1", "s2")).toBeUndefined();
   });
+  it("gives a panel to the battery that has no other before one every panel feeds", () => {
+    // the house battery may take any panel, the balcony battery only its own: the roof fills the
+    // house battery, nothing runs through the grid that reads 0
+    const cfg = normalizePowerFlowConfig({
+      home: "sensor.home",
+      sources: [
+        { type: "solar", entity: "sensor.roof" },
+        { type: "solar", entity: "sensor.balcony" },
+        { type: "battery", power: "sensor.house", charge_from: "solar" },
+        {
+          type: "battery",
+          charge: "sensor.bc",
+          discharge: "sensor.bd",
+          charge_from: "sensor.balcony",
+        },
+        { type: "grid", power: "sensor.grid" },
+      ],
+    });
+    const { now, f } = flowsOf(cfg, {
+      "sensor.roof": "3000",
+      "sensor.balcony": "400",
+      "sensor.house": "-2000",
+      "sensor.bc": "400",
+      "sensor.bd": "0",
+      "sensor.home": "1000",
+      "sensor.grid": "0",
+    });
+    expect(f).toMatchObject({ sB: 2400, sH: 1000, sG: 0, gB: 0, gH: 0 });
+    expect(edge(f, "s1", "s3")?.w).toBe(400);
+    expect(edge(f, "s0", "s2")?.w).toBe(2000);
+    expect(edge(f, "s1", "s2")?.w).toBe(0);
+    expect(summaryState(cfg, now, f).key).toBe("power.state.balanced");
+    // overlapping lists: the battery with one panel takes it, the other the panel left
+    const two = normalizePowerFlowConfig({
+      sources: [
+        { type: "solar", entity: "sensor.a" },
+        { type: "solar", entity: "sensor.b" },
+        { type: "battery", power: "sensor.x", charge_from: "sensor.a" },
+        { type: "battery", power: "sensor.y", charge_from: ["sensor.a", "sensor.b"] },
+      ],
+    });
+    const o = flowsOf(two, {
+      "sensor.a": "500",
+      "sensor.b": "500",
+      "sensor.x": "-500",
+      "sensor.y": "-500",
+    }).f;
+    expect(o).toMatchObject({ sB: 1000, sG: 0, gB: 0 });
+    expect(edge(o, "s0", "s2")?.w).toBe(500);
+    expect(edge(o, "s1", "s3")?.w).toBe(500);
+    expect(edge(o, "s0", "s3")?.w).toBe(0);
+  });
   it("draws a battery that names every panel as one fed by `solar`", () => {
     const cfgOf = (chargeFrom: unknown) =>
       normalizePowerFlowConfig({
@@ -975,6 +1028,22 @@ describe("power flow numbers", () => {
     expect(summaryState(cfg, out.now, out.f)).toMatchObject({
       key: "power.state.exporting",
       w: 1500,
+    });
+    // an import that charges a battery counts as well: it outweighs the export, and the battery
+    // that feeds nothing does not name the state
+    const charging = normalizePowerFlowConfig({
+      sources: [...sources, { type: "battery", power: "sensor.battery" }],
+    });
+    const c = flowsOf(charging, {
+      "sensor.pv": "800",
+      "sensor.in": "1200",
+      "sensor.out": "400",
+      "sensor.battery": "-1500",
+    });
+    expect(c.f).toMatchObject({ H: 100, sG: 400, gH: 0, gB: 1200 });
+    expect(summaryState(charging, c.now, c.f)).toMatchObject({
+      key: "power.state.importing",
+      w: 1200,
     });
     // without both_ways the pair is netted, as before
     const net = normalizePowerFlowConfig({
@@ -1383,6 +1452,32 @@ describe("power flow layout", () => {
       const l = layoutTree(cfg, 416, f.edges);
       expect(crossings(l.edges.filter((e) => e.to === "home"))).toBe(0);
     }
+  });
+
+  it("keeps a line for the second value of a source that may run two ways", () => {
+    const cfgOf = (battery: Record<string, unknown>, grid: Record<string, unknown> = {}) =>
+      normalizePowerFlowConfig({
+        sources: [
+          SRC[0],
+          { type: "battery", charge: "sensor.c", discharge: "sensor.d", ...battery },
+          { type: "grid", import: "sensor.i", export: "sensor.e", ...grid },
+        ],
+      });
+    const one = cfgOf({}),
+      pair = cfgOf({ charge_from: "solar" }),
+      both = cfgOf({ charge_from: "solar" }, { both_ways: true });
+    expect(one.sources.map(twoValued)).toEqual([false, false, false]);
+    expect(pair.sources.map(twoValued)).toEqual([false, true, false]);
+    expect(both.sources.map(twoValued)).toEqual([false, true, true]);
+    // the config decides the height, never the values
+    expect(acrossOf(pair)).toBeGreaterThan(acrossOf(one));
+    expect(acrossOf(both)).toBeGreaterThan(acrossOf(pair));
+    // direction: down – a value with its arrow needs more room right of the icon
+    const ds = [44, 40, 44];
+    expect(sourceRow(ds, [40, 40, 40], 600).slot).toBe("right");
+    expect(sourceRow(ds, [40, 40, 40], 600, GEOM.srcValueW, [false, true, false]).slot).toBe(
+      "below",
+    );
   });
 
   it("centres the row of sources and puts their labels in one line, right or below", () => {
