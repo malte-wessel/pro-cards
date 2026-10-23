@@ -43,14 +43,11 @@ export const STYLE_HEADER = `
   .header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 4px 16px; min-width: 0; }
   .header ha-icon { flex: none; color: var(--secondary-text-color); --mdc-icon-size: 20px; }
   .header .title { flex: 1; min-width: 0; ${HEADER_TITLE} color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .header .range { flex: none; font-size: ${fs(12)}; color: var(--secondary-text-color); white-space: nowrap; }
   .header .hvals { display: flex; align-items: center; gap: 10px; flex: 0 1 auto; min-width: 0; max-width: 60%; }
   .header .hvals:empty { display: none; }
   /* title_tap_action: the title and its icon are the button */
   .header.tappable .title, .header.tappable > ha-icon { cursor: pointer; }
   .header.tappable .title:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; border-radius: 4px; }
-  /* without history there is no range: it must not keep a gap after the header items */
-  .header .range:empty { display: none; }
   .row.hval { flex: 0 1 auto; flex-direction: row; align-items: center; gap: 4px; border-radius: 6px; min-width: 0; }
   .hval .state, .hval .secondary { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .hval ha-icon, .hval ha-state-icon { --mdc-icon-size: 18px; color: var(--fe-color); }

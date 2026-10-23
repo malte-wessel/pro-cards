@@ -594,11 +594,11 @@ A thin horizontal bar under the value, filled to the same `(value − min) / (ma
 
 `sparkline`, `columns` and `strip` fetch the recorder history of their entity and redraw it every five minutes. Three card-level keys shape the window; they apply to every history visual on the card (or on all sections of a sections card):
 
-| Option              | Default | Description                                                                                                            |
-| ------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `hours_to_show`     | `24`    | Length of the window in hours, at least 1. Shown as a small chip in the group header and as the left label of a strip. |
-| `bucket_minutes`    | `60`    | Bucket size for `columns` and `strip`, at least 5. The number of buckets is `hours_to_show × 60 / bucket_minutes`.     |
-| `smoothing_minutes` |         | Averaging bucket of the `sparkline` in minutes, at least 5. Without it the line has one point per 12 px of width.      |
+| Option              | Default | Description                                                                                                        |
+| ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
+| `hours_to_show`     | `24`    | Length of the window in hours, at least 1. Shown as the left label of a strip.                                     |
+| `bucket_minutes`    | `60`    | Bucket size for `columns` and `strip`, at least 5. The number of buckets is `hours_to_show × 60 / bucket_minutes`. |
+| `smoothing_minutes` |         | Averaging bucket of the `sparkline` in minutes, at least 5. Without it the line has one point per 12 px of width.  |
 
 In a card given more height (fixed rows, a taller card beside it) a `sparkline` or `columns` plot takes the height the card has to spare ([Filling the height](/guide/sizing#filling-the-height)); a `strip` keeps its own. Entities without recorder history draw an empty plot. Hovering (or touching) a plot shows the value at that point and the time; on a sparkline that value is the mean of the point's bucket.
 
