@@ -9,10 +9,8 @@ import {
   STYLE_HEADER,
   STYLE_ROW,
 } from "../shared/entity/render/styles.ts";
-import { iconBg } from "../shared/constants.ts";
+import { CARD_BG, iconBg } from "../shared/constants.ts";
 import { fs, fw, type } from "../shared/typography.ts";
-
-const CARD_BG = "var(--ha-card-background, var(--card-background-color))";
 
 const STYLE_POWER = `
   .body { gap: 10px; }

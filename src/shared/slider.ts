@@ -3,6 +3,7 @@
 // step, PageUp / PageDown jump, Home / End) and reports what it is set to; what the value does is
 // the caller's. Colours come from --fe-color (knob ring, fill), --fe-soft (the halo while
 // dragging) and --fe-track.
+import { CARD_BG } from "./constants.ts";
 import { clamp01, snapTo } from "./util.ts";
 import { fw, type } from "./typography.ts";
 
@@ -121,9 +122,9 @@ export const STYLE_SLIDER = `
   .ctl-slider .track { position: relative; flex: 1; height: 8px; border-radius: 4px; background: var(--fe-track, color-mix(in srgb, var(--primary-text-color) 8%, transparent)); }
   .ctl-slider.sm .track { height: 6px; }
   .ctl-slider .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--fe-color); }
-  .ctl-slider .knob { position: absolute; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; box-sizing: border-box; background: var(--ha-card-background, var(--card-background-color)); box-shadow: 0 1px 3px rgba(0,0,0,.3), inset 0 0 0 2px var(--fe-color); }
+  .ctl-slider .knob { position: absolute; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; box-sizing: border-box; background: ${CARD_BG}; box-shadow: 0 1px 3px rgba(0,0,0,.3), inset 0 0 0 2px var(--fe-color); }
   .ctl-slider.sm .knob { width: 16px; height: 16px; margin: -8px 0 0 -8px; }
   .ctl-slider.dragging .knob { width: 24px; height: 24px; margin: -12px 0 0 -12px; box-shadow: 0 1px 3px rgba(0,0,0,.3), inset 0 0 0 2px var(--fe-color), 0 0 0 7px var(--fe-soft, color-mix(in srgb, var(--fe-color) 20%, transparent)); }
-  .ctl-slider .bubble { display: none; position: absolute; bottom: 18px; transform: translateX(-50%); padding: 3px 8px; border-radius: 999px; background: var(--primary-text-color); color: var(--ha-card-background, var(--card-background-color)); ${type(12, 14)} font-weight: ${fw("medium")}; white-space: nowrap; text-decoration: none; font-variant-numeric: tabular-nums; z-index: 1; pointer-events: none; }
+  .ctl-slider .bubble { display: none; position: absolute; bottom: 18px; transform: translateX(-50%); padding: 3px 8px; border-radius: 999px; background: var(--primary-text-color); color: ${CARD_BG}; ${type(12, 14)} font-weight: ${fw("medium")}; white-space: nowrap; text-decoration: none; font-variant-numeric: tabular-nums; z-index: 1; pointer-events: none; }
   .ctl-slider.dragging .bubble { display: block; }
 `;
