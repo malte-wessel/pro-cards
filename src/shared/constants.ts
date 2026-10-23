@@ -37,6 +37,11 @@ export const STYLE_ICONS = `ha-icon, ha-state-icon { line-height: 0; }`;
 export const ICON_RADIUS = "var(--ha-tile-icon-border-radius, 50%)";
 export const iconBg = (color: string, base = "transparent", k = 1) =>
   `color-mix(in srgb, ${color} calc(var(--tile-icon-opacity, 0.2) * ${100 * k}%), ${base})`;
+// the colour of the surface under a card's knobs, halos, tooltips and colour mixes: the card's
+// background, or the surface of a seamless layout, whose cards paint no background of their own
+// (--ha-card-background is transparent there); the card's own background stays --ha-card-background
+export const CARD_BG =
+  "var(--pro-cards-surface, var(--ha-card-background, var(--card-background-color)))";
 // every card's host takes the height its container gives, as Home Assistant's own cards do (a cell
 // with fixed rows, a grid row stretched by a taller neighbour, a horizontal stack); where that
 // height follows the content (masonry, a vertical stack) 100% is the content's height anyway.

@@ -418,7 +418,7 @@ cards:
 
 ## Seamless
 
-`card_style: seamless` merges the cards into one surface with dividers between them. The layout draws the surface in the theme's card colour, border and radius, and the cards inside drop their own (it sets `--ha-card-background`, `--ha-card-border-width`, `--ha-card-border-radius` and `--ha-card-box-shadow` for them). The gaps default to 0.
+`card_style: seamless` merges the cards into one surface with dividers between them. The layout draws the surface in the theme's card colour, border and radius, and the cards inside drop their own (it sets `--ha-card-background` to transparent and `--ha-card-border-width`, `--ha-card-border-radius` and `--ha-card-box-shadow` for them). The surface is painted once, so a translucent card colour over a background image looks the same as on a single card. The gaps default to 0.
 
 ::: live
 
@@ -439,7 +439,7 @@ cards:
 
 :::
 
-With `padding`, the padding is inside the surface, around the cards. A card that draws its own background without these variables keeps it. For one column of cards, use `columns: 1`.
+With `padding`, the padding is inside the surface, around the cards. A card that draws its own background without these variables keeps it, and a card that uses `--ha-card-background` for more than its background (a chip, a knob) draws that part transparent; the Pro Cards' knobs and tooltips keep the surface colour. For one column of cards, use `columns: 1`.
 
 ## Placing cards
 

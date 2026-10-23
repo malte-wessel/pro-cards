@@ -1,5 +1,5 @@
 // Styles of the sun path card.
-import { STYLE_HOST, STYLE_ICONS } from "../shared/constants.ts";
+import { CARD_BG, STYLE_HOST, STYLE_ICONS } from "../shared/constants.ts";
 import { PLOT_H } from "./constants.ts";
 import { HEADER_TITLE, fs, fw, lh, type } from "../shared/typography.ts";
 
@@ -35,16 +35,16 @@ export const STYLE = `
   .curve { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: butt; }
   .curve.future { opacity: .35; }
   .wash { opacity: .12; }
-  .sun { stroke: var(--ha-card-background, var(--card-background-color)); stroke-width: 2; }
+  .sun { stroke: ${CARD_BG}; stroke-width: 2; }
   /* hover: crosshair + dot on the curve, tooltip with time and elevation */
   .hover { display: none; }
   .hover.on { display: block; }
   .hair { stroke: var(--divider-color); stroke-width: 1; }
-  .dot { stroke: var(--ha-card-background, var(--card-background-color)); stroke-width: 2; }
+  .dot { stroke: ${CARD_BG}; stroke-width: 2; }
   .tip {
     position: absolute; top: 4px;
     pointer-events: none;
-    background: var(--ha-card-background, var(--card-background-color));
+    background: ${CARD_BG};
     color: var(--primary-text-color);
     border: 1px solid var(--divider-color);
     border-radius: 8px;

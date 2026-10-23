@@ -1,6 +1,6 @@
 // Styles of the sun azimuth card. --saz-sun / --saz-night / --saz-sky are set on the card from
 // the config colours; --c is the colour of a lead or row (the sun's while it is up).
-import { ICON_RADIUS, STYLE_HOST, STYLE_ICONS, iconBg } from "../shared/constants.ts";
+import { CARD_BG, ICON_RADIUS, STYLE_HOST, STYLE_ICONS, iconBg } from "../shared/constants.ts";
 import { STYLE_SLIDER } from "../shared/slider.ts";
 import {
   HEADER_TITLE,
@@ -12,7 +12,6 @@ import {
   type,
 } from "../shared/typography.ts";
 
-const CARD_BG = "var(--ha-card-background, var(--card-background-color))";
 // a stroke width of the pictures: full at full size, thinner as the picture shrinks (--k is set
 // on each <svg> from its size); hairlines of 1 px stay as they are
 const sw = (px: number) => `calc(${px}px * var(--k, 1))`;

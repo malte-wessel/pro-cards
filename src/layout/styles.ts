@@ -1,15 +1,17 @@
 // Styles of the layout card. It draws no ha-card of its own (as Home Assistant's stacks): no
 // border around the cards; the cards inside bring their own.
-import { STYLE_HOST } from "../shared/constants.ts";
+import { CARD_BG, STYLE_HOST } from "../shared/constants.ts";
 import { font } from "../shared/typography.ts";
 
 export const STYLE = `
   ${STYLE_HOST}
   :host([hidden]) { display: none; }
   /* the card surface as the theme draws it, read here before the seamless style resets the
-     variables for the cards inside */
+     variables for the cards inside; --pl-surface is the colour under it, the surface of a
+     seamless layout around this one included (whose --ha-card-background is transparent here) */
   :host {
     --pl-bg: var(--ha-card-background, var(--card-background-color));
+    --pl-surface: ${CARD_BG};
     --pl-radius: var(--ha-card-border-radius, var(--ha-border-radius-lg, 12px));
     --pl-border-width: var(--ha-card-border-width, 1px);
     --pl-border-color: var(--ha-card-border-color, var(--divider-color));
@@ -48,16 +50,19 @@ export const STYLE = `
     border-radius: var(--pl-radius);
     box-shadow: var(--pl-shadow);
     overflow: hidden;
-    /* the cards inside keep a background, the surface's own: a card may use the variable for
-       more than its own surface (a slider's knob, the text of its value bubble), and
-       transparent there would let the fill show through the knob */
-    --ha-card-background: var(--pl-bg);
+    /* the surface is painted once: the cards inside paint no background of their own (a
+       translucent theme colour would stack, each card darker than the surface); what the cards
+       draw in the surface colour (a slider's knob, a tooltip, a dot's halo) reads it from
+       --pro-cards-surface (CARD_BG) */
+    --ha-card-background: transparent;
+    --pro-cards-surface: var(--pl-surface);
     --ha-card-border-width: 0px;
     --ha-card-border-radius: 0px;
     --ha-card-box-shadow: none;
   }
   /* the dividers: a line on the right and the bottom of every card, drawn above the cards next
-     to it (their backgrounds are opaque); the surface clips the ones at its edge */
+     to it (a card that paints its own background would cover them); the surface clips the ones
+     at its edge */
   .seamless .item, .seamless .col { position: relative; }
   .seamless .item::after, .seamless .col::after {
     content: ""; position: absolute; inset: 0 -1px -1px 0; z-index: 1; pointer-events: none;

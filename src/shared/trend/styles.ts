@@ -1,5 +1,6 @@
 // Styles of the trend plot (`.plot.trend`) and its legend, shared by the multi trend card and the
 // weather card. Theme tokens only.
+import { CARD_BG } from "../constants.ts";
 import { font, fw, type } from "../typography.ts";
 
 export const STYLE_TREND = `
@@ -19,11 +20,11 @@ export const STYLE_TREND = `
   .trend svg path.line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: butt; }
   .trend svg path.area { opacity: .12; }
   .trend svg .hair { stroke: var(--secondary-text-color); stroke-width: 1; opacity: .6; }
-  .trend svg .dot { stroke: var(--ha-card-background, var(--card-background-color)); stroke-width: 2; }
+  .trend svg .dot { stroke: ${CARD_BG}; stroke-width: 2; }
   .trend .lane-label {
     position: absolute; left: 4px; max-width: calc(100% - 8px); box-sizing: border-box;
     padding: 0 3px; border-radius: 3px;
-    background: color-mix(in srgb, var(--ha-card-background, var(--card-background-color)) 75%, transparent);
+    background: color-mix(in srgb, ${CARD_BG} 75%, transparent);
     ${type(10, 12)} color: var(--secondary-text-color);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;
   }
@@ -42,7 +43,7 @@ export const STYLE_TREND = `
   .trend .tip {
     position: absolute; top: 4px;
     pointer-events: none;
-    background: var(--ha-card-background, var(--card-background-color));
+    background: ${CARD_BG};
     color: var(--primary-text-color);
     border: 1px solid var(--divider-color);
     border-radius: 8px;
