@@ -105,3 +105,21 @@ test("reports a missing entity instead of crashing", async ({ page }) => {
   await mount(page, cfg("trend", { entity: "sensor.nope" }));
   await expect(card(page).locator(".empty")).toContainText("sensor.nope");
 });
+
+test("draws its body again only when what it shows changed", async ({ page }) => {
+  await mount(page, {
+    type: "custom:illuminance-card-pro",
+    entity: "sensor.illuminance",
+    mode: "trend",
+  });
+  const c = card(page);
+  const plot = c.locator(".plot");
+  await expect(plot).toHaveCount(1);
+  await plot.evaluate((e) => e.setAttribute("data-mark", "1"));
+  // a render with nothing new keeps the drawing
+  await page.evaluate(() => (window.pc.card(0) as unknown as { _render(): void })._render());
+  await expect(plot).toHaveAttribute("data-mark", "1");
+  // a new reading draws it again
+  await setState(page, "sensor.illuminance", "12345");
+  await expect(c.locator(".plot")).not.toHaveAttribute("data-mark", "1");
+});

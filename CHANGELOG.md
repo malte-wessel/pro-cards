@@ -21,6 +21,8 @@ _Beta_
 - Fix: weather forecast days keep their day icon after sunset; forecast hours take the night icon when the sun is down at that hour
 - Fix: the rain card animates in/h, mm/d and in/d rates and in or cm totals by their real amount (an in/h sensor counted as nearly dry)
 - Fix: history axes keep their ticks on the hour and the days on midnight across a daylight saving change
+- Faster updates: an entity card redraws only the rows a state change touches, weather forecasts and charts only when the forecast changes, and numbers and times are formatted without rebuilding a formatter each time
+- Wind and rain: off-screen bands stop animating, the wind lead moves without layout work, and a sensor hovering at a threshold no longer rebuilds the field over and over
 
 ## 2.7.1 – Safer colours, centred gauges
 

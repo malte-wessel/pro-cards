@@ -209,8 +209,8 @@ describe("rain maths", () => {
     expect(needsRebuild(built, { n: 24, wet: true })).toBe(false);
     expect(needsRebuild(built, { n: 36, wet: true })).toBe(true);
     expect(needsRebuild(built, { n: 0, wet: false })).toBe(true);
-    expect(needsRebuild({ n: 3, wet: true }, { n: 5, wet: true })).toBe(true);
-    expect(needsRebuild({ n: 3, wet: true }, { n: 4, wet: true })).toBe(false);
+    expect(needsRebuild({ n: 3, wet: true }, { n: 6, wet: true })).toBe(true);
+    expect(needsRebuild({ n: 3, wet: true }, { n: 5, wet: true })).toBe(false);
   });
 });
 

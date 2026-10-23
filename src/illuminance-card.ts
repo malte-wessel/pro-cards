@@ -31,6 +31,7 @@ import { REFRESH_MS } from "./shared/constants.ts";
 import { fmtTime, langOf } from "./shared/format.ts";
 import { fetchHistory, normalizeSmoothing } from "./shared/history.ts";
 import { HistoryFeed } from "./shared/history-feed.ts";
+import { depsChanged } from "./shared/deps.ts";
 import { hideHover } from "./shared/hover.ts";
 import { t } from "./shared/i18n.ts";
 import { isNum, oneOf, qs } from "./shared/util.ts";
@@ -67,6 +68,8 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
   _plotW?: number;
   _hoverT: number | null = null;
   _history = new HistoryFeed(CARD_TYPE);
+  // what the body and the zone colours were last drawn from (deps.ts)
+  _drawn = new WeakMap<object, readonly unknown[]>();
   _timer?: ReturnType<typeof setInterval>;
   _ro?: ResizeObserver;
 
@@ -196,17 +199,43 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
   _render() {
     if (!this._root || !this._hass) return;
     const card = this._root,
-      cfg = this._config;
+      cfg = this._config,
+      hass = this._hass;
+    const body = qs(card, ".body");
+    // drawn again only when what it shows changed: the state, the history, the size, the mode,
+    // the language, the theme, and the time by a pixel of the window (a minute for the arc)
+    const w = body.clientWidth,
+      now = Date.now();
+    const last = this._series[this._series.length - 1];
+    const step = cfg.mode === "arc" ? 60e3 : (cfg.hours_to_show * 3600e3) / Math.max(w, 1);
+    const changed = depsChanged(this._drawn, body, [
+      this._state(),
+      this._series,
+      this._series.length,
+      last?.t,
+      w,
+      body.clientHeight,
+      cfg,
+      langOf(hass),
+      hass.themes,
+      Math.floor(now / Math.max(step, 1)),
+    ]);
+    if (!changed) {
+      if (cfg.mode !== "arc" && this._hoverT !== null && !showHover(this, this._hoverT))
+        this._hideHover();
+      return;
+    }
     // default labels in the user's language, then the zone colours against the live theme:
-    // css (token var) for fills, hex for blending
-    cfg.zonesList = mergeZones(cfg.zones, this._hass);
-    cfg.zonesList.forEach((z) => {
-      z.css = cssColor(z.color, "#888888");
-      z.hex = resolveHex(z.color, this);
-    });
+    // css (token var) for fills, hex for blending (a style read: only when either changed)
+    if (depsChanged(this._drawn, this, [cfg, langOf(hass), hass.themes])) {
+      cfg.zonesList = mergeZones(cfg.zones, hass);
+      cfg.zonesList.forEach((z) => {
+        z.css = cssColor(z.color, "#888888");
+        z.hex = resolveHex(z.color, this);
+      });
+    }
     const st = this._state();
     qs(card, ".primary").textContent = cfg.name || st?.attributes.friendly_name || cfg.entity;
-    const body = qs(card, ".body");
     if (!st) {
       body.innerHTML = `<div class="empty"></div>`;
       qs(body, ".empty").textContent = t(this._hass, "common.not_found", { entity: cfg.entity });

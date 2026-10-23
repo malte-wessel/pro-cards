@@ -31,13 +31,18 @@ export const buildBand = (kind: "bg" | "band", chipIcon: HTMLElement, field: HTM
 };
 
 // scales every running animation under `root` (the field's particles, the lead's) so a value
-// change is seen at once without restarting or jumping; the rate is kept on the element
+// change is seen at once without restarting or jumping; the rate is kept on the element. A rate
+// within half a percent of the one applied is no visible change (sensor noise): the hundreds of
+// animations stay as they are. Transitions (an arrow turning to a new direction) keep their pace.
 export const setRate = (root: HTMLElement, rate: number) => {
-  const r = rate.toFixed(3);
-  if (root.dataset.rate === r) return;
-  root.dataset.rate = r;
+  const prev = root.dataset.rate === undefined ? NaN : Number(root.dataset.rate);
+  if (Math.abs(rate - prev) <= 0.005 * prev) return;
+  root.dataset.rate = rate.toFixed(3);
   if (typeof root.getAnimations !== "function") return;
-  for (const a of root.getAnimations({ subtree: true })) a.playbackRate = rate;
+  const isTransition = (a: Animation) =>
+    typeof CSSTransition !== "undefined" && a instanceof CSSTransition;
+  for (const a of root.getAnimations({ subtree: true }))
+    if (!isTransition(a)) a.playbackRate = rate;
 };
 
 // the lead: an icon in the soft circle, or alone (icon_style: plain); the animated lead below

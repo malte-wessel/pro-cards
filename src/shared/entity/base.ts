@@ -12,6 +12,7 @@ import { fetchHistory, pointOf, type Point } from "../history.ts";
 import { HistoryFeed } from "../history-feed.ts";
 import { hideHover } from "../hover.ts";
 import { TemplateSubscriptions } from "../templates.ts";
+import { depsChanged } from "../deps.ts";
 import { clamp01, qs } from "../util.ts";
 import {
   checkVisibility,
@@ -24,6 +25,7 @@ import { VisibilityWatch } from "../visibility-watch.ts";
 import { BLOCK_VISUALS, DOUBLE_MS, HISTORY_VISUALS, HOLD_MS } from "./constants.ts";
 import {
   collectTemplates,
+  itemTemplates,
   visibilityTrees,
   type EntityCardConfig,
   type EntityItem,
@@ -122,6 +124,18 @@ export abstract class EntityCardBase extends HTMLElement {
   _vis?: VisState;
   _bodyKey: string | null = null;
   _person: { user: string | undefined; id: string | null } | null = null;
+  // what each item's model, each row and each plot were last drawn from (deps.ts): a render
+  // recomputes and redraws only what its inputs changed. Per item: the ids it reads (its entity,
+  // its buttons') and whether it has templates; `_fillEpoch` moves on what every row depends on
+  // without naming it (the refresh, a theme, a config); `_resized` asks for a full refit
+  _idsByItem: string[][] = [];
+  _itemTpl: boolean[] = [];
+  _itemModels: EntityModel[] = [];
+  _modelInputs = new WeakMap<object, readonly unknown[]>();
+  _rowInputsDrawn = new WeakMap<object, readonly unknown[]>();
+  _plotInputs = new WeakMap<object, readonly unknown[]>();
+  _fillEpoch = 0;
+  _resized = true;
 
   abstract _normalize(raw: unknown): EntityCardConfig;
   abstract _styles(): string;
@@ -169,6 +183,11 @@ export abstract class EntityCardBase extends HTMLElement {
       [e.entity, ...(e.control?.buttons ?? []).map((b) => b.entity)].filter(
         (id): id is string => !!id,
       );
+    this._idsByItem = cfg.entities.map(idsOf);
+    this._itemTpl = cfg.entities.map((e) => itemTemplates(e).length > 0);
+    this._itemModels = [];
+    this._fillEpoch++;
+    this._resized = true;
     this._entityIds = [...new Set(cfg.entities.flatMap(idsOf))];
     this._historyIds = [
       ...new Set(
@@ -242,6 +261,8 @@ export abstract class EntityCardBase extends HTMLElement {
     if (changed) this._render();
     if (themeChanged(prev, hass)) {
       this._textCache.clear();
+      this._fillEpoch++;
+      this._resized = true;
       requestAnimationFrame(() => this._render());
     }
   }
@@ -249,11 +270,17 @@ export abstract class EntityCardBase extends HTMLElement {
   connectedCallback() {
     // another place may have another theme (a view's own)
     this._textCache.clear();
+    this._fillEpoch++;
+    this._resized = true;
     this._timer = setInterval(() => {
+      this._fillEpoch++;
       if (this._historyIds?.length) this._fetchHistory();
       else this._render();
     }, REFRESH_MS);
-    this._ro = new ResizeObserver(() => this._render());
+    this._ro = new ResizeObserver(() => {
+      this._resized = true;
+      this._render();
+    });
     if (this._root) this._ro.observe(this._root);
     document.addEventListener("pointerdown", this._onDocPointer);
     this._visWatch.connect();
@@ -555,7 +582,7 @@ export abstract class EntityCardBase extends HTMLElement {
     this._render();
     // text fitted before the web font arrived is measured again once it is there
     document.fonts?.ready.then(() => {
-      if (this._root === card) this._fitCells(card);
+      if (this._root === card) this._fitCells([card]);
     });
   }
   // `title_tap_action`: the title is the button, its icon taps the same; the header items keep
@@ -680,8 +707,10 @@ export abstract class EntityCardBase extends HTMLElement {
     }
     // nothing shown at all: the card takes no room (its own `visibility` is HA's way to hide it)
     card.hidden = (!header || header.hidden) && !this._bodyShown(vis);
-    const models = cfg.entities.map((ent) => modelOf(ctx, ent));
+    const models = cfg.entities.map((_, i) => this._modelAt(ctx, i));
     const focus = this._focusWithin();
+    // the rows filled now: only they are fitted again (all of them after a resize)
+    const filled: HTMLElement[] = [];
     for (const row of card.querySelectorAll<HTMLElement>(".row")) {
       const idx = Number(row.dataset.idx),
         ent = cfg.entities[idx],
@@ -695,6 +724,10 @@ export abstract class EntityCardBase extends HTMLElement {
       if (this._dragging === idx) continue;
       // a focused select keeps its row too: rebuilding it would close its open list
       if (focus?.row === row && focus.select) continue;
+      // a row whose inputs are the ones it was filled from keeps its DOM
+      const inputs = this._rowInputs(ctx, row, idx, m);
+      if (inputs && !depsChanged(this._rowInputsDrawn, row, inputs)) continue;
+      filled.push(row);
       const hit = row.querySelector<HTMLElement>(":scope > .hit");
       this._fill(ctx, row, ent, idx, m);
       if (hit) {
@@ -714,8 +747,9 @@ export abstract class EntityCardBase extends HTMLElement {
       "--fe-tint",
       tint === null ? "transparent" : cssColor(tint, "transparent"),
     );
-    for (const plot of card.querySelectorAll<PlotElement>(".plot")) drawPlot(ctx, plot);
-    this._fitCells(card);
+    this._drawPlots(ctx, card);
+    this._fitCells(this._resized ? [card] : filled);
+    this._resized = false;
     this._visWatch.arm(this._hass);
     if (this._hover) {
       const hover = this._hover;
@@ -724,6 +758,70 @@ export abstract class EntityCardBase extends HTMLElement {
       );
       if (plot) showHover(ctx, plot, hover.t);
     }
+  }
+  // an item's model, computed again only when what it reads changed: the states of its entity and
+  // its buttons' entities, its templates, the language and Home Assistant's formatting
+  _modelAt(ctx: RenderCtx, idx: number): EntityModel {
+    const ent = (this._config as EntityCardConfig).entities[idx],
+      hass = ctx.hass;
+    const inputs = [
+      ...this._idsByItem[idx].map((id) => hass?.states[id]),
+      this._itemTpl[idx] ? this._tpl.version : 0,
+      langOf(hass),
+      // by value: Home Assistant keeps the object, a test double may not
+      JSON.stringify(hass?.locale ?? null),
+      hass?.formatEntityState,
+    ];
+    const changed = depsChanged(this._modelInputs, ent, inputs);
+    if (!changed && this._itemModels[idx]) return this._itemModels[idx];
+    return (this._itemModels[idx] = modelOf(ctx, ent));
+  }
+  // what a row is filled from: its model, its pending calls, its armed buttons, which of its
+  // buttons are shown, and what every row reads (the refresh, the theme, the user). A subclass
+  // returns null for a row it fills from more than its own item: that row is filled every time
+  _rowInputs(ctx: RenderCtx, _row: HTMLElement, idx: number, m: EntityModel): unknown[] | null {
+    const ent = (this._config as EntityCardConfig).entities[idx];
+    const own = (map: Map<string, unknown>) => {
+      const out: unknown[] = [];
+      for (const [k, v] of map) if (k.startsWith(`${idx}:`)) out.push(k, v);
+      return out;
+    };
+    return [
+      m,
+      this._pending.get(idx),
+      ...own(this._buttonPending),
+      ...own(this._armed),
+      ...(ent.control?.buttons ?? []).map((b) => this._shown(b.visibility)),
+      this._fillEpoch,
+      ctx.hass?.user?.id,
+      ctx.hass?.user?.is_admin,
+    ];
+  }
+  // the plots: every size read first, then drawn (one layout for all of them); a plot whose
+  // inputs are the same and that would move by less than a pixel keeps its drawing
+  _drawPlots(ctx: RenderCtx, card: HTMLElement) {
+    const plots = [...card.querySelectorAll<PlotElement>(".plot")];
+    const sizes = plots.map((p) => ({ w: p.clientWidth, h: p.clientHeight }));
+    plots.forEach((plot, i) => {
+      const { w, h } = sizes[i];
+      const { t0, t1 } = windowOf(ctx, plot);
+      const pc = plot._ctx;
+      const series = pc.series ?? (pc.ent.entity ? ctx.series.get(pc.ent.entity) : undefined);
+      const msPerPx = Math.max(1, (t1 - t0) / Math.max(w, 1));
+      const inputs = [
+        w,
+        h,
+        series,
+        series?.length,
+        pc.loaded ?? ctx.fetched,
+        pc.st,
+        Math.floor(t0 / msPerPx),
+        Math.floor(t1 / msPerPx),
+        langOf(ctx.hass),
+        this._fillEpoch,
+      ];
+      if (depsChanged(this._plotInputs, plot, inputs)) drawPlot(ctx, plot, { w, h });
+    });
   }
   // the focused element of a row, as its index among the row's focusable elements: a rebuilt row
   // has the same elements in the same order, so the same index is the same control
@@ -757,10 +855,15 @@ export abstract class EntityCardBase extends HTMLElement {
   }
   // shrink a grid cell's big value (down to 13 px at the default text size; it starts from its
   // styled size, which follows the theme's) so short words like scene names stay whole
-  _fitCells(card: HTMLElement) {
+  _fitCells(roots: readonly HTMLElement[]) {
+    const all = <E extends Element>(sel: string) =>
+      roots.flatMap((r) => [
+        ...(r.matches(sel) ? [r as unknown as E] : []),
+        ...r.querySelectorAll<E>(sel),
+      ]);
     // a gauge's value sits inside its arc: a long one (a unit like "UV index") steps its font down
     // until its drawn box fits (glyph widths do not scale exactly with the size)
-    for (const t of card.querySelectorAll<SVGTextElement>(".gauge text.val")) {
+    for (const t of all<SVGTextElement>(".gauge text.val")) {
       t.style.fontSize = "";
       if (typeof t.getBBox !== "function") continue;
       let size = GAUGE_FONT;
@@ -771,7 +874,7 @@ export abstract class EntityCardBase extends HTMLElement {
     }
     // every cell's value has the same styled size: read once
     let full = 0;
-    for (const big of card.querySelectorAll<HTMLElement>(".cell .big")) {
+    for (const big of all<HTMLElement>(".cell .big")) {
       const b = big.querySelector("b");
       if (!b) continue;
       if (!full) {

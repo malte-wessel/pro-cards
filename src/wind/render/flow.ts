@@ -10,9 +10,9 @@ import {
   baseDuration,
   fieldKey,
   fieldRotation,
-  fieldSize,
+  fieldSizeFor,
   fieldSpec,
-  gustCount,
+  gustsFor,
   gustDuration,
   needsRedraw,
   rateOf,
@@ -143,17 +143,21 @@ export const updateBand = (band: HTMLElement, s: BandState) => {
     h = band.clientHeight;
   // not laid out yet: the resize observer renders again once the band has a size
   if (w > 0 && h > 0) {
-    const size = fieldSize(w, h);
-    const key = fieldKey(s.style, s.density, size);
-    const waves = { amp: amplitude(s.kmh, s.gustKmh), gusts: gustCount(s.gustKmh) };
     const built =
       band.dataset.amp === undefined
         ? null
         : { amp: Number(band.dataset.amp), gusts: Number(band.dataset.gusts) };
+    const size = fieldSizeFor(w, h, built ? Number(band.dataset.size) : null);
+    const key = fieldKey(s.style, s.density, size);
+    const waves = {
+      amp: amplitude(s.kmh, s.gustKmh),
+      gusts: gustsFor(s.gustKmh, built ? built.gusts : null),
+    };
     if (band.dataset.key !== key || needsRedraw(built, waves)) {
       field.replaceChildren(
-        buildField(fieldSpec(s.style, s.density, size, waves.amp, s.gustKmh, s.kmh)),
+        buildField(fieldSpec(s.style, s.density, size, waves.amp, s.gustKmh, s.kmh, waves.gusts)),
       );
+      band.dataset.size = String(size);
       field.style.setProperty("--size", `${size}px`);
       // the durations of the field as built; later speeds scale the playback rate instead
       band.style.setProperty("--dur", `${baseDuration(s.kmh).toFixed(3)}s`);

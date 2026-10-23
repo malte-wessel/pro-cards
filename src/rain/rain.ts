@@ -120,10 +120,11 @@ export const rainSpec = (style: RainStyle, rate: number, todayMm: number | null)
 };
 
 // what a field was built with; a rebuild restarts every drop, so only a real change triggers it:
-// rain starting or stopping, or the count moving by a quarter (at least two)
+// rain starting or stopping, or the count moving by a quarter (at least three: at a drizzle, two
+// drops are about 0.2 mm/h, the noise of a rain sensor)
 export interface Built {
   n: number;
   wet: boolean;
 }
 export const needsRebuild = (built: Built | null, now: Built) =>
-  !built || built.wet !== now.wet || Math.abs(now.n - built.n) >= Math.max(2, built.n * 0.25);
+  !built || built.wet !== now.wet || Math.abs(now.n - built.n) >= Math.max(3, built.n * 0.25);

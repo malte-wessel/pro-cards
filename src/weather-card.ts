@@ -27,6 +27,8 @@ import type {
   HomeAssistant,
   WeatherForecastType,
 } from "./shared/ha.ts";
+import { depsChanged } from "./shared/deps.ts";
+import { langOf } from "./shared/format.ts";
 import { hideHover } from "./shared/hover.ts";
 import { t } from "./shared/i18n.ts";
 import type { Visibility } from "./shared/visibility.ts";
@@ -39,6 +41,7 @@ import { CARD_TYPE } from "./weather/constants.ts";
 import {
   dailyTypeOf,
   daysOf,
+  hourStart,
   hoursOf,
   isToday,
   supportsForecast,
@@ -82,6 +85,8 @@ export class WeatherCard extends EntityCardBase {
   _fcUnsub = new Map<WeatherForecastType, Promise<Unsubscribe | null>>();
   _fcToken = new Map<WeatherForecastType, object>(); // identifies the live subscription per type
   _chartHover: { el: ForecastTrendEl; t: number } | null = null;
+  // what each forecast and trend section was last drawn from (deps.ts)
+  _sectionInputs = new WeakMap<object, readonly unknown[]>();
   _chartHandlers = {
     move: this._onChartPointer.bind(this),
     up: (ev: PointerEvent) => ev.stopPropagation(),
@@ -294,6 +299,11 @@ export class WeatherCard extends EntityCardBase {
     }
     super._fill(ctx, row, ent, idx, m);
   }
+  // the tile and the hero read the temperature item and the forecast too: filled every time
+  _rowInputs(ctx: RenderCtx, row: HTMLElement, idx: number, m: EntityModel) {
+    const c = row.classList;
+    return c.contains("wtile") || c.contains("whero") ? null : super._rowInputs(ctx, row, idx, m);
+  }
   // temperature rules may tint the card too
   _tintColor(ctx: RenderCtx, models: EntityModel[], card: HTMLElement) {
     const base = super._tintColor(ctx, models, card);
@@ -322,8 +332,31 @@ export class WeatherCard extends EntityCardBase {
     const hourly = supportsForecast(st, "hourly") ? this._forecast.hourly : null;
     const hours = (n: number) =>
       hourly === undefined ? undefined : hourly === null ? null : hoursOf(hourly, ctx.now, n);
+    // a section is drawn again only when what it shows changed: its forecast, the entity (its
+    // rules read it), the language, the templates, the hour or the day, its size (a trend)
+    const daily = dailyTypeOf(st);
+    const drawn = (el: HTMLElement, mode: "hourly" | "daily", chart: HTMLElement | null) =>
+      !depsChanged(this._sectionInputs, el, [
+        mode === "hourly" ? hourly : daily && this._forecast[daily],
+        st,
+        langOf(this._hass),
+        // the location (night hours) and units; by value, a test double rebuilds the object
+        this._hass?.config?.latitude,
+        this._hass?.config?.longitude,
+        JSON.stringify(this._hass?.config?.unit_system ?? null),
+        this._tpl.version,
+        mode === "hourly" ? hourStart(ctx.now) : new Date(ctx.now).toDateString(),
+        this._fillEpoch,
+        chart?.clientWidth,
+        chart?.clientHeight,
+      ]);
     sections.forEach((el) => {
       const sec = cfg.sections[Number(el.dataset.sec)];
+      if (
+        (sec?.kind === "trend" || sec?.kind === "forecast") &&
+        drawn(el, sec.mode, sec.kind === "trend" ? el.querySelector<HTMLElement>(".trend") : null)
+      )
+        return;
       if (sec?.kind === "trend")
         drawTrendSection(
           ctx,

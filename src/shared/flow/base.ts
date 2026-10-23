@@ -60,6 +60,11 @@ export abstract class FlowCardBase extends EntityCardBase {
     }
     super._fill(ctx, row, ent, idx, m);
   }
+  // the lead row reads the other items too (direction, gust, today, wind): filled every time
+  _rowInputs(ctx: RenderCtx, row: HTMLElement, idx: number, m: EntityModel) {
+    const c = row.classList;
+    return c.contains("wtile") || c.contains("whero") ? null : super._rowInputs(ctx, row, idx, m);
+  }
   _render() {
     if (!this._root || !this._hass || !this._config) return;
     super._render();

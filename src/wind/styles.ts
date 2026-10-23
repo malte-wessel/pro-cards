@@ -12,13 +12,15 @@ const STYLE_WIND = `
   .nodir .arrow { display: none; }
 
   /* the animated lead: a rotated field inside the soft circle */
-  .lead.wlead .lfield { position: absolute; inset: -25%; transform: rotate(var(--rot, 0deg)); transition: transform 5s; }
+  .lead.wlead .lfield { position: absolute; inset: -25%; transform: rotate(var(--rot, 0deg)); transition: transform 5s; container-type: inline-size; }
   .ld, .la, .ls { position: absolute; top: var(--t); background: var(--fe-color); }
-  .ld { width: 5px; height: 5px; margin-top: -2px; border-radius: 50%; left: calc(-12% + var(--p0) * 120%); animation: lam var(--ldur, 1s) linear infinite; animation-delay: calc(-1 * var(--p0) * var(--ldur, 1s)); }
+  /* the dots and arrows cross the field on the compositor: a translate in the field's width (cqw),
+     where a left in % would lay the lead out again on every frame */
+  .ld { width: 5px; height: 5px; margin-top: -2px; border-radius: 50%; left: 0; transform: translateX(calc((var(--p0) * 120 - 12) * 1cqw)); animation: lam var(--ldur, 1s) linear infinite; animation-delay: calc(-1 * var(--p0) * var(--ldur, 1s)); }
   .ld.trail { opacity: .5; scale: .75; }
-  .la { width: 9px; height: 2px; border-radius: 1px; left: calc(-12% + var(--p0) * 120%); animation: lam var(--ldur, 1s) linear infinite; animation-delay: calc(-1 * var(--p0) * var(--ldur, 1s)); }
+  .la { width: 9px; height: 2px; border-radius: 1px; left: 0; transform: translateX(calc((var(--p0) * 120 - 12) * 1cqw)); animation: lam var(--ldur, 1s) linear infinite; animation-delay: calc(-1 * var(--p0) * var(--ldur, 1s)); }
   .la::after { content: ""; position: absolute; right: -3px; top: -3px; border-left: 5px solid var(--fe-color); border-top: 4px solid transparent; border-bottom: 4px solid transparent; }
-  @keyframes lam { from { left: -12%; } to { left: 108%; } }
+  @keyframes lam { from { transform: translateX(-12cqw); } to { transform: translateX(108cqw); } }
   .ls { left: 0; width: var(--w); height: var(--h, 2px); border-radius: 1px; transform: translateX(calc(-120% + var(--p0) * 540%)); animation: lsm var(--ldur, 1s) linear infinite; animation-delay: calc(-1 * var(--p0) * var(--ldur, 1s)); }
   @keyframes lsm { from { transform: translateX(-120%); } to { transform: translateX(420%); } }
   .lead.wlead svg { inset: 19%; width: 62%; height: 62%; transform: rotate(var(--rot, 0deg)); transition: transform 5s; overflow: visible; }

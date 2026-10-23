@@ -358,6 +358,30 @@ test.describe("weather card", () => {
     );
   });
 
+  test("an update keeps the forecast rows unless the forecast or the entity changed", async ({
+    page,
+  }) => {
+    await mount(page, {
+      type: T,
+      entity: W,
+      sections: [
+        { type: "row", entities: [{ entity: "sensor.outdoor_humidity" }] },
+        { type: "forecast", mode: "daily", days: 3 },
+      ],
+    });
+    const c = card(page);
+    const rows = c.locator(".frow");
+    await expect(rows).toHaveCount(3);
+    await rows.first().evaluate((e) => e.setAttribute("data-mark", "1"));
+    // the card renders for its sensor; the forecast did not change
+    await setState(page, "sensor.outdoor_humidity", "64");
+    await expect(c.locator(".section").first()).toContainText("64");
+    await expect(rows.first()).toHaveAttribute("data-mark", "1");
+    // the weather entity changed (its rules and units are read): drawn again
+    await setState(page, W, undefined, { temperature: 18.2 });
+    await expect(rows.first()).not.toHaveAttribute("data-mark", "1");
+  });
+
   test("forecast days keep the day icon after sunset", async ({ page }) => {
     const cfg = {
       type: T,

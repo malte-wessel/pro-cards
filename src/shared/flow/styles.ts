@@ -18,7 +18,8 @@ export const STYLE_FLOW = `
   .lead.wlead { overflow: hidden; border-radius: ${ICON_RADIUS}; }
 
   /* the band: the animation behind a chip */
-  .wflow { position: relative; overflow: hidden; border-radius: 10px; background: color-mix(in srgb, var(--fe-color) 7%, transparent); contain: layout paint; }
+  /* a band out of view is not rendered, so its particles stop costing frames (content-visibility) */
+  .wflow { position: relative; overflow: hidden; border-radius: 10px; background: color-mix(in srgb, var(--fe-color) 7%, transparent); contain: layout paint; content-visibility: auto; }
   /* the hero's band: flow.height is its height and its basis; a taller card gives it the room the
      lead leaves, down to the smallest band (the field follows the band's measured box) */
   .wflow.band { flex: 1 1 auto; height: var(--band-h, 120px); min-height: ${BAND.minBandH}px; }
