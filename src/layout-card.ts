@@ -137,11 +137,14 @@ export class LayoutCard extends HTMLElement {
   }
 
   connectedCallback() {
+    // laid out at once, not in the next frame: the browser lays the page out again before it
+    // paints, so the first frame already shows the columns of the real width (setConfig ran with
+    // none), and a layout inside, deeper in the tree, is observed and laid out in the same frame
     this._ro = new ResizeObserver((entries) => {
       const w = entries[entries.length - 1].contentRect.width;
       if (w > 0 && Math.round(w) !== Math.round(this._width)) {
         this._width = w;
-        this._schedule();
+        this._relayout();
       }
     });
     this._ro.observe(this);
