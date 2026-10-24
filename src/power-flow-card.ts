@@ -19,51 +19,18 @@
  *   title / icon / header_entities / tap_action / hold_action / double_tap_action
  */
 import { registerCard } from "./shared/card.ts";
-import { cssColor } from "./shared/color.ts";
-import { EntityCardBase, type VisState } from "./shared/entity/base.ts";
-import type { EntityItem } from "./shared/entity/config.ts";
-import { resolveLook, type Look } from "./shared/entity/look.ts";
-import { modelOf, tplGetter, type EntityModel, type RenderCtx } from "./shared/entity/model.ts";
-import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
+import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
+import { FlowTreeCardBase } from "./shared/flow-tree/base.ts";
+import type { Motion } from "./shared/flow-tree/flow.ts";
+import type { Flows } from "./shared/flow-tree/model.ts";
+import { selfSufficiencyPart, type Summary } from "./shared/flow-tree/render/summary.ts";
+import type { HomeAssistant } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
-import type { Visibility } from "./shared/visibility.ts";
-import {
-  hiddenNodes,
-  leavesOf,
-  nodeVisibilities,
-  normalizePowerFlowConfig,
-  viewConfig,
-  type PowerFlowConfig,
-  twoValued,
-} from "./power-flow/config.ts";
-import { CARD_TYPE, COLORS, GEOM } from "./power-flow/constants.ts";
-import { diagramHeight, layoutTree } from "./power-flow/layout.ts";
-import {
-  allocate,
-  thresholdShown,
-  bothFlows,
-  powerNow,
-  summaryState,
-  type Flows,
-  type PowerNow,
-  type SummaryState,
-} from "./power-flow/model.ts";
-import { buildSummary, updateSummary } from "./power-flow/render/summary.ts";
-import { buildTree, labelLines, updateTree } from "./power-flow/render/tree.ts";
-import { STYLE_POWER_FLOW_CARD } from "./power-flow/styles.ts";
+import { normalizePowerFlowConfig, type PowerFlowConfig } from "./power-flow/config.ts";
+import { CARD_TYPE } from "./power-flow/constants.ts";
+import { allocate, fmtPower, powerNow, summaryState, type PowerNow } from "./power-flow/model.ts";
 
-interface Computed {
-  models: EntityModel[];
-  now: PowerNow;
-  hidden: Set<string>; // the nodes not drawn now
-  view: PowerFlowConfig; // the config as drawn: without them
-  flows: Flows;
-  state: SummaryState;
-  homeLook: Look;
-  split: Set<string>; // the sources that show both their flows
-}
-
-export class PowerFlowCard extends EntityCardBase {
+export class PowerFlowCard extends FlowTreeCardBase<PowerFlowConfig> {
   static cardType = CARD_TYPE;
   static getStubConfig(hass: HomeAssistant | undefined, entities?: string[]) {
     const states = hass?.states || {};
@@ -81,182 +48,37 @@ export class PowerFlowCard extends EntityCardBase {
     };
   }
 
-  declare _config?: PowerFlowConfig;
-  _computed?: Computed;
-  // `hide_below`: whether each consumer was shown by its power (the threshold's memory)
-  _byPower = new Map<string, boolean>();
-  // whether each source showed both its flows (the two values' memory)
-  _byBoth = new Map<string, boolean>();
-
-  setConfig(config: unknown) {
-    // what the old config hid says nothing about the new one's nodes
-    this._computed = undefined;
-    this._byPower = new Map();
-    this._byBoth = new Map();
-    super.setConfig(config);
-  }
   _normalize(raw: unknown) {
     return normalizePowerFlowConfig(raw);
   }
-  _styles() {
-    return STYLE_POWER_FLOW_CARD;
+  _measure(_ctx: RenderCtx, cfg: PowerFlowConfig, models: EntityModel[]) {
+    return { now: powerNow(cfg, models), models };
   }
-  getGridOptions(): GridOptions {
-    return { columns: 12, rows: "auto", min_columns: 6, min_rows: 3 };
+  _allocate(cfg: PowerFlowConfig, now: PowerNow, hidden: ReadonlySet<string>) {
+    return allocate(cfg, now, hidden);
   }
-  getCardSize() {
-    const cfg = this._config;
-    if (!cfg) return 3;
-    // the tree as drawn now: hidden nodes take no room
-    const view = this._computed?.view ?? cfg;
-    return this._headerRows() + Math.ceil((GEOM.summaryH + diagramHeight(view) + 36) / 56);
-  }
-
-  // ----- visibility: the tree's nodes have conditions of their own -----
-  _visibilityTrees(): Visibility[] {
-    return [...super._visibilityTrees(), ...nodeVisibilities(this._config as PowerFlowConfig)];
-  }
-  // the rows of hidden nodes count as hidden items, so the base hides them and never tints from them
-  _computeVis(): VisState {
-    const vis = super._computeVis();
-    const cfg = this._config as PowerFlowConfig,
-      hidden = this._computed?.hidden;
-    if (!hidden?.size) return vis;
-    const items = [...vis.items];
-    for (const s of cfg.sources) if (hidden.has(s.id)) items[s.idx] = false;
-    for (const leaf of leavesOf(cfg))
-      if (leaf.kind === "item" && hidden.has(leaf.id)) items[leaf.idx] = false;
-    return { ...vis, items };
-  }
-
-  // ----- DOM -----
-  _buildBody(body: HTMLElement) {
-    const cfg = this._config as PowerFlowConfig;
-    body.appendChild(buildSummary());
-    const diag = buildTree(cfg, (idx, cls) => this._row(idx, cls));
-    diag.style.setProperty("--diag-h", `${diagramHeight(cfg)}px`);
-    body.appendChild(diag);
-  }
-  // the tree's nodes and rows are filled by the tree updater; header values by the base
-  _fill(ctx: RenderCtx, row: HTMLElement, ent: EntityItem, idx: number, m: EntityModel) {
-    if (row.classList.contains("pnode") || row.classList.contains("plist")) return;
-    super._fill(ctx, row, ent, idx, m);
-  }
-  // grid offline and an expensive price tint the card red; else the home rule's tint
-  _tintColor(ctx: RenderCtx, models: EntityModel[], card: HTMLElement) {
-    const c = this._computed;
-    if (c?.state.tint) return "red";
-    if (c?.homeLook.tint) return c.homeLook.color;
-    // the base walks every row: the home row must carry the look resolved on watts, not the raw value
-    const cfg = this._config as PowerFlowConfig;
-    return super._tintColor(
-      ctx,
-      models.map((m, i) => (c && i === cfg.homeIdx ? { ...m, look: c.homeLook } : m)),
-      card,
-    );
-  }
-  _compute(ctx: RenderCtx, cfg: PowerFlowConfig): Computed {
-    const models = cfg.entities.map((ent) => modelOf(ctx, ent));
-    const now = powerNow(cfg, models);
-    // the consumers below their threshold: decided for every one on every render (the memory
-    // follows the power), then hidden with those whose conditions fail
-    const below = new Set<string>();
-    for (const leaf of leavesOf(cfg)) {
-      if (leaf.kind !== "item" || leaf.hideBelow === null) continue;
-      const shown = thresholdShown(
-        this._byPower.get(leaf.id),
-        now.leaves.get(leaf.id) ?? null,
-        leaf.hideBelow,
-      );
-      this._byPower.set(leaf.id, shown);
-      if (!shown) below.add(leaf.id);
-    }
-    const hidden = hiddenNodes(
-      cfg,
-      (v) => this._shown(v),
-      (leaf) => below.has(leaf.id),
-    );
-    // a battery that charges while it discharges, a grid that imports while it exports: both
-    // values while both run, the net value below the idle threshold (both again only clearly above)
-    const split = new Set<string>();
-    cfg.sources.forEach((s, i) => {
-      const n = now.sources[i];
-      if (n.kind === "solar" || !twoValued(s)) return;
-      const [a, b] = n.kind === "battery" ? [n.charge, n.discharge] : [n.export, n.import];
-      const both = bothFlows(this._byBoth.get(s.id), a, b, cfg.idleBelow);
-      this._byBoth.set(s.id, both);
-      if (both) split.add(s.id);
-    });
-    const flows = allocate(cfg, now, hidden);
+  // the state (importing, exporting, on battery …) and the self-sufficiency
+  _summary(ctx: RenderCtx, cfg: PowerFlowConfig, now: PowerNow, flows: Flows): Summary {
+    const hass = ctx.hass;
     const state = summaryState(cfg, now, flows);
-    // the home rules match the home power in watts, whatever unit the sensor reports
-    const homeEnt = cfg.entities[cfg.homeIdx],
-      homeM = models[cfg.homeIdx];
-    const H = Math.round(flows.H);
-    const homeLook = resolveLook(
-      homeEnt,
-      { raw: String(H), num: H, avail: true },
-      homeM.st,
-      tplGetter(ctx),
-      ctx.hass,
-    );
-    homeLook.color =
-      homeEnt.color || homeLook.rule?.color ? cssColor(homeLook.color, COLORS.home) : COLORS.home;
-    return { models, now, hidden, view: viewConfig(cfg, hidden), flows, state, homeLook, split };
+    const vars: Record<string, string> = {
+      v: fmtPower(hass, state.w, cfg.units),
+      price: now.price?.text ?? "",
+    };
+    return {
+      parts: [
+        { text: t(hass, state.key, vars), accent: true },
+        ...selfSufficiencyPart(hass, flows),
+      ],
+      color: state.color,
+      tint: state.tint,
+    };
   }
-  _render() {
-    if (!this._root || !this._hass || !this._config) return;
-    const cfg = this._config,
-      ctx = this._ctx();
-    // before super._render: the base's _computeVis reads the hidden set from _computed, and
-    // getCardSize its view
-    const c = (this._computed = this._compute(ctx, cfg));
-    super._render();
-    const card = this._root;
-    const summary = card.querySelector<HTMLElement>(".psummary");
-    if (summary)
-      updateSummary(
-        summary,
-        ctx,
-        { ent: cfg.entities[cfg.homeIdx], m: c.models[cfg.homeIdx], look: c.homeLook },
-        c.now,
-        c.flows,
-        c.state,
-        cfg.units,
-      );
-    const diag = card.querySelector<HTMLElement>(".pdiag");
-    const box = diag?.querySelector<HTMLElement>(".pscale");
-    if (!diag || !box) return;
-    // the labels' lines at the theme's text size: their heights take part in the tree's height
-    c.view = { ...c.view, lines: labelLines(diag, this._textCache) };
-    // the height follows the config and what of it is shown, never the width. A card given more
-    // or less height (fixed rows, a stretched grid row, a stack) lays the tree out in what the
-    // diagram measures: the natural height stays its basis, so the card's own height never
-    // depends on the tree and the resize observer cannot loop.
-    const natural = diagramHeight(c.view);
-    diag.style.setProperty("--diag-h", `${natural}px`);
-    const avail = diag.clientHeight || natural;
-    const width = diag.clientWidth;
-    // not laid out yet: the resize observer renders again once the diagram has a size
-    if (width <= 0) return;
-    // too small a cell: the tree is laid out at its own height and scaled down as a whole
-    const scale = Math.min(1, avail / natural);
-    if (scale < 1) {
-      box.style.width = `${width / scale}px`;
-      box.style.height = `${natural}px`;
-      box.style.transform = `scale(${scale})`;
-    } else box.style.width = box.style.height = box.style.transform = "";
-    const layout = layoutTree(c.view, width / scale, c.flows.edges, undefined, avail);
-    updateTree(diag, {
-      cfg: c.view,
-      ctx,
-      models: c.models,
-      now: c.now,
-      flows: c.flows,
-      layout,
-      homeLook: c.homeLook,
-      split: c.split,
-    });
+  _fmt(ctx: RenderCtx, cfg: PowerFlowConfig) {
+    return (v: number | null, dec: number | null = null) => fmtPower(ctx.hass, v, cfg.units, dec);
+  }
+  _motion(cfg: PowerFlowConfig): Motion {
+    return { of: (w) => w, a: cfg.animation };
   }
 }
 

@@ -165,6 +165,14 @@ const ru: Translation = {
   "power.state.importing": "Потребление {v}",
   "power.state.balanced": "Баланс",
   "power.self_sufficient": "автономность {pct}",
+  "energy.stub_title": "Поток энергии",
+  "energy.period.today": "Сегодня",
+  "energy.period.yesterday": "Вчера",
+  "energy.period.week": "Эта неделя",
+  "energy.period.month": "Этот месяц",
+  "energy.period.year": "Этот год",
+  "energy.imported": "импорт {v}",
+  "energy.exported": "экспорт {v}",
 
   "editor.default": "По умолчанию: {value}",
 

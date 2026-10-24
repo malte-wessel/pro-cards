@@ -165,6 +165,14 @@ const nb: Translation = {
   "power.state.importing": "Importerer {v}",
   "power.state.balanced": "Balansert",
   "power.self_sufficient": "selvforsynt {pct}",
+  "energy.stub_title": "Energiflyt",
+  "energy.period.today": "I dag",
+  "energy.period.yesterday": "I går",
+  "energy.period.week": "Denne uken",
+  "energy.period.month": "Denne måneden",
+  "energy.period.year": "I år",
+  "energy.imported": "importert {v}",
+  "energy.exported": "eksportert {v}",
 
   "editor.default": "Standard: {value}",
 

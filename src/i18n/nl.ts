@@ -165,6 +165,14 @@ const nl: Translation = {
   "power.state.importing": "Afname {v}",
   "power.state.balanced": "In balans",
   "power.self_sufficient": "zelfvoorzienend {pct}",
+  "energy.stub_title": "Energiestroom",
+  "energy.period.today": "Vandaag",
+  "energy.period.yesterday": "Gisteren",
+  "energy.period.week": "Deze week",
+  "energy.period.month": "Deze maand",
+  "energy.period.year": "Dit jaar",
+  "energy.imported": "afgenomen {v}",
+  "energy.exported": "teruggeleverd {v}",
 
   "editor.default": "Standaard: {value}",
 

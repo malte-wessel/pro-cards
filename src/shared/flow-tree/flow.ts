@@ -4,6 +4,13 @@
 // `fastAbove` W and more it is fastest.
 import { DEFAULT_ANIMATION, IDLE_W, type Animation } from "./constants.ts";
 
+// How a card's values move its links: `of` maps a link's value to the load the bounds `a` read
+// (the power card: its watts; the energy card: its share of the home)
+export interface Motion {
+  of: (w: number) => number;
+  a: Animation;
+}
+
 // a link is active when it carries a real load either way: `idle` W or more (the card's
 // `idle_below`; a rounding remainder below it still counts), never nothing
 export const isActive = (w: number, idle: number = IDLE_W) => w !== 0 && Math.abs(w) >= idle - 1e-9;

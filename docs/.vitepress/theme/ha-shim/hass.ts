@@ -501,6 +501,18 @@ export const snapshot = (): HassSnapshot => ({
         new Date(msg.end_time).getTime(),
       ) as T;
     }
+    if (msg.type === "recorder/statistics_during_period") {
+      return world.statistics(
+        msg.statistic_ids || [],
+        new Date(msg.start_time).getTime(),
+        msg.end_time ? new Date(msg.end_time).getTime() : Date.now(),
+        msg.period,
+        msg.types || ["change", "state", "sum"],
+        msg.units?.energy,
+      ) as T;
+    }
+    if (msg.type === "recorder/get_statistics_metadata")
+      return world.statisticsMetadata(msg.statistic_ids || []) as T;
     throw new Error(`unsupported ws ${msg.type}`);
   },
   connection,

@@ -66,7 +66,13 @@ const cardGroups = [
       { text: "Multi Trend Card Pro", link: "/cards/multi-trend-card" },
     ],
   },
-  { text: "Energy", items: [{ text: "Power Flow Card Pro", link: "/cards/power-flow-card" }] },
+  {
+    text: "Energy",
+    items: [
+      { text: "Power Flow Card Pro", link: "/cards/power-flow-card" },
+      { text: "Energy Flow Card Pro", link: "/cards/energy-flow-card" },
+    ],
+  },
   { text: "Layout", items: [{ text: "Layout Card Pro", link: "/cards/layout-card" }] },
   {
     text: "Weather",

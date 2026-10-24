@@ -385,6 +385,7 @@
                   "custom:wind-card-pro",
                   "custom:rain-card-pro",
                   "custom:power-flow-card-pro",
+                  "custom:energy-flow-card-pro",
                   "custom:layout-card-pro"
                 ]
               }
@@ -532,6 +533,19 @@
           },
           "then": {
             "$ref": "power-flow-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:energy-flow-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "energy-flow-card-pro.schema.json"
           }
         },
         {

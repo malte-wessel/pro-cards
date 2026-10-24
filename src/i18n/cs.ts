@@ -165,6 +165,14 @@ const cs: Translation = {
   "power.state.importing": "Odběr {v}",
   "power.state.balanced": "Vyrovnáno",
   "power.self_sufficient": "soběstačnost {pct}",
+  "energy.stub_title": "Tok energie",
+  "energy.period.today": "Dnes",
+  "energy.period.yesterday": "Včera",
+  "energy.period.week": "Tento týden",
+  "energy.period.month": "Tento měsíc",
+  "energy.period.year": "Tento rok",
+  "energy.imported": "odběr {v}",
+  "energy.exported": "dodávka {v}",
 
   "editor.default": "Výchozí: {value}",
 

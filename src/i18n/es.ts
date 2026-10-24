@@ -165,6 +165,14 @@ const es: Translation = {
   "power.state.importing": "Importando {v}",
   "power.state.balanced": "Equilibrado",
   "power.self_sufficient": "autosuficiencia {pct}",
+  "energy.stub_title": "Flujo de energía",
+  "energy.period.today": "Hoy",
+  "energy.period.yesterday": "Ayer",
+  "energy.period.week": "Esta semana",
+  "energy.period.month": "Este mes",
+  "energy.period.year": "Este año",
+  "energy.imported": "importado {v}",
+  "energy.exported": "exportado {v}",
 
   "editor.default": "Predeterminado: {value}",
 

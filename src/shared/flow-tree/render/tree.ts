@@ -4,17 +4,17 @@
 // colours, rings and the flow: a link whose load changed a little keeps its particles and only
 // plays faster or slower (`setRate`), a link that switched on or off, or whose particle count
 // moved by two, gets its lane rebuilt.
-import { cssColor } from "../../shared/color.ts";
-import type { EntityItem } from "../../shared/entity/config.ts";
-import type { Look } from "../../shared/entity/look.ts";
-import { nameOf, tplOf, type EntityModel, type RenderCtx } from "../../shared/entity/model.ts";
-import { iconEl, textEl } from "../../shared/entity/render/lead.ts";
-import { el as iEl, setRate, vars } from "../../shared/flow/dom.ts";
-import { fmtNumber, textWidth } from "../../shared/format.ts";
-import { t } from "../../shared/i18n.ts";
-import { measure, type TextCache } from "../../shared/typography.ts";
-import { qs } from "../../shared/util.ts";
-import { leavesOf, twoValued, type PowerFlowConfig } from "../config.ts";
+import { cssColor } from "../../color.ts";
+import type { EntityItem } from "../../entity/config.ts";
+import type { Look } from "../../entity/look.ts";
+import { nameOf, tplOf, type EntityModel, type RenderCtx } from "../../entity/model.ts";
+import { iconEl, textEl } from "../../entity/render/lead.ts";
+import { el as iEl, setRate, vars } from "../../flow/dom.ts";
+import { fmtNumber, textWidth } from "../../format.ts";
+import { t } from "../../i18n.ts";
+import { measure, type TextCache } from "../../typography.ts";
+import { qs } from "../../util.ts";
+import { bothWays, leavesOf, type FlowTreeConfig } from "../config.ts";
 import { COLORS, ICONS, type LabelLines } from "../constants.ts";
 import {
   arrowLength,
@@ -24,6 +24,7 @@ import {
   needsRebuild,
   particles,
   rateOf,
+  type Motion,
 } from "../flow.ts";
 import { placeLabels, type LabelSize } from "../labels.ts";
 import {
@@ -35,20 +36,26 @@ import {
   type LNode,
   type TreeLayout,
 } from "../layout.ts";
-import { edgeColor, fmtPower, sourceColor, type Flows, type PowerNow } from "../model.ts";
+import { edgeColor, sourceColor, type FlowNow, type Flows } from "../model.ts";
 import { arcPath, ringArcs } from "../path.ts";
 
 const SVG = "http://www.w3.org/2000/svg";
 
+// a value as the card shows it ("1.23 kW", "12.4 kWh"): its magnitude, an entity's own decimals
+// winning over the card's
+export type Fmt = (v: number | null, dec?: number | null) => string;
+
 export interface TreeState {
-  cfg: PowerFlowConfig;
+  cfg: FlowTreeConfig;
   ctx: RenderCtx;
   models: EntityModel[];
-  now: PowerNow;
+  now: FlowNow;
   flows: Flows;
   layout: TreeLayout;
   homeLook: Look;
   split: ReadonlySet<string>; // the sources that show both their flows
+  fmt: Fmt;
+  motion: Motion;
 }
 interface LabelTexts {
   v: string; // the value
@@ -135,7 +142,7 @@ const rowEl = (id: string, d: number, row: HTMLElement | null) => {
 
 // the diagram: tracks, lanes, then a node (or a row) and a label per config node
 export const buildTree = (
-  cfg: PowerFlowConfig,
+  cfg: FlowTreeConfig,
   rowOf: (idx: number, cls: string) => HTMLElement,
 ): HTMLElement => {
   const diag = document.createElement("div");
@@ -184,14 +191,15 @@ export const buildTree = (
 // ----- update -----
 
 const laneOf = (st: TreeState, e: LEdge, w: number, color: string) => {
-  const a = st.cfg.animation;
+  const { a } = st.motion,
+    load = st.motion.of(w);
   const lane = document.createElement("div");
   lane.className = w < 0 ? "lane back" : "lane";
-  const n = particles(e.len, w, a);
-  const dur = duration(e.len, w, a);
+  const n = particles(e.len, load, a);
+  const dur = duration(e.len, load, a);
   vars(lane, { "--p": `path('${e.d}')`, "--pf-c": color, "--dur": `${dur.toFixed(3)}s` });
   lane.dataset.n = String(n);
-  lane.dataset.w = String(Math.round(w));
+  lane.dataset.w = String(Math.round(load));
   // the path and its length as built: a moved link changes its path in place (moveLane)
   lane.dataset.d = e.d;
   lane.dataset.len = String(e.len);
@@ -213,7 +221,7 @@ const laneOf = (st: TreeState, e: LEdge, w: number, color: string) => {
       if (style === "dots") lane.appendChild(iEl("pt", { "--p0": p0.toFixed(3) }));
       else {
         const ar = iEl("fa", { "--p0": p0.toFixed(3) });
-        ar.style.width = `${arrowLength(w, a)}px`;
+        ar.style.width = `${arrowLength(load, a)}px`;
         lane.appendChild(ar);
       }
     }
@@ -313,23 +321,23 @@ const labelText = (
 ): LabelTexts => {
   const { hass } = st.ctx,
     f = st.flows,
-    u = st.cfg.units;
+    fmt = st.fmt;
   const dec = ent?.decimals ?? null;
   const s = ent ? (tplOf(st.ctx, ent.secondary) ?? "") : "";
-  if (nd.kind === "home") return { v: fmtPower(hass, f.H, u, dec), n: "", s };
+  if (nd.kind === "home") return { v: fmt(f.H, dec), n: "", s };
   if (nd.kind === "group") {
     const g = st.cfg.consumers.find((c) => c.id === nd.id);
     return {
-      v: fmtPower(hass, f.groupW.get(nd.id) ?? 0, u),
+      v: fmt(f.groupW.get(nd.id) ?? 0),
       n: g && g.kind === "group" ? g.name : "",
       s: "",
     };
   }
   if (nd.kind === "other")
-    return { v: fmtPower(hass, f.leafW.get(nd.id) ?? 0, u), n: t(hass, "power.other"), s: "" };
+    return { v: fmt(f.leafW.get(nd.id) ?? 0), n: t(hass, "power.other"), s: "" };
   if (nd.kind === "consumer")
     return {
-      v: m && m.model.avail ? fmtPower(hass, f.leafW.get(nd.id) ?? 0, u, dec) : "–",
+      v: m && m.model.avail ? fmt(f.leafW.get(nd.id) ?? 0, dec) : "–",
       n: ent && m ? nameOf(st.ctx, ent, m.st) : "",
       s,
     };
@@ -341,14 +349,8 @@ const labelText = (
     src.kind === "battery" ? [src.charge, src.discharge] : [src.export, src.import];
   const split = src.w !== null && st.split.has(nd.id);
   const cfgSrc = st.cfg.sources.find((c) => c.id === nd.id);
-  const v =
-    src.w === null
-      ? "–"
-      : split
-        ? `${fmtPower(hass, into, u, dec)} ↓`
-        : fmtPower(hass, src.w, u, dec);
-  const v2 =
-    cfgSrc && twoValued(cfgSrc) ? (split ? `${fmtPower(hass, out, u, dec)} ↑` : "") : undefined;
+  const v = src.w === null ? "–" : split ? `${fmt(into, dec)} ↓` : fmt(src.w, dec);
+  const v2 = cfgSrc && bothWays(st.cfg, cfgSrc) ? (split ? `${fmt(out, dec)} ↑` : "") : undefined;
   if (src.kind === "battery" && src.soc !== null)
     return { v, v2, n: `${name} · ${fmtNumber(hass, Math.round(src.soc), 0)} %`, s };
   if (src.kind === "grid") {
@@ -477,7 +479,8 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
       lane?.remove();
       return;
     }
-    const n = particles(e.len, w, cfg.animation);
+    const load = st.motion.of(w);
+    const n = particles(e.len, load, st.motion.a);
     const wasBack = lane?.classList.contains("back") ?? false;
     if (!lane || needsRebuild(Number(lane.dataset.n), n) || wasBack !== w < 0) {
       const fresh = laneOf(st, e, w, color);
@@ -492,7 +495,7 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
       if (svg && svg.getAttribute("viewBox") !== viewBox) svg.setAttribute("viewBox", viewBox);
       // the speed in px/s follows the load; a longer path takes as much longer
       const longer = e.len > 0 ? Number(lane.dataset.len) / e.len : 1;
-      setRate(lane, rateOf(w, Number(lane.dataset.w), cfg.animation) * longer);
+      setRate(lane, rateOf(load, Number(lane.dataset.w), st.motion.a) * longer);
     }
   });
   // the idle tracks run under the active ones: links share legs (the export and charging rails,
@@ -550,7 +553,7 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
   const barMax = Math.max(
     flows.H,
     [...flows.leafW.values()].reduce((a, b) => a + Math.abs(b), 0),
-    1,
+    1e-9,
   );
   for (const r of layout.rows) {
     const el = nodeEls.get(r.id);

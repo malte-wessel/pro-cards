@@ -1,18 +1,13 @@
-// CSS of the power flow card on top of the entity layer's styles. Theme tokens only; --pf-c is the
+// CSS of the flow tree cards on top of the entity layer's styles. Theme tokens only; --pf-c is the
 // colour of one link (the energy colour of what flows on it), --fe-color the colour of a node or
 // the summary line. Every particle's base styles carry its phase (--p0), so a paused frame
 // (prefers-reduced-motion) still shows a populated tree; that rule comes last because the
 // `animation` shorthands would reset the play state otherwise.
-import {
-  STYLE_BASE,
-  STYLE_BLOCKS,
-  STYLE_HEADER,
-  STYLE_ROW,
-} from "../shared/entity/render/styles.ts";
-import { CARD_BG, iconBg } from "../shared/constants.ts";
-import { fs, fw, type } from "../shared/typography.ts";
+import { STYLE_BASE, STYLE_BLOCKS, STYLE_HEADER, STYLE_ROW } from "../entity/render/styles.ts";
+import { CARD_BG, iconBg } from "../constants.ts";
+import { fs, fw, type } from "../typography.ts";
 
-const STYLE_POWER = `
+const STYLE_TREE = `
   .body { gap: 10px; }
   .psummary { --fe-color: var(--primary-color); }
   .psummary .secondary { white-space: normal; }
@@ -86,5 +81,4 @@ const STYLE_POWER = `
   @media (prefers-reduced-motion: reduce) { .pflow * { animation-play-state: paused; } .pnode .lead .prog { transition: none; } }
 `;
 
-export const STYLE_POWER_FLOW_CARD =
-  STYLE_BASE + STYLE_HEADER + STYLE_ROW + STYLE_BLOCKS + STYLE_POWER;
+export const STYLE_FLOW_TREE = STYLE_BASE + STYLE_HEADER + STYLE_ROW + STYLE_BLOCKS + STYLE_TREE;

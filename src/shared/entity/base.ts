@@ -280,11 +280,7 @@ export abstract class EntityCardBase extends HTMLElement {
     this._textCache.clear();
     this._fillEpoch++;
     this._resized = true;
-    this._timer = setInterval(() => {
-      this._fillEpoch++;
-      if (this._historyIds?.length) this._fetchHistory();
-      else this._render();
-    }, REFRESH_MS);
+    this._timer = setInterval(() => this._tick(), REFRESH_MS);
     this._ro = new ResizeObserver(() => {
       this._resized = true;
       this._render();
@@ -295,6 +291,12 @@ export abstract class EntityCardBase extends HTMLElement {
     // ghosts that expired while the card was away (another view) go now, the rest get their timer
     if ((this._pending.size || this._buttonPending.size) && this._sweepPending()) this._render();
     if (this._hass && this._templates?.size && this._tpl.size === 0) this._subscribeTemplates();
+  }
+  // every REFRESH_MS: time moves the plots (a fresh history, or a render)
+  _tick() {
+    this._fillEpoch++;
+    if (this._historyIds?.length) this._fetchHistory();
+    else this._render();
   }
   disconnectedCallback() {
     clearInterval(this._timer);

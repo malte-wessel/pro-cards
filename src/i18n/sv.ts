@@ -165,6 +165,14 @@ const sv: Translation = {
   "power.state.importing": "Importerar {v}",
   "power.state.balanced": "Balanserat",
   "power.self_sufficient": "självförsörjning {pct}",
+  "energy.stub_title": "Energiflöde",
+  "energy.period.today": "Idag",
+  "energy.period.yesterday": "Igår",
+  "energy.period.week": "Den här veckan",
+  "energy.period.month": "Den här månaden",
+  "energy.period.year": "I år",
+  "energy.imported": "importerat {v}",
+  "energy.exported": "exporterat {v}",
 
   "editor.default": "Standard: {value}",
 

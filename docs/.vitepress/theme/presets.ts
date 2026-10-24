@@ -170,6 +170,20 @@ consumers:
   - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
   - { entity: sensor.office_power, name: Office, icon: mdi:monitor }
 `,
+  "Energy flow card": `type: custom:energy-flow-card-pro
+title: Today
+icon: mdi:calendar-today
+period: today
+home: sensor.home_energy
+sources:
+  - { type: solar, entity: sensor.solar_energy }
+  - { type: battery, charge: sensor.battery_charge_energy, discharge: sensor.battery_discharge_energy, soc: sensor.battery_soc }
+  - { type: grid, import: sensor.grid_import_energy, export: sensor.grid_export_energy }
+consumers:
+  - { entity: sensor.heat_pump_energy, name: Heat pump, icon: mdi:heat-pump }
+  - { entity: sensor.washer_energy, name: Washer, icon: mdi:washing-machine }
+  - { entity: sensor.office_energy, name: Office, icon: mdi:monitor }
+`,
   "Layout card": `type: custom:layout-card-pro
 columns: 2
 breakpoints:

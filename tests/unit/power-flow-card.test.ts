@@ -4,26 +4,22 @@ import {
   hiddenNodes,
   leavesOf,
   nodeSize,
-  normalizePowerFlowConfig,
   twoValued,
   viewConfig,
-} from "../../src/power-flow/config.ts";
+} from "../../src/shared/flow-tree/config.ts";
+import { normalizePowerFlowConfig } from "../../src/power-flow/config.ts";
 import type { Visibility } from "../../src/shared/visibility.ts";
 import { collectTemplates } from "../../src/shared/entity/config.ts";
 import { modelOf, type FormatCtx } from "../../src/shared/entity/model.ts";
 import type { HomeAssistant } from "../../src/shared/ha.ts";
+import { allocate, fmtPower, powerNow, summaryState, wattsOf } from "../../src/power-flow/model.ts";
 import {
-  allocate,
   type EdgeFlow,
   thresholdShown,
   bothFlows,
   edgeColor,
-  fmtPower,
-  powerNow,
   sourceColor,
-  summaryState,
-  wattsOf,
-} from "../../src/power-flow/model.ts";
+} from "../../src/shared/flow-tree/model.ts";
 import {
   arrowLength,
   duration,
@@ -33,8 +29,14 @@ import {
   particles,
   rateOf,
   speed,
-} from "../../src/power-flow/flow.ts";
-import { arcPath, dedupe, orthoPath, pathLength, ringArcs } from "../../src/power-flow/path.ts";
+} from "../../src/shared/flow-tree/flow.ts";
+import {
+  arcPath,
+  dedupe,
+  orthoPath,
+  pathLength,
+  ringArcs,
+} from "../../src/shared/flow-tree/path.ts";
 import {
   acrossOf,
   alongDownOf,
@@ -44,10 +46,11 @@ import {
   layoutTree,
   ringWidth,
   sourceRow,
-} from "../../src/power-flow/layout.ts";
-import { placeLabels } from "../../src/power-flow/labels.ts";
-import { COLORS, DEFAULT_UNITS, GEOM } from "../../src/power-flow/constants.ts";
-import { segmentsOf, type Pt } from "../../src/power-flow/path.ts";
+} from "../../src/shared/flow-tree/layout.ts";
+import { placeLabels } from "../../src/shared/flow-tree/labels.ts";
+import { COLORS, GEOM } from "../../src/shared/flow-tree/constants.ts";
+import { DEFAULT_UNITS } from "../../src/power-flow/constants.ts";
+import { segmentsOf, type Pt } from "../../src/shared/flow-tree/path.ts";
 
 const SRC = [
   { type: "solar", entity: "sensor.solar" },

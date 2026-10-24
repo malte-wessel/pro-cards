@@ -164,6 +164,14 @@ const en = {
   "power.state.importing": "Importing {v}",
   "power.state.balanced": "Balanced",
   "power.self_sufficient": "self-sufficient {pct}",
+  "energy.stub_title": "Energy flow",
+  "energy.period.today": "Today",
+  "energy.period.yesterday": "Yesterday",
+  "energy.period.week": "This week",
+  "energy.period.month": "This month",
+  "energy.period.year": "This year",
+  "energy.imported": "imported {v}",
+  "energy.exported": "exported {v}",
 
   "editor.default": "Default: {value}",
 

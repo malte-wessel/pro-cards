@@ -10,9 +10,12 @@ export class HistoryFeed {
   _inFlight = false;
   _failedAt: number | null = null;
   _type: string;
+  _what: string;
 
-  constructor(type: string) {
+  // `what`: the data, for the console ("history", "statistics")
+  constructor(type: string, what = "history") {
     this._type = type;
+    this._what = what;
   }
 
   // a new config: what is loaded or on its way belongs to the old one
@@ -21,6 +24,17 @@ export class HistoryFeed {
     this.loaded = false;
     this._inFlight = false;
     this._failedAt = null;
+  }
+
+  // fetch again (newer data), showing what is loaded meanwhile
+  invalidate() {
+    this.loaded = false;
+  }
+
+  // what arrived is not complete yet: fetch again after RETRY_MS
+  later(now = Date.now()) {
+    this.loaded = false;
+    this._failedAt = now;
   }
 
   // whether the history should be fetched now: not loaded, none on its way, no recent failure
@@ -46,7 +60,7 @@ export class HistoryFeed {
       this._failedAt = null;
     } catch (err) {
       if (gen !== this._gen) return;
-      console.error(`${this._type}: history fetch failed`, err);
+      console.error(`${this._type}: ${this._what} fetch failed`, err);
       this._failedAt = Date.now();
     } finally {
       if (gen === this._gen) {

@@ -1,0 +1,383 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/energy-flow-card-pro.schema.json",
+  "title": "custom:energy-flow-card-pro",
+  "description": "Where the energy came from and where it went over a period (today, yesterday, this week, month or year): solar, battery and grid → home → rooms and devices, from energy meters and their long-term statistics.",
+  "type": "object",
+  "$defs": {
+    "iconSize": {
+      "type": "integer",
+      "minimum": 16,
+      "maximum": 96,
+      "description": "Diameter of the node's circle (px); the icon follows. Defaults: solar and grid 44, battery 40, home 46, consumer and room 32, a room's device 24; a list row's at most 36"
+    },
+    "sourceKeys": {
+      "type": "object",
+      "properties": {
+        "visibility": {
+          "$ref": "defs.schema.json#/$defs/visibility"
+        },
+        "name": {
+          "type": "string",
+          "description": "Template allowed."
+        },
+        "secondary": {
+          "type": "string",
+          "description": "A line under the name. Template allowed."
+        },
+        "icon": {
+          "$ref": "defs.schema.json#/$defs/icon"
+        },
+        "icon_size": {
+          "$ref": "#/$defs/iconSize"
+        },
+        "color": {
+          "$ref": "defs.schema.json#/$defs/color",
+          "description": "Fixed colour of the node; overrides the flow colour and the rules"
+        },
+        "decimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "entity.schema.json#/$defs/rule"
+          },
+          "description": "On the meter's energy in the period (kWh): colour and icon of the node; first match wins"
+        }
+      }
+    },
+    "solar": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/sourceKeys"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "solar"
+        },
+        "entity": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "Production: an energy meter (kWh, Wh, MWh …) with long-term statistics"
+        }
+      },
+      "required": ["type", "entity"],
+      "unevaluatedProperties": false
+    },
+    "battery": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/sourceKeys"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "battery"
+        },
+        "charge": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "Energy into the battery: an energy meter"
+        },
+        "discharge": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "Energy out of the battery: an energy meter"
+        },
+        "soc": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "State of charge in %: the ring of the node (now)"
+        },
+        "charge_from": {
+          "anyOf": [
+            {
+              "enum": ["any", "solar"]
+            },
+            {
+              "$ref": "defs.schema.json#/$defs/entityId"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "defs.schema.json#/$defs/entityId"
+              },
+              "minItems": 1
+            }
+          ],
+          "default": "any",
+          "description": "`solar`: only the panels charge this battery, never the grid. The entity of a solar source (or a list of them) instead: only those panels charge it."
+        }
+      },
+      "required": ["type", "charge", "discharge"],
+      "unevaluatedProperties": false
+    },
+    "grid": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/sourceKeys"
+        }
+      ],
+      "properties": {
+        "type": {
+          "const": "grid"
+        },
+        "import": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "Energy from the grid: an energy meter"
+        },
+        "export": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "Energy returned to the grid: an energy meter"
+        }
+      },
+      "required": ["type", "import"],
+      "unevaluatedProperties": false
+    },
+    "home": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "entity.schema.json#/$defs/entityKeys"
+        }
+      ],
+      "properties": {
+        "icon_size": {
+          "$ref": "#/$defs/iconSize"
+        },
+        "icon_style": false
+      },
+      "unevaluatedProperties": false
+    },
+    "consumer": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "entity.schema.json#/$defs/entityKeys"
+        }
+      ],
+      "properties": {
+        "icon_size": {
+          "$ref": "#/$defs/iconSize"
+        },
+        "icon_style": false,
+        "hide_below": {
+          "type": "number",
+          "minimum": 0,
+          "description": "This consumer's own hide_consumers_below (kWh); 0 never hides it"
+        },
+        "visibility": {
+          "$ref": "defs.schema.json#/$defs/visibility"
+        }
+      },
+      "required": ["entity"],
+      "unevaluatedProperties": false
+    },
+    "group": {
+      "type": "object",
+      "properties": {
+        "group": {
+          "type": "string",
+          "description": "The room's name"
+        },
+        "icon": {
+          "$ref": "defs.schema.json#/$defs/icon"
+        },
+        "icon_size": {
+          "$ref": "#/$defs/iconSize"
+        },
+        "hide_below": {
+          "type": "number",
+          "minimum": 0,
+          "description": "hide_consumers_below for the room's devices (kWh); a device's own wins"
+        },
+        "visibility": {
+          "$ref": "defs.schema.json#/$defs/visibility"
+        },
+        "entities": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "defs.schema.json#/$defs/entityId"
+              },
+              {
+                "$ref": "#/$defs/consumer"
+              }
+            ]
+          }
+        }
+      },
+      "required": ["group", "entities"],
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "type": {
+      "const": "custom:energy-flow-card-pro"
+    },
+    "period": {
+      "type": "string",
+      "enum": ["today", "yesterday", "week", "month", "year"],
+      "default": "today",
+      "description": "The period the card shows: calendar-aligned in Home Assistant's time zone, the week from Monday; it turns over by itself"
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/solar"
+          },
+          {
+            "$ref": "#/$defs/battery"
+          },
+          {
+            "$ref": "#/$defs/grid"
+          }
+        ]
+      },
+      "description": "The sources, in drawing order: solar arrays, batteries and grid connections, each with its energy meters"
+    },
+    "home": {
+      "oneOf": [
+        {
+          "$ref": "defs.schema.json#/$defs/entityId"
+        },
+        {
+          "$ref": "#/$defs/home"
+        }
+      ],
+      "description": "The home's consumption: an energy meter, or an object with `name`, `icon`, `rules` (and `entity`). Without an entity the home is computed from the sources"
+    },
+    "consumers": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "defs.schema.json#/$defs/entityId"
+          },
+          {
+            "$ref": "#/$defs/consumer"
+          },
+          {
+            "$ref": "#/$defs/group"
+          }
+        ]
+      },
+      "description": "Devices, or rooms with devices, to the right of the home"
+    },
+    "consumer_style": {
+      "type": "string",
+      "enum": ["nodes", "list"],
+      "default": "nodes"
+    },
+    "other": {
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "icon_size": {
+              "$ref": "#/$defs/iconSize"
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "description": "An \"Other\" node for the home's consumption the consumers do not account for (default: true when consumers are given); an object shows it and sets its icon_size"
+    },
+    "direction": {
+      "type": "string",
+      "enum": ["right", "down"],
+      "default": "right"
+    },
+    "idle_below": {
+      "type": "number",
+      "minimum": 0,
+      "default": 0.05,
+      "description": "kWh below which a link is idle (no motion); 0 lets every trickle flow"
+    },
+    "idle_links": {
+      "type": "string",
+      "enum": ["dashed", "hidden", "faint"],
+      "default": "dashed",
+      "description": "Links that carry nothing: dashed tracks, hidden, or faint solid lines"
+    },
+    "decimals": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kwh": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "mwh": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "description": "Decimals of the values: one number for both units, or `{ kwh, mwh }` (default 1 and 2); MWh from 1000 kWh"
+    },
+    "flow_style": {
+      "type": "string",
+      "enum": ["dots", "lines", "arrows"],
+      "default": "dots"
+    },
+    "hide_consumers_below": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Hide a consumer while its energy in the period stays below this many kWh; it comes back clearly above (20 %). Its energy counts in Other. 0 never hides"
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "$ref": "entity.schema.json#/$defs/rule"
+      },
+      "description": "On the home's energy in the period in kWh (below / above): label pill, colour of the home node, tint; first match wins"
+    },
+    "title": {
+      "type": "string",
+      "description": "Header text. Template allowed."
+    },
+    "title_tap_action": {
+      "$ref": "defs.schema.json#/$defs/action",
+      "description": "Action when the title or its icon is tapped, e.g. navigate to the room's dashboard (default: none)"
+    },
+    "icon": {
+      "$ref": "defs.schema.json#/$defs/icon",
+      "description": "Header icon. Template allowed."
+    },
+    "header_entities": {
+      "$ref": "entity.schema.json#/$defs/headerEntities"
+    }
+  },
+  "required": ["type", "sources"],
+  "allOf": [
+    {
+      "$ref": "entity.schema.json#/$defs/historyOptions"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/actionDefaults"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/haExtras"
+    }
+  ],
+  "unevaluatedProperties": false
+}

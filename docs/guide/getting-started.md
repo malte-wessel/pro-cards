@@ -13,9 +13,10 @@ Pro Cards adds these cards to the dashboard editor:
 
 **Energy**
 
-| Card                                          | `type`                       | Editor |
-| --------------------------------------------- | ---------------------------- | ------ |
-| [Power Flow Card Pro](/cards/power-flow-card) | `custom:power-flow-card-pro` | YAML   |
+| Card                                            | `type`                        | Editor |
+| ----------------------------------------------- | ----------------------------- | ------ |
+| [Power Flow Card Pro](/cards/power-flow-card)   | `custom:power-flow-card-pro`  | YAML   |
+| [Energy Flow Card Pro](/cards/energy-flow-card) | `custom:energy-flow-card-pro` | YAML   |
 
 **Layout**
 
