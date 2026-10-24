@@ -10,7 +10,7 @@
  *   header_entities: [...]                 # compact icon + value items on the title line
  *   hours_to_show: 24 / bucket_minutes: 60 # history window for sparkline / columns / strip
  *   smoothing_minutes: 30                  # sparkline averaging bucket (default: one point per 12 px)
- *   tap_action / hold_action / double_tap_action   # defaults for every entity
+ *   tap_action / hold_action / double_tap_action / hover   # defaults for every entity
  *   entities:                              # entity ids or entity objects (see entity-card-pro for the keys)
  *     - sensor.wohnzimmer_temperatur
  *     - { entity: light.wohnzimmer, toggle: true, rules: [{ state: "on", color: amber }] }

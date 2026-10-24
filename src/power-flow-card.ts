@@ -16,7 +16,7 @@
  *   hide_consumers_below: 20               # hide consumers drawing less (W); hide_below per room / consumer
  *   visibility: [...]                      # on a source, consumer, room or device: drawn while it holds
  *   rules: [...]                           # on the home power in W: label, colour, tint_card
- *   title / icon / header_entities / tap_action / hold_action / double_tap_action
+ *   title / icon / header_entities / tap_action / hold_action / double_tap_action / hover
  */
 import { registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";

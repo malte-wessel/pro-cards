@@ -13,7 +13,7 @@
  *   visual: icon                           # icon | flow   (tile only: the whole tile is the field)
  *   lead: animated                         # animated | icon
  *   flow: { style: drops, height: 120 }    # drops | ripples | fill; the hero band's height
- *   title / icon / header_entities / tap_action / hold_action / double_tap_action
+ *   title / icon / header_entities / tap_action / hold_action / double_tap_action / hover
  */
 import { registerCard } from "./shared/card.ts";
 import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";

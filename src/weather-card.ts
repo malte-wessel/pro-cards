@@ -15,6 +15,7 @@
  *     - { type: forecast, mode: daily, layout: vertical, days: 7 }
  *     - { type: table, title: More, entities: [pressure, dew_point] }   # row | list | table | grid | column
  *   tap_action / hold_action / double_tap_action   # more-info / more-info / none
+ *   hover: false                           # Home Assistant's hover and press layers (also per section)
  */
 import { registerCard } from "./shared/card.ts";
 import { EntityCardBase, groupCardSize, type VisState } from "./shared/entity/base.ts";

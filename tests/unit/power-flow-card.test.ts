@@ -1999,3 +1999,40 @@ describe("power flow hide_consumers_below", () => {
     expect(thresholdShown(undefined, now.leaves.get("c0") ?? null, 500)).toBe(false);
   });
 });
+
+describe("hover", () => {
+  const hovers = (raw: object) =>
+    Object.fromEntries(
+      normalizePowerFlowConfig(raw).entities.map((e) => [e.entity, e.hover] as const),
+    );
+  it("is the default of every node on the card; a source, the home or a consumer overrides it", () => {
+    expect(
+      hovers({
+        hover: true,
+        home: "sensor.home",
+        sources: [
+          { type: "solar", entity: "sensor.solar" },
+          { type: "grid", power: "sensor.grid", hover: false },
+        ],
+        consumers: [{ entity: "sensor.ev" }],
+      }),
+    ).toMatchObject({
+      "sensor.home": true,
+      "sensor.solar": true,
+      "sensor.grid": false,
+      "sensor.ev": true,
+    });
+    expect(
+      hovers({
+        home: { entity: "sensor.home", hover: true },
+        sources: [{ type: "solar", entity: "sensor.solar" }],
+        consumers: [{ entity: "sensor.ev", hover: true }, { entity: "sensor.washer" }],
+      }),
+    ).toMatchObject({
+      "sensor.home": true,
+      "sensor.solar": false,
+      "sensor.ev": true,
+      "sensor.washer": false,
+    });
+  });
+});

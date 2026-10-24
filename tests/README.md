@@ -33,7 +33,7 @@ Importing a card also registers its custom element, which is why the tests run u
 What is covered:
 
 - **Shared modules**: history bucketing and smooth paths (clamped and plain), the recorder fetch, nearest-point and tooltip placement, the ha-form editor base, colour tokens and hex blending.
-- **Entity cards**: rule matching and order, value sources (state, `attribute`, template, text), config normalisation and errors of all three cards, look resolution (explicit colour beats a matching rule, tint only on a match, grey for unavailable), formatting, grid options.
+- **Entity cards**: rule matching and order, value sources (state, `attribute`, template, text), config normalisation and errors of all three cards, look resolution (explicit colour beats a matching rule, tint only on a match, grey for unavailable), formatting, grid options, the `hover` cascade (card → section → entity, power flow nodes, the weather card's sections).
 - **Multi trend card**: tick steps, time steps, editor form round trip, layout rows.
 - **Sun path card**: solar elevation against known solstice values, event ordering, polar day and night.
 - **Sun azimuth card**: the azimuth against known bearings (noon due south, sunrise and sunset bearings of the solstices), the sides of the house (lit sides, two windows a day for the north side in summer, none in winter, rotation), the footer timeline span, the sky dial and 3D scene geometry (sun inside the disc, night without beam or shadow, visible walls per camera bearing), config normalisation and card size per view.
@@ -81,7 +81,7 @@ Locators pierce the cards' shadow DOM, so `card(page).locator(".row")` works as 
 
 Determinism: `mount` freezes the browser clock at **21 June 2026, 12:00 Europe/Berlin** before loading the page, and the harness never starts the demo world's value drift. History is generated from a seed per entity, so the same window always yields the same series.
 
-What is covered: every layout, all eight visuals, rules updating live, templates, attribute values, prefix and suffix, missing and unavailable entities, toggles calling `homeassistant.toggle`, tap, hold, navigate, none and confirmed `perform-action`, hover tooltips, editor elements, config errors, sun events for the frozen day, the sun azimuth card's three views with the sides footer (pills, windows, hover preview, the camera slider, night, languages), illuminance modes, every section type of the weather card with the forecast of the demo world.
+What is covered: every layout, all eight visuals, rules updating live, templates, attribute values, prefix and suffix, missing and unavailable entities, toggles calling `homeassistant.toggle`, tap, hold, navigate, none and confirmed `perform-action`, hover tooltips, the `hover` layers (tiles to the card's edges, cells, header entities, icons by the theme's hover opacity, every control, still list rows, the press state, touch screens), editor elements, config errors, sun events for the frozen day, the sun azimuth card's three views with the sides footer (pills, windows, hover preview, the camera slider, night, languages), illuminance modes, every section type of the weather card with the forecast of the demo world.
 
 Run one file or test with the usual Playwright flags, for example `npx playwright test --project=integration tests/e2e/sun-path-card.spec.ts` or `-g "hold"`. Add `--ui` for the inspector.
 
