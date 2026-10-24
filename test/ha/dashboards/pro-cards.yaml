@@ -51,6 +51,42 @@ views:
             name: Living room light
             toggle: true
             hold_action: { action: more-info }
+      # hover: true next to Home Assistant's own tile, to compare the layers on the tile, the
+      # icon and the controls
+      - type: grid
+        cards:
+          - type: heading
+            heading: Hover
+          - type: tile
+            entity: light.living_room
+            name: Built-in tile
+            icon_tap_action: { action: toggle }
+            grid_options: { columns: 6 }
+          - type: custom:entity-card-pro
+            entity: light.living_room
+            name: Pro tile
+            control: toggle
+            control_position: lead
+            hover: true
+            grid_options: { columns: 6 }
+          - type: tile
+            entity: cover.living_room_blinds
+            name: Built-in buttons
+            features: [{ type: cover-open-close }]
+            features_position: inline
+          - type: custom:entity-card-pro
+            entity: cover.living_room_blinds
+            name: Pro buttons
+            control: buttons
+            hover: true
+          - type: custom:entity-group-card-pro
+            title: Living room
+            icon: mdi:sofa
+            layout: grid
+            hover: true
+            entities:
+              - { entity: light.living_room, name: Light, control: toggle }
+              - { entity: cover.living_room_blinds, name: Blinds, hover: false }
       - type: grid
         cards:
           - type: heading

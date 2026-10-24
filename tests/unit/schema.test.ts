@@ -183,6 +183,55 @@ describe("card config schemas", () => {
     expect(validate({ type: "custom:flexible-entity-card", entity: "sensor.a" })).toBeTruthy();
     expect(validate({ type: "custom:other-card", entity: "sensor.a" })).toBeTruthy();
   });
+  it("accept hover on the card, a section and an entity, as a boolean, and nowhere else", () => {
+    const ok = [
+      { type: "custom:entity-card-pro", entity: "light.a", hover: true },
+      {
+        type: "custom:entity-group-card-pro",
+        hover: true,
+        header_entities: [{ entity: "sensor.h", hover: false }],
+        entities: [{ entity: "light.a", hover: false }],
+      },
+      {
+        type: "custom:entity-sections-card-pro",
+        hover: false,
+        sections: [{ hover: true, entities: [{ entity: "light.a", hover: false }] }],
+      },
+      {
+        type: "custom:power-flow-card-pro",
+        hover: true,
+        home: { entity: "sensor.home", hover: false },
+        sources: [{ type: "solar", entity: "sensor.solar", hover: false }],
+        consumers: [{ entity: "sensor.ev", hover: true }],
+      },
+      {
+        type: "custom:weather-card-pro",
+        entity: "weather.home",
+        hover: true,
+        sections: [{ type: "row", hover: false, entities: ["humidity"] }],
+      },
+      { type: "custom:wind-card-pro", entity: "sensor.wind_speed", hover: true },
+      { type: "custom:rain-card-pro", entity: "sensor.rain_rate", hover: true },
+    ];
+    for (const cfg of ok) expect(validate(cfg), cfg.type).toBeNull();
+    expect(validate({ type: "custom:entity-card-pro", entity: "light.a", hover: "yes" })).toMatch(
+      /boolean/,
+    );
+    expect(
+      validate({
+        type: "custom:entity-group-card-pro",
+        entities: [{ entity: "light.a", hover: 1 }],
+      }),
+    ).toMatch(/boolean/);
+    // cards without anything to click have no hover
+    for (const cfg of [
+      { type: "custom:multi-trend-card-pro", entities: ["sensor.a"] },
+      { type: "custom:sun-path-card-pro" },
+    ]) {
+      expect(validate(cfg), cfg.type).toBeNull();
+      expect(validate({ ...cfg, hover: true }), cfg.type).toMatch(/unevaluated|additional/);
+    }
+  });
   it("rejects wind card typos and wrong enums", () => {
     const WIC = "custom:wind-card-pro";
     expect(validate({ type: WIC })).toMatch(/entity/);
