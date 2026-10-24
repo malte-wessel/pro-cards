@@ -483,6 +483,30 @@ test.describe("power flow card", () => {
     await expect(card(page).locator("path.link.active")).toHaveCount(idle + 1);
   });
 
+  test("an idle track never covers an active line it shares a leg with", async ({ page }) => {
+    await mount(page, { type: T, sources: SRC, home: HOME, consumers: CONS });
+    const c = card(page);
+    // the tracks in paint order: every idle one before every active one
+    const order = () =>
+      c
+        .locator("path.link")
+        .evaluateAll((ps) => ps.map((p) => (p.classList.contains("active") ? "a" : "i")).join(""));
+    const idleFirst = /^i*a+$/;
+    // solar exports over the battery's idle export rail, the home feeds one consumer of three
+    await pin(page, {
+      [BATT]: "0",
+      [GRID]: "-2000",
+      [HOME]: "1400",
+      "sensor.heat_pump_power": "0",
+      "sensor.ev_charger_power": "0",
+    });
+    expect(await order()).toMatch(idleFirst);
+    // a cloud: the export stops in the middle of the active tracks, the battery feeds the home
+    await pin(page, { [SOLAR]: "0.9", [BATT]: "500", [GRID]: "0", [HOME]: "1400" });
+    await expect(link(c, 2)).not.toHaveClass(/active/);
+    expect(await order()).toMatch(idleFirst);
+  });
+
   test("labels keep their places when hidden idle links switch on and off", async ({ page }) => {
     // a narrow column of sources: a hidden line used to free the place beside it
     await mount(

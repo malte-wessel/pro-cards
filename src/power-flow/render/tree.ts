@@ -495,6 +495,13 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
       setRate(lane, rateOf(w, Number(lane.dataset.w), cfg.animation) * longer);
     }
   });
+  // the idle tracks run under the active ones: links share legs (the export and charging rails,
+  // a trunk out of the home), and an idle track painted later would dash the line it covers.
+  // The tracks move only when an idle one follows an active one.
+  const links = [...tracks.querySelectorAll<SVGPathElement>("path.link")];
+  const firstActive = links.findIndex((p) => p.classList.contains("active"));
+  if (firstActive >= 0 && links.slice(firstActive).some((p) => !p.classList.contains("active")))
+    for (const p of links) if (p.classList.contains("active")) tracks.appendChild(p);
 
   // ----- nodes -----
   for (const nd of layout.nodes) {
