@@ -410,11 +410,29 @@ consumers:
 
 :::
 
+## Hover
+
+`hover: true` shows what a click will do, as Home Assistant's tile does: a node's circle brightens under the pointer, and header entities take a light layer. On the card it is the default for every node; a source, the home or a consumer sets its own. See [Hover](/cards/entity-options#hover).
+
+::: live
+
+```yaml
+type: custom:power-flow-card-pro
+home: sensor.power_consumption
+hover: true
+sources:
+  - { type: solar, entity: sensor.solar_power }
+  - { type: grid, power: sensor.grid_power, hover: false }
+consumers:
+  - { entity: sensor.ev_charger_power, name: EV, icon: mdi:car-electric }
+  - { entity: sensor.washer_power, name: Washer, icon: mdi:washing-machine }
+```
+
+:::
+
 ## Card size
 
 By default the card is as tall as its tree, and it grows or shrinks when nodes come and go (`visibility`, `hide_consumers_below`). In a sections dashboard with a fixed number of rows in `grid_options`, the card keeps the size of its cell and the tree fills it: more room spreads the tree out, less room scales the whole tree down so nothing is cut off. That keeps the card level with its neighbours. Wherever the card's height follows its content (a masonry view, a vertical stack, a card alone in its row), the tree keeps its own height. The card fills a grid row stretched by a taller card beside it the same way, and so do the other cards; `fill_height: false` keeps it at its own height there, see [Filling the height](/guide/sizing#filling-the-height).
-
-`hover: true` shows Home Assistant's hover layers on what a click runs: a node's circle brightens under the pointer, header entities take a light layer. On the card it is the default for every node; set it on a source, the home or a consumer for that node alone; see [Hover](/cards/entity-options#hover).
 
 ```yaml
 grid_options:
@@ -446,6 +464,7 @@ grid_options:
 | `title`, `icon`        | –                                     | Header, templates allowed. `header_entities` as in the [group card](/cards/entity-group-card#header-entities).                                                                                  |
 | `title_tap_action`     | none                                  | Action when the title or its icon is tapped, e.g. `{ action: navigate, navigation_path: /dashboard-rooms/kitchen }` to open the room's dashboard; see [Actions](/cards/entity-options#actions). |
 | `tap_action` …         | `more-info`                           | `tap_action`, `hold_action`, `double_tap_action` on every node with an entity.                                                                                                                  |
+| `hover`                | `false`                               | Default for every node; a source, the home or a consumer sets its own, see [Hover](#hover).                                                                                                     |
 
 ### Sources
 

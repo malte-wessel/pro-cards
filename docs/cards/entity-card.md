@@ -333,6 +333,36 @@ A tile is a button. `tap_action` runs a scene, opens a dashboard or a URL, or to
 
 :::
 
+## Hover
+
+`hover: true` shows what a click will do, as Home Assistant's tile does: the whole tile takes a light layer in its colour under the pointer, and a stronger one while pressed. An icon that is a switch (`control_position: lead`) brightens its circle instead and grows a little when pressed, and every [control](/cards/controls) answers on its own: the tile's layer gives way to it. Touch screens show only the press. See [Hover](/cards/entity-options#hover) for the details and the theme variable.
+
+::: live
+
+```yaml
+- type: custom:entity-card-pro
+  entity: light.kitchen
+  hover: true
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  entity: light.hallway
+  name: Hallway · tap the icon
+  control: toggle
+  control_position: lead
+  hover: true
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  entity: cover.living_room_blinds
+  control: buttons
+  hover: true
+- type: custom:entity-card-pro
+  entity: light.living_room
+  control: slider
+  hover: true
+```
+
+:::
+
 ## More examples
 
 One card type, many tiles. Rules colour a battery ring, an attribute drives a bar, a person becomes a badge, and prefix and suffix turn a number into a sentence.
@@ -456,6 +486,7 @@ All [entity options](/cards/entity-options#entity-options) plus:
 | `bucket_minutes`                                   | `60`                         | Bucket size for `columns` and `strip`, at least 5.                                              |
 | `smoothing_minutes`                                |                              | Averaging bucket of `sparkline` in minutes, at least 5 (default: one point per 12 px of width). |
 | `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none | See [Actions](/cards/entity-options#actions).                                                   |
+| `hover`                                            | `false`                      | Hover and press layers on the tile, its icon and its controls, see [Hover](#hover).             |
 
 ### Grid defaults
 
@@ -463,4 +494,4 @@ All [entity options](/cards/entity-options#entity-options) plus:
 
 ### Home Assistant options
 
-Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`. They are passed through to Home Assistant; see [Sizing in sections](/guide/sizing) for `grid_options`. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height). `hover: true` shows Home Assistant's hover and press layers on what a click runs, for every entity or, set on an entity, for that one; see [Hover](/cards/entity-options#hover).
+Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`. They are passed through to Home Assistant; see [Sizing in sections](/guide/sizing) for `grid_options`. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height). `hover: true` shows Home Assistant's hover and press layers on what a click runs, for every entity or, set on an entity, for that one; see [Hover](#hover).

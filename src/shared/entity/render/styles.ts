@@ -33,6 +33,14 @@ export const STYLE_TILE = `
   .layout-tile .body { padding: 6px 12px; gap: 8px; flex: 1; justify-content: center; }
   ha-card.layout-tile { min-height: 56px; }
   ha-card.layout-tile:has(> .header:not([hidden])) { min-height: 120px; }
+  /* a tile is one button, as Home Assistant's tile: the row's action layer fills the card's body
+     (the row stays static, the body holds the layer), so a click anywhere on the tile runs it, also
+     when the tile is taller than its row; the focus ring is drawn inside, the card clips outside */
+  ha-card.layout-tile .body { position: relative; }
+  ha-card.layout-tile .row.actionable:is(.tile, .wtile):not(.flow) { position: static; }
+  ha-card.layout-tile .row:is(.tile, .wtile) > .hit { border-radius: var(--ha-card-border-radius, 12px); }
+  ha-card.layout-tile:has(> .header:not([hidden])) .row:is(.tile, .wtile) > .hit { border-top-left-radius: 0; border-top-right-radius: 0; }
+  ha-card.layout-tile .row:is(.tile, .wtile) > .hit:focus-visible { box-shadow: inset 0 0 0 2px var(--fe-color); }
   /* a gauge is the tile's picture: the icon and name keep the top left, the gauge (and what
      follows it) centres in the room below, across and down */
   .row.tile:has(> .gauge) { flex: 1 1 auto; }
@@ -330,9 +338,6 @@ export const STYLE_PLOT = `
 // layer shows only where a click runs the row's action.
 export const STYLE_HOVER = `
   .row.hover-fx > .hit::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--fe-color); opacity: 0; pointer-events: none; }
-  /* a tile's layer reaches the card's edges (ha-card clips it; the click area stays the row) */
-  ha-card.layout-tile .row.hover-fx:is(.tile, .wtile) > .hit::before { inset: -6px -12px; border-radius: 0; }
-  ha-card.layout-tile .row.hover-fx.wtile.flow > .hit::before { inset: 0; }
   /* list rows, heroes and table fields keep still; an item or a power flow node is its icon: the
      icon answers, as it shows the focus ring */
   .row.hover-fx:is(.list, .hero, .whero, .field, .item, .pnode) > .hit::before { content: none; }
