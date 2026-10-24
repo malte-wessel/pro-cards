@@ -337,10 +337,10 @@ export const STYLE_PLOT = `
 // so a tap leaves nothing behind on a phone. Over a control the row's `.hit` is not hovered: the
 // layer shows only where a click runs the row's action.
 export const STYLE_HOVER = `
-  .row.hover-fx > .hit::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--fe-color); opacity: 0; pointer-events: none; }
-  /* list rows, heroes and table fields keep still; an item or a power flow node is its icon: the
-     icon answers, as it shows the focus ring */
-  .row.hover-fx:is(.list, .hero, .whero, .field, .item, .pnode) > .hit::before { content: none; }
+  /* only what reads as one button takes the layer: a tile, a grid cell, a header entity. List rows,
+     heroes, table fields and the power flow's list rows keep still; an item or a power flow node is
+     its icon: the icon answers, as it shows the focus ring */
+  .row.hover-fx:is(.tile, .wtile, .cell, .hval) > .hit::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--fe-color); opacity: 0; pointer-events: none; }
   .row.hover-fx .lead.tap .shape, .row.hover-fx:is(.item, .pnode) > .hit ~ .lead .shape { transition: background-color 180ms ease-in-out, transform 180ms ease-in-out; }
   @media (hover: hover) {
     .row.hover-fx > .hit:hover::before { opacity: .04; }
@@ -354,18 +354,26 @@ export const STYLE_HOVER = `
      as the icons do (180 ms) */
   .row.hover-fx :is(.ctl button, button.ctl, .ctl-select) { position: relative; isolation: isolate; }
   .row.hover-fx :is(.ctl button, button.ctl, .ctl-select)::after { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: currentColor; opacity: 0; pointer-events: none; transition: opacity 180ms ease-in-out; }
-  .row.hover-fx :is(.toggle, .ctl-select)::after { background: var(--primary-text-color); }
+  /* the base rule's :is() counts as its most specific argument (a class and an element): this one
+     matches its shape to win by order */
+  .row.hover-fx :is(button.toggle, div.ctl-select)::after { background: var(--primary-text-color); }
   .row.hover-fx .ctl-slider .knob { transition: box-shadow 180ms ease-in-out; }
   @media (hover: hover) {
     .row.hover-fx :is(.ctl button, button.ctl):not(:disabled):hover::after, .row.hover-fx .ctl-select:hover::after { opacity: .08; }
     /* the slider: a halo around the knob, lighter than the one while dragging */
-    .row.hover-fx .ctl-slider:not(.dragging, .pending):hover .knob { box-shadow: 0 1px 3px rgba(0,0,0,.3), inset 0 0 0 2px var(--fe-color), 0 0 0 6px color-mix(in srgb, var(--fe-color) 12%, transparent); }
+    .row.hover-fx .ctl-slider:not(.dragging, .pending):hover .knob { box-shadow: var(--knob-shadow), 0 0 0 6px color-mix(in srgb, var(--fe-color) 12%, transparent); }
   }
   /* pressed after hovered: the same specificity, the later rule wins */
   .row.hover-fx > .hit:active::before { opacity: .12; }
   .row.hover-fx :is(.ctl button, button.ctl):not(:disabled):active::after, .row.hover-fx .ctl-select:active::after { opacity: .12; }
   .row.hover-fx .lead.tap:not(.disabled):active .shape { transform: scale(1.2); }
-  @media (prefers-reduced-motion: reduce) { .row.hover-fx .lead.tap:active .shape { transform: none; } .row.hover-fx :is(.ctl button, button.ctl, .ctl-select)::after { transition: none; } }
+  /* reduced motion: no growing and no fades; each selector repeats the one it overrides */
+  @media (prefers-reduced-motion: reduce) {
+    .row.hover-fx .lead.tap:not(.disabled):active .shape { transform: none; }
+    .row.hover-fx .lead.tap .shape, .row.hover-fx:is(.item, .pnode) > .hit ~ .lead .shape { transition: none; }
+    .row.hover-fx :is(.ctl button, button.ctl, .ctl-select)::after { transition: none; }
+    .row.hover-fx .ctl-slider .knob { transition: none; }
+  }
 `;
 
 export const STYLE_ENTITY_CARD =
