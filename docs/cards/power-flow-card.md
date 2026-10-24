@@ -381,7 +381,7 @@ consumers:
 
 ## Hover
 
-`hover: true` shows what a click will do, as Home Assistant's tile does: a node's circle brightens under the pointer, and header entities take a light layer. On the card it is the default for every node; a source, the home or a consumer sets its own. See [Hover](/cards/entity-options#hover).
+`hover: true` shows what a click will do, as Home Assistant's tile does: a node's circle brightens under the pointer, and header entities take a light layer; consumers drawn as a list (`consumer_style: list`) keep still, as list rows do. On the card it is the default for every node; a source, the home or a consumer sets its own. See [Hover](/cards/entity-options#hover).
 
 ::: live
 

@@ -24,6 +24,16 @@ const point = async (page: Page, loc: Locator, dx = 0.5) => {
   await page.mouse.move(b.x + b.width * dx, b.y + b.height / 2);
 };
 const away = (page: Page) => page.mouse.move(1, 1);
+// --primary-text-color as a computed colour inside the element's shadow tree
+const textColour = (loc: Locator) =>
+  loc.evaluate((e) => {
+    const probe = document.createElement("i");
+    probe.style.color = "var(--primary-text-color)";
+    e.parentElement?.appendChild(probe);
+    const c = getComputedStyle(probe).color;
+    probe.remove();
+    return c;
+  });
 
 test.describe("hover", () => {
   test("is off unless set: no class, no layer, no reaction", async ({ page }) => {
@@ -89,11 +99,22 @@ test.describe("hover", () => {
       { type: G, hover: true, layout: "hero", entities: ["sensor.outdoor_temperature"] },
       { type: G, hover: true, layout: "table", entities: ["sensor.outdoor_humidity"] },
       { type: G, hover: true, layout: "grid", entities: ["sensor.outdoor_humidity"] },
+      {
+        type: "custom:power-flow-card-pro",
+        hover: true,
+        home: "sensor.power_consumption",
+        sources: [{ type: "solar", entity: "sensor.solar_power" }],
+        consumer_style: "list",
+        consumers: [{ entity: "sensor.washer_power" }],
+      },
+      { type: "custom:wind-card-pro", entity: "sensor.wind_speed", layout: "hero", hover: true },
     ]);
     for (const [i, sel] of [
       [0, ".row.list"],
       [1, ".row.hero"],
       [2, ".row.field"],
+      [4, ".row.plist"],
+      [5, ".row.whero"],
     ] as const)
       expect(await css(card(page, i).locator(`${sel} > .hit`).first(), "content", "::before")).toBe(
         "none",
@@ -163,6 +184,75 @@ test.describe("hover", () => {
     const slider = card(page, 1).locator(".ctl-slider");
     await point(page, slider, 0.2);
     await expect.poll(() => css(slider.locator(".knob"), "box-shadow")).toMatch(/0px 0px 0px 6px/);
+  });
+
+  test("the switch and the select take their layer in the text colour", async ({ page }) => {
+    // dark: the theme's text is light, the browser's default button text is not
+    await mount(
+      page,
+      {
+        type: G,
+        hover: true,
+        entities: [
+          { entity: "light.kitchen", control: "toggle" },
+          { entity: "input_select.house_mode", control: "select" },
+        ],
+      },
+      { theme: "dark" },
+    );
+    for (const sel of [".toggle", ".ctl-select"]) {
+      const el = card(page).locator(sel);
+      expect(await css(el, "background-color", "::after"), sel).toBe(await textColour(el));
+    }
+  });
+
+  test("reduced motion: nothing grows, nothing fades", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await mount(page, [
+      {
+        type: T,
+        entity: "light.hallway",
+        control: "toggle",
+        control_position: "lead",
+        hover: true,
+      },
+      {
+        type: G,
+        hover: true,
+        layout: "row",
+        entities: [{ entity: "light.kitchen", tap_action: "toggle" }],
+      },
+      {
+        type: G,
+        hover: true,
+        entities: [
+          { entity: "light.living_room", control: "slider" },
+          { entity: "light.kitchen", control: "toggle" },
+        ],
+      },
+      {
+        type: "custom:power-flow-card-pro",
+        hover: true,
+        home: "sensor.power_consumption",
+        sources: [{ type: "solar", entity: "sensor.solar_power" }],
+      },
+    ]);
+    const lead = card(page, 0).locator(".lead.tap");
+    await point(page, lead);
+    await page.mouse.down();
+    expect(await css(lead.locator(".shape"), "transform")).toBe("none");
+    await away(page);
+    await page.mouse.up();
+    for (const [i, sel] of [
+      [0, ".lead.tap .shape"],
+      [1, ".row.item .lead .shape"],
+      [2, ".ctl-slider .knob"],
+      [3, ".pnode .lead .shape"],
+    ] as const)
+      expect(await css(card(page, i).locator(sel).first(), "transition-duration"), sel).toBe("0s");
+    expect(await css(card(page, 2).locator(".toggle"), "transition-duration", "::after")).toBe(
+      "0s",
+    );
   });
 
   test("an entity's own hover wins over the card's and the section's", async ({ page }) => {
