@@ -42,6 +42,7 @@ export interface RawActionDefaults {
   tap_action?: RawAction;
   hold_action?: RawAction;
   double_tap_action?: RawAction;
+  hover?: boolean | null;
 }
 export interface RawHistoryOptions {
   hours_to_show?: unknown;
@@ -93,6 +94,7 @@ export interface RawEntity extends RawItemOptions, RawActionDefaults {
 }
 export type RawEntityInput = string | RawEntity;
 export interface RawGroup extends RawItemOptions {
+  hover?: boolean | null;
   layout?: unknown;
   entities?: unknown;
   align?: unknown;
@@ -138,6 +140,8 @@ export interface ActionDefaults {
   tap: ActionConfig;
   hold: ActionConfig;
   dbl: ActionConfig;
+  // Home Assistant's hover and press layers on the row and its controls (STYLE_HOVER)
+  hover: boolean;
 }
 export interface EntityItem extends ActionDefaults {
   entity: string | null;
@@ -177,7 +181,7 @@ export interface Group {
   // drawn only while its conditions hold and one of its items is shown (null: the items decide)
   visibility: Visibility;
 }
-// ctx carries the card type (for error messages) and the action defaults
+// ctx carries the card type (for error messages) and the action and hover defaults
 export interface NormalizeCtx extends ActionDefaults {
   type: string;
   columns?: number;
@@ -216,6 +220,7 @@ export const normalizeActionDefaults = (raw: RawActionDefaults): ActionDefaults 
   tap: normalizeAction(raw.tap_action, { action: "more-info" }),
   hold: normalizeAction(raw.hold_action, { action: "more-info" }),
   dbl: normalizeAction(raw.double_tap_action, { action: "none" }),
+  hover: raw.hover === true,
 });
 export const normalizeHistoryOptions = (raw: RawHistoryOptions) => ({
   hours: Math.max(1, numOrNull(raw.hours_to_show) ?? DEFAULTS.hours_to_show),
@@ -358,6 +363,7 @@ export const normalizeEntity = (
     tap: normalizeAction(o.tap_action, ctx.tap),
     hold: normalizeAction(o.hold_action, ctx.hold),
     dbl: normalizeAction(o.double_tap_action, ctx.dbl),
+    hover: typeof o.hover === "boolean" ? o.hover : ctx.hover,
     item: normalizeItemOptions(o, itemDefaults),
     visibility: normalizeVisibility(o.visibility, {
       type: ctx.type,
@@ -390,10 +396,12 @@ export const normalizeGroup = (
   const base = ITEM_DEFAULTS[layout] || ITEM_DEFAULTS.other;
   const itemDefaults = normalizeItemOptions(g, normalizeItemOptions(cardRaw, base));
   const isItem = ITEM_LAYOUTS.has(layout);
+  // `hover` cascades as the actions do: card → group → entity
+  const gctx = typeof g.hover === "boolean" ? { ...ctx, hover: g.hover } : ctx;
   const entities = (list as (RawEntityInput | null | undefined)[]).map((e, i) => {
     const ent = normalizeEntity(
       e,
-      ctx,
+      gctx,
       `${entLabel}[${i}]`,
       itemDefaults,
       layout === "row" ? { buttons: false, name: "a row" } : { buttons: true },

@@ -561,6 +561,8 @@ export abstract class EntityCardBase extends HTMLElement {
     r.className = `row ${cls}`;
     r.dataset.idx = String(idx);
     const ent = this._config?.entities[idx];
+    // `hover` (card → group → entity): the row and its controls show the hover layers (STYLE_HOVER)
+    if (ent?.hover) r.classList.add("hover-fx");
     if (ent && this._hasActions(ent)) {
       // the row's own action lives on a layer behind the content, so the controls on the row are
       // never nested inside a button (Home Assistant's tile does the same); _render keeps it first

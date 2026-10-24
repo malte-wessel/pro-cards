@@ -251,3 +251,14 @@ describe("wind flow maths", () => {
     expect(wide.lanes).toHaveLength(36);
   });
 });
+
+describe("hover", () => {
+  it("is the lead row's, off by default", () => {
+    const lead = (raw: object) => {
+      const c = normalizeWindCardConfig({ entity: "sensor.wind_speed", ...raw });
+      return c.entities[c.leadIdx].hover;
+    };
+    expect(lead({})).toBe(false);
+    expect(lead({ hover: true })).toBe(true);
+  });
+});

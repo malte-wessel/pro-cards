@@ -559,3 +559,23 @@ describe("the date of a forecast day", async () => {
     expect(isTodayEntry(Date.UTC(2026, 5, 23), now)).toBe(false);
   });
 });
+
+describe("hover", () => {
+  it("is the card's default for the condition and every section's entities; a section overrides it", () => {
+    const c = normalizeWeatherCardConfig({
+      entity: "weather.home",
+      hover: true,
+      sections: [
+        { type: "hero" },
+        { type: "row", hover: false, entities: ["humidity", { entity: "sensor.uv", hover: true }] },
+      ],
+    });
+    expect(c.entities[c.condIdx].hover).toBe(true);
+    const row = c.sections.find((s) => s.kind === "entities");
+    expect(row?.kind === "entities" && row.group.idxs.map((i) => c.entities[i].hover)).toEqual([
+      false,
+      true,
+    ]);
+    expect(normalizeWeatherCardConfig({ entity: "weather.home" }).entities[0].hover).toBe(false);
+  });
+});

@@ -409,6 +409,11 @@
       "default": true,
       "description": "Fill the height the card is given (a cell with fixed rows, a grid row stretched by a taller card, a horizontal stack); false keeps the card's own height, at most its cell's"
     },
+    "hover": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show Home Assistant's hover and press layers on what a click runs: a tile, a grid cell or a header entity with an action, an icon with its own action, the controls. On the card or a section the default for its entities"
+    },
     "haCardExtras": {
       "description": "Keys Home Assistant adds to any card; the cards do not read them, Home Assistant applies them",
       "grid_options": {
