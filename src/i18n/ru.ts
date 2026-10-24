@@ -224,7 +224,6 @@ const ru: Translation = {
   "editor.multi_trend.hours_to_show": "Показывать часов",
   "editor.multi_trend.smoothing_minutes": "Сглаживание",
   "editor.multi_trend.fill_height": "Заполнять по высоте",
-  "editor.multi_trend.hover": "Эффект при наведении",
   "editor.multi_trend.layout": "Компоновка",
   "editor.multi_trend.show_legend": "Показывать легенду",
   "editor.multi_trend.x_axis": "Ось X (время)",

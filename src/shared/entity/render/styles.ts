@@ -321,33 +321,46 @@ export const STYLE_PLOT = `
   .tip .lbl { color: var(--secondary-text-color); }
 `;
 
-// `hover: true` (the host's `hover` attribute, syncHover): Home Assistant's state layers on what a
-// click runs. A row with an action gets the tile's layer in its colour (4 % on hover, 12 % pressed),
-// an icon with its own action the tile icon's (its circle from --tile-icon-opacity to
-// --tile-icon-hover-opacity, 20 to 35 % by default; a press grows it). Hover only for a pointer
-// that hovers, so a tap leaves nothing behind on a phone. Over a control the row's `.hit` is not
-// hovered: the layer shows only where a click runs the row's action.
+// `hover` (on the card, a group or an entity; the row's `hover-fx` class): Home Assistant's state
+// layers on what a click runs. A tile, a grid cell or a header entity with an action gets the tile's
+// layer in its colour (4 % on hover, 12 % pressed), an icon with its own action the tile icon's (its
+// circle from --tile-icon-opacity to --tile-icon-hover-opacity, 20 to 35 % by default; a press
+// grows it), the controls Home Assistant's control buttons'. Hover only for a pointer that hovers,
+// so a tap leaves nothing behind on a phone. Over a control the row's `.hit` is not hovered: the
+// layer shows only where a click runs the row's action.
 export const STYLE_HOVER = `
-  :host([hover]) .hit::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--fe-color); opacity: 0; pointer-events: none; }
-  /* the layer reaches into the room around the content (the click area stays the row): a tile's to
-     the card's edges (ha-card clips it), a list row's halfway into the gap */
-  :host([hover]) ha-card.layout-tile .row:is(.tile, .wtile) > .hit::before { inset: -6px -12px; border-radius: 0; }
-  :host([hover]) ha-card.layout-tile .row.wtile.flow > .hit::before { inset: 0; }
-  :host([hover]) .row:is(.list, .hero, .whero) > .hit::before { inset: -4px -8px; border-radius: 12px; }
-  :host([hover]) .row.field > .hit::before { inset: -2px -6px; }
-  /* an item or a power flow node is its icon: the icon answers, as it shows the focus ring */
-  :host([hover]) :is(.item, .pnode) > .hit::before { content: none; }
-  :host([hover]) :is(.lead.tap, :is(.item, .pnode) > .hit ~ .lead) .shape { transition: background-color 180ms ease-in-out, transform 180ms ease-in-out; }
+  .row.hover-fx > .hit::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--fe-color); opacity: 0; pointer-events: none; }
+  /* a tile's layer reaches the card's edges (ha-card clips it; the click area stays the row) */
+  ha-card.layout-tile .row.hover-fx:is(.tile, .wtile) > .hit::before { inset: -6px -12px; border-radius: 0; }
+  ha-card.layout-tile .row.hover-fx.wtile.flow > .hit::before { inset: 0; }
+  /* list rows, heroes and table fields keep still; an item or a power flow node is its icon: the
+     icon answers, as it shows the focus ring */
+  .row.hover-fx:is(.list, .hero, .whero, .field, .item, .pnode) > .hit::before { content: none; }
+  .row.hover-fx .lead.tap .shape, .row.hover-fx:is(.item, .pnode) > .hit ~ .lead .shape { transition: background-color 180ms ease-in-out, transform 180ms ease-in-out; }
   @media (hover: hover) {
-    :host([hover]) .hit:hover::before { opacity: .04; }
+    .row.hover-fx > .hit:hover::before { opacity: .04; }
     /* as Home Assistant's tile icon: the hover opacity takes the place of the icon's, so every
        background drawn with iconBg follows (an off toggle's fainter one, a node's on the card) */
-    :host([hover]) :is(.lead.tap:not(.disabled):hover, :is(.item, .pnode) > .hit:hover ~ .lead) { --tile-icon-opacity: var(--tile-icon-hover-opacity, 0.35); }
+    .row.hover-fx .lead.tap:not(.disabled):hover, .row.hover-fx:is(.item, .pnode) > .hit:hover ~ .lead { --tile-icon-opacity: var(--tile-icon-hover-opacity, 0.35); }
+  }
+  /* the controls, as Home Assistant's control buttons: a layer over the button's own fill, under
+     its icon and label (8 % on hover, 12 % pressed), in the button's text colour, so a filled
+     button lightens and a soft one deepens; the switch and the select in the text colour. They fade
+     as the icons do (180 ms) */
+  .row.hover-fx :is(.ctl button, button.ctl, .ctl-select) { position: relative; isolation: isolate; }
+  .row.hover-fx :is(.ctl button, button.ctl, .ctl-select)::after { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: currentColor; opacity: 0; pointer-events: none; transition: opacity 180ms ease-in-out; }
+  .row.hover-fx :is(.toggle, .ctl-select)::after { background: var(--primary-text-color); }
+  .row.hover-fx .ctl-slider .knob { transition: box-shadow 180ms ease-in-out; }
+  @media (hover: hover) {
+    .row.hover-fx :is(.ctl button, button.ctl):not(:disabled):hover::after, .row.hover-fx .ctl-select:hover::after { opacity: .08; }
+    /* the slider: a halo around the knob, lighter than the one while dragging */
+    .row.hover-fx .ctl-slider:not(.dragging, .pending):hover .knob { box-shadow: 0 1px 3px rgba(0,0,0,.3), inset 0 0 0 2px var(--fe-color), 0 0 0 6px color-mix(in srgb, var(--fe-color) 12%, transparent); }
   }
   /* pressed after hovered: the same specificity, the later rule wins */
-  :host([hover]) .hit:active::before { opacity: .12; }
-  :host([hover]) .lead.tap:not(.disabled):active .shape { transform: scale(1.2); }
-  @media (prefers-reduced-motion: reduce) { :host([hover]) .lead.tap:active .shape { transform: none; } }
+  .row.hover-fx > .hit:active::before { opacity: .12; }
+  .row.hover-fx :is(.ctl button, button.ctl):not(:disabled):active::after, .row.hover-fx .ctl-select:active::after { opacity: .12; }
+  .row.hover-fx .lead.tap:not(.disabled):active .shape { transform: scale(1.2); }
+  @media (prefers-reduced-motion: reduce) { .row.hover-fx .lead.tap:active .shape { transform: none; } .row.hover-fx :is(.ctl button, button.ctl, .ctl-select)::after { transition: none; } }
 `;
 
 export const STYLE_ENTITY_CARD =

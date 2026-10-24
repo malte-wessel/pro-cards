@@ -61,11 +61,11 @@ These are the variables of a Home Assistant theme the cards read. Set them in a 
 
 **Icons**
 
-| Variable                     | What it changes                                                                                                                            |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ha-tile-icon-border-radius` | the shape behind an icon, as on Home Assistant's tile card (round by default; a ring and the power flow's nodes stay round)                |
-| `tile-icon-opacity`          | how strong the soft colour behind an icon is (`0.2` by default; `0` leaves the icon alone on the card)                                     |
-| `tile-icon-hover-opacity`    | the same under the pointer, on an icon with its own action in a card with [`hover: true`](/cards/entity-options#hover) (`0.35` by default) |
+| Variable                     | What it changes                                                                                                                               |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ha-tile-icon-border-radius` | the shape behind an icon, as on Home Assistant's tile card (round by default; a ring and the power flow's nodes stay round)                   |
+| `tile-icon-opacity`          | how strong the soft colour behind an icon is (`0.2` by default; `0` leaves the icon alone on the card)                                        |
+| `tile-icon-hover-opacity`    | the same under the pointer, on an icon with its own action of an entity with [`hover: true`](/cards/entity-options#hover) (`0.35` by default) |
 
 For example, a theme with rounded-square icons on a transparent background:
 

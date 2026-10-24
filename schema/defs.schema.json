@@ -412,7 +412,7 @@
     "hover": {
       "type": "boolean",
       "default": false,
-      "description": "Show Home Assistant's hover and press layers on what a click runs: a row, cell or header with an action, an icon with its own action"
+      "description": "Show Home Assistant's hover and press layers on what a click runs: a tile, a grid cell or a header entity with an action, an icon with its own action, the controls. On the card or a section the default for its entities"
     },
     "haCardExtras": {
       "description": "Keys Home Assistant adds to any card; the cards do not read them, Home Assistant applies them",

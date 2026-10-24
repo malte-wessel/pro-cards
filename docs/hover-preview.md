@@ -6,7 +6,7 @@ pageClass: wide
 
 # Hover preview
 
-Every card on this page sets `hover: true`. Hover a row, a tile, a cell, an icon or a header to see the layer; press to see the pressed state. The examples are taken from the card pages; only `hover: true` is added.
+Every card on this page sets `hover: true`. Hover a row, a tile, a cell, an icon, a control or a header to see the layer; press to see the pressed state. The examples are taken from the card pages; only `hover: true` is added.
 
 ## Side by side
 
@@ -18,10 +18,12 @@ The same tiles without and with `hover`.
 - type: custom:entity-card-pro
   entity: light.kitchen
   name: Without hover
+  control: toggle
   grid_options: { columns: 6 }
 - type: custom:entity-card-pro
   entity: light.kitchen
   name: With hover
+  control: toggle
   hover: true
   grid_options: { columns: 6 }
 - type: custom:entity-card-pro
@@ -41,242 +43,45 @@ The same tiles without and with `hover`.
 
 :::
 
-## Entity card
+## Per entity
 
-From [Entity card](/cards/entity-card).
-
-::: live
-
-```yaml
-type: custom:entity-card-pro
-hover: true
-entity: vacuum.robot
-name: Robot vacuum
-rules:
-  - { state: docked, color: green, label: Docked }
-  - { state: cleaning, color: blue, label: Cleaning }
-  - { state: returning, color: teal, label: Returning }
-  - { state: paused, color: amber, label: Paused }
-  - { state: error, color: red, label: Error }
-```
-
-:::
+`hover` on the card is the default for its entities; an entity's own `hover` wins.
 
 ::: live
 
 ```yaml
-- type: custom:entity-card-pro
+- type: custom:entity-group-card-pro
+  title: Living room · all but the thermostat
+  icon: mdi:sofa
   hover: true
-  entity: light.living_room
-  rules:
-    - { state: "on", color: amber, label: "On" }
-    - { state: "off", color: grey, label: "Off" }
-  control: auto
-  grid_options: { columns: 6 }
-- type: custom:entity-card-pro
-  hover: true
-  entity: switch.coffee_machine
-  control: toggle
-  grid_options: { columns: 6 }
+  entities:
+    - { entity: light.living_room, control: auto }
+    - { entity: cover.living_room_blinds, control: auto }
+    - { entity: climate.living_room, control: auto, hover: false }
+- type: custom:entity-group-card-pro
+  title: Kitchen · the lights only
+  icon: mdi:silverware-fork-knife
+  layout: row
+  entities:
+    - { entity: light.kitchen, name: Light, tap_action: { action: toggle }, hover: true }
+    - { entity: light.dining_table, name: Dining, tap_action: { action: toggle }, hover: true }
+    - { entity: fan.living_room, name: Fan, tap_action: { action: toggle } }
+- type: custom:entity-sections-card-pro
+  title: Sections · only the second
+  icon: mdi:view-split-horizontal
+  sections:
+    - layout: grid
+      entities: [light.office, light.desk_lamp]
+    - layout: grid
+      hover: true
+      entities: [light.bedroom, light.attic]
 ```
 
 :::
 
-::: live
+## Controls
 
-```yaml
-type: custom:entity-card-pro
-hover: true
-entity: sensor.robot_battery
-name: Robot battery
-visual: ring
-rules:
-  - { below: 20, color: red, label: Replace }
-  - { below: 50, color: amber }
-  - { above: 50, color: green }
-```
-
-:::
-
-::: live
-
-```yaml
-- type: custom:entity-card-pro
-  hover: true
-  entity: sensor.switch_temperature
-  name: Kitchen switch
-  decimals: 0
-  visual: ring
-  min: 20
-  max: 90
-  rules:
-    - { below: 50, color: green, icon: mdi:chip, label: Normal }
-    - { below: 70, color: amber, icon: mdi:thermometer-alert, label: Warm, tint_card: true }
-    - { above: 70, color: red, icon: mdi:fire-alert, label: Hot, tint_card: true }
-  grid_options: { columns: 6 }
-- type: custom:entity-card-pro
-  hover: true
-  entity: sensor.motion_hallway_battery
-  name: Hallway motion
-  decimals: 0
-  visual: bar
-  rules:
-    - { below: 20, color: red, icon: mdi:battery-alert, label: Empty, tint_card: true }
-    - { below: 50, color: amber, icon: mdi:battery-50, label: Half }
-    - { above: 50, color: green, icon: mdi:battery, label: Full }
-  grid_options: { columns: 6 }
-```
-
-:::
-
-::: live
-
-```yaml
-- type: custom:entity-card-pro
-  hover: true
-  entity: light.living_room
-  name: Brightness
-  icon: mdi:brightness-6
-  color: amber
-  attribute: brightness
-  unit: ""
-  visual: bar
-  min: 0
-  max: 255
-  grid_options: { columns: 6 }
-- type: custom:entity-card-pro
-  hover: true
-  entity: cover.office_blinds
-  name: Blind position
-  icon: mdi:window-shutter
-  attribute: current_position
-  unit: "%"
-  visual: ring
-  rules:
-    - { below: 30, color: grey }
-    - { above: 30, color: amber }
-  grid_options: { columns: 6 }
-```
-
-:::
-
-::: live
-
-```yaml
-- type: custom:entity-card-pro
-  hover: true
-  entity: scene.movie_night
-  name: Movie night
-  value: Activate
-  icon: mdi:movie-open
-  color: deep-purple
-  tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.movie_night } }
-  grid_options: { columns: 6 }
-- type: custom:entity-card-pro
-  hover: true
-  entity: light.living_room
-  name: Sofa lamp
-  rules:
-    - { state: "on", color: amber, label: "On" }
-    - { state: "off", color: grey, label: "Off" }
-  tap_action: { action: toggle }
-  hold_action: { action: more-info }
-  grid_options: { columns: 6 }
-- type: custom:entity-card-pro
-  hover: true
-  entity: sensor.energy_today
-  name: Energy dashboard
-  icon: mdi:open-in-app
-  color: teal
-  value: Open
-  tap_action: { action: navigate, navigation_path: /energy }
-  grid_options: { columns: 6 }
-- type: custom:entity-card-pro
-  hover: true
-  entity: script.check_windows
-  name: Check windows
-  icon: mdi:play-circle-outline
-  color: blue
-  value: Run
-  tap_action:
-    action: perform-action
-    perform_action: script.turn_on
-    target: { entity_id: script.check_windows }
-    confirmation: { text: Run the window check now? }
-  grid_options: { columns: 6 }
-```
-
-:::
-
-::: live
-
-```yaml
-- type: custom:entity-card-pro
-  hover: true
-  entity: sensor.kitchen_window_battery
-  name: Window sensor
-  visual: ring
-  rules:
-    - { below: 20, color: red, label: Replace }
-    - { below: 50, color: amber }
-    - { above: 50, color: green }
-  grid_options: { columns: 6 }
-- type: custom:entity-card-pro
-  hover: true
-  entity: light.living_room
-  name: Brightness
-  icon: mdi:brightness-6
-  color: amber
-  attribute: brightness
-  unit: ""
-  visual: bar
-  min: 0
-  max: 255
-  grid_options: { columns: 6 }
-- type: custom:entity-card-pro
-  hover: true
-  entity: person.kim
-  visual: badge
-  rules:
-    - { state: home, color: green, icon: mdi:home-account, label: Home }
-    - { state: not_home, color: grey, icon: mdi:account-arrow-right, label: Away }
-  grid_options: { columns: 6 }
-- type: custom:entity-card-pro
-  hover: true
-  entity: sensor.energy_today
-  name: Energy
-  icon: mdi:lightning-bolt
-  color: green
-  decimals: 1
-  suffix: " so far today"
-  grid_options: { columns: 6 }
-- type: custom:entity-card-pro
-  hover: true
-  entity: sun.sun
-  name: Sun
-  visual: badge
-  rules:
-    - { state: above_horizon, color: amber, icon: mdi:white-balance-sunny, label: Up }
-    - { state: below_horizon, color: indigo, icon: mdi:weather-night, label: Down }
-  grid_options: { columns: 6 }
-- type: custom:entity-card-pro
-  hover: true
-  entity: sensor.washer_status
-  name: Washer
-  secondary: "{{ states('sensor.washer_remaining') }} min left"
-  visual: badge
-  rules:
-    - { state: run, color: green, icon: mdi:washing-machine, label: Running }
-    - { state: end, color: teal, icon: mdi:washing-machine-alert, label: Done, tint_card: true }
-    - { state: power_off, color: grey, icon: mdi:washing-machine-off, label: "Off" }
-  grid_options: { columns: 6 }
-```
-
-:::
-
-## Controls on rows and icons
-
-From [Controls on rows and icons](/cards/controls).
+From [Controls](/cards/controls). Every control: hover a button, a segment, a chip, the switch, the select or the slider; hold buttons and lead toggles too. Over a control the row keeps still.
 
 ::: live
 
@@ -645,9 +450,271 @@ entities:
 
 :::
 
+## Entity card
+
+From [Entity card](/cards/entity-card). Tiles reach the card's edges; the icon of a lead toggle brightens and grows when pressed.
+
+::: live
+
+```yaml
+type: custom:entity-card-pro
+hover: true
+entity: vacuum.robot
+name: Robot vacuum
+rules:
+  - { state: docked, color: green, label: Docked }
+  - { state: cleaning, color: blue, label: Cleaning }
+  - { state: returning, color: teal, label: Returning }
+  - { state: paused, color: amber, label: Paused }
+  - { state: error, color: red, label: Error }
+```
+
+:::
+
+::: live
+
+```yaml
+- type: custom:entity-card-pro
+  hover: true
+  entity: light.living_room
+  rules:
+    - { state: "on", color: amber, label: "On" }
+    - { state: "off", color: grey, label: "Off" }
+  control: auto
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  hover: true
+  entity: switch.coffee_machine
+  control: toggle
+  grid_options: { columns: 6 }
+```
+
+:::
+
+::: live
+
+```yaml
+type: custom:entity-card-pro
+hover: true
+entity: sensor.robot_battery
+name: Robot battery
+visual: ring
+rules:
+  - { below: 20, color: red, label: Replace }
+  - { below: 50, color: amber }
+  - { above: 50, color: green }
+```
+
+:::
+
+::: live
+
+```yaml
+- type: custom:entity-card-pro
+  hover: true
+  entity: sensor.switch_temperature
+  name: Kitchen switch
+  decimals: 0
+  visual: ring
+  min: 20
+  max: 90
+  rules:
+    - { below: 50, color: green, icon: mdi:chip, label: Normal }
+    - { below: 70, color: amber, icon: mdi:thermometer-alert, label: Warm, tint_card: true }
+    - { above: 70, color: red, icon: mdi:fire-alert, label: Hot, tint_card: true }
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  hover: true
+  entity: sensor.motion_hallway_battery
+  name: Hallway motion
+  decimals: 0
+  visual: bar
+  rules:
+    - { below: 20, color: red, icon: mdi:battery-alert, label: Empty, tint_card: true }
+    - { below: 50, color: amber, icon: mdi:battery-50, label: Half }
+    - { above: 50, color: green, icon: mdi:battery, label: Full }
+  grid_options: { columns: 6 }
+```
+
+:::
+
+::: live
+
+```yaml
+- type: custom:entity-card-pro
+  hover: true
+  entity: light.living_room
+  name: Brightness
+  icon: mdi:brightness-6
+  color: amber
+  attribute: brightness
+  unit: ""
+  visual: bar
+  min: 0
+  max: 255
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  hover: true
+  entity: cover.office_blinds
+  name: Blind position
+  icon: mdi:window-shutter
+  attribute: current_position
+  unit: "%"
+  visual: ring
+  rules:
+    - { below: 30, color: grey }
+    - { above: 30, color: amber }
+  grid_options: { columns: 6 }
+```
+
+:::
+
+::: live
+
+```yaml
+- type: custom:entity-card-pro
+  hover: true
+  entity: scene.movie_night
+  name: Movie night
+  value: Activate
+  icon: mdi:movie-open
+  color: deep-purple
+  tap_action: { action: perform-action, perform_action: scene.turn_on, target: { entity_id: scene.movie_night } }
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  hover: true
+  entity: light.living_room
+  name: Sofa lamp
+  rules:
+    - { state: "on", color: amber, label: "On" }
+    - { state: "off", color: grey, label: "Off" }
+  tap_action: { action: toggle }
+  hold_action: { action: more-info }
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  hover: true
+  entity: sensor.energy_today
+  name: Energy dashboard
+  icon: mdi:open-in-app
+  color: teal
+  value: Open
+  tap_action: { action: navigate, navigation_path: /energy }
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  hover: true
+  entity: script.check_windows
+  name: Check windows
+  icon: mdi:play-circle-outline
+  color: blue
+  value: Run
+  tap_action:
+    action: perform-action
+    perform_action: script.turn_on
+    target: { entity_id: script.check_windows }
+    confirmation: { text: Run the window check now? }
+  grid_options: { columns: 6 }
+```
+
+:::
+
+::: live
+
+```yaml
+- type: custom:entity-card-pro
+  hover: true
+  entity: sensor.kitchen_window_battery
+  name: Window sensor
+  visual: ring
+  rules:
+    - { below: 20, color: red, label: Replace }
+    - { below: 50, color: amber }
+    - { above: 50, color: green }
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  hover: true
+  entity: light.living_room
+  name: Brightness
+  icon: mdi:brightness-6
+  color: amber
+  attribute: brightness
+  unit: ""
+  visual: bar
+  min: 0
+  max: 255
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  hover: true
+  entity: person.kim
+  visual: badge
+  rules:
+    - { state: home, color: green, icon: mdi:home-account, label: Home }
+    - { state: not_home, color: grey, icon: mdi:account-arrow-right, label: Away }
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  hover: true
+  entity: sensor.energy_today
+  name: Energy
+  icon: mdi:lightning-bolt
+  color: green
+  decimals: 1
+  suffix: " so far today"
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  hover: true
+  entity: sun.sun
+  name: Sun
+  visual: badge
+  rules:
+    - { state: above_horizon, color: amber, icon: mdi:white-balance-sunny, label: Up }
+    - { state: below_horizon, color: indigo, icon: mdi:weather-night, label: Down }
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  hover: true
+  entity: sensor.washer_status
+  name: Washer
+  secondary: "{{ states('sensor.washer_remaining') }} min left"
+  visual: badge
+  rules:
+    - { state: run, color: green, icon: mdi:washing-machine, label: Running }
+    - { state: end, color: teal, icon: mdi:washing-machine-alert, label: Done, tint_card: true }
+    - { state: power_off, color: grey, icon: mdi:washing-machine-off, label: "Off" }
+  grid_options: { columns: 6 }
+```
+
+:::
+
+## Entity pictures
+
+From [entity pictures](/cards/entity-options). A picture in place of the icon.
+
+::: live
+
+```yaml
+- type: custom:entity-card-pro
+  hover: true
+  entity: person.alex
+  show_entity_picture: true
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  hover: true
+  entity: person.sam
+  show_entity_picture: true
+  grid_options: { columns: 6 }
+- type: custom:entity-group-card-pro
+  hover: true
+  title: People
+  layout: row
+  entities:
+    - { entity: person.alex, show_entity_picture: true }
+    - { entity: person.sam, show_entity_picture: true }
+    - { entity: person.kim, show_entity_picture: true }
+```
+
+:::
+
 ## Entity group card
 
-From [Entity group card](/cards/entity-group-card).
+From [Entity group card](/cards/entity-group-card). List rows, grid cells, heroes, row and column items, table fields, header entities and a tappable title (not covered yet).
 
 ::: live
 
@@ -1006,46 +1073,44 @@ sections:
 
 :::
 
-## Multi trend card
-
-From [Multi trend card](/cards/multi-trend-card).
-
-::: live
-
-```yaml
-type: custom:multi-trend-card-pro
-hover: true
-title: Temperature & dew point
-icon: mdi:thermometer
-entities:
-  - { entity: sensor.outdoor_temperature, name: Temperature, color: red }
-  - { entity: sensor.dew_point, name: Dew point, color: blue }
-```
-
-:::
-
-::: live
-
-```yaml
-type: custom:multi-trend-card-pro
-hover: true
-title: Power
-icon: mdi:flash
-color: amber
-hours_to_show: 24
-x_axis: true
-y_axis: true
-show_legend: true
-entities:
-  - { entity: sensor.power_consumption, name: Consumption, color: red }
-  - { entity: sensor.dining_light_power, name: Dining light, color: amber }
-```
-
-:::
-
 ## Power flow card
 
-From [Power flow card](/cards/power-flow-card).
+From [Power flow card](/cards/power-flow-card). Each node's circle brightens; header entities take the layer.
+
+::: live
+
+```yaml
+type: custom:power-flow-card-pro
+hover: true
+sources:
+  - { type: solar, entity: sensor.solar_power, name: Roof }
+  - { type: solar, entity: sensor.balcony_solar_power, name: Balcony }
+  - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
+  - type: battery
+    name: Balcony battery
+    charge: sensor.balcony_battery_charge_power
+    discharge: sensor.balcony_battery_discharge_power
+    soc: sensor.balcony_battery_soc
+    charge_from: sensor.balcony_solar_power
+  - { type: grid, power: sensor.grid_power }
+```
+
+:::
+
+::: live
+
+```yaml
+type: custom:power-flow-card-pro
+hover: true
+sources:
+  - { type: solar, entity: sensor.solar_power }
+  - type: grid
+    import: sensor.grid_import_power
+    export: sensor.grid_export_power
+    both_ways: true
+```
+
+:::
 
 ::: live
 

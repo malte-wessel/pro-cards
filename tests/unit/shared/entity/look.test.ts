@@ -22,6 +22,7 @@ const ctx: NormalizeCtx = {
   tap: { action: "more-info" },
   hold: { action: "more-info" },
   dbl: { action: "none" },
+  hover: false,
 };
 const st = (
   state: string | number,

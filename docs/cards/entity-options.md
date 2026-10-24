@@ -967,7 +967,7 @@ entities:
 
 ### Hover
 
-`hover: true` on a card shows what a click will do, as Home Assistant's tile does. A row with an action takes a light layer in its colour under the pointer and a stronger one while pressed. In a tile the layer reaches the card's edges. An icon with its own action (`control_position: lead`, the items of a row layout, the power flow's nodes) brightens its circle instead, and a pressed lead toggle grows a little. Over a control on the row the layer gives way to the control. Touch screens show only the press. `hover` is off by default and changes nothing else.
+`hover: true` shows what a click will do, as Home Assistant's tile does. Set it on an entity, or on the card or a section as the default for its entities, as with the actions: the closest one wins, so `hover: false` on one entity leaves it out. A tile, a grid cell or a header entity with an action takes a light layer in its colour under the pointer and a stronger one while pressed; in a tile it reaches the card's edges. List rows, heroes and table fields keep still. An icon with its own action (`control_position: lead`, the items of a row layout, the power flow's nodes) brightens its circle instead, and a pressed lead toggle grows a little. Every [control](/cards/controls) answers too, as Home Assistant's control buttons do: a button, a segment, a chip, the switch and the select take a light layer over their own colour, the slider a halo around its knob. Over a control the row's layer gives way to the control's. Touch screens show only the press. `hover` is off by default and changes nothing else.
 
 ::: live
 
@@ -984,21 +984,20 @@ entities:
   hover: true
   grid_options: { columns: 6 }
 - type: custom:entity-group-card-pro
-  title: Living room
+  title: Living room · all but the thermostat
   icon: mdi:sofa
   hover: true
   entities:
-    - light.living_room
+    - { entity: light.living_room, control: auto }
     - { entity: cover.living_room_blinds, control: auto }
-    - climate.living_room
+    - { entity: climate.living_room, control: auto, hover: false }
 - type: custom:entity-group-card-pro
-  title: Kitchen
+  title: Kitchen · the lights only
   icon: mdi:silverware-fork-knife
   layout: row
-  hover: true
   entities:
-    - { entity: light.kitchen, name: Light, tap_action: { action: toggle } }
-    - { entity: light.dining_table, name: Dining, tap_action: { action: toggle } }
+    - { entity: light.kitchen, name: Light, tap_action: { action: toggle }, hover: true }
+    - { entity: light.dining_table, name: Dining, tap_action: { action: toggle }, hover: true }
     - { entity: fan.living_room, name: Fan, tap_action: { action: toggle } }
 ```
 
@@ -1079,11 +1078,12 @@ These keys sit on the card, not on the entity, and apply to every history visual
 
 See [Controls](/cards/controls) for what every control looks like and where it sits.
 
-| Option                                             | Default       | Applies to      | Description                                                                                                                                                                                                                                                                                                                                   |
-| -------------------------------------------------- | ------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `control`                                          |               | all but headers | `auto` (or `true`) picks the domain default, a name picks one, `none` draws nothing. `control_position`, `control_attribute`, `control_step`, `control_options` and `control_confirm` tune it: see [Controls](/cards/controls#one-key); `control: buttons` with `control_options` draws [your own buttons](/cards/controls#your-own-buttons). |
-| `toggle`                                           | `false`       | all but headers | Deprecated alias of `control: toggle`.                                                                                                                                                                                                                                                                                                        |
-| `tap_action` / `hold_action` / `double_tap_action` | card defaults | all             | Per-entity overrides, see [Action options](#action-options).                                                                                                                                                                                                                                                                                  |
+| Option                                             | Default                          | Applies to      | Description                                                                                                                                                                                                                                                                                                                                   |
+| -------------------------------------------------- | -------------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `control`                                          |                                  | all but headers | `auto` (or `true`) picks the domain default, a name picks one, `none` draws nothing. `control_position`, `control_attribute`, `control_step`, `control_options` and `control_confirm` tune it: see [Controls](/cards/controls#one-key); `control: buttons` with `control_options` draws [your own buttons](/cards/controls#your-own-buttons). |
+| `toggle`                                           | `false`                          | all but headers | Deprecated alias of `control: toggle`.                                                                                                                                                                                                                                                                                                        |
+| `tap_action` / `hold_action` / `double_tap_action` | card defaults                    | all             | Per-entity overrides, see [Action options](#action-options).                                                                                                                                                                                                                                                                                  |
+| `hover`                                            | card / section default (`false`) | all             | Home Assistant's hover and press layers on the entity's tile, cell or header item, its icon and its controls, see [Hover](#hover).                                                                                                                                                                                                            |
 
 ### Items
 
@@ -1098,4 +1098,4 @@ See [Controls](/cards/controls) for what every control looks like and where it s
 | ------------ | ------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `visibility` |         | entities in groups, headers | Drawn only while every condition holds (Home Assistant's conditions); a condition without `entity` reads this one. See [Visibility](/guide/visibility). |
 
-Every card also accepts the Home Assistant keys `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`; see [Sizing in sections](/guide/sizing). On the card itself `visibility` is Home Assistant's and hides the whole card. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height). `hover: true` shows Home Assistant's hover and press layers on what a click runs; see [Hover](#hover).
+Every card also accepts the Home Assistant keys `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`; see [Sizing in sections](/guide/sizing). On the card itself `visibility` is Home Assistant's and hides the whole card. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height). `hover: true` shows Home Assistant's hover and press layers on what a click runs, for every entity or, set on an entity, for that one; see [Hover](#hover).

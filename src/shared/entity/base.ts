@@ -3,14 +3,7 @@
 //   _normalize(raw)            – the normalised config (see config.js)
 //   _styles()                  – the CSS string for the shadow root
 //   getGridOptions()           – the sections grid footprint
-import {
-  fireAction,
-  fireEvent,
-  fireHaptic,
-  freshShadow,
-  syncHover,
-  syncKeepHeight,
-} from "../card.ts";
+import { fireAction, fireEvent, fireHaptic, freshShadow, syncKeepHeight } from "../card.ts";
 import { cssColor } from "../color.ts";
 import { REFRESH_MS } from "../constants.ts";
 import { langOf } from "../format.ts";
@@ -232,7 +225,6 @@ export abstract class EntityCardBase extends HTMLElement {
     this._dragging = null;
     this._subscribeTemplates();
     syncKeepHeight(this, config);
-    syncHover(this, config);
     if (this._root) this._buildDom();
   }
 
@@ -588,6 +580,8 @@ export abstract class EntityCardBase extends HTMLElement {
     r.className = `row ${cls}`;
     r.dataset.idx = String(idx);
     const ent = this._config?.entities[idx];
+    // `hover` (card → group → entity): the row and its controls show the hover layers (STYLE_HOVER)
+    if (ent?.hover) r.classList.add("hover-fx");
     if (ent && this._hasActions(ent)) {
       // the row's own action lives on a layer behind the content, so the controls on the row are
       // never nested inside a button (Home Assistant's tile does the same); _render keeps it first

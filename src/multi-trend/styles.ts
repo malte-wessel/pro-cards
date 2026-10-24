@@ -27,11 +27,6 @@ export const STYLE =
     border-radius: var(--ha-card-border-radius, 12px);
   }
   .header:focus-visible { box-shadow: inset 0 0 0 2px var(--tile-color); border-radius: var(--ha-card-border-radius, 12px); }
-  /* hover: true: Home Assistant's tile layer behind the header (4 % on hover, 12 % pressed) */
-  :host([hover]) .header { isolation: isolate; }
-  :host([hover]) .header::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--tile-color); opacity: 0; pointer-events: none; }
-  @media (hover: hover) { :host([hover]) .header:hover::before { opacity: .04; } }
-  :host([hover]) .header:active::before { opacity: .12; }
   .shape {
     flex: none;
     width: 36px;

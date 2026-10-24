@@ -270,6 +270,9 @@
                 "type": "string",
                 "enum": ["above", "below"]
               },
+              "hover": {
+                "$ref": "defs.schema.json#/$defs/hover"
+              },
               "layout": {
                 "type": "string",
                 "enum": ["row", "list", "table", "grid", "column"],
