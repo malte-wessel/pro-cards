@@ -586,6 +586,36 @@ entities:
 
 :::
 
+## Hover
+
+`hover: true` on the card shows what a click will do on every entity, as Home Assistant's tile does; `hover` on an entity turns it on or off for that one. Grid cells and header entities take a light layer under the pointer and a stronger one while pressed; the items of a row or column layout brighten their icon; list rows, heroes and table fields keep still, while their icons and [controls](/cards/controls) answer. See [Hover](/cards/entity-options#hover).
+
+::: live
+
+```yaml
+- type: custom:entity-group-card-pro
+  title: Kitchen
+  icon: mdi:silverware-fork-knife
+  layout: grid
+  hover: true
+  header_entities: [sensor.outdoor_temperature]
+  entities:
+    - { entity: light.kitchen, tap_action: toggle }
+    - { entity: light.dining_table, tap_action: toggle }
+    - { entity: sensor.kitchen_temperature, name: Temperature, hover: false }
+- type: custom:entity-group-card-pro
+  title: Living room
+  icon: mdi:sofa
+  layout: row
+  hover: true
+  entities:
+    - { entity: light.living_room, name: Ceiling, tap_action: toggle }
+    - { entity: light.desk_lamp, name: Desk, tap_action: toggle }
+    - { entity: fan.living_room, name: Fan, tap_action: toggle }
+```
+
+:::
+
 ## Reference
 
 ### Layouts
@@ -617,6 +647,7 @@ entities:
 | `bucket_minutes`                                   | `60`                         | Bucket size for `columns` and `strip`, at least 5.                                                                                                                                                                                                                                                  |
 | `smoothing_minutes`                                |                              | Averaging bucket of `sparkline` in minutes, at least 5 (default: one point per 12 px of width).                                                                                                                                                                                                     |
 | `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none | Defaults for every entity, see [Actions](/cards/entity-options#actions).                                                                                                                                                                                                                            |
+| `hover`                                            | `false`                      | Default for every entity; an entity's own `hover` wins, see [Hover](#hover).                                                                                                                                                                                                                        |
 
 ### Grid defaults
 
@@ -624,4 +655,4 @@ entities:
 
 ### Home Assistant options
 
-Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`. They are passed through to Home Assistant; see [Sizing in sections](/guide/sizing) for `grid_options`. The card's own `visibility` hides the whole card; its entities, header entities and sections take their own, see [Visibility](/guide/visibility). `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height). `hover: true` shows Home Assistant's hover and press layers on what a click runs, for every entity or, set on an entity, for that one; see [Hover](/cards/entity-options#hover).
+Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`. They are passed through to Home Assistant; see [Sizing in sections](/guide/sizing) for `grid_options`. The card's own `visibility` hides the whole card; its entities, header entities and sections take their own, see [Visibility](/guide/visibility). `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height). `hover: true` shows Home Assistant's hover and press layers on what a click runs, for every entity or, set on an entity, for that one; see [Hover](#hover).

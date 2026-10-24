@@ -36,19 +36,44 @@ test.describe("hover", () => {
     expect(await css(card(page).locator(".toggle"), "content", "::after")).toBe("none");
   });
 
-  test("a tile takes the layer to the card's edges, stronger while pressed", async ({ page }) => {
-    await mount(page, { type: T, entity: "light.kitchen", hover: true });
-    const hit = card(page).locator(".row.hover-fx > .hit");
-    expect(await css(hit, "opacity", "::before")).toBe("0");
-    await point(page, hit, 0.6);
-    expect(await css(hit, "opacity", "::before")).toBe("0.04");
-    expect(await css(hit, "top", "::before")).toBe("-6px");
-    expect(await css(hit, "left", "::before")).toBe("-12px");
-    await page.mouse.down();
-    expect(await css(hit, "opacity", "::before")).toBe("0.12");
-    await page.mouse.up();
-    await away(page);
-    expect(await css(hit, "opacity", "::before")).toBe("0");
+  test("a tile is one button: the layer fills the card, also a taller one, stronger while pressed", async ({
+    page,
+  }) => {
+    await mount(page, [
+      { type: T, entity: "light.kitchen", hover: true, grid_options: { columns: 6 } },
+      { type: T, entity: "light.hallway", hover: true, grid_options: { columns: 6, rows: 3 } },
+      { type: "custom:wind-card-pro", entity: "sensor.wind_speed", hover: true },
+    ]);
+    for (const i of [0, 1, 2]) {
+      const c = card(page, i);
+      const hit = c.locator(".row.hover-fx > .hit");
+      // the click area is the card inside its border: no gap above, below or at the sides
+      const [h, k] = [await hit.boundingBox(), await c.locator("ha-card").boundingBox()];
+      if (!h || !k) throw new Error("not visible");
+      const border = Number.parseFloat(await css(c.locator("ha-card"), "border-top-width"));
+      for (const [a, b] of [
+        [h.x, k.x + border],
+        [h.y, k.y + border],
+        [h.width, k.width - 2 * border],
+        [h.height, k.height - 2 * border],
+      ])
+        expect(Math.abs(a - b), `card ${i}`).toBeLessThan(1);
+      expect(await css(hit, "opacity", "::before")).toBe("0");
+      // the tile's padding, outside its row, is part of the button: its left and bottom edge
+      for (const [x, y] of [
+        [k.x + 4, k.y + k.height / 2],
+        [k.x + k.width / 2, k.y + k.height - 4],
+      ]) {
+        await away(page);
+        await page.mouse.move(x, y);
+        expect(await css(hit, "opacity", "::before"), `card ${i} at ${x},${y}`).toBe("0.04");
+      }
+      await page.mouse.down();
+      expect(await css(hit, "opacity", "::before"), `card ${i}`).toBe("0.12");
+      await away(page);
+      await page.mouse.up();
+      expect(await css(hit, "opacity", "::before")).toBe("0");
+    }
   });
 
   test("list rows, heroes and table fields keep still; cells and header entities answer", async ({

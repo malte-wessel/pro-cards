@@ -325,6 +325,29 @@ sections:
 
 :::
 
+## Hover
+
+`hover` cascades as the actions do: on the card for every entity, on a section for its entities, on an entity for that one. It shows what a click will do, as Home Assistant's tile does: grid cells and header entities take a light layer under the pointer, items brighten their icon, and the [controls](/cards/controls) answer everywhere; list rows, heroes and table fields keep still. See [Hover](/cards/entity-options#hover).
+
+::: live
+
+```yaml
+type: custom:entity-sections-card-pro
+title: Living room
+icon: mdi:sofa
+sections:
+  - layout: grid
+    hover: true
+    entities:
+      - { entity: light.living_room, tap_action: toggle }
+      - { entity: light.desk_lamp, tap_action: toggle }
+  - entities:
+      - { entity: cover.living_room_blinds, control: auto, hover: true }
+      - sensor.living_room_temperature
+```
+
+:::
+
 ## Reference
 
 ### Card options
@@ -344,6 +367,7 @@ sections:
 | `bucket_minutes`                                   | `60`                         | Bucket size for `columns` and `strip`, at least 5.                                                                                                                                              |
 | `smoothing_minutes`                                |                              | Averaging bucket of `sparkline` in minutes, at least 5 (default: one point per 12 px of width).                                                                                                 |
 | `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none | Defaults for every entity, see [Actions](/cards/entity-options#actions).                                                                                                                        |
+| `hover`                                            | `false`                      | Default for every section and entity, see [Hover](#hover).                                                                                                                                      |
 
 ### Section options
 
@@ -356,6 +380,7 @@ sections:
 | `align`                                  | card `align`   | Overrides the card value for this section.                                           |
 | `show_name` / `show_value` / `show_icon` | card values    | Item options for this section; entities can override them again.                     |
 | `name_position`                          | card value     | Where a row item's name sits; entities can override it again.                        |
+| `hover`                                  | card value     | Default for the section's entities; entities can override it again.                  |
 | `visibility`                             |                | Drawn only while the [conditions](/guide/visibility) hold (and one entity is shown). |
 
 ### Grid defaults
@@ -364,4 +389,4 @@ sections:
 
 ### Home Assistant options
 
-Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`. They are passed through to Home Assistant; see [Sizing in sections](/guide/sizing) for `grid_options`. The card's own `visibility` hides the whole card; its entities, header entities and sections take their own, see [Visibility](/guide/visibility). `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height). `hover: true` shows Home Assistant's hover and press layers on what a click runs, for every entity or, set on an entity, for that one; see [Hover](/cards/entity-options#hover).
+Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`. They are passed through to Home Assistant; see [Sizing in sections](/guide/sizing) for `grid_options`. The card's own `visibility` hides the whole card; its entities, header entities and sections take their own, see [Visibility](/guide/visibility). `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height). `hover: true` shows Home Assistant's hover and press layers on what a click runs, for every entity or, set on an entity, for that one; see [Hover](#hover).
