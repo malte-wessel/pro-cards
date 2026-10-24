@@ -19,6 +19,7 @@ const actx: NormalizeCtx = {
   tap: { action: "more-info" },
   hold: { action: "more-info" },
   dbl: { action: "none" },
+  hover: false,
 };
 const ent = (o: RawEntity) => normalizeEntity({ entity: "sensor.x", ...o }, actx, "e");
 const st = (state: string | number, attributes: Record<string, unknown> = {}): HassEntity =>
@@ -128,6 +129,7 @@ describe("names and units of items built by a card", () => {
     tap: { action: "none" },
     hold: { action: "none" },
     dbl: { action: "none" },
+    hover: false,
   };
   const st = {
     entity_id: "weather.home",

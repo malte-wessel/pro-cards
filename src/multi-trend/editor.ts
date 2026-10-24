@@ -15,7 +15,6 @@ export const EDITOR_LABELS: Record<string, StringKey> = {
   layout: "editor.multi_trend.layout",
   show_legend: "editor.multi_trend.show_legend",
   fill_height: "editor.multi_trend.fill_height",
-  hover: "editor.multi_trend.hover",
   x_axis: "editor.multi_trend.x_axis",
   y_axis: "editor.multi_trend.y_axis",
   entities: "editor.multi_trend.entities",
@@ -40,7 +39,6 @@ export const configToForm = (config: MultiTrendCardConfig): HaFormData => {
     layout: config.layout ?? "auto",
     show_legend: config.show_legend ?? true,
     fill_height: config.fill_height ?? true,
-    hover: config.hover === true,
     x_axis: !!config.x_axis,
     y_axis: !!config.y_axis,
     entities,
@@ -78,7 +76,6 @@ export const formToConfig = (
   setOrDrop(config, "layout", data.layout, !data.layout || data.layout === "auto");
   setOrDrop(config, "show_legend", !!data.show_legend, data.show_legend !== false);
   setOrDrop(config, "fill_height", false, data.fill_height !== false);
-  setOrDrop(config, "hover", true, data.hover !== true);
   setOrDrop(config, "x_axis", true, !data.x_axis);
   setOrDrop(config, "y_axis", true, !data.y_axis);
   // each entity starts from the one it was (the first unused with its id), so the keys the form
@@ -146,7 +143,6 @@ export const editorSchema = (hass: HomeAssistant | undefined, data: HaFormData):
         { name: "x_axis", selector: { boolean: {} } },
         { name: "y_axis", selector: { boolean: {} } },
         { name: "fill_height", selector: { boolean: {} } },
-        { name: "hover", selector: { boolean: {} } },
       ],
     },
     {

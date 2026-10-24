@@ -76,11 +76,3 @@ export const syncKeepHeight = (el: HTMLElement, config: unknown) =>
     "keep-height",
     !!config && typeof config === "object" && (config as CardConfigBase).fill_height === false,
   );
-
-// `hover: true` gives the clickable parts Home Assistant's hover and press layers (STYLE_HOVER,
-// gated on the host's `hover` attribute); a card sets it from its raw config in setConfig
-export const syncHover = (el: HTMLElement, config: unknown) =>
-  el.toggleAttribute(
-    "hover",
-    !!config && typeof config === "object" && (config as CardConfigBase).hover === true,
-  );

@@ -34,6 +34,7 @@ const ctx: NormalizeCtx = {
   tap: { action: "more-info" },
   hold: { action: "more-info" },
   dbl: { action: "none" },
+  hover: false,
 };
 const ent = (o: RawEntity) =>
   normalizeEntity({ entity: "light.x", control: "auto", ...o }, ctx, "e");

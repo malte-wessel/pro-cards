@@ -23,6 +23,7 @@ const ctx: NormalizeCtx = {
   tap: { action: "more-info" },
   hold: { action: "more-info" },
   dbl: { action: "none" },
+  hover: false,
   columns: 2,
 };
 const ent = (o: RawEntity) => normalizeEntity({ entity: "sensor.x", ...o }, ctx, "entities[0]");

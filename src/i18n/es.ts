@@ -206,7 +206,6 @@ const es: Translation = {
   "editor.multi_trend.hours_to_show": "Horas mostradas",
   "editor.multi_trend.smoothing_minutes": "Suavizado",
   "editor.multi_trend.fill_height": "Rellenar la altura",
-  "editor.multi_trend.hover": "Efecto al pasar el ratón",
   "editor.multi_trend.layout": "Disposición",
   "editor.multi_trend.show_legend": "Mostrar leyenda",
   "editor.multi_trend.x_axis": "Eje X (tiempo)",
