@@ -210,6 +210,13 @@ describe("card config schemas", () => {
         hover: true,
         sections: [{ type: "row", hover: false, entities: ["humidity"] }],
       },
+      {
+        type: "custom:energy-flow-card-pro",
+        hover: true,
+        home: { entity: "sensor.home_energy", hover: false },
+        sources: [{ type: "solar", entity: "sensor.solar_energy", hover: false }],
+        consumers: [{ entity: "sensor.ev_energy", hover: true }],
+      },
       { type: "custom:wind-card-pro", entity: "sensor.wind_speed", hover: true },
       { type: "custom:rain-card-pro", entity: "sensor.rain_rate", hover: true },
     ];

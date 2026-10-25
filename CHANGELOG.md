@@ -5,6 +5,8 @@
 _Beta_
 
 - **New energy flow card** (`custom:energy-flow-card-pro`): the power flow card's tree over a period (`period: today | yesterday | week | month | year`), from energy meters and their long-term statistics, live between compiled hours. The flows split the way the Energy dashboard splits them, hour by hour (day by day for longer periods); the dots move by each link's share of the home, thresholds and rules read kWh. A picker in the header steps to another day, week, month or year (‹ ›) or opens a calendar like Home Assistant's date picker (quick picks, and any range of days in two clicks), and goes back to the configured `period` after ten minutes untouched; `period_picker: false` keeps a fixed period. Also for heat: a heat pump's heat meter and the floors' meters show where the heat went
+- `hover: true` on an entity (or on the card or a section, for all of its entities) shows Home Assistant's hover and press layers on what a click runs (a tile, a grid cell, a header entity, an icon with its own action, every control), as on its tile card
+- A tile is clickable as a whole, as on Home Assistant's tile card: its padding runs the action too, also when the tile is taller than its content
 - Power flow: `other: { name, icon }` renames the Other node
 - Power and energy flow: `flow_style: none` draws the active links in their colour without motion
 - Power and energy flow: a tree whose sensors report another unit (a water flow in L/min, water meters in m³) shows its values in that unit as written instead of W or kWh
@@ -23,8 +25,6 @@ _2026-10-25_
 - Icons are sized like Home Assistant's tile card (a 24 px icon in a 36 px circle), so Pro tiles match the built-in ones
 - `icon_style: plain` draws an icon without its circle, still aligned with circled icons
 - `show_entity_picture: true` shows an entity's picture (a person's photo, a cover, a snapshot) in place of its icon, as on Home Assistant's tile card
-- `hover: true` on an entity (or on the card or a section, for all of its entities) shows Home Assistant's hover and press layers on what a click runs (a tile, a grid cell, a header entity, an icon with its own action, every control), as on its tile card
-- A tile is clickable as a whole, as on Home Assistant's tile card: its padding runs the action too, also when the tile is taller than its content
 - Entity cards no longer show the history window (`12 h`) in the header; a strip still labels its own axis
 - Power flow: `icon_size` on any node, including `other`
 - Power flow: a solar-fed battery given as a `charge` / `discharge` pair shows both values while it charges and discharges at once (`252 W ↓` over `221 W ↑`) instead of the net value; its label keeps a line for the second value, so such a card is one line taller
