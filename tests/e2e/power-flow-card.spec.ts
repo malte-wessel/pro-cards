@@ -734,3 +734,67 @@ test("a node with two flows shows its net value below the idle threshold, both a
   });
   await expect(label(card(page), "s1")).toHaveText(/^900 W\s*Grid/);
 });
+
+test.describe("power flow card: a still flow, the Other node and a unit of its own", () => {
+  test("flow_style none draws the active links in their colour, nothing moving", async ({
+    page,
+  }) => {
+    await mount(page, { type: T, sources: SRC, home: HOME, flow_style: "none" });
+    await pin(page);
+    const c = card(page);
+    await expect(c.locator("path.link.active")).toHaveCount(3);
+    await expect(c.locator(".lane")).toHaveCount(0);
+    await expect(c.locator(".pdiag")).toHaveClass(/static/);
+    // the full colour of the flow, not the faint track the dots run on
+    const stroke = await c
+      .locator("path.link.active")
+      .first()
+      .evaluate((p) => getComputedStyle(p).stroke);
+    // the solar link in the solar colour itself (the dots' track is a blend of it)
+    expect(stroke).toBe("rgb(255, 152, 0)");
+  });
+
+  test("the Other node takes a name and an icon of its own", async ({ page }) => {
+    await mount(page, {
+      type: T,
+      sources: SRC,
+      home: HOME,
+      consumers: CONS,
+      other: { name: "Rest of the house", icon: "mdi:home-outline" },
+    });
+    await pin(page);
+    const c = card(page);
+    await expect(label(c, "other")).toHaveText(/Rest of the house/);
+    await expect(c.locator(".pnode[data-node='other'] ha-icon")).toHaveAttribute(
+      "icon",
+      "mdi:home-outline",
+    );
+  });
+
+  test("a tree of water flows reads L/min, without the words of electricity", async ({ page }) => {
+    await mount(page, {
+      type: T,
+      decimals: 1,
+      sources: [{ type: "grid", power: "sensor.water_flow", name: "Mains" }],
+      consumers: [
+        { entity: "sensor.bathroom_water_flow", name: "Bathroom" },
+        { entity: "sensor.kitchen_water_flow", name: "Kitchen" },
+        { entity: "sensor.garden_water_flow", name: "Garden" },
+      ],
+    });
+    const c = card(page);
+    await expect(c.locator(".psummary .primary")).toHaveText("Home · 14.6 L/min");
+    await expect(c.locator(".psummary .secondary")).toHaveText("");
+    await expect(label(c, "s0")).toHaveText(/14\.6 L\/min\s*Mains/);
+    await expect(label(c, "c0")).toHaveText(/8\.2 L\/min\s*Bathroom/);
+    await expect(label(c, "other")).toHaveText(/2\.5 L\/min/);
+    // without an idle_below every flow that is not nothing moves; the garden takes nothing
+    await expect(c.locator(".lane")).toHaveCount(4);
+    // a kitchen in W does not belong: the console says so
+    const warned = page.waitForEvent("console", (m) =>
+      m.text().includes("sensor.kitchen_water_flow"),
+    );
+    await setState(page, "sensor.kitchen_water_flow", "3.9", { unit_of_measurement: "W" });
+    await warned;
+  });
+});

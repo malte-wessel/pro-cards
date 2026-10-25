@@ -340,7 +340,8 @@ export const allocate = (
     sG: z(sG),
     bG: z(bG),
     grid: z(grid),
-    selfSufficiency: H > 0 ? (H - gH) / H : null,
+    // what the grid did not cover: without a grid there is nothing to be self-sufficient of
+    selfSufficiency: H > 0 && cfg.sources.some((s) => s.kind === "grid") ? (H - gH) / H : null,
     edges,
     leafW,
     groupW,

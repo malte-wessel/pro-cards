@@ -12,6 +12,7 @@ _Beta_
 - Entity cards no longer show the history window (`12 h`) in the header; a strip still labels its own axis
 - Power flow: `icon_size` on any node, including `other`; `other: { name, icon }` renames the Other node
 - Power and energy flow: `flow_style: none` draws the active links in their colour without motion
+- Power and energy flow: a tree without a grid source (a heat flow) no longer claims to be 100 % self-sufficient
 - Power and energy flow: a tree whose sensors report another unit (a water flow in L/min, water meters in m³) shows its values in that unit as written instead of W or kWh
 - Power flow: a solar-fed battery given as a `charge` / `discharge` pair shows both values while it charges and discharges at once (`252 W ↓` over `221 W ↑`) instead of the net value; its label keeps a line for the second value, so such a card is one line taller
 - Power flow: `charge_from` takes the entity of a solar source (or a list of them), so a battery is charged only by its own panels and the other arrays get no link to it

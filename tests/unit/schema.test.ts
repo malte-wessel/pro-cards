@@ -318,6 +318,38 @@ describe("card config schemas", () => {
     expect(validate({ type: LC, cards: [{ entity: "light.kitchen" }] })).not.toBeNull();
   });
 
+  it("rejects energy flow cards that read power sensors", () => {
+    const EF = "custom:energy-flow-card-pro";
+    const ok = {
+      type: EF,
+      period: "week",
+      period_picker: false,
+      sources: [
+        { type: "solar", entity: "sensor.solar_energy" },
+        { type: "battery", charge: "sensor.c", discharge: "sensor.d", charge_from: "solar" },
+        { type: "grid", import: "sensor.i", export: "sensor.e" },
+      ],
+      consumers: ["sensor.ev_charger_energy"],
+      other: { name: "Rest", icon: "mdi:home" },
+      flow_style: "none",
+      decimals: { kwh: 2, mwh: 1 },
+      hide_consumers_below: 0.5,
+    };
+    expect(validate(ok)).toBeNull();
+    expect(validate({ ...ok, period: "decade" })).toMatch(/enum|allowed/);
+    // what describes a moment is the power flow card's
+    for (const src of [
+      { type: "battery", power: "sensor.b" },
+      { type: "grid", import: "sensor.i", price: "sensor.p" },
+      { type: "solar", entity: "sensor.s", peak: 8000 },
+      { type: "battery", charge: "sensor.c" },
+    ])
+      expect(validate({ type: EF, sources: [src] })).toBeTruthy();
+    for (const key of ["kw_above", "expensive_above", "animation"])
+      expect(validate({ ...ok, [key]: 1 })).toBeTruthy();
+    expect(validate({ ...ok, decimals: { w: 1 } })).toBeTruthy();
+  });
+
   it("rejects power flow card typos and wrong shapes", () => {
     const PF = "custom:power-flow-card-pro";
     const src = [

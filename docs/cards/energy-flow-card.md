@@ -134,7 +134,7 @@ The two cards take the same layout, so a power card for the moment and an energy
 
 ## Heat distribution
 
-The tree is not tied to electricity. A heat pump's heat meter as the source and the heat meters of the floors and the hot water as consumers show where the heat went. The source is a `solar` source with its own name and icon; `other: false` leaves out the **Other** node when the consumers account for all of it.
+The tree is not tied to electricity. A heat pump's heat meter as the source and the heat meters of the floors and the hot water as consumers show where the heat went. The source is a `solar` source with its own name and icon; `other: false` leaves out the **Other** node when the consumers account for all of it. Without a grid source there is nothing to be self-sufficient of, so the summary line leaves the self-sufficiency out.
 
 ::: live
 

@@ -118,4 +118,37 @@ describe("history feed", () => {
     expect(console.error).not.toHaveBeenCalled();
     expect(feed.due()).toBe(true);
   });
+
+  it("fetches again on demand while keeping what is loaded, or later when it is not complete", async () => {
+    const feed = new HistoryFeed("test", "statistics");
+    const applied: number[] = [];
+    await feed.run(
+      () => Promise.resolve(1),
+      (v) => applied.push(v),
+      () => {},
+    );
+    expect(feed.due()).toBe(false);
+    // newer data: due at once, the old result stays applied meanwhile
+    feed.invalidate();
+    expect(feed.due()).toBe(true);
+    expect(applied).toEqual([1]);
+    // incomplete: due again only after RETRY_MS
+    const now = Date.now();
+    feed.later(now);
+    expect(feed.due(now)).toBe(false);
+    expect(feed.due(now + RETRY_MS)).toBe(true);
+  });
+
+  it("names what failed in the console", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const feed = new HistoryFeed("energy-flow-card-pro", "statistics");
+    await feed.run(
+      () => Promise.reject(new Error("x")),
+      () => {},
+      () => {},
+    );
+    expect(vi.mocked(console.error).mock.calls[0][0]).toBe(
+      "energy-flow-card-pro: statistics fetch failed",
+    );
+  });
 });

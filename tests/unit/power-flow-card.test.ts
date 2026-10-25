@@ -12,13 +12,23 @@ import type { Visibility } from "../../src/shared/visibility.ts";
 import { collectTemplates } from "../../src/shared/entity/config.ts";
 import { modelOf, type FormatCtx } from "../../src/shared/entity/model.ts";
 import type { HomeAssistant } from "../../src/shared/ha.ts";
-import { allocate, fmtPower, powerNow, summaryState, wattsOf } from "../../src/power-flow/model.ts";
+import {
+  allocate,
+  fmtPower,
+  isPowerUnit,
+  powerNow,
+  summaryState,
+  wattsOf,
+} from "../../src/power-flow/model.ts";
 import {
   type EdgeFlow,
   thresholdShown,
   bothFlows,
   edgeColor,
+  fmtIn,
+  shareOfMax,
   sourceColor,
+  treeUnit,
 } from "../../src/shared/flow-tree/model.ts";
 import {
   arrowLength,
@@ -2000,5 +2010,87 @@ describe("power flow hide_consumers_below", () => {
     );
     expect(now.leaves.get("c0")).toBe(400);
     expect(thresholdShown(undefined, now.leaves.get("c0") ?? null, 500)).toBe(false);
+  });
+});
+
+describe("power-flow-card: self-sufficiency", () => {
+  it("is of a grid: a tree without one says nothing of it", () => {
+    const cfg = normalizePowerFlowConfig({ sources: [{ type: "solar", entity: "sensor.heat" }] });
+    const now = powerNow(cfg, modelsOf(cfg, hassOf({ "sensor.heat": "800" })));
+    const f = allocate(cfg, now);
+    expect(f.H).toBe(800);
+    expect(f.selfSufficiency).toBeNull();
+  });
+});
+
+describe("power-flow-card: the Other node and a still flow", () => {
+  it("names the Other node and gives it an icon of its own", () => {
+    const c = base({ consumers: ["sensor.a"], other: { name: "Losses", icon: "mdi:fire" } });
+    expect(c.consumers.at(-1)).toMatchObject({ kind: "other", name: "Losses", icon: "mdi:fire" });
+    // without them it is the translated Other with its own icon
+    const plain = base({ consumers: ["sensor.a"] }).consumers.at(-1);
+    expect(plain).not.toHaveProperty("name");
+    expect(plain).not.toHaveProperty("icon");
+  });
+
+  it("takes a flow style without motion", () => {
+    expect(base({ flow_style: "none" }).flowStyle).toBe("none");
+    expect(() => base({ flow_style: "sparks" })).toThrow(/flow_style/);
+  });
+});
+
+describe("power-flow-card: a tree in a unit of its own", () => {
+  const water = () =>
+    base({
+      home: undefined,
+      sources: [{ type: "grid", power: "sensor.main" }],
+      consumers: ["sensor.bath", "sensor.kitchen"],
+    });
+  const hassIn = (unit: string, extra: Record<string, string> = {}) =>
+    hassOf(
+      Object.fromEntries(
+        ["sensor.main", "sensor.bath", "sensor.kitchen"].map((id) => [
+          id,
+          ["1", { unit_of_measurement: extra[id] ?? unit }] as [string, Record<string, unknown>],
+        ]),
+      ),
+    );
+
+  it("counts in W and kW while its sensors are power sensors", () => {
+    expect(isPowerUnit("kW")).toBe(true);
+    expect(isPowerUnit("L/min")).toBe(false);
+    const strays: string[] = [];
+    expect(treeUnit(water(), hassIn("W"), isPowerUnit, (id) => strays.push(id))).toBeNull();
+    expect(strays).toEqual([]);
+  });
+
+  it("takes the unit of its first sensor when that is no power unit", () => {
+    const strays: string[] = [];
+    expect(treeUnit(water(), hassIn("L/min"), isPowerUnit, (id) => strays.push(id))).toBe("L/min");
+    expect(strays).toEqual([]);
+  });
+
+  it("names the sensors that count in another unit than the tree", () => {
+    const strays: string[] = [];
+    treeUnit(water(), hassIn("L/min", { "sensor.kitchen": "W" }), isPowerUnit, (id) =>
+      strays.push(id),
+    );
+    expect(strays).toEqual(["sensor.kitchen"]);
+  });
+
+  it("writes a value in the tree's unit, and moves the links by the largest flow", () => {
+    expect(fmtIn(undefined, -12.345, "L/min", 1)).toBe("12.3 L/min");
+    expect(fmtIn(undefined, null, "L/min", 1)).toBe("–");
+    const f = { H: 10, edges: [{ from: "s0", to: "home", w: 10, kind: "gridIn" }] } as Parameters<
+      typeof shareOfMax
+    >[0];
+    const of = shareOfMax(f);
+    expect(of(10)).toBe(1000);
+    expect(of(2.5)).toBe(250);
+  });
+
+  it("holds an idle_below that is given in any unit", () => {
+    expect(base().idleSet).toBe(false);
+    expect(base({ idle_below: 0.5 })).toMatchObject({ idleSet: true, idleBelow: 0.5 });
   });
 });
