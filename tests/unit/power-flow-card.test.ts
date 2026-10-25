@@ -1477,6 +1477,67 @@ describe("power flow layout", () => {
     expect(crossings(lanes)).toBe(0);
   });
 
+  it("sets the home level with a source a few px off its height, so its line runs straight", () => {
+    const cfg = normalizePowerFlowConfig({
+      sources: [
+        { type: "solar", entity: "sensor.solar" },
+        {
+          type: "battery",
+          charge: "sensor.charge",
+          discharge: "sensor.discharge",
+          soc: "sensor.soc",
+          charge_from: "solar",
+        },
+        { type: "grid", power: "sensor.grid" },
+      ],
+    });
+    const { f } = flowsOf(cfg, { "sensor.solar": "800", "sensor.grid": "300" });
+    const l = layoutTree(cfg, 400, f.edges);
+    const battery = l.edges.find((e) => e.from === "s1" && e.to === "home")!;
+    const node = (id: string) => l.nodes.find((n) => n.id === id)!;
+    // the two values make the battery's label taller: it sits a few px off the diagram's middle,
+    // and the home moves to it rather than the line taking a step
+    expect(node("s1").y).not.toBe(l.h / 2);
+    expect(node("home").y).toBe(node("s1").y);
+    expect(battery.pts).toHaveLength(2);
+  });
+
+  it("keeps the lanes into the home around its centre, a near source straight in", () => {
+    const configs = [
+      base(),
+      // a solar-fed pair: two values on the battery, the battery a few px off the home's height
+      normalizePowerFlowConfig({
+        sources: [
+          { type: "solar", entity: "sensor.solar" },
+          {
+            type: "battery",
+            charge: "sensor.charge",
+            discharge: "sensor.discharge",
+            soc: "sensor.soc",
+            charge_from: "solar",
+          },
+          { type: "grid", power: "sensor.grid" },
+        ],
+      }),
+    ];
+    for (const cfg of configs)
+      for (const width of [340, 400, 640]) {
+        const { f } = flowsOf(cfg, { "sensor.solar": "800", "sensor.grid": "300" });
+        const l = layoutTree(cfg, width, f.edges);
+        const home = l.nodes.find((n) => n.id === "home")!;
+        let near = 0;
+        for (const e of l.edges.filter((x) => x.to === "home")) {
+          const dy = e.pts[e.pts.length - 1][1] - home.y;
+          // on a lane of its own (0, ±8, ±16 …), or – one of them – straight in within half a lane
+          if (Math.abs(dy - Math.round(dy / GEOM.lane) * GEOM.lane) < 1e-6) continue;
+          near++;
+          expect(Math.abs(dy)).toBeLessThanOrEqual(GEOM.lane / 2);
+          expect(e.pts).toHaveLength(2);
+        }
+        expect(near).toBeLessThanOrEqual(1);
+      }
+  });
+
   it("keeps the lanes into the home free of crossings for many sources", () => {
     for (let n = 1; n <= 6; n++) {
       const sources = Array.from({ length: n }, (_, i) => ({
@@ -1792,6 +1853,33 @@ describe("power flow labels", () => {
     expect(placed.find((p) => p.id === "home")?.align).toBe("c");
     expect(placed.find((p) => p.id === "s0")?.align).toBe("l");
   });
+  it("puts a node's two values in one line where there is room for it", () => {
+    const cfg = base();
+    const { f } = flowsOf(cfg, {
+      "sensor.solar": "3400",
+      "sensor.home": "1240",
+      "sensor.battery": "-1200",
+      "sensor.grid": "-960",
+    });
+    // the battery shows two values: stacked 90 px wide and three lines, in one line 180 and two
+    const sizesOf = (alt: number) => [
+      { id: "s0", w: 70, h: 32 },
+      { id: "s1", w: 90, h: 49, alt: { w: alt, h: 32 } },
+      { id: "s2", w: 70, h: 32 },
+      { id: "home", w: 60, h: 17 },
+    ];
+    const battery = (width: number, alt: number) =>
+      placeLabels(layoutTree(cfg, width, f.edges), sizesOf(alt), "right").find(
+        (p) => p.id === "s1",
+      )!;
+    // a wide card: one line, in the line's shape
+    expect(battery(640, 180)).toMatchObject({ inline: true, w: 180, h: 32, align: "l" });
+    // too wide for the room before the lanes bend: stacked, in its first place
+    const narrow = battery(300, 180);
+    expect(narrow).toMatchObject({ inline: false, w: 90, h: 49 });
+    expect(narrow.align).toBe("l");
+  });
+
   it("shows both flows of a node from the idle threshold on, again only clearly above it", () => {
     // charge, discharge (or export, import) at idle_below 20
     expect(bothFlows(undefined, 30, 30, 20)).toBe(true);

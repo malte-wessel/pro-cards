@@ -1,6 +1,8 @@
 // Label placement (pure): every node's label (value over name) is tried at a few places around
 // its node, in an order that suits the node's kind and the flow direction, and takes the first
-// that overlaps no line, node, row or placed label and stays inside the diagram.
+// that overlaps no line, node, row or placed label and stays inside the diagram. A label with
+// two values may have a second shape, both values in one line (`alt`): it takes that one where it
+// finds a place at least as good as the stacked one's.
 import type { Direction } from "./constants.ts";
 import { GEOM } from "./constants.ts";
 import { slotRise, type LNode, type TreeLayout } from "./layout.ts";
@@ -11,11 +13,13 @@ export interface LabelSize {
   id: string; // node id
   w: number;
   h: number;
+  alt?: { w: number; h: number }; // the two values in one line: wider, a line lower
 }
 export interface PlacedLabel extends LabelSize {
   x: number;
   y: number;
   align: Align;
+  inline: boolean; // placed in its `alt` shape
 }
 type Box = [number, number, number, number]; // x1 y1 x2 y2
 type Cand = [number, number, Align];
@@ -134,6 +138,22 @@ export const placeLabels = (
   for (const s of [...sizes].sort((p, q) => order(p.id) - order(q.id))) {
     const nd = layout.nodes.find((n) => n.id === s.id);
     if (!nd) continue;
+    // the two values in one line where that finds a place as good as stacked or better (the
+    // candidates follow the label's height, so each shape has its own)
+    if (s.alt) {
+      const alt = s.alt;
+      const stacked = candidates(nd, dir, s.h, row).findIndex((c) =>
+        ok(boxOf(c[0], c[1], c[2], s.w, s.h)),
+      );
+      const flat = candidates(nd, dir, alt.h, row);
+      const i = flat.findIndex((c) => ok(boxOf(c[0], c[1], c[2], alt.w, alt.h)));
+      if (i >= 0 && (stacked < 0 || i <= stacked)) {
+        const [x, y, align] = flat[i];
+        placed.push(boxOf(x, y, align, alt.w, alt.h));
+        out.push({ ...s, ...alt, x: Math.round(x), y: Math.round(y), align, inline: true });
+        continue;
+      }
+    }
     const cands = candidates(nd, dir, s.h, row);
     let pick = cands.find((c) => ok(boxOf(c[0], c[1], c[2], s.w, s.h)));
     if (!pick) {
@@ -156,7 +176,7 @@ export const placeLabels = (
     }
     const [x, y, align] = pick;
     placed.push(boxOf(x, y, align, s.w, s.h));
-    out.push({ ...s, x: Math.round(x), y: Math.round(y), align });
+    out.push({ ...s, x: Math.round(x), y: Math.round(y), align, inline: false });
   }
   return out;
 };

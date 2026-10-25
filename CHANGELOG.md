@@ -9,7 +9,8 @@ _Beta_
 - Power and energy flow: `flow_style: none` draws the active links in their colour without motion
 - Power and energy flow: a tree whose sensors report another unit (a water flow in L/min, water meters in m³) shows its values in that unit as written instead of W or kWh
 - Power and energy flow: a tree without a grid source (a heat flow) no longer claims to be 100 % self-sufficient
-- Fix: power and energy flow: the source nearest the home's height runs into it straight, without a small step that looked like a crack in its line, and every line into the home meets its circle
+- Power and energy flow: a battery's or grid's two values sit in one line where there is room for it, stacked where there is not
+- Fix: power and energy flow: the home sits level with the source nearest its height, so that source's line runs straight in instead of taking a small step that looked like a crack, and every line into the home meets its circle
 
 ## 2.8.0 – Layout card and theme-aware sizing
 

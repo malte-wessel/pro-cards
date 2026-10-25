@@ -377,6 +377,9 @@ const labelText = (
   return { v, v2, n: name, s };
 };
 
+// both values of a two-valued label in one line
+const inlineValues = (txt: LabelTexts) => `${txt.v} · ${txt.v2}`;
+
 // the labels' lines as styled (`.plabel`), at the theme's text size
 export const labelLines = (diag: HTMLElement, cache?: TextCache): LabelLines => ({
   value: measure(cache, diag, ["plabel", "state"], [14, 17, 500]),
@@ -390,6 +393,8 @@ const measureLabels = (st: TreeState, labelEls: Map<string, HTMLElement>) => {
   const lines = linesOf(st.cfg);
   const texts = new Map<string, LabelTexts>();
   const sizes = new Map<string, LabelBox>();
+  // a label showing two values: its shape with both in one line
+  const alts = new Map<string, { w: number; h: number }>();
   for (const nd of st.layout.nodes) {
     const el = labelEls.get(nd.id);
     if (!el) continue;
@@ -406,8 +411,13 @@ const measureLabels = (st: TreeState, labelEls: Map<string, HTMLElement>) => {
     const h =
       value.line + (txt.v2 !== undefined ? value.line : 0) + name.line + (txt.s ? name.line : 0);
     sizes.set(nd.id, { w, h, vw, nw });
+    if (txt.v2)
+      alts.set(nd.id, {
+        w: Math.max(textWidth(inlineValues(txt), value.font) + 2, nw),
+        h: h - value.line,
+      });
   }
-  return { texts, sizes };
+  return { texts, sizes, alts };
 };
 
 export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
@@ -419,7 +429,7 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
     if (!leaf.id.includes("."))
       labelEls.get(leaf.id)?.classList.toggle("small", !prelim.cfg.hasGroups);
   // the labels' sizes decide where the columns go: lay out again with them
-  const { texts, sizes } = measureLabels(prelim, labelEls);
+  const { texts, sizes, alts } = measureLabels(prelim, labelEls);
   const st: TreeState = {
     ...prelim,
     layout: layoutTree(prelim.cfg, prelim.layout.w, prelim.flows.edges, sizes, prelim.layout.h),
@@ -597,7 +607,9 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
   const labelMax = new Map(layout.nodes.map((n) => [n.id, n.labelMax]));
   const labelSizes: LabelSize[] = [...sizes].map(([id, { w, h, vw = 0 }]) => {
     const max = labelMax.get(id);
-    return { id, h, w: max === undefined ? w : Math.min(w, Math.max(max, vw)) };
+    // the values in one line where there is room for it (a label cut to its room has none)
+    const alt = max === undefined ? alts.get(id) : undefined;
+    return { id, h, w: max === undefined ? w : Math.min(w, Math.max(max, vw)), alt };
   });
   for (const p of placeLabels(layout, labelSizes, cfg.direction)) {
     const el = labelEls.get(p.id);
@@ -606,13 +618,14 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
     const max = labelMax.get(p.id);
     el.classList.toggle("cut", max !== undefined);
     el.style.setProperty("--pl-max", max === undefined ? "" : `${Math.floor(max)}px`);
-    qs(el, ".state").textContent = txt.v;
+    // both values in one line where the placement found room for it
+    qs(el, ".state").textContent = p.inline ? inlineValues(txt) : txt.v;
     // the second value line: kept while it shows one value, below the name, so the value stays
     // over the name and the label keeps its height
     const v2 = qs(el, ".v2");
-    el.classList.toggle("two", txt.v2 !== undefined);
+    el.classList.toggle("two", txt.v2 !== undefined && !p.inline);
     v2.classList.toggle("blank", !txt.v2);
-    v2.textContent = txt.v2 || "\u00a0";
+    v2.textContent = p.inline ? "" : txt.v2 || "\u00a0";
     const name = qs(el, ".name");
     name.textContent = txt.n;
     name.style.display = txt.n ? "" : "none";
