@@ -2,7 +2,7 @@
 
 ## 2.8.0 – Layout card and theme-aware sizing
 
-_Beta_
+_2026-10-25_
 
 - **New layout card** (`custom:layout-card-pro`): arrange any cards inside a section as a `grid` (columns, tracks, spans) or as `masonry`. Breakpoints count view columns, each card is placed through its `view_layout`, and `card_style: seamless` joins the cards into one surface, painted once (a translucent theme colour does not stack). YAML only for now
 - Icons are sized like Home Assistant's tile card (a 24 px icon in a 36 px circle), so Pro tiles match the built-in ones
