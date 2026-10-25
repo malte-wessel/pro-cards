@@ -1464,11 +1464,9 @@ describe("power flow layout", () => {
         to = node(e.to);
       const [a, b] = [e.pts[0], e.pts[e.pts.length - 1]];
       expect(Math.hypot(a[0] - from.x, a[1] - from.y)).toBeCloseTo(from.d / 2, 5);
-      if (e.to === "home") {
-        // a lane into the home enters on its own lane, up to two lanes off the centre line
-        expect(b[0]).toBe(to.x - to.d / 2);
-        expect(Math.abs(b[1] - to.y)).toBeLessThanOrEqual(2 * GEOM.lane);
-      } else expect(Math.hypot(b[0] - to.x, b[1] - to.y)).toBeCloseTo(to.d / 2, 5);
+      // a lane into the home ends on its circle too, off the centre line on a lane of its own
+      expect(Math.hypot(b[0] - to.x, b[1] - to.y)).toBeCloseTo(to.d / 2, 5);
+      if (e.to === "home") expect(Math.abs(b[1] - to.y)).toBeLessThan(to.d / 2 - 3);
       expect(e.len).toBeGreaterThan(0);
       expect(e.d).toMatch(/^M/);
     }

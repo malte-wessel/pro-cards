@@ -457,6 +457,15 @@ export const layoutTree = (
   const A = (nd: LNode) => (right ? nd.x : nd.y),
     Bof = (nd: LNode) => (right ? nd.y : nd.x);
   const offsets = laneOffsets(bS, bH);
+  // The source nearest the home's height has the middle lane; it is rarely level with the home,
+  // and a step of a few px would round into two tiny corners that read as a crack. The lanes move
+  // with it, as far as they all still meet the home's circle, so it runs in straight (one too far
+  // off keeps its bend, large enough to round).
+  const mid = offsets.findIndex((o, i) => o === 0 && bS[i] !== undefined);
+  const reach = rH - 4;
+  const laneLo = Math.min(0, ...offsets),
+    laneHi = Math.max(0, ...offsets);
+  const shift = mid < 0 ? 0 : Math.max(-reach - laneLo, Math.min(reach - laneHi, bS[mid] - bH));
   // a source's lane by its id (its position in the drawn column, not its config index)
   const srcPos = new Map(cfg.sources.map((s, i) => [s.id, i]));
   const gapAlong = aH - rH - (aS + rS);
@@ -487,11 +496,14 @@ export const layoutTree = (
     if (e.to === "home") {
       const off = offsets[srcPos.get(e.from) ?? -1] ?? 0;
       const aBend = bendBase + Math.abs(off) * 1.5;
+      const b = bH + off + shift;
+      // a lane off the home's centre line ends on its circle, not short of it
+      const aEnd = aH - Math.sqrt(Math.max(0, rH * rH - (b - bH) ** 2));
       pts = [
         map(A(from) + from.d / 2, Bof(from)),
         map(aBend, Bof(from)),
-        map(aBend, bH + off),
-        map(aH - rH, bH + off),
+        map(aBend, b),
+        map(aEnd, b),
       ];
     } else if (from.kind !== "home" && from.kind !== "group") {
       // a rail: charging (… → battery) or export (… → grid), behind the source column
