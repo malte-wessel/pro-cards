@@ -74,4 +74,52 @@ describe("demo world", () => {
     expect(calls).toBe(2);
     world.set("nope.x", "on");
   });
+
+  it("counts the energy meters on and keeps their statistics", () => {
+    const HOUR = 3600e3;
+    const now = Date.now();
+    const start = Math.floor((now - DAY) / HOUR) * HOUR;
+    const st = world.statistics(
+      ["sensor.solar_energy", "sensor.heat_pump_energy", "sensor.nope"],
+      start,
+      now,
+      "hour",
+      ["change", "state"],
+      "kWh",
+    );
+    // compiled hours only, in the asked unit (the heat pump counts in Wh)
+    const solar = st["sensor.solar_energy"],
+      heat = st["sensor.heat_pump_energy"];
+    expect(solar.length).toBeGreaterThanOrEqual(23);
+    expect(solar.at(-1)!.end).toBeLessThanOrEqual(now);
+    expect(st["sensor.nope"]).toBeUndefined();
+    // what a row counted is the difference of the readings around it
+    for (let i = 1; i < heat.length; i++)
+      expect(heat[i].state! - heat[i - 1].state!).toBeCloseTo(heat[i].change!, 6);
+    expect(heat.every((r) => r.change! < 2)).toBe(true);
+    // the same window gives the same rows
+    expect(
+      world.statistics(["sensor.solar_energy"], start, now, "hour", ["change"], "kWh"),
+    ).toEqual(world.statistics(["sensor.solar_energy"], start, now, "hour", ["change"], "kWh"));
+    // merged into days, a day's change is its hours'
+    const days = world.statistics(["sensor.home_energy"], start, now, "day", ["change"], "kWh")[
+      "sensor.home_energy"
+    ];
+    const hours = world.statistics(["sensor.home_energy"], start, now, "hour", ["change"], "kWh")[
+      "sensor.home_energy"
+    ];
+    expect(days.reduce((a, r) => a + r.change!, 0)).toBeCloseTo(
+      hours.reduce((a, r) => a + r.change!, 0),
+      6,
+    );
+    expect(world.statisticsMetadata(["sensor.solar_energy", "sensor.outdoor_temperature"])).toEqual(
+      [
+        {
+          statistic_id: "sensor.solar_energy",
+          statistics_unit_of_measurement: "kWh",
+          has_sum: true,
+        },
+      ],
+    );
+  });
 });

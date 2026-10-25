@@ -40,6 +40,27 @@ export interface HomeAssistant {
 // the compact rows of `history/history_during_period` with minimal_response + no_attributes
 export type HistoryDuringPeriodResult = Record<string, { s?: string; lu?: number }[]>;
 
+// ----- statistics (the recorder's long-term statistics) -----
+
+export type StatisticsPeriod = "5minute" | "hour" | "day" | "week" | "month";
+// a row of `recorder/statistics_during_period`: its bucket (ms) and the asked types, in the asked
+// units; `change` is what the sum grew in the bucket, `state` the meter's reading at its end
+export interface StatisticValue {
+  start: number;
+  end: number;
+  change?: number | null;
+  state?: number | null;
+  sum?: number | null;
+}
+// statistic id → its rows (an id without rows in the window is left out)
+export type StatisticsResult = Record<string, StatisticValue[]>;
+// a row of `recorder/get_statistics_metadata`
+export interface StatisticMetadata {
+  statistic_id: string;
+  statistics_unit_of_measurement: string | null;
+  has_sum: boolean;
+}
+
 // ----- weather -----
 
 export type WeatherForecastType = "hourly" | "daily" | "twice_daily";

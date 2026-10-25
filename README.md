@@ -37,6 +37,7 @@ Pro Cards are polished dashboard cards that look like they belong in Home Assist
 | Wind Card Pro            | `custom:wind-card-pro`            | Wind speed, direction and gusts as a tile, a flow tile or a hero, with an animated wind field in four styles that rules colour.               | YAML only |
 | Rain Card Pro            | `custom:rain-card-pro`            | Rain rate and today's total as a tile, a flow tile or a hero, with falling drops, ripples or a filling gauge that rules colour.               | YAML only |
 | Power Flow Card Pro      | `custom:power-flow-card-pro`      | Solar, battery and grid → home → rooms and devices as a tree with animated flow, the state of the home and its self-sufficiency.              | YAML only |
+| Energy Flow Card Pro     | `custom:energy-flow-card-pro`     | The power flow's tree over a period (today, this week, month or year) from energy meters and their long-term statistics.                      | YAML only |
 | Layout Card Pro          | `custom:layout-card-pro`          | Cards inside a section in a grid or masonry, arranged by how many view columns the section spans, as separate cards or one seamless surface.  | YAML only |
 
 All cards support the sections grid (`grid_options`). Requires Home Assistant 2025.3 or newer.
@@ -154,6 +155,23 @@ consumers:
 ```
 
 [Power Flow Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/power-flow-card)
+
+#### Energy Flow Card Pro
+
+Where the energy came from and where it went today, this week, this month or this year: the power flow card's tree, drawn from energy meters and their long-term statistics, with what the grid imported and exported and how self-sufficient the home was.
+
+```yaml
+type: custom:energy-flow-card-pro
+period: today
+sources:
+  - { type: solar, entity: sensor.solar_energy }
+  - { type: battery, charge: sensor.battery_charge_energy, discharge: sensor.battery_discharge_energy }
+  - { type: grid, import: sensor.grid_import_energy, export: sensor.grid_export_energy }
+consumers:
+  - { entity: sensor.heat_pump_energy, name: Heat pump, icon: mdi:heat-pump }
+```
+
+[Energy Flow Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/energy-flow-card)
 
 ### Layout
 

@@ -93,7 +93,7 @@ sources:
 
 ## Consumers
 
-`consumers` lists the devices the home feeds. Each is an entity with a power sensor and, like everywhere else, a `name`, an `icon` and a `secondary` line (a template is fine); an **Other** node takes whatever the home uses beyond them (`other: false` leaves it out). `consumer_style: list` shows them as rows with a bar instead of nodes.
+`consumers` lists the devices the home feeds. Each is an entity with a power sensor and, like everywhere else, a `name`, an `icon` and a `secondary` line (a template is fine); an **Other** node takes whatever the home uses beyond them (`other: false` leaves it out, `other: { name: Rest of the house, icon: mdi:home-outline }` gives it a name and an icon of its own). `consumer_style: list` shows them as rows with a bar instead of nodes.
 
 A device that can produce, such as an EV giving power back or a plug-in panel on a smart plug, reports a negative value: its link then runs back to the home in the solar colour and it counts for nothing in the Other node. `invert: true` flips a sensor with the opposite sign.
 
@@ -238,7 +238,7 @@ consumers:
 
 ## Flow style
 
-`flow_style` picks how the power moves along the links: `dots` (the default), `lines` (dashes running along the link) or `arrows`.
+`flow_style` picks how the power moves along the links: `dots` (the default), `lines` (dashes running along the link) or `arrows`. `none` keeps everything still: an active link is drawn in its full colour, an idle one stays a dashed track.
 
 ::: live
 
@@ -264,13 +264,20 @@ consumers:
     - { type: solar, entity: sensor.solar_power }
     - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
     - { type: grid, power: sensor.grid_power }
+- type: custom:power-flow-card-pro
+  home: sensor.power_consumption
+  flow_style: none
+  sources:
+    - { type: solar, entity: sensor.solar_power }
+    - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
+    - { type: grid, power: sensor.grid_power }
 ```
 
 :::
 
 ## States, rules and the grid
 
-The line above the tree says what the home runs on: **Exporting**, **On battery**, **Importing** or **Balanced**, with the self-sufficiency of the moment. A grid source with `price` and a card-level `expensive_above` adds **Expensive** when importing at or above that price, and `offline` names an entity whose state (`on` by default, or `{ entity, state }`) means the grid is down: the grid node turns red, the card tints and the line says what keeps the home running (**Grid offline · on battery**, **· on solar**, or **Grid offline** alone). Both take the red state colour.
+The line above the tree says what the home runs on: **Exporting**, **On battery**, **Importing** or **Balanced**, with the self-sufficiency of the moment (a tree without a grid source has none). A grid source with `price` and a card-level `expensive_above` adds **Expensive** when importing at or above that price, and `offline` names an entity whose state (`on` by default, or `{ entity, state }`) means the grid is down: the grid node turns red, the card tints and the line says what keeps the home running (**Grid offline · on battery**, **· on solar**, or **Grid offline** alone). Both take the red state colour.
 
 A grid with a `generator` sensor keeps the home running during an outage: while `offline`, the grid node becomes the generator, its power flows to the home in amber and the line reads **Grid offline · on generator**. A grid with the `fossil` percentage of the [CO2 Signal](https://www.home-assistant.io/integrations/co2signal/) integration (or a `non_fossil` percentage) splits the grid's share of the home ring into a low-carbon and a fossil part, names the share on the grid label and draws it as the grid node's ring.
 
@@ -321,6 +328,26 @@ Every active link carries dots: more and faster the more power it carries, from 
 A link carrying less than `idle_below` watts (default 20) counts as carrying nothing, so standby noise around 0 W never makes the flow blink; `idle_below: 1` shows every trickle, `0` anything that is not exactly nothing. The same threshold decides the node colours and the summary line. Links that carry nothing are dashed tracks by default. `idle_links: hidden` leaves them out (the labels keep clear of them all the same, so no label moves when a link switches on or off); `faint` draws them as faint solid lines.
 
 Values show in W below `kw_above` watts (default 1000) and in kW from there on, whatever unit the sensors report; `kw_above: 0` shows every value in kW. `decimals` sets the decimals of both units (`decimals: 1`) or each (`decimals: { w: 0, kw: 1 }`); a source's or consumer's own `decimals` wins for its label.
+
+The tree is not tied to power. When its sensors report another unit (a water flow in L/min, a heat flow in a unit of its own), the card takes the unit of its first sensor (the home's, or else the first source's) and shows every value in it as written, with the kW decimals. Then `idle_below`, `hide_below` and the rules read that unit, without an `idle_below` every flow that is not nothing moves, and the dots move by each link's share of the largest flow unless `animation` sets its bounds. The summary line leaves out the state and the self-sufficiency, which speak of electricity. All the tree's sensors should report the same unit; the browser console names one that does not. Here the water main is a `grid` source, a supply from outside, with a name and an icon of its own:
+
+::: live
+
+```yaml
+type: custom:power-flow-card-pro
+title: Water
+icon: mdi:water
+decimals: 1
+sources:
+  - { type: grid, power: sensor.water_flow, name: Mains, icon: mdi:water-pump }
+consumers:
+  - { entity: sensor.bathroom_water_flow, name: Bathroom, icon: mdi:shower }
+  - { entity: sensor.kitchen_water_flow, name: Kitchen, icon: mdi:faucet }
+  - { entity: sensor.garden_water_flow, name: Garden, icon: mdi:sprinkler-variant }
+other: { name: Rest of the house, icon: mdi:home-outline }
+```
+
+:::
 
 ::: live
 
@@ -399,9 +426,9 @@ grid_options:
 | `home`                 | sum of the sources                    | The home's consumption sensor (W or kW), or an entity object with `name`, `icon`, `rules` and actions.                                                                                          |
 | `consumers`            | –                                     | Devices (`{ entity, name, icon }`) or rooms (`{ group, icon, entities }`), in drawing order.                                                                                                    |
 | `consumer_style`       | `nodes`                               | `nodes` or `list` (rows with a bar). Rows need the `right` direction.                                                                                                                           |
-| `other`                | `true` with consumers                 | The **Other** node for the home's consumption the consumers do not account for; `{ icon_size }` sizes it.                                                                                       |
+| `other`                | `true` with consumers                 | The **Other** node for the home's consumption the consumers do not account for; `{ name, icon, icon_size }` names and sizes it.                                                                 |
 | `direction`            | `right`                               | `right` (sources → home → consumers) or `down`.                                                                                                                                                 |
-| `flow_style`           | `dots`                                | `dots`, `lines` or `arrows`.                                                                                                                                                                    |
+| `flow_style`           | `dots`                                | `dots`, `lines`, `arrows`, or `none` (active links in their colour, no motion).                                                                                                                 |
 | `idle_links`           | `dashed`                              | Links that carry nothing: `dashed`, `hidden` or `faint`.                                                                                                                                        |
 | `idle_below`           | `20`                                  | Watts below which a link is idle (no motion) and names no state; `0` lets every trickle flow.                                                                                                   |
 | `animation`            | `{ slow_below: 0, fast_above: 3600 }` | The loads (W) between which the flow goes from slowest to fastest.                                                                                                                              |

@@ -4,26 +4,32 @@ import {
   hiddenNodes,
   leavesOf,
   nodeSize,
-  normalizePowerFlowConfig,
   twoValued,
   viewConfig,
-} from "../../src/power-flow/config.ts";
+} from "../../src/shared/flow-tree/config.ts";
+import { normalizePowerFlowConfig } from "../../src/power-flow/config.ts";
 import type { Visibility } from "../../src/shared/visibility.ts";
 import { collectTemplates } from "../../src/shared/entity/config.ts";
 import { modelOf, type FormatCtx } from "../../src/shared/entity/model.ts";
 import type { HomeAssistant } from "../../src/shared/ha.ts";
 import {
   allocate,
+  fmtPower,
+  isPowerUnit,
+  powerNow,
+  summaryState,
+  wattsOf,
+} from "../../src/power-flow/model.ts";
+import {
   type EdgeFlow,
   thresholdShown,
   bothFlows,
   edgeColor,
-  fmtPower,
-  powerNow,
+  fmtIn,
+  shareOfMax,
   sourceColor,
-  summaryState,
-  wattsOf,
-} from "../../src/power-flow/model.ts";
+  treeUnit,
+} from "../../src/shared/flow-tree/model.ts";
 import {
   arrowLength,
   duration,
@@ -33,8 +39,14 @@ import {
   particles,
   rateOf,
   speed,
-} from "../../src/power-flow/flow.ts";
-import { arcPath, dedupe, orthoPath, pathLength, ringArcs } from "../../src/power-flow/path.ts";
+} from "../../src/shared/flow-tree/flow.ts";
+import {
+  arcPath,
+  dedupe,
+  orthoPath,
+  pathLength,
+  ringArcs,
+} from "../../src/shared/flow-tree/path.ts";
 import {
   acrossOf,
   alongDownOf,
@@ -44,10 +56,11 @@ import {
   layoutTree,
   ringWidth,
   sourceRow,
-} from "../../src/power-flow/layout.ts";
-import { placeLabels } from "../../src/power-flow/labels.ts";
-import { COLORS, DEFAULT_UNITS, GEOM } from "../../src/power-flow/constants.ts";
-import { segmentsOf, type Pt } from "../../src/power-flow/path.ts";
+} from "../../src/shared/flow-tree/layout.ts";
+import { placeLabels } from "../../src/shared/flow-tree/labels.ts";
+import { COLORS, GEOM } from "../../src/shared/flow-tree/constants.ts";
+import { DEFAULT_UNITS } from "../../src/power-flow/constants.ts";
+import { segmentsOf, type Pt } from "../../src/shared/flow-tree/path.ts";
 
 const SRC = [
   { type: "solar", entity: "sensor.solar" },
@@ -1997,5 +2010,125 @@ describe("power flow hide_consumers_below", () => {
     );
     expect(now.leaves.get("c0")).toBe(400);
     expect(thresholdShown(undefined, now.leaves.get("c0") ?? null, 500)).toBe(false);
+  });
+});
+
+describe("power-flow-card: self-sufficiency", () => {
+  it("is of a grid: a tree without one says nothing of it", () => {
+    const cfg = normalizePowerFlowConfig({ sources: [{ type: "solar", entity: "sensor.heat" }] });
+    const now = powerNow(cfg, modelsOf(cfg, hassOf({ "sensor.heat": "800" })));
+    const f = allocate(cfg, now);
+    expect(f.H).toBe(800);
+    expect(f.selfSufficiency).toBeNull();
+  });
+});
+
+describe("power-flow-card: the Other node and a still flow", () => {
+  it("names the Other node and gives it an icon of its own", () => {
+    const c = base({ consumers: ["sensor.a"], other: { name: "Losses", icon: "mdi:fire" } });
+    expect(c.consumers.at(-1)).toMatchObject({ kind: "other", name: "Losses", icon: "mdi:fire" });
+    // without them it is the translated Other with its own icon
+    const plain = base({ consumers: ["sensor.a"] }).consumers.at(-1);
+    expect(plain).not.toHaveProperty("name");
+    expect(plain).not.toHaveProperty("icon");
+  });
+
+  it("takes a flow style without motion", () => {
+    expect(base({ flow_style: "none" }).flowStyle).toBe("none");
+    expect(() => base({ flow_style: "sparks" })).toThrow(/flow_style/);
+  });
+});
+
+describe("power-flow-card: a tree in a unit of its own", () => {
+  const water = () =>
+    base({
+      home: undefined,
+      sources: [{ type: "grid", power: "sensor.main" }],
+      consumers: ["sensor.bath", "sensor.kitchen"],
+    });
+  const hassIn = (unit: string, extra: Record<string, string> = {}) =>
+    hassOf(
+      Object.fromEntries(
+        ["sensor.main", "sensor.bath", "sensor.kitchen"].map((id) => [
+          id,
+          ["1", { unit_of_measurement: extra[id] ?? unit }] as [string, Record<string, unknown>],
+        ]),
+      ),
+    );
+
+  it("counts in W and kW while its sensors are power sensors", () => {
+    expect(isPowerUnit("kW")).toBe(true);
+    expect(isPowerUnit("L/min")).toBe(false);
+    const strays: string[] = [];
+    expect(treeUnit(water(), hassIn("W"), isPowerUnit, (id) => strays.push(id))).toBeNull();
+    expect(strays).toEqual([]);
+  });
+
+  it("takes the unit of its first sensor when that is no power unit", () => {
+    const strays: string[] = [];
+    expect(treeUnit(water(), hassIn("L/min"), isPowerUnit, (id) => strays.push(id))).toBe("L/min");
+    expect(strays).toEqual([]);
+  });
+
+  it("names the sensors that count in another unit than the tree", () => {
+    const strays: string[] = [];
+    treeUnit(water(), hassIn("L/min", { "sensor.kitchen": "W" }), isPowerUnit, (id) =>
+      strays.push(id),
+    );
+    expect(strays).toEqual(["sensor.kitchen"]);
+  });
+
+  it("writes a value in the tree's unit, and moves the links by the largest flow", () => {
+    expect(fmtIn(undefined, -12.345, "L/min", 1)).toBe("12.3 L/min");
+    expect(fmtIn(undefined, null, "L/min", 1)).toBe("–");
+    const f = { H: 10, edges: [{ from: "s0", to: "home", w: 10, kind: "gridIn" }] } as Parameters<
+      typeof shareOfMax
+    >[0];
+    const of = shareOfMax(f);
+    expect(of(10)).toBe(1000);
+    expect(of(2.5)).toBe(250);
+  });
+
+  it("holds an idle_below that is given in any unit", () => {
+    expect(base().idleSet).toBe(false);
+    expect(base({ idle_below: 0.5 })).toMatchObject({ idleSet: true, idleBelow: 0.5 });
+  });
+});
+
+describe("power-flow-card: thresholds in a tree of its own unit", () => {
+  const water = (extra: Record<string, unknown> = {}) => {
+    const el = new PowerFlowCard();
+    el.setConfig({
+      sources: [{ type: "grid", power: "sensor.main" }],
+      consumers: [{ entity: "sensor.garden", hide_below: 0.5 }],
+      ...extra,
+    });
+    return el;
+  };
+  const flows = (garden: string, unit = "L/min") =>
+    hassOf({
+      "sensor.main": ["10", { unit_of_measurement: unit }],
+      "sensor.garden": [garden, { unit_of_measurement: unit }],
+    });
+
+  it("has no idle threshold unless the config gives one", () => {
+    const el = water();
+    el.hass = flows("1");
+    expect(el._config?.idleBelow).toBe(0);
+    const given = water({ idle_below: 0.5 });
+    given.hass = flows("1");
+    expect(given._config?.idleBelow).toBe(0.5);
+    // in watts the card's own 20 W
+    const watts = water();
+    watts.hass = flows("1", "W");
+    expect(watts._config?.idleBelow).toBe(20);
+  });
+
+  it("brings a hidden consumer back 20 % above its threshold, not 2 units", () => {
+    const el = water();
+    el.hass = flows("0.3");
+    expect(el._computed?.hidden.has("c0")).toBe(true);
+    el.hass = flows("0.65");
+    expect(el._computed?.hidden.has("c0")).toBe(false);
   });
 });

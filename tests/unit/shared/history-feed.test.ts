@@ -118,4 +118,64 @@ describe("history feed", () => {
     expect(console.error).not.toHaveBeenCalled();
     expect(feed.due()).toBe(true);
   });
+
+  it("fetches again on demand while keeping what is loaded", async () => {
+    const feed = new HistoryFeed("test", "statistics");
+    const applied: number[] = [];
+    await feed.run(
+      () => Promise.resolve(1),
+      (v) => applied.push(v),
+      () => {},
+    );
+    expect(feed.due()).toBe(false);
+    // newer data: due at once, the old result stays applied meanwhile
+    feed.invalidate();
+    expect(feed.due()).toBe(true);
+    expect(applied).toEqual([1]);
+  });
+
+  it("fetches a result that is not complete yet again after RETRY_MS", async () => {
+    const feed = new HistoryFeed("test", "statistics");
+    const done = vi.fn();
+    const before = Date.now();
+    // the hours around a turn are compiled a little later
+    await feed.run(
+      () => Promise.resolve(1),
+      () => false,
+      done,
+    );
+    expect(done).toHaveBeenCalledTimes(1);
+    expect(feed.loaded).toBe(false);
+    expect(feed.due(before)).toBe(false);
+    expect(feed.due(Date.now() + RETRY_MS)).toBe(true);
+  });
+
+  it("answers a refresh asked for while a fetch runs with another fetch", async () => {
+    const feed = new HistoryFeed("test", "statistics");
+    const d = deferred<number>();
+    const run = feed.run(
+      () => d.promise,
+      () => {},
+      () => {},
+    );
+    // a newly compiled hour while the request is on its way
+    feed.invalidate();
+    d.resolve(1);
+    await run;
+    expect(feed.loaded).toBe(false);
+    expect(feed.due()).toBe(true);
+  });
+
+  it("names what failed in the console", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const feed = new HistoryFeed("energy-flow-card-pro", "statistics");
+    await feed.run(
+      () => Promise.reject(new Error("x")),
+      () => {},
+      () => {},
+    );
+    expect(vi.mocked(console.error).mock.calls[0][0]).toBe(
+      "energy-flow-card-pro: statistics fetch failed",
+    );
+  });
 });

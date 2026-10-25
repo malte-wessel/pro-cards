@@ -71,6 +71,25 @@ const PF_CONS = [
   { entity: "sensor.office_power", name: "Office", icon: "mdi:monitor" },
 ];
 
+const EF = "custom:energy-flow-card-pro";
+// the demo world's meters (meters.ts): their statistics follow the frozen clock
+const EF_SRC = [
+  { type: "solar", entity: "sensor.solar_energy" },
+  {
+    type: "battery",
+    charge: "sensor.battery_charge_energy",
+    discharge: "sensor.battery_discharge_energy",
+    soc: "sensor.battery_soc",
+  },
+  { type: "grid", import: "sensor.grid_import_energy", export: "sensor.grid_export_energy" },
+];
+const EF_CONS = [
+  { entity: "sensor.heat_pump_energy", name: "Heat pump", icon: "mdi:heat-pump" },
+  { entity: "sensor.ev_charger_energy", name: "EV", icon: "mdi:car-electric" },
+  { entity: "sensor.washer_energy", name: "Washer", icon: "mdi:washing-machine" },
+  { entity: "sensor.office_energy", name: "Office", icon: "mdi:monitor" },
+];
+
 const CASES = {
   "ec-visuals": [
     {
@@ -1632,6 +1651,65 @@ const CASES = {
       { ...PF_CONS[3], hide_below: 0 },
     ],
   },
+  // flow_style none: the active links in their full colour, nothing moving; a renamed Other
+  "pf-still": {
+    type: PF,
+    home: "sensor.power_consumption",
+    sources: PF_SRC,
+    consumers: PF_CONS.slice(0, 2),
+    flow_style: "none",
+    other: { name: "Rest of the house", icon: "mdi:home-outline" },
+  },
+  // a tree in a unit of its own: water in L/min, no state or self-sufficiency on the summary
+  "pf-water": {
+    type: PF,
+    title: "Water",
+    icon: "mdi:water",
+    decimals: 1,
+    sources: [{ type: "grid", power: "sensor.water_flow", name: "Mains", icon: "mdi:water-pump" }],
+    consumers: [
+      { entity: "sensor.bathroom_water_flow", name: "Bathroom", icon: "mdi:shower" },
+      { entity: "sensor.kitchen_water_flow", name: "Kitchen", icon: "mdi:faucet" },
+      { entity: "sensor.garden_water_flow", name: "Garden", icon: "mdi:sprinkler-variant" },
+    ],
+    other: { name: "Rest of the house", icon: "mdi:home-outline" },
+  },
+  // the energy flow card: today with the picker and its default title …
+  "ef-today": { type: EF, home: "sensor.home_energy", sources: EF_SRC, consumers: EF_CONS },
+  // … a month as a list with a room, without the picker: the summary names the period …
+  "ef-month-list": {
+    type: EF,
+    title: "Energy",
+    icon: "mdi:lightning-bolt",
+    period: "month",
+    period_picker: false,
+    consumer_style: "list",
+    sources: EF_SRC,
+    consumers: [
+      { group: "Utility room", icon: "mdi:washing-machine", entities: EF_CONS.slice(0, 1) },
+      ...EF_CONS.slice(1),
+    ],
+  },
+  // … and the heat a heat pump made, as a tree of heat meters (no grid: no self-sufficiency)
+  "ef-heat": {
+    type: EF,
+    title: "Heat",
+    icon: "mdi:fire",
+    other: false,
+    sources: [
+      {
+        type: "solar",
+        entity: "sensor.heat_pump_heat_energy",
+        name: "Heat pump",
+        icon: "mdi:heat-pump",
+      },
+    ],
+    consumers: [
+      { entity: "sensor.heating_ground_floor_energy", name: "Ground floor" },
+      { entity: "sensor.heating_upper_floor_energy", name: "Upper floor" },
+      { entity: "sensor.hot_water_energy", name: "Hot water" },
+    ],
+  },
   // the layout card: a grid with a full-width span, a seamless grid with
   // dividers, and masonry over two tracks filled by the cards' sizes
   "lc-grid": {
@@ -1687,7 +1765,11 @@ const ALL: Record<string, Parameters<typeof mount>[1]> = {
 };
 // cases that need a wider column than the 400 px section (list rows show their circles from 380 px
 // of tree, after the card's padding)
-const WIDTHS: Record<string, number> = { "pf-list-rooms": 640, "pf-two-way-down": 340 };
+const WIDTHS: Record<string, number> = {
+  "pf-list-rooms": 640,
+  "pf-two-way-down": 340,
+  "ef-month-list": 640,
+};
 
 for (const [name, cfg] of Object.entries(ALL)) {
   for (const theme of ["light", "dark"]) {
@@ -1714,4 +1796,32 @@ for (const [name, cfg] of Object.entries(ALL)) {
       await expect(page.locator("#root")).toHaveScreenshot(`${name}-${theme}.png`);
     });
   }
+}
+
+// the energy flow card's calendar, open over the card: a range picked (its band, the button's
+// label) and the calendar opened again on it
+for (const theme of ["light", "dark"]) {
+  test(`ef-calendar (${theme})`, async ({ page }) => {
+    await mount(page, { type: EF, home: "sensor.home_energy", sources: EF_SRC }, { theme });
+    const c = page.locator("#root .cell").first().locator("> *");
+    const cell = (d: number) => c.locator(".dp-cell:not(.dim)", { hasText: new RegExp(`^${d}$`) });
+    await c.locator(".pchip").click();
+    await cell(8).click();
+    await cell(12).click();
+    await c.locator(".pchip").click();
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(150);
+    const a = (await c.boundingBox())!,
+      b = (await c.locator(".dp").boundingBox())!;
+    const x = Math.min(a.x, b.x) - 8,
+      y = Math.min(a.y, b.y) - 8;
+    await expect(page).toHaveScreenshot(`ef-calendar-${theme}.png`, {
+      clip: {
+        x,
+        y,
+        width: Math.max(a.x + a.width, b.x + b.width) + 8 - x,
+        height: Math.max(a.y + a.height, b.y + b.height) + 8 - y,
+      },
+    });
+  });
 }

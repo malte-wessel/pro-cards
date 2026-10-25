@@ -7,7 +7,7 @@
 // across the flow through the pitch between nodes, which follows the label heights and so the
 // config alone (the card's height never depends on its width); along the flow through the column
 // positions, which keep the measured label widths clear of the next column and the trunks.
-import { leavesOf, twoValued, type PowerFlowConfig, type Source } from "./config.ts";
+import { bothWays, leavesOf, type FlowTreeConfig, type Source } from "./config.ts";
 import { GEOM, LABEL_LINES, NODE_D, type Direction } from "./constants.ts";
 import type { EdgeFlow, EdgeKind } from "./model.ts";
 import { dedupe, orthoPath, pathLength, type Pt } from "./path.ts";
@@ -60,15 +60,15 @@ export type LabelSizes = ReadonlyMap<string, LabelBox>;
 
 // the source column's centre along the flow: a source bigger than the default solar node moves
 // it in, so the charging and export rails behind it (and the card's edge) stay clear
-const srcAlongOf = (cfg: PowerFlowConfig) =>
+const srcAlongOf = (cfg: FlowTreeConfig) =>
   GEOM.srcAlong + Math.max(0, ...cfg.sources.map((s) => (s.d - GEOM.dSolar) / 2));
 
 // ----- label slots -----
 
 // the labels' lines: the theme's where the tree is drawn, the default size otherwise
-export const linesOf = (cfg: PowerFlowConfig) => cfg.lines ?? LABEL_LINES;
+export const linesOf = (cfg: FlowTreeConfig) => cfg.lines ?? LABEL_LINES;
 // the height of a node's label from the config: value and name, a secondary line when set
-export const labelHeightOf = (cfg: PowerFlowConfig, idx: number | null, small: boolean) => {
+export const labelHeightOf = (cfg: FlowTreeConfig, idx: number | null, small: boolean) => {
   const sec = idx !== null && !!cfg.entities[idx]?.secondary;
   const l = linesOf(cfg),
     name = small ? l.smallName : l.name;
@@ -76,8 +76,8 @@ export const labelHeightOf = (cfg: PowerFlowConfig, idx: number | null, small: b
 };
 // a source's label: a source that may show two values keeps a line for the second (the config
 // decides, not the values)
-const srcLabelHeight = (cfg: PowerFlowConfig, s: Source) =>
-  labelHeightOf(cfg, s.idx, false) + (twoValued(s) ? linesOf(cfg).value.line : 0);
+const srcLabelHeight = (cfg: FlowTreeConfig, s: Source) =>
+  labelHeightOf(cfg, s.idx, false) + (bothWays(cfg, s) ? linesOf(cfg).value.line : 0);
 // a label beside its node sits above the node's line: centred `max(r, h/2) + 4` above the
 // centre, so its bottom clears the line by 4 px however small the node is
 export const slotRise = (d: number, h: number) => Math.max(d / 2, h / 2) + 4;
@@ -99,7 +99,7 @@ interface Stack {
   last: number; // margin after the last centre
   extent: number;
 }
-const sourceStack = (cfg: PowerFlowConfig): Stack => {
+const sourceStack = (cfg: FlowTreeConfig): Stack => {
   // every source hidden: an empty column
   if (!cfg.sources.length)
     return { bs: [], first: GEOM.srcMargin, last: GEOM.srcMargin, extent: 0 };
@@ -125,7 +125,7 @@ interface Column {
   last: number;
   extent: number;
 }
-const columnPlan = (cfg: PowerFlowConfig, scale = 1): Column => {
+const columnPlan = (cfg: FlowTreeConfig, scale = 1): Column => {
   const leaves: Column["leaves"] = [],
     groups: Column["groups"] = [];
   // a list row draws its circle within the row: a bigger icon_size asks for no more room
@@ -217,7 +217,7 @@ export const sourceRow = (
 };
 
 // the diagram's extent across the flow (its height for `right`): a function of the config
-export const acrossOf = (cfg: PowerFlowConfig): number => {
+export const acrossOf = (cfg: FlowTreeConfig): number => {
   const st = sourceStack(cfg);
   const srcNeed = st.first + st.extent + st.last;
   const col = columnPlan(cfg);
@@ -225,16 +225,16 @@ export const acrossOf = (cfg: PowerFlowConfig): number => {
   return Math.ceil(Math.max(GEOM.minAcross, srcNeed, consNeed));
 };
 // the columns after the sources (`down`: their positions along the flow)
-const alongColumns = (cfg: PowerFlowConfig) =>
+const alongColumns = (cfg: FlowTreeConfig) =>
   1 + (cfg.hasGroups ? 1 : 0) + (cfg.consumers.length ? 1 : 0);
-export const alongDownOf = (cfg: PowerFlowConfig): number => {
+export const alongDownOf = (cfg: FlowTreeConfig): number => {
   if (!cfg.consumers.length) return GEOM.minAcross + srcAlongOf(cfg) - GEOM.srcAlong;
   // room below the consumer column for its tallest label (a secondary line adds one)
   const below = Math.max(56, ...columnPlan(cfg).leaves.map((l) => l.d / 2 + 4 + l.h + 8));
   return srcAlongOf(cfg) + GEOM.columnPitch * alongColumns(cfg) + below;
 };
 // the diagram's height in px for the card's size
-export const diagramHeight = (cfg: PowerFlowConfig) =>
+export const diagramHeight = (cfg: FlowTreeConfig) =>
   cfg.direction === "right" ? acrossOf(cfg) : alongDownOf(cfg);
 
 // the lane offsets into the home: the source nearest the centre takes the inner lane, the
@@ -259,7 +259,7 @@ export const laneOffsets = (bs: number[], bH: number): number[] => {
 };
 
 export const layoutTree = (
-  cfg: PowerFlowConfig,
+  cfg: FlowTreeConfig,
   width: number,
   edges: EdgeFlow[],
   sizes: LabelSizes = new Map(),
@@ -304,7 +304,7 @@ export const layoutTree = (
       cfg.sources.map((s) => sizes.get(s.id)?.nw ?? 0),
       across,
       (GEOM.srcValueW * linesOf(cfg).value.size) / LABEL_LINES.value.size,
-      cfg.sources.map(twoValued),
+      cfg.sources.map((s) => bothWays(cfg, s)),
     );
     bS = row.bs;
     srcCaps = row.caps;

@@ -9,10 +9,15 @@ export class HistoryFeed {
   _gen = 0;
   _inFlight = false;
   _failedAt: number | null = null;
+  // the refreshes asked for (invalidate): one asked while a fetch runs is not answered by it
+  _asked = 0;
   _type: string;
+  _what: string;
 
-  constructor(type: string) {
+  // `what`: the data, for the console ("history", "statistics")
+  constructor(type: string, what = "history") {
     this._type = type;
+    this._what = what;
   }
 
   // a new config: what is loaded or on its way belongs to the old one
@@ -21,6 +26,12 @@ export class HistoryFeed {
     this.loaded = false;
     this._inFlight = false;
     this._failedAt = null;
+  }
+
+  // fetch again (newer data), showing what is loaded meanwhile
+  invalidate() {
+    this.loaded = false;
+    this._asked++;
   }
 
   // whether the history should be fetched now: not loaded, none on its way, no recent failure
@@ -33,20 +44,27 @@ export class HistoryFeed {
   }
 
   // fetches (unless a fetch is on its way), hands the result to `apply` and calls `done` (the
-  // card's render); a result or failure of an older config does neither
-  async run<T>(fetch: () => Promise<T>, apply: (res: T) => void, done: () => void) {
+  // card's render); a result or failure of an older config does neither. `apply` returns false
+  // for a result that is not complete yet: it is fetched again after RETRY_MS
+  async run<T>(fetch: () => Promise<T>, apply: (res: T) => unknown, done: () => void) {
     if (this._inFlight) return;
-    const gen = this._gen;
+    const gen = this._gen,
+      asked = this._asked;
     this._inFlight = true;
     try {
       const res = await fetch();
       if (gen !== this._gen) return;
-      apply(res);
-      this.loaded = true;
-      this._failedAt = null;
+      if (apply(res) === false) {
+        this.loaded = false;
+        this._failedAt = Date.now();
+      } else {
+        // a refresh asked for meanwhile wants newer data than this
+        this.loaded = asked === this._asked;
+        this._failedAt = null;
+      }
     } catch (err) {
       if (gen !== this._gen) return;
-      console.error(`${this._type}: history fetch failed`, err);
+      console.error(`${this._type}: ${this._what} fetch failed`, err);
       this._failedAt = Date.now();
     } finally {
       if (gen === this._gen) {

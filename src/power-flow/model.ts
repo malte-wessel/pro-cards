@@ -7,11 +7,25 @@ import { unitOf, type EntityModel } from "../shared/entity/model.ts";
 import { fmtNumber } from "../shared/format.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
 import type { EntityItem } from "../shared/entity/config.ts";
-import { COLORS, DEFAULT_UNITS, IDLE_W, type Units } from "./constants.ts";
-import { isActive } from "./flow.ts";
-import { leavesOf, twoValued, type PowerFlowConfig } from "./config.ts";
+import { twoValued } from "../shared/flow-tree/config.ts";
+import { COLORS } from "../shared/flow-tree/constants.ts";
+import { isActive } from "../shared/flow-tree/flow.ts";
+import {
+  consumerFlows,
+  leafValues,
+  shares,
+  type EdgeFlow,
+  type EdgeKind,
+  type FlowNow,
+  type Flows,
+  type SourceNow,
+} from "../shared/flow-tree/model.ts";
+import type { PowerFlowConfig } from "./config.ts";
+import { DEFAULT_UNITS, type Units } from "./constants.ts";
 
 const UNIT_TO_W: Record<string, number> = { W: 1, kW: 1000, MW: 1e6, mW: 1e-3 };
+// a power unit the card converts to W (any other is shown as written: treeUnit)
+export const isPowerUnit = (u: string) => u in UNIT_TO_W;
 
 // the model's value in watts, null when unavailable
 export const wattsOf = (ent: EntityItem, m: EntityModel | undefined): number | null => {
@@ -19,29 +33,7 @@ export const wattsOf = (ent: EntityItem, m: EntityModel | undefined): number | n
   return m.model.num * (UNIT_TO_W[unitOf(ent, m.st)] ?? 1);
 };
 
-export interface SourceNow {
-  kind: "solar" | "battery" | "grid";
-  w: number | null; // solar ≥ 0; battery + = discharging; grid + = import (the generator while offline)
-  // a battery's gross flows (W, ≥ 0): one sign of `w`, except a solar-fed battery given as a
-  // charge / discharge pair, which may do both at once (the panels fill it while it feeds the home)
-  charge: number;
-  discharge: number;
-  // a grid's gross flows (W, ≥ 0): one sign of `w`, except a pair with `both_ways`, which may
-  // import and export at once (a meter that does not net its phases)
-  import: number;
-  export: number;
-  soc: number | null;
-  avail: boolean;
-  generator: boolean; // a grid that runs on its generator during an outage
-  lowCarbon: number | null; // a grid's low-carbon share of its power, 0 … 1
-}
-export interface PowerNow {
-  sources: SourceNow[];
-  leaves: Map<string, number | null>; // consumer id → watts, negative when the consumer produces
-  homeW: number | null; // the home sensor, null when computed
-  offline: boolean;
-  price: { num: number; text: string } | null;
-}
+export type PowerNow = FlowNow;
 
 export const powerNow = (cfg: PowerFlowConfig, models: EntityModel[]): PowerNow => {
   const entities = cfg.entities;
@@ -107,12 +99,7 @@ export const powerNow = (cfg: PowerFlowConfig, models: EntityModel[]): PowerNow 
       export: gross ? Math.max(0, b ?? 0) : Math.max(0, -(v ?? 0)),
     };
   });
-  const leaves = new Map<string, number | null>();
-  for (const leaf of leavesOf(cfg))
-    if (leaf.kind === "item") {
-      const v = w(leaf.idx);
-      leaves.set(leaf.id, v === null ? null : leaf.invert ? -v : v);
-    }
+  const leaves = leafValues(cfg, w);
   const homeW = cfg.homeEntity ? w(cfg.homeIdx) : null;
   return {
     sources,
@@ -123,63 +110,7 @@ export const powerNow = (cfg: PowerFlowConfig, models: EntityModel[]): PowerNow 
   };
 };
 
-// `hide_below`: whether a consumer of `w` watts is shown, given whether it was (undefined: not
-// decided yet). It hides below `x` and comes back only clearly above it (20 %, at least 2 W), so a
-// device idling around the threshold does not blink; a producer counts by its size, unavailable as 0
-export const thresholdShown = (prev: boolean | undefined, w: number | null, x: number): boolean => {
-  const a = Math.abs(w ?? 0);
-  if (prev === false) return a >= Math.max(x * 1.2, x + 2);
-  return a >= x;
-};
-
-// whether a node with two flows at once (a solar-fed battery given as a pair, a grid with
-// `both_ways`) shows both values, given whether it did: from the idle threshold on, and once
-// below it again only clearly above it, so the label (and the columns it moves) does not flicker
-export const bothFlows = (prev: boolean | undefined, a: number, b: number, idle: number) =>
-  Math.min(a, b) > 0 && thresholdShown(prev, Math.min(a, b), idle);
-
-export type EdgeKind = "solar" | "battIn" | "battOut" | "gridIn" | "gridOut" | "generator" | "home";
-export interface EdgeFlow {
-  from: string; // node id: s<i> (source), home, g<i> (group), c<i> / c<i>.<j> / other
-  to: string;
-  w: number; // negative on a consumer link whose device produces
-  kind: EdgeKind;
-}
-// What the allocation gives: the flows between the nodes (`edges`) and the totals the card draws
-// (H, sH, bH, gH, the ring's gHClean / gHGen, sG, bG, the leaf and group watts). S, B, sB, dB, gB
-// and grid are no drawn quantity: the unit tests check through them that the allocation adds up
-// (what goes in comes out), so they stay.
-export interface Flows {
-  S: number;
-  H: number;
-  B: number;
-  sH: number;
-  bH: number;
-  gH: number;
-  gHClean: number; // the low-carbon part of gH (grids without a fossil sensor count as unknown)
-  gHGen: number; // the part of gH a generator supplies
-  sB: number;
-  dB: number; // discharge of one battery charging another
-  gB: number;
-  sG: number;
-  bG: number;
-  grid: number; // + import, − export
-  selfSufficiency: number | null;
-  edges: EdgeFlow[];
-  leafW: Map<string, number>; // consumer id → watts (signed), "other" included
-  groupW: Map<string, number>;
-}
-
-// splits `total` over the parts pro rata; when every eligible part is 0 the eligible ones share
-// it equally (the others get nothing)
-const shares = (parts: number[], total: number, eligible: boolean[]) => {
-  const sum = parts.reduce((a, b, i) => a + (eligible[i] ? b : 0), 0);
-  const n = eligible.filter(Boolean).length;
-  return parts.map((p, i) => (!eligible[i] ? 0 : sum > 0 ? (total * p) / sum : n ? total / n : 0));
-};
-
-// `hidden`: the nodes not drawn (hiddenNodes); a hidden consumer or room counts in the other node,
-// so the shown numbers still add up to the home (a room keeps its hidden devices in its total)
+// `hidden`: the nodes not drawn (hiddenNodes, consumerFlows)
 export const allocate = (
   cfg: PowerFlowConfig,
   now: PowerNow,
@@ -392,37 +323,7 @@ export const allocate = (
     }
   });
 
-  // the consumers: leaves take their watts, a group the sum of its items, "other" the rest of
-  // what the home draws (a producing consumer feeds the home and counts for nothing here, a
-  // hidden one counts there)
-  const leafW = new Map<string, number>(),
-    groupW = new Map<string, number>();
-  let used = 0;
-  for (const c of cfg.consumers) {
-    if (c.kind === "group") {
-      let sum = 0;
-      for (const it of c.items) {
-        const w = now.leaves.get(it.id) ?? 0;
-        leafW.set(it.id, w);
-        sum += w;
-        if (!hidden.has(c.id)) used += Math.max(0, w);
-        push(c.id, it.id, w, "home");
-      }
-      groupW.set(c.id, sum);
-      push("home", c.id, sum, "home");
-    } else if (c.kind === "item") {
-      const w = now.leaves.get(c.id) ?? 0;
-      leafW.set(c.id, w);
-      if (!hidden.has(c.id)) used += Math.max(0, w);
-      push("home", c.id, w, "home");
-    }
-  }
-  for (const c of cfg.consumers)
-    if (c.kind === "other") {
-      const w = Math.max(0, H - used);
-      leafW.set(c.id, w);
-      push("home", c.id, w, "home");
-    }
+  const { leafW, groupW } = consumerFlows(cfg, now, H, hidden, push);
 
   return {
     S,
@@ -439,7 +340,8 @@ export const allocate = (
     sG: z(sG),
     bG: z(bG),
     grid: z(grid),
-    selfSufficiency: H > 0 ? (H - gH) / H : null,
+    // what the grid did not cover: without a grid there is nothing to be self-sufficient of
+    selfSufficiency: H > 0 && cfg.sources.some((s) => s.kind === "grid") ? (H - gH) / H : null,
     edges,
     leafW,
     groupW,
@@ -506,35 +408,4 @@ export const fmtPower = (
   if (units.kwAbove <= 0 || v >= units.kwAbove)
     return `${fmtNumber(hass, v / 1000, dec ?? units.decKw)} kW`;
   return `${fmtNumber(hass, v, dec ?? units.decW)} W`;
-};
-
-// the colour of a source node for its current flow
-export const sourceColor = (s: SourceNow, offline: boolean, idle: number = IDLE_W): string => {
-  const w = s.w ?? 0,
-    on = isActive(w, idle);
-  if (s.kind === "grid" && offline)
-    return s.generator && on && w > 0 ? COLORS.generator : COLORS.offline;
-  if (s.w === null || !on) return COLORS.idle;
-  if (s.kind === "solar") return w > 0 ? COLORS.solar : COLORS.idle;
-  if (s.kind === "battery") return w > 0 ? COLORS.battOut : COLORS.battIn;
-  return w > 0 ? COLORS.gridIn : COLORS.gridOut;
-};
-// the colour of a link; a consumer link running backwards carries what the device produces
-export const edgeColor = (kind: EdgeKind, w = 0): string => {
-  switch (kind) {
-    case "solar":
-      return COLORS.solar;
-    case "battIn":
-      return COLORS.battIn;
-    case "battOut":
-      return COLORS.battOut;
-    case "gridIn":
-      return COLORS.gridIn;
-    case "gridOut":
-      return COLORS.gridOut;
-    case "generator":
-      return COLORS.generator;
-    default:
-      return w < 0 ? COLORS.solar : COLORS.home;
-  }
 };

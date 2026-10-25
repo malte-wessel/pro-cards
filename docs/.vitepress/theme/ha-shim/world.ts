@@ -4,8 +4,11 @@ import type {
   ForecastEntry,
   HassEntity,
   HassEntities,
+  StatisticMetadata,
+  StatisticsResult,
   WeatherForecastType,
 } from "../../../../src/shared/ha.ts";
+import { isMeter, METERS, readingAt, statistics, statisticsMetadata } from "./meters.ts";
 
 // an entity of the demo home: its initial state plus how its history and drift are generated
 export interface EntityDef {
@@ -37,6 +40,16 @@ export interface World {
   history(ids: string[], start: number, end: number): HistoryResult;
   // the forecast of a weather entity (`weather/subscribe_forecast`); null when it has none
   forecast(id: string, type: WeatherForecastType): ForecastEntry[] | null;
+  // the energy meters' long-term statistics (`recorder/statistics_during_period`), in `unit`
+  statistics(
+    ids: string[],
+    start: number,
+    end: number,
+    period: string,
+    types: string[],
+    unit?: string,
+  ): StatisticsResult;
+  statisticsMetadata(ids: string[]): StatisticMetadata[];
   start(): void;
   _timer?: ReturnType<typeof setInterval>;
 }
@@ -625,6 +638,21 @@ def(
   "power",
   { noise: 0, min: 0, decimals: 0 },
 );
+// water flow in L/min (a tree in a unit of its own): the main meter and three taps, adding up
+// with a little left for the rest of the house
+for (const [id, name, v] of [
+  ["sensor.water_flow", "Water flow", 14.6],
+  ["sensor.bathroom_water_flow", "Bathroom water flow", 8.2],
+  ["sensor.kitchen_water_flow", "Kitchen water flow", 3.9],
+  ["sensor.garden_water_flow", "Garden water flow", 0],
+] as const)
+  def(
+    id,
+    v,
+    { unit_of_measurement: "L/min", device_class: "volume_flow_rate", friendly_name: name },
+    "flat",
+    { decimals: 1 },
+  );
 def(
   "sensor.grid_power",
   -960,
@@ -883,6 +911,22 @@ def(
   { noise: 0.5, decimals: 0 },
 );
 
+// energy meters (meters.ts): lifetime totals that count on with the simulated home
+for (const m of METERS)
+  def(
+    m.id,
+    readingAt(m.id, now()).toFixed(m.unit === "MWh" ? 4 : m.unit === "Wh" ? 0 : 2),
+    {
+      unit_of_measurement: m.unit,
+      device_class: "energy",
+      state_class: "total_increasing",
+      friendly_name: m.name,
+      ...(m.icon ? { icon: m.icon } : {}),
+    },
+    "meter",
+    { decimals: m.unit === "MWh" ? 4 : m.unit === "Wh" ? 0 : 2 },
+  );
+
 // scenes & scripts
 for (const [id, name, icon] of [
   ["scene.movie_night", "Movie night", "mdi:movie-open"],
@@ -947,12 +991,28 @@ export const world: World = {
   forecast(id, type) {
     return forecast(id, type);
   },
+  statistics(ids, start, end, period, types, unit) {
+    return statistics(ids, start, end, period, types, unit, now());
+  },
+  statisticsMetadata(ids) {
+    return statisticsMetadata(ids);
+  },
   start() {
     if (this._timer) return;
     this._timer = setInterval(() => {
       // drift a few numeric sensors so cards visibly update
       const r = Math.random;
       for (const e of Object.values(E)) {
+        // a meter counts on
+        if (e.kind === "meter") {
+          states[e.id] = {
+            ...states[e.id],
+            state: readingAt(e.id, now()).toFixed(e.decimals ?? 2),
+            last_updated: iso(now()),
+            last_changed: iso(now()),
+          };
+          continue;
+        }
         if (!e.noise || r() > 0.25) continue;
         const st = states[e.id];
         let v = Number(st.state) + (r() - 0.5) * e.noise;
@@ -995,6 +1055,12 @@ function series(id: string, start: number, end: number): HistoryPoint[] {
       out.push({ s: cur, lu: t / 1000 });
     }
     if (out.length) out[out.length - 1].s = st.state;
+    cache.set(key, out);
+    return out;
+  }
+  if (isMeter(id)) {
+    for (let t = start; t < end; t += step)
+      out.push({ s: readingAt(id, t).toFixed(e.decimals ?? 2), lu: t / 1000 });
     cache.set(key, out);
     return out;
   }

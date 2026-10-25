@@ -280,11 +280,7 @@ export abstract class EntityCardBase extends HTMLElement {
     this._textCache.clear();
     this._fillEpoch++;
     this._resized = true;
-    this._timer = setInterval(() => {
-      this._fillEpoch++;
-      if (this._historyIds?.length) this._fetchHistory();
-      else this._render();
-    }, REFRESH_MS);
+    this._timer = setInterval(() => this._tick(), REFRESH_MS);
     this._ro = new ResizeObserver(() => {
       this._resized = true;
       this._render();
@@ -295,6 +291,12 @@ export abstract class EntityCardBase extends HTMLElement {
     // ghosts that expired while the card was away (another view) go now, the rest get their timer
     if ((this._pending.size || this._buttonPending.size) && this._sweepPending()) this._render();
     if (this._hass && this._templates?.size && this._tpl.size === 0) this._subscribeTemplates();
+  }
+  // every REFRESH_MS: time moves the plots (a fresh history, or a render)
+  _tick() {
+    this._fillEpoch++;
+    if (this._historyIds?.length) this._fetchHistory();
+    else this._render();
   }
   disconnectedCallback() {
     clearInterval(this._timer);
@@ -331,7 +333,24 @@ export abstract class EntityCardBase extends HTMLElement {
     const cfg = this._config,
       vis = this._vis;
     if (!cfg?.hasHeader) return 0;
-    return cfg.title || cfg.icon || !vis || cfg.headerIdxs.some((i) => vis.items[i]) ? 1 : 0;
+    return cfg.title ||
+      cfg.icon ||
+      this._headerExtra() ||
+      !vis ||
+      cfg.headerIdxs.some((i) => vis.items[i])
+      ? 1
+      : 0;
+  }
+  // a card that puts something of its own into the header (_buildHeader): the header shows for it
+  // even without a title, an icon or header entities
+  _headerExtra(): boolean {
+    return false;
+  }
+  // the card's own part of the header, after the title and the header entities
+  _buildHeader(_header: HTMLElement) {}
+  // the title when the config gives none, or its template renders empty (null: none)
+  _defaultTitle(_ctx: RenderCtx): string | null {
+    return null;
   }
 
   // ----- visibility -----
@@ -585,6 +604,7 @@ export abstract class EntityCardBase extends HTMLElement {
       const hvals = qs(header, ".hvals");
       for (const i of cfg.headerIdxs) hvals.appendChild(this._row(i, "hval"));
       if (cfg.titleTap) this._bindTitle(header, cfg.titleTap);
+      this._buildHeader(header);
       card.appendChild(header);
     }
     const body = document.createElement("div");
@@ -712,7 +732,7 @@ export abstract class EntityCardBase extends HTMLElement {
       refocus = this._rebuildBody(card);
     const header = card.querySelector<HTMLElement>(".header");
     if (header) {
-      const title = tplOf(ctx, cfg.title),
+      const title = tplOf(ctx, cfg.title) || this._defaultTitle(ctx),
         icon = tplOf(ctx, cfg.icon);
       const hi = qs(header, "ha-icon");
       if (icon) {
@@ -722,7 +742,12 @@ export abstract class EntityCardBase extends HTMLElement {
       const t = qs(header, ".title");
       t.textContent = title || "";
       if (cfg.titleTap) t.setAttribute("aria-label", title || "");
-      header.hidden = !(title || icon || cfg.headerIdxs.some((i) => vis.items[i]));
+      header.hidden = !(
+        title ||
+        icon ||
+        this._headerExtra() ||
+        cfg.headerIdxs.some((i) => vis.items[i])
+      );
     }
     // nothing shown at all: the card takes no room (its own `visibility` is HA's way to hide it)
     card.hidden = (!header || header.hidden) && !this._bodyShown(vis);

@@ -38,6 +38,9 @@
       "$ref": "power-flow-card-pro.schema.json"
     },
     {
+      "$ref": "energy-flow-card-pro.schema.json"
+    },
+    {
       "$ref": "layout-card-pro.schema.json"
     }
   ]

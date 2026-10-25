@@ -14,22 +14,37 @@
     "sourceKeys": {
       "type": "object",
       "properties": {
-        "visibility": { "$ref": "defs.schema.json#/$defs/visibility" },
-        "name": { "type": "string", "description": "Template allowed." },
+        "visibility": {
+          "$ref": "defs.schema.json#/$defs/visibility"
+        },
+        "name": {
+          "type": "string",
+          "description": "Template allowed."
+        },
         "secondary": {
           "type": "string",
           "description": "A line under the name. Template allowed."
         },
-        "icon": { "$ref": "defs.schema.json#/$defs/icon" },
-        "icon_size": { "$ref": "#/$defs/iconSize" },
+        "icon": {
+          "$ref": "defs.schema.json#/$defs/icon"
+        },
+        "icon_size": {
+          "$ref": "#/$defs/iconSize"
+        },
         "color": {
           "$ref": "defs.schema.json#/$defs/color",
           "description": "Fixed colour of the node; overrides the flow colour and the rules"
         },
-        "decimals": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "decimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
         "rules": {
           "type": "array",
-          "items": { "$ref": "entity.schema.json#/$defs/rule" },
+          "items": {
+            "$ref": "entity.schema.json#/$defs/rule"
+          },
           "description": "On the sensor's value (its own unit and sign): colour and icon of the node; first match wins"
         },
         "invert": {
@@ -39,9 +54,15 @@
       }
     },
     "solar": {
-      "allOf": [{ "$ref": "#/$defs/sourceKeys" }],
+      "allOf": [
+        {
+          "$ref": "#/$defs/sourceKeys"
+        }
+      ],
       "properties": {
-        "type": { "const": "solar" },
+        "type": {
+          "const": "solar"
+        },
         "entity": {
           "$ref": "defs.schema.json#/$defs/entityId",
           "description": "Production (W or kW)"
@@ -56,9 +77,15 @@
       "unevaluatedProperties": false
     },
     "battery": {
-      "allOf": [{ "$ref": "#/$defs/sourceKeys" }],
+      "allOf": [
+        {
+          "$ref": "#/$defs/sourceKeys"
+        }
+      ],
       "properties": {
-        "type": { "const": "battery" },
+        "type": {
+          "const": "battery"
+        },
         "power": {
           "$ref": "defs.schema.json#/$defs/entityId",
           "description": "Signed power: positive discharging, negative charging (`invert` flips it)"
@@ -77,11 +104,17 @@
         },
         "charge_from": {
           "anyOf": [
-            { "enum": ["any", "solar"] },
-            { "$ref": "defs.schema.json#/$defs/entityId" },
+            {
+              "enum": ["any", "solar"]
+            },
+            {
+              "$ref": "defs.schema.json#/$defs/entityId"
+            },
             {
               "type": "array",
-              "items": { "$ref": "defs.schema.json#/$defs/entityId" },
+              "items": {
+                "$ref": "defs.schema.json#/$defs/entityId"
+              },
               "minItems": 1
             }
           ],
@@ -93,16 +126,36 @@
       "oneOf": [
         {
           "required": ["power"],
-          "not": { "anyOf": [{ "required": ["charge"] }, { "required": ["discharge"] }] }
+          "not": {
+            "anyOf": [
+              {
+                "required": ["charge"]
+              },
+              {
+                "required": ["discharge"]
+              }
+            ]
+          }
         },
-        { "required": ["charge", "discharge"], "not": { "required": ["power"] } }
+        {
+          "required": ["charge", "discharge"],
+          "not": {
+            "required": ["power"]
+          }
+        }
       ],
       "unevaluatedProperties": false
     },
     "grid": {
-      "allOf": [{ "$ref": "#/$defs/sourceKeys" }],
+      "allOf": [
+        {
+          "$ref": "#/$defs/sourceKeys"
+        }
+      ],
       "properties": {
-        "type": { "const": "grid" },
+        "type": {
+          "const": "grid"
+        },
         "power": {
           "$ref": "defs.schema.json#/$defs/entityId",
           "description": "Signed power: positive import, negative export (`invert` flips it)"
@@ -111,7 +164,10 @@
           "$ref": "defs.schema.json#/$defs/entityId",
           "description": "Import power (with an optional `export`)"
         },
-        "export": { "$ref": "defs.schema.json#/$defs/entityId", "description": "Export power" },
+        "export": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "Export power"
+        },
         "both_ways": {
           "type": "boolean",
           "default": false,
@@ -123,11 +179,15 @@
         },
         "offline": {
           "oneOf": [
-            { "$ref": "defs.schema.json#/$defs/entityId" },
+            {
+              "$ref": "defs.schema.json#/$defs/entityId"
+            },
             {
               "type": "object",
               "properties": {
-                "entity": { "$ref": "defs.schema.json#/$defs/entityId" },
+                "entity": {
+                  "$ref": "defs.schema.json#/$defs/entityId"
+                },
                 "state": {
                   "type": "string",
                   "description": "The state that means offline (default `on`)"
@@ -156,19 +216,48 @@
       "oneOf": [
         {
           "required": ["power"],
-          "not": { "anyOf": [{ "required": ["import"] }, { "required": ["export"] }] }
+          "not": {
+            "anyOf": [
+              {
+                "required": ["import"]
+              },
+              {
+                "required": ["export"]
+              }
+            ]
+          }
         },
-        { "required": ["import"], "not": { "required": ["power"] } }
+        {
+          "required": ["import"],
+          "not": {
+            "required": ["power"]
+          }
+        }
       ],
-      "if": { "properties": { "both_ways": { "const": true } }, "required": ["both_ways"] },
-      "then": { "required": ["import", "export"] },
+      "if": {
+        "properties": {
+          "both_ways": {
+            "const": true
+          }
+        },
+        "required": ["both_ways"]
+      },
+      "then": {
+        "required": ["import", "export"]
+      },
       "unevaluatedProperties": false
     },
     "home": {
       "type": "object",
-      "allOf": [{ "$ref": "entity.schema.json#/$defs/entityKeys" }],
+      "allOf": [
+        {
+          "$ref": "entity.schema.json#/$defs/entityKeys"
+        }
+      ],
       "properties": {
-        "icon_size": { "$ref": "#/$defs/iconSize" },
+        "icon_size": {
+          "$ref": "#/$defs/iconSize"
+        },
         "icon_style": false,
         "invert": {
           "type": "boolean",
@@ -180,9 +269,15 @@
     },
     "consumer": {
       "type": "object",
-      "allOf": [{ "$ref": "entity.schema.json#/$defs/entityKeys" }],
+      "allOf": [
+        {
+          "$ref": "entity.schema.json#/$defs/entityKeys"
+        }
+      ],
       "properties": {
-        "icon_size": { "$ref": "#/$defs/iconSize" },
+        "icon_size": {
+          "$ref": "#/$defs/iconSize"
+        },
         "icon_style": false,
         "invert": {
           "type": "boolean",
@@ -193,7 +288,9 @@
           "minimum": 0,
           "description": "This consumer's own hide_consumers_below (W); 0 never hides it"
         },
-        "visibility": { "$ref": "defs.schema.json#/$defs/visibility" }
+        "visibility": {
+          "$ref": "defs.schema.json#/$defs/visibility"
+        }
       },
       "required": ["entity"],
       "unevaluatedProperties": false
@@ -201,22 +298,35 @@
     "group": {
       "type": "object",
       "properties": {
-        "group": { "type": "string", "description": "The room's name" },
-        "icon": { "$ref": "defs.schema.json#/$defs/icon" },
-        "icon_size": { "$ref": "#/$defs/iconSize" },
+        "group": {
+          "type": "string",
+          "description": "The room's name"
+        },
+        "icon": {
+          "$ref": "defs.schema.json#/$defs/icon"
+        },
+        "icon_size": {
+          "$ref": "#/$defs/iconSize"
+        },
         "hide_below": {
           "type": "number",
           "minimum": 0,
           "description": "hide_consumers_below for the room's devices (W); a device's own wins"
         },
-        "visibility": { "$ref": "defs.schema.json#/$defs/visibility" },
+        "visibility": {
+          "$ref": "defs.schema.json#/$defs/visibility"
+        },
         "entities": {
           "type": "array",
           "minItems": 1,
           "items": {
             "oneOf": [
-              { "$ref": "defs.schema.json#/$defs/entityId" },
-              { "$ref": "#/$defs/consumer" }
+              {
+                "$ref": "defs.schema.json#/$defs/entityId"
+              },
+              {
+                "$ref": "#/$defs/consumer"
+              }
             ]
           }
         }
@@ -226,47 +336,89 @@
     }
   },
   "properties": {
-    "type": { "const": "custom:power-flow-card-pro" },
+    "type": {
+      "const": "custom:power-flow-card-pro"
+    },
     "sources": {
       "type": "array",
       "minItems": 1,
       "items": {
         "oneOf": [
-          { "$ref": "#/$defs/solar" },
-          { "$ref": "#/$defs/battery" },
-          { "$ref": "#/$defs/grid" }
+          {
+            "$ref": "#/$defs/solar"
+          },
+          {
+            "$ref": "#/$defs/battery"
+          },
+          {
+            "$ref": "#/$defs/grid"
+          }
         ]
       },
       "description": "The sources, in drawing order: solar arrays, batteries and grid connections"
     },
     "home": {
-      "oneOf": [{ "$ref": "defs.schema.json#/$defs/entityId" }, { "$ref": "#/$defs/home" }],
+      "oneOf": [
+        {
+          "$ref": "defs.schema.json#/$defs/entityId"
+        },
+        {
+          "$ref": "#/$defs/home"
+        }
+      ],
       "description": "The home's consumption (W or kW). Without it the home is computed from the sources"
     },
     "consumers": {
       "type": "array",
       "items": {
         "oneOf": [
-          { "$ref": "defs.schema.json#/$defs/entityId" },
-          { "$ref": "#/$defs/consumer" },
-          { "$ref": "#/$defs/group" }
+          {
+            "$ref": "defs.schema.json#/$defs/entityId"
+          },
+          {
+            "$ref": "#/$defs/consumer"
+          },
+          {
+            "$ref": "#/$defs/group"
+          }
         ]
       },
       "description": "Devices, or rooms with devices, to the right of the home"
     },
-    "consumer_style": { "type": "string", "enum": ["nodes", "list"], "default": "nodes" },
+    "consumer_style": {
+      "type": "string",
+      "enum": ["nodes", "list"],
+      "default": "nodes"
+    },
     "other": {
       "oneOf": [
-        { "type": "boolean" },
+        {
+          "type": "boolean"
+        },
         {
           "type": "object",
-          "properties": { "icon_size": { "$ref": "#/$defs/iconSize" } },
+          "properties": {
+            "icon_size": {
+              "$ref": "#/$defs/iconSize"
+            },
+            "name": {
+              "type": "string",
+              "description": "Its own name (default: Other, translated), e.g. Losses"
+            },
+            "icon": {
+              "$ref": "defs.schema.json#/$defs/icon"
+            }
+          },
           "additionalProperties": false
         }
       ],
-      "description": "An \"Other\" node for the home's consumption the consumers do not account for (default: true when consumers are given); an object shows it and sets its icon_size"
+      "description": "An \"Other\" node for what the consumers do not account for (default: true when consumers are given); an object shows it with its own `name`, `icon` or `icon_size`"
     },
-    "direction": { "type": "string", "enum": ["right", "down"], "default": "right" },
+    "direction": {
+      "type": "string",
+      "enum": ["right", "down"],
+      "default": "right"
+    },
     "idle_below": {
       "type": "number",
       "minimum": 0,
@@ -287,12 +439,24 @@
     },
     "decimals": {
       "oneOf": [
-        { "type": "integer", "minimum": 0, "maximum": 3 },
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
         {
           "type": "object",
           "properties": {
-            "w": { "type": "integer", "minimum": 0, "maximum": 3 },
-            "kw": { "type": "integer", "minimum": 0, "maximum": 3 }
+            "w": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "kw": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            }
           },
           "additionalProperties": false
         }
@@ -317,7 +481,12 @@
       },
       "additionalProperties": false
     },
-    "flow_style": { "type": "string", "enum": ["dots", "lines", "arrows"], "default": "dots" },
+    "flow_style": {
+      "type": "string",
+      "enum": ["dots", "lines", "arrows", "none"],
+      "default": "dots",
+      "description": "How the flow moves on a link: dots, dashes (lines) or arrows; none draws the active links in their colour without motion"
+    },
     "expensive_above": {
       "type": "number",
       "description": "Price at or above which importing shows the Expensive state and tints the card (the price sensor's unit)"
@@ -329,10 +498,15 @@
     },
     "rules": {
       "type": "array",
-      "items": { "$ref": "entity.schema.json#/$defs/rule" },
+      "items": {
+        "$ref": "entity.schema.json#/$defs/rule"
+      },
       "description": "On the home power in W (below / above): label pill, colour of the home node, tint; first match wins"
     },
-    "title": { "type": "string", "description": "Header text. Template allowed." },
+    "title": {
+      "type": "string",
+      "description": "Header text. Template allowed."
+    },
     "title_tap_action": {
       "$ref": "defs.schema.json#/$defs/action",
       "description": "Action when the title or its icon is tapped, e.g. navigate to the room's dashboard (default: none)"
@@ -341,13 +515,21 @@
       "$ref": "defs.schema.json#/$defs/icon",
       "description": "Header icon. Template allowed."
     },
-    "header_entities": { "$ref": "entity.schema.json#/$defs/headerEntities" }
+    "header_entities": {
+      "$ref": "entity.schema.json#/$defs/headerEntities"
+    }
   },
   "required": ["type", "sources"],
   "allOf": [
-    { "$ref": "entity.schema.json#/$defs/historyOptions" },
-    { "$ref": "entity.schema.json#/$defs/actionDefaults" },
-    { "$ref": "entity.schema.json#/$defs/haExtras" }
+    {
+      "$ref": "entity.schema.json#/$defs/historyOptions"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/actionDefaults"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/haExtras"
+    }
   ],
   "unevaluatedProperties": false
 }
