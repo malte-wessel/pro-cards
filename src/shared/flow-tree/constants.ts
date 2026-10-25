@@ -5,7 +5,8 @@ import type { TextStyle } from "../typography.ts";
 
 export const DIRECTIONS = ["right", "down"] as const;
 export type Direction = (typeof DIRECTIONS)[number];
-export const FLOW_STYLES = ["dots", "lines", "arrows"] as const;
+// none: the active links are drawn in their colour, without motion
+export const FLOW_STYLES = ["dots", "lines", "arrows", "none"] as const;
 export type FlowStyle = (typeof FLOW_STYLES)[number];
 export const CONSUMER_STYLES = ["nodes", "list"] as const;
 export type ConsumerStyle = (typeof CONSUMER_STYLES)[number];

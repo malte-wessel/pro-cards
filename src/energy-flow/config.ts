@@ -14,7 +14,6 @@ import { enumOf } from "../shared/flow/config.ts";
 import {
   chargeFromOf,
   clampDec,
-  leavesOf,
   normalizeFlowTree,
   sourceParts,
   type FlowTreeConfig,
@@ -22,6 +21,7 @@ import {
   type Source,
 } from "../shared/flow-tree/config.ts";
 import { NODE_D } from "../shared/flow-tree/constants.ts";
+import { treeIdxs } from "../shared/flow-tree/model.ts";
 import { numOrNull } from "../shared/util.ts";
 import { CARD_TYPE, DEFAULT_UNITS, IDLE_KWH, type EnergyUnits } from "./constants.ts";
 
@@ -159,15 +159,7 @@ export const normalizeEnergyFlowConfig = (input: unknown): EnergyFlowConfig => {
 
 // the items whose values are meters (the home, the sources' meters, the consumers), by index:
 // not a battery's charge level, not the header entities
-export const meterIdxs = (cfg: EnergyFlowConfig): number[] => {
-  const idxs = cfg.homeEntity ? [cfg.homeIdx] : [];
-  for (const s of cfg.sources) {
-    idxs.push(s.idx);
-    if (s.kind !== "solar" && s.secondIdx !== null) idxs.push(s.secondIdx);
-  }
-  for (const leaf of leavesOf(cfg)) if (leaf.kind === "item") idxs.push(leaf.idx);
-  return idxs;
-};
+export const meterIdxs = (cfg: EnergyFlowConfig): number[] => treeIdxs(cfg);
 
 // the meters' entity ids, once each (the statistics to fetch)
 export const meterIdsOf = (cfg: EnergyFlowConfig): string[] => [

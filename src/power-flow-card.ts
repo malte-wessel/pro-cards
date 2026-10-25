@@ -22,13 +22,21 @@ import { registerCard } from "./shared/card.ts";
 import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
 import { FlowTreeCardBase } from "./shared/flow-tree/base.ts";
 import type { Motion } from "./shared/flow-tree/flow.ts";
-import type { Flows } from "./shared/flow-tree/model.ts";
+import { fmtIn, shareOfMax, treeUnit, type Flows } from "./shared/flow-tree/model.ts";
+import { COLORS, DEFAULT_ANIMATION, IDLE_W } from "./shared/flow-tree/constants.ts";
 import { selfSufficiencyPart, type Summary } from "./shared/flow-tree/render/summary.ts";
 import type { HomeAssistant } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
 import { normalizePowerFlowConfig, type PowerFlowConfig } from "./power-flow/config.ts";
 import { CARD_TYPE } from "./power-flow/constants.ts";
-import { allocate, fmtPower, powerNow, summaryState, type PowerNow } from "./power-flow/model.ts";
+import {
+  allocate,
+  fmtPower,
+  isPowerUnit,
+  powerNow,
+  summaryState,
+  type PowerNow,
+} from "./power-flow/model.ts";
 
 export class PowerFlowCard extends FlowTreeCardBase<PowerFlowConfig> {
   static cardType = CARD_TYPE;
@@ -48,21 +56,36 @@ export class PowerFlowCard extends FlowTreeCardBase<PowerFlowConfig> {
     };
   }
 
+  // the tree's unit when its sensors are no power sensors (a heat or water flow), from the last
+  // _measure; null: W and kW
+  _unit: string | null = null;
+  _warned = new Set<string>();
+
   _normalize(raw: unknown) {
     return normalizePowerFlowConfig(raw);
   }
-  _measure(_ctx: RenderCtx, cfg: PowerFlowConfig, models: EntityModel[]) {
+  _measure(ctx: RenderCtx, cfg: PowerFlowConfig, models: EntityModel[]) {
+    if (ctx.hass)
+      this._unit = treeUnit(cfg, ctx.hass, isPowerUnit, (id) => {
+        if (this._warned.has(id)) return;
+        this._warned.add(id);
+        console.warn(`${CARD_TYPE}: ${id} does not count in the unit of the tree`);
+      });
+    // 20 W is no threshold for another unit: without `idle_below` every flow moves there
+    if (!cfg.idleSet) cfg.idleBelow = this._unit ? 0 : IDLE_W;
     return { now: powerNow(cfg, models), models };
   }
   _allocate(cfg: PowerFlowConfig, now: PowerNow, hidden: ReadonlySet<string>) {
     return allocate(cfg, now, hidden);
   }
-  // the state (importing, exporting, on battery …) and the self-sufficiency
+  // the state (importing, exporting, on battery …) and the self-sufficiency; a tree in another
+  // unit (heat, water) has neither: they speak of electricity
   _summary(ctx: RenderCtx, cfg: PowerFlowConfig, now: PowerNow, flows: Flows): Summary {
     const hass = ctx.hass;
+    if (this._unit) return { parts: [], color: COLORS.home, tint: false };
     const state = summaryState(cfg, now, flows);
     const vars: Record<string, string> = {
-      v: fmtPower(hass, state.w, cfg.units),
+      v: this._fmt(ctx, cfg)(state.w),
       price: now.price?.text ?? "",
     };
     return {
@@ -74,10 +97,19 @@ export class PowerFlowCard extends FlowTreeCardBase<PowerFlowConfig> {
       tint: state.tint,
     };
   }
+  // W and kW, or the tree's own unit as written (with the kW decimals)
   _fmt(ctx: RenderCtx, cfg: PowerFlowConfig) {
-    return (v: number | null, dec: number | null = null) => fmtPower(ctx.hass, v, cfg.units, dec);
+    const unit = this._unit;
+    return (v: number | null, dec: number | null = null) =>
+      unit
+        ? fmtIn(ctx.hass, v, unit, dec ?? cfg.units.decKw)
+        : fmtPower(ctx.hass, v, cfg.units, dec);
   }
-  _motion(cfg: PowerFlowConfig): Motion {
+  // by the watts between the animation's bounds; in another unit (and no bounds of the config's
+  // own) by the share of the largest flow
+  _motion(cfg: PowerFlowConfig, flows: Flows): Motion {
+    if (this._unit && cfg.animation === DEFAULT_ANIMATION)
+      return { of: shareOfMax(flows), a: { slowBelow: 0, fastAbove: 1000 } };
     return { of: (w) => w, a: cfg.animation };
   }
 }

@@ -56,7 +56,7 @@ export interface RawFlowTreeConfig extends RawEntityCardBase {
   consumer_style?: unknown;
   idle_links?: unknown;
   idle_below?: unknown;
-  other?: boolean | RawNode | null;
+  other?: boolean | (RawNode & { name?: unknown; icon?: unknown }) | null;
   rules?: unknown;
   hide_consumers_below?: unknown;
   decimals?: unknown;
@@ -126,6 +126,8 @@ export interface OtherConsumer {
   id: string;
   d: number;
   rowD: number;
+  name?: string; // its own name (default: Other, translated) …
+  icon?: string; // … and icon
 }
 export type Consumer = ConsumerItem | ConsumerGroup | OtherConsumer;
 
@@ -384,12 +386,16 @@ export const normalizeFlowTree = (
   const o = raw.other;
   const other = o === undefined || o === null ? consumers.length > 0 : !!o;
   if (other && consumers.length) {
-    const size = typeof o === "object" && o ? o.icon_size : undefined;
+    const own = typeof o === "object" && o ? o : {};
+    const size = own.icon_size;
     consumers.push({
       kind: "other",
       id: "other",
       d: nodeSize(size, GEOM.dConsumer),
       rowD: Math.min(nodeSize(size, GEOM.dConsumer), GEOM.rowH),
+      // a name and an icon of its own ("Losses", "Rest of the house")
+      ...(typeof own.name === "string" && own.name ? { name: own.name } : {}),
+      ...(typeof own.icon === "string" && own.icon ? { icon: own.icon } : {}),
     });
   }
 

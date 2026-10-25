@@ -2,6 +2,9 @@
 // gives (Flows), the consumers' share of the home, the thresholds' memory and the colours. The
 // cards compute the sources' flows themselves: the power card for the moment, the energy card for
 // a period.
+import { unitOf } from "../entity/model.ts";
+import { fmtNumber } from "../format.ts";
+import type { HomeAssistant } from "../ha.ts";
 import { COLORS, IDLE_W } from "./constants.ts";
 import { leavesOf, type FlowTreeConfig } from "./config.ts";
 import { isActive } from "./flow.ts";
@@ -173,4 +176,57 @@ export const edgeColor = (kind: EdgeKind, w = 0): string => {
     default:
       return w < 0 ? COLORS.solar : COLORS.home;
   }
+};
+
+// ----- the tree's unit -----
+
+// the items whose values the tree adds up: the home's sensor, the sources' and the consumers'
+export const treeIdxs = (cfg: FlowTreeConfig): number[] => {
+  const idxs = cfg.homeEntity ? [cfg.homeIdx] : [];
+  for (const s of cfg.sources) {
+    idxs.push(s.idx);
+    if (s.kind !== "solar" && s.secondIdx !== null) idxs.push(s.secondIdx);
+  }
+  for (const leaf of leavesOf(cfg)) if (leaf.kind === "item") idxs.push(leaf.idx);
+  return idxs;
+};
+
+// The unit a tree counts in when it is not the card's own kind (`own`: W and kW for the power
+// card, kWh and its kin for the energy card): the unit of its first sensor, the home's or else
+// the first source's, shown as written (a heat flow in its own unit, water in L/min); null: the
+// card's own. `stray` hears of each sensor whose unit differs from the tree's.
+export const treeUnit = (
+  cfg: FlowTreeConfig,
+  hass: HomeAssistant,
+  own: (unit: string) => boolean,
+  stray: (entity: string) => void,
+): string | null => {
+  const unit = (idx: number) => {
+    const ent = cfg.entities[idx];
+    return unitOf(ent, ent.entity ? hass.states[ent.entity] : undefined);
+  };
+  const idxs = treeIdxs(cfg);
+  const first = idxs.map(unit).find((u) => u !== "") ?? "";
+  const foreign = first !== "" && !own(first) ? first : null;
+  for (const idx of idxs) {
+    const u = unit(idx),
+      id = cfg.entities[idx].entity;
+    if (id && u !== "" && (foreign === null ? !own(u) : u !== foreign)) stray(id);
+  }
+  return foreign;
+};
+
+// a value in a unit of its own, as written: "12.5 L/min"
+export const fmtIn = (
+  hass: HomeAssistant | undefined,
+  v: number | null,
+  unit: string,
+  dec: number,
+): string =>
+  v === null || !Number.isFinite(v) ? "–" : `${fmtNumber(hass, Math.abs(v), dec)} ${unit}`;
+
+// links that move by their share of the largest flow (a unit the bounds know nothing of)
+export const shareOfMax = (f: Flows) => {
+  const ref = Math.max(f.H, ...f.edges.map((e) => Math.abs(e.w)));
+  return (w: number) => (ref > 0 ? (1000 * w) / ref : 0);
 };

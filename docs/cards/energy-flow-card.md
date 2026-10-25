@@ -4,7 +4,7 @@
 
 ## Sources and home
 
-Every source is an energy meter: the solar production, a battery's `charge` and `discharge`, a grid's `import` and `export`. The card reads what each meter counted in the period from Home Assistant's long-term statistics, so the meters need them: `device_class: energy` with a `state_class` of `total` or `total_increasing`, the meters the Energy dashboard accepts. The unit does not matter (Wh, kWh, MWh, GJ …); the card converts to kWh. What a meter counted since the last compiled hour comes from its live state, so the numbers move as the meters count.
+Every source is an energy meter: the solar production, a battery's `charge` and `discharge`, a grid's `import` and `export`. The card reads what each meter counted in the period from Home Assistant's long-term statistics, so the meters need them: `device_class: energy` with a `state_class` of `total` or `total_increasing`, the meters the Energy dashboard accepts. The unit does not matter (Wh, kWh, MWh, GJ …); the card converts to kWh. Meters that count something else (water in m³ or L, gas in m³) are shown in their own unit, the unit of the card's first meter, as written, and the summary line leaves out imported, exported and self-sufficient; all of the card's meters should count the same. What a meter counted since the last compiled hour comes from its live state, so the numbers move as the meters count.
 
 ::: live
 
@@ -73,7 +73,7 @@ consumers:
 
 ## Consumers and rooms
 
-Consumers, rooms, `consumer_style: list`, `direction`, `flow_style`, `idle_links`, `other`, `icon_size` and `visibility` work as on the [power flow card](/cards/power-flow-card#consumers), with energy meters for the devices. The **Other** node takes what the home used beyond the consumers.
+Consumers, rooms, `consumer_style: list`, `direction`, `flow_style` (`none` keeps the links still), `idle_links`, `other` (`{ name, icon }` renames it), `icon_size` and `visibility` work as on the [power flow card](/cards/power-flow-card#consumers), with energy meters for the devices. The **Other** node takes what the home used beyond the consumers.
 
 The dots move by each link's share of the home's total, so the busiest link is the one that carried the most. `idle_below` (default `0.05` kWh) leaves a link that carried less without motion, and `hide_consumers_below` (or a room's or device's `hide_below`) hides a device that used less in the period, in kWh. The card's `rules` match the home's energy in the period in kWh, and a source's or consumer's rules match its meter's energy in the period.
 

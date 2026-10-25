@@ -24,6 +24,8 @@ import type { PowerFlowConfig } from "./config.ts";
 import { DEFAULT_UNITS, type Units } from "./constants.ts";
 
 const UNIT_TO_W: Record<string, number> = { W: 1, kW: 1000, MW: 1e6, mW: 1e-3 };
+// a power unit the card converts to W (any other is shown as written: treeUnit)
+export const isPowerUnit = (u: string) => u in UNIT_TO_W;
 
 // the model's value in watts, null when unavailable
 export const wattsOf = (ent: EntityItem, m: EntityModel | undefined): number | null => {

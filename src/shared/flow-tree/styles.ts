@@ -24,6 +24,8 @@ const STYLE_TREE = `
   .pdiag svg.abs { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
   .link { fill: none; stroke: var(--divider-color); stroke-width: 2; stroke-dasharray: 4 4; stroke-linejoin: round; }
   .link.active { stroke: color-mix(in srgb, var(--pf-c) 45%, ${CARD_BG}); stroke-dasharray: none; }
+  /* flow_style: none – no motion on the links: an active one is drawn in its full colour */
+  .pdiag.static .link.active { stroke: var(--pf-c); }
   .pdiag.idle-hidden .link:not(.active) { display: none; }
   .pdiag.idle-faint .link:not(.active) { stroke-dasharray: none; opacity: .35; }
 

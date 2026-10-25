@@ -249,6 +249,11 @@ const place = (el: HTMLElement, nd: LNode) => {
 const sourceOf = (st: TreeState, nd: LNode) =>
   nd.column === "source" ? st.now.sources[Number(nd.id.slice(1))] : undefined;
 
+const otherOf = (st: TreeState) => {
+  const o = st.cfg.consumers.find((c) => c.kind === "other");
+  return o?.kind === "other" ? o : undefined;
+};
+
 const iconFor = (st: TreeState, nd: LNode, look: Look | null): string => {
   if (look?.icon) return look.icon;
   if (nd.kind === "solar") return ICONS.solar;
@@ -258,7 +263,7 @@ const iconFor = (st: TreeState, nd: LNode, look: Look | null): string => {
     return sourceOf(st, nd)?.generator ? ICONS.generator : ICONS.gridOff;
   }
   if (nd.kind === "home") return ICONS.home;
-  if (nd.kind === "other") return ICONS.other;
+  if (nd.kind === "other") return otherOf(st)?.icon ?? ICONS.other;
   if (nd.kind === "group") {
     const g = st.cfg.consumers.find((c) => c.id === nd.id);
     return (g && g.kind === "group" && g.icon) || ICONS.group;
@@ -334,7 +339,11 @@ const labelText = (
     };
   }
   if (nd.kind === "other")
-    return { v: fmt(f.leafW.get(nd.id) ?? 0), n: t(hass, "power.other"), s: "" };
+    return {
+      v: fmt(f.leafW.get(nd.id) ?? 0),
+      n: otherOf(st)?.name ?? t(hass, "power.other"),
+      s: "",
+    };
   if (nd.kind === "consumer")
     return {
       v: m && m.model.avail ? fmt(f.leafW.get(nd.id) ?? 0, dec) : "–",
@@ -423,6 +432,7 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
     if (el.dataset.node) nodeEls.set(el.dataset.node, el);
   diag.classList.toggle("idle-hidden", cfg.idleLinks === "hidden");
   diag.classList.toggle("idle-faint", cfg.idleLinks === "faint");
+  diag.classList.toggle("static", cfg.flowStyle === "none");
   // what the layout leaves out (a hidden node) is not drawn: its node, row and label
   const drawn = new Set([...layout.nodes.map((n) => n.id), ...layout.rows.map((r) => r.id)]);
   for (const [id, el] of nodeEls) el.hidden = !drawn.has(id);
@@ -475,7 +485,8 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
     track.classList.toggle("active", active);
     track.style.setProperty("--pf-c", color);
     const lane = laneEls.get(e.id);
-    if (!active) {
+    // `flow_style: none`: the active links carry their colour, nothing moves on them
+    if (!active || cfg.flowStyle === "none") {
       lane?.remove();
       return;
     }

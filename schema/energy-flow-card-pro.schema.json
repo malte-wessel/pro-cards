@@ -289,12 +289,19 @@
           "properties": {
             "icon_size": {
               "$ref": "#/$defs/iconSize"
+            },
+            "name": {
+              "type": "string",
+              "description": "Its own name (default: Other, translated), e.g. Losses"
+            },
+            "icon": {
+              "$ref": "defs.schema.json#/$defs/icon"
             }
           },
           "additionalProperties": false
         }
       ],
-      "description": "An \"Other\" node for the home's consumption the consumers do not account for (default: true when consumers are given); an object shows it and sets its icon_size"
+      "description": "An \"Other\" node for what the consumers do not account for (default: true when consumers are given); an object shows it with its own `name`, `icon` or `icon_size`"
     },
     "direction": {
       "type": "string",
@@ -341,8 +348,9 @@
     },
     "flow_style": {
       "type": "string",
-      "enum": ["dots", "lines", "arrows"],
-      "default": "dots"
+      "enum": ["dots", "lines", "arrows", "none"],
+      "default": "dots",
+      "description": "How the flow moves on a link: dots, dashes (lines) or arrows; none draws the active links in their colour without motion"
     },
     "hide_consumers_below": {
       "type": "number",

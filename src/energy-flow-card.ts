@@ -34,7 +34,7 @@ import { registerCard } from "./shared/card.ts";
 import { resolveLook } from "./shared/entity/look.ts";
 import { tplGetter, unitOf, type EntityModel, type RenderCtx } from "./shared/entity/model.ts";
 import { FlowTreeCardBase } from "./shared/flow-tree/base.ts";
-import type { FlowNow, Flows } from "./shared/flow-tree/model.ts";
+import { fmtIn, treeUnit, type FlowNow, type Flows } from "./shared/flow-tree/model.ts";
 import { selfSufficiencyPart, type Summary } from "./shared/flow-tree/render/summary.ts";
 import type { HomeAssistant } from "./shared/ha.ts";
 import { langOf } from "./shared/format.ts";
@@ -118,6 +118,8 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
   // the meters with long-term statistics (null: not known yet, or the server did not say)
   _counted: Set<string> | null = null;
   _warned = new Set<string>();
+  // the meters' unit when they are no energy meters (m³, L, …), from the last _measure; null: kWh
+  _unit: string | null = null;
   _range?: PeriodRange;
   _rollTimer?: ReturnType<typeof setTimeout>;
   // the period's buckets, from the last _measure for its _allocate
@@ -393,6 +395,18 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
   // ----- the numbers -----
   _measure(ctx: RenderCtx, cfg: EnergyFlowConfig, models: EntityModel[]) {
     const hass = ctx.hass as HomeAssistant;
+    // meters that count no energy (water in m³, …) are shown in their own unit, which the
+    // statistics keep
+    this._unit = treeUnit(
+      cfg,
+      hass,
+      (u) => u in ENERGY_TO_KWH,
+      (id) => {
+        if (this._warned.has(id)) return;
+        this._warned.add(id);
+        console.warn(`${CARD_TYPE}: ${id} does not count in the unit of the tree`);
+      },
+    );
     const now = Date.now();
     const r = this._syncPeriod(now);
     const series = new Map<number, Map<number, number> | null>();
@@ -451,11 +465,18 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
     // the period's name goes on the summary line when no picker names it
     const r = this._range;
     const period = !cfg.picker && r && ctx.hass ? this._periodLabel(r, ctx.hass) : null;
-    const s = energySummary(ctx.hass, cfg, now, flows, period);
+    const s = energySummary(ctx.hass, cfg, now, flows, period, this._fmt(ctx, cfg));
+    // imported, exported and self-sufficient speak of electricity: not of water or gas
+    if (this._unit) return { ...s, parts: s.parts.slice(0, period === null ? 0 : 1) };
     return { ...s, parts: [...s.parts, ...selfSufficiencyPart(ctx.hass, flows)] };
   }
+  // kWh and MWh, or the meters' own unit as written (with the kWh decimals)
   _fmt(ctx: RenderCtx, cfg: EnergyFlowConfig) {
-    return (v: number | null, dec: number | null = null) => fmtEnergy(ctx.hass, v, cfg.units, dec);
+    const unit = this._unit;
+    return (v: number | null, dec: number | null = null) =>
+      unit
+        ? fmtIn(ctx.hass, v, unit, dec ?? cfg.units.decKwh)
+        : fmtEnergy(ctx.hass, v, cfg.units, dec);
   }
   _motion(_cfg: EnergyFlowConfig, flows: Flows) {
     return shareMotion(flows);

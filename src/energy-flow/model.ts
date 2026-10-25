@@ -314,6 +314,8 @@ export const energySummary = (
   f: Flows,
   // the period's name, first and in the state colour (null: the title names it)
   period: string | null = null,
+  // how an amount reads (default: kWh / MWh)
+  fmt: (v: number) => string = (v) => fmtEnergy(hass, v, cfg.units),
 ): Summary => {
   const on = (w: number) => isActive(w, cfg.idleBelow);
   const top = Math.max(f.sH, f.bH, f.gH);
@@ -324,7 +326,6 @@ export const energySummary = (
       : top === f.bH
         ? COLORS.battOut
         : COLORS.gridIn;
-  const fmt = (v: number) => fmtEnergy(hass, v, cfg.units);
   const parts: Summary["parts"] = period === null ? [] : [{ text: period, accent: true }];
   const grids = cfg.sources.flatMap((s, i) =>
     s.kind === "grid" ? [[s, now.sources[i]] as const] : [],

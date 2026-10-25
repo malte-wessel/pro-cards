@@ -638,6 +638,21 @@ def(
   "power",
   { noise: 0, min: 0, decimals: 0 },
 );
+// water flow in L/min (a tree in a unit of its own): the main meter and three taps, adding up
+// with a little left for the rest of the house
+for (const [id, name, v] of [
+  ["sensor.water_flow", "Water flow", 14.6],
+  ["sensor.bathroom_water_flow", "Bathroom water flow", 8.2],
+  ["sensor.kitchen_water_flow", "Kitchen water flow", 3.9],
+  ["sensor.garden_water_flow", "Garden water flow", 0],
+] as const)
+  def(
+    id,
+    v,
+    { unit_of_measurement: "L/min", device_class: "volume_flow_rate", friendly_name: name },
+    "flat",
+    { decimals: 1 },
+  );
 def(
   "sensor.grid_power",
   -960,
