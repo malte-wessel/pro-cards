@@ -1,19 +1,25 @@
 # Changelog
 
-## 2.8.0 – Layout card and theme-aware sizing
+## 2.9.0 – Energy flow card
 
 _Beta_
 
-- **New layout card** (`custom:layout-card-pro`): arrange any cards inside a section as a `grid` (columns, tracks, spans) or as `masonry`. Breakpoints count view columns, each card is placed through its `view_layout`, and `card_style: seamless` joins the cards into one surface, painted once (a translucent theme colour does not stack). YAML only for now
 - **New energy flow card** (`custom:energy-flow-card-pro`): the power flow card's tree over a period (`period: today | yesterday | week | month | year`), from energy meters and their long-term statistics, live between compiled hours. The flows split the way the Energy dashboard splits them, hour by hour (day by day for longer periods); the dots move by each link's share of the home, thresholds and rules read kWh. A picker in the header steps to another day, week, month or year (‹ ›) or opens a calendar like Home Assistant's date picker (quick picks, and any range of days in two clicks), and goes back to the configured `period` after ten minutes untouched; `period_picker: false` keeps a fixed period. Also for heat: a heat pump's heat meter and the floors' meters show where the heat went
+- Power flow: `other: { name, icon }` renames the Other node
+- Power and energy flow: `flow_style: none` draws the active links in their colour without motion
+- Power and energy flow: a tree whose sensors report another unit (a water flow in L/min, water meters in m³) shows its values in that unit as written instead of W or kWh
+- Power and energy flow: a tree without a grid source (a heat flow) no longer claims to be 100 % self-sufficient
+
+## 2.8.0 – Layout card and theme-aware sizing
+
+_2026-10-25_
+
+- **New layout card** (`custom:layout-card-pro`): arrange any cards inside a section as a `grid` (columns, tracks, spans) or as `masonry`. Breakpoints count view columns, each card is placed through its `view_layout`, and `card_style: seamless` joins the cards into one surface, painted once (a translucent theme colour does not stack). YAML only for now
 - Icons are sized like Home Assistant's tile card (a 24 px icon in a 36 px circle), so Pro tiles match the built-in ones
 - `icon_style: plain` draws an icon without its circle, still aligned with circled icons
 - `show_entity_picture: true` shows an entity's picture (a person's photo, a cover, a snapshot) in place of its icon, as on Home Assistant's tile card
 - Entity cards no longer show the history window (`12 h`) in the header; a strip still labels its own axis
-- Power flow: `icon_size` on any node, including `other`; `other: { name, icon }` renames the Other node
-- Power and energy flow: `flow_style: none` draws the active links in their colour without motion
-- Power and energy flow: a tree without a grid source (a heat flow) no longer claims to be 100 % self-sufficient
-- Power and energy flow: a tree whose sensors report another unit (a water flow in L/min, water meters in m³) shows its values in that unit as written instead of W or kWh
+- Power flow: `icon_size` on any node, including `other`
 - Power flow: a solar-fed battery given as a `charge` / `discharge` pair shows both values while it charges and discharges at once (`252 W ↓` over `221 W ↑`) instead of the net value; its label keeps a line for the second value, so such a card is one line taller
 - Power flow: `charge_from` takes the entity of a solar source (or a list of them), so a battery is charged only by its own panels and the other arrays get no link to it
 - Power flow: `both_ways: true` on a grid's `import` / `export` pair, for a meter that does not net its phases: the grid imports and exports at once and its node shows both values
