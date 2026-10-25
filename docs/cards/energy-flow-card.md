@@ -28,7 +28,7 @@ The flows split the way Home Assistant's Energy dashboard splits them, hour by h
 
 ## Periods
 
-`period` picks the stretch of time: `today` (the default), `yesterday`, `week` (from Monday), `month` or `year`. The periods follow the calendar in Home Assistant's time zone (or the browser's, as your profile says), and the card turns over by itself at midnight, on Monday and on the first of the month.
+`period` picks the stretch of time the card shows (and comes back to, see the picker below): `today` (the default), `yesterday`, `week` (from Monday), `month` or `year`. The periods follow the calendar in Home Assistant's time zone (or the browser's, as your profile says), and the card turns over by itself at midnight, on Monday and on the first of the month.
 
 ::: live
 
@@ -46,6 +46,27 @@ consumers:
   - { entity: sensor.ev_charger_energy, name: EV }
   - { entity: sensor.washer_energy, name: Washer }
   - { entity: sensor.office_energy, name: Office }
+```
+
+:::
+
+### Picking the time frame
+
+The header carries a picker: **‹** goes to the period before, **›** to the one after (up to the running one), and the button between them names the period shown (Today, Yesterday, Fri 23 Oct, 6 – 10 Oct, March 2026) and opens a calendar, as Home Assistant's date picker does. The button keeps one width whatever it names, so nothing in the header moves as you step; a long range is cut, its tooltip names it in full. Quick picks give today, yesterday, this week, month and year and the last 7 and 30 days; on the calendar two clicks pick any range of days, its first day and then its last (the same day twice: that day). The calendar's title opens the months and the years, to get to a far month quickly. A range that is exactly a day, a week (Monday to Sunday), a month or a year steps by it with ‹ ›, any other range by its own length. Nothing after today can be picked; the arrow keys move through the calendar, Page Up and Page Down turn its page, Escape closes it. The pick is the viewer's own and lasts while the page is open: after ten minutes without a touch, and on a reload, the card shows its `period` again, so a wall tablet comes back to today. `period_picker: false` leaves the picker out for a card that always shows its `period`; the summary line then names the period. Without a `title` the card is titled **Energy**.
+
+::: live
+
+```yaml
+type: custom:energy-flow-card-pro
+title: Energy
+icon: mdi:lightning-bolt
+period: week
+sources:
+  - { type: solar, entity: sensor.solar_energy }
+  - { type: grid, import: sensor.grid_import_energy, export: sensor.grid_export_energy }
+consumers:
+  - { entity: sensor.heat_pump_energy, name: Heat pump }
+  - { entity: sensor.ev_charger_energy, name: EV }
 ```
 
 :::
@@ -137,17 +158,19 @@ consumers:
 
 ### Card options
 
-| Option                                                                                         | Default                | Description                                                                                                                                |
-| ---------------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `sources`                                                                                      | required               | Solar, battery and grid entries (below), in drawing order.                                                                                 |
-| `period`                                                                                       | `today`                | `today`, `yesterday`, `week` (from Monday), `month` or `year`, in Home Assistant's time zone.                                              |
-| `home`                                                                                         | sum of the sources     | The home's energy meter, or an entity object with `name`, `icon`, `rules` and actions.                                                     |
-| `consumers`                                                                                    | –                      | Devices (`{ entity, name, icon }`) or rooms (`{ group, icon, entities }`) with energy meters, in drawing order.                            |
-| `idle_below`                                                                                   | `0.05`                 | kWh below which a link is idle (no motion); `0` lets every trickle flow.                                                                   |
-| `decimals`                                                                                     | `{ kwh: 1, mwh: 2 }`   | Decimals of the values: one number for both units, or `{ kwh, mwh }`. Values show in MWh from 1000 kWh.                                    |
-| `hide_consumers_below`                                                                         | –                      | Hides a consumer while it used less than this many kWh in the period. A room or consumer's own `hide_below` overrides it, `0` never hides. |
-| `rules`                                                                                        | –                      | `[{ below, above, color, label, tint_card }]` on the home's energy in the period in kWh; first match wins.                                 |
-| `consumer_style`, `other`, `direction`, `flow_style`, `idle_links`, `title`, `icon`, actions … | as the power flow card | See the [power flow card's options](/cards/power-flow-card#card-options).                                                                  |
+| Option                                                                                | Default                | Description                                                                                                                                             |
+| ------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sources`                                                                             | required               | Solar, battery and grid entries (below), in drawing order.                                                                                              |
+| `period`                                                                              | `today`                | `today`, `yesterday`, `week` (from Monday), `month` or `year`, in Home Assistant's time zone.                                                           |
+| `period_picker`                                                                       | `true`                 | The picker in the header: the viewer steps to another day, week, month or year; back to `period` after ten minutes untouched. `false`: always `period`. |
+| `title`                                                                               | Energy                 | The header's text, templates allowed.                                                                                                                   |
+| `home`                                                                                | sum of the sources     | The home's energy meter, or an entity object with `name`, `icon`, `rules` and actions.                                                                  |
+| `consumers`                                                                           | –                      | Devices (`{ entity, name, icon }`) or rooms (`{ group, icon, entities }`) with energy meters, in drawing order.                                         |
+| `idle_below`                                                                          | `0.05`                 | kWh below which a link is idle (no motion); `0` lets every trickle flow.                                                                                |
+| `decimals`                                                                            | `{ kwh: 1, mwh: 2 }`   | Decimals of the values: one number for both units, or `{ kwh, mwh }`. Values show in MWh from 1000 kWh.                                                 |
+| `hide_consumers_below`                                                                | –                      | Hides a consumer while it used less than this many kWh in the period. A room or consumer's own `hide_below` overrides it, `0` never hides.              |
+| `rules`                                                                               | –                      | `[{ below, above, color, label, tint_card }]` on the home's energy in the period in kWh; first match wins.                                              |
+| `consumer_style`, `other`, `direction`, `flow_style`, `idle_links`, `icon`, actions … | as the power flow card | See the [power flow card's options](/cards/power-flow-card#card-options).                                                                               |
 
 ### Sources
 

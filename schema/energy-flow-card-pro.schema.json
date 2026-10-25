@@ -223,6 +223,11 @@
       "default": "today",
       "description": "The period the card shows: calendar-aligned in Home Assistant's time zone, the week from Monday; it turns over by itself"
     },
+    "period_picker": {
+      "type": "boolean",
+      "default": true,
+      "description": "A picker in the header: the viewer steps to another day, week, month or year (‹ ›) and switches between them; it goes back to `period` after 10 minutes untouched. false: a fixed period"
+    },
     "sources": {
       "type": "array",
       "minItems": 1,

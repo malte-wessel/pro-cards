@@ -12,7 +12,6 @@ import { fmtNumber } from "../shared/format.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
 import { t } from "../shared/i18n.ts";
 import { liveTail, type MeterPeriod } from "../shared/statistics.ts";
-import type { CalendarPeriod } from "../shared/calendar.ts";
 import { COLORS } from "../shared/flow-tree/constants.ts";
 import { isActive, type Motion } from "../shared/flow-tree/flow.ts";
 import {
@@ -306,14 +305,6 @@ export const fmtEnergy = (
   return `${fmtNumber(hass, v, dec ?? units.decKwh)} kWh`;
 };
 
-const PERIOD_KEYS = {
-  today: "energy.period.today",
-  yesterday: "energy.period.yesterday",
-  week: "energy.period.week",
-  month: "energy.period.month",
-  year: "energy.period.year",
-} as const satisfies Record<CalendarPeriod, string>;
-
 // The period in the colour of what covered most of the home (solar, the batteries, the grid),
 // then what the grids imported and exported (where they have meters for it); never a tint
 export const energySummary = (
@@ -321,6 +312,8 @@ export const energySummary = (
   cfg: EnergyFlowConfig,
   now: FlowNow,
   f: Flows,
+  // the period's name, first and in the state colour (null: the title names it)
+  period: string | null = null,
 ): Summary => {
   const on = (w: number) => isActive(w, cfg.idleBelow);
   const top = Math.max(f.sH, f.bH, f.gH);
@@ -332,7 +325,7 @@ export const energySummary = (
         ? COLORS.battOut
         : COLORS.gridIn;
   const fmt = (v: number) => fmtEnergy(hass, v, cfg.units);
-  const parts: Summary["parts"] = [{ text: t(hass, PERIOD_KEYS[cfg.period]), accent: true }];
+  const parts: Summary["parts"] = period === null ? [] : [{ text: period, accent: true }];
   const grids = cfg.sources.flatMap((s, i) =>
     s.kind === "grid" ? [[s, now.sources[i]] as const] : [],
   );

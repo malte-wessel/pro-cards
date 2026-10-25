@@ -27,10 +27,12 @@ import { CARD_TYPE, DEFAULT_UNITS, IDLE_KWH, type EnergyUnits } from "./constant
 
 export interface RawEnergyFlowConfig extends RawFlowTreeConfig {
   period?: unknown;
+  period_picker?: unknown;
 }
 
 export interface EnergyFlowConfig extends FlowTreeConfig {
-  period: CalendarPeriod;
+  period: CalendarPeriod; // what the card shows until a viewer picks another
+  picker: boolean; // the viewer's period picker in the header (`period_picker`)
   units: EnergyUnits;
 }
 
@@ -138,14 +140,19 @@ export const normalizeEnergyFlowConfig = (input: unknown): EnergyFlowConfig => {
     ...normalizeActionDefaults(raw),
     columns: clampColumns(raw.columns, ENTITY_DEFAULTS.columns),
   };
+  const tree = normalizeFlowTree(raw, ctx, {
+    source: normalizeSource,
+    unit: "kWh",
+    idleBelow: IDLE_KWH,
+    gross: true,
+  });
+  const picker = raw.period_picker !== false;
   return {
-    ...normalizeFlowTree(raw, ctx, {
-      source: normalizeSource,
-      unit: "kWh",
-      idleBelow: IDLE_KWH,
-      gross: true,
-    }),
+    ...tree,
+    // always a header: the card's name is the title when the config gives none
+    hasHeader: true,
     period: enumOf(CARD_TYPE, PERIODS, raw.period, "period", "today"),
+    picker,
     units: normalizeUnits(raw),
   };
 };
