@@ -17,7 +17,7 @@ import {
   viewConfig,
   type FlowTreeConfig,
 } from "./config.ts";
-import { COLORS, GEOM } from "./constants.ts";
+import { COLORS, GEOM, IDLE_W } from "./constants.ts";
 import type { Motion } from "./flow.ts";
 import { diagramHeight, layoutTree } from "./layout.ts";
 import { bothFlows, thresholdShown, type FlowNow, type Flows } from "./model.ts";
@@ -57,9 +57,16 @@ export abstract class FlowTreeCardBase<C extends FlowTreeConfig> extends EntityC
   abstract _summary(ctx: RenderCtx, cfg: C, now: FlowNow, flows: Flows): Summary;
   abstract _fmt(ctx: RenderCtx, cfg: C): Fmt;
   abstract _motion(cfg: C, flows: Flows): Motion;
+  // the tree's unit when its sensors count in no unit of the card's own kind (a heat or water
+  // flow: treeUnit), set by the card's _measure; null: the card's own (W, kWh)
+  _unit: string | null = null;
   // the least step of the thresholds' hysteresis, in the card's unit
   _gap() {
     return 2;
+  }
+  // `idle_below` when the config gives none, in the card's unit
+  _idleDefault() {
+    return IDLE_W;
   }
   // the home's value its rules match (rounded to what they compare)
   _homeValue(h: number) {
@@ -139,7 +146,10 @@ export abstract class FlowTreeCardBase<C extends FlowTreeConfig> extends EntityC
       cfg,
       cfg.entities.map((ent) => modelOf(ctx, ent)),
     );
-    const gap = this._gap();
+    // a tree in a unit of its own knows no threshold of the card's: nothing is idle unless the
+    // config says so, and the thresholds' memory is their 20 % alone
+    if (!cfg.idleSet) cfg.idleBelow = this._unit ? 0 : this._idleDefault();
+    const gap = this._unit ? 0 : this._gap();
     // the consumers below their threshold: decided for every one on every render (the memory
     // follows the value), then hidden with those whose conditions fail
     const below = new Set<string>();

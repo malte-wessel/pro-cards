@@ -130,11 +130,16 @@ const dayEnd = (t0: number, tz: string) => {
   return zonedMidnight(y, m, d + 1, tz);
 };
 
+// the calendar open in a host, by its close: a new one closes the old first (its listeners and
+// the anchor's state go with it)
+const opened = new WeakMap<ShadowRoot | HTMLElement, () => void>();
+
 export const openDatePicker = (
   anchor: HTMLElement,
   host: ShadowRoot | HTMLElement,
   o: DatePickerOpts,
 ) => {
+  opened.get(host)?.();
   host.querySelector(".dp")?.remove();
   const { hass, tz, lang } = o;
   const now = Date.now();
@@ -176,7 +181,8 @@ export const openDatePicker = (
   for (const [text, a, b] of presets) {
     const btn = el("button", "dp-preset", text);
     btn.type = "button";
-    btn.classList.toggle("on", a === shown.start && b === shown.end);
+    // the period shown, as it ends (a running week ends on Sunday, after today)
+    btn.classList.toggle("on", a === o.start && b === o.end);
     btn.addEventListener("click", () => pick(a, b));
     quick.appendChild(btn);
   }
@@ -374,6 +380,7 @@ export const openDatePicker = (
   const close = () => {
     if (closed) return;
     closed = true;
+    if (opened.get(host) === close) opened.delete(host);
     window.removeEventListener("resize", place);
     document.removeEventListener("pointerdown", outside, true);
     box.removeEventListener("keydown", onKey);
@@ -383,6 +390,7 @@ export const openDatePicker = (
     anchor.focus();
   };
 
+  opened.set(host, close);
   draw(false);
   if (supportsPopover) {
     box.showPopover();

@@ -23,7 +23,7 @@ import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
 import { FlowTreeCardBase } from "./shared/flow-tree/base.ts";
 import type { Motion } from "./shared/flow-tree/flow.ts";
 import { fmtIn, shareOfMax, treeUnit, type Flows } from "./shared/flow-tree/model.ts";
-import { COLORS, DEFAULT_ANIMATION, IDLE_W } from "./shared/flow-tree/constants.ts";
+import { COLORS, DEFAULT_ANIMATION } from "./shared/flow-tree/constants.ts";
 import { selfSufficiencyPart, type Summary } from "./shared/flow-tree/render/summary.ts";
 import type { HomeAssistant } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
@@ -56,9 +56,6 @@ export class PowerFlowCard extends FlowTreeCardBase<PowerFlowConfig> {
     };
   }
 
-  // the tree's unit when its sensors are no power sensors (a heat or water flow), from the last
-  // _measure; null: W and kW
-  _unit: string | null = null;
   _warned = new Set<string>();
 
   _normalize(raw: unknown) {
@@ -71,8 +68,6 @@ export class PowerFlowCard extends FlowTreeCardBase<PowerFlowConfig> {
         this._warned.add(id);
         console.warn(`${CARD_TYPE}: ${id} does not count in the unit of the tree`);
       });
-    // 20 W is no threshold for another unit: without `idle_below` every flow moves there
-    if (!cfg.idleSet) cfg.idleBelow = this._unit ? 0 : IDLE_W;
     return { now: powerNow(cfg, models), models };
   }
   _allocate(cfg: PowerFlowConfig, now: PowerNow, hidden: ReadonlySet<string>) {

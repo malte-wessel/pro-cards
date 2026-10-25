@@ -34,8 +34,6 @@ export interface RawPowerFlowConfig extends RawFlowTreeConfig {
 }
 
 export interface PowerFlowConfig extends FlowTreeConfig {
-  // `idle_below` given: it holds in any unit; else 20 W, or nothing in a unit of the tree's own
-  idleSet: boolean;
   expensiveAbove: number | null;
   units: Units;
   animation: Animation;
@@ -189,7 +187,6 @@ export const normalizePowerFlowConfig = (input: unknown): PowerFlowConfig => {
       idleBelow: IDLE_W,
       gross: false,
     }),
-    idleSet: raw.idle_below !== undefined && raw.idle_below !== null,
     expensiveAbove: numOrNull(raw.expensive_above),
     units: normalizeUnits(raw),
     animation: normalizeAnimation(raw.animation),

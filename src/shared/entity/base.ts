@@ -348,6 +348,10 @@ export abstract class EntityCardBase extends HTMLElement {
   }
   // the card's own part of the header, after the title and the header entities
   _buildHeader(_header: HTMLElement) {}
+  // the title when the config gives none, or its template renders empty (null: none)
+  _defaultTitle(_ctx: RenderCtx): string | null {
+    return null;
+  }
 
   // ----- visibility -----
   // every condition tree of the config; a card with parts of its own adds theirs
@@ -728,7 +732,7 @@ export abstract class EntityCardBase extends HTMLElement {
       refocus = this._rebuildBody(card);
     const header = card.querySelector<HTMLElement>(".header");
     if (header) {
-      const title = tplOf(ctx, cfg.title),
+      const title = tplOf(ctx, cfg.title) || this._defaultTitle(ctx),
         icon = tplOf(ctx, cfg.icon);
       const hi = qs(header, "ha-icon");
       if (icon) {

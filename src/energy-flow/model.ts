@@ -110,6 +110,29 @@ export interface EnergyIn {
   src: { a: number; b: number }[];
   home: number | null;
 }
+// The period's buckets from every meter's series (item index → bucket start → kWh), in time order.
+// A source counts 0 in a bucket it has nothing for. The home's meter counts where it has the
+// bucket; elsewhere – and without long-term statistics, or as a fixed value – the bucket's home is
+// computed from the sources (null), never 0.
+export const bucketsOf = (
+  cfg: EnergyFlowConfig,
+  series: ReadonlyMap<number, Map<number, number> | null>,
+): EnergyIn[] => {
+  const keys = [...new Set([...series.values()].flatMap((s) => (s ? [...s.keys()] : [])))].sort(
+    (a, b) => a - b,
+  );
+  const at = (idx: number | null, key: number) =>
+    idx === null ? 0 : (series.get(idx)?.get(key) ?? 0);
+  const home = cfg.homeEntity && cfg.entities[cfg.homeIdx].entity ? series.get(cfg.homeIdx) : null;
+  return keys.map((key) => ({
+    src: cfg.sources.map((s) => ({
+      a: at(s.idx, key),
+      b: s.kind === "solar" ? 0 : at(s.secondIdx, key),
+    })),
+    home: home ? (home.get(key) ?? null) : null,
+  }));
+};
+
 // what a bucket gives: per source what went to the home, to each battery, to each grid
 interface Split {
   U: number; // the home

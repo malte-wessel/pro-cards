@@ -54,11 +54,12 @@ import {
   normalizeEnergyFlowConfig,
   type EnergyFlowConfig,
 } from "./energy-flow/config.ts";
-import { CARD_TYPE, GAP_KWH } from "./energy-flow/constants.ts";
+import { CARD_TYPE, GAP_KWH, IDLE_KWH } from "./energy-flow/constants.ts";
 import { buildPicker, updatePicker } from "./energy-flow/picker.ts";
 import { STYLE_ENERGY_FLOW_CARD } from "./energy-flow/styles.ts";
 import {
   allocate,
+  bucketsOf,
   energyNow,
   energySummary,
   fmtEnergy,
@@ -118,8 +119,6 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
   // the meters with long-term statistics (null: not known yet, or the server did not say)
   _counted: Set<string> | null = null;
   _warned = new Set<string>();
-  // the meters' unit when they are no energy meters (m³, L, …), from the last _measure; null: kWh
-  _unit: string | null = null;
   _range?: PeriodRange;
   _rollTimer?: ReturnType<typeof setTimeout>;
   // the period's buckets, from the last _measure for its _allocate
@@ -153,6 +152,9 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
   // always a header: the card's name is the title when the config gives none
   _headerExtra() {
     return true;
+  }
+  _defaultTitle(ctx: RenderCtx) {
+    return t(ctx.hass, "energy.title");
   }
   _buildHeader(header: HTMLElement) {
     if (!this._config?.picker) return;
@@ -250,9 +252,6 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
       r = this._range;
     if (!cfg || !hass || !r) return;
     const label = this._periodLabel(r, hass);
-    // no title of the config's own: the card's name
-    const title = cfg.title ? null : this._root?.querySelector<HTMLElement>(".header .title");
-    if (title) title.textContent = t(hass, "energy.title");
     const el = this._root?.querySelector<HTMLElement>(".ppicker");
     if (!cfg.picker || !el) return;
     updatePicker(el, {
@@ -275,8 +274,10 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
     this._fetchStats();
   }
   _tick() {
-    // newly compiled hours: the live tail moves into its buckets
-    this._stats.invalidate();
+    // newly compiled hours: the live tail moves into its buckets. A period that ended a while ago
+    // gets no new hours: it is not fetched again
+    const r = this._range;
+    if (!r || r.open || Date.now() - r.end < SETTLE_MS) this._stats.invalidate();
     this._fetchStats();
     super._tick();
   }
@@ -323,6 +324,9 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
             : rangeAt(pick.kind, pick.anchor ?? now, now, tz)
           : periodRange(cfg.period, now, tz);
     this._picked = false;
+    // a range that ran into today ends under the same key: its last hours come from the
+    // statistics now, not from the live tail
+    if (old && r.key === old.key && old.open && !r.open) this._stats.invalidate();
     if (r.key !== old?.key) {
       this._stats.reset();
       const seed = new Map<string, MeterPeriod>();
@@ -386,7 +390,7 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
           if (!m || (counted && !counted.has(id))) return false;
           return r.open ? m.base === null : (m.rows[m.rows.length - 1]?.end ?? 0) < r.end;
         });
-        if (settling && short) this._stats.later();
+        return !(settling && short);
       },
       () => this._render(),
     );
@@ -441,19 +445,7 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
       );
       return { ...m, look };
     });
-    // the buckets every meter knows of, in time order
-    const keys = [...new Set([...series.values()].flatMap((s) => (s ? [...s.keys()] : [])))].sort(
-      (a, b) => a - b,
-    );
-    const at = (idx: number | null, key: number) =>
-      idx === null ? 0 : (series.get(idx)?.get(key) ?? 0);
-    this._buckets = keys.map((key) => ({
-      src: cfg.sources.map((s) => ({
-        a: at(s.idx, key),
-        b: s.kind === "solar" ? 0 : at(s.secondIdx, key),
-      })),
-      home: cfg.homeEntity ? at(cfg.homeIdx, key) : null,
-    }));
+    this._buckets = bucketsOf(cfg, series);
     const flowNow = energyNow(cfg, amount, (idx) => models[idx]?.model.num ?? null);
     return { now: flowNow, models: looked };
   }
@@ -483,6 +475,9 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
   }
   _gap() {
     return GAP_KWH;
+  }
+  _idleDefault() {
+    return IDLE_KWH;
   }
   _homeValue(h: number) {
     return Math.round(h * 1000) / 1000;

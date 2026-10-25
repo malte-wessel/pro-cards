@@ -8,6 +8,7 @@ import {
 import {
   allocate,
   allocateBucket,
+  bucketsOf,
   energyNow,
   energySummary,
   fmtEnergy,
@@ -204,6 +205,36 @@ describe("energy-flow-card: the split", () => {
     const f = allocate(heat, nowOf(heat, kwh), [bucketOf(heat, kwh)]);
     expect(f.H).toBe(5);
     expect(f.selfSufficiency).toBeNull();
+  });
+
+  it("computes a bucket's home from the sources where its meter has nothing", () => {
+    const cfg = cfgOf({ home: "sensor.home" });
+    const [solar, , grid] = cfg.sources;
+    const series = new Map([
+      [
+        solar.idx,
+        new Map([
+          [0, 2],
+          [1, 3],
+        ]),
+      ],
+      [grid.idx, new Map([[1, 1]])],
+      // the home meter has the first bucket only
+      [cfg.homeIdx, new Map([[0, 2]])],
+    ]);
+    const b = bucketsOf(cfg, series);
+    expect(b.map((x) => x.home)).toEqual([2, null]);
+    expect(b[1].src[0].a).toBe(3);
+    expect(allocate(cfg, nowOf(cfg, {}), b).H).toBe(6);
+    // without statistics, or as a fixed value, the home is computed throughout
+    expect(bucketsOf(cfg, new Map([...series, [cfg.homeIdx, null]])).map((x) => x.home)).toEqual([
+      null,
+      null,
+    ]);
+    const fixed = cfgOf({ home: { value: 5 } });
+    expect(bucketsOf(fixed, new Map([[fixed.sources[0].idx, new Map([[0, 2]])]]))[0].home).toBe(
+      null,
+    );
   });
 
   it("gives every consumer its period and Other the rest", () => {

@@ -88,6 +88,8 @@ test.describe("energy flow card", () => {
     await chip(c).click();
     await expect(dp(c)).toBeVisible();
     await expect(chip(c)).toHaveAttribute("aria-expanded", "true");
+    // the quick pick of the period shown: a running week too, although it ends after today
+    await expect(dp(c).locator(".dp-preset.on")).toHaveText(["Today"]);
     // nothing after today
     await expect(day(c, 22)).toBeDisabled();
     await expect(day(c, 21)).toHaveAttribute("aria-current", "date");
@@ -146,6 +148,19 @@ test.describe("energy flow card", () => {
     await expect(chip(c)).toHaveText("Yesterday");
     await page.clock.runFor(2 * 60e3);
     await expect(chip(c)).toHaveText("Today");
+  });
+
+  test("its default title is a title like any: a button with its name", async ({ page }) => {
+    await mount(page, {
+      type: T,
+      home: HOME,
+      sources: SRC,
+      title_tap_action: { action: "navigate", navigation_path: "/energy" },
+    });
+    const c = card(page);
+    await expect(title(c)).toHaveText("Energy");
+    await expect(title(c)).toHaveAttribute("aria-label", "Energy");
+    await expect(title(c)).toHaveAttribute("role", "button");
   });
 
   test("without the picker, the summary names the configured period", async ({ page }) => {

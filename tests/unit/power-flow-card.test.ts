@@ -2094,3 +2094,41 @@ describe("power-flow-card: a tree in a unit of its own", () => {
     expect(base({ idle_below: 0.5 })).toMatchObject({ idleSet: true, idleBelow: 0.5 });
   });
 });
+
+describe("power-flow-card: thresholds in a tree of its own unit", () => {
+  const water = (extra: Record<string, unknown> = {}) => {
+    const el = new PowerFlowCard();
+    el.setConfig({
+      sources: [{ type: "grid", power: "sensor.main" }],
+      consumers: [{ entity: "sensor.garden", hide_below: 0.5 }],
+      ...extra,
+    });
+    return el;
+  };
+  const flows = (garden: string, unit = "L/min") =>
+    hassOf({
+      "sensor.main": ["10", { unit_of_measurement: unit }],
+      "sensor.garden": [garden, { unit_of_measurement: unit }],
+    });
+
+  it("has no idle threshold unless the config gives one", () => {
+    const el = water();
+    el.hass = flows("1");
+    expect(el._config?.idleBelow).toBe(0);
+    const given = water({ idle_below: 0.5 });
+    given.hass = flows("1");
+    expect(given._config?.idleBelow).toBe(0.5);
+    // in watts the card's own 20 W
+    const watts = water();
+    watts.hass = flows("1", "W");
+    expect(watts._config?.idleBelow).toBe(20);
+  });
+
+  it("brings a hidden consumer back 20 % above its threshold, not 2 units", () => {
+    const el = water();
+    el.hass = flows("0.3");
+    expect(el._computed?.hidden.has("c0")).toBe(true);
+    el.hass = flows("0.65");
+    expect(el._computed?.hidden.has("c0")).toBe(false);
+  });
+});

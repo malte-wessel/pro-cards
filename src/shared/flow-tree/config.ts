@@ -146,6 +146,9 @@ export interface FlowTreeConfig extends EntityCardConfig {
   // every pair runs both ways and shows both values (the energy card's period totals); else only
   // a solar-fed battery pair and a grid with `both_ways` (twoValued)
   gross: boolean;
+  // `idle_below` given: it holds in any unit; else the card's default, or nothing in a tree that
+  // counts in a unit of its own (FlowTreeCardBase)
+  idleSet: boolean;
   lines?: LabelLines; // the labels' lines at the theme's text size, set where the tree is drawn
 }
 
@@ -429,6 +432,7 @@ export const normalizeFlowTree = (
     consumers,
     hasGroups: consumers.some((c) => c.kind === "group"),
     gross: opts.gross,
+    idleSet: raw.idle_below !== undefined && raw.idle_below !== null,
   };
 };
 
