@@ -32,6 +32,7 @@ const cs: Translation = {
   "layout.unavailable": "Prvky karet Home Assistantu se nenačetly",
   "group.stub_title": "Skupina",
   "sections.stub_title": "Sekce",
+  "heading.stub_title": "Nadpis",
 
   "sun.label.sunrise": "Východ slunce",
   "sun.label.sunset": "Západ slunce",

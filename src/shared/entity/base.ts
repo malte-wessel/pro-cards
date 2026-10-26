@@ -38,6 +38,7 @@ import {
   type Pending,
   type ServiceCall,
 } from "./control.ts";
+import { membersOf } from "./look.ts";
 import { modelOf, nameOf, tplOf, type PlotHandlers, type RenderCtx } from "./model.ts";
 import { plotRows } from "./render/blocks.ts";
 import { fillByClass } from "./render/fill.ts";
@@ -105,6 +106,11 @@ export abstract class EntityCardBase extends HTMLElement {
   _historyIds: string[] = [];
   _templates?: Set<string>;
   _timer?: ReturnType<typeof setInterval>;
+  // badges whose text follows the clock (stale_after, format: relative) render every minute
+  _timed = false;
+  _minute?: ReturnType<typeof setInterval>;
+  // the items that count a group's members on: they follow the members' states too
+  _countIdxs: number[] = [];
   _ro?: ResizeObserver;
   // controls: service calls in flight per entity index, the row being dragged, the host the
   // builders talk to
@@ -200,10 +206,13 @@ export abstract class EntityCardBase extends HTMLElement {
     this._historyIds = [
       ...new Set(
         cfg.entities
-          .filter((e) => e.entity && HISTORY_VISUALS.has(e.visual))
+          .filter((e) => e.entity && (HISTORY_VISUALS.has(e.visual) || e.visual === "trend"))
           .map((e) => e.entity as string),
       ),
     ];
+    this._timed = cfg.entities.some((e) => e.staleMin !== null || e.format === "relative");
+    this._countIdxs = cfg.entities.flatMap((e, i) => (e.visual === "count" && e.entity ? [i] : []));
+    this._armMinute();
     this._templates = collectTemplates(cfg);
     this._visDeps = visibilityDeps(this._visibilityTrees());
     for (const tpl of this._visDeps.templates) this._templates.add(tpl);
@@ -266,6 +275,9 @@ export abstract class EntityCardBase extends HTMLElement {
         if (s.length === 0 || t > s[s.length - 1].t) s.push(pointOf(t, st.state));
       }
     }
+    // a count follows its group's members, which the group itself may not show (2 → 3 lights on)
+    if (!changed)
+      changed = this._countMembers(hass).some((id) => hass.states[id] !== prev?.states[id]);
     if (changed) this._render();
     if (themeChanged(prev, hass)) {
       this._textCache.clear();
@@ -281,6 +293,7 @@ export abstract class EntityCardBase extends HTMLElement {
     this._fillEpoch++;
     this._resized = true;
     this._timer = setInterval(() => this._tick(), REFRESH_MS);
+    this._armMinute();
     this._ro = new ResizeObserver(() => {
       this._resized = true;
       this._render();
@@ -298,8 +311,21 @@ export abstract class EntityCardBase extends HTMLElement {
     if (this._historyIds?.length) this._fetchHistory();
     else this._render();
   }
+  // the minute timer of badges that follow the clock: on while connected and the config has any
+  _armMinute() {
+    clearInterval(this._minute);
+    this._minute = undefined;
+    if (this._timed && this.isConnected) this._minute = setInterval(() => this._render(), 60e3);
+  }
+  // the members of the groups the count items read
+  _countMembers(hass: HomeAssistant | undefined): string[] {
+    const cfg = this._config;
+    if (!cfg || !hass) return [];
+    return this._countIdxs.flatMap((i) => membersOf(hass.states[cfg.entities[i].entity ?? ""]));
+  }
   disconnectedCallback() {
     clearInterval(this._timer);
+    clearInterval(this._minute);
     clearTimeout(this._pendingTimer);
     // a gesture cut off by leaving the page never ends: its row is filled again on return
     this._dragging = null;
@@ -606,6 +632,7 @@ export abstract class EntityCardBase extends HTMLElement {
       const hvals = qs(header, ".hvals");
       for (const i of cfg.headerIdxs) hvals.appendChild(this._row(i, "hval"));
       if (cfg.titleTap) this._bindTitle(header, cfg.titleTap);
+      if (cfg.iconTap) this._bindIcon(header, cfg.iconTap);
       this._buildHeader(header);
       card.appendChild(header);
     }
@@ -625,24 +652,35 @@ export abstract class EntityCardBase extends HTMLElement {
       if (this._root === card) this._fitCells([card]);
     });
   }
-  // `title_tap_action`: the title is the button, its icon taps the same; the header items keep
-  // their own actions, so the header itself is not one (no button inside a button)
+  // `title_tap_action`: the title is the button, its icon taps the same (unless the icon has an
+  // action of its own); the header items keep their own actions, so the header itself is not one
+  // (no button inside a button)
   _bindTitle(header: HTMLElement, a: ActionConfig) {
     header.classList.add("tappable");
     const title = qs(header, ".title");
-    title.setAttribute("role", "button");
-    title.tabIndex = 0;
+    const run = this._tapper(title, a);
+    if (!this._config?.iconTap) qs(header, "ha-icon").addEventListener("click", run);
+  }
+  // `icon_tap_action` (the heading card): the icon is a button of its own
+  _bindIcon(header: HTMLElement, a: ActionConfig) {
+    header.classList.add("icon-tap");
+    this._tapper(qs(header, "ha-icon"), a);
+  }
+  // makes `el` a button that runs `a` on a click, Enter or Space; returns the runner
+  _tapper(el: HTMLElement, a: ActionConfig) {
+    el.setAttribute("role", "button");
+    el.tabIndex = 0;
     const run = () => {
       const { entity, ...action } = a;
       fireAction(this, entity ?? null, action, "tap");
     };
-    title.addEventListener("click", run);
-    qs(header, "ha-icon").addEventListener("click", run);
-    title.addEventListener("keydown", (ev) => {
+    el.addEventListener("click", run);
+    el.addEventListener("keydown", (ev) => {
       if (ev.key !== "Enter" && ev.key !== " ") return;
       ev.preventDefault();
       run();
     });
+    return run;
   }
   // the body: one container per shown group (a subclass may lay its body out differently); a
   // divider only between shown groups, so a hidden first group leaves none on top
@@ -810,8 +848,10 @@ export abstract class EntityCardBase extends HTMLElement {
   _modelAt(ctx: RenderCtx, idx: number): EntityModel {
     const ent = (this._config as EntityCardConfig).entities[idx],
       hass = ctx.hass;
+    const members = ent.visual === "count" ? membersOf(hass?.states[ent.entity ?? ""]) : [];
     const inputs = [
       ...this._idsByItem[idx].map((id) => hass?.states[id]),
+      ...members.map((id) => hass?.states[id]),
       this._itemTpl[idx] ? this._tpl.version : 0,
       langOf(hass),
       this._localeKey,
@@ -823,9 +863,17 @@ export abstract class EntityCardBase extends HTMLElement {
   }
   // what a row is filled from: its model, its pending calls, its armed buttons, which of its
   // buttons are shown, and what every row reads (the refresh, the theme, the user). A subclass
-  // returns null for a row it fills from more than its own item: that row is filled every time
-  _rowInputs(ctx: RenderCtx, _row: HTMLElement, idx: number, m: EntityModel): unknown[] | null {
+  // returns null for a row it fills from more than its own item: that row is filled every time.
+  // A header badge drawing history (sparkline, trend) reads the series too, one that follows the
+  // clock (stale_after, format: relative) the minute
+  _rowInputs(ctx: RenderCtx, row: HTMLElement, idx: number, m: EntityModel): unknown[] | null {
     const ent = (this._config as EntityCardConfig).entities[idx];
+    const badge = row.classList.contains("hval");
+    const hist =
+      badge && ent.entity && (ent.visual === "sparkline" || ent.visual === "trend")
+        ? ctx.series.get(ent.entity)
+        : undefined;
+    const timed = badge && (ent.staleMin !== null || ent.format === "relative");
     const own = (map: Map<string, unknown>) => {
       const out: unknown[] = [];
       for (const [k, v] of map) if (k.startsWith(`${idx}:`)) out.push(k, v);
@@ -840,6 +888,10 @@ export abstract class EntityCardBase extends HTMLElement {
       this._fillEpoch,
       ctx.hass?.user?.id,
       ctx.hass?.user?.is_admin,
+      hist,
+      hist?.length,
+      hist ? ctx.fetched : null,
+      timed ? Math.floor(ctx.now / 60e3) : null,
     ];
   }
   // the plots: every size read first, then drawn (one layout for all of them); a plot whose

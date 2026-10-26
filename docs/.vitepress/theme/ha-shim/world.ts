@@ -346,6 +346,12 @@ def("light.office", "on", {
   supported_color_modes: ["brightness"],
 });
 def("light.hallway", "off", { friendly_name: "Hallway", supported_color_modes: ["onoff"] });
+// a light group: its members in `entity_id` (a heading's count badge reads how many are on)
+def("light.downstairs", "on", {
+  friendly_name: "Downstairs lights",
+  entity_id: ["light.living_room", "light.kitchen", "light.dining_table", "light.hallway"],
+  supported_color_modes: ["brightness"],
+});
 def("light.desk_lamp", "on", {
   friendly_name: "Desk lamp",
   brightness: 90,
@@ -598,6 +604,11 @@ def(
   { decimals: 0 },
 );
 def("sensor.dishwasher_status", "end", { friendly_name: "Dishwasher" });
+// when the dishwasher is done: a timestamp, 38 minutes from when the page loaded
+def("sensor.dishwasher_finishes", iso(now() + 38 * 60e3), {
+  device_class: "timestamp",
+  friendly_name: "Dishwasher finishes",
+});
 def("media_player.living_room_tv", "playing", {
   friendly_name: "Living room TV",
   media_title: "Planet Earth III",

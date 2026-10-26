@@ -312,7 +312,7 @@ describe("header entities and templates", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const h = normalizeHeaderEntities(
       [
-        { entity: "sensor.t", visual: "sparkline", name: "{{ a }}" },
+        { entity: "sensor.t", visual: "gauge", name: "{{ a }}" },
         { entity: "sensor.h", visual: "badge", show_icon: false, show_name: true },
       ],
       ctx,

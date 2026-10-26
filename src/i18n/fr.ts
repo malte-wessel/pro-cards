@@ -32,6 +32,7 @@ const fr: Translation = {
   "layout.unavailable": "Les éléments de carte de Home Assistant n'ont pas été chargés",
   "group.stub_title": "Groupe",
   "sections.stub_title": "Section",
+  "heading.stub_title": "Titre",
 
   "sun.label.sunrise": "Lever du soleil",
   "sun.label.sunset": "Coucher du soleil",

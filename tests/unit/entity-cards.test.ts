@@ -153,19 +153,20 @@ describe("entity-group-card-pro", () => {
     expect(el.getCardSize()).toBe(3);
   });
 
-  it("draws only icon and badge in the header and warns about other visuals", () => {
+  it("draws the badge visuals in the header and warns about the block visuals", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const c = normalizeEntityGroupCardConfig({
       entities: ["light.a"],
       header_entities: [
         { entity: "sensor.a", visual: "badge" },
         { entity: "sensor.b", visual: "ring" },
-        { entity: "sensor.c", visual: "sparkline" },
+        { entity: "sensor.c", visual: "gauge" },
+        { entity: "sensor.d", visual: "columns" },
       ],
     });
-    expect(c.entities.slice(1).map((e) => e.visual)).toEqual(["badge", "icon", "icon"]);
+    expect(c.entities.slice(1).map((e) => e.visual)).toEqual(["badge", "ring", "icon", "icon"]);
     expect(warn).toHaveBeenCalledTimes(2);
-    expect(warn.mock.calls[0][0]).toMatch(/visual 'ring' is not drawn in the header/);
+    expect(warn.mock.calls[0][0]).toMatch(/visual 'gauge' is not drawn in the header/);
     warn.mockRestore();
   });
 });

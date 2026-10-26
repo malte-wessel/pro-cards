@@ -16,6 +16,9 @@ export const VISUALS = [
   "columns",
   "badge",
   "strip",
+  "trend",
+  "count",
+  "dot",
 ] as const;
 export type Visual = (typeof VISUALS)[number];
 // the soft circle behind the icon, or the icon alone
@@ -30,7 +33,30 @@ export const BLOCK_VISUALS: ReadonlySet<Visual> = new Set([
   "columns",
   "strip",
 ]);
-export const HEADER_VISUALS: ReadonlySet<Visual> = new Set(["icon", "badge"]);
+// what a header badge draws: the icon (or picture), a ring around it, a bar or a sparkline beside the
+// value, the change over trend_hours, how many members of a group are on, or a dot for the icon;
+// `badge` is the old spelling of a soft pill
+export const HEADER_VISUALS: ReadonlySet<Visual> = new Set([
+  "icon",
+  "badge",
+  "ring",
+  "bar",
+  "sparkline",
+  "trend",
+  "count",
+  "dot",
+]);
+// the visuals only a header badge draws
+export const HEADER_ONLY_VISUALS: ReadonlySet<Visual> = new Set(["trend", "count", "dot"]);
+// a header badge: its pill (or none) and its height (24 / 30 / 36 px)
+export const BADGE_STYLES = ["outline", "soft", "filled", "plain"] as const;
+export type BadgeStyle = (typeof BADGE_STYLES)[number];
+export const BADGE_SIZES = ["s", "m", "l"] as const;
+export type BadgeSize = (typeof BADGE_SIZES)[number];
+// how a badge writes its value: as the entity formats it, in W / kW / MW, as a duration, or as
+// the time from now of a date
+export const BADGE_FORMATS = ["auto", "power", "duration", "relative"] as const;
+export type BadgeFormat = (typeof BADGE_FORMATS)[number];
 export const DEFAULTS = {
   layout: "list",
   hours_to_show: 24,

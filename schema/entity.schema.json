@@ -28,6 +28,14 @@
         "tint_card": {
           "type": "boolean",
           "description": "Tint the whole card in the rule's colour"
+        },
+        "style": {
+          "$ref": "#/$defs/badgeStyle",
+          "description": "Header badges: the pill while the rule matches"
+        },
+        "pulse": {
+          "type": "boolean",
+          "description": "Header badges: a ring pulses around the badge while the rule matches"
         }
       },
       "anyOf": [{ "required": ["state"] }, { "required": ["below"] }, { "required": ["above"] }],
@@ -140,8 +148,21 @@
         "suffix": { "type": "string" },
         "visual": {
           "type": "string",
-          "enum": ["icon", "ring", "gauge", "bar", "sparkline", "columns", "badge", "strip"],
-          "default": "icon"
+          "enum": [
+            "icon",
+            "ring",
+            "gauge",
+            "bar",
+            "sparkline",
+            "columns",
+            "badge",
+            "strip",
+            "trend",
+            "count",
+            "dot"
+          ],
+          "default": "icon",
+          "description": "How the value is drawn. trend, count and dot are header badges only; a header badge draws icon, ring, bar, sparkline, trend, count, dot (badge: the old soft pill)"
         },
         "icon_style": {
           "type": "string",
@@ -292,10 +313,41 @@
       ],
       "unevaluatedProperties": false
     },
+    "badgeStyle": {
+      "type": "string",
+      "enum": ["outline", "soft", "filled", "plain"],
+      "description": "The badge's pill: a coloured outline, a soft fill, a full fill, or none"
+    },
+    "badgeSize": {
+      "type": "string",
+      "enum": ["s", "m", "l"],
+      "description": "The badge's height: 24, 30 or 36 px"
+    },
     "headerEntity": {
-      "description": "An entity of the header: buttons are not drawn there, so it needs an entity or a value",
+      "description": "An entity of the header (a badge): it needs an entity or a value; a switch (control: toggle) is the only control drawn there",
       "allOf": [{ "$ref": "#/$defs/entityKeys" }],
-      "properties": { "visibility": { "$ref": "defs.schema.json#/$defs/visibility" } },
+      "properties": {
+        "visibility": { "$ref": "defs.schema.json#/$defs/visibility" },
+        "style": { "$ref": "#/$defs/badgeStyle" },
+        "size": { "$ref": "#/$defs/badgeSize" },
+        "format": {
+          "type": "string",
+          "enum": ["auto", "power", "duration", "relative"],
+          "default": "auto",
+          "description": "How the value is written: as the entity formats it, in W / kW / MW, as a duration (1 h 12 min) or as the time from now of a date (in 38 min)"
+        },
+        "stale_after": {
+          "type": ["number", "string"],
+          "pattern": "^\\s*\\d+(\\.\\d+)?\\s*(s|m|min|h|d)?\\s*$",
+          "description": "Grey with its age when the entity has not reported for this long: minutes, or a number with s, min, h or d (\"2h\")"
+        },
+        "trend_hours": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "default": 1,
+          "description": "visual: trend, the hours the change is measured over (at most hours_to_show)"
+        }
+      },
       "anyOf": [{ "required": ["entity"] }, { "required": ["value"] }],
       "unevaluatedProperties": false
     },
@@ -314,7 +366,7 @@
           { "$ref": "#/$defs/headerEntity" }
         ]
       },
-      "description": "Compact icon + value items on the right of the title line (visual: icon, ring or badge)"
+      "description": "Badges on the title line: icon and value, in a pill of their style and size (plain and small unless set)"
     },
     "groupKeys": {
       "type": "object",

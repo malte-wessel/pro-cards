@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/heading-card-pro.schema.json",
+  "title": "custom:heading-card-pro",
+  "description": "A heading with an icon, a subtitle and live badges, without a card around it.",
+  "type": "object",
+  "properties": {
+    "type": { "const": "custom:heading-card-pro" },
+    "style": {
+      "type": "string",
+      "enum": ["section", "title", "subtitle", "big", "hero"],
+      "default": "title",
+      "description": "section: small caps and a line; title and subtitle as Home Assistant's heading; big: a larger title beside the icon in a circle; hero: a greeting's size"
+    },
+    "title": { "type": "string", "description": "The heading's text. Template allowed." },
+    "subtitle": {
+      "type": "string",
+      "description": "The line under the title. Template allowed."
+    },
+    "icon": {
+      "$ref": "defs.schema.json#/$defs/icon",
+      "description": "The icon before the title. Template allowed."
+    },
+    "color": {
+      "$ref": "defs.schema.json#/$defs/color",
+      "description": "The icon's colour (default: secondary text, big: primary). Template allowed."
+    },
+    "title_tap_action": {
+      "$ref": "defs.schema.json#/$defs/action",
+      "description": "Action when the title or its icon is tapped, e.g. navigate to the room's dashboard (default: none)"
+    },
+    "icon_tap_action": {
+      "$ref": "defs.schema.json#/$defs/action",
+      "description": "Action when the icon is tapped, instead of the title's (default: none)"
+    },
+    "align": {
+      "type": "string",
+      "enum": ["start", "center"],
+      "default": "start",
+      "description": "center: the title, the subtitle and the badges centred"
+    },
+    "badges_position": {
+      "type": "string",
+      "enum": ["end", "inline", "below"],
+      "default": "end",
+      "description": "Where the badges sit: at the end of the line (below it on a narrow card), right after the title, or on a line of their own"
+    },
+    "overflow": {
+      "type": "string",
+      "enum": ["wrap", "scroll"],
+      "default": "wrap",
+      "description": "More badges than fit: wrap onto more lines, or scroll on one"
+    },
+    "badge_style": {
+      "$ref": "entity.schema.json#/$defs/badgeStyle",
+      "default": "outline",
+      "description": "The pill of every badge that names none"
+    },
+    "badge_size": {
+      "$ref": "entity.schema.json#/$defs/badgeSize",
+      "default": "m",
+      "description": "The size of every badge that names none"
+    },
+    "badges": { "$ref": "entity.schema.json#/$defs/headerEntities" }
+  },
+  "required": ["type"],
+  "allOf": [
+    { "$ref": "entity.schema.json#/$defs/historyOptions" },
+    { "$ref": "entity.schema.json#/$defs/actionDefaults" },
+    { "$ref": "entity.schema.json#/$defs/haExtras" }
+  ],
+  "unevaluatedProperties": false
+}

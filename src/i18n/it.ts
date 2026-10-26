@@ -32,6 +32,7 @@ const it: Translation = {
   "layout.unavailable": "Gli elementi delle schede di Home Assistant non sono stati caricati",
   "group.stub_title": "Gruppo",
   "sections.stub_title": "Sezione",
+  "heading.stub_title": "Intestazione",
 
   "sun.label.sunrise": "Alba",
   "sun.label.sunset": "Tramonto",

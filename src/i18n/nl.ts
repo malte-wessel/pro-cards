@@ -32,6 +32,7 @@ const nl: Translation = {
   "layout.unavailable": "De kaartelementen van Home Assistant zijn niet geladen",
   "group.stub_title": "Groep",
   "sections.stub_title": "Sectie",
+  "heading.stub_title": "Kop",
 
   "sun.label.sunrise": "Zonsopkomst",
   "sun.label.sunset": "Zonsondergang",

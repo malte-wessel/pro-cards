@@ -377,6 +377,7 @@
                   "custom:entity-card-pro",
                   "custom:entity-group-card-pro",
                   "custom:entity-sections-card-pro",
+                  "custom:heading-card-pro",
                   "custom:multi-trend-card-pro",
                   "custom:sun-path-card-pro",
                   "custom:sun-azimuth-card-pro",
@@ -429,6 +430,19 @@
           },
           "then": {
             "$ref": "entity-sections-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:heading-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "heading-card-pro.schema.json"
           }
         },
         {

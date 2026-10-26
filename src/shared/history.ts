@@ -187,6 +187,25 @@ export const lineMeans = (
   }
   return out;
 };
+// the change of a value over the last `hours`: `current` against the last reading at or before
+// the span's start (the first reading when the series starts later); null without both
+export const trendOf = (
+  series: readonly { t: number; v: number | null }[] | undefined,
+  now: number,
+  hours: number,
+  current: number | null,
+): number | null => {
+  if (!series || current === null) return null;
+  const t0 = now - hours * 3600e3;
+  let before: number | null = null;
+  for (const p of series) {
+    if (p.v === null) continue;
+    if (p.t > t0 && before !== null) break;
+    before = p.v;
+    if (p.t > t0) break;
+  }
+  return before === null ? null : current - before;
+};
 // last state per bucket (for non-numeric strips), carried forward into empty buckets
 export const bucketLast = (
   pts: readonly { t: number; s: string; v?: number | null }[],

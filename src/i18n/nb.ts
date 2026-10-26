@@ -32,6 +32,7 @@ const nb: Translation = {
   "layout.unavailable": "Kortelementene i Home Assistant ble ikke lastet",
   "group.stub_title": "Gruppe",
   "sections.stub_title": "Seksjon",
+  "heading.stub_title": "Overskrift",
 
   "sun.label.sunrise": "Soloppgang",
   "sun.label.sunset": "Solnedgang",

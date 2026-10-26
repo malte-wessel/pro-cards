@@ -61,6 +61,7 @@ const cardGroups = [
       { text: "Entity Card Pro", link: "/cards/entity-card" },
       { text: "Entity Group Card Pro", link: "/cards/entity-group-card" },
       { text: "Entity Sections Card Pro", link: "/cards/entity-sections-card" },
+      { text: "Heading Card Pro", link: "/cards/heading-card" },
       { text: "Entity Options", link: "/cards/entity-options" },
       { text: "Controls", link: "/cards/controls" },
       { text: "Multi Trend Card Pro", link: "/cards/multi-trend-card" },

@@ -46,6 +46,8 @@ const rule = (o: Partial<Rule>): Rule => ({
   icon: null,
   label: null,
   tintCard: false,
+  style: null,
+  pulse: false,
   ...o,
 });
 

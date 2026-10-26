@@ -32,6 +32,7 @@ const ru: Translation = {
   "layout.unavailable": "Элементы карточек Home Assistant не загрузились",
   "group.stub_title": "Группа",
   "sections.stub_title": "Раздел",
+  "heading.stub_title": "Заголовок",
 
   "sun.label.sunrise": "Восход",
   "sun.label.sunset": "Закат",
