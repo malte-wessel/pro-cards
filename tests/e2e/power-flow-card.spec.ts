@@ -157,7 +157,7 @@ test.describe("power flow card", () => {
   test("a label that changes its width moves the links in place, their dots keep running", async ({
     page,
   }) => {
-    await mount(page, { type: T, sources: SRC, home: HOME, consumers: CONS }, { width: 320 });
+    await mount(page, { type: T, sources: SRC, home: HOME, consumers: CONS }, { width: 440 });
     await pin(page, { "sensor.heat_pump_power": "990" });
     const c = card(page);
     const lanes = c.locator(".lane");

@@ -1424,14 +1424,16 @@ describe("power flow layout", () => {
     });
     expect(acrossOf(batterySecondary)).toBe(42 + 75 + 75 + 42); // 22 + 2 + 27.5 + 23.5 above it
     const cons = base({ consumers: ["sensor.a", "sensor.b", "sensor.c", "sensor.d"] }); // + other
-    expect(acrossOf(cons)).toBe(34 + 4 * GEOM.consumerPitch + 30); // 32 px nodes, 28 px labels
+    // 32 px nodes, 28 px labels: the first label's room (34) after the column too, so it centres
+    // on the home
+    expect(acrossOf(cons)).toBe(34 + 4 * GEOM.consumerPitch + 34);
     const rooms = base({
       consumers: [{ group: "A", entities: ["sensor.a", "sensor.b"] }, "sensor.c"],
     });
     // the first room's label above it (52), then one pitch for every leaf: the most any asks
     // for – here the room column's, the other node's label above it clearing the lone consumer
-    // before it (16 + 16 + 32 + 7 = 71 over one leaf)
-    expect(acrossOf(rooms)).toBe(52 + 3 * 71 + 30);
+    // before it (16 + 16 + 32 + 7 = 71 over one leaf), and as much room after the column
+    expect(acrossOf(rooms)).toBe(52 + 3 * 71 + 52);
     expect(alongDownOf(three)).toBe(GEOM.minAcross);
     expect(alongDownOf(cons)).toBe(GEOM.srcAlong + 2 * GEOM.columnPitch + 56);
     expect(diagramHeight(base({ direction: "down", consumers: ["sensor.a"] }))).toBe(
@@ -1622,10 +1624,18 @@ describe("power flow layout", () => {
       expect(p.align).toBe("c");
       expect(p.y).toBeGreaterThan(d.y);
     }
-    // the rooms' labels sit clear of the home's trunk
-    const trunk = Math.max(...l.edges.filter((e) => e.from === "home").map((e) => e.pts[1][0]));
-    for (const id of ["g0", "g1"])
-      expect(box(placed.find((p) => p.id === id)!)[0]).toBeGreaterThan(trunk + 3);
+    // no label lies on a line (the rooms' clear of the lines out of the home)
+    for (const p of placed) {
+      const [x1, y1, x2, y2] = box(p);
+      for (const e of l.edges)
+        for (const [[ax, ay], [bx, by]] of segmentsOf(e.pts))
+          expect(
+            Math.min(ax, bx) < x2 &&
+              Math.max(ax, bx) > x1 &&
+              Math.min(ay, by) < y2 &&
+              Math.max(ay, by) > y1,
+          ).toBe(false);
+    }
     // and no label overlaps another
     for (const a of placed)
       for (const b of placed) {

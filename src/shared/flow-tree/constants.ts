@@ -63,7 +63,9 @@ export const GEOM = {
   srcAlong: 48, // centre of the source column along the flow
   railBattery: 16, // the charging rail (… → battery), along
   railGrid: 6, // the export rail (… → grid), along
-  lane: 8, // distance between the lanes into the home
+  lane: 8, // distance between the lanes into the home (and out of it, where they fit)
+  lineW: 2, // a link's track: lanes squeezed closer keep the gap below between two tracks
+  minGap: 2, // … between two lanes; a fan of lanes that needs a smaller one merges into a trunk
   radius: 12, // corner radius of every line
   srcPitch: 52, // least distance between two sources (the label slots usually ask for more)
   srcMargin: 42, // first / last source centre from the edge, across

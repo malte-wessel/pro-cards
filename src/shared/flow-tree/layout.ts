@@ -224,7 +224,9 @@ export const acrossOf = (cfg: FlowTreeConfig): number => {
   const st = sourceStack(cfg);
   const srcNeed = st.first + st.extent + st.last;
   const col = columnPlan(cfg);
-  const consNeed = cfg.consumers.length ? col.first + col.extent + col.last : 0;
+  // the consumer column centred on the home: as much room after it as before it, so the lanes
+  // out of the home stay centred on it and the target in the middle runs straight
+  const consNeed = cfg.consumers.length ? col.extent + 2 * Math.max(col.first, col.last) : 0;
   return Math.ceil(Math.max(GEOM.minAcross, srcNeed, consNeed));
 };
 // the columns after the sources (`down`: their positions along the flow)
@@ -244,7 +246,7 @@ export const diagramHeight = (cfg: FlowTreeConfig) =>
 // lane 0 and the others move outward a lane at a time on their side; with none level and sources
 // on both sides the lanes sit half a lane off the centre (±4, ±12 …), the nearest innermost. So
 // no two lines cross, and an even column of sources meets the home as a mirrored bundle.
-export const laneOffsets = (bs: number[], bH: number): number[] => {
+export const laneOffsets = (bs: number[], bH: number, pitch: number = GEOM.lane): number[] => {
   const order = bs
     .map((b, i) => ({ i, d: Math.abs(b - bH), b }))
     .sort((p, q) => p.d - q.d || p.b - q.b);
@@ -257,9 +259,45 @@ export const laneOffsets = (bs: number[], bH: number): number[] => {
     if (k === 0 && !halves) return;
     const n = o.b < bH ? ++above : ++below;
     const lanes = halves ? n - 0.5 : n;
-    out[o.i] = (o.b < bH ? -1 : 1) * GEOM.lane * lanes;
+    out[o.i] = (o.b < bH ? -1 : 1) * pitch * lanes;
   });
   return out;
+};
+
+// The lanes out of a node to its targets (the home's consumers, a room's devices), the mirror of
+// the lanes into the home: each leaves the node's circle on its own lane (`laneOffsets`), and
+// they turn in one block after it, every corner alike, the outermost first and each further in a
+// lane later, so none crosses another. `legs` are the along positions of the turns, the first at
+// `firstBend`. The lanes are a lane apart where that holds; closer where the outermost would
+// leave the circle (less 4 px) or a lane's turn would pass its `maxLeg` (one for all, or one
+// per target), down to `GEOM.minGap` between two lines. Null when not even that holds: the
+// node's lines then share one trunk.
+export const fanOut = (
+  bs: number[],
+  bN: number,
+  r: number,
+  firstBend: number,
+  maxLeg: number | number[],
+): { offsets: number[]; legs: number[]; pitch: number; reach: number | null } | null => {
+  const unit = laneOffsets(bs, bN, 1);
+  const outer = Math.max(0, ...unit.map((u) => Math.abs(u)));
+  // a lane turns unless it runs straight into a target level with the node
+  const turns = unit.map((u, i) => u !== 0 || Math.abs(bs[i] - bN) >= 0.5);
+  let pitch: number = GEOM.lane;
+  if (outer > 0) pitch = Math.min(pitch, (r - 4) / outer);
+  for (let i = 0; i < bs.length; i++) {
+    if (!turns[i]) continue;
+    const room = (typeof maxLeg === "number" ? maxLeg : maxLeg[i]) - firstBend,
+      later = outer - Math.abs(unit[i]);
+    if (room < 0) return null;
+    if (later > 0) pitch = Math.min(pitch, room / later);
+  }
+  if (outer > 0 && pitch < GEOM.lineW + GEOM.minGap) return null;
+  const legs = unit.map((u) => firstBend + (outer - Math.abs(u)) * pitch);
+  const turning = legs.filter((_, i) => turns[i]);
+  // the last turn (null: every lane runs straight)
+  const reach = turning.length ? Math.max(...turning) : null;
+  return { offsets: unit.map((u) => u * pitch), legs, pitch, reach };
 };
 
 export const layoutTree = (
@@ -346,7 +384,43 @@ export const layoutTree = (
   // first label's room, the last node's) only bound it, and split the room when it is short
   const lo = plan.first,
     hi = across - plan.last - plan.extent;
-  const b0 = hi < lo ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, across / 2 - plan.extent / 2));
+  const b0 = hi < lo ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, bH - plan.extent / 2));
+  // the home's targets: the room column with rooms, else the consumers
+  const homeTargets = (
+    cfg.hasGroups ? [...plan.groups, ...plan.leaves.filter((l) => !l.group)] : plan.leaves
+  ).map((l) => l.b);
+  // how far past its centre a node's lines take their last turn: the last leg of its fan of
+  // lanes (a room's first turn clear of its label above it), or the trunk where they share one
+  const homeFan = fanOut(
+    homeTargets.map((b) => b0 + b),
+    bH,
+    rH,
+    rH + GEOM.radius + 4,
+    Infinity,
+  );
+  const homeTrunk = rH + 10;
+  const homeReach = homeFan ? (homeFan.reach ?? rH) : homeTrunk;
+  // … and with its lanes squeezed as close as they go: what a narrow card makes room for
+  const minPitch = GEOM.lineW + GEOM.minGap;
+  const homeReachMin =
+    homeFan?.reach != null
+      ? rH + GEOM.radius + 4 + ((homeFan.reach - rH - GEOM.radius - 4) * minPitch) / homeFan.pitch
+      : homeReach;
+  const roomFirst = (id: string, r: number) =>
+    Math.max(r + GEOM.radius + 4, right ? widthOf(id) / 2 + 6 : 0);
+  const roomR = (id: string) => (cfg.consumers.find((c) => c.id === id)?.d ?? GEOM.dGroup) / 2;
+  const roomTrunk = Math.max(
+    0,
+    ...plan.groups.map((g) => Math.max(roomR(g.id) + 10, widthOf(g.id) / 2 + 6)),
+  );
+  const roomReach = Math.max(
+    roomTrunk,
+    ...plan.groups.map((g) => {
+      const devs = plan.leaves.filter((l) => l.group === g.id).map((l) => b0 + l.b);
+      const fan = fanOut(devs, b0 + g.b, roomR(g.id), roomFirst(g.id, roomR(g.id)), Infinity);
+      return fan?.reach ?? 0;
+    }),
+  );
   let aH: number, aG: number, aC: number, aRow: number;
   // the sources whose labels' names are cut to the room before the home (narrow, with rooms)
   const srcCut = new Map<string, number>();
@@ -379,17 +453,30 @@ export const layoutTree = (
     // the devices' values are never cut: their room beside a room's label always holds
     const maxLeafVW = Math.max(0, ...farLeaves.map((l) => sizes.get(l.id)?.vw ?? 0));
     const values = aC - rLeaf - GEOM.labelGap - maxLeafVW - 6 - maxRoomW / 2;
-    // With rooms on a narrow card the home moves left as far as the rooms and the devices'
-    // values need: a source label beside it then keeps its value and has its name cut (never
-    // the value) rather than the home crowding the rooms
-    const clearH =
-      cfg.hasGroups && !listRows
-        ? Math.max(valueClear, Math.min(fullClear, values - maxRoomW / 2 - 6 - 16 - rH))
-        : fullClear;
+    // On a narrow card the home moves left as far as its lanes out need (squeezed as close as
+    // they go) to turn before the rooms' labels, beside the devices' values, or before the
+    // consumers' labels: a source label beside it then keeps its value and has its name cut
+    // (never the value) rather than the lanes merging into a trunk
+    const lanesClear =
+      listRows || !hasCons || (homeFan && homeFan.reach === null)
+        ? Infinity
+        : cfg.hasGroups
+          ? values - maxRoomW / 2 - 6 - homeReachMin - 6
+          : aC - rLeaf - GEOM.labelGap - maxLeafW - 6 - homeReachMin;
+    const clearH = Math.max(valueClear, Math.min(fullClear, lanesClear));
     const minH = Math.max(aS + rS + 40, clearH);
     if (!hasCons) aH = Math.max(along - 44, minH);
     else if (listRows) aH = Math.max(minH, along * (cfg.hasGroups ? 0.3 : 0.42));
-    else aH = Math.max(minH, along * (cfg.hasGroups ? 0.38 : 0.5));
+    else if (cfg.hasGroups) aH = Math.max(minH, along * 0.38);
+    // the consumers' lanes turn before their labels: the home moves left for them where it can
+    else
+      aH = Math.max(
+        minH,
+        Math.min(
+          along * 0.5,
+          homeFan?.reach == null ? Infinity : lanesClear + homeReachMin - homeReach,
+        ),
+      );
     aH = Math.min(aH, along - rH - 2);
     // a source label beside the home that it does not clear in full: its name cut to the room
     for (const s of band) {
@@ -401,20 +488,25 @@ export const layoutTree = (
       // … and left of the device labels where both hold; where they cannot, the rooms win (a
       // label over the trunk would cut its line) and the devices' names are cut to their room
       // (placeLabels), the column staying left of the devices
-      const lower = aH + rH + 16 + maxRoomW / 2 + 6;
+      // (list rows keep their width: there the home's lanes take the room the column leaves)
+      const lower = aH + (listRows ? homeTrunk : homeReach) + 6 + maxRoomW / 2 + 6;
       const upper = aC - rLeaf - GEOM.labelGap - maxLeafW - 6 - maxRoomW / 2;
       // not even the devices' values hold beside the rooms' labels: the devices take their labels
       // below them, centred between their rooms' forks and the card's edge (whole where that
       // holds them), and the rooms' labels clear the trunk – where that leaves the values room
-      const aGU = Math.max(
-        aH + rH + 26,
-        Math.min(aH + rH + 16 + roomW / 2 + 6, aC - rLeaf - rRoom - 12),
-      );
-      const fork = Math.max(aGU + rRoom + 10, aGU + roomW / 2 + 6) + 4;
-      const aCU = Math.min(
-        aC,
-        along - fork >= maxLeafW ? along - maxLeafW / 2 - 1 : (fork + along) / 2,
-      );
+      // (with the lanes out of the home and the rooms where they fit, else their trunks)
+      const underFor = (homeOut: number, roomOut: number) => {
+        const aGU = Math.max(
+          aH + rH + 26,
+          Math.min(aH + homeOut + 6 + roomW / 2 + 6, aC - rLeaf - rRoom - 12),
+        );
+        const fork = aGU + roomOut + 4;
+        const aCU = Math.min(
+          aC,
+          along - fork >= maxLeafW ? along - maxLeafW / 2 - 1 : (fork + along) / 2,
+        );
+        return 2 * Math.min(along - aCU, aCU - fork) >= maxLeafVW ? { aGU, aCU } : null;
+      };
       // … and the labels below the devices clear the next device and the bottom (the height
       // follows the config, so this holds at any width)
       const devs = plan.leaves.filter((l) => l.group);
@@ -423,11 +515,18 @@ export const layoutTree = (
           next = devs[i + 1];
         return next ? end + 3 <= b0 + next.b - next.d / 2 - 2 : end <= across + 4;
       });
-      const valuesFit = 2 * Math.min(along - aCU, aCU - fork) >= maxLeafVW;
-      if (!listRows && lower > values && below && valuesFit) {
+      // (the rooms' labels beside the devices' values even with the home's lines in one trunk)
+      const tight = aH + homeTrunk + 6 + maxRoomW / 2 + 6 > values;
+      const u =
+        !listRows && tight && below
+          ? (underFor(homeReach, roomReach) ??
+            underFor(homeTrunk, roomReach) ??
+            underFor(homeTrunk, roomTrunk))
+          : null;
+      if (u) {
         under = true;
-        aG = aGU;
-        aC = aCU;
+        aG = u.aGU;
+        aC = u.aCU;
       } else {
         aG = Math.max(aG, lower) <= upper ? Math.max(aG, lower) : Math.max(upper, lower);
         aG = Math.max(aH + rH + 26, Math.min(aG, values, aC - rLeaf - rRoom - 12));
@@ -476,6 +575,8 @@ export const layoutTree = (
     const grp = cfg.consumers.find((c) => c.id === g.id);
     add(g.id, "group", null, grp ? grp.d : GEOM.dGroup, aG, b0 + g.b);
   }
+  // the devices whose labels go below them, by their room
+  const underRoom = new Map<LNode, LNode>();
   plan.leaves.forEach((lf, k) => {
     const leaf = leaves.find((l) => l.id === lf.id);
     const idx = leaf && leaf.kind === "item" ? leaf.idx : null;
@@ -502,9 +603,8 @@ export const layoutTree = (
       if (asRoom) nd.column = "group";
       const room = lf.group ? byId.get(lf.group) : undefined;
       if (under && room) {
-        // its name cut to the room between its room's fork and the card's edge
         nd.under = true;
-        nd.labelMax = 2 * Math.min(along - aC, aC - forkOf(room) - 3 - 1);
+        underRoom.set(nd, room);
       }
       if (consTight) {
         // every label centred below its node, its name cut to its room: of the gap to a
@@ -532,6 +632,62 @@ export const layoutTree = (
   const out: LEdge[] = [];
   const A = (nd: LNode) => (right ? nd.x : nd.y),
     Bof = (nd: LNode) => (right ? nd.y : nd.x);
+  const leafW = Math.max(
+    0,
+    ...plan.leaves.map((l) => (byId.get(l.id)?.column === "leaf" ? widthOf(l.id) : 0)),
+  );
+  // a target's label slot beside the leg of a lane (direction: right): a room's centred above
+  // it, a device's left of it above its line – the heights it spans and its left edge
+  const slotOf = (to: LNode): [number, number, number] | null => {
+    if (!right || to.d === 0) return null;
+    const h = sizes.get(to.id)?.h ?? 0;
+    if (to.column === "group")
+      return [to.y - to.d / 2 - 4 - h, to.y - to.d / 2 - 4, to.x - widthOf(to.id) / 2];
+    if (to.column !== "leaf" || under) return null;
+    const rise = slotRise(to.d, h);
+    return [
+      to.y - rise - h / 2,
+      to.y - rise + h / 2,
+      to.x - to.d / 2 - GEOM.labelGap - widthOf(to.id),
+    ];
+  };
+  // the last turn a lane to each target may take: room for its corner into the target, and
+  // clear of every label slot beside the run of its leg (the labels' 3 px, the line's 3)
+  const legLimits = (from: LNode, targets: LNode[]) => {
+    const slots = targets.map(slotOf);
+    return targets.map((to) => {
+      const lo = Math.min(Bof(from) - from.d / 2, Bof(to)),
+        hi = Math.max(Bof(from) + from.d / 2, Bof(to));
+      let m = A(to) - to.d / 2 - GEOM.radius - 4;
+      for (const sl of slots)
+        if (sl && sl[0] < hi + 3 && sl[1] > lo - 3) m = Math.min(m, sl[2] - 6);
+      return m;
+    });
+  };
+  // the lanes out of the home and out of each room, by target (null: the lines share a trunk)
+  const fans = new Map<string, Map<string, { off: number; leg: number }> | null>();
+  const fanOf = (from: LNode) => {
+    const known = fans.get(from.id);
+    if (known !== undefined) return known;
+    const targets = [...new Set(edges.filter((e) => e.from === from.id).map((e) => e.to))]
+      .map((id) => byId.get(id))
+      .filter((n): n is LNode => !!n && n.column !== "source");
+    const r = from.d / 2;
+    const first = A(from) + (from.kind === "group" ? roomFirst(from.id, r) : r + GEOM.radius + 4);
+    const fan = fanOut(targets.map(Bof), Bof(from), r, first, legLimits(from, targets));
+    const lanes = fan
+      ? new Map(targets.map((t, i) => [t.id, { off: fan.offsets[i], leg: fan.legs[i] }]))
+      : null;
+    fans.set(from.id, lanes);
+    return lanes;
+  };
+  // a device's label below it: its name cut to the room between its room's last turn and the
+  // card's edge
+  for (const [nd, room] of underRoom) {
+    const lanes = fanOf(room);
+    const last = lanes ? Math.max(...[...lanes.values()].map((l) => l.leg)) : forkOf(room);
+    nd.labelMax = 2 * Math.min(along - aC, aC - last - 3 - 1);
+  }
   const offsets = laneOffsets(bS, bH);
   // a source's lane by its id (its position in the drawn column, not its config index)
   const srcPos = new Map(cfg.sources.map((s, i) => [s.id, i]));
@@ -551,13 +707,7 @@ export const layoutTree = (
     // a room's label sits centred above it: the trunk stays left of that label
     if (to.column === "group" && to.d > 0) t = Math.min(t, A(to) - widthOf(to.id) / 2 - 6);
     if (to.column === "leaf" && to.d > 0 && under) return forkOf(from);
-    if (to.column === "leaf" && to.d > 0) {
-      const lw = Math.max(
-        0,
-        ...plan.leaves.map((l) => (byId.get(l.id)?.column === "leaf" ? widthOf(l.id) : 0)),
-      );
-      t = Math.min(t, a1 - GEOM.labelGap - lw - 6);
-    }
+    if (to.column === "leaf" && to.d > 0) t = Math.min(t, a1 - GEOM.labelGap - leafW - 6);
     return Math.max(t, a0 + 10);
   };
   edges.forEach((e, fi) => {
@@ -585,6 +735,17 @@ export const layoutTree = (
         map(A(from) - from.d / 2, Bof(from)),
         map(rail, Bof(from)),
         map(rail, Bof(to)),
+        map(A(to) - to.d / 2, Bof(to)),
+      ];
+    } else if (fanOf(from)?.has(to.id)) {
+      // its own lane out of the node's circle, turning in the node's block
+      const lane = fanOf(from)!.get(to.id)!;
+      const b = Bof(from) + lane.off,
+        r = from.d / 2;
+      pts = [
+        map(A(from) + Math.sqrt(Math.max(0, r * r - lane.off ** 2)), b),
+        map(lane.leg, b),
+        map(lane.leg, Bof(to)),
         map(A(to) - to.d / 2, Bof(to)),
       ];
     } else {
