@@ -279,6 +279,37 @@ test.describe("hover", () => {
   });
 });
 
+test.describe("the energy card's period picker", () => {
+  test("answers the pointer as the controls do, without the option", async ({ page }) => {
+    await mount(page, {
+      type: "custom:energy-flow-card-pro",
+      home: "sensor.home_energy",
+      sources: [{ type: "solar", entity: "sensor.solar_energy" }],
+    });
+    const picker = card(page).locator(".ppicker");
+    for (const sel of [".prev", ".pchip"]) {
+      const el = picker.locator(sel);
+      expect(await css(el, "opacity", "::after"), sel).toBe("0");
+      await point(page, el);
+      await expect.poll(() => css(el, "opacity", "::after"), sel).toBe("0.08");
+      expect(await css(el, "background-color", "::after"), sel).toBe(await textColour(el));
+      await away(page);
+    }
+    const prev = picker.locator(".prev");
+    await point(page, prev);
+    await page.mouse.down();
+    await expect.poll(() => css(prev, "opacity", "::after")).toBe("0.12");
+    await away(page);
+    await page.mouse.up();
+    // today: nothing comes after it, the disabled button keeps still
+    const next = picker.locator(".next");
+    await expect(next).toBeDisabled();
+    await point(page, next);
+    await page.waitForTimeout(250);
+    expect(await css(next, "opacity", "::after")).toBe("0");
+  });
+});
+
 test.describe("hover on a touch screen", () => {
   test.use({ hasTouch: true, isMobile: true });
 

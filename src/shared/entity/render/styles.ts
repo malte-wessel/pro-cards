@@ -336,6 +336,17 @@ export const STYLE_PLOT = `
 // grows it), the controls Home Assistant's control buttons'. Hover only for a pointer that hovers,
 // so a tap leaves nothing behind on a phone. Over a control the row's `.hit` is not hovered: the
 // layer shows only where a click runs the row's action.
+// Home Assistant's control button layer on the buttons `sel` matches: a layer in the button's text
+// colour over its own fill, under its icon and label, so a filled button lightens and a soft one
+// deepens; 8 % on hover (only for a pointer that hovers), 12 % pressed, fading in 180 ms (at once
+// with reduced motion). The controls take it with `hover`, the energy card's period picker always.
+export const controlLayer = (sel: string) => `
+  ${sel} { position: relative; isolation: isolate; }
+  ${sel}::after { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: currentColor; opacity: 0; pointer-events: none; transition: opacity 180ms ease-in-out; }
+  @media (hover: hover) { ${sel}:not(:disabled):hover::after { opacity: .08; } }
+  ${sel}:not(:disabled):active::after { opacity: .12; }
+  @media (prefers-reduced-motion: reduce) { ${sel}::after { transition: none; } }
+`;
 export const STYLE_HOVER = `
   /* only what reads as one button takes the layer: a tile, a grid cell, a header entity. List rows,
      heroes, table fields and the power flow's list rows keep still; an item or a power flow node is
@@ -348,30 +359,23 @@ export const STYLE_HOVER = `
        background drawn with iconBg follows (an off toggle's fainter one, a node's on the card) */
     .row.hover-fx .lead.tap:not(.disabled):hover, .row.hover-fx:is(.item, .pnode) > .hit:hover ~ .lead { --tile-icon-opacity: var(--tile-icon-hover-opacity, 0.35); }
   }
-  /* the controls, as Home Assistant's control buttons: a layer over the button's own fill, under
-     its icon and label (8 % on hover, 12 % pressed), in the button's text colour, so a filled
-     button lightens and a soft one deepens; the switch and the select in the text colour. They fade
-     as the icons do (180 ms) */
-  .row.hover-fx :is(.ctl button, button.ctl, .ctl-select) { position: relative; isolation: isolate; }
-  .row.hover-fx :is(.ctl button, button.ctl, .ctl-select)::after { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: currentColor; opacity: 0; pointer-events: none; transition: opacity 180ms ease-in-out; }
-  /* the base rule's :is() counts as its most specific argument (a class and an element): this one
-     matches its shape to win by order */
+  /* the controls, as Home Assistant's control buttons (controlLayer); the switch and the select in
+     the text colour: the layer's :is() counts as its most specific argument (a class and an
+     element), so this one matches its shape to win by order */
+  ${controlLayer(".row.hover-fx :is(.ctl button, button.ctl, .ctl-select)")}
   .row.hover-fx :is(button.toggle, div.ctl-select)::after { background: var(--primary-text-color); }
   .row.hover-fx .ctl-slider .knob { transition: box-shadow 180ms ease-in-out; }
   @media (hover: hover) {
-    .row.hover-fx :is(.ctl button, button.ctl):not(:disabled):hover::after, .row.hover-fx .ctl-select:hover::after { opacity: .08; }
     /* the slider: a halo around the knob, lighter than the one while dragging */
     .row.hover-fx .ctl-slider:not(.dragging, .pending):hover .knob { box-shadow: var(--knob-shadow), 0 0 0 6px color-mix(in srgb, var(--fe-color) 12%, transparent); }
   }
   /* pressed after hovered: the same specificity, the later rule wins */
   .row.hover-fx > .hit:active::before { opacity: .12; }
-  .row.hover-fx :is(.ctl button, button.ctl):not(:disabled):active::after, .row.hover-fx .ctl-select:active::after { opacity: .12; }
   .row.hover-fx .lead.tap:not(.disabled):active .shape { transform: scale(1.2); }
   /* reduced motion: no growing and no fades; each selector repeats the one it overrides */
   @media (prefers-reduced-motion: reduce) {
     .row.hover-fx .lead.tap:not(.disabled):active .shape { transform: none; }
     .row.hover-fx .lead.tap .shape, .row.hover-fx:is(.item, .pnode) > .hit ~ .lead .shape { transition: none; }
-    .row.hover-fx :is(.ctl button, button.ctl, .ctl-select)::after { transition: none; }
     .row.hover-fx .ctl-slider .knob { transition: none; }
   }
 `;
