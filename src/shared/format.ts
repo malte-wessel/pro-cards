@@ -32,26 +32,34 @@ export const fmtTime = (
 export const fmtNumber = (hass: HomeAssistant | null | undefined, v: number, dec: number) =>
   numberFormat(langOf(hass), { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(v);
 
-// a span of time as "1 h 12 min", the two largest units (the unit symbols are the same in every
-// language); `largest` keeps only the largest ("6 h", an age)
+// a span of time in its two largest units, in the language's narrow unit symbols ("1h 12m",
+// "1h 12 Min."); `largest` keeps only the largest ("6h", an age)
+const DURATION_UNITS: [number, string][] = [
+  [86400, "day"],
+  [3600, "hour"],
+  [60, "minute"],
+  [1, "second"],
+];
 export const fmtDuration = (
   hass: HomeAssistant | null | undefined,
   seconds: number,
   largest = false,
 ) => {
-  const s = Math.round(Math.abs(seconds));
-  const parts: [number, string][] = [
-    [Math.floor(s / 86400), "d"],
-    [Math.floor((s % 86400) / 3600), "h"],
-    [Math.floor((s % 3600) / 60), "min"],
-    [s % 60, "s"],
-  ];
-  const first = parts.findIndex(([n]) => n > 0);
-  if (first < 0) return `${fmtNumber(hass, 0, 0)} min`;
+  const lang = langOf(hass);
+  const unit = (v: number, u: string) =>
+    numberFormat(lang, { style: "unit", unit: u, unitDisplay: "narrow" }).format(v);
+  let s = Math.round(Math.abs(seconds));
+  const parts = DURATION_UNITS.map(([n, u]): [number, string] => {
+    const v = Math.floor(s / n);
+    s -= v * n;
+    return [v, u];
+  });
+  const first = parts.findIndex(([v]) => v > 0);
+  if (first < 0) return unit(0, "minute");
   return parts
     .slice(first, first + (largest ? 1 : 2))
-    .filter(([n], i) => i === 0 || n > 0)
-    .map(([n, u]) => `${fmtNumber(hass, n, 0)} ${u}`)
+    .filter(([v], i) => i === 0 || v > 0)
+    .map(([v, u]) => unit(v, u))
     .join(" ");
 };
 const DURATION_UNIT_S: Record<string, number> = { s: 1, min: 60, h: 3600, d: 86400 };
@@ -60,17 +68,21 @@ export const durationSeconds = (v: number, unit: string) =>
   unit in DURATION_UNIT_S ? v * DURATION_UNIT_S[unit] : null;
 
 const relativeFormats = new Map<string, Intl.RelativeTimeFormat>();
-// a moment as its time from now: "in 38 min", "12 min ago", "tomorrow"
+// a moment as its time from now in the language's words: "in 38 minutes", "1 hour ago", "tomorrow"
 export const fmtRelative = (hass: HomeAssistant | null | undefined, t: number, now: number) => {
   const lang = langOf(hass);
   let f = relativeFormats.get(lang);
   if (!f) relativeFormats.set(lang, (f = new Intl.RelativeTimeFormat(lang, { numeric: "auto" })));
+  // rounded before the unit is picked: 59.6 minutes is "in 1 hour", not "in 60 minutes"
   const s = (t - now) / 1000,
+    sign = s < 0 ? -1 : 1,
     a = Math.abs(s);
-  if (a < 60) return f.format(0, "minute");
-  if (a < 3600) return f.format(Math.round(s / 60), "minute");
-  if (a < 86400) return f.format(Math.round(s / 3600), "hour");
-  return f.format(Math.round(s / 86400), "day");
+  const min = Math.round(a / 60);
+  if (min === 0) return f.format(0, "minute");
+  if (min < 60) return f.format(sign * min, "minute");
+  const h = Math.round(a / 3600);
+  if (h < 24) return f.format(sign * h, "hour");
+  return f.format(sign * Math.round(a / 86400), "day");
 };
 
 const POWER_UNIT_W: Record<string, number> = { mW: 1e-3, W: 1, kW: 1e3, MW: 1e6 };

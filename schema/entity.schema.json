@@ -334,7 +334,7 @@
           "type": "string",
           "enum": ["auto", "power", "duration", "relative"],
           "default": "auto",
-          "description": "How the value is written: as the entity formats it, in W / kW / MW, as a duration (1 h 12 min) or as the time from now of a date (in 38 min)"
+          "description": "How the value is written: as the entity formats it, in W / kW / MW, as a duration (1h 12m) or as the time from now of a date (in 38 minutes)"
         },
         "stale_after": {
           "type": ["number", "string"],

@@ -632,7 +632,8 @@ export abstract class EntityCardBase extends HTMLElement {
       const hvals = qs(header, ".hvals");
       for (const i of cfg.headerIdxs) hvals.appendChild(this._row(i, "hval"));
       if (cfg.titleTap) this._bindTitle(header, cfg.titleTap);
-      if (cfg.iconTap) this._bindIcon(header, cfg.iconTap);
+      // icon_tap_action: none keeps the icon still, also under a tappable title
+      if (cfg.iconTap && cfg.iconTap.action !== "none") this._bindIcon(header, cfg.iconTap);
       this._buildHeader(header);
       card.appendChild(header);
     }
@@ -659,7 +660,8 @@ export abstract class EntityCardBase extends HTMLElement {
     header.classList.add("tappable");
     const title = qs(header, ".title");
     const run = this._tapper(title, a);
-    if (!this._config?.iconTap) qs(header, "ha-icon").addEventListener("click", run);
+    if (this._config?.iconTap) header.classList.add("icon-own");
+    else qs(header, "ha-icon").addEventListener("click", run);
   }
   // `icon_tap_action` (the heading card): the icon is a button of its own
   _bindIcon(header: HTMLElement, a: ActionConfig) {
@@ -782,6 +784,8 @@ export abstract class EntityCardBase extends HTMLElement {
       const t = qs(header, ".title");
       t.textContent = title || "";
       if (cfg.titleTap) t.setAttribute("aria-label", title || "");
+      // an icon with its own action is a button: it reads as the heading it belongs to
+      if (hi.getAttribute("role") === "button") hi.setAttribute("aria-label", title || "");
       header.hidden = !(
         title ||
         icon ||

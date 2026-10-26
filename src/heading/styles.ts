@@ -74,10 +74,12 @@ const STYLE_HEADING = `
   .header.ov-scroll .hvals { min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 4px 8px; margin: -4px 0; mask-image: linear-gradient(to right, transparent, black 8px, black calc(100% - 8px), transparent); }
   .header.ov-scroll .hvals::-webkit-scrollbar { display: none; }
   .header.ov-scroll .row.hval { flex: none; }
-  /* a row that overflows starts at its first badge (flex-end would push the start out of reach);
-     one that fits still sits at the end */
+  /* a row that overflows starts at its first badge (flex-end or center would push the start out of
+     reach); one that fits still sits at the end, or in the middle (auto margins give way to an
+     overflow, the alignment does not) */
   .header.ov-scroll .hvals { justify-content: flex-start; }
-  .header.ov-scroll:not(.align-center) .hvals > :first-child { margin-left: auto; }
+  .header.ov-scroll .hvals > :first-child { margin-left: auto; }
+  .header.ov-scroll.align-center .hvals > :last-child { margin-right: auto; }
 `;
 
 export const STYLE_HEADING_CARD =

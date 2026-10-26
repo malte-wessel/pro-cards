@@ -1837,7 +1837,7 @@ const CASES = {
         { entity: "sensor.power_consumption", visual: "sparkline", format: "power" },
         { entity: "sensor.living_room_temperature", visual: "trend" },
         { entity: "sensor.ev_battery", visual: "bar", icon: "mdi:car-electric" },
-        { entity: "light.downstairs", visual: "count", name: "Lights", show_name: true },
+        { entity: "group.downstairs_lights", visual: "count", name: "Lights", show_name: true },
       ],
     },
     {

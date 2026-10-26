@@ -2,6 +2,7 @@
 // alone: a title with its icon and subtitle, and the badges (header items) beside or below it.
 import { BADGE_SIZES, BADGE_STYLES } from "../shared/entity/constants.ts";
 import {
+  normalizeAction,
   normalizeActionDefaults,
   normalizeHeaderEntities,
   normalizeHistoryOptions,
@@ -60,7 +61,11 @@ export const normalizeHeadingCardConfig = (input: unknown): HeadingCardConfig =>
     icon: raw.icon ?? null,
     subtitle: raw.subtitle ?? null,
     iconColor: raw.color ?? null,
-    iconTap: normalizeTitleAction({ title_tap_action: raw.icon_tap_action }),
+    // null: unset, the icon runs the title's action; `none` keeps it still
+    iconTap:
+      raw.icon_tap_action === undefined || raw.icon_tap_action === null
+        ? null
+        : normalizeAction(raw.icon_tap_action, { action: "none" }),
     ...normalizeHistoryOptions({ ...raw, hours_to_show: raw.hours_to_show ?? DEFAULT_HOURS }),
     columns: 1,
     ...ctx,

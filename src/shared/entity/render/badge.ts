@@ -13,6 +13,7 @@ import {
 import { decimalsOf } from "../../util.ts";
 import type { EntityItem } from "../config.ts";
 import { placementsOf } from "../control.ts";
+import { staleAge } from "../look.ts";
 import { nameOf, unitOf, type EntityModel, type RenderCtx } from "../model.ts";
 import { appendControls } from "./controls.ts";
 import { headerBadgeEl, iconOrPictureEl, ringSvg } from "./lead.ts";
@@ -33,13 +34,6 @@ const icon = (name: string) => {
   const el = document.createElement("ha-icon");
   el.setAttribute("icon", name);
   return el;
-};
-
-// how long the entity has not reported, in ms, once that is longer than `stale_after` (else null)
-export const staleAge = (ctx: RenderCtx, ent: EntityItem, m: EntityModel): number | null => {
-  if (ent.staleMin === null || !m.st || !m.model.avail) return null;
-  const age = ctx.now - new Date(m.st.last_updated).getTime();
-  return age > ent.staleMin * 60e3 ? age : null;
 };
 
 // the value as `format` writes it; the entity's own formatting where the format does not apply
@@ -165,7 +159,7 @@ export const fillBadge = (
     return;
   }
   const style = m.look.style ?? ent.badge.style;
-  const age = staleAge(ctx, ent, m);
+  const age = m.model.avail ? staleAge(m.st, ent.staleMin, ctx.now) : null;
   el.classList.add(`b-${style}`, `b-${ent.badge.size}`);
   el.classList.toggle("pb", style !== "plain");
   el.classList.toggle("pulse", !!m.look.pulse);

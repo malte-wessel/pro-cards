@@ -76,6 +76,8 @@ const STYLE_BADGES = `
   .row.hval.b-soft .state { color: var(--fe-color); }
   .row.hval.b-filled { --b-ink: var(--text-primary-color, #fff); background: var(--fe-color); color: var(--b-ink); }
   .row.hval.b-filled :is(ha-icon, ha-state-icon, .state, .state.accent, .secondary) { color: var(--b-ink); }
+  /* a switch in a filled pill: its track in the ink, as the pill already is the colour */
+  .row.hval.b-filled .toggle.on { background: color-mix(in srgb, var(--b-ink) 40%, transparent); }
   /* the tap area is 44 px high whatever the pill's height; the hover layer and the focus ring keep
      to the pill */
   .row.hval.pb > .hit { inset: min(0px, calc((var(--b-h) - 44px) / 2)) -3px; }
@@ -89,7 +91,7 @@ const STYLE_BADGES = `
   .hval .bring .track { fill: none; stroke: color-mix(in srgb, var(--b-ink, var(--fe-color)) 22%, transparent); }
   .hval .bring .prog { fill: none; stroke: var(--b-ink, var(--fe-color)); stroke-linecap: round; }
   /* a ring sits in the pill's rounded end, the same gap to the edge all round */
-  .row.hval.pb:has(> .bring:first-child) { padding-left: calc((var(--b-h) - var(--b-ring)) / 2 - var(--b-bw, 0px)); }
+  .row.hval.pb:has(> .bring:first-child, > .hit:first-child + .bring) { padding-left: calc((var(--b-h) - var(--b-ring)) / 2 - var(--b-bw, 0px)); }
   /* the icon inside the ring, clear of its stroke (beats the pill's icon size) */
   .row.hval .bring :is(ha-icon, ha-state-icon) { display: flex; --mdc-icon-size: calc(var(--b-ring, 20px) * .55); }
   .row.hval .bring img.picture { width: 55%; height: 55%; border-radius: 50%; }
@@ -120,7 +122,7 @@ export const STYLE_HEADER = `
   .header .hvals { display: flex; align-items: center; gap: 10px; flex: 0 1 auto; min-width: 0; max-width: 60%; }
   .header .hvals:empty { display: none; }
   /* title_tap_action: the title and its icon are the button */
-  .header.tappable .title, .header.tappable > ha-icon { cursor: pointer; }
+  .header.tappable .title, .header.tappable:not(.icon-own) > ha-icon { cursor: pointer; }
   .header.tappable .title:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; border-radius: 4px; }
   .row.hval { flex: 0 1 auto; flex-direction: row; align-items: center; gap: 4px; border-radius: 6px; min-width: 0; }
   .hval .state, .hval .secondary { min-width: 0; overflow: hidden; text-overflow: ellipsis; }

@@ -31,7 +31,7 @@
     },
     "icon_tap_action": {
       "$ref": "defs.schema.json#/$defs/action",
-      "description": "Action when the icon is tapped, instead of the title's (default: none)"
+      "description": "Action when the icon is tapped, instead of the title's (default: the title's); none keeps the icon still"
     },
     "align": {
       "type": "string",

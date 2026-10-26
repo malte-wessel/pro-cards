@@ -137,7 +137,7 @@ title: Living room
 icon: mdi:sofa
 badges:
   - { entity: sensor.ev_battery, visual: bar, icon: mdi:car-electric }
-  - { entity: light.downstairs, visual: count, name: Lights, show_name: true }
+  - { entity: group.downstairs_lights, visual: count, name: Lights, show_name: true }
   - { entity: person.alex, show_entity_picture: true, show_name: true, show_value: false }
   - { entity: binary_sensor.window_kitchen, visual: dot, name: Kitchen window, show_name: true, show_value: false }
 ```
@@ -187,7 +187,7 @@ badges:
 
 ## Format and staleness
 
-`format` writes the value another way: `power` switches between W, kW and MW, `duration` writes a time span (`1 h 12 min`), `relative` writes a date as its time from now (`in 38 min`). `stale_after` greys a badge whose entity has not reported for that long and adds how long ago it did; it takes minutes or a number with `s`, `min`, `h` or `d`.
+`format` writes the value another way: `power` switches between W, kW and MW, `duration` writes a time span (`1h 12m`), `relative` writes a date as its time from now (`in 38 minutes`). `stale_after` greys a badge whose entity has not reported for that long (a report of an unchanged value counts) and adds how long ago it did; it takes minutes or a number with `s`, `min`, `h` or `d`.
 
 ::: live
 
@@ -277,7 +277,7 @@ badges:
 
 ## Actions
 
-`title_tap_action` runs when the title (or its icon) is tapped, for example to open the room's dashboard. `icon_tap_action` gives the icon an action of its own. Every badge keeps its entity's `tap_action`, `hold_action` and `double_tap_action`; the card's own set the defaults for all of them. See [Actions](/cards/entity-options#actions).
+`title_tap_action` runs when the title (or its icon) is tapped, for example to open the room's dashboard. `icon_tap_action` gives the icon an action of its own; `icon_tap_action: none` keeps it still under a tappable title. Every badge keeps its entity's `tap_action`, `hold_action` and `double_tap_action`; the card's own set the defaults for all of them. See [Actions](/cards/entity-options#actions).
 
 ::: live
 
@@ -318,25 +318,25 @@ The cards with a header (the group, sections, weather, wind, rain, power flow an
 
 ### Card options
 
-| Option                                             | Default                         | Description                                                                        |
-| -------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------- |
-| `style`                                            | `title`                         | `section`, `title`, `subtitle`, `big` or `hero`.                                   |
-| `title`                                            |                                 | The heading's text. Template allowed.                                              |
-| `subtitle`                                         |                                 | The line under the title. Template allowed.                                        |
-| `icon`                                             |                                 | The icon before the title. Template allowed.                                       |
-| `color`                                            | secondary text (`big`: primary) | The icon's colour, a theme colour name or any CSS colour. Template allowed.        |
-| `title_tap_action`                                 | none                            | Action when the title or its icon is tapped.                                       |
-| `icon_tap_action`                                  | none                            | Action when the icon is tapped, instead of the title's.                            |
-| `align`                                            | `start`                         | `start` or `center`.                                                               |
-| `badges_position`                                  | `end`                           | `end` (below on a card narrower than 300 px), `inline` or `below`.                 |
-| `overflow`                                         | `wrap`                          | `wrap` or `scroll`.                                                                |
-| `badge_style`                                      | `outline`                       | The pill of every badge: `outline`, `soft`, `filled` or `plain`.                   |
-| `badge_size`                                       | `m`                             | The size of every badge: `s`, `m` or `l`.                                          |
-| `badges`                                           |                                 | Entity ids or badge objects.                                                       |
-| `hours_to_show`                                    | `6`                             | History window of `sparkline` and `trend`, at least 1.                             |
-| `smoothing_minutes`                                |                                 | Averaging bucket of `sparkline` in minutes, at least 5.                            |
-| `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none    | Defaults for every badge, see [Actions](/cards/entity-options#actions).            |
-| `hover`                                            | on for badges with an action    | `false` turns the hover and press layers off for every badge, see [Hover](#hover). |
+| Option                                             | Default                         | Description                                                                          |
+| -------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------ |
+| `style`                                            | `title`                         | `section`, `title`, `subtitle`, `big` or `hero`.                                     |
+| `title`                                            |                                 | The heading's text. Template allowed.                                                |
+| `subtitle`                                         |                                 | The line under the title. Template allowed.                                          |
+| `icon`                                             |                                 | The icon before the title. Template allowed.                                         |
+| `color`                                            | secondary text (`big`: primary) | The icon's colour, a theme colour name or any CSS colour. Template allowed.          |
+| `title_tap_action`                                 | none                            | Action when the title or its icon is tapped.                                         |
+| `icon_tap_action`                                  | the title's                     | Action when the icon is tapped, instead of the title's; `none` keeps the icon still. |
+| `align`                                            | `start`                         | `start` or `center`.                                                                 |
+| `badges_position`                                  | `end`                           | `end` (below on a card narrower than 300 px), `inline` or `below`.                   |
+| `overflow`                                         | `wrap`                          | `wrap` or `scroll`.                                                                  |
+| `badge_style`                                      | `outline`                       | The pill of every badge: `outline`, `soft`, `filled` or `plain`.                     |
+| `badge_size`                                       | `m`                             | The size of every badge: `s`, `m` or `l`.                                            |
+| `badges`                                           |                                 | Entity ids or badge objects.                                                         |
+| `hours_to_show`                                    | `6`                             | History window of `sparkline` and `trend`, at least 1.                               |
+| `smoothing_minutes`                                |                                 | Averaging bucket of `sparkline` in minutes, at least 5.                              |
+| `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none    | Defaults for every badge, see [Actions](/cards/entity-options#actions).              |
+| `hover`                                            | on for badges with an action    | `false` turns the hover and press layers off for every badge, see [Hover](#hover).   |
 
 ### Badge options
 
