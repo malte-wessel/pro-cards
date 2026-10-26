@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.9.0 – Energy flow card
+## 2.9.0 – Energy flow and heading cards
 
 _Beta_
 
