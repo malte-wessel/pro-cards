@@ -1393,7 +1393,10 @@ const crossings = (edges: { pts: Pt[] }[]) => {
 describe("power flow layout", () => {
   it("gives the nearest source the inner lane and the others their side", () => {
     expect(laneOffsets([34, 95, 156], 95)).toEqual([-8, 0, 8]);
-    expect(laneOffsets([20, 60, 100, 140], 80)).toEqual([-8, 0, 8, 16]); // a tie: the upper one is nearer
+    // none level, sources on both sides: half a lane off the centre, mirrored
+    expect(laneOffsets([20, 60, 100, 140], 80)).toEqual([-12, -4, 4, 12]);
+    // none level, all on one side: the nearest takes lane 0
+    expect(laneOffsets([20, 60], 100)).toEqual([-8, 0]);
     expect(laneOffsets([95], 95)).toEqual([0]);
   });
 
@@ -1409,7 +1412,8 @@ describe("power flow layout", () => {
         { type: "solar", entity: "sensor.c" },
       ],
     });
-    expect(acrossOf(five)).toBe(42 + 64 + 64 + 66 + 66 + 42); // two 44 px nodes in a row: 66
+    // one pitch for every source, the most any label asks for: two 44 px nodes in a row ask 66
+    expect(acrossOf(five)).toBe(42 + 4 * 66 + 42);
     const withSecondary = normalizePowerFlowConfig({
       sources: [{ ...SRC[0], secondary: "roof" }, SRC[1], SRC[2]],
     });
@@ -1418,14 +1422,16 @@ describe("power flow layout", () => {
     const batterySecondary = normalizePowerFlowConfig({
       sources: [SRC[0], { ...SRC[1], secondary: "x" }, SRC[2]],
     });
-    expect(acrossOf(batterySecondary)).toBe(42 + 75 + 64 + 42); // 22 + 2 + 27.5 + 23.5 above it
+    expect(acrossOf(batterySecondary)).toBe(42 + 75 + 75 + 42); // 22 + 2 + 27.5 + 23.5 above it
     const cons = base({ consumers: ["sensor.a", "sensor.b", "sensor.c", "sensor.d"] }); // + other
     expect(acrossOf(cons)).toBe(34 + 4 * GEOM.consumerPitch + 30); // 32 px nodes, 28 px labels
     const rooms = base({
       consumers: [{ group: "A", entities: ["sensor.a", "sensor.b"] }, "sensor.c"],
     });
-    // the first room's label above it (52), devices 44 apart, a room gap of 22 between blocks
-    expect(acrossOf(rooms)).toBe(52 + 46 + (52 + 22) + (54 + 22) + 30); // … then the other node
+    // the first room's label above it (52), then one pitch for every leaf: the most any asks
+    // for – here the room column's, the other node's label above it clearing the lone consumer
+    // before it (16 + 16 + 32 + 7 = 71 over one leaf)
+    expect(acrossOf(rooms)).toBe(52 + 3 * 71 + 30);
     expect(alongDownOf(three)).toBe(GEOM.minAcross);
     expect(alongDownOf(cons)).toBe(GEOM.srcAlong + 2 * GEOM.columnPitch + 56);
     expect(diagramHeight(base({ direction: "down", consumers: ["sensor.a"] }))).toBe(
@@ -1477,29 +1483,119 @@ describe("power flow layout", () => {
     expect(crossings(lanes)).toBe(0);
   });
 
-  it("sets the home level with a source a few px off its height, so its line runs straight", () => {
+  it("spaces the sources evenly, the middle one straight into the home", () => {
+    const pair = {
+      type: "battery",
+      charge: "sensor.charge",
+      discharge: "sensor.discharge",
+      soc: "sensor.soc",
+      charge_from: "solar",
+    };
+    for (const sources of [
+      [SRC[0], pair, SRC[2]],
+      [SRC[0], pair, SRC[2], { type: "solar", entity: "sensor.b" }],
+    ]) {
+      const cfg = normalizePowerFlowConfig({ sources });
+      const { f } = flowsOf(cfg, { "sensor.solar": "800", "sensor.grid": "300" });
+      const l = layoutTree(cfg, 400, f.edges);
+      const ys = cfg.sources.map((s) => l.nodes.find((n) => n.id === s.id)!.y);
+      // one pitch, centre to centre, whatever the labels (the pair's has a line more)
+      const gaps = ys.slice(1).map((y, i) => y - ys[i]);
+      for (const g of gaps) expect(g).toBeCloseTo(gaps[0], 6);
+      const home = l.nodes.find((n) => n.id === "home")!;
+      const lanes = l.edges.filter((e) => e.to === "home");
+      if (ys.length % 2) {
+        // an odd number: the middle one level with the home, one straight leg
+        expect(ys[1]).toBeCloseTo(home.y, 6);
+        expect(lanes.find((e) => e.from === "s1")!.pts).toHaveLength(2);
+      } else {
+        // an even number: the home between the middle two, both bend, mirrored
+        expect(home.y).toBeCloseTo((ys[1] + ys[2]) / 2, 6);
+        const end = (id: string) => lanes.find((e) => e.from === id)!.pts.at(-1)![1] - home.y;
+        expect(end("s1")).toBeCloseTo(-end("s2"), 6);
+      }
+    }
+  });
+
+  it("spaces the consumers evenly, every room centred on its devices", () => {
+    const cfg = base({
+      consumers: [
+        { group: "Laundry", entities: ["sensor.a", "sensor.b"] },
+        { group: "Kitchen", entities: ["sensor.c"] },
+        "sensor.d",
+        { group: "Office", entities: ["sensor.e", "sensor.f", "sensor.g"] },
+      ],
+    });
+    const { f } = flowsOf(cfg, { "sensor.solar": "3000", "sensor.home": "2000" });
+    for (const width of [340, 416, 640]) {
+      const l = layoutTree(cfg, width, f.edges);
+      const y = (id: string) => l.nodes.find((n) => n.id === id)!.y;
+      // devices, the lone consumer and the other node: one pitch, centre to centre
+      const leaves = ["c0.0", "c0.1", "c1.0", "c2", "c3.0", "c3.1", "c3.2", "other"].map(y);
+      const gaps = leaves.slice(1).map((v, i) => v - leaves[i]);
+      for (const g of gaps) expect(g).toBeCloseTo(gaps[0], 6);
+      // a room centred on its devices
+      expect(y("g0")).toBeCloseTo((y("c0.0") + y("c0.1")) / 2, 6);
+      expect(y("g1")).toBeCloseTo(y("c1.0"), 6);
+      expect(y("g3")).toBeCloseTo(y("c3.1"), 6);
+    }
+  });
+
+  it("keeps the lanes' turns clear of a source label beside the home", () => {
+    // three sources: the battery level with the home, its label (87 px) in the home's band;
+    // rooms put the home at 38 % of the width, so the label decides where it goes
+    const cfg = base({ consumers: [{ group: "A", entities: ["sensor.a", "sensor.b"] }] });
+    const { f } = flowsOf(cfg, { "sensor.solar": "800", "sensor.grid": "300" });
+    const sizes = new Map([
+      ["s0", { w: 60, h: 32 }],
+      ["s1", { w: 87, h: 49 }],
+      ["s2", { w: 60, h: 32 }],
+    ]);
+    for (const width of [400, 480, 530]) {
+      const l = layoutTree(cfg, width, f.edges, sizes);
+      const battery = l.nodes.find((n) => n.id === "s1")!;
+      const labelEnd = battery.x + battery.d / 2 + GEOM.labelGap + 87;
+      // every vertical leg of a lane into the home lies right of the label, 3 px clear
+      for (const e of l.edges.filter((x) => x.to === "home" && x.pts.length === 4))
+        expect(e.pts[1][0] - 3).toBeGreaterThan(labelEnd);
+      // so the label finds its first place, beside the node above its line
+      const placed = placeLabels(
+        l,
+        [...sizes].map(([id, s]) => ({ id, ...s })),
+        "right",
+      ).find((p) => p.id === "s1")!;
+      expect(placed.align).toBe("l");
+      expect(placed.y).toBeLessThan(battery.y);
+    }
+  });
+
+  it("turns the lanes into the home in one block: same corners, a lane apart, mirrored", () => {
     const cfg = normalizePowerFlowConfig({
       sources: [
-        { type: "solar", entity: "sensor.solar" },
-        {
-          type: "battery",
-          charge: "sensor.charge",
-          discharge: "sensor.discharge",
-          soc: "sensor.soc",
-          charge_from: "solar",
-        },
-        { type: "grid", power: "sensor.grid" },
+        ...SRC,
+        { type: "solar", entity: "sensor.b" },
+        { type: "solar", entity: "sensor.c" },
       ],
     });
     const { f } = flowsOf(cfg, { "sensor.solar": "800", "sensor.grid": "300" });
-    const l = layoutTree(cfg, 400, f.edges);
-    const battery = l.edges.find((e) => e.from === "s1" && e.to === "home")!;
-    const node = (id: string) => l.nodes.find((n) => n.id === id)!;
-    // the two values make the battery's label taller: it sits a few px off the diagram's middle,
-    // and the home moves to it rather than the line taking a step
-    expect(node("s1").y).not.toBe(l.h / 2);
-    expect(node("home").y).toBe(node("s1").y);
-    expect(battery.pts).toHaveLength(2);
+    const l = layoutTree(cfg, 416, f.edges);
+    const home = l.nodes.find((n) => n.id === "home")!;
+    // the vertical leg of every lane that turns: its along position, by its offset from the home
+    const legs = l.edges
+      .filter((e) => e.to === "home" && e.pts.length === 4)
+      .map((e) => ({ x: e.pts[1][0], off: e.pts[3][1] - home.y }));
+    expect(legs.length).toBeGreaterThan(1);
+    for (const a of legs)
+      for (const b of legs) {
+        const k = (o: number) => Math.abs(o) / GEOM.lane;
+        // a lane further out turns a lane later; above and below the same
+        expect(a.x - b.x).toBeCloseTo((k(a.off) - k(b.off)) * GEOM.lane, 6);
+      }
+    // the last turn leaves room for its corner before the home's circle
+    expect(Math.max(...legs.map((g) => g.x))).toBeLessThanOrEqual(
+      home.x - home.d / 2 - GEOM.radius,
+    );
+    expect(crossings(l.edges.filter((e) => e.to === "home"))).toBe(0);
   });
 
   it("keeps the lanes into the home around its centre, a near source straight in", () => {
@@ -1570,7 +1666,8 @@ describe("power flow layout", () => {
     expect(both.sources.map(twoValued)).toEqual([false, true, true]);
     // the config decides the height, never the values
     expect(acrossOf(pair)).toBeGreaterThan(acrossOf(one));
-    expect(acrossOf(both)).toBeGreaterThan(acrossOf(pair));
+    // one pitch for every source: the battery's second line already sets it for the grid
+    expect(acrossOf(both)).toBeGreaterThanOrEqual(acrossOf(pair));
     // direction: down – a value with its arrow needs more room right of the icon
     const ds = [44, 40, 44];
     expect(sourceRow(ds, [40, 40, 40], 600).slot).toBe("right");

@@ -105,15 +105,14 @@ const sourceStack = (cfg: FlowTreeConfig): Stack => {
     return { bs: [], first: GEOM.srcMargin, last: GEOM.srcMargin, extent: 0 };
   const ds = cfg.sources.map((s) => s.d);
   const hs = cfg.sources.map((s) => srcLabelHeight(cfg, s));
-  const bs: number[] = [];
-  let b = 0;
-  ds.forEach((d, i) => {
-    if (i > 0) b += Math.max(GEOM.srcPitch, slotPitch(ds[i - 1], d, hs[i]));
-    bs.push(b);
-  });
+  // one pitch for every source, centre to centre: the most any label asks for to clear the node
+  // before it
+  let pitch: number = GEOM.srcPitch;
+  for (let i = 1; i < ds.length; i++) pitch = Math.max(pitch, slotPitch(ds[i - 1], ds[i], hs[i]));
+  const bs = ds.map((_, i) => i * pitch);
   const first = Math.max(GEOM.srcMargin, slotMargin(ds[0], hs[0]));
   const last = Math.max(GEOM.srcMargin, ds[ds.length - 1] / 2 + 12);
-  return { bs, first, last, extent: b };
+  return { bs, first, last, extent: bs[bs.length - 1] };
 };
 
 // the consumer column: every leaf's position across the flow (relative to the first), the centre
@@ -130,42 +129,45 @@ const columnPlan = (cfg: FlowTreeConfig, scale = 1): Column => {
     groups: Column["groups"] = [];
   // a list row draws its circle within the row: a bigger icon_size asks for no more room
   const rows = cfg.direction === "right" && cfg.consumerStyle === "list";
-  let b = 0,
-    prevD = 0;
-  const place = (
-    id: string,
-    idx: number | null,
-    group: string | null,
-    d: number,
-    small: boolean,
-  ) => {
-    const h = labelHeightOf(cfg, idx, small);
-    if (rows) d = Math.min(d, GEOM.rowH);
-    if (leaves.length) {
-      // the gap between two blocks (rooms or lone consumers) on top of the slot pitch
-      const sameBlock = group !== null && leaves[leaves.length - 1].group === group;
-      const least = sameBlock ? GEOM.itemPitch : GEOM.consumerPitch;
-      b +=
-        Math.max(least, slotPitch(prevD, d, h)) * scale +
-        (sameBlock || !cfg.hasGroups ? 0 : GEOM.groupGap * scale);
-    }
-    leaves.push({ id, b, group, d, h });
-    prevD = d;
-  };
+  // every leaf in order, with its label's height; the nodes of the room column (the rooms, and
+  // beside them the lone consumers and the other node) by the leaves they span
+  const all: { id: string; group: string | null; d: number; h: number }[] = [];
+  const blocks: { id: string | null; first: number; last: number; d: number; h: number }[] = [];
   for (const c of cfg.consumers) {
-    if (c.kind === "group") {
-      let start = 0;
-      c.items.forEach((it, j) => {
-        place(it.id, it.idx, c.id, it.d, true);
-        if (j === 0) start = leaves[leaves.length - 1].b;
-      });
-      groups.push({ id: c.id, b: (start + b) / 2 });
-    } else {
+    const first = all.length;
+    if (c.kind === "group")
+      for (const it of c.items)
+        all.push({ id: it.id, group: c.id, d: it.d, h: labelHeightOf(cfg, it.idx, true) });
+    else
       // a lone consumer beside rooms reads like a room (a normal label, centred above)
-      const small = !cfg.hasGroups;
-      place(c.id, c.kind === "item" ? c.idx : null, null, c.d, small);
-    }
+      all.push({
+        id: c.id,
+        group: null,
+        d: c.d,
+        h: labelHeightOf(cfg, c.kind === "item" ? c.idx : null, !cfg.hasGroups),
+      });
+    const h = labelHeightOf(cfg, c.kind === "item" ? c.idx : null, false);
+    blocks.push({ id: c.kind === "group" ? c.id : null, first, last: all.length - 1, d: c.d, h });
   }
+  if (rows) for (const l of all) l.d = Math.min(l.d, GEOM.rowH);
+  // One pitch for every leaf, centre to centre: the most any of them asks for – a leaf's label
+  // clears the leaf before it, and with rooms a room's label (centred above it) clears the room
+  // before it, over the leaves between their centres
+  let pitch = all.length > 1 ? (cfg.hasGroups ? GEOM.itemPitch : GEOM.consumerPitch) : 0;
+  for (let i = 1; i < all.length; i++)
+    pitch = Math.max(pitch, slotPitch(all[i - 1].d, all[i].d, all[i].h));
+  if (cfg.hasGroups)
+    for (let k = 1; k < blocks.length; k++) {
+      const a = blocks[k - 1],
+        b = blocks[k];
+      const span = (b.first + b.last) / 2 - (a.first + a.last) / 2;
+      pitch = Math.max(pitch, (a.d / 2 + b.d / 2 + b.h + 7) / span);
+    }
+  const step = pitch * scale;
+  all.forEach((l, i) => leaves.push({ ...l, b: i * step }));
+  for (const bl of blocks)
+    if (bl.id) groups.push({ id: bl.id, b: ((bl.first + bl.last) / 2) * step });
+  const b = all.length ? (all.length - 1) * step : 0;
   const firstLeaf = leaves[0],
     lastLeaf = leaves[leaves.length - 1];
   let first = firstLeaf ? Math.max(GEOM.consumerMargin, slotMargin(firstLeaf.d, firstLeaf.h)) : 0;
@@ -237,24 +239,25 @@ export const alongDownOf = (cfg: FlowTreeConfig): number => {
 export const diagramHeight = (cfg: FlowTreeConfig) =>
   cfg.direction === "right" ? acrossOf(cfg) : alongDownOf(cfg);
 
-// the lane offsets into the home: the source nearest the centre takes the inner lane, the
-// others move outward on their side, so no two lines cross
+// The lane offsets into the home, mirrored above and below: a source level with the home takes
+// lane 0 and the others move outward a lane at a time on their side; with none level and sources
+// on both sides the lanes sit half a lane off the centre (±4, ±12 …), the nearest innermost. So
+// no two lines cross, and an even column of sources meets the home as a mirrored bundle.
 export const laneOffsets = (bs: number[], bH: number): number[] => {
   const order = bs
     .map((b, i) => ({ i, d: Math.abs(b - bH), b }))
     .sort((p, q) => p.d - q.d || p.b - q.b);
   const out = new Array<number>(bs.length).fill(0);
+  const level = order.length > 0 && order[0].d < 0.5;
+  const halves = !level && bs.some((b) => b < bH) && bs.some((b) => b > bH);
   let above = 0,
     below = 0;
   order.forEach((o, k) => {
-    if (k === 0) {
-      out[o.i] = 0;
-      return;
-    }
-    if (o.b < bH) out[o.i] = -GEOM.lane * ++above;
-    else out[o.i] = GEOM.lane * ++below;
+    if (k === 0 && !halves) return;
+    const n = o.b < bH ? ++above : ++below;
+    const lanes = halves ? n - 0.5 : n;
+    out[o.i] = (o.b < bH ? -1 : 1) * GEOM.lane * lanes;
   });
-  // a single source aligned with the home keeps 0; two sources on one side keep their order
   return out;
 };
 
@@ -333,15 +336,17 @@ export const layoutTree = (
   if (right) {
     // the home column clears the source labels; the columns keep a least distance on narrow
     // cards and spread on wide ones
-    // only a source label in the home's band (beside it, above its line) must clear the home
+    // only a source label in the home's band (beside it, above its line) must clear the home –
+    // and the block where the lanes turn into it, between the label and the home
     const bandH = [bH - rH - 2, bH + rH + 2];
+    const turns = Math.max(0, ...laneOffsets(bS, bH).map((o) => Math.abs(o))) + GEOM.radius + 4 + 4;
     const clearH = Math.max(
       0,
       ...cfg.sources.map((s, i) => {
         const h = srcLabelHeight(cfg, s),
           mid = bS[i] - s.d / 2 - 4;
         const inBand = mid + h / 2 > bandH[0] && mid - h / 2 < bandH[1];
-        return inBand ? aS + rS + GEOM.labelGap + widthOf(s.id) + 10 + rH : 0;
+        return inBand ? aS + rS + GEOM.labelGap + widthOf(s.id) + 3 + turns + rH : 0;
       }),
     );
     const minH = Math.max(aS + rS + 40, clearH);
@@ -468,9 +473,14 @@ export const layoutTree = (
   const offsets = laneOffsets(bS, bH);
   // a source's lane by its id (its position in the drawn column, not its config index)
   const srcPos = new Map(cfg.sources.map((s, i) => [s.id, i]));
-  const gapAlong = aH - rH - (aS + rS);
-  // the lanes bend late, so a source's label fits beside its node on a narrow card
-  const bendBase = aS + rS + gapAlong * 0.8;
+  // The lanes turn into the home in one block right before it, mirrored above and below: every
+  // corner the same radius, the vertical legs a lane apart, the outermost lane turning last
+  // (so none crosses another) with room left for its corner before the home's circle. Late
+  // turns leave a source's label room beside its node on a narrow card.
+  const outer = Math.max(0, ...offsets.map((o) => Math.abs(o) / GEOM.lane));
+  const lastBend = aH - rH - GEOM.radius - 4;
+  const bendAt = (off: number) =>
+    Math.max(aS + rS + GEOM.radius, lastBend - (outer - Math.abs(off) / GEOM.lane) * GEOM.lane);
   // the trunk sits nearer its origin and clears the labels left of the targets
   const trunkOf = (from: LNode, to: LNode) => {
     const a0 = A(from) + from.d / 2,
@@ -495,7 +505,7 @@ export const layoutTree = (
     let pts: Pt[];
     if (e.to === "home") {
       const off = offsets[srcPos.get(e.from) ?? -1] ?? 0;
-      const aBend = bendBase + Math.abs(off) * 1.5;
+      const aBend = bendAt(off);
       const b = bH + off;
       // a lane off the home's centre line ends on its circle, not short of it
       const aEnd = aH - Math.sqrt(Math.max(0, rH * rH - (b - bH) ** 2));
