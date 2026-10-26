@@ -20,8 +20,8 @@ import { headerBadgeEl, iconOrPictureEl, ringSvg } from "./lead.ts";
 // the sparkline in the icon's place, in viewBox units (CSS sizes it with the badge)
 const SPARK_W = 34;
 const SPARK_H = 16;
-// a ring around the icon fits the badge's height with a little room
-const RING_PX = { s: 20, m: 24, l: 28 } as const;
+// a ring around the icon: in the pill's rounded end, 4, 5 or 6 px from its edge (the CSS --b-ring)
+const RING_PX = { s: 16, m: 20, l: 24 } as const;
 
 const span = (cls: string, text?: string) => {
   const s = document.createElement("span");
@@ -131,7 +131,11 @@ const leadOf = (ctx: RenderCtx, ent: EntityItem, m: EntityModel): HTMLElement | 
       return sparkEl(ctx, ent);
     case "ring": {
       const el = span("bring");
-      el.innerHTML = ringSvg(RING_PX[ent.badge.size], m.progress, 2.5);
+      el.innerHTML = ringSvg(
+        RING_PX[ent.badge.size],
+        m.progress,
+        ent.badge.size === "s" ? 1.75 : 2,
+      );
       if (ent.item.showIcon) el.appendChild(iconOrPictureEl(ctx, m.look, m.st));
       return el;
     }
