@@ -23,7 +23,8 @@ const STYLE_HEADING = `
   .header .htx > .title { flex: none; }
   .header .subtitle { ${type(14, 20)} color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .header .hline { display: none; }
-  .layout-heading .header .hvals { flex: 0 1 auto; max-width: none; flex-wrap: wrap; justify-content: flex-end; row-gap: 6px; }
+  /* the badges give way first: they wrap down to their widest badge before the title is cut */
+  .layout-heading .header .hvals { flex: 0 16 auto; min-width: min-content; max-width: none; flex-wrap: wrap; justify-content: flex-end; row-gap: 6px; }
   /* icon_tap_action: the icon is a button of its own */
   .header.icon-tap > ha-icon { cursor: pointer; border-radius: ${ICON_RADIUS}; outline: none; }
   .header.icon-tap > ha-icon:focus-visible { box-shadow: 0 0 0 2px var(--primary-color); }
@@ -41,13 +42,27 @@ const STYLE_HEADING = `
   .header.s-hero > ha-icon { --mdc-icon-size: 32px; }
   ha-card.layout-heading .header.s-hero { padding-block: 12px; }
 
-  /* where the badges sit; on a narrow card those at the end move to a line of their own */
+  /* where the badges sit. At the end of the line a grid shares it: the title takes its width first
+     (cut only down to 96 px), the badges what is left, wrapping in it; a section's line takes what
+     the badges leave. (A wrapping flex item keeps the width it was given, not the one its wrapped
+     badges need, so in a flex line the title would give up room nobody uses.) The gaps are margins:
+     a missing icon or line leaves no gap behind */
+  .header.bpos-end:not(.align-center) { display: grid; grid-template-columns: auto minmax(min(96px, 100%), max-content) 0 minmax(min-content, 1fr); column-gap: 0; }
+  .header.bpos-end.s-section:not(.align-center) { grid-template-columns: auto minmax(min(96px, 100%), max-content) minmax(24px, 1fr) minmax(min-content, max-content); }
+  .header.bpos-end.ov-scroll:not(.align-center) { grid-template-columns: auto minmax(min(96px, 100%), max-content) 0 minmax(0, 1fr); }
+  .header.bpos-end.s-section.ov-scroll:not(.align-center) { grid-template-columns: auto minmax(min(96px, 100%), max-content) minmax(24px, 1fr) minmax(0, max-content); }
+  .header.bpos-end:not(.align-center) > ha-icon { grid-column: 1; margin-right: 10px; }
+  .header.bpos-end:not(.align-center) > .htx { grid-column: 2; min-width: 0; }
+  .header.bpos-end:not(.align-center) > .hline { grid-column: 3; margin-left: 10px; }
+  .header.bpos-end:not(.align-center) > .hvals { grid-column: 4; margin-left: 10px; }
   .header.bpos-inline .htx { flex: 0 1 auto; }
   .header.bpos-inline .hvals { flex: 1 1 0; justify-content: flex-start; }
   .header.bpos-below { flex-wrap: wrap; }
   .header.bpos-below .hvals { flex: 1 0 100%; justify-content: flex-start; }
+  /* a narrow card: the badges at the end move to a line of their own */
   @container (max-width: 300px) {
-    .header.bpos-end { flex-wrap: wrap; }
+    .header.bpos-end:not(.align-center) { display: flex; flex-wrap: wrap; }
+    .header.bpos-end:not(.align-center) > :is(ha-icon, .hline, .hvals) { margin-left: 0; margin-right: 0; }
     .header.bpos-end .hvals { flex: 1 0 100%; justify-content: flex-start; }
   }
   /* align: center, a panel's or a wall tablet's heading: the text and the badges centred */
@@ -56,7 +71,7 @@ const STYLE_HEADING = `
   .header.align-center .hvals { flex: none; justify-content: center; max-width: 100%; }
   .header.align-center .hline { display: none; }
   /* overflow: scroll, one line that scrolls and fades at its edges */
-  .header.ov-scroll .hvals { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 4px 8px; margin: -4px 0; mask-image: linear-gradient(to right, transparent, black 8px, black calc(100% - 8px), transparent); }
+  .header.ov-scroll .hvals { min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 4px 8px; margin: -4px 0; mask-image: linear-gradient(to right, transparent, black 8px, black calc(100% - 8px), transparent); }
   .header.ov-scroll .hvals::-webkit-scrollbar { display: none; }
   .header.ov-scroll .row.hval { flex: none; }
   /* a row that overflows starts at its first badge (flex-end would push the start out of reach);
