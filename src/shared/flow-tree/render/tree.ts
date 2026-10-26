@@ -603,19 +603,20 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
   }
 
   // ----- labels -----
-  // a name cut to its room (a tight row of consumers); the value is never cut
+  // a name cut to its room (a tight row of consumers, or a device's beside a room's label: the
+  // placement cuts it); the value is never cut
   const labelMax = new Map(layout.nodes.map((n) => [n.id, n.labelMax]));
   const labelSizes: LabelSize[] = [...sizes].map(([id, { w, h, vw = 0 }]) => {
     const max = labelMax.get(id);
     // the values in one line where there is room for it (a label cut to its room has none)
     const alt = max === undefined ? alts.get(id) : undefined;
-    return { id, h, w: max === undefined ? w : Math.min(w, Math.max(max, vw)), alt };
+    return { id, h, w: max === undefined ? w : Math.min(w, Math.max(max, vw)), alt, vw };
   });
   for (const p of placeLabels(layout, labelSizes, cfg.direction)) {
     const el = labelEls.get(p.id);
     const txt = texts.get(p.id);
     if (!el || !txt) continue;
-    const max = labelMax.get(p.id);
+    const max = p.cut ?? labelMax.get(p.id);
     el.classList.toggle("cut", max !== undefined);
     el.style.setProperty("--pl-max", max === undefined ? "" : `${Math.floor(max)}px`);
     // both values in one line where the placement found room for it

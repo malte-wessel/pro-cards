@@ -23,6 +23,7 @@ export interface LNode {
   column: "source" | "home" | "group" | "leaf"; // where it sits along the flow
   labelMax?: number; // direction: down, a crowded row – the widest name that clears its neighbours
   slot?: SourceSlot; // direction: down – where the sources' labels go, the same for the whole row
+  under?: boolean; // direction: right, a narrow card with rooms – a device's label centred below it
 }
 export interface LEdge {
   id: string;
@@ -332,7 +333,26 @@ export const layoutTree = (
     levelPitch = GEOM.columnPitch + grow / cols;
   const sA = srcAlongOf(cfg);
   const aS = sA + (extra - grow) / 2;
+  // the consumer column, centred across; `down` spreads it to the width
+  let plan = columnPlan(cfg);
+  let consTight = false;
+  if (!right && plan.extent > 0) {
+    const fit = Math.max(0.6, Math.min(1.6, (across - 2 * GEOM.consumerMargin) / plan.extent));
+    plan = columnPlan(cfg, fit);
+    const pitch = plan.leaves.length > 1 ? plan.extent / (plan.leaves.length - 1) : Infinity;
+    consTight = pitch < maxLeafW + 8;
+  }
+  // the column centred on the home, so a lone consumer's line runs straight; the margins (the
+  // first label's room, the last node's) only bound it, and split the room when it is short
+  const lo = plan.first,
+    hi = across - plan.last - plan.extent;
+  const b0 = hi < lo ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, across / 2 - plan.extent / 2));
   let aH: number, aG: number, aC: number, aRow: number;
+  // the sources whose labels' names are cut to the room before the home (narrow, with rooms)
+  const srcCut = new Map<string, number>();
+  // the devices' labels go below them: the rooms' labels cannot sit beside their values
+  let under = false;
+  const roomW = Math.max(0, ...cfg.consumers.map((c) => (c.kind === "group" ? widthOf(c.id) : 0)));
   if (right) {
     // the home column clears the source labels; the columns keep a least distance on narrow
     // cards and spread on wide ones
@@ -340,32 +360,78 @@ export const layoutTree = (
     // and the block where the lanes turn into it, between the label and the home
     const bandH = [bH - rH - 2, bH + rH + 2];
     const turns = Math.max(0, ...laneOffsets(bS, bH).map((o) => Math.abs(o))) + GEOM.radius + 4 + 4;
-    const clearH = Math.max(
-      0,
-      ...cfg.sources.map((s, i) => {
-        const h = srcLabelHeight(cfg, s),
-          mid = bS[i] - s.d / 2 - 4;
-        const inBand = mid + h / 2 > bandH[0] && mid - h / 2 < bandH[1];
-        return inBand ? aS + rS + GEOM.labelGap + widthOf(s.id) + 3 + turns + rH : 0;
-      }),
-    );
-    const minH = Math.max(aS + rS + 40, clearH);
-    if (!hasCons) aH = Math.max(along - 44, minH);
-    else if (listRows) aH = Math.max(minH, along * (cfg.hasGroups ? 0.3 : 0.42));
-    else aH = Math.max(minH, along * (cfg.hasGroups ? 0.38 : 0.5));
-    aH = Math.min(aH, along - rH - 2);
+    // where the home clears a label of width w beside the source column
+    const clearFor = (w: number) => aS + rS + GEOM.labelGap + w + 3 + turns + rH;
+    const inBand = cfg.sources.map((s, i) => {
+      const h = srcLabelHeight(cfg, s),
+        mid = bS[i] - s.d / 2 - 4;
+      return mid + h / 2 > bandH[0] && mid - h / 2 < bandH[1];
+    });
+    const band = cfg.sources.filter((_, i) => inBand[i]);
+    const fullClear = Math.max(0, ...band.map((s) => clearFor(widthOf(s.id))));
+    const valueClear = Math.max(0, ...band.map((s) => clearFor(sizes.get(s.id)?.vw ?? 0)));
     aC = along - (rLeaf + 14);
-    aG = listRows ? aH + Math.max(55, along * 0.16) : aH + (aC - aH) * 0.36;
     // the room column: its labels sit centred above the rooms, right of the home's trunk
     const maxRoomW = Math.max(
       0,
       ...cfg.consumers.map((c) => (c.kind === "group" || cfg.hasGroups ? widthOf(c.id) : 0)),
     );
+    // the devices' values are never cut: their room beside a room's label always holds
+    const maxLeafVW = Math.max(0, ...farLeaves.map((l) => sizes.get(l.id)?.vw ?? 0));
+    const values = aC - rLeaf - GEOM.labelGap - maxLeafVW - 6 - maxRoomW / 2;
+    // With rooms on a narrow card the home moves left as far as the rooms and the devices'
+    // values need: a source label beside it then keeps its value and has its name cut (never
+    // the value) rather than the home crowding the rooms
+    const clearH =
+      cfg.hasGroups && !listRows
+        ? Math.max(valueClear, Math.min(fullClear, values - maxRoomW / 2 - 6 - 16 - rH))
+        : fullClear;
+    const minH = Math.max(aS + rS + 40, clearH);
+    if (!hasCons) aH = Math.max(along - 44, minH);
+    else if (listRows) aH = Math.max(minH, along * (cfg.hasGroups ? 0.3 : 0.42));
+    else aH = Math.max(minH, along * (cfg.hasGroups ? 0.38 : 0.5));
+    aH = Math.min(aH, along - rH - 2);
+    // a source label beside the home that it does not clear in full: its name cut to the room
+    for (const s of band) {
+      const room = aH - (clearFor(0) - aS - rS - GEOM.labelGap) - (aS + rS + GEOM.labelGap);
+      if (widthOf(s.id) > room) srcCut.set(s.id, Math.max(0, room));
+    }
+    aG = listRows ? aH + Math.max(55, along * 0.16) : aH + (aC - aH) * 0.36;
     if (cfg.hasGroups) {
-      // … and left of the device labels; when both cannot hold, the devices win
+      // … and left of the device labels where both hold; where they cannot, the rooms win (a
+      // label over the trunk would cut its line) and the devices' names are cut to their room
+      // (placeLabels), the column staying left of the devices
       const lower = aH + rH + 16 + maxRoomW / 2 + 6;
       const upper = aC - rLeaf - GEOM.labelGap - maxLeafW - 6 - maxRoomW / 2;
-      aG = Math.max(aH + rH + 26, Math.min(Math.max(aG, lower), upper));
+      // not even the devices' values hold beside the rooms' labels: the devices take their labels
+      // below them, centred between their rooms' forks and the card's edge (whole where that
+      // holds them), and the rooms' labels clear the trunk – where that leaves the values room
+      const aGU = Math.max(
+        aH + rH + 26,
+        Math.min(aH + rH + 16 + roomW / 2 + 6, aC - rLeaf - rRoom - 12),
+      );
+      const fork = Math.max(aGU + rRoom + 10, aGU + roomW / 2 + 6) + 4;
+      const aCU = Math.min(
+        aC,
+        along - fork >= maxLeafW ? along - maxLeafW / 2 - 1 : (fork + along) / 2,
+      );
+      // … and the labels below the devices clear the next device and the bottom (the height
+      // follows the config, so this holds at any width)
+      const devs = plan.leaves.filter((l) => l.group);
+      const below = devs.every((l, i) => {
+        const end = b0 + l.b + l.d / 2 + 4 + (sizes.get(l.id)?.h ?? 0),
+          next = devs[i + 1];
+        return next ? end + 3 <= b0 + next.b - next.d / 2 - 2 : end <= across + 4;
+      });
+      const valuesFit = 2 * Math.min(along - aCU, aCU - fork) >= maxLeafVW;
+      if (!listRows && lower > values && below && valuesFit) {
+        under = true;
+        aG = aGU;
+        aC = aCU;
+      } else {
+        aG = Math.max(aG, lower) <= upper ? Math.max(aG, lower) : Math.max(upper, lower);
+        aG = Math.max(aH + rH + 26, Math.min(aG, values, aC - rLeaf - rRoom - 12));
+      }
     }
     aRow = cfg.hasGroups ? aG + Math.max(50, along * 0.18) : Math.max(aH + 80, along * 0.62);
     if (listRows) aC = aRow;
@@ -396,26 +462,16 @@ export const layoutTree = (
   };
   cfg.sources.forEach((s, i) => {
     const nd = add(s.id, s.kind, s.idx, s.d, aS, bS[i]);
-    nd.labelMax = srcCaps[i];
+    nd.labelMax = srcCaps[i] ?? srcCut.get(s.id);
     nd.slot = srcSlot;
   });
   add("home", "home", cfg.homeIdx, cfg.homeD, aH, bH);
 
-  // the consumer column, centred across; `down` spreads it to the width
-  let plan = columnPlan(cfg);
-  let consTight = false;
-  if (!right && plan.extent > 0) {
-    const fit = Math.max(0.6, Math.min(1.6, (across - 2 * GEOM.consumerMargin) / plan.extent));
-    plan = columnPlan(cfg, fit);
-    const pitch = plan.leaves.length > 1 ? plan.extent / (plan.leaves.length - 1) : Infinity;
-    consTight = pitch < maxLeafW + 8;
-  }
-  // the column centred on the home, so a lone consumer's line runs straight; the margins (the
-  // first label's room, the last node's) only bound it, and split the room when it is short
-  const lo = plan.first,
-    hi = across - plan.last - plan.extent;
-  const b0 = hi < lo ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, across / 2 - plan.extent / 2));
   const leafKind = (id: string): NodeKind => (id === "other" ? "other" : "consumer");
+  // with the devices' labels below them (direction: right), where a room's line forks to its
+  // devices: near the room, clear of its label
+  const forkOf = (room: LNode) =>
+    Math.max(room.x + room.d / 2 + 10, room.x + widthOf(room.id) / 2 + 6);
   for (const g of plan.groups) {
     const grp = cfg.consumers.find((c) => c.id === g.id);
     add(g.id, "group", null, grp ? grp.d : GEOM.dGroup, aG, b0 + g.b);
@@ -444,6 +500,12 @@ export const layoutTree = (
       const kind = leafKind(lf.id);
       const nd = add(lf.id, kind, idx, lf.d, asRoom ? aG : aC, b0 + lf.b);
       if (asRoom) nd.column = "group";
+      const room = lf.group ? byId.get(lf.group) : undefined;
+      if (under && room) {
+        // its name cut to the room between its room's fork and the card's edge
+        nd.under = true;
+        nd.labelMax = 2 * Math.min(along - aC, aC - forkOf(room) - 3 - 1);
+      }
       if (consTight) {
         // every label centred below its node, its name cut to its room: of the gap to a
         // neighbour, the neighbour keeps half (less when its label is narrower, more when its
@@ -488,6 +550,7 @@ export const layoutTree = (
     let t = a0 + (a1 - a0) * (from.kind === "group" ? 0.25 : 0.4);
     // a room's label sits centred above it: the trunk stays left of that label
     if (to.column === "group" && to.d > 0) t = Math.min(t, A(to) - widthOf(to.id) / 2 - 6);
+    if (to.column === "leaf" && to.d > 0 && under) return forkOf(from);
     if (to.column === "leaf" && to.d > 0) {
       const lw = Math.max(
         0,

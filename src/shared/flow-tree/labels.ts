@@ -14,12 +14,14 @@ export interface LabelSize {
   w: number;
   h: number;
   alt?: { w: number; h: number }; // the two values in one line: wider, a line lower
+  vw?: number; // the value line's width: a device's name may be cut down to it, never further
 }
 export interface PlacedLabel extends LabelSize {
   x: number;
   y: number;
   align: Align;
   inline: boolean; // placed in its `alt` shape
+  cut?: number; // the width its name was cut to, to make room for a room's label
 }
 type Box = [number, number, number, number]; // x1 y1 x2 y2
 type Cand = [number, number, Align];
@@ -85,6 +87,7 @@ const candidates = (nd: LNode, dir: Direction, h: number, row: Row): Cand[] => {
   if (dir === "right") {
     if (nd.kind === "home") pref = [below, above, rightMid];
     else if (nd.kind === "group" || nd.column === "group") pref = [above, below];
+    else if (nd.under) pref = [below, above];
     else if (nd.kind === "consumer" || nd.kind === "other")
       pref = [leftAbove, leftBelow, rightMid, below, above];
     else pref = [rightAbove, rightBelow, rightMid, leftAbove, leftBelow];
@@ -125,6 +128,25 @@ export const placeLabels = (
     r: Math.max(0, ...sources.map((n) => n.d / 2)),
   };
   const out: PlacedLabel[] = [];
+  // The device labels a box would need cut to clear it (by their place, the width each keeps),
+  // or null when anything else is in the way or a cut would reach a value: only labels left of
+  // their nodes (right-aligned) with a value width shrink, and their left edges move right.
+  const cutsFor = (b: Box): [number, number][] | null => {
+    if (!inside(b) || segs.some((x) => hits(b, x)) || nodeBoxes.some((x) => hits(b, x)))
+      return null;
+    if (rowBoxes.some((x) => hits(b, x))) return null;
+    const cuts: [number, number][] = [];
+    for (let k = 0; k < placed.length; k++) {
+      if (!hits(b, placed[k], 3)) continue;
+      const o = out[k],
+        nd = layout.nodes.find((n) => n.id === o.id);
+      if (o.align !== "r" || o.vw === undefined || nd?.column !== "leaf") return null;
+      const w = placed[k][2] - (b[2] + 3);
+      if (w < o.vw || placed[k][2] <= b[2]) return null;
+      cuts.push([k, w]);
+    }
+    return cuts.length ? cuts : null;
+  };
   // the home and the sources first, then the devices (one tight slot each), then the rooms and
   // the consumers beside them (their labels have room above and below)
   const order = (id: string) => {
@@ -156,6 +178,21 @@ export const placeLabels = (
     }
     const cands = candidates(nd, dir, s.h, row);
     let pick = cands.find((c) => ok(boxOf(c[0], c[1], c[2], s.w, s.h)));
+    // A room's label with no free place: the first of its places that only device labels left
+    // of their nodes block, whose names are cut to clear it – never their values
+    if (!pick && nd.column === "group") {
+      for (const c of cands) {
+        const b = boxOf(c[0], c[1], c[2], s.w, s.h);
+        const cuts = cutsFor(b);
+        if (!cuts) continue;
+        for (const [k, w] of cuts) {
+          placed[k] = [placed[k][2] - w, placed[k][1], placed[k][2], placed[k][3]];
+          out[k] = { ...out[k], w, cut: w };
+        }
+        pick = c;
+        break;
+      }
+    }
     if (!pick) {
       // least overlap when nothing is free
       let best = Infinity;

@@ -69,6 +69,7 @@ const STYLE_TREE = `
   .plabel.c { transform: translateX(-50%); text-align: center; }
   .plabel.cut .secondary { display: block; max-width: var(--pl-max); overflow: hidden; text-overflow: ellipsis; }
   .plabel.c.cut .secondary { margin-inline: auto; }
+  .plabel.r.cut .secondary { margin-left: auto; }
 
   .pdiag .plist { position: absolute; display: flex; flex-direction: row; align-items: center; gap: 10px; box-sizing: border-box; z-index: 2; }
   .pdiag.narrow .plist .lead { display: none; }

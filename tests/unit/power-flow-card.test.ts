@@ -57,7 +57,7 @@ import {
   ringWidth,
   sourceRow,
 } from "../../src/shared/flow-tree/layout.ts";
-import { placeLabels } from "../../src/shared/flow-tree/labels.ts";
+import { placeLabels, type PlacedLabel } from "../../src/shared/flow-tree/labels.ts";
 import { COLORS, GEOM } from "../../src/shared/flow-tree/constants.ts";
 import { DEFAULT_UNITS } from "../../src/power-flow/constants.ts";
 import { segmentsOf, type Pt } from "../../src/shared/flow-tree/path.ts";
@@ -1567,6 +1567,74 @@ describe("power flow layout", () => {
       expect(placed.align).toBe("l");
       expect(placed.y).toBeLessThan(battery.y);
     }
+  });
+
+  it("puts the devices' labels below them where the rooms' labels leave no room beside", () => {
+    // two rooms of two devices and a consumer beside them; the battery's label beside the home
+    const cfg = base({
+      consumers: [
+        { group: "A", entities: ["sensor.a", "sensor.b"] },
+        { group: "B", entities: ["sensor.c", "sensor.d"] },
+        { entity: "sensor.e" },
+      ],
+    });
+    const { f } = flowsOf(cfg, { "sensor.solar": "800", "sensor.grid": "300" });
+    const room = { w: 46, h: 32, vw: 36 },
+      dev = { w: 63, h: 28, vw: 36 };
+    const sizes = new Map<string, { w: number; h: number; vw?: number }>([
+      ["s0", { w: 60, h: 32 }],
+      ["s1", { w: 87, h: 32, vw: 54 }],
+      ["s2", { w: 60, h: 32 }],
+      ["home", { w: 56, h: 17 }],
+      ["g0", room],
+      ["g1", room],
+      ["c2", room],
+      ["other", room],
+      ["c0.0", dev],
+      ["c0.1", dev],
+      ["c1.0", dev],
+      ["c1.1", dev],
+    ]);
+    const at = (width: number) => {
+      const l = layoutTree(cfg, width, f.edges, sizes);
+      // as the card renders them: a name cut to its node's room, never the value
+      const max = (id: string) => l.nodes.find((n) => n.id === id)?.labelMax ?? Infinity;
+      const labels = [...sizes].map(([id, s]) => ({
+        id,
+        ...s,
+        w: Math.min(s.w, Math.max(max(id), s.vw ?? 0)),
+      }));
+      return { l, placed: placeLabels(l, labels, "right") };
+    };
+    const box = (p: PlacedLabel) => {
+      const left = p.align === "l" ? p.x : p.align === "r" ? p.x - p.w : p.x - p.w / 2;
+      const top = p.align === "c" ? p.y : p.y - p.h / 2;
+      return [left, top, left + p.w, top + p.h];
+    };
+    // a narrow card: the rooms' labels and the devices' values do not fit side by side
+    const { l, placed } = at(334);
+    const devices = l.nodes.filter((n) => n.column === "leaf");
+    expect(devices.length).toBe(4);
+    for (const d of devices) {
+      expect(d.under).toBe(true);
+      expect(d.labelMax).toBeGreaterThanOrEqual(dev.vw);
+      const p = placed.find((x) => x.id === d.id)!;
+      expect(p.align).toBe("c");
+      expect(p.y).toBeGreaterThan(d.y);
+    }
+    // the rooms' labels sit clear of the home's trunk
+    const trunk = Math.max(...l.edges.filter((e) => e.from === "home").map((e) => e.pts[1][0]));
+    for (const id of ["g0", "g1"])
+      expect(box(placed.find((p) => p.id === id)!)[0]).toBeGreaterThan(trunk + 3);
+    // and no label overlaps another
+    for (const a of placed)
+      for (const b of placed) {
+        if (a === b) continue;
+        const [p, q] = [box(a), box(b)];
+        expect(p[0] < q[2] && p[2] > q[0] && p[1] < q[3] && p[3] > q[1]).toBe(false);
+      }
+    // a wide card keeps them beside their devices
+    expect(at(560).l.nodes.some((n) => n.under)).toBe(false);
   });
 
   it("turns the lanes into the home in one block: same corners, a lane apart, mirrored", () => {

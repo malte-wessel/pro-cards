@@ -11,6 +11,7 @@ _Beta_
 - Power and energy flow: a tree without a grid source (a heat flow) no longer claims to be 100 % self-sufficient
 - Power and energy flow: sources and consumers are evenly spaced (one distance between every two centres in a column, rooms centred on their devices), and the lines from the sources turn into the home in one mirrored block, every corner alike
 - Power and energy flow: a battery's or grid's two values sit in one line where there is room for it, stacked where there is not
+- Power and energy flow: on a narrow card with rooms, the rooms' labels stay clear of the home's line: the home moves left (a source label beside it keeps its value and has its name cut), a device's name is cut where a room's label needs its place, and where even the devices' values would not fit beside the rooms' labels, the devices' labels go below them
 - Fix: power and energy flow: the home sits level with the source nearest its height, so that source's line runs straight in instead of taking a small step that looked like a crack, and every line into the home meets its circle
 
 ## 2.8.0 – Layout card and theme-aware sizing
