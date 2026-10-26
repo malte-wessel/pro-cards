@@ -31,6 +31,7 @@ const en = {
   "layout.unavailable": "Home Assistant's card elements did not load",
   "group.stub_title": "Group",
   "sections.stub_title": "Section",
+  "heading.stub_title": "Heading",
 
   "sun.label.sunrise": "Sunrise",
   "sun.label.sunset": "Sunset",

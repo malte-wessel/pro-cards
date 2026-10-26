@@ -102,6 +102,14 @@ icon: mdi:lightbulb-group
 color: amber
 value: "{{ states.light | selectattr('state', 'eq', 'on') | list | count }} of {{ states.light | list | count }}"
 `,
+  "Heading card": `type: custom:heading-card-pro
+title: Living room
+icon: mdi:sofa
+badges:
+  - sensor.living_room_temperature
+  - { entity: sensor.power_consumption, visual: sparkline, format: power }
+  - { entity: light.living_room, control: toggle }
+`,
   "Multi trend card": `type: custom:multi-trend-card-pro
 title: Temperature & dew point
 icon: mdi:thermometer

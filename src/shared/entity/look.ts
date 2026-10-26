@@ -5,7 +5,7 @@ import type { HassEntity, HomeAssistant } from "../ha.ts";
 import { t } from "../i18n.ts";
 import { clamp01, isNum, isTemplate } from "../util.ts";
 import type { EntityItem, Rule } from "./config.ts";
-import { OFF_STATES } from "./constants.ts";
+import { OFF_STATES, type BadgeStyle } from "./constants.ts";
 
 // the rendered result of a template (null until Home Assistant answered)
 export type TplGet = (template: string) => unknown;
@@ -29,6 +29,9 @@ export interface Look {
   label: string | null;
   tint: boolean;
   rule: Rule | null;
+  // a header badge: the matching rule's pill (null or left out: the badge's own) and its pulse
+  style?: BadgeStyle | null;
+  pulse?: boolean;
 }
 
 export const readValue = (
@@ -125,6 +128,8 @@ export const resolveLook = (
       label: rule?.label || t(hass, "common.unavailable"),
       tint: false,
       rule,
+      style: null,
+      pulse: false,
     };
   }
   const fromState = ent.valueSrc.kind === "state" && st;
@@ -138,5 +143,29 @@ export const resolveLook = (
     label: rule?.label || null,
     tint: !!(rule && rule.tintCard),
     rule,
+    style: rule?.style ?? null,
+    pulse: !!rule?.pulse,
   };
+};
+
+// how long an entity has not reported, in ms, once that is longer than `staleMin` minutes (else
+// null): its last report (Home Assistant's last_reported, also for an unchanged value), else its
+// last update
+export const staleAge = (
+  st: HassEntity | undefined,
+  staleMin: number | null,
+  now: number,
+): number | null => {
+  if (staleMin === null || !st) return null;
+  const at = (st as HassEntity & { last_reported?: string }).last_reported || st.last_updated;
+  const t = new Date(at).getTime();
+  if (Number.isNaN(t)) return null;
+  const age = now - t;
+  return age > staleMin * 60e3 ? age : null;
+};
+
+// the members of a group entity: the ids in its `entity_id` attribute (a light group, a group)
+export const membersOf = (st: HassEntity | undefined): string[] => {
+  const ids = st?.attributes?.entity_id;
+  return Array.isArray(ids) ? ids.filter((x): x is string => typeof x === "string") : [];
 };

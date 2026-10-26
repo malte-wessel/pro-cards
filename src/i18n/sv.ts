@@ -32,6 +32,7 @@ const sv: Translation = {
   "layout.unavailable": "Home Assistants kortelement lästes inte in",
   "group.stub_title": "Grupp",
   "sections.stub_title": "Sektion",
+  "heading.stub_title": "Rubrik",
 
   "sun.label.sunrise": "Soluppgång",
   "sun.label.sunset": "Solnedgång",

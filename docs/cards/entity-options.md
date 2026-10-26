@@ -299,7 +299,7 @@ entities:
 | `badge`     | a coloured pill with the rule label or the value                   | `rules[].label`                            | everywhere             |
 | `strip`     | a timeline coloured by the matching rule per bucket                | `hours_to_show`, `bucket_minutes`, `rules` | tile, list, grid, hero |
 
-"Everywhere" includes the compact items of the row, column and table layouts; header entities draw `icon` and `badge` only. See [Visuals in items and headers](#visuals-in-items-and-headers) for what happens to the others there.
+"Everywhere" includes the compact items of the row, column and table layouts; header entities draw the [badge visuals](/cards/heading-card#visuals). See [Visuals in items and headers](#visuals-in-items-and-headers) for what happens to the others there.
 
 ### Icon
 
@@ -871,7 +871,7 @@ entities:
 
 ### Visuals in items and headers
 
-The row, column and table layouts show every entity as a compact item, and `header_entities` sit on the title line. There is no room for a block there, so items draw `icon`, `ring` and `badge` only, and the header line, which is smaller still, draws `icon` and `badge` only. Any other visual on such an entity falls back to `icon` and logs a warning in the browser console. `show_icon`, `show_value` and `show_name` decide what the item shows; see [Item options](#item-options).
+The row, column and table layouts show every entity as a compact item, and `header_entities` sit on the title line. There is no room for a block there, so items draw `icon`, `ring` and `badge` only. The header line draws badges: `icon`, `ring`, `bar` (beside the value), `sparkline` (in the icon's place), `trend`, `count`, `dot` and `badge`, see [Heading Card Pro](/cards/heading-card#visuals). Any other visual on such an entity falls back to `icon` and logs a warning in the browser console. `show_icon`, `show_value` and `show_name` decide what the item shows; see [Item options](#item-options).
 
 ## Actions
 
@@ -967,7 +967,7 @@ entities:
 
 ### Hover
 
-`hover: true` shows what a click will do, as Home Assistant's tile does. Set it on an entity, or on the card or a section as the default for its entities, as with the actions: the closest one wins, so `hover: false` on one entity leaves it out. A tile, a grid cell or a header entity with an action takes a light layer in its colour under the pointer and a stronger one while pressed; a tile is one button, as on Home Assistant's tile card, and the layer fills it. List rows, heroes and table fields keep still. An icon with its own action (`control_position: lead`, the items of a row layout, the power flow's nodes) brightens its circle instead, and a pressed lead toggle grows a little. Every [control](/cards/controls) answers too, as Home Assistant's control buttons do: a button, a segment, a chip, the switch and the select take a light layer over their own colour, the slider a halo around its knob. Over a control the row's layer gives way to the control's. Touch screens show only the press. `hover` is off by default and changes nothing else.
+`hover: true` shows what a click will do, as Home Assistant's tile does. Set it on an entity, or on the card or a section as the default for its entities, as with the actions: the closest one wins, so `hover: false` on one entity leaves it out. A tile, a grid cell or a header entity with an action takes a light layer in its colour under the pointer and a stronger one while pressed; a tile is one button, as on Home Assistant's tile card, and the layer fills it. List rows, heroes and table fields keep still. An icon with its own action (`control_position: lead`, the items of a row layout, the power flow's nodes) brightens its circle instead, and a pressed lead toggle grows a little. Every [control](/cards/controls) answers too, as Home Assistant's control buttons do: a button, a segment, a chip, the switch and the select take a light layer over their own colour, the slider a halo around its knob. Over a control the row's layer gives way to the control's. Touch screens show only the press. `hover` is off by default and changes nothing else, except on header entities: a badge is a button, as Home Assistant's badges are, so it answers whenever it has an action; `hover: false` on the entity or the card keeps it still.
 
 ::: live
 
@@ -1083,7 +1083,7 @@ See [Controls](/cards/controls) for what every control looks like and where it s
 | `control`                                          |                                  | all but headers | `auto` (or `true`) picks the domain default, a name picks one, `none` draws nothing. `control_position`, `control_attribute`, `control_step`, `control_options` and `control_confirm` tune it: see [Controls](/cards/controls#one-key); `control: buttons` with `control_options` draws [your own buttons](/cards/controls#your-own-buttons). |
 | `toggle`                                           | `false`                          | all but headers | Deprecated alias of `control: toggle`.                                                                                                                                                                                                                                                                                                        |
 | `tap_action` / `hold_action` / `double_tap_action` | card defaults                    | all             | Per-entity overrides, see [Action options](#action-options).                                                                                                                                                                                                                                                                                  |
-| `hover`                                            | card / section default (`false`) | all             | Home Assistant's hover and press layers on the entity's tile, cell or header item, its icon and its controls, see [Hover](#hover).                                                                                                                                                                                                            |
+| `hover`                                            | card / section default (`false`) | all             | Home Assistant's hover and press layers on the entity's tile, cell or header item (on by default for header items), its icon and its controls, see [Hover](#hover).                                                                                                                                                                           |
 
 ### Items
 

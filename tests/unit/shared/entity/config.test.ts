@@ -8,6 +8,7 @@ import {
   normalizeHeaderEntities,
   normalizeActionDefaults,
   normalizeHistoryOptions,
+  minutesOf,
   collectTemplates,
   visibilityTrees,
 } from "../../../../src/shared/entity/config.ts";
@@ -312,7 +313,7 @@ describe("header entities and templates", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const h = normalizeHeaderEntities(
       [
-        { entity: "sensor.t", visual: "sparkline", name: "{{ a }}" },
+        { entity: "sensor.t", visual: "gauge", name: "{{ a }}" },
         { entity: "sensor.h", visual: "badge", show_icon: false, show_name: true },
       ],
       ctx,
@@ -399,5 +400,110 @@ describe("visibility", () => {
     expect(trees).toEqual([e.visibility, null]);
     // the card subscribes their templates itself (with those of its own parts)
     expect([...collectTemplates(cfg as unknown as EntityCardConfig)]).toEqual([]);
+  });
+});
+
+describe("header badges", () => {
+  const warn = () => vi.spyOn(console, "warn").mockImplementation(() => {});
+  it("takes the card's pill and size unless the badge names its own; badge is the soft pill", () => {
+    const [a, b, c, d] = normalizeHeaderEntities(
+      [
+        "sensor.t",
+        { entity: "sensor.t", style: "filled", size: "l" },
+        { entity: "sensor.t", visual: "badge" },
+        { entity: "sensor.t", visual: "badge", style: "outline" },
+      ],
+      ctx,
+      "badges",
+      { style: "outline", size: "m" },
+    );
+    expect(a.badge).toEqual({ style: "outline", size: "m" });
+    expect(b.badge).toEqual({ style: "filled", size: "l" });
+    expect(c).toMatchObject({ visual: "badge", badge: { style: "soft" } });
+    // a badge visual with a style of its own is the new pill around the icon and the value
+    expect(d).toMatchObject({ visual: "icon", badge: { style: "outline" } });
+    // a card's header: plain and small
+    expect(normalizeHeaderEntities(["sensor.t"], ctx)[0].badge).toEqual({
+      style: "plain",
+      size: "s",
+    });
+  });
+  it("draws the badge visuals; the header-only ones fall back to the icon elsewhere", () => {
+    const w = warn();
+    const visuals = ["ring", "bar", "sparkline", "trend", "count", "dot"];
+    const h = normalizeHeaderEntities(
+      visuals.map((visual) => ({ entity: "sensor.t", visual })),
+      ctx,
+    );
+    expect(h.map((e) => e.visual)).toEqual(visuals);
+    expect(ent({ visual: "trend" }).visual).toBe("icon");
+    expect(w).toHaveBeenCalledWith(expect.stringMatching(/drawn in header badges only/));
+    w.mockRestore();
+  });
+  it("keeps a switch, takes a switch for auto where the domain has one, drops other controls", () => {
+    const w = warn();
+    const [a, b, c] = normalizeHeaderEntities(
+      [
+        { entity: "switch.pump", control: "toggle" },
+        { entity: "light.a", control: "auto" },
+        { entity: "cover.blinds", control: "auto" },
+      ],
+      ctx,
+    );
+    expect(a).toMatchObject({ control: { kind: "toggle" }, toggle: true });
+    expect(b).toMatchObject({ control: { kind: "toggle" }, toggle: true });
+    expect(c).toMatchObject({ control: null, toggle: false });
+    expect(w).toHaveBeenCalledTimes(1);
+    w.mockRestore();
+  });
+  it("reads format, stale_after and trend_hours", () => {
+    const [e] = normalizeHeaderEntities(
+      [{ entity: "sensor.t", format: "power", stale_after: "2h", trend_hours: 3 }],
+      ctx,
+    );
+    expect(e).toMatchObject({ format: "power", staleMin: 120, trendHours: 3 });
+    expect(ent({ format: "nope", trend_hours: -1 })).toMatchObject({
+      format: "auto",
+      staleMin: null,
+      trendHours: 1,
+    });
+  });
+  it("answers the pointer when it has an action, unless the badge or the card says hover: false", () => {
+    const [on, off] = normalizeHeaderEntities(
+      ["sensor.t", { entity: "sensor.t", hover: false }],
+      ctx,
+    );
+    expect([on.hover, off.hover]).toEqual([true, false]);
+    const cardOff = { ...ctx, ...normalizeActionDefaults({ hover: false }) };
+    expect(normalizeHeaderEntities(["sensor.t"], cardOff)[0].hover).toBe(false);
+  });
+  it("reads a rule's style and pulse", () => {
+    expect(
+      normalizeRules([
+        { above: 1, style: "soft", pulse: true },
+        { above: 2, style: "x" },
+      ]),
+    ).toMatchObject([
+      { style: "soft", pulse: true },
+      { style: null, pulse: false },
+    ]);
+  });
+});
+
+describe("spans", () => {
+  it("reads minutes, or a number with a unit", () => {
+    expect(minutesOf(90)).toBe(90);
+    expect(minutesOf("90s")).toBe(1.5);
+    expect(minutesOf("30min")).toBe(30);
+    expect(minutesOf("30 m")).toBe(30);
+    expect(minutesOf("2h")).toBe(120);
+    expect(minutesOf("1d")).toBe(1440);
+    expect(minutesOf("45")).toBe(45);
+  });
+  it("is null when unset, not positive or not a span", () => {
+    expect(minutesOf(undefined)).toBeNull();
+    expect(minutesOf(0)).toBeNull();
+    expect(minutesOf("-2h")).toBeNull();
+    expect(minutesOf("2 weeks")).toBeNull();
   });
 });

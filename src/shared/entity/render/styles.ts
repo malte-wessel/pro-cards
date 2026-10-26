@@ -47,6 +47,73 @@ export const STYLE_TILE = `
   .row.tile > .gauge { align-self: center; margin-top: auto; }
   .row.tile:has(> .gauge) > :last-child { margin-bottom: auto; }
 `;
+// the header badges (render/badge.ts): the row is the pill (.pb) of its style (b-outline, b-soft,
+// b-filled; b-plain draws none) and size (b-s, b-m, b-l: 24 / 30 / 36 px high). A filled pill
+// draws its glyphs in --b-ink, every other one in the row's colour
+const STYLE_BADGES = `
+  .row.hval.b-s { --b-h: 24px; --b-ps: 6px; --b-pe: 8px; --b-gap: 4px; --b-icon: 14px; --b-ring: 16px; }
+  .row.hval.b-m { --b-h: 30px; --b-ps: 8px; --b-pe: 10px; --b-gap: 6px; --b-icon: 16px; --b-ring: 20px; }
+  .row.hval.b-l { --b-h: 36px; --b-ps: 10px; --b-pe: 12px; --b-gap: 6px; --b-icon: 18px; --b-ring: 24px; }
+  .row.hval.pb { height: var(--b-h); box-sizing: border-box; padding: 0 var(--b-pe) 0 var(--b-ps); gap: var(--b-gap); border-radius: 999px; }
+  .header .hvals:has(> .pb) { gap: 6px; }
+  .row.hval.pb > :is(ha-icon, ha-state-icon) { flex: none; --mdc-icon-size: var(--b-icon); }
+  .row.hval.pb > img.picture { width: var(--b-icon); height: var(--b-icon); border-radius: 50%; }
+  .row.hval.b-s.pb :is(.state, .secondary) { ${type(12, 16)} }
+  .row.hval.b-m.pb :is(.state, .secondary) { ${type(13, 16)} }
+  .row.hval.b-l.pb :is(.state, .secondary) { ${type(14, 20)} }
+  .row.hval.pb .state { color: var(--primary-text-color); }
+  .row.hval.pb .state.accent { color: var(--fe-color); }
+  /* plain at m and l: no pill, the icon and the value grow */
+  .row.hval.b-m:not(.pb) { gap: 6px; }
+  .row.hval.b-m:not(.pb) > :is(ha-icon, ha-state-icon) { --mdc-icon-size: 20px; }
+  .row.hval.b-m:not(.pb) .state { ${type(14, 20)} }
+  .row.hval.b-l:not(.pb) { gap: 6px; }
+  .row.hval.b-l:not(.pb) > :is(ha-icon, ha-state-icon) { --mdc-icon-size: 22px; }
+  .row.hval.b-l:not(.pb) .state { ${type(16, 20)} }
+  /* outline: Home Assistant's badge, on the card's surface (its background, border and shadow) */
+  .row.hval.b-outline { --b-bw: var(--ha-card-border-width, 1px); background: ${CARD_BG}; border: var(--b-bw) solid var(--ha-card-border-color, var(--divider-color)); box-shadow: var(--ha-card-box-shadow, none); backdrop-filter: var(--ha-card-backdrop-filter, none); }
+  .row.hval.b-soft { background: var(--fe-soft); }
+  .row.hval.b-soft .state { color: var(--fe-color); }
+  .row.hval.b-filled { --b-ink: var(--text-primary-color, #fff); background: var(--fe-color); color: var(--b-ink); }
+  .row.hval.b-filled :is(ha-icon, ha-state-icon, .state, .state.accent, .secondary) { color: var(--b-ink); }
+  /* a switch in a filled pill: its track in the ink, as the pill already is the colour */
+  .row.hval.b-filled .toggle.on { background: color-mix(in srgb, var(--b-ink) 40%, transparent); }
+  /* the tap area is 44 px high whatever the pill's height; the hover layer and the focus ring keep
+     to the pill */
+  .row.hval.pb > .hit { inset: min(0px, calc((var(--b-h) - 44px) / 2)) -3px; }
+  .row.hover-fx.hval.pb > .hit::before { inset: max(0px, calc((44px - var(--b-h)) / 2)) 3px; }
+  .row.actionable.hval.pb > .hit:focus-visible { box-shadow: none; }
+  .row.hval.pb:has(> .hit:focus-visible) { outline: 2px solid var(--fe-color); outline-offset: 1px; }
+  /* what a visual draws: a dot or a sparkline for the icon, a ring around it, a bar, the trend */
+  .hval .bdot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--b-ink, var(--fe-color)); }
+  .hval .bring { position: relative; flex: none; width: var(--b-ring, 20px); height: var(--b-ring, 20px); display: flex; align-items: center; justify-content: center; }
+  .hval .bring svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hval .bring .track { fill: none; stroke: color-mix(in srgb, var(--b-ink, var(--fe-color)) 22%, transparent); }
+  .hval .bring .prog { fill: none; stroke: var(--b-ink, var(--fe-color)); stroke-linecap: round; }
+  /* a ring sits in the pill's rounded end, the same gap to the edge all round */
+  .row.hval.pb:has(> .bring:first-child, > .hit:first-child + .bring) { padding-left: calc((var(--b-h) - var(--b-ring)) / 2 - var(--b-bw, 0px)); }
+  /* the icon inside the ring, clear of its stroke (beats the pill's icon size) */
+  .row.hval .bring :is(ha-icon, ha-state-icon) { display: flex; --mdc-icon-size: calc(var(--b-ring, 20px) * .55); }
+  .row.hval .bring img.picture { width: 55%; height: 55%; border-radius: 50%; }
+  .hval .bbar { flex: none; width: 28px; height: 4px; border-radius: 2px; overflow: hidden; background: color-mix(in srgb, var(--b-ink, var(--fe-color)) 22%, transparent); }
+  .hval .bbar > i { display: block; height: 100%; border-radius: inherit; background: var(--b-ink, var(--fe-color)); }
+  .hval .bspark { flex: none; display: block; width: calc(var(--b-h, 24px) + 4px); height: calc(var(--b-h, 24px) / 2); }
+  .hval .bspark svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .hval .bspark path { fill: none; stroke: var(--b-ink, var(--fe-color)); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+  .hval .btr { flex: none; display: inline-flex; align-items: center; gap: 1px; ${type(11, 16)} font-weight: ${fw("medium")}; color: var(--b-ink, var(--secondary-text-color)); font-variant-numeric: tabular-nums; }
+  .hval .btr :is(ha-icon, ha-state-icon) { --mdc-icon-size: 14px; color: inherit; }
+  /* stale_after: grey while the entity has not reported (beats the row's own colour) */
+  .row.hval.stale { --fe-color: var(--disabled-text-color, var(--secondary-text-color)) !important; }
+  /* a rule's pulse: a ring that grows and fades; with reduced motion a still ring */
+  .row.hval.pulse { animation: badge-pulse 2s ease-out infinite; }
+  @keyframes badge-pulse {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--fe-color) 50%, transparent); }
+    70%, 100% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--fe-color) 0%, transparent); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .row.hval.pulse { animation: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--fe-color) 40%, transparent); }
+  }
+`;
 export const STYLE_HEADER = `
   /* 4 px here and the body's 12 px: the title line sits 16 px above the first row */
   .header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 4px 16px; min-width: 0; }
@@ -55,7 +122,7 @@ export const STYLE_HEADER = `
   .header .hvals { display: flex; align-items: center; gap: 10px; flex: 0 1 auto; min-width: 0; max-width: 60%; }
   .header .hvals:empty { display: none; }
   /* title_tap_action: the title and its icon are the button */
-  .header.tappable .title, .header.tappable > ha-icon { cursor: pointer; }
+  .header.tappable .title, .header.tappable:not(.icon-own) > ha-icon { cursor: pointer; }
   .header.tappable .title:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; border-radius: 4px; }
   .row.hval { flex: 0 1 auto; flex-direction: row; align-items: center; gap: 4px; border-radius: 6px; min-width: 0; }
   .hval .state, .hval .secondary { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -70,6 +137,7 @@ export const STYLE_HEADER = `
   .hval img.picture { flex: none; width: 18px; height: 18px; border-radius: ${ICON_RADIUS}; object-fit: cover; }
   .hval .pill.badge img.picture { width: 16px; height: 16px; }
   .hval .secondary { font-size: ${fs(12)}; }
+  ${STYLE_BADGES}
 `;
 // the icon in a lead (and in a button in its place) is two thirds of a small lead, at most 24 px
 // (Home Assistant's tile: a 24 px icon in a 36 px circle); a bigger lead (the hero's 56 px) keeps 55 %

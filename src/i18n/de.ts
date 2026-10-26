@@ -32,6 +32,7 @@ const de: Translation = {
   "layout.unavailable": "Die Kartenelemente von Home Assistant wurden nicht geladen",
   "group.stub_title": "Gruppe",
   "sections.stub_title": "Bereich",
+  "heading.stub_title": "Überschrift",
 
   "sun.label.sunrise": "Sonnenaufgang",
   "sun.label.sunset": "Sonnenuntergang",

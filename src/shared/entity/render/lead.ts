@@ -36,6 +36,22 @@ export const iconOrPictureEl = (
   img.src = ctx.hass?.hassUrl ? ctx.hass.hassUrl(look.picture) : look.picture;
   return img;
 };
+// a progress ring of `size` px: the track and, with a value, the arc from the top (the lead's ring
+// and a header badge's)
+export const ringSvg = (
+  size: number,
+  p: number | null,
+  sw = Math.max(3, Math.round(size * 0.09)),
+) => {
+  const c = size / 2,
+    r = c - sw / 2,
+    C = 2 * Math.PI * r;
+  return `<svg viewBox="0 0 ${size} ${size}"><circle class="track" cx="${c}" cy="${c}" r="${r}" stroke-width="${sw}"/>${
+    p === null
+      ? ""
+      : `<circle class="prog" cx="${c}" cy="${c}" r="${r}" stroke-width="${sw}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * (1 - p)).toFixed(1)}" transform="rotate(-90 ${c} ${c})"/>`
+  }</svg>`;
+};
 // round lead of `size` px: icon (or the value) in a soft circle, a progress ring for visual: ring
 export const leadEl = (
   ctx: RenderCtx,
@@ -50,15 +66,7 @@ export const leadEl = (
   if (ent.iconStyle === "plain") el.classList.add("plain");
   if (ent.visual === "ring") {
     el.classList.add("ring");
-    const sw = Math.max(3, Math.round(size * 0.09)),
-      r = size / 2 - sw / 2,
-      C = 2 * Math.PI * r;
-    const p = m.progress;
-    el.innerHTML = `<svg viewBox="0 0 ${size} ${size}"><circle class="track" cx="${size / 2}" cy="${size / 2}" r="${r}" stroke-width="${sw}"/>${
-      p === null
-        ? ""
-        : `<circle class="prog" cx="${size / 2}" cy="${size / 2}" r="${r}" stroke-width="${sw}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * (1 - p)).toFixed(1)}" transform="rotate(-90 ${size / 2} ${size / 2})"/>`
-    }</svg>`;
+    el.innerHTML = ringSvg(size, m.progress);
   }
   const shape = document.createElement("div");
   shape.className = "shape";

@@ -10,11 +10,13 @@ import type { ValueModel } from "../../../../src/shared/entity/look.ts";
 import {
   asText,
   matchRule,
+  membersOf,
   pictureOf,
   readValue,
   progressOf,
   scaleOf,
   resolveLook,
+  staleAge,
 } from "../../../../src/shared/entity/look.ts";
 
 const ctx: NormalizeCtx = {
@@ -46,6 +48,8 @@ const rule = (o: Partial<Rule>): Rule => ({
   icon: null,
   label: null,
   tintCard: false,
+  style: null,
+  pulse: false,
   ...o,
 });
 
@@ -342,5 +346,41 @@ describe("a template value before its result", () => {
     });
     // a result of nothing stays a missing value
     expect(readValue(ent({ value: "{{ x }}" }), undefined, () => null).avail).toBe(false);
+  });
+});
+
+describe("badges", () => {
+  const now = Date.UTC(2026, 5, 21, 12);
+  const at = (min: number) => new Date(now - min * 60e3).toISOString();
+  const reported = (updated: number, rep?: number) =>
+    ({
+      ...st(87),
+      last_updated: at(updated),
+      ...(rep === undefined ? {} : { last_reported: at(rep) }),
+    }) as HassEntity;
+  it("a badge is stale once its entity has not reported for stale_after", () => {
+    expect(staleAge(reported(180), 120, now)).toBe(180 * 60e3);
+    expect(staleAge(reported(60), 120, now)).toBeNull();
+    expect(staleAge(reported(180), null, now)).toBeNull();
+    expect(staleAge(undefined, 120, now)).toBeNull();
+  });
+  it("a report of an unchanged value counts (last_reported)", () => {
+    expect(staleAge(reported(180, 10), 120, now)).toBeNull();
+    expect(staleAge(reported(300, 200), 120, now)).toBe(200 * 60e3);
+  });
+  it("reads a group's members from its entity_id", () => {
+    expect(membersOf(st("on", { entity_id: ["light.a", "light.b", 3] }, "group.x"))).toEqual([
+      "light.a",
+      "light.b",
+    ]);
+    expect(membersOf(st("on"))).toEqual([]);
+    expect(membersOf(undefined)).toEqual([]);
+  });
+  it("a rule's style and pulse reach the look; an unavailable value keeps neither", () => {
+    const e = ent({ rules: [{ above: 20, color: "red", style: "filled", pulse: true }] });
+    const look = resolveLook(e, num(25), st(25), tpl);
+    expect(look).toMatchObject({ color: "red", style: "filled", pulse: true });
+    const off = resolveLook(e, { raw: null, num: null, avail: false }, st(25), tpl);
+    expect(off).toMatchObject({ style: null, pulse: false });
   });
 });

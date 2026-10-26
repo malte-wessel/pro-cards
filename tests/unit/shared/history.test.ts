@@ -9,6 +9,7 @@ import {
   lineMeans,
   normalizeSmoothing,
   pointOf,
+  trendOf,
 } from "../../../src/shared/history.ts";
 import type { HomeAssistant } from "../../../src/shared/ha.ts";
 
@@ -161,5 +162,27 @@ describe("history helpers", () => {
         1,
       ),
     ).rejects.toThrow("x");
+  });
+});
+
+describe("trend", () => {
+  const h = 3600e3;
+  const series = [
+    { t: 0, v: 18 },
+    { t: 2 * h, v: 19 },
+    { t: 2.5 * h, v: null },
+    { t: 3.5 * h, v: 21 },
+  ];
+  it("is the value now against the last reading at or before the span's start", () => {
+    expect(trendOf(series, 4 * h, 0.25, 22)).toBe(1);
+    // a gap (null) is no reading: the one before it counts
+    expect(trendOf(series, 4 * h, 1, 22)).toBe(3);
+    expect(trendOf(series, 4 * h, 2.5, 22)).toBe(4);
+  });
+  it("takes the first reading when the series starts later, and is null without one", () => {
+    expect(trendOf(series, 4 * h, 6, 20)).toBe(2);
+    expect(trendOf([], 4 * h, 1, 20)).toBeNull();
+    expect(trendOf(undefined, 4 * h, 1, 20)).toBeNull();
+    expect(trendOf(series, 4 * h, 1, null)).toBeNull();
   });
 });

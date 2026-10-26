@@ -73,7 +73,13 @@ const cardGroups = [
       { text: "Energy Flow Card Pro", link: "/cards/energy-flow-card" },
     ],
   },
-  { text: "Layout", items: [{ text: "Layout Card Pro", link: "/cards/layout-card" }] },
+  {
+    text: "Layout",
+    items: [
+      { text: "Layout Card Pro", link: "/cards/layout-card" },
+      { text: "Heading Card Pro", link: "/cards/heading-card" },
+    ],
+  },
   {
     text: "Weather",
     items: [

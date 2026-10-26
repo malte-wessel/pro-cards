@@ -297,7 +297,10 @@ const defaultPosition = (kind: ControlKind, row: RowKind): ControlPosition => {
 // domain defaults; placements the row cannot hold are moved to the end slot or dropped
 export const placementsOf = (ent: EntityItem, row: RowKind): Placement[] => {
   const c = ent.control;
-  if (!c || row === "hval") return [];
+  if (!c) return [];
+  // a header badge holds a switch and nothing else (normalizeHeaderEntities)
+  if (row === "hval")
+    return c.kind === "toggle" ? [{ kind: "toggle", position: "end", small: true }] : [];
   let list: Placement[] =
     c.kind === "auto"
       ? defaultPlacements(ent)

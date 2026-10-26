@@ -2,6 +2,7 @@
 import "./entity-card.ts";
 import "./entity-group-card.ts";
 import "./entity-sections-card.ts";
+import "./heading-card.ts";
 import "./multi-trend-card.ts";
 import "./sun-path-card.ts";
 import "./sun-azimuth-card.ts";

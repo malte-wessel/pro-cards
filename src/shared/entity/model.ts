@@ -1,6 +1,16 @@
 // Formatting and the per-entity render model. Every function takes the card context
 // ctx = { hass, tplResult, ... } so it runs without a DOM element.
-import { asText, progressOf, readValue, resolveLook, type Look, type ValueModel } from "./look.ts";
+import {
+  asText,
+  membersOf,
+  progressOf,
+  readValue,
+  resolveLook,
+  type Look,
+  type ValueModel,
+} from "./look.ts";
+import { OFF_STATES } from "./constants.ts";
+import { stateActive } from "../color.ts";
 import type { EntityCardConfig, EntityItem } from "./config.ts";
 import type { ControlHost } from "./control.ts";
 import { fmtNumber as fmtNum, fmtTime as fmtT, langOf as lang } from "../format.ts";
@@ -146,10 +156,32 @@ export const fmtValue = (
   return { text, num: text, unit: "" };
 };
 
+// how many members of a group are on (as a control's switch reads it)
+export const membersOn = (ctx: FormatCtx, st: HassEntity | undefined) =>
+  membersOf(st).filter((id) => {
+    const m = ctx.hass?.states[id];
+    return !!m && stateActive(m) && !OFF_STATES.has(m.state) && m.state !== "unknown";
+  }).length;
+
+// visual: count, how many of the group's members are on. Its value is "on" while any is (rules
+// and the state colour read it so) and the count is its number
+const countModel = (ctx: FormatCtx, ent: EntityItem, st: HassEntity | undefined) => {
+  const n = membersOn(ctx, st);
+  const avail = !!st && st.state !== "unavailable";
+  const model: ValueModel = avail
+    ? { raw: n ? "on" : "off", num: n, avail }
+    : { raw: st?.state ?? null, num: null, avail };
+  const fmt = avail
+    ? { text: `${ent.prefix}${fmtNum(ctx.hass, n, 0)}${ent.suffix}`, num: String(n), unit: "" }
+    : { text: "–", num: "–", unit: "" };
+  return { model, fmt };
+};
+
 export const modelOf = (ctx: FormatCtx, ent: EntityItem): EntityModel => {
   const st = stateOf(ctx, ent);
   const tplGet = tplGetter(ctx);
-  const model = readValue(ent, st, tplGet);
+  const count = ent.visual === "count" ? countModel(ctx, ent, st) : null;
+  const model = count?.model ?? readValue(ent, st, tplGet);
   if (ent.entity && !st) {
     model.avail = false;
     model.missing = true;
@@ -160,7 +192,7 @@ export const modelOf = (ctx: FormatCtx, ent: EntityItem): EntityModel => {
     st,
     model,
     look,
-    fmt: fmtValue(ctx, ent, model, st),
+    fmt: count?.fmt ?? fmtValue(ctx, ent, model, st),
     progress: progressOf(ent, model.num, st),
   };
 };

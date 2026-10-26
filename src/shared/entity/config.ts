@@ -6,15 +6,22 @@
 // `entities` is one flat list; groups and header entities point into it by index.
 import {
   ALIGNS,
+  BADGE_FORMATS,
+  BADGE_SIZES,
+  BADGE_STYLES,
   BLOCK_VISUALS,
   DEFAULTS,
   GROUP_LAYOUTS,
+  HEADER_ONLY_VISUALS,
   HEADER_VISUALS,
   ICON_STYLES,
   ITEM_DEFAULTS,
   ITEM_LAYOUTS,
   VISUALS,
   type Align,
+  type BadgeFormat,
+  type BadgeSize,
+  type BadgeStyle,
   type GroupLayout,
   type IconStyle,
   type ItemDefaults,
@@ -27,6 +34,7 @@ import { normalizeSmoothing } from "../history.ts";
 import { isTemplate, numOrNull, oneOf } from "../util.ts";
 import { normalizeVisibility, type Visibility } from "../visibility.ts";
 import {
+  defaultPlacements,
   ITEM_CONTROLS,
   normalizeControl,
   placementsOf,
@@ -63,6 +71,9 @@ export interface RawRule {
   icon?: string | null;
   label?: string | null;
   tint_card?: boolean;
+  // header badges: the pill while the rule matches, and a pulse around it
+  style?: unknown;
+  pulse?: boolean;
 }
 export interface RawEntity extends RawItemOptions, RawActionDefaults {
   entity?: string | null;
@@ -91,6 +102,13 @@ export interface RawEntity extends RawItemOptions, RawActionDefaults {
   control_confirm?: boolean;
   toggle?: boolean;
   visibility?: unknown;
+  // header badges: the pill and its size, how the value is written, when it counts as stale (minutes
+  // or "2h"), the window of the trend visual
+  style?: unknown;
+  size?: unknown;
+  format?: unknown;
+  stale_after?: unknown;
+  trend_hours?: unknown;
 }
 export type RawEntityInput = string | RawEntity;
 export interface RawGroup extends RawItemOptions {
@@ -129,6 +147,8 @@ export interface Rule {
   icon: string | null;
   label: string | null;
   tintCard: boolean;
+  style: BadgeStyle | null;
+  pulse: boolean;
 }
 export interface ItemOptions {
   showName: boolean;
@@ -142,6 +162,8 @@ export interface ActionDefaults {
   dbl: ActionConfig;
   // Home Assistant's hover and press layers on the row and its controls (STYLE_HOVER)
   hover: boolean;
+  // `hover: false` on the card: header badges, which answer by default, keep still too
+  hoverOff?: boolean;
 }
 export interface EntityItem extends ActionDefaults {
   entity: string | null;
@@ -171,6 +193,12 @@ export interface EntityItem extends ActionDefaults {
   item: ItemOptions;
   // drawn only while its conditions hold (null: always)
   visibility: Visibility;
+  // as a header badge: its pill and size, how the value is written, the minutes after which an
+  // entity that has not reported counts as stale (null: never), the hours the trend looks back
+  badge: { style: BadgeStyle; size: BadgeSize };
+  format: BadgeFormat;
+  staleMin: number | null;
+  trendHours: number;
 }
 export interface Group {
   layout: GroupLayout | "tile";
@@ -188,11 +216,16 @@ export interface NormalizeCtx extends ActionDefaults {
 }
 export interface EntityCardConfig extends ActionDefaults {
   type: string;
-  layout: GroupLayout | "tile" | "sections";
+  layout: GroupLayout | "tile" | "sections" | "heading";
   title: string | null;
   // the action of the title and its icon (null: they are plain text)
   titleTap: ActionConfig | null;
   icon: string | null;
+  // the heading card: the line under the title, the icon's colour and the icon's own action (all
+  // optional, the other cards leave them out)
+  subtitle?: string | null;
+  iconColor?: string | null;
+  iconTap?: ActionConfig | null;
   hours: number;
   bucketMin: number;
   // bucket size of the sparkline in minutes (null: one point per LINE_POINT_PX)
@@ -221,6 +254,7 @@ export const normalizeActionDefaults = (raw: RawActionDefaults): ActionDefaults 
   hold: normalizeAction(raw.hold_action, { action: "more-info" }),
   dbl: normalizeAction(raw.double_tap_action, { action: "none" }),
   hover: raw.hover === true,
+  hoverOff: raw.hover === false,
 });
 export const normalizeHistoryOptions = (raw: RawHistoryOptions) => ({
   hours: Math.max(1, numOrNull(raw.hours_to_show) ?? DEFAULTS.hours_to_show),
@@ -290,6 +324,8 @@ export const normalizeRules = (list: unknown): Rule[] => {
       icon: x.icon ?? null,
       label: x.label ?? null,
       tintCard: !!x.tint_card,
+      style: oneOf(BADGE_STYLES, x.style) ? x.style : null,
+      pulse: !!x.pulse,
     }))
     .filter((r) => r.state !== null || r.below !== null || r.above !== null);
 };
@@ -318,8 +354,11 @@ export const normalizeEntity = (
   label: string,
   itemDefaults: ItemDefaults = ITEM_DEFAULTS.other,
   // where the item sits: whether custom buttons are drawn there (only then does an item of buttons
-  // alone stand without an entity or a value), else the place, for the error
-  place: { buttons: true } | { buttons: false; name?: string } = { buttons: false },
+  // alone stand without an entity or a value), else the place, for the error; `header` for a
+  // header badge, the only place the badge visuals draw
+  place: { buttons: true } | { buttons: false; name?: string; header?: boolean } = {
+    buttons: false,
+  },
 ): EntityItem => {
   const o: RawEntity = typeof raw === "string" ? { entity: raw } : { ...(raw || {}) };
   let valueSrc: ValueSrc;
@@ -341,6 +380,12 @@ export const normalizeEntity = (
     );
   }
   const dec = numOrNull(o.decimals);
+  let visual: Visual = oneOf(VISUALS, o.visual) ? o.visual : "icon";
+  if (HEADER_ONLY_VISUALS.has(visual) && !("header" in place && place.header)) {
+    console.warn(`${ctx.type}: visual '${visual}' is drawn in header badges only; using icon`);
+    visual = "icon";
+  }
+  const trend = numOrNull(o.trend_hours);
   return {
     entity: o.entity || null,
     name: o.name ?? null,
@@ -352,7 +397,7 @@ export const normalizeEntity = (
     decimals: dec === null ? null : Math.max(0, Math.min(3, Math.round(dec))),
     prefix: o.prefix ?? "",
     suffix: o.suffix ?? "",
-    visual: oneOf(VISUALS, o.visual) ? o.visual : "icon",
+    visual,
     iconStyle: oneOf(ICON_STYLES, o.icon_style) ? o.icon_style : "circle",
     picture: !!o.show_entity_picture,
     min: numOrNull(o.min),
@@ -370,7 +415,26 @@ export const normalizeEntity = (
       label,
       entity: o.entity || null,
     }),
+    badge: {
+      style: oneOf(BADGE_STYLES, o.style) ? o.style : "plain",
+      size: oneOf(BADGE_SIZES, o.size) ? o.size : "s",
+    },
+    format: oneOf(BADGE_FORMATS, o.format) ? o.format : "auto",
+    staleMin: minutesOf(o.stale_after),
+    trendHours: trend !== null && trend > 0 ? trend : 1,
   };
+};
+
+// a span as minutes: a number of minutes, or a number with a unit ("90s", "30min", "2h", "1d");
+// null when unset or not positive
+export const minutesOf = (v: unknown): number | null => {
+  if (typeof v === "number") return v > 0 ? v : null;
+  if (typeof v !== "string") return null;
+  const m = /^\s*(\d+(?:\.\d+)?)\s*(s|m|min|h|d)?\s*$/i.exec(v);
+  if (!m) return null;
+  const n =
+    Number(m[1]) * ({ s: 1 / 60, m: 1, min: 1, h: 60, d: 1440 }[m[2]?.toLowerCase() ?? "m"] ?? 1);
+  return n > 0 ? n : null;
 };
 
 // One group of entities with a layout. Returns { group, entities }; the caller appends the
@@ -434,23 +498,48 @@ export const normalizeGroup = (
   };
 };
 
-// header_entities: compact icon + value items on the title line; only icon / badge draw there
-export const normalizeHeaderEntities = (raw: unknown, ctx: NormalizeCtx): EntityItem[] => {
+// header_entities (the heading card's badges): compact items on the title line. `defaults` is the
+// card's pill and size for badges that name none: plain and small (an icon and a value, as the
+// header always drew them) unless the card says otherwise. The old `visual: badge` is a soft pill
+// unless a style is given. A switch is the one control a badge holds.
+export const normalizeHeaderEntities = (
+  raw: unknown,
+  ctx: NormalizeCtx,
+  label = "header_entities",
+  defaults: { style: BadgeStyle; size: BadgeSize } = { style: "plain", size: "s" },
+): EntityItem[] => {
   if (!Array.isArray(raw)) return [];
   return (raw as (RawEntityInput | null | undefined)[]).map((e, i) => {
-    const ent = normalizeEntity(e, ctx, `header_entities[${i}]`, ITEM_DEFAULTS.header, {
+    const ent = normalizeEntity(e, ctx, `${label}[${i}]`, ITEM_DEFAULTS.header, {
       buttons: false,
       name: "the header",
+      header: true,
     });
     if (!HEADER_VISUALS.has(ent.visual)) {
       console.warn(`${ctx.type}: visual '${ent.visual}' is not drawn in the header; using icon`);
       ent.visual = "icon";
     }
-    if (ent.control) {
-      console.warn(`${ctx.type}: controls are not drawn in the header`);
-      ent.control = null;
-      ent.toggle = false;
+    const o: RawEntity = e && typeof e === "object" ? e : {};
+    // a badge is a button, as Home Assistant's: it answers the pointer unless the badge or the card
+    // says hover: false (one without an action has no layer to show)
+    if (typeof o.hover !== "boolean") ent.hover = ctx.hover || !ctx.hoverOff;
+    const style = oneOf(BADGE_STYLES, o.style) ? o.style : null;
+    ent.badge = {
+      style: style ?? (ent.visual === "badge" ? "soft" : defaults.style),
+      size: oneOf(BADGE_SIZES, o.size) ? o.size : defaults.size,
+    };
+    // a badge visual with a style of its own is the new pill around the icon and the value
+    if (ent.visual === "badge" && style) ent.visual = "icon";
+    const c = ent.control;
+    if (c && c.kind !== "toggle") {
+      if (c.kind === "auto" && defaultPlacements(ent).some((p) => p.kind === "toggle"))
+        ent.control = { ...c, kind: "toggle", buttons: null };
+      else {
+        console.warn(`${ctx.type}: a switch is the only control drawn in the header`);
+        ent.control = null;
+      }
     }
+    ent.toggle = ent.control?.kind === "toggle";
     return ent;
   });
 };
@@ -476,7 +565,7 @@ export const itemTemplates = (e: EntityItem): string[] =>
   ].filter((x): x is string => isTemplate(x));
 export const collectTemplates = (cfg: EntityCardConfig): Set<string> => {
   const s = new Set<string>();
-  for (const x of [cfg.title, cfg.icon]) if (isTemplate(x)) s.add(x);
+  for (const x of [cfg.title, cfg.icon, cfg.subtitle, cfg.iconColor]) if (isTemplate(x)) s.add(x);
   for (const e of cfg.entities) for (const x of itemTemplates(e)) s.add(x);
   return s;
 };

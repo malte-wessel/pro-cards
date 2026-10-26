@@ -32,6 +32,7 @@ const pl: Translation = {
   "layout.unavailable": "Nie wczytano elementów kart Home Assistant",
   "group.stub_title": "Grupa",
   "sections.stub_title": "Sekcja",
+  "heading.stub_title": "Nagłówek",
 
   "sun.label.sunrise": "Wschód słońca",
   "sun.label.sunset": "Zachód słońca",

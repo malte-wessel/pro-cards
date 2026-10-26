@@ -71,6 +71,7 @@ const PF_CONS = [
   { entity: "sensor.office_power", name: "Office", icon: "mdi:monitor" },
 ];
 
+const HC = "custom:heading-card-pro";
 const EF = "custom:energy-flow-card-pro";
 // the demo world's meters (meters.ts): their statistics follow the frozen clock
 const EF_SRC = [
@@ -1753,6 +1754,219 @@ const CASES = {
       { type: "custom:entity-card-pro", entity: "light.office" },
     ],
   },
+  // the heading card: its five styles, with a subtitle, a coloured lead and badges
+  "hc-styles": [
+    {
+      type: HC,
+      style: "section",
+      title: "Cameras",
+      badges: [{ entity: "binary_sensor.motion_hallway", name: "Motion" }],
+    },
+    {
+      type: HC,
+      title: "Living room",
+      icon: "mdi:sofa",
+      badges: [
+        "sensor.living_room_temperature",
+        "sensor.living_room_humidity",
+        "light.living_room",
+      ],
+    },
+    { type: HC, style: "subtitle", title: "Upstairs", icon: "mdi:stairs-up" },
+    {
+      type: HC,
+      style: "big",
+      title: "Bedroom",
+      subtitle: "Blinds closed",
+      icon: "mdi:bed",
+      color: "indigo",
+      badges: [{ entity: "light.bedroom", show_value: false }],
+    },
+    {
+      type: HC,
+      style: "hero",
+      title: "Good afternoon",
+      subtitle: "Everyone is home",
+      badges: ["sensor.outdoor_temperature", { entity: "lock.front_door", style: "filled" }],
+    },
+  ],
+  // the badges' four pills and three sizes
+  "hc-badge-styles": [
+    {
+      type: HC,
+      title: "Styles",
+      badge_size: "s",
+      badges: [
+        { entity: "sensor.kitchen_temperature", style: "outline" },
+        { entity: "light.living_room", style: "soft" },
+        { entity: "lock.front_door", style: "filled" },
+        { entity: "media_player.living_room_tv", style: "plain" },
+      ],
+    },
+    {
+      type: HC,
+      title: "Sizes",
+      badges: [
+        { entity: "sensor.kitchen_temperature", size: "s" },
+        { entity: "sensor.kitchen_temperature", size: "m" },
+        { entity: "sensor.kitchen_temperature", size: "l" },
+      ],
+    },
+  ],
+  // what a badge draws: a ring (in every size and style), a bar, a sparkline, a trend, a count, a
+  // dot, a picture and a switch
+  "hc-visuals": [
+    {
+      type: HC,
+      title: "Rings",
+      badges_position: "below",
+      badges: [
+        { entity: "sensor.battery_soc", visual: "ring", icon: "mdi:home-battery", size: "s" },
+        { entity: "sensor.battery_soc", visual: "ring", icon: "mdi:home-battery" },
+        { entity: "sensor.battery_soc", visual: "ring", icon: "mdi:home-battery", size: "l" },
+        { entity: "sensor.battery_soc", visual: "ring", icon: "mdi:home-battery", style: "soft" },
+        { entity: "sensor.battery_soc", visual: "ring", icon: "mdi:home-battery", style: "filled" },
+        { entity: "sensor.battery_soc", visual: "ring", icon: "mdi:home-battery", style: "plain" },
+      ],
+    },
+    {
+      type: HC,
+      title: "Energy",
+      badges_position: "below",
+      badges: [
+        { entity: "sensor.power_consumption", visual: "sparkline", format: "power" },
+        { entity: "sensor.living_room_temperature", visual: "trend" },
+        { entity: "sensor.ev_battery", visual: "bar", icon: "mdi:car-electric" },
+        { entity: "group.downstairs_lights", visual: "count", name: "Lights", show_name: true },
+      ],
+    },
+    {
+      type: HC,
+      title: "House",
+      badges_position: "below",
+      badges: [
+        { entity: "person.alex", show_entity_picture: true, show_name: true, show_value: false },
+        {
+          entity: "binary_sensor.window_kitchen",
+          visual: "dot",
+          name: "Kitchen window",
+          show_name: true,
+          show_value: false,
+        },
+        {
+          entity: "light.living_room",
+          name: "Living",
+          show_name: true,
+          show_value: false,
+          control: "toggle",
+        },
+      ],
+    },
+  ],
+  // rules on badges (colour, a pill, a still pulse with reduced motion, the tint), the value
+  // formats and a stale badge
+  "hc-rules-formats": [
+    {
+      type: HC,
+      title: "Kitchen",
+      icon: "mdi:silverware-fork-knife",
+      badges: [
+        {
+          entity: "sensor.kitchen_temperature",
+          rules: [
+            { below: 18, color: "blue" },
+            { below: 24, color: "green", style: "soft" },
+          ],
+        },
+        {
+          entity: "binary_sensor.window_kitchen",
+          rules: [
+            {
+              state: "on",
+              color: "red",
+              style: "filled",
+              label: "Open",
+              pulse: true,
+              tint_card: true,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      type: HC,
+      title: "Appliances",
+      icon: "mdi:washing-machine",
+      badges_position: "below",
+      badges: [
+        { entity: "sensor.solar_power", format: "power", icon: "mdi:solar-power" },
+        { entity: "sensor.washer_remaining", format: "duration" },
+        { entity: "sensor.dishwasher_finishes", format: "relative", icon: "mdi:dishwasher" },
+        { entity: "sensor.weather_station_battery", stale_after: "30s" },
+      ],
+    },
+  ],
+  // where the badges sit and what happens to many of them
+  "hc-positions": [
+    {
+      type: HC,
+      title: "Inline",
+      badges_position: "inline",
+      badges: ["sensor.living_room_temperature", "light.living_room"],
+    },
+    {
+      type: HC,
+      title: "Centred",
+      style: "big",
+      align: "center",
+      subtitle: "A panel's heading",
+      badges: ["sensor.living_room_humidity", "light.living_room"],
+    },
+    {
+      type: HC,
+      title: "Wrap",
+      icon: "mdi:home",
+      badges: [
+        "sensor.outdoor_temperature",
+        "sensor.living_room_temperature",
+        "sensor.kitchen_temperature",
+        "sensor.bedroom_temperature",
+        "sensor.office_temperature",
+      ],
+    },
+    {
+      type: HC,
+      title: "Scroll",
+      icon: "mdi:home",
+      overflow: "scroll",
+      badges: [
+        "sensor.outdoor_temperature",
+        "sensor.living_room_temperature",
+        "sensor.kitchen_temperature",
+        "sensor.bedroom_temperature",
+        "sensor.office_temperature",
+      ],
+    },
+  ],
+  // a narrow card: the badges at the end move below the title
+  "hc-narrow": {
+    type: HC,
+    title: "Living room",
+    icon: "mdi:sofa",
+    badges: ["sensor.living_room_temperature", "sensor.living_room_humidity", "light.living_room"],
+  },
+  // the heading's badges in another card's header: plain and small unless they say otherwise
+  "egc-header-pills": {
+    type: EGC,
+    title: "Living room",
+    icon: "mdi:sofa",
+    header_entities: [
+      "sensor.living_room_temperature",
+      { entity: "sensor.battery_soc", visual: "ring", icon: "mdi:home-battery" },
+      { entity: "light.living_room", style: "outline" },
+    ],
+    entities: ["light.living_room", "cover.living_room_blinds"],
+  },
 };
 
 // cases rendered under a Home Assistant theme from ha.css instead of the default one
@@ -1766,6 +1980,7 @@ const ALL: Record<string, Parameters<typeof mount>[1]> = {
 // cases that need a wider column than the 400 px section (list rows show their circles from 380 px
 // of tree, after the card's padding)
 const WIDTHS: Record<string, number> = {
+  "hc-narrow": 260,
   "pf-list-rooms": 640,
   "pf-two-way-down": 340,
   "ef-month-list": 640,

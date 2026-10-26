@@ -1144,14 +1144,21 @@ describe("layouts", () => {
     expect(fan.querySelector(".val > .ctl-segments.sm")).toBeTruthy();
     expect(mode.querySelector(".val > .ctl-select.sm")).toBeTruthy();
   });
-  it("header entities never draw a control", () => {
+  it("a header entity draws a switch and no other control", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const r = h.mount(EntityGroupCard, {
       title: "Room",
-      header_entities: [{ entity: "switch.pump", control: "toggle" }],
+      header_entities: [
+        { entity: "switch.pump", control: "toggle" },
+        { entity: "light.ceiling", control: "slider" },
+      ],
       entities: ["sensor.temp"],
     });
-    expect(q(r, ".header .row.hval")).toBeTruthy();
-    expect(r.querySelector(".header .ctl, .header .toggle")).toBeNull();
+    expect(r.querySelectorAll(".header .row.hval")).toHaveLength(2);
+    expect(r.querySelectorAll(".header .toggle")).toHaveLength(1);
+    expect(r.querySelector(".header .ctl-slider")).toBeNull();
+    expect(warn).toHaveBeenCalledWith(expect.stringMatching(/only control drawn in the header/));
+    warn.mockRestore();
   });
   it("a control: none or no control draws nothing", () => {
     const r = h.mount(EntityGroupCard, {

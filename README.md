@@ -39,6 +39,7 @@ Pro Cards are polished dashboard cards that look like they belong in Home Assist
 | Power Flow Card Pro      | `custom:power-flow-card-pro`      | Solar, battery and grid → home → rooms and devices as a tree with animated flow, the state of the home and its self-sufficiency.              | YAML only |
 | Energy Flow Card Pro     | `custom:energy-flow-card-pro`     | The power flow's tree over a period (today, this week, month or year) from energy meters and their long-term statistics.                      | YAML only |
 | Layout Card Pro          | `custom:layout-card-pro`          | Cards inside a section in a grid or masonry, arranged by how many view columns the section spans, as separate cards or one seamless surface.  | YAML only |
+| Heading Card Pro         | `custom:heading-card-pro`         | A heading with live badges: values, rings, bars, sparklines, trends, counts and switches.                                                     | YAML only |
 
 All cards support the sections grid (`grid_options`). Requires Home Assistant 2025.3 or newer.
 
@@ -193,6 +194,22 @@ cards:
 ```
 
 [Layout Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/layout-card)
+
+#### Heading Card Pro
+
+A heading for a room or a part of a view, without a card around it. Its badges are entities with rules and actions, and can draw a ring, a bar, a sparkline, a trend, a count or a switch.
+
+```yaml
+type: custom:heading-card-pro
+title: Living room
+icon: mdi:sofa
+badges:
+  - sensor.living_room_temperature
+  - { entity: sensor.power_consumption, visual: sparkline, format: power }
+  - { entity: light.living_room, control: toggle }
+```
+
+[Heading Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/heading-card)
 
 ### Weather
 
