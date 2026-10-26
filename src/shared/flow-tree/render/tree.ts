@@ -420,6 +420,38 @@ const measureLabels = (st: TreeState, labelEls: Map<string, HTMLElement>) => {
   return { texts, sizes, alts };
 };
 
+// The widest each label has been, per diagram, while its width, its fonts and its nodes stay the
+// same (a new config builds a new diagram): a value ticking between 990 W and 1.01 kW would
+// otherwise move the columns, or flip a label between two places or shapes, back and forth on
+// every update. A label only ever gets more room; a new width measures afresh.
+interface Widest {
+  key: string;
+  labels: Map<string, { w: number; vw: number; nw: number; alt?: number }>;
+}
+const widestOf = new WeakMap<HTMLElement, Widest>();
+const keepWidest = (
+  diag: HTMLElement,
+  key: string,
+  sizes: Map<string, LabelBox>,
+  alts: Map<string, { w: number; h: number }>,
+) => {
+  let seen = widestOf.get(diag);
+  if (!seen || seen.key !== key) widestOf.set(diag, (seen = { key, labels: new Map() }));
+  for (const [id, s] of sizes) {
+    const alt = alts.get(id);
+    const m = seen.labels.get(id) ?? { w: 0, vw: 0, nw: 0 };
+    seen.labels.set(id, m);
+    m.w = Math.max(m.w, s.w);
+    m.vw = Math.max(m.vw, s.vw ?? 0);
+    m.nw = Math.max(m.nw, s.nw ?? 0);
+    sizes.set(id, { ...s, w: m.w, vw: m.vw, nw: m.nw });
+    if (alt) {
+      m.alt = Math.max(m.alt ?? 0, alt.w);
+      alts.set(id, { ...alt, w: m.alt });
+    }
+  }
+};
+
 export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
   const labelEls = new Map<string, HTMLElement>();
   for (const el of diag.querySelectorAll<HTMLElement>(".plabel"))
@@ -430,6 +462,18 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
       labelEls.get(leaf.id)?.classList.toggle("small", !prelim.cfg.hasGroups);
   // the labels' sizes decide where the columns go: lay out again with them
   const { texts, sizes, alts } = measureLabels(prelim, labelEls);
+  const lines = linesOf(prelim.cfg);
+  keepWidest(
+    diag,
+    [
+      Math.round(prelim.layout.w),
+      lines.value.font,
+      lines.name.font,
+      prelim.layout.nodes.map((n) => n.id).join(","),
+    ].join("|"),
+    sizes,
+    alts,
+  );
   const st: TreeState = {
     ...prelim,
     layout: layoutTree(prelim.cfg, prelim.layout.w, prelim.flows.edges, sizes, prelim.layout.h),

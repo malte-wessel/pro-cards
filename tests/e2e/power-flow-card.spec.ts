@@ -192,6 +192,22 @@ test.describe("power flow card", () => {
     for (const [d, p] of pairs) expect(p).toBe(`path('${d}')`);
   });
 
+  test("a value ticking back narrower keeps the tree where its widest put it", async ({ page }) => {
+    await mount(page, { type: T, sources: SRC, home: HOME, consumers: CONS }, { width: 440 });
+    await pin(page, { [SOC]: "64" });
+    const c = card(page);
+    const paths = () =>
+      c.locator("path.link").evaluateAll((els) => els.map((e) => e.getAttribute("d")));
+    // the battery's label widens (64 % → 100 %) and moves the tree …
+    await pin(page, { [SOC]: "100" });
+    await expect(label(c, "s1")).toHaveText(/Battery · 100 %/);
+    const wide = await paths();
+    // … and narrows again: the tree stays, so a value ticking about one width moves nothing
+    await pin(page, { [SOC]: "64" });
+    await expect(label(c, "s1")).toHaveText(/Battery · 64 %/);
+    expect(await paths()).toEqual(wide);
+  });
+
   test("lines keep to their tracks when the diagram changes height", async ({ page }) => {
     const shown = [{ condition: "state", entity: "light.kitchen", state: "on" }];
     await mount(page, {

@@ -22,7 +22,7 @@ sources:
 
 :::
 
-Over a period a battery both charges and discharges, and a grid both imports and exports, so their nodes show both values: what went in `↓` over what came out `↑`. `soc` still puts the battery's state of charge, as it is now, on its node as a ring. Without `home` the card adds the sources up: production, discharge and import, less charge and export.
+Over a period a battery both charges and discharges, and a grid both imports and exports, so their nodes show both values: what went in `↓` and what came out `↑`, in one line where there is room, else one over the other. `soc` still puts the battery's state of charge, as it is now, on its node as a ring. Without `home` the card adds the sources up: production, discharge and import, less charge and export.
 
 The flows split the way Home Assistant's Energy dashboard splits them, hour by hour for a day and day by day for longer periods: what the grid imported beyond the home charged the battery; solar charged the battery, then covered the export, and the battery covered the rest of it; the grid charged what the battery still took; the home took what was left of solar, then of the battery, then the grid. A battery with `charge_from: solar` (or a list of solar entities) takes only those panels' energy and never the grid's.
 

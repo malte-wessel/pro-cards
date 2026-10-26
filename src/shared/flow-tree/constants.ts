@@ -71,7 +71,6 @@ export const GEOM = {
   srcMargin: 42, // first / last source centre from the edge, across
   consumerPitch: 52, // flat consumer nodes
   itemPitch: 44, // devices inside a group
-  groupGap: 22, // between two consumer blocks when groups exist
   consumerMargin: 30, // first / last consumer centre from the edge, across
   rowH: 36, // a list row
   minAcross: 190, // least diagram extent across the flow

@@ -152,12 +152,13 @@ const columnPlan = (cfg: FlowTreeConfig, scale = 1): Column => {
   }
   if (rows) for (const l of all) l.d = Math.min(l.d, GEOM.rowH);
   // One pitch for every leaf, centre to centre: the most any of them asks for – a leaf's label
-  // clears the leaf before it, and with rooms a room's label (centred above it) clears the room
-  // before it, over the leaves between their centres
+  // clears the leaf before it, and with rooms (direction: right) a room's label, centred above
+  // it, clears the room before it, over the leaves between their centres (`down` has the rooms'
+  // labels beside them)
   let pitch = all.length > 1 ? (cfg.hasGroups ? GEOM.itemPitch : GEOM.consumerPitch) : 0;
   for (let i = 1; i < all.length; i++)
     pitch = Math.max(pitch, slotPitch(all[i - 1].d, all[i].d, all[i].h));
-  if (cfg.hasGroups)
+  if (cfg.hasGroups && cfg.direction === "right")
     for (let k = 1; k < blocks.length; k++) {
       const a = blocks[k - 1],
         b = blocks[k];
@@ -431,6 +432,46 @@ export const layoutTree = (
   // the devices' labels go below them: the rooms' labels cannot sit beside their values
   let under = false;
   const roomW = Math.max(0, ...cfg.consumers.map((c) => (c.kind === "group" ? widthOf(c.id) : 0)));
+  // a target of a node's lanes, along and across the flow (a node, or where one will be)
+  interface Spot {
+    id: string;
+    a: number;
+    b: number;
+    d: number;
+    column: LNode["column"];
+  }
+  // a target's label slot beside the leg of a lane (direction: right): a room's centred above
+  // it, a device's left of it above its line – the heights it spans and its left edge
+  const slotOf = (to: Spot): [number, number, number] | null => {
+    if (!right || to.d === 0) return null;
+    const h = sizes.get(to.id)?.h ?? 0;
+    if (to.column === "group")
+      return [to.b - to.d / 2 - 4 - h, to.b - to.d / 2 - 4, to.a - widthOf(to.id) / 2];
+    if (to.column !== "leaf" || under) return null;
+    const rise = slotRise(to.d, h);
+    return [
+      to.b - rise - h / 2,
+      to.b - rise + h / 2,
+      to.a - to.d / 2 - GEOM.labelGap - widthOf(to.id),
+    ];
+  };
+  // the last turn a lane to each target may take: room for its corner into the target, and
+  // clear of every other target's label slot beside the run of its leg (the labels' 3 px, the
+  // line's 3); its own target's label takes the side of its line away from the leg
+  const legLimits = (from: { b: number }, targets: Spot[]) => {
+    const slots = targets.map(slotOf);
+    return targets.map((to, i) => {
+      // (a lane to a target above the node leaves it at or above its centre, one below at or
+      // below it: `laneOffsets`)
+      const lo = Math.min(from.b, to.b),
+        hi = Math.max(from.b, to.b);
+      let m = to.a - to.d / 2 - GEOM.radius - 4;
+      slots.forEach((sl, j) => {
+        if (sl && j !== i && sl[0] < hi + 3 && sl[1] > lo - 3) m = Math.min(m, sl[2] - 6);
+      });
+      return m;
+    });
+  };
   if (right) {
     // the home column clears the source labels; the columns keep a least distance on narrow
     // cards and spread on wide ones
@@ -457,30 +498,55 @@ export const layoutTree = (
     // the devices' values are never cut: their room beside a room's label always holds
     const maxLeafVW = Math.max(0, ...farLeaves.map((l) => sizes.get(l.id)?.vw ?? 0));
     const values = aC - rLeaf - GEOM.labelGap - maxLeafVW - 6 - maxRoomW / 2;
-    // On a narrow card the home moves left as far as its lanes out need (squeezed as close as
-    // they go) to turn before the rooms' labels, beside the devices' values, or before the
-    // consumers' labels: a source label beside it then keeps its value and has its name cut
-    // (never the value) rather than the lanes merging into a trunk
-    const lanesClear =
-      listRows || !hasCons || (homeFan && homeFan.reach === null)
+    // without rooms: the furthest right the home may sit for its lanes to turn before the
+    // consumers' labels (each lane's turn clear of the slots beside its own leg), its lanes
+    // `pitch` apart
+    const lanesFrom = (a: number, pitch: number) => {
+      const spots = plan.leaves.map((l) => ({
+        id: l.id,
+        a,
+        b: b0 + l.b,
+        d: l.d,
+        column: "leaf" as const,
+      }));
+      const limits = legLimits({ b: bH }, spots);
+      const unit = laneOffsets(
+        spots.map((t) => t.b),
+        bH,
+        1,
+      );
+      const outer = Math.max(0, ...unit.map((u) => Math.abs(u)));
+      return Math.min(
+        ...spots.map((t, i) =>
+          unit[i] === 0 && Math.abs(t.b - bH) < 0.5
+            ? Infinity
+            : limits[i] - (rH + GEOM.radius + 4) - (outer - Math.abs(unit[i])) * pitch,
+        ),
+      );
+    };
+    // On a narrow card the home moves left as far as its lanes out need to turn, a lane apart,
+    // before the rooms' labels, beside the devices' values, or before the consumers' labels: a
+    // source label beside it then keeps its value and has its name cut (never the value) rather
+    // than the lanes squeezing or merging into a trunk. Where the value stops it short, the
+    // lanes move closer; where not even the closest lanes fit, they merge, and the name is cut
+    // only as far as the rooms' labels need to clear the trunk (or not at all, without rooms).
+    const lanesAt = (reach: number, pitch: number) =>
+      listRows || !hasCons || !homeFan || homeFan.reach === null
         ? Infinity
         : cfg.hasGroups
-          ? values - maxRoomW / 2 - 6 - homeReachMin - 6
-          : aC - rLeaf - GEOM.labelGap - maxLeafW - 6 - homeReachMin;
-    const clearH = Math.max(valueClear, Math.min(fullClear, lanesClear));
+          ? values - maxRoomW / 2 - 6 - reach - 6
+          : lanesFrom(aC, pitch);
+    const lanesFull = homeFan ? lanesAt(homeReach, homeFan.pitch) : Infinity;
+    const lanesFit = lanesAt(homeReachMin, minPitch) >= valueClear;
+    const trunkClear =
+      cfg.hasGroups && !listRows ? values - maxRoomW / 2 - 6 - homeTrunk - 6 : Infinity;
+    const clearH = Math.max(valueClear, Math.min(fullClear, lanesFit ? lanesFull : trunkClear));
     const minH = Math.max(aS + rS + 40, clearH);
     if (!hasCons) aH = Math.max(along - 44, minH);
     else if (listRows) aH = Math.max(minH, along * (cfg.hasGroups ? 0.3 : 0.42));
     else if (cfg.hasGroups) aH = Math.max(minH, along * 0.38);
     // the consumers' lanes turn before their labels: the home moves left for them where it can
-    else
-      aH = Math.max(
-        minH,
-        Math.min(
-          along * 0.5,
-          homeFan?.reach == null ? Infinity : lanesClear + homeReachMin - homeReach,
-        ),
-      );
+    else aH = Math.max(minH, Math.min(along * 0.5, lanesFit ? lanesFull : Infinity));
     aH = Math.min(aH, along - rH - 2);
     // a source label beside the home that it does not clear in full: its name cut to the room
     for (const s of band) {
@@ -499,6 +565,8 @@ export const layoutTree = (
       // below them, centred between their rooms' forks and the card's edge (whole where that
       // holds them), and the rooms' labels clear the trunk – where that leaves the values room
       // (with the lanes out of the home and the rooms where they fit, else their trunks)
+      // (the rooms' labels only: a lone consumer's or the Other node's label finds a place
+      // beside it, and the home's lanes turn before every label of the room column)
       const underFor = (homeOut: number, roomOut: number) => {
         const aGU = Math.max(
           aH + rH + 26,
@@ -636,40 +704,10 @@ export const layoutTree = (
   const out: LEdge[] = [];
   const A = (nd: LNode) => (right ? nd.x : nd.y),
     Bof = (nd: LNode) => (right ? nd.y : nd.x);
-  const leafW = Math.max(
-    0,
-    ...plan.leaves.map((l) => (byId.get(l.id)?.column === "leaf" ? widthOf(l.id) : 0)),
-  );
-  // a target's label slot beside the leg of a lane (direction: right): a room's centred above
-  // it, a device's left of it above its line – the heights it spans and its left edge
-  const slotOf = (to: LNode): [number, number, number] | null => {
-    if (!right || to.d === 0) return null;
-    const h = sizes.get(to.id)?.h ?? 0;
-    if (to.column === "group")
-      return [to.y - to.d / 2 - 4 - h, to.y - to.d / 2 - 4, to.x - widthOf(to.id) / 2];
-    if (to.column !== "leaf" || under) return null;
-    const rise = slotRise(to.d, h);
-    return [
-      to.y - rise - h / 2,
-      to.y - rise + h / 2,
-      to.x - to.d / 2 - GEOM.labelGap - widthOf(to.id),
-    ];
-  };
-  // the last turn a lane to each target may take: room for its corner into the target, and
-  // clear of every label slot beside the run of its leg (the labels' 3 px, the line's 3)
-  const legLimits = (from: LNode, targets: LNode[]) => {
-    const slots = targets.map(slotOf);
-    return targets.map((to) => {
-      const lo = Math.min(Bof(from) - from.d / 2, Bof(to)),
-        hi = Math.max(Bof(from) + from.d / 2, Bof(to));
-      let m = A(to) - to.d / 2 - GEOM.radius - 4;
-      for (const sl of slots)
-        if (sl && sl[0] < hi + 3 && sl[1] > lo - 3) m = Math.min(m, sl[2] - 6);
-      return m;
-    });
-  };
   // the lanes out of the home and out of each room, by target (null: the lines share a trunk)
   const fans = new Map<string, Map<string, { off: number; leg: number }> | null>();
+  // … and the last turn of a node's lanes (none where they all run straight)
+  const fanReach = new Map<string, number>();
   const fanOf = (from: LNode) => {
     const known = fans.get(from.id);
     if (known !== undefined) return known;
@@ -678,18 +716,26 @@ export const layoutTree = (
       .filter((n): n is LNode => !!n && n.column !== "source");
     const r = from.d / 2;
     const first = A(from) + (from.kind === "group" ? roomFirst(from.id, r) : r + GEOM.radius + 4);
-    const fan = fanOut(targets.map(Bof), Bof(from), r, first, legLimits(from, targets));
+    const spots = targets.map((n) => ({ id: n.id, a: A(n), b: Bof(n), d: n.d, column: n.column }));
+    const fan = fanOut(
+      spots.map((t) => t.b),
+      Bof(from),
+      r,
+      first,
+      legLimits({ b: Bof(from) }, spots),
+    );
     const lanes = fan
       ? new Map(targets.map((t, i) => [t.id, { off: fan.offsets[i], leg: fan.legs[i] }]))
       : null;
     fans.set(from.id, lanes);
+    if (fan?.reach != null) fanReach.set(from.id, fan.reach);
     return lanes;
   };
   // a device's label below it: its name cut to the room between its room's last turn and the
   // card's edge
   for (const [nd, room] of underRoom) {
     const lanes = fanOf(room);
-    const last = lanes ? Math.max(...[...lanes.values()].map((l) => l.leg)) : forkOf(room);
+    const last = lanes ? (fanReach.get(room.id) ?? room.x + room.d / 2) : forkOf(room);
     nd.labelMax = 2 * Math.min(along - aC, aC - last - 3 - 1);
   }
   const offsets = laneOffsets(bS, bH);
@@ -698,11 +744,18 @@ export const layoutTree = (
   // The lanes turn into the home in one block right before it, mirrored above and below: every
   // corner the same radius, the vertical legs a lane apart, the outermost lane turning last
   // (so none crosses another) with room left for its corner before the home's circle. Late
-  // turns leave a source's label room beside its node on a narrow card.
-  const outer = Math.max(0, ...offsets.map((o) => Math.abs(o) / GEOM.lane));
-  const lastBend = aH - rH - GEOM.radius - 4;
-  const bendAt = (off: number) =>
-    Math.max(aS + rS + GEOM.radius, lastBend - (outer - Math.abs(off) / GEOM.lane) * GEOM.lane);
+  // turns leave a source's label room beside its node on a narrow card; where the home sits too
+  // close for a lane between the turns, they move closer (never past the last turn, so no lane
+  // runs back into the home).
+  const outer = Math.max(0, ...offsets.map((o) => Math.abs(o) / GEOM.lane)),
+    inner = Math.min(outer, ...offsets.map((o) => Math.abs(o) / GEOM.lane));
+  const lastBend = aH - rH - GEOM.radius - 4,
+    firstLeg = aS + rS + GEOM.radius;
+  const legPitch =
+    outer > inner
+      ? Math.max(0, Math.min(GEOM.lane, (lastBend - firstLeg) / (outer - inner)))
+      : GEOM.lane;
+  const bendAt = (off: number) => lastBend - (outer - Math.abs(off) / GEOM.lane) * legPitch;
   // the trunk sits nearer its origin and clears the labels left of the targets
   const trunkOf = (from: LNode, to: LNode) => {
     const a0 = A(from) + from.d / 2,
@@ -711,7 +764,7 @@ export const layoutTree = (
     // a room's label sits centred above it: the trunk stays left of that label
     if (to.column === "group" && to.d > 0) t = Math.min(t, A(to) - widthOf(to.id) / 2 - 6);
     if (to.column === "leaf" && to.d > 0 && under) return forkOf(from);
-    if (to.column === "leaf" && to.d > 0) t = Math.min(t, a1 - GEOM.labelGap - leafW - 6);
+    if (to.column === "leaf" && to.d > 0) t = Math.min(t, a1 - GEOM.labelGap - maxLeafW - 6);
     return Math.max(t, a0 + 10);
   };
   edges.forEach((e, fi) => {
