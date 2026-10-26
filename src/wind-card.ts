@@ -11,7 +11,7 @@
  *   visual: icon                           # icon | flow   (tile only: the whole tile is the field)
  *   lead: animated                         # animated | arrow
  *   flow: { style: dots, density: normal, height: 120 }   # dots | lines | swoosh | vectors; sparse | normal | dense
- *   title / icon / header_entities / tap_action / hold_action / double_tap_action
+ *   title / icon / header_entities / tap_action / hold_action / double_tap_action / hover
  */
 import { registerCard } from "./shared/card.ts";
 import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";

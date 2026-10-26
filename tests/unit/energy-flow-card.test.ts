@@ -330,6 +330,32 @@ describe("energy-flow-card: the lanes into the home", () => {
   });
 });
 
+describe("hover", () => {
+  it("is the default of every node on the card; a source, the home or a consumer overrides it", () => {
+    const c = normalizeEnergyFlowConfig({
+      hover: true,
+      home: "sensor.home_energy",
+      sources: [
+        { type: "solar", entity: "sensor.solar_energy", hover: false },
+        { type: "grid", import: "sensor.grid_import_energy", export: "sensor.grid_export_energy" },
+      ],
+      consumers: [{ entity: "sensor.ev_energy", hover: false }, { entity: "sensor.washer_energy" }],
+    });
+    expect(Object.fromEntries(c.entities.map((e) => [e.entity, e.hover]))).toMatchObject({
+      "sensor.home_energy": true,
+      "sensor.solar_energy": false,
+      "sensor.grid_import_energy": true,
+      "sensor.grid_export_energy": true,
+      "sensor.ev_energy": false,
+      "sensor.washer_energy": true,
+    });
+    const off = normalizeEnergyFlowConfig({
+      sources: [{ type: "solar", entity: "sensor.solar_energy" }],
+    });
+    expect(off.entities.every((e) => !e.hover)).toBe(true);
+  });
+});
+
 describe("energy-flow-card: the dashboard's energy period", () => {
   const TZ = "Europe/Berlin";
   const at = (iso: string) => new Date(iso);

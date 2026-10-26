@@ -1,6 +1,7 @@
 // CSS of the energy flow card's period picker, on top of the flow tree's. The picker sits outside
 // any row, so it defines the control tokens rows carry for themselves.
 import { STYLE_DATEPICKER } from "../shared/datepicker.ts";
+import { controlLayer } from "../shared/entity/render/styles.ts";
 import { STYLE_FLOW_TREE } from "../shared/flow-tree/styles.ts";
 import { fs, fw } from "../shared/typography.ts";
 
@@ -16,6 +17,9 @@ const STYLE_PICKER = `
   .ppicker .round ha-icon { color: var(--primary-text-color); }
   .ppicker .round:disabled ha-icon { color: var(--secondary-text-color); }
   .ppicker .round:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--fe-color); }
+  /* the picker is the card's own control: its buttons answer the pointer as the controls do with
+     hover, always */
+  ${controlLayer(".ppicker :is(.round, .pchip)")}
   /* the title keeps its width (up to half the header); on a narrow card the button gives way,
      by the card's width alone, never by what it names */
   .header .title { flex: 1 0 auto; max-width: 50%; }

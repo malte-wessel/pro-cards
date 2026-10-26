@@ -168,6 +168,28 @@ The animation is CSS only, keeps flowing through sensor updates (a new speed cha
 
 :::
 
+## Hover
+
+`hover: true` shows what a click will do, as Home Assistant's tile does: a tile takes a light layer under the pointer, over the whole card, and a stronger one while pressed; header entities do too. A hero keeps still, as the heroes of the entity cards do. See [Hover](/cards/entity-options#hover).
+
+::: live
+
+```yaml
+- type: custom:wind-card-pro
+  entity: sensor.wind_speed
+  direction: sensor.wind_direction
+  hover: true
+  grid_options: { columns: 6 }
+- type: custom:wind-card-pro
+  entity: sensor.wind_speed
+  direction: sensor.wind_direction
+  visual: flow
+  hover: true
+  grid_options: { columns: 6 }
+```
+
+:::
+
 ## Reference
 
 ### Card options
@@ -189,6 +211,7 @@ The animation is CSS only, keeps flowing through sensor updates (a new speed cha
 | `title`, `icon`     | –                         | Header, templates allowed. `header_entities` as in the [group card](/cards/entity-group-card#header-entities).                                                                                  |
 | `title_tap_action`  | none                      | Action when the title or its icon is tapped, e.g. `{ action: navigate, navigation_path: /dashboard-rooms/kitchen }` to open the room's dashboard; see [Actions](/cards/entity-options#actions). |
 | `tap_action` …      | `more-info`               | `tap_action`, `hold_action`, `double_tap_action` on the lead row.                                                                                                                               |
+| `hover`             | `false`                   | Home Assistant's hover and press layers on the tile; see [Hover](#hover).                                                                                                                       |
 
 ### Flow options
 

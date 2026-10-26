@@ -6,6 +6,9 @@ _Beta_
 
 - **New energy flow card** (`custom:energy-flow-card-pro`): the power flow card's tree over a period (`period: today | yesterday | week | month | year`), from energy meters and their long-term statistics, live between compiled hours. The flows split the way the Energy dashboard splits them, hour by hour (day by day for longer periods); the dots move by each link's share of the home, thresholds and rules read kWh. A picker in the header steps to another day, week, month or year (‹ ›) or opens a calendar like Home Assistant's date picker (quick picks, and any range of days in two clicks), and goes back to the configured `period` after ten minutes untouched; `period_picker: false` keeps a fixed period. Also for heat: a heat pump's heat meter and the floors' meters show where the heat went
 - Energy flow: `period: dashboard` follows the period of Home Assistant's energy date picker on the dashboard, as Home Assistant's own energy cards do (`collection_key` for another picker); the card then has no picker of its own
+- `hover: true` on an entity (or on the card or a section, for all of its entities) shows Home Assistant's hover and press layers on what a click runs (a tile, a grid cell, a header entity, an icon with its own action, every control), as on its tile card
+- A tile is clickable as a whole, as on Home Assistant's tile card: its padding runs the action too, also when the tile is taller than its content
+- Energy flow: the period picker's buttons answer the pointer as Home Assistant's control buttons do (a light layer on hover, a stronger one while pressed)
 - Power flow: `other: { name, icon }` renames the Other node
 - Power and energy flow: `flow_style: none` draws the active links in their colour without motion
 - Power and energy flow: a tree whose sensors report another unit (a water flow in L/min, water meters in m³) shows its values in that unit as written instead of W or kWh
