@@ -70,7 +70,8 @@ const STYLE_BADGES = `
   .row.hval.b-l:not(.pb) { gap: 6px; }
   .row.hval.b-l:not(.pb) :is(ha-icon, ha-state-icon) { --mdc-icon-size: 22px; }
   .row.hval.b-l:not(.pb) .state { ${type(16, 20)} }
-  .row.hval.b-outline { border: 1px solid color-mix(in srgb, var(--fe-color) 40%, transparent); }
+  /* outline: Home Assistant's badge, on the card's surface (its background, border and shadow) */
+  .row.hval.b-outline { background: ${CARD_BG}; border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--divider-color)); box-shadow: var(--ha-card-box-shadow, none); backdrop-filter: var(--ha-card-backdrop-filter, none); }
   .row.hval.b-soft { background: var(--fe-soft); }
   .row.hval.b-soft .state { color: var(--fe-color); }
   .row.hval.b-filled { --b-ink: var(--text-primary-color, #fff); background: var(--fe-color); color: var(--b-ink); }

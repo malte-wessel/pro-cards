@@ -316,7 +316,7 @@
     "badgeStyle": {
       "type": "string",
       "enum": ["outline", "soft", "filled", "plain"],
-      "description": "The badge's pill: a coloured outline, a soft fill, a full fill, or none"
+      "description": "The badge's pill: Home Assistant's badge on the card's surface (outline), a soft fill, a full fill, or none"
     },
     "badgeSize": {
       "type": "string",

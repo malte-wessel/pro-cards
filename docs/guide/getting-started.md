@@ -9,7 +9,6 @@ Pro Cards adds these cards to the dashboard editor:
 | [Entity Card Pro](/cards/entity-card)                   | `custom:entity-card-pro`          | YAML          |
 | [Entity Group Card Pro](/cards/entity-group-card)       | `custom:entity-group-card-pro`    | YAML          |
 | [Entity Sections Card Pro](/cards/entity-sections-card) | `custom:entity-sections-card-pro` | YAML          |
-| [Heading Card Pro](/cards/heading-card)                 | `custom:heading-card-pro`         | YAML          |
 | [Multi Trend Card Pro](/cards/multi-trend-card)         | `custom:multi-trend-card-pro`     | Visual + YAML |
 
 **Energy**
@@ -21,9 +20,10 @@ Pro Cards adds these cards to the dashboard editor:
 
 **Layout**
 
-| Card                                  | `type`                   | Editor |
-| ------------------------------------- | ------------------------ | ------ |
-| [Layout Card Pro](/cards/layout-card) | `custom:layout-card-pro` | YAML   |
+| Card                                    | `type`                    | Editor |
+| --------------------------------------- | ------------------------- | ------ |
+| [Layout Card Pro](/cards/layout-card)   | `custom:layout-card-pro`  | YAML   |
+| [Heading Card Pro](/cards/heading-card) | `custom:heading-card-pro` | YAML   |
 
 **Weather**
 
