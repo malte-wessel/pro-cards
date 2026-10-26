@@ -374,16 +374,20 @@ export const layoutTree = (
   // the consumer column, centred across; `down` spreads it to the width
   let plan = columnPlan(cfg);
   let consTight = false;
+  // the column keeps as much room after it as before it, so it can centre on the home (`down`:
+  // the labels sit below the nodes, so only the nodes' room counts)
+  const margin = right ? Math.max(plan.first, plan.last) : plan.last;
   if (!right && plan.extent > 0) {
-    const fit = Math.max(0.6, Math.min(1.6, (across - 2 * GEOM.consumerMargin) / plan.extent));
+    const fit = Math.max(0.6, Math.min(1.6, (across - 2 * margin) / plan.extent));
     plan = columnPlan(cfg, fit);
     const pitch = plan.leaves.length > 1 ? plan.extent / (plan.leaves.length - 1) : Infinity;
     consTight = pitch < maxLeafW + 8;
   }
-  // the column centred on the home, so a lone consumer's line runs straight; the margins (the
-  // first label's room, the last node's) only bound it, and split the room when it is short
-  const lo = plan.first,
-    hi = across - plan.last - plan.extent;
+  // the column centred on the home, so the consumer level with it runs straight; the margins
+  // (the larger of the first label's room and the last node's, on both sides) only bound it,
+  // and split the room when it is short
+  const lo = margin,
+    hi = across - margin - plan.extent;
   const b0 = hi < lo ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, bH - plan.extent / 2));
   // the home's targets: the room column with rooms, else the consumers
   const homeTargets = (
