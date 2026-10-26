@@ -296,17 +296,16 @@ badges:
 
 ## Hover
 
-`hover: true` shows Home Assistant's hover and press layers on the badges, set on the card for all of them or on one badge for that one.
+A badge is a button, as Home Assistant's badges are: one with an action takes a light layer under the pointer and a stronger one while pressed, its switch too. A badge without an action (`tap_action: none` and no hold or double tap) keeps still. `hover: false` turns the layers off, on the card for every badge or on one badge for that one.
 
 ::: live
 
 ```yaml
 type: custom:heading-card-pro
 title: Living room
-hover: true
 badges:
   - sensor.living_room_temperature
-  - light.living_room
+  - { entity: light.living_room, hover: false }
 ```
 
 :::
@@ -319,25 +318,25 @@ The cards with a header (the group, sections, weather, wind, rain, power flow an
 
 ### Card options
 
-| Option                                             | Default                         | Description                                                                 |
-| -------------------------------------------------- | ------------------------------- | --------------------------------------------------------------------------- |
-| `style`                                            | `title`                         | `section`, `title`, `subtitle`, `big` or `hero`.                            |
-| `title`                                            |                                 | The heading's text. Template allowed.                                       |
-| `subtitle`                                         |                                 | The line under the title. Template allowed.                                 |
-| `icon`                                             |                                 | The icon before the title. Template allowed.                                |
-| `color`                                            | secondary text (`big`: primary) | The icon's colour, a theme colour name or any CSS colour. Template allowed. |
-| `title_tap_action`                                 | none                            | Action when the title or its icon is tapped.                                |
-| `icon_tap_action`                                  | none                            | Action when the icon is tapped, instead of the title's.                     |
-| `align`                                            | `start`                         | `start` or `center`.                                                        |
-| `badges_position`                                  | `end`                           | `end` (below on a card narrower than 300 px), `inline` or `below`.          |
-| `overflow`                                         | `wrap`                          | `wrap` or `scroll`.                                                         |
-| `badge_style`                                      | `outline`                       | The pill of every badge: `outline`, `soft`, `filled` or `plain`.            |
-| `badge_size`                                       | `m`                             | The size of every badge: `s`, `m` or `l`.                                   |
-| `badges`                                           |                                 | Entity ids or badge objects.                                                |
-| `hours_to_show`                                    | `6`                             | History window of `sparkline` and `trend`, at least 1.                      |
-| `smoothing_minutes`                                |                                 | Averaging bucket of `sparkline` in minutes, at least 5.                     |
-| `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none    | Defaults for every badge, see [Actions](/cards/entity-options#actions).     |
-| `hover`                                            | `false`                         | Default for every badge, see [Hover](#hover).                               |
+| Option                                             | Default                         | Description                                                                        |
+| -------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------- |
+| `style`                                            | `title`                         | `section`, `title`, `subtitle`, `big` or `hero`.                                   |
+| `title`                                            |                                 | The heading's text. Template allowed.                                              |
+| `subtitle`                                         |                                 | The line under the title. Template allowed.                                        |
+| `icon`                                             |                                 | The icon before the title. Template allowed.                                       |
+| `color`                                            | secondary text (`big`: primary) | The icon's colour, a theme colour name or any CSS colour. Template allowed.        |
+| `title_tap_action`                                 | none                            | Action when the title or its icon is tapped.                                       |
+| `icon_tap_action`                                  | none                            | Action when the icon is tapped, instead of the title's.                            |
+| `align`                                            | `start`                         | `start` or `center`.                                                               |
+| `badges_position`                                  | `end`                           | `end` (below on a card narrower than 300 px), `inline` or `below`.                 |
+| `overflow`                                         | `wrap`                          | `wrap` or `scroll`.                                                                |
+| `badge_style`                                      | `outline`                       | The pill of every badge: `outline`, `soft`, `filled` or `plain`.                   |
+| `badge_size`                                       | `m`                             | The size of every badge: `s`, `m` or `l`.                                          |
+| `badges`                                           |                                 | Entity ids or badge objects.                                                       |
+| `hours_to_show`                                    | `6`                             | History window of `sparkline` and `trend`, at least 1.                             |
+| `smoothing_minutes`                                |                                 | Averaging bucket of `sparkline` in minutes, at least 5.                            |
+| `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none    | Defaults for every badge, see [Actions](/cards/entity-options#actions).            |
+| `hover`                                            | on for badges with an action    | `false` turns the hover and press layers off for every badge, see [Hover](#hover). |
 
 ### Badge options
 

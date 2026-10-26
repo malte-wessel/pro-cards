@@ -162,6 +162,8 @@ export interface ActionDefaults {
   dbl: ActionConfig;
   // Home Assistant's hover and press layers on the row and its controls (STYLE_HOVER)
   hover: boolean;
+  // `hover: false` on the card: header badges, which answer by default, keep still too
+  hoverOff?: boolean;
 }
 export interface EntityItem extends ActionDefaults {
   entity: string | null;
@@ -252,6 +254,7 @@ export const normalizeActionDefaults = (raw: RawActionDefaults): ActionDefaults 
   hold: normalizeAction(raw.hold_action, { action: "more-info" }),
   dbl: normalizeAction(raw.double_tap_action, { action: "none" }),
   hover: raw.hover === true,
+  hoverOff: raw.hover === false,
 });
 export const normalizeHistoryOptions = (raw: RawHistoryOptions) => ({
   hours: Math.max(1, numOrNull(raw.hours_to_show) ?? DEFAULTS.hours_to_show),
@@ -517,6 +520,9 @@ export const normalizeHeaderEntities = (
       ent.visual = "icon";
     }
     const o: RawEntity = e && typeof e === "object" ? e : {};
+    // a badge is a button, as Home Assistant's: it answers the pointer unless the badge or the card
+    // says hover: false (one without an action has no layer to show)
+    if (typeof o.hover !== "boolean") ent.hover = ctx.hover || !ctx.hoverOff;
     const style = oneOf(BADGE_STYLES, o.style) ? o.style : null;
     ent.badge = {
       style: style ?? (ent.visual === "badge" ? "soft" : defaults.style),
