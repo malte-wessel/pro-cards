@@ -18,6 +18,7 @@
  *     - { state: "on", color: amber, label: "On" }
  *   toggle: false                          # switch on the right (homeassistant.toggle)
  *   tap_action / hold_action / double_tap_action   # more-info / more-info / none
+ *   hover: false                           # Home Assistant's hover and press layers on the tile, icon and controls
  *   hours_to_show: 24 / bucket_minutes: 60 # history window and bucket size for sparkline / columns / strip
  *   smoothing_minutes: 30                  # sparkline averaging bucket (default: one point per 12 px)
  */

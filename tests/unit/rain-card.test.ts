@@ -249,3 +249,14 @@ describe("rain units", () => {
     }
   });
 });
+
+describe("hover", () => {
+  it("is the lead row's, off by default", () => {
+    const lead = (raw: object) => {
+      const c = normalizeRainCardConfig({ entity: "sensor.rain_rate", ...raw });
+      return c.entities[c.leadIdx].hover;
+    };
+    expect(lead({})).toBe(false);
+    expect(lead({ hover: true })).toBe(true);
+  });
+});

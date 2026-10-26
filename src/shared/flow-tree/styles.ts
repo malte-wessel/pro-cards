@@ -3,7 +3,13 @@
 // the summary line. Every particle's base styles carry its phase (--p0), so a paused frame
 // (prefers-reduced-motion) still shows a populated tree; that rule comes last because the
 // `animation` shorthands would reset the play state otherwise.
-import { STYLE_BASE, STYLE_BLOCKS, STYLE_HEADER, STYLE_ROW } from "../entity/render/styles.ts";
+import {
+  STYLE_BASE,
+  STYLE_BLOCKS,
+  STYLE_HEADER,
+  STYLE_HOVER,
+  STYLE_ROW,
+} from "../entity/render/styles.ts";
 import { CARD_BG, iconBg } from "../constants.ts";
 import { fs, fw, type } from "../typography.ts";
 
@@ -84,4 +90,5 @@ const STYLE_TREE = `
   @media (prefers-reduced-motion: reduce) { .pflow * { animation-play-state: paused; } .pnode .lead .prog { transition: none; } }
 `;
 
-export const STYLE_FLOW_TREE = STYLE_BASE + STYLE_HEADER + STYLE_ROW + STYLE_BLOCKS + STYLE_TREE;
+export const STYLE_FLOW_TREE =
+  STYLE_BASE + STYLE_HEADER + STYLE_ROW + STYLE_BLOCKS + STYLE_HOVER + STYLE_TREE;

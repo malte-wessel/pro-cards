@@ -91,7 +91,8 @@
         "double_tap_action": {
           "$ref": "defs.schema.json#/$defs/action",
           "description": "Default for every entity (none)"
-        }
+        },
+        "hover": { "$ref": "defs.schema.json#/$defs/hover" }
       }
     },
     "haExtras": {
@@ -239,7 +240,8 @@
         "name_position": { "type": "string", "enum": ["above", "below"] },
         "tap_action": { "$ref": "defs.schema.json#/$defs/action" },
         "hold_action": { "$ref": "defs.schema.json#/$defs/action" },
-        "double_tap_action": { "$ref": "defs.schema.json#/$defs/action" }
+        "double_tap_action": { "$ref": "defs.schema.json#/$defs/action" },
+        "hover": { "$ref": "defs.schema.json#/$defs/hover" }
       },
       "if": { "required": ["control"], "properties": { "control": { "const": "buttons" } } },
       "then": {
@@ -346,7 +348,8 @@
           "enum": ["above", "below"],
           "default": "below",
           "description": "Where the name sits relative to the icon in row items; the other layouts ignore it"
-        }
+        },
+        "hover": { "$ref": "defs.schema.json#/$defs/hover" }
       },
       "if": { "required": ["layout"], "properties": { "layout": { "const": "row" } } },
       "then": {

@@ -23,6 +23,7 @@ const ctx: NormalizeCtx = {
   tap: { action: "more-info" },
   hold: { action: "more-info" },
   dbl: { action: "none" },
+  hover: false,
   columns: 2,
 };
 const ent = (o: RawEntity) => normalizeEntity({ entity: "sensor.x", ...o }, ctx, "entities[0]");
@@ -271,6 +272,38 @@ describe("group", () => {
     );
     // the table draws its icon column while a shown item has an icon
     expect(t.entities.map((e) => e.item.showIcon)).toEqual([true, false]);
+  });
+});
+
+describe("hover", () => {
+  const on: NormalizeCtx = { ...ctx, ...normalizeActionDefaults({ hover: true }) };
+  it("is off unless the card turns it on, and only true turns it on", () => {
+    expect(normalizeActionDefaults({}).hover).toBe(false);
+    expect(normalizeActionDefaults({ hover: true }).hover).toBe(true);
+    expect(normalizeActionDefaults({ hover: null }).hover).toBe(false);
+    expect(normalizeActionDefaults({ hover: "yes" as unknown as boolean }).hover).toBe(false);
+  });
+  it("cascades card → entity: the entity's own boolean wins, anything else keeps the default", () => {
+    expect(ent({}).hover).toBe(false);
+    expect(ent({ hover: true }).hover).toBe(true);
+    const n = (o: RawEntity) => normalizeEntity({ entity: "sensor.x", ...o }, on, "entities[0]");
+    expect(n({}).hover).toBe(true);
+    expect(n({ hover: false }).hover).toBe(false);
+    expect(n({ hover: null }).hover).toBe(true);
+    expect(n({ hover: 1 as unknown as boolean }).hover).toBe(true);
+  });
+  it("cascades card → group → entity", () => {
+    const list = ["s.a", { entity: "s.b", hover: false }, { entity: "s.c", hover: true }];
+    const hovers = (g: object, c: NormalizeCtx) =>
+      normalizeGroup({ entities: list, ...g }, c, {}, "entities", 0).entities.map((e) => e.hover);
+    expect(hovers({}, ctx)).toEqual([false, false, true]);
+    expect(hovers({}, on)).toEqual([true, false, true]);
+    expect(hovers({ hover: true }, ctx)).toEqual([true, false, true]);
+    expect(hovers({ hover: false }, on)).toEqual([false, false, true]);
+  });
+  it("reaches header entities from the card", () => {
+    const h = normalizeHeaderEntities(["sensor.a", { entity: "sensor.b", hover: false }], on);
+    expect(h.map((e) => e.hover)).toEqual([true, false]);
   });
 });
 

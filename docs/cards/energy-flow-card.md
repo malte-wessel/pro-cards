@@ -154,35 +154,56 @@ consumers:
 
 :::
 
+## Hover
+
+`hover: true` shows what a click will do, as on the [power flow card](/cards/power-flow-card#hover): a node's circle brightens under the pointer, and header entities take a light layer; consumers drawn as a list keep still. On the card it is the default for every node; a source, the home or a consumer sets its own. See [Hover](/cards/entity-options#hover).
+
+::: live
+
+```yaml
+type: custom:energy-flow-card-pro
+home: sensor.home_energy
+hover: true
+sources:
+  - { type: solar, entity: sensor.solar_energy }
+  - type: battery
+    charge: sensor.battery_charge_energy
+    discharge: sensor.battery_discharge_energy
+    soc: sensor.battery_soc
+  - { type: grid, import: sensor.grid_import_energy, export: sensor.grid_export_energy, hover: false }
+```
+
+:::
+
 ## Reference
 
 ### Card options
 
-| Option                                                                                | Default                | Description                                                                                                                                             |
-| ------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sources`                                                                             | required               | Solar, battery and grid entries (below), in drawing order.                                                                                              |
-| `period`                                                                              | `today`                | `today`, `yesterday`, `week` (from Monday), `month` or `year`, in Home Assistant's time zone.                                                           |
-| `period_picker`                                                                       | `true`                 | The picker in the header: the viewer steps to another day, week, month or year; back to `period` after ten minutes untouched. `false`: always `period`. |
-| `title`                                                                               | Energy                 | The header's text, templates allowed.                                                                                                                   |
-| `home`                                                                                | sum of the sources     | The home's energy meter, or an entity object with `name`, `icon`, `rules` and actions.                                                                  |
-| `consumers`                                                                           | –                      | Devices (`{ entity, name, icon }`) or rooms (`{ group, icon, entities }`) with energy meters, in drawing order.                                         |
-| `idle_below`                                                                          | `0.05`                 | kWh below which a link is idle (no motion); `0` lets every trickle flow.                                                                                |
-| `decimals`                                                                            | `{ kwh: 1, mwh: 2 }`   | Decimals of the values: one number for both units, or `{ kwh, mwh }`. Values show in MWh from 1000 kWh.                                                 |
-| `hide_consumers_below`                                                                | –                      | Hides a consumer while it used less than this many kWh in the period. A room or consumer's own `hide_below` overrides it, `0` never hides.              |
-| `rules`                                                                               | –                      | `[{ below, above, color, label, tint_card }]` on the home's energy in the period in kWh; first match wins.                                              |
-| `consumer_style`, `other`, `direction`, `flow_style`, `idle_links`, `icon`, actions … | as the power flow card | See the [power flow card's options](/cards/power-flow-card#card-options).                                                                               |
+| Option                                                                                         | Default                | Description                                                                                                                                             |
+| ---------------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sources`                                                                                      | required               | Solar, battery and grid entries (below), in drawing order.                                                                                              |
+| `period`                                                                                       | `today`                | `today`, `yesterday`, `week` (from Monday), `month` or `year`, in Home Assistant's time zone.                                                           |
+| `period_picker`                                                                                | `true`                 | The picker in the header: the viewer steps to another day, week, month or year; back to `period` after ten minutes untouched. `false`: always `period`. |
+| `title`                                                                                        | Energy                 | The header's text, templates allowed.                                                                                                                   |
+| `home`                                                                                         | sum of the sources     | The home's energy meter, or an entity object with `name`, `icon`, `rules` and actions.                                                                  |
+| `consumers`                                                                                    | –                      | Devices (`{ entity, name, icon }`) or rooms (`{ group, icon, entities }`) with energy meters, in drawing order.                                         |
+| `idle_below`                                                                                   | `0.05`                 | kWh below which a link is idle (no motion); `0` lets every trickle flow.                                                                                |
+| `decimals`                                                                                     | `{ kwh: 1, mwh: 2 }`   | Decimals of the values: one number for both units, or `{ kwh, mwh }`. Values show in MWh from 1000 kWh.                                                 |
+| `hide_consumers_below`                                                                         | –                      | Hides a consumer while it used less than this many kWh in the period. A room or consumer's own `hide_below` overrides it, `0` never hides.              |
+| `rules`                                                                                        | –                      | `[{ below, above, color, label, tint_card }]` on the home's energy in the period in kWh; first match wins.                                              |
+| `consumer_style`, `other`, `direction`, `flow_style`, `idle_links`, `icon`, actions, `hover` … | as the power flow card | See the [power flow card's options](/cards/power-flow-card#card-options).                                                                               |
 
 ### Sources
 
-| Option                                       | Applies to | Description                                                                                                                                       |
-| -------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `type`                                       | all        | `solar`, `battery` or `grid`.                                                                                                                     |
-| `entity`                                     | solar      | Production: an energy meter.                                                                                                                      |
-| `charge`, `discharge`                        | battery    | The energy into and out of the battery: two energy meters, both required.                                                                         |
-| `import`, `export`                           | grid       | The energy from and to the grid: energy meters (`export` optional).                                                                               |
-| `soc`                                        | battery    | State of charge in %, shown as the node's ring (as it is now).                                                                                    |
-| `charge_from`                                | battery    | `solar`: only the panels charge this battery, never the grid. The entity of a solar source (or a list of them): only those panels. Default `any`. |
-| `name`, `icon`, `color`, `rules`, `decimals` | all        | As on every entity; `rules` match the meter's energy in the period (kWh).                                                                         |
-| `secondary`, `icon_size`, `visibility`       | all        | As on the [power flow card](/cards/power-flow-card#sources).                                                                                      |
+| Option                                          | Applies to | Description                                                                                                                                       |
+| ----------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`                                          | all        | `solar`, `battery` or `grid`.                                                                                                                     |
+| `entity`                                        | solar      | Production: an energy meter.                                                                                                                      |
+| `charge`, `discharge`                           | battery    | The energy into and out of the battery: two energy meters, both required.                                                                         |
+| `import`, `export`                              | grid       | The energy from and to the grid: energy meters (`export` optional).                                                                               |
+| `soc`                                           | battery    | State of charge in %, shown as the node's ring (as it is now).                                                                                    |
+| `charge_from`                                   | battery    | `solar`: only the panels charge this battery, never the grid. The entity of a solar source (or a list of them): only those panels. Default `any`. |
+| `name`, `icon`, `color`, `rules`, `decimals`    | all        | As on every entity; `rules` match the meter's energy in the period (kWh).                                                                         |
+| `secondary`, `icon_size`, `visibility`, `hover` | all        | As on the [power flow card](/cards/power-flow-card#sources).                                                                                      |
 
 The power flow card's `power`, `both_ways`, `invert`, `peak`, `price`, `offline`, `generator` and `fossil` describe a moment and are not options here; the card says so when it meets one.

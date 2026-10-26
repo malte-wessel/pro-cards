@@ -50,7 +50,8 @@
         "invert": {
           "type": "boolean",
           "description": "Flips the sign of the signed `power` sensor"
-        }
+        },
+        "hover": { "$ref": "defs.schema.json#/$defs/hover" }
       }
     },
     "solar": {

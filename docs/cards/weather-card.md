@@ -191,6 +191,30 @@ sections:
 
 :::
 
+## Hover
+
+`hover: true` shows what a click will do, as Home Assistant's tile does: the whole tile takes a light layer under the pointer, and a stronger one while pressed; header entities and the cells of a `grid` section do too, the items of a `row` or `column` section brighten their icon. On the card it is the default for every section; a section or an entity sets its own. See [Hover](/cards/entity-options#hover).
+
+::: live
+
+```yaml
+- type: custom:weather-card-pro
+  entity: weather.home
+  hover: true
+- type: custom:weather-card-pro
+  entity: weather.home
+  hover: true
+  sections:
+    - type: hero
+    - type: grid
+      entities: [humidity, pressure]
+    - type: row
+      hover: false
+      entities: [wind_speed, dew_point]
+```
+
+:::
+
 ## Everything
 
 Sections render in the order written, so the forecast can sit between groups; `divider: true` draws a line above a section, and the header takes `title`, `icon` and `header_entities` like the group cards.
@@ -273,6 +297,7 @@ Home Assistant's fifteen condition states. They are the keys of an `icons` map a
 | `title` / `icon` / `header_entities`     |                 | The header, like the [group card](/cards/entity-group-card#card-options). Templates allowed.                                                                                                    |
 | `title_tap_action`                       | none            | Action when the title or its icon is tapped, e.g. `{ action: navigate, navigation_path: /dashboard-rooms/kitchen }` to open the room's dashboard; see [Actions](/cards/entity-options#actions). |
 | `tap_action` …                           | `more-info`     | Actions of the lead and defaults for every entity, see the [entity options](/cards/entity-options#actions).                                                                                     |
+| `hover`                                  | `false`         | Hover and press layers on the lead and default for every section and entity, see [Hover](#hover).                                                                                               |
 | `columns` / `align`                      | per layout      | Defaults for the entity sections, see the [group card](/cards/entity-group-card#card-options).                                                                                                  |
 | `show_name` / `show_value` / `show_icon` | per layout      | Default [item options](/cards/entity-options#item-options) for every entity section.                                                                                                            |
 | `name_position`                          | `below`         | Default `above` or `below` the icon in row items; the other layouts ignore it, see the [item options](/cards/entity-options#item-options).                                                      |
@@ -294,7 +319,7 @@ Every section, whatever its type, also takes [`visibility`](/guide/visibility): 
 
 ### Sections `row`, `list`, `table`, `grid`, `column`
 
-The keys of a [sections card](/cards/entity-sections-card#section-options) section (`entities`, `align`, `columns`, `divider`, `visibility`, item options) plus `title`. Entries: a weather attribute name, an entity id, or an entity item (without `entity` it reads the weather entity, with `attribute`). Row items show their value by default.
+The keys of a [sections card](/cards/entity-sections-card#section-options) section (`entities`, `align`, `columns`, `divider`, `visibility`, `hover`, item options) plus `title`. Entries: a weather attribute name, an entity id, or an entity item (without `entity` it reads the weather entity, with `attribute`). Row items show their value by default.
 
 ### Section `trend`
 
@@ -323,4 +348,4 @@ The keys of a [sections card](/cards/entity-sections-card#section-options) secti
 | `divider`                     | `false`                   | Line above the section (never drawn for the first).                                                               |
 | `visibility`                  |                           | Drawn only while the [conditions](/guide/visibility) hold; they read the weather entity unless they name another. |
 
-The forecast comes from Home Assistant's forecast subscription, so it is the same data the built-in weather card shows, in the entity's own units; entities with a twice-daily forecast are summarised per day. An entity without an hourly or daily forecast shows "no forecast" in that section. Tapping the lead opens the more-info dialog of the weather entity. The card takes 6 columns and one row as a tile (two with a header) and 12 columns with sections, both `rows: auto`; given more height (fixed rows, a taller card beside it), its trends fill the card and the tile centres its content ([Filling the height](/guide/sizing#filling-the-height)); `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod` pass through. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height).
+The forecast comes from Home Assistant's forecast subscription, so it is the same data the built-in weather card shows, in the entity's own units; entities with a twice-daily forecast are summarised per day. An entity without an hourly or daily forecast shows "no forecast" in that section. Tapping the lead opens the more-info dialog of the weather entity. The card takes 6 columns and one row as a tile (two with a header) and 12 columns with sections, both `rows: auto`; given more height (fixed rows, a taller card beside it), its trends fill the card and the tile centres its content ([Filling the height](/guide/sizing#filling-the-height)); `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod` pass through. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height). `hover: true` shows Home Assistant's hover and press layers on what a click runs, for every entity or, set on an entity, for that one; see [Hover](#hover).

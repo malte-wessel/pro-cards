@@ -46,6 +46,9 @@
             "$ref": "entity.schema.json#/$defs/rule"
           },
           "description": "On the meter's energy in the period (kWh): colour and icon of the node; first match wins"
+        },
+        "hover": {
+          "$ref": "defs.schema.json#/$defs/hover"
         }
       }
     },

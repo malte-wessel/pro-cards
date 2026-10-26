@@ -253,3 +253,36 @@ describe("card-level visibility", () => {
     ).not.toThrow();
   });
 });
+
+describe("hover", () => {
+  const byId = (c: { entities: { entity: string | null; hover: boolean }[] }) =>
+    Object.fromEntries(c.entities.map((e) => [e.entity, e.hover]));
+  it("is the entity card's own key, off by default", () => {
+    expect(normalizeEntityCardConfig({ entity: "light.a" }).entities[0].hover).toBe(false);
+    expect(normalizeEntityCardConfig({ entity: "light.a", hover: true }).entities[0].hover).toBe(
+      true,
+    );
+  });
+  it("cascades card → entity on the group card, header entities included", () => {
+    const c = normalizeEntityGroupCardConfig({
+      hover: true,
+      header_entities: ["sensor.h"],
+      entities: ["light.a", { entity: "light.b", hover: false }],
+    });
+    expect(byId(c)).toEqual({ "light.a": true, "light.b": false, "sensor.h": true });
+  });
+  it("cascades card → section → entity on the sections card", () => {
+    const c = normalizeEntitySectionsCardConfig({
+      sections: [
+        { entities: ["light.a", { entity: "light.b", hover: true }] },
+        { hover: true, entities: ["light.c", { entity: "light.d", hover: false }] },
+      ],
+    });
+    expect(byId(c)).toEqual({
+      "light.a": false,
+      "light.b": true,
+      "light.c": true,
+      "light.d": false,
+    });
+  });
+});
