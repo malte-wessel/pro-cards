@@ -1,8 +1,7 @@
 // The dashboard's energy period (`period: dashboard`): Home Assistant's energy cards share one
 // collection on the websocket connection (its date picker sets the period, its other cards
-// subscribe), under `_<collection_key>`, else `_energy_<panel url>`, else `_energy`. The card only
-// reads it: one it created itself would be found by Home Assistant, which would then miss its
-// own methods.
+// subscribe), under `_<collection_key>`, else `_energy_<panel url>`. The card only reads it: one
+// it created itself would be found by Home Assistant, which would then miss its own methods.
 import {
   daysRange,
   kindOfRange,
@@ -23,18 +22,17 @@ export interface EnergyCollection extends EnergyPeriod {
 
 export const COLLECTION_PREFIX = "energy_";
 
-// the connection's keys to look under, the first found wins
-export const collectionKeys = (panelUrl: string | undefined, key: string | null): string[] =>
-  key ? [`_${key}`] : [...(panelUrl ? [`_${COLLECTION_PREFIX}${panelUrl}`] : []), "_energy"];
+// The connection's key of the collection, as Home Assistant builds it
+// (convertCollectionKeyToConnection): only this one, so a collection of another dashboard (or the
+// Energy panel's) never stands in for this dashboard's
+export const collectionKey = (panelUrl: string | undefined, key: string | null): string =>
+  key ? `_${key}` : panelUrl ? `_${COLLECTION_PREFIX}${panelUrl}` : "_energy";
 
-export const findCollection = (connection: object, keys: string[]): EnergyCollection | null => {
-  const conn = connection as Record<string, unknown>;
-  for (const k of keys) {
-    const c = conn[k] as Partial<EnergyCollection> | null | undefined;
-    if (c && typeof c.subscribe === "function" && c.start instanceof Date)
-      return c as EnergyCollection;
-  }
-  return null;
+export const findCollection = (connection: object, key: string): EnergyCollection | null => {
+  const c = (connection as Record<string, unknown>)[key] as Partial<EnergyCollection> | null;
+  return c && typeof c.subscribe === "function" && c.start instanceof Date
+    ? (c as EnergyCollection)
+    : null;
 };
 
 // the midnight nearest an instant: a picker in another zone than the card's still names its days

@@ -24,6 +24,7 @@ import {
   kindOf,
   kindOfRange,
   periodRange,
+  PERIOD_KINDS,
   rangeAt,
   zonedMidnight,
   zonedParts,
@@ -47,6 +48,7 @@ import {
   fetchMeterPeriods,
   type MeterPeriod,
 } from "./shared/statistics.ts";
+import { oneOf } from "./shared/util.ts";
 import { timeZoneOf } from "./shared/visibility.ts";
 import {
   meterIdsOf,
@@ -56,7 +58,7 @@ import {
 } from "./energy-flow/config.ts";
 import { CARD_TYPE, GAP_KWH, IDLE_KWH } from "./energy-flow/constants.ts";
 import {
-  collectionKeys,
+  collectionKey,
   findCollection,
   followedRange,
   type EnergyPeriod,
@@ -177,10 +179,10 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
   }
   // the kind of period shown (null: a range of days that is none)
   _kind(): PeriodKind | null {
+    // following: the kind followedRange found, in the range's key ("week:…", "range:…")
     if (this._config?.follow) {
-      const r = this._range,
-        hass = this._hass;
-      return r && hass ? kindOfRange(r.start, r.end, Date.now(), timeZoneOf(hass)) : "day";
+      const k = this._range?.key.split(":")[0] ?? "day";
+      return oneOf(PERIOD_KINDS, k) ? k : null;
     }
     const p = this._pick;
     return p ? (p.kind === "range" ? null : p.kind) : kindOf(this._config?.period ?? "today");
@@ -284,18 +286,21 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
   }
 
   // ----- the dashboard's period -----
-  // Home Assistant's energy collection, once one of its cards made it: looked for on every update
-  // until found, again on a new connection
-  _link(hass: HomeAssistant | undefined) {
-    const follow = this._config?.follow;
+  // Home Assistant's energy collection, once its date picker made it: looked for on every sync
+  // of the period until found (a config change finds it again before it renders), again on a new
+  // connection. A subscriber hears of a new period once its data is in; the card reads the period
+  // from the collection then, never from the data, which may be an older period's
+  _link() {
+    const follow = this._config?.follow,
+      hass = this._hass;
     if (!follow || !hass || !this.isConnected) return;
     if (this._followOff && this._followConn === hass.connection) return;
     this._unlink();
-    const coll = findCollection(hass.connection, collectionKeys(hass.panelUrl, follow.key));
+    const coll = findCollection(hass.connection, collectionKey(hass.panelUrl, follow.key));
     if (!coll) return;
     this._followConn = hass.connection;
     this._follow(coll, false);
-    this._followOff = coll.subscribe((data) => this._follow(data, true));
+    this._followOff = coll.subscribe(() => this._follow(coll, true));
   }
   _unlink() {
     this._followOff?.();
@@ -316,7 +321,6 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
   // ----- the statistics -----
   _setHass(hass: HomeAssistant) {
     const prev = this._hass;
-    this._link(hass);
     super._setHass(hass);
     // a new connection (Home Assistant restarted): the statistics may have moved on
     if (prev && prev.connection !== hass.connection) this._stats.invalidate();
@@ -332,7 +336,6 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
   }
   connectedCallback() {
     super.connectedCallback();
-    this._link(this._hass);
     this._stats.invalidate();
     this._fetchStats();
   }
@@ -363,6 +366,7 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
     const cfg = this._config,
       hass = this._hass;
     if (!cfg || !hass) return this._range;
+    if (cfg.follow) this._link();
     const tz = timeZoneOf(hass);
     const old = this._range;
     const pick = this._pick;

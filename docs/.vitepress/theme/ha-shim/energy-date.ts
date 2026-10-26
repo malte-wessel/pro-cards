@@ -54,6 +54,7 @@ export class HuiEnergyDateSelectionShim extends HTMLElement {
   _cfg: CardConfigBase = {};
   _hass?: HomeAssistant;
   _coll?: ShimEnergyCollection;
+  _off?: () => void;
   constructor() {
     super();
     const root = this.attachShadow({ mode: "open" });
@@ -97,9 +98,18 @@ export class HuiEnergyDateSelectionShim extends HTMLElement {
         conn[key] = makeEnergyCollection(new Date(r.start), new Date(r.end - 1));
       }
       this._coll = conn[key];
-      this._coll?.subscribe(() => this._paint());
+      this.connectedCallback();
     }
     this._paint();
+  }
+  // a picker on the page hears of the period; a removed one lets go of the shared collection
+  connectedCallback() {
+    if (this._coll && !this._off && this.isConnected)
+      this._off = this._coll.subscribe(() => this._paint());
+  }
+  disconnectedCallback() {
+    this._off?.();
+    this._off = undefined;
   }
   get hass(): HomeAssistant | undefined {
     return this._hass;

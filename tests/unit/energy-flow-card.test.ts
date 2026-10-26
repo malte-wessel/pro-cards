@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EnergyFlowCard } from "../../src/energy-flow-card.ts";
-import { collectionKeys, findCollection, followedRange } from "../../src/energy-flow/collection.ts";
+import { collectionKey, findCollection, followedRange } from "../../src/energy-flow/collection.ts";
 import {
   meterIdsOf,
   normalizeEnergyFlowConfig,
@@ -340,21 +340,19 @@ describe("energy-flow-card: the dashboard's energy period", () => {
   });
   const NOW = at("2026-03-12T10:00:00+01:00").getTime();
 
-  it("looks under the collection key, else the dashboard's, else the default", () => {
-    expect(collectionKeys("dashboard-energy", null)).toEqual([
-      "_energy_dashboard-energy",
-      "_energy",
-    ]);
-    expect(collectionKeys(undefined, null)).toEqual(["_energy"]);
-    expect(collectionKeys("lovelace", "energy_upstairs")).toEqual(["_energy_upstairs"]);
+  it("looks only where Home Assistant keeps it: the collection key, else the dashboard's", () => {
+    expect(collectionKey("dashboard-energy", null)).toBe("_energy_dashboard-energy");
+    expect(collectionKey("lovelace", "energy_upstairs")).toBe("_energy_upstairs");
+    expect(collectionKey(undefined, null)).toBe("_energy");
   });
 
   it("finds a collection by its period and subscription, nothing else", () => {
     const coll = { start: new Date(), subscribe: () => () => {} };
-    expect(findCollection({ _energy: coll }, ["_energy_x", "_energy"])).toBe(coll);
-    expect(findCollection({ _energy: { start: "today" } }, ["_energy"])).toBeNull();
-    expect(findCollection({ _energy: { subscribe: () => {} } }, ["_energy"])).toBeNull();
-    expect(findCollection({}, ["_energy"])).toBeNull();
+    expect(findCollection({ _energy_x: coll }, "_energy_x")).toBe(coll);
+    // another dashboard's never stands in
+    expect(findCollection({ _energy: coll }, "_energy_x")).toBeNull();
+    expect(findCollection({ _energy: { start: "today" } }, "_energy")).toBeNull();
+    expect(findCollection({ _energy: { subscribe: () => {} } }, "_energy")).toBeNull();
   });
 
   it("takes a day, week, month or year as that period", () => {

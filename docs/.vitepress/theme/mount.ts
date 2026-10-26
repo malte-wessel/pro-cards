@@ -36,7 +36,9 @@ export const createCard = (cfg: CardConfigBase): CardElement => {
   if (!raw) throw new Error("missing `type`");
   const type = customElements.get(raw) ? raw : `hui-${raw}-card`;
   if (!customElements.get(type))
-    throw new Error(`unknown card type "${cfg.type}" (only the Pro Cards types work here)`);
+    throw new Error(
+      `unknown card type "${cfg.type}" (only the Pro Cards types, heading and energy-date-selection work here)`,
+    );
   const el = document.createElement(type) as CardElement;
   el.setConfig(JSON.parse(JSON.stringify(cfg)));
   return el;

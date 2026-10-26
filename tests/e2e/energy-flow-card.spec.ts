@@ -206,17 +206,23 @@ test.describe("energy flow card", () => {
     const named = c.locator(".psummary .secondary .accent");
     await expect(named).toHaveText("Today");
     await expect(c.locator(".ppicker")).toHaveCount(0);
-    // Home Assistant's picker makes the dashboard's collection when it first renders
-    await page.evaluate(() => {
-      const conn = window.pc.snapshot().connection as unknown as Record<string, unknown>;
-      conn._energy_docs = {
-        start: new Date("2026-06-01T00:00:00"),
-        end: new Date("2026-06-30T23:59:59.999"),
-        subscribe: () => () => {},
-      };
-      // a new hass: the card looks again
-      window.pc.world.set("sensor.solar_energy");
-    });
+    // a collection made at another key is another dashboard's (or the Energy panel's) …
+    const make = (key: string) =>
+      page.evaluate((k) => {
+        const conn = window.pc.snapshot().connection as unknown as Record<string, unknown>;
+        conn[k] = {
+          start: new Date("2026-06-01T00:00:00"),
+          end: new Date("2026-06-30T23:59:59.999"),
+          subscribe: () => () => {},
+        };
+        // a new hass: the card looks again
+        window.pc.world.set("sensor.solar_energy");
+      }, key);
+    await make("_energy");
+    await make("_energy_dashboard");
+    await expect(named).toHaveText("Today");
+    // … this dashboard's picker makes its own when it first renders
+    await make("_energy_docs");
     await expect(named).toHaveText("This month");
   });
 
