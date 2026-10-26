@@ -222,9 +222,14 @@
     },
     "period": {
       "type": "string",
-      "enum": ["today", "yesterday", "week", "month", "year"],
+      "enum": ["today", "yesterday", "week", "month", "year", "dashboard"],
       "default": "today",
-      "description": "The period the card shows: calendar-aligned in Home Assistant's time zone, the week from Monday; it turns over by itself"
+      "description": "The period the card shows: calendar-aligned in Home Assistant's time zone, the week from Monday; it turns over by itself. dashboard: the period of Home Assistant's energy date picker on the dashboard (today without one); the card then has no picker of its own"
+    },
+    "collection_key": {
+      "type": "string",
+      "pattern": "^energy_",
+      "description": "With period: dashboard, the energy date picker to follow: its collection_key (Home Assistant's own option), e.g. energy_living_room. Default: the dashboard's"
     },
     "period_picker": {
       "type": "boolean",
@@ -393,6 +398,10 @@
     },
     {
       "$ref": "entity.schema.json#/$defs/haExtras"
+    },
+    {
+      "if": { "required": ["collection_key"] },
+      "then": { "required": ["period"], "properties": { "period": { "const": "dashboard" } } }
     }
   ],
   "unevaluatedProperties": false

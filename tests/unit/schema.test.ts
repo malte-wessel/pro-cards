@@ -18,6 +18,9 @@ const walk = (d: string): string[] =>
         : [];
   });
 
+// Home Assistant's own cards the docs shim has: not ours to validate
+const CORE = new Set(["heading", "energy-date-selection"]);
+const core = (c: unknown) => CORE.has(String((c as { type?: unknown } | null)?.type));
 // every card config the docs site renders: ::: live fences, DashboardGrid sections, the home page embeds DashboardGrids too
 const docExamples = () => {
   const out: { file: string; cfg: unknown }[] = [];
@@ -25,14 +28,14 @@ const docExamples = () => {
     const md = readFileSync(file, "utf8");
     for (const m of md.matchAll(/^::: live[^\n]*\n\n?```yaml\n([\s\S]*?)```/gm)) {
       const doc = yaml.load(m[1]);
-      for (const c of Array.isArray(doc) ? doc : [doc]) out.push({ file, cfg: c });
+      for (const c of Array.isArray(doc) ? doc : [doc]) if (!core(c)) out.push({ file, cfg: c });
     }
     for (const m of md.matchAll(/<DashboardGrid b64="([A-Za-z0-9+/=]+)"/g)) {
       const sections = yaml.load(Buffer.from(m[1], "base64").toString("utf8")) as {
         cards?: { type?: string }[];
       }[];
       for (const s of sections)
-        for (const c of s.cards || []) if (c.type !== "heading") out.push({ file, cfg: c });
+        for (const c of s.cards || []) if (!core(c)) out.push({ file, cfg: c });
     }
   }
   return out;
@@ -393,6 +396,10 @@ describe("card config schemas", () => {
     };
     expect(validate(ok)).toBeNull();
     expect(validate({ ...ok, period: "decade" })).toMatch(/enum|allowed/);
+    // the dashboard's period, of its own picker or another one
+    expect(validate({ ...ok, period: "dashboard", collection_key: "energy_upstairs" })).toBeNull();
+    expect(validate({ ...ok, period: "dashboard", collection_key: "upstairs" })).toBeTruthy();
+    expect(validate({ ...ok, collection_key: "energy_upstairs" })).toBeTruthy();
     // what describes a moment is the power flow card's
     for (const src of [
       { type: "battery", power: "sensor.b" },

@@ -479,6 +479,8 @@ export const snapshot = (): HassSnapshot => ({
   states: { ...world.states },
   locale: { language: "en-GB", number_format: "language", time_format: "24", time_zone: "server" },
   language: "en-GB",
+  // the dashboard's path: the energy cards share their period per dashboard
+  panelUrl: "docs",
   // the demo's logged-in user is Alex (person.alex carries the id, for `location` conditions)
   user: { id: DEMO_USER, name: "Alex", is_admin: true },
   config: {

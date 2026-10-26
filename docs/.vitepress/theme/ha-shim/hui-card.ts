@@ -13,6 +13,7 @@ import {
   type Visibility,
 } from "../../../../src/shared/visibility.ts";
 import { VisibilityWatch } from "../../../../src/shared/visibility-watch.ts";
+import { HuiEnergyDateSelectionShim } from "./energy-date.ts";
 
 interface Inner extends HTMLElement {
   setConfig?(config: unknown): void;
@@ -25,13 +26,15 @@ interface Inner extends HTMLElement {
 }
 
 // a card element from its config: custom:<tag> for the Pro Cards, hui-<type>-card for the core
-// cards the shim has (heading)
+// cards the shim has (heading, energy-date-selection)
 export const createInner = (cfg: CardConfigBase): Inner => {
   const raw = String(cfg.type || "");
   if (!raw) throw new Error("missing `type`");
   const tag = raw.startsWith("custom:") ? raw.slice(7) : `hui-${raw}-card`;
   if (!customElements.get(tag))
-    throw new Error(`unknown card type "${raw}" (only the Pro Cards types and heading work here)`);
+    throw new Error(
+      `unknown card type "${raw}" (only the Pro Cards types, heading and energy-date-selection work here)`,
+    );
   const el = document.createElement(tag) as Inner;
   el.setConfig?.(JSON.parse(JSON.stringify(cfg)));
   return el;
@@ -203,6 +206,8 @@ export class HuiHeadingShim extends HTMLElement {
 export const defineHuiElements = () => {
   if (!customElements.get("hui-heading-card"))
     customElements.define("hui-heading-card", HuiHeadingShim);
+  if (!customElements.get("hui-energy-date-selection-card"))
+    customElements.define("hui-energy-date-selection-card", HuiEnergyDateSelectionShim);
   if (!customElements.get("hui-card")) customElements.define("hui-card", HuiCardShim);
   window.loadCardHelpers ??= async () => ({ createCardElement: (c) => createInner(c) });
 };
