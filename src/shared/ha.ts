@@ -33,6 +33,9 @@ export interface HomeAssistant {
   formatEntityState?: (st: HassEntity) => string;
   // a path on the Home Assistant server as a full URL (an entity picture on a cast device)
   hassUrl?: (path?: string) => string;
+  // the dashboard's url path ("dashboard-energy"): Home Assistant's energy cards share their period
+  // per dashboard
+  panelUrl?: string;
   // the theme's mode (cards that draw pictures tune their colours for a dark one)
   themes?: { darkMode?: boolean };
 }

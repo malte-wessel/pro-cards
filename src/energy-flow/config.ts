@@ -23,16 +23,20 @@ import {
 import { NODE_D } from "../shared/flow-tree/constants.ts";
 import { treeIdxs } from "../shared/flow-tree/model.ts";
 import { numOrNull } from "../shared/util.ts";
+import { COLLECTION_PREFIX } from "./collection.ts";
 import { CARD_TYPE, DEFAULT_UNITS, IDLE_KWH, type EnergyUnits } from "./constants.ts";
 
 export interface RawEnergyFlowConfig extends RawFlowTreeConfig {
   period?: unknown;
   period_picker?: unknown;
+  collection_key?: unknown;
 }
 
 export interface EnergyFlowConfig extends FlowTreeConfig {
   period: CalendarPeriod; // what the card shows until a viewer picks another
   picker: boolean; // the viewer's period picker in the header (`period_picker`)
+  // `period: dashboard`: the period of Home Assistant's energy cards (`key`: `collection_key`)
+  follow: { key: string | null } | null;
   units: EnergyUnits;
 }
 
@@ -114,6 +118,9 @@ const normalizeSource = (
   };
 };
 
+// the calendar periods, or the dashboard's
+const PERIOD_OPTIONS = [...PERIODS, "dashboard"] as const;
+
 const normalizeUnits = (raw: RawEnergyFlowConfig): EnergyUnits => {
   const d = raw.decimals;
   if (d !== undefined && d !== null && typeof d === "object") {
@@ -146,13 +153,22 @@ export const normalizeEnergyFlowConfig = (input: unknown): EnergyFlowConfig => {
     idleBelow: IDLE_KWH,
     gross: true,
   });
-  const picker = raw.period_picker !== false;
+  const period = enumOf(CARD_TYPE, PERIOD_OPTIONS, raw.period, "period", "today");
+  const ck = raw.collection_key ?? null;
+  if (ck !== null && (typeof ck !== "string" || !ck.startsWith(COLLECTION_PREFIX)))
+    throw new Error(`${CARD_TYPE}: collection_key must start with ${COLLECTION_PREFIX}`);
+  const key = ck as string | null;
+  if (key !== null && period !== "dashboard")
+    throw new Error(`${CARD_TYPE}: collection_key needs period: dashboard`);
+  const follow = period === "dashboard" ? { key } : null;
   return {
     ...tree,
     // always a header: the card's name is the title when the config gives none
     hasHeader: true,
-    period: enumOf(CARD_TYPE, PERIODS, raw.period, "period", "today"),
-    picker,
+    // following the dashboard: today until its period is known; Home Assistant's picker sets it
+    period: period === "dashboard" ? "today" : period,
+    picker: !follow && raw.period_picker !== false,
+    follow,
     units: normalizeUnits(raw),
   };
 };

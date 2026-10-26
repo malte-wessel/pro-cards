@@ -168,7 +168,9 @@ const mount = (cfgOrList: CardConfigBase | CardConfigBase[], opts: MountOptions 
   const cfgs = Array.isArray(cfgOrList) ? cfgOrList : [cfgOrList];
   const els: CardElement[] = [];
   for (const cfg of cfgs) {
-    const type = String(cfg.type || "").replace(/^custom:/, "");
+    // a Pro card, or a core card the docs shim has as hui-<type>-card
+    const raw = String(cfg.type || "").replace(/^custom:/, "");
+    const type = customElements.get(raw) ? raw : `hui-${raw}-card`;
     const el = document.createElement(type) as CardElement;
     el.setConfig(JSON.parse(JSON.stringify(cfg)));
     el.hass = snapshot();

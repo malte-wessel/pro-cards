@@ -4,7 +4,7 @@
  * grid) → home → rooms → consumers, from energy meters and their long-term statistics.
  *
  *   type: custom:energy-flow-card-pro
- *   period: today                          # today | yesterday | week | month | year
+ *   period: today                          # today | yesterday | week | month | year | dashboard
  *   period_picker: true                    # the viewer picks another day, week, month or year
  *   sources:                               # required: solar / battery / grid entries (energy meters)
  *     - { type: solar, entity: sensor.solar_energy }
@@ -55,6 +55,12 @@ import {
   type EnergyFlowConfig,
 } from "./energy-flow/config.ts";
 import { CARD_TYPE, GAP_KWH, IDLE_KWH } from "./energy-flow/constants.ts";
+import {
+  collectionKeys,
+  findCollection,
+  followedRange,
+  type EnergyPeriod,
+} from "./energy-flow/collection.ts";
 import { buildPicker, updatePicker } from "./energy-flow/picker.ts";
 import { STYLE_ENERGY_FLOW_CARD } from "./energy-flow/styles.ts";
 import {
@@ -129,8 +135,15 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
   _pick: Pick | null = null;
   _picked = false; // the pick changed: the next _syncPeriod takes its range
   _idleTimer?: ReturnType<typeof setTimeout>;
+  // `period: dashboard`: the period of Home Assistant's energy cards (null: none found yet), the
+  // subscription to it and the connection it lives on
+  _followed: EnergyPeriod | null = null;
+  _followOff?: () => void;
+  _followConn?: object;
 
   setConfig(config: unknown) {
+    this._unlink();
+    this._followed = null;
     this._pick = null;
     clearTimeout(this._idleTimer);
     this._stats.reset();
@@ -164,6 +177,11 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
   }
   // the kind of period shown (null: a range of days that is none)
   _kind(): PeriodKind | null {
+    if (this._config?.follow) {
+      const r = this._range,
+        hass = this._hass;
+      return r && hass ? kindOfRange(r.start, r.end, Date.now(), timeZoneOf(hass)) : "day";
+    }
     const p = this._pick;
     return p ? (p.kind === "range" ? null : p.kind) : kindOf(this._config?.period ?? "today");
   }
@@ -265,9 +283,40 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
     });
   }
 
+  // ----- the dashboard's period -----
+  // Home Assistant's energy collection, once one of its cards made it: looked for on every update
+  // until found, again on a new connection
+  _link(hass: HomeAssistant | undefined) {
+    const follow = this._config?.follow;
+    if (!follow || !hass || !this.isConnected) return;
+    if (this._followOff && this._followConn === hass.connection) return;
+    this._unlink();
+    const coll = findCollection(hass.connection, collectionKeys(hass.panelUrl, follow.key));
+    if (!coll) return;
+    this._followConn = hass.connection;
+    this._follow(coll, false);
+    this._followOff = coll.subscribe((data) => this._follow(data, true));
+  }
+  _unlink() {
+    this._followOff?.();
+    this._followOff = undefined;
+    this._followConn = undefined;
+  }
+  _follow(p: EnergyPeriod, render: boolean) {
+    const old = this._followed;
+    if (old && old.start.getTime() === p.start.getTime() && old.end?.getTime() === p.end?.getTime())
+      return;
+    this._followed = { start: p.start, end: p.end };
+    this._picked = true;
+    if (!render) return;
+    this._fetchStats();
+    this._render();
+  }
+
   // ----- the statistics -----
   _setHass(hass: HomeAssistant) {
     const prev = this._hass;
+    this._link(hass);
     super._setHass(hass);
     // a new connection (Home Assistant restarted): the statistics may have moved on
     if (prev && prev.connection !== hass.connection) this._stats.invalidate();
@@ -283,11 +332,13 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
   }
   connectedCallback() {
     super.connectedCallback();
+    this._link(this._hass);
     this._stats.invalidate();
     this._fetchStats();
   }
   disconnectedCallback() {
     super.disconnectedCallback();
+    this._unlink();
     clearTimeout(this._rollTimer);
     this._rollTimer = undefined;
     // a card that comes back (another view, back again) shows its configured period
@@ -318,11 +369,15 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
     const r =
       old && now < old.next && old.key.endsWith(`:${tz}`) && !this._picked
         ? old
-        : pick
-          ? pick.kind === "range"
-            ? daysRange(pick.start, pick.end, now, tz)
-            : rangeAt(pick.kind, pick.anchor ?? now, now, tz)
-          : periodRange(cfg.period, now, tz);
+        : cfg.follow
+          ? this._followed
+            ? followedRange(this._followed, now, tz)
+            : periodRange("today", now, tz)
+          : pick
+            ? pick.kind === "range"
+              ? daysRange(pick.start, pick.end, now, tz)
+              : rangeAt(pick.kind, pick.anchor ?? now, now, tz)
+            : periodRange(cfg.period, now, tz);
     this._picked = false;
     // a range that ran into today ends under the same key: its last hours come from the
     // statistics now, not from the live tail

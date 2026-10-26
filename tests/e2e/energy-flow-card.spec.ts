@@ -178,6 +178,48 @@ test.describe("energy flow card", () => {
     await expect(c.locator(".psummary .secondary .accent")).toHaveText("This month");
   });
 
+  test("follows the dashboard's energy date picker, without a picker of its own", async ({
+    page,
+  }) => {
+    const dash = { type: T, period: "dashboard", home: HOME, sources: SRC };
+    await mount(page, [{ type: "energy-date-selection" }, dash]);
+    const picker = card(page, 0),
+      c = card(page, 1);
+    const named = c.locator(".psummary .secondary .accent");
+    await expect(c.locator(".ppicker")).toHaveCount(0);
+    await expect(named).toHaveText("Today");
+    await picker.locator(".prev").click();
+    await expect(named).toHaveText("Yesterday");
+    await expect(home(c)).toHaveText(
+      `Home · ${(await counted(page, midnight(20), midnight(21))).toFixed(1)} kWh`,
+    );
+    await picker.locator(".prev").click();
+    await expect(named).toHaveText(/19 Jun/);
+    await picker.locator("[data-kind='week']").click();
+    // the week of the 19th is the running one
+    await expect(named).toHaveText("This week");
+  });
+
+  test("shows today without a date picker, and follows one that comes later", async ({ page }) => {
+    await mount(page, { type: T, period: "dashboard", home: HOME, sources: SRC });
+    const c = card(page);
+    const named = c.locator(".psummary .secondary .accent");
+    await expect(named).toHaveText("Today");
+    await expect(c.locator(".ppicker")).toHaveCount(0);
+    // Home Assistant's picker makes the dashboard's collection when it first renders
+    await page.evaluate(() => {
+      const conn = window.pc.snapshot().connection as unknown as Record<string, unknown>;
+      conn._energy_docs = {
+        start: new Date("2026-06-01T00:00:00"),
+        end: new Date("2026-06-30T23:59:59.999"),
+        subscribe: () => () => {},
+      };
+      // a new hass: the card looks again
+      window.pc.world.set("sensor.solar_energy");
+    });
+    await expect(named).toHaveText("This month");
+  });
+
   test("keeps the picker's buttons in place whatever the period's name", async ({ page }) => {
     await mount(page, { type: T, home: HOME, sources: SRC });
     const c = card(page);

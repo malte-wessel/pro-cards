@@ -30,9 +30,11 @@ export const loadRuntime = (): Promise<HassModule> => {
   return ready;
 };
 
+// a Pro card (with or without custom:), or a core card the shim has as hui-<type>-card
 export const createCard = (cfg: CardConfigBase): CardElement => {
-  const type = String(cfg.type || "").replace(/^custom:/, "");
-  if (!type) throw new Error("missing `type`");
+  const raw = String(cfg.type || "").replace(/^custom:/, "");
+  if (!raw) throw new Error("missing `type`");
+  const type = customElements.get(raw) ? raw : `hui-${raw}-card`;
   if (!customElements.get(type))
     throw new Error(`unknown card type "${cfg.type}" (only the Pro Cards types work here)`);
   const el = document.createElement(type) as CardElement;

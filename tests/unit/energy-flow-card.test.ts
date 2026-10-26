@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EnergyFlowCard } from "../../src/energy-flow-card.ts";
+import { collectionKeys, findCollection, followedRange } from "../../src/energy-flow/collection.ts";
 import {
   meterIdsOf,
   normalizeEnergyFlowConfig,
@@ -94,6 +95,20 @@ describe("energy-flow-card config", () => {
     });
     expect(() => cfgOf({ period: "decade" })).toThrow(/period/);
     expect(cfgOf({ decimals: { kwh: 2, mwh: 3 } }).units).toMatchObject({ decKwh: 2, decMwh: 3 });
+  });
+
+  it("follows the dashboard's energy period without a picker of its own", () => {
+    expect(cfgOf()).toMatchObject({ follow: null });
+    expect(cfgOf({ period: "dashboard" })).toMatchObject({
+      period: "today",
+      picker: false,
+      follow: { key: null },
+    });
+    expect(cfgOf({ period: "dashboard", collection_key: "energy_upstairs" })).toMatchObject({
+      follow: { key: "energy_upstairs" },
+    });
+    expect(() => cfgOf({ period: "dashboard", collection_key: "upstairs" })).toThrow(/energy_/);
+    expect(() => cfgOf({ collection_key: "energy_upstairs" })).toThrow(/period: dashboard/);
   });
 
   it("reads its thresholds in kWh", () => {
@@ -312,5 +327,62 @@ describe("energy-flow-card: the lanes into the home", () => {
       const end = battery.pts[1];
       expect(Math.hypot(end[0] - home.x, end[1] - home.y)).toBeCloseTo(home.d / 2, 5);
     }
+  });
+});
+
+describe("energy-flow-card: the dashboard's energy period", () => {
+  const TZ = "Europe/Berlin";
+  const at = (iso: string) => new Date(iso);
+  // a period as Home Assistant's picker sets it: from a day's start to the last instant of a day
+  const ha = (from: string, to?: string) => ({
+    start: at(`${from}T00:00:00+01:00`),
+    end: to ? new Date(at(`${to}T00:00:00+01:00`).getTime() - 1) : undefined,
+  });
+  const NOW = at("2026-03-12T10:00:00+01:00").getTime();
+
+  it("looks under the collection key, else the dashboard's, else the default", () => {
+    expect(collectionKeys("dashboard-energy", null)).toEqual([
+      "_energy_dashboard-energy",
+      "_energy",
+    ]);
+    expect(collectionKeys(undefined, null)).toEqual(["_energy"]);
+    expect(collectionKeys("lovelace", "energy_upstairs")).toEqual(["_energy_upstairs"]);
+  });
+
+  it("finds a collection by its period and subscription, nothing else", () => {
+    const coll = { start: new Date(), subscribe: () => () => {} };
+    expect(findCollection({ _energy: coll }, ["_energy_x", "_energy"])).toBe(coll);
+    expect(findCollection({ _energy: { start: "today" } }, ["_energy"])).toBeNull();
+    expect(findCollection({ _energy: { subscribe: () => {} } }, ["_energy"])).toBeNull();
+    expect(findCollection({}, ["_energy"])).toBeNull();
+  });
+
+  it("takes a day, week, month or year as that period", () => {
+    const today = followedRange(ha("2026-03-12", "2026-03-13"), NOW, TZ);
+    expect(today).toMatchObject({ open: true, granularity: "hour" });
+    expect(today.key).toMatch(/^day:/);
+    expect(followedRange(ha("2026-03-11", "2026-03-12"), NOW, TZ)).toMatchObject({ open: false });
+    expect(followedRange(ha("2026-03-09", "2026-03-16"), NOW, TZ).key).toMatch(/^week:/);
+    expect(followedRange(ha("2026-03-01", "2026-04-01"), NOW, TZ).key).toMatch(/^month:/);
+    expect(followedRange(ha("2026-01-01", "2027-01-01"), NOW, TZ)).toMatchObject({
+      granularity: "month",
+    });
+  });
+
+  it("takes any other run of days as such, and a period without an end as its first day", () => {
+    const r = followedRange(ha("2026-03-01", "2026-03-11"), NOW, TZ);
+    expect(r.key).toMatch(/^range:/);
+    expect((r.end - r.start) / 86400e3).toBe(10);
+    expect(followedRange(ha("2026-03-05"), NOW, TZ).key).toMatch(/^day:/);
+  });
+
+  it("keeps a day of a clock change whole, and names the days of a picker in another zone", () => {
+    // the clocks go forward on 29 March: a day of 23 hours
+    const r = followedRange(ha("2026-03-29", "2026-03-30"), NOW, TZ);
+    expect(r.key).toMatch(/^day:/);
+    expect(r.end - r.start).toBe(23 * 3600e3);
+    // midnight in London is 01:00 in Berlin: still the same day
+    const london = { start: at("2026-03-05T00:00:00Z"), end: at("2026-03-05T23:59:59.999Z") };
+    expect(followedRange(london, NOW, TZ).start).toBe(at("2026-03-05T00:00:00+01:00").getTime());
   });
 });
