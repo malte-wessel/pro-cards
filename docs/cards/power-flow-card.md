@@ -36,7 +36,7 @@ sources:
 
 A plug-in battery (a balcony system, a DC-coupled hybrid) is fed by its panels: solar goes into the battery first and the grid cannot charge it. `charge_from: solar` on the battery tells the card so. Solar then charges that battery before it covers the home, and grid power runs to the home; the grid only tops the battery up when the sensors disagree (the panels report less than the battery takes). With several solar sources the charge is shared across them. Without the option the card follows the usual order and would draw the grid charging the battery whenever the battery takes more than the solar surplus.
 
-Such a unit usually reports two numbers: what the panels put in and what its inverter gives out. Given as the `charge` / `discharge` pair, the card draws both flows at once, the panels into the battery and the battery into the home, and the node shows both values while both run: `650 W ↓` over `250 W ↑`, into the battery and out of it. The label keeps the second line while it shows one value, so the card's height never changes with the flows. Once one of them drops below `idle_below` the node shows the net value again (and both again only clearly above it, so the label does not flicker). With a single `power` sensor it only knows the net value, so part of the solar runs to the home directly. The inverter's output is not the battery's `power`: it already contains the solar share and would count it twice.
+Such a unit usually reports two numbers: what the panels put in and what its inverter gives out. Given as the `charge` / `discharge` pair, the card draws both flows at once, the panels into the battery and the battery into the home, and the node shows both values while both run, into the battery and out of it: in one line where there is room beside the node (`650 W ↓ · 250 W ↑`), else `650 W ↓` over `250 W ↑`. The label keeps the room of the second value while it shows one, so the card's height never changes with the flows. Once one of them drops below `idle_below` the node shows the net value again (and both again only clearly above it, so the label does not flicker). With a single `power` sensor it only knows the net value, so part of the solar runs to the home directly. The inverter's output is not the battery's `power`: it already contains the solar share and would count it twice.
 
 ::: live
 
@@ -75,7 +75,7 @@ sources:
 
 :::
 
-Most meters net their phases: the home imports or exports, never both. A meter that counts every phase on its own can import on one phase while it exports on another. `both_ways: true` on an `import` / `export` pair tells the card so. The export then comes from the panels (then the batteries) before they cover the home, the import covers what is left of the home and of the batteries' charge, and the grid node shows both values: `400 W ↓` over `1.20 kW ↑`, into the grid and out of it. The summary reads the export when it outweighs what the home imports. Without the option the pair is netted.
+Most meters net their phases: the home imports or exports, never both. A meter that counts every phase on its own can import on one phase while it exports on another. `both_ways: true` on an `import` / `export` pair tells the card so. The export then comes from the panels (then the batteries) before they cover the home, the import covers what is left of the home and of the batteries' charge, and the grid node shows both values, into the grid and out of it: `400 W ↓ · 1.20 kW ↑` in one line where there is room, else stacked. The summary reads the export when it outweighs what the home imports. Without the option the pair is netted.
 
 ::: live
 
@@ -94,6 +94,8 @@ sources:
 ## Consumers
 
 `consumers` lists the devices the home feeds. Each is an entity with a power sensor and, like everywhere else, a `name`, an `icon` and a `secondary` line (a template is fine); an **Other** node takes whatever the home uses beyond them (`other: false` leaves it out, `other: { name: Rest of the house, icon: mdi:home-outline }` gives it a name and an icon of its own). `consumer_style: list` shows them as rows with a bar instead of nodes.
+
+The consumers are evenly spaced and centred on the home, so the one level with it runs straight. Every line out of the home takes its own lane, the mirror of the lines into it: the lanes leave the home side by side and turn in one block. Many consumers move the lanes closer, down to a 2 px gap; more than fit that way share one line. On a narrow card the home moves left to make room for the lanes, and the label of a source beside it keeps its value and has its name cut.
 
 A device that can produce, such as an EV giving power back or a plug-in panel on a smart plug, reports a negative value: its link then runs back to the home in the solar colour and it counts for nothing in the Other node. `invert: true` flips a sensor with the opposite sign.
 
@@ -168,6 +170,8 @@ consumers:
 ```
 
 :::
+
+A room's label sits above it (below where that is free), and its devices' lines leave the room on lanes of their own, as the home's do. On a narrow card the rooms win: a room's label never sits on a line, a device's name is cut where a room's label needs its place (its value never), and where not even the devices' values fit beside the rooms' labels, the devices' labels go below them.
 
 ## Node sizes
 

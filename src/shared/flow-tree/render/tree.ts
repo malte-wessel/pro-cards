@@ -377,6 +377,9 @@ const labelText = (
   return { v, v2, n: name, s };
 };
 
+// both values of a two-valued label in one line
+const inlineValues = (txt: LabelTexts) => `${txt.v} · ${txt.v2}`;
+
 // the labels' lines as styled (`.plabel`), at the theme's text size
 export const labelLines = (diag: HTMLElement, cache?: TextCache): LabelLines => ({
   value: measure(cache, diag, ["plabel", "state"], [14, 17, 500]),
@@ -390,6 +393,8 @@ const measureLabels = (st: TreeState, labelEls: Map<string, HTMLElement>) => {
   const lines = linesOf(st.cfg);
   const texts = new Map<string, LabelTexts>();
   const sizes = new Map<string, LabelBox>();
+  // a label showing two values: its shape with both in one line
+  const alts = new Map<string, { w: number; h: number }>();
   for (const nd of st.layout.nodes) {
     const el = labelEls.get(nd.id);
     if (!el) continue;
@@ -406,8 +411,45 @@ const measureLabels = (st: TreeState, labelEls: Map<string, HTMLElement>) => {
     const h =
       value.line + (txt.v2 !== undefined ? value.line : 0) + name.line + (txt.s ? name.line : 0);
     sizes.set(nd.id, { w, h, vw, nw });
+    if (txt.v2)
+      alts.set(nd.id, {
+        w: Math.max(textWidth(inlineValues(txt), value.font) + 2, nw),
+        h: h - value.line,
+      });
   }
-  return { texts, sizes };
+  return { texts, sizes, alts };
+};
+
+// The widest each label has been, per diagram, while its width, its fonts and its nodes stay the
+// same (a new config builds a new diagram): a value ticking between 990 W and 1.01 kW would
+// otherwise move the columns, or flip a label between two places or shapes, back and forth on
+// every update. A label only ever gets more room; a new width measures afresh.
+interface Widest {
+  key: string;
+  labels: Map<string, { w: number; vw: number; nw: number; alt?: number }>;
+}
+const widestOf = new WeakMap<HTMLElement, Widest>();
+const keepWidest = (
+  diag: HTMLElement,
+  key: string,
+  sizes: Map<string, LabelBox>,
+  alts: Map<string, { w: number; h: number }>,
+) => {
+  let seen = widestOf.get(diag);
+  if (!seen || seen.key !== key) widestOf.set(diag, (seen = { key, labels: new Map() }));
+  for (const [id, s] of sizes) {
+    const alt = alts.get(id);
+    const m = seen.labels.get(id) ?? { w: 0, vw: 0, nw: 0 };
+    seen.labels.set(id, m);
+    m.w = Math.max(m.w, s.w);
+    m.vw = Math.max(m.vw, s.vw ?? 0);
+    m.nw = Math.max(m.nw, s.nw ?? 0);
+    sizes.set(id, { ...s, w: m.w, vw: m.vw, nw: m.nw });
+    if (alt) {
+      m.alt = Math.max(m.alt ?? 0, alt.w);
+      alts.set(id, { ...alt, w: m.alt });
+    }
+  }
 };
 
 export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
@@ -419,7 +461,19 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
     if (!leaf.id.includes("."))
       labelEls.get(leaf.id)?.classList.toggle("small", !prelim.cfg.hasGroups);
   // the labels' sizes decide where the columns go: lay out again with them
-  const { texts, sizes } = measureLabels(prelim, labelEls);
+  const { texts, sizes, alts } = measureLabels(prelim, labelEls);
+  const lines = linesOf(prelim.cfg);
+  keepWidest(
+    diag,
+    [
+      Math.round(prelim.layout.w),
+      lines.value.font,
+      lines.name.font,
+      prelim.layout.nodes.map((n) => n.id).join(","),
+    ].join("|"),
+    sizes,
+    alts,
+  );
   const st: TreeState = {
     ...prelim,
     layout: layoutTree(prelim.cfg, prelim.layout.w, prelim.flows.edges, sizes, prelim.layout.h),
@@ -593,26 +647,30 @@ export const updateTree = (diag: HTMLElement, prelim: TreeState) => {
   }
 
   // ----- labels -----
-  // a name cut to its room (a tight row of consumers); the value is never cut
+  // a name cut to its room (a tight row of consumers, or a device's beside a room's label: the
+  // placement cuts it); the value is never cut
   const labelMax = new Map(layout.nodes.map((n) => [n.id, n.labelMax]));
   const labelSizes: LabelSize[] = [...sizes].map(([id, { w, h, vw = 0 }]) => {
     const max = labelMax.get(id);
-    return { id, h, w: max === undefined ? w : Math.min(w, Math.max(max, vw)) };
+    // the values in one line where there is room for it (a label cut to its room has none)
+    const alt = max === undefined ? alts.get(id) : undefined;
+    return { id, h, w: max === undefined ? w : Math.min(w, Math.max(max, vw)), alt, vw };
   });
   for (const p of placeLabels(layout, labelSizes, cfg.direction)) {
     const el = labelEls.get(p.id);
     const txt = texts.get(p.id);
     if (!el || !txt) continue;
-    const max = labelMax.get(p.id);
+    const max = p.cut ?? labelMax.get(p.id);
     el.classList.toggle("cut", max !== undefined);
     el.style.setProperty("--pl-max", max === undefined ? "" : `${Math.floor(max)}px`);
-    qs(el, ".state").textContent = txt.v;
+    // both values in one line where the placement found room for it
+    qs(el, ".state").textContent = p.inline ? inlineValues(txt) : txt.v;
     // the second value line: kept while it shows one value, below the name, so the value stays
     // over the name and the label keeps its height
     const v2 = qs(el, ".v2");
-    el.classList.toggle("two", txt.v2 !== undefined);
+    el.classList.toggle("two", txt.v2 !== undefined && !p.inline);
     v2.classList.toggle("blank", !txt.v2);
-    v2.textContent = txt.v2 || "\u00a0";
+    v2.textContent = p.inline ? "" : txt.v2 || "\u00a0";
     const name = qs(el, ".name");
     name.textContent = txt.n;
     name.style.display = txt.n ? "" : "none";

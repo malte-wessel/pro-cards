@@ -9,6 +9,11 @@ _Beta_
 - Power and energy flow: `flow_style: none` draws the active links in their colour without motion
 - Power and energy flow: a tree whose sensors report another unit (a water flow in L/min, water meters in m³) shows its values in that unit as written instead of W or kWh
 - Power and energy flow: a tree without a grid source (a heat flow) no longer claims to be 100 % self-sufficient
+- Power and energy flow: sources and consumers are evenly spaced (one distance between every two centres in a column, rooms centred on their devices), and the lines from the sources turn into the home in one mirrored block, every corner alike
+- Power and energy flow: a battery's or grid's two values sit in one line where there is room for it, stacked where there is not
+- Power and energy flow: the lines out of the home and out of each room take their own lanes, the mirror of the lines into the home: each leaves the circle on its own lane, centred on the node, and they turn in one block, every corner alike. Many lines move closer, down to a 2 px gap; more than that fit share one line as before. The consumer column centres on the home, so the one level with it runs straight (a card with rooms can grow a few px for it), and on a narrow card the home moves left for the lanes, a source label beside it keeping its value and having its name cut
+- Power and energy flow: on a narrow card with rooms, the rooms' labels stay clear of the home's line: the home moves left (a source label beside it keeps its value and has its name cut), a device's name is cut where a room's label needs its place, and where even the devices' values would not fit beside the rooms' labels, the devices' labels go below them
+- Fix: power and energy flow: the home sits level with the source nearest its height, so that source's line runs straight in instead of taking a small step that looked like a crack, and every line into the home meets its circle
 
 ## 2.8.0 – Layout card and theme-aware sizing
 

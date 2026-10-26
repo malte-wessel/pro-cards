@@ -18,6 +18,7 @@ import {
   type EnergyIn,
 } from "../../src/energy-flow/model.ts";
 import { COLORS } from "../../src/shared/flow-tree/constants.ts";
+import { layoutTree } from "../../src/shared/flow-tree/layout.ts";
 import type { HomeAssistant } from "../../src/shared/ha.ts";
 
 const T = "energy-flow-card-pro";
@@ -285,5 +286,31 @@ describe("energy-flow-card: what it says", () => {
     expect(m.of(f.H)).toBe(1000);
     expect(m.of(1)).toBe(250);
     expect(m.a).toEqual({ slowBelow: 0, fastAbove: 1000 });
+  });
+});
+
+describe("energy-flow-card: the lanes into the home", () => {
+  it("runs the source nearest the home's height straight in, without a step", () => {
+    // the pairs' two values make their labels a line taller: the battery sits a pixel off the
+    // home's centre line, a step that rounded into a crack
+    const cfg = cfgOf({ consumers: ["sensor.a", "sensor.b", "sensor.c", "sensor.d"] });
+    const kwh = {
+      "sensor.solar": 3,
+      "sensor.charge": 1,
+      "sensor.discharge": 1,
+      "sensor.import": 1,
+      "sensor.export": 1,
+    };
+    const f = allocate(cfg, nowOf(cfg, kwh), [bucketOf(cfg, kwh)]);
+    for (const width of [340, 416, 640]) {
+      const l = layoutTree(cfg, width, f.edges);
+      const home = l.nodes.find((n) => n.id === "home")!;
+      const battery = l.edges.find((e) => e.from === "s1" && e.to === "home")!;
+      // one straight leg, from the battery to the home's circle
+      expect(battery.pts).toHaveLength(2);
+      expect(battery.pts[0][1]).toBe(battery.pts[1][1]);
+      const end = battery.pts[1];
+      expect(Math.hypot(end[0] - home.x, end[1] - home.y)).toBeCloseTo(home.d / 2, 5);
+    }
   });
 });

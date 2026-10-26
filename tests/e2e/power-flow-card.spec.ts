@@ -157,7 +157,7 @@ test.describe("power flow card", () => {
   test("a label that changes its width moves the links in place, their dots keep running", async ({
     page,
   }) => {
-    await mount(page, { type: T, sources: SRC, home: HOME, consumers: CONS }, { width: 320 });
+    await mount(page, { type: T, sources: SRC, home: HOME, consumers: CONS }, { width: 440 });
     await pin(page, { "sensor.heat_pump_power": "990" });
     const c = card(page);
     const lanes = c.locator(".lane");
@@ -190,6 +190,22 @@ test.describe("power flow card", () => {
       }),
     );
     for (const [d, p] of pairs) expect(p).toBe(`path('${d}')`);
+  });
+
+  test("a value ticking back narrower keeps the tree where its widest put it", async ({ page }) => {
+    await mount(page, { type: T, sources: SRC, home: HOME, consumers: CONS }, { width: 440 });
+    await pin(page, { [SOC]: "64" });
+    const c = card(page);
+    const paths = () =>
+      c.locator("path.link").evaluateAll((els) => els.map((e) => e.getAttribute("d")));
+    // the battery's label widens (64 % → 100 %) and moves the tree …
+    await pin(page, { [SOC]: "100" });
+    await expect(label(c, "s1")).toHaveText(/Battery · 100 %/);
+    const wide = await paths();
+    // … and narrows again: the tree stays, so a value ticking about one width moves nothing
+    await pin(page, { [SOC]: "64" });
+    await expect(label(c, "s1")).toHaveText(/Battery · 64 %/);
+    expect(await paths()).toEqual(wide);
   });
 
   test("lines keep to their tracks when the diagram changes height", async ({ page }) => {
@@ -644,7 +660,7 @@ test("a solar-fed battery given as a pair charges from its panels and feeds the 
   const c = card(page);
   await expect(label(c, "home")).toHaveText("259 W");
   // the node shows both flows, its colour follows the net value, the links carry both
-  await expect(label(c, "s1")).toHaveText(/374 W ↓\s*189 W ↑\s*Battery · 42 %/);
+  await expect(label(c, "s1")).toHaveText(/374 W ↓\s*(?:·\s*)?189 W ↑\s*Battery · 42 %/);
   expect(await cssVar(c.locator(".pnode[data-node='s1']"), "--fe-color")).toContain(
     "--energy-battery-in",
   );
@@ -690,18 +706,18 @@ test("a node with two flows shows its net value below the idle threshold, both a
   });
   const c = card(page);
   // one value over the other: into the node ↓, out of it ↑ (the grid: export, import)
-  await expect(label(c, "s2")).toHaveText(/300 W ↓\s*1\.20 kW ↑\s*Grid/);
-  await expect(label(c, "s1")).toHaveText(/400 W ↓\s*250 W ↑/);
+  await expect(label(c, "s2")).toHaveText(/300 W ↓\s*(?:·\s*)?1\.20 kW ↑\s*Grid/);
+  await expect(label(c, "s1")).toHaveText(/400 W ↓\s*(?:·\s*)?250 W ↑/);
   // at idle_below (20 W) the two values stay, below it the net value returns
   await set({ [`${B}discharge_power`]: "20" });
-  await expect(label(c, "s1")).toHaveText(/400 W ↓\s*20 W ↑/);
+  await expect(label(c, "s1")).toHaveText(/400 W ↓\s*(?:·\s*)?20 W ↑/);
   await set({ [`${B}discharge_power`]: "15" });
   await expect(label(c, "s1")).toHaveText(/^385 W/);
   // and the two values come back only clearly above it
   await set({ [`${B}discharge_power`]: "22" });
   await expect(label(c, "s1")).toHaveText(/^378 W/);
   await set({ [`${B}discharge_power`]: "30" });
-  await expect(label(c, "s1")).toHaveText(/400 W ↓\s*30 W ↑/);
+  await expect(label(c, "s1")).toHaveText(/400 W ↓\s*(?:·\s*)?30 W ↑/);
   // direction: down as well; the second line is kept while the node shows one value
   await mount(page, {
     type: T,
