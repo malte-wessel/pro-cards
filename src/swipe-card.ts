@@ -1,9 +1,10 @@
 /*
  * swipe-card-pro
  * Any cards side by side in a strip you swipe through, snapping to each card; a fraction of a
- * card per page lets the next one peek in, dots below show the page. From `unfold.from` view
- * columns on the cards are a plain grid instead. Every child is a Home Assistant <hui-card>, so
- * its own `visibility` works as anywhere else.
+ * card per page lets the next one peek in, dots below show the page; `unfold` makes them a plain
+ * grid instead. Like the layout card's, its options change at breakpoints by the view columns the
+ * card spans. Every child is a Home Assistant <hui-card>, so its own `visibility` works as
+ * anywhere else.
  *
  * Config (see docs/cards/swipe-card.md):
  *   type: custom:swipe-card-pro
@@ -11,19 +12,27 @@
  *   gap: 8
  *   snap: start                     # start | center | free
  *   indicator: dots                 # dots | none
- *   unfold: { from: 2, columns: 3 } # from 2 view columns on: a grid
+ *   breakpoints:
+ *     2: { per_page: 2.2 }          # from 2 view columns on
+ *     3: { unfold: 4 }              # a grid of 4 from 3 view columns on
  *   cards:
  *     - type: custom:entity-card-pro
  *       entity: sensor.outdoor_temperature
  */
 import { registerCard, syncKeepHeight } from "./shared/card.ts";
 import { applyStyle, CardsBase, placeNodes, type Style } from "./shared/cards/base.ts";
+import { resolveAt } from "./shared/cards/breakpoints.ts";
 import { themeGap } from "./shared/cards/units.ts";
 import { depsChanged } from "./shared/deps.ts";
 import { langOf } from "./shared/format.ts";
 import type { CardConfigBase } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
-import { CARD_TYPE, normalizeSwipeConfig, type SwipeConfig } from "./swipe/config.ts";
+import {
+  CARD_TYPE,
+  normalizeSwipeConfig,
+  type SwipeConfig,
+  type SwipeOptions,
+} from "./swipe/config.ts";
 import { STYLE } from "./swipe/styles.ts";
 import { nearest, sizeOf, slideWidth, stopsOf } from "./swipe/track.ts";
 
@@ -39,6 +48,7 @@ export class SwipeCard extends CardsBase {
   _cfg?: SwipeConfig;
   _dots?: HTMLElement;
   _strip = false; // the cards are in the strip now (not unfolded)
+  _opts?: SwipeOptions; // the options at the view columns the card spans now
   _stops: number[] = []; // the scroll position of each page, from the strip's start
   _rtl = false; // the strip scrolls from the right (scrollLeft from 0 down)
   // what the stops were measured for (_updateDots)
@@ -97,30 +107,31 @@ export class SwipeCard extends CardsBase {
   }
 
   _arrange(columns: number): boolean[] {
-    const cfg = this._cfg!;
+    const o = resolveAt(this._cfg!.base, this._cfg!.breakpoints, columns);
+    this._opts = o;
     const root = this._root!;
     const body = this._body!;
     const shown = this._kids.map((k) => this._visible(k));
     const count = shown.filter(Boolean).length;
-    const gap = cfg.gap ?? themeGap("column");
-    const unfold = !!cfg.unfold && columns >= cfg.unfold.from;
+    const gap = o.gap ?? themeGap("column");
+    const unfold = o.unfold !== null;
     this._strip = !unfold;
 
-    root.className = ["root", unfold ? "unfold" : "strip", unfold ? "" : cfg.snap]
+    root.className = ["root", unfold ? "unfold" : "strip", unfold ? "" : o.snap]
       .filter(Boolean)
       .join(" ");
-    const [top, right, bottom, left] = cfg.padding ?? ["0px", "0px", "0px", "0px"];
+    const [top, right, bottom, left] = o.padding ?? ["0px", "0px", "0px", "0px"];
     const style: Style = {
-      "align-items": cfg.height === "equal" ? "stretch" : "start",
+      "align-items": o.height === "equal" ? "stretch" : "start",
       padding: `${top} ${right} ${bottom} ${left}`,
     };
     if (unfold) {
       style.display = "grid";
-      style["grid-template-columns"] = `repeat(${cfg.unfold!.columns}, minmax(0, 1fr))`;
-      style["row-gap"] = cfg.gap ?? themeGap("row");
+      style["grid-template-columns"] = `repeat(${o.unfold}, minmax(0, 1fr))`;
+      style["row-gap"] = o.gap ?? themeGap("row");
       style["column-gap"] = gap;
     } else {
-      style["--sw-slide"] = slideWidth(cfg.per_page, count, gap);
+      style["--sw-slide"] = slideWidth(o.per_page, count, gap);
       style["column-gap"] = gap;
       style.padding = `calc(${top} + ${BLEED}) ${right} calc(${bottom} + ${BLEED}) ${left}`;
       style["margin-block"] = `calc(-1 * ${BLEED})`;
@@ -137,21 +148,30 @@ export class SwipeCard extends CardsBase {
     this._kids.forEach((k, i) => k.item.classList.toggle("off", !shown[i]));
 
     const sizes = this._kids.filter((_, i) => shown[i]).map((k) => (k.size > 0 ? k.size : 1));
-    this._size = sizes.length ? sizeOf(sizes, unfold ? cfg.unfold!.columns : sizes.length) : 1;
-    this._updateDots();
+    this._size = sizes.length ? sizeOf(sizes, o.unfold ?? sizes.length) : 1;
+    this._updateDots(columns);
     return shown;
   }
 
   // The stops of the strip, its dots (one per stop; none for a single page, unfolded cards or
   // indicator: none) and its focus (only a strip that scrolls takes it, so the arrow keys scroll
   // it). Measured again only when what they follow changed: the strip's width, the cards shown,
-  // the config, the theme (its gap), the language (the labels, the direction); a strip measured
-  // while hidden, at no width, measured nothing and is measured the next time.
-  _updateDots() {
-    const cfg = this._cfg!;
+  // the config and the view columns (its breakpoints), the theme (its gap), the language (the
+  // labels, the direction); a strip measured while hidden, at no width, measured nothing and is
+  // measured the next time.
+  _updateDots(columns: number) {
+    const o = this._opts!;
     const body = this._body!;
     const shown = this._kids.filter((k) => !k.item.classList.contains("off")).map((k) => k.item);
-    const deps = [cfg, this._strip, this._width, this._hass?.themes, langOf(this._hass), ...shown];
+    const deps = [
+      this._cfg,
+      columns,
+      this._strip,
+      this._width,
+      this._hass?.themes,
+      langOf(this._hass),
+      ...shown,
+    ];
     if (!depsChanged(this._measured, this, deps)) return this._markPage();
 
     let stops: number[] = [];
@@ -171,7 +191,7 @@ export class SwipeCard extends CardsBase {
         slides,
         body.clientWidth,
         body.scrollWidth - body.clientWidth,
-        cfg.snap,
+        o.snap,
         this._rtl ? padRight : padLeft,
         this._rtl ? padLeft : padRight,
       );
@@ -190,7 +210,7 @@ export class SwipeCard extends CardsBase {
     }
 
     const dots = this._dots!;
-    const n = cfg.indicator === "dots" && stops.length > 1 ? stops.length : 0;
+    const n = o.indicator === "dots" && stops.length > 1 ? stops.length : 0;
     while (dots.children.length > n) dots.lastElementChild!.remove();
     while (dots.children.length < n) {
       const dot = document.createElement("button");

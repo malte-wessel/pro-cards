@@ -147,6 +147,14 @@
           ],
           "default": 1
         },
+        "rows": {
+          "description": "The first rows' heights like grid-template-rows, the rest auto: auto (as tall as its cards), fr (a share of the height the layout is given beyond its cards), a length or minmax(); [auto, 1fr] keeps a heading row at its height and gives the rest to the row below",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rowTrack"
+          },
+          "minItems": 1
+        },
         "align_items": {
           "enum": ["start", "center", "end", "stretch"],
           "default": "stretch",
@@ -588,6 +596,18 @@
           "then": {
             "$ref": "swipe-card-pro.schema.json"
           }
+        }
+      ]
+    },
+    "rowTrack": {
+      "description": "A row: auto, fr, a length or minmax(a, b)",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/length"
+        },
+        {
+          "type": "string",
+          "pattern": "^\\s*(auto|\\d*\\.?\\d+fr|minmax\\(.+\\))\\s*$"
         }
       ]
     }

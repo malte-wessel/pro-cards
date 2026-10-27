@@ -2,61 +2,32 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://malte-wessel.github.io/pro-cards/schema/swipe-card-pro.schema.json",
   "title": "custom:swipe-card-pro",
-  "description": "Any cards side by side in a strip you swipe through, snapping to each card, with dots below; a grid from a number of view columns on.",
+  "description": "Any cards side by side in a strip you swipe through, snapping to each card, with dots below; a grid instead with unfold, and options that change at breakpoints by view columns.",
   "type": "object",
+  "allOf": [
+    {
+      "$ref": "#/$defs/swipeOptions"
+    }
+  ],
   "properties": {
     "type": {
       "const": "custom:swipe-card-pro"
     },
-    "per_page": {
-      "type": "number",
-      "minimum": 1,
-      "maximum": 12,
-      "default": 1.15,
-      "description": "How many cards fit across the strip; a fraction lets the next card peek in"
-    },
-    "gap": {
-      "$ref": "layout-card-pro.schema.json#/$defs/length",
-      "description": "The space between the cards. Default: the theme's section gap"
-    },
-    "padding": {
-      "$ref": "layout-card-pro.schema.json#/$defs/sides",
-      "description": "Space around the cards; its left and right are the inset at both ends of the strip"
-    },
-    "snap": {
-      "enum": ["start", "center", "free"],
-      "default": "start",
-      "description": "Where a card stops: at the start, centred, or free scrolling"
-    },
-    "height": {
-      "enum": ["equal", "auto"],
-      "default": "equal",
-      "description": "equal: every card as tall as the tallest; auto: each its own height"
-    },
-    "indicator": {
-      "enum": ["dots", "none"],
-      "default": "dots",
-      "description": "The dots below the strip, one per page"
-    },
-    "unfold": {
-      "type": ["object", "null"],
-      "description": "From this many view columns on, the cards are a grid instead of a strip; null: never",
-      "properties": {
-        "from": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 12,
-          "description": "The view columns the card spans (its section's column_span)"
-        },
-        "columns": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 12,
-          "description": "The grid's columns"
-        }
+    "breakpoints": {
+      "type": "object",
+      "description": "The options that change once the card spans this many view columns (2 to 12); the top-level options apply in one. Outside a section the view columns are counted from the card's width, by the sections view's 500 px columns",
+      "propertyNames": {
+        "pattern": "^([2-9]|1[0-2])$"
       },
-      "required": ["from", "columns"],
-      "additionalProperties": false
+      "additionalProperties": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/$defs/swipeOptions"
+          }
+        ],
+        "unevaluatedProperties": false
+      }
     },
     "cards": {
       "type": "array",
@@ -85,5 +56,59 @@
     }
   },
   "required": ["type"],
-  "unevaluatedProperties": false
+  "unevaluatedProperties": false,
+  "$defs": {
+    "swipeOptions": {
+      "type": "object",
+      "properties": {
+        "per_page": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 12,
+          "default": 1.15,
+          "description": "How many cards fit across the strip; a fraction lets the next card peek in"
+        },
+        "gap": {
+          "$ref": "layout-card-pro.schema.json#/$defs/length",
+          "description": "The space between the cards. Default: the theme's section gap"
+        },
+        "padding": {
+          "$ref": "layout-card-pro.schema.json#/$defs/sides",
+          "description": "Space around the cards; its left and right are the inset at both ends of the strip"
+        },
+        "snap": {
+          "enum": ["start", "center", "free"],
+          "default": "start",
+          "description": "Where a card stops: at the start, centred, or free scrolling"
+        },
+        "height": {
+          "enum": ["equal", "auto"],
+          "default": "equal",
+          "description": "equal: every card as tall as the tallest; auto: each its own height"
+        },
+        "indicator": {
+          "enum": ["dots", "none"],
+          "default": "dots",
+          "description": "The dots below the strip, one per page"
+        },
+        "unfold": {
+          "description": "Show the cards as a grid of this many columns instead of the strip; false: the strip (to go back to it in a breakpoint)",
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12
+            },
+            {
+              "type": "boolean",
+              "const": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
 }

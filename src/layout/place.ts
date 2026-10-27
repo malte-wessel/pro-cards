@@ -113,6 +113,7 @@ export const planLayout = (o: LayoutOptions, kids: KidState[], columns: number):
     display: "grid",
     "grid-template-columns": trackList(o.columns),
     "grid-auto-rows": "auto",
+    ...(o.rows ? { "grid-template-rows": o.rows.join(" ") } : {}),
     "row-gap": gap.row,
     "column-gap": gap.col,
     "align-items": o.align_items,

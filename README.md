@@ -214,12 +214,14 @@ badges:
 
 #### Swipe Card Pro
 
-Cards, Pro Cards and Home Assistant's own, side by side in a strip you swipe through. It snaps to each card, the next one peeks in, and dots below show the page; from a number of view columns on the cards unfold into a grid.
+Cards, Pro Cards and Home Assistant's own, side by side in a strip you swipe through. It snaps to each card, the next one peeks in, and dots below show the page. Like the layout card's, its options change at breakpoints by view columns: more cards per page, or a grid instead of the strip.
 
 ```yaml
 type: custom:swipe-card-pro
 per_page: 1.15
-unfold: { from: 2, columns: 4 }
+breakpoints:
+  2: { per_page: 2.2 }
+  3: { unfold: 4 }
 cards:
   - type: custom:entity-card-pro
     entity: sensor.living_room_temperature

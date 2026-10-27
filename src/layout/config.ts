@@ -4,12 +4,12 @@
 // lists only what changes once the layout's section spans that many view columns. Each child
 // card's own placement lives in its `view_layout`, which Home Assistant's card editors keep (a key
 // of their own would make them refuse the config); per-child values may be maps by view columns.
+import { breakpointsOf, type Breakpoint as BreakpointOf } from "../shared/cards/breakpoints.ts";
 import { checks, isObj } from "../shared/cards/checks.ts";
 import type { Sides } from "../shared/cards/units.ts";
-import { MAX_VIEW_COLUMNS } from "../shared/cards/view-columns.ts";
 import type { CardConfigBase } from "../shared/ha.ts";
 import { CARD_TYPE } from "./type.ts";
-import { boxSides, cssLength, trackTokens } from "./units.ts";
+import { boxSides, cssLength, rowTokens, trackTokens } from "./units.ts";
 
 export { CARD_TYPE };
 export const LAYOUTS = ["grid", "masonry"] as const;
@@ -23,6 +23,7 @@ export type ItemAlign = (typeof ITEM_ALIGNS)[number];
 export interface LayoutOptions {
   layout: LayoutType;
   columns: number | string[]; // a count, or CSS tracks (fr already as minmax(0, Nfr))
+  rows: string[] | null; // the first rows' tracks, the rest auto; null: all auto
   align_items: ItemAlign;
   row_gap: string | null; // from `gap`; null: the theme's gap
   column_gap: string | null;
@@ -31,10 +32,7 @@ export interface LayoutOptions {
 }
 export type Overrides = Partial<LayoutOptions>;
 
-export interface Breakpoint {
-  columns: number; // the view columns it applies from (2 …)
-  overrides: Overrides;
-}
+export type Breakpoint = BreakpointOf<LayoutOptions>;
 
 // a per-child value: one for every width, or a map by view columns (inherited upwards)
 export interface Responsive<T> {
@@ -64,6 +62,7 @@ export interface LayoutConfig {
 export const DEFAULT_OPTIONS: LayoutOptions = {
   layout: "grid",
   columns: 1,
+  rows: null,
   align_items: "stretch",
   row_gap: null,
   column_gap: null,
@@ -76,17 +75,8 @@ const PLACE_KEYS = ["span", "column", "order", "align"] as const;
 // keys of view_layout that belong to Home Assistant's views or other layouts: kept, not ours
 const FOREIGN_PLACE_KEYS = ["position", "grid-area", "grid-column", "grid-row", "show"];
 
-const { err, pickOf, int, cardList } = checks(CARD_TYPE);
-// a key of a breakpoint map: a number of view columns ("2" in YAML's { 2: … } is a string here)
-const viewColumns = (key: string, at: string, min: number): number => {
-  const n = /^\d+$/.test(key) ? Number(key) : NaN;
-  if (!(n >= min && n <= MAX_VIEW_COLUMNS))
-    throw err(
-      `${at} is keyed by view columns, ${min} to ${MAX_VIEW_COLUMNS} (how many columns of the view the section spans), not '${key}'`,
-    );
-  return n;
-};
-
+const check = checks(CARD_TYPE);
+const { err, pickOf, int, viewColumns, cardList } = check;
 // the options of one level (the base or a breakpoint): only the keys it sets
 export const parseOptions = (raw: Record<string, unknown>, at: string): Overrides => {
   const o: Overrides = {};
@@ -99,6 +89,9 @@ export const parseOptions = (raw: Record<string, unknown>, at: string): Override
         break;
       case "columns":
         o.columns = typeof v === "number" ? int(v, p(k), 1, 24) : trackTokens(v, p(k));
+        break;
+      case "rows":
+        o.rows = rowTokens(v, p(k));
         break;
       case "align_items":
         o.align_items = pickOf(ITEM_ALIGNS, v, p(k));
@@ -122,19 +115,6 @@ export const parseOptions = (raw: Record<string, unknown>, at: string): Override
     }
   }
   return o;
-};
-
-const parseBreakpoints = (raw: unknown): Breakpoint[] => {
-  if (raw === undefined || raw === null) return [];
-  if (!isObj(raw))
-    throw err(`'breakpoints' must map view columns to options, as { 2: { columns: 4 } }`);
-  return Object.entries(raw)
-    .map(([key, v]) => {
-      const columns = viewColumns(key, "'breakpoints'", 2);
-      if (!isObj(v)) throw err(`'breakpoints.${key}' must be the options that change there`);
-      return { columns, overrides: parseOptions(v, `breakpoints.${key}`) };
-    })
-    .sort((a, b) => a.columns - b.columns);
 };
 
 // ----- per child (view_layout) -----
@@ -190,7 +170,7 @@ export const normalizeLayoutConfig = (raw: unknown): LayoutConfig => {
   for (const k of OPTION_KEYS) if (raw[k] !== undefined) own[k] = raw[k];
   return {
     base: { ...DEFAULT_OPTIONS, ...parseOptions(own, "") },
-    breakpoints: parseBreakpoints(raw.breakpoints),
+    breakpoints: breakpointsOf(raw.breakpoints, check, parseOptions, "{ 2: { columns: 4 } }"),
     children,
   };
 };

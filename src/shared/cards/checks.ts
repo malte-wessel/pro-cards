@@ -1,6 +1,7 @@
 // The container cards (layout, swipe): the checks of their configs (pure). They are made per card,
 // so their errors name it.
 import type { CardConfigBase } from "../ha.ts";
+import { MAX_VIEW_COLUMNS } from "./view-columns.ts";
 
 export const isObj = (v: unknown): v is Record<string, unknown> =>
   !!v && typeof v === "object" && !Array.isArray(v);
@@ -19,6 +20,15 @@ export const checks = (card: string) => {
       );
     return v;
   };
+  // a key of a map by view columns ("2" in YAML's { 2: … } is a string here)
+  const viewColumns = (key: string, at: string, min: number): number => {
+    const n = /^\d+$/.test(key) ? Number(key) : NaN;
+    if (!(n >= min && n <= MAX_VIEW_COLUMNS))
+      throw err(
+        `${at} is keyed by view columns, ${min} to ${MAX_VIEW_COLUMNS} (how many columns of the view the section spans), not '${key}'`,
+      );
+    return n;
+  };
   // the child cards: a list of configs, each with a type
   const cardList = (v: unknown): CardConfigBase[] => {
     const cards = v ?? [];
@@ -30,5 +40,5 @@ export const checks = (card: string) => {
     return cards as CardConfigBase[];
   };
 
-  return { err, pickOf, int, cardList };
+  return { err, pickOf, int, viewColumns, cardList };
 };

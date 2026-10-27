@@ -34,6 +34,32 @@ export const trackTokens = (v: unknown, at: string): string[] => {
   return v.map((x, i) => track(x, `${at}[${i}]`));
 };
 
+// One row track: `auto` (the row as tall as its cards), `Nfr` as written (a share of the height
+// the layout is given beyond its cards', never less than its cards), a length, or minmax(a, b).
+// Unlike a column a row may size to its content: the cards contain only their width.
+const row = (v: unknown, at: string): string => {
+  const s = typeof v === "number" ? `${v}px` : typeof v === "string" ? v.trim() : "";
+  if (s === "auto" || FR_RE.test(s)) return s;
+  const mm = /^minmax\(\s*([^,]+?)\s*,\s*([^,]+?)\s*\)$/.exec(s);
+  if (mm) {
+    const part = (x: string) => (x === "auto" || FR_RE.test(x) ? x : cssLength(x, at));
+    if (FR_RE.test(mm[1])) throw err(`'${at}' can not start a minmax() with fr`);
+    return `minmax(${part(mm[1])}, ${part(mm[2])})`;
+  }
+  try {
+    return cssLength(s, at);
+  } catch {
+    throw err(
+      `'${at}' must be auto, fr or a length, such as auto, 1fr, 120px or minmax(80px, 1fr)`,
+    );
+  }
+};
+export const rowTokens = (v: unknown, at: string): string[] => {
+  if (!Array.isArray(v) || !v.length)
+    throw err(`'${at}' must be a list of rows such as [auto, 1fr]`);
+  return v.map((x, i) => row(x, `${at}[${i}]`));
+};
+
 // grid-template-columns for a count or a track list
 export const trackList = (cols: number | string[]): string =>
   Array.isArray(cols) ? cols.join(" ") : `repeat(${cols}, minmax(0, 1fr))`;

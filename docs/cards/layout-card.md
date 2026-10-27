@@ -288,7 +288,7 @@ cards:
 
 ### Rows
 
-A row is as tall as its tallest card and the cards stretch to it (`align_items: start` keeps their own heights). A card that asks for a number of rows, by its `span` (`[1, 3]`) or by its own `grid_options` rows (a tile with a feature asks for 2), gets them in the height of Home Assistant's sections grid rows (56 px each) and fills them.
+A row is as tall as its tallest card and the cards stretch to it (`align_items: start` keeps their own heights). When the layout is given more height than its cards need (stretched to a taller neighbour in its row, or a slide of a [swipe card](/cards/swipe-card#rooms-of-equal-height) with `height: equal`), every row grows by a share of it. `rows` sets the first rows' heights, as CSS's `grid-template-rows` does, the rest stay as tall as their cards: `auto` keeps a row as tall as its cards, `fr` gives it a share of the height left over (never less than its cards), a length is fixed, and `minmax(80px, 1fr)` is at least 80 px. `rows: [auto, 1fr]` keeps a heading at its height and gives the rest to the card below it. A card that asks for a number of rows, by its `span` (`[1, 3]`) or by its own `grid_options` rows (a tile with a feature asks for 2), gets them in the height of Home Assistant's sections grid rows (56 px each) and fills them.
 
 ::: live
 
@@ -513,6 +513,7 @@ Every option but `breakpoints` and `cards` may change in a breakpoint.
 | ------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `layout`      | `grid`    | `grid` or `masonry`.                                                                                                     |
 | `columns`     | `1`       | A count (1 to 24) or a list of tracks (`[1fr, 2fr]`, `[320px, 1fr]`). Masonry: the column count or their widths.         |
+| `rows`        | –         | The first rows' heights (`[auto, 1fr]`): `auto`, `fr`, a length or `minmax()`; the rest are as tall as their cards.      |
 | `align_items` | `stretch` | `stretch`, `start`, `center` or `end`: how cards sit in their row.                                                       |
 | `gap`         | theme     | One length or `[row, column]`.                                                                                           |
 | `padding`     | `0`       | Inside the layout: 1, 2 or 4 values, or `{ top, right, bottom, left }`.                                                  |

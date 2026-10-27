@@ -179,8 +179,23 @@ test.describe("swipe-card-pro", () => {
     await expect.poll(() => dots(page)).toBe("●○○");
   });
 
-  test("unfolds into a grid from the view columns in unfold.from", async ({ page }) => {
-    await mount(page, { type: SW, unfold: { from: 2, columns: 4 }, cards: ROOMS }, { width: 1000 });
+  test("takes more cards per page at a breakpoint, and the dots follow", async ({ page }) => {
+    const cfg = { type: SW, gap: 8, breakpoints: { 2: { per_page: 2.5 } }, cards: LIGHTS };
+    await mount(page, cfg, { width: 400 });
+    expect(await dots(page)).toBe("●○○○○○");
+    await resize(page, 1000);
+    // two view columns: two and a half cards to a page, six cards stop at the first four and the end
+    await expect.poll(() => dots(page)).toBe("●○○○○");
+    const s = await strip(page);
+    expect(Math.abs(s.items[0].w - (s.w - 16) / 2.5)).toBeLessThanOrEqual(1);
+  });
+
+  test("unfolds into a grid at a breakpoint", async ({ page }) => {
+    await mount(
+      page,
+      { type: SW, breakpoints: { 2: { unfold: 4 } }, cards: ROOMS },
+      { width: 1000 },
+    );
     const wide = await strip(page);
     expect(new Set(wide.items.map((i) => i.y)).size).toBe(1);
     expect(wide.max).toBe(0);

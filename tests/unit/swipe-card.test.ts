@@ -3,6 +3,7 @@ import { defineHuiElements } from "../../docs/.vitepress/theme/ha-shim/hui-card.
 import { snapshot } from "../../docs/.vitepress/theme/ha-shim/hass.ts";
 import { SwipeCard } from "../../src/swipe-card.ts";
 import "../../src/entity-card.ts";
+import { resolveAt } from "../../src/shared/cards/breakpoints.ts";
 import { normalizeSwipeConfig } from "../../src/swipe/config.ts";
 import { nearest, sizeOf, slideWidth, stopsOf } from "../../src/swipe/track.ts";
 import type { HuiCardElement } from "../../src/shared/ha.ts";
@@ -22,18 +23,18 @@ const tile = (entity: string, extra: Record<string, unknown> = {}) => ({
 describe("swipe-card config", () => {
   it("fills in the defaults", () => {
     expect(cfg({})).toEqual({
-      per_page: 1.15,
-      gap: null,
-      padding: null,
-      snap: "start",
-      height: "equal",
-      indicator: "dots",
-      unfold: null,
+      base: {
+        per_page: 1.15,
+        gap: null,
+        padding: null,
+        snap: "start",
+        height: "equal",
+        indicator: "dots",
+        unfold: null,
+      },
+      breakpoints: [],
       cards: [],
     });
-  });
-  it("takes unfold: null as no unfold, as YAML's empty unfold: is", () => {
-    expect(cfg({ unfold: null }).unfold).toBeNull();
   });
   it("reads every option", () => {
     const c = cfg({
@@ -43,17 +44,40 @@ describe("swipe-card config", () => {
       snap: "center",
       height: "auto",
       indicator: "none",
-      unfold: { from: 2, columns: 4 },
+      unfold: 4,
       cards: [tile("light.kitchen")],
     });
-    expect(c.per_page).toBe(2.5);
-    expect(c.gap).toBe("12px");
-    expect(c.padding).toEqual(["0px", "16px", "0px", "16px"]);
-    expect(c.snap).toBe("center");
-    expect(c.height).toBe("auto");
-    expect(c.indicator).toBe("none");
-    expect(c.unfold).toEqual({ from: 2, columns: 4 });
+    expect(c.base).toEqual({
+      per_page: 2.5,
+      gap: "12px",
+      padding: ["0px", "16px", "0px", "16px"],
+      snap: "center",
+      height: "auto",
+      indicator: "none",
+      unfold: 4,
+    });
     expect(c.cards).toHaveLength(1);
+  });
+  it("turns unfold off with false or YAML's empty unfold:", () => {
+    expect(cfg({ unfold: null }).base.unfold).toBeNull();
+    expect(cfg({ unfold: false }).base.unfold).toBeNull();
+  });
+  it("changes options at breakpoints by view columns, only what each lists", () => {
+    const c = cfg({
+      per_page: 1.15,
+      breakpoints: { 3: { unfold: 4 }, 2: { per_page: 2.2, snap: "center" } },
+    });
+    expect(c.breakpoints).toEqual([
+      { columns: 2, overrides: { per_page: 2.2, snap: "center" } },
+      { columns: 3, overrides: { unfold: 4 } },
+    ]);
+    const at = (n: number) => resolveAt(c.base, c.breakpoints, n);
+    expect(at(1)).toMatchObject({ per_page: 1.15, snap: "start", unfold: null });
+    expect(at(2)).toMatchObject({ per_page: 2.2, snap: "center", unfold: null });
+    expect(at(4)).toMatchObject({ per_page: 2.2, snap: "center", unfold: 4 });
+    // a higher breakpoint goes back to the strip
+    const back = cfg({ unfold: 2, breakpoints: { 3: { unfold: false } } });
+    expect(resolveAt(back.base, back.breakpoints, 3).unfold).toBeNull();
   });
   it("names the card and the option in its errors", () => {
     expect(() => normalizeSwipeConfig(null)).toThrow("swipe-card-pro: the config must be");
@@ -64,11 +88,20 @@ describe("swipe-card config", () => {
     expect(() => cfg({ gap: "wide" })).toThrow("swipe-card-pro: 'gap' must be a length");
     expect(() => cfg({ snap: "end" })).toThrow("'snap' must be one of start, center, free");
     expect(() => cfg({ indicator: "bar" })).toThrow("'indicator' must be one of dots, none");
-    expect(() => cfg({ unfold: 2 })).toThrow("'unfold' must be { from");
-    expect(() => cfg({ unfold: { from: 2 } })).toThrow("'unfold.columns' must be a whole number");
-    expect(() => cfg({ unfold: { from: 13, columns: 2 } })).toThrow("'unfold.from'");
-    expect(() => cfg({ unfold: { from: 2, columns: 2, at: 1 } })).toThrow(
-      "'unfold.at' is not an option",
+    expect(() => cfg({ unfold: { from: 2, columns: 4 } })).toThrow(
+      "'unfold' must be a whole number from 1 to 12",
+    );
+    expect(() => cfg({ breakpoints: [] })).toThrow(
+      "'breakpoints' must map view columns to options, as { 2: { per_page: 2.2 } }",
+    );
+    expect(() => cfg({ breakpoints: { 1: { per_page: 2 } } })).toThrow(
+      "'breakpoints' is keyed by view columns, 2 to 12",
+    );
+    expect(() => cfg({ breakpoints: { 2: { cards: [] } } })).toThrow(
+      "'breakpoints.2.cards' is not a swipe option",
+    );
+    expect(() => cfg({ breakpoints: { 2: { per_page: 0 } } })).toThrow(
+      "'breakpoints.2.per_page' must be a number",
     );
   });
 });
@@ -180,16 +213,22 @@ describe("swipe-card-pro element", () => {
     expect(b.style.getPropertyValue("margin-block")).toBe("calc(-1 * 8px)");
     el.remove();
   });
-  it("unfolds into a grid from the view columns in unfold.from", async () => {
+  it("takes the options of its breakpoints: a wider strip, then a grid", async () => {
     const raw = {
-      unfold: { from: 2, columns: 3 },
-      cards: [tile("light.kitchen"), tile("light.living_room")],
+      breakpoints: { 2: { per_page: 2.2, snap: "center" }, 3: { unfold: 3 } },
+      cards: [tile("light.kitchen"), tile("light.living_room"), tile("light.office")],
     };
     const narrow = make(raw, 1);
     await frame();
     expect(root(narrow).className).toBe("root strip start");
+    expect(body(narrow).style.getPropertyValue("--sw-slide")).toContain("/ 1.15)");
     narrow.remove();
-    const wide = make(raw, 2);
+    const mid = make(raw, 2);
+    await frame();
+    expect(root(mid).className).toBe("root strip center");
+    expect(body(mid).style.getPropertyValue("--sw-slide")).toContain("/ 2.2)");
+    mid.remove();
+    const wide = make(raw, 3);
     await frame();
     expect(root(wide).className).toBe("root unfold");
     const b = body(wide);
