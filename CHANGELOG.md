@@ -20,6 +20,7 @@ _Beta_
 - Power and energy flow: a battery's or grid's two values sit in one line where there is room for it, stacked where there is not
 - Power and energy flow: the lines out of the home and out of each room take their own lanes, the mirror of the lines into the home: each leaves the circle on its own lane, centred on the node, and they turn in one block, every corner alike. Many lines move closer, down to a 2 px gap; more than that fit share one line as before. The consumer column centres on the home, so the one level with it runs straight (a card with rooms can grow a few px for it), and on a narrow card the home moves left for the lanes, a source label beside it keeping its value and having its name cut
 - Power and energy flow: on a narrow card with rooms, the rooms' labels stay clear of the home's line: the home moves left (a source label beside it keeps its value and has its name cut), a device's name is cut where a room's label needs its place, and where even the devices' values would not fit beside the rooms' labels, the devices' labels go below them
+- Fix: energy flow: the period picker no longer makes the header taller, so a power and an energy flow card side by side start their trees at the same height
 - Fix: power and energy flow: the home sits level with the source nearest its height, so that source's line runs straight in instead of taking a small step that looked like a crack, and every line into the home meets its circle
 
 ## 2.8.0 – Layout card and theme-aware sizing
