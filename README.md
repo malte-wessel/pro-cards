@@ -40,6 +40,7 @@ Pro Cards are polished dashboard cards that look like they belong in Home Assist
 | Energy Flow Card Pro     | `custom:energy-flow-card-pro`     | The power flow's tree over a period (today, this week, month or year) from energy meters and their long-term statistics.                      | YAML only |
 | Layout Card Pro          | `custom:layout-card-pro`          | Cards inside a section in a grid or masonry, arranged by how many view columns the section spans, as separate cards or one seamless surface.  | YAML only |
 | Heading Card Pro         | `custom:heading-card-pro`         | A heading with live badges: values, rings, bars, sparklines, trends, counts and switches.                                                     | YAML only |
+| Swipe Card Pro           | `custom:swipe-card-pro`           | Cards side by side in a strip you swipe through, the next one peeking in, with dots; a grid once the section is wide enough.                  | YAML only |
 
 All cards support the sections grid (`grid_options`). Requires Home Assistant 2025.3 or newer.
 
@@ -210,6 +211,24 @@ badges:
 ```
 
 [Heading Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/heading-card)
+
+#### Swipe Card Pro
+
+Cards, Pro Cards and Home Assistant's own, side by side in a strip you swipe through. It snaps to each card, the next one peeks in, and dots below show the page; from a number of view columns on the cards unfold into a grid.
+
+```yaml
+type: custom:swipe-card-pro
+per_page: 1.15
+unfold: { from: 2, columns: 4 }
+cards:
+  - type: custom:entity-card-pro
+    entity: sensor.living_room_temperature
+    visual: sparkline
+  - type: tile
+    entity: light.kitchen
+```
+
+[Swipe Card Pro docs](https://malte-wessel.github.io/pro-cards/cards/swipe-card)
 
 ### Weather
 

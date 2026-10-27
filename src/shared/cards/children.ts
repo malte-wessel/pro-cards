@@ -1,7 +1,8 @@
-// Layout Card Pro: the child cards. Each one is a Home Assistant <hui-card>, as in HA's own
-// sections and stacks, so a child gets what it gets there: core cards loaded lazily, an error card
-// for a broken config, its `visibility` evaluated (partly on the server) and its grid options.
-import type { CardConfigBase, HomeAssistant, HuiCardElement } from "../shared/ha.ts";
+// The container cards (layout, swipe): the child cards. Each one is a Home Assistant <hui-card>,
+// as in HA's own sections and stacks, so a child gets what it gets there: core cards loaded
+// lazily, an error card for a broken config, its `visibility` evaluated (partly on the server) and
+// its grid options.
+import type { CardConfigBase, HomeAssistant, HuiCardElement } from "../ha.ts";
 
 const TIMEOUT_MS = 10000;
 

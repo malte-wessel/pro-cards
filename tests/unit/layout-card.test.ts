@@ -3,14 +3,13 @@ import { defineHuiElements } from "../../docs/.vitepress/theme/ha-shim/hui-card.
 import { snapshot } from "../../docs/.vitepress/theme/ha-shim/hass.ts";
 import { LayoutCard } from "../../src/layout-card.ts";
 import "../../src/entity-card.ts";
+import { pick, resolveOptions } from "../../src/layout/breakpoints.ts";
+import { childKey, reconcile } from "../../src/shared/cards/children.ts";
 import {
   activeColumns,
   columnsForWidth,
   HYSTERESIS_PX,
-  pick,
-  resolveOptions,
-} from "../../src/layout/breakpoints.ts";
-import { childKey, reconcile } from "../../src/layout/children.ts";
+} from "../../src/shared/cards/view-columns.ts";
 import { normalizeLayoutConfig, type LayoutConfig } from "../../src/layout/config.ts";
 import { distribute, tallest } from "../../src/layout/masonry.ts";
 import { cardSize, planLayout, type KidState } from "../../src/layout/place.ts";

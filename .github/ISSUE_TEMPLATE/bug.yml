@@ -21,6 +21,7 @@ body:
         - power-flow-card-pro
         - energy-flow-card-pro
         - layout-card-pro
+        - swipe-card-pro
     validations:
       required: true
   - type: input

@@ -4,6 +4,8 @@
 // lists only what changes once the layout's section spans that many view columns. Each child
 // card's own placement lives in its `view_layout`, which Home Assistant's card editors keep (a key
 // of their own would make them refuse the config); per-child values may be maps by view columns.
+import type { Sides } from "../shared/cards/units.ts";
+import { MAX_VIEW_COLUMNS } from "../shared/cards/view-columns.ts";
 import type { CardConfigBase } from "../shared/ha.ts";
 import { boxSides, cssLength, trackTokens } from "./units.ts";
 
@@ -11,12 +13,9 @@ export const CARD_TYPE = "layout-card-pro";
 export const LAYOUTS = ["grid", "masonry"] as const;
 export const ITEM_ALIGNS = ["start", "center", "end", "stretch"] as const;
 export const CARD_STYLES = ["cards", "seamless"] as const;
-// the widest a breakpoint can be: Home Assistant's sections view shows at most this many columns
-export const MAX_VIEW_COLUMNS = 12;
 
 export type LayoutType = (typeof LAYOUTS)[number];
 export type ItemAlign = (typeof ITEM_ALIGNS)[number];
-export type Sides = [string, string, string, string];
 
 // everything a breakpoint may change
 export interface LayoutOptions {

@@ -1754,6 +1754,32 @@ const CASES = {
       { type: "custom:entity-card-pro", entity: "light.office" },
     ],
   },
+  // the swipe card: a card and the start of the next with the dots below (the first one the
+  // current page's pill), small tiles two and a half to a page, and unfolded into a grid
+  "sw-peek": {
+    type: "custom:swipe-card-pro",
+    cards: ["living_room", "kitchen", "bedroom", "office"].map((r) => ({
+      type: "custom:entity-card-pro",
+      entity: `sensor.${r}_temperature`,
+      visual: "sparkline",
+    })),
+  },
+  "sw-tiles": {
+    type: "custom:swipe-card-pro",
+    per_page: 2.5,
+    cards: ["living_room", "kitchen", "dining_table", "office", "bedroom", "hallway"].map((r) => ({
+      type: "custom:entity-card-pro",
+      entity: `light.${r}`,
+    })),
+  },
+  "sw-unfold": {
+    type: "custom:swipe-card-pro",
+    unfold: { from: 2, columns: 4 },
+    cards: ["living_room", "kitchen", "bedroom", "office"].map((r) => ({
+      type: "custom:entity-card-pro",
+      entity: `sensor.${r}_temperature`,
+    })),
+  },
   // the heading card: its five styles, with a subtitle, a coloured lead and badges
   "hc-styles": [
     {
@@ -1984,6 +2010,8 @@ const WIDTHS: Record<string, number> = {
   "pf-list-rooms": 640,
   "pf-two-way-down": 340,
   "ef-month-list": 640,
+  // two view columns: the swipe card unfolds
+  "sw-unfold": 880,
 };
 
 for (const [name, cfg] of Object.entries(ALL)) {
