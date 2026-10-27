@@ -209,9 +209,11 @@ const setUser = (id: string | null) => {
   push();
 };
 
-// the cards a mounted card shows: a layout card's own cards (each inside a hui-card), else itself
+// the cards a mounted card shows: a layout or swipe card's own cards (each inside a hui-card),
+// else itself
+const CONTAINERS = ["layout-card-pro", "swipe-card-pro"];
 const leaves = (el: Element): Element[] =>
-  el.localName === "layout-card-pro"
+  CONTAINERS.includes(el.localName)
     ? [...(el.shadowRoot?.querySelectorAll("hui-card") ?? [])].flatMap((h) =>
         h.firstElementChild ? leaves(h.firstElementChild) : [],
       )

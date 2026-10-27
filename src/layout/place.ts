@@ -4,7 +4,8 @@ import { pick } from "./breakpoints.ts";
 import type { ChildPlace, LayoutOptions, Responsive } from "./config.ts";
 import type { GridOptions } from "../shared/ha.ts";
 import { distribute, tallest } from "./masonry.ts";
-import { themeGap, trackCountOf, trackList } from "./units.ts";
+import { themeGap } from "../shared/cards/units.ts";
+import { trackCountOf, trackList } from "./units.ts";
 
 // one row of Home Assistant's sections grid: a card that asks for rows gets them in this unit
 export const ROW_HEIGHT = "var(--ha-section-grid-row-height, 56px)";

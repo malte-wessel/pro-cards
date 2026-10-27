@@ -78,6 +78,7 @@ const cardGroups = [
     items: [
       { text: "Layout Card Pro", link: "/cards/layout-card" },
       { text: "Heading Card Pro", link: "/cards/heading-card" },
+      { text: "Swipe Card Pro", link: "/cards/swipe-card" },
     ],
   },
   {

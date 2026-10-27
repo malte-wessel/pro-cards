@@ -13,6 +13,7 @@ import "./rain-card.ts";
 import "./power-flow-card.ts";
 import "./energy-flow-card.ts";
 import "./layout-card.ts";
+import "./swipe-card.ts";
 
 console.info(
   `%c PRO-CARDS %c v${__VERSION__} `,

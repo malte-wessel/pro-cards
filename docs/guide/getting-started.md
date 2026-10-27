@@ -24,6 +24,7 @@ Pro Cards adds these cards to the dashboard editor:
 | --------------------------------------- | ------------------------- | ------ |
 | [Layout Card Pro](/cards/layout-card)   | `custom:layout-card-pro`  | YAML   |
 | [Heading Card Pro](/cards/heading-card) | `custom:heading-card-pro` | YAML   |
+| [Swipe Card Pro](/cards/swipe-card)     | `custom:swipe-card-pro`   | YAML   |
 
 **Weather**
 
@@ -104,7 +105,7 @@ control: auto
 
 :::
 
-Every card page continues like this: the smallest configuration first, then one option at a time. All fourteen cards appear in the card picker as "Entity Card Pro", "Weather Card Pro" and so on; the three with visual editors can be configured there without YAML.
+Every card page continues like this: the smallest configuration first, then one option at a time. All fifteen cards appear in the card picker as "Entity Card Pro", "Weather Card Pro" and so on; the three with visual editors can be configured there without YAML.
 
 ## Completion and validation in your editor
 
@@ -116,7 +117,7 @@ type: custom:entity-card-pro
 entity: sensor.living_room_temperature
 ```
 
-It accepts any of the fourteen cards and picks the right one by `type`. Home Assistant's own keys (`grid_options`, `visibility`, `layout_options`, `view_layout`, `card_mod`) are allowed; anything else unknown is an error, so `visula: ring` surfaces as you type it instead of as a card that ignores your option. A single card's schema is `https://malte-wessel.github.io/pro-cards/schema/<type>.schema.json`, for example `entity-card-pro.schema.json`.
+It accepts any of the fifteen cards and picks the right one by `type`. Home Assistant's own keys (`grid_options`, `visibility`, `layout_options`, `view_layout`, `card_mod`) are allowed; anything else unknown is an error, so `visula: ring` surfaces as you type it instead of as a card that ignores your option. A single card's schema is `https://malte-wessel.github.io/pro-cards/schema/<type>.schema.json`, for example `entity-card-pro.schema.json`.
 
 ## About the examples on this site
 

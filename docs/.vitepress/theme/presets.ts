@@ -208,6 +208,22 @@ cards:
   - type: custom:entity-card-pro
     entity: cover.living_room_blinds
 `,
+  "Swipe card": `type: custom:swipe-card-pro
+per_page: 1.15
+cards:
+  - type: custom:entity-card-pro
+    entity: sensor.living_room_temperature
+    name: Living room
+    visual: sparkline
+  - type: custom:entity-card-pro
+    entity: sensor.kitchen_temperature
+    name: Kitchen
+    visual: sparkline
+  - type: custom:entity-card-pro
+    entity: sensor.bedroom_temperature
+    name: Bedroom
+    visual: sparkline
+`,
   "Wind card": `type: custom:wind-card-pro
 entity: sensor.wind_speed
 direction: sensor.wind_direction

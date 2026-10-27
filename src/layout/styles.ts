@@ -1,11 +1,10 @@
-// Styles of the layout card. It draws no ha-card of its own (as Home Assistant's stacks): no
-// border around the cards; the cards inside bring their own.
-import { CARD_BG, STYLE_HOST } from "../shared/constants.ts";
-import { font } from "../shared/typography.ts";
+// Styles of the layout card: the container cards' (src/shared/cards/styles.ts), the masonry
+// columns and the seamless surface.
+import { CARDS_STYLE } from "../shared/cards/styles.ts";
+import { CARD_BG } from "../shared/constants.ts";
 
 export const STYLE = `
-  ${STYLE_HOST}
-  :host([hidden]) { display: none; }
+  ${CARDS_STYLE}
   /* the card surface as the theme draws it, read here before the seamless style resets the
      variables for the cards inside; --pl-surface is the colour under it, the surface of a
      seamless layout around this one included (whose --ha-card-background is transparent here) */
@@ -24,25 +23,6 @@ export const STYLE = `
     --pl-border-width: var(--restore-card-border-width, 1px);
     --pl-shadow: var(--restore-card-box-shadow, none);
   }
-  :host([panel]) .root:not(.seamless) .body {
-    --ha-card-border-radius: var(--restore-card-border-radius);
-    --ha-card-border-width: var(--restore-card-border-width);
-    --ha-card-box-shadow: var(--restore-card-box-shadow);
-  }
-  /* the root fills the height the host is given; the body keeps its own height as its basis
-     (never 0: in a stretched grid row that would drop the layout's share of the row's height) */
-  .root { box-sizing: border-box; height: 100%; display: flex; flex-direction: column; min-width: 0; }
-  .body { flex: 1 1 auto; min-width: 0; box-sizing: border-box; }
-  /* what the resize observer watches: the card's width, no height of its own */
-  .probe { flex: none; height: 0; }
-  /* a layout card inside this one is not its section's width: it counts its view columns from
-     its own width (Home Assistant's --column-span inherits from the section otherwise) */
-  .body { --column-span: initial; }
-  /* a card never widens its column, whatever it holds (the Pro Cards contain their own ha-card,
-     core and other cards may not) */
-  .item { min-width: 0; contain: inline-size; box-sizing: border-box; display: flex; flex-direction: column; }
-  .item > hui-card { display: block; flex: 1 1 auto; min-width: 0; height: 100%; }
-  .item.off { display: none; }
   .col { display: flex; flex-direction: column; gap: var(--pl-row-gap); min-width: 0; contain: inline-size; }
   .col > .item > hui-card { height: auto; }
 
@@ -75,7 +55,4 @@ export const STYLE = `
   .seamless .col > .item:last-child::after,
   .seamless .col > .item:nth-last-child(1 of :not(.off))::after { border-bottom: none; }
   .seamless .col > .item::after { border-right: none; }
-
-  .note { padding: 16px; text-align: center; color: var(--secondary-text-color); ${font(14, 20)} }
-  .note[hidden] { display: none; }
 `;
