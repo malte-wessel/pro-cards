@@ -19,6 +19,8 @@
 import { registerCard, syncKeepHeight } from "./shared/card.ts";
 import { applyStyle, CardsBase, placeNodes, type Style } from "./shared/cards/base.ts";
 import { themeGap } from "./shared/cards/units.ts";
+import { depsChanged } from "./shared/deps.ts";
+import { langOf } from "./shared/format.ts";
 import type { CardConfigBase } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
 import { CARD_TYPE, normalizeSwipeConfig, type SwipeConfig } from "./swipe/config.ts";
@@ -26,6 +28,10 @@ import { STYLE } from "./swipe/styles.ts";
 import { nearest, sizeOf, slideWidth, stopsOf } from "./swipe/track.ts";
 
 const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+// the room above and below the cards inside the scrolling strip (which clips both ways): their
+// shadows, focus rings and hover layers fit into it; a negative margin of the same keeps the
+// strip where it would be without it
+const BLEED = "8px";
 
 export class SwipeCard extends CardsBase {
   static cardType = CARD_TYPE;
@@ -33,7 +39,10 @@ export class SwipeCard extends CardsBase {
   _cfg?: SwipeConfig;
   _dots?: HTMLElement;
   _strip = false; // the cards are in the strip now (not unfolded)
-  _stops: number[] = []; // the scroll position of each page
+  _stops: number[] = []; // the scroll position of each page, from the strip's start
+  _rtl = false; // the strip scrolls from the right (scrollLeft from 0 down)
+  // what the stops were measured for (_updateDots)
+  _measured = new WeakMap<object, readonly unknown[]>();
   _scrollFrame = 0;
 
   static getStubConfig() {
@@ -100,9 +109,10 @@ export class SwipeCard extends CardsBase {
     root.className = ["root", unfold ? "unfold" : "strip", unfold ? "" : cfg.snap]
       .filter(Boolean)
       .join(" ");
+    const [top, right, bottom, left] = cfg.padding ?? ["0px", "0px", "0px", "0px"];
     const style: Style = {
       "align-items": cfg.height === "equal" ? "stretch" : "start",
-      padding: cfg.padding ? cfg.padding.join(" ") : "0",
+      padding: `${top} ${right} ${bottom} ${left}`,
     };
     if (unfold) {
       style.display = "grid";
@@ -112,20 +122,13 @@ export class SwipeCard extends CardsBase {
     } else {
       style["--sw-slide"] = slideWidth(cfg.per_page, count, gap);
       style["column-gap"] = gap;
+      style.padding = `calc(${top} + ${BLEED}) ${right} calc(${bottom} + ${BLEED}) ${left}`;
+      style["margin-block"] = `calc(-1 * ${BLEED})`;
       // a card snaps to where the padding ends, not to the strip's edge
-      if (cfg.padding) style["scroll-padding-inline"] = `${cfg.padding[3]} ${cfg.padding[1]}`;
+      style["scroll-padding-left"] = left;
+      style["scroll-padding-right"] = right;
     }
     applyStyle(body, style, this._styles);
-    if (unfold) {
-      body.removeAttribute("tabindex");
-      body.removeAttribute("role");
-      body.removeAttribute("aria-label");
-    } else {
-      // focusable, so the arrow keys scroll it
-      body.tabIndex = 0;
-      body.setAttribute("role", "region");
-      body.setAttribute("aria-label", t(this._hass, "swipe.cards"));
-    }
 
     placeNodes(
       body,
@@ -139,28 +142,55 @@ export class SwipeCard extends CardsBase {
     return shown;
   }
 
-  // the dots: one per page the strip stops at; none for a single page or unfolded cards
+  // The stops of the strip, its dots (one per stop; none for a single page, unfolded cards or
+  // indicator: none) and its focus (only a strip that scrolls takes it, so the arrow keys scroll
+  // it). Measured again only when what they follow changed: the strip's width, the cards shown,
+  // the config, the theme (its gap), the language (the labels, the direction); a strip measured
+  // while hidden, at no width, measured nothing and is measured the next time.
   _updateDots() {
     const cfg = this._cfg!;
     const body = this._body!;
-    const dots = this._dots!;
+    const shown = this._kids.filter((k) => !k.item.classList.contains("off")).map((k) => k.item);
+    const deps = [cfg, this._strip, this._width, this._hass?.themes, langOf(this._hass), ...shown];
+    if (!depsChanged(this._measured, this, deps)) return this._markPage();
+
     let stops: number[] = [];
-    if (this._strip && cfg.indicator === "dots") {
+    if (this._strip) {
       const cs = getComputedStyle(body);
-      const slides = this._kids
-        .filter((k) => !k.item.classList.contains("off"))
-        .map((k) => ({ start: k.item.offsetLeft, width: k.item.offsetWidth }));
+      this._rtl = cs.direction === "rtl";
+      // each card's distance from the strip's start edge, wherever it is scrolled: offsets are
+      // from the strip's left padding edge (it is their offsetParent), and unlike a bounding box
+      // they ignore transforms (a dialog that opens by scaling up)
+      const slides = shown.map((item) => ({
+        start: this._rtl ? body.clientWidth - item.offsetLeft - item.offsetWidth : item.offsetLeft,
+        width: item.offsetWidth,
+      }));
+      const padLeft = Number.parseFloat(cs.paddingLeft) || 0;
+      const padRight = Number.parseFloat(cs.paddingRight) || 0;
       stops = stopsOf(
         slides,
         body.clientWidth,
         body.scrollWidth - body.clientWidth,
         cfg.snap,
-        Number.parseFloat(cs.paddingLeft) || 0,
-        Number.parseFloat(cs.paddingRight) || 0,
+        this._rtl ? padRight : padLeft,
+        this._rtl ? padLeft : padRight,
       );
+      if (!body.clientWidth) this._measured.delete(this);
     }
     this._stops = stops;
-    const n = stops.length > 1 ? stops.length : 0;
+
+    if (stops.length > 1) {
+      body.tabIndex = 0;
+      body.setAttribute("role", "region");
+      body.setAttribute("aria-label", t(this._hass, "swipe.cards"));
+    } else {
+      body.removeAttribute("tabindex");
+      body.removeAttribute("role");
+      body.removeAttribute("aria-label");
+    }
+
+    const dots = this._dots!;
+    const n = cfg.indicator === "dots" && stops.length > 1 ? stops.length : 0;
     while (dots.children.length > n) dots.lastElementChild!.remove();
     while (dots.children.length < n) {
       const dot = document.createElement("button");
@@ -180,7 +210,7 @@ export class SwipeCard extends CardsBase {
   _markPage() {
     const dots = this._dots;
     if (!dots || dots.hidden) return;
-    const page = nearest(this._stops, this._body!.scrollLeft);
+    const page = nearest(this._stops, Math.abs(this._body!.scrollLeft));
     [...dots.children].forEach((dot, i) => {
       dot.classList.toggle("on", i === page);
       if (i === page) dot.setAttribute("aria-current", "true");
@@ -189,9 +219,12 @@ export class SwipeCard extends CardsBase {
   }
 
   _go(page: number) {
-    const left = this._stops[page];
-    if (left === undefined) return;
-    this._body!.scrollTo({ left, behavior: reducedMotion() ? "auto" : "smooth" });
+    const at = this._stops[page];
+    if (at === undefined) return;
+    this._body!.scrollTo({
+      left: this._rtl ? -at : at,
+      behavior: reducedMotion() ? "auto" : "smooth",
+    });
   }
 }
 

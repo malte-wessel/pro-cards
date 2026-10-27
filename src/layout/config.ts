@@ -4,12 +4,14 @@
 // lists only what changes once the layout's section spans that many view columns. Each child
 // card's own placement lives in its `view_layout`, which Home Assistant's card editors keep (a key
 // of their own would make them refuse the config); per-child values may be maps by view columns.
+import { checks, isObj } from "../shared/cards/checks.ts";
 import type { Sides } from "../shared/cards/units.ts";
 import { MAX_VIEW_COLUMNS } from "../shared/cards/view-columns.ts";
 import type { CardConfigBase } from "../shared/ha.ts";
+import { CARD_TYPE } from "./type.ts";
 import { boxSides, cssLength, trackTokens } from "./units.ts";
 
-export const CARD_TYPE = "layout-card-pro";
+export { CARD_TYPE };
 export const LAYOUTS = ["grid", "masonry"] as const;
 export const ITEM_ALIGNS = ["start", "center", "end", "stretch"] as const;
 export const CARD_STYLES = ["cards", "seamless"] as const;
@@ -74,21 +76,7 @@ const PLACE_KEYS = ["span", "column", "order", "align"] as const;
 // keys of view_layout that belong to Home Assistant's views or other layouts: kept, not ours
 const FOREIGN_PLACE_KEYS = ["position", "grid-area", "grid-column", "grid-row", "show"];
 
-const err = (msg: string) => new Error(`${CARD_TYPE}: ${msg}`);
-const isObj = (v: unknown): v is Record<string, unknown> =>
-  !!v && typeof v === "object" && !Array.isArray(v);
-
-const pickOf = <T extends string>(list: readonly T[], v: unknown, at: string): T => {
-  if (typeof v === "string" && (list as readonly string[]).includes(v)) return v as T;
-  throw err(`'${at}' must be one of ${list.join(", ")}`);
-};
-const int = (v: unknown, at: string, min: number, max = Infinity) => {
-  if (typeof v !== "number" || !Number.isInteger(v) || v < min || v > max)
-    throw err(
-      `'${at}' must be a whole number${max === Infinity ? ` of at least ${min}` : ` from ${min} to ${max}`}`,
-    );
-  return v;
-};
+const { err, pickOf, int, cardList } = checks(CARD_TYPE);
 // a key of a breakpoint map: a number of view columns ("2" in YAML's { 2: … } is a string here)
 const viewColumns = (key: string, at: string, min: number): number => {
   const n = /^\d+$/.test(key) ? Number(key) : NaN;
@@ -194,16 +182,10 @@ export const normalizeViewLayout = (raw: unknown, label: string): ChildPlace => 
 
 export const normalizeLayoutConfig = (raw: unknown): LayoutConfig => {
   if (!isObj(raw)) throw err("the config must be an object");
-  const cards = raw.cards ?? [];
-  if (!Array.isArray(cards)) throw err("'cards' must be a list of card configs");
-  const children = cards.map((c, i): ChildConfig => {
-    if (!isObj(c) || typeof c.type !== "string" || !c.type)
-      throw err(`cards[${i}] must be a card config with a 'type'`);
-    return {
-      config: c as CardConfigBase,
-      place: normalizeViewLayout(c.view_layout, `cards[${i}]`),
-    };
-  });
+  const children = cardList(raw.cards).map((c, i): ChildConfig => ({
+    config: c,
+    place: normalizeViewLayout(c.view_layout, `cards[${i}]`),
+  }));
   const own: Record<string, unknown> = {};
   for (const k of OPTION_KEYS) if (raw[k] !== undefined) own[k] = raw[k];
   return {

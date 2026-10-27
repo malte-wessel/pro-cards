@@ -48,6 +48,7 @@ export abstract class CardsBase extends HTMLElement {
   _body?: HTMLElement;
   _note?: HTMLElement;
   _width = 0;
+  _wasHidden = false; // the probe had no width since the last layout (see connectedCallback)
   _columns?: number; // the view columns the card spans now
   _selfHidden = false;
   _ready = false;
@@ -139,9 +140,18 @@ export abstract class CardsBase extends HTMLElement {
     // pass, after its parent laid out, with the size it had before that. offsetWidth is the
     // layout width: a dialog that opens by scaling up must not count as a narrower card (and no
     // observation follows when its transform ends)
+    // A card hidden (display: none: Home Assistant's visibility, or every card inside hidden)
+    // has no width: it keeps the one it had, so that a relayout while hidden still sees its
+    // columns, and it is laid out again when it shows, at whatever width, since what it measured
+    // while hidden (the swipe card's dots) was nothing.
     this._ro = new ResizeObserver(() => {
       const w = this._probe?.offsetWidth ?? 0;
-      if (w > 0 && Math.round(w) !== Math.round(this._width)) {
+      if (w <= 0) {
+        this._wasHidden = true;
+        return;
+      }
+      if (this._wasHidden || Math.round(w) !== Math.round(this._width)) {
+        this._wasHidden = false;
         this._width = w;
         this._relayout();
       }

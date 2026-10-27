@@ -32,6 +32,9 @@ describe("swipe-card config", () => {
       cards: [],
     });
   });
+  it("takes unfold: null as no unfold, as YAML's empty unfold: is", () => {
+    expect(cfg({ unfold: null }).unfold).toBeNull();
+  });
   it("reads every option", () => {
     const c = cfg({
       per_page: 2.5,
@@ -167,12 +170,14 @@ describe("swipe-card-pro element", () => {
     const b = body(el);
     expect(b.style.getPropertyValue("--sw-slide")).toBe("calc((100% - 2 * 12px) / 2.5)");
     expect(b.style.getPropertyValue("column-gap")).toBe("12px");
-    expect(b.style.getPropertyValue("scroll-padding-inline")).toBe("16px 16px");
+    expect(b.style.getPropertyValue("scroll-padding-left")).toBe("16px");
+    expect(b.style.getPropertyValue("scroll-padding-right")).toBe("16px");
     expect(b.style.getPropertyValue("align-items")).toBe("start");
-    // focusable and named, so the arrow keys scroll it
-    expect(b.tabIndex).toBe(0);
-    expect(b.getAttribute("role")).toBe("region");
-    expect(b.getAttribute("aria-label")).toBe("Cards");
+    // room above and below the cards for their shadows, the strip where it would be without it
+    expect(b.style.getPropertyValue("padding-top")).toBe("calc(0px + 8px)");
+    expect(b.style.getPropertyValue("padding-bottom")).toBe("calc(0px + 8px)");
+    expect(b.style.getPropertyValue("padding-left")).toBe("16px");
+    expect(b.style.getPropertyValue("margin-block")).toBe("calc(-1 * 8px)");
     el.remove();
   });
   it("unfolds into a grid from the view columns in unfold.from", async () => {

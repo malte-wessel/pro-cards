@@ -2,7 +2,7 @@
 // dots that follow the page and jump to it, Home Assistant's visibility, and unfolding into a
 // grid at the view columns of its section.
 import type { Page } from "@playwright/test";
-import { test, expect, mount, setState } from "./util";
+import { test, expect, mount, setLanguage, setState } from "./util";
 
 const SW = "custom:swipe-card-pro";
 const ec = (entity: string, extra: Record<string, unknown> = {}) => ({
@@ -125,8 +125,13 @@ test.describe("swipe-card-pro", () => {
     expect(Math.abs(s.items[0].w - (s.w - 8) / 2)).toBeLessThanOrEqual(1);
     expect(s.max).toBe(0);
     expect(await dots(page)).toBe("");
+    // nothing to scroll: no tab stop of its own
+    await expect(page.getByRole("region", { name: "Cards" })).toHaveCount(0);
+    expect(await page.locator("swipe-card-pro .root > .body").getAttribute("tabindex")).toBeNull();
+    // no dots, yet the strip scrolls: it takes the focus
     await mount(page, { type: SW, indicator: "none", cards: ROOMS }, { width: 400 });
     expect(await dots(page)).toBe("");
+    await expect(page.getByRole("region", { name: "Cards" })).toHaveCount(1);
   });
 
   test("centres the current card for snap: center", async ({ page }) => {
@@ -193,5 +198,59 @@ test.describe("swipe-card-pro", () => {
     await page.keyboard.press("ArrowRight");
     await expect.poll(async () => (await strip(page)).left).toBeGreaterThan(0);
     await expect.poll(() => dots(page)).toBe("○●○○");
+  });
+
+  test("scrolls from the right in a right-to-left language", async ({ page }) => {
+    await mount(page, { type: SW, cards: [] });
+    await page.evaluate(() => (window.pc.root.dir = "rtl"));
+    await mount(page, { type: SW, cards: ROOMS }, { width: 400 });
+    const s = await strip(page);
+    // the first card at the right edge, the next peeking in on the left
+    expect(s.items[0].x + s.items[0].w).toBe(s.x + s.w);
+    expect(s.items[1].x).toBeLessThan(s.items[0].x);
+    expect(await dots(page)).toBe("●○○○");
+    await page.locator("swipe-card-pro .dot").nth(2).click();
+    await expect
+      .poll(async () => {
+        const t = await strip(page);
+        return t.items[2].x + t.items[2].w - (t.x + t.w);
+      })
+      .toBe(0);
+    expect((await strip(page)).left).toBeLessThan(0);
+    await expect.poll(() => dots(page)).toBe("○○●○");
+  });
+
+  test("shows its dots again after Home Assistant hid it and it was laid out meanwhile", async ({
+    page,
+  }) => {
+    // in a layout card, whose hui-card hides it by its own visibility
+    const nested = () =>
+      page.evaluate(() => {
+        const hui = window.pc.card(0).shadowRoot!.querySelector("hui-card")!;
+        const box = hui.firstElementChild!.shadowRoot!.querySelector<HTMLElement>(".dots")!;
+        return box.hidden ? "" : String(box.querySelectorAll(".dot").length);
+      });
+    // the kitchen light is off in the demo world: the swipe card shows
+    await mount(
+      page,
+      {
+        type: "custom:layout-card-pro",
+        cards: [
+          {
+            type: SW,
+            cards: ROOMS,
+            visibility: [{ condition: "state", entity: "light.kitchen", state: "off" }],
+          },
+        ],
+      },
+      { width: 400 },
+    );
+    expect(await nested()).toBe("4");
+    await setState(page, "light.kitchen", "on");
+    // a relayout while hidden (the language) measures nothing
+    await setLanguage(page, "de");
+    await page.waitForTimeout(100);
+    await setState(page, "light.kitchen", "off");
+    await expect.poll(nested).toBe("4");
   });
 });

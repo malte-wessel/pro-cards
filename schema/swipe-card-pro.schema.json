@@ -39,8 +39,8 @@
       "description": "The dots below the strip, one per page"
     },
     "unfold": {
-      "type": "object",
-      "description": "From this many view columns on, the cards are a grid instead of a strip",
+      "type": ["object", "null"],
+      "description": "From this many view columns on, the cards are a grid instead of a strip; null: never",
       "properties": {
         "from": {
           "type": "integer",

@@ -1,6 +1,7 @@
 // Swipe Card Pro: config types and normalization (pure). The cards sit side by side in a strip
 // that scrolls sideways and snaps to each card; `per_page` says how many fit across (a fraction
 // lets the next one peek in); from `unfold.from` view columns on they are a plain grid instead.
+import { checks, isObj } from "../shared/cards/checks.ts";
 import { lengths, type Sides } from "../shared/cards/units.ts";
 import { MAX_VIEW_COLUMNS } from "../shared/cards/view-columns.ts";
 import type { CardConfigBase } from "../shared/ha.ts";
@@ -38,20 +39,8 @@ export const DEFAULTS: Omit<SwipeConfig, "cards"> = {
   unfold: null,
 };
 
-const err = (msg: string) => new Error(`${CARD_TYPE}: ${msg}`);
-const isObj = (v: unknown): v is Record<string, unknown> =>
-  !!v && typeof v === "object" && !Array.isArray(v);
+const { err, pickOf, int, cardList } = checks(CARD_TYPE);
 const { cssLength, boxSides } = lengths(CARD_TYPE);
-
-const pickOf = <T extends string>(list: readonly T[], v: unknown, at: string): T => {
-  if (typeof v === "string" && (list as readonly string[]).includes(v)) return v as T;
-  throw err(`'${at}' must be one of ${list.join(", ")}`);
-};
-const int = (v: unknown, at: string, min: number, max: number) => {
-  if (typeof v !== "number" || !Number.isInteger(v) || v < min || v > max)
-    throw err(`'${at}' must be a whole number from ${min} to ${max}`);
-  return v;
-};
 
 const unfoldOf = (v: unknown): Unfold | null => {
   if (v === undefined || v === null) return null;
@@ -67,12 +56,6 @@ const unfoldOf = (v: unknown): Unfold | null => {
 
 export const normalizeSwipeConfig = (raw: unknown): SwipeConfig => {
   if (!isObj(raw)) throw err("the config must be an object");
-  const cards = raw.cards ?? [];
-  if (!Array.isArray(cards)) throw err("'cards' must be a list of card configs");
-  cards.forEach((c, i) => {
-    if (!isObj(c) || typeof c.type !== "string" || !c.type)
-      throw err(`cards[${i}] must be a card config with a 'type'`);
-  });
   const perPage = raw.per_page ?? DEFAULTS.per_page;
   if (typeof perPage !== "number" || !(perPage >= 1 && perPage <= MAX_PER_PAGE))
     throw err(
@@ -89,6 +72,6 @@ export const normalizeSwipeConfig = (raw: unknown): SwipeConfig => {
         ? DEFAULTS.indicator
         : pickOf(INDICATORS, raw.indicator, "indicator"),
     unfold: unfoldOf(raw.unfold),
-    cards: cards as CardConfigBase[],
+    cards: cardList(raw.cards),
   };
 };

@@ -1,11 +1,11 @@
 // Layout Card Pro: lengths, sides and column tracks as CSS (pure). Lengths and sides are the
 // container cards' (src/shared/cards/units.ts), with the layout card's name in their errors.
+import { checks } from "../shared/cards/checks.ts";
 import { lengths } from "../shared/cards/units.ts";
-// the card type as in config.ts (which imports this module, so it can not be imported from there)
-const CARD = "layout-card-pro";
-export const { cssLength, boxSides } = lengths(CARD);
+import { CARD_TYPE } from "./type.ts";
 
-const err = (msg: string) => new Error(`${CARD}: ${msg}`);
+export const { cssLength, boxSides } = lengths(CARD_TYPE);
+const { err } = checks(CARD_TYPE);
 
 // One column track: `Nfr` (as minmax(0, Nfr), so a wide card never widens its column), a length,
 // or minmax(a, b) of those. Content-sized tracks (auto, min-content, max-content) are refused: each
