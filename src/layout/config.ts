@@ -4,7 +4,7 @@
 // lists only what changes once the layout's section spans that many view columns. Each child
 // card's own placement lives in its `view_layout`, which Home Assistant's card editors keep (a key
 // of their own would make them refuse the config); per-child values may be maps by view columns.
-import { breakpointsOf, type Breakpoint as BreakpointOf } from "../shared/cards/breakpoints.ts";
+import { optionsOf, type Breakpoint as BreakpointOf } from "../shared/cards/breakpoints.ts";
 import { checks, isObj } from "../shared/cards/checks.ts";
 import type { Sides } from "../shared/cards/units.ts";
 import type { CardConfigBase } from "../shared/ha.ts";
@@ -77,7 +77,8 @@ const FOREIGN_PLACE_KEYS = ["position", "grid-area", "grid-column", "grid-row", 
 
 const check = checks(CARD_TYPE);
 const { err, pickOf, int, viewColumns, cardList } = check;
-// the options of one level (the base or a breakpoint): only the keys it sets
+// the options of one level (the base or a breakpoint): only the keys it sets; null (YAML's empty
+// `gap:`) puts gap, padding and rows back to their defaults
 export const parseOptions = (raw: Record<string, unknown>, at: string): Overrides => {
   const o: Overrides = {};
   const p = (k: string) => (at ? `${at}.${k}` : k);
@@ -91,12 +92,16 @@ export const parseOptions = (raw: Record<string, unknown>, at: string): Override
         o.columns = typeof v === "number" ? int(v, p(k), 1, 24) : trackTokens(v, p(k));
         break;
       case "rows":
-        o.rows = rowTokens(v, p(k));
+        o.rows = v === null ? null : rowTokens(v, p(k));
         break;
       case "align_items":
         o.align_items = pickOf(ITEM_ALIGNS, v, p(k));
         break;
       case "gap": {
+        if (v === null) {
+          o.row_gap = o.column_gap = null;
+          break;
+        }
         const pair = Array.isArray(v) ? v : [v, v];
         if (pair.length !== 2)
           throw err(`'${p(k)}' must be a length (8, 0.5rem, 4%, var(--x)) or [row, column]`);
@@ -105,7 +110,7 @@ export const parseOptions = (raw: Record<string, unknown>, at: string): Override
         break;
       }
       case "padding":
-        o.padding = boxSides(v, p(k));
+        o.padding = v === null ? null : boxSides(v, p(k));
         break;
       case "card_style":
         o.card_style = pickOf(CARD_STYLES, v, p(k));
@@ -166,11 +171,8 @@ export const normalizeLayoutConfig = (raw: unknown): LayoutConfig => {
     config: c,
     place: normalizeViewLayout(c.view_layout, `cards[${i}]`),
   }));
-  const own: Record<string, unknown> = {};
-  for (const k of OPTION_KEYS) if (raw[k] !== undefined) own[k] = raw[k];
   return {
-    base: { ...DEFAULT_OPTIONS, ...parseOptions(own, "") },
-    breakpoints: breakpointsOf(raw.breakpoints, check, parseOptions, "{ 2: { columns: 4 } }"),
+    ...optionsOf(raw, DEFAULT_OPTIONS, OPTION_KEYS, check, parseOptions, "{ 2: { columns: 4 } }"),
     children,
   };
 };

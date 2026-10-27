@@ -28,6 +28,24 @@ export const breakpointsOf = <O>(
     .sort((a, b) => a.columns - b.columns);
 };
 
+// The options of a config: the top-level ones (the defaults, then the `keys` it sets) and its
+// breakpoints, each level read by the card's own `parse`
+export const optionsOf = <O>(
+  raw: Record<string, unknown>,
+  defaults: O,
+  keys: readonly string[],
+  check: ReturnType<typeof checks>,
+  parse: (raw: Record<string, unknown>, at: string) => Partial<O>,
+  example: string,
+): { base: O; breakpoints: Breakpoint<O>[] } => {
+  const own: Record<string, unknown> = {};
+  for (const k of keys) if (raw[k] !== undefined) own[k] = raw[k];
+  return {
+    base: { ...defaults, ...parse(own, "") },
+    breakpoints: breakpointsOf(raw.breakpoints, check, parse, example),
+  };
+};
+
 // The base options, then every breakpoint up to the view columns there are.
 export const resolveAt = <O>(
   base: O,

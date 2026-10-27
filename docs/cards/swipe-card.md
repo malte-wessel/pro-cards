@@ -103,7 +103,7 @@ breakpoints:
   3: { unfold: 4 } # three or more: a grid of four
 ```
 
-`unfold: false` in a wider breakpoint goes back to the strip. Outside a section (a panel view, a stack, a layout card) the card counts its own width in the sections view's columns, 500 px at most each, as the layout card does.
+`unfold: false` in a wider breakpoint goes back to the strip, and `gap:` or `padding:` left empty go back to their defaults. Outside a section (a panel view, a stack, a layout card) the card counts its own width in the sections view's columns, 500 px at most each, as the layout card does.
 
 The same card in a narrow frame and in one as wide as two view columns, where it unfolds:
 

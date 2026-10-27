@@ -117,7 +117,7 @@
         },
         {
           "type": "string",
-          "pattern": "^\\s*(\\d*\\.?\\d+fr|minmax\\((?!\\s*\\d*\\.?\\d+fr)[^,]+,[^,]+\\)|\\d*\\.?\\d+(px|rem|em|%|vw|vh|svh|dvh)?|(var|calc|min|max|clamp)\\(.+\\))\\s*$"
+          "pattern": "^\\s*(\\d*\\.?\\d+fr|minmax\\(\\s*(\\d*\\.?\\d+(px|rem|em|%|vw|vh|svh|dvh)?|(var|calc|min|max|clamp)\\([^,]*\\))\\s*,\\s*(\\d*\\.?\\d+fr|\\d*\\.?\\d+(px|rem|em|%|vw|vh|svh|dvh)?|(var|calc|min|max|clamp)\\([^,]*\\))\\s*\\)|\\d*\\.?\\d+(px|rem|em|%|vw|vh|svh|dvh)?|(var|calc|min|max|clamp)\\([^,]*\\))\\s*$"
         }
       ]
     },
@@ -148,12 +148,19 @@
           "default": 1
         },
         "rows": {
-          "description": "The first rows' heights like grid-template-rows, the rest auto: auto (as tall as its cards), fr (a share of the height the layout is given beyond its cards), a length or minmax(); [auto, 1fr] keeps a heading row at its height and gives the rest to the row below",
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/rowTrack"
-          },
-          "minItems": 1
+          "description": "layout: grid only. The first rows' heights like grid-template-rows, the rest as tall as their cards: auto (as tall as its cards), fr (a share of the height the layout is given beyond its cards; several fr rows keep their proportions, as in CSS), a length or minmax(); [auto, 1fr] keeps a heading row at its height and gives the rest to the row below. null: all as tall as their cards",
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/rowTrack"
+              },
+              "minItems": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "align_items": {
           "enum": ["start", "center", "end", "stretch"],
@@ -173,12 +180,22 @@
               },
               "minItems": 2,
               "maxItems": 2
+            },
+            {
+              "type": "null"
             }
           ]
         },
         "padding": {
-          "$ref": "#/$defs/sides",
-          "description": "Inside the layout, around the cards: 1, 2 or 4 values, or per side"
+          "description": "Inside the layout, around the cards: 1, 2 or 4 values, or per side; null: none",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/sides"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "card_style": {
           "enum": ["cards", "seamless"],
@@ -600,14 +617,15 @@
       ]
     },
     "rowTrack": {
-      "description": "A row: auto, fr, a length or minmax(a, b)",
+      "description": "A row: auto, Nfr, a length, or minmax(a, b) of those (not starting with fr)",
       "oneOf": [
         {
-          "$ref": "#/$defs/length"
+          "type": "number",
+          "minimum": 0
         },
         {
           "type": "string",
-          "pattern": "^\\s*(auto|\\d*\\.?\\d+fr|minmax\\(.+\\))\\s*$"
+          "pattern": "^\\s*(auto|\\d*\\.?\\d+fr|minmax\\(\\s*(auto|\\d*\\.?\\d+(px|rem|em|%|vw|vh|svh|dvh)?|(var|calc|min|max|clamp)\\([^,]*\\))\\s*,\\s*(auto|\\d*\\.?\\d+fr|\\d*\\.?\\d+(px|rem|em|%|vw|vh|svh|dvh)?|(var|calc|min|max|clamp)\\([^,]*\\))\\s*\\)|\\d*\\.?\\d+(px|rem|em|%|vw|vh|svh|dvh)?|(var|calc|min|max|clamp)\\([^,]*\\))\\s*$"
         }
       ]
     }

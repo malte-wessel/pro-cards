@@ -69,12 +69,26 @@
           "description": "How many cards fit across the strip; a fraction lets the next card peek in"
         },
         "gap": {
-          "$ref": "layout-card-pro.schema.json#/$defs/length",
-          "description": "The space between the cards. Default: the theme's section gap"
+          "description": "The space between the cards. Default: the theme's section gap; null: the theme's gap",
+          "oneOf": [
+            {
+              "$ref": "layout-card-pro.schema.json#/$defs/length"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "padding": {
-          "$ref": "layout-card-pro.schema.json#/$defs/sides",
-          "description": "Space around the cards; its left and right are the inset at both ends of the strip"
+          "description": "Space around the cards; its left and right are the inset at both ends of the strip; null: none",
+          "oneOf": [
+            {
+              "$ref": "layout-card-pro.schema.json#/$defs/sides"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "snap": {
           "enum": ["start", "center", "free"],

@@ -48,7 +48,6 @@ export class SwipeCard extends CardsBase {
   _cfg?: SwipeConfig;
   _dots?: HTMLElement;
   _strip = false; // the cards are in the strip now (not unfolded)
-  _opts?: SwipeOptions; // the options at the view columns the card spans now
   _stops: number[] = []; // the scroll position of each page, from the strip's start
   _rtl = false; // the strip scrolls from the right (scrollLeft from 0 down)
   // what the stops were measured for (_updateDots)
@@ -108,7 +107,6 @@ export class SwipeCard extends CardsBase {
 
   _arrange(columns: number): boolean[] {
     const o = resolveAt(this._cfg!.base, this._cfg!.breakpoints, columns);
-    this._opts = o;
     const root = this._root!;
     const body = this._body!;
     const shown = this._kids.map((k) => this._visible(k));
@@ -149,23 +147,23 @@ export class SwipeCard extends CardsBase {
 
     const sizes = this._kids.filter((_, i) => shown[i]).map((k) => (k.size > 0 ? k.size : 1));
     this._size = sizes.length ? sizeOf(sizes, o.unfold ?? sizes.length) : 1;
-    this._updateDots(columns);
+    this._updateDots(o);
     return shown;
   }
 
   // The stops of the strip, its dots (one per stop; none for a single page, unfolded cards or
   // indicator: none) and its focus (only a strip that scrolls takes it, so the arrow keys scroll
   // it). Measured again only when what they follow changed: the strip's width, the cards shown,
-  // the config and the view columns (its breakpoints), the theme (its gap), the language (the
-  // labels, the direction); a strip measured while hidden, at no width, measured nothing and is
-  // measured the next time.
-  _updateDots(columns: number) {
-    const o = this._opts!;
+  // the options at the view columns there are (its breakpoints), the theme (its gap), the
+  // language (the labels, the direction); a strip measured while hidden, at no width, measured
+  // nothing and is measured the next time.
+  _updateDots(o: SwipeOptions) {
     const body = this._body!;
     const shown = this._kids.filter((k) => !k.item.classList.contains("off")).map((k) => k.item);
+    // the options' values: the same between breakpoints, whatever the view columns (padding is
+    // the config's own array, the same object as long as the config is)
     const deps = [
-      this._cfg,
-      columns,
+      ...Object.values(o),
       this._strip,
       this._width,
       this._hass?.themes,

@@ -60,6 +60,12 @@ describe("layout-card units", () => {
       "layout-card-pro: 'rows[0]' must be auto, fr or a length",
     );
     expect(() => rowTokens("auto", "rows")).toThrow("a list of rows such as [auto, 1fr]");
+    expect(() => rowTokens(["minmax(1fr, auto)"], "rows")).toThrow(
+      "can not start a minmax() with fr",
+    );
+    expect(() => rowTokens(["minmax(min-content, 1fr)"], "rows")).toThrow(
+      "'rows[0]' must be auto, fr or a length",
+    );
   });
 });
 
@@ -224,6 +230,19 @@ describe("layout-card plan", () => {
     const kids = [kid(c, 0), kid(c, 1)];
     expect(planLayout(at(c, 1), kids, 1).body["grid-template-rows"]).toBe("auto 1fr");
     expect(planLayout(at(c, 2), kids, 2).body["grid-template-rows"]).toBe("auto auto");
+    // an empty value in a breakpoint goes back to the default
+    const reset = cfg({
+      rows: ["auto", "1fr"],
+      gap: 4,
+      padding: 8,
+      breakpoints: { 2: { rows: null, gap: null, padding: null } },
+    });
+    expect(at(reset, 2)).toMatchObject({
+      rows: null,
+      row_gap: null,
+      column_gap: null,
+      padding: null,
+    });
     const plain = cfg({ cards });
     expect(planLayout(plain.base, kids, 1).body).not.toHaveProperty("grid-template-rows");
   });

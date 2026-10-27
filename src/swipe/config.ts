@@ -3,7 +3,7 @@
 // lets the next one peek in), `unfold` makes them a grid of that many columns instead. Like the
 // layout card's, the top-level options apply in one view column and each breakpoint under
 // `breakpoints` (2, 3 …) lists only what changes once the card spans that many view columns.
-import { breakpointsOf, type Breakpoint } from "../shared/cards/breakpoints.ts";
+import { optionsOf, type Breakpoint } from "../shared/cards/breakpoints.ts";
 import { checks, isObj } from "../shared/cards/checks.ts";
 import { lengths, type Sides } from "../shared/cards/units.ts";
 import type { CardConfigBase } from "../shared/ha.ts";
@@ -46,7 +46,8 @@ const check = checks(CARD_TYPE);
 const { err, pickOf, int, cardList } = check;
 const { cssLength, boxSides } = lengths(CARD_TYPE);
 
-// the options of one level (the base or a breakpoint): only the keys it sets
+// the options of one level (the base or a breakpoint): only the keys it sets; null (YAML's empty
+// `gap:`) puts gap, padding and unfold back to their defaults
 export const parseOptions = (raw: Record<string, unknown>, at: string): Partial<SwipeOptions> => {
   const o: Partial<SwipeOptions> = {};
   const p = (k: string) => (at ? `${at}.${k}` : k);
@@ -61,10 +62,10 @@ export const parseOptions = (raw: Record<string, unknown>, at: string): Partial<
         o.per_page = v;
         break;
       case "gap":
-        o.gap = cssLength(v, p(k));
+        o.gap = v === null ? null : cssLength(v, p(k));
         break;
       case "padding":
-        o.padding = boxSides(v, p(k));
+        o.padding = v === null ? null : boxSides(v, p(k));
         break;
       case "snap":
         o.snap = pickOf(SNAPS, v, p(k));
@@ -76,6 +77,11 @@ export const parseOptions = (raw: Record<string, unknown>, at: string): Partial<
         o.indicator = pickOf(INDICATORS, v, p(k));
         break;
       case "unfold":
+        // the form of the first betas: a column count now, its `from` a breakpoint
+        if (isObj(v))
+          throw err(
+            `'${p(k)}' is a column count now: write breakpoints: { ${v.from ?? 2}: { unfold: ${v.columns ?? 4} } } instead of { from, columns }`,
+          );
         // false (or YAML's empty `unfold:`) turns it off, so a breakpoint can go back to the strip
         o.unfold = v === null || v === false ? null : int(v, p(k), 1, 12);
         break;
@@ -90,11 +96,15 @@ const OPTION_KEYS = Object.keys(DEFAULT_OPTIONS);
 
 export const normalizeSwipeConfig = (raw: unknown): SwipeConfig => {
   if (!isObj(raw)) throw err("the config must be an object");
-  const own: Record<string, unknown> = {};
-  for (const k of OPTION_KEYS) if (k in raw) own[k] = raw[k];
   return {
-    base: { ...DEFAULT_OPTIONS, ...parseOptions(own, "") },
-    breakpoints: breakpointsOf(raw.breakpoints, check, parseOptions, "{ 2: { per_page: 2.2 } }"),
+    ...optionsOf(
+      raw,
+      DEFAULT_OPTIONS,
+      OPTION_KEYS,
+      check,
+      parseOptions,
+      "{ 2: { per_page: 2.2 } }",
+    ),
     cards: cardList(raw.cards),
   };
 };

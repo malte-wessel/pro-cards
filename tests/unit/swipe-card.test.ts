@@ -75,6 +75,9 @@ describe("swipe-card config", () => {
     expect(at(1)).toMatchObject({ per_page: 1.15, snap: "start", unfold: null });
     expect(at(2)).toMatchObject({ per_page: 2.2, snap: "center", unfold: null });
     expect(at(4)).toMatchObject({ per_page: 2.2, snap: "center", unfold: 4 });
+    // an empty gap or padding goes back to the default
+    const reset = cfg({ gap: 12, padding: 16, breakpoints: { 2: { gap: null, padding: null } } });
+    expect(resolveAt(reset.base, reset.breakpoints, 2)).toMatchObject({ gap: null, padding: null });
     // a higher breakpoint goes back to the strip
     const back = cfg({ unfold: 2, breakpoints: { 3: { unfold: false } } });
     expect(resolveAt(back.base, back.breakpoints, 3).unfold).toBeNull();
@@ -88,8 +91,10 @@ describe("swipe-card config", () => {
     expect(() => cfg({ gap: "wide" })).toThrow("swipe-card-pro: 'gap' must be a length");
     expect(() => cfg({ snap: "end" })).toThrow("'snap' must be one of start, center, free");
     expect(() => cfg({ indicator: "bar" })).toThrow("'indicator' must be one of dots, none");
-    expect(() => cfg({ unfold: { from: 2, columns: 4 } })).toThrow(
-      "'unfold' must be a whole number from 1 to 12",
+    expect(() => cfg({ unfold: 0 })).toThrow("'unfold' must be a whole number from 1 to 12");
+    // the form of the first betas says what to write instead
+    expect(() => cfg({ unfold: { from: 3, columns: 4 } })).toThrow(
+      "'unfold' is a column count now: write breakpoints: { 3: { unfold: 4 } } instead of { from, columns }",
     );
     expect(() => cfg({ breakpoints: [] })).toThrow(
       "'breakpoints' must map view columns to options, as { 2: { per_page: 2.2 } }",
