@@ -24,6 +24,10 @@ const STYLE_PICKER = `
      by the card's width alone, never by what it names */
   .header .title { flex: 1 0 auto; max-width: 50%; }
   .ppicker { flex: 0 1 auto; }
+  /* the picker's 32 px buttons start with the 20 px title line and overhang it downwards, so the
+     header is as high as any other card's with a title: a power and an energy flow card side by
+     side have their titles and trees at the same height */
+  .ppicker { margin-bottom: -12px; }
 `;
 
 export const STYLE_ENERGY_FLOW_CARD = STYLE_FLOW_TREE + STYLE_PICKER + STYLE_DATEPICKER;
