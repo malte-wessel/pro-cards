@@ -444,4 +444,45 @@ test.describe("layout-card-pro", () => {
     );
     expect(h).toBe(3 * 56 + 2 * 8);
   });
+
+  test("keeps a heading row at its height and gives a stretched layout's rest to the next row", async ({
+    page,
+  }) => {
+    // two rooms in a swipe card of equal heights: the shorter one is stretched to the taller
+    const room = (title: string, entities: string[]) => ({
+      type: LC,
+      rows: ["auto", "1fr"],
+      cards: [
+        { type: "custom:heading-card-pro", title },
+        { type: "custom:entity-group-card-pro", entities },
+      ],
+    });
+    await mount(
+      page,
+      {
+        type: "custom:swipe-card-pro",
+        per_page: 2,
+        cards: [
+          room("Living room", ["light.living_room", "light.dining_table", "light.office"]),
+          room("Kitchen", ["light.kitchen"]),
+        ],
+      },
+      { width: 600 },
+    );
+    const rooms = await page.evaluate(() =>
+      [...window.pc.card(0).shadowRoot!.querySelectorAll<HTMLElement>(".body > .item")].map(
+        (item) => {
+          const lay = item.querySelector("hui-card")!.firstElementChild!;
+          const [head, group] = [...lay.shadowRoot!.querySelectorAll<HTMLElement>(".item")].map(
+            (i) => i.getBoundingClientRect(),
+          );
+          return { head: Math.round(head.height), group: Math.round(group.height) };
+        },
+      ),
+    );
+    const [big, small] = rooms;
+    // the headings as tall as each other, the kitchen's lights as tall as the living room's
+    expect(small.head).toBe(big.head);
+    expect(small.group).toBe(big.group);
+  });
 });

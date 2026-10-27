@@ -13,7 +13,7 @@ import {
 import { normalizeLayoutConfig, type LayoutConfig } from "../../src/layout/config.ts";
 import { distribute, tallest } from "../../src/layout/masonry.ts";
 import { cardSize, planLayout, type KidState } from "../../src/layout/place.ts";
-import { boxSides, cssLength, trackList, trackTokens } from "../../src/layout/units.ts";
+import { boxSides, cssLength, rowTokens, trackList, trackTokens } from "../../src/layout/units.ts";
 import type { HuiCardElement } from "../../src/shared/ha.ts";
 
 defineHuiElements();
@@ -51,6 +51,21 @@ describe("layout-card units", () => {
       "'columns[0]' must be a length or fr",
     );
     expect(() => trackTokens([], "columns")).toThrow("a list of tracks such as [1fr, 2fr]");
+  });
+  it("turns rows into tracks, which may size to their cards", () => {
+    expect(
+      rowTokens(["auto", "1fr", 120, "minmax(80px, 2fr)", "minmax(auto, 1fr)"], "rows"),
+    ).toEqual(["auto", "1fr", "120px", "minmax(80px, 2fr)", "minmax(auto, 1fr)"]);
+    expect(() => rowTokens(["max-content"], "rows")).toThrow(
+      "layout-card-pro: 'rows[0]' must be auto, fr or a length",
+    );
+    expect(() => rowTokens("auto", "rows")).toThrow("a list of rows such as [auto, 1fr]");
+    expect(() => rowTokens(["minmax(1fr, auto)"], "rows")).toThrow(
+      "can not start a minmax() with fr",
+    );
+    expect(() => rowTokens(["minmax(min-content, 1fr)"], "rows")).toThrow(
+      "'rows[0]' must be auto, fr or a length",
+    );
   });
 });
 
@@ -208,6 +223,28 @@ describe("layout-card plan", () => {
     });
     expect(planLayout(c.base, [kid(c, 0)], 1).items[0].style["grid-column"]).toBe("1 / -1");
     expect(planLayout(c.base, [kid(c, 0)], 3).items[0].style["grid-column"]).toBe("span 2");
+  });
+  it("sizes the first rows by its rows option, the rest by their cards", () => {
+    const cards = [{ type: "heading" }, { type: "tile" }];
+    const c = cfg({ rows: ["auto", "1fr"], breakpoints: { 2: { rows: ["auto", "auto"] } }, cards });
+    const kids = [kid(c, 0), kid(c, 1)];
+    expect(planLayout(at(c, 1), kids, 1).body["grid-template-rows"]).toBe("auto 1fr");
+    expect(planLayout(at(c, 2), kids, 2).body["grid-template-rows"]).toBe("auto auto");
+    // an empty value in a breakpoint goes back to the default
+    const reset = cfg({
+      rows: ["auto", "1fr"],
+      gap: 4,
+      padding: 8,
+      breakpoints: { 2: { rows: null, gap: null, padding: null } },
+    });
+    expect(at(reset, 2)).toMatchObject({
+      rows: null,
+      row_gap: null,
+      column_gap: null,
+      padding: null,
+    });
+    const plain = cfg({ cards });
+    expect(planLayout(plain.base, kids, 1).body).not.toHaveProperty("grid-template-rows");
   });
   it("gives a card the rows it asks for in the sections grid's row height", () => {
     const c = cfg({

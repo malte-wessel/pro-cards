@@ -4,6 +4,8 @@ import { join } from "node:path";
 import yaml from "js-yaml";
 import { makeValidator } from "../../scripts/schema-validator.ts";
 import { PRESETS } from "../../docs/.vitepress/theme/presets.ts";
+import { normalizeLayoutConfig } from "../../src/layout/config.ts";
+import { normalizeSwipeConfig } from "../../src/swipe/config.ts";
 
 const validate = makeValidator();
 const walk = (d: string): string[] =>
@@ -375,6 +377,53 @@ describe("card config schemas", () => {
     expect(validate({ type: LC, cards: [{ ...EC, visula: "ring" }] })).not.toBeNull();
     expect(validate({ type: LC, cards: [{ type: "tile", whatever: 1 }] })).toBeNull();
     expect(validate({ type: LC, cards: [{ entity: "light.kitchen" }] })).not.toBeNull();
+  });
+
+  it("agrees with the layout and swipe cards on rows, resets and unfold", () => {
+    const LC = "custom:layout-card-pro",
+      SW = "custom:swipe-card-pro";
+    // the schema accepts a value exactly where the card does
+    const same = (cfg: Record<string, unknown>, normalize: (c: unknown) => unknown) => {
+      let card = true;
+      try {
+        normalize(cfg);
+      } catch {
+        card = false;
+      }
+      expect(validate(cfg) === null, JSON.stringify(cfg)).toBe(card);
+      return card;
+    };
+    const rows = (r: unknown[]) => same({ type: LC, rows: r }, normalizeLayoutConfig);
+    for (const ok of [
+      ["auto", "1fr"],
+      [120, "2.5fr"],
+      ["minmax(80px, 1fr)"],
+      ["minmax(auto, 1fr)"],
+    ])
+      expect(rows(ok), String(ok)).toBe(true);
+    for (const bad of [
+      ["minmax(1fr, auto)"],
+      ["minmax(min-content, 1fr)"],
+      ["minmax(80px)"],
+      ["max-content"],
+      [-1],
+    ])
+      expect(rows(bad), String(bad)).toBe(false);
+    const cols = (c: unknown[]) => same({ type: LC, columns: c }, normalizeLayoutConfig);
+    expect(cols(["minmax(200px, 1fr)"])).toBe(true);
+    expect(cols(["minmax(auto, 1fr)"])).toBe(false);
+    // an empty value in a breakpoint goes back to the default
+    for (const k of ["gap", "padding", "rows"])
+      expect(same({ type: LC, breakpoints: { 2: { [k]: null } } }, normalizeLayoutConfig), k).toBe(
+        true,
+      );
+    for (const k of ["gap", "padding", "unfold"])
+      expect(same({ type: SW, breakpoints: { 2: { [k]: null } } }, normalizeSwipeConfig), k).toBe(
+        true,
+      );
+    expect(same({ type: SW, unfold: false }, normalizeSwipeConfig)).toBe(true);
+    // the form of the first betas
+    expect(same({ type: SW, unfold: { from: 2, columns: 4 } }, normalizeSwipeConfig)).toBe(false);
   });
 
   it("rejects energy flow cards that read power sensors", () => {

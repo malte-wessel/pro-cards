@@ -1,9 +1,11 @@
 // Swipe Card Pro: config types and normalization (pure). The cards sit side by side in a strip
 // that scrolls sideways and snaps to each card; `per_page` says how many fit across (a fraction
-// lets the next one peek in); from `unfold.from` view columns on they are a plain grid instead.
+// lets the next one peek in), `unfold` makes them a grid of that many columns instead. Like the
+// layout card's, the top-level options apply in one view column and each breakpoint under
+// `breakpoints` (2, 3 …) lists only what changes once the card spans that many view columns.
+import { optionsOf, type Breakpoint } from "../shared/cards/breakpoints.ts";
 import { checks, isObj } from "../shared/cards/checks.ts";
 import { lengths, type Sides } from "../shared/cards/units.ts";
-import { MAX_VIEW_COLUMNS } from "../shared/cards/view-columns.ts";
 import type { CardConfigBase } from "../shared/ha.ts";
 
 export const CARD_TYPE = "swipe-card-pro";
@@ -14,22 +16,23 @@ export const MAX_PER_PAGE = 12;
 
 export type Snap = (typeof SNAPS)[number];
 
-export interface Unfold {
-  from: number; // the view columns it applies from
-  columns: number;
-}
-export interface SwipeConfig {
+// everything a breakpoint may change
+export interface SwipeOptions {
   per_page: number;
   gap: string | null; // null: the theme's gap
   padding: Sides | null;
   snap: Snap;
   height: (typeof HEIGHTS)[number];
   indicator: (typeof INDICATORS)[number];
-  unfold: Unfold | null;
+  unfold: number | null; // the grid's columns; null: the strip
+}
+export interface SwipeConfig {
+  base: SwipeOptions;
+  breakpoints: Breakpoint<SwipeOptions>[]; // ascending by view columns
   cards: CardConfigBase[];
 }
 
-export const DEFAULTS: Omit<SwipeConfig, "cards"> = {
+export const DEFAULT_OPTIONS: SwipeOptions = {
   per_page: 1.15,
   gap: null,
   padding: null,
@@ -39,39 +42,69 @@ export const DEFAULTS: Omit<SwipeConfig, "cards"> = {
   unfold: null,
 };
 
-const { err, pickOf, int, cardList } = checks(CARD_TYPE);
+const check = checks(CARD_TYPE);
+const { err, pickOf, int, cardList } = check;
 const { cssLength, boxSides } = lengths(CARD_TYPE);
 
-const unfoldOf = (v: unknown): Unfold | null => {
-  if (v === undefined || v === null) return null;
-  if (!isObj(v)) throw err(`'unfold' must be { from: <view columns>, columns: <n> }`);
-  for (const k of Object.keys(v))
-    if (k !== "from" && k !== "columns")
-      throw err(`'unfold.${k}' is not an option (from, columns)`);
-  return {
-    from: int(v.from, "unfold.from", 1, MAX_VIEW_COLUMNS),
-    columns: int(v.columns, "unfold.columns", 1, 12),
-  };
+// the options of one level (the base or a breakpoint): only the keys it sets; null (YAML's empty
+// `gap:`) puts gap, padding and unfold back to their defaults
+export const parseOptions = (raw: Record<string, unknown>, at: string): Partial<SwipeOptions> => {
+  const o: Partial<SwipeOptions> = {};
+  const p = (k: string) => (at ? `${at}.${k}` : k);
+  for (const [k, v] of Object.entries(raw)) {
+    if (v === undefined) continue;
+    switch (k) {
+      case "per_page":
+        if (typeof v !== "number" || !(v >= 1 && v <= MAX_PER_PAGE))
+          throw err(
+            `'${p(k)}' must be a number from 1 to ${MAX_PER_PAGE} (1.15 lets the next card peek in)`,
+          );
+        o.per_page = v;
+        break;
+      case "gap":
+        o.gap = v === null ? null : cssLength(v, p(k));
+        break;
+      case "padding":
+        o.padding = v === null ? null : boxSides(v, p(k));
+        break;
+      case "snap":
+        o.snap = pickOf(SNAPS, v, p(k));
+        break;
+      case "height":
+        o.height = pickOf(HEIGHTS, v, p(k));
+        break;
+      case "indicator":
+        o.indicator = pickOf(INDICATORS, v, p(k));
+        break;
+      case "unfold":
+        // the form of the first betas: a column count now, its `from` a breakpoint
+        if (isObj(v))
+          throw err(
+            `'${p(k)}' is a column count now: write breakpoints: { ${v.from ?? 2}: { unfold: ${v.columns ?? 4} } } instead of { from, columns }`,
+          );
+        // false (or YAML's empty `unfold:`) turns it off, so a breakpoint can go back to the strip
+        o.unfold = v === null || v === false ? null : int(v, p(k), 1, 12);
+        break;
+      default:
+        if (at) throw err(`'${p(k)}' is not a swipe option`);
+    }
+  }
+  return o;
 };
+
+const OPTION_KEYS = Object.keys(DEFAULT_OPTIONS);
 
 export const normalizeSwipeConfig = (raw: unknown): SwipeConfig => {
   if (!isObj(raw)) throw err("the config must be an object");
-  const perPage = raw.per_page ?? DEFAULTS.per_page;
-  if (typeof perPage !== "number" || !(perPage >= 1 && perPage <= MAX_PER_PAGE))
-    throw err(
-      `'per_page' must be a number from 1 to ${MAX_PER_PAGE} (1.15 lets the next card peek in)`,
-    );
   return {
-    per_page: perPage,
-    gap: raw.gap === undefined ? DEFAULTS.gap : cssLength(raw.gap, "gap"),
-    padding: raw.padding === undefined ? DEFAULTS.padding : boxSides(raw.padding, "padding"),
-    snap: raw.snap === undefined ? DEFAULTS.snap : pickOf(SNAPS, raw.snap, "snap"),
-    height: raw.height === undefined ? DEFAULTS.height : pickOf(HEIGHTS, raw.height, "height"),
-    indicator:
-      raw.indicator === undefined
-        ? DEFAULTS.indicator
-        : pickOf(INDICATORS, raw.indicator, "indicator"),
-    unfold: unfoldOf(raw.unfold),
+    ...optionsOf(
+      raw,
+      DEFAULT_OPTIONS,
+      OPTION_KEYS,
+      check,
+      parseOptions,
+      "{ 2: { per_page: 2.2 } }",
+    ),
     cards: cardList(raw.cards),
   };
 };

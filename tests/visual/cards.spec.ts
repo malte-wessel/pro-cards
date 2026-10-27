@@ -1774,7 +1774,7 @@ const CASES = {
   },
   "sw-unfold": {
     type: "custom:swipe-card-pro",
-    unfold: { from: 2, columns: 4 },
+    breakpoints: { 2: { unfold: 4 } },
     cards: ["living_room", "kitchen", "bedroom", "office"].map((r) => ({
       type: "custom:entity-card-pro",
       entity: `sensor.${r}_temperature`,

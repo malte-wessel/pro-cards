@@ -1,6 +1,6 @@
 # Swipe Card Pro
 
-`custom:swipe-card-pro` puts cards side by side in a strip you swipe through. The strip snaps to each card, the next card peeks in so it is clear there is more, and dots below show the page. Once the section is wide enough the cards can unfold into a plain grid. Any card works inside: Pro Cards and Home Assistant's own. The cards keep their own `visibility`. YAML only for now.
+`custom:swipe-card-pro` puts cards side by side in a strip you swipe through. The strip snaps to each card, the next card peeks in so it is clear there is more, and dots below show the page. Once the section is wide enough the cards can unfold into a plain grid, and like the layout card's, every option can change at breakpoints. Any card works inside: Pro Cards and Home Assistant's own. The cards keep their own `visibility`. YAML only for now.
 
 ## When to use it
 
@@ -89,13 +89,30 @@ cards:
 
 ## Unfold
 
-`unfold` turns the strip into a grid once the section spans enough view columns: `{ from: 2, columns: 4 }` swipes on a phone and shows all the cards four in a row in a section of two view columns or more. Like the layout card's breakpoints it counts view columns, not pixels (see [Breakpoints](/cards/layout-card#breakpoints)). This frame is as wide as two view columns, so the cards are unfolded.
+`unfold` shows the cards as a plain grid of that many columns instead of the strip: no swiping, no dots. On its own it makes little sense; it belongs in a breakpoint, so a phone swipes and a wider section shows every card.
 
-::: live width=full
+## Breakpoints
+
+The swipe card's breakpoints are the [layout card's](/cards/layout-card#breakpoints): view columns, the unit Home Assistant's sections view places sections in. The top-level options apply in one view column, on a phone or in a section with `column_span: 1`. Each breakpoint under `breakpoints` names a number of view columns (2, 3 …) and lists only what changes once the card's section spans that many, inherited by every wider one. Every option can change there.
 
 ```yaml
 type: custom:swipe-card-pro
-unfold: { from: 2, columns: 4 }
+per_page: 1.15 # one view column
+breakpoints:
+  2: { per_page: 2.2 } # the section spans two view columns
+  3: { unfold: 4 } # three or more: a grid of four
+```
+
+`unfold: false` in a wider breakpoint goes back to the strip, and `gap:` or `padding:` left empty go back to their defaults. Outside a section (a panel view, a stack, a layout card) the card counts its own width in the sections view's columns, 500 px at most each, as the layout card does.
+
+The same card in a narrow frame and in one as wide as two view columns, where it unfolds:
+
+::: live width=400
+
+```yaml
+type: custom:swipe-card-pro
+breakpoints:
+  2: { unfold: 4 }
 cards:
   - type: custom:entity-card-pro
     entity: sensor.living_room_temperature
@@ -117,6 +134,78 @@ cards:
 
 :::
 
+::: live width=full
+
+```yaml
+type: custom:swipe-card-pro
+breakpoints:
+  2: { unfold: 4 }
+cards:
+  - type: custom:entity-card-pro
+    entity: sensor.living_room_temperature
+    name: Living room
+    visual: sparkline
+  - type: custom:entity-card-pro
+    entity: sensor.kitchen_temperature
+    name: Kitchen
+    visual: sparkline
+  - type: custom:entity-card-pro
+    entity: sensor.bedroom_temperature
+    name: Bedroom
+    visual: sparkline
+  - type: custom:entity-card-pro
+    entity: sensor.office_temperature
+    name: Office
+    visual: sparkline
+```
+
+:::
+
+## Rooms of equal height
+
+A slide can be a [layout card](/cards/layout-card) of its own: here each room is a heading over its lights. With `height: equal` every slide is as tall as the tallest, and the layout card's `rows: [auto, 1fr]` gives that height to the lights, so the headings stay at their own height and line up.
+
+::: live width=400
+
+```yaml
+type: custom:swipe-card-pro
+cards:
+  - type: custom:layout-card-pro
+    rows: [auto, 1fr]
+    cards:
+      - type: custom:heading-card-pro
+        title: Living room
+        icon: mdi:sofa
+      - type: custom:entity-group-card-pro
+        entities:
+          - light.living_room
+          - light.dining_table
+          - cover.living_room_blinds
+          - media_player.living_room_tv
+  - type: custom:layout-card-pro
+    rows: [auto, 1fr]
+    cards:
+      - type: custom:heading-card-pro
+        title: Kitchen
+        icon: mdi:stove
+      - type: custom:entity-group-card-pro
+        entities:
+          - light.kitchen
+          - media_player.kitchen_speaker
+  - type: custom:layout-card-pro
+    rows: [auto, 1fr]
+    cards:
+      - type: custom:heading-card-pro
+        title: Bedroom
+        icon: mdi:bed
+      - type: custom:entity-group-card-pro
+        entities:
+          - light.bedroom
+          - cover.bedroom_blinds
+```
+
+:::
+
 ## Spacing and height
 
 `gap` is the space between the cards (the theme's section gap by default). `padding` is the space around them; its left and right are an inset at both ends of the strip, where a card also stops. `height: equal` (the default) makes every card as tall as the tallest; `height: auto` lets each keep its own height.
@@ -131,19 +220,22 @@ A slider, a plot you scrub and similar controls take a sideways drag for themsel
 
 ## Sizing
 
-In a section the swipe card takes the full width of the section and sizes to its cards (`rows: auto`). Its `getCardSize` is the tallest card's, unfolded the tallest card of each row. See [Sizing](/guide/sizing).
+In a section the swipe card takes the full width of the section and sizes to its cards (`rows: auto`). Its `getCardSize` is the tallest card's; unfolded, the tallest card of each row. See [Sizing](/guide/sizing).
 
 ## Reference
 
 ### Card options
 
-| Option      | Default | Description                                                                                                       |
-| ----------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
-| `per_page`  | `1.15`  | How many cards fit across the strip, 1 to 12; a fraction lets the next card peek in.                              |
-| `gap`       | theme   | The space between the cards.                                                                                      |
-| `padding`   | `0`     | Around the cards: 1, 2 or 4 values, or `{ top, right, bottom, left }`. Left and right are the inset of the strip. |
-| `snap`      | `start` | `start`, `center` or `free`.                                                                                      |
-| `height`    | `equal` | `equal` (every card as tall as the tallest) or `auto`.                                                            |
-| `indicator` | `dots`  | `dots` or `none`.                                                                                                 |
-| `unfold`    | –       | `{ from, columns }`: from `from` view columns on, the cards are a grid of `columns` columns instead of a strip.   |
-| `cards`     | `[]`    | The cards.                                                                                                        |
+Every option but `breakpoints` and `cards` may change in a breakpoint.
+
+| Option        | Default | Description                                                                                                              |
+| ------------- | ------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `per_page`    | `1.15`  | How many cards fit across the strip, 1 to 12; a fraction lets the next card peek in.                                     |
+| `gap`         | theme   | The space between the cards.                                                                                             |
+| `padding`     | `0`     | Around the cards: 1, 2 or 4 values, or `{ top, right, bottom, left }`. Left and right are the inset of the strip.        |
+| `snap`        | `start` | `start`, `center` or `free`.                                                                                             |
+| `height`      | `equal` | `equal` (every card as tall as the tallest) or `auto`.                                                                   |
+| `indicator`   | `dots`  | `dots` or `none`.                                                                                                        |
+| `unfold`      | –       | A grid of this many columns (1 to 12) instead of the strip; `false` goes back to the strip in a breakpoint.              |
+| `breakpoints` | –       | `{ 2: { …options }, 3: { … } }`: the options that change once the section spans that many view columns. The base is one. |
+| `cards`       | `[]`    | The cards.                                                                                                               |
