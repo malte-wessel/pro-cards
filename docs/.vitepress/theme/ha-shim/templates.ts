@@ -435,6 +435,59 @@ export interface Scope {
   round: Filter;
 }
 
+// now().strftime(): the codes a clock or a date line asks for, in English and local time
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+const pad = (n: number) => String(n).padStart(2, "0");
+export const strftime = (d: Date, fmt: string) =>
+  fmt.replace(/%([HMSdmYAaBbe%])/g, (_, c: string) => {
+    switch (c) {
+      case "H":
+        return pad(d.getHours());
+      case "M":
+        return pad(d.getMinutes());
+      case "S":
+        return pad(d.getSeconds());
+      case "d":
+        return pad(d.getDate());
+      case "e":
+        return String(d.getDate());
+      case "m":
+        return pad(d.getMonth() + 1);
+      case "Y":
+        return String(d.getFullYear());
+      case "A":
+        return DAYS[d.getDay()];
+      case "a":
+        return DAYS[d.getDay()].slice(0, 3);
+      case "B":
+        return MONTHS[d.getMonth()];
+      case "b":
+        return MONTHS[d.getMonth()].slice(0, 3);
+      default:
+        return "%";
+    }
+  });
+const dateNow = () =>
+  Object.assign(new Date(), {
+    strftime(this: Date, fmt: string) {
+      return strftime(this, fmt);
+    },
+  });
+
 export const makeScope = (states: HassEntities): Scope => {
   const byDomain = (domain: string) =>
     Object.values(states).filter((s) => s.entity_id.startsWith(domain + "."));
@@ -459,8 +512,8 @@ export const makeScope = (states: HassEntities): Scope => {
       Array.isArray(v) ? v.includes(states[id]?.state) : states[id]?.state === v,
     is_state_attr: (id, a, v) => states[id]?.attributes?.[a] == v,
     has_value: (id) => !!states[id] && !["unknown", "unavailable"].includes(states[id].state),
-    now: () => new Date(),
-    utcnow: () => new Date(),
+    now: dateNow,
+    utcnow: dateNow,
     float: FILTERS.float,
     int: FILTERS.int,
     max: Math.max,

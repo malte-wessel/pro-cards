@@ -108,6 +108,7 @@ const guide = [
 // the showcase dashboards, grown from the homepage examples
 const showcase = [
   { text: "Energy", link: "/showcase/energy" },
+  { text: "Home", link: "/showcase/home" },
   { text: "Layout", link: "/showcase/layout" },
   { text: "Overview", link: "/showcase/overview" },
   { text: "Weather", link: "/showcase/weather" },
