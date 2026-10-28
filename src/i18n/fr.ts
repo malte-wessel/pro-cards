@@ -190,6 +190,12 @@ const fr: Translation = {
 
   "editor.default": "Par défaut : {value}",
 
+  "editor.sun.layout": "Disposition",
+
+  "editor.sun.layout.card": "Carte",
+
+  "editor.sun.layout.poster": "Affiche",
+
   "editor.sun.title": "Titre",
   "editor.sun.icon": "Icône",
   "editor.sun.show_dawn_dusk": "Afficher l'aube, le midi solaire et le crépuscule",

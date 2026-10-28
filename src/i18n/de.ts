@@ -190,6 +190,9 @@ const de: Translation = {
 
   "editor.default": "Standard: {value}",
 
+  "editor.sun.layout": "Layout",
+  "editor.sun.layout.card": "Karte",
+  "editor.sun.layout.poster": "Poster",
   "editor.sun.title": "Titel",
   "editor.sun.icon": "Symbol",
   "editor.sun.show_dawn_dusk": "Morgendämmerung, Sonnenhöchststand und Abenddämmerung anzeigen",

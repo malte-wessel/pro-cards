@@ -190,6 +190,12 @@ const nl: Translation = {
 
   "editor.default": "Standaard: {value}",
 
+  "editor.sun.layout": "Indeling",
+
+  "editor.sun.layout.card": "Kaart",
+
+  "editor.sun.layout.poster": "Poster",
+
   "editor.sun.title": "Titel",
   "editor.sun.icon": "Pictogram",
   "editor.sun.show_dawn_dusk": "Dageraad, zonnemiddag en schemering tonen",

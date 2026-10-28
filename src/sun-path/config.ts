@@ -5,6 +5,8 @@ import type { SolarDay } from "../shared/solar.ts";
 import type { TextCache } from "../shared/typography.ts";
 
 export interface SunPathCardConfig extends CardConfigBase {
+  // poster: the next sunrise or sunset large, the curve along the bottom (the entity poster's shape)
+  layout?: "card" | "poster";
   title?: string;
   icon?: string;
   show_dawn_dusk?: boolean;
@@ -15,6 +17,7 @@ export interface SunPathCardConfig extends CardConfigBase {
   labels?: Partial<SunLabels>;
 }
 export interface SunPathConfig extends CardConfigBase {
+  layout?: "card" | "poster";
   title?: string;
   icon?: string;
   show_dawn_dusk: boolean;

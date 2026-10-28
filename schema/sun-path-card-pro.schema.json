@@ -6,6 +6,12 @@
   "type": "object",
   "properties": {
     "type": { "const": "custom:sun-path-card-pro" },
+    "layout": {
+      "type": "string",
+      "enum": ["card", "poster"],
+      "default": "card",
+      "description": "poster: the sun's icon and how soon the next sunrise or sunset comes on top, that event's time large at the bottom, the curve along the bottom edge (the dawn / noon / dusk row is not drawn)"
+    },
     "title": { "type": "string", "description": "Omit for no header" },
     "icon": { "$ref": "defs.schema.json#/$defs/icon", "description": "Header icon" },
     "show_dawn_dusk": { "type": "boolean", "default": true },

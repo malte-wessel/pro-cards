@@ -190,6 +190,12 @@ const nb: Translation = {
 
   "editor.default": "Standard: {value}",
 
+  "editor.sun.layout": "Oppsett",
+
+  "editor.sun.layout.card": "Kort",
+
+  "editor.sun.layout.poster": "Plakat",
+
   "editor.sun.title": "Tittel",
   "editor.sun.icon": "Ikon",
   "editor.sun.show_dawn_dusk": "Vis daggry, solmiddag og skumring",

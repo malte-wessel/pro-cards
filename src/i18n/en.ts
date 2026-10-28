@@ -189,6 +189,9 @@ const en = {
 
   "editor.default": "Default: {value}",
 
+  "editor.sun.layout": "Layout",
+  "editor.sun.layout.card": "Card",
+  "editor.sun.layout.poster": "Poster",
   "editor.sun.title": "Title",
   "editor.sun.icon": "Icon",
   "editor.sun.show_dawn_dusk": "Show dawn, solar noon and dusk",

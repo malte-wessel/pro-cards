@@ -190,6 +190,12 @@ const cs: Translation = {
 
   "editor.default": "Výchozí: {value}",
 
+  "editor.sun.layout": "Rozvržení",
+
+  "editor.sun.layout.card": "Karta",
+
+  "editor.sun.layout.poster": "Plakát",
+
   "editor.sun.title": "Název",
   "editor.sun.icon": "Ikona",
   "editor.sun.show_dawn_dusk": "Zobrazit svítání, sluneční poledne a soumrak",

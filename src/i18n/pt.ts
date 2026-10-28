@@ -190,6 +190,12 @@ const pt: Translation = {
 
   "editor.default": "Padrão: {value}",
 
+  "editor.sun.layout": "Disposição",
+
+  "editor.sun.layout.card": "Cartão",
+
+  "editor.sun.layout.poster": "Cartaz",
+
   "editor.sun.title": "Título",
   "editor.sun.icon": "Ícone",
   "editor.sun.show_dawn_dusk": "Mostrar aurora, meio-dia solar e crepúsculo",

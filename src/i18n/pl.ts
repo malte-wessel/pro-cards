@@ -190,6 +190,12 @@ const pl: Translation = {
 
   "editor.default": "Domyślnie: {value}",
 
+  "editor.sun.layout": "Układ",
+
+  "editor.sun.layout.card": "Karta",
+
+  "editor.sun.layout.poster": "Plakat",
+
   "editor.sun.title": "Tytuł",
   "editor.sun.icon": "Ikona",
   "editor.sun.show_dawn_dusk": "Pokaż świt, południe słoneczne i zmierzch",

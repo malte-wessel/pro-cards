@@ -190,6 +190,12 @@ const it: Translation = {
 
   "editor.default": "Predefinito: {value}",
 
+  "editor.sun.layout": "Disposizione",
+
+  "editor.sun.layout.card": "Scheda",
+
+  "editor.sun.layout.poster": "Poster",
+
   "editor.sun.title": "Titolo",
   "editor.sun.icon": "Icona",
   "editor.sun.show_dawn_dusk": "Mostra aurora, mezzogiorno solare e crepuscolo",

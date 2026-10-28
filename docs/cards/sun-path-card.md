@@ -72,10 +72,31 @@ show_dawn_dusk: false
 
 :::
 
+## Poster
+
+`layout: poster` draws the sun as the entity card's [poster](/cards/entity-card#poster): the sun's icon at the top left (the moon below the horizon) and how soon the next sunrise or sunset comes as a pill at the top right; at the bottom that event and its time, large, with the day's curve along the bottom edge. The tooltip works on the curve as on the card. The row with dawn, solar noon and dusk is not drawn. A poster is three rows high in a sections grid (two at least).
+
+::: live
+
+```yaml
+- type: custom:sun-path-card-pro
+  layout: poster
+  grid_options: { columns: 6 }
+- type: custom:sun-path-card-pro
+  layout: poster
+  day_color: orange
+  sun_color: deep-orange
+  labels: { sunrise: Sun up, sunset: Sun down }
+  grid_options: { columns: 6 }
+```
+
+:::
+
 ## Reference
 
 | Option           | Default      | Description                                                                                                                                        |
 | ---------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `layout`         | `card`       | `card` or `poster`, see [Poster](#poster).                                                                                                         |
 | `title`          |              | Header. Omit for no header.                                                                                                                        |
 | `icon`           |              | Header icon.                                                                                                                                       |
 | `show_dawn_dusk` | `true`       | Bottom row with dawn, solar noon and dusk.                                                                                                         |
@@ -85,4 +106,4 @@ show_dawn_dusk: false
 | `sun_color`      | `amber`      | Current position marker.                                                                                                                           |
 | `labels`         | see below    | Overrides for `sunrise` (Sunrise), `sunset` (Sunset), `dawn` (Dawn), `noon` (Solar noon), `dusk` (Dusk); the defaults follow the profile language. |
 
-The plot is a 24 hour window centred on solar noon; the vertical ticks mark sunrise, solar noon and sunset. Dawn and dusk are civil (sun 6° below the horizon), sunrise and sunset use the standard −0.833° refraction. The default size is 12 columns with `rows: auto`; given more height (fixed rows, a taller card beside it), the plot fills the card ([Filling the height](/guide/sizing#filling-the-height)). Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`, which are passed through to Home Assistant. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height).
+The plot is a 24 hour window centred on solar noon; the vertical ticks mark sunrise, solar noon and sunset. Dawn and dusk are civil (sun 6° below the horizon), sunrise and sunset use the standard −0.833° refraction. The default size is 12 columns with `rows: auto` (a poster: 6 columns, 3 rows); given more height (fixed rows, a taller card beside it), the plot fills the card ([Filling the height](/guide/sizing#filling-the-height)). Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`, which are passed through to Home Assistant. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height).

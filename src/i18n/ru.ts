@@ -190,6 +190,12 @@ const ru: Translation = {
 
   "editor.default": "По умолчанию: {value}",
 
+  "editor.sun.layout": "Компоновка",
+
+  "editor.sun.layout.card": "Карточка",
+
+  "editor.sun.layout.poster": "Постер",
+
   "editor.sun.title": "Заголовок",
   "editor.sun.icon": "Значок",
   "editor.sun.show_dawn_dusk": "Показывать рассвет, солнечный полдень и сумерки",

@@ -190,6 +190,12 @@ const sv: Translation = {
 
   "editor.default": "Standard: {value}",
 
+  "editor.sun.layout": "Layout",
+
+  "editor.sun.layout.card": "Kort",
+
+  "editor.sun.layout.poster": "Affisch",
+
   "editor.sun.title": "Titel",
   "editor.sun.icon": "Ikon",
   "editor.sun.show_dawn_dusk": "Visa gryning, solmiddag och skymning",
