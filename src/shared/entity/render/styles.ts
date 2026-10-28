@@ -66,7 +66,7 @@ export const STYLE_POSTER = `
   /* the value keeps its width: controls that do not fit beside it wrap under it */
   .pvalue { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; }
   .pvalue > .big { flex: 0 0 auto; }
-  .pvalue > .end { margin-inline-start: auto; max-width: none; }
+  .pvalue > .end { margin-inline-start: auto; min-width: 0; max-width: 100%; }
   .row.poster .big b { ${type(40, 44)} font-weight: ${fw("light")}; letter-spacing: -.02em; }
   .row.poster .big span { font-size: ${fs(16)}; }
   .row.poster .big.word b { ${type(28, 36)} letter-spacing: 0; }
@@ -289,8 +289,8 @@ export const STYLE_CONTROLS = `
   .ctl-segments { display: flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--fe-track); flex: none; max-width: 100%; box-sizing: border-box; }
   .ctl-segments .seg { flex: 0 1 auto; min-width: 26px; height: 30px; border: 0; padding: 0 10px; border-radius: 999px; background: transparent; color: var(--secondary-text-color); display: flex; align-items: center; justify-content: center; gap: 4px; font-size: ${fs(12)}; font-weight: ${fw("medium")}; white-space: nowrap; cursor: pointer; overflow: hidden; --mdc-icon-size: 18px; }
   /* in the block slot the segments share the width */
-  .row > .ctl-segments, .main > .ctl-segments, .cell > .ctl-segments { align-self: stretch; }
-  .row > .ctl-segments .seg, .main > .ctl-segments .seg, .cell > .ctl-segments .seg { flex: 1 1 0; min-width: 0; }
+  .row > .ctl-segments, .main > .ctl-segments, .cell > .ctl-segments, .pbody > .ctl-segments { align-self: stretch; }
+  .row > .ctl-segments .seg, .main > .ctl-segments .seg, .cell > .ctl-segments .seg, .pbody > .ctl-segments .seg { flex: 1 1 0; min-width: 0; }
   .ctl-segments .seg span { overflow: hidden; text-overflow: ellipsis; }
   .ctl-segments .seg.on { background: var(--fe-soft); color: var(--fe-color); }
   .ctl-segments .seg.pending { box-shadow: inset 0 0 0 1px var(--fe-color); animation: ctl-pulse 1s ease-in-out infinite; }

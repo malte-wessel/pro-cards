@@ -190,8 +190,11 @@ export const fillPoster = (
   const value = document.createElement("div");
   value.className = "pvalue";
   const ctls = endControls(ctx, ent, idx, m, c.end);
-  // a control that shows the value itself (segments, a stepper on its own number) takes its place
-  if (!ctls.showsValue) {
+  // the value is the poster's point: segments, a select or a Run chip sit beside it; only a
+  // stepper that shows the very same number takes its place
+  const repeats =
+    canControl(ent, m.st) && c.end.some((p) => p.kind === "stepper" && controlShowsValue(ent, p));
+  if (!repeats) {
     const big = bigEl(m.fmt);
     // a word (Cleaning, Away) is drawn smaller than a number, so the controls stay beside it
     big.classList.toggle("word", m.model.num === null);
