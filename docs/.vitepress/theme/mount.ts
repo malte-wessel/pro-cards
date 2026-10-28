@@ -90,3 +90,30 @@ export const mountGrid = async (
   });
   return { els, dispose: off };
 };
+
+// a section of a sections view: its cards (or a bare list of cards) and an optional column span
+interface SectionConfig {
+  column_span?: number;
+  cards?: unknown[];
+}
+
+// root: element with classes ha-grid sections; sections: a sections view's list, each mounted
+// like HA's: a span of 2 takes two of three columns, anything wider takes the row
+export const mountSections = async (root: HTMLElement, sections: unknown[]) => {
+  root.textContent = "";
+  const handles: MountHandle[] = [];
+  for (const raw of sections) {
+    const sec = raw as SectionConfig;
+    const el = document.createElement("div");
+    el.className = "section";
+    const span = Number(sec.column_span) || 1;
+    if (span === 2) el.classList.add("span-2");
+    else if (span > 2) {
+      el.style.gridColumn = "1 / -1";
+      el.classList.add("span-wide");
+    }
+    root.appendChild(el);
+    handles.push(await mountGrid(el, (sec.cards || raw) as unknown[], { fullWidth: false }));
+  }
+  return handles;
+};

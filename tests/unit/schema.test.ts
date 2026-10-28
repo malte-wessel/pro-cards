@@ -23,11 +23,17 @@ const walk = (d: string): string[] =>
 // Home Assistant's own cards the docs shim has: not ours to validate
 const CORE = new Set(["heading", "energy-date-selection"]);
 const core = (c: unknown) => CORE.has(String((c as { type?: unknown } | null)?.type));
-// every card config the docs site renders: ::: live fences, DashboardGrid sections, the home page embeds DashboardGrids too
+// every card config the docs site renders: ::: live fences, DashboardGrid sections, the home page embeds DashboardGrids too,
+// and the home hero's backdrop (`hero.dashboard` in the frontmatter)
 const docExamples = () => {
   const out: { file: string; cfg: unknown }[] = [];
   for (const file of walk("docs")) {
     const md = readFileSync(file, "utf8");
+    const front = /^---\n([\s\S]*?)\n---/.exec(md);
+    const hero = front && (yaml.load(front[1]) as { hero?: { dashboard?: unknown } } | null)?.hero;
+    if (Array.isArray(hero?.dashboard))
+      for (const s of hero.dashboard as { cards?: unknown[] }[])
+        for (const c of s.cards || []) if (!core(c)) out.push({ file, cfg: c });
     for (const m of md.matchAll(/^::: live[^\n]*\n\n?```yaml\n([\s\S]*?)```/gm)) {
       const doc = yaml.load(m[1]);
       for (const c of Array.isArray(doc) ? doc : [doc]) if (!core(c)) out.push({ file, cfg: c });

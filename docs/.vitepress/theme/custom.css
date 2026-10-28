@@ -17,9 +17,10 @@
   --vp-c-gutter: #e3e7ee;
   --vp-c-border: #c3cbd8;
 
-  /* hero: no glow; BrandVisual.vue draws the card floor behind the mark */
+  /* hero: no glow and no image; HeroDashboard.vue draws a live dashboard behind it */
   --vp-home-hero-image-background-image: none;
 }
+
 .dark {
   --vp-c-brand-1: #4fb4ff;
   --vp-c-brand-2: #3566ff;
@@ -41,6 +42,43 @@
   --vp-c-divider: rgba(225, 225, 225, 0.12);
   --vp-c-gutter: #000000;
   --vp-c-border: rgba(225, 225, 225, 0.24);
+}
+
+/* The home hero fills the screen over HeroDashboard's backdrop, its text on the left, centred
+   top to bottom: .main gives up its positioning so the backdrop covers the whole hero (under the
+   transparent nav too), and the text and buttons sit above it. */
+.VPHome .VPHero.VPHomeHero {
+  position: relative;
+  overflow: clip;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100svh;
+}
+.VPHome .VPHero.VPHomeHero .container {
+  width: 100%;
+}
+.VPHome .VPHero.VPHomeHero .main {
+  position: static;
+}
+.VPHome .VPHero.VPHomeHero .brand-hero,
+.VPHome .VPHero.VPHomeHero .actions {
+  position: relative;
+  z-index: 1;
+}
+/* VPHero draws its actions at the medium size; the home hero's are larger from 640 px (on a
+   phone they stay medium, so both fit in a row) */
+@media (min-width: 640px) {
+  .VPHome .VPHero.VPHomeHero .actions {
+    padding-top: 36px;
+  }
+  .VPHome .VPHero.VPHomeHero .actions .VPButton {
+    border-radius: 23px;
+    padding: 0 24px;
+    line-height: 46px;
+    font-size: 16px;
+  }
 }
 
 /* Safari (iOS above all) ties the scroll position to a box near the top of the viewport and
