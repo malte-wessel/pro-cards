@@ -47,6 +47,40 @@ export const STYLE_TILE = `
   .row.tile > .gauge { align-self: center; margin-top: auto; }
   .row.tile:has(> .gauge) > :last-child { margin-bottom: auto; }
 `;
+// a poster (fill.ts: fillPoster): the icon and the corner's pills at the top, the name, the big value
+// and what follows them anchored to the bottom of whatever height it is given (unlike a tile, which
+// centres); its natural height is its content's. A sparkline or columns plot takes the room left
+// below the value, and on the entity card it runs to the card's edges.
+export const STYLE_POSTER = `
+  ha-card.layout-poster .body { flex: 1 1 auto; padding: 16px; }
+  .row.poster { flex: 1 1 auto; gap: 12px; }
+  .ptop { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+  .plead { flex: none; }
+  .corner { flex: 0 1 auto; min-width: 0; margin-inline-start: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .corner > .plabel { flex: none; text-transform: uppercase; letter-spacing: .08em; background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fe-color) 40%, transparent); }
+  /* the badges answer the pointer above the poster's own action layer */
+  .row.poster .corner > .row.hval { pointer-events: auto; max-width: 100%; }
+  .pbody { margin-top: auto; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .pbody:has(> .plot.grow) { flex: 1 1 auto; min-height: 0; }
+  .pname { ${type(11, 16)} font-weight: ${fw("medium")}; letter-spacing: .1em; text-transform: uppercase; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* the value keeps its width: controls that do not fit beside it wrap under it */
+  .pvalue { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; }
+  .pvalue > .big { flex: 0 0 auto; }
+  .pvalue > .end { margin-inline-start: auto; max-width: none; }
+  .row.poster .big b { ${type(40, 44)} font-weight: ${fw("light")}; letter-spacing: -.02em; }
+  .row.poster .big span { font-size: ${fs(16)}; }
+  .row.poster .big.word b { ${type(28, 36)} letter-spacing: 0; }
+  .row.poster .big.fit b { font-size: var(--fit); }
+  .pbody > :is(.bar, .gauge, .ctl-slider, .ctl-segments, .ctl-buttons, .plot) { margin-top: 8px; }
+  .pbody > .gauge { align-self: center; }
+  /* the entity card: the poster is one button (its action layer fills the card, as a tile's) and its
+     plot runs to the card's edges, under the body's padding; the card's corners clip it */
+  ha-card.layout-poster .body { position: relative; }
+  ha-card.layout-poster .row.actionable.poster { position: static; }
+  ha-card.layout-poster .row.poster > .hit { border-radius: var(--ha-card-border-radius, 12px); }
+  ha-card.layout-poster .row.poster > .hit:focus-visible { box-shadow: inset 0 0 0 2px var(--fe-color); }
+  ha-card.layout-poster .pbody > .plot { width: auto; margin: 8px -16px -16px; }
+`;
 // the header badges (render/badge.ts): the row is the pill (.pb) of its style (b-outline, b-soft,
 // b-filled; b-plain draws none) and size (b-s, b-m, b-l: 24 / 30 / 36 px high). A filled pill
 // draws its glyphs in --b-ink, every other one in the row's colour
@@ -114,16 +148,8 @@ const STYLE_BADGES = `
     .row.hval.pulse { animation: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--fe-color) 40%, transparent); }
   }
 `;
-export const STYLE_HEADER = `
-  /* 4 px here and the body's 12 px: the title line sits 16 px above the first row */
-  .header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 4px 16px; min-width: 0; }
-  .header ha-icon { flex: none; color: var(--secondary-text-color); --mdc-icon-size: 20px; }
-  .header .title { flex: 1; min-width: 0; ${HEADER_TITLE} color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .header .hvals { display: flex; align-items: center; gap: 10px; flex: 0 1 auto; min-width: 0; max-width: 60%; }
-  .header .hvals:empty { display: none; }
-  /* title_tap_action: the title and its icon are the button */
-  .header.tappable .title, .header.tappable:not(.icon-own) > ha-icon { cursor: pointer; }
-  .header.tappable .title:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; border-radius: 4px; }
+// a badge (a header entity, a pill in a poster's corner)
+const STYLE_HVAL = `
   .row.hval { flex: 0 1 auto; flex-direction: row; align-items: center; gap: 4px; border-radius: 6px; min-width: 0; }
   .hval .state, .hval .secondary { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .hval ha-icon, .hval ha-state-icon { --mdc-icon-size: 18px; color: var(--fe-color); }
@@ -138,6 +164,18 @@ export const STYLE_HEADER = `
   .hval .pill.badge img.picture { width: 16px; height: 16px; }
   .hval .secondary { font-size: ${fs(12)}; }
   ${STYLE_BADGES}
+`;
+export const STYLE_HEADER = `
+  /* 4 px here and the body's 12 px: the title line sits 16 px above the first row */
+  .header { display: flex; align-items: center; gap: 10px; padding: 12px 16px 4px 16px; min-width: 0; }
+  .header ha-icon { flex: none; color: var(--secondary-text-color); --mdc-icon-size: 20px; }
+  .header .title { flex: 1; min-width: 0; ${HEADER_TITLE} color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .header .hvals { display: flex; align-items: center; gap: 10px; flex: 0 1 auto; min-width: 0; max-width: 60%; }
+  .header .hvals:empty { display: none; }
+  /* title_tap_action: the title and its icon are the button */
+  .header.tappable .title, .header.tappable:not(.icon-own) > ha-icon { cursor: pointer; }
+  .header.tappable .title:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; border-radius: 4px; }
+  ${STYLE_HVAL}
 `;
 // the icon in a lead (and in a button in its place) is two thirds of a small lead, at most 24 px
 // (Home Assistant's tile: a 24 px icon in a 36 px circle); a bigger lead (the hero's 56 px) keeps 55 %
@@ -419,7 +457,7 @@ export const STYLE_HOVER = `
   /* only what reads as one button takes the layer: a tile, a grid cell, a header entity. List rows,
      heroes, table fields and the power flow's list rows keep still; an item or a power flow node is
      its icon: the icon answers, as it shows the focus ring */
-  .row.hover-fx:is(.tile, .wtile, .cell, .hval) > .hit::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--fe-color); opacity: 0; pointer-events: none; }
+  .row.hover-fx:is(.tile, .wtile, .poster, .cell, .hval) > .hit::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--fe-color); opacity: 0; pointer-events: none; }
   .row.hover-fx .lead.tap .shape, .row.hover-fx:is(.item, .pnode) > .hit ~ .lead .shape { transition: background-color 180ms ease-in-out, transform 180ms ease-in-out; }
   @media (hover: hover) {
     .row.hover-fx > .hit:hover::before { opacity: .04; }
@@ -449,7 +487,15 @@ export const STYLE_HOVER = `
 `;
 
 export const STYLE_ENTITY_CARD =
-  STYLE_BASE + STYLE_TILE + STYLE_ROW + STYLE_CONTROLS + STYLE_BLOCKS + STYLE_PLOT + STYLE_HOVER;
+  STYLE_BASE +
+  STYLE_TILE +
+  STYLE_HVAL +
+  STYLE_ROW +
+  STYLE_CONTROLS +
+  STYLE_POSTER +
+  STYLE_BLOCKS +
+  STYLE_PLOT +
+  STYLE_HOVER;
 export const STYLE_GROUP_CARD =
   STYLE_BASE +
   STYLE_HEADER +
@@ -459,6 +505,7 @@ export const STYLE_GROUP_CARD =
   STYLE_CELL +
   STYLE_ITEM +
   STYLE_TABLE +
+  STYLE_POSTER +
   STYLE_BLOCKS +
   STYLE_PLOT +
   STYLE_HOVER;

@@ -75,6 +75,8 @@ export const groupCardSize = (cfg: EntityCardConfig, group: Group) => {
   switch (group.layout) {
     case "tile":
       return 1 + blk(ents[0]);
+    case "poster":
+      return 3;
     case "grid":
       return Math.ceil(n / group.columns) * 2;
     case "hero":
@@ -720,6 +722,7 @@ export abstract class EntityCardBase extends HTMLElement {
   _buildGroup(g: Group, idxs = g.idxs.filter((i) => this._vis?.items[i] ?? true)) {
     const cfg = this._config as EntityCardConfig;
     if (g.layout === "tile") return this._row(idxs[0], "tile");
+    if (g.layout === "poster") return this._poster(idxs[0], g.badgeIdxs ?? []);
     const el = document.createElement("div");
     el.className = `section layout-${g.layout}`;
     if (g.layout === "list") idxs.forEach((i) => el.appendChild(this._row(i, "list")));
@@ -748,6 +751,26 @@ export abstract class EntityCardBase extends HTMLElement {
     const n = this._plotRows(g, idxs);
     if (n > 1) el.style.setProperty("--grow", String(n));
     return el;
+  }
+  // a poster: its own parts (the lead, the label pill, the body; fillPoster fills them) and its
+  // badges, rows of their own in the corner that its fill never touches
+  _poster(idx: number, badgeIdxs: number[]) {
+    const row = this._row(idx, "poster");
+    const top = document.createElement("div");
+    top.className = "ptop";
+    const lead = document.createElement("div");
+    lead.className = "plead";
+    const corner = document.createElement("div");
+    corner.className = "corner";
+    const label = document.createElement("span");
+    label.className = "pill plabel";
+    corner.appendChild(label);
+    for (const b of badgeIdxs) corner.appendChild(this._row(b, "hval"));
+    top.append(lead, corner);
+    const body = document.createElement("div");
+    body.className = "pbody";
+    row.append(top, body);
+    return row;
   }
   // the rows of a group's shown items that hold a growing plot (a grid row counts once)
   _plotRows(g: Group, idxs: number[]) {
@@ -987,6 +1010,21 @@ export abstract class EntityCardBase extends HTMLElement {
       let size = full;
       big.style.setProperty("--fit", `${size}px`);
       while (size > least && b.scrollWidth > b.clientWidth + 1) {
+        size -= 1;
+        big.style.setProperty("--fit", `${size}px`);
+      }
+    }
+    // a poster's value on a narrow card: the same, from its own styled size (a word is drawn
+    // smaller than a number) down to 60 % of it
+    for (const big of all<HTMLElement>(".row.poster .big")) {
+      const b = big.querySelector("b");
+      if (!b) continue;
+      big.classList.remove("fit");
+      const own = parseFloat(getComputedStyle(b).fontSize) || 40;
+      let size = own;
+      big.classList.add("fit");
+      big.style.setProperty("--fit", `${size}px`);
+      while (size > own * 0.6 && b.scrollWidth > b.clientWidth + 1) {
         size -= 1;
         big.style.setProperty("--fit", `${size}px`);
       }

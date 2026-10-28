@@ -92,6 +92,8 @@ export class HeadingCard extends EntityCardBase {
     const text = tplOf(ctx, cfg.subtitle ?? null) || "";
     if (sub.textContent !== text) sub.textContent = text;
     sub.hidden = !text;
+    // badges without a title or a subtitle start at the edge, with no room kept for the title
+    qs(header, ".htx").hidden = !text && !qs(header, ".title").textContent;
     // a colour that is no plain colour token (a template rendering markup) counts as none
     const color = cssColor(tplOf(ctx, cfg.iconColor ?? null));
     if (color) header.style.setProperty("--hd-color", color);

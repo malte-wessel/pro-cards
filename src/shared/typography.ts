@@ -38,7 +38,7 @@ export const lh = (px: number, linePx: number) => `calc(${fs(px)} * ${linePx} / 
 export const type = (px: number, linePx: number) =>
   `font-size: ${fs(px)}; line-height: ${lh(px, linePx)};`;
 
-const WEIGHT = { normal: 400, medium: 500, bold: 700 } as const;
+const WEIGHT = { light: 300, normal: 400, medium: 500, bold: 700 } as const;
 export const fw = (w: keyof typeof WEIGHT) => `var(--ha-font-weight-${w}, ${WEIGHT[w]})`;
 
 export const FONT_FAMILY = "var(--ha-font-family-body, Roboto, system-ui, sans-serif)";

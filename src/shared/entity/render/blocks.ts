@@ -39,7 +39,7 @@ export const GROW_VISUALS: ReadonlySet<string> = new Set(["sparkline", "columns"
 // how many rows of a group hold a growing plot, the share of a taller card the group asks for:
 // each list or hero row with one, each grid row (of `columns` cells) with one at least
 export const plotRows = (layout: string, columns: number, visuals: string[]) => {
-  if (layout === "list" || layout === "hero")
+  if (layout === "list" || layout === "hero" || layout === "poster")
     return visuals.filter((v) => GROW_VISUALS.has(v)).length;
   if (layout !== "grid") return 0;
   let n = 0;

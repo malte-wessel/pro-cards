@@ -67,7 +67,7 @@ export interface Placement {
 }
 // the row kinds the fill functions draw (the `.row` classes; items split by their layout)
 export type RowKind =
-  "tile" | "list" | "hero" | "cell" | "item-row" | "item-column" | "field" | "hval";
+  "tile" | "poster" | "list" | "hero" | "cell" | "item-row" | "item-column" | "field" | "hval";
 export interface ServiceCall {
   domain: string;
   service: string;
@@ -209,7 +209,7 @@ export const normalizeControl = (
 
 // ----- placement -----
 
-const BLOCK_ROWS: ReadonlySet<RowKind> = new Set(["tile", "list", "hero", "cell"]);
+const BLOCK_ROWS: ReadonlySet<RowKind> = new Set(["tile", "poster", "list", "hero", "cell"]);
 const SMALL_ROWS: ReadonlySet<RowKind> = new Set(["cell", "item-column", "field", "hval"]);
 // kinds that can stand in for the lead of a row item
 const LEAD_KINDS: ReadonlySet<ControlKind> = new Set(["toggle", "button", "hold"]);
@@ -342,8 +342,9 @@ export const placementsOf = (ent: EntityItem, row: RowKind): Placement[] => {
   return out;
 };
 // whether the entity draws any control in a tile (its height follows the content then: a control
-// on the line wraps under the name when the tile is narrow)
-export const hasTileControl = (ent: EntityItem) => placementsOf(ent, "tile").length > 0;
+// on the line wraps under the name when the tile is narrow) or a poster
+export const hasTileControl = (ent: EntityItem, row: "tile" | "poster" = "tile") =>
+  placementsOf(ent, row).length > 0;
 // controls on a tile's line wider than a switch: below 6 columns they do not fit beside the icon
 const WIDE_ON_LINE: ReadonlySet<ControlKind> = new Set([
   "stepper",
@@ -355,9 +356,9 @@ const WIDE_ON_LINE: ReadonlySet<ControlKind> = new Set([
 ]);
 // the narrowest a tile may get in a sections grid (min_columns): what sits on its line decides
 // (a switch or hold needs 4 columns, anything wider 6); controls under the line or on the icon
-// need nothing more than the tile itself (3)
-export const tileMinColumns = (ent: EntityItem) => {
-  const end = placementsOf(ent, "tile").filter((p) => p.position === "end");
+// need nothing more than the tile itself (3); a poster's line is its value's
+export const tileMinColumns = (ent: EntityItem, row: "tile" | "poster" = "tile") => {
+  const end = placementsOf(ent, row).filter((p) => p.position === "end");
   if (end.some((p) => WIDE_ON_LINE.has(p.kind))) return 6;
   return end.length ? 4 : 3;
 };

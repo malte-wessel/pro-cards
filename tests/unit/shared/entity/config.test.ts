@@ -179,7 +179,9 @@ describe("group", () => {
     expect(table.entities[0].item).toMatchObject({ showValue: true, showIcon: false });
     expect(() =>
       normalizeGroup({ layout: "tile", entities: ["s.a"] }, ctx, {}, "entities", 0),
-    ).toThrow(/test-card: layout must be one of list \| grid \| hero \| row \| column \| table/);
+    ).toThrow(
+      /test-card: layout must be one of list \| grid \| hero \| poster \| row \| column \| table/,
+    );
     expect(() =>
       normalizeGroup({ layout: "x", entities: ["s.a"] }, ctx, {}, "sections[1]", 0),
     ).toThrow(/sections\[1\].layout must be one of/);

@@ -164,6 +164,54 @@ export const fillHero = (
   appendControls(ctx, ent, idx, m, c.block, row);
 };
 
+// a poster: the icon at the top left, the rule's label as the first pill of the corner (the badges
+// below it are rows of their own, filled apart), and at the bottom the name, the big value with the
+// controls on its line, the secondary line and the block visual or controls. Only the poster's own
+// parts are filled again, never the corner's badge rows (base: _poster).
+export const fillPoster = (
+  ctx: RenderCtx,
+  row: HTMLElement,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+) => {
+  const c = slots(ctx, ent, "poster");
+  const lead = row.querySelector<HTMLElement>(":scope > .ptop > .plead"),
+    label = row.querySelector<HTMLElement>(":scope > .ptop > .corner > .plabel"),
+    body = row.querySelector<HTMLElement>(":scope > .pbody");
+  if (!lead || !label || !body) return;
+  lead.replaceChildren(leadOf(ctx, ent, idx, m, 40, c.lead));
+  // a badge visual is the label's pill already: the value takes it when no rule matches
+  const text = ent.visual === "badge" ? (m.look.label ?? m.fmt.text) : m.look.label;
+  label.textContent = text ?? "";
+  label.hidden = !text;
+  body.replaceChildren();
+  const name = textEl("pname", nameOf(ctx, ent, m.st));
+  const value = document.createElement("div");
+  value.className = "pvalue";
+  const ctls = endControls(ctx, ent, idx, m, c.end);
+  // a control that shows the value itself (segments, a stepper on its own number) takes its place
+  if (!ctls.showsValue) {
+    const big = bigEl(m.fmt);
+    // a word (Cleaning, Away) is drawn smaller than a number, so the controls stay beside it
+    big.classList.toggle("word", m.model.num === null);
+    value.appendChild(big);
+  }
+  if (ctls.els.length) {
+    const end = document.createElement("div");
+    end.className = "end";
+    end.append(...ctls.els);
+    value.appendChild(end);
+  }
+  if (ent.item.namePosition === "below") body.append(value, name);
+  else body.append(name, value);
+  const sec = tplOf(ctx, ent.secondary);
+  if (sec) body.appendChild(textEl("secondary", sec));
+  const block = blockOf(ctx, ent, idx, m, c.block);
+  if (block) body.appendChild(block);
+  appendControls(ctx, ent, idx, m, c.block, body);
+};
+
 export const fillCell = (
   ctx: RenderCtx,
   cell: HTMLElement,
@@ -273,6 +321,7 @@ export const fillByClass = (
 ) => {
   const c = row.classList;
   if (c.contains("cell")) fillCell(ctx, row, ent, idx, m);
+  else if (c.contains("poster")) fillPoster(ctx, row, ent, idx, m);
   else if (c.contains("hero")) fillHero(ctx, row, ent, idx, m);
   else if (c.contains("item")) fillItem(ctx, row, ent, idx, m);
   else if (c.contains("field")) fillField(ctx, row, ent, idx, m);

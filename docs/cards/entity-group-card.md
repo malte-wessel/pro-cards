@@ -270,6 +270,32 @@ entities:
 
 :::
 
+## Poster
+
+The first entity is a [poster](/cards/entity-card#poster): its icon and the matching rule's label at the top, the name and a large value at the bottom. The rest are [badges](/cards/entity-card#badges) in its corner, with the keys of header entities.
+
+::: live
+
+```yaml
+type: custom:entity-group-card-pro
+title: Car
+icon: mdi:car-electric
+layout: poster
+entities:
+  - entity: sensor.ev_battery
+    name: Battery
+    rules:
+      - { below: 20, color: red, label: Low }
+      - { above: 20, color: green, label: Ready }
+  - entity: binary_sensor.ev_plugged
+    rules:
+      - { state: "on", color: green, icon: mdi:power-plug, label: Plugged in }
+      - { state: "off", color: grey, icon: mdi:power-plug-off, label: Unplugged }
+  - sensor.ev_range
+```
+
+:::
+
 ## Row
 
 Entities side by side as compact items: a round icon with the name under it, optionally the value under the name. A matching rule's `label` stands in for the value, in the rule's colour (the window below reads Open or Closed instead of its state). Items spread over the width (`align: space-between`) and wrap when the card is narrow; `align` packs them (`start`, `center`, `end`) or gives every item the same share (`stretch`). Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
@@ -625,6 +651,7 @@ entities:
 | `list` (default) | One row per entity: icon, name, value, optional toggle; graphs below the name.         |
 | `grid`           | Compact cells, `columns` per row, with the value big; a `ring` or `gauge` is centred.  |
 | `hero`           | The first entity is the lead with a big value and its graph; the rest are list rows.   |
+| `poster`         | The first entity is a poster; the rest are badges in its corner.                       |
 | `row`            | Compact items side by side: a round icon with the name under it, optionally the value. |
 | `column`         | Stacked list-like items: name and value beside the icon.                               |
 | `table`          | Key/value rows: small-caps name on the left, value on the right.                       |
@@ -634,7 +661,7 @@ entities:
 | Option                                             | Default                      | Description                                                                                                                                                                                                                                                                                         |
 | -------------------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `entities`                                         |                              | List of entity ids or [entity objects](/cards/entity-options#entity-options) (required).                                                                                                                                                                                                            |
-| `layout`                                           | `list`                       | `list`, `grid`, `hero`, `row`, `column` or `table`.                                                                                                                                                                                                                                                 |
+| `layout`                                           | `list`                       | `list`, `grid`, `hero`, `poster`, `row`, `column` or `table`.                                                                                                                                                                                                                                       |
 | `title`                                            |                              | Header text. Template allowed.                                                                                                                                                                                                                                                                      |
 | `title_tap_action`                                 | none                         | Action when the title or its icon is tapped, e.g. `{ action: navigate, navigation_path: /dashboard-rooms/kitchen }` to open the room's dashboard; see [Actions](/cards/entity-options#actions).                                                                                                     |
 | `icon`                                             |                              | Header icon. Template allowed.                                                                                                                                                                                                                                                                      |

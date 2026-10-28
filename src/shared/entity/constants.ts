@@ -1,7 +1,8 @@
 // Shared constants of the entity cards (entity-card-pro, entity-group-card-pro, entity-sections-card-pro).
 import { lh } from "../typography.ts";
 
-export const GROUP_LAYOUTS = ["list", "grid", "hero", "row", "column", "table"] as const;
+// poster: the first entity as a poster, the rest as the pills in its corner
+export const GROUP_LAYOUTS = ["list", "grid", "hero", "poster", "row", "column", "table"] as const;
 export type GroupLayout = (typeof GROUP_LAYOUTS)[number];
 // layouts whose entities render as compact items (name / icon / value) instead of rows
 export const ITEM_LAYOUTS: ReadonlySet<GroupLayout> = new Set(["row", "column", "table"]);
@@ -57,6 +58,8 @@ export type BadgeSize = (typeof BADGE_SIZES)[number];
 // the time from now of a date
 export const BADGE_FORMATS = ["auto", "power", "duration", "relative"] as const;
 export type BadgeFormat = (typeof BADGE_FORMATS)[number];
+// the pill of a poster's badges that name none (the header's are plain and small)
+export const POSTER_BADGE = { style: "outline", size: "s" } as const;
 export const DEFAULTS = {
   layout: "list",
   hours_to_show: 24,

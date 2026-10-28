@@ -229,6 +229,96 @@ Each visual, the options it reads and the layouts it is drawn in are explained o
 
 :::
 
+## Poster
+
+`layout: poster` turns the tile into a poster: the icon at the top left, the matching rule's label as a pill at the top right, and at the bottom the name in small capitals and the value, large. Controls work as on the tile: a switch, buttons or a stepper sit on the value's line, a slider runs along the bottom. A `sparkline` or `columns` plot fills the room below the value, out to the card's edges. A poster is three rows high in a sections grid (two at least), and its content stays at the bottom of whatever height it gets.
+
+::: live
+
+```yaml
+- type: custom:entity-card-pro
+  entity: sensor.power_consumption
+  name: Power
+  layout: poster
+  visual: sparkline
+  hours_to_show: 12
+  rules:
+    - { below: 1000, color: green, icon: mdi:flash-outline, label: Low }
+    - { below: 3000, color: amber, icon: mdi:flash, label: Normal }
+    - { above: 3000, color: red, icon: mdi:flash-alert, label: High }
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  entity: light.living_room
+  name: Living room
+  layout: poster
+  value: "{{ (state_attr('light.living_room', 'brightness') | float(0) / 2.55) | round }}"
+  unit: "%"
+  control: auto
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  entity: climate.living_room
+  name: Thermostat
+  layout: poster
+  attribute: current_temperature
+  unit: °C
+  decimals: 1
+  control: stepper
+  color: deep-orange
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  entity: vacuum.robot
+  name: Robot
+  layout: poster
+  control: buttons
+  control_options:
+    - icon: mdi:play
+      action: { action: perform-action, perform_action: vacuum.start, target: { entity_id: vacuum.robot } }
+    - icon: mdi:home-import-outline
+      action: { action: perform-action, perform_action: vacuum.return_to_base, target: { entity_id: vacuum.robot } }
+  rules:
+    - { state: cleaning, color: teal }
+    - { state: docked, color: grey }
+  grid_options: { columns: 6 }
+```
+
+:::
+
+### Badges
+
+`badges` adds pills to the poster's corner, under the rule's label: the battery, the place, the temperature, any entity. They are [header entities](/cards/heading-card#badge-options) and take the same keys: `visual`, `style`, `size`, `format`, `stale_after`, a switch with `control: toggle`, their own actions and `visibility`. On a poster they are outline pills unless a `style` says otherwise. A badge hidden by its `visibility` leaves no gap.
+
+::: live
+
+```yaml
+- type: custom:entity-card-pro
+  entity: sensor.ev_battery
+  name: Car
+  icon: mdi:car-electric
+  layout: poster
+  rules:
+    - { below: 20, color: red, label: Low }
+    - { above: 20, color: green }
+  badges:
+    - entity: binary_sensor.ev_plugged
+      rules:
+        - { state: "on", color: green, icon: mdi:power-plug, label: Plugged in }
+        - { state: "off", color: grey, icon: mdi:power-plug-off, label: Unplugged }
+    - sensor.ev_range
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  entity: sensor.robot_progress
+  name: Cleaning
+  icon: mdi:robot-vacuum
+  layout: poster
+  visual: bar
+  badges:
+    - { entity: sensor.robot_battery, visual: ring }
+    - sensor.robot_current_room
+  grid_options: { columns: 6 }
+```
+
+:::
+
 ## Attribute
 
 `attribute` shows an attribute instead of the state; `unit`, `decimals` and `min` / `max` apply to it like to a state. On a thermostat, `attribute: hvac_mode` shows the HVAC mode, which Home Assistant keeps in the state rather than in an attribute.
@@ -478,19 +568,21 @@ A template value that looks like a number gets rules, decimals and a unit like a
 
 All [entity options](/cards/entity-options#entity-options) plus:
 
-| Option                                             | Default                      | Description                                                                                     |
-| -------------------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------- |
-| `toggle`                                           | `false`                      | Switch on the right that calls `homeassistant.toggle`.                                          |
-| `secondary`                                        |                              | Line under the name instead of the value and label. Template allowed.                           |
-| `hours_to_show`                                    | `24`                         | History window for `sparkline`, `columns` and `strip`, at least 1.                              |
-| `bucket_minutes`                                   | `60`                         | Bucket size for `columns` and `strip`, at least 5.                                              |
-| `smoothing_minutes`                                |                              | Averaging bucket of `sparkline` in minutes, at least 5 (default: one point per 12 px of width). |
-| `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none | See [Actions](/cards/entity-options#actions).                                                   |
-| `hover`                                            | `false`                      | Hover and press layers on the tile, its icon and its controls, see [Hover](#hover).             |
+| Option                                             | Default                      | Description                                                                                               |
+| -------------------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `layout`                                           | `tile`                       | `tile` or `poster`, see [Poster](#poster).                                                                |
+| `badges`                                           |                              | Poster: pills in its corner, [header entities](/cards/heading-card#badge-options), see [Badges](#badges). |
+| `toggle`                                           | `false`                      | Switch on the right that calls `homeassistant.toggle`.                                                    |
+| `secondary`                                        |                              | Line under the name instead of the value and label. Template allowed.                                     |
+| `hours_to_show`                                    | `24`                         | History window for `sparkline`, `columns` and `strip`, at least 1.                                        |
+| `bucket_minutes`                                   | `60`                         | Bucket size for `columns` and `strip`, at least 5.                                                        |
+| `smoothing_minutes`                                |                              | Averaging bucket of `sparkline` in minutes, at least 5 (default: one point per 12 px of width).           |
+| `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none | See [Actions](/cards/entity-options#actions).                                                             |
+| `hover`                                            | `false`                      | Hover and press layers on the tile, its icon and its controls, see [Hover](#hover).                       |
 
 ### Grid defaults
 
-6 columns, `rows: auto`: one row for a plain tile, more for the block visuals (`gauge`, `bar`, `sparkline`, `columns`, `strip`), at least 2 rows with a `sparkline` or `columns`. Given more height (fixed rows, a taller card beside it), a `sparkline` or `columns` plot fills the card, a `gauge` centres in the room under the icon and name, and any other tile centres its content, see [Filling the height](/guide/sizing#filling-the-height).
+6 columns, `rows: auto`: one row for a plain tile, more for the block visuals (`gauge`, `bar`, `sparkline`, `columns`, `strip`), at least 2 rows with a `sparkline` or `columns`. Given more height (fixed rows, a taller card beside it), a `sparkline` or `columns` plot fills the card, a `gauge` centres in the room under the icon and name, and any other tile centres its content, see [Filling the height](/guide/sizing#filling-the-height). A poster is 6 columns and 3 rows (at least 2), its content at the bottom.
 
 ### Home Assistant options
 

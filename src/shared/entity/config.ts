@@ -17,6 +17,7 @@ import {
   ICON_STYLES,
   ITEM_DEFAULTS,
   ITEM_LAYOUTS,
+  POSTER_BADGE,
   VISUALS,
   type Align,
   type BadgeFormat,
@@ -203,6 +204,8 @@ export interface EntityItem extends ActionDefaults {
 export interface Group {
   layout: GroupLayout | "tile";
   idxs: number[];
+  // a poster's badges: drawn in its corner, hidden in place (not part of the body's structure)
+  badgeIdxs?: number[];
   align: Align | undefined;
   columns: number;
   divider: boolean;
@@ -462,7 +465,11 @@ export const normalizeGroup = (
   const isItem = ITEM_LAYOUTS.has(layout);
   // `hover` cascades as the actions do: card → group → entity
   const gctx = typeof g.hover === "boolean" ? { ...ctx, hover: g.hover } : ctx;
+  const poster = layout === "poster";
   const entities = (list as (RawEntityInput | null | undefined)[]).map((e, i) => {
+    // a poster: the first entity is the poster, the rest are the pills in its corner
+    if (poster && i > 0)
+      return normalizeBadge(e, gctx, `${entLabel}[${i}]`, POSTER_BADGE, "a poster's corner");
     const ent = normalizeEntity(
       e,
       gctx,
@@ -488,7 +495,8 @@ export const normalizeGroup = (
   return {
     group: {
       layout,
-      idxs: entities.map((_, i) => offset + i),
+      idxs: poster ? [offset] : entities.map((_, i) => offset + i),
+      ...(poster ? { badgeIdxs: entities.slice(1).map((_, i) => offset + 1 + i) } : {}),
       align: oneOf(ALIGNS, align) ? align : base.align,
       columns: clampColumns(g.columns, ctx.columns ?? DEFAULTS.columns),
       divider: !!g.divider,
@@ -509,39 +517,49 @@ export const normalizeHeaderEntities = (
   defaults: { style: BadgeStyle; size: BadgeSize } = { style: "plain", size: "s" },
 ): EntityItem[] => {
   if (!Array.isArray(raw)) return [];
-  return (raw as (RawEntityInput | null | undefined)[]).map((e, i) => {
-    const ent = normalizeEntity(e, ctx, `${label}[${i}]`, ITEM_DEFAULTS.header, {
-      buttons: false,
-      name: "the header",
-      header: true,
-    });
-    if (!HEADER_VISUALS.has(ent.visual)) {
-      console.warn(`${ctx.type}: visual '${ent.visual}' is not drawn in the header; using icon`);
-      ent.visual = "icon";
-    }
-    const o: RawEntity = e && typeof e === "object" ? e : {};
-    // a badge is a button, as Home Assistant's: it answers the pointer unless the badge or the card
-    // says hover: false (one without an action has no layer to show)
-    if (typeof o.hover !== "boolean") ent.hover = ctx.hover || !ctx.hoverOff;
-    const style = oneOf(BADGE_STYLES, o.style) ? o.style : null;
-    ent.badge = {
-      style: style ?? (ent.visual === "badge" ? "soft" : defaults.style),
-      size: oneOf(BADGE_SIZES, o.size) ? o.size : defaults.size,
-    };
-    // a badge visual with a style of its own is the new pill around the icon and the value
-    if (ent.visual === "badge" && style) ent.visual = "icon";
-    const c = ent.control;
-    if (c && c.kind !== "toggle") {
-      if (c.kind === "auto" && defaultPlacements(ent).some((p) => p.kind === "toggle"))
-        ent.control = { ...c, kind: "toggle", buttons: null };
-      else {
-        console.warn(`${ctx.type}: a switch is the only control drawn in the header`);
-        ent.control = null;
-      }
-    }
-    ent.toggle = ent.control?.kind === "toggle";
-    return ent;
+  return (raw as (RawEntityInput | null | undefined)[]).map((e, i) =>
+    normalizeBadge(e, ctx, `${label}[${i}]`, defaults),
+  );
+};
+// one badge: a header entity, or a pill in a poster's corner (`where` names the place in warnings)
+export const normalizeBadge = (
+  e: RawEntityInput | null | undefined,
+  ctx: NormalizeCtx,
+  label: string,
+  defaults: { style: BadgeStyle; size: BadgeSize },
+  where = "the header",
+): EntityItem => {
+  const ent = normalizeEntity(e, ctx, label, ITEM_DEFAULTS.header, {
+    buttons: false,
+    name: where,
+    header: true,
   });
+  if (!HEADER_VISUALS.has(ent.visual)) {
+    console.warn(`${ctx.type}: visual '${ent.visual}' is not drawn in ${where}; using icon`);
+    ent.visual = "icon";
+  }
+  const o: RawEntity = e && typeof e === "object" ? e : {};
+  // a badge is a button, as Home Assistant's: it answers the pointer unless the badge or the card
+  // says hover: false (one without an action has no layer to show)
+  if (typeof o.hover !== "boolean") ent.hover = ctx.hover || !ctx.hoverOff;
+  const style = oneOf(BADGE_STYLES, o.style) ? o.style : null;
+  ent.badge = {
+    style: style ?? (ent.visual === "badge" ? "soft" : defaults.style),
+    size: oneOf(BADGE_SIZES, o.size) ? o.size : defaults.size,
+  };
+  // a badge visual with a style of its own is the new pill around the icon and the value
+  if (ent.visual === "badge" && style) ent.visual = "icon";
+  const c = ent.control;
+  if (c && c.kind !== "toggle") {
+    if (c.kind === "auto" && defaultPlacements(ent).some((p) => p.kind === "toggle"))
+      ent.control = { ...c, kind: "toggle", buttons: null };
+    else {
+      console.warn(`${ctx.type}: a switch is the only control drawn in ${where}`);
+      ent.control = null;
+    }
+  }
+  ent.toggle = ent.control?.kind === "toggle";
+  return ent;
 };
 
 // every visibility condition tree of the config: items, their custom buttons and groups (cards
