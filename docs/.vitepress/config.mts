@@ -110,7 +110,6 @@ const showcase = [
   { text: "Energy", link: "/showcase/energy" },
   { text: "Layout", link: "/showcase/layout" },
   { text: "Overview", link: "/showcase/overview" },
-  { text: "Poster layouts", link: "/showcase/poster-layouts" },
   { text: "Weather", link: "/showcase/weather" },
 ];
 
