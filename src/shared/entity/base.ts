@@ -61,6 +61,14 @@ export interface VisState {
   key: string;
 }
 
+// whether a text's glyphs are wider than its box, to the fraction of a pixel: an ellipsis shows for
+// any overflow, and scrollWidth rounds it away
+const overflows = (el: HTMLElement) => {
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  return range.getBoundingClientRect().width > el.getBoundingClientRect().width + 0.01;
+};
+
 // grid rows a block visual (and a block control) adds below its row
 const blk = (e: EntityItem) =>
   (e.visual === "sparkline" || e.visual === "columns" || e.visual === "gauge"
@@ -301,6 +309,7 @@ export abstract class EntityCardBase extends HTMLElement {
       this._render();
     });
     if (this._root) this._ro.observe(this._root);
+    document.fonts?.addEventListener("loadingdone", this._onFonts);
     document.addEventListener("pointerdown", this._onDocPointer);
     this._visWatch.connect();
     // ghosts that expired while the card was away (another view) go now, the rest get their timer
@@ -325,7 +334,13 @@ export abstract class EntityCardBase extends HTMLElement {
     if (!cfg || !hass) return [];
     return this._countIdxs.flatMap((i) => membersOf(hass.states[cfg.entities[i].entity ?? ""]));
   }
+  // a web font that arrives later widens the text without resizing the card: fitted values are
+  // measured again (the `ready` promise after a build misses a font that starts loading later)
+  _onFonts = () => {
+    if (this._root) this._fitCells([this._root]);
+  };
   disconnectedCallback() {
+    document.fonts?.removeEventListener("loadingdone", this._onFonts);
     clearInterval(this._timer);
     clearInterval(this._minute);
     clearTimeout(this._pendingTimer);
@@ -1009,7 +1024,7 @@ export abstract class EntityCardBase extends HTMLElement {
       big.classList.add("fit");
       let size = full;
       big.style.setProperty("--fit", `${size}px`);
-      while (size > least && b.scrollWidth > b.clientWidth + 1) {
+      while (size > least && overflows(b)) {
         size -= 1;
         big.style.setProperty("--fit", `${size}px`);
       }
@@ -1024,7 +1039,7 @@ export abstract class EntityCardBase extends HTMLElement {
       let size = own;
       big.classList.add("fit");
       big.style.setProperty("--fit", `${size}px`);
-      while (size > own * 0.6 && b.scrollWidth > b.clientWidth + 1) {
+      while (size > own * 0.6 && overflows(b)) {
         size -= 1;
         big.style.setProperty("--fit", `${size}px`);
       }
