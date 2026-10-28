@@ -231,7 +231,7 @@ Each visual, the options it reads and the layouts it is drawn in are explained o
 
 ## Poster
 
-`layout: poster` turns the tile into a poster: the icon at the top left, the matching rule's label as a pill at the top right, and at the bottom the name in small capitals and the value, large. Controls work as on the tile: a switch, buttons, segments or a stepper sit on the value's line, at the right, and a slider runs along the bottom. The value stays beside them; only a stepper that shows the same number (a thermostat's set point as the value) takes its place. A `sparkline` or `columns` plot fills the room below the value, out to the card's edges; with a plot the value is a little smaller, and the plot reaches up under it. A poster is three rows high in a sections grid (two at least), and its content stays at the bottom of whatever height it gets.
+`layout: poster` turns the tile into a poster: the icon at the top left, the matching rule's label as a pill at the top right, and at the bottom the name in small capitals and the value, large. Controls work as on the tile: a switch, buttons, segments or a stepper sit on the value's line, at the right, and a slider runs along the bottom. The value stays beside them; only a stepper that shows the same number (a thermostat's set point as the value) takes its place. A `sparkline` or `columns` plot fills the room below the value, out to the card's edges; with a plot the value is a little smaller, and a sparkline reaches up under it. A `gauge` shows the value in its arc, so the poster leaves out the large one and centres the arc with its name under it. A poster is three rows high in a sections grid (two at least), and its content stays at the bottom of whatever height it gets.
 
 ::: live
 

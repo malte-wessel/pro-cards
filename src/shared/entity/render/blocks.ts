@@ -62,6 +62,8 @@ export const plotEl = (
   // sparkline and columns grow into a taller card; a strip is a timeline and keeps its height
   // (styles: STYLE_PLOT)
   plot.className = GROW_VISUALS.has(kind) ? "plot grow" : "plot";
+  // what it draws, for the styles (a poster lets a line, not columns, reach up under its value)
+  plot.dataset.kind = kind;
   plot.style.height =
     kind === "strip" ? `calc(${PLOT_H.strip}px + ${STRIP_AXIS_CSS})` : `${PLOT_H[kind]}px`;
   plot.innerHTML = `<svg class="abs" preserveAspectRatio="none"></svg><div class="labels"></div><div class="tip"></div>`;

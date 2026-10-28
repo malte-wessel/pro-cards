@@ -194,7 +194,8 @@ export const fillPoster = (
   // stepper that shows the very same number takes its place
   const repeats =
     canControl(ent, m.st) && c.end.some((p) => p.kind === "stepper" && controlShowsValue(ent, p));
-  if (!repeats) {
+  // a gauge draws the value in its arc, as in a grid cell
+  if (!repeats && ent.visual !== "gauge") {
     const big = bigEl(m.fmt);
     // a word (Cleaning, Away) is drawn smaller than a number, so the controls stay beside it
     big.classList.toggle("word", m.model.num === null);
@@ -206,12 +207,19 @@ export const fillPoster = (
     end.append(...ctls.els);
     value.appendChild(end);
   }
-  if (ent.item.namePosition === "below") body.append(value, name);
-  else body.append(name, value);
+  const block = blockOf(ctx, ent, idx, m, c.block);
+  // a gauge is the poster's picture: the arc first, its name centred under it, the whole
+  // centred in the room under the top line (pgauge)
+  const gauge = ent.visual === "gauge" && !!block;
+  body.classList.toggle("pgauge", gauge);
+  if (gauge) body.appendChild(block);
+  // a value line with nothing on it (a gauge's, without controls) takes no room
+  const parts = value.childElementCount ? [name, value] : [name];
+  if (ent.item.namePosition === "below" && !gauge) parts.reverse();
+  body.append(...parts);
   const sec = tplOf(ctx, ent.secondary);
   if (sec) body.appendChild(textEl("secondary", sec));
-  const block = blockOf(ctx, ent, idx, m, c.block);
-  if (block) body.appendChild(block);
+  if (block && !gauge) body.appendChild(block);
   appendControls(ctx, ent, idx, m, c.block, body);
 };
 

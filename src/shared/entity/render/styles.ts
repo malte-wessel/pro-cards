@@ -78,6 +78,9 @@ export const STYLE_POSTER = `
   .row.poster .big.fit b { font-size: var(--fit); }
   .pbody > :is(.bar, .gauge, .ctl-slider, .ctl-segments, .ctl-buttons, .plot) { margin-top: 8px; }
   .pbody > .gauge { align-self: center; }
+  /* a gauge poster: the arc and its name centred, across and down */
+  .pbody.pgauge { margin-block: auto; align-items: center; text-align: center; }
+  .pbody.pgauge > .gauge { margin-top: 0; }
   /* the entity card: the poster is one button (its action layer fills the card, as a tile's) and its
      plot runs to the card's edges, under the body's padding; the card's corners clip it */
   ha-card.layout-poster .body { position: relative; }
@@ -85,8 +88,8 @@ export const STYLE_POSTER = `
   ha-card.layout-poster .row.poster > .hit { border-radius: var(--ha-card-border-radius, 12px); }
   ha-card.layout-poster .row.poster > .hit:focus-visible { box-shadow: inset 0 0 0 2px var(--fe-color); }
   ha-card.layout-poster .pbody > .plot { width: auto; margin: 8px -16px -16px; }
-  /* a curve reaches up under the value; the texts stay on top of it */
-  ha-card.layout-poster .pbody > .plot.grow { margin-top: -16px; }
+  /* a line reaches up under the value; the texts stay on top of it (columns would cover them) */
+  ha-card.layout-poster .pbody > .plot.grow[data-kind="sparkline"] { margin-top: -16px; }
   ha-card.layout-poster .pbody:has(> .plot.grow) > :not(.plot) { position: relative; z-index: 1; }
 `;
 // the header badges (render/badge.ts): the row is the pill (.pb) of its style (b-outline, b-soft,
