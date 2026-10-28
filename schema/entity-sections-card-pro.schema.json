@@ -26,6 +26,12 @@
       "$ref": "entity.schema.json#/$defs/align",
       "description": "Default for every section"
     },
+    "vertical_align": {
+      "type": "string",
+      "enum": ["top", "center", "bottom"],
+      "default": "top",
+      "description": "Where the sections sit in a card taller than its content (fixed rows, a taller card beside it); the header stays on top"
+    },
     "sections": {
       "type": "array",
       "minItems": 1,

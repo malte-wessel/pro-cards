@@ -326,6 +326,11 @@ export const STYLE_CONTROLS = `
   @media (prefers-reduced-motion: reduce) { .ctl, .ctl *, .toggle i, .lead.tap .shape { animation: none !important; transition: none !important; } }
 `;
 export const STYLE_GROUP = `
+  /* vertical_align: in a card taller than its content the body takes the room under the header
+     (its own height as the basis) and puts its sections at the centre or the bottom */
+  ha-card:is(.valign-center, .valign-bottom) > .body { flex: 1 1 auto; }
+  ha-card.valign-center > .body { justify-content: center; }
+  ha-card.valign-bottom > .body { justify-content: flex-end; }
   .section { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
   .section.layout-row { flex-direction: row; flex-wrap: wrap; gap: 12px 16px; align-items: flex-start; }
   .section.layout-row.align-start { justify-content: flex-start; }

@@ -4,6 +4,7 @@
  *   type: custom:entity-sections-card-pro
  *   title: Living room / icon: mdi:sofa     # header (template allowed)
  *   header_entities: [...]                 # compact icon + value items on the title line
+ *   vertical_align: top                    # top | center | bottom: the body in a taller card
  *   hours_to_show: 24 / bucket_minutes: 60
  *   smoothing_minutes: 30                   # sparkline averaging bucket (default: one point per 12 px)
  *   tap_action / hold_action / double_tap_action / hover   # defaults for every entity
@@ -25,6 +26,7 @@ import {
   normalizeGroup,
   normalizeHeaderEntities,
   normalizeHistoryOptions,
+  normalizeVerticalAlign,
   type EntityCardConfig,
   type EntityItem,
   type Group,
@@ -68,6 +70,7 @@ export const normalizeEntitySectionsCardConfig = (input: unknown): EntityCardCon
     groups,
     headerIdxs: header.map((_, i) => entities.length + i),
     hasHeader: true,
+    valign: normalizeVerticalAlign(raw.vertical_align, CARD_TYPE),
   };
 };
 

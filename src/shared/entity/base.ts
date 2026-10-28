@@ -642,6 +642,8 @@ export abstract class EntityCardBase extends HTMLElement {
     const cfg = this._config as EntityCardConfig;
     const card = freshShadow(this.shadowRoot as ShadowRoot, this._styles());
     card.className = `layout-${cfg.layout}`;
+    // the body's place in a taller card (top: as it always sat)
+    if (cfg.valign && cfg.valign !== "top") card.classList.add(`valign-${cfg.valign}`);
     if (cfg.hasHeader) {
       const header = document.createElement("div");
       header.className = "header";

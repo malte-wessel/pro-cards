@@ -15,7 +15,13 @@
       "$ref": "defs.schema.json#/$defs/icon",
       "description": "Header icon. Template allowed."
     },
-    "header_entities": { "$ref": "entity.schema.json#/$defs/headerEntities" }
+    "header_entities": { "$ref": "entity.schema.json#/$defs/headerEntities" },
+    "vertical_align": {
+      "type": "string",
+      "enum": ["top", "center", "bottom"],
+      "default": "top",
+      "description": "Where the body sits in a card taller than its content (fixed rows, a taller card beside it); the header stays on top"
+    }
   },
   "required": ["type", "entities"],
   "allOf": [

@@ -592,6 +592,39 @@ entities:
 
 :::
 
+## Vertical alignment
+
+In a card taller than its content (fixed `rows`, a taller card beside it in a row) the entities sit at the top and the room is left below them. `vertical_align: center` or `bottom` moves them to the middle or the bottom of the card; the title stays on top. A sparkline or columns plot that grows into the room fills it as before.
+
+::: live
+
+```yaml
+- type: custom:entity-group-card-pro
+  title: Top
+  icon: mdi:format-vertical-align-top
+  layout: table
+  entities: &rows
+    - { entity: light.living_room, name: Light, control: toggle, show_value: false }
+    - { entity: light.desk_lamp, name: Lamp, control: toggle, show_value: false }
+  grid_options: { columns: 4, min_columns: 4, rows: 4 }
+- type: custom:entity-group-card-pro
+  title: Center
+  icon: mdi:format-vertical-align-center
+  layout: table
+  vertical_align: center
+  entities: *rows
+  grid_options: { columns: 4, min_columns: 4, rows: 4 }
+- type: custom:entity-group-card-pro
+  title: Bottom
+  icon: mdi:format-vertical-align-bottom
+  layout: table
+  vertical_align: bottom
+  entities: *rows
+  grid_options: { columns: 4, min_columns: 4, rows: 4 }
+```
+
+:::
+
 ## Title action
 
 `title_tap_action` makes the title and its icon tappable, for example to open the room's own dashboard from a summary card. It takes any [action](/cards/entity-options#actions); without it the title is plain text. The header entities keep their own actions.
@@ -667,6 +700,7 @@ entities:
 | `icon`                                             |                              | Header icon. Template allowed.                                                                                                                                                                                                                                                                      |
 | `header_entities`                                  |                              | Entities shown as icon + value on the right of the title line. Defaults `show_icon: true`, `show_value: true`, `show_name: false`; the badges of the [heading card](/cards/heading-card#badge-options), plain and small.                                                                            |
 | `columns`                                          | `2`                          | Grid: cells per row, 1 to 4 (not the sections grid `grid_options.columns`).                                                                                                                                                                                                                         |
+| `vertical_align`                                   | `top`                        | `top`, `center` or `bottom`: where the entities sit in a card taller than its content; the title stays on top. See [Vertical alignment](#vertical-alignment).                                                                                                                                       |
 | `align`                                            | per layout                   | Row: `start`, `center`, `end`, `space-between` or `stretch` (items share the width). Column: `start`, `center`, `end`. Table: `start`, `center`, `end` for the value. `stretch` and `space-between` act as `end` in columns and tables. Defaults: row `space-between`, column `start`, table `end`. |
 | `show_name` / `show_value` / `show_icon`           | per layout                   | [Item options](/cards/entity-options#item-options) for row, column and table; every entity can override them.                                                                                                                                                                                       |
 | `name_position`                                    | `below`                      | `above` or `below` the icon in row items; the other layouts ignore it.                                                                                                                                                                                                                              |

@@ -131,6 +131,8 @@ export interface RawEntityCardBase
   align?: unknown;
   columns?: unknown;
   header_entities?: unknown;
+  // the group and sections cards: where the body sits in a card taller than its content
+  vertical_align?: unknown;
 }
 
 // ----- the normalised config -----
@@ -238,6 +240,9 @@ export interface EntityCardConfig extends ActionDefaults {
   groups: Group[];
   headerIdxs: number[];
   hasHeader: boolean;
+  // where the body sits in a card taller than its content (the group and sections cards; the
+  // header stays on top): unset is the top
+  valign?: VerticalAlign;
 }
 
 export const normalizeAction = (a: RawAction | undefined, fallback: ActionConfig): ActionConfig => {
@@ -264,6 +269,15 @@ export const normalizeHistoryOptions = (raw: RawHistoryOptions) => ({
   bucketMin: Math.max(5, numOrNull(raw.bucket_minutes) ?? DEFAULTS.bucket_minutes),
   smoothMin: normalizeSmoothing(raw.smoothing_minutes),
 });
+export const VERTICAL_ALIGNS = ["top", "center", "bottom"] as const;
+export type VerticalAlign = (typeof VERTICAL_ALIGNS)[number];
+// `vertical_align`: top (the default), center or bottom
+export const normalizeVerticalAlign = (v: unknown, type: string): VerticalAlign => {
+  if (v === undefined || v === null) return "top";
+  if (!oneOf(VERTICAL_ALIGNS, v))
+    throw new Error(`${type}: vertical_align must be one of ${VERTICAL_ALIGNS.join(" | ")}`);
+  return v;
+};
 export const clampColumns = (v: unknown, fallback: number) =>
   Math.max(1, Math.min(4, Math.round(numOrNull(v) ?? fallback)));
 
