@@ -7,7 +7,7 @@ pageClass: wide
 
 # Poster layouts
 
-Four dark wall-panel dashboards, a home, a room, its climate and its energy, each a [layout card](/cards/layout-card) of twelve cells, four across and three down (two across on a phone). Most cells are posters: one thing each, its icon and a pill on top, a large value at the bottom, and a curve along the bottom edge where there is one. The cards that are not posters take whole cells too (`view_layout: { span: [columns, rows] }`, three grid rows to a cell), so every row lines up. Every control works: tap, drag and hold.
+Four dark wall-panel dashboards, a home, a room, the weather and the energy, each a [layout card](/cards/layout-card) of twelve cells, four across and three down (two across on a phone). Most cells are posters: one thing each, its icon and a pill on top, a large value at the bottom, and a curve along the bottom edge where there is one. The cards that are not posters take whole cells too (`view_layout: { span: [columns, rows] }`, three grid rows to a cell), so every row lines up. Every control works: tap, drag and hold.
 
 ## Home
 
@@ -405,19 +405,19 @@ One room on one screen: the scenes and four modes first, in a [sections card](/c
 
 </DashboardGrid>
 
-## Climate
+## Weather
 
-The two thermostats with their steppers and what they are doing, the living room fan's speeds, the blinds, the room temperatures and the office air with their history, the bathroom's humidity with a switch for its fan, the temperatures of four rooms in a [multi trend card](/cards/multi-trend-card) with a time axis, the windows in a table and the weather outside.
+The outside in every card that shows weather: the [weather card](/cards/weather-card)'s hero with the next 6 hours under it, the [sun path](/cards/sun-path-card#poster) and the [sun azimuth](/cards/sun-azimuth-card) around the house, in a first row a grid row taller than the others; the last 24 hours of the temperature, the wind, the rain and the daylight as status strips in a [group card](/cards/entity-group-card) of four cells, each block in its rule's colour; beside it the [rain](/cards/rain-card#poster) falling across its poster, the pressure over the day, the [wind](/cards/wind-card#poster) as its animated field, and a stack of three tiles: the UV index with a ring around its icon, the humidity and the dew point.
 
-<DashboardGrid mode="dark" b64="LSBjb2x1bW5fc3BhbjogNAogIGNhcmRzOgogICAgLSB0eXBlOiBjdXN0b206aGVhZGluZy1jYXJkLXBybwogICAgICBzdHlsZTogaGVybwogICAgICB0aXRsZTogQ2xpbWF0ZQogICAgICBzdWJ0aXRsZTogInt7IHN0YXRlcygnc2Vuc29yLm91dGRvb3JfdGVtcGVyYXR1cmUnKSB9fSDCsEMgb3V0c2lkZSDCtyB7eyBzdGF0ZXMoJ3NlbnNvci5vdXRkb29yX2h1bWlkaXR5JykgfX0gJSBodW1pZGl0eSIKICAgICAgYmFkZ2Vfc3R5bGU6IHBsYWluCiAgICAgIGJhZGdlX3NpemU6IGwKICAgICAgYmFkZ2VzOgogICAgICAgIC0geyB2YWx1ZTogInt7IG5vdygpLnN0cmZ0aW1lKCclSDolTScpIH19Iiwgc2hvd19pY29uOiBmYWxzZSwgdGFwX2FjdGlvbjogeyBhY3Rpb246IG5vbmUgfSB9CiAgICAtIHR5cGU6IGN1c3RvbTpsYXlvdXQtY2FyZC1wcm8KICAgICAgY29sdW1uczogMgogICAgICBicmVha3BvaW50czoKICAgICAgICAyOiB7IGNvbHVtbnM6IDQgfQogICAgICBjYXJkczoKICAgICAgICAtIHR5cGU6IGN1c3RvbTplbnRpdHktY2FyZC1wcm8KICAgICAgICAgIGVudGl0eTogY2xpbWF0ZS5saXZpbmdfcm9vbQogICAgICAgICAgbmFtZTogTGl2aW5nIHJvb20KICAgICAgICAgIGxheW91dDogcG9zdGVyCiAgICAgICAgICBhdHRyaWJ1dGU6IGN1cnJlbnRfdGVtcGVyYXR1cmUKICAgICAgICAgIHVuaXQ6IMKwQwogICAgICAgICAgZGVjaW1hbHM6IDEKICAgICAgICAgIGNvbnRyb2w6IHN0ZXBwZXIKICAgICAgICAgIGNvbG9yOiBkZWVwLW9yYW5nZQogICAgICAgICAgYmFkZ2VzOgogICAgICAgICAgICAtIGVudGl0eTogY2xpbWF0ZS5saXZpbmdfcm9vbQogICAgICAgICAgICAgIGF0dHJpYnV0ZTogaHZhY19hY3Rpb24KICAgICAgICAgICAgICBydWxlczogJmFjdGlvbgogICAgICAgICAgICAgICAgLSB7IHN0YXRlOiBoZWF0aW5nLCBjb2xvcjogZGVlcC1vcmFuZ2UsIGljb246IG1kaTpmaXJlLCBsYWJlbDogSGVhdGluZyB9CiAgICAgICAgICAgICAgICAtIHsgc3RhdGU6IGlkbGUsIGNvbG9yOiBncmV5LCBpY29uOiBtZGk6ZmlyZS1vZmYsIGxhYmVsOiBJZGxlIH0KICAgICAgICAgICAgICAgIC0geyBzdGF0ZTogIm9mZiIsIGNvbG9yOiBncmV5LCBpY29uOiBtZGk6cG93ZXIsIGxhYmVsOiAiT2ZmIiB9CiAgICAgICAgLSB0eXBlOiBjdXN0b206ZW50aXR5LWNhcmQtcHJvCiAgICAgICAgICBlbnRpdHk6IGNsaW1hdGUuYmVkcm9vbQogICAgICAgICAgbmFtZTogQmVkcm9vbQogICAgICAgICAgbGF5b3V0OiBwb3N0ZXIKICAgICAgICAgIGF0dHJpYnV0ZTogY3VycmVudF90ZW1wZXJhdHVyZQogICAgICAgICAgdW5pdDogwrBDCiAgICAgICAgICBkZWNpbWFsczogMQogICAgICAgICAgY29udHJvbDogc3RlcHBlcgogICAgICAgICAgY29sb3I6IGluZGlnbwogICAgICAgICAgYmFkZ2VzOgogICAgICAgICAgICAtIHsgZW50aXR5OiBjbGltYXRlLmJlZHJvb20sIGF0dHJpYnV0ZTogaHZhY19hY3Rpb24sIHJ1bGVzOiAqYWN0aW9uIH0KICAgICAgICAtIHR5cGU6IGN1c3RvbTplbnRpdHktY2FyZC1wcm8KICAgICAgICAgIGVudGl0eTogZmFuLmxpdmluZ19yb29tCiAgICAgICAgICBuYW1lOiBMaXZpbmcgcm9vbSBmYW4KICAgICAgICAgIGxheW91dDogcG9zdGVyCiAgICAgICAgICBhdHRyaWJ1dGU6IHBlcmNlbnRhZ2UKICAgICAgICAgIHVuaXQ6ICIlIgogICAgICAgICAgY29udHJvbDogc2VnbWVudHMKICAgICAgICAgIHJ1bGVzOgogICAgICAgICAgICAtIHsgc3RhdGU6ICJvbiIsIGNvbG9yOiBjeWFuIH0KICAgICAgICAgICAgLSB7IHN0YXRlOiAib2ZmIiwgY29sb3I6IGdyZXkgfQogICAgICAgIC0gdHlwZTogY3VzdG9tOmVudGl0eS1jYXJkLXBybwogICAgICAgICAgZW50aXR5OiBjb3Zlci5saXZpbmdfcm9vbV9ibGluZHMKICAgICAgICAgIG5hbWU6IEJsaW5kcwogICAgICAgICAgaWNvbjogbWRpOmJsaW5kcy1ob3Jpem9udGFsCiAgICAgICAgICBsYXlvdXQ6IHBvc3RlcgogICAgICAgICAgYXR0cmlidXRlOiBjdXJyZW50X3Bvc2l0aW9uCiAgICAgICAgICB1bml0OiAiJSIKICAgICAgICAgIGNvbnRyb2w6IHNsaWRlcgogICAgICAgICAgY29sb3I6IGluZGlnbwogICAgICAgIC0gdHlwZTogY3VzdG9tOmVudGl0eS1jYXJkLXBybwogICAgICAgICAgZW50aXR5OiBzZW5zb3IubGl2aW5nX3Jvb21fdGVtcGVyYXR1cmUKICAgICAgICAgIG5hbWU6IExpdmluZyByb29tCiAgICAgICAgICBpY29uOiBtZGk6c29mYQogICAgICAgICAgbGF5b3V0OiBwb3N0ZXIKICAgICAgICAgIGRlY2ltYWxzOiAxCiAgICAgICAgICB2aXN1YWw6IHNwYXJrbGluZQogICAgICAgICAgaG91cnNfdG9fc2hvdzogMjQKICAgICAgICAgIHJ1bGVzOiAmdGVtcGVyYXR1cmUKICAgICAgICAgICAgLSB7IGJlbG93OiAxOCwgY29sb3I6IGJsdWUsIGxhYmVsOiBDb29sIH0KICAgICAgICAgICAgLSB7IGJlbG93OiAyNCwgY29sb3I6IGdyZWVuLCBsYWJlbDogQ29tZm9ydGFibGUgfQogICAgICAgICAgICAtIHsgYWJvdmU6IDI0LCBjb2xvcjogb3JhbmdlLCBsYWJlbDogV2FybSB9CiAgICAgICAgLSB0eXBlOiBjdXN0b206ZW50aXR5LWNhcmQtcHJvCiAgICAgICAgICBlbnRpdHk6IHNlbnNvci5iZWRyb29tX3RlbXBlcmF0dXJlCiAgICAgICAgICBuYW1lOiBCZWRyb29tCiAgICAgICAgICBpY29uOiBtZGk6YmVkCiAgICAgICAgICBsYXlvdXQ6IHBvc3RlcgogICAgICAgICAgZGVjaW1hbHM6IDEKICAgICAgICAgIHZpc3VhbDogc3BhcmtsaW5lCiAgICAgICAgICBob3Vyc190b19zaG93OiAyNAogICAgICAgICAgcnVsZXM6ICp0ZW1wZXJhdHVyZQogICAgICAgIC0gdHlwZTogY3VzdG9tOmVudGl0eS1jYXJkLXBybwogICAgICAgICAgZW50aXR5OiBzZW5zb3IuYmF0aHJvb21faHVtaWRpdHkKICAgICAgICAgIG5hbWU6IEJhdGhyb29tCiAgICAgICAgICBpY29uOiBtZGk6c2hvd2VyCiAgICAgICAgICBsYXlvdXQ6IHBvc3RlcgogICAgICAgICAgZGVjaW1hbHM6IDAKICAgICAgICAgIHZpc3VhbDogYmFyCiAgICAgICAgICBtaW46IDMwCiAgICAgICAgICBtYXg6IDEwMAogICAgICAgICAgcnVsZXM6CiAgICAgICAgICAgIC0geyBiZWxvdzogNjAsIGNvbG9yOiBncmVlbiwgbGFiZWw6IERyeSB9CiAgICAgICAgICAgIC0geyBiZWxvdzogNzAsIGNvbG9yOiBhbWJlciwgbGFiZWw6IEh1bWlkIH0KICAgICAgICAgICAgLSB7IGFib3ZlOiA3MCwgY29sb3I6IHJlZCwgbGFiZWw6IFZlbnRpbGF0ZSwgdGludF9jYXJkOiB0cnVlIH0KICAgICAgICAgIGJhZGdlczoKICAgICAgICAgICAgLSB7IGVudGl0eTogZmFuLmJhdGhyb29tLCBjb250cm9sOiB0b2dnbGUgfQogICAgICAgIC0gdHlwZTogY3VzdG9tOmVudGl0eS1jYXJkLXBybwogICAgICAgICAgZW50aXR5OiBzZW5zb3Iub2ZmaWNlX2NvMgogICAgICAgICAgbmFtZTogT2ZmaWNlIGFpcgogICAgICAgICAgaWNvbjogbWRpOm1vbGVjdWxlLWNvMgogICAgICAgICAgbGF5b3V0OiBwb3N0ZXIKICAgICAgICAgIGRlY2ltYWxzOiAwCiAgICAgICAgICB2aXN1YWw6IHNwYXJrbGluZQogICAgICAgICAgaG91cnNfdG9fc2hvdzogMTIKICAgICAgICAgIHJ1bGVzOgogICAgICAgICAgICAtIHsgYmVsb3c6IDgwMCwgY29sb3I6IGdyZWVuLCBsYWJlbDogRnJlc2ggfQogICAgICAgICAgICAtIHsgYmVsb3c6IDEyMDAsIGNvbG9yOiBhbWJlciwgbGFiZWw6IFN0dWZmeSB9CiAgICAgICAgICAgIC0geyBhYm92ZTogMTIwMCwgY29sb3I6IHJlZCwgbGFiZWw6IFZlbnRpbGF0ZSB9CiAgICAgICAgLSB0eXBlOiBjdXN0b206bXVsdGktdHJlbmQtY2FyZC1wcm8KICAgICAgICAgIHRpdGxlOiBUZW1wZXJhdHVyZXMKICAgICAgICAgIGljb246IG1kaTpob21lLXRoZXJtb21ldGVyCiAgICAgICAgICBjb2xvcjogb3JhbmdlCiAgICAgICAgICBob3Vyc190b19zaG93OiAyNAogICAgICAgICAgeF9heGlzOiB0cnVlCiAgICAgICAgICB2aWV3X2xheW91dDogeyBzcGFuOiBbMiwgM10gfQogICAgICAgICAgZW50aXRpZXM6CiAgICAgICAgICAgIC0geyBlbnRpdHk6IHNlbnNvci5saXZpbmdfcm9vbV90ZW1wZXJhdHVyZSwgbmFtZTogTGl2aW5nIHJvb20sIGNvbG9yOiBncmVlbiB9CiAgICAgICAgICAgIC0geyBlbnRpdHk6IHNlbnNvci5iZWRyb29tX3RlbXBlcmF0dXJlLCBuYW1lOiBCZWRyb29tLCBjb2xvcjogaW5kaWdvIH0KICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLm9mZmljZV90ZW1wZXJhdHVyZSwgbmFtZTogT2ZmaWNlLCBjb2xvcjogb3JhbmdlIH0KICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLmJhdGhyb29tX3RlbXBlcmF0dXJlLCBuYW1lOiBCYXRocm9vbSwgY29sb3I6IHRlYWwgfQogICAgICAgIC0gdHlwZTogY3VzdG9tOmVudGl0eS1ncm91cC1jYXJkLXBybwogICAgICAgICAgdGl0bGU6IFdpbmRvd3MKICAgICAgICAgIGljb246IG1kaTp3aW5kb3ctY2xvc2VkLXZhcmlhbnQKICAgICAgICAgIGxheW91dDogdGFibGUKICAgICAgICAgIHZpZXdfbGF5b3V0OiB7IHNwYW46IFsxLCAzXSB9CiAgICAgICAgICBlbnRpdGllczoKICAgICAgICAgICAgLSB7IGVudGl0eTogYmluYXJ5X3NlbnNvci53aW5kb3dfa2l0Y2hlbiwgbmFtZTogS2l0Y2hlbiwgdmlzdWFsOiBiYWRnZSwgcnVsZXM6ICZ3aW5kb3cgW3sgc3RhdGU6ICJvbiIsIGNvbG9yOiByZWQsIGxhYmVsOiBPcGVuIH0sIHsgc3RhdGU6ICJvZmYiLCBjb2xvcjogZ3JlZW4sIGxhYmVsOiBDbG9zZWQgfV0gfQogICAgICAgICAgICAtIHsgZW50aXR5OiBiaW5hcnlfc2Vuc29yLndpbmRvd19iYXRocm9vbSwgbmFtZTogQmF0aHJvb20sIHZpc3VhbDogYmFkZ2UsIHJ1bGVzOiAqd2luZG93IH0KICAgICAgICAgICAgLSB7IGVudGl0eTogYmluYXJ5X3NlbnNvci53aW5kb3dfYmVkcm9vbSwgbmFtZTogQmVkcm9vbSwgdmlzdWFsOiBiYWRnZSwgcnVsZXM6ICp3aW5kb3cgfQogICAgICAgICAgICAtIHsgZW50aXR5OiBiaW5hcnlfc2Vuc29yLndpbmRvd19vZmZpY2UsIG5hbWU6IE9mZmljZSwgdmlzdWFsOiBiYWRnZSwgcnVsZXM6ICp3aW5kb3cgfQogICAgICAgIC0gdHlwZTogY3VzdG9tOndlYXRoZXItY2FyZC1wcm8KICAgICAgICAgIGVudGl0eTogd2VhdGhlci5ob21lCiAgICAgICAgICBuYW1lOiBPdXRzaWRlCiAgICAgICAgICBsYXlvdXQ6IHBvc3RlcgogICAgICAgICAgdGVtcGVyYXR1cmVfcnVsZXM6CiAgICAgICAgICAgIC0geyBiZWxvdzogNSwgY29sb3I6IGJsdWUsIGxhYmVsOiBDb2xkIH0KICAgICAgICAgICAgLSB7IGJlbG93OiAyMCwgY29sb3I6IHRlYWwsIGxhYmVsOiBNaWxkIH0KICAgICAgICAgICAgLSB7IGFib3ZlOiAyMCwgY29sb3I6IG9yYW5nZSwgbGFiZWw6IFdhcm0gfQo=">
+<DashboardGrid mode="dark" b64="LSBjb2x1bW5fc3BhbjogNAogIGNhcmRzOgogICAgLSB0eXBlOiBjdXN0b206aGVhZGluZy1jYXJkLXBybwogICAgICBzdHlsZTogaGVybwogICAgICB0aXRsZTogV2VhdGhlcgogICAgICBzdWJ0aXRsZTogInt7IHN0YXRlcygnc2Vuc29yLm91dGRvb3JfdGVtcGVyYXR1cmUnKSB9fSDCsEMgwrcgd2luZCB7eyBzdGF0ZXMoJ3NlbnNvci53aW5kX3NwZWVkJykgfX0ga20vaCDCtyB7eyBzdGF0ZXMoJ3NlbnNvci5yYWluX3RvZGF5JykgfX0gbW0gcmFpbiB0b2RheSIKICAgICAgYmFkZ2Vfc3R5bGU6IHBsYWluCiAgICAgIGJhZGdlX3NpemU6IGwKICAgICAgYmFkZ2VzOgogICAgICAgIC0geyB2YWx1ZTogInt7IG5vdygpLnN0cmZ0aW1lKCclSDolTScpIH19Iiwgc2hvd19pY29uOiBmYWxzZSwgdGFwX2FjdGlvbjogeyBhY3Rpb246IG5vbmUgfSB9CiAgICAtIHR5cGU6IGN1c3RvbTpsYXlvdXQtY2FyZC1wcm8KICAgICAgY29sdW1uczogMgogICAgICBicmVha3BvaW50czoKICAgICAgICAyOiB7IGNvbHVtbnM6IDQgfQogICAgICBjYXJkczoKICAgICAgICAtIHR5cGU6IGN1c3RvbTp3ZWF0aGVyLWNhcmQtcHJvCiAgICAgICAgICBlbnRpdHk6IHdlYXRoZXIuaG9tZQogICAgICAgICAgbmFtZTogT3V0c2lkZQogICAgICAgICAgdmlld19sYXlvdXQ6IHsgc3BhbjogWzIsIDRdIH0KICAgICAgICAgIHRlbXBlcmF0dXJlX3J1bGVzOgogICAgICAgICAgICAtIHsgYmVsb3c6IDUsIGNvbG9yOiBibHVlLCBsYWJlbDogQ29sZCB9CiAgICAgICAgICAgIC0geyBiZWxvdzogMjAsIGNvbG9yOiB0ZWFsLCBsYWJlbDogTWlsZCB9CiAgICAgICAgICAgIC0geyBhYm92ZTogMjAsIGNvbG9yOiBvcmFuZ2UsIGxhYmVsOiBXYXJtIH0KICAgICAgICAgIHNlY3Rpb25zOgogICAgICAgICAgICAtIHsgdHlwZTogaGVybyB9CiAgICAgICAgICAgIC0geyB0eXBlOiBmb3JlY2FzdCwgbW9kZTogaG91cmx5LCBsYXlvdXQ6IGhvcml6b250YWwsIGhvdXJzOiA2LCB0aXRsZTogTmV4dCA2IGhvdXJzLCBkaXZpZGVyOiB0cnVlLCBzaG93OiBbXSwgaWNvbl9zaXplOiAzMiB9CiAgICAgICAgLSB0eXBlOiBjdXN0b206c3VuLXBhdGgtY2FyZC1wcm8KICAgICAgICAgIGxheW91dDogcG9zdGVyCiAgICAgICAgICB2aWV3X2xheW91dDogeyBzcGFuOiBbMSwgNF0gfQogICAgICAgIC0gdHlwZTogY3VzdG9tOnN1bi1hemltdXRoLWNhcmQtcHJvCiAgICAgICAgICBzaG93X3N1bW1hcnk6IGZhbHNlCiAgICAgICAgICBjYW1lcmE6IDI4MAogICAgICAgICAgdmlld19sYXlvdXQ6IHsgc3BhbjogWzEsIDRdIH0KICAgICAgICAtIHR5cGU6IGN1c3RvbTplbnRpdHktZ3JvdXAtY2FyZC1wcm8KICAgICAgICAgIHRpdGxlOiBMYXN0IDI0IGhvdXJzCiAgICAgICAgICBpY29uOiBtZGk6Y2hhcnQtdGltZWxpbmUKICAgICAgICAgIHZpZXdfbGF5b3V0OiB7IHNwYW46IFsyLCA2XSB9CiAgICAgICAgICBob3Vyc190b19zaG93OiAyNAogICAgICAgICAgYnVja2V0X21pbnV0ZXM6IDMwCiAgICAgICAgICBlbnRpdGllczoKICAgICAgICAgICAgLSBlbnRpdHk6IHNlbnNvci5vdXRkb29yX3RlbXBlcmF0dXJlCiAgICAgICAgICAgICAgbmFtZTogVGVtcGVyYXR1cmUKICAgICAgICAgICAgICBkZWNpbWFsczogMQogICAgICAgICAgICAgIHZpc3VhbDogc3RyaXAKICAgICAgICAgICAgICBydWxlczoKICAgICAgICAgICAgICAgIC0geyBiZWxvdzogNSwgY29sb3I6IGJsdWUsIGljb246IG1kaTp0aGVybW9tZXRlci1sb3cgfQogICAgICAgICAgICAgICAgLSB7IGJlbG93OiAxOCwgY29sb3I6IGxpZ2h0LWJsdWUsIGljb246IG1kaTp0aGVybW9tZXRlciB9CiAgICAgICAgICAgICAgICAtIHsgYmVsb3c6IDI1LCBjb2xvcjogZ3JlZW4sIGljb246IG1kaTp0aGVybW9tZXRlciB9CiAgICAgICAgICAgICAgICAtIHsgYWJvdmU6IDI1LCBjb2xvcjogb3JhbmdlLCBpY29uOiBtZGk6dGhlcm1vbWV0ZXItaGlnaCB9CiAgICAgICAgICAgIC0gZW50aXR5OiBzZW5zb3Iud2luZF9zcGVlZAogICAgICAgICAgICAgIG5hbWU6IFdpbmQKICAgICAgICAgICAgICBkZWNpbWFsczogMAogICAgICAgICAgICAgIHZpc3VhbDogc3RyaXAKICAgICAgICAgICAgICBydWxlczoKICAgICAgICAgICAgICAgIC0geyBiZWxvdzogMTAsIGNvbG9yOiBibHVlLWdyZXksIGljb246IG1kaTp3ZWF0aGVyLXdpbmR5IH0KICAgICAgICAgICAgICAgIC0geyBiZWxvdzogMjUsIGNvbG9yOiB0ZWFsLCBpY29uOiBtZGk6d2VhdGhlci13aW5keSB9CiAgICAgICAgICAgICAgICAtIHsgYWJvdmU6IDI1LCBjb2xvcjogb3JhbmdlLCBpY29uOiBtZGk6d2VhdGhlci13aW5keS12YXJpYW50IH0KICAgICAgICAgICAgLSBlbnRpdHk6IHNlbnNvci5yYWluX3JhdGVfcm9vZgogICAgICAgICAgICAgIG5hbWU6IFJhaW4KICAgICAgICAgICAgICBkZWNpbWFsczogMQogICAgICAgICAgICAgIHZpc3VhbDogc3RyaXAKICAgICAgICAgICAgICBydWxlczoKICAgICAgICAgICAgICAgIC0geyBiZWxvdzogMC4xLCBjb2xvcjogZ3JleSwgaWNvbjogbWRpOndlYXRoZXItY2xvdWR5IH0KICAgICAgICAgICAgICAgIC0geyBhYm92ZTogMC4xLCBjb2xvcjogYmx1ZSwgaWNvbjogbWRpOndlYXRoZXItcmFpbnkgfQogICAgICAgICAgICAtIGVudGl0eTogc2Vuc29yLmlsbHVtaW5hbmNlCiAgICAgICAgICAgICAgbmFtZTogRGF5bGlnaHQKICAgICAgICAgICAgICBkZWNpbWFsczogMAogICAgICAgICAgICAgIHZpc3VhbDogc3RyaXAKICAgICAgICAgICAgICBydWxlczoKICAgICAgICAgICAgICAgIC0geyBiZWxvdzogMTAsIGNvbG9yOiBibHVlLWdyZXksIGljb246IG1kaTp3ZWF0aGVyLW5pZ2h0IH0KICAgICAgICAgICAgICAgIC0geyBiZWxvdzogMTAwMCwgY29sb3I6IGJsdWUsIGljb246IG1kaTp3ZWF0aGVyLXN1bnNldCB9CiAgICAgICAgICAgICAgICAtIHsgYmVsb3c6IDIwMDAwLCBjb2xvcjogYW1iZXIsIGljb246IG1kaTp3aGl0ZS1iYWxhbmNlLXN1bm55IH0KICAgICAgICAgICAgICAgIC0geyBhYm92ZTogMjAwMDAsIGNvbG9yOiBvcmFuZ2UsIGljb246IG1kaTp3aGl0ZS1iYWxhbmNlLXN1bm55IH0KICAgICAgICAtIHR5cGU6IGN1c3RvbTpyYWluLWNhcmQtcHJvCiAgICAgICAgICBlbnRpdHk6IHNlbnNvci5yYWluX3JhdGVfcm9vZgogICAgICAgICAgdG9kYXk6IHNlbnNvci5yYWluX3RvZGF5CiAgICAgICAgICB3aW5kOiBzZW5zb3Iud2luZF9zcGVlZAogICAgICAgICAgZGlyZWN0aW9uOiBzZW5zb3Iud2luZF9kaXJlY3Rpb24KICAgICAgICAgIG5hbWU6IFJhaW4KICAgICAgICAgIGxheW91dDogcG9zdGVyCiAgICAgICAgICB2aXN1YWw6IGZsb3cKICAgICAgICAgIHJ1bGVzOgogICAgICAgICAgICAtIHsgYmVsb3c6IDAuMSwgY29sb3I6IGJsdWUtZ3JleSwgbGFiZWw6IERyeSB9CiAgICAgICAgICAgIC0geyBiZWxvdzogMi41LCBjb2xvcjogbGlnaHQtYmx1ZSwgbGFiZWw6IExpZ2h0IH0KICAgICAgICAgICAgLSB7IGFib3ZlOiAyLjUsIGNvbG9yOiBibHVlLCBsYWJlbDogSGVhdnkgfQogICAgICAgIC0gdHlwZTogY3VzdG9tOmVudGl0eS1jYXJkLXBybwogICAgICAgICAgZW50aXR5OiBzZW5zb3IucHJlc3N1cmUKICAgICAgICAgIG5hbWU6IFByZXNzdXJlCiAgICAgICAgICBpY29uOiBtZGk6Z2F1Z2UKICAgICAgICAgIGxheW91dDogcG9zdGVyCiAgICAgICAgICBkZWNpbWFsczogMAogICAgICAgICAgdmlzdWFsOiBzcGFya2xpbmUKICAgICAgICAgIGhvdXJzX3RvX3Nob3c6IDI0CiAgICAgICAgICBjb2xvcjogaW5kaWdvCiAgICAgICAgLSB0eXBlOiBjdXN0b206d2luZC1jYXJkLXBybwogICAgICAgICAgZW50aXR5OiBzZW5zb3Iud2luZF9zcGVlZAogICAgICAgICAgZGlyZWN0aW9uOiBzZW5zb3Iud2luZF9kaXJlY3Rpb24KICAgICAgICAgIGd1c3Q6IHNlbnNvci53aW5kX2d1c3QKICAgICAgICAgIG5hbWU6IFdpbmQKICAgICAgICAgIGxheW91dDogcG9zdGVyCiAgICAgICAgICB2aXN1YWw6IGZsb3cKICAgICAgICAgIHJ1bGVzOgogICAgICAgICAgICAtIHsgYmVsb3c6IDUsIGNvbG9yOiBibHVlLWdyZXksIGxhYmVsOiBDYWxtIH0KICAgICAgICAgICAgLSB7IGJlbG93OiAyMCwgY29sb3I6IHRlYWwsIGxhYmVsOiBCcmVlemUgfQogICAgICAgICAgICAtIHsgYmVsb3c6IDM1LCBjb2xvcjogYW1iZXIsIGxhYmVsOiBGcmVzaCB9CiAgICAgICAgICAgIC0geyBhYm92ZTogMzUsIGNvbG9yOiBvcmFuZ2UsIGxhYmVsOiBTdHJvbmcgfQogICAgICAgIC0gdHlwZTogY3VzdG9tOmxheW91dC1jYXJkLXBybwogICAgICAgICAgcm93czogWzFmciwgMWZyLCAxZnJdCiAgICAgICAgICB2aWV3X2xheW91dDogeyBzcGFuOiBbMSwgM10gfQogICAgICAgICAgY2FyZHM6CiAgICAgICAgICAgIC0gdHlwZTogY3VzdG9tOmVudGl0eS1jYXJkLXBybwogICAgICAgICAgICAgIGVudGl0eTogc2Vuc29yLnV2X2luZGV4CiAgICAgICAgICAgICAgbmFtZTogVVYgaW5kZXgKICAgICAgICAgICAgICBpY29uOiBtZGk6c3VuLXdpcmVsZXNzCiAgICAgICAgICAgICAgZGVjaW1hbHM6IDEKICAgICAgICAgICAgICB1bml0OiAiIgogICAgICAgICAgICAgIHZpc3VhbDogcmluZwogICAgICAgICAgICAgIG1pbjogMAogICAgICAgICAgICAgIG1heDogMTEKICAgICAgICAgICAgICBydWxlczoKICAgICAgICAgICAgICAgIC0geyBiZWxvdzogMywgY29sb3I6IGdyZWVuLCBsYWJlbDogTG93IH0KICAgICAgICAgICAgICAgIC0geyBiZWxvdzogNiwgY29sb3I6IGFtYmVyLCBsYWJlbDogTW9kZXJhdGUgfQogICAgICAgICAgICAgICAgLSB7IGJlbG93OiA4LCBjb2xvcjogb3JhbmdlLCBsYWJlbDogSGlnaCB9CiAgICAgICAgICAgICAgICAtIHsgYWJvdmU6IDgsIGNvbG9yOiByZWQsIGxhYmVsOiBWZXJ5IGhpZ2ggfQogICAgICAgICAgICAtIHR5cGU6IGN1c3RvbTplbnRpdHktY2FyZC1wcm8KICAgICAgICAgICAgICBlbnRpdHk6IHNlbnNvci5vdXRkb29yX2h1bWlkaXR5CiAgICAgICAgICAgICAgbmFtZTogSHVtaWRpdHkKICAgICAgICAgICAgICBpY29uOiBtZGk6d2F0ZXItcGVyY2VudAogICAgICAgICAgICAgIGRlY2ltYWxzOiAwCiAgICAgICAgICAgICAgY29sb3I6IGJsdWUKICAgICAgICAgICAgLSB0eXBlOiBjdXN0b206ZW50aXR5LWNhcmQtcHJvCiAgICAgICAgICAgICAgZW50aXR5OiBzZW5zb3IuZGV3X3BvaW50CiAgICAgICAgICAgICAgbmFtZTogRGV3IHBvaW50CiAgICAgICAgICAgICAgaWNvbjogbWRpOnRoZXJtb21ldGVyLXdhdGVyCiAgICAgICAgICAgICAgZGVjaW1hbHM6IDEKICAgICAgICAgICAgICBjb2xvcjogdGVhbAo=">
 
 ```yaml
 - column_span: 4
   cards:
     - type: custom:heading-card-pro
       style: hero
-      title: Climate
-      subtitle: "{{ states('sensor.outdoor_temperature') }} °C outside · {{ states('sensor.outdoor_humidity') }} % humidity"
+      title: Weather
+      subtitle: "{{ states('sensor.outdoor_temperature') }} °C · wind {{ states('sensor.wind_speed') }} km/h · {{ states('sensor.rain_today') }} mm rain today"
       badge_style: plain
       badge_size: l
       badges:
@@ -427,139 +427,136 @@ The two thermostats with their steppers and what they are doing, the living room
       breakpoints:
         2: { columns: 4 }
       cards:
-        - type: custom:entity-card-pro
-          entity: climate.living_room
-          name: Living room
-          layout: poster
-          attribute: current_temperature
-          unit: °C
-          decimals: 1
-          control: stepper
-          color: deep-orange
-          badges:
-            - entity: climate.living_room
-              attribute: hvac_action
-              rules: &action
-                - { state: heating, color: deep-orange, icon: mdi:fire, label: Heating }
-                - { state: idle, color: grey, icon: mdi:fire-off, label: Idle }
-                - { state: "off", color: grey, icon: mdi:power, label: "Off" }
-        - type: custom:entity-card-pro
-          entity: climate.bedroom
-          name: Bedroom
-          layout: poster
-          attribute: current_temperature
-          unit: °C
-          decimals: 1
-          control: stepper
-          color: indigo
-          badges:
-            - { entity: climate.bedroom, attribute: hvac_action, rules: *action }
-        - type: custom:entity-card-pro
-          entity: fan.living_room
-          name: Living room fan
-          layout: poster
-          attribute: percentage
-          unit: "%"
-          control: segments
-          rules:
-            - { state: "on", color: cyan }
-            - { state: "off", color: grey }
-        - type: custom:entity-card-pro
-          entity: cover.living_room_blinds
-          name: Blinds
-          icon: mdi:blinds-horizontal
-          layout: poster
-          attribute: current_position
-          unit: "%"
-          control: slider
-          color: indigo
-        - type: custom:entity-card-pro
-          entity: sensor.living_room_temperature
-          name: Living room
-          icon: mdi:sofa
-          layout: poster
-          decimals: 1
-          visual: sparkline
-          hours_to_show: 24
-          rules: &temperature
-            - { below: 18, color: blue, label: Cool }
-            - { below: 24, color: green, label: Comfortable }
-            - { above: 24, color: orange, label: Warm }
-        - type: custom:entity-card-pro
-          entity: sensor.bedroom_temperature
-          name: Bedroom
-          icon: mdi:bed
-          layout: poster
-          decimals: 1
-          visual: sparkline
-          hours_to_show: 24
-          rules: *temperature
-        - type: custom:entity-card-pro
-          entity: sensor.bathroom_humidity
-          name: Bathroom
-          icon: mdi:shower
-          layout: poster
-          decimals: 0
-          visual: bar
-          min: 30
-          max: 100
-          rules:
-            - { below: 60, color: green, label: Dry }
-            - { below: 70, color: amber, label: Humid }
-            - { above: 70, color: red, label: Ventilate, tint_card: true }
-          badges:
-            - { entity: fan.bathroom, control: toggle }
-        - type: custom:entity-card-pro
-          entity: sensor.office_co2
-          name: Office air
-          icon: mdi:molecule-co2
-          layout: poster
-          decimals: 0
-          visual: sparkline
-          hours_to_show: 12
-          rules:
-            - { below: 800, color: green, label: Fresh }
-            - { below: 1200, color: amber, label: Stuffy }
-            - { above: 1200, color: red, label: Ventilate }
-        - type: custom:multi-trend-card-pro
-          title: Temperatures
-          icon: mdi:home-thermometer
-          color: orange
-          hours_to_show: 24
-          x_axis: true
-          view_layout: { span: [2, 3] }
-          entities:
-            - { entity: sensor.living_room_temperature, name: Living room, color: green }
-            - { entity: sensor.bedroom_temperature, name: Bedroom, color: indigo }
-            - { entity: sensor.office_temperature, name: Office, color: orange }
-            - { entity: sensor.bathroom_temperature, name: Bathroom, color: teal }
-        - type: custom:entity-group-card-pro
-          title: Windows
-          icon: mdi:window-closed-variant
-          layout: table
-          view_layout: { span: [1, 3] }
-          entities:
-            - { entity: binary_sensor.window_kitchen, name: Kitchen, visual: badge, rules: &window [{ state: "on", color: red, label: Open }, { state: "off", color: green, label: Closed }] }
-            - { entity: binary_sensor.window_bathroom, name: Bathroom, visual: badge, rules: *window }
-            - { entity: binary_sensor.window_bedroom, name: Bedroom, visual: badge, rules: *window }
-            - { entity: binary_sensor.window_office, name: Office, visual: badge, rules: *window }
         - type: custom:weather-card-pro
           entity: weather.home
           name: Outside
-          layout: poster
+          view_layout: { span: [2, 4] }
           temperature_rules:
             - { below: 5, color: blue, label: Cold }
             - { below: 20, color: teal, label: Mild }
             - { above: 20, color: orange, label: Warm }
+          sections:
+            - { type: hero }
+            - { type: forecast, mode: hourly, layout: horizontal, hours: 6, title: Next 6 hours, divider: true, show: [], icon_size: 32 }
+        - type: custom:sun-path-card-pro
+          layout: poster
+          view_layout: { span: [1, 4] }
+        - type: custom:sun-azimuth-card-pro
+          show_summary: false
+          camera: 280
+          view_layout: { span: [1, 4] }
+        - type: custom:entity-group-card-pro
+          title: Last 24 hours
+          icon: mdi:chart-timeline
+          view_layout: { span: [2, 6] }
+          hours_to_show: 24
+          bucket_minutes: 30
+          entities:
+            - entity: sensor.outdoor_temperature
+              name: Temperature
+              decimals: 1
+              visual: strip
+              rules:
+                - { below: 5, color: blue, icon: mdi:thermometer-low }
+                - { below: 18, color: light-blue, icon: mdi:thermometer }
+                - { below: 25, color: green, icon: mdi:thermometer }
+                - { above: 25, color: orange, icon: mdi:thermometer-high }
+            - entity: sensor.wind_speed
+              name: Wind
+              decimals: 0
+              visual: strip
+              rules:
+                - { below: 10, color: blue-grey, icon: mdi:weather-windy }
+                - { below: 25, color: teal, icon: mdi:weather-windy }
+                - { above: 25, color: orange, icon: mdi:weather-windy-variant }
+            - entity: sensor.rain_rate_roof
+              name: Rain
+              decimals: 1
+              visual: strip
+              rules:
+                - { below: 0.1, color: grey, icon: mdi:weather-cloudy }
+                - { above: 0.1, color: blue, icon: mdi:weather-rainy }
+            - entity: sensor.illuminance
+              name: Daylight
+              decimals: 0
+              visual: strip
+              rules:
+                - { below: 10, color: blue-grey, icon: mdi:weather-night }
+                - { below: 1000, color: blue, icon: mdi:weather-sunset }
+                - { below: 20000, color: amber, icon: mdi:white-balance-sunny }
+                - { above: 20000, color: orange, icon: mdi:white-balance-sunny }
+        - type: custom:rain-card-pro
+          entity: sensor.rain_rate_roof
+          today: sensor.rain_today
+          wind: sensor.wind_speed
+          direction: sensor.wind_direction
+          name: Rain
+          layout: poster
+          visual: flow
+          rules:
+            - { below: 0.1, color: blue-grey, label: Dry }
+            - { below: 2.5, color: light-blue, label: Light }
+            - { above: 2.5, color: blue, label: Heavy }
+        - type: custom:entity-card-pro
+          entity: sensor.pressure
+          name: Pressure
+          icon: mdi:gauge
+          layout: poster
+          decimals: 0
+          visual: sparkline
+          hours_to_show: 24
+          color: indigo
+        - type: custom:wind-card-pro
+          entity: sensor.wind_speed
+          direction: sensor.wind_direction
+          gust: sensor.wind_gust
+          name: Wind
+          layout: poster
+          visual: flow
+          rules:
+            - { below: 5, color: blue-grey, label: Calm }
+            - { below: 20, color: teal, label: Breeze }
+            - { below: 35, color: amber, label: Fresh }
+            - { above: 35, color: orange, label: Strong }
+        - type: custom:layout-card-pro
+          rows: [1fr, 1fr, 1fr]
+          view_layout: { span: [1, 3] }
+          cards:
+            - type: custom:entity-card-pro
+              entity: sensor.uv_index
+              name: UV index
+              icon: mdi:sun-wireless
+              decimals: 1
+              unit: ""
+              visual: ring
+              min: 0
+              max: 11
+              rules:
+                - { below: 3, color: green, label: Low }
+                - { below: 6, color: amber, label: Moderate }
+                - { below: 8, color: orange, label: High }
+                - { above: 8, color: red, label: Very high }
+            - type: custom:entity-card-pro
+              entity: sensor.outdoor_humidity
+              name: Humidity
+              icon: mdi:water-percent
+              decimals: 0
+              color: blue
+            - type: custom:entity-card-pro
+              entity: sensor.dew_point
+              name: Dew point
+              icon: mdi:thermometer-water
+              decimals: 1
+              color: teal
 ```
 
 </DashboardGrid>
 
 ## Energy
 
-The [power flow](/cards/power-flow-card) in a block of four cells, then the solar output, the grid's import and export per half hour, the home battery, the car, today's energy with its cost, the price, the washer with the time it has left and the heat pump.
+The [power flow](/cards/power-flow-card) of the moment and the [energy flow](/cards/energy-flow-card) of today side by side, a block of four cells each, with the same sources and consumers; below them the solar output, the grid's import and export per half hour, the home battery and the heat pump.
 
-<DashboardGrid mode="dark" b64="LSBjb2x1bW5fc3BhbjogNAogIGNhcmRzOgogICAgLSB0eXBlOiBjdXN0b206aGVhZGluZy1jYXJkLXBybwogICAgICBzdHlsZTogaGVybwogICAgICB0aXRsZTogRW5lcmd5CiAgICAgIHN1YnRpdGxlOiAie3sgc3RhdGVzKCdzZW5zb3IuZW5lcmd5X3RvZGF5JykgfX0ga1doIHRvZGF5IMK3IHt7IHN0YXRlcygnc2Vuc29yLmVsZWN0cmljaXR5X3ByaWNlJykgfX0g4oKsL2tXaCBub3ciCiAgICAgIGJhZGdlX3N0eWxlOiBwbGFpbgogICAgICBiYWRnZV9zaXplOiBsCiAgICAgIGJhZGdlczoKICAgICAgICAtIHsgdmFsdWU6ICJ7eyBub3coKS5zdHJmdGltZSgnJUg6JU0nKSB9fSIsIHNob3dfaWNvbjogZmFsc2UsIHRhcF9hY3Rpb246IHsgYWN0aW9uOiBub25lIH0gfQogICAgLSB0eXBlOiBjdXN0b206bGF5b3V0LWNhcmQtcHJvCiAgICAgIGNvbHVtbnM6IDIKICAgICAgYnJlYWtwb2ludHM6CiAgICAgICAgMjogeyBjb2x1bW5zOiA0IH0KICAgICAgY2FyZHM6CiAgICAgICAgLSB0eXBlOiBjdXN0b206cG93ZXItZmxvdy1jYXJkLXBybwogICAgICAgICAgaG9tZTogc2Vuc29yLnBvd2VyX2NvbnN1bXB0aW9uCiAgICAgICAgICB2aWV3X2xheW91dDogeyBzcGFuOiBbMiwgNl0gfQogICAgICAgICAgc291cmNlczoKICAgICAgICAgICAgLSB7IHR5cGU6IHNvbGFyLCBlbnRpdHk6IHNlbnNvci5zb2xhcl9wb3dlciB9CiAgICAgICAgICAgIC0geyB0eXBlOiBiYXR0ZXJ5LCBwb3dlcjogc2Vuc29yLmJhdHRlcnlfcG93ZXIsIHNvYzogc2Vuc29yLmJhdHRlcnlfc29jIH0KICAgICAgICAgICAgLSB7IHR5cGU6IGdyaWQsIHBvd2VyOiBzZW5zb3IuZ3JpZF9wb3dlciwgcHJpY2U6IHNlbnNvci5lbGVjdHJpY2l0eV9wcmljZSB9CiAgICAgICAgICBjb25zdW1lcnM6CiAgICAgICAgICAgIC0geyBlbnRpdHk6IHNlbnNvci5oZWF0X3B1bXBfcG93ZXIsIG5hbWU6IEhlYXQgcHVtcCwgaWNvbjogbWRpOmhlYXQtcHVtcCB9CiAgICAgICAgICAgIC0geyBlbnRpdHk6IHNlbnNvci53YXNoZXJfcG93ZXIsIG5hbWU6IFdhc2hlciwgaWNvbjogbWRpOndhc2hpbmctbWFjaGluZSB9CiAgICAgICAgICAgIC0geyBlbnRpdHk6IHNlbnNvci5vZmZpY2VfcG93ZXIsIG5hbWU6IE9mZmljZSwgaWNvbjogbWRpOm1vbml0b3IgfQogICAgICAgICAgICAtIHsgZW50aXR5OiBzZW5zb3IuZXZfY2hhcmdlcl9wb3dlciwgbmFtZTogRVYgY2hhcmdlciwgaWNvbjogbWRpOmV2LXN0YXRpb24gfQogICAgICAgICAgcnVsZXM6CiAgICAgICAgICAgIC0geyBiZWxvdzogNTAwLCBjb2xvcjogZ3JlZW4sIGxhYmVsOiBRdWlldCB9CiAgICAgICAgICAgIC0geyBiZWxvdzogMzAwMCwgY29sb3I6IGFtYmVyLCBsYWJlbDogQnVzeSB9CiAgICAgICAgICAgIC0geyBhYm92ZTogMzAwMCwgY29sb3I6IHJlZCwgbGFiZWw6IFBlYWsgfQogICAgICAgIC0gdHlwZTogY3VzdG9tOmVudGl0eS1jYXJkLXBybwogICAgICAgICAgZW50aXR5OiBzZW5zb3Iuc29sYXJfcG93ZXIKICAgICAgICAgIG5hbWU6IFNvbGFyCiAgICAgICAgICBpY29uOiBtZGk6c29sYXItcG93ZXItdmFyaWFudAogICAgICAgICAgbGF5b3V0OiBwb3N0ZXIKICAgICAgICAgIGRlY2ltYWxzOiAxCiAgICAgICAgICB2aXN1YWw6IHNwYXJrbGluZQogICAgICAgICAgaG91cnNfdG9fc2hvdzogMTIKICAgICAgICAgIHJ1bGVzOgogICAgICAgICAgICAtIHsgYmVsb3c6IDAuMSwgY29sb3I6IGdyZXksIGxhYmVsOiBJZGxlIH0KICAgICAgICAgICAgLSB7IGFib3ZlOiAwLjEsIGNvbG9yOiBhbWJlciwgbGFiZWw6IFByb2R1Y2luZyB9CiAgICAgICAgLSB0eXBlOiBjdXN0b206ZW50aXR5LWNhcmQtcHJvCiAgICAgICAgICBlbnRpdHk6IHNlbnNvci5ncmlkX3Bvd2VyCiAgICAgICAgICBuYW1lOiBHcmlkCiAgICAgICAgICBpY29uOiBtZGk6dHJhbnNtaXNzaW9uLXRvd2VyCiAgICAgICAgICBsYXlvdXQ6IHBvc3RlcgogICAgICAgICAgZGVjaW1hbHM6IDAKICAgICAgICAgIHZpc3VhbDogY29sdW1ucwogICAgICAgICAgaG91cnNfdG9fc2hvdzogMTIKICAgICAgICAgIGJ1Y2tldF9taW51dGVzOiAzMAogICAgICAgICAgcnVsZXM6CiAgICAgICAgICAgIC0geyBiZWxvdzogMCwgY29sb3I6IGdyZWVuLCBsYWJlbDogRXhwb3J0aW5nIH0KICAgICAgICAgICAgLSB7IGFib3ZlOiAwLCBjb2xvcjogYmx1ZSwgbGFiZWw6IEltcG9ydGluZyB9CiAgICAgICAgLSB0eXBlOiBjdXN0b206ZW50aXR5LWNhcmQtcHJvCiAgICAgICAgICBlbnRpdHk6IHNlbnNvci5iYXR0ZXJ5X3NvYwogICAgICAgICAgbmFtZTogQmF0dGVyeQogICAgICAgICAgaWNvbjogbWRpOmhvbWUtYmF0dGVyeQogICAgICAgICAgbGF5b3V0OiBwb3N0ZXIKICAgICAgICAgIGRlY2ltYWxzOiAwCiAgICAgICAgICB2aXN1YWw6IGJhcgogICAgICAgICAgcnVsZXM6CiAgICAgICAgICAgIC0geyBiZWxvdzogMjAsIGNvbG9yOiByZWQsIGxhYmVsOiBMb3cgfQogICAgICAgICAgICAtIHsgYmVsb3c6IDUwLCBjb2xvcjogYW1iZXIsIGxhYmVsOiBIYWxmIH0KICAgICAgICAgICAgLSB7IGFib3ZlOiA1MCwgY29sb3I6IGdyZWVuLCBsYWJlbDogRnVsbCB9CiAgICAgICAgICBiYWRnZXM6CiAgICAgICAgICAgIC0geyBlbnRpdHk6IHNlbnNvci5iYXR0ZXJ5X3Bvd2VyLCBmb3JtYXQ6IHBvd2VyLCBpY29uOiBtZGk6Zmxhc2ggfQogICAgICAgIC0gdHlwZTogY3VzdG9tOmVudGl0eS1jYXJkLXBybwogICAgICAgICAgZW50aXR5OiBzZW5zb3IuZXZfYmF0dGVyeQogICAgICAgICAgbmFtZTogQ2FyCiAgICAgICAgICBpY29uOiBtZGk6Y2FyLWVsZWN0cmljCiAgICAgICAgICBsYXlvdXQ6IHBvc3RlcgogICAgICAgICAgcnVsZXM6CiAgICAgICAgICAgIC0geyBiZWxvdzogMjAsIGNvbG9yOiByZWQsIGxhYmVsOiBMb3cgfQogICAgICAgICAgICAtIHsgYWJvdmU6IDIwLCBjb2xvcjogZ3JlZW4gfQogICAgICAgICAgYmFkZ2VzOgogICAgICAgICAgICAtIHsgZW50aXR5OiBzZW5zb3IuZXZfY2hhcmdlcl9wb3dlciwgZm9ybWF0OiBwb3dlciwgaWNvbjogbWRpOmV2LXN0YXRpb24gfQogICAgICAgICAgICAtIHNlbnNvci5ldl9yYW5nZQogICAgICAgIC0gdHlwZTogY3VzdG9tOmVudGl0eS1jYXJkLXBybwogICAgICAgICAgZW50aXR5OiBzZW5zb3IuZW5lcmd5X3RvZGF5CiAgICAgICAgICBuYW1lOiBFbmVyZ3kgdG9kYXkKICAgICAgICAgIGljb246IG1kaTpjYXNoCiAgICAgICAgICBsYXlvdXQ6IHBvc3RlcgogICAgICAgICAgZGVjaW1hbHM6IDEKICAgICAgICAgIHNlY29uZGFyeTogInt7IChzdGF0ZXMoJ3NlbnNvci5lbmVyZ3lfdG9kYXknKSB8IGZsb2F0KDApICogc3RhdGVzKCdzZW5zb3IuZWxlY3RyaWNpdHlfcHJpY2UnKSB8IGZsb2F0KDApKSB8IHJvdW5kKDIpIH19IOKCrCBhdCB7eyBzdGF0ZXMoJ3NlbnNvci5lbGVjdHJpY2l0eV9wcmljZScpIH19IOKCrC9rV2giCiAgICAgICAgICBjb2xvcjogZ3JlZW4KICAgICAgICAtIHR5cGU6IGN1c3RvbTplbnRpdHktY2FyZC1wcm8KICAgICAgICAgIGVudGl0eTogc2Vuc29yLmVsZWN0cmljaXR5X3ByaWNlCiAgICAgICAgICBuYW1lOiBQcmljZQogICAgICAgICAgaWNvbjogbWRpOmN1cnJlbmN5LWV1cgogICAgICAgICAgbGF5b3V0OiBwb3N0ZXIKICAgICAgICAgIGRlY2ltYWxzOiAyCiAgICAgICAgICBydWxlczoKICAgICAgICAgICAgLSB7IGJlbG93OiAwLjIsIGNvbG9yOiBncmVlbiwgbGFiZWw6IENoZWFwIH0KICAgICAgICAgICAgLSB7IGJlbG93OiAwLjM1LCBjb2xvcjogYW1iZXIsIGxhYmVsOiBOb3JtYWwgfQogICAgICAgICAgICAtIHsgYWJvdmU6IDAuMzUsIGNvbG9yOiByZWQsIGxhYmVsOiBFeHBlbnNpdmUgfQogICAgICAgIC0gdHlwZTogY3VzdG9tOmVudGl0eS1jYXJkLXBybwogICAgICAgICAgZW50aXR5OiBzZW5zb3Iud2FzaGVyX3N0YXR1cwogICAgICAgICAgbmFtZTogV2FzaGVyCiAgICAgICAgICBsYXlvdXQ6IHBvc3RlcgogICAgICAgICAgdmFsdWU6ICJ7eyBzdGF0ZXMoJ3NlbnNvci53YXNoZXJfc3RhdHVzJykgfCByZXBsYWNlKCdwb3dlcl9vZmYnLCAnT2ZmJykgfCByZXBsYWNlKCdydW4nLCAnUnVubmluZycpIHwgcmVwbGFjZSgnZW5kJywgJ0RvbmUnKSB9fSIKICAgICAgICAgIHJ1bGVzOgogICAgICAgICAgICAtIHsgc3RhdGU6IFJ1bm5pbmcsIGNvbG9yOiBncmVlbiwgaWNvbjogbWRpOndhc2hpbmctbWFjaGluZSB9CiAgICAgICAgICAgIC0geyBzdGF0ZTogRG9uZSwgY29sb3I6IHRlYWwsIGljb246IG1kaTp3YXNoaW5nLW1hY2hpbmUtYWxlcnQgfQogICAgICAgICAgICAtIHsgc3RhdGU6ICJPZmYiLCBjb2xvcjogZ3JleSwgaWNvbjogbWRpOndhc2hpbmctbWFjaGluZS1vZmYgfQogICAgICAgICAgYmFkZ2VzOgogICAgICAgICAgICAtIHsgZW50aXR5OiBzZW5zb3Iud2FzaGVyX3JlbWFpbmluZywgaWNvbjogbWRpOnRpbWVyLW91dGxpbmUgfQogICAgICAgIC0gdHlwZTogY3VzdG9tOmVudGl0eS1jYXJkLXBybwogICAgICAgICAgZW50aXR5OiBzZW5zb3IuaGVhdF9wdW1wX3Bvd2VyCiAgICAgICAgICBuYW1lOiBIZWF0IHB1bXAKICAgICAgICAgIGljb246IG1kaTpoZWF0LXB1bXAKICAgICAgICAgIGxheW91dDogcG9zdGVyCiAgICAgICAgICBkZWNpbWFsczogMAogICAgICAgICAgdmlzdWFsOiBzcGFya2xpbmUKICAgICAgICAgIGhvdXJzX3RvX3Nob3c6IDEyCiAgICAgICAgICBjb2xvcjogZGVlcC1vcmFuZ2UK">
+<DashboardGrid mode="dark" b64="LSBjb2x1bW5fc3BhbjogNAogIGNhcmRzOgogICAgLSB0eXBlOiBjdXN0b206aGVhZGluZy1jYXJkLXBybwogICAgICBzdHlsZTogaGVybwogICAgICB0aXRsZTogRW5lcmd5CiAgICAgIHN1YnRpdGxlOiAie3sgc3RhdGVzKCdzZW5zb3IuZW5lcmd5X3RvZGF5JykgfX0ga1doIHRvZGF5IMK3IHt7IHN0YXRlcygnc2Vuc29yLmVsZWN0cmljaXR5X3ByaWNlJykgfX0g4oKsL2tXaCBub3ciCiAgICAgIGJhZGdlX3N0eWxlOiBwbGFpbgogICAgICBiYWRnZV9zaXplOiBsCiAgICAgIGJhZGdlczoKICAgICAgICAtIHsgdmFsdWU6ICJ7eyBub3coKS5zdHJmdGltZSgnJUg6JU0nKSB9fSIsIHNob3dfaWNvbjogZmFsc2UsIHRhcF9hY3Rpb246IHsgYWN0aW9uOiBub25lIH0gfQogICAgLSB0eXBlOiBjdXN0b206bGF5b3V0LWNhcmQtcHJvCiAgICAgIGNvbHVtbnM6IDIKICAgICAgYnJlYWtwb2ludHM6CiAgICAgICAgMjogeyBjb2x1bW5zOiA0IH0KICAgICAgY2FyZHM6CiAgICAgICAgLSB0eXBlOiBjdXN0b206cG93ZXItZmxvdy1jYXJkLXBybwogICAgICAgICAgdGl0bGU6IE5vdwogICAgICAgICAgaWNvbjogbWRpOmZsYXNoCiAgICAgICAgICBob21lOiBzZW5zb3IucG93ZXJfY29uc3VtcHRpb24KICAgICAgICAgIHZpZXdfbGF5b3V0OiB7IHNwYW46IFsyLCA2XSB9CiAgICAgICAgICBzb3VyY2VzOgogICAgICAgICAgICAtIHsgdHlwZTogc29sYXIsIGVudGl0eTogc2Vuc29yLnNvbGFyX3Bvd2VyIH0KICAgICAgICAgICAgLSB7IHR5cGU6IGJhdHRlcnksIHBvd2VyOiBzZW5zb3IuYmF0dGVyeV9wb3dlciwgc29jOiBzZW5zb3IuYmF0dGVyeV9zb2MgfQogICAgICAgICAgICAtIHsgdHlwZTogZ3JpZCwgcG93ZXI6IHNlbnNvci5ncmlkX3Bvd2VyLCBwcmljZTogc2Vuc29yLmVsZWN0cmljaXR5X3ByaWNlIH0KICAgICAgICAgIGNvbnN1bWVyczoKICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLmhlYXRfcHVtcF9wb3dlciwgbmFtZTogSGVhdCBwdW1wLCBpY29uOiBtZGk6aGVhdC1wdW1wIH0KICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLndhc2hlcl9wb3dlciwgbmFtZTogV2FzaGVyLCBpY29uOiBtZGk6d2FzaGluZy1tYWNoaW5lIH0KICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLm9mZmljZV9wb3dlciwgbmFtZTogT2ZmaWNlLCBpY29uOiBtZGk6bW9uaXRvciB9CiAgICAgICAgICAgIC0geyBlbnRpdHk6IHNlbnNvci5ldl9jaGFyZ2VyX3Bvd2VyLCBuYW1lOiBFViBjaGFyZ2VyLCBpY29uOiBtZGk6ZXYtc3RhdGlvbiB9CiAgICAgICAgICBydWxlczoKICAgICAgICAgICAgLSB7IGJlbG93OiA1MDAsIGNvbG9yOiBncmVlbiwgbGFiZWw6IFF1aWV0IH0KICAgICAgICAgICAgLSB7IGJlbG93OiAzMDAwLCBjb2xvcjogYW1iZXIsIGxhYmVsOiBCdXN5IH0KICAgICAgICAgICAgLSB7IGFib3ZlOiAzMDAwLCBjb2xvcjogcmVkLCBsYWJlbDogUGVhayB9CiAgICAgICAgLSB0eXBlOiBjdXN0b206ZW5lcmd5LWZsb3ctY2FyZC1wcm8KICAgICAgICAgIHRpdGxlOiBUb2RheQogICAgICAgICAgaWNvbjogbWRpOmNhbGVuZGFyLXRvZGF5CiAgICAgICAgICB2aWV3X2xheW91dDogeyBzcGFuOiBbMiwgNl0gfQogICAgICAgICAgaG9tZTogc2Vuc29yLmhvbWVfZW5lcmd5CiAgICAgICAgICBzb3VyY2VzOgogICAgICAgICAgICAtIHsgdHlwZTogc29sYXIsIGVudGl0eTogc2Vuc29yLnNvbGFyX2VuZXJneSB9CiAgICAgICAgICAgIC0geyB0eXBlOiBiYXR0ZXJ5LCBjaGFyZ2U6IHNlbnNvci5iYXR0ZXJ5X2NoYXJnZV9lbmVyZ3ksIGRpc2NoYXJnZTogc2Vuc29yLmJhdHRlcnlfZGlzY2hhcmdlX2VuZXJneSwgc29jOiBzZW5zb3IuYmF0dGVyeV9zb2MgfQogICAgICAgICAgICAtIHsgdHlwZTogZ3JpZCwgaW1wb3J0OiBzZW5zb3IuZ3JpZF9pbXBvcnRfZW5lcmd5LCBleHBvcnQ6IHNlbnNvci5ncmlkX2V4cG9ydF9lbmVyZ3kgfQogICAgICAgICAgY29uc3VtZXJzOgogICAgICAgICAgICAtIHsgZW50aXR5OiBzZW5zb3IuaGVhdF9wdW1wX2VuZXJneSwgbmFtZTogSGVhdCBwdW1wLCBpY29uOiBtZGk6aGVhdC1wdW1wIH0KICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLndhc2hlcl9lbmVyZ3ksIG5hbWU6IFdhc2hlciwgaWNvbjogbWRpOndhc2hpbmctbWFjaGluZSB9CiAgICAgICAgICAgIC0geyBlbnRpdHk6IHNlbnNvci5vZmZpY2VfZW5lcmd5LCBuYW1lOiBPZmZpY2UsIGljb246IG1kaTptb25pdG9yIH0KICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLmV2X2NoYXJnZXJfZW5lcmd5LCBuYW1lOiBFViBjaGFyZ2VyLCBpY29uOiBtZGk6ZXYtc3RhdGlvbiB9CiAgICAgICAgLSB0eXBlOiBjdXN0b206ZW50aXR5LWNhcmQtcHJvCiAgICAgICAgICBlbnRpdHk6IHNlbnNvci5zb2xhcl9wb3dlcgogICAgICAgICAgbmFtZTogU29sYXIKICAgICAgICAgIGljb246IG1kaTpzb2xhci1wb3dlci12YXJpYW50CiAgICAgICAgICBsYXlvdXQ6IHBvc3RlcgogICAgICAgICAgZGVjaW1hbHM6IDEKICAgICAgICAgIHZpc3VhbDogc3BhcmtsaW5lCiAgICAgICAgICBob3Vyc190b19zaG93OiAxMgogICAgICAgICAgcnVsZXM6CiAgICAgICAgICAgIC0geyBiZWxvdzogMC4xLCBjb2xvcjogZ3JleSwgbGFiZWw6IElkbGUgfQogICAgICAgICAgICAtIHsgYWJvdmU6IDAuMSwgY29sb3I6IGFtYmVyLCBsYWJlbDogUHJvZHVjaW5nIH0KICAgICAgICAtIHR5cGU6IGN1c3RvbTplbnRpdHktY2FyZC1wcm8KICAgICAgICAgIGVudGl0eTogc2Vuc29yLmdyaWRfcG93ZXIKICAgICAgICAgIG5hbWU6IEdyaWQKICAgICAgICAgIGljb246IG1kaTp0cmFuc21pc3Npb24tdG93ZXIKICAgICAgICAgIGxheW91dDogcG9zdGVyCiAgICAgICAgICBkZWNpbWFsczogMAogICAgICAgICAgdmlzdWFsOiBjb2x1bW5zCiAgICAgICAgICBob3Vyc190b19zaG93OiAxMgogICAgICAgICAgYnVja2V0X21pbnV0ZXM6IDMwCiAgICAgICAgICBydWxlczoKICAgICAgICAgICAgLSB7IGJlbG93OiAwLCBjb2xvcjogZ3JlZW4sIGxhYmVsOiBFeHBvcnRpbmcgfQogICAgICAgICAgICAtIHsgYWJvdmU6IDAsIGNvbG9yOiBibHVlLCBsYWJlbDogSW1wb3J0aW5nIH0KICAgICAgICAtIHR5cGU6IGN1c3RvbTplbnRpdHktY2FyZC1wcm8KICAgICAgICAgIGVudGl0eTogc2Vuc29yLmJhdHRlcnlfc29jCiAgICAgICAgICBuYW1lOiBCYXR0ZXJ5CiAgICAgICAgICBpY29uOiBtZGk6aG9tZS1iYXR0ZXJ5CiAgICAgICAgICBsYXlvdXQ6IHBvc3RlcgogICAgICAgICAgZGVjaW1hbHM6IDAKICAgICAgICAgIHZpc3VhbDogYmFyCiAgICAgICAgICBydWxlczoKICAgICAgICAgICAgLSB7IGJlbG93OiAyMCwgY29sb3I6IHJlZCwgbGFiZWw6IExvdyB9CiAgICAgICAgICAgIC0geyBiZWxvdzogNTAsIGNvbG9yOiBhbWJlciwgbGFiZWw6IEhhbGYgfQogICAgICAgICAgICAtIHsgYWJvdmU6IDUwLCBjb2xvcjogZ3JlZW4sIGxhYmVsOiBGdWxsIH0KICAgICAgICAgIGJhZGdlczoKICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLmJhdHRlcnlfcG93ZXIsIGZvcm1hdDogcG93ZXIsIGljb246IG1kaTpmbGFzaCB9CiAgICAgICAgLSB0eXBlOiBjdXN0b206ZW50aXR5LWNhcmQtcHJvCiAgICAgICAgICBlbnRpdHk6IHNlbnNvci5oZWF0X3B1bXBfcG93ZXIKICAgICAgICAgIG5hbWU6IEhlYXQgcHVtcAogICAgICAgICAgaWNvbjogbWRpOmhlYXQtcHVtcAogICAgICAgICAgbGF5b3V0OiBwb3N0ZXIKICAgICAgICAgIGRlY2ltYWxzOiAwCiAgICAgICAgICB2aXN1YWw6IHNwYXJrbGluZQogICAgICAgICAgaG91cnNfdG9fc2hvdzogMTIKICAgICAgICAgIGNvbG9yOiBkZWVwLW9yYW5nZQo=">
 
 ```yaml
 - column_span: 4
@@ -578,6 +575,8 @@ The [power flow](/cards/power-flow-card) in a block of four cells, then the sola
         2: { columns: 4 }
       cards:
         - type: custom:power-flow-card-pro
+          title: Now
+          icon: mdi:flash
           home: sensor.power_consumption
           view_layout: { span: [2, 6] }
           sources:
@@ -593,6 +592,20 @@ The [power flow](/cards/power-flow-card) in a block of four cells, then the sola
             - { below: 500, color: green, label: Quiet }
             - { below: 3000, color: amber, label: Busy }
             - { above: 3000, color: red, label: Peak }
+        - type: custom:energy-flow-card-pro
+          title: Today
+          icon: mdi:calendar-today
+          view_layout: { span: [2, 6] }
+          home: sensor.home_energy
+          sources:
+            - { type: solar, entity: sensor.solar_energy }
+            - { type: battery, charge: sensor.battery_charge_energy, discharge: sensor.battery_discharge_energy, soc: sensor.battery_soc }
+            - { type: grid, import: sensor.grid_import_energy, export: sensor.grid_export_energy }
+          consumers:
+            - { entity: sensor.heat_pump_energy, name: Heat pump, icon: mdi:heat-pump }
+            - { entity: sensor.washer_energy, name: Washer, icon: mdi:washing-machine }
+            - { entity: sensor.office_energy, name: Office, icon: mdi:monitor }
+            - { entity: sensor.ev_charger_energy, name: EV charger, icon: mdi:ev-station }
         - type: custom:entity-card-pro
           entity: sensor.solar_power
           name: Solar
@@ -629,46 +642,6 @@ The [power flow](/cards/power-flow-card) in a block of four cells, then the sola
             - { above: 50, color: green, label: Full }
           badges:
             - { entity: sensor.battery_power, format: power, icon: mdi:flash }
-        - type: custom:entity-card-pro
-          entity: sensor.ev_battery
-          name: Car
-          icon: mdi:car-electric
-          layout: poster
-          rules:
-            - { below: 20, color: red, label: Low }
-            - { above: 20, color: green }
-          badges:
-            - { entity: sensor.ev_charger_power, format: power, icon: mdi:ev-station }
-            - sensor.ev_range
-        - type: custom:entity-card-pro
-          entity: sensor.energy_today
-          name: Energy today
-          icon: mdi:cash
-          layout: poster
-          decimals: 1
-          secondary: "{{ (states('sensor.energy_today') | float(0) * states('sensor.electricity_price') | float(0)) | round(2) }} € at {{ states('sensor.electricity_price') }} €/kWh"
-          color: green
-        - type: custom:entity-card-pro
-          entity: sensor.electricity_price
-          name: Price
-          icon: mdi:currency-eur
-          layout: poster
-          decimals: 2
-          rules:
-            - { below: 0.2, color: green, label: Cheap }
-            - { below: 0.35, color: amber, label: Normal }
-            - { above: 0.35, color: red, label: Expensive }
-        - type: custom:entity-card-pro
-          entity: sensor.washer_status
-          name: Washer
-          layout: poster
-          value: "{{ states('sensor.washer_status') | replace('power_off', 'Off') | replace('run', 'Running') | replace('end', 'Done') }}"
-          rules:
-            - { state: Running, color: green, icon: mdi:washing-machine }
-            - { state: Done, color: teal, icon: mdi:washing-machine-alert }
-            - { state: "Off", color: grey, icon: mdi:washing-machine-off }
-          badges:
-            - { entity: sensor.washer_remaining, icon: mdi:timer-outline }
         - type: custom:entity-card-pro
           entity: sensor.heat_pump_power
           name: Heat pump
