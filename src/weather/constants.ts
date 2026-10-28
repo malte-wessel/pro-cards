@@ -37,6 +37,9 @@ export const DEFAULTS = {
   forecastLayout: "vertical",
   tileIconSize: 36,
   heroIconSize: 56,
+  posterIconSize: 40,
+  // the poster's curve: the next hours of the hourly forecast's temperature
+  posterHours: 12,
   forecastIconSize: 22,
   trendShow: ["temperature", "precipitation"],
   rainFigures: ["probability"],

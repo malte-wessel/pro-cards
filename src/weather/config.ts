@@ -71,6 +71,7 @@ export interface RawWeatherCardConfig extends RawEntityCardBase {
   rules?: unknown;
   temperature_rules?: unknown;
   decimals?: unknown;
+  layout?: unknown;
   sections?: unknown;
 }
 
@@ -135,7 +136,8 @@ export type WeatherSection = SectionBase &
   );
 
 export interface WeatherConfig extends EntityCardConfig {
-  layout: "tile" | "sections";
+  // tile and sections follow `sections`; a poster draws none
+  layout: "tile" | "sections" | "poster";
   entity: string;
   condIdx: number; // the condition item: the entity's state, `rules`
   tempIdx: number; // the temperature item: the `temperature` attribute, `temperature_rules`
@@ -143,7 +145,7 @@ export interface WeatherConfig extends EntityCardConfig {
   probIdx: number;
   windIdx: number;
   icons: WeatherIcons;
-  iconSize: number; // the tile's lead
+  iconSize: number; // the tile's or the poster's lead
   sections: WeatherSection[];
 }
 
@@ -406,8 +408,14 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
   const headerIdxs = header.map((_, i) => entities.length + i);
   entities.push(...header);
 
+  if (raw.layout !== undefined && raw.layout !== "tile" && raw.layout !== "poster")
+    throw new Error(`${CARD_TYPE}: layout must be one of tile | poster`);
+  const poster = raw.layout === "poster";
+  if (poster && sections.length)
+    console.warn(`${CARD_TYPE}: sections are not drawn on a poster (layout: poster)`);
+
   return {
-    layout: sections.length ? "sections" : "tile",
+    layout: poster ? "poster" : sections.length ? "sections" : "tile",
     entity,
     title: raw.title ?? null,
     titleTap: normalizeTitleAction(raw),
@@ -424,14 +432,15 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
     probIdx: 3,
     windIdx: 4,
     icons,
-    iconSize: iconSize(raw.icon_size, DEFAULTS.tileIconSize),
+    iconSize: iconSize(raw.icon_size, poster ? DEFAULTS.posterIconSize : DEFAULTS.tileIconSize),
     sections,
   };
 };
 
 // the forecast types the sections need (before the entity says which it supports): the hero
-// and the tile show today's high / low from the daily forecast
+// shows today's high / low from the daily forecast; a poster that too, and the next hours' curve
 export const wantedForecasts = (cfg: WeatherConfig) => {
+  if (cfg.layout === "poster") return { hourly: true, daily: true };
   const modes = cfg.sections.flatMap((s) =>
     s.kind === "forecast" || s.kind === "trend" ? [s.mode] : [],
   );

@@ -62,6 +62,8 @@ export const STYLE_POSTER = `
   .row.poster .corner > .row.hval { pointer-events: auto; max-width: 100%; }
   .pbody { margin-top: auto; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .pbody:has(> .plot.grow) { flex: 1 1 auto; min-height: 0; }
+  /* the texts keep their lines (clipped text would shrink to nothing); the plot gives way */
+  .pbody > :not(.plot) { flex: none; }
   .pname { ${type(11, 16)} font-weight: ${fw("medium")}; letter-spacing: .1em; text-transform: uppercase; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* the value keeps its width: controls that do not fit beside it wrap under it */
   .pvalue { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; }
@@ -69,6 +71,9 @@ export const STYLE_POSTER = `
   .pvalue > .end { margin-inline-start: auto; min-width: 0; max-width: 100%; }
   .row.poster .big b { ${type(40, 44)} font-weight: ${fw("light")}; letter-spacing: -.02em; }
   .row.poster .big span { font-size: ${fs(16)}; }
+  /* with a curve the value is smaller: the curve gets the room (a word and a fitted value still
+     take their own size, by order) */
+  .pbody:has(> .plot.grow) .big b { ${type(32, 36)} }
   .row.poster .big.word b { ${type(28, 36)} letter-spacing: 0; }
   .row.poster .big.fit b { font-size: var(--fit); }
   .pbody > :is(.bar, .gauge, .ctl-slider, .ctl-segments, .ctl-buttons, .plot) { margin-top: 8px; }
@@ -80,6 +85,9 @@ export const STYLE_POSTER = `
   ha-card.layout-poster .row.poster > .hit { border-radius: var(--ha-card-border-radius, 12px); }
   ha-card.layout-poster .row.poster > .hit:focus-visible { box-shadow: inset 0 0 0 2px var(--fe-color); }
   ha-card.layout-poster .pbody > .plot { width: auto; margin: 8px -16px -16px; }
+  /* a curve reaches up under the value; the texts stay on top of it */
+  ha-card.layout-poster .pbody > .plot.grow { margin-top: -16px; }
+  ha-card.layout-poster .pbody:has(> .plot.grow) > :not(.plot) { position: relative; z-index: 1; }
 `;
 // the header badges (render/badge.ts): the row is the pill (.pb) of its style (b-outline, b-soft,
 // b-filled; b-plain draws none) and size (b-s, b-m, b-l: 24 / 30 / 36 px high). A filled pill

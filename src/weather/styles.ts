@@ -12,6 +12,9 @@ const STYLE_WEATHER = `
   .whero .primary { font-size: ${fs(15)}; }
   .whero .secondary { white-space: normal; }
   .whero .secondary .accent { color: var(--fe-temp, var(--fe-color)); font-weight: ${fw("medium")}; }
+  /* the poster: the temperature's label and its curve in the temperature's colour */
+  .row.poster .secondary .accent { color: var(--fe-temp, var(--fe-color)); font-weight: ${fw("medium")}; }
+  .row.poster .plot.ptrend { --fe-color: var(--fe-temp); }
   .wsec { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
   .whead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; }
   .whead .wtitle { ${type(14, 20)} font-weight: ${fw("medium")}; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

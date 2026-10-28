@@ -75,6 +75,12 @@
       "$ref": "entity.schema.json#/$defs/align",
       "description": "Default for every entity section"
     },
+    "layout": {
+      "type": "string",
+      "enum": ["tile", "poster"],
+      "default": "tile",
+      "description": "poster: the entity card's poster, the condition icon and its pill on top, the name, the big temperature and today's high / low at the bottom, the next hours of the hourly forecast as the curve along the bottom edge (sections are not drawn)"
+    },
     "sections": {
       "type": "array",
       "minItems": 1,
