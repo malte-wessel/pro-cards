@@ -17,6 +17,10 @@
   --vp-c-gutter: #e3e7ee;
   --vp-c-border: #c3cbd8;
 
+  /* Home Assistant's font for the whole site (loaded in config.mts), so the text around the
+     cards matches them */
+  --vp-font-family-base: Roboto, "Segoe UI", system-ui, -apple-system, sans-serif;
+
   /* hero: no glow and no image; HeroDashboard.vue draws a live dashboard behind it */
   --vp-home-hero-image-background-image: none;
 }

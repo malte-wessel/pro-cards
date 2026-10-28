@@ -126,7 +126,7 @@ export default defineConfig({
       "link",
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Roboto:wght@400..900&display=swap",
       },
     ],
     ["link", { rel: "icon", href: `${base}favicon.svg`, type: "image/svg+xml" }],
