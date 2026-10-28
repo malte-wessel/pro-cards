@@ -1993,6 +1993,313 @@ const CASES = {
     ],
     entities: ["light.living_room", "cover.living_room_blinds"],
   },
+  // posters (layout: poster, 6 columns and 3 rows by default): the icon and the rule's pill at the
+  // top, the name and a large value at the bottom. A plain value with its rule's pill; badges in the
+  // corner, under the label
+  "ec-poster-values": [
+    {
+      type: EC,
+      entity: "sensor.outdoor_temperature",
+      name: "Outside",
+      layout: "poster",
+      decimals: 1,
+      rules,
+      grid_options: { columns: 6 },
+    },
+    {
+      type: EC,
+      entity: "sensor.ev_battery",
+      name: "Car",
+      icon: "mdi:car-electric",
+      layout: "poster",
+      rules: [
+        { below: 20, color: "red", label: "Low" },
+        { above: 20, color: "green", label: "Ready" },
+      ],
+      badges: [
+        {
+          entity: "binary_sensor.ev_plugged",
+          rules: [
+            { state: "on", color: "green", icon: "mdi:power-plug", label: "Plugged in" },
+            { state: "off", color: "grey", icon: "mdi:power-plug-off", label: "Unplugged" },
+          ],
+        },
+        "sensor.ev_range",
+      ],
+      grid_options: { columns: 6 },
+    },
+  ],
+  // a sparkline reaches up under the value, columns fill the room below it; a gauge draws the
+  // value in its arc, centred with its name under it
+  "ec-poster-plots": [
+    {
+      type: EC,
+      entity: "sensor.power_consumption",
+      name: "Power",
+      layout: "poster",
+      visual: "sparkline",
+      hours_to_show: 12,
+      rules: [
+        { below: 1000, color: "green", icon: "mdi:flash-outline", label: "Low" },
+        { below: 3000, color: "amber", icon: "mdi:flash", label: "Normal" },
+        { above: 3000, color: "red", icon: "mdi:flash-alert", label: "High" },
+      ],
+      grid_options: { columns: 6 },
+    },
+    {
+      type: EC,
+      entity: "sensor.living_room_co2",
+      name: "CO₂",
+      layout: "poster",
+      visual: "columns",
+      hours_to_show: 12,
+      bucket_minutes: 30,
+      rules: [
+        { below: 800, color: "green", label: "Good" },
+        { below: 1200, color: "amber", label: "Stuffy" },
+        { above: 1200, color: "red", label: "Ventilate" },
+      ],
+      grid_options: { columns: 6 },
+    },
+    {
+      type: EC,
+      entity: "sensor.living_room_humidity",
+      name: "Humidity",
+      layout: "poster",
+      visual: "gauge",
+      min: 0,
+      max: 100,
+      decimals: 0,
+      rules: [
+        { below: 40, color: "amber", label: "Dry" },
+        { below: 60, color: "green", label: "OK" },
+        { above: 60, color: "blue", label: "Humid" },
+      ],
+      grid_options: { columns: 6 },
+    },
+  ],
+  // controls on the value's line (a stepper beside another number, segments, own buttons beside a
+  // word) or along the bottom (a slider)
+  "ec-poster-controls": [
+    {
+      type: EC,
+      entity: "climate.living_room",
+      name: "Thermostat",
+      layout: "poster",
+      attribute: "current_temperature",
+      unit: "°C",
+      decimals: 1,
+      visual: "bar",
+      min: 15,
+      max: 28,
+      control: "stepper",
+      color: "deep-orange",
+      grid_options: { columns: 6 },
+    },
+    {
+      type: EC,
+      entity: "light.living_room",
+      name: "Living room",
+      layout: "poster",
+      value: "{{ (state_attr('light.living_room', 'brightness') | float(0) / 2.55) | round }}",
+      unit: "%",
+      control: "slider",
+      grid_options: { columns: 6 },
+    },
+    {
+      type: EC,
+      entity: "fan.living_room",
+      name: "Fan",
+      layout: "poster",
+      attribute: "percentage",
+      unit: "%",
+      control: "segments",
+      grid_options: { columns: 6 },
+    },
+    {
+      type: EC,
+      entity: "vacuum.robot",
+      name: "Robot",
+      layout: "poster",
+      control: "buttons",
+      control_options: [
+        {
+          icon: "mdi:play",
+          action: {
+            action: "perform-action",
+            perform_action: "vacuum.start",
+            target: { entity_id: "vacuum.robot" },
+          },
+        },
+        {
+          icon: "mdi:home-import-outline",
+          action: {
+            action: "perform-action",
+            perform_action: "vacuum.return_to_base",
+            target: { entity_id: "vacuum.robot" },
+          },
+        },
+      ],
+      rules: [
+        { state: "cleaning", color: "teal" },
+        { state: "docked", color: "grey" },
+      ],
+      grid_options: { columns: 6 },
+    },
+  ],
+  // the group's first entity is the poster, the rest are badges in its corner
+  "egc-poster": {
+    type: EGC,
+    title: "Car",
+    icon: "mdi:car-electric",
+    layout: "poster",
+    entities: [
+      {
+        entity: "sensor.ev_battery",
+        name: "Battery",
+        rules: [
+          { below: 20, color: "red", label: "Low" },
+          { above: 20, color: "green", label: "Ready" },
+        ],
+      },
+      {
+        entity: "binary_sensor.ev_plugged",
+        rules: [
+          { state: "on", color: "green", icon: "mdi:power-plug", label: "Plugged in" },
+          { state: "off", color: "grey", icon: "mdi:power-plug-off", label: "Unplugged" },
+        ],
+      },
+      "sensor.ev_range",
+    ],
+  },
+  // fixed rows taller than the content: the entities at the bottom, the title on top
+  "egc-vertical-bottom": {
+    type: EGC,
+    title: "Bottom",
+    icon: "mdi:format-vertical-align-bottom",
+    layout: "table",
+    vertical_align: "bottom",
+    entities: [
+      { entity: "light.living_room", name: "Light", control: "toggle", show_value: false },
+      { entity: "light.desk_lamp", name: "Lamp", control: "toggle", show_value: false },
+    ],
+    grid_options: { columns: 6, rows: 4 },
+  },
+  // the wind and the rain as posters: plain, and the whole poster the (paused) field
+  "wic-poster": [
+    {
+      type: "custom:wind-card-pro",
+      entity: "sensor.wind_speed",
+      direction: "sensor.wind_direction",
+      gust: "sensor.wind_gust",
+      name: "Wind",
+      layout: "poster",
+      rules: windRules,
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:wind-card-pro",
+      entity: "sensor.wind_speed",
+      direction: "sensor.wind_direction",
+      gust: "sensor.wind_gust",
+      name: "Wind",
+      layout: "poster",
+      visual: "flow",
+      rules: windRules,
+      grid_options: { columns: 6 },
+    },
+  ],
+  "rc-poster": [
+    {
+      type: "custom:rain-card-pro",
+      entity: "sensor.rain_rate_roof",
+      today: "sensor.rain_today",
+      name: "Rain",
+      layout: "poster",
+      rules: rainRules,
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:rain-card-pro",
+      entity: "sensor.rain_rate_roof",
+      today: "sensor.rain_today",
+      wind: "sensor.wind_speed",
+      direction: "sensor.wind_direction",
+      name: "Rain",
+      layout: "poster",
+      visual: "flow",
+      rules: rainRules,
+      grid_options: { columns: 6 },
+    },
+  ],
+  // the next sunrise or sunset, large, over the day's curve; own colours and labels
+  "spc-poster": [
+    { type: "custom:sun-path-card-pro", layout: "poster", grid_options: { columns: 6 } },
+    {
+      type: "custom:sun-path-card-pro",
+      layout: "poster",
+      day_color: "orange",
+      sun_color: "deep-orange",
+      labels: { sunrise: "Sun up", sunset: "Sun down" },
+      grid_options: { columns: 6 },
+    },
+  ],
+  // the temperature, today's high and low and the hourly forecast's curve; temperature rules
+  "wc-poster": [
+    {
+      type: "custom:weather-card-pro",
+      entity: "weather.home",
+      name: "Outside",
+      layout: "poster",
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:weather-card-pro",
+      entity: "weather.home",
+      name: "Outside",
+      layout: "poster",
+      icons: "mdi",
+      temperature_rules: [
+        { below: 5, color: "blue", label: "Cold" },
+        { below: 20, color: "teal", label: "Mild" },
+        { above: 20, color: "orange", label: "Warm" },
+      ],
+      grid_options: { columns: 6 },
+    },
+  ],
+  // the lines overlaid along the bottom edge, the first entity's value large
+  "mtc-poster": [
+    {
+      type: "custom:multi-trend-card-pro",
+      title: "Outside",
+      icon: "mdi:thermometer",
+      color: "orange",
+      hours_to_show: 12,
+      layout: "poster",
+      entities: [
+        { entity: "sensor.outdoor_temperature", name: "Temperature", color: "orange" },
+        { entity: "sensor.dew_point", name: "Dew point", color: "teal" },
+      ],
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:multi-trend-card-pro",
+      title: "Rooms",
+      icon: "mdi:home-thermometer",
+      color: "green",
+      layout: "poster",
+      entities: [
+        { entity: "sensor.living_room_temperature", name: "Living room", color: "green" },
+        { entity: "sensor.bedroom_temperature", name: "Bedroom", color: "indigo" },
+      ],
+      grid_options: { columns: 6 },
+    },
+  ],
+  // badges without a title: the heading is only as tall as its badges
+  "hc-badges-only": {
+    type: HC,
+    badges: ["sensor.outdoor_temperature", "sensor.living_room_humidity", "light.living_room"],
+  },
 };
 
 // cases rendered under a Home Assistant theme from ha.css instead of the default one

@@ -61,15 +61,17 @@
   .row.tile > .gauge { align-self: center; margin-top: auto; }
   .row.tile:has(> .gauge) > :last-child { margin-bottom: auto; }
 `,Du=`
-  ha-card.layout-poster .body { flex: 1 1 auto; padding: 16px; }
-  .row.poster { flex: 1 1 auto; gap: 12px; }
-  .ptop { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+  ha-card.layout-poster .body { flex: 1 1 auto; min-height: 0; padding: 16px; }
+  /* the top line keeps the top (its auto margin takes the room); with no room left, the content
+     packs to the bottom and overflows at the top */
+  .row.poster { flex: 1 1 auto; min-height: 0; justify-content: flex-end; gap: 12px; }
+  .ptop { flex: none; margin-bottom: auto; display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
   .plead { flex: none; }
   .corner { flex: 0 1 auto; min-width: 0; margin-inline-start: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
   .corner > .plabel { flex: none; text-transform: uppercase; letter-spacing: .08em; background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fe-color) 40%, transparent); }
   /* the badges answer the pointer above the poster's own action layer */
   .row.poster .corner > .row.hval { pointer-events: auto; max-width: 100%; }
-  .pbody { margin-top: auto; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .pbody { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .pbody:has(> .plot.grow) { flex: 1 1 auto; min-height: 0; }
   /* the texts keep their lines (clipped text would shrink to nothing); the plot gives way */
   .pbody > :not(.plot) { flex: none; }
@@ -87,9 +89,11 @@
   .row.poster .big.fit b { font-size: var(--fit); }
   .pbody > :is(.bar, .gauge, .ctl-slider, .ctl-segments, .ctl-buttons, .plot) { margin-top: 8px; }
   .pbody > .gauge { align-self: center; }
-  /* a gauge poster: the arc and its name centred, across and down */
+  /* a gauge poster: the arc and its name centred, across and down; the arc stays small enough for
+     the arc and its name to fit three rows at any width */
+  .row.poster:has(> .pbody.pgauge) > .ptop { margin-bottom: 0; }
   .pbody.pgauge { margin-block: auto; align-items: center; text-align: center; }
-  .pbody.pgauge > .gauge { margin-top: 0; }
+  .pbody.pgauge > .gauge { margin-top: 0; max-width: 120px; }
   /* the entity card: the poster is one button (its action layer fills the card, as a tile's) and its
      plot runs to the card's edges, under the body's padding; the card's corners clip it */
   ha-card.layout-poster .body { position: relative; }
@@ -97,8 +101,9 @@
   ha-card.layout-poster .row.poster > .hit { border-radius: var(--ha-card-border-radius, 12px); }
   ha-card.layout-poster .row.poster > .hit:focus-visible { box-shadow: inset 0 0 0 2px var(--fe-color); }
   ha-card.layout-poster .pbody > .plot { width: auto; margin: 8px -16px -16px; }
-  /* a line reaches up under the value; the texts stay on top of it (columns would cover them) */
-  ha-card.layout-poster .pbody > .plot.grow[data-kind="sparkline"] { margin-top: -16px; }
+  /* a line right under the value reaches up under it; the texts stay on top of it (columns would
+     cover them, and a line under a secondary line would cross its text) */
+  ha-card.layout-poster .pbody > .pvalue + .plot.grow[data-kind="sparkline"] { margin-top: -16px; }
   ha-card.layout-poster .pbody:has(> .plot.grow) > :not(.plot) { position: relative; z-index: 1; }
 `,bb=`
   .row.hval.b-s { --b-h: 24px; --b-ps: 6px; --b-pe: 8px; --b-gap: 4px; --b-icon: 14px; --b-ring: 16px; }
@@ -518,6 +523,8 @@
   .header.bpos-end:not(.align-center) > .htx { grid-column: 2; min-width: 0; }
   .header.bpos-end:not(.align-center) > .hline { grid-column: 3; margin-left: 10px; }
   .header.bpos-end:not(.align-center) > .hvals { grid-column: 4; margin-left: 10px; }
+  /* no title and no subtitle: the title's column takes no room, the badges have the line */
+  .header.bpos-end:not(.align-center):has(> .htx[hidden]) { grid-template-columns: auto 0 0 minmax(0, 1fr); }
   .header.bpos-inline .htx { flex: 0 1 auto; }
   .header.bpos-inline .hvals { flex: 1 1 0; justify-content: flex-start; }
   .header.bpos-below { flex-wrap: wrap; }

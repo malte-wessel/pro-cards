@@ -8,11 +8,17 @@ import {
   normalizeHeaderEntities,
   normalizeActionDefaults,
   normalizeHistoryOptions,
+  normalizeBadge,
+  normalizeVerticalAlign,
   minutesOf,
   collectTemplates,
   visibilityTrees,
 } from "../../../../src/shared/entity/config.ts";
-import { ITEM_DEFAULTS } from "../../../../src/shared/entity/constants.ts";
+import {
+  GROUP_LAYOUTS,
+  ITEM_DEFAULTS,
+  POSTER_BADGE,
+} from "../../../../src/shared/entity/constants.ts";
 import type {
   EntityCardConfig,
   NormalizeCtx,
@@ -507,5 +513,163 @@ describe("spans", () => {
     expect(minutesOf(0)).toBeNull();
     expect(minutesOf("-2h")).toBeNull();
     expect(minutesOf("2 weeks")).toBeNull();
+  });
+});
+
+describe("one badge", () => {
+  it("is a header entity by default, with the header's wording in its warnings", () => {
+    const w = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const b = normalizeBadge(
+      { entity: "cover.blinds", visual: "gauge", control: "slider" },
+      ctx,
+      "badges[0]",
+      { style: "plain", size: "s" },
+    );
+    expect(b).toMatchObject({ visual: "icon", control: null, toggle: false });
+    expect(b.badge).toEqual({ style: "plain", size: "s" });
+    expect(w.mock.calls.map((c) => c[0])).toEqual([
+      "test-card: visual 'gauge' is not drawn in the header; using icon",
+      "test-card: a switch is the only control drawn in the header",
+    ]);
+    w.mockRestore();
+  });
+  it("names its place in the warnings when it is told where it sits", () => {
+    const w = vi.spyOn(console, "warn").mockImplementation(() => {});
+    normalizeBadge(
+      { entity: "cover.blinds", visual: "columns", control: "slider" },
+      ctx,
+      "entities[1]",
+      POSTER_BADGE,
+      "a poster's corner",
+    );
+    expect(w.mock.calls.map((c) => c[0])).toEqual([
+      "test-card: visual 'columns' is not drawn in a poster's corner; using icon",
+      "test-card: a switch is the only control drawn in a poster's corner",
+    ]);
+    w.mockRestore();
+  });
+  it("names the label in its config errors", () => {
+    expect(() => normalizeBadge({ name: "x" }, ctx, "entities[2]", POSTER_BADGE)).toThrow(
+      /test-card: entities\[2\] needs 'entity' or 'value'/,
+    );
+  });
+  it("draws the header entities as before", () => {
+    const raw = [
+      "sensor.t",
+      { entity: "sensor.t", style: "soft", size: "l" },
+      { entity: "light.a", control: "auto" },
+    ];
+    const viaHeader = normalizeHeaderEntities(raw, ctx);
+    const viaBadge = raw.map((e, i) =>
+      normalizeBadge(e, ctx, `header_entities[${i}]`, { style: "plain", size: "s" }),
+    );
+    expect(viaBadge).toEqual(viaHeader);
+  });
+});
+
+describe("poster groups", () => {
+  it("is one of the group layouts", () => {
+    expect(GROUP_LAYOUTS).toContain("poster");
+  });
+  it("draws the first entity as the poster and the rest as outline pills in its corner", () => {
+    const { group, entities } = normalizeGroup(
+      {
+        layout: "poster",
+        entities: [
+          { entity: "sensor.t", visual: "sparkline" },
+          "sensor.h",
+          { entity: "sensor.co2", style: "filled", size: "m" },
+        ],
+      },
+      ctx,
+      {},
+      "entities",
+      0,
+    );
+    expect(group).toEqual({
+      layout: "poster",
+      idxs: [0],
+      badgeIdxs: [1, 2],
+      align: "start",
+      columns: 2,
+      divider: false,
+      visibility: null,
+    });
+    // the poster is a normal entity: its block visual stays
+    expect(entities[0]).toMatchObject({ entity: "sensor.t", visual: "sparkline" });
+    // the badges take the poster's pill unless they name their own
+    expect(entities[1].badge).toEqual({ style: "outline", size: "s" });
+    expect(entities[2].badge).toEqual({ style: "filled", size: "m" });
+    expect(POSTER_BADGE).toEqual({ style: "outline", size: "s" });
+  });
+  it("keeps only a switch on a badge and warns about the corner", () => {
+    const w = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { entities } = normalizeGroup(
+      {
+        layout: "poster",
+        entities: [
+          { entity: "light.a", control: "auto" },
+          { entity: "switch.pump", control: "toggle" },
+          { entity: "cover.blinds", control: "slider" },
+          { entity: "sensor.t", visual: "gauge" },
+        ],
+      },
+      ctx,
+      {},
+      "sections[1]",
+      0,
+    );
+    // the poster keeps its controls
+    expect(entities[0].control).toMatchObject({ kind: "auto" });
+    expect(entities[1]).toMatchObject({ control: { kind: "toggle" }, toggle: true });
+    expect(entities[2]).toMatchObject({ control: null, toggle: false });
+    expect(entities[3].visual).toBe("icon");
+    expect(w.mock.calls.map((c) => c[0])).toEqual([
+      "test-card: a switch is the only control drawn in a poster's corner",
+      "test-card: visual 'gauge' is not drawn in a poster's corner; using icon",
+    ]);
+    w.mockRestore();
+  });
+  it("names the badge's place in its errors", () => {
+    expect(() =>
+      normalizeGroup(
+        { layout: "poster", entities: ["sensor.t", { name: "x" }] },
+        ctx,
+        {},
+        "sections[2]",
+        0,
+      ),
+    ).toThrow(/test-card: sections\[2\].entities\[1\] needs 'entity' or 'value'/);
+  });
+  it("points its indices past the offset; a poster alone has no badges", () => {
+    const a = normalizeGroup(
+      { layout: "poster", entities: ["sensor.t", "sensor.h"] },
+      ctx,
+      {},
+      "entities",
+      5,
+    );
+    expect(a.group).toMatchObject({ idxs: [5], badgeIdxs: [6] });
+    const b = normalizeGroup({ layout: "poster", entities: ["sensor.t"] }, ctx, {}, "entities", 2);
+    expect(b.group).toMatchObject({ idxs: [2], badgeIdxs: [] });
+    // other layouts have no badges at all
+    const list = normalizeGroup({ entities: ["sensor.t"] }, ctx, {}, "entities", 0);
+    expect(list.group).not.toHaveProperty("badgeIdxs");
+  });
+});
+
+describe("vertical_align", () => {
+  it("is the top unless set", () => {
+    expect(normalizeVerticalAlign(undefined, "x-card")).toBe("top");
+    expect(normalizeVerticalAlign(null, "x-card")).toBe("top");
+    expect(normalizeVerticalAlign("top", "x-card")).toBe("top");
+    expect(normalizeVerticalAlign("center", "x-card")).toBe("center");
+    expect(normalizeVerticalAlign("bottom", "x-card")).toBe("bottom");
+  });
+  it("names the card and the choices in its error", () => {
+    expect(() => normalizeVerticalAlign("middle", "x-card")).toThrow(
+      "x-card: vertical_align must be one of top | center | bottom",
+    );
+    expect(() => normalizeVerticalAlign(1, "x-card")).toThrow(/vertical_align must be one of/);
   });
 });

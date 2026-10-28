@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect, vi } from "vitest";
 import { WeatherCard } from "../../src/weather-card.ts";
 import { normalizeWeatherCardConfig, wantedForecasts } from "../../src/weather/config.ts";
 import { PICTURED, pictureSvg } from "../../src/weather/pictures.ts";
@@ -577,5 +577,149 @@ describe("hover", () => {
       true,
     ]);
     expect(normalizeWeatherCardConfig({ entity: "weather.home" }).entities[0].hover).toBe(false);
+  });
+});
+
+describe("weather-card poster", () => {
+  it("is a layout with a 40 px lead unless icon_size says otherwise", () => {
+    const c = normalizeWeatherCardConfig({ entity: W, layout: "poster" });
+    expect(c).toMatchObject({ layout: "poster", iconSize: 40, sections: [] });
+    expect(
+      normalizeWeatherCardConfig({ entity: W, layout: "poster", icon_size: 64 }).iconSize,
+    ).toBe(64);
+    expect(normalizeWeatherCardConfig({ entity: W, layout: "tile" }).layout).toBe("tile");
+    expect(() => normalizeWeatherCardConfig({ entity: W, layout: "hero" })).toThrow(
+      "weather-card-pro: layout must be one of tile | poster",
+    );
+  });
+  it("draws no sections and says so", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const c = normalizeWeatherCardConfig({
+      entity: W,
+      layout: "poster",
+      sections: [{ type: "hero" }],
+    });
+    expect(c.layout).toBe("poster");
+    expect(warn).toHaveBeenCalledWith(
+      "weather-card-pro: sections are not drawn on a poster (layout: poster)",
+    );
+    warn.mockRestore();
+  });
+  it("wants the hourly and the daily forecast", () => {
+    expect(wantedForecasts(normalizeWeatherCardConfig({ entity: W, layout: "poster" }))).toEqual({
+      hourly: true,
+      daily: true,
+    });
+  });
+  it("is three rows high, two at least", () => {
+    const el = new WeatherCard();
+    el.setConfig({ entity: W, layout: "poster" });
+    expect(el.getGridOptions()).toEqual({ columns: 6, rows: 3, min_columns: 3, min_rows: 2 });
+    expect(el.getCardSize()).toBe(3);
+    el.setConfig({ entity: W, layout: "poster", title: "Weather" });
+    expect(el.getCardSize()).toBe(4);
+  });
+
+  // the forecasts the card subscribes to, answered by the test
+  const H = 3600e3;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const today = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T00:00:00+00:00`;
+  };
+  const hourly = (n: number) => {
+    const t0 = Date.now() - (Date.now() % H);
+    return [...Array(n).keys()].map((i) => ({
+      datetime: new Date(t0 + i * H).toISOString(),
+      temperature: 14 + i,
+      condition: "cloudy",
+    }));
+  };
+  const daily = () => [{ datetime: today(), temperature: 18.4, templow: 9.2, condition: "rainy" }];
+  const cards: WeatherCard[] = [];
+  afterEach(() => {
+    for (const c of cards.splice(0)) c.remove();
+  });
+  const mount = async (cfg: Record<string, unknown>, features = 3, hours = 4) => {
+    const asked: string[] = [];
+    const hass = {
+      states: {
+        [W]: {
+          entity_id: W,
+          state: "rainy",
+          attributes: {
+            friendly_name: "Home",
+            temperature: 15.6,
+            temperature_unit: "°C",
+            supported_features: features,
+          },
+        },
+      },
+      locale: { language: "en" },
+      config: { unit_system: { temperature: "°C" } },
+      connection: {
+        subscribeMessage: (
+          cb: (msg: { forecast: unknown[] }) => void,
+          msg: { forecast_type: string },
+        ) => {
+          asked.push(msg.forecast_type);
+          const forecast = msg.forecast_type === "hourly" ? hourly(hours) : daily();
+          return Promise.resolve().then(() => {
+            cb({ forecast });
+            return () => {};
+          });
+        },
+      },
+    } as unknown as HomeAssistant;
+    const el = new WeatherCard();
+    el.setConfig({ entity: W, layout: "poster", ...cfg });
+    document.body.appendChild(el);
+    el.hass = hass;
+    cards.push(el);
+    await new Promise((r) => setTimeout(r, 0));
+    return { root: el.shadowRoot!.querySelector("ha-card") as HTMLElement, asked };
+  };
+  it("draws the condition in the pill, the big temperature, today's high / low and the next hours", async () => {
+    const { root, asked } = await mount({ name: "Garden" });
+    expect(asked.sort()).toEqual(["daily", "hourly"]);
+    expect(root.classList.contains("layout-poster")).toBe(true);
+    const row = root.querySelector<HTMLElement>(".body > .row.poster")!;
+    expect(row.querySelector(".ptop > .plead > .lead")).not.toBeNull();
+    const pill = row.querySelector<HTMLElement>(".plabel")!;
+    expect(pill.textContent).toBe("Rainy");
+    expect(pill.hidden).toBe(false);
+    expect(row.querySelector(".pname")!.textContent).toBe("Garden");
+    expect(row.querySelector(".pvalue .big b")!.textContent).toBe("15.6");
+    expect(row.querySelector(".pbody > .secondary")!.textContent).toBe("18° / 9°");
+    const plot = row.querySelector<HTMLElement>(".pbody > .plot.ptrend")!;
+    expect(plot.dataset.kind).toBe("sparkline");
+    // no section of the tile or the sections layout
+    expect(root.querySelector(".row.wtile, .row.whero, .section")).toBeNull();
+  });
+  it("takes the condition rule's label and the temperature rule's label", async () => {
+    const { root } = await mount({
+      rules: [{ state: "rainy", label: "Wet" }],
+      temperature_rules: [{ above: 15, label: "Mild" }],
+    });
+    expect(root.querySelector(".plabel")!.textContent).toBe("Wet");
+    const sec = root.querySelector(".pbody > .secondary")!;
+    expect(sec.textContent).toBe("Mild · 18° / 9°");
+    expect(sec.querySelector(".accent")!.textContent).toBe("Mild");
+  });
+  it("draws no curve without an hourly forecast", async () => {
+    const { root, asked } = await mount({}, 1);
+    expect(asked).toEqual(["daily"]);
+    expect(root.querySelector(".plot")).toBeNull();
+    expect(root.querySelector(".pbody > .secondary")!.textContent).toBe("18° / 9°");
+  });
+  it("draws no curve from a single hour", async () => {
+    const { root } = await mount({}, 3, 1);
+    expect(root.querySelector(".plot")).toBeNull();
+  });
+  it("draws no high / low without a daily forecast", async () => {
+    const { root, asked } = await mount({}, 2);
+    expect(asked).toEqual(["hourly"]);
+    expect(root.querySelector(".pbody > .secondary")).toBeNull();
+    expect(root.querySelector(".plot.ptrend")).not.toBeNull();
   });
 });

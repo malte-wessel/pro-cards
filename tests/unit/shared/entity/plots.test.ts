@@ -63,6 +63,11 @@ describe("history plots in a cell with fixed rows", () => {
     expect(top).toBe(0);
     expect(bottom).toBeCloseTo(120, 0);
   });
+  it("names what it draws", () => {
+    expect(plotOf("sparkline").dataset.kind).toBe("sparkline");
+    expect(plotOf("columns").dataset.kind).toBe("columns");
+    expect(plotOf("strip").dataset.kind).toBe("strip");
+  });
   it("keeps a strip at its height in a taller cell", () => {
     expect(viewH(plotOf("strip", { w: 200, h: 140 }))).toBe(22 + 14);
   });
@@ -72,6 +77,12 @@ describe("the share of a taller card a group asks for", () => {
   it("counts each list or hero row with a growing plot", () => {
     expect(plotRows("list", 2, ["sparkline", "icon", "columns", "strip"])).toBe(2);
     expect(plotRows("hero", 2, ["sparkline", "sparkline"])).toBe(2);
+  });
+  it("counts a poster's growing plot", () => {
+    expect(plotRows("poster", 1, ["sparkline"])).toBe(1);
+    expect(plotRows("poster", 1, ["columns"])).toBe(1);
+    expect(plotRows("poster", 1, ["strip"])).toBe(0);
+    expect(plotRows("poster", 1, ["gauge"])).toBe(0);
   });
   it("counts a grid row once, however many plots sit side by side", () => {
     expect(plotRows("grid", 2, ["sparkline", "sparkline", "icon", "icon"])).toBe(1);

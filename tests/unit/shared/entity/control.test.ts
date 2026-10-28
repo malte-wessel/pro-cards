@@ -20,6 +20,7 @@ import {
   currentOptionOf,
   defaultPlacements,
   hasBlockControl,
+  hasTileControl,
   HVAC_ICON,
   isOn,
   optionsOf,
@@ -27,6 +28,7 @@ import {
   rangeOf,
   serviceFor,
   sliderApplies,
+  tileMinColumns,
 } from "../../../../src/shared/entity/control.ts";
 
 const ctx: NormalizeCtx = {
@@ -804,5 +806,36 @@ describe("custom buttons", () => {
     expect(buttonRuns(b("scene.a"))).toBe(true);
     expect(buttonRuns(b("switch.a"))).toBe(false);
     expect(buttonRuns(b(null))).toBe(true);
+  });
+});
+
+describe("controls on a poster", () => {
+  it("has room under its value: a slider goes to the block slot, as on a tile", () => {
+    expect(kinds(placementsOf(ent({ control: "slider" }), "poster"))).toEqual(["slider@block"]);
+    expect(kinds(placementsOf(ent({}), "poster"))).toEqual(["toggle@end", "slider@block"]);
+    expect(kinds(placementsOf(ent({ entity: "cover.a" }), "poster"))).toEqual([
+      "buttons@end",
+      "slider@block",
+    ]);
+    expect(kinds(placementsOf(ent({ entity: "climate.a" }), "poster"))).toEqual(["stepper@end"]);
+    expect(placementsOf(ent({}), "poster")[0].small).toBe(false);
+  });
+  it("knows whether it draws any control", () => {
+    expect(hasTileControl(ent({}), "poster")).toBe(true);
+    expect(hasTileControl(ent({ entity: "sensor.a" }), "poster")).toBe(false);
+    expect(hasTileControl(ent({ control: undefined }), "poster")).toBe(false);
+    // the tile is the default row
+    expect(hasTileControl(ent({}))).toBe(true);
+  });
+  it("is as narrow as what sits beside its value allows", () => {
+    expect(tileMinColumns(ent({ entity: "sensor.a" }), "poster")).toBe(3);
+    // a slider under the value needs nothing more
+    expect(tileMinColumns(ent({ entity: "number.a" }), "poster")).toBe(3);
+    expect(tileMinColumns(ent({ entity: "switch.a" }), "poster")).toBe(4);
+    expect(tileMinColumns(ent({ entity: "lock.a" }), "poster")).toBe(4);
+    expect(tileMinColumns(ent({ entity: "climate.a" }), "poster")).toBe(6);
+    expect(tileMinColumns(ent({ entity: "cover.a" }), "poster")).toBe(6);
+    expect(tileMinColumns(ent({ entity: "input_select.a" }), "poster")).toBe(6);
+    expect(tileMinColumns(ent({ entity: "climate.a" }))).toBe(6);
   });
 });

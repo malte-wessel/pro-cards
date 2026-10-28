@@ -36,6 +36,7 @@ describe("typography tokens", () => {
   });
   it("weights and the font shorthand read the theme's tokens", () => {
     expect(fw("medium")).toBe("var(--ha-font-weight-medium, 500)");
+    expect(fw("light")).toBe("var(--ha-font-weight-light, 300)");
     expect(font(10, 12)).toBe(
       "font: var(--ha-font-weight-normal, 400) var(--ha-font-size-xs, 10px)/calc(var(--ha-font-size-xs, 10px) * 12 / 10) var(--ha-font-family-body, Roboto, system-ui, sans-serif);",
     );

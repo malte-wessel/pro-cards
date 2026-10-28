@@ -1,5 +1,9 @@
-import { describe, it, expect } from "vitest";
-import { renderTemplate, makeScope } from "../../docs/.vitepress/theme/ha-shim/templates.ts";
+import { afterEach, describe, it, expect, vi } from "vitest";
+import {
+  renderTemplate,
+  makeScope,
+  strftime,
+} from "../../docs/.vitepress/theme/ha-shim/templates.ts";
 import type { HassEntity } from "../../src/shared/ha.ts";
 
 // the states proxy of the shim's template scope: callable, with one array per domain
@@ -115,5 +119,38 @@ describe("makeScope", () => {
     expect(S.has_value("light.a")).toBe(true);
     expect(S.has_value("light.zzz")).toBe(false);
     expect(S.is_state_attr("light.a", "brightness", 200)).toBe(true);
+  });
+});
+
+describe("strftime", () => {
+  // a Wednesday afternoon, local time
+  const d = new Date(2026, 6, 1, 9, 5, 7);
+  it("formats the time and the date codes in local time", () => {
+    expect(strftime(d, "%H:%M:%S")).toBe("09:05:07");
+    expect(strftime(d, "%d.%m.%Y")).toBe("01.07.2026");
+    expect(strftime(d, "%e")).toBe("1");
+    expect(strftime(new Date(2026, 6, 14, 23, 59), "%e %H:%M")).toBe("14 23:59");
+  });
+  it("names the day and the month in English, long and short", () => {
+    expect(strftime(d, "%A, %B")).toBe("Wednesday, July");
+    expect(strftime(d, "%a %b")).toBe("Wed Jul");
+    expect(strftime(new Date(2026, 0, 4), "%A %B")).toBe("Sunday January");
+  });
+  it("writes %% as a percent sign and leaves other text alone", () => {
+    expect(strftime(d, "100%% at %H h")).toBe("100% at 09 h");
+    expect(strftime(d, "%Q")).toBe("%Q");
+  });
+});
+
+describe("now() in a template", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+  it("formats the time with strftime", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 6, 1, 7, 30));
+    expect(r("{{ now().strftime('%H:%M') }}")).toEqual({ ok: true, result: "07:30" });
+    expect(r("It is {{ now().strftime('%A') }}").result).toBe("It is Wednesday");
+    expect(r("{{ utcnow().strftime('%Y') }}").result).toBe("2026");
   });
 });

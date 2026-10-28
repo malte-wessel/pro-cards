@@ -1,7 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect } from "vitest";
 import { WindCard } from "../../src/wind-card.ts";
 import { normalizeWindCardConfig } from "../../src/wind/config.ts";
 import { collectTemplates } from "../../src/shared/entity/config.ts";
+import type { HassEntity, HomeAssistant } from "../../src/shared/ha.ts";
 import {
   amplitude,
   arrowRotation,
@@ -260,5 +261,113 @@ describe("hover", () => {
     };
     expect(lead({})).toBe(false);
     expect(lead({ hover: true })).toBe(true);
+  });
+});
+
+describe("wind-card poster", () => {
+  it("is a layout; the flow poster shows the arrow, the hero keeps its lead", () => {
+    const c = normalizeWindCardConfig({ entity: S, layout: "poster" });
+    expect(c).toMatchObject({ layout: "poster", visual: "icon", lead: "animated" });
+    expect(normalizeWindCardConfig({ entity: S, layout: "poster", lead: "arrow" }).lead).toBe(
+      "arrow",
+    );
+    expect(normalizeWindCardConfig({ entity: S, layout: "poster", visual: "flow" }).lead).toBe(
+      "arrow",
+    );
+    expect(
+      normalizeWindCardConfig({ entity: S, layout: "poster", visual: "flow", lead: "animated" })
+        .lead,
+    ).toBe("arrow");
+    expect(
+      normalizeWindCardConfig({ entity: S, layout: "hero", visual: "flow", lead: "arrow" }).lead,
+    ).toBe("arrow");
+    expect(() => normalizeWindCardConfig({ entity: S, layout: "x" })).toThrow(
+      "wind-card-pro: layout must be one of tile | hero | poster",
+    );
+  });
+  it("is three rows high, two at least", () => {
+    const el = new WindCard();
+    el.setConfig({ entity: S, layout: "poster" });
+    expect(el.getGridOptions()).toEqual({ columns: 6, rows: 3, min_columns: 3, min_rows: 2 });
+    expect(el.getCardSize()).toBe(3);
+    el.setConfig({ entity: S, layout: "poster", title: "Wind" });
+    expect(el.getCardSize()).toBe(4);
+  });
+
+  const st = (id: string, state: string, attributes: Record<string, unknown>) =>
+    ({ entity_id: id, state, attributes }) as unknown as HassEntity;
+  const hass = () =>
+    ({
+      states: {
+        [S]: st(S, "12", { friendly_name: "Wind speed", unit_of_measurement: "km/h" }),
+        "sensor.wind_gust": st("sensor.wind_gust", "25", { unit_of_measurement: "km/h" }),
+        "sensor.wind_direction": st("sensor.wind_direction", "225", {}),
+      },
+      locale: { language: "en" },
+      config: {},
+      formatEntityState: (s: HassEntity) => `${s.state} ${s.attributes.unit_of_measurement}`,
+    }) as unknown as HomeAssistant;
+  const cards: WindCard[] = [];
+  afterEach(() => {
+    for (const c of cards.splice(0)) c.remove();
+  });
+  const mount = (cfg: Record<string, unknown>) => {
+    const el = new WindCard();
+    el.setConfig({
+      entity: S,
+      direction: "sensor.wind_direction",
+      gust: "sensor.wind_gust",
+      layout: "poster",
+      ...cfg,
+    });
+    document.body.appendChild(el);
+    el.hass = hass();
+    cards.push(el);
+    return el.shadowRoot as ShadowRoot;
+  };
+  it("draws the entity poster's parts with the label in the pill", () => {
+    const r = mount({ rules: [{ above: 10, label: "Breezy" }] });
+    expect(r.querySelector("ha-card")!.classList.contains("layout-poster")).toBe(true);
+    const row = r.querySelector<HTMLElement>(".row")!;
+    expect([...row.classList]).toEqual(
+      expect.arrayContaining(["row", "wposter", "poster", "actionable"]),
+    );
+    expect(row.classList.contains("flow")).toBe(false);
+    expect(row.querySelector(".wflow")).toBeNull();
+    expect(row.querySelector(":scope > .ptop > .plead > .lead")).not.toBeNull();
+    const pill = row.querySelector<HTMLElement>(".plabel")!;
+    expect(pill.textContent).toBe("Breezy");
+    expect(pill.hidden).toBe(false);
+    expect(row.querySelector(".pname")!.textContent).toBe("Wind speed");
+    expect(row.querySelector(".pvalue .big b")!.textContent).toBe("12");
+    expect(row.querySelector(".pvalue .big span")!.textContent).toBe("km/h");
+    // the secondary line: the direction and the gusts, not the label (the pill has it)
+    const sec = row.querySelector(".pbody > .secondary")!.textContent!;
+    expect(sec).toContain("from SW");
+    expect(sec).toContain("gusts 25 km/h");
+    expect(sec).not.toContain("Breezy");
+  });
+  it("hides the pill without a matching rule", () => {
+    const pill = mount({ rules: [{ above: 50, label: "Storm" }] }).querySelector<HTMLElement>(
+      ".plabel",
+    )!;
+    expect(pill.hidden).toBe(true);
+    expect(pill.textContent).toBe("");
+  });
+  it("with visual: flow puts the band behind the poster and the arrow in the lead", () => {
+    const r = mount({ visual: "flow" });
+    const row = r.querySelector<HTMLElement>(".row.wposter")!;
+    expect(row.classList.contains("flow")).toBe(true);
+    expect(row.querySelector(":scope > .wflow.bg")).not.toBeNull();
+    expect(row.querySelector(".plead .arrow")).not.toBeNull();
+    expect(row.querySelector(".pbody > .secondary")!.textContent).toContain("from SW");
+  });
+  it("is built once and filled in place", () => {
+    const r = mount({});
+    const card = cards[0];
+    const body = r.querySelector(".pbody");
+    card.hass = hass();
+    expect(r.querySelector(".pbody")).toBe(body);
+    expect(r.querySelectorAll(".ptop")).toHaveLength(1);
   });
 });

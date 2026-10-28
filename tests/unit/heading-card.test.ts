@@ -108,6 +108,13 @@ describe("heading-card-pro title and icon", () => {
     (header.querySelector(".title") as HTMLElement).click();
     expect(fired).toHaveLength(1);
   });
+  it("keeps no room for the title when there is neither a title nor a subtitle", () => {
+    const htx = (cfg: Record<string, unknown>) =>
+      mount(cfg).header.querySelector(".htx") as HTMLElement;
+    expect(htx({ title: "", badges: ["sensor.temp"] }).hidden).toBe(true);
+    expect(htx({ title: "Living room" }).hidden).toBe(false);
+    expect(htx({ title: "", subtitle: "3 lights on" }).hidden).toBe(false);
+  });
   it("shows a subtitle, and nothing for an empty one", () => {
     const { header } = mount({ subtitle: "3 lights on" });
     expect(header.querySelector(".subtitle")?.textContent).toBe("3 lights on");

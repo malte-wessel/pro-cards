@@ -50,17 +50,20 @@ export const STYLE_TILE = `
 // a poster (fill.ts: fillPoster): the icon and the corner's pills at the top, the name, the big value
 // and what follows them anchored to the bottom of whatever height it is given (unlike a tile, which
 // centres); its natural height is its content's. A sparkline or columns plot takes the room left
-// below the value, and on the entity card it runs to the card's edges.
+// below the value, and on the entity card it runs to the card's edges. Content taller than the
+// card gives way at the top: the value and its controls stay, the icon is cut first.
 export const STYLE_POSTER = `
-  ha-card.layout-poster .body { flex: 1 1 auto; padding: 16px; }
-  .row.poster { flex: 1 1 auto; gap: 12px; }
-  .ptop { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+  ha-card.layout-poster .body { flex: 1 1 auto; min-height: 0; padding: 16px; }
+  /* the top line keeps the top (its auto margin takes the room); with no room left, the content
+     packs to the bottom and overflows at the top */
+  .row.poster { flex: 1 1 auto; min-height: 0; justify-content: flex-end; gap: 12px; }
+  .ptop { flex: none; margin-bottom: auto; display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
   .plead { flex: none; }
   .corner { flex: 0 1 auto; min-width: 0; margin-inline-start: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
   .corner > .plabel { flex: none; text-transform: uppercase; letter-spacing: .08em; background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fe-color) 40%, transparent); }
   /* the badges answer the pointer above the poster's own action layer */
   .row.poster .corner > .row.hval { pointer-events: auto; max-width: 100%; }
-  .pbody { margin-top: auto; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .pbody { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .pbody:has(> .plot.grow) { flex: 1 1 auto; min-height: 0; }
   /* the texts keep their lines (clipped text would shrink to nothing); the plot gives way */
   .pbody > :not(.plot) { flex: none; }
@@ -78,9 +81,11 @@ export const STYLE_POSTER = `
   .row.poster .big.fit b { font-size: var(--fit); }
   .pbody > :is(.bar, .gauge, .ctl-slider, .ctl-segments, .ctl-buttons, .plot) { margin-top: 8px; }
   .pbody > .gauge { align-self: center; }
-  /* a gauge poster: the arc and its name centred, across and down */
+  /* a gauge poster: the arc and its name centred, across and down; the arc stays small enough for
+     the arc and its name to fit three rows at any width */
+  .row.poster:has(> .pbody.pgauge) > .ptop { margin-bottom: 0; }
   .pbody.pgauge { margin-block: auto; align-items: center; text-align: center; }
-  .pbody.pgauge > .gauge { margin-top: 0; }
+  .pbody.pgauge > .gauge { margin-top: 0; max-width: 120px; }
   /* the entity card: the poster is one button (its action layer fills the card, as a tile's) and its
      plot runs to the card's edges, under the body's padding; the card's corners clip it */
   ha-card.layout-poster .body { position: relative; }
@@ -88,8 +93,9 @@ export const STYLE_POSTER = `
   ha-card.layout-poster .row.poster > .hit { border-radius: var(--ha-card-border-radius, 12px); }
   ha-card.layout-poster .row.poster > .hit:focus-visible { box-shadow: inset 0 0 0 2px var(--fe-color); }
   ha-card.layout-poster .pbody > .plot { width: auto; margin: 8px -16px -16px; }
-  /* a line reaches up under the value; the texts stay on top of it (columns would cover them) */
-  ha-card.layout-poster .pbody > .plot.grow[data-kind="sparkline"] { margin-top: -16px; }
+  /* a line right under the value reaches up under it; the texts stay on top of it (columns would
+     cover them, and a line under a secondary line would cross its text) */
+  ha-card.layout-poster .pbody > .pvalue + .plot.grow[data-kind="sparkline"] { margin-top: -16px; }
   ha-card.layout-poster .pbody:has(> .plot.grow) > :not(.plot) { position: relative; z-index: 1; }
 `;
 // the header badges (render/badge.ts): the row is the pill (.pb) of its style (b-outline, b-soft,

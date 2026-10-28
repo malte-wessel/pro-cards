@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { setRate } from "../../../src/shared/flow/dom.ts";
+import { buildRow, rowBuilt, setRate } from "../../../src/shared/flow/dom.ts";
+import { BAND, LAYOUTS } from "../../../src/shared/flow/constants.ts";
 import { bandHeight, enumOf, flowObject, sensorId } from "../../../src/shared/flow/config.ts";
 import {
   compassIndex,
@@ -107,5 +108,37 @@ describe("setRate", () => {
     setRate(withAnimations([anim, turn]), 2);
     expect(anim.playbackRate).toBe(2);
     expect(turn.playbackRate).toBe(1);
+  });
+});
+
+describe("the poster's row", () => {
+  it("is a layout of the flow cards, with a 40 px lead", () => {
+    expect(LAYOUTS).toEqual(["tile", "hero", "poster"]);
+    expect(BAND.posterLead).toBe(40);
+  });
+  it("is the entity poster's skeleton: the lead and the pill on top, the texts below", () => {
+    const row = document.createElement("div");
+    const lead = document.createElement("div");
+    lead.className = "lead";
+    expect(rowBuilt(row)).toBe(false);
+    buildRow(row, "poster", lead);
+    expect(rowBuilt(row)).toBe(true);
+    expect([...row.children].map((c) => c.className)).toEqual(["ptop", "pbody"]);
+    expect(row.querySelector(":scope > .ptop > .plead > .lead")).toBe(lead);
+    const pill = row.querySelector<HTMLElement>(":scope > .ptop > .corner > .plabel")!;
+    expect(pill.classList.contains("pill")).toBe(true);
+    const body = row.querySelector(":scope > .pbody")!;
+    expect([...body.children].map((c) => c.className)).toEqual(["pname", "pvalue", "secondary"]);
+    expect(body.querySelector(":scope > .pvalue > .big > b")).not.toBeNull();
+    // no tile parts
+    expect(row.querySelector(".top, .primary, .end")).toBeNull();
+  });
+  it("counts a tile's or a hero's skeleton as built too, not a nested one", () => {
+    const tile = document.createElement("div");
+    buildRow(tile, "tile", document.createElement("div"));
+    expect(rowBuilt(tile)).toBe(true);
+    const outer = document.createElement("div");
+    outer.appendChild(tile);
+    expect(rowBuilt(outer)).toBe(false);
   });
 });

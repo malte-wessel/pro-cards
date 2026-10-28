@@ -1,6 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect } from "vitest";
 import { niceStep, decimalsForStep, DEFAULT_HOURS } from "../../src/shared/trend/scale.ts";
-import { configToForm, formToConfig, editorSchema } from "../../src/multi-trend/editor.ts";
+import {
+  configToForm,
+  formToConfig,
+  editorSchema,
+  layoutOptions,
+} from "../../src/multi-trend/editor.ts";
 import { MultiTrendCard } from "../../src/multi-trend-card.ts";
 import type { MultiTrendCardConfig } from "../../src/multi-trend/config.ts";
 import type { HomeAssistant } from "../../src/shared/ha.ts";
@@ -213,5 +218,94 @@ describe("multi-trend-card editor titles", () => {
     expect(form.schema).toBe(schema);
     ed.hass = hass("Garden");
     expect(titles()).toEqual(["Garden"]);
+  });
+});
+
+describe("multi-trend-card poster", () => {
+  const st = (state: string, attributes: Record<string, unknown> = {}) => ({
+    state,
+    attributes,
+    last_changed: "2026-06-21T10:00:00Z",
+    last_updated: "2026-06-21T10:00:00Z",
+  });
+  const hass = () =>
+    ({
+      states: {
+        "sensor.a": st("21.46", { friendly_name: "Living room", unit_of_measurement: "°C" }),
+        "sensor.b": st("55", { friendly_name: "Humidity", unit_of_measurement: "%" }),
+        "sensor.c": st("unavailable", { friendly_name: "Gone" }),
+      },
+      locale: { language: "en" },
+      connection: { subscribeMessage: async () => () => {} },
+      // the history never arrives: the lines are drawn empty
+      callWS: () => new Promise(() => {}),
+    }) as unknown as HomeAssistant;
+  const cards: MultiTrendCard[] = [];
+  afterEach(() => {
+    for (const c of cards.splice(0)) c.remove();
+  });
+  const mount = (cfg: Partial<MultiTrendCardConfig>) => {
+    const el = new MultiTrendCard();
+    el.setConfig({ entities: ["sensor.a", "sensor.b"], layout: "poster", ...cfg });
+    document.body.appendChild(el);
+    el.hass = hass();
+    cards.push(el);
+    const fired: unknown[] = [];
+    el.addEventListener("hass-action", (ev) => fired.push((ev as CustomEvent).detail));
+    return { el, root: el.shadowRoot!.querySelector("ha-card") as HTMLElement, fired };
+  };
+  it("overlays the lines whatever their units", () => {
+    const el = new MultiTrendCard();
+    el.setConfig({ entities: ["sensor.a", "sensor.b"], layout: "poster" });
+    el.hass = hass();
+    expect(el._layout()).toBe("overlay");
+  });
+  it("is three rows high, two at least", () => {
+    const el = new MultiTrendCard();
+    el.setConfig({ entities: ["sensor.a", "sensor.b", "sensor.c"], layout: "poster" });
+    expect(el.getGridOptions()).toEqual({ columns: 6, rows: 3, min_columns: 3, min_rows: 2 });
+    expect(el.getCardSize()).toBe(3);
+  });
+  it("shows the window on top, the name and the first value large, the plot below, no legend", () => {
+    const { root } = mount({ hours_to_show: 12 });
+    expect(root.classList.contains("layout-poster")).toBe(true);
+    const header = root.querySelector<HTMLElement>(".header.poster")!;
+    expect(header.getAttribute("role")).toBe("button");
+    expect(header.querySelector(".ptop > .shape > ha-icon")).not.toBeNull();
+    expect(header.querySelector(".ptop > .plabel")!.textContent).toBe("12 h");
+    expect(header.querySelector(".pbody > .primary")!.textContent).toBe("Living room");
+    expect(header.querySelector(".pbody > .big > b")!.textContent).toBe("21.46");
+    expect(header.querySelector(".pbody > .big > span")!.textContent).toBe("°C");
+    expect(header.querySelector(".pbody > .plot")).not.toBeNull();
+    expect(root.querySelector(".legend")).toBeNull();
+    expect(root.querySelector(".secondary")).toBeNull();
+  });
+  it("names the card by its title and shows a state that is no number without a unit", () => {
+    const { root } = mount({ title: "Climate", entities: ["sensor.c", "sensor.a"] });
+    expect(root.querySelector(".pbody > .primary")!.textContent).toBe("Climate");
+    expect(root.querySelector(".big b")!.textContent).toBe("unavailable");
+    expect(root.querySelector(".big span")!.textContent).toBe("");
+  });
+  it("opens the more-info from its texts, not from a click on the plot", () => {
+    const { root, fired } = mount({});
+    (root.querySelector(".pbody > .plot") as HTMLElement).click();
+    (root.querySelector(".pbody > .plot svg") as Element).dispatchEvent(
+      new MouseEvent("click", { bubbles: true, composed: true }),
+    );
+    expect(fired).toEqual([]);
+    (root.querySelector(".pbody > .primary") as HTMLElement).click();
+    expect(fired).toEqual([
+      { config: { entity: "sensor.a", tap_action: { action: "more-info" } }, action: "tap" },
+    ]);
+    (root.querySelector(".plabel") as HTMLElement).click();
+    expect(fired).toHaveLength(2);
+  });
+  it("is a choice of the editor and survives its round trip", () => {
+    expect(layoutOptions().map((o) => o.value)).toEqual(["auto", "overlay", "lanes", "poster"]);
+    expect(layoutOptions().every((o) => o.label.length > 0)).toBe(true);
+    const cfg: MultiTrendCardConfig = { entities: [{ entity: "sensor.a" }], layout: "poster" };
+    const data = configToForm(cfg);
+    expect(data.layout).toBe("poster");
+    expect(formToConfig(data, cfg)).toEqual(cfg);
   });
 });

@@ -6,6 +6,7 @@ import {
   normalizeEntitySectionsCardConfig,
 } from "../../src/entity-sections-card.ts";
 import type { HomeAssistant } from "../../src/shared/ha.ts";
+import { groupCardSize } from "../../src/shared/entity/base.ts";
 
 describe("entity-card-pro", () => {
   it("is registered and normalises the entity keys on the card", () => {
@@ -285,5 +286,172 @@ describe("hover", () => {
       "light.c": true,
       "light.d": false,
     });
+  });
+});
+
+describe("entity-card-pro as a poster", () => {
+  it("is one poster group whose badges follow the entity", () => {
+    const c = normalizeEntityCardConfig({
+      entity: "sensor.t",
+      layout: "poster",
+      badges: ["sensor.h", { entity: "sensor.co2", style: "soft", size: "m" }],
+    });
+    expect(c.layout).toBe("poster");
+    expect(c.groups).toEqual([
+      {
+        layout: "poster",
+        idxs: [0],
+        badgeIdxs: [1, 2],
+        align: "start",
+        columns: 1,
+        divider: false,
+        visibility: null,
+      },
+    ]);
+    expect(c.entities.map((e) => e.entity)).toEqual(["sensor.t", "sensor.h", "sensor.co2"]);
+    // the badges are pills in its corner: outline and small unless they name their own
+    expect(c.entities[1].badge).toEqual({ style: "outline", size: "s" });
+    expect(c.entities[2].badge).toEqual({ style: "soft", size: "m" });
+    expect(c).toMatchObject({ hasHeader: false, headerIdxs: [] });
+  });
+  it("keeps a switch on a badge and drops the other controls", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const c = normalizeEntityCardConfig({
+      entity: "sensor.t",
+      layout: "poster",
+      badges: [
+        { entity: "switch.pump", control: "toggle" },
+        { entity: "cover.blinds", control: "slider" },
+      ],
+    });
+    expect(c.entities[1]).toMatchObject({ control: { kind: "toggle" }, toggle: true });
+    expect(c.entities[2]).toMatchObject({ control: null, toggle: false });
+    expect(warn).toHaveBeenCalledWith(
+      "entity-card-pro: a switch is the only control drawn in the header",
+    );
+    warn.mockRestore();
+  });
+  it("is a poster with no badges when none are given", () => {
+    const c = normalizeEntityCardConfig({ entity: "sensor.t", layout: "poster" });
+    expect(c.entities).toHaveLength(1);
+    expect(c.groups[0]).toMatchObject({ layout: "poster", idxs: [0], badgeIdxs: [] });
+  });
+  it("takes tile or poster only", () => {
+    expect(normalizeEntityCardConfig({ entity: "sensor.t", layout: "tile" }).layout).toBe("tile");
+    expect(() => normalizeEntityCardConfig({ entity: "sensor.t", layout: "hero" })).toThrow(
+      "entity-card-pro: layout must be one of tile | poster",
+    );
+  });
+  it("warns about badges on a tile and draws none", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const c = normalizeEntityCardConfig({ entity: "sensor.t", badges: ["sensor.h"] });
+    expect(warn).toHaveBeenCalledWith(
+      "entity-card-pro: badges are drawn on a poster only (layout: poster)",
+    );
+    expect(c.entities).toHaveLength(1);
+    expect(c.groups[0]).not.toHaveProperty("badgeIdxs");
+    warn.mockRestore();
+  });
+  it("is three rows high, two at least, and as narrow as its value's controls allow", () => {
+    const el = new EntityCard();
+    const opts = (cfg: Record<string, unknown>) => {
+      el.setConfig({ layout: "poster", ...cfg });
+      return el.getGridOptions();
+    };
+    expect(opts({ entity: "sensor.t" })).toEqual({
+      columns: 6,
+      rows: 3,
+      min_columns: 3,
+      min_rows: 2,
+    });
+    expect(el.getCardSize()).toBe(3);
+    // a block visual changes nothing: the poster has a fixed height
+    expect(opts({ entity: "sensor.t", visual: "sparkline" })).toMatchObject({ rows: 3 });
+    expect(el.getCardSize()).toBe(3);
+    // a switch beside the value needs 4 columns, a stepper 6
+    expect(opts({ entity: "switch.pump", control: "toggle" }).min_columns).toBe(4);
+    expect(opts({ entity: "climate.living", control: "stepper" }).min_columns).toBe(6);
+  });
+  it("counts three rows for a poster group", () => {
+    const c = normalizeEntityGroupCardConfig({
+      layout: "poster",
+      entities: [{ entity: "sensor.t", visual: "sparkline" }, "sensor.h", "sensor.co2"],
+    });
+    expect(groupCardSize(c, c.groups[0])).toBe(3);
+    const el = new EntityGroupCard();
+    el.setConfig({ title: "Air", layout: "poster", entities: ["sensor.t", "sensor.h"] });
+    // the header's row and the poster's three
+    expect(el.getCardSize()).toBe(4);
+  });
+});
+
+describe("posters in the group and sections cards", () => {
+  it("the group card draws its first entity as the poster, the rest as its badges", () => {
+    const c = normalizeEntityGroupCardConfig({
+      layout: "poster",
+      entities: ["sensor.t", "sensor.h"],
+      header_entities: ["sensor.co2"],
+    });
+    expect(c.groups[0]).toMatchObject({ layout: "poster", idxs: [0], badgeIdxs: [1] });
+    expect(c.headerIdxs).toEqual([2]);
+    expect(c.entities[1].badge).toEqual({ style: "outline", size: "s" });
+    // a header entity keeps the header's plain pill
+    expect(c.entities[2].badge).toEqual({ style: "plain", size: "s" });
+  });
+  it("the sections card points each poster's indices at the flat list", () => {
+    const c = normalizeEntitySectionsCardConfig({
+      sections: [
+        { layout: "row", entities: ["light.a", "light.b"] },
+        { layout: "poster", entities: ["sensor.t", "sensor.h", "sensor.co2"] },
+        { layout: "poster", entities: ["sensor.p", "sensor.q"] },
+        { entities: ["light.c"] },
+      ],
+    });
+    expect(c.groups.map((g) => [g.layout, g.idxs, g.badgeIdxs])).toEqual([
+      ["row", [0, 1], undefined],
+      ["poster", [2], [3, 4]],
+      ["poster", [5], [6]],
+      ["list", [7], undefined],
+    ]);
+    expect(c.entities.map((e) => e.entity)).toEqual([
+      "light.a",
+      "light.b",
+      "sensor.t",
+      "sensor.h",
+      "sensor.co2",
+      "sensor.p",
+      "sensor.q",
+      "light.c",
+    ]);
+  });
+});
+
+describe("vertical_align on the group and sections cards", () => {
+  it("is the top by default and keeps center and bottom", () => {
+    expect(normalizeEntityGroupCardConfig({ entities: ["light.a"] }).valign).toBe("top");
+    expect(
+      normalizeEntityGroupCardConfig({ entities: ["light.a"], vertical_align: "center" }).valign,
+    ).toBe("center");
+    const sec = (v?: string) =>
+      normalizeEntitySectionsCardConfig({
+        sections: [{ entities: ["light.a"] }],
+        vertical_align: v,
+      }).valign;
+    expect(sec()).toBe("top");
+    expect(sec("bottom")).toBe("bottom");
+  });
+  it("names the card in its error", () => {
+    expect(() =>
+      normalizeEntityGroupCardConfig({ entities: ["light.a"], vertical_align: "middle" }),
+    ).toThrow("entity-group-card-pro: vertical_align must be one of top | center | bottom");
+    expect(() =>
+      normalizeEntitySectionsCardConfig({
+        sections: [{ entities: ["light.a"] }],
+        vertical_align: "up",
+      }),
+    ).toThrow("entity-sections-card-pro: vertical_align must be one of top | center | bottom");
+  });
+  it("is no option of the entity card", () => {
+    expect(normalizeEntityCardConfig({ entity: "light.a" })).not.toHaveProperty("valign");
   });
 });

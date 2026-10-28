@@ -1,7 +1,9 @@
-import { describe, it, expect } from "vitest";
-import { solarElevation, solarDay } from "../../src/shared/solar.ts";
-import { configToForm, formToConfig } from "../../src/sun-path/editor.ts";
-import { timeAt } from "../../src/sun-path/plot.ts";
+import { afterEach, describe, it, expect, vi } from "vitest";
+import { solarElevation, solarDay, type SolarDay } from "../../src/shared/solar.ts";
+import { configToForm, editorSchema, formToConfig } from "../../src/sun-path/editor.ts";
+import { fmtEvent, timeAt } from "../../src/sun-path/plot.ts";
+import { nextEvent } from "../../src/sun-path/poster.ts";
+import type { HomeAssistant } from "../../src/shared/ha.ts";
 import { defaultLabel } from "../../src/sun-path/constants.ts";
 import { SunPathCard } from "../../src/sun-path-card.ts";
 
@@ -118,5 +120,127 @@ describe("the solar day around a moment", async () => {
     expect(solarDayAround(new Date(2026, 5, 21, 12), make).date).toBe(21);
     expect(solarDayAround(new Date(2026, 5, 21, 0, 30), make).date).toBe(20);
     expect(solarDayAround(new Date(2026, 5, 21, 23, 0), make).date).toBe(21);
+  });
+});
+
+describe("sun-path-card poster: the next event", () => {
+  const H = 3600e3;
+  // a day with its events at these hours after midnight (null: none that day)
+  const day = (sunrise: number | null, sunset: number | null, noon = 12, base = 0) =>
+    ({
+      sunrise: sunrise === null ? null : base + sunrise * H,
+      sunset: sunset === null ? null : base + sunset * H,
+      noon: base + noon * H,
+    }) as SolarDay;
+  const next = day(5, 21, 13, 24 * H);
+  it("is today's sunrise before it, then today's sunset", () => {
+    const fn = vi.fn(() => next);
+    expect(nextEvent(day(6, 20), fn, 3 * H)).toEqual({ key: "sunrise", t: 6 * H });
+    expect(nextEvent(day(6, 20), fn, 12 * H)).toEqual({ key: "sunset", t: 20 * H });
+    // the moment of an event is past: the next one
+    expect(nextEvent(day(6, 20), fn, 6 * H)).toEqual({ key: "sunset", t: 20 * H });
+    // the next day is not worked out while today has an event to come
+    expect(fn).not.toHaveBeenCalled();
+  });
+  it("is the next day's sunrise after today's sunset", () => {
+    const fn = vi.fn(() => next);
+    expect(nextEvent(day(6, 20), fn, 22 * H)).toEqual({ key: "sunrise", t: 29 * H });
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+  it("names the solar noon on a polar day or night, the next day's once it passed", () => {
+    const polar = day(null, null, 12);
+    const polarNext = day(null, null, 12, 24 * H);
+    expect(nextEvent(polar, () => polarNext, 8 * H)).toEqual({ key: "noon", t: 12 * H });
+    expect(nextEvent(polar, () => polarNext, 15 * H)).toEqual({ key: "noon", t: 36 * H });
+  });
+  it("takes the next day's sunrise when the polar night ends tomorrow", () => {
+    expect(nextEvent(day(null, null), () => next, 15 * H)).toEqual({ key: "sunrise", t: 29 * H });
+  });
+});
+
+describe("sun-path-card poster", () => {
+  const hass = () =>
+    ({
+      states: {},
+      locale: { language: "en" },
+      config: { latitude: LAT, longitude: LON, time_zone: "Europe/Berlin" },
+    }) as unknown as HomeAssistant;
+  const cards: SunPathCard[] = [];
+  afterEach(() => {
+    for (const c of cards.splice(0)) c.remove();
+    vi.useRealTimers();
+  });
+  const mount = (cfg: Record<string, unknown>, at: Date) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(at);
+    const el = new SunPathCard();
+    el.setConfig(cfg);
+    document.body.appendChild(el);
+    el.hass = hass();
+    cards.push(el);
+    return el.shadowRoot!.querySelector("ha-card") as HTMLElement;
+  };
+  it("is three rows high, two at least", () => {
+    const el = new SunPathCard();
+    el.setConfig({ layout: "poster" });
+    expect(el.getGridOptions()).toEqual({ columns: 6, rows: 3, min_columns: 3, min_rows: 2 });
+    expect(el.getCardSize()).toBe(3);
+    el.setConfig({ layout: "poster", show_dawn_dusk: true });
+    expect(el.getCardSize()).toBe(3);
+  });
+  it("names today's sunset during the day, large, with how soon it comes", () => {
+    const now = local(2026, 6, 21, 18);
+    const card = mount({ layout: "poster" }, now);
+    const sunset = solarDay(local(2026, 6, 21), LAT, LON).sunset!;
+    expect(card.classList.contains("layout-poster")).toBe(true);
+    const poster = card.querySelector<HTMLElement>(".body > .poster")!;
+    expect(poster.querySelector(".pname")!.textContent).toBe("Sunset");
+    expect(poster.querySelector(".big b")!.textContent).toBe(fmtEvent(hass(), sunset));
+    expect(poster.querySelector(".plabel")!.textContent).toBe("in 4 hours");
+    expect(poster.querySelector(".pbody > .plot")).not.toBeNull();
+    // the sun is up: its icon and colour
+    expect(poster.querySelector(".lead ha-icon")!.getAttribute("icon")).toBe(
+      "mdi:white-balance-sunny",
+    );
+    expect(poster.style.getPropertyValue("--fe-color")).toBe("var(--amber-color)");
+    // none of the card layout's rows
+    expect(card.querySelector(".events")).toBeNull();
+    expect(card.querySelector(".row .ev")).toBeNull();
+  });
+  it("names tomorrow's sunrise at night, with the night's icon and its own label", () => {
+    const now = local(2026, 6, 21, 23);
+    const card = mount({ layout: "poster", labels: { sunrise: "Dawn chorus" } }, now);
+    const rise = solarDay(local(2026, 6, 22), LAT, LON).sunrise!;
+    expect(card.querySelector(".pname")!.textContent).toBe("Dawn chorus");
+    expect(card.querySelector(".big b")!.textContent).toBe(fmtEvent(hass(), rise));
+    expect(card.querySelector(".plabel")!.textContent).toBe("in 6 hours");
+    expect(card.querySelector(".lead ha-icon")!.getAttribute("icon")).toBe("mdi:weather-night");
+    expect(card.querySelector<HTMLElement>(".poster")!.style.getPropertyValue("--fe-color")).toBe(
+      "var(--indigo-color)",
+    );
+  });
+  it("keeps the card layout's rows without layout: poster", () => {
+    const card = mount({}, local(2026, 6, 21, 12));
+    expect(card.classList.contains("layout-poster")).toBe(false);
+    expect(card.querySelector(".poster")).toBeNull();
+    expect(card.querySelectorAll(".row .ev")).toHaveLength(2);
+    expect(card.querySelector(".events")).not.toBeNull();
+  });
+  it("is chosen in the editor: card by default, only a poster written to the config", () => {
+    expect(configToForm({}).layout).toBe("card");
+    expect(configToForm({ layout: "poster" }).layout).toBe("poster");
+    const data = configToForm({ layout: "poster", title: "Sun" });
+    expect(formToConfig(data, { layout: "poster", title: "Sun" })).toEqual({
+      layout: "poster",
+      title: "Sun",
+    });
+    expect(formToConfig({ ...data, layout: "card" }, { layout: "poster" })).not.toHaveProperty(
+      "layout",
+    );
+    const field = editorSchema().find((f) => f.name === "layout") as unknown as {
+      selector: { select: { options: { value: string; label: string }[] } };
+    };
+    expect(field.selector.select.options.map((o) => o.value)).toEqual(["card", "poster"]);
+    expect(field.selector.select.options.every((o) => o.label.length > 0)).toBe(true);
   });
 });

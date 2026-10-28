@@ -1,7 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, describe, it, expect } from "vitest";
 import { RainCard } from "../../src/rain-card.ts";
 import { normalizeRainCardConfig } from "../../src/rain/config.ts";
 import { collectTemplates } from "../../src/shared/entity/config.ts";
+import type { HassEntity, HomeAssistant } from "../../src/shared/ha.ts";
 import { snapshot, world } from "../../docs/.vitepress/theme/ha-shim/hass.ts";
 import {
   countOf,
@@ -258,5 +259,94 @@ describe("hover", () => {
     };
     expect(lead({})).toBe(false);
     expect(lead({ hover: true })).toBe(true);
+  });
+});
+
+describe("rain-card poster", () => {
+  it("is a layout; the flow poster shows the icon, the hero keeps its lead", () => {
+    const c = normalizeRainCardConfig({ entity: R, layout: "poster" });
+    expect(c).toMatchObject({ layout: "poster", visual: "icon", lead: "animated" });
+    expect(normalizeRainCardConfig({ entity: R, layout: "poster", lead: "icon" }).lead).toBe(
+      "icon",
+    );
+    expect(normalizeRainCardConfig({ entity: R, layout: "poster", visual: "flow" }).lead).toBe(
+      "icon",
+    );
+    expect(
+      normalizeRainCardConfig({ entity: R, layout: "poster", visual: "flow", lead: "animated" })
+        .lead,
+    ).toBe("icon");
+    expect(
+      normalizeRainCardConfig({ entity: R, layout: "hero", visual: "flow", lead: "icon" }).lead,
+    ).toBe("icon");
+    expect(() => normalizeRainCardConfig({ entity: R, layout: "x" })).toThrow(
+      "rain-card-pro: layout must be one of tile | hero | poster",
+    );
+  });
+  it("is three rows high, two at least", () => {
+    const el = new RainCard();
+    el.setConfig({ entity: R, layout: "poster" });
+    expect(el.getGridOptions()).toEqual({ columns: 6, rows: 3, min_columns: 3, min_rows: 2 });
+    expect(el.getCardSize()).toBe(3);
+    el.setConfig({ entity: R, layout: "poster", title: "Rain" });
+    expect(el.getCardSize()).toBe(4);
+  });
+
+  const st = (id: string, state: string, attributes: Record<string, unknown>) =>
+    ({ entity_id: id, state, attributes }) as unknown as HassEntity;
+  const hass = () =>
+    ({
+      states: {
+        [R]: st(R, "2.4", { friendly_name: "Roof", unit_of_measurement: "mm/h" }),
+        "sensor.rain_today": st("sensor.rain_today", "5.2", { unit_of_measurement: "mm" }),
+      },
+      locale: { language: "en" },
+      config: {},
+      formatEntityState: (s: HassEntity) => `${s.state} ${s.attributes.unit_of_measurement}`,
+    }) as unknown as HomeAssistant;
+  const cards: RainCard[] = [];
+  afterEach(() => {
+    for (const c of cards.splice(0)) c.remove();
+  });
+  const mount = (cfg: Record<string, unknown>) => {
+    const el = new RainCard();
+    el.setConfig({ entity: R, today: "sensor.rain_today", layout: "poster", ...cfg });
+    document.body.appendChild(el);
+    el.hass = hass();
+    cards.push(el);
+    return el.shadowRoot as ShadowRoot;
+  };
+  it("draws the entity poster's parts with the label in the pill", () => {
+    const r = mount({ rules: [{ above: 1, label: "Showers" }] });
+    expect(r.querySelector("ha-card")!.classList.contains("layout-poster")).toBe(true);
+    const row = r.querySelector<HTMLElement>(".row")!;
+    expect([...row.classList]).toEqual(expect.arrayContaining(["row", "wposter", "poster"]));
+    expect(row.classList.contains("flow")).toBe(false);
+    // the animated lead at the poster's size
+    const lead = row.querySelector<HTMLElement>(":scope > .ptop > .plead > .lead.wlead")!;
+    expect(lead.style.getPropertyValue("--lead")).toBe("40px");
+    const pill = row.querySelector<HTMLElement>(".plabel")!;
+    expect(pill.textContent).toBe("Showers");
+    expect(pill.hidden).toBe(false);
+    expect(row.querySelector(".pname")!.textContent).toBe("Roof");
+    expect(row.querySelector(".pvalue .big b")!.textContent).toBe("2.4");
+    expect(row.querySelector(".pvalue .big span")!.textContent).toBe("mm/h");
+    // the secondary line: today's total, not the label (the pill has it)
+    const sec = row.querySelector(".pbody > .secondary")!.textContent!;
+    expect(sec).toContain("5.2 mm");
+    expect(sec).not.toContain("Showers");
+  });
+  it("hides the pill without a matching rule", () => {
+    const pill = mount({}).querySelector<HTMLElement>(".plabel")!;
+    expect(pill.hidden).toBe(true);
+  });
+  it("with visual: flow puts the band behind the poster and the icon in the lead", () => {
+    const r = mount({ visual: "flow" });
+    const row = r.querySelector<HTMLElement>(".row.wposter")!;
+    expect(row.classList.contains("flow")).toBe(true);
+    expect(row.querySelector(":scope > .wflow.bg")).not.toBeNull();
+    // the plain icon, not the animated lead (the band animates)
+    expect(row.querySelector(".plead > .lead")).not.toBeNull();
+    expect(row.querySelector(".plead .wlead")).toBeNull();
   });
 });
