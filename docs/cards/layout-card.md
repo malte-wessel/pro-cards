@@ -1,6 +1,6 @@
 # Layout Card Pro
 
-`custom:layout-card-pro` arranges cards, Pro Cards and Home Assistant's own, inside a section: in a grid or in masonry, as one surface or as separate cards, and differently depending on how many view columns the section spans. The cards keep their own `visibility`. YAML only for now. The [layout showcase](/showcase/layout) shows whole dashboards built with it.
+`custom:layout-card-pro` arranges cards, Pro Cards and Home Assistant's own, inside a section: in a grid or in masonry, as one surface or as separate cards, and differently depending on how many view columns the section spans. The cards keep their own `visibility`. YAML only for now. The [showcase dashboards](/showcase/home) are built with it.
 
 ## When to use it
 
@@ -50,7 +50,7 @@ cards:
 
 ### More columns where there is room
 
-The lights of the house: two columns on a phone, four once the section spans two view columns. This frame is as wide as two view columns, so it shows four; the [showcase](/showcase/layout) has the same card in a narrow and a wide section.
+The lights of the house: two columns on a phone, four once the section spans two view columns. This frame is as wide as two view columns, so it shows four.
 
 ::: live width=full
 

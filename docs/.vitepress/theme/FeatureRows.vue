@@ -45,7 +45,7 @@ onBeforeUnmount(() => handles.forEach((h) => h.dispose()));
 </script>
 
 <template>
-  <section v-if="rows.length" class="features">
+  <section v-if="rows.length" class="features ha-theme" :data-theme="theme">
     <header class="head">
       <h2 class="headline">Cards that do more than show a number.</h2>
       <p class="lead">
@@ -61,7 +61,7 @@ onBeforeUnmount(() => handles.forEach((h) => h.dispose()));
           >{{ row.label ?? "Learn more" }} →</a
         >
       </div>
-      <div class="stage ha-theme" :style="{ '--cols': row.columns ?? 1 }" :data-theme="theme">
+      <div class="stage" :style="{ '--cols': row.columns ?? 1 }">
         <div v-for="(_, c) in row.cards" :key="c" :ref="host(r, c)" class="ha-grid"></div>
       </div>
     </article>
@@ -70,8 +70,19 @@ onBeforeUnmount(() => handles.forEach((h) => h.dispose()));
 </template>
 
 <style scoped>
+/* the section is a band of Home Assistant's ground, as the examples' frames are (ha-theme paints
+   it and follows the example theme); the shadow carries it out to the window's edges without
+   widening the page, the clip keeps it to the band's height */
 .features {
   margin: 32px 0 96px;
+  padding-block: 88px;
+  box-shadow: 0 0 0 100vmax var(--primary-background-color);
+  clip-path: inset(0 -100vmax);
+}
+/* the copy keeps the site's font; ha-theme gives the cards the example theme's */
+.head,
+.copy {
+  font-family: var(--vp-font-family-base);
 }
 /* .vp-doc styles every h2 / h3 / p / a on the page; these reset what they set */
 .head {
@@ -144,12 +155,11 @@ onBeforeUnmount(() => handles.forEach((h) => h.dispose()));
 .copy .link:hover {
   color: var(--vp-c-brand-1);
 }
-/* the cards of a row are equally tall, on the page's ground (ha-theme paints HA's own) */
+/* the cards of a row are equally tall */
 .stage {
   display: grid;
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   gap: 16px;
-  background: none;
 }
 .error {
   margin-top: 12px;

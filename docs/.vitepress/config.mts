@@ -105,11 +105,11 @@ const guide = [
   { text: "Changelog", link: "/changelog/" },
 ];
 
-// the showcase dashboards, grown from the homepage examples
+// the showcase dashboards, linked from the home page
 const showcase = [
+  { text: "Home", link: "/showcase/home" },
   { text: "Energy", link: "/showcase/energy" },
-  { text: "Layout", link: "/showcase/layout" },
-  { text: "Overview", link: "/showcase/overview" },
+  { text: "Living room", link: "/showcase/living-room" },
   { text: "Weather", link: "/showcase/weather" },
 ];
 
