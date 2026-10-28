@@ -95,6 +95,9 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
   }
 
   setConfig(config: SunPathCardConfig | null | undefined) {
+    const layout = config?.layout ?? "card";
+    if (layout !== "card" && layout !== "poster")
+      throw new Error(`${CARD_TYPE}: layout must be one of card | poster`);
     this._config = { ...DEFAULTS, ...(config || {}) };
     this._day = null;
     syncKeepHeight(this, config);

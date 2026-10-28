@@ -677,7 +677,7 @@ describe("weather-card poster", () => {
     el.hass = hass;
     cards.push(el);
     await new Promise((r) => setTimeout(r, 0));
-    return { root: el.shadowRoot!.querySelector("ha-card") as HTMLElement, asked };
+    return { root: el.shadowRoot!.querySelector("ha-card") as HTMLElement, asked, el, hass };
   };
   it("draws the condition in the pill, the big temperature, today's high / low and the next hours", async () => {
     const { root, asked } = await mount({ name: "Garden" });
@@ -705,6 +705,24 @@ describe("weather-card poster", () => {
     const sec = root.querySelector(".pbody > .secondary")!;
     expect(sec.textContent).toBe("Mild · 18° / 9°");
     expect(sec.querySelector(".accent")!.textContent).toBe("Mild");
+  });
+  it("keeps its curve through a render that changed nothing it reads", async () => {
+    const { root, el, hass } = await mount({});
+    const plot = root.querySelector(".plot.ptrend");
+    expect(plot).not.toBeNull();
+    // a render with nothing new (the refresh tick's): the curve and the condition's colour stay
+    el._render();
+    expect(root.querySelector(".plot.ptrend")).toBe(plot);
+    const row = root.querySelector<HTMLElement>(".row.poster")!;
+    expect(row.style.getPropertyValue("--fe-color")).toBe("var(--primary-color)");
+    // the temperature changed: the poster is filled again
+    const w = hass.states[W];
+    el.hass = {
+      ...hass,
+      states: { ...hass.states, [W]: { ...w, attributes: { ...w.attributes, temperature: 16.2 } } },
+    } as never;
+    expect(root.querySelector(".pvalue .big b")!.textContent).toBe("16.2");
+    expect(root.querySelector(".plot.ptrend")).not.toBe(plot);
   });
   it("draws no curve without an hourly forecast", async () => {
     const { root, asked } = await mount({}, 1);

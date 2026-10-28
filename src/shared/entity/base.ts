@@ -42,6 +42,7 @@ import { membersOf } from "./look.ts";
 import { modelOf, nameOf, tplOf, type PlotHandlers, type RenderCtx } from "./model.ts";
 import { plotRows } from "./render/blocks.ts";
 import { fillByClass } from "./render/fill.ts";
+import { posterParts } from "./render/lead.ts";
 import { drawPlot, showHover, windowOf, type PlotElement } from "./render/plots.ts";
 import type { EntityModel } from "./model.ts";
 import { TextCache, themeChanged } from "../typography.ts";
@@ -62,11 +63,12 @@ export interface VisState {
 }
 
 // whether a text's glyphs are wider than its box, to the fraction of a pixel: an ellipsis shows for
-// any overflow, and scrollWidth rounds it away
+// any overflow, and scrollWidth rounds it away. Less than a layout unit (1/64 px) is rounding,
+// which shows no ellipsis
 const overflows = (el: HTMLElement) => {
   const range = document.createRange();
   range.selectNodeContents(el);
-  return range.getBoundingClientRect().width > el.getBoundingClientRect().width + 0.01;
+  return range.getBoundingClientRect().width > el.getBoundingClientRect().width + 1 / 64;
 };
 
 // grid rows a block visual (and a block control) adds below its row
@@ -773,20 +775,8 @@ export abstract class EntityCardBase extends HTMLElement {
   // badges, rows of their own in the corner that its fill never touches
   _poster(idx: number, badgeIdxs: number[]) {
     const row = this._row(idx, "poster");
-    const top = document.createElement("div");
-    top.className = "ptop";
-    const lead = document.createElement("div");
-    lead.className = "plead";
-    const corner = document.createElement("div");
-    corner.className = "corner";
-    const label = document.createElement("span");
-    label.className = "pill plabel";
-    corner.appendChild(label);
+    const { corner } = posterParts(row);
     for (const b of badgeIdxs) corner.appendChild(this._row(b, "hval"));
-    top.append(lead, corner);
-    const body = document.createElement("div");
-    body.className = "pbody";
-    row.append(top, body);
     return row;
   }
   // the rows of a group's shown items that hold a growing plot (a grid row counts once)
@@ -847,7 +837,7 @@ export abstract class EntityCardBase extends HTMLElement {
       // a header item (or a body row whose rebuild waits for a gesture) hides in place
       row.hidden = !vis.items[idx];
       if (row.hidden) continue;
-      row.style.setProperty("--fe-color", cssColor(m.look.color, "var(--primary-color)"));
+      row.style.setProperty("--fe-color", this._rowColor(row, ent, m));
       // a row whose control is being dragged or held keeps its DOM until the gesture ends
       if (this._dragging === idx) continue;
       // a focused select keeps its row too: rebuilding it would close its open list
@@ -984,6 +974,10 @@ export abstract class EntityCardBase extends HTMLElement {
   // fills one row from its model; a subclass adds its own row kinds and falls back to this
   _fill(ctx: RenderCtx, row: HTMLElement, ent: EntityItem, idx: number, m: EntityModel) {
     fillByClass(ctx, row, ent, idx, m);
+  }
+  // a row's colour (--fe-color), set on every render, also on a row that keeps its DOM: its look's
+  _rowColor(_row: HTMLElement, _ent: EntityItem, m: EntityModel) {
+    return cssColor(m.look.color, "var(--primary-color)");
   }
   // the card tint: the colour of the first shown row whose matching rule sets tint_card
   _tintColor(_ctx: RenderCtx, models: EntityModel[], card: HTMLElement): string | null {

@@ -20,7 +20,6 @@ import {
   currentOptionOf,
   defaultPlacements,
   hasBlockControl,
-  hasTileControl,
   HVAC_ICON,
   isOn,
   optionsOf,
@@ -820,12 +819,9 @@ describe("controls on a poster", () => {
     expect(kinds(placementsOf(ent({ entity: "climate.a" }), "poster"))).toEqual(["stepper@end"]);
     expect(placementsOf(ent({}), "poster")[0].small).toBe(false);
   });
-  it("knows whether it draws any control", () => {
-    expect(hasTileControl(ent({}), "poster")).toBe(true);
-    expect(hasTileControl(ent({ entity: "sensor.a" }), "poster")).toBe(false);
-    expect(hasTileControl(ent({ control: undefined }), "poster")).toBe(false);
-    // the tile is the default row
-    expect(hasTileControl(ent({}))).toBe(true);
+  it("draws no control for a sensor or without control", () => {
+    expect(placementsOf(ent({ entity: "sensor.a" }), "poster")).toEqual([]);
+    expect(placementsOf(ent({ control: undefined }), "poster")).toEqual([]);
   });
   it("is as narrow as what sits beside its value allows", () => {
     expect(tileMinColumns(ent({ entity: "sensor.a" }), "poster")).toBe(3);

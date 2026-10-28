@@ -327,7 +327,7 @@ describe("entity-card-pro as a poster", () => {
     expect(c.entities[1]).toMatchObject({ control: { kind: "toggle" }, toggle: true });
     expect(c.entities[2]).toMatchObject({ control: null, toggle: false });
     expect(warn).toHaveBeenCalledWith(
-      "entity-card-pro: a switch is the only control drawn in the header",
+      "entity-card-pro: a switch is the only control drawn in a poster's corner",
     );
     warn.mockRestore();
   });

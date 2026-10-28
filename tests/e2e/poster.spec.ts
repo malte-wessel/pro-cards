@@ -397,6 +397,40 @@ test.describe("group and sections cards", () => {
     expect(await infos(page)).toEqual([moreInfo("sensor.living_room_humidity")]);
   });
 
+  test("a group poster under a title keeps the header's gap and its square top", async ({
+    page,
+  }) => {
+    await mount(page, {
+      type: "custom:entity-group-card-pro",
+      title: "Living room",
+      layout: "poster",
+      entities: ["sensor.living_room_temperature", "sensor.living_room_humidity"],
+    });
+    const c = card(page);
+    const body = c.locator("ha-card > .body");
+    await expect(body).toHaveCSS("padding-top", "12px");
+    const hit = c.locator(".row.poster > .hit");
+    await expect(hit).toHaveCSS("border-top-left-radius", "0px");
+    await expect(hit).toHaveCSS("border-top-right-radius", "0px");
+    expect(parseFloat(await hit.evaluate((e) => getComputedStyle(e).borderBottomLeftRadius))).toBe(
+      parseFloat(
+        await c.locator("ha-card").evaluate((e) => getComputedStyle(e).borderBottomLeftRadius),
+      ),
+    );
+    // without a title the poster is the whole card
+    await mount(page, {
+      type: "custom:entity-group-card-pro",
+      layout: "poster",
+      entities: ["sensor.living_room_temperature", "sensor.living_room_humidity"],
+    });
+    await expect(body).toHaveCSS("padding-top", "16px");
+    expect(parseFloat(await hit.evaluate((e) => getComputedStyle(e).borderTopLeftRadius))).toBe(
+      parseFloat(
+        await c.locator("ha-card").evaluate((e) => getComputedStyle(e).borderTopLeftRadius),
+      ),
+    );
+  });
+
   test("vertical_align moves the body in a taller card, the header stays on top", async ({
     page,
   }) => {
@@ -782,7 +816,33 @@ test.describe("heading card", () => {
     const c = card(page);
     const header = await rect(c.locator(".header"));
     const hvals = await rect(c.locator(".hvals"));
-    expect(hvals.left - header.left).toBeLessThanOrEqual(16);
+    const pad = await c
+      .locator(".header")
+      .evaluate((e) => parseFloat(getComputedStyle(e).paddingLeft));
+    expect(hvals.left - header.left).toBeCloseTo(pad, 0);
+  });
+
+  test("a section heading without a title keeps its line before the badges", async ({ page }) => {
+    await mount(
+      page,
+      {
+        type: "custom:heading-card-pro",
+        style: "section",
+        badges: ["sensor.outdoor_temperature", "sensor.outdoor_humidity"],
+      },
+      { width: 500 },
+    );
+    const c = card(page);
+    await expect(c.locator(".htx")).toBeHidden();
+    const header = await rect(c.locator(".header"));
+    const line = await rect(c.locator(".hline"));
+    const hvals = await rect(c.locator(".hvals"));
+    const pad = await c
+      .locator(".header")
+      .evaluate((e) => parseFloat(getComputedStyle(e).paddingLeft));
+    expect(line.left - header.left).toBeCloseTo(pad, 0);
+    expect(line.w).toBeGreaterThan(100);
+    expect(hvals.left - line.right).toBeCloseTo(10, 0);
   });
 });
 

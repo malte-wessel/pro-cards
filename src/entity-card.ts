@@ -63,7 +63,9 @@ export const normalizeEntityCardConfig = (input: unknown): EntityCardConfig => {
   const poster = layout === "poster";
   if (raw.badges !== undefined && !poster)
     console.warn(`${CARD_TYPE}: badges are drawn on a poster only (layout: poster)`);
-  const badges = poster ? normalizeHeaderEntities(raw.badges, ctx, "badges", POSTER_BADGE) : [];
+  const badges = poster
+    ? normalizeHeaderEntities(raw.badges, ctx, "badges", POSTER_BADGE, "a poster's corner")
+    : [];
   return {
     layout,
     title: null,

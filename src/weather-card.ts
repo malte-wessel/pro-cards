@@ -21,6 +21,7 @@
  */
 import { registerCard } from "./shared/card.ts";
 import { EntityCardBase, groupCardSize, type VisState } from "./shared/entity/base.ts";
+import { cssColor } from "./shared/color.ts";
 import type { EntityItem } from "./shared/entity/config.ts";
 import { modelOf, type EntityModel, type RenderCtx } from "./shared/entity/model.ts";
 import type {
@@ -52,7 +53,7 @@ import {
   type Day,
 } from "./weather/forecast.ts";
 import { showTrendHover, trendTimeAt } from "./shared/trend/plot.ts";
-import { fillCurrent, fillPoster } from "./weather/render/current.ts";
+import { condColor, fillCurrent, fillPoster } from "./weather/render/current.ts";
 import { buildForecast, drawForecast } from "./weather/render/forecast.ts";
 import { sectionShell } from "./weather/render/section.ts";
 import { buildTrend, drawTrendSection, type ForecastTrendEl } from "./weather/render/trend.ts";
@@ -318,7 +319,7 @@ export class WeatherCard extends EntityCardBase {
     const c = row.classList;
     if (c.contains("poster")) {
       const today = this._days(1)?.find((d) => isTodayEntry(d.t, ctx.now)) ?? null;
-      const temp = modelOf(ctx, cfg.entities[cfg.tempIdx]);
+      const temp = this._modelAt(ctx, cfg.tempIdx);
       const cm = { cond: m, temp, today, iconSize: cfg.iconSize, icons: cfg.icons };
       fillPoster(ctx, row, cfg, cm, this._hourSeries(ctx));
       return;
@@ -338,13 +339,31 @@ export class WeatherCard extends EntityCardBase {
     }
     super._fill(ctx, row, ent, idx, m);
   }
-  // the tile, the hero and the poster read the temperature item and the forecast too: filled
-  // every time
+  // the tile and the hero read the temperature item and the forecast too: filled every time. The
+  // poster keeps its curve: it is filled again when the condition, the temperature, the forecast
+  // or the hour changes
   _rowInputs(ctx: RenderCtx, row: HTMLElement, idx: number, m: EntityModel) {
     const c = row.classList;
+    if (c.contains("wtile") || c.contains("whero")) return null;
+    const own = super._rowInputs(ctx, row, idx, m);
+    if (!c.contains("poster") || !own) return own;
+    const cfg = this._config as WeatherConfig;
+    return [
+      ...own,
+      this._modelAt(ctx, cfg.tempIdx),
+      this._forecast.hourly,
+      this._forecast.daily,
+      this._forecast.twice_daily,
+      Math.floor(ctx.now / 3600e3),
+    ];
+  }
+  // the tile, the hero and the poster take the condition's colour (primary unless a rule or `color`
+  // says otherwise), not Home Assistant's state colour
+  _rowColor(row: HTMLElement, ent: EntityItem, m: EntityModel) {
+    const c = row.classList;
     return c.contains("wtile") || c.contains("whero") || c.contains("poster")
-      ? null
-      : super._rowInputs(ctx, row, idx, m);
+      ? cssColor(condColor(ent, m), "var(--primary-color)")
+      : super._rowColor(row, ent, m);
   }
   // temperature rules may tint the card too
   _tintColor(ctx: RenderCtx, models: EntityModel[], card: HTMLElement) {

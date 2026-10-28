@@ -180,6 +180,12 @@ describe("sun-path-card poster", () => {
     cards.push(el);
     return el.shadowRoot!.querySelector("ha-card") as HTMLElement;
   };
+  it("rejects a layout it does not know", () => {
+    expect(() => new SunPathCard().setConfig({ layout: "Poster" } as never)).toThrow(
+      "sun-path-card-pro: layout must be one of card | poster",
+    );
+    expect(() => new SunPathCard().setConfig({ layout: "card" })).not.toThrow();
+  });
   it("is three rows high, two at least", () => {
     const el = new SunPathCard();
     el.setConfig({ layout: "poster" });

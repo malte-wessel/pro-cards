@@ -8,6 +8,7 @@ import { COMPASS } from "../../shared/flow/constants.ts";
 import {
   buildRow,
   builtLead,
+  leadSize,
   fillFlowTexts,
   rowBuilt,
   setRate,
@@ -18,7 +19,6 @@ import { compassIndex, parseBearing, toKmh } from "../../shared/flow/maths.ts";
 import { fmtNumber } from "../../shared/format.ts";
 import { t, type StringKey } from "../../shared/i18n.ts";
 import type { WindConfig } from "../config.ts";
-import { DEFAULTS } from "../constants.ts";
 import { leadDuration, pxps } from "../flow.ts";
 import { setAngles } from "./flow.ts";
 import { animatedLead, arrowLead } from "./lead.ts";
@@ -52,8 +52,6 @@ export const windNow = (ctx: RenderCtx, cfg: WindConfig, cm: CurrentModels): Win
   return { kmh, gustKmh, bearing, dirText, chip };
 };
 
-const leadSize = (kind: RowKind) =>
-  kind === "hero" ? DEFAULTS.heroLead : kind === "poster" ? DEFAULTS.posterLead : DEFAULTS.tileLead;
 const leadOf = (cfg: WindConfig, kind: RowKind) => {
   const size = leadSize(kind);
   return cfg.lead === "arrow"

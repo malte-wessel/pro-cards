@@ -90,6 +90,8 @@ export class MultiTrendCard extends HTMLElement {
   _tpl: TemplateSubscriptions;
   // the state text of each entity at the last render (a rule may match a new state)
   _lastStates: (string | undefined)[] = [];
+  // the entity the header (the poster) names and opens: the first, on a poster the first shown
+  _lead = 0;
   _visWatch: VisibilityWatch;
   _person: { user: string | undefined; id: string | null } | null = null;
 
@@ -360,20 +362,22 @@ export class MultiTrendCard extends HTMLElement {
   }
 
   _moreInfo() {
-    fireAction(this, this._config.entities[0].entity, { action: "more-info" }, "tap");
+    fireAction(this, this._config.entities[this._lead].entity, { action: "more-info" }, "tap");
   }
 
   _render() {
     if (!this._root || !this._hass) return;
     const card = this._root;
-    const st0 = this._state(0);
-    // the shown series; the title, icon and more-info stay the first entity's (the card's)
+    // the shown series; the title, icon and more-info stay the first entity's (the card's), on a
+    // poster the first shown one's, whose value it shows large
     const shown = this._shown();
     const layout = this._layout(shown);
+    this._lead = this._poster() ? (shown[0] ?? 0) : 0;
+    const st0 = this._state(this._lead);
     this._lastStates = this._config.entities.map((e) => this._hass?.states[e.entity]?.state);
 
     // Header text
-    qs(card, ".primary").textContent = this._config.title || this._name(0);
+    qs(card, ".primary").textContent = this._config.title || this._name(this._lead);
     const icon = qs(card, "ha-icon");
     icon.setAttribute(
       "icon",

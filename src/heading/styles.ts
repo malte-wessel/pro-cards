@@ -55,8 +55,14 @@ const STYLE_HEADING = `
   .header.bpos-end:not(.align-center) > .htx { grid-column: 2; min-width: 0; }
   .header.bpos-end:not(.align-center) > .hline { grid-column: 3; margin-left: 10px; }
   .header.bpos-end:not(.align-center) > .hvals { grid-column: 4; margin-left: 10px; }
-  /* no title and no subtitle: the title's column takes no room, the badges have the line */
-  .header.bpos-end:not(.align-center):has(> .htx[hidden]) { grid-template-columns: auto 0 0 minmax(0, 1fr); }
+  /* no title and no subtitle: the title's column takes no room and leaves no gap (the icon's margin
+     is the gap); the badges have the line, a section's line what they leave */
+  .header.bpos-end:not(.align-center, .s-section):has(> .htx[hidden]) { grid-template-columns: auto 0 0 minmax(min-content, 1fr); }
+  .header.bpos-end.ov-scroll:not(.align-center, .s-section):has(> .htx[hidden]) { grid-template-columns: auto 0 0 minmax(0, 1fr); }
+  .header.bpos-end.s-section:not(.align-center):has(> .htx[hidden]) { grid-template-columns: auto 0 minmax(24px, 1fr) minmax(min-content, max-content); }
+  .header.bpos-end.s-section.ov-scroll:not(.align-center):has(> .htx[hidden]) { grid-template-columns: auto 0 minmax(24px, 1fr) minmax(0, max-content); }
+  .header.bpos-end:not(.align-center):has(> .htx[hidden]) > .hline,
+  .header.bpos-end:not(.align-center, .s-section):has(> .htx[hidden]) > .hvals { margin-left: 0; }
   .header.bpos-inline .htx { flex: 0 1 auto; }
   .header.bpos-inline .hvals { flex: 1 1 0; justify-content: flex-start; }
   .header.bpos-below { flex-wrap: wrap; }

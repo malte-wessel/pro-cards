@@ -300,6 +300,19 @@ describe("multi-trend-card poster", () => {
     (root.querySelector(".plabel") as HTMLElement).click();
     expect(fired).toHaveLength(2);
   });
+  it("names and opens the series it shows large when the first one is hidden", () => {
+    const hidden = [{ condition: "state", entity: "sensor.b", state: "0" }];
+    const { root, fired } = mount({
+      entities: [{ entity: "sensor.a", visibility: hidden }, "sensor.b"],
+    });
+    expect(root.querySelector(".pbody > .primary")!.textContent).toBe("Humidity");
+    expect(root.querySelector(".big b")!.textContent).toBe("55");
+    expect(root.querySelector(".big span")!.textContent).toBe("%");
+    (root.querySelector(".pbody > .primary") as HTMLElement).click();
+    expect(fired).toEqual([
+      { config: { entity: "sensor.b", tap_action: { action: "more-info" } }, action: "tap" },
+    ]);
+  });
   it("is a choice of the editor and survives its round trip", () => {
     expect(layoutOptions().map((o) => o.value)).toEqual(["auto", "overlay", "lanes", "poster"]);
     expect(layoutOptions().every((o) => o.label.length > 0)).toBe(true);

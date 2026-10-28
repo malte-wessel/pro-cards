@@ -83,6 +83,26 @@ export const pillEl = (text: string) => {
   s.textContent = text;
   return s;
 };
+// a poster's skeleton (styles: STYLE_POSTER), built once into its row: the top line (the lead and
+// the corner with the label's pill) and the body; the entity base adds the badges to the corner,
+// the flow cards their texts to the body
+export const posterParts = (row: HTMLElement) => {
+  const div = (cls: string) => {
+    const d = document.createElement("div");
+    d.className = cls;
+    return d;
+  };
+  const top = div("ptop"),
+    lead = div("plead"),
+    corner = div("corner"),
+    body = div("pbody");
+  const label = pillEl("");
+  label.classList.add("plabel");
+  corner.appendChild(label);
+  top.append(lead, corner);
+  row.append(top, body);
+  return { lead, corner, body };
+};
 // the badge of a header item: one pill that carries the icon and the label or value; with an icon
 // and nothing to say (show_value: false, or an empty text) it is the icon in a circle
 export const headerBadgeEl = (ctx: RenderCtx, ent: EntityItem, m: EntityModel) => {

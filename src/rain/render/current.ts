@@ -7,6 +7,7 @@ import { tplOf, unitOf, type EntityModel, type RenderCtx } from "../../shared/en
 import {
   buildRow,
   builtLead,
+  leadSize,
   fillFlowTexts,
   rowBuilt,
   setRate,
@@ -17,7 +18,6 @@ import {
 import { parseBearing, toKmh } from "../../shared/flow/maths.ts";
 import { t } from "../../shared/i18n.ts";
 import type { RainConfig } from "../config.ts";
-import { DEFAULTS } from "../constants.ts";
 import { fallRate, isWet, leadFall, levelOf, slantOf, tanOf, toMm, toMmH } from "../rain.ts";
 import { animatedLead, rainLead } from "./lead.ts";
 
@@ -56,8 +56,6 @@ export const rainNow = (ctx: RenderCtx, cfg: RainConfig, cm: CurrentModels): Rai
   return { rate, today, slant, chip };
 };
 
-const leadSize = (kind: RowKind) =>
-  kind === "hero" ? DEFAULTS.heroLead : kind === "poster" ? DEFAULTS.posterLead : DEFAULTS.tileLead;
 const leadOf = (cfg: RainConfig, kind: RowKind) => {
   const size = leadSize(kind);
   return cfg.lead === "icon"

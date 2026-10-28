@@ -47,6 +47,13 @@ export const STYLE_TILE = `
   .row.tile > .gauge { align-self: center; margin-top: auto; }
   .row.tile:has(> .gauge) > :last-child { margin-bottom: auto; }
 `;
+// the poster's texts, shared with the cards that draw a poster in their own DOM (the sun path and
+// multi trend cards): the label's outline pill in a colour, the name in small capitals and the
+// large value's light weight (declarations, for the card's own selectors)
+export const posterPill = (color: string) =>
+  `box-sizing: border-box; min-width: 0; padding: 4px 10px; border-radius: 999px; ${type(12, 16)} font-weight: ${fw("medium")}; letter-spacing: .08em; text-transform: uppercase; color: ${color}; background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, ${color} 40%, transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;`;
+export const POSTER_NAME = `${type(11, 16)} font-weight: ${fw("medium")}; letter-spacing: .1em; text-transform: uppercase; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;`;
+export const POSTER_VALUE = `font-weight: ${fw("light")}; letter-spacing: -.02em;`;
 // a poster (fill.ts: fillPoster): the icon and the corner's pills at the top, the name, the big value
 // and what follows them anchored to the bottom of whatever height it is given (unlike a tile, which
 // centres); its natural height is its content's. A sparkline or columns plot takes the room left
@@ -60,19 +67,19 @@ export const STYLE_POSTER = `
   .ptop { flex: none; margin-bottom: auto; display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
   .plead { flex: none; }
   .corner { flex: 0 1 auto; min-width: 0; margin-inline-start: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-  .corner > .plabel { flex: none; text-transform: uppercase; letter-spacing: .08em; background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fe-color) 40%, transparent); }
+  .corner > .plabel { flex: none; ${posterPill("var(--fe-color)")} }
   /* the badges answer the pointer above the poster's own action layer */
   .row.poster .corner > .row.hval { pointer-events: auto; max-width: 100%; }
   .pbody { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .pbody:has(> .plot.grow) { flex: 1 1 auto; min-height: 0; }
   /* the texts keep their lines (clipped text would shrink to nothing); the plot gives way */
   .pbody > :not(.plot) { flex: none; }
-  .pname { ${type(11, 16)} font-weight: ${fw("medium")}; letter-spacing: .1em; text-transform: uppercase; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pname { ${POSTER_NAME} }
   /* the value keeps its width: controls that do not fit beside it wrap under it */
   .pvalue { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; }
   .pvalue > .big { flex: 0 0 auto; }
   .pvalue > .end { margin-inline-start: auto; min-width: 0; max-width: 100%; }
-  .row.poster .big b { ${type(40, 44)} font-weight: ${fw("light")}; letter-spacing: -.02em; }
+  .row.poster .big b { ${type(40, 44)} ${POSTER_VALUE} }
   .row.poster .big span { font-size: ${fs(16)}; }
   /* with a curve the value is smaller: the curve gets the room (a word and a fitted value still
      take their own size, by order) */
@@ -86,11 +93,14 @@ export const STYLE_POSTER = `
   .row.poster:has(> .pbody.pgauge) > .ptop { margin-bottom: 0; }
   .pbody.pgauge { margin-block: auto; align-items: center; text-align: center; }
   .pbody.pgauge > .gauge { margin-top: 0; max-width: 120px; }
-  /* the entity card: the poster is one button (its action layer fills the card, as a tile's) and its
-     plot runs to the card's edges, under the body's padding; the card's corners clip it */
+  /* the poster is one button (its action layer fills the body: the whole card, as a tile's, unless
+     a title sits above it) and its plot runs to the card's edges, under the body's padding; the
+     card's corners clip it. Under a title the body keeps the header's gap and its top corners */
   ha-card.layout-poster .body { position: relative; }
+  ha-card.layout-poster:has(> .header:not([hidden])) > .body { padding-top: 12px; }
   ha-card.layout-poster .row.actionable.poster { position: static; }
   ha-card.layout-poster .row.poster > .hit { border-radius: var(--ha-card-border-radius, 12px); }
+  ha-card.layout-poster:has(> .header:not([hidden])) .row.poster > .hit { border-top-left-radius: 0; border-top-right-radius: 0; }
   ha-card.layout-poster .row.poster > .hit:focus-visible { box-shadow: inset 0 0 0 2px var(--fe-color); }
   ha-card.layout-poster .pbody > .plot { width: auto; margin: 8px -16px -16px; }
   /* a line right under the value reaches up under it; the texts stay on top of it (columns would

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { buildRow, rowBuilt, setRate } from "../../../src/shared/flow/dom.ts";
+import { buildRow, leadSize, rowBuilt, setRate } from "../../../src/shared/flow/dom.ts";
 import { BAND, LAYOUTS } from "../../../src/shared/flow/constants.ts";
 import { bandHeight, enumOf, flowObject, sensorId } from "../../../src/shared/flow/config.ts";
 import {
@@ -114,7 +114,11 @@ describe("setRate", () => {
 describe("the poster's row", () => {
   it("is a layout of the flow cards, with a 40 px lead", () => {
     expect(LAYOUTS).toEqual(["tile", "hero", "poster"]);
-    expect(BAND.posterLead).toBe(40);
+    expect(leadSize("poster")).toBe(40);
+    // the tile's and the flow tile's are the same, the hero's the largest
+    expect(leadSize("tile")).toBe(BAND.tileLead);
+    expect(leadSize("flowtile")).toBe(BAND.tileLead);
+    expect(leadSize("hero")).toBe(BAND.heroLead);
   });
   it("is the entity poster's skeleton: the lead and the pill on top, the texts below", () => {
     const row = document.createElement("div");

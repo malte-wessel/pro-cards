@@ -342,9 +342,8 @@ export const placementsOf = (ent: EntityItem, row: RowKind): Placement[] => {
   return out;
 };
 // whether the entity draws any control in a tile (its height follows the content then: a control
-// on the line wraps under the name when the tile is narrow) or a poster
-export const hasTileControl = (ent: EntityItem, row: "tile" | "poster" = "tile") =>
-  placementsOf(ent, row).length > 0;
+// on the line wraps under the name when the tile is narrow)
+export const hasTileControl = (ent: EntityItem) => placementsOf(ent, "tile").length > 0;
 // controls on a tile's line wider than a switch: below 6 columns they do not fit beside the icon
 const WIDE_ON_LINE: ReadonlySet<ControlKind> = new Set([
   "stepper",

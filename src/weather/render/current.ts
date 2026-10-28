@@ -52,11 +52,10 @@ export const hiLoText = (ctx: RenderCtx, today: Day | null) => {
   return `${fmtNumber(ctx.hass, today.hi, 0)}° / ${fmtNumber(ctx.hass, today.lo, 0)}°`;
 };
 
-// the row's own item (the card's condition item, or a hero section's) and its colours: the
-// condition's, and the temperature's for what shows it
+// the row's own item (the card's condition item, or a hero section's) and the temperature's colour
+// for what shows it (the condition's is the row's --fe-color: the card's _rowColor)
 const startRow = (row: HTMLElement, cfg: WeatherConfig, cm: CurrentModel) => {
   const ent = cfg.entities[Number(row.dataset.idx)] ?? cfg.entities[cfg.condIdx];
-  row.style.setProperty("--fe-color", cssColor(condColor(ent, cm.cond), "var(--primary-color)"));
   row.style.setProperty("--fe-temp", cssColor(cm.temp.look.color, "var(--primary-color)"));
   return ent;
 };

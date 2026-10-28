@@ -4,9 +4,14 @@
 import type { EntityItem } from "../entity/config.ts";
 import type { IconStyle } from "../entity/constants.ts";
 import { nameOf, type EntityModel, type RenderCtx } from "../entity/model.ts";
-import { bigEl, fillSecondary, pillEl, textEl } from "../entity/render/lead.ts";
+import { bigEl, fillSecondary, pillEl, posterParts, textEl } from "../entity/render/lead.ts";
+import { BAND } from "./constants.ts";
 
 export type RowKind = "tile" | "flowtile" | "hero" | "poster";
+
+// the lead's size in px for a row of that kind
+export const leadSize = (kind: RowKind) =>
+  kind === "hero" ? BAND.heroLead : kind === "poster" ? BAND.posterLead : BAND.tileLead;
 
 export const vars = (el: HTMLElement | SVGElement, v: Record<string, string | number>) => {
   for (const [k, val] of Object.entries(v)) el.style.setProperty(k, String(val));
@@ -76,23 +81,11 @@ export const rowBuilt = (row: HTMLElement) => !!row.querySelector(":scope > :is(
 // name, the big value and the secondary line at the bottom
 export const buildRow = (row: HTMLElement, kind: RowKind, lead: HTMLElement) => {
   if (kind === "poster") {
-    const ptop = document.createElement("div");
-    ptop.className = "ptop";
-    const plead = document.createElement("div");
-    plead.className = "plead";
-    plead.appendChild(lead);
-    const corner = document.createElement("div");
-    corner.className = "corner";
-    corner.appendChild(pillEl(""));
-    (corner.firstChild as HTMLElement).classList.add("plabel");
-    ptop.append(plead, corner);
-    const pbody = document.createElement("div");
-    pbody.className = "pbody";
-    const pvalue = document.createElement("div");
-    pvalue.className = "pvalue";
+    const parts = posterParts(row);
+    parts.lead.appendChild(lead);
+    const pvalue = textEl("pvalue", "");
     pvalue.appendChild(bigEl({ text: "", num: "", unit: "" }));
-    pbody.append(textEl("pname", ""), pvalue, textEl("secondary", ""));
-    row.append(ptop, pbody);
+    parts.body.append(textEl("pname", ""), pvalue, textEl("secondary", ""));
     return;
   }
   const top = document.createElement("div");

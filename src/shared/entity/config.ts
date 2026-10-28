@@ -529,10 +529,11 @@ export const normalizeHeaderEntities = (
   ctx: NormalizeCtx,
   label = "header_entities",
   defaults: { style: BadgeStyle; size: BadgeSize } = { style: "plain", size: "s" },
+  where = "the header",
 ): EntityItem[] => {
   if (!Array.isArray(raw)) return [];
   return (raw as (RawEntityInput | null | undefined)[]).map((e, i) =>
-    normalizeBadge(e, ctx, `${label}[${i}]`, defaults),
+    normalizeBadge(e, ctx, `${label}[${i}]`, defaults, where),
   );
 };
 // one badge: a header entity, or a pill in a poster's corner (`where` names the place in warnings)
