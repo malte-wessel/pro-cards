@@ -241,6 +241,7 @@ const de: Translation = {
   "editor.multi_trend.layout.auto": "Automatisch (gleiche Einheit: überlagert, sonst Spuren)",
   "editor.multi_trend.layout.overlay": "Überlagert (eine Skala)",
   "editor.multi_trend.layout.lanes": "Spuren (eine Skala je Entität)",
+  "editor.multi_trend.layout.poster": "Poster",
 };
 
 export default de;

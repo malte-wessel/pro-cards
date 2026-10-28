@@ -244,6 +244,7 @@ const nb: Translation = {
   "editor.multi_trend.layout.auto": "Auto (samme enhet: overlagt, ellers baner)",
   "editor.multi_trend.layout.overlay": "Overlagt (én skala)",
   "editor.multi_trend.layout.lanes": "Baner (én skala per entitet)",
+  "editor.multi_trend.layout.poster": "Plakat",
 };
 
 export default nb;

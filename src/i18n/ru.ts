@@ -244,6 +244,7 @@ const ru: Translation = {
   "editor.multi_trend.layout.auto": "Авто (одна единица: наложение, иначе дорожки)",
   "editor.multi_trend.layout.overlay": "Наложение (одна шкала)",
   "editor.multi_trend.layout.lanes": "Дорожки (своя шкала для каждого объекта)",
+  "editor.multi_trend.layout.poster": "Постер",
 };
 
 export default ru;

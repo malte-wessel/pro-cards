@@ -3,7 +3,8 @@ import type { CardConfigBase } from "../shared/ha.ts";
 import type { Rule } from "../shared/entity/config.ts";
 import type { Visibility } from "../shared/visibility.ts";
 
-export type TrendLayout = "auto" | "overlay" | "lanes";
+// poster: the entity poster's shape, the first value large and the lines overlaid along the bottom
+export type TrendLayout = "auto" | "overlay" | "lanes" | "poster";
 export interface MultiTrendEntity {
   entity: string;
   name?: string;

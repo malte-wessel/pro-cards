@@ -244,6 +244,7 @@ const sv: Translation = {
   "editor.multi_trend.layout.auto": "Auto (samma enhet: överlagrat, annars banor)",
   "editor.multi_trend.layout.overlay": "Överlagrat (en skala)",
   "editor.multi_trend.layout.lanes": "Banor (en skala per entitet)",
+  "editor.multi_trend.layout.poster": "Affisch",
 };
 
 export default sv;

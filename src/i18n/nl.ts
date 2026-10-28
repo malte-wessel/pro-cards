@@ -244,6 +244,7 @@ const nl: Translation = {
   "editor.multi_trend.layout.auto": "Automatisch (zelfde eenheid: overlappend, anders banen)",
   "editor.multi_trend.layout.overlay": "Overlappend (één schaal)",
   "editor.multi_trend.layout.lanes": "Banen (één schaal per entiteit)",
+  "editor.multi_trend.layout.poster": "Poster",
 };
 
 export default nl;

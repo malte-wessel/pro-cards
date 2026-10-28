@@ -96,6 +96,37 @@ entities:
 
 :::
 
+## Poster
+
+`layout: poster` draws the card as the entity card's [poster](/cards/entity-card#poster): the icon at the top left and the time window as a pill at the top right; at the bottom the title (or the first entity's name), the first entity's value, large, and the lines overlaid along the bottom edge, reaching up under the texts. Tap the texts for the more-info dialog, hover the lines for the tooltip with every entity's value. The lines share one scale, so a poster suits entities of one unit. The legend is not drawn, so the lines get its room; `x_axis` and `y_axis` work as on the card. A poster is three rows high in a sections grid (two at least).
+
+::: live
+
+```yaml
+- type: custom:multi-trend-card-pro
+  title: Outside
+  icon: mdi:thermometer
+  color: orange
+  hours_to_show: 12
+  layout: poster
+  entities:
+    - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
+    - { entity: sensor.dew_point, name: Dew point, color: teal }
+  grid_options: { columns: 6 }
+- type: custom:multi-trend-card-pro
+  title: Rooms
+  icon: mdi:home-thermometer
+  color: green
+  layout: poster
+  entities:
+    - { entity: sensor.living_room_temperature, name: Living room, color: green }
+    - { entity: sensor.bedroom_temperature, name: Bedroom, color: indigo }
+    - { entity: sensor.office_temperature, name: Office, color: orange }
+  grid_options: { columns: 6 }
+```
+
+:::
+
 ## Axes and legend
 
 `x_axis` adds time labels with vertical gridlines, `y_axis` adds value labels with horizontal gridlines (per lane in the lanes layout). Both are off by default to keep the tile calm. `show_legend` lists the overlaid series under the header; `color` colours the header icon.
@@ -128,7 +159,7 @@ entities:
 | `color`             | state icon colour | Header icon colour.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `hours_to_show`     | `6`               | History window, 1 to 168 hours.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `smoothing_minutes` |                   | Averaging bucket of the lines in minutes, at least 5. Without it one point per 12 px of width.                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `layout`            | `auto`            | `auto`, `overlay` or `lanes`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `layout`            | `auto`            | `auto`, `overlay`, `lanes` or `poster` (see [Poster](#poster)).                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `show_legend`       | `true`            | Legend for overlaid series with two or more entities.                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `x_axis`            | `false`           | Time labels and vertical gridlines.                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `y_axis`            | `false`           | Value labels and horizontal gridlines.                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |

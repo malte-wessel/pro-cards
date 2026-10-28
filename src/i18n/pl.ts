@@ -244,6 +244,7 @@ const pl: Translation = {
   "editor.multi_trend.layout.auto": "Automatycznie (ta sama jednostka: nałożone, inaczej tory)",
   "editor.multi_trend.layout.overlay": "Nałożone (jedna skala)",
   "editor.multi_trend.layout.lanes": "Tory (jedna skala na encję)",
+  "editor.multi_trend.layout.poster": "Plakat",
 };
 
 export default pl;

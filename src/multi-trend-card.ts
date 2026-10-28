@@ -10,7 +10,8 @@
  *   color: primary                    # optional icon color (HA color token or hex)
  *   hours_to_show: 6                  # default 6
  *   smoothing_minutes: 15             # optional: averaging bucket (default: one point per 12 px)
- *   layout: auto | overlay | lanes    # auto = overlay when all units match, else lanes
+ *   layout: auto | overlay | lanes    # auto = overlay when all units match, else lanes;
+ *           | poster                  # poster: the first value large, the lines overlaid below it
  *   show_legend: true
  *   x_axis: false                     # time labels + vertical gridlines
  *   y_axis: false                     # value labels + horizontal gridlines (per lane)
@@ -209,14 +210,20 @@ export class MultiTrendCard extends HTMLElement {
     this._tpl.clear();
   }
 
+  _poster() {
+    return this._config?.layout === "poster";
+  }
   // the series shown now
   getCardSize() {
+    if (this._poster()) return 3;
     const shown = this._shown();
     return this._layout(shown) === "lanes" ? 2 + shown.length : 3;
   }
 
-  // sizes to its content, so it stretches with its grid row like every card (the plot grows)
+  // sizes to its content, so it stretches with its grid row like every card (the plot grows); a
+  // poster has a fixed height, its content anchored to the bottom, as the entity card's
   getGridOptions(): GridOptions {
+    if (this._poster()) return { columns: 6, rows: 3, min_columns: 3, min_rows: 2 };
     return { columns: 12, rows: "auto", min_columns: 6, min_rows: 2 };
   }
 
@@ -268,10 +275,11 @@ export class MultiTrendCard extends HTMLElement {
     );
   }
 
-  // `auto` overlays the series when their units match (of the shown ones)
+  // `auto` overlays the series when their units match (of the shown ones); a poster overlays them
   _layout(idxs = this._shown()): "overlay" | "lanes" {
     const l = this._config.layout;
     if (l === "overlay" || l === "lanes") return l;
+    if (l === "poster") return "overlay";
     const units = new Set(idxs.map((i) => this._unit(i)));
     return units.size <= 1 ? "overlay" : "lanes";
   }
@@ -303,18 +311,35 @@ export class MultiTrendCard extends HTMLElement {
 
   _buildDom() {
     const card = freshShadow(this.shadowRoot as ShadowRoot, STYLE);
-    card.innerHTML = `
+    const poster = this._poster();
+    card.classList.toggle("layout-poster", poster);
+    if (poster) {
+      // the icon and the window on top, the name and the first value at the bottom, the lines
+      // along the bottom edge (no legend: the lines get its room, the tooltip names them); the
+      // poster is the button the header is otherwise
+      card.innerHTML = `
+      <div class="header poster" role="button" tabindex="0">
+        <div class="ptop"><div class="shape"><ha-icon></ha-icon></div><span class="range plabel"></span></div>
+        <div class="pbody"><div class="primary"></div><div class="big"><b></b><span></span></div></div>
+      </div>`;
+      qs(card, ".pbody").appendChild(trendPlotEl());
+    } else {
+      card.innerHTML = `
       <div class="header" role="button" tabindex="0">
         <div class="shape"><ha-icon></ha-icon></div>
         <div class="info"><div class="primary"></div><div class="secondary"></div></div>
         <div class="range"></div>
       </div>
       <div class="legend"></div>`;
-    card.appendChild(trendPlotEl());
+      card.appendChild(trendPlotEl());
+    }
     this._root = card;
 
     const header = qs(card, ".header");
-    header.addEventListener("click", () => this._moreInfo());
+    // a click on the poster's plot is the plot's (its tooltip), not the more-info
+    header.addEventListener("click", (ev) => {
+      if (!(ev.target as Element).closest(".plot")) this._moreInfo();
+    });
     header.addEventListener("keydown", (ev) => {
       if (ev.key === "Enter" || ev.key === " ") {
         ev.preventDefault();
@@ -358,6 +383,15 @@ export class MultiTrendCard extends HTMLElement {
         "mdi:chart-line-variant",
     );
 
+    if (this._poster()) {
+      this._fillPoster(shown);
+      drawTrend(this._plot as TrendPlotEl, this._spec(shown));
+      if (this._hoverT !== null && !showTrendHover(this._plot as TrendPlotEl, this._hoverT))
+        this._hideHover();
+      this._visWatch.arm(this._hass);
+      return;
+    }
+
     const sec = qs(card, ".secondary");
     sec.textContent = "";
     shown.forEach((i, k) => {
@@ -393,6 +427,22 @@ export class MultiTrendCard extends HTMLElement {
     if (this._hoverT !== null && !showTrendHover(this._plot as TrendPlotEl, this._hoverT))
       this._hideHover();
     this._visWatch.arm(this._hass);
+  }
+
+  // the poster's value: the first shown series large (number and unit)
+  _fillPoster(shown: number[]) {
+    const card = this._root as HTMLElement;
+    const big = qs(card, ".big");
+    const first = shown[0];
+    const st = first === undefined ? undefined : this._state(first);
+    const num = st && isNum(st.state);
+    qs(big, "b").textContent =
+      first === undefined
+        ? "—"
+        : num
+          ? fmtNumber(this._hass, Number(st.state), decimalsOf(st.state))
+          : (st?.state ?? "—");
+    qs(big, "span").textContent = num && first !== undefined ? this._unit(first) : "";
   }
 
   // what the plot draws: the history window and one series per shown entity (the history of

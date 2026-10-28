@@ -17,9 +17,9 @@
     },
     "layout": {
       "type": "string",
-      "enum": ["auto", "overlay", "lanes"],
+      "enum": ["auto", "overlay", "lanes", "poster"],
       "default": "auto",
-      "description": "auto = overlay when all units match, else lanes"
+      "description": "auto = overlay when all units match, else lanes; poster = the entity card's poster: the icon and the window on top, the first value large, the lines overlaid along the bottom edge (no legend)"
     },
     "show_legend": { "type": "boolean", "default": true },
     "x_axis": {

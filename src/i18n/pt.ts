@@ -244,6 +244,7 @@ const pt: Translation = {
   "editor.multi_trend.layout.auto": "Automático (mesma unidade: sobreposto, senão faixas)",
   "editor.multi_trend.layout.overlay": "Sobreposto (uma escala)",
   "editor.multi_trend.layout.lanes": "Faixas (uma escala por entidade)",
+  "editor.multi_trend.layout.poster": "Cartaz",
 };
 
 export default pt;

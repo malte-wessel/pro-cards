@@ -244,6 +244,7 @@ const it: Translation = {
   "editor.multi_trend.layout.auto": "Automatico (stessa unità: sovrapposto, altrimenti corsie)",
   "editor.multi_trend.layout.overlay": "Sovrapposto (una scala)",
   "editor.multi_trend.layout.lanes": "Corsie (una scala per entità)",
+  "editor.multi_trend.layout.poster": "Poster",
 };
 
 export default it;

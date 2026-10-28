@@ -244,6 +244,7 @@ const fr: Translation = {
   "editor.multi_trend.layout.auto": "Auto (même unité : superposé, sinon pistes)",
   "editor.multi_trend.layout.overlay": "Superposé (une échelle)",
   "editor.multi_trend.layout.lanes": "Pistes (une échelle par entité)",
+  "editor.multi_trend.layout.poster": "Affiche",
 };
 
 export default fr;

@@ -244,6 +244,7 @@ const es: Translation = {
   "editor.multi_trend.layout.auto": "Automático (misma unidad: superpuesto; si no, carriles)",
   "editor.multi_trend.layout.overlay": "Superpuesto (una escala)",
   "editor.multi_trend.layout.lanes": "Carriles (una escala por entidad)",
+  "editor.multi_trend.layout.poster": "Póster",
 };
 
 export default es;

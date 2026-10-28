@@ -244,6 +244,7 @@ const cs: Translation = {
   "editor.multi_trend.layout.auto": "Automaticky (stejná jednotka: překryv, jinak dráhy)",
   "editor.multi_trend.layout.overlay": "Překryv (jedna stupnice)",
   "editor.multi_trend.layout.lanes": "Dráhy (jedna stupnice na entitu)",
+  "editor.multi_trend.layout.poster": "Plakát",
 };
 
 export default cs;

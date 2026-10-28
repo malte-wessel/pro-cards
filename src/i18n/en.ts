@@ -240,6 +240,7 @@ const en = {
   "editor.multi_trend.layout.auto": "Auto (same unit: overlay, otherwise lanes)",
   "editor.multi_trend.layout.overlay": "Overlay (one scale)",
   "editor.multi_trend.layout.lanes": "Lanes (one scale per entity)",
+  "editor.multi_trend.layout.poster": "Poster",
 } as const;
 
 export type StringKey = keyof typeof en;

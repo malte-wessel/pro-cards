@@ -25,6 +25,7 @@ export const layoutOptions = (hass?: HomeAssistant) => [
   { value: "auto", label: t(hass, "editor.multi_trend.layout.auto") },
   { value: "overlay", label: t(hass, "editor.multi_trend.layout.overlay") },
   { value: "lanes", label: t(hass, "editor.multi_trend.layout.lanes") },
+  { value: "poster", label: t(hass, "editor.multi_trend.layout.poster") },
 ];
 
 // card config -> flat ha-form data
