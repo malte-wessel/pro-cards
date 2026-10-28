@@ -79,6 +79,38 @@ rules:
 
 :::
 
+## Poster
+
+`layout: poster` draws the rain as the entity card's [poster](/cards/entity-card#poster): the round lead at the top left, the matching rule's label as a pill at the top right, and at the bottom the name, the rate, large, and today's total. `visual: flow` makes the whole poster the field, with the rain icon as its lead. A poster is three rows high in a sections grid (two at least).
+
+::: live
+
+```yaml
+- type: custom:rain-card-pro
+  entity: sensor.rain_rate_roof
+  today: sensor.rain_today
+  name: Rain
+  layout: poster
+  rules: &rain
+    - { below: 0.1, color: blue-grey, label: Dry }
+    - { below: 2.5, color: light-blue, label: Light rain }
+    - { below: 7.6, color: blue, label: Moderate rain }
+    - { above: 7.6, color: indigo, label: Heavy rain }
+  grid_options: { columns: 6 }
+- type: custom:rain-card-pro
+  entity: sensor.rain_rate_roof
+  today: sensor.rain_today
+  wind: sensor.wind_speed
+  direction: sensor.wind_direction
+  name: Rain
+  layout: poster
+  visual: flow
+  rules: *rain
+  grid_options: { columns: 6 }
+```
+
+:::
+
 ## Wind and direction
 
 `wind` slants the drops with the wind speed (up to 32° at 35 km/h and more; m/s, mph, kn and ft/s are understood) and `direction` says which way: a westerly wind blows them to the right. Without the two the drops fall straight. Ripples and the gauge ignore the wind.
@@ -122,7 +154,7 @@ layout: hero
 
 ## Lead and motion
 
-`lead: icon` puts the rain icon in the round lead instead of the animation (the flow tile always shows the icon). The animation is CSS only and keeps flowing through sensor updates: a new rate changes its pace, the field is redrawn only when rain starts or stops or the drop count changes by a quarter, and the wind's slant and the gauge's level move in place. It pauses when your system asks for reduced motion (`prefers-reduced-motion`), leaving a still field.
+`lead: icon` puts the rain icon in the round lead instead of the animation (a flow tile or poster always shows the icon). The animation is CSS only and keeps flowing through sensor updates: a new rate changes its pace, the field is redrawn only when rain starts or stops or the drop count changes by a quarter, and the wind's slant and the gauge's level move in place. It pauses when your system asks for reduced motion (`prefers-reduced-motion`), leaving a still field.
 
 ::: live
 
@@ -176,8 +208,8 @@ layout: hero
 | `color`             | –                         | Fixed colour; overrides the rules.                                                                                                                                                              |
 | `decimals`          | sensor                    | Decimals of the rate.                                                                                                                                                                           |
 | `rules`             | –                         | `[{ below, above, color, label, tint_card }]` on the rate; first match wins.                                                                                                                    |
-| `layout`            | `tile`                    | `tile` or `hero`.                                                                                                                                                                               |
-| `visual`            | `icon`                    | Tile only: `flow` makes the whole tile the animated field.                                                                                                                                      |
+| `layout`            | `tile`                    | `tile`, `hero` or `poster`.                                                                                                                                                                     |
+| `visual`            | `icon`                    | Tile and poster: `flow` makes the whole tile or poster the animated field.                                                                                                                      |
 | `lead`              | `animated`                | The round lead: `animated` (the style, small) or `icon`.                                                                                                                                        |
 | `icon_style`        | `circle`                  | `plain` draws the icon lead (`lead: icon`) without its circle; the animated lead keeps it.                                                                                                      |
 | `flow`              | see below                 | The animation options.                                                                                                                                                                          |

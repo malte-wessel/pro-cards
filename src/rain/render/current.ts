@@ -1,6 +1,6 @@
 // The current rain: the tile (lead, name, "rate · total today", label pill), the flow tile (the
-// band behind icon, name, "label · total today" and the big rate) and the hero lead (big rate and
-// "label · total today"). Built once per row; every render updates texts and CSS variables so
+// band behind icon, name, "label · total today" and the big rate), the hero lead (big rate and
+// "label · total today") and the poster (label pill, big rate, "total today"). Built once per row; every render updates texts and CSS variables so
 // the running animations keep their phase.
 import type { EntityItem } from "../../shared/entity/config.ts";
 import { tplOf, unitOf, type EntityModel, type RenderCtx } from "../../shared/entity/model.ts";
@@ -8,6 +8,7 @@ import {
   buildRow,
   builtLead,
   fillFlowTexts,
+  rowBuilt,
   setRate,
   vars,
   type RowKind,
@@ -55,8 +56,10 @@ export const rainNow = (ctx: RenderCtx, cfg: RainConfig, cm: CurrentModels): Rai
   return { rate, today, slant, chip };
 };
 
+const leadSize = (kind: RowKind) =>
+  kind === "hero" ? DEFAULTS.heroLead : kind === "poster" ? DEFAULTS.posterLead : DEFAULTS.tileLead;
 const leadOf = (cfg: RainConfig, kind: RowKind) => {
-  const size = kind === "hero" ? DEFAULTS.heroLead : DEFAULTS.tileLead;
+  const size = leadSize(kind);
   return cfg.lead === "icon"
     ? rainLead(size, cfg.entities[cfg.rateIdx].iconStyle)
     : animatedLead(cfg.flow.style, size);
@@ -70,9 +73,9 @@ export const updateCurrent = (
   kind: RowKind,
   now: RainNow,
 ) => {
-  if (!row.querySelector(".top")) buildRow(row, kind, leadOf(cfg, kind));
+  if (!rowBuilt(row)) buildRow(row, kind, leadOf(cfg, kind));
   const ent = cfg.entities[cfg.rateIdx];
-  const size = kind === "hero" ? DEFAULTS.heroLead : DEFAULTS.tileLead;
+  const size = leadSize(kind);
   const level = levelOf(now.today);
   vars(row, {
     "--t": tanOf(now.slant).toFixed(4),
@@ -99,7 +102,8 @@ export const updateCurrent = (
     wide.push({ text: cm.rate.fmt.text });
     if (todayText) wide.push({ text: todayText });
   } else {
-    if (label) wide.push({ text: label, accent: cm.rate.model.avail });
+    // a poster shows the label in its pill
+    if (label && kind !== "poster") wide.push({ text: label, accent: cm.rate.model.avail });
     if (todayText) wide.push({ text: todayText });
   }
   const narrow = sec

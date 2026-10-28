@@ -1,6 +1,6 @@
 // The current wind: the tile (lead, name, "speed · direction", label pill), the flow tile (the
-// band behind arrow, name, "label · gusts" and the big value) and the hero lead (big value and
-// "label · from SW · gusts"). Built once per row; every render updates texts and CSS variables so
+// band behind arrow, name, "label · gusts" and the big value), the hero lead (big value and
+// "label · from SW · gusts") and the poster (label pill, big value, "from SW · gusts"). Built once per row; every render updates texts and CSS variables so
 // the running animations keep their phase.
 import type { EntityItem } from "../../shared/entity/config.ts";
 import { tplOf, unitOf, type EntityModel, type RenderCtx } from "../../shared/entity/model.ts";
@@ -9,6 +9,7 @@ import {
   buildRow,
   builtLead,
   fillFlowTexts,
+  rowBuilt,
   setRate,
   type RowKind,
   type TextPart,
@@ -51,8 +52,10 @@ export const windNow = (ctx: RenderCtx, cfg: WindConfig, cm: CurrentModels): Win
   return { kmh, gustKmh, bearing, dirText, chip };
 };
 
+const leadSize = (kind: RowKind) =>
+  kind === "hero" ? DEFAULTS.heroLead : kind === "poster" ? DEFAULTS.posterLead : DEFAULTS.tileLead;
 const leadOf = (cfg: WindConfig, kind: RowKind) => {
-  const size = kind === "hero" ? DEFAULTS.heroLead : DEFAULTS.tileLead;
+  const size = leadSize(kind);
   return cfg.lead === "arrow"
     ? arrowLead(size, cfg.entities[cfg.speedIdx].iconStyle)
     : animatedLead(cfg.flow.style, size);
@@ -66,7 +69,7 @@ export const updateCurrent = (
   kind: RowKind,
   now: WindNow,
 ) => {
-  if (!row.querySelector(".top")) buildRow(row, kind, leadOf(cfg, kind));
+  if (!rowBuilt(row)) buildRow(row, kind, leadOf(cfg, kind));
   const ent = cfg.entities[cfg.speedIdx];
   const px = pxps(now.kmh);
   setAngles(row, now.bearing);
@@ -83,8 +86,9 @@ export const updateCurrent = (
     wide.push({ text: cm.speed.fmt.text });
     if (now.dirText) wide.push({ text: now.dirText });
   } else {
-    if (label) wide.push({ text: label, accent: cm.speed.model.avail });
-    if (kind === "hero" && now.dirText)
+    // a poster shows the label in its pill
+    if (label && kind !== "poster") wide.push({ text: label, accent: cm.speed.model.avail });
+    if (kind !== "flowtile" && now.dirText)
       wide.push({ text: t(ctx.hass, "wind.from", { dir: now.dirText }) });
     if (cm.gust && cm.gust.model.avail)
       wide.push({ text: t(ctx.hass, "wind.gusts", { v: cm.gust.fmt.text }) });

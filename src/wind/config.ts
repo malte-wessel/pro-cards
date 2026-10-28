@@ -76,7 +76,7 @@ export const normalizeWindCardConfig = (input: unknown): WindConfig => {
   const layout = enumOf(LAYOUTS, raw.layout, "layout", "tile");
   const visual = enumOf(VISUALS, raw.visual, "visual", "icon");
   const lead =
-    visual === "flow" && layout === "tile" ? "arrow" : enumOf(LEADS, raw.lead, "lead", "animated");
+    visual === "flow" && layout !== "hero" ? "arrow" : enumOf(LEADS, raw.lead, "lead", "animated");
   const fo = flowObject(CARD_TYPE, raw.flow);
   const flow: FlowOptions = {
     style: enumOf(FLOW_STYLES, fo.style, "flow.style", DEFAULTS.style),

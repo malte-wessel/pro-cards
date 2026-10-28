@@ -40,6 +40,14 @@ export const STYLE_FLOW = `
   .row.wtile.flow .lead.plain .shape { background: transparent; }
   .row.wtile.flow .end .big b { ${type(26, 30)} }
 
+  /* a poster is the entity poster (STYLE_POSTER); with visual: flow the band fills the card behind
+     its parts, under the action layer's reach (the row is static, the body holds both) */
+  ha-card.layout-poster .row.wposter.flow { position: static; }
+  .row.wposter.flow > .wflow.bg { position: absolute; inset: 0; border-radius: 0; }
+  .row.wposter.flow > :is(.ptop, .pbody) { position: relative; }
+  .row.wposter.flow .lead .shape { background: ${iconBg("var(--fe-color)", CARD_BG)}; }
+  .row.wposter.flow .lead.plain .shape { background: transparent; }
+
   /* the chip on the band */
   .chip { position: absolute; left: 8px; top: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 4px; border-radius: 999px; background: color-mix(in srgb, ${CARD_BG} 80%, transparent); ${type(12, 16)} font-weight: ${fw("medium")}; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .chip ha-icon { --mdc-icon-size: 14px; color: var(--fe-color); }

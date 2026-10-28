@@ -1,4 +1,4 @@
-// DOM pieces shared by the flow cards: the band, the row skeleton of tile / flow tile / hero,
+// DOM pieces shared by the flow cards: the band, the row skeleton of tile / flow tile / hero / poster,
 // the lead shells and the playback-rate scaling that lets a value change re-time running
 // animations without restarting them.
 import type { EntityItem } from "../entity/config.ts";
@@ -6,7 +6,7 @@ import type { IconStyle } from "../entity/constants.ts";
 import { nameOf, type EntityModel, type RenderCtx } from "../entity/model.ts";
 import { bigEl, fillSecondary, pillEl, textEl } from "../entity/render/lead.ts";
 
-export type RowKind = "tile" | "flowtile" | "hero";
+export type RowKind = "tile" | "flowtile" | "hero" | "poster";
 
 export const vars = (el: HTMLElement | SVGElement, v: Record<string, string | number>) => {
   for (const [k, val] of Object.entries(v)) el.style.setProperty(k, String(val));
@@ -69,8 +69,32 @@ export const animatedLeadShell = (size: number) => {
   return lead;
 };
 
-// the row skeleton, built once: lead, name, big value (hero / flow tile end), secondary lines
+// whether the row's skeleton is built (buildRow)
+export const rowBuilt = (row: HTMLElement) => !!row.querySelector(":scope > :is(.top, .ptop)");
+// the row skeleton, built once: lead, name, big value (hero / flow tile end), secondary lines;
+// a poster's are the entity poster's (fillPoster): the lead and the label's pill on top, the
+// name, the big value and the secondary line at the bottom
 export const buildRow = (row: HTMLElement, kind: RowKind, lead: HTMLElement) => {
+  if (kind === "poster") {
+    const ptop = document.createElement("div");
+    ptop.className = "ptop";
+    const plead = document.createElement("div");
+    plead.className = "plead";
+    plead.appendChild(lead);
+    const corner = document.createElement("div");
+    corner.className = "corner";
+    corner.appendChild(pillEl(""));
+    (corner.firstChild as HTMLElement).classList.add("plabel");
+    ptop.append(plead, corner);
+    const pbody = document.createElement("div");
+    pbody.className = "pbody";
+    const pvalue = document.createElement("div");
+    pvalue.className = "pvalue";
+    pvalue.appendChild(bigEl({ text: "", num: "", unit: "" }));
+    pbody.append(textEl("pname", ""), pvalue, textEl("secondary", ""));
+    row.append(ptop, pbody);
+    return;
+  }
   const top = document.createElement("div");
   top.className = "top";
   top.appendChild(lead);
@@ -120,7 +144,7 @@ export const builtLead = (row: HTMLElement, key: string, value: number, duration
   return Number(row.dataset[key]);
 };
 // the texts of a flow card's row: the name, the secondary line (`wide`; the flow tile's narrow
-// line, `narrow`, for small widths), the big value and, on a tile, the label pill
+// line, `narrow`, for small widths), the big value and, on a tile and a poster, the label pill
 export const fillFlowTexts = (
   ctx: RenderCtx,
   row: HTMLElement,
@@ -130,7 +154,7 @@ export const fillFlowTexts = (
   wide: TextPart[],
   narrow: TextPart[],
 ) => {
-  const primary = row.querySelector<HTMLElement>(".primary");
+  const primary = row.querySelector<HTMLElement>(":is(.primary, .pname)");
   if (primary) primary.textContent = nameOf(ctx, ent, m.st);
   const secondary = row.querySelector<HTMLElement>(".secondary:not(.narrow)");
   if (secondary) {
@@ -140,6 +164,14 @@ export const fillFlowTexts = (
   const narrowEl = row.querySelector<HTMLElement>(".secondary.narrow");
   if (narrowEl) fillSecondary(narrowEl, narrow);
   setBig(row.querySelector<HTMLElement>(".big"), m);
+  if (kind === "poster") {
+    const pill = row.querySelector<HTMLElement>(".plabel");
+    if (pill) {
+      pill.textContent = m.look.label ?? "";
+      pill.hidden = !m.look.label;
+    }
+    return;
+  }
   if (kind !== "tile") return;
   const label = m.look.label;
   const end = row.querySelector<HTMLElement>(".end");

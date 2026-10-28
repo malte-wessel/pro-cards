@@ -120,6 +120,39 @@ rules:
 
 :::
 
+## Poster
+
+`layout: poster` draws the wind as the entity card's [poster](/cards/entity-card#poster): the round lead at the top left, the matching rule's label as a pill at the top right, and at the bottom the name, the speed, large, and where the wind comes from with its gusts. `visual: flow` makes the whole poster the field, with the direction arrow as its lead. A poster is three rows high in a sections grid (two at least).
+
+::: live
+
+```yaml
+- type: custom:wind-card-pro
+  entity: sensor.wind_speed
+  direction: sensor.wind_direction
+  gust: sensor.wind_gust
+  name: Wind
+  layout: poster
+  rules: &wind
+    - { below: 5, color: blue-grey, label: Calm }
+    - { below: 20, color: teal, label: Light breeze }
+    - { below: 35, color: amber, label: Fresh }
+    - { below: 50, color: orange, label: Strong }
+    - { above: 50, color: red, label: Storm, tint_card: true }
+  grid_options: { columns: 6 }
+- type: custom:wind-card-pro
+  entity: sensor.wind_speed
+  direction: sensor.wind_direction
+  gust: sensor.wind_gust
+  name: Wind
+  layout: poster
+  visual: flow
+  rules: *wind
+  grid_options: { columns: 6 }
+```
+
+:::
+
 ## Rules and colours
 
 `rules` work on the speed like the [entity rules](/cards/entity-options#rules): `below` / `above` thresholds in the sensor's unit, first match wins. The matching rule's `color` paints the particles, the lead, the label and the chip's arrow; its `label` is the pill of the tile and the accent of the second line; `tint_card: true` tints the whole card. A fixed `color` overrides the rules. Without any rule the field takes the primary colour.
@@ -147,7 +180,7 @@ rules:
 
 ## Lead, density and motion
 
-`lead: arrow` puts the direction arrow in the round lead instead of the animation (the flow tile always shows the arrow). `flow.density` sets how many particles cross the field: `sparse`, `normal` or `dense`. Speeds in m/s, mph, kn and ft/s drive the animation the same way as km/h, and a Beaufort force by the speed it stands for; the value is shown as the sensor reports it.
+`lead: arrow` puts the direction arrow in the round lead instead of the animation (a flow tile or poster always shows the arrow). `flow.density` sets how many particles cross the field: `sparse`, `normal` or `dense`. Speeds in m/s, mph, kn and ft/s drive the animation the same way as km/h, and a Beaufort force by the speed it stands for; the value is shown as the sensor reports it.
 
 The animation is CSS only, keeps flowing through sensor updates (a new speed changes its pace, a new direction turns the field smoothly, only a real change in the gusts redraws the waves) and pauses when your system asks for reduced motion (`prefers-reduced-motion`), leaving a still field. A `dense` field on a wide card is the heaviest choice; `sparse` suits dashboards with many wind cards.
 
@@ -203,8 +236,8 @@ The animation is CSS only, keeps flowing through sensor updates (a new speed cha
 | `color`             | –                         | Fixed colour; overrides the rules.                                                                                                                                                              |
 | `decimals`          | sensor                    | Decimals of the speed.                                                                                                                                                                          |
 | `rules`             | –                         | `[{ below, above, color, label, tint_card }]` on the speed; first match wins.                                                                                                                   |
-| `layout`            | `tile`                    | `tile` or `hero`.                                                                                                                                                                               |
-| `visual`            | `icon`                    | Tile only: `flow` makes the whole tile the animated field.                                                                                                                                      |
+| `layout`            | `tile`                    | `tile`, `hero` or `poster`.                                                                                                                                                                     |
+| `visual`            | `icon`                    | Tile and poster: `flow` makes the whole tile or poster the animated field.                                                                                                                      |
 | `lead`              | `animated`                | The round lead: `animated` (the flow style, small) or `arrow`.                                                                                                                                  |
 | `icon_style`        | `circle`                  | `plain` draws the arrow lead (`lead: arrow`) without its circle; the animated lead keeps it.                                                                                                    |
 | `flow`              | see below                 | The animation options.                                                                                                                                                                          |

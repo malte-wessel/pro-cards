@@ -19,7 +19,7 @@ export interface RawFlowCardBase extends RawEntityCardBase {
 }
 export interface FlowCardConfig extends EntityCardConfig {
   layout: Layout;
-  visual: FlowVisual; // tile only
+  visual: FlowVisual; // tile and poster
   leadIdx: number; // the item the lead row shows: carries name / secondary / color / rules
   flow: { height: number }; // the hero's band; the flow tile's band is BAND.tileBandH
 }
