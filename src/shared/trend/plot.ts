@@ -53,6 +53,8 @@ export interface TrendSpec {
   // (forecasts) the points are drawn as they are unless there are more than one per 2 px
   smoothing?: { minutes: number | null };
   text?: TextCache; // the card's text styles (the axis and lane labels)
+  // overlay: the lines' span fills the plot's height, no room above or below it (a poster)
+  fill?: boolean;
 }
 export interface TrendPlotEl extends HTMLDivElement {
   _spec?: TrendSpec;
@@ -154,7 +156,9 @@ export const drawTrend = (plot: TrendPlotEl, spec: TrendSpec) => {
     scales.push(
       lanes
         ? mkScale(...rangeOf(mine), li * laneH, laneH, laneLabelH)
-        : mkScale(...rangeOf(mine), 0, laneH, 6),
+        : spec.fill
+          ? mkScale(...rangeOf(mine), 0, laneH, 2, 0, 2)
+          : mkScale(...rangeOf(mine), 0, laneH, 6),
     );
   }
   plot._scales = scales;

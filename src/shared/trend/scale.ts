@@ -32,12 +32,16 @@ export interface Scale {
   max: number;
   y: (v: number) => number;
 }
+// `padFrac` widens the range above and below the data, `bottomPad` keeps pixels free under it
+// (0 and 2 for a plot the lines fill, a poster's)
 export const mkScale = (
   min: number,
   max: number,
   top: number,
   h: number,
   topPad: number,
+  padFrac = 0.1,
+  bottomPad = 6,
 ): Scale => {
   if (!Number.isFinite(min)) {
     min = 0;
@@ -47,12 +51,12 @@ export const mkScale = (
     max = min + 1;
     min = min - 1;
   }
-  const pad = (max - min) * 0.1;
+  const pad = (max - min) * padFrac;
   min -= pad;
   max += pad;
   const innerTop = top + topPad,
     // at least a pixel: a lane shorter than its label would otherwise draw the scale upside down
-    innerH = Math.max(1, h - topPad - 6);
+    innerH = Math.max(1, h - topPad - bottomPad);
   return {
     top,
     h,

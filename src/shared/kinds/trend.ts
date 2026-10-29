@@ -67,6 +67,7 @@ const specOf = (c: KindCtx, shown: Series[]) => {
     yAxis: false,
     smoothing: { minutes: null },
     text: c.ctx.text,
+    fill: true,
     series: shown.map((s) => {
       const st = hass?.states[s.entity];
       const unit = st?.attributes?.unit_of_measurement;

@@ -23,8 +23,13 @@ const STYLE_POSTER_CARD = `
      and the bottom (the texts), so the theme's text reads on any picture */
   .pback.scrim::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, color-mix(in srgb, ${CARD_BG} 72%, transparent) 0%, color-mix(in srgb, ${CARD_BG} 38%, transparent) 30%, color-mix(in srgb, ${CARD_BG} 55%, transparent) 50%, color-mix(in srgb, ${CARD_BG} 90%, transparent) 100%); }
   .row.hval.pstatus.empty { display: none; }
-  /* a corner of three badges or more wraps them into rows from the right, so it keeps to the top */
-  .corner:has(> .row.hval:nth-child(3)) { flex-direction: row; flex-wrap: wrap; justify-content: flex-end; align-content: flex-start; }
+  /* the corner floats over the poster's top right, so the badges take no height from the name,
+     the value and the picture (the top line is as tall as the lead); many badges reach down over
+     the picture's right. Controls on the value's line keep their room: there the corner stops
+     above them */
+  ha-card.layout-poster .row.poster { position: static; }
+  ha-card.layout-poster .row.poster > .ptop > .corner { position: absolute; z-index: 2; top: 16px; right: 16px; max-width: calc(100% - 88px); }
+  ha-card.layout-poster .row.poster:has(> .pbody > .pvalue > .end) > .ptop > .corner { max-height: calc(100% - 96px); overflow: hidden; }
 
   /* a kind's field as the backdrop (wind, rain): the band fills the card; the lead keeps a solid
      circle over it */
@@ -33,14 +38,16 @@ const STYLE_POSTER_CARD = `
   ha-card.pflow .plead .lead.plain .shape { background: transparent; }
 
   /* a kind's curve along the bottom (the sun's day, a trend's lines): it takes the room the texts
-     leave, out to the card's edges, and reaches up under the value; the texts stay on top and let
-     the pointer through to it */
+     leave, out to the card's edges, a small gap below them; the texts stay on top and let the
+     pointer through to it */
   .pbody:has(> .pcurve) { flex: 1 1 auto; min-height: 0; }
   .pbody:has(> .pcurve) > :not(.pcurve) { position: relative; z-index: 1; pointer-events: none; }
   .pbody:has(> .pcurve) .big b { ${type(32, 36)} }
-  .pbody > .pcurve { position: relative; flex: 1 1 auto; min-height: 40px; min-width: 0; margin: -12px -16px -16px; touch-action: pan-y; }
+  .pbody > .pcurve { position: relative; flex: 1 1 auto; min-height: 40px; min-width: 0; margin: 6px -16px -16px; touch-action: pan-y; }
+  /* a sparkline keeps a small gap below the value instead of reaching up under it */
+  ha-card.layout-poster .pbody > .pvalue + .plot.grow[data-kind="sparkline"] { margin-top: 6px; }
   .row.actionable .pcurve { pointer-events: auto; }
-  .pbody > .pcurve.trend { margin: -12px -16px -16px; }
+  .pbody > .pcurve.trend { margin: 6px -16px -16px; }
 `;
 
 export const STYLE_POSTER_CARD_ALL =
