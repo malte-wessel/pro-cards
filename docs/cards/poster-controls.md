@@ -6,16 +6,16 @@ A poster can carry one control: a switch, a slider, a stepper, speeds, buttons, 
 
 Without `control` (or with `control: auto`), a domain kind draws its own controls:
 
-| Kind                   | Controls                                                                 |
-| ---------------------- | ------------------------------------------------------------------------ |
-| `light`                | a switch on the value's line, brightness below it                        |
-| `fan`                  | its speeds                                                               |
-| `climate`              | a stepper for the target temperature                                     |
-| `lock`                 | hold the icon to lock or unlock                                          |
-| `alarm_control_panel`  | hold the icon to arm or disarm (none where the panel wants a code)       |
-| `media_player`         | previous, play / pause and next on the value's line, the volume below it |
-| `cover`                | open, stop and close                                                     |
-| `vacuum`, `lawn_mower` | start / pause and back to the dock                                       |
+| Kind                   | Controls                                                              |
+| ---------------------- | --------------------------------------------------------------------- |
+| `light`                | a switch beside the value, brightness below it                        |
+| `fan`                  | its speeds                                                            |
+| `climate`              | a stepper for the target temperature                                  |
+| `lock`                 | hold the icon to lock or unlock                                       |
+| `alarm_control_panel`  | hold the icon to arm or disarm (none where the panel wants a code)    |
+| `media_player`         | previous, play / pause and next beside the title, the volume below it |
+| `cover`                | open, stop and close                                                  |
+| `vacuum`, `lawn_mower` | start / pause and back to the dock                                    |
 
 Every other kind (a sensor, the weather, the wind, the energy kinds …) has no control unless the card asks for one.
 
@@ -137,11 +137,11 @@ control_options:
 
 A control has three places on a poster, set with `control_position`:
 
-| `control_position` | Place                                                                 | The default of                           |
-| ------------------ | --------------------------------------------------------------------- | ---------------------------------------- |
-| `end`              | on the value's line, at the right; the value keeps its room beside it | switch, stepper, speeds, buttons, select |
-| `block`            | under the value, the poster's whole width                             | slider                                   |
-| `lead`             | the icon is the control: a tap switches, a hold confirms              | the hold of locks and alarm panels       |
+| `control_position` | Place                                                                                              | The default of                           |
+| ------------------ | -------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `end`              | beside the value and the line under it, at the right; under them where they do not fit beside them | switch, stepper, speeds, buttons, select |
+| `block`            | under the value, the poster's whole width                                                          | slider                                   |
+| `lead`             | the icon is the control: a tap switches, a hold confirms                                           | the hold of locks and alarm panels       |
 
 ::: live
 
@@ -161,7 +161,7 @@ A control has three places on a poster, set with `control_position`:
 
 :::
 
-On a narrow poster a control on the value's line goes under the value rather than squeezing it. Where the poster is short of room, the value is drawn smaller first; if that is not enough, a slider below the value gives way (its more-info dialog still has it): a media player's volume on a poster of 6 × 3, shown on one of 9 × 4. See [Poster sizes](/showcase/poster-sizes).
+The name runs across the poster on top; the value and the line under it are one block, and a control beside it ends on the baseline of the block's last line, so the value sits where it sits without one. On a narrow poster the control goes under the block (under the line under the value) rather than squeezing the value; the line under the value is cut where a control beside it starts. Where the poster is short of room, the value is drawn smaller first; if that is not enough, a slider below the value gives way (its more-info dialog still has it): a media player's volume on a poster of 6 × 3, shown on one of 9 × 4. See [Poster sizes](/showcase/poster-sizes).
 
 ## Your own buttons
 

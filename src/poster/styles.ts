@@ -29,7 +29,7 @@ const STYLE_POSTER_CARD = `
      above them */
   ha-card.layout-poster .row.poster { position: static; }
   ha-card.layout-poster .row.poster > .ptop > .corner { position: absolute; z-index: 2; top: 16px; right: 16px; max-width: calc(100% - 88px); }
-  ha-card.layout-poster .row.poster:has(> .pbody > .pvalue > .end) > .ptop > .corner { max-height: calc(100% - 96px); overflow: hidden; }
+  ha-card.layout-poster .row.poster:has(> .pbody > .pmain > .end) > .ptop > .corner { max-height: calc(100% - 96px); overflow: hidden; }
 
   /* a kind's field as the backdrop (wind, rain): the band fills the card; the lead keeps a solid
      circle over it */
@@ -45,7 +45,7 @@ const STYLE_POSTER_CARD = `
   .pbody:has(> .pcurve) .big b { ${type(32, 36)} }
   .pbody > .pcurve { position: relative; flex: 1 1 auto; min-height: 40px; min-width: 0; margin: 6px -16px -16px; touch-action: pan-y; }
   /* a sparkline keeps a small gap below the value instead of reaching up under it */
-  ha-card.layout-poster .pbody > .pvalue + .plot.grow[data-kind="sparkline"] { margin-top: 6px; }
+  ha-card.layout-poster .pbody > .pmain:not(:has(> .ptext > .secondary)) + .plot.grow[data-kind="sparkline"] { margin-top: 6px; }
   .row.actionable .pcurve { pointer-events: auto; }
   /* the value's line keeps its height whatever it shows: a word (Off, Cleaning) is drawn smaller
      than a number but in the number's line, so a light switched off moves nothing around it */

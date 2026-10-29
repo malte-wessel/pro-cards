@@ -177,9 +177,10 @@ export interface PosterSlots {
   picture?: HTMLElement | null;
 }
 
-// a poster (the poster card's row): the icon at the top left, and at the bottom the name, the big
-// value with the controls on its line, the secondary line and the block visual or controls. Only
-// the poster's own parts are filled again, never the badge rows in its corner (filled apart).
+// a poster (the poster card's row): the icon at the top left, and at the bottom the name, then
+// the big value and the secondary line as one block with the controls beside it (under it where
+// they do not fit), then the block visual or controls. Only the poster's own parts are filled
+// again, never the badge rows in its corner (filled apart).
 export const fillPosterSlots = (
   ctx: RenderCtx,
   row: HTMLElement,
@@ -195,8 +196,6 @@ export const fillPosterSlots = (
   if (o.lead !== "keep") lead.replaceChildren(o.lead ?? leadOf(ctx, ent, idx, m, 40, c.lead));
   body.replaceChildren();
   const name = textEl("pname", o.name ?? nameOf(ctx, ent, m.st));
-  const value = document.createElement("div");
-  value.className = "pvalue";
   const ctls = endControls(ctx, ent, idx, m, c.end);
   // the value is the poster's point: segments, a select or a Run chip sit beside it; only a
   // stepper that shows the very same number takes its place
@@ -205,31 +204,43 @@ export const fillPosterSlots = (
   const fmt = o.value === undefined ? m.fmt : o.value;
   // a gauge draws the value in its arc, as in a grid cell
   const gaugeShown = o.picture === undefined && ent.visual === "gauge";
-  if (!repeats && !gaugeShown && fmt) {
-    const big = bigEl(fmt);
-    // a word (Cleaning, Away) is drawn smaller than a number, so the controls stay beside it
-    big.classList.toggle("word", o.word ?? m.model.num === null);
-    value.appendChild(big);
-  }
-  if (ctls.els.length) {
-    const end = document.createElement("div");
-    end.className = "end";
-    end.append(...ctls.els);
-    value.appendChild(end);
-  }
   const block = o.picture !== undefined ? o.picture : blockOf(ctx, ent, idx, m, c.block);
   // a gauge is the poster's picture: the arc first, its name centred under it, the whole
   // centred in the room under the top line (pgauge)
   const gauge = gaugeShown && !!block;
   body.classList.toggle("pgauge", gauge);
   if (gauge && block) body.appendChild(block);
-  // a value line with nothing on it (a gauge's, without controls) takes no room
-  const parts = value.childElementCount ? [name, value] : [name];
-  if (ent.item.namePosition === "below" && !gauge) parts.reverse();
-  body.append(...parts);
+  // the name on top across the poster; below the value it is part of the value's block
+  const below = ent.item.namePosition === "below" && !gauge;
+  if (!below) body.appendChild(name);
+  const text = document.createElement("div");
+  text.className = "ptext";
+  if (!repeats && !gaugeShown && fmt) {
+    const value = document.createElement("div");
+    value.className = "pvalue";
+    const big = bigEl(fmt);
+    // a word (Cleaning, Away) is drawn smaller than a number, so the controls stay beside it
+    big.classList.toggle("word", o.word ?? m.model.num === null);
+    value.appendChild(big);
+    text.appendChild(value);
+  }
+  if (below) text.appendChild(name);
   const sec = o.secondary !== undefined ? o.secondary : tplOf(ctx, ent.secondary);
-  if (typeof sec === "string") body.appendChild(textEl("secondary", sec));
-  else if (sec) body.appendChild(sec);
+  if (typeof sec === "string") text.appendChild(textEl("secondary", sec));
+  else if (sec) text.appendChild(sec);
+  // the value's block and the controls beside it; nothing on it takes no room (a gauge's)
+  if (text.childElementCount || ctls.els.length) {
+    const main = document.createElement("div");
+    main.className = "pmain";
+    main.appendChild(text);
+    if (ctls.els.length) {
+      const end = document.createElement("div");
+      end.className = "end";
+      end.append(...ctls.els);
+      main.appendChild(end);
+    }
+    body.appendChild(main);
+  }
   if (block && !gauge) body.appendChild(block);
   appendControls(ctx, ent, idx, m, c.block, body);
 };

@@ -12,7 +12,7 @@ A poster is three rows high in a sections grid (two at least) and keeps its cont
 
 - the **lead** at the top left: the icon, the entity's picture or the kind's own drawing;
 - the **badges** at the top right, the first of them the **status badge** (the matching rule's label here);
-- the **name**, the large **value** with the controls on its line, and the line under the value;
+- the **name**, the large **value** and the line under it, with the controls beside them (under them on a narrow card);
 - the **picture** along the bottom: here the last 12 hours as a sparkline;
 - behind it all, the **backdrop** (an image, or what the kind draws there).
 
@@ -288,7 +288,7 @@ Several entities on one scale (`kind: { type: trend, entities: [...] }`): the fi
 
 ### Light
 
-A light: a glow from the bottom of the card in the light's own colour (`rgb_color`, else Home Assistant's colour for a light that is on), as strong as its brightness and gone while it is off. The brightness is large, the switch on its line and the brightness slider along the bottom; `control: false` leaves them out.
+A light: a glow from the bottom of the card in the light's own colour (`rgb_color`, else Home Assistant's colour for a light that is on), as strong as its brightness and gone while it is off. The brightness is large, the switch beside it and the brightness slider along the bottom; `control: false` leaves them out.
 
 ::: live
 
@@ -310,7 +310,7 @@ A light: a glow from the bottom of the card in the light's own colour (`rgb_colo
 
 ### Fan
 
-A fan: its blades turn at its speed (standing still while it is off), the speed is large and its speeds are segments on its line.
+A fan: its blades turn at its speed (standing still while it is off), the speed is large and its speeds are segments beside it.
 
 ::: live
 
@@ -327,7 +327,7 @@ A fan: its blades turn at its speed (standing still while it is off), the speed 
 
 ### Climate
 
-A thermostat: the current temperature large, the target under it and the stepper on its line, what it is doing as the status (Heating, Idle, Cooling), and a dial along the bottom: the target as a ring, the temperature now as a dot, the stretch between them in the poster's colour. The card warms while it heats and cools while it cools.
+A thermostat: the current temperature large, the target under it and the stepper beside them, what it is doing as the status (Heating, Idle, Cooling), and a dial along the bottom: the target as a ring, the temperature now as a dot, the stretch between them in the poster's colour. The card warms while it heats and cools while it cools.
 
 ::: live
 
@@ -391,7 +391,7 @@ A person: their photo behind the poster (no lead over their face), the zone larg
 
 ### Media player
 
-A media player: its cover art behind the poster, and the art's own colour for the poster (read from the picture once it has loaded). The title is large, the artist and album under it, the transport on its line and the volume below (on a card too short for it the volume gives way, more-info has it); a thin bar along the bottom edge runs with the track while it plays.
+A media player: its cover art behind the poster, and the art's own colour for the poster (read from the picture once it has loaded). The title is large, the artist and album under it, the transport beside them and the volume below (on a card too short for it the volume gives way, more-info has it); a thin bar along the bottom edge runs with the track while it plays.
 
 ::: live
 
@@ -467,7 +467,7 @@ A cover without a device class is a window pane; `kind: { style }` picks another
 
 ### Vacuum and lawn mower
 
-A vacuum or a lawn mower: while it works its path draws itself across the poster (on grass for a mower) and the robot in the lead moves; docked, the dock stands there. The state is large, its battery and room under it where the integration reports them, start / pause and return to the dock on its line, and an error pulses red.
+A vacuum or a lawn mower: while it works its path draws itself across the poster (on grass for a mower) and the robot in the lead moves; docked, the dock stands there. The state is large, its battery and room under it where the integration reports them, start / pause and return to the dock beside them, and an error pulses red.
 
 ::: live
 

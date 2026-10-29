@@ -353,7 +353,9 @@ export class PosterCard extends EntityCardBase {
   // so nothing jumps back and forth
   _valueFit: { size: string; px: number | null; base: number | null; drop: boolean } | null = null;
   _fitHeight(card: HTMLElement, row: HTMLElement) {
-    const big = row.querySelector<HTMLElement>(":scope > .pbody > .pvalue > .big");
+    const big = row.querySelector<HTMLElement>(
+      ":scope > .pbody > .pmain > .ptext > .pvalue > .big",
+    );
     const top = row.querySelector<HTMLElement>(":scope > .ptop"),
       body = row.querySelector<HTMLElement>(":scope > .pbody");
     const b = big?.querySelector("b");

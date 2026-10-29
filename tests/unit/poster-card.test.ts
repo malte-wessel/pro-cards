@@ -336,7 +336,13 @@ describe("poster-card drawing", () => {
     return el;
   };
   // the classes of the poster body's children, in order
-  const bodyParts = (r: ParentNode) => [...q(r, ".pbody").children].map((c) => c.className);
+  // the body's parts in order, the text block's own spelled out
+  const bodyParts = (r: ParentNode) =>
+    [...q(r, ".pbody").children].flatMap((c) =>
+      c.classList.contains("pmain")
+        ? [...q(c, ".ptext").children].map((t) => t.className)
+        : [c.className],
+    );
   const TEMP = "sensor.living_room_temperature";
 
   it("has the lead and the corner on top and the body below, no label pill", () => {
@@ -410,7 +416,7 @@ describe("poster-card drawing", () => {
     const r = draw({ entity: TEMP, name: "Living room", secondary: "Feels like 20" });
     expect(bodyParts(r)).toEqual(["pname", "pvalue", "secondary"]);
     expect(q(r, ".pname").textContent).toBe("Living room");
-    expect(q(r, ".pbody > .secondary").textContent).toBe("Feels like 20");
+    expect(q(r, ".ptext > .secondary").textContent).toBe("Feels like 20");
     expect(bodyParts(draw({ entity: TEMP, name_position: "below" }))).toEqual(["pvalue", "pname"]);
   });
 
@@ -422,11 +428,11 @@ describe("poster-card drawing", () => {
       control: "stepper",
     });
     expect(same.querySelector(".pvalue .big")).toBeNull();
-    expect(same.querySelector(".pvalue > .end > .ctl-stepper")).not.toBeNull();
+    expect(same.querySelector(".pmain > .end > .ctl-stepper")).not.toBeNull();
     // the climate kind's own: the current temperature beside the target's stepper
     const own = draw({ entity: "climate.living_room" });
     expect(q(own, ".pvalue > .big > b").textContent).toBe("21.6");
-    expect(own.querySelector(".pvalue > .end > .ctl-stepper")).not.toBeNull();
+    expect(own.querySelector(".pmain > .end > .ctl-stepper")).not.toBeNull();
   });
 
   it("keeps the value beside segments, a select and a button", () => {
@@ -437,15 +443,15 @@ describe("poster-card drawing", () => {
       control: "segments",
     });
     expect(seg.querySelector(".pvalue > .big")).not.toBeNull();
-    expect(seg.querySelector(".pvalue > .end > .ctl-segments")).not.toBeNull();
+    expect(seg.querySelector(".pmain > .end > .ctl-segments")).not.toBeNull();
     const sel = draw({ entity: "input_select.house_mode", control: "auto" });
     expect(q(sel, ".pvalue > .big > b").textContent).toBe("Home");
-    expect(sel.querySelector(".pvalue > .end > .ctl-select")).not.toBeNull();
+    expect(sel.querySelector(".pmain > .end > .ctl-select")).not.toBeNull();
     const run = draw({ entity: "script.check_windows", control: "auto" });
     expect(run.querySelector(".pvalue > .big")).not.toBeNull();
-    expect(run.querySelector(".pvalue > .end > .ctl-chip")).not.toBeNull();
+    expect(run.querySelector(".pmain > .end > .ctl-chip")).not.toBeNull();
     // no control, no end slot
-    expect(draw({ entity: TEMP }).querySelector(".pvalue > .end")).toBeNull();
+    expect(draw({ entity: TEMP }).querySelector(".pmain > .end")).toBeNull();
   });
 
   it("draws a gauge as its picture: the arc first, no big value", () => {

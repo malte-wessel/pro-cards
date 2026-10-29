@@ -37,6 +37,16 @@ const layoutOf = async (c: Locator) => {
   };
   return { lead: await at(".plead"), name: await at(".pname"), value: await at(".pvalue") };
 };
+// where a text's last line sits on its baseline (a zero-height marker at its end)
+const baselineOf = (loc: Locator) =>
+  loc.evaluate((e) => {
+    const mark = document.createElement("span");
+    mark.style.cssText = "display: inline-block; width: 0; height: 0";
+    e.appendChild(mark);
+    const y = mark.getBoundingClientRect().bottom;
+    mark.remove();
+    return y;
+  });
 // presses a button down for a while (a hold)
 const hold = async (page: Page, loc: Locator) => {
   const b = (await loc.boundingBox())!;
@@ -147,7 +157,7 @@ test.describe("poster kinds", () => {
     const row = card(page).locator(".row.poster");
     await expect(row.locator(".pvalue .big b")).toHaveText("9.4");
     await expect(row.locator(".pstatus")).toHaveText("Light breeze");
-    await expect(row.locator(".pbody > .secondary")).toHaveText("from SW · gusts 18.2 km/h");
+    await expect(row.locator(".ptext > .secondary")).toHaveText("from SW · gusts 18.2 km/h");
     // the animated lead turns where the wind blows
     await expect(row.locator(".plead")).toBeVisible();
     // the predefined rules read km/h whatever the sensor reports
@@ -200,7 +210,7 @@ test.describe("poster kinds", () => {
     await expect.poll(opacity).toBe("0");
     expect(await layoutOf(c)).toEqual(before);
     // its controls: the switch on the value's line, the slider below
-    const toggle = c.locator(".pvalue .end .toggle");
+    const toggle = c.locator(".pmain > .end .toggle");
     await expect(c.locator(".pbody > .ctl-slider")).toBeVisible();
     await toggle.click();
     expect(await services(page)).toEqual(["homeassistant.toggle"]);
@@ -212,6 +222,53 @@ test.describe("poster kinds", () => {
     await c.locator('.ctl-buttons button[aria-label="Start / pause"]').click();
     await c.locator('.ctl-buttons button[aria-label="Return to dock"]').click();
     expect(await services(page)).toEqual(["vacuum.pause", "vacuum.return_to_base"]);
+  });
+
+  test("controls sit beside the value and its line, or under both; the name runs across", async ({
+    page,
+  }) => {
+    const house = {
+      type: P,
+      entity: "input_select.house_mode",
+      name: "House",
+      grid_options: { columns: 12 },
+    };
+    await mount(
+      page,
+      [
+        { type: P, entity: "vacuum.robot", grid_options: { columns: 12 } },
+        {
+          type: P,
+          entity: "climate.bedroom",
+          control: "segments",
+          control_attribute: "hvac_mode",
+          grid_options: { columns: 6 },
+        },
+        { ...house, control: "select" },
+        { ...house, control: false },
+      ],
+      { width: 400 },
+    );
+    // beside: the buttons end on the last line's baseline (the line under the value)
+    const robot = card(page, 0);
+    const value = await rect(robot.locator(".pvalue"));
+    const end = await rect(robot.locator(".pmain > .end"));
+    expect(end.left).toBeGreaterThan(value.right);
+    expect(end.bottom).toBeCloseTo(await baselineOf(robot.locator(".ptext > .secondary")), 0);
+    // the name is not cut by the controls: it runs over them
+    const name = await rect(robot.locator(".pbody > .pname"));
+    expect(name.right).toBeGreaterThan(end.left);
+    // under: segments too wide to sit beside go under the line under the value
+    const bed = card(page, 1);
+    const line = await rect(bed.locator(".ptext > .secondary"));
+    const segs = await rect(bed.locator(".pmain > .end"));
+    expect(segs.top).toBeGreaterThanOrEqual(line.bottom);
+    // the value sits where it sits without a control; the select ends on its baseline
+    const [withSelect, without] = [card(page, 2), card(page, 3)];
+    const at = async (c: Locator) => (await rect(c.locator(".pvalue"))).top - (await inner(c)).top;
+    expect(await at(withSelect)).toBeCloseTo(await at(without), 0);
+    const select = await rect(withSelect.locator(".pmain > .end"));
+    expect(select.bottom).toBeCloseTo(await baselineOf(withSelect.locator(".pvalue .big b")), 0);
   });
 
   test("your own buttons with labels sit on the value's line, each in its place", async ({
@@ -227,7 +284,7 @@ test.describe("poster kinds", () => {
       ],
     });
     const c = card(page);
-    const chips = c.locator(".pvalue .end .ctl-buttons.custom > .chip");
+    const chips = c.locator(".pmain > .end .ctl-buttons.custom > .chip");
     await expect(chips).toHaveCount(2);
     const [a, b] = [await rect(chips.nth(0)), await rect(chips.nth(1))];
     // side by side on the value's line, below the lead (no band's chip style pins them)
@@ -268,7 +325,7 @@ test.describe("poster kinds", () => {
     const pump = card(page, 0);
     await expect(pump.locator(".pstatus")).toHaveText("Running");
     await expect(pump.locator(".pvalue .big")).toHaveText(/^\d+\s*W$/);
-    await expect(pump.locator(".pbody > .secondary")).toHaveText(/kWh in the last 24 h$/);
+    await expect(pump.locator(".ptext > .secondary")).toHaveText(/kWh in the last 24 h$/);
     // a pump turned off: Off, no line under it
     await setState(page, "sensor.heat_pump_power", "0");
     await expect(pump.locator(".pvalue .big")).toHaveText("Off");
@@ -311,7 +368,7 @@ test.describe("poster value fit", () => {
   test("a value shrinks where the card is short of room and is full size where it is not", async ({
     page,
   }) => {
-    const cfg = { type: P, entity: "light.living_room" };
+    const cfg = { type: P, entity: "climate.living_room" };
     await mount(
       page,
       [
@@ -329,8 +386,8 @@ test.describe("poster value fit", () => {
     expect((await rect(small.locator(".ptop"))).top - box.top).toBeCloseTo(16, 0);
     // a new value never makes it larger again (no jump back and forth)
     const px = await fontPx(b(small));
-    await setState(page, "light.living_room", "on", { brightness: 40 });
-    await expect(b(small)).toHaveText("16");
+    await setState(page, "climate.living_room", "heat", { current_temperature: 19 });
+    await expect(b(small)).toHaveText("19");
     expect(await fontPx(b(small))).toBe(px);
   });
 });

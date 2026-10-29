@@ -70,10 +70,18 @@ const STYLE_POSTER = `
   /* the texts keep their lines (clipped text would shrink to nothing); the plot gives way */
   .pbody > :not(.plot) { flex: none; }
   .pname { ${POSTER_NAME} }
-  /* the value keeps its width: controls that do not fit beside it wrap under it */
-  .pvalue { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; }
-  .pvalue > .big { flex: 0 0 auto; }
-  .pvalue > .end { margin-inline-start: auto; min-width: 0; max-width: 100%; }
+  /* the value and the line under it as one block, the controls beside it; where they do not fit
+     beside it, under it. The block is as wide as its value (the line under it takes the room it is
+     given, cut where it ends) and grows to push the controls to the right. Beside it, the controls
+     end on the block's last baseline: the block sits where it sits without them, and an empty last
+     item makes the controls' baseline their bottom edge (its gap given back) */
+  .pmain { display: flex; flex-wrap: wrap; align-items: last baseline; gap: 8px 12px; min-width: 0; }
+  .ptext { flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .ptext > :is(.pname, .secondary) { contain: inline-size; }
+  .pvalue { display: flex; min-width: 0; }
+  .pvalue > .big { flex: 0 1 auto; }
+  .pmain > .end::after { content: ""; align-self: last baseline; margin-inline-start: -8px; }
+  .pmain > .end { min-width: 0; max-width: 100%; }
   .row.poster .big b { ${type(40, 44)} ${POSTER_VALUE} }
   .row.poster .big span { font-size: ${fs(16)}; }
   /* with a curve the value is smaller: the curve gets the room (a word and a fitted value still
@@ -87,6 +95,7 @@ const STYLE_POSTER = `
      the arc and its name to fit three rows at any width */
   .row.poster:has(> .pbody.pgauge) > .ptop { margin-bottom: 0; }
   .pbody.pgauge { margin-block: auto; align-items: center; text-align: center; }
+  .pbody.pgauge > .pmain { align-self: stretch; justify-content: center; }
   .pbody.pgauge > .gauge { margin-top: 0; max-width: 120px; }
   /* the poster is one button (its action layer fills the body: the whole card, as a tile's) and
      its plot runs to the card's edges, under the body's padding; the card's corners clip it */
@@ -97,7 +106,7 @@ const STYLE_POSTER = `
   ha-card.layout-poster .pbody > .plot { width: auto; margin: 8px -16px -16px; }
   /* a line right under the value reaches up under it; the texts stay on top of it (columns would
      cover them, and a line under a secondary line would cross its text) */
-  ha-card.layout-poster .pbody > .pvalue + .plot.grow[data-kind="sparkline"] { margin-top: -16px; }
+  ha-card.layout-poster .pbody > .pmain:not(:has(> .ptext > .secondary)) + .plot.grow[data-kind="sparkline"] { margin-top: -16px; }
   ha-card.layout-poster .pbody:has(> .plot.grow) > :not(.plot) { position: relative; z-index: 1; }
 `;
 // the header badges (render/badge.ts): the row is the pill (.pb) of its style (b-outline, b-soft,
