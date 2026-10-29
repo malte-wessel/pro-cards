@@ -57,7 +57,10 @@ const description =
 const cardGroups = [
   {
     text: "Posters",
-    items: [{ text: "Poster Card Pro", link: "/cards/poster-card" }],
+    items: [
+      { text: "Poster Card Pro", link: "/cards/poster-card" },
+      { text: "Poster controls", link: "/cards/poster-controls" },
+    ],
   },
   {
     text: "Entities",

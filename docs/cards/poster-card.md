@@ -690,7 +690,7 @@ Every kind takes `control` and its options, as the [entity cards](/cards/control
 
 :::
 
-A tap on the poster opens more-info; the controls and the badges take their own taps.
+A tap on the poster opens more-info; the controls and the badges take their own taps. [Poster controls](/cards/poster-controls) has every control, where it sits, your own buttons and holds.
 
 ## Kind options
 
