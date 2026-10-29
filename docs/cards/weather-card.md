@@ -15,31 +15,7 @@ entity: weather.home
 
 :::
 
-## Poster
-
-`layout: poster` draws the entity as the entity card's [poster](/cards/entity-card#poster): the condition icon at the top left and the condition as a pill at the top right (the matching rule's label, when one has one); at the bottom the name, the temperature, large, its rule's label and today's high and low, and the next 12 hours of the hourly forecast's temperature as a curve along the bottom edge (hover it for the hour's value). An entity without an hourly forecast leaves the curve out. A poster draws no `sections`; it is three rows high in a sections grid (two at least).
-
-::: live
-
-```yaml
-- type: custom:weather-card-pro
-  entity: weather.home
-  name: Outside
-  layout: poster
-  grid_options: { columns: 6 }
-- type: custom:weather-card-pro
-  entity: weather.home
-  name: Outside
-  layout: poster
-  icons: mdi
-  temperature_rules:
-    - { below: 5, color: blue, label: Cold }
-    - { below: 20, color: teal, label: Mild }
-    - { above: 20, color: orange, label: Warm }
-  grid_options: { columns: 6 }
-```
-
-:::
+For the weather as a poster, with the temperature large and the next hours as a curve, see the [poster card](/cards/poster-card#weather).
 
 ## Hero
 
@@ -310,7 +286,6 @@ Home Assistant's fifteen condition states. They are the keys of an `icons` map a
 | Option                                   | Default         | Description                                                                                                                                                                                     |
 | ---------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `entity`                                 |                 | The weather entity (required).                                                                                                                                                                  |
-| `layout`                                 | `tile`          | `tile` or `poster`, see [Poster](#poster). With `sections` the card draws them, unless it is a poster.                                                                                          |
 | `sections`                               |                 | The sections, rendered in this order (see below). Without sections the card is a tile.                                                                                                          |
 | `name`                                   | friendly name   | Tile: the name. Hero: the first line, the condition then moves to the second line. Template allowed.                                                                                            |
 | `secondary`                              | see description | The line under the name (tile: `temperature · condition`) or the temperature (hero: labels · high / low). Template allowed.                                                                     |
@@ -318,7 +293,7 @@ Home Assistant's fifteen condition states. They are the keys of an `icons` map a
 | `icon_style`                             | `circle`        | `plain` draws the tile's and the hero's condition icon without its circle (a picture never has one).                                                                                            |
 | `decimals`                               | as reported     | Decimals of the temperature.                                                                                                                                                                    |
 | `icons`                                  | `hass`          | `hass` (the Home Assistant weather pictures), `mdi`, or a map from condition to an `mdi:` icon or image URL; mapped conditions override, the rest keep the pictures.                            |
-| `icon_size`                              | `36`            | Size of the tile's condition icon (px); a poster's is `40`.                                                                                                                                     |
+| `icon_size`                              | `36`            | Size of the tile's condition icon (px).                                                                                                                                                         |
 | `rules`                                  |                 | [Rules](/cards/entity-options#rules) on the condition (`state: rainy` …): colour, icon, label and `tint_card`. First match wins.                                                                |
 | `temperature_rules`                      |                 | Rules on the temperature (`below` / `above`): colour of the value, the temperature line and the forecast bars, label, `tint_card`.                                                              |
 | `title` / `icon` / `header_entities`     |                 | The header, like the [group card](/cards/entity-group-card#card-options). Templates allowed.                                                                                                    |

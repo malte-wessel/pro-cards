@@ -905,9 +905,9 @@ image: camera.front_door
 
 :::
 
-## From v2
+## From the 2.9 betas
 
-The posters of the 2.9 betas (`layout: poster` on the entity, group, sections, wind, rain, weather, sun path and multi trend cards) keep working. The poster card takes their place:
+The 2.9 betas drew posters with `layout: poster` on the entity, group, sections, wind, rain, weather, sun path and multi trend cards. That layout is gone: those cards are tiles, lists and plots again, and a poster is this card. To move one over, change its type to `custom:poster-card-pro`, drop `layout: poster` and let the kind bring what you had set by hand (icons, controls, the standard bands); keep `name`, your own rules and the grid options. The keys map like this:
 
 | 2.9 beta                                                                    | Poster card                                                                 |
 | --------------------------------------------------------------------------- | --------------------------------------------------------------------------- |

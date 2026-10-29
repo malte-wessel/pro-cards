@@ -19,7 +19,7 @@ sections:
 
 ## Layout per section
 
-`layout` takes the same values as the group card (`list`, `grid`, `hero`, `poster`, `row`, `column`, `table`). Here the sensors become a row and the controls stay a list; `title` and `icon` add the header.
+`layout` takes the same values as the group card (`list`, `grid`, `hero`, `row`, `column`, `table`). Here the sensors become a row and the controls stay a list; `title` and `icon` add the header.
 
 ::: live
 
@@ -240,31 +240,7 @@ sections:
 
 :::
 
-A `poster` section puts one device on top: the [poster](/cards/entity-card#poster) of its first entity, with the rest as badges in its corner, and the other sections below it.
-
-::: live
-
-```yaml
-type: custom:entity-sections-card-pro
-title: Robot vacuum
-icon: mdi:robot-vacuum
-sections:
-  - layout: poster
-    entities:
-      - entity: sensor.robot_progress
-        name: Cleaning
-        icon: mdi:robot-vacuum
-        visual: bar
-      - { entity: sensor.robot_battery, visual: ring }
-      - sensor.robot_current_room
-  - layout: table
-    divider: true
-    entities:
-      - { entity: sensor.robot_dustbin_remaining, name: Dustbin }
-      - { entity: sensor.robot_total_cleanings, name: Cleanings }
-```
-
-:::
+A device on top as a poster, with the rest as badges in its corner, is a [poster card](/cards/poster-card); a [layout card](/cards/layout-card) stacks it over this card.
 
 ## Devices and status
 
@@ -401,7 +377,7 @@ sections:
 | Option                                   | Default        | Description                                                                          |
 | ---------------------------------------- | -------------- | ------------------------------------------------------------------------------------ |
 | `entities`                               |                | Entity ids or [entity objects](/cards/entity-options#entity-options) (required).     |
-| `layout`                                 | `list`         | `list`, `grid`, `hero`, `poster`, `row`, `column` or `table`.                        |
+| `layout`                                 | `list`         | `list`, `grid`, `hero`, `row`, `column` or `table`.                                  |
 | `divider`                                | `false`        | Draws a line above the section (never for the first one).                            |
 | `columns`                                | card `columns` | Cells per row in a grid section.                                                     |
 | `align`                                  | card `align`   | Overrides the card value for this section.                                           |

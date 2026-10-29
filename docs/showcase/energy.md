@@ -9,7 +9,7 @@ pageClass: wide
 
 Follow every watt and every kilowatt-hour. The [power flow](/cards/power-flow-card) shows where power goes right now; the [energy flow](/cards/energy-flow-card) splits a day, week, month or year the way Home Assistant's Energy dashboard does, with a picker to step through them. Every card runs against a simulated home, so tap, drag and hold them.
 
-<DashboardGrid b64="LSBjb2x1bW5fc3BhbjogNAogIGNhcmRzOgogICAgLSB0eXBlOiBjdXN0b206aGVhZGluZy1jYXJkLXBybwogICAgICBzdHlsZTogaGVybwogICAgICB0aXRsZTogRW5lcmd5CiAgICAgIHN1YnRpdGxlOiAie3sgc3RhdGVzKCdzZW5zb3IuZW5lcmd5X3RvZGF5JykgfX0ga1doIHRvZGF5IMK3IHt7IHN0YXRlcygnc2Vuc29yLmVsZWN0cmljaXR5X3ByaWNlJykgfX0g4oKsL2tXaCBub3ciCiAgICAgIGJhZGdlX3N0eWxlOiBwbGFpbgogICAgICBiYWRnZV9zaXplOiBsCiAgICAgIGJhZGdlczoKICAgICAgICAtIHsgdmFsdWU6ICJ7eyBub3coKS5zdHJmdGltZSgnJUg6JU0nKSB9fSIsIHNob3dfaWNvbjogZmFsc2UsIHRhcF9hY3Rpb246IHsgYWN0aW9uOiBub25lIH0gfQogICAgLSB0eXBlOiBjdXN0b206bGF5b3V0LWNhcmQtcHJvCiAgICAgIGNvbHVtbnM6IDIKICAgICAgYnJlYWtwb2ludHM6CiAgICAgICAgMjogeyBjb2x1bW5zOiA0IH0KICAgICAgY2FyZHM6CiAgICAgICAgLSB0eXBlOiBjdXN0b206cG93ZXItZmxvdy1jYXJkLXBybwogICAgICAgICAgdGl0bGU6IE5vdwogICAgICAgICAgaWNvbjogbWRpOmZsYXNoCiAgICAgICAgICBob21lOiBzZW5zb3IucG93ZXJfY29uc3VtcHRpb24KICAgICAgICAgIHZpZXdfbGF5b3V0OiB7IHNwYW46IFsyLCA2XSB9CiAgICAgICAgICBzb3VyY2VzOgogICAgICAgICAgICAtIHsgdHlwZTogc29sYXIsIGVudGl0eTogc2Vuc29yLnNvbGFyX3Bvd2VyIH0KICAgICAgICAgICAgLSB7IHR5cGU6IGJhdHRlcnksIHBvd2VyOiBzZW5zb3IuYmF0dGVyeV9wb3dlciwgc29jOiBzZW5zb3IuYmF0dGVyeV9zb2MgfQogICAgICAgICAgICAtIHsgdHlwZTogZ3JpZCwgcG93ZXI6IHNlbnNvci5ncmlkX3Bvd2VyLCBwcmljZTogc2Vuc29yLmVsZWN0cmljaXR5X3ByaWNlIH0KICAgICAgICAgIGNvbnN1bWVyczoKICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLmhlYXRfcHVtcF9wb3dlciwgbmFtZTogSGVhdCBwdW1wLCBpY29uOiBtZGk6aGVhdC1wdW1wIH0KICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLndhc2hlcl9wb3dlciwgbmFtZTogV2FzaGVyLCBpY29uOiBtZGk6d2FzaGluZy1tYWNoaW5lIH0KICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLm9mZmljZV9wb3dlciwgbmFtZTogT2ZmaWNlLCBpY29uOiBtZGk6bW9uaXRvciB9CiAgICAgICAgICAgIC0geyBlbnRpdHk6IHNlbnNvci5ldl9jaGFyZ2VyX3Bvd2VyLCBuYW1lOiBFViBjaGFyZ2VyLCBpY29uOiBtZGk6ZXYtc3RhdGlvbiB9CiAgICAgICAgICBydWxlczoKICAgICAgICAgICAgLSB7IGJlbG93OiA1MDAsIGNvbG9yOiBncmVlbiwgbGFiZWw6IFF1aWV0IH0KICAgICAgICAgICAgLSB7IGJlbG93OiAzMDAwLCBjb2xvcjogYW1iZXIsIGxhYmVsOiBCdXN5IH0KICAgICAgICAgICAgLSB7IGFib3ZlOiAzMDAwLCBjb2xvcjogcmVkLCBsYWJlbDogUGVhayB9CiAgICAgICAgLSB0eXBlOiBjdXN0b206ZW5lcmd5LWZsb3ctY2FyZC1wcm8KICAgICAgICAgIHRpdGxlOiBUb2RheQogICAgICAgICAgaWNvbjogbWRpOmNhbGVuZGFyLXRvZGF5CiAgICAgICAgICB2aWV3X2xheW91dDogeyBzcGFuOiBbMiwgNl0gfQogICAgICAgICAgaG9tZTogc2Vuc29yLmhvbWVfZW5lcmd5CiAgICAgICAgICBzb3VyY2VzOgogICAgICAgICAgICAtIHsgdHlwZTogc29sYXIsIGVudGl0eTogc2Vuc29yLnNvbGFyX2VuZXJneSB9CiAgICAgICAgICAgIC0geyB0eXBlOiBiYXR0ZXJ5LCBjaGFyZ2U6IHNlbnNvci5iYXR0ZXJ5X2NoYXJnZV9lbmVyZ3ksIGRpc2NoYXJnZTogc2Vuc29yLmJhdHRlcnlfZGlzY2hhcmdlX2VuZXJneSwgc29jOiBzZW5zb3IuYmF0dGVyeV9zb2MgfQogICAgICAgICAgICAtIHsgdHlwZTogZ3JpZCwgaW1wb3J0OiBzZW5zb3IuZ3JpZF9pbXBvcnRfZW5lcmd5LCBleHBvcnQ6IHNlbnNvci5ncmlkX2V4cG9ydF9lbmVyZ3kgfQogICAgICAgICAgY29uc3VtZXJzOgogICAgICAgICAgICAtIHsgZW50aXR5OiBzZW5zb3IuaGVhdF9wdW1wX2VuZXJneSwgbmFtZTogSGVhdCBwdW1wLCBpY29uOiBtZGk6aGVhdC1wdW1wIH0KICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLndhc2hlcl9lbmVyZ3ksIG5hbWU6IFdhc2hlciwgaWNvbjogbWRpOndhc2hpbmctbWFjaGluZSB9CiAgICAgICAgICAgIC0geyBlbnRpdHk6IHNlbnNvci5vZmZpY2VfZW5lcmd5LCBuYW1lOiBPZmZpY2UsIGljb246IG1kaTptb25pdG9yIH0KICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLmV2X2NoYXJnZXJfZW5lcmd5LCBuYW1lOiBFViBjaGFyZ2VyLCBpY29uOiBtZGk6ZXYtc3RhdGlvbiB9CiAgICAgICAgLSB0eXBlOiBjdXN0b206ZW50aXR5LWNhcmQtcHJvCiAgICAgICAgICBlbnRpdHk6IHNlbnNvci5zb2xhcl9wb3dlcgogICAgICAgICAgbmFtZTogU29sYXIKICAgICAgICAgIGljb246IG1kaTpzb2xhci1wb3dlci12YXJpYW50CiAgICAgICAgICBsYXlvdXQ6IHBvc3RlcgogICAgICAgICAgZGVjaW1hbHM6IDEKICAgICAgICAgIHZpc3VhbDogc3BhcmtsaW5lCiAgICAgICAgICBob3Vyc190b19zaG93OiAxMgogICAgICAgICAgcnVsZXM6CiAgICAgICAgICAgIC0geyBiZWxvdzogMC4xLCBjb2xvcjogZ3JleSwgbGFiZWw6IElkbGUgfQogICAgICAgICAgICAtIHsgYWJvdmU6IDAuMSwgY29sb3I6IGFtYmVyLCBsYWJlbDogUHJvZHVjaW5nIH0KICAgICAgICAtIHR5cGU6IGN1c3RvbTplbnRpdHktY2FyZC1wcm8KICAgICAgICAgIGVudGl0eTogc2Vuc29yLmdyaWRfcG93ZXIKICAgICAgICAgIG5hbWU6IEdyaWQKICAgICAgICAgIGljb246IG1kaTp0cmFuc21pc3Npb24tdG93ZXIKICAgICAgICAgIGxheW91dDogcG9zdGVyCiAgICAgICAgICBkZWNpbWFsczogMAogICAgICAgICAgdmlzdWFsOiBjb2x1bW5zCiAgICAgICAgICBob3Vyc190b19zaG93OiAxMgogICAgICAgICAgYnVja2V0X21pbnV0ZXM6IDMwCiAgICAgICAgICBydWxlczoKICAgICAgICAgICAgLSB7IGJlbG93OiAwLCBjb2xvcjogZ3JlZW4sIGxhYmVsOiBFeHBvcnRpbmcgfQogICAgICAgICAgICAtIHsgYWJvdmU6IDAsIGNvbG9yOiBibHVlLCBsYWJlbDogSW1wb3J0aW5nIH0KICAgICAgICAtIHR5cGU6IGN1c3RvbTplbnRpdHktY2FyZC1wcm8KICAgICAgICAgIGVudGl0eTogc2Vuc29yLmJhdHRlcnlfc29jCiAgICAgICAgICBuYW1lOiBCYXR0ZXJ5CiAgICAgICAgICBpY29uOiBtZGk6aG9tZS1iYXR0ZXJ5CiAgICAgICAgICBsYXlvdXQ6IHBvc3RlcgogICAgICAgICAgZGVjaW1hbHM6IDAKICAgICAgICAgIHZpc3VhbDogYmFyCiAgICAgICAgICBydWxlczoKICAgICAgICAgICAgLSB7IGJlbG93OiAyMCwgY29sb3I6IHJlZCwgbGFiZWw6IExvdyB9CiAgICAgICAgICAgIC0geyBiZWxvdzogNTAsIGNvbG9yOiBhbWJlciwgbGFiZWw6IEhhbGYgfQogICAgICAgICAgICAtIHsgYWJvdmU6IDUwLCBjb2xvcjogZ3JlZW4sIGxhYmVsOiBGdWxsIH0KICAgICAgICAgIGJhZGdlczoKICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLmJhdHRlcnlfcG93ZXIsIGZvcm1hdDogcG93ZXIsIGljb246IG1kaTpmbGFzaCB9CiAgICAgICAgLSB0eXBlOiBjdXN0b206ZW50aXR5LWNhcmQtcHJvCiAgICAgICAgICBlbnRpdHk6IHNlbnNvci5oZWF0X3B1bXBfcG93ZXIKICAgICAgICAgIG5hbWU6IEhlYXQgcHVtcAogICAgICAgICAgaWNvbjogbWRpOmhlYXQtcHVtcAogICAgICAgICAgbGF5b3V0OiBwb3N0ZXIKICAgICAgICAgIGRlY2ltYWxzOiAwCiAgICAgICAgICB2aXN1YWw6IHNwYXJrbGluZQogICAgICAgICAgaG91cnNfdG9fc2hvdzogMTIKICAgICAgICAgIGNvbG9yOiBkZWVwLW9yYW5nZQo=">
+<DashboardGrid b64="LSBjb2x1bW5fc3BhbjogNAogIGNhcmRzOgogICAgLSB0eXBlOiBjdXN0b206aGVhZGluZy1jYXJkLXBybwogICAgICBzdHlsZTogaGVybwogICAgICB0aXRsZTogRW5lcmd5CiAgICAgIHN1YnRpdGxlOiAie3sgc3RhdGVzKCdzZW5zb3IuZW5lcmd5X3RvZGF5JykgfX0ga1doIHRvZGF5IMK3IHt7IHN0YXRlcygnc2Vuc29yLmVsZWN0cmljaXR5X3ByaWNlJykgfX0g4oKsL2tXaCBub3ciCiAgICAgIGJhZGdlX3N0eWxlOiBwbGFpbgogICAgICBiYWRnZV9zaXplOiBsCiAgICAgIGJhZGdlczoKICAgICAgICAtIHsgdmFsdWU6ICJ7eyBub3coKS5zdHJmdGltZSgnJUg6JU0nKSB9fSIsIHNob3dfaWNvbjogZmFsc2UsIHRhcF9hY3Rpb246IHsgYWN0aW9uOiBub25lIH0gfQogICAgLSB0eXBlOiBjdXN0b206bGF5b3V0LWNhcmQtcHJvCiAgICAgIGNvbHVtbnM6IDIKICAgICAgYnJlYWtwb2ludHM6CiAgICAgICAgMjogeyBjb2x1bW5zOiA0IH0KICAgICAgY2FyZHM6CiAgICAgICAgLSB0eXBlOiBjdXN0b206cG93ZXItZmxvdy1jYXJkLXBybwogICAgICAgICAgdGl0bGU6IE5vdwogICAgICAgICAgaWNvbjogbWRpOmZsYXNoCiAgICAgICAgICBob21lOiBzZW5zb3IucG93ZXJfY29uc3VtcHRpb24KICAgICAgICAgIHZpZXdfbGF5b3V0OiB7IHNwYW46IFsyLCA2XSB9CiAgICAgICAgICBzb3VyY2VzOgogICAgICAgICAgICAtIHsgdHlwZTogc29sYXIsIGVudGl0eTogc2Vuc29yLnNvbGFyX3Bvd2VyIH0KICAgICAgICAgICAgLSB7IHR5cGU6IGJhdHRlcnksIHBvd2VyOiBzZW5zb3IuYmF0dGVyeV9wb3dlciwgc29jOiBzZW5zb3IuYmF0dGVyeV9zb2MgfQogICAgICAgICAgICAtIHsgdHlwZTogZ3JpZCwgcG93ZXI6IHNlbnNvci5ncmlkX3Bvd2VyLCBwcmljZTogc2Vuc29yLmVsZWN0cmljaXR5X3ByaWNlIH0KICAgICAgICAgIGNvbnN1bWVyczoKICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLmhlYXRfcHVtcF9wb3dlciwgbmFtZTogSGVhdCBwdW1wLCBpY29uOiBtZGk6aGVhdC1wdW1wIH0KICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLndhc2hlcl9wb3dlciwgbmFtZTogV2FzaGVyLCBpY29uOiBtZGk6d2FzaGluZy1tYWNoaW5lIH0KICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLm9mZmljZV9wb3dlciwgbmFtZTogT2ZmaWNlLCBpY29uOiBtZGk6bW9uaXRvciB9CiAgICAgICAgICAgIC0geyBlbnRpdHk6IHNlbnNvci5ldl9jaGFyZ2VyX3Bvd2VyLCBuYW1lOiBFViBjaGFyZ2VyLCBpY29uOiBtZGk6ZXYtc3RhdGlvbiB9CiAgICAgICAgICBydWxlczoKICAgICAgICAgICAgLSB7IGJlbG93OiA1MDAsIGNvbG9yOiBncmVlbiwgbGFiZWw6IFF1aWV0IH0KICAgICAgICAgICAgLSB7IGJlbG93OiAzMDAwLCBjb2xvcjogYW1iZXIsIGxhYmVsOiBCdXN5IH0KICAgICAgICAgICAgLSB7IGFib3ZlOiAzMDAwLCBjb2xvcjogcmVkLCBsYWJlbDogUGVhayB9CiAgICAgICAgLSB0eXBlOiBjdXN0b206ZW5lcmd5LWZsb3ctY2FyZC1wcm8KICAgICAgICAgIHRpdGxlOiBUb2RheQogICAgICAgICAgaWNvbjogbWRpOmNhbGVuZGFyLXRvZGF5CiAgICAgICAgICB2aWV3X2xheW91dDogeyBzcGFuOiBbMiwgNl0gfQogICAgICAgICAgaG9tZTogc2Vuc29yLmhvbWVfZW5lcmd5CiAgICAgICAgICBzb3VyY2VzOgogICAgICAgICAgICAtIHsgdHlwZTogc29sYXIsIGVudGl0eTogc2Vuc29yLnNvbGFyX2VuZXJneSB9CiAgICAgICAgICAgIC0geyB0eXBlOiBiYXR0ZXJ5LCBjaGFyZ2U6IHNlbnNvci5iYXR0ZXJ5X2NoYXJnZV9lbmVyZ3ksIGRpc2NoYXJnZTogc2Vuc29yLmJhdHRlcnlfZGlzY2hhcmdlX2VuZXJneSwgc29jOiBzZW5zb3IuYmF0dGVyeV9zb2MgfQogICAgICAgICAgICAtIHsgdHlwZTogZ3JpZCwgaW1wb3J0OiBzZW5zb3IuZ3JpZF9pbXBvcnRfZW5lcmd5LCBleHBvcnQ6IHNlbnNvci5ncmlkX2V4cG9ydF9lbmVyZ3kgfQogICAgICAgICAgY29uc3VtZXJzOgogICAgICAgICAgICAtIHsgZW50aXR5OiBzZW5zb3IuaGVhdF9wdW1wX2VuZXJneSwgbmFtZTogSGVhdCBwdW1wLCBpY29uOiBtZGk6aGVhdC1wdW1wIH0KICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLndhc2hlcl9lbmVyZ3ksIG5hbWU6IFdhc2hlciwgaWNvbjogbWRpOndhc2hpbmctbWFjaGluZSB9CiAgICAgICAgICAgIC0geyBlbnRpdHk6IHNlbnNvci5vZmZpY2VfZW5lcmd5LCBuYW1lOiBPZmZpY2UsIGljb246IG1kaTptb25pdG9yIH0KICAgICAgICAgICAgLSB7IGVudGl0eTogc2Vuc29yLmV2X2NoYXJnZXJfZW5lcmd5LCBuYW1lOiBFViBjaGFyZ2VyLCBpY29uOiBtZGk6ZXYtc3RhdGlvbiB9CiAgICAgICAgLSB0eXBlOiBjdXN0b206cG9zdGVyLWNhcmQtcHJvCiAgICAgICAgICBlbnRpdHk6IHNlbnNvci5zb2xhcl9wb3dlcgogICAgICAgICAgbmFtZTogU29sYXIKICAgICAgICAgIGtpbmQ6IHNvbGFyCiAgICAgICAgLSB0eXBlOiBjdXN0b206cG9zdGVyLWNhcmQtcHJvCiAgICAgICAgICBlbnRpdHk6IHNlbnNvci5ncmlkX3Bvd2VyCiAgICAgICAgICBuYW1lOiBHcmlkCiAgICAgICAgICBraW5kOiBncmlkCiAgICAgICAgLSB0eXBlOiBjdXN0b206cG9zdGVyLWNhcmQtcHJvCiAgICAgICAgICBlbnRpdHk6IHNlbnNvci5iYXR0ZXJ5X3NvYwogICAgICAgICAgbmFtZTogQmF0dGVyeQogICAgICAgICAga2luZDogeyBwb3dlcjogc2Vuc29yLmJhdHRlcnlfcG93ZXIgfQogICAgICAgIC0gdHlwZTogY3VzdG9tOnBvc3Rlci1jYXJkLXBybwogICAgICAgICAgZW50aXR5OiBzZW5zb3IuaGVhdF9wdW1wX3Bvd2VyCiAgICAgICAgICBuYW1lOiBIZWF0IHB1bXAKICAgICAgICAgIGtpbmQ6IHsgdHlwZTogYXBwbGlhbmNlLCBzdHlsZTogaGVhdF9wdW1wLCBydW5uaW5nX2Fib3ZlOiA1MCB9Cg==">
 
 ```yaml
 - column_span: 4
@@ -59,51 +59,22 @@ Follow every watt and every kilowatt-hour. The [power flow](/cards/power-flow-ca
             - { entity: sensor.washer_energy, name: Washer, icon: mdi:washing-machine }
             - { entity: sensor.office_energy, name: Office, icon: mdi:monitor }
             - { entity: sensor.ev_charger_energy, name: EV charger, icon: mdi:ev-station }
-        - type: custom:entity-card-pro
+        - type: custom:poster-card-pro
           entity: sensor.solar_power
           name: Solar
-          icon: mdi:solar-power-variant
-          layout: poster
-          decimals: 1
-          visual: sparkline
-          hours_to_show: 12
-          rules:
-            - { below: 0.1, color: grey, label: Idle }
-            - { above: 0.1, color: amber, label: Producing }
-        - type: custom:entity-card-pro
+          kind: solar
+        - type: custom:poster-card-pro
           entity: sensor.grid_power
           name: Grid
-          icon: mdi:transmission-tower
-          layout: poster
-          decimals: 0
-          visual: columns
-          hours_to_show: 12
-          bucket_minutes: 30
-          rules:
-            - { below: 0, color: green, label: Exporting }
-            - { above: 0, color: blue, label: Importing }
-        - type: custom:entity-card-pro
+          kind: grid
+        - type: custom:poster-card-pro
           entity: sensor.battery_soc
           name: Battery
-          icon: mdi:home-battery
-          layout: poster
-          decimals: 0
-          visual: bar
-          rules:
-            - { below: 20, color: red, label: Low }
-            - { below: 50, color: amber, label: Half }
-            - { above: 50, color: green, label: Full }
-          badges:
-            - { entity: sensor.battery_power, format: power, icon: mdi:flash }
-        - type: custom:entity-card-pro
+          kind: { power: sensor.battery_power }
+        - type: custom:poster-card-pro
           entity: sensor.heat_pump_power
           name: Heat pump
-          icon: mdi:heat-pump
-          layout: poster
-          decimals: 0
-          visual: sparkline
-          hours_to_show: 12
-          color: deep-orange
+          kind: { type: appliance, style: heat_pump, running_above: 50 }
 ```
 
 </DashboardGrid>

@@ -21,101 +21,44 @@ hero:
             2: { columns: 4 }
             3: { columns: 6 }
           cards:
-            - type: custom:entity-card-pro
+            - type: custom:poster-card-pro
               entity: sensor.solar_power
               name: Solar
-              icon: mdi:solar-power-variant
-              layout: poster
-              decimals: 1
-              visual: sparkline
-              hours_to_show: 12
-              rules:
-                - { below: 0.1, color: grey, label: Idle }
-                - { above: 0.1, color: amber, label: Producing }
-            - type: custom:weather-card-pro
+              kind: solar
+            - type: custom:poster-card-pro
               entity: weather.home
               name: Outside
-              layout: poster
-              temperature_rules:
-                - { below: 5, color: blue, label: Cold }
-                - { below: 20, color: teal, label: Mild }
-                - { above: 20, color: orange, label: Warm }
-            - type: custom:wind-card-pro
+            - type: custom:poster-card-pro
               entity: sensor.wind_speed
-              direction: sensor.wind_direction
-              gust: sensor.wind_gust
               name: Wind
-              layout: poster
-              visual: flow
-              rules:
-                - { below: 5, color: blue-grey, label: Calm }
-                - { below: 20, color: teal, label: Breeze }
-                - { below: 35, color: amber, label: Fresh }
-                - { above: 35, color: orange, label: Strong }
-            - type: custom:rain-card-pro
+              kind: { flow: lines }
+            - type: custom:poster-card-pro
               entity: sensor.rain_rate_roof
-              today: sensor.rain_today
-              wind: sensor.wind_speed
-              direction: sensor.wind_direction
               name: Rain
-              layout: poster
-              visual: flow
-              rules:
-                - { below: 0.1, color: blue-grey, label: Dry }
-                - { below: 2.5, color: light-blue, label: Light }
-                - { above: 2.5, color: blue, label: Heavy }
-            - type: custom:sun-path-card-pro
-              layout: poster
-            - type: custom:entity-card-pro
+              kind: { flow: drops, wind: sensor.wind_speed, direction: sensor.wind_direction }
+            - type: custom:poster-card-pro
+              kind: sun
+            - type: custom:poster-card-pro
               entity: sensor.heat_pump_power
               name: Heat pump
-              icon: mdi:heat-pump
-              layout: poster
-              decimals: 0
-              visual: sparkline
-              hours_to_show: 12
-              color: deep-orange
-            - type: custom:entity-card-pro
+              kind: { type: appliance, style: heat_pump, running_above: 50 }
+            - type: custom:poster-card-pro
               entity: climate.living_room
               name: Thermostat
-              layout: poster
-              attribute: current_temperature
-              unit: °C
-              decimals: 1
-              visual: bar
-              min: 15
-              max: 28
-              control: stepper
-              color: deep-orange
-              badges:
-                - entity: climate.living_room
-                  attribute: hvac_action
-                  rules:
-                    - { state: heating, color: deep-orange, icon: mdi:fire, label: Heating }
-                    - { state: idle, color: grey, icon: mdi:fire-off, label: Idle }
-                    - { state: "off", color: grey, icon: mdi:power, label: "Off" }
-            - type: custom:multi-trend-card-pro
-              title: Power
+            - type: custom:poster-card-pro
+              name: Power
               icon: mdi:flash
               color: amber
               hours_to_show: 12
-              layout: poster
-              entities:
-                - { entity: sensor.power_consumption, name: Home, color: amber }
-                - { entity: sensor.heat_pump_power, name: Heat pump, color: deep-orange }
-            - type: custom:entity-card-pro
+              kind:
+                type: trend
+                entities:
+                  - { entity: sensor.power_consumption, name: Home, color: amber }
+                  - { entity: sensor.heat_pump_power, name: Heat pump, color: deep-orange }
+            - type: custom:poster-card-pro
               entity: vacuum.robot
               name: Robot
-              layout: poster
-              control: buttons
-              control_options:
-                - { icon: mdi:play, action: { action: perform-action, perform_action: vacuum.start, target: { entity_id: vacuum.robot } } }
-                - { icon: mdi:home-import-outline, action: { action: perform-action, perform_action: vacuum.return_to_base, target: { entity_id: vacuum.robot } } }
-              rules:
-                - { state: cleaning, color: teal }
-                - { state: docked, color: grey }
               badges:
-                - { entity: sensor.robot_battery, visual: ring }
                 - sensor.robot_current_room
             - type: custom:layout-card-pro
               rows: [1fr, 1fr, 1fr]
@@ -140,37 +83,19 @@ hero:
                   control: toggle
                   control_position: lead
                   color: brown
-            - type: custom:entity-card-pro
+            - type: custom:poster-card-pro
               entity: sensor.battery_soc
               name: Battery
-              icon: mdi:home-battery
-              layout: poster
-              decimals: 0
-              visual: bar
-              rules:
-                - { below: 20, color: red, label: Low }
-                - { below: 50, color: amber, label: Half }
-                - { above: 50, color: green, label: Full }
-              badges:
-                - { entity: sensor.battery_power, format: power, icon: mdi:flash }
-            - type: custom:entity-card-pro
+              kind: { power: sensor.battery_power }
+            - type: custom:poster-card-pro
               entity: sensor.living_room_co2
               name: Air
-              icon: mdi:molecule-co2
-              layout: poster
-              decimals: 0
               visual: columns
               hours_to_show: 12
               bucket_minutes: 30
-              rules:
-                - { below: 800, color: green, label: Fresh }
-                - { below: 1200, color: amber, label: Stuffy }
-                - { above: 1200, color: red, label: Ventilate }
-            - type: custom:entity-card-pro
+            - type: custom:poster-card-pro
               entity: sensor.living_room_temperature
               name: Temperature
-              icon: mdi:thermometer
-              layout: poster
               decimals: 1
               visual: sparkline
               hours_to_show: 24
@@ -178,11 +103,9 @@ hero:
                 - { below: 18, color: blue, label: Cool }
                 - { below: 24, color: green, label: Comfortable }
                 - { above: 24, color: orange, label: Warm }
-            - type: custom:entity-card-pro
+            - type: custom:poster-card-pro
               entity: sensor.living_room_humidity
               name: Humidity
-              icon: mdi:water-percent
-              layout: poster
               decimals: 0
               visual: gauge
               min: 0
@@ -191,29 +114,13 @@ hero:
                 - { below: 40, color: amber, label: Dry }
                 - { below: 60, color: teal, label: Good }
                 - { above: 60, color: blue, label: Humid }
-            - type: custom:entity-card-pro
+            - type: custom:poster-card-pro
               entity: light.living_room
               name: Ceiling
-              layout: poster
-              value: "{{ (state_attr('light.living_room', 'brightness') | float(0) / 2.55) | round }}"
-              unit: "%"
-              control: slider
-              tap_action: { action: toggle }
-              rules: &light
-                - { state: "on", color: amber }
-                - { state: "off", color: grey }
-            - type: custom:entity-card-pro
+            - type: custom:poster-card-pro
               entity: sensor.grid_power
               name: Grid
-              icon: mdi:transmission-tower
-              layout: poster
-              decimals: 0
-              visual: columns
-              hours_to_show: 12
-              bucket_minutes: 30
-              rules:
-                - { below: 0, color: green, label: Exporting }
-                - { above: 0, color: blue, label: Importing }
+              kind: grid
             - type: custom:power-flow-card-pro
               title: Now
               icon: mdi:flash
@@ -232,58 +139,24 @@ hero:
                 - { below: 500, color: green, label: Quiet }
                 - { below: 3000, color: amber, label: Busy }
                 - { above: 3000, color: red, label: Peak }
-            - type: custom:entity-card-pro
+            - type: custom:poster-card-pro
               entity: light.desk_lamp
               name: Desk lamp
-              layout: poster
-              value: "{{ (state_attr('light.desk_lamp', 'brightness') | float(0) / 2.55) | round }}"
-              unit: "%"
-              control: slider
-              tap_action: { action: toggle }
-              rules: *light
-            - type: custom:entity-card-pro
+            - type: custom:poster-card-pro
               entity: cover.living_room_blinds
               name: Blinds
-              icon: mdi:blinds-horizontal
-              layout: poster
-              attribute: current_position
-              unit: "%"
-              control: slider
-              color: indigo
-            - type: custom:entity-card-pro
+            - type: custom:poster-card-pro
               entity: fan.living_room
               name: Fan
-              layout: poster
-              attribute: percentage
-              unit: "%"
-              control: segments
-              rules:
-                - { state: "on", color: cyan }
-                - { state: "off", color: grey }
-            - type: custom:entity-card-pro
+            - type: custom:poster-card-pro
               entity: media_player.kitchen_speaker
               name: Kitchen speaker
-              layout: poster
-              icon: mdi:speaker
-              attribute: media_title
-              control: buttons
-              rules:
-                - { state: playing, color: green, label: Playing }
-                - { state: idle, color: grey, label: Idle }
-            - type: custom:entity-card-pro
+            - type: custom:poster-card-pro
               entity: light.dining_table
               name: Dining table
-              layout: poster
-              value: "{{ (state_attr('light.dining_table', 'brightness') | float(0) / 2.55) | round }}"
-              unit: "%"
-              control: slider
-              tap_action: { action: toggle }
-              rules: *light
-            - type: custom:entity-card-pro
+            - type: custom:poster-card-pro
               entity: sensor.pressure
               name: Pressure
-              icon: mdi:gauge
-              layout: poster
               decimals: 0
               visual: sparkline
               hours_to_show: 24
@@ -314,34 +187,18 @@ feature_rows:
           - { above: 3000, color: red, label: Peak }
   - title: "Weather you can see moving."
     text: "Wind and rain are animated fields that follow your sensors: faster in a storm, still on a calm day, always from the right direction."
-    link: /cards/wind-card
-    label: Wind and rain cards
+    link: /cards/poster-card#wind
+    label: Wind and rain posters
     columns: 2
     cards:
-      - type: custom:wind-card-pro
+      - type: custom:poster-card-pro
         entity: sensor.wind_speed
-        direction: sensor.wind_direction
-        gust: sensor.wind_gust
         name: Wind
-        layout: poster
-        visual: flow
-        rules:
-          - { below: 5, color: blue-grey, label: Calm }
-          - { below: 20, color: teal, label: Breeze }
-          - { below: 35, color: amber, label: Fresh }
-          - { above: 35, color: orange, label: Strong }
-      - type: custom:rain-card-pro
+        kind: { flow: lines }
+      - type: custom:poster-card-pro
         entity: sensor.rain_rate_roof
-        today: sensor.rain_today
-        wind: sensor.wind_speed
-        direction: sensor.wind_direction
         name: Rain
-        layout: poster
-        visual: flow
-        rules:
-          - { below: 0.1, color: blue-grey, label: Dry }
-          - { below: 2.5, color: light-blue, label: Light }
-          - { above: 2.5, color: blue, label: Heavy }
+        kind: { flow: drops, wind: sensor.wind_speed, direction: sensor.wind_direction }
   - title: "Control, right on the card."
     text: "Steppers, sliders, segments, locks and your own buttons sit on the card itself. Swipe through and try them, no dialog opens."
     link: /cards/controls
@@ -352,80 +209,30 @@ feature_rows:
         breakpoints:
           2: { per_page: 2.3 }
         cards:
-          - type: custom:entity-card-pro
+          - type: custom:poster-card-pro
             entity: climate.living_room
             name: Thermostat
-            layout: poster
-            attribute: current_temperature
-            unit: °C
-            decimals: 1
-            visual: bar
-            min: 15
-            max: 28
-            control: stepper
-            color: deep-orange
-            badges:
-              - entity: climate.living_room
-                attribute: hvac_action
-                rules:
-                  - { state: heating, color: deep-orange, icon: mdi:fire, label: Heating }
-                  - { state: idle, color: grey, icon: mdi:fire-off, label: Idle }
-                  - { state: "off", color: grey, icon: mdi:power, label: "Off" }
-          - type: custom:entity-card-pro
+          - type: custom:poster-card-pro
             entity: fan.living_room
             name: Fan
-            layout: poster
-            attribute: percentage
-            unit: "%"
-            control: segments
-            rules:
-              - { state: "on", color: cyan }
-              - { state: "off", color: grey }
-          - type: custom:entity-card-pro
+          - type: custom:poster-card-pro
             entity: cover.living_room_blinds
             name: Blinds
-            icon: mdi:blinds-horizontal
-            layout: poster
-            attribute: current_position
-            unit: "%"
-            control: slider
-            color: indigo
-          - type: custom:entity-card-pro
+          - type: custom:poster-card-pro
             entity: lock.front_door
             name: Front door
-            layout: poster
-            control: auto
-            rules:
-              - { state: locked, color: green, icon: mdi:shield-lock }
-              - { state: unlocked, color: red, icon: mdi:shield-lock-open }
             badges:
               - entity: binary_sensor.door_front
                 rules:
                   - { state: "on", color: red, icon: mdi:door-open, label: Open }
                   - { state: "off", color: green, icon: mdi:door-closed, label: Closed }
-          - type: custom:entity-card-pro
+          - type: custom:poster-card-pro
             entity: media_player.kitchen_speaker
             name: Kitchen speaker
-            layout: poster
-            icon: mdi:speaker
-            attribute: media_title
-            control: buttons
-            rules:
-              - { state: playing, color: green, label: Playing }
-              - { state: idle, color: grey, label: Idle }
-          - type: custom:entity-card-pro
+          - type: custom:poster-card-pro
             entity: vacuum.robot
             name: Robot
-            layout: poster
-            control: buttons
-            control_options:
-              - { icon: mdi:play, action: { action: perform-action, perform_action: vacuum.start, target: { entity_id: vacuum.robot } } }
-              - { icon: mdi:home-import-outline, action: { action: perform-action, perform_action: vacuum.return_to_base, target: { entity_id: vacuum.robot } } }
-            rules:
-              - { state: cleaning, color: teal }
-              - { state: docked, color: grey }
             badges:
-              - { entity: sensor.robot_battery, visual: ring }
               - sensor.robot_current_room
   - title: "A whole room in one card."
     text: "Lights, scenes and devices together in one card, or as tiles stacked in one cell. Lay them out your way with the layout card."
@@ -487,45 +294,33 @@ feature_rows:
             control_position: lead
             color: brown
   - title: "One value, front and centre."
-    text: "A poster gives any entity one big value, a pill and badges. Rules turn thresholds into colours, labels and icons, so a glance is enough."
-    link: /cards/entity-card#poster
+    text: "A poster gives any entity one big value, a status and badges. It knows what the entity is and draws it that way; rules turn thresholds into colours, labels and icons, so a glance is enough."
+    link: /cards/poster-card
     label: Posters
     columns: 2
     cards:
-      - type: custom:entity-card-pro
+      - type: custom:poster-card-pro
         entity: lock.front_door
         name: Front door
-        layout: poster
-        control: auto
-        rules:
-          - { state: locked, color: green, icon: mdi:shield-lock }
-          - { state: unlocked, color: red, icon: mdi:shield-lock-open }
         badges:
           - entity: binary_sensor.door_front
             rules:
               - { state: "on", color: red, icon: mdi:door-open, label: Open }
               - { state: "off", color: green, icon: mdi:door-closed, label: Closed }
-      - type: custom:entity-card-pro
+      - type: custom:poster-card-pro
         entity: sensor.living_room_co2
         name: Air
-        icon: mdi:molecule-co2
-        layout: poster
-        decimals: 0
         visual: columns
         hours_to_show: 12
         bucket_minutes: 30
-        rules:
-          - { below: 800, color: green, label: Fresh }
-          - { below: 1200, color: amber, label: Stuffy }
-          - { above: 1200, color: red, label: Ventilate }
   - title: "Follow the sun."
     text: "Its path through the day, the time to sunset, and which side of your house it shines on right now."
     link: /cards/sun-path-card
     label: Sun cards
     columns: 2
     cards:
-      - type: custom:sun-path-card-pro
-        layout: poster
+      - type: custom:poster-card-pro
+        kind: sun
       - type: custom:sun-azimuth-card-pro
         show_summary: false
         camera: 280
