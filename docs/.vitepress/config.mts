@@ -113,6 +113,7 @@ const guide = [
 const showcase = [
   { text: "Home", link: "/showcase/home" },
   { text: "Posters", link: "/showcase/posters" },
+  { text: "Poster sizes", link: "/showcase/poster-sizes" },
   { text: "Energy", link: "/showcase/energy" },
   { text: "Living room", link: "/showcase/living-room" },
   { text: "Weather", link: "/showcase/weather" },
