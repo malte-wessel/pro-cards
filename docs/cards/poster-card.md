@@ -504,7 +504,7 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 
 ### Solar
 
-`kind: solar` on the inverter's power: the panel glows as strongly as the output (against `peak` in W, else against the most it gave today), the power is large, today's energy under it ([found](#discovered-inputs) on the inverter's device) and today's production along the bottom.
+`kind: solar` on the inverter's power, in the solar colour: the power is large, today's energy under it ([found](#discovered-inputs) on the inverter's device) and today's production along the bottom.
 
 ::: live
 
@@ -517,7 +517,7 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 - type: custom:poster-card-pro
   entity: sensor.solar_power
   name: Solar
-  kind: { type: solar, today: sensor.energy_today, peak: 8000 }
+  kind: { type: solar, today: sensor.energy_today }
   grid_options: { columns: 6 }
 ```
 
@@ -525,7 +525,7 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 
 ### Car
 
-`kind: car` on the car's battery: its silhouette filling with the charge and the charge flowing in while it charges, the charge large, the range under it, and Charging, Plugged in or where it is (away from home) as the status. Range, plug, charging and location are [found](#discovered-inputs) on the car's device; a wallbox's power sensor counts as charging above 0 W.
+`kind: car` on the car's battery: the charge large, the range under it, and Charging, Plugged in or where it is (away from home) as the status. Range, plug, charging and location are [found](#discovered-inputs) on the car's device; a wallbox's power sensor counts as charging above 0 W.
 
 ::: live
 
@@ -705,7 +705,7 @@ What only one kind needs goes into `kind`: an object with an optional `type` (le
 | `cover`                                                                                                                                                                                    | `style: shutter \| blind \| curtain \| garage \| gate \| awning \| window` (default: the device class)                       |
 | `battery`                                                                                                                                                                                  | `power` (+ charging), or `charge` and `discharge` (entity ids or `false`): a home battery                                    |
 | `grid`                                                                                                                                                                                     | `import`, `export` (entity ids, instead of one signed sensor)                                                                |
-| `solar`                                                                                                                                                                                    | `today` (an energy sensor or `false`), `peak` (W)                                                                            |
+| `solar`                                                                                                                                                                                    | `today` (an energy sensor or `false`)                                                                                        |
 | `car`                                                                                                                                                                                      | `range`, `charging` (a binary sensor, or power: on above 0), `plugged`, `location` (a device tracker); entity ids or `false` |
 | `appliance`                                                                                                                                                                                | `style: pump \| washer \| dryer \| dishwasher \| heat_pump`, `running_above` (W, default 5)                                  |
 

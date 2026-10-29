@@ -90,10 +90,6 @@ export const STYLE_KINDS = `
   @keyframes pline { from { left: 0%; } to { left: 100%; } }
   .pline.grid { left: 0; right: 0; top: 46%; }
 
-  /* solar: the panel's cells glowing as strongly as the output */
-  .ppanel { position: absolute; right: 16px; top: 64px; width: 42%; aspect-ratio: 2 / 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; transform: perspective(240px) rotateX(28deg); transform-origin: bottom; opacity: .9; }
-  .ppanel > i { border-radius: 2px; background: color-mix(in srgb, var(--fe-color) var(--glow-a, 20%), color-mix(in srgb, var(--primary-text-color) 8%, transparent)); box-shadow: 0 0 12px color-mix(in srgb, var(--fe-color) calc(var(--glow-a, 20%) * 0.6), transparent); }
-
   /* home battery: the cell filled to its charge, the power flowing into it or out */
   .pcell { position: absolute; inset: 0; }
   .pcell .cell { position: absolute; right: 20px; top: 64px; width: 36px; height: 52%; max-height: 120px; border: 2px solid color-mix(in srgb, var(--fe-color) 55%, transparent); border-radius: 6px; overflow: hidden; }
@@ -101,18 +97,8 @@ export const STYLE_KINDS = `
   .pcell .cell > i { position: absolute; left: 3px; right: 3px; bottom: 3px; height: calc(var(--fill, 0%) - 6px); min-height: 2px; border-radius: 3px; background: color-mix(in srgb, var(--fe-color) 60%, transparent); transition: height .6s; }
   .pcell .pline { right: 58px; width: 30%; top: calc(64px + 26%); }
 
-  /* car: its battery filling inside the silhouette, the charge flowing in while it charges */
-  .pcar { position: absolute; inset: 0; }
-  .pcar svg { position: absolute; right: 14px; top: 58px; width: 52%; max-width: 220px; overflow: visible; }
-  .pcar .shell { fill: color-mix(in srgb, var(--fe-color) 10%, transparent); }
-  .pcar .charge { fill: color-mix(in srgb, var(--fe-color) 45%, transparent); transition: width .6s; }
-  .pcar .outline { fill: none; stroke: color-mix(in srgb, var(--fe-color) 60%, transparent); stroke-width: 1.5; }
-  .pcar .wheel { fill: ${CARD_BG}; stroke: color-mix(in srgb, var(--fe-color) 60%, transparent); stroke-width: 3; }
-  .pcar.charging .charge { animation: pcar 1.6s ease-in-out infinite; }
-  @keyframes pcar { 50% { opacity: .55; } }
-
   @media (prefers-reduced-motion: reduce) {
-    .pline > i, .pcar.charging .charge,
+    .pline > i,
     .lead.pfan.spin :is(ha-icon, ha-state-icon), .palarm.on, .ppath.working .reveal,
     .lead.probot.working :is(ha-icon, ha-state-icon), .pprog > i { animation: none; }
   }

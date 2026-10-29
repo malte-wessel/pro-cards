@@ -1,9 +1,9 @@
 // The kinds of the home's energy, set with `kind` (a grid meter, an inverter and a dishwasher are
-// all power sensors): the grid (a power line, its dots flowing in or out), solar (the panel glowing
-// with the output, today's energy and production), the home battery (the battery kind with its
-// power: + charging), the car (its battery filling, what it found on the car's device) and an
-// appliance (running above a threshold: for how long, and the energy of this run). W / kW as the
-// power flow card writes them, its energy colours.
+// all power sensors): the grid (a power line, its dots flowing in or out), solar (the output,
+// today's energy and production), the home battery (the battery kind with its power: + charging),
+// the car (its charge and range, what it found on the car's device) and an appliance (running above
+// a threshold: for how long, and the energy of this run). W / kW as the power flow card writes
+// them, its energy colours.
 import { COLORS } from "../flow-tree/constants.ts";
 import { setRate } from "../flow/dom.ts";
 import { unitOf, type FmtValue } from "../entity/model.ts";
@@ -18,7 +18,6 @@ import { isNum, oneOf } from "../util.ts";
 import { BATTERY_RULES } from "./rules.ts";
 import type { Kind, KindCtx, Read } from "./types.ts";
 
-const SVG = "http://www.w3.org/2000/svg";
 // below this a flow counts as none (sensor noise)
 const IDLE_W = 10;
 const div = (cls: string) => {
@@ -101,7 +100,7 @@ export const GRID: Kind = {
   },
 };
 
-// ----- solar: the panel glowing with the output -----
+// ----- solar: the output, today's energy and production -----
 
 const startOfDay = (now: number) => {
   const d = new Date(now);
@@ -112,17 +111,11 @@ const todayOf = (c: KindCtx): Point[] => {
   const t0 = startOfDay(c.ctx.now);
   return (id ? (c.ctx.series.get(id) ?? []) : []).filter((p) => p.t >= t0);
 };
-const panelEl = () => {
-  const el = div("ppanel");
-  for (let i = 0; i < 12; i++) el.appendChild(document.createElement("i"));
-  return el;
-};
-
 export const SOLAR: Kind = {
   name: "solar",
   reads: ["sensor", "input_number", "number"],
   readsText: "a power sensor",
-  keys: ["today", "peak"],
+  keys: ["today"],
   inputs: [
     {
       key: "today",
@@ -164,18 +157,6 @@ export const SOLAR: Kind = {
         : {}),
       picture,
     };
-  },
-  // the glow: the output against `peak` (W), else against the most it gave today
-  backdrop: {
-    key: () => "solar",
-    build: () => panelEl(),
-    update: (el, c) => {
-      const w = watts({ ent: c.ent, m: c.m }) ?? 0;
-      const scale = UNIT_TO_W[unitOf(c.ent, c.m.st)] ?? 1;
-      const most = Math.max(0, ...todayOf(c).map((p) => (p.v ?? 0) * scale));
-      const peak = isNum(c.opts.peak) && Number(c.opts.peak) > 0 ? Number(c.opts.peak) : most;
-      el.style.setProperty("--glow-a", `${Math.round(Math.min(1, peak > 0 ? w / peak : 0) * 70)}%`);
-    },
   },
   extra: (c) => [c.ctx.fetched, todayOf(c).length],
 };
@@ -235,22 +216,13 @@ export const BATTERY: Kind = {
   },
 };
 
-// ----- car: its battery filling, charging, plugged in, away -----
+// ----- car: its charge and range, charging, plugged in, away -----
 
 const isOn = (r: Read | null) => {
   if (!r?.m.st) return false;
   if (r.m.model.num !== null && r.ent.entity?.startsWith("sensor.")) return r.m.model.num > 0;
   return r.m.st.state === "on";
 };
-const carSvg = () => {
-  const svg = document.createElementNS(SVG, "svg");
-  svg.setAttribute("viewBox", "0 0 120 48");
-  const body =
-    "M8 34 C8 26 14 24 22 22 L38 12 C42 10 46 9 52 9 L76 9 C82 9 86 11 90 15 L100 23 C108 24 114 27 114 34 L114 38 L8 38 Z";
-  svg.innerHTML = `<defs><clipPath id="pcar-c"><path d="${body}"/></clipPath></defs><path class="shell" d="${body}"/><rect class="charge" clip-path="url(#pcar-c)" x="8" y="0" height="48"/><path class="outline" d="${body}"/><circle class="wheel" cx="32" cy="38" r="8"/><circle class="wheel" cx="92" cy="38" r="8"/>`;
-  return svg;
-};
-
 export const CAR: Kind = {
   name: "car",
   reads: ["sensor", "input_number", "number"],
@@ -288,19 +260,6 @@ export const CAR: Kind = {
         ? { secondary: range.m.model.avail ? secondaryEl([{ text: range.m.fmt.text }]) : null }
         : {}),
     };
-  },
-  backdrop: {
-    key: () => "car",
-    build: () => {
-      const el = div("pcar");
-      el.appendChild(carSvg());
-      return el;
-    },
-    update: (el, c) => {
-      const p = Math.max(0, Math.min(100, c.m.model.num ?? 0));
-      el.querySelector(".charge")?.setAttribute("width", String((106 * p) / 100));
-      el.classList.toggle("charging", isOn(c.input("charging")));
-    },
   },
 };
 

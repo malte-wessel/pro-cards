@@ -198,11 +198,6 @@
           "$ref": "#/$defs/input",
           "description": "car: its device tracker"
         },
-        "peak": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "solar: the output (W) the panel glows fully at"
-        },
         "running_above": {
           "type": "number",
           "minimum": 0,
@@ -567,7 +562,7 @@
           },
           "then": {
             "propertyNames": {
-              "enum": ["type", "today", "peak"]
+              "enum": ["type", "today"]
             }
           }
         },
