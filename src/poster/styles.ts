@@ -47,6 +47,12 @@ const STYLE_POSTER_CARD = `
   /* a sparkline keeps a small gap below the value instead of reaching up under it */
   ha-card.layout-poster .pbody > .pvalue + .plot.grow[data-kind="sparkline"] { margin-top: 6px; }
   .row.actionable .pcurve { pointer-events: auto; }
+  /* a picture's tooltip opens upward from its bottom, over the texts: the picture is the poster's
+     bottom strip, and a tooltip opening downward would be cut by the card's edge */
+  ha-card.layout-poster .pbody > :is(.pcurve, .plot) > .tip { top: auto; bottom: 8px; z-index: 3; }
+  /* its lines are rows of their own (a colour key, the value, the name): not the poster's entity
+     rows, which stack their parts */
+  ha-card.layout-poster .tip .row { flex-direction: row; align-items: center; gap: 6px; border-radius: 0; }
   .pbody > .pcurve.trend { margin: 6px -16px -16px; }
 `;
 
