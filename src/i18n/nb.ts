@@ -57,18 +57,16 @@ const nb: Translation = {
   "kind.climate.heating": "Varmer",
   "kind.climate.cooling": "Kjøler",
   "kind.climate.idle": "Inaktiv",
-  "kind.climate.off": "Av",
   "kind.climate.drying": "Tørker",
   "kind.climate.fan": "Vifte",
   "kind.person.since": "i {t}",
   "kind.grid.importing": "Importerer",
   "kind.grid.exporting": "Eksporterer",
+  "kind.solar.today": "{v} i dag",
   "kind.battery.charging": "Lader",
   "kind.battery.discharging": "Utlader",
-  "kind.car.charging": "Lader",
   "kind.car.plugged": "Tilkoblet",
   "kind.appliance.running": "Går",
-  "kind.appliance.off": "Av",
   "kind.appliance.this_run": "{v} denne økten",
   "kind.appliance.last_hours": "{v} de siste {h} t",
   "control.hold_to": "Hold for å {action}",
@@ -235,12 +233,6 @@ const nb: Translation = {
 
   "editor.default": "Standard: {value}",
 
-  "editor.sun.layout": "Oppsett",
-
-  "editor.sun.layout.card": "Kort",
-
-  "editor.sun.layout.poster": "Plakat",
-
   "editor.sun.title": "Tittel",
   "editor.sun.icon": "Ikon",
   "editor.sun.show_dawn_dusk": "Vis daggry, solmiddag og skumring",
@@ -289,7 +281,6 @@ const nb: Translation = {
   "editor.multi_trend.layout.auto": "Auto (samme enhet: overlagt, ellers baner)",
   "editor.multi_trend.layout.overlay": "Overlagt (én skala)",
   "editor.multi_trend.layout.lanes": "Baner (én skala per entitet)",
-  "editor.multi_trend.layout.poster": "Plakat",
 };
 
 export default nb;

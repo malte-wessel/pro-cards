@@ -56,18 +56,16 @@ const en = {
   "kind.climate.heating": "Heating",
   "kind.climate.cooling": "Cooling",
   "kind.climate.idle": "Idle",
-  "kind.climate.off": "Off",
   "kind.climate.drying": "Drying",
   "kind.climate.fan": "Fan",
   "kind.person.since": "for {t}",
   "kind.grid.importing": "Importing",
   "kind.grid.exporting": "Exporting",
+  "kind.solar.today": "{v} today",
   "kind.battery.charging": "Charging",
   "kind.battery.discharging": "Discharging",
-  "kind.car.charging": "Charging",
   "kind.car.plugged": "Plugged in",
   "kind.appliance.running": "Running",
-  "kind.appliance.off": "Off",
   "kind.appliance.this_run": "{v} this run",
   "kind.appliance.last_hours": "{v} in the last {h} h",
   "control.hold_to": "Hold to {action}",
@@ -234,9 +232,6 @@ const en = {
 
   "editor.default": "Default: {value}",
 
-  "editor.sun.layout": "Layout",
-  "editor.sun.layout.card": "Card",
-  "editor.sun.layout.poster": "Poster",
   "editor.sun.title": "Title",
   "editor.sun.icon": "Icon",
   "editor.sun.show_dawn_dusk": "Show dawn, solar noon and dusk",
@@ -285,7 +280,6 @@ const en = {
   "editor.multi_trend.layout.auto": "Auto (same unit: overlay, otherwise lanes)",
   "editor.multi_trend.layout.overlay": "Overlay (one scale)",
   "editor.multi_trend.layout.lanes": "Lanes (one scale per entity)",
-  "editor.multi_trend.layout.poster": "Poster",
 } as const;
 
 export type StringKey = keyof typeof en;

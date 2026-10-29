@@ -1,5 +1,5 @@
 // Which kind a card draws (pure): `kind` as written, else detected from the entity, first match
-// wins: the area key, the domain (or the entity id: sun.sun), the device class, else `entity`.
+// wins: the domain (or the entity id: sun.sun), the device class, else `entity`.
 // An entity has one domain and at most one device class, so detection is never ambiguous.
 import { domainOf } from "../color.ts";
 import type { HassEntity } from "../ha.ts";

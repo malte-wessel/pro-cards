@@ -5,7 +5,7 @@ import { domainOf } from "../color.ts";
 import type { HomeAssistant } from "../ha.ts";
 
 // the slice of hass discovery reads
-export type Registry = Pick<HomeAssistant, "states" | "entities" | "devices" | "areas">;
+export type Registry = Pick<HomeAssistant, "states" | "entities">;
 
 // how an input is found among the candidates
 export interface Finder {

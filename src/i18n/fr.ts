@@ -57,18 +57,16 @@ const fr: Translation = {
   "kind.climate.heating": "Chauffe",
   "kind.climate.cooling": "Refroidit",
   "kind.climate.idle": "Inactif",
-  "kind.climate.off": "Éteint",
   "kind.climate.drying": "Déshumidifie",
   "kind.climate.fan": "Ventilation",
   "kind.person.since": "depuis {t}",
   "kind.grid.importing": "Soutirage",
   "kind.grid.exporting": "Injection",
+  "kind.solar.today": "{v} aujourd’hui",
   "kind.battery.charging": "En charge",
   "kind.battery.discharging": "En décharge",
-  "kind.car.charging": "En charge",
   "kind.car.plugged": "Branché",
   "kind.appliance.running": "En marche",
-  "kind.appliance.off": "Arrêté",
   "kind.appliance.this_run": "{v} sur ce cycle",
   "kind.appliance.last_hours": "{v} sur les dernières {h} h",
   "control.hold_to": "Maintenir pour {action}",
@@ -235,12 +233,6 @@ const fr: Translation = {
 
   "editor.default": "Par défaut : {value}",
 
-  "editor.sun.layout": "Disposition",
-
-  "editor.sun.layout.card": "Carte",
-
-  "editor.sun.layout.poster": "Affiche",
-
   "editor.sun.title": "Titre",
   "editor.sun.icon": "Icône",
   "editor.sun.show_dawn_dusk": "Afficher l'aube, le midi solaire et le crépuscule",
@@ -289,7 +281,6 @@ const fr: Translation = {
   "editor.multi_trend.layout.auto": "Auto (même unité : superposé, sinon pistes)",
   "editor.multi_trend.layout.overlay": "Superposé (une échelle)",
   "editor.multi_trend.layout.lanes": "Pistes (une échelle par entité)",
-  "editor.multi_trend.layout.poster": "Affiche",
 };
 
 export default fr;

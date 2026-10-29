@@ -57,18 +57,16 @@ const sv: Translation = {
   "kind.climate.heating": "Värmer",
   "kind.climate.cooling": "Kyler",
   "kind.climate.idle": "Inaktiv",
-  "kind.climate.off": "Av",
   "kind.climate.drying": "Avfuktar",
   "kind.climate.fan": "Fläkt",
   "kind.person.since": "i {t}",
   "kind.grid.importing": "Köper",
   "kind.grid.exporting": "Säljer",
+  "kind.solar.today": "{v} idag",
   "kind.battery.charging": "Laddar",
   "kind.battery.discharging": "Laddar ur",
-  "kind.car.charging": "Laddar",
   "kind.car.plugged": "Inkopplad",
   "kind.appliance.running": "Kör",
-  "kind.appliance.off": "Av",
   "kind.appliance.this_run": "{v} denna körning",
   "kind.appliance.last_hours": "{v} de senaste {h} h",
   "control.hold_to": "Håll för att {action}",
@@ -235,12 +233,6 @@ const sv: Translation = {
 
   "editor.default": "Standard: {value}",
 
-  "editor.sun.layout": "Layout",
-
-  "editor.sun.layout.card": "Kort",
-
-  "editor.sun.layout.poster": "Affisch",
-
   "editor.sun.title": "Titel",
   "editor.sun.icon": "Ikon",
   "editor.sun.show_dawn_dusk": "Visa gryning, solmiddag och skymning",
@@ -289,7 +281,6 @@ const sv: Translation = {
   "editor.multi_trend.layout.auto": "Auto (samma enhet: överlagrat, annars banor)",
   "editor.multi_trend.layout.overlay": "Överlagrat (en skala)",
   "editor.multi_trend.layout.lanes": "Banor (en skala per entitet)",
-  "editor.multi_trend.layout.poster": "Affisch",
 };
 
 export default sv;

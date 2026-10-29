@@ -57,18 +57,16 @@ const de: Translation = {
   "kind.climate.heating": "Heizt",
   "kind.climate.cooling": "Kühlt",
   "kind.climate.idle": "Untätig",
-  "kind.climate.off": "Aus",
   "kind.climate.drying": "Entfeuchtet",
   "kind.climate.fan": "Lüftet",
   "kind.person.since": "seit {t}",
   "kind.grid.importing": "Bezug",
   "kind.grid.exporting": "Einspeisung",
+  "kind.solar.today": "{v} heute",
   "kind.battery.charging": "Lädt",
   "kind.battery.discharging": "Entlädt",
-  "kind.car.charging": "Lädt",
   "kind.car.plugged": "Angesteckt",
   "kind.appliance.running": "Läuft",
-  "kind.appliance.off": "Aus",
   "kind.appliance.this_run": "{v} in diesem Lauf",
   "kind.appliance.last_hours": "{v} in den letzten {h} h",
   "control.hold_to": "Halten zum {action}",
@@ -235,9 +233,6 @@ const de: Translation = {
 
   "editor.default": "Standard: {value}",
 
-  "editor.sun.layout": "Layout",
-  "editor.sun.layout.card": "Karte",
-  "editor.sun.layout.poster": "Poster",
   "editor.sun.title": "Titel",
   "editor.sun.icon": "Symbol",
   "editor.sun.show_dawn_dusk": "Morgendämmerung, Sonnenhöchststand und Abenddämmerung anzeigen",
@@ -286,7 +281,6 @@ const de: Translation = {
   "editor.multi_trend.layout.auto": "Automatisch (gleiche Einheit: überlagert, sonst Spuren)",
   "editor.multi_trend.layout.overlay": "Überlagert (eine Skala)",
   "editor.multi_trend.layout.lanes": "Spuren (eine Skala je Entität)",
-  "editor.multi_trend.layout.poster": "Poster",
 };
 
 export default de;

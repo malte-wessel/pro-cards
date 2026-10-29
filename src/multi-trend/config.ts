@@ -1,10 +1,8 @@
 // Config types of the multi trend card: the raw YAML shape and the normalised one the card keeps.
 import type { CardConfigBase } from "../shared/ha.ts";
-import type { Rule } from "../shared/entity/config.ts";
-import type { Visibility } from "../shared/visibility.ts";
+import type { TrendSeries } from "../shared/trend/series.ts";
 
-// poster: the entity poster's shape, the first value large and the lines overlaid along the bottom
-export type TrendLayout = "auto" | "overlay" | "lanes" | "poster";
+export type TrendLayout = "auto" | "overlay" | "lanes";
 export interface MultiTrendEntity {
   entity: string;
   name?: string;
@@ -24,13 +22,8 @@ export interface MultiTrendCardConfig extends CardConfigBase {
   y_axis?: boolean;
   entities?: (string | MultiTrendEntity)[];
 }
-// the entity with its palette colour (CSS, by config position), its colour rules and its
-// conditions (null: always drawn); the drawn colour is resolved at render time (`seriesColor`)
-export interface TrendEntity extends Omit<MultiTrendEntity, "rules" | "visibility"> {
-  fallbackCss: string;
-  rules: Rule[];
-  visibility: Visibility;
-}
+// the entity with its palette colour, its colour rules and its conditions (shared/trend/series.ts)
+export type TrendEntity = TrendSeries;
 export interface TrendConfig extends CardConfigBase {
   title?: string;
   icon?: string;

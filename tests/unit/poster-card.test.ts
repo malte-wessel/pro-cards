@@ -5,7 +5,7 @@ import { imageUrl, statusText } from "../../src/poster/render.ts";
 import { placementsOf } from "../../src/shared/entity/control.ts";
 import { modelOf } from "../../src/shared/entity/model.ts";
 import { BATTERY_RULES, toRule, WIND_RULES } from "../../src/shared/kinds/rules.ts";
-import { snapshot } from "../../docs/.vitepress/theme/ha-shim/hass.ts";
+import { snapshot, world } from "../../docs/.vitepress/theme/ha-shim/hass.ts";
 import type { HassEntity, HomeAssistant } from "../../src/shared/ha.ts";
 
 const T = "poster-card-pro";
@@ -286,7 +286,7 @@ describe("poster-card element", () => {
     expect(el.getGridOptions().min_columns).toBe(4);
   });
 
-  it("resolves its kind again once hass tells the device class and the registries", () => {
+  it("resolves its kind again once hass tells the device class and the registry", () => {
     vi.spyOn(console, "info").mockImplementation(() => {});
     const el = mount({ entity: "sensor.wind_speed" });
     // no hass yet: a sensor of no known class
@@ -296,11 +296,181 @@ describe("poster-card element", () => {
     el.hass = hass;
     expect(el._config?.kind.name).toBe("wind");
     expect(Object.keys(el._config!.inputs).sort()).toEqual(["direction", "gust"]);
-    // a new hass with the same registries normalises nothing again
+    // a new hass with the same registry normalises nothing again
     const before = el._config;
     el.hass = { ...hass };
     expect(el._config).toBe(before);
     const row = el.shadowRoot!.querySelector(".row.poster");
     expect(row).not.toBeNull();
+  });
+});
+
+// the poster as the card draws it (happy-dom, the demo home): its skeleton, the badges in its
+// corner, the name and the big value, the controls beside the value and its visuals. Fitting the
+// value to the card needs a real layout and lives in the integration and visual tests.
+describe("poster-card drawing", () => {
+  const cards: PosterCard[] = [];
+  const saved = new Map<string, HassEntity>();
+  afterEach(() => {
+    for (const c of cards.splice(0)) c.remove();
+    for (const [id, s] of saved) world.states[id] = s;
+    saved.clear();
+  });
+  // a state for this test (put back afterwards); every card gets a fresh hass
+  const set = (id: string, state: string | number, attributes: Record<string, unknown> = {}) => {
+    if (!saved.has(id)) saved.set(id, world.get(id)!);
+    world.set(id, state, attributes);
+    for (const c of cards) c.hass = snapshot();
+  };
+  const draw = (cfg: Record<string, unknown>) => {
+    const el = new PosterCard();
+    el.setConfig(cfg);
+    document.body.appendChild(el);
+    el.hass = snapshot();
+    cards.push(el);
+    return el.shadowRoot as ShadowRoot;
+  };
+  const q = (r: ParentNode, sel: string) => {
+    const el = r.querySelector<HTMLElement>(sel);
+    if (!el) throw new Error(`no element for ${sel}`);
+    return el;
+  };
+  // the classes of the poster body's children, in order
+  const bodyParts = (r: ParentNode) => [...q(r, ".pbody").children].map((c) => c.className);
+  const TEMP = "sensor.living_room_temperature";
+
+  it("has the lead and the corner on top and the body below, no label pill", () => {
+    const r = draw({ entity: TEMP });
+    const row = q(r, ".body > .row.poster");
+    expect(row.querySelector(":scope > .ptop > .plead > .lead")).not.toBeNull();
+    expect(row.querySelector(":scope > .ptop > .corner")).not.toBeNull();
+    expect(row.querySelector(":scope > .pbody")).not.toBeNull();
+    // the status is a badge like the others: no pill of the v2 poster's
+    expect(row.querySelector(".plabel")).toBeNull();
+    // the action layer stays first
+    expect(row.firstElementChild?.classList.contains("hit")).toBe(true);
+  });
+
+  it("draws the status and the badges as rows of their own in the corner", () => {
+    set("sensor.living_room_humidity", 55);
+    set("sensor.living_room_co2", 640);
+    const r = draw({
+      entity: TEMP,
+      badges: [
+        "sensor.living_room_humidity",
+        { entity: "sensor.living_room_co2", style: "filled" },
+      ],
+    });
+    const kids = [...q(r, ".row.poster .corner").children] as HTMLElement[];
+    expect(kids.every((b) => b.classList.contains("row") && b.classList.contains("hval"))).toBe(
+      true,
+    );
+    // the status first, then the badges as written
+    expect(kids[0].classList.contains("pstatus")).toBe(true);
+    const badges = kids.slice(1);
+    expect(badges.map((b) => b.dataset.idx)).toEqual(["2", "3"]);
+    expect(badges[0].classList.contains("b-outline")).toBe(true);
+    expect(badges[1].classList.contains("b-filled")).toBe(true);
+    expect(badges[0].textContent).toContain("55");
+    expect(badges[1].textContent).toContain("640");
+  });
+
+  it("keeps its badges when the poster is filled again, and fills a badge in place", () => {
+    set(TEMP, 21.4);
+    set("sensor.living_room_humidity", 55);
+    const r = draw({ entity: TEMP, badges: ["sensor.living_room_humidity"] });
+    const badge = q(r, ".corner > .row.hval:not(.pstatus)");
+    set(TEMP, 23.5);
+    expect(q(r, ".pvalue .big b").textContent).toBe("23.5");
+    expect(q(r, ".corner > .row.hval:not(.pstatus)")).toBe(badge);
+    expect(r.querySelectorAll(".corner > .row.hval:not(.pstatus)")).toHaveLength(1);
+    set("sensor.living_room_humidity", 61);
+    expect(q(r, ".corner > .row.hval:not(.pstatus)")).toBe(badge);
+    expect(badge.textContent).toContain("61");
+    expect(q(r, ".pvalue .big b").textContent).toBe("23.5");
+  });
+
+  it("shows the name and the big value with its unit", () => {
+    set(TEMP, 21.4);
+    const r = draw({ entity: TEMP });
+    expect(q(r, ".pbody > .pname").textContent).toBe("Living room temperature");
+    expect(q(r, ".pvalue > .big > b").textContent).toBe("21.4");
+    expect(q(r, ".pvalue > .big > span").textContent).toBe("°C");
+    expect(q(r, ".pvalue > .big").classList.contains("word")).toBe(false);
+    expect(bodyParts(r)).toEqual(["pname", "pvalue"]);
+  });
+
+  it("draws a word smaller than a number", () => {
+    const r = draw({ entity: "input_select.house_mode", control: false });
+    expect(q(r, ".pvalue > .big").classList.contains("word")).toBe(true);
+    expect(q(r, ".pvalue > .big > b").textContent).toBe("Home");
+  });
+
+  it("adds the secondary line under the value, the name under it with name_position: below", () => {
+    const r = draw({ entity: TEMP, name: "Living room", secondary: "Feels like 20" });
+    expect(bodyParts(r)).toEqual(["pname", "pvalue", "secondary"]);
+    expect(q(r, ".pname").textContent).toBe("Living room");
+    expect(q(r, ".pbody > .secondary").textContent).toBe("Feels like 20");
+    expect(bodyParts(draw({ entity: TEMP, name_position: "below" }))).toEqual(["pvalue", "pname"]);
+  });
+
+  it("lets a stepper that shows the very same number take the value's place", () => {
+    const same = draw({
+      entity: "climate.living_room",
+      kind: "entity",
+      attribute: "temperature",
+      control: "stepper",
+    });
+    expect(same.querySelector(".pvalue .big")).toBeNull();
+    expect(same.querySelector(".pvalue > .end > .ctl-stepper")).not.toBeNull();
+    // the climate kind's own: the current temperature beside the target's stepper
+    const own = draw({ entity: "climate.living_room" });
+    expect(q(own, ".pvalue > .big > b").textContent).toBe("21.6");
+    expect(own.querySelector(".pvalue > .end > .ctl-stepper")).not.toBeNull();
+  });
+
+  it("keeps the value beside segments, a select and a button", () => {
+    const seg = draw({
+      entity: "climate.living_room",
+      kind: "entity",
+      attribute: "hvac_mode",
+      control: "segments",
+    });
+    expect(seg.querySelector(".pvalue > .big")).not.toBeNull();
+    expect(seg.querySelector(".pvalue > .end > .ctl-segments")).not.toBeNull();
+    const sel = draw({ entity: "input_select.house_mode", control: "auto" });
+    expect(q(sel, ".pvalue > .big > b").textContent).toBe("Home");
+    expect(sel.querySelector(".pvalue > .end > .ctl-select")).not.toBeNull();
+    const run = draw({ entity: "script.check_windows", control: "auto" });
+    expect(run.querySelector(".pvalue > .big")).not.toBeNull();
+    expect(run.querySelector(".pvalue > .end > .ctl-chip")).not.toBeNull();
+    // no control, no end slot
+    expect(draw({ entity: TEMP }).querySelector(".pvalue > .end")).toBeNull();
+  });
+
+  it("draws a gauge as its picture: the arc first, no big value", () => {
+    const H = "sensor.living_room_humidity";
+    const r = draw({ entity: H, visual: "gauge" });
+    expect(q(r, ".pbody").classList.contains("pgauge")).toBe(true);
+    expect(r.querySelector(".pbody .big")).toBeNull();
+    expect(bodyParts(r)).toEqual(["gauge", "pname"]);
+    // the name stays under the arc
+    expect(bodyParts(draw({ entity: H, visual: "gauge", name_position: "below" }))).toEqual([
+      "gauge",
+      "pname",
+    ]);
+    // any other visual leaves the body as it is
+    const bar = draw({ entity: H, visual: "bar" });
+    expect(q(bar, ".pbody").classList.contains("pgauge")).toBe(false);
+    expect(bodyParts(bar)).toEqual(["pname", "pvalue", "bar"]);
+  });
+
+  it("closes the body with a plot that names what it draws", () => {
+    for (const kind of ["sparkline", "columns", "strip"]) {
+      const r = draw({ entity: TEMP, visual: kind });
+      const plot = q(r, ".pbody > .plot");
+      expect(plot.dataset.kind).toBe(kind);
+      expect(q(r, ".pbody").lastElementChild).toBe(plot);
+    }
   });
 });

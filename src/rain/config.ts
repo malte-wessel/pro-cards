@@ -52,7 +52,7 @@ export const normalizeRainCardConfig = (input: unknown): RainConfig => {
   const layout = enumOf(CARD_TYPE, LAYOUTS, raw.layout, "layout", "tile");
   const visual = enumOf(CARD_TYPE, VISUALS, raw.visual, "visual", "icon");
   const lead =
-    visual === "flow" && layout !== "hero"
+    visual === "flow" && layout === "tile"
       ? "icon"
       : enumOf(CARD_TYPE, LEADS, raw.lead, "lead", "animated");
   const fo = flowObject(CARD_TYPE, raw.flow);

@@ -26,15 +26,11 @@ const registry = (
       {
         entity_id: id,
         device_id,
-        area_id: null,
         translation_key: translation_key ?? null,
-        platform: "x",
         hidden,
       },
     ]),
   ),
-  devices: {},
-  areas: {},
 });
 
 const station = registry({

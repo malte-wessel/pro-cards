@@ -78,12 +78,6 @@ describe("the share of a taller card a group asks for", () => {
     expect(plotRows("list", 2, ["sparkline", "icon", "columns", "strip"])).toBe(2);
     expect(plotRows("hero", 2, ["sparkline", "sparkline"])).toBe(2);
   });
-  it("counts a poster's growing plot", () => {
-    expect(plotRows("poster", 1, ["sparkline"])).toBe(1);
-    expect(plotRows("poster", 1, ["columns"])).toBe(1);
-    expect(plotRows("poster", 1, ["strip"])).toBe(0);
-    expect(plotRows("poster", 1, ["gauge"])).toBe(0);
-  });
   it("counts a grid row once, however many plots sit side by side", () => {
     expect(plotRows("grid", 2, ["sparkline", "sparkline", "icon", "icon"])).toBe(1);
     expect(plotRows("grid", 2, ["sparkline", "icon", "icon", "columns"])).toBe(2);

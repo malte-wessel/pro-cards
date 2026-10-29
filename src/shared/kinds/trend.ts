@@ -3,10 +3,7 @@
 // as the status, the lines overlaid along the bottom on one scale, their values under the pointer.
 // A series takes its `color` (a template allowed), else its first matching rule's, else the
 // palette's; its `visibility` hides it.
-import { cssColor } from "../color.ts";
-import { normalizeRules, type Rule } from "../entity/config.ts";
 import { fmtNumber } from "../format.ts";
-import { PALETTE } from "../trend/scale.ts";
 import {
   drawTrend,
   showTrendHover,
@@ -15,46 +12,23 @@ import {
   type TrendPlotEl,
 } from "../trend/plot.ts";
 import { seriesColor } from "../trend/color.ts";
+import { normalizeSeries, type TrendSeries } from "../trend/series.ts";
 import { decimalsOf, isNum, isTemplate } from "../util.ts";
-import { normalizeVisibility, type Visibility } from "../visibility.ts";
 import type { Kind, KindCtx } from "./types.ts";
 
 const HOURS = 6;
 
-interface Series {
-  entity: string;
-  name?: string;
-  color?: string;
-  rules: Rule[];
-  visibility: Visibility;
-  fallbackCss: string;
-}
-// the series as written: ids or { entity, name, color, rules, visibility }
-const seriesOf = (opts: Record<string, unknown>): Series[] => {
+// the series as written: ids or { entity, name, color, rules, visibility }; one without an entity
+// is left out
+const seriesOf = (opts: Record<string, unknown>): TrendSeries[] => {
   const list = Array.isArray(opts.entities) ? opts.entities : [];
-  return list.flatMap((e, i): Series[] => {
-    const o = (typeof e === "string" ? { entity: e } : e) as Record<string, unknown> | null;
-    if (!o || typeof o.entity !== "string") return [];
-    return [
-      {
-        entity: o.entity,
-        name: typeof o.name === "string" ? o.name : undefined,
-        color: typeof o.color === "string" ? o.color : undefined,
-        rules: normalizeRules(o.rules),
-        visibility: normalizeVisibility(o.visibility, {
-          type: "poster-card-pro",
-          label: `kind.entities[${i}]`,
-          entity: o.entity,
-        }),
-        // the palette colour stays the config position's: a hidden series never shifts the others'
-        fallbackCss: cssColor(PALETTE[i % PALETTE.length]) ?? "",
-      },
-    ];
-  });
+  return list.flatMap(
+    (e, i) => normalizeSeries(e, i, "poster-card-pro", `kind.entities[${i}]`) ?? [],
+  );
 };
 const shownOf = (c: KindCtx) => seriesOf(c.opts).filter((s) => c.host.shown(s.visibility));
 
-const specOf = (c: KindCtx, shown: Series[]) => {
+const specOf = (c: KindCtx, shown: TrendSeries[]) => {
   const hass = c.ctx.hass,
     hours = c.hours ?? HOURS;
   const tplGet = (t: string) => c.ctx.tplResult.get(t) ?? null;

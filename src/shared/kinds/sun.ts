@@ -14,6 +14,7 @@ import {
   type SunCurveHost,
 } from "../sun/curve.ts";
 import { defaultLabel, fmtEvent, nextEvent } from "../sun/events.ts";
+import { div, wordValue } from "./dom.ts";
 import type { Kind, KindCtx } from "./types.ts";
 
 const CURVE_H = 72;
@@ -69,8 +70,7 @@ export const SUN: Kind = {
   slots: (c) => {
     const ev = eventOf(c);
     const icon = isUp(c) ? "mdi:white-balance-sunny" : "mdi:weather-night";
-    const plot = document.createElement("div");
-    plot.className = "pcurve psun";
+    const plot = div("pcurve psun");
     plot.innerHTML = `<svg></svg><div class="tip"></div>`;
     const sun = c.host.sun;
     c.host.hover(
@@ -86,9 +86,7 @@ export const SUN: Kind = {
     return {
       lead: leadEl(c.ctx, c.ent, { ...c.m, look: { ...c.m.look, icon, picture: null } }, 40),
       name: ev ? defaultLabel(c.ctx.hass, ev.key) : undefined,
-      value: ev
-        ? { text: fmtEvent(c.ctx.hass, ev.t), num: fmtEvent(c.ctx.hass, ev.t), unit: "" }
-        : null,
+      value: ev ? wordValue(fmtEvent(c.ctx.hass, ev.t)) : null,
       word: false,
       picture: plot,
     };

@@ -57,18 +57,16 @@ const cs: Translation = {
   "kind.climate.heating": "Topí",
   "kind.climate.cooling": "Chladí",
   "kind.climate.idle": "Nečinný",
-  "kind.climate.off": "Vypnuto",
   "kind.climate.drying": "Vysouší",
   "kind.climate.fan": "Ventilátor",
   "kind.person.since": "už {t}",
   "kind.grid.importing": "Odběr",
   "kind.grid.exporting": "Dodávka",
+  "kind.solar.today": "{v} dnes",
   "kind.battery.charging": "Nabíjí",
   "kind.battery.discharging": "Vybíjí",
-  "kind.car.charging": "Nabíjí",
   "kind.car.plugged": "Připojeno",
   "kind.appliance.running": "Běží",
-  "kind.appliance.off": "Vypnuto",
   "kind.appliance.this_run": "{v} v tomto cyklu",
   "kind.appliance.last_hours": "{v} za posledních {h} h",
   "control.hold_to": "Podržte pro {action}",
@@ -235,12 +233,6 @@ const cs: Translation = {
 
   "editor.default": "Výchozí: {value}",
 
-  "editor.sun.layout": "Rozvržení",
-
-  "editor.sun.layout.card": "Karta",
-
-  "editor.sun.layout.poster": "Plakát",
-
   "editor.sun.title": "Název",
   "editor.sun.icon": "Ikona",
   "editor.sun.show_dawn_dusk": "Zobrazit svítání, sluneční poledne a soumrak",
@@ -289,7 +281,6 @@ const cs: Translation = {
   "editor.multi_trend.layout.auto": "Automaticky (stejná jednotka: překryv, jinak dráhy)",
   "editor.multi_trend.layout.overlay": "Překryv (jedna stupnice)",
   "editor.multi_trend.layout.lanes": "Dráhy (jedna stupnice na entitu)",
-  "editor.multi_trend.layout.poster": "Plakát",
 };
 
 export default cs;

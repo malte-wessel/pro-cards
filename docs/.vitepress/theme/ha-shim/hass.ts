@@ -1,7 +1,7 @@
 // Builds the `hass` object the cards expect, backed by the demo world, and wires the
 // document-level events HA would normally handle (actions, more-info, navigation, toasts).
 import { world } from "./world.ts";
-import { AREAS, DEVICES, ENTITIES } from "./registry.ts";
+import { ENTITIES } from "./registry.ts";
 import { renderTemplate } from "./templates.ts";
 import type {
   ActionConfig,
@@ -272,16 +272,12 @@ const callService = async (
     case "cover.stop_cover":
       toast(`Cover stopped: ${ids.join(", ")}`);
       break;
-    case "cover.set_cover_tilt_position":
-      each((id) => world.set(id, undefined, { current_tilt_position: num("tilt_position") }));
-      break;
     // the robots: they start, pause and go back to their dock (a moment later they are there)
     case "vacuum.start":
       each((id) => world.set(id, "cleaning", { status: "Cleaning" }));
       break;
     case "vacuum.pause":
-    case "vacuum.stop":
-      each((id) => world.set(id, service === "pause" ? "paused" : "idle"));
+      each((id) => world.set(id, "paused"));
       break;
     case "vacuum.return_to_base":
       each((id) => {
@@ -353,13 +349,9 @@ const callService = async (
       break;
     // an alarm arms after a short countdown and disarms at once
     case "alarm_control_panel.alarm_arm_away":
-    case "alarm_control_panel.alarm_arm_home":
       each((id) => {
         world.set(id, "arming");
-        setTimeout(
-          () => world.set(id, service === "alarm_arm_home" ? "armed_home" : "armed_away"),
-          1200,
-        );
+        setTimeout(() => world.set(id, "armed_away"), 1200);
       });
       break;
     case "alarm_control_panel.alarm_disarm":
@@ -545,10 +537,8 @@ export const snapshot = (): HassSnapshot => ({
   },
   themes: themesNow(),
   formatEntityState,
-  // the registries keep their identity: a card looks into them again only when one changes
+  // the registry keeps its identity: a card looks into it again only when it changes
   entities: ENTITIES,
-  devices: DEVICES,
-  areas: AREAS,
   callService,
   // HA's callWS / subscribeMessage are generic in the caller's result type, so the shim asserts
   // its concrete answers to it (history rows here, template results below)

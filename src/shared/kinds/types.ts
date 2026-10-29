@@ -1,6 +1,6 @@
 // The kinds (pure types): what an entity is, and what a card draws for it by default. A kind is
 // detected from the entity (its domain, then its device class) or set with `kind`; the poster card
-// draws its places the kind's way, and the tile card will draw the same kinds smaller.
+// draws its places the kind's way.
 import type { EntityItem, RawEntity, RuleUnit } from "../entity/config.ts";
 import type { Placement } from "../entity/control.ts";
 import type { EntityModel, RenderCtx } from "../entity/model.ts";
@@ -24,7 +24,7 @@ export interface KindRule {
 
 // an entity the kind reads besides the card's own: set in `kind` (an id, or false for none),
 // else found on the same device, else (on a weather entity) one of its attributes
-export interface InputDef {
+interface InputDef {
   key: string;
   find?: Finder;
   weather?: string;
@@ -72,7 +72,7 @@ export interface KindCtx {
 
 // a part built once and updated on every render, so its animations keep their phase: rebuilt
 // only when its key changes
-export interface Persistent {
+interface Persistent {
   key(c: KindCtx): string;
   build(c: KindCtx): HTMLElement;
   update?(el: HTMLElement, c: KindCtx, row: HTMLElement): void;
@@ -89,7 +89,7 @@ export interface Kind {
   // cannot read is a config error that names `readsText`
   reads: readonly string[] | "any";
   readsText: string;
-  // it draws without an entity too (the sun, a trend of its own entities, an area)
+  // it draws without an entity too (the sun, a trend of its own entities, the grid from its meters)
   entityless?: boolean;
   // the keys `kind: { … }` takes besides `type` (inputs among them)
   keys: readonly string[];

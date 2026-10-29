@@ -7,7 +7,6 @@
  *
  * Config:
  *   type: custom:sun-path-card-pro
- *   layout: card                  # card | poster (the next sunrise or sunset large, the curve below)
  *   title: Sun path               # optional; omit → no header
  *   show_dawn_dusk: true          # bottom row with dawn / solar noon / dusk
  *   (the plot is a 24 h window centred on solar noon; ticks mark sunrise, noon and sunset)
@@ -24,7 +23,7 @@
  */
 import { defineElement, syncKeepHeight, registerCard, freshShadow } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
-import { fmtRelative, langOf } from "./shared/format.ts";
+import { langOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { qs } from "./shared/util.ts";
 import type { SunPathCardConfig, SunPathConfig, SunPathHost } from "./sun-path/config.ts";
@@ -34,14 +33,8 @@ import { hideHover, leaveHides, outsideHides } from "./shared/hover.ts";
 import { t } from "./shared/i18n.ts";
 import { drawEvents } from "./sun-path/plot.ts";
 import { drawCurve, showHover, timeAt, type PositionedDay } from "./shared/sun/curve.ts";
-import { defaultLabel, fmtEvent, nextEvent, type SunEvent } from "./shared/sun/events.ts";
-import {
-  SUNRISE_ELEV,
-  solarDay,
-  solarDayAround,
-  solarElevation,
-  type SolarDay,
-} from "./shared/solar.ts";
+import { defaultLabel, fmtEvent, type SunEvent } from "./shared/sun/events.ts";
+import { solarDay, solarDayAround } from "./shared/solar.ts";
 import { STYLE } from "./sun-path/styles.ts";
 import { TextCache, themeChanged } from "./shared/typography.ts";
 
@@ -59,8 +52,6 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
   _root?: HTMLElement;
   _uid?: string;
   _day: PositionedDay | null = null;
-  // the poster's next day (its sunrise after today's sunset), for the day it follows
-  _next: { after: PositionedDay; day: SolarDay } | null = null;
   _xOf?: (t: number) => number;
   _yOf?: (e: number) => number;
   _plotW?: number;
@@ -91,9 +82,6 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
   }
 
   setConfig(config: SunPathCardConfig | null | undefined) {
-    const layout = config?.layout ?? "card";
-    if (layout !== "card" && layout !== "poster")
-      throw new Error(`${CARD_TYPE}: layout must be one of card | poster`);
     this._config = { ...DEFAULTS, ...(config || {}) };
     this._day = null;
     syncKeepHeight(this, config);
@@ -131,17 +119,11 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
     document.removeEventListener("pointerdown", this._onDocPointer);
   }
 
-  _poster() {
-    return this._config.layout === "poster";
-  }
   getCardSize() {
-    if (this._poster()) return 3;
     return this._config.show_dawn_dusk ? 6 : 5;
   }
-  // rows "auto": the sections grid sizes the card to its content instead of a fixed row count; a
-  // poster has a fixed height, its content anchored to the bottom, as the entity card's
+  // rows "auto": the sections grid sizes the card to its content instead of a fixed row count
   getGridOptions(): GridOptions {
-    if (this._poster()) return { columns: 6, rows: 3, min_columns: 3, min_rows: 2 };
     return { columns: 12, rows: "auto", min_columns: 6 };
   }
 
@@ -149,26 +131,11 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
     const card = freshShadow(this.shadowRoot as ShadowRoot, STYLE);
     // the header is drawn like the entity cards' (icon and title), not HA's card header
     const { title, icon } = this._config;
-    const poster = this._poster();
-    card.classList.toggle("layout-poster", poster);
-    // a poster: the sun's icon and how soon the next event comes on top, the event and its time
-    // at the bottom, the curve along the bottom edge
-    const body = poster
-      ? `
-      <div class="body">
-        <div class="poster">
-          <div class="ptop">
-            <div class="lead"><div class="shape"><ha-icon></ha-icon></div></div>
-            <span class="pill plabel"></span>
-          </div>
-          <div class="pbody">
-            <div class="pname"></div>
-            <div class="big"><b></b></div>
-            <div class="plot"><svg preserveAspectRatio="none"></svg><div class="tip"></div></div>
-          </div>
-        </div>
-      </div>`
-      : `
+    card.innerHTML = `
+      <div class="header"${title || icon ? "" : ' style="display: none"'}>
+        <ha-icon${icon ? "" : ' style="display: none"'}></ha-icon>
+        <div class="title"></div>
+      </div>
       <div class="body">
         <div class="row">
           <div class="ev"><div class="lbl"></div><div class="val"></div></div>
@@ -177,11 +144,6 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
         <div class="plot"><svg preserveAspectRatio="none"></svg><div class="tip"></div></div>
         <div class="events"></div>
       </div>`;
-    card.innerHTML = `
-      <div class="header"${title || icon ? "" : ' style="display: none"'}>
-        <ha-icon${icon ? "" : ' style="display: none"'}></ha-icon>
-        <div class="title"></div>
-      </div>${body}`;
     qs(card, ".title").textContent = title || "";
     // the icon is the user's string: an attribute, never markup
     if (icon) qs(card, ".header > ha-icon").setAttribute("icon", icon);
@@ -193,7 +155,7 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
       plot.addEventListener("pointerdown", this._onPointer);
       plot.addEventListener("pointerleave", this._onLeave);
     }
-    if (!poster && !this._config.show_dawn_dusk) qs(card, ".events").style.display = "none";
+    if (!this._config.show_dawn_dusk) qs(card, ".events").style.display = "none";
     this._ro?.observe(qs(card, ".plot"));
     this._render();
   }
@@ -215,61 +177,20 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
     return this._config.labels?.[key] || defaultLabel(this._hass, key);
   }
 
-  // the poster's next day, worked out once per day it follows
-  _nextDay(day: PositionedDay): SolarDay {
-    if (this._next?.after !== day) {
-      const noon = new Date(day.noon);
-      const start = new Date(noon.getFullYear(), noon.getMonth(), noon.getDate() + 1);
-      this._next = { after: day, day: solarDay(start, day.lat, day.lon) };
-    }
-    return this._next.day;
-  }
-
-  // the poster's texts: the sun's icon, how soon the next event comes, the event and its time
-  _fillPoster(day: PositionedDay, now: Date) {
-    const root = this._root as HTMLElement,
-      hass = this._hass,
-      cfg = this._config;
-    const ms = now.getTime();
-    const ev = nextEvent(day, () => this._nextDay(day), ms);
-    const elev = solarElevation(now, day.lat, day.lon);
-    const up = elev > SUNRISE_ELEV;
-    const poster = qs(root, ".poster");
-    poster.style.setProperty(
-      "--fe-color",
-      up
-        ? cssColor(cfg.sun_color, "var(--amber-color)")
-        : cssColor(cfg.night_color, "var(--indigo-color)"),
-    );
-    qs(poster, ".lead ha-icon").setAttribute(
-      "icon",
-      up ? "mdi:white-balance-sunny" : "mdi:weather-night",
-    );
-    qs(poster, ".plabel").textContent = fmtRelative(hass, ev.t, ms);
-    qs(poster, ".pname").textContent = this._label(ev.key);
-    qs(poster, ".big b").textContent = fmtEvent(hass, ev.t);
-  }
-
   _render() {
     if (!this._root || !this._hass) return;
-    const poster = this._poster();
     // Top row labels (here, not in _buildDom: they follow the user's language)
     const [rise, set] = this._root.querySelectorAll(".row .ev");
-    if (!poster) {
-      qs(rise, ".lbl").textContent = this._label("sunrise");
-      qs(set, ".lbl").textContent = this._label("sunset");
-    }
+    qs(rise, ".lbl").textContent = this._label("sunrise");
+    qs(set, ".lbl").textContent = this._label("sunset");
     const lat = this._hass.config?.latitude,
       lon = this._hass.config?.longitude;
     if (typeof lat !== "number" || typeof lon !== "number") return;
     const now = new Date();
     const day = this._dayOf(now, lat, lon);
 
-    if (poster) this._fillPoster(day, now);
-    else {
-      qs(rise, ".val").textContent = fmtEvent(this._hass, day.sunrise);
-      qs(set, ".val").textContent = fmtEvent(this._hass, day.sunset);
-    }
+    qs(rise, ".val").textContent = fmtEvent(this._hass, day.sunrise);
+    qs(set, ".val").textContent = fmtEvent(this._hass, day.sunset);
 
     const plot = qs(this._root, ".plot"),
       cfg = this._config;
@@ -280,7 +201,7 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
       tooltip: cfg.show_tooltip,
     };
     const { xOf, W } = drawCurve(this, plot, day, now, look, PLOT_H);
-    if (!poster) drawEvents(this, day, xOf, W);
+    drawEvents(this, day, xOf, W);
     // the tooltip survives the per-minute re-render
     if (this._hoverT !== null && !showHover(this, plot, this._hoverT)) this._hideHover();
   }

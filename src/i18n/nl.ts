@@ -57,18 +57,16 @@ const nl: Translation = {
   "kind.climate.heating": "Verwarmt",
   "kind.climate.cooling": "Koelt",
   "kind.climate.idle": "Inactief",
-  "kind.climate.off": "Uit",
   "kind.climate.drying": "Droogt",
   "kind.climate.fan": "Ventileert",
   "kind.person.since": "sinds {t}",
   "kind.grid.importing": "Afname",
   "kind.grid.exporting": "Teruglevering",
+  "kind.solar.today": "{v} vandaag",
   "kind.battery.charging": "Laadt",
   "kind.battery.discharging": "Ontlaadt",
-  "kind.car.charging": "Laadt",
   "kind.car.plugged": "Aangesloten",
   "kind.appliance.running": "Draait",
-  "kind.appliance.off": "Uit",
   "kind.appliance.this_run": "{v} deze run",
   "kind.appliance.last_hours": "{v} in de laatste {h} u",
   "control.hold_to": "Houd vast om te {action}",
@@ -235,12 +233,6 @@ const nl: Translation = {
 
   "editor.default": "Standaard: {value}",
 
-  "editor.sun.layout": "Indeling",
-
-  "editor.sun.layout.card": "Kaart",
-
-  "editor.sun.layout.poster": "Poster",
-
   "editor.sun.title": "Titel",
   "editor.sun.icon": "Pictogram",
   "editor.sun.show_dawn_dusk": "Dageraad, zonnemiddag en schemering tonen",
@@ -289,7 +281,6 @@ const nl: Translation = {
   "editor.multi_trend.layout.auto": "Automatisch (zelfde eenheid: overlappend, anders banen)",
   "editor.multi_trend.layout.overlay": "Overlappend (één schaal)",
   "editor.multi_trend.layout.lanes": "Banen (één schaal per entiteit)",
-  "editor.multi_trend.layout.poster": "Poster",
 };
 
 export default nl;

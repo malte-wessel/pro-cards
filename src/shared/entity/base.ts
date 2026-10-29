@@ -38,10 +38,10 @@ import {
   type Pending,
   type ServiceCall,
 } from "./control.ts";
-import { countIds, modelOf, nameOf, tplOf, type PlotHandlers, type RenderCtx } from "./model.ts";
+import { membersOf } from "./look.ts";
+import { modelOf, nameOf, tplOf, type PlotHandlers, type RenderCtx } from "./model.ts";
 import { plotRows } from "./render/blocks.ts";
 import { fillByClass } from "./render/fill.ts";
-import { posterParts } from "./render/lead.ts";
 import { drawPlot, showHover, windowOf, type PlotElement } from "./render/plots.ts";
 import type { EntityModel } from "./model.ts";
 import { TextCache, themeChanged } from "../typography.ts";
@@ -84,8 +84,6 @@ export const groupCardSize = (cfg: EntityCardConfig, group: Group) => {
   switch (group.layout) {
     case "tile":
       return 1 + blk(ents[0]);
-    case "poster":
-      return 3;
     case "grid":
       return Math.ceil(n / group.columns) * 2;
     case "hero":
@@ -223,9 +221,7 @@ export abstract class EntityCardBase extends HTMLElement {
       ]),
     ];
     this._timed = cfg.entities.some((e) => e.staleMin !== null || e.format === "relative");
-    this._countIdxs = cfg.entities.flatMap((e, i) =>
-      e.visual === "count" && (e.entity || e.countOf) ? [i] : [],
-    );
+    this._countIdxs = cfg.entities.flatMap((e, i) => (e.visual === "count" && e.entity ? [i] : []));
     this._armMinute();
     this._templates = collectTemplates(cfg);
     for (const tpl of this._extraTemplates(cfg)) this._templates.add(tpl);
@@ -339,13 +335,10 @@ export abstract class EntityCardBase extends HTMLElement {
   _countMembers(hass: HomeAssistant | undefined): string[] {
     const cfg = this._config;
     if (!cfg || !hass) return [];
-    return this._countIdxs.flatMap((i) => {
-      const ent = cfg.entities[i];
-      return countIds(ent, hass.states[ent.entity ?? ""]);
-    });
+    return this._countIdxs.flatMap((i) => membersOf(hass.states[cfg.entities[i].entity ?? ""]));
   }
   // what a subclass reads beyond its items: entities whose history it draws, templates it renders
-  // and entities it follows (an image's camera, an area's members)
+  // and entities it follows (an image's camera)
   _extraHistoryIds(_cfg: EntityCardConfig): string[] {
     return [];
   }
@@ -760,7 +753,6 @@ export abstract class EntityCardBase extends HTMLElement {
   _buildGroup(g: Group, idxs = g.idxs.filter((i) => this._vis?.items[i] ?? true)) {
     const cfg = this._config as EntityCardConfig;
     if (g.layout === "tile") return this._row(idxs[0], "tile");
-    if (g.layout === "poster") return this._poster(idxs[0], g.badgeIdxs ?? []);
     const el = document.createElement("div");
     el.className = `section layout-${g.layout}`;
     if (g.layout === "list") idxs.forEach((i) => el.appendChild(this._row(i, "list")));
@@ -789,14 +781,6 @@ export abstract class EntityCardBase extends HTMLElement {
     const n = this._plotRows(g, idxs);
     if (n > 1) el.style.setProperty("--grow", String(n));
     return el;
-  }
-  // a poster: its own parts (the lead, the label pill, the body; fillPoster fills them) and its
-  // badges, rows of their own in the corner that its fill never touches
-  _poster(idx: number, badgeIdxs: number[]) {
-    const row = this._row(idx, "poster");
-    const { corner } = posterParts(row);
-    for (const b of badgeIdxs) corner.appendChild(this._row(b, "hval"));
-    return row;
   }
   // the rows of a group's shown items that hold a growing plot (a grid row counts once)
   _plotRows(g: Group, idxs: number[]) {
@@ -901,7 +885,7 @@ export abstract class EntityCardBase extends HTMLElement {
   _modelAt(ctx: RenderCtx, idx: number): EntityModel {
     const ent = (this._config as EntityCardConfig).entities[idx],
       hass = ctx.hass;
-    const members = ent.visual === "count" ? countIds(ent, hass?.states[ent.entity ?? ""]) : [];
+    const members = ent.visual === "count" ? membersOf(hass?.states[ent.entity ?? ""]) : [];
     const inputs = [
       ...this._idsByItem[idx].map((id) => hass?.states[id]),
       ...members.map((id) => hass?.states[id]),

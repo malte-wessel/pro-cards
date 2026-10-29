@@ -1,10 +1,9 @@
 // Constants of the flow engine: the animated cards (wind, rain) share layouts, band and lead
 // sizes, the compass points and the speed units.
 
-export const LAYOUTS = ["tile", "hero", "poster"] as const;
+export const LAYOUTS = ["tile", "hero"] as const;
 export type Layout = (typeof LAYOUTS)[number];
-// the tile's and the poster's look: the animation in the lead (`icon`) or as their whole
-// background (`flow`)
+// the tile's look: the animation in the lead (`icon`) or as the whole tile's background (`flow`)
 export const VISUALS = ["icon", "flow"] as const;
 export type FlowVisual = (typeof VISUALS)[number];
 

@@ -1,6 +1,6 @@
 // Config of the poster card (pure): the raw YAML shape and the normalised one. The card is one
 // entity (or none) drawn the way its kind says; its items are the poster itself, the status badge
-// (the poster's label pill, a badge like the others) and the badges in its corner.
+// (a badge like the others, drawn as a tag) and the badges in its corner.
 import { domainOf } from "../shared/color.ts";
 import { isTemplate, numOrNull } from "../shared/util.ts";
 import {
@@ -26,7 +26,7 @@ import type { Kind } from "../shared/kinds/types.ts";
 import { ATTRIBUTES } from "../shared/weather/constants.ts";
 import { CARD_TYPE } from "./constants.ts";
 
-export interface RawPosterCardConfig extends RawEntityCardBase, RawEntity {
+interface RawPosterCardConfig extends RawEntityCardBase, RawEntity {
   kind?: unknown;
   status?: unknown;
   badges?: unknown;

@@ -1,12 +1,9 @@
-// The current conditions: the hero lead (condition icon, big temperature, high / low), the
-// tile (icon, name, "temperature · condition") and the poster (icon and condition on top, name,
-// big temperature, high / low and the next hours' curve at the bottom).
+// The current conditions: the hero lead (condition icon, big temperature, high / low) and the
+// tile (icon, name, "temperature · condition").
 import { cssColor } from "../../shared/color.ts";
 import type { EntityItem } from "../../shared/entity/config.ts";
 import { nameOf, tplOf, type EntityModel, type RenderCtx } from "../../shared/entity/model.ts";
-import { plotEl } from "../../shared/entity/render/blocks.ts";
 import { bigEl, leadEl, secondaryEl, textEl } from "../../shared/entity/render/lead.ts";
-import type { Point } from "../../shared/history.ts";
 import { fmtNumber } from "../../shared/format.ts";
 import type { WeatherConfig } from "../config.ts";
 import type { WeatherIcons } from "../../shared/weather/icon.ts";
@@ -130,51 +127,4 @@ export const fillCurrent = (
   main.appendChild(line);
   top.appendChild(main);
   row.appendChild(top);
-};
-
-// a poster (its skeleton is the entity poster's, base: _poster): the condition's lead and, in the
-// pill, the matching rule's label or the condition; at the bottom the name, the big temperature,
-// its label and today's high / low, and the next hours of the forecast's temperature as the curve
-// along the bottom edge (its tooltip reads the temperature item)
-export const fillPoster = (
-  ctx: RenderCtx,
-  row: HTMLElement,
-  cfg: WeatherConfig,
-  cm: CurrentModel,
-  hours: Point[],
-) => {
-  const lead = row.querySelector<HTMLElement>(":scope > .ptop > .plead"),
-    label = row.querySelector<HTMLElement>(":scope > .ptop > .corner > .plabel"),
-    body = row.querySelector<HTMLElement>(":scope > .pbody");
-  if (!lead || !label || !body) return;
-  const ent = startRow(row, cfg, cm);
-  lead.replaceChildren(condLead(ctx, ent, cm));
-  const pill = cm.cond.look.label ?? condText(ctx, cm.cond);
-  label.textContent = pill;
-  label.hidden = !pill;
-  body.replaceChildren();
-  body.appendChild(textEl("pname", nameOf(ctx, ent, cm.cond.st)));
-  const value = document.createElement("div");
-  value.className = "pvalue";
-  value.appendChild(bigEl(cm.temp.fmt));
-  body.appendChild(value);
-  const sec = tplOf(ctx, ent.secondary);
-  const parts: { text: string; accent?: boolean }[] = [];
-  if (sec) parts.push({ text: sec });
-  else {
-    if (cm.temp.look.label) parts.push({ text: cm.temp.look.label, accent: true });
-    const hiLo = hiLoText(ctx, cm.today);
-    if (hiLo) parts.push({ text: hiLo });
-  }
-  if (parts.length) body.appendChild(secondaryEl(parts));
-  if (hours.length > 1) {
-    const plot = plotEl(ctx, cfg.entities[cfg.tempIdx], cfg.tempIdx, cm.temp, {
-      kind: "sparkline",
-      series: hours,
-      window: { t0: hours[0].t, t1: hours[hours.length - 1].t },
-      loaded: true,
-    });
-    plot.classList.add("ptrend");
-    body.appendChild(plot);
-  }
 };

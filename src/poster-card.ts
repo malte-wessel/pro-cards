@@ -18,7 +18,7 @@ import type { EntityCardConfig, EntityItem } from "./shared/entity/config.ts";
 import { tileMinColumns } from "./shared/entity/control.ts";
 import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
 import { fillPosterSlots, type PosterSlots } from "./shared/entity/render/fill.ts";
-import { secondaryEl } from "./shared/entity/render/lead.ts";
+import { posterParts, secondaryEl } from "./shared/entity/render/lead.ts";
 import type { GridOptions, HomeAssistant, WeatherForecastType } from "./shared/ha.ts";
 import { hideHover } from "./shared/hover.ts";
 import { detectKind, parseKind } from "./shared/kinds/detect.ts";
@@ -29,13 +29,7 @@ import { ForecastFeed } from "./shared/weather/feed.ts";
 import { dailyTypeOf, supportsForecast } from "./shared/weather/forecast.ts";
 import { normalizePosterConfig, type PosterConfig } from "./poster/config.ts";
 import { CARD_TYPE } from "./poster/constants.ts";
-import {
-  fillStatus,
-  imageUrl,
-  posterCardParts,
-  statusText,
-  updateBackdrop,
-} from "./poster/render.ts";
+import { fillStatus, imageUrl, statusText, updateBackdrop } from "./poster/render.ts";
 import { STYLE_POSTER_CARD_ALL } from "./poster/styles.ts";
 
 export class PosterCard extends EntityCardBase {
@@ -45,9 +39,9 @@ export class PosterCard extends EntityCardBase {
   }
 
   declare _config?: PosterConfig;
-  // the config as written: normalised again once hass tells the device class and the registries
+  // the config as written: normalised again once hass tells the device class and the registry
   _raw: unknown;
-  // what the last normalisation read of hass (the kind it resolved and the registries it saw)
+  // what the last normalisation read of hass (the kind it resolved and the registry it saw)
   _resolvedFrom: unknown[] = [];
   // the hass a normalisation reads (the one arriving, before the base takes it)
   _nextHass?: HomeAssistant;
@@ -111,7 +105,7 @@ export class PosterCard extends EntityCardBase {
     this._syncForecast();
   }
   // what the kind is resolved from: the detected kind (the device class arrives with the first
-  // state) and the registries' identities
+  // state) and the entity registry's identity (the inputs found on the entity's device)
   _resolveInputs(hass: HomeAssistant | undefined): unknown[] {
     const raw = (this._raw ?? {}) as { entity?: string; kind?: unknown };
     let kind: string | null = null;
@@ -121,7 +115,7 @@ export class PosterCard extends EntityCardBase {
     } catch {
       // setConfig reports it
     }
-    return [kind, hass?.entities, hass?.devices, hass?.areas];
+    return [kind, hass?.entities];
   }
   _setHass(hass: HomeAssistant) {
     const now = this._resolveInputs(hass);
@@ -230,7 +224,7 @@ export class PosterCard extends EntityCardBase {
   _buildBody(body: HTMLElement) {
     const cfg = this._config as PosterConfig;
     const row = this._row(0, "poster");
-    const { corner } = posterCardParts(row);
+    const { corner } = posterParts(row);
     for (const i of cfg.groups[0].badgeIdxs ?? [])
       corner.appendChild(this._row(i, i === cfg.statusIdx ? "hval pstatus" : "hval"));
     body.appendChild(row);
@@ -444,5 +438,5 @@ export class PosterCard extends EntityCardBase {
 registerCard(PosterCard, {
   name: "Poster Card Pro",
   description:
-    "One entity as a poster drawn the way its kind says: weather, wind, rain, sun, media, covers, locks, lights, rooms and more",
+    "One entity as a poster drawn the way its kind says: weather, wind, rain, sun, media, covers, locks, lights and more",
 });

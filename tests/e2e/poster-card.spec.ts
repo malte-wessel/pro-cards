@@ -311,3 +311,62 @@ test.describe("poster value fit", () => {
     expect(await fontPx(b(small))).toBe(px);
   });
 });
+
+test.describe("poster cards in the layout card", () => {
+  test("every cell of a row has the same height", async ({ page }) => {
+    // a poster's height in the harness grid: three 56 px rows and two 8 px gaps
+    const ROWS3 = 3 * 56 + 2 * 8;
+    await mount(
+      page,
+      {
+        type: "custom:layout-card-pro",
+        columns: 4,
+        cards: [
+          { type: P, entity: "weather.home" },
+          { type: P, kind: "sun" },
+          { type: P, entity: "sensor.wind_speed", kind: { flow: "lines" } },
+          { type: P, entity: "sensor.ev_battery", badges: ["sensor.ev_range"] },
+          { type: P, entity: "sensor.solar_power", visual: "sparkline" },
+          { type: P, entity: "light.kitchen" },
+          {
+            type: "custom:entity-group-card-pro",
+            title: "Living room",
+            layout: "table",
+            vertical_align: "bottom",
+            view_layout: { span: [1, 3] },
+            entities: [
+              { entity: "light.desk_lamp", control: "toggle" },
+              { entity: "light.living_room", control: "slider" },
+            ],
+          },
+          { type: P, kind: { type: "trend", entities: ["sensor.power_consumption"] } },
+        ],
+      },
+      { width: 960 },
+    );
+    const rows = await page.evaluate(() => {
+      const el = window.pc.card(0);
+      const out: Record<number, { item: number; card: number }[]> = {};
+      for (const it of el.shadowRoot!.querySelectorAll<HTMLElement>(".body .item")) {
+        const b = it.getBoundingClientRect();
+        const inner = it.querySelector("hui-card")?.firstElementChild as HTMLElement | null;
+        const ha = inner?.shadowRoot?.querySelector("ha-card")?.getBoundingClientRect();
+        (out[Math.round(b.top)] ??= []).push({
+          item: Math.round(b.height),
+          card: Math.round(ha?.height ?? -1),
+        });
+      }
+      return Object.values(out);
+    });
+    expect(rows).toHaveLength(2);
+    for (const row of rows) {
+      expect(row).toHaveLength(4);
+      const h = row[0].item;
+      expect(h).toBe(ROWS3);
+      for (const cell of row) {
+        expect(cell.item).toBe(h);
+        expect(cell.card).toBe(h);
+      }
+    }
+  });
+});

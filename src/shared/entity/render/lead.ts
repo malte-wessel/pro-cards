@@ -84,8 +84,7 @@ export const pillEl = (text: string) => {
   return s;
 };
 // a poster's skeleton (styles: STYLE_POSTER), built once into its row: the top line (the lead and
-// the corner with the label's pill) and the body; the entity base adds the badges to the corner,
-// the flow cards their texts to the body
+// the corner, which the poster card fills with its badge rows) and the body (fillPosterSlots)
 export const posterParts = (row: HTMLElement) => {
   const div = (cls: string) => {
     const d = document.createElement("div");
@@ -96,9 +95,6 @@ export const posterParts = (row: HTMLElement) => {
     lead = div("plead"),
     corner = div("corner"),
     body = div("pbody");
-  const label = pillEl("");
-  label.classList.add("plabel");
-  corner.appendChild(label);
   top.append(lead, corner);
   row.append(top, body);
   return { lead, corner, body };

@@ -164,24 +164,12 @@ export const membersOn = (ctx: FormatCtx, st: HassEntity | undefined) =>
     const m = ctx.hass?.states[id];
     return !!m && stateActive(m) && !OFF_STATES.has(m.state) && m.state !== "unknown";
   }).length;
-// the entities a count reads: those the card gave it, else its group's members
-export const countIds = (ent: EntityItem, st: HassEntity | undefined) =>
-  ent.countOf?.ids ?? membersOf(st);
 
-// visual: count, how many of the group's members are on (or, with the entities the card gave it,
-// how many of them are on or in one of its states). Its value is "on" while any is (rules and the
-// state colour read it so) and the count is its number
+// visual: count, how many of the group's members are on. Its value is "on" while any is (rules
+// and the state colour read it so) and the count is its number
 const countModel = (ctx: FormatCtx, ent: EntityItem, st: HassEntity | undefined) => {
-  const of = ent.countOf;
-  const n = of
-    ? of.ids.filter((id) => {
-        const m = ctx.hass?.states[id];
-        if (!m) return false;
-        if (of.states) return of.states.includes(m.state);
-        return stateActive(m) && !OFF_STATES.has(m.state) && m.state !== "unknown";
-      }).length
-    : membersOn(ctx, st);
-  const avail = !!of || (!!st && st.state !== "unavailable");
+  const n = membersOn(ctx, st);
+  const avail = !!st && st.state !== "unavailable";
   const model: ValueModel = avail
     ? { raw: n ? "on" : "off", num: n, avail }
     : { raw: st?.state ?? null, num: null, avail };

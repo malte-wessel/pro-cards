@@ -4,34 +4,16 @@
 // while it works, the dock while it rests).
 import type { EntityItem } from "../entity/config.ts";
 import { PENDING_MS, serviceFor } from "../entity/control.ts";
-import { pictureOf } from "../entity/look.ts";
+import { numAttr as num, pictureOf } from "../entity/look.ts";
 import { leadEl, secondaryEl } from "../entity/render/lead.ts";
-import { fmtNumber } from "../format.ts";
 import type { HassEntity } from "../ha.ts";
 import { oneOf } from "../util.ts";
 import { artColor } from "./art.ts";
+import { div, pctValue, str, SVG, wordValue } from "./dom.ts";
 import { place, stateText } from "./domains.ts";
 import { attention } from "./rules.ts";
 import type { Kind, KindCtx } from "./types.ts";
 
-const SVG = "http://www.w3.org/2000/svg";
-const div = (cls: string) => {
-  const d = document.createElement("div");
-  d.className = cls;
-  return d;
-};
-const num = (st: HassEntity | undefined, key: string) => {
-  const v = st?.attributes?.[key];
-  return typeof v === "number" && Number.isFinite(v) ? v : null;
-};
-const str = (st: HassEntity | undefined, key: string) => {
-  const v = st?.attributes?.[key];
-  return typeof v === "string" && v ? v : null;
-};
-const pct = (c: KindCtx, p: number) => {
-  const n = fmtNumber(c.ctx.hass, p, 0);
-  return { text: `${n} %`, num: n, unit: "%" };
-};
 const artUrl = (c: KindCtx) => {
   const url = pictureOf(c.m.st);
   return url && c.ctx.hass?.hassUrl ? c.ctx.hass.hassUrl(url) : url;
@@ -70,7 +52,7 @@ export const MEDIA: Kind = {
     const progress = played(st, c.ctx.now) ? div("pprog") : null;
     progress?.appendChild(document.createElement("i"));
     return {
-      ...(title ? { value: { text: title, num: title, unit: "" }, word: true } : {}),
+      ...(title ? { value: wordValue(title), word: true } : {}),
       secondary: by.length ? secondaryEl(by.map((text) => ({ text }))) : null,
       picture: progress,
     };
@@ -103,15 +85,7 @@ export const MEDIA: Kind = {
 
 // ----- cover -----
 
-export const COVER_STYLES = [
-  "shutter",
-  "blind",
-  "curtain",
-  "garage",
-  "gate",
-  "awning",
-  "window",
-] as const;
+const COVER_STYLES = ["shutter", "blind", "curtain", "garage", "gate", "awning", "window"] as const;
 type CoverStyle = (typeof COVER_STYLES)[number];
 const BY_CLASS: Record<string, CoverStyle> = {
   shutter: "shutter",
@@ -218,7 +192,7 @@ export const COVER: Kind = {
   status: (c) => c.m.look.label ?? stateText(c),
   slots: (c) => {
     const p = num(c.m.st, "current_position");
-    return p === null ? {} : { value: pct(c, p), word: false };
+    return p === null ? {} : { value: pctValue(c.ctx.hass, p), word: false };
   },
   backdrop: {
     key: (c) => styleOf(c),
@@ -230,7 +204,6 @@ export const COVER: Kind = {
       const back = el.parentElement ?? el;
       back.style.setProperty("--p", String(p ?? 0));
       back.style.setProperty("--tilt", String(num(st, "current_tilt_position") ?? 50));
-      el.classList.toggle("moving", st?.state === "opening" || st?.state === "closing");
       el.classList.toggle("unknown", p === null);
     },
   },
@@ -275,7 +248,7 @@ const robot = (name: string, domain: string, readsText: string): Kind => ({
     const st = c.m.st;
     const parts: { text: string }[] = [];
     const b = num(st, "battery_level");
-    if (b !== null) parts.push({ text: `${fmtNumber(c.ctx.hass, b, 0)} %` });
+    if (b !== null) parts.push({ text: pctValue(c.ctx.hass, b).text });
     const room = str(st, "current_room") ?? str(st, "room");
     if (room) parts.push({ text: room });
     const a = st?.attributes ?? {};

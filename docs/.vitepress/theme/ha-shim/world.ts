@@ -417,11 +417,6 @@ def("cover.driveway_gate", "closed", {
   device_class: "gate",
   current_position: 0,
 });
-def("cover.kitchen_window", "closed", {
-  friendly_name: "Kitchen window",
-  device_class: "window",
-  current_position: 0,
-});
 // a cover without a device class (a poster draws it by `kind: { style }`)
 def("cover.workshop_door", "closed", { friendly_name: "Workshop door", current_position: 0 });
 def("climate.living_room", "heat", {

@@ -701,3 +701,78 @@ test.describe("gestures", () => {
     expect(await events(page)).toEqual([]);
   });
 });
+
+test.describe("vertical_align", () => {
+  const rect = (loc: Locator) =>
+    loc.evaluate((e) => {
+      const r = e.getBoundingClientRect();
+      return { top: r.top, bottom: r.bottom, h: r.height };
+    });
+  // the box inside the card's border
+  const inner = (c: Locator) =>
+    c.locator("ha-card").evaluate((e) => {
+      const r = e.getBoundingClientRect();
+      const s = getComputedStyle(e);
+      return {
+        top: r.top + parseFloat(s.borderTopWidth),
+        bottom: r.bottom - parseFloat(s.borderBottomWidth),
+      };
+    });
+
+  test("vertical_align moves the body in a taller card, the header stays on top", async ({
+    page,
+  }) => {
+    const group = (extra = {}) => ({
+      type: T,
+      title: "Lights",
+      grid_options: { rows: 4 },
+      entities: ["light.living_room", "light.kitchen"],
+      ...extra,
+    });
+    const place = async () => {
+      const c = card(page);
+      return {
+        box: await inner(c),
+        header: await rect(c.locator(".header")),
+        section: await rect(c.locator(".section")),
+      };
+    };
+    await mount(page, group());
+    const top = await place();
+    // the default: the rows right under the header, the room below them empty
+    expect(top.section.top - top.header.bottom).toBeCloseTo(12, 0);
+    expect(top.box.bottom - top.section.bottom).toBeGreaterThan(60);
+
+    await mount(page, group({ vertical_align: "bottom" }));
+    const bottom = await place();
+    expect(bottom.header.top).toBeCloseTo(top.header.top, 0);
+    expect(bottom.header.bottom).toBeCloseTo(top.header.bottom, 0);
+    expect(bottom.box.bottom - bottom.section.bottom).toBeLessThanOrEqual(16);
+    expect(bottom.section.h).toBeCloseTo(top.section.h, 0);
+
+    await mount(page, group({ vertical_align: "center" }));
+    const center = await place();
+    expect(center.header.bottom).toBeCloseTo(top.header.bottom, 0);
+    const above = center.section.top - center.header.bottom;
+    const below = center.box.bottom - center.section.bottom;
+    expect(Math.abs(above - below)).toBeLessThanOrEqual(2);
+    expect(center.section.top).toBeGreaterThan(top.section.top + 20);
+    expect(center.section.top).toBeLessThan(bottom.section.top - 20);
+  });
+
+  test("vertical_align is checked", async ({ page }) => {
+    await mount(page, { type: T, entities: ["light.kitchen"] });
+    const err = await page.evaluate(() => {
+      const el = document.createElement("entity-group-card-pro") as unknown as {
+        setConfig(c: unknown): void;
+      };
+      try {
+        el.setConfig({ entities: ["light.kitchen"], vertical_align: "middle" });
+        return "";
+      } catch (e) {
+        return (e as Error).message;
+      }
+    });
+    expect(err).toMatch(/vertical_align must be one of top \| center \| bottom/);
+  });
+});

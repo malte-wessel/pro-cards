@@ -15,14 +15,14 @@ import { fillBadge } from "./badge.ts";
 import { bigEl, leadEl, pillEl, textEl, valueEl } from "./lead.ts";
 
 // the controls of the row, split by slot; a card without a control host draws none
-export const slots = (ctx: RenderCtx, ent: EntityItem, kind: RowKind) => {
+const slots = (ctx: RenderCtx, ent: EntityItem, kind: RowKind) => {
   const ps = ctx.ctl ? placementsOf(ent, kind) : [];
   const at = (pos: Placement["position"]) => ps.filter((p) => p.position === pos);
   return { end: at("end"), block: at("block"), lead: at("lead") };
 };
 // the icon slot: the icon, the icon as a switch, or a Run / hold button in its place (at the
 // icon's size); a confirmed control is a hold here too, never a plain tap
-export const leadOf = (
+const leadOf = (
   ctx: RenderCtx,
   ent: EntityItem,
   idx: number,
@@ -44,7 +44,7 @@ export const leadOf = (
 };
 // the end controls, drawn; and whether one of them shows the value (so the text would repeat it):
 // only a control that was drawn and can be used counts, otherwise the value stays
-export const endControls = (
+const endControls = (
   ctx: RenderCtx,
   ent: EntityItem,
   idx: number,
@@ -62,7 +62,7 @@ export const endControls = (
   return { els, showsValue: showsValue && canControl(ent, m.st) };
 };
 // a slider in the block slot is the bar with a knob, so the bar visual gives way to it
-export const blockOf = (
+const blockOf = (
   ctx: RenderCtx,
   ent: EntityItem,
   idx: number,
@@ -169,7 +169,6 @@ export const fillHero = (
 // built once), a null value draws no large value, a picture replaces the block visual
 export interface PosterSlots {
   lead?: HTMLElement | "keep";
-  label?: string | null;
   name?: string;
   value?: FmtValue | null;
   // a word (Cleaning, Away) is drawn smaller than a number (default: the value is no number)
@@ -178,11 +177,9 @@ export interface PosterSlots {
   picture?: HTMLElement | null;
 }
 
-// a poster: the icon at the top left, the rule's label as the first pill of the corner (the badges
-// below it are rows of their own, filled apart), and at the bottom the name, the big value with the
-// controls on its line, the secondary line and the block visual or controls. Only the poster's own
-// parts are filled again, never the corner's badge rows (base: _poster). A poster without a label
-// pill (the poster card's: its status is a badge row) fills the rest.
+// a poster (the poster card's row): the icon at the top left, and at the bottom the name, the big
+// value with the controls on its line, the secondary line and the block visual or controls. Only
+// the poster's own parts are filled again, never the badge rows in its corner (filled apart).
 export const fillPosterSlots = (
   ctx: RenderCtx,
   row: HTMLElement,
@@ -193,21 +190,9 @@ export const fillPosterSlots = (
 ) => {
   const c = slots(ctx, ent, "poster");
   const lead = row.querySelector<HTMLElement>(":scope > .ptop > .plead"),
-    label = row.querySelector<HTMLElement>(":scope > .ptop > .corner > .plabel"),
     body = row.querySelector<HTMLElement>(":scope > .pbody");
   if (!lead || !body) return;
   if (o.lead !== "keep") lead.replaceChildren(o.lead ?? leadOf(ctx, ent, idx, m, 40, c.lead));
-  if (label) {
-    // a badge visual is the label's pill already: the value takes it when no rule matches
-    const text =
-      o.label !== undefined
-        ? o.label
-        : ent.visual === "badge"
-          ? (m.look.label ?? m.fmt.text)
-          : m.look.label;
-    label.textContent = text ?? "";
-    label.hidden = !text;
-  }
   body.replaceChildren();
   const name = textEl("pname", o.name ?? nameOf(ctx, ent, m.st));
   const value = document.createElement("div");
@@ -248,13 +233,6 @@ export const fillPosterSlots = (
   if (block && !gauge) body.appendChild(block);
   appendControls(ctx, ent, idx, m, c.block, body);
 };
-export const fillPoster = (
-  ctx: RenderCtx,
-  row: HTMLElement,
-  ent: EntityItem,
-  idx: number,
-  m: EntityModel,
-) => fillPosterSlots(ctx, row, ent, idx, m);
 
 export const fillCell = (
   ctx: RenderCtx,
@@ -365,7 +343,6 @@ export const fillByClass = (
 ) => {
   const c = row.classList;
   if (c.contains("cell")) fillCell(ctx, row, ent, idx, m);
-  else if (c.contains("poster")) fillPoster(ctx, row, ent, idx, m);
   else if (c.contains("hero")) fillHero(ctx, row, ent, idx, m);
   else if (c.contains("item")) fillItem(ctx, row, ent, idx, m);
   else if (c.contains("field")) fillField(ctx, row, ent, idx, m);

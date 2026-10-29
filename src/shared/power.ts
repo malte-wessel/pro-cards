@@ -23,17 +23,27 @@ export interface Units {
 }
 export const DEFAULT_UNITS: Units = { kwAbove: 1000, decW: 0, decKw: 2 };
 
-// "850 W" or "1.23 kW" (magnitudes; the direction is told by colour and motion); an entity's own
-// decimals win over the card's
+// "850 W" or "1.23 kW" as its number and its unit (magnitudes; the direction is told by colour and
+// motion); an entity's own decimals win over the card's. No value is "–" without a unit
+export const powerParts = (
+  hass: HomeAssistant | undefined,
+  w: number | null,
+  units: Units = DEFAULT_UNITS,
+  dec: number | null = null,
+): { text: string; num: string; unit: string } => {
+  if (w === null || !Number.isFinite(w)) return { text: "–", num: "–", unit: "" };
+  const v = Math.abs(w);
+  const kw = units.kwAbove <= 0 || v >= units.kwAbove;
+  const num = kw
+    ? fmtNumber(hass, v / 1000, dec ?? units.decKw)
+    : fmtNumber(hass, v, dec ?? units.decW);
+  const unit = kw ? "kW" : "W";
+  return { text: `${num} ${unit}`, num, unit };
+};
+// the same as one text
 export const fmtPower = (
   hass: HomeAssistant | undefined,
   w: number | null,
   units: Units = DEFAULT_UNITS,
   dec: number | null = null,
-): string => {
-  if (w === null || !Number.isFinite(w)) return "–";
-  const v = Math.abs(w);
-  if (units.kwAbove <= 0 || v >= units.kwAbove)
-    return `${fmtNumber(hass, v / 1000, dec ?? units.decKw)} kW`;
-  return `${fmtNumber(hass, v, dec ?? units.decW)} W`;
-};
+): string => powerParts(hass, w, units, dec).text;

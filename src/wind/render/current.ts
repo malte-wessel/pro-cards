@@ -1,6 +1,6 @@
 // The current wind: the tile (lead, name, "speed · direction", label pill), the flow tile (the
-// band behind arrow, name, "label · gusts" and the big value), the hero lead (big value and
-// "label · from SW · gusts") and the poster (label pill, big value, "from SW · gusts"). Built once per row; every render updates texts and CSS variables so
+// band behind arrow, name, "label · gusts" and the big value) and the hero lead (big value and
+// "label · from SW · gusts"). Built once per row; every render updates texts and CSS variables so
 // the running animations keep their phase.
 import { tplOf, type EntityModel, type RenderCtx } from "../../shared/entity/model.ts";
 import {
@@ -69,9 +69,8 @@ export const updateCurrent = (
     wide.push({ text: cm.speed.fmt.text });
     if (now.dirText) wide.push({ text: now.dirText });
   } else {
-    // a poster shows the label in its pill
-    if (label && kind !== "poster") wide.push({ text: label, accent: cm.speed.model.avail });
-    if (kind !== "flowtile" && now.dirText)
+    if (label) wide.push({ text: label, accent: cm.speed.model.avail });
+    if (kind === "hero" && now.dirText)
       wide.push({ text: t(ctx.hass, "wind.from", { dir: now.dirText }) });
     if (cm.gust && cm.gust.model.avail)
       wide.push({ text: t(ctx.hass, "wind.gusts", { v: cm.gust.fmt.text }) });

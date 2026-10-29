@@ -57,18 +57,16 @@ const pl: Translation = {
   "kind.climate.heating": "Grzeje",
   "kind.climate.cooling": "Chłodzi",
   "kind.climate.idle": "Bezczynny",
-  "kind.climate.off": "Wyłączony",
   "kind.climate.drying": "Osusza",
   "kind.climate.fan": "Wentylator",
   "kind.person.since": "od {t}",
   "kind.grid.importing": "Pobór",
   "kind.grid.exporting": "Oddawanie",
+  "kind.solar.today": "{v} dziś",
   "kind.battery.charging": "Ładuje",
   "kind.battery.discharging": "Rozładowuje",
-  "kind.car.charging": "Ładuje",
   "kind.car.plugged": "Podłączony",
   "kind.appliance.running": "Pracuje",
-  "kind.appliance.off": "Wyłączony",
   "kind.appliance.this_run": "{v} w tym cyklu",
   "kind.appliance.last_hours": "{v} w ostatnich {h} h",
   "control.hold_to": "Przytrzymaj, aby {action}",
@@ -235,12 +233,6 @@ const pl: Translation = {
 
   "editor.default": "Domyślnie: {value}",
 
-  "editor.sun.layout": "Układ",
-
-  "editor.sun.layout.card": "Karta",
-
-  "editor.sun.layout.poster": "Plakat",
-
   "editor.sun.title": "Tytuł",
   "editor.sun.icon": "Ikona",
   "editor.sun.show_dawn_dusk": "Pokaż świt, południe słoneczne i zmierzch",
@@ -289,7 +281,6 @@ const pl: Translation = {
   "editor.multi_trend.layout.auto": "Automatycznie (ta sama jednostka: nałożone, inaczej tory)",
   "editor.multi_trend.layout.overlay": "Nałożone (jedna skala)",
   "editor.multi_trend.layout.lanes": "Tory (jedna skala na encję)",
-  "editor.multi_trend.layout.poster": "Plakat",
 };
 
 export default pl;

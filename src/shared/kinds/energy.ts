@@ -10,28 +10,23 @@ import { unitOf, type FmtValue } from "../entity/model.ts";
 import { plotEl } from "../entity/render/blocks.ts";
 import { leadEl, secondaryEl } from "../entity/render/lead.ts";
 import { fmtDuration, fmtNumber } from "../format.ts";
-import type { HassEntity } from "../ha.ts";
+import type { HassEntity, HomeAssistant } from "../ha.ts";
 import type { Point } from "../history.ts";
 import { t } from "../i18n.ts";
-import { fmtPower, UNIT_TO_W, wattsOf } from "../power.ts";
+import { powerParts, UNIT_TO_W, wattsOf } from "../power.ts";
 import { isNum, oneOf } from "../util.ts";
+import { div, wordValue } from "./dom.ts";
 import { BATTERY_RULES } from "./rules.ts";
 import type { Kind, KindCtx, Read } from "./types.ts";
 
 // below this a flow counts as none (sensor noise)
 const IDLE_W = 10;
-const div = (cls: string) => {
-  const d = document.createElement("div");
-  d.className = cls;
-  return d;
-};
 const watts = (r: Read | null) => (r ? wattsOf(r.ent, r.m) : null);
-const power = (c: KindCtx, w: number | null): FmtValue | null => {
-  if (w === null) return null;
-  const text = fmtPower(c.ctx.hass, w);
-  const [num, unit] = text.split(" ");
-  return { text, num, unit: unit ?? "" };
-};
+const power = (c: KindCtx, w: number | null): FmtValue | null =>
+  w === null ? null : powerParts(c.ctx.hass, w);
+// an amount of energy: two decimals below 10 kWh, one from there
+const fmtKwh = (hass: HomeAssistant | undefined, kwh: number) =>
+  `${fmtNumber(hass, kwh, kwh < 10 ? 2 : 1)} kWh`;
 
 // the dots of a line: they flow forward (in) or back (out), faster the more power flows (one
 // crossing in 3 s as built, the power scales the playback rate)
@@ -151,7 +146,7 @@ export const SOLAR: Kind = {
       ...(today
         ? {
             secondary: today.m.model.avail
-              ? secondaryEl([{ text: t(c.ctx.hass, "rain.today", { v: today.m.fmt.text }) }])
+              ? secondaryEl([{ text: t(c.ctx.hass, "kind.solar.today", { v: today.m.fmt.text }) }])
               : null,
           }
         : {}),
@@ -240,7 +235,7 @@ export const CAR: Kind = {
   ],
   status: (c) => {
     if (c.m.look.label) return c.m.look.label;
-    if (isOn(c.input("charging"))) return t(c.ctx.hass, "kind.car.charging");
+    if (isOn(c.input("charging"))) return t(c.ctx.hass, "kind.battery.charging");
     if (isOn(c.input("plugged"))) return t(c.ctx.hass, "kind.car.plugged");
     const loc = c.input("location");
     if (loc?.m.st && loc.m.st.state !== "home")
@@ -265,7 +260,7 @@ export const CAR: Kind = {
 
 // ----- appliance: running above a threshold, for how long, the energy of this run -----
 
-export const APPLIANCE_STYLES = ["pump", "washer", "dryer", "dishwasher", "heat_pump"] as const;
+const APPLIANCE_STYLES = ["pump", "washer", "dryer", "dishwasher", "heat_pump"] as const;
 const ICONS: Record<(typeof APPLIANCE_STYLES)[number], string> = {
   pump: "mdi:pump",
   washer: "mdi:washing-machine",
@@ -313,10 +308,9 @@ export const APPLIANCE: Kind = {
   slots: (c) => {
     const run = runOf(c, c.m.st);
     if (!run) {
-      const off = t(c.ctx.hass, "kind.appliance.off");
-      return { value: { text: off, num: off, unit: "" }, word: true, secondary: null };
+      return { value: wordValue(t(c.ctx.hass, "control.off")), word: true, secondary: null };
     }
-    const kwh = `${fmtNumber(c.ctx.hass, run.kwh, run.kwh < 10 ? 2 : 1)} kWh`;
+    const kwh = fmtKwh(c.ctx.hass, run.kwh);
     // a run longer than the history has no length to tell: its power, and the window's energy
     if (run.whole)
       return {
@@ -333,7 +327,7 @@ export const APPLIANCE: Kind = {
       };
     const d = fmtDuration(c.ctx.hass, Math.max(60, run.since), true);
     return {
-      value: { text: d, num: d, unit: "" },
+      value: wordValue(d),
       word: false,
       secondary:
         run.kwh > 0

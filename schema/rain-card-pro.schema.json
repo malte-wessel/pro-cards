@@ -60,21 +60,20 @@
     },
     "layout": {
       "type": "string",
-      "enum": ["tile", "hero", "poster"],
-      "default": "tile",
-      "description": "tile; hero: the big value above a band; poster: the entity card's poster, the icon and the label's pill on top, the big value at the bottom"
+      "enum": ["tile", "hero"],
+      "default": "tile"
     },
     "visual": {
       "type": "string",
       "enum": ["icon", "flow"],
       "default": "icon",
-      "description": "tile and poster: `flow` makes the whole tile or poster the animated field"
+      "description": "tile only: `flow` makes the whole tile the animated field"
     },
     "lead": {
       "type": "string",
       "enum": ["animated", "icon"],
       "default": "animated",
-      "description": "The round lead: a small animation of the style, or the rain icon (a flow tile or poster always shows the icon)"
+      "description": "The round lead: a small animation of the style, or the rain icon (the flow tile always shows the icon)"
     },
     "flow": {
       "type": "object",

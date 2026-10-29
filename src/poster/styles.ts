@@ -62,7 +62,6 @@ const STYLE_POSTER_CARD = `
   /* its lines are rows of their own (a colour key, the value, the name): not the poster's entity
      rows, which stack their parts */
   ha-card.layout-poster .tip .row { flex-direction: row; align-items: center; gap: 6px; border-radius: 0; }
-  .pbody > .pcurve.trend { margin: 6px -16px -16px; }
 `;
 
 export const STYLE_POSTER_CARD_ALL =

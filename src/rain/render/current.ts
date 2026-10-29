@@ -1,6 +1,6 @@
 // The current rain: the tile (lead, name, "rate · total today", label pill), the flow tile (the
-// band behind icon, name, "label · total today" and the big rate), the hero lead (big rate and
-// "label · total today") and the poster (label pill, big rate, "total today"). Built once per row; every render updates texts and CSS variables so
+// band behind icon, name, "label · total today" and the big rate) and the hero lead (big rate and
+// "label · total today"). Built once per row; every render updates texts and CSS variables so
 // the running animations keep their phase.
 import { tplOf, type EntityModel, type RenderCtx } from "../../shared/entity/model.ts";
 import {
@@ -82,8 +82,7 @@ export const updateCurrent = (
     wide.push({ text: cm.rate.fmt.text });
     if (todayText) wide.push({ text: todayText });
   } else {
-    // a poster shows the label in its pill
-    if (label && kind !== "poster") wide.push({ text: label, accent: cm.rate.model.avail });
+    if (label) wide.push({ text: label, accent: cm.rate.model.avail });
     if (todayText) wide.push({ text: todayText });
   }
   const narrow = sec

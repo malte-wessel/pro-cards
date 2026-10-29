@@ -57,18 +57,16 @@ const pt: Translation = {
   "kind.climate.heating": "A aquecer",
   "kind.climate.cooling": "A arrefecer",
   "kind.climate.idle": "Inativo",
-  "kind.climate.off": "Desligado",
   "kind.climate.drying": "A secar",
   "kind.climate.fan": "Ventilação",
   "kind.person.since": "há {t}",
   "kind.grid.importing": "A importar",
   "kind.grid.exporting": "A exportar",
+  "kind.solar.today": "{v} hoje",
   "kind.battery.charging": "A carregar",
   "kind.battery.discharging": "A descarregar",
-  "kind.car.charging": "A carregar",
   "kind.car.plugged": "Ligado",
   "kind.appliance.running": "A funcionar",
-  "kind.appliance.off": "Desligado",
   "kind.appliance.this_run": "{v} neste ciclo",
   "kind.appliance.last_hours": "{v} nas últimas {h} h",
   "control.hold_to": "Manter premido para {action}",
@@ -235,12 +233,6 @@ const pt: Translation = {
 
   "editor.default": "Padrão: {value}",
 
-  "editor.sun.layout": "Disposição",
-
-  "editor.sun.layout.card": "Cartão",
-
-  "editor.sun.layout.poster": "Cartaz",
-
   "editor.sun.title": "Título",
   "editor.sun.icon": "Ícone",
   "editor.sun.show_dawn_dusk": "Mostrar aurora, meio-dia solar e crepúsculo",
@@ -289,7 +281,6 @@ const pt: Translation = {
   "editor.multi_trend.layout.auto": "Automático (mesma unidade: sobreposto, senão faixas)",
   "editor.multi_trend.layout.overlay": "Sobreposto (uma escala)",
   "editor.multi_trend.layout.lanes": "Faixas (uma escala por entidade)",
-  "editor.multi_trend.layout.poster": "Cartaz",
 };
 
 export default pt;

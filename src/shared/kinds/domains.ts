@@ -8,27 +8,22 @@ import {
   type ControlPosition,
   type Placement,
 } from "../entity/control.ts";
-import { pictureOf } from "../entity/look.ts";
+import { numAttr as num, pictureOf } from "../entity/look.ts";
 import type { FmtValue } from "../entity/model.ts";
 import { leadEl, secondaryEl } from "../entity/render/lead.ts";
 import { setRate } from "../flow/dom.ts";
 import { fmtDuration, fmtNumber } from "../format.ts";
 import type { HassEntity } from "../ha.ts";
 import { t, type StringKey } from "../i18n.ts";
+import { div, pctValue, SVG } from "./dom.ts";
 import { attention } from "./rules.ts";
 import type { Kind, KindCtx } from "./types.ts";
-
-const SVG = "http://www.w3.org/2000/svg";
 
 export const place = (kind: ControlKind, position: ControlPosition): Placement => ({
   kind,
   position,
   small: false,
 });
-const num = (st: HassEntity | undefined, key: string) => {
-  const v = st?.attributes?.[key];
-  return typeof v === "number" && Number.isFinite(v) ? v : null;
-};
 // the state as Home Assistant writes it (On, Locked, Armed away)
 export const stateText = (c: KindCtx) => {
   const st = c.m.st;
@@ -40,16 +35,8 @@ export const stateText = (c: KindCtx) => {
   }
 };
 // a percentage as the large value, "Off" (the state) while off
-const percent = (c: KindCtx, p: number | null): FmtValue | null => {
-  if (c.m.st?.state !== "on" || p === null) return null;
-  const n = fmtNumber(c.ctx.hass, p, 0);
-  return { text: `${n} %`, num: n, unit: "%" };
-};
-const div = (cls: string) => {
-  const d = document.createElement("div");
-  d.className = cls;
-  return d;
-};
+const percent = (c: KindCtx, p: number | null): FmtValue | null =>
+  c.m.st?.state !== "on" || p === null ? null : pctValue(c.ctx.hass, p);
 
 // ----- light: a glow in its colour, as strong as its brightness -----
 
@@ -140,7 +127,7 @@ const ACTIONS: Record<string, StringKey> = {
   heating: "kind.climate.heating",
   cooling: "kind.climate.cooling",
   idle: "kind.climate.idle",
-  off: "kind.climate.off",
+  off: "control.off",
   drying: "kind.climate.drying",
   fan: "kind.climate.fan",
 };

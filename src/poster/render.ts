@@ -1,18 +1,11 @@
-// The poster card's own parts (DOM): the poster row's skeleton without the label pill (the status
-// is a badge row in the corner), the status badge, and the backdrop.
+// The poster card's own parts (DOM): the status badge (a badge row in the corner) and the
+// backdrop.
 import type { EntityItem } from "../shared/entity/config.ts";
 import { tplOf, type EntityModel, type RenderCtx } from "../shared/entity/model.ts";
 import { fillBadge } from "../shared/entity/render/badge.ts";
 import { asText, pictureOf } from "../shared/entity/look.ts";
-import { posterParts } from "../shared/entity/render/lead.ts";
+import { div } from "../shared/kinds/dom.ts";
 import type { ImageSrc, PosterConfig } from "./config.ts";
-
-// the poster row's skeleton: the top line (lead, corner) and the body
-export const posterCardParts = (row: HTMLElement) => {
-  const parts = posterParts(row);
-  parts.corner.querySelector(".plabel")?.remove();
-  return parts;
-};
 
 // the status text: the card's, else the kind's, else the matching rule's label
 export const statusText = (
@@ -59,8 +52,7 @@ export const updateBackdrop = (
 ): HTMLElement | null => {
   let back = body.querySelector<HTMLElement>(":scope > .pback");
   if (!back) {
-    back = document.createElement("div");
-    back.className = "pback";
+    back = div("pback");
     body.prepend(back);
   }
   back.hidden = !url && !part;

@@ -57,18 +57,16 @@ const ru: Translation = {
   "kind.climate.heating": "Нагрев",
   "kind.climate.cooling": "Охлаждение",
   "kind.climate.idle": "Простой",
-  "kind.climate.off": "Выключено",
   "kind.climate.drying": "Осушение",
   "kind.climate.fan": "Вентиляция",
   "kind.person.since": "уже {t}",
   "kind.grid.importing": "Потребление",
   "kind.grid.exporting": "Отдача",
+  "kind.solar.today": "{v} сегодня",
   "kind.battery.charging": "Заряжается",
   "kind.battery.discharging": "Разряжается",
-  "kind.car.charging": "Заряжается",
   "kind.car.plugged": "Подключён",
   "kind.appliance.running": "Работает",
-  "kind.appliance.off": "Выключено",
   "kind.appliance.this_run": "{v} за цикл",
   "kind.appliance.last_hours": "{v} за последние {h} ч",
   "control.hold_to": "Удерживайте, чтобы {action}",
@@ -235,12 +233,6 @@ const ru: Translation = {
 
   "editor.default": "По умолчанию: {value}",
 
-  "editor.sun.layout": "Компоновка",
-
-  "editor.sun.layout.card": "Карточка",
-
-  "editor.sun.layout.poster": "Постер",
-
   "editor.sun.title": "Заголовок",
   "editor.sun.icon": "Значок",
   "editor.sun.show_dawn_dusk": "Показывать рассвет, солнечный полдень и сумерки",
@@ -289,7 +281,6 @@ const ru: Translation = {
   "editor.multi_trend.layout.auto": "Авто (одна единица: наложение, иначе дорожки)",
   "editor.multi_trend.layout.overlay": "Наложение (одна шкала)",
   "editor.multi_trend.layout.lanes": "Дорожки (своя шкала для каждого объекта)",
-  "editor.multi_trend.layout.poster": "Постер",
 };
 
 export default ru;

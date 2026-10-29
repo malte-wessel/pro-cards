@@ -1,6 +1,5 @@
 /*
- * weather-card-pro – one weather entity as a tile, a poster, or as sections composed like the
- * sections card.
+ * weather-card-pro – one weather entity as a tile, or as sections composed like the sections card.
  *
  *   type: custom:weather-card-pro
  *   entity: weather.home                   # required
@@ -9,7 +8,6 @@
  *   name / secondary / color               # of the lead (tile and hero); templates allowed
  *   rules:                                 # on the condition (state: rainy), colour / icon / label / tint_card
  *   temperature_rules:                     # on the temperature (below / above), colour + label of the value
- *   layout: poster                         # the entity poster's shape: condition, big temperature, the next hours
  *   sections:                              # none → a tile
  *     - { type: hero }                                     # condition, big temperature, high / low
  *     - { type: row, entities: [humidity, wind_speed, { entity: sensor.uv_index, visual: ring }] }
@@ -35,7 +33,7 @@ import {
   wantedForecasts,
   type WeatherConfig,
 } from "./weather/config.ts";
-import { CARD_TYPE, DEFAULTS } from "./weather/constants.ts";
+import { CARD_TYPE } from "./weather/constants.ts";
 import { ForecastFeed } from "./shared/weather/feed.ts";
 import {
   dailyTypeOf,
@@ -47,7 +45,7 @@ import {
   type Day,
 } from "./shared/weather/forecast.ts";
 import { showTrendHover, trendTimeAt } from "./shared/trend/plot.ts";
-import { condColor, fillCurrent, fillPoster } from "./weather/render/current.ts";
+import { condColor, fillCurrent } from "./weather/render/current.ts";
 import { buildForecast, drawForecast } from "./weather/render/forecast.ts";
 import { sectionShell } from "./weather/render/section.ts";
 import { buildTrend, drawTrendSection, type ForecastTrendEl } from "./weather/render/trend.ts";
@@ -95,9 +93,6 @@ export class WeatherCard extends EntityCardBase {
     return STYLE_WEATHER_CARD;
   }
   getGridOptions(): GridOptions {
-    // a poster has a fixed height, its content anchored to the bottom, as the entity card's
-    if (this._config?.layout === "poster")
-      return { columns: 6, rows: 3, min_columns: 3, min_rows: 2 };
     // a tile sizes to its content (one row, two with a header), so it stretches with its grid row
     if (this._config?.layout === "tile")
       return { columns: 6, rows: "auto", min_columns: 3, min_rows: this._config.hasHeader ? 2 : 1 };
@@ -107,7 +102,6 @@ export class WeatherCard extends EntityCardBase {
     const cfg = this._config;
     if (!cfg) return 2;
     if (cfg.layout === "tile") return this._headerRows() + 1;
-    if (cfg.layout === "poster") return this._headerRows() + 3;
     let rows = this._headerRows();
     const vis = this._vis as WeatherVis | undefined;
     for (const [i, s] of cfg.sections.entries()) {
@@ -144,7 +138,7 @@ export class WeatherCard extends EntityCardBase {
   }
   _bodyShown(vis: VisState) {
     const cfg = this._config as WeatherConfig;
-    return cfg.layout !== "sections" || (vis as WeatherVis).sections.some(Boolean);
+    return cfg.layout === "tile" || (vis as WeatherVis).sections.some(Boolean);
   }
 
   // ----- lifecycle: the forecast subscriptions follow config, hass and connection -----
@@ -209,10 +203,6 @@ export class WeatherCard extends EntityCardBase {
       body.appendChild(this._row(cfg.condIdx, "wtile"));
       return;
     }
-    if (cfg.layout === "poster") {
-      body.appendChild(this._poster(cfg.condIdx, []));
-      return;
-    }
     // only the shown sections, a divider only between them
     const vis = this._vis as WeatherVis;
     let first = true;
@@ -248,24 +238,9 @@ export class WeatherCard extends EntityCardBase {
       body.appendChild(el);
     });
   }
-  // the next hours of the hourly forecast's temperature, for the poster's curve
-  _hourSeries(ctx: RenderCtx) {
-    const st = this._hass?.states[(this._config as WeatherConfig).entity];
-    const hourly = supportsForecast(st, "hourly") ? this._feed.forecast.hourly : null;
-    return hoursOf(hourly, ctx.now, DEFAULTS.posterHours).flatMap((h) =>
-      h.hi === null ? [] : [{ t: h.t, v: h.hi, s: String(h.hi) }],
-    );
-  }
   _fill(ctx: RenderCtx, row: HTMLElement, ent: EntityItem, idx: number, m: EntityModel) {
     const cfg = this._config as WeatherConfig;
     const c = row.classList;
-    if (c.contains("poster")) {
-      const today = this._days(1)?.find((d) => isTodayEntry(d.t, ctx.now)) ?? null;
-      const temp = this._modelAt(ctx, cfg.tempIdx);
-      const cm = { cond: m, temp, today, iconSize: cfg.iconSize, icons: cfg.icons };
-      fillPoster(ctx, row, cfg, cm, this._hourSeries(ctx));
-      return;
-    }
     if (c.contains("wtile") || c.contains("whero")) {
       // the hero shows today's high / low; the tile does not read the forecast
       const days = c.contains("whero") ? this._days(1) : null;
@@ -281,29 +256,16 @@ export class WeatherCard extends EntityCardBase {
     }
     super._fill(ctx, row, ent, idx, m);
   }
-  // the tile and the hero read the temperature item and the forecast too: filled every time. The
-  // poster keeps its curve: it is filled again when the condition, the temperature, the forecast
-  // or the hour changes
+  // the tile and the hero read the temperature item and the forecast too: filled every time
   _rowInputs(ctx: RenderCtx, row: HTMLElement, idx: number, m: EntityModel) {
     const c = row.classList;
-    if (c.contains("wtile") || c.contains("whero")) return null;
-    const own = super._rowInputs(ctx, row, idx, m);
-    if (!c.contains("poster") || !own) return own;
-    const cfg = this._config as WeatherConfig;
-    return [
-      ...own,
-      this._modelAt(ctx, cfg.tempIdx),
-      this._feed.forecast.hourly,
-      this._feed.forecast.daily,
-      this._feed.forecast.twice_daily,
-      Math.floor(ctx.now / 3600e3),
-    ];
+    return c.contains("wtile") || c.contains("whero") ? null : super._rowInputs(ctx, row, idx, m);
   }
-  // the tile, the hero and the poster take the condition's colour (primary unless a rule or `color`
-  // says otherwise), not Home Assistant's state colour
+  // the tile and the hero take the condition's colour (primary unless a rule or `color` says
+  // otherwise), not Home Assistant's state colour
   _rowColor(row: HTMLElement, ent: EntityItem, m: EntityModel) {
     const c = row.classList;
-    return c.contains("wtile") || c.contains("whero") || c.contains("poster")
+    return c.contains("wtile") || c.contains("whero")
       ? cssColor(condColor(ent, m), "var(--primary-color)")
       : super._rowColor(row, ent, m);
   }
@@ -314,7 +276,7 @@ export class WeatherCard extends EntityCardBase {
     // the temperature items of the tile / the hero sections may tint too
     const cfg = this._config as WeatherConfig;
     const idxs =
-      cfg.layout !== "sections"
+      cfg.layout === "tile"
         ? [cfg.tempIdx]
         : cfg.sections.flatMap((s, i) =>
             s.kind === "hero" && (this._vis as WeatherVis).sections[i] ? [s.tempIdx] : [],

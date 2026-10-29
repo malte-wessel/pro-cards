@@ -111,36 +111,22 @@ describe("setRate", () => {
   });
 });
 
-describe("the poster's row", () => {
-  it("is a layout of the flow cards, with a 40 px lead", () => {
-    expect(LAYOUTS).toEqual(["tile", "hero", "poster"]);
-    expect(leadSize("poster")).toBe(40);
-    // the tile's and the flow tile's are the same, the hero's the largest
+describe("the flow row", () => {
+  it("is a tile or a hero, the hero's lead the largest", () => {
+    expect(LAYOUTS).toEqual(["tile", "hero"]);
+    // the tile's and the flow tile's are the same
     expect(leadSize("tile")).toBe(BAND.tileLead);
     expect(leadSize("flowtile")).toBe(BAND.tileLead);
     expect(leadSize("hero")).toBe(BAND.heroLead);
   });
-  it("is the entity poster's skeleton: the lead and the pill on top, the texts below", () => {
-    const row = document.createElement("div");
-    const lead = document.createElement("div");
-    lead.className = "lead";
-    expect(rowBuilt(row)).toBe(false);
-    buildRow(row, "poster", lead);
-    expect(rowBuilt(row)).toBe(true);
-    expect([...row.children].map((c) => c.className)).toEqual(["ptop", "pbody"]);
-    expect(row.querySelector(":scope > .ptop > .plead > .lead")).toBe(lead);
-    const pill = row.querySelector<HTMLElement>(":scope > .ptop > .corner > .plabel")!;
-    expect(pill.classList.contains("pill")).toBe(true);
-    const body = row.querySelector(":scope > .pbody")!;
-    expect([...body.children].map((c) => c.className)).toEqual(["pname", "pvalue", "secondary"]);
-    expect(body.querySelector(":scope > .pvalue > .big > b")).not.toBeNull();
-    // no tile parts
-    expect(row.querySelector(".top, .primary, .end")).toBeNull();
-  });
-  it("counts a tile's or a hero's skeleton as built too, not a nested one", () => {
+  it("counts a tile's or a hero's skeleton as built, not a nested one", () => {
     const tile = document.createElement("div");
+    expect(rowBuilt(tile)).toBe(false);
     buildRow(tile, "tile", document.createElement("div"));
     expect(rowBuilt(tile)).toBe(true);
+    const hero = document.createElement("div");
+    buildRow(hero, "hero", document.createElement("div"));
+    expect(rowBuilt(hero)).toBe(true);
     const outer = document.createElement("div");
     outer.appendChild(tile);
     expect(rowBuilt(outer)).toBe(false);

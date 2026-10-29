@@ -17,7 +17,6 @@ import {
   ICON_STYLES,
   ITEM_DEFAULTS,
   ITEM_LAYOUTS,
-  POSTER_BADGE,
   VISUALS,
   type Align,
   type BadgeFormat,
@@ -205,16 +204,13 @@ export interface EntityItem extends ActionDefaults {
   staleMin: number | null;
   trendHours: number;
   // set by cards that build items themselves: the unit a card's own rules are written in (the
-  // value is converted to it before they match; a user's rules read the sensor's own unit), and
-  // the entities a `count` counts without a group to read them from (an area's lights), with the
-  // states that count (null: on, as a group's members)
+  // value is converted to it before they match; a user's rules read the sensor's own unit)
   ruleUnit?: RuleUnit;
-  countOf?: { ids: string[]; states: string[] | null };
 }
 // the units a card's own rules can be written in
 export type RuleUnit = "km/h" | "mm/h";
 export interface Group {
-  layout: GroupLayout | "tile";
+  layout: GroupLayout | "tile" | "poster";
   idxs: number[];
   // a poster's badges: drawn in its corner, hidden in place (not part of the body's structure)
   badgeIdxs?: number[];
@@ -231,7 +227,7 @@ export interface NormalizeCtx extends ActionDefaults {
 }
 export interface EntityCardConfig extends ActionDefaults {
   type: string;
-  layout: GroupLayout | "tile" | "sections" | "heading";
+  layout: GroupLayout | "tile" | "poster" | "sections" | "heading";
   title: string | null;
   // the action of the title and its icon (null: they are plain text)
   titleTap: ActionConfig | null;
@@ -489,11 +485,7 @@ export const normalizeGroup = (
   const isItem = ITEM_LAYOUTS.has(layout);
   // `hover` cascades as the actions do: card → group → entity
   const gctx = typeof g.hover === "boolean" ? { ...ctx, hover: g.hover } : ctx;
-  const poster = layout === "poster";
   const entities = (list as (RawEntityInput | null | undefined)[]).map((e, i) => {
-    // a poster: the first entity is the poster, the rest are the pills in its corner
-    if (poster && i > 0)
-      return normalizeBadge(e, gctx, `${entLabel}[${i}]`, POSTER_BADGE, "a poster's corner");
     const ent = normalizeEntity(
       e,
       gctx,
@@ -519,8 +511,7 @@ export const normalizeGroup = (
   return {
     group: {
       layout,
-      idxs: poster ? [offset] : entities.map((_, i) => offset + i),
-      ...(poster ? { badgeIdxs: entities.slice(1).map((_, i) => offset + 1 + i) } : {}),
+      idxs: entities.map((_, i) => offset + i),
       align: oneOf(ALIGNS, align) ? align : base.align,
       columns: clampColumns(g.columns, ctx.columns ?? DEFAULTS.columns),
       divider: !!g.divider,
@@ -539,11 +530,10 @@ export const normalizeHeaderEntities = (
   ctx: NormalizeCtx,
   label = "header_entities",
   defaults: { style: BadgeStyle; size: BadgeSize } = { style: "plain", size: "s" },
-  where = "the header",
 ): EntityItem[] => {
   if (!Array.isArray(raw)) return [];
   return (raw as (RawEntityInput | null | undefined)[]).map((e, i) =>
-    normalizeBadge(e, ctx, `${label}[${i}]`, defaults, where),
+    normalizeBadge(e, ctx, `${label}[${i}]`, defaults),
   );
 };
 // one badge: a header entity, or a pill in a poster's corner (`where` names the place in warnings)
