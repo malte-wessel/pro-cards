@@ -348,6 +348,59 @@ export class PosterCard extends EntityCardBase {
     }
     // what follows the clock or the size (a curve) checks itself whether it changed
     cfg.kind.live?.(kc, row);
+    this._fitHeight(card, row);
+  }
+
+  // the value's size for the room the card has: a poster whose content is taller than the card
+  // (controls on a line of their own beside a narrow value) draws its value smaller, down to 60 % of
+  // its styled size, so the top keeps its room. The size found holds until the card's own size
+  // changes: a new value may make it smaller, never larger, so nothing jumps back and forth
+  _valueFit: { size: string; px: number | null; base: number | null } | null = null;
+  _fitHeight(card: HTMLElement, row: HTMLElement) {
+    const big = row.querySelector<HTMLElement>(":scope > .pbody > .pvalue > .big");
+    const top = row.querySelector<HTMLElement>(":scope > .ptop"),
+      body = row.querySelector<HTMLElement>(":scope > .pbody");
+    const b = big?.querySelector("b");
+    if (!big || !b || !top || !body) return;
+    const size = `${card.clientWidth}x${card.clientHeight}`;
+    if (this._valueFit?.size !== size) {
+      big.classList.remove("hfit");
+      this._valueFit = { size, px: null, base: null };
+    }
+    const fit = this._valueFit;
+    const apply = (px: number) => {
+      big.style.setProperty("--hfit", `${px}px`);
+      big.classList.add("hfit");
+    };
+    if (fit.px !== null) apply(fit.px);
+    // what is missing: content taller than the row packs to its bottom and pushes the top line out
+    // above it; in a body that shrinks with its picture, a part reaches past the body's bottom
+    // (counting its margins: a picture reaches to the card's edge on purpose)
+    const short = () => {
+      const bottom = body.getBoundingClientRect().bottom;
+      let past = 0;
+      for (const el of body.children) {
+        const r = el.getBoundingClientRect();
+        if (r.height === 0) continue;
+        past = Math.max(past, r.bottom + parseFloat(getComputedStyle(el).marginBottom) - bottom);
+      }
+      return Math.max(row.getBoundingClientRect().top - top.getBoundingClientRect().top, past);
+    };
+    if (short() <= 0.5) return;
+    // the styled size, in a number's size (a word is drawn at 0.7 of it), found once per card size
+    if (fit.base === null) {
+      big.classList.remove("hfit");
+      const drawn = parseFloat(getComputedStyle(b).fontSize);
+      fit.base = big.classList.contains("word") ? drawn / 0.7 : drawn;
+    }
+    const min = Math.round(fit.base * 0.6);
+    let px = fit.px ?? fit.base;
+    apply(px);
+    while (short() > 0.5 && px > min) {
+      px = Math.max(min, px - 2);
+      apply(px);
+    }
+    fit.px = px;
   }
   _hideHover() {
     super._hideHover();
