@@ -1,12 +1,9 @@
 // The numbers of the power flow (pure): every node's watts from its entity models, the allocation
 // of the flows between the sources, the home and the consumers (the order Home Assistant's energy
 // dashboard uses: solar covers the home first, then the battery, then the grid; surplus solar
-// charges the battery before it is exported; a battery fed by its own panels, `charge_from:
-// solar`, is charged before solar covers the home), the summary state and the W / kW formatting.
-import { unitOf, type EntityModel } from "../shared/entity/model.ts";
-import { fmtNumber } from "../shared/format.ts";
-import type { HomeAssistant } from "../shared/ha.ts";
-import type { EntityItem } from "../shared/entity/config.ts";
+// charges the battery before it is exported; a battery fed by its own panels, `charge_from: solar`,
+// is charged before solar covers the home), and the summary state (W / kW: src/shared/power.ts).
+import type { EntityModel } from "../shared/entity/model.ts";
 import { twoValued } from "../shared/flow-tree/config.ts";
 import { COLORS } from "../shared/flow-tree/constants.ts";
 import { isActive } from "../shared/flow-tree/flow.ts";
@@ -21,17 +18,7 @@ import {
   type SourceNow,
 } from "../shared/flow-tree/model.ts";
 import type { PowerFlowConfig } from "./config.ts";
-import { DEFAULT_UNITS, type Units } from "./constants.ts";
-
-const UNIT_TO_W: Record<string, number> = { W: 1, kW: 1000, MW: 1e6, mW: 1e-3 };
-// a power unit the card converts to W (any other is shown as written: treeUnit)
-export const isPowerUnit = (u: string) => u in UNIT_TO_W;
-
-// the model's value in watts, null when unavailable
-export const wattsOf = (ent: EntityItem, m: EntityModel | undefined): number | null => {
-  if (!m || m.model.num === null) return null;
-  return m.model.num * (UNIT_TO_W[unitOf(ent, m.st)] ?? 1);
-};
+import { wattsOf } from "../shared/power.ts";
 
 export type PowerNow = FlowNow;
 
@@ -393,19 +380,4 @@ export const summaryState = (cfg: PowerFlowConfig, now: PowerNow, f: Flows): Sum
     return { key: "power.state.battery", color: COLORS.battOut, w: null, tint: false };
   if (on(f.gH)) return { key: "power.state.importing", color: COLORS.gridIn, w: f.gH, tint: false };
   return { key: "power.state.balanced", color: COLORS.balanced, w: null, tint: false };
-};
-
-// "850 W" or "1.23 kW" (magnitudes; the direction is told by colour and motion); an entity's own
-// decimals win over the card's
-export const fmtPower = (
-  hass: HomeAssistant | undefined,
-  w: number | null,
-  units: Units = DEFAULT_UNITS,
-  dec: number | null = null,
-): string => {
-  if (w === null || !Number.isFinite(w)) return "–";
-  const v = Math.abs(w);
-  if (units.kwAbove <= 0 || v >= units.kwAbove)
-    return `${fmtNumber(hass, v / 1000, dec ?? units.decKw)} kW`;
-  return `${fmtNumber(hass, v, dec ?? units.decW)} W`;
 };

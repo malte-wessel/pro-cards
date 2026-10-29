@@ -1,7 +1,7 @@
 // Weather conditions (pure): Home Assistant's condition states, their icons and names.
-import type { HomeAssistant } from "../shared/ha.ts";
-import { solarElevation, SUNRISE_ELEV } from "../shared/solar.ts";
-import { t, type StringKey } from "../shared/i18n.ts";
+import type { HomeAssistant } from "../ha.ts";
+import { solarElevation, SUNRISE_ELEV } from "../solar.ts";
+import { t, type StringKey } from "../i18n.ts";
 
 export const CONDITIONS = [
   "clear-night",

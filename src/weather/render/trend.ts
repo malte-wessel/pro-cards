@@ -19,9 +19,15 @@ import {
   type TrendSeries,
 } from "../../shared/trend/plot.ts";
 import type { TrendEntry, WeatherConfig, WeatherSection } from "../config.ts";
-import { conditionText } from "../conditions.ts";
+import { conditionText } from "../../shared/weather/conditions.ts";
 import { QUANTITY_COLOR, type Quantity } from "../constants.ts";
-import { forecastPoints, hourlyWindow, hoursIn, timeOf, type Day } from "../forecast.ts";
+import {
+  forecastPoints,
+  hourlyWindow,
+  hoursIn,
+  timeOf,
+  type Day,
+} from "../../shared/weather/forecast.ts";
 import { emptyEl, sectionShell, setTitle } from "./section.ts";
 
 export type TrendSection = Extract<WeatherSection, { kind: "trend" }>;

@@ -1,8 +1,9 @@
-// The lead of the wind card: the direction arrow, or a small animation of the flow style inside
-// the soft circle. Built once; the row's CSS variables (--rot, --arrow, --ldur) drive it.
-import { animatedLeadShell, el, iconLead } from "../../shared/flow/dom.ts";
-import type { IconStyle } from "../../shared/entity/constants.ts";
-import type { FlowStyle } from "../constants.ts";
+// The wind lead (the wind card, the poster): the direction arrow, or a small animation of the flow
+// style inside the soft circle. Built once; the row's CSS variables (--rot, --arrow, --ldur) drive
+// it.
+import { animatedLeadShell, el, iconLead } from "../flow/dom.ts";
+import type { IconStyle } from "../entity/constants.ts";
+import type { FlowStyle } from "./constants.ts";
 
 export const arrowIcon = () => {
   const icon = document.createElement("ha-icon");

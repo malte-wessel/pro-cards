@@ -24,10 +24,11 @@ import type { RowKind } from "./shared/flow/dom.ts";
 import type { HomeAssistant } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
 import { normalizeRainCardConfig, type RainConfig } from "./rain/config.ts";
-import { CARD_TYPE, CHIP_ICON } from "./rain/constants.ts";
+import { CARD_TYPE } from "./rain/constants.ts";
+import { CHIP_ICON } from "./shared/rain/constants.ts";
 import { rainNow, updateCurrent, type CurrentModels, type RainNow } from "./rain/render/current.ts";
-import { fieldEl, updateBand } from "./rain/render/flow.ts";
-import { rainIcon } from "./rain/render/lead.ts";
+import { fieldEl, updateBand } from "./shared/rain/field.ts";
+import { rainIcon } from "./shared/rain/lead.ts";
 import { STYLE_RAIN_CARD } from "./rain/styles.ts";
 
 export class RainCard extends FlowCardBase {

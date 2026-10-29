@@ -1,8 +1,8 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
 import { WeatherCard } from "../../src/weather-card.ts";
 import { normalizeWeatherCardConfig, wantedForecasts } from "../../src/weather/config.ts";
-import { PICTURED, pictureSvg } from "../../src/weather/pictures.ts";
-import { conditionIcon, conditionText, isNight } from "../../src/weather/conditions.ts";
+import { PICTURED, pictureSvg } from "../../src/shared/weather/pictures.ts";
+import { conditionIcon, conditionText, isNight } from "../../src/shared/weather/conditions.ts";
 import {
   dailyRange,
   dailyTypeOf,
@@ -12,7 +12,7 @@ import {
   hoursIn,
   hoursOf,
   supportsForecast,
-} from "../../src/weather/forecast.ts";
+} from "../../src/shared/weather/forecast.ts";
 import type { ForecastEntry, HassEntity, HomeAssistant } from "../../src/shared/ha.ts";
 
 const W = "weather.home";
@@ -515,7 +515,7 @@ describe("forecast", () => {
 });
 
 describe("weather forecast night icons", async () => {
-  const { nightAt, rowNight } = await import("../../src/weather/conditions.ts");
+  const { nightAt, rowNight } = await import("../../src/shared/weather/conditions.ts");
   const LAT = 51.2277,
     LON = 6.7735; // Düsseldorf
   const at = (iso: string) => new Date(iso).getTime();
@@ -544,7 +544,7 @@ describe("weather forecast night icons", async () => {
 });
 
 describe("the date of a forecast day", async () => {
-  const { entryDate, isTodayEntry } = await import("../../src/weather/forecast.ts");
+  const { entryDate, isTodayEntry } = await import("../../src/shared/weather/forecast.ts");
   it("reads a stamp at UTC midnight as that UTC date, any other as its local date", () => {
     // the unit tests run in Berlin: UTC midnight is 02:00 there, the same date either way;
     // the e2e tests check New York, where it is the evening before

@@ -27,18 +27,14 @@ import { cssColor } from "./shared/color.ts";
 import { fmtRelative, langOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { qs } from "./shared/util.ts";
-import type {
-  PositionedDay,
-  SunPathCardConfig,
-  SunPathConfig,
-  SunPathHost,
-} from "./sun-path/config.ts";
-import { DEFAULTS, defaultLabel, type SunEvent } from "./sun-path/constants.ts";
+import type { SunPathCardConfig, SunPathConfig, SunPathHost } from "./sun-path/config.ts";
+import { DEFAULTS, PLOT_H } from "./sun-path/constants.ts";
 import { SunPathCardEditor } from "./sun-path/editor.ts";
 import { hideHover, leaveHides, outsideHides } from "./shared/hover.ts";
 import { t } from "./shared/i18n.ts";
-import { drawCurve, drawEvents, fmtEvent, showHover, timeAt } from "./sun-path/plot.ts";
-import { nextEvent } from "./sun-path/poster.ts";
+import { drawEvents } from "./sun-path/plot.ts";
+import { drawCurve, showHover, timeAt, type PositionedDay } from "./shared/sun/curve.ts";
+import { defaultLabel, fmtEvent, nextEvent, type SunEvent } from "./shared/sun/events.ts";
 import {
   SUNRISE_ELEV,
   solarDay,
@@ -77,7 +73,7 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
     const plot = qs(this._root, ".plot");
     const rect = plot.getBoundingClientRect();
     this._hoverT = timeAt(this._day, ev.clientX - rect.left, this._plotW || rect.width);
-    if (!showHover(this, this._hoverT)) this._hideHover();
+    if (!showHover(this, plot, this._hoverT)) this._hideHover();
   };
   _onLeave = leaveHides(() => this._hideHover());
   _onDocPointer = outsideHides(this, () => this._hideHover());
@@ -275,10 +271,18 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
       qs(set, ".val").textContent = fmtEvent(this._hass, day.sunset);
     }
 
-    const { xOf, W } = drawCurve(this, day, now);
+    const plot = qs(this._root, ".plot"),
+      cfg = this._config;
+    const look = {
+      day: cssColor(cfg.day_color, "var(--light-blue-color)"),
+      night: cssColor(cfg.night_color, "var(--indigo-color)"),
+      sun: cssColor(cfg.sun_color, "var(--amber-color)"),
+      tooltip: cfg.show_tooltip,
+    };
+    const { xOf, W } = drawCurve(this, plot, day, now, look, PLOT_H);
     if (!poster) drawEvents(this, day, xOf, W);
     // the tooltip survives the per-minute re-render
-    if (this._hoverT !== null && !showHover(this, this._hoverT)) this._hideHover();
+    if (this._hoverT !== null && !showHover(this, plot, this._hoverT)) this._hideHover();
   }
 
   _hideHover() {

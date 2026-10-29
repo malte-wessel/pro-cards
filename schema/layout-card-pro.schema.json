@@ -399,6 +399,7 @@
             "properties": {
               "type": {
                 "enum": [
+                  "custom:poster-card-pro",
                   "custom:entity-card-pro",
                   "custom:entity-group-card-pro",
                   "custom:entity-sections-card-pro",
@@ -417,6 +418,19 @@
                 ]
               }
             }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:poster-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "poster-card-pro.schema.json"
           }
         },
         {

@@ -38,6 +38,40 @@ export interface HomeAssistant {
   panelUrl?: string;
   // the theme's mode (cards that draw pictures tune their colours for a dark one)
   themes?: { darkMode?: boolean };
+  // the registries the frontend keeps (narrowed to what the cards read): which device and area an
+  // entity belongs to, the devices' areas, the areas themselves (the poster's kinds find related
+  // entities there)
+  entities?: Record<string, EntityRegistryEntry>;
+  devices?: Record<string, DeviceRegistryEntry>;
+  areas?: Record<string, AreaRegistryEntry>;
+}
+
+// an entity's row in `hass.entities`: `translation_key` is the integration's own name for it, the
+// same in every language
+export interface EntityRegistryEntry {
+  entity_id: string;
+  device_id?: string | null;
+  area_id?: string | null;
+  hidden?: boolean;
+  entity_category?: string | null;
+  translation_key?: string | null;
+  platform?: string;
+}
+export interface DeviceRegistryEntry {
+  id: string;
+  area_id?: string | null;
+  name?: string | null;
+  name_by_user?: string | null;
+}
+// an area: its picture, and the sensors chosen for its temperature and humidity in its settings
+export interface AreaRegistryEntry {
+  area_id: string;
+  name: string;
+  icon?: string | null;
+  picture?: string | null;
+  floor_id?: string | null;
+  temperature_entity_id?: string | null;
+  humidity_entity_id?: string | null;
 }
 
 // the compact rows of `history/history_during_period` with minimal_response + no_attributes

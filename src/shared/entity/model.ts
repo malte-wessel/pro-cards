@@ -19,6 +19,8 @@ import type { Point } from "../history.ts";
 import type { TextCache } from "../typography.ts";
 import { t } from "../i18n.ts";
 import { decimalsOf, isTemplate } from "../util.ts";
+import { toKmh } from "../flow/maths.ts";
+import { toMmH } from "../rain/rain.ts";
 import type { Visibility } from "../visibility.ts";
 
 // the card's bound pointer handlers for the history plots
@@ -162,12 +164,24 @@ export const membersOn = (ctx: FormatCtx, st: HassEntity | undefined) =>
     const m = ctx.hass?.states[id];
     return !!m && stateActive(m) && !OFF_STATES.has(m.state) && m.state !== "unknown";
   }).length;
+// the entities a count reads: those the card gave it, else its group's members
+export const countIds = (ent: EntityItem, st: HassEntity | undefined) =>
+  ent.countOf?.ids ?? membersOf(st);
 
-// visual: count, how many of the group's members are on. Its value is "on" while any is (rules
-// and the state colour read it so) and the count is its number
+// visual: count, how many of the group's members are on (or, with the entities the card gave it,
+// how many of them are on or in one of its states). Its value is "on" while any is (rules and the
+// state colour read it so) and the count is its number
 const countModel = (ctx: FormatCtx, ent: EntityItem, st: HassEntity | undefined) => {
-  const n = membersOn(ctx, st);
-  const avail = !!st && st.state !== "unavailable";
+  const of = ent.countOf;
+  const n = of
+    ? of.ids.filter((id) => {
+        const m = ctx.hass?.states[id];
+        if (!m) return false;
+        if (of.states) return of.states.includes(m.state);
+        return stateActive(m) && !OFF_STATES.has(m.state) && m.state !== "unknown";
+      }).length
+    : membersOn(ctx, st);
+  const avail = !!of || (!!st && st.state !== "unavailable");
   const model: ValueModel = avail
     ? { raw: n ? "on" : "off", num: n, avail }
     : { raw: st?.state ?? null, num: null, avail };
@@ -175,6 +189,18 @@ const countModel = (ctx: FormatCtx, ent: EntityItem, st: HassEntity | undefined)
     ? { text: `${ent.prefix}${fmtNum(ctx.hass, n, 0)}${ent.suffix}`, num: String(n), unit: "" }
     : { text: "–", num: "–", unit: "" };
   return { model, fmt };
+};
+
+// the value a card's own rules read: converted to their unit (km/h, mm/h)
+export const ruleModelOf = (
+  ent: EntityItem,
+  model: ValueModel,
+  st: HassEntity | undefined,
+): ValueModel => {
+  if (!ent.ruleUnit || model.num === null) return model;
+  const unit = unitOf(ent, st);
+  const num = ent.ruleUnit === "km/h" ? toKmh(model.num, unit) : toMmH(model.num, unit);
+  return { ...model, num };
 };
 
 export const modelOf = (ctx: FormatCtx, ent: EntityItem): EntityModel => {
@@ -186,7 +212,7 @@ export const modelOf = (ctx: FormatCtx, ent: EntityItem): EntityModel => {
     model.avail = false;
     model.missing = true;
   }
-  const look = resolveLook(ent, model, st, tplGet, ctx.hass);
+  const look = resolveLook(ent, model, st, tplGet, ctx.hass, ruleModelOf(ent, model, st));
   if (model.missing) look.label = t(ctx.hass, "common.not_found", { entity: ent.entity ?? "" });
   return {
     st,

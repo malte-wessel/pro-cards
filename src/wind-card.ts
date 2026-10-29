@@ -24,8 +24,8 @@ import { t } from "./shared/i18n.ts";
 import { normalizeWindCardConfig, type WindConfig } from "./wind/config.ts";
 import { CARD_TYPE } from "./wind/constants.ts";
 import { updateCurrent, windNow, type CurrentModels, type WindNow } from "./wind/render/current.ts";
-import { fieldEl, updateBand } from "./wind/render/flow.ts";
-import { arrowIcon } from "./wind/render/lead.ts";
+import { fieldEl, updateBand } from "./shared/wind/field.ts";
+import { arrowIcon } from "./shared/wind/lead.ts";
 import { STYLE_WIND_CARD } from "./wind/styles.ts";
 
 export class WindCard extends FlowCardBase {

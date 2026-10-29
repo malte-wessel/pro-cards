@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { seriesColor } from "../../src/multi-trend/color.ts";
+import { seriesColor } from "../../src/shared/trend/color.ts";
 import type { TrendEntity } from "../../src/multi-trend/config.ts";
 import { normalizeRules } from "../../src/shared/entity/config.ts";
 import type { HassEntity } from "../../src/shared/ha.ts";

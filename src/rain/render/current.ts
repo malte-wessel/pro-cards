@@ -2,8 +2,7 @@
 // band behind icon, name, "label · total today" and the big rate), the hero lead (big rate and
 // "label · total today") and the poster (label pill, big rate, "total today"). Built once per row; every render updates texts and CSS variables so
 // the running animations keep their phase.
-import type { EntityItem } from "../../shared/entity/config.ts";
-import { tplOf, unitOf, type EntityModel, type RenderCtx } from "../../shared/entity/model.ts";
+import { tplOf, type EntityModel, type RenderCtx } from "../../shared/entity/model.ts";
 import {
   buildRow,
   builtLead,
@@ -15,11 +14,10 @@ import {
   type RowKind,
   type TextPart,
 } from "../../shared/flow/dom.ts";
-import { parseBearing, toKmh } from "../../shared/flow/maths.ts";
-import { t } from "../../shared/i18n.ts";
 import type { RainConfig } from "../config.ts";
-import { fallRate, isWet, leadFall, levelOf, slantOf, tanOf, toMm, toMmH } from "../rain.ts";
-import { animatedLead, rainLead } from "./lead.ts";
+import { fallRate, isWet, leadFall, levelOf, tanOf } from "../../shared/rain/rain.ts";
+import { rainNow as sharedRainNow, type RainNow } from "../../shared/rain/now.ts";
+import { animatedLead, rainLead } from "../../shared/rain/lead.ts";
 
 export interface CurrentModels {
   rate: EntityModel;
@@ -27,33 +25,17 @@ export interface CurrentModels {
   wind: EntityModel | null;
   dir: EntityModel | null;
 }
-// the rate in mm/h and today's total in mm, whatever unit the sensors report (the texts keep it)
-export interface RainNow {
-  rate: number;
-  today: number | null;
-  slant: number;
-  chip: string | null;
-}
-
-const numOf = (m: EntityModel | null) => (m && m.model.avail ? m.model.num : null);
 
 export const rainNow = (ctx: RenderCtx, cfg: RainConfig, cm: CurrentModels): RainNow => {
-  const rateNum = numOf(cm.rate) ?? 0;
-  const rate = toMmH(rateNum, unitOf(cfg.entities[cfg.rateIdx], cm.rate.st));
-  const todayNum = numOf(cm.today);
-  const today =
-    todayNum === null || cfg.todayIdx === null
-      ? null
-      : toMm(todayNum, unitOf(cfg.entities[cfg.todayIdx], cm.today?.st));
-  const windEnt: EntityItem | undefined =
-    cfg.windIdx === null ? undefined : cfg.entities[cfg.windIdx];
-  const windNum = numOf(cm.wind);
-  const windKmh = windEnt && windNum !== null ? toKmh(windNum, unitOf(windEnt, cm.wind?.st)) : null;
-  const bearing = cm.dir && cm.dir.model.avail ? parseBearing(cm.dir.model.raw) : null;
-  const slant = slantOf(bearing, windKmh);
-  const chip =
-    cm.today && cm.today.model.avail ? t(ctx.hass, "rain.today", { v: cm.today.fmt.text }) : null;
-  return { rate, today, slant, chip };
+  const read = (i: number | null, m: EntityModel | null) =>
+    i === null || !m ? null : { ent: cfg.entities[i], m };
+  return sharedRainNow(
+    ctx,
+    { ent: cfg.entities[cfg.rateIdx], m: cm.rate },
+    read(cfg.todayIdx, cm.today),
+    read(cfg.windIdx, cm.wind),
+    read(cfg.dirIdx, cm.dir),
+  );
 };
 
 const leadOf = (cfg: RainConfig, kind: RowKind) => {
@@ -109,3 +91,5 @@ export const updateCurrent = (
     : [{ text: cm.rate.fmt.text }, ...(todayText ? [{ text: todayText }] : [])];
   fillFlowTexts(ctx, row, ent, cm.rate, kind, wide, narrow);
 };
+
+export type { RainNow };

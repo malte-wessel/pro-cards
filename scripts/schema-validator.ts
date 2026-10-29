@@ -7,6 +7,7 @@ import Ajv2020, { type ErrorObject } from "ajv/dist/2020.js";
 const dir = join(dirname(fileURLToPath(import.meta.url)), "..", "schema");
 const BASE = "https://malte-wessel.github.io/pro-cards/schema/";
 const TYPES = [
+  "poster-card-pro",
   "entity-card-pro",
   "entity-group-card-pro",
   "entity-sections-card-pro",

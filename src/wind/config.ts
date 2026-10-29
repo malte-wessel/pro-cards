@@ -21,15 +21,13 @@ import {
 } from "../shared/flow/config.ts";
 import { LAYOUTS, VISUALS } from "../shared/flow/constants.ts";
 import {
-  CARD_TYPE,
   DEFAULTS,
   DENSITIES,
   FLOW_STYLES,
-  LEADS,
   type Density,
   type FlowStyle,
-  type Lead,
-} from "./constants.ts";
+} from "../shared/wind/constants.ts";
+import { CARD_TYPE, LEADS, type Lead } from "./constants.ts";
 
 // ----- the raw config as written in YAML -----
 

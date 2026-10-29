@@ -50,7 +50,7 @@ export const HEADER_VISUALS: ReadonlySet<Visual> = new Set([
 // the visuals only a header badge draws
 export const HEADER_ONLY_VISUALS: ReadonlySet<Visual> = new Set(["trend", "count", "dot"]);
 // a header badge: its pill (or none) and its height (24 / 30 / 36 px)
-export const BADGE_STYLES = ["outline", "soft", "filled", "plain"] as const;
+export const BADGE_STYLES = ["outline", "soft", "filled", "plain", "tag"] as const;
 export type BadgeStyle = (typeof BADGE_STYLES)[number];
 export const BADGE_SIZES = ["s", "m", "l"] as const;
 export type BadgeSize = (typeof BADGE_SIZES)[number];

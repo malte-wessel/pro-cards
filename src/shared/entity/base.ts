@@ -38,8 +38,7 @@ import {
   type Pending,
   type ServiceCall,
 } from "./control.ts";
-import { membersOf } from "./look.ts";
-import { modelOf, nameOf, tplOf, type PlotHandlers, type RenderCtx } from "./model.ts";
+import { countIds, modelOf, nameOf, tplOf, type PlotHandlers, type RenderCtx } from "./model.ts";
 import { plotRows } from "./render/blocks.ts";
 import { fillByClass } from "./render/fill.ts";
 import { posterParts } from "./render/lead.ts";
@@ -216,19 +215,25 @@ export abstract class EntityCardBase extends HTMLElement {
     this._resized = true;
     this._entityIds = [...new Set(cfg.entities.flatMap(idsOf))];
     this._historyIds = [
-      ...new Set(
-        cfg.entities
+      ...new Set([
+        ...cfg.entities
           .filter((e) => e.entity && (HISTORY_VISUALS.has(e.visual) || e.visual === "trend"))
           .map((e) => e.entity as string),
-      ),
+        ...this._extraHistoryIds(cfg),
+      ]),
     ];
     this._timed = cfg.entities.some((e) => e.staleMin !== null || e.format === "relative");
-    this._countIdxs = cfg.entities.flatMap((e, i) => (e.visual === "count" && e.entity ? [i] : []));
+    this._countIdxs = cfg.entities.flatMap((e, i) =>
+      e.visual === "count" && (e.entity || e.countOf) ? [i] : [],
+    );
     this._armMinute();
     this._templates = collectTemplates(cfg);
+    for (const tpl of this._extraTemplates(cfg)) this._templates.add(tpl);
     this._visDeps = visibilityDeps(this._visibilityTrees());
     for (const tpl of this._visDeps.templates) this._templates.add(tpl);
-    this._watchIds = [...new Set([...this._entityIds, ...this._visDeps.entities])];
+    this._watchIds = [
+      ...new Set([...this._entityIds, ...this._visDeps.entities, ...this._extraWatchIds(cfg)]),
+    ];
     this._visWatch.set(this._visDeps);
     this._person = null;
     this._vis = undefined;
@@ -334,7 +339,21 @@ export abstract class EntityCardBase extends HTMLElement {
   _countMembers(hass: HomeAssistant | undefined): string[] {
     const cfg = this._config;
     if (!cfg || !hass) return [];
-    return this._countIdxs.flatMap((i) => membersOf(hass.states[cfg.entities[i].entity ?? ""]));
+    return this._countIdxs.flatMap((i) => {
+      const ent = cfg.entities[i];
+      return countIds(ent, hass.states[ent.entity ?? ""]);
+    });
+  }
+  // what a subclass reads beyond its items: entities whose history it draws, templates it renders
+  // and entities it follows (an image's camera, an area's members)
+  _extraHistoryIds(_cfg: EntityCardConfig): string[] {
+    return [];
+  }
+  _extraTemplates(_cfg: EntityCardConfig): string[] {
+    return [];
+  }
+  _extraWatchIds(_cfg: EntityCardConfig): string[] {
+    return [];
   }
   // a web font that arrives later widens the text without resizing the card: fitted values are
   // measured again (the `ready` promise after a build misses a font that starts loading later)
@@ -882,7 +901,7 @@ export abstract class EntityCardBase extends HTMLElement {
   _modelAt(ctx: RenderCtx, idx: number): EntityModel {
     const ent = (this._config as EntityCardConfig).entities[idx],
       hass = ctx.hass;
-    const members = ent.visual === "count" ? membersOf(hass?.states[ent.entity ?? ""]) : [];
+    const members = ent.visual === "count" ? countIds(ent, hass?.states[ent.entity ?? ""]) : [];
     const inputs = [
       ...this._idsByItem[idx].map((id) => hass?.states[id]),
       ...members.map((id) => hass?.states[id]),

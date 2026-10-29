@@ -25,7 +25,7 @@ import {
   waveAmp,
   wavePathD,
   wavePeriod,
-} from "../../src/rain/rain.ts";
+} from "../../src/shared/rain/rain.ts";
 
 const R = "sensor.rain_rate_roof";
 

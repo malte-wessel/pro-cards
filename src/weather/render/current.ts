@@ -8,10 +8,16 @@ import { plotEl } from "../../shared/entity/render/blocks.ts";
 import { bigEl, leadEl, secondaryEl, textEl } from "../../shared/entity/render/lead.ts";
 import type { Point } from "../../shared/history.ts";
 import { fmtNumber } from "../../shared/format.ts";
-import type { WeatherConfig, WeatherIcons } from "../config.ts";
-import { conditionIcon, conditionText, isCondition, isNight } from "../conditions.ts";
-import { conditionEl, iconFor, isImageIcon } from "./icon.ts";
-import type { Day } from "../forecast.ts";
+import type { WeatherConfig } from "../config.ts";
+import type { WeatherIcons } from "../../shared/weather/icon.ts";
+import {
+  conditionIcon,
+  conditionText,
+  isCondition,
+  isNight,
+} from "../../shared/weather/conditions.ts";
+import { conditionEl, iconFor, isImageIcon } from "../../shared/weather/icon.ts";
+import type { Day } from "../../shared/weather/forecast.ts";
 
 export interface CurrentModel {
   cond: EntityModel;

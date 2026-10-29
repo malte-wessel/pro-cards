@@ -42,7 +42,7 @@ Pro Cards are polished dashboard cards that look like they belong in Home Assist
 | Heading Card Pro         | `custom:heading-card-pro`         | A heading with live badges: values, rings, bars, sparklines, trends, counts and switches.                                                     | YAML only |
 | Swipe Card Pro           | `custom:swipe-card-pro`           | Cards side by side in a strip you swipe through, the next one peeking in, with dots; a grid once the section is wide enough.                  | YAML only |
 
-All cards support the sections grid (`grid_options`). Requires Home Assistant 2025.3 or newer.
+All cards support the sections grid (`grid_options`). Requires Home Assistant 2026.4 or newer.
 
 ## Installation
 

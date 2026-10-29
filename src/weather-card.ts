@@ -24,13 +24,7 @@ import { EntityCardBase, groupCardSize, type VisState } from "./shared/entity/ba
 import { cssColor } from "./shared/color.ts";
 import type { EntityItem } from "./shared/entity/config.ts";
 import { modelOf, type EntityModel, type RenderCtx } from "./shared/entity/model.ts";
-import type {
-  ForecastEntry,
-  ForecastMessage,
-  GridOptions,
-  HomeAssistant,
-  WeatherForecastType,
-} from "./shared/ha.ts";
+import type { GridOptions, HomeAssistant, WeatherForecastType } from "./shared/ha.ts";
 import { depsChanged } from "./shared/deps.ts";
 import { langOf } from "./shared/format.ts";
 import { hideHover, leaveHides } from "./shared/hover.ts";
@@ -42,7 +36,7 @@ import {
   type WeatherConfig,
 } from "./weather/config.ts";
 import { CARD_TYPE, DEFAULTS } from "./weather/constants.ts";
-import { RETRY_MS } from "./shared/constants.ts";
+import { ForecastFeed } from "./shared/weather/feed.ts";
 import {
   dailyTypeOf,
   daysOf,
@@ -51,15 +45,13 @@ import {
   supportsForecast,
   isTodayEntry,
   type Day,
-} from "./weather/forecast.ts";
+} from "./shared/weather/forecast.ts";
 import { showTrendHover, trendTimeAt } from "./shared/trend/plot.ts";
 import { condColor, fillCurrent, fillPoster } from "./weather/render/current.ts";
 import { buildForecast, drawForecast } from "./weather/render/forecast.ts";
 import { sectionShell } from "./weather/render/section.ts";
 import { buildTrend, drawTrendSection, type ForecastTrendEl } from "./weather/render/trend.ts";
 import { STYLE_WEATHER_CARD } from "./weather/styles.ts";
-
-type Unsubscribe = () => unknown;
 
 // what is shown, with a flag per section
 interface WeatherVis extends VisState {
@@ -86,11 +78,7 @@ export class WeatherCard extends EntityCardBase {
 
   declare _config?: WeatherConfig;
   // the forecasts by type: undefined until the first message, null when not available
-  _forecast: Partial<Record<WeatherForecastType, ForecastEntry[] | null>> = {};
-  _fcUnsub = new Map<WeatherForecastType, Promise<Unsubscribe | null>>();
-  _fcToken = new Map<WeatherForecastType, object>(); // identifies the live subscription per type
-  // when a type's subscription was refused: it is asked for again after RETRY_MS, not at once
-  _fcFailedAt = new Map<WeatherForecastType, number>();
+  _feed = new ForecastFeed(() => this._render(), CARD_TYPE);
   _chartHover: { el: ForecastTrendEl; t: number } | null = null;
   // what each forecast and trend section was last drawn from (deps.ts)
   _sectionInputs = new WeakMap<object, readonly unknown[]>();
@@ -161,8 +149,7 @@ export class WeatherCard extends EntityCardBase {
 
   // ----- lifecycle: the forecast subscriptions follow config, hass and connection -----
   setConfig(config: unknown) {
-    this._unsubscribeForecasts();
-    this._forecast = {};
+    this._feed.reset();
     super.setConfig(config);
     // the condition takes its night icon at sunset: the sun is watched like an item
     this._watchIds = [...new Set([...this._watchIds, "sun.sun"])];
@@ -172,10 +159,7 @@ export class WeatherCard extends EntityCardBase {
     const prev = this._hass;
     super._setHass(hass);
     if (!this._config) return;
-    if (prev && prev.connection !== hass.connection) {
-      this._unsubscribeForecasts();
-      this._forecast = {};
-    }
+    if (prev && prev.connection !== hass.connection) this._feed.reset();
     this._subscribeForecasts();
   }
   connectedCallback() {
@@ -184,7 +168,7 @@ export class WeatherCard extends EntityCardBase {
   }
   disconnectedCallback() {
     super.disconnectedCallback();
-    this._unsubscribeForecasts();
+    this._feed.unsubscribe();
   }
 
   // the forecast types the sections need and the entity offers
@@ -203,49 +187,7 @@ export class WeatherCard extends EntityCardBase {
     const conn = this._hass?.connection,
       cfg = this._config;
     if (!conn || !cfg || !this.isConnected) return;
-    const wanted = this._wantedTypes();
-    for (const [type, p] of [...this._fcUnsub])
-      if (!wanted.includes(type)) {
-        this._fcUnsub.delete(type);
-        this._fcToken.delete(type);
-        p.then((u) => u && u()).catch(() => {});
-      }
-    for (const type of wanted) {
-      if (this._fcUnsub.has(type)) continue;
-      const failed = this._fcFailedAt.get(type);
-      if (failed !== undefined && Date.now() - failed < RETRY_MS) continue;
-      // a message of a subscription that was replaced meanwhile (new config or connection) is dropped
-      const token = {};
-      this._fcToken.set(type, token);
-      const p: Promise<Unsubscribe | null> = conn
-        .subscribeMessage<ForecastMessage>(
-          (msg) => {
-            if (this._fcToken.get(type) !== token) return;
-            this._fcFailedAt.delete(type);
-            this._forecast[type] = msg?.forecast ?? null;
-            this._render();
-          },
-          { type: "weather/subscribe_forecast", forecast_type: type, entity_id: cfg.entity },
-        )
-        .catch((e) => {
-          if (this._fcToken.get(type) !== token) return null; // replaced meanwhile
-          console.warn(`${CARD_TYPE}: forecast subscription failed`, type, e);
-          // "no forecast" until a later hass update asks again (the entity may come back)
-          this._fcUnsub.delete(type);
-          this._fcToken.delete(type);
-          this._fcFailedAt.set(type, Date.now());
-          this._forecast[type] = null;
-          this._render();
-          return null;
-        });
-      this._fcUnsub.set(type, p);
-    }
-  }
-  _unsubscribeForecasts() {
-    for (const p of this._fcUnsub.values()) p.then((u) => u && u()).catch(() => {});
-    this._fcUnsub = new Map();
-    this._fcToken = new Map();
-    this._fcFailedAt = new Map();
+    this._feed.sync(conn, cfg.entity, this._wantedTypes());
   }
   // the days of the daily forecast (undefined while loading, null when there is none)
   _days(n: number): Day[] | null | undefined {
@@ -253,7 +195,7 @@ export class WeatherCard extends EntityCardBase {
       st = cfg && this._hass?.states[cfg.entity];
     const type = dailyTypeOf(st);
     if (!type) return null;
-    const fc = this._forecast[type];
+    const fc = this._feed.forecast[type];
     if (fc === undefined) return undefined;
     if (fc === null) return null;
     return daysOf(fc, type, n);
@@ -309,7 +251,7 @@ export class WeatherCard extends EntityCardBase {
   // the next hours of the hourly forecast's temperature, for the poster's curve
   _hourSeries(ctx: RenderCtx) {
     const st = this._hass?.states[(this._config as WeatherConfig).entity];
-    const hourly = supportsForecast(st, "hourly") ? this._forecast.hourly : null;
+    const hourly = supportsForecast(st, "hourly") ? this._feed.forecast.hourly : null;
     return hoursOf(hourly, ctx.now, DEFAULTS.posterHours).flatMap((h) =>
       h.hi === null ? [] : [{ t: h.t, v: h.hi, s: String(h.hi) }],
     );
@@ -351,9 +293,9 @@ export class WeatherCard extends EntityCardBase {
     return [
       ...own,
       this._modelAt(ctx, cfg.tempIdx),
-      this._forecast.hourly,
-      this._forecast.daily,
-      this._forecast.twice_daily,
+      this._feed.forecast.hourly,
+      this._feed.forecast.daily,
+      this._feed.forecast.twice_daily,
       Math.floor(ctx.now / 3600e3),
     ];
   }
@@ -390,7 +332,7 @@ export class WeatherCard extends EntityCardBase {
     const sections = [...card.querySelectorAll<HTMLElement>("[data-sec]")];
     // an entity without an hourly forecast: "no forecast" rather than loading forever
     const st = this._hass.states[cfg.entity];
-    const hourly = supportsForecast(st, "hourly") ? this._forecast.hourly : null;
+    const hourly = supportsForecast(st, "hourly") ? this._feed.forecast.hourly : null;
     const hours = (n: number) =>
       hourly === undefined ? undefined : hourly === null ? null : hoursOf(hourly, ctx.now, n);
     // a section is drawn again only when what it shows changed: its forecast, the entity (its
@@ -398,7 +340,7 @@ export class WeatherCard extends EntityCardBase {
     const daily = dailyTypeOf(st);
     const drawn = (el: HTMLElement, mode: "hourly" | "daily", chart: HTMLElement | null) =>
       !depsChanged(this._sectionInputs, el, [
-        mode === "hourly" ? hourly : daily && this._forecast[daily],
+        mode === "hourly" ? hourly : daily && this._feed.forecast[daily],
         st,
         langOf(this._hass),
         // the location (night hours) and units; by value, a test double rebuilds the object

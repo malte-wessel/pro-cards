@@ -8,21 +8,21 @@ import {
   type Placement,
   type RowKind,
 } from "../control.ts";
-import { nameOf, tplOf, type EntityModel, type RenderCtx } from "../model.ts";
+import { nameOf, tplOf, type EntityModel, type FmtValue, type RenderCtx } from "../model.ts";
 import { blockEl } from "./blocks.ts";
 import { appendControls, bindLeadTap, controlEl } from "./controls.ts";
 import { fillBadge } from "./badge.ts";
 import { bigEl, leadEl, pillEl, textEl, valueEl } from "./lead.ts";
 
 // the controls of the row, split by slot; a card without a control host draws none
-const slots = (ctx: RenderCtx, ent: EntityItem, kind: RowKind) => {
+export const slots = (ctx: RenderCtx, ent: EntityItem, kind: RowKind) => {
   const ps = ctx.ctl ? placementsOf(ent, kind) : [];
   const at = (pos: Placement["position"]) => ps.filter((p) => p.position === pos);
   return { end: at("end"), block: at("block"), lead: at("lead") };
 };
 // the icon slot: the icon, the icon as a switch, or a Run / hold button in its place (at the
 // icon's size); a confirmed control is a hold here too, never a plain tap
-const leadOf = (
+export const leadOf = (
   ctx: RenderCtx,
   ent: EntityItem,
   idx: number,
@@ -44,7 +44,7 @@ const leadOf = (
 };
 // the end controls, drawn; and whether one of them shows the value (so the text would repeat it):
 // only a control that was drawn and can be used counts, otherwise the value stays
-const endControls = (
+export const endControls = (
   ctx: RenderCtx,
   ent: EntityItem,
   idx: number,
@@ -62,7 +62,7 @@ const endControls = (
   return { els, showsValue: showsValue && canControl(ent, m.st) };
 };
 // a slider in the block slot is the bar with a knob, so the bar visual gives way to it
-const blockOf = (
+export const blockOf = (
   ctx: RenderCtx,
   ent: EntityItem,
   idx: number,
@@ -164,29 +164,52 @@ export const fillHero = (
   appendControls(ctx, ent, idx, m, c.block, row);
 };
 
+// what a card puts into a poster's slots in place of the entity's own (the poster card's kinds):
+// a slot left out takes the entity's; `lead: "keep"` leaves the lead as it is (an animated lead
+// built once), a null value draws no large value, a picture replaces the block visual
+export interface PosterSlots {
+  lead?: HTMLElement | "keep";
+  label?: string | null;
+  name?: string;
+  value?: FmtValue | null;
+  // a word (Cleaning, Away) is drawn smaller than a number (default: the value is no number)
+  word?: boolean;
+  secondary?: string | Node | null;
+  picture?: HTMLElement | null;
+}
+
 // a poster: the icon at the top left, the rule's label as the first pill of the corner (the badges
 // below it are rows of their own, filled apart), and at the bottom the name, the big value with the
 // controls on its line, the secondary line and the block visual or controls. Only the poster's own
-// parts are filled again, never the corner's badge rows (base: _poster).
-export const fillPoster = (
+// parts are filled again, never the corner's badge rows (base: _poster). A poster without a label
+// pill (the poster card's: its status is a badge row) fills the rest.
+export const fillPosterSlots = (
   ctx: RenderCtx,
   row: HTMLElement,
   ent: EntityItem,
   idx: number,
   m: EntityModel,
+  o: PosterSlots = {},
 ) => {
   const c = slots(ctx, ent, "poster");
   const lead = row.querySelector<HTMLElement>(":scope > .ptop > .plead"),
     label = row.querySelector<HTMLElement>(":scope > .ptop > .corner > .plabel"),
     body = row.querySelector<HTMLElement>(":scope > .pbody");
-  if (!lead || !label || !body) return;
-  lead.replaceChildren(leadOf(ctx, ent, idx, m, 40, c.lead));
-  // a badge visual is the label's pill already: the value takes it when no rule matches
-  const text = ent.visual === "badge" ? (m.look.label ?? m.fmt.text) : m.look.label;
-  label.textContent = text ?? "";
-  label.hidden = !text;
+  if (!lead || !body) return;
+  if (o.lead !== "keep") lead.replaceChildren(o.lead ?? leadOf(ctx, ent, idx, m, 40, c.lead));
+  if (label) {
+    // a badge visual is the label's pill already: the value takes it when no rule matches
+    const text =
+      o.label !== undefined
+        ? o.label
+        : ent.visual === "badge"
+          ? (m.look.label ?? m.fmt.text)
+          : m.look.label;
+    label.textContent = text ?? "";
+    label.hidden = !text;
+  }
   body.replaceChildren();
-  const name = textEl("pname", nameOf(ctx, ent, m.st));
+  const name = textEl("pname", o.name ?? nameOf(ctx, ent, m.st));
   const value = document.createElement("div");
   value.className = "pvalue";
   const ctls = endControls(ctx, ent, idx, m, c.end);
@@ -194,11 +217,13 @@ export const fillPoster = (
   // stepper that shows the very same number takes its place
   const repeats =
     canControl(ent, m.st) && c.end.some((p) => p.kind === "stepper" && controlShowsValue(ent, p));
+  const fmt = o.value === undefined ? m.fmt : o.value;
   // a gauge draws the value in its arc, as in a grid cell
-  if (!repeats && ent.visual !== "gauge") {
-    const big = bigEl(m.fmt);
+  const gaugeShown = o.picture === undefined && ent.visual === "gauge";
+  if (!repeats && !gaugeShown && fmt) {
+    const big = bigEl(fmt);
     // a word (Cleaning, Away) is drawn smaller than a number, so the controls stay beside it
-    big.classList.toggle("word", m.model.num === null);
+    big.classList.toggle("word", o.word ?? m.model.num === null);
     value.appendChild(big);
   }
   if (ctls.els.length) {
@@ -207,21 +232,29 @@ export const fillPoster = (
     end.append(...ctls.els);
     value.appendChild(end);
   }
-  const block = blockOf(ctx, ent, idx, m, c.block);
+  const block = o.picture !== undefined ? o.picture : blockOf(ctx, ent, idx, m, c.block);
   // a gauge is the poster's picture: the arc first, its name centred under it, the whole
   // centred in the room under the top line (pgauge)
-  const gauge = ent.visual === "gauge" && !!block;
+  const gauge = gaugeShown && !!block;
   body.classList.toggle("pgauge", gauge);
-  if (gauge) body.appendChild(block);
+  if (gauge && block) body.appendChild(block);
   // a value line with nothing on it (a gauge's, without controls) takes no room
   const parts = value.childElementCount ? [name, value] : [name];
   if (ent.item.namePosition === "below" && !gauge) parts.reverse();
   body.append(...parts);
-  const sec = tplOf(ctx, ent.secondary);
-  if (sec) body.appendChild(textEl("secondary", sec));
+  const sec = o.secondary !== undefined ? o.secondary : tplOf(ctx, ent.secondary);
+  if (typeof sec === "string") body.appendChild(textEl("secondary", sec));
+  else if (sec) body.appendChild(sec);
   if (block && !gauge) body.appendChild(block);
   appendControls(ctx, ent, idx, m, c.block, body);
 };
+export const fillPoster = (
+  ctx: RenderCtx,
+  row: HTMLElement,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+) => fillPosterSlots(ctx, row, ent, idx, m);
 
 export const fillCell = (
   ctx: RenderCtx,

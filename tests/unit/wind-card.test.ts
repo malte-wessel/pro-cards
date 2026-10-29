@@ -18,7 +18,7 @@ import {
   leadDuration,
   pxps,
   wavePath,
-} from "../../src/wind/flow.ts";
+} from "../../src/shared/wind/flow.ts";
 
 const S = "sensor.wind_speed";
 

@@ -109,7 +109,7 @@ export const STYLE_POSTER = `
   ha-card.layout-poster .pbody:has(> .plot.grow) > :not(.plot) { position: relative; z-index: 1; }
 `;
 // the header badges (render/badge.ts): the row is the pill (.pb) of its style (b-outline, b-soft,
-// b-filled; b-plain draws none) and size (b-s, b-m, b-l: 24 / 30 / 36 px high). A filled pill
+// b-filled, b-tag; b-plain draws none) and size (b-s, b-m, b-l: 24 / 30 / 36 px high). A filled pill
 // draws its glyphs in --b-ink, every other one in the row's colour
 const STYLE_BADGES = `
   .row.hval.b-s { --b-h: 24px; --b-ps: 6px; --b-pe: 8px; --b-gap: 4px; --b-icon: 14px; --b-ring: 16px; }
@@ -137,6 +137,11 @@ const STYLE_BADGES = `
   .row.hval.b-soft .state { color: var(--fe-color); }
   .row.hval.b-filled { --b-ink: var(--text-primary-color, #fff); background: var(--fe-color); color: var(--b-ink); }
   .row.hval.b-filled :is(ha-icon, ha-state-icon, .state, .state.accent, .secondary) { color: var(--b-ink); }
+  /* tag: the poster's label pill, a coloured outline and small capitals in the row's colour (a
+     border, so a rule's pulse keeps it) */
+  .row.hval.b-tag { border: 1px solid color-mix(in srgb, var(--fe-color) 40%, transparent); }
+  .row.hval.b-tag :is(ha-icon, ha-state-icon, .state, .state.accent, .secondary) { color: var(--fe-color); }
+  .row.hval.b-tag :is(.state, .secondary) { font-weight: ${fw("medium")}; letter-spacing: .08em; text-transform: uppercase; }
   /* a switch in a filled pill: its track in the ink, as the pill already is the colour */
   .row.hval.b-filled .toggle.on { background: color-mix(in srgb, var(--b-ink) 40%, transparent); }
   /* the tap area is 44 px high whatever the pill's height; the hover layer and the focus ring keep

@@ -19,7 +19,8 @@ import {
   type RawFlowCardBase,
 } from "../shared/flow/config.ts";
 import { LAYOUTS, VISUALS } from "../shared/flow/constants.ts";
-import { CARD_TYPE, DEFAULTS, LEADS, RAIN_STYLES, type Lead, type RainStyle } from "./constants.ts";
+import { DEFAULTS, RAIN_STYLES, type RainStyle } from "../shared/rain/constants.ts";
+import { CARD_TYPE, LEADS, type Lead } from "./constants.ts";
 
 export interface RawRainCardConfig extends RawFlowCardBase {
   today?: string | null;

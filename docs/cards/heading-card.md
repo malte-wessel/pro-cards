@@ -81,7 +81,7 @@ badges:
 
 ## Badge styles and sizes
 
-`badge_style` sets the pill of every badge: `outline` (the default, Home Assistant's badge: the card's background, border and shadow), `soft` (a tint of the badge's colour), `filled` or `plain` (no pill, the icon and the value alone). `badge_size` sets their height: `s` (24 px), `m` (30 px, the default) or `l` (36 px). A badge's own `style` and `size` override both.
+`badge_style` sets the pill of every badge: `outline` (the default, Home Assistant's badge: the card's background, border and shadow), `soft` (a tint of the badge's colour), `filled`, `tag` (an outline in the badge's colour with the text in small capitals, the poster's status pill) or `plain` (no pill, the icon and the value alone). `badge_size` sets their height: `s` (24 px), `m` (30 px, the default) or `l` (36 px). A badge's own `style` and `size` override both.
 
 ::: live
 
@@ -330,7 +330,7 @@ The cards with a header (the group, sections, weather, wind, rain, power flow an
 | `align`                                            | `start`                         | `start` or `center`.                                                                 |
 | `badges_position`                                  | `end`                           | `end` (below on a card narrower than 300 px), `inline` or `below`.                   |
 | `overflow`                                         | `wrap`                          | `wrap` or `scroll`.                                                                  |
-| `badge_style`                                      | `outline`                       | The pill of every badge: `outline`, `soft`, `filled` or `plain`.                     |
+| `badge_style`                                      | `outline`                       | The pill of every badge: `outline`, `soft`, `filled`, `tag` or `plain`.              |
 | `badge_size`                                       | `m`                             | The size of every badge: `s`, `m` or `l`.                                            |
 | `badges`                                           |                                 | Entity ids or badge objects.                                                         |
 | `hours_to_show`                                    | `6`                             | History window of `sparkline` and `trend`, at least 1.                               |
@@ -345,7 +345,7 @@ A badge takes the [entity options](/cards/entity-options#entity-options) (`entit
 | Option                                   | Default             | Description                                                                                         |
 | ---------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------- |
 | `visual`                                 | `icon`              | `icon`, `ring`, `bar`, `sparkline`, `trend`, `count` or `dot`.                                      |
-| `style`                                  | `badge_style`       | `outline`, `soft`, `filled` or `plain`.                                                             |
+| `style`                                  | `badge_style`       | `outline`, `soft`, `filled`, `tag` or `plain`.                                                      |
 | `size`                                   | `badge_size`        | `s`, `m` or `l`.                                                                                    |
 | `show_name` / `show_value` / `show_icon` | false / true / true | What the badge shows.                                                                               |
 | `format`                                 | `auto`              | `auto`, `power`, `duration` or `relative`.                                                          |

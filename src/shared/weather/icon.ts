@@ -1,9 +1,15 @@
 // The element that shows a condition: an mdi icon, one of the Home Assistant weather pictures
 // (inline SVG) or an image from a URL, by the `icons` setting in force: a map overrides single
 // conditions and the rest keep the pictures; `mdi` switches all of them. A rule's icon wins.
-import type { WeatherIcons } from "../config.ts";
-import { conditionIcon, isCondition } from "../conditions.ts";
-import { PICTURE_VIEWBOX, pictureSvg } from "../pictures.ts";
+import { conditionIcon, isCondition, type Condition } from "./conditions.ts";
+import { PICTURE_VIEWBOX, pictureSvg } from "./pictures.ts";
+
+// the `icons` setting in force: the base set (Home Assistant's pictures or mdi icons) and a map
+// from condition to an mdi icon or an image URL that overrides single conditions
+export interface WeatherIcons {
+  base: "hass" | "mdi";
+  map: Partial<Record<Condition, string>>;
+}
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 

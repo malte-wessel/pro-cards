@@ -1,6 +1,6 @@
 // Forecast helpers (pure): feature checks, windows, series for the plots and per-day summaries.
-import type { ForecastEntry, HassEntity, WeatherForecastType } from "../shared/ha.ts";
-import type { Point } from "../shared/history.ts";
+import type { ForecastEntry, HassEntity, WeatherForecastType } from "../ha.ts";
+import type { Point } from "../history.ts";
 import { WEATHER_FEATURE } from "./constants.ts";
 
 export const supportsForecast = (st: HassEntity | undefined, type: WeatherForecastType) =>

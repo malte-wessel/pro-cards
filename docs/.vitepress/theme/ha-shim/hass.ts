@@ -1,6 +1,7 @@
 // Builds the `hass` object the cards expect, backed by the demo world, and wires the
 // document-level events HA would normally handle (actions, more-info, navigation, toasts).
 import { world } from "./world.ts";
+import { AREAS, DEVICES, ENTITIES } from "./registry.ts";
 import { renderTemplate } from "./templates.ts";
 import type {
   ActionConfig,
@@ -154,6 +155,15 @@ export interface ServiceTarget {
 
 // the demo's state machine for service calls: what a real Home Assistant would make the device do
 const COVER_OPEN = (pos: number) => (pos <= 0 ? "closed" : "open");
+// a player's position where it stops or starts again: what it played meanwhile counts
+const played = (st: HassEntity) => {
+  const pos = Number(st.attributes.media_position),
+    at = Date.parse(String(st.attributes.media_position_updated_at));
+  if (!Number.isFinite(pos) || !Number.isFinite(at)) return {};
+  const now = Date.now();
+  const p = st.state === "playing" ? pos + (now - at) / 1000 : pos;
+  return { media_position: Math.round(p), media_position_updated_at: new Date(now).toISOString() };
+};
 const TRACKS = ["Planet Earth III", "Radio Eins", "Morning Mix", "Jazz Hour"];
 const setTimeoutState = (id: string, state: string, attrs: Record<string, unknown>, ms: number) =>
   setTimeout(() => world.set(id, state, attrs), ms);
@@ -262,6 +272,35 @@ const callService = async (
     case "cover.stop_cover":
       toast(`Cover stopped: ${ids.join(", ")}`);
       break;
+    case "cover.set_cover_tilt_position":
+      each((id) => world.set(id, undefined, { current_tilt_position: num("tilt_position") }));
+      break;
+    // the robots: they start, pause and go back to their dock (a moment later they are there)
+    case "vacuum.start":
+      each((id) => world.set(id, "cleaning", { status: "Cleaning" }));
+      break;
+    case "vacuum.pause":
+    case "vacuum.stop":
+      each((id) => world.set(id, service === "pause" ? "paused" : "idle"));
+      break;
+    case "vacuum.return_to_base":
+      each((id) => {
+        world.set(id, "returning", { status: "Returning" });
+        setTimeoutState(id, "docked", { status: "Docked" }, 2500);
+      });
+      break;
+    case "lawn_mower.start_mowing":
+      each((id) => world.set(id, "mowing"));
+      break;
+    case "lawn_mower.pause":
+      each((id) => world.set(id, "paused"));
+      break;
+    case "lawn_mower.dock":
+      each((id) => {
+        world.set(id, "returning");
+        setTimeoutState(id, "docked", {}, 2500);
+      });
+      break;
     case "cover.set_cover_position":
       each((id) => {
         const pos = num("position");
@@ -289,7 +328,7 @@ const callService = async (
       each((id) => world.set(id, undefined, { volume_level: num("volume_level") }));
       break;
     case "media_player.media_play_pause":
-      each((id, st) => world.set(id, st.state === "playing" ? "paused" : "playing"));
+      each((id, st) => world.set(id, st.state === "playing" ? "paused" : "playing", played(st)));
       break;
     case "media_player.media_play":
       each((id) => world.set(id, "playing"));
@@ -311,6 +350,20 @@ const callService = async (
       break;
     case "lock.unlock":
       each((id) => lock(id, false));
+      break;
+    // an alarm arms after a short countdown and disarms at once
+    case "alarm_control_panel.alarm_arm_away":
+    case "alarm_control_panel.alarm_arm_home":
+      each((id) => {
+        world.set(id, "arming");
+        setTimeout(
+          () => world.set(id, service === "alarm_arm_home" ? "armed_home" : "armed_away"),
+          1200,
+        );
+      });
+      break;
+    case "alarm_control_panel.alarm_disarm":
+      each((id) => world.set(id, "disarmed"));
       break;
     case "number.set_value":
     case "input_number.set_value":
@@ -492,6 +545,10 @@ export const snapshot = (): HassSnapshot => ({
   },
   themes: themesNow(),
   formatEntityState,
+  // the registries keep their identity: a card looks into them again only when one changes
+  entities: ENTITIES,
+  devices: DEVICES,
+  areas: AREAS,
   callService,
   // HA's callWS / subscribeMessage are generic in the caller's result type, so the shim asserts
   // its concrete answers to it (history rows here, template results below)

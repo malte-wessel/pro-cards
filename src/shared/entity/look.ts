@@ -83,9 +83,12 @@ export const progressOf = (
   return max > min ? clamp01((num - min) / (max - min)) : null;
 };
 
-// every matcher a rule has must hold: state on the raw string, below exclusive, above inclusive
-export const matchRule = (rule: Rule, model: ValueModel) =>
-  (rule.state === null || (model.raw !== null && model.raw === rule.state)) &&
+// every matcher a rule has must hold: state on the raw string or the entity's own state (a
+// media player shown by its title still matches `playing`), below exclusive, above inclusive
+export const matchRule = (rule: Rule, model: ValueModel, state?: string | null) =>
+  (rule.state === null ||
+    (model.raw !== null && model.raw === rule.state) ||
+    (state != null && state === rule.state)) &&
   (rule.below === null || (model.num !== null && model.num < rule.below)) &&
   (rule.above === null || (model.num !== null && model.num >= rule.above));
 
@@ -99,14 +102,18 @@ export const pictureOf = (st: HassEntity | undefined): string | null => {
 // { color, icon, fallbackIcon, picture, label, tint, rule }: explicit colour / icon win, then the first
 // matching rule (author order), then Home Assistant's state colour for the value (lights amber,
 // locks green / red, batteries by level …), then grey for off-like states, else primary
+// `ruleModel` is the value the rules read when it differs from the shown one (a card's own rules
+// in their unit: modelOf)
 export const resolveLook = (
   ent: EntityItem,
   model: ValueModel,
   st: HassEntity | undefined,
   tplGet: TplGet,
   hass?: HomeAssistant,
+  ruleModel: ValueModel = model,
 ): Look => {
-  const rule = ent.rules.find((r) => matchRule(r, model)) ?? null;
+  const rule = ent.rules.find((r) => matchRule(r, ruleModel, st?.state)) ?? null;
+  const ruleLabel = rule?.labelKey ? t(hass, rule.labelKey) : (rule?.label ?? null);
   // a colour that is no plain colour token (a template rendering markup) counts as none
   const explicitColor = safeColor(
     ent.color ? (isTemplate(ent.color) ? asText(tplGet(ent.color)) : ent.color) : null,
@@ -125,7 +132,7 @@ export const resolveLook = (
       icon: explicitIcon || rule?.icon || null,
       fallbackIcon: fallbackIcon || "mdi:help-circle-outline",
       picture,
-      label: rule?.label || t(hass, "common.unavailable"),
+      label: ruleLabel || t(hass, "common.unavailable"),
       tint: false,
       rule,
       style: null,
@@ -140,7 +147,7 @@ export const resolveLook = (
     icon: explicitIcon || rule?.icon || null,
     fallbackIcon: fallbackIcon || "mdi:eye",
     picture,
-    label: rule?.label || null,
+    label: ruleLabel || null,
     tint: !!(rule && rule.tintCard),
     rule,
     style: rule?.style ?? null,

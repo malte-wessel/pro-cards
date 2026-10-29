@@ -56,6 +56,10 @@ const description =
 // the cards by category; the nav dropdown and the sidebar both list them this way
 const cardGroups = [
   {
+    text: "Posters",
+    items: [{ text: "Poster Card Pro", link: "/cards/poster-card" }],
+  },
+  {
     text: "Entities",
     items: [
       { text: "Entity Card Pro", link: "/cards/entity-card" },
@@ -108,6 +112,7 @@ const guide = [
 // the showcase dashboards, linked from the home page
 const showcase = [
   { text: "Home", link: "/showcase/home" },
+  { text: "Posters", link: "/showcase/posters" },
   { text: "Energy", link: "/showcase/energy" },
   { text: "Living room", link: "/showcase/living-room" },
   { text: "Weather", link: "/showcase/weather" },

@@ -3,7 +3,8 @@ import { FormEditorBase, setOrDrop } from "../shared/editor.ts";
 import type { HaFormData, HaFormSchema, HomeAssistant } from "../shared/ha.ts";
 import { t, type StringKey } from "../shared/i18n.ts";
 import type { SunPathCardConfig } from "./config.ts";
-import { DEFAULTS, defaultLabel, SUN_EVENTS, type SunEvent, type SunLabels } from "./constants.ts";
+import { defaultLabel, SUN_EVENTS, type SunEvent, type SunLabels } from "../shared/sun/events.ts";
+import { DEFAULTS } from "./constants.ts";
 
 export const EDITOR_LABELS: Record<string, StringKey> = {
   layout: "editor.sun.layout",

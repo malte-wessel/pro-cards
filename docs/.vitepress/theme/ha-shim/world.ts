@@ -263,6 +263,20 @@ def(
   { noise: 15, min: 400, decimals: 0 },
 );
 def(
+  "sensor.living_room_pm25",
+  14,
+  { unit_of_measurement: "µg/m³", device_class: "pm25", friendly_name: "Living room PM2.5" },
+  "flat",
+  { noise: 1, min: 2, max: 60, decimals: 0 },
+);
+def(
+  "sensor.outdoor_aqi",
+  64,
+  { device_class: "aqi", friendly_name: "Air quality index", icon: "mdi:air-filter" },
+  "flat",
+  { noise: 3, min: 10, max: 180, decimals: 0 },
+);
+def(
   "sensor.kitchen_temperature",
   22.3,
   { unit_of_measurement: "°C", device_class: "temperature", friendly_name: "Kitchen temperature" },
@@ -323,8 +337,11 @@ def(
 def("light.living_room", "on", {
   friendly_name: "Living room",
   brightness: 180,
-  color_mode: "brightness",
-  supported_color_modes: ["brightness"],
+  // a warm white in its own colour (the poster's light kind glows in it)
+  color_mode: "hs",
+  hs_color: [30, 58],
+  rgb_color: [255, 175, 107],
+  supported_color_modes: ["hs"],
 });
 def("light.kitchen", "off", { friendly_name: "Kitchen", supported_color_modes: ["brightness"] });
 // answers its services after a moment (see SLOW in hass.ts): shows a control's pending ghost
@@ -384,6 +401,29 @@ def("cover.awning", "open", {
   current_position: 65,
 });
 def("cover.garage_door", "closed", { friendly_name: "Garage door", device_class: "garage" });
+def("cover.patio_blind", "open", {
+  friendly_name: "Patio blind",
+  device_class: "blind",
+  current_position: 60,
+  current_tilt_position: 40,
+});
+def("cover.bedroom_curtain", "open", {
+  friendly_name: "Bedroom curtain",
+  device_class: "curtain",
+  current_position: 70,
+});
+def("cover.driveway_gate", "closed", {
+  friendly_name: "Driveway gate",
+  device_class: "gate",
+  current_position: 0,
+});
+def("cover.kitchen_window", "closed", {
+  friendly_name: "Kitchen window",
+  device_class: "window",
+  current_position: 0,
+});
+// a cover without a device class (a poster draws it by `kind: { style }`)
+def("cover.workshop_door", "closed", { friendly_name: "Workshop door", current_position: 0 });
 def("climate.living_room", "heat", {
   friendly_name: "Living room thermostat",
   temperature: 21,
@@ -420,6 +460,20 @@ def("fan.living_room", "on", {
 def("fan.bedroom", "off", { friendly_name: "Bedroom fan", percentage: 0, percentage_step: 25 });
 def("fan.bathroom", "on", { friendly_name: "Bathroom fan" });
 def("lock.front_door", "locked", { friendly_name: "Front door" });
+// the alarm: armed and disarmed without a code (a hold on the poster)
+def("alarm_control_panel.home", "disarmed", {
+  friendly_name: "Alarm",
+  code_arm_required: false,
+  code_format: null,
+  supported_features: 3,
+});
+// the front door's camera: a still of the porch as its picture
+def("camera.front_door", "idle", {
+  friendly_name: "Front door camera",
+  entity_picture: `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9cb7c9"/><stop offset="1" stop-color="#d9e2e6"/></linearGradient></defs><rect width="320" height="240" fill="url(#s)"/><rect y="150" width="320" height="90" fill="#8a8f84"/><rect x="40" y="60" width="240" height="120" fill="#c9b9a0"/><rect x="130" y="95" width="60" height="85" fill="#6b4f3a"/><circle cx="180" cy="140" r="3" fill="#d8c27a"/><rect x="60" y="85" width="45" height="40" fill="#e9eef0"/><rect x="215" y="85" width="45" height="40" fill="#e9eef0"/><path d="M30 60 L160 20 L290 60 Z" fill="#7a5b4a"/><rect x="0" y="0" width="320" height="16" fill="rgba(0,0,0,.35)"/></svg>`,
+  )}`,
+});
 def("lock.garage_side_door", "unlocked", { friendly_name: "Garage side door" });
 // the shed is offline: its devices show how a control greys out while its entity is unavailable
 def("light.shed", "unavailable", { friendly_name: "Shed light" });
@@ -557,6 +611,7 @@ def(
 );
 
 // appliances
+def("lawn_mower.garden", "mowing", { friendly_name: "Lawn mower", battery_level: 64 });
 def("vacuum.robot", "cleaning", {
   friendly_name: "Robot vacuum",
   battery_level: 72,
@@ -610,14 +665,36 @@ def("sensor.dishwasher_finishes", iso(now() + 38 * 60e3), {
   device_class: "timestamp",
   friendly_name: "Dishwasher finishes",
 });
+// cover art as SVG data URIs: a picture the cards can read their colour from (the same origin)
+const art = (from: string, to: string, shape: string) =>
+  `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/></linearGradient></defs><rect width="300" height="300" fill="url(#g)"/>${shape}</svg>`,
+  )}`;
 def("media_player.living_room_tv", "playing", {
   friendly_name: "Living room TV",
   media_title: "Planet Earth III",
+  media_artist: "David Attenborough",
+  media_album_name: "Coasts",
+  media_duration: 3480,
+  media_position: 1210,
+  media_position_updated_at: iso(Date.now()),
+  app_name: "BBC iPlayer",
+  entity_picture: art(
+    "#0f6b5c",
+    "#0b2e4a",
+    `<circle cx="210" cy="90" r="46" fill="#f4d58d" opacity=".9"/><path d="M0 220 Q75 170 150 205 T300 190 V300 H0 Z" fill="#0a3d33"/><path d="M0 250 Q90 215 170 245 T300 235 V300 H0 Z" fill="#06261f"/>`,
+  ),
   volume_level: 0.35,
 });
 def("media_player.kitchen_speaker", "idle", {
   friendly_name: "Kitchen speaker",
   media_title: "Radio Eins",
+  media_artist: "Live",
+  entity_picture: art(
+    "#f06a4a",
+    "#b5179e",
+    `<circle cx="150" cy="150" r="90" fill="none" stroke="#fff" stroke-width="14" opacity=".85"/><circle cx="150" cy="150" r="22" fill="#fff" opacity=".9"/>`,
+  ),
   volume_level: 0.2,
 });
 
@@ -860,11 +937,21 @@ def(
 def(
   "sensor.ev_range",
   248,
-  { unit_of_measurement: "km", friendly_name: "EV range", icon: "mdi:map-marker-distance" },
+  {
+    unit_of_measurement: "km",
+    device_class: "distance",
+    friendly_name: "EV range",
+    icon: "mdi:map-marker-distance",
+  },
   "flat",
   { noise: 1, min: 0, max: 420, decimals: 0 },
 );
 def("binary_sensor.ev_plugged", "on", { device_class: "plug", friendly_name: "EV plugged in" });
+def("binary_sensor.ev_charging", "on", {
+  device_class: "battery_charging",
+  friendly_name: "EV charging",
+});
+def("device_tracker.ev", "home", { friendly_name: "EV", source_type: "gps" });
 def(
   "sensor.generator_power",
   0,

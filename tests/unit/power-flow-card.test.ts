@@ -12,14 +12,8 @@ import type { Visibility } from "../../src/shared/visibility.ts";
 import { collectTemplates } from "../../src/shared/entity/config.ts";
 import { modelOf, type FormatCtx } from "../../src/shared/entity/model.ts";
 import type { HomeAssistant } from "../../src/shared/ha.ts";
-import {
-  allocate,
-  fmtPower,
-  isPowerUnit,
-  powerNow,
-  summaryState,
-  wattsOf,
-} from "../../src/power-flow/model.ts";
+import { allocate, powerNow, summaryState } from "../../src/power-flow/model.ts";
+import { fmtPower, isPowerUnit, wattsOf } from "../../src/shared/power.ts";
 import {
   type EdgeFlow,
   thresholdShown,

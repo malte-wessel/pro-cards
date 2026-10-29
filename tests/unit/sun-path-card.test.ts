@@ -1,10 +1,10 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
 import { solarElevation, solarDay, type SolarDay } from "../../src/shared/solar.ts";
 import { configToForm, editorSchema, formToConfig } from "../../src/sun-path/editor.ts";
-import { fmtEvent, timeAt } from "../../src/sun-path/plot.ts";
-import { nextEvent } from "../../src/sun-path/poster.ts";
+import { timeAt } from "../../src/shared/sun/curve.ts";
+import { fmtEvent, nextEvent } from "../../src/shared/sun/events.ts";
 import type { HomeAssistant } from "../../src/shared/ha.ts";
-import { defaultLabel } from "../../src/sun-path/constants.ts";
+import { defaultLabel } from "../../src/shared/sun/events.ts";
 import { SunPathCard } from "../../src/sun-path-card.ts";
 
 const LAT = 51.23,

@@ -37,7 +37,7 @@ Pro Cards adds these cards to the dashboard editor:
 | [Sun Azimuth Card Pro](/cards/sun-azimuth-card) | `custom:sun-azimuth-card-pro` | YAML          |
 | [Illuminance Card Pro](/cards/illuminance-card) | `custom:illuminance-card-pro` | Visual + YAML |
 
-Requires Home Assistant 2025.3 or newer.
+Requires Home Assistant 2026.4 or newer.
 
 ::: warning Upgrading from 1.x
 Since 2.0.0 every card type ends in `-pro` (`custom:weather-card` is now `custom:weather-card-pro`). The old generic names collided with other custom cards, and one collision silently disabled the whole bundle. Update the `type:` of every Pro Card in your dashboards: in the raw configuration editor, append `-pro` to each `type: custom:…-card` line.

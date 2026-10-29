@@ -1,5 +1,5 @@
 // The flow animation's maths (pure): units, bearings, the mapping from wind to motion and the
-// geometry of every animation style. The DOM and the CSS live in render/flow.ts and styles.ts.
+// geometry of every animation style. The DOM and the CSS live in field.ts and styles.ts.
 //
 // A field is a square of `size` px centred in the band and rotated so that +x is where the wind
 // blows. Particles travel along wave lanes (a sine through a smooth path) from x = -40 to
@@ -7,8 +7,8 @@
 // the base duration from the speed the field was built for, and a later speed change scales the
 // playback rate of the running animations (`rateOf`), so nothing restarts or jumps. The spec is
 // deterministic (seeded PRNG) so a paused frame is reproducible.
-import { norm, prng } from "../shared/flow/maths.ts";
-import { smoothPath } from "../shared/history.ts";
+import { norm, prng } from "../flow/maths.ts";
+import { smoothPath } from "../history.ts";
 import { DEFAULTS, DENSITY, type Density, type FlowStyle } from "./constants.ts";
 
 // ----- directions -----

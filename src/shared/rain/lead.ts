@@ -1,11 +1,11 @@
-// The lead of the rain card: the rain icon, or a small animation of the style inside the soft
-// circle: drops falling through it, rings around a drop, or a filling gauge. Built once; the
-// row's CSS variables (--t, --sl, --ldur, --H, --lv) and its `dry` class drive it; --H is the
-// lead's size, less the water level for the gauge, so the drops stop at the surface.
-import { animatedLeadShell, el, iconLead } from "../../shared/flow/dom.ts";
-import type { IconStyle } from "../../shared/entity/constants.ts";
-import { ICON, LEAD_ICON, type RainStyle } from "../constants.ts";
-import { wavePathD } from "../rain.ts";
+// The rain lead (the rain card, the poster): the rain icon, or a small animation of the style
+// inside the soft circle: drops falling through it, rings around a drop, or a filling gauge. Built
+// once; the row's CSS variables (--t, --sl, --ldur, --H, --lv) and its `dry` class drive it; --H is
+// the lead's size, less the water level for the gauge, so the drops stop at the surface.
+import { animatedLeadShell, el, iconLead } from "../flow/dom.ts";
+import type { IconStyle } from "../entity/constants.ts";
+import { ICON, LEAD_ICON, type RainStyle } from "./constants.ts";
+import { wavePathD } from "./rain.ts";
 
 const SVG = "http://www.w3.org/2000/svg";
 

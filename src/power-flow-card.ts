@@ -29,14 +29,8 @@ import type { HomeAssistant } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
 import { normalizePowerFlowConfig, type PowerFlowConfig } from "./power-flow/config.ts";
 import { CARD_TYPE } from "./power-flow/constants.ts";
-import {
-  allocate,
-  fmtPower,
-  isPowerUnit,
-  powerNow,
-  summaryState,
-  type PowerNow,
-} from "./power-flow/model.ts";
+import { allocate, powerNow, summaryState, type PowerNow } from "./power-flow/model.ts";
+import { fmtPower, isPowerUnit } from "./shared/power.ts";
 
 export class PowerFlowCard extends FlowTreeCardBase<PowerFlowConfig> {
   static cardType = CARD_TYPE;

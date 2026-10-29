@@ -318,8 +318,8 @@
     },
     "badgeStyle": {
       "type": "string",
-      "enum": ["outline", "soft", "filled", "plain"],
-      "description": "The badge's pill: Home Assistant's badge on the card's surface (outline), a soft fill, a full fill, or none"
+      "enum": ["outline", "soft", "filled", "plain", "tag"],
+      "description": "The badge's pill: Home Assistant's badge on the card's surface (outline), a soft fill, a full fill, none, or a coloured outline in small capitals (tag, the poster's status)"
     },
     "badgeSize": {
       "type": "string",

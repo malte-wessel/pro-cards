@@ -16,7 +16,7 @@ A fourth, manual layer is a real Home Assistant in Docker (`npm run ha`), see [R
 
 `tests/unit/*.test.ts`, one file per card (the three entity cards share `entity-cards.test.ts`), `tests/unit/shared/` for the modules every card uses, `tests/unit/shared/entity/` for the entity layer the entity cards share, and one each for the docs' template engine, demo world and hass shim.
 
-Every card is built from plain ES modules: `src/shared/` (colours, formatting, history fetch and bucketing, the editor base), `src/shared/entity/` for the layer the entity cards share, `src/shared/trend/` for the trend plot the multi trend and weather cards share, and one folder per other card (`src/multi-trend/`, `src/sun-path/`, `src/sun-azimuth/`, `src/illuminance/`, `src/weather/`). Tests import straight from `src/`:
+Every card is built from plain ES modules: `src/shared/` (colours, formatting, history fetch and bucketing, the editor base), `src/shared/entity/` for the layer the entity cards share, `src/shared/trend/` for the trend plot the multi trend and weather cards share, `src/shared/{wind,rain,weather,sun}/` for what those cards share with the poster card, and one folder per other card (`src/multi-trend/`, `src/sun-path/`, `src/sun-azimuth/`, `src/illuminance/`, `src/weather/`). Tests import straight from `src/`:
 
 ```js
 import { matchRule } from "../../src/shared/entity/look.ts";

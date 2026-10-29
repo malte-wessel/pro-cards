@@ -152,6 +152,8 @@ export interface Rule {
   tintCard: boolean;
   style: BadgeStyle | null;
   pulse: boolean;
+  // a card's own rule (the poster's predefined ones): its label is ours, translated at render time
+  labelKey?: StringKey;
 }
 export interface ItemOptions {
   showName: boolean;
@@ -202,7 +204,15 @@ export interface EntityItem extends ActionDefaults {
   format: BadgeFormat;
   staleMin: number | null;
   trendHours: number;
+  // set by cards that build items themselves: the unit a card's own rules are written in (the
+  // value is converted to it before they match; a user's rules read the sensor's own unit), and
+  // the entities a `count` counts without a group to read them from (an area's lights), with the
+  // states that count (null: on, as a group's members)
+  ruleUnit?: RuleUnit;
+  countOf?: { ids: string[]; states: string[] | null };
 }
+// the units a card's own rules can be written in
+export type RuleUnit = "km/h" | "mm/h";
 export interface Group {
   layout: GroupLayout | "tile";
   idxs: number[];

@@ -3,7 +3,7 @@
 // around an inline ha-icon around an ha-svg-icon that is inline-flex and aligned to the middle of
 // the text line, so a card that leaves a line box around its icon shows the same offset here.
 import type { HassEntity, HomeAssistant } from "../../../../src/shared/ha.ts";
-import { conditionIcon } from "../../../../src/weather/conditions.ts";
+import { conditionIcon } from "../../../../src/shared/weather/conditions.ts";
 import { defineHuiElements } from "./hui-card.ts";
 
 // the `@mdi/js` namespace: `mdiLightbulb` → SVG path, indexed by the PascalCased icon name
@@ -82,6 +82,16 @@ const DOMAIN_ICON: Record<string, (s: string) => string> = {
   climate: () => "mdi:thermostat",
   cover: (s) => (s === "closed" ? "mdi:window-shutter" : "mdi:window-shutter-open"),
   vacuum: () => "mdi:robot-vacuum",
+  lawn_mower: () => "mdi:robot-mower",
+  camera: () => "mdi:cctv",
+  alarm_control_panel: (s) =>
+    s === "disarmed"
+      ? "mdi:shield-off"
+      : s === "triggered"
+        ? "mdi:bell-ring"
+        : s === "arming" || s === "pending"
+          ? "mdi:shield-sync"
+          : "mdi:shield-lock",
   media_player: (s) => (s === "playing" ? "mdi:play" : "mdi:cast"),
   scene: () => "mdi:palette",
   script: () => "mdi:script-text",

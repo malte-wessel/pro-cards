@@ -10,7 +10,7 @@
  *   align: start                           # start | center
  *   badges_position: end                   # end | inline | below (end moves below on a narrow card)
  *   overflow: wrap                         # wrap | scroll
- *   badge_style: outline / badge_size: m   # defaults: outline | soft | filled | plain, s | m | l
+ *   badge_style: outline / badge_size: m   # defaults: outline | soft | filled | tag | plain, s | m | l
  *   hours_to_show: 6                       # history of the sparkline and trend badges
  *   tap_action / hold_action / double_tap_action / hover   # defaults for every badge
  *   badges:                                # header entities (see entity-card-pro for the keys)

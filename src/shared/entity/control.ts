@@ -57,6 +57,8 @@ export interface ControlConfig {
   // `control: buttons` with `control_options`: the buttons drawn (null: the domain's own)
   buttons: CustomButton[] | null;
   confirm: boolean;
+  // what `auto` draws when a card's kind decides it (the poster's kinds), in place of the domain's
+  defaults?: Placement[];
 }
 // one drawn control: its kind, slot and size; `confirm` makes every button of a group a hold
 export interface Placement {
@@ -80,7 +82,8 @@ export interface Range {
   value: number | null;
   unit: string;
 }
-export type ButtonId = "open" | "stop" | "close" | "previous" | "play_pause" | "next";
+export type ButtonId =
+  "open" | "stop" | "close" | "previous" | "play_pause" | "next" | "start_pause" | "dock";
 export interface ControlButton {
   id: ButtonId;
   icon: string;
@@ -303,7 +306,7 @@ export const placementsOf = (ent: EntityItem, row: RowKind): Placement[] => {
     return c.kind === "toggle" ? [{ kind: "toggle", position: "end", small: true }] : [];
   let list: Placement[] =
     c.kind === "auto"
-      ? defaultPlacements(ent)
+      ? (c.defaults ?? defaultPlacements(ent))
       : [{ kind: c.kind, position: c.position ?? defaultPosition(c.kind, row), small: false }];
   if (c.confirm) {
     // hold to confirm replaces the primary (toggle / button / hold); every button of a group
@@ -398,6 +401,7 @@ const PRESS_KINDS: Record<string, "run" | "switch"> = {
   media_player: "switch",
   cover: "switch",
   lock: "switch",
+  alarm_control_panel: "switch",
 };
 export const pressKindOf = (id: string | null | undefined) =>
   (id && PRESS_KINDS[domainOf(id)]) || null;
@@ -594,6 +598,17 @@ export const buttonsOf = (ent: EntityItem): ControlButton[] => {
         { id: "play_pause", icon: "mdi:play-pause", labelKey: "control.play_pause", primary: true },
         { id: "next", icon: "mdi:skip-next", labelKey: "control.next", primary: false },
       ];
+    case "vacuum":
+    case "lawn_mower":
+      return [
+        {
+          id: "start_pause",
+          icon: "mdi:play-pause",
+          labelKey: "control.start_pause",
+          primary: true,
+        },
+        { id: "dock", icon: "mdi:home-import-outline", labelKey: "control.dock", primary: false },
+      ];
     default:
       return [];
   }
@@ -618,6 +633,9 @@ export const actionServiceFor = (
   if (kind === "run")
     return d === "script" || d === "scene" ? call(d, "turn_on") : call(d, "press");
   if (d === "lock") return st?.state === "locked" ? call("lock", "unlock") : call("lock", "lock");
+  // an alarm panel arms away from disarmed and is disarmed from anything else
+  if (d === "alarm_control_panel")
+    return st?.state === "disarmed" ? call(d, "alarm_arm_away") : call(d, "alarm_disarm");
   if (d === "cover") return call("cover", "toggle");
   return call("homeassistant", "toggle");
 };
@@ -702,6 +720,12 @@ export const serviceFor = (
           return call("media_player", "media_play_pause");
         case "next":
           return call("media_player", "media_next_track");
+        // a robot that works pauses, one that rests starts
+        case "start_pause":
+          if (d === "lawn_mower") return call(d, st?.state === "mowing" ? "pause" : "start_mowing");
+          return call("vacuum", st?.state === "cleaning" ? "pause" : "start");
+        case "dock":
+          return d === "lawn_mower" ? call(d, "dock") : call("vacuum", "return_to_base");
       }
       return null;
     case "press":

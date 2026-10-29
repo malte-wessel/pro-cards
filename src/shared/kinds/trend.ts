@@ -1,0 +1,136 @@
+// The trend kind: several entities (`kind: { type: trend, entities: [...] }`), never detected. The
+// first shown one's value large (the card's entity, when it has none of its own), the time window
+// as the status, the lines overlaid along the bottom on one scale, their values under the pointer.
+// A series takes its `color` (a template allowed), else its first matching rule's, else the
+// palette's; its `visibility` hides it.
+import { cssColor } from "../color.ts";
+import { normalizeRules, type Rule } from "../entity/config.ts";
+import { fmtNumber } from "../format.ts";
+import { PALETTE } from "../trend/scale.ts";
+import {
+  drawTrend,
+  showTrendHover,
+  trendPlotEl,
+  trendTimeAt,
+  type TrendPlotEl,
+} from "../trend/plot.ts";
+import { seriesColor } from "../trend/color.ts";
+import { decimalsOf, isNum, isTemplate } from "../util.ts";
+import { normalizeVisibility, type Visibility } from "../visibility.ts";
+import type { Kind, KindCtx } from "./types.ts";
+
+const HOURS = 6;
+
+interface Series {
+  entity: string;
+  name?: string;
+  color?: string;
+  rules: Rule[];
+  visibility: Visibility;
+  fallbackCss: string;
+}
+// the series as written: ids or { entity, name, color, rules, visibility }
+const seriesOf = (opts: Record<string, unknown>): Series[] => {
+  const list = Array.isArray(opts.entities) ? opts.entities : [];
+  return list.flatMap((e, i): Series[] => {
+    const o = (typeof e === "string" ? { entity: e } : e) as Record<string, unknown> | null;
+    if (!o || typeof o.entity !== "string") return [];
+    return [
+      {
+        entity: o.entity,
+        name: typeof o.name === "string" ? o.name : undefined,
+        color: typeof o.color === "string" ? o.color : undefined,
+        rules: normalizeRules(o.rules),
+        visibility: normalizeVisibility(o.visibility, {
+          type: "poster-card-pro",
+          label: `kind.entities[${i}]`,
+          entity: o.entity,
+        }),
+        // the palette colour stays the config position's: a hidden series never shifts the others'
+        fallbackCss: cssColor(PALETTE[i % PALETTE.length]) ?? "",
+      },
+    ];
+  });
+};
+const shownOf = (c: KindCtx) => seriesOf(c.opts).filter((s) => c.host.shown(s.visibility));
+
+const specOf = (c: KindCtx, shown: Series[]) => {
+  const hass = c.ctx.hass,
+    hours = c.hours ?? HOURS;
+  const tplGet = (t: string) => c.ctx.tplResult.get(t) ?? null;
+  return {
+    hass,
+    t0: c.ctx.now - hours * 3600e3,
+    t1: c.ctx.now,
+    layout: "overlay" as const,
+    xAxis: false,
+    yAxis: false,
+    smoothing: { minutes: null },
+    text: c.ctx.text,
+    series: shown.map((s) => {
+      const st = hass?.states[s.entity];
+      const unit = st?.attributes?.unit_of_measurement;
+      return {
+        pts: (c.ctx.series.get(s.entity) ?? []).flatMap((p) =>
+          p.v === null ? [] : [{ t: p.t, v: p.v }],
+        ),
+        color: seriesColor(s, st, tplGet),
+        name: s.name || String(st?.attributes?.friendly_name ?? s.entity),
+        fmt: (v: number) => {
+          const n = fmtNumber(hass, v, decimalsOf(st?.state ?? ""));
+          return typeof unit === "string" && unit ? `${n} ${unit}` : n;
+        },
+      };
+    }),
+  };
+};
+
+export const TREND: Kind = {
+  name: "trend",
+  reads: "any",
+  readsText: "its own entities",
+  entityless: true,
+  keys: ["entities"],
+  // the first series is the card's entity when it has none
+  main: (entity, _raw, opts) => {
+    const first = seriesOf(opts)[0];
+    return entity || !first ? {} : { entity: first.entity, name: first.name };
+  },
+  history: (opts) => seriesOf(opts).map((s) => s.entity),
+  templates: (opts) =>
+    seriesOf(opts).flatMap((s) => (s.color && isTemplate(s.color) ? [s.color] : [])),
+  visibility: (opts) => seriesOf(opts).map((s) => s.visibility),
+  status: (c) => `${c.hours ?? HOURS} h`,
+  slots: (c) => {
+    const plot = trendPlotEl("pcurve trend ptrend");
+    c.host.hover(
+      plot,
+      (ev) => trendTimeAt(plot, ev),
+      (t) => showTrendHover(plot, t),
+    );
+    return { picture: plot };
+  },
+  live: (c, row) => {
+    const plot = row.querySelector<TrendPlotEl>(":scope > .pbody > .ptrend");
+    if (!plot) return;
+    const shown = shownOf(c);
+    const spec = specOf(c, shown);
+    const key = JSON.stringify([
+      plot.clientWidth,
+      plot.clientHeight,
+      Math.floor(c.ctx.now / 60e3),
+      c.ctx.fetched,
+      spec.series.map((s) => [s.pts.length, s.pts[s.pts.length - 1]?.v, s.color]),
+    ]);
+    if (plot.dataset.key === key) return;
+    plot.dataset.key = key;
+    drawTrend(plot, spec);
+    if (c.host.hoverT !== null) showTrendHover(plot, c.host.hoverT);
+  },
+  extra: (c) => [
+    shownOf(c)
+      .map((s) => s.entity)
+      .join(),
+    isNum(c.hours) ? c.hours : null,
+  ],
+};

@@ -50,7 +50,7 @@ import {
 } from "./shared/visibility.ts";
 import { VisibilityWatch } from "./shared/visibility-watch.ts";
 import { MultiTrendCardEditor } from "./multi-trend/editor.ts";
-import { seriesColor } from "./multi-trend/color.ts";
+import { seriesColor } from "./shared/trend/color.ts";
 import { DEFAULT_HOURS, PALETTE } from "./shared/trend/scale.ts";
 import {
   drawTrend,

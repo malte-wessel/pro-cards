@@ -3,7 +3,7 @@
 // for the drops, a duration factor `k`; the band sets the fall duration for the rate the field
 // was built for and a later rate scales the playback rate (`fallRate`), so nothing restarts.
 // Deterministic (seeded PRNG) so a paused frame is reproducible.
-import { prng } from "../shared/flow/maths.ts";
+import { prng } from "../flow/maths.ts";
 import { DEFAULTS, DEPTH_TO_MM, RATE_TO_MMH, type RainStyle } from "./constants.ts";
 
 // a rate in the sensor's unit as mm/h, a depth as mm (an unknown unit is taken as it is)

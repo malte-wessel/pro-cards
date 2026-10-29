@@ -2,8 +2,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://malte-wessel.github.io/pro-cards/schema/pro-cards.schema.json",
   "title": "Pro Cards card config",
-  "description": "Any of the fifteen Pro Cards, discriminated by `type`.",
+  "description": "Any of the sixteen Pro Cards, discriminated by `type`.",
   "oneOf": [
+    {
+      "$ref": "poster-card-pro.schema.json"
+    },
     {
       "$ref": "entity-card-pro.schema.json"
     },

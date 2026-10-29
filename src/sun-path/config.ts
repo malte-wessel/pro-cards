@@ -1,7 +1,7 @@
 // Config types of the sun path card and what its plot module reads from the card element.
-import type { CardConfigBase, HomeAssistant } from "../shared/ha.ts";
-import type { SunEvent, SunLabels } from "./constants.ts";
-import type { SolarDay } from "../shared/solar.ts";
+import type { CardConfigBase } from "../shared/ha.ts";
+import type { SunCurveHost } from "../shared/sun/curve.ts";
+import type { SunEvent, SunLabels } from "../shared/sun/events.ts";
 import type { TextCache } from "../shared/typography.ts";
 
 export interface SunPathCardConfig extends CardConfigBase {
@@ -27,22 +27,11 @@ export interface SunPathConfig extends CardConfigBase {
   sun_color: string;
   labels?: Partial<SunLabels>;
 }
-// the solar day of the home's position
-export interface PositionedDay extends SolarDay {
-  lat: number;
-  lon: number;
-}
-export interface SunPathHost {
+// what the events row reads from the card element (the curve's part: SunCurveHost)
+export interface SunPathHost extends SunCurveHost {
   _config: SunPathConfig;
   _textCache?: TextCache;
   // the label of an event: the config override or the default in the user's language
   _label(key: SunEvent): string;
-  _hass?: HomeAssistant;
   _root?: HTMLElement;
-  _uid?: string;
-  _day: PositionedDay | null;
-  // set by drawCurve for the hover tooltip
-  _xOf?: (t: number) => number;
-  _yOf?: (e: number) => number;
-  _plotW?: number;
 }

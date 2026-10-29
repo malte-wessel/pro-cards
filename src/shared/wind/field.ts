@@ -1,9 +1,9 @@
 // The flow band: the animated field of the chosen style and the direction chip. The field's DOM
 // is rebuilt only when its geometry changes (style, density, size) or the waves moved enough to
 // be worth a redraw; a speed change only scales the playback rate of the running animations.
-import { setRate, vars } from "../../shared/flow/dom.ts";
-import { unwrapAngle } from "../../shared/flow/maths.ts";
-import type { Density, FlowStyle } from "../constants.ts";
+import { setRate, vars } from "../flow/dom.ts";
+import { unwrapAngle } from "../flow/maths.ts";
+import type { Density, FlowStyle } from "./constants.ts";
 import {
   amplitude,
   arrowRotation,
@@ -19,7 +19,7 @@ import {
   type FieldSpec,
   type Lane,
   type Streak,
-} from "../flow.ts";
+} from "./flow.ts";
 
 const SVG = "http://www.w3.org/2000/svg";
 

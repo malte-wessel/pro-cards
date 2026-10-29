@@ -22,9 +22,10 @@ import {
 import { DEFAULTS as ENTITY_DEFAULTS } from "../shared/entity/constants.ts";
 import { numOrNull, oneOf } from "../shared/util.ts";
 import { normalizeVisibility, type Visibility } from "../shared/visibility.ts";
-import { isCondition, type Condition } from "./conditions.ts";
+import { isCondition, type Condition } from "../shared/weather/conditions.ts";
+import { ATTRIBUTES } from "../shared/weather/constants.ts";
+import type { WeatherIcons } from "../shared/weather/icon.ts";
 import {
-  ATTRIBUTES,
   CARD_TYPE,
   DEFAULTS,
   FORECAST_LAYOUTS,
@@ -89,13 +90,6 @@ export interface SectionItems {
   condIdx: number;
   tempIdx: number;
   divider: boolean; // a line above the section (never drawn for the first)
-}
-// the condition icons: a base (Home Assistant's weather pictures by default, or mdi icons) and
-// a map from condition to an mdi icon or an image URL that overrides single conditions. A
-// section's setting merges over the card's.
-export interface WeatherIcons {
-  base: "hass" | "mdi";
-  map: Partial<Record<Condition, string>>;
 }
 // every section kind: drawn only while its conditions hold (null: always)
 interface SectionBase {

@@ -2,8 +2,8 @@
 // The field is rebuilt only when rain starts or stops or the drop count moves by a quarter; a
 // rate change scales the playback rate of the running animations, the slant and the water
 // level are CSS variables updated in place.
-import { el, setRate, vars } from "../../shared/flow/dom.ts";
-import type { RainStyle } from "../constants.ts";
+import { el, setRate, vars } from "../flow/dom.ts";
+import type { RainStyle } from "./constants.ts";
 import {
   countOf,
   fallOf,
@@ -19,7 +19,7 @@ import {
   type Drop,
   type RainSpec,
   type Ripple,
-} from "../rain.ts";
+} from "./rain.ts";
 import { waterEl } from "./lead.ts";
 
 export interface RainBand {

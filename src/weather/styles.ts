@@ -4,6 +4,7 @@ import { font, fs, fw, type } from "../shared/typography.ts";
 import { STYLE_GROUP_CARD, STYLE_TILE } from "../shared/entity/render/styles.ts";
 import { STYLE_TREND } from "../shared/trend/styles.ts";
 import { RANGE_BAR_H, DAY_COLUMN_H } from "./constants.ts";
+import { STYLE_WEATHER_PICTURES } from "../shared/weather/styles.ts";
 
 const STYLE_WEATHER = `
   .row.wtile { flex: 1; justify-content: center; }
@@ -21,17 +22,7 @@ const STYLE_WEATHER = `
   .whead .wsub { flex: none; ${type(12, 16)} color: var(--secondary-text-color); white-space: nowrap; }
   .wempty { ${font(10)} color: var(--secondary-text-color); padding: 8px 0; }
 
-  /* the Home Assistant weather pictures and image icons */
-  .wpic { display: block; width: var(--fe-icon, 100%); height: var(--fe-icon, 100%); object-fit: contain; }
-  .lead.picture .shape { background: transparent; }
-  .lead.picture .wpic { width: 100%; height: 100%; }
-  .wpic .rain { fill: var(--weather-icon-rain-color, #30b3ff); }
-  .wpic .sun { fill: var(--weather-icon-sun-color, #fdd93c); }
-  .wpic .moon { fill: var(--weather-icon-moon-color, #fcf497); }
-  .wpic .cloud-back { fill: var(--weather-icon-cloud-back-color, #d4d4d4); }
-  .wpic .cloud-front { fill: var(--weather-icon-cloud-front-color, #f9f9f9); }
-  .wpic .snow { fill: var(--weather-icon-snow-color, #f9f9f9); stroke: var(--weather-icon-snow-stroke-color, #d4d4d4); stroke-width: 1; paint-order: stroke; }
-
+  ${STYLE_WEATHER_PICTURES}
   /* the trend plot (multi trend card look) inside a section */
   .wsec .legend { padding: 0; }
   /* a taller card: a trend grows like the entity plots (STYLE_PLOT), down to a floor */

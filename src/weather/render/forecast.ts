@@ -13,9 +13,15 @@ import { fmtNumber as fmtNum, fmtTime } from "../../shared/format.ts";
 import { t } from "../../shared/i18n.ts";
 import { qs } from "../../shared/util.ts";
 import type { WeatherConfig, WeatherSection } from "../config.ts";
-import { rowNight } from "../conditions.ts";
-import { conditionEl } from "./icon.ts";
-import { dailyRange, entryDate, hourStart, isTodayEntry, type ForecastRow } from "../forecast.ts";
+import { rowNight } from "../../shared/weather/conditions.ts";
+import { conditionEl } from "../../shared/weather/icon.ts";
+import {
+  dailyRange,
+  entryDate,
+  hourStart,
+  isTodayEntry,
+  type ForecastRow,
+} from "../../shared/weather/forecast.ts";
 import { emptyEl, sectionShell, setTitle } from "./section.ts";
 
 export type ForecastSection = Extract<WeatherSection, { kind: "forecast" }>;
