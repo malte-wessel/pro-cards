@@ -37,6 +37,6 @@ export const STYLE_RAIN = `
   .lead.wlead .water, .lead.wlead .wtop path { background: color-mix(in srgb, var(--fe-color) 45%, transparent); fill: color-mix(in srgb, var(--fe-color) 45%, transparent); }
   @keyframes wvm { from { transform: translateX(0); } to { transform: translateX(-10%); } }
 
-  .notoday .chip { display: none; }
+  .wflow.notoday > .chip { display: none; }
   @media (prefers-reduced-motion: reduce) { .water, .wtop { transition: none; } }
 `;

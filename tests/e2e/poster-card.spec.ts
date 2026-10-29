@@ -214,6 +214,29 @@ test.describe("poster kinds", () => {
     expect(await services(page)).toEqual(["vacuum.pause", "vacuum.return_to_base"]);
   });
 
+  test("your own buttons with labels sit on the value's line, each in its place", async ({
+    page,
+  }) => {
+    await mount(page, {
+      type: P,
+      entity: "vacuum.robot",
+      control: "buttons",
+      control_options: [
+        { entity: "scene.dimmed", label: "Dim" },
+        { entity: "scene.movie_night", label: "Movie" },
+      ],
+    });
+    const c = card(page);
+    const chips = c.locator(".pvalue .end .ctl-buttons.custom > .chip");
+    await expect(chips).toHaveCount(2);
+    const [a, b] = [await rect(chips.nth(0)), await rect(chips.nth(1))];
+    // side by side on the value's line, below the lead (no band's chip style pins them)
+    expect(b.left).toBeGreaterThanOrEqual(a.right);
+    expect(a.top).toBeGreaterThan((await rect(c.locator(".plead"))).bottom);
+    await chips.nth(1).click();
+    expect(await services(page)).toEqual(["scene.turn_on"]);
+  });
+
   test("a lock is held to open, from its lead", async ({ page }) => {
     await mount(page, { type: P, entity: "lock.front_door" }, live);
     const h = card(page).locator(".plead .ctl-hold");

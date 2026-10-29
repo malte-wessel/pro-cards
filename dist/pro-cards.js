@@ -507,7 +507,7 @@
   .wflow.band { flex: 1 1 auto; height: var(--band-h, 120px); min-height: ${Nt.minBandH}px; }
   .body:has(> .wflow.band) { flex: 1 1 auto; min-height: 0; }
   .row.wtile.flow { position: relative; container-type: inline-size; }
-  .wflow.bg .chip { display: none; }
+  .wflow.bg > .chip { display: none; }
   /* a narrow flow tile shows the plain tile's line; a wide one the label line and the big value */
   .row.wtile.flow .secondary:not(.narrow), .row.wtile.flow .end { display: none; }
   @container (min-width: 340px) {
@@ -522,9 +522,9 @@
   .row.wtile.flow .lead.plain .shape { background: transparent; }
   .row.wtile.flow .end .big b { ${U(26,30)} }
 
-  /* the chip on the band */
-  .chip { position: absolute; left: 8px; top: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 4px; border-radius: 999px; background: color-mix(in srgb, ${X} 80%, transparent); ${U(12,16)} font-weight: ${j("medium")}; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .chip ha-icon { --mdc-icon-size: 14px; color: var(--fe-color); }
+  /* the chip on the band (scoped to it: a poster's own chips, its custom buttons, are no band's) */
+  .wflow > .chip { position: absolute; left: 8px; top: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 4px; border-radius: 999px; background: color-mix(in srgb, ${X} 80%, transparent); ${U(12,16)} font-weight: ${j("medium")}; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .wflow > .chip ha-icon { --mdc-icon-size: 14px; color: var(--fe-color); }
 `,Ui=`
   @media (prefers-reduced-motion: reduce) { .wflow *, .lead.wlead * { animation-play-state: paused; } }
 `;var pf=`
@@ -659,7 +659,7 @@
   .lead.wlead .water, .lead.wlead .wtop path { background: color-mix(in srgb, var(--fe-color) 45%, transparent); fill: color-mix(in srgb, var(--fe-color) 45%, transparent); }
   @keyframes wvm { from { transform: translateX(0); } to { transform: translateX(-10%); } }
 
-  .notoday .chip { display: none; }
+  .wflow.notoday > .chip { display: none; }
   @media (prefers-reduced-motion: reduce) { .water, .wtop { transition: none; } }
 `;var hf=`
   .psun svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
@@ -767,7 +767,7 @@
   @keyframes swm { 0% { stroke-dashoffset: 34; opacity: 0; } 12% { opacity: var(--o); } 80% { opacity: var(--o); } 100% { stroke-dashoffset: -100; opacity: 0; } }
 
   /* the direction chip on the band */
-  .nodir .chip { display: none; }
+  .nodir .wflow > .chip, .wflow.nodir > .chip { display: none; }
 
   @media (prefers-reduced-motion: reduce) { .field, .lfield, .lead.wlead svg, .arrow { transition: none; } }
 `;var F_=`

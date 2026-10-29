@@ -43,7 +43,7 @@ export const STYLE_WIND = `
   @keyframes swm { 0% { stroke-dashoffset: 34; opacity: 0; } 12% { opacity: var(--o); } 80% { opacity: var(--o); } 100% { stroke-dashoffset: -100; opacity: 0; } }
 
   /* the direction chip on the band */
-  .nodir .chip { display: none; }
+  .nodir .wflow > .chip, .wflow.nodir > .chip { display: none; }
 
   @media (prefers-reduced-motion: reduce) { .field, .lfield, .lead.wlead svg, .arrow { transition: none; } }
 `;
