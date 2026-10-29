@@ -4,9 +4,9 @@
 import { CARD_BG } from "../constants.ts";
 
 export const STYLE_KINDS = `
-  /* light: its colour from the bottom of the card, as strong as its brightness; nothing while off */
-  .pglow { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 105%, color-mix(in srgb, var(--glow) var(--glow-a, 40%), transparent) 0%, transparent 72%); transition: opacity .6s; }
-  .pglow.off { opacity: 0; }
+  /* light: its colour from the bottom of the card, as strong as its brightness (its opacity, set
+     by the kind: a change of brightness fades as switching does); nothing while off */
+  .pglow { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 105%, color-mix(in srgb, var(--glow) 60%, transparent) 0%, transparent 72%); opacity: 0; transition: opacity .6s; }
 
   /* fan: one turn a second as built (the speed scales the playback rate) */
   .lead.pfan :is(ha-icon, ha-state-icon) { transform: rotate(20deg); }

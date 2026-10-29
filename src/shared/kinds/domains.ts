@@ -85,12 +85,12 @@ export const LIGHT: Kind = {
       const st = c.m.st,
         on = st?.state === "on";
       const p = brightness(st) ?? (on ? 100 : 0);
-      el.classList.toggle("off", !on);
       el.style.setProperty(
         "--glow",
         rgbOf(st) ?? stateColorCss(st, st?.state) ?? "var(--amber-color)",
       );
-      el.style.setProperty("--glow-a", `${Math.round(18 + 0.42 * p)}%`);
+      // the brightness is the glow's opacity, so a new brightness fades as switching does
+      el.style.opacity = on ? (0.3 + (0.7 * p) / 100).toFixed(3) : "0";
     },
   },
   extra: (c) => [String(c.m.st?.attributes?.rgb_color), num(c.m.st, "brightness")],
