@@ -114,7 +114,8 @@ export interface Kind {
   watch?: readonly string[];
   // the forecast types it reads (a weather entity's)
   forecast?: readonly WeatherForecastType[];
-  // the places it fills (the lead only through `lead`)
+  // the places it fills (the lead only through `lead`); a `secondary` of null is a line it has
+  // with nothing on it now (the card keeps its room), left out a line it never has
   slots?(c: KindCtx): PosterSlots;
   status?(c: KindCtx): string | null;
   // its colour where no rule and no `color` says one (the sun's by day and by night)

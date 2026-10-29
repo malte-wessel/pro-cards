@@ -216,10 +216,14 @@ export const CLIMATE: Kind = {
     const stepper = placementsOf(c.ent, "poster").some((p) => p.kind === "stepper");
     return {
       ...(value ? { value } : {}),
-      secondary:
-        target === null || stepper
-          ? null
-          : secondaryEl([{ text: `→ ${fmtNumber(c.ctx.hass, target, 1)} ${unit}` }]),
+      ...(stepper
+        ? {}
+        : {
+            secondary:
+              target === null
+                ? null
+                : secondaryEl([{ text: `→ ${fmtNumber(c.ctx.hass, target, 1)} ${unit}` }]),
+          }),
       picture: dialEl(st),
     };
   },

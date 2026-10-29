@@ -41,6 +41,7 @@ export const RAIN: Kind = {
   ],
   slots: (c) => {
     const chip = nowOf(c).chip;
+    if (!c.input("today")) return {};
     return { secondary: chip ? secondaryEl([{ text: chip }]) : null };
   },
   lead: {

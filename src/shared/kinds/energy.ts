@@ -141,14 +141,12 @@ export const SOLAR: Kind = {
     const v = power(c, w);
     const today = c.input("today");
     const pts = todayOf(c);
-    const picture =
-      pts.length > 1
-        ? plotEl(c.ctx, c.ent, 0, c.m, {
-            kind: "sparkline",
-            series: pts,
-            window: { t0: startOfDay(c.ctx.now), t1: c.ctx.now },
-          })
-        : null;
+    // the curve is there from the start: it fills in once the history has loaded
+    const picture = plotEl(c.ctx, c.ent, 0, c.m, {
+      kind: "sparkline",
+      series: pts,
+      window: { t0: startOfDay(c.ctx.now), t1: c.ctx.now },
+    });
     return {
       lead: leadEl(
         c.ctx,
@@ -157,10 +155,13 @@ export const SOLAR: Kind = {
         40,
       ),
       ...(v ? { value: v, word: false } : {}),
-      secondary:
-        today && today.m.model.avail
-          ? secondaryEl([{ text: t(c.ctx.hass, "rain.today", { v: today.m.fmt.text }) }])
-          : null,
+      ...(today
+        ? {
+            secondary: today.m.model.avail
+              ? secondaryEl([{ text: t(c.ctx.hass, "rain.today", { v: today.m.fmt.text }) }])
+              : null,
+          }
+        : {}),
       picture,
     };
   },
@@ -283,7 +284,9 @@ export const CAR: Kind = {
         { ...c.m, look: { ...c.m.look, icon: c.m.look.icon ?? "mdi:car-electric" } },
         40,
       ),
-      secondary: range && range.m.model.avail ? secondaryEl([{ text: range.m.fmt.text }]) : null,
+      ...(range
+        ? { secondary: range.m.model.avail ? secondaryEl([{ text: range.m.fmt.text }]) : null }
+        : {}),
     };
   },
   backdrop: {

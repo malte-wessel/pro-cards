@@ -72,15 +72,16 @@ export const WEATHER: Kind = {
   slots: (c) => {
     const h = hours(c),
       hl = hiLo(c);
-    const picture =
-      h.length > 1
-        ? plotEl(c.ctx, c.ent, 0, c.m, {
-            kind: "sparkline",
-            series: h,
-            window: { t0: h[0].t, t1: h[h.length - 1].t },
-            loaded: true,
-          })
-        : null;
+    // the curve is there from the start: it fills in once the forecast has arrived
+    const t0 = h[0]?.t ?? c.ctx.now;
+    const picture = supportsForecast(c.m.st, "hourly")
+      ? plotEl(c.ctx, c.ent, 0, c.m, {
+          kind: "sparkline",
+          series: h,
+          window: { t0, t1: h.length > 1 ? h[h.length - 1].t : t0 + (c.hours ?? HOURS) * 3600e3 },
+          loaded: c.host.forecast("hourly") !== undefined,
+        })
+      : null;
     return { lead: lead(c), secondary: hl ? secondaryEl([{ text: hl }]) : null, picture };
   },
   extra: (c) => [

@@ -18,6 +18,7 @@ import type { EntityCardConfig, EntityItem } from "./shared/entity/config.ts";
 import { tileMinColumns } from "./shared/entity/control.ts";
 import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
 import { fillPosterSlots, type PosterSlots } from "./shared/entity/render/fill.ts";
+import { secondaryEl } from "./shared/entity/render/lead.ts";
 import type { GridOptions, HomeAssistant, WeatherForecastType } from "./shared/ha.ts";
 import { hideHover } from "./shared/hover.ts";
 import { detectKind, parseKind } from "./shared/kinds/detect.ts";
@@ -244,6 +245,9 @@ export class PosterCard extends EntityCardBase {
     if (idx === 0 && row.classList.contains("poster")) {
       const kc = this._kindCtx(ctx);
       const slots = this._slots(kc);
+      // a kind's line under the value keeps its room while it has nothing to say (gusts gone, a
+      // forecast still loading), so the name and the value never move
+      if (slots.secondary === null) slots.secondary = secondaryEl([{ text: "\u00a0" }]);
       // a poster without an entity or a value has its name alone
       if (
         slots.value === undefined &&

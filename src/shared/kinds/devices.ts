@@ -278,6 +278,9 @@ const robot = (name: string, domain: string, readsText: string): Kind => ({
     if (b !== null) parts.push({ text: `${fmtNumber(c.ctx.hass, b, 0)} %` });
     const room = str(st, "current_room") ?? str(st, "room");
     if (room) parts.push({ text: room });
+    const a = st?.attributes ?? {};
+    if (!parts.length && !("battery_level" in a) && !("current_room" in a) && !("room" in a))
+      return {};
     return { secondary: parts.length ? secondaryEl(parts) : null };
   },
   lead: {

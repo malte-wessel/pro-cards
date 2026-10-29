@@ -8,7 +8,7 @@ import { STYLE_KINDS } from "../shared/kinds/styles.ts";
 import { STYLE_RAIN } from "../shared/rain/styles.ts";
 import { STYLE_SUN_CURVE } from "../shared/sun/styles.ts";
 import { STYLE_TREND } from "../shared/trend/styles.ts";
-import { type } from "../shared/typography.ts";
+import { lh, type } from "../shared/typography.ts";
 import { STYLE_WEATHER_PICTURES } from "../shared/weather/styles.ts";
 import { STYLE_WIND } from "../shared/wind/styles.ts";
 
@@ -47,6 +47,10 @@ const STYLE_POSTER_CARD = `
   /* a sparkline keeps a small gap below the value instead of reaching up under it */
   ha-card.layout-poster .pbody > .pvalue + .plot.grow[data-kind="sparkline"] { margin-top: 6px; }
   .row.actionable .pcurve { pointer-events: auto; }
+  /* the value's line keeps its height whatever it shows: a word (Off, Cleaning) is drawn smaller
+     than a number but in the number's line, so a light switched off moves nothing around it */
+  ha-card.layout-poster .row.poster .big.word b { line-height: ${lh(40, 44)}; }
+  ha-card.layout-poster .pbody:has(> :is(.plot.grow, .pcurve)) .big.word b { line-height: ${lh(32, 36)}; }
   /* a picture's tooltip opens upward from its bottom, over the texts: the picture is the poster's
      bottom strip, and a tooltip opening downward would be cut by the card's edge */
   ha-card.layout-poster .pbody > :is(.pcurve, .plot) > .tip { top: auto; bottom: 8px; z-index: 3; }

@@ -54,6 +54,7 @@ export const WIND: Kind = {
     if (now.dirText) parts.push({ text: t(c.ctx.hass, "wind.from", { dir: now.dirText }) });
     if (gust && gust.m.model.avail)
       parts.push({ text: t(c.ctx.hass, "wind.gusts", { v: gust.m.fmt.text }) });
+    if (!parts.length && !c.input("direction") && !gust) return {};
     return { secondary: parts.length ? secondaryEl(parts) : null };
   },
   lead: {
