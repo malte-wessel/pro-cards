@@ -160,7 +160,7 @@ test("every icon sits centred in the box the card draws it in", async ({ page })
     ["entity-group-card-pro", "ha-state-icon in button.chip"],
     ["entity-group-card-pro", "ha-icon in button.round.hold"],
     ["entity-group-card-pro", "ha-state-icon in button.ctl.ctl-chip.round"],
-    ["entity-group-card-pro", "ha-icon in button.ctl.ctl-hold"],
+    ["entity-group-card-pro", "ha-state-icon in button.ctl.ctl-hold"],
     ["entity-sections-card-pro", "ha-icon in div.header"],
     ["rain-card-pro", "ha-icon in div.chip"],
     ["wind-card-pro", "ha-icon.arrow in div.chip"],

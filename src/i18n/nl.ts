@@ -70,6 +70,7 @@ const nl: Translation = {
   "kind.appliance.running": "Draait",
   "kind.appliance.off": "Uit",
   "kind.appliance.this_run": "{v} deze run",
+  "kind.appliance.last_hours": "{v} in de laatste {h} u",
   "control.hold_to": "Houd vast om te {action}",
   "control.press_again": "Druk nogmaals om te {action}",
   "layout.empty": "Voeg kaarten toe aan deze indeling",

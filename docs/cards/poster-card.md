@@ -391,7 +391,7 @@ A person: their photo behind the poster (no lead over their face), the zone larg
 
 ### Media player
 
-A media player: its cover art behind the poster, and the art's own colour for the poster (read from the picture once it has loaded). The title is large, the artist and album under it, the transport on its line and the volume below; a thin bar along the bottom edge runs with the track while it plays.
+A media player: its cover art behind the poster, and the art's own colour for the poster (read from the picture once it has loaded). The title is large, the artist and album under it, the transport on its line and the volume below (on a card too short for it the volume gives way, more-info has it); a thin bar along the bottom edge runs with the track while it plays.
 
 ::: live
 
@@ -546,7 +546,7 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 
 ### Appliance
 
-`kind: appliance` on a power sensor: running above `running_above` (5 W by default), it says for how long and the energy of this run (from the sensor's history), and the device in the lead works: a pump's impeller and a heat pump's fan turn, a drum shakes (`style: pump | washer | dryer | dishwasher | heat_pump`). Otherwise it is Off.
+`kind: appliance` on a power sensor: running above `running_above` (5 W by default), it says for how long and the energy of this run (from the sensor's history; a run longer than the history, a heat pump's, shows its power and the energy of the history's hours), and the device in the lead works: a pump's impeller and a heat pump's fan turn, a drum shakes (`style: pump | washer | dryer | dishwasher | heat_pump`). Otherwise it is Off.
 
 ::: live
 

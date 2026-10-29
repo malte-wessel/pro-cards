@@ -70,6 +70,7 @@ const nb: Translation = {
   "kind.appliance.running": "Går",
   "kind.appliance.off": "Av",
   "kind.appliance.this_run": "{v} denne økten",
+  "kind.appliance.last_hours": "{v} de siste {h} t",
   "control.hold_to": "Hold for å {action}",
   "control.press_again": "Trykk igjen for å {action}",
   "layout.empty": "Legg til kort i dette oppsettet",

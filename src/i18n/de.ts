@@ -70,6 +70,7 @@ const de: Translation = {
   "kind.appliance.running": "Läuft",
   "kind.appliance.off": "Aus",
   "kind.appliance.this_run": "{v} in diesem Lauf",
+  "kind.appliance.last_hours": "{v} in den letzten {h} h",
   "control.hold_to": "Halten zum {action}",
   "control.press_again": "Erneut drücken zum {action}",
   "layout.empty": "Karten zu diesem Layout hinzufügen",

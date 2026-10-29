@@ -524,10 +524,10 @@ export const buttonEl = (
 // button replaces it) the entity's own icon
 const holdIcon = (ctx: RenderCtx, ent: EntityItem, m: EntityModel, p: Placement) => {
   const d = String(ent.entity || "").split(".")[0];
+  if (p.position === "lead") return iconEl(ctx, m.look, m.st);
   if (d === "lock") return icon(m.st?.state === "locked" ? "mdi:lock-open-variant" : "mdi:lock");
   if (d === "alarm_control_panel")
     return icon(m.st?.state === "disarmed" ? "mdi:shield-lock" : "mdi:shield-off");
-  if (p.position === "lead") return iconEl(ctx, m.look, m.st);
   if (d === "script" || d === "scene" || d === "button" || d === "input_button")
     return icon("mdi:play");
   if (d === "cover") return icon("mdi:arrow-up-down");

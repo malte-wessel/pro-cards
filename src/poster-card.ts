@@ -353,19 +353,24 @@ export class PosterCard extends EntityCardBase {
 
   // the value's size for the room the card has: a poster whose content is taller than the card
   // (controls on a line of their own beside a narrow value) draws its value smaller, down to 60 % of
-  // its styled size, so the top keeps its room. The size found holds until the card's own size
-  // changes: a new value may make it smaller, never larger, so nothing jumps back and forth
-  _valueFit: { size: string; px: number | null; base: number | null } | null = null;
+  // its styled size, so the top keeps its room; where even that is not enough, its slider below the
+  // value goes (a media player's volume: more-info has it) and the value is fitted again. What was
+  // found holds until the card's own size changes: a new value may make it smaller, never larger,
+  // so nothing jumps back and forth
+  _valueFit: { size: string; px: number | null; base: number | null; drop: boolean } | null = null;
   _fitHeight(card: HTMLElement, row: HTMLElement) {
     const big = row.querySelector<HTMLElement>(":scope > .pbody > .pvalue > .big");
     const top = row.querySelector<HTMLElement>(":scope > .ptop"),
       body = row.querySelector<HTMLElement>(":scope > .pbody");
     const b = big?.querySelector("b");
     if (!big || !b || !top || !body) return;
+    const sliders = body.querySelectorAll<HTMLElement>(":scope > .ctl-slider");
+    const drop = (on: boolean) => sliders.forEach((el) => el.classList.toggle("pfit-out", on));
     const size = `${card.clientWidth}x${card.clientHeight}`;
     if (this._valueFit?.size !== size) {
       big.classList.remove("hfit");
-      this._valueFit = { size, px: null, base: null };
+      drop(false);
+      this._valueFit = { size, px: null, base: null, drop: false };
     }
     const fit = this._valueFit;
     const apply = (px: number) => {
@@ -373,15 +378,18 @@ export class PosterCard extends EntityCardBase {
       big.classList.add("hfit");
     };
     if (fit.px !== null) apply(fit.px);
+    // a row filled again has its slider back
+    if (fit.drop) drop(true);
     // what is missing: content taller than the row packs to its bottom and pushes the top line out
     // above it; in a body that shrinks with its picture, a part reaches past the body's bottom
-    // (counting its margins: a picture reaches to the card's edge on purpose)
+    // (counting its margins: a picture reaches to the card's edge on purpose; a part placed on its
+    // own, a media player's progress along the edge, is not in the flow)
     const short = () => {
       const bottom = body.getBoundingClientRect().bottom;
       let past = 0;
       for (const el of body.children) {
         const r = el.getBoundingClientRect();
-        if (r.height === 0) continue;
+        if (r.height === 0 || getComputedStyle(el).position === "absolute") continue;
         past = Math.max(past, r.bottom + parseFloat(getComputedStyle(el).marginBottom) - bottom);
       }
       return Math.max(row.getBoundingClientRect().top - top.getBoundingClientRect().top, past);
@@ -393,12 +401,22 @@ export class PosterCard extends EntityCardBase {
       const drawn = parseFloat(getComputedStyle(b).fontSize);
       fit.base = big.classList.contains("word") ? drawn / 0.7 : drawn;
     }
-    const min = Math.round(fit.base * 0.6);
-    let px = fit.px ?? fit.base;
-    apply(px);
-    while (short() > 0.5 && px > min) {
-      px = Math.max(min, px - 2);
+    const base = fit.base;
+    const min = Math.round(base * 0.6);
+    const shrink = (from: number) => {
+      let px = from;
       apply(px);
+      while (short() > 0.5 && px > min) {
+        px = Math.max(min, px - 2);
+        apply(px);
+      }
+      return px;
+    };
+    let px = shrink(fit.px ?? base);
+    if (short() > 0.5 && !fit.drop && sliders.length) {
+      fit.drop = true;
+      drop(true);
+      px = shrink(base);
     }
     fit.px = px;
   }

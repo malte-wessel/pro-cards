@@ -70,6 +70,7 @@ const es: Translation = {
   "kind.appliance.running": "En marcha",
   "kind.appliance.off": "Apagado",
   "kind.appliance.this_run": "{v} en este ciclo",
+  "kind.appliance.last_hours": "{v} en las últimas {h} h",
   "control.hold_to": "Mantén pulsado para {action}",
   "control.press_again": "Pulsa de nuevo para {action}",
   "layout.empty": "Añade tarjetas a este diseño",

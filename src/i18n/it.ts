@@ -70,6 +70,7 @@ const it: Translation = {
   "kind.appliance.running": "In funzione",
   "kind.appliance.off": "Spento",
   "kind.appliance.this_run": "{v} in questo ciclo",
+  "kind.appliance.last_hours": "{v} nelle ultime {h} h",
   "control.hold_to": "Tieni premuto per {action}",
   "control.press_again": "Premi di nuovo per {action}",
   "layout.empty": "Aggiungi schede a questo layout",

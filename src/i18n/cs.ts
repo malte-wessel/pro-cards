@@ -70,6 +70,7 @@ const cs: Translation = {
   "kind.appliance.running": "Běží",
   "kind.appliance.off": "Vypnuto",
   "kind.appliance.this_run": "{v} v tomto cyklu",
+  "kind.appliance.last_hours": "{v} za posledních {h} h",
   "control.hold_to": "Podržte pro {action}",
   "control.press_again": "Stiskněte znovu pro {action}",
   "layout.empty": "Přidejte do tohoto rozvržení karty",

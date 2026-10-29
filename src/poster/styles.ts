@@ -55,6 +55,7 @@ const STYLE_POSTER_CARD = `
      number and its line shrink together, a word stays as much smaller as it is */
   ha-card.layout-poster .row.poster .big.hfit b { font-size: var(--hfit); line-height: calc(var(--hfit) * 1.1); }
   ha-card.layout-poster .row.poster .big.hfit.word b { font-size: calc(var(--hfit) * 0.7); }
+  ha-card.layout-poster .row.poster .pbody > .ctl-slider.pfit-out { display: none; }
   /* a picture's tooltip opens upward from its bottom, over the texts: the picture is the poster's
      bottom strip, and a tooltip opening downward would be cut by the card's edge */
   ha-card.layout-poster .pbody > :is(.pcurve, .plot) > .tip { top: auto; bottom: 8px; z-index: 3; }

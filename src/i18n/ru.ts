@@ -70,6 +70,7 @@ const ru: Translation = {
   "kind.appliance.running": "Работает",
   "kind.appliance.off": "Выключено",
   "kind.appliance.this_run": "{v} за цикл",
+  "kind.appliance.last_hours": "{v} за последние {h} ч",
   "control.hold_to": "Удерживайте, чтобы {action}",
   "control.press_again": "Нажмите ещё раз, чтобы {action}",
   "layout.empty": "Добавьте карточки в этот макет",

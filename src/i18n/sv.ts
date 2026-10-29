@@ -70,6 +70,7 @@ const sv: Translation = {
   "kind.appliance.running": "Kör",
   "kind.appliance.off": "Av",
   "kind.appliance.this_run": "{v} denna körning",
+  "kind.appliance.last_hours": "{v} de senaste {h} h",
   "control.hold_to": "Håll för att {action}",
   "control.press_again": "Tryck igen för att {action}",
   "layout.empty": "Lägg till kort i den här layouten",

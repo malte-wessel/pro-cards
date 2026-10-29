@@ -276,8 +276,8 @@ const ICONS: Record<(typeof APPLIANCE_STYLES)[number], string> = {
 const thresholdOf = (c: KindCtx) =>
   isNum(c.opts.running_above) ? Number(c.opts.running_above) : 5;
 const styleOf = (c: KindCtx) => (oneOf(APPLIANCE_STYLES, c.opts.style) ? c.opts.style : null);
-// this run: since the history last fell to the threshold (the window's start if it never did),
-// and its energy (W over time)
+// this run: since the history last fell to the threshold (`whole`: it never did, the run started
+// before the window), and its energy (W over time)
 const runOf = (c: KindCtx, st: HassEntity | undefined) => {
   const w = watts({ ent: c.ent, m: c.m });
   const limit = thresholdOf(c);
@@ -295,7 +295,7 @@ const runOf = (c: KindCtx, st: HassEntity | undefined) => {
     const next = run[k + 1]?.t ?? c.ctx.now;
     wh += ((run[k].v as number) * scale * (next - run[k].t)) / 3600e3;
   }
-  return { since: (c.ctx.now - start) / 1000, kwh: wh / 1000 };
+  return { since: (c.ctx.now - start) / 1000, kwh: wh / 1000, whole: i < 0 && run.length > 0 };
 };
 
 export const APPLIANCE: Kind = {
@@ -316,19 +316,28 @@ export const APPLIANCE: Kind = {
       const off = t(c.ctx.hass, "kind.appliance.off");
       return { value: { text: off, num: off, unit: "" }, word: true, secondary: null };
     }
+    const kwh = `${fmtNumber(c.ctx.hass, run.kwh, run.kwh < 10 ? 2 : 1)} kWh`;
+    // a run longer than the history has no length to tell: its power, and the window's energy
+    if (run.whole)
+      return {
+        value: power(c, watts({ ent: c.ent, m: c.m })),
+        word: false,
+        secondary: secondaryEl([
+          {
+            text: t(c.ctx.hass, "kind.appliance.last_hours", {
+              v: kwh,
+              h: String(Math.round(run.since / 3600)),
+            }),
+          },
+        ]),
+      };
     const d = fmtDuration(c.ctx.hass, Math.max(60, run.since), true);
     return {
       value: { text: d, num: d, unit: "" },
       word: false,
       secondary:
         run.kwh > 0
-          ? secondaryEl([
-              {
-                text: t(c.ctx.hass, "kind.appliance.this_run", {
-                  v: `${fmtNumber(c.ctx.hass, run.kwh, run.kwh < 10 ? 2 : 1)} kWh`,
-                }),
-              },
-            ])
+          ? secondaryEl([{ text: t(c.ctx.hass, "kind.appliance.this_run", { v: kwh }) }])
           : null,
     };
   },

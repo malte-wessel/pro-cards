@@ -69,6 +69,7 @@ const en = {
   "kind.appliance.running": "Running",
   "kind.appliance.off": "Off",
   "kind.appliance.this_run": "{v} this run",
+  "kind.appliance.last_hours": "{v} in the last {h} h",
   "control.hold_to": "Hold to {action}",
   "control.press_again": "Press again to {action}",
   "layout.empty": "Add cards to this layout",
