@@ -194,6 +194,16 @@ describe("trend scale", async () => {
     const s = mkScale(0, 10, 0, 10, 16);
     expect(s.y(10)).toBeLessThanOrEqual(s.y(0));
   });
+  it("pads the data's range by a tenth, or as asked: a poster's lines fill their plot", () => {
+    const s = mkScale(0, 10, 0, 100, 0);
+    expect([s.min, s.max]).toEqual([-1, 11]);
+    expect(s.y(11)).toBe(0);
+    expect(s.y(-1)).toBe(94);
+    const full = mkScale(0, 10, 0, 100, 0, 0, 2);
+    expect([full.min, full.max]).toEqual([0, 10]);
+    expect(full.y(10)).toBe(0);
+    expect(full.y(0)).toBe(98);
+  });
 });
 
 describe("multi-trend-card editor titles", () => {

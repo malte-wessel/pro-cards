@@ -113,6 +113,17 @@ describe("placements", () => {
     expect(d("media_player.a")).toEqual(["buttons@end", "slider@block"]);
     expect(d("sensor.a")).toEqual([]);
   });
+  it("draws the defaults a card's kind gives for auto, in place of the domain's", () => {
+    const hold = [{ kind: "hold" as const, position: "end" as const, small: false }];
+    const e = ent({ entity: "light.a" });
+    expect(kinds(placementsOf(e, "poster"))).not.toEqual(["hold@end"]);
+    e.control = { ...e.control!, defaults: hold };
+    expect(kinds(placementsOf(e, "poster"))).toEqual(["hold@end"]);
+    // a named control is the card's own choice: the kind's defaults do not apply
+    const named = ent({ entity: "light.a", control: "toggle" });
+    named.control = { ...named.control!, defaults: hold };
+    expect(kinds(placementsOf(named, "poster"))).toEqual(["toggle@end"]);
+  });
   it("draws nothing without a control or in a header value", () => {
     expect(placementsOf(ent({ control: undefined }), "tile")).toEqual([]);
     expect(placementsOf(ent({}), "hval")).toEqual([]);
@@ -361,7 +372,7 @@ describe("options", () => {
     });
     expect(optionsOf(own, s)).toEqual([{ value: "Away", label: "Out", icon: null }]);
   });
-  it("has transport buttons for covers and media players only", () => {
+  it("has transport buttons for covers, media players and robots only", () => {
     expect(buttonsOf(ent({ entity: "cover.a" })).map((b) => b.id)).toEqual([
       "open",
       "stop",
@@ -372,6 +383,11 @@ describe("options", () => {
       "play_pause",
       "next",
     ]);
+    for (const robot of ["vacuum.a", "lawn_mower.a"])
+      expect(buttonsOf(ent({ entity: robot })).map((b) => [b.id, b.primary])).toEqual([
+        ["start_pause", true],
+        ["dock", false],
+      ]);
     expect(buttonsOf(ent({}))).toEqual([]);
   });
 });
@@ -507,6 +523,35 @@ describe("services", () => {
     // no silent toggle on a domain without an on / off meaning
     expect(svc("sensor.a", {}, undefined, { type: "hold" })).toBeNull();
     expect(svc("climate.a", {}, undefined, { type: "hold" })).toBeNull();
+  });
+  it("starts a resting robot, pauses a working one and sends it home", () => {
+    const btn = (entity: string, state: string, id: "start_pause" | "dock") =>
+      svc(entity, {}, st(state, {}, entity), { type: "button", id });
+    expect(btn("vacuum.a", "docked", "start_pause")).toMatchObject({
+      domain: "vacuum",
+      service: "start",
+      data: { entity_id: "vacuum.a" },
+    });
+    expect(btn("vacuum.a", "cleaning", "start_pause")).toMatchObject({ service: "pause" });
+    expect(btn("vacuum.a", "cleaning", "dock")).toMatchObject({ service: "return_to_base" });
+    expect(btn("lawn_mower.a", "docked", "start_pause")).toMatchObject({
+      domain: "lawn_mower",
+      service: "start_mowing",
+    });
+    expect(btn("lawn_mower.a", "mowing", "start_pause")).toMatchObject({ service: "pause" });
+    expect(btn("lawn_mower.a", "mowing", "dock")).toMatchObject({ service: "dock" });
+  });
+  it("arms a disarmed alarm panel away and disarms it from any other state", () => {
+    const A = "alarm_control_panel.a";
+    expect(svc(A, {}, st("disarmed", {}, A), { type: "hold" })).toEqual({
+      domain: "alarm_control_panel",
+      service: "alarm_arm_away",
+      data: { entity_id: A },
+    });
+    for (const state of ["armed_home", "armed_away", "triggered"])
+      expect(svc(A, {}, st(state, {}, A), { type: "hold" })).toMatchObject({
+        service: "alarm_disarm",
+      });
   });
 });
 

@@ -24,6 +24,8 @@ const rainRules = [
   { above: 7.6, color: "indigo", label: "Heavy rain", tint_card: true },
 ];
 
+const PC = "custom:poster-card-pro";
+
 const KITCHEN_ON = [{ condition: "state", entity: "light.kitchen", state: "on" }];
 
 const PF = "custom:power-flow-card-pro";
@@ -2294,6 +2296,98 @@ const CASES = {
       ],
       grid_options: { columns: 6 },
     },
+  ],
+  // the poster card (6 × 3 by default): one case per family of kinds, two posters a row
+  "pc-entity": [
+    {
+      type: PC,
+      entity: "sensor.power_consumption",
+      name: "Power",
+      visual: "sparkline",
+      hours_to_show: 12,
+      rules: [
+        { below: 1000, color: "green", label: "Low" },
+        { below: 3000, color: "amber", label: "Normal" },
+        { above: 3000, color: "red", label: "High" },
+      ],
+      badges: ["sensor.solar_power"],
+    },
+    { type: PC, name: "Welcome", value: "Home", icon: "mdi:home", status: "Good evening" },
+  ],
+  // the predefined rules: the air's bands, a battery charging (+) with its cell
+  "pc-levels": [
+    { type: PC, entity: "sensor.living_room_co2", name: "Living room", visual: "sparkline" },
+    {
+      type: PC,
+      entity: "sensor.balcony_battery_soc",
+      name: "Battery",
+      kind: {
+        charge: "sensor.balcony_battery_charge_power",
+        discharge: "sensor.balcony_battery_discharge_power",
+      },
+    },
+  ],
+  "pc-weather-sun": [
+    { type: PC, entity: "weather.home", name: "Outside" },
+    { type: PC, entity: "sun.sun" },
+  ],
+  // the wind's animated lead and inputs found on its device; the rain filling the poster
+  "pc-wind-rain": [
+    { type: PC, entity: "sensor.wind_speed", name: "Wind" },
+    {
+      type: PC,
+      entity: "sensor.rain_rate_roof",
+      name: "Rain",
+      kind: { flow: "drops", wind: "sensor.wind_speed", direction: "sensor.wind_direction" },
+    },
+    { type: PC, entity: "sensor.wind_speed", name: "Wind", kind: { flow: "lines" } },
+    {
+      type: PC,
+      name: "Outside",
+      icon: "mdi:thermometer",
+      hours_to_show: 12,
+      kind: {
+        type: "trend",
+        entities: [
+          { entity: "sensor.outdoor_temperature", name: "Temperature", color: "orange" },
+          { entity: "sensor.dew_point", name: "Dew point", color: "teal" },
+        ],
+      },
+    },
+  ],
+  // the domains' controls and backdrops: glow, fan, thermostat, padlock
+  "pc-domains": [
+    { type: PC, entity: "light.living_room" },
+    { type: PC, entity: "fan.living_room" },
+    { type: PC, entity: "climate.living_room" },
+    { type: PC, entity: "lock.front_door" },
+  ],
+  "pc-people": [
+    { type: PC, entity: "alarm_control_panel.home" },
+    { type: PC, entity: "person.alex" },
+  ],
+  "pc-devices": [
+    { type: PC, entity: "media_player.living_room_tv" },
+    { type: PC, entity: "cover.office_blinds", name: "Office blinds" },
+    { type: PC, entity: "vacuum.robot" },
+    { type: PC, entity: "lawn_mower.garden" },
+  ],
+  "pc-energy": [
+    { type: PC, entity: "sensor.grid_power", name: "Grid", kind: "grid" },
+    { type: PC, entity: "sensor.solar_power", name: "Solar", kind: "solar" },
+    { type: PC, entity: "sensor.ev_battery", name: "Car", kind: "car" },
+    {
+      type: PC,
+      entity: "sensor.heat_pump_power",
+      name: "Heat pump",
+      kind: { type: "appliance", style: "heat_pump", running_above: 50 },
+    },
+  ],
+  // bigger than the default: twice as wide, one column wider and one row higher (the plots and
+  // the backdrops grow into the room)
+  "pc-sizes": [
+    { type: PC, entity: "weather.home", name: "Outside", grid_options: { columns: 12, rows: 3 } },
+    { type: PC, entity: "climate.living_room", grid_options: { columns: 9, rows: 4 } },
   ],
   // badges without a title: the heading is only as tall as its badges
   "hc-badges-only": {

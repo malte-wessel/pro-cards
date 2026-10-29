@@ -79,6 +79,36 @@ describe("rule matching", () => {
       }),
     ).toBe(false);
   });
+  it("matches a state rule on the entity's own state when the value shows something else", () => {
+    const playing = rule({ state: "playing" });
+    // a media player shown by its title
+    expect(matchRule(playing, txt("Planet Earth III"), "playing")).toBe(true);
+    expect(matchRule(playing, txt("Planet Earth III"), "paused")).toBe(false);
+    expect(matchRule(playing, txt("Planet Earth III"))).toBe(false);
+    // the state never satisfies a range
+    expect(matchRule(rule({ state: "on", below: 10 }), txt("on"), "on")).toBe(false);
+    const e = ent({ attribute: "media_title", rules: [{ state: "playing", label: "Now" }] });
+    const s = st("playing", { media_title: "Coasts" });
+    expect(resolveLook(e, txt("Coasts"), s, tpl).label).toBe("Now");
+  });
+  it("translates a card's own rule label at render time; a written label stays as written", () => {
+    const e = ent({});
+    e.rules = [rule({ below: 20, labelKey: "kind.level.low" }), rule({ above: 20, label: "Full" })];
+    const de = { locale: { language: "de" } } as unknown as HomeAssistant;
+    expect(resolveLook(e, num(10), st(10), tpl).label).toBe("Low");
+    expect(resolveLook(e, num(10), st(10), tpl, de).label).not.toBe("Low");
+    expect(resolveLook(e, num(30), st(30), tpl, de).label).toBe("Full");
+  });
+  it("matches the rules on the value they are written for, shows the value as it is", () => {
+    const e = ent({
+      rules: [
+        { below: 20, label: "low" },
+        { above: 20, label: "high" },
+      ],
+    });
+    const look = resolveLook(e, num(10), st(10), tpl, undefined, num(36));
+    expect(look.label).toBe("high");
+  });
   it("first match wins in author order", () => {
     const e = ent({
       rules: [

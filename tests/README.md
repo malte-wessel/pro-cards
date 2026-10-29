@@ -38,6 +38,7 @@ What is covered:
 - **Sun path card**: solar elevation against known solstice values, event ordering, polar day and night.
 - **Sun azimuth card**: the azimuth against known bearings (noon due south, sunrise and sunset bearings of the solstices), the sides of the house (lit sides, two windows a day for the north side in summer, none in winter, rotation), the footer timeline span, the sky dial and 3D scene geometry (sun inside the disc, night without beam or shadow, visible walls per camera bearing), config normalisation and card size per view.
 - **Illuminance card**: zone merging, log scale, colour blending, editor round trip.
+- **Poster card and its kinds**: kind parsing, detection (domain, entity id, device class) and inference from `kind`'s keys, inputs found on the entity's device (device class, unit, translation key, never a guess), the predefined rules (bands, units, translated labels), config normalisation (kind defaults, controls, inputs, the status badge, badges reading the poster's entity, images), the second normalisation once `hass` arrives, the cover art colour.
 - **Docs shim**: the Jinja subset (filters, precedence, tests, conditionals, error fallback), deterministic history, state updates, service calls, template subscriptions.
 
 `npm run test:watch` re-runs on change.

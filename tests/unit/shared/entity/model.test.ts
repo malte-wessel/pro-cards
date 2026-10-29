@@ -119,6 +119,59 @@ describe("model", () => {
   });
 });
 
+describe("a card's own rules", () => {
+  const wind = (v: number, unit: string) => {
+    const e = ent({});
+    e.rules = [
+      { below: 12, label: "light" },
+      { above: 12, label: "fresh" },
+    ].map((r) => ({
+      state: null,
+      below: r.below ?? null,
+      above: r.above ?? null,
+      color: null,
+      icon: null,
+      label: r.label,
+      tintCard: false,
+      style: null,
+      pulse: false,
+    }));
+    e.ruleUnit = "km/h";
+    return modelOf(ctx({ "sensor.x": st(v, { unit_of_measurement: unit }) }), e);
+  };
+
+  it("converts the value to the rules' unit before they match, and shows it in its own", () => {
+    // 5 m/s is 18 km/h
+    const ms = wind(5, "m/s");
+    expect(ms.look.label).toBe("fresh");
+    expect(ms.model.num).toBe(5);
+    expect(ms.fmt.text).toBe("5 m/s");
+    expect(wind(5, "km/h").look.label).toBe("light");
+    // a user's own rules (no ruleUnit) read the sensor's unit
+    const own = ent({
+      rules: [
+        { below: 12, label: "light" },
+        { above: 12, label: "fresh" },
+      ],
+    });
+    const m = modelOf(ctx({ "sensor.x": st(5, { unit_of_measurement: "m/s" }) }), own);
+    expect(m.look.label).toBe("light");
+  });
+
+  it("converts rain rates to mm/h", () => {
+    const e = ent({
+      rules: [
+        { below: 2.5, label: "light" },
+        { above: 2.5, label: "moderate" },
+      ],
+    });
+    e.ruleUnit = "mm/h";
+    const s = (v: number, u: string) => ctx({ "sensor.x": st(v, { unit_of_measurement: u }) });
+    expect(modelOf(s(0.2, "in/h"), e).look.label).toBe("moderate");
+    expect(modelOf(s(0.2, "mm/h"), e).look.label).toBe("light");
+  });
+});
+
 describe("names and units of items built by a card", () => {
   const ctx: FormatCtx = {
     hass: { states: {}, locale: { language: "de" } } as unknown as FormatCtx["hass"],
