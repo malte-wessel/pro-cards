@@ -13,6 +13,7 @@ const DEVICE_TABLE: [string, RegExp][] = [
   ["robot_vacuum", /^(vacuum\.robot|sensor\.robot_)/],
   ["ev", /^(sensor\.ev_(battery|range)|binary_sensor\.ev_|number\.ev_|device_tracker\.ev$)/],
   ["wallbox", /^sensor\.ev_charger_/],
+  ["van", /^(sensor\.van_|device_tracker\.van$)/],
   ["inverter", /^sensor\.(solar_|energy_today$)/],
   ["home_battery", /^sensor\.battery_/],
   ["balcony", /^sensor\.balcony_/],

@@ -26,7 +26,7 @@ The type is detected from the entity's domain, then its device class, else it is
 
 **Reads** any entity.
 
-The fallback: the entity's icon, name and value. The status badge shows the matching rule's label. `visual` adds a picture: `sparkline`, `columns`, `bar` or `gauge`. A numeric value takes `unit`, `decimals` and `rules`, as on every Pro card.
+The fallback: the entity's icon, name and value. The status badge shows the matching rule's label. `visual` adds a picture: `sparkline`, `columns`, `strip`, `bar`, `gauge`, or `glow`, a light from below as strong as the value. A numeric value takes `unit`, `decimals` and `rules`, as on every Pro card.
 
 ::: live
 
@@ -53,7 +53,7 @@ The fallback: the entity's icon, name and value. The status badge shows the matc
 
 A battery poster draws a strip of ten segments under the charge, filled to it. It turns orange and says _Low_ below 20 %, red and _Critical_ below 10 %. The labels follow the user's language; [Predefined rules](#predefined-rules) has the set to copy and change.
 
-A template sensor often has no device class. `poster: battery` makes it a battery, like the phone here:
+A template sensor often has no device class. `poster: battery` makes it a battery, like the phone here. The remote is low, the smoke detector critical:
 
 ::: live
 
@@ -67,6 +67,14 @@ A template sensor often has no device class. `poster: battery` makes it a batter
   entity: sensor.phone_battery
   name: Phone
   poster: battery
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: sensor.remote_battery
+  name: Remote
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: sensor.smoke_detector_battery
+  name: Smoke detector
   grid_options: { columns: 6 }
 ```
 
@@ -134,6 +142,14 @@ The labels follow the user's language. [Predefined rules](#predefined-rules) has
 - type: custom:poster-card-pro
   entity: sensor.outdoor_aqi
   name: Outside
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: sensor.bedroom_co2
+  name: Bedroom
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: sensor.city_aqi
+  name: City
   grid_options: { columns: 6 }
 ```
 
@@ -208,7 +224,22 @@ Along the bottom runs the day's curve, with the sun where it is now. Hover it fo
 
 **Reads** a `wind_speed` sensor or a weather entity.
 
-A wind speed sensor, or a weather entity with `poster: wind`. The animated icon turns where the wind blows and runs at its speed. The speed is large, with the direction and the gusts under it. Five bands of its speed colour and name it, from _Calm_ to _Stormy_, and from 50 km/h the whole poster turns red.
+A wind speed sensor, or a weather entity with `poster: wind`. The animated icon turns where the wind blows and runs at its speed. The speed is large, with the direction and the gusts under it. Five bands of its speed colour and name it, from _Calm_ to _Stormy_, and from 50 km/h the whole poster turns red:
+
+::: live
+
+```yaml
+- type: custom:poster-card-pro
+  entity: sensor.wind_speed
+  name: Garden
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: sensor.coast_wind_speed
+  name: Coast
+  grid_options: { columns: 6 }
+```
+
+:::
 
 The direction and the gusts come from the sensor's device, or from the weather entity.
 
@@ -262,7 +293,7 @@ The direction and the gusts come from the sensor's device, or from the weather e
 
 **Reads** a `precipitation_intensity` sensor (mm/h or in/h).
 
-A rain rate sensor. The animated icon rains at the rate. The rate is large, with today's total under it. The rain's bands colour and name it.
+A rain rate sensor. The animated icon rains at the rate. The rate is large, with today's total under it. The rain's bands colour and name it, from _Dry_ to _Violent_, which pulses.
 
 `wind` and `direction` slant the drops. `variant` fills the whole poster with rain: `drops`, `ripples` or `fill`, a gauge that fills with today's total.
 
@@ -270,12 +301,20 @@ A rain rate sensor. The animated icon rains at the rate. The rate is large, with
 
 ```yaml
 - type: custom:poster-card-pro
-  entity: sensor.rain_rate_roof
-  name: Rain
+  entity: sensor.rain_rate
+  name: Garden
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: sensor.rain_rate_roof
-  name: Rain
+  name: Roof
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: sensor.carport_rain_rate
+  name: Carport
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: sensor.rain_rate_roof
+  name: Roof
   variant: drops
   wind: sensor.wind_speed
   direction: sensor.wind_direction
@@ -398,6 +437,12 @@ Along the bottom, a dial shows the target as a ring and the temperature now as a
 - type: custom:poster-card-pro
   entity: climate.bedroom
   grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: climate.office
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: climate.kitchen
+  grid_options: { columns: 6 }
 ```
 
 :::
@@ -419,6 +464,9 @@ The hold is the icon's default action, `icon_hold_action: { action: toggle }`. S
 - type: custom:poster-card-pro
   entity: lock.garage_side_door
   grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: lock.back_door
+  grid_options: { columns: 6 }
 ```
 
 :::
@@ -432,8 +480,15 @@ Hold the shield icon to arm the panel (away) or disarm it, as on the [lock](#loc
 ::: live
 
 ```yaml
-type: custom:poster-card-pro
-entity: alarm_control_panel.home
+- type: custom:poster-card-pro
+  entity: alarm_control_panel.home
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: alarm_control_panel.studio
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: alarm_control_panel.garage
+  grid_options: { columns: 6 }
 ```
 
 :::
@@ -474,7 +529,7 @@ show_entity_picture: false
 
 **Reads** a media player.
 
-A media player's cover art is the icon, and fills the poster behind it, blurred. It also gives the poster its colour. The title is large, with the artist and album under it. The transport sits beside them and the volume below. On a short card the volume is hidden (more-info still has it). A thin bar along the bottom edge follows the track while it plays.
+A media player's cover art is the icon, and fills the poster behind it, blurred. It also gives the poster its colour. The title is large, with the artist and album under it. The transport sits beside them and the volume below. On a short card the volume is hidden (more-info still has it). A thin bar along the bottom edge follows the track while it plays. A player that is off shows its icon and the state.
 
 ::: live
 
@@ -494,6 +549,9 @@ entity: media_player.living_room_speaker
 - type: custom:poster-card-pro
   entity: media_player.kitchen_speaker
   control: false
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: media_player.office_speaker
   grid_options: { columns: 6 }
 ```
 
@@ -526,7 +584,7 @@ A cover draws its window by its device class:
 - an awning reaching out;
 - a window pane.
 
-The drawing follows the cover's position and glides along while it moves. The position is large, with open, stop and close beside it.
+The drawing follows the cover's position and glides along while it moves; the status says Opening or Closing. The position is large, with open, stop and close beside it. A cover without a position draws it open or closed, and its state is large.
 
 ::: live
 
@@ -550,6 +608,12 @@ The drawing follows the cover's position and glides along while it moves. The po
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: cover.driveway_gate
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: cover.skylight
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: cover.garage_door
   grid_options: { columns: 6 }
 ```
 
@@ -581,7 +645,7 @@ A cover without a device class draws a window pane. `variant` picks another draw
 
 **Reads** a vacuum or a lawn mower.
 
-While a vacuum or a lawn mower works, its path draws itself across the poster, on grass for a mower. The robot in the icon moves. Docked, the icon shows the dock.
+While a vacuum or a lawn mower works, its path draws itself across the poster, on grass for a mower, and the robot in the icon moves. On its way back the path stays, faint. Docked, its dock stands in the path's place.
 
 The state is large, with the battery and the room under it where the integration reports them. Start / pause and return to the dock sit beside them. An error pulses red.
 
@@ -592,7 +656,16 @@ The state is large, with the battery and the room under it where the integration
   entity: vacuum.robot
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
+  entity: vacuum.upstairs
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: vacuum.basement
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
   entity: lawn_mower.garden
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: lawn_mower.front_lawn
   grid_options: { columns: 6 }
 ```
 
@@ -617,6 +690,11 @@ The state is large, with the battery and the room under it where the integration
   poster: grid
   import: sensor.grid_import_power
   export: sensor.grid_export_power
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: sensor.balcony_grid_power
+  name: Balcony
+  poster: grid
   grid_options: { columns: 6 }
 ```
 
@@ -662,7 +740,7 @@ The state is large, with the battery and the room under it where the integration
 
 **Reads** the car's battery in % (`poster: car`).
 
-`poster: car` on the car's battery shows the charge large, with the range under it. The status says Charging, Plugged in, or where the car is while it is away from home.
+`poster: car` on the car's battery shows the charge large, with the range under it. The status says Charging, Plugged in, or where the car is while it is away from home. The battery's [rules](#predefined-rules) colour it, and their label comes first: the van is away, and its status says Critical.
 
 Range, plug, charging and location come from the car's device. A wallbox's power sensor as `charging` counts as charging above 0 W.
 
@@ -680,6 +758,11 @@ Range, plug, charging and location come from the car's device. A wallbox's power
   poster: car
   charging: false
   location: false
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: sensor.van_battery
+  name: Van
+  poster: car
   grid_options: { columns: 6 }
 ```
 

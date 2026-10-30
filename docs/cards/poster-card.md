@@ -82,6 +82,29 @@ Four entities, nothing but `entity` and a key or two: a power sensor with its la
 
 :::
 
+## An unavailable entity
+
+While its entity is unavailable, a poster draws a dash for the value, its status says Unavailable and its controls are greyed out. An entity that does not exist draws the same, its status naming the missing entity.
+
+::: live
+
+```yaml
+- type: custom:poster-card-pro
+  entity: light.shed
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: climate.shed
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: cover.shed_door
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: lock.shed
+  grid_options: { columns: 6 }
+```
+
+:::
+
 ## Reference
 
 ### Card options
@@ -95,6 +118,7 @@ Four entities, nothing but `entity` and a key or two: a power sensor with its la
 | `running_above`, `series`                           | –                   | The [appliance](/cards/poster-types#appliance)'s threshold and the [trend](/cards/poster-types#trend)'s series.                               |
 | `name`, `icon`, `value`, `secondary`, `color`       | the type's          | The places, templates allowed; see [The places](/cards/poster-custom#the-places).                                                             |
 | `attribute`, `unit`, `decimals`, `prefix`, `suffix` | –                   | The value, as on the entity cards.                                                                                                            |
+| `name_position`                                     | `above`             | `below` puts the name under the value; see [The places](/cards/poster-custom#the-places).                                                     |
 | `icon_style`                                        | `circle`            | `plain` drops the circle behind the icon; see [The icon](/cards/poster-custom#the-icon).                                                      |
 | `show_entity_picture`                               | `false`             | The entity's picture in the icon's place (the weather's, a person's and a media player's by default).                                         |
 | `icon_image`                                        | –                   | A picture in the icon: a URL, a template or an entity's picture; see [The icon](/cards/poster-custom#the-icon).                               |
@@ -109,7 +133,9 @@ Four entities, nothing but `entity` and a key or two: a power sensor with its la
 | `rules`                                             | the type's          | Colour, icon, label, the icon's and the backdrop's keys by value or state; see [Colour and rules](/cards/poster-custom#colour-and-rules).     |
 | `control`                                           | the type's          | A control as on the [entity cards](/cards/controls), or `false`; see [Poster controls](/cards/poster-controls).                               |
 | `control_position`                                  | the control's own   | `end` or `block`; see [Where it sits](/cards/poster-controls#where-it-sits).                                                                  |
-| `hours_to_show`                                     | `24`                | The picture's window.                                                                                                                         |
+| `control_step`, `control_options` …                 | –                   | `control_step`, `control_attribute`, `control_options`, `control_confirm`: the control's own keys, as on the [entity cards](/cards/controls). |
+| `hours_to_show`                                     | the type's          | The picture's window in hours: 24, the weather's forecast 12 ahead, a trend's 6. A solar poster always draws today.                           |
+| `bucket_minutes`, `smoothing_minutes`               | `60`, by width      | The buckets of `columns` and `strip`, the averaging of `sparkline`, as on the [entity card](/cards/entity-card#reference).                    |
 | `tap_action` …                                      | `more-info`         | `tap_action`, `hold_action`, `double_tap_action`; see [Actions](/cards/poster-custom#actions).                                                |
 | `hover`                                             | `false`             | Home Assistant's hover and press layers.                                                                                                      |
 

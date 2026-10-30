@@ -740,6 +740,116 @@ def("media_player.kitchen_speaker", "playing", {
   volume_level: 0.3,
 });
 
+// the same kinds in other states, for the poster docs that show a type's states side by side
+// (each numeric one drifts within its band only)
+def("media_player.office_speaker", "off", { friendly_name: "Office speaker", volume_level: 0.2 });
+def("alarm_control_panel.garage", "triggered", {
+  friendly_name: "Garage alarm",
+  code_arm_required: false,
+  code_format: null,
+  supported_features: 3,
+});
+def("alarm_control_panel.studio", "armed_away", {
+  friendly_name: "Studio alarm",
+  code_arm_required: false,
+  code_format: null,
+  supported_features: 3,
+});
+def("lock.back_door", "jammed", { friendly_name: "Back door" });
+def("vacuum.upstairs", "docked", { friendly_name: "Upstairs vacuum", battery_level: 100 });
+def("vacuum.basement", "error", {
+  friendly_name: "Basement vacuum",
+  battery_level: 31,
+  status: "Stuck",
+});
+def("lawn_mower.front_lawn", "docked", { friendly_name: "Front lawn", battery_level: 100 });
+def("climate.office", "cool", {
+  friendly_name: "Office AC",
+  temperature: 22,
+  current_temperature: 25.5,
+  hvac_action: "cooling",
+  hvac_modes: ["off", "cool", "auto"],
+  min_temp: 16,
+  max_temp: 30,
+  target_temp_step: 0.5,
+});
+def("climate.kitchen", "heat", {
+  friendly_name: "Kitchen thermostat",
+  temperature: 21,
+  current_temperature: 21.4,
+  hvac_action: "idle",
+  hvac_modes: ["off", "heat", "auto"],
+  min_temp: 5,
+  max_temp: 30,
+  target_temp_step: 0.5,
+});
+def("cover.skylight", "opening", {
+  friendly_name: "Skylight",
+  device_class: "window",
+  current_position: 30,
+});
+def(
+  "sensor.remote_battery",
+  18,
+  { unit_of_measurement: "%", device_class: "battery", friendly_name: "Remote battery" },
+  "battery",
+  { min: 0, max: 100, decimals: 0 },
+);
+def(
+  "sensor.smoke_detector_battery",
+  6,
+  { unit_of_measurement: "%", device_class: "battery", friendly_name: "Smoke detector battery" },
+  "battery",
+  { min: 0, max: 100, decimals: 0 },
+);
+def(
+  "sensor.bedroom_co2",
+  1480,
+  { unit_of_measurement: "ppm", device_class: "carbon_dioxide", friendly_name: "Bedroom CO₂" },
+  "co2",
+  { noise: 15, min: 1250, max: 1900, decimals: 0 },
+);
+def(
+  "sensor.city_aqi",
+  320,
+  { device_class: "aqi", friendly_name: "City air quality", icon: "mdi:air-filter" },
+  "flat",
+  { noise: 3, min: 305, max: 360, decimals: 0 },
+);
+def(
+  "sensor.coast_wind_speed",
+  62,
+  { unit_of_measurement: "km/h", device_class: "wind_speed", friendly_name: "Coast wind" },
+  "wind",
+  { noise: 4, min: 52, max: 90, decimals: 1 },
+);
+def(
+  "sensor.carport_rain_rate",
+  12,
+  {
+    unit_of_measurement: "mm/h",
+    device_class: "precipitation_intensity",
+    friendly_name: "Carport rain rate",
+  },
+  "flat",
+  { noise: 1, min: 8, max: 40, decimals: 1 },
+);
+def(
+  "sensor.van_battery",
+  8,
+  { unit_of_measurement: "%", device_class: "battery", friendly_name: "Van battery" },
+  "battery",
+  { min: 0, max: 100, decimals: 0 },
+);
+def(
+  "sensor.van_range",
+  31,
+  { unit_of_measurement: "km", device_class: "distance", friendly_name: "Van range" },
+  "flat",
+  { decimals: 0 },
+);
+def("device_tracker.van", "not_home", { friendly_name: "Van", source_type: "gps" });
+
 // energy
 def(
   "sensor.power_consumption",

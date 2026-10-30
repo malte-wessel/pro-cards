@@ -9,7 +9,7 @@ A poster has a few places: an icon at the top, badges in the corner, and a name,
 | Icon            | `icon`           | an `mdi:` icon, a template; `icon_ring` and the icon's own [actions](#the-icon) | the entity's icon or picture, the type's drawing        |
 | Status          | `status`         | a text, a template, badge keys with `value` for its text, or `false`            | the type's status, else the matching rule's label       |
 | Badges          | `badges`         | entities or [badges](/cards/poster-badges) of your own, in order                | none                                                    |
-| Name            | `name`           | a text, a template                                                              | the friendly name                                       |
+| Name            | `name`           | a text, a template; `name_position: below` puts it under the value              | the friendly name                                       |
 | Value           | `value`          | a text, a template; `attribute` shows an attribute                              | the entity's state                                      |
 | Under the value | `secondary`      | a text, a template                                                              | the type's line                                         |
 | Colour          | `color`, `rules` | a colour token, hex or a template; [rules](#colour-and-rules) by value          | the matching rule's, else Home Assistant's state colour |

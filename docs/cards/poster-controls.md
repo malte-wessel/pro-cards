@@ -86,6 +86,8 @@ Every poster takes a control its entity supports, whatever its poster type. The 
 | `button`   | one round button           | scripts, scenes, buttons                                        |
 | `hold`     | a button held for a second | locks, alarm panels; any switch that should not go by accident  |
 
+A stepper beside the value that steps that very number takes the value's place, so the number shows once, between − and +. A thermostat's stepper sets the target and leaves the temperature large.
+
 ::: live
 
 ```yaml
