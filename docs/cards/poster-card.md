@@ -580,7 +580,7 @@ Every place has one key, the same for every kind. Each takes plain text or a tem
 | Picture         | `visual`    | the kind's drawing                                      |
 | Backdrop        | `image`     | the kind's backdrop                                     |
 
-Without an entity the keys fill the poster alone. A tap then does nothing unless `tap_action` says what:
+Without an entity the keys fill the poster alone. A tap then does nothing unless `tap_action` says what. [Custom posters](/cards/poster-custom) builds posters from these keys, step by step:
 
 ::: live
 
@@ -934,7 +934,7 @@ The 2.9 betas drew posters with `layout: poster` on the entity, group, sections,
 | `name`, `icon`, `value`, `secondary`, `color` | the kind's  | The places; templates allowed. `attribute`, `unit`, `decimals`, `prefix`, `suffix` as on the entity cards. |
 | `status`                                      | the kind's  | The status badge: a text or a template, an object of badge keys with `value` for its text, or `false`.     |
 | `badges`                                      | –           | The badges in the corner, in order; `status` places the status badge.                                      |
-| `visual`                                      | the kind's  | The picture: `sparkline`, `columns`, `bar` or `gauge`, `icon` for none.                                    |
+| `visual`                                      | the kind's  | The picture: `sparkline`, `columns`, `strip`, `bar`, `gauge`, `ring` (around the icon), `icon` for none.   |
 | `image`                                       | the kind's  | The backdrop: a URL, a template or an entity's picture; `false` drops the kind's.                          |
 | `rules`                                       | the kind's  | Colour, icon, label, `style`, `pulse`, `tint_card` by value or state; they replace the kind's own.         |
 | `control`                                     | the kind's  | A control as on the [entity cards](/cards/controls); `false` drops the kind's.                             |

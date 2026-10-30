@@ -60,6 +60,7 @@ const cardGroups = [
     items: [
       { text: "Poster Card Pro", link: "/cards/poster-card" },
       { text: "Poster controls", link: "/cards/poster-controls" },
+      { text: "Custom posters", link: "/cards/poster-custom" },
     ],
   },
   {
