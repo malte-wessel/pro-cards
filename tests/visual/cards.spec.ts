@@ -1,31 +1,11 @@
-import type { Page } from "@playwright/test";
-import { test, expect, mount } from "../e2e/util.ts";
+import { test, expect, mount, sharedTest } from "../e2e/util.ts";
 
 // All snapshots: frozen clock (21 June 2026, 12:00 Europe/Berlin), 400 px section column, light and dark.
 // One test per case draws both themes, on one page per worker: the harness loads once and every
 // case is mounted into it again (mount resets the theme, skin, width and the harness's records).
 // VISUAL_THEMES=dark draws one theme only, for a quick look while working.
 const THEMES = (process.env.VISUAL_THEMES || "light,dark").split(",");
-const vtest = test.extend<object, { shared: Page }>({
-  shared: [
-    async ({ browser }, use, info) => {
-      const u = info.project.use;
-      const context = await browser.newContext({
-        baseURL: u.baseURL,
-        viewport: u.viewport,
-        deviceScaleFactor: u.deviceScaleFactor,
-        userAgent: u.userAgent,
-        colorScheme: u.colorScheme,
-        reducedMotion: u.reducedMotion,
-        timezoneId: u.timezoneId,
-        locale: u.locale,
-      });
-      await use(await context.newPage());
-      await context.close();
-    },
-    { scope: "worker" },
-  ],
-});
+const vtest = sharedTest;
 const EC = "custom:entity-card-pro",
   EGC = "custom:entity-group-card-pro",
   ESC = "custom:entity-sections-card-pro";

@@ -19,10 +19,15 @@ export default defineConfig({
     timezoneId: "Europe/Berlin",
     locale: "en-GB",
   },
+  // the harness built and served as files: a page loads one bundle instead of a hundred modules
+  // through the dev server, which also no longer competes with the browsers for the CPU (the
+  // integration run takes about half as long); the build is a second or two
   webServer: {
-    command: "npx vite tests/harness --port 4174 --strictPort",
+    command:
+      "npx vite build tests/harness --outDir dist --emptyOutDir --logLevel warn && npx vite preview tests/harness --outDir dist --port 4174 --strictPort",
     url: "http://localhost:4174/",
-    reuseExistingServer: !process.env.CI,
+    // always its own, freshly built: a server left running from an earlier run would serve an old build
+    reuseExistingServer: false,
     timeout: 60_000,
   },
   projects: [

@@ -10,7 +10,7 @@ Pro Cards has three test layers. They share one idea: the cards are plain web co
 
 A fourth, manual layer is a real Home Assistant in Docker (`npm run ha`), see [Real Home Assistant](#real-home-assistant) below.
 
-`npm run test:all` runs all three in that order; `npm run check` runs Prettier, ESLint, the TypeScript type check, the build, the unit and integration tests and the docs build, which is the definition of done before a commit. CI runs the same commands on every push and pull request (`.github/workflows/validate.yml`).
+`npm run test:all` runs all three in that order; `npm run check` runs Prettier, ESLint, the TypeScript type check, the build, the unit and integration tests and the docs build, which is the definition of done before a commit (about 2 minutes). `npm run check:fast` runs the first three side by side (`scripts/parallel.mjs`), then the build and the unit tests (about 15 s): enough while working, with the integration specs a change touches. The docs examples mount one after another into one page per worker (`sharedTest` in `tests/e2e/util.ts`, as the visual cases), which keeps them at about 25 s. CI runs the same commands on every push and pull request (`.github/workflows/validate.yml`).
 
 ## Unit tests
 
@@ -49,7 +49,7 @@ What is covered:
 
 ## Integration tests
 
-`tests/e2e/*.spec.ts` mount the real cards in Chromium through a small harness page, `tests/harness/`. Playwright starts the harness with Vite on port 4174 by itself.
+`tests/e2e/*.spec.ts` mount the real cards in Chromium through a small harness page, `tests/harness/`. Playwright builds the harness with Vite and serves the built files on port 4174 by itself (a page loads one bundle, not a hundred modules through the dev server: the integration run takes half as long). It always starts its own server, so a test never runs against an old build; to debug in the browser, `npx vite tests/harness` serves the sources.
 
 The harness exposes `window.pc`:
 

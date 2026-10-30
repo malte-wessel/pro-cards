@@ -77,35 +77,35 @@ test("a numeric row count clamps like Home Assistant's", async ({ page }) => {
   expect(await height(page, 0)).toBe(cell(3));
 });
 
-test("in a grid row every card takes the row's height, the tallest keeps its own", async ({
-  page,
-}) => {
-  // each card alone, then beside the tall list: both fill the row, which is as tall as the
-  // taller of the two (a card that fills never shrinks its own row: power flow, sun azimuth)
-  const alone = async (cfg: object) => {
-    await mount(page, [half(cfg)], { fullWidth: false });
-    return height(page, 0);
-  };
-  const tall = await alone(TALL);
-  for (const cfg of [...CARDS, ...MORE]) {
-    const own = await alone(cfg);
+// one test per card, so the workers share them
+const EACH = [...CARDS, ...MORE].map((cfg, i) => ({ cfg, name: `${cfg.type} (#${i + 1})` }));
+const alone = async (page: Page, cfg: object) => {
+  await mount(page, [half(cfg)], { fullWidth: false });
+  return height(page, 0);
+};
+
+for (const { cfg, name } of EACH)
+  test(`in a grid row every card takes the row's height, the tallest keeps its own: ${name}`, async ({
+    page,
+  }) => {
+    // the card alone, then beside the tall list: both fill the row, which is as tall as the taller
+    // of the two (a card that fills never shrinks its own row: power flow, sun azimuth)
+    const tall = await alone(page, TALL);
+    const own = await alone(page, cfg);
     await mount(page, [half(cfg), half(TALL)], { fullWidth: false });
     const row = Math.max(own, tall);
     expect(await height(page, 0), `${cfg.type} beside the list`).toBe(row);
     expect(await height(page, 1), `the list beside ${cfg.type}`).toBe(row);
-  }
-});
+  });
 
-test("fill_height: false keeps a card at its own height, at most its cell's", async ({ page }) => {
-  const alone = async (cfg: object) => {
-    await mount(page, [half(cfg)], { fullWidth: false });
-    return height(page, 0);
-  };
-  const tall = await alone(TALL);
-  for (const cfg of [...CARDS, ...MORE]) {
+for (const { cfg, name } of EACH)
+  test(`fill_height: false keeps a card at its own height, at most its cell's: ${name}`, async ({
+    page,
+  }) => {
+    const tall = await alone(page, TALL);
     const own = { ...cfg, fill_height: false };
-    const natural = await alone(own);
-    if (natural >= tall) continue;
+    const natural = await alone(page, own);
+    if (natural >= tall) return;
     await mount(page, [half(own), half(TALL)], { fullWidth: false });
     expect(await height(page, 0), `${cfg.type} beside the list`).toBe(natural);
     expect(await height(page, 1), `the list beside ${cfg.type}`).toBe(tall);
@@ -119,8 +119,7 @@ test("fill_height: false keeps a card at its own height, at most its cell's", as
       .boundingBox()
       .then((b) => Math.round(b!.height));
     expect(await height(page, 0), `${cfg.type} in a small cell`).toBeLessThanOrEqual(small);
-  }
-});
+  });
 
 test("in a horizontal stack fill_height: false keeps a card at its own height", async ({
   page,

@@ -5,7 +5,8 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import yaml from "js-yaml";
-import { test, expect, mount } from "./util";
+import type { ConsoleMessage } from "@playwright/test";
+import { test, expect, mount, sharedTest } from "./util";
 import type { CardConfigBase } from "../../src/shared/ha.ts";
 
 const walk = (d: string): string[] =>
@@ -46,39 +47,48 @@ for (const file of walk("docs")) {
   const mounts = mountsOf(readFileSync(file, "utf8"));
   if (!mounts.length) continue;
   for (const [k, { cards, width }] of mounts.entries())
-    test(`${file} #${k + 1}: ${cards.length} cards render`, async ({ page }) => {
+    // one page per worker: each example mounts into it again (only mounts, nothing changes state)
+    sharedTest(`${file} #${k + 1}: ${cards.length} cards render`, async ({ shared: page }) => {
       const errors: string[] = [];
-      page.on("console", (m) => {
+      const onConsole = (m: ConsoleMessage) => {
         if (m.type() === "error") errors.push(m.text());
-      });
-      page.on("pageerror", (e) => errors.push(String(e)));
-      const n = await mount(page, cards, { liveClock: true, width });
-      expect(n).toBe(cards.length);
-      const missing = await page.evaluate(() =>
-        window.pc
-          .cards()
-          .map((el) => el.shadowRoot?.textContent ?? "")
-          .filter((t) => / not found/.test(t)),
-      );
-      expect(missing).toEqual([]);
-      expect(errors).toEqual([]);
-      // and none the browser reports past the console (a ResizeObserver loop)
-      expect(await page.evaluate(() => window.pc.errors)).toEqual([]);
-      // no control spills past its card (clipped by the card's overflow) at a section's width
-      const spilled = await page.evaluate(() =>
-        window.pc.cards().flatMap((el, i) => {
-          const root = el.shadowRoot;
-          const card = root?.querySelector("ha-card")?.getBoundingClientRect();
-          if (!root || !card) return [];
-          return [...root.querySelectorAll<HTMLElement>(".ctl, .toggle")]
-            .filter((c) => {
-              const b = c.getBoundingClientRect();
-              return b.width > 0 && (b.right > card.right + 0.5 || b.bottom > card.bottom + 0.5);
-            })
-            .map((c) => `card ${i}: ${c.className}`);
-        }),
-      );
-      expect(spilled).toEqual([]);
+      };
+      const onError = (e: Error) => errors.push(String(e));
+      page.on("console", onConsole);
+      page.on("pageerror", onError);
+      // the page outlives the test: its listeners go with it, failed or not
+      try {
+        const n = await mount(page, cards, { liveClock: true, width });
+        expect(n).toBe(cards.length);
+        const missing = await page.evaluate(() =>
+          window.pc
+            .cards()
+            .map((el) => el.shadowRoot?.textContent ?? "")
+            .filter((t) => / not found/.test(t)),
+        );
+        expect(missing).toEqual([]);
+        expect(errors).toEqual([]);
+        // and none the browser reports past the console (a ResizeObserver loop)
+        expect(await page.evaluate(() => window.pc.errors)).toEqual([]);
+        // no control spills past its card (clipped by the card's overflow) at a section's width
+        const spilled = await page.evaluate(() =>
+          window.pc.cards().flatMap((el, i) => {
+            const root = el.shadowRoot;
+            const card = root?.querySelector("ha-card")?.getBoundingClientRect();
+            if (!root || !card) return [];
+            return [...root.querySelectorAll<HTMLElement>(".ctl, .toggle")]
+              .filter((c) => {
+                const b = c.getBoundingClientRect();
+                return b.width > 0 && (b.right > card.right + 0.5 || b.bottom > card.bottom + 0.5);
+              })
+              .map((c) => `card ${i}: ${c.className}`);
+          }),
+        );
+        expect(spilled).toEqual([]);
+      } finally {
+        page.off("console", onConsole);
+        page.off("pageerror", onError);
+      }
     });
 }
 

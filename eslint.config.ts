@@ -12,6 +12,7 @@ export default tseslint.config(
       "playwright-report/",
       "test-results/",
       "coverage/",
+      "tests/harness/dist/",
       "node_modules/",
       "**/*.vue",
     ],

@@ -17,6 +17,31 @@ export interface MountOpts extends MountOptions {
   time?: Date;
 }
 
+// `test` with one page per worker (`shared`): the harness loads once and every test mounts into
+// it again (mount resets the theme, skin, width and the harness's records). For tests that only
+// mount and look (the docs examples, the visual cases); one that clicks or sets a state takes a
+// page of its own. The page's clock is the first mount's (frozen unless opts.liveClock)
+export const sharedTest = test.extend<object, { shared: Page }>({
+  shared: [
+    async ({ browser }, use, info) => {
+      const u = info.project.use;
+      const context = await browser.newContext({
+        baseURL: u.baseURL,
+        viewport: u.viewport,
+        deviceScaleFactor: u.deviceScaleFactor,
+        userAgent: u.userAgent,
+        colorScheme: u.colorScheme,
+        reducedMotion: u.reducedMotion,
+        timezoneId: u.timezoneId,
+        locale: u.locale,
+      });
+      await use(await context.newPage());
+      await context.close();
+    },
+    { scope: "worker" },
+  ],
+});
+
 // Opens the harness (with a frozen clock unless opts.liveClock) and mounts one config or a list.
 export async function mount(
   page: Page,

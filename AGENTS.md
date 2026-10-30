@@ -55,6 +55,8 @@ npm run check          # prettier check + eslint + typecheck + build + schema/un
 npm run test:visual    # only when anything rendered changed (needs Docker)
 ```
 
+While working, `npm run check:fast` (the static checks side by side, the build and the unit tests, about 15 s) and the integration specs a change touches (`npm run test:e2e -- poster-card`) are enough; the full check runs once before a commit.
+
 Then update `CHANGELOG.md` under the next version and, for behaviour changes, the card's page in `docs/cards/`.
 
 ## Conventions
