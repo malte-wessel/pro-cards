@@ -1,10 +1,10 @@
 # Badges
 
-The top right of a [poster](/cards/poster-card) is its corner: a column of small badges, the first of them the poster's own status. A badge shows another entity beside the poster's subject, an attribute of the poster's entity, or a value of your own, and takes its own taps. This page shows what a badge can be, the status badge and how the corner fits the poster.
+The top right of a [poster](/cards/poster-card) is its corner: a column of small badges. A badge shows another entity, an attribute of the poster's entity, or a value of your own. It takes its own taps.
 
 ## Badges in the corner
 
-`badges` lists the corner's badges in the order written, under the status badge. A badge is an entity id, or an object with the keys of [header badges](/cards/heading-card#badge-options): `entity`, its own `value` or `attribute`, `icon`, `name`, `rules`, the [badge keys](#badge-keys) below, actions and `visibility`. They are outline pills, small, unless a `style` or `size` says otherwise. A badge without `entity` on a poster with one reads [the poster's entity](#badges-reading-the-poster-s-entity); on a poster without one it needs a `value`.
+`badges` lists the badges in order, under the [status badge](#the-status-badge). A badge is an entity id, or an object with the [badge keys](#badge-keys). Badges are small outline pills by default. A badge without `entity` reads [the poster's entity](#badges-reading-the-poster-s-entity). On a poster without an entity, it needs a `value`.
 
 ::: live
 
@@ -40,11 +40,20 @@ The top right of a [poster](/cards/poster-card) is its corner: a column of small
 
 ## Badge keys
 
-A badge in the corner takes the keys of a header badge, as on the [heading card](/cards/heading-card#badges). The sections below show each on a poster.
+A badge takes the keys of a [heading card's badge](/cards/heading-card#badges). The sections below show them on a poster, and the [reference](#reference) lists them all.
 
 ### Visuals
 
-`visual` changes what a badge draws: `ring` puts a progress ring around the icon and `bar` a short bar before the value (both on `min` and `max`), `sparkline` draws the history in the icon's place, `trend` adds how much the value changed over `trend_hours`, `count` shows how many members of a group are on and `dot` is a coloured dot instead of the icon. `show_name: true` writes the name before the value; `show_value: false` leaves the icon alone.
+`visual` changes what a badge draws:
+
+- `ring`: a progress ring around the icon, between `min` and `max`.
+- `bar`: a short bar before the value, between `min` and `max`.
+- `sparkline`: the history in the icon's place.
+- `trend`: how much the value changed over `trend_hours`.
+- `count`: how many members of a group are on.
+- `dot`: a coloured dot in the icon's place.
+
+`show_name: true` writes the name before the value. `show_value: false` shows the icon alone.
 
 ::: live
 
@@ -71,7 +80,15 @@ A badge in the corner takes the keys of a header badge, as on the [heading card]
 
 ### Styles and sizes
 
-`style` sets the pill: `outline` (the default, Home Assistant's badge), `soft` (a tint of the badge's colour), `filled`, `plain` (no pill, the icon and the value alone) or `tag` (an outline in the badge's colour with the text in small capitals, the status badge's pill). `size` sets its height: `s` (the default in the corner), `m` or `l`. A rule's `style` changes the pill while it matches.
+`style` sets the pill:
+
+- `outline`: Home Assistant's badge, the default.
+- `soft`: a tint of the badge's colour.
+- `filled`: the badge's colour.
+- `plain`: no pill, only the icon and the value.
+- `tag`: an outline in the badge's colour, with the text in small capitals.
+
+`size` sets its height: `s` (the default), `m` or `l`. A rule's `style` changes the pill while the rule matches.
 
 ::: live
 
@@ -101,7 +118,13 @@ A badge in the corner takes the keys of a header badge, as on the [heading card]
 
 ### Format and staleness
 
-`format` writes the value another way: `power` switches between W, kW and MW, `duration` writes a time span, `relative` a date as its time from now. `stale_after` greys a badge whose entity has not reported for that long and adds how long ago it did: minutes, or a number with `s`, `min`, `h` or `d`.
+`format` writes the value another way:
+
+- `power` switches between W, kW and MW.
+- `duration` writes a time span.
+- `relative` writes a date as its time from now.
+
+`stale_after` greys a badge whose entity has not reported for that long, and adds how long ago it did. Give minutes, or a number with `s`, `min`, `h` or `d`.
 
 ::: live
 
@@ -121,7 +144,7 @@ badges:
 
 ### A switch in a badge
 
-`control: toggle` puts a switch into the badge, the only control a badge holds; the badge itself keeps its action.
+`control: toggle` puts a switch into the badge. The rest of the badge keeps its own action.
 
 ::: live
 
@@ -138,7 +161,9 @@ badges:
 
 ### Actions and visibility
 
-A badge takes its own taps: `tap_action`, `hold_action` and `double_tap_action` on the badge act on its entity ([Actions](/cards/entity-options#actions)), here a toggle of the light. A badge without them takes the poster's, more-info by default. `visibility` shows a badge only while its conditions hold, here the open windows; a hidden badge takes no room.
+A badge takes its own taps. `tap_action`, `hold_action` and `double_tap_action` act on the badge's entity ([Actions](/cards/entity-options#actions)): here a tap toggles the light. Without them, it takes the poster's actions, more-info by default.
+
+`visibility` shows a badge only while its conditions hold, here the open windows. A hidden badge takes no room.
 
 ::: live
 
@@ -164,7 +189,7 @@ badges:
 
 ## Badges reading the poster's entity
 
-A badge without `entity` reads the poster's own: `attribute` shows one of its attributes (a weather attribute keeps its unit), and a badge with neither shows the poster's value again, say as a ring.
+A badge without `entity` reads the poster's entity. `attribute` shows one of its attributes, with its unit. A badge with neither shows the poster's value again, say as a ring.
 
 ::: live
 
@@ -193,9 +218,15 @@ A badge without `entity` reads the poster's own: `attribute` shows one of its at
 
 ## The status badge
 
-The poster's own label is a badge too: the **status badge**, first in the corner. It is a `tag` (an outline in the poster's colour with its text in small capitals, without an icon) and says the poster type's status, else the matching rule's label; with nothing to say it takes no room. The poster's rules set its `style` and make it `pulse`.
+The first badge is the status badge. It shows the poster type's status, else the matching rule's label. With nothing to show, it takes no room. It is a `tag` in the poster's colour, without an icon. A rule's `style` and `pulse` apply to it.
 
-`status` gives it a text (a template allowed), an object of badge keys (with `value` for its text), or `false` to drop it. `status` in `badges` places it elsewhere:
+`status` sets it:
+
+- a text or a template;
+- badge keys, with `value` for the text;
+- `false` to drop it.
+
+`- status` in `badges` moves it to that place:
 
 ::: live
 
@@ -231,7 +262,7 @@ The poster's own label is a badge too: the **status badge**, first in the corner
 
 ## How the corner behaves
 
-The corner floats over the poster's top right: the badges take no height from the name, the value or the picture, so adding one never moves the texts. Many badges reach down over the right of the picture, as on the power poster. Where the poster has controls on the value's line, the corner stops above them: on a short card the badges that do not fit there are cut off and the controls keep their room, as on the light two rows high.
+The badges float over the poster, so adding one never moves the texts. Many badges reach down over the picture, but never over the controls: on a short card, the badges that do not fit are cut off.
 
 ::: live
 
@@ -262,11 +293,11 @@ The corner floats over the poster's top right: the badges take no height from th
 
 ### Badge keys
 
-A badge is an entity id, `status` (the status badge's place), or an object with these keys and the [entity options](/cards/entity-options#entity-options) (`name`, `icon`, `color`, `unit`, `decimals`, `prefix`, `suffix`, `min`, `max`, `show_entity_picture`, `hover` …); the [heading card's badge options](/cards/heading-card#badge-options) have the full list.
+A badge is an entity id, `status`, or an object with these keys. It also takes the [entity options](/cards/entity-options#entity-options), such as `name`, `icon`, `color`, `unit`, `min` and `max`.
 
 | Key                                      | Default             | Description                                                                                         |
 | ---------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------- |
-| `entity`                                 | the poster's        | The entity; without one the badge reads the poster's entity, or needs a `value`.                    |
+| `entity`                                 | the poster's        | The entity. Without one, the badge reads the poster's entity.                                       |
 | `attribute`, `value`                     | the poster's value  | An attribute of the entity, or a text or a template of your own.                                    |
 | `visual`                                 | `icon`              | `icon`, `ring`, `bar`, `sparkline`, `trend`, `count` or `dot`.                                      |
 | `style`                                  | `outline`           | `outline`, `soft`, `filled`, `plain` or `tag`.                                                      |
@@ -280,4 +311,4 @@ A badge is an entity id, `status` (the status badge's place), or an object with 
 | `tap_action` …                           | the poster's        | `tap_action`, `hold_action`, `double_tap_action`, on the badge's own entity.                        |
 | `visibility`                             | –                   | Conditions; a hidden badge takes no room.                                                           |
 
-On the poster, `status` sets the status badge: a text or a template, an object of these keys with `value` for its text, or `false`.
+On the poster, `status` takes these keys for the [status badge](#the-status-badge).

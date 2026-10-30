@@ -1,12 +1,12 @@
 # Custom posters
 
-A poster is a handful of places: an icon at the top, badges in the corner, and at the bottom a name, a large value and a line under it, with a picture, a backdrop and a control around them. A [poster type](/cards/poster-types) fills them for an entity; every place also has a key of its own, so a poster can show anything: a value you compute, several entities at once, or nothing but your own buttons. This page builds posters from those keys; the [overview](/cards/poster-card) shows how a poster is laid out and how it finds its type.
+A poster has a few places: an icon at the top, badges in the corner, and a name, a large value and a line under it at the bottom. A picture, a backdrop and a control go around them. A [poster type](/cards/poster-types) fills these places for an entity. Every place also has a key of its own, so a poster can show anything: a value you compute, several entities, or only your own buttons. This page builds posters from those keys. The [overview](/cards/poster-card) shows how a poster is laid out.
 
 ## The places
 
 | Place           | Key              | Takes                                                                           | Default                                                 |
 | --------------- | ---------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Lead            | `icon`           | an `mdi:` icon, a template; `icon_ring` and the icon's own [actions](#the-icon) | the entity's icon or picture, the type's drawing        |
+| Icon            | `icon`           | an `mdi:` icon, a template; `icon_ring` and the icon's own [actions](#the-icon) | the entity's icon or picture, the type's drawing        |
 | Status          | `status`         | a text, a template, badge keys with `value` for its text, or `false`            | the type's status, else the matching rule's label       |
 | Badges          | `badges`         | entities or [badges](/cards/poster-badges) of your own, in order                | none                                                    |
 | Name            | `name`           | a text, a template                                                              | the friendly name                                       |
@@ -17,7 +17,7 @@ A poster is a handful of places: an icon at the top, badges in the corner, and a
 | Backdrop        | `image`          | a URL, a template or an entity's picture                                        | the type's backdrop                                     |
 | Control         | `control`        | any [control](/cards/poster-controls), or your own buttons                      | the type's                                              |
 
-A poster needs no entity: the keys alone fill it. Without one, a tap does nothing unless `tap_action` says what.
+A poster needs no entity: the keys alone can fill it. Without an entity, a tap does nothing until you set `tap_action`.
 
 ::: live
 
@@ -43,7 +43,7 @@ A poster needs no entity: the keys alone fill it. Without one, a tap does nothin
 
 ## Values from templates
 
-Every text takes a [template](https://www.home-assistant.io/docs/configuration/templating/), rendered by Home Assistant and kept up to date: `name`, `value`, `secondary`, `status`, and the `icon` and `color` too. A number from a template is formatted as one (`unit`, `decimals`, `prefix` and `suffix` work on it, as plain text), and a word (`Done`, `Running`) is drawn a little smaller than a number.
+`name`, `value`, `secondary`, `status`, `icon` and `color` take a [template](https://www.home-assistant.io/docs/configuration/templating/). Home Assistant renders it and keeps it up to date. A number from a template is formatted as a number: `unit`, `decimals`, `prefix` and `suffix` work on it. A word such as `Done` is drawn a little smaller than a number.
 
 ::: live
 
@@ -71,7 +71,11 @@ Every text takes a [template](https://www.home-assistant.io/docs/configuration/t
 
 ## An entity, your own look
 
-With an `entity`, the poster takes its name, icon, state and colour from it, and its poster type adds the rest. Any key replaces one place and keeps the others. `attribute` shows an attribute instead of the state, `control: false` drops a poster type's control and leaves the rest of it (the thermostat below keeps its tint and its status), and `poster: entity` drops the type's own look altogether (its backdrop, status, controls and rules) for a poster that is only what you write:
+With an `entity`, the poster takes its name, icon, state and colour from it, and its poster type adds the rest. A key you set changes its own place and leaves the others as they are:
+
+- `attribute` shows an attribute of the entity in place of its state.
+- `control: false` drops the poster type's control and keeps the rest. The thermostat below keeps its tint and its status.
+- `poster: entity` drops the type's backdrop, status, controls and rules. The poster shows only what you write.
 
 ::: live
 
@@ -102,9 +106,19 @@ With an `entity`, the poster takes its name, icon, state and colour from it, and
 
 ## Colour and rules
 
-`rules` pick the colour, the icon and the status by the value or the entity's state, as on every Pro card ([rules](/cards/entity-options#rules)). They match in the order written, and the first that matches wins: `below` and `above` compare the value as a number, `state` matches the value **or** the entity's own state, so `{ state: playing }` works on a media player shown by its title. A rule's `label` is the status badge's text, `tint_card: true` washes the whole poster in its colour, `pulse: true` makes the badge pulse and `style` changes the badge's look.
+`rules` pick the colour, the icon and the status by the value or the entity's state, as on every Pro card ([rules](/cards/entity-options#rules)). They match in the order written, and the first match wins.
 
-A poster type's own rules (the [predefined sets](/cards/poster-types#predefined-rules)) apply until the card has `rules`, which replace them as a whole; `rules: []` drops them.
+- `below` and `above` compare the value as a number.
+- `state` matches the value **or** the entity's state, so `{ state: playing }` works on a media player that shows its title.
+
+On a poster, a rule can also set:
+
+- `label`: the status badge's text.
+- `tint_card: true`: the whole poster in the rule's colour ([tinted posters](#tinted-posters)).
+- `pulse: true`: the badge pulses.
+- `style`: the badge's look.
+
+A poster type brings its own rules (the [predefined sets](/cards/poster-types#predefined-rules)). Your `rules` take their place as a whole, and `rules: []` drops them.
 
 ::: live
 
@@ -132,7 +146,7 @@ A poster type's own rules (the [predefined sets](/cards/poster-types#predefined-
 
 ### Tinted posters
 
-`tint_card: true` on a rule washes the whole poster in that rule's colour while the rule matches: a soft tint of the card, the picture and the backdrop drawn over it, in light and dark themes alike. It is a rule's, so it follows the value: the poster goes back to the card's own background when another rule (or none) matches. `color` alone colours the icon, the value's picture and the badge, never the card, and a poster type's own rules never tint; a rule needs a `state`, `below` or `above` to match at all.
+`tint_card: true` on a rule washes the whole poster in the rule's colour while the rule matches. The card, its picture and its backdrop take a soft tint, in light and dark themes. When another rule or none matches, the poster goes back to its own background. `color` alone colours the icon, the picture and the badge, not the card.
 
 ::: live
 
@@ -169,23 +183,24 @@ A poster type's own rules (the [predefined sets](/cards/poster-types#predefined-
 
 :::
 
-A template value is matched as its text: the last poster's rules read `Open` and `Closed`, no entity needed. The weather poster's rules replace its condition colours, so they name every condition that should keep a colour.
+Rules match a template value by its text: the last poster's rules read `Open` and `Closed` and need no entity. On the weather poster, your rules take the place of the condition colours. Name every condition that should keep a colour.
 
 ## A picture
 
-`visual` draws the entity's value as a picture. History pictures run along the bottom to the poster's edges, over `hours_to_show` (24 by default); a level reads between `min` and `max` (the entity's own, else 0 and 100):
+`visual` draws the entity's value as a picture.
 
-| `visual`    | Draws                                                                               |
-| ----------- | ----------------------------------------------------------------------------------- |
-| `sparkline` | a line of its history, filled below, up under the value                             |
-| `columns`   | a bar per `bucket_minutes` (60 by default), the last one the value now              |
-| `strip`     | a block per bucket, coloured by the [rules](#colour-and-rules) each one matched     |
-| `bar`       | a level between `min` and `max` under the value                                     |
-| `gauge`     | an arc between `min` and `max` with the value inside it, the name under it, centred |
-| `glow`      | the poster lit from below in its colour, as strong as the value's level             |
-| `none`      | no picture: the default of an entity without a poster type's own                    |
+- A history runs along the bottom of the poster and covers `hours_to_show` (24 by default).
+- A level reads between `min` and `max`: the entity's own, else 0 and 100.
 
-A ring around the icon is not a picture: it is `icon_ring: true`, beside any of these (see [The icon](#the-icon)).
+| `visual`    | Draws                                                                           |
+| ----------- | ------------------------------------------------------------------------------- |
+| `sparkline` | a line of its history, filled below                                             |
+| `columns`   | a bar per `bucket_minutes` (60 by default), the last one the value now          |
+| `strip`     | a block per bucket, coloured by the [rules](#colour-and-rules) each one matched |
+| `bar`       | a level between `min` and `max` under the value                                 |
+| `gauge`     | an arc between `min` and `max` with the value inside it, centred                |
+| `glow`      | the poster lit from below in its colour, as strong as the value's level         |
+| `none`      | no picture: the default where the poster type draws none                        |
 
 ::: live
 
@@ -232,7 +247,13 @@ A ring around the icon is not a picture: it is `icon_ring: true`, beside any of 
 
 :::
 
-`glow` lights the poster from below in its colour, as strong as the value's level: a number between `min` and `max`, a light by its brightness, and anything that switches while it is on (dark while it is off). It is the [light](/cards/poster-types#light)'s picture by default, and any poster can have it; on a light, `visual: bar` or `visual: none` replaces it.
+`glow` lights the poster from below in its colour. How strongly depends on the entity:
+
+- a number: its level between `min` and `max`;
+- a light: its brightness;
+- anything that switches: lit while on, dark while off.
+
+It is the [light](/cards/poster-types#light)'s picture by default, and any poster can use it. On a light, `visual: bar` or `visual: none` draws another picture.
 
 ::: live
 
@@ -258,11 +279,16 @@ A ring around the icon is not a picture: it is `icon_ring: true`, beside any of 
 
 The coffee machine is off: switch it on and it glows.
 
-A [trend](/cards/poster-types#trend) draws several entities' lines on one scale. `trend`, `count` and `dot` are badge pictures: they go on [badges](/cards/poster-badges), not on the poster.
+For several entities' lines on one scale, see the [trend](/cards/poster-types#trend) poster type.
 
 ## The icon
 
-The lead at the top left is the entity's icon, or the poster type's own drawing (the padlock, the fan, the animated wind). `icon` puts an `mdi:` icon (or a template that renders one) in its place, `icon_style: plain` draws it without its circle, and `show_entity_picture: true` shows the entity's picture instead where it has one (the weather poster shows its pictures by default; `false` draws mdi icons). `icon_ring: true` puts a ring of the value around the icon, filled between `min` and `max` (the entity's own, else 0 and 100):
+The icon at the top left shows the entity's icon, or the poster type's own drawing: the padlock, the fan, the animated wind.
+
+- `icon` sets an `mdi:` icon, or a template that renders one.
+- `icon_style: plain` draws the icon without its circle.
+- `show_entity_picture: true` shows the entity's picture where it has one. The weather poster does this by default.
+- `icon_ring: true` puts a ring of the value around the icon, filled between `min` and `max` (the entity's own, else 0 and 100).
 
 ::: live
 
@@ -284,7 +310,7 @@ The lead at the top left is the entity's icon, or the poster type's own drawing 
 
 :::
 
-The icon takes [actions](#actions) of its own, as on Home Assistant's tile card: `icon_tap_action`, `icon_hold_action` and `icon_double_tap_action`. An icon with an `icon_tap_action` runs it when tapped. An icon with no action of its own is part of the poster: a tap there runs the poster's `tap_action`. An icon with only an `icon_hold_action` (a lock's) does nothing on a short tap. `toggle` is run by the card, which shows the call on its way: a lock locks and unlocks, an alarm panel arms and disarms, anything else switches. A hold fills a ring around the icon for a second and runs when it is full; letting go earlier cancels, so a hold is the icon's way to [confirm](/cards/poster-controls#hold-to-confirm). Locks and alarm panels hold to lock or arm by default (`icon_hold_action: { action: toggle }`; an alarm panel that wants a code has none). Every other action (`more-info`, `navigate`, `url`, `perform-action` …) goes to Home Assistant, as `tap_action` does.
+The icon takes [actions](#actions) of its own, as on Home Assistant's tile card: `icon_tap_action`, `icon_hold_action` and `icon_double_tap_action`. An icon without actions of its own is part of the poster: a tap there runs the poster's `tap_action`. On the icon, `toggle` locks or unlocks a lock, arms or disarms an alarm panel and switches anything else. A hold runs after a second, so it [confirms](/cards/poster-controls#hold-to-confirm): locks and alarm panels hold their icon by default.
 
 ::: live
 
@@ -310,11 +336,15 @@ The icon takes [actions](#actions) of its own, as on Home Assistant's tile card:
 
 :::
 
-A held icon shows the entity as it is (a padlock locked while locked); its label says what holding does ("Hold to unlock"). A screen reader's click arms the hold, a second one within five seconds runs it.
-
 ## A backdrop
 
-`image` puts a picture behind the whole poster, under a scrim that keeps the texts readable: a URL (`/local/…` for a file in Home Assistant's `www` folder), a template that renders one, or an entity whose picture it shows (a camera's snapshot, a person's photo, a media player's art). `image: false` drops a poster type's own backdrop. A person poster has their photo behind it already; `image: person.alex` puts it behind any other poster.
+`image` puts a picture behind the whole poster, under a shade that keeps the text readable. It takes:
+
+- a URL (`/local/…` for a file in Home Assistant's `www` folder);
+- a template that renders one;
+- an entity, whose picture it shows: a camera's snapshot, a person's photo, a media player's art.
+
+`image: false` drops a poster type's own backdrop. A person poster has their photo behind it already. `image: person.alex` puts it behind any other poster.
 
 ::: live
 
@@ -337,7 +367,7 @@ A held icon shows the entity as it is (a padlock locked while locked); its label
 
 :::
 
-A camera's snapshot behind a lock: who is at the door, held to open it.
+A camera's snapshot behind a lock: see who is at the door, then hold the padlock to unlock it.
 
 ::: live
 
@@ -351,12 +381,11 @@ image: camera.front_door
 
 ## Badges
 
-The corner holds the status badge and the `badges`, in the order written: entity ids, or badges of your own with a `value` or an `attribute`, an icon, rules and a picture of their own.
-[Badges](/cards/poster-badges) has every key, with examples.
+The corner holds the status badge, then your `badges` in the order written. A badge is an entity id, or a badge of your own with its value, icon, rules and picture. [Badges](/cards/poster-badges) has every key, with examples.
 
 ## Controls and buttons
 
-A poster carries one control: the one its entity supports (`toggle`, `slider`, `stepper`, `segments`, `select`, `button`, `hold`), or a row of your own buttons that run scenes, scripts or any action. [Poster controls](/cards/poster-controls) has them all; a poster of buttons needs no entity:
+A poster carries one control. It can be one its entity supports (`toggle`, `slider`, `stepper`, `segments`, `select`, `button`, `hold`). It can also be a row of your own buttons that run scenes, scripts or any action. [Poster controls](/cards/poster-controls) has them all. A poster of buttons needs no entity:
 
 ::: live
 
@@ -379,7 +408,7 @@ control_options:
 
 ## Actions
 
-`tap_action`, `hold_action` and `double_tap_action` take [Home Assistant's actions](https://www.home-assistant.io/dashboards/actions/): `more-info` (of the poster's entity, or the one named), `toggle`, `navigate`, `url`, `perform-action`, `assist`, `none`. With an entity a tap opens its more-info dialog and a hold too; without one both do nothing until told. The control and the badges keep their own taps, and the icon takes actions of its own (`icon_tap_action` …, see [The icon](#the-icon)).
+`tap_action`, `hold_action` and `double_tap_action` take [Home Assistant's actions](https://www.home-assistant.io/dashboards/actions/): `more-info`, `toggle`, `navigate`, `url`, `perform-action`, `assist` and `none`. With an entity, a tap or a hold opens its more-info dialog. Without one, both do nothing until you set them. The control and the badges keep their own taps, and the icon has [actions of its own](#the-icon).
 
 ::: live
 

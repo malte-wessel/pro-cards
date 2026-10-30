@@ -1,26 +1,32 @@
+---
+outline: [2, 2]
+---
+
 # Poster types
 
-A poster type is what the entity is, and what the [poster card](/cards/poster-card) draws for it unless the card says otherwise. This page shows every type: what it reads, its `variant` values and its own keys, each with live examples; then the keys the types share, the entities they find on the device and the rules they bring.
+A poster type is what the entity is, and what the [poster card](/cards/poster-card) draws for it. This page shows every type with what it reads and draws, and its own options.
 
-The type supplies the poster's defaults: some types fill every place their own way, others only bring their own [rules](#predefined-rules). Detection takes the first match: the domain (`weather.*`, `sun.sun` …), then the device class, then `entity`, which brings nothing. `poster` names another type, gives one to an entity without a device class, names one that is never detected, or (`poster: entity`) switches every default off; no other key decides the type. A type named with `poster` must read the entity: `poster: wind` on a light is an error that says what the wind poster reads. A poster has one type; several subjects on one card are [badges](/cards/poster-badges).
+A type's options sit on the card like any other key. Where a type reads other entities, it finds them on the same device as the poster's entity. With more than one match, none is used: set the key yourself, or `false` for none.
 
-| Poster type                                                                                          | Detected by                                                                    | Status |
-| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------ |
-| [`entity`](#entity)                                                                                  | anything else                                                                  | built  |
-| [`battery`](#battery-and-air-quality)                                                                | device class `battery`                                                         | built  |
-| [`carbon_dioxide`, `pm25`, `pm10`, `aqi`](#battery-and-air-quality)                                  | their device class                                                             | built  |
-| [`weather`](#weather), [`sun`](#sun), [`wind`](#wind), [`rain`](#rain)                               | `weather.*`, `sun.sun`, device classes `wind_speed`, `precipitation_intensity` | built  |
-| [`trend`](#trend)                                                                                    | never: `poster: trend` with its `series`                                       | built  |
-| [`light`](#light), [`fan`](#fan), [`climate`](#climate)                                              | domain                                                                         | built  |
-| [`lock`](#lock), [`alarm_control_panel`](#alarm), [`person`](#person)                                | domain                                                                         | built  |
-| [`media_player`](#media-player), [`cover`](#cover), [`vacuum`, `lawn_mower`](#vacuum-and-lawn-mower) | domain                                                                         | built  |
-| [`grid`](#grid), [`solar`](#solar), [`car`](#car), [`appliance`](#appliance)                         | never: what a device is in the home, set with `poster`                         | built  |
+The type is detected from the entity's domain, then its device class, else it is `entity`. `poster` sets a type by name, for an entity without a device class or a type that is never detected.
+
+| Poster type                                                                                          | Detected by                                                                    |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [`entity`](#entity)                                                                                  | anything else                                                                  |
+| [`battery`](#battery-and-air-quality)                                                                | device class `battery`                                                         |
+| [`carbon_dioxide`, `pm25`, `pm10`, `aqi`](#battery-and-air-quality)                                  | their device class                                                             |
+| [`weather`](#weather), [`sun`](#sun), [`wind`](#wind), [`rain`](#rain)                               | `weather.*`, `sun.sun`, device classes `wind_speed`, `precipitation_intensity` |
+| [`trend`](#trend)                                                                                    | never: `poster: trend` with its `series`                                       |
+| [`light`](#light), [`fan`](#fan), [`climate`](#climate)                                              | domain                                                                         |
+| [`lock`](#lock), [`alarm_control_panel`](#alarm), [`person`](#person)                                | domain                                                                         |
+| [`media_player`](#media-player), [`cover`](#cover), [`vacuum`, `lawn_mower`](#vacuum-and-lawn-mower) | domain                                                                         |
+| [`grid`](#grid), [`solar`](#solar), [`car`](#car), [`appliance`](#appliance)                         | never: set with `poster`                                                       |
 
 ## Entity
 
-**Reads** any entity · no keys of its own.
+**Reads** any entity.
 
-The fallback: the entity's icon, name and value, the matching rule's label in the status badge, and `visual` for the picture (`sparkline`, `columns`, `bar`, `gauge`). A value that reads as a number gets `unit`, `decimals` and `rules`, as on every Pro card.
+The fallback: the entity's icon, name and value. The status badge shows the matching rule's label. `visual` adds a picture: `sparkline`, `columns`, `bar` or `gauge`. A numeric value takes `unit`, `decimals` and `rules`, as on every Pro card.
 
 ::: live
 
@@ -43,9 +49,16 @@ The fallback: the entity's icon, name and value, the matching rule's label in th
 
 ## Battery and air quality
 
-**Reads** a sensor of device class `battery`, `carbon_dioxide`, `pm25`, `pm10` or `aqi` · **keys** `power`, `charge`, `discharge` (battery).
+**Reads** a sensor of device class `battery`, `carbon_dioxide`, `pm25`, `pm10` or `aqi`.
 
-These types bring nothing but their rules: colour and a label by value, from a standard where there is one. A battery is red and _Critical_ below 10 %, orange and _Low_ below 20 %; CO₂ goes from _Good_ to _Bad_ at 800, 1200 and 2000 ppm; PM2.5 and PM10 follow the WHO and EU bands, the air quality index the US EPA's (_Hazardous_ pulses). Their labels follow the user's language. See [Predefined rules](#predefined-rules) for the sets to copy and change.
+These types bring their own rules: a colour and a label by value, from a standard where there is one.
+
+- Battery: red and _Critical_ below 10 %, orange and _Low_ below 20 %.
+- CO₂: from _Good_ to _Bad_ at 800, 1200 and 2000 ppm.
+- PM2.5 and PM10: the WHO and EU bands.
+- Air quality index: the US EPA's bands. _Hazardous_ pulses.
+
+The labels follow the user's language. [Predefined rules](#predefined-rules) has the sets to copy and change.
 
 ::: live
 
@@ -72,7 +85,9 @@ These types bring nothing but their rules: colour and a label by value, from a s
 
 :::
 
-With its power the battery poster draws a home battery: the cell filled to the charge, the power flowing in or out, Charging or Discharging as the status and the power under the charge. `power` is + while it charges and − while it discharges (the [power flow card](/cards/power-flow-card) reads a battery the other way round); `charge` and `discharge` give a meter each. They need no `poster`: the state of charge's device class makes it a battery. A power sensor on the battery's device is found by itself.
+With its power, the battery poster draws a home battery. The cell fills to the charge and the power flows in or out. The status says Charging or Discharging, with the power under the charge.
+
+`power` is positive while the battery charges and negative while it discharges. The [power flow card](/cards/power-flow-card) reads a battery the other way round. Or give `charge` and `discharge`, a sensor each.
 
 ::: live
 
@@ -91,7 +106,7 @@ With its power the battery poster draws a home battery: the cell filled to the c
 
 :::
 
-A template sensor has no device class; `poster` gives it a type:
+A template sensor has no device class. `poster` gives it a type:
 
 ::: live
 
@@ -105,11 +120,22 @@ poster: battery
 
 :::
 
+### Options
+
+These apply to a battery:
+
+| Key                   | Takes                                              | Default                                |
+| --------------------- | -------------------------------------------------- | -------------------------------------- |
+| `power`               | a power sensor, positive while the battery charges | a power sensor on the battery's device |
+| `charge`, `discharge` | a power sensor each, in place of `power`           | –                                      |
+
 ## Weather
 
-**Reads** a weather entity · no keys of its own.
+**Reads** a weather entity.
 
-A weather entity: Home Assistant's picture of the condition, the condition as the status, the temperature large with today's high and low under it, and the next 12 hours of the hourly forecast as a curve along the bottom (hover it for the hour). The condition sets the colour: amber in the sun, blue in the rain, deep orange in a thunderstorm. `hours_to_show` sets how far the curve looks ahead, `show_entity_picture: false` draws mdi icons instead of the pictures.
+A weather entity shows Home Assistant's picture of the condition, and the condition as the status. The temperature is large, with today's high and low under it. Along the bottom, a curve shows the hourly forecast for the next 12 hours. Hover it to read an hour.
+
+The condition sets the colour: amber in the sun, blue in the rain, deep orange in a thunderstorm. `hours_to_show` sets how far the curve looks ahead. `show_entity_picture: false` draws mdi icons.
 
 ::: live
 
@@ -128,7 +154,7 @@ A weather entity: Home Assistant's picture of the condition, the condition as th
 
 :::
 
-One `rules` reads both: `state` matches the condition, `below` and `above` the temperature. They replace the condition colours, so copy the [set](#predefined-rules) to keep them:
+`state` rules match the condition, `below` and `above` the temperature. With rules of your own, copy the [condition colours](#predefined-rules) to keep them:
 
 ::: live
 
@@ -148,9 +174,11 @@ rules:
 
 ## Sun
 
-**Reads** `sun.sun`, or no entity · no keys of its own.
+**Reads** `sun.sun`, or no entity.
 
-`sun.sun`, or `poster: sun` without an entity: the sun is computed from Home Assistant's location. The sun or the moon, how soon the next sunrise or sunset comes as the status, that event large with its time, and the day's curve along the bottom with the sun where it is now (hover it for the elevation). Amber by day and indigo by night; `color` paints the curve and the poster.
+Use `sun.sun`, or `poster: sun` without an entity: the sun is then computed from Home Assistant's location. The icon is the sun or the moon. The value is the next sunrise or sunset with its time, and the status says how soon it comes.
+
+Along the bottom runs the day's curve, with the sun where it is now. Hover it for the elevation. The poster is amber by day and indigo by night. `color` paints the curve and the poster.
 
 ::: live
 
@@ -168,11 +196,18 @@ rules:
 
 ## Wind
 
-**Reads** a `wind_speed` sensor or a weather entity · **variant** `dots`, `lines`, `swoosh`, `vectors` · **keys** `direction`, `gust`.
+**Reads** a `wind_speed` sensor or a weather entity.
 
-A wind speed sensor, or a weather entity with `poster: wind`. The animated lead turns where the wind blows and runs at its speed; the speed is large, where the wind comes from and its gusts are under it, and the Beaufort bands colour and name it. The direction and the gusts are [found](#discovered-inputs) on the speed sensor's device (a weather entity brings its own); `direction` and `gust` set them.
+A wind speed sensor, or a weather entity with `poster: wind`. The animated icon turns where the wind blows and runs at its speed. The speed is large, with the direction and the gusts under it. The Beaufort bands colour and name it.
 
-`variant` makes the whole poster the animated field: `dots`, `lines` (streamlines), `swoosh` (strokes drawing themselves) or `vectors` (arrows); the lead is the direction's arrow then.
+The direction and the gusts come from the sensor's device, or from the weather entity.
+
+`variant` turns the whole poster into the animated field, and the icon becomes an arrow for the direction:
+
+- `dots`
+- `lines`: streamlines
+- `swoosh`: strokes that draw themselves
+- `vectors`: arrows
 
 ::: live
 
@@ -205,11 +240,21 @@ A wind speed sensor, or a weather entity with `poster: wind`. The animated lead 
 
 :::
 
+### Options
+
+| Key         | Takes                                                                      | Default                                            |
+| ----------- | -------------------------------------------------------------------------- | -------------------------------------------------- |
+| `variant`   | `dots`, `lines`, `swoosh` or `vectors`: the whole poster is the wind field | the animated icon                                  |
+| `direction` | a wind direction sensor, or `false`                                        | one on the sensor's device; a weather entity's own |
+| `gust`      | a gust speed sensor, or `false`                                            | one on the sensor's device; a weather entity's own |
+
 ## Rain
 
-**Reads** a `precipitation_intensity` sensor (mm/h or in/h) · **variant** `drops`, `ripples`, `fill` · **keys** `today`, `wind`, `direction`.
+**Reads** a `precipitation_intensity` sensor (mm/h or in/h).
 
-A rain rate sensor. The animated lead rains at the rate, the rate is large and today's total under it ([found](#discovered-inputs) on the rate sensor's device), and the rain's bands colour and name it. `wind` and `direction` slant the drops; `variant` fills the poster with rain: `drops`, `ripples` or `fill` (a gauge that fills with today's total).
+A rain rate sensor. The animated icon rains at the rate. The rate is large, with today's total under it. The rain's bands colour and name it.
+
+`wind` and `direction` slant the drops. `variant` fills the whole poster with rain: `drops`, `ripples` or `fill`, a gauge that fills with today's total.
 
 ::: live
 
@@ -229,11 +274,22 @@ A rain rate sensor. The animated lead rains at the rate, the rate is large and t
 
 :::
 
+### Options
+
+| Key         | Takes                                                      | Default                    |
+| ----------- | ---------------------------------------------------------- | -------------------------- |
+| `variant`   | `drops`, `ripples` or `fill`: the whole poster is the rain | the animated icon          |
+| `today`     | a sensor of the day's total, or `false`                    | one on the sensor's device |
+| `wind`      | a wind speed sensor, to slant the drops                    | –                          |
+| `direction` | a wind direction sensor                                    | –                          |
+
 ## Trend
 
-**Reads** its own entities (`poster: trend`) · **keys** `series`.
+**Reads** its own entities (`poster: trend`).
 
-Several entities on one scale (`poster: trend` with its `series`): the first one's value large (the card's `entity`, when it has one), the time window as the status (`hours_to_show`, 6 hours by default) and the lines overlaid along the bottom, every value under the pointer. A series takes `name`, `color` (a template allowed), `rules` and `visibility`, as on the [multi trend card](/cards/multi-trend-card).
+`poster: trend` draws the entities of its `series` on one scale, as lines along the bottom. Hover them to read every value at that time. The large value is the card's `entity`, else the first series. The status is the time window: `hours_to_show`, 6 hours by default.
+
+A series takes `name`, `color`, `rules` and `visibility`, as on the [multi trend card](/cards/multi-trend-card). `color` may be a template.
 
 ::: live
 
@@ -260,11 +316,19 @@ Several entities on one scale (`poster: trend` with its `series`): the first one
 
 :::
 
+### Options
+
+| Key      | Takes                                                       | Default  |
+| -------- | ----------------------------------------------------------- | -------- |
+| `series` | entity ids, or `{ entity, name, color, rules, visibility }` | required |
+
 ## Light
 
-**Reads** a light · no keys of its own.
+**Reads** a light.
 
-A light: its picture is a glow from the bottom of the card (`visual: glow`) in the light's own colour (`rgb_color`, else Home Assistant's colour for a light that is on), as strong as its brightness and gone while it is off. The brightness is large, the switch beside it and the brightness slider along the bottom; `control: false` leaves them out. Another [picture](/cards/poster-custom#a-picture) replaces the glow: `visual: bar` draws the brightness as a bar, `visual: none` draws nothing.
+A light glows from the bottom of the card (`visual: glow`). The glow takes the light's own colour, is as strong as its brightness and is gone while the light is off. The brightness is large, with the switch beside it and the brightness slider along the bottom. `control: false` leaves them out.
+
+Another [picture](/cards/poster-custom#a-picture) takes the glow's place: `visual: bar` draws the brightness as a bar, `visual: none` draws nothing.
 
 ::: live
 
@@ -290,9 +354,9 @@ A light: its picture is a glow from the bottom of the card (`visual: glow`) in t
 
 ## Fan
 
-**Reads** a fan · no keys of its own.
+**Reads** a fan.
 
-A fan: its blades turn at its speed (standing still while it is off), the speed is large and its speeds are segments beside it.
+A fan's blades turn at its speed and stand still while it is off. The speed is large, with a segment for each speed beside it.
 
 ::: live
 
@@ -309,9 +373,11 @@ A fan: its blades turn at its speed (standing still while it is off), the speed 
 
 ## Climate
 
-**Reads** a climate entity · no keys of its own.
+**Reads** a climate entity.
 
-A thermostat: the current temperature large, the target under it and the stepper beside them, what it is doing as the status (Heating, Idle, Cooling), and a dial along the bottom: the target as a ring, the temperature now as a dot, the stretch between them in the poster's colour. The card warms while it heats and cools while it cools.
+A thermostat shows the current temperature large, with the target under it and a stepper beside them. The status says what it is doing: Heating, Idle or Cooling.
+
+Along the bottom, a dial shows the target as a ring and the temperature now as a dot. The stretch between them is in the poster's colour. The card warms while it heats and cools while it cools.
 
 ::: live
 
@@ -328,9 +394,11 @@ A thermostat: the current temperature large, the target under it and the stepper
 
 ## Lock
 
-**Reads** a lock · no keys of its own.
+**Reads** a lock.
 
-A lock: the padlock in the lead is held to lock or unlock (a ring fills around it; a screen reader presses it twice), the state is large, and a jammed lock pulses red. The hold is the icon's default action, `icon_hold_action: { action: toggle }`; another [icon action](/cards/poster-custom#the-icon) replaces it.
+Hold the padlock icon to lock or unlock: a ring fills around it first ([Hold to confirm](/cards/poster-controls#hold-to-confirm)). The state is large, and a jammed lock pulses red.
+
+The hold is the icon's default action, `icon_hold_action: { action: toggle }`. Set another [icon action](/cards/poster-custom#the-icon) to change it.
 
 ::: live
 
@@ -347,9 +415,9 @@ A lock: the padlock in the lead is held to lock or unlock (a ring fills around i
 
 ## Alarm
 
-**Reads** an alarm control panel · no keys of its own.
+**Reads** an alarm control panel.
 
-An alarm panel: its shield in the lead is held to arm it (away) or disarm it (`icon_hold_action: { action: toggle }`, as the [lock](#lock)), its state large, red and pulsing while triggered. A panel that wants a code has no hold here: a tap opens Home Assistant's dialog with its keypad.
+Hold the shield icon to arm the panel (away) or disarm it, as on the [lock](#lock). The state is large, red and pulsing while triggered. A panel that wants a code has no hold: a tap opens Home Assistant's dialog with its keypad.
 
 ::: live
 
@@ -362,9 +430,9 @@ entity: alarm_control_panel.home
 
 ## Person
 
-**Reads** a person or a device tracker · no keys of its own.
+**Reads** a person or a device tracker.
 
-A person: their photo behind the poster (no lead over their face), the zone large and for how long under it. A person without a picture keeps their icon.
+A person's photo fills the poster, with no icon over their face. The zone is large, with how long they have been there under it. A person without a picture keeps their icon.
 
 ::: live
 
@@ -381,9 +449,9 @@ A person: their photo behind the poster (no lead over their face), the zone larg
 
 ## Media player
 
-**Reads** a media player · no keys of its own.
+**Reads** a media player.
 
-A media player: its cover art behind the poster, and the art's own colour for the poster (read from the picture once it has loaded). The title is large, the artist and album under it, the transport beside them and the volume below (on a card too short for it the volume gives way, more-info has it); a thin bar along the bottom edge runs with the track while it plays.
+A media player's cover art fills the poster and gives it its colour. The title is large, with the artist and album under it. The transport sits beside them and the volume below. On a short card the volume is hidden (more-info still has it). A thin bar along the bottom edge follows the track while it plays.
 
 ::: live
 
@@ -412,9 +480,19 @@ entity: media_player.living_room_tv
 
 ## Cover
 
-**Reads** a cover · **variant** `shutter`, `blind`, `curtain`, `garage`, `gate`, `awning`, `window` · no other keys.
+**Reads** a cover.
 
-A cover draws the window itself, by its device class: a shutter's slats, a blind's slats turning with its tilt, a curtain's two halves, a garage door's panels, a gate, an awning reaching out, or a window pane. The drawing sits at the cover's position and glides along while it moves, through every position it reports. The position is large, with open, stop and close beside it.
+A cover draws its window by its device class:
+
+- a shutter's slats;
+- a blind's slats, turning with its tilt;
+- a curtain's two halves;
+- a garage door's panels;
+- a gate;
+- an awning reaching out;
+- a window pane.
+
+The drawing follows the cover's position and glides along while it moves. The position is large, with open, stop and close beside it.
 
 ::: live
 
@@ -443,7 +521,7 @@ A cover draws the window itself, by its device class: a shutter's slats, a blind
 
 :::
 
-A cover without a device class is a window pane; `variant` picks another drawing (`shutter`, `blind`, `curtain`, `garage`, `gate`, `awning`, `window`):
+A cover without a device class draws a window pane. `variant` picks another drawing:
 
 ::: live
 
@@ -459,11 +537,19 @@ A cover without a device class is a window pane; `variant` picks another drawing
 
 :::
 
+### Options
+
+| Key       | Takes                                                                 | Default                        |
+| --------- | --------------------------------------------------------------------- | ------------------------------ |
+| `variant` | `shutter`, `blind`, `curtain`, `garage`, `gate`, `awning` or `window` | by device class, else `window` |
+
 ## Vacuum and lawn mower
 
-**Reads** a vacuum or a lawn mower · no keys of its own.
+**Reads** a vacuum or a lawn mower.
 
-A vacuum or a lawn mower: while it works its path draws itself across the poster (on grass for a mower) and the robot in the lead moves; docked, the dock stands there. The state is large, its battery and room under it where the integration reports them, start / pause and return to the dock beside them, and an error pulses red.
+While a vacuum or a lawn mower works, its path draws itself across the poster, on grass for a mower. The robot in the icon moves. Docked, the icon shows the dock.
+
+The state is large, with the battery and the room under it where the integration reports them. Start / pause and return to the dock sit beside them. An error pulses red.
 
 ::: live
 
@@ -480,9 +566,9 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 
 ## Grid
 
-**Reads** a power sensor, + importing and − exporting (`poster: grid`) · **keys** `import`, `export`.
+**Reads** a power sensor, + importing and − exporting (`poster: grid`).
 
-`poster: grid` on a power sensor, + while it imports and − while it exports (or `poster: grid` with `import` and `export`, a meter each): a power line across the poster with its dots flowing in, or out while it exports, in Home Assistant's energy colours. The power is large in W or kW, Importing or Exporting the status.
+`poster: grid` reads a power sensor that is positive while it imports and negative while it exports. Or give `import` and `export`, a sensor each. A power line crosses the poster, its dots flowing in or out in Home Assistant's energy colours. The power is large in W or kW, and the status says Importing or Exporting.
 
 ::: live
 
@@ -502,11 +588,17 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 
 :::
 
+### Options
+
+| Key                | Takes                                                     | Default |
+| ------------------ | --------------------------------------------------------- | ------- |
+| `import`, `export` | a power sensor each, for a grid without one signed sensor | –       |
+
 ## Solar
 
-**Reads** a power sensor (`poster: solar`) · **keys** `today`.
+**Reads** a power sensor (`poster: solar`).
 
-`poster: solar` on the inverter's power, in the solar colour: the power is large, today's energy under it ([found](#discovered-inputs) on the inverter's device, or `today`) and today's production along the bottom.
+`poster: solar` on the inverter's power draws it in the solar colour. The power is large, with today's energy under it. Today's production runs along the bottom.
 
 ::: live
 
@@ -526,11 +618,19 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 
 :::
 
+### Options
+
+| Key     | Takes                                              | Default                      |
+| ------- | -------------------------------------------------- | ---------------------------- |
+| `today` | an energy sensor of today's production, or `false` | one on the inverter's device |
+
 ## Car
 
-**Reads** the car's battery in % (`poster: car`) · **keys** `range`, `charging`, `plugged`, `location`.
+**Reads** the car's battery in % (`poster: car`).
 
-`poster: car` on the car's battery: the charge large, the range under it, and Charging, Plugged in or where it is (away from home) as the status. Range, plug, charging and location are [found](#discovered-inputs) on the car's device (`range`, `plugged`, `charging` and `location` set them); a wallbox's power sensor counts as charging above 0 W.
+`poster: car` on the car's battery shows the charge large, with the range under it. The status says Charging, Plugged in, or where the car is while it is away from home.
+
+Range, plug, charging and location come from the car's device. A wallbox's power sensor as `charging` counts as charging above 0 W.
 
 ::: live
 
@@ -551,11 +651,24 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 
 :::
 
+### Options
+
+| Key        | Takes                                                    | Default                 |
+| ---------- | -------------------------------------------------------- | ----------------------- |
+| `range`    | a distance sensor, or `false`                            | one on the car's device |
+| `charging` | a binary sensor, or a wallbox's power sensor, or `false` | one on the car's device |
+| `plugged`  | a plug binary sensor, or `false`                         | one on the car's device |
+| `location` | a device tracker, or `false`                             | one on the car's device |
+
 ## Appliance
 
-**Reads** a power sensor (`poster: appliance`) · **variant** `pump`, `washer`, `dryer`, `dishwasher`, `heat_pump` · **keys** `running_above`.
+**Reads** a power sensor (`poster: appliance`).
 
-`poster: appliance` on a power sensor: running above `running_above` (5 W by default), it says for how long and the energy of this run (from the sensor's history; a run longer than the history, a heat pump's, shows its power and the energy of the history's hours), and the device in the lead works: a pump's impeller and a heat pump's fan turn, a drum shakes (`variant: pump | washer | dryer | dishwasher | heat_pump`). Otherwise it is Off.
+`poster: appliance` reads a power sensor. Above `running_above` (5 W by default) the appliance runs, and the poster shows for how long and the energy of this run. Below it, the poster says Off.
+
+The energy comes from the sensor's history. A run longer than the history, such as a heat pump's, shows its power and the energy of the hours the history holds.
+
+`variant` picks the device in the icon: `pump`, `washer`, `dryer`, `dishwasher` or `heat_pump`. It works while it runs: a pump's impeller and a heat pump's fan turn, a drum shakes.
 
 ::: live
 
@@ -577,45 +690,17 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 
 :::
 
-## Options of a poster type
+### Options
 
-What only one poster type reads sits at the top level too, beside everything that shapes the poster: `variant` for how the type draws its subject, the entities it reads, `running_above` and `series`. These keys never decide the type: a solar poster's `today` needs `poster: solar`, a pair of meters `poster: grid`. A key the poster type does not read is left out, with a warning in the browser console; with `poster` written, [the schema](/guide/getting-started#completion-and-validation-in-your-editor) rejects it too (`gust` on `poster: rain`), so a YAML editor that knows it marks it as you type.
-
-| Key                                        | Poster type | Value                                                                                                                                                |
-| ------------------------------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `poster`                                   | any         | A poster type's name: forces it, or names one never detected (`grid`, `solar`, `car`, `appliance`, `sun`, `trend`); `entity` turns every default off |
-| `variant`                                  | `wind`      | `dots \| lines \| swoosh \| vectors`: the whole poster is the animated field (default: the animated lead)                                            |
-| `variant`                                  | `rain`      | `drops \| ripples \| fill`: the whole poster is the rain (default: the animated lead)                                                                |
-| `variant`                                  | `cover`     | `shutter \| blind \| curtain \| garage \| gate \| awning \| window` (default: the device class)                                                      |
-| `variant`                                  | `appliance` | `pump \| washer \| dryer \| dishwasher \| heat_pump` (default: a plug)                                                                               |
-| `direction`, `gust`                        | `wind`      | entity ids or `false`                                                                                                                                |
-| `today`, `wind`, `direction`               | `rain`      | entity ids or `false`                                                                                                                                |
-| `today`                                    | `solar`     | an energy sensor or `false`                                                                                                                          |
-| `power`, or `charge` and `discharge`       | `battery`   | entity ids or `false`: a home battery, `power` + while it charges                                                                                    |
-| `import`, `export`                         | `grid`      | entity ids, instead of one signed sensor                                                                                                             |
-| `range`, `charging`, `plugged`, `location` | `car`       | entity ids or `false`; `charging` a binary sensor, or power: on above 0; `location` a device tracker                                                 |
-| `running_above`                            | `appliance` | the power in W above which it runs (default 5)                                                                                                       |
-| `series`                                   | `trend`     | ids or `{ entity, name, color, rules, visibility }`                                                                                                  |
-
-## Discovered inputs
-
-A poster type's inputs are found on the poster entity's device: by device class first, by the integration's own name for the entity (its translation key, the same in every language) where that cannot tell two apart. Two candidates left: none, never a guess. The input's key on the card replaces what was found, `false` drops it; what was found is said once in the browser console ("…; set `gust` to choose another").
-
-| Poster type | Input       | Found by                                                                                             |
-| ----------- | ----------- | ---------------------------------------------------------------------------------------------------- |
-| wind        | `direction` | device class `wind_direction`, else a sensor in °; a weather entity's `wind_bearing`                 |
-| wind        | `gust`      | another `wind_speed` sensor whose translation key names a gust; a weather entity's `wind_gust_speed` |
-| rain        | `today`     | a `precipitation` sensor whose translation key names the day                                         |
-| solar       | `today`     | an `energy` sensor whose translation key names the day                                               |
-| battery     | `power`     | a `power` sensor                                                                                     |
-| car         | `range`     | device class `distance`                                                                              |
-| car         | `plugged`   | binary sensor `plug`                                                                                 |
-| car         | `charging`  | binary sensor `battery_charging`                                                                     |
-| car         | `location`  | a `device_tracker`                                                                                   |
+| Key             | Takes                                                                          | Default |
+| --------------- | ------------------------------------------------------------------------------ | ------- |
+| `variant`       | `pump`, `washer`, `dryer`, `dishwasher` or `heat_pump`: the device in the icon | a plug  |
+| `running_above` | the power in W above which it runs                                             | `5`     |
 
 ## Predefined rules
 
-A poster type's own rules apply until the card has `rules`, which replace them as a whole; `rules: []` drops them (see [Colour and rules](/cards/poster-custom#colour-and-rules)). Their labels are translated. Copy a set to change one band:
+A poster type's own rules apply until the card has `rules` of its own. `rules: []` drops them ([Colour and rules](/cards/poster-custom#colour-and-rules)). Their labels follow the user's language. Copy a set to change one band:
+
 ::: code-group
 
 ```yaml [battery]
@@ -660,7 +745,7 @@ rules:
 
 :::
 
-Wind, in the unit of your sensor (the set is written in km/h; a copied set reads the sensor's own unit):
+Wind: pick the tab for your sensor's unit.
 
 ::: code-group
 
@@ -710,7 +795,7 @@ rules:
 
 :::
 
-Rain:
+Rain: pick the tab for your sensor's unit.
 
 ::: code-group
 
@@ -734,7 +819,7 @@ rules:
 
 :::
 
-Weather, colours only (the condition is the status):
+Weather, colours only:
 
 ```yaml
 rules:
