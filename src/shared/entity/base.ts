@@ -64,7 +64,7 @@ export interface VisState {
 // whether a text's glyphs are wider than its box, to the fraction of a pixel: an ellipsis shows for
 // any overflow, and scrollWidth rounds it away. Less than a layout unit (1/64 px) is rounding,
 // which shows no ellipsis
-const overflows = (el: HTMLElement) => {
+export const overflows = (el: HTMLElement) => {
   const range = document.createRange();
   range.selectNodeContents(el);
   return range.getBoundingClientRect().width > el.getBoundingClientRect().width + 1 / 64;
@@ -121,6 +121,10 @@ export abstract class EntityCardBase extends HTMLElement {
   // the items that count a group's members on: they follow the members' states too
   _countIdxs: number[] = [];
   _ro?: ResizeObserver;
+  // a card whose fit changes its own height (the poster's value on a card as tall as its content)
+  // renders a resize a frame later: in the observer's callback that change reports a loop
+  _resizeLater = false;
+  _resizeFrame = 0;
   // controls: service calls in flight per entity index, the row being dragged, the host the
   // builders talk to
   _pending = new Map<number, Pending>();
@@ -309,7 +313,9 @@ export abstract class EntityCardBase extends HTMLElement {
     this._armMinute();
     this._ro = new ResizeObserver(() => {
       this._resized = true;
-      this._render();
+      if (!this._resizeLater) return this._render();
+      cancelAnimationFrame(this._resizeFrame);
+      this._resizeFrame = requestAnimationFrame(() => this._render());
     });
     if (this._root) this._ro.observe(this._root);
     document.fonts?.addEventListener("loadingdone", this._onFonts);
@@ -358,6 +364,7 @@ export abstract class EntityCardBase extends HTMLElement {
     clearInterval(this._timer);
     clearInterval(this._minute);
     clearTimeout(this._pendingTimer);
+    cancelAnimationFrame(this._resizeFrame);
     // a gesture cut off by leaving the page never ends: its row is filled again on return
     this._dragging = null;
     this._armed.clear();
@@ -1024,21 +1031,6 @@ export abstract class EntityCardBase extends HTMLElement {
       let size = full;
       big.style.setProperty("--fit", `${size}px`);
       while (size > least && overflows(b)) {
-        size -= 1;
-        big.style.setProperty("--fit", `${size}px`);
-      }
-    }
-    // a poster's value on a narrow card: the same, from its own styled size (a word is drawn
-    // smaller than a number) down to 60 % of it
-    for (const big of all<HTMLElement>(".row.poster .big")) {
-      const b = big.querySelector("b");
-      if (!b) continue;
-      big.classList.remove("fit");
-      const own = parseFloat(getComputedStyle(b).fontSize) || 40;
-      let size = own;
-      big.classList.add("fit");
-      big.style.setProperty("--fit", `${size}px`);
-      while (size > own * 0.6 && overflows(b)) {
         size -= 1;
         big.style.setProperty("--fit", `${size}px`);
       }

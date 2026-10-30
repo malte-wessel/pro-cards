@@ -53,6 +53,12 @@ const baselineOf = (loc: Locator) =>
     mark.remove();
     return y;
   });
+// from the name's bottom to the top of the value's capitals, where they are drawn
+const nameGapOf = async (c: Locator) => {
+  const b = c.locator(".pvalue .big b");
+  const base = await baselineOf(b);
+  return base - (await fontPx(b)) * 0.711 - (await rect(c.locator(".pname"))).bottom;
+};
 // the glow's opacity as the card set it (not mid-transition)
 const glowOf = (c: Locator) =>
   c.locator(".pglow").evaluate((e) => (e as HTMLElement).style.opacity);
@@ -393,12 +399,14 @@ test.describe("poster types", () => {
     await expect(card(page).locator(".pglow")).toHaveCount(0);
   });
 
-  test("a value turning from a number into a word moves nothing, the switch beside it neither", async ({
+  test("a value turning from a number into a word moves nothing, the switch beside it neither; the name keeps its gap", async ({
     page,
   }) => {
     await mount(page, [
       { type: P, entity: "fan.bedroom", control: "toggle" },
       { type: P, entity: "light.desk_lamp", visual: "sparkline", control: "toggle" },
+      { type: P, entity: "sensor.living_room_temperature" },
+      { type: P, entity: "lock.front_door", icon_hold_action: "none" },
     ]);
     const before = [await layoutOf(card(page, 0)), await layoutOf(card(page, 1))];
     await setState(page, "fan.bedroom", "on", { percentage: 50 });
@@ -406,6 +414,9 @@ test.describe("poster types", () => {
     await expect(card(page, 0).locator(".pvalue .big b")).toHaveText("50");
     await expect(card(page, 1).locator(".pvalue .big b")).toHaveText("Off");
     expect([await layoutOf(card(page, 0)), await layoutOf(card(page, 1))]).toEqual(before);
+    // the name sits as close above a word (Locked) as above a number
+    const number = await nameGapOf(card(page, 2));
+    expect(Math.abs((await nameGapOf(card(page, 3))) - number)).toBeLessThan(1.5);
   });
 
   test("a wider or narrower value never moves the controls: their place holds for the card's size", async ({
@@ -772,7 +783,7 @@ test.describe("poster value fit", () => {
   test("a value shrinks where the card is short of room and is full size where it is not", async ({
     page,
   }) => {
-    const cfg = { type: P, entity: "climate.living_room" };
+    const cfg = { type: P, entity: "vacuum.robot" };
     await mount(
       page,
       [
@@ -785,13 +796,14 @@ test.describe("poster value fit", () => {
       big = card(page, 1);
     const b = (c: Locator) => c.locator(".pvalue .big b");
     await expect.poll(() => fontPx(b(small))).toBeLessThan(await fontPx(b(big)));
-    // the room it gives up keeps the top line at the card's padding
+    // the room it gives up keeps the top line at the card's padding, the buttons beside the value
     const box = await inner(small);
     expect((await rect(small.locator(".ptop"))).top - box.top).toBeCloseTo(16, 0);
+    await expect(small.locator(".pmain")).toHaveClass(/beside/);
     // a new value never makes it larger again (no jump back and forth)
     const px = await fontPx(b(small));
-    await setState(page, "climate.living_room", "heat", { current_temperature: 19 });
-    await expect(b(small)).toHaveText("19");
+    await setState(page, "vacuum.robot", "docked");
+    await expect(b(small)).toHaveText("Docked");
     expect(await fontPx(b(small))).toBe(px);
   });
 });

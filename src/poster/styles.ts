@@ -63,17 +63,16 @@ const STYLE_POSTER_CARD = `
      pointer through to it */
   .pbody:has(> .pcurve) { flex: 1 1 auto; min-height: 0; }
   .pbody:has(> .pcurve) > :not(.pcurve) { position: relative; z-index: 1; pointer-events: none; }
-  .pbody:has(> .pcurve) .big { --pnum: ${fs(32)}; --plh: ${lh(32, 36)}; }
-  .pbody:has(> .pcurve) .big b { ${type(32, 36)} }
+  .pbody:has(> .pcurve) .big { --pnum: ${fs(28)}; --plh: ${lh(28, 31)}; }
+  .pbody:has(> .pcurve) .big b { ${type(28, 31)} }
   .pbody > .pcurve { position: relative; flex: 1 1 auto; min-height: 40px; min-width: 0; margin: 6px -16px -16px; touch-action: pan-y; }
   /* a sparkline keeps a small gap below the value instead of reaching up under it */
   ha-card.layout-poster .pbody > .pmain:not(:has(> .ptext > .secondary)) + .plot.grow[data-kind="sparkline"] { margin-top: 6px; }
   .row.actionable .pcurve { pointer-events: auto; }
-  /* the value drawn smaller where the card is too short for it (PosterCard._fitHeight): the
-     number and its line shrink together, a word stays as much smaller as it is */
+  /* the value drawn smaller where it is too wide for its line or the card too short for it
+     (PosterCard._fitValue): the value and its line shrink together */
   ha-card.layout-poster .row.poster .big.hfit { --pnum: var(--hfit); --plh: calc(var(--hfit) * 1.1); }
   ha-card.layout-poster .row.poster .big.hfit b { font-size: var(--hfit); line-height: calc(var(--hfit) * 1.1); }
-  ha-card.layout-poster .row.poster .big.hfit.word b { font-size: calc(var(--hfit) * 0.7); line-height: 1.1; }
   ha-card.layout-poster .row.poster .pbody > .ctl-slider.pfit-out { display: none; }
   /* a picture's tooltip opens upward from its bottom, over the texts: the picture is the poster's
      bottom strip, and a tooltip opening downward would be cut by the card's edge */

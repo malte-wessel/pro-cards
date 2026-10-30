@@ -88,20 +88,17 @@ const STYLE_POSTER = `
   .pmain.beside { flex-wrap: nowrap; }
   .pmain.beside > .end { flex-shrink: 0; }
   .pmain.under > .end { flex-basis: 100%; }
-  .row.poster .big { --pnum: ${fs(40)}; --plh: ${lh(40, 44)}; }
-  .row.poster .big b { ${type(40, 44)} ${POSTER_VALUE} }
+  .row.poster .big { --pnum: ${fs(32)}; --plh: ${lh(32, 35)}; }
+  .row.poster .big b { ${type(32, 35)} ${POSTER_VALUE} }
   .row.poster .big span { font-size: ${fs(16)}; }
-  /* with a curve the value is smaller: the curve gets the room (a word and a fitted value still
-     take their own size, by order) */
-  .pbody:has(> .plot.grow) .big { --pnum: ${fs(32)}; --plh: ${lh(32, 36)}; }
-  .pbody:has(> .plot.grow) .big b { ${type(32, 36)} }
-  /* a word (Off, Cleaning) is drawn smaller than a number, on the number's baseline and in its
-     line: an empty first item at the number's size (its gap given back) holds both, the word's own
-     line is short enough to stay inside them. A light switched off moves nothing, not the value,
-     not a control ending on its baseline */
-  .row.poster .big.word b { font-size: ${fs(28)}; line-height: 1.1; letter-spacing: 0; }
-  .row.poster .big.word::before { content: "\\200b"; width: 0; margin-inline-end: -6px; font-size: var(--pnum); line-height: var(--plh); }
-  .row.poster .big.fit b { font-size: var(--fit); }
+  /* with a curve the value is smaller: the curve gets the room (a fitted value still takes its own
+     size, by order) */
+  .pbody:has(> .plot.grow) .big { --pnum: ${fs(28)}; --plh: ${lh(28, 31)}; }
+  .pbody:has(> .plot.grow) .big b { ${type(28, 31)} }
+  /* a word (Off, Cleaning) is drawn as a number is, at its size and in its line, so the name, the
+     value and the line under it keep the same gaps whatever the value; where it is too wide the
+     card draws every value smaller (PosterCard._fitValue) */
+  .row.poster .big.word b { letter-spacing: 0; }
   .pbody > :is(.bar, .gauge, .ctl-slider, .ctl-segments, .ctl-buttons, .plot) { margin-top: 8px; }
   .pbody > .gauge { align-self: center; }
   /* a gauge poster: the arc and its name centred, across and down; the arc stays small enough for
