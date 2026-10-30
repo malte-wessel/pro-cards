@@ -137,6 +137,9 @@ export interface Kind {
   imageBlur?: boolean;
   // run on every render after the fill: what follows the clock or the size (a curve)
   live?(c: KindCtx, row: HTMLElement): void;
+  // run on every render once the value is fitted, where the texts have their place: what fills
+  // the room they leave (a robot's route)
+  placed?(c: KindCtx, row: HTMLElement): void;
   // what else the poster row is filled from (beyond its model and the inputs')
   extra?(c: KindCtx): unknown[];
   // the minute timer (a countdown, a duration)

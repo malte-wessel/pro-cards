@@ -166,13 +166,124 @@ export const COVER: Kind = {
 // ----- vacuum and lawn mower -----
 
 const WORKING = new Set(["cleaning", "mowing"]);
+// the robot's route, drawn into the largest room the poster's parts leave free (placeRoute):
+// lanes back and forth LANE px apart, each turn a short straight step with rounded corners, in px
+// (so the dashes keep their length); the whole route faint, the part it has done revealed over it
+// by a solid stroke drawing itself in a mask (half of it while the robot rests)
+const LANE = 12;
 const robotSvg = () => {
   const svg = document.createElementNS(SVG, "svg");
-  svg.setAttribute("viewBox", "0 0 100 60");
-  svg.setAttribute("preserveAspectRatio", "none");
-  const d = "M6 52 H94 V42 H6 V32 H94 V22 H6 V12 H94";
-  svg.innerHTML = `<defs><mask id="ptrail-m" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="60"><path class="reveal" d="${d}" pathLength="100"/></mask></defs><path class="trail" d="${d}" mask="url(#ptrail-m)"/>`;
+  svg.innerHTML = `<defs><mask id="proute" maskUnits="userSpaceOnUse"><path class="reveal" pathLength="100"/></mask></defs><path class="route"/><path class="done" mask="url(#proute)"/>`;
   return svg;
+};
+// the route through a box of w × h px: as many lanes as fit, from the top down
+export const routeOf = (w: number, h: number) => {
+  const r = 3,
+    pad = 2;
+  const n = Math.max(1, Math.floor((h - 2 * pad) / LANE) + 1);
+  const top = h / 2 - ((n - 1) * LANE) / 2;
+  const x0 = pad,
+    x1 = w - pad;
+  let d = `M${x0} ${top}`;
+  for (let i = 0; i < n; i++) {
+    const y = top + i * LANE,
+      right = i % 2 === 0;
+    const end = right ? x1 : x0,
+      dir = right ? 1 : -1;
+    if (i === n - 1) {
+      d += ` H${end}`;
+      break;
+    }
+    const down = y + LANE;
+    d += ` H${end - dir * r} Q${end} ${y} ${end} ${y + r} V${down - r} Q${end} ${down} ${end - dir * r} ${down}`;
+  }
+  return d;
+};
+type Box = { x0: number; y0: number; x1: number; y1: number };
+const GAP = 12;
+// the room the route leaves at the sides and the bottom of the free box
+const INSET = 8;
+// the largest room the poster's parts leave: above the name right of the icon (beside the
+// corner's badges or under them), or beside the texts above the controls
+const freeBox = (row: HTMLElement, back: DOMRect): Box | null => {
+  const q = (sel: string) => row.querySelector<HTMLElement>(sel);
+  const rect = (el: Element | null) => (el ? el.getBoundingClientRect() : null);
+  // a text's own extent, not its box's
+  const ink = (el: Element | null) => {
+    if (!el) return null;
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    return range.getBoundingClientRect();
+  };
+  const inner = {
+    x0: back.left + 16,
+    y0: back.top + 16,
+    x1: back.right - 16,
+    y1: back.bottom - 16,
+  };
+  const lead = rect(q(":scope > .ptop > .plead")),
+    name = rect(q(":scope > .pbody > .pname")),
+    corner = rect(q(":scope > .ptop > .corner")),
+    main = rect(q(":scope > .pbody > .pmain")),
+    end = rect(q(":scope > .pbody > .pmain > .end"));
+  const texts = [ink(q(":scope > .pbody > .pname")), ink(q(":scope > .pbody > .pmain > .ptext"))];
+  const left = lead ? lead.right + GAP : inner.x0;
+  const top = name ? name.top - GAP : inner.y1;
+  const badges = corner && corner.width > 0 && corner.height > 0 ? corner : null;
+  const boxes: Box[] = [];
+  if (badges) {
+    boxes.push({ x0: left, y0: inner.y0, x1: badges.left - GAP, y1: top });
+    boxes.push({ x0: left, y0: badges.bottom + GAP, x1: inner.x1, y1: top });
+  } else boxes.push({ x0: left, y0: inner.y0, x1: inner.x1, y1: top });
+  const textRight = Math.max(...texts.map((t) => (t && t.width ? t.right : -Infinity)));
+  if (Number.isFinite(textRight)) {
+    const bottom = end && end.left > textRight ? end.top - GAP : (main?.bottom ?? inner.y1);
+    boxes.push({
+      x0: Math.max(textRight + 2 * GAP, left),
+      y0: badges ? badges.bottom + GAP : inner.y0,
+      x1: inner.x1,
+      y1: bottom,
+    });
+  }
+  let best: Box | null = null,
+    area = 0;
+  for (const room of boxes) {
+    // the route keeps clear of the room's sides and bottom (its top is the card's padding)
+    const b = { x0: room.x0 + INSET, y0: room.y0, x1: room.x1 - INSET, y1: room.y1 - INSET };
+    const w = b.x1 - b.x0,
+      h = b.y1 - b.y0;
+    if (w < 48 || h < 16 || w * h <= area) continue;
+    best = b;
+    area = w * h;
+  }
+  return best;
+};
+// draws the route into the free room (only again when that room moved or changed size)
+const placeRoute = (row: HTMLElement) => {
+  const el = row.parentElement?.querySelector<HTMLElement>(":scope > .pback > .ppath");
+  const svg = el?.querySelector<SVGSVGElement>(":scope > svg");
+  if (!el || !svg) return;
+  const back = el.getBoundingClientRect();
+  const box = freeBox(row, back);
+  const key = box
+    ? [box.x0 - back.left, box.y0 - back.top, box.x1 - box.x0, box.y1 - box.y0]
+        .map(Math.round)
+        .join(",")
+    : "";
+  if (svg.dataset.key === key) return;
+  svg.dataset.key = key;
+  svg.toggleAttribute("hidden", !box);
+  if (!box) return;
+  const [x, y, w, h] = key.split(",").map(Number);
+  Object.assign(svg.style, { left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px` });
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  const d = routeOf(w, h);
+  for (const p of svg.querySelectorAll("path")) p.setAttribute("d", d);
+  const mask = svg.querySelector("mask");
+  mask?.setAttribute("x", "-8");
+  mask?.setAttribute("y", "-8");
+  mask?.setAttribute("width", String(w + 16));
+  mask?.setAttribute("height", String(h + 16));
 };
 const robot = (name: string, domain: string, readsText: string): Kind => ({
   name,
@@ -224,6 +335,7 @@ const robot = (name: string, domain: string, readsText: string): Kind => ({
       el.classList.toggle("docked", s === "docked");
     },
   },
+  placed: (_c, row) => placeRoute(row),
 });
 
 export const VACUUM = robot("vacuum", "vacuum", "a vacuum");

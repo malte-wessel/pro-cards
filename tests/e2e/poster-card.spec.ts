@@ -545,6 +545,35 @@ test.describe("poster types", () => {
     expect(await services(page)).toEqual(["script.turn_on"]);
   });
 
+  test("a robot's route fills the room the icon, the badges and the texts leave", async ({
+    page,
+  }) => {
+    const v = { type: P, entity: "vacuum.robot" };
+    await mount(
+      page,
+      [
+        { ...v, grid_options: { columns: 6, rows: 3 } },
+        { ...v, grid_options: { columns: 9, rows: 4 } },
+      ],
+      { width: 400 },
+    );
+    for (const i of [0, 1]) {
+      const c = card(page, i);
+      const route = await rect(c.locator(".ppath > svg"));
+      const lead = await rect(c.locator(".plead"));
+      const name = await rect(c.locator(".pname"));
+      const box = await inner(c);
+      // right of the icon, above the name, inside the card's padding
+      expect(route.left).toBeGreaterThan(lead.right);
+      expect(route.bottom).toBeLessThan(name.top);
+      expect(route.top).toBeGreaterThanOrEqual(box.top + 16 - 0.5);
+      expect(route.right).toBeLessThanOrEqual(box.right - 16);
+    }
+    // a taller card, a longer route
+    const d = (i: number) => card(page, i).locator(".ppath .route").getAttribute("d");
+    expect((await d(1))!.length).toBeGreaterThan((await d(0))!.length);
+  });
+
   test("a vacuum starts, pauses and docks from its buttons", async ({ page }) => {
     await mount(page, { type: P, entity: "vacuum.robot" });
     const c = card(page);

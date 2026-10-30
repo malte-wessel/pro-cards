@@ -58,10 +58,13 @@ export const STYLE_KINDS = `
      dock while it rests; on grass for a mower */
   .ppath { position: absolute; inset: 0; }
   .ppath.lawn { background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--green-color) 10%, transparent) 0 22px, color-mix(in srgb, var(--green-color) 5%, transparent) 22px 44px); }
-  /* the path keeps to the room right of the lead, above the texts */
-  .ppath svg { position: absolute; left: 34%; top: 14%; width: 58%; height: 30%; overflow: visible; }
-  .ppath .trail { fill: none; stroke: var(--fe-color); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 0 7; vector-effect: non-scaling-stroke; opacity: .45; }
-  .ppath .reveal { fill: none; stroke: #fff; stroke-width: 24; stroke-dasharray: 100; stroke-dashoffset: 50; }
+  /* the route keeps to the largest room the icon, the badges, the texts and the controls leave
+     (placed by the robot kind, in px) */
+  .ppath svg { position: absolute; overflow: visible; }
+  .ppath :is(.route, .done) { fill: none; stroke: var(--fe-color); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 5 5; vector-effect: non-scaling-stroke; }
+  .ppath .route { opacity: .18; }
+  .ppath .done { opacity: .8; }
+  .ppath .reveal { fill: none; stroke: #fff; stroke-width: 8; stroke-dasharray: 100; stroke-dashoffset: 50; }
   .ppath.working .reveal { animation: ptrail 16s linear infinite; }
   @keyframes ptrail { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
   .ppath:not(.working) svg { opacity: .35; }

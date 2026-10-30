@@ -477,6 +477,7 @@ export class PosterCard extends EntityCardBase {
     // what follows the clock or the size (a curve) checks itself whether it changed
     cfg.kind.live?.(kc, row);
     this._fitValue(card, row);
+    cfg.kind.placed?.(kc, row);
   }
 
   // the value's size for the room the card has, one size for every value (a word as a number, so
