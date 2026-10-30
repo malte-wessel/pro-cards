@@ -52,6 +52,8 @@ export interface World {
   ): StatisticsResult;
   statisticsMetadata(ids: string[]): StatisticMetadata[];
   start(): void;
+  // no more drift (the tests: what they draw never depends on chance or on how long they ran)
+  stop(): void;
   _timer?: ReturnType<typeof setInterval>;
 }
 
@@ -1165,6 +1167,10 @@ export const world: World = {
       }
       notify();
     }, 5000);
+  },
+  stop() {
+    clearInterval(this._timer);
+    this._timer = undefined;
   },
 };
 

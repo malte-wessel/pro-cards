@@ -93,11 +93,16 @@ Run one file or test with the usual Playwright flags, for example `npx playwrigh
 Font rendering differs between macOS and Linux, so the baselines are rendered on **Linux only**, inside `mcr.microsoft.com/playwright`. `scripts/visual.sh` runs the suite in that image with the repository mounted; the same image runs in CI, so both compare identical pixels.
 
 ```sh
-npm run test:visual           # compare against the committed baselines
-npm run test:visual:update    # re-render the baselines after an intended change
+npm run test:visual                                        # compare against the committed baselines
+npm run test:visual:update                                 # re-render the baselines after an intended change
+npm run test:visual -- -g "pc-battery|pc-levels"           # some cases only
+VISUAL_THEMES=dark npm run test:visual -- -g pc-           # one theme only, a quick look while working
+npm run test:visual:update -- -g pc-battery --update-snapshots=all   # also baselines within the threshold
 ```
 
-Docker Desktop must be running. The first run pulls the image (about 2 GB) and installs `node_modules` into a named volume, later runs take a few seconds.
+Docker Desktop must be running. The first run pulls the image (about 2 GB) and installs `node_modules` into a named volume; it is installed again only when `package-lock.json` changes. The whole suite takes well under a minute.
+
+One test draws a case in both themes, and each worker mounts case after case into one page: the harness loads once, `mount` resets the theme, skin, width and the harness's records, and the demo world's sensors hold still in the harness (no drift), so a picture never depends on what ran before it. A case that changes the world (a click, a state) needs a page of its own (`page`, as `ef-calendar`). A local run fails a changed snapshot once; CI retries it once.
 
 When a visual test fails, `test-results/` holds the expected, actual and diff images, and `npx playwright show-report` opens them side by side. Update the baselines only when the change is intended, and review the new PNGs in the diff before committing.
 

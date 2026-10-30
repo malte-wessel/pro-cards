@@ -1,6 +1,31 @@
+import type { Page } from "@playwright/test";
 import { test, expect, mount } from "../e2e/util.ts";
 
 // All snapshots: frozen clock (21 June 2026, 12:00 Europe/Berlin), 400 px section column, light and dark.
+// One test per case draws both themes, on one page per worker: the harness loads once and every
+// case is mounted into it again (mount resets the theme, skin, width and the harness's records).
+// VISUAL_THEMES=dark draws one theme only, for a quick look while working.
+const THEMES = (process.env.VISUAL_THEMES || "light,dark").split(",");
+const vtest = test.extend<object, { shared: Page }>({
+  shared: [
+    async ({ browser }, use, info) => {
+      const u = info.project.use;
+      const context = await browser.newContext({
+        baseURL: u.baseURL,
+        viewport: u.viewport,
+        deviceScaleFactor: u.deviceScaleFactor,
+        userAgent: u.userAgent,
+        colorScheme: u.colorScheme,
+        reducedMotion: u.reducedMotion,
+        timezoneId: u.timezoneId,
+        locale: u.locale,
+      });
+      await use(await context.newPage());
+      await context.close();
+    },
+    { scope: "worker" },
+  ],
+});
 const EC = "custom:entity-card-pro",
   EGC = "custom:entity-group-card-pro",
   ESC = "custom:entity-sections-card-pro";
@@ -2132,8 +2157,8 @@ const WIDTHS: Record<string, number> = {
 };
 
 for (const [name, cfg] of Object.entries(ALL)) {
-  for (const theme of ["light", "dark"]) {
-    test(`${name} (${theme})`, async ({ page }) => {
+  vtest(name, async ({ shared: page }) => {
+    for (const theme of THEMES) {
       await mount(page, cfg, { theme, skin: SKINS[name], width: WIDTHS[name] });
       // fonts + icons settled: every ha-icon has a path (in its ha-svg-icon), then one more frame
       await page.waitForFunction(() =>
@@ -2153,14 +2178,15 @@ for (const [name, cfg] of Object.entries(ALL)) {
       );
       await page.evaluate(() => document.fonts.ready);
       await page.waitForTimeout(150);
-      await expect(page.locator("#root")).toHaveScreenshot(`${name}-${theme}.png`);
-    });
-  }
+      // soft: a changed light snapshot still lets the dark one be checked
+      await expect.soft(page.locator("#root")).toHaveScreenshot(`${name}-${theme}.png`);
+    }
+  });
 }
 
 // the energy flow card's calendar, open over the card: a range picked (its band, the button's
 // label) and the calendar opened again on it
-for (const theme of ["light", "dark"]) {
+for (const theme of THEMES) {
   test(`ef-calendar (${theme})`, async ({ page }) => {
     await mount(page, { type: EF, home: "sensor.home_energy", sources: EF_SRC }, { theme });
     const c = page.locator("#root .cell").first().locator("> *");

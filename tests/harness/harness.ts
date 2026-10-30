@@ -42,6 +42,7 @@ export interface ShimWorld {
   set(id: string, state?: string, attributes?: Record<string, unknown>): void;
   subscribe(fn: () => void): () => void;
   history(ids: string[], start: number, end: number): Record<string, { s: string; lu: number }[]>;
+  stop(): void;
 }
 // what every mounted card element offers
 export interface CardElement extends HTMLElement {
@@ -141,6 +142,9 @@ const snapshot = (): HomeAssistant => {
 hassMod.setActionHass(snapshot);
 hassMod.setMoreInfo((entityId: string) => events.push({ type: "more-info", entityId }));
 hassMod.wire();
+// the sensors hold still: a test's picture never depends on chance or on how long the page has run
+// (the visual tests mount case after case into one page)
+world.stop();
 document.addEventListener("hass-action", (ev) => actions.push((ev as CustomEvent).detail));
 document.addEventListener("hass-notification", (ev) =>
   events.push({ type: "notification", message: String((ev as CustomEvent).detail?.message) }),
