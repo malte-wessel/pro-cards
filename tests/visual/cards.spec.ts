@@ -2036,6 +2036,11 @@ const CASES = {
       discharge: "sensor.balcony_battery_discharge_power",
     },
   ],
+  // a battery without power: its cell alone, the texts short of it; a template sensor made one
+  "pc-battery": [
+    { type: PC, entity: "sensor.robot_battery", name: "Robot", icon: "mdi:robot-vacuum" },
+    { type: PC, entity: "sensor.phone_battery", name: "Phone", poster: "battery" },
+  ],
   "pc-weather-sun": [
     { type: PC, entity: "weather.home", name: "Outside" },
     { type: PC, entity: "sun.sun" },

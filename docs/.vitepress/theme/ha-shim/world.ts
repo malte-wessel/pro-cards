@@ -605,6 +605,13 @@ def(
   { duty: 0.2 },
 );
 
+// a phone's battery from a template sensor: no device class
+def("sensor.phone_battery", 15, {
+  unit_of_measurement: "%",
+  friendly_name: "Phone battery",
+  icon: "mdi:cellphone",
+});
+
 // appliances
 def("lawn_mower.garden", "mowing", { friendly_name: "Lawn mower", battery_level: 64 });
 def("vacuum.robot", "cleaning", {

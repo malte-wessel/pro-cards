@@ -206,6 +206,33 @@ test.describe("poster types", () => {
     await expect(field).toHaveAttribute("data-mark", "1");
   });
 
+  test("a battery fills its cell to the charge; power flows into it only with a power sensor", async ({
+    page,
+  }) => {
+    await mount(page, [
+      { type: P, entity: "sensor.robot_battery" },
+      { type: P, entity: "sensor.phone_battery", poster: "battery" },
+      {
+        type: P,
+        entity: "sensor.balcony_battery_soc",
+        charge: "sensor.balcony_battery_charge_power",
+        discharge: "sensor.balcony_battery_discharge_power",
+      },
+    ]);
+    const robot = card(page, 0).locator(".pback .pcell");
+    await expect(robot.locator(".cell")).toBeVisible();
+    await expect(robot).toHaveAttribute("style", /--fill: 72%/);
+    await expect(robot.locator(".pline")).toHaveCount(0);
+    await expect(card(page, 1).locator(".pstatus")).toHaveText("Low");
+    await expect(card(page, 1).locator(".pback .pcell")).toHaveAttribute("style", /--fill: 15%/);
+    await expect(card(page, 2).locator(".pback .pcell .pline")).toBeAttached();
+    // the cell fills to a new charge in place
+    await mark(robot);
+    await setState(page, "sensor.robot_battery", "40");
+    await expect(robot).toHaveAttribute("style", /--fill: 40%/);
+    await expect(robot).toHaveAttribute("data-mark", "1");
+  });
+
   test("weather: the condition as the status, the temperature as the value", async ({ page }) => {
     await mount(page, { type: P, entity: "weather.home" });
     const row = card(page).locator(".row.poster");

@@ -167,9 +167,11 @@ const batteryW = (c: KindCtx) => {
   return null;
 };
 const isHome = (c: KindCtx) => !!(c.input("power") || c.input("charge") || c.input("discharge"));
-const cellEl = () => {
+// the cell filled to the charge; with a power sensor (a home battery) the power flows into it or out
+const cellEl = (home: boolean) => {
   const el = div("pcell");
-  el.append(lineEl("in", 3), div("cell"));
+  if (home) el.append(lineEl("in", 3));
+  el.append(div("cell"));
   el.querySelector(".cell")?.appendChild(document.createElement("i"));
   return el;
 };
@@ -202,8 +204,8 @@ export const BATTERY: Kind = {
     return { secondary: v ? secondaryEl([{ text: v.text }]) : null };
   },
   backdrop: {
-    key: (c) => (isHome(c) ? "cell" : ""),
-    build: () => cellEl(),
+    key: (c) => (isHome(c) ? "cell home" : "cell"),
+    build: (c) => cellEl(isHome(c)),
     update: (el, c) => {
       el.style.setProperty("--fill", `${Math.max(0, Math.min(100, c.m.model.num ?? 0))}%`);
       flow(el.querySelector(".pline"), batteryW(c));

@@ -294,8 +294,8 @@ The icon at the top left shows the entity's icon, or the poster type's own drawi
 
 ```yaml
 - type: custom:poster-card-pro
-  entity: sensor.robot_battery
-  name: Robot
+  entity: sensor.robot_progress
+  name: Cleaning
   icon: mdi:robot-vacuum
   icon_ring: true
   grid_options: { columns: 6 }

@@ -13,8 +13,8 @@ The type is detected from the entity's domain, then its device class, else it is
 | Poster type                                                                                          | Detected by                                                                    |
 | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | [`entity`](#entity)                                                                                  | anything else                                                                  |
-| [`battery`](#battery-and-air-quality)                                                                | device class `battery`                                                         |
-| [`carbon_dioxide`, `pm25`, `pm10`, `aqi`](#battery-and-air-quality)                                  | their device class                                                             |
+| [`battery`](#battery)                                                                                | device class `battery`                                                         |
+| [`carbon_dioxide`, `pm25`, `pm10`, `aqi`](#air-quality)                                              | their device class                                                             |
 | [`weather`](#weather), [`sun`](#sun), [`wind`](#wind), [`rain`](#rain)                               | `weather.*`, `sun.sun`, device classes `wind_speed`, `precipitation_intensity` |
 | [`trend`](#trend)                                                                                    | never: `poster: trend` with its `series`                                       |
 | [`light`](#light), [`fan`](#fan), [`climate`](#climate)                                              | domain                                                                         |
@@ -47,13 +47,67 @@ The fallback: the entity's icon, name and value. The status badge shows the matc
 
 :::
 
-## Battery and air quality
+## Battery
 
-**Reads** a sensor of device class `battery`, `carbon_dioxide`, `pm25`, `pm10` or `aqi`.
+**Reads** a sensor of device class `battery`.
 
-These types bring their own rules: a colour and a label by value, from a standard where there is one.
+A battery poster draws a cell that fills to the charge. It turns orange and says _Low_ below 20 %, red and _Critical_ below 10 %. The labels follow the user's language; [Predefined rules](#predefined-rules) has the set to copy and change.
 
-- Battery: red and _Critical_ below 10 %, orange and _Low_ below 20 %.
+A template sensor often has no device class. `poster: battery` makes it a battery, like the phone here:
+
+::: live
+
+```yaml
+- type: custom:poster-card-pro
+  entity: sensor.robot_battery
+  name: Robot
+  icon: mdi:robot-vacuum
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: sensor.phone_battery
+  name: Phone
+  poster: battery
+  grid_options: { columns: 6 }
+```
+
+:::
+
+With a power sensor, it draws a home battery: the power flows into the cell or out of it. The status says Charging or Discharging, with the power under the charge.
+
+`power` is positive while the battery charges and negative while it discharges. The [power flow card](/cards/power-flow-card) reads a battery the other way round. Or give `charge` and `discharge`, a sensor each.
+
+::: live
+
+```yaml
+- type: custom:poster-card-pro
+  entity: sensor.balcony_battery_soc
+  name: Balcony battery
+  charge: sensor.balcony_battery_charge_power
+  discharge: sensor.balcony_battery_discharge_power
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: sensor.battery_soc
+  name: Home battery
+  grid_options: { columns: 6 }
+```
+
+:::
+
+### Options
+
+These apply to a battery:
+
+| Key                   | Takes                                              | Default                                |
+| --------------------- | -------------------------------------------------- | -------------------------------------- |
+| `power`               | a power sensor, positive while the battery charges | a power sensor on the battery's device |
+| `charge`, `discharge` | a power sensor each, in place of `power`           | –                                      |
+
+## Air quality
+
+**Reads** a sensor of device class `carbon_dioxide`, `pm25`, `pm10` or `aqi`.
+
+These types bring their own colour and label by value, from a standard where there is one:
+
 - CO₂: from _Good_ to _Bad_ at 800, 1200 and 2000 ppm.
 - PM2.5 and PM10: the WHO and EU bands.
 - Air quality index: the US EPA's bands. _Hazardous_ pulses.
@@ -84,50 +138,6 @@ The labels follow the user's language. [Predefined rules](#predefined-rules) has
 ```
 
 :::
-
-With its power, the battery poster draws a home battery. The cell fills to the charge and the power flows in or out. The status says Charging or Discharging, with the power under the charge.
-
-`power` is positive while the battery charges and negative while it discharges. The [power flow card](/cards/power-flow-card) reads a battery the other way round. Or give `charge` and `discharge`, a sensor each.
-
-::: live
-
-```yaml
-- type: custom:poster-card-pro
-  entity: sensor.balcony_battery_soc
-  name: Balcony battery
-  charge: sensor.balcony_battery_charge_power
-  discharge: sensor.balcony_battery_discharge_power
-  grid_options: { columns: 6 }
-- type: custom:poster-card-pro
-  entity: sensor.battery_soc
-  name: Home battery
-  grid_options: { columns: 6 }
-```
-
-:::
-
-A template sensor has no device class. `poster` gives it a type:
-
-::: live
-
-```yaml
-type: custom:poster-card-pro
-entity: sensor.robot_battery
-name: Robot
-icon: mdi:robot-vacuum
-poster: battery
-```
-
-:::
-
-### Options
-
-These apply to a battery:
-
-| Key                   | Takes                                              | Default                                |
-| --------------------- | -------------------------------------------------- | -------------------------------------- |
-| `power`               | a power sensor, positive while the battery charges | a power sensor on the battery's device |
-| `charge`, `discharge` | a power sensor each, in place of `power`           | –                                      |
 
 ## Weather
 
