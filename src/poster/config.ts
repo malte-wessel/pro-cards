@@ -4,6 +4,7 @@
 import { domainOf } from "../shared/color.ts";
 import { isTemplate, numOrNull } from "../shared/util.ts";
 import {
+  normalizeAction,
   normalizeActionDefaults,
   normalizeBadge,
   normalizeEntity,
@@ -12,13 +13,14 @@ import {
   type EntityCardConfig,
   type EntityItem,
   type NormalizeCtx,
+  type RawAction,
   type RawEntity,
   type RawEntityCardBase,
   type ValueSrc,
 } from "../shared/entity/config.ts";
 import { ITEM_DEFAULTS, type BadgeSize, type BadgeStyle } from "../shared/entity/constants.ts";
-import { normalizeControl } from "../shared/entity/control.ts";
-import type { HomeAssistant } from "../shared/ha.ts";
+import { normalizeControl, type IconActions } from "../shared/entity/control.ts";
+import type { ActionConfig, HomeAssistant } from "../shared/ha.ts";
 import { parsePoster, resolveKind } from "../shared/kinds/detect.ts";
 import { deviceSiblings, findInput, logOnce } from "../shared/kinds/discover.ts";
 import { toRule } from "../shared/kinds/rules.ts";
@@ -50,6 +52,11 @@ export interface RawPosterCardConfig extends RawEntityCardBase, RawEntity {
   status?: unknown;
   badges?: unknown;
   image?: unknown;
+  // the lead: a ring of the value around the icon, the icon's own actions
+  icon_ring?: unknown;
+  icon_tap_action?: RawAction;
+  icon_hold_action?: RawAction;
+  icon_double_tap_action?: RawAction;
 }
 
 // the backdrop: an image URL, a template that renders one, or an entity's picture (a camera's
@@ -72,6 +79,10 @@ export interface PosterConfig extends EntityCardConfig {
   inputs: Record<string, number>;
   // `hours_to_show` as written (null: the kind's window)
   hoursSet: number | null;
+  // `visual: glow`: the poster lit from below in its colour, as strong as its level
+  glow: boolean;
+  // the icon's own actions: as written, else the kind's (a lock's hold)
+  iconActions: IconActions;
 }
 
 // the kind's inputs as items: set on the card (an id; false drops it), else a weather entity's
@@ -127,9 +138,27 @@ export const parseImage = (v: unknown): ImageSrc | false | null => {
 const isObj = (v: unknown): v is Record<string, unknown> =>
   !!v && typeof v === "object" && !Array.isArray(v);
 
+// an icon action as written, else the kind's; `none` (or neither) is null
+const iconAction = (written: RawAction | undefined, own: ActionConfig | undefined) => {
+  const a =
+    written === undefined || written === null
+      ? (own ?? null)
+      : normalizeAction(written, { action: "none" });
+  return a && a.action !== "none" ? a : null;
+};
+// whether the icon has an action of its own
+export const hasIconActions = (a: IconActions) => !!(a.tap || a.hold || a.dbl);
+
 export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): PosterConfig => {
   if (!isObj(input)) throw new Error(`${CARD_TYPE}: invalid config`);
   const written = input as RawPosterCardConfig;
+  // the poster's lead options are its own: the ring and the icon's actions
+  if (written.visual === "ring")
+    throw new Error(`${CARD_TYPE}: visual: ring is icon_ring: true on the poster card`);
+  if (written.control_position === "lead")
+    throw new Error(
+      `${CARD_TYPE}: the icon's own actions are icon_tap_action / icon_hold_action, not control_position: lead`,
+    );
   const kind = resolveKind(
     parsePoster(written.poster, CARD_TYPE),
     written.entity || null,
@@ -164,29 +193,41 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
     }),
   };
   // a card-level `visibility` is Home Assistant's (it hides the whole card); a poster without an
-  // entity or a value still has its name
+  // entity or a value still has its name. `glow` and `none` draw no picture of the item's own (the
+  // glow is the card's, PosterCard._render)
+  const glow = raw.visual === "glow";
   const own: RawEntity = {
     ...raw,
     visibility: undefined,
     value: raw.value ?? (entity || raw.attribute ? undefined : ""),
+    ...(glow || raw.visual === "none" ? { visual: "icon" } : {}),
   };
   const main = normalizeEntity(own, ctx, "the card", ITEM_DEFAULTS.other, { buttons: true });
+  if (raw.icon_ring === true) main.iconRing = true;
   // the kind's own rules, unless the card has its own (`rules: []` drops them)
   if (raw.rules === undefined && kind.rules) {
     main.rules = kind.rules.map(toRule);
     if (kind.ruleUnit) main.ruleUnit = kind.ruleUnit;
   }
+  const st = entity ? hass?.states[entity] : undefined;
   // a kind's controls are on by default: `control: false` drops them, a name picks another
   if (
     kind.controls &&
     (raw.control === undefined || raw.control === true || raw.control === "auto")
   ) {
-    const st = entity ? hass?.states[entity] : undefined;
     const defaults = typeof kind.controls === "function" ? kind.controls(st) : kind.controls;
     const c = normalizeControl({ ...own, control: "auto" }, ctx, "the card");
     main.control = c && defaults.length ? { ...c, defaults: [...defaults] } : null;
     main.toggle = false;
   }
+
+  // the icon's own actions, each as written or else the kind's
+  const kindIcon = kind.iconActions?.(st) ?? {};
+  const iconActions: IconActions = {
+    tap: iconAction(raw.icon_tap_action, kindIcon.tap),
+    hold: iconAction(raw.icon_hold_action, kindIcon.hold),
+    dbl: iconAction(raw.icon_double_tap_action, kindIcon.dbl),
+  };
 
   const entities: EntityItem[] = [main];
   const inputs = inputsOf(kind, opts, entity, hass, ctx, entities);
@@ -283,5 +324,7 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
     statusIdx,
     statusText,
     image: parseImage(raw.image),
+    glow,
+    iconActions,
   };
 };

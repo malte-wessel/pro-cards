@@ -1,13 +1,9 @@
-// CSS of what the kinds draw on a poster: a light's glow, a fan's turning blades, a thermostat's
+// CSS of what the kinds draw on a poster: a fan's turning blades, a thermostat's
 // dial and its warm or cool backdrop, an alarm's red pulse. Every animation has a paused frame
 // (prefers-reduced-motion, the visual tests): the blades stand at an angle, the pulse is still.
 import { CARD_BG } from "../constants.ts";
 
 export const STYLE_KINDS = `
-  /* light: its colour from the bottom of the card, as strong as its brightness (its opacity, set
-     by the kind: a change of brightness fades as switching does); nothing while off */
-  .pglow { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 105%, color-mix(in srgb, var(--glow) 60%, transparent) 0%, transparent 72%); opacity: 0; transition: opacity .6s; }
-
   /* fan: one turn a second as built (the speed scales the playback rate) */
   .lead.pfan :is(ha-icon, ha-state-icon) { transform: rotate(20deg); }
   .lead.pfan.spin :is(ha-icon, ha-state-icon) { animation: pfan-spin 1s linear infinite; }

@@ -10,7 +10,9 @@
  *   badges: [sensor.x, { attribute: humidity }, status]   # the corner; `status` places the status
  *   image: camera.front_door               # the backdrop: a URL, a template or an entity's picture
  *   rules: [...]                           # replace the type's own rules as a whole
- *   visual / control / tap_action / hold_action / double_tap_action / hover / hours_to_show
+ *   visual: glow                           # sparkline … gauge, glow (lit by its level), none
+ *   icon_ring / icon_tap_action / icon_hold_action / icon_double_tap_action   # the icon's own
+ *   control / tap_action / hold_action / double_tap_action / hover / hours_to_show
  */
 import { registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
@@ -28,9 +30,16 @@ import type { SunCurveHost } from "./shared/sun/curve.ts";
 import type { Visibility } from "./shared/visibility.ts";
 import { ForecastFeed } from "./shared/weather/feed.ts";
 import { dailyTypeOf, supportsForecast } from "./shared/weather/forecast.ts";
-import { normalizePosterConfig, type PosterConfig } from "./poster/config.ts";
+import { hasIconActions, normalizePosterConfig, type PosterConfig } from "./poster/config.ts";
 import { CARD_TYPE } from "./poster/constants.ts";
-import { fillStatus, imageUrl, statusText, updateBackdrop } from "./poster/render.ts";
+import {
+  fillStatus,
+  glowLevel,
+  glowOpacity,
+  imageUrl,
+  statusText,
+  updateBackdrop,
+} from "./poster/render.ts";
 import { STYLE_POSTER_CARD_ALL } from "./poster/styles.ts";
 
 export class PosterCard extends EntityCardBase {
@@ -223,12 +232,13 @@ export class PosterCard extends EntityCardBase {
       host: this._host,
     };
   }
-  // the places the kind fills, less those the card sets itself
+  // the places the kind fills, less those the card sets itself; the icon's own actions take the
+  // lead (the plain icon, or the hold button in its place)
   _slots(c: KindCtx): PosterSlots {
     const cfg = this._config as PosterConfig;
     const raw = (this._raw ?? {}) as Record<string, unknown>;
-    const o: PosterSlots = { ...(cfg.kind.slots?.(c) ?? {}) };
-    if (raw.icon !== undefined) delete o.lead;
+    const o: PosterSlots = { ...(cfg.kind.slots?.(c) ?? {}), iconActions: cfg.iconActions };
+    if (raw.icon !== undefined || hasIconActions(cfg.iconActions)) delete o.lead;
     if (raw.name !== undefined) delete o.name;
     if (raw.value !== undefined || raw.attribute !== undefined) {
       delete o.value;
@@ -238,8 +248,14 @@ export class PosterCard extends EntityCardBase {
     if (raw.visual !== undefined) delete o.picture;
     return o;
   }
+  // the card draws its own lead: its `icon`, or an icon with actions of its own (an animated lead
+  // gives way to them)
   _userIcon() {
-    return ((this._raw ?? {}) as Record<string, unknown>).icon !== undefined;
+    const cfg = this._config as PosterConfig | undefined;
+    return (
+      ((this._raw ?? {}) as Record<string, unknown>).icon !== undefined ||
+      (!!cfg && hasIconActions(cfg.iconActions))
+    );
   }
 
   // ----- DOM -----
@@ -346,15 +362,22 @@ export class PosterCard extends EntityCardBase {
       imageUrl(ctx, cfg.image) ?? (cfg.image === false ? null : (cfg.kind.image?.(kc) ?? null));
     const back = cfg.image === false ? null : cfg.kind.backdrop;
     const key = !url && back ? back.key(kc) : "";
-    const part = updateBackdrop(
+    const { part, glow } = updateBackdrop(
       body,
       ctx,
       url,
       key && back ? { key, build: () => back.build(kc) } : null,
+      cfg.glow,
     );
-    const pback = body.querySelector<HTMLElement>(":scope > .pback");
-    pback?.style.setProperty("--fe-color", row.style.getPropertyValue("--fe-color"));
-    card.classList.toggle("pflow", !!part);
+    const pback = body.querySelector<HTMLElement>(":scope > .pback"),
+      color = row.style.getPropertyValue("--fe-color");
+    pback?.style.setProperty("--fe-color", color);
+    // the glow in the poster's colour, as strong as its level (its opacity: a new level fades)
+    if (glow) {
+      glow.style.setProperty("--glow", color);
+      glow.style.opacity = glowOpacity(glowLevel(cfg.kind, kc));
+    }
+    card.classList.toggle("pflow", !!part || !!glow);
     if (part && back?.update) back.update(part, kc, row);
     // what follows the clock or the size (a curve) checks itself whether it changed
     cfg.kind.live?.(kc, row);

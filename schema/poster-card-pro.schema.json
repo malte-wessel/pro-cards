@@ -101,11 +101,38 @@
     "image": {
       "description": "The backdrop behind the whole poster: an image URL, a template, or an entity whose picture it shows (a camera, a media player, a person); false drops the poster type's own backdrop",
       "oneOf": [{ "const": false }, { "type": "string" }]
+    },
+    "visual": {
+      "type": "string",
+      "enum": ["sparkline", "columns", "strip", "bar", "gauge", "glow", "none"],
+      "description": "The picture along the bottom: a plot of the history, a bar or a gauge of the value, glow (the poster lit from below in its colour, as strong as its level: min to max, a light's brightness, or on / off), or none. Default: the poster type's (a light glows); set, it replaces the type's picture"
+    },
+    "control_position": {
+      "type": "string",
+      "enum": ["end", "block"],
+      "description": "Where the control sits: beside the value, or in a block under it. The icon's own actions are icon_tap_action / icon_hold_action"
+    },
+    "icon_ring": {
+      "type": "boolean",
+      "default": false,
+      "description": "A ring of the value (min to max) around the icon"
+    },
+    "icon_tap_action": {
+      "$ref": "defs.schema.json#/$defs/action",
+      "description": "Run when the icon is tapped; toggle is the card's own (a lock locks or unlocks, an alarm panel arms or disarms, the rest switch). Default: none, a tap on the icon is the poster's"
+    },
+    "icon_hold_action": {
+      "$ref": "defs.schema.json#/$defs/action",
+      "description": "Run when the icon is held, a filling ring confirms it. Default: toggle on a lock and an alarm panel (none when it wants a code), else none"
+    },
+    "icon_double_tap_action": {
+      "$ref": "defs.schema.json#/$defs/action",
+      "description": "Run on a double tap of the icon"
     }
   },
   "required": ["type"],
   "allOf": [
-    { "$ref": "entity.schema.json#/$defs/entityKeys" },
+    { "$ref": "#/$defs/posterKeys" },
     { "$ref": "entity.schema.json#/$defs/historyOptions" },
     { "$ref": "entity.schema.json#/$defs/actionDefaults" },
     { "$ref": "entity.schema.json#/$defs/haExtras" },
@@ -676,6 +703,56 @@
   ],
   "unevaluatedProperties": false,
   "$defs": {
+    "posterKeys": {
+      "description": "The poster's item: an entity's keys, less the picture and the control's place, which are the poster's own (visual, control_position)",
+      "type": "object",
+      "properties": {
+        "entity": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/entity" },
+        "name": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/name" },
+        "secondary": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/secondary" },
+        "icon": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/icon" },
+        "color": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/color" },
+        "attribute": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/attribute" },
+        "value": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/value" },
+        "unit": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/unit" },
+        "decimals": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/decimals" },
+        "prefix": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/prefix" },
+        "suffix": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/suffix" },
+        "icon_style": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/icon_style" },
+        "show_entity_picture": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/show_entity_picture"
+        },
+        "min": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/min" },
+        "max": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/max" },
+        "rules": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/rules" },
+        "control": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/control" },
+        "control_attribute": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_attribute"
+        },
+        "control_step": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_step" },
+        "control_options": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_options"
+        },
+        "control_confirm": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_confirm"
+        },
+        "toggle": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/toggle" },
+        "show_name": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/show_name" },
+        "show_value": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/show_value" },
+        "show_icon": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/show_icon" },
+        "name_position": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/name_position"
+        },
+        "tap_action": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/tap_action" },
+        "hold_action": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/hold_action" },
+        "double_tap_action": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/double_tap_action"
+        },
+        "hover": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/hover" }
+      },
+      "if": { "$ref": "entity.schema.json#/$defs/entityKeys/if" },
+      "then": { "$ref": "entity.schema.json#/$defs/entityKeys/then" }
+    },
     "posterType": {
       "type": "string",
       "enum": [

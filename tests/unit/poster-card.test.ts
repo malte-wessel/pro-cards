@@ -101,20 +101,94 @@ describe("poster-card config", () => {
     expect(norm({ entity: "light.living_room", control: false }).entities[0].control).toBeNull();
     const named = norm({ entity: "light.living_room", control: "slider" }).entities[0];
     expect(kinds(placementsOf(named, "poster"))).toEqual(["slider@block"]);
-    expect(kinds(placementsOf(norm({ entity: "lock.front_door" }).entities[0], "poster"))).toEqual([
-      "hold@lead",
-    ]);
   });
 
-  it("draws no control on an alarm panel that wants a code", () => {
+  it("holds a lock and an alarm panel on its icon, an alarm panel that wants a code not", () => {
+    const toggle = { action: "toggle" };
+    const lock = norm({ entity: "lock.front_door" });
+    expect(lock.iconActions).toEqual({ tap: null, hold: toggle, dbl: null });
+    // the hold is the icon's, not a control
+    expect(placementsOf(lock.entities[0], "poster")).toEqual([]);
     const A = "alarm_control_panel.home";
     const free = norm({ entity: A }, withStates({ [A]: st(A, "disarmed") }));
-    expect(kinds(placementsOf(free.entities[0], "poster"))).toEqual(["hold@lead"]);
-    const coded = norm(
-      { entity: A },
-      withStates({ [A]: st(A, "disarmed", { code_format: "number" }) }),
+    expect(free.iconActions.hold).toEqual(toggle);
+    for (const attrs of [{ code_format: "number" }, { code_arm_required: true }]) {
+      const coded = norm({ entity: A }, withStates({ [A]: st(A, "disarmed", attrs) }));
+      expect(coded.iconActions).toEqual({ tap: null, hold: null, dbl: null });
+      expect(coded.entities[0].control).toBeNull();
+    }
+    // other posters' icons have no action of their own
+    expect(norm({ entity: "switch.coffee_machine" }).iconActions).toEqual({
+      tap: null,
+      hold: null,
+      dbl: null,
+    });
+  });
+
+  it("takes the icon's actions as written over the type's, none dropping one", () => {
+    const c = norm({
+      entity: "lock.front_door",
+      icon_tap_action: "more-info",
+      icon_hold_action: { action: "navigate", navigation_path: "/doors" },
+      icon_double_tap_action: { action: "toggle" },
+    });
+    expect(c.iconActions).toEqual({
+      tap: { action: "more-info" },
+      hold: { action: "navigate", navigation_path: "/doors" },
+      dbl: { action: "toggle" },
+    });
+    // a written one replaces only its own gesture: the lock keeps its hold beside a tap
+    const tap = norm({ entity: "lock.front_door", icon_tap_action: "toggle" });
+    expect(tap.iconActions).toEqual({
+      tap: { action: "toggle" },
+      hold: { action: "toggle" },
+      dbl: null,
+    });
+    expect(
+      norm({ entity: "lock.front_door", icon_hold_action: "none" }).iconActions.hold,
+    ).toBeNull();
+    // an object without an action is more-info, as tap_action
+    expect(
+      norm({ entity: "switch.coffee_machine", icon_tap_action: { entity: "light.kitchen" } })
+        .iconActions.tap,
+    ).toEqual({ action: "more-info", entity: "light.kitchen" });
+  });
+
+  it("draws visual: glow and none as no picture of the item's own; a light glows by default", () => {
+    const H = "sensor.living_room_humidity";
+    const glow = norm({ entity: H, visual: "glow" });
+    expect(glow.glow).toBe(true);
+    expect(glow.entities[0].visual).toBe("icon");
+    const none = norm({ entity: H, visual: "none" });
+    expect(none.glow).toBe(false);
+    expect(none.entities[0].visual).toBe("icon");
+    expect(norm({ entity: H, visual: "bar" }).entities[0].visual).toBe("bar");
+    expect(norm({ entity: H }).glow).toBe(false);
+    // the light's own picture is its glow; another visual replaces it
+    expect(norm({ entity: "light.living_room" }).glow).toBe(true);
+    for (const visual of ["none", "bar"])
+      expect(norm({ entity: "light.living_room", visual }).glow).toBe(false);
+  });
+
+  it("draws a ring around the icon with icon_ring", () => {
+    const H = "sensor.living_room_humidity";
+    expect(norm({ entity: H, icon_ring: true }).entities[0].iconRing).toBe(true);
+    expect(norm({ entity: H }).entities[0].iconRing).toBeUndefined();
+    // the badges keep their own visual
+    const c = norm({ entity: H, icon_ring: true, badges: [{ entity: H, visual: "ring" }] });
+    expect(c.entities.at(-1)?.visual).toBe("ring");
+    expect(c.entities.at(-1)?.iconRing).toBeUndefined();
+  });
+
+  it("names the poster's own keys in place of visual: ring and control_position: lead", () => {
+    expect(() => norm({ entity: "sensor.living_room_humidity", visual: "ring" })).toThrow(
+      `${T}: visual: ring is icon_ring: true on the poster card`,
     );
-    expect(coded.entities[0].control).toBeNull();
+    expect(() =>
+      norm({ entity: "switch.coffee_machine", control: "toggle", control_position: "lead" }),
+    ).toThrow(
+      `${T}: the icon's own actions are icon_tap_action / icon_hold_action, not control_position: lead`,
+    );
   });
 
   it("reads inputs set on the card, a weather entity's attributes or found on the device", () => {
@@ -547,6 +621,163 @@ describe("poster-card drawing", () => {
     const bar = draw({ entity: H, visual: "bar" });
     expect(q(bar, ".pbody").classList.contains("pgauge")).toBe(false);
     expect(bodyParts(bar)).toEqual(["pname", "pvalue", "bar"]);
+  });
+
+  it("lights visual: glow from below as strong as its level, the same element at every level", () => {
+    const H = "sensor.living_room_humidity";
+    set(H, 50);
+    const r = draw({ entity: H, visual: "glow", min: 0, max: 100 });
+    const glow = q(r, ".body > .pback > .pglow");
+    expect(glow.style.opacity).toBe("0.650");
+    expect(glow.style.getPropertyValue("--glow")).not.toBe("");
+    set(H, 100);
+    expect(glow.style.opacity).toBe("1.000");
+    set(H, 0);
+    expect(glow.style.opacity).toBe("0");
+    expect(q(r, ".pback > .pglow")).toBe(glow);
+    // the glow is the picture: none along the bottom
+    expect(bodyParts(r)).toEqual(["pname", "pvalue"]);
+    // without a number: on or off
+    set("switch.coffee_machine", "off");
+    const sw = draw({ entity: "switch.coffee_machine", visual: "glow" });
+    expect(q(sw, ".pglow").style.opacity).toBe("0");
+    set("switch.coffee_machine", "on");
+    expect(q(sw, ".pglow").style.opacity).toBe("1.000");
+  });
+
+  it("glows a light in its colour by its brightness; another visual drops the glow", () => {
+    const L = "light.living_room";
+    set(L, "on", { brightness: 255, rgb_color: [255, 200, 100] });
+    const r = draw({ entity: L });
+    const glow = q(r, ".pback > .pglow");
+    expect(glow.style.opacity).toBe("1.000");
+    expect(glow.style.getPropertyValue("--glow")).toBe("rgb(255, 200, 100)");
+    set(L, "on", { brightness: 0.4 * 255 });
+    expect(glow.style.opacity).toBe("0.580");
+    set(L, "off");
+    expect(glow.style.opacity).toBe("0");
+    expect(q(r, ".pback > .pglow")).toBe(glow);
+    for (const visual of ["none", "bar"])
+      expect(draw({ entity: L, visual }).querySelector(".pglow")).toBeNull();
+  });
+
+  it("keeps the glow over a type's drawing, under an image's scrim", () => {
+    const r = draw({
+      entity: "sensor.living_room_humidity",
+      visual: "glow",
+      image: "/local/garden.jpg",
+    });
+    const back = q(r, ".pback");
+    expect(back.classList.contains("scrim")).toBe(true);
+    expect([...back.children].map((c) => c.tagName.toLowerCase() + "." + c.className)).toEqual([
+      "img.",
+      "div.pglow",
+    ]);
+  });
+
+  it("draws icon_ring around the icon", () => {
+    const r = draw({ entity: "sensor.living_room_humidity", icon_ring: true });
+    expect(q(r, ".plead > .lead").classList.contains("ring")).toBe(true);
+    expect(r.querySelector(".plead > .lead svg .track")).not.toBeNull();
+  });
+
+  // the card with its calls and actions recorded
+  const drawCalls = (cfg: Record<string, unknown>) => {
+    const r = draw(cfg);
+    const calls: string[] = [];
+    const fired: Record<string, unknown>[] = [];
+    (r.host as PosterCard).hass = {
+      ...snapshot(),
+      callService: (d: string, s: string) => {
+        calls.push(`${d}.${s}`);
+        return Promise.resolve();
+      },
+    } as unknown as HomeAssistant;
+    r.host.addEventListener("hass-action", (e) =>
+      fired.push((e as CustomEvent).detail.config as Record<string, unknown>),
+    );
+    return { r, calls, fired };
+  };
+
+  it("holds a lock on its icon, which takes its own gestures", () => {
+    vi.useFakeTimers();
+    try {
+      set("lock.front_door", "locked");
+      const { r, calls, fired } = drawCalls({ entity: "lock.front_door" });
+      const hold = q(r, ".plead > button.ctl-hold.lead-size");
+      expect(hold.getAttribute("aria-label")).toBe("Hold to unlock");
+      hold.dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true }));
+      vi.advanceTimersByTime(1100);
+      expect(calls).toEqual(["lock.unlock"]);
+      expect(fired).toEqual([]);
+      // beside a tap action of its own: a press let go early is a tap
+      const tap = drawCalls({ entity: "lock.front_door", icon_tap_action: "more-info" });
+      const both = q(tap.r, ".plead > button.ctl-hold");
+      both.dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true }));
+      vi.advanceTimersByTime(200);
+      both.dispatchEvent(new PointerEvent("pointerup", { button: 0, bubbles: true }));
+      expect(tap.fired).toEqual([
+        { entity: "lock.front_door", tap_action: { action: "more-info" } },
+      ]);
+      expect(tap.calls).toEqual([]);
+      // icon_hold_action: none leaves the plain icon
+      expect(
+        draw({ entity: "lock.front_door", icon_hold_action: "none" }).querySelector(
+          ".plead > .lead:not(.tap)",
+        ),
+      ).not.toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("makes the icon a switch with icon_tap_action: toggle", () => {
+    set("switch.coffee_machine", "off");
+    const { r, calls, fired } = drawCalls({
+      entity: "switch.coffee_machine",
+      icon_tap_action: "toggle",
+    });
+    const lead = q(r, ".plead > .lead.tap");
+    expect(lead.getAttribute("role")).toBe("switch");
+    expect(lead.classList.contains("off")).toBe(true);
+    lead.click();
+    expect(calls).toEqual(["homeassistant.toggle"]);
+    expect(fired).toEqual([]);
+  });
+
+  it("runs any other icon action through Home Assistant, a double tap on its own", () => {
+    vi.useFakeTimers();
+    try {
+      const { r, calls, fired } = drawCalls({
+        entity: "sensor.living_room_humidity",
+        icon_tap_action: { action: "navigate", navigation_path: "/climate" },
+        icon_double_tap_action: "more-info",
+      });
+      const lead = q(r, ".plead > .lead.tap.act");
+      expect(lead.getAttribute("role")).toBe("button");
+      // a single tap waits for a second one
+      lead.click();
+      expect(fired).toEqual([]);
+      vi.advanceTimersByTime(300);
+      expect(fired).toEqual([
+        {
+          entity: "sensor.living_room_humidity",
+          tap_action: { action: "navigate", navigation_path: "/climate" },
+        },
+      ]);
+      lead.click();
+      lead.click();
+      vi.advanceTimersByTime(300);
+      expect(fired.slice(1)).toEqual([
+        { entity: "sensor.living_room_humidity", double_tap_action: { action: "more-info" } },
+      ]);
+      // a key runs the tap at once
+      lead.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+      expect(fired).toHaveLength(3);
+      expect(calls).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("closes the body with a plot that names what it draws", () => {

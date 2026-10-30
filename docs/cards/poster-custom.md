@@ -4,18 +4,18 @@ A poster is a handful of places: an icon at the top, badges in the corner, and a
 
 ## The places
 
-| Place           | Key              | Takes                                                                  | Default                                                 |
-| --------------- | ---------------- | ---------------------------------------------------------------------- | ------------------------------------------------------- |
-| Lead            | `icon`           | an `mdi:` icon, a template                                             | the entity's icon or picture, the type's drawing        |
-| Status          | `status`         | a text, a template, badge keys with `value` for its text, or `false`   | the type's status, else the matching rule's label       |
-| Badges          | `badges`         | entities or [badges](/cards/poster-badges) of your own, in order       | none                                                    |
-| Name            | `name`           | a text, a template                                                     | the friendly name                                       |
-| Value           | `value`          | a text, a template; `attribute` shows an attribute                     | the entity's state                                      |
-| Under the value | `secondary`      | a text, a template                                                     | the type's line                                         |
-| Colour          | `color`, `rules` | a colour token, hex or a template; [rules](#colour-and-rules) by value | the matching rule's, else Home Assistant's state colour |
-| Picture         | `visual`         | a [picture](#a-picture) of the entity's value                          | the type's drawing                                      |
-| Backdrop        | `image`          | a URL, a template or an entity's picture                               | the type's backdrop                                     |
-| Control         | `control`        | any [control](/cards/poster-controls), or your own buttons             | the type's                                              |
+| Place           | Key              | Takes                                                                           | Default                                                 |
+| --------------- | ---------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Lead            | `icon`           | an `mdi:` icon, a template; `icon_ring` and the icon's own [actions](#the-icon) | the entity's icon or picture, the type's drawing        |
+| Status          | `status`         | a text, a template, badge keys with `value` for its text, or `false`            | the type's status, else the matching rule's label       |
+| Badges          | `badges`         | entities or [badges](/cards/poster-badges) of your own, in order                | none                                                    |
+| Name            | `name`           | a text, a template                                                              | the friendly name                                       |
+| Value           | `value`          | a text, a template; `attribute` shows an attribute                              | the entity's state                                      |
+| Under the value | `secondary`      | a text, a template                                                              | the type's line                                         |
+| Colour          | `color`, `rules` | a colour token, hex or a template; [rules](#colour-and-rules) by value          | the matching rule's, else Home Assistant's state colour |
+| Picture         | `visual`         | a [picture](#a-picture) of the entity's value                                   | the type's drawing                                      |
+| Backdrop        | `image`          | a URL, a template or an entity's picture                                        | the type's backdrop                                     |
+| Control         | `control`        | any [control](/cards/poster-controls), or your own buttons                      | the type's                                              |
 
 A poster needs no entity: the keys alone fill it. Without one, a tap does nothing unless `tap_action` says what.
 
@@ -71,7 +71,7 @@ Every text takes a [template](https://www.home-assistant.io/docs/configuration/t
 
 ## An entity, your own look
 
-With an `entity`, the poster takes its name, icon, state and colour from it, and its poster type adds the rest. Any key replaces one place and keeps the others. `attribute` shows an attribute instead of the state, `control: false` drops a poster type's control and leaves the rest of it (the thermostat below keeps its glow and its status), and `poster: entity` drops the type's own look altogether (its backdrop, status, controls and rules) for a poster that is only what you write:
+With an `entity`, the poster takes its name, icon, state and colour from it, and its poster type adds the rest. Any key replaces one place and keeps the others. `attribute` shows an attribute instead of the state, `control: false` drops a poster type's control and leaves the rest of it (the thermostat below keeps its tint and its status), and `poster: entity` drops the type's own look altogether (its backdrop, status, controls and rules) for a poster that is only what you write:
 
 ::: live
 
@@ -182,8 +182,10 @@ A template value is matched as its text: the last poster's rules read `Open` and
 | `strip`     | a block per bucket, coloured by the [rules](#colour-and-rules) each one matched     |
 | `bar`       | a level between `min` and `max` under the value                                     |
 | `gauge`     | an arc between `min` and `max` with the value inside it, the name under it, centred |
-| `ring`      | a ring around the icon, filled between `min` and `max`                              |
-| `icon`      | no picture: the default of an entity without a poster type's own                    |
+| `glow`      | the poster lit from below in its colour, as strong as the value's level             |
+| `none`      | no picture: the default of an entity without a poster type's own                    |
+
+A ring around the icon is not a picture: it is `icon_ring: true`, beside any of these (see [The icon](#the-icon)).
 
 ::: live
 
@@ -226,18 +228,89 @@ A template value is matched as its text: the last poster's rules read `Open` and
   min: 0
   max: 100
   grid_options: { columns: 6 }
+```
+
+:::
+
+`glow` lights the poster from below in its colour, as strong as the value's level: a number between `min` and `max`, a light by its brightness, and anything that switches while it is on (dark while it is off). It is the [light](/cards/poster-types#light)'s picture by default, and any poster can have it; on a light, `visual: bar` or `visual: none` replaces it.
+
+::: live
+
+```yaml
 - type: custom:poster-card-pro
-  entity: sensor.robot_battery
-  name: Robot
-  icon: mdi:robot-vacuum
-  poster: entity
-  visual: ring
+  entity: sensor.living_room_humidity
+  name: Humidity
+  visual: glow
+  min: 0
+  max: 100
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: switch.coffee_machine
+  name: Coffee
+  icon: mdi:coffee-maker
+  color: brown
+  visual: glow
+  control: toggle
   grid_options: { columns: 6 }
 ```
 
 :::
 
+The coffee machine is off: switch it on and it glows.
+
 A [trend](/cards/poster-types#trend) draws several entities' lines on one scale. `trend`, `count` and `dot` are badge pictures: they go on [badges](/cards/poster-badges), not on the poster.
+
+## The icon
+
+The lead at the top left is the entity's icon, or the poster type's own drawing (the padlock, the fan, the animated wind). `icon` puts an `mdi:` icon (or a template that renders one) in its place, `icon_style: plain` draws it without its circle, and `show_entity_picture: true` shows the entity's picture instead where it has one (the weather poster shows its pictures by default; `false` draws mdi icons). `icon_ring: true` puts a ring of the value around the icon, filled between `min` and `max` (the entity's own, else 0 and 100):
+
+::: live
+
+```yaml
+- type: custom:poster-card-pro
+  entity: sensor.robot_battery
+  name: Robot
+  icon: mdi:robot-vacuum
+  icon_ring: true
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: sensor.living_room_humidity
+  name: Humidity
+  icon_style: plain
+  icon_ring: true
+  visual: sparkline
+  grid_options: { columns: 6 }
+```
+
+:::
+
+The icon takes [actions](#actions) of its own, as on Home Assistant's tile card: `icon_tap_action`, `icon_hold_action` and `icon_double_tap_action`. An icon with an `icon_tap_action` runs it when tapped. An icon with no action of its own is part of the poster: a tap there runs the poster's `tap_action`. An icon with only an `icon_hold_action` (a lock's) does nothing on a short tap. `toggle` is run by the card, which shows the call on its way: a lock locks and unlocks, an alarm panel arms and disarms, anything else switches. A hold fills a ring around the icon for a second and runs when it is full; letting go earlier cancels, so a hold is the icon's way to [confirm](/cards/poster-controls#hold-to-confirm). Locks and alarm panels hold to lock or arm by default (`icon_hold_action: { action: toggle }`; an alarm panel that wants a code has none). Every other action (`more-info`, `navigate`, `url`, `perform-action` …) goes to Home Assistant, as `tap_action` does.
+
+::: live
+
+```yaml
+- type: custom:poster-card-pro
+  entity: switch.coffee_machine
+  name: Coffee
+  icon: mdi:coffee-maker
+  icon_tap_action: { action: toggle }
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: switch.garden_pump
+  icon: mdi:water-pump
+  icon_hold_action: { action: toggle }
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: sensor.living_room_temperature
+  name: Living room
+  icon_tap_action: { action: navigate, navigation_path: /config }
+  icon_double_tap_action: { action: more-info, entity: climate.living_room }
+  grid_options: { columns: 6 }
+```
+
+:::
+
+A held icon shows the entity as it is (a padlock locked while locked); its label says what holding does ("Hold to unlock"). A screen reader's click arms the hold, a second one within five seconds runs it.
 
 ## A backdrop
 
@@ -306,7 +379,7 @@ control_options:
 
 ## Actions
 
-`tap_action`, `hold_action` and `double_tap_action` take [Home Assistant's actions](https://www.home-assistant.io/dashboards/actions/): `more-info` (of the poster's entity, or the one named), `toggle`, `navigate`, `url`, `perform-action`, `assist`, `none`. With an entity a tap opens its more-info dialog and a hold too; without one both do nothing until told. The control and the badges keep their own taps.
+`tap_action`, `hold_action` and `double_tap_action` take [Home Assistant's actions](https://www.home-assistant.io/dashboards/actions/): `more-info` (of the poster's entity, or the one named), `toggle`, `navigate`, `url`, `perform-action`, `assist`, `none`. With an entity a tap opens its more-info dialog and a hold too; without one both do nothing until told. The control and the badges keep their own taps, and the icon takes actions of its own (`icon_tap_action` …, see [The icon](#the-icon)).
 
 ::: live
 

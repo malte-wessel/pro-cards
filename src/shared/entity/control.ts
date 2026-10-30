@@ -109,6 +109,13 @@ export interface Pending {
   key?: string;
   entity?: string | null;
 }
+// the icon's own actions (the poster's `icon_tap_action`, `icon_hold_action`,
+// `icon_double_tap_action`; null: none): `toggle` is run by the card, the rest by Home Assistant
+export interface IconActions {
+  tap: ActionConfig | null;
+  hold: ActionConfig | null;
+  dbl: ActionConfig | null;
+}
 // what the control builders need from the card element
 export interface ControlHost {
   pending: ReadonlyMap<number, Pending>;

@@ -4,10 +4,12 @@
 // the row's own tap / hold actions never fire.
 import { cssColor, domainOf } from "../../color.ts";
 import { fmtNumber } from "../../format.ts";
+import type { ActionConfig, ActionKind, HapticType } from "../../ha.ts";
 import { t } from "../../i18n.ts";
 import { slider } from "../../slider.ts";
 import { stepDecimals } from "../../util.ts";
 import type { EntityItem } from "../config.ts";
+import { DOUBLE_MS } from "../constants.ts";
 import {
   actionOf,
   actionServiceFor,
@@ -30,12 +32,13 @@ import {
   speedsAsSlider,
   type ControlHost,
   type CustomButton,
+  type IconActions,
   type Pending,
   type Placement,
   type Range,
 } from "../control.ts";
 import { nameOf, type EntityModel, type RenderCtx } from "../model.ts";
-import { iconEl } from "./lead.ts";
+import { iconEl, leadEl } from "./lead.ts";
 
 const SWALLOW = ["pointerdown", "pointerup", "click", "keydown", "keyup"];
 // the row underneath must not see the control's gestures
@@ -547,6 +550,8 @@ const ringEl = () => {
 // must not rebuild the button under the finger. Assistive technology sends a bare click (no
 // pointer, no key): the first arms the button, a second within ARM_MS runs it. `armKey` names this
 // button alone: arming one button of a group must not confirm its neighbour.
+// With `tap`, a press let go before the ring is full is a tap (the poster's icon with a tap action
+// of its own besides its hold).
 const bindHold = (
   el: HTMLElement,
   ctx: RenderCtx,
@@ -555,6 +560,7 @@ const bindHold = (
   armKey: string,
   action: string,
   run: () => void,
+  tap?: () => void,
 ) => {
   const isArmed = () => (host.armed.get(armKey) ?? 0) > Date.now();
   const label = (again: boolean) =>
@@ -584,11 +590,12 @@ const bindHold = (
     timer = setTimeout(fire, HOLD_CONFIRM_MS);
   };
   const cancel = () => {
-    if (timer === undefined) return;
+    if (timer === undefined) return false;
     clearTimeout(timer);
     timer = undefined;
     el.classList.remove("holding");
     host.endDrag(idx);
+    return true;
   };
   // the click that follows a pointer or key gesture is not a press of its own
   const done = () => setTimeout(() => (started = false), 0);
@@ -599,7 +606,7 @@ const bindHold = (
   });
   for (const type of ["pointerup", "pointercancel", "lostpointercapture"])
     el.addEventListener(type, () => {
-      if (!fired) cancel();
+      if (!fired && cancel() && type === "pointerup") tap?.();
       done();
     });
   el.addEventListener("keydown", (ev) => {
@@ -611,7 +618,7 @@ const bindHold = (
   el.addEventListener("keyup", (ev) => {
     if (ev.key !== "Enter" && ev.key !== " ") return;
     ev.preventDefault();
-    if (!fired) cancel();
+    if (!fired && cancel()) tap?.();
     done();
   });
   el.addEventListener("blur", cancel);
@@ -633,6 +640,51 @@ const bindHold = (
     }, ARM_MS);
   });
 };
+// what a hold switches, named: a lock's next state, an alarm panel's, else the entity
+const holdAction = (ctx: RenderCtx, ent: EntityItem, m: EntityModel) => {
+  const d = String(ent.entity || "").split(".")[0];
+  return d === "lock"
+    ? t(ctx.hass, m.st?.state === "locked" ? "control.unlock" : "control.lock")
+    : d === "alarm_control_panel"
+      ? t(ctx.hass, m.st?.state === "disarmed" ? "control.arm" : "control.disarm")
+      : nameOf(ctx, ent, m.st);
+};
+// the hold button, not yet bound: its ring and its icon, pending while its call is in flight
+const holdButton = (
+  ctx: RenderCtx,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+  p: Placement,
+  action: string,
+) => {
+  const host = ctx.ctl as ControlHost;
+  const el = root("hold", p, idx, "button") as HTMLButtonElement;
+  el.type = "button";
+  if (p.position === "lead") el.classList.add("lead-size");
+  el.setAttribute("aria-label", t(ctx.hass, "control.hold_to", { action }));
+  el.append(ringEl(), holdIcon(ctx, ent, m, p));
+  el.classList.toggle("pending", host.pending.has(idx));
+  return el;
+};
+// the card's own call of a hold (and of the icon's `toggle`): a lock locks or unlocks, an alarm
+// panel arms or disarms, a script runs, the rest switch
+const holdCall = (
+  ctx: RenderCtx,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+  el: HTMLElement,
+  haptic: HapticType,
+) =>
+  (ctx.ctl as ControlHost).call(
+    el,
+    idx,
+    ent,
+    serviceFor(ent, m.st, { type: "hold" }),
+    { until: later() },
+    haptic,
+  );
 // the hold-to-confirm button: locks, or any toggle / button with `control_confirm`
 export const holdEl = (
   ctx: RenderCtx,
@@ -642,26 +694,103 @@ export const holdEl = (
   p: Placement,
 ) => {
   const host = ctx.ctl as ControlHost;
-  const d = String(ent.entity || "").split(".")[0];
-  const action =
-    d === "lock"
-      ? t(ctx.hass, m.st?.state === "locked" ? "control.unlock" : "control.lock")
-      : d === "alarm_control_panel"
-        ? t(ctx.hass, m.st?.state === "disarmed" ? "control.arm" : "control.disarm")
-        : nameOf(ctx, ent, m.st);
-  const el = root("hold", p, idx, "button") as HTMLButtonElement;
-  el.type = "button";
-  if (p.position === "lead") el.classList.add("lead-size");
-  el.setAttribute("aria-label", t(ctx.hass, "control.hold_to", { action }));
-  el.append(ringEl(), holdIcon(ctx, ent, m, p));
-  el.classList.toggle("pending", host.pending.has(idx));
+  const action = holdAction(ctx, ent, m);
+  const el = holdButton(ctx, ent, idx, m, p, action);
   if (!canControl(ent, m.st)) {
     disable(el);
     return el;
   }
   bindHold(el, ctx, host, idx, String(idx), action, () =>
-    host.call(el, idx, ent, serviceFor(ent, m.st, { type: "hold" }), { until: later() }, "success"),
+    holdCall(ctx, ent, idx, m, el, "success"),
   );
+  return el;
+};
+
+// a tap, or with a double tap action a tap that waits DOUBLE_MS for a second one (the row's own
+// timing, EntityCardBase._bindActions); null when there is nothing to run
+const tapsOf = (tap: (() => void) | null, dbl: (() => void) | null) => {
+  if (!dbl) return tap;
+  let last = 0,
+    timer: ReturnType<typeof setTimeout> | undefined;
+  return () => {
+    const now = Date.now();
+    clearTimeout(timer);
+    if (now - last < DOUBLE_MS) {
+      last = 0;
+      dbl();
+      return;
+    }
+    last = now;
+    if (tap) timer = setTimeout(tap, DOUBLE_MS);
+  };
+};
+const LEAD_HOLD: Placement = { kind: "hold", position: "lead", small: false };
+// the icon with its own actions (the poster's `icon_tap_action`, `icon_hold_action`,
+// `icon_double_tap_action`): `toggle` is the card's own call (holdCall), any other action goes to
+// Home Assistant as the row's do. A hold makes the icon the hold button (its ring fills, as a lock's
+// on its icon), which also takes the taps; a toggle tap alone that switches is the icon as a switch
+// (bindLeadTap); anything else makes the icon a button. The icon takes its own gestures, so the
+// poster's action never runs with them. Null without an action or a control host.
+export const iconActionsEl = (
+  ctx: RenderCtx,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+  size: number,
+  a: IconActions,
+): HTMLElement | null => {
+  const host = ctx.ctl;
+  if (!host || (!a.tap && !a.hold && !a.dbl)) return null;
+  const usable = canControl(ent, m.st);
+  let el: HTMLElement;
+  // what an action runs (null: a toggle on an entity that takes no call now)
+  const runOf = (x: ActionConfig | null, kind: ActionKind, haptic: HapticType) => {
+    if (!x) return null;
+    if (x.action !== "toggle") return () => host.runAction(ent, x, kind);
+    return usable ? () => holdCall(ctx, ent, idx, m, el, haptic) : null;
+  };
+  const tap = tapsOf(runOf(a.tap, "tap", "light"), runOf(a.dbl, "double_tap", "light"));
+  if (a.hold) {
+    const action = a.hold.action === "toggle" ? holdAction(ctx, ent, m) : nameOf(ctx, ent, m.st);
+    const b = holdButton(ctx, ent, idx, m, LEAD_HOLD, action);
+    el = b;
+    b.style.setProperty("--lead", `${size}px`);
+    const run = runOf(a.hold, "hold", "success");
+    if (!run) {
+      disable(b);
+      return b;
+    }
+    bindHold(b, ctx, host, idx, String(idx), action, run, tap ?? undefined);
+    return b;
+  }
+  el = leadEl(ctx, ent, m, size);
+  if (
+    a.tap?.action === "toggle" &&
+    !a.dbl &&
+    serviceFor(ent, m.st, { type: "hold" })?.domain === "homeassistant"
+  ) {
+    bindLeadTap(el, ctx, ent, idx, m);
+    return el;
+  }
+  el.classList.add("tap", "act");
+  el.setAttribute("role", "button");
+  el.setAttribute("aria-label", nameOf(ctx, ent, m.st));
+  el.tabIndex = 0;
+  guard(el);
+  const own = a.tap?.action === "toggle" || a.dbl?.action === "toggle";
+  el.classList.toggle("pending", own && host.pending.has(idx));
+  if (!tap) {
+    disable(el);
+    return el;
+  }
+  el.addEventListener("click", tap);
+  // a key runs the tap at once (else the double tap)
+  const once = runOf(a.tap, "tap", "light") ?? runOf(a.dbl, "double_tap", "light");
+  el.addEventListener("keydown", (ev) => {
+    if (ev.key !== "Enter" && ev.key !== " ") return;
+    ev.preventDefault();
+    once?.();
+  });
   return el;
 };
 

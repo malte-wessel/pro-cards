@@ -365,6 +365,43 @@ describe("card config schemas", () => {
     ).toBeNull();
   });
 
+  it("checks the poster's picture and its icon's own keys", () => {
+    const PC = "custom:poster-card-pro";
+    const H = "sensor.living_room_humidity";
+    for (const visual of ["sparkline", "columns", "strip", "bar", "gauge", "glow", "none"])
+      expect(validate({ type: PC, entity: H, visual }), visual).toBeNull();
+    // the ring is the icon's (icon_ring), the old "no picture" is none
+    for (const visual of ["ring", "icon", "badge", "trend"])
+      expect(validate({ type: PC, entity: H, visual }), visual).toMatch(/enum|allowed/);
+    expect(validate({ type: PC, entity: H, icon_ring: true })).toBeNull();
+    expect(validate({ type: PC, entity: H, icon_ring: "yes" })).toBeTruthy();
+    expect(
+      validate({
+        type: PC,
+        entity: "switch.coffee_machine",
+        icon_tap_action: "toggle",
+        icon_hold_action: { action: "navigate", navigation_path: "/kitchen" },
+        icon_double_tap_action: { action: "more-info" },
+      }),
+    ).toBeNull();
+    expect(validate({ type: PC, entity: H, icon_tap_action: "explode" })).toBeTruthy();
+    expect(validate({ type: PC, entity: H, icon_action: "toggle" })).toMatch(/unevaluated/);
+    // the control beside the value or under it; the icon's own actions replace lead
+    for (const control_position of ["end", "block"])
+      expect(
+        validate({ type: PC, entity: "light.kitchen", control: "slider", control_position }),
+      ).toBeNull();
+    expect(
+      validate({ type: PC, entity: "lock.front_door", control: "hold", control_position: "lead" }),
+    ).toMatch(/enum|allowed/);
+    // the item's other keys still check as an entity's
+    expect(validate({ type: PC, entity: H, control: "buttons", control_options: [] })).toBeTruthy();
+    expect(validate({ type: PC, entity: H, decimals: 5 })).toBeTruthy();
+    expect(validate({ type: PC, entity: H, rules: [{ color: "red" }] })).toBeTruthy();
+    // the badges keep the entity's visuals
+    expect(validate({ type: PC, entity: H, badges: [{ entity: H, visual: "ring" }] })).toBeNull();
+  });
+
   it("checks layout cards, their breakpoints and the cards inside", () => {
     const LC = "custom:layout-card-pro";
     const EC = { type: "custom:entity-card-pro", entity: "sensor.outdoor_temperature" };

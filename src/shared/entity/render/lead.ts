@@ -53,6 +53,7 @@ export const ringSvg = (
   }</svg>`;
 };
 // round lead of `size` px: icon (or the value) in a soft circle, a progress ring for visual: ring
+// (the poster's `icon_ring`)
 export const leadEl = (
   ctx: RenderCtx,
   ent: EntityItem,
@@ -64,7 +65,7 @@ export const leadEl = (
   el.className = "lead";
   el.style.setProperty("--lead", `${size}px`);
   if (ent.iconStyle === "plain") el.classList.add("plain");
-  if (ent.visual === "ring") {
+  if (ent.visual === "ring" || ent.iconRing) {
     el.classList.add("ring");
     el.innerHTML = ringSvg(size, m.progress);
   }

@@ -5,12 +5,13 @@ import {
   canControl,
   controlShowsValue,
   placementsOf,
+  type IconActions,
   type Placement,
   type RowKind,
 } from "../control.ts";
 import { nameOf, tplOf, type EntityModel, type FmtValue, type RenderCtx } from "../model.ts";
 import { blockEl } from "./blocks.ts";
-import { appendControls, bindLeadTap, controlEl } from "./controls.ts";
+import { appendControls, bindLeadTap, controlEl, iconActionsEl } from "./controls.ts";
 import { fillBadge } from "./badge.ts";
 import { bigEl, leadEl, pillEl, textEl, valueEl } from "./lead.ts";
 
@@ -175,6 +176,8 @@ export interface PosterSlots {
   word?: boolean;
   secondary?: string | Node | null;
   picture?: HTMLElement | null;
+  // the icon's own actions (the poster card's `icon_*_action`): the lead takes them
+  iconActions?: IconActions;
 }
 
 // a poster (the poster card's row): the icon at the top left, and at the bottom the name, then
@@ -193,7 +196,12 @@ export const fillPosterSlots = (
   const lead = row.querySelector<HTMLElement>(":scope > .ptop > .plead"),
     body = row.querySelector<HTMLElement>(":scope > .pbody");
   if (!lead || !body) return;
-  if (o.lead !== "keep") lead.replaceChildren(o.lead ?? leadOf(ctx, ent, idx, m, 40, c.lead));
+  if (o.lead !== "keep")
+    lead.replaceChildren(
+      o.lead ??
+        (o.iconActions && iconActionsEl(ctx, ent, idx, m, 40, o.iconActions)) ??
+        leadOf(ctx, ent, idx, m, 40, c.lead),
+    );
   body.replaceChildren();
   const name = textEl("pname", o.name ?? nameOf(ctx, ent, m.st));
   const ctls = endControls(ctx, ent, idx, m, c.end);

@@ -1,7 +1,6 @@
 // The domain kinds of the home's devices that need no drawing of their own beyond a lead or a
 // glow: light, fan, climate, lock, alarm panel, person. Each brings its controls (`control: false`
 // drops them) and fills its places from the entity's state.
-import { stateColorCss } from "../color.ts";
 import {
   placementsOf,
   type ControlKind,
@@ -58,6 +57,8 @@ export const LIGHT: Kind = {
   readsText: "a light",
   keys: [],
   controls: [place("toggle", "end"), place("slider", "block")],
+  // lit from below in its colour unless the card draws another picture
+  main: () => ({ visual: "glow" }),
   // the light's own colour while it is on
   color: (c) => (c.m.st?.state === "on" ? rgbOf(c.m.st) : null),
   status: (c) => c.m.look.label ?? stateText(c),
@@ -65,21 +66,8 @@ export const LIGHT: Kind = {
     const v = percent(c, brightness(c.m.st));
     return v ? { value: v, word: false } : {};
   },
-  backdrop: {
-    key: () => "glow",
-    build: () => div("pglow"),
-    update: (el, c) => {
-      const st = c.m.st,
-        on = st?.state === "on";
-      const p = brightness(st) ?? (on ? 100 : 0);
-      el.style.setProperty(
-        "--glow",
-        rgbOf(st) ?? stateColorCss(st, st?.state) ?? "var(--amber-color)",
-      );
-      // the brightness is the glow's opacity, so a new brightness fades as switching does
-      el.style.opacity = on ? (0.3 + (0.7 * p) / 100).toFixed(3) : "0";
-    },
-  },
+  // its glow (the poster's `visual: glow`, its default) as strong as its brightness, dark while off
+  level: (c) => (c.m.st?.state === "on" ? (brightness(c.m.st) ?? 100) / 100 : 0),
   extra: (c) => [String(c.m.st?.attributes?.rgb_color), num(c.m.st, "brightness")],
 };
 
@@ -225,7 +213,7 @@ export const CLIMATE: Kind = {
   },
 };
 
-// ----- lock: the padlock held to lock or unlock -----
+// ----- lock: the padlock held to lock or unlock (its icon's hold) -----
 
 export const LOCK: Kind = {
   name: "lock",
@@ -233,11 +221,11 @@ export const LOCK: Kind = {
   reads: ["lock"],
   readsText: "a lock",
   keys: [],
-  controls: [place("hold", "lead")],
+  iconActions: () => ({ hold: { action: "toggle" } }),
   rules: attention("jammed"),
 };
 
-// ----- alarm panel: held to arm (away) or disarm, red while triggered -----
+// ----- alarm panel: its icon held to arm (away) or disarm, red while triggered -----
 
 export const ALARM: Kind = {
   name: "alarm_control_panel",
@@ -245,9 +233,11 @@ export const ALARM: Kind = {
   reads: ["alarm_control_panel"],
   readsText: "an alarm control panel",
   keys: [],
-  // a panel that wants a code is armed in Home Assistant's own dialog: no control here
-  controls: (st) =>
-    st?.attributes?.code_format || st?.attributes?.code_arm_required ? [] : [place("hold", "lead")],
+  // a panel that wants a code is armed in Home Assistant's own dialog: no hold on its icon
+  iconActions: (st) =>
+    st?.attributes?.code_format || st?.attributes?.code_arm_required
+      ? {}
+      : { hold: { action: "toggle" } },
   rules: attention("triggered"),
   backdrop: {
     key: () => "alarm",

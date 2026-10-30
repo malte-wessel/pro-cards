@@ -264,7 +264,7 @@ Several entities on one scale (`poster: trend` with its `series`): the first one
 
 **Reads** a light · no keys of its own.
 
-A light: a glow from the bottom of the card in the light's own colour (`rgb_color`, else Home Assistant's colour for a light that is on), as strong as its brightness and gone while it is off. The brightness is large, the switch beside it and the brightness slider along the bottom; `control: false` leaves them out.
+A light: its picture is a glow from the bottom of the card (`visual: glow`) in the light's own colour (`rgb_color`, else Home Assistant's colour for a light that is on), as strong as its brightness and gone while it is off. The brightness is large, the switch beside it and the brightness slider along the bottom; `control: false` leaves them out. Another [picture](/cards/poster-custom#a-picture) replaces the glow: `visual: bar` draws the brightness as a bar, `visual: none` draws nothing.
 
 ::: live
 
@@ -279,6 +279,10 @@ A light: a glow from the bottom of the card in the light's own colour (`rgb_colo
   entity: light.desk_lamp
   name: Desk
   control: false
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: light.office
+  visual: bar
   grid_options: { columns: 6 }
 ```
 
@@ -326,7 +330,7 @@ A thermostat: the current temperature large, the target under it and the stepper
 
 **Reads** a lock · no keys of its own.
 
-A lock: the padlock in the lead is held to lock or unlock (a ring fills around it; a screen reader presses it twice), the state is large, and a jammed lock pulses red.
+A lock: the padlock in the lead is held to lock or unlock (a ring fills around it; a screen reader presses it twice), the state is large, and a jammed lock pulses red. The hold is the icon's default action, `icon_hold_action: { action: toggle }`; another [icon action](/cards/poster-custom#the-icon) replaces it.
 
 ::: live
 
@@ -345,7 +349,7 @@ A lock: the padlock in the lead is held to lock or unlock (a ring fills around i
 
 **Reads** an alarm control panel · no keys of its own.
 
-An alarm panel: held to arm it (away) or disarm it, its state large, red and pulsing while triggered. A panel that wants a code has no control here: a tap opens Home Assistant's dialog with its keypad.
+An alarm panel: its shield in the lead is held to arm it (away) or disarm it (`icon_hold_action: { action: toggle }`, as the [lock](#lock)), its state large, red and pulsing while triggered. A panel that wants a code has no hold here: a tap opens Home Assistant's dialog with its keypad.
 
 ::: live
 

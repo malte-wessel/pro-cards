@@ -1,6 +1,6 @@
 // CSS of the poster card on top of the entity layer's poster: the backdrop behind the whole card
-// (an image, or what a kind draws there) under a scrim that keeps the texts readable, and the
-// status badge, which takes no room while it has nothing to say.
+// (an image, or what a kind draws there) under a scrim that keeps the texts readable, the glow,
+// and the status badge, which takes no room while it has nothing to say.
 import { CARD_BG, iconBg } from "../shared/constants.ts";
 import { STYLE_ENTITY_CARD } from "../shared/entity/render/styles.ts";
 import { STYLE_FLOW, STYLE_FLOW_MOTION } from "../shared/flow/styles.ts";
@@ -22,6 +22,10 @@ const STYLE_POSTER_CARD = `
   /* the scrim: the card's own surface over the whole picture, most of it at the top (lead, badges)
      and the bottom (the texts), so the theme's text reads on any picture */
   .pback.scrim::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, color-mix(in srgb, ${CARD_BG} 72%, transparent) 0%, color-mix(in srgb, ${CARD_BG} 38%, transparent) 30%, color-mix(in srgb, ${CARD_BG} 55%, transparent) 50%, color-mix(in srgb, ${CARD_BG} 90%, transparent) 100%); }
+  /* visual: glow: the poster's colour from the bottom of the card, as strong as its level (its
+     opacity, set by the card: a new level fades as switching does); nothing at 0. The last part
+     of the backdrop: over a kind's drawing, under an image's scrim */
+  .pglow { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 105%, color-mix(in srgb, var(--glow) 60%, transparent) 0%, transparent 72%); opacity: 0; transition: opacity .6s; }
   .row.hval.pstatus.empty { display: none; }
   /* the corner floats over the poster's top right, so the badges take no height from the name,
      the value and the picture (the top line is as tall as the lead); many badges reach down over

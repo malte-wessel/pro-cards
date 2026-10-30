@@ -5,7 +5,7 @@ import type { EntityItem, RawEntity, RuleUnit } from "../entity/config.ts";
 import type { Placement } from "../entity/control.ts";
 import type { EntityModel, RenderCtx } from "../entity/model.ts";
 import type { PosterSlots } from "../entity/render/fill.ts";
-import type { ForecastEntry, HassEntity, WeatherForecastType } from "../ha.ts";
+import type { ActionConfig, ForecastEntry, HassEntity, WeatherForecastType } from "../ha.ts";
 import type { StringKey } from "../i18n.ts";
 import type { SunCurveHost } from "../sun/curve.ts";
 import type { Visibility } from "../visibility.ts";
@@ -99,6 +99,9 @@ export interface Kind {
   // what `control: auto` draws (the domain kinds), by the entity's state where it depends on it
   // (an alarm panel that wants a code has none); the card's `control` replaces it
   controls?: readonly Placement[] | ((st: HassEntity | undefined) => readonly Placement[]);
+  // the icon's own actions where the card sets none (`icon_tap_action` …), by the entity's state
+  // where it depends on it (a lock held to lock or unlock, an alarm panel that wants a code: none)
+  iconActions?(st: HassEntity | undefined): Partial<Record<"tap" | "hold" | "dbl", ActionConfig>>;
 
   // ----- drawing (all optional: a kind without them draws as `entity`) -----
   // the card's item where the card sets neither `value` nor `attribute` (a weather entity's
@@ -120,6 +123,9 @@ export interface Kind {
   status?(c: KindCtx): string | null;
   // its colour where no rule and no `color` says one (the sun's by day and by night)
   color?(c: KindCtx): string | null;
+  // how strong `visual: glow` lights it, 0 to 1 (a light's brightness; null or left out: the
+  // value between min and max, else on or off)
+  level?(c: KindCtx): number | null;
   lead?: Persistent;
   backdrop?: Persistent;
   // a picture behind the poster under the scrim (a person's photo), where the card sets no `image`

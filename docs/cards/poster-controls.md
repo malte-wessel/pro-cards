@@ -2,7 +2,7 @@
 
 A poster can carry one control: a switch, a slider, a stepper, speeds, buttons, a select or a button to hold. Every [poster type](/cards/poster-types) takes `control` and its options, the same key as on the [entity cards](/cards/controls): a control needs a domain that supports it, and your own `buttons` call any action. The domain poster types (light, cover, media player …) bring theirs, so a light poster is a switch and a dimmer without a line of config; `control: false` removes them, a name picks another.
 
-A tap on the poster opens more-info; the control and the [badges](/cards/poster-badges) take their own taps. This page shows what each poster type brings, every control, where it sits, your own buttons and holds; the [overview](/cards/poster-card) explains the poster around them.
+A tap on the poster opens more-info; the control and the [badges](/cards/poster-badges) take their own taps, and the icon takes [actions of its own](#the-icon). This page shows what each poster type brings, every control, where it sits, your own buttons and holds; the [overview](/cards/poster-card) explains the poster around them.
 
 ## What the poster types bring
 
@@ -13,7 +13,7 @@ Without `control` (or with `control: auto`), a domain poster type draws its own 
 | `light`                | a switch beside the value, brightness below it                        |
 | `fan`                  | its speeds                                                            |
 | `climate`              | a stepper for the target temperature                                  |
-| `lock`                 | hold the icon to lock or unlock                                       |
+| `lock`                 | hold the icon to lock or unlock (`icon_hold_action`)                  |
 | `alarm_control_panel`  | hold the icon to arm or disarm (none where the panel wants a code)    |
 | `media_player`         | previous, play / pause and next beside the title, the volume below it |
 | `cover`                | open, stop and close                                                  |
@@ -137,13 +137,12 @@ control_options:
 
 ## Where it sits
 
-A control has three places on a poster, set with `control_position`:
+A control has two places on a poster, set with `control_position`:
 
-| `control_position` | Place                                                                                              | The default of                           |
-| ------------------ | -------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `end`              | beside the value and the line under it, at the right; under them where they do not fit beside them | switch, stepper, speeds, buttons, select |
-| `block`            | under the value, the poster's whole width                                                          | slider                                   |
-| `lead`             | the icon is the control: a tap switches, a hold confirms                                           | the hold of locks and alarm panels       |
+| `control_position` | Place                                                                                              | The default of                                 |
+| ------------------ | -------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `end`              | beside the value and the line under it, at the right; under them where they do not fit beside them | switch, stepper, speeds, buttons, select, hold |
+| `block`            | under the value, the poster's whole width                                                          | slider                                         |
 
 ::: live
 
@@ -152,7 +151,6 @@ A control has three places on a poster, set with `control_position`:
   entity: switch.coffee_machine
   icon: mdi:coffee-maker
   control: toggle
-  control_position: lead
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: cover.garage_door
@@ -162,6 +160,8 @@ A control has three places on a poster, set with `control_position`:
 ```
 
 :::
+
+To switch from the icon instead, give it an action: `icon_tap_action: { action: toggle }` (see [The icon](#the-icon)).
 
 The name runs across the poster on top; the value and the line under it are one block, and a control beside it ends on the baseline of the block's last line, so the value sits where it sits without one. On a narrow poster the control goes under the block (under the line under the value) rather than squeezing the value; the line under the value is cut where a control beside it starts. The place is found once for the card's size: a value that gets wider later (Cleaning, then Returning) is drawn smaller rather than pushing the controls down, and one that gets narrower leaves them where they are. Where the poster is short of room, the value is drawn smaller first; if that is not enough, a slider below the value gives way (its more-info dialog still has it): a media player's volume on a poster of 6 × 3, shown on one of 9 × 4. See [Poster sizes](/cards/poster-sizes).
 
@@ -240,7 +240,7 @@ control_options:
 
 ## Hold to confirm
 
-Some things should not happen by a stray tap. A hold fills a ring around the button for a second and runs when it is full; letting go earlier cancels. Locks and alarm panels hold by default. `control_confirm: true` turns a switch or buttons into holds (every button of a row its own), and `control: hold` holds any entity that switches:
+Some things should not happen by a stray tap. A hold fills a ring around the button for a second and runs when it is full; letting go earlier cancels. `control_confirm: true` turns a switch or buttons into holds (every button of a row its own), and `control: hold` holds any entity that switches. On the icon, `icon_hold_action` is the hold: locks and alarm panels hold their icon to lock or arm by default (`icon_hold_action: { action: toggle }`; an alarm panel that wants a code has none), and any poster that switches can do the same:
 
 ::: live
 
@@ -253,21 +253,24 @@ Some things should not happen by a stray tap. A hold fills a ring around the but
 - type: custom:poster-card-pro
   entity: switch.garden_pump
   icon: mdi:water-pump
-  control: hold
-  control_position: lead
+  icon_hold_action: { action: toggle }
   grid_options: { columns: 6 }
 ```
 
 :::
 
-The icon of a held lead shows the entity as it is (a padlock locked while locked); its label says what holding does ("Hold to unlock"). A screen reader's click arms the hold, a second one within five seconds runs it.
+A held icon shows the entity as it is (a padlock locked while locked); its label says what holding does ("Hold to unlock"). A screen reader's click arms a hold, a second one within five seconds runs it.
+
+## The icon
+
+The icon is no control, but it takes actions of its own, as on Home Assistant's tile card: `icon_tap_action`, `icon_hold_action` and `icon_double_tap_action`. `toggle` there is run by the card (a lock locks and unlocks, an alarm panel arms and disarms, anything else switches), every other action goes to Home Assistant. [The icon](/cards/poster-custom#the-icon) on Custom posters has them with examples.
 
 ## Reference
 
 | Key                 | Default                      | Description                                                                                                                        |
 | ------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `control`           | `auto`                       | `auto` (the type's), `toggle`, `slider`, `stepper`, `segments`, `select`, `buttons`, `button`, `hold`; `false` or `none` for none. |
-| `control_position`  | the control's own            | `end`, `block` or `lead`.                                                                                                          |
+| `control_position`  | the control's own            | `end` or `block`; the icon's own actions are `icon_tap_action` …, see [The icon](#the-icon).                                       |
 | `control_attribute` | the shown one, else the mode | `hvac_mode`, `preset_mode` or `fan_mode`: what segments and a select change on a thermostat or fan.                                |
 | `control_options`   | the entity's                 | Segments and select: the options (`value`, `label`, `icon`). Buttons: [your own buttons](#your-own-buttons).                       |
 | `control_confirm`   | `false`                      | Every switch and button a hold.                                                                                                    |

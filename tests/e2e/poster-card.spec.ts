@@ -2,7 +2,7 @@
 // the device, controls, backdrops), what the card's own keys change, and that nothing moves when a
 // state changes: the parts are kept, the value fits the room the card has.
 import type { Locator, Page } from "@playwright/test";
-import { test, expect, mount, calls, events, setState, card } from "./util.ts";
+import { test, expect, mount, calls, events, actions, setState, card } from "./util.ts";
 
 const P = "custom:poster-card-pro";
 const live = { liveClock: true };
@@ -53,6 +53,22 @@ const baselineOf = (loc: Locator) =>
     mark.remove();
     return y;
   });
+// the glow's opacity as the card set it (not mid-transition)
+const glowOf = (c: Locator) =>
+  c.locator(".pglow").evaluate((e) => (e as HTMLElement).style.opacity);
+// what setConfig throws for a config, or null
+const configError = (page: Page, cfg: Record<string, unknown>) =>
+  page.evaluate((c) => {
+    const el = document.createElement("poster-card-pro") as HTMLElement & {
+      setConfig(c: unknown): void;
+    };
+    try {
+      el.setConfig({ type: "custom:poster-card-pro", ...c });
+      return null;
+    } catch (e) {
+      return (e as Error).message;
+    }
+  }, cfg);
 // presses a button down for a while (a hold)
 const hold = async (page: Page, loc: Locator) => {
   const b = (await loc.boundingBox())!;
@@ -222,6 +238,10 @@ test.describe("poster types", () => {
     await expect(c.locator(".pbody > .ctl-slider")).toBeVisible();
     await toggle.click();
     expect(await services(page)).toEqual(["homeassistant.toggle"]);
+    // the glow is the light's picture: another visual replaces it
+    await mount(page, { type: P, entity: "light.living_room", visual: "none" });
+    await expect(card(page).locator(".row.poster")).toBeVisible();
+    await expect(card(page).locator(".pglow")).toHaveCount(0);
   });
 
   test("a value turning from a number into a word moves nothing, the switch beside it neither", async ({
@@ -390,7 +410,7 @@ test.describe("poster types", () => {
     expect(Number(stopped)).toBeLessThan(100);
   });
 
-  test("a lock is held to open, from its lead", async ({ page }) => {
+  test("a lock is held to open, from its icon", async ({ page }) => {
     await mount(page, { type: P, entity: "lock.front_door" }, live);
     const h = card(page).locator(".plead .ctl-hold");
     await expect(h).toHaveAttribute("aria-label", "Hold to unlock");
@@ -478,19 +498,124 @@ test.describe("poster config", () => {
 
   test("an unknown poster type is a config error that names the types", async ({ page }) => {
     await mount(page, { type: P, entity: "sensor.wind_speed" });
-    const msg = await page.evaluate(() => {
-      const el = document.createElement("poster-card-pro") as HTMLElement & {
-        setConfig(c: unknown): void;
-      };
-      try {
-        el.setConfig({ type: "custom:poster-card-pro", poster: "nonsense" });
-        return null;
-      } catch (e) {
-        return (e as Error).message;
-      }
-    });
+    const msg = await configError(page, { poster: "nonsense" });
     expect(msg).toMatch(/^poster-card-pro: .*nonsense/);
     expect(msg).toMatch(/\bwind\b/);
+  });
+
+  test("the entity cards' ring and lead control are config errors that name the icon's keys", async ({
+    page,
+  }) => {
+    await mount(page, { type: P, entity: "sensor.wind_speed" });
+    const ring = await configError(page, { entity: "sensor.living_room_humidity", visual: "ring" });
+    expect(ring).toMatch(/^poster-card-pro: .*icon_ring/);
+    const lead = await configError(page, {
+      entity: "switch.coffee_machine",
+      control: "toggle",
+      control_position: "lead",
+    });
+    expect(lead).toMatch(/^poster-card-pro: .*icon_tap_action/);
+  });
+});
+
+test.describe("poster glow and icon", () => {
+  test("visual: glow lights any poster as strong as its value, fading in place", async ({
+    page,
+  }) => {
+    await mount(page, [
+      { type: P, entity: "sensor.living_room_humidity", visual: "glow", min: 0, max: 100 },
+      { type: P, entity: "switch.coffee_machine", visual: "glow" },
+    ]);
+    const [humid, coffee] = [card(page, 0), card(page, 1)];
+    // the value between min and max: 0.3 + 0.7 × the level
+    await setState(page, "sensor.living_room_humidity", "50");
+    await expect.poll(async () => Number(await glowOf(humid))).toBeCloseTo(0.65, 2);
+    await mark(humid.locator(".pglow"));
+    await setState(page, "sensor.living_room_humidity", "100");
+    await expect.poll(async () => Number(await glowOf(humid))).toBeCloseTo(1, 2);
+    await setState(page, "sensor.living_room_humidity", "0");
+    await expect.poll(() => glowOf(humid)).toBe("0");
+    await expect(humid.locator(".pglow")).toHaveAttribute("data-mark", "1");
+    // on or off: lit while on, dark while off
+    await expect.poll(() => glowOf(coffee)).toBe("0");
+    await setState(page, "switch.coffee_machine", "on");
+    await expect.poll(async () => Number(await glowOf(coffee))).toBeGreaterThan(0.3);
+  });
+
+  test("icon_ring draws the value as a ring around the icon", async ({ page }) => {
+    await mount(page, [
+      { type: P, entity: "sensor.living_room_humidity", icon_ring: true, min: 0, max: 100 },
+      { type: P, entity: "sensor.living_room_humidity" },
+    ]);
+    await expect(card(page, 0).locator(".plead .lead.ring")).toBeVisible();
+    await expect(card(page, 1).locator(".plead .lead.ring")).toHaveCount(0);
+  });
+
+  test("icon_tap_action: toggle switches the entity from its icon, opening nothing", async ({
+    page,
+  }) => {
+    await mount(page, {
+      type: P,
+      entity: "switch.coffee_machine",
+      icon_tap_action: { action: "toggle" },
+    });
+    const c = card(page);
+    const lead = c.locator(".plead .lead.tap");
+    await expect(lead).toHaveAttribute("role", "switch");
+    await lead.click();
+    expect(await services(page)).toEqual(["homeassistant.toggle"]);
+    expect(await infos(page)).toEqual([]);
+    expect(await actions(page)).toEqual([]);
+  });
+
+  test("any other icon action goes to Home Assistant; the poster keeps its own tap", async ({
+    page,
+  }) => {
+    const nav = { action: "navigate", navigation_path: "/config" };
+    await mount(page, {
+      type: P,
+      entity: "sensor.living_room_temperature",
+      icon_tap_action: nav,
+    });
+    const c = card(page);
+    const navs = async () =>
+      ((await actions(page)) as { action: string; config: Record<string, unknown> }[]).filter(
+        (a) => (a.config.tap_action as { action?: string } | undefined)?.action === "navigate",
+      );
+    await c.locator(".plead").click();
+    await expect.poll(navs).toHaveLength(1);
+    expect((await navs())[0]).toEqual({
+      action: "tap",
+      config: { entity: "sensor.living_room_temperature", tap_action: nav },
+    });
+    expect(await infos(page)).toEqual([]);
+    // the poster's own tap still opens the entity, not the icon's action
+    await c.locator(".pname").click({ force: true });
+    expect(await infos(page)).toEqual([
+      { type: "more-info", entityId: "sensor.living_room_temperature" },
+    ]);
+    expect(await navs()).toHaveLength(1);
+  });
+
+  test("icon_hold_action runs once the icon is held", async ({ page }) => {
+    const nav = { action: "navigate", navigation_path: "/config" };
+    await mount(
+      page,
+      { type: P, entity: "sensor.living_room_temperature", icon_hold_action: nav },
+      live,
+    );
+    const b = (await card(page).locator(".plead").boundingBox())!;
+    await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+    await page.mouse.down();
+    await expect.poll(() => actions(page), { timeout: 3000 }).not.toEqual([]);
+    await page.mouse.up();
+    expect(await actions(page)).toEqual([
+      {
+        action: "hold",
+        config: { entity: "sensor.living_room_temperature", hold_action: nav },
+      },
+    ]);
+    expect(await infos(page)).toEqual([]);
   });
 });
 

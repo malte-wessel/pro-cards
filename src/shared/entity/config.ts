@@ -186,6 +186,8 @@ export interface EntityItem extends ActionDefaults {
   suffix: string;
   visual: Visual;
   iconStyle: IconStyle;
+  // a ring of the value around the icon whatever the visual (the poster's `icon_ring`)
+  iconRing?: boolean;
   // the entity's picture (a person's photo) in place of its icon, where it has one
   picture: boolean;
   min: number | null;
