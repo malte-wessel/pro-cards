@@ -52,8 +52,10 @@ export interface RawPosterCardConfig extends RawEntityCardBase, RawEntity {
   status?: unknown;
   badges?: unknown;
   image?: unknown;
+  image_blur?: unknown;
   // the lead: a ring of the value around the icon, the icon's own actions
   icon_ring?: unknown;
+  icon_image?: unknown;
   icon_tap_action?: RawAction;
   icon_hold_action?: RawAction;
   icon_double_tap_action?: RawAction;
@@ -75,6 +77,10 @@ export interface PosterConfig extends EntityCardConfig {
   statusText: ValueSrc | null;
   // the backdrop as written (false: none, not even the kind's; null: the kind's)
   image: ImageSrc | false | null;
+  // a picture of the card's own in the icon (null: the icon's, or the entity's picture)
+  iconImage: ImageSrc | null;
+  // the backdrop's blur in px as written (0: sharp; null: the kind's)
+  imageBlur: number | null;
   // the kind's inputs: key → item (not drawn as rows: read by the kind)
   inputs: Record<string, number>;
   // `hours_to_show` as written (null: the kind's window)
@@ -126,6 +132,16 @@ const inputsOf = (
 const BADGE: { style: BadgeStyle; size: BadgeSize } = { style: "outline", size: "s" };
 const STATUS: { style: BadgeStyle; size: BadgeSize } = { style: "tag", size: "s" };
 const ENTITY_ID = /^[a-z_]+\.[a-z0-9_]+$/;
+
+// the blur of `image_blur: true`, in px
+export const IMAGE_BLUR = 20;
+export const parseImageBlur = (v: unknown): number | null => {
+  if (v === undefined || v === null) return null;
+  if (v === true) return IMAGE_BLUR;
+  if (v === false) return 0;
+  if (typeof v === "number" && Number.isFinite(v) && v >= 0) return v;
+  throw new Error(`${CARD_TYPE}: image_blur must be true, false or a number of px`);
+};
 
 export const parseImage = (v: unknown): ImageSrc | false | null => {
   if (v === false) return false;
@@ -324,6 +340,8 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
     statusIdx,
     statusText,
     image: parseImage(raw.image),
+    imageBlur: parseImageBlur(raw.image_blur),
+    iconImage: parseImage(raw.icon_image) || null,
     glow,
     iconActions,
   };

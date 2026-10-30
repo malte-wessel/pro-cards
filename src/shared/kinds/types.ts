@@ -130,6 +130,9 @@ export interface Kind {
   backdrop?: Persistent;
   // a picture behind the poster under the scrim (a person's photo), where the card sets no `image`
   image?(c: KindCtx): string | null;
+  // the picture behind the poster is blurred unless the card says `image_blur` (a person's photo,
+  // a cover art: the icon shows it sharp)
+  imageBlur?: boolean;
   // run on every render after the fill: what follows the clock or the size (a curve)
   live?(c: KindCtx, row: HTMLElement): void;
   // what else the poster row is filled from (beyond its model and the inputs')

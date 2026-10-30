@@ -9,8 +9,10 @@
  *   status: "{{ … }}"                      # the status badge's text, an object of badge keys, or false
  *   badges: [sensor.x, { attribute: humidity }, status]   # the corner; `status` places the status
  *   image: camera.front_door               # the backdrop: a URL, a template or an entity's picture
+ *   image_blur: true                       # the backdrop blurred (px; a person's and a player's are)
  *   rules: [...]                           # replace the type's own rules as a whole
  *   visual: glow                           # sparkline … gauge, glow (lit by its level), none
+ *   icon_image: person.alex                # a picture in the icon: a URL, a template or an entity's
  *   icon_ring / icon_tap_action / icon_hold_action / icon_double_tap_action   # the icon's own
  *   control / tap_action / hold_action / double_tap_action / hover / hours_to_show
  */
@@ -30,7 +32,12 @@ import type { SunCurveHost } from "./shared/sun/curve.ts";
 import type { Visibility } from "./shared/visibility.ts";
 import { ForecastFeed } from "./shared/weather/feed.ts";
 import { dailyTypeOf, supportsForecast } from "./shared/weather/forecast.ts";
-import { hasIconActions, normalizePosterConfig, type PosterConfig } from "./poster/config.ts";
+import {
+  hasIconActions,
+  IMAGE_BLUR,
+  normalizePosterConfig,
+  type PosterConfig,
+} from "./poster/config.ts";
 import { CARD_TYPE } from "./poster/constants.ts";
 import {
   fillStatus,
@@ -194,7 +201,8 @@ export class PosterCard extends EntityCardBase {
   _extraTemplates(cfg: EntityCardConfig): string[] {
     const c = cfg as PosterConfig;
     const out = c.kind.templates?.(c.kindOpts) ?? [];
-    if (c.image && c.image.kind === "template") out.push(c.image.template);
+    for (const src of [c.image, c.iconImage])
+      if (src && src.kind === "template") out.push(src.template);
     if (c.statusText?.kind === "template") out.push(c.statusText.template);
     return out;
   }
@@ -203,7 +211,9 @@ export class PosterCard extends EntityCardBase {
     return [
       ...(c.kind.watch ?? []),
       ...(c.kind.history?.(c.kindOpts, c.entities[0].entity) ?? []),
-      ...(c.image && c.image.kind === "entity" ? [c.image.entity] : []),
+      ...[c.image, c.iconImage].flatMap((src) =>
+        src && src.kind === "entity" ? [src.entity] : [],
+      ),
     ];
   }
   _extraHistoryIds(cfg: EntityCardConfig): string[] {
@@ -238,7 +248,7 @@ export class PosterCard extends EntityCardBase {
     const cfg = this._config as PosterConfig;
     const raw = (this._raw ?? {}) as Record<string, unknown>;
     const o: PosterSlots = { ...(cfg.kind.slots?.(c) ?? {}), iconActions: cfg.iconActions };
-    if (raw.icon !== undefined || hasIconActions(cfg.iconActions)) delete o.lead;
+    if (this._userIcon()) delete o.lead;
     if (raw.name !== undefined) delete o.name;
     if (raw.value !== undefined || raw.attribute !== undefined) {
       delete o.value;
@@ -248,13 +258,13 @@ export class PosterCard extends EntityCardBase {
     if (raw.visual !== undefined) delete o.picture;
     return o;
   }
-  // the card draws its own lead: its `icon`, or an icon with actions of its own (an animated lead
-  // gives way to them)
+  // the card draws its own lead: its `icon` or `icon_image`, or an icon with actions of its own
+  // (an animated lead gives way to them)
   _userIcon() {
     const cfg = this._config as PosterConfig | undefined;
     return (
       ((this._raw ?? {}) as Record<string, unknown>).icon !== undefined ||
-      (!!cfg && hasIconActions(cfg.iconActions))
+      (!!cfg && (!!cfg.iconImage || hasIconActions(cfg.iconActions)))
     );
   }
 
@@ -299,7 +309,16 @@ export class PosterCard extends EntityCardBase {
         }
         slots.lead = "keep";
       } else if (plead) delete plead.dataset.key;
-      fillPosterSlots(ctx, row, ent, idx, m, slots);
+      // icon_image: its picture in the icon while it has one, else the icon
+      const pic = imageUrl(ctx, cfg.iconImage);
+      fillPosterSlots(
+        ctx,
+        row,
+        ent,
+        idx,
+        pic ? { ...m, look: { ...m.look, picture: pic } } : m,
+        slots,
+      );
       this._placeControls(row);
       return;
     }
@@ -321,7 +340,7 @@ export class PosterCard extends EntityCardBase {
         ...extra,
         statusText(ctx, cfg, kc.m, cfg.kind.status?.(kc) ?? null),
       ];
-    return [...inputs, ...own, ...extra];
+    return [...inputs, ...own, ...extra, imageUrl(ctx, cfg.iconImage)];
   }
   // the kind's colour where neither the card nor a rule names one
   _rowColor(row: HTMLElement, ent: EntityItem, m: EntityModel) {
@@ -368,6 +387,7 @@ export class PosterCard extends EntityCardBase {
       url,
       key && back ? { key, build: () => back.build(kc) } : null,
       cfg.glow,
+      cfg.imageBlur ?? (cfg.kind.imageBlur ? IMAGE_BLUR : 0),
     );
     const pback = body.querySelector<HTMLElement>(":scope > .pback"),
       color = row.style.getPropertyValue("--fe-color");

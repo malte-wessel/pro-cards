@@ -1,6 +1,11 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
 import { PosterCard } from "../../src/poster-card.ts";
-import { normalizePosterConfig, parseImage } from "../../src/poster/config.ts";
+import {
+  IMAGE_BLUR,
+  normalizePosterConfig,
+  parseImage,
+  parseImageBlur,
+} from "../../src/poster/config.ts";
 import { imageUrl, statusText } from "../../src/poster/render.ts";
 import { placementsOf } from "../../src/shared/entity/control.ts";
 import { modelOf } from "../../src/shared/entity/model.ts";
@@ -358,6 +363,45 @@ describe("poster-card image and status", () => {
       entity: "camera.front_door",
     });
     expect(parseImage("{{ 'a' }}")).toEqual({ kind: "template", template: "{{ 'a' }}" });
+  });
+
+  it("blurs the image by true, a number of px, or not by false; unset is the type's", () => {
+    expect(parseImageBlur(undefined)).toBeNull();
+    expect(parseImageBlur(true)).toBe(IMAGE_BLUR);
+    expect(parseImageBlur(8)).toBe(8);
+    expect(parseImageBlur(0)).toBe(0);
+    expect(parseImageBlur(false)).toBe(0);
+    expect(() => norm({ entity: "sensor.x", image_blur: "soft" })).toThrow(
+      `${T}: image_blur must be true, false or a number of px`,
+    );
+    expect(() => norm({ entity: "sensor.x", image_blur: -2 })).toThrow(/image_blur/);
+    expect(norm({ entity: "sensor.x", image_blur: 6 }).imageBlur).toBe(6);
+  });
+
+  it("takes a picture for the icon as a URL, a template or an entity's", () => {
+    expect(norm({ icon_image: "/local/a.png" }).iconImage).toEqual({
+      kind: "url",
+      url: "/local/a.png",
+    });
+    expect(norm({ icon_image: "person.alex" }).iconImage).toEqual({
+      kind: "entity",
+      entity: "person.alex",
+    });
+    expect(norm({ icon_image: "{{ x }}" }).iconImage).toEqual({
+      kind: "template",
+      template: "{{ x }}",
+    });
+    expect(norm({ icon_image: false }).iconImage).toBeNull();
+    expect(norm({ name: "x" }).iconImage).toBeNull();
+  });
+
+  it("shows a person's and a player's picture in the icon unless the card says not", () => {
+    for (const entity of ["person.alex", "media_player.tv"]) {
+      expect(norm({ entity }).entities[0].picture).toBe(true);
+      expect(norm({ entity, show_entity_picture: false }).entities[0].picture).toBe(false);
+      expect(norm({ entity }).kind.imageBlur).toBe(true);
+    }
+    expect(norm({ entity: "sensor.x" }).entities[0].picture).toBe(false);
   });
 
   it("reads the image now", () => {

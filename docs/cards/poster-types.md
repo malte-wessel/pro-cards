@@ -442,7 +442,7 @@ entity: alarm_control_panel.home
 
 **Reads** a person or a device tracker.
 
-A person's photo fills the poster, with no icon over their face. The zone is large, with how long they have been there under it. A person without a picture keeps their icon.
+A person's picture is the icon, and their photo fills the poster behind it, blurred. The zone is large, with how long they have been there under it. A person without a picture keeps their icon.
 
 ::: live
 
@@ -457,11 +457,24 @@ A person's photo fills the poster, with no icon over their face. The zone is lar
 
 :::
 
+`image_blur: false` shows the photo sharp. With `show_entity_picture: false` the icon stays empty, so nothing covers their face:
+
+::: live
+
+```yaml
+type: custom:poster-card-pro
+entity: person.alex
+image_blur: false
+show_entity_picture: false
+```
+
+:::
+
 ## Media player
 
 **Reads** a media player.
 
-A media player's cover art fills the poster and gives it its colour. The title is large, with the artist and album under it. The transport sits beside them and the volume below. On a short card the volume is hidden (more-info still has it). A thin bar along the bottom edge follows the track while it plays.
+A media player's cover art is the icon, and fills the poster behind it, blurred. It also gives the poster its colour. The title is large, with the artist and album under it. The transport sits beside them and the volume below. On a short card the volume is hidden (more-info still has it). A thin bar along the bottom edge follows the track while it plays.
 
 ::: live
 
@@ -487,6 +500,8 @@ entity: media_player.living_room_tv
 ```
 
 :::
+
+As on a person, `image_blur: false` shows the art sharp and `show_entity_picture: false` draws the player's icon.
 
 ## Cover
 

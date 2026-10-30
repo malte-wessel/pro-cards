@@ -102,6 +102,14 @@
       "description": "The backdrop behind the whole poster: an image URL, a template, or an entity whose picture it shows (a camera, a media player, a person); false drops the poster type's own backdrop",
       "oneOf": [{ "const": false }, { "type": "string" }]
     },
+    "icon_image": {
+      "type": "string",
+      "description": "A picture in the icon: an image URL, a template that renders one, or an entity whose picture it shows. Without a picture now, the icon is `icon`'s"
+    },
+    "image_blur": {
+      "description": "Blurs the backdrop: true for the default blur, a number of px, false for a sharp picture. Default: a person's photo and a media player's cover art are blurred",
+      "oneOf": [{ "type": "boolean" }, { "type": "number", "minimum": 0 }]
+    },
     "visual": {
       "type": "string",
       "enum": ["sparkline", "columns", "strip", "bar", "gauge", "glow", "none"],

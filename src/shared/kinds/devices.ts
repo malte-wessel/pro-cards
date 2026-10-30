@@ -1,7 +1,7 @@
-// The domain kinds that draw their device: a media player (its cover art behind the poster and its
-// colour, the progress along the bottom), a cover (the window itself, its slats or panels at the
-// position, gliding while they move) and the robots (a vacuum's or a lawn mower's path drawing itself
-// while it works, the dock while it rests).
+// The domain kinds that draw their device: a media player (its cover art in the icon and blurred
+// behind the poster, its colour, the progress along the bottom), a cover (the window itself, its
+// slats or panels at the position, gliding while they move) and the robots (a vacuum's or a lawn
+// mower's path drawing itself while it works, the dock while it rests).
 import { numAttr as num, pictureOf } from "../entity/look.ts";
 import { leadEl, secondaryEl } from "../entity/render/lead.ts";
 import type { HassEntity } from "../ha.ts";
@@ -37,7 +37,11 @@ export const MEDIA: Kind = {
   readsText: "a media player",
   keys: [],
   controls: [place("buttons", "end"), place("slider", "block")],
+  // the art in the icon unless the card says show_entity_picture: false
+  main: (_entity, raw) =>
+    raw.show_entity_picture === undefined ? { show_entity_picture: true } : {},
   image: (c) => pictureOf(c.m.st),
+  imageBlur: true,
   // the art's own colour, once it has been read
   color: (c) => artColor(artUrl(c), c.host.redraw),
   status: (c) => c.m.look.label ?? stateText(c),

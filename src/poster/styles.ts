@@ -19,6 +19,8 @@ const STYLE_POSTER_CARD = `
   .pback { position: absolute; inset: 0; z-index: -2; pointer-events: none; overflow: hidden; border-radius: inherit; }
   .pback[hidden] { display: none; }
   .pback > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* image_blur: drawn a little larger, so the blur's soft edge lies outside the card */
+  .pback.blur > img { filter: blur(var(--pblur)); transform: scale(1.15); }
   /* the scrim: the card's own surface over the whole picture, most of it at the top (lead, badges)
      and the bottom (the texts), so the theme's text reads on any picture */
   .pback.scrim::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, color-mix(in srgb, ${CARD_BG} 72%, transparent) 0%, color-mix(in srgb, ${CARD_BG} 38%, transparent) 30%, color-mix(in srgb, ${CARD_BG} 55%, transparent) 50%, color-mix(in srgb, ${CARD_BG} 90%, transparent) 100%); }

@@ -246,7 +246,7 @@ export const ALARM: Kind = {
   },
 };
 
-// ----- person: their photo behind the poster, the zone, since when -----
+// ----- person: their photo in the icon and blurred behind the poster, the zone, since when -----
 
 export const PERSON: Kind = {
   name: "person",
@@ -255,13 +255,17 @@ export const PERSON: Kind = {
   readsText: "a person or a device tracker",
   keys: [],
   timed: true,
+  // their photo in the icon unless the card says show_entity_picture: false
+  main: (_entity, raw) =>
+    raw.show_entity_picture === undefined ? { show_entity_picture: true } : {},
   image: (c) => pictureOf(c.m.st),
+  imageBlur: true,
   slots: (c) => {
     const st = c.m.st;
     const since = st ? (c.ctx.now - new Date(st.last_changed).getTime()) / 1000 : NaN;
     return {
-      // their photo is the backdrop: no lead over their face
-      ...(pictureOf(st) ? { lead: div("plead-none") } : {}),
+      // with their photo behind it and none in the icon: no icon over their face
+      ...(pictureOf(st) && !c.m.look.picture ? { lead: div("plead-none") } : {}),
       secondary: Number.isFinite(since)
         ? secondaryEl([
             {

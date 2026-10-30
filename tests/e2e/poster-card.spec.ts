@@ -171,6 +171,78 @@ test.describe("poster card", () => {
     await expect(card(page, 1).locator(".pback.scrim img")).toBeAttached();
     await expect(card(page, 2).locator(".pback img")).toHaveCount(0);
   });
+
+  test("a person's and a player's picture is the icon over the same picture blurred", async ({
+    page,
+  }) => {
+    await mount(page, [
+      { type: P, entity: "person.alex" },
+      { type: P, entity: "person.alex", image_blur: false, show_entity_picture: false },
+      { type: P, entity: "person.kim" },
+      { type: P, entity: "media_player.living_room_tv" },
+      { type: P, entity: "sensor.living_room_temperature", image: "/local/garden.jpg" },
+      {
+        type: P,
+        entity: "sensor.living_room_temperature",
+        image: "/local/garden.jpg",
+        image_blur: 6,
+      },
+    ]);
+    const blurOf = (i: number) =>
+      card(page, i)
+        .locator(".pback")
+        .evaluate((e) => (e as HTMLElement).style.getPropertyValue("--pblur"));
+    const alex = card(page, 0);
+    await expect(alex.locator(".pback.blur img")).toBeAttached();
+    expect(await blurOf(0)).toBe("20px");
+    const src = await alex.locator(".pback img").getAttribute("src");
+    await expect(alex.locator(".plead img.picture")).toHaveAttribute("src", src!);
+    // sharp, and no icon over their face
+    await expect(card(page, 1).locator(".pback")).not.toHaveClass(/blur/);
+    await expect(card(page, 1).locator(".plead .plead-none")).toBeAttached();
+    // without a picture: their icon, nothing behind
+    await expect(
+      card(page, 2).locator(".plead ha-state-icon, .plead ha-icon").first(),
+    ).toBeAttached();
+    await expect(card(page, 2).locator(".pback img")).toHaveCount(0);
+    const tv = card(page, 3);
+    await expect(tv.locator(".pback.blur img")).toBeAttached();
+    await expect(tv.locator(".plead img.picture")).toBeAttached();
+    // your own image: sharp unless blurred
+    await expect(card(page, 4).locator(".pback")).not.toHaveClass(/blur/);
+    expect(await blurOf(5)).toBe("6px");
+  });
+
+  test("icon_image: a picture of its own in the icon, the icon while it has none", async ({
+    page,
+  }) => {
+    await mount(page, [
+      { type: P, name: "Garden", icon_image: "/local/garden.jpg" },
+      { type: P, name: "Alex", icon_image: "person.alex" },
+      {
+        type: P,
+        name: "Template",
+        icon_image: "{{ state_attr('person.alex', 'entity_picture') }}",
+        icon_ring: true,
+        value: 40,
+      },
+      { type: P, name: "Kim", icon: "mdi:star", icon_image: "person.kim" },
+      { type: P, entity: "sensor.wind_speed", icon_image: "/local/garden.jpg" },
+      { type: P, entity: "person.alex" },
+    ]);
+    const pic = (i: number) => card(page, i).locator(".plead img.picture");
+    await expect(pic(0)).toHaveAttribute("src", "/local/garden.jpg");
+    // Alex's own picture, as their person poster shows it
+    const alex = (await pic(5).getAttribute("src"))!;
+    await expect(pic(1)).toHaveAttribute("src", alex);
+    await expect(pic(2)).toHaveAttribute("src", alex);
+    await expect(card(page, 2).locator(".plead .ring")).toBeAttached();
+    // no picture now: the icon
+    await expect(pic(3)).toHaveCount(0);
+    await expect(card(page, 3).locator(".plead ha-icon")).toHaveAttribute("icon", "mdi:star");
+    // the wind's arrow gives way to the picture
+    await expect(pic(4)).toHaveAttribute("src", "/local/garden.jpg");
+  });
 });
 
 test.describe("poster types", () => {

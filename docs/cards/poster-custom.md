@@ -289,6 +289,7 @@ The icon at the top left shows the entity's icon, or the poster type's own drawi
 - `icon_style: plain` draws the icon without its circle.
 - `show_entity_picture: true` shows the entity's picture where it has one. The weather poster does this by default.
 - `icon_ring: true` puts a ring of the value around the icon, filled between `min` and `max` (the entity's own, else 0 and 100).
+- `icon_image` shows a picture of your own: a URL, a template that renders one, or an entity, whose picture it shows. While it has no picture, the poster shows `icon`.
 
 ::: live
 
@@ -305,6 +306,27 @@ The icon at the top left shows the entity's icon, or the poster type's own drawi
   icon_style: plain
   icon_ring: true
   visual: sparkline
+  grid_options: { columns: 6 }
+```
+
+:::
+
+`icon_image` needs no entity of the poster's own:
+
+::: live
+
+```yaml
+- type: custom:poster-card-pro
+  name: Alex
+  icon: mdi:account
+  icon_image: person.alex
+  value: "{{ 'Home' if is_state('person.alex', 'home') else 'Away' }}"
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  name: Now playing
+  icon: mdi:television
+  icon_image: "{{ state_attr('media_player.living_room_tv', 'entity_picture') }}"
+  value: "{{ state_attr('media_player.living_room_tv', 'media_title') }}"
   grid_options: { columns: 6 }
 ```
 
@@ -346,6 +368,8 @@ The icon takes [actions](#actions) of its own, as on Home Assistant's tile card:
 
 `image: false` drops a poster type's own backdrop. A person poster has their photo behind it already. `image: person.alex` puts it behind any other poster.
 
+`image_blur` blurs the backdrop: `true` for the default blur, or a number of pixels. A person's photo and a media player's art are blurred by default; `image_blur: false` shows them sharp.
+
 ::: live
 
 ```yaml
@@ -361,6 +385,7 @@ The icon takes [actions](#actions) of its own, as on Home Assistant's tile card:
   name: Alex
   icon: mdi:account
   image: "{{ state_attr('person.alex', 'entity_picture') }}"
+  image_blur: 8
   value: "{{ 'Home' if is_state('person.alex', 'home') else 'Away' }}"
   grid_options: { columns: 6 }
 ```

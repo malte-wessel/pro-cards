@@ -54,8 +54,9 @@ export const glowLevel = (kind: Kind, c: KindCtx): number => {
 // transition)
 export const glowOpacity = (level: number) => (level > 0 ? (0.3 + 0.7 * level).toFixed(3) : "0");
 
-// the backdrop in the body (built once): an image under its scrim, else a kind's part (built once
-// per key, so its animations keep running; returned for its update), else nothing. The glow
+// the backdrop in the body (built once): an image under its scrim (blurred by `blur` px), else a
+// kind's part (built once per key, so its animations keep running; returned for its update), else
+// nothing. The glow
 // (`visual: glow`) is built once and kept last: over a kind's drawing, under an image's scrim (the
 // pback's ::after), so a new level fades rather than being drawn again
 export const updateBackdrop = (
@@ -64,6 +65,7 @@ export const updateBackdrop = (
   url: string | null,
   part: { key: string; build: () => HTMLElement } | null,
   glow = false,
+  blur = 0,
 ): { part: HTMLElement | null; glow: HTMLElement | null } => {
   let back = body.querySelector<HTMLElement>(":scope > .pback");
   if (!back) {
@@ -78,6 +80,9 @@ export const updateBackdrop = (
   }
   back.hidden = !url && !part && !lit;
   back.classList.toggle("scrim", !!url);
+  back.classList.toggle("blur", !!url && blur > 0);
+  if (url && blur > 0) back.style.setProperty("--pblur", `${blur}px`);
+  else back.style.removeProperty("--pblur");
   // the backdrop's own content, before the glow
   const own = (el: HTMLElement | null) => {
     for (const c of [...(back as HTMLElement).children]) if (c !== lit) c.remove();
