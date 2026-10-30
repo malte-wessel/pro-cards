@@ -833,12 +833,11 @@
   .pglow { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 105%, color-mix(in srgb, var(--glow) 60%, transparent) 0%, transparent 72%); opacity: 0; transition: opacity .6s; }
   .row.hval.pstatus.empty { display: none; }
   /* the corner floats over the poster's top right, so the badges take no height from the name,
-     the value and the picture (the top line is as tall as the lead); many badges reach down over
-     the picture's right. Controls on the value's line keep their room: there the corner stops
-     above them */
+     the value and the picture (the top line is as tall as the lead); more badges than the poster
+     has room for reach down over what is below them, the controls too: the card's author sees
+     that and makes the poster larger or drops a badge */
   ha-card.layout-poster .row.poster { position: static; }
   ha-card.layout-poster .row.poster > .ptop > .corner { position: absolute; z-index: 2; top: 16px; right: 16px; max-width: calc(100% - 88px); }
-  ha-card.layout-poster .row.poster:has(> .pbody > .pmain > .end) > .ptop > .corner { max-height: calc(100% - 96px); overflow: hidden; }
 
   /* a kind's field as the backdrop (wind, rain): the band fills the card; the lead keeps a solid
      circle over it */

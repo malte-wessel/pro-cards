@@ -262,7 +262,7 @@ The first badge is the status badge. It shows the poster type's status, else the
 
 ## How the corner behaves
 
-The badges float over the poster, so adding one never moves the texts. Many badges reach down over the picture, but never over the controls: the badges that do not fit are cut off.
+The badges float over the poster, so adding one never moves the texts. Many badges reach down over the picture, and more than the poster has room for reach over the value and the controls too: make the poster larger or drop a badge. A badge that only shows sometimes (`visibility`, a status that only a rule gives) needs that room too.
 
 ::: live
 
