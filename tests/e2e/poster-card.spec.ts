@@ -432,6 +432,24 @@ test.describe("poster types", () => {
     await expect(row.locator(".pstatus")).toHaveText("Rainy");
   });
 
+  test("a gauge takes the room under the top line, up to its cap", async ({ page }) => {
+    const g = { type: P, entity: "sensor.living_room_humidity", visual: "gauge" };
+    await mount(
+      page,
+      [
+        { ...g, grid_options: { columns: 6, rows: 3 } },
+        { ...g, grid_options: { columns: 6, rows: 4 } },
+        { ...g, grid_options: { columns: 12, rows: 6 } },
+      ],
+      { width: 400 },
+    );
+    const size = async (i: number) => rect(card(page, i).locator(".gauge"));
+    expect((await size(0)).h).toBe(80);
+    expect((await size(1)).h).toBeGreaterThan(80);
+    const big = await size(2);
+    expect([big.w, big.h]).toEqual([204, 136]);
+  });
+
   test("a light: switch and slider; the glow fades with the brightness, nothing moves", async ({
     page,
   }) => {

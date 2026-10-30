@@ -14,6 +14,9 @@ export const barEl = (m: EntityModel) => {
     m.progress === null ? "0%" : `${(m.progress * 100).toFixed(1)}%`;
   return d;
 };
+// the gauge's drawing without the room around it (the arc and its stroke, the end labels): a
+// poster draws its gauge in this box, so the arc takes the height it is given
+export const GAUGE_CROP = "4 11 112 70";
 export const gaugeEl = (ctx: RenderCtx, ent: EntityItem, m: EntityModel) => {
   const d = document.createElement("div");
   d.className = "gauge";

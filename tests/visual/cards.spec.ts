@@ -2066,6 +2066,26 @@ const CASES = {
     { type: PC, entity: "sensor.robot_battery", name: "Robot", icon: "mdi:robot-vacuum" },
     { type: PC, entity: "sensor.phone_battery", name: "Phone", poster: "battery" },
   ],
+  // a gauge takes the room under the top line: three rows and four
+  "pc-gauge": [
+    {
+      type: PC,
+      entity: "sensor.living_room_humidity",
+      name: "Humidity",
+      visual: "gauge",
+      min: 0,
+      max: 100,
+    },
+    {
+      type: PC,
+      entity: "sensor.living_room_humidity",
+      name: "Humidity",
+      visual: "gauge",
+      min: 0,
+      max: 100,
+      grid_options: { columns: 6, rows: 4 },
+    },
+  ],
   "pc-weather-sun": [
     { type: PC, entity: "weather.home", name: "Outside" },
     { type: PC, entity: "sun.sun" },

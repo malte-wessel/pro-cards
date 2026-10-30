@@ -10,7 +10,7 @@ import {
   type RowKind,
 } from "../control.ts";
 import { nameOf, tplOf, type EntityModel, type FmtValue, type RenderCtx } from "../model.ts";
-import { blockEl } from "./blocks.ts";
+import { blockEl, GAUGE_CROP } from "./blocks.ts";
 import { appendControls, bindLeadTap, controlEl, iconActionsEl } from "./controls.ts";
 import { fillBadge } from "./badge.ts";
 import { bigEl, leadEl, pillEl, textEl, valueEl } from "./lead.ts";
@@ -217,7 +217,10 @@ export const fillPosterSlots = (
   // centred in the room under the top line (pgauge)
   const gauge = gaugeShown && !!block;
   body.classList.toggle("pgauge", gauge);
-  if (gauge && block) body.appendChild(block);
+  if (gauge && block) {
+    block.querySelector("svg")?.setAttribute("viewBox", GAUGE_CROP);
+    body.appendChild(block);
+  }
   // the name on top across the poster; below the value it is part of the value's block
   const below = ent.item.namePosition === "below" && !gauge;
   if (!below) body.appendChild(name);

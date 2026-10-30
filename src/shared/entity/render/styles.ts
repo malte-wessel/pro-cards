@@ -101,12 +101,14 @@ const STYLE_POSTER = `
   .row.poster .big.word b { letter-spacing: 0; }
   .pbody > :is(.bar, .gauge, .ctl-slider, .ctl-segments, .ctl-buttons, .plot) { margin-top: 8px; }
   .pbody > .gauge { align-self: center; }
-  /* a gauge poster: the arc and its name centred, across and down; the arc stays small enough for
-     the arc and its name to fit three rows at any width */
+  /* a gauge poster: the arc and its name centred across; the arc takes the room under the top line,
+     from 80 px high (three rows at any width) up to 204 × 136, drawn whole in its box (cropped to
+     the drawing, GAUGE_CROP, so the arc fills the height) */
   .row.poster:has(> .pbody.pgauge) > .ptop { margin-bottom: 0; }
-  .pbody.pgauge { margin-block: auto; align-items: center; text-align: center; }
+  .pbody.pgauge { flex: 1 1 auto; min-height: 0; justify-content: center; align-items: center; text-align: center; }
   .pbody.pgauge > .pmain { align-self: stretch; justify-content: center; }
-  .pbody.pgauge > .gauge { margin-top: 0; max-width: 120px; }
+  .pbody.pgauge > .gauge { margin-top: 0; flex: 1 1 80px; min-height: 80px; max-height: 136px; width: 100%; max-width: 204px; }
+  .pbody.pgauge > .gauge svg { height: 100%; }
   /* the poster is one button (its action layer fills the body: the whole card, as a tile's) and
      its plot runs to the card's edges, under the body's padding; the card's corners clip it */
   ha-card.layout-poster .body { position: relative; }
