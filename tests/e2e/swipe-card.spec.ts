@@ -165,6 +165,22 @@ test.describe("swipe-card-pro", () => {
     expect(c.h).toBeLessThan(d.h);
   });
 
+  test("given less height than its cards want, its cards fit into it, none cut off", async ({
+    page,
+  }) => {
+    const poster = { type: "custom:poster-card-pro", entity: "climate.living_room" };
+    await mount(page, { type: SW, per_page: 1, cards: [poster], grid_options: { rows: 2 } });
+    const box = await page.evaluate(() => {
+      const el = window.pc.card(0);
+      const body = el.shadowRoot!.querySelector<HTMLElement>(".body")!.getBoundingClientRect();
+      const card = el.shadowRoot!.querySelector("hui-card")!.getBoundingClientRect();
+      return { body: Math.round(body.bottom), card: Math.round(card.bottom), h: card.height };
+    });
+    // two rows (120 px) and no more: the poster ends inside the strip
+    expect(box.h).toBeLessThanOrEqual(120);
+    expect(box.card).toBeLessThanOrEqual(box.body);
+  });
+
   test("a hidden card leaves the strip and takes its dot", async ({ page }) => {
     // the kitchen light is off in the demo world
     const cards = [...ROOMS];

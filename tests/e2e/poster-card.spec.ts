@@ -966,6 +966,20 @@ test.describe("poster value fit", () => {
     await expect(b(small)).toHaveText("Docked");
     expect(await fontPx(b(small))).toBe(px);
   });
+
+  test("a number keeps its size rather than squeezing beside the controls", async ({ page }) => {
+    // a closed cover's 0 % would fit beside its buttons only drawn small: they go under it, as
+    // under an open cover's 100 %, and both are drawn at one size
+    await mount(page, [
+      { type: P, entity: "cover.driveway_gate" },
+      { type: P, entity: "cover.living_room_blinds" },
+    ]);
+    const [closed, open] = [card(page, 0), card(page, 1)];
+    for (const c of [closed, open]) await expect(c.locator(".pmain")).toHaveClass(/under/);
+    const b = (c: Locator) => c.locator(".pvalue .big b");
+    await expect(b(closed)).toHaveText("0");
+    expect(await fontPx(b(closed))).toBe(await fontPx(b(open)));
+  });
 });
 
 test.describe("poster cards in the layout card", () => {

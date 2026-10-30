@@ -508,7 +508,8 @@ export class PosterCard extends EntityCardBase {
   // the value's size for the room the card has, one size for every value (a word as a number, so
   // the gaps between the name, the value and its line never change): a value wider than its line
   // or content taller than the card draws it smaller, down to 45 % of its styled size. Controls
-  // stay beside the value while it fits there at that size, else they go under it; where even that
+  // stay beside the value while it fits there (a number at 80 % of its size at least), else they
+  // go under it and the value keeps its size; where even that
   // is too tall, the slider below the value goes (a media player's volume: more-info has it). What
   // was found holds until the card's own size changes: a new value may make it smaller, never
   // larger, so nothing jumps back and forth
@@ -587,22 +588,28 @@ export class PosterCard extends EntityCardBase {
     }
     const base = fit.base;
     const min = Math.round(base * 0.45);
-    const shrink = (from: number) => {
+    // beside the controls a number gives up less of its size: one that would have to get smaller
+    // than this to fit beside them keeps its size, and the controls go under it (a closed cover's
+    // 0 % as large as an open one's 100 %); a word (Cleaning) is drawn smaller anyway and keeps
+    // them beside it
+    const besideMin = big.classList.contains("word") ? min : Math.round(base * 0.8);
+    const shrink = (from: number, least = min) => {
       let px = from;
       apply(px);
-      while (misses() && px > min) {
-        px = Math.max(min, px - 2);
+      while (misses() && px > least) {
+        px = Math.max(least, px - 2);
         apply(px);
       }
       return px;
     };
-    let px = shrink(fit.px ?? base);
-    // too wide beside the controls even at its least: the controls go under it (for this width)
+    let px = shrink(fit.px ?? base, fit.place === "beside" ? besideMin : min);
+    // too wide beside the controls at that size: the controls go under it (for this width); a
+    // value that fits beside them but lacks height still shrinks there, down to its least
     if (overflows(b) && fit.place === "beside") {
       fit.place = "under";
       this._placeControls(row);
       px = shrink(base);
-    }
+    } else if (fit.place === "beside") px = shrink(px);
     if (short() > 0.5 && !fit.drop && sliders.length) {
       fit.drop = true;
       drop(true);
