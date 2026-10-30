@@ -23,6 +23,16 @@ export interface MountOptions {
   // an auto cell stretches to its grid row) or null for a masonry view or a vertical stack, where
   // `grid_options` is ignored and the card keeps the height of its content
   layout?: string | null;
+  // states of the case's own, set before the cards are built and put back by the next reset: an
+  // entity's state and attributes, or (with `like`) a new entity as a copy of another, its history
+  // drawn as that one's; `ago` sets the last change, in minutes before now
+  states?: Record<string, StateOverride>;
+}
+export interface StateOverride {
+  state?: string | number;
+  attributes?: Record<string, unknown>;
+  like?: string;
+  ago?: number;
 }
 export interface ServiceCall {
   domain: string;
@@ -43,6 +53,8 @@ export interface ShimWorld {
   subscribe(fn: () => void): () => void;
   history(ids: string[], start: number, end: number): Record<string, { s: string; lu: number }[]>;
   stop(): void;
+  defs: Record<string, object>;
+  forget(): void;
 }
 // what every mounted card element offers
 export interface CardElement extends HTMLElement {
@@ -157,8 +169,42 @@ window.addEventListener("location-changed", () =>
   events.push({ type: "location-changed", path: location.pathname }),
 );
 
+// what stage() replaced: the entity and its definition before (undefined: there was none)
+let staged: [string, HassEntity | undefined, object | undefined][] = [];
+const stage = (states: Record<string, StateOverride>) => {
+  for (const [id, o] of Object.entries(states)) {
+    const base = world.states[o.like ?? id];
+    if (!base) throw new Error(`harness: no entity ${o.like ?? id} to stage ${id}`);
+    staged.push([id, world.states[id], world.defs[id]]);
+    const changed =
+      o.ago === undefined ? base.last_changed : new Date(Date.now() - o.ago * 60e3).toISOString();
+    world.states[id] = {
+      ...base,
+      entity_id: id,
+      state: o.state === undefined ? base.state : String(o.state),
+      attributes: { ...base.attributes, ...o.attributes },
+      last_changed: changed,
+      last_updated: changed,
+    };
+    if (o.like) world.defs[id] = { ...world.defs[o.like], id };
+  }
+  world.forget();
+};
+const unstage = () => {
+  if (!staged.length) return;
+  for (const [id, st, def] of staged.reverse()) {
+    if (st) world.states[id] = st;
+    else delete world.states[id];
+    if (def) world.defs[id] = def;
+    else delete world.defs[id];
+  }
+  staged = [];
+  world.forget();
+};
+
 const mount = (cfgOrList: CardConfigBase | CardConfigBase[], opts: MountOptions = {}) => {
   unsub?.();
+  if (opts.states) stage(opts.states);
   root.textContent = "";
   root.classList.toggle("dark", opts.theme === "dark");
   root.classList.toggle("light", opts.theme === "light");
@@ -266,6 +312,7 @@ window.pc = {
     fns.forEach((fn) => fn());
   },
   reset: () => {
+    unstage();
     calls.length = 0;
     events.length = 0;
     errors.length = 0;

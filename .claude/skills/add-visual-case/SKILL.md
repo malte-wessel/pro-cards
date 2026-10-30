@@ -5,7 +5,7 @@ description: Add or update a visual regression case and regenerate the Linux bas
 
 # Add a visual regression case
 
-1. Append an entry to `CASES` in `tests/visual/cards.spec.ts`. The key becomes the PNG name; light and dark variants are generated automatically. Use demo-world entities only.
+1. Append an entry to `CASES` in `tests/visual/cards.spec.ts`. The key becomes the PNG name; light and dark variants are generated automatically. Use demo-world entities only. Poster card cases go into `tests/visual/posters.spec.ts` (`add(name, cards, { states, width, skin, time })`): a new poster type, variant, option or badge gets its case there, with the states it needs (`states`, `like` for a copy of an entity in another state).
 2. Baselines are rendered on Linux only. Start Docker Desktop, then:
    ```sh
    npm run test:visual:update -- -g "<case name>"   # only the new/changed case

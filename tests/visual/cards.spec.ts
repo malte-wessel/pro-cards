@@ -1,11 +1,10 @@
-import { test, expect, mount, sharedTest } from "../e2e/util.ts";
+import { test, expect, mount } from "../e2e/util.ts";
+import { shoot, THEMES } from "./shoot.ts";
 
 // All snapshots: frozen clock (21 June 2026, 12:00 Europe/Berlin), 400 px section column, light and dark.
 // One test per case draws both themes, on one page per worker: the harness loads once and every
 // case is mounted into it again (mount resets the theme, skin, width and the harness's records).
-// VISUAL_THEMES=dark draws one theme only, for a quick look while working.
-const THEMES = (process.env.VISUAL_THEMES || "light,dark").split(",");
-const vtest = sharedTest;
+// The poster card's docs examples are cases of their own (posters.spec.ts).
 const EC = "custom:entity-card-pro",
   EGC = "custom:entity-group-card-pro",
   ESC = "custom:entity-sections-card-pro";
@@ -2161,33 +2160,7 @@ const WIDTHS: Record<string, number> = {
   "sw-unfold": 880,
 };
 
-for (const [name, cfg] of Object.entries(ALL)) {
-  vtest(name, async ({ shared: page }) => {
-    for (const theme of THEMES) {
-      await mount(page, cfg, { theme, skin: SKINS[name], width: WIDTHS[name] });
-      // fonts + icons settled: every ha-icon has a path (in its ha-svg-icon), then one more frame
-      await page.waitForFunction(() =>
-        [...document.querySelectorAll("*")].every(
-          (e) =>
-            !e.shadowRoot ||
-            [...e.shadowRoot.querySelectorAll("ha-icon")].every(
-              (i) =>
-                (
-                  i.shadowRoot
-                    ?.querySelector("ha-svg-icon")
-                    ?.shadowRoot?.querySelector("path")
-                    ?.getAttribute("d") || ""
-                ).length > 5,
-            ),
-        ),
-      );
-      await page.evaluate(() => document.fonts.ready);
-      await page.waitForTimeout(150);
-      // soft: a changed light snapshot still lets the dark one be checked
-      await expect.soft(page.locator("#root")).toHaveScreenshot(`${name}-${theme}.png`);
-    }
-  });
-}
+shoot(ALL, { skins: SKINS, widths: WIDTHS });
 
 // the energy flow card's calendar, open over the card: a range picked (its band, the button's
 // label) and the calendar opened again on it

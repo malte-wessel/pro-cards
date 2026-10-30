@@ -55,6 +55,8 @@ export interface World {
   start(): void;
   // no more drift (the tests: what they draw never depends on chance or on how long they ran)
   stop(): void;
+  // drops the histories and forecasts drawn so far (the tests: after they set states of their own)
+  forget(): void;
   _timer?: ReturnType<typeof setInterval>;
 }
 
@@ -1171,6 +1173,10 @@ export const world: World = {
     clearInterval(this._timer);
     this._timer = undefined;
   },
+  forget() {
+    cache.clear();
+    fcCache.clear();
+  },
 };
 
 // ---------- history ----------
@@ -1237,12 +1243,13 @@ function series(id: string, start: number, end: number): HistoryPoint[] {
 const HOUR = 3600e3,
   DAY = 86400e3;
 const fcCache = new Map<string, ForecastEntry[]>();
-// the demo forecast of weather.home: rain this evening (3.6 mm from 20:00), a wet day mid-week,
-// otherwise the temperature curve of the outdoor sensor; deterministic for a given hour
+// the demo forecast of weather.home (and of a copy the tests make of it): rain this evening
+// (3.6 mm from 20:00), a wet day mid-week, otherwise the temperature curve of the outdoor sensor;
+// deterministic for a given hour
 function forecast(id: string, type: WeatherForecastType): ForecastEntry[] | null {
-  if (id !== "weather.home" || type === "twice_daily") return null;
+  if (!id.startsWith("weather.") || !states[id] || type === "twice_daily") return null;
   const t = now();
-  const key = `${type}|${Math.floor(t / HOUR)}`;
+  const key = `${id}|${type}|${Math.floor(t / HOUR)}`;
   const hit = fcCache.get(key);
   if (hit) return hit;
   const base = Number(states[id].attributes.temperature);

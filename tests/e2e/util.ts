@@ -75,6 +75,7 @@ export async function mount(
         width: opts.width,
         fullWidth: opts.fullWidth,
         layout: opts.layout,
+        states: opts.states,
       },
     ] as const,
   );

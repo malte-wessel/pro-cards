@@ -88,7 +88,7 @@ Run one file or test with the usual Playwright flags, for example `npx playwrigh
 
 ## Visual regression tests
 
-`tests/visual/cards.spec.ts` screenshots a set of configurations in light and dark and compares them with the PNGs in `tests/visual/__snapshots__/`. The threshold is 0.2 % of pixels.
+`tests/visual/cards.spec.ts` screenshots a set of configurations in light and dark and compares them with the PNGs in `tests/visual/__snapshots__/`. The threshold is 0.2 % of pixels. `tests/visual/posters.spec.ts` covers the poster card on its own: every poster type in the states it draws differently (`pt-`), every variant (`pv-`), the poster's options (`po-`), the status and the corner's badges (`pb-`), and every type at five sizes plus the phone and wide widths and the Large text and Graphite themes (`ps-`). Both share the screenshot loop in `tests/visual/shoot.ts`; a case there may set states of its own (`states`: an entity's state and attributes, or with `like` a copy of an entity under a new id, its history drawn as that one's, so one case shows a type at several levels side by side), its width, a theme and the time it is drawn at. The harness puts the states back before the next mount.
 
 Font rendering differs between macOS and Linux, so the baselines are rendered on **Linux only**, inside `mcr.microsoft.com/playwright`. `scripts/visual.sh` runs the suite in that image with the repository mounted; the same image runs in CI, so both compare identical pixels.
 
