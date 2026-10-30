@@ -237,6 +237,26 @@ test.describe("poster kinds", () => {
     expect([await layoutOf(card(page, 0)), await layoutOf(card(page, 1))]).toEqual(before);
   });
 
+  test("a wider or narrower value never moves the controls: their place holds for the card's size", async ({
+    page,
+  }) => {
+    // beside the value on a wide card, under it on a narrow one
+    for (const [width, place] of [
+      [440, "beside"],
+      [180, "under"],
+    ] as const) {
+      await mount(page, { type: P, entity: "vacuum.robot" }, { width });
+      const c = card(page);
+      await expect(c.locator(".pmain")).toHaveClass(new RegExp(place));
+      const before = await layoutOf(c);
+      for (const state of ["returning", "docked", "cleaning"]) {
+        await setState(page, "vacuum.robot", state);
+        await expect(c.locator(".pvalue .big b")).not.toHaveText("");
+        expect(await layoutOf(c)).toEqual(before);
+      }
+    }
+  });
+
   test("a Run chip keeps its size and place while it says Done", async ({ page }) => {
     await mount(
       page,

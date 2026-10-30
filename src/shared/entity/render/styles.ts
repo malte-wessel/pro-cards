@@ -83,6 +83,11 @@ const STYLE_POSTER = `
   .pvalue > .big { flex: 0 1 auto; }
   .pmain > .end::after { content: ""; align-self: last baseline; margin-inline-start: -8px; }
   .pmain > .end { min-width: 0; max-width: 100%; }
+  /* the place the card found for its size (PosterCard._placeControls) holds: beside, a wider value
+     is drawn smaller; under, a narrower one leaves the controls where they are */
+  .pmain.beside { flex-wrap: nowrap; }
+  .pmain.beside > .end { flex-shrink: 0; }
+  .pmain.under > .end { flex-basis: 100%; }
   .row.poster .big { --pnum: ${fs(40)}; --plh: ${lh(40, 44)}; }
   .row.poster .big b { ${type(40, 44)} ${POSTER_VALUE} }
   .row.poster .big span { font-size: ${fs(16)}; }

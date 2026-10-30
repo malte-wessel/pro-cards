@@ -262,6 +262,7 @@ export class PosterCard extends EntityCardBase {
         slots.lead = "keep";
       } else if (plead) delete plead.dataset.key;
       fillPosterSlots(ctx, row, ent, idx, m, slots);
+      this._placeControls(row);
       return;
     }
     super._fill(ctx, row, ent, idx, m);
@@ -299,6 +300,14 @@ export class PosterCard extends EntityCardBase {
     return super._rowColor(row, ent, m);
   }
   _render() {
+    // a new card size finds the controls' place again: free to wrap before the value is fitted
+    const root = this._root,
+      fit = this._valueFit;
+    if (root && fit && fit.size !== `${root.clientWidth}x${root.clientHeight}`) {
+      fit.place = null;
+      const poster = root.querySelector<HTMLElement>(":scope > .body > .row.poster");
+      if (poster) this._placeControls(poster);
+    }
     super._render();
     const cfg = this._config,
       card = this._root,
@@ -351,7 +360,23 @@ export class PosterCard extends EntityCardBase {
   // value goes (a media player's volume: more-info has it) and the value is fitted again. What was
   // found holds until the card's own size changes: a new value may make it smaller, never larger,
   // so nothing jumps back and forth
-  _valueFit: { size: string; px: number | null; base: number | null; drop: boolean } | null = null;
+  _valueFit: {
+    size: string;
+    px: number | null;
+    base: number | null;
+    drop: boolean;
+    place: "beside" | "under" | null;
+  } | null = null;
+  // where the controls go, beside the value or under it: decided once per card size (_fitHeight),
+  // so a value that gets wider (Cleaning, Returning) is drawn smaller rather than pushing them down,
+  // and one that gets narrower does not pull them back up
+  _placeControls(row: HTMLElement) {
+    const main = row.querySelector<HTMLElement>(":scope > .pbody > .pmain");
+    const place = this._valueFit?.place ?? null;
+    if (!main) return;
+    main.classList.toggle("beside", place === "beside");
+    main.classList.toggle("under", place === "under");
+  }
   _fitHeight(card: HTMLElement, row: HTMLElement) {
     const big = row.querySelector<HTMLElement>(
       ":scope > .pbody > .pmain > .ptext > .pvalue > .big",
@@ -366,9 +391,21 @@ export class PosterCard extends EntityCardBase {
     if (this._valueFit?.size !== size) {
       big.classList.remove("hfit");
       drop(false);
-      this._valueFit = { size, px: null, base: null, drop: false };
+      this._valueFit = { size, px: null, base: null, drop: false, place: null };
+      this._placeControls(row);
     }
     const fit = this._valueFit;
+    const main = body.querySelector<HTMLElement>(":scope > .pmain");
+    const end = main?.querySelector<HTMLElement>(":scope > .end");
+    const text = main?.querySelector<HTMLElement>(":scope > .ptext");
+    // the controls' place, once the value has its size for the card: kept from then on (wrapped:
+    // the controls start below the value's block)
+    const decide = () => {
+      if (fit.place !== null || !end || !text) return;
+      const under = end.getBoundingClientRect().top > text.getBoundingClientRect().bottom - 1;
+      fit.place = under ? "under" : "beside";
+      this._placeControls(row);
+    };
     const apply = (px: number) => {
       big.style.setProperty("--hfit", `${px}px`);
       big.classList.add("hfit");
@@ -390,7 +427,7 @@ export class PosterCard extends EntityCardBase {
       }
       return Math.max(row.getBoundingClientRect().top - top.getBoundingClientRect().top, past);
     };
-    if (short() <= 0.5) return;
+    if (short() <= 0.5) return decide();
     // the styled size, in a number's size (a word is drawn at 0.7 of it), found once per card size
     if (fit.base === null) {
       big.classList.remove("hfit");
@@ -415,6 +452,7 @@ export class PosterCard extends EntityCardBase {
       px = shrink(base);
     }
     fit.px = px;
+    decide();
   }
   _hideHover() {
     super._hideHover();
