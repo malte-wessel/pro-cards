@@ -83,10 +83,12 @@ describe("the kinds' rules", () => {
   });
 
   it("read the wind and the rain in the unit they are written in", () => {
-    expect(look("wind", 10, "km/h")[0]).toBe("Light breeze");
-    // 10 m/s is 36 km/h
-    expect(look("wind", 10, "m/s")[0]).toBe("Fresh breeze");
-    expect(look("wind", 10, "kn")[0]).toBe("Moderate breeze");
+    expect(look("wind", 10, "km/h")[0]).toBe("Breezy");
+    // 10 m/s is 36 km/h, 10 kn 18.5 km/h
+    expect(look("wind", 10, "m/s")[0]).toBe("Strong wind");
+    expect(look("wind", 10, "kn")[0]).toBe("Breezy");
+    // stormy turns the whole card red
+    expect(look("wind", 60, "km/h")).toEqual(["Stormy", "red"]);
     expect(look("rain", 0, "mm/h")[0]).toBe("Dry");
     expect(look("rain", 0.5, "in/h")[0]).toBe("Heavy rain");
   });

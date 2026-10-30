@@ -20,6 +20,8 @@ export interface KindRule {
   icon?: string;
   labelKey?: StringKey;
   pulse?: boolean;
+  // the whole card in the rule's colour while it matches
+  tintCard?: boolean;
 }
 
 // an entity the kind reads besides the card's own: set on the card (an id, or false for none),

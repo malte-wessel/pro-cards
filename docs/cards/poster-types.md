@@ -208,7 +208,7 @@ Along the bottom runs the day's curve, with the sun where it is now. Hover it fo
 
 **Reads** a `wind_speed` sensor or a weather entity.
 
-A wind speed sensor, or a weather entity with `poster: wind`. The animated icon turns where the wind blows and runs at its speed. The speed is large, with the direction and the gusts under it. The Beaufort bands colour and name it.
+A wind speed sensor, or a weather entity with `poster: wind`. The animated icon turns where the wind blows and runs at its speed. The speed is large, with the direction and the gusts under it. Five bands of its speed colour and name it, from _Calm_ to _Stormy_, and from 50 km/h the whole poster turns red.
 
 The direction and the gusts come from the sensor's device, or from the weather entity.
 
@@ -785,46 +785,38 @@ Wind: pick the tab for your sensor's unit.
 
 ```yaml [km/h]
 rules:
-  - { below: 2, color: blue-grey, label: Calm }
-  - { below: 12, color: light-blue, label: Light breeze }
-  - { below: 29, color: teal, label: Moderate breeze }
-  - { below: 39, color: green, label: Fresh breeze }
-  - { below: 62, color: amber, label: Strong wind }
-  - { below: 89, color: orange, label: Gale }
-  - { above: 89, color: red, label: Storm, pulse: true }
+  - { below: 5, color: blue-grey, label: Calm }
+  - { below: 20, color: teal, label: Breezy }
+  - { below: 35, color: amber, label: Windy }
+  - { below: 50, color: orange, label: Strong wind }
+  - { above: 50, color: red, label: Stormy, tint_card: true }
 ```
 
 ```yaml [m/s]
 rules:
-  - { below: 0.6, color: blue-grey, label: Calm }
-  - { below: 3.3, color: light-blue, label: Light breeze }
-  - { below: 8.1, color: teal, label: Moderate breeze }
-  - { below: 10.8, color: green, label: Fresh breeze }
-  - { below: 17.2, color: amber, label: Strong wind }
-  - { below: 24.7, color: orange, label: Gale }
-  - { above: 24.7, color: red, label: Storm, pulse: true }
+  - { below: 1.4, color: blue-grey, label: Calm }
+  - { below: 5.6, color: teal, label: Breezy }
+  - { below: 9.7, color: amber, label: Windy }
+  - { below: 13.9, color: orange, label: Strong wind }
+  - { above: 13.9, color: red, label: Stormy, tint_card: true }
 ```
 
 ```yaml [mph]
 rules:
-  - { below: 1, color: blue-grey, label: Calm }
-  - { below: 7, color: light-blue, label: Light breeze }
-  - { below: 18, color: teal, label: Moderate breeze }
-  - { below: 24, color: green, label: Fresh breeze }
-  - { below: 39, color: amber, label: Strong wind }
-  - { below: 55, color: orange, label: Gale }
-  - { above: 55, color: red, label: Storm, pulse: true }
+  - { below: 3, color: blue-grey, label: Calm }
+  - { below: 12, color: teal, label: Breezy }
+  - { below: 22, color: amber, label: Windy }
+  - { below: 31, color: orange, label: Strong wind }
+  - { above: 31, color: red, label: Stormy, tint_card: true }
 ```
 
 ```yaml [kn]
 rules:
-  - { below: 1, color: blue-grey, label: Calm }
-  - { below: 6, color: light-blue, label: Light breeze }
-  - { below: 16, color: teal, label: Moderate breeze }
-  - { below: 21, color: green, label: Fresh breeze }
-  - { below: 34, color: amber, label: Strong wind }
-  - { below: 48, color: orange, label: Gale }
-  - { above: 48, color: red, label: Storm, pulse: true }
+  - { below: 3, color: blue-grey, label: Calm }
+  - { below: 11, color: teal, label: Breezy }
+  - { below: 19, color: amber, label: Windy }
+  - { below: 27, color: orange, label: Strong wind }
+  - { above: 27, color: red, label: Stormy, tint_card: true }
 ```
 
 :::

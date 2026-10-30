@@ -356,13 +356,17 @@ test.describe("poster types", () => {
     await mount(page, { type: P, entity: "sensor.wind_speed" });
     const row = card(page).locator(".row.poster");
     await expect(row.locator(".pvalue .big b")).toHaveText("9.4");
-    await expect(row.locator(".pstatus")).toHaveText("Light breeze");
+    await expect(row.locator(".pstatus")).toHaveText("Breezy");
     await expect(row.locator(".ptext > .secondary")).toHaveText("from SW · gusts 18.2 km/h");
     // the animated lead turns where the wind blows
     await expect(row.locator(".plead")).toBeVisible();
     // the predefined rules read km/h whatever the sensor reports
+    await setState(page, "sensor.wind_speed", "10", { unit_of_measurement: "m/s" });
+    await expect(row.locator(".pstatus")).toHaveText("Strong wind");
+    // stormy tints the whole poster
     await setState(page, "sensor.wind_speed", "20", { unit_of_measurement: "m/s" });
-    await expect(row.locator(".pstatus")).toHaveText("Gale");
+    await expect(row.locator(".pstatus")).toHaveText("Stormy");
+    await expect(card(page).locator("ha-card")).toHaveClass(/tinted/);
   });
 
   test("wind drawn as lines: the field fills the poster and keeps running through a new speed", async ({

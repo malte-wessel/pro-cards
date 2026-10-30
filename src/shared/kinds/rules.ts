@@ -35,15 +35,13 @@ export const AQI_RULES: readonly KindRule[] = [
   { above: 301, color: "deep-purple", labelKey: "kind.level.hazardous", pulse: true },
 ];
 
-// the Beaufort bands in km/h
+// five bands of the wind speed in km/h, from calm to a storm (the whole card red)
 export const WIND_RULES: readonly KindRule[] = [
-  { below: 2, color: "blue-grey", labelKey: "kind.wind.calm" },
-  { below: 12, color: "light-blue", labelKey: "kind.wind.light_breeze" },
-  { below: 29, color: "teal", labelKey: "kind.wind.moderate_breeze" },
-  { below: 39, color: "green", labelKey: "kind.wind.fresh_breeze" },
-  { below: 62, color: "amber", labelKey: "kind.wind.strong" },
-  { below: 89, color: "orange", labelKey: "kind.wind.gale" },
-  { above: 89, color: "red", labelKey: "kind.wind.storm", pulse: true },
+  { below: 5, color: "blue-grey", labelKey: "kind.wind.calm" },
+  { below: 20, color: "teal", labelKey: "kind.wind.breezy" },
+  { below: 35, color: "amber", labelKey: "kind.wind.windy" },
+  { below: 50, color: "orange", labelKey: "kind.wind.strong" },
+  { above: 50, color: "red", labelKey: "kind.wind.stormy", tintCard: true },
 ];
 // mm/h
 export const RAIN_RULES: readonly KindRule[] = [
@@ -87,7 +85,7 @@ export const toRule = (r: KindRule): Rule => ({
   color: r.color ?? null,
   icon: r.icon ?? null,
   label: null,
-  tintCard: false,
+  tintCard: !!r.tintCard,
   style: null,
   pulse: !!r.pulse,
   ...(r.labelKey ? { labelKey: r.labelKey } : {}),
