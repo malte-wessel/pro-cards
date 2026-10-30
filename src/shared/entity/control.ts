@@ -364,9 +364,9 @@ const WIDE_ON_LINE: ReadonlySet<ControlKind> = new Set([
 ]);
 // the narrowest a tile may get in a sections grid (min_columns): what sits on its line decides
 // (a switch or hold needs 4 columns, anything wider 6); controls under the line or on the icon
-// need nothing more than the tile itself (3); a poster's line is its value's
-export const tileMinColumns = (ent: EntityItem, row: "tile" | "poster" = "tile") => {
-  const end = placementsOf(ent, row).filter((p) => p.position === "end");
+// need nothing more than the tile itself (3)
+export const tileMinColumns = (ent: EntityItem) => {
+  const end = placementsOf(ent, "tile").filter((p) => p.position === "end");
   if (end.some((p) => WIDE_ON_LINE.has(p.kind))) return 6;
   return end.length ? 4 : 3;
 };

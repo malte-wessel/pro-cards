@@ -729,12 +729,14 @@ add("pb-corner-controls", [
 
 // ----- sizes, widths and themes -----
 
+// a poster's sizes in a section: half of it and three rows (the default and the grid's least),
+// four rows, the whole width; and about the showcases' dashboards' (8 columns: 264 px here, theirs
+// 285)
 const SIZES: GridOptions[] = [
-  { columns: 4, rows: 2 },
-  { columns: 8, rows: 2 },
+  { columns: 6, rows: 3 },
   { columns: 6, rows: 4 },
-  { columns: 6, rows: "auto" },
   { columns: 12, rows: 3 },
+  { columns: 8, rows: 3 },
 ];
 const SIZED: Record<string, CardConfigBase> = {
   entity: p("sensor.outdoor_temperature", { visual: "sparkline" }),
@@ -768,11 +770,24 @@ for (const [name, card] of Object.entries(SIZED))
     `ps-${name}`,
     SIZES.map((grid_options) => ({ ...card, grid_options })),
   );
+
+// beside a taller card: its own height with fill_height: false, the row's with rows: auto
 add("ps-fill-height", [
-  p("sensor.outdoor_temperature", { grid_options: { columns: 4, rows: 4 } }),
-  p("sensor.outdoor_temperature", { fill_height: false, grid_options: { columns: 4, rows: 4 } }),
-  p("light.living_room", { grid_options: { columns: 4, rows: "auto" } }),
+  p("sensor.outdoor_temperature", { fill_height: false, grid_options: { columns: 6, rows: 4 } }),
+  p("light.living_room", { grid_options: { columns: 6, rows: 4 } }),
+  p("light.living_room", { grid_options: { columns: 6, rows: 4 } }),
+  p("sensor.outdoor_temperature", { grid_options: { columns: 6, rows: "auto" } }),
 ]);
+// where its height follows its content (rows: auto, a masonry view): as tall as that
+const LITTLE = [
+  p(null, { name: "Note", icon: "mdi:note-outline", value: "Bins out" }),
+  p("sensor.outdoor_temperature"),
+];
+add(
+  "ps-auto",
+  LITTLE.map((c) => ({ ...c, grid_options: { columns: 6, rows: "auto" } })),
+);
+add("ps-auto-masonry", LITTLE, { layout: null });
 const FEW = [
   p("light.living_room"),
   p("climate.living_room"),
@@ -781,7 +796,8 @@ const FEW = [
   p("weather.home"),
   p("sensor.battery_soc", { power: "sensor.battery_power" }),
 ];
-add("ps-phone", FEW, { width: 300 });
+// a phone 390 px wide: its section 358 px, half of it 175
+add("ps-phone", FEW, { width: 358 });
 add("ps-wide", FEW, { width: 760 });
 add("ps-large-text", FEW, { skin: "large" });
 add("ps-graphite", FEW, { skin: "graphite" });

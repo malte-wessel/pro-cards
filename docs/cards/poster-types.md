@@ -529,7 +529,7 @@ show_entity_picture: false
 
 **Reads** a media player.
 
-A media player's cover art is the icon, and fills the poster behind it, blurred. It also gives the poster its colour. The title is large, with the artist and album under it. The transport sits beside them and the volume below. On a short card the volume is hidden (more-info still has it). A thin bar along the bottom edge follows the track while it plays. A player that is off shows its icon and the state.
+A media player's cover art is the icon, and fills the poster behind it, blurred. It also gives the poster its colour. The title is large, with the artist and album under it. The transport sits beside them and the volume below. Where the card has no room for it, the volume is hidden (more-info still has it). A thin bar along the bottom edge follows the track while it plays. A player that is off shows its icon and the state.
 
 ::: live
 

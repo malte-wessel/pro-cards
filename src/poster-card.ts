@@ -21,7 +21,6 @@ import { cssColor } from "./shared/color.ts";
 import { CARD_BG } from "./shared/constants.ts";
 import { EntityCardBase, overflows } from "./shared/entity/base.ts";
 import type { EntityCardConfig, EntityItem } from "./shared/entity/config.ts";
-import { tileMinColumns } from "./shared/entity/control.ts";
 import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
 import { fillPosterSlots, type PosterSlots } from "./shared/entity/render/fill.ts";
 import { posterParts, secondaryEl } from "./shared/entity/render/lead.ts";
@@ -618,14 +617,10 @@ export class PosterCard extends EntityCardBase {
   }
 
   getGridOptions(): GridOptions {
-    const main = this._config?.entities[0];
-    // three rows, two at least; its content anchored to the bottom
-    return {
-      columns: 6,
-      rows: 3,
-      min_columns: main ? tileMinColumns(main, "poster") : 3,
-      min_rows: 2,
-    };
+    // half a section and three rows, and that at least in a sections grid (a smaller entity is a
+    // tile's); a card around it (a swipe card, a stack) may still give it less, and the poster
+    // fits its content into that (_fitValue). Its content anchored to the bottom
+    return { columns: 6, rows: 3, min_columns: 6, min_rows: 3 };
   }
   getCardSize() {
     return 3;

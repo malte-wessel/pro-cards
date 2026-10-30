@@ -262,7 +262,7 @@ The first badge is the status badge. It shows the poster type's status, else the
 
 ## How the corner behaves
 
-The badges float over the poster, so adding one never moves the texts. Many badges reach down over the picture, but never over the controls: on a short card, the badges that do not fit are cut off.
+The badges float over the poster, so adding one never moves the texts. Many badges reach down over the picture, but never over the controls: the badges that do not fit are cut off.
 
 ::: live
 
@@ -284,7 +284,7 @@ The badges float over the poster, so adding one never moves the texts. Many badg
     - sensor.living_room_humidity
     - sensor.living_room_co2
     - sensor.living_room_pm25
-  grid_options: { columns: 6, rows: 2 }
+  grid_options: { columns: 6 }
 ```
 
 :::

@@ -8,26 +8,18 @@ How a [poster](/cards/poster-card) fits its size, then every [poster type](/card
 
 ## How a poster fits its size
 
-A poster takes six columns and three rows by default, and two rows at least. `grid_options` sets both. How narrow it can get in the dashboard editor depends on its control:
+A poster takes half a section (six columns) and three rows, by default and at least: the icon and its badges, the name, the large value and the picture need that much room. An entity in less room is what a tile is for, such as the [entity card](/cards/entity-card)'s. `grid_options` makes a poster larger, and the dashboard editor does not let it get smaller. A card around it, such as a swipe card or a stack, may still give it less: the poster then fits its content as well as it can.
 
-| Control                                                                           | Columns at least |
-| --------------------------------------------------------------------------------- | ---------------- |
-| none, or under the value                                                          | 3                |
-| a switch or a hold beside the value                                               | 4                |
-| anything wider beside the value: a stepper, a slider, segments, a select, buttons | 6                |
+The content sits at the bottom of the card. More rows give the picture and the backdrop more room, and the icon and the badges stay at the top. Where the content needs more room than the card has, the value shrinks and a slider may be hidden (more-info still has it).
 
-The icon's own actions, such as a lock's hold, take no room.
-
-The content sits at the bottom of the card. More rows give the picture and the backdrop more room, and the icon and the badges stay at the top. On a short card the value shrinks and a slider may be hidden (more-info still has it).
-
-`rows: auto` makes the poster as tall as its content. Beside a taller card, the poster stretches to the row's height. `fill_height: false` keeps its own height, see [Filling the height](/guide/sizing#filling-the-height). The player at two rows, its title smaller and its volume hidden, and with `rows: auto`:
+`rows: auto` makes the poster as tall as its content; so does a masonry view or a vertical stack. Beside a taller card, the poster stretches to the row's height. `fill_height: false` keeps its own height, see [Filling the height](/guide/sizing#filling-the-height). The player at three rows, its volume hidden, and with `rows: auto`:
 
 ::: live
 
 ```yaml
 - type: custom:poster-card-pro
   entity: media_player.living_room_speaker
-  grid_options: { columns: 6, rows: 2 }
+  grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: media_player.living_room_speaker
   grid_options: { columns: 6, rows: auto }

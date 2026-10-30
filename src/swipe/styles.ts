@@ -6,9 +6,12 @@ export const STYLE = `
   ${CARDS_STYLE}
   /* the strip: one row of cards that scrolls sideways and snaps to each card. Off-screen cards
      stay laid out (never display: none), so a card that measures its width always has one. The
-     strip is the cards' offsetParent: their offsetLeft is their place along it */
+     strip is the cards' offsetParent: their offsetLeft is their place along it. Its row is the
+     strip's height where the swipe card is given less than its cards' (a card fits itself into
+     it), else their own */
   .strip .body {
     position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: var(--sw-slide);
+    grid-template-rows: minmax(0, 1fr);
     overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory; scrollbar-width: none;
   }

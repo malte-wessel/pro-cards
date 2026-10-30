@@ -6,8 +6,9 @@ import { expect, FROZEN, mount, sharedTest } from "../e2e/util.ts";
 
 export const THEMES = (process.env.VISUAL_THEMES || "light,dark").split(",");
 type Config = Parameters<typeof mount>[1];
-// a case with more than its cards: states of its own, its width, a theme, the time it is drawn at
-export interface Shot extends Pick<MountOptions, "states" | "width" | "skin"> {
+// a case with more than its cards: states of its own, its width, a theme, the layout (null: a
+// masonry view), the time it is drawn at
+export interface Shot extends Pick<MountOptions, "states" | "width" | "skin" | "layout"> {
   cards: Config;
   time?: Date;
 }
@@ -31,6 +32,7 @@ export const shoot = (
           skin: shot.skin,
           width: shot.width,
           states: shot.states,
+          layout: shot.layout,
           time: shot.time,
         });
         // fonts + icons settled: every ha-icon has a path (in its ha-svg-icon), then one more frame

@@ -27,7 +27,6 @@ import {
   rangeOf,
   serviceFor,
   sliderApplies,
-  tileMinColumns,
 } from "../../../../src/shared/entity/control.ts";
 
 const ctx: NormalizeCtx = {
@@ -867,16 +866,5 @@ describe("controls on a poster", () => {
   it("draws no control for a sensor or without control", () => {
     expect(placementsOf(ent({ entity: "sensor.a" }), "poster")).toEqual([]);
     expect(placementsOf(ent({ control: undefined }), "poster")).toEqual([]);
-  });
-  it("is as narrow as what sits beside its value allows", () => {
-    expect(tileMinColumns(ent({ entity: "sensor.a" }), "poster")).toBe(3);
-    // a slider under the value needs nothing more
-    expect(tileMinColumns(ent({ entity: "number.a" }), "poster")).toBe(3);
-    expect(tileMinColumns(ent({ entity: "switch.a" }), "poster")).toBe(4);
-    expect(tileMinColumns(ent({ entity: "lock.a" }), "poster")).toBe(4);
-    expect(tileMinColumns(ent({ entity: "climate.a" }), "poster")).toBe(6);
-    expect(tileMinColumns(ent({ entity: "cover.a" }), "poster")).toBe(6);
-    expect(tileMinColumns(ent({ entity: "input_select.a" }), "poster")).toBe(6);
-    expect(tileMinColumns(ent({ entity: "climate.a" }))).toBe(6);
   });
 });

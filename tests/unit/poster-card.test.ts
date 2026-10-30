@@ -517,12 +517,12 @@ describe("poster-card element", () => {
     return el;
   };
 
-  it("is three rows high, two at least, and wider where its line holds controls", () => {
+  it("is half a section wide and three rows high, and that at least", () => {
     const el = mount({ entity: "sensor.living_room_temperature" });
-    expect(el.getGridOptions()).toEqual({ columns: 6, rows: 3, min_columns: 3, min_rows: 2 });
+    expect(el.getGridOptions()).toEqual({ columns: 6, rows: 3, min_columns: 6, min_rows: 3 });
     expect(el.getCardSize()).toBe(3);
-    el.setConfig({ entity: "light.living_room" });
-    expect(el.getGridOptions().min_columns).toBe(4);
+    el.setConfig({ entity: "climate.living_room" });
+    expect(el.getGridOptions().min_columns).toBe(6);
   });
 
   it("resolves its kind again once hass tells the device class and the registry", () => {

@@ -163,7 +163,7 @@ A control has two places on a poster, set with `control_position`:
 
 :::
 
-On a narrow poster, a control at the `end` moves under the value rather than squeezing it. How a short poster makes room is on [Poster sizes](/cards/poster-sizes#how-a-poster-fits-its-size).
+On a narrow poster, a control at the `end` moves under the value rather than squeezing it. How a poster makes room for its content is on [Poster sizes](/cards/poster-sizes#how-a-poster-fits-its-size).
 
 ## Your own buttons
 
