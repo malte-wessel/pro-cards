@@ -51,7 +51,7 @@ The fallback: the entity's icon, name and value. The status badge shows the matc
 
 **Reads** a sensor of device class `battery`.
 
-A battery poster draws a cell that fills to the charge. It turns orange and says _Low_ below 20 %, red and _Critical_ below 10 %. The labels follow the user's language; [Predefined rules](#predefined-rules) has the set to copy and change.
+A battery poster draws a strip of ten segments under the charge, filled to it. It turns orange and says _Low_ below 20 %, red and _Critical_ below 10 %. The labels follow the user's language; [Predefined rules](#predefined-rules) has the set to copy and change.
 
 A template sensor often has no device class. `poster: battery` makes it a battery, like the phone here:
 
@@ -72,7 +72,7 @@ A template sensor often has no device class. `poster: battery` makes it a batter
 
 :::
 
-With a power sensor, it draws a home battery: the power flows into the cell or out of it. The status says Charging or Discharging, with the power under the charge.
+With a power sensor, it is a home battery. The status says Charging or Discharging, with the power under the charge, and the next segment to fill pulses while power flows.
 
 `power` is positive while the battery charges and negative while it discharges. The [power flow card](/cards/power-flow-card) reads a battery the other way round. Or give `charge` and `discharge`, a sensor each.
 

@@ -80,23 +80,21 @@ export const STYLE_KINDS = `
   @keyframes pline { from { left: 0%; } to { left: 100%; } }
   .pline.grid { left: 0; right: 0; top: 46%; }
 
-  /* battery: the cell filled to its charge at the right, the texts stopping short of it; a home
-     battery's power flowing into it or out, on a narrow poster only by its colour and status */
-  .pcell { position: absolute; inset: 0; }
-  .pcell .cell { position: absolute; right: 20px; top: 64px; width: 36px; height: 52%; max-height: 120px; border: 2px solid color-mix(in srgb, var(--fe-color) 55%, transparent); border-radius: 6px; overflow: hidden; }
-  .pcell .cell::before { content: ""; position: absolute; left: 50%; top: -6px; width: 14px; height: 4px; margin-left: -7px; border-radius: 2px 2px 0 0; background: color-mix(in srgb, var(--fe-color) 55%, transparent); }
-  .pcell .cell > i { position: absolute; left: 3px; right: 3px; bottom: 3px; height: calc(var(--fill, 0%) - 6px); min-height: 2px; border-radius: 3px; background: color-mix(in srgb, var(--fe-color) 60%, transparent); transition: height .6s; }
-  .pcell .pline { right: 58px; width: 30%; top: calc(64px + 26%); }
-  ha-card:has(> .body > .pback .pcell) .row.poster > .pbody > :is(.pname, .pmain) { padding-right: 48px; }
-  @container pcard (max-width: 159px) {
-    .pcell .cell { right: 16px; width: 28px; }
-    .pcell .pline { display: none; }
-    ha-card:has(> .body > .pback .pcell) .row.poster > .pbody > :is(.pname, .pmain) { padding-right: 36px; }
-  }
+  /* battery: a strip of ten segments under the charge, filled to it, with a battery's tip; while
+     power flows (a home battery) the first segment not full pulses */
+  .pbody > .pstrip { display: flex; align-items: center; gap: 3px; margin-top: 8px; }
+  /* the strip's height comes from the room between the icon and the name, not from the value */
+  .row.poster:has(> .pbody > .pstrip) { gap: 6px; }
+  .pstrip > i { flex: 1 1 0; min-width: 0; height: 10px; border-radius: 3px; position: relative; overflow: hidden; background: color-mix(in srgb, var(--fe-color) 22%, transparent); }
+  .pstrip > i.part { background: color-mix(in srgb, var(--fe-color) 34%, transparent); }
+  .pstrip > i::after { content: ""; position: absolute; inset: 0 auto 0 0; width: calc(var(--f, 0) * 100%); background: var(--fe-color); }
+  .pstrip > .tip { flex: none; width: 3px; height: 5px; border-radius: 0 2px 2px 0; background: color-mix(in srgb, var(--fe-color) 22%, transparent); }
+  .pstrip.flow > i.part { animation: pstrip 1.6s ease-in-out infinite; }
+  @keyframes pstrip { 50% { opacity: .55; } }
 
   @media (prefers-reduced-motion: reduce) {
     .pline > i,
     .lead.pfan.spin :is(ha-icon, ha-state-icon), .palarm.on, .ppath.working .reveal,
-    .lead.probot.working :is(ha-icon, ha-state-icon), .pprog > i { animation: none; }
+    .lead.probot.working :is(ha-icon, ha-state-icon), .pprog > i, .pstrip.flow > i.part { animation: none; }
   }
 `;

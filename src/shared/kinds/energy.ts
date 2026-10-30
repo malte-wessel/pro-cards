@@ -156,7 +156,7 @@ export const SOLAR: Kind = {
   extra: (c) => [c.ctx.fetched, todayOf(c).length],
 };
 
-// ----- home battery: the battery kind with its power (+ charging) -----
+// ----- battery: its charge as a strip; with its power a home battery (+ charging) -----
 
 const batteryW = (c: KindCtx) => {
   const pw = c.input("power"),
@@ -167,12 +167,24 @@ const batteryW = (c: KindCtx) => {
   return null;
 };
 const isHome = (c: KindCtx) => !!(c.input("power") || c.input("charge") || c.input("discharge"));
-// the cell filled to the charge; with a power sensor (a home battery) the power flows into it or out
-const cellEl = (home: boolean) => {
-  const el = div("pcell");
-  if (home) el.append(lineEl("in", 3));
-  el.append(div("cell"));
-  el.querySelector(".cell")?.appendChild(document.createElement("i"));
+// the charge over ten segments, each 0 to 1: 42 % is four full ones and a fifth a fifth full
+export const segments = (pct: number | null, n = 10): number[] => {
+  const f = (Math.max(0, Math.min(100, pct ?? 0)) / 100) * n;
+  return Array.from({ length: n }, (_, i) => Math.max(0, Math.min(1, f - i)));
+};
+// the strip of segments with a battery's tip; the first one not full pulses while power flows
+const stripEl = (pct: number | null, flowing: boolean) => {
+  const el = div("pstrip");
+  el.classList.toggle("flow", flowing);
+  const fills = segments(pct);
+  const part = fills.findIndex((f) => f < 1);
+  fills.forEach((f, i) => {
+    const seg = document.createElement("i");
+    seg.style.setProperty("--f", String(Math.round(f * 1000) / 1000));
+    if (i === part) seg.className = "part";
+    el.appendChild(seg);
+  });
+  el.appendChild(document.createElement("b")).className = "tip";
   return el;
 };
 
@@ -199,17 +211,13 @@ export const BATTERY: Kind = {
     return w === null || Math.abs(w) < IDLE_W ? null : w > 0 ? COLORS.battIn : COLORS.battOut;
   },
   slots: (c) => {
-    if (!isHome(c)) return {};
-    const v = power(c, batteryW(c));
-    return { secondary: v ? secondaryEl([{ text: v.text }]) : null };
-  },
-  backdrop: {
-    key: (c) => (isHome(c) ? "cell home" : "cell"),
-    build: (c) => cellEl(isHome(c)),
-    update: (el, c) => {
-      el.style.setProperty("--fill", `${Math.max(0, Math.min(100, c.m.model.num ?? 0))}%`);
-      flow(el.querySelector(".pline"), batteryW(c));
-    },
+    if (!isHome(c)) return { picture: stripEl(c.m.model.num, false) };
+    const w = batteryW(c);
+    const v = power(c, w);
+    return {
+      secondary: v ? secondaryEl([{ text: v.text }]) : null,
+      picture: stripEl(c.m.model.num, w !== null && Math.abs(w) >= IDLE_W),
+    };
   },
 };
 

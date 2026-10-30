@@ -206,7 +206,7 @@ test.describe("poster types", () => {
     await expect(field).toHaveAttribute("data-mark", "1");
   });
 
-  test("a battery fills its cell to the charge; power flows into it only with a power sensor", async ({
+  test("a battery fills its strip to the charge; the next segment pulses only while power flows", async ({
     page,
   }) => {
     await mount(page, [
@@ -218,19 +218,33 @@ test.describe("poster types", () => {
         charge: "sensor.balcony_battery_charge_power",
         discharge: "sensor.balcony_battery_discharge_power",
       },
+      { type: P, entity: "sensor.robot_battery", visual: "none" },
     ]);
-    const robot = card(page, 0).locator(".pback .pcell");
-    await expect(robot.locator(".cell")).toBeVisible();
-    await expect(robot).toHaveAttribute("style", /--fill: 72%/);
-    await expect(robot.locator(".pline")).toHaveCount(0);
+    const fills = (i: number) =>
+      card(page, i)
+        .locator(".pbody > .pstrip > i")
+        .evaluateAll((els) =>
+          els.map((e) => [(e as HTMLElement).style.getPropertyValue("--f"), e.className]),
+        );
+    const strip = card(page, 0).locator(".pbody > .pstrip");
+    await expect(strip.locator("> i")).toHaveCount(10);
+    await expect(strip.locator("> .tip")).toBeAttached();
+    expect((await fills(0)).slice(6, 9)).toEqual([
+      ["1", ""],
+      ["0.2", "part"],
+      ["0", ""],
+    ]);
+    await expect(strip).not.toHaveClass(/flow/);
     await expect(card(page, 1).locator(".pstatus")).toHaveText("Low");
-    await expect(card(page, 1).locator(".pback .pcell")).toHaveAttribute("style", /--fill: 15%/);
-    await expect(card(page, 2).locator(".pback .pcell .pline")).toBeAttached();
-    // the cell fills to a new charge in place
-    await mark(robot);
+    expect((await fills(1)).slice(0, 2)).toEqual([
+      ["1", ""],
+      ["0.5", "part"],
+    ]);
+    await expect(card(page, 2).locator(".pbody > .pstrip")).toHaveClass(/flow/);
+    await expect(card(page, 3).locator(".pstrip")).toHaveCount(0);
+    // a whole ten: the next segment is the one to fill
     await setState(page, "sensor.robot_battery", "40");
-    await expect(robot).toHaveAttribute("style", /--fill: 40%/);
-    await expect(robot).toHaveAttribute("data-mark", "1");
+    await expect.poll(async () => (await fills(0))[4]).toEqual(["0", "part"]);
   });
 
   test("weather: the condition as the status, the temperature as the value", async ({ page }) => {

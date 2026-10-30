@@ -110,7 +110,7 @@ CO₂ with its bands: 6 × 3, 12 × 3 and 9 × 4.
 
 ## Home battery
 
-The cell and its power: 6 × 3, 12 × 3 and 9 × 4.
+The strip and its power: 6 × 3, 12 × 3 and 9 × 4.
 
 ::: live
 
