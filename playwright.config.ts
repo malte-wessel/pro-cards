@@ -21,7 +21,14 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : [["list"]],
   timeout: 30_000,
-  expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.002, animations: "disabled" } },
+  // a fixed number of pixels, whatever the screenshot's size (a share of a whole dashboard let a
+  // missing picture pass): enough for anti-aliasing, far too few for a moved or missing part
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixels: Number(process.env.VISUAL_MAX_DIFF ?? 100),
+      animations: "disabled",
+    },
+  },
   // one folder of baselines, no platform suffix: visual tests always run in the Playwright Docker image
   snapshotPathTemplate: "{testDir}/visual/__snapshots__/{arg}{ext}",
   use: {

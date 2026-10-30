@@ -16,6 +16,7 @@ exec docker run --rm -t \
   -v pro-cards-node-modules:/work/node_modules \
   ${CI:+-e CI=1} \
   ${VISUAL_THEMES:+-e VISUAL_THEMES="$VISUAL_THEMES"} \
+  ${VISUAL_MAX_DIFF:+-e VISUAL_MAX_DIFF="$VISUAL_MAX_DIFF"} \
   "$IMAGE" sh -c '
     lock=$(sha1sum package-lock.json | cut -d" " -f1)
     if [ "$(cat node_modules/.lock-sha 2>/dev/null)" != "$lock" ]; then
