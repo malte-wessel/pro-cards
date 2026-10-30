@@ -1,21 +1,21 @@
 # Custom posters
 
-A poster is a handful of places: an icon at the top, badges in the corner, and at the bottom a name, a large value and a line under it, with a picture, a backdrop and a control around them. A [poster type](/cards/poster-card#poster-types) fills them for an entity; every place also has a key of its own, so a poster can show anything: a value you compute, several entities at once, or nothing but your own buttons. This page builds posters from those keys.
+A poster is a handful of places: an icon at the top, badges in the corner, and at the bottom a name, a large value and a line under it, with a picture, a backdrop and a control around them. A [poster type](/cards/poster-types) fills them for an entity; every place also has a key of its own, so a poster can show anything: a value you compute, several entities at once, or nothing but your own buttons. This page builds posters from those keys; the [overview](/cards/poster-card) shows how a poster is laid out and how it finds its type.
 
 ## The places
 
-| Place           | Key              | Takes                                                                  |
-| --------------- | ---------------- | ---------------------------------------------------------------------- |
-| Lead            | `icon`           | an `mdi:` icon, a template                                             |
-| Status          | `status`         | a text, a template, badge keys with `value` for its text, or `false`   |
-| Badges          | `badges`         | entities or [badges](#badges) of your own, in order                    |
-| Name            | `name`           | a text, a template                                                     |
-| Value           | `value`          | a text, a template; with an entity its state or `attribute`            |
-| Under the value | `secondary`      | a text, a template                                                     |
-| Colour          | `color`, `rules` | a colour token, hex or a template; [rules](#colour-and-rules) by value |
-| Picture         | `visual`         | `sparkline`, `columns`, `bar` or `gauge` of the entity's value         |
-| Backdrop        | `image`          | a URL, a template or an entity's picture                               |
-| Control         | `control`        | any [control](/cards/poster-controls), or your own buttons             |
+| Place           | Key              | Takes                                                                  | Default                                                 |
+| --------------- | ---------------- | ---------------------------------------------------------------------- | ------------------------------------------------------- |
+| Lead            | `icon`           | an `mdi:` icon, a template                                             | the entity's icon or picture, the type's drawing        |
+| Status          | `status`         | a text, a template, badge keys with `value` for its text, or `false`   | the type's status, else the matching rule's label       |
+| Badges          | `badges`         | entities or [badges](/cards/poster-badges) of your own, in order       | none                                                    |
+| Name            | `name`           | a text, a template                                                     | the friendly name                                       |
+| Value           | `value`          | a text, a template; `attribute` shows an attribute                     | the entity's state                                      |
+| Under the value | `secondary`      | a text, a template                                                     | the type's line                                         |
+| Colour          | `color`, `rules` | a colour token, hex or a template; [rules](#colour-and-rules) by value | the matching rule's, else Home Assistant's state colour |
+| Picture         | `visual`         | a [picture](#a-picture) of the entity's value                          | the type's drawing                                      |
+| Backdrop        | `image`          | a URL, a template or an entity's picture                               | the type's backdrop                                     |
+| Control         | `control`        | any [control](/cards/poster-controls), or your own buttons             | the type's                                              |
 
 A poster needs no entity: the keys alone fill it. Without one, a tap does nothing unless `tap_action` says what.
 
@@ -102,7 +102,9 @@ With an `entity`, the poster takes its name, icon, state and colour from it, and
 
 ## Colour and rules
 
-`rules` pick the colour, the icon and the status by the value or the entity's state; the first that matches wins. A rule's `label` is the status badge's text, `tint_card: true` washes the whole poster in its colour, `pulse: true` makes the badge pulse and `style` changes the badge's look. Rules you write replace a poster type's own.
+`rules` pick the colour, the icon and the status by the value or the entity's state, as on every Pro card ([rules](/cards/entity-options#rules)). They match in the order written, and the first that matches wins: `below` and `above` compare the value as a number, `state` matches the value **or** the entity's own state, so `{ state: playing }` works on a media player shown by its title. A rule's `label` is the status badge's text, `tint_card: true` washes the whole poster in its colour, `pulse: true` makes the badge pulse and `style` changes the badge's look.
+
+A poster type's own rules (the [predefined sets](/cards/poster-types#predefined-rules)) apply until the card has `rules`, which replace them as a whole; `rules: []` drops them.
 
 ::: live
 
@@ -130,7 +132,7 @@ With an `entity`, the poster takes its name, icon, state and colour from it, and
 
 ### Tinted posters
 
-`tint_card: true` on a rule washes the whole poster in that rule's colour while the rule matches: a soft tint of the card, the picture and the backdrop drawn over it, in light and dark themes alike. It is a rule's, so it follows the value: the poster goes back to the card's own background when another rule (or none) matches. `color` alone colours the icon, the value's picture and the badge, never the card, and a kind's own rules never tint; a rule needs a `state`, `below` or `above` to match at all.
+`tint_card: true` on a rule washes the whole poster in that rule's colour while the rule matches: a soft tint of the card, the picture and the backdrop drawn over it, in light and dark themes alike. It is a rule's, so it follows the value: the poster goes back to the card's own background when another rule (or none) matches. `color` alone colours the icon, the value's picture and the badge, never the card, and a poster type's own rules never tint; a rule needs a `state`, `below` or `above` to match at all.
 
 ::: live
 
@@ -235,11 +237,11 @@ A template value is matched as its text: the last poster's rules read `Open` and
 
 :::
 
-A [trend](/cards/poster-card#trend) draws several entities' lines on one scale. `trend`, `count` and `dot` are badge pictures: they go on [badges](#badges), not on the poster.
+A [trend](/cards/poster-types#trend) draws several entities' lines on one scale. `trend`, `count` and `dot` are badge pictures: they go on [badges](/cards/poster-badges), not on the poster.
 
 ## A backdrop
 
-`image` puts a picture behind the whole poster, under a scrim that keeps the texts readable: a URL (`/local/…` for a file in Home Assistant's `www` folder), a template that renders one, or an entity whose picture it shows (a camera's snapshot, a person's photo, a media player's art). `image: false` drops a poster type's own backdrop.
+`image` puts a picture behind the whole poster, under a scrim that keeps the texts readable: a URL (`/local/…` for a file in Home Assistant's `www` folder), a template that renders one, or an entity whose picture it shows (a camera's snapshot, a person's photo, a media player's art). `image: false` drops a poster type's own backdrop. A person poster has their photo behind it already; `image: person.alex` puts it behind any other poster.
 
 ::: live
 
@@ -262,41 +264,22 @@ A [trend](/cards/poster-card#trend) draws several entities' lines on one scale. 
 
 :::
 
-## Badges
-
-The corner holds the status badge and the `badges`, in the order written (`status` in the list places the status badge). A badge is an entity id, or an object with the keys of [header badges](/cards/heading-card#badge-options): its own `value` or `attribute`, `icon`, `name`, `visual` (`ring`, `bar`, `sparkline`, `trend`, `count`, `dot`), `style`, `size`, `format`, `rules`, actions and `visibility`. A badge without `entity` on a poster with one reads the poster's entity; on a poster without one it needs a `value`.
+A camera's snapshot behind a lock: who is at the door, held to open it.
 
 ::: live
 
 ```yaml
-- type: custom:poster-card-pro
-  name: Downstairs
-  icon: mdi:home-floor-g
-  value: "{{ states('sensor.living_room_temperature') }}"
-  unit: °C
-  status: { value: "{{ 'Lights on' if is_state('light.living_room', 'on') else 'Dark' }}", style: soft }
-  badges:
-    - sensor.living_room_humidity
-    - { entity: sensor.living_room_co2, icon: mdi:molecule-co2 }
-    - entity: binary_sensor.window_kitchen
-      rules:
-        - { state: "on", color: red, icon: mdi:window-open, label: Open }
-        - { state: "off", color: green, icon: mdi:window-closed, label: Closed }
-  grid_options: { columns: 6 }
-- type: custom:poster-card-pro
-  entity: sensor.ev_battery
-  name: Car
-  icon: mdi:car-electric
-  poster: entity
-  status: false
-  badges:
-    - { visual: ring, show_icon: false }
-    - { entity: sensor.ev_range, icon: mdi:map-marker-distance }
-    - { value: "{{ states('number.ev_charge_limit') }} %", icon: mdi:battery-lock, name: Limit }
-  grid_options: { columns: 6 }
+type: custom:poster-card-pro
+entity: lock.front_door
+image: camera.front_door
 ```
 
 :::
+
+## Badges
+
+The corner holds the status badge and the `badges`, in the order written: entity ids, or badges of your own with a `value` or an `attribute`, an icon, rules and a picture of their own.
+[Badges](/cards/poster-badges) has every key, with examples.
 
 ## Controls and buttons
 
@@ -400,4 +383,4 @@ color: "{{ 'green' if states('sensor.electricity_price') | float(0) < 0.25 else 
 
 :::
 
-The rest of the poster card's options, every poster type and its keys are in the [reference](/cards/poster-card#reference).
+The poster card's options are in the [reference](/cards/poster-card#reference), every poster type and its keys on [Poster types](/cards/poster-types).

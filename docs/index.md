@@ -190,7 +190,7 @@ feature_rows:
           - { above: 3000, color: red, label: Peak }
   - title: "Weather you can see moving."
     text: "Wind and rain are animated fields that follow your sensors: faster in a storm, still on a calm day, always from the right direction."
-    link: /cards/poster-card#wind
+    link: /cards/poster-types#wind
     label: Wind and rain posters
     columns: 2
     cards:

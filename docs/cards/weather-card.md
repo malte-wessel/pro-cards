@@ -15,7 +15,7 @@ entity: weather.home
 
 :::
 
-For the weather as a poster, with the temperature large and the next hours as a curve, see the [poster card](/cards/poster-card#weather).
+For the weather as a poster, with the temperature large and the next hours as a curve, see the [weather poster](/cards/poster-types#weather).
 
 ## Hero
 

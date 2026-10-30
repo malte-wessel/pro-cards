@@ -72,7 +72,7 @@ show_dawn_dusk: false
 
 :::
 
-For the sun as a poster, with the next sunrise or sunset large over the day's curve, see the [poster card](/cards/poster-card#sun) (`poster: sun`).
+For the sun as a poster, with the next sunrise or sunset large over the day's curve, see the [sun poster](/cards/poster-types#sun) (`poster: sun`).
 
 ## Reference
 

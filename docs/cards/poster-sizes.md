@@ -4,7 +4,28 @@ outline: [2, 2]
 
 # Poster sizes
 
-Every [poster type](/cards/poster-card#poster-types) at three sizes in one section of the sections grid: the default, six columns and three rows; twice as wide (twelve columns, the full section); and one step wider and a row higher (nine columns, four rows). The value fits the room each size gives, and every poster runs against the simulated home.
+How a [poster](/cards/poster-card) fits the room it is given, then every [poster type](/cards/poster-types) at three sizes in one section of the sections grid: the default, six columns and three rows; twice as wide (twelve columns, the full section); and one step wider and a row higher (nine columns, four rows). Every poster runs against the simulated home.
+
+## How a poster fits its size
+
+A poster takes six columns and three rows of the sections grid by default, two rows at least; `grid_options` sets both. How narrow it may get in the dashboard editor follows its controls on the value's line: 3 columns without one (or with its controls under the value or on the icon), 4 with a switch or a hold beside the value, 6 for anything wider (a stepper, a slider, segments, a select, buttons).
+
+The content sits at the bottom of whatever height the card has: more rows give the picture and the backdrop more room, and the icon and the badges stay at the top. On a short card the value is drawn smaller, down to 60 % of its size, so the top keeps its room; where even that is not enough, a slider below the value gives way (a media player's volume: more-info has it). Whether the controls sit beside the value or under it is found once per card size, so a value that gets wider (Cleaning, Returning) is drawn smaller rather than pushing them down.
+
+`rows: auto` makes the poster as tall as its content. Beside a taller card the poster stretches to the row's height; `fill_height: false` keeps it at its own, see [Filling the height](/guide/sizing#filling-the-height). The player at two rows (its title smaller, its volume gone) and with `rows: auto` (as tall as all of it):
+
+::: live
+
+```yaml
+- type: custom:poster-card-pro
+  entity: media_player.living_room_tv
+  grid_options: { columns: 6, rows: 2 }
+- type: custom:poster-card-pro
+  entity: media_player.living_room_tv
+  grid_options: { columns: 6, rows: auto }
+```
+
+:::
 
 ## Entity
 

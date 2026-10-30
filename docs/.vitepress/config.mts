@@ -58,10 +58,12 @@ const cardGroups = [
   {
     text: "Posters",
     items: [
-      { text: "Poster Card Pro", link: "/cards/poster-card" },
-      { text: "Poster controls", link: "/cards/poster-controls" },
+      { text: "Overview", link: "/cards/poster-card" },
+      { text: "Poster types", link: "/cards/poster-types" },
       { text: "Custom posters", link: "/cards/poster-custom" },
-      { text: "Poster sizes", link: "/cards/poster-sizes" },
+      { text: "Controls", link: "/cards/poster-controls" },
+      { text: "Badges", link: "/cards/poster-badges" },
+      { text: "Sizes", link: "/cards/poster-sizes" },
     ],
   },
   {

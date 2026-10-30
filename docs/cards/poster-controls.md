@@ -1,6 +1,8 @@
 # Poster controls
 
-A poster can carry one control: a switch, a slider, a stepper, speeds, buttons, a select or a button to hold. The domain poster types bring theirs, so a light poster is a switch and a dimmer without a line of config; any other poster gets one with `control`, the same key and options as on the [entity cards](/cards/controls). A tap on the poster opens more-info; the control and the [badges](/cards/poster-card#badges) take their own taps.
+A poster can carry one control: a switch, a slider, a stepper, speeds, buttons, a select or a button to hold. Every [poster type](/cards/poster-types) takes `control` and its options, the same key as on the [entity cards](/cards/controls): a control needs a domain that supports it, and your own `buttons` call any action. The domain poster types (light, cover, media player …) bring theirs, so a light poster is a switch and a dimmer without a line of config; `control: false` removes them, a name picks another.
+
+A tap on the poster opens more-info; the control and the [badges](/cards/poster-badges) take their own taps. This page shows what each poster type brings, every control, where it sits, your own buttons and holds; the [overview](/cards/poster-card) explains the poster around them.
 
 ## What the poster types bring
 

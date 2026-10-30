@@ -79,7 +79,7 @@ rules:
 
 :::
 
-For the rain as a poster, with the rate large and the drops behind it, see the [poster card](/cards/poster-card#rain) (`variant: drops`).
+For the rain as a poster, with the rate large and the drops behind it, see the [rain poster](/cards/poster-types#rain) (`variant: drops`).
 
 ## Wind and direction
 
