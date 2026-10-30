@@ -65,7 +65,7 @@ export interface PcApi {
   snapshot(): HomeAssistant;
   // the frontend language the mounted cards see (hass.locale.language), default en-GB
   setLanguage(language: string): void;
-  // the logged-in user the mounted cards see (hass.user), by id; null logs out. Default demo-alex
+  // the logged-in user the mounted cards see (hass.user), by id; null logs out. Default demo-malte
   setUser(id: string | null): void;
   root: HTMLElement;
   card(i?: number): CardElement;

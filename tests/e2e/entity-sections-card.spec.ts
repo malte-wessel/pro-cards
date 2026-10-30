@@ -16,7 +16,7 @@ test.describe("sections", () => {
             { entity: "sensor.living_room_humidity", name: "Humidity" },
           ],
         },
-        { layout: "row", entities: ["light.living_room", "media_player.living_room_tv"] },
+        { layout: "row", entities: ["light.living_room", "media_player.living_room_speaker"] },
         { layout: "column", divider: true, entities: ["cover.living_room_blinds"] },
         {
           layout: "hero",

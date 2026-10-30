@@ -93,7 +93,7 @@ badges:
   - { entity: sensor.kitchen_temperature, style: outline }
   - { entity: light.living_room, style: soft }
   - { entity: lock.front_door, style: filled }
-  - { entity: media_player.living_room_tv, style: plain }
+  - { entity: media_player.living_room_speaker, style: plain }
 ```
 
 :::
@@ -138,7 +138,7 @@ icon: mdi:sofa
 badges:
   - { entity: sensor.ev_battery, visual: bar, icon: mdi:car-electric }
   - { entity: group.downstairs_lights, visual: count, name: Lights, show_name: true }
-  - { entity: person.alex, show_entity_picture: true, show_name: true, show_value: false }
+  - { entity: person.malte, show_entity_picture: true, show_name: true, show_value: false }
   - { entity: binary_sensor.window_kitchen, visual: dot, name: Kitchen window, show_name: true, show_value: false }
 ```
 

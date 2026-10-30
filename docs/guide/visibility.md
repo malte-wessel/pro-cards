@@ -103,7 +103,7 @@ A hidden part takes no room, and the card is laid out without it:
 - a hidden row never tints the card;
 - a header without title, icon or a shown header entity goes, and a card with nothing left shows nothing. In a sections view it keeps its place in the grid (Home Assistant sizes the cell); the card's own `visibility` removes it from the grid.
 
-Sections follow the window here: the second only on a wide screen, the third while the TV is on.
+Sections follow the window here: the second only on a wide screen, the third while the music is on.
 
 ::: live
 
@@ -120,9 +120,9 @@ sections:
     entities: [sensor.living_room_temperature, sensor.living_room_humidity]
   - layout: list
     divider: true
-    visibility: [{ condition: state, entity: media_player.living_room_tv, state_not: "off" }]
+    visibility: [{ condition: state, entity: media_player.living_room_speaker, state_not: "off" }]
     entities:
-      - entity: media_player.living_room_tv
+      - entity: media_player.living_room_speaker
         control: toggle
 ```
 
@@ -202,4 +202,4 @@ entities:
 
 ## In the examples
 
-The examples on this site log in as Alex (user id `demo-alex`, `person.alex`), so `user` and `location` conditions work with those. Templates evaluate <code v-pre>{{ }}</code> expressions only; Home Assistant itself renders <code v-pre>{% %}</code> blocks too.
+The examples on this site log in as Malte (user id `demo-malte`, `person.malte`), so `user` and `location` conditions work with those. Templates evaluate <code v-pre>{{ }}</code> expressions only; Home Assistant itself renders <code v-pre>{% %}</code> blocks too.

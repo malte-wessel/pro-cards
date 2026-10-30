@@ -17,7 +17,7 @@ entities:
   - { entity: light.desk_lamp, name: Desk lamp, control: auto }
   - { entity: climate.living_room, name: Radiator, control: auto }
   - { entity: cover.living_room_blinds, name: Blinds, control: auto }
-  - { entity: media_player.living_room_tv, name: TV, control: auto }
+  - { entity: media_player.living_room_speaker, name: Music, control: auto }
   - { entity: input_select.house_mode, control: auto }
   - { entity: script.check_windows, name: Night routine, control: auto }
 ```
@@ -186,7 +186,7 @@ icon: mdi:gesture-tap-button
 entities:
   - { entity: cover.bedroom_blinds, name: Bedroom blinds, control: buttons }
   - { entity: cover.garage_door, control: buttons }
-  - { entity: media_player.living_room_tv, name: TV, attribute: media_title, control: buttons }
+  - { entity: media_player.living_room_speaker, name: Music, attribute: media_title, control: buttons }
 ```
 
 :::
@@ -421,7 +421,7 @@ sections:
       - { entity: scene.movie_night, name: Movie, control: button, color: deep-purple }
       - { entity: scene.bright, name: Bright, control: button, color: amber }
       - { entity: scene.good_night, name: Night, control: button, color: indigo }
-      - { entity: media_player.living_room_tv, name: TV, control: toggle }
+      - { entity: media_player.living_room_speaker, name: Music, control: toggle }
   - layout: table
     divider: true
     entities:

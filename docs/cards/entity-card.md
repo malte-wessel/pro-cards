@@ -173,7 +173,7 @@ All eight side by side. The history visuals (`sparkline`, `columns`, `strip`) re
   bucket_minutes: 30
   grid_options: { columns: 6 }
 - type: custom:entity-card-pro
-  entity: person.alex
+  entity: person.malte
   name: Badge
   visual: badge
   rules:

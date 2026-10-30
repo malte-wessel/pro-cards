@@ -293,31 +293,33 @@ describe("look resolution", () => {
     ).toBe("red");
   });
   it("takes the entity's picture only when asked, the local copy first", () => {
-    const alex = st("home", { entity_picture: "/api/image/alex.jpg" }, "person.alex");
+    const malte = st("home", { entity_picture: "/api/image/malte.jpg" }, "person.malte");
     const local = st("home", { entity_picture: "https://x/a.jpg", entity_picture_local: "/l.jpg" });
-    expect(pictureOf(alex)).toBe("/api/image/alex.jpg");
+    expect(pictureOf(malte)).toBe("/api/image/malte.jpg");
     expect(pictureOf(local)).toBe("/l.jpg");
     expect(pictureOf(st("home", { entity_picture: null }))).toBeNull();
     expect(pictureOf(st("home", { entity_picture: 3 }))).toBeNull();
     expect(pictureOf(undefined)).toBeNull();
-    const asked = ent({ entity: "person.alex", show_entity_picture: true });
-    expect(resolveLook(ent({ entity: "person.alex" }), txt("home"), alex, tpl).picture).toBeNull();
-    expect(resolveLook(asked, txt("home"), alex, tpl).picture).toBe("/api/image/alex.jpg");
+    const asked = ent({ entity: "person.malte", show_entity_picture: true });
+    expect(
+      resolveLook(ent({ entity: "person.malte" }), txt("home"), malte, tpl).picture,
+    ).toBeNull();
+    expect(resolveLook(asked, txt("home"), malte, tpl).picture).toBe("/api/image/malte.jpg");
     // the rules still colour and label the entity, and its icon stays for where no picture fits
     const ruled = ent({
-      entity: "person.alex",
+      entity: "person.malte",
       show_entity_picture: true,
       rules: [{ state: "home", color: "green", icon: "mdi:home", label: "Home" }],
     });
-    expect(resolveLook(ruled, txt("home"), alex, tpl)).toMatchObject({
-      picture: "/api/image/alex.jpg",
+    expect(resolveLook(ruled, txt("home"), malte, tpl)).toMatchObject({
+      picture: "/api/image/malte.jpg",
       color: "green",
       icon: "mdi:home",
       label: "Home",
     });
     // an unavailable entity keeps its picture; one without a picture has none
     const gone = { raw: "unavailable", num: null, avail: false };
-    expect(resolveLook(asked, gone, alex, tpl).picture).toBe("/api/image/alex.jpg");
+    expect(resolveLook(asked, gone, malte, tpl).picture).toBe("/api/image/malte.jpg");
     expect(resolveLook(asked, txt("home"), st("home"), tpl).picture).toBeNull();
   });
   it("tints only when the matched rule asks for it", () => {

@@ -448,7 +448,7 @@ A person's picture is the icon, and their photo fills the poster behind it, blur
 
 ```yaml
 - type: custom:poster-card-pro
-  entity: person.alex
+  entity: person.malte
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: person.kim
@@ -463,7 +463,7 @@ A person's picture is the icon, and their photo fills the poster behind it, blur
 
 ```yaml
 type: custom:poster-card-pro
-entity: person.alex
+entity: person.malte
 image_blur: false
 show_entity_picture: false
 ```
@@ -480,7 +480,7 @@ A media player's cover art is the icon, and fills the poster behind it, blurred.
 
 ```yaml
 type: custom:poster-card-pro
-entity: media_player.living_room_tv
+entity: media_player.living_room_speaker
 ```
 
 :::
@@ -489,19 +489,28 @@ entity: media_player.living_room_tv
 
 ```yaml
 - type: custom:poster-card-pro
-  entity: media_player.kitchen_speaker
-  control: false
+  entity: media_player.bedroom_speaker
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
-  entity: media_player.living_room_tv
-  image: false
-  control: buttons
+  entity: media_player.kitchen_speaker
+  control: false
   grid_options: { columns: 6 }
 ```
 
 :::
 
-As on a person, `image_blur: false` shows the art sharp and `show_entity_picture: false` draws the player's icon.
+As on a person, `image_blur: false` shows the art sharp and `show_entity_picture: false` draws the player's icon:
+
+::: live
+
+```yaml
+type: custom:poster-card-pro
+entity: media_player.kitchen_speaker
+image_blur: false
+show_entity_picture: false
+```
+
+:::
 
 ## Cover
 

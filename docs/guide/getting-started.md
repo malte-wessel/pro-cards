@@ -121,4 +121,4 @@ It accepts any of the fifteen cards and picks the right one by `type`. Home Assi
 
 ## About the examples on this site
 
-The examples run the real card code against a simulated home with about 120 entities (`sensor.outdoor_temperature`, `light.living_room`, `person.alex` and so on). Values drift every few seconds, switches really toggle, history is generated with a daily pattern, and Jinja templates are evaluated with a small subset of the template engine. Hover a graph or click a tile to see the interactions. Every example carries its YAML underneath, ready to paste.
+The examples run the real card code against a simulated home with about 120 entities (`sensor.outdoor_temperature`, `light.living_room`, `person.malte` and so on). Values drift every few seconds, switches really toggle, history is generated with a daily pattern, and Jinja templates are evaluated with a small subset of the template engine. Hover a graph or click a tile to see the interactions. Every example carries its YAML underneath, ready to paste.

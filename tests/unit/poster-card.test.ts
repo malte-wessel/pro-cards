@@ -383,9 +383,9 @@ describe("poster-card image and status", () => {
       kind: "url",
       url: "/local/a.png",
     });
-    expect(norm({ icon_image: "person.alex" }).iconImage).toEqual({
+    expect(norm({ icon_image: "person.malte" }).iconImage).toEqual({
       kind: "entity",
-      entity: "person.alex",
+      entity: "person.malte",
     });
     expect(norm({ icon_image: "{{ x }}" }).iconImage).toEqual({
       kind: "template",
@@ -396,7 +396,7 @@ describe("poster-card image and status", () => {
   });
 
   it("shows a person's and a player's picture in the icon unless the card says not", () => {
-    for (const entity of ["person.alex", "media_player.tv"]) {
+    for (const entity of ["person.malte", "media_player.tv"]) {
       expect(norm({ entity }).entities[0].picture).toBe(true);
       expect(norm({ entity, show_entity_picture: false }).entities[0].picture).toBe(false);
       expect(norm({ entity }).kind.imageBlur).toBe(true);
@@ -695,7 +695,11 @@ describe("poster-card drawing", () => {
     const r = draw({ entity: L });
     const glow = q(r, ".pback > .pglow");
     expect(glow.style.opacity).toBe("1.000");
-    expect(glow.style.getPropertyValue("--glow")).toBe("rgb(255, 200, 100)");
+    // the poster's colour, which fades to a new one (the body's --pc-tint)
+    expect(glow.style.getPropertyValue("--glow")).toBe("var(--pc-tint)");
+    expect((glow.closest(".body") as HTMLElement).style.getPropertyValue("--pc-tint")).toBe(
+      "rgb(255, 200, 100)",
+    );
     set(L, "on", { brightness: 0.4 * 255 });
     expect(glow.style.opacity).toBe("0.580");
     set(L, "off");

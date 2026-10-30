@@ -8,6 +8,7 @@ import type {
   StatisticsResult,
   WeatherForecastType,
 } from "../../../../src/shared/ha.ts";
+import { MALTE_PHOTO } from "./malte.ts";
 import { isMeter, METERS, readingAt, statistics, statisticsMetadata } from "./meters.ts";
 
 // an entity of the demo home: its initial state plus how its history and drift are generated
@@ -521,7 +522,8 @@ def("button.restart_router", "2026-09-20T18:12:00+00:00", {
 });
 
 // people & modes
-// a drawn portrait as a person's picture (show_entity_picture); Kim has none, so shows the icon
+// a person's picture (show_entity_picture): Malte's photo, a drawn portrait for Sam; Kim has none,
+// so shows the icon
 const avatar = (bg: string, skin: string, shirt: string, hair: string, hairPath: string) =>
   "data:image/svg+xml," +
   encodeURIComponent(
@@ -530,16 +532,10 @@ const avatar = (bg: string, skin: string, shirt: string, hair: string, hairPath:
       `<rect x="27" y="34" width="10" height="12" rx="3" fill="${skin}"/>` +
       `<circle cx="32" cy="27" r="12" fill="${skin}"/><path d="${hairPath}" fill="${hair}"/></svg>`,
   );
-def("person.alex", "home", {
-  friendly_name: "Alex",
-  entity_picture: avatar(
-    "#8fb8de",
-    "#f1c7a3",
-    "#2f5d8a",
-    "#4a3426",
-    "M20 27c0-9 5-15 12-15s12 6 12 15c-2-6-7-8-12-8s-10 2-12 8z",
-  ),
-  user_id: "demo-alex",
+def("person.malte", "home", {
+  friendly_name: "Malte",
+  entity_picture: MALTE_PHOTO,
+  user_id: "demo-malte",
 });
 def("person.sam", "not_home", {
   friendly_name: "Sam",
@@ -668,36 +664,77 @@ def("sensor.dishwasher_finishes", iso(now() + 38 * 60e3), {
   friendly_name: "Dishwasher finishes",
 });
 // cover art as SVG data URIs: a picture the cards can read their colour from (the same origin)
-const art = (from: string, to: string, shape: string) =>
-  `data:image/svg+xml,${encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/></linearGradient></defs><rect width="300" height="300" fill="url(#g)"/>${shape}</svg>`,
-  )}`;
-def("media_player.living_room_tv", "playing", {
-  friendly_name: "Living room TV",
-  media_title: "Planet Earth III",
-  media_artist: "David Attenborough",
-  media_album_name: "Coasts",
-  media_duration: 3480,
-  media_position: 1210,
+// the speakers play these songs, their cover art from Spotify's image CDN as a Spotify player
+// reports it (not stored in the repo; it sends CORS headers, so a poster reads its colour); next
+// and previous track step through them (hass.ts)
+const spotify = (id: string) => `https://i.scdn.co/image/ab67616d00001e02${id}`;
+export const SONGS = [
+  {
+    media_title: "So Good",
+    media_artist: "Loverground",
+    media_duration: 186,
+    entity_picture: spotify("8d5771595b471e293efef88c"),
+  },
+  {
+    media_title: "Summer Drop",
+    media_artist: "Cordae, Anderson .Paak",
+    media_duration: 194,
+    entity_picture: spotify("c62b5211815dea65bfcdc2ee"),
+  },
+  {
+    media_title: "Nevermind (Alright)",
+    media_artist: "Dennis Lloyd",
+    media_duration: 172,
+    entity_picture: spotify("bcf853454a76ea40b846c0b4"),
+  },
+  {
+    media_title: "Feel It",
+    media_artist: "Cupidon, Milaa",
+    media_duration: 201,
+    entity_picture: spotify("06cb22b5fac57c75e88521e4"),
+  },
+  {
+    media_title: "Danger Ca$h Money Anthem",
+    media_artist: "Suff Daddy",
+    media_duration: 158,
+    entity_picture: spotify("0b64ee82fe57f8f975af2064"),
+  },
+  {
+    media_title: "Aura",
+    media_artist: "SG Lewis, J Warner",
+    media_duration: 214,
+    entity_picture: spotify("7a57c79de5138d173331183d"),
+  },
+  {
+    media_title: "Who He Iz",
+    media_artist: "KAYTRAMINÉ",
+    media_duration: 179,
+    entity_picture: spotify("d62081338362c43d9b2451ed"),
+  },
+];
+def("media_player.living_room_speaker", "playing", {
+  friendly_name: "Living room speaker",
+  ...SONGS[0],
+  media_position: 64,
   media_position_updated_at: iso(Date.now()),
-  app_name: "BBC iPlayer",
-  entity_picture: art(
-    "#0f6b5c",
-    "#0b2e4a",
-    `<circle cx="210" cy="90" r="46" fill="#f4d58d" opacity=".9"/><path d="M0 220 Q75 170 150 205 T300 190 V300 H0 Z" fill="#0a3d33"/><path d="M0 250 Q90 215 170 245 T300 235 V300 H0 Z" fill="#06261f"/>`,
-  ),
-  volume_level: 0.35,
+  app_name: "Spotify",
+  volume_level: 0.4,
 });
-def("media_player.kitchen_speaker", "idle", {
+def("media_player.bedroom_speaker", "paused", {
+  friendly_name: "Bedroom speaker",
+  ...SONGS[1],
+  media_position: 121,
+  media_position_updated_at: iso(Date.now()),
+  app_name: "Spotify",
+  volume_level: 0.25,
+});
+def("media_player.kitchen_speaker", "playing", {
   friendly_name: "Kitchen speaker",
-  media_title: "Radio Eins",
-  media_artist: "Live",
-  entity_picture: art(
-    "#f06a4a",
-    "#b5179e",
-    `<circle cx="150" cy="150" r="90" fill="none" stroke="#fff" stroke-width="14" opacity=".85"/><circle cx="150" cy="150" r="22" fill="#fff" opacity=".9"/>`,
-  ),
-  volume_level: 0.2,
+  ...SONGS[2],
+  media_position: 30,
+  media_position_updated_at: iso(Date.now()),
+  app_name: "Spotify",
+  volume_level: 0.3,
 });
 
 // energy

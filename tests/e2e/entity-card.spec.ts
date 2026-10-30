@@ -225,21 +225,21 @@ test.describe("visuals", () => {
   test("show_entity_picture puts the picture in the icon's place and shape", async ({ page }) => {
     const radius = (loc: Locator) => loc.evaluate((e) => getComputedStyle(e).borderRadius);
     await mount(page, [
-      { type: T, entity: "person.alex", show_entity_picture: true },
-      { type: T, entity: "person.alex" },
+      { type: T, entity: "person.malte", show_entity_picture: true },
+      { type: T, entity: "person.malte" },
       { type: T, entity: "person.kim", show_entity_picture: true },
-      { type: T, entity: "person.alex", show_entity_picture: true, visual: "ring" },
+      { type: T, entity: "person.malte", show_entity_picture: true, visual: "ring" },
     ]);
-    const alex = card(page, 0);
-    const img = alex.locator(".lead .shape > img.picture");
-    await expect(img).toHaveAttribute("src", /^data:image\/svg\+xml,/);
-    await expect(alex.locator(".lead ha-state-icon")).toHaveCount(0);
+    const malte = card(page, 0);
+    const img = malte.locator(".lead .shape > img.picture");
+    await expect(img).toHaveAttribute("src", /^data:image\/jpeg;base64,/);
+    await expect(malte.locator(".lead ha-state-icon")).toHaveCount(0);
     // it fills the 36 px shape, clipped to the icon's round shape; name and value stay
     const box = (await img.boundingBox())!;
     expect([box.width, box.height]).toEqual([36, 36]);
-    expect(await radius(alex.locator(".lead .shape"))).toBe("50%");
-    await expect(alex.locator(".texts .primary")).toHaveText("Alex");
-    await expect(alex.locator(".texts .secondary")).toHaveText("Home");
+    expect(await radius(malte.locator(".lead .shape"))).toBe("50%");
+    await expect(malte.locator(".texts .primary")).toHaveText("Malte");
+    await expect(malte.locator(".texts .secondary")).toHaveText("Home");
     // off unless asked for; an entity without a picture keeps its icon
     await expect(card(page, 1).locator(".lead img")).toHaveCount(0);
     await expect(card(page, 1).locator(".lead ha-state-icon")).toHaveCount(1);
@@ -252,11 +252,11 @@ test.describe("visuals", () => {
     expect(inner.width).toBeLessThan(36);
     expect(inner.width).toBe(inner.height);
     // the picture follows the entity: a new one replaces it, none brings the icon back
-    await setState(page, "person.alex", undefined, { entity_picture: "/local/alex-2.png" });
-    await expect(img).toHaveAttribute("src", "/local/alex-2.png");
-    await setState(page, "person.alex", undefined, { entity_picture: null });
-    await expect(alex.locator(".lead img")).toHaveCount(0);
-    await expect(alex.locator(".lead ha-state-icon")).toHaveCount(1);
+    await setState(page, "person.malte", undefined, { entity_picture: "/local/malte-2.png" });
+    await expect(img).toHaveAttribute("src", "/local/malte-2.png");
+    await setState(page, "person.malte", undefined, { entity_picture: null });
+    await expect(malte.locator(".lead img")).toHaveCount(0);
+    await expect(malte.locator(".lead ha-state-icon")).toHaveCount(1);
   });
   test("a row item shows the picture; a button in the icon's place keeps its icon", async ({
     page,
@@ -282,7 +282,7 @@ test.describe("visuals", () => {
       { type: T, entity: "sensor.bathroom_humidity", visual: "bar" },
       {
         type: T,
-        entity: "person.alex",
+        entity: "person.malte",
         visual: "badge",
         rules: [{ state: "home", label: "Home" }],
       },

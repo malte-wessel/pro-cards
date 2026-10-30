@@ -181,7 +181,7 @@ cards:
           - light.living_room
           - light.dining_table
           - cover.living_room_blinds
-          - media_player.living_room_tv
+          - media_player.living_room_speaker
   - type: custom:layout-card-pro
     rows: [auto, 1fr]
     cards:

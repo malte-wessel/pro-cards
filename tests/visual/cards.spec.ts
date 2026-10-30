@@ -164,7 +164,7 @@ const CASES = {
     },
     {
       type: EC,
-      entity: "person.alex",
+      entity: "person.malte",
       name: "Badge",
       visual: "badge",
       rules: [
@@ -254,8 +254,8 @@ const CASES = {
         icon: "mdi:window-shutter",
       },
       {
-        entity: "media_player.living_room_tv",
-        name: "TV",
+        entity: "media_player.living_room_speaker",
+        name: "Music",
         visual: "badge",
         rules: [{ state: "playing", color: "green", icon: "mdi:play-circle", label: "Playing" }],
       },
@@ -370,7 +370,7 @@ const CASES = {
               { state: "closed", color: "grey", icon: "mdi:window-shutter", label: "Closed" },
             ],
           },
-          { entity: "media_player.living_room_tv", name: "TV", icon: "mdi:television" },
+          { entity: "media_player.living_room_speaker", name: "Music", icon: "mdi:speaker" },
           { entity: "vacuum.robot", name: "Robot" },
         ],
       },
@@ -1079,7 +1079,7 @@ const CASES = {
         { entity: "light.living_room", control: "auto" },
         { entity: "cover.living_room_blinds", control: "auto" },
         { entity: "climate.living_room", control: "auto" },
-        { entity: "media_player.living_room_tv", control: "auto" },
+        { entity: "media_player.living_room_speaker", control: "auto" },
       ],
     },
     {
@@ -1828,7 +1828,7 @@ const CASES = {
         { entity: "sensor.kitchen_temperature", style: "outline" },
         { entity: "light.living_room", style: "soft" },
         { entity: "lock.front_door", style: "filled" },
-        { entity: "media_player.living_room_tv", style: "plain" },
+        { entity: "media_player.living_room_speaker", style: "plain" },
       ],
     },
     {
@@ -1873,7 +1873,7 @@ const CASES = {
       title: "House",
       badges_position: "below",
       badges: [
-        { entity: "person.alex", show_entity_picture: true, show_name: true, show_value: false },
+        { entity: "person.malte", show_entity_picture: true, show_name: true, show_value: false },
         {
           entity: "binary_sensor.window_kitchen",
           visual: "dot",
@@ -2078,10 +2078,10 @@ const CASES = {
   ],
   "pc-people": [
     { type: PC, entity: "alarm_control_panel.home" },
-    { type: PC, entity: "person.alex" },
+    { type: PC, entity: "person.malte" },
   ],
   "pc-devices": [
-    { type: PC, entity: "media_player.living_room_tv" },
+    { type: PC, entity: "media_player.living_room_speaker" },
     { type: PC, entity: "cover.office_blinds", name: "Office blinds" },
     { type: PC, entity: "vacuum.robot" },
     { type: PC, entity: "lawn_mower.garden" },

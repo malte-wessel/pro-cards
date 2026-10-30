@@ -1,6 +1,6 @@
 // Builds the `hass` object the cards expect, backed by the demo world, and wires the
 // document-level events HA would normally handle (actions, more-info, navigation, toasts).
-import { world } from "./world.ts";
+import { SONGS, world } from "./world.ts";
 import { ENTITIES } from "./registry.ts";
 import { renderTemplate } from "./templates.ts";
 import type {
@@ -51,8 +51,8 @@ declare global {
 
 const LAT = 51.23,
   LON = 6.78; // Düsseldorf-ish, used by the sun path card
-// the id of the demo's logged-in user (Alex); person.alex names it in `user_id`
-export const DEMO_USER = "demo-alex";
+// the id of the demo's logged-in user (Malte); person.malte names it in `user_id`
+export const DEMO_USER = "demo-malte";
 let toastEl: (HTMLDivElement & { _t?: ReturnType<typeof setTimeout> }) | null = null,
   popEl: HTMLDivElement | null = null;
 
@@ -164,7 +164,6 @@ const played = (st: HassEntity) => {
   const p = st.state === "playing" ? pos + (now - at) / 1000 : pos;
   return { media_position: Math.round(p), media_position_updated_at: new Date(now).toISOString() };
 };
-const TRACKS = ["Planet Earth III", "Radio Eins", "Morning Mix", "Jazz Hour"];
 // a cover travels as a real one does: opening or closing while it moves, a few percent closer
 // every tick (a whole run in about 6 s), held where it is when stopped; one without a position is
 // on its way for as long and then arrives
@@ -387,11 +386,16 @@ const callService = async (
       break;
     case "media_player.media_next_track":
     case "media_player.media_previous_track":
+      // the next song (title, artist, cover) from its start
       each((id, st) => {
-        const i = TRACKS.indexOf(String(st.attributes.media_title));
-        const n = TRACKS.length;
+        const i = SONGS.findIndex((x) => x.media_title === st.attributes.media_title);
+        const n = SONGS.length;
         const next = (i + (service.endsWith("next_track") ? 1 : n - 1) + n) % n;
-        world.set(id, "playing", { media_title: TRACKS[next] });
+        world.set(id, "playing", {
+          ...SONGS[next],
+          media_position: 0,
+          media_position_updated_at: new Date().toISOString(),
+        });
       });
       break;
     case "lock.lock":
@@ -579,8 +583,8 @@ export const snapshot = (): HassSnapshot => ({
   language: "en-GB",
   // the dashboard's path: the energy cards share their period per dashboard
   panelUrl: "docs",
-  // the demo's logged-in user is Alex (person.alex carries the id, for `location` conditions)
-  user: { id: DEMO_USER, name: "Alex", is_admin: true },
+  // the demo's logged-in user is Malte (person.malte carries the id, for `location` conditions)
+  user: { id: DEMO_USER, name: "Malte", is_admin: true },
   config: {
     latitude: LAT,
     longitude: LON,

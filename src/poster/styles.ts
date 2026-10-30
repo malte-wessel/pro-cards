@@ -16,14 +16,29 @@ const STYLE_POSTER_CARD = `
   /* the card is its own stacking context: the backdrop sits on its background, under the poster's
      action layer (.hit, z-index -1) and the content */
   ha-card.layout-poster { isolation: isolate; container: pcard / inline-size; }
+  /* the poster's colour (PosterCard._rowColor) fades to a new one */
+  ha-card.layout-poster > .body { transition: --pc-tint .8s ease; }
+  @media (prefers-reduced-motion: reduce) { ha-card.layout-poster > .body { transition: none; } }
   .pback { position: absolute; inset: 0; z-index: -2; pointer-events: none; overflow: hidden; border-radius: inherit; }
   .pback[hidden] { display: none; }
   .pback > img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  /* image_blur: drawn a little larger, so the blur's soft edge lies outside the card */
-  .pback.blur > img { filter: blur(var(--pblur)); transform: scale(1.15); }
-  /* the scrim: the card's own surface over the whole picture, most of it at the top (lead, badges)
-     and the bottom (the texts), so the theme's text reads on any picture */
-  .pback.scrim::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, color-mix(in srgb, ${CARD_BG} 72%, transparent) 0%, color-mix(in srgb, ${CARD_BG} 38%, transparent) 30%, color-mix(in srgb, ${CARD_BG} 55%, transparent) 50%, color-mix(in srgb, ${CARD_BG} 90%, transparent) 100%); }
+  /* a new picture fades in over the one before (updateBackdrop) */
+  .pback > img.pin { position: absolute; inset: 0; opacity: 0; transition: opacity .7s ease; }
+  .pback > img.pin.on { opacity: 1; }
+  /* the icon's new picture (the next song's cover) fades in once it has loaded */
+  .plead img.picture.pwait { opacity: 0; }
+  .plead img.picture.pfade { animation: pfade .7s ease both; }
+  @keyframes pfade { from { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .pback > img.pin, .plead img.picture.pfade { transition: none; animation: none; } }
+  /* image_blur: drawn larger by twice the blur on every side, so the blur's soft edge (where it
+     fades into nothing) lies outside the card, also while a new picture fades in over the last */
+  .pback.blur > img { position: absolute; left: calc(var(--pblur) * -2); top: calc(var(--pblur) * -2); width: calc(100% + var(--pblur) * 4); height: calc(100% + var(--pblur) * 4); filter: blur(var(--pblur)); }
+  /* the scrim: the card's own surface evenly over the whole picture, so the theme's text reads on
+     any picture */
+  .pback.scrim::after { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, ${CARD_BG} 70%, transparent); }
+  /* over a picture the status badge is filled with the poster's colour, so it reads on any picture */
+  ha-card:has(> .body > .pback.scrim) .row.poster > .ptop > .corner > .row.hval.b-tag { --b-ink: var(--text-primary-color, #fff); background: var(--fe-color); border-color: transparent; }
+  ha-card:has(> .body > .pback.scrim) .row.poster > .ptop > .corner > .row.hval.b-tag :is(ha-icon, ha-state-icon, .state, .state.accent, .secondary) { color: var(--b-ink); }
   /* visual: glow: the poster's colour from the bottom of the card, as strong as its level (its
      opacity, set by the card: a new level fades as switching does); nothing at 0. The last part
      of the backdrop: over a kind's drawing, under an image's scrim */

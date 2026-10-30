@@ -56,7 +56,7 @@ entities:
     attribute: current_position
     unit: "%"
     control: auto
-  - entity: media_player.living_room_tv
+  - entity: media_player.living_room_speaker
     visual: badge
     control: auto
     rules:

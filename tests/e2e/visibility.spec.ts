@@ -325,7 +325,7 @@ test.describe("visibility: conditions", () => {
       type: G,
       entities: [
         "light.office",
-        { entity: "light.bedroom", visibility: [{ condition: "user", users: ["demo-alex"] }] },
+        { entity: "light.bedroom", visibility: [{ condition: "user", users: ["demo-malte"] }] },
         {
           entity: "light.hallway",
           visibility: [{ condition: "location", locations: ["home"] }],
@@ -334,7 +334,7 @@ test.describe("visibility: conditions", () => {
     });
     const rows = card(page).locator(".row.list");
     expect(await idxs(rows)).toEqual(["0", "1", "2"]);
-    await setState(page, "person.alex", "not_home");
+    await setState(page, "person.malte", "not_home");
     await expect(rows).toHaveCount(2);
     expect(await idxs(rows)).toEqual(["0", "1"]);
     // Sam is away (person.sam), and not on the user list

@@ -10,7 +10,7 @@ const STATES: Record<string, [string, Record<string, unknown>]> = {
   "sensor.battery": ["72", { friendly_name: "Battery", unit_of_measurement: "%" }],
   "sensor.offline": ["unavailable", { friendly_name: "Offline" }],
   "sensor.temp": ["21.5", { friendly_name: "Temperature", unit_of_measurement: "°C" }],
-  "person.alex": ["home", { friendly_name: "Alex", entity_picture: "/api/image/alex.jpg" }],
+  "person.malte": ["home", { friendly_name: "Malte", entity_picture: "/api/image/malte.jpg" }],
   "person.kim": ["home", { friendly_name: "Kim" }],
 };
 const hass = () =>
@@ -104,13 +104,13 @@ describe("header badges", () => {
 describe("header pictures", () => {
   it("stand in for the icon with show_entity_picture, in a plain item and in a badge", () => {
     const [plain, badge, kim, off] = header([
-      { entity: "person.alex", show_entity_picture: true },
-      { entity: "person.alex", show_entity_picture: true, visual: "badge" },
+      { entity: "person.malte", show_entity_picture: true },
+      { entity: "person.malte", show_entity_picture: true, visual: "badge" },
       { entity: "person.kim", show_entity_picture: true },
-      "person.alex",
+      "person.malte",
     ]);
-    expect(parts(plain)).toEqual(["picture(/api/image/alex.jpg)", "state:home"]);
-    expect(parts(badge)).toEqual(["badge(picture(/api/image/alex.jpg), home)"]);
+    expect(parts(plain)).toEqual(["picture(/api/image/malte.jpg)", "state:home"]);
+    expect(parts(badge)).toEqual(["badge(picture(/api/image/malte.jpg), home)"]);
     // without a picture, or without the option, the icon stays
     expect(parts(kim)).toEqual(["icon", "state:home"]);
     expect(parts(off)).toEqual(["icon", "state:home"]);
@@ -119,14 +119,14 @@ describe("header pictures", () => {
     const el = new EntityGroupCard();
     el.setConfig({
       title: "People",
-      header_entities: [{ entity: "person.alex", show_entity_picture: true }],
+      header_entities: [{ entity: "person.malte", show_entity_picture: true }],
       entities: ["sensor.temp"],
     });
     document.body.appendChild(el);
     el.hass = { ...hass(), hassUrl: (p = "") => `http://ha.local:8123${p}` };
     cards.push(el);
     const img = (el.shadowRoot as ShadowRoot).querySelector(".header img.picture");
-    expect(img?.getAttribute("src")).toBe("http://ha.local:8123/api/image/alex.jpg");
+    expect(img?.getAttribute("src")).toBe("http://ha.local:8123/api/image/malte.jpg");
     expect(img?.getAttribute("alt")).toBe("");
   });
 });

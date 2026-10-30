@@ -183,9 +183,9 @@ entities:
   - { entity: light.living_room, name: Light on }
   - { entity: light.kitchen, name: Light off }
   - { entity: cover.living_room_blinds, name: Blinds open }
-  - { entity: person.alex, name: At home }
+  - { entity: person.malte, name: At home }
   - { entity: person.sam, name: Away }
-  - { entity: media_player.living_room_tv, name: Playing }
+  - { entity: media_player.living_room_speaker, name: Playing }
   - { entity: sensor.robot_battery, name: Battery, visual: ring }
   - { entity: sensor.kitchen_window_battery, name: Low battery, visual: ring }
   - { entity: sensor.outdoor_temperature, name: Plain sensor }

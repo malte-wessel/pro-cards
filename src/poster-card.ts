@@ -12,7 +12,7 @@
  *   image_blur: true                       # the backdrop blurred (px; a person's and a player's are)
  *   rules: [...]                           # replace the type's own rules as a whole
  *   visual: glow                           # sparkline … gauge, glow (lit by its level), none
- *   icon_image: person.alex                # a picture in the icon: a URL, a template or an entity's
+ *   icon_image: person.malte                # a picture in the icon: a URL, a template or an entity's
  *   icon_ring / icon_tap_action / icon_hold_action / icon_double_tap_action   # the icon's own
  *   control / tap_action / hold_action / double_tap_action / hover / hours_to_show
  */
@@ -319,6 +319,7 @@ export class PosterCard extends EntityCardBase {
         pic ? { ...m, look: { ...m.look, picture: pic } } : m,
         slots,
       );
+      this._fadePicture(row);
       this._placeControls(row);
       return;
     }
@@ -342,19 +343,55 @@ export class PosterCard extends EntityCardBase {
       ];
     return [...inputs, ...own, ...extra, imageUrl(ctx, cfg.iconImage)];
   }
-  // the kind's colour where neither the card nor a rule names one
+  // the icon's picture fades in when it is a new one (the next song's cover); a fill with the same
+  // picture keeps the element it has, so a fade under way runs on
+  _leadImg: HTMLImageElement | null = null;
+  _fadePicture(row: HTMLElement) {
+    const img = row.querySelector<HTMLImageElement>(":scope > .ptop > .plead img.picture");
+    const last = this._leadImg;
+    const src = img?.getAttribute("src") ?? null;
+    if (!img || !src) {
+      this._leadImg = null;
+      return;
+    }
+    if (last && last.getAttribute("src") === src) {
+      if (last !== img) img.replaceWith(last);
+      return;
+    }
+    if (last) {
+      const show = () => img.classList.replace("pwait", "pfade");
+      img.classList.add("pwait");
+      if (img.complete) show();
+      else {
+        img.addEventListener("load", show, { once: true });
+        img.addEventListener("error", show, { once: true });
+      }
+    }
+    this._leadImg = img;
+  }
+  // the kind's colour where neither the card nor a rule names one. The poster's own colour is the
+  // body's --pc-tint, a registered colour, so a new one fades (the next song's cover); the status
+  // badge reads it too while it has the same colour
+  _tint: string | null = null;
   _rowColor(row: HTMLElement, ent: EntityItem, m: EntityModel) {
     const cfg = this._config as PosterConfig;
     const idx = Number(row.dataset.idx);
+    let color = super._rowColor(row, ent, m);
     if ((idx === 0 || idx === cfg.statusIdx) && cfg.kind.color && this._hass) {
       const main = cfg.entities[0];
       const kc = this._kindCtx(this._ctx());
       if (!main.color && !kc.m.look.rule?.color) {
         const c = cfg.kind.color(kc);
-        if (c) return cssColor(c, "var(--primary-color)");
+        if (c) color = cssColor(c, "var(--primary-color)");
       }
     }
-    return super._rowColor(row, ent, m);
+    const body = row.closest<HTMLElement>(".body");
+    if (idx === 0 && body) {
+      body.style.setProperty("--pc-tint", color);
+      this._tint = color;
+      return "var(--pc-tint)";
+    }
+    return idx === cfg.statusIdx && color === this._tint ? "var(--pc-tint)" : color;
   }
   _render() {
     // a new card size finds the controls' place again: free to wrap before the value is fitted
@@ -523,6 +560,18 @@ export class PosterCard extends EntityCardBase {
   getCardSize() {
     return 3;
   }
+}
+
+// --pc-tint as a colour, so it can fade (once per page; another copy of the bundle has done it)
+try {
+  CSS.registerProperty({
+    name: "--pc-tint",
+    syntax: "<color>",
+    inherits: true,
+    initialValue: "transparent",
+  });
+} catch {
+  // registered already, or no CSS Properties API: the colour changes at once
 }
 
 registerCard(PosterCard, {

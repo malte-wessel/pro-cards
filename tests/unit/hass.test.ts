@@ -31,7 +31,7 @@ describe("hass shim", () => {
   it("logs in the demo user, whose person entity names it", () => {
     expect(hass.user?.id).toBe(DEMO_USER);
     expect(hass.locale.time_zone).toBe("server");
-    expect(world.get("person.alex")?.attributes.user_id).toBe(DEMO_USER);
+    expect(world.get("person.malte")?.attributes.user_id).toBe(DEMO_USER);
   });
   it("returns a fresh object per snapshot with the same world", () => {
     const a = snapshot(),

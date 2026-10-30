@@ -212,14 +212,14 @@ entities:
       - { state: run, color: green, icon: mdi:washing-machine, label: Running }
       - { state: pause, color: amber, icon: mdi:pause-circle, label: Paused }
       - { state: end, color: teal, icon: mdi:washing-machine-alert, label: Done, tint_card: true }
-  - entity: media_player.living_room_tv
-    name: TV
+  - entity: media_player.living_room_speaker
+    name: Music
     visual: badge
     rules:
       - { state: playing, color: green, icon: mdi:play-circle, label: Playing }
       - { state: paused, color: amber, icon: mdi:pause-circle, label: Paused }
-      - { state: idle, color: grey, icon: mdi:television, label: Idle }
-      - { state: "off", color: grey, icon: mdi:television-off, label: "Off" }
+      - { state: idle, color: grey, icon: mdi:speaker, label: Idle }
+      - { state: "off", color: grey, icon: mdi:speaker-off, label: "Off" }
   - entity: climate.living_room
     name: Thermostat
     visual: badge
@@ -374,7 +374,7 @@ entities:
 
 ```yaml
 - type: custom:entity-card-pro
-  entity: person.alex
+  entity: person.malte
   show_entity_picture: true
   grid_options: { columns: 6 }
 - type: custom:entity-card-pro
@@ -385,7 +385,7 @@ entities:
   title: People
   layout: row
   entities:
-    - { entity: person.alex, show_entity_picture: true }
+    - { entity: person.malte, show_entity_picture: true }
     - { entity: person.sam, show_entity_picture: true }
     - { entity: person.kim, show_entity_picture: true }
 ```
@@ -728,7 +728,7 @@ A coloured pill instead of the plain value. The pill shows the matching rule's `
 
 ```yaml
 - type: custom:entity-card-pro
-  entity: person.alex
+  entity: person.malte
   name: Presence
   visual: badge
   rules:
@@ -776,7 +776,7 @@ title: Who is home
 icon: mdi:account-group
 layout: row
 entities:
-  - entity: person.alex
+  - entity: person.malte
     visual: badge
     rules:
       - { state: home, color: green, label: Home }

@@ -1,14 +1,16 @@
 // The main colour of a picture (cover art), read from the image once: drawn small on a canvas,
 // its pixels weighted by how colourful they are, the result held to a lightness the theme's text
-// reads against. Only same-origin images (Home Assistant serves media art through its own proxy)
-// and data: URIs can be read; any other one has no colour. Kept per URL; `onReady` runs once the
-// image has loaded, so the card draws again with the colour.
+// reads against. Same-origin images (Home Assistant serves media art through its own proxy) and
+// data: URIs are read as they are; any other one is asked for with CORS, and one whose server
+// does not allow that has no colour. Kept per URL; `onReady` runs once the image has loaded, so
+// the card draws again with the colour.
 
 type Entry = string | null | "pending";
 const cache = new Map<string, Entry>();
 const waiting = new Map<string, Set<() => void>>();
 
-const readable = (url: string) => {
+// whether an image is ours to read as it is (else it is fetched with CORS)
+const ownOrigin = (url: string) => {
   if (url.startsWith("data:")) return true;
   try {
     return new URL(url, location.href).origin === location.origin;
@@ -56,6 +58,9 @@ const toReadable = (r: number, g: number, b: number) => {
   return `hsl(${h}, ${Math.round(Math.max(0.35, s) * 100)}%, ${Math.round(L * 100)}%)`;
 };
 
+// whether a picture's colour is still being read
+export const artPending = (url: string | null) => !!url && cache.get(url) === "pending";
+
 export const artColor = (url: string | null, onReady: () => void): string | null => {
   if (!url) return null;
   const known = cache.get(url);
@@ -64,7 +69,7 @@ export const artColor = (url: string | null, onReady: () => void): string | null
     return null;
   }
   if (known !== undefined) return known;
-  if (!readable(url) || typeof Image === "undefined") {
+  if (typeof Image === "undefined") {
     cache.set(url, null);
     return null;
   }
@@ -89,6 +94,7 @@ export const artColor = (url: string | null, onReady: () => void): string | null
     }
   };
   img.onerror = () => done(null);
+  if (!ownOrigin(url)) img.crossOrigin = "anonymous";
   img.src = url;
   return null;
 };

@@ -26,10 +26,10 @@ The content sits at the bottom of the card. More rows give the picture and the b
 
 ```yaml
 - type: custom:poster-card-pro
-  entity: media_player.living_room_tv
+  entity: media_player.living_room_speaker
   grid_options: { columns: 6, rows: 2 }
 - type: custom:poster-card-pro
-  entity: media_player.living_room_tv
+  entity: media_player.living_room_speaker
   grid_options: { columns: 6, rows: auto }
 ```
 
@@ -384,13 +384,13 @@ The photo behind the poster: 6 × 3, 12 × 3 and 9 × 4.
 
 ```yaml
 - type: custom:poster-card-pro
-  entity: person.alex
+  entity: person.malte
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
-  entity: person.alex
+  entity: person.malte
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
-  entity: person.alex
+  entity: person.malte
   grid_options: { columns: 9, rows: 4 }
 ```
 
@@ -404,13 +404,13 @@ The art, the track and the transport: 6 × 3, 12 × 3 and 9 × 4.
 
 ```yaml
 - type: custom:poster-card-pro
-  entity: media_player.living_room_tv
+  entity: media_player.living_room_speaker
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
-  entity: media_player.living_room_tv
+  entity: media_player.living_room_speaker
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
-  entity: media_player.living_room_tv
+  entity: media_player.living_room_speaker
   grid_options: { columns: 9, rows: 4 }
 ```
 

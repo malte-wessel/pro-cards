@@ -24,7 +24,7 @@ const states = {
   "binary_sensor.w1": st("binary_sensor.w1", "on", { device_class: "window" }),
   "binary_sensor.w2": st("binary_sensor.w2", "off", { device_class: "window" }),
   "binary_sensor.m": st("binary_sensor.m", "on", { device_class: "motion" }),
-  "person.alex": st("person.alex", "home"),
+  "person.malte": st("person.malte", "home"),
 };
 const r = (tpl: string) => renderTemplate(tpl, states);
 
@@ -79,9 +79,9 @@ describe("renderTemplate", () => {
       "78",
     );
     expect(
-      r("{{ is_state('person.alex', 'home') and not is_state('light.b', 'on') }}").result,
+      r("{{ is_state('person.malte', 'home') and not is_state('light.b', 'on') }}").result,
     ).toBe("True");
-    expect(r("{{ is_state('person.alex', ['home', 'work']) or False }}").result).toBe("True");
+    expect(r("{{ is_state('person.malte', ['home', 'work']) or False }}").result).toBe("True");
     expect(r("{{ states('sensor.t') | float > 10 }} {{ 3 == 3.0 }} {{ 'a' != 'b' }}").result).toBe(
       "True True True",
     );

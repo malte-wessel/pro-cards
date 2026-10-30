@@ -68,9 +68,9 @@ hero:
               view_layout: { span: [1, 3] }
               cards:
                 - type: custom:entity-card-pro
-                  entity: media_player.living_room_tv
-                  name: TV
-                  icon: mdi:television-play
+                  entity: media_player.living_room_speaker
+                  name: Music
+                  icon: mdi:speaker
                   attribute: media_title
                   color: deep-purple
                 - type: custom:entity-card-pro
@@ -280,9 +280,9 @@ feature_rows:
         rows: [1fr, 1fr, 1fr]
         cards:
           - type: custom:entity-card-pro
-            entity: media_player.living_room_tv
-            name: TV
-            icon: mdi:television-play
+            entity: media_player.living_room_speaker
+            name: Music
+            icon: mdi:speaker
             attribute: media_title
             color: deep-purple
           - type: custom:entity-card-pro

@@ -54,6 +54,35 @@ export const glowLevel = (kind: Kind, c: KindCtx): number => {
 // transition)
 export const glowOpacity = (level: number) => (level > 0 ? (0.3 + 0.7 * level).toFixed(3) : "0");
 
+const imgEl = (src: string) => {
+  const img = document.createElement("img");
+  img.alt = "";
+  img.draggable = false;
+  img.src = src;
+  return img;
+};
+// a new picture (the next song's cover) fades in over the one before, once it has loaded; the
+// one before goes when it is covered (at once without motion: .pin has no transition then)
+const FADE_MS = 700;
+const fadeIn = (back: HTMLElement, last: HTMLImageElement, next: HTMLImageElement) => {
+  next.classList.add("pin");
+  last.after(next);
+  const drop = () => {
+    for (const o of back.querySelectorAll(":scope > img")) if (o !== next) o.remove();
+    next.classList.remove("pin", "on");
+  };
+  const show = () => {
+    if (!next.isConnected) return;
+    requestAnimationFrame(() => next.classList.add("on"));
+    setTimeout(drop, FADE_MS + 50);
+  };
+  if (next.complete) show();
+  else {
+    next.addEventListener("load", show, { once: true });
+    next.addEventListener("error", drop, { once: true });
+  }
+};
+
 // the backdrop in the body (built once): an image under its scrim (blurred by `blur` px), else a
 // kind's part (built once per key, so its animations keep running; returned for its update), else
 // nothing. The glow
@@ -91,14 +120,10 @@ export const updateBackdrop = (
   if (url) {
     delete back.dataset.key;
     const src = ctx.hass?.hassUrl ? ctx.hass.hassUrl(url) : url;
-    let img = back.querySelector(":scope > img") as HTMLImageElement | null;
-    if (!img) {
-      img = document.createElement("img");
-      img.alt = "";
-      img.draggable = false;
-      own(img);
-    }
-    if (img.getAttribute("src") !== src) img.src = src;
+    const imgs = back.querySelectorAll<HTMLImageElement>(":scope > img");
+    const img = imgs[imgs.length - 1] ?? null;
+    if (!img) own(imgEl(src));
+    else if (img.getAttribute("src") !== src) fadeIn(back, img, imgEl(src));
     return { part: null, glow: lit };
   }
   if (!part) {

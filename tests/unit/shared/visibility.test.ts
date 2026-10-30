@@ -22,7 +22,7 @@ const STATES: Record<string, [string, Record<string, unknown>?]> = {
   "sensor.limit": ["40"],
   "sensor.offline": ["unavailable"],
   "input_select.mode": ["eco"],
-  "person.alex": ["home", { user_id: "u-alex" }],
+  "person.malte": ["home", { user_id: "u-malte" }],
   "person.sam": ["work", { user_id: "u-sam" }],
 };
 const hass = (over: Partial<HomeAssistant> = {}): HomeAssistant =>
@@ -35,7 +35,7 @@ const hass = (over: Partial<HomeAssistant> = {}): HomeAssistant =>
     ),
     config: { time_zone: "Europe/Berlin" },
     locale: { language: "en", time_zone: "server" },
-    user: { id: "u-alex", name: "Alex", is_admin: true },
+    user: { id: "u-malte", name: "Malte", is_admin: true },
     ...over,
   }) as unknown as HomeAssistant;
 
@@ -176,14 +176,14 @@ describe("checkVisibility (Home Assistant's semantics)", () => {
     expect(shown(c, hass(), { media: () => false })).toBe(false);
   });
   it("matches the logged-in user, and nobody when there is none", () => {
-    expect(shown([{ condition: "user", users: ["u-alex"] }])).toBe(true);
+    expect(shown([{ condition: "user", users: ["u-malte"] }])).toBe(true);
     expect(shown([{ condition: "user", users: ["u-sam"] }])).toBe(false);
-    expect(shown([{ condition: "user", users: ["u-alex"] }], hass({ user: undefined }))).toBe(
+    expect(shown([{ condition: "user", users: ["u-malte"] }], hass({ user: undefined }))).toBe(
       false,
     );
   });
   it("finds the user's person for location conditions", () => {
-    expect(userPerson(hass())).toBe("person.alex");
+    expect(userPerson(hass())).toBe("person.malte");
     expect(shown([{ condition: "location", locations: ["home"] }])).toBe(true);
     const sam = hass({ user: { id: "u-sam", name: "Sam", is_admin: false } });
     expect(shown([{ condition: "location", locations: ["home"] }], sam)).toBe(false);

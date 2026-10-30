@@ -317,16 +317,16 @@ The icon at the top left shows the entity's icon, or the poster type's own drawi
 
 ```yaml
 - type: custom:poster-card-pro
-  name: Alex
+  name: Malte
   icon: mdi:account
-  icon_image: person.alex
-  value: "{{ 'Home' if is_state('person.alex', 'home') else 'Away' }}"
+  icon_image: person.malte
+  value: "{{ 'Home' if is_state('person.malte', 'home') else 'Away' }}"
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   name: Now playing
-  icon: mdi:television
-  icon_image: "{{ state_attr('media_player.living_room_tv', 'entity_picture') }}"
-  value: "{{ state_attr('media_player.living_room_tv', 'media_title') }}"
+  icon: mdi:speaker
+  icon_image: "{{ state_attr('media_player.living_room_speaker', 'entity_picture') }}"
+  value: "{{ state_attr('media_player.living_room_speaker', 'media_title') }}"
   grid_options: { columns: 6 }
 ```
 
@@ -366,7 +366,7 @@ The icon takes [actions](#actions) of its own, as on Home Assistant's tile card:
 - a template that renders one;
 - an entity, whose picture it shows: a camera's snapshot, a person's photo, a media player's art.
 
-`image: false` drops a poster type's own backdrop. A person poster has their photo behind it already. `image: person.alex` puts it behind any other poster.
+`image: false` drops a poster type's own backdrop. A person poster has their photo behind it already. `image: person.malte` puts it behind any other poster.
 
 `image_blur` blurs the backdrop: `true` for the default blur, or a number of pixels. A person's photo and a media player's art are blurred by default; `image_blur: false` shows them sharp.
 
@@ -382,11 +382,11 @@ The icon takes [actions](#actions) of its own, as on Home Assistant's tile card:
   tap_action: { action: more-info, entity: camera.front_door }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
-  name: Alex
+  name: Malte
   icon: mdi:account
-  image: "{{ state_attr('person.alex', 'entity_picture') }}"
+  image: "{{ state_attr('person.malte', 'entity_picture') }}"
   image_blur: 8
-  value: "{{ 'Home' if is_state('person.alex', 'home') else 'Away' }}"
+  value: "{{ 'Home' if is_state('person.malte', 'home') else 'Away' }}"
   grid_options: { columns: 6 }
 ```
 
@@ -480,7 +480,7 @@ control_options:
   - { value: Guest, icon: mdi:account-multiple }
 status: false
 badges:
-  - person.alex
+  - person.malte
   - person.sam
   - entity: binary_sensor.window_bedroom
     name: Bedroom

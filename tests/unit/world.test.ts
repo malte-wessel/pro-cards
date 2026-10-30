@@ -18,7 +18,7 @@ describe("demo world", () => {
     for (const id of [
       "sensor.outdoor_temperature",
       "light.living_room",
-      "person.alex",
+      "person.malte",
       "sun.sun",
       "scene.movie_night",
       "vacuum.robot",

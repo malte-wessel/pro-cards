@@ -50,7 +50,7 @@ sections:
     entities: [sensor.living_room_temperature, sensor.living_room_humidity]
   - layout: row
     divider: true
-    entities: [light.living_room, cover.living_room_blinds, media_player.living_room_tv, vacuum.robot]
+    entities: [light.living_room, cover.living_room_blinds, media_player.living_room_speaker, vacuum.robot]
 ```
 
 :::
@@ -73,7 +73,7 @@ sections:
       - { entity: sensor.living_room_humidity, decimals: 0 }
   - layout: row
     divider: true
-    entities: [light.living_room, cover.living_room_blinds, media_player.living_room_tv, vacuum.robot]
+    entities: [light.living_room, cover.living_room_blinds, media_player.living_room_speaker, vacuum.robot]
 ```
 
 :::
@@ -102,7 +102,7 @@ sections:
     entities:
       - { entity: light.living_room, tap_action: { action: toggle } }
       - { entity: cover.living_room_blinds, icon: mdi:window-shutter }
-      - { entity: media_player.living_room_tv, icon: mdi:television }
+      - { entity: media_player.living_room_speaker, icon: mdi:speaker }
       - { entity: vacuum.robot }
 ```
 
@@ -256,7 +256,7 @@ show_icon: true
 sections:
   - layout: row
     entities:
-      - { entity: person.alex, name: Alex, visual: badge, rules: &p [{ state: home, color: green, label: Home }, { state: not_home, color: grey, label: Away }] }
+      - { entity: person.malte, name: Malte, visual: badge, rules: &p [{ state: home, color: green, label: Home }, { state: not_home, color: grey, label: Away }] }
       - { entity: person.sam, name: Sam, visual: badge, rules: *p }
       - { entity: person.kim, name: Kim, visual: badge, rules: *p }
   - layout: table

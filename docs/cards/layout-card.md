@@ -39,8 +39,8 @@ cards:
         entity: cover.living_room_blinds
         name: Blinds
       - type: custom:entity-card-pro
-        entity: media_player.living_room_tv
-        name: TV
+        entity: media_player.living_room_speaker
+        name: Music
       - type: custom:entity-card-pro
         entity: climate.living_room
         name: Heating
@@ -490,9 +490,9 @@ cards:
   - type: custom:entity-card-pro
     entity: light.kitchen
   - type: custom:entity-card-pro
-    entity: media_player.living_room_tv
+    entity: media_player.living_room_speaker
     visibility:
-      - { condition: state, entity: media_player.living_room_tv, state_not: "off" }
+      - { condition: state, entity: media_player.living_room_speaker, state_not: "off" }
   - type: custom:entity-card-pro
     entity: sensor.outdoor_temperature
 ```

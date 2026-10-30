@@ -6,11 +6,11 @@ import { numAttr as num, pictureOf } from "../entity/look.ts";
 import { leadEl, secondaryEl } from "../entity/render/lead.ts";
 import type { HassEntity } from "../ha.ts";
 import { oneOf } from "../util.ts";
-import { artColor } from "./art.ts";
+import { artColor, artPending } from "./art.ts";
 import { div, pctValue, str, SVG, wordValue } from "./dom.ts";
 import { place, stateText } from "./domains.ts";
 import { attention } from "./rules.ts";
-import type { Kind, KindCtx } from "./types.ts";
+import type { Kind, KindCtx, KindHost } from "./types.ts";
 
 const artUrl = (c: KindCtx) => {
   const url = pictureOf(c.m.st);
@@ -18,6 +18,17 @@ const artUrl = (c: KindCtx) => {
 };
 
 // ----- media player -----
+
+// each poster's last cover colour: held while the next cover's is read, so the colour fades from
+// the one song's to the next one's rather than through the default
+const lastArt = new WeakMap<KindHost, string>();
+const coverColor = (c: KindCtx) => {
+  const url = artUrl(c);
+  const color = artColor(url, c.host.redraw);
+  if (color) lastArt.set(c.host, color);
+  else if (!artPending(url)) lastArt.delete(c.host);
+  return color ?? lastArt.get(c.host) ?? null;
+};
 
 // the share of the track played now: from the position Home Assistant last reported and the time
 // since, while it plays
@@ -43,7 +54,7 @@ export const MEDIA: Kind = {
   image: (c) => pictureOf(c.m.st),
   imageBlur: true,
   // the art's own colour, once it has been read
-  color: (c) => artColor(artUrl(c), c.host.redraw),
+  color: coverColor,
   status: (c) => c.m.look.label ?? stateText(c),
   slots: (c) => {
     const st = c.m.st,

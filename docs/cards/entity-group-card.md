@@ -68,7 +68,7 @@ entities:
 
 ## Mixed visuals
 
-Every row can have its own `visual` and its own [control](/cards/controls): a switch and brightness slider for the light, buttons and a position slider for the blinds (`control: auto` picks them by domain), a sparkline for the temperature and a badge for the TV. `hours_to_show` sets one history window for the whole card.
+Every row can have its own `visual` and its own [control](/cards/controls): a switch and brightness slider for the light, buttons and a position slider for the blinds (`control: auto` picks them by domain), a sparkline for the temperature and a badge for the speaker. `hours_to_show` sets one history window for the whole card.
 
 ::: live
 
@@ -98,13 +98,13 @@ entities:
       - { below: 19, color: blue, label: Cold }
       - { below: 24, color: green, label: Comfortable }
       - { above: 24, color: orange, label: Warm }
-  - entity: media_player.living_room_tv
-    name: TV
+  - entity: media_player.living_room_speaker
+    name: Music
     visual: badge
     rules:
       - { state: playing, color: green, icon: mdi:play-circle, label: Playing }
-      - { state: idle, color: grey, icon: mdi:television, label: Idle }
-      - { state: "off", color: grey, icon: mdi:television-off, label: "Off" }
+      - { state: idle, color: grey, icon: mdi:speaker, label: Idle }
+      - { state: "off", color: grey, icon: mdi:speaker-off, label: "Off" }
 ```
 
 :::
@@ -180,7 +180,7 @@ Three columns of badges and rings make a compact status board; a grid of scenes 
   layout: grid
   columns: 3
   entities:
-    - { entity: person.alex, name: Alex, visual: badge, rules: [{ state: home, color: green, label: Home }, { state: not_home, color: grey, label: Away }] }
+    - { entity: person.malte, name: Malte, visual: badge, rules: [{ state: home, color: green, label: Home }, { state: not_home, color: grey, label: Away }] }
     - { entity: person.sam, name: Sam, visual: badge, rules: [{ state: home, color: green, label: Home }, { state: not_home, color: grey, label: Away }] }
     - { entity: person.kim, name: Kim, visual: badge, rules: [{ state: home, color: green, label: Home }, { state: not_home, color: grey, label: Away }] }
     - { entity: sensor.robot_battery, name: Robot, visual: ring, rules: [{ below: 20, color: red }, { above: 20, color: green }] }
@@ -498,13 +498,13 @@ A table of modes with the switch in the value column, and a device sheet where e
     - { entity: input_boolean.vacation_mode, name: Vacation mode, control: toggle }
   grid_options: { columns: 6 }
 - type: custom:entity-group-card-pro
-  title: Living room TV
-  icon: mdi:television
+  title: Living room speaker
+  icon: mdi:speaker
   layout: table
   entities:
-    - { entity: media_player.living_room_tv, name: State, visual: badge, rules: [{ state: playing, color: green, label: Playing }, { state: idle, color: grey, label: Idle }, { state: "off", color: grey, label: "Off" }] }
-    - { entity: media_player.living_room_tv, name: Playing, attribute: media_title }
-    - { entity: media_player.living_room_tv, name: Volume, attribute: volume_level, unit: "" }
+    - { entity: media_player.living_room_speaker, name: State, visual: badge, rules: [{ state: playing, color: green, label: Playing }, { state: idle, color: grey, label: Idle }, { state: "off", color: grey, label: "Off" }] }
+    - { entity: media_player.living_room_speaker, name: Playing, attribute: media_title }
+    - { entity: media_player.living_room_speaker, name: Volume, attribute: volume_level, unit: "" }
     - { entity: sensor.living_room_co2, name: Room air, decimals: 0 }
   grid_options: { columns: 6 }
 ```
@@ -537,7 +537,7 @@ entities:
     rules:
       - { state: open, color: green, icon: mdi:window-shutter-open, label: Open }
       - { state: closed, color: grey, icon: mdi:window-shutter, label: Closed }
-  - { entity: media_player.living_room_tv, name: TV, icon: mdi:television }
+  - { entity: media_player.living_room_speaker, name: Music, icon: mdi:speaker }
   - entity: scene.movie_night
     name: Movie
     icon: mdi:movie-open

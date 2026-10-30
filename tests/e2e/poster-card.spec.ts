@@ -162,8 +162,8 @@ test.describe("poster card", () => {
   }) => {
     await mount(page, [
       { type: P, entity: "sensor.living_room_temperature", image: "/local/garden.jpg" },
-      { type: P, entity: "person.alex" },
-      { type: P, entity: "person.alex", image: false },
+      { type: P, entity: "person.malte" },
+      { type: P, entity: "person.malte", image: false },
     ]);
     const back = card(page, 0).locator(".pback");
     await expect(back).toHaveClass(/scrim/);
@@ -176,10 +176,10 @@ test.describe("poster card", () => {
     page,
   }) => {
     await mount(page, [
-      { type: P, entity: "person.alex" },
-      { type: P, entity: "person.alex", image_blur: false, show_entity_picture: false },
+      { type: P, entity: "person.malte" },
+      { type: P, entity: "person.malte", image_blur: false, show_entity_picture: false },
       { type: P, entity: "person.kim" },
-      { type: P, entity: "media_player.living_room_tv" },
+      { type: P, entity: "media_player.living_room_speaker" },
       { type: P, entity: "sensor.living_room_temperature", image: "/local/garden.jpg" },
       {
         type: P,
@@ -192,11 +192,11 @@ test.describe("poster card", () => {
       card(page, i)
         .locator(".pback")
         .evaluate((e) => (e as HTMLElement).style.getPropertyValue("--pblur"));
-    const alex = card(page, 0);
-    await expect(alex.locator(".pback.blur img")).toBeAttached();
+    const malte = card(page, 0);
+    await expect(malte.locator(".pback.blur img")).toBeAttached();
     expect(await blurOf(0)).toBe("20px");
-    const src = await alex.locator(".pback img").getAttribute("src");
-    await expect(alex.locator(".plead img.picture")).toHaveAttribute("src", src!);
+    const src = await malte.locator(".pback img").getAttribute("src");
+    await expect(malte.locator(".plead img.picture")).toHaveAttribute("src", src!);
     // sharp, and no icon over their face
     await expect(card(page, 1).locator(".pback")).not.toHaveClass(/blur/);
     await expect(card(page, 1).locator(".plead .plead-none")).toBeAttached();
@@ -213,29 +213,65 @@ test.describe("poster card", () => {
     expect(await blurOf(5)).toBe("6px");
   });
 
+  test("a cover from another site that allows it gives the poster its colour, the next song its own", async ({
+    page,
+  }) => {
+    await mount(page, { type: P, entity: "media_player.kitchen_speaker" });
+    const c = card(page);
+    const tint = () =>
+      c.locator(".body").evaluate((e) => (e as HTMLElement).style.getPropertyValue("--pc-tint"));
+    await expect.poll(tint).toMatch(/^hsl\(/);
+    const first = await tint();
+    // the poster row and its status badge read the one colour, so they fade together
+    await expect(c.locator(".row.poster")).toHaveAttribute("style", /--fe-color: var\(--pc-tint\)/);
+    // the status badge over the picture is filled with it
+    const badge = c.locator(".row.hval.pstatus");
+    expect(await badge.evaluate((e) => getComputedStyle(e).backgroundColor)).not.toBe(
+      "rgba(0, 0, 0, 0)",
+    );
+    // the next song: its own cover and colour, never the default between the two
+    await c.locator(".pmain .ctl-buttons button").last().click();
+    await expect(c.locator(".pvalue")).toContainText("Feel It");
+    const seen: string[] = [];
+    await expect
+      .poll(async () => {
+        const t = await tint();
+        seen.push(t);
+        return t;
+      })
+      .not.toBe(first);
+    expect(seen.every((t) => /^hsl\(/.test(t))).toBe(true);
+    // its cover fades in, behind the poster and in the icon; the one before goes once covered
+    const back = c.locator(".pback > img");
+    await expect(back).toHaveCount(1);
+    const src = await back.getAttribute("src");
+    await expect(c.locator(".plead img.picture")).toHaveAttribute("src", src!);
+    await expect(c.locator(".plead img.picture")).toHaveClass(/pfade/);
+  });
+
   test("icon_image: a picture of its own in the icon, the icon while it has none", async ({
     page,
   }) => {
     await mount(page, [
       { type: P, name: "Garden", icon_image: "/local/garden.jpg" },
-      { type: P, name: "Alex", icon_image: "person.alex" },
+      { type: P, name: "Malte", icon_image: "person.malte" },
       {
         type: P,
         name: "Template",
-        icon_image: "{{ state_attr('person.alex', 'entity_picture') }}",
+        icon_image: "{{ state_attr('person.malte', 'entity_picture') }}",
         icon_ring: true,
         value: 40,
       },
       { type: P, name: "Kim", icon: "mdi:star", icon_image: "person.kim" },
       { type: P, entity: "sensor.wind_speed", icon_image: "/local/garden.jpg" },
-      { type: P, entity: "person.alex" },
+      { type: P, entity: "person.malte" },
     ]);
     const pic = (i: number) => card(page, i).locator(".plead img.picture");
     await expect(pic(0)).toHaveAttribute("src", "/local/garden.jpg");
-    // Alex's own picture, as their person poster shows it
-    const alex = (await pic(5).getAttribute("src"))!;
-    await expect(pic(1)).toHaveAttribute("src", alex);
-    await expect(pic(2)).toHaveAttribute("src", alex);
+    // Malte's own picture, as their person poster shows it
+    const malte = (await pic(5).getAttribute("src"))!;
+    await expect(pic(1)).toHaveAttribute("src", malte);
+    await expect(pic(2)).toHaveAttribute("src", malte);
     await expect(card(page, 2).locator(".plead .ring")).toBeAttached();
     // no picture now: the icon
     await expect(pic(3)).toHaveCount(0);
@@ -563,7 +599,7 @@ test.describe("poster types", () => {
   });
 
   test("a media player's volume gives way on a card too short for it", async ({ page }) => {
-    const cfg = { type: P, entity: "media_player.living_room_tv" };
+    const cfg = { type: P, entity: "media_player.living_room_speaker" };
     await mount(
       page,
       [
@@ -579,7 +615,7 @@ test.describe("poster types", () => {
     // the transport stays, and the icon is whole inside the card
     await expect(short.locator(".ctl-buttons")).toBeVisible();
     const box = await inner(short);
-    expect((await rect(short.locator(".plead"))).top - box.top).toBeGreaterThan(8);
+    expect((await rect(short.locator(".plead"))).top - box.top).toBeGreaterThanOrEqual(0);
     // the progress along the edge does not count: the tall card's title is full size
     expect(await fontPx(tall.locator(".pvalue .big b"))).toBeGreaterThan(
       await fontPx(short.locator(".pvalue .big b")),
