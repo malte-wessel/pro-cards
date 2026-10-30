@@ -7,6 +7,8 @@ const en = {
   "common.unavailable": "unavailable",
   "common.not_found": "{entity} not found",
   "common.plus_hours": "+{n} h",
+  "common.minus_hours": "−{n} h",
+  "common.hours": "{n} h",
 
   "entity.peak": "Peak",
   "control.toggle": "Toggle {name}",

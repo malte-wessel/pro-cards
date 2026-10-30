@@ -293,7 +293,7 @@ export const STYLE_CONTROLS = `
   .ctl:focus-visible, .ctl button:focus-visible, .ctl select:focus-visible, .toggle:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--fe-color); }
   .toggle { flex: none; width: 48px; height: 28px; border: 0; border-radius: 14px; padding: 0; position: relative; cursor: pointer; background: var(--switch-unchecked-track-color, rgba(128,128,128,.4)); }
   .toggle.on { background: var(--fe-color); }
-  .toggle i { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: left .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .toggle i { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--text-primary-color, #fff); transition: left .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
   .toggle.on i { left: 23px; }
   .toggle.sm { width: 36px; height: 20px; border-radius: 10px; }
   .toggle.sm i { top: 2px; left: 2px; width: 16px; height: 16px; }

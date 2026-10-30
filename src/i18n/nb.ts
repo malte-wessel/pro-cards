@@ -8,6 +8,8 @@ const nb: Translation = {
   "common.unavailable": "utilgjengelig",
   "common.not_found": "{entity} ikke funnet",
   "common.plus_hours": "+{n} t",
+  "common.minus_hours": "−{n} t",
+  "common.hours": "{n} t",
 
   "entity.peak": "Topp",
   "control.toggle": "Veksle {name}",

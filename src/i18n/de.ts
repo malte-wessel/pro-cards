@@ -8,6 +8,8 @@ const de: Translation = {
   "common.unavailable": "nicht verfügbar",
   "common.not_found": "{entity} nicht gefunden",
   "common.plus_hours": "+{n} h",
+  "common.minus_hours": "−{n} h",
+  "common.hours": "{n} h",
 
   "entity.peak": "Maximum",
   "control.toggle": "{name} umschalten",

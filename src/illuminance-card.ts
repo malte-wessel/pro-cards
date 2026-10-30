@@ -157,6 +157,8 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
       if (this._config?.mode !== "arc") this._fetchHistory();
       else this._render();
     }, REFRESH_MS);
+    // one observer, whatever was built while the card was away
+    this._ro?.disconnect();
     this._ro = new ResizeObserver(() => this._render());
     if (this._root) this._ro.observe(qs(this._root, ".body"));
     document.addEventListener("pointerdown", this._onDocPointer);
@@ -207,7 +209,8 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
       </div>
       <div class="body"></div>`;
     this._root = card;
-    this._ro?.observe(qs(card, ".body"));
+    // observed while on the page (connectedCallback observes a card built while away)
+    if (this.isConnected) this._ro?.observe(qs(card, ".body"));
     this._render();
   }
 
@@ -245,7 +248,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
     if (depsChanged(this._drawn, this, [cfg, langOf(hass), hass.themes])) {
       cfg.zonesList = mergeZones(cfg.zones, hass);
       cfg.zonesList.forEach((z) => {
-        z.css = cssColor(z.color, "#888888");
+        z.css = cssColor(z.color, "var(--grey-color, #888888)");
         z.hex = resolveHex(z.color, this);
       });
     }
@@ -268,7 +271,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
       for (const p of this._series) if (p.t >= t0 && (!best || p.v > best.v)) best = p;
       sec.textContent = best
         ? `${t(this._hass, "illuminance.max")} ${fmtLx(this._hass, best.v)} lx · ${fmtTime(this._hass, best.t)}`
-        : `${cfg.hours_to_show} h`;
+        : t(this._hass, "common.hours", { n: cfg.hours_to_show });
     }
     if (cfg.mode === "arc") renderArc(this, body, v);
     else if (cfg.mode === "trend") renderTrend(this, body, v);

@@ -106,6 +106,29 @@ export interface PosterConfig extends EntityCardConfig {
   iconActions: IconActions;
 }
 
+// the input of `def` found on the entity's device, where the card sets none (an id, or false) and
+// a weather entity has no attribute for it; null: none found
+const foundInput = (
+  def: NonNullable<Kind["inputs"]>[number],
+  set: unknown,
+  entity: string | null,
+  hass: HomeAssistant | undefined,
+): string | null => {
+  if (set === false || (typeof set === "string" && set)) return null;
+  if (!entity || !def.find || !hass || (domainOf(entity) === "weather" && def.weather)) return null;
+  return findInput(hass, deviceSiblings(hass, entity), def.find);
+};
+// what the kind's inputs found on the device of the card's entity, as written (null: none): the
+// card normalises again when one of them changes
+export const foundInputs = (
+  kind: Kind,
+  written: Readonly<Record<string, unknown>>,
+  hass: HomeAssistant | undefined,
+): (string | null)[] => {
+  const entity = typeof written.entity === "string" && written.entity ? written.entity : null;
+  return (kind.inputs ?? []).map((def) => foundInput(def, written[def.key], entity, hass));
+};
+
 // the kind's inputs as items: set on the card (an id; false drops it), else a weather entity's
 // attribute, else found on the entity's device (said once in the console); none found: left out
 const inputsOf = (
@@ -124,8 +147,8 @@ const inputsOf = (
     if (typeof set === "string" && set) raw = { entity: set };
     else if (entity && domainOf(entity) === "weather" && def.weather)
       raw = { entity, attribute: def.weather };
-    else if (entity && def.find && hass) {
-      const found = findInput(hass, deviceSiblings(hass, entity), def.find);
+    else {
+      const found = foundInput(def, set, entity, hass);
       if (found) {
         raw = { entity: found };
         logOnce(
@@ -147,6 +170,8 @@ const inputsOf = (
 const BADGE: { style: BadgeStyle; size: BadgeSize } = { style: "outline", size: "s" };
 const STATUS: { style: BadgeStyle; size: BadgeSize } = { style: "tag", size: "s" };
 const ENTITY_ID = /^[a-z_]+\.[a-z0-9_]+$/;
+// a file name looks like an entity id (garden.jpg): it is a picture's URL
+const IMAGE_FILE = /\.(jpe?g|png|gif|webp|svg|avif)$/i;
 
 // the blur of `image_blur: true`, in px
 export const IMAGE_BLUR = 20;
@@ -198,7 +223,7 @@ export const parseImage = (v: unknown): ImageSrc | false | null => {
   if (v === false) return false;
   if (typeof v !== "string" || !v) return null;
   if (isTemplate(v)) return { kind: "template", template: v };
-  if (ENTITY_ID.test(v)) return { kind: "entity", entity: v };
+  if (ENTITY_ID.test(v) && !IMAGE_FILE.test(v)) return { kind: "entity", entity: v };
   return { kind: "url", url: v };
 };
 
@@ -282,10 +307,8 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
     kind.controls &&
     (raw.control === undefined || raw.control === true || raw.control === "auto")
   ) {
-    const defaults = typeof kind.controls === "function" ? kind.controls(st) : kind.controls;
     const c = normalizeControl({ ...own, control: "auto" }, ctx, "the card");
-    main.control = c && defaults.length ? { ...c, defaults: [...defaults] } : null;
-    main.toggle = false;
+    main.control = c && kind.controls.length ? { ...c, defaults: [...kind.controls] } : null;
   }
 
   // the icon's own actions, each as written or else the kind's
@@ -323,9 +346,16 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
       STATUS,
       "a poster's corner",
     );
-    status.rules = main.rules;
-    if (main.ruleUnit) status.ruleUnit = main.ruleUnit;
-    status.item = { ...status.item, showIcon: typeof o.icon === "string", showName: false };
+    // the poster's rules, no name and an icon only where it names one, unless it says otherwise
+    if (o.rules === undefined) {
+      status.rules = main.rules;
+      if (main.ruleUnit) status.ruleUnit = main.ruleUnit;
+    }
+    status.item = {
+      ...status.item,
+      showIcon: o.show_icon == null ? typeof o.icon === "string" : status.item.showIcon,
+      showName: o.show_name == null ? false : status.item.showName,
+    };
     statusIdx = entities.push(status) - 1;
   }
 

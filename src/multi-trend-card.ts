@@ -36,6 +36,7 @@ import { DEVICE_CLASS_ICON, REFRESH_MS } from "./shared/constants.ts";
 import { fmtNumber, langOf } from "./shared/format.ts";
 import { fetchHistory, normalizeSmoothing, type Point } from "./shared/history.ts";
 import { HistoryFeed } from "./shared/history-feed.ts";
+import { t } from "./shared/i18n.ts";
 import { hideHover, leaveHides, outsideHides } from "./shared/hover.ts";
 import { TemplateSubscriptions } from "./shared/templates.ts";
 import { decimalsOf, isNum, isTemplate, qs } from "./shared/util.ts";
@@ -137,7 +138,8 @@ export class MultiTrendCard extends HTMLElement {
       ...this._visDeps.templates,
       ...entities.flatMap((e) => (isTemplate(e.color) ? [e.color] : [])),
     ]);
-    this._tpl.sync(this._hass?.connection, this._templates);
+    // off the page it subscribes once it is connected again
+    if (this.isConnected) this._tpl.sync(this._hass?.connection, this._templates);
     syncKeepHeight(this, config);
     if (this._root) this._buildDom();
   }
@@ -145,7 +147,7 @@ export class MultiTrendCard extends HTMLElement {
   set hass(hass: HomeAssistant) {
     const prev = this._hass;
     this._hass = hass;
-    if (!prev || prev.connection !== hass.connection)
+    if (this.isConnected && (!prev || prev.connection !== hass.connection))
       this._tpl.sync(hass.connection, this._templates);
     if (!this._root) this._buildDom();
     if (this._history.due()) {
@@ -185,6 +187,8 @@ export class MultiTrendCard extends HTMLElement {
     // another place may have another theme (a view's own)
     this._textCache.clear();
     this._timer = setInterval(() => this._fetchHistory(), REFRESH_MS);
+    // one observer, whatever was built while the card was away
+    this._ro?.disconnect();
     this._ro = new ResizeObserver(() => this._render());
     if (this._root) this._ro.observe(qs(this._root, ".plot"));
     document.addEventListener("pointerdown", this._onDocPointer);
@@ -317,10 +321,10 @@ export class MultiTrendCard extends HTMLElement {
     plot.addEventListener("pointermove", this._onPointer);
     plot.addEventListener("pointerdown", this._onPointer);
     plot.addEventListener("pointerleave", this._onLeave);
-    this._ro?.observe(plot);
+    // observed while on the page (connectedCallback observes a card built while away)
+    if (this.isConnected) this._ro?.observe(plot);
 
     card.style.setProperty("--tile-color", cssColor(this._config.color, "var(--state-icon-color)"));
-    qs(card, ".range").textContent = `${this._config.hours_to_show} h`;
 
     this._render();
   }
@@ -340,6 +344,9 @@ export class MultiTrendCard extends HTMLElement {
 
     // Header text
     qs(card, ".primary").textContent = this._config.title || this._name(0);
+    qs(card, ".range").textContent = t(this._hass, "common.hours", {
+      n: this._config.hours_to_show,
+    });
     const icon = qs(card, "ha-icon");
     icon.setAttribute(
       "icon",

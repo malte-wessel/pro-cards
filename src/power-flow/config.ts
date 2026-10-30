@@ -9,7 +9,6 @@ import {
 } from "../shared/entity/config.ts";
 import { DEFAULTS as ENTITY_DEFAULTS } from "../shared/entity/constants.ts";
 import {
-  amountBelow,
   chargeFromOf,
   clampDec,
   normalizeFlowTree,
@@ -168,9 +167,6 @@ const normalizeAnimation = (raw: unknown): Animation => {
     throw new Error(`${CARD_TYPE}: animation.fast_above must be greater than slow_below`);
   return { slowBelow, fastAbove };
 };
-
-// `hide_below` / `hide_consumers_below` / `idle_below`: watts, 0 (or nothing) never hides
-export const wattsBelow = (v: unknown, key: string) => amountBelow(CARD_TYPE, v, key, "watts");
 
 export const normalizePowerFlowConfig = (input: unknown): PowerFlowConfig => {
   if (!input || typeof input !== "object") throw new Error(`${CARD_TYPE}: invalid config`);

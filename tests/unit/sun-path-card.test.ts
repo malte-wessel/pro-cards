@@ -1,6 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
 import { solarElevation, solarDay, type SolarDay } from "../../src/shared/solar.ts";
-import { configToForm, formToConfig } from "../../src/sun-path/editor.ts";
+import {
+  configToForm,
+  EDITOR_LABELS,
+  editorSchema,
+  formToConfig,
+} from "../../src/sun-path/editor.ts";
 import { timeAt } from "../../src/shared/sun/curve.ts";
 import { defaultLabel, nextEvent } from "../../src/shared/sun/events.ts";
 import { SunPathCard } from "../../src/sun-path-card.ts";
@@ -153,5 +158,14 @@ describe("the sun's next event", () => {
   });
   it("takes the next day's sunrise when the polar night ends tomorrow", () => {
     expect(nextEvent(day(null, null), () => next, 15 * H)).toEqual({ key: "sunrise", t: 29 * H });
+  });
+});
+
+describe("sun path editor", () => {
+  it("labels every field it draws", () => {
+    type Field = { name: string; schema?: Field[] };
+    const names = (list: Field[]): string[] =>
+      list.flatMap((f) => (f.schema ? names(f.schema) : f.name ? [f.name] : []));
+    for (const name of names(editorSchema() as Field[])) expect(EDITOR_LABELS[name]).toBeDefined();
   });
 });

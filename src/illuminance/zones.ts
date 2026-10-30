@@ -1,5 +1,6 @@
 // Illuminance zones and the log scale (pure).
 import { mixHex, resolveHex } from "../shared/color.ts";
+import { langOf, numberFormat } from "../shared/format.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
 import { lineMeans, type MeanBucket } from "../shared/history.ts";
 import { t } from "../shared/i18n.ts";
@@ -13,6 +14,8 @@ export interface ZoneDef {
 }
 export interface Zone extends ZoneDef {
   label: string;
+  // the threshold as the y axis writes it, in the user's locale (see mergeZones)
+  axis?: string;
   // the colour resolved against the live theme (set by the card, used for blending)
   hex?: string;
 }
@@ -41,16 +44,19 @@ export const DEFAULT_ZONES: readonly ZoneDef[] = [
 export const defaultZoneLabel = (hass: HomeAssistant | null | undefined, key: ZoneKey) =>
   t(hass, `illuminance.zone.${key}`);
 
-// the zones with the config overrides applied; default labels in the user's language
+// the zones with the config overrides applied; default labels and the axis text in the user's
+// language
 export const mergeZones = (overrides?: ZoneOverrides | null, hass?: HomeAssistant | null): Zone[] =>
   DEFAULT_ZONES.map((z) => {
     const o = overrides?.[z.key] || {};
-    const max = o.max === undefined || o.max === null || o.max === "" ? z.max : Number(o.max);
+    const raw = o.max === undefined || o.max === null || o.max === "" ? z.max : Number(o.max);
+    const max = Number.isFinite(raw) ? raw : z.max;
     return {
       ...z,
       label: o.label || defaultZoneLabel(hass, z.key),
-      max: Number.isFinite(max) ? max : z.max,
+      max,
       color: o.color || z.color,
+      axis: fmtAxisLx(max, hass),
     };
   });
 export const zoneOf = (zones: readonly Zone[], v: number): Zone =>
@@ -81,14 +87,16 @@ export const niceCeilLog = (v: number) => {
 };
 // top of the trend scale: `maxLx` unless the window's peak is higher, then a nice ceiling above it
 export const scaleTop = (maxLx: number, peak: number) => (peak > maxLx ? niceCeilLog(peak) : maxLx);
-// compact lux text for the axis: 1, 100, 10k, 30k, 1.5k
-export const fmtAxisLx = (v: number) =>
-  v >= 1000 ? `${Math.round((v / 1000) * 10) / 10}k` : String(v);
+// compact lux text for the axis in the user's locale: 1, 100, 10k, 30k, 1.5k (1,5k in German)
+export const fmtAxisLx = (v: number, hass?: HomeAssistant | null) =>
+  v >= 1000
+    ? `${numberFormat(langOf(hass), { maximumFractionDigits: 1 }).format(v / 1000)}k`
+    : numberFormat(langOf(hass), {}).format(v);
 // y axis labels: the zone thresholds strictly inside (min, max)
 export const yLabels = (zones: readonly Zone[], min: number, max: number) =>
   zones
     .filter((z) => z.max > min && z.max < max)
-    .map((z) => ({ val: z.max, txt: fmtAxisLx(z.max) }));
+    .map((z) => ({ val: z.max, txt: z.axis ?? fmtAxisLx(z.max) }));
 // 0..1 position of v on the log scale [min, max]
 export const posOf = (v: number, min: number, max: number) =>
   Math.max(0, Math.min(1, (logOf(v, min) - logOf(min, min)) / (logOf(max, min) - logOf(min, min))));

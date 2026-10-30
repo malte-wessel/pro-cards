@@ -28,7 +28,7 @@ describe("illuminance-card zones and scale", () => {
     expect(z[3]).toMatchObject({ label: "Daylight", max: 40000, color: "orange" });
     expect(z[4]).toMatchObject({ label: "Sun", max: Infinity, color: "#ff0000" });
     expect(z[0].max).toBe(1);
-    expect(mergeZones().map(({ label: _label, ...z }) => z)).toEqual(DEFAULT_ZONES);
+    expect(mergeZones().map(({ label: _label, axis: _axis, ...z }) => z)).toEqual(DEFAULT_ZONES);
     expect(mergeZones().map((z) => z.label)).toEqual([
       "Night",
       "Twilight",
@@ -47,6 +47,11 @@ describe("illuminance-card zones and scale", () => {
       "Sonne",
     ]);
     expect(mergeZones({ day: { label: "Daylight" } }, de)[3].label).toBe("Daylight");
+  });
+  it("writes the axis thresholds in the user's locale", () => {
+    const de = { states: {}, locale: { language: "de-DE" } } as unknown as HomeAssistant;
+    const zones = mergeZones({ day: { max: 1500 } }, de);
+    expect(yLabels(zones, 0.1, 1e5).map((l) => l.txt)).toEqual(["1", "100", "10k", "1,5k"]);
   });
   it("finds zones by value", () => {
     const z = mergeZones();

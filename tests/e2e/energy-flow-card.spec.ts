@@ -1,4 +1,4 @@
-import { test, expect, mount, card, FROZEN } from "./util.ts";
+import { test, expect, mount, card, setState, FROZEN } from "./util.ts";
 import type { Locator, Page } from "@playwright/test";
 
 // The demo world's meters (meters.ts) and their statistics, under the frozen clock: Sunday,
@@ -224,6 +224,33 @@ test.describe("energy flow card", () => {
     // … this dashboard's picker makes its own when it first renders
     await make("_energy_docs");
     await expect(named).toHaveText("This month");
+  });
+
+  test("closes its calendar when it leaves the page", async ({ page }) => {
+    await mount(page, { type: T, home: HOME, sources: SRC });
+    const c = card(page);
+    await chip(c).click();
+    await expect(dp(c)).toBeVisible();
+    const after = await c.evaluate((el) => {
+      const root = el.shadowRoot!;
+      const button = root.querySelector(".ppicker .pchip")!;
+      const parent = el.parentElement!;
+      el.remove();
+      const left = [button.getAttribute("aria-expanded"), root.querySelectorAll(".dp").length];
+      parent.appendChild(el);
+      return left;
+    });
+    expect(after).toEqual(["false", 0]);
+  });
+
+  test("shows a consumer's period total while its meter is unavailable", async ({ page }) => {
+    await mount(page, { type: T, home: HOME, sources: SRC, consumers: ["sensor.washer_energy"] });
+    const c = card(page);
+    const washer = c.locator(".plabel[data-node='c0'] .state");
+    await expect(washer).toHaveText(/kWh/);
+    await setState(page, "sensor.washer_energy", "unavailable");
+    // the statistics still count the day: only the live tail is gone
+    await expect(washer).toHaveText(/\d kWh$/);
   });
 
   test("keeps the picker's buttons in place whatever the period's name", async ({ page }) => {

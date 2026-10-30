@@ -1,6 +1,7 @@
-// The sun's curve over the day (SVG): the elevation from midnight to midnight, the day and night
-// washes, the horizon, ticks at sunrise, noon and sunset, and the sun now; with a crosshair and a
-// tooltip under the pointer (the sun path card, the poster's sun kind).
+// The sun's curve over the day (SVG): the elevation over the solar day (12 h either side of solar
+// noon, SolarDay), the day and night washes, the horizon, ticks at sunrise, noon and sunset, and
+// the sun now; with a crosshair and a tooltip under the pointer (the sun path card, the poster's
+// sun kind).
 import { fmtNumber, fmtTime } from "../format.ts";
 import { smoothPath } from "../history.ts";
 import type { HomeAssistant } from "../ha.ts";

@@ -5,6 +5,8 @@ import {
   logOnce,
   type Registry,
 } from "../../../../src/shared/kinds/discover.ts";
+import { SOLAR } from "../../../../src/shared/kinds/energy.ts";
+import { RAIN } from "../../../../src/shared/kinds/rain.ts";
 import { snapshot } from "../../../../docs/.vitepress/theme/ha-shim/hass.ts";
 import type { HassEntity } from "../../../../src/shared/ha.ts";
 
@@ -84,6 +86,20 @@ describe("findInput", () => {
     expect(findInput(station, ["sensor.gust", "sensor.speed"], gust)).toBe("sensor.gust");
     // one candidate left, yet its key says nothing: not a gust
     expect(findInput(station, ["sensor.speed"], gust)).toBeNull();
+  });
+
+  it("finds the day's total by its key, never yesterday's", () => {
+    const meter = registry({
+      "sensor.power": ["pv", { device_class: "power" }],
+      "sensor.yesterday": ["pv", { device_class: "energy" }, "energy_yesterday"],
+      "sensor.today": ["pv", { device_class: "energy" }, "energy_day"],
+    });
+    const today = SOLAR.inputs!.find((d) => d.key === "today")!.find!;
+    const rain = RAIN.inputs!.find((d) => d.key === "today")!.find!;
+    expect(findInput(meter, ["sensor.yesterday", "sensor.today"], today)).toBe("sensor.today");
+    expect(findInput(meter, ["sensor.yesterday"], today)).toBeNull();
+    expect(rain.translationKey!.test("precipitation_yesterday")).toBe(false);
+    expect(rain.translationKey!.test("precipitation_today")).toBe(true);
   });
 
   it("never guesses between two", () => {

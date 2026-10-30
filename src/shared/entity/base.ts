@@ -1,6 +1,6 @@
 // Base element of the entity cards (and the weather card). Subclasses provide:
 //   static cardType            – the custom element name
-//   _normalize(raw)            – the normalised config (see config.js)
+//   _normalize(raw)            – the normalised config (see config.ts)
 //   _styles()                  – the CSS string for the shadow root
 //   getGridOptions()           – the sections grid footprint
 import { fireAction, fireEvent, fireHaptic, freshShadow, syncKeepHeight } from "../card.ts";
@@ -175,14 +175,10 @@ export abstract class EntityCardBase extends HTMLElement {
       up: (ev) => ev.stopPropagation(),
       leave: leaveHides(() => this._hideHover()),
     };
-    const dragging = () => this._dragging;
     this._ctl = {
       pending: this._pending,
       buttonPending: this._buttonPending,
       armed: this._armed,
-      get dragging() {
-        return dragging();
-      },
       call: (el, idx, ent, svc, pending, haptic) =>
         this._callService(el, idx, ent, svc, pending, haptic),
       redraw: () => this._render(),
@@ -311,6 +307,8 @@ export abstract class EntityCardBase extends HTMLElement {
     this._resized = true;
     this._timer = setInterval(() => this._tick(), REFRESH_MS);
     this._armMinute();
+    // one observer while connected: a card connected again drops the one it had
+    this._ro?.disconnect();
     this._ro = new ResizeObserver(() => {
       this._resized = true;
       if (!this._resizeLater) return this._render();
@@ -553,8 +551,9 @@ export abstract class EntityCardBase extends HTMLElement {
   }
 
   // ----- templates -----
+  // only while connected: a card away from the page subscribes once it is back (connectedCallback)
   _subscribeTemplates() {
-    this._tpl.sync(this._hass?.connection, this._templates);
+    if (this.isConnected) this._tpl.sync(this._hass?.connection, this._templates);
   }
   _cardType() {
     return (this.constructor as typeof EntityCardBase).cardType;
@@ -683,10 +682,11 @@ export abstract class EntityCardBase extends HTMLElement {
     this._buildBody(body);
     this._bodyKey = this._vis.key;
     card.appendChild(body);
-    // the observer follows the new card, not the one setConfig replaced (it would keep it alive)
+    // the observer follows the new card, not the one setConfig replaced (it would keep it alive);
+    // a card away from the page observes nothing (connectedCallback observes the card then)
     if (this._root) this._ro?.unobserve(this._root);
     this._root = card;
-    this._ro?.observe(card);
+    if (this.isConnected) this._ro?.observe(card);
     this._render();
     // text fitted before the web font arrived is measured again once it is there
     document.fonts?.ready.then(() => {

@@ -8,6 +8,8 @@ const nl: Translation = {
   "common.unavailable": "niet beschikbaar",
   "common.not_found": "{entity} niet gevonden",
   "common.plus_hours": "+{n} u",
+  "common.minus_hours": "−{n} u",
+  "common.hours": "{n} u",
 
   "entity.peak": "Piek",
   "control.toggle": "{name} omschakelen",

@@ -156,7 +156,7 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
     const buckets = bucketMean(pts, t0, now, nb, true);
     const vals = buckets.filter((b): b is MeanBucket => b !== null).map((b) => b.v);
     if (!vals.length) return empty();
-    const vmax = Math.max(...vals),
+    const vmax = Math.max(0, ...vals),
       vmin = Math.min(0, ...vals),
       range = vmax - vmin || 1;
     const yOf = (v: number) => H * (1 - (v - vmin) / range),
@@ -211,7 +211,11 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
       numeric || !("s" in b)
         ? { num: b.v, raw: String(b.v), avail: true }
         : { num: null, raw: b.s, avail: b.s !== "unavailable" && b.s !== "unknown" };
-    const col = cssColor(resolveLook(ent, bm, plot._ctx.st, tplGet).color, "var(--primary-color)");
+    // a past bucket is matched by its own value, not by the entity's state of now
+    const col = cssColor(
+      resolveLook(ent, bm, plot._ctx.st, tplGet, undefined, bm, false).color,
+      "var(--primary-color)",
+    );
     const stroke =
       i === buckets.length - 1 ? ` stroke="var(--primary-text-color)" stroke-width="1.5"` : "";
     html += `<rect x="${(i * bw + gap / 2).toFixed(1)}" y="0" width="${Math.max(1, bw - gap).toFixed(1)}" height="${H}" rx="2" fill="${col}" opacity=".7"${stroke}/>`;
@@ -222,7 +226,13 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
   // history windows end now, forward windows (forecasts) start now
   const forward = !!plot._ctx.window && t0 >= ctx.now - 3600e3;
   const n = Math.round(hours);
-  addLabel(labels, "", forward ? tr(ctx.hass, "common.now") : `−${n} h`, 0, H + 3);
+  addLabel(
+    labels,
+    "",
+    forward ? tr(ctx.hass, "common.now") : tr(ctx.hass, "common.minus_hours", { n }),
+    0,
+    H + 3,
+  );
   addLabel(
     labels,
     "right",
@@ -275,22 +285,13 @@ export const showHover = (ctx: RenderCtx, plot: PlotElement, t: number): boolean
     if (kind === "columns" && i === plot._peak) time += ` · ${tr(ctx.hass, "entity.peak")}`;
   }
   const tplGet = tplGetter(ctx);
-  let text: string, label: string | null;
-  if (val !== null) {
-    const look = resolveLook(
-      ent,
-      { num: val, raw: String(val), avail: true },
-      st,
-      tplGet,
-      ctx.hass,
-    );
-    label = look.label;
-    text = fmtNumber(ctx, ent, val, st);
-  } else {
-    const look = resolveLook(ent, { num: null, raw: stateText, avail: true }, st, tplGet, ctx.hass);
-    label = look.label;
-    text = stateText ?? "–";
-  }
+  // the value under the pointer is matched by itself, not by the entity's state of now
+  const vm =
+    val !== null
+      ? { num: val, raw: String(val), avail: true }
+      : { num: null, raw: stateText, avail: true };
+  const label = resolveLook(ent, vm, st, tplGet, ctx.hass, vm, false).label;
+  const text = val !== null ? fmtNumber(ctx, ent, val, st) : (stateText ?? "–");
   g.classList.add("on");
   tip.textContent = "";
   const tm = document.createElement("div");

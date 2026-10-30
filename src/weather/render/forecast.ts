@@ -79,13 +79,30 @@ export const drawForecast = (
     cssColor(
       r.hi === null
         ? modelOf(ctx, tempEnt).look.color
-        : resolveLook(tempEnt, { num: r.hi, raw: String(r.hi), avail: true }, st, tplGet).color,
+        : resolveLook(
+            tempEnt,
+            { num: r.hi, raw: String(r.hi), avail: true },
+            st,
+            tplGet,
+            ctx.hass,
+            undefined,
+            false,
+          ).color,
       "var(--primary-color)",
     );
-  // the condition rules of the section pick the row's icon and icon colour
+  // the condition rules of the section pick the row's icon and icon colour; a forecast row is
+  // matched by its own value, never by today's state (resolveLook's `now`)
   const condLook = (r: ForecastRow) =>
     r.condition
-      ? resolveLook(condEnt, { num: null, raw: r.condition, avail: true }, st, tplGet)
+      ? resolveLook(
+          condEnt,
+          { num: null, raw: r.condition, avail: true },
+          st,
+          tplGet,
+          ctx.hass,
+          undefined,
+          false,
+        )
       : null;
   const setCondition = (el: HTMLElement, r: ForecastRow) => {
     const look = condLook(r);

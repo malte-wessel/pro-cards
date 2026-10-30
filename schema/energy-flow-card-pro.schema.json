@@ -224,7 +224,7 @@
       "type": "string",
       "enum": ["today", "yesterday", "week", "month", "year", "dashboard"],
       "default": "today",
-      "description": "The period the card shows: calendar-aligned in Home Assistant's time zone, the week from Monday; it turns over by itself. dashboard: the period of Home Assistant's energy date picker on the dashboard (today without one); the card then has no picker of its own"
+      "description": "The period the card shows: calendar-aligned in Home Assistant's time zone or the browser's, as the user's profile says, the week from Monday; it turns over by itself. dashboard: the period of Home Assistant's energy date picker on the dashboard (today without one); the card then has no picker of its own"
     },
     "collection_key": {
       "type": "string",

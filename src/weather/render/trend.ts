@@ -22,6 +22,7 @@ import type { TrendEntry, WeatherConfig, WeatherSection } from "../config.ts";
 import { conditionText } from "../../shared/weather/conditions.ts";
 import { QUANTITY_COLOR, type Quantity } from "../constants.ts";
 import {
+  entryDate,
   forecastPoints,
   hourlyWindow,
   hoursIn,
@@ -37,7 +38,6 @@ export interface ForecastTrendEl extends TrendPlotEl {
 }
 
 const DAY = 86400e3;
-const midnight = (t: number) => new Date(new Date(t).toDateString()).getTime();
 const KEY: Record<Quantity, keyof ForecastEntry> = {
   temperature: "temperature",
   precipitation: "precipitation",
@@ -114,19 +114,19 @@ const hourlySeries = (
   });
 };
 // the series of a daily trend: the temperature as high and low sharing one lane, the rest one
-// line each; points at the days' midnights
+// line each; points at the midnights of the days' dates (`at`)
 const dailySeries = (
   ctx: RenderCtx,
   cfg: WeatherConfig,
   sec: TrendSection,
   days: Day[],
-  t0: number,
+  at: number[],
 ): TrendSeries[] => {
   const st = ctx.hass?.states[cfg.entity];
   const pts = (of: (d: Day) => number | null) =>
     days.flatMap((d, i) => {
       const v = of(d);
-      return v === null ? [] : [{ t: t0 + i * DAY, v }];
+      return v === null ? [] : [{ t: at[i], v }];
     });
   const out: TrendSeries[] = [];
   sec.show.forEach((e, lane) => {
@@ -181,11 +181,27 @@ export const drawTrendSection = (
   const condLabel = (cond: string | null | undefined, temp: number | null | undefined) => {
     const c = cond ? conditionText(ctx.hass, cond) : null;
     const cl = cond
-      ? resolveLook(condEnt, { num: null, raw: cond, avail: true }, st, tplGet).label
+      ? resolveLook(
+          condEnt,
+          { num: null, raw: cond, avail: true },
+          st,
+          tplGet,
+          ctx.hass,
+          undefined,
+          false,
+        ).label
       : null;
     const label =
       typeof temp === "number"
-        ? resolveLook(tempEnt, { num: temp, raw: String(temp), avail: true }, st, tplGet).label
+        ? resolveLook(
+            tempEnt,
+            { num: temp, raw: String(temp), avail: true },
+            st,
+            tplGet,
+            ctx.hass,
+            undefined,
+            false,
+          ).label
         : null;
     return [c, cl, label].filter(Boolean).join(" · ") || null;
   };
@@ -209,12 +225,15 @@ export const drawTrendSection = (
   } else {
     const list = (days || []).slice(0, sec.count);
     loading = days === undefined;
-    t0 = list.length ? midnight(list[0].t) : ctx.now;
-    t1 = t0 + Math.max(1, list.length - 1) * DAY;
-    series = list.length ? dailySeries(ctx, cfg, sec, list, t0) : [];
+    // each day at the local midnight of the date the forecast section names it by (entryDate):
+    // calendar days, a DST change makes one 23 or 25 hours long
+    const at = list.map((d) => entryDate(d.t).getTime());
+    t0 = at.length ? at[0] : ctx.now;
+    t1 = at.length > 1 ? at[at.length - 1] : t0 + DAY;
+    series = list.length ? dailySeries(ctx, cfg, sec, list, at) : [];
     timeFmt = (tt) => fmtTime(ctx.hass, tt, { weekday: "long", day: "numeric", month: "short" });
     chart._head = (tt) => {
-      const d = list[Math.round((tt - t0) / DAY)];
+      const d = list[at.indexOf(tt)];
       return d ? condLabel(d.condition, d.hi) : null;
     };
   }

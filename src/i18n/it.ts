@@ -8,6 +8,8 @@ const it: Translation = {
   "common.unavailable": "non disponibile",
   "common.not_found": "{entity} non trovato",
   "common.plus_hours": "+{n} h",
+  "common.minus_hours": "−{n} h",
+  "common.hours": "{n} h",
 
   "entity.peak": "Picco",
   "control.toggle": "Commuta {name}",

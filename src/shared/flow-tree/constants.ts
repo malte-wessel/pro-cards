@@ -11,7 +11,6 @@ export type FlowStyle = (typeof FLOW_STYLES)[number];
 export const CONSUMER_STYLES = ["nodes", "list"] as const;
 export type ConsumerStyle = (typeof CONSUMER_STYLES)[number];
 export const SOURCE_KINDS = ["solar", "battery", "grid"] as const;
-export type SourceKind = (typeof SOURCE_KINDS)[number];
 export const IDLE_LINKS = ["dashed", "hidden", "faint"] as const;
 export type IdleLinks = (typeof IDLE_LINKS)[number];
 

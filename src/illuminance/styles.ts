@@ -53,7 +53,7 @@ export const STYLE = `
   .arcwrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .arcwrap svg { display: block; width: 100%; max-width: 340px; height: auto; overflow: visible; }
   .arcwrap .zl { font-size: 9px; letter-spacing: .9px; fill: var(--secondary-text-color); text-transform: uppercase; }
-  .arcwrap .bigv { font-size: 40px; font-weight: 500; letter-spacing: -1px; fill: var(--primary-text-color); font-variant-numeric: tabular-nums; }
+  .arcwrap .bigv { font-size: 40px; font-weight: ${fw("medium")}; letter-spacing: -1px; fill: var(--primary-text-color); font-variant-numeric: tabular-nums; }
   .arcwrap .unit { font-size: 13px; letter-spacing: 1.2px; fill: var(--secondary-text-color); }
   .arcwrap .mark { stroke: ${CARD_BG}; stroke-width: 4; fill: var(--primary-text-color); }
   /* band */

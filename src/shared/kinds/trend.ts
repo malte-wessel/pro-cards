@@ -1,9 +1,10 @@
 // The trend kind: several entities (`poster: trend`, `series: [...]`), never detected. The
-// first shown one's value large (the card's entity, when it has none of its own), the time window
+// first series' value large (the card's entity, when it has none of its own), the time window
 // as the status, the lines overlaid along the bottom on one scale, their values under the pointer.
 // A series takes its `color` (a template allowed), else its first matching rule's, else the
 // palette's; its `visibility` hides it.
 import { fmtNumber } from "../format.ts";
+import { t } from "../i18n.ts";
 import {
   drawTrend,
   showTrendHover,
@@ -73,7 +74,7 @@ export const TREND: Kind = {
   templates: (opts) =>
     seriesOf(opts).flatMap((s) => (s.color && isTemplate(s.color) ? [s.color] : [])),
   visibility: (opts) => seriesOf(opts).map((s) => s.visibility),
-  status: (c) => `${c.hours ?? HOURS} h`,
+  status: (c) => t(c.ctx.hass, "common.hours", { n: c.hours ?? HOURS }),
   slots: (c) => {
     const plot = trendPlotEl("pcurve trend ptrend");
     c.host.hover(

@@ -560,6 +560,42 @@ describe("the date of a forecast day", async () => {
   });
 });
 
+describe("the daily trend", async () => {
+  const { buildTrend, drawTrendSection } = await import("../../src/weather/render/trend.ts");
+  type Ctx = Parameters<typeof drawTrendSection>[0];
+  type Chart = HTMLElement & {
+    _spec?: { series: { pts: { t: number }[] }[] };
+    _head?: (t: number) => string | null;
+  };
+  it("puts each day on its date's midnight, the forecast section's date, across a DST change", () => {
+    const cfg = normalizeWeatherCardConfig({
+      entity: W,
+      sections: [{ type: "trend", mode: "daily", days: 4, show: ["temperature"] }],
+    });
+    const sec = cfg.sections[0] as Parameters<typeof drawTrendSection>[3];
+    // Berlin leaves summer time in the night to Sunday 25 October: that day has 25 hours
+    const days = [24, 25, 26, 27].map((d, i) => ({
+      t: new Date(2026, 9, d).getTime(),
+      condition: i === 2 ? "rainy" : "sunny",
+      hi: 10 + i,
+      lo: 5,
+      precipitation: null,
+      probability: null,
+      wind: null,
+    }));
+    const h = hass({ [W]: st({ temperature: 12 }) });
+    const ctx = { hass: h, tplResult: new Map(), now: days[0].t } as unknown as Ctx;
+    const el = buildTrend(ctx, sec);
+    drawTrendSection(ctx, el, cfg, sec, null, days);
+    const chart = el.querySelector<Chart>(".trend")!;
+    const pts = chart._spec!.series[0].pts;
+    expect(pts.map((p) => new Date(p.t).getDate())).toEqual([24, 25, 26, 27]);
+    expect(pts.map((p) => new Date(p.t).getHours())).toEqual([0, 0, 0, 0]);
+    // the Monday after the change is Monday's: rain
+    expect(chart._head!(pts[2].t)).toMatch(/Rain/);
+  });
+});
+
 describe("hover", () => {
   it("is the card's default for the condition and every section's entities; a section overrides it", () => {
     const c = normalizeWeatherCardConfig({

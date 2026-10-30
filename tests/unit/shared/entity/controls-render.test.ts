@@ -470,6 +470,34 @@ describe("segments", () => {
       data: { preset_mode: "comfort" },
     });
   });
+  it("name the modes as Home Assistant does, else write the value out", () => {
+    const el = new EntityGroupCard();
+    el.setConfig({
+      entities: [
+        { entity: "climate.living", attribute: "hvac_mode", control: "segments" },
+        { entity: "climate.living", attribute: "preset_mode", control: "segments" },
+      ],
+    });
+    document.body.appendChild(el);
+    h.cards.push(el);
+    const names: Record<string, string> = { heat: "Heizen", eco: "Sparmodus" };
+    el.hass = {
+      ...h.hass(),
+      formatEntityState: (st: HassEntity) => names[st.state] ?? st.state,
+      formatEntityAttributeValue: (_st: HassEntity, a: string, v: unknown) =>
+        a === "preset_mode" ? (names[String(v)] ?? String(v)) : String(v),
+    } as HomeAssistant;
+    const [hvac, preset] = qa(el.shadowRoot as ShadowRoot, ".ctl-segments");
+    expect(qa(hvac, ".seg").map((s) => s.getAttribute("aria-label"))).toEqual([
+      "Off",
+      "Heizen",
+      "Auto",
+    ]);
+    expect(qa(preset, ".seg").map((s) => s.getAttribute("aria-label"))).toEqual([
+      "Sparmodus",
+      "Comfort",
+    ]);
+  });
   it("list a fan's speeds with an off segment and pick the nearest", () => {
     const r = h.mount(EntityCard, { entity: "fan.ceiling", control: "segments" });
     const segs = qa(r, ".seg");
@@ -892,6 +920,30 @@ describe("hold to confirm", () => {
     bareClick(b);
     bareClick(q(r, ".ctl-hold"));
     expect(h.svc()).toEqual(["lock.unlock"]);
+  });
+  it("drops the armed look when the arm expires, also on a button built again meanwhile", () => {
+    // one formatter for every update, as Home Assistant's: a row whose inputs stay keeps its DOM
+    const formatEntityState = (st: HassEntity) => st.state;
+    const hass = () => ({ ...h.hass(), formatEntityState });
+    const el = new EntityGroupCard();
+    el.setConfig({
+      entities: [{ entity: "lock.door", control: "hold" }, { entity: "sensor.temp" }],
+    });
+    document.body.appendChild(el);
+    el.hass = hass();
+    const r = el.shadowRoot as ShadowRoot;
+    bareClick(q(r, ".ctl-hold"));
+    // the lock reports again: its row is filled again, the new button still armed
+    h.def("lock.door", "locked", { friendly_name: "Door", battery: 90 });
+    el.hass = hass();
+    expect(q(r, ".ctl-hold").classList.contains("armed")).toBe(true);
+    vi.advanceTimersByTime(ARM_MS + 10);
+    h.def("sensor.temp", 23);
+    el.hass = hass();
+    const b = q(r, ".ctl-hold");
+    el.remove();
+    expect(b.classList.contains("armed")).toBe(false);
+    expect(b.getAttribute("aria-label")).toBe("Hold to unlock");
   });
   it("ignores the click that follows a pointer or key gesture", () => {
     const r = h.mount(EntityCard, { entity: "lock.door", control: "hold" });
@@ -1349,6 +1401,49 @@ describe("lifecycle", () => {
     el.setConfig({ entity: "switch.pump", control: "toggle" });
     expect(q(r, ".toggle").classList.contains("pending")).toBe(false);
   });
+  it("a card away from the page subscribes and observes only once it is back", () => {
+    const observed: Element[] = [];
+    const RO = globalThis.ResizeObserver;
+    globalThis.ResizeObserver = class {
+      observe(el: Element) {
+        observed.push(el);
+      }
+      unobserve(el: Element) {
+        observed.splice(observed.indexOf(el), 1);
+      }
+      disconnect() {
+        observed.length = 0;
+      }
+    } as unknown as typeof ResizeObserver;
+    try {
+      const subscribed: string[] = [];
+      const hass = {
+        ...h.hass(),
+        connection: {
+          subscribeMessage: (_cb: unknown, msg: { template: string }) => {
+            subscribed.push(msg.template);
+            return Promise.resolve(() => {});
+          },
+        },
+      } as unknown as HomeAssistant;
+      const el = new EntityCard();
+      el.setConfig({ entity: "switch.pump", name: "{{ 'Pump' }}" });
+      document.body.appendChild(el);
+      el.hass = hass;
+      expect(subscribed).toEqual(["{{ 'Pump' }}"]);
+      expect(observed).toHaveLength(1);
+      el.remove();
+      el.setConfig({ entity: "switch.pump", name: "{{ 'Pool pump' }}" });
+      expect(subscribed).toHaveLength(1);
+      expect(observed).toHaveLength(0);
+      document.body.appendChild(el);
+      expect(subscribed).toEqual(["{{ 'Pump' }}", "{{ 'Pool pump' }}"]);
+      expect(observed).toHaveLength(1);
+      el.remove();
+    } finally {
+      globalThis.ResizeObserver = RO;
+    }
+  });
   it("a removed card stops redrawing when its ghosts expire", () => {
     const el = new EntityCard();
     el.setConfig({ entity: "switch.pump", control: "toggle" });
@@ -1376,6 +1471,15 @@ describe("slider details", () => {
     expect(h.calls).toEqual([]);
     h.set("cover.blinds", "open", { current_position: 70 });
     expect(q(r, ".ctl-slider").getAttribute("aria-valuenow")).toBe("70");
+  });
+  it("a tap or keys that end where they started call nothing", () => {
+    const r = h.mount(EntityCard, { entity: "cover.blinds", control: "slider" });
+    const s = q(r, ".ctl-slider");
+    key(s, "ArrowRight");
+    key(s, "ArrowLeft");
+    vi.advanceTimersByTime(1000);
+    expect(h.calls).toEqual([]);
+    expect(q(r, ".ctl-slider").classList.contains("pending")).toBe(false);
   });
   it("formats the value in the profile language", () => {
     h.language = "de";

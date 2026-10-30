@@ -8,6 +8,7 @@ import { DEFAULTS } from "./constants.ts";
 
 export const EDITOR_LABELS: Record<string, StringKey> = {
   title: "editor.sun.title",
+  icon: "editor.sun.icon",
   show_dawn_dusk: "editor.sun.show_dawn_dusk",
   show_tooltip: "editor.sun.show_tooltip",
   fill_height: "editor.sun.fill_height",

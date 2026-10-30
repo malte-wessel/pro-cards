@@ -8,6 +8,8 @@ const sv: Translation = {
   "common.unavailable": "otillgänglig",
   "common.not_found": "{entity} hittades inte",
   "common.plus_hours": "+{n} h",
+  "common.minus_hours": "−{n} h",
+  "common.hours": "{n} h",
 
   "entity.peak": "Topp",
   "control.toggle": "Växla {name}",

@@ -8,6 +8,8 @@ const ru: Translation = {
   "common.unavailable": "недоступно",
   "common.not_found": "{entity} не найдено",
   "common.plus_hours": "+{n} ч",
+  "common.minus_hours": "−{n} ч",
+  "common.hours": "{n} ч",
 
   "entity.peak": "Пик",
   "control.toggle": "Переключить {name}",

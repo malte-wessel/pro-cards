@@ -96,7 +96,6 @@ describe("entity", () => {
       iconStyle: "circle",
       picture: false,
       rules: [],
-      toggle: false,
       decimals: null,
       prefix: "",
       tap: { action: "more-info" },
@@ -109,7 +108,8 @@ describe("entity", () => {
       visual: "icon",
       decimals: 3,
       tap: { action: "toggle" },
-      toggle: true,
+      // the old `toggle` is `control: toggle`
+      control: { kind: "toggle" },
     });
     expect(ent({ icon_style: "plain" }).iconStyle).toBe("plain");
     expect(ent({ icon_style: "square" }).iconStyle).toBe("circle");
@@ -452,9 +452,9 @@ describe("header badges", () => {
       ],
       ctx,
     );
-    expect(a).toMatchObject({ control: { kind: "toggle" }, toggle: true });
-    expect(b).toMatchObject({ control: { kind: "toggle" }, toggle: true });
-    expect(c).toMatchObject({ control: null, toggle: false });
+    expect(a).toMatchObject({ control: { kind: "toggle" } });
+    expect(b).toMatchObject({ control: { kind: "toggle" } });
+    expect(c).toMatchObject({ control: null });
     expect(w).toHaveBeenCalledTimes(1);
     w.mockRestore();
   });
@@ -522,7 +522,7 @@ describe("one badge", () => {
       "badges[0]",
       { style: "plain", size: "s" },
     );
-    expect(b).toMatchObject({ visual: "icon", control: null, toggle: false });
+    expect(b).toMatchObject({ visual: "icon", control: null });
     expect(b.badge).toEqual({ style: "plain", size: "s" });
     expect(w.mock.calls.map((c) => c[0])).toEqual([
       "test-card: visual 'gauge' is not drawn in the header; using icon",

@@ -98,9 +98,8 @@ export interface Kind {
   // its own rules, replaced as a whole by the card's `rules`; the unit they are written in
   rules?: readonly KindRule[];
   ruleUnit?: RuleUnit;
-  // what `control: auto` draws (the domain kinds), by the entity's state where it depends on it
-  // (an alarm panel that wants a code has none); the card's `control` replaces it
-  controls?: readonly Placement[] | ((st: HassEntity | undefined) => readonly Placement[]);
+  // what `control: auto` draws (the domain kinds); the card's `control` replaces it
+  controls?: readonly Placement[];
   // the icon's own actions where the card sets none (`icon_tap_action` …), by the entity's state
   // where it depends on it (a lock held to lock or unlock, an alarm panel that wants a code: none)
   iconActions?(st: HassEntity | undefined): Partial<Record<"tap" | "hold" | "dbl", ActionConfig>>;

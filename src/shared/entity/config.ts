@@ -195,9 +195,8 @@ export interface EntityItem extends ActionDefaults {
   min: number | null;
   max: number | null;
   rules: Rule[];
-  // the control (null: none); `toggle` is derived from it for the old `toggle: true`
+  // the control (null: none; the old `toggle: true` is `control: toggle`)
   control: ControlConfig | null;
-  toggle: boolean;
   item: ItemOptions;
   // drawn only while its conditions hold (null: always)
   visibility: Visibility;
@@ -432,7 +431,6 @@ export const normalizeEntity = (
     max: numOrNull(o.max),
     rules: normalizeRules(o.rules),
     control,
-    toggle: control?.kind === "toggle",
     tap: normalizeAction(o.tap_action, ctx.tap),
     hold: normalizeAction(o.hold_action, ctx.hold),
     dbl: normalizeAction(o.double_tap_action, ctx.dbl),
@@ -578,7 +576,6 @@ export const normalizeBadge = (
       ent.control = null;
     }
   }
-  ent.toggle = ent.control?.kind === "toggle";
   return ent;
 };
 

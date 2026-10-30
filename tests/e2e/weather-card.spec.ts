@@ -291,6 +291,29 @@ test.describe("weather card", () => {
     );
   });
 
+  test("a forecast row matches the rules by its own condition, not by today's", async ({
+    page,
+  }) => {
+    // today is partly cloudy; the third day rains
+    await mount(page, {
+      type: T,
+      entity: W,
+      sections: [
+        {
+          type: "forecast",
+          mode: "daily",
+          days: 3,
+          rules: [{ state: "partlycloudy", color: "purple", icon: "mdi:star" }],
+        },
+      ],
+    });
+    const rows = card(page).locator(".wsec .frow");
+    await expect(rows).toHaveCount(3);
+    const rain = rows.nth(2);
+    await expect(rain.locator('ha-icon[icon="mdi:star"]')).toHaveCount(0);
+    expect(await cssVar(rain, "--fe-cond")).not.toBe("var(--purple-color)");
+  });
+
   test("icons: the hass pictures, a map of icons and images, rule icons, sizes", async ({
     page,
   }) => {

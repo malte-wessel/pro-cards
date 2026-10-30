@@ -344,9 +344,11 @@ const labelText = (
       n: otherOf(st)?.name ?? t(hass, "power.other"),
       s: "",
     };
+  // a consumer shows its value while the card knows one, as a source does: the energy card knows
+  // the period's total of a meter unavailable right now
   if (nd.kind === "consumer")
     return {
-      v: m && m.model.avail ? fmt(f.leafW.get(nd.id) ?? 0, dec) : "–",
+      v: st.now.leaves.get(nd.id) == null ? "–" : fmt(f.leafW.get(nd.id) ?? 0, dec),
       n: ent && m ? nameOf(st.ctx, ent, m.st) : "",
       s,
     };

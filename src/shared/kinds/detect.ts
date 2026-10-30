@@ -17,7 +17,12 @@ export const parsePoster = (raw: unknown, cardType: string): string | null => {
   return raw;
 };
 
-// the kind the entity is, by its domain, id and device class
+// whether a kind reads the entity (or the lack of one)
+export const canRead = (k: Kind, entity: string | null) =>
+  k.reads === "any" || (entity ? k.reads.includes(domainOf(entity)) : !!k.entityless);
+
+// the kind the entity is, by its domain, id and device class (of a domain the kind reads: a
+// binary sensor of class battery is no battery poster)
 export const detectKind = (entity: string | null, st: HassEntity | undefined): Kind => {
   if (!entity) return KINDS.entity;
   const d = domainOf(entity);
@@ -25,13 +30,10 @@ export const detectKind = (entity: string | null, st: HassEntity | undefined): K
     if (k.ids?.includes(entity) || k.domains?.includes(d)) return k;
   const dc = st?.attributes?.device_class;
   if (typeof dc === "string")
-    for (const k of Object.values(KINDS)) if (k.deviceClasses?.includes(dc)) return k;
+    for (const k of Object.values(KINDS))
+      if (k.deviceClasses?.includes(dc) && canRead(k, entity)) return k;
   return KINDS.entity;
 };
-
-// whether a kind reads the entity (or the lack of one)
-export const canRead = (k: Kind, entity: string | null) =>
-  k.reads === "any" || (entity ? k.reads.includes(domainOf(entity)) : !!k.entityless);
 
 // the kind a card draws: the written one (checked against the entity), else the detected one
 export const resolveKind = (

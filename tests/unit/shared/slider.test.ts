@@ -78,6 +78,17 @@ describe("slider", () => {
     key(el, "PageDown");
     expect(log.slice(-2)).toEqual(["start", "input 181"]);
   });
+  it("ends a burst that went back to where it started without a value", () => {
+    const { el, log } = make();
+    key(el, "ArrowRight");
+    key(el, "ArrowLeft");
+    vi.advanceTimersByTime(250);
+    expect(log).toEqual(["start", "input 181", "input 180", "end null"]);
+    // the next burst starts from the value shown then
+    key(el, "ArrowRight");
+    vi.advanceTimersByTime(250);
+    expect(log.at(-1)).toBe("end 181");
+  });
   it("Home and End go to the bounds, and steps stop there", () => {
     const { el } = make();
     key(el, "End");

@@ -134,6 +134,10 @@ const dayEnd = (t0: number, tz: string) => {
 // the anchor's state go with it)
 const opened = new WeakMap<ShadowRoot | HTMLElement, () => void>();
 
+// closes the calendar open in a host, if any: a card leaving the page does (its removal hides
+// the popover without a `toggle`, so its listeners and the anchor's state would stay)
+export const closeDatePicker = (host: ShadowRoot | HTMLElement) => opened.get(host)?.();
+
 export const openDatePicker = (
   anchor: HTMLElement,
   host: ShadowRoot | HTMLElement,

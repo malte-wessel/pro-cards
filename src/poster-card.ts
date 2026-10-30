@@ -28,12 +28,14 @@ import { posterParts, secondaryEl } from "./shared/entity/render/lead.ts";
 import type { GridOptions, HomeAssistant, WeatherForecastType } from "./shared/ha.ts";
 import { hideHover } from "./shared/hover.ts";
 import { detectKind, parsePoster, unusedKeys } from "./shared/kinds/detect.ts";
+import { KINDS } from "./shared/kinds/registry.ts";
 import type { KindCtx, KindHost } from "./shared/kinds/types.ts";
 import type { SunCurveHost } from "./shared/sun/curve.ts";
 import type { Visibility } from "./shared/visibility.ts";
 import { ForecastFeed } from "./shared/weather/feed.ts";
 import { dailyTypeOf, supportsForecast } from "./shared/weather/forecast.ts";
 import {
+  foundInputs,
   hasIconActions,
   IMAGE_BLUR,
   IMAGE_OPACITY,
@@ -61,8 +63,10 @@ export class PosterCard extends EntityCardBase {
   declare _config?: PosterConfig;
   // the config as written: normalised again once hass tells the device class and the registry
   _raw: unknown;
-  // what the last normalisation read of hass (the kind it resolved and the registry it saw)
+  // what the last normalisation read of hass (the kind it resolved and the inputs it found)
   _resolvedFrom: unknown[] = [];
+  // the inputs found for a kind in a registry, for a config (looked for again when one is new)
+  _found: { kind: string; entities: unknown; raw: unknown; ids: (string | null)[] } | null = null;
   // the hass a normalisation reads (the one arriving, before the base takes it)
   _nextHass?: HomeAssistant;
   // the config whose keys of other poster types have been warned about
@@ -119,7 +123,9 @@ export class PosterCard extends EntityCardBase {
   }
   // what the kind adds once its config is in: the minute timer, the forecasts
   _afterConfig() {
-    const cfg = this._config as PosterConfig;
+    const cfg = this._config;
+    // hass before any config: setConfig does it
+    if (!cfg) return;
     if (cfg.kind.timed && !this._timed) {
       this._timed = true;
       this._armMinute();
@@ -142,7 +148,8 @@ export class PosterCard extends EntityCardBase {
       );
   }
   // what the kind is resolved from: the detected kind (the device class arrives with the first
-  // state) and the entity registry's identity (the inputs found on the entity's device)
+  // state) and the inputs found on the entity's device (Home Assistant replaces its registry on
+  // any change anywhere: only a change of what was found counts)
   _resolveInputs(hass: HomeAssistant | undefined): unknown[] {
     const raw = (this._raw ?? {}) as { entity?: string; poster?: unknown };
     let kind: string | null = null;
@@ -153,11 +160,22 @@ export class PosterCard extends EntityCardBase {
     } catch {
       // setConfig reports it
     }
-    return [kind, hass?.entities];
+    if (kind === null) return [kind];
+    const entities = hass?.entities;
+    let found = this._found;
+    if (!found || found.kind !== kind || found.entities !== entities || this._raw !== found.raw)
+      found = this._found = {
+        kind,
+        entities,
+        raw: this._raw,
+        ids: foundInputs(KINDS[kind], raw as Record<string, unknown>, hass),
+      };
+    return [kind, ...found.ids];
   }
   _setHass(hass: HomeAssistant) {
     const now = this._resolveInputs(hass);
-    const changed = now.some((v, i) => v !== this._resolvedFrom[i]);
+    const was = this._resolvedFrom;
+    const changed = now.length !== was.length || now.some((v, i) => v !== was[i]);
     if (changed && this._raw !== undefined) {
       this._resolvedFrom = now;
       this._nextHass = hass;
@@ -304,7 +322,7 @@ export class PosterCard extends EntityCardBase {
     const cfg = this._config as PosterConfig;
     if (idx === cfg.statusIdx && row.classList.contains("hval")) {
       const kc = this._kindCtx(ctx);
-      fillStatus(ctx, row, ent, idx, m, statusText(ctx, cfg, kc.m, cfg.kind.status?.(kc) ?? null));
+      fillStatus(ctx, row, ent, idx, m, statusText(ctx, cfg, m, cfg.kind.status?.(kc) ?? null));
       return;
     }
     if (idx === 0 && row.classList.contains("poster")) {
@@ -321,17 +339,6 @@ export class PosterCard extends EntityCardBase {
         ent.valueSrc.text === ""
       )
         slots.value = null;
-      // an animated lead is built once (per key) and kept through fills: its animation runs on
-      const lead = cfg.kind.lead,
-        plead = row.querySelector<HTMLElement>(":scope > .ptop > .plead");
-      if (lead && plead && !this._userIcon(kc)) {
-        const key = lead.key(kc);
-        if (plead.dataset.key !== key) {
-          plead.replaceChildren(lead.build(kc));
-          plead.dataset.key = key;
-        }
-        slots.lead = "keep";
-      } else if (plead) delete plead.dataset.key;
       // icon_image: its picture in the icon while it has one, else the icon; the icon's style and
       // ring as the matching rule says
       const look = this._look(kc);
@@ -340,6 +347,23 @@ export class PosterCard extends EntityCardBase {
         look.iconStyle === ent.iconStyle && look.iconRing === !!ent.iconRing
           ? ent
           : { ...ent, iconStyle: look.iconStyle, iconRing: look.iconRing };
+      // an animated lead is built once (per key, the icon and its style) and kept through fills:
+      // its animation runs on. A ring around the icon takes its place, as the card's own icon does
+      const lead = cfg.kind.lead,
+        plead = row.querySelector<HTMLElement>(":scope > .ptop > .plead");
+      if (lead && plead && !this._userIcon(kc) && !look.iconRing) {
+        const key = `${lead.key(kc)} ${look.iconStyle} ${kc.m.look.icon ?? ""}`;
+        if (plead.dataset.key !== key) {
+          plead.replaceChildren(lead.build({ ...kc, ent: icon }));
+          plead.dataset.key = key;
+        } else
+          // the state's own icon follows the state in place
+          for (const el of plead.querySelectorAll("ha-state-icon")) {
+            el.hass = ctx.hass;
+            el.stateObj = kc.m.st;
+          }
+        slots.lead = "keep";
+      } else if (plead) delete plead.dataset.key;
       fillPosterSlots(
         ctx,
         row,
@@ -368,7 +392,7 @@ export class PosterCard extends EntityCardBase {
         kc.m,
         ...own,
         ...extra,
-        statusText(ctx, cfg, kc.m, cfg.kind.status?.(kc) ?? null),
+        statusText(ctx, cfg, m, cfg.kind.status?.(kc) ?? null),
       ];
     return [...inputs, ...own, ...extra, imageUrl(ctx, this._look(kc).iconImage)];
   }
@@ -398,21 +422,23 @@ export class PosterCard extends EntityCardBase {
     }
     this._leadImg = img;
   }
-  // the kind's colour where neither the card nor a rule names one. The poster's own colour is the
-  // body's --pc-tint, a registered colour, so a new one fades (the next song's cover); the status
-  // badge reads it too while it has the same colour
+  // the kind's colour where neither the item (the poster, the status badge) nor its rule names one.
+  // The poster's own colour is the body's --pc-tint, a registered colour, so a new one fades (the
+  // next song's cover); the status badge reads it too while it has the same colour
   _tint: string | null = null;
   _rowColor(row: HTMLElement, ent: EntityItem, m: EntityModel) {
     const cfg = this._config as PosterConfig;
     const idx = Number(row.dataset.idx);
     let color = super._rowColor(row, ent, m);
-    if ((idx === 0 || idx === cfg.statusIdx) && cfg.kind.color && this._hass) {
-      const main = cfg.entities[0];
-      const kc = this._kindCtx(this._ctx());
-      if (!main.color && !kc.m.look.rule?.color) {
-        const c = cfg.kind.color(kc);
-        if (c) color = cssColor(c, "var(--primary-color)");
-      }
+    if (
+      (idx === 0 || idx === cfg.statusIdx) &&
+      cfg.kind.color &&
+      this._hass &&
+      !ent.color &&
+      !m.look.rule?.color
+    ) {
+      const c = cfg.kind.color(this._kindCtx(this._ctx()));
+      if (c) color = cssColor(c, "var(--primary-color)");
     }
     const body = row.closest<HTMLElement>(".body");
     if (idx === 0 && body) {

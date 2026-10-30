@@ -2276,6 +2276,24 @@ describe("power-flow-card: self-sufficiency", () => {
     expect(f.H).toBe(800);
     expect(f.selfSufficiency).toBeNull();
   });
+
+  it("exports nothing without a grid: the solar the home leaves over is nobody's", () => {
+    const cfg = normalizePowerFlowConfig({
+      home: "sensor.home",
+      sources: [
+        { type: "solar", entity: "sensor.solar" },
+        { type: "battery", power: "sensor.battery" },
+      ],
+    });
+    const now = powerNow(
+      cfg,
+      modelsOf(cfg, hassOf({ "sensor.solar": "800", "sensor.home": "500", "sensor.battery": "0" })),
+    );
+    const f = allocate(cfg, now);
+    expect(f.sG).toBe(0);
+    expect(f.bG).toBe(0);
+    expect(summaryState(cfg, now, f).key).toBe("power.state.balanced");
+  });
 });
 
 describe("power-flow-card: the Other node and a still flow", () => {

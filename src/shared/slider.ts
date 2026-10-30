@@ -22,7 +22,8 @@ export interface SliderSpec {
   onStart?: () => void;
   // every value the gesture passes through
   onInput?: (v: number) => void;
-  // the gesture ends: the value it settled on, or null when the pointer was cancelled
+  // the gesture ends: the value it settled on, or null when the pointer was cancelled or the
+  // value is the one the gesture started from (a tap on the knob, keys that went back)
   onEnd?: (v: number | null) => void;
 }
 export interface Slider {
@@ -70,6 +71,13 @@ export const slider = (
     paint(snapTo(next, min, max, step));
     spec.onInput?.(v);
   };
+  // the value a gesture started from: ending on it changes nothing
+  let from = v;
+  const begin = () => {
+    from = v;
+    spec.onStart?.();
+  };
+  const end = (cancelled: boolean) => spec.onEnd?.(cancelled || v === from ? null : v);
   const valueAt = (ev: PointerEvent) => {
     const rect = track.getBoundingClientRect();
     return min + clamp01((ev.clientX - rect.left) / (rect.width || 1)) * span;
@@ -77,7 +85,7 @@ export const slider = (
   el.addEventListener("pointerdown", (ev) => {
     if (ev.button !== 0) return;
     el.setPointerCapture(ev.pointerId);
-    spec.onStart?.();
+    begin();
     el.classList.add("dragging");
     set(valueAt(ev));
   });
@@ -88,7 +96,7 @@ export const slider = (
     if (!el.classList.contains("dragging")) return;
     el.classList.remove("dragging");
     if (el.hasPointerCapture(ev.pointerId)) el.releasePointerCapture(ev.pointerId);
-    spec.onEnd?.(ev.type === "pointercancel" ? null : v);
+    end(ev.type === "pointercancel");
   };
   el.addEventListener("pointerup", release);
   el.addEventListener("pointercancel", release);
@@ -104,12 +112,12 @@ export const slider = (
     else if (ev.key === "End") next = max;
     if (next === null) return;
     ev.preventDefault();
-    if (keyTimer === undefined) spec.onStart?.();
+    if (keyTimer === undefined) begin();
     set(next);
     clearTimeout(keyTimer);
     keyTimer = setTimeout(() => {
       keyTimer = undefined;
-      spec.onEnd?.(v);
+      end(false);
     }, KEY_SETTLE_MS);
   });
   return { el, paint };

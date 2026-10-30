@@ -4,7 +4,7 @@
 // the row's own tap / hold actions never fire.
 import { cssColor, domainOf } from "../../color.ts";
 import { fmtNumber } from "../../format.ts";
-import type { ActionConfig, ActionKind, HapticType } from "../../ha.ts";
+import type { ActionConfig, ActionKind, HapticType, HassEntity } from "../../ha.ts";
 import { t } from "../../i18n.ts";
 import { slider } from "../../slider.ts";
 import { stepDecimals } from "../../util.ts";
@@ -250,8 +250,33 @@ export const stepperEl = (
 
 // ----- segments and select -----
 
-const optionText = (value: string, label: string | null) =>
-  label ?? value.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+// Home Assistant's text for an attribute's value in the user's language (frontends without it:
+// none)
+// an option's text: its label, else Home Assistant's own for the mode (a climate's or fan's preset
+// or fan mode as that attribute's value, an hvac mode or a select's option as the state it sets),
+// else the value written out. A formatter without a translation hands the value back as it is:
+// the written-out value then
+const optionText = (
+  ctx: RenderCtx,
+  ent: EntityItem,
+  st: HassEntity | undefined,
+  value: string,
+  label: string | null,
+) => {
+  if (label !== null) return label;
+  const hass = ctx.hass,
+    a = ent.control?.attribute ?? null,
+    d = domainOf(ent.entity);
+  const own =
+    st && hass
+      ? a && a !== "hvac_mode" && (d === "climate" || d === "fan")
+        ? hass.formatEntityAttributeValue?.(st, a, value)
+        : hass.formatEntityState?.({ ...st, state: value })
+      : undefined;
+  return own && own !== value
+    ? own
+    : value.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+};
 
 export const segmentsEl = (
   ctx: RenderCtx,
@@ -272,7 +297,7 @@ export const segmentsEl = (
   const compact = p.small || p.position !== "block";
   const segs: HTMLButtonElement[] = [];
   for (const o of opts) {
-    const text = optionText(o.value, o.label);
+    const text = optionText(ctx, ent, m.st, o.value, o.label);
     // a segment drawn as an icon alone (the fan's power) still needs a name
     const b = button("seg", text || t(ctx.hass, "control.off"));
     b.setAttribute("role", "radio");
@@ -335,14 +360,14 @@ export const selectEl = (
   for (const o of opts) {
     const opt = document.createElement("option");
     opt.value = o.value;
-    opt.textContent = optionText(o.value, o.label);
+    opt.textContent = optionText(ctx, ent, m.st, o.value, o.label);
     opt.selected = o.value === current;
     sel.appendChild(opt);
   }
   if (current !== null && !opts.some((o) => o.value === current)) {
     const opt = document.createElement("option");
     opt.value = current;
-    opt.textContent = optionText(current, null);
+    opt.textContent = optionText(ctx, ent, m.st, current, null);
     opt.selected = true;
     sel.appendChild(opt);
   }
@@ -549,7 +574,8 @@ const ringEl = () => {
 // The row keeps its DOM while the ring fills (beginDrag): an update of another entity in the card
 // must not rebuild the button under the finger. Assistive technology sends a bare click (no
 // pointer, no key): the first arms the button, a second within ARM_MS runs it. `armKey` names this
-// button alone: arming one button of a group must not confirm its neighbour.
+// button alone (`index:…`, which makes it an input of its row): arming one button of a group must
+// not confirm its neighbour.
 // With `tap`, a press let go before the ring is full is a tap (the poster's icon with a tap action
 // of its own besides its hold).
 const bindHold = (
@@ -632,7 +658,9 @@ const bindHold = (
     el.classList.add("armed");
     label(true);
     setTimeout(() => {
-      if ((host.armed.get(armKey) ?? 0) <= Date.now()) host.armed.delete(armKey);
+      const expired = (host.armed.get(armKey) ?? 0) <= Date.now();
+      // a button built again meanwhile (its row filled) drops its armed look with a render
+      if (expired && host.armed.delete(armKey) && !el.isConnected) host.redraw();
       if (el.isConnected) {
         el.classList.remove("armed");
         label(false);
@@ -700,7 +728,7 @@ export const holdEl = (
     disable(el);
     return el;
   }
-  bindHold(el, ctx, host, idx, String(idx), action, () =>
+  bindHold(el, ctx, host, idx, `${idx}:hold`, action, () =>
     holdCall(ctx, ent, idx, m, el, "success"),
   );
   return el;
@@ -760,7 +788,7 @@ export const iconActionsEl = (
       disable(b);
       return b;
     }
-    bindHold(b, ctx, host, idx, String(idx), action, run, tap ?? undefined);
+    bindHold(b, ctx, host, idx, `${idx}:icon`, action, run, tap ?? undefined);
     return b;
   }
   el = leadEl(ctx, ent, m, size);

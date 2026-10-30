@@ -121,10 +121,9 @@ export interface ControlHost {
   pending: ReadonlyMap<number, Pending>;
   // the calls of custom buttons, one per button (`index:c<i>`)
   buttonPending: ReadonlyMap<string, Pending>;
-  // hold buttons armed by a first press (screen readers): until when, by entity index, and by
-  // `index:button` for the buttons of a confirmed group
+  // hold buttons armed by a first press (screen readers): until when, by `index:button` (`hold`,
+  // the icon's `icon`, a confirmed group's button id or `c<i>`)
   armed: Map<string, number>;
-  readonly dragging: number | null;
   call(
     el: HTMLElement,
     idx: number,
@@ -371,7 +370,6 @@ export const tileMinColumns = (ent: EntityItem, row: "tile" | "poster" = "tile")
   if (end.some((p) => WIDE_ON_LINE.has(p.kind))) return 6;
   return end.length ? 4 : 3;
 };
-// whether the entity draws a control below its line in a tile (for the card height)
 // whether a control on the line shows the row's own value itself (segments and a select show the
 // mode, a Run chip is the value, a stepper shows the number it sets), so the text beside it would
 // repeat it
@@ -389,6 +387,7 @@ export const controlShowsValue = (ent: EntityItem, p: Placement): boolean => {
       return false;
   }
 };
+// whether the entity draws a control below its line in a tile (for the card height)
 export const hasBlockControl = (ent: EntityItem) =>
   placementsOf(ent, "tile").some((p) => p.position === "block");
 

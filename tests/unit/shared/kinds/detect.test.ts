@@ -58,6 +58,13 @@ describe("detectKind", () => {
     expect(detectKind("sensor.x", st("sensor.x", { device_class: "power" })).name).toBe("entity");
     expect(detectKind("sensor.x", st("sensor.x", { device_class: "energy" })).name).toBe("entity");
   });
+
+  it("goes by the device class only for a domain the type reads", () => {
+    const b = "binary_sensor.phone_battery_low";
+    expect(detectKind(b, st(b, { device_class: "battery" })).name).toBe("entity");
+    const n = "number.co2_target";
+    expect(detectKind(n, st(n, { device_class: "carbon_dioxide" })).name).toBe("carbon_dioxide");
+  });
 });
 
 describe("canRead", () => {

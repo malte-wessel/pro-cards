@@ -41,6 +41,14 @@ _Beta_
 - Fix: a grid cell's value that is a fraction of a pixel too wide is made smaller instead of cut with an ellipsis, and the values are fitted again when a web font arrives after the card was drawn
 - Fix: energy flow: the period picker no longer makes the header taller, so a power and an energy flow card side by side start their trees at the same height
 - Fix: power and energy flow: the home sits level with the source nearest its height, so that source's line runs straight in instead of taking a small step that looked like a crack, and every line into the home meets its circle
+- Fix: a history strip and its tooltip colour and name each past bucket by its own value, not by the entity's state now; columns of a series below zero stay inside the plot
+- Fix: weather: a forecast row and the trend's tooltip match the rules by their own condition and temperature, not today's; the daily trend names each day as the forecast does (a day stamped at a UTC midnight, the day after a daylight saving change)
+- Fix: power flow: without a grid, leftover solar or battery power no longer counts as export ("Exporting"), nor battery charging as coming from the grid
+- Fix: energy flow: a consumer whose meter is unavailable now shows its total for the period; the period picker closes when the card leaves the page
+- Fix: a slider tapped without moving, or keys that end on the value it started from, call no service; a hold button no longer keeps its armed look after the arm expired
+- Fix: animations keep their speed when a card comes back (a view switch, a masonry move, shown again by `visibility`)
+- Fix: a card's history period labels ("−24 h"), the multi trend and illuminance ranges and the illuminance axis follow the language; a thermostat's or fan's modes and presets show Home Assistant's names for them
+- Fix: the sun path card's editor labels its icon field
 
 ## 2.8.0 – Layout card and theme-aware sizing
 

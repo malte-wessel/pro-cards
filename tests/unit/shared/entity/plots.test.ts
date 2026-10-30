@@ -3,30 +3,37 @@ import { plotEl, plotRows } from "../../../../src/shared/entity/render/blocks.ts
 import { drawPlot } from "../../../../src/shared/entity/render/plots.ts";
 import type { EntityModel, RenderCtx } from "../../../../src/shared/entity/model.ts";
 import { normalizeEntityCardConfig } from "../../../../src/entity-card.ts";
+import type { HassEntity, HomeAssistant } from "../../../../src/shared/ha.ts";
+import type { Point } from "../../../../src/shared/history.ts";
 
 // the least a plot needs to draw: one entity's history over an hour
 const HOUR = 3600e3;
-const ctxOf = (visual: string): RenderCtx =>
+const RISING = [
+  { t: 0, v: 1, s: "1" },
+  { t: HOUR / 2, v: 3, s: "3" },
+  { t: HOUR, v: 2, s: "2" },
+];
+const ctxOf = (visual: string, series: Point[] = RISING, item: Record<string, unknown> = {}) =>
   ({
-    series: new Map([
-      [
-        "sensor.a",
-        [
-          { t: 0, v: 1 },
-          { t: HOUR / 2, v: 3 },
-          { t: HOUR, v: 2 },
-        ],
-      ],
-    ]),
+    series: new Map([["sensor.a", series]]),
     fetched: true,
-    cfg: { ...normalizeEntityCardConfig({ entity: "sensor.a", visual }), hours: 1, bucketMin: 10 },
+    cfg: {
+      ...normalizeEntityCardConfig({ entity: "sensor.a", visual, ...item }),
+      hours: 1,
+      bucketMin: 10,
+    },
     now: HOUR,
     t0: 0,
+    tplResult: new Map(),
     plotHandlers: { move: () => {}, up: () => {}, leave: () => {} },
   }) as unknown as RenderCtx;
-const plotOf = (visual: string, size?: { w: number; h: number }) => {
-  const ctx = ctxOf(visual);
-  const plot = plotEl(ctx, ctx.cfg.entities[0], 0, { st: undefined } as EntityModel);
+const plotOf = (
+  visual: string,
+  size?: { w: number; h: number },
+  ctx = ctxOf(visual),
+  st?: HassEntity,
+) => {
+  const plot = plotEl(ctx, ctx.cfg.entities[0], 0, { st } as EntityModel);
   Object.defineProperty(plot, "clientWidth", { value: size?.w ?? 200 });
   if (size) Object.defineProperty(plot, "clientHeight", { value: size.h });
   drawPlot(ctx, plot);
@@ -70,6 +77,41 @@ describe("history plots in a cell with fixed rows", () => {
   });
   it("keeps a strip at its height in a taller cell", () => {
     expect(viewH(plotOf("strip", { w: 200, h: 140 }))).toBe(22 + 14);
+  });
+});
+
+describe("what a plot draws", () => {
+  it("keeps columns of a series below zero inside the plot", () => {
+    const below = RISING.map((p) => ({ ...p, v: -p.v, s: String(-p.v) }));
+    const plot = plotOf("columns", { w: 200, h: 120 }, ctxOf("columns", below));
+    const cols = [...plot.querySelectorAll("rect.col")];
+    expect(cols.length).toBeGreaterThan(0);
+    for (const c of cols) {
+      const y = Number(c.getAttribute("y"));
+      expect(y).toBeGreaterThanOrEqual(0);
+      expect(y + Number(c.getAttribute("height"))).toBeLessThanOrEqual(120.05);
+    }
+    // they hang from zero at the top
+    expect(Math.min(...cols.map((c) => Number(c.getAttribute("y"))))).toBe(0);
+  });
+  it("colours a strip's past buckets by their own state, not by the state of now", () => {
+    const series = [
+      { t: 0, v: null, s: "off" },
+      { t: HOUR / 2, v: null, s: "on" },
+    ];
+    const ctx = ctxOf("strip", series, { rules: [{ state: "on", color: "amber" }] });
+    const st = { entity_id: "sensor.a", state: "on", attributes: {} } as unknown as HassEntity;
+    const fills = [...plotOf("strip", undefined, ctx, st).querySelectorAll("svg > rect")].map((r) =>
+      r.getAttribute("fill"),
+    );
+    expect(fills[0]).not.toBe("var(--amber-color)");
+    expect(fills.at(-1)).toBe("var(--amber-color)");
+  });
+  it("writes the strip's start in the user's language", () => {
+    const ctx = ctxOf("strip");
+    ctx.hass = { locale: { language: "nl" } } as HomeAssistant;
+    const labels = [...plotOf("strip", undefined, ctx).querySelectorAll(".label")];
+    expect(labels.map((l) => l.textContent)).toEqual(["−1 u", "nu"]);
   });
 });
 

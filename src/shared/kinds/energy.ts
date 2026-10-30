@@ -117,7 +117,7 @@ export const SOLAR: Kind = {
       find: {
         domains: ["sensor"],
         deviceClasses: ["energy"],
-        translationKey: /today|daily|day/i,
+        translationKey: /today|daily|(?<!yester)day/i,
         needsKey: true,
       },
     },
@@ -191,7 +191,7 @@ const stripEl = (pct: number | null, flowing: boolean) => {
 export const BATTERY: Kind = {
   name: "battery",
   deviceClasses: ["battery"],
-  reads: "any",
+  reads: ["sensor", "input_number", "number"],
   readsText: "a battery sensor (%)",
   keys: ["power", "charge", "discharge"],
   rules: BATTERY_RULES,

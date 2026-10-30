@@ -8,6 +8,8 @@ const cs: Translation = {
   "common.unavailable": "nedostupné",
   "common.not_found": "{entity} nenalezeno",
   "common.plus_hours": "+{n} h",
+  "common.minus_hours": "−{n} h",
+  "common.hours": "{n} h",
 
   "entity.peak": "Vrchol",
   "control.toggle": "Přepnout {name}",

@@ -98,6 +98,17 @@ describe("setRate", () => {
     expect(a.playbackRate).toBe(1.21);
   });
 
+  it("gives the rate back to animations the browser started again at 1", () => {
+    const anims = [{ playbackRate: 1 }];
+    const el = withAnimations(anims);
+    setRate(el, 1.5);
+    // the node was moved or shown again: new animations, the kept rate unchanged
+    anims[0] = { playbackRate: 1 };
+    setRate(el, 1.501);
+    expect(anims[0].playbackRate).toBe(1.5);
+    expect(el.dataset.rate).toBe("1.500");
+  });
+
   it("leaves transitions at their own pace", () => {
     class FakeTransition {
       playbackRate = 1;

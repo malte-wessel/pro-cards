@@ -32,7 +32,7 @@ export const RAIN: Kind = {
       find: {
         domains: ["sensor"],
         deviceClasses: ["precipitation"],
-        translationKey: /today|daily|day/i,
+        translationKey: /today|daily|(?<!yester)day/i,
         needsKey: true,
       },
     },

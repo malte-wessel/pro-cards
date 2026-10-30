@@ -39,7 +39,7 @@ import { fmtIn, treeUnit, type FlowNow, type Flows } from "./shared/flow-tree/mo
 import { selfSufficiencyPart, type Summary } from "./shared/flow-tree/render/summary.ts";
 import type { HomeAssistant } from "./shared/ha.ts";
 import { langOf } from "./shared/format.ts";
-import { openDatePicker } from "./shared/datepicker.ts";
+import { closeDatePicker, openDatePicker } from "./shared/datepicker.ts";
 import { HistoryFeed } from "./shared/history-feed.ts";
 import { t } from "./shared/i18n.ts";
 import {
@@ -341,6 +341,7 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
   }
   disconnectedCallback() {
     super.disconnectedCallback();
+    if (this.shadowRoot) closeDatePicker(this.shadowRoot);
     this._unlink();
     clearTimeout(this._rollTimer);
     this._rollTimer = undefined;
@@ -512,7 +513,6 @@ export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
     return allocate(cfg, now, this._buckets, hidden);
   }
   _summary(ctx: RenderCtx, cfg: EnergyFlowConfig, now: FlowNow, flows: Flows): Summary {
-    // the picker names the period: the summary does not say it again
     // the period's name goes on the summary line when no picker names it
     const r = this._range;
     const period = !cfg.picker && r && ctx.hass ? this._periodLabel(r, ctx.hass) : null;

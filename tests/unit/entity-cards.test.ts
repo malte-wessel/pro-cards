@@ -37,7 +37,8 @@ describe("entity-card-pro", () => {
     ]);
     expect(c.entities[0]).toMatchObject({
       entity: "light.a",
-      toggle: true,
+      // the old `toggle: true` is `control: toggle`
+      control: { kind: "toggle" },
       visual: "icon",
       rules: [],
     });

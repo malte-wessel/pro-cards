@@ -31,6 +31,8 @@ export interface HomeAssistant {
   user?: Pick<HassUser, "id" | "name" | "is_admin">;
   // frontend versions without it fall back to the card's own formatting
   formatEntityState?: (st: HassEntity) => string;
+  // an attribute's value as Home Assistant shows it (a climate's preset or fan mode, translated)
+  formatEntityAttributeValue?: (st: HassEntity, attribute: string, value?: unknown) => string;
   // a path on the Home Assistant server as a full URL (an entity picture on a cast device)
   hassUrl?: (path?: string) => string;
   // the dashboard's url path ("dashboard-energy"): Home Assistant's energy cards share their period

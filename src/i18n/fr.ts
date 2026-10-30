@@ -8,6 +8,8 @@ const fr: Translation = {
   "common.unavailable": "indisponible",
   "common.not_found": "{entity} introuvable",
   "common.plus_hours": "+{n} h",
+  "common.minus_hours": "−{n} h",
+  "common.hours": "{n} h",
 
   "entity.peak": "Pic",
   "control.toggle": "Basculer {name}",

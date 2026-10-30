@@ -108,6 +108,8 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
     // another place may have another theme (a view's own)
     this._textCache.clear();
     this._timer = setInterval(() => this._render(), 60000);
+    // one observer, whatever was built while the card was away
+    this._ro?.disconnect();
     this._ro = new ResizeObserver(() => this._render());
     if (this._root) this._ro.observe(qs(this._root, ".plot"));
     document.addEventListener("pointerdown", this._onDocPointer);
@@ -156,7 +158,8 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
       plot.addEventListener("pointerleave", this._onLeave);
     }
     if (!this._config.show_dawn_dusk) qs(card, ".events").style.display = "none";
-    this._ro?.observe(qs(card, ".plot"));
+    // observed while on the page (connectedCallback observes a card built while away)
+    if (this.isConnected) this._ro?.observe(qs(card, ".plot"));
     this._render();
   }
 

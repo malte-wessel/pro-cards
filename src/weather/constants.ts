@@ -12,9 +12,7 @@ export const SECTION_TYPES = [
   "forecast",
   "trend",
 ] as const;
-export type SectionType = (typeof SECTION_TYPES)[number];
 export const GROUP_TYPES = ["row", "list", "table", "grid", "column"] as const;
-export type GroupType = (typeof GROUP_TYPES)[number];
 export const FORECAST_MODES = ["hourly", "daily"] as const;
 export type ForecastMode = (typeof FORECAST_MODES)[number];
 export const FORECAST_LAYOUTS = ["vertical", "horizontal"] as const;

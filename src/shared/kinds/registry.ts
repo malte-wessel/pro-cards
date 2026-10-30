@@ -15,7 +15,7 @@ import { WIND } from "./wind.ts";
 const ruleKind = (name: string, rules: readonly KindRule[], unit: string): Kind => ({
   name,
   deviceClasses: [name],
-  reads: "any",
+  reads: ["sensor", "input_number", "number"],
   readsText: `a ${name} sensor (${unit})`,
   keys: [],
   rules,

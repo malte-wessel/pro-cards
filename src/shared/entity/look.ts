@@ -103,7 +103,8 @@ export const pictureOf = (st: HassEntity | undefined): string | null => {
 // matching rule (author order), then Home Assistant's state colour for the value (lights amber,
 // locks green / red, batteries by level …), then grey for off-like states, else primary
 // `ruleModel` is the value the rules read when it differs from the shown one (a card's own rules
-// in their unit: modelOf)
+// in their unit: modelOf); `now` false: the value is not the entity's of now (a past bucket of
+// its history), so a rule's state matches that value alone, never the entity's current state
 export const resolveLook = (
   ent: EntityItem,
   model: ValueModel,
@@ -111,8 +112,9 @@ export const resolveLook = (
   tplGet: TplGet,
   hass?: HomeAssistant,
   ruleModel: ValueModel = model,
+  now = true,
 ): Look => {
-  const rule = ent.rules.find((r) => matchRule(r, ruleModel, st?.state)) ?? null;
+  const rule = ent.rules.find((r) => matchRule(r, ruleModel, now ? st?.state : null)) ?? null;
   const ruleLabel = rule?.labelKey ? t(hass, rule.labelKey) : (rule?.label ?? null);
   // a colour that is no plain colour token (a template rendering markup) counts as none
   const explicitColor = safeColor(
