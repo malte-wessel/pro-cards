@@ -106,6 +106,17 @@
       "type": "string",
       "description": "A picture in the icon: an image URL, a template that renders one, or an entity whose picture it shows. Without a picture now, the icon is `icon`'s"
     },
+    "image_opacity": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.3,
+      "description": "How much of the backdrop's picture shows through its shade, 0 to 1"
+    },
+    "image_tint": {
+      "$ref": "defs.schema.json#/$defs/color",
+      "description": "The colour of the shade over the backdrop's picture: a theme colour name, a hex or a var(). Default: the card's surface"
+    },
     "image_blur": {
       "description": "Blurs the backdrop: true for the default blur, a number of px, false for a sharp picture. Default: a person's photo and a media player's cover art are blurred",
       "oneOf": [{ "type": "boolean" }, { "type": "number", "minimum": 0 }]
@@ -711,6 +722,36 @@
   ],
   "unevaluatedProperties": false,
   "$defs": {
+    "posterRule": {
+      "type": "object",
+      "description": "First matching rule wins, in the order written. Besides the colour, icon and label it changes the poster's icon and backdrop; a key it writes wins over the card's",
+      "properties": {
+        "state": { "$ref": "entity.schema.json#/$defs/rule/properties/state" },
+        "below": { "$ref": "entity.schema.json#/$defs/rule/properties/below" },
+        "above": { "$ref": "entity.schema.json#/$defs/rule/properties/above" },
+        "color": { "$ref": "entity.schema.json#/$defs/rule/properties/color" },
+        "icon": { "$ref": "entity.schema.json#/$defs/rule/properties/icon" },
+        "label": { "$ref": "entity.schema.json#/$defs/rule/properties/label" },
+        "tint_card": { "$ref": "entity.schema.json#/$defs/rule/properties/tint_card" },
+        "style": { "$ref": "entity.schema.json#/$defs/rule/properties/style" },
+        "pulse": { "$ref": "entity.schema.json#/$defs/rule/properties/pulse" },
+        "icon_style": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/icon_style" },
+        "icon_image": {
+          "oneOf": [{ "const": false }, { "type": "string" }],
+          "description": "A picture in the icon while the rule matches, or false for the icon"
+        },
+        "icon_ring": { "type": "boolean", "description": "A ring of the value around the icon" },
+        "image": {
+          "oneOf": [{ "const": false }, { "type": "string" }],
+          "description": "The backdrop while the rule matches, or false for none"
+        },
+        "image_blur": { "$ref": "#/properties/image_blur" },
+        "image_opacity": { "$ref": "#/properties/image_opacity" },
+        "image_tint": { "$ref": "#/properties/image_tint" }
+      },
+      "anyOf": [{ "required": ["state"] }, { "required": ["below"] }, { "required": ["above"] }],
+      "additionalProperties": false
+    },
     "posterKeys": {
       "description": "The poster's item: an entity's keys, less the picture and the control's place, which are the poster's own (visual, control_position)",
       "type": "object",
@@ -732,7 +773,7 @@
         },
         "min": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/min" },
         "max": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/max" },
-        "rules": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/rules" },
+        "rules": { "type": "array", "items": { "$ref": "#/$defs/posterRule" } },
         "control": { "$ref": "entity.schema.json#/$defs/entityKeys/properties/control" },
         "control_attribute": {
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_attribute"

@@ -5,6 +5,7 @@ import {
   normalizePosterConfig,
   parseImage,
   parseImageBlur,
+  ruleLookOf,
 } from "../../src/poster/config.ts";
 import { imageUrl, statusText } from "../../src/poster/render.ts";
 import { placementsOf } from "../../src/shared/entity/control.ts";
@@ -358,9 +359,9 @@ describe("poster-card image and status", () => {
     expect(parseImage(3)).toBeNull();
     expect(parseImage("/local/garden.jpg")).toEqual({ kind: "url", url: "/local/garden.jpg" });
     expect(parseImage("https://x.org/a.png")).toEqual({ kind: "url", url: "https://x.org/a.png" });
-    expect(parseImage("camera.front_door")).toEqual({
+    expect(parseImage("camera.garden")).toEqual({
       kind: "entity",
-      entity: "camera.front_door",
+      entity: "camera.garden",
     });
     expect(parseImage("{{ 'a' }}")).toEqual({ kind: "template", template: "{{ 'a' }}" });
   });
@@ -376,6 +377,52 @@ describe("poster-card image and status", () => {
     );
     expect(() => norm({ entity: "sensor.x", image_blur: -2 })).toThrow(/image_blur/);
     expect(norm({ entity: "sensor.x", image_blur: 6 }).imageBlur).toBe(6);
+  });
+
+  it("takes the shade's opacity and tint; a bad opacity names the key", () => {
+    const cfg = norm({ entity: "sensor.x", image_opacity: 0.6, image_tint: "blue" });
+    expect([cfg.imageOpacity, cfg.imageTint]).toEqual([0.6, "blue"]);
+    expect([
+      norm({ entity: "sensor.x" }).imageOpacity,
+      norm({ entity: "sensor.x" }).imageTint,
+    ]).toEqual([null, null]);
+    expect(() => norm({ entity: "sensor.x", image_opacity: 2 })).toThrow(
+      `${T}: image_opacity must be a number from 0 to 1`,
+    );
+  });
+
+  it("reads what a rule changes of the icon and the backdrop, only the keys it writes", () => {
+    expect(
+      ruleLookOf({
+        state: "on",
+        icon_style: "plain",
+        icon_image: "person.malte",
+        icon_ring: true,
+        image: "camera.garden",
+        image_blur: true,
+        image_opacity: 0.5,
+        image_tint: "amber",
+      }),
+    ).toEqual({
+      iconStyle: "plain",
+      iconImage: { kind: "entity", entity: "person.malte" },
+      iconRing: true,
+      image: { kind: "entity", entity: "camera.garden" },
+      imageBlur: IMAGE_BLUR,
+      imageOpacity: 0.5,
+      imageTint: "amber",
+    });
+    // false: no picture while it matches
+    expect(ruleLookOf({ state: "off", image: false, icon_image: false })).toEqual({
+      image: false,
+      iconImage: null,
+    });
+    expect(ruleLookOf({ state: "on", color: "red" })).toEqual({});
+    // every rule of the card, by rule
+    const cfg = norm({ entity: "sensor.x", rules: [{ above: 5, image: "/local/a.jpg" }] });
+    expect(cfg.ruleLooks.get(cfg.entities[0].rules[0])).toEqual({
+      image: { kind: "url", url: "/local/a.jpg" },
+    });
   });
 
   it("takes a picture for the icon as a URL, a template or an entity's", () => {
@@ -406,7 +453,7 @@ describe("poster-card image and status", () => {
 
   it("reads the image now", () => {
     const hass = withStates({
-      "camera.front_door": st("camera.front_door", "idle", { entity_picture: "/api/cam?t=1" }),
+      "camera.garden": st("camera.garden", "idle", { entity_picture: "/api/cam?t=1" }),
     });
     const ctx = { hass, tplResult: new Map<string, unknown>([["{{ 'a' }}", "/local/a.jpg"]]) };
     expect(imageUrl(ctx as never, null)).toBeNull();
@@ -415,7 +462,7 @@ describe("poster-card image and status", () => {
     expect(imageUrl(ctx as never, { kind: "template", template: "{{ 'a' }}" })).toBe(
       "/local/a.jpg",
     );
-    expect(imageUrl(ctx as never, { kind: "entity", entity: "camera.front_door" })).toBe(
+    expect(imageUrl(ctx as never, { kind: "entity", entity: "camera.garden" })).toBe(
       "/api/cam?t=1",
     );
   });

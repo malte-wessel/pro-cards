@@ -153,6 +153,8 @@ export interface Rule {
   pulse: boolean;
   // a card's own rule (the poster's predefined ones): its label is ours, translated at render time
   labelKey?: StringKey;
+  // the rule as written: a card reads keys of its own from it (the poster's icon and backdrop)
+  src?: Readonly<Record<string, unknown>>;
 }
 export interface ItemOptions {
   showName: boolean;
@@ -351,6 +353,7 @@ export const normalizeRules = (list: unknown): Rule[] => {
       tintCard: !!x.tint_card,
       style: oneOf(BADGE_STYLES, x.style) ? x.style : null,
       pulse: !!x.pulse,
+      src: x as Readonly<Record<string, unknown>>,
     }))
     .filter((r) => r.state !== null || r.below !== null || r.above !== null);
 };

@@ -8,7 +8,7 @@
  *   name / icon / value / secondary / color   # the slots, plain text or templates
  *   status: "{{ … }}"                      # the status badge's text, an object of badge keys, or false
  *   badges: [sensor.x, { attribute: humidity }, status]   # the corner; `status` places the status
- *   image: camera.front_door               # the backdrop: a URL, a template or an entity's picture
+ *   image: camera.garden                   # the backdrop: a URL, a template or an entity's picture
  *   image_blur: true                       # the backdrop blurred (px; a person's and a player's are)
  *   rules: [...]                           # replace the type's own rules as a whole
  *   visual: glow                           # sparkline … gauge, glow (lit by its level), none
@@ -18,6 +18,7 @@
  */
 import { registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
+import { CARD_BG } from "./shared/constants.ts";
 import { EntityCardBase, overflows } from "./shared/entity/base.ts";
 import type { EntityCardConfig, EntityItem } from "./shared/entity/config.ts";
 import { tileMinColumns } from "./shared/entity/control.ts";
@@ -35,8 +36,10 @@ import { dailyTypeOf, supportsForecast } from "./shared/weather/forecast.ts";
 import {
   hasIconActions,
   IMAGE_BLUR,
+  IMAGE_OPACITY,
   normalizePosterConfig,
   type PosterConfig,
+  type RuleLook,
 } from "./poster/config.ts";
 import { CARD_TYPE } from "./poster/constants.ts";
 import {
@@ -201,8 +204,7 @@ export class PosterCard extends EntityCardBase {
   _extraTemplates(cfg: EntityCardConfig): string[] {
     const c = cfg as PosterConfig;
     const out = c.kind.templates?.(c.kindOpts) ?? [];
-    for (const src of [c.image, c.iconImage])
-      if (src && src.kind === "template") out.push(src.template);
+    for (const src of this._pictures(c)) if (src && src.kind === "template") out.push(src.template);
     if (c.statusText?.kind === "template") out.push(c.statusText.template);
     return out;
   }
@@ -211,10 +213,13 @@ export class PosterCard extends EntityCardBase {
     return [
       ...(c.kind.watch ?? []),
       ...(c.kind.history?.(c.kindOpts, c.entities[0].entity) ?? []),
-      ...[c.image, c.iconImage].flatMap((src) =>
-        src && src.kind === "entity" ? [src.entity] : [],
-      ),
+      ...this._pictures(c).flatMap((src) => (src && src.kind === "entity" ? [src.entity] : [])),
     ];
+  }
+  // the pictures the card and its rules name (the backdrop's and the icon's)
+  _pictures(c: PosterConfig) {
+    const rules = [...c.ruleLooks.values()];
+    return [c.image, c.iconImage, ...rules.flatMap((r) => [r.image, r.iconImage])];
   }
   _extraHistoryIds(cfg: EntityCardConfig): string[] {
     const c = cfg as PosterConfig;
@@ -248,7 +253,7 @@ export class PosterCard extends EntityCardBase {
     const cfg = this._config as PosterConfig;
     const raw = (this._raw ?? {}) as Record<string, unknown>;
     const o: PosterSlots = { ...(cfg.kind.slots?.(c) ?? {}), iconActions: cfg.iconActions };
-    if (this._userIcon()) delete o.lead;
+    if (this._userIcon(c)) delete o.lead;
     if (raw.name !== undefined) delete o.name;
     if (raw.value !== undefined || raw.attribute !== undefined) {
       delete o.value;
@@ -258,14 +263,32 @@ export class PosterCard extends EntityCardBase {
     if (raw.visual !== undefined) delete o.picture;
     return o;
   }
-  // the card draws its own lead: its `icon` or `icon_image`, or an icon with actions of its own
-  // (an animated lead gives way to them)
-  _userIcon() {
+  // the card draws its own lead: its `icon` or `icon_image` (the card's or the matching rule's), or
+  // an icon with actions of its own (an animated lead gives way to them)
+  _userIcon(kc?: KindCtx) {
     const cfg = this._config as PosterConfig | undefined;
+    const image = kc ? this._look(kc).iconImage : cfg?.iconImage;
     return (
       ((this._raw ?? {}) as Record<string, unknown>).icon !== undefined ||
-      (!!cfg && (!!cfg.iconImage || hasIconActions(cfg.iconActions)))
+      !!image ||
+      (!!cfg && hasIconActions(cfg.iconActions))
     );
+  }
+  // the icon and the backdrop as the card writes them, with what the matching rule changes (a
+  // rule's key wins: the card's is the default)
+  _look(kc: KindCtx) {
+    const cfg = this._config as PosterConfig;
+    const rule = kc.m.look.rule;
+    const r: RuleLook = (rule && cfg.ruleLooks.get(rule)) || {};
+    return {
+      iconStyle: r.iconStyle ?? kc.ent.iconStyle,
+      iconRing: r.iconRing ?? !!kc.ent.iconRing,
+      iconImage: "iconImage" in r ? (r.iconImage ?? null) : cfg.iconImage,
+      image: "image" in r ? (r.image ?? null) : cfg.image,
+      imageBlur: r.imageBlur ?? cfg.imageBlur ?? (cfg.kind.imageBlur ? IMAGE_BLUR : 0),
+      imageOpacity: r.imageOpacity ?? cfg.imageOpacity ?? IMAGE_OPACITY,
+      imageTint: r.imageTint ?? cfg.imageTint,
+    };
   }
 
   // ----- DOM -----
@@ -301,7 +324,7 @@ export class PosterCard extends EntityCardBase {
       // an animated lead is built once (per key) and kept through fills: its animation runs on
       const lead = cfg.kind.lead,
         plead = row.querySelector<HTMLElement>(":scope > .ptop > .plead");
-      if (lead && plead && !this._userIcon()) {
+      if (lead && plead && !this._userIcon(kc)) {
         const key = lead.key(kc);
         if (plead.dataset.key !== key) {
           plead.replaceChildren(lead.build(kc));
@@ -309,12 +332,18 @@ export class PosterCard extends EntityCardBase {
         }
         slots.lead = "keep";
       } else if (plead) delete plead.dataset.key;
-      // icon_image: its picture in the icon while it has one, else the icon
-      const pic = imageUrl(ctx, cfg.iconImage);
+      // icon_image: its picture in the icon while it has one, else the icon; the icon's style and
+      // ring as the matching rule says
+      const look = this._look(kc);
+      const pic = imageUrl(ctx, look.iconImage);
+      const icon =
+        look.iconStyle === ent.iconStyle && look.iconRing === !!ent.iconRing
+          ? ent
+          : { ...ent, iconStyle: look.iconStyle, iconRing: look.iconRing };
       fillPosterSlots(
         ctx,
         row,
-        ent,
+        icon,
         idx,
         pic ? { ...m, look: { ...m.look, picture: pic } } : m,
         slots,
@@ -341,7 +370,7 @@ export class PosterCard extends EntityCardBase {
         ...extra,
         statusText(ctx, cfg, kc.m, cfg.kind.status?.(kc) ?? null),
       ];
-    return [...inputs, ...own, ...extra, imageUrl(ctx, cfg.iconImage)];
+    return [...inputs, ...own, ...extra, imageUrl(ctx, this._look(kc).iconImage)];
   }
   // the icon's picture fades in when it is a new one (the next song's cover); a fill with the same
   // picture keeps the element it has, so a fade under way runs on
@@ -414,9 +443,10 @@ export class PosterCard extends EntityCardBase {
     const lead = cfg.kind.lead,
       leadEl = row.querySelector<HTMLElement>(":scope > .ptop > .plead[data-key] > *");
     if (lead?.update && leadEl) lead.update(leadEl, kc, row);
+    const look = this._look(kc);
     const url =
-      imageUrl(ctx, cfg.image) ?? (cfg.image === false ? null : (cfg.kind.image?.(kc) ?? null));
-    const back = cfg.image === false ? null : cfg.kind.backdrop;
+      imageUrl(ctx, look.image) ?? (look.image === false ? null : (cfg.kind.image?.(kc) ?? null));
+    const back = look.image === false ? null : cfg.kind.backdrop;
     const key = !url && back ? back.key(kc) : "";
     const { part, glow } = updateBackdrop(
       body,
@@ -424,11 +454,19 @@ export class PosterCard extends EntityCardBase {
       url,
       key && back ? { key, build: () => back.build(kc) } : null,
       cfg.glow,
-      cfg.imageBlur ?? (cfg.kind.imageBlur ? IMAGE_BLUR : 0),
+      look.imageBlur,
     );
     const pback = body.querySelector<HTMLElement>(":scope > .pback"),
       color = row.style.getPropertyValue("--fe-color");
     pback?.style.setProperty("--fe-color", color);
+    // the picture's shade: as much as the picture does not show, the card's surface with its tint
+    // mixed in half and half (so the theme's text keeps reading); both fade to a new value
+    const tint = look.imageTint ? cssColor(look.imageTint, "") : "";
+    pback?.style.setProperty("--pc-shade", String(1 - look.imageOpacity));
+    pback?.style.setProperty(
+      "--pc-shade-color",
+      tint ? `color-mix(in srgb, ${tint} 50%, ${CARD_BG})` : CARD_BG,
+    );
     // the glow in the poster's colour, as strong as its level (its opacity: a new level fades)
     if (glow) {
       glow.style.setProperty("--glow", color);
@@ -567,16 +605,18 @@ export class PosterCard extends EntityCardBase {
   }
 }
 
-// --pc-tint as a colour, so it can fade (once per page; another copy of the bundle has done it)
-try {
-  CSS.registerProperty({
-    name: "--pc-tint",
-    syntax: "<color>",
-    inherits: true,
-    initialValue: "transparent",
-  });
-} catch {
-  // registered already, or no CSS Properties API: the colour changes at once
+// the poster's colour and its backdrop's shade as typed values, so they can fade (once per page;
+// another copy of the bundle has done it)
+for (const [name, syntax, initialValue] of [
+  ["--pc-tint", "<color>", "transparent"],
+  ["--pc-shade", "<number>", "0.7"],
+  ["--pc-shade-color", "<color>", "transparent"],
+]) {
+  try {
+    CSS.registerProperty({ name, syntax, inherits: true, initialValue });
+  } catch {
+    // registered already, or no CSS Properties API: the value changes at once
+  }
 }
 
 registerCard(PosterCard, {

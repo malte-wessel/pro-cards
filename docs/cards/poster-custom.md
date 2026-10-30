@@ -117,6 +117,7 @@ On a poster, a rule can also set:
 - `tint_card: true`: the whole poster in the rule's colour ([tinted posters](#tinted-posters)).
 - `pulse: true`: the badge pulses.
 - `style`: the badge's look.
+- the icon and the backdrop: `icon_style`, `icon_image`, `icon_ring`, `image`, `image_blur`, `image_opacity` and `image_tint` ([below](#the-icon-and-the-backdrop-by-rule)).
 
 A poster type brings its own rules (the [predefined sets](/cards/poster-types#predefined-rules)). Your `rules` take their place as a whole, and `rules: []` drops them.
 
@@ -184,6 +185,33 @@ A poster type brings its own rules (the [predefined sets](/cards/poster-types#pr
 :::
 
 Rules match a template value by its text: the last poster's rules read `Open` and `Closed` and need no entity. On the weather poster, your rules take the place of the condition colours. Name every condition that should keep a colour.
+
+### The icon and the backdrop by rule
+
+A rule can change the icon and the backdrop too, with the keys the card has for them. A key the rule writes wins over the card's while the rule matches; a key it leaves out stays the card's. `false` drops a picture: `image: false` the backdrop, `icon_image: false` the icon's picture.
+
+Switch the pump on: the garden camera comes up behind it. The garden light shows the camera dimmed in indigo while it is off, and clearer, with a ring, while it is on.
+
+::: live
+
+```yaml
+- type: custom:poster-card-pro
+  entity: switch.garden_pump
+  icon: mdi:water-pump
+  control: toggle
+  rules:
+    - { state: "on", color: blue, label: Watering, image: camera.garden, image_opacity: 0.6 }
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: light.garden
+  image: camera.garden
+  rules:
+    - { state: "off", image_opacity: 0.2, image_tint: indigo, icon_style: plain }
+    - { state: "on", image_opacity: 0.6, icon_ring: true }
+  grid_options: { columns: 6 }
+```
+
+:::
 
 ## A picture
 
@@ -370,16 +398,39 @@ The icon takes [actions](#actions) of its own, as on Home Assistant's tile card:
 
 `image_blur` blurs the backdrop: `true` for the default blur, or a number of pixels. A person's photo and a media player's art are blurred by default; `image_blur: false` shows them sharp.
 
+A shade of the card's own surface lies over the picture, so the text reads on it. `image_opacity` sets how much of the picture shows through, from `0` to `1` (`0.3` by default). `image_tint` mixes a colour into the shade (half and half with the card's surface, so the text still reads): a theme colour name, a hex or a `var()`.
+
 ::: live
 
 ```yaml
 - type: custom:poster-card-pro
-  name: Front door
-  icon: mdi:doorbell-video
-  image: camera.front_door
-  value: "{{ 'Open' if is_state('binary_sensor.door_front', 'on') else 'Closed' }}"
-  secondary: "{{ 'Locked' if is_state('lock.front_door', 'locked') else 'Unlocked' }}"
-  tap_action: { action: more-info, entity: camera.front_door }
+  name: Garden
+  icon: mdi:cctv
+  image: camera.garden
+  image_opacity: 0.7
+  value: Clear
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  name: Garden
+  icon: mdi:cctv
+  image: camera.garden
+  image_tint: deep-purple
+  value: Night
+  grid_options: { columns: 6 }
+```
+
+:::
+
+::: live
+
+```yaml
+- type: custom:poster-card-pro
+  name: Garden
+  icon: mdi:cctv
+  image: camera.garden
+  value: "{{ 'Light on' if is_state('light.garden', 'on') else 'Light off' }}"
+  secondary: "{{ 'Pump running' if is_state('switch.garden_pump', 'on') else 'Pump off' }}"
+  tap_action: { action: more-info, entity: camera.garden }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   name: Malte
@@ -392,14 +443,14 @@ The icon takes [actions](#actions) of its own, as on Home Assistant's tile card:
 
 :::
 
-A camera's snapshot behind a lock: see who is at the door, then hold the padlock to unlock it.
+A camera's snapshot behind a switch: see the garden, then switch its light.
 
 ::: live
 
 ```yaml
 type: custom:poster-card-pro
-entity: lock.front_door
-image: camera.front_door
+entity: light.garden
+image: camera.garden
 ```
 
 :::

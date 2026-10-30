@@ -2,7 +2,7 @@
 // entity (or none) drawn the way its poster type (its kind) says; its items are the poster itself,
 // the status badge (a badge like the others, drawn as a tag) and the badges in its corner.
 import { domainOf } from "../shared/color.ts";
-import { isTemplate, numOrNull } from "../shared/util.ts";
+import { isTemplate, numOrNull, oneOf } from "../shared/util.ts";
 import {
   normalizeAction,
   normalizeActionDefaults,
@@ -16,9 +16,16 @@ import {
   type RawAction,
   type RawEntity,
   type RawEntityCardBase,
+  type Rule,
   type ValueSrc,
 } from "../shared/entity/config.ts";
-import { ITEM_DEFAULTS, type BadgeSize, type BadgeStyle } from "../shared/entity/constants.ts";
+import {
+  ICON_STYLES,
+  ITEM_DEFAULTS,
+  type BadgeSize,
+  type BadgeStyle,
+  type IconStyle,
+} from "../shared/entity/constants.ts";
 import { normalizeControl, type IconActions } from "../shared/entity/control.ts";
 import type { ActionConfig, HomeAssistant } from "../shared/ha.ts";
 import { parsePoster, resolveKind } from "../shared/kinds/detect.ts";
@@ -53,6 +60,8 @@ export interface RawPosterCardConfig extends RawEntityCardBase, RawEntity {
   badges?: unknown;
   image?: unknown;
   image_blur?: unknown;
+  image_opacity?: unknown;
+  image_tint?: unknown;
   // the lead: a ring of the value around the icon, the icon's own actions
   icon_ring?: unknown;
   icon_image?: unknown;
@@ -81,6 +90,12 @@ export interface PosterConfig extends EntityCardConfig {
   iconImage: ImageSrc | null;
   // the backdrop's blur in px as written (0: sharp; null: the kind's)
   imageBlur: number | null;
+  // how much of the backdrop's picture shows through its shade, 0 to 1, and the shade's colour
+  // (null: IMAGE_OPACITY, the card's surface)
+  imageOpacity: number | null;
+  imageTint: string | null;
+  // what each of the card's rules changes of the icon and the backdrop, by rule
+  ruleLooks: Map<Rule, RuleLook>;
   // the kind's inputs: key → item (not drawn as rows: read by the kind)
   inputs: Record<string, number>;
   // `hours_to_show` as written (null: the kind's window)
@@ -135,6 +150,42 @@ const ENTITY_ID = /^[a-z_]+\.[a-z0-9_]+$/;
 
 // the blur of `image_blur: true`, in px
 export const IMAGE_BLUR = 20;
+// how much of a backdrop's picture shows through its shade by default
+export const IMAGE_OPACITY = 0.3;
+
+// what a matching rule changes of the poster's icon and backdrop; a key it leaves out is the card's
+// (a key it writes wins over the card's: the card's is the default)
+export interface RuleLook {
+  iconStyle?: IconStyle;
+  iconImage?: ImageSrc | null;
+  iconRing?: boolean;
+  image?: ImageSrc | false | null;
+  imageBlur?: number;
+  imageOpacity?: number;
+  imageTint?: string;
+}
+
+export const parseImageOpacity = (v: unknown, key = "image_opacity"): number | null => {
+  if (v === undefined || v === null) return null;
+  if (typeof v === "number" && v >= 0 && v <= 1) return v;
+  throw new Error(`${CARD_TYPE}: ${key} must be a number from 0 to 1`);
+};
+
+// a rule's own keys for the icon and the backdrop, as the card's are read
+export const ruleLookOf = (src: Readonly<Record<string, unknown>> | undefined): RuleLook => {
+  const out: RuleLook = {};
+  if (!src) return out;
+  if (oneOf(ICON_STYLES, src.icon_style)) out.iconStyle = src.icon_style;
+  if (src.icon_image !== undefined) out.iconImage = parseImage(src.icon_image) || null;
+  if (typeof src.icon_ring === "boolean") out.iconRing = src.icon_ring;
+  if (src.image !== undefined) out.image = parseImage(src.image);
+  const blur = parseImageBlur(src.image_blur);
+  if (blur !== null) out.imageBlur = blur;
+  const opacity = parseImageOpacity(src.image_opacity, "a rule's image_opacity");
+  if (opacity !== null) out.imageOpacity = opacity;
+  if (typeof src.image_tint === "string" && src.image_tint) out.imageTint = src.image_tint;
+  return out;
+};
 export const parseImageBlur = (v: unknown): number | null => {
   if (v === undefined || v === null) return null;
   if (v === true) return IMAGE_BLUR;
@@ -341,6 +392,9 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
     statusText,
     image: parseImage(raw.image),
     imageBlur: parseImageBlur(raw.image_blur),
+    imageOpacity: parseImageOpacity(raw.image_opacity),
+    imageTint: typeof raw.image_tint === "string" && raw.image_tint ? raw.image_tint : null,
+    ruleLooks: new Map(main.rules.map((r) => [r, ruleLookOf(r.src)])),
     iconImage: parseImage(raw.icon_image) || null,
     glow,
     iconActions,

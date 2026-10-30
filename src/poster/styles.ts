@@ -34,8 +34,11 @@ const STYLE_POSTER_CARD = `
      fades into nothing) lies outside the card, also while a new picture fades in over the last */
   .pback.blur > img { position: absolute; left: calc(var(--pblur) * -2); top: calc(var(--pblur) * -2); width: calc(100% + var(--pblur) * 4); height: calc(100% + var(--pblur) * 4); filter: blur(var(--pblur)); }
   /* the scrim: the card's own surface evenly over the whole picture, so the theme's text reads on
-     any picture */
-  .pback.scrim::after { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, ${CARD_BG} 70%, transparent); }
+     any picture; as strong as the picture does not show (image_opacity), a tint (image_tint) mixed
+     into the surface (PosterCard._render). A new strength or tint fades */
+  .pback { transition: --pc-shade .6s ease, --pc-shade-color .6s ease; }
+  @media (prefers-reduced-motion: reduce) { .pback { transition: none; } }
+  .pback.scrim::after { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, var(--pc-shade-color, ${CARD_BG}) calc(var(--pc-shade, .7) * 100%), transparent); }
   /* over a picture the status badge is filled with the poster's colour, so it reads on any picture */
   ha-card:has(> .body > .pback.scrim) .row.poster > .ptop > .corner > .row.hval.b-tag { --b-ink: var(--text-primary-color, #fff); background: var(--fe-color); border-color: transparent; }
   ha-card:has(> .body > .pback.scrim) .row.poster > .ptop > .corner > .row.hval.b-tag :is(ha-icon, ha-state-icon, .state, .state.accent, .secondary) { color: var(--b-ink); }

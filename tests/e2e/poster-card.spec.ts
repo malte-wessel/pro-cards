@@ -255,6 +255,68 @@ test.describe("poster card", () => {
     await expect(c.locator(".plead img.picture")).toHaveClass(/pfade/);
   });
 
+  test("the backdrop's shade takes its opacity and tint; a matching rule changes the icon and the backdrop", async ({
+    page,
+  }) => {
+    await mount(page, [
+      {
+        type: P,
+        entity: "sensor.living_room_temperature",
+        image: "/local/garden.jpg",
+        image_opacity: 0.6,
+        image_tint: "blue",
+      },
+      {
+        type: P,
+        entity: "switch.garden_pump",
+        rules: [
+          {
+            state: "on",
+            image: "camera.garden",
+            image_opacity: 0.5,
+            image_tint: "amber",
+            icon_style: "plain",
+            icon_ring: true,
+            icon_image: "person.malte",
+          },
+        ],
+      },
+    ]);
+    // the shade's strength and colour: the tint mixed into the card's surface
+    const shade = (i: number) =>
+      card(page, i)
+        .locator(".pback")
+        .evaluate((e) => [
+          (e as HTMLElement).style.getPropertyValue("--pc-shade"),
+          (e as HTMLElement).style.getPropertyValue("--pc-shade-color"),
+        ]);
+    const [strength, color] = await shade(0);
+    expect(strength).toBe("0.4");
+    expect(color).toMatch(/^color-mix\(in srgb, var\(--blue-color\) 50%, /);
+    // a new strength or tint fades
+    await expect(card(page, 0).locator(".pback")).toHaveCSS(
+      "transition-property",
+      "--pc-shade, --pc-shade-color",
+    );
+    // off: no rule matches, the poster as the card writes it
+    const pump = card(page, 1);
+    await expect(pump.locator(".pback img")).toHaveCount(0);
+    await expect(pump.locator(".plead img.picture")).toHaveCount(0);
+    await setState(page, "switch.garden_pump", "on");
+    await expect(pump.locator(".pback.scrim img")).toBeAttached();
+    const [on, amber] = await shade(1);
+    expect(on).toBe("0.5");
+    expect(amber).toContain("var(--amber-color)");
+    await expect(pump.locator(".plead img.picture")).toBeAttached();
+    await expect(pump.locator(".plead .lead")).toHaveClass(/plain/);
+    await expect(pump.locator(".plead .ring")).toBeAttached();
+    // off again: back to the card's
+    await setState(page, "switch.garden_pump", "off");
+    await expect(pump.locator(".pback img")).toHaveCount(0);
+    await expect(pump.locator(".plead img.picture")).toHaveCount(0);
+    await expect(pump.locator(".plead .ring")).toHaveCount(0);
+  });
+
   test("icon_image: a picture of its own in the icon, the icon while it has none", async ({
     page,
   }) => {

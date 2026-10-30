@@ -8,6 +8,7 @@ import type {
   StatisticsResult,
   WeatherForecastType,
 } from "../../../../src/shared/ha.ts";
+import { GARDEN_SNAPSHOT } from "./camera.ts";
 import { MALTE_PHOTO } from "./malte.ts";
 import { isMeter, METERS, readingAt, statistics, statisticsMetadata } from "./meters.ts";
 
@@ -465,12 +466,10 @@ def("alarm_control_panel.home", "disarmed", {
   code_format: null,
   supported_features: 3,
 });
-// the front door's camera: a still of the porch as its picture
-def("camera.front_door", "idle", {
-  friendly_name: "Front door camera",
-  entity_picture: `data:image/svg+xml,${encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9cb7c9"/><stop offset="1" stop-color="#d9e2e6"/></linearGradient></defs><rect width="320" height="240" fill="url(#s)"/><rect y="150" width="320" height="90" fill="#8a8f84"/><rect x="40" y="60" width="240" height="120" fill="#c9b9a0"/><rect x="130" y="95" width="60" height="85" fill="#6b4f3a"/><circle cx="180" cy="140" r="3" fill="#d8c27a"/><rect x="60" y="85" width="45" height="40" fill="#e9eef0"/><rect x="215" y="85" width="45" height="40" fill="#e9eef0"/><path d="M30 60 L160 20 L290 60 Z" fill="#7a5b4a"/><rect x="0" y="0" width="320" height="16" fill="rgba(0,0,0,.35)"/></svg>`,
-  )}`,
+// the garden camera: a snapshot of the garden as its picture
+def("camera.garden", "idle", {
+  friendly_name: "Garden camera",
+  entity_picture: GARDEN_SNAPSHOT,
 });
 def("lock.garage_side_door", "unlocked", { friendly_name: "Garage side door" });
 // the shed is offline: its devices show how a control greys out while its entity is unavailable
