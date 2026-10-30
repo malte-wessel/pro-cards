@@ -69,6 +69,9 @@ const STYLE_POSTER_CARD = `
   .pbody:has(> .pcurve) .big { --pnum: ${fs(28)}; --plh: ${lh(28, 31)}; }
   .pbody:has(> .pcurve) .big b { ${type(28, 31)} }
   .pbody > .pcurve { position: relative; flex: 1 1 auto; min-height: 40px; min-width: 0; margin: 6px -16px -16px; touch-action: pan-y; }
+  /* the sun's day starts behind the time above it by the headroom its arc keeps over a low sun's
+     peak (--psun-lift, the sun kind), so no band of nothing is left under the texts */
+  .pbody > .pcurve.psun { margin-top: calc(6px - var(--psun-lift, 0px)); }
   /* a sparkline keeps a small gap below the value instead of reaching up under it */
   ha-card.layout-poster .pbody > .pmain:not(:has(> .ptext > .secondary)) + .plot.grow[data-kind="sparkline"] { margin-top: 6px; }
   .row.actionable .pcurve { pointer-events: auto; }

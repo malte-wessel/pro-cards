@@ -12,6 +12,9 @@ import { qs } from "../util.ts";
 export const HORIZON_MIN = 0.45; // horizon never above 45 % of the plot height
 export const HORIZON_MAX = 0.7; // ... and never below 70 %
 export const CURVE_STEP_MIN = 10;
+// the room the curve keeps above and below its range, in px
+export const CURVE_TOP = 8;
+export const CURVE_BOTTOM = 6;
 
 // the solar day of the home's position
 export interface PositionedDay extends SolarDay {
@@ -36,7 +39,8 @@ export interface CurveLook {
 }
 
 // draws the day's curve into `plot` (its svg) at the height the plot has (`fallbackH` while it
-// has none yet); returns the x mapping and the width
+// has none yet); returns the x mapping, the width and the headroom: the share of the range left
+// empty above the day's peak (a low sun keeps the horizon in its band that way)
 export const drawCurve = (
   host: SunCurveHost,
   plot: HTMLElement,
@@ -50,8 +54,8 @@ export const drawCurve = (
   const W = Math.max(plot.clientWidth, 10),
     H = plot.clientHeight || fallbackH;
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-  const top = 8,
-    bottom = H - 6;
+  const top = CURVE_TOP,
+    bottom = H - CURVE_BOTTOM;
   // One linear elevation scale for the whole curve (a split scale would kink it at the horizon).
   // The horizon lands where the data puts it, but the range is padded so it stays within a band.
   let maxE = Math.max(day.maxElev, 5),
@@ -119,7 +123,7 @@ export const drawCurve = (
   host._xOf = xOf;
   host._yOf = yOf;
   host._plotW = W;
-  return { xOf, W };
+  return { xOf, W, headroom: Math.max(0, (maxE - day.maxElev) / (maxE - minE)) };
 };
 
 // the time of the day under plot x (0..W), clamped to the day

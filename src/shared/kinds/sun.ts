@@ -7,6 +7,8 @@ import { leadEl } from "../entity/render/lead.ts";
 import { fmtRelative } from "../format.ts";
 import { SUNRISE_ELEV, solarDay, solarDayAround, solarElevation, type SolarDay } from "../solar.ts";
 import {
+  CURVE_BOTTOM,
+  CURVE_TOP,
   drawCurve,
   showHover,
   timeAt,
@@ -18,6 +20,8 @@ import { div, wordValue } from "./dom.ts";
 import type { Kind, KindCtx } from "./types.ts";
 
 const CURVE_H = 72;
+// how far the sun's curve reaches up behind the time above it, in px, besides its headroom
+const SUN_BLEED = 10;
 // the next day of a day, kept per curve host
 const nextDays = new WeakMap<SunCurveHost, { after: PositionedDay; day: SolarDay }>();
 
@@ -108,7 +112,20 @@ export const SUN: Kind = {
       sun: "var(--amber-color)",
       tooltip: true,
     };
-    drawCurve(c.host.sun, plot, day, new Date(c.ctx.now), look, CURVE_H);
+    const draw = () => drawCurve(c.host.sun, plot, day, new Date(c.ctx.now), look, CURVE_H);
+    // the plot starts behind the texts: by SUN_BLEED, and by the empty band the curve keeps above
+    // a low sun's peak, so the peak sits as close under the time in December as in June. Found
+    // from the height without a lift, so it settles at once
+    const { headroom } = draw();
+    const lift = parseFloat(plot.style.getPropertyValue("--psun-lift")) || 0;
+    const room = plot.clientHeight - lift - CURVE_TOP - CURVE_BOTTOM;
+    const band = headroom < 1 ? (headroom * (room + SUN_BLEED)) / (1 - headroom) : 0;
+    const next = Math.max(0, Math.round(SUN_BLEED + band));
+    if (next !== lift) {
+      plot.style.setProperty("--psun-lift", `${next}px`);
+      draw();
+      plot.dataset.key = `${plot.clientWidth}x${plot.clientHeight}|${Math.floor(c.ctx.now / 60e3)}|${day0}`;
+    }
     if (c.host.hoverT !== null) showHover(c.host.sun, plot, c.host.hoverT);
   },
   extra: (c) => [Math.floor(c.ctx.now / 60e3)],
