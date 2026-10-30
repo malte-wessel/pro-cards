@@ -122,8 +122,6 @@ export interface Kind {
   color?(c: KindCtx): string | null;
   lead?: Persistent;
   backdrop?: Persistent;
-  // a part over the poster's action layer, under its texts (a cover's drag handle)
-  handle?: Persistent;
   // a picture behind the poster under the scrim (a person's photo), where the card sets no `image`
   image?(c: KindCtx): string | null;
   // run on every render after the fill: what follows the clock or the size (a curve)

@@ -165,6 +165,56 @@ const played = (st: HassEntity) => {
   return { media_position: Math.round(p), media_position_updated_at: new Date(now).toISOString() };
 };
 const TRACKS = ["Planet Earth III", "Radio Eins", "Morning Mix", "Jazz Hour"];
+// a cover travels as a real one does: opening or closing while it moves, a few percent closer
+// every tick (a whole run in about 6 s), held where it is when stopped; one without a position is
+// on its way for as long and then arrives
+const TRAVEL_TICK_MS = 250;
+const TRAVEL_STEP = 4;
+const travels = new Map<string, ReturnType<typeof setTimeout>>();
+const stopTravel = (id: string) => {
+  clearTimeout(travels.get(id));
+  travels.delete(id);
+};
+const travel = (id: string, target: number) => {
+  stopTravel(id);
+  const st = world.get(id);
+  if (!st) return;
+  const start = Number(st.attributes.current_position);
+  const way = (up: boolean) => (up ? "opening" : "closing");
+  if (!Number.isFinite(start)) {
+    if (st.state === COVER_OPEN(target)) return;
+    world.set(id, way(target > 0));
+    travels.set(
+      id,
+      setTimeout(
+        () => {
+          travels.delete(id);
+          world.set(id, COVER_OPEN(target));
+        },
+        (100 / TRAVEL_STEP) * TRAVEL_TICK_MS,
+      ),
+    );
+    return;
+  }
+  if (start === target) {
+    world.set(id, COVER_OPEN(target), { current_position: target });
+    return;
+  }
+  const up = target > start;
+  let pos = start;
+  world.set(id, way(up));
+  const step = () => {
+    pos = up ? Math.min(target, pos + TRAVEL_STEP) : Math.max(target, pos - TRAVEL_STEP);
+    if (pos === target) {
+      travels.delete(id);
+      world.set(id, COVER_OPEN(pos), { current_position: pos });
+    } else {
+      world.set(id, way(up), { current_position: pos });
+      travels.set(id, setTimeout(step, TRAVEL_TICK_MS));
+    }
+  };
+  travels.set(id, setTimeout(step, TRAVEL_TICK_MS));
+};
 const setTimeoutState = (id: string, state: string, attrs: Record<string, unknown>, ms: number) =>
   setTimeout(() => world.set(id, state, attrs), ms);
 // devices that take a moment to answer, so a control's pending ghost can be seen (the controls
@@ -190,7 +240,7 @@ const callService = async (
     });
   const onOff = (id: string, st: HassEntity, on: boolean) => {
     const d = id.split(".")[0];
-    if (d === "cover") world.set(id, on ? "open" : "closed", { current_position: on ? 100 : 0 });
+    if (d === "cover") travel(id, on ? 100 : 0);
     else if (d === "lock") lock(id, !on);
     else if (d === "media_player") world.set(id, on ? "playing" : "off");
     else if (d === "fan")
@@ -264,13 +314,19 @@ const callService = async (
       each((id) => world.set(id, "on", { preset_mode: data.preset_mode }));
       break;
     case "cover.open_cover":
-      each((id) => world.set(id, "open", { current_position: 100 }));
+      each((id) => travel(id, 100));
       break;
     case "cover.close_cover":
-      each((id) => world.set(id, "closed", { current_position: 0 }));
+      each((id) => travel(id, 0));
       break;
+    // stopped where it is: a cover with a position is open unless it is down; one without is open
     case "cover.stop_cover":
-      toast(`Cover stopped: ${ids.join(", ")}`);
+      each((id, st) => {
+        if (!travels.has(id)) return;
+        stopTravel(id);
+        const pos = Number(st.attributes.current_position);
+        world.set(id, Number.isFinite(pos) ? COVER_OPEN(pos) : "open");
+      });
       break;
     // the robots: they start, pause and go back to their dock (a moment later they are there)
     case "vacuum.start":
@@ -298,10 +354,7 @@ const callService = async (
       });
       break;
     case "cover.set_cover_position":
-      each((id) => {
-        const pos = num("position");
-        world.set(id, COVER_OPEN(pos), { current_position: pos });
-      });
+      each((id) => travel(id, num("position")));
       break;
     case "climate.set_temperature":
       each((id) => world.set(id, undefined, { temperature: num("temperature") }));

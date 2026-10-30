@@ -43,6 +43,8 @@ export const STYLE_KINDS = `
      device class, sliding while it moves */
   .pcov { position: absolute; inset: 0; --slat: color-mix(in srgb, var(--fe-color) 26%, ${CARD_BG}); --gap: color-mix(in srgb, var(--fe-color) 12%, ${CARD_BG}); }
   .pcov .sheet, .pcov .half { position: absolute; transition: height .8s ease, width .8s ease; box-shadow: 0 2px 6px rgba(0, 0, 0, .12); }
+  /* on its way it glides from one reported position to the next at an even speed */
+  .pcov.moving :is(.sheet, .half) { transition-duration: 1s; transition-timing-function: linear; }
   .pcov:is(.shutter, .blind, .garage) .sheet { left: 0; right: 0; top: 0; height: calc((100 - var(--p, 0)) * 1%); }
   .pcov.shutter .sheet { background: repeating-linear-gradient(to bottom, var(--slat) 0 11px, var(--gap) 11px 13px); }
   /* a blind's slats turn with its tilt: the gaps between them open */
@@ -55,14 +57,6 @@ export const STYLE_KINDS = `
   .pcov.awning .sheet { left: 0; right: 0; top: 0; height: calc(var(--p, 0) * 0.6%); background: repeating-linear-gradient(90deg, var(--slat) 0 18px, var(--gap) 18px 36px); }
   .pcov.window .pane { position: absolute; inset: 14% 18%; border: 3px solid var(--slat); border-radius: 4px; background: linear-gradient(to bottom, color-mix(in srgb, var(--fe-color) calc(var(--p, 0) * 0.2%), transparent), transparent); }
   .pcov.unknown { opacity: .4; }
-  /* the drag: a band along the drawing's edge, over the poster's action layer */
-  .pcovdrag { position: absolute; z-index: 0; touch-action: none; }
-  .pcovdrag.y { left: 0; right: 0; height: 32px; top: calc((100 - var(--p, 0)) * 1% - 16px); cursor: ns-resize; }
-  .pcovdrag.x { top: 0; bottom: 0; width: 32px; left: calc((100 - var(--p, 0)) * 1% - 16px); cursor: ew-resize; }
-  .pcovdrag::after { content: ""; position: absolute; border-radius: 2px; background: var(--fe-color); opacity: 0; transition: opacity .2s; }
-  .pcovdrag.y::after { left: 50%; top: 50%; width: 36px; height: 4px; margin: -2px 0 0 -18px; }
-  .pcovdrag.x::after { top: 50%; left: 50%; height: 36px; width: 4px; margin: -18px 0 0 -2px; }
-  .pcovdrag:hover::after, .pcovdrag.dragging::after { opacity: .8; }
 
   /* vacuum and lawn mower: the path drawing itself while it works (half drawn when still), the
      dock while it rests; on grass for a mower */

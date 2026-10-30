@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { DEMO_USER, snapshot, world } from "../../docs/.vitepress/theme/ha-shim/hass.ts";
 import type { HassEntity } from "../../src/shared/ha.ts";
 
@@ -50,16 +50,49 @@ describe("hass shim", () => {
     expect(world.get("light.garden")!.state).toBe("on");
     await hass.callService("light", "turn_off", { entity_id: ["light.garden"] });
     expect(world.get("light.garden")!.state).toBe("off");
-    await hass.callService("cover", "close_cover", { entity_id: "cover.awning" });
-    expect(world.get("cover.awning")).toMatchObject({
-      state: "closed",
-      attributes: { current_position: 0 },
-    });
-    await hass.callService("cover", "open_cover", {}, { entity_id: "cover.awning" });
-    expect(world.get("cover.awning")!.state).toBe("open");
     await expect(
       hass.callService("scene", "turn_on", { entity_id: "scene.bright" }),
     ).resolves.toBeUndefined();
+  });
+  it("moves a cover through its positions, as a real one reports them, and stops it", async () => {
+    vi.useFakeTimers();
+    try {
+      const pos = () => world.get("cover.awning")!.attributes.current_position;
+      world.set("cover.awning", "open", { current_position: 70 });
+      await hass.callService("cover", "close_cover", { entity_id: "cover.awning" });
+      expect(world.get("cover.awning")!.state).toBe("closing");
+      vi.advanceTimersByTime(250);
+      expect(world.get("cover.awning")).toMatchObject({
+        state: "closing",
+        attributes: { current_position: 66 },
+      });
+      // stopped on its way: it stays there, open
+      await hass.callService("cover", "stop_cover", { entity_id: "cover.awning" });
+      vi.advanceTimersByTime(1000);
+      expect(world.get("cover.awning")).toMatchObject({ state: "open" });
+      expect(pos()).toBe(66);
+      // to a position, then all the way: each run ends where it was sent
+      await hass.callService("cover", "set_cover_position", {
+        entity_id: "cover.awning",
+        position: 80,
+      });
+      expect(world.get("cover.awning")!.state).toBe("opening");
+      vi.advanceTimersByTime(10_000);
+      expect(world.get("cover.awning")!.state).toBe("open");
+      expect(pos()).toBe(80);
+      await hass.callService("cover", "close_cover", {}, { entity_id: "cover.awning" });
+      vi.advanceTimersByTime(10_000);
+      expect(world.get("cover.awning")).toMatchObject({ state: "closed" });
+      expect(pos()).toBe(0);
+      // one without a position is on its way for a while, then there
+      world.set("cover.garage_door", "closed");
+      await hass.callService("cover", "open_cover", { entity_id: "cover.garage_door" });
+      expect(world.get("cover.garage_door")!.state).toBe("opening");
+      vi.advanceTimersByTime(10_000);
+      expect(world.get("cover.garage_door")!.state).toBe("open");
+    } finally {
+      vi.useRealTimers();
+    }
   });
   it("answers history and template subscriptions", async () => {
     const end = new Date(),

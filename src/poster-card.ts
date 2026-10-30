@@ -334,21 +334,6 @@ export class PosterCard extends EntityCardBase {
     pback?.style.setProperty("--fe-color", row.style.getPropertyValue("--fe-color"));
     card.classList.toggle("pflow", !!part);
     if (part && back?.update) back.update(part, kc, row);
-    // a part over the action layer (a drag handle), built once per key in the body
-    const handle = cfg.kind.handle;
-    let hEl = body.querySelector<HTMLElement>(":scope > .phandle");
-    const hKey = handle && !url ? handle.key(kc) : "";
-    if (!hKey) hEl?.remove();
-    else {
-      if (!hEl || hEl.dataset.key !== hKey) {
-        hEl?.remove();
-        hEl = handle!.build(kc);
-        hEl.classList.add("phandle");
-        hEl.dataset.key = hKey;
-        body.appendChild(hEl);
-      }
-      handle!.update?.(hEl, kc, row);
-    }
     // what follows the clock or the size (a curve) checks itself whether it changed
     cfg.kind.live?.(kc, row);
     this._fitHeight(card, row);

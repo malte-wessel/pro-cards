@@ -1,9 +1,7 @@
 // The domain kinds that draw their device: a media player (its cover art behind the poster and its
 // colour, the progress along the bottom), a cover (the window itself, its slats or panels at the
-// position, dragged to move them) and the robots (a vacuum's or a lawn mower's path drawing itself
+// position, gliding while they move) and the robots (a vacuum's or a lawn mower's path drawing itself
 // while it works, the dock while it rests).
-import type { EntityItem } from "../entity/config.ts";
-import { PENDING_MS, serviceFor } from "../entity/control.ts";
 import { numAttr as num, pictureOf } from "../entity/look.ts";
 import { leadEl, secondaryEl } from "../entity/render/lead.ts";
 import type { HassEntity } from "../ha.ts";
@@ -104,13 +102,10 @@ const styleOf = (c: KindCtx): CoverStyle =>
   oneOf(COVER_STYLES, c.opts.style)
     ? c.opts.style
     : (BY_CLASS[String(c.m.st?.attributes?.device_class)] ?? "window");
-// across: the drawing moves sideways (curtains and gates), else up and down
-const across = (s: CoverStyle) => s === "curtain" || s === "gate";
-// the position drawn: the one being dragged or sent (pending), else the entity's; a cover without
-// a position is open or closed
+// the position drawn: the entity's, where the cover really is (a cover on its way passes every
+// position between); a cover without a position is open or closed
+const moving = (c: KindCtx) => c.m.st?.state === "opening" || c.m.st?.state === "closing";
 const positionOf = (c: KindCtx): number | null => {
-  const pending = c.ctx.ctl?.pending.get(0)?.value;
-  if (typeof pending === "number") return pending;
   const p = num(c.m.st, "current_position");
   if (p !== null) return p;
   const s = c.m.st?.state;
@@ -121,64 +116,6 @@ const coverEl = (style: CoverStyle) => {
   if (style === "curtain") el.append(div("half l"), div("half r"));
   else if (style === "window") el.append(div("pane"));
   else el.append(div("sheet"));
-  return el;
-};
-
-// the drag on the drawing's edge: the position follows the pointer and is sent on release
-interface Drag {
-  c: KindCtx;
-  value: number | null;
-}
-const drags = new WeakMap<HTMLElement, Drag>();
-const dragValue = (el: HTMLElement, ev: PointerEvent, style: CoverStyle) => {
-  const box = (el.parentElement ?? el).getBoundingClientRect();
-  const f = across(style)
-    ? (ev.clientX - box.left) / Math.max(1, box.width)
-    : (ev.clientY - box.top) / Math.max(1, box.height);
-  // a curtain's edge sits at half its closed share; the rest close from the top or the left
-  const closed = style === "curtain" ? 2 * f : style === "awning" ? 1 - f / 0.6 : f;
-  return Math.round(Math.min(100, Math.max(0, 100 - closed * 100)));
-};
-const handleEl = (style: CoverStyle) => {
-  const el = div(`pcovdrag ${across(style) ? "x" : "y"}`);
-  el.setAttribute("aria-hidden", "true");
-  el.addEventListener("pointerdown", (ev) => {
-    const d = drags.get(el);
-    const ctl = d?.c.ctx.ctl;
-    if (!d || !ctl) return;
-    ev.stopPropagation();
-    el.setPointerCapture(ev.pointerId);
-    ctl.beginDrag(0);
-    d.value = dragValue(el, ev, style);
-    el.classList.add("dragging");
-  });
-  el.addEventListener("pointermove", (ev) => {
-    const d = drags.get(el);
-    if (!d || d.value === null) return;
-    d.value = dragValue(el, ev, style);
-    // the drawing follows the finger at once
-    el.closest(".body")
-      ?.querySelector<HTMLElement>(":scope > .pback")
-      ?.style.setProperty("--p", String(d.value));
-    el.style.setProperty("--p", String(d.value));
-  });
-  const end = () => {
-    const d = drags.get(el);
-    const ctl = d?.c.ctx.ctl;
-    el.classList.remove("dragging");
-    if (!d || !ctl || d.value === null) return;
-    const value = d.value;
-    d.value = null;
-    const ent: EntityItem = d.c.ent;
-    ctl.call(el, 0, ent, serviceFor(ent, d.c.m.st, { type: "value", value }), {
-      until: Date.now() + PENDING_MS,
-      value,
-    });
-    ctl.endDrag(0);
-  };
-  el.addEventListener("pointerup", end);
-  el.addEventListener("pointercancel", end);
-  el.addEventListener("click", (ev) => ev.stopPropagation());
   return el;
 };
 
@@ -200,25 +137,12 @@ export const COVER: Kind = {
     update: (el, c) => {
       const st = c.m.st;
       const p = positionOf(c);
-      // the pback holds the variables, so the drag's preview and the drawing read the same
+      // the variables sit on the pback, around the drawing
       const back = el.parentElement ?? el;
       back.style.setProperty("--p", String(p ?? 0));
       back.style.setProperty("--tilt", String(num(st, "current_tilt_position") ?? 50));
       el.classList.toggle("unknown", p === null);
-    },
-  },
-  handle: {
-    // only a cover that reports a position is dragged
-    key: (c) =>
-      num(c.m.st, "current_position") !== null && c.ctx.ctl && c.m.model.avail
-        ? `drag ${styleOf(c)}`
-        : "",
-    build: (c) => handleEl(styleOf(c)),
-    update: (el, c) => {
-      const d = drags.get(el);
-      if (d?.value !== null && d?.value !== undefined) return;
-      drags.set(el, { c, value: null });
-      el.style.setProperty("--p", String(positionOf(c) ?? 0));
+      el.classList.toggle("moving", moving(c));
     },
   },
   extra: (c) => [num(c.m.st, "current_tilt_position")],

@@ -357,6 +357,37 @@ test.describe("poster kinds", () => {
     expect(await services(page)).toEqual(["scene.turn_on"]);
   });
 
+  test("a cover glides through the positions it reports on its way, and stops", async ({
+    page,
+  }) => {
+    await mount(page, { type: P, entity: "cover.office_blinds" }, live);
+    const c = card(page);
+    const cover = c.locator(".pback > .pcov");
+    const value = c.locator(".pvalue .big b");
+    await expect(value).toHaveText("40");
+    // no drag on the drawing: the buttons move it
+    await expect(c.locator(".pcovdrag")).toHaveCount(0);
+    await c.locator('.ctl-buttons button[aria-label="Open"]').click();
+    await expect(cover).toHaveClass(/moving/);
+    // on its way: every position between, the drawing at the one reported
+    await expect.poll(async () => Number(await value.textContent())).toBeGreaterThan(40);
+    const [shown, drawn] = await c.evaluate((el) => {
+      const root = el.shadowRoot!;
+      return [
+        root.querySelector(".pvalue .big b")!.textContent,
+        root.querySelector<HTMLElement>(".pback")!.style.getPropertyValue("--p"),
+      ];
+    });
+    expect(Number(shown)).toBeLessThan(100);
+    expect(drawn).toBe(shown);
+    await c.locator('.ctl-buttons button[aria-label="Stop"]').click();
+    await expect(cover).not.toHaveClass(/moving/);
+    const stopped = await value.textContent();
+    await page.waitForTimeout(600);
+    await expect(value).toHaveText(stopped!);
+    expect(Number(stopped)).toBeLessThan(100);
+  });
+
   test("a lock is held to open, from its lead", async ({ page }) => {
     await mount(page, { type: P, entity: "lock.front_door" }, live);
     const h = card(page).locator(".plead .ctl-hold");

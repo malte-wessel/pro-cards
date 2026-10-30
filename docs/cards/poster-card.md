@@ -420,7 +420,7 @@ entity: media_player.living_room_tv
 
 ### Cover
 
-A cover draws the window itself, by its device class: a shutter's slats, a blind's slats turning with its tilt, a curtain's two halves, a garage door's panels, a gate, an awning reaching out, or a window pane. The drawing sits at the cover's position and slides while it moves; drag its edge to move the cover there (the rest of the poster still opens more-info, and the page still scrolls). The position is large, open, stop and close on its line.
+A cover draws the window itself, by its device class: a shutter's slats, a blind's slats turning with its tilt, a curtain's two halves, a garage door's panels, a gate, an awning reaching out, or a window pane. The drawing sits at the cover's position and glides along while it moves, through every position it reports. The position is large, with open, stop and close beside it.
 
 ::: live
 
