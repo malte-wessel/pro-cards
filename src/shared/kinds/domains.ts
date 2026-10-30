@@ -14,7 +14,7 @@ import { setRate } from "../flow/dom.ts";
 import { fmtDuration, fmtNumber } from "../format.ts";
 import type { HassEntity } from "../ha.ts";
 import { t, type StringKey } from "../i18n.ts";
-import { div, pctValue, SVG } from "./dom.ts";
+import { div, pctValue } from "./dom.ts";
 import { attention } from "./rules.ts";
 import type { Kind, KindCtx } from "./types.ts";
 
@@ -109,7 +109,7 @@ export const FAN: Kind = {
   },
 };
 
-// ----- climate: the current temperature, the target, the dial, warm or cool -----
+// ----- climate: the current temperature, the target, warm or cool -----
 
 const ACTIONS: Record<string, StringKey> = {
   heating: "kind.climate.heating",
@@ -124,44 +124,6 @@ const actionOf = (st: HassEntity | undefined) => {
   return typeof a === "string" ? a : null;
 };
 const tempUnit = (c: KindCtx) => c.ctx.hass?.config?.unit_system?.temperature ?? "°C";
-
-// the dial: an arc from the minimum to the maximum, the stretch between now and the target in the
-// card's colour, the current temperature as a dot, the target as a ring
-const ARC = { r: 140, cx: 100, cy: 164, a0: Math.atan2(-112, -84), a1: Math.atan2(-112, 84) };
-const at = (f: number) => {
-  const a = ARC.a0 + Math.min(1, Math.max(0, f)) * (ARC.a1 - ARC.a0);
-  return [ARC.cx + ARC.r * Math.cos(a), ARC.cy + ARC.r * Math.sin(a)];
-};
-const arcD = (f0: number, f1: number) => {
-  const [x0, y0] = at(f0),
-    [x1, y1] = at(f1);
-  return `M${x0.toFixed(1)} ${y0.toFixed(1)} A${ARC.r} ${ARC.r} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`;
-};
-const dialEl = (st: HassEntity | undefined) => {
-  const lo = num(st, "min_temp") ?? 7,
-    hi = num(st, "max_temp") ?? 35;
-  const f = (v: number) => (v - lo) / Math.max(1, hi - lo);
-  const cur = num(st, "current_temperature"),
-    target = num(st, "temperature");
-  const el = div("pdial");
-  const svg = document.createElementNS(SVG, "svg");
-  svg.setAttribute("viewBox", "0 0 200 60");
-  svg.setAttribute("preserveAspectRatio", "xMidYMax meet");
-  let html = `<path class="track" d="${arcD(0, 1)}"/>`;
-  if (cur !== null && target !== null)
-    html += `<path class="span" d="${arcD(Math.min(f(cur), f(target)), Math.max(f(cur), f(target)))}"/>`;
-  if (target !== null) {
-    const [x, y] = at(f(target));
-    html += `<circle class="target" r="6" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}"/>`;
-  }
-  if (cur !== null) {
-    const [x, y] = at(f(cur));
-    html += `<circle class="now" r="5" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}"/>`;
-  }
-  svg.innerHTML = html;
-  el.appendChild(svg);
-  return el;
-};
 
 export const CLIMATE: Kind = {
   name: "climate",
@@ -199,7 +161,6 @@ export const CLIMATE: Kind = {
                 ? null
                 : secondaryEl([{ text: `→ ${fmtNumber(c.ctx.hass, target, 1)} ${unit}` }]),
           }),
-      picture: dialEl(st),
     };
   },
   backdrop: {

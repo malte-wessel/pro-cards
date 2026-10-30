@@ -426,7 +426,7 @@ A fan's blades turn at its speed and stand still while it is off. The speed is l
 
 A thermostat shows the current temperature large, with the target under it and a stepper beside them. The status says what it is doing: Heating, Idle or Cooling.
 
-Along the bottom, a dial shows the target as a ring and the temperature now as a dot. The stretch between them is in the poster's colour. The card warms while it heats and cools while it cools.
+The card warms while it heats and cools while it cools.
 
 ::: live
 

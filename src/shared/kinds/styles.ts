@@ -1,5 +1,5 @@
 // CSS of what the kinds draw on a poster: a fan's turning blades, a thermostat's
-// dial and its warm or cool backdrop, an alarm's red pulse. Every animation has a paused frame
+// warm or cool backdrop, an alarm's red pulse. Every animation has a paused frame
 // (prefers-reduced-motion, the visual tests): the blades stand at an angle, the pulse is still.
 import { CARD_BG } from "../constants.ts";
 
@@ -13,14 +13,6 @@ export const STYLE_KINDS = `
   .pclimate { position: absolute; inset: 0; opacity: 0; transition: opacity .6s; }
   .pclimate.heating { opacity: 1; background: radial-gradient(120% 90% at 50% 105%, color-mix(in srgb, var(--state-climate-heat-color, var(--deep-orange-color)) 30%, transparent), transparent 72%); }
   .pclimate.cooling { opacity: 1; background: radial-gradient(120% 90% at 50% 105%, color-mix(in srgb, var(--state-climate-cool-color, var(--blue-color)) 30%, transparent), transparent 72%); }
-  .pbody > .pdial { height: 36px; margin-top: 4px; }
-  /* a half-width poster has no room for the dial beside the stepper */
-  @container pcard (max-width: 300px) { .pbody > .pdial { display: none; } }
-  .pdial svg { display: block; width: 100%; height: 100%; overflow: visible; }
-  .pdial .track { fill: none; stroke: var(--divider-color); stroke-width: 6; stroke-linecap: round; }
-  .pdial .span { fill: none; stroke: var(--fe-color); stroke-width: 6; stroke-linecap: round; }
-  .pdial .now { fill: var(--fe-color); stroke: ${CARD_BG}; stroke-width: 2; }
-  .pdial .target { fill: ${CARD_BG}; stroke: var(--fe-color); stroke-width: 3; }
 
   /* alarm: a red pulse from the edges while triggered */
   .palarm { position: absolute; inset: 0; opacity: 0; }

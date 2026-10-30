@@ -66,6 +66,11 @@ const STYLE_POSTER = `
   .corner { flex: 0 1 auto; min-width: 0; margin-inline-start: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
   /* the badges answer the pointer above the poster's own action layer */
   .row.poster .corner > .row.hval { pointer-events: auto; max-width: 100%; }
+  /* the status's words wrap where it has a space, two lines at most (a word too long for the room
+     still ends in an ellipsis; a value and its unit never part, so the other badges keep one line):
+     the corner floats, so its height moves nothing */
+  .row.poster .corner > .row.hval.pb.pstatus { height: auto; min-height: var(--b-h); padding-block: 3px; }
+  .row.poster .corner > .row.hval.pb.pstatus .state { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; text-overflow: ellipsis; }
   .pbody { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .pbody:has(> .plot.grow) { flex: 1 1 auto; min-height: 0; }
   /* the texts keep their lines (clipped text would shrink to nothing); the plot gives way */
@@ -157,11 +162,11 @@ const STYLE_BADGES = `
   .row.hval.b-soft .state { color: var(--fe-color); }
   .row.hval.b-filled { --b-ink: var(--text-primary-color, #fff); background: var(--fe-color); color: var(--b-ink); }
   .row.hval.b-filled :is(ha-icon, ha-state-icon, .state, .state.accent, .secondary) { color: var(--b-ink); }
-  /* tag: the poster's status pill, a coloured outline and small capitals in the row's colour (a
-     border, so a rule's pulse keeps it) */
+  /* tag: the poster's status pill, a coloured outline and its text in the row's colour (a border,
+     so a rule's pulse keeps it) */
   .row.hval.b-tag { border: 1px solid color-mix(in srgb, var(--fe-color) 40%, transparent); }
   .row.hval.b-tag :is(ha-icon, ha-state-icon, .state, .state.accent, .secondary) { color: var(--fe-color); }
-  .row.hval.b-tag :is(.state, .secondary) { font-weight: ${fw("medium")}; letter-spacing: .08em; text-transform: uppercase; }
+  .row.hval.b-tag :is(.state, .secondary) { font-weight: ${fw("medium")}; }
   /* a switch in a filled pill: its track in the ink, as the pill already is the colour */
   .row.hval.b-filled .toggle.on { background: color-mix(in srgb, var(--b-ink) 40%, transparent); }
   /* the tap area is 44 px high whatever the pill's height; the hover layer and the focus ring keep

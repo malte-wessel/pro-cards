@@ -367,7 +367,7 @@ The blades and the speeds: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 
 ## Climate
 
-The thermostat and its dial: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
+The thermostat, warm while it heats: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 
 ::: live
 
