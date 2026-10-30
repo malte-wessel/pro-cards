@@ -1,6 +1,6 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
 import type { CardConfigBase } from "../../src/shared/ha.ts";
-import type { MountOptions } from "../harness/harness.ts";
+import type { MountOptions, ViewSection } from "../harness/harness.ts";
 
 export const FROZEN = new Date("2026-06-21T12:00:00");
 // a stand-in cover, its colour from the image's id, so the speakers' songs tell apart (one song
@@ -32,6 +32,8 @@ export const sharedTest = test.extend<object, { shared: Page }>({
         userAgent: u.userAgent,
         colorScheme: u.colorScheme,
         reducedMotion: u.reducedMotion,
+        isMobile: u.isMobile,
+        hasTouch: u.hasTouch,
         timezoneId: u.timezoneId,
         locale: u.locale,
       });
@@ -42,12 +44,8 @@ export const sharedTest = test.extend<object, { shared: Page }>({
   ],
 });
 
-// Opens the harness (with a frozen clock unless opts.liveClock) and mounts one config or a list.
-export async function mount(
-  page: Page,
-  cfg: CardConfigBase | CardConfigBase[],
-  opts: MountOpts = {},
-): Promise<number> {
+// Opens the harness once per page (with a frozen clock unless opts.liveClock)
+const open = async (page: Page, opts: MountOpts) => {
   if (!page.url().includes("localhost")) {
     if (!opts.liveClock) await page.clock.setFixedTime(opts.time || FROZEN);
     // the demo speakers' cover art is on Spotify's image CDN: the tests stay offline, every
@@ -62,22 +60,48 @@ export async function mount(
     await page.goto("/");
     await page.waitForFunction(() => window.__pcReady === true);
   }
+};
+// what the harness takes of a mount's options
+const harnessOpts = (opts: MountOpts): MountOptions => ({
+  theme: opts.theme,
+  skin: opts.skin,
+  width: opts.width,
+  fullWidth: opts.fullWidth,
+  layout: opts.layout,
+  states: opts.states,
+});
+
+// Opens the harness and mounts one config or a list.
+export async function mount(
+  page: Page,
+  cfg: CardConfigBase | CardConfigBase[],
+  opts: MountOpts = {},
+): Promise<number> {
+  await open(page, opts);
   const count = await page.evaluate(
     ([c, o]) => {
       window.pc.reset();
       return window.pc.mount(c, o);
     },
-    [
-      cfg,
-      {
-        theme: opts.theme,
-        skin: opts.skin,
-        width: opts.width,
-        fullWidth: opts.fullWidth,
-        layout: opts.layout,
-        states: opts.states,
-      },
-    ] as const,
+    [cfg, harnessOpts(opts)] as const,
+  );
+  await page.evaluate(() => window.pc.settled());
+  return count;
+}
+
+// Opens the harness and mounts a dashboard's sections as a sections view opts.width wide.
+export async function mountView(
+  page: Page,
+  sections: ViewSection[],
+  opts: MountOpts = {},
+): Promise<number> {
+  await open(page, opts);
+  const count = await page.evaluate(
+    ([s, o]) => {
+      window.pc.reset();
+      return window.pc.mountView(s, o);
+    },
+    [sections, harnessOpts(opts)] as const,
   );
   await page.evaluate(() => window.pc.settled());
   return count;

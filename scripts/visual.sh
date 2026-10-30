@@ -21,4 +21,4 @@ exec docker run --rm -t \
     if [ "$(cat node_modules/.lock-sha 2>/dev/null)" != "$lock" ]; then
       npm ci --no-audit --no-fund >/dev/null && echo "$lock" > node_modules/.lock-sha
     fi
-    npx playwright test --project=visual "$@"' visual "$@"
+    npx playwright test --project=visual --project=visual-phone --project=visual-tablet --project=visual-desktop "$@"' visual "$@"

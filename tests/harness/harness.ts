@@ -28,6 +28,11 @@ export interface MountOptions {
   // drawn as that one's; `ago` sets the last change, in minutes before now
   states?: Record<string, StateOverride>;
 }
+// a section of a dashboard, as Home Assistant's sections view takes it
+export interface ViewSection {
+  column_span?: number;
+  cards?: CardConfigBase[];
+}
 export interface StateOverride {
   state?: string | number;
   attributes?: Record<string, unknown>;
@@ -66,6 +71,8 @@ export interface CardElement extends HTMLElement {
 }
 export interface PcApi {
   mount(cfgOrList: CardConfigBase | CardConfigBase[], opts?: MountOptions): number;
+  // a dashboard: its sections laid out as a sections view as wide as opts.width
+  mountView(sections: ViewSection[], opts?: MountOptions): number;
   settled(): Promise<boolean>;
   world: ShimWorld;
   hass: typeof hassMod;
@@ -202,10 +209,13 @@ const unstage = () => {
   world.forget();
 };
 
-const mount = (cfgOrList: CardConfigBase | CardConfigBase[], opts: MountOptions = {}) => {
+// a fresh root for a mount: its states, theme and width
+const begin = (opts: MountOptions) => {
   unsub?.();
   if (opts.states) stage(opts.states);
   root.textContent = "";
+  root.classList.remove("view");
+  root.style.removeProperty("--view-cols");
   root.classList.toggle("dark", opts.theme === "dark");
   root.classList.toggle("light", opts.theme === "light");
   if (opts.skin) root.dataset.theme = opts.skin;
@@ -215,7 +225,14 @@ const mount = (cfgOrList: CardConfigBase | CardConfigBase[], opts: MountOptions 
       ? `${opts.width}px`
       : opts.width
     : "400px";
-  const cfgs = Array.isArray(cfgOrList) ? cfgOrList : [cfgOrList];
+};
+// the cards in their cells, in a section's grid (`full`: a single card takes the whole width)
+const place = (
+  grid: HTMLElement,
+  cfgs: CardConfigBase[],
+  opts: MountOptions,
+  full: boolean,
+): CardElement[] => {
   const els: CardElement[] = [];
   for (const cfg of cfgs) {
     // a Pro card, or a core card the docs shim has as hui-<type>-card
@@ -228,22 +245,58 @@ const mount = (cfgOrList: CardConfigBase | CardConfigBase[], opts: MountOptions 
     const cell = document.createElement("div");
     cell.className = layout === "grid" ? "cell" : "cell masonry";
     const g = cellSize(el.getGridOptions?.(), cfg);
-    cell.style.gridColumn = `span ${opts.fullWidth === false ? g.columns : Array.isArray(cfgOrList) ? g.columns : 12}`;
+    cell.style.gridColumn = `span ${opts.fullWidth === false || !full ? g.columns : 12}`;
     if (layout === "grid" && g.rows !== "auto") {
       cell.style.gridRow = `span ${g.rows}`;
       cell.style.setProperty("--rows", String(g.rows));
       cell.classList.add("fixed");
     }
     cell.appendChild(el);
-    root.appendChild(cell);
+    grid.appendChild(cell);
     els.push(el);
   }
+  return els;
+};
+const follow = (els: CardElement[]) => {
   mounted = els;
   unsub = world.subscribe(() => {
     const h = snapshot();
     for (const el of els) el.hass = h;
   });
   return els.length;
+};
+
+const mount = (cfgOrList: CardConfigBase | CardConfigBase[], opts: MountOptions = {}) => {
+  begin(opts);
+  const list = Array.isArray(cfgOrList);
+  return follow(place(root, list ? cfgOrList : [cfgOrList], opts, !list));
+};
+
+// a sections view as Home Assistant lays one out (hui-sections-view): as many columns as fit at
+// 320 px (24 px apart), four at most, each 500 px at most and the whole centred; a section takes
+// its column_span of them (all of them at most) and sets --column-span, as Home Assistant does,
+// its cards in a section's 12-column grid
+const VIEW = { min: 320, gap: 24, pad: 16, max: 4 };
+const mountView = (sections: ViewSection[], opts: MountOptions = {}) => {
+  begin(opts);
+  root.classList.add("view");
+  const inner = (typeof opts.width === "number" ? opts.width : 400) - 2 * VIEW.pad;
+  const cols = Math.max(
+    1,
+    Math.min(VIEW.max, Math.floor((inner + VIEW.gap) / (VIEW.min + VIEW.gap))),
+  );
+  root.style.setProperty("--view-cols", String(cols));
+  const els: CardElement[] = [];
+  for (const sec of sections) {
+    const span = Math.min(cols, Math.max(1, Number(sec.column_span) || 1));
+    const el = document.createElement("div");
+    el.className = "section";
+    el.style.gridColumn = `span ${span}`;
+    el.style.setProperty("--column-span", String(span));
+    root.appendChild(el);
+    els.push(...place(el, sec.cards ?? [], { ...opts, fullWidth: false }, false));
+  }
+  return follow(els);
 };
 
 const push = () => {
@@ -287,6 +340,7 @@ const settled = async () => {
 
 window.pc = {
   mount,
+  mountView,
   settled,
   world,
   hass: hassMod,

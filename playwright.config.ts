@@ -1,6 +1,17 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const FROZEN_TIME = "2026-06-21T12:00:00";
+// what every visual project draws with: one pixel per CSS pixel, the light scheme, no motion
+const VISUAL = {
+  deviceScaleFactor: 1,
+  colorScheme: "light" as const,
+  reducedMotion: "reduce" as const,
+};
+const DEVICES = {
+  phone: devices["iPhone 15 Pro"],
+  tablet: devices["iPad (gen 7)"],
+  desktop: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
+};
 
 export default defineConfig({
   testDir: "tests",
@@ -39,14 +50,22 @@ export default defineConfig({
     {
       name: "visual",
       testMatch: "visual/**/*.spec.ts",
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: 900, height: 700 },
-        deviceScaleFactor: 1,
-        colorScheme: "light",
-        reducedMotion: "reduce",
-      },
+      testIgnore: "visual/viewports.spec.ts",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 900, height: 700 }, ...VISUAL },
     },
+    // the dashboards on a phone, a tablet and a desktop: the device's viewport, touch and mobile
+    // (hover: none, pointer: coarse), in Chromium at 1x so the baselines compare the layout
+    ...Object.entries(DEVICES).map(([device, use]) => ({
+      name: `visual-${device}`,
+      testMatch: "visual/viewports.spec.ts",
+      metadata: { device },
+      use: {
+        ...use,
+        ...VISUAL,
+        browserName: "chromium" as const,
+        defaultBrowserType: "chromium" as const,
+      },
+    })),
   ],
   metadata: { frozenTime: FROZEN_TIME },
 });
