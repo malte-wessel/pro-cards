@@ -61,9 +61,9 @@ export const STYLE_KINDS = `
   /* the route keeps to the largest room the icon, the badges, the texts and the controls leave
      (placed by the robot kind, in px) */
   .ppath svg { position: absolute; overflow: visible; }
-  .ppath :is(.route, .done) { fill: none; stroke: var(--fe-color); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 5 5; vector-effect: non-scaling-stroke; }
-  .ppath .route { opacity: .18; }
-  .ppath .done { opacity: .8; }
+  .ppath :is(.route, .done) { fill: none; stroke: var(--fe-color); stroke-width: 2; stroke-linecap: square; vector-effect: non-scaling-stroke; }
+  .ppath .route { opacity: .12; }
+  .ppath .done { opacity: .6; }
   .ppath .reveal { fill: none; stroke: #fff; stroke-width: 8; stroke-dasharray: 100; stroke-dashoffset: 50; }
   .ppath.working .reveal { animation: ptrail 16s linear infinite; }
   @keyframes ptrail { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }

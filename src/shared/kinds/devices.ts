@@ -167,37 +167,40 @@ export const COVER: Kind = {
 
 const WORKING = new Set(["cleaning", "mowing"]);
 // the robot's route, drawn into the largest room the poster's parts leave free (placeRoute):
-// lanes back and forth LANE px apart, each turn a short straight step with rounded corners, in px
-// (so the dashes keep their length); the whole route faint, the part it has done revealed over it
-// by a solid stroke drawing itself in a mask (half of it while the robot rests)
-const LANE = 12;
+// lanes back and forth LANE px apart, joined by straight steps at their ends, as squares on a
+// grid DOT px apart (the same x in every lane, one halfway down each step); the whole route faint, the
+// part it has done revealed over it by a solid stroke along the route drawing itself in a mask
+// (half of it while the robot rests)
+const LANE = 12,
+  DOT = 6;
 const robotSvg = () => {
   const svg = document.createElementNS(SVG, "svg");
   svg.innerHTML = `<defs><mask id="proute" maskUnits="userSpaceOnUse"><path class="reveal" pathLength="100"/></mask></defs><path class="route"/><path class="done" mask="url(#proute)"/>`;
   return svg;
 };
-// the route through a box of w × h px: as many lanes as fit, from the top down
+// the route through a box of w × h px: as many lanes as fit, from the top down, as wide as a whole
+// number of squares allows (centred); `path` the line, `dots` its squares (each a square cap)
 export const routeOf = (w: number, h: number) => {
-  const r = 3,
-    pad = 2;
+  const pad = 2;
   const n = Math.max(1, Math.floor((h - 2 * pad) / LANE) + 1);
-  const top = h / 2 - ((n - 1) * LANE) / 2;
-  const x0 = pad,
-    x1 = w - pad;
-  let d = `M${x0} ${top}`;
+  // the squares' centres on whole pixels, so their 2 px land on whole pixels (sharp at 1x)
+  const top = Math.floor(h / 2 - ((n - 1) * LANE) / 2);
+  const steps = Math.max(1, Math.floor((w - 2 * pad) / DOT));
+  const x0 = pad + Math.floor((w - 2 * pad - steps * DOT) / 2),
+    x1 = x0 + steps * DOT;
+  let path = `M${x0} ${top}`,
+    dots = "";
+  const dot = (x: number, y: number) => (dots += `${dots ? " " : ""}M${x} ${y}h0`);
   for (let i = 0; i < n; i++) {
     const y = top + i * LANE,
-      right = i % 2 === 0;
-    const end = right ? x1 : x0,
-      dir = right ? 1 : -1;
-    if (i === n - 1) {
-      d += ` H${end}`;
-      break;
-    }
-    const down = y + LANE;
-    d += ` H${end - dir * r} Q${end} ${y} ${end} ${y + r} V${down - r} Q${end} ${down} ${end - dir * r} ${down}`;
+      end = i % 2 === 0 ? x1 : x0;
+    for (let k = 0; k <= steps; k++) dot(x0 + k * DOT, y);
+    path += ` H${end}`;
+    if (i === n - 1) break;
+    path += ` V${y + LANE}`;
+    dot(end, y + LANE / 2);
   }
-  return d;
+  return { path, dots };
 };
 type Box = { x0: number; y0: number; x1: number; y1: number };
 const GAP = 12;
@@ -277,8 +280,9 @@ const placeRoute = (row: HTMLElement) => {
   const [x, y, w, h] = key.split(",").map(Number);
   Object.assign(svg.style, { left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px` });
   svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
-  const d = routeOf(w, h);
-  for (const p of svg.querySelectorAll("path")) p.setAttribute("d", d);
+  const { path, dots } = routeOf(w, h);
+  svg.querySelector(".reveal")?.setAttribute("d", path);
+  for (const p of svg.querySelectorAll(":scope > path")) p.setAttribute("d", dots);
   const mask = svg.querySelector("mask");
   mask?.setAttribute("x", "-8");
   mask?.setAttribute("y", "-8");
