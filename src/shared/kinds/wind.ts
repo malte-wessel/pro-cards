@@ -1,5 +1,5 @@
 // The wind kind: a wind speed sensor, or a weather entity's wind. The animated lead turns where the
-// wind blows and runs at its speed; `flow` makes the whole poster the animated field (with the
+// wind blows and runs at its speed; `variant` makes the whole poster the animated field (with the
 // direction arrow as its lead). Direction and gusts are found on the speed sensor's device, or are
 // the weather entity's attributes.
 import { buildBand, builtLead, setRate } from "../flow/dom.ts";
@@ -14,9 +14,9 @@ import { windNow } from "../wind/now.ts";
 import { WIND_RULES } from "./rules.ts";
 import type { Kind, KindCtx } from "./types.ts";
 
-// `kind: { flow: lines }`: the field's style (null: no field, the animated lead alone)
+// `variant: lines`: the field's style (null: no field, the animated lead alone)
 const flowOf = (c: KindCtx): FlowStyle | null =>
-  oneOf(FLOW_STYLES, c.opts.flow) ? c.opts.flow : null;
+  oneOf(FLOW_STYLES, c.opts.variant) ? c.opts.variant : null;
 const nowOf = (c: KindCtx) =>
   windNow(c.ctx, { ent: c.ent, m: c.m }, c.input("direction"), c.input("gust"));
 
@@ -25,7 +25,7 @@ export const WIND: Kind = {
   deviceClasses: ["wind_speed"],
   reads: ["sensor", "weather", "input_number", "number"],
   readsText: "a wind_speed sensor or a weather entity (wind_speed, wind_bearing, wind_gust_speed)",
-  keys: ["direction", "gust", "flow"],
+  keys: ["direction", "gust", "variant"],
   rules: WIND_RULES,
   ruleUnit: "km/h",
   main: (entity) => (entity?.startsWith("weather.") ? { attribute: "wind_speed" } : {}),

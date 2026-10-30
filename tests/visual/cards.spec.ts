@@ -2008,7 +2008,7 @@ const CASES = {
     ],
     grid_options: { columns: 6, rows: 4 },
   },
-  // the poster card (6 × 3 by default): one case per family of kinds, two posters a row
+  // the poster card (6 × 3 by default): one case per family of poster types, two posters a row
   "pc-entity": [
     {
       type: PC,
@@ -2032,10 +2032,8 @@ const CASES = {
       type: PC,
       entity: "sensor.balcony_battery_soc",
       name: "Battery",
-      kind: {
-        charge: "sensor.balcony_battery_charge_power",
-        discharge: "sensor.balcony_battery_discharge_power",
-      },
+      charge: "sensor.balcony_battery_charge_power",
+      discharge: "sensor.balcony_battery_discharge_power",
     },
   ],
   "pc-weather-sun": [
@@ -2049,21 +2047,21 @@ const CASES = {
       type: PC,
       entity: "sensor.rain_rate_roof",
       name: "Rain",
-      kind: { flow: "drops", wind: "sensor.wind_speed", direction: "sensor.wind_direction" },
+      variant: "drops",
+      wind: "sensor.wind_speed",
+      direction: "sensor.wind_direction",
     },
-    { type: PC, entity: "sensor.wind_speed", name: "Wind", kind: { flow: "lines" } },
+    { type: PC, entity: "sensor.wind_speed", name: "Wind", variant: "lines" },
     {
       type: PC,
       name: "Outside",
       icon: "mdi:thermometer",
       hours_to_show: 12,
-      kind: {
-        type: "trend",
-        entities: [
-          { entity: "sensor.outdoor_temperature", name: "Temperature", color: "orange" },
-          { entity: "sensor.dew_point", name: "Dew point", color: "teal" },
-        ],
-      },
+      poster: "trend",
+      series: [
+        { entity: "sensor.outdoor_temperature", name: "Temperature", color: "orange" },
+        { entity: "sensor.dew_point", name: "Dew point", color: "teal" },
+      ],
     },
   ],
   // the domains' controls and backdrops: glow, fan, thermostat, padlock
@@ -2084,14 +2082,16 @@ const CASES = {
     { type: PC, entity: "lawn_mower.garden" },
   ],
   "pc-energy": [
-    { type: PC, entity: "sensor.grid_power", name: "Grid", kind: "grid" },
-    { type: PC, entity: "sensor.solar_power", name: "Solar", kind: "solar" },
-    { type: PC, entity: "sensor.ev_battery", name: "Car", kind: "car" },
+    { type: PC, entity: "sensor.grid_power", name: "Grid", poster: "grid" },
+    { type: PC, entity: "sensor.solar_power", name: "Solar", poster: "solar" },
+    { type: PC, entity: "sensor.ev_battery", name: "Car", poster: "car" },
     {
       type: PC,
       entity: "sensor.heat_pump_power",
       name: "Heat pump",
-      kind: { type: "appliance", style: "heat_pump", running_above: 50 },
+      poster: "appliance",
+      variant: "heat_pump",
+      running_above: 50,
     },
   ],
   // bigger than the default: twice as wide, one column wider and one row higher (the plots and

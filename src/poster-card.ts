@@ -1,14 +1,15 @@
 /*
- * poster-card-pro – one entity (or none) as a poster, drawn the way its kind says.
+ * poster-card-pro – one entity (or none) as a poster, drawn the way its poster type says.
  *
  *   type: custom:poster-card-pro
- *   entity: sensor.living_room_co2         # optional; its domain and device class pick the kind
- *   kind: carbon_dioxide                   # or { type, …the kind's keys }; detected when left out
+ *   entity: sensor.living_room_co2         # optional; its domain and device class pick the type
+ *   poster: carbon_dioxide                 # the poster type; detected when left out
+ *   variant / direction / gust / today / …  # the type's own keys, flat on the card
  *   name / icon / value / secondary / color   # the slots, plain text or templates
  *   status: "{{ … }}"                      # the status badge's text, an object of badge keys, or false
  *   badges: [sensor.x, { attribute: humidity }, status]   # the corner; `status` places the status
  *   image: camera.front_door               # the backdrop: a URL, a template or an entity's picture
- *   rules: [...]                           # replace the kind's own rules as a whole
+ *   rules: [...]                           # replace the type's own rules as a whole
  *   visual / control / tap_action / hold_action / double_tap_action / hover / hours_to_show
  */
 import { registerCard } from "./shared/card.ts";
@@ -21,7 +22,7 @@ import { fillPosterSlots, type PosterSlots } from "./shared/entity/render/fill.t
 import { posterParts, secondaryEl } from "./shared/entity/render/lead.ts";
 import type { GridOptions, HomeAssistant, WeatherForecastType } from "./shared/ha.ts";
 import { hideHover } from "./shared/hover.ts";
-import { detectKind, parseKind } from "./shared/kinds/detect.ts";
+import { detectKind, parsePoster, unusedKeys } from "./shared/kinds/detect.ts";
 import type { KindCtx, KindHost } from "./shared/kinds/types.ts";
 import type { SunCurveHost } from "./shared/sun/curve.ts";
 import type { Visibility } from "./shared/visibility.ts";
@@ -45,6 +46,8 @@ export class PosterCard extends EntityCardBase {
   _resolvedFrom: unknown[] = [];
   // the hass a normalisation reads (the one arriving, before the base takes it)
   _nextHass?: HomeAssistant;
+  // the config whose keys of other poster types have been warned about
+  _warnedFor: unknown;
   // a weather entity's forecasts (the weather kind)
   _feed = new ForecastFeed(() => this._render(), CARD_TYPE);
   // the sun curve's state for its tooltip; the time a kind's tooltip is at
@@ -103,15 +106,31 @@ export class PosterCard extends EntityCardBase {
       this._armMinute();
     }
     this._syncForecast();
+    this._warnUnused();
+  }
+  // the keys of other poster types the card sets, said once per config, once the type is known
+  // (written, no entity, or its state is in: the device class decides)
+  _warnUnused() {
+    const cfg = this._config as PosterConfig | undefined;
+    const raw = this._raw as { entity?: string; poster?: unknown } | undefined;
+    if (!cfg || !raw || this._warnedFor === raw) return;
+    if (raw.poster == null && raw.entity && !this._hass?.states[raw.entity]) return;
+    this._warnedFor = raw;
+    const unused = unusedKeys(cfg.kind, raw as Record<string, unknown>);
+    if (unused.length)
+      console.warn(
+        `${CARD_TYPE}: the ${cfg.kind.name} poster reads no ${unused.join(", ")}; left out`,
+      );
   }
   // what the kind is resolved from: the detected kind (the device class arrives with the first
   // state) and the entity registry's identity (the inputs found on the entity's device)
   _resolveInputs(hass: HomeAssistant | undefined): unknown[] {
-    const raw = (this._raw ?? {}) as { entity?: string; kind?: unknown };
+    const raw = (this._raw ?? {}) as { entity?: string; poster?: unknown };
     let kind: string | null = null;
     try {
-      const spec = parseKind(raw.kind, CARD_TYPE);
-      kind = spec.type ?? detectKind(raw.entity || null, hass?.states[raw.entity ?? ""]).name;
+      kind =
+        parsePoster(raw.poster, CARD_TYPE) ??
+        detectKind(raw.entity || null, hass?.states[raw.entity ?? ""]).name;
     } catch {
       // setConfig reports it
     }
@@ -135,7 +154,10 @@ export class PosterCard extends EntityCardBase {
     super._setHass(hass);
     if (prev && prev.connection !== hass.connection) this._feed.reset();
     if (changed) this._afterConfig();
-    else this._syncForecast();
+    else {
+      this._syncForecast();
+      this._warnUnused();
+    }
   }
   connectedCallback() {
     super.connectedCallback();
@@ -463,5 +485,5 @@ export class PosterCard extends EntityCardBase {
 registerCard(PosterCard, {
   name: "Poster Card Pro",
   description:
-    "One entity as a poster drawn the way its kind says: weather, wind, rain, sun, media, covers, locks, lights and more",
+    "One entity as a poster drawn the way its poster type says: weather, wind, rain, sun, media, covers, locks, lights and more",
 });

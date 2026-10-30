@@ -317,6 +317,54 @@ describe("card config schemas", () => {
     ).toBeNull();
   });
 
+  it("checks the poster card's type, its variant and its flat keys", () => {
+    const PC = "custom:poster-card-pro";
+    expect(validate({ type: PC, entity: "sensor.a", poster: "room" })).toMatch(/enum|allowed/);
+    expect(validate({ type: PC, entity: "sensor.a", kind: "wind" })).toBeTruthy();
+    expect(validate({ type: PC, entity: "sensor.a", variant: "snow" })).toMatch(/enum|allowed/);
+    // a written type takes only its own variants
+    expect(validate({ type: PC, entity: "sensor.a", poster: "wind", variant: "lines" })).toBeNull();
+    expect(
+      validate({ type: PC, entity: "sensor.a", poster: "wind", variant: "fill" }),
+    ).toBeTruthy();
+    expect(
+      validate({ type: PC, entity: "light.a", poster: "light", variant: "lines" }),
+    ).toBeTruthy();
+    // a detected type: only the shapes
+    expect(validate({ type: PC, entity: "cover.a", variant: "garage" })).toBeNull();
+    expect(validate({ type: PC, poster: "trend" })).toMatch(/series/);
+    expect(
+      validate({ type: PC, poster: "trend", series: ["sensor.a", { entity: "sensor.b" }] }),
+    ).toBeNull();
+    expect(
+      validate({ type: PC, entity: "sensor.a", gust: false, direction: "sensor.b" }),
+    ).toBeNull();
+    expect(validate({ type: PC, entity: "sensor.a", gust: "gusty" })).toBeTruthy();
+    // a written type takes none of another type's keys; a detected one leaves that to the card
+    expect(validate({ type: PC, entity: "sensor.r", poster: "rain", gust: "sensor.g" })).toMatch(
+      /gust/,
+    );
+    expect(
+      validate({ type: PC, entity: "sensor.w", poster: "wind", gust: "sensor.g", variant: "dots" }),
+    ).toBeNull();
+    expect(validate({ type: PC, poster: "grid", import: "sensor.i", running_above: 5 })).toMatch(
+      /running_above/,
+    );
+    expect(
+      validate({ type: PC, entity: "sensor.r", gust: "sensor.g", today: "sensor.t" }),
+    ).toBeNull();
+    expect(validate({ type: PC, poster: "grid", import: false })).toBeTruthy();
+    expect(
+      validate({
+        type: PC,
+        poster: "appliance",
+        entity: "sensor.p",
+        variant: "washer",
+        running_above: 8,
+      }),
+    ).toBeNull();
+  });
+
   it("checks layout cards, their breakpoints and the cards inside", () => {
     const LC = "custom:layout-card-pro";
     const EC = { type: "custom:entity-card-pro", entity: "sensor.outdoor_temperature" };

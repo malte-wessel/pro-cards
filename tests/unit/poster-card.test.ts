@@ -25,8 +25,12 @@ describe("poster-card config", () => {
     expect(customElements.get(T)).toBe(PosterCard);
     expect(window.customCards?.some((c) => c.type === T)).toBe(true);
     expect(() => norm(null as never)).toThrow(`${T}: invalid config`);
-    expect(() => norm({ entity: "light.kitchen", kind: "room" })).toThrow(/kind must be one of/);
-    expect(() => norm({ entity: "light.kitchen", kind: "wind" })).toThrow(/kind 'wind' reads/);
+    expect(() => norm({ entity: "light.kitchen", poster: "room" })).toThrow(
+      /poster must be one of entity \| battery/,
+    );
+    expect(() => norm({ entity: "light.kitchen", poster: "wind" })).toThrow(
+      `${T}: the wind poster reads a wind_speed sensor or a weather entity`,
+    );
   });
 
   it("is one poster: its item, then the status badge first in the corner", () => {
@@ -78,12 +82,12 @@ describe("poster-card config", () => {
       [],
     );
     // the wind rules are written in km/h: the value is converted before they match
-    const wind = norm({ entity: "sensor.wind_speed", kind: "wind" });
+    const wind = norm({ entity: "sensor.wind_speed", poster: "wind" });
     expect(wind.entities[0].rules).toEqual(WIND_RULES.map(toRule));
     expect(wind.entities[0].ruleUnit).toBe("km/h");
     expect(wind.entities[wind.statusIdx!].ruleUnit).toBe("km/h");
     expect(
-      norm({ entity: "sensor.wind_speed", kind: "wind", rules: [] }).entities[0].ruleUnit,
+      norm({ entity: "sensor.wind_speed", poster: "wind", rules: [] }).entities[0].ruleUnit,
     ).toBeUndefined();
   });
 
@@ -113,18 +117,21 @@ describe("poster-card config", () => {
     expect(coded.entities[0].control).toBeNull();
   });
 
-  it("reads inputs set in kind, a weather entity's attributes or found on the device", () => {
+  it("reads inputs set on the card, a weather entity's attributes or found on the device", () => {
     const info = vi.spyOn(console, "info").mockImplementation(() => {});
     const set = norm({
       entity: "sensor.wind_speed",
-      kind: { type: "wind", direction: "sensor.wind_direction", gust: false },
+      poster: "wind",
+      direction: "sensor.wind_direction",
+      gust: false,
     });
     expect(Object.keys(set.inputs)).toEqual(["direction"]);
     expect(set.entities[set.inputs.direction].entity).toBe("sensor.wind_direction");
+    expect(set.kindOpts).toEqual({ direction: "sensor.wind_direction", gust: false });
     // without hass nothing is found yet
-    expect(norm({ entity: "sensor.wind_speed", kind: "wind" }).inputs).toEqual({});
+    expect(norm({ entity: "sensor.wind_speed", poster: "wind" }).inputs).toEqual({});
 
-    const weather = norm({ entity: "weather.home", kind: "wind" });
+    const weather = norm({ entity: "weather.home", poster: "wind" });
     expect(weather.entities[0].valueSrc).toMatchObject({ key: "wind_speed" });
     const gust = weather.entities[weather.inputs.gust];
     expect(gust.valueSrc).toMatchObject({ kind: "attribute", key: "wind_gust_speed" });
@@ -137,11 +144,50 @@ describe("poster-card config", () => {
     );
     expect(ids).toEqual({ direction: "sensor.wind_direction", gust: "sensor.wind_gust" });
     expect(info).toHaveBeenCalledWith(
-      `${T}: wind: gust from sensor.wind_gust (same device as sensor.wind_speed); set kind.gust to choose another`,
+      `${T}: wind: gust from sensor.wind_gust (same device as sensor.wind_speed); set gust to choose another`,
     );
     // the inputs are read, never drawn
     expect(found.groups[0].idxs).toEqual([0]);
     expect(found.groups[0].badgeIdxs).toEqual([found.statusIdx]);
+    // false drops a found one, an id replaces it
+    const own = norm(
+      { entity: "sensor.wind_speed", gust: false, direction: "sensor.x" },
+      snapshot(),
+    );
+    expect(Object.keys(own.inputs)).toEqual(["direction"]);
+    expect(own.entities[own.inputs.direction].entity).toBe("sensor.x");
+  });
+
+  it("takes the type's own keys flat on the card, and only the type's", () => {
+    const speed = withStates({
+      "sensor.wind_speed": st("sensor.wind_speed", "12", { device_class: "wind_speed" }),
+    });
+    const wind = norm({ entity: "sensor.wind_speed", variant: "lines", today: "sensor.t" }, speed);
+    expect(wind.kind.name).toBe("wind");
+    expect(wind.kindOpts).toEqual({ variant: "lines" });
+    const cover = norm({ entity: "cover.garage_door", variant: "garage" });
+    expect(cover.kindOpts).toEqual({ variant: "garage" });
+    const pump = norm({
+      entity: "sensor.washer_power",
+      poster: "appliance",
+      variant: "washer",
+      running_above: 10,
+    });
+    expect(pump.kindOpts).toEqual({ variant: "washer", running_above: 10 });
+    // the keys never decide the type: a grid's meters on a sensor of no class draw an entity
+    const plain = norm({ entity: "sensor.grid_power", import: "sensor.a", export: "sensor.b" });
+    expect(plain.kind.name).toBe("entity");
+    expect(plain.kindOpts).toEqual({});
+    expect(plain.inputs).toEqual({});
+  });
+
+  it("turns every default off with poster: entity", () => {
+    const own = norm({ entity: "weather.home", poster: "entity" });
+    expect(own.kind.name).toBe("entity");
+    expect(own.entities[0].valueSrc).toEqual({ kind: "state" });
+    expect(own.inputs).toEqual({});
+    const light = norm({ entity: "light.kitchen", poster: "entity" });
+    expect(light.entities[0].control).toBeFalsy();
   });
 
   it("takes the status as text, a template, an object or false", () => {
@@ -195,15 +241,28 @@ describe("poster-card config", () => {
     expect(c.hold).toEqual({ action: "none" });
     expect(norm({ name: "Hello", tap_action: { action: "navigate" } }).tap.action).toBe("navigate");
     expect(norm({ name: "Hello" }).entities[0].valueSrc).toEqual({ kind: "text", text: "" });
-    expect(norm({ kind: "sun" }).kind.name).toBe("sun");
+    expect(norm({ poster: "sun" }).kind.name).toBe("sun");
     // a grid without an entity opens its import meter; a trend's first series is its entity
-    const grid = norm({ kind: { import: "sensor.grid_import", export: "sensor.grid_export" } });
+    const grid = norm({
+      poster: "grid",
+      import: "sensor.grid_import",
+      export: "sensor.grid_export",
+    });
     expect(grid.kind.name).toBe("grid");
     expect(grid.entities[0].entity).toBe("sensor.grid_import");
     const trend = norm({
-      kind: { type: "trend", entities: [{ entity: "sensor.outdoor_temperature", name: "Out" }] },
+      poster: "trend",
+      series: [{ entity: "sensor.outdoor_temperature", name: "Out" }, "sensor.x"],
     });
     expect(trend.entities[0]).toMatchObject({ entity: "sensor.outdoor_temperature", name: "Out" });
+    expect(trend.kind.history?.(trend.kindOpts, trend.entities[0].entity)).toEqual([
+      "sensor.outdoor_temperature",
+      "sensor.x",
+    ]);
+    // a series is named by its place in errors
+    expect(() =>
+      norm({ poster: "trend", series: [{ entity: "sensor.x", visibility: 3 }] }),
+    ).toThrow(`${T}: 'series[0].visibility'`);
   });
 
   it("keeps hours_to_show as written", () => {
@@ -302,6 +361,25 @@ describe("poster-card element", () => {
     expect(el._config).toBe(before);
     const row = el.shadowRoot!.querySelector(".row.poster");
     expect(row).not.toBeNull();
+  });
+
+  it("warns once about another type's keys, once the type is known", () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const el = mount({ entity: "sensor.rain_rate", gust: "sensor.wind_gust", variant: "lines" });
+    // no state yet: the device class may still make it a wind poster
+    expect(warn).not.toHaveBeenCalled();
+    const hass = snapshot();
+    el.hass = hass;
+    expect(el._config?.kind.name).toBe("rain");
+    expect(warn).toHaveBeenCalledWith(`${T}: the rain poster reads no gust; left out`);
+    el.hass = { ...hass };
+    expect(warn).toHaveBeenCalledTimes(1);
+    // a written type is known at once; a config with nothing stray says nothing
+    el.setConfig({ poster: "sun", today: "sensor.x" });
+    expect(warn).toHaveBeenLastCalledWith(`${T}: the sun poster reads no today; left out`);
+    el.setConfig({ poster: "sun" });
+    expect(warn).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -423,7 +501,7 @@ describe("poster-card drawing", () => {
   it("lets a stepper that shows the very same number take the value's place", () => {
     const same = draw({
       entity: "climate.living_room",
-      kind: "entity",
+      poster: "entity",
       attribute: "temperature",
       control: "stepper",
     });
@@ -438,7 +516,7 @@ describe("poster-card drawing", () => {
   it("keeps the value beside segments, a select and a button", () => {
     const seg = draw({
       entity: "climate.living_room",
-      kind: "entity",
+      poster: "entity",
       attribute: "hvac_mode",
       control: "segments",
     });

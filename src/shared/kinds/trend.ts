@@ -1,4 +1,4 @@
-// The trend kind: several entities (`kind: { type: trend, entities: [...] }`), never detected. The
+// The trend kind: several entities (`poster: trend`, `series: [...]`), never detected. The
 // first shown one's value large (the card's entity, when it has none of its own), the time window
 // as the status, the lines overlaid along the bottom on one scale, their values under the pointer.
 // A series takes its `color` (a template allowed), else its first matching rule's, else the
@@ -21,10 +21,8 @@ const HOURS = 6;
 // the series as written: ids or { entity, name, color, rules, visibility }; one without an entity
 // is left out
 const seriesOf = (opts: Record<string, unknown>): TrendSeries[] => {
-  const list = Array.isArray(opts.entities) ? opts.entities : [];
-  return list.flatMap(
-    (e, i) => normalizeSeries(e, i, "poster-card-pro", `kind.entities[${i}]`) ?? [],
-  );
+  const list = Array.isArray(opts.series) ? opts.series : [];
+  return list.flatMap((e, i) => normalizeSeries(e, i, "poster-card-pro", `series[${i}]`) ?? []);
 };
 const shownOf = (c: KindCtx) => seriesOf(c.opts).filter((s) => c.host.shown(s.visibility));
 
@@ -65,7 +63,7 @@ export const TREND: Kind = {
   reads: "any",
   readsText: "its own entities",
   entityless: true,
-  keys: ["entities"],
+  keys: ["series"],
   // the first series is the card's entity when it has none
   main: (entity, _raw, opts) => {
     const first = seriesOf(opts)[0];

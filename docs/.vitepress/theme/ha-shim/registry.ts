@@ -1,5 +1,5 @@
 // The demo home's entity registry, as the frontend keeps it in `hass.entities`: the device each
-// entity belongs to (the poster card's kinds find their inputs among a device's other entities) and
+// entity belongs to (the poster card's types find their inputs among a device's other entities) and
 // the integrations' own names for some entities (translation keys). Built once over the world's
 // entities, so its identity stays the same across hass snapshots (a card looks again only when the
 // registry changes).

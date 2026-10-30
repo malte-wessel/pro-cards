@@ -1,4 +1,4 @@
-// The kinds of the home's energy, set with `kind` (a grid meter, an inverter and a dishwasher are
+// The kinds of the home's energy, set with `poster` (a grid meter, an inverter and a dishwasher are
 // all power sensors): the grid (a power line, its dots flowing in or out), solar (the output,
 // today's energy and production), the home battery (the battery kind with its power: + charging),
 // the car (its charge and range, what it found on the car's device) and an appliance (running above
@@ -270,7 +270,7 @@ const ICONS: Record<(typeof APPLIANCE_STYLES)[number], string> = {
 };
 const thresholdOf = (c: KindCtx) =>
   isNum(c.opts.running_above) ? Number(c.opts.running_above) : 5;
-const styleOf = (c: KindCtx) => (oneOf(APPLIANCE_STYLES, c.opts.style) ? c.opts.style : null);
+const styleOf = (c: KindCtx) => (oneOf(APPLIANCE_STYLES, c.opts.variant) ? c.opts.variant : null);
 // this run: since the history last fell to the threshold (`whole`: it never did, the run started
 // before the window), and its energy (W over time)
 const runOf = (c: KindCtx, st: HassEntity | undefined) => {
@@ -297,7 +297,7 @@ export const APPLIANCE: Kind = {
   name: "appliance",
   reads: ["sensor", "input_number", "number"],
   readsText: "a power sensor",
-  keys: ["style", "running_above"],
+  keys: ["variant", "running_above"],
   history: (_opts, entity) => (entity ? [entity] : []),
   timed: true,
   status: (c) => {

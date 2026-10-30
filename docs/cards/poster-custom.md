@@ -1,6 +1,6 @@
 # Custom posters
 
-A poster is a handful of places: an icon at the top, badges in the corner, and at the bottom a name, a large value and a line under it, with a picture, a backdrop and a control around them. A [kind](/cards/poster-card#kinds) fills them for an entity; every place also has a key of its own, so a poster can show anything: a value you compute, several entities at once, or nothing but your own buttons. This page builds posters from those keys.
+A poster is a handful of places: an icon at the top, badges in the corner, and at the bottom a name, a large value and a line under it, with a picture, a backdrop and a control around them. A [poster type](/cards/poster-card#poster-types) fills them for an entity; every place also has a key of its own, so a poster can show anything: a value you compute, several entities at once, or nothing but your own buttons. This page builds posters from those keys.
 
 ## The places
 
@@ -71,14 +71,14 @@ Every text takes a [template](https://www.home-assistant.io/docs/configuration/t
 
 ## An entity, your own look
 
-With an `entity`, the poster takes its name, icon, state and colour from it, and its kind adds the rest. Any key replaces one place and keeps the others. `attribute` shows an attribute instead of the state, `control: false` drops a kind's control and leaves the rest of it (the thermostat below keeps its glow and its status), and `kind: entity` drops the kind's own look altogether (its backdrop, status, controls and rules) for a poster that is only what you write:
+With an `entity`, the poster takes its name, icon, state and colour from it, and its poster type adds the rest. Any key replaces one place and keeps the others. `attribute` shows an attribute instead of the state, `control: false` drops a poster type's control and leaves the rest of it (the thermostat below keeps its glow and its status), and `poster: entity` drops the type's own look altogether (its backdrop, status, controls and rules) for a poster that is only what you write:
 
 ::: live
 
 ```yaml
 - type: custom:poster-card-pro
   entity: light.living_room
-  kind: entity
+  poster: entity
   name: Ceiling
   value: "{{ (state_attr('light.living_room', 'brightness') | float(0) / 2.55) | round }}"
   unit: "%"
@@ -102,7 +102,7 @@ With an `entity`, the poster takes its name, icon, state and colour from it, and
 
 ## Colour and rules
 
-`rules` pick the colour, the icon and the status by the value or the entity's state; the first that matches wins. A rule's `label` is the status badge's text, `tint_card: true` washes the whole poster in its colour, `pulse: true` makes the badge pulse and `style` changes the badge's look. Rules you write replace a kind's own.
+`rules` pick the colour, the icon and the status by the value or the entity's state; the first that matches wins. A rule's `label` is the status badge's text, `tint_card: true` washes the whole poster in its colour, `pulse: true` makes the badge pulse and `style` changes the badge's look. Rules you write replace a poster type's own.
 
 ::: live
 
@@ -181,7 +181,7 @@ A template value is matched as its text: the last poster's rules read `Open` and
 | `bar`       | a level between `min` and `max` under the value                                     |
 | `gauge`     | an arc between `min` and `max` with the value inside it, the name under it, centred |
 | `ring`      | a ring around the icon, filled between `min` and `max`                              |
-| `icon`      | no picture: the default of an entity without a kind's own                           |
+| `icon`      | no picture: the default of an entity without a poster type's own                    |
 
 ::: live
 
@@ -212,7 +212,7 @@ A template value is matched as its text: the last poster's rules read `Open` and
 - type: custom:poster-card-pro
   entity: sensor.battery_soc
   name: Battery
-  kind: entity
+  poster: entity
   visual: bar
   min: 0
   max: 100
@@ -228,7 +228,7 @@ A template value is matched as its text: the last poster's rules read `Open` and
   entity: sensor.robot_battery
   name: Robot
   icon: mdi:robot-vacuum
-  kind: entity
+  poster: entity
   visual: ring
   grid_options: { columns: 6 }
 ```
@@ -239,7 +239,7 @@ A [trend](/cards/poster-card#trend) draws several entities' lines on one scale. 
 
 ## A backdrop
 
-`image` puts a picture behind the whole poster, under a scrim that keeps the texts readable: a URL (`/local/…` for a file in Home Assistant's `www` folder), a template that renders one, or an entity whose picture it shows (a camera's snapshot, a person's photo, a media player's art). `image: false` drops a kind's own backdrop.
+`image` puts a picture behind the whole poster, under a scrim that keeps the texts readable: a URL (`/local/…` for a file in Home Assistant's `www` folder), a template that renders one, or an entity whose picture it shows (a camera's snapshot, a person's photo, a media player's art). `image: false` drops a poster type's own backdrop.
 
 ::: live
 
@@ -287,7 +287,7 @@ The corner holds the status badge and the `badges`, in the order written (`statu
   entity: sensor.ev_battery
   name: Car
   icon: mdi:car-electric
-  kind: entity
+  poster: entity
   status: false
   badges:
     - { visual: ring, show_icon: false }
@@ -400,4 +400,4 @@ color: "{{ 'green' if states('sensor.electricity_price') | float(0) < 0.25 else 
 
 :::
 
-The rest of the poster card's options, every kind and its keys are in the [reference](/cards/poster-card#reference).
+The rest of the poster card's options, every poster type and its keys are in the [reference](/cards/poster-card#reference).

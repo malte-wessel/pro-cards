@@ -1,12 +1,12 @@
 # Poster controls
 
-A poster can carry one control: a switch, a slider, a stepper, speeds, buttons, a select or a button to hold. The domain kinds bring theirs, so a light poster is a switch and a dimmer without a line of config; any other poster gets one with `control`, the same key and options as on the [entity cards](/cards/controls). A tap on the poster opens more-info; the control and the [badges](/cards/poster-card#badges) take their own taps.
+A poster can carry one control: a switch, a slider, a stepper, speeds, buttons, a select or a button to hold. The domain poster types bring theirs, so a light poster is a switch and a dimmer without a line of config; any other poster gets one with `control`, the same key and options as on the [entity cards](/cards/controls). A tap on the poster opens more-info; the control and the [badges](/cards/poster-card#badges) take their own taps.
 
-## What the kinds bring
+## What the poster types bring
 
-Without `control` (or with `control: auto`), a domain kind draws its own controls:
+Without `control` (or with `control: auto`), a domain poster type draws its own controls:
 
-| Kind                   | Controls                                                              |
+| Poster type            | Controls                                                              |
 | ---------------------- | --------------------------------------------------------------------- |
 | `light`                | a switch beside the value, brightness below it                        |
 | `fan`                  | its speeds                                                            |
@@ -17,7 +17,7 @@ Without `control` (or with `control: auto`), a domain kind draws its own control
 | `cover`                | open, stop and close                                                  |
 | `vacuum`, `lawn_mower` | start / pause and back to the dock                                    |
 
-Every other kind (a sensor, the weather, the wind, the energy kinds …) has no control unless the card asks for one.
+Every other poster type (a sensor, the weather, the wind, the energy types …) has no control unless the card asks for one.
 
 ::: live
 
@@ -46,7 +46,7 @@ Every other kind (a sensor, the weather, the wind, the energy kinds …) has no 
 
 ## Another control, or none
 
-`control` with a name replaces the kind's controls with that one; `control: false` (or `none`) drops them. A light that only dims, a fan that only switches, a thermostat to look at:
+`control` with a name replaces the poster type's controls with that one; `control: false` (or `none`) drops them. A light that only dims, a fan that only switches, a thermostat to look at:
 
 ::: live
 
@@ -67,11 +67,11 @@ Every other kind (a sensor, the weather, the wind, the energy kinds …) has no 
 
 :::
 
-A card names one control. The pairs the kinds draw (a light's switch and its brightness, a player's transport and its volume) are their own defaults: `control: slider` on a light is the slider alone.
+A card names one control. The pairs the poster types draw (a light's switch and its brightness, a player's transport and its volume) are their own defaults: `control: slider` on a light is the slider alone.
 
 ## A control on any poster
 
-Every poster takes a control its entity supports, whatever its kind. The names:
+Every poster takes a control its entity supports, whatever its poster type. The names:
 
 | `control`  | Draws                      | For                                                             |
 | ---------- | -------------------------- | --------------------------------------------------------------- |
@@ -264,7 +264,7 @@ The icon of a held lead shows the entity as it is (a padlock locked while locked
 
 | Key                 | Default                      | Description                                                                                                                        |
 | ------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `control`           | `auto`                       | `auto` (the kind's), `toggle`, `slider`, `stepper`, `segments`, `select`, `buttons`, `button`, `hold`; `false` or `none` for none. |
+| `control`           | `auto`                       | `auto` (the type's), `toggle`, `slider`, `stepper`, `segments`, `select`, `buttons`, `button`, `hold`; `false` or `none` for none. |
 | `control_position`  | the control's own            | `end`, `block` or `lead`.                                                                                                          |
 | `control_attribute` | the shown one, else the mode | `hvac_mode`, `preset_mode` or `fan_mode`: what segments and a select change on a thermostat or fan.                                |
 | `control_options`   | the entity's                 | Segments and select: the options (`value`, `label`, `icon`). Buttons: [your own buttons](#your-own-buttons).                       |

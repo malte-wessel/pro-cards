@@ -1,6 +1,6 @@
 // Config of the poster card (pure): the raw YAML shape and the normalised one. The card is one
-// entity (or none) drawn the way its kind says; its items are the poster itself, the status badge
-// (a badge like the others, drawn as a tag) and the badges in its corner.
+// entity (or none) drawn the way its poster type (its kind) says; its items are the poster itself,
+// the status badge (a badge like the others, drawn as a tag) and the badges in its corner.
 import { domainOf } from "../shared/color.ts";
 import { isTemplate, numOrNull } from "../shared/util.ts";
 import {
@@ -19,15 +19,34 @@ import {
 import { ITEM_DEFAULTS, type BadgeSize, type BadgeStyle } from "../shared/entity/constants.ts";
 import { normalizeControl } from "../shared/entity/control.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
-import { parseKind, resolveKind } from "../shared/kinds/detect.ts";
+import { parsePoster, resolveKind } from "../shared/kinds/detect.ts";
 import { deviceSiblings, findInput, logOnce } from "../shared/kinds/discover.ts";
 import { toRule } from "../shared/kinds/rules.ts";
 import type { Kind } from "../shared/kinds/types.ts";
 import { ATTRIBUTES } from "../shared/weather/constants.ts";
 import { CARD_TYPE } from "./constants.ts";
 
-interface RawPosterCardConfig extends RawEntityCardBase, RawEntity {
-  kind?: unknown;
+export interface RawPosterCardConfig extends RawEntityCardBase, RawEntity {
+  // the poster type (a kind's name; detected when left out) and how it draws its subject
+  poster?: unknown;
+  variant?: unknown;
+  // the entities a type reads besides the card's own: an id, or false for none
+  direction?: unknown;
+  gust?: unknown;
+  today?: unknown;
+  wind?: unknown;
+  power?: unknown;
+  charge?: unknown;
+  discharge?: unknown;
+  import?: unknown;
+  export?: unknown;
+  range?: unknown;
+  plugged?: unknown;
+  charging?: unknown;
+  location?: unknown;
+  // the appliance's threshold, the trend's entities
+  running_above?: unknown;
+  series?: unknown;
   status?: unknown;
   badges?: unknown;
   image?: unknown;
@@ -55,7 +74,7 @@ export interface PosterConfig extends EntityCardConfig {
   hoursSet: number | null;
 }
 
-// the kind's inputs as items: set in `kind` (an id; false drops it), else a weather entity's
+// the kind's inputs as items: set on the card (an id; false drops it), else a weather entity's
 // attribute, else found on the entity's device (said once in the console); none found: left out
 const inputsOf = (
   kind: Kind,
@@ -78,12 +97,12 @@ const inputsOf = (
       if (found) {
         raw = { entity: found };
         logOnce(
-          `${CARD_TYPE}: ${kind.name}: ${def.key} from ${found} (same device as ${entity}); set kind.${def.key} to choose another`,
+          `${CARD_TYPE}: ${kind.name}: ${def.key} from ${found} (same device as ${entity}); set ${def.key} to choose another`,
         );
       }
     }
     if (!raw) continue;
-    const item = normalizeEntity(raw, ctx, `kind.${def.key}`);
+    const item = normalizeEntity(raw, ctx, def.key);
     // a weather attribute keeps its unit in a sibling attribute (wind_gust_speed: wind_speed_unit)
     const attr = raw.attribute ? ATTRIBUTES[raw.attribute] : undefined;
     if (attr?.unitAttr) item.unitAttr = attr.unitAttr;
@@ -111,16 +130,21 @@ const isObj = (v: unknown): v is Record<string, unknown> =>
 export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): PosterConfig => {
   if (!isObj(input)) throw new Error(`${CARD_TYPE}: invalid config`);
   const written = input as RawPosterCardConfig;
-  const spec = parseKind(written.kind, CARD_TYPE);
   const kind = resolveKind(
-    spec,
+    parsePoster(written.poster, CARD_TYPE),
     written.entity || null,
     written.entity ? hass?.states[written.entity] : undefined,
     CARD_TYPE,
   );
+  // the kind's own keys, as written on the card
+  const opts: Record<string, unknown> = {};
+  for (const k of kind.keys) {
+    const v = (written as Record<string, unknown>)[k];
+    if (v !== undefined) opts[k] = v;
+  }
   // the kind's defaults for the card's item: what it shows where the card sets neither `value`
   // nor `attribute`, and keys the card leaves out (a trend's first series as the entity)
-  const defaults = kind.main?.(written.entity || null, written, spec.opts) ?? {};
+  const defaults = kind.main?.(written.entity || null, written, opts) ?? {};
   const raw: RawPosterCardConfig = { ...written };
   for (const [k, v] of Object.entries(defaults)) {
     const key = k as keyof RawEntity;
@@ -165,7 +189,7 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
   }
 
   const entities: EntityItem[] = [main];
-  const inputs = inputsOf(kind, spec.opts, entity, hass, ctx, entities);
+  const inputs = inputsOf(kind, opts, entity, hass, ctx, entities);
 
   // the status badge: the poster's own value, rules and colour, drawn as a tag with the status text
   let statusIdx: number | null = null,
@@ -253,7 +277,7 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
     headerIdxs: [],
     hasHeader: false,
     kind,
-    kindOpts: spec.opts,
+    kindOpts: opts,
     inputs,
     hoursSet: numOrNull(raw.hours_to_show),
     statusIdx,

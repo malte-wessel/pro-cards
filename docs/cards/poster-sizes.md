@@ -4,7 +4,7 @@ outline: [2, 2]
 
 # Poster sizes
 
-Every [poster](/cards/poster-card) kind at three sizes in one section of the sections grid: the default, six columns and three rows; twice as wide (twelve columns, the full section); and one step wider and a row higher (nine columns, four rows). The value fits the room each size gives, and every poster runs against the simulated home.
+Every [poster type](/cards/poster-card#poster-types) at three sizes in one section of the sections grid: the default, six columns and three rows; twice as wide (twelve columns, the full section); and one step wider and a row higher (nine columns, four rows). The value fits the room each size gives, and every poster runs against the simulated home.
 
 ## Entity
 
@@ -89,17 +89,20 @@ The cell and its power: 6 × 3, 12 × 3 and 9 × 4.
 - type: custom:poster-card-pro
   entity: sensor.balcony_battery_soc
   name: Battery
-  kind: { charge: sensor.balcony_battery_charge_power, discharge: sensor.balcony_battery_discharge_power }
+  charge: sensor.balcony_battery_charge_power
+  discharge: sensor.balcony_battery_discharge_power
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.balcony_battery_soc
   name: Battery
-  kind: { charge: sensor.balcony_battery_charge_power, discharge: sensor.balcony_battery_discharge_power }
+  charge: sensor.balcony_battery_charge_power
+  discharge: sensor.balcony_battery_discharge_power
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.balcony_battery_soc
   name: Battery
-  kind: { charge: sensor.balcony_battery_charge_power, discharge: sensor.balcony_battery_discharge_power }
+  charge: sensor.balcony_battery_charge_power
+  discharge: sensor.balcony_battery_discharge_power
   grid_options: { columns: 9, rows: 4 }
 ```
 
@@ -158,17 +161,17 @@ The field behind the poster: 6 × 3, 12 × 3 and 9 × 4.
 - type: custom:poster-card-pro
   entity: sensor.wind_speed
   name: Wind
-  kind: { flow: lines }
+  variant: lines
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.wind_speed
   name: Wind
-  kind: { flow: lines }
+  variant: lines
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.wind_speed
   name: Wind
-  kind: { flow: lines }
+  variant: lines
   grid_options: { columns: 9, rows: 4 }
 ```
 
@@ -184,17 +187,23 @@ The drops behind the poster: 6 × 3, 12 × 3 and 9 × 4.
 - type: custom:poster-card-pro
   entity: sensor.rain_rate_roof
   name: Rain
-  kind: { flow: drops, wind: sensor.wind_speed, direction: sensor.wind_direction }
+  variant: drops
+  wind: sensor.wind_speed
+  direction: sensor.wind_direction
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.rain_rate_roof
   name: Rain
-  kind: { flow: drops, wind: sensor.wind_speed, direction: sensor.wind_direction }
+  variant: drops
+  wind: sensor.wind_speed
+  direction: sensor.wind_direction
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.rain_rate_roof
   name: Rain
-  kind: { flow: drops, wind: sensor.wind_speed, direction: sensor.wind_direction }
+  variant: drops
+  wind: sensor.wind_speed
+  direction: sensor.wind_direction
   grid_options: { columns: 9, rows: 4 }
 ```
 
@@ -211,31 +220,28 @@ Several lines on one scale: 6 × 3, 12 × 3 and 9 × 4.
   name: Outside
   icon: mdi:thermometer
   hours_to_show: 12
-  kind:
-    type: trend
-    entities:
-      - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
-      - { entity: sensor.dew_point, name: Dew point, color: teal }
+  poster: trend
+  series:
+    - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
+    - { entity: sensor.dew_point, name: Dew point, color: teal }
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   name: Outside
   icon: mdi:thermometer
   hours_to_show: 12
-  kind:
-    type: trend
-    entities:
-      - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
-      - { entity: sensor.dew_point, name: Dew point, color: teal }
+  poster: trend
+  series:
+    - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
+    - { entity: sensor.dew_point, name: Dew point, color: teal }
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   name: Outside
   icon: mdi:thermometer
   hours_to_show: 12
-  kind:
-    type: trend
-    entities:
-      - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
-      - { entity: sensor.dew_point, name: Dew point, color: teal }
+  poster: trend
+  series:
+    - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
+    - { entity: sensor.dew_point, name: Dew point, color: teal }
   grid_options: { columns: 9, rows: 4 }
 ```
 
@@ -434,17 +440,17 @@ The power line: 6 × 3, 12 × 3 and 9 × 4.
 - type: custom:poster-card-pro
   entity: sensor.grid_power
   name: Grid
-  kind: grid
+  poster: grid
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.grid_power
   name: Grid
-  kind: grid
+  poster: grid
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.grid_power
   name: Grid
-  kind: grid
+  poster: grid
   grid_options: { columns: 9, rows: 4 }
 ```
 
@@ -460,17 +466,17 @@ The output and today's production: 6 × 3, 12 × 3 and 9 × 4.
 - type: custom:poster-card-pro
   entity: sensor.solar_power
   name: Solar
-  kind: solar
+  poster: solar
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.solar_power
   name: Solar
-  kind: solar
+  poster: solar
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.solar_power
   name: Solar
-  kind: solar
+  poster: solar
   grid_options: { columns: 9, rows: 4 }
 ```
 
@@ -486,17 +492,17 @@ The charge, the range and the status: 6 × 3, 12 × 3 and 9 × 4.
 - type: custom:poster-card-pro
   entity: sensor.ev_battery
   name: Car
-  kind: car
+  poster: car
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.ev_battery
   name: Car
-  kind: car
+  poster: car
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.ev_battery
   name: Car
-  kind: car
+  poster: car
   grid_options: { columns: 9, rows: 4 }
 ```
 
@@ -512,17 +518,23 @@ How long it runs and the energy of this run: 6 × 3, 12 × 3 and 9 × 4.
 - type: custom:poster-card-pro
   entity: sensor.heat_pump_power
   name: Heat pump
-  kind: { type: appliance, style: heat_pump, running_above: 50 }
+  poster: appliance
+  variant: heat_pump
+  running_above: 50
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.heat_pump_power
   name: Heat pump
-  kind: { type: appliance, style: heat_pump, running_above: 50 }
+  poster: appliance
+  variant: heat_pump
+  running_above: 50
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.heat_pump_power
   name: Heat pump
-  kind: { type: appliance, style: heat_pump, running_above: 50 }
+  poster: appliance
+  variant: heat_pump
+  running_above: 50
   grid_options: { columns: 9, rows: 4 }
 ```
 

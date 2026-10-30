@@ -1,5 +1,5 @@
 // The sun kind: computed from Home Assistant's location (sun.sun is detected, and is the more-info
-// target; `kind: sun` needs no entity). The sun or the moon, how soon the next sunrise or sunset
+// target; `poster: sun` needs no entity). The sun or the moon, how soon the next sunrise or sunset
 // comes as the status, that event large with its time, and the day's curve along the bottom, its
 // tooltip under the pointer. Amber by day, indigo by night, unless `color` says otherwise.
 import { cssColor } from "../color.ts";

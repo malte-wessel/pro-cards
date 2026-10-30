@@ -120,7 +120,7 @@ rules:
 
 :::
 
-For the wind as a poster, with the speed large and the field behind it, see the [poster card](/cards/poster-card#wind) (`kind: { flow: lines }`).
+For the wind as a poster, with the speed large and the field behind it, see the [poster card](/cards/poster-card#wind) (`variant: lines`).
 
 ## Rules and colours
 

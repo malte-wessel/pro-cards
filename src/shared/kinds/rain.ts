@@ -1,6 +1,6 @@
 // The rain kind: a rain rate sensor. The animated lead rains at the rate, slanted by the wind;
-// `flow` fills the whole poster with rain (with the rain icon as its lead). Today's total is
-// found on the rate sensor's device; the wind and its direction are set in `kind`.
+// `variant` fills the whole poster with rain (with the rain icon as its lead). Today's total is
+// found on the rate sensor's device; the wind and its direction are set on the card (`wind`, `direction`).
 import { buildBand, builtLead, setRate, vars } from "../flow/dom.ts";
 import { secondaryEl } from "../entity/render/lead.ts";
 import { oneOf } from "../util.ts";
@@ -14,7 +14,7 @@ import type { Kind, KindCtx } from "./types.ts";
 
 const LEAD = 40;
 const flowOf = (c: KindCtx): RainStyle | null =>
-  oneOf(RAIN_STYLES, c.opts.flow) ? c.opts.flow : null;
+  oneOf(RAIN_STYLES, c.opts.variant) ? c.opts.variant : null;
 const nowOf = (c: KindCtx) =>
   rainNow(c.ctx, { ent: c.ent, m: c.m }, c.input("today"), c.input("wind"), c.input("direction"));
 
@@ -23,7 +23,7 @@ export const RAIN: Kind = {
   deviceClasses: ["precipitation_intensity"],
   reads: ["sensor", "input_number", "number"],
   readsText: "a precipitation_intensity sensor (mm/h or in/h)",
-  keys: ["today", "wind", "direction", "flow"],
+  keys: ["today", "wind", "direction", "variant"],
   rules: RAIN_RULES,
   ruleUnit: "mm/h",
   inputs: [

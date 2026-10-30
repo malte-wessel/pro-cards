@@ -96,7 +96,7 @@ entities:
 
 :::
 
-For the lines as a poster, with the first value large and the lines along the bottom, see the [poster card](/cards/poster-card#trend) (`kind: { type: trend, entities }`).
+For the lines as a poster, with the first value large and the lines along the bottom, see the [poster card](/cards/poster-card#trend) (`poster: trend`, `series`).
 
 ## Axes and legend
 

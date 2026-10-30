@@ -24,24 +24,28 @@ hero:
             - type: custom:poster-card-pro
               entity: sensor.solar_power
               name: Solar
-              kind: solar
+              poster: solar
             - type: custom:poster-card-pro
               entity: weather.home
               name: Outside
             - type: custom:poster-card-pro
               entity: sensor.wind_speed
               name: Wind
-              kind: { flow: lines }
+              variant: lines
             - type: custom:poster-card-pro
               entity: sensor.rain_rate_roof
               name: Rain
-              kind: { flow: drops, wind: sensor.wind_speed, direction: sensor.wind_direction }
+              variant: drops
+              wind: sensor.wind_speed
+              direction: sensor.wind_direction
             - type: custom:poster-card-pro
-              kind: sun
+              poster: sun
             - type: custom:poster-card-pro
               entity: sensor.heat_pump_power
               name: Heat pump
-              kind: { type: appliance, style: heat_pump, running_above: 50 }
+              poster: appliance
+              variant: heat_pump
+              running_above: 50
             - type: custom:poster-card-pro
               entity: climate.living_room
               name: Thermostat
@@ -50,11 +54,10 @@ hero:
               icon: mdi:flash
               color: amber
               hours_to_show: 12
-              kind:
-                type: trend
-                entities:
-                  - { entity: sensor.power_consumption, name: Home, color: amber }
-                  - { entity: sensor.heat_pump_power, name: Heat pump, color: deep-orange }
+              poster: trend
+              series:
+                - { entity: sensor.power_consumption, name: Home, color: amber }
+                - { entity: sensor.heat_pump_power, name: Heat pump, color: deep-orange }
             - type: custom:poster-card-pro
               entity: vacuum.robot
               name: Robot
@@ -86,7 +89,7 @@ hero:
             - type: custom:poster-card-pro
               entity: sensor.battery_soc
               name: Battery
-              kind: { power: sensor.battery_power }
+              power: sensor.battery_power
             - type: custom:poster-card-pro
               entity: sensor.living_room_co2
               name: Air
@@ -120,7 +123,7 @@ hero:
             - type: custom:poster-card-pro
               entity: sensor.grid_power
               name: Grid
-              kind: grid
+              poster: grid
             - type: custom:power-flow-card-pro
               title: Now
               icon: mdi:flash
@@ -194,11 +197,13 @@ feature_rows:
       - type: custom:poster-card-pro
         entity: sensor.wind_speed
         name: Wind
-        kind: { flow: lines }
+        variant: lines
       - type: custom:poster-card-pro
         entity: sensor.rain_rate_roof
         name: Rain
-        kind: { flow: drops, wind: sensor.wind_speed, direction: sensor.wind_direction }
+        variant: drops
+        wind: sensor.wind_speed
+        direction: sensor.wind_direction
   - title: "Control, right on the card."
     text: "Steppers, sliders, segments, locks and your own buttons sit on the card itself. Swipe through and try them, no dialog opens."
     link: /cards/controls
@@ -320,7 +325,7 @@ feature_rows:
     columns: 2
     cards:
       - type: custom:poster-card-pro
-        kind: sun
+        poster: sun
       - type: custom:sun-azimuth-card-pro
         show_summary: false
         camera: 280

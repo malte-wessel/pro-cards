@@ -1,4 +1,4 @@
-// The poster card in a browser: what each kind draws by default (status, value, inputs found on
+// The poster card in a browser: what each poster type draws by default (status, value, inputs found on
 // the device, controls, backdrops), what the card's own keys change, and that nothing moves when a
 // state changes: the parts are kept, the value fits the room the card has.
 import type { Locator, Page } from "@playwright/test";
@@ -141,7 +141,9 @@ test.describe("poster card", () => {
     expect(await infos(page)).toEqual([]);
   });
 
-  test("an image lies behind a scrim; image: false drops a kind's picture", async ({ page }) => {
+  test("an image lies behind a scrim; image: false drops a poster type's picture", async ({
+    page,
+  }) => {
     await mount(page, [
       { type: P, entity: "sensor.living_room_temperature", image: "/local/garden.jpg" },
       { type: P, entity: "person.alex" },
@@ -155,7 +157,7 @@ test.describe("poster card", () => {
   });
 });
 
-test.describe("poster kinds", () => {
+test.describe("poster types", () => {
   test("wind: detected from the device class, direction and gusts found on its device", async ({
     page,
   }) => {
@@ -171,10 +173,10 @@ test.describe("poster kinds", () => {
     await expect(row.locator(".pstatus")).toHaveText("Gale");
   });
 
-  test("wind with flow: the field fills the poster and keeps running through a new speed", async ({
+  test("wind drawn as lines: the field fills the poster and keeps running through a new speed", async ({
     page,
   }) => {
-    await mount(page, { type: P, entity: "sensor.wind_speed", kind: { flow: "lines" } });
+    await mount(page, { type: P, entity: "sensor.wind_speed", variant: "lines" });
     const c = card(page);
     const field = c.locator(".pback > *");
     await expect(field).toBeAttached();
@@ -412,9 +414,11 @@ test.describe("poster kinds", () => {
       {
         type: P,
         entity: "sensor.heat_pump_power",
-        kind: { type: "appliance", style: "heat_pump", running_above: 50 },
+        poster: "appliance",
+        variant: "heat_pump",
+        running_above: 50,
       },
-      { type: P, entity: "sensor.washer_power", kind: { type: "appliance", style: "washer" } },
+      { type: P, entity: "sensor.washer_power", poster: "appliance", variant: "washer" },
     ]);
     const pump = card(page, 0);
     await expect(pump.locator(".pstatus")).toHaveText("Running");
@@ -450,11 +454,43 @@ test.describe("poster kinds", () => {
   });
 
   test("the sun without an entity: the next event, how soon, the curve", async ({ page }) => {
-    await mount(page, { type: P, kind: "sun" });
+    await mount(page, { type: P, poster: "sun" });
     const row = card(page).locator(".row.poster");
     await expect(row.locator(".pname")).toHaveText("Sunset");
     await expect(row.locator(".pstatus")).toContainText(/in \d+ hours?/i);
     await expect(row.locator(".pcurve.psun")).toBeVisible();
+  });
+});
+
+test.describe("poster config", () => {
+  test("a key the poster type does not read is left out with one warning", async ({ page }) => {
+    const warned: string[] = [];
+    page.on("console", (m) => {
+      if (m.text().includes("reads no")) warned.push(m.text());
+    });
+    await mount(page, { type: P, entity: "sensor.rain_rate_roof", gust: "sensor.wind_gust" });
+    await expect(card(page).locator(".row.poster")).toBeVisible();
+    await setState(page, "sensor.rain_rate_roof", "2.4");
+    await expect
+      .poll(() => warned)
+      .toEqual(["poster-card-pro: the rain poster reads no gust; left out"]);
+  });
+
+  test("an unknown poster type is a config error that names the types", async ({ page }) => {
+    await mount(page, { type: P, entity: "sensor.wind_speed" });
+    const msg = await page.evaluate(() => {
+      const el = document.createElement("poster-card-pro") as HTMLElement & {
+        setConfig(c: unknown): void;
+      };
+      try {
+        el.setConfig({ type: "custom:poster-card-pro", poster: "nonsense" });
+        return null;
+      } catch (e) {
+        return (e as Error).message;
+      }
+    });
+    expect(msg).toMatch(/^poster-card-pro: .*nonsense/);
+    expect(msg).toMatch(/\bwind\b/);
   });
 });
 
@@ -497,8 +533,8 @@ test.describe("poster cards in the layout card", () => {
         columns: 4,
         cards: [
           { type: P, entity: "weather.home" },
-          { type: P, kind: "sun" },
-          { type: P, entity: "sensor.wind_speed", kind: { flow: "lines" } },
+          { type: P, poster: "sun" },
+          { type: P, entity: "sensor.wind_speed", variant: "lines" },
           { type: P, entity: "sensor.ev_battery", badges: ["sensor.ev_range"] },
           { type: P, entity: "sensor.solar_power", visual: "sparkline" },
           { type: P, entity: "light.kitchen" },
@@ -513,7 +549,7 @@ test.describe("poster cards in the layout card", () => {
               { entity: "light.living_room", control: "slider" },
             ],
           },
-          { type: P, kind: { type: "trend", entities: ["sensor.power_consumption"] } },
+          { type: P, poster: "trend", series: ["sensor.power_consumption"] },
         ],
       },
       { width: 960 },

@@ -97,10 +97,10 @@ const BY_CLASS: Record<string, CoverStyle> = {
   window: "window",
   damper: "window",
 };
-// `kind: { style }`, else the device class's drawing, else a window pane
+// `variant`, else the device class's drawing, else a window pane
 const styleOf = (c: KindCtx): CoverStyle =>
-  oneOf(COVER_STYLES, c.opts.style)
-    ? c.opts.style
+  oneOf(COVER_STYLES, c.opts.variant)
+    ? c.opts.variant
     : (BY_CLASS[String(c.m.st?.attributes?.device_class)] ?? "window");
 // the position drawn: the entity's, where the cover really is (a cover on its way passes every
 // position between); a cover without a position is open or closed
@@ -124,7 +124,7 @@ export const COVER: Kind = {
   domains: ["cover"],
   reads: ["cover"],
   readsText: "a cover",
-  keys: ["style"],
+  keys: ["variant"],
   controls: [place("buttons", "end")],
   status: (c) => c.m.look.label ?? stateText(c),
   slots: (c) => {

@@ -28,7 +28,7 @@ const look = (kind: string, v: number | string, unit = "", language = "en") => {
     },
     locale: { language },
   } as unknown as HomeAssistant;
-  const cfg = normalizePosterConfig({ entity: E, kind }, hass);
+  const cfg = normalizePosterConfig({ entity: E, poster: kind }, hass);
   const m = modelOf({ hass, tplResult: new Map() }, cfg.entities[0]);
   return [m.look.label, m.look.color];
 };

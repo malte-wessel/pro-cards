@@ -1,6 +1,6 @@
-// The kinds (pure types): what an entity is, and what a card draws for it by default. A kind is
-// detected from the entity (its domain, then its device class) or set with `kind`; the poster card
-// draws its places the kind's way.
+// The kinds (pure types): what an entity is, and what a card draws for it by default. A kind (a
+// poster type) is detected from the entity (its domain, then its device class) or set with
+// `poster`; the poster card draws its places the kind's way.
 import type { EntityItem, RawEntity, RuleUnit } from "../entity/config.ts";
 import type { Placement } from "../entity/control.ts";
 import type { EntityModel, RenderCtx } from "../entity/model.ts";
@@ -22,7 +22,7 @@ export interface KindRule {
   pulse?: boolean;
 }
 
-// an entity the kind reads besides the card's own: set in `kind` (an id, or false for none),
+// an entity the kind reads besides the card's own: set on the card (an id, or false for none),
 // else found on the same device, else (on a weather entity) one of its attributes
 interface InputDef {
   key: string;
@@ -81,7 +81,7 @@ interface Persistent {
 export interface Kind {
   name: string;
   // detection: the domains and entity ids that are this kind, then the device classes; a kind with
-  // none of them is never detected (the role kinds, `trend`: always set with `kind`)
+  // none of them is never detected (the role kinds, `trend`: always set with `poster`)
   domains?: readonly string[];
   ids?: readonly string[];
   deviceClasses?: readonly string[];
@@ -91,7 +91,7 @@ export interface Kind {
   readsText: string;
   // it draws without an entity too (the sun, a trend of its own entities, the grid from its meters)
   entityless?: boolean;
-  // the keys `kind: { … }` takes besides `type` (inputs among them)
+  // the keys it takes on the card (inputs among them); a card that sets another kind's is warned
   keys: readonly string[];
   // its own rules, replaced as a whole by the card's `rules`; the unit they are written in
   rules?: readonly KindRule[];
@@ -130,10 +130,4 @@ export interface Kind {
   extra?(c: KindCtx): unknown[];
   // the minute timer (a countdown, a duration)
   timed?: boolean;
-}
-
-// `kind` as written: a name, or an object with an optional `type` and the kind's keys
-export interface KindSpec {
-  type: string | null;
-  opts: Record<string, unknown>;
 }

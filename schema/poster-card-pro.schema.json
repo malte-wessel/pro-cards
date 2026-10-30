@@ -2,84 +2,681 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://malte-wessel.github.io/pro-cards/schema/poster-card-pro.schema.json",
   "title": "custom:poster-card-pro",
-  "description": "One entity (or none) as a poster, drawn the way its kind says: the lead and the badges on top, the name, the large value and the picture at the bottom, a backdrop behind. The kind is detected from the entity (its domain, then its device class) or set with `kind`. Strings containing {{ }} are Jinja templates rendered by Home Assistant (name, secondary, icon, color, value, status, image).",
+  "description": "One entity (or none) as a poster, drawn the way its poster type says: the lead and the badges on top, the name, the large value and the picture at the bottom, a backdrop behind. The poster type is detected from the entity (its domain, then its device class) or set with `poster`; its own keys (`variant`, the entities it reads, `running_above`, `series`) sit flat on the card and never decide the type. Strings containing {{ }} are Jinja templates rendered by Home Assistant (name, secondary, icon, color, value, status, image).",
   "type": "object",
   "properties": {
-    "type": {
-      "const": "custom:poster-card-pro"
+    "type": { "const": "custom:poster-card-pro" },
+    "poster": {
+      "description": "The poster type, forced or one that is never detected (trend, grid, solar, car, appliance). Left out: detected from the entity's domain and device class; `entity` turns every default off",
+      "$ref": "#/$defs/posterType"
     },
-    "kind": {
-      "description": "The kind: a name, or an object with an optional type and the kind's keys. Left out: detected from the entity",
-      "oneOf": [
-        {
-          "$ref": "#/$defs/kindName"
-        },
-        {
-          "$ref": "#/$defs/kindObject"
-        }
-      ]
+    "variant": {
+      "type": "string",
+      "enum": [
+        "dots",
+        "lines",
+        "swoosh",
+        "vectors",
+        "drops",
+        "ripples",
+        "fill",
+        "shutter",
+        "blind",
+        "curtain",
+        "garage",
+        "gate",
+        "awning",
+        "window",
+        "pump",
+        "washer",
+        "dryer",
+        "dishwasher",
+        "heat_pump"
+      ],
+      "description": "How the type draws its subject: wind (dots, lines, swoosh, vectors) and rain (drops, ripples, fill) make the whole poster the animated field; cover (shutter, blind, curtain, garage, gate, awning, window; default: the device class) and appliance (pump, washer, dryer, dishwasher, heat_pump) pick the drawing"
+    },
+    "direction": {
+      "$ref": "#/$defs/input",
+      "description": "wind, rain: the direction sensor (degrees or a compass point)"
+    },
+    "gust": { "$ref": "#/$defs/input", "description": "wind: the gust sensor" },
+    "today": { "$ref": "#/$defs/input", "description": "rain, solar: today's total" },
+    "wind": {
+      "$ref": "#/$defs/input",
+      "description": "rain: the wind speed that slants the drops"
+    },
+    "power": {
+      "$ref": "defs.schema.json#/$defs/entityId",
+      "description": "battery: its power, + charging"
+    },
+    "charge": {
+      "$ref": "defs.schema.json#/$defs/entityId",
+      "description": "battery: its charging power"
+    },
+    "discharge": {
+      "$ref": "defs.schema.json#/$defs/entityId",
+      "description": "battery: its discharging power"
+    },
+    "import": {
+      "$ref": "defs.schema.json#/$defs/entityId",
+      "description": "grid: the import meter"
+    },
+    "export": {
+      "$ref": "defs.schema.json#/$defs/entityId",
+      "description": "grid: the export meter"
+    },
+    "range": { "$ref": "#/$defs/input", "description": "car: its range" },
+    "plugged": { "$ref": "#/$defs/input", "description": "car: plugged in" },
+    "charging": {
+      "$ref": "#/$defs/input",
+      "description": "car: charging (a binary sensor, or power: on above 0)"
+    },
+    "location": { "$ref": "#/$defs/input", "description": "car: its device tracker" },
+    "running_above": {
+      "type": "number",
+      "minimum": 0,
+      "description": "appliance: the power (W) above which it runs"
+    },
+    "series": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/trendEntity" },
+      "description": "trend: the series, ids or objects (entity, name, color, rules, visibility)"
     },
     "status": {
-      "description": "The status badge: its text (a template allowed), an object of badge keys with `value` for its text, or false for none. Default: the kind's status, else the matching rule's label",
-      "oneOf": [
-        {
-          "const": false
-        },
-        {
-          "type": "string"
-        },
-        {
-          "$ref": "#/$defs/statusBadge"
-        }
-      ]
+      "description": "The status badge: its text (a template allowed), an object of badge keys with `value` for its text, or false for none. Default: the poster type's status, else the matching rule's label",
+      "oneOf": [{ "const": false }, { "type": "string" }, { "$ref": "#/$defs/statusBadge" }]
     },
     "badges": {
       "type": "array",
       "description": "The badges in the corner, in this order; `status` places the status badge (first unless placed). A badge without an entity reads the poster's: its attribute, else the poster's value",
       "items": {
         "oneOf": [
-          {
-            "const": "status"
-          },
-          {
-            "$ref": "defs.schema.json#/$defs/entityId"
-          },
-          {
-            "$ref": "#/$defs/badge"
-          }
+          { "const": "status" },
+          { "$ref": "defs.schema.json#/$defs/entityId" },
+          { "$ref": "#/$defs/badge" }
         ]
       }
     },
     "image": {
-      "description": "The backdrop behind the whole poster: an image URL, a template, or an entity whose picture it shows (a camera, a media player, a person); false drops the kind's own backdrop",
-      "oneOf": [
-        {
-          "const": false
-        },
-        {
-          "type": "string"
-        }
-      ]
+      "description": "The backdrop behind the whole poster: an image URL, a template, or an entity whose picture it shows (a camera, a media player, a person); false drops the poster type's own backdrop",
+      "oneOf": [{ "const": false }, { "type": "string" }]
     }
   },
   "required": ["type"],
   "allOf": [
+    { "$ref": "entity.schema.json#/$defs/entityKeys" },
+    { "$ref": "entity.schema.json#/$defs/historyOptions" },
+    { "$ref": "entity.schema.json#/$defs/actionDefaults" },
+    { "$ref": "entity.schema.json#/$defs/haExtras" },
     {
-      "$ref": "entity.schema.json#/$defs/entityKeys"
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "entity" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
     },
     {
-      "$ref": "entity.schema.json#/$defs/historyOptions"
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "battery" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
     },
     {
-      "$ref": "entity.schema.json#/$defs/actionDefaults"
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "carbon_dioxide" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
     },
     {
-      "$ref": "entity.schema.json#/$defs/haExtras"
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "pm25" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "pm10" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "aqi" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "weather" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "sun" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "wind" } } },
+      "then": {
+        "properties": {
+          "variant": { "enum": ["dots", "lines", "swoosh", "vectors"] },
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "rain" } } },
+      "then": {
+        "properties": {
+          "variant": { "enum": ["drops", "ripples", "fill"] },
+          "gust": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "trend" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false
+        },
+        "required": ["series"]
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "light" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "fan" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "climate" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "lock" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["poster"],
+        "properties": { "poster": { "const": "alarm_control_panel" } }
+      },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "person" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "media_player" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "cover" } } },
+      "then": {
+        "properties": {
+          "variant": {
+            "enum": ["shutter", "blind", "curtain", "garage", "gate", "awning", "window"]
+          },
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "vacuum" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "lawn_mower" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "grid" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "solar" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "car" } } },
+      "then": {
+        "properties": {
+          "variant": false,
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "running_above": false,
+          "series": false
+        }
+      }
+    },
+    {
+      "if": { "required": ["poster"], "properties": { "poster": { "const": "appliance" } } },
+      "then": {
+        "properties": {
+          "variant": { "enum": ["pump", "washer", "dryer", "dishwasher", "heat_pump"] },
+          "direction": false,
+          "gust": false,
+          "today": false,
+          "wind": false,
+          "power": false,
+          "charge": false,
+          "discharge": false,
+          "import": false,
+          "export": false,
+          "range": false,
+          "plugged": false,
+          "charging": false,
+          "location": false,
+          "series": false
+        }
+      }
     }
   ],
   "unevaluatedProperties": false,
   "$defs": {
-    "kindName": {
+    "posterType": {
       "type": "string",
       "enum": [
         "entity",
@@ -109,517 +706,13 @@
         "appliance"
       ]
     },
-    "kindObject": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "$ref": "#/$defs/kindName"
-        },
-        "direction": {
-          "$ref": "#/$defs/input",
-          "description": "wind, rain: the direction sensor (degrees or a compass point)"
-        },
-        "gust": {
-          "$ref": "#/$defs/input",
-          "description": "wind: the gust sensor"
-        },
-        "today": {
-          "$ref": "#/$defs/input",
-          "description": "rain, solar: today's total"
-        },
-        "wind": {
-          "$ref": "#/$defs/input",
-          "description": "rain: the wind speed that slants the drops"
-        },
-        "flow": {
-          "type": "string",
-          "enum": ["dots", "lines", "swoosh", "vectors", "drops", "ripples", "fill"],
-          "description": "wind (dots, lines, swoosh, vectors), rain (drops, ripples, fill): the whole poster is the animated field"
-        },
-        "entities": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/$defs/trendEntity"
-          },
-          "description": "trend: the series"
-        },
-        "style": {
-          "type": "string",
-          "enum": [
-            "awning",
-            "blind",
-            "curtain",
-            "dishwasher",
-            "dryer",
-            "garage",
-            "gate",
-            "heat_pump",
-            "pump",
-            "shutter",
-            "washer",
-            "window"
-          ],
-          "description": "cover: the drawing (default: the device class); appliance: the device"
-        },
-        "import": {
-          "$ref": "#/$defs/input",
-          "description": "grid: the import meter"
-        },
-        "export": {
-          "$ref": "#/$defs/input",
-          "description": "grid: the export meter"
-        },
-        "power": {
-          "$ref": "#/$defs/input",
-          "description": "battery: its power, + charging"
-        },
-        "charge": {
-          "$ref": "#/$defs/input",
-          "description": "battery: its charging power"
-        },
-        "discharge": {
-          "$ref": "#/$defs/input",
-          "description": "battery: its discharging power"
-        },
-        "range": {
-          "$ref": "#/$defs/input",
-          "description": "car: its range"
-        },
-        "charging": {
-          "$ref": "#/$defs/input",
-          "description": "car: charging (a binary sensor, or power: on above 0)"
-        },
-        "plugged": {
-          "$ref": "#/$defs/input",
-          "description": "car: plugged in"
-        },
-        "location": {
-          "$ref": "#/$defs/input",
-          "description": "car: its device tracker"
-        },
-        "running_above": {
-          "type": "number",
-          "minimum": 0,
-          "description": "appliance: the power (W) above which it runs"
-        }
-      },
-      "additionalProperties": false,
-      "allOf": [
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "entity"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "battery"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type", "power", "charge", "discharge"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "carbon_dioxide"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "pm25"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "pm10"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "aqi"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "weather"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "sun"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "wind"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type", "direction", "gust", "flow"]
-            },
-            "properties": {
-              "flow": {
-                "enum": ["dots", "lines", "swoosh", "vectors"]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "rain"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type", "today", "wind", "direction", "flow"]
-            },
-            "properties": {
-              "flow": {
-                "enum": ["drops", "ripples", "fill"]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "trend"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type", "entities"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "light"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "fan"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "climate"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "lock"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "alarm_control_panel"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "person"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "media_player"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "cover"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type", "style"]
-            },
-            "properties": {
-              "style": {
-                "enum": ["shutter", "blind", "curtain", "garage", "gate", "awning", "window"]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "vacuum"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "lawn_mower"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "grid"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type", "import", "export"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "solar"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type", "today"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "car"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type", "range", "charging", "plugged", "location"]
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["type"],
-            "properties": {
-              "type": {
-                "const": "appliance"
-              }
-            }
-          },
-          "then": {
-            "propertyNames": {
-              "enum": ["type", "style", "running_above"]
-            },
-            "properties": {
-              "style": {
-                "enum": ["pump", "washer", "dryer", "dishwasher", "heat_pump"]
-              }
-            }
-          }
-        }
-      ]
-    },
     "badgeKeys": {
       "type": "object",
-      "allOf": [
-        {
-          "$ref": "entity.schema.json#/$defs/entityKeys"
-        }
-      ],
+      "allOf": [{ "$ref": "entity.schema.json#/$defs/entityKeys" }],
       "properties": {
-        "visibility": {
-          "$ref": "defs.schema.json#/$defs/visibility"
-        },
-        "style": {
-          "$ref": "entity.schema.json#/$defs/badgeStyle"
-        },
-        "size": {
-          "$ref": "entity.schema.json#/$defs/badgeSize"
-        },
+        "visibility": { "$ref": "defs.schema.json#/$defs/visibility" },
+        "style": { "$ref": "entity.schema.json#/$defs/badgeStyle" },
+        "size": { "$ref": "entity.schema.json#/$defs/badgeSize" },
         "format": {
           "type": "string",
           "enum": ["auto", "power", "duration", "relative"],
@@ -639,62 +732,30 @@
     },
     "badge": {
       "description": "A badge in the poster's corner (an outline pill unless a style is set)",
-      "allOf": [
-        {
-          "$ref": "#/$defs/badgeKeys"
-        }
-      ],
+      "allOf": [{ "$ref": "#/$defs/badgeKeys" }],
       "unevaluatedProperties": false
     },
     "statusBadge": {
       "description": "The status badge's keys (a tag without an icon unless set); `value` is its text",
-      "allOf": [
-        {
-          "$ref": "#/$defs/badgeKeys"
-        }
-      ],
-      "not": {
-        "required": ["entity"]
-      },
+      "allOf": [{ "$ref": "#/$defs/badgeKeys" }],
+      "not": { "required": ["entity"] },
       "unevaluatedProperties": false
     },
     "input": {
       "description": "An entity id, or false for none (left out: found on the entity's device, or a weather entity's attribute)",
-      "oneOf": [
-        {
-          "$ref": "defs.schema.json#/$defs/entityId"
-        },
-        {
-          "const": false
-        }
-      ]
+      "oneOf": [{ "$ref": "defs.schema.json#/$defs/entityId" }, { "const": false }]
     },
     "trendEntity": {
       "oneOf": [
-        {
-          "$ref": "defs.schema.json#/$defs/entityId"
-        },
+        { "$ref": "defs.schema.json#/$defs/entityId" },
         {
           "type": "object",
           "properties": {
-            "entity": {
-              "$ref": "defs.schema.json#/$defs/entityId"
-            },
-            "name": {
-              "type": "string"
-            },
-            "color": {
-              "$ref": "defs.schema.json#/$defs/color"
-            },
-            "rules": {
-              "type": "array",
-              "items": {
-                "$ref": "entity.schema.json#/$defs/rule"
-              }
-            },
-            "visibility": {
-              "$ref": "defs.schema.json#/$defs/visibility"
-            }
+            "entity": { "$ref": "defs.schema.json#/$defs/entityId" },
+            "name": { "type": "string" },
+            "color": { "$ref": "defs.schema.json#/$defs/color" },
+            "rules": { "type": "array", "items": { "$ref": "entity.schema.json#/$defs/rule" } },
+            "visibility": { "$ref": "defs.schema.json#/$defs/visibility" }
           },
           "required": ["entity"],
           "additionalProperties": false

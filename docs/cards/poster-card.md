@@ -1,6 +1,6 @@
 # Poster Card Pro
 
-`custom:poster-card-pro` draws one entity as a poster: the icon at the top left, the badges at the top right, and at the bottom the name in small capitals and the value, large. What fills these places depends on the entity's **kind**: a CO₂ sensor brings its air quality bands, a wind sensor its animated field, a media player its cover art. The kind is detected from the entity, so most posters are just `entity:`. Every place can be set with a key of its own, and a poster needs no entity at all.
+`custom:poster-card-pro` draws one entity as a poster: the icon at the top left, the badges at the top right, and at the bottom the name in small capitals and the value, large. What fills these places depends on the entity's **poster type**: a CO₂ sensor brings its air quality bands, a wind sensor its animated field, a media player its cover art. The poster type is detected from the entity, so most posters are just `entity:`. Every place can be set with a key of its own, and a poster needs no entity at all.
 
 ::: info Beta
 The poster card is new in 3.0 and in beta: its options may still change.
@@ -10,11 +10,11 @@ The poster card is new in 3.0 and in beta: its options may still change.
 
 A poster is three rows high in a sections grid (two at least) and keeps its content at the bottom of whatever height it gets. From top to bottom:
 
-- the **lead** at the top left: the icon, the entity's picture or the kind's own drawing;
+- the **lead** at the top left: the icon, the entity's picture or the poster type's own drawing;
 - the **badges** at the top right, the first of them the **status badge** (the matching rule's label here);
 - the **name**, the large **value** and the line under it, with the controls beside them (under them on a narrow card);
 - the **picture** along the bottom: here the last 12 hours as a sparkline;
-- behind it all, the **backdrop** (an image, or what the kind draws there).
+- behind it all, the **backdrop** (an image, or what the poster type draws there).
 
 ::: live
 
@@ -40,21 +40,21 @@ A poster is three rows high in a sections grid (two at least) and keeps its cont
 
 :::
 
-## Kinds
+## Poster types
 
-A kind is what the entity is. It supplies the poster's defaults: some kinds fill every place their own way, others only bring their own [rules](#rules). Detection takes the first match: the domain (`weather.*`, `sun.sun` …), then the device class, then `entity`, which brings nothing. `kind` picks another kind, gives one to an entity without a device class, or (`kind: entity`) switches every default off. A poster has one kind; several subjects on one card are [badges](#badges).
+A poster type is what the entity is. It supplies the poster's defaults: some types fill every place their own way, others only bring their own [rules](#rules). Detection takes the first match: the domain (`weather.*`, `sun.sun` …), then the device class, then `entity`, which brings nothing. `poster` names another type, gives one to an entity without a device class, names one that is never detected, or (`poster: entity`) switches every default off; no other key decides the type. A poster has one type; several subjects on one card are [badges](#badges).
 
-| Kind                                                                                                 | Detected by                                                                    | Status |
+| Poster type                                                                                          | Detected by                                                                    | Status |
 | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------ |
 | [`entity`](#entity)                                                                                  | anything else                                                                  | built  |
 | [`battery`](#battery-and-air-quality)                                                                | device class `battery`                                                         | built  |
 | [`carbon_dioxide`, `pm25`, `pm10`, `aqi`](#battery-and-air-quality)                                  | their device class                                                             | built  |
 | [`weather`](#weather), [`sun`](#sun), [`wind`](#wind), [`rain`](#rain)                               | `weather.*`, `sun.sun`, device classes `wind_speed`, `precipitation_intensity` | built  |
-| [`trend`](#trend)                                                                                    | never: `kind: { type: trend, entities: [...] }`                                | built  |
+| [`trend`](#trend)                                                                                    | never: `poster: trend` with its `series`                                       | built  |
 | [`light`](#light), [`fan`](#fan), [`climate`](#climate)                                              | domain                                                                         | built  |
 | [`lock`](#lock), [`alarm_control_panel`](#alarm), [`person`](#person)                                | domain                                                                         | built  |
 | [`media_player`](#media-player), [`cover`](#cover), [`vacuum`, `lawn_mower`](#vacuum-and-lawn-mower) | domain                                                                         | built  |
-| [`grid`](#grid), [`solar`](#solar), [`car`](#car), [`appliance`](#appliance)                         | never: what a device is in the home, set with `kind`                           | built  |
+| [`grid`](#grid), [`solar`](#solar), [`car`](#car), [`appliance`](#appliance)                         | never: what a device is in the home, set with `poster`                         | built  |
 
 ### Entity
 
@@ -81,7 +81,7 @@ The fallback: the entity's icon, name and value, the matching rule's label in th
 
 ### Battery and air quality
 
-These kinds bring nothing but their rules: colour and a label by value, from a standard where there is one. A battery is red and _Critical_ below 10 %, orange and _Low_ below 20 %; CO₂ goes from _Good_ to _Bad_ at 800, 1200 and 2000 ppm; PM2.5 and PM10 follow the WHO and EU bands, the air quality index the US EPA's (_Hazardous_ pulses). Their labels follow the user's language. See [Predefined rules](#predefined-rules) for the sets to copy and change.
+These types bring nothing but their rules: colour and a label by value, from a standard where there is one. A battery is red and _Critical_ below 10 %, orange and _Low_ below 20 %; CO₂ goes from _Good_ to _Bad_ at 800, 1200 and 2000 ppm; PM2.5 and PM10 follow the WHO and EU bands, the air quality index the US EPA's (_Hazardous_ pulses). Their labels follow the user's language. See [Predefined rules](#predefined-rules) for the sets to copy and change.
 
 ::: live
 
@@ -108,7 +108,7 @@ These kinds bring nothing but their rules: colour and a label by value, from a s
 
 :::
 
-With its power the battery kind draws a home battery: the cell filled to the charge, the power flowing in or out, Charging or Discharging as the status and the power under the charge. `power` is + while it charges and − while it discharges (the [power flow card](/cards/power-flow-card) reads a battery the other way round); `charge` and `discharge` give a meter each. A power sensor on the battery's device is found by itself.
+With its power the battery poster draws a home battery: the cell filled to the charge, the power flowing in or out, Charging or Discharging as the status and the power under the charge. `power` is + while it charges and − while it discharges (the [power flow card](/cards/power-flow-card) reads a battery the other way round); `charge` and `discharge` give a meter each. They need no `poster`: the state of charge's device class makes it a battery. A power sensor on the battery's device is found by itself.
 
 ::: live
 
@@ -116,7 +116,8 @@ With its power the battery kind draws a home battery: the cell filled to the cha
 - type: custom:poster-card-pro
   entity: sensor.balcony_battery_soc
   name: Balcony battery
-  kind: { charge: sensor.balcony_battery_charge_power, discharge: sensor.balcony_battery_discharge_power }
+  charge: sensor.balcony_battery_charge_power
+  discharge: sensor.balcony_battery_discharge_power
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: sensor.battery_soc
@@ -126,7 +127,7 @@ With its power the battery kind draws a home battery: the cell filled to the cha
 
 :::
 
-A template sensor has no device class; `kind` gives it one:
+A template sensor has no device class; `poster` gives it a type:
 
 ::: live
 
@@ -135,7 +136,7 @@ type: custom:poster-card-pro
 entity: sensor.robot_battery
 name: Robot
 icon: mdi:robot-vacuum
-kind: battery
+poster: battery
 ```
 
 :::
@@ -181,7 +182,7 @@ rules:
 
 ### Sun
 
-`sun.sun`, or `kind: sun` without an entity: the sun is computed from Home Assistant's location. The sun or the moon, how soon the next sunrise or sunset comes as the status, that event large with its time, and the day's curve along the bottom with the sun where it is now (hover it for the elevation). Amber by day and indigo by night; `color` paints the curve and the poster.
+`sun.sun`, or `poster: sun` without an entity: the sun is computed from Home Assistant's location. The sun or the moon, how soon the next sunrise or sunset comes as the status, that event large with its time, and the day's curve along the bottom with the sun where it is now (hover it for the elevation). Amber by day and indigo by night; `color` paints the curve and the poster.
 
 ::: live
 
@@ -190,7 +191,7 @@ rules:
   entity: sun.sun
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
-  kind: sun
+  poster: sun
   color: orange
   grid_options: { columns: 6 }
 ```
@@ -199,9 +200,9 @@ rules:
 
 ### Wind
 
-A wind speed sensor, or a weather entity with `kind: wind`. The animated lead turns where the wind blows and runs at its speed; the speed is large, where the wind comes from and its gusts are under it, and the Beaufort bands colour and name it. The direction and the gusts are [found](#discovered-inputs) on the speed sensor's device (a weather entity brings its own); `kind: { direction, gust }` sets them.
+A wind speed sensor, or a weather entity with `poster: wind`. The animated lead turns where the wind blows and runs at its speed; the speed is large, where the wind comes from and its gusts are under it, and the Beaufort bands colour and name it. The direction and the gusts are [found](#discovered-inputs) on the speed sensor's device (a weather entity brings its own); `direction` and `gust` set them.
 
-`kind: { flow: … }` makes the whole poster the animated field: `dots`, `lines` (streamlines), `swoosh` (strokes drawing themselves) or `vectors` (arrows); the lead is the direction's arrow then.
+`variant` makes the whole poster the animated field: `dots`, `lines` (streamlines), `swoosh` (strokes drawing themselves) or `vectors` (arrows); the lead is the direction's arrow then.
 
 ::: live
 
@@ -213,17 +214,19 @@ A wind speed sensor, or a weather entity with `kind: wind`. The animated lead tu
 - type: custom:poster-card-pro
   entity: sensor.wind_speed
   name: Wind
-  kind: { flow: lines }
+  variant: lines
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: weather.home
   name: Wind
-  kind: { type: wind, flow: swoosh }
+  poster: wind
+  variant: swoosh
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: sensor.wind_speed
   name: Wind
-  kind: { flow: vectors, gust: false }
+  variant: vectors
+  gust: false
   rules:
     - { below: 20, color: teal, label: Fine for sailing }
     - { above: 20, color: orange, label: Reef the sails }
@@ -234,7 +237,7 @@ A wind speed sensor, or a weather entity with `kind: wind`. The animated lead tu
 
 ### Rain
 
-A rain rate sensor. The animated lead rains at the rate, the rate is large and today's total under it ([found](#discovered-inputs) on the rate sensor's device), and the rain's bands colour and name it. `kind: { wind, direction }` slants the drops; `kind: { flow: … }` fills the poster with rain: `drops`, `ripples` or `fill` (a gauge that fills with today's total).
+A rain rate sensor. The animated lead rains at the rate, the rate is large and today's total under it ([found](#discovered-inputs) on the rate sensor's device), and the rain's bands colour and name it. `wind` and `direction` slant the drops; `variant` fills the poster with rain: `drops`, `ripples` or `fill` (a gauge that fills with today's total).
 
 ::: live
 
@@ -246,10 +249,9 @@ A rain rate sensor. The animated lead rains at the rate, the rate is large and t
 - type: custom:poster-card-pro
   entity: sensor.rain_rate_roof
   name: Rain
-  kind:
-    wind: sensor.wind_speed
-    direction: sensor.wind_direction
-    flow: drops
+  variant: drops
+  wind: sensor.wind_speed
+  direction: sensor.wind_direction
   grid_options: { columns: 6 }
 ```
 
@@ -257,7 +259,7 @@ A rain rate sensor. The animated lead rains at the rate, the rate is large and t
 
 ### Trend
 
-Several entities on one scale (`kind: { type: trend, entities: [...] }`): the first one's value large (the card's `entity`, when it has one), the time window as the status (`hours_to_show`, 6 hours by default) and the lines overlaid along the bottom, every value under the pointer. A series takes `name`, `color` (a template allowed), `rules` and `visibility`, as on the [multi trend card](/cards/multi-trend-card).
+Several entities on one scale (`poster: trend` with its `series`): the first one's value large (the card's `entity`, when it has one), the time window as the status (`hours_to_show`, 6 hours by default) and the lines overlaid along the bottom, every value under the pointer. A series takes `name`, `color` (a template allowed), `rules` and `visibility`, as on the [multi trend card](/cards/multi-trend-card).
 
 ::: live
 
@@ -266,21 +268,19 @@ Several entities on one scale (`kind: { type: trend, entities: [...] }`): the fi
   name: Outside
   icon: mdi:thermometer
   hours_to_show: 12
-  kind:
-    type: trend
-    entities:
-      - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
-      - { entity: sensor.dew_point, name: Dew point, color: teal }
+  poster: trend
+  series:
+    - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
+    - { entity: sensor.dew_point, name: Dew point, color: teal }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   name: Rooms
   icon: mdi:home-thermometer
-  kind:
-    type: trend
-    entities:
-      - { entity: sensor.living_room_temperature, name: Living room, color: green }
-      - { entity: sensor.bedroom_temperature, name: Bedroom, color: indigo }
-      - { entity: sensor.office_temperature, name: Office, color: orange }
+  poster: trend
+  series:
+    - { entity: sensor.living_room_temperature, name: Living room, color: green }
+    - { entity: sensor.bedroom_temperature, name: Bedroom, color: indigo }
+    - { entity: sensor.office_temperature, name: Office, color: orange }
   grid_options: { columns: 6 }
 ```
 
@@ -449,14 +449,14 @@ A cover draws the window itself, by its device class: a shutter's slats, a blind
 
 :::
 
-A cover without a device class is a window pane; `kind: { style }` picks another drawing (`shutter`, `blind`, `curtain`, `garage`, `gate`, `awning`, `window`):
+A cover without a device class is a window pane; `variant` picks another drawing (`shutter`, `blind`, `curtain`, `garage`, `gate`, `awning`, `window`):
 
 ::: live
 
 ```yaml
 - type: custom:poster-card-pro
   entity: cover.workshop_door
-  kind: { style: garage }
+  variant: garage
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: cover.garage_door
@@ -484,7 +484,7 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 
 ### Grid
 
-`kind: grid` on a power sensor, + while it imports and − while it exports (or `kind: { type: grid, import, export }` with a meter for each): a power line across the poster with its dots flowing in, or out while it exports, in Home Assistant's energy colours. The power is large in W or kW, Importing or Exporting the status.
+`poster: grid` on a power sensor, + while it imports and − while it exports (or `poster: grid` with `import` and `export`, a meter each): a power line across the poster with its dots flowing in, or out while it exports, in Home Assistant's energy colours. The power is large in W or kW, Importing or Exporting the status.
 
 ::: live
 
@@ -492,11 +492,13 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 - type: custom:poster-card-pro
   entity: sensor.grid_power
   name: Grid
-  kind: grid
+  poster: grid
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   name: Grid
-  kind: { type: grid, import: sensor.grid_import_power, export: sensor.grid_export_power }
+  poster: grid
+  import: sensor.grid_import_power
+  export: sensor.grid_export_power
   grid_options: { columns: 6 }
 ```
 
@@ -504,7 +506,7 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 
 ### Solar
 
-`kind: solar` on the inverter's power, in the solar colour: the power is large, today's energy under it ([found](#discovered-inputs) on the inverter's device) and today's production along the bottom.
+`poster: solar` on the inverter's power, in the solar colour: the power is large, today's energy under it ([found](#discovered-inputs) on the inverter's device, or `today`) and today's production along the bottom.
 
 ::: live
 
@@ -512,12 +514,13 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 - type: custom:poster-card-pro
   entity: sensor.solar_power
   name: Solar
-  kind: solar
+  poster: solar
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: sensor.solar_power
   name: Solar
-  kind: { type: solar, today: sensor.energy_today }
+  poster: solar
+  today: sensor.energy_today
   grid_options: { columns: 6 }
 ```
 
@@ -525,7 +528,7 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 
 ### Car
 
-`kind: car` on the car's battery: the charge large, the range under it, and Charging, Plugged in or where it is (away from home) as the status. Range, plug, charging and location are [found](#discovered-inputs) on the car's device; a wallbox's power sensor counts as charging above 0 W.
+`poster: car` on the car's battery: the charge large, the range under it, and Charging, Plugged in or where it is (away from home) as the status. Range, plug, charging and location are [found](#discovered-inputs) on the car's device (`range`, `plugged`, `charging` and `location` set them); a wallbox's power sensor counts as charging above 0 W.
 
 ::: live
 
@@ -533,12 +536,14 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 - type: custom:poster-card-pro
   entity: sensor.ev_battery
   name: Car
-  kind: car
+  poster: car
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: sensor.ev_battery
   name: Car
-  kind: { type: car, charging: false, location: false }
+  poster: car
+  charging: false
+  location: false
   grid_options: { columns: 6 }
 ```
 
@@ -546,7 +551,7 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 
 ### Appliance
 
-`kind: appliance` on a power sensor: running above `running_above` (5 W by default), it says for how long and the energy of this run (from the sensor's history; a run longer than the history, a heat pump's, shows its power and the energy of the history's hours), and the device in the lead works: a pump's impeller and a heat pump's fan turn, a drum shakes (`style: pump | washer | dryer | dishwasher | heat_pump`). Otherwise it is Off.
+`poster: appliance` on a power sensor: running above `running_above` (5 W by default), it says for how long and the energy of this run (from the sensor's history; a run longer than the history, a heat pump's, shows its power and the energy of the history's hours), and the device in the lead works: a pump's impeller and a heat pump's fan turn, a drum shakes (`variant: pump | washer | dryer | dishwasher | heat_pump`). Otherwise it is Off.
 
 ::: live
 
@@ -554,12 +559,15 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 - type: custom:poster-card-pro
   entity: sensor.heat_pump_power
   name: Heat pump
-  kind: { type: appliance, style: heat_pump, running_above: 50 }
+  poster: appliance
+  variant: heat_pump
+  running_above: 50
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: sensor.washer_power
   name: Washer
-  kind: { type: appliance, style: washer }
+  poster: appliance
+  variant: washer
   grid_options: { columns: 6 }
 ```
 
@@ -567,18 +575,18 @@ A vacuum or a lawn mower: while it works its path draws itself across the poster
 
 ## Slots
 
-Every place has one key, the same for every kind. Each takes plain text or a template; a key replaces one place and keeps the rest of the kind.
+Every place has one key, the same for every poster type. Each takes plain text or a template; a key replaces one place and keeps the rest of the type.
 
 | Place           | Key         | Default                                                 |
 | --------------- | ----------- | ------------------------------------------------------- |
-| Lead            | `icon`      | the entity's icon or picture, the kind's drawing        |
-| Status badge    | `status`    | the kind's status, else the matching rule's label       |
+| Lead            | `icon`      | the entity's icon or picture, the type's drawing        |
+| Status badge    | `status`    | the type's status, else the matching rule's label       |
 | Name            | `name`      | the friendly name                                       |
 | Value           | `value`     | the state (`attribute` shows an attribute)              |
-| Under the value | `secondary` | the kind's line                                         |
+| Under the value | `secondary` | the type's line                                         |
 | Colour          | `color`     | the matching rule's, else Home Assistant's state colour |
-| Picture         | `visual`    | the kind's drawing                                      |
-| Backdrop        | `image`     | the kind's backdrop                                     |
+| Picture         | `visual`    | the type's drawing                                      |
+| Backdrop        | `image`     | the type's backdrop                                     |
 
 Without an entity the keys fill the poster alone. A tap then does nothing unless `tap_action` says what. [Custom posters](/cards/poster-custom) builds posters from these keys, step by step:
 
@@ -631,7 +639,7 @@ A badge without `entity` reads the poster's own: `attribute` shows one of its at
 
 ### The status badge
 
-The poster's own label is a badge too: the **status badge**, first in the corner. It is a `tag` (an outline in the poster's colour with its text in small capitals, without an icon) and says the kind's status, else the matching rule's label; with nothing to say it takes no room. The poster's rules set its `style` and make it `pulse`.
+The poster's own label is a badge too: the **status badge**, first in the corner. It is a `tag` (an outline in the poster's colour with its text in small capitals, without an icon) and says the poster type's status, else the matching rule's label; with nothing to say it takes no room. The poster's rules set its `style` and make it `pulse`.
 
 `status` gives it a text (a template allowed), an object of badge keys (with `value` for its text), or `false` to drop it. `status` in `badges` places it elsewhere:
 
@@ -669,7 +677,7 @@ The poster's own label is a badge too: the **status badge**, first in the corner
 
 ## Controls
 
-Every kind takes `control` and its options, as the [entity cards](/cards/controls) do: a control needs a domain that supports it, and custom `buttons` call any action. The domain kinds (light, cover, media player …) bring their controls by default; `control: false` removes them, a name picks another. Every other kind has none unless asked:
+Every poster type takes `control` and its options, as the [entity cards](/cards/controls) do: a control needs a domain that supports it, and custom `buttons` call any action. The domain types (light, cover, media player …) bring their controls by default; `control: false` removes them, a name picks another. Every other type has none unless asked:
 
 ::: live
 
@@ -692,42 +700,45 @@ Every kind takes `control` and its options, as the [entity cards](/cards/control
 
 A tap on the poster opens more-info; the controls and the badges take their own taps. [Poster controls](/cards/poster-controls) has every control, where it sits, your own buttons and holds.
 
-## Kind options
+## Options of a poster type
 
-What only one kind needs goes into `kind`: an object with an optional `type` (left out where detection already knows the kind) and the kind's keys. Everything that shapes the poster stays at the top level, the same for every kind.
+What only one poster type reads sits at the top level too, beside everything that shapes the poster: `variant` for how the type draws its subject, the entities it reads, `running_above` and `series`. These keys never decide the type: a solar poster's `today` needs `poster: solar`, a pair of meters `poster: grid`. A key the poster type does not read is left out, with a warning in the browser console; with `poster` written, [the schema](/guide/getting-started#completion-and-validation-in-your-editor) rejects it too (`gust` on `poster: rain`), so a YAML editor that knows it marks it as you type.
 
-| `kind.type`                                                                                                                                                                                | Keys                                                                                                                         |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| `entity`, `battery`, `carbon_dioxide`, `pm25`, `pm10`, `aqi`, `weather`, `sun`, `light`, `fan`, `climate`, `lock`, `alarm_control_panel`, `person`, `media_player`, `vacuum`, `lawn_mower` | none                                                                                                                         |
-| `wind`                                                                                                                                                                                     | `direction`, `gust` (entity ids or `false`), `flow: dots \| lines \| swoosh \| vectors`                                      |
-| `rain`                                                                                                                                                                                     | `today`, `wind`, `direction` (entity ids or `false`), `flow: drops \| ripples \| fill`                                       |
-| `trend`                                                                                                                                                                                    | `entities`: ids or `{ entity, name, color, rules, visibility }`                                                              |
-| `cover`                                                                                                                                                                                    | `style: shutter \| blind \| curtain \| garage \| gate \| awning \| window` (default: the device class)                       |
-| `battery`                                                                                                                                                                                  | `power` (+ charging), or `charge` and `discharge` (entity ids or `false`): a home battery                                    |
-| `grid`                                                                                                                                                                                     | `import`, `export` (entity ids, instead of one signed sensor)                                                                |
-| `solar`                                                                                                                                                                                    | `today` (an energy sensor or `false`)                                                                                        |
-| `car`                                                                                                                                                                                      | `range`, `charging` (a binary sensor, or power: on above 0), `plugged`, `location` (a device tracker); entity ids or `false` |
-| `appliance`                                                                                                                                                                                | `style: pump \| washer \| dryer \| dishwasher \| heat_pump`, `running_above` (W, default 5)                                  |
+| Key                                        | Poster type | Value                                                                                                                                                |
+| ------------------------------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `poster`                                   | any         | A poster type's name: forces it, or names one never detected (`grid`, `solar`, `car`, `appliance`, `sun`, `trend`); `entity` turns every default off |
+| `variant`                                  | `wind`      | `dots \| lines \| swoosh \| vectors`: the whole poster is the animated field (default: the animated lead)                                            |
+| `variant`                                  | `rain`      | `drops \| ripples \| fill`: the whole poster is the rain (default: the animated lead)                                                                |
+| `variant`                                  | `cover`     | `shutter \| blind \| curtain \| garage \| gate \| awning \| window` (default: the device class)                                                      |
+| `variant`                                  | `appliance` | `pump \| washer \| dryer \| dishwasher \| heat_pump` (default: a plug)                                                                               |
+| `direction`, `gust`                        | `wind`      | entity ids or `false`                                                                                                                                |
+| `today`, `wind`, `direction`               | `rain`      | entity ids or `false`                                                                                                                                |
+| `today`                                    | `solar`     | an energy sensor or `false`                                                                                                                          |
+| `power`, or `charge` and `discharge`       | `battery`   | entity ids or `false`: a home battery, `power` + while it charges                                                                                    |
+| `import`, `export`                         | `grid`      | entity ids, instead of one signed sensor                                                                                                             |
+| `range`, `charging`, `plugged`, `location` | `car`       | entity ids or `false`; `charging` a binary sensor, or power: on above 0; `location` a device tracker                                                 |
+| `running_above`                            | `appliance` | the power in W above which it runs (default 5)                                                                                                       |
+| `series`                                   | `trend`     | ids or `{ entity, name, color, rules, visibility }`                                                                                                  |
 
 ## Discovered inputs
 
-A kind's inputs are found on the poster entity's device: by device class first, by the integration's own name for the entity (its translation key, the same in every language) where that cannot tell two apart. Two candidates left: none, never a guess. A key in `kind` replaces what was found, `false` drops it; what was found is said once in the browser console.
+A poster type's inputs are found on the poster entity's device: by device class first, by the integration's own name for the entity (its translation key, the same in every language) where that cannot tell two apart. Two candidates left: none, never a guess. The input's key on the card replaces what was found, `false` drops it; what was found is said once in the browser console ("…; set `gust` to choose another").
 
-| Kind    | Input       | Found by                                                                                             |
-| ------- | ----------- | ---------------------------------------------------------------------------------------------------- |
-| wind    | `direction` | device class `wind_direction`, else a sensor in °; a weather entity's `wind_bearing`                 |
-| wind    | `gust`      | another `wind_speed` sensor whose translation key names a gust; a weather entity's `wind_gust_speed` |
-| rain    | `today`     | a `precipitation` sensor whose translation key names the day                                         |
-| solar   | `today`     | an `energy` sensor whose translation key names the day                                               |
-| battery | `power`     | a `power` sensor                                                                                     |
-| car     | `range`     | device class `distance`                                                                              |
-| car     | `plugged`   | binary sensor `plug`                                                                                 |
-| car     | `charging`  | binary sensor `battery_charging`                                                                     |
-| car     | `location`  | a `device_tracker`                                                                                   |
+| Poster type | Input       | Found by                                                                                             |
+| ----------- | ----------- | ---------------------------------------------------------------------------------------------------- |
+| wind        | `direction` | device class `wind_direction`, else a sensor in °; a weather entity's `wind_bearing`                 |
+| wind        | `gust`      | another `wind_speed` sensor whose translation key names a gust; a weather entity's `wind_gust_speed` |
+| rain        | `today`     | a `precipitation` sensor whose translation key names the day                                         |
+| solar       | `today`     | an `energy` sensor whose translation key names the day                                               |
+| battery     | `power`     | a `power` sensor                                                                                     |
+| car         | `range`     | device class `distance`                                                                              |
+| car         | `plugged`   | binary sensor `plug`                                                                                 |
+| car         | `charging`  | binary sensor `battery_charging`                                                                     |
+| car         | `location`  | a `device_tracker`                                                                                   |
 
 ## Rules
 
-`rules` pick colour, icon and label by value or state, as on every Pro card; the first that matches wins. `state` matches the value **or** the entity's own state, so `{ state: playing }` works on a media player shown by its title. A kind's own rules apply until the card has `rules`, which replace them as a whole; `rules: []` drops them.
+`rules` pick colour, icon and label by value or state, as on every Pro card; the first that matches wins. `state` matches the value **or** the entity's own state, so `{ state: playing }` works on a media player shown by its title. A poster type's own rules apply until the card has `rules`, which replace them as a whole; `rules: []` drops them.
 
 ### Predefined rules
 
@@ -874,7 +885,7 @@ rules:
 
 ## Images and backdrops
 
-`image` puts a picture behind the whole poster, under a scrim that keeps the texts readable: a URL, a template, or an entity whose picture it shows (a camera's snapshot, a media player's art, a person's photo). `image: false` drops a kind's own backdrop.
+`image` puts a picture behind the whole poster, under a scrim that keeps the texts readable: a URL, a template, or an entity whose picture it shows (a camera's snapshot, a media player's art, a person's photo). `image: false` drops a poster type's own backdrop.
 
 ::: live
 
@@ -907,39 +918,42 @@ image: camera.front_door
 
 ## From the 2.9 betas
 
-The 2.9 betas drew posters with `layout: poster` on the entity, group, sections, wind, rain, weather, sun path and multi trend cards. That layout is gone: those cards are tiles, lists and plots again, and a poster is this card. To move one over, change its type to `custom:poster-card-pro`, drop `layout: poster` and let the kind bring what you had set by hand (icons, controls, the standard bands); keep `name`, your own rules and the grid options. The keys map like this:
+The 2.9 betas drew posters with `layout: poster` on the entity, group, sections, wind, rain, weather, sun path and multi trend cards. That layout is gone: those cards are tiles, lists and plots again, and a poster is this card. To move one over, change its type to `custom:poster-card-pro`, drop `layout: poster` and let the poster type bring what you had set by hand (icons, controls, the standard bands); keep `name`, your own rules and the grid options. The keys map like this:
 
 | 2.9 beta                                                                    | Poster card                                                                 |
 | --------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | `custom:entity-card-pro` with `layout: poster`                              | `custom:poster-card-pro`, the same keys                                     |
 | a group or sections card's `poster`: the rest as badges                     | `badges`                                                                    |
 | the label pill                                                              | the status badge (`status`)                                                 |
-| wind and rain cards: `layout: poster`, `direction`, `gust`, `today`, `wind` | `kind: { direction, gust, today, wind }`, found on the device               |
-| wind and rain cards: `visual: flow` with `flow.style`                       | `kind: { flow: lines }`                                                     |
+| wind and rain cards: `layout: poster`, `direction`, `gust`, `today`, `wind` | the same keys on the poster, found on the device                            |
+| wind and rain cards: `visual: flow` with `flow.style`                       | `variant`, the same names (`variant: lines`)                                |
 | wind and rain cards: `lead: arrow`, `lead: icon`                            | `icon` replaces the animated lead                                           |
 | weather card: `rules` and `temperature_rules`                               | one `rules`: `state` reads the condition, `below` / `above` the temperature |
 | weather card: `icons: mdi`                                                  | `show_entity_picture: false`                                                |
 | sun path card: `day_color`                                                  | `color`                                                                     |
 | sun path card: `labels`                                                     | `name` and `value` templates                                                |
-| multi trend card: `layout: poster`, `entities`                              | `kind: { type: trend, entities }`                                           |
+| multi trend card: `layout: poster`, `entities`                              | `poster: trend`, `series`                                                   |
 
 ## Reference
 
 ### Card options
 
-| Option                                        | Default     | Description                                                                                                |
-| --------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------- |
-| `entity`                                      | –           | The entity; its domain and device class pick the kind. Optional: the keys alone fill a poster.             |
-| `kind`                                        | detected    | A kind's name, or `{ type, …the kind's keys }`; see [Kinds](#kinds) and [Kind options](#kind-options).     |
-| `name`, `icon`, `value`, `secondary`, `color` | the kind's  | The places; templates allowed. `attribute`, `unit`, `decimals`, `prefix`, `suffix` as on the entity cards. |
-| `status`                                      | the kind's  | The status badge: a text or a template, an object of badge keys with `value` for its text, or `false`.     |
-| `badges`                                      | –           | The badges in the corner, in order; `status` places the status badge.                                      |
-| `visual`                                      | the kind's  | The picture: `sparkline`, `columns`, `strip`, `bar`, `gauge`, `ring` (around the icon), `icon` for none.   |
-| `image`                                       | the kind's  | The backdrop: a URL, a template or an entity's picture; `false` drops the kind's.                          |
-| `rules`                                       | the kind's  | Colour, icon, label, `style`, `pulse`, `tint_card` by value or state; they replace the kind's own.         |
-| `control`                                     | the kind's  | A control as on the [entity cards](/cards/controls); `false` drops the kind's.                             |
-| `hours_to_show`                               | `24`        | The picture's window.                                                                                      |
-| `tap_action` …                                | `more-info` | `tap_action`, `hold_action`, `double_tap_action`; `none` without an entity.                                |
-| `hover`                                       | `false`     | Home Assistant's hover and press layers.                                                                   |
+| Option                                        | Default             | Description                                                                                                                                                                                                                                                            |
+| --------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entity`                                      | –                   | The entity; its domain and device class pick the poster type. Optional: the keys alone fill a poster.                                                                                                                                                                  |
+| `poster`                                      | detected            | A poster type's name: forces it, names one never detected, or (`entity`) turns every default off; see [Poster types](#poster-types).                                                                                                                                   |
+| `variant`                                     | the type's          | How the poster type draws its subject; see [Options of a poster type](#options-of-a-poster-type).                                                                                                                                                                      |
+| `direction`, `gust`, `today` …                | found on the device | The entities a poster type reads (`direction`, `gust`, `today`, `wind`, `power`, `charge`, `discharge`, `import`, `export`, `range`, `plugged`, `charging`, `location`): an entity id, or `false` for none; see [Options of a poster type](#options-of-a-poster-type). |
+| `running_above`, `series`                     | –                   | The appliance's threshold and the trend's series; see [Options of a poster type](#options-of-a-poster-type).                                                                                                                                                           |
+| `name`, `icon`, `value`, `secondary`, `color` | the type's          | The places; templates allowed. `attribute`, `unit`, `decimals`, `prefix`, `suffix` as on the entity cards.                                                                                                                                                             |
+| `status`                                      | the type's          | The status badge: a text or a template, an object of badge keys with `value` for its text, or `false`.                                                                                                                                                                 |
+| `badges`                                      | –                   | The badges in the corner, in order; `status` places the status badge.                                                                                                                                                                                                  |
+| `visual`                                      | the type's          | The picture: `sparkline`, `columns`, `strip`, `bar`, `gauge`, `ring` (around the icon), `icon` for none.                                                                                                                                                               |
+| `image`                                       | the type's          | The backdrop: a URL, a template or an entity's picture; `false` drops the type's.                                                                                                                                                                                      |
+| `rules`                                       | the type's          | Colour, icon, label, `style`, `pulse`, `tint_card` by value or state; they replace the type's own.                                                                                                                                                                     |
+| `control`                                     | the type's          | A control as on the [entity cards](/cards/controls); `false` drops the type's.                                                                                                                                                                                         |
+| `hours_to_show`                               | `24`                | The picture's window.                                                                                                                                                                                                                                                  |
+| `tap_action` …                                | `more-info`         | `tap_action`, `hold_action`, `double_tap_action`; `none` without an entity.                                                                                                                                                                                            |
+| `hover`                                       | `false`             | Home Assistant's hover and press layers.                                                                                                                                                                                                                               |
 
 Like every card, this one also accepts `grid_options`, `visibility`, `view_layout` and `card_mod`. A poster takes half a section (6 columns) and three rows by default, two at least; `fill_height: false` keeps it at its own height.
