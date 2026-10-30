@@ -98,7 +98,7 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
     const half = labelLine() / 2;
     addLabel(
       labels,
-      "",
+      "placeholder",
       tr(ctx.hass, loaded ? "common.no_data" : "common.loading"),
       0,
       H / 2 - half,

@@ -351,7 +351,7 @@ export class PosterCard extends EntityCardBase {
       // its animation runs on. A ring around the icon takes its place, as the card's own icon does
       const lead = cfg.kind.lead,
         plead = row.querySelector<HTMLElement>(":scope > .ptop > .plead");
-      if (lead && plead && !this._userIcon(kc) && !look.iconRing) {
+      if (lead && plead && ent.item.showIcon && !this._userIcon(kc) && !look.iconRing) {
         const key = `${lead.key(kc)} ${look.iconStyle} ${kc.m.look.icon ?? ""}`;
         if (plead.dataset.key !== key) {
           plead.replaceChildren(lead.build({ ...kc, ent: icon }));

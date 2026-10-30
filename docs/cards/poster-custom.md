@@ -17,7 +17,7 @@ A poster has a few places: an icon at the top, badges in the corner, and a name,
 | Backdrop        | `image`          | a URL, a template or an entity's picture                                        | the type's backdrop                                     |
 | Control         | `control`        | any [control](/cards/poster-controls), or your own buttons                      | the type's                                              |
 
-A poster needs no entity: the keys alone can fill it. Without an entity, a tap does nothing until you set `tap_action`.
+A poster needs no entity: the keys alone can fill it. Without an entity, a tap does nothing until you set `tap_action`; a badge with an entity of its own still opens it.
 
 ::: live
 

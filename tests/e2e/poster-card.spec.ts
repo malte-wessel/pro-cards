@@ -163,6 +163,53 @@ test.describe("poster card", () => {
     expect(await infos(page)).toEqual([]);
   });
 
+  test("an entity-less poster's badges open their own entities", async ({ page }) => {
+    await mount(page, {
+      type: P,
+      name: "Living room",
+      icon: "mdi:sofa",
+      badges: ["sensor.living_room_temperature"],
+    });
+    await card(page).locator(".corner > .hval:not(.pstatus)").click();
+    expect(await infos(page)).toEqual([
+      { type: "more-info", entityId: "sensor.living_room_temperature" },
+    ]);
+  });
+
+  test("show_name, show_icon and show_value leave their part out", async ({ page }) => {
+    const cfg = { type: P, entity: "sensor.wind_speed" };
+    await mount(page, [
+      { ...cfg, show_name: false },
+      { ...cfg, show_icon: false },
+      { ...cfg, show_value: false },
+    ]);
+    const [noName, noIcon, noValue] = [0, 1, 2].map((i) => card(page, i).locator(".row.poster"));
+    await expect(noName.locator(".pname")).toHaveCount(0);
+    await expect(noName.locator(".pvalue")).toContainText("9.4");
+    // the wind's animated icon goes too
+    await expect(noIcon.locator(".plead > *")).toHaveCount(0);
+    await expect(noIcon.locator(".pname")).toHaveText("Wind speed");
+    await expect(noValue.locator(".pvalue")).toHaveCount(0);
+    // the line under the value stays
+    await expect(noValue.locator(".pmain .secondary")).toContainText("gusts");
+  });
+
+  test("a picture without data says so inside the card's padding", async ({ page }) => {
+    await mount(page, [
+      { type: P, entity: "sensor.robot_current_room", visual: "sparkline" },
+      { type: P, entity: "sensor.robot_current_room", visual: "columns" },
+    ]);
+    for (const i of [0, 1]) {
+      const c = card(page, i);
+      const label = c.locator(".plot .label.placeholder");
+      await expect(label).toHaveText("no data");
+      const [box, name] = [await inner(c), await rect(c.locator(".pname"))];
+      // where the texts start, as they do
+      expect(Math.round((await rect(label)).left)).toBe(Math.round(name.left));
+      expect((await rect(label)).left - box.left).toBeGreaterThanOrEqual(15);
+    }
+  });
+
   test("an image lies behind a scrim; image: false drops a poster type's picture", async ({
     page,
   }) => {

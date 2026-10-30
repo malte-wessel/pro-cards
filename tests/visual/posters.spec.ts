@@ -464,6 +464,16 @@ add("po-texts", [
   p("weather.home", { poster: "entity", attribute: "humidity", name: "An attribute" }),
   p(null, { name: "Note", icon: "mdi:note-outline", value: "Bins out" }),
 ]);
+add("po-hide", [
+  p("sensor.wind_speed", { show_name: false }),
+  p("sensor.wind_speed", { show_icon: false }),
+  p("sensor.wind_speed", { show_value: false }),
+  p("switch.garden_pump", { image: "camera.garden", show_icon: false, show_value: false }),
+]);
+add("po-no-data", [
+  p("sensor.robot_current_room", { visual: "sparkline" }),
+  p("sensor.robot_current_room", { visual: "columns" }),
+]);
 add("po-templates", [
   p(null, {
     name: "Template value",

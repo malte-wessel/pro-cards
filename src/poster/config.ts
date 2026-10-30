@@ -274,7 +274,8 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
     } else if (raw[key] === undefined) raw[key] = v as never;
   }
   const entity = raw.entity || null;
-  // without an entity there is no more-info to open: a tap does nothing unless it is told to
+  // without an entity there is no more-info to open: a tap does nothing unless it is told to. The
+  // badges keep the card's defaults as written: a badge's own entity opens its more-info
   const none = { action: "none" };
   const ctx = {
     type: CARD_TYPE,
@@ -284,6 +285,7 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
       hold_action: raw.hold_action ?? (entity ? undefined : none),
     }),
   };
+  const badgeCtx = { type: CARD_TYPE, ...normalizeActionDefaults(raw) };
   // a card-level `visibility` is Home Assistant's (it hides the whole card); a poster without an
   // entity or a value still has its name. `glow` and `none` draw no picture of the item's own (the
   // glow is the card's, PosterCard._render)
@@ -379,7 +381,7 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
         ...o,
       };
     }
-    const ent = normalizeBadge(o, ctx, `badges[${i}]`, BADGE, "a poster's corner");
+    const ent = normalizeBadge(o, badgeCtx, `badges[${i}]`, BADGE, "a poster's corner");
     // a weather attribute has its own unit (humidity: %) or keeps it in a sibling attribute
     // (wind_gust_speed: wind_speed_unit)
     const def = ent.valueSrc.kind === "attribute" ? ATTRIBUTES[ent.valueSrc.key] : undefined;

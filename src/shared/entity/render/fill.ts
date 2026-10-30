@@ -182,8 +182,9 @@ export interface PosterSlots {
 
 // a poster (the poster card's row): the icon at the top left, and at the bottom the name, then
 // the big value and the secondary line as one block with the controls beside it (under it where
-// they do not fit), then the block visual or controls. Only the poster's own parts are filled
-// again, never the badge rows in its corner (filled apart).
+// they do not fit), then the block visual or controls; `show_icon`, `show_name` and `show_value`
+// leave their part out. Only the poster's own parts are filled again, never the badge rows in its
+// corner (filled apart).
 export const fillPosterSlots = (
   ctx: RenderCtx,
   row: HTMLElement,
@@ -196,7 +197,9 @@ export const fillPosterSlots = (
   const lead = row.querySelector<HTMLElement>(":scope > .ptop > .plead"),
     body = row.querySelector<HTMLElement>(":scope > .pbody");
   if (!lead || !body) return;
-  if (o.lead !== "keep")
+  const { showIcon, showName, showValue } = ent.item;
+  if (!showIcon) lead.replaceChildren();
+  else if (o.lead !== "keep")
     lead.replaceChildren(
       o.lead ??
         (o.iconActions && iconActionsEl(ctx, ent, idx, m, 40, o.iconActions)) ??
@@ -223,10 +226,10 @@ export const fillPosterSlots = (
   }
   // the name on top across the poster; below the value it is part of the value's block
   const below = ent.item.namePosition === "below" && !gauge;
-  if (!below) body.appendChild(name);
+  if (!below && showName) body.appendChild(name);
   const text = document.createElement("div");
   text.className = "ptext";
-  if (!repeats && !gaugeShown && fmt) {
+  if (showValue && !repeats && !gaugeShown && fmt) {
     const value = document.createElement("div");
     value.className = "pvalue";
     const big = bigEl(fmt);
@@ -235,7 +238,7 @@ export const fillPosterSlots = (
     value.appendChild(big);
     text.appendChild(value);
   }
-  if (below) text.appendChild(name);
+  if (below && showName) text.appendChild(name);
   const sec = o.secondary !== undefined ? o.secondary : tplOf(ctx, ent.secondary);
   if (typeof sec === "string") text.appendChild(textEl("secondary", sec));
   else if (sec) text.appendChild(sec);

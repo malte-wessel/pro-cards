@@ -120,6 +120,9 @@ const STYLE_POSTER = `
   ha-card.layout-poster .pbody > .plot { width: auto; margin: 8px -16px -16px; }
   ha-card.layout-poster .pbody > .plot[data-kind="strip"] { margin: 8px 0 -6px; }
   ha-card.layout-poster .pbody > .plot[data-kind="columns"] { margin: 8px -18px -20px; }
+  /* a poster's plot runs to the card's edges: its placeholder (no data, loading) keeps the padding */
+  ha-card.layout-poster .pbody > .plot .label.placeholder { margin-left: 16px; }
+  ha-card.layout-poster .pbody > .plot[data-kind="columns"] .label.placeholder { margin-left: 18px; }
   /* a line right under the value reaches up under it; the texts stay on top of it (columns would
      cover them, and a line under a secondary line would cross its text) */
   ha-card.layout-poster .pbody > .pmain:not(:has(> .ptext > .secondary)) + .plot.grow[data-kind="sparkline"] { margin-top: -16px; }
