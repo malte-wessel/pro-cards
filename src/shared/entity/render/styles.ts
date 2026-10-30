@@ -10,6 +10,7 @@ import {
   font,
   fs,
   fw,
+  lh,
   type,
 } from "../../typography.ts";
 import { STYLE_SLIDER } from "../../slider.ts";
@@ -82,12 +83,19 @@ const STYLE_POSTER = `
   .pvalue > .big { flex: 0 1 auto; }
   .pmain > .end::after { content: ""; align-self: last baseline; margin-inline-start: -8px; }
   .pmain > .end { min-width: 0; max-width: 100%; }
+  .row.poster .big { --pnum: ${fs(40)}; --plh: ${lh(40, 44)}; }
   .row.poster .big b { ${type(40, 44)} ${POSTER_VALUE} }
   .row.poster .big span { font-size: ${fs(16)}; }
   /* with a curve the value is smaller: the curve gets the room (a word and a fitted value still
      take their own size, by order) */
+  .pbody:has(> .plot.grow) .big { --pnum: ${fs(32)}; --plh: ${lh(32, 36)}; }
   .pbody:has(> .plot.grow) .big b { ${type(32, 36)} }
-  .row.poster .big.word b { ${type(28, 36)} letter-spacing: 0; }
+  /* a word (Off, Cleaning) is drawn smaller than a number, on the number's baseline and in its
+     line: an empty first item at the number's size (its gap given back) holds both, the word's own
+     line is short enough to stay inside them. A light switched off moves nothing, not the value,
+     not a control ending on its baseline */
+  .row.poster .big.word b { font-size: ${fs(28)}; line-height: 1.1; letter-spacing: 0; }
+  .row.poster .big.word::before { content: "\\200b"; width: 0; margin-inline-end: -6px; font-size: var(--pnum); line-height: var(--plh); }
   .row.poster .big.fit b { font-size: var(--fit); }
   .pbody > :is(.bar, .gauge, .ctl-slider, .ctl-segments, .ctl-buttons, .plot) { margin-top: 8px; }
   .pbody > .gauge { align-self: center; }
@@ -335,6 +343,8 @@ export const STYLE_CONTROLS = `
   .ctl-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px 0 10px; border: 0; border-radius: 999px; background: var(--fe-soft); color: var(--fe-color); font-size: ${fs(13)}; font-weight: ${fw("medium")}; white-space: nowrap; cursor: pointer; --mdc-icon-size: 18px; }
   .ctl-chip.sm { height: 28px; font-size: ${fs(12)}; padding: 0 12px 0 8px; }
   .ctl-chip.done { background: var(--fe-color); color: var(--text-primary-color, #fff); }
+  .ctl-chip > span { display: inline-flex; flex-direction: column; }
+  .ctl-chip > span::after { content: attr(data-alt); height: 0; overflow: hidden; visibility: hidden; }
   .ctl-chip.round { width: var(--lead, 36px); height: var(--lead, 36px); padding: 0; justify-content: center; border-radius: 50%; --mdc-icon-size: ${LEAD_ICON}; }
   .ctl-hold { position: relative; flex: none; width: 36px; height: 36px; border: 0; padding: 0; border-radius: 50%; background: var(--fe-soft); color: var(--fe-color); display: flex; align-items: center; justify-content: center; cursor: pointer; --mdc-icon-size: 20px; touch-action: none; -webkit-user-select: none; user-select: none; }
   .ctl-hold.sm { width: 30px; height: 30px; --mdc-icon-size: 18px; }

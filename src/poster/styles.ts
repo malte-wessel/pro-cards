@@ -8,7 +8,7 @@ import { STYLE_KINDS } from "../shared/kinds/styles.ts";
 import { STYLE_RAIN } from "../shared/rain/styles.ts";
 import { STYLE_SUN_CURVE } from "../shared/sun/styles.ts";
 import { STYLE_TREND } from "../shared/trend/styles.ts";
-import { lh, type } from "../shared/typography.ts";
+import { fs, lh, type } from "../shared/typography.ts";
 import { STYLE_WEATHER_PICTURES } from "../shared/weather/styles.ts";
 import { STYLE_WIND } from "../shared/wind/styles.ts";
 
@@ -42,19 +42,17 @@ const STYLE_POSTER_CARD = `
      pointer through to it */
   .pbody:has(> .pcurve) { flex: 1 1 auto; min-height: 0; }
   .pbody:has(> .pcurve) > :not(.pcurve) { position: relative; z-index: 1; pointer-events: none; }
+  .pbody:has(> .pcurve) .big { --pnum: ${fs(32)}; --plh: ${lh(32, 36)}; }
   .pbody:has(> .pcurve) .big b { ${type(32, 36)} }
   .pbody > .pcurve { position: relative; flex: 1 1 auto; min-height: 40px; min-width: 0; margin: 6px -16px -16px; touch-action: pan-y; }
   /* a sparkline keeps a small gap below the value instead of reaching up under it */
   ha-card.layout-poster .pbody > .pmain:not(:has(> .ptext > .secondary)) + .plot.grow[data-kind="sparkline"] { margin-top: 6px; }
   .row.actionable .pcurve { pointer-events: auto; }
-  /* the value's line keeps its height whatever it shows: a word (Off, Cleaning) is drawn smaller
-     than a number but in the number's line, so a light switched off moves nothing around it */
-  ha-card.layout-poster .row.poster .big.word b { line-height: ${lh(40, 44)}; }
-  ha-card.layout-poster .pbody:has(> :is(.plot.grow, .pcurve)) .big.word b { line-height: ${lh(32, 36)}; }
   /* the value drawn smaller where the card is too short for it (PosterCard._fitHeight): the
      number and its line shrink together, a word stays as much smaller as it is */
+  ha-card.layout-poster .row.poster .big.hfit { --pnum: var(--hfit); --plh: calc(var(--hfit) * 1.1); }
   ha-card.layout-poster .row.poster .big.hfit b { font-size: var(--hfit); line-height: calc(var(--hfit) * 1.1); }
-  ha-card.layout-poster .row.poster .big.hfit.word b { font-size: calc(var(--hfit) * 0.7); }
+  ha-card.layout-poster .row.poster .big.hfit.word b { font-size: calc(var(--hfit) * 0.7); line-height: 1.1; }
   ha-card.layout-poster .row.poster .pbody > .ctl-slider.pfit-out { display: none; }
   /* a picture's tooltip opens upward from its bottom, over the texts: the picture is the poster's
      bottom strip, and a tooltip opening downward would be cut by the card's edge */

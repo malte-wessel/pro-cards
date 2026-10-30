@@ -35,7 +35,13 @@ const layoutOf = async (c: Locator) => {
     const r = await rect(c.locator(sel).first());
     return [Math.round(r.left - box.left), Math.round(r.top - box.top)];
   };
-  return { lead: await at(".plead"), name: await at(".pname"), value: await at(".pvalue") };
+  const end = c.locator(".pmain > .end");
+  return {
+    lead: await at(".plead"),
+    name: await at(".pname"),
+    value: await at(".pvalue"),
+    controls: (await end.count()) ? await at(".pmain > .end") : null,
+  };
 };
 // where a text's last line sits on its baseline (a zero-height marker at its end)
 const baselineOf = (loc: Locator) =>
@@ -214,6 +220,43 @@ test.describe("poster kinds", () => {
     await expect(c.locator(".pbody > .ctl-slider")).toBeVisible();
     await toggle.click();
     expect(await services(page)).toEqual(["homeassistant.toggle"]);
+  });
+
+  test("a value turning from a number into a word moves nothing, the switch beside it neither", async ({
+    page,
+  }) => {
+    await mount(page, [
+      { type: P, entity: "fan.bedroom", control: "toggle" },
+      { type: P, entity: "light.desk_lamp", visual: "sparkline", control: "toggle" },
+    ]);
+    const before = [await layoutOf(card(page, 0)), await layoutOf(card(page, 1))];
+    await setState(page, "fan.bedroom", "on", { percentage: 50 });
+    await setState(page, "light.desk_lamp", "off");
+    await expect(card(page, 0).locator(".pvalue .big b")).toHaveText("50");
+    await expect(card(page, 1).locator(".pvalue .big b")).toHaveText("Off");
+    expect([await layoutOf(card(page, 0)), await layoutOf(card(page, 1))]).toEqual(before);
+  });
+
+  test("a Run chip keeps its size and place while it says Done", async ({ page }) => {
+    await mount(
+      page,
+      {
+        type: P,
+        entity: "script.check_windows",
+        name: "Windows",
+        value: "Check",
+        control: "button",
+        grid_options: { columns: 12 },
+      },
+      live,
+    );
+    const c = card(page);
+    const chip = c.locator(".pmain > .end > .ctl-chip");
+    const before = await rect(chip);
+    await chip.click();
+    await expect(chip).toHaveText("Done");
+    expect(await rect(chip)).toEqual(before);
+    expect(await services(page)).toEqual(["script.turn_on"]);
   });
 
   test("a vacuum starts, pauses and docks from its buttons", async ({ page }) => {

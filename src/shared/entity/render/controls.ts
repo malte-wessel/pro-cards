@@ -500,6 +500,8 @@ export const buttonEl = (
     el.appendChild(icon(done ? "mdi:check" : "mdi:play"));
     const s = document.createElement("span");
     s.textContent = t(ctx.hass, done ? "control.done" : "control.run");
+    // the other word holds the chip's width, so Run turning into Done moves nothing beside it
+    s.dataset.alt = t(ctx.hass, done ? "control.run" : "control.done");
     el.appendChild(s);
     el.setAttribute("aria-label", `${t(ctx.hass, "control.run")} ${name}`);
   }
