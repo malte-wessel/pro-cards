@@ -2066,6 +2066,11 @@ const CASES = {
     { type: PC, entity: "sensor.robot_battery", name: "Robot", icon: "mdi:robot-vacuum" },
     { type: PC, entity: "sensor.phone_battery", name: "Phone", poster: "battery" },
   ],
+  // columns past the card's edges (the first and last bar cut, no rounded feet); a strip in the padding
+  "pc-plots": [
+    { type: PC, entity: "sensor.power_consumption", name: "House", visual: "columns" },
+    { type: PC, entity: "sensor.living_room_co2", name: "Air today", visual: "strip" },
+  ],
   // a gauge takes the room under the top line: three rows and four
   "pc-gauge": [
     {

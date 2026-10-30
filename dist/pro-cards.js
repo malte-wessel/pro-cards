@@ -118,12 +118,16 @@
   .pbody.pgauge > .gauge { margin-top: 0; flex: 1 1 80px; min-height: 80px; max-height: 136px; width: 100%; max-width: 204px; }
   .pbody.pgauge > .gauge svg { height: 100%; }
   /* the poster is one button (its action layer fills the body: the whole card, as a tile's) and
-     its plot runs to the card's edges, under the body's padding; the card's corners clip it */
+     its plot runs to the card's edges, under the body's padding; the card's corners clip it. A
+     strip (blocks and their time labels, like a bar) keeps the padding; columns run a little past
+     the edges, so the card cuts the first and the last bar and no bar shows its rounded foot */
   ha-card.layout-poster .body { position: relative; }
   ha-card.layout-poster .row.actionable.poster { position: static; }
   ha-card.layout-poster .row.poster > .hit { border-radius: var(--ha-card-border-radius, 12px); }
   ha-card.layout-poster .row.poster > .hit:focus-visible { box-shadow: inset 0 0 0 2px var(--fe-color); }
   ha-card.layout-poster .pbody > .plot { width: auto; margin: 8px -16px -16px; }
+  ha-card.layout-poster .pbody > .plot[data-kind="strip"] { margin: 8px 0 -6px; }
+  ha-card.layout-poster .pbody > .plot[data-kind="columns"] { margin: 8px -18px -20px; }
   /* a line right under the value reaches up under it; the texts stay on top of it (columns would
      cover them, and a line under a secondary line would cross its text) */
   ha-card.layout-poster .pbody > .pmain:not(:has(> .ptext > .secondary)) + .plot.grow[data-kind="sparkline"] { margin-top: -16px; }
