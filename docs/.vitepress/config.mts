@@ -61,6 +61,7 @@ const cardGroups = [
       { text: "Poster Card Pro", link: "/cards/poster-card" },
       { text: "Poster controls", link: "/cards/poster-controls" },
       { text: "Custom posters", link: "/cards/poster-custom" },
+      { text: "Poster sizes", link: "/cards/poster-sizes" },
     ],
   },
   {
@@ -117,7 +118,6 @@ const guide = [
 const showcase = [
   { text: "Home", link: "/showcase/home" },
   { text: "Posters", link: "/showcase/posters" },
-  { text: "Poster sizes", link: "/showcase/poster-sizes" },
   { text: "Energy", link: "/showcase/energy" },
   { text: "Living room", link: "/showcase/living-room" },
   { text: "Weather", link: "/showcase/weather" },
