@@ -190,7 +190,7 @@ Rules match a template value by its text: the last poster's rules read `Open` an
 
 A rule can change the icon and the backdrop too, with the keys the card has for them. A key the rule writes wins over the card's while the rule matches; a key it leaves out stays the card's. `false` drops a picture: `image: false` the backdrop, `icon_image: false` the icon's picture.
 
-Switch the pump on: the garden camera comes up behind it. The garden light shows the camera dimmed in indigo while it is off, and clearer, with a ring, while it is on.
+Switch the pump on: the garden camera fades in behind it (`image_opacity` from `0` to `0.6`). The garden light shows the camera dimmed in indigo while it is off, and clearer, with a ring, while it is on.
 
 ::: live
 
@@ -199,8 +199,10 @@ Switch the pump on: the garden camera comes up behind it. The garden light shows
   entity: switch.garden_pump
   icon: mdi:water-pump
   control: toggle
+  image: camera.garden
+  image_opacity: 0
   rules:
-    - { state: "on", color: blue, label: Watering, image: camera.garden, image_opacity: 0.6 }
+    - { state: "on", color: blue, label: Watering, image_opacity: 0.6 }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: light.garden
