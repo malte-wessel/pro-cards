@@ -3,11 +3,11 @@ import { PosterCard } from "../../src/poster-card.ts";
 import {
   IMAGE_BLUR,
   normalizePosterConfig,
-  parseImage,
   parseImageBlur,
   ruleLookOf,
 } from "../../src/poster/config.ts";
-import { imageUrl, statusText } from "../../src/poster/render.ts";
+import { parseImage } from "../../src/shared/kinds/config.ts";
+import { imageUrl, statusText } from "../../src/shared/kinds/render.ts";
 import { cssColor } from "../../src/shared/color.ts";
 import { placementsOf } from "../../src/shared/entity/control.ts";
 import { modelOf } from "../../src/shared/entity/model.ts";

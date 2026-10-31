@@ -83,7 +83,7 @@ export const GRID: Kind = {
         c.ctx,
         c.ent,
         { ...c.m, look: { ...c.m.look, icon: c.m.look.icon ?? "mdi:transmission-tower" } },
-        40,
+        c.leadSize,
       ),
       ...(v ? { value: v, word: false } : {}),
     };
@@ -140,7 +140,7 @@ export const SOLAR: Kind = {
         c.ctx,
         c.ent,
         { ...c.m, look: { ...c.m.look, icon: c.m.look.icon ?? "mdi:solar-power-variant" } },
-        40,
+        c.leadSize,
       ),
       ...(v ? { value: v, word: false } : {}),
       ...(today
@@ -259,7 +259,7 @@ export const CAR: Kind = {
         c.ctx,
         c.ent,
         { ...c.m, look: { ...c.m.look, icon: c.m.look.icon ?? "mdi:car-electric" } },
-        40,
+        c.leadSize,
       ),
       ...(range
         ? { secondary: range.m.model.avail ? secondaryEl([{ text: range.m.fmt.text }]) : null }
@@ -350,7 +350,12 @@ export const APPLIANCE: Kind = {
     build: (c) => {
       const style = styleOf(c);
       const icon = c.m.look.icon ?? (style ? ICONS[style] : "mdi:power-plug");
-      const el = leadEl(c.ctx, c.ent, { ...c.m, look: { ...c.m.look, icon, picture: null } }, 40);
+      const el = leadEl(
+        c.ctx,
+        c.ent,
+        { ...c.m, look: { ...c.m.look, icon, picture: null } },
+        c.leadSize,
+      );
       // a pump's impeller and a heat pump's fan turn; a drum shakes
       el.classList.add(style === "pump" || style === "heat_pump" ? "pfan" : "probot");
       return el;

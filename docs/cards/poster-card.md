@@ -10,7 +10,7 @@ The poster card is new in 3.0 and in beta: its options may still change.
 
 ## Anatomy
 
-A poster is half a section wide and three rows high in a sections grid, and that at least: less room is what a tile is for. Its content sits at the bottom of whatever height it gets. From top to bottom:
+A poster is half a section wide and three rows high in a sections grid, and that at least: less room is what a [tile](/cards/tile-card) is for. Its content sits at the bottom of whatever height it gets. From top to bottom:
 
 - the **icon** at the top left. It shows the entity's icon or picture, or the poster type's own drawing. It can have actions of its own: a lock is held there.
 - the **badges** at the top right. The first is the **status badge**, here the matching rule's label.

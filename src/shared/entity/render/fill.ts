@@ -165,10 +165,10 @@ export const fillHero = (
   appendControls(ctx, ent, idx, m, c.block, row);
 };
 
-// what a card puts into a poster's slots in place of the entity's own (the poster card's kinds):
+// what a card puts into its slots in place of the entity's own (a poster type's, its kind's):
 // a slot left out takes the entity's; `lead: "keep"` leaves the lead as it is (an animated lead
 // built once), a null value draws no large value, a picture replaces the block visual
-export interface PosterSlots {
+export interface KindSlots {
   lead?: HTMLElement | "keep";
   name?: string;
   value?: FmtValue | null;
@@ -176,9 +176,90 @@ export interface PosterSlots {
   word?: boolean;
   secondary?: string | Node | null;
   picture?: HTMLElement | null;
-  // the icon's own actions (the poster card's `icon_*_action`): the lead takes them
+  // the status the tile's line shows after the value (null: none; the poster's is a badge of its own)
+  status?: string | null;
+  // the icon's own actions (`icon_*_action`): the lead takes them
   iconActions?: IconActions;
 }
+
+// the tile's icon slot (built once, so an animated lead in it is kept through fills)
+export const tileLead = (row: HTMLElement) => {
+  let lead = row.querySelector<HTMLElement>(":scope > .top > .tlead");
+  if (!lead) {
+    lead = document.createElement("div");
+    lead.className = "tlead";
+  }
+  return lead;
+};
+
+// a tile (the tile card's row): the icon, the name and one line under it (the value, the status,
+// the secondary), the controls at the end of the line, a block visual or control below it;
+// `show_icon`, `show_name` and `show_value` leave their part out. A status that only repeats the
+// value is left out (a vacuum's Cleaning). The icon slot is kept: `lead: "keep"` leaves it as it is
+export const fillTileSlots = (
+  ctx: RenderCtx,
+  row: HTMLElement,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+  o: KindSlots = {},
+) => {
+  const c = slots(ctx, ent, "tile");
+  const lead = tileLead(row);
+  row.replaceChildren();
+  const { showIcon, showName, showValue } = ent.item;
+  lead.hidden = !showIcon;
+  if (!showIcon) lead.replaceChildren();
+  else if (o.lead !== "keep")
+    lead.replaceChildren(
+      o.lead ??
+        (o.iconActions && iconActionsEl(ctx, ent, idx, m, 36, o.iconActions)) ??
+        leadOf(ctx, ent, idx, m, 36, c.lead),
+    );
+  const top = document.createElement("div");
+  top.className = "top";
+  const main = document.createElement("div");
+  main.className = "main";
+  const line = document.createElement("div");
+  line.className = "line";
+  const texts = document.createElement("div");
+  texts.className = "texts";
+  if (showName) texts.appendChild(textEl("primary", o.name ?? nameOf(ctx, ent, m.st)));
+  // the line under the name: its parts joined by " · " (a kind's secondary may be a node: its
+  // parts are taken over)
+  const parts: (string | Node)[] = [];
+  const value = showValue ? (o.value === undefined ? m.fmt : o.value) : null;
+  // a kind's value may carry its unit apart (the poster draws it smaller): the line joins them
+  const text =
+    value && value.unit && !value.text.endsWith(value.unit)
+      ? `${value.num} ${value.unit}`
+      : (value?.text ?? "");
+  if (text) parts.push(text);
+  const status = o.status === undefined ? m.look.label : o.status;
+  if (status && status.toLowerCase() !== text.toLowerCase()) parts.push(status);
+  const sec = o.secondary === undefined ? tplOf(ctx, ent.secondary) : o.secondary;
+  if (sec instanceof Element && sec.classList.contains("secondary")) {
+    if (sec.childNodes.length) parts.push(...sec.childNodes);
+  } else if (sec) parts.push(sec);
+  if (parts.length) {
+    const el = textEl("secondary", null);
+    parts.forEach((p, i) => {
+      if (i > 0) el.append(" · ");
+      el.append(p);
+    });
+    texts.appendChild(el);
+  }
+  const end = document.createElement("div");
+  end.className = "end";
+  end.append(...endControls(ctx, ent, idx, m, c.end).els);
+  line.append(texts, end);
+  main.appendChild(line);
+  top.append(lead, main);
+  row.appendChild(top);
+  const block = o.picture !== undefined ? o.picture : blockOf(ctx, ent, idx, m, c.block);
+  if (block) row.appendChild(block);
+  appendControls(ctx, ent, idx, m, c.block, row);
+};
 
 // a poster (the poster card's row): the icon at the top left, and at the bottom the name, then
 // the big value and the secondary line as one block with the controls beside it (under it where
@@ -191,7 +272,7 @@ export const fillPosterSlots = (
   ent: EntityItem,
   idx: number,
   m: EntityModel,
-  o: PosterSlots = {},
+  o: KindSlots = {},
 ) => {
   const c = slots(ctx, ent, "poster");
   const lead = row.querySelector<HTMLElement>(":scope > .ptop > .plead"),

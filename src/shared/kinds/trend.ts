@@ -15,6 +15,7 @@ import {
 import { seriesColor } from "../trend/color.ts";
 import { normalizeSeries, type TrendSeries } from "../trend/series.ts";
 import { decimalsOf, isNum, isTemplate } from "../util.ts";
+import { partOf } from "./dom.ts";
 import type { Kind, KindCtx } from "./types.ts";
 
 const HOURS = 6;
@@ -85,7 +86,7 @@ export const TREND: Kind = {
     return { picture: plot };
   },
   live: (c, row) => {
-    const plot = row.querySelector<TrendPlotEl>(":scope > .pbody > .ptrend");
+    const plot = partOf<TrendPlotEl>(row, ".ptrend");
     if (!plot) return;
     const shown = shownOf(c);
     const spec = specOf(c, shown);

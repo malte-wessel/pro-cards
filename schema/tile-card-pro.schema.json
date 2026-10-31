@@ -1,0 +1,339 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/tile-card-pro.schema.json",
+  "title": "custom:tile-card-pro",
+  "description": "One entity (or none) as a tile, drawn the way its poster type says: the icon (a type's animated one), the name, one line under it with the value, the status and the secondary, and controls at the line's end. What needs a second row is asked for: a slider below (control), the type's picture (show_picture), a plot of the history (visual). The poster type is detected from the entity (its domain, then its device class) or set with `poster`; its own keys sit flat on the card. Strings containing {{ }} are Jinja templates rendered by Home Assistant (name, secondary, icon, color, value, status, icon_image).",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "custom:tile-card-pro"
+    },
+    "poster": {
+      "description": "The poster type, forced or one that is never detected (trend, grid, solar, car, appliance). Left out: detected from the entity's domain and device class; `entity` turns every default off",
+      "$ref": "poster-card-pro.schema.json#/$defs/posterType"
+    },
+    "variant": {
+      "type": "string",
+      "enum": [
+        "dots",
+        "lines",
+        "swoosh",
+        "vectors",
+        "drops",
+        "ripples",
+        "fill",
+        "shutter",
+        "blind",
+        "curtain",
+        "garage",
+        "gate",
+        "awning",
+        "window",
+        "pump",
+        "washer",
+        "dryer",
+        "dishwasher",
+        "heat_pump"
+      ],
+      "description": "How the type draws its subject: wind (dots, lines, swoosh, vectors) and rain (drops, ripples, fill) make the whole poster the animated field; cover (shutter, blind, curtain, garage, gate, awning, window; default: the device class) and appliance (pump, washer, dryer, dishwasher, heat_pump) pick the drawing"
+    },
+    "direction": {
+      "$ref": "poster-card-pro.schema.json#/$defs/input",
+      "description": "wind, rain: the direction sensor (degrees or a compass point)"
+    },
+    "gust": {
+      "$ref": "poster-card-pro.schema.json#/$defs/input",
+      "description": "wind: the gust sensor"
+    },
+    "today": {
+      "$ref": "poster-card-pro.schema.json#/$defs/input",
+      "description": "rain, solar: today's total"
+    },
+    "wind": {
+      "$ref": "poster-card-pro.schema.json#/$defs/input",
+      "description": "rain: the wind speed that slants the drops"
+    },
+    "power": {
+      "$ref": "defs.schema.json#/$defs/entityId",
+      "description": "battery: its power, + charging"
+    },
+    "charge": {
+      "$ref": "defs.schema.json#/$defs/entityId",
+      "description": "battery: its charging power"
+    },
+    "discharge": {
+      "$ref": "defs.schema.json#/$defs/entityId",
+      "description": "battery: its discharging power"
+    },
+    "import": {
+      "$ref": "defs.schema.json#/$defs/entityId",
+      "description": "grid: the import meter"
+    },
+    "export": {
+      "$ref": "defs.schema.json#/$defs/entityId",
+      "description": "grid: the export meter"
+    },
+    "range": {
+      "$ref": "poster-card-pro.schema.json#/$defs/input",
+      "description": "car: its range"
+    },
+    "plugged": {
+      "$ref": "poster-card-pro.schema.json#/$defs/input",
+      "description": "car: plugged in"
+    },
+    "charging": {
+      "$ref": "poster-card-pro.schema.json#/$defs/input",
+      "description": "car: charging (a binary sensor, or power: on above 0)"
+    },
+    "location": {
+      "$ref": "poster-card-pro.schema.json#/$defs/input",
+      "description": "car: its device tracker"
+    },
+    "running_above": {
+      "type": "number",
+      "minimum": 0,
+      "description": "appliance: the power (W) above which it runs"
+    },
+    "series": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "poster-card-pro.schema.json#/$defs/trendEntity"
+      },
+      "description": "trend: the series, ids or objects (entity, name, color, rules, visibility)"
+    },
+    "status": {
+      "description": "The status on the line after the value: its text (a template allowed), or false for none. Default: the poster type's status, else the matching rule's label; left out where it only repeats the value",
+      "oneOf": [
+        {
+          "const": false
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "icon_image": {
+      "type": "string",
+      "description": "A picture in the icon: an image URL, a template that renders one, or an entity whose picture it shows. Without a picture now, the icon is `icon`'s"
+    },
+    "visual": {
+      "type": "string",
+      "enum": ["sparkline", "columns", "strip", "bar", "gauge", "glow", "none"],
+      "description": "A picture below the line: a plot of the history, a bar or a gauge of the value (a second row); glow (the tile lit from below in its colour, as strong as its level: min to max, a light's brightness, or on / off; a light's default); or none"
+    },
+    "control_position": {
+      "type": "string",
+      "enum": ["end", "block"],
+      "description": "Where the control sits: at the line's end, or below it. The icon's own actions are icon_tap_action / icon_hold_action"
+    },
+    "icon_ring": {
+      "type": "boolean",
+      "default": false,
+      "description": "A ring of the value (min to max) around the icon"
+    },
+    "icon_tap_action": {
+      "$ref": "defs.schema.json#/$defs/action",
+      "description": "Run when the icon is tapped; toggle is the card's own (a lock locks or unlocks, an alarm panel arms or disarms, the rest switch). Default: none, a tap on the icon is the poster's"
+    },
+    "icon_hold_action": {
+      "$ref": "defs.schema.json#/$defs/action",
+      "description": "Run when the icon is held, a filling ring confirms it. Default: toggle on a lock and an alarm panel (none when it wants a code), else none"
+    },
+    "icon_double_tap_action": {
+      "$ref": "defs.schema.json#/$defs/action",
+      "description": "Run on a double tap of the icon"
+    },
+    "show_picture": {
+      "type": "boolean",
+      "default": false,
+      "description": "The poster type's picture below the line (a weather or sun curve, solar production, a trend's lines); it takes a second row"
+    }
+  },
+  "required": ["type"],
+  "allOf": [
+    {
+      "$ref": "#/$defs/tileKeys"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/historyOptions"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/actionDefaults"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/haExtras"
+    },
+    {
+      "$ref": "poster-card-pro.schema.json#/$defs/typeKeys"
+    }
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "tileKeys": {
+      "description": "The tile's item: an entity's keys, less the picture and the control's place, which are the tile's own (visual, control_position)",
+      "type": "object",
+      "properties": {
+        "entity": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/entity"
+        },
+        "name": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/name"
+        },
+        "secondary": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/secondary"
+        },
+        "icon": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/icon"
+        },
+        "color": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/color"
+        },
+        "attribute": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/attribute"
+        },
+        "value": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/value"
+        },
+        "unit": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/unit"
+        },
+        "decimals": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/decimals"
+        },
+        "prefix": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/prefix"
+        },
+        "suffix": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/suffix"
+        },
+        "icon_style": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/icon_style"
+        },
+        "show_entity_picture": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/show_entity_picture"
+        },
+        "min": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/min"
+        },
+        "max": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/max"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tileRule"
+          }
+        },
+        "control": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control"
+        },
+        "control_attribute": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_attribute"
+        },
+        "control_step": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_step"
+        },
+        "control_options": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_options"
+        },
+        "control_confirm": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_confirm"
+        },
+        "show_name": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/show_name"
+        },
+        "show_value": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/show_value"
+        },
+        "show_icon": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/show_icon"
+        },
+        "name_position": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/name_position"
+        },
+        "tap_action": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/tap_action"
+        },
+        "hold_action": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/hold_action"
+        },
+        "double_tap_action": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/double_tap_action"
+        },
+        "hover": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/hover"
+        }
+      },
+      "if": {
+        "$ref": "entity.schema.json#/$defs/entityKeys/if"
+      },
+      "then": {
+        "$ref": "entity.schema.json#/$defs/entityKeys/then"
+      }
+    },
+    "tileRule": {
+      "type": "object",
+      "description": "First matching rule wins, in the order written. Besides the colour, icon and label it changes the tile's icon; a key it writes wins over the card's",
+      "properties": {
+        "state": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/state"
+        },
+        "below": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/below"
+        },
+        "above": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/above"
+        },
+        "color": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/color"
+        },
+        "icon": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/icon"
+        },
+        "label": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/label"
+        },
+        "tint_card": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/tint_card"
+        },
+        "style": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/style"
+        },
+        "pulse": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/pulse"
+        },
+        "icon_style": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/icon_style"
+        },
+        "icon_image": {
+          "oneOf": [
+            {
+              "const": false
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "A picture in the icon while the rule matches, or false for the icon"
+        },
+        "icon_ring": {
+          "type": "boolean",
+          "description": "A ring of the value around the icon"
+        }
+      },
+      "anyOf": [
+        {
+          "required": ["state"]
+        },
+        {
+          "required": ["below"]
+        },
+        {
+          "required": ["above"]
+        }
+      ],
+      "additionalProperties": false
+    }
+  }
+}

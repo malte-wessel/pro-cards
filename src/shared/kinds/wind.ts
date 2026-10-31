@@ -59,7 +59,7 @@ export const WIND: Kind = {
   },
   lead: {
     key: (c) => (flowOf(c) ? "arrow" : "animated"),
-    build: (c) => (flowOf(c) ? arrowLead(40) : animatedLead("dots", 40)),
+    build: (c) => (flowOf(c) ? arrowLead(c.leadSize) : animatedLead("dots", c.leadSize)),
     // the row turns the lead (--rot, --arrow) and times it (--ldur); a new speed scales its rate
     update: (el, c, row) => {
       const now = nowOf(c),

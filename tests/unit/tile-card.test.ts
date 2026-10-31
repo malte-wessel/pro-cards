@@ -1,0 +1,83 @@
+import { afterEach, describe, it, expect, vi } from "vitest";
+import { TileCard } from "../../src/tile-card.ts";
+import { normalizeTileConfig } from "../../src/tile/config.ts";
+import { placementsOf } from "../../src/shared/entity/control.ts";
+import { snapshot } from "../../docs/.vitepress/theme/ha-shim/hass.ts";
+
+const T = "tile-card-pro";
+const norm = (cfg: Record<string, unknown>) => normalizeTileConfig(cfg, snapshot() as never);
+const kinds = (list: { kind: string; position: string }[]) =>
+  list.map((p) => `${p.kind}@${p.position}`);
+
+afterEach(() => vi.restoreAllMocks());
+
+describe("tile-card config", () => {
+  it("is registered and checks its config", () => {
+    expect(customElements.get(T)).toBe(TileCard);
+    expect(window.customCards?.some((c) => c.type === T)).toBe(true);
+    expect(() => norm(null as never)).toThrow(`${T}: invalid config`);
+    expect(() => norm({ entity: "light.kitchen", poster: "wind" })).toThrow(
+      `${T}: the wind poster reads a wind_speed sensor or a weather entity`,
+    );
+  });
+
+  it("names the tile's own keys in place of the entity card's", () => {
+    const e = "sensor.living_room_temperature";
+    expect(() => norm({ entity: e, visual: "ring" })).toThrow(
+      `${T}: visual: ring is icon_ring: true on the tile card`,
+    );
+    expect(() => norm({ entity: "light.desk_lamp", toggle: true })).toThrow(
+      `${T}: toggle is control: toggle on the tile card`,
+    );
+    expect(() => norm({ entity: e, visual: "icon" })).toThrow(`${T}: visual: icon is the tile's`);
+    expect(() => norm({ entity: e, visual: "badge" })).toThrow(`${T}: visual: badge is gone`);
+    expect(() => norm({ entity: e, status: { style: "filled" } })).toThrow(
+      `${T}: status takes a text, a template or false on the tile card`,
+    );
+  });
+
+  it("is one tile with its kind, its rules and its inputs", () => {
+    const c = norm({ entity: "sensor.living_room_co2" });
+    expect(c.kind.name).toBe("carbon_dioxide");
+    expect(c.groups).toEqual([expect.objectContaining({ layout: "tile", idxs: [0] })]);
+    expect(c.entities[0].rules.length).toBeGreaterThan(0);
+    const w = norm({ entity: "sensor.wind_speed" });
+    expect(Object.keys(w.inputs).sort()).toEqual(["direction", "gust"]);
+    expect(norm({ entity: "sensor.living_room_temperature" }).showStatus).toBe(true);
+    expect(norm({ entity: "sensor.living_room_temperature", status: false }).showStatus).toBe(
+      false,
+    );
+    expect(
+      norm({ entity: "sensor.living_room_temperature", status: "{{ 'a' }}" }).statusText,
+    ).toEqual({ kind: "template", template: "{{ 'a' }}" });
+  });
+
+  it("draws a kind's controls at the line's end only, unless the card names one below", () => {
+    const light = norm({ entity: "light.desk_lamp" }).entities[0];
+    expect(kinds(placementsOf(light, "tile"))).toEqual(["toggle@end"]);
+    const cover = norm({ entity: "cover.living_room_blinds" }).entities[0];
+    expect(kinds(placementsOf(cover, "tile"))).toEqual(["buttons@end"]);
+    const slider = norm({ entity: "light.desk_lamp", control: "slider" }).entities[0];
+    expect(kinds(placementsOf(slider, "tile"))).toEqual(["slider@block"]);
+    expect(norm({ entity: "light.desk_lamp", control: false }).entities[0].control).toBeNull();
+  });
+
+  it("takes one row unless something below the line needs a second", () => {
+    const grid = (cfg: Record<string, unknown>) => {
+      const el = new TileCard();
+      el.setConfig(cfg);
+      return el.getGridOptions();
+    };
+    expect(grid({ entity: "sensor.living_room_temperature" })).toEqual({
+      columns: 6,
+      rows: "auto",
+      min_columns: 3,
+      min_rows: 1,
+    });
+    expect(grid({ entity: "sensor.living_room_temperature", visual: "sparkline" })).toMatchObject({
+      min_rows: 2,
+    });
+    expect(grid({ entity: "weather.home", show_picture: true })).toMatchObject({ min_rows: 2 });
+    expect(grid({ entity: "cover.living_room_blinds" })).toMatchObject({ min_rows: 1 });
+  });
+});

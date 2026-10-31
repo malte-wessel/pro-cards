@@ -365,6 +365,33 @@ describe("card config schemas", () => {
     ).toBeNull();
   });
 
+  it("checks the tile card: the poster's types and keys, less the poster's own parts", () => {
+    const TC = "custom:tile-card-pro";
+    const H = "sensor.living_room_humidity";
+    expect(validate({ type: TC, entity: H })).toBeNull();
+    expect(validate({ type: TC, entity: "sensor.a", poster: "wind", variant: "lines" })).toBeNull();
+    expect(validate({ type: TC, entity: "sensor.r", poster: "rain", gust: "sensor.g" })).toMatch(
+      /gust/,
+    );
+    for (const visual of ["sparkline", "columns", "strip", "bar", "gauge", "glow", "none"])
+      expect(validate({ type: TC, entity: H, visual }), visual).toBeNull();
+    for (const visual of ["ring", "icon", "badge", "trend"])
+      expect(validate({ type: TC, entity: H, visual }), visual).toMatch(/enum|allowed/);
+    expect(validate({ type: TC, entity: "weather.home", show_picture: true })).toBeNull();
+    expect(validate({ type: TC, entity: H, status: false })).toBeNull();
+    expect(validate({ type: TC, entity: H, status: "{{ 'Dry' }}" })).toBeNull();
+    expect(validate({ type: TC, entity: H, status: { style: "filled" } })).toBeTruthy();
+    // the poster's corner and backdrop, and the entity card's toggle, are not the tile's
+    for (const key of ["badges", "image", "image_blur", "toggle"])
+      expect(validate({ type: TC, entity: H, [key]: true }), key).toMatch(/unevaluated/);
+    expect(
+      validate({ type: TC, entity: H, rules: [{ above: 60, color: "red", image: false }] }),
+    ).toMatch(/unevaluated|additional/);
+    expect(
+      validate({ type: TC, entity: H, rules: [{ above: 60, color: "red", icon_ring: true }] }),
+    ).toBeNull();
+  });
+
   it("checks the poster's picture and its icon's own keys", () => {
     const PC = "custom:poster-card-pro";
     const H = "sensor.living_room_humidity";

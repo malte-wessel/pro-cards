@@ -12,6 +12,10 @@ export const div = (cls: string) => {
   return d;
 };
 
+// a kind's part in the row it fills: in a poster's body, or right in a tile's row
+export const partOf = <T extends HTMLElement = HTMLElement>(row: HTMLElement, sel: string) =>
+  row.querySelector<T>(`:scope > .pbody > ${sel}, :scope > ${sel}`);
+
 // a text attribute, null when missing or empty
 export const str = (st: HassEntity | undefined, key: string) => {
   const v = st?.attributes?.[key];

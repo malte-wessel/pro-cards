@@ -19,23 +19,17 @@
 import { registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
 import { CARD_BG } from "./shared/constants.ts";
-import { EntityCardBase, overflows } from "./shared/entity/base.ts";
+import { overflows } from "./shared/entity/base.ts";
 import type { EntityCardConfig, EntityItem } from "./shared/entity/config.ts";
 import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
-import { fillPosterSlots, type PosterSlots } from "./shared/entity/render/fill.ts";
+import { fillPosterSlots } from "./shared/entity/render/fill.ts";
 import { posterParts, secondaryEl } from "./shared/entity/render/lead.ts";
-import type { GridOptions, HomeAssistant, WeatherForecastType } from "./shared/ha.ts";
+import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { hideHover } from "./shared/hover.ts";
-import { detectKind, parsePoster, unusedKeys } from "./shared/kinds/detect.ts";
-import { KINDS } from "./shared/kinds/registry.ts";
-import type { KindCtx, KindHost } from "./shared/kinds/types.ts";
-import type { SunCurveHost } from "./shared/sun/curve.ts";
-import type { Visibility } from "./shared/visibility.ts";
-import { ForecastFeed } from "./shared/weather/feed.ts";
-import { dailyTypeOf, supportsForecast } from "./shared/weather/forecast.ts";
+import { KindCardBase } from "./shared/kinds/card.ts";
+import { glowLevel, glowOpacity, imageUrl, statusText } from "./shared/kinds/render.ts";
+import type { KindCtx } from "./shared/kinds/types.ts";
 import {
-  foundInputs,
-  hasIconActions,
   IMAGE_BLUR,
   IMAGE_OPACITY,
   normalizePosterConfig,
@@ -43,69 +37,18 @@ import {
   type RuleLook,
 } from "./poster/config.ts";
 import { CARD_TYPE } from "./poster/constants.ts";
-import {
-  fillStatus,
-  glowLevel,
-  glowOpacity,
-  imageUrl,
-  statusText,
-  updateBackdrop,
-} from "./poster/render.ts";
+import { fillStatus, updateBackdrop } from "./poster/render.ts";
 import { STYLE_POSTER_CARD_ALL } from "./poster/styles.ts";
 
-export class PosterCard extends EntityCardBase {
+export class PosterCard extends KindCardBase {
   static cardType = CARD_TYPE;
+  static thing = "poster" as const;
+  static leadSize = 40;
   static getStubConfig(hass: HomeAssistant | undefined, entities?: string[]) {
     return { entity: (entities || [])[0] || Object.keys(hass?.states || {})[0] || "" };
   }
 
   declare _config?: PosterConfig;
-  // the config as written: normalised again once hass tells the device class and the registry
-  _raw: unknown;
-  // what the last normalisation read of hass (the kind it resolved and the inputs it found)
-  _resolvedFrom: unknown[] = [];
-  // the inputs found for a kind in a registry, for a config (looked for again when one is new)
-  _found: { kind: string; entities: unknown; raw: unknown; ids: (string | null)[] } | null = null;
-  // the hass a normalisation reads (the one arriving, before the base takes it)
-  _nextHass?: HomeAssistant;
-  // the config whose keys of other poster types have been warned about
-  _warnedFor: unknown;
-  // a weather entity's forecasts (the weather kind)
-  _feed = new ForecastFeed(() => this._render(), CARD_TYPE);
-  // the sun curve's state for its tooltip; the time a kind's tooltip is at
-  _sunHost: SunCurveHost = { _day: null };
-  _kindHoverT: number | null = null;
-  _host: KindHost;
-
-  constructor() {
-    super();
-    const hoverT = () => this._kindHoverT;
-    this._host = {
-      forecast: (type: WeatherForecastType) => this._feed.forecast[type],
-      sun: this._sunHost,
-      hover: (plot, timeAt, show) => {
-        const at = (ev: PointerEvent) => {
-          const t = timeAt(ev);
-          if (t === null) return;
-          this._kindHoverT = t;
-          if (!show(t)) this._hideHover();
-        };
-        plot.addEventListener("pointermove", at);
-        plot.addEventListener("pointerdown", at);
-        plot.addEventListener("pointerleave", () => this._hideHover());
-        // a tap on the curve is the tooltip's, not the poster's action
-        plot.addEventListener("click", (ev) => ev.stopPropagation());
-      },
-      get hoverT() {
-        return hoverT();
-      },
-      shown: (v: Visibility) => this._shown(v),
-      redraw: () => {
-        this._fillEpoch++;
-        this._render();
-      },
-    };
-  }
 
   _normalize(raw: unknown) {
     return normalizePosterConfig(raw, this._nextHass ?? this._hass);
@@ -113,194 +56,25 @@ export class PosterCard extends EntityCardBase {
   _styles() {
     return STYLE_POSTER_CARD_ALL;
   }
-  setConfig(config: unknown) {
-    this._raw = config;
-    this._feed.reset();
-    super.setConfig(config);
-    this._resolvedFrom = this._resolveInputs(this._hass);
-    this._afterConfig();
-  }
-  // what the kind adds once its config is in: the minute timer, the forecasts
-  _afterConfig() {
-    const cfg = this._config;
-    // hass before any config: setConfig does it
-    if (!cfg) return;
-    if (cfg.kind.timed && !this._timed) {
-      this._timed = true;
-      this._armMinute();
-    }
-    this._syncForecast();
-    this._warnUnused();
-  }
-  // the keys of other poster types the card sets, said once per config, once the type is known
-  // (written, no entity, or its state is in: the device class decides)
-  _warnUnused() {
-    const cfg = this._config as PosterConfig | undefined;
-    const raw = this._raw as { entity?: string; poster?: unknown } | undefined;
-    if (!cfg || !raw || this._warnedFor === raw) return;
-    if (raw.poster == null && raw.entity && !this._hass?.states[raw.entity]) return;
-    this._warnedFor = raw;
-    const unused = unusedKeys(cfg.kind, raw as Record<string, unknown>);
-    if (unused.length)
-      console.warn(
-        `${CARD_TYPE}: the ${cfg.kind.name} poster reads no ${unused.join(", ")}; left out`,
-      );
-  }
-  // what the kind is resolved from: the detected kind (the device class arrives with the first
-  // state) and the inputs found on the entity's device (Home Assistant replaces its registry on
-  // any change anywhere: only a change of what was found counts)
-  _resolveInputs(hass: HomeAssistant | undefined): unknown[] {
-    const raw = (this._raw ?? {}) as { entity?: string; poster?: unknown };
-    let kind: string | null = null;
-    try {
-      kind =
-        parsePoster(raw.poster, CARD_TYPE) ??
-        detectKind(raw.entity || null, hass?.states[raw.entity ?? ""]).name;
-    } catch {
-      // setConfig reports it
-    }
-    if (kind === null) return [kind];
-    const entities = hass?.entities;
-    let found = this._found;
-    if (!found || found.kind !== kind || found.entities !== entities || this._raw !== found.raw)
-      found = this._found = {
-        kind,
-        entities,
-        raw: this._raw,
-        ids: foundInputs(KINDS[kind], raw as Record<string, unknown>, hass),
-      };
-    return [kind, ...found.ids];
-  }
-  _setHass(hass: HomeAssistant) {
-    const now = this._resolveInputs(hass);
-    const was = this._resolvedFrom;
-    const changed = now.length !== was.length || now.some((v, i) => v !== was[i]);
-    if (changed && this._raw !== undefined) {
-      this._resolvedFrom = now;
-      this._nextHass = hass;
-      try {
-        super.setConfig(this._raw);
-      } catch (e) {
-        console.warn(`${CARD_TYPE}:`, e);
-      } finally {
-        this._nextHass = undefined;
-      }
-    }
-    const prev = this._hass;
-    super._setHass(hass);
-    if (prev && prev.connection !== hass.connection) this._feed.reset();
-    if (changed) this._afterConfig();
-    else {
-      this._syncForecast();
-      this._warnUnused();
-    }
-  }
-  connectedCallback() {
-    super.connectedCallback();
-    this._syncForecast();
-  }
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    this._feed.unsubscribe();
-  }
-  // the forecast types the kind reads and the entity offers
-  _syncForecast() {
-    const cfg = this._config,
-      conn = this._hass?.connection;
-    const entity = cfg?.entities[0].entity;
-    if (!cfg?.kind.forecast || !conn || !entity || !this.isConnected) return;
-    const st = this._hass?.states[entity];
-    const daily = dailyTypeOf(st);
-    const wanted = cfg.kind.forecast.filter((t) =>
-      t === "hourly" ? supportsForecast(st, "hourly") : t === daily,
-    );
-    this._feed.sync(conn, entity, wanted);
-  }
 
-  // ----- what the card reads beyond its items -----
+  // ----- what the card reads beyond its items: the status's template, the backdrop's picture -----
   _extraTemplates(cfg: EntityCardConfig): string[] {
     const c = cfg as PosterConfig;
-    const out = c.kind.templates?.(c.kindOpts) ?? [];
-    for (const src of this._pictures(c)) if (src && src.kind === "template") out.push(src.template);
+    const out = super._extraTemplates(c);
     if (c.statusText?.kind === "template") out.push(c.statusText.template);
     return out;
   }
-  _extraWatchIds(cfg: EntityCardConfig): string[] {
-    const c = cfg as PosterConfig;
-    return [
-      ...(c.kind.watch ?? []),
-      ...(c.kind.history?.(c.kindOpts, c.entities[0].entity) ?? []),
-      ...this._pictures(c).flatMap((src) => (src && src.kind === "entity" ? [src.entity] : [])),
-    ];
-  }
-  // the pictures the card and its rules name (the backdrop's and the icon's)
   _pictures(c: PosterConfig) {
     const rules = [...c.ruleLooks.values()];
-    return [c.image, c.iconImage, ...rules.flatMap((r) => [r.image, r.iconImage])];
-  }
-  _extraHistoryIds(cfg: EntityCardConfig): string[] {
-    const c = cfg as PosterConfig;
-    return c.kind.history?.(c.kindOpts, c.entities[0].entity) ?? [];
-  }
-  _visibilityTrees(): Visibility[] {
-    const cfg = this._config as PosterConfig;
-    return [...super._visibilityTrees(), ...(cfg.kind.visibility?.(cfg.kindOpts) ?? [])];
+    return [...super._pictures(c), c.image, ...rules.map((r) => r.image)];
   }
 
-  // what the kind reads now
-  _kindCtx(ctx: RenderCtx): KindCtx {
-    const cfg = this._config as PosterConfig;
-    this._sunHost._hass = ctx.hass;
-    return {
-      ctx,
-      ent: cfg.entities[0],
-      m: this._modelAt(ctx, 0),
-      opts: cfg.kindOpts,
-      input: (key) => {
-        const i = cfg.inputs[key];
-        return i === undefined ? null : { ent: cfg.entities[i], m: this._modelAt(ctx, i) };
-      },
-      hours: cfg.hoursSet,
-      host: this._host,
-    };
-  }
-  // the places the kind fills, less those the card sets itself; the icon's own actions take the
-  // lead (the plain icon, or the hold button in its place)
-  _slots(c: KindCtx): PosterSlots {
-    const cfg = this._config as PosterConfig;
-    const raw = (this._raw ?? {}) as Record<string, unknown>;
-    const o: PosterSlots = { ...(cfg.kind.slots?.(c) ?? {}), iconActions: cfg.iconActions };
-    if (this._userIcon(c)) delete o.lead;
-    if (raw.name !== undefined) delete o.name;
-    if (raw.value !== undefined || raw.attribute !== undefined) {
-      delete o.value;
-      delete o.word;
-    }
-    if (raw.secondary !== undefined) delete o.secondary;
-    if (raw.visual !== undefined) delete o.picture;
-    return o;
-  }
-  // the card draws its own lead: its `icon` or `icon_image` (the card's or the matching rule's), or
-  // an icon with actions of its own (an animated lead gives way to them)
-  _userIcon(kc?: KindCtx) {
-    const cfg = this._config as PosterConfig | undefined;
-    const image = kc ? this._look(kc).iconImage : cfg?.iconImage;
-    return (
-      ((this._raw ?? {}) as Record<string, unknown>).icon !== undefined ||
-      !!image ||
-      (!!cfg && hasIconActions(cfg.iconActions))
-    );
-  }
-  // the icon and the backdrop as the card writes them, with what the matching rule changes (a
-  // rule's key wins: the card's is the default)
+  // the backdrop as the card writes it, with what the matching rule changes (a rule's key wins:
+  // the card's is the default)
   _look(kc: KindCtx) {
     const cfg = this._config as PosterConfig;
-    const rule = kc.m.look.rule;
-    const r: RuleLook = (rule && cfg.ruleLooks.get(rule)) || {};
+    const r: RuleLook = this._ruleLook(kc);
     return {
-      iconStyle: r.iconStyle ?? kc.ent.iconStyle,
-      iconRing: r.iconRing ?? !!kc.ent.iconRing,
-      iconImage: "iconImage" in r ? (r.iconImage ?? null) : cfg.iconImage,
       image: "image" in r ? (r.image ?? null) : cfg.image,
       imageBlur: r.imageBlur ?? cfg.imageBlur ?? (cfg.kind.imageBlur ? IMAGE_BLUR : 0),
       imageOpacity: r.imageOpacity ?? cfg.imageOpacity ?? IMAGE_OPACITY,
@@ -340,29 +114,10 @@ export class PosterCard extends EntityCardBase {
         slots.value = null;
       // icon_image: its picture in the icon while it has one, else the icon; the icon's style and
       // ring as the matching rule says
-      const look = this._look(kc);
-      const pic = imageUrl(ctx, look.iconImage);
-      const icon =
-        look.iconStyle === ent.iconStyle && look.iconRing === !!ent.iconRing
-          ? ent
-          : { ...ent, iconStyle: look.iconStyle, iconRing: look.iconRing };
-      // an animated lead is built once (per key, the icon and its style) and kept through fills:
-      // its animation runs on. A ring around the icon takes its place, as the card's own icon does
-      const lead = cfg.kind.lead,
-        plead = row.querySelector<HTMLElement>(":scope > .ptop > .plead");
-      if (lead && plead && ent.item.showIcon && !this._userIcon(kc) && !look.iconRing) {
-        const key = `${lead.key(kc)} ${look.iconStyle} ${kc.m.look.icon ?? ""}`;
-        if (plead.dataset.key !== key) {
-          plead.replaceChildren(lead.build({ ...kc, ent: icon }));
-          plead.dataset.key = key;
-        } else
-          // the state's own icon follows the state in place
-          for (const el of plead.querySelectorAll("ha-state-icon")) {
-            el.hass = ctx.hass;
-            el.stateObj = kc.m.st;
-          }
-        slots.lead = "keep";
-      } else if (plead) delete plead.dataset.key;
+      const pic = imageUrl(ctx, this._iconLook(kc).iconImage);
+      const icon = this._iconItem(kc, ent);
+      const plead = row.querySelector<HTMLElement>(":scope > .ptop > .plead");
+      if (this._keepLead(kc, plead, icon)) slots.lead = "keep";
       fillPosterSlots(
         ctx,
         row,
@@ -371,7 +126,7 @@ export class PosterCard extends EntityCardBase {
         pic ? { ...m, look: { ...m.look, picture: pic } } : m,
         slots,
       );
-      this._fadePicture(row);
+      this._fadePicture(plead);
       this._placeControls(row);
       return;
     }
@@ -383,43 +138,10 @@ export class PosterCard extends EntityCardBase {
     const cfg = this._config as PosterConfig;
     if (!inputs || (idx !== 0 && idx !== cfg.statusIdx)) return inputs;
     const kc = this._kindCtx(ctx);
-    const own = Object.values(cfg.inputs).map((i) => this._modelAt(ctx, i));
-    const extra = cfg.kind.extra?.(kc) ?? [];
+    const kind = this._kindInputs(kc);
     if (idx === cfg.statusIdx)
-      return [
-        ...inputs,
-        kc.m,
-        ...own,
-        ...extra,
-        statusText(ctx, cfg, m, cfg.kind.status?.(kc) ?? null),
-      ];
-    return [...inputs, ...own, ...extra, imageUrl(ctx, this._look(kc).iconImage)];
-  }
-  // the icon's picture fades in when it is a new one (the next song's cover); a fill with the same
-  // picture keeps the element it has, so a fade under way runs on
-  _leadImg: HTMLImageElement | null = null;
-  _fadePicture(row: HTMLElement) {
-    const img = row.querySelector<HTMLImageElement>(":scope > .ptop > .plead img.picture");
-    const last = this._leadImg;
-    const src = img?.getAttribute("src") ?? null;
-    if (!img || !src) {
-      this._leadImg = null;
-      return;
-    }
-    if (last && last.getAttribute("src") === src) {
-      if (last !== img) img.replaceWith(last);
-      return;
-    }
-    if (last) {
-      const show = () => img.classList.replace("pwait", "pfade");
-      img.classList.add("pwait");
-      if (img.complete) show();
-      else {
-        img.addEventListener("load", show, { once: true });
-        img.addEventListener("error", show, { once: true });
-      }
-    }
-    this._leadImg = img;
+      return [...inputs, kc.m, ...kind, statusText(ctx, cfg, m, cfg.kind.status?.(kc) ?? null)];
+    return [...inputs, ...kind, imageUrl(ctx, this._iconLook(kc).iconImage)];
   }
   // the kind's colour where neither the item (the poster, the status badge) nor its rule names one.
   // The poster's own colour is the body's --pc-tint, a registered colour, so a new one fades (the
@@ -429,16 +151,7 @@ export class PosterCard extends EntityCardBase {
     const cfg = this._config as PosterConfig;
     const idx = Number(row.dataset.idx);
     let color = super._rowColor(row, ent, m);
-    if (
-      (idx === 0 || idx === cfg.statusIdx) &&
-      cfg.kind.color &&
-      this._hass &&
-      !ent.color &&
-      !m.look.rule?.color
-    ) {
-      const c = cfg.kind.color(this._kindCtx(this._ctx()));
-      if (c) color = cssColor(c, "var(--primary-color)");
-    }
+    if (idx === 0 || idx === cfg.statusIdx) color = this._kindColor(ent, m) ?? color;
     const body = row.closest<HTMLElement>(".body");
     if (idx === 0 && body) {
       body.style.setProperty("--pc-tint", color);
@@ -465,9 +178,7 @@ export class PosterCard extends EntityCardBase {
     const ctx = this._ctx(),
       kc = this._kindCtx(ctx);
     // the lead's and the backdrop's motion follow every render (a new speed, a new direction)
-    const lead = cfg.kind.lead,
-      leadEl = row.querySelector<HTMLElement>(":scope > .ptop > .plead[data-key] > *");
-    if (lead?.update && leadEl) lead.update(leadEl, kc, row);
+    this._updateLead(kc, row, row.querySelector<HTMLElement>(":scope > .ptop > .plead"));
     const look = this._look(kc);
     const url =
       imageUrl(ctx, look.image) ?? (look.image === false ? null : (cfg.kind.image?.(kc) ?? null));
@@ -619,7 +330,6 @@ export class PosterCard extends EntityCardBase {
   }
   _hideHover() {
     super._hideHover();
-    this._kindHoverT = null;
     if (this._root) hideHover(this._root);
   }
 

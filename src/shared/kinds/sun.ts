@@ -16,7 +16,7 @@ import {
   type SunCurveHost,
 } from "../sun/curve.ts";
 import { defaultLabel, fmtEvent, nextEvent } from "../sun/events.ts";
-import { div, wordValue } from "./dom.ts";
+import { div, partOf, wordValue } from "./dom.ts";
 import type { Kind, KindCtx } from "./types.ts";
 
 const CURVE_H = 72;
@@ -88,7 +88,12 @@ export const SUN: Kind = {
       (t) => showHover(sun, plot, t),
     );
     return {
-      lead: leadEl(c.ctx, c.ent, { ...c.m, look: { ...c.m.look, icon, picture: null } }, 40),
+      lead: leadEl(
+        c.ctx,
+        c.ent,
+        { ...c.m, look: { ...c.m.look, icon, picture: null } },
+        c.leadSize,
+      ),
       name: ev ? defaultLabel(c.ctx.hass, ev.key) : undefined,
       value: ev ? wordValue(fmtEvent(c.ctx.hass, ev.t)) : null,
       word: false,
@@ -97,7 +102,7 @@ export const SUN: Kind = {
   },
   // the curve follows the minute and the plot's size
   live: (c, row) => {
-    const plot = row.querySelector<HTMLElement>(":scope > .pbody > .psun");
+    const plot = partOf(row, ".psun");
     const day = dayOf(c);
     if (!plot || !day) return;
     const w = plot.clientWidth,

@@ -95,7 +95,7 @@ export const FAN: Kind = {
         c.ctx,
         c.ent,
         { ...c.m, look: { ...c.m.look, icon: c.m.look.icon ?? "mdi:fan", picture: null } },
-        40,
+        c.leadSize,
       );
       el.classList.add("pfan");
       return el;

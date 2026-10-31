@@ -12,7 +12,6 @@ import { fallRate, isWet, leadFall, levelOf, tanOf } from "../rain/rain.ts";
 import { RAIN_RULES } from "./rules.ts";
 import type { Kind, KindCtx } from "./types.ts";
 
-const LEAD = 40;
 const flowOf = (c: KindCtx): RainStyle | null =>
   oneOf(RAIN_STYLES, c.opts.variant) ? c.opts.variant : null;
 const nowOf = (c: KindCtx) =>
@@ -46,7 +45,7 @@ export const RAIN: Kind = {
   },
   lead: {
     key: (c) => (flowOf(c) ? "icon" : "animated"),
-    build: (c) => (flowOf(c) ? rainLead(LEAD) : animatedLead("drops", LEAD)),
+    build: (c) => (flowOf(c) ? rainLead(c.leadSize) : animatedLead("drops", c.leadSize)),
     // the row slants the drops (--t, --sl) and times them; a new rate scales their rate
     update: (el, c, row) => {
       const now = nowOf(c);
@@ -55,7 +54,7 @@ export const RAIN: Kind = {
         "--t": tanOf(now.slant).toFixed(4),
         "--sl": `${(-now.slant).toFixed(2)}deg`,
         "--lv": `${(level * 100).toFixed(1)}%`,
-        "--H": `${LEAD}px`,
+        "--H": `${c.leadSize}px`,
       });
       const built = builtLead(row, "rate0", now.rate, leadFall(now.rate));
       // dry first: a dry lead's drops are not drawn and have no animations to scale

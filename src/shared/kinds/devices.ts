@@ -7,7 +7,7 @@ import { leadEl, secondaryEl } from "../entity/render/lead.ts";
 import type { HassEntity } from "../ha.ts";
 import { oneOf } from "../util.ts";
 import { artColor, artPending } from "./art.ts";
-import { div, pctValue, str, SVG, wordValue } from "./dom.ts";
+import { div, partOf, pctValue, str, SVG, wordValue } from "./dom.ts";
 import { place, stateText } from "./domains.ts";
 import { attention } from "./rules.ts";
 import type { Kind, KindCtx, KindHost } from "./types.ts";
@@ -72,7 +72,7 @@ export const MEDIA: Kind = {
   },
   // the bar runs on its own from where the track is to its end while it plays
   live: (c, row) => {
-    const bar = row.querySelector<HTMLElement>(":scope > .pbody > .pprog > i");
+    const bar = partOf(row, ".pprog > i");
     const p = played(c.m.st, c.ctx.now);
     if (!bar || !p) return;
     const st = c.m.st;
@@ -313,7 +313,7 @@ const robot = (name: string, domain: string, readsText: string): Kind => ({
   lead: {
     key: () => "robot",
     build: (c) => {
-      const el = leadEl(c.ctx, c.ent, { ...c.m, look: { ...c.m.look, picture: null } }, 40);
+      const el = leadEl(c.ctx, c.ent, { ...c.m, look: { ...c.m.look, picture: null } }, c.leadSize);
       el.classList.add("probot");
       return el;
     },

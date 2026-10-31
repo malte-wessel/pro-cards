@@ -56,6 +56,10 @@ const description =
 // the cards by category; the nav dropdown and the sidebar both list them this way
 const cardGroups = [
   {
+    text: "Tiles",
+    items: [{ text: "Tile Card Pro", link: "/cards/tile-card" }],
+  },
+  {
     text: "Posters",
     items: [
       { text: "Overview", link: "/cards/poster-card" },

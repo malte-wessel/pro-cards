@@ -8,6 +8,7 @@ const dir = join(dirname(fileURLToPath(import.meta.url)), "..", "schema");
 const BASE = "https://malte-wessel.github.io/pro-cards/schema/";
 const TYPES = [
   "poster-card-pro",
+  "tile-card-pro",
   "entity-card-pro",
   "entity-group-card-pro",
   "entity-sections-card-pro",

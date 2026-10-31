@@ -4,7 +4,7 @@
 import type { EntityItem, RawEntity, RuleUnit } from "../entity/config.ts";
 import type { Placement } from "../entity/control.ts";
 import type { EntityModel, RenderCtx } from "../entity/model.ts";
-import type { PosterSlots } from "../entity/render/fill.ts";
+import type { KindSlots } from "../entity/render/fill.ts";
 import type { ActionConfig, ForecastEntry, HassEntity, WeatherForecastType } from "../ha.ts";
 import type { StringKey } from "../i18n.ts";
 import type { SunCurveHost } from "../sun/curve.ts";
@@ -70,6 +70,9 @@ export interface KindCtx {
   // the card's own `hours_to_show` (null: not set)
   hours: number | null;
   host: KindHost;
+  // the card it draws for, and the size its lead is drawn at (the poster's 40 px, the tile's 36)
+  card: "poster" | "tile";
+  leadSize: number;
 }
 
 // a part built once and updated on every render, so its animations keep their phase: rebuilt
@@ -120,7 +123,7 @@ export interface Kind {
   forecast?: readonly WeatherForecastType[];
   // the places it fills (the lead only through `lead`); a `secondary` of null is a line it has
   // with nothing on it now (the card keeps its room), left out a line it never has
-  slots?(c: KindCtx): PosterSlots;
+  slots?(c: KindCtx): KindSlots;
   status?(c: KindCtx): string | null;
   // its colour where no rule and no `color` says one (the sun's by day and by night)
   color?(c: KindCtx): string | null;

@@ -41,7 +41,12 @@ const lead = (c: KindCtx) => {
   const state = c.m.st?.state;
   const night = isNight(c.ctx.hass);
   const icon = c.m.look.icon ?? conditionIcon(state, night);
-  const el = leadEl(c.ctx, c.ent, { ...c.m, look: { ...c.m.look, icon, picture: null } }, 40);
+  const el = leadEl(
+    c.ctx,
+    c.ent,
+    { ...c.m, look: { ...c.m.look, icon, picture: null } },
+    c.leadSize,
+  );
   if (c.ent.picture && c.m.model.avail && !c.m.look.icon) {
     const pic = conditionEl({ base: "hass", map: {} }, state, night, null);
     if (pic.tagName !== "HA-ICON") {
