@@ -17,6 +17,8 @@ A tile is half a section wide and one row high in a sections grid, and it grows 
 - the **controls** the type brings, at the end of the line. On a narrow tile they move under it.
 - below the line, only where asked for: the type's **picture**, a plot of the value, or a slider. A light's glow and a media player's progress take no row of their own.
 
+`vertical: true` stacks them instead: the icon on top, the name and the line centred under it; see [A vertical tile](/cards/tile-sizes#a-vertical-tile).
+
 ::: live
 
 ```yaml
@@ -134,6 +136,7 @@ The old keys stop the card with an error that names the new one.
 | `icon_image`                                           | –                          | A picture in the icon: a URL, a template or an entity's picture; see [The icon](/cards/tile-custom#the-icon).                                 |
 | `icon_ring`                                            | `false`                    | A ring of the value around the icon, filled between `min` and `max`.                                                                          |
 | `icon_tap_action` …                                    | –                          | `icon_tap_action`, `icon_hold_action`, `icon_double_tap_action`: the icon's own actions. A lock and an alarm panel are held there by default. |
+| `vertical`                                             | `false`                    | The icon on top, the name and the line centred under it, the controls under them; see [A vertical tile](/cards/tile-sizes#a-vertical-tile).   |
 | `show_picture`                                         | `false`                    | The type's picture below the line (a trend's: `true`); see [A second row](/cards/tile-custom#a-second-row).                                   |
 | `visual`                                               | the type's                 | `sparkline`, `columns`, `strip`, `bar` or `gauge` below the line, `glow` (a light's default) or `none`.                                       |
 | `rules`                                                | the type's                 | Colour, icon, label and the icon's keys by value or state; see [Colour and rules](/cards/tile-custom#colour-and-rules).                       |

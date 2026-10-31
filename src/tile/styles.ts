@@ -31,6 +31,16 @@ const STYLE_TILE_CARD = `
      be cut by the card's edge */
   ha-card.layout-tile .row.tile > :is(.pcurve, .plot) > .tip { top: auto; bottom: 8px; z-index: 3; }
   ha-card.layout-tile .tip .row { flex-direction: row; align-items: center; gap: 6px; border-radius: 0; }
+  /* vertical: the icon on top, the name and the line centred under it (each cut at its end), the
+     controls under them across the tile, centred; a picture or a slider below as on a tile */
+  ha-card.tvertical .body { padding: 12px; }
+  ha-card.tvertical .row.tile > .top, ha-card.tvertical .row.tile > .top:has(> .main > .line > .end > .ctl) { flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+  ha-card.tvertical .row.tile > .top > .main { align-self: stretch; }
+  /* one column, never wrapped: a wrapping column would size its parts to their content, not to
+     the tile, and nothing would be cut */
+  ha-card.tvertical .row.tile .line { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 8px; }
+  ha-card.tvertical .row.tile .line > .texts { flex: none; }
+  ha-card.tvertical .row.tile .line > .end { max-width: none; justify-content: center; }
   /* a media player's progress runs along the tile's bottom edge, taking no row */
   .row.tile > .pprog { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: color-mix(in srgb, var(--fe-color) 22%, transparent); }
 `;

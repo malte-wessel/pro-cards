@@ -37,6 +37,37 @@ A tile takes half a section (six columns), and its height follows its content (`
 
 :::
 
+## A vertical tile
+
+`vertical: true` puts the icon on top, with the name and the line centred under it and the controls under them, as Home Assistant's own tile does. Its line is narrow: it shows the value and the status, not what the type adds after them (a `secondary` you write stays).
+
+A vertical tile takes a quarter of a section, and two rows at least. A stepper, a select, buttons or speeds need half a section across it, so with one of them it takes six columns.
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: sensor.living_room_co2
+  vertical: true
+- type: custom:tile-card-pro
+  entity: light.desk_lamp
+  vertical: true
+- type: custom:tile-card-pro
+  entity: lock.front_door
+  vertical: true
+- type: custom:tile-card-pro
+  entity: person.malte
+  vertical: true
+- type: custom:tile-card-pro
+  entity: cover.living_room_blinds
+  vertical: true
+- type: custom:tile-card-pro
+  entity: media_player.living_room_speaker
+  vertical: true
+```
+
+:::
+
 ## Entity
 
 A plain tile fits a quarter of a section; its name and line are cut there. A plot asks for two rows.

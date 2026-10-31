@@ -362,11 +362,19 @@ const WIDE_ON_LINE: ReadonlySet<ControlKind> = new Set([
   "button",
   "slider",
 ]);
+// on a vertical tile, across it under the name: a stepper, a select, buttons and speeds take 6
+// columns (a third of a phone's section is less than three buttons), a switch, a hold, a slider or
+// a Run chip fit its 3
+const WIDE_ACROSS: ReadonlySet<ControlKind> = new Set(["stepper", "select", "buttons", "segments"]);
 // the narrowest a tile may get in a sections grid (min_columns): what sits on its line decides
 // (a switch or hold needs 4 columns, anything wider 6); controls under the line or on the icon
-// need nothing more than the tile itself (3)
-export const tileMinColumns = (ent: EntityItem) => {
+// need nothing more than the tile itself (3). A vertical tile has its controls under the name
+// (WIDE_ACROSS)
+export const tileMinColumns = (ent: EntityItem, vertical = false) => {
   const end = placementsOf(ent, "tile").filter((p) => p.position === "end");
+  if (vertical) {
+    return end.some((p) => WIDE_ACROSS.has(p.kind)) ? 6 : 3;
+  }
   if (end.some((p) => WIDE_ON_LINE.has(p.kind))) return 6;
   return end.length ? 4 : 3;
 };

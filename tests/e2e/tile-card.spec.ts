@@ -91,6 +91,36 @@ test.describe("tile pictures", () => {
   });
 });
 
+test.describe("vertical tile", () => {
+  test("puts the icon on top, the name and the value centred under it, the controls below", async ({
+    page,
+  }) => {
+    await mount(page, [
+      { type: T, entity: "cover.living_room_blinds", vertical: true },
+      { type: T, entity: "sensor.wind_speed", vertical: true },
+      { type: T, entity: "sensor.wind_speed", vertical: true, secondary: "Roof" },
+    ]);
+    const c = card(page, 0);
+    const box = async (sel: string) => (await c.locator(sel).first().boundingBox())!;
+    const lead = await box(".tlead"),
+      name = await box(".primary"),
+      text = await box(".secondary"),
+      ctl = await box(".line > .end"),
+      tile = await box("ha-card");
+    // stacked: the icon, the name, the line, the controls
+    expect(lead.y + lead.height).toBeLessThanOrEqual(name.y);
+    expect(name.y + name.height).toBeLessThanOrEqual(text.y + 1);
+    expect(text.y + text.height).toBeLessThanOrEqual(ctl.y);
+    // centred across the tile
+    const mid = tile.x + tile.width / 2;
+    for (const b of [lead, ctl]) expect(Math.abs(b.x + b.width / 2 - mid)).toBeLessThan(2);
+    await expect(c.locator(".primary")).toHaveCSS("text-align", "center");
+    // the type's line under the value is left out; a written one stays
+    await expect(line(page, 1)).toHaveText("9.4 km/h · Breezy");
+    await expect(line(page, 2)).toHaveText("9.4 km/h · Breezy · Roof");
+  });
+});
+
 test.describe("tile card", () => {
   test("a tap opens the entity; without an entity it does nothing", async ({ page }) => {
     await mount(page, [

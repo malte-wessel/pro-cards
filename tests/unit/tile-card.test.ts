@@ -79,5 +79,26 @@ describe("tile-card config", () => {
     });
     expect(grid({ entity: "weather.home", show_picture: true })).toMatchObject({ min_rows: 2 });
     expect(grid({ entity: "cover.living_room_blinds" })).toMatchObject({ min_rows: 1 });
+    // vertical: as narrow as its controls let it be, two rows at least
+    expect(grid({ entity: "sensor.living_room_temperature", vertical: true })).toEqual({
+      columns: 3,
+      rows: "auto",
+      min_columns: 3,
+      min_rows: 2,
+    });
+    expect(grid({ entity: "light.desk_lamp", vertical: true })).toMatchObject({ min_columns: 3 });
+    expect(grid({ entity: "fan.living_room", vertical: true })).toMatchObject({
+      columns: 6,
+      min_columns: 6,
+    });
+    expect(grid({ entity: "cover.living_room_blinds", vertical: true })).toMatchObject({
+      min_columns: 6,
+    });
+    expect(grid({ entity: "climate.living_room", vertical: true })).toMatchObject({
+      min_columns: 6,
+    });
+    expect(
+      grid({ entity: "sensor.outdoor_temperature", visual: "sparkline", vertical: true }),
+    ).toMatchObject({ min_rows: 3 });
   });
 });

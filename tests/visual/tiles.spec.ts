@@ -163,6 +163,24 @@ add("to-controls", [
   t("media_player.living_room_speaker", { control: false }),
 ]);
 
+// vertical: the icon on top, the name and the line centred, the controls below; each at the
+// columns it asks for
+const v = (entity: string | null, o: Opts = {}) => t(entity, { vertical: true, ...o });
+add("to-vertical", [
+  v("sensor.living_room_temperature"),
+  v("sensor.living_room_co2"),
+  v("light.desk_lamp"),
+  v("fan.living_room"),
+  v("climate.living_room"),
+  v("cover.living_room_blinds"),
+  v("vacuum.robot"),
+  v("media_player.living_room_speaker"),
+  v("sensor.wind_speed"),
+  v("weather.home", { show_picture: true }),
+  v("lock.front_door"),
+  v("person.malte"),
+]);
+
 // ----- sizes, widths and themes -----
 
 // half a section, a quarter, the whole width; and given one row with a second row's content (a
@@ -188,6 +206,28 @@ for (const [name, card] of Object.entries(SIZED))
     `ts-${name}`,
     SIZES.map((grid_options) => ({ ...card, grid_options })),
   );
+
+// a vertical tile at its least, half a section and the whole, and given a second row
+add("ts-vertical", [
+  v("sensor.outdoor_temperature", { grid_options: { columns: 3, rows: "auto" } }),
+  v("sensor.outdoor_temperature", { grid_options: { columns: 6, rows: "auto" } }),
+  v("sensor.outdoor_temperature", { visual: "sparkline", grid_options: { columns: 3 } }),
+  v("fan.living_room", { grid_options: { columns: 12, rows: "auto" } }),
+  v("light.living_room", { control: "slider", grid_options: { columns: 6, rows: "auto" } }),
+  v("light.living_room", { grid_options: { columns: 3, rows: 3 } }),
+]);
+add(
+  "ts-vertical-phone",
+  [
+    v("sensor.living_room_co2"),
+    v("light.living_room"),
+    v("fan.living_room"),
+    v("cover.living_room_blinds"),
+    v("media_player.living_room_speaker"),
+    v("vacuum.robot"),
+  ],
+  { width: 358 },
+);
 
 const FEW = [
   t("light.living_room"),

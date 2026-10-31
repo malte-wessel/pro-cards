@@ -378,6 +378,8 @@ describe("card config schemas", () => {
     for (const visual of ["ring", "icon", "badge", "trend"])
       expect(validate({ type: TC, entity: H, visual }), visual).toMatch(/enum|allowed/);
     expect(validate({ type: TC, entity: "weather.home", show_picture: true })).toBeNull();
+    expect(validate({ type: TC, entity: H, vertical: true })).toBeNull();
+    expect(validate({ type: TC, entity: H, vertical: "yes" })).toBeTruthy();
     expect(validate({ type: TC, entity: H, status: false })).toBeNull();
     expect(validate({ type: TC, entity: H, status: "{{ 'Dry' }}" })).toBeNull();
     expect(validate({ type: TC, entity: H, status: { style: "filled" } })).toBeTruthy();

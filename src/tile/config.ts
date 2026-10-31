@@ -16,6 +16,7 @@ import { CARD_TYPE } from "./constants.ts";
 export interface RawTileCardConfig extends RawKindCardConfig {
   status?: unknown;
   show_picture?: unknown;
+  vertical?: unknown;
 }
 
 export interface TileConfig extends KindConfig {
@@ -27,6 +28,8 @@ export interface TileConfig extends KindConfig {
   showPicture: boolean;
   // `visual: glow`: the tile lit from below in its colour, as strong as its level (a light's)
   glow: boolean;
+  // the icon on top, the name and the line centred under it, the controls under them
+  vertical: boolean;
 }
 
 // the entity card's visuals the tile draws no more, and what takes their place
@@ -91,5 +94,6 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
     showPicture:
       typeof written.show_picture === "boolean" ? written.show_picture : k.kind.name === "trend",
     glow: k.raw.visual === "glow",
+    vertical: written.vertical === true,
   };
 };

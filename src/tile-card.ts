@@ -74,6 +74,9 @@ export class TileCard extends KindCardBase {
     // the type's picture is a second row: drawn when asked for, unless it runs along the edge (a
     // media player's progress)
     if (!cfg.showPicture && !slots.picture?.classList.contains("pprog")) delete slots.picture;
+    // a vertical tile's line is narrow: the value and the status, the type's line left out (one
+    // the card writes stays)
+    if (cfg.vertical && slots.secondary !== undefined) slots.secondary = null;
     // icon_image: its picture in the icon while it has one, else the icon; the icon's style and
     // ring as the matching rule says
     const pic = imageUrl(ctx, this._iconLook(kc).iconImage);
@@ -107,6 +110,8 @@ export class TileCard extends KindCardBase {
     return Number(row.dataset.idx) === 0 ? (this._kindColor(ent, m) ?? color) : color;
   }
   _render() {
+    // vertical: the icon on top, before anything is laid out
+    this._root?.classList.toggle("tvertical", !!this._config?.vertical);
     super._render();
     const cfg = this._config,
       body = this._root?.querySelector<HTMLElement>(":scope > .body"),
@@ -137,10 +142,16 @@ export class TileCard extends KindCardBase {
     // row; a block visual or a control makes it taller (a control on the line wraps under the name
     // when the tile is narrow). A card around it may give it less (a swipe card, a stack)
     const ent = cfg.entities[0];
+    const plot = ent.visual === "sparkline" || ent.visual === "columns" || cfg.showPicture;
+    // a vertical tile: the icon over two lines of text, as narrow as its controls let it be (a
+    // quarter of a section), two rows at least (three with a plot)
+    if (cfg.vertical) {
+      const columns = tileMinColumns(ent, true);
+      return { columns, rows: "auto", min_columns: columns, min_rows: plot ? 3 : 2 };
+    }
     if (!BLOCK_VISUALS.has(ent.visual) && !hasTileControl(ent) && !cfg.showPicture)
       return { columns: 6, rows: "auto", min_columns: 3, min_rows: 1 };
     // a plot needs two rows: in one it would have no room at all
-    const plot = ent.visual === "sparkline" || ent.visual === "columns" || cfg.showPicture;
     return { columns: 6, rows: "auto", min_columns: tileMinColumns(ent), min_rows: plot ? 2 : 1 };
   }
 }
