@@ -182,12 +182,16 @@ export interface KindSlots {
   iconActions?: IconActions;
 }
 
-// the tile's icon slot (built once, so an animated lead in it is kept through fills)
+// the tile's icon slot (built once, so an animated lead in it is kept through fills): in the row
+// at once, so the card's lead and the fill after it find the same one
 export const tileLead = (row: HTMLElement) => {
   let lead = row.querySelector<HTMLElement>(":scope > .top > .tlead");
   if (!lead) {
-    lead = document.createElement("div");
+    const top = document.createElement("div");
+    top.className = "top";
+    lead = top.appendChild(document.createElement("div"));
     lead.className = "tlead";
+    row.appendChild(top);
   }
   return lead;
 };

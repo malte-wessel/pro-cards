@@ -57,7 +57,13 @@ const description =
 const cardGroups = [
   {
     text: "Tiles",
-    items: [{ text: "Tile Card Pro", link: "/cards/tile-card" }],
+    items: [
+      { text: "Overview", link: "/cards/tile-card" },
+      { text: "Tile types", link: "/cards/tile-types" },
+      { text: "Custom tiles", link: "/cards/tile-custom" },
+      { text: "Controls", link: "/cards/tile-controls" },
+      { text: "Sizes", link: "/cards/tile-sizes" },
+    ],
   },
   {
     text: "Posters",

@@ -128,6 +128,22 @@ test.describe("tile card", () => {
     await expect(card(page).locator(".tlead > .lead.pfan[data-mark]")).toHaveCount(1);
   });
 
+  test("draws a kind's animated icon with its first fill, so a resize changes nothing", async ({
+    page,
+  }) => {
+    // the speeds wrap under the line at this width: an icon drawn a render late moved them
+    await mount(
+      page,
+      { type: T, entity: "fan.living_room", grid_options: { columns: 6 } },
+      {
+        width: 500,
+      },
+    );
+    await expect(card(page).locator(".tlead > .lead.pfan")).toHaveCount(1);
+    await expect(card(page).locator(".row.tile > .top")).toHaveCount(1);
+    expect(await page.evaluate(() => window.pc.errors)).toEqual([]);
+  });
+
   test("icon_image puts a picture in the icon; icon_tap_action runs from it alone", async ({
     page,
   }) => {
