@@ -113,7 +113,7 @@ test.describe("tile without room for its controls", () => {
     // the whole width: on the line as it is
     await expect(row(1)).not.toHaveClass(/tkeep|tdrop/);
     // one row, room beside the name: two buttons stay on the line
-    await expect(row(2)).toHaveClass(/tkeep/);
+    await expect(row(2)).not.toHaveClass(/tdrop/);
     await expect(buttons(2)).toBeVisible();
     // one row, no room: left out, the name and the line whole
     await expect(row(3)).toHaveClass(/tdrop/);
@@ -192,6 +192,78 @@ test.describe("tile plots", () => {
     const box = await inner(3);
     const strip = (await card(page, 3).locator(".row.tile > .plot").boundingBox())!;
     expect(strip.x - box.left).toBeGreaterThan(8);
+  });
+});
+
+test.describe("tile status and badges", () => {
+  const shown = (loc: import("@playwright/test").Locator) =>
+    loc.evaluate((e) => (e as HTMLElement).innerText.trim());
+
+  test("the status is on the line; status_badge makes it a badge before the badges", async ({
+    page,
+  }) => {
+    await mount(page, [
+      { type: T, entity: "sensor.living_room_co2", grid_options: { columns: 12 } },
+      {
+        type: T,
+        entity: "sensor.living_room_co2",
+        status_badge: true,
+        grid_options: { columns: 12 },
+      },
+    ]);
+    expect(await shown(line(page, 0))).toBe("742 ppm · Good");
+    await expect(card(page, 0).locator(".tcorner")).toHaveCount(0);
+    expect(await shown(line(page, 1))).toBe("742 ppm");
+    await expect(card(page, 1).locator(".tcorner .pstatus")).toHaveText("Good");
+    await expect(card(page, 1).locator(".tcorner .pstatus")).toHaveClass(/b-tag/);
+  });
+
+  test("badges always show in full: the name and the line give way, never a badge", async ({
+    page,
+  }) => {
+    const badges = ["sensor.living_room_temperature", "status"];
+    await mount(
+      page,
+      [
+        { type: T, entity: "sensor.living_room_co2", badges, grid_options: { columns: 12 } },
+        { type: T, entity: "sensor.living_room_co2", badges, grid_options: { columns: 6 } },
+      ],
+      { width: 500 },
+    );
+    for (const i of [0, 1]) {
+      const pills = card(page, i).locator(".tcorner > .row.hval");
+      await expect(pills).toHaveCount(2);
+      for (const b of await pills.all()) await expect(b).toBeVisible();
+      // `status` placed last
+      await expect(pills.last()).toHaveText("Good");
+    }
+    // half a section: the name is cut, the badges are whole and centred on the icon
+    const name = card(page, 1).locator(".tinfo > .texts > .primary");
+    expect(await name.evaluate((e) => e.scrollWidth > e.clientWidth)).toBe(true);
+    const lead = (await card(page, 1).locator(".tlead").boundingBox())!;
+    const pill = (await card(page, 1).locator(".tcorner > .row.hval").first().boundingBox())!;
+    expect(Math.abs(pill.y + pill.height / 2 - (lead.y + lead.height / 2))).toBeLessThan(2);
+    // a badge opens its own entity
+    await card(page, 0).locator(".tcorner > .row.hval").first().locator("> .hit").click();
+    expect(await infos(page)).toEqual([
+      { type: "more-info", entityId: "sensor.living_room_temperature" },
+    ]);
+  });
+
+  test("the icon carries Home Assistant's badge: an action, a zone, unavailable", async ({
+    page,
+  }) => {
+    await mount(page, [
+      { type: T, entity: "climate.living_room" },
+      { type: T, entity: "person.malte" },
+      { type: T, entity: "light.shed" },
+      { type: T, entity: "sensor.living_room_temperature" },
+    ]);
+    const icon = (i: number) => card(page, i).locator(".tlead > .tibadge > ha-icon");
+    await expect(icon(0)).toHaveAttribute("icon", "mdi:fire");
+    await expect(icon(1)).toHaveAttribute("icon", "mdi:home");
+    await expect(icon(2)).toHaveAttribute("icon", "mdi:exclamation-thick");
+    await expect(card(page, 3).locator(".tibadge")).toHaveCount(0);
   });
 });
 

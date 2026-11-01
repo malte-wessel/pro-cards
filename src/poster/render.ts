@@ -1,23 +1,6 @@
-// The poster card's own parts (DOM): the status badge (a badge row in the corner), the backdrop
-// and the glow.
-import type { EntityItem } from "../shared/entity/config.ts";
-import type { EntityModel, RenderCtx } from "../shared/entity/model.ts";
-import { fillBadge } from "../shared/entity/render/badge.ts";
+// The poster card's own parts (DOM): the backdrop and the glow.
+import type { RenderCtx } from "../shared/entity/model.ts";
 import { div } from "../shared/kinds/dom.ts";
-
-// the status badge: a badge whose text is the status; with nothing to say it takes no room
-export const fillStatus = (
-  ctx: RenderCtx,
-  el: HTMLElement,
-  ent: EntityItem,
-  idx: number,
-  m: EntityModel,
-  text: string | null,
-) => {
-  fillBadge(ctx, el, ent, idx, { ...m, look: { ...m.look, label: text || null } });
-  el.classList.add("pstatus");
-  el.classList.toggle("empty", !text);
-};
 
 const imgEl = (src: string) => {
   const img = document.createElement("img");

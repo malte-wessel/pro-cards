@@ -66,10 +66,12 @@ The charge, orange and Low below 20 %, red and Critical below 10 %. A template s
   entity: sensor.phone_battery
   name: Phone
   poster: battery
+  status_badge: true
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.remote_battery
   name: Remote
+  status_badge: true
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.smoke_detector_battery
@@ -87,12 +89,14 @@ With a power sensor, it is a home battery: Charging or Discharging and its power
 - type: custom:tile-card-pro
   entity: sensor.balcony_battery_soc
   name: Balcony battery
+  status_badge: true
   charge: sensor.balcony_battery_charge_power
   discharge: sensor.balcony_battery_discharge_power
   grid_options: { columns: 12 }
 - type: custom:tile-card-pro
   entity: sensor.battery_soc
   name: Home battery
+  status_badge: true
   grid_options: { columns: 12 }
 ```
 
@@ -147,6 +151,7 @@ The condition's picture as the icon, the temperature, the condition, and today's
   show_picture: true
   hours_to_show: 24
   show_entity_picture: false
+  status_badge: true
   grid_options: { columns: 12 }
 ```
 
@@ -207,6 +212,7 @@ Particles cross the icon in the wind's direction, as fast as it blows. The line 
 - type: custom:tile-card-pro
   entity: sensor.coast_wind_speed
   name: Coast
+  status_badge: true
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.wind_speed
@@ -255,6 +261,7 @@ Drops fall through the icon as fast as it rains. The line gives the rate, its la
 - type: custom:tile-card-pro
   entity: sensor.rain_rate
   name: Garden
+  status_badge: true
   grid_options: { columns: 6 }
 ```
 
@@ -309,6 +316,7 @@ The blades in the icon turn at the fan's speed. The line gives the speed, and it
 ```yaml
 - type: custom:tile-card-pro
   entity: fan.living_room
+  status_badge: true
   grid_options: { columns: 12 }
 - type: custom:tile-card-pro
   entity: fan.bedroom
@@ -321,13 +329,15 @@ The blades in the icon turn at the fan's speed. The line gives the speed, and it
 
 **Reads** a `climate.*` entity.
 
-The current temperature, what it is doing (Heating, Cooling, Idle), and a stepper for the target at the end of the line. See [Poster types: Climate](/cards/poster-types#climate).
+The current temperature, what it is doing (Heating, Cooling, Idle), and a stepper for the target at the end of the line. The icon's badge says what it is doing too; `status_badge: true` puts the status in a tag at the end of the first row, in place of on the line ([Status and badges](/cards/tile-custom#status-and-badges)). See [Poster types: Climate](/cards/poster-types#climate).
 
 ::: live
 
 ```yaml
 - type: custom:tile-card-pro
   entity: climate.living_room
+  name: Living room
+  status_badge: true
   grid_options: { columns: 12 }
 - type: custom:tile-card-pro
   entity: climate.bedroom
@@ -378,7 +388,7 @@ Its state (Disarmed, Armed away …); a triggered alarm in red. Hold the shield 
 
 **Reads** a `person.*` entity.
 
-Their picture as the icon, their zone and for how long they have been there. A person without a picture has the person icon. See [Poster types: Person](/cards/poster-types#person).
+Their picture as the icon, with their zone's badge on it, their zone and for how long they have been there. A person without a picture has the person icon. See [Poster types: Person](/cards/poster-types#person).
 
 ::: live
 
@@ -417,9 +427,11 @@ The cover art as the icon and the tile's colour, the title, Playing or Paused, t
 ```yaml
 - type: custom:tile-card-pro
   entity: media_player.living_room_speaker
+  status_badge: true
   grid_options: { columns: 12 }
 - type: custom:tile-card-pro
   entity: media_player.kitchen_speaker
+  status_badge: true
   grid_options: { columns: 12 }
 ```
 
@@ -469,12 +481,15 @@ Its position and Open, Closed, Opening or Closing, with open, stop and close at 
 - type: custom:tile-card-pro
   entity: cover.living_room_blinds
   name: Living room
+  status_badge: true
   grid_options: { columns: 12 }
 - type: custom:tile-card-pro
   entity: cover.skylight
+  status_badge: true
   grid_options: { columns: 12 }
 - type: custom:tile-card-pro
   entity: cover.driveway_gate
+  status_badge: true
   grid_options: { columns: 12 }
 - type: custom:tile-card-pro
   entity: cover.garage_door
@@ -515,12 +530,14 @@ The power in W or kW, Importing or Exporting, in Home Assistant's energy colours
   entity: sensor.grid_power
   poster: grid
   name: Grid
+  status_badge: true
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   name: Grid
   poster: grid
   import: sensor.grid_import_power
   export: sensor.grid_export_power
+  status_badge: true
   grid_options: { columns: 6 }
 ```
 

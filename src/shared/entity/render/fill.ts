@@ -196,6 +196,24 @@ export const tileLead = (row: HTMLElement) => {
   return lead;
 };
 
+// the value on a tile's line: a kind's value may carry its unit apart (the poster draws it
+// smaller), the line joins them
+export const tileValueText = (value: FmtValue | null) =>
+  value && value.unit && !value.text.endsWith(value.unit)
+    ? `${value.num} ${value.unit}`
+    : (value?.text ?? "");
+
+// the badges beside a tile's texts, made once by the card (its badge rows are filled apart)
+export const tileCorner = (row: HTMLElement) => {
+  let corner = row.querySelector<HTMLElement>(".tcorner");
+  if (!corner) {
+    corner = document.createElement("div");
+    corner.className = "tcorner";
+    row.appendChild(corner);
+  }
+  return corner;
+};
+
 // a tile (the tile card's row): the icon, the name and one line under it (the value, the status,
 // the secondary), the controls at the end of the line, a block visual or control below it;
 // `show_icon`, `show_name` and `show_value` leave their part out. A status that only repeats the
@@ -210,6 +228,8 @@ export const fillTileSlots = (
 ) => {
   const c = slots(ctx, ent, "tile");
   const lead = tileLead(row);
+  // the badges beside the texts: built once by the card, kept here
+  const corner = row.querySelector<HTMLElement>(".tcorner");
   row.replaceChildren();
   const { showIcon, showName, showValue } = ent.item;
   lead.hidden = !showIcon;
@@ -232,12 +252,7 @@ export const fillTileSlots = (
   // the line under the name: its parts joined by " · " (a kind's secondary may be a node: its
   // parts are taken over)
   const parts: (string | Node)[] = [];
-  const value = showValue ? (o.value === undefined ? m.fmt : o.value) : null;
-  // a kind's value may carry its unit apart (the poster draws it smaller): the line joins them
-  const text =
-    value && value.unit && !value.text.endsWith(value.unit)
-      ? `${value.num} ${value.unit}`
-      : (value?.text ?? "");
+  const text = showValue ? tileValueText(o.value === undefined ? m.fmt : o.value) : "";
   if (text) parts.push(text);
   const status = o.status === undefined ? m.look.label : o.status;
   if (status && status.toLowerCase() !== text.toLowerCase()) parts.push(status);
@@ -256,7 +271,13 @@ export const fillTileSlots = (
   const end = document.createElement("div");
   end.className = "end";
   end.append(...endControls(ctx, ent, idx, m, c.end).els);
-  line.append(texts, end);
+  // the texts and the badges beside them as one: the badges centre on the texts (the icon's
+  // middle), and never wrap apart from them when the controls go under the line
+  const info = document.createElement("div");
+  info.className = "tinfo";
+  info.append(texts);
+  if (corner) info.appendChild(corner);
+  line.append(info, end);
   main.appendChild(line);
   top.append(lead, main);
   row.appendChild(top);

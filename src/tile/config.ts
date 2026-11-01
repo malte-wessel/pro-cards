@@ -2,12 +2,13 @@
 // entity (or none) as a tile, filled the way its poster type (its kind) says
 // (src/shared/kinds/config.ts): the icon, the name, one line under it, controls at its end. What
 // needs a second row is asked for: a slider below, the type's picture.
-import { normalizeHistoryOptions, normalizeValue, type ValueSrc } from "../shared/entity/config.ts";
+import { normalizeHistoryOptions, type ValueSrc } from "../shared/entity/config.ts";
 import { domainOf } from "../shared/color.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
 import {
   isObj,
   kindConfigOf,
+  normalizeCorner,
   normalizeKindItem,
   type KindConfig,
   type RawKindCardConfig,
@@ -16,15 +17,19 @@ import { CARD_TYPE } from "./constants.ts";
 
 export interface RawTileCardConfig extends RawKindCardConfig {
   status?: unknown;
+  status_badge?: unknown;
+  badges?: unknown;
   show_picture?: unknown;
   vertical?: unknown;
 }
 
 export interface TileConfig extends KindConfig {
-  // the status on the line, as written (null: the kind's, else the matching rule's label); false:
-  // none
+  // the status's item (null: `status: false`) and its text as written (null: the kind's, else the
+  // matching rule's label): on the line after the value, or a badge before the badges where the
+  // card says so (`status_badge`, or `status` in the list of badges)
+  statusIdx: number | null;
   statusText: ValueSrc | null;
-  showStatus: boolean;
+  statusBadge: boolean;
   // the type's picture below the line (a second row)
   showPicture: boolean;
   // `visual: glow`: the tile lit from below in its colour, as strong as its level (a light's)
@@ -62,12 +67,6 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
     throw new Error(`${CARD_TYPE}: toggle is control: toggle on the tile card`);
   if (typeof written.visual === "string" && GONE[written.visual])
     throw new Error(`${CARD_TYPE}: ${GONE[written.visual]}`);
-  if (
-    written.status !== undefined &&
-    written.status !== false &&
-    typeof written.status !== "string"
-  )
-    throw new Error(`${CARD_TYPE}: status takes a text, a template or false on the tile card`);
   const k = normalizeKindItem(
     written,
     hass,
@@ -90,6 +89,11 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
     const end = main.control.defaults.filter((p) => p.position === "end");
     main.control = end.length ? { ...main.control, defaults: end } : null;
   }
+  // the badges at the end of the first row, and the status among them where the card says so
+  const { statusIdx, statusText, corner: all } = normalizeCorner(k, CARD_TYPE, "a tile's badges");
+  const listed = Array.isArray(written.badges) && written.badges.includes("status");
+  const statusBadge = written.status_badge === true || listed;
+  const corner = statusBadge ? all : all.filter((i) => i !== statusIdx);
   return {
     layout: "tile",
     title: null,
@@ -104,6 +108,7 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
       {
         layout: "tile",
         idxs: [0],
+        badgeIdxs: corner,
         align: "start",
         columns: 1,
         divider: false,
@@ -113,8 +118,9 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
     headerIdxs: [],
     hasHeader: false,
     ...kindConfigOf(k, main.rules),
-    statusText: typeof written.status === "string" ? normalizeValue(written.status) : null,
-    showStatus: written.status !== false,
+    statusIdx,
+    statusText,
+    statusBadge,
     // a trend is its lines: without them it is a value alone
     showPicture:
       typeof written.show_picture === "boolean" ? written.show_picture : k.kind.name === "trend",

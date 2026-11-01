@@ -1,9 +1,10 @@
-// What a card that draws a poster type renders from its config (DOM-free helpers): the status
-// text, a picture's URL, the glow's level.
-import type { ValueSrc } from "../entity/config.ts";
+// What a card that draws a poster type renders from its config: the status text and its badge, a
+// picture's URL, the glow's level.
+import type { EntityItem, ValueSrc } from "../entity/config.ts";
 import { isOn } from "../entity/control.ts";
 import { asText, pictureOf } from "../entity/look.ts";
 import { tplOf, type EntityModel, type RenderCtx } from "../entity/model.ts";
+import { fillBadge } from "../entity/render/badge.ts";
 import type { ImageSrc } from "./config.ts";
 import type { Kind, KindCtx } from "./types.ts";
 
@@ -37,3 +38,17 @@ export const glowLevel = (kind: Kind, c: KindCtx): number => {
 // the glow's opacity for a level: from 0.3 up, nothing at 0 (a new level fades: .pglow's
 // transition)
 export const glowOpacity = (level: number) => (level > 0 ? (0.3 + 0.7 * level).toFixed(3) : "0");
+
+// the status badge: a badge whose text is the status; with nothing to say it takes no room
+export const fillStatus = (
+  ctx: RenderCtx,
+  el: HTMLElement,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+  text: string | null,
+) => {
+  fillBadge(ctx, el, ent, idx, { ...m, look: { ...m.look, label: text || null } });
+  el.classList.add("pstatus");
+  el.classList.toggle("empty", !text);
+};

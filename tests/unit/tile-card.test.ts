@@ -1,5 +1,6 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
 import { TileCard } from "../../src/tile-card.ts";
+import { iconBadgeOf } from "../../src/tile/badge.ts";
 import { normalizeTileConfig } from "../../src/tile/config.ts";
 import { placementsOf } from "../../src/shared/entity/control.ts";
 import { snapshot } from "../../docs/.vitepress/theme/ha-shim/hass.ts";
@@ -31,9 +32,6 @@ describe("tile-card config", () => {
     );
     expect(() => norm({ entity: e, visual: "icon" })).toThrow(`${T}: visual: icon is the tile's`);
     expect(() => norm({ entity: e, visual: "badge" })).toThrow(`${T}: visual: badge is gone`);
-    expect(() => norm({ entity: e, status: { style: "filled" } })).toThrow(
-      `${T}: status takes a text, a template or false on the tile card`,
-    );
   });
 
   it("is one tile with its kind, its rules and its inputs", () => {
@@ -43,10 +41,8 @@ describe("tile-card config", () => {
     expect(c.entities[0].rules.length).toBeGreaterThan(0);
     const w = norm({ entity: "sensor.wind_speed" });
     expect(Object.keys(w.inputs).sort()).toEqual(["direction", "gust"]);
-    expect(norm({ entity: "sensor.living_room_temperature" }).showStatus).toBe(true);
-    expect(norm({ entity: "sensor.living_room_temperature", status: false }).showStatus).toBe(
-      false,
-    );
+    expect(norm({ entity: "sensor.living_room_temperature" }).statusIdx).not.toBeNull();
+    expect(norm({ entity: "sensor.living_room_temperature", status: false }).statusIdx).toBeNull();
     expect(
       norm({ entity: "sensor.living_room_temperature", status: "{{ 'a' }}" }).statusText,
     ).toEqual({ kind: "template", template: "{{ 'a' }}" });
@@ -82,6 +78,58 @@ describe("tile-card config", () => {
     expect(norm({ entity: "lock.front_door" }).iconActions.hold?.action).toBe("toggle");
     expect(tap("light.desk_lamp", { icon_tap_action: "none" })).toBeNull();
     expect(tap("light.desk_lamp", { icon_tap_action: { action: "more-info" } })).toBe("more-info");
+  });
+
+  it("keeps the status on the line unless it is asked for as a badge", () => {
+    const badges = ["sensor.living_room_temperature", { attribute: "unit_of_measurement" }];
+    const line = norm({ entity: "sensor.living_room_co2", badges });
+    expect(line.statusBadge).toBe(false);
+    expect(line.groups[0].badgeIdxs).not.toContain(line.statusIdx);
+    expect(line.groups[0].badgeIdxs).toHaveLength(2);
+    // a badge without an entity reads the tile's
+    expect(line.entities[line.groups[0].badgeIdxs![1]].entity).toBe("sensor.living_room_co2");
+    // status_badge: first among the badges, a tag
+    const badge = norm({ entity: "sensor.living_room_co2", status_badge: true, badges });
+    expect(badge.statusBadge).toBe(true);
+    expect(badge.groups[0].badgeIdxs?.[0]).toBe(badge.statusIdx);
+    expect(badge.entities[badge.statusIdx!].badge).toEqual({ style: "tag", size: "s" });
+    // `status` in the list places it, and asks for it
+    const placed = norm({ entity: "sensor.living_room_co2", badges: ["sensor.a", "status"] });
+    expect(placed.statusBadge).toBe(true);
+    expect(placed.groups[0].badgeIdxs?.at(-1)).toBe(placed.statusIdx);
+    expect(
+      norm({ entity: "sensor.living_room_co2", status: false, status_badge: true }).groups[0]
+        .badgeIdxs,
+    ).toEqual([]);
+  });
+
+  it("draws Home Assistant's badge on the icon: an action, a zone, unavailable", () => {
+    const hass = snapshot() as never;
+    const st = (entity_id: string, state: string, attributes: Record<string, unknown> = {}) =>
+      ({ entity_id, state, attributes }) as never;
+    const heat = iconBadgeOf(hass, st("climate.a", "heat", { hvac_action: "heating" }));
+    expect(heat?.icon).toBe("mdi:fire");
+    expect(heat?.color).toContain("--state-climate-heat-color");
+    expect(iconBadgeOf(hass, st("climate.a", "cool", { hvac_action: "cooling" }))?.icon).toBe(
+      "mdi:snowflake",
+    );
+    expect(iconBadgeOf(hass, st("climate.a", "off", { hvac_action: "off" }))).toBeNull();
+    expect(iconBadgeOf(hass, st("humidifier.a", "on", { action: "drying" }))?.icon).toBe(
+      "mdi:arrow-down-bold",
+    );
+    expect(iconBadgeOf(hass, st("person.a", "home"))?.icon).toBe("mdi:home");
+    expect(iconBadgeOf(hass, st("person.a", "not_home"))?.icon).toBe("mdi:home-export-outline");
+    expect(iconBadgeOf(hass, st("light.a", "unavailable"))?.icon).toBe("mdi:exclamation-thick");
+    expect(iconBadgeOf(hass, st("light.a", "unknown"))).toBeNull();
+    expect(iconBadgeOf(hass, st("sensor.a", "21"))).toBeNull();
+    // a zone of its own: the zone's icon
+    const withZone = {
+      ...(hass as object),
+      states: {
+        "zone.work": st("zone.work", "0", { friendly_name: "Work", icon: "mdi:briefcase" }),
+      },
+    } as never;
+    expect(iconBadgeOf(withZone, st("person.a", "Work"))?.icon).toBe("mdi:briefcase");
   });
 
   it("takes one row unless something below the line needs a second", () => {
@@ -126,5 +174,11 @@ describe("tile-card config", () => {
     expect(
       grid({ entity: "sensor.outdoor_temperature", visual: "sparkline", vertical: true }),
     ).toMatchObject({ min_rows: 3 });
+    // badges take a row of their own above the icon
+    expect(
+      grid({ entity: "sensor.living_room_co2", vertical: true, status_badge: true }),
+    ).toMatchObject({
+      min_rows: 3,
+    });
   });
 });

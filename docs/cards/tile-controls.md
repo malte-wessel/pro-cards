@@ -32,12 +32,14 @@ Every other poster type (a sensor, the weather, the wind, the energy types …) 
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: fan.living_room
+  status_badge: true
   grid_options: { columns: 12 }
 - type: custom:tile-card-pro
   entity: climate.living_room
   grid_options: { columns: 12 }
 - type: custom:tile-card-pro
   entity: cover.office_blinds
+  status_badge: true
   grid_options: { columns: 12 }
 - type: custom:tile-card-pro
   entity: vacuum.robot

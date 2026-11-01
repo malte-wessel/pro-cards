@@ -181,6 +181,32 @@ add("to-vertical", [
   v("person.malte"),
 ]);
 
+// the status on the line, as a badge with status_badge; badges at the end of the first row, always
+// all of them (the name gives way); the badge on the icon (an action, a zone, unavailable)
+const AIR = ["sensor.living_room_temperature", "sensor.living_room_humidity"];
+add("to-badges", [
+  t(CO2, { grid_options: { columns: 6 } }),
+  t(CO2, { name: "CO₂", status_badge: true, grid_options: { columns: 6 } }),
+  t(CO2, { badges: [...AIR, "status"], grid_options: { columns: 12 } }),
+  t(CO2, { badges: AIR, grid_options: { columns: 6 } }),
+  t(CO2, {
+    name: "Air",
+    status_badge: true,
+    status: { style: "filled", icon: "mdi:air-filter" },
+    grid_options: { columns: 6 },
+  }),
+  t("climate.living_room", { name: "Heat", status_badge: true, grid_options: { columns: 6 } }),
+  t(CO2, {
+    name: "CO₂",
+    vertical: true,
+    status_badge: true,
+    badges: ["sensor.living_room_temperature"],
+    grid_options: { columns: 6 },
+  }),
+  t("person.malte", { vertical: true }),
+  t("light.shed", { grid_options: { columns: 6 } }),
+]);
+
 // ----- sizes, widths and themes -----
 
 // the sizes of the docs' sizes page: horizontal 12 × 1, 6 × 1 and 6 × 2, vertical 6 × 2, 6 × 3

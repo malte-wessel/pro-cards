@@ -103,13 +103,16 @@
       "description": "trend: the series, ids or objects (entity, name, color, rules, visibility)"
     },
     "status": {
-      "description": "The status on the line after the value: its text (a template allowed), or false for none. Default: the poster type's status, else the matching rule's label; left out where it only repeats the value",
+      "description": "The status, on the line after the value (as a badge with status_badge). A text (a template allowed), an object of badge keys with `value` for its text, or false for none. Default: the poster type's status, else the matching rule's label; left out where it only repeats the value",
       "oneOf": [
         {
           "const": false
         },
         {
           "type": "string"
+        },
+        {
+          "$ref": "poster-card-pro.schema.json#/$defs/statusBadge"
         }
       ]
     },
@@ -153,6 +156,28 @@
       "type": "boolean",
       "default": false,
       "description": "The icon on top, the name and the value with its status centred under it, the controls under them; as narrow as its controls let it be, two rows at least, three with a control. The poster type's line under the value is left out (a written `secondary` stays)"
+    },
+    "badges": {
+      "type": "array",
+      "description": "Badges at the end of the first row, centred on the icon, always all of them: the name and the line give way. Entities or badges of your own; `status` places the status badge among them",
+      "items": {
+        "oneOf": [
+          {
+            "const": "status"
+          },
+          {
+            "$ref": "defs.schema.json#/$defs/entityId"
+          },
+          {
+            "$ref": "poster-card-pro.schema.json#/$defs/badge"
+          }
+        ]
+      }
+    },
+    "status_badge": {
+      "type": "boolean",
+      "default": false,
+      "description": "The status as a badge (a tag by default) before the badges at the end of the first row, in place of on the line; `status` in the list of badges places it among them"
     }
   },
   "required": ["type"],

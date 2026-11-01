@@ -2,21 +2,13 @@
 // entity (or none) drawn the way its poster type (its kind) says (src/shared/kinds/config.ts); its
 // items are the poster itself, the status badge (a badge like the others, drawn as a tag) and the
 // badges in its corner.
-import {
-  normalizeActionDefaults,
-  normalizeBadge,
-  normalizeHistoryOptions,
-  normalizeValue,
-  type RawEntity,
-  type Rule,
-  type ValueSrc,
-} from "../shared/entity/config.ts";
-import { type BadgeSize, type BadgeStyle } from "../shared/entity/constants.ts";
+import { normalizeHistoryOptions, type Rule, type ValueSrc } from "../shared/entity/config.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
 import {
   iconLookOf,
   isObj,
   kindConfigOf,
+  normalizeCorner,
   normalizeKindItem,
   parseImage,
   type IconLook,
@@ -24,7 +16,6 @@ import {
   type KindConfig,
   type RawKindCardConfig,
 } from "../shared/kinds/config.ts";
-import { ATTRIBUTES } from "../shared/weather/constants.ts";
 import { CARD_TYPE } from "./constants.ts";
 
 export interface RawPosterCardConfig extends RawKindCardConfig {
@@ -54,10 +45,6 @@ export interface PosterConfig extends KindConfig {
   // `visual: glow`: the poster lit from below in its colour, as strong as its level
   glow: boolean;
 }
-
-// a badge that names no style or size: an outline pill, small; the status badge: a tag
-const BADGE: { style: BadgeStyle; size: BadgeSize } = { style: "outline", size: "s" };
-const STATUS: { style: BadgeStyle; size: BadgeSize } = { style: "tag", size: "s" };
 
 // the blur of `image_blur: true`, in px
 export const IMAGE_BLUR = 20;
@@ -111,80 +98,10 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
     visual === "glow" || visual === "none" ? { visual: "icon" } : {},
   );
   const raw = k.raw as RawPosterCardConfig;
-  const { entity, own, ctx, entities } = k;
+  const { ctx, entities } = k;
   const main = entities[0];
   const glow = raw.visual === "glow";
-  // the badges keep the card's defaults as written: a badge's own entity opens its more-info
-  const badgeCtx = { type: CARD_TYPE, ...normalizeActionDefaults(raw) };
-
-  // the status badge: the poster's own value, rules and colour, drawn as a tag with the status text
-  let statusIdx: number | null = null,
-    statusText: ValueSrc | null = null;
-  if (raw.status !== false) {
-    const o = isObj(raw.status) ? raw.status : {};
-    statusText =
-      typeof raw.status === "string" ? normalizeValue(raw.status) : normalizeValue(o.value);
-    const keys = { ...o };
-    delete keys.value;
-    const status = normalizeBadge(
-      {
-        entity: own.entity,
-        attribute: own.attribute,
-        value: own.value,
-        color: own.color,
-        unit: own.unit,
-        decimals: own.decimals,
-        ...keys,
-      } as RawEntity,
-      ctx,
-      "status",
-      STATUS,
-      "a poster's corner",
-    );
-    // the poster's rules, no name and an icon only where it names one, unless it says otherwise
-    if (o.rules === undefined) {
-      status.rules = main.rules;
-      if (main.ruleUnit) status.ruleUnit = main.ruleUnit;
-    }
-    status.item = {
-      ...status.item,
-      showIcon: o.show_icon == null ? typeof o.icon === "string" : status.item.showIcon,
-      showName: o.show_name == null ? false : status.item.showName,
-    };
-    statusIdx = entities.push(status) - 1;
-  }
-
-  // the badges in the written order; `status` places the status badge (first unless placed)
-  const list = Array.isArray(raw.badges) ? raw.badges : [];
-  const corner: number[] = [];
-  let placed = false;
-  list.forEach((b, i) => {
-    if (b === "status") {
-      if (statusIdx !== null && !placed) corner.push(statusIdx);
-      placed = true;
-      return;
-    }
-    let o: RawEntity | string | null = typeof b === "string" || isObj(b) ? (b as RawEntity) : null;
-    // a badge without an entity reads the poster's: its attribute, else the poster's value again
-    if (isObj(o) && !o.entity && entity) {
-      const shown = o.attribute !== undefined || o.value !== undefined;
-      o = {
-        entity,
-        ...(shown ? {} : { attribute: own.attribute, value: own.value, unit: own.unit }),
-        ...o,
-      };
-    }
-    const ent = normalizeBadge(o, badgeCtx, `badges[${i}]`, BADGE, "a poster's corner");
-    // a weather attribute has its own unit (humidity: %) or keeps it in a sibling attribute
-    // (wind_gust_speed: wind_speed_unit)
-    const def = ent.valueSrc.kind === "attribute" ? ATTRIBUTES[ent.valueSrc.key] : undefined;
-    if (def && ent.unit === null) {
-      if (def.unit !== undefined) ent.unit = def.unit;
-      else if (def.unitAttr) ent.unitAttr = def.unitAttr;
-    }
-    corner.push(entities.push(ent) - 1);
-  });
-  if (statusIdx !== null && !placed) corner.unshift(statusIdx);
+  const { statusIdx, statusText, corner } = normalizeCorner(k, CARD_TYPE, "a poster's corner");
 
   return {
     layout: "poster",

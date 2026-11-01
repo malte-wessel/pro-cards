@@ -27,7 +27,7 @@ import { posterParts, secondaryEl } from "./shared/entity/render/lead.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { hideHover } from "./shared/hover.ts";
 import { KindCardBase } from "./shared/kinds/card.ts";
-import { glowLevel, glowOpacity, imageUrl, statusText } from "./shared/kinds/render.ts";
+import { fillStatus, glowLevel, glowOpacity, imageUrl, statusText } from "./shared/kinds/render.ts";
 import type { KindCtx } from "./shared/kinds/types.ts";
 import {
   IMAGE_BLUR,
@@ -37,7 +37,7 @@ import {
   type RuleLook,
 } from "./poster/config.ts";
 import { CARD_TYPE } from "./poster/constants.ts";
-import { fillStatus, updateBackdrop } from "./poster/render.ts";
+import { updateBackdrop } from "./poster/render.ts";
 import { STYLE_POSTER_CARD_ALL } from "./poster/styles.ts";
 
 export class PosterCard extends KindCardBase {

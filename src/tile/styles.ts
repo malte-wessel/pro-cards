@@ -56,7 +56,7 @@ const STYLE_TILE_CARD = `
   /* one column, never wrapped: a wrapping column would size its parts to their content, not to
      the tile, and nothing would be cut */
   ha-card.tvertical .row.tile .line { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 8px; }
-  ha-card.tvertical .row.tile .line > .texts { flex: none; }
+  ha-card.tvertical .row.tile .line > .tinfo { flex: none; display: block; }
   ha-card.tvertical .row.tile .line > .end { max-width: none; justify-content: center; }
   /* a tile with no room for its controls under the line (TileCard._fitControls) keeps them on
      the line beside the name, else leaves them out */
@@ -65,6 +65,28 @@ const STYLE_TILE_CARD = `
   /* a gauge below the line at its drawing's own size (120 px): its value no larger than the
      name above it, which the line already says */
   ha-card.layout-tile .row.tile > .gauge { max-width: 120px; }
+  /* the badges beside the texts (the status among them with status_badge), always all of them:
+     the name and the line give way (and the controls wrap under the line where even their least
+     does not fit). They centre on the texts, the icon's middle, and have no height of their own
+     (a pill is taller than the name's line), so a one-row tile keeps its 56 px */
+  .row.tile .line > .tinfo { flex: 1 1 0; display: flex; align-items: center; gap: 8px; }
+  /* the texts count only as their least (size containment): the badges keep their width, the
+     name and the line take what is left */
+  .row.tile .tinfo > .texts { flex: 1 1 auto; min-width: 24px; contain: inline-size; }
+  .row.tile .line:has(> .end > .ctl) > .tinfo > .texts { min-width: 40px; }
+  .tcorner { flex: none; height: 0; display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+  .tcorner > .row.hval { flex: none; pointer-events: auto; }
+  .row.hval.pstatus.empty { display: none; }
+  /* nothing to show (a status with nothing to say alone): no room taken, not even the gap */
+  .tcorner:not(:has(> .row.hval:not(.empty, [hidden]))) { display: none; }
+  /* vertical: the corner at the top right, beside the icon, as a poster's */
+  /* vertical: the badges in a row of their own at the top right, above the icon (the body makes
+     room for them), never over it */
+  ha-card.tvertical .tcorner { position: absolute; top: 12px; right: 12px; height: var(--b-h, 24px); }
+  ha-card.tvertical > .body:has(.tcorner > .row.hval:not(.empty, [hidden])) { padding-top: 44px; }
+  /* the badge on the icon, as Home Assistant's tile: 16 px over the circle's top right */
+  .tlead { position: relative; }
+  .tibadge { position: absolute; top: -3px; right: -3px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--tibadge); color: var(--white-color, #fff); --mdc-icon-size: 12px; line-height: 0; pointer-events: none; transition: background-color 280ms ease-in-out; }
   /* a media player's progress runs along the tile's bottom edge, taking no row */
   .row.tile > .pprog { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: color-mix(in srgb, var(--fe-color) 22%, transparent); }
 `;

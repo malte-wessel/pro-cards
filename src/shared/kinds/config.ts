@@ -6,7 +6,9 @@ import { isTemplate, numOrNull, oneOf } from "../util.ts";
 import {
   normalizeAction,
   normalizeActionDefaults,
+  normalizeBadge,
   normalizeEntity,
+  normalizeValue,
   type EntityCardConfig,
   type EntityItem,
   type NormalizeCtx,
@@ -14,8 +16,15 @@ import {
   type RawEntity,
   type RawEntityCardBase,
   type Rule,
+  type ValueSrc,
 } from "../entity/config.ts";
-import { ICON_STYLES, ITEM_DEFAULTS, type IconStyle } from "../entity/constants.ts";
+import {
+  ICON_STYLES,
+  ITEM_DEFAULTS,
+  type BadgeSize,
+  type BadgeStyle,
+  type IconStyle,
+} from "../entity/constants.ts";
 import { normalizeControl, type IconActions } from "../entity/control.ts";
 import type { ActionConfig, HassEntity, HomeAssistant } from "../ha.ts";
 import { ATTRIBUTES } from "../weather/constants.ts";
@@ -297,3 +306,89 @@ export const kindConfigOf = (k: KindItem, rules: Rule[]) => ({
   iconActions: k.iconActions,
   ruleLooks: new Map<Rule, IconLook>(rules.map((r) => [r, iconLookOf(r.src)])),
 });
+
+// a badge that names no style or size: an outline pill, small; the status badge: a tag
+const BADGE: { style: BadgeStyle; size: BadgeSize } = { style: "outline", size: "s" };
+const STATUS: { style: BadgeStyle; size: BadgeSize } = { style: "tag", size: "s" };
+
+// the status badge and the badges of a card that draws a kind (the poster's corner, the end of a
+// tile's name line), added to the card's items: `status` (a text, a template, badge keys with
+// `value` for its text, or false) and `badges` (entities or badges of their own, `status` placing
+// the status badge, first unless placed). `where` names the place in messages
+export const normalizeCorner = (k: KindItem, type: string, where: string) => {
+  const raw = k.raw as RawKindCardConfig & { status?: unknown; badges?: unknown };
+  const { entity, own, ctx, entities } = k;
+  const main = entities[0];
+  // the badges keep the card's defaults as written: a badge's own entity opens its more-info
+  const badgeCtx = { type, ...normalizeActionDefaults(raw) };
+
+  // the status badge: the card's own value, rules and colour, drawn as a tag with the status text
+  let statusIdx: number | null = null,
+    statusText: ValueSrc | null = null;
+  if (raw.status !== false) {
+    const o = isObj(raw.status) ? raw.status : {};
+    statusText =
+      typeof raw.status === "string" ? normalizeValue(raw.status) : normalizeValue(o.value);
+    const keys = { ...o };
+    delete keys.value;
+    const status = normalizeBadge(
+      {
+        entity: own.entity,
+        attribute: own.attribute,
+        value: own.value,
+        color: own.color,
+        unit: own.unit,
+        decimals: own.decimals,
+        ...keys,
+      } as RawEntity,
+      ctx,
+      "status",
+      STATUS,
+      where,
+    );
+    // the card's rules, no name and an icon only where it names one, unless it says otherwise
+    if (o.rules === undefined) {
+      status.rules = main.rules;
+      if (main.ruleUnit) status.ruleUnit = main.ruleUnit;
+    }
+    status.item = {
+      ...status.item,
+      showIcon: o.show_icon == null ? typeof o.icon === "string" : status.item.showIcon,
+      showName: o.show_name == null ? false : status.item.showName,
+    };
+    statusIdx = entities.push(status) - 1;
+  }
+
+  // the badges in the written order; `status` places the status badge (first unless placed)
+  const list = Array.isArray(raw.badges) ? raw.badges : [];
+  const corner: number[] = [];
+  let placed = false;
+  list.forEach((b, i) => {
+    if (b === "status") {
+      if (statusIdx !== null && !placed) corner.push(statusIdx);
+      placed = true;
+      return;
+    }
+    let o: RawEntity | string | null = typeof b === "string" || isObj(b) ? (b as RawEntity) : null;
+    // a badge without an entity reads the card's: its attribute, else the card's value again
+    if (isObj(o) && !o.entity && entity) {
+      const shown = o.attribute !== undefined || o.value !== undefined;
+      o = {
+        entity,
+        ...(shown ? {} : { attribute: own.attribute, value: own.value, unit: own.unit }),
+        ...o,
+      };
+    }
+    const ent = normalizeBadge(o, badgeCtx, `badges[${i}]`, BADGE, where);
+    // a weather attribute has its own unit (humidity: %) or keeps it in a sibling attribute
+    // (wind_gust_speed: wind_speed_unit)
+    const def = ent.valueSrc.kind === "attribute" ? ATTRIBUTES[ent.valueSrc.key] : undefined;
+    if (def && ent.unit === null) {
+      if (def.unit !== undefined) ent.unit = def.unit;
+      else if (def.unitAttr) ent.unitAttr = def.unitAttr;
+    }
+    corner.push(entities.push(ent) - 1);
+  });
+  if (statusIdx !== null && !placed) corner.unshift(statusIdx);
+  return { statusIdx, statusText, corner };
+};

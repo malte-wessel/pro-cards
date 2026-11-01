@@ -14,6 +14,7 @@ A tile is half a section wide and one row high in a sections grid, and it grows 
 
 - the **icon**. It shows the entity's icon or picture, or the poster type's own animated icon. It can have actions of its own: a lock is held there.
 - the **name**, and the **line** under it: the value, then the status, then what the type adds. A status that only repeats the value is left out.
+- your **badges** at the end of the first row, and the status among them with `status_badge: true`. The icon carries Home Assistant's badge: a thermostat heating, a person's zone, an unavailable entity.
 - the **controls** the type brings, at the end of the line. On a narrow tile they move under it; a tile too short for that keeps them beside the name, or leaves them out (a tap opens more-info).
 - below the line, only where asked for: the type's **picture**, a plot of the value, or a slider. A light's glow and a media player's progress take no row of their own.
 
@@ -34,6 +35,7 @@ A tile is half a section wide and one row high in a sections grid, and it grows 
 - type: custom:tile-card-pro
   entity: sensor.wind_speed
   name: Wind
+  status_badge: true
   grid_options: { columns: 6 }
 ```
 
@@ -129,7 +131,9 @@ The old keys stop the card with an error that names the new one.
 | `running_above`, `series`                              | –                          | The [appliance](/cards/poster-types#appliance)'s threshold and the [trend](/cards/poster-types#trend)'s series.                                                                                      |
 | `name`, `icon`, `value`, `secondary`, `color`          | the type's                 | The places, templates allowed; see [The places](/cards/tile-custom#the-places).                                                                                                                      |
 | `attribute`, `unit`, `decimals`, `prefix`, `suffix`    | –                          | The value, as on the entity cards.                                                                                                                                                                   |
-| `status`                                               | the type's                 | The status on the line: a text, a template or `false`; see [The line](/cards/tile-custom#the-line).                                                                                                  |
+| `status`                                               | the type's                 | The status on the line: a text, a template, badge keys or `false`; see [The line](/cards/tile-custom#the-line).                                                                                      |
+| `status_badge`                                         | `false`                    | The status as a badge before the badges, in place of on the line; see [Status and badges](/cards/tile-custom#status-and-badges).                                                                     |
+| `badges`                                               | –                          | Badges at the end of the first row, always shown: the name and the line give way; see [Status and badges](/cards/tile-custom#status-and-badges).                                                     |
 | `show_name`, `show_icon`, `show_value`                 | `true`                     | `false` leaves out the name, the icon (a type's animated one too) or the value.                                                                                                                      |
 | `icon_style`                                           | `circle`                   | `plain` drops the circle behind the icon; see [The icon](/cards/tile-custom#the-icon).                                                                                                               |
 | `show_entity_picture`                                  | `false`                    | The entity's picture in the icon's place (the weather's, a person's and a media player's by default).                                                                                                |

@@ -23,12 +23,13 @@ import type { EntityItem } from "./shared/entity/config.ts";
 import { hasTileControl, tileMinColumns } from "./shared/entity/control.ts";
 import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
 import { bindKeptLeadTap, leadTapState } from "./shared/entity/render/controls.ts";
-import { fillTileSlots, tileLead } from "./shared/entity/render/fill.ts";
+import { fillTileSlots, tileCorner, tileLead, tileValueText } from "./shared/entity/render/fill.ts";
 import { KindCardBase } from "./shared/kinds/card.ts";
 import { div } from "./shared/kinds/dom.ts";
-import { glowLevel, glowOpacity, imageUrl, statusText } from "./shared/kinds/render.ts";
+import { fillStatus, glowLevel, glowOpacity, imageUrl, statusText } from "./shared/kinds/render.ts";
 import type { KindCtx } from "./shared/kinds/types.ts";
 import { isNum } from "./shared/util.ts";
+import { iconBadgeOf } from "./tile/badge.ts";
 import { normalizeTileConfig, type TileConfig } from "./tile/config.ts";
 import { CARD_TYPE } from "./tile/constants.ts";
 import { STYLE_TILE_CARD_ALL } from "./tile/styles.ts";
@@ -71,17 +72,43 @@ export class TileCard extends KindCardBase {
     return super._actionsTakeLead(cfg) && !this._plainToggle();
   }
 
-  // the status on the line: the card's, else the kind's, else the matching rule's label
+  // the status: the card's, else the kind's, else the matching rule's label; none with status:
+  // false, and none where it only repeats the value (a vacuum's Cleaning), as tag or on the line
   _status(kc: KindCtx) {
     const cfg = this._config as TileConfig;
-    return cfg.showStatus ? statusText(kc.ctx, cfg, kc.m, cfg.kind.status?.(kc) ?? null) : null;
+    if (cfg.statusIdx === null) return null;
+    const s = statusText(kc.ctx, cfg, kc.m, cfg.kind.status?.(kc) ?? null);
+    return s && s.toLowerCase() === this._lineValue.toLowerCase() ? null : s;
+  }
+  // the value the tile's line shows (the kind's, else the entity's), found when the row is filled:
+  // before its status badge, which is in it
+  _lineValue = "";
+
+  // ----- DOM -----
+  // the tile's row, and at the end of its first row the badges (the status among them where the
+  // card says so)
+  _buildBody(body: HTMLElement) {
+    const cfg = this._config as TileConfig;
+    const row = this._row(0, "tile");
+    const badges = cfg.groups[0].badgeIdxs ?? [];
+    if (badges.length) {
+      const corner = tileCorner(row);
+      for (const i of badges)
+        corner.appendChild(this._row(i, i === cfg.statusIdx ? "hval pstatus" : "hval"));
+    }
+    body.appendChild(row);
   }
   _fill(ctx: RenderCtx, row: HTMLElement, ent: EntityItem, idx: number, m: EntityModel) {
     const cfg = this._config as TileConfig;
+    if (idx === cfg.statusIdx && row.classList.contains("hval")) {
+      fillStatus(ctx, row, ent, idx, m, this._status(this._kindCtx(ctx)));
+      return;
+    }
     if (idx !== 0 || !row.classList.contains("tile")) return super._fill(ctx, row, ent, idx, m);
     const kc = this._kindCtx(ctx);
     const slots = this._slots(kc);
-    slots.status = this._status(kc);
+    // the status on the line, unless it is a badge
+    slots.status = cfg.statusBadge ? null : this._status(kc);
     // the type's picture is a second row: drawn when asked for, unless it runs along the edge (a
     // media player's progress)
     if (!cfg.showPicture && !slots.picture?.classList.contains("pprog")) delete slots.picture;
@@ -92,6 +119,9 @@ export class TileCard extends KindCardBase {
     // ring as the matching rule says
     const pic = imageUrl(ctx, this._iconLook(kc).iconImage);
     const icon = this._iconItem(kc, ent);
+    this._lineValue = ent.item.showValue
+      ? tileValueText(slots.value === undefined ? m.fmt : slots.value)
+      : "";
     const lead = tileLead(row);
     const kept = this._keepLead(kc, lead, icon);
     if (kept) slots.lead = "keep";
@@ -118,22 +148,54 @@ export class TileCard extends KindCardBase {
       });
     }
     this._fadePicture(lead);
+    // the badge on the icon, as Home Assistant's tile: what a thermostat does, a person's zone …
+    const badge = ent.item.showIcon ? iconBadgeOf(ctx.hass, m.st) : null;
+    let b = lead.querySelector<HTMLElement>(":scope > .tibadge");
+    if (!badge) b?.remove();
+    else {
+      if (!b) {
+        b = div("tibadge");
+        b.appendChild(document.createElement("ha-icon"));
+      }
+      // after the lead, which a fill may have built anew
+      lead.appendChild(b);
+      b.style.setProperty("--tibadge", badge.color);
+      b.firstElementChild?.setAttribute("icon", badge.icon);
+      if (badge.label) {
+        b.setAttribute("role", "img");
+        b.setAttribute("aria-label", badge.label);
+      } else {
+        b.removeAttribute("role");
+        b.removeAttribute("aria-label");
+        b.setAttribute("aria-hidden", "true");
+      }
+    }
   }
   // the tile reads its inputs, what its kind says, its status and its icon's picture
   _rowInputs(ctx: RenderCtx, row: HTMLElement, idx: number, m: EntityModel) {
     const inputs = super._rowInputs(ctx, row, idx, m);
-    if (!inputs || idx !== 0) return inputs;
+    const cfg = this._config as TileConfig;
+    if (!inputs || (idx !== 0 && idx !== cfg.statusIdx)) return inputs;
     const kc = this._kindCtx(ctx);
+    if (idx === cfg.statusIdx)
+      return [...inputs, kc.m, ...this._kindInputs(kc), this._lineValue, this._status(kc)];
     return [
       ...inputs,
       ...this._kindInputs(kc),
       this._status(kc),
       imageUrl(ctx, this._iconLook(kc).iconImage),
+      // a person's zone (its icon on the badge)
+      ...Object.keys(ctx.hass?.states ?? {})
+        .filter((id) => id.startsWith("zone."))
+        .map((id) => ctx.hass?.states[id]),
     ];
   }
   _rowColor(row: HTMLElement, ent: EntityItem, m: EntityModel) {
     const color = super._rowColor(row, ent, m);
-    if (Number(row.dataset.idx) !== 0) return color;
+    const idx = Number(row.dataset.idx);
+    // the status badge takes the tile's colour, as on a poster
+    if (idx === this._config?.statusIdx) return this._kindColor(ent, m) ?? color;
+    if (idx !== 0) return color;
     // the tile's colour on the card too: its focus ring (STYLE_KIND_CARD_FOCUS)
     const own = this._kindColor(ent, m) ?? color;
     this._root?.style.setProperty("--card-tint", own);
@@ -212,10 +274,11 @@ export class TileCard extends KindCardBase {
     const plot = ent.visual === "sparkline" || ent.visual === "columns" || cfg.showPicture;
     // a vertical tile: the icon over two lines of text, as narrow as its controls let it be (a
     // quarter of a section); two rows for those, one more for a control under them, one more for
-    // a plot
+    // a plot, one more for the badges above the icon
     if (cfg.vertical) {
       const columns = tileMinColumns(ent, true);
-      const rows = 2 + (hasTileControl(ent) ? 1 : 0) + (plot ? 1 : 0);
+      const badges = (cfg.groups[0].badgeIdxs ?? []).length > 0;
+      const rows = 2 + (hasTileControl(ent) ? 1 : 0) + (plot ? 1 : 0) + (badges ? 1 : 0);
       return { columns, rows: "auto", min_columns: columns, min_rows: rows };
     }
     if (!BLOCK_VISUALS.has(ent.visual) && !hasTileControl(ent) && !cfg.showPicture)

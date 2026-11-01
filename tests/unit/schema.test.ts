@@ -382,9 +382,19 @@ describe("card config schemas", () => {
     expect(validate({ type: TC, entity: H, vertical: "yes" })).toBeTruthy();
     expect(validate({ type: TC, entity: H, status: false })).toBeNull();
     expect(validate({ type: TC, entity: H, status: "{{ 'Dry' }}" })).toBeNull();
-    expect(validate({ type: TC, entity: H, status: { style: "filled" } })).toBeTruthy();
+    expect(
+      validate({ type: TC, entity: H, status: { style: "filled", icon: "mdi:air" } }),
+    ).toBeNull();
+    expect(validate({ type: TC, entity: H, status_badge: true })).toBeNull();
+    // the poster's status is always a badge
+    expect(validate({ type: "custom:poster-card-pro", entity: H, status_badge: true })).toMatch(
+      /unevaluated/,
+    );
+    expect(
+      validate({ type: TC, entity: H, badges: ["sensor.a", { attribute: "x" }, "status"] }),
+    ).toBeNull();
     // the poster's corner and backdrop, and the entity card's toggle, are not the tile's
-    for (const key of ["badges", "image", "image_blur", "toggle"])
+    for (const key of ["image", "image_blur", "toggle"])
       expect(validate({ type: TC, entity: H, [key]: true }), key).toMatch(/unevaluated/);
     expect(
       validate({ type: TC, entity: H, rules: [{ above: 60, color: "red", image: false }] }),
