@@ -225,6 +225,8 @@ A tile keeps to one row unless it is asked for more:
 - `visual` draws the entity's value below the line, as on the poster: `sparkline`, `columns` or `strip` from its history over `hours_to_show`; `bar` or `gauge` between `min` and `max`.
 - `control: slider` (or another control `control_position: block`) adds a control there; see [Tile controls](/cards/tile-controls#where-it-sits).
 
+A plot or a curve runs to the tile's left, right and bottom edges, as on a poster; a strip keeps the tile's padding.
+
 ::: live
 
 ```yaml

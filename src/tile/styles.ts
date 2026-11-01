@@ -11,6 +11,10 @@ import { STYLE_WEATHER_PICTURES } from "../shared/weather/styles.ts";
 import { STYLE_WIND } from "../shared/wind/styles.ts";
 
 const STYLE_TILE_CARD = `
+  /* 8 px above and below: a one-row tile is its 56 px (38 px of texts, a border up to 2 px) with
+     the icon 10 px from its top, and a taller tile (a plot, controls under the line) starts its
+     icon there too, not nearer the top than a one-row tile beside it */
+  ha-card.layout-tile:not(.tvertical) .body { padding-block: 8px; }
   .tlead { flex: none; display: flex; }
   .tlead[hidden] { display: none; }
   /* the icon's picture fades in when it is a new one (the next song's cover) */
@@ -27,6 +31,19 @@ const STYLE_TILE_CARD = `
      tile's sparkline; on a poster it reaches up behind the texts, here it keeps below them */
   .row.tile > .pcurve { position: relative; flex: 1 1 auto; height: ${PLOT_H.sparkline}px; min-height: 40px; min-width: 0; margin: 0; touch-action: pan-y; }
   .row.actionable > .pcurve { pointer-events: auto; }
+  /* a plot below the line (a sparkline, columns, a kind's curve) runs to the tile's edges under the
+     body's padding, as on a poster; the card's corners clip it. A strip (blocks and their time
+     labels) keeps the padding; columns run a little past the edges, so the card cuts the first and
+     the last bar and none shows its rounded foot; a placeholder (no data, loading) keeps the
+     padding */
+  ha-card.layout-tile .row.tile > :is(.plot, .pcurve) { width: auto; margin: 0 -12px -8px; }
+  ha-card.layout-tile .row.tile > .plot[data-kind="strip"] { margin: 0; }
+  ha-card.layout-tile .row.tile > .plot[data-kind="columns"] { margin: 0 -14px -12px; }
+  ha-card.tvertical .row.tile > :is(.plot, .pcurve) { margin: 0 -12px -12px; }
+  ha-card.tvertical .row.tile > .plot[data-kind="strip"] { margin: 0; }
+  ha-card.tvertical .row.tile > .plot[data-kind="columns"] { margin: 0 -14px -16px; }
+  ha-card.layout-tile .row.tile > .plot .label.placeholder { margin-left: 12px; }
+  ha-card.layout-tile .row.tile > .plot[data-kind="columns"] .label.placeholder { margin-left: 14px; }
   /* a picture's tooltip opens upward from its bottom, over the line: one opening downward would
      be cut by the card's edge */
   ha-card.layout-tile .row.tile > :is(.pcurve, .plot) > .tip { top: auto; bottom: 8px; z-index: 3; }

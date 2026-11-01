@@ -160,6 +160,41 @@ test.describe("vertical tile", () => {
   });
 });
 
+test.describe("tile plots", () => {
+  test("run to the tile's edges, as on a poster; a strip keeps the padding", async ({ page }) => {
+    await mount(page, [
+      { type: T, entity: "sensor.outdoor_temperature", visual: "sparkline" },
+      { type: T, entity: "sun.sun", show_picture: true },
+      { type: T, entity: "sensor.outdoor_temperature", visual: "sparkline", vertical: true },
+      { type: T, entity: "binary_sensor.door_front", visual: "strip" },
+    ]);
+    // the card's inner box: inside its border
+    const inner = (i: number) =>
+      card(page, i)
+        .locator("ha-card")
+        .evaluate((e) => {
+          const r = e.getBoundingClientRect(),
+            s = getComputedStyle(e);
+          const b = parseFloat(s.borderLeftWidth);
+          return { left: r.left + b, right: r.right - b, bottom: r.bottom - b };
+        });
+    for (const [i, sel] of [
+      [0, ".plot"],
+      [1, ".pcurve"],
+      [2, ".plot"],
+    ] as const) {
+      const box = await inner(i);
+      const p = (await card(page, i).locator(`.row.tile > ${sel}`).boundingBox())!;
+      expect(Math.abs(p.x - box.left)).toBeLessThan(1);
+      expect(Math.abs(p.x + p.width - box.right)).toBeLessThan(1);
+      expect(Math.abs(p.y + p.height - box.bottom)).toBeLessThan(1);
+    }
+    const box = await inner(3);
+    const strip = (await card(page, 3).locator(".row.tile > .plot").boundingBox())!;
+    expect(strip.x - box.left).toBeGreaterThan(8);
+  });
+});
+
 test.describe("tile card", () => {
   test("a tap opens the entity; without an entity it does nothing", async ({ page }) => {
     await mount(page, [
