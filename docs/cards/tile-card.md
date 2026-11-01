@@ -13,7 +13,7 @@ The tile card is new in 3.0 and in beta: its options may still change.
 A tile is half a section wide and one row high in a sections grid, and it grows with what it holds. From left to right:
 
 - the **icon**. It shows the entity's icon or picture, or the poster type's own animated icon. It can have actions of its own: a lock is held there.
-- the **name**, and the **line** under it: the value, then the status, then what the type adds. A status that only repeats the value is left out.
+- the **name**, and the **line** under it: the value, then the status, then what the type adds. A status that only repeats the value is left out there; as a badge (`status_badge`) it always shows.
 - your **badges** at the end of the first row, and the status among them with `status_badge: true`. The icon carries Home Assistant's badge: a thermostat heating, a person's zone, an unavailable entity.
 - the **controls** the type brings, at the end of the line. On a narrow tile they move under it; a tile too short for that keeps them beside the name, or leaves them out (a tap opens more-info).
 - below the line, only where asked for: the type's **picture**, a plot of the value, or a slider. A light's glow and a media player's progress take no row of their own.

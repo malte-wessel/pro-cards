@@ -103,7 +103,7 @@
       "description": "trend: the series, ids or objects (entity, name, color, rules, visibility)"
     },
     "status": {
-      "description": "The status, on the line after the value (as a badge with status_badge). A text (a template allowed), an object of badge keys with `value` for its text, or false for none. Default: the poster type's status, else the matching rule's label; left out where it only repeats the value",
+      "description": "The status, on the line after the value (as a badge with status_badge). A text (a template allowed), an object of badge keys with `value` for its text, or false for none. Default: the poster type's status, else the matching rule's label; on the line left out where it only repeats the value. A status badge always shows: the entity's state where the type and the rules give none",
       "oneOf": [
         {
           "const": false

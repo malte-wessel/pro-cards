@@ -231,7 +231,7 @@ A badge without `entity` reads the tile's entity. `attribute` shows one of its a
 
 ## The status badge
 
-The status is on the line after the value. `status_badge: true` makes it a badge instead, before the others: a `tag` in the tile's colour, without an icon. It shows the poster type's status, else the matching rule's label; with nothing to show, it takes no room. A rule's `style` and `pulse` apply to it.
+The status is on the line after the value. `status_badge: true` makes it a badge instead, before the others: a `tag` in the tile's colour, without an icon. It shows the poster type's status, else the matching rule's label, else the entity's state (a vacuum's Cleaning, a lock's Locked), even where that repeats the value: you asked for the badge. A rule's `style` and `pulse` apply to it.
 
 `status` sets it:
 

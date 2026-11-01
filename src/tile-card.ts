@@ -28,6 +28,7 @@ import { bindKeptLeadTap, leadTapState } from "./shared/entity/render/controls.t
 import { fillTileSlots, tileCorner, tileLead, tileValueText } from "./shared/entity/render/fill.ts";
 import { KindCardBase } from "./shared/kinds/card.ts";
 import { div } from "./shared/kinds/dom.ts";
+import { stateText } from "./shared/kinds/domains.ts";
 import { fillStatus, glowLevel, glowOpacity, imageUrl, statusText } from "./shared/kinds/render.ts";
 import type { KindCtx } from "./shared/kinds/types.ts";
 import { isNum } from "./shared/util.ts";
@@ -103,11 +104,15 @@ export class TileCard extends KindCardBase {
   }
 
   // the status: the card's, else the kind's, else the matching rule's label; none with status:
-  // false, and none where it only repeats the value (a vacuum's Cleaning), as tag or on the line
+  // false
   _status(kc: KindCtx) {
     const cfg = this._config as TileConfig;
     if (cfg.statusIdx === null) return null;
     const s = statusText(kc.ctx, cfg, kc.m, cfg.kind.status?.(kc) ?? null);
+    // a status badge is asked for: it shows, the entity's state where the type and the rules say
+    // nothing (a vacuum's value is its state), even where it repeats the value
+    if (cfg.statusBadge) return s ?? stateText(kc);
+    // on the line, a status that repeats the value is left out
     return s && s.toLowerCase() === this._lineValue.toLowerCase() ? null : s;
   }
   // the value the tile's line shows (the kind's, else the entity's), found when the row is filled:

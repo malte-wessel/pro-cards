@@ -218,6 +218,21 @@ test.describe("tile status and badges", () => {
     await expect(card(page, 1).locator(".tcorner .pstatus")).toHaveClass(/b-tag/);
   });
 
+  test("a status badge always shows: the entity's state where the type says nothing more", async ({
+    page,
+  }) => {
+    await mount(page, [
+      { type: T, entity: "vacuum.robot", grid_options: { columns: 12 } },
+      { type: T, entity: "vacuum.robot", status_badge: true, grid_options: { columns: 12 } },
+    ]);
+    // on the line the state is the value, said once
+    expect(await shown(line(page, 0))).toBe("Cleaning · 72 %");
+    await expect(card(page, 0).locator(".tcorner")).toHaveCount(0);
+    // asked for as a badge, it shows, though it repeats the value
+    await expect(card(page, 1).locator(".tcorner .pstatus")).toHaveText("Cleaning");
+    await expect(card(page, 1).locator(".tcorner .pstatus")).not.toHaveClass(/empty/);
+  });
+
   test("badges always show in full: the name and the line give way, never a badge", async ({
     page,
   }) => {
