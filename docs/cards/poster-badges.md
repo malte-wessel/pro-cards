@@ -85,7 +85,7 @@ A badge takes the keys of a [heading card's badge](/cards/heading-card#badges). 
 - `outline`: Home Assistant's badge, the default.
 - `soft`: a tint of the badge's colour.
 - `filled`: the badge's colour.
-- `plain`: no pill, only the icon and the value.
+- `plain`: only the icon and the value; its pill draws nothing, but keeps its padding and shape, so it lines up with the others and its hover is a pill.
 - `tag`: an outline in the badge's colour, with the text in that colour.
 
 `size` sets its height: `s` (the default), `m` or `l`. A rule's `style` changes the pill while the rule matches.

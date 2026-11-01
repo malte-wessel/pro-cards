@@ -134,12 +134,13 @@ const STYLE_POSTER = `
   ha-card.layout-poster .pbody:has(> .plot.grow) > :not(.plot) { position: relative; z-index: 1; }
 `;
 // the header badges (render/badge.ts): the row is the pill (.pb) of its style (b-outline, b-soft,
-// b-filled, b-tag; b-plain draws none) and size (b-s, b-m, b-l: 24 / 30 / 36 px high). A filled pill
+// b-filled, b-tag; b-plain draws none, but keeps its shape) and size (b-s, b-m, b-l: 24 / 30 /
+// 36 px high). A filled pill
 // draws its glyphs in --b-ink, every other one in the row's colour
 const STYLE_BADGES = `
-  .row.hval.b-s { --b-h: 24px; --b-ps: 6px; --b-pe: 8px; --b-gap: 4px; --b-icon: 14px; --b-ring: 16px; }
-  .row.hval.b-m { --b-h: 30px; --b-ps: 8px; --b-pe: 10px; --b-gap: 6px; --b-icon: 16px; --b-ring: 20px; }
-  .row.hval.b-l { --b-h: 36px; --b-ps: 10px; --b-pe: 12px; --b-gap: 6px; --b-icon: 18px; --b-ring: 24px; }
+  .row.hval.b-s { --b-h: 24px; --b-ps: 6px; --b-pe: 8px; --b-gap: 4px; --b-icon: 14px; --b-ring: 16px; --b-th: 16px; --b-tw: 28px; }
+  .row.hval.b-m { --b-h: 30px; --b-ps: 8px; --b-pe: 10px; --b-gap: 6px; --b-icon: 16px; --b-ring: 20px; --b-th: 22px; --b-tw: 38px; }
+  .row.hval.b-l { --b-h: 36px; --b-ps: 10px; --b-pe: 12px; --b-gap: 6px; --b-icon: 18px; --b-ring: 24px; --b-th: 28px; --b-tw: 48px; }
   .row.hval.pb { height: var(--b-h); box-sizing: border-box; padding: 0 var(--b-pe) 0 var(--b-ps); gap: var(--b-gap); border-radius: 999px; }
   .header .hvals:has(> .pb) { gap: 6px; }
   .row.hval.pb > :is(ha-icon, ha-state-icon) { flex: none; --mdc-icon-size: var(--b-icon); }
@@ -149,13 +150,18 @@ const STYLE_BADGES = `
   .row.hval.b-l.pb :is(.state, .secondary) { ${type(14, 20)} }
   .row.hval.pb .state { color: var(--primary-text-color); }
   .row.hval.pb .state.accent { color: var(--fe-color); }
-  /* plain at m and l: no pill, the icon and the value grow */
-  .row.hval.b-m:not(.pb) { gap: 6px; }
-  .row.hval.b-m:not(.pb) > :is(ha-icon, ha-state-icon) { --mdc-icon-size: 20px; }
-  .row.hval.b-m:not(.pb) .state { ${type(14, 20)} }
-  .row.hval.b-l:not(.pb) { gap: 6px; }
-  .row.hval.b-l:not(.pb) > :is(ha-icon, ha-state-icon) { --mdc-icon-size: 22px; }
-  .row.hval.b-l:not(.pb) .state { ${type(16, 20)} }
+  /* plain: the pill draws nothing, so it takes no more height than its text and icon (20 px; the
+     pill reaches past it, for the hover layer), and the last one at a header's end reaches out by
+     its end padding: its value ends where the content does, in line with the rows below it */
+  .row.hval.b-plain { margin-block: calc((var(--b-h) - 20px) / -2); }
+  /* its glyphs as the header always drew its items, larger at m and l */
+  .row.hval.b-plain > :is(ha-icon, ha-state-icon) { --mdc-icon-size: 18px; }
+  .row.hval.b-s.b-plain :is(.state, .secondary) { ${type(13, 16)} }
+  .row.hval.b-m.b-plain > :is(ha-icon, ha-state-icon) { --mdc-icon-size: 20px; }
+  .row.hval.b-m.b-plain :is(.state, .secondary) { ${type(14, 20)} }
+  .row.hval.b-l.b-plain > :is(ha-icon, ha-state-icon) { --mdc-icon-size: 22px; }
+  .row.hval.b-l.b-plain :is(.state, .secondary) { ${type(16, 20)} }
+  .header:not(.bpos-inline, .bpos-below, .align-center) > .hvals > .row.hval.b-plain:last-child { margin-inline-end: calc(-1 * var(--b-pe)); }
   /* outline: Home Assistant's badge, on the card's surface (its background, border and shadow) */
   .row.hval.b-outline { --b-bw: var(--ha-card-border-width, 1px); background: ${CARD_BG}; border: var(--b-bw) solid var(--ha-card-border-color, var(--divider-color)); box-shadow: var(--ha-card-box-shadow, none); backdrop-filter: var(--ha-card-backdrop-filter, none); }
   .row.hval.b-soft { background: var(--fe-soft); }
@@ -167,6 +173,14 @@ const STYLE_BADGES = `
   .row.hval.b-tag { border: 1px solid color-mix(in srgb, var(--fe-color) 40%, transparent); }
   .row.hval.b-tag :is(ha-icon, ha-state-icon, .state, .state.accent, .secondary) { color: var(--fe-color); }
   .row.hval.b-tag :is(.state, .secondary) { font-weight: ${fw("medium")}; }
+  /* a switch in a pill sits in its rounded end, the same gap to the edge all round (4 px), sized
+     to the pill: 16 × 28 in a small one, 22 × 38 in a medium one, the switch's own 28 × 48 in a
+     large one */
+  .row.hval.pb > .toggle { width: var(--b-tw); height: var(--b-th); border-radius: calc(var(--b-th) / 2); }
+  .row.hval.pb > .toggle i { top: 2px; left: 2px; width: calc(var(--b-th) - 4px); height: calc(var(--b-th) - 4px); }
+  .row.hval.pb > .toggle.on i { left: calc(var(--b-tw) - var(--b-th) + 2px); }
+  .row.hval.pb > .toggle.pending i { left: calc((var(--b-tw) - var(--b-th) + 4px) / 2); }
+  .row.hval.pb:has(> .toggle:last-child) { padding-right: calc((var(--b-h) - var(--b-th)) / 2 - var(--b-bw, 0px)); }
   /* a switch in a filled pill: its track in the ink, as the pill already is the colour */
   .row.hval.b-filled .toggle.on { background: color-mix(in srgb, var(--b-ink) 40%, transparent); }
   /* the tap area is 44 px high whatever the pill's height; the hover layer and the focus ring keep

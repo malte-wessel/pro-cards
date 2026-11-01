@@ -1,7 +1,7 @@
 // The header badges (header_entities, the heading card's badges): one row each, holding the icon
 // (a ring around it, or a dot or a sparkline in its place), the name, the value and what the visual
 // adds beside it (a bar, the trend, a switch). The row itself is the pill of its style and size; a
-// plain badge has none and draws as the header always drew its items.
+// plain badge's pill draws nothing, but keeps its height, padding and shape.
 import { clampedSeries, lineBuckets, lineMeans, smoothPath, trendOf } from "../../history.ts";
 import {
   durationSeconds,
@@ -161,7 +161,8 @@ export const fillBadge = (
   const style = m.look.style ?? ent.badge.style;
   const age = m.model.avail ? staleAge(m.st, ent.staleMin, ctx.now) : null;
   el.classList.add(`b-${style}`, `b-${ent.badge.size}`);
-  el.classList.toggle("pb", style !== "plain");
+  // every style is a pill (plain draws none, but keeps its shape: its hover layer is a pill too)
+  el.classList.add("pb");
   el.classList.toggle("pulse", !!m.look.pulse);
   el.classList.toggle("stale", age !== null);
   const lead = leadOf(ctx, ent, m);

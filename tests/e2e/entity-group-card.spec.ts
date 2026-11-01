@@ -494,9 +494,13 @@ test.describe("values and header entities", () => {
     });
     await expect(card(page).locator(".header")).toBeVisible();
     await expect(card(page).locator(".header .title")).toHaveText("");
-    // the header items end at the padding, no gap after them
+    // the header items' value ends at the padding, no gap after it (a plain badge's pill reaches
+    // past it)
     expect(
-      await rightGap(card(page).locator(".header"), card(page).locator(".header .row.hval").last()),
+      await rightGap(
+        card(page).locator(".header"),
+        card(page).locator(".header .row.hval").last().locator(".state"),
+      ),
     ).toBeLessThan(1);
   });
 });
