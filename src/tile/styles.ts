@@ -62,6 +62,9 @@ const STYLE_TILE_CARD = `
      the line beside the name, else leaves them out */
   ha-card.layout-tile .row.tile.tkeep > .top > .main > .line { flex-wrap: nowrap; }
   ha-card.layout-tile .row.tile.tdrop > .top > .main > .line > .end, ha-card.layout-tile .row.tile.tdrop > .ctl { display: none; }
+  /* a gauge below the line at its drawing's own size (120 px): its value no larger than the
+     name above it, which the line already says */
+  ha-card.layout-tile .row.tile > .gauge { max-width: 120px; }
   /* a media player's progress runs along the tile's bottom edge, taking no row */
   .row.tile > .pprog { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: color-mix(in srgb, var(--fe-color) 22%, transparent); }
 `;
