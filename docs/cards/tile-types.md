@@ -52,21 +52,46 @@ The fallback: the entity's icon, name and value, then the matching rule's label.
 
 **Reads** a battery's charge (device class `battery`).
 
-The charge, orange and Low below 20 %, red and Critical below 10 %. A home battery, with its `power` (or `charge` and `discharge`), adds Charging or Discharging and its power to the line. See [Poster types: Battery](/cards/poster-types#battery).
+The charge, orange and Low below 20 %, red and Critical below 10 %. A template sensor often has no device class: `poster: battery` makes it a battery, like the phone here. The remote is low, the smoke detector critical. See [Poster types: Battery](/cards/poster-types#battery).
 
 ::: live
 
 ```yaml
 - type: custom:tile-card-pro
   entity: sensor.robot_battery
+  name: Robot
+  icon: mdi:robot-vacuum
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.phone_battery
+  name: Phone
   poster: battery
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
+  entity: sensor.remote_battery
+  name: Remote
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: sensor.smoke_detector_battery
+  name: Smoke detector
+  grid_options: { columns: 6 }
+```
+
+:::
+
+With a power sensor, it is a home battery: Charging or Discharging and its power follow the charge on the line. `power` is positive while it charges; `charge` and `discharge` take a sensor each instead. Without them, the type finds the power on the battery's device.
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: sensor.balcony_battery_soc
+  name: Balcony battery
+  charge: sensor.balcony_battery_charge_power
+  discharge: sensor.balcony_battery_discharge_power
+  grid_options: { columns: 12 }
+- type: custom:tile-card-pro
   entity: sensor.battery_soc
-  power: sensor.battery_power
   name: Home battery
   grid_options: { columns: 12 }
 ```
@@ -102,7 +127,7 @@ The value, coloured and labelled by the bands of its standard. See [Poster types
 
 **Reads** a `weather.*` entity.
 
-The condition's picture as the icon, the temperature, the condition, and today's high and low. `show_picture: true` draws the next hours as a curve. See [Poster types: Weather](/cards/poster-types#weather).
+The condition's picture as the icon, the temperature, the condition, and today's high and low. `show_picture: true` draws the next hours as a curve, `hours_to_show` sets how far it looks ahead, and `show_entity_picture: false` draws the condition's icon in place of its picture. See [Poster types: Weather](/cards/poster-types#weather).
 
 ::: live
 
@@ -116,6 +141,32 @@ The condition's picture as the icon, the temperature, the condition, and today's
   name: Next hours
   show_picture: true
   grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: weather.home
+  name: Next day
+  show_picture: true
+  hours_to_show: 24
+  show_entity_picture: false
+  grid_options: { columns: 12 }
+```
+
+:::
+
+`state` rules match the condition, `below` and `above` the temperature; a rule's label takes the condition's place on the line. With rules of your own, copy the [condition colours](/cards/poster-types#predefined-rules) to keep them:
+
+::: live
+
+```yaml
+type: custom:tile-card-pro
+entity: weather.home
+name: Outside
+rules:
+  - { state: lightning-rainy, color: red, label: Storm }
+  - { state: rainy, color: blue, icon: mdi:umbrella }
+  - { below: 5, color: light-blue, label: Frost risk }
+  - { above: 25, color: orange, label: Hot }
+  - { above: 15, color: amber, label: Mild }
+grid_options: { columns: 6 }
 ```
 
 :::
@@ -144,14 +195,14 @@ The next sunrise or sunset as the name, its time, and how long until then. `show
 
 **Reads** a wind speed sensor (device class `wind_speed`), or a `weather.*` entity with `poster: wind`.
 
-Particles cross the icon in the wind's direction, as fast as it blows. The line gives the speed, the wind's label, its direction and the gusts, which the type finds on the same device (`direction`, `gust`). A `variant` draws the poster's field, which a tile has no room for: with one, the icon is an arrow turned to where the wind blows. See [Poster types: Wind](/cards/poster-types#wind).
+Particles cross the icon in the wind's direction, as fast as it blows. The line gives the speed, the wind's label, its direction and the gusts, which the type finds on the same device (`direction`, `gust`; `false` leaves one out). A `variant` draws the poster's field, which a tile has no room for: with one, the icon is an arrow turned to where the wind blows. See [Poster types: Wind](/cards/poster-types#wind).
 
 ::: live
 
 ```yaml
 - type: custom:tile-card-pro
   entity: sensor.wind_speed
-  name: Wind
+  name: Garden
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.coast_wind_speed
@@ -167,6 +218,23 @@ Particles cross the icon in the wind's direction, as fast as it blows. The line 
   poster: wind
   name: Forecast wind
   grid_options: { columns: 6 }
+```
+
+:::
+
+Rules of your own take the place of the wind's labels:
+
+::: live
+
+```yaml
+type: custom:tile-card-pro
+entity: sensor.wind_speed
+name: Wind
+gust: false
+rules:
+  - { below: 20, color: teal, label: Fine for sailing }
+  - { above: 20, color: orange, label: Reef the sails }
+grid_options: { columns: 6 }
 ```
 
 :::
@@ -310,7 +378,7 @@ Its state (Disarmed, Armed away …); a triggered alarm in red. Hold the shield 
 
 **Reads** a `person.*` entity.
 
-Their picture as the icon, their zone and for how long they have been there. See [Poster types: Person](/cards/poster-types#person).
+Their picture as the icon, their zone and for how long they have been there. A person without a picture has the person icon. See [Poster types: Person](/cards/poster-types#person).
 
 ::: live
 
@@ -319,8 +387,21 @@ Their picture as the icon, their zone and for how long they have been there. See
   entity: person.malte
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
-  entity: person.sam
+  entity: person.kim
   grid_options: { columns: 6 }
+```
+
+:::
+
+`show_entity_picture: false` draws the icon in place of the picture:
+
+::: live
+
+```yaml
+type: custom:tile-card-pro
+entity: person.malte
+show_entity_picture: false
+grid_options: { columns: 6 }
 ```
 
 :::
@@ -344,17 +425,56 @@ The cover art as the icon and the tile's colour, the title, Playing or Paused, t
 
 :::
 
+Other players, the kitchen's without its buttons (`control: false`):
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: media_player.bedroom_speaker
+  grid_options: { columns: 12 }
+- type: custom:tile-card-pro
+  entity: media_player.kitchen_speaker
+  control: false
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: media_player.office_speaker
+  grid_options: { columns: 6 }
+```
+
+:::
+
+`show_entity_picture: false` draws the player's icon in place of the art:
+
+::: live
+
+```yaml
+type: custom:tile-card-pro
+entity: media_player.kitchen_speaker
+show_entity_picture: false
+grid_options: { columns: 12 }
+```
+
+:::
+
 ## Cover
 
 **Reads** a `cover.*` entity.
 
-Its position and Open, Closed, Opening or Closing, with open, stop and close at the end of the line. `control: slider` puts the position below the line instead. See [Poster types: Cover](/cards/poster-types#cover).
+Its position and Open, Closed, Opening or Closing, with open, stop and close at the end of the line; the icon is Home Assistant's for its device class and state. `control: slider` puts the position below the line instead. See [Poster types: Cover](/cards/poster-types#cover).
 
 ::: live
 
 ```yaml
 - type: custom:tile-card-pro
   entity: cover.living_room_blinds
+  name: Living room
+  grid_options: { columns: 12 }
+- type: custom:tile-card-pro
+  entity: cover.skylight
+  grid_options: { columns: 12 }
+- type: custom:tile-card-pro
+  entity: cover.driveway_gate
   grid_options: { columns: 12 }
 - type: custom:tile-card-pro
   entity: cover.garage_door

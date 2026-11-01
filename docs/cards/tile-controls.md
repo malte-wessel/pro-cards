@@ -119,7 +119,32 @@ Every tile takes a control its entity supports, whatever its poster type. The na
 
 :::
 
-On a thermostat or a fan, `control_attribute` picks what segments and a select change: `hvac_mode`, `preset_mode` or `fan_mode`. `control_options` limits segments and selects to the options listed, each with its own `label` and `icon`. See [A control on any poster](/cards/poster-controls#a-control-on-any-poster).
+On a thermostat or a fan, `control_attribute` picks what segments and a select change: `hvac_mode`, `preset_mode` or `fan_mode`. By default it is the attribute the tile shows, else the main mode. `control_options` limits segments and selects to the options listed, each with its own `label` and `icon`:
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: input_select.house_mode
+  name: House
+  icon: mdi:home-account
+  control: segments
+  control_position: block
+  control_options:
+    - { value: Home, icon: mdi:home }
+    - { value: Away, icon: mdi:home-export-outline }
+    - { value: Night, icon: mdi:weather-night }
+  grid_options: { columns: 12 }
+- type: custom:tile-card-pro
+  entity: climate.bedroom
+  name: Bedroom
+  control: segments
+  control_attribute: hvac_mode
+  control_position: block
+  grid_options: { columns: 12 }
+```
+
+:::
 
 ## Where it sits
 
@@ -174,6 +199,32 @@ On a narrow tile, a control at the `end` moves under the line rather than squeez
     - { entity: scene.dinner, label: Dinner, color: orange }
     - { entity: scene.good_night, label: Night, color: indigo }
   grid_options: { columns: 6 }
+```
+
+:::
+
+A button with `visibility` comes and goes with its conditions. Here the dock button shows only while the robot is out:
+
+::: live
+
+```yaml
+type: custom:tile-card-pro
+entity: vacuum.robot
+name: Robot
+control: buttons
+control_options:
+  - entity: vacuum.robot
+    label: Clean
+    icon: mdi:play
+    action: { action: perform-action, perform_action: vacuum.start }
+  - entity: vacuum.robot
+    label: Dock
+    icon: mdi:home-import-outline
+    action: { action: perform-action, perform_action: vacuum.return_to_base }
+    visibility:
+      - { condition: state, entity: vacuum.robot, state_not: docked }
+control_position: block
+grid_options: { columns: 6 }
 ```
 
 :::

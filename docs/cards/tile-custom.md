@@ -352,6 +352,29 @@ The icon takes actions of its own, as on Home Assistant's tile card: `icon_tap_a
 
 :::
 
+## Controls and buttons
+
+A tile carries one control. It can be one its entity supports (`toggle`, `slider`, `stepper`, `segments`, `select`, `button`, `hold`). It can also be a row of your own buttons that run scenes, scripts or any action. [Tile controls](/cards/tile-controls) has them all. A tile of buttons needs no entity:
+
+::: live
+
+```yaml
+type: custom:tile-card-pro
+name: Scenes
+icon: mdi:palette
+value: Living room
+color: deep-purple
+control: buttons
+control_position: block
+control_options:
+  - { entity: scene.bright, label: Bright, color: amber }
+  - { entity: scene.dinner, label: Dinner, color: orange }
+  - { entity: scene.movie_night, label: Movie, color: deep-purple }
+  - { entity: scene.good_night, label: Night, color: indigo }
+```
+
+:::
+
 ## Actions
 
 `tap_action`, `hold_action` and `double_tap_action` take [Home Assistant's actions](https://www.home-assistant.io/dashboards/actions/): `more-info`, `toggle`, `navigate`, `url`, `perform-action`, `assist` and `none`. With an entity, a tap or a hold opens its more-info dialog. Without one, both do nothing until you set them. A tap anywhere on the tile runs it, also in its padding; the controls keep their own taps, and the icon has [actions of its own](#the-icon). The tile answers the pointer as Home Assistant's does: a light layer in its colour under a mouse, a ripple from where you press, its border and a ring in its colour while it has the keyboard's focus. `hover: false` keeps it still.
