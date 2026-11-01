@@ -250,6 +250,36 @@ test.describe("tile status and badges", () => {
     ]);
   });
 
+  test("icon_badge: none, or a badge of the card's own that a template shows and hides", async ({
+    page,
+  }) => {
+    const alert = "{{ 'mdi:alert' if states('sensor.wind_speed') | float(0) > 50 else '' }}";
+    await mount(page, [
+      { type: T, entity: "sensor.wind_speed", icon_badge: { icon: alert, color: "red" } },
+      { type: T, entity: "climate.living_room", icon_badge: false },
+      {
+        type: T,
+        entity: "sensor.living_room_co2",
+        icon_badge: { icon: "mdi:window-open-variant" },
+      },
+    ]);
+    const badge = (i: number) => card(page, i).locator(".tlead > .tibadge");
+    await expect(badge(0)).toHaveCount(0);
+    await setState(page, "sensor.wind_speed", "62");
+    await expect(badge(0).locator("ha-icon")).toHaveAttribute("icon", "mdi:alert");
+    await expect(badge(0)).toHaveCSS("background-color", "rgb(244, 67, 54)");
+    await setState(page, "sensor.wind_speed", "9.4");
+    await expect(badge(0)).toHaveCount(0);
+    // none, not even Home Assistant's heating flame
+    await expect(badge(1)).toHaveCount(0);
+    // the card's own icon, in the tile's colour
+    await expect(badge(2).locator("ha-icon")).toHaveAttribute("icon", "mdi:window-open-variant");
+    const tile = await card(page, 2)
+      .locator(".row.tile")
+      .evaluate((e) => getComputedStyle(e).getPropertyValue("--fe-color"));
+    expect(tile).not.toBe("");
+  });
+
   test("the icon carries Home Assistant's badge: an action, a zone, unavailable", async ({
     page,
   }) => {

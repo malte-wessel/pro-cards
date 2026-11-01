@@ -8,7 +8,7 @@ How a [tile](/cards/tile-card) fits its size, then every [poster type](/cards/ti
 
 A type that asks for more room shows the sizes it takes instead, as Home Assistant draws a smaller one at the least a card asks for: a trend's lines take two rows, three vertical; a vertical tile with a control takes three rows, six columns with a stepper, buttons or speeds.
 
-Where a type's status fits as a badge beside the whole name, the tile shows it so (`status_badge: true`): on the whole section and on most vertical tiles. At half a section it stays on the line, where a badge would cut the name; see [Status and badges](/cards/tile-custom#status-and-badges).
+Where a type's status fits as a badge beside the whole name, the tile shows it so (`status_badge: true`): on the whole section and on most vertical tiles. At half a section it stays on the line, where a badge would cut the name; see [Badges](/cards/tile-badges).
 
 ## How a tile fits its size
 

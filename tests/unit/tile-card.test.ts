@@ -103,6 +103,22 @@ describe("tile-card config", () => {
     ).toEqual([]);
   });
 
+  it("takes the icon's badge as Home Assistant's, none or its own", () => {
+    const e = "sensor.wind_speed";
+    expect(norm({ entity: e }).iconBadge).toBe("auto");
+    expect(norm({ entity: e, icon_badge: "auto" }).iconBadge).toBe("auto");
+    expect(norm({ entity: e, icon_badge: false }).iconBadge).toBe(false);
+    expect(
+      norm({ entity: e, icon_badge: { icon: "mdi:alert", color: "{{ 'red' }}" } }).iconBadge,
+    ).toEqual({
+      icon: { kind: "text", text: "mdi:alert" },
+      color: { kind: "template", template: "{{ 'red' }}" },
+    });
+    expect(() => norm({ entity: e, icon_badge: 3 })).toThrow(
+      "tile-card-pro: icon_badge takes auto, false or { icon, color }",
+    );
+  });
+
   it("draws Home Assistant's badge on the icon: an action, a zone, unavailable", () => {
     const hass = snapshot() as never;
     const st = (entity_id: string, state: string, attributes: Record<string, unknown> = {}) =>

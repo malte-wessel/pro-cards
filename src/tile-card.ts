@@ -17,11 +17,13 @@
  *   hours_to_show / bucket_minutes / smoothing_minutes
  */
 import { registerCard } from "./shared/card.ts";
+import { cssColor } from "./shared/color.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { BLOCK_VISUALS } from "./shared/entity/constants.ts";
-import type { EntityItem } from "./shared/entity/config.ts";
+import type { EntityItem, ValueSrc } from "./shared/entity/config.ts";
 import { hasTileControl, tileMinColumns } from "./shared/entity/control.ts";
-import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
+import { asText } from "./shared/entity/look.ts";
+import { tplOf, type EntityModel, type RenderCtx } from "./shared/entity/model.ts";
 import { bindKeptLeadTap, leadTapState } from "./shared/entity/render/controls.ts";
 import { fillTileSlots, tileCorner, tileLead, tileValueText } from "./shared/entity/render/fill.ts";
 import { KindCardBase } from "./shared/kinds/card.ts";
@@ -29,7 +31,7 @@ import { div } from "./shared/kinds/dom.ts";
 import { fillStatus, glowLevel, glowOpacity, imageUrl, statusText } from "./shared/kinds/render.ts";
 import type { KindCtx } from "./shared/kinds/types.ts";
 import { isNum } from "./shared/util.ts";
-import { iconBadgeOf } from "./tile/badge.ts";
+import { iconBadgeOf, type IconBadge } from "./tile/badge.ts";
 import { normalizeTileConfig, type TileConfig } from "./tile/config.ts";
 import { CARD_TYPE } from "./tile/constants.ts";
 import { STYLE_TILE_CARD_ALL } from "./tile/styles.ts";
@@ -59,7 +61,35 @@ export class TileCard extends KindCardBase {
   _extraTemplates(cfg: TileConfig): string[] {
     const out = super._extraTemplates(cfg);
     if (cfg.statusText?.kind === "template") out.push(cfg.statusText.template);
+    if (cfg.iconBadge && cfg.iconBadge !== "auto")
+      for (const v of [cfg.iconBadge.icon, cfg.iconBadge.color])
+        if (v?.kind === "template") out.push(v.template);
     return out;
+  }
+
+  // the badge on the icon: Home Assistant's, none, or the card's own (its templates rendered; an
+  // empty icon: none, no colour: the tile's)
+  _iconBadge(ctx: RenderCtx, m: EntityModel): IconBadge | null {
+    const b = (this._config as TileConfig).iconBadge;
+    if (b === false) return null;
+    if (b === "auto") return iconBadgeOf(ctx.hass, m.st);
+    const text = (v: ValueSrc | null) => {
+      const t =
+        v?.kind === "text"
+          ? v.text
+          : v?.kind === "template"
+            ? asText(tplOf(ctx, v.template))
+            : null;
+      return t?.trim() || null;
+    };
+    const icon = text(b.icon);
+    if (!icon) return null;
+    const color = text(b.color);
+    return {
+      icon,
+      color: color ? cssColor(color, "var(--fe-color)") : "var(--fe-color)",
+      label: null,
+    };
   }
 
   // the icon's own actions are a toggle tap alone (a light's, a fan's by default): the kind's lead
@@ -149,7 +179,7 @@ export class TileCard extends KindCardBase {
     }
     this._fadePicture(lead);
     // the badge on the icon, as Home Assistant's tile: what a thermostat does, a person's zone …
-    const badge = ent.item.showIcon ? iconBadgeOf(ctx.hass, m.st) : null;
+    const badge = ent.item.showIcon ? this._iconBadge(ctx, m) : null;
     let b = lead.querySelector<HTMLElement>(":scope > .tibadge");
     if (!badge) b?.remove();
     else {
@@ -184,7 +214,8 @@ export class TileCard extends KindCardBase {
       ...this._kindInputs(kc),
       this._status(kc),
       imageUrl(ctx, this._iconLook(kc).iconImage),
-      // a person's zone (its icon on the badge)
+      // the badge on the icon, and a person's zone (its icon on Home Assistant's)
+      JSON.stringify(this._iconBadge(ctx, m)),
       ...Object.keys(ctx.hass?.states ?? {})
         .filter((id) => id.startsWith("zone."))
         .map((id) => ctx.hass?.states[id]),

@@ -386,6 +386,11 @@ describe("card config schemas", () => {
       validate({ type: TC, entity: H, status: { style: "filled", icon: "mdi:air" } }),
     ).toBeNull();
     expect(validate({ type: TC, entity: H, status_badge: true })).toBeNull();
+    expect(validate({ type: TC, entity: H, icon_badge: false })).toBeNull();
+    expect(
+      validate({ type: TC, entity: H, icon_badge: { icon: "{{ 'mdi:alert' }}", color: "red" } }),
+    ).toBeNull();
+    expect(validate({ type: TC, entity: H, icon_badge: { color: "red" } })).toBeTruthy();
     // the poster's status is always a badge
     expect(validate({ type: "custom:poster-card-pro", entity: H, status_badge: true })).toMatch(
       /unevaluated/,

@@ -62,6 +62,7 @@ const cardGroups = [
       { text: "Tile types", link: "/cards/tile-types" },
       { text: "Custom tiles", link: "/cards/tile-custom" },
       { text: "Controls", link: "/cards/tile-controls" },
+      { text: "Badges", link: "/cards/tile-badges" },
       { text: "Sizes", link: "/cards/tile-sizes" },
     ],
   },

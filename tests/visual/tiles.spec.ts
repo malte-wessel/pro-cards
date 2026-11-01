@@ -205,6 +205,12 @@ add("to-badges", [
   }),
   t("person.malte", { vertical: true }),
   t("light.shed", { grid_options: { columns: 6 } }),
+  t("sensor.wind_speed", {
+    name: "Wind",
+    icon_badge: { icon: "mdi:alert", color: "red" },
+    grid_options: { columns: 6 },
+  }),
+  t("climate.living_room", { name: "Heat", icon_badge: false, grid_options: { columns: 6 } }),
 ]);
 
 // ----- sizes, widths and themes -----

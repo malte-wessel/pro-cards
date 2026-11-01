@@ -329,7 +329,7 @@ The blades in the icon turn at the fan's speed. The line gives the speed, and it
 
 **Reads** a `climate.*` entity.
 
-The current temperature, what it is doing (Heating, Cooling, Idle), and a stepper for the target at the end of the line. The icon's badge says what it is doing too; `status_badge: true` puts the status in a tag at the end of the first row, in place of on the line ([Status and badges](/cards/tile-custom#status-and-badges)). See [Poster types: Climate](/cards/poster-types#climate).
+The current temperature, what it is doing (Heating, Cooling, Idle), and a stepper for the target at the end of the line. The icon's badge says what it is doing too; `status_badge: true` puts the status in a tag at the end of the first row, in place of on the line ([Badges](/cards/tile-badges)). See [Poster types: Climate](/cards/poster-types#climate).
 
 ::: live
 

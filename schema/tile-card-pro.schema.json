@@ -178,6 +178,29 @@
       "type": "boolean",
       "default": false,
       "description": "The status as a badge (a tag by default) before the badges at the end of the first row, in place of on the line; `status` in the list of badges places it among them"
+    },
+    "icon_badge": {
+      "description": "The badge on the icon. auto (the default): Home Assistant's, a thermostat's or humidifier's action, a person's zone, an unavailable entity; false: none; or one of your own: an icon and a colour, each a text or a template (an empty icon shows none; without a colour, the tile's)",
+      "oneOf": [
+        {
+          "enum": ["auto", "none", true, false]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "icon": {
+              "type": "string",
+              "description": "An mdi: icon, or a template that renders one (empty: no badge)"
+            },
+            "color": {
+              "type": "string",
+              "description": "A colour token, a hex or a template; default: the tile's colour"
+            }
+          },
+          "required": ["icon"],
+          "additionalProperties": false
+        }
+      ]
     }
   },
   "required": ["type"],

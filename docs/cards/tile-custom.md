@@ -41,7 +41,7 @@ A tile needs no entity: the keys alone can fill it. Without an entity, a tap doe
 The line under the name joins its parts with a dot, and is cut at the end where it is too long:
 
 - the **value**: the type's (a thermostat's temperature, a media player's title), else the state. `value` and `attribute` set it; `unit`, `decimals`, `prefix` and `suffix` format a number.
-- the **status**: the type's, else the matching rule's label. `status` sets it (a text or a template), `false` leaves it out. A status that only repeats the value is left out: a vacuum's Cleaning shows once. `status_badge: true` makes it a badge instead; see [Status and badges](#status-and-badges).
+- the **status**: the type's, else the matching rule's label. `status` sets it (a text or a template), `false` leaves it out. A status that only repeats the value is left out: a vacuum's Cleaning shows once. `status_badge: true` makes it a badge instead; see [Badges](/cards/tile-badges).
 - the **secondary**: what the type adds (the direction and gusts, the artist and the album). `secondary` sets it.
 
 `show_value: false` leaves the value out, `show_name: false` the name above it.
@@ -77,18 +77,11 @@ The line under the name joins its parts with a dot, and is cut at the end where 
 
 ## Status and badges
 
-The status is on the line after the value. `status_badge: true` makes it a badge instead: a tag in the tile's colour at the end of the first row, centred on the icon. `status` takes badge keys as on the poster, to style it (`style`, `icon`, `tap_action` …).
-
-`badges` adds badges of your own there: entities, or badges with their value, icon, rules and picture, as on the [poster](/cards/poster-badges). A badge without an entity reads the tile's. The status badge comes first; `status` in the list of `badges` places it among them, and asks for it as a badge too.
-
-The badges always show, all of them, in full: the name and the line give way beside them, cut at their end, and controls at the end of the line move under it where even the name's least does not fit. Too many badges for a tile's width is for you to see and change: a shorter `name`, fewer badges, more columns. On a vertical tile, they sit in a row of their own at the top right, above the icon, and the tile takes a row more.
+The status is on the line; `status_badge: true` makes it a badge at the end of the first row, centred on the icon. `badges` adds badges of your own there, and `icon_badge` decides the badge on the icon. [Badges](/cards/tile-badges) shows them all.
 
 ::: live
 
 ```yaml
-- type: custom:tile-card-pro
-  entity: sensor.living_room_co2
-  grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.living_room_co2
   name: CO₂
@@ -98,47 +91,8 @@ The badges always show, all of them, in full: the name and the line give way bes
   entity: sensor.living_room_co2
   badges:
     - sensor.living_room_temperature
-    - sensor.living_room_humidity
     - status
   grid_options: { columns: 12 }
-- type: custom:tile-card-pro
-  entity: sensor.living_room_co2
-  name: Air
-  status_badge: true
-  status: { style: filled, icon: mdi:air-filter }
-  grid_options: { columns: 6 }
-- type: custom:tile-card-pro
-  entity: climate.living_room
-  name: Heat
-  status_badge: true
-  grid_options: { columns: 6 }
-- type: custom:tile-card-pro
-  entity: sensor.living_room_co2
-  name: CO₂
-  vertical: true
-  status_badge: true
-  grid_options: { columns: 6 }
-```
-
-:::
-
-The icon carries Home Assistant's badge, as on its tile: what a thermostat or a humidifier is doing (heating, cooling, drying …) in its colour, a person's zone, and an orange mark on an entity that is unavailable. It takes no room, and `show_icon: false` leaves it out with the icon.
-
-::: live
-
-```yaml
-- type: custom:tile-card-pro
-  entity: climate.living_room
-  grid_options: { columns: 6 }
-- type: custom:tile-card-pro
-  entity: person.malte
-  grid_options: { columns: 6 }
-- type: custom:tile-card-pro
-  entity: light.shed
-  grid_options: { columns: 6 }
-- type: custom:tile-card-pro
-  entity: person.sam
-  grid_options: { columns: 6 }
 ```
 
 :::

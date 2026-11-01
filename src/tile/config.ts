@@ -2,7 +2,7 @@
 // entity (or none) as a tile, filled the way its poster type (its kind) says
 // (src/shared/kinds/config.ts): the icon, the name, one line under it, controls at its end. What
 // needs a second row is asked for: a slider below, the type's picture.
-import { normalizeHistoryOptions, type ValueSrc } from "../shared/entity/config.ts";
+import { normalizeHistoryOptions, normalizeValue, type ValueSrc } from "../shared/entity/config.ts";
 import { domainOf } from "../shared/color.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
 import {
@@ -18,6 +18,7 @@ import { CARD_TYPE } from "./constants.ts";
 export interface RawTileCardConfig extends RawKindCardConfig {
   status?: unknown;
   status_badge?: unknown;
+  icon_badge?: unknown;
   badges?: unknown;
   show_picture?: unknown;
   vertical?: unknown;
@@ -36,7 +37,18 @@ export interface TileConfig extends KindConfig {
   glow: boolean;
   // the icon on top, the name and the line centred under it, the controls under them
   vertical: boolean;
+  // the badge on the icon: Home Assistant's (auto), none (false), or the card's own icon and
+  // colour, each text or a template (an empty icon: none; no colour: the tile's)
+  iconBadge: "auto" | false | { icon: ValueSrc | null; color: ValueSrc | null };
 }
+
+// `icon_badge` as written
+const parseIconBadge = (v: unknown): TileConfig["iconBadge"] => {
+  if (v === undefined || v === null || v === true || v === "auto") return "auto";
+  if (v === false || v === "none") return false;
+  if (isObj(v)) return { icon: normalizeValue(v.icon), color: normalizeValue(v.color) };
+  throw new Error(`${CARD_TYPE}: icon_badge takes auto, false or { icon, color }`);
+};
 
 // the domains whose icon toggles them by default, as on Home Assistant's tile (its DOMAINS_TOGGLE),
 // and those it presses (a toggle runs them: actionServiceFor)
@@ -126,5 +138,6 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
       typeof written.show_picture === "boolean" ? written.show_picture : k.kind.name === "trend",
     glow: k.raw.visual === "glow",
     vertical: written.vertical === true,
+    iconBadge: parseIconBadge(written.icon_badge),
   };
 };
