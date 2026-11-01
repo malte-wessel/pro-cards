@@ -86,7 +86,11 @@ describe("tile-card config", () => {
       min_columns: 3,
       min_rows: 2,
     });
-    expect(grid({ entity: "light.desk_lamp", vertical: true })).toMatchObject({ min_columns: 3 });
+    // a control under the name takes a third row
+    expect(grid({ entity: "light.desk_lamp", vertical: true })).toMatchObject({
+      min_columns: 3,
+      min_rows: 3,
+    });
     expect(grid({ entity: "fan.living_room", vertical: true })).toMatchObject({
       columns: 6,
       min_columns: 6,

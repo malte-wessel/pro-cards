@@ -152,7 +152,7 @@
     "vertical": {
       "type": "boolean",
       "default": false,
-      "description": "The icon on top, the name and the value with its status centred under it, the controls under them; as narrow as its controls let it be, two rows at least. The poster type's line under the value is left out (a written `secondary` stays)"
+      "description": "The icon on top, the name and the value with its status centred under it, the controls under them; as narrow as its controls let it be, two rows at least, three with a control. The poster type's line under the value is left out (a written `secondary` stays)"
     }
   },
   "required": ["type"],

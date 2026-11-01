@@ -133,6 +133,43 @@ export class TileCard extends KindCardBase {
     }
     // what follows the clock or the size (a curve, the progress) checks itself whether it changed
     cfg.kind.live?.(kc, row);
+    if (this._root) this._fitControls(this._root, row, cfg.vertical);
+  }
+
+  // a tile with no room for its controls (a fixed row, a card around it giving less): they go
+  // under the line where they fit there; else they stay on the line beside a name of 40 px at
+  // least (not on a vertical tile); else they are left out, and more-info has them, as a poster
+  // leaves out its slider. Found once per card size, so nothing flips back and forth; a tile as
+  // tall as its content (rows: auto) grows instead and never needs it
+  _ctlFit: { size: string; mode: string } | null = null;
+  _fitControls(card: HTMLElement, row: HTMLElement, vertical: boolean) {
+    if (!row.querySelector(":scope > .ctl, :scope > .top > .main > .line > .end > .ctl")) return;
+    const set = (mode: string) => {
+      row.classList.toggle("tkeep", mode === "tkeep");
+      row.classList.toggle("tdrop", mode === "tdrop");
+    };
+    const size = `${card.clientWidth}x${card.clientHeight}`;
+    if (this._ctlFit?.size !== size) {
+      // no control reaches past the card's edges (it clips them); beside the name, none scrolls
+      // either (speeds cut at the line's end)
+      const fits = (mode: string) => {
+        const box = card.getBoundingClientRect();
+        return [...row.querySelectorAll<HTMLElement>(".ctl, .toggle")].every((c) => {
+          const b = c.getBoundingClientRect();
+          if (!b.width) return true;
+          if (mode === "tkeep" && c.scrollWidth > c.clientWidth + 0.5) return false;
+          return b.right <= box.right + 0.5 && b.bottom <= box.bottom + 0.5;
+        });
+      };
+      const modes = vertical ? ["", "tdrop"] : ["", "tkeep", "tdrop"];
+      let mode = "";
+      for (mode of modes) {
+        set(mode);
+        if (fits(mode)) break;
+      }
+      this._ctlFit = { size, mode };
+    }
+    set(this._ctlFit.mode);
   }
 
   getGridOptions(): GridOptions {
@@ -144,10 +181,12 @@ export class TileCard extends KindCardBase {
     const ent = cfg.entities[0];
     const plot = ent.visual === "sparkline" || ent.visual === "columns" || cfg.showPicture;
     // a vertical tile: the icon over two lines of text, as narrow as its controls let it be (a
-    // quarter of a section), two rows at least (three with a plot)
+    // quarter of a section); two rows for those, one more for a control under them, one more for
+    // a plot
     if (cfg.vertical) {
       const columns = tileMinColumns(ent, true);
-      return { columns, rows: "auto", min_columns: columns, min_rows: plot ? 3 : 2 };
+      const rows = 2 + (hasTileControl(ent) ? 1 : 0) + (plot ? 1 : 0);
+      return { columns, rows: "auto", min_columns: columns, min_rows: rows };
     }
     if (!BLOCK_VISUALS.has(ent.visual) && !hasTileControl(ent) && !cfg.showPicture)
       return { columns: 6, rows: "auto", min_columns: 3, min_rows: 1 };

@@ -41,6 +41,10 @@ const STYLE_TILE_CARD = `
   ha-card.tvertical .row.tile .line { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 8px; }
   ha-card.tvertical .row.tile .line > .texts { flex: none; }
   ha-card.tvertical .row.tile .line > .end { max-width: none; justify-content: center; }
+  /* a tile with no room for its controls under the line (TileCard._fitControls) keeps them on
+     the line beside the name, else leaves them out */
+  ha-card.layout-tile .row.tile.tkeep > .top > .main > .line { flex-wrap: nowrap; }
+  ha-card.layout-tile .row.tile.tdrop > .top > .main > .line > .end, ha-card.layout-tile .row.tile.tdrop > .ctl { display: none; }
   /* a media player's progress runs along the tile's bottom edge, taking no row */
   .row.tile > .pprog { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: color-mix(in srgb, var(--fe-color) 22%, transparent); }
 `;

@@ -183,28 +183,49 @@ add("to-vertical", [
 
 // ----- sizes, widths and themes -----
 
-// half a section, a quarter, the whole width; and given one row with a second row's content (a
-// card around it may give it less than it asks for: it fits into that)
-const SIZES: GridOptions[] = [
-  { columns: 6, rows: "auto" },
-  { columns: 3, rows: "auto" },
-  { columns: 12, rows: "auto" },
-  { columns: 6, rows: 1 },
-];
-const SIZED: Record<string, CardConfigBase> = {
-  entity: t("sensor.outdoor_temperature"),
-  light: t("light.living_room"),
-  climate: t("climate.living_room"),
-  cover: t("cover.living_room_blinds"),
-  vacuum: t("vacuum.robot"),
-  media: t("media_player.living_room_speaker"),
-  sparkline: t("sensor.outdoor_temperature", { visual: "sparkline" }),
-  weather: t("weather.home", { show_picture: true }),
+// the sizes of the docs' sizes page: horizontal 12 × 1, 6 × 1 and 6 × 2, vertical 6 × 2, 6 × 3
+// and 4 × 2; a type that asks for more room takes the sizes it is drawn at instead (a trend's two
+// rows, a vertical tile's third row for a control, six columns for wide controls)
+type Size = { grid_options: GridOptions; vertical?: boolean };
+const h = (columns: number, rows: number): Size => ({ grid_options: { columns, rows } });
+const vt = (columns: number, rows: number): Size => ({ ...h(columns, rows), vertical: true });
+const ALL = [h(12, 1), h(6, 1), h(6, 2), vt(6, 2), vt(6, 3), vt(4, 2)];
+const SWITCH = [h(12, 1), h(6, 1), h(6, 2), vt(6, 3), vt(4, 3)];
+const WIDE = [h(12, 1), h(6, 1), h(6, 2), vt(6, 3)];
+const SIZED: Record<string, [CardConfigBase, Size[]]> = {
+  entity: [t("sensor.outdoor_temperature"), ALL],
+  air: [t("sensor.living_room_co2"), ALL],
+  battery: [t("sensor.battery_soc", { power: "sensor.battery_power" }), ALL],
+  weather: [t("weather.home"), ALL],
+  sun: [t("sun.sun"), ALL],
+  wind: [t("sensor.wind_speed"), ALL],
+  rain: [t("sensor.rain_rate_roof"), ALL],
+  trend: [
+    t(null, {
+      poster: "trend",
+      name: "Temperatures",
+      series: ["sensor.living_room_temperature", "sensor.outdoor_temperature"],
+    }),
+    [h(12, 2), h(6, 2), vt(6, 3), vt(4, 3)],
+  ],
+  light: [t("light.living_room"), SWITCH],
+  fan: [t("fan.living_room"), WIDE],
+  climate: [t("climate.living_room"), WIDE],
+  lock: [t("lock.front_door"), ALL],
+  alarm: [t("alarm_control_panel.home"), ALL],
+  person: [t("person.malte"), ALL],
+  media: [t("media_player.living_room_speaker"), WIDE],
+  cover: [t("cover.office_blinds"), WIDE],
+  vacuum: [t("vacuum.robot"), WIDE],
+  grid: [t("sensor.grid_power", { poster: "grid" }), ALL],
+  solar: [t("sensor.solar_power", { poster: "solar", today: "sensor.energy_today" }), ALL],
+  car: [t("sensor.ev_battery", { poster: "car" }), ALL],
+  appliance: [t("sensor.washer_power", { poster: "appliance", variant: "washer" }), ALL],
 };
-for (const [name, card] of Object.entries(SIZED))
+for (const [name, [card, sizes]] of Object.entries(SIZED))
   add(
     `ts-${name}`,
-    SIZES.map((grid_options) => ({ ...card, grid_options })),
+    sizes.map((o) => ({ ...card, ...o })),
   );
 
 // a vertical tile at its least, half a section and the whole, and given a second row

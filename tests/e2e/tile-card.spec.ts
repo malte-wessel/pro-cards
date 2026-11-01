@@ -91,6 +91,45 @@ test.describe("tile pictures", () => {
   });
 });
 
+test.describe("tile without room for its controls", () => {
+  test("keeps them under the line, else beside the name, else leaves them out", async ({
+    page,
+  }) => {
+    await mount(
+      page,
+      [
+        { type: T, entity: "cover.office_blinds", grid_options: { columns: 6 } },
+        { type: T, entity: "cover.office_blinds", grid_options: { columns: 12, rows: 1 } },
+        { type: T, entity: "vacuum.robot", grid_options: { columns: 6, rows: 1 } },
+        { type: T, entity: "cover.office_blinds", grid_options: { columns: 6, rows: 1 } },
+      ],
+      { width: 420 },
+    );
+    const row = (i: number) => card(page, i).locator(".row.tile");
+    const buttons = (i: number) => card(page, i).locator(".line > .end .ctl-buttons");
+    // as tall as its content: under the line
+    await expect(row(0)).not.toHaveClass(/tkeep|tdrop/);
+    await expect(buttons(0)).toBeVisible();
+    // the whole width: on the line as it is
+    await expect(row(1)).not.toHaveClass(/tkeep|tdrop/);
+    // one row, room beside the name: two buttons stay on the line
+    await expect(row(2)).toHaveClass(/tkeep/);
+    await expect(buttons(2)).toBeVisible();
+    // one row, no room: left out, the name and the line whole
+    await expect(row(3)).toHaveClass(/tdrop/);
+    await expect(buttons(3)).toBeHidden();
+    await expect(line(page, 3)).toHaveText("40 % · Open");
+    // whatever is drawn stays inside its card
+    for (let i = 0; i < 4; i++) {
+      const box = (await card(page, i).locator("ha-card").boundingBox())!;
+      for (const c of await card(page, i).locator(".ctl").all()) {
+        const b = await c.boundingBox();
+        if (b) expect(b.y + b.height).toBeLessThanOrEqual(box.y + box.height + 0.5);
+      }
+    }
+  });
+});
+
 test.describe("vertical tile", () => {
   test("puts the icon on top, the name and the value centred under it, the controls below", async ({
     page,

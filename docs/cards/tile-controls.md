@@ -130,7 +130,7 @@ A control has two places on a tile, set with `control_position`:
 | `end`              | at the end of the line                | switch, stepper, speeds, buttons, select, hold |
 | `block`            | below the line, across the whole tile | slider                                         |
 
-On a narrow tile, a control at the `end` moves under the line rather than squeezing the name. A tile with a control on its line asks the sections grid for more columns: four for a switch or a hold, six for anything wider. See [Tile sizes](/cards/tile-sizes).
+On a narrow tile, a control at the `end` moves under the line rather than squeezing the name. A tile too short for that (a fixed row) keeps it on the line beside the name; where even that does not fit, the control is left out and a tap opens more-info. A tile with a control on its line asks the sections grid for more columns: four for a switch or a hold, six for anything wider. See [Tile sizes](/cards/tile-sizes).
 
 ::: live
 
