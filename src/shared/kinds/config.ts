@@ -237,7 +237,8 @@ export const normalizeKindItem = (
     } else if (raw[key] === undefined) raw[key] = v as never;
   }
   const entity = raw.entity || null;
-  // without an entity there is no more-info to open: a tap does nothing unless it is told to
+  // without an entity there is no more-info to open: a tap does nothing unless it is told to. The
+  // card answers the pointer as Home Assistant's tile does unless it says hover: false
   const none = { action: "none" };
   const ctx = {
     type,
@@ -245,6 +246,7 @@ export const normalizeKindItem = (
       ...raw,
       tap_action: raw.tap_action ?? (entity ? undefined : none),
       hold_action: raw.hold_action ?? (entity ? undefined : none),
+      hover: raw.hover !== false,
     }),
   };
   // a card-level `visibility` is Home Assistant's (it hides the whole card); a card without an

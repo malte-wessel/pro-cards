@@ -135,6 +135,26 @@ export const bindLeadTap = (
   idx: number,
   m: EntityModel,
 ) => {
+  const usable = leadTapState(lead, ctx, ent, idx, m);
+  guard(lead);
+  if (!usable) return;
+  bindToggle(lead, ctx, ent, idx, m, toggleTarget(ctx, idx, m).on);
+  lead.addEventListener("keydown", (ev) => {
+    if (ev.key === "Enter" || ev.key === " ") {
+      ev.preventDefault();
+      lead.click();
+    }
+  });
+};
+// the icon as a switch, as it is now: on or off, pending, its label; greyed out where the entity
+// takes no call. True: it can be used
+export const leadTapState = (
+  lead: HTMLElement,
+  ctx: RenderCtx,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+) => {
   lead.classList.add("tap");
   const { on, pending } = toggleTarget(ctx, idx, m);
   lead.classList.toggle("off", !on);
@@ -143,12 +163,31 @@ export const bindLeadTap = (
   lead.setAttribute("aria-label", t(ctx.hass, "control.toggle", { name: nameOf(ctx, ent, m.st) }));
   lead.setAttribute("aria-checked", String(on));
   lead.tabIndex = 0;
+  const usable = canControl(ent, m.st);
+  lead.classList.toggle("disabled", !usable);
+  if (usable) lead.removeAttribute("aria-disabled");
+  else lead.setAttribute("aria-disabled", "true");
+  return usable;
+};
+// a kept icon (a kind's animated one, built once, so its animation runs on) as a switch: bound
+// once, it reads the row as it is when tapped (`now`); leadTapState sets its look on every fill
+export const bindKeptLeadTap = (
+  lead: HTMLElement,
+  now: () => { ctx: RenderCtx; ent: EntityItem; idx: number; m: EntityModel },
+) => {
+  if (lead.dataset.tapBound) return;
+  lead.dataset.tapBound = "1";
   guard(lead);
-  if (!canControl(ent, m.st)) {
-    disable(lead);
-    return;
-  }
-  bindToggle(lead, ctx, ent, idx, m, on);
+  lead.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    if (lead.classList.contains("disabled")) return;
+    const { ctx, ent, idx, m } = now();
+    const { on } = toggleTarget(ctx, idx, m);
+    ctx.ctl?.call(lead, idx, ent, serviceFor(ent, m.st, { type: "toggle" }), {
+      until: later(),
+      value: on ? "off" : "on",
+    });
+  });
   lead.addEventListener("keydown", (ev) => {
     if (ev.key === "Enter" || ev.key === " ") {
       ev.preventDefault();

@@ -1040,3 +1040,34 @@ test.describe("poster cards in the layout card", () => {
     }
   });
 });
+
+test.describe("poster pointer", () => {
+  test("answers the pointer by default, as Home Assistant's tile; focus rings the card", async ({
+    page,
+  }) => {
+    await mount(page, [
+      { type: P, entity: "sensor.living_room_co2" },
+      { type: P, entity: "sensor.living_room_co2", hover: false },
+    ]);
+    await expect(card(page, 0).locator(".row.poster")).toHaveClass(/hover-fx/);
+    await expect(card(page, 1).locator(".row.poster")).not.toHaveClass(/hover-fx/);
+    const hit = card(page, 0).locator(".row.poster > .hit");
+    const b = (await hit.boundingBox())!;
+    await page.mouse.move(b.x + b.width / 2, b.y + b.height * 0.6);
+    await page.mouse.down();
+    await expect
+      .poll(() =>
+        hit.evaluate((e) => getComputedStyle(e.querySelector(".ripple > .rpress")!).opacity),
+      )
+      .toBe("0.12");
+    await page.mouse.move(1, 1);
+    await page.mouse.up();
+    await hit.focus();
+    await page.keyboard.press("Shift");
+    await expect(card(page, 0).locator("ha-card")).toHaveCSS("outline-width", "1px");
+    await expect(card(page, 0).locator("ha-card")).not.toHaveCSS(
+      "outline-color",
+      "rgba(0, 0, 0, 0)",
+    );
+  });
+});

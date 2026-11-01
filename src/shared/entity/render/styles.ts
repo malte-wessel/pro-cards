@@ -172,7 +172,7 @@ const STYLE_BADGES = `
   /* the tap area is 44 px high whatever the pill's height; the hover layer and the focus ring keep
      to the pill */
   .row.hval.pb > .hit { inset: min(0px, calc((var(--b-h) - 44px) / 2)) -3px; }
-  .row.hover-fx.hval.pb > .hit::before { inset: max(0px, calc((44px - var(--b-h)) / 2)) 3px; }
+  .row.hover-fx.hval.pb > .hit > .ripple { inset: max(0px, calc((44px - var(--b-h)) / 2)) 3px; }
   .row.actionable.hval.pb > .hit:focus-visible { box-shadow: none; }
   .row.hval.pb:has(> .hit:focus-visible) { outline: 2px solid var(--fe-color); outline-offset: 1px; }
   /* what a visual draws: a dot or a sparkline for the icon, a ring around it, a bar, the trend */
@@ -521,29 +521,41 @@ export const STYLE_HOVER = `
   /* only what reads as one button takes the layer: a tile, a grid cell, a header entity. List rows,
      heroes, table fields and the power flow's list rows keep still; an item or a power flow node is
      its icon: the icon answers, as it shows the focus ring */
-  .row.hover-fx:is(.tile, .wtile, .poster, .cell, .hval) > .hit::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--fe-color); opacity: 0; pointer-events: none; }
+  /* Home Assistant's ripple (src/shared/ripple.ts: RIPPLE_TARGETS): a layer while hovered, a press
+     growing from where it starts; the card in its colour (4 %, 12 %), a control button in the
+     secondary text colour (8 %, 12 %), as Home Assistant's tile and control buttons */
+  .ripple { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; }
+  .ripple > span { position: absolute; opacity: 0; }
+  .ripple > .rhover { inset: 0; background: var(--ripple-color); transition: opacity 15ms linear, background-color 15ms linear; }
+  .ripple.hovered > .rhover { opacity: var(--ripple-hover, .08); }
+  .ripple > .rpress { top: 0; left: 0; transform-origin: center center; background: radial-gradient(closest-side, var(--ripple-color) max(100% - 70px, 65%), transparent 100%); transition-property: opacity, transform; transition-duration: 375ms, 450ms; transition-timing-function: linear, cubic-bezier(0.2, 0, 0, 1); }
+  .ripple.pressed > .rpress { opacity: var(--ripple-pressed, .12); transition-duration: 105ms, 450ms; }
+  .row.hover-fx > .hit { --ripple-color: var(--fe-color); --ripple-hover: .04; --ripple-pressed: .12; }
+  .row.hover-fx :is(.ctl-stepper, .ctl-buttons) button, .row.hover-fx button.ctl-chip { position: relative; isolation: isolate; --ripple-color: var(--secondary-text-color); --ripple-hover: .08; --ripple-pressed: .12; }
+  .row.hover-fx :is(.ctl-stepper, .ctl-buttons) button > .ripple, .row.hover-fx button.ctl-chip > .ripple { z-index: -1; }
+  /* an icon with its own action is hit 6 px around its circle too, as Home Assistant's tile icon */
+  .lead.tap::before, .ctl-hold.lead-size::before { content: ""; position: absolute; inset: -6px; border-radius: 50%; }
   .row.hover-fx .lead.tap .shape, .row.hover-fx:is(.item, .pnode) > .hit ~ .lead .shape { transition: background-color 180ms ease-in-out, transform 180ms ease-in-out; }
   @media (hover: hover) {
-    .row.hover-fx > .hit:hover::before { opacity: .04; }
     /* as Home Assistant's tile icon: the hover opacity takes the place of the icon's, so every
        background drawn with iconBg follows (an off toggle's fainter one, a node's on the card) */
     .row.hover-fx .lead.tap:not(.disabled):hover, .row.hover-fx:is(.item, .pnode) > .hit:hover ~ .lead { --tile-icon-opacity: var(--tile-icon-hover-opacity, 0.35); }
   }
-  /* the controls, as Home Assistant's control buttons (controlLayer); the switch and the select in
-     the text colour: the layer's :is() counts as its most specific argument (a class and an
-     element), so this one matches its shape to win by order */
-  ${controlLayer(".row.hover-fx :is(.ctl button, button.ctl, .ctl-select)")}
+  /* the controls Home Assistant draws without a ripple: the segments, the switch, the select and a
+     hold take a light layer (controlLayer); the switch and the select in the text colour: the
+     layer's :is() counts as its most specific argument (a class and an element), so this one
+     matches its shape to win by order */
+  ${controlLayer(".row.hover-fx :is(.ctl-segments button, button.ctl-hold, button.toggle, .ctl-select)")}
   .row.hover-fx :is(button.toggle, div.ctl-select)::after { background: var(--primary-text-color); }
   .row.hover-fx .ctl-slider .knob { transition: box-shadow 180ms ease-in-out; }
   @media (hover: hover) {
     /* the slider: a halo around the knob, lighter than the one while dragging */
     .row.hover-fx .ctl-slider:not(.dragging, .pending):hover .knob { box-shadow: var(--knob-shadow), 0 0 0 6px color-mix(in srgb, var(--fe-color) 12%, transparent); }
   }
-  /* pressed after hovered: the same specificity, the later rule wins */
-  .row.hover-fx > .hit:active::before { opacity: .12; }
   .row.hover-fx .lead.tap:not(.disabled):active .shape { transform: scale(1.2); }
   /* reduced motion: no growing and no fades; each selector repeats the one it overrides */
   @media (prefers-reduced-motion: reduce) {
+    .ripple > .rpress { transition-property: opacity; }
     .row.hover-fx .lead.tap:not(.disabled):active .shape { transform: none; }
     .row.hover-fx .lead.tap .shape, .row.hover-fx:is(.item, .pnode) > .hit ~ .lead .shape { transition: none; }
     .row.hover-fx .ctl-slider .knob { transition: none; }

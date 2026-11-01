@@ -255,8 +255,12 @@ export abstract class KindCardBase extends EntityCardBase {
     return (
       ((this._raw ?? {}) as Record<string, unknown>).icon !== undefined ||
       !!image ||
-      (!!cfg && hasIconActions(cfg.iconActions))
+      (!!cfg && this._actionsTakeLead(cfg))
     );
+  }
+  // whether the icon's own actions take the place of the kind's lead (the hold button, a button)
+  _actionsTakeLead(cfg: KindConfig) {
+    return hasIconActions(cfg.iconActions);
   }
   // the matching rule's look of the icon, if any (a rule's key wins: the card's is the default)
   _ruleLook(kc: KindCtx): IconLook {

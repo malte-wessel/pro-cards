@@ -22,6 +22,7 @@ import { BLOCK_VISUALS } from "./shared/entity/constants.ts";
 import type { EntityItem } from "./shared/entity/config.ts";
 import { hasTileControl, tileMinColumns } from "./shared/entity/control.ts";
 import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
+import { bindKeptLeadTap, leadTapState } from "./shared/entity/render/controls.ts";
 import { fillTileSlots, tileLead } from "./shared/entity/render/fill.ts";
 import { KindCardBase } from "./shared/kinds/card.ts";
 import { div } from "./shared/kinds/dom.ts";
@@ -60,6 +61,16 @@ export class TileCard extends KindCardBase {
     return out;
   }
 
+  // the icon's own actions are a toggle tap alone (a light's, a fan's by default): the kind's lead
+  // stays (the fan turns on) and takes it
+  _plainToggle() {
+    const a = this._config?.iconActions;
+    return !!a && a.tap?.action === "toggle" && !a.hold && !a.dbl;
+  }
+  _actionsTakeLead(cfg: TileConfig) {
+    return super._actionsTakeLead(cfg) && !this._plainToggle();
+  }
+
   // the status on the line: the card's, else the kind's, else the matching rule's label
   _status(kc: KindCtx) {
     const cfg = this._config as TileConfig;
@@ -82,7 +93,8 @@ export class TileCard extends KindCardBase {
     const pic = imageUrl(ctx, this._iconLook(kc).iconImage);
     const icon = this._iconItem(kc, ent);
     const lead = tileLead(row);
-    if (this._keepLead(kc, lead, icon)) slots.lead = "keep";
+    const kept = this._keepLead(kc, lead, icon);
+    if (kept) slots.lead = "keep";
     fillTileSlots(
       ctx,
       row,
@@ -91,6 +103,20 @@ export class TileCard extends KindCardBase {
       pic ? { ...m, look: { ...m.look, picture: pic } } : m,
       slots,
     );
+    // a kept lead with the icon's toggle (a fan's turning blades): a switch, its tap bound once
+    const el = lead.firstElementChild as HTMLElement | null;
+    if (kept && el && this._plainToggle()) {
+      leadTapState(el, ctx, icon, idx, m);
+      bindKeptLeadTap(el, () => {
+        const now = this._ctx();
+        return {
+          ctx: now,
+          ent: (this._config as TileConfig).entities[0],
+          idx: 0,
+          m: this._modelAt(now, 0),
+        };
+      });
+    }
     this._fadePicture(lead);
   }
   // the tile reads its inputs, what its kind says, its status and its icon's picture
@@ -107,7 +133,11 @@ export class TileCard extends KindCardBase {
   }
   _rowColor(row: HTMLElement, ent: EntityItem, m: EntityModel) {
     const color = super._rowColor(row, ent, m);
-    return Number(row.dataset.idx) === 0 ? (this._kindColor(ent, m) ?? color) : color;
+    if (Number(row.dataset.idx) !== 0) return color;
+    // the tile's colour on the card too: its focus ring (STYLE_KIND_CARD_FOCUS)
+    const own = this._kindColor(ent, m) ?? color;
+    this._root?.style.setProperty("--card-tint", own);
+    return own;
   }
   _render() {
     // vertical: the icon on top, before anything is laid out

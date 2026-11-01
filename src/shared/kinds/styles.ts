@@ -3,6 +3,16 @@
 // (prefers-reduced-motion, the visual tests): the blades stand at an angle, the pulse is still.
 import { CARD_BG } from "../constants.ts";
 
+// focus on a card that is one button, as Home Assistant's tile: the card's border in its colour
+// (--card-tint, set by the card) with a 1 px ring outside it, in place of a ring inside the card.
+// The ring is an outline (always there, transparent until focused, so it fades): a box shadow
+// would have to list the theme's own, and a theme's `none` would drop the whole declaration
+export const STYLE_KIND_CARD_FOCUS = `
+  ha-card:is(.layout-tile, .layout-poster) { outline: 1px solid transparent; transition: border-color 180ms ease-in-out, outline-color 180ms ease-in-out; }
+  ha-card:is(.layout-tile, .layout-poster):has(> .body > .row > .hit:focus-visible) { border-color: var(--card-tint); outline-color: var(--card-tint); }
+  ha-card:is(.layout-tile, .layout-poster) .row > .hit:focus-visible { box-shadow: none; }
+`;
+
 export const STYLE_KINDS = `
   /* fan: one turn a second as built (the speed scales the playback rate) */
   .lead.pfan :is(ha-icon, ha-state-icon) { transform: rotate(20deg); }

@@ -332,7 +332,7 @@ The icon shows the entity's icon, or the poster type's own: the padlock, the fan
 
 :::
 
-The icon takes actions of its own, as on Home Assistant's tile card: `icon_tap_action`, `icon_hold_action` and `icon_double_tap_action`. An icon without actions of its own is part of the tile: a tap there runs the tile's `tap_action`. On the icon, `toggle` locks or unlocks a lock, arms or disarms an alarm panel and switches anything else. A hold runs after a second, so it [confirms](/cards/tile-controls#hold-to-confirm): locks and alarm panels hold their icon by default.
+The icon takes actions of its own, as on Home Assistant's tile card: `icon_tap_action`, `icon_hold_action` and `icon_double_tap_action`. As there, the icon toggles what switches (a light, a switch, a fan, an input boolean, a group, an automation, a humidifier, a valve) and presses what runs (a button, a scene) by default; `icon_tap_action: none` makes it part of the tile again. An icon without actions of its own is part of the tile: a tap there runs the tile's `tap_action`. A fan's blades keep turning with the toggle on them. On the icon, `toggle` locks or unlocks a lock, arms or disarms an alarm panel and switches anything else. A hold runs after a second, so it [confirms](/cards/tile-controls#hold-to-confirm): locks and alarm panels hold their icon by default.
 
 ::: live
 
@@ -354,7 +354,7 @@ The icon takes actions of its own, as on Home Assistant's tile card: `icon_tap_a
 
 ## Actions
 
-`tap_action`, `hold_action` and `double_tap_action` take [Home Assistant's actions](https://www.home-assistant.io/dashboards/actions/): `more-info`, `toggle`, `navigate`, `url`, `perform-action`, `assist` and `none`. With an entity, a tap or a hold opens its more-info dialog. Without one, both do nothing until you set them. A tap anywhere on the tile runs it, also in its padding; the controls keep their own taps, and the icon has [actions of its own](#the-icon).
+`tap_action`, `hold_action` and `double_tap_action` take [Home Assistant's actions](https://www.home-assistant.io/dashboards/actions/): `more-info`, `toggle`, `navigate`, `url`, `perform-action`, `assist` and `none`. With an entity, a tap or a hold opens its more-info dialog. Without one, both do nothing until you set them. A tap anywhere on the tile runs it, also in its padding; the controls keep their own taps, and the icon has [actions of its own](#the-icon). The tile answers the pointer as Home Assistant's does: a light layer in its colour under a mouse, a ripple from where you press, its border and a ring in its colour while it has the keyboard's focus. `hover: false` keeps it still.
 
 ::: live
 

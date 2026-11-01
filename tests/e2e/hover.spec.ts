@@ -24,6 +24,15 @@ const point = async (page: Page, loc: Locator, dx = 0.5) => {
   await page.mouse.move(b.x + b.width * dx, b.y + b.height / 2);
 };
 const away = (page: Page) => page.mouse.move(1, 1);
+// the ripple's layers on a target (src/shared/ripple.ts): its hover and its press, "0" before its
+// surface is made
+const layerOf = (loc: Locator, part: "rhover" | "rpress") =>
+  loc.evaluate((e, p) => {
+    const el = e.querySelector(`:scope > .ripple > .${p}`);
+    return el ? getComputedStyle(el).opacity : "0";
+  }, part);
+const pressed = (loc: Locator) =>
+  loc.evaluate((e) => !!e.querySelector(":scope > .ripple.pressed"));
 // --primary-text-color as a computed colour inside the element's shadow tree
 const textColour = (loc: Locator) =>
   loc.evaluate((e) => {
@@ -68,7 +77,7 @@ test.describe("hover", () => {
         [h.height, k.height - 2 * border],
       ])
         expect(Math.abs(a - b), `card ${i}`).toBeLessThan(1);
-      expect(await css(hit, "opacity", "::before")).toBe("0");
+      expect(await layerOf(hit, "rhover")).toBe("0");
       // the tile's padding, outside its row, is part of the button: its left and bottom edge
       for (const [x, y] of [
         [k.x + 4, k.y + k.height / 2],
@@ -76,14 +85,59 @@ test.describe("hover", () => {
       ]) {
         await away(page);
         await page.mouse.move(x, y);
-        expect(await css(hit, "opacity", "::before"), `card ${i} at ${x},${y}`).toBe("0.04");
+        await expect.poll(() => layerOf(hit, "rhover"), `card ${i} at ${x},${y}`).toBe("0.04");
       }
+      // a press grows from the pointer: a fifth of the card's longer side, centred where it is
       await page.mouse.down();
-      expect(await css(hit, "opacity", "::before"), `card ${i}`).toBe("0.12");
+      await expect.poll(() => layerOf(hit, "rpress"), `card ${i}`).toBe("0.12");
+      const size = await hit.evaluate((e) => {
+        const r = e.getBoundingClientRect();
+        const p = e.querySelector<HTMLElement>(":scope > .ripple > .rpress");
+        return [
+          Number.parseFloat(p?.style.width ?? ""),
+          Math.floor(Math.max(r.width, r.height) * 0.2),
+        ];
+      });
+      expect(size[0]).toBe(size[1]);
+      // leaving the card ends it
       await away(page);
       await page.mouse.up();
-      expect(await css(hit, "opacity", "::before")).toBe("0");
+      await expect.poll(() => layerOf(hit, "rpress")).toBe("0");
     }
+  });
+
+  test("a badge's layer and press keep to its pill, not its larger tap area", async ({ page }) => {
+    await mount(page, {
+      type: "custom:poster-card-pro",
+      entity: "sensor.living_room_co2",
+      badges: ["sensor.outdoor_temperature"],
+    });
+    const badge = card(page).locator(".corner .row.hval").nth(1);
+    const hit = badge.locator("> .hit");
+    await point(page, hit);
+    await expect.poll(() => layerOf(hit, "rhover")).toBe("0.04");
+    const [pill, layer] = [await badge.boundingBox(), await hit.locator("> .ripple").boundingBox()];
+    if (!pill || !layer) throw new Error("not visible");
+    // the pill inside its border
+    const bw = Number.parseFloat(await css(badge, "border-left-width"));
+    for (const [a, b] of [
+      [layer.x, pill.x + bw],
+      [layer.y, pill.y + bw],
+      [layer.width, pill.width - 2 * bw],
+      [layer.height, pill.height - 2 * bw],
+    ])
+      expect(Math.abs(a - b)).toBeLessThan(0.5);
+  });
+
+  test("a quick click still shows its press", async ({ page }) => {
+    await mount(page, { type: T, entity: "light.kitchen", hover: true });
+    const hit = card(page).locator(".row.hover-fx > .hit");
+    await point(page, hit, 0.6);
+    await page.mouse.down();
+    await page.mouse.up();
+    // at least 225 ms, then it fades
+    expect(await pressed(hit)).toBe(true);
+    await expect.poll(() => pressed(hit)).toBe(false);
   });
 
   test("list rows, heroes and table fields keep still; cells and header entities answer", async ({
@@ -115,16 +169,17 @@ test.describe("hover", () => {
       [2, ".row.field"],
       [4, ".row.plist"],
       [5, ".row.whero"],
-    ] as const)
-      expect(await css(card(page, i).locator(`${sel} > .hit`).first(), "content", "::before")).toBe(
-        "none",
-      );
+    ] as const) {
+      const hit = card(page, i).locator(`${sel} > .hit`).first();
+      await point(page, hit, 0.3);
+      expect(await hit.locator(".ripple").count(), sel).toBe(0);
+    }
     const cell = card(page, 3).locator(".row.cell > .hit");
     await point(page, cell, 0.7);
-    expect(await css(cell, "opacity", "::before")).toBe("0.04");
+    await expect.poll(() => layerOf(cell, "rhover")).toBe("0.04");
     const head = card(page, 0).locator(".row.hval > .hit");
     await point(page, head);
-    expect(await css(head, "opacity", "::before")).toBe("0.04");
+    await expect.poll(() => layerOf(head, "rhover")).toBe("0.04");
   });
 
   test("an icon with its own action brightens by the theme's hover opacity and grows when pressed", async ({
@@ -171,16 +226,23 @@ test.describe("hover", () => {
     await point(page, toggle);
     await expect.poll(() => css(toggle, "opacity", "::after")).toBe("0.08");
     // over the control the tile's own layer stays off
-    expect(await css(card(page, 0).locator(".row > .hit"), "opacity", "::before")).toBe("0");
+    expect(await layerOf(card(page, 0).locator(".row > .hit"), "rhover")).toBe("0");
     await page.mouse.down();
     await expect.poll(() => css(toggle, "opacity", "::after")).toBe("0.12");
     await away(page);
     await page.mouse.up();
-    for (const sel of [".ctl-buttons > button.round", ".ctl-select"]) {
-      const el = card(page, 1).locator(sel).first();
-      await point(page, el);
-      await expect.poll(() => css(el, "opacity", "::after"), sel).toBe("0.08");
-    }
+    // a control button ripples as Home Assistant's, in the secondary text colour; the select
+    // takes the light layer
+    const button = card(page, 1).locator(".ctl-buttons > button.round").first();
+    await point(page, button);
+    await expect.poll(() => layerOf(button, "rhover")).toBe("0.08");
+    await page.mouse.down();
+    await expect.poll(() => layerOf(button, "rpress")).toBe("0.12");
+    await away(page);
+    await page.mouse.up();
+    const select = card(page, 1).locator(".ctl-select").first();
+    await point(page, select);
+    await expect.poll(() => css(select, "opacity", "::after")).toBe("0.08");
     const slider = card(page, 1).locator(".ctl-slider");
     await point(page, slider, 0.2);
     await expect.poll(() => css(slider.locator(".knob"), "box-shadow")).toMatch(/0px 0px 0px 6px/);
@@ -317,10 +379,11 @@ test.describe("hover on a touch screen", () => {
     await mount(page, { type: T, entity: "light.kitchen", hover: true });
     expect(await page.evaluate(() => matchMedia("(hover: hover)").matches)).toBe(false);
     const hit = card(page).locator(".row > .hit");
-    await point(page, hit, 0.6);
-    expect(await css(hit, "opacity", "::before")).toBe("0");
-    await page.mouse.down();
-    expect(await css(hit, "opacity", "::before")).toBe("0.12");
-    await page.mouse.up();
+    const b = (await hit.boundingBox())!;
+    await page.touchscreen.tap(b.x + b.width * 0.6, b.y + b.height / 2);
+    // a touch presses (from where it lands), and never hovers
+    expect(await pressed(hit)).toBe(true);
+    expect(await layerOf(hit, "rhover")).toBe("0");
+    await expect.poll(() => pressed(hit)).toBe(false);
   });
 });

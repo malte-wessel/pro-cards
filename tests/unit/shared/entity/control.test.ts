@@ -798,6 +798,9 @@ describe("custom buttons", () => {
     expect(svc("input_button.a")).toBe("input_button.press");
     expect(svc("light.a")).toBe("homeassistant.toggle");
     expect(svc("cover.a")).toBe("cover.toggle");
+    // Home Assistant's other toggle domains switch as well
+    for (const id of ["group.a", "automation.a", "humidifier.a", "valve.a"])
+      expect(svc(id), id).toBe("homeassistant.toggle");
     expect(svc("lock.a", "locked")).toBe("lock.unlock");
     expect(svc("sensor.a")).toBeNull();
     expect(actionServiceFor(null, undefined)).toBeNull();

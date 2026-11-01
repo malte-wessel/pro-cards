@@ -195,6 +195,73 @@ test.describe("tile plots", () => {
   });
 });
 
+test.describe("tile pointer", () => {
+  test("answers the pointer by default, as Home Assistant's tile; hover: false keeps it still", async ({
+    page,
+  }) => {
+    await mount(page, [
+      { type: T, entity: "sensor.living_room_temperature" },
+      { type: T, entity: "sensor.living_room_temperature", hover: false },
+    ]);
+    await expect(card(page, 0).locator(".row.tile")).toHaveClass(/hover-fx/);
+    await expect(card(page, 1).locator(".row.tile")).not.toHaveClass(/hover-fx/);
+    const hit = card(page, 0).locator(".row.tile > .hit");
+    const b = (await hit.boundingBox())!;
+    await page.mouse.move(b.x + b.width * 0.7, b.y + b.height / 2);
+    await expect
+      .poll(() =>
+        hit.evaluate((e) => getComputedStyle(e.querySelector(".ripple > .rhover")!).opacity),
+      )
+      .toBe("0.04");
+  });
+
+  test("focus colours the card's border, with a ring outside it", async ({ page }) => {
+    await mount(page, { type: T, entity: "sensor.living_room_co2" });
+    const hit = card(page).locator(".row.tile > .hit");
+    await hit.focus();
+    await page.keyboard.press("Shift");
+    const haCard = card(page).locator("ha-card");
+    await expect(haCard).toHaveCSS("outline-width", "1px");
+    await expect
+      .poll(() =>
+        haCard.evaluate(
+          (e) => getComputedStyle(e).borderTopColor === getComputedStyle(e).outlineColor,
+        ),
+      )
+      .toBe(true);
+    await expect(haCard).not.toHaveCSS("outline-color", "rgba(0, 0, 0, 0)");
+  });
+
+  test("the icon toggles what switches and presses what runs, as Home Assistant's tile", async ({
+    page,
+  }) => {
+    await mount(page, [
+      { type: T, entity: "light.desk_lamp" },
+      { type: T, entity: "fan.living_room" },
+      { type: T, entity: "scene.movie_night" },
+      { type: T, entity: "light.desk_lamp", icon_tap_action: "none" },
+      { type: T, entity: "sensor.living_room_temperature" },
+    ]);
+    const lead = (i: number) => card(page, i).locator(".tlead > .lead");
+    await lead(0).click();
+    expect(await services(page)).toEqual(["homeassistant.toggle"]);
+    // the fan keeps its turning blades, and they are the switch
+    await expect(lead(1)).toHaveClass(/pfan/);
+    await expect(lead(1)).toHaveAttribute("role", "switch");
+    await lead(1).click();
+    await lead(2).click();
+    expect(await services(page)).toEqual([
+      "homeassistant.toggle",
+      "homeassistant.toggle",
+      "scene.turn_on",
+    ]);
+    expect(await infos(page)).toEqual([]);
+    // none: the icon is part of the tile, a sensor's has nothing to toggle
+    await expect(lead(3)).not.toHaveClass(/tap/);
+    await expect(lead(4)).not.toHaveClass(/tap/);
+  });
+});
+
 test.describe("tile card", () => {
   test("a tap opens the entity; without an entity it does nothing", async ({ page }) => {
     await mount(page, [

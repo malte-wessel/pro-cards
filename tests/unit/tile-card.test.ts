@@ -62,6 +62,28 @@ describe("tile-card config", () => {
     expect(norm({ entity: "light.desk_lamp", control: false }).entities[0].control).toBeNull();
   });
 
+  it("answers the pointer and toggles from its icon by default, as Home Assistant's tile", () => {
+    expect(norm({ entity: "sensor.living_room_temperature" }).entities[0].hover).toBe(true);
+    expect(norm({ entity: "sensor.living_room_temperature", hover: false }).entities[0].hover).toBe(
+      false,
+    );
+    const tap = (entity: string, o: Record<string, unknown> = {}) =>
+      norm({ entity, ...o }).iconActions.tap?.action ?? null;
+    for (const e of [
+      "light.desk_lamp",
+      "switch.coffee_machine",
+      "fan.bedroom",
+      "scene.movie_night",
+    ])
+      expect(tap(e), e).toBe("toggle");
+    // what has no toggle, and a lock's hold of its own
+    for (const e of ["sensor.living_room_temperature", "cover.office_blinds", "lock.front_door"])
+      expect(tap(e), e).toBeNull();
+    expect(norm({ entity: "lock.front_door" }).iconActions.hold?.action).toBe("toggle");
+    expect(tap("light.desk_lamp", { icon_tap_action: "none" })).toBeNull();
+    expect(tap("light.desk_lamp", { icon_tap_action: { action: "more-info" } })).toBe("more-info");
+  });
+
   it("takes one row unless something below the line needs a second", () => {
     const grid = (cfg: Record<string, unknown>) => {
       const el = new TileCard();

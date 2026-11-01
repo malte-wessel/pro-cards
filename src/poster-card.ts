@@ -155,6 +155,8 @@ export class PosterCard extends KindCardBase {
     const body = row.closest<HTMLElement>(".body");
     if (idx === 0 && body) {
       body.style.setProperty("--pc-tint", color);
+      // and on the card: its focus ring (STYLE_KIND_CARD_FOCUS)
+      this._root?.style.setProperty("--card-tint", color);
       this._tint = color;
       return "var(--pc-tint)";
     }

@@ -3,6 +3,7 @@
 // (src/shared/kinds/config.ts): the icon, the name, one line under it, controls at its end. What
 // needs a second row is asked for: a slider below, the type's picture.
 import { normalizeHistoryOptions, normalizeValue, type ValueSrc } from "../shared/entity/config.ts";
+import { domainOf } from "../shared/color.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
 import {
   isObj,
@@ -32,6 +33,22 @@ export interface TileConfig extends KindConfig {
   vertical: boolean;
 }
 
+// the domains whose icon toggles them by default, as on Home Assistant's tile (its DOMAINS_TOGGLE),
+// and those it presses (a toggle runs them: actionServiceFor)
+const ICON_TOGGLES: ReadonlySet<string> = new Set([
+  "fan",
+  "input_boolean",
+  "light",
+  "switch",
+  "group",
+  "automation",
+  "humidifier",
+  "valve",
+  "button",
+  "input_button",
+  "scene",
+]);
+
 // the entity card's visuals the tile draws no more, and what takes their place
 const GONE: Record<string, string> = {
   icon: "visual: icon is the tile's own: leave it out",
@@ -59,6 +76,14 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
     written.visual === "none" || written.visual === "glow" ? { visual: "icon" } : {},
   );
   const main = k.entities[0];
+  // the icon toggles what switches and presses what runs, unless the card or the type says else
+  if (
+    written.icon_tap_action === undefined &&
+    !k.iconActions.tap &&
+    k.entity &&
+    ICON_TOGGLES.has(domainOf(k.entity))
+  )
+    k.iconActions.tap = { action: "toggle" };
   // a kind's controls below the line need a second row: only those at the end of the line are
   // drawn unless the card names them (`control: slider`)
   if (main.control?.defaults) {

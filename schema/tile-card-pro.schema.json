@@ -267,7 +267,9 @@
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/double_tap_action"
         },
         "hover": {
-          "$ref": "entity.schema.json#/$defs/entityKeys/properties/hover"
+          "type": "boolean",
+          "default": true,
+          "description": "Home Assistant's hover and press, as on its tile card: a light layer under a mouse, a ripple from where you press, a ring around the card while it has the keyboard's focus. false keeps it still"
         }
       },
       "if": {

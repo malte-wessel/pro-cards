@@ -10,6 +10,7 @@ import { langOf } from "../format.ts";
 import type { ActionConfig, ActionKind, GridOptions, HapticType, HomeAssistant } from "../ha.ts";
 import { fetchHistory, pointOf, type Point } from "../history.ts";
 import { HistoryFeed } from "../history-feed.ts";
+import { installRipple } from "../ripple.ts";
 import { hideHover, leaveHides, outsideHides } from "../hover.ts";
 import { TemplateSubscriptions } from "../templates.ts";
 import { depsChanged } from "../deps.ts";
@@ -121,6 +122,8 @@ export abstract class EntityCardBase extends HTMLElement {
   // the items that count a group's members on: they follow the members' states too
   _countIdxs: number[] = [];
   _ro?: ResizeObserver;
+  // removes the ripple's listeners (installRipple)
+  _unripple?: () => void;
   // a card whose fit changes its own height (the poster's value on a card as tall as its content)
   // renders a resize a frame later: in the observer's callback that change reports a loop
   _resizeLater = false;
@@ -301,6 +304,9 @@ export abstract class EntityCardBase extends HTMLElement {
   }
 
   connectedCallback() {
+    // Home Assistant's ripple on the buttons the hover layers mark (STYLE_HOVER)
+    this._unripple?.();
+    if (this.shadowRoot) this._unripple = installRipple(this.shadowRoot);
     // another place may have another theme (a view's own)
     this._textCache.clear();
     this._fillEpoch++;
@@ -358,6 +364,8 @@ export abstract class EntityCardBase extends HTMLElement {
     if (this._root) this._fitCells([this._root]);
   };
   disconnectedCallback() {
+    this._unripple?.();
+    this._unripple = undefined;
     document.fonts?.removeEventListener("loadingdone", this._onFonts);
     clearInterval(this._timer);
     clearInterval(this._minute);

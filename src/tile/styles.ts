@@ -3,7 +3,7 @@
 import { PLOT_H } from "../shared/entity/constants.ts";
 import { STYLE_ENTITY_CARD } from "../shared/entity/render/styles.ts";
 import { STYLE_FLOW, STYLE_FLOW_MOTION } from "../shared/flow/styles.ts";
-import { STYLE_KINDS } from "../shared/kinds/styles.ts";
+import { STYLE_KIND_CARD_FOCUS, STYLE_KINDS } from "../shared/kinds/styles.ts";
 import { STYLE_RAIN } from "../shared/rain/styles.ts";
 import { STYLE_SUN_CURVE } from "../shared/sun/styles.ts";
 import { STYLE_TREND } from "../shared/trend/styles.ts";
@@ -75,5 +75,6 @@ export const STYLE_TILE_CARD_ALL =
   STYLE_SUN_CURVE +
   STYLE_TREND +
   STYLE_KINDS +
+  STYLE_KIND_CARD_FOCUS +
   STYLE_TILE_CARD +
   STYLE_FLOW_MOTION;

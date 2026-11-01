@@ -416,6 +416,10 @@ const PRESS_KINDS: Record<string, "run" | "switch"> = {
   cover: "switch",
   lock: "switch",
   alarm_control_panel: "switch",
+  group: "switch",
+  automation: "switch",
+  humidifier: "switch",
+  valve: "switch",
 };
 export const pressKindOf = (id: string | null | undefined) =>
   (id && PRESS_KINDS[domainOf(id)]) || null;
