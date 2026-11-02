@@ -40,8 +40,19 @@ describe("parseIcon", () => {
       src: "person.malte",
       style: "circle",
     });
-    expect(icon({ type: "flow", style: "swoosh" })).toEqual({ type: "flow", style: "swoosh" });
-    expect(icon({ type: "flow", style: "ripples" })).toEqual({ type: "flow", style: "ripples" });
+    // a flow's drawing is its variant; its style is the circle or none, as on any icon
+    expect(icon({ type: "flow", variant: "swoosh" })).toEqual({ type: "flow", variant: "swoosh" });
+    expect(icon({ type: "flow", variant: "ripples" })).toEqual({
+      type: "flow",
+      variant: "ripples",
+    });
+    expect(icon({ type: "flow", variant: "swoosh", style: "plain" })).toEqual({
+      type: "flow",
+      variant: "swoosh",
+      style: "plain",
+    });
+    expect(icon({ type: "flow", style: "circle" })).toEqual({ type: "flow", style: "circle" });
+    expect(icon({ variant: "lines" })).toEqual({ variant: "lines" });
     // without a type: options for whatever the place draws
     expect(icon({ ring: true })).toEqual({ ring: true });
     expect(icon({ src: "/a.png", style: "plain" })).toEqual({ src: "/a.png", style: "plain" });
@@ -58,26 +69,34 @@ describe("parseIcon", () => {
       'icon: type must be one of icon, image, flow, not "glow"',
     );
     expect(() => icon({ type: "flow", ring: true })).toThrow(
-      "icon: flow takes style, tap_action, hold_action, double_tap_action, badge, not ring",
+      "icon: flow takes variant, style, tap_action, hold_action, double_tap_action, badge, not ring",
     );
     expect(() => icon({ type: "icon", src: "/a.png" })).toThrow(
       "icon: icon takes name, ring, style, tap_action, hold_action, double_tap_action, badge, not src",
     );
     expect(() => icon({ blur: 4 })).toThrow(
-      "icon: blur is no option here (name, ring, style, src, tap_action, hold_action, double_tap_action, badge)",
+      "icon: blur is no option here (name, ring, style, src, variant, tap_action, hold_action, double_tap_action, badge)",
     );
     expect(() => icon({ type: "icon", ring: "yes" })).toThrow("icon: ring must be true or false");
     expect(() => icon({ type: "icon", name: "" })).toThrow("icon: name must be a text");
     expect(() => icon({ type: "image", src: 3 })).toThrow("icon: src must be a text");
     expect(() => icon({ type: "icon", style: "square" })).toThrow("icon: style must be one of");
-    // a style of the right kind for the thing
-    expect(() => icon({ type: "flow", style: "plain" })).toThrow("icon: flow's style is one of");
-    expect(() => icon({ type: "icon", style: "dots" })).toThrow(
-      "icon: icon's style is circle or plain",
+    // style is the circle or none on every thing; a flow's drawing is its variant
+    for (const type of ["icon", "image", "flow"])
+      expect(() => icon({ type, style: "lines" })).toThrow(
+        "icon: style must be one of circle, plain",
+      );
+    expect(() => icon({ style: "dots" })).toThrow("icon: style must be one of circle, plain");
+    expect(() => icon({ type: "icon", variant: "dots" })).toThrow(
+      "icon: icon takes name, ring, style, tap_action, hold_action, double_tap_action, badge, not variant",
     );
-    expect(() => icon({ type: "image", style: "drops" })).toThrow(
-      "icon: image's style is circle or plain",
+    expect(() => icon({ type: "image", variant: "drops" })).toThrow("icon: image takes src,");
+    expect(() => icon({ type: "flow", variant: "plain" })).toThrow("icon: variant must be one of");
+    // a cover's drawing is no flow's
+    expect(() => icon({ type: "flow", variant: "garage" })).toThrow(
+      "icon: a flow's variant is one of dots, lines, swoosh, vectors, drops, ripples, fill",
     );
+    expect(() => icon({ variant: "blind" })).toThrow("icon: a flow's variant is one of");
   });
 
   it("reads a rule's icon the same way", () => {
@@ -131,8 +150,14 @@ describe("parseVisual", () => {
     expect(
       visual({ type: "image", src: "camera.garden", opacity: 0.4, tint: "blue", blur: 6 }),
     ).toEqual({ type: "image", src: "camera.garden", opacity: 0.4, tint: "blue", blur: 6 });
-    expect(visual({ type: "flow", style: "lines" })).toEqual({ type: "flow", style: "lines" });
-    expect(visual({ type: "flow", style: "fill" })).toEqual({ type: "flow", style: "fill" });
+    expect(visual({ type: "flow", variant: "lines" })).toEqual({ type: "flow", variant: "lines" });
+    expect(visual({ type: "flow", variant: "fill" })).toEqual({ type: "flow", variant: "fill" });
+    // a cover's drawing: its variant (left out: the device class's)
+    for (const variant of ["shutter", "blind", "curtain", "garage", "gate", "awning", "window"])
+      expect(visual({ type: "cover", variant })).toEqual({ type: "cover", variant });
+    // without a type a variant merges onto whatever the place draws
+    expect(visual({ variant: "garage" })).toEqual({ variant: "garage" });
+    expect(visual({ variant: "swoosh" })).toEqual({ variant: "swoosh" });
     expect(
       visual({
         type: "sparkline",
@@ -215,13 +240,22 @@ describe("parseVisual", () => {
     expect(() => visual({ type: "sparkline", smoothing: "1h" })).toThrow(
       "visual: smoothing must be a number of minutes, at least 5",
     );
-    // a flow's style only
-    expect(() => visual({ type: "flow", style: "plain" })).toThrow(
-      "visual: flow's style is one of",
+    // a visual has no style: a flow's drawing is its variant, a cover's too
+    expect(() => visual({ type: "flow", style: "lines" })).toThrow(
+      "visual: flow takes variant, not style",
     );
-    expect(() => visual({ style: "circle" })).toThrow("visual: flow's style is one of");
-    expect(() => visual({ type: "flow", style: "sideways" })).toThrow(
-      "visual: style must be one of",
+    expect(() => visual({ style: "circle" })).toThrow("visual: style is no option here");
+    expect(() => visual({ type: "flow", variant: "sideways" })).toThrow(
+      "visual: variant must be one of",
+    );
+    expect(() => visual({ type: "flow", variant: "garage" })).toThrow(
+      "visual: a flow's variant is one of dots, lines, swoosh, vectors, drops, ripples, fill",
+    );
+    expect(() => visual({ type: "cover", variant: "lines" })).toThrow(
+      "visual: a cover's variant is one of shutter, blind, curtain, garage, gate, awning, window",
+    );
+    expect(() => visual({ type: "image", variant: "garage" })).toThrow(
+      "visual: image takes src, opacity, tint, blur, not variant",
     );
   });
 
@@ -365,7 +399,7 @@ describe("resolvePlaces", () => {
       badge: false,
       tap_action: "toggle",
     });
-    // a thing's own options go with it: a picture's src, a flow's style
+    // a thing's own options go with it: a picture's src, a flow's variant
     expect(
       resolvePlaces([
         layer({ icon: { type: "image", src: "/a.png" } }),
@@ -374,10 +408,30 @@ describe("resolvePlaces", () => {
     ).toEqual({ type: "icon" });
     expect(
       resolvePlaces([
-        layer({ icon: { type: "flow", style: "lines" } }),
+        layer({ icon: { type: "flow", variant: "lines" } }),
         layer({ icon: { type: "icon" } }),
       ]).icon,
     ).toEqual({ type: "icon" });
+    // the style is every icon's: it carries over a switch to a flow and back from one
+    expect(
+      resolvePlaces([
+        layer({ icon: { type: "icon", name: "mdi:weather-windy", style: "plain", ring: true } }),
+        layer({ icon: { type: "flow", variant: "swoosh" } }),
+      ]).icon,
+    ).toEqual({ type: "flow", variant: "swoosh", style: "plain", ring: true });
+    expect(
+      resolvePlaces([
+        layer({ icon: { type: "flow", variant: "lines", style: "plain" } }),
+        layer({ icon: { type: "icon" } }),
+      ]).icon,
+    ).toEqual({ type: "icon", style: "plain" });
+    // the flow's own style wins
+    expect(
+      resolvePlaces([
+        layer({ icon: { type: "image", style: "plain" } }),
+        layer({ icon: { type: "flow", style: "circle" } }),
+      ]).icon,
+    ).toEqual({ type: "flow", style: "circle" });
     // the new thing's own option wins
     expect(
       resolvePlaces([
@@ -388,20 +442,20 @@ describe("resolvePlaces", () => {
   });
 
   it("draws the animation in one place: a flow behind the card makes the icon the still one", () => {
-    const wind = layer({ icon: { type: "flow", style: "dots" } });
+    const wind = layer({ icon: { type: "flow", variant: "dots" } });
     expect(resolvePlaces([wind])).toEqual({
-      icon: { type: "flow", style: "dots" },
+      icon: { type: "flow", variant: "dots" },
       visual: false,
     });
-    expect(resolvePlaces([wind, layer({ visual: { type: "flow", style: "lines" } })])).toEqual({
+    expect(resolvePlaces([wind, layer({ visual: { type: "flow", variant: "lines" } })])).toEqual({
       icon: { type: "icon" },
-      visual: { type: "flow", style: "lines" },
+      visual: { type: "flow", variant: "lines" },
     });
     // the icon's other options stay
     expect(
       resolvePlaces([
         wind,
-        layer({ icon: { ring: true }, visual: { type: "flow", style: "swoosh" } }),
+        layer({ icon: { ring: true }, visual: { type: "flow", variant: "swoosh" } }),
       ]).icon,
     ).toEqual({ type: "icon", ring: true });
     // a rule that moves the flow behind the card while it matches
@@ -491,19 +545,21 @@ describe("the keys the places replaced", () => {
       GONE_KEYS.image_tint("red"),
     );
     expect(goneKey({ variant: "lines" })).toBe(
-      "variant: lines is visual: { type: flow, style: lines }",
+      "variant: lines is visual: { type: flow, variant: lines }",
+    );
+    expect(goneKey({ variant: "garage" })).toBe(
+      "variant: garage is visual: { type: cover, variant: garage }",
     );
   });
 
-  it("tells a flow's style from a device's kind in variant", () => {
-    for (const style of ["dots", "lines", "swoosh", "vectors", "drops", "ripples", "fill"])
-      expect(goneVariant(style)).toBe(
-        `variant: ${style} is visual: { type: flow, style: ${style} }`,
-      );
-    expect(goneVariant("garage")).toBe("variant: garage is kind: garage");
+  it("tells a flow's or a cover's drawing from an appliance's kind in variant", () => {
+    for (const v of ["dots", "lines", "swoosh", "vectors", "drops", "ripples", "fill"])
+      expect(goneVariant(v)).toBe(`variant: ${v} is visual: { type: flow, variant: ${v} }`);
+    for (const v of ["shutter", "blind", "curtain", "garage", "gate", "awning", "window"])
+      expect(goneVariant(v)).toBe(`variant: ${v} is visual: { type: cover, variant: ${v} }`);
     expect(goneVariant("heat_pump")).toBe("variant: heat_pump is kind: heat_pump");
     expect(goneVariant(3)).toBe(
-      "variant is gone: a flow's style is visual: { type: flow, style: … }, a device is its kind",
+      "variant is the drawing's: visual: { type: flow, variant: … }; an appliance is its kind",
     );
   });
 });

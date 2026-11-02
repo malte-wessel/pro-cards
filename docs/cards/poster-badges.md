@@ -27,7 +27,7 @@ The top right of a [poster](/cards/poster-card) is its corner: a column of small
   entity: sensor.ev_battery
   name: Car
   icon: mdi:car-electric
-  kind: entity
+  kind: none
   status: false
   badges:
     - { visual: ring, show_icon: false }

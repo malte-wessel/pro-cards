@@ -22,13 +22,29 @@ export const HISTORY_THINGS: readonly VisualThing[] = ["sparkline", "columns", "
 export const KIND_THINGS: readonly string[] = ["flow", "sun", "cover", "path", "line"];
 export const FLOW_ALL = [...FLOW_STYLES, ...RAIN_STYLES] as const;
 export type FlowStyleAny = (typeof FLOW_ALL)[number];
+// a cover's drawings (its device class picks one by default)
+export const COVER_VARIANTS = [
+  "shutter",
+  "blind",
+  "curtain",
+  "garage",
+  "gate",
+  "awning",
+  "window",
+] as const;
+export type CoverVariant = (typeof COVER_VARIANTS)[number];
+// the drawings of the things that have more than one: the wind's or the rain's flow, a cover
+const VARIANTS = [...FLOW_ALL, ...COVER_VARIANTS] as const;
+export type Variant = (typeof VARIANTS)[number];
 
 export interface IconPlace {
   type?: IconThing;
   name?: string;
   ring?: boolean;
-  // the circle or none (icon, image); the animation's style (flow)
-  style?: IconStyle | FlowStyleAny;
+  // the circle or none, whatever it draws
+  style?: IconStyle;
+  // which drawing of the thing (a flow's: dots, lines, swoosh …)
+  variant?: FlowStyleAny;
   src?: string;
   // resolved only: the place emptied (icon: false, the card's or a rule's)
   hidden?: boolean;
@@ -45,7 +61,8 @@ export interface VisualPlace {
   opacity?: number;
   tint?: string;
   blur?: number;
-  style?: FlowStyleAny;
+  // which drawing of the thing (a flow's: lines, drops …; a cover's: blind, garage …)
+  variant?: Variant;
   // the window: hours, or today (since midnight); a bucket's minutes; the plot's axes; the line's
   // smoothing in minutes
   hours?: number | "today";
@@ -63,13 +80,13 @@ const ICON_OPTIONS: Record<IconThing, readonly string[]> = {
   icon: ["name", "ring", "style", ...ICON_ALL],
   // its name: the icon while there is no picture
   image: ["src", "ring", "style", "name", ...ICON_ALL],
-  flow: ["style", ...ICON_ALL],
+  flow: ["variant", "style", ...ICON_ALL],
 };
 const PLOT = ["hours", "bucket", "src"];
 const VISUAL_OPTIONS: Record<VisualThing, readonly string[]> = {
   glow: [],
   image: ["src", "opacity", "tint", "blur"],
-  flow: ["style"],
+  flow: ["variant"],
   sparkline: [...PLOT, "axis", "smoothing"],
   columns: [...PLOT, "axis"],
   strip: PLOT,
@@ -77,7 +94,7 @@ const VISUAL_OPTIONS: Record<VisualThing, readonly string[]> = {
   gauge: [],
   segments: [],
   sun: ["hours"],
-  cover: [],
+  cover: ["variant"],
   path: [],
   line: [],
 };
@@ -131,8 +148,10 @@ const optionOf = (k: string, v: unknown, at: string): unknown => {
       if (typeof v !== "number" || !(v >= 5)) fail("must be a number of minutes, at least 5");
       return v;
     case "style":
-      if (!oneOf(ICON_STYLES, v) && !oneOf(FLOW_ALL, v))
-        fail(`must be one of ${list([...ICON_STYLES, ...FLOW_ALL])}`);
+      if (!oneOf(ICON_STYLES, v)) fail(`must be one of ${list(ICON_STYLES)}`);
+      return v;
+    case "variant":
+      if (!oneOf(VARIANTS, v)) fail(`must be one of ${list(VARIANTS)}`);
       return v;
   }
   return v;
@@ -179,12 +198,12 @@ export const parseIcon = (raw: unknown, at: string, rule = false): Written<IconP
   const type = raw.type;
   if (type !== undefined && !oneOf(ICON_THINGS, type))
     throw new Error(`${at}: type must be one of ${list(ICON_THINGS)}, not ${JSON.stringify(type)}`);
-  const allowed = type ? ICON_OPTIONS[type] : ["name", "ring", "style", "src", ...ICON_ALL];
+  const allowed = type
+    ? ICON_OPTIONS[type]
+    : ["name", "ring", "style", "src", "variant", ...ICON_ALL];
   const opts = optionsOf(raw, allowed, at, type, rule) as IconPlace;
-  if (type === "flow" && opts.style !== undefined && !oneOf(FLOW_ALL, opts.style))
-    throw new Error(`${at}: flow's style is one of ${list(FLOW_ALL)}`);
-  if (type !== "flow" && type && oneOf(FLOW_ALL, opts.style))
-    throw new Error(`${at}: ${type}'s style is circle or plain`);
+  if (opts.variant !== undefined && !oneOf(FLOW_ALL, opts.variant))
+    throw new Error(`${at}: a flow's variant is one of ${list(FLOW_ALL)}`);
   if (!type && opts.name !== undefined) return { type: "icon", ...opts };
   return type ? { type, ...opts } : opts;
 };
@@ -207,8 +226,10 @@ export const parseVisual = (raw: unknown, at: string, rule = false): Written<Vis
     );
   const all = [...new Set(Object.values(VISUAL_OPTIONS).flat())];
   const opts = optionsOf(raw, type ? VISUAL_OPTIONS[type] : all, at, type, rule) as VisualPlace;
-  if (opts.style !== undefined && !oneOf(FLOW_ALL, opts.style))
-    throw new Error(`${at}: flow's style is one of ${list(FLOW_ALL)}`);
+  if (type === "flow" && opts.variant !== undefined && !oneOf(FLOW_ALL, opts.variant))
+    throw new Error(`${at}: a flow's variant is one of ${list(FLOW_ALL)}`);
+  if (type === "cover" && opts.variant !== undefined && !oneOf(COVER_VARIANTS, opts.variant))
+    throw new Error(`${at}: a cover's variant is one of ${list(COVER_VARIANTS)}`);
   if (rule && opts.src !== undefined && type && HISTORY_THINGS.includes(type))
     throw new Error(`${at}: a rule sets no src of a plot (it is the card's history)`);
   return type ? { type, ...opts } : opts;
@@ -229,21 +250,22 @@ export const mergePlace = <P extends { type?: string }>(
 
 // what every icon takes, whatever it draws, carried over when a layer switches the thing (a rule's
 // name over the card's photo keeps the card's ring, its plain style, its badge, its actions); a
-// thing's own options (a picture's src, a flow's style) go with it
+// thing's own options (a picture's src, a flow's variant) go with it
 const iconOver = (base: Written<IconPlace>, over: Written<IconPlace>): Written<IconPlace> => {
   const merged = mergePlace(base, over);
   if (!base || !over || !merged || merged === base || !over.type || base.type === over.type)
     return merged;
   const kept: IconPlace = {};
-  for (const k of ["ring", "badge", "tap_action", "hold_action", "double_tap_action"] as const)
+  for (const k of [
+    "ring",
+    "style",
+    "badge",
+    "tap_action",
+    "hold_action",
+    "double_tap_action",
+  ] as const)
     if (base[k] !== undefined && over[k] === undefined)
       (kept as Record<string, unknown>)[k] = base[k];
-  if (
-    (base.style === "circle" || base.style === "plain") &&
-    over.style === undefined &&
-    over.type !== "flow"
-  )
-    kept.style = base.style;
   return { ...kept, ...merged };
 };
 
@@ -265,8 +287,8 @@ export const resolvePlaces = (
     icon === false ? { type: "icon", hidden: true } : { type: "icon", ...(icon ?? {}) };
   if (!i.type) i = { ...i, type: "icon" };
   if (v && v.type === "flow" && i.type === "flow") {
-    const { style: _style, ...rest } = i;
-    void _style;
+    const { variant: _variant, ...rest } = i;
+    void _variant;
     i = { ...rest, type: "icon" };
   }
   return { icon: i, visual: v };
@@ -309,13 +331,16 @@ export const GONE_KEYS: Record<string, (v: unknown) => string> = {
   control_options: () => "control_options is control: { options: [ … ] }",
   control_confirm: () => "control_confirm is control: { confirm: true }",
 };
-// `variant` is gone: a style of the animation is the flow's, what a device is its kind
+// `variant` on the card is the drawing's now: a flow's or a cover's in the visual; an appliance is
+// its kind
 export const goneVariant = (v: unknown): string =>
   oneOf(FLOW_ALL, v)
-    ? `variant: ${v} is visual: { type: flow, style: ${v} }`
-    : typeof v === "string"
-      ? `variant: ${v} is kind: ${v}`
-      : "variant is gone: a flow's style is visual: { type: flow, style: … }, a device is its kind";
+    ? `variant: ${v} is visual: { type: flow, variant: ${v} }`
+    : oneOf(COVER_VARIANTS, v)
+      ? `variant: ${v} is visual: { type: cover, variant: ${v} }`
+      : typeof v === "string"
+        ? `variant: ${v} is kind: ${v}`
+        : "variant is the drawing's: visual: { type: flow, variant: … }; an appliance is its kind";
 
 // the first gone key of an object as written (a card or a rule), as its message; null: none
 export const goneKey = (o: Readonly<Record<string, unknown>>): string | null => {

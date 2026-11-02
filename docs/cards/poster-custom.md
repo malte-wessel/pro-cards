@@ -74,14 +74,14 @@ With an `entity`, the poster takes its name, icon, state and colour from it, and
 
 - `attribute` shows an attribute of the entity in place of its state.
 - `control: false` drops the kind's control and keeps the rest. The thermostat below keeps its tint and its status.
-- `kind: entity` drops the kind's visual, status, controls and rules. The poster shows only what you write.
+- `kind: none` drops the kind's visual, status, controls and rules. The poster shows only what you write.
 
 ::: live
 
 ```yaml
 - type: custom:poster-card-pro
   entity: light.living_room
-  kind: entity
+  kind: none
   name: Ceiling
   value: "{{ (state_attr('light.living_room', 'brightness') | float(0) / 2.55) | round }}"
   unit: "%"
@@ -226,11 +226,11 @@ Each place takes one **thing**:
 | -------- | -------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------ |
 | `icon`   | `icon`         | `name`, `ring`, `style`                       | an icon, the entity's unless `name` says another                                                                             | every kind         |
 | `icon`   | `image`        | `src`, `ring`, `style`                        | a picture in the icon, the entity's unless `src` says another                                                                | every kind         |
-| `icon`   | `flow`         | `style`                                       | the animation in the icon                                                                                                    | wind, rain         |
+| `icon`   | `flow`         | `variant`, `style`                            | the animation in the icon                                                                                                    | wind, rain         |
 | `visual` | `glow`         | –                                             | the poster lit from below in its colour, as strong as its level                                                              | every kind         |
 | `visual` | `image`        | `src`, `opacity`, `tint`, `blur`              | a [picture behind](#a-picture-behind) the whole poster                                                                       | every kind         |
-| `visual` | `flow`         | `style`                                       | the animation behind the whole poster                                                                                        | wind, rain         |
-| `visual` | `cover`        | –                                             | the cover's drawing                                                                                                          | the covers         |
+| `visual` | `flow`         | `variant`                                     | the animation behind the whole poster                                                                                        | wind, rain         |
+| `visual` | `cover`        | `variant`                                     | the cover's drawing, its device class's unless `variant` names another                                                       | cover              |
 | `visual` | `path`         | –                                             | the robot's path                                                                                                             | vacuum, lawn mower |
 | `visual` | `line`         | –                                             | the power line                                                                                                               | grid               |
 | `visual` | `sparkline`    | `hours`, `bucket`, `smoothing`, `axis`, `src` | a line of the history, filled below; a trend's: its series, a weather's: the hours ahead (unless `src` names another entity) | every kind         |
@@ -242,19 +242,20 @@ Each place takes one **thing**:
 
 A thing that only some kinds draw is left out on another kind, with a warning in the browser's console; the kind's own visual stays.
 
-| Option      | Takes                                                                                                                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`      | an `mdi:` icon, or a template that renders one                                                                                                                                              |
-| `ring`      | `true`: a ring of the value around the icon, filled between `min` and `max` (the entity's own, else 0 and 100)                                                                              |
-| `style`     | an icon or an image: `circle` (the default) or `plain`, without the circle. A flow: the wind's `dots`, `lines`, `swoosh` or `vectors`, the rain's `drops`, `ripples` or `fill`              |
-| `src`       | a picture: a URL (`/local/…` for a file in Home Assistant's `www` folder), a template that renders one, or an entity whose picture it shows. A plot: another entity, whose history it draws |
-| `opacity`   | how much of the picture shows through its shade, from `0` to `1` (`0.3`)                                                                                                                    |
-| `tint`      | a colour mixed into the shade: a theme colour name, a hex or a `var()`                                                                                                                      |
-| `blur`      | blurs the picture: a number of px, `true` for 20, `false` for a sharp picture                                                                                                               |
-| `hours`     | the window in hours, or `today` (since midnight). 24 by default; the forecast looks 12 ahead, a trend 6 back                                                                                |
-| `bucket`    | a bucket's minutes, a column or a block of the strip (`60`)                                                                                                                                 |
-| `smoothing` | the sparkline's averaging in minutes (by default one point per 12 px)                                                                                                                       |
-| `axis`      | `true`: the plot's axes                                                                                                                                                                     |
+| Option      | Takes                                                                                                                                                                                                 |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`      | an `mdi:` icon, or a template that renders one                                                                                                                                                        |
+| `ring`      | `true`: a ring of the value around the icon, filled between `min` and `max` (the entity's own, else 0 and 100)                                                                                        |
+| `style`     | `circle` (the default) or `plain`, without the circle, whatever the icon draws: an icon, an image or a flow                                                                                           |
+| `variant`   | which drawing: a flow's, the wind's `dots`, `lines`, `swoosh` or `vectors`, the rain's `drops`, `ripples` or `fill`; a cover's, `shutter`, `blind`, `curtain`, `garage`, `gate`, `awning` or `window` |
+| `src`       | a picture: a URL (`/local/…` for a file in Home Assistant's `www` folder), a template that renders one, or an entity whose picture it shows. A plot: another entity, whose history it draws           |
+| `opacity`   | how much of the picture shows through its shade, from `0` to `1` (`0.3`)                                                                                                                              |
+| `tint`      | a colour mixed into the shade: a theme colour name, a hex or a `var()`                                                                                                                                |
+| `blur`      | blurs the picture: a number of px, `true` for 20, `false` for a sharp picture                                                                                                                         |
+| `hours`     | the window in hours, or `today` (since midnight). 24 by default; the forecast looks 12 ahead, a trend 6 back                                                                                          |
+| `bucket`    | a bucket's minutes, a column or a block of the strip (`60`)                                                                                                                                           |
+| `smoothing` | the sparkline's averaging in minutes (by default one point per 12 px)                                                                                                                                 |
+| `axis`      | `true`: the plot's axes                                                                                                                                                                               |
 
 ### The kinds' defaults
 
@@ -265,10 +266,10 @@ A place left out draws the kind's default. The same on a [tile](/cards/tile-cust
 | [light](/cards/poster-types#light)                                                     |                                  | `glow`: the light's colour, as strong as its brightness |
 | [climate](/cards/poster-types#climate)                                                 |                                  | `glow`: warm while heating, cool while cooling          |
 | [alarm_control_panel](/cards/poster-types#alarm)                                       |                                  | `glow`: a red pulse while triggered                     |
-| [wind](/cards/poster-types#wind)                                                       | `{ type: flow, style: dots }`    |                                                         |
-| [rain](/cards/poster-types#rain)                                                       | `{ type: flow, style: drops }`   |                                                         |
+| [wind](/cards/poster-types#wind)                                                       | `{ type: flow, variant: dots }`  |                                                         |
+| [rain](/cards/poster-types#rain)                                                       | `{ type: flow, variant: drops }` |                                                         |
 | [person](/cards/poster-types#person), [media_player](/cards/poster-types#media-player) | `{ type: image }`                | `{ type: image, blur: 20 }`                             |
-| [the covers](/cards/poster-types#cover)                                                |                                  | `cover`                                                 |
+| [cover](/cards/poster-types#cover)                                                     |                                  | `cover`, in its device class's variant                  |
 | [vacuum, lawn_mower](/cards/poster-types#vacuum-and-lawn-mower)                        |                                  | `path`                                                  |
 | [grid](/cards/poster-types#grid)                                                       |                                  | `line`                                                  |
 | [solar](/cards/poster-types#solar)                                                     |                                  | `{ type: sparkline, hours: today }`                     |
@@ -281,7 +282,7 @@ Every other kind draws the entity's icon and no visual.
 
 ### Changing a default
 
-An object without `type` keeps the thing and changes its options (with a `name` it is an icon): `visual: { hours: 24 }` makes the weather's forecast look a day ahead, `visual: { blur: false }` shows a person's photo sharp, `icon: { ring: true }` puts a ring around whatever the icon is. An object with the default's own `type` merges the same way; another `type` replaces it.
+An object without `type` keeps the thing and changes its options (with a `name` it is an icon): `visual: { hours: 24 }` makes the weather's forecast look a day ahead, `visual: { blur: false }` shows a person's photo sharp, `icon: { ring: true }` puts a ring around whatever the icon is. An object with the default's own `type` merges the same way; another `type` replaces it. Another thing in the icon keeps what every icon takes, its `ring`, its `style` and its actions; a thing's own options, an image's `src` or a flow's `variant`, go with it.
 
 ::: live
 
@@ -302,7 +303,7 @@ An object without `type` keeps the thing and changes its options (with a `name` 
 
 ### One place for the animation
 
-The wind's and the rain's animation is drawn in one place: by default the icon. `visual: { type: flow }` makes it fill the whole poster, and the icon becomes the wind's arrow (the rain's icon). Writing a flow in both places is a config error.
+The wind's and the rain's animation is drawn in one place: by default the icon. `visual: { type: flow }` makes it fill the whole poster, and the icon becomes the wind's arrow (the rain's icon). A flow's `variant` picks its drawing: the wind's `dots`, `lines`, `swoosh` or `vectors`, the rain's `drops`, `ripples` or `fill`. Writing a flow in both places is a config error.
 
 ::: live
 
@@ -310,12 +311,12 @@ The wind's and the rain's animation is drawn in one place: by default the icon. 
 - type: custom:poster-card-pro
   entity: sensor.wind_speed
   name: Wind
-  icon: { type: flow, style: vectors }
+  icon: { type: flow, variant: vectors }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: sensor.wind_speed
   name: Wind
-  visual: { type: flow, style: swoosh }
+  visual: { type: flow, variant: swoosh }
   grid_options: { columns: 6 }
 ```
 
@@ -397,7 +398,7 @@ A plot's `src` draws another entity's history under this one's value.
 - type: custom:poster-card-pro
   entity: sensor.battery_soc
   name: Battery
-  kind: entity
+  kind: none
   visual: bar
   min: 0
   max: 100

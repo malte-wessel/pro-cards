@@ -1,15 +1,16 @@
 // The domain kinds that draw their device: a media player (its cover art in the icon and blurred
 // behind the card, its colour, the progress along the bottom), a cover (the window itself, its
-// slats or panels at the position, gliding while they move: `visual: cover`; a kind per look, the
-// device class's by default) and the robots (a vacuum's or a lawn mower's path drawing itself while
+// slats or panels at the position, gliding while they move: `visual: cover`, its variant the device
+// class's by default) and the robots (a vacuum's or a lawn mower's path drawing itself while
 // it works, the dock while it rests: `visual: path`).
 import { numAttr as num, pictureOf } from "../entity/look.ts";
 import { leadEl, secondaryEl } from "../entity/render/lead.ts";
 import type { HassEntity } from "../ha.ts";
+import { oneOf } from "../util.ts";
 import { artColor, artPending } from "./art.ts";
 import { div, partOf, pctValue, str, SVG, wordValue } from "./dom.ts";
 import { place, stateText } from "./domains.ts";
-import { IMAGE_BLUR } from "./places.ts";
+import { COVER_VARIANTS, IMAGE_BLUR, type CoverVariant } from "./places.ts";
 import { attention } from "./rules.ts";
 import type { Kind, KindCtx, KindHost } from "./types.ts";
 
@@ -97,16 +98,7 @@ export const MEDIA: Kind = {
 
 // ----- cover -----
 
-export const COVER_STYLES = [
-  "shutter",
-  "blind",
-  "curtain",
-  "garage",
-  "gate",
-  "awning",
-  "window",
-] as const;
-type CoverStyle = (typeof COVER_STYLES)[number];
+type CoverStyle = CoverVariant;
 const BY_CLASS: Record<string, CoverStyle> = {
   shutter: "shutter",
   blind: "blind",
@@ -139,45 +131,44 @@ const coverEl = (style: CoverStyle) => {
   return el;
 };
 
-// a cover kind: drawn as `look` (null: the device class's look), detected by the domain (the
-// generic cover) or named (a garage door whose device class says nothing)
-const coverKind = (name: string, look: CoverStyle | null): Kind => {
-  const styleOf = (c: KindCtx) => look ?? classStyle(c);
-  const drawn = (c: KindCtx) => c.place.visual && c.place.visual.type === "cover";
-  return {
-    name,
-    ...(look ? {} : { domains: ["cover"] }),
-    reads: ["cover"],
-    readsText: "a cover",
-    keys: [],
-    controls: [place("buttons", "end")],
-    visual: { type: "cover" },
-    tileVisual: false,
-    draws: ["cover"],
-    status: (c) => c.m.look.label ?? stateText(c),
-    slots: (c) => {
-      const p = num(c.m.st, "current_position");
-      return p === null ? {} : { value: pctValue(c.ctx.hass, p), word: false };
-    },
-    backdrop: {
-      key: (c) => (drawn(c) ? styleOf(c) : ""),
-      build: (c) => coverEl(styleOf(c)),
-      update: (el, c) => {
-        const st = c.m.st;
-        const p = positionOf(c);
-        // the variables sit on the pback, around the drawing
-        const back = el.parentElement ?? el;
-        back.style.setProperty("--p", String(p ?? 0));
-        back.style.setProperty("--tilt", String(num(st, "current_tilt_position") ?? 50));
-        el.classList.toggle("unknown", p === null);
-        el.classList.toggle("moving", moving(c));
-      },
-    },
-    extra: (c) => [num(c.m.st, "current_tilt_position")],
-  };
+// a cover: its window drawn at its position behind the card (`visual: cover`), in the variant the
+// visual names, else its device class's
+const styleOf = (c: KindCtx): CoverStyle => {
+  const v = c.place.visual;
+  return v && v.type === "cover" && oneOf(COVER_VARIANTS, v.variant) ? v.variant : classStyle(c);
 };
-export const COVER = coverKind("cover", null);
-export const COVER_KINDS = Object.fromEntries(COVER_STYLES.map((s) => [s, coverKind(s, s)]));
+const drawn = (c: KindCtx) => c.place.visual && c.place.visual.type === "cover";
+export const COVER: Kind = {
+  name: "cover",
+  domains: ["cover"],
+  reads: ["cover"],
+  readsText: "a cover",
+  keys: [],
+  controls: [place("buttons", "end")],
+  visual: { type: "cover" },
+  tileVisual: false,
+  draws: ["cover"],
+  status: (c) => c.m.look.label ?? stateText(c),
+  slots: (c) => {
+    const p = num(c.m.st, "current_position");
+    return p === null ? {} : { value: pctValue(c.ctx.hass, p), word: false };
+  },
+  backdrop: {
+    key: (c) => (drawn(c) ? styleOf(c) : ""),
+    build: (c) => coverEl(styleOf(c)),
+    update: (el, c) => {
+      const st = c.m.st;
+      const p = positionOf(c);
+      // the variables sit on the pback, around the drawing
+      const back = el.parentElement ?? el;
+      back.style.setProperty("--p", String(p ?? 0));
+      back.style.setProperty("--tilt", String(num(st, "current_tilt_position") ?? 50));
+      el.classList.toggle("unknown", p === null);
+      el.classList.toggle("moving", moving(c));
+    },
+  },
+  extra: (c) => [num(c.m.st, "current_tilt_position")],
+};
 
 // ----- vacuum and lawn mower -----
 

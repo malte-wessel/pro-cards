@@ -208,22 +208,22 @@ The field behind the poster: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 - type: custom:poster-card-pro
   entity: sensor.wind_speed
   name: Wind
-  visual: { type: flow, style: lines }
+  visual: { type: flow, variant: lines }
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.wind_speed
   name: Wind
-  visual: { type: flow, style: lines }
+  visual: { type: flow, variant: lines }
   grid_options: { columns: 6, rows: 4 }
 - type: custom:poster-card-pro
   entity: sensor.wind_speed
   name: Wind
-  visual: { type: flow, style: lines }
+  visual: { type: flow, variant: lines }
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.wind_speed
   name: Wind
-  visual: { type: flow, style: lines }
+  visual: { type: flow, variant: lines }
   grid_options: { columns: 8, rows: 3 }
 ```
 
@@ -239,28 +239,28 @@ The drops behind the poster: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 - type: custom:poster-card-pro
   entity: sensor.rain_rate_roof
   name: Rain
-  visual: { type: flow, style: drops }
+  visual: { type: flow, variant: drops }
   wind: sensor.wind_speed
   direction: sensor.wind_direction
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.rain_rate_roof
   name: Rain
-  visual: { type: flow, style: drops }
+  visual: { type: flow, variant: drops }
   wind: sensor.wind_speed
   direction: sensor.wind_direction
   grid_options: { columns: 6, rows: 4 }
 - type: custom:poster-card-pro
   entity: sensor.rain_rate_roof
   name: Rain
-  visual: { type: flow, style: drops }
+  visual: { type: flow, variant: drops }
   wind: sensor.wind_speed
   direction: sensor.wind_direction
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.rain_rate_roof
   name: Rain
-  visual: { type: flow, style: drops }
+  visual: { type: flow, variant: drops }
   wind: sensor.wind_speed
   direction: sensor.wind_direction
   grid_options: { columns: 8, rows: 3 }

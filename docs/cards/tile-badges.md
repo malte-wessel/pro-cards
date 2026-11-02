@@ -27,7 +27,7 @@ The badges always show, all of them. The name and the line give way beside them;
   entity: sensor.ev_battery
   name: Car
   icon: mdi:car-electric
-  kind: entity
+  kind: none
   status: false
   badges:
     - { visual: ring, show_icon: false }

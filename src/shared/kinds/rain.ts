@@ -13,9 +13,9 @@ import { fallRate, isWet, leadFall, levelOf, tanOf } from "../rain/rain.ts";
 import { RAIN_RULES } from "./rules.ts";
 import type { Kind, KindCtx } from "./types.ts";
 
-// the animation's style in a place (null: the place draws no flow)
-const flowIn = (p: { type?: string; style?: unknown } | false) =>
-  p && p.type === "flow" ? (oneOf(RAIN_STYLES, p.style) ? p.style : "drops") : null;
+// the animation's drawing in a place (its variant; null: the place draws no flow)
+const flowIn = (p: { type?: string; variant?: unknown } | false) =>
+  p && p.type === "flow" ? (oneOf(RAIN_STYLES, p.variant) ? p.variant : "drops") : null;
 const nowOf = (c: KindCtx) =>
   rainNow(c.ctx, { ent: c.ent, m: c.m }, c.input("today"), c.input("wind"), c.input("direction"));
 
@@ -26,7 +26,7 @@ export const RAIN: Kind = {
   readsText: "a precipitation_intensity sensor (mm/h or in/h)",
   keys: ["today", "wind", "direction"],
   rules: RAIN_RULES,
-  icon: { type: "flow", style: "drops" },
+  icon: { type: "flow", variant: "drops" },
   draws: ["flow"],
   ruleUnit: "mm/h",
   inputs: [
@@ -51,9 +51,13 @@ export const RAIN: Kind = {
     key: (c) => flowIn(c.place.icon) ?? "icon",
     build: (c) => {
       const style = flowIn(c.place.icon);
-      return style
-        ? animatedLead(style, c.leadSize)
-        : rainLead(c.leadSize, c.place.icon.style === "plain" ? "plain" : "circle");
+      if (style) {
+        // its circle, or none (style: plain)
+        const el = animatedLead(style, c.leadSize);
+        el.classList.toggle("plain", c.place.icon.style === "plain");
+        return el;
+      }
+      return rainLead(c.leadSize, c.place.icon.style === "plain" ? "plain" : "circle");
     },
     // the row slants the drops (--t, --sl) and times them; a new rate scales their rate
     update: (el, c, row) => {

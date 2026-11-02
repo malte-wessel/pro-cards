@@ -33,7 +33,7 @@ describe("poster-card config", () => {
     expect(window.customCards?.some((c) => c.type === T)).toBe(true);
     expect(() => norm(null as never)).toThrow(`${T}: invalid config`);
     expect(() => norm({ entity: "light.kitchen", kind: "room" })).toThrow(
-      /kind must be one of entity \| battery/,
+      /kind must be one of none \| battery/,
     );
     expect(() => norm({ entity: "light.kitchen", kind: "wind" })).toThrow(
       `${T}: the wind kind reads a wind_speed sensor or a weather entity`,
@@ -59,10 +59,10 @@ describe("poster-card config", () => {
     fails({ hours_to_show: 6 }, "hours_to_show is visual: { hours: 6 }");
     fails({ bucket_minutes: 15 }, "bucket_minutes is visual: { bucket: 15 }");
     fails({ smoothing_minutes: 15 }, "smoothing_minutes is visual: { smoothing: 15 }");
-    // variant: a flow's style is the visual's, a device's look is its kind
-    fails({ variant: "lines" }, "variant: lines is visual: { type: flow, style: lines }");
-    fails({ variant: "drops" }, "variant: drops is visual: { type: flow, style: drops }");
-    fails({ variant: "garage" }, "variant: garage is kind: garage");
+    // variant: a flow's or a cover's drawing is the visual's, an appliance is its kind
+    fails({ variant: "lines" }, "variant: lines is visual: { type: flow, variant: lines }");
+    fails({ variant: "drops" }, "variant: drops is visual: { type: flow, variant: drops }");
+    fails({ variant: "garage" }, "variant: garage is visual: { type: cover, variant: garage }");
     fails({ variant: "washer" }, "variant: washer is kind: washer");
     // the same keys in a rule, named by the rule
     fails(
@@ -74,7 +74,7 @@ describe("poster-card config", () => {
       "rules[0]: icon_style: plain is icon:",
     );
     // a key left undefined is no key
-    expect(norm({ entity: E, image: undefined }).kind.name).toBe("entity");
+    expect(norm({ entity: E, image: undefined }).kind.name).toBe("none");
   });
 
   it("names the new spelling of the flat control, icon action and badge keys", () => {
@@ -192,7 +192,7 @@ describe("poster-card config", () => {
 
   it("is one poster: its item, then the status badge first in the corner", () => {
     const c = norm({ entity: "sensor.living_room_temperature", name: "Living room" });
-    expect(c.kind.name).toBe("entity");
+    expect(c.kind.name).toBe("none");
     expect(c.entities.map((e) => e.entity)).toEqual([
       "sensor.living_room_temperature",
       "sensor.living_room_temperature",
@@ -338,12 +338,12 @@ describe("poster-card config", () => {
     expect(of({ entity: "climate.living_room" }).visual).toEqual({ type: "glow" });
     expect(of({ entity: "alarm_control_panel.home" }).visual).toEqual({ type: "glow" });
     expect(of({ entity: "sensor.wind_speed", kind: "wind" })).toEqual({
-      icon: { type: "flow", style: "dots" },
+      icon: { type: "flow", variant: "dots" },
       visual: false,
     });
     expect(of({ entity: "sensor.rain_rate", kind: "rain" }).icon).toEqual({
       type: "flow",
-      style: "drops",
+      variant: "drops",
     });
     for (const entity of ["person.malte", "media_player.living_room_speaker"])
       expect(of({ entity })).toEqual({
@@ -351,7 +351,11 @@ describe("poster-card config", () => {
         visual: { type: "image", blur: IMAGE_BLUR },
       });
     expect(of({ entity: "cover.living_room_blinds" }).visual).toEqual({ type: "cover" });
-    expect(of({ entity: "cover.garage_door", kind: "garage" }).visual).toEqual({ type: "cover" });
+    expect(of({ entity: "cover.garage_door" }).visual).toEqual({ type: "cover" });
+    expect(of({ entity: "cover.workshop_door", visual: { variant: "garage" } }).visual).toEqual({
+      type: "cover",
+      variant: "garage",
+    });
     expect(of({ entity: "vacuum.robot" }).visual).toEqual({ type: "path" });
     expect(of({ entity: "lawn_mower.garden" }).visual).toEqual({ type: "path" });
     expect(of({ entity: "sensor.grid_power", kind: "grid" }).visual).toEqual({ type: "line" });
@@ -407,8 +411,25 @@ describe("poster-card config", () => {
     ).toThrow(`${T}: the animation goes in one place: icon or visual, not both`);
     // a flow behind the card makes the wind's icon the still one
     expect(
-      drawn(norm({ entity: W, kind: "wind", visual: { type: "flow", style: "lines" } })),
-    ).toEqual({ icon: { type: "icon" }, visual: { type: "flow", style: "lines" } });
+      drawn(norm({ entity: W, kind: "wind", visual: { type: "flow", variant: "lines" } })),
+    ).toEqual({ icon: { type: "icon" }, visual: { type: "flow", variant: "lines" } });
+    // the icon's animation in another drawing, and without its circle
+    expect(
+      drawn(
+        norm({
+          entity: W,
+          kind: "wind",
+          icon: { type: "flow", variant: "swoosh", style: "plain" },
+        }),
+      ).icon,
+    ).toEqual({ type: "flow", variant: "swoosh", style: "plain" });
+    // a flow's drawing is its variant now: style is the circle or none
+    expect(() =>
+      norm({ entity: W, kind: "wind", visual: { type: "flow", style: "lines" } }),
+    ).toThrow(`${T}: visual: flow takes variant, not style`);
+    expect(() => norm({ entity: W, kind: "wind", icon: { type: "flow", style: "lines" } })).toThrow(
+      `${T}: icon: style must be one of circle, plain`,
+    );
   });
 
   it("takes a ring around the icon as the icon's option", () => {
@@ -483,27 +504,30 @@ describe("poster-card config", () => {
     const wind = norm({ entity: "sensor.wind_speed", gust: false, today: "sensor.t" }, speed);
     expect(wind.kind.name).toBe("wind");
     expect(wind.kindOpts).toEqual({ gust: false });
-    // a cover's and an appliance's look is a kind of its own
-    const cover = norm({ entity: "cover.garage_door", kind: "garage" });
-    expect(cover.kind.name).toBe("garage");
+    // an appliance's look is a kind of its own, a cover's is its visual's variant
+    const cover = norm({ entity: "cover.garage_door", visual: { type: "cover", variant: "gate" } });
+    expect(cover.kind.name).toBe("cover");
     expect(cover.kindOpts).toEqual({});
+    expect(() => norm({ entity: "cover.garage_door", kind: "garage" })).toThrow(
+      `${T}: kind: garage is visual: { type: cover, variant: garage }`,
+    );
     const washer = norm({ entity: "sensor.washer_power", kind: "washer", running_above: 10 });
     expect(washer.kind.name).toBe("washer");
     expect(washer.kindOpts).toEqual({ running_above: 10 });
     // the keys never decide the type: a grid's meters on a sensor of no class draw an entity
     const plain = norm({ entity: "sensor.grid_power", import: "sensor.a", export: "sensor.b" });
-    expect(plain.kind.name).toBe("entity");
+    expect(plain.kind.name).toBe("none");
     expect(plain.kindOpts).toEqual({});
     expect(plain.inputs).toEqual({});
   });
 
-  it("turns every default off with kind: entity", () => {
-    const own = norm({ entity: "weather.home", kind: "entity" });
-    expect(own.kind.name).toBe("entity");
+  it("turns every default off with kind: none", () => {
+    const own = norm({ entity: "weather.home", kind: "none" });
+    expect(own.kind.name).toBe("none");
     expect(own.entities[0].valueSrc).toEqual({ kind: "state" });
     expect(own.inputs).toEqual({});
     expect(drawn(own)).toEqual({ icon: { type: "icon" }, visual: false });
-    const light = norm({ entity: "light.kitchen", kind: "entity" });
+    const light = norm({ entity: "light.kitchen", kind: "none" });
     expect(light.entities[0].control).toBeFalsy();
     expect(drawn(light).visual).toBe(false);
   });
@@ -564,7 +588,7 @@ describe("poster-card config", () => {
 
   it("draws without an entity: its name, no tap, the kinds that read none", () => {
     const c = norm({ name: "Hello", value: "World" });
-    expect(c.kind.name).toBe("entity");
+    expect(c.kind.name).toBe("none");
     expect(c.tap).toEqual({ action: "none" });
     expect(c.hold).toEqual({ action: "none" });
     expect(norm({ name: "Hello", tap_action: { action: "navigate" } }).tap.action).toBe("navigate");
@@ -807,7 +831,7 @@ describe("poster-card element", () => {
     vi.spyOn(console, "info").mockImplementation(() => {});
     const el = mount({ entity: "sensor.wind_speed" });
     // no hass yet: a sensor of no known class
-    expect(el._config?.kind.name).toBe("entity");
+    expect(el._config?.kind.name).toBe("none");
     expect(el._config?.inputs).toEqual({});
     const hass = snapshot();
     el.hass = hass;
@@ -979,7 +1003,7 @@ describe("poster-card drawing", () => {
   it("lets a stepper that shows the very same number take the value's place", () => {
     const same = draw({
       entity: "climate.living_room",
-      kind: "entity",
+      kind: "none",
       attribute: "temperature",
       control: "stepper",
     });
@@ -994,7 +1018,7 @@ describe("poster-card drawing", () => {
   it("keeps the value beside segments, a select and a button", () => {
     const seg = draw({
       entity: "climate.living_room",
-      kind: "entity",
+      kind: "none",
       attribute: "hvac_mode",
       control: "segments",
     });
@@ -1134,11 +1158,43 @@ describe("poster-card drawing", () => {
     const lead = draw({ entity: W });
     expect(lead.querySelector(".plead > .wlead")).not.toBeNull();
     expect(q(lead, ".pback").hidden).toBe(true);
-    const behind = draw({ entity: W, visual: { type: "flow", style: "lines" } });
+    const behind = draw({ entity: W, visual: { type: "flow", variant: "lines" } });
     expect(behind.querySelector(".plead > .wlead")).toBeNull();
     expect(behind.querySelector(".plead ha-icon.arrow")).not.toBeNull();
     expect(q(behind, ".pback").dataset.key).toBe("lines");
     expect(behind.querySelector(".pback > .wflow")).not.toBeNull();
+    // the icon's style stays when the flow moves behind the texts: the arrow without its circle
+    const plain = draw({ entity: W, icon: { style: "plain" }, visual: { type: "flow" } });
+    expect(q(plain, ".plead > .lead").classList.contains("plain")).toBe(true);
+    expect(q(behind, ".plead > .lead").classList.contains("plain")).toBe(false);
+  });
+
+  it("draws a cover in its device class's variant, or in the one its visual names", () => {
+    // garage: the door's panels; no device class: a window pane
+    expect(
+      draw({ entity: "cover.garage_door" }).querySelector(".pback > .pcov.garage"),
+    ).not.toBeNull();
+    expect(
+      draw({ entity: "cover.workshop_door" }).querySelector(".pback > .pcov.window"),
+    ).not.toBeNull();
+    // a written variant wins over the device class, with or without the visual's type
+    const named = draw({
+      entity: "cover.workshop_door",
+      visual: { type: "cover", variant: "garage" },
+    });
+    expect(named.querySelector(".pback > .pcov.garage")).not.toBeNull();
+    expect(named.querySelector(".pback > .pcov.window")).toBeNull();
+    expect(
+      draw({ entity: "cover.garage_door", visual: { variant: "gate" } }).querySelector(
+        ".pback > .pcov.gate",
+      ),
+    ).not.toBeNull();
+    // a curtain's two halves
+    expect(
+      draw({ entity: "cover.garage_door", visual: { variant: "curtain" } }).querySelectorAll(
+        ".pback > .pcov.curtain > .half",
+      ).length,
+    ).toBe(2);
   });
 
   it("leaves out a thing its kind does not draw, said once", () => {
@@ -1146,7 +1202,7 @@ describe("poster-card drawing", () => {
     const r = draw({ entity: TEMP, visual: "sun" });
     expect(q(r, ".pback").hidden).toBe(true);
     expect(r.querySelector(".pbody > .plot")).toBeNull();
-    expect(warn).toHaveBeenCalledWith(`${T}: the entity kind draws no visual: sun; left out`);
+    expect(warn).toHaveBeenCalledWith(`${T}: a card without a kind draws no visual: sun; left out`);
     const calls = warn.mock.calls.length;
     set(TEMP, 22);
     expect(warn.mock.calls.length).toBe(calls);

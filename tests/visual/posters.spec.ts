@@ -42,7 +42,7 @@ add("pt-entity", [
   p("switch.coffee_machine"),
   p("input_select.house_mode"),
   p("input_number.target_humidity"),
-  p("light.living_room", { kind: "entity" }),
+  p("light.living_room", { kind: "none" }),
 ]);
 add("pt-entity-states", [
   p("switch.shed_heater"),
@@ -423,20 +423,20 @@ add("pt-appliance", [
 
 add(
   "pv-wind",
-  ["dots", "lines", "swoosh", "vectors"].map((style) =>
-    p("sensor.wind_speed", { visual: { type: "flow", style }, name: style }),
+  ["dots", "lines", "swoosh", "vectors"].map((variant) =>
+    p("sensor.wind_speed", { visual: { type: "flow", variant }, name: variant }),
   ),
 );
 add("pv-rain", [
-  ...["drops", "ripples", "fill"].map((style) =>
-    p("sensor.rain_rate_roof", { visual: { type: "flow", style }, name: style }),
+  ...["drops", "ripples", "fill"].map((variant) =>
+    p("sensor.rain_rate_roof", { visual: { type: "flow", variant }, name: variant }),
   ),
-  p("sensor.rain_rate", { visual: { type: "flow", style: "fill" }, name: "fill, dry" }),
+  p("sensor.rain_rate", { visual: { type: "flow", variant: "fill" }, name: "fill, dry" }),
 ]);
 add(
   "pv-cover",
-  ["shutter", "blind", "curtain", "garage", "gate", "awning", "window"].map((kind) =>
-    p("cover.pt_half", { kind, name: kind }),
+  ["shutter", "blind", "curtain", "garage", "gate", "awning", "window"].map((variant) =>
+    p("cover.pt_half", { visual: { type: "cover", variant }, name: variant }),
   ),
   {
     states: {
@@ -460,7 +460,7 @@ add("po-texts", [
   p("sensor.outdoor_temperature", { name: "Outside", secondary: "In the shade" }),
   p("sensor.outdoor_temperature", { prefix: "≈ ", suffix: " now", decimals: 0 }),
   p("sensor.pressure", { unit: "mbar", name: "Unit of its own" }),
-  p("weather.home", { kind: "entity", attribute: "humidity", name: "An attribute" }),
+  p("weather.home", { kind: "none", attribute: "humidity", name: "An attribute" }),
   p(null, { name: "Note", icon: "mdi:note-outline", value: "Bins out" }),
 ]);
 add("po-hide", [
@@ -494,7 +494,7 @@ add("po-templates", [
 add("po-icon", [
   p("sensor.outdoor_temperature", { icon: "mdi:sun-thermometer" }),
   p("sensor.outdoor_temperature", { icon: { style: "plain" } }),
-  p("sensor.robot_battery", { kind: "entity", icon: { ring: true } }),
+  p("sensor.robot_battery", { kind: "none", icon: { ring: true } }),
   p("sensor.living_room_humidity", {
     icon: { ring: true, style: "plain" },
     min: 30,
@@ -775,8 +775,8 @@ const SIZED: Record<string, CardConfigBase> = {
   vacuum: p("vacuum.robot"),
   weather: p("weather.home"),
   sun: p("sun.sun"),
-  wind: p("sensor.wind_speed", { visual: { type: "flow", style: "lines" } }),
-  rain: p("sensor.rain_rate_roof", { visual: { type: "flow", style: "fill" } }),
+  wind: p("sensor.wind_speed", { visual: { type: "flow", variant: "lines" } }),
+  rain: p("sensor.rain_rate_roof", { visual: { type: "flow", variant: "fill" } }),
   trend: p(null, {
     kind: "trend",
     name: "Temperatures",
@@ -816,7 +816,7 @@ const FEW = [
   p("light.living_room"),
   p("climate.living_room"),
   p("media_player.living_room_speaker"),
-  p("sensor.wind_speed", { visual: { type: "flow", style: "lines" } }),
+  p("sensor.wind_speed", { visual: { type: "flow", variant: "lines" } }),
   p("weather.home"),
   p("sensor.battery_soc", { power: "sensor.battery_power" }),
 ];

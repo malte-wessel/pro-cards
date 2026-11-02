@@ -466,7 +466,7 @@ test.describe("tile places", () => {
 
   test("a flow visual runs the wind behind the tile; the icon is the arrow", async ({ page }) => {
     await mount(page, [
-      { type: T, entity: "sensor.wind_speed", visual: { type: "flow", style: "lines" } },
+      { type: T, entity: "sensor.wind_speed", visual: { type: "flow", variant: "lines" } },
       { type: T, entity: "sensor.wind_speed" },
     ]);
     const flow = card(page, 0);

@@ -14,9 +14,9 @@ import { windNow } from "../wind/now.ts";
 import { WIND_RULES } from "./rules.ts";
 import type { Kind, KindCtx } from "./types.ts";
 
-// the animation's style in a place (null: the place draws no flow)
-const flowIn = (p: { type?: string; style?: unknown } | false) =>
-  p && p.type === "flow" ? (oneOf(FLOW_STYLES, p.style) ? p.style : "dots") : null;
+// the animation's drawing in a place (its variant; null: the place draws no flow)
+const flowIn = (p: { type?: string; variant?: unknown } | false) =>
+  p && p.type === "flow" ? (oneOf(FLOW_STYLES, p.variant) ? p.variant : "dots") : null;
 const nowOf = (c: KindCtx) =>
   windNow(c.ctx, { ent: c.ent, m: c.m }, c.input("direction"), c.input("gust"));
 
@@ -27,7 +27,7 @@ export const WIND: Kind = {
   readsText: "a wind_speed sensor or a weather entity (wind_speed, wind_bearing, wind_gust_speed)",
   keys: ["direction", "gust"],
   rules: WIND_RULES,
-  icon: { type: "flow", style: "dots" },
+  icon: { type: "flow", variant: "dots" },
   draws: ["flow"],
   ruleUnit: "km/h",
   main: (entity) => (entity?.startsWith("weather.") ? { attribute: "wind_speed" } : {}),
@@ -63,9 +63,13 @@ export const WIND: Kind = {
     key: (c) => flowIn(c.place.icon) ?? "arrow",
     build: (c) => {
       const style = flowIn(c.place.icon);
-      return style
-        ? animatedLead(style, c.leadSize)
-        : arrowLead(c.leadSize, c.place.icon.style === "plain" ? "plain" : "circle");
+      if (style) {
+        // its circle, or none (style: plain)
+        const el = animatedLead(style, c.leadSize);
+        el.classList.toggle("plain", c.place.icon.style === "plain");
+        return el;
+      }
+      return arrowLead(c.leadSize, c.place.icon.style === "plain" ? "plain" : "circle");
     },
     // the row turns the lead (--rot, --arrow) and times it (--ldur); a new speed scales its rate
     update: (el, c, row) => {

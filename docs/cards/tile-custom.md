@@ -130,14 +130,14 @@ With an `entity`, the tile takes its name, icon, state and colour from it, and i
 
 - `attribute` shows an attribute of the entity in place of its state.
 - `control: false` drops the kind's control and keeps the rest. The thermostat below keeps its status.
-- `kind: entity` drops the kind's status, controls, rules, visual and animated icon. The tile shows only what you write.
+- `kind: none` drops the kind's status, controls, rules, visual and animated icon. The tile shows only what you write.
 
 ::: live
 
 ```yaml
 - type: custom:tile-card-pro
   entity: light.living_room
-  kind: entity
+  kind: none
   name: Ceiling
   value: "{{ (state_attr('light.living_room', 'brightness') | float(0) / 2.55) | round }}"
   unit: "%"
@@ -247,10 +247,10 @@ Each place takes one **thing**:
 | -------- | -------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------- |
 | `icon`   | `icon`         | `name`, `ring`, `style`                       | an icon, the entity's unless `name` says another                                                                               | every kind |
 | `icon`   | `image`        | `src`, `ring`, `style`                        | a picture in the icon, the entity's unless `src` says another                                                                  | every kind |
-| `icon`   | `flow`         | `style`                                       | the animation in the icon                                                                                                      | wind, rain |
+| `icon`   | `flow`         | `variant`, `style`                            | the animation in the icon                                                                                                      | wind, rain |
 | `visual` | `glow`         | –                                             | the tile lit from its bottom edge in its colour                                                                                | every kind |
 | `visual` | `image`        | `src`, `opacity`, `tint`, `blur`              | a picture behind the whole tile                                                                                                | every kind |
-| `visual` | `flow`         | `style`                                       | the animation behind the whole tile                                                                                            | wind, rain |
+| `visual` | `flow`         | `variant`                                     | the animation behind the whole tile                                                                                            | wind, rain |
 | `visual` | `sparkline`    | `hours`, `bucket`, `smoothing`, `axis`, `src` | a line of the history, below the line; a trend's: its series, a weather's: the hours ahead (unless `src` names another entity) | every kind |
 | `visual` | `columns`      | `hours`, `bucket`, `axis`, `src`              | a bar per bucket, below the line                                                                                               | every kind |
 | `visual` | `strip`        | `hours`, `bucket`, `src`                      | a block per bucket, coloured by the rule each one matched                                                                      | every kind |
@@ -258,7 +258,7 @@ Each place takes one **thing**:
 | `visual` | `segments`     | –                                             | ten segments, filled to the value                                                                                              | every kind |
 | `visual` | `sun`          | `hours`                                       | the sun's day, with the sun where it is now                                                                                    | sun        |
 
-A poster's `cover`, `path` and `line` are the covers', the robots' and the grid's drawings; a tile leaves them out by default. The options are the poster's: see [the things](/cards/poster-custom#the-things). A thing that only some kinds draw is left out on another kind, with a warning in the browser's console.
+A poster's `cover`, `path` and `line` are the cover's, the robots' and the grid's drawings; a tile leaves them out by default, and draws one where it names it (`visual: { type: cover, variant: garage }`). The options are the poster's: see [the things](/cards/poster-custom#the-things). A thing that only some kinds draw is left out on another kind, with a warning in the browser's console.
 
 ### The kinds' defaults
 
@@ -269,8 +269,8 @@ A place left out draws the kind's default. Where it is a visual below the line, 
 | [light](/cards/tile-types#light)                                                   |                                  | `glow`: the light's colour and brightness      |
 | [climate](/cards/tile-types#climate)                                               |                                  | `glow`: warm while heating, cool while cooling |
 | [alarm_control_panel](/cards/tile-types#alarm)                                     |                                  | `glow`: a red pulse while triggered            |
-| [wind](/cards/tile-types#wind)                                                     | `{ type: flow, style: dots }`    |                                                |
-| [rain](/cards/tile-types#rain)                                                     | `{ type: flow, style: drops }`   |                                                |
+| [wind](/cards/tile-types#wind)                                                     | `{ type: flow, variant: dots }`  |                                                |
+| [rain](/cards/tile-types#rain)                                                     | `{ type: flow, variant: drops }` |                                                |
 | [person](/cards/tile-types#person), [media_player](/cards/tile-types#media-player) | `{ type: image }`                | `{ type: image, blur: 20 }`: behind the tile   |
 | [solar](/cards/tile-types#solar)                                                   |                                  | `{ type: sparkline, hours: today }`            |
 | [battery](/cards/tile-types#battery)                                               |                                  | `segments`                                     |
@@ -278,7 +278,7 @@ A place left out draws the kind's default. Where it is a visual below the line, 
 | [weather](/cards/tile-types#weather)                                               | `{ type: image }`: the condition | `sparkline`: the hours ahead                   |
 | [trend](/cards/tile-types#trend)                                                   |                                  | `sparkline`: its series                        |
 
-Every other kind (the covers, the robots and the grid too) draws the entity's icon and no visual.
+Every other kind (the cover, the robots and the grid too) draws the entity's icon and no visual.
 
 ::: live
 
@@ -304,13 +304,13 @@ Every other kind (the covers, the robots and the grid too) draws the entity's ic
 
 ### Changing a default
 
-An object without `type` keeps the thing and changes its options (with a `name` it is an icon): `visual: { hours: 24 }` makes the weather's forecast look a day ahead, `visual: { blur: false }` shows a person's photo sharp, `icon: { ring: true }` puts a ring around whatever the icon is. An object with the default's own `type` merges the same way; another `type` replaces it.
+An object without `type` keeps the thing and changes its options (with a `name` it is an icon): `visual: { hours: 24 }` makes the weather's forecast look a day ahead, `visual: { blur: false }` shows a person's photo sharp, `icon: { ring: true }` puts a ring around whatever the icon is. An object with the default's own `type` merges the same way; another `type` replaces it. Another thing in the icon keeps what every icon takes, its `ring`, its `style` and its actions and its badge; a thing's own options, an image's `src` or a flow's `variant`, go with it.
 
 In a [tile group](/cards/tile-group-card), a tile's `visual` without `type` merges onto the group's: a bucket of its own over the group's sparkline.
 
 ### One place for the animation
 
-The wind's and the rain's animation is drawn in one place: by default the icon. `visual: { type: flow }` makes it fill the whole tile, and the icon becomes the wind's arrow (the rain's icon). Writing a flow in both places is a config error.
+The wind's and the rain's animation is drawn in one place: by default the icon. `visual: { type: flow }` makes it fill the whole tile, and the icon becomes the wind's arrow (the rain's icon). A flow's `variant` picks its drawing: the wind's `dots`, `lines`, `swoosh` or `vectors`, the rain's `drops`, `ripples` or `fill`. Writing a flow in both places is a config error.
 
 ::: live
 
@@ -322,7 +322,7 @@ The wind's and the rain's animation is drawn in one place: by default the icon. 
 - type: custom:tile-card-pro
   entity: sensor.wind_speed
   name: Wind
-  visual: { type: flow, style: lines }
+  visual: { type: flow, variant: lines }
   grid_options: { columns: 6 }
 ```
 

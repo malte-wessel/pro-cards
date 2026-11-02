@@ -31,11 +31,11 @@ hero:
             - type: custom:poster-card-pro
               entity: sensor.wind_speed
               name: Wind
-              visual: { type: flow, style: lines }
+              visual: { type: flow, variant: lines }
             - type: custom:poster-card-pro
               entity: sensor.rain_rate_roof
               name: Rain
-              visual: { type: flow, style: drops }
+              visual: { type: flow, variant: drops }
               wind: sensor.wind_speed
               direction: sensor.wind_direction
             - type: custom:poster-card-pro
@@ -192,11 +192,11 @@ feature_rows:
       - type: custom:poster-card-pro
         entity: sensor.wind_speed
         name: Wind
-        visual: { type: flow, style: lines }
+        visual: { type: flow, variant: lines }
       - type: custom:poster-card-pro
         entity: sensor.rain_rate_roof
         name: Rain
-        visual: { type: flow, style: drops }
+        visual: { type: flow, variant: drops }
         wind: sensor.wind_speed
         direction: sensor.wind_direction
   - title: "Control, right on the card."

@@ -341,7 +341,7 @@
     "kind": {
       "type": "string",
       "enum": [
-        "entity",
+        "none",
         "battery",
         "carbon_dioxide",
         "pm25",
@@ -360,13 +360,6 @@
         "person",
         "media_player",
         "cover",
-        "shutter",
-        "blind",
-        "curtain",
-        "garage",
-        "gate",
-        "awning",
-        "window",
         "vacuum",
         "lawn_mower",
         "grid",
@@ -410,7 +403,7 @@
     },
     "iconOptions": {
       "type": "object",
-      "description": "The icon's options, whatever it draws: type: icon (an icon: name, ring, style), image (a picture: src, ring, style, and name: the icon while there is no picture) or flow (the kind's animation: style; wind and rain only); and the icon's own actions. Without type its options merge onto what the place draws (the kind's icon, the card's in a rule); with a name it is an icon",
+      "description": "The icon's options, whatever it draws: type: icon (an icon: name, ring, style), image (a picture: src, ring, style, and name: the icon while there is no picture) or flow (the kind's animation: variant, style; wind and rain only); and the icon's own actions. Without type its options merge onto what the place draws (the kind's icon, the card's in a rule); with a name it is an icon",
       "properties": {
         "type": {
           "enum": ["icon", "image", "flow"],
@@ -425,18 +418,12 @@
           "description": "icon, image: a ring of the value (min to max) around it"
         },
         "style": {
-          "enum": [
-            "circle",
-            "plain",
-            "dots",
-            "lines",
-            "swoosh",
-            "vectors",
-            "drops",
-            "ripples",
-            "fill"
-          ],
-          "description": "icon, image: circle (default) or plain (no circle); flow: the animation's style, wind: dots, lines, swoosh, vectors; rain: drops, ripples, fill"
+          "enum": ["circle", "plain"],
+          "description": "circle (default) or plain (no circle), whatever the icon draws"
+        },
+        "variant": {
+          "enum": ["dots", "lines", "swoosh", "vectors", "drops", "ripples", "fill"],
+          "description": "flow: the animation's drawing, wind: dots, lines, swoosh, vectors; rain: drops, ripples, fill"
         },
         "src": {
           "type": "string",
@@ -470,9 +457,7 @@
           "then": {
             "properties": {
               "src": false,
-              "style": {
-                "enum": ["circle", "plain"]
-              }
+              "variant": false
             }
           }
         },
@@ -488,9 +473,7 @@
           },
           "then": {
             "properties": {
-              "style": {
-                "enum": ["circle", "plain"]
-              }
+              "variant": false
             }
           }
         },
@@ -508,10 +491,7 @@
             "properties": {
               "name": false,
               "ring": false,
-              "src": false,
-              "style": {
-                "enum": ["dots", "lines", "swoosh", "vectors", "drops", "ripples", "fill"]
-              }
+              "src": false
             }
           }
         },
@@ -525,9 +505,7 @@
           "then": {
             "properties": {
               "src": false,
-              "style": {
-                "enum": ["circle", "plain"]
-              }
+              "variant": false
             }
           }
         }
@@ -633,9 +611,24 @@
           ],
           "description": "image: blurs the picture, a number of px; true is 20, false a sharp picture"
         },
-        "style": {
-          "enum": ["dots", "lines", "swoosh", "vectors", "drops", "ripples", "fill"],
-          "description": "flow: the animation's style, wind: dots, lines, swoosh, vectors; rain: drops, ripples, fill"
+        "variant": {
+          "enum": [
+            "dots",
+            "lines",
+            "swoosh",
+            "vectors",
+            "drops",
+            "ripples",
+            "fill",
+            "shutter",
+            "blind",
+            "curtain",
+            "garage",
+            "gate",
+            "awning",
+            "window"
+          ],
+          "description": "flow: the animation's drawing, wind: dots, lines, swoosh, vectors; rain: drops, ripples, fill. cover: the window's drawing, shutter, blind, curtain, garage, gate, awning, window. Default: the kind's (a cover's device class's)"
         },
         "hours": {
           "oneOf": [
@@ -710,7 +703,12 @@
           },
           "then": {
             "propertyNames": {
-              "enum": ["type", "style"]
+              "enum": ["type", "variant"]
+            },
+            "properties": {
+              "variant": {
+                "enum": ["dots", "lines", "swoosh", "vectors", "drops", "ripples", "fill"]
+              }
             }
           }
         },
@@ -726,7 +724,12 @@
           },
           "then": {
             "propertyNames": {
-              "enum": ["type"]
+              "enum": ["type", "variant"]
+            },
+            "properties": {
+              "variant": {
+                "enum": ["shutter", "blind", "curtain", "garage", "gate", "awning", "window"]
+              }
             }
           }
         },
@@ -1040,7 +1043,7 @@
             "properties": {
               "kind": {
                 "enum": [
-                  "entity",
+                  "none",
                   "carbon_dioxide",
                   "pm25",
                   "pm10",
@@ -1055,13 +1058,6 @@
                   "person",
                   "media_player",
                   "cover",
-                  "shutter",
-                  "blind",
-                  "curtain",
-                  "garage",
-                  "gate",
-                  "awning",
-                  "window",
                   "vacuum",
                   "lawn_mower"
                 ]
@@ -1150,7 +1146,7 @@
                 },
                 "then": {
                   "properties": {
-                    "style": {
+                    "variant": {
                       "enum": ["dots", "lines", "swoosh", "vectors"]
                     }
                   }
@@ -1168,7 +1164,7 @@
                 },
                 "then": {
                   "properties": {
-                    "style": {
+                    "variant": {
                       "enum": ["dots", "lines", "swoosh", "vectors"]
                     }
                   }
@@ -1212,7 +1208,7 @@
                 },
                 "then": {
                   "properties": {
-                    "style": {
+                    "variant": {
                       "enum": ["drops", "ripples", "fill"]
                     }
                   }
@@ -1230,7 +1226,7 @@
                 },
                 "then": {
                   "properties": {
-                    "style": {
+                    "variant": {
                       "enum": ["drops", "ripples", "fill"]
                     }
                   }
@@ -1461,16 +1457,7 @@
           "then": {
             "properties": {
               "kind": {
-                "enum": [
-                  "cover",
-                  "shutter",
-                  "blind",
-                  "curtain",
-                  "garage",
-                  "gate",
-                  "awning",
-                  "window"
-                ]
+                "enum": ["cover"]
               }
             }
           }

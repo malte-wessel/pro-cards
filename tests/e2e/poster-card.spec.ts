@@ -431,7 +431,7 @@ test.describe("poster types", () => {
     await mount(page, {
       type: P,
       entity: "sensor.wind_speed",
-      visual: { type: "flow", style: "lines" },
+      visual: { type: "flow", variant: "lines" },
     });
     const c = card(page);
     const field = c.locator(".pback > *");
@@ -851,10 +851,10 @@ test.describe("poster config", () => {
 });
 
 test.describe("poster places", () => {
-  test("the wind's icon draws the flow in the style it names", async ({ page }) => {
+  test("the wind's icon draws the flow in the variant it names", async ({ page }) => {
     await mount(page, [
-      { type: P, entity: "sensor.wind_speed", icon: { type: "flow", style: "swoosh" } },
-      { type: P, entity: "sensor.wind_speed", icon: { type: "flow", style: "lines" } },
+      { type: P, entity: "sensor.wind_speed", icon: { type: "flow", variant: "swoosh" } },
+      { type: P, entity: "sensor.wind_speed", icon: { type: "flow", variant: "lines" } },
       { type: P, entity: "sensor.wind_speed" },
     ]);
     const lead = (i: number) => card(page, i).locator(".plead");
@@ -871,7 +871,7 @@ test.describe("poster places", () => {
     await mount(page, {
       type: P,
       entity: "sensor.wind_speed",
-      visual: { type: "flow", style: "vectors" },
+      visual: { type: "flow", variant: "vectors" },
     });
     const c = card(page);
     await expect(c.locator(".body > .pback > .wflow .field")).toBeAttached();
@@ -918,26 +918,45 @@ test.describe("poster places", () => {
     await expect(card(page, 3).locator(".pcov")).toHaveCount(0);
   });
 
+  test("a cover draws its device class's variant, or the one its visual names", async ({
+    page,
+  }) => {
+    await mount(page, [
+      { type: P, entity: "cover.garage_door" },
+      { type: P, entity: "cover.workshop_door" },
+      { type: P, entity: "cover.workshop_door", visual: { type: "cover", variant: "garage" } },
+    ]);
+    await expect(card(page, 0).locator(".pback > .pcov.garage")).toBeAttached();
+    await expect(card(page, 1).locator(".pback > .pcov.window")).toBeAttached();
+    await expect(card(page, 2).locator(".pback > .pcov.garage")).toBeAttached();
+  });
+
   test("the old keys are config errors that name the new spelling", async ({ page }) => {
     await mount(page, { type: P, entity: "sensor.wind_speed" });
     const err = (c: Record<string, unknown>) => configError(page, c);
     expect(await err({ poster: "wind" })).toMatch(/kind/);
-    expect(await err({ variant: "lines" })).toMatch(/visual: \{ type: flow, style: lines \}/);
-    expect(await err({ variant: "garage" })).toMatch(/kind: garage/);
+    expect(await err({ variant: "lines" })).toMatch(/visual: \{ type: flow, variant: lines \}/);
+    expect(await err({ variant: "garage" })).toMatch(/visual: \{ type: cover, variant: garage \}/);
+    expect(await err({ kind: "garage" })).toMatch(
+      /kind: garage is visual: \{ type: cover, variant: garage \}/,
+    );
+    expect(await err({ visual: { type: "flow", style: "lines" } })).toMatch(
+      /flow takes variant, not style/,
+    );
     expect(await err({ image: "/local/garden.jpg" })).toMatch(/visual: \{ type: image/);
     expect(await err({ icon_image: "person.malte" })).toMatch(/icon: \{ type: image/);
     expect(await err({ hours_to_show: 6 })).toMatch(/visual: \{ hours/);
     expect(await err({ visual: "none" })).toMatch(/false/);
     // the animation in one place
     expect(
-      await err({ icon: { type: "flow" }, visual: { type: "flow", style: "lines" } }),
+      await err({ icon: { type: "flow" }, visual: { type: "flow", variant: "lines" } }),
     ).not.toBeNull();
     // a rule fetches no history
     expect(
       await err({ visual: "sparkline", rules: [{ above: 20, visual: { hours: 6 } }] }),
     ).toMatch(/rule sets no hours/);
     // the new spelling is fine
-    expect(await err({ visual: { type: "flow", style: "lines" } })).toBeNull();
+    expect(await err({ visual: { type: "flow", variant: "lines" } })).toBeNull();
   });
 });
 
@@ -1103,7 +1122,7 @@ test.describe("poster cards in the layout card", () => {
         cards: [
           { type: P, entity: "weather.home" },
           { type: P, kind: "sun" },
-          { type: P, entity: "sensor.wind_speed", visual: { type: "flow", style: "lines" } },
+          { type: P, entity: "sensor.wind_speed", visual: { type: "flow", variant: "lines" } },
           { type: P, entity: "sensor.ev_battery", badges: ["sensor.ev_range"] },
           { type: P, entity: "sensor.solar_power", visual: "sparkline" },
           { type: P, entity: "light.kitchen" },

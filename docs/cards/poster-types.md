@@ -8,11 +8,11 @@ A kind is what the entity is, and what the [poster card](/cards/poster-card) dra
 
 A kind's options sit on the card like any other key. Where a kind reads other entities, it finds them on the same device as the poster's entity. With more than one match, none is used: set the key yourself, or `false` for none. What a kind draws in its two places, the `icon` and the `visual`, is its default: [The places](/cards/poster-custom#the-places) lists them, and a key of the card changes them.
 
-The kind is detected from the entity's domain, then its device class, else it is `entity`. `kind` sets it by name, for an entity without a device class or a kind that is never detected.
+The kind is detected from the entity's domain, then its device class, else it is `none`. `kind` sets it by name, for an entity without a device class or a kind that is never detected.
 
 | Kind                                                                                                 | Detected by                                                                    |
 | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| [`entity`](#entity)                                                                                  | anything else                                                                  |
+| [`none`](#none)                                                                                      | anything else                                                                  |
 | [`battery`](#battery)                                                                                | device class `battery`                                                         |
 | [`carbon_dioxide`, `pm25`, `pm10`, `aqi`](#air-quality)                                              | their device class                                                             |
 | [`weather`](#weather), [`sun`](#sun), [`wind`](#wind), [`rain`](#rain)                               | `weather.*`, `sun.sun`, device classes `wind_speed`, `precipitation_intensity` |
@@ -20,11 +20,10 @@ The kind is detected from the entity's domain, then its device class, else it is
 | [`light`](#light), [`fan`](#fan), [`climate`](#climate)                                              | domain                                                                         |
 | [`lock`](#lock), [`alarm_control_panel`](#alarm), [`person`](#person)                                | domain                                                                         |
 | [`media_player`](#media-player), [`cover`](#cover), [`vacuum`, `lawn_mower`](#vacuum-and-lawn-mower) | domain                                                                         |
-| [`shutter`, `blind`, `curtain`, `garage`, `gate`, `awning`, `window`](#cover)                        | never: a cover drawn as one of them, whatever its device class                 |
 | [`grid`](#grid), [`solar`](#solar), [`car`](#car), [`appliance`](#appliance)                         | never: set with `kind`                                                         |
 | [`pump`, `washer`, `dryer`, `dishwasher`, `heat_pump`](#appliance)                                   | never: an appliance that is a device of its own                                |
 
-## Entity
+## None
 
 **Reads** any entity.
 
@@ -226,7 +225,7 @@ Along the bottom runs the day's curve (the `sun` visual), with the sun where it 
 
 **Reads** a `wind_speed` sensor or a weather entity.
 
-A wind speed sensor, or a weather entity with `kind: wind`. The animated icon (`icon: { type: flow, style: dots }`) turns where the wind blows and runs at its speed. The speed is large, with the direction and the gusts under it. Five bands of its speed colour and name it, from _Calm_ to _Stormy_, and from 50 km/h the whole poster turns red:
+A wind speed sensor, or a weather entity with `kind: wind`. The animated icon (`icon: { type: flow, variant: dots }`) turns where the wind blows and runs at its speed. The speed is large, with the direction and the gusts under it. Five bands of its speed colour and name it, from _Calm_ to _Stormy_, and from 50 km/h the whole poster turns red:
 
 ::: live
 
@@ -245,7 +244,7 @@ A wind speed sensor, or a weather entity with `kind: wind`. The animated icon (`
 
 The direction and the gusts come from the sensor's device, or from the weather entity.
 
-`visual: { type: flow }` turns the whole poster into the animated field, and the icon becomes an arrow for the direction. Its `style`, in the icon or behind the poster:
+`visual: { type: flow }` turns the whole poster into the animated field, and the icon becomes an arrow for the direction. Its `variant`, in the icon or behind the poster:
 
 - `dots`
 - `lines`: streamlines
@@ -264,18 +263,18 @@ The animation is drawn in one place: a flow in both is a config error.
 - type: custom:poster-card-pro
   entity: sensor.wind_speed
   name: Wind
-  visual: { type: flow, style: lines }
+  visual: { type: flow, variant: lines }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: weather.home
   name: Wind
   kind: wind
-  visual: { type: flow, style: swoosh }
+  visual: { type: flow, variant: swoosh }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: sensor.wind_speed
   name: Wind
-  visual: { type: flow, style: vectors }
+  visual: { type: flow, variant: vectors }
   gust: false
   rules:
     - { below: 20, color: teal, label: Fine for sailing }
@@ -287,20 +286,20 @@ The animation is drawn in one place: a flow in both is a config error.
 
 ### Options
 
-| Key         | Takes                                                                                           | Default                                            |
-| ----------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| `icon`      | `{ type: flow, style }`: the animated icon, `style` one of `dots`, `lines`, `swoosh`, `vectors` | `{ type: flow, style: dots }`                      |
-| `visual`    | `{ type: flow, style }`: the whole poster is the wind field                                     | none                                               |
-| `direction` | a wind direction sensor, or `false`                                                             | one on the sensor's device; a weather entity's own |
-| `gust`      | a gust speed sensor, or `false`                                                                 | one on the sensor's device; a weather entity's own |
+| Key         | Takes                                                                                               | Default                                            |
+| ----------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `icon`      | `{ type: flow, variant }`: the animated icon, `variant` one of `dots`, `lines`, `swoosh`, `vectors` | `{ type: flow, variant: dots }`                    |
+| `visual`    | `{ type: flow, variant }`: the whole poster is the wind field                                       | none                                               |
+| `direction` | a wind direction sensor, or `false`                                                                 | one on the sensor's device; a weather entity's own |
+| `gust`      | a gust speed sensor, or `false`                                                                     | one on the sensor's device; a weather entity's own |
 
 ## Rain
 
 **Reads** a `precipitation_intensity` sensor (mm/h or in/h).
 
-A rain rate sensor. The animated icon (`icon: { type: flow, style: drops }`) rains at the rate. The rate is large, with today's total under it. The rain's bands colour and name it, from _Dry_ to _Violent_, which pulses.
+A rain rate sensor. The animated icon (`icon: { type: flow, variant: drops }`) rains at the rate. The rate is large, with today's total under it. The rain's bands colour and name it, from _Dry_ to _Violent_, which pulses.
 
-`wind` and `direction` slant the drops. `visual: { type: flow }` fills the whole poster with rain. Its `style`, in the icon or behind the poster: `drops`, `ripples` or `fill`, a gauge that fills with today's total.
+`wind` and `direction` slant the drops. `visual: { type: flow }` fills the whole poster with rain. Its `variant`, in the icon or behind the poster: `drops`, `ripples` or `fill`, a gauge that fills with today's total.
 
 ::: live
 
@@ -320,7 +319,7 @@ A rain rate sensor. The animated icon (`icon: { type: flow, style: drops }`) rai
 - type: custom:poster-card-pro
   entity: sensor.rain_rate_roof
   name: Roof
-  visual: { type: flow, style: drops }
+  visual: { type: flow, variant: drops }
   wind: sensor.wind_speed
   direction: sensor.wind_direction
   grid_options: { columns: 6 }
@@ -330,13 +329,13 @@ A rain rate sensor. The animated icon (`icon: { type: flow, style: drops }`) rai
 
 ### Options
 
-| Key         | Takes                                                                                 | Default                        |
-| ----------- | ------------------------------------------------------------------------------------- | ------------------------------ |
-| `icon`      | `{ type: flow, style }`: the animated icon, `style` one of `drops`, `ripples`, `fill` | `{ type: flow, style: drops }` |
-| `visual`    | `{ type: flow, style }`: the whole poster is the rain                                 | none                           |
-| `today`     | a sensor of the day's total, or `false`                                               | one on the sensor's device     |
-| `wind`      | a wind speed sensor, to slant the drops                                               | –                              |
-| `direction` | a wind direction sensor                                                               | –                              |
+| Key         | Takes                                                                                     | Default                          |
+| ----------- | ----------------------------------------------------------------------------------------- | -------------------------------- |
+| `icon`      | `{ type: flow, variant }`: the animated icon, `variant` one of `drops`, `ripples`, `fill` | `{ type: flow, variant: drops }` |
+| `visual`    | `{ type: flow, variant }`: the whole poster is the rain                                   | none                             |
+| `today`     | a sensor of the day's total, or `false`                                                   | one on the sensor's device       |
+| `wind`      | a wind speed sensor, to slant the drops                                                   | –                                |
+| `direction` | a wind direction sensor                                                                   | –                                |
 
 ## Trend
 
@@ -580,7 +579,7 @@ visual: { blur: false }
 
 **Reads** a cover.
 
-A cover draws its window by its device class (its visual, `cover`):
+A cover draws its window (its visual, `cover`), by default in its device class's variant:
 
 - a shutter's slats;
 - a blind's slats, turning with its tilt;
@@ -625,14 +624,14 @@ The drawing follows the cover's position and glides along while it moves; the st
 
 :::
 
-A cover without a device class draws a window pane. A cover kind of its own picks another drawing, whatever the device class: `kind: shutter`, `blind`, `curtain`, `garage`, `gate`, `awning` or `window`.
+A cover without a device class draws a window pane. The visual's `variant` picks another drawing, whatever the device class: `visual: { type: cover, variant: garage }` (or `shutter`, `blind`, `curtain`, `gate`, `awning`, `window`).
 
 ::: live
 
 ```yaml
 - type: custom:poster-card-pro
   entity: cover.workshop_door
-  kind: garage
+  visual: { type: cover, variant: garage }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: cover.garage_door
@@ -641,12 +640,11 @@ A cover without a device class draws a window pane. A cover kind of its own pick
 
 :::
 
-### Kinds
+### Options
 
-| `kind`                                                                | Draws                                          |
-| --------------------------------------------------------------------- | ---------------------------------------------- |
-| `cover`                                                               | by device class, else a window pane (detected) |
-| `shutter`, `blind`, `curtain`, `garage`, `gate`, `awning` or `window` | that drawing                                   |
+| Key      | Takes                                                                                                                                          | Default                                                                                                               |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `visual` | `{ type: cover, variant }`: the window behind the poster, `variant` one of `shutter`, `blind`, `curtain`, `garage`, `gate`, `awning`, `window` | `cover`, its device class's variant (`shade` is a blind, `door` a garage door, `damper` a window), else a window pane |
 
 ## Vacuum and lawn mower
 

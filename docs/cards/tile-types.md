@@ -11,11 +11,11 @@ A kind fills a tile as it fills a poster, less what needs a poster's room:
 - **The icon:** the kind's own. A fan, a vacuum, a lawn mower and an appliance move while they run; wind and rain animate theirs. A media player shows its cover art, a person their picture.
 - **The line:** the kind's value, then its status (a rule's label, Heating, Cleaning, Exporting), then what it puts under a poster's value (the direction and gusts, today's total, the battery and the room).
 - **The controls:** those a kind puts beside a poster's value, at the end of the line. See [Tile controls](/cards/tile-controls).
-- **The visual:** the kind's, as on the poster. Below the line, on a second row: the weather's forecast, the sun's day, the solar production, a battery's segments, a trend's lines. Behind the texts: a light's and a thermostat's glow, a person's photo and a player's art; a media player's progress runs along the bottom edge. `visual: false` leaves it out. A cover's window, a robot's path and the grid's line are a poster's alone; see [The places](/cards/tile-custom#the-places).
+- **The visual:** the kind's, as on the poster. Below the line, on a second row: the weather's forecast, the sun's day, the solar production, a battery's segments, a trend's lines. Behind the texts: a light's and a thermostat's glow, a person's photo and a player's art; a media player's progress runs along the bottom edge. `visual: false` leaves it out. A cover's window, a robot's path and the grid's line are left out unless the tile names them; see [The places](/cards/tile-custom#the-places).
 
-The kind is detected from the entity's domain, then its device class, else it is `entity`. `kind` sets it by name.
+The kind is detected from the entity's domain, then its device class, else it is `none`. `kind` sets it by name.
 
-## Entity
+## None
 
 **Reads** any entity.
 
@@ -198,7 +198,7 @@ The next sunrise or sunset as the name, its time, and how long until then, with 
 
 **Reads** a wind speed sensor (device class `wind_speed`), or a `weather.*` entity with `kind: wind`.
 
-Particles cross the icon in the wind's direction, as fast as it blows. The line gives the speed, the wind's label, its direction and the gusts, which the kind finds on the same device (`direction`, `gust`; `false` leaves one out). The particles are the icon's flow (`icon: { type: flow, style: dots }`); its `style` is one of `dots`, `lines`, `swoosh` and `vectors`. `visual: { type: flow }` draws the field behind the whole tile instead, and the icon is an arrow turned to where the wind blows. See [Kinds: Wind](/cards/poster-types#wind).
+Particles cross the icon in the wind's direction, as fast as it blows. The line gives the speed, the wind's label, its direction and the gusts, which the kind finds on the same device (`direction`, `gust`; `false` leaves one out). The particles are the icon's flow (`icon: { type: flow, variant: dots }`); its `variant` is one of `dots`, `lines`, `swoosh` and `vectors`. `visual: { type: flow }` draws the field behind the whole tile instead, and the icon is an arrow turned to where the wind blows. See [Kinds: Wind](/cards/poster-types#wind).
 
 ::: live
 
@@ -215,7 +215,7 @@ Particles cross the icon in the wind's direction, as fast as it blows. The line 
 - type: custom:tile-card-pro
   entity: sensor.wind_speed
   name: Field
-  visual: { type: flow, style: lines }
+  visual: { type: flow, variant: lines }
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: weather.home
@@ -247,7 +247,7 @@ grid_options: { columns: 6 }
 
 **Reads** a rain rate sensor (device class `precipitation_intensity`).
 
-Drops fall through the icon as fast as it rains. The line gives the rate, its label and today's total, which the kind finds on the same device (`today`). The drops are the icon's flow (`icon: { type: flow, style: drops }`; `ripples` or `fill` as its `style`), and `visual: { type: flow }` lets it rain behind the whole tile. See [Kinds: Rain](/cards/poster-types#rain).
+Drops fall through the icon as fast as it rains. The line gives the rate, its label and today's total, which the kind finds on the same device (`today`). The drops are the icon's flow (`icon: { type: flow, variant: drops }`; `ripples` or `fill` as its `variant`), and `visual: { type: flow }` lets it rain behind the whole tile. See [Kinds: Rain](/cards/poster-types#rain).
 
 ::: live
 
@@ -472,7 +472,7 @@ grid_options: { columns: 12 }
 
 **Reads** a `cover.*` entity.
 
-Its position and Open, Closed, Opening or Closing, with open, stop and close at the end of the line; the icon is Home Assistant's for its device class and state. `control: slider` puts the position below the line instead. See [Kinds: Cover](/cards/poster-types#cover).
+Its position and Open, Closed, Opening or Closing, with open, stop and close at the end of the line; the icon is Home Assistant's for its device class and state. `control: slider` puts the position below the line instead. `visual: cover` draws its window behind the tile, in its device class's variant unless `variant` names another: `visual: { type: cover, variant: garage }`. See [Kinds: Cover](/cards/poster-types#cover).
 
 ::: live
 

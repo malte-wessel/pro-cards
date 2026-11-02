@@ -5,11 +5,17 @@
 import { domainOf } from "../color.ts";
 import type { HassEntity } from "../ha.ts";
 import { KIND_NAMES, KINDS } from "./registry.ts";
+import { oneOf } from "../util.ts";
+import { COVER_VARIANTS } from "./places.ts";
 import type { Kind } from "./types.ts";
 
 // `kind` as written: a kind's name (null: none written, detect it)
 export const parseKind = (raw: unknown, cardType: string): string | null => {
   if (raw === undefined || raw === null) return null;
+  if (raw === "entity") throw new Error(`${cardType}: kind: entity is kind: none`);
+  // a cover's look is its visual's variant
+  if (typeof raw === "string" && oneOf(COVER_VARIANTS, raw))
+    throw new Error(`${cardType}: kind: ${raw} is visual: { type: cover, variant: ${raw} }`);
   if (typeof raw !== "string" || !(raw in KINDS))
     throw new Error(
       `${cardType}: kind must be one of ${KIND_NAMES.join(" | ")}, not ${JSON.stringify(raw)}`,
@@ -24,7 +30,7 @@ export const canRead = (k: Kind, entity: string | null) =>
 // the kind the entity is, by its domain, id and device class (of a domain the kind reads: a
 // binary sensor of class battery is no battery poster)
 export const detectKind = (entity: string | null, st: HassEntity | undefined): Kind => {
-  if (!entity) return KINDS.entity;
+  if (!entity) return KINDS.none;
   const d = domainOf(entity);
   for (const k of Object.values(KINDS))
     if (k.ids?.includes(entity) || k.domains?.includes(d)) return k;
@@ -32,7 +38,7 @@ export const detectKind = (entity: string | null, st: HassEntity | undefined): K
   if (typeof dc === "string")
     for (const k of Object.values(KINDS))
       if (k.deviceClasses?.includes(dc) && canRead(k, entity)) return k;
-  return KINDS.entity;
+  return KINDS.none;
 };
 
 // the kind a card draws: the written one (checked against the entity), else the detected one

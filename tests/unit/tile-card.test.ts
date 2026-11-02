@@ -33,7 +33,9 @@ describe("tile-card config", () => {
     fails({ icon_ring: true }, "icon_ring: true is icon: { ring: true }");
     fails({ icon_style: "plain" }, "icon_style: plain is icon: { style: plain }");
     fails({ hours_to_show: 6 }, "hours_to_show is visual: { hours: 6 }");
-    fails({ variant: "lines" }, "variant: lines is visual: { type: flow, style: lines }");
+    fails({ variant: "lines" }, "variant: lines is visual: { type: flow, variant: lines }");
+    fails({ variant: "blind" }, "variant: blind is visual: { type: cover, variant: blind }");
+    fails({ kind: "garage" }, "kind: garage is visual: { type: cover, variant: garage }");
     expect(() => norm({ entity: e, visual: "none" })).toThrow("visual: none is false (no visual)");
     fails({ rules: [{ state: "on", icon_ring: true }] }, "rules[0]: icon_ring: true is icon:");
   });
@@ -334,6 +336,35 @@ describe("tile-card config", () => {
     }
   });
 
+  it("draws a flow icon in its variant, plain without its circle", () => {
+    const tiles: TileCard[] = [];
+    const lead = (cfg: Record<string, unknown>) => {
+      const el = new TileCard();
+      el.setConfig(cfg);
+      document.body.appendChild(el);
+      el.hass = snapshot() as never;
+      tiles.push(el);
+      return el.shadowRoot?.querySelector(".tlead .lead");
+    };
+    try {
+      const W = "sensor.wind_speed";
+      expect(
+        lead({ entity: W, icon: { type: "flow", variant: "swoosh" } })?.classList,
+      ).not.toContain("plain");
+      const plain = lead({ entity: W, icon: { type: "flow", variant: "swoosh", style: "plain" } });
+      expect(plain?.classList).toContain("wlead");
+      expect(plain?.classList).toContain("plain");
+      expect(
+        lead({
+          entity: "sensor.rain_rate",
+          icon: { type: "flow", variant: "fill", style: "plain" },
+        })?.classList,
+      ).toContain("plain");
+    } finally {
+      for (const t of tiles) t.remove();
+    }
+  });
+
   it("gives the kinds today as the hours since midnight, the weather its own hours", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const card = (cfg: Record<string, unknown>) => {
@@ -388,12 +419,21 @@ describe("tile-card config", () => {
         const back = draw(cfg).querySelector<HTMLElement>(".pback");
         expect(back?.hidden ?? true, JSON.stringify(cfg)).toBe(true);
       }
-      // unless the card asks for it
+      // unless the card asks for it, in the device class's variant or the one it names
       expect(
         draw({ entity: "cover.living_room_blinds", visual: "cover" }).querySelector(
-          ".pback > .pcov",
+          ".pback > .pcov.shutter",
         ),
       ).not.toBeNull();
+      expect(
+        draw({
+          entity: "cover.workshop_door",
+          visual: { type: "cover", variant: "garage" },
+        }).querySelector(".pback > .pcov.garage"),
+      ).not.toBeNull();
+      // a variant alone merges onto nothing: a tile draws no cover by default
+      const bare = draw({ entity: "cover.workshop_door", visual: { variant: "garage" } });
+      expect(bare.querySelector(".pback > .pcov")).toBeNull();
     } finally {
       for (const t of tiles) t.remove();
     }

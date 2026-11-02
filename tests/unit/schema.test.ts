@@ -321,9 +321,11 @@ describe("card config schemas", () => {
     const PC = "custom:poster-card-pro";
     expect(validate({ type: PC, entity: "sensor.a", kind: "room" })).toMatch(/enum|allowed/);
     expect(validate({ type: PC, entity: "sensor.a", kind: "wind" })).toBeNull();
-    // the covers and the appliances are kinds of their own
-    for (const kind of ["garage", "shutter", "window", "washer", "heat_pump"])
+    // the appliances are kinds of their own, a cover's look is its visual's variant
+    for (const kind of ["cover", "washer", "heat_pump"])
       expect(validate({ type: PC, entity: "sensor.a", kind }), kind).toBeNull();
+    for (const kind of ["garage", "shutter", "blind", "curtain", "gate", "awning", "window"])
+      expect(validate({ type: PC, entity: "cover.a", kind }), kind).toMatch(/enum|allowed/);
     expect(validate({ type: PC, kind: "trend" })).toMatch(/series/);
     expect(
       validate({ type: PC, kind: "trend", series: ["sensor.a", { entity: "sensor.b" }] }),
@@ -478,26 +480,50 @@ describe("card config schemas", () => {
       ok({ entity: H, icon: { ring: true } }, "icon ring");
       ok({ entity: H, icon: { name: "mdi:x", ring: true, style: "plain" } }, "icon options");
       ok({ entity: H, icon: { type: "image", src: "person.a", ring: true } }, "icon image");
-      ok({ entity: "sensor.w", icon: { type: "flow", style: "swoosh" } }, "icon flow");
+      ok({ entity: "sensor.w", icon: { type: "flow", variant: "swoosh" } }, "icon flow");
+      ok(
+        { entity: "sensor.w", icon: { type: "flow", variant: "swoosh", style: "plain" } },
+        "a plain animated icon",
+      );
+      ok({ entity: "sensor.w", icon: { variant: "lines" } }, "merge a flow's variant");
+      bad({ entity: "sensor.w", icon: { type: "flow", style: "swoosh" } }, "a flow's style");
+      bad({ entity: "sensor.w", icon: { type: "flow", variant: "garage" } }, "a cover's variant");
+      bad({ entity: H, icon: { type: "icon", variant: "dots" } }, "an icon has no variant");
+      bad({ entity: H, icon: { type: "image", variant: "dots" } }, "an image has no variant");
       bad({ entity: H, icon: "image" }, "a string is an icon's name");
       bad({ entity: H, icon: { type: "flow", name: "mdi:x" } }, "a flow has no name");
       bad({ entity: H, icon: { name: "mdi:x", src: "/local/x.jpg" } }, "a name makes it an icon");
       bad({ entity: H, icon: { type: "icon", style: "dots" } }, "an icon's style");
       bad({ entity: H, icon: { type: "picture" } }, "no such thing");
       // what only a kind draws fits only that kind
-      ok({ entity: "sensor.w", kind: "wind", visual: { type: "flow", style: "lines" } }, "flow");
+      ok({ entity: "sensor.w", kind: "wind", visual: { type: "flow", variant: "lines" } }, "flow");
+      bad({ entity: "sensor.w", visual: { type: "flow", style: "lines" } }, "a flow's style");
       bad(
-        { entity: "sensor.w", kind: "wind", visual: { type: "flow", style: "drops" } },
-        "rain's style",
+        { entity: "sensor.w", kind: "wind", visual: { type: "flow", variant: "drops" } },
+        "rain's variant",
+      );
+      bad(
+        { entity: "sensor.w", kind: "wind", icon: { type: "flow", variant: "fill" } },
+        "rain's variant in the icon",
       );
       ok(
-        { entity: "sensor.r", kind: "rain", icon: { type: "flow", style: "ripples" } },
+        { entity: "sensor.r", kind: "rain", icon: { type: "flow", variant: "ripples" } },
         "rain icon",
+      );
+      bad(
+        { entity: "sensor.r", kind: "rain", visual: { type: "flow", variant: "swoosh" } },
+        "the wind's variant",
       );
       bad({ entity: "light.a", kind: "light", visual: "flow" }, "a light has no flow");
       bad({ entity: "light.a", kind: "light", icon: { type: "flow" } }, "nor in its icon");
       bad({ entity: "sun.sun", kind: "sun", visual: "cover" }, "the sun has no cover");
-      ok({ entity: "cover.a", kind: "garage", visual: "cover" }, "a garage's cover");
+      ok({ entity: "cover.a", kind: "cover", visual: "cover" }, "a cover's drawing");
+      ok({ entity: "cover.a", visual: { type: "cover", variant: "garage" } }, "a garage door");
+      ok({ entity: "cover.a", visual: { variant: "gate" } }, "merge a cover's variant");
+      bad({ entity: "cover.a", visual: { type: "cover", variant: "lines" } }, "a flow's variant");
+      bad({ entity: "cover.a", visual: { type: "cover", style: "garage" } }, "a cover's style");
+      bad({ entity: H, visual: { type: "image", variant: "garage" } }, "an image's variant");
+      bad({ entity: H, visual: { variant: "plain" } }, "no such variant");
       ok(
         { entity: "weather.home", kind: "weather", visual: { type: "sparkline", hours: 12 } },
         "a weather's sparkline: its forecast",
@@ -554,9 +580,13 @@ describe("card config schemas", () => {
         type: TC,
         entity: "sensor.a",
         kind: "wind",
-        visual: { type: "flow", style: "lines" },
+        visual: { type: "flow", variant: "lines" },
       }),
     ).toBeNull();
+    expect(
+      validate({ type: TC, entity: "cover.a", visual: { type: "cover", variant: "garage" } }),
+    ).toBeNull();
+    expect(validate({ type: TC, entity: "cover.a", kind: "garage" })).toMatch(/enum|allowed/);
     expect(validate({ type: TC, entity: "sensor.r", kind: "rain", gust: "sensor.g" })).toMatch(
       /gust/,
     );

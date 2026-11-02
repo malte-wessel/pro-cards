@@ -2,7 +2,7 @@
 // existing cards of its domain look, unasked).
 import { AQI_RULES, CO2_RULES, PM10_RULES, PM25_RULES } from "./rules.ts";
 import { APPLIANCE, APPLIANCE_KINDS, BATTERY, CAR, GRID, SOLAR } from "./energy.ts";
-import { COVER, COVER_KINDS, LAWN_MOWER, MEDIA, VACUUM } from "./devices.ts";
+import { COVER, LAWN_MOWER, MEDIA, VACUUM } from "./devices.ts";
 import { ALARM, CLIMATE, FAN, LIGHT, LOCK, PERSON } from "./domains.ts";
 import { RAIN } from "./rain.ts";
 import { SUN } from "./sun.ts";
@@ -22,7 +22,8 @@ const ruleKind = (name: string, rules: readonly KindRule[], unit: string): Kind 
 });
 
 export const KINDS: Record<string, Kind> = {
-  entity: { name: "entity", reads: "any", readsText: "any entity", keys: [] },
+  // no kind: the entity as it is (its state as the value, its own icon)
+  none: { name: "none", reads: "any", readsText: "any entity", keys: [] },
   battery: BATTERY,
   carbon_dioxide: ruleKind("carbon_dioxide", CO2_RULES, "ppm"),
   pm25: ruleKind("pm25", PM25_RULES, "µg/m³"),
@@ -41,8 +42,6 @@ export const KINDS: Record<string, Kind> = {
   person: PERSON,
   media_player: MEDIA,
   cover: COVER,
-  // a cover drawn as its kind says, whatever its device class (a garage door without one)
-  ...COVER_KINDS,
   vacuum: VACUUM,
   lawn_mower: LAWN_MOWER,
   grid: GRID,

@@ -19,16 +19,22 @@ describe("parseKind", () => {
     expect(kind(undefined)).toBeNull();
     expect(kind(null)).toBeNull();
     expect(kind("wind")).toBe("wind");
-    expect(kind("entity")).toBe("entity");
-    // covers and appliances have kinds of their own
-    expect(kind("garage")).toBe("garage");
+    expect(kind("none")).toBe("none");
+    expect(() => kind("entity")).toThrow("kind: entity is kind: none");
+    // appliances have kinds of their own
     expect(kind("washer")).toBe("washer");
+    expect(kind("cover")).toBe("cover");
+  });
+
+  it("names a cover's look as its visual's variant", () => {
+    for (const v of ["shutter", "blind", "curtain", "garage", "gate", "awning", "window"]) {
+      expect(() => kind(v)).toThrow(`${T}: kind: ${v} is visual: { type: cover, variant: ${v} }`);
+      expect(v in KINDS).toBe(false);
+    }
   });
 
   it("names the kinds when one is unknown", () => {
-    expect(() => kind("room")).toThrow(
-      `${T}: kind must be one of entity | battery | carbon_dioxide`,
-    );
+    expect(() => kind("room")).toThrow(`${T}: kind must be one of none | battery | carbon_dioxide`);
     expect(() => kind("room")).toThrow(/, not "room"$/);
     expect(() => kind({ type: "wind" })).toThrow(/kind must be one of/);
     expect(() => kind(3)).toThrow(/not 3/);
@@ -41,7 +47,7 @@ describe("detectKind", () => {
     expect(detectKind("weather.home", undefined).name).toBe("weather");
     expect(detectKind("sun.sun", undefined).name).toBe("sun");
     expect(detectKind("lawn_mower.garden", undefined).name).toBe("lawn_mower");
-    // a cover is the generic cover kind, drawn by its device class; its own kinds are only named
+    // a cover is the one cover kind, drawn by its device class unless its visual names a variant
     expect(detectKind("cover.garage", st("cover.garage", { device_class: "garage" })).name).toBe(
       "cover",
     );
@@ -56,19 +62,19 @@ describe("detectKind", () => {
   });
 
   it("falls back to entity, and never detects a role kind", () => {
-    expect(detectKind(null, undefined).name).toBe("entity");
-    expect(detectKind("sensor.x", undefined).name).toBe("entity");
+    expect(detectKind(null, undefined).name).toBe("none");
+    expect(detectKind("sensor.x", undefined).name).toBe("none");
     expect(detectKind("sensor.x", st("sensor.x", { device_class: "temperature" })).name).toBe(
-      "entity",
+      "none",
     );
     // grid, solar, car, appliance and trend have no domain and no device class of their own
-    expect(detectKind("sensor.x", st("sensor.x", { device_class: "power" })).name).toBe("entity");
-    expect(detectKind("sensor.x", st("sensor.x", { device_class: "energy" })).name).toBe("entity");
+    expect(detectKind("sensor.x", st("sensor.x", { device_class: "power" })).name).toBe("none");
+    expect(detectKind("sensor.x", st("sensor.x", { device_class: "energy" })).name).toBe("none");
   });
 
   it("goes by the device class only for a domain the type reads", () => {
     const b = "binary_sensor.phone_battery_low";
-    expect(detectKind(b, st(b, { device_class: "battery" })).name).toBe("entity");
+    expect(detectKind(b, st(b, { device_class: "battery" })).name).toBe("none");
     const n = "number.co2_target";
     expect(detectKind(n, st(n, { device_class: "carbon_dioxide" })).name).toBe("carbon_dioxide");
   });
@@ -80,8 +86,8 @@ describe("canRead", () => {
     expect(canRead(KINDS.wind, "weather.home")).toBe(true);
     expect(canRead(KINDS.wind, "light.kitchen")).toBe(false);
     expect(canRead(KINDS.person, "device_tracker.ev")).toBe(true);
-    expect(canRead(KINDS.entity, "light.kitchen")).toBe(true);
-    expect(canRead(KINDS.entity, null)).toBe(true);
+    expect(canRead(KINDS.none, "light.kitchen")).toBe(true);
+    expect(canRead(KINDS.none, null)).toBe(true);
     expect(canRead(KINDS.sun, null)).toBe(true);
     expect(canRead(KINDS.grid, null)).toBe(true);
     expect(canRead(KINDS.light, null)).toBe(false);
@@ -95,9 +101,8 @@ describe("resolveKind", () => {
   it("takes the written type, checked against the entity", () => {
     expect(resolve("grid", "sensor.grid_power")).toBe("grid");
     expect(resolve("cover", "cover.garage_door")).toBe("cover");
-    expect(resolve("garage", "cover.garage_door")).toBe("garage");
-    expect(() => resolve("garage", "sensor.x")).toThrow(`${T}: the garage kind reads a cover`);
-    expect(resolve("entity", "weather.home")).toBe("entity");
+    expect(() => resolve("cover", "sensor.x")).toThrow(`${T}: the cover kind reads a cover`);
+    expect(resolve("none", "weather.home")).toBe("none");
     expect(resolve("sun", null)).toBe("sun");
     expect(() => resolve("wind", "light.kitchen")).toThrow(
       `${T}: the wind kind reads a wind_speed sensor or a weather entity (wind_speed, wind_bearing, wind_gust_speed), not light.kitchen`,
@@ -109,7 +114,7 @@ describe("resolveKind", () => {
 
   it("detects the type when none is written", () => {
     expect(resolve(null, "light.kitchen")).toBe("light");
-    expect(resolve(null, null)).toBe("entity");
+    expect(resolve(null, null)).toBe("none");
     const speed = st("sensor.wind_speed", { device_class: "wind_speed" });
     expect(resolve(null, "sensor.wind_speed", speed)).toBe("wind");
   });
@@ -120,19 +125,17 @@ describe("unusedKeys", () => {
     expect(unusedKeys(KINDS.rain, { entity: "sensor.r", gust: "sensor.g", today: false })).toEqual([
       "gust",
     ]);
-    expect(unusedKeys(KINDS.entity, { import: "sensor.a", series: ["sensor.b"] })).toEqual([
+    expect(unusedKeys(KINDS.none, { import: "sensor.a", series: ["sensor.b"] })).toEqual([
       "import",
       "series",
     ]);
-    expect(unusedKeys(KINDS.garage, { kind: "garage", running_above: 3 })).toEqual([
-      "running_above",
-    ]);
+    expect(unusedKeys(KINDS.cover, { kind: "cover", running_above: 3 })).toEqual(["running_above"]);
     expect(unusedKeys(KINDS.washer, { kind: "washer", running_above: 3 })).toEqual([]);
     // the card's own keys are never another type's
     expect(unusedKeys(KINDS.light, { entity: "light.x", name: "A", color: "red" })).toEqual([]);
     expect(
       unusedKeys(KINDS.wind, {
-        visual: { type: "flow", style: "lines" },
+        visual: { type: "flow", variant: "lines" },
         direction: false,
         gust: undefined,
       }),

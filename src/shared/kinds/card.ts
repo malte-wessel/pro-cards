@@ -137,7 +137,7 @@ export abstract class KindCardBase extends EntityCardBase {
     const thing = (this.constructor as typeof KindCardBase).thing;
     if (unused.length)
       console.warn(
-        `${this._cardType()}: the ${cfg.kind.name} ${thing} reads no ${unused.join(", ")}; left out`,
+        `${this._cardType()}: ${cfg.kind.name === "none" ? `a ${thing} without a kind` : `the ${cfg.kind.name} ${thing}`} reads no ${unused.join(", ")}; left out`,
       );
   }
   // what the kind is resolved from: the detected kind (the device class arrives with the first
@@ -303,7 +303,8 @@ export abstract class KindCardBase extends EntityCardBase {
     const warn = (what: string) => {
       if (this._warnedPlaces.has(what)) return;
       this._warnedPlaces.add(what);
-      console.warn(`${this._cardType()}: the ${kind.name} kind draws no ${what}; left out`);
+      const which = kind.name === "none" ? "a card without a kind" : `the ${kind.name} kind`;
+      console.warn(`${this._cardType()}: ${which} draws no ${what}; left out`);
     };
     if (r.visual && !fits(r.visual.type as string)) {
       warn(`visual: ${r.visual.type}`);
