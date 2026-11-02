@@ -344,9 +344,47 @@ describe("resolvePlaces", () => {
       type: "icon",
       name: "mdi:x",
     });
+    // false empties the place, also a rule's over the card's
     expect(resolvePlaces([layer({ icon: { type: "flow" } }), layer({ icon: false })]).icon).toEqual(
-      { type: "icon" },
+      { type: "icon", hidden: true },
     );
+  });
+
+  it("keeps what every icon takes when a layer switches the thing", () => {
+    // a rule's name over the card's photo: the ring, the plain style, the badge and the actions stay
+    const card = layer({
+      icon: { type: "image", ring: true, style: "plain", badge: false, tap_action: "toggle" },
+    });
+    expect(
+      resolvePlaces([card, layer({ icon: { type: "icon", name: "mdi:home-export" } })]).icon,
+    ).toEqual({
+      type: "icon",
+      name: "mdi:home-export",
+      ring: true,
+      style: "plain",
+      badge: false,
+      tap_action: "toggle",
+    });
+    // a thing's own options go with it: a picture's src, a flow's style
+    expect(
+      resolvePlaces([
+        layer({ icon: { type: "image", src: "/a.png" } }),
+        layer({ icon: { type: "icon" } }),
+      ]).icon,
+    ).toEqual({ type: "icon" });
+    expect(
+      resolvePlaces([
+        layer({ icon: { type: "flow", style: "lines" } }),
+        layer({ icon: { type: "icon" } }),
+      ]).icon,
+    ).toEqual({ type: "icon" });
+    // the new thing's own option wins
+    expect(
+      resolvePlaces([
+        layer({ icon: { type: "image", ring: true } }),
+        layer({ icon: { type: "icon", ring: false } }),
+      ]).icon,
+    ).toEqual({ type: "icon", ring: false });
   });
 
   it("draws the animation in one place: a flow behind the card makes the icon the still one", () => {

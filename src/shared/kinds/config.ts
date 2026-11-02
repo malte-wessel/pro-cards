@@ -32,6 +32,7 @@ import { parseKind, resolveKind } from "./detect.ts";
 import { deviceSiblings, findInput, logOnce } from "./discover.ts";
 import {
   goneKey,
+  mergePlace,
   parseIcon,
   parseVisual,
   type IconPlace,
@@ -103,15 +104,15 @@ export const parseImage = (v: unknown): ImageSrc | false | null => {
   return { kind: "url", url: v };
 };
 
-// the history the card fetches for its plots: as long as the longest window its places ask for
-// (today: a day), the card's bucket and smoothing where its visual names one
+// the history the card fetches for its plots: the window of the visual it draws without a rule (the
+// kind's, with the card's merged or in its place; today: a day), else the default; the card's
+// bucket and smoothing where its visual names one
 export const historyOf = (kind: Kind, places: Places) => {
-  const hours: number[] = [];
-  for (const v of [kind.visual, places.visual])
-    if (v && v.hours !== undefined) hours.push(v.hours === "today" ? 24 : v.hours);
+  const base = mergePlace(kind.visual, places.visual);
+  const h = base && base.hours !== undefined ? base.hours : undefined;
   const v = places.visual || undefined;
   return {
-    hours: Math.max(1, ...(hours.length ? hours : [DEFAULTS.hours_to_show])),
+    hours: Math.max(1, h === undefined ? DEFAULTS.hours_to_show : h === "today" ? 24 : h),
     bucketMin: v?.bucket ?? DEFAULTS.bucket_minutes,
     smoothMin: v?.smoothing ?? null,
   };

@@ -6,13 +6,14 @@
  *   kind: carbon_dioxide                   # what the entity is; detected when left out
  *   direction / gust / today / …           # the kind's own keys, flat on the card
  *   name / value / secondary / color       # the slots, plain text or templates
- *   icon: mdi:sofa | { type: icon | image | flow, name, ring, style, src }   # the icon's place
+ *   icon: mdi:sofa | { type: icon | image | flow, name, ring, style, src,
+ *          tap_action, hold_action, double_tap_action } | false     # the icon's place
  *   visual: glow | { type: image | flow | sparkline | …, … } | false        # what fills the card
  *   status: "{{ … }}"                      # the status: a text, a template, or false (first in the corner)
  *   badges: [sensor.x, { attribute: humidity }]   # the corner, after the status
  *   rules: [...]                           # replace the kind's own rules as a whole; set places too
- *   icon: { tap_action, hold_action, double_tap_action }   # the icon's own actions
- *   control / tap_action / hold_action / double_tap_action / hover
+ *   control: slider | { type, position, attribute, step, options, confirm }   # the kind's, or this
+ *   tap_action / hold_action / double_tap_action / hover
  */
 import { registerCard } from "./shared/card.ts";
 import { overflows } from "./shared/entity/base.ts";

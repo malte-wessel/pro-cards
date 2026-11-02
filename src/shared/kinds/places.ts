@@ -30,6 +30,8 @@ export interface IconPlace {
   // the circle or none (icon, image); the animation's style (flow)
   style?: IconStyle | FlowStyleAny;
   src?: string;
+  // resolved only: the place emptied (icon: false, the card's or a rule's)
+  hidden?: boolean;
   // the icon's own actions (as written: the card parses them), and the badge on it (a tile's)
   tap_action?: unknown;
   hold_action?: unknown;
@@ -225,6 +227,26 @@ export const mergePlace = <P extends { type?: string }>(
   return { ...base, ...over };
 };
 
+// what every icon takes, whatever it draws, carried over when a layer switches the thing (a rule's
+// name over the card's photo keeps the card's ring, its plain style, its badge, its actions); a
+// thing's own options (a picture's src, a flow's style) go with it
+const iconOver = (base: Written<IconPlace>, over: Written<IconPlace>): Written<IconPlace> => {
+  const merged = mergePlace(base, over);
+  if (!base || !over || !merged || merged === base || !over.type || base.type === over.type)
+    return merged;
+  const kept: IconPlace = {};
+  for (const k of ["ring", "badge", "tap_action", "hold_action", "double_tap_action"] as const)
+    if (base[k] !== undefined && over[k] === undefined)
+      (kept as Record<string, unknown>)[k] = base[k];
+  if (
+    (base.style === "circle" || base.style === "plain") &&
+    over.style === undefined &&
+    over.type !== "flow"
+  )
+    kept.style = base.style;
+  return { ...kept, ...merged };
+};
+
 // the places a card draws now: the kind's default, the group's, the card's and the matching
 // rule's, merged in that order. The animation is drawn in one place: a flow behind the card makes
 // the icon the kind's still icon (the wind's arrow)
@@ -234,11 +256,13 @@ export const resolvePlaces = (
   let icon: Written<IconPlace> = undefined,
     visual: Written<VisualPlace> = undefined;
   for (const l of layers) {
-    icon = mergePlace(icon, l.icon);
+    icon = iconOver(icon, l.icon);
     visual = mergePlace(visual, l.visual);
   }
   const v: VisualPlace | false = visual && visual.type ? visual : false;
-  let i: IconPlace = icon === false ? { type: "icon" } : { type: "icon", ...(icon ?? {}) };
+  // false empties the place: no icon is drawn (the card's or a rule's)
+  let i: IconPlace =
+    icon === false ? { type: "icon", hidden: true } : { type: "icon", ...(icon ?? {}) };
   if (!i.type) i = { ...i, type: "icon" };
   if (v && v.type === "flow" && i.type === "flow") {
     const { style: _style, ...rest } = i;

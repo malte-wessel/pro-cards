@@ -14,7 +14,7 @@ import {
 } from "../trend/plot.ts";
 import { seriesColor } from "../trend/color.ts";
 import { normalizeSeries, type TrendSeries } from "../trend/series.ts";
-import { decimalsOf, isNum, isTemplate } from "../util.ts";
+import { decimalsOf, isTemplate } from "../util.ts";
 import { partOf } from "./dom.ts";
 import type { Kind, KindCtx } from "./types.ts";
 
@@ -79,7 +79,11 @@ export const TREND: Kind = {
   templates: (opts) =>
     seriesOf(opts).flatMap((s) => (s.color && isTemplate(s.color) ? [s.color] : [])),
   visibility: (opts) => seriesOf(opts).map((s) => s.visibility),
-  status: (c) => t(c.ctx.hass, "common.hours", { n: c.hours ?? HOURS }),
+  // its window: the hours, or Today since midnight
+  status: (c) =>
+    c.place.visual && c.place.visual.hours === "today"
+      ? t(c.ctx.hass, "weather.today")
+      : t(c.ctx.hass, "common.hours", { n: c.hours ?? HOURS }),
   slots: (c) => {
     const plot = trendPlotEl("pcurve trend ptrend");
     c.host.hover(
@@ -111,6 +115,6 @@ export const TREND: Kind = {
     shownOf(c)
       .map((s) => s.entity)
       .join(),
-    isNum(c.hours) ? c.hours : null,
+    c.place.visual ? (c.place.visual.hours ?? null) : null,
   ],
 };

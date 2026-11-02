@@ -1,20 +1,21 @@
 /*
- * tile-card-pro – one entity (or none) as a tile, filled the way its poster type says.
+ * tile-card-pro – one entity (or none) as a tile, filled the way its kind says.
  *
  *   type: custom:tile-card-pro
- *   entity: climate.living_room            # optional; its domain and device class pick the type
- *   poster: carbon_dioxide                 # the poster type; detected when left out
- *   variant / direction / gust / today / …  # the type's own keys, flat on the card
- *   name / icon / value / secondary / color   # the places, plain text or templates
+ *   entity: climate.living_room            # optional; its domain and device class pick the kind
+ *   kind: carbon_dioxide                   # what the entity is; detected when left out
+ *   direction / gust / today / …           # the kind's own keys, flat on the card
+ *   name / value / secondary / color       # the texts, plain text or templates
+ *   icon: mdi:sofa | { type: icon | image | flow, name, ring, style, src, badge,
+ *          tap_action, hold_action, double_tap_action } | false     # the icon's place
+ *   visual: sparkline | { type, hours, bucket, axis, src, … } | false  # below the line or behind it
  *   status: "{{ … }}"                      # the status on the line after the value, or false
- *   rules: [...]                           # replace the type's own rules as a whole
- *   visual: sparkline                      # sparkline | columns | strip | bar | gauge | none: below
- *   show_picture: true                     # the type's picture below the line (a weather curve)
- *   control: slider                        # the type's controls at the line's end; a slider below
- *   icon_image: person.alex                # a picture in the icon: a URL, a template or an entity's
- *   icon: { tap_action, hold_action, double_tap_action, badge }   # the icon's own
- *   show_icon / show_name / show_value / tap_action / hold_action / double_tap_action / hover
- *   hours_to_show / bucket_minutes / smoothing_minutes
+ *   status_badge: true                     # the status as the first badge instead
+ *   badges: [sensor.x, { attribute: humidity }]   # at the line's end, centred on the icon
+ *   rules: [...]                           # replace the kind's own rules as a whole; set places too
+ *   control: slider | { type, position, attribute, step, options, confirm }   # the kind's, or this
+ *   vertical: true                         # the icon on top, the texts centred under it
+ *   show_name / show_value / tap_action / hold_action / double_tap_action / hover
  */
 import { registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
@@ -184,7 +185,7 @@ export class TileCard extends KindCardBase {
     }
     this._fadePicture(lead);
     // the badge on the icon, as Home Assistant's tile: what a thermostat does, a person's zone …
-    const badge = ent.item.showIcon ? this._iconBadge(ctx, m) : null;
+    const badge = icon.item.showIcon ? this._iconBadge(ctx, m) : null;
     let b = lead.querySelector<HTMLElement>(":scope > .tibadge");
     if (!badge) b?.remove();
     else {

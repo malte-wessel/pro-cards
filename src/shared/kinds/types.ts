@@ -89,7 +89,7 @@ interface Persistent {
 export interface Kind {
   name: string;
   // detection: the domains and entity ids that are this kind, then the device classes; a kind with
-  // none of them is never detected (the role kinds, `trend`: always set with `poster`)
+  // none of them is never detected (the role kinds, `trend`: always set with `kind`)
   domains?: readonly string[];
   ids?: readonly string[];
   deviceClasses?: readonly string[];
@@ -106,7 +106,7 @@ export interface Kind {
   ruleUnit?: RuleUnit;
   // what `control: auto` draws (the domain kinds); the card's `control` replaces it
   controls?: readonly Placement[];
-  // the icon's own actions where the card sets none (`icon_tap_action` …), by the entity's state
+  // the icon's own actions where the card sets none (`icon: { tap_action, … }`), by the entity's state
   // where it depends on it (a lock held to lock or unlock, an alarm panel that wants a code: none)
   iconActions?(st: HassEntity | undefined): Partial<Record<"tap" | "hold" | "dbl", ActionConfig>>;
 

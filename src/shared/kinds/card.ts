@@ -231,26 +231,40 @@ export abstract class KindCardBase extends EntityCardBase {
     return [c.places, ...c.rulePlaces.values()];
   }
   // the pictures the card and its rules name (an icon's, a visual's)
+  // the visual the card draws without a rule: the kind's, with the card's merged or in its place
+  _baseVisual(c: KindConfig): VisualPlace | false {
+    return resolvePlaces([{ icon: undefined, visual: this._kindVisual() }, c.places]).visual;
+  }
+  // whether a rule's visual merges onto a plot (a type of its own replaces it)
+  _ontoPlot(c: KindConfig, v: VisualPlace | false | undefined) {
+    const base = this._baseVisual(c);
+    return !!v && !v.type && !!base && HISTORY_THINGS.includes(base.type as never);
+  }
   _pictures(c: KindConfig): (ImageSrc | false | null | undefined)[] {
+    const base = this._baseVisual(c);
     return this._written(c).flatMap((p) => [
       p.icon && p.icon.src ? parseImage(p.icon.src) : null,
-      p.visual && p.visual.src && !HISTORY_THINGS.includes(p.visual.type ?? "image")
+      // a picture's: of an image, or merged onto one (another entity's history is a plot's)
+      p.visual &&
+      p.visual.src &&
+      (p.visual.type ? p.visual.type === "image" : !!base && base.type === "image")
         ? parseImage(p.visual.src)
         : null,
     ]);
   }
-  // the kind's history, and the plots' entities: the card's own, or another's (`src`)
+  // the kind's history, and the plots' entities the card and its rules can draw: the card's own,
+  // or another's (`src`); a plot the card replaces or leaves out fetches nothing
   _extraHistoryIds(cfg: EntityCardConfig): string[] {
     const c = cfg as KindConfig;
     const entity = c.entities[0].entity;
-    const plots = [c.kind.visual, ...this._written(c).map((p) => p.visual)].flatMap((v) =>
+    const rules = [...c.rulePlaces.values()].map((p) =>
+      p.visual && p.visual.type ? p.visual : null,
+    );
+    const plots = [this._baseVisual(c), ...rules].flatMap((v) =>
       v && v.type && HISTORY_THINGS.includes(v.type) && !kindDraws(c.kind, v)
         ? [v.src ?? entity]
         : [],
     );
-    // a src merged onto the kind's plot (visual: { src: … } on a solar card)
-    const own = c.places.visual;
-    if (own && own.src && !own.type) plots.push(own.src);
     return [
       ...(c.kind.history?.(c.kindOpts, entity) ?? []),
       ...plots.filter((x): x is string => !!x),
@@ -267,7 +281,19 @@ export abstract class KindCardBase extends EntityCardBase {
   _placesFor(m: EntityModel): { icon: IconPlace; visual: VisualPlace | false } {
     const cfg = this._config as KindConfig;
     const kind = cfg.kind;
-    const rule = m.look.rule ? cfg.rulePlaces.get(m.look.rule) : undefined;
+    let rule = m.look.rule ? cfg.rulePlaces.get(m.look.rule) : undefined;
+    // a rule sets no plot's data: its src merged onto the card's plot is left out (said once)
+    if (rule && rule.visual && rule.visual.src !== undefined && this._ontoPlot(cfg, rule.visual)) {
+      const { src: _src, ...rest } = rule.visual;
+      void _src;
+      rule = { ...rule, visual: rest };
+      if (!this._warnedPlaces.has("rule src")) {
+        this._warnedPlaces.add("rule src");
+        console.warn(
+          `${this._cardType()}: a rule sets no src of a plot (it is the card's history); left out`,
+        );
+      }
+    }
     const r = resolvePlaces([
       { icon: kind.icon, visual: this._kindVisual() },
       cfg.places,
@@ -297,14 +323,33 @@ export abstract class KindCardBase extends EntityCardBase {
     return tile && kind.tileVisual !== undefined ? kind.tileVisual : kind.visual;
   }
 
+  // the visual's window for the kind's own drawing, in hours (null: the kind's own): today is the
+  // hours since midnight; a weather's line looks ahead, where today means nothing (said once)
+  _hoursOf(v: VisualPlace | false, now: number): number | null {
+    if (!v || v.hours === undefined) return null;
+    if (typeof v.hours === "number") return v.hours;
+    const kind = (this._config as KindConfig).kind;
+    if (kind.name === "weather") {
+      if (!this._warnedPlaces.has("today")) {
+        this._warnedPlaces.add("today");
+        console.warn(
+          `${this._cardType()}: the weather's line looks ahead: hours: today means nothing there; its own hours are drawn`,
+        );
+      }
+      return null;
+    }
+    const d = new Date(now);
+    const midnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    return Math.max(1 / 60, (now - midnight) / 3600e3);
+  }
+
   // what the kind reads now
   _kindCtx(ctx: RenderCtx): KindCtx {
     const cfg = this._config as KindConfig;
     this._sunHost._hass = ctx.hass;
     const m = this._modelAt(ctx, 0);
     const place = this._placesFor(m);
-    const hours =
-      place.visual && typeof place.visual.hours === "number" ? place.visual.hours : null;
+    const hours = this._hoursOf(place.visual, ctx.now);
     return {
       ctx,
       ent: cfg.entities[0],
@@ -399,6 +444,8 @@ export abstract class KindCardBase extends EntityCardBase {
       iconRing: look.iconRing,
       visual: block,
       plot,
+      // icon: false (the card's or a matching rule's): no icon
+      ...(kc.place.icon.hidden ? { item: { ...ent.item, showIcon: false } } : {}),
     };
   }
   // an animated lead is built once (per key, the icon and its style) and kept through fills: its
@@ -411,6 +458,7 @@ export abstract class KindCardBase extends EntityCardBase {
       !lead ||
       !slot ||
       !kc.ent.item.showIcon ||
+      kc.place.icon.hidden ||
       this._userIcon(kc) ||
       look.iconRing ||
       kc.place.icon.type === "image"

@@ -288,6 +288,73 @@ describe("tile-card config", () => {
     expect(iconBadgeOf(withZone, st("person.a", "Work"))?.icon).toBe("mdi:briefcase");
   });
 
+  it("draws a rule's icon over the card's: false hides it, a name keeps the ring and the style", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const tiles: TileCard[] = [];
+    const draw = (cfg: Record<string, unknown>) => {
+      const el = new TileCard();
+      el.setConfig(cfg);
+      document.body.appendChild(el);
+      el.hass = snapshot() as never;
+      tiles.push(el);
+      return el;
+    };
+    try {
+      const T = "sensor.living_room_temperature";
+      // a matching rule's icon: false leaves the icon out, as the card's own does
+      const hidden = draw({ entity: T, rules: [{ above: 0, icon: false }] });
+      expect(hidden.shadowRoot?.querySelector(".tlead .lead")).toBeNull();
+      expect(draw({ entity: T }).shadowRoot?.querySelector(".tlead .lead")).not.toBeNull();
+      // a rule's name over the card's photo keeps the card's ring and its plain style
+      const person = draw({
+        entity: "person.malte",
+        icon: { ring: true, style: "plain" },
+        rules: [{ state: "home", icon: "mdi:home-account" }],
+      });
+      const lead = person.shadowRoot?.querySelector(".tlead .lead");
+      expect(lead?.classList.contains("ring")).toBe(true);
+      expect(lead?.classList.contains("plain")).toBe(true);
+      expect(lead?.querySelector("img.picture")).toBeNull();
+      // a rule's src merged onto the card's plot is no plot data of its own: the card's history
+      const plot = draw({
+        entity: T,
+        visual: { type: "sparkline" },
+        rules: [{ above: 0, visual: { src: "sensor.outdoor_temperature" } }],
+      });
+      expect(plot._historyIds).toEqual([T]);
+      // the history is the one the card and its rules can draw: none for no plot
+      expect(draw({ entity: T, visual: false })._historyIds).toEqual([]);
+      expect(
+        draw({ entity: T, visual: false, rules: [{ above: 50, visual: "columns" }] })._historyIds,
+      ).toEqual([T]);
+      // the window is the plot's: a visual with fewer hours fetches fewer
+      expect(draw({ entity: T, visual: { type: "columns", hours: 6 } })._config?.hours).toBe(6);
+    } finally {
+      for (const t of tiles) t.remove();
+    }
+  });
+
+  it("gives the kinds today as the hours since midnight, the weather its own hours", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const card = (cfg: Record<string, unknown>) => {
+      const el = new TileCard();
+      el.setConfig(cfg);
+      return el;
+    };
+    const now = new Date(2026, 10, 2, 13, 30).getTime();
+    const trend = card({
+      kind: "trend",
+      visual: { hours: "today" },
+      series: [{ entity: "sensor.outdoor_temperature" }],
+    });
+    expect(trend._hoursOf({ type: "sparkline", hours: "today" }, now)).toBeCloseTo(13.5);
+    expect(trend._hoursOf({ type: "sparkline", hours: 6 }, now)).toBe(6);
+    // a weather's line looks ahead: today means nothing there, said once
+    const weather = card({ entity: "weather.home", visual: { hours: "today" } });
+    expect(weather._hoursOf({ type: "sparkline", hours: "today" }, now)).toBeNull();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("today means nothing"));
+  });
+
   it("draws the kind's visual as a poster does, but no drawing that needs a poster's room", () => {
     vi.spyOn(console, "info").mockImplementation(() => {});
     const tiles: TileCard[] = [];

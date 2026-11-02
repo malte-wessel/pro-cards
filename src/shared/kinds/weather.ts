@@ -1,7 +1,7 @@
-// The weather kind: a weather entity. The condition's picture (Home Assistant's weather pictures,
-// or mdi icons with `show_entity_picture: false`), the condition as the status unless a matching
-// rule has a label, the temperature large with today's high and low under it, and the next hours
-// of the hourly forecast (`hours_to_show`, 12 by default) as the curve along the bottom.
+// The weather kind: a weather entity. The condition's picture in the icon (Home Assistant's
+// weather pictures; `icon: { type: icon }` draws mdi icons), the condition as the status unless a
+// matching rule has a label, the temperature large with today's high and low under it, and its
+// sparkline: the next hours of the hourly forecast (`visual: { hours }`, 12 by default).
 import { plotEl } from "../entity/render/blocks.ts";
 import { leadEl, secondaryEl } from "../entity/render/lead.ts";
 import { fmtNumber } from "../format.ts";
