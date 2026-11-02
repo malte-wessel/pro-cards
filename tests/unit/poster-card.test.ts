@@ -461,8 +461,7 @@ describe("poster-card config", () => {
     const set = norm({
       entity: "sensor.wind_speed",
       kind: "wind",
-      direction: "sensor.wind_direction",
-      gust: false,
+      inputs: { direction: "sensor.wind_direction", gust: false },
     });
     expect(Object.keys(set.inputs)).toEqual(["direction"]);
     expect(set.entities[set.inputs.direction].entity).toBe("sensor.wind_direction");
@@ -483,27 +482,53 @@ describe("poster-card config", () => {
     );
     expect(ids).toEqual({ direction: "sensor.wind_direction", gust: "sensor.wind_gust" });
     expect(info).toHaveBeenCalledWith(
-      `${T}: wind: gust from sensor.wind_gust (same device as sensor.wind_speed); set gust to choose another`,
+      `${T}: wind: gust from sensor.wind_gust (same device as sensor.wind_speed); set inputs: { gust } to choose another`,
     );
     // the inputs are read, never drawn
     expect(found.groups[0].idxs).toEqual([0]);
     expect(found.groups[0].badgeIdxs).toEqual([found.statusIdx]);
     // false drops a found one, an id replaces it
     const own = norm(
-      { entity: "sensor.wind_speed", gust: false, direction: "sensor.x" },
+      { entity: "sensor.wind_speed", inputs: { gust: false, direction: "sensor.x" } },
       snapshot(),
     );
     expect(Object.keys(own.inputs)).toEqual(["direction"]);
     expect(own.entities[own.inputs.direction].entity).toBe("sensor.x");
   });
 
-  it("takes the type's own keys flat on the card, and only the type's", () => {
+  it("takes the kind's inputs in inputs and its other keys on the card, and only the kind's", () => {
     const speed = withStates({
       "sensor.wind_speed": st("sensor.wind_speed", "12", { device_class: "wind_speed" }),
     });
-    const wind = norm({ entity: "sensor.wind_speed", gust: false, today: "sensor.t" }, speed);
+    const wind = norm(
+      { entity: "sensor.wind_speed", inputs: { gust: false, today: "sensor.t" } },
+      speed,
+    );
     expect(wind.kind.name).toBe("wind");
     expect(wind.kindOpts).toEqual({ gust: false });
+    // a written kind decides it from the config alone: a key it does not read is an error
+    expect(() =>
+      norm({ entity: "sensor.wind_speed", kind: "wind", inputs: { today: "sensor.t" } }),
+    ).toThrow(`${T}: the wind kind reads no inputs: today (its inputs: direction, gust)`);
+    expect(() => norm({ kind: "sun", running_above: 3 })).toThrow(
+      `${T}: the sun kind reads no running_above`,
+    );
+    // an input is a key of inputs, never of the card; inputs takes inputs only
+    expect(() => norm({ entity: "sensor.wind_speed", gust: false })).toThrow(
+      `${T}: gust is inputs: { gust: … }`,
+    );
+    expect(() => norm({ entity: "sensor.wind_speed", inputs: "sensor.x" })).toThrow(
+      `${T}: inputs takes the kind's entities by their names`,
+    );
+    expect(() => norm({ entity: "sensor.washer_power", inputs: { running_above: 3 } })).toThrow(
+      `${T}: inputs: running_above goes on the card, not in inputs`,
+    );
+    expect(() => norm({ entity: "sensor.wind_speed", inputs: { bearing: "sensor.x" } })).toThrow(
+      `${T}: inputs: bearing is no kind's input`,
+    );
+    expect(() => norm({ entity: "sensor.wind_speed", inputs: { gust: 3 } })).toThrow(
+      `${T}: inputs: gust takes an entity id or false`,
+    );
     // an appliance's look is a kind of its own, a cover's is its visual's variant
     const cover = norm({ entity: "cover.garage_door", visual: { type: "cover", variant: "gate" } });
     expect(cover.kind.name).toBe("cover");
@@ -515,7 +540,10 @@ describe("poster-card config", () => {
     expect(washer.kind.name).toBe("washer");
     expect(washer.kindOpts).toEqual({ running_above: 10 });
     // the keys never decide the type: a grid's meters on a sensor of no class draw an entity
-    const plain = norm({ entity: "sensor.grid_power", import: "sensor.a", export: "sensor.b" });
+    const plain = norm({
+      entity: "sensor.grid_power",
+      inputs: { import: "sensor.a", export: "sensor.b" },
+    });
     expect(plain.kind.name).toBe("none");
     expect(plain.kindOpts).toEqual({});
     expect(plain.inputs).toEqual({});
@@ -597,8 +625,7 @@ describe("poster-card config", () => {
     // a grid without an entity opens its import meter; a trend's first series is its entity
     const grid = norm({
       kind: "grid",
-      import: "sensor.grid_import",
-      export: "sensor.grid_export",
+      inputs: { import: "sensor.grid_import", export: "sensor.grid_export" },
     });
     expect(grid.kind.name).toBe("grid");
     expect(grid.entities[0].entity).toBe("sensor.grid_import");
@@ -866,23 +893,26 @@ describe("poster-card element", () => {
     expect(el.shadowRoot!.querySelector(".row.poster")).not.toBeNull();
   });
 
-  it("warns once about another type's keys, once the type is known", () => {
+  it("warns once about another kind's keys, once a detected kind is known", () => {
     vi.spyOn(console, "info").mockImplementation(() => {});
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const el = mount({ entity: "sensor.rain_rate", gust: "sensor.wind_gust" });
+    const el = mount({ entity: "sensor.rain_rate", inputs: { gust: "sensor.wind_gust" } });
     // no state yet: the device class may still make it a wind poster
     expect(warn).not.toHaveBeenCalled();
     const hass = snapshot();
     el.hass = hass;
     expect(el._config?.kind.name).toBe("rain");
-    expect(warn).toHaveBeenCalledWith(`${T}: the rain poster reads no gust; left out`);
+    expect(warn).toHaveBeenCalledWith(
+      `${T}: the rain poster reads no inputs: gust (its inputs: today, wind, direction); left out`,
+    );
     el.hass = { ...hass };
     expect(warn).toHaveBeenCalledTimes(1);
-    // a written type is known at once; a config with nothing stray says nothing
-    el.setConfig({ kind: "sun", today: "sensor.x" });
-    expect(warn).toHaveBeenLastCalledWith(`${T}: the sun poster reads no today; left out`);
+    // a written kind is a config error instead; a config with nothing stray says nothing
+    expect(() => el.setConfig({ kind: "sun", inputs: { today: "sensor.x" } })).toThrow(
+      `${T}: the sun kind reads no inputs: today`,
+    );
     el.setConfig({ kind: "sun" });
-    expect(warn).toHaveBeenCalledTimes(2);
+    expect(warn).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -1206,6 +1236,20 @@ describe("poster-card drawing", () => {
     const calls = warn.mock.calls.length;
     set(TEMP, 22);
     expect(warn.mock.calls.length).toBe(calls);
+  });
+
+  it("says once which options do nothing on what the detected kind draws", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    draw({ entity: "light.kitchen", visual: { hours: 12 } });
+    const msg = `${T}: visual: a light poster's visual is glow, which takes no options, not hours`;
+    const said = () => warn.mock.calls.filter((c) => String(c[0]).startsWith(msg)).length;
+    expect(said()).toBe(1);
+    set("light.kitchen", "off");
+    expect(said()).toBe(1);
+    // a written kind decides it from the config alone: an error
+    expect(() => norm({ entity: "light.kitchen", kind: "light", visual: { hours: 12 } })).toThrow(
+      msg,
+    );
   });
 
   it("draws a ring around the icon", () => {

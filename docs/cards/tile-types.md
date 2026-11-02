@@ -80,7 +80,7 @@ The charge, orange and Low below 20 %, red and Critical below 10 %, with its ten
 
 :::
 
-With a power sensor, it is a home battery: Charging or Discharging and its power follow the charge on the line. `power` is positive while it charges; `charge` and `discharge` take a sensor each instead. Without them, the kind finds the power on the battery's device.
+With a power sensor, it is a home battery: Charging or Discharging and its power follow the charge on the line. `power` is positive while it charges; `inputs: { charge, discharge }` take a sensor each instead. Without them, the kind finds the power on the battery's device.
 
 ::: live
 
@@ -89,8 +89,9 @@ With a power sensor, it is a home battery: Charging or Discharging and its power
   entity: sensor.balcony_battery_soc
   name: Balcony battery
   status_badge: true
-  charge: sensor.balcony_battery_charge_power
-  discharge: sensor.balcony_battery_discharge_power
+  inputs:
+    charge: sensor.balcony_battery_charge_power
+    discharge: sensor.balcony_battery_discharge_power
   grid_options: { columns: 12 }
 - type: custom:tile-card-pro
   entity: sensor.battery_soc
@@ -198,7 +199,7 @@ The next sunrise or sunset as the name, its time, and how long until then, with 
 
 **Reads** a wind speed sensor (device class `wind_speed`), or a `weather.*` entity with `kind: wind`.
 
-Particles cross the icon in the wind's direction, as fast as it blows. The line gives the speed, the wind's label, its direction and the gusts, which the kind finds on the same device (`direction`, `gust`; `false` leaves one out). The particles are the icon's flow (`icon: { type: flow, variant: dots }`); its `variant` is one of `dots`, `lines`, `swoosh` and `vectors`. `visual: { type: flow }` draws the field behind the whole tile instead, and the icon is an arrow turned to where the wind blows. See [Kinds: Wind](/cards/poster-types#wind).
+Particles cross the icon in the wind's direction, as fast as it blows. The line gives the speed, the wind's label, its direction and the gusts, which the kind finds on the same device (`inputs: { direction, gust }`; `false` leaves one out). The particles are the icon's flow (`icon: { type: flow, variant: dots }`); its `variant` is one of `dots`, `lines`, `swoosh` and `vectors`. `visual: { type: flow }` draws the field behind the whole tile instead, and the icon is an arrow turned to where the wind blows. See [Kinds: Wind](/cards/poster-types#wind).
 
 ::: live
 
@@ -234,7 +235,7 @@ Rules of your own take the place of the wind's labels:
 type: custom:tile-card-pro
 entity: sensor.wind_speed
 name: Wind
-gust: false
+inputs: { gust: false }
 rules:
   - { below: 20, color: teal, label: Fine for sailing }
   - { above: 20, color: orange, label: Reef the sails }
@@ -247,7 +248,7 @@ grid_options: { columns: 6 }
 
 **Reads** a rain rate sensor (device class `precipitation_intensity`).
 
-Drops fall through the icon as fast as it rains. The line gives the rate, its label and today's total, which the kind finds on the same device (`today`). The drops are the icon's flow (`icon: { type: flow, variant: drops }`; `ripples` or `fill` as its `variant`), and `visual: { type: flow }` lets it rain behind the whole tile. See [Kinds: Rain](/cards/poster-types#rain).
+Drops fall through the icon as fast as it rains. The line gives the rate, its label and today's total, which the kind finds on the same device (`inputs: { today }`). The drops are the icon's flow (`icon: { type: flow, variant: drops }`; `ripples` or `fill` as its `variant`), and `visual: { type: flow }` lets it rain behind the whole tile. See [Kinds: Rain](/cards/poster-types#rain).
 
 ::: live
 
@@ -518,7 +519,7 @@ The robot in the icon moves while it works. The line gives its state, its batter
 
 ## Grid
 
-**Reads** a power sensor, + importing and − exporting (`kind: grid`), or `import` and `export`.
+**Reads** a power sensor, + importing and − exporting (`kind: grid`), or `inputs: { import, export }`.
 
 The power in W or kW, Importing or Exporting, in Home Assistant's energy colours. See [Kinds: Grid](/cards/poster-types#grid).
 
@@ -534,8 +535,7 @@ The power in W or kW, Importing or Exporting, in Home Assistant's energy colours
 - type: custom:tile-card-pro
   name: Grid
   kind: grid
-  import: sensor.grid_import_power
-  export: sensor.grid_export_power
+  inputs: { import: sensor.grid_import_power, export: sensor.grid_export_power }
   status_badge: true
   grid_options: { columns: 6 }
 ```

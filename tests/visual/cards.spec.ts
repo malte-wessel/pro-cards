@@ -2035,8 +2035,10 @@ const CASES = {
       type: PC,
       entity: "sensor.balcony_battery_soc",
       name: "Battery",
-      charge: "sensor.balcony_battery_charge_power",
-      discharge: "sensor.balcony_battery_discharge_power",
+      inputs: {
+        charge: "sensor.balcony_battery_charge_power",
+        discharge: "sensor.balcony_battery_discharge_power",
+      },
     },
   ],
   // a battery without power: its cell alone, the texts short of it; a template sensor made one
@@ -2081,8 +2083,7 @@ const CASES = {
       entity: "sensor.rain_rate_roof",
       name: "Rain",
       visual: { type: "flow", variant: "drops" },
-      wind: "sensor.wind_speed",
-      direction: "sensor.wind_direction",
+      inputs: { wind: "sensor.wind_speed", direction: "sensor.wind_direction" },
     },
     {
       type: PC,

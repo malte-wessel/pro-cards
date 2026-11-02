@@ -28,14 +28,25 @@ import {
 } from "../entity/control.ts";
 import type { ActionConfig, HassEntity, HomeAssistant } from "../ha.ts";
 import { ATTRIBUTES } from "../weather/constants.ts";
-import { parseKind, resolveKind } from "./detect.ts";
+import {
+  INPUT_KEYS,
+  kindKeysOf,
+  parseKind,
+  resolveKind,
+  unusedKeys,
+  unusedText,
+  writtenInputs,
+} from "./detect.ts";
 import { deviceSiblings, findInput, logOnce } from "./discover.ts";
 import {
   goneKey,
+  idleOptions,
   mergePlace,
   parseIcon,
   parseVisual,
+  unfitThings,
   type IconPlace,
+  type PlaceDefaults,
   type VisualPlace,
   type Written,
 } from "./places.ts";
@@ -45,20 +56,8 @@ import type { Kind } from "./types.ts";
 export interface RawKindCardConfig extends RawEntityCardBase, RawEntity {
   // what the entity is (a kind's name; detected when left out)
   kind?: unknown;
-  // the entities a type reads besides the card's own: an id, or false for none
-  direction?: unknown;
-  gust?: unknown;
-  today?: unknown;
-  wind?: unknown;
-  power?: unknown;
-  charge?: unknown;
-  discharge?: unknown;
-  import?: unknown;
-  export?: unknown;
-  range?: unknown;
-  plugged?: unknown;
-  charging?: unknown;
-  location?: unknown;
+  // the entities a kind reads besides the card's own: each an id, or false for none
+  inputs?: unknown;
   // the appliance's threshold, the trend's entities
   running_above?: unknown;
   series?: unknown;
@@ -138,7 +137,30 @@ export const foundInputs = (
   hass: HomeAssistant | undefined,
 ): (string | null)[] => {
   const entity = typeof written.entity === "string" && written.entity ? written.entity : null;
-  return (kind.inputs ?? []).map((def) => foundInput(def, written[def.key], entity, hass));
+  const set = writtenInputs(written);
+  return (kind.inputs ?? []).map((def) => foundInput(def, set[def.key], entity, hass));
+};
+
+// `inputs` as written: the entities a kind reads besides the card's own, each an id or false (not
+// looked for on the device). They are keys of `inputs`, never of the card
+const parseInputs = (written: Record<string, unknown>, type: string): Record<string, unknown> => {
+  for (const k of INPUT_KEYS)
+    if (written[k] !== undefined) throw new Error(`${type}: ${k} is inputs: { ${k}: … }`);
+  const raw = written.inputs;
+  if (raw === undefined || raw === null) return {};
+  if (!isObj(raw))
+    throw new Error(
+      `${type}: inputs takes the kind's entities by their names (inputs: { direction: sensor.x, gust: false })`,
+    );
+  for (const [k, v] of Object.entries(raw)) {
+    if (k === "running_above" || k === "series")
+      throw new Error(`${type}: inputs: ${k} goes on the card, not in inputs`);
+    if (!INPUT_KEYS.has(k))
+      throw new Error(`${type}: inputs: ${k} is no kind's input (${[...INPUT_KEYS].join(", ")})`);
+    if (v !== undefined && v !== null && v !== false && (typeof v !== "string" || !v))
+      throw new Error(`${type}: inputs: ${k} takes an entity id or false`);
+  }
+  return raw;
 };
 
 // the kind's inputs as items: set on the card (an id; false drops it), else a weather entity's
@@ -164,7 +186,7 @@ const inputsOf = (
       if (found) {
         raw = { entity: found };
         logOnce(
-          `${ctx.type}: ${kind.name}: ${def.key} from ${found} (same device as ${entity}); set ${def.key} to choose another`,
+          `${ctx.type}: ${kind.name}: ${def.key} from ${found} (same device as ${entity}); set inputs: { ${def.key} } to choose another`,
         );
       }
     }
@@ -267,6 +289,7 @@ export const normalizeKindItem = (
     const g = isObj(r) ? goneKey(r) : null;
     if (g) throw new Error(`${type}: rules[${i}]: ${g}`);
   }
+  const writtenIn = parseInputs(written as Record<string, unknown>, type);
   // the icon's ring and its own actions are the icon's
   if (written.visual === "ring")
     throw new Error(`${type}: visual: ring is icon: { ring: true } on the ${thing}`);
@@ -291,16 +314,35 @@ export const normalizeKindItem = (
     byRule.set(out, p);
     return out;
   });
+  const named = parseKind(written.kind, type);
   const kind = resolveKind(
-    parseKind(written.kind, type),
+    named,
     written.entity || null,
     written.entity ? hass?.states[written.entity] : undefined,
     type,
   );
-  // the kind's own keys, as written on the card
+  // options that would do nothing, where the config alone decides it: on a written kind's places,
+  // and in a rule over the card's own thing (a detected kind's are said once it is known)
+  const ruleLayers = rules.map(
+    (r): Places => (isObj(r) && byRule.get(r)) || { icon: undefined, visual: undefined },
+  );
+  const below = named ? placeDefaults(kind, thing) : null;
+  const idle = [
+    ...idleOptions(below, places, ruleLayers, type),
+    ...(below ? unfitThings(below, places, ruleLayers, type) : []),
+  ];
+  if (idle.length) throw new Error(idle[0]);
+  // keys the kind does not read: an error for a written kind (a detected one's are said once its
+  // state is known)
+  const unused = unusedKeys(kind, kindKeysOf(written as Record<string, unknown>));
+  if (named && unused.length)
+    throw new Error(
+      `${type}: ${unusedText(kind, unused, kind.name === "none" ? `a ${thing} without a kind` : `the ${kind.name} kind`)}`,
+    );
+  // the kind's own keys, as written: its inputs in `inputs`, the rest on the card
   const opts: Record<string, unknown> = {};
   for (const k of kind.keys) {
-    const v = (written as Record<string, unknown>)[k];
+    const v = INPUT_KEYS.has(k) ? writtenIn[k] : (written as Record<string, unknown>)[k];
     if (v !== undefined) opts[k] = v;
   }
   // the kind's defaults for the card's item: what it shows where the card sets neither `value`
@@ -391,6 +433,21 @@ export const normalizeKindItem = (
     iconActions,
     places,
     rulePlaces,
+  };
+};
+
+// what a kind draws in a card's places where the card says nothing (a tile's visual may differ:
+// none for a cover); `thing` names the card (a poster card)
+export const placeDefaults = (kind: Kind, thing: string): PlaceDefaults => {
+  const card = thing.replace(/ card$/, "");
+  return {
+    who:
+      kind.name === "none"
+        ? `a ${card} without a kind`
+        : `${/^[aeiou]/.test(kind.name) ? "an" : "a"} ${kind.name} ${card}`,
+    icon: kind.icon,
+    visual: card === "tile" && kind.tileVisual !== undefined ? kind.tileVisual : kind.visual,
+    draws: kind.draws ?? [],
   };
 };
 

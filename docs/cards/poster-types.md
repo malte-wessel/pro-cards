@@ -6,7 +6,7 @@ outline: [2, 2]
 
 A kind is what the entity is, and what the [poster card](/cards/poster-card) draws for it. This page shows every kind with what it reads and draws, and its own options.
 
-A kind's options sit on the card like any other key. Where a kind reads other entities, it finds them on the same device as the poster's entity. With more than one match, none is used: set the key yourself, or `false` for none. What a kind draws in its two places, the `icon` and the `visual`, is its default: [The places](/cards/poster-custom#the-places) lists them, and a key of the card changes them.
+Where a kind reads other entities, it finds them on the same device as the poster's entity. With more than one match, none is used: name it under `inputs` yourself (`inputs: { gust: sensor.wind_gust }`), or `false` for none. A kind's other options (an appliance's `running_above`, a trend's `series`) sit on the card. A key the kind does not read is a config error where `kind` is written, and a warning in the browser's console where it is detected. What a kind draws in its two places, the `icon` and the `visual`, is its default: [The places](/cards/poster-custom#the-places) lists them, and a key of the card changes them.
 
 The kind is detected from the entity's domain, then its device class, else it is `none`. `kind` sets it by name, for an entity without a device class or a kind that is never detected.
 
@@ -83,7 +83,7 @@ A template sensor often has no device class. `kind: battery` makes it a battery,
 
 With a power sensor, it is a home battery. The status says Charging or Discharging, with the power under the charge, and the next segment to fill pulses while power flows.
 
-`power` is positive while the battery charges and negative while it discharges. The [power flow card](/cards/power-flow-card) reads a battery the other way round. Or give `charge` and `discharge`, a sensor each.
+`power` is positive while the battery charges and negative while it discharges. The [power flow card](/cards/power-flow-card) reads a battery the other way round. Or give `inputs: { charge, discharge }`, a sensor each.
 
 ::: live
 
@@ -91,8 +91,9 @@ With a power sensor, it is a home battery. The status says Charging or Dischargi
 - type: custom:poster-card-pro
   entity: sensor.balcony_battery_soc
   name: Balcony battery
-  charge: sensor.balcony_battery_charge_power
-  discharge: sensor.balcony_battery_discharge_power
+  inputs:
+    charge: sensor.balcony_battery_charge_power
+    discharge: sensor.balcony_battery_discharge_power
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: sensor.battery_soc
@@ -106,10 +107,10 @@ With a power sensor, it is a home battery. The status says Charging or Dischargi
 
 These apply to a battery:
 
-| Key                   | Takes                                              | Default                                |
-| --------------------- | -------------------------------------------------- | -------------------------------------- |
-| `power`               | a power sensor, positive while the battery charges | a power sensor on the battery's device |
-| `charge`, `discharge` | a power sensor each, in place of `power`           | –                                      |
+| Key                                 | Takes                                              | Default                                |
+| ----------------------------------- | -------------------------------------------------- | -------------------------------------- |
+| `inputs.power`                      | a power sensor, positive while the battery charges | a power sensor on the battery's device |
+| `inputs.charge`, `inputs.discharge` | a power sensor each, in place of `power`           | –                                      |
 
 ## Air quality
 
@@ -275,7 +276,7 @@ The animation is drawn in one place: a flow in both is a config error.
   entity: sensor.wind_speed
   name: Wind
   visual: { type: flow, variant: vectors }
-  gust: false
+  inputs: { gust: false }
   rules:
     - { below: 20, color: teal, label: Fine for sailing }
     - { above: 20, color: orange, label: Reef the sails }
@@ -286,12 +287,12 @@ The animation is drawn in one place: a flow in both is a config error.
 
 ### Options
 
-| Key         | Takes                                                                                               | Default                                            |
-| ----------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| `icon`      | `{ type: flow, variant }`: the animated icon, `variant` one of `dots`, `lines`, `swoosh`, `vectors` | `{ type: flow, variant: dots }`                    |
-| `visual`    | `{ type: flow, variant }`: the whole poster is the wind field                                       | none                                               |
-| `direction` | a wind direction sensor, or `false`                                                                 | one on the sensor's device; a weather entity's own |
-| `gust`      | a gust speed sensor, or `false`                                                                     | one on the sensor's device; a weather entity's own |
+| Key                | Takes                                                                                               | Default                                            |
+| ------------------ | --------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `icon`             | `{ type: flow, variant }`: the animated icon, `variant` one of `dots`, `lines`, `swoosh`, `vectors` | `{ type: flow, variant: dots }`                    |
+| `visual`           | `{ type: flow, variant }`: the whole poster is the wind field                                       | none                                               |
+| `inputs.direction` | a wind direction sensor, or `false`                                                                 | one on the sensor's device; a weather entity's own |
+| `inputs.gust`      | a gust speed sensor, or `false`                                                                     | one on the sensor's device; a weather entity's own |
 
 ## Rain
 
@@ -299,7 +300,7 @@ The animation is drawn in one place: a flow in both is a config error.
 
 A rain rate sensor. The animated icon (`icon: { type: flow, variant: drops }`) rains at the rate. The rate is large, with today's total under it. The rain's bands colour and name it, from _Dry_ to _Violent_, which pulses.
 
-`wind` and `direction` slant the drops. `visual: { type: flow }` fills the whole poster with rain. Its `variant`, in the icon or behind the poster: `drops`, `ripples` or `fill`, a gauge that fills with today's total.
+`inputs: { wind, direction }` slant the drops. `visual: { type: flow }` fills the whole poster with rain. Its `variant`, in the icon or behind the poster: `drops`, `ripples` or `fill`, a gauge that fills with today's total.
 
 ::: live
 
@@ -320,8 +321,7 @@ A rain rate sensor. The animated icon (`icon: { type: flow, variant: drops }`) r
   entity: sensor.rain_rate_roof
   name: Roof
   visual: { type: flow, variant: drops }
-  wind: sensor.wind_speed
-  direction: sensor.wind_direction
+  inputs: { wind: sensor.wind_speed, direction: sensor.wind_direction }
   grid_options: { columns: 6 }
 ```
 
@@ -329,13 +329,13 @@ A rain rate sensor. The animated icon (`icon: { type: flow, variant: drops }`) r
 
 ### Options
 
-| Key         | Takes                                                                                     | Default                          |
-| ----------- | ----------------------------------------------------------------------------------------- | -------------------------------- |
-| `icon`      | `{ type: flow, variant }`: the animated icon, `variant` one of `drops`, `ripples`, `fill` | `{ type: flow, variant: drops }` |
-| `visual`    | `{ type: flow, variant }`: the whole poster is the rain                                   | none                             |
-| `today`     | a sensor of the day's total, or `false`                                                   | one on the sensor's device       |
-| `wind`      | a wind speed sensor, to slant the drops                                                   | –                                |
-| `direction` | a wind direction sensor                                                                   | –                                |
+| Key                | Takes                                                                                     | Default                          |
+| ------------------ | ----------------------------------------------------------------------------------------- | -------------------------------- |
+| `icon`             | `{ type: flow, variant }`: the animated icon, `variant` one of `drops`, `ripples`, `fill` | `{ type: flow, variant: drops }` |
+| `visual`           | `{ type: flow, variant }`: the whole poster is the rain                                   | none                             |
+| `inputs.today`     | a sensor of the day's total, or `false`                                                   | one on the sensor's device       |
+| `inputs.wind`      | a wind speed sensor, to slant the drops                                                   | –                                |
+| `inputs.direction` | a wind direction sensor                                                                   | –                                |
 
 ## Trend
 
@@ -680,7 +680,7 @@ The state is large, with the battery and the room under it where the integration
 
 **Reads** a power sensor, + importing and − exporting (`kind: grid`).
 
-`kind: grid` reads a power sensor that is positive while it imports and negative while it exports. Or give `import` and `export`, a sensor each. A power line crosses the poster (its visual, `line`), its dots flowing in or out in Home Assistant's energy colours. The power is large in W or kW, and the status says Importing or Exporting.
+`kind: grid` reads a power sensor that is positive while it imports and negative while it exports. Or give `inputs: { import, export }`, a sensor each. A power line crosses the poster (its visual, `line`), its dots flowing in or out in Home Assistant's energy colours. The power is large in W or kW, and the status says Importing or Exporting.
 
 ::: live
 
@@ -693,8 +693,7 @@ The state is large, with the battery and the room under it where the integration
 - type: custom:poster-card-pro
   name: Grid
   kind: grid
-  import: sensor.grid_import_power
-  export: sensor.grid_export_power
+  inputs: { import: sensor.grid_import_power, export: sensor.grid_export_power }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: sensor.balcony_grid_power
@@ -707,9 +706,9 @@ The state is large, with the battery and the room under it where the integration
 
 ### Options
 
-| Key                | Takes                                                     | Default |
-| ------------------ | --------------------------------------------------------- | ------- |
-| `import`, `export` | a power sensor each, for a grid without one signed sensor | –       |
+| Key                              | Takes                                                     | Default |
+| -------------------------------- | --------------------------------------------------------- | ------- |
+| `inputs.import`, `inputs.export` | a power sensor each, for a grid without one signed sensor | –       |
 
 ## Solar
 
@@ -729,7 +728,7 @@ The state is large, with the battery and the room under it where the integration
   entity: sensor.solar_power
   name: Solar
   kind: solar
-  today: sensor.energy_today
+  inputs: { today: sensor.energy_today }
   grid_options: { columns: 6 }
 ```
 
@@ -737,9 +736,9 @@ The state is large, with the battery and the room under it where the integration
 
 ### Options
 
-| Key     | Takes                                              | Default                      |
-| ------- | -------------------------------------------------- | ---------------------------- |
-| `today` | an energy sensor of today's production, or `false` | one on the inverter's device |
+| Key            | Takes                                              | Default                      |
+| -------------- | -------------------------------------------------- | ---------------------------- |
+| `inputs.today` | an energy sensor of today's production, or `false` | one on the inverter's device |
 
 ## Car
 
@@ -747,7 +746,7 @@ The state is large, with the battery and the room under it where the integration
 
 `kind: car` on the car's battery shows the charge large, with the range under it. The status says Charging, Plugged in, or where the car is while it is away from home. The battery's [rules](#predefined-rules) colour it, and their label comes first: the van is away, and its status says Critical.
 
-Range, plug, charging and location come from the car's device. A wallbox's power sensor as `charging` counts as charging above 0 W.
+Range, plug, charging and location come from the car's device. A wallbox's power sensor as `inputs: { charging }` counts as charging above 0 W.
 
 ::: live
 
@@ -761,8 +760,7 @@ Range, plug, charging and location come from the car's device. A wallbox's power
   entity: sensor.ev_battery
   name: Car
   kind: car
-  charging: false
-  location: false
+  inputs: { charging: false, location: false }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: sensor.van_battery
@@ -775,12 +773,12 @@ Range, plug, charging and location come from the car's device. A wallbox's power
 
 ### Options
 
-| Key        | Takes                                                    | Default                 |
-| ---------- | -------------------------------------------------------- | ----------------------- |
-| `range`    | a distance sensor, or `false`                            | one on the car's device |
-| `charging` | a binary sensor, or a wallbox's power sensor, or `false` | one on the car's device |
-| `plugged`  | a plug binary sensor, or `false`                         | one on the car's device |
-| `location` | a device tracker, or `false`                             | one on the car's device |
+| Key               | Takes                                                    | Default                 |
+| ----------------- | -------------------------------------------------------- | ----------------------- |
+| `inputs.range`    | a distance sensor, or `false`                            | one on the car's device |
+| `inputs.charging` | a binary sensor, or a wallbox's power sensor, or `false` | one on the car's device |
+| `inputs.plugged`  | a plug binary sensor, or `false`                         | one on the car's device |
+| `inputs.location` | a device tracker, or `false`                             | one on the car's device |
 
 ## Appliance
 

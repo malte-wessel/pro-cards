@@ -68,14 +68,16 @@ add("pt-entity-states", [
 add(
   "pt-battery-home",
   [
-    p("sensor.battery_soc", { power: "sensor.battery_power", name: "Discharging" }),
-    p("sensor.battery_soc", { power: "sensor.pt_battery_in", name: "Charging" }),
+    p("sensor.battery_soc", { inputs: { power: "sensor.battery_power" }, name: "Discharging" }),
+    p("sensor.battery_soc", { inputs: { power: "sensor.pt_battery_in" }, name: "Charging" }),
     p("sensor.balcony_battery_soc", {
-      charge: "sensor.balcony_battery_charge_power",
-      discharge: "sensor.balcony_battery_discharge_power",
+      inputs: {
+        charge: "sensor.balcony_battery_charge_power",
+        discharge: "sensor.balcony_battery_discharge_power",
+      },
       name: "Charge and discharge",
     }),
-    p("sensor.battery_soc", { power: "sensor.pt_battery_idle", name: "Idle" }),
+    p("sensor.battery_soc", { inputs: { power: "sensor.pt_battery_idle" }, name: "Idle" }),
   ],
   {
     states: {
@@ -147,14 +149,14 @@ add("pt-sun-evening", [p("sun.sun"), p(null, { kind: "sun" })], { time: at(7) })
 add("pt-sun-night", [p("sun.sun"), p(null, { kind: "sun" })], { time: at(12) });
 
 {
-  const inputs = { direction: "sensor.wind_direction", gust: "sensor.wind_gust" };
+  const inputs = { inputs: { direction: "sensor.wind_direction", gust: "sensor.wind_gust" } };
   const w = levels("sensor.wind_speed", "pt_wind", [2, 12, 28, 42, 65]);
   add(
     "pt-wind",
     [
       p("sensor.wind_speed"),
       p("weather.home", { kind: "wind" }),
-      p("sensor.wind_speed", { direction: false, gust: false, name: "No direction" }),
+      p("sensor.wind_speed", { inputs: { direction: false, gust: false }, name: "No direction" }),
       p(w.ids[0], inputs),
     ],
     { states: w.states },
@@ -172,11 +174,9 @@ add("pt-sun-night", [p("sun.sun"), p(null, { kind: "sun" })], { time: at(12) });
     [
       p("sensor.rain_rate"),
       p("sensor.rain_rate_roof"),
-      ...r.ids.map((id) => p(id, { today: "sensor.rain_today" })),
+      ...r.ids.map((id) => p(id, { inputs: { today: "sensor.rain_today" } })),
       p("sensor.rain_rate_roof", {
-        wind: "sensor.wind_speed",
-        direction: "sensor.wind_direction",
-        today: false,
+        inputs: { wind: "sensor.wind_speed", direction: "sensor.wind_direction", today: false },
         name: "In the wind",
       }),
     ],
@@ -375,8 +375,7 @@ add(
     p(null, {
       kind: "grid",
       name: "Grid",
-      import: "sensor.grid_import_power",
-      export: "sensor.grid_export_power",
+      inputs: { import: "sensor.grid_import_power", export: "sensor.grid_export_power" },
     }),
   ],
   {
@@ -389,10 +388,10 @@ add(
 add(
   "pt-solar",
   [
-    p("sensor.solar_power", { kind: "solar", today: "sensor.energy_today" }),
-    p("sensor.solar_power", { kind: "solar", today: false, name: "No today" }),
+    p("sensor.solar_power", { kind: "solar", inputs: { today: "sensor.energy_today" } }),
+    p("sensor.solar_power", { kind: "solar", inputs: { today: false }, name: "No today" }),
     p("sensor.balcony_solar_power", { kind: "solar" }),
-    p("sensor.pt_solar_off", { kind: "solar", today: "sensor.energy_today" }),
+    p("sensor.pt_solar_off", { kind: "solar", inputs: { today: "sensor.energy_today" } }),
   ],
   { states: { "sensor.pt_solar_off": like("sensor.solar_power", 0) } },
 );
@@ -400,9 +399,16 @@ add(
   "pt-car",
   [
     p("sensor.ev_battery", { kind: "car" }),
-    p("sensor.ev_battery", { kind: "car", charging: false, name: "Plugged in" }),
-    p("sensor.ev_battery", { kind: "car", charging: false, plugged: false, name: "Away" }),
-    p("sensor.pt_ev_low", { kind: "car", range: "sensor.pt_ev_range", charging: false }),
+    p("sensor.ev_battery", { kind: "car", inputs: { charging: false }, name: "Plugged in" }),
+    p("sensor.ev_battery", {
+      kind: "car",
+      inputs: { charging: false, plugged: false },
+      name: "Away",
+    }),
+    p("sensor.pt_ev_low", {
+      kind: "car",
+      inputs: { range: "sensor.pt_ev_range", charging: false },
+    }),
   ],
   {
     states: {
@@ -782,10 +788,10 @@ const SIZED: Record<string, CardConfigBase> = {
     name: "Temperatures",
     series: ["sensor.living_room_temperature", "sensor.outdoor_temperature"],
   }),
-  battery: p("sensor.battery_soc", { power: "sensor.battery_power" }),
+  battery: p("sensor.battery_soc", { inputs: { power: "sensor.battery_power" } }),
   car: p("sensor.ev_battery", { kind: "car" }),
   grid: p("sensor.grid_power", { kind: "grid" }),
-  solar: p("sensor.solar_power", { kind: "solar", today: "sensor.energy_today" }),
+  solar: p("sensor.solar_power", { kind: "solar", inputs: { today: "sensor.energy_today" } }),
   appliance: p("sensor.washer_power", { kind: "washer" }),
   air: p("sensor.living_room_co2"),
 };
@@ -818,7 +824,7 @@ const FEW = [
   p("media_player.living_room_speaker"),
   p("sensor.wind_speed", { visual: { type: "flow", variant: "lines" } }),
   p("weather.home"),
-  p("sensor.battery_soc", { power: "sensor.battery_power" }),
+  p("sensor.battery_soc", { inputs: { power: "sensor.battery_power" } }),
 ];
 // a phone 390 px wide: its section 358 px, half of it 175
 add("ps-phone", FEW, { width: 358 });

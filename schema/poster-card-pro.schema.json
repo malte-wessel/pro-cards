@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://malte-wessel.github.io/pro-cards/schema/poster-card-pro.schema.json",
   "title": "custom:poster-card-pro",
-  "description": "One entity (or none) as a poster, drawn the way its kind says: the icon and the badges on top, the name, the large value and the visual at the bottom. The kind is detected from the entity (its domain, then its device class) or set with `kind`; its own keys (the entities it reads, `running_above`, `series`) sit flat on the card and never decide the kind. Two places say what the card draws: `icon` and `visual`, each a thing with its options, false, or left out for the kind's. Strings containing {{ }} are Jinja templates rendered by Home Assistant (name, secondary, icon, color, value, status, an image's src).",
+  "description": "One entity (or none) as a poster, drawn the way its kind says: the icon and the badges on top, the name, the large value and the visual at the bottom. The kind is detected from the entity (its domain, then its device class) or set with `kind`; the entities it reads besides the card's own are its `inputs`; an appliance's `running_above` and a trend's `series` sit on the card; none of them decides the kind. Two places say what the card draws: `icon` and `visual`, each a thing with its options, false, or left out for the kind's. Strings containing {{ }} are Jinja templates rendered by Home Assistant (name, secondary, icon, color, value, status, an image's src).",
   "type": "object",
   "properties": {
     "type": {
@@ -12,57 +12,8 @@
       "description": "What the entity is, forced or one that is never detected (trend, grid, solar, car, appliance, a named cover or appliance). Left out: detected from the entity's domain and device class; `entity` turns every default off",
       "$ref": "#/$defs/kind"
     },
-    "direction": {
-      "$ref": "#/$defs/input",
-      "description": "wind, rain: the direction sensor (degrees or a compass point)"
-    },
-    "gust": {
-      "$ref": "#/$defs/input",
-      "description": "wind: the gust sensor"
-    },
-    "today": {
-      "$ref": "#/$defs/input",
-      "description": "rain, solar: today's total"
-    },
-    "wind": {
-      "$ref": "#/$defs/input",
-      "description": "rain: the wind speed that slants the drops"
-    },
-    "power": {
-      "$ref": "defs.schema.json#/$defs/entityId",
-      "description": "battery: its power, + charging"
-    },
-    "charge": {
-      "$ref": "defs.schema.json#/$defs/entityId",
-      "description": "battery: its charging power"
-    },
-    "discharge": {
-      "$ref": "defs.schema.json#/$defs/entityId",
-      "description": "battery: its discharging power"
-    },
-    "import": {
-      "$ref": "defs.schema.json#/$defs/entityId",
-      "description": "grid: the import meter"
-    },
-    "export": {
-      "$ref": "defs.schema.json#/$defs/entityId",
-      "description": "grid: the export meter"
-    },
-    "range": {
-      "$ref": "#/$defs/input",
-      "description": "car: its range"
-    },
-    "plugged": {
-      "$ref": "#/$defs/input",
-      "description": "car: plugged in"
-    },
-    "charging": {
-      "$ref": "#/$defs/input",
-      "description": "car: charging (a binary sensor, or power: on above 0)"
-    },
-    "location": {
-      "$ref": "#/$defs/input",
-      "description": "car: its device tracker"
+    "inputs": {
+      "$ref": "#/$defs/inputs"
     },
     "running_above": {
       "type": "number",
@@ -1066,19 +1017,7 @@
           },
           "then": {
             "properties": {
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
+              "inputs": false,
               "running_above": false,
               "series": false
             }
@@ -1095,16 +1034,20 @@
           },
           "then": {
             "properties": {
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
+              "inputs": {
+                "properties": {
+                  "direction": false,
+                  "gust": false,
+                  "today": false,
+                  "wind": false,
+                  "import": false,
+                  "export": false,
+                  "range": false,
+                  "plugged": false,
+                  "charging": false,
+                  "location": false
+                }
+              },
               "running_above": false,
               "series": false
             }
@@ -1121,17 +1064,21 @@
           },
           "then": {
             "properties": {
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
+              "inputs": {
+                "properties": {
+                  "today": false,
+                  "wind": false,
+                  "power": false,
+                  "charge": false,
+                  "discharge": false,
+                  "import": false,
+                  "export": false,
+                  "range": false,
+                  "plugged": false,
+                  "charging": false,
+                  "location": false
+                }
+              },
               "running_above": false,
               "series": false,
               "icon": {
@@ -1184,16 +1131,20 @@
           },
           "then": {
             "properties": {
-              "gust": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
+              "inputs": {
+                "properties": {
+                  "gust": false,
+                  "power": false,
+                  "charge": false,
+                  "discharge": false,
+                  "import": false,
+                  "export": false,
+                  "range": false,
+                  "plugged": false,
+                  "charging": false,
+                  "location": false
+                }
+              },
               "running_above": false,
               "series": false,
               "icon": {
@@ -1246,19 +1197,7 @@
           },
           "then": {
             "properties": {
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
+              "inputs": false,
               "running_above": false
             },
             "required": ["series"]
@@ -1275,17 +1214,21 @@
           },
           "then": {
             "properties": {
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
+              "inputs": {
+                "properties": {
+                  "direction": false,
+                  "gust": false,
+                  "today": false,
+                  "wind": false,
+                  "power": false,
+                  "charge": false,
+                  "discharge": false,
+                  "range": false,
+                  "plugged": false,
+                  "charging": false,
+                  "location": false
+                }
+              },
               "running_above": false,
               "series": false
             }
@@ -1302,18 +1245,22 @@
           },
           "then": {
             "properties": {
-              "direction": false,
-              "gust": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
+              "inputs": {
+                "properties": {
+                  "direction": false,
+                  "gust": false,
+                  "wind": false,
+                  "power": false,
+                  "charge": false,
+                  "discharge": false,
+                  "import": false,
+                  "export": false,
+                  "range": false,
+                  "plugged": false,
+                  "charging": false,
+                  "location": false
+                }
+              },
               "running_above": false,
               "series": false
             }
@@ -1330,15 +1277,19 @@
           },
           "then": {
             "properties": {
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
+              "inputs": {
+                "properties": {
+                  "direction": false,
+                  "gust": false,
+                  "today": false,
+                  "wind": false,
+                  "power": false,
+                  "charge": false,
+                  "discharge": false,
+                  "import": false,
+                  "export": false
+                }
+              },
               "running_above": false,
               "series": false
             }
@@ -1355,19 +1306,7 @@
           },
           "then": {
             "properties": {
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
+              "inputs": false,
               "series": false
             }
           }
@@ -1546,6 +1485,65 @@
           }
         }
       ]
+    },
+    "inputs": {
+      "type": "object",
+      "description": "The entities the kind reads besides the card's own, by their names: each an entity id, or false not to look for one on the entity's device. Left out: found on the device, or a weather entity's attribute",
+      "properties": {
+        "direction": {
+          "$ref": "#/$defs/input",
+          "description": "wind, rain: the direction sensor (degrees or a compass point)"
+        },
+        "gust": {
+          "$ref": "#/$defs/input",
+          "description": "wind: the gust sensor"
+        },
+        "today": {
+          "$ref": "#/$defs/input",
+          "description": "rain, solar: today's total"
+        },
+        "wind": {
+          "$ref": "#/$defs/input",
+          "description": "rain: the wind speed that slants the drops"
+        },
+        "power": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "battery: its power, + charging"
+        },
+        "charge": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "battery: its charging power"
+        },
+        "discharge": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "battery: its discharging power"
+        },
+        "import": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "grid: the import meter"
+        },
+        "export": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "grid: the export meter"
+        },
+        "range": {
+          "$ref": "#/$defs/input",
+          "description": "car: its range"
+        },
+        "plugged": {
+          "$ref": "#/$defs/input",
+          "description": "car: plugged in"
+        },
+        "charging": {
+          "$ref": "#/$defs/input",
+          "description": "car: charging (a binary sensor, or power: on above 0)"
+        },
+        "location": {
+          "$ref": "#/$defs/input",
+          "description": "car: its device tracker"
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

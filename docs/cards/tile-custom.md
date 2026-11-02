@@ -258,7 +258,7 @@ Each place takes one **thing**:
 | `visual` | `segments`     | –                                             | ten segments, filled to the value                                                                                              | every kind |
 | `visual` | `sun`          | `hours`                                       | the sun's day, with the sun where it is now                                                                                    | sun        |
 
-A poster's `cover`, `path` and `line` are the cover's, the robots' and the grid's drawings; a tile leaves them out by default, and draws one where it names it (`visual: { type: cover, variant: garage }`). The options are the poster's: see [the things](/cards/poster-custom#the-things). A thing that only some kinds draw is left out on another kind, with a warning in the browser's console.
+A poster's `cover`, `path` and `line` are the cover's, the robots' and the grid's drawings; a tile leaves them out by default, and draws one where it names it (`visual: { type: cover, variant: garage }`). The options are the poster's: see [the things](/cards/poster-custom#the-things). A thing that only some kinds draw is left out on another kind, with a warning in the browser's console (a config error where the `kind` is written).
 
 ### The kinds' defaults
 
@@ -306,7 +306,7 @@ Every other kind (the cover, the robots and the grid too) draws the entity's ico
 
 An object without `type` keeps the thing and changes its options (with a `name` it is an icon): `visual: { hours: 24 }` makes the weather's forecast look a day ahead, `visual: { blur: false }` shows a person's photo sharp, `icon: { ring: true }` puts a ring around whatever the icon is. An object with the default's own `type` merges the same way; another `type` replaces it. Another thing in the icon keeps what every icon takes, its `ring`, its `style` and its actions and its badge; a thing's own options, an image's `src` or a flow's `variant`, go with it.
 
-In a [tile group](/cards/tile-group-card), a tile's `visual` without `type` merges onto the group's: a bucket of its own over the group's sparkline.
+Options that would do nothing are caught. Where the config alone decides it, it is an error that names the thing taking them: a written `kind` (`kind: light` with `visual: { hours: 12 }`: the glow takes no hours), a rule over the card's own thing (`visual: sparkline` and a rule's `visual: { opacity: 0.3 }`), or a thing the written kind does not draw. Where the entity decides it (the kind is detected), the browser's console says so once the state is known, and the options are left out.
 
 ### One place for the animation
 

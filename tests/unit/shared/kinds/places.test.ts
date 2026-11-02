@@ -3,12 +3,15 @@ import {
   GONE_KEYS,
   goneKey,
   goneVariant,
+  idleOptions,
   IMAGE_BLUR,
   mergePlace,
   parseIcon,
   parseVisual,
   resolvePlaces,
+  unfitThings,
   type IconPlace,
+  type PlaceDefaults,
   type VisualPlace,
 } from "../../../../src/shared/kinds/places.ts";
 
@@ -462,6 +465,78 @@ describe("resolvePlaces", () => {
     expect(resolvePlaces([wind, none, layer({ visual: { type: "flow" } })]).icon).toEqual({
       type: "icon",
     });
+  });
+});
+
+describe("options that do nothing", () => {
+  const none = { icon: undefined, visual: undefined };
+  const card = (o: object) => ({ ...none, ...o });
+  const light: PlaceDefaults = {
+    who: "a light poster",
+    icon: undefined,
+    visual: { type: "glow" },
+    draws: [],
+  };
+  const fan: PlaceDefaults = { who: "a fan poster", icon: undefined, visual: undefined, draws: [] };
+  const wind: PlaceDefaults = {
+    who: "a wind poster",
+    icon: { type: "flow", variant: "dots" },
+    visual: undefined,
+    draws: ["flow"],
+  };
+  const idle = (kind: PlaceDefaults | null, c: object, rules: object[] = []) =>
+    idleOptions(kind, card(c), rules.map(card), "C");
+
+  it("names options the thing under them does not take, and the thing that does", () => {
+    expect(idle(light, { visual: { hours: 12 } })).toEqual([
+      "C: visual: a light poster's visual is glow, which takes no options, not hours (name the thing that does: visual: { type: sparkline | columns | strip, hours: … })",
+    ]);
+    expect(idle(wind, { icon: { ring: true } })).toEqual([
+      "C: icon: a wind poster's icon is flow, which takes variant, style, tap_action, hold_action, double_tap_action, badge, not ring (name the thing that does: icon: { type: icon | image, ring: … })",
+    ]);
+    // the options a thing takes, and a thing of its own type, do something
+    expect(idle(light, { visual: { type: "sparkline", hours: 12 } })).toEqual([]);
+    expect(idle(wind, { icon: { variant: "lines", style: "plain" } })).toEqual([]);
+  });
+
+  it("names options with nothing under them", () => {
+    expect(idle(fan, { visual: { hours: 6 } })).toEqual([
+      "C: visual: a fan poster draws no visual, so hours has nothing to change (name the thing that does: visual: { type: sparkline | columns | strip, hours: … })",
+    ]);
+    // a thing only some kinds draw is named only for a kind that draws it
+    expect(idle(fan, { visual: { variant: "garage" } })[0]).not.toContain("type: cover");
+  });
+
+  it("checks a rule against the card's places, merged onto the kind's", () => {
+    const sparkline = { visual: { type: "sparkline" } };
+    expect(idle(light, sparkline, [{ visual: { opacity: 0.3 } }])).toEqual([
+      "C: rules[0].visual: the card's visual is sparkline, which takes hours, bucket, src, axis, smoothing, not opacity (name the thing that does: visual: { type: image, opacity: … })",
+    ]);
+    expect(idle(light, { visual: false }, [{ visual: { axis: true } }])[0]).toMatch(
+      /^C: rules\[0\]\.visual: the card draws no visual, so axis has nothing to change/,
+    );
+    // the card's options merged onto the kind's thing: the rule's options go onto that thing too
+    expect(idle(light, { visual: {} }, [{ visual: { hours: 1 } }])[0]).toMatch(
+      /^C: rules\[0\]\.visual: a light poster's visual is glow/,
+    );
+  });
+
+  it("checks only what the card's own things decide while the kind is not known", () => {
+    expect(idle(null, { visual: { hours: 12 } })).toEqual([]);
+    expect(idle(null, { visual: { hours: 12 } }, [{ visual: { opacity: 1 } }])).toEqual([]);
+    expect(
+      idle(null, { visual: { type: "sparkline" } }, [{ visual: { opacity: 1 } }]),
+    ).toHaveLength(1);
+  });
+
+  it("names a thing the kind does not draw", () => {
+    expect(unfitThings(light, card({ visual: { type: "sun" } }), [], "C")).toEqual([
+      "C: visual: a light poster draws no sun",
+    ]);
+    expect(unfitThings(wind, card({}), [card({ visual: { type: "flow" } })], "C")).toEqual([]);
+    expect(unfitThings(light, card({}), [card({ icon: { type: "flow" } })], "C")).toEqual([
+      "C: rules[0].icon: a light poster draws no flow",
+    ]);
   });
 });
 

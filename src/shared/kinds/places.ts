@@ -294,6 +294,106 @@ export const resolvePlaces = (
   return { icon: i, visual: v };
 };
 
+// what a card's kind draws in its places where the card says nothing, and the things only some
+// kinds draw that it draws (Kind.draws); `who` names it in messages (a light tile)
+export interface PlaceDefaults {
+  who: string;
+  icon: Written<IconPlace>;
+  visual: Written<VisualPlace>;
+  draws: readonly string[];
+}
+interface Layer {
+  icon: Written<IconPlace>;
+  visual: Written<VisualPlace>;
+}
+// a place under a layer: what it draws once that layer is merged on; null while it is not known
+// (a detected kind before its state, and options merged onto it)
+const under = <P extends { type?: string }>(
+  below: Written<P> | null,
+  over: Written<P>,
+): Written<P> | null =>
+  below !== null ? mergePlace(below, over) : over === false || over?.type ? over : null;
+// the options an object without a type writes that do nothing on what it merges onto, as a message
+// that names the thing that takes them; null: they all do something (or it is not known yet)
+const idleIn = (
+  place: "icon" | "visual",
+  below: Written<IconPlace | VisualPlace> | null,
+  who: string,
+  over: Written<IconPlace | VisualPlace>,
+  at: string,
+  fits: (thing: string) => boolean,
+): string | null => {
+  if (below === null || !over || over.type) return null;
+  const keys = Object.keys(over).filter((k) => (over as Record<string, unknown>)[k] !== undefined);
+  if (!keys.length) return null;
+  const table: Record<string, readonly string[]> = place === "icon" ? ICON_OPTIONS : VISUAL_OPTIONS;
+  // an icon is always some icon: the plain one where nothing names a thing
+  const thing = below ? below.type : place === "icon" ? "icon" : undefined;
+  const idle = thing ? keys.filter((k) => !table[thing].includes(k)) : keys;
+  if (!idle.length) return null;
+  const takers = Object.keys(table).filter(
+    (t) => fits(t) && idle.every((k) => table[t].includes(k)),
+  );
+  const hint = takers.length
+    ? ` (name the thing that does: ${place}: { type: ${takers.join(" | ")}, ${idle.map((k) => `${k}: …`).join(", ")} })`
+    : "";
+  return thing
+    ? `${at}: ${who}'s ${place} is ${thing}, which takes ${table[thing].length ? list(table[thing]) : "no options"}, not ${list(idle)}${hint}`
+    : `${at}: ${who} draws no ${place}, so ${list(idle)} has nothing to change${hint}`;
+};
+// what the options a card and its rules write merge onto, where some do nothing: options of another
+// thing, or options with nothing under them. `kind` is what the card's kind draws (null: not known
+// yet, a kind detected from the entity: only what the card's own things decide is checked); the
+// card merges onto it, each rule onto the card. `at` names the card in messages
+export const idleOptions = (
+  kind: PlaceDefaults | null,
+  card: Layer,
+  rules: Layer[],
+  at: string,
+): string[] => {
+  const out: string[] = [];
+  const fits = (t: string) => !KIND_THINGS.includes(t) || !kind || kind.draws.includes(t);
+  const check = (
+    below: Record<"icon" | "visual", Written<IconPlace | VisualPlace> | null>,
+    who: (place: "icon" | "visual") => string,
+    over: Layer,
+    where: string,
+  ) => {
+    for (const place of ["icon", "visual"] as const) {
+      const msg = idleIn(place, below[place], who(place), over[place], `${where}${place}`, fits);
+      if (msg) out.push(msg);
+    }
+  };
+  const kindWho = kind?.who ?? "";
+  check(
+    { icon: kind ? kind.icon : null, visual: kind ? kind.visual : null },
+    () => kindWho,
+    card,
+    `${at}: `,
+  );
+  // a rule merges onto the card's places: the card's thing, or the kind's under the card's options
+  const below = {
+    icon: under(kind ? kind.icon : null, card.icon),
+    visual: under(kind ? kind.visual : null, card.visual),
+  };
+  const who = (place: "icon" | "visual") => {
+    const p = card[place];
+    return p === false || p?.type ? "the card" : kindWho;
+  };
+  rules.forEach((r, i) => check(below, who, r, `${at}: rules[${i}].`));
+  return out;
+};
+// the things a card and its rules name that its kind does not draw (a sun's day on a light)
+export const unfitThings = (kind: PlaceDefaults, card: Layer, rules: Layer[], at: string) =>
+  [card, ...rules].flatMap((l, i) =>
+    (["icon", "visual"] as const).flatMap((place) => {
+      const p = l[place];
+      return p && p.type && KIND_THINGS.includes(p.type) && !kind.draws.includes(p.type)
+        ? [`${at}: ${i ? `rules[${i - 1}].` : ""}${place}: ${kind.who} draws no ${p.type}`]
+        : [];
+    }),
+  );
+
 // the keys the places replace, and what they are now, by the value written (an error that names
 // the new spelling)
 const val = (v: unknown) => (typeof v === "string" || typeof v === "number" ? String(v) : "…");

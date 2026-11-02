@@ -59,6 +59,28 @@ export const resolveKind = (
 
 // every kind's own keys on the card
 const ALL_KEYS = new Set(Object.values(KINDS).flatMap((k) => k.keys));
+// the entities a kind reads besides the card's own: keys of the card's `inputs`; a kind's other
+// keys (an appliance's running_above, a trend's series) sit on the card
+export const INPUT_KEYS: ReadonlySet<string> = new Set(
+  Object.values(KINDS).flatMap((k) => (k.inputs ?? []).map((d) => d.key)),
+);
+// the card's `inputs` as written (none: empty)
+export const writtenInputs = (raw: Readonly<Record<string, unknown>>): Record<string, unknown> => {
+  const i = raw.inputs;
+  return i && typeof i === "object" && !Array.isArray(i) ? (i as Record<string, unknown>) : {};
+};
+// the keys a kind reads, as a card writes them: its inputs' among the card's own
+export const kindKeysOf = (raw: Readonly<Record<string, unknown>>): Record<string, unknown> => ({
+  ...raw,
+  ...writtenInputs(raw),
+});
+// what `who` (the wind kind, a poster without a kind) says of keys it does not read, with the
+// inputs it does
+export const unusedText = (kind: Kind, unused: readonly string[], who: string) => {
+  const own = (kind.inputs ?? []).map((d) => d.key);
+  const keys = unused.map((k) => (INPUT_KEYS.has(k) ? `inputs: ${k}` : k));
+  return `${who} reads no ${keys.join(", ")}${own.length && unused.some((k) => INPUT_KEYS.has(k)) ? ` (its inputs: ${own.join(", ")})` : ""}`;
+};
 
 // the keys of other kinds the card sets that `kind` does not take (left out), as written
 export const unusedKeys = (kind: Kind, raw: Record<string, unknown>): string[] =>

@@ -103,11 +103,14 @@ add("tt-energy", [
   t(null, {
     kind: "grid",
     name: "Grid",
-    import: "sensor.grid_import_power",
-    export: "sensor.grid_export_power",
+    inputs: { import: "sensor.grid_import_power", export: "sensor.grid_export_power" },
   }),
-  t("sensor.solar_power", { visual: false, kind: "solar", today: "sensor.energy_today" }),
-  t("sensor.battery_soc", { visual: false, power: "sensor.battery_power" }),
+  t("sensor.solar_power", {
+    visual: false,
+    kind: "solar",
+    inputs: { today: "sensor.energy_today" },
+  }),
+  t("sensor.battery_soc", { visual: false, inputs: { power: "sensor.battery_power" } }),
   t("sensor.ev_battery", { kind: "car" }),
   t("sensor.washer_power", { kind: "washer" }),
 ]);
@@ -236,7 +239,10 @@ const WIDE = [h(12, 1), h(6, 1), h(6, 2), vt(6, 3)];
 const SIZED: Record<string, [CardConfigBase, Size[]]> = {
   entity: [t("sensor.outdoor_temperature"), ALL],
   air: [t("sensor.living_room_co2"), ALL],
-  battery: [t("sensor.battery_soc", { visual: false, power: "sensor.battery_power" }), ALL],
+  battery: [
+    t("sensor.battery_soc", { visual: false, inputs: { power: "sensor.battery_power" } }),
+    ALL,
+  ],
   weather: [t("weather.home", { visual: false }), ALL],
   sun: [t("sun.sun", { visual: false }), ALL],
   wind: [t("sensor.wind_speed"), ALL],
@@ -260,7 +266,11 @@ const SIZED: Record<string, [CardConfigBase, Size[]]> = {
   vacuum: [t("vacuum.robot"), WIDE],
   grid: [t("sensor.grid_power", { kind: "grid" }), ALL],
   solar: [
-    t("sensor.solar_power", { visual: false, kind: "solar", today: "sensor.energy_today" }),
+    t("sensor.solar_power", {
+      visual: false,
+      kind: "solar",
+      inputs: { today: "sensor.energy_today" },
+    }),
     ALL,
   ],
   car: [t("sensor.ev_battery", { kind: "car" }), ALL],

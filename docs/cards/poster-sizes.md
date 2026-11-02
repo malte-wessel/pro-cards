@@ -123,26 +123,30 @@ The strip and its power: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 - type: custom:poster-card-pro
   entity: sensor.balcony_battery_soc
   name: Battery
-  charge: sensor.balcony_battery_charge_power
-  discharge: sensor.balcony_battery_discharge_power
+  inputs:
+    charge: sensor.balcony_battery_charge_power
+    discharge: sensor.balcony_battery_discharge_power
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.balcony_battery_soc
   name: Battery
-  charge: sensor.balcony_battery_charge_power
-  discharge: sensor.balcony_battery_discharge_power
+  inputs:
+    charge: sensor.balcony_battery_charge_power
+    discharge: sensor.balcony_battery_discharge_power
   grid_options: { columns: 6, rows: 4 }
 - type: custom:poster-card-pro
   entity: sensor.balcony_battery_soc
   name: Battery
-  charge: sensor.balcony_battery_charge_power
-  discharge: sensor.balcony_battery_discharge_power
+  inputs:
+    charge: sensor.balcony_battery_charge_power
+    discharge: sensor.balcony_battery_discharge_power
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.balcony_battery_soc
   name: Battery
-  charge: sensor.balcony_battery_charge_power
-  discharge: sensor.balcony_battery_discharge_power
+  inputs:
+    charge: sensor.balcony_battery_charge_power
+    discharge: sensor.balcony_battery_discharge_power
   grid_options: { columns: 8, rows: 3 }
 ```
 
@@ -240,29 +244,25 @@ The drops behind the poster: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
   entity: sensor.rain_rate_roof
   name: Rain
   visual: { type: flow, variant: drops }
-  wind: sensor.wind_speed
-  direction: sensor.wind_direction
+  inputs: { wind: sensor.wind_speed, direction: sensor.wind_direction }
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.rain_rate_roof
   name: Rain
   visual: { type: flow, variant: drops }
-  wind: sensor.wind_speed
-  direction: sensor.wind_direction
+  inputs: { wind: sensor.wind_speed, direction: sensor.wind_direction }
   grid_options: { columns: 6, rows: 4 }
 - type: custom:poster-card-pro
   entity: sensor.rain_rate_roof
   name: Rain
   visual: { type: flow, variant: drops }
-  wind: sensor.wind_speed
-  direction: sensor.wind_direction
+  inputs: { wind: sensor.wind_speed, direction: sensor.wind_direction }
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.rain_rate_roof
   name: Rain
   visual: { type: flow, variant: drops }
-  wind: sensor.wind_speed
-  direction: sensor.wind_direction
+  inputs: { wind: sensor.wind_speed, direction: sensor.wind_direction }
   grid_options: { columns: 8, rows: 3 }
 ```
 

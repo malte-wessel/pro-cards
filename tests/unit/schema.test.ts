@@ -317,7 +317,7 @@ describe("card config schemas", () => {
     ).toBeNull();
   });
 
-  it("checks the poster card's kind and its flat keys", () => {
+  it("checks the poster card's kind, its inputs and its keys", () => {
     const PC = "custom:poster-card-pro";
     expect(validate({ type: PC, entity: "sensor.a", kind: "room" })).toMatch(/enum|allowed/);
     expect(validate({ type: PC, entity: "sensor.a", kind: "wind" })).toBeNull();
@@ -331,21 +331,28 @@ describe("card config schemas", () => {
       validate({ type: PC, kind: "trend", series: ["sensor.a", { entity: "sensor.b" }] }),
     ).toBeNull();
     expect(
-      validate({ type: PC, entity: "sensor.a", gust: false, direction: "sensor.b" }),
+      validate({ type: PC, entity: "sensor.a", inputs: { gust: false, direction: "sensor.b" } }),
     ).toBeNull();
-    expect(validate({ type: PC, entity: "sensor.a", gust: "gusty" })).toBeTruthy();
-    // a written kind takes none of another kind's keys; a detected one leaves that to the card
-    expect(validate({ type: PC, entity: "sensor.r", kind: "rain", gust: "sensor.g" })).toMatch(
-      /gust/,
-    );
-    expect(validate({ type: PC, entity: "sensor.w", kind: "wind", gust: "sensor.g" })).toBeNull();
-    expect(validate({ type: PC, kind: "grid", import: "sensor.i", running_above: 5 })).toMatch(
-      /running_above/,
-    );
+    expect(validate({ type: PC, entity: "sensor.a", inputs: { gust: "gusty" } })).toBeTruthy();
+    // an input is a key of inputs, never of the card
+    expect(validate({ type: PC, entity: "sensor.a", gust: "sensor.g" })).toBeTruthy();
     expect(
-      validate({ type: PC, entity: "sensor.r", gust: "sensor.g", today: "sensor.t" }),
+      validate({ type: PC, entity: "sensor.a", inputs: { bearing: "sensor.b" } }),
+    ).toBeTruthy();
+    // a written kind takes none of another kind's keys; a detected one leaves that to the card
+    expect(
+      validate({ type: PC, entity: "sensor.r", kind: "rain", inputs: { gust: "sensor.g" } }),
+    ).toMatch(/gust/);
+    expect(
+      validate({ type: PC, entity: "sensor.w", kind: "wind", inputs: { gust: "sensor.g" } }),
     ).toBeNull();
-    expect(validate({ type: PC, kind: "grid", import: false })).toBeTruthy();
+    expect(
+      validate({ type: PC, kind: "grid", inputs: { import: "sensor.i" }, running_above: 5 }),
+    ).toMatch(/running_above/);
+    expect(
+      validate({ type: PC, entity: "sensor.r", inputs: { gust: "sensor.g", today: "sensor.t" } }),
+    ).toBeNull();
+    expect(validate({ type: PC, kind: "grid", inputs: { import: false } })).toBeTruthy();
     expect(validate({ type: PC, kind: "washer", entity: "sensor.p", running_above: 8 })).toBeNull();
   });
 
@@ -587,9 +594,9 @@ describe("card config schemas", () => {
       validate({ type: TC, entity: "cover.a", visual: { type: "cover", variant: "garage" } }),
     ).toBeNull();
     expect(validate({ type: TC, entity: "cover.a", kind: "garage" })).toMatch(/enum|allowed/);
-    expect(validate({ type: TC, entity: "sensor.r", kind: "rain", gust: "sensor.g" })).toMatch(
-      /gust/,
-    );
+    expect(
+      validate({ type: TC, entity: "sensor.r", kind: "rain", inputs: { gust: "sensor.g" } }),
+    ).toMatch(/gust/);
     expect(validate({ type: TC, entity: H, vertical: true })).toBeNull();
     expect(validate({ type: TC, entity: H, vertical: "yes" })).toBeTruthy();
     expect(validate({ type: TC, entity: H, status: false })).toBeNull();

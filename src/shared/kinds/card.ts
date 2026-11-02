@@ -21,16 +21,18 @@ import {
   foundInputs,
   hasIconActions,
   parseImage,
+  placeDefaults,
   type ImageSrc,
   type KindConfig,
   type Places,
 } from "./config.ts";
-import { detectKind, parseKind, unusedKeys } from "./detect.ts";
+import { detectKind, kindKeysOf, parseKind, unusedKeys, unusedText } from "./detect.ts";
 import { stripEl } from "./energy.ts";
 import {
   BEHIND,
   BELOW,
   HISTORY_THINGS,
+  idleOptions,
   KIND_THINGS,
   resolvePlaces,
   type IconPlace,
@@ -133,12 +135,23 @@ export abstract class KindCardBase extends EntityCardBase {
     if (!cfg || !raw || this._warnedFor === raw) return;
     if (raw.kind == null && raw.entity && !this._hass?.states[raw.entity]) return;
     this._warnedFor = raw;
-    const unused = unusedKeys(cfg.kind, raw as Record<string, unknown>);
+    const unused = unusedKeys(cfg.kind, kindKeysOf(raw as Record<string, unknown>));
     const thing = (this.constructor as typeof KindCardBase).thing;
+    const who =
+      cfg.kind.name === "none" ? `a ${thing} without a kind` : `the ${cfg.kind.name} ${thing}`;
     if (unused.length)
-      console.warn(
-        `${this._cardType()}: ${cfg.kind.name === "none" ? `a ${thing} without a kind` : `the ${cfg.kind.name} ${thing}`} reads no ${unused.join(", ")}; left out`,
+      console.warn(`${this._cardType()}: ${unusedText(cfg.kind, unused, who)}; left out`);
+    // options that do nothing on what the detected kind draws (a written kind's are config errors)
+    if (raw.kind == null) {
+      const c = cfg as KindConfig;
+      const idle = idleOptions(
+        placeDefaults(c.kind, thing),
+        c.places,
+        [...c.rulePlaces.values()],
+        this._cardType(),
       );
+      for (const msg of idle) console.warn(`${msg}; left out`);
+    }
   }
   // what the kind is resolved from: the detected kind (the device class arrives with the first
   // state) and the inputs found on the entity's device (Home Assistant replaces its registry on

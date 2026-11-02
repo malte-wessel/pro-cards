@@ -240,7 +240,7 @@ Each place takes one **thing**:
 | `visual` | `segments`     | –                                             | ten segments, filled to the value                                                                                            | every kind         |
 | `visual` | `sun`          | `hours`                                       | the sun's day, with the sun where it is now                                                                                  | sun                |
 
-A thing that only some kinds draw is left out on another kind, with a warning in the browser's console; the kind's own visual stays.
+A thing that only some kinds draw is left out on another kind, with a warning in the browser's console (a config error where the `kind` is written); the kind's own visual stays.
 
 | Option      | Takes                                                                                                                                                                                                 |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -283,6 +283,8 @@ Every other kind draws the entity's icon and no visual.
 ### Changing a default
 
 An object without `type` keeps the thing and changes its options (with a `name` it is an icon): `visual: { hours: 24 }` makes the weather's forecast look a day ahead, `visual: { blur: false }` shows a person's photo sharp, `icon: { ring: true }` puts a ring around whatever the icon is. An object with the default's own `type` merges the same way; another `type` replaces it. Another thing in the icon keeps what every icon takes, its `ring`, its `style` and its actions; a thing's own options, an image's `src` or a flow's `variant`, go with it.
+
+Options that would do nothing are caught. Where the config alone decides it, it is an error that names the thing taking them: a written `kind` (`kind: light` with `visual: { hours: 12 }`: the glow takes no hours), a rule over the card's own thing (`visual: sparkline` and a rule's `visual: { opacity: 0.3 }`), or a thing the written kind does not draw. Where the entity decides it (the kind is detected), the browser's console says so once the state is known, and the options are left out.
 
 ::: live
 

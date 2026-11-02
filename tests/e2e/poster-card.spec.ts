@@ -455,8 +455,10 @@ test.describe("poster types", () => {
       {
         type: P,
         entity: "sensor.balcony_battery_soc",
-        charge: "sensor.balcony_battery_charge_power",
-        discharge: "sensor.balcony_battery_discharge_power",
+        inputs: {
+          charge: "sensor.balcony_battery_charge_power",
+          discharge: "sensor.balcony_battery_discharge_power",
+        },
       },
       { type: P, entity: "sensor.robot_battery", visual: false },
     ]);
@@ -816,17 +818,23 @@ test.describe("poster types", () => {
 });
 
 test.describe("poster config", () => {
-  test("a key the poster type does not read is left out with one warning", async ({ page }) => {
+  test("a key the detected kind does not read is left out with one warning", async ({ page }) => {
     const warned: string[] = [];
     page.on("console", (m) => {
       if (m.text().includes("reads no")) warned.push(m.text());
     });
-    await mount(page, { type: P, entity: "sensor.rain_rate_roof", gust: "sensor.wind_gust" });
+    await mount(page, {
+      type: P,
+      entity: "sensor.rain_rate_roof",
+      inputs: { gust: "sensor.wind_gust" },
+    });
     await expect(card(page).locator(".row.poster")).toBeVisible();
     await setState(page, "sensor.rain_rate_roof", "2.4");
     await expect
       .poll(() => warned)
-      .toEqual(["poster-card-pro: the rain poster reads no gust; left out"]);
+      .toEqual([
+        "poster-card-pro: the rain poster reads no inputs: gust (its inputs: today, wind, direction); left out",
+      ]);
   });
 
   test("an unknown poster type is a config error that names the types", async ({ page }) => {

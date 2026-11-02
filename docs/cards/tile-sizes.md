@@ -122,32 +122,32 @@ The line holds the charge, Discharging and the power: at 6 × 1 it is cut at its
 ```yaml
 - type: custom:tile-card-pro
   entity: sensor.battery_soc
-  power: sensor.battery_power
+  inputs: { power: sensor.battery_power }
   status_badge: true
   grid_options: { columns: 12, rows: 1 }
 - type: custom:tile-card-pro
   entity: sensor.battery_soc
-  power: sensor.battery_power
+  inputs: { power: sensor.battery_power }
   grid_options: { columns: 6, rows: 1 }
 - type: custom:tile-card-pro
   entity: sensor.battery_soc
-  power: sensor.battery_power
+  inputs: { power: sensor.battery_power }
   grid_options: { columns: 6, rows: 2 }
 - type: custom:tile-card-pro
   entity: sensor.battery_soc
-  power: sensor.battery_power
+  inputs: { power: sensor.battery_power }
   vertical: true
   status_badge: true
   grid_options: { columns: 6, rows: 2 }
 - type: custom:tile-card-pro
   entity: sensor.battery_soc
-  power: sensor.battery_power
+  inputs: { power: sensor.battery_power }
   vertical: true
   status_badge: true
   grid_options: { columns: 6, rows: 3 }
 - type: custom:tile-card-pro
   entity: sensor.battery_soc
-  power: sensor.battery_power
+  inputs: { power: sensor.battery_power }
   vertical: true
   grid_options: { columns: 4, rows: 2 }
 ```
@@ -630,34 +630,34 @@ Its two buttons keep to the line at 6 × 1, the name and the line giving way to 
 - type: custom:tile-card-pro
   entity: sensor.solar_power
   kind: solar
-  today: sensor.energy_today
+  inputs: { today: sensor.energy_today }
   grid_options: { columns: 12, rows: 1 }
 - type: custom:tile-card-pro
   entity: sensor.solar_power
   kind: solar
-  today: sensor.energy_today
+  inputs: { today: sensor.energy_today }
   grid_options: { columns: 6, rows: 1 }
 - type: custom:tile-card-pro
   entity: sensor.solar_power
   kind: solar
-  today: sensor.energy_today
+  inputs: { today: sensor.energy_today }
   grid_options: { columns: 6, rows: 2 }
 - type: custom:tile-card-pro
   entity: sensor.solar_power
   kind: solar
-  today: sensor.energy_today
+  inputs: { today: sensor.energy_today }
   vertical: true
   grid_options: { columns: 6, rows: 2 }
 - type: custom:tile-card-pro
   entity: sensor.solar_power
   kind: solar
-  today: sensor.energy_today
+  inputs: { today: sensor.energy_today }
   vertical: true
   grid_options: { columns: 6, rows: 3 }
 - type: custom:tile-card-pro
   entity: sensor.solar_power
   kind: solar
-  today: sensor.energy_today
+  inputs: { today: sensor.energy_today }
   vertical: true
   grid_options: { columns: 4, rows: 2 }
 ```

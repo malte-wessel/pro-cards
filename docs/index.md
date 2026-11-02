@@ -36,8 +36,7 @@ hero:
               entity: sensor.rain_rate_roof
               name: Rain
               visual: { type: flow, variant: drops }
-              wind: sensor.wind_speed
-              direction: sensor.wind_direction
+              inputs: { wind: sensor.wind_speed, direction: sensor.wind_direction }
             - type: custom:poster-card-pro
               kind: sun
             - type: custom:poster-card-pro
@@ -88,7 +87,7 @@ hero:
             - type: custom:poster-card-pro
               entity: sensor.battery_soc
               name: Battery
-              power: sensor.battery_power
+              inputs: { power: sensor.battery_power }
             - type: custom:poster-card-pro
               entity: sensor.living_room_co2
               name: Air
@@ -197,8 +196,7 @@ feature_rows:
         entity: sensor.rain_rate_roof
         name: Rain
         visual: { type: flow, variant: drops }
-        wind: sensor.wind_speed
-        direction: sensor.wind_direction
+        inputs: { wind: sensor.wind_speed, direction: sensor.wind_direction }
   - title: "Control, right on the card."
     text: "Steppers, sliders, segments, locks and your own buttons sit on the card itself. Swipe through and try them, no dialog opens."
     link: /cards/controls
