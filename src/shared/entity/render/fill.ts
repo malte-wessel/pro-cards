@@ -258,7 +258,10 @@ export const fillTileSlots = (
   if (status && status.toLowerCase() !== text.toLowerCase()) parts.push(status);
   const sec = o.secondary === undefined ? tplOf(ctx, ent.secondary) : o.secondary;
   if (sec instanceof Element && sec.classList.contains("secondary")) {
-    if (sec.childNodes.length) parts.push(...sec.childNodes);
+    // its parts without the separators between them (the line puts its own)
+    parts.push(
+      ...[...sec.childNodes].filter((n) => !(n.nodeType === 3 && n.textContent === " · ")),
+    );
   } else if (sec) parts.push(sec);
   if (parts.length) {
     const el = textEl("secondary", null);

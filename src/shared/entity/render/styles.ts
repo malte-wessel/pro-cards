@@ -30,8 +30,9 @@ export const STYLE_TILE = `
   /* a tile is one 56 px row, two with a header: the floor holds it there whatever the theme's
      border (the 38 px of two text lines beside the 36 px lead, 6 px padding and a border up to
      2 px fit; a calc on the border width would break on a unitless 0); a taller tile (a
-     stretched grid row, fixed rows) centres its content */
-  .layout-tile .body { padding: 6px 12px; gap: 8px; flex: 1; justify-content: center; }
+     stretched grid row, fixed rows) centres its content, unless the card around it keeps it at
+     the top (--pro-cards-tile-align: a tile group's row, its icons level) */
+  .layout-tile .body { padding: 6px 12px; gap: 8px; flex: 1; justify-content: var(--pro-cards-tile-align, center); }
   ha-card.layout-tile { min-height: 56px; }
   ha-card.layout-tile:has(> .header:not([hidden])) { min-height: 120px; }
   /* a tile is one button, as Home Assistant's tile: the row's action layer fills the card's body

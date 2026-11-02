@@ -312,15 +312,17 @@ const setUser = (id: string | null) => {
   push();
 };
 
-// the cards a mounted card shows: a layout or swipe card's own cards (each inside a hui-card),
-// else itself
+// the cards a mounted card shows: a layout or swipe card's own cards (each inside a hui-card), a
+// tile group with its tiles, else itself
 const CONTAINERS = ["layout-card-pro", "swipe-card-pro"];
 const leaves = (el: Element): Element[] =>
   CONTAINERS.includes(el.localName)
     ? [...(el.shadowRoot?.querySelectorAll("hui-card") ?? [])].flatMap((h) =>
         h.firstElementChild ? leaves(h.firstElementChild) : [],
       )
-    : [el];
+    : el.localName === "tile-group-card-pro"
+      ? [el, ...(el.shadowRoot?.querySelectorAll("tile-card-pro") ?? [])]
+      : [el];
 const cards = () => [...root.querySelectorAll(".cell > *")].flatMap(leaves);
 // a card that has drawn: its ha-card, or a heading / error box (no ha-card of their own)
 const drawn = (el: Element) =>

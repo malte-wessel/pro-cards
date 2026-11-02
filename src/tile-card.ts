@@ -269,6 +269,9 @@ export class TileCard extends KindCardBase {
   // least (not on a vertical tile); else they are left out, and more-info has them, as a poster
   // leaves out its slider. Found once per card size, so nothing flips back and forth; a tile as
   // tall as its content (rows: auto) grows instead and never needs it
+  // the controls' fit changes the tile's height where it is as tall as its content (rows: auto, a
+  // tile group): a resize renders a frame later, not inside the observer's pass
+  _resizeLater = true;
   _ctlFit: { size: string; mode: string } | null = null;
   _fitControls(card: HTMLElement, row: HTMLElement, vertical: boolean) {
     if (!row.querySelector(":scope > .ctl, :scope > .top > .main > .line > .end > .ctl")) return;

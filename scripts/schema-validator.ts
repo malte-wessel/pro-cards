@@ -9,6 +9,7 @@ const BASE = "https://malte-wessel.github.io/pro-cards/schema/";
 const TYPES = [
   "poster-card-pro",
   "tile-card-pro",
+  "tile-group-card-pro",
   "entity-card-pro",
   "entity-group-card-pro",
   "entity-sections-card-pro",

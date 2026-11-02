@@ -1,6 +1,7 @@
 // Pro Cards – bundle entry. Each card registers its own custom element(s) on import.
 import "./poster-card.ts";
 import "./tile-card.ts";
+import "./tile-group-card.ts";
 import "./entity-card.ts";
 import "./entity-group-card.ts";
 import "./entity-sections-card.ts";

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/tile-group-card-pro.schema.json",
+  "title": "custom:tile-group-card-pro",
+  "description": "Several tiles on one card under a header (title, icon, badges): one under the other (list) or vertical tiles side by side (row). Every key the card does not take itself is a default for every tile; a tile's own value wins. Strings containing {{ }} are Jinja templates rendered by Home Assistant.",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "custom:tile-group-card-pro"
+    },
+    "layout": {
+      "type": "string",
+      "enum": ["list", "row"],
+      "default": "list",
+      "description": "list: the tiles one under the other; row: vertical tiles side by side, in columns alike, wrapping when narrow"
+    },
+    "title": {
+      "type": "string",
+      "description": "Header text. Template allowed."
+    },
+    "title_tap_action": {
+      "$ref": "defs.schema.json#/$defs/action",
+      "description": "Action when the title or its icon is tapped, e.g. navigate to the room's dashboard (default: none)"
+    },
+    "icon": {
+      "$ref": "defs.schema.json#/$defs/icon",
+      "description": "Header icon. Template allowed."
+    },
+    "badges": {
+      "$ref": "entity.schema.json#/$defs/headerEntities",
+      "description": "The header's badges, plain and small unless they say otherwise"
+    },
+    "entity": false,
+    "entities": {
+      "type": "array",
+      "minItems": 1,
+      "description": "The tiles: entity ids or tiles (the tile card's keys, without type and grid_options)",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "defs.schema.json#/$defs/entityId"
+          },
+          {
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "tile-card-pro.schema.json#/$defs/tile"
+              }
+            ],
+            "properties": {
+              "visibility": {
+                "$ref": "defs.schema.json#/$defs/haCardExtras/visibility",
+                "description": "Shows the tile only while the conditions hold"
+              }
+            },
+            "unevaluatedProperties": false
+          }
+        ]
+      }
+    }
+  },
+  "required": ["type", "entities"],
+  "allOf": [
+    {
+      "$ref": "tile-card-pro.schema.json#/$defs/tile"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/haExtras"
+    }
+  ],
+  "unevaluatedProperties": false
+}

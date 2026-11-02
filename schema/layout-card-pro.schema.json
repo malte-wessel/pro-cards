@@ -401,6 +401,7 @@
                 "enum": [
                   "custom:poster-card-pro",
                   "custom:tile-card-pro",
+                  "custom:tile-group-card-pro",
                   "custom:entity-card-pro",
                   "custom:entity-group-card-pro",
                   "custom:entity-sections-card-pro",
@@ -445,6 +446,19 @@
           },
           "then": {
             "$ref": "tile-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:tile-group-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "tile-group-card-pro.schema.json"
           }
         },
         {
