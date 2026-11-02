@@ -257,8 +257,8 @@ The status is on the line after the value. `status_badge: true` makes it a badge
   name: Car
   icon: mdi:car-electric
   rules:
-    - { below: 20, color: red, label: Low }
-    - { above: 20, color: green, label: Ready }
+    - { below: 20, color: red, status: Low }
+    - { above: 20, color: green, status: Ready }
   status_badge: true
   badges:
     - sensor.ev_range
@@ -269,7 +269,7 @@ The status is on the line after the value. `status_badge: true` makes it a badge
 
 ## The icon badge
 
-The icon carries a small badge of its own, as on Home Assistant's tile: what a thermostat or a humidifier is doing (heating, cooling, drying …) in its colour, a person's zone, and an orange mark on an entity that is unavailable. It takes no room, and `show_icon: false` leaves it out with the icon.
+The icon carries a small badge of its own, as on Home Assistant's tile: what a thermostat or a humidifier is doing (heating, cooling, drying …) in its colour, a person's zone, and an orange mark on an entity that is unavailable. It takes no room, and `icon: false` leaves it out with the icon.
 
 ::: live
 

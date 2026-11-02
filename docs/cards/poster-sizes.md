@@ -39,9 +39,9 @@ A sensor with its history and badges: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
   name: Power
   visual: { type: sparkline, hours: 12 }
   rules:
-    - { below: 1000, color: green, label: Low }
-    - { below: 3000, color: amber, label: Normal }
-    - { above: 3000, color: red, label: High }
+    - { below: 1000, color: green, status: Low }
+    - { below: 3000, color: amber, status: Normal }
+    - { above: 3000, color: red, status: High }
   badges:
     - sensor.solar_power
   grid_options: { columns: 6, rows: 3 }
@@ -50,9 +50,9 @@ A sensor with its history and badges: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
   name: Power
   visual: { type: sparkline, hours: 12 }
   rules:
-    - { below: 1000, color: green, label: Low }
-    - { below: 3000, color: amber, label: Normal }
-    - { above: 3000, color: red, label: High }
+    - { below: 1000, color: green, status: Low }
+    - { below: 3000, color: amber, status: Normal }
+    - { above: 3000, color: red, status: High }
   badges:
     - sensor.solar_power
   grid_options: { columns: 6, rows: 4 }
@@ -61,9 +61,9 @@ A sensor with its history and badges: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
   name: Power
   visual: { type: sparkline, hours: 12 }
   rules:
-    - { below: 1000, color: green, label: Low }
-    - { below: 3000, color: amber, label: Normal }
-    - { above: 3000, color: red, label: High }
+    - { below: 1000, color: green, status: Low }
+    - { below: 3000, color: amber, status: Normal }
+    - { above: 3000, color: red, status: High }
   badges:
     - sensor.solar_power
   grid_options: { columns: 12, rows: 3 }
@@ -72,9 +72,9 @@ A sensor with its history and badges: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
   name: Power
   visual: { type: sparkline, hours: 12 }
   rules:
-    - { below: 1000, color: green, label: Low }
-    - { below: 3000, color: amber, label: Normal }
-    - { above: 3000, color: red, label: High }
+    - { below: 1000, color: green, status: Low }
+    - { below: 3000, color: amber, status: Normal }
+    - { above: 3000, color: red, status: High }
   badges:
     - sensor.solar_power
   grid_options: { columns: 8, rows: 3 }

@@ -141,6 +141,16 @@ export const foundInputs = (
   return (kind.inputs ?? []).map((def) => foundInput(def, set[def.key], entity, hass));
 };
 
+// a text as written: a boolean is a word YAML read as one (Off, No, On, Yes unquoted), an error that
+// says so and, for the name and the value, how to hide them
+const textOf = (v: unknown, key: string, type: string) => {
+  if (typeof v !== "boolean") return;
+  const hide = key === "name" || key === "value" ? `to hide the ${key}: show_${key}: false; ` : "";
+  throw new Error(
+    `${type}: ${key} takes a text, not ${v} (${hide}a word such as ${v ? "On or Yes" : "Off or No"} is read as ${v} unless quoted: "${v ? "On" : "Off"}")`,
+  );
+};
+
 // `inputs` as written: the entities a kind reads besides the card's own, each an id or false (not
 // looked for on the device). They are keys of `inputs`, never of the card
 const parseInputs = (written: Record<string, unknown>, type: string): Record<string, unknown> => {
@@ -288,7 +298,23 @@ export const normalizeKindItem = (
   for (const [i, r] of writtenRules.entries()) {
     const g = isObj(r) ? goneKey(r) : null;
     if (g) throw new Error(`${type}: rules[${i}]: ${g}`);
+    // a rule's text is the status, as the card's
+    if (isObj(r) && r.label !== undefined)
+      throw new Error(`${type}: rules[${i}]: label is status on the ${thing}`);
+    if (isObj(r)) textOf(r.status, `rules[${i}].status`, type);
   }
+  // a text read as a boolean is a word YAML took for one (Off, No): an error, never a hidden part
+  textOf(written.name, "name", type);
+  textOf(written.value, "value", type);
+  // one spelling each: auto (the kind's controls, else the domain's), false for none, an object
+  // without a type for the kind's own with other options
+  const ctl = written.control;
+  if (ctl === true) throw new Error(`${type}: control: true is control: auto`);
+  if (isObj(ctl) && ctl.type === "auto")
+    throw new Error(
+      `${type}: control: { type: auto, … } is control: { … }: without a type it changes the kind's own`,
+    );
+  if (ctl === "none") throw new Error(`${type}: control: none is control: false`);
   const writtenIn = parseInputs(written as Record<string, unknown>, type);
   // the icon's ring and its own actions are the icon's
   if (written.visual === "ring")
@@ -310,7 +336,13 @@ export const normalizeKindItem = (
       icon: parseIcon(r.icon, `${at}.icon`, true),
       visual: parseVisual(r.visual, `${at}.visual`, true),
     };
-    const out = { ...r, icon: p.icon ? p.icon.name : undefined, visual: undefined };
+    const out = {
+      ...r,
+      icon: p.icon ? p.icon.name : undefined,
+      visual: undefined,
+      label: r.status,
+      status: undefined,
+    };
     byRule.set(out, p);
     return out;
   });

@@ -25,7 +25,7 @@ export interface RawTileCardConfig extends RawKindCardConfig {
 
 export interface TileConfig extends KindConfig {
   // the status's item (null: `status: false`) and its text as written (null: the kind's, else the
-  // matching rule's label): on the line after the value, or a badge before the badges where the
+  // matching rule's status): on the line after the value, or a badge before the badges where the
   // card says so (`status_badge: true`)
   statusIdx: number | null;
   statusText: ValueSrc | null;

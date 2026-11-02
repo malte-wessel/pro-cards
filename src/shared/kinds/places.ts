@@ -413,6 +413,10 @@ export const GONE_KEYS: Record<string, (v: unknown) => string> = {
       : "show_entity_picture: true is icon: { type: image }",
   icon_ring: (v) => `icon_ring: ${v !== false} is icon: { ring: ${v !== false} }`,
   icon_style: (v) => `icon_style: ${val(v)} is icon: { style: ${val(v)} }`,
+  show_icon: (v) =>
+    v === false
+      ? "show_icon: false is icon: false"
+      : "show_icon is gone: the icon shows unless icon: false",
   show_picture: (v) =>
     v === false
       ? "show_picture: false is visual: false"

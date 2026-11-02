@@ -402,7 +402,7 @@ test.describe("tile card", () => {
 
   test("leaves out the icon or the name when told to", async ({ page }) => {
     await mount(page, [
-      { type: T, entity: "sensor.living_room_temperature", show_icon: false },
+      { type: T, entity: "sensor.living_room_temperature", icon: false },
       { type: T, entity: "sensor.living_room_temperature", show_name: false },
     ]);
     await expect(card(page, 0).locator(".tlead")).toBeHidden();

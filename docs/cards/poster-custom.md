@@ -7,7 +7,7 @@ A poster has a few parts: an icon at the top, badges in the corner, and a name, 
 | Part            | Key              | Takes                                                                                                          | Default                                                 |
 | --------------- | ---------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
 | Icon            | `icon`           | an icon's name, a template, or a [place's thing](#the-places): a picture, a ring, [its own actions](#the-icon) | the entity's icon, or the kind's                        |
-| Status          | `status`         | a text, a template, or `false` (always the first badge, a tag in the poster's colour)                          | the kind's status, else the matching rule's label       |
+| Status          | `status`         | a text, a template, or `false` (always the first badge, a tag in the poster's colour)                          | the kind's status, else the matching rule's status      |
 | Badges          | `badges`         | entities or [badges](/cards/poster-badges) of your own, in order                                               | none                                                    |
 | Name            | `name`           | a text, a template                                                                                             | the friendly name                                       |
 | Value           | `value`          | a text, a template; `attribute` shows an attribute                                                             | the entity's state                                      |
@@ -112,7 +112,7 @@ With an `entity`, the poster takes its name, icon, state and colour from it, and
 
 On a poster, a rule can also set:
 
-- `label`: the status badge's text.
+- `status`: the status badge's text (a word such as Off or No in quotes: `"Off"`).
 - `tint_card: true`: the whole poster in the rule's colour ([tinted posters](#tinted-posters)).
 - `pulse: true`: the badge pulses.
 - `style`: the badge's look.
@@ -130,16 +130,16 @@ A kind brings its own rules (the [predefined sets](/cards/poster-types#predefine
   name: Office air
   visual: { type: sparkline, hours: 12 }
   rules:
-    - { below: 800, color: green, label: Fresh }
-    - { below: 1200, color: amber, label: Stuffy, icon: mdi:window-open-variant }
-    - { above: 1200, color: red, label: Open a window, icon: mdi:alert, tint_card: true, pulse: true }
+    - { below: 800, color: green, status: Fresh }
+    - { below: 1200, color: amber, status: Stuffy, icon: mdi:window-open-variant }
+    - { above: 1200, color: red, status: Open a window, icon: mdi:alert, tint_card: true, pulse: true }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: binary_sensor.door_front
   name: Front door
   rules:
-    - { state: "on", color: red, icon: mdi:door-open, label: Open, style: filled }
-    - { state: "off", color: green, icon: mdi:door-closed, label: Closed }
+    - { state: "on", color: red, icon: mdi:door-open, status: Open, style: filled }
+    - { state: "off", color: green, icon: mdi:door-closed, status: Closed }
   grid_options: { columns: 6 }
 ```
 
@@ -157,8 +157,8 @@ A kind brings its own rules (the [predefined sets](/cards/poster-types#predefine
   name: Office air
   visual: sparkline
   rules:
-    - { below: 800, color: green, label: Fresh }
-    - { above: 800, color: red, label: Ventilate, tint_card: true }
+    - { below: 800, color: green, status: Fresh }
+    - { above: 800, color: red, status: Ventilate, tint_card: true }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: light.living_room
@@ -177,8 +177,8 @@ A kind brings its own rules (the [predefined sets](/cards/poster-types#predefine
   icon: mdi:door
   value: "{{ 'Open' if is_state('binary_sensor.door_front', 'on') else 'Closed' }}"
   rules:
-    - { state: Open, color: red, label: Open, tint_card: true, pulse: true }
-    - { state: Closed, color: green, label: Closed, tint_card: true }
+    - { state: Open, color: red, status: Open, tint_card: true, pulse: true }
+    - { state: Closed, color: green, status: Closed, tint_card: true }
   grid_options: { columns: 6 }
 ```
 
@@ -341,7 +341,7 @@ Switch the pump on: the garden camera fades in behind it (`opacity` from `0` to 
   control: toggle
   visual: { type: image, src: camera.garden, opacity: 0 }
   rules:
-    - { state: "on", color: blue, label: Watering, visual: { opacity: 0.6 } }
+    - { state: "on", color: blue, status: Watering, visual: { opacity: 0.6 } }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: light.garden
@@ -393,9 +393,9 @@ A plot's `src` draws another entity's history under this one's value.
   name: Air today
   visual: strip
   rules:
-    - { below: 800, color: green, label: Fresh }
-    - { below: 1200, color: amber, label: Stuffy }
-    - { above: 1200, color: red, label: Bad }
+    - { below: 800, color: green, status: Fresh }
+    - { below: 1200, color: amber, status: Stuffy }
+    - { above: 1200, color: red, status: Bad }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: sensor.battery_soc

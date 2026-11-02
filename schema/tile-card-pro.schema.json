@@ -159,9 +159,6 @@
         "show_value": {
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/show_value"
         },
-        "show_icon": {
-          "$ref": "entity.schema.json#/$defs/entityKeys/properties/show_icon"
-        },
         "tap_action": {
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/tap_action"
         },

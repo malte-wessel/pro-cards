@@ -93,8 +93,8 @@ test.describe("poster card", () => {
       entity: "sensor.living_room_temperature",
       name: "Living room",
       rules: [
-        { below: 20, color: "blue", label: "Cool" },
-        { above: 20, color: "orange", label: "Warm" },
+        { below: 20, color: "blue", status: "Cool" },
+        { above: 20, color: "orange", status: "Warm" },
       ],
     });
     const c = card(page);
@@ -176,11 +176,11 @@ test.describe("poster card", () => {
     ]);
   });
 
-  test("show_name, show_icon and show_value leave their part out", async ({ page }) => {
+  test("show_name, icon: false and show_value leave their part out", async ({ page }) => {
     const cfg = { type: P, entity: "sensor.wind_speed" };
     await mount(page, [
       { ...cfg, show_name: false },
-      { ...cfg, show_icon: false },
+      { ...cfg, icon: false },
       { ...cfg, show_value: false },
     ]);
     const [noName, noIcon, noValue] = [0, 1, 2].map((i) => card(page, i).locator(".row.poster"));

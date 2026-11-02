@@ -554,6 +554,7 @@ describe("the keys the places replaced", () => {
     expect(goneKey({ show_entity_picture: false })).toBe(
       "show_entity_picture: false is icon: { type: icon }",
     );
+    expect(goneKey({ show_icon: false })).toBe("show_icon: false is icon: false");
     expect(goneKey({ hours_to_show: 6 })).toBe("hours_to_show is visual: { hours: 6 }");
     expect(goneKey({ control_step: 5 })).toBe("control_step is control: { step: 5 }");
     expect(goneKey({ control_position: "block" })).toBe(
@@ -596,6 +597,7 @@ describe("the keys the places replaced", () => {
         "name_position",
         "poster",
         "show_entity_picture",
+        "show_icon",
         "show_picture",
         "smoothing_minutes",
         "icon_tap_action",

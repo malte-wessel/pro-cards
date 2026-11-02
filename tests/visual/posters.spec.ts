@@ -115,7 +115,7 @@ add("pt-weather", [
   p("weather.home"),
   p("weather.home", { icon: { type: "icon" } }),
   p("weather.home", { visual: { hours: 24 }, name: "24 hours" }),
-  p("weather.home", { rules: [{ state: "partlycloudy", color: "teal", label: "Mild" }] }),
+  p("weather.home", { rules: [{ state: "partlycloudy", color: "teal", status: "Mild" }] }),
 ]);
 {
   const w = levels("weather.home", "pt_weather", [
@@ -471,11 +471,11 @@ add("po-texts", [
 ]);
 add("po-hide", [
   p("sensor.wind_speed", { show_name: false }),
-  p("sensor.wind_speed", { show_icon: false }),
+  p("sensor.wind_speed", { icon: false }),
   p("sensor.wind_speed", { show_value: false }),
   p("switch.garden_pump", {
     visual: { type: "image", src: "camera.garden" },
-    show_icon: false,
+    icon: false,
     show_value: false,
   }),
 ]);
@@ -532,13 +532,13 @@ add("po-colour", [
   p("sensor.outdoor_temperature", { color: "red" }),
   p("sensor.outdoor_temperature", { color: "#3f51b5", name: "Hex" }),
   p("sensor.outdoor_temperature", {
-    rules: [{ above: 0, color: "orange", icon: "mdi:fire", label: "Warm" }],
+    rules: [{ above: 0, color: "orange", icon: "mdi:fire", status: "Warm" }],
   }),
   p("sensor.outdoor_temperature", {
-    rules: [{ above: 0, color: "deep-orange", tint_card: true, label: "Tinted" }],
+    rules: [{ above: 0, color: "deep-orange", tint_card: true, status: "Tinted" }],
   }),
   p("sensor.outdoor_temperature", { rules: [{ above: 0, color: "red", pulse: true }] }),
-  p("light.kitchen", { rules: [{ state: "off", color: "grey", label: "Dark" }], color: "purple" }),
+  p("light.kitchen", { rules: [{ state: "off", color: "grey", status: "Dark" }], color: "purple" }),
 ]);
 add("po-visuals", [
   p("sensor.outdoor_temperature", { visual: "sparkline" }),
@@ -650,7 +650,7 @@ add("pb-status", [
   p("sensor.outdoor_temperature", { status: "Mild", color: "teal" }),
   p("light.living_room", { badges: [{ entity: "sensor.living_room_temperature" }] }),
   p("sensor.living_room_temperature", {
-    rules: [{ above: 20, color: "orange", label: "Warm" }],
+    rules: [{ above: 20, color: "orange", status: "Warm" }],
   }),
 ]);
 add("pb-styles", [

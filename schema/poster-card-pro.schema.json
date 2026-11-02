@@ -98,8 +98,9 @@
         "icon": {
           "description": "The icon while the rule matches"
         },
-        "label": {
-          "$ref": "entity.schema.json#/$defs/rule/properties/label"
+        "status": {
+          "type": "string",
+          "description": "The status while the rule matches: the tile's line, the poster's status badge. A text: a word such as Off or No is quoted (\"Off\")"
         },
         "tint_card": {
           "$ref": "entity.schema.json#/$defs/rule/properties/tint_card"
@@ -203,9 +204,6 @@
         "show_value": {
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/show_value"
         },
-        "show_icon": {
-          "$ref": "entity.schema.json#/$defs/entityKeys/properties/show_icon"
-        },
         "tap_action": {
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/tap_action"
         },
@@ -223,10 +221,21 @@
       }
     },
     "control": {
-      "description": "The control: a control's name (auto or true: the kind's or the domain's; false or none: no control), or { type, position, attribute, step, options, confirm }. An object without type changes the kind's own controls (control: { step: 10 })",
+      "description": "The control. Left out: the kind's. auto: the kind's, else the domain's (an input_select's select, a script's button); a control's name; false for none; or { type, position, attribute, step, options, confirm }. An object without type changes the kind's own controls (control: { step: 10 })",
       "oneOf": [
         {
-          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control"
+          "enum": [
+            false,
+            "auto",
+            "toggle",
+            "slider",
+            "stepper",
+            "segments",
+            "buttons",
+            "button",
+            "select",
+            "hold"
+          ]
         },
         {
           "$ref": "#/$defs/controlThing"
@@ -239,7 +248,6 @@
       "properties": {
         "type": {
           "enum": [
-            "auto",
             "toggle",
             "slider",
             "stepper",
@@ -249,7 +257,7 @@
             "select",
             "hold"
           ],
-          "description": "The control drawn: auto picks the kind's or the domain's (control: false draws none)"
+          "description": "The control drawn (without type: the kind's own, its options changed)"
         },
         "position": {
           "type": "string",

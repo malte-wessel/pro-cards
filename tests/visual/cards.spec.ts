@@ -2020,9 +2020,9 @@ const CASES = {
       name: "Power",
       visual: { type: "sparkline", hours: 12 },
       rules: [
-        { below: 1000, color: "green", label: "Low" },
-        { below: 3000, color: "amber", label: "Normal" },
-        { above: 3000, color: "red", label: "High" },
+        { below: 1000, color: "green", status: "Low" },
+        { below: 3000, color: "amber", status: "Normal" },
+        { above: 3000, color: "red", status: "High" },
       ],
       badges: ["sensor.solar_power"],
     },

@@ -133,10 +133,10 @@ add("to-line", [
   t(CO2, { status: "{{ 'Open a window' }}" }),
   t(CO2, { show_value: false }),
   t(CO2, { show_name: false }),
-  t(CO2, { show_icon: false }),
+  t(CO2, { icon: false }),
   t(CO2, { name: "{{ 'Air' }}", value: "{{ 'Fine' }}", status: false }),
   t("sensor.living_room_temperature", {
-    rules: [{ above: 20, color: "orange", label: "Warm", tint_card: true }],
+    rules: [{ above: 20, color: "orange", status: "Warm", tint_card: true }],
   }),
 ]);
 add("to-icon", [

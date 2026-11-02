@@ -281,16 +281,16 @@ The icon has its own actions, as on Home Assistant's tile card: `tap_action`, `h
 
 ## Reference
 
-`control` is a control's name, `true` / `auto` (the kind's), `false` / `none` (no control), or an object:
+`control` is a control's name, `auto` (the kind's, else the domain's: an `input_select`'s select, a `script`'s button), `false` (no control), or an object:
 
-| Key         | Default                      | Description                                                                                                  |
-| ----------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `type`      | the kind's                   | `auto`, `toggle`, `slider`, `stepper`, `segments`, `select`, `buttons`, `button`, `hold` or `none`.          |
-| `position`  | the control's own            | `end` or `block`.                                                                                            |
-| `attribute` | the shown one, else the mode | `hvac_mode`, `preset_mode` or `fan_mode`: what segments and a select change on a thermostat or fan.          |
-| `step`      | the entity's, else 1         | The step of a slider or a stepper (a thermostat: 0.5).                                                       |
-| `options`   | the entity's                 | Segments and select: the options (`value`, `label`, `icon`). Buttons: [your own buttons](#your-own-buttons). |
-| `confirm`   | `false`                      | Turns the switch and the buttons into holds.                                                                 |
+| Key         | Default                      | Description                                                                                                                                 |
+| ----------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`      | the kind's                   | `toggle`, `slider`, `stepper`, `segments`, `select`, `buttons`, `button` or `hold`. Without it, the options change the kind's own controls. |
+| `position`  | the control's own            | `end` or `block`.                                                                                                                           |
+| `attribute` | the shown one, else the mode | `hvac_mode`, `preset_mode` or `fan_mode`: what segments and a select change on a thermostat or fan.                                         |
+| `step`      | the entity's, else 1         | The step of a slider or a stepper (a thermostat: 0.5).                                                                                      |
+| `options`   | the entity's                 | Segments and select: the options (`value`, `label`, `icon`). Buttons: [your own buttons](#your-own-buttons).                                |
+| `confirm`   | `false`                      | Turns the switch and the buttons into holds.                                                                                                |
 
 An object without `type` changes the kind's own controls: `control: { step: 1 }` steps a thermostat by whole degrees, `control: { attribute: preset_mode }` gives it its presets as segments.
 

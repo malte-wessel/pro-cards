@@ -27,7 +27,7 @@ The kind is detected from the entity's domain, then its device class, else it is
 
 **Reads** any entity.
 
-The fallback: the entity's icon, name and value. The status badge shows the matching rule's label. `visual` adds a [visual](/cards/poster-custom#a-visual): `sparkline`, `columns`, `strip`, `bar`, `gauge`, `segments`, or `glow`, a light from below as strong as the value. A numeric value takes `unit`, `decimals` and `rules`, as on every Pro card.
+The fallback: the entity's icon, name and value. The status badge shows the matching rule's status. `visual` adds a [visual](/cards/poster-custom#a-visual): `sparkline`, `columns`, `strip`, `bar`, `gauge`, `segments`, or `glow`, a light from below as strong as the value. A numeric value takes `unit`, `decimals` and `rules`, as on every Pro card.
 
 ::: live
 
@@ -116,7 +116,7 @@ These apply to a battery:
 
 **Reads** a sensor of device class `carbon_dioxide`, `pm25`, `pm10` or `aqi`.
 
-These kinds bring their own colour and label by value, from a standard where there is one:
+These kinds bring their own colour and status by value, from a standard where there is one:
 
 - CO₂: from _Good_ to _Bad_ at 800, 1200 and 2000 ppm.
 - PM2.5 and PM10: the WHO and EU bands.
@@ -191,10 +191,10 @@ type: custom:poster-card-pro
 entity: weather.home
 name: Outside
 rules:
-  - { state: lightning-rainy, color: red, label: Storm, pulse: true }
+  - { state: lightning-rainy, color: red, status: Storm, pulse: true }
   - { state: rainy, color: blue, icon: mdi:umbrella }
-  - { below: 5, color: light-blue, label: Frost risk }
-  - { above: 25, color: orange, label: Hot }
+  - { below: 5, color: light-blue, status: Frost risk }
+  - { above: 25, color: orange, status: Hot }
   - { state: partlycloudy, color: light-blue }
 ```
 
@@ -278,8 +278,8 @@ The animation is drawn in one place: a flow in both is a config error.
   visual: { type: flow, variant: vectors }
   inputs: { gust: false }
   rules:
-    - { below: 20, color: teal, label: Fine for sailing }
-    - { above: 20, color: orange, label: Reef the sails }
+    - { below: 20, color: teal, status: Fine for sailing }
+    - { above: 20, color: orange, status: Reef the sails }
   grid_options: { columns: 6 }
 ```
 
@@ -818,48 +818,48 @@ These apply to `appliance` and to each device kind:
 
 ## Predefined rules
 
-A kind's own rules apply until the card has `rules` of its own. `rules: []` drops them ([Colour and rules](/cards/poster-custom#colour-and-rules)). Their labels follow the user's language. Copy a set to change one band:
+A kind's own rules apply until the card has `rules` of its own. `rules: []` drops them ([Colour and rules](/cards/poster-custom#colour-and-rules)). Their statuses follow the user's language. Copy a set to change one band:
 
 ::: code-group
 
 ```yaml [battery]
 rules:
-  - { below: 10, color: red, label: Critical }
-  - { below: 20, color: orange, label: Low }
+  - { below: 10, color: red, status: Critical }
+  - { below: 20, color: orange, status: Low }
 ```
 
 ```yaml [carbon_dioxide]
 rules:
-  - { below: 800, color: green, label: Good }
-  - { below: 1200, color: amber, label: Moderate }
-  - { below: 2000, color: orange, label: Poor }
-  - { above: 2000, color: red, label: Bad }
+  - { below: 800, color: green, status: Good }
+  - { below: 1200, color: amber, status: Moderate }
+  - { below: 2000, color: orange, status: Poor }
+  - { above: 2000, color: red, status: Bad }
 ```
 
 ```yaml [pm25]
 rules:
-  - { below: 10, color: green, label: Good }
-  - { below: 25, color: amber, label: Fair }
-  - { below: 50, color: orange, label: Poor }
-  - { above: 50, color: red, label: Very poor }
+  - { below: 10, color: green, status: Good }
+  - { below: 25, color: amber, status: Fair }
+  - { below: 50, color: orange, status: Poor }
+  - { above: 50, color: red, status: Very poor }
 ```
 
 ```yaml [pm10]
 rules:
-  - { below: 20, color: green, label: Good }
-  - { below: 50, color: amber, label: Fair }
-  - { below: 100, color: orange, label: Poor }
-  - { above: 100, color: red, label: Very poor }
+  - { below: 20, color: green, status: Good }
+  - { below: 50, color: amber, status: Fair }
+  - { below: 100, color: orange, status: Poor }
+  - { above: 100, color: red, status: Very poor }
 ```
 
 ```yaml [aqi]
 rules:
-  - { below: 51, color: green, label: Good }
-  - { below: 101, color: amber, label: Moderate }
-  - { below: 151, color: orange, label: Unhealthy for sensitive groups }
-  - { below: 201, color: red, label: Unhealthy }
-  - { below: 301, color: purple, label: Very unhealthy }
-  - { above: 301, color: deep-purple, label: Hazardous, pulse: true }
+  - { below: 51, color: green, status: Good }
+  - { below: 101, color: amber, status: Moderate }
+  - { below: 151, color: orange, status: Unhealthy for sensitive groups }
+  - { below: 201, color: red, status: Unhealthy }
+  - { below: 301, color: purple, status: Very unhealthy }
+  - { above: 301, color: deep-purple, status: Hazardous, pulse: true }
 ```
 
 :::
@@ -870,38 +870,38 @@ Wind: pick the tab for your sensor's unit.
 
 ```yaml [km/h]
 rules:
-  - { below: 5, color: blue-grey, label: Calm }
-  - { below: 20, color: teal, label: Breezy }
-  - { below: 35, color: amber, label: Windy }
-  - { below: 50, color: orange, label: Strong wind }
-  - { above: 50, color: red, label: Stormy, tint_card: true }
+  - { below: 5, color: blue-grey, status: Calm }
+  - { below: 20, color: teal, status: Breezy }
+  - { below: 35, color: amber, status: Windy }
+  - { below: 50, color: orange, status: Strong wind }
+  - { above: 50, color: red, status: Stormy, tint_card: true }
 ```
 
 ```yaml [m/s]
 rules:
-  - { below: 1.4, color: blue-grey, label: Calm }
-  - { below: 5.6, color: teal, label: Breezy }
-  - { below: 9.7, color: amber, label: Windy }
-  - { below: 13.9, color: orange, label: Strong wind }
-  - { above: 13.9, color: red, label: Stormy, tint_card: true }
+  - { below: 1.4, color: blue-grey, status: Calm }
+  - { below: 5.6, color: teal, status: Breezy }
+  - { below: 9.7, color: amber, status: Windy }
+  - { below: 13.9, color: orange, status: Strong wind }
+  - { above: 13.9, color: red, status: Stormy, tint_card: true }
 ```
 
 ```yaml [mph]
 rules:
-  - { below: 3, color: blue-grey, label: Calm }
-  - { below: 12, color: teal, label: Breezy }
-  - { below: 22, color: amber, label: Windy }
-  - { below: 31, color: orange, label: Strong wind }
-  - { above: 31, color: red, label: Stormy, tint_card: true }
+  - { below: 3, color: blue-grey, status: Calm }
+  - { below: 12, color: teal, status: Breezy }
+  - { below: 22, color: amber, status: Windy }
+  - { below: 31, color: orange, status: Strong wind }
+  - { above: 31, color: red, status: Stormy, tint_card: true }
 ```
 
 ```yaml [kn]
 rules:
-  - { below: 3, color: blue-grey, label: Calm }
-  - { below: 11, color: teal, label: Breezy }
-  - { below: 19, color: amber, label: Windy }
-  - { below: 27, color: orange, label: Strong wind }
-  - { above: 27, color: red, label: Stormy, tint_card: true }
+  - { below: 3, color: blue-grey, status: Calm }
+  - { below: 11, color: teal, status: Breezy }
+  - { below: 19, color: amber, status: Windy }
+  - { below: 27, color: orange, status: Strong wind }
+  - { above: 27, color: red, status: Stormy, tint_card: true }
 ```
 
 :::
@@ -912,20 +912,20 @@ Rain: pick the tab for your sensor's unit.
 
 ```yaml [mm/h]
 rules:
-  - { below: 0.1, color: blue-grey, label: Dry }
-  - { below: 2.5, color: light-blue, label: Light rain }
-  - { below: 7.6, color: blue, label: Moderate rain }
-  - { below: 50, color: indigo, label: Heavy rain }
-  - { above: 50, color: deep-purple, label: Violent rain, pulse: true }
+  - { below: 0.1, color: blue-grey, status: Dry }
+  - { below: 2.5, color: light-blue, status: Light rain }
+  - { below: 7.6, color: blue, status: Moderate rain }
+  - { below: 50, color: indigo, status: Heavy rain }
+  - { above: 50, color: deep-purple, status: Violent rain, pulse: true }
 ```
 
 ```yaml [in/h]
 rules:
-  - { below: 0.004, color: blue-grey, label: Dry }
-  - { below: 0.1, color: light-blue, label: Light rain }
-  - { below: 0.3, color: blue, label: Moderate rain }
-  - { below: 2, color: indigo, label: Heavy rain }
-  - { above: 2, color: deep-purple, label: Violent rain, pulse: true }
+  - { below: 0.004, color: blue-grey, status: Dry }
+  - { below: 0.1, color: light-blue, status: Light rain }
+  - { below: 0.3, color: blue, status: Moderate rain }
+  - { below: 2, color: indigo, status: Heavy rain }
+  - { above: 2, color: deep-purple, status: Violent rain, pulse: true }
 ```
 
 :::

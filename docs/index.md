@@ -98,9 +98,9 @@ hero:
               decimals: 1
               visual: { type: sparkline, hours: 24 }
               rules:
-                - { below: 18, color: blue, label: Cool }
-                - { below: 24, color: green, label: Comfortable }
-                - { above: 24, color: orange, label: Warm }
+                - { below: 18, color: blue, status: Cool }
+                - { below: 24, color: green, status: Comfortable }
+                - { above: 24, color: orange, status: Warm }
             - type: custom:poster-card-pro
               entity: sensor.living_room_humidity
               name: Humidity
@@ -109,9 +109,9 @@ hero:
               min: 0
               max: 100
               rules:
-                - { below: 40, color: amber, label: Dry }
-                - { below: 60, color: teal, label: Good }
-                - { above: 60, color: blue, label: Humid }
+                - { below: 40, color: amber, status: Dry }
+                - { below: 60, color: teal, status: Good }
+                - { above: 60, color: blue, status: Humid }
             - type: custom:poster-card-pro
               entity: light.living_room
               name: Ceiling

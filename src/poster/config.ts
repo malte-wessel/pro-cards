@@ -21,7 +21,7 @@ export interface RawPosterCardConfig extends RawKindCardConfig {
 
 export interface PosterConfig extends KindConfig {
   // the status badge's item (null: `status: false`) and its text as written (null: the kind's,
-  // else the matching rule's label)
+  // else the matching rule's status)
   statusIdx: number | null;
   statusText: ValueSrc | null;
 }

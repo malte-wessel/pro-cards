@@ -41,7 +41,7 @@ A tile needs no entity: the keys alone can fill it. Without an entity, a tap doe
 The line under the name joins its parts with a dot, and is cut at the end where it is too long:
 
 - the **value**: the kind's (a thermostat's temperature, a media player's title), else the state. `value` and `attribute` set it; `unit`, `decimals`, `prefix` and `suffix` format a number.
-- the **status**: the kind's, else the matching rule's label. `status` sets it (a text or a template), `false` leaves it out. A status that only repeats the value is left out: a vacuum's Cleaning shows once. `status_badge: true` makes it the first badge instead, shown even where it repeats the value; see [Badges](/cards/tile-badges).
+- the **status**: the kind's, else the matching rule's status. `status` sets it (a text or a template), `false` leaves it out. A status that only repeats the value is left out: a vacuum's Cleaning shows once. `status_badge: true` makes it the first badge instead, shown even where it repeats the value; see [Badges](/cards/tile-badges).
 - the **secondary**: what the kind adds (the direction and gusts, the artist and the album). `secondary` sets it.
 
 `show_value: false` leaves the value out, `show_name: false` the name above it.
@@ -54,9 +54,9 @@ The line under the name joins its parts with a dot, and is cut at the end where 
   name: Living room
   secondary: "Humidity {{ states('sensor.living_room_humidity') }} %"
   rules:
-    - { below: 19, color: blue, label: Cold }
-    - { below: 24, color: green, label: Comfortable }
-    - { above: 24, color: orange, label: Warm }
+    - { below: 19, color: blue, status: Cold }
+    - { below: 24, color: green, status: Comfortable }
+    - { above: 24, color: orange, status: Warm }
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.living_room_co2
@@ -167,7 +167,7 @@ With an `entity`, the tile takes its name, icon, state and colour from it, and i
 
 On a tile, a rule can also set:
 
-- `label`: the status, on the line or as its badge.
+- `status`: the status, on the line or as its badge (a word such as Off or No in quotes: `"Off"`).
 - `tint_card: true`: the whole tile in the rule's colour ([tinted tiles](#tinted-tiles)).
 - the two places: `icon` and `visual` ([by rule](#by-rule)).
 
@@ -182,16 +182,16 @@ A kind brings its own rules (the [predefined sets](/cards/poster-types#predefine
   entity: sensor.office_co2
   name: Office air
   rules:
-    - { below: 800, color: green, label: Fresh }
-    - { below: 1200, color: amber, label: Stuffy, icon: mdi:window-open-variant }
-    - { above: 1200, color: red, label: Open a window, icon: mdi:alert }
+    - { below: 800, color: green, status: Fresh }
+    - { below: 1200, color: amber, status: Stuffy, icon: mdi:window-open-variant }
+    - { above: 1200, color: red, status: Open a window, icon: mdi:alert }
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: binary_sensor.door_front
   name: Front door
   rules:
-    - { state: "on", color: red, icon: mdi:door-open, label: Open }
-    - { state: "off", color: green, icon: mdi:door-closed, label: Closed }
+    - { state: "on", color: red, icon: mdi:door-open, status: Open }
+    - { state: "off", color: green, icon: mdi:door-closed, status: Closed }
   grid_options: { columns: 6 }
 ```
 
@@ -208,8 +208,8 @@ A kind brings its own rules (the [predefined sets](/cards/poster-types#predefine
   entity: sensor.office_co2
   name: Office air
   rules:
-    - { below: 800, color: green, label: Fresh }
-    - { above: 800, color: red, label: Ventilate, tint_card: true }
+    - { below: 800, color: green, status: Fresh }
+    - { above: 800, color: red, status: Ventilate, tint_card: true }
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   name: Front door
@@ -348,7 +348,7 @@ What a place draws comes from, each over the one before: the kind's default, the
   icon: mdi:water-pump
   visual: { type: image, src: camera.garden, opacity: 0 }
   rules:
-    - { state: "on", color: blue, label: Watering, visual: { opacity: 0.6 } }
+    - { state: "on", color: blue, status: Watering, visual: { opacity: 0.6 } }
   grid_options: { columns: 6 }
 ```
 

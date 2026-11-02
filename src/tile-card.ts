@@ -107,7 +107,7 @@ export class TileCard extends KindCardBase {
     return super._actionsTakeLead(cfg) && !this._plainToggle();
   }
 
-  // the status: the card's, else the kind's, else the matching rule's label; none with status:
+  // the status: the card's, else the kind's, else the matching rule's status; none with status:
   // false
   _status(kc: KindCtx) {
     const cfg = this._config as TileConfig;

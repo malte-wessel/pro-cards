@@ -235,8 +235,8 @@ A poster takes no `status_badge`: its status is always this badge. On a [tile](/
   name: Car
   icon: mdi:car-electric
   rules:
-    - { below: 20, color: red, label: Low }
-    - { above: 20, color: green, label: Ready }
+    - { below: 20, color: red, status: Low }
+    - { above: 20, color: green, status: Ready }
   badges:
     - entity: binary_sensor.ev_plugged
       rules:

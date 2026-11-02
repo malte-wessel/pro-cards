@@ -232,7 +232,7 @@ describe("poster-card config", () => {
     expect(own.entities[0].rules).toEqual(BATTERY_RULES.map(toRule));
     expect(own.entities[own.statusIdx!].rules).toBe(own.entities[0].rules);
     const mine = norm(
-      { entity: "sensor.phone_battery", rules: [{ below: 50, label: "Charge" }] },
+      { entity: "sensor.phone_battery", rules: [{ below: 50, status: "Charge" }] },
       battery,
     );
     expect(mine.entities[0].rules.map((r) => r.label)).toEqual(["Charge"]);
@@ -496,6 +496,33 @@ describe("poster-card config", () => {
     expect(own.entities[own.inputs.direction].entity).toBe("sensor.x");
   });
 
+  it("takes one spelling for each part: a rule's status, icon: false, control: auto", () => {
+    const E = "sensor.living_room_temperature";
+    // a rule's text is the status, as the card's; a word YAML read as a boolean is an error
+    expect(() => norm({ entity: E, rules: [{ below: 10, label: "Low" }] })).toThrow(
+      `${T}: rules[0]: label is status on the poster card`,
+    );
+    expect(() => norm({ entity: E, rules: [{ state: "off", status: false }] })).toThrow(
+      `${T}: rules[0].status takes a text, not false (a word such as Off or No is read as false unless quoted: "Off")`,
+    );
+    expect(() => norm({ entity: E, value: false })).toThrow(
+      `${T}: value takes a text, not false (to hide the value: show_value: false; a word such as Off or No`,
+    );
+    expect(() => norm({ entity: E, name: true })).toThrow(`${T}: name takes a text, not true`);
+    expect(() => norm({ entity: E, show_icon: false })).toThrow(
+      `${T}: show_icon: false is icon: false`,
+    );
+    expect(() => norm({ entity: E, control: true })).toThrow(
+      `${T}: control: true is control: auto`,
+    );
+    expect(() => norm({ entity: E, control: { type: "auto", step: 2 } })).toThrow(
+      `${T}: control: { type: auto, … } is control: { … }`,
+    );
+    expect(() => norm({ entity: E, control: "none" })).toThrow(
+      `${T}: control: none is control: false`,
+    );
+  });
+
   it("takes the kind's inputs in inputs and its other keys on the card, and only the kind's", () => {
     const speed = withStates({
       "sensor.wind_speed": st("sensor.wind_speed", "12", { device_class: "wind_speed" }),
@@ -576,7 +603,7 @@ describe("poster-card config", () => {
     ])
       expect(() => norm({ entity: E, status })).toThrow(look);
     // the card's rules, as a tag without an icon
-    const own = norm({ entity: E, status: "Cosy", rules: [{ below: 30, label: "Poster" }] });
+    const own = norm({ entity: E, status: "Cosy", rules: [{ below: 30, status: "Poster" }] });
     const badge = own.entities[own.statusIdx!];
     expect(badge.rules.map((r) => r.label)).toEqual(["Poster"]);
     expect(badge.badge).toEqual({ style: "tag", size: "s" });
@@ -815,7 +842,7 @@ describe("poster-card image and status", () => {
     const E = "sensor.x";
     const hass = withStates({ [E]: st(E, "5") });
     const ctx = { hass, tplResult: new Map<string, unknown>([["{{ s }}", "Rendered"]]) };
-    const cfg = norm({ entity: E, rules: [{ below: 10, label: "Low" }] });
+    const cfg = norm({ entity: E, rules: [{ below: 10, status: "Low" }] });
     const m = modelOf(ctx, cfg.entities[0]);
     expect(statusText(ctx as never, cfg, m, null)).toBe("Low");
     expect(statusText(ctx as never, cfg, m, "Kind's")).toBe("Kind's");

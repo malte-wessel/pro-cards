@@ -667,9 +667,11 @@ describe("card config schemas", () => {
       expect(
         validate({ type, entity: H, rules: [{ above: 1, icon: { tap_action: "toggle" } }] }),
       ).toBeTruthy();
-      // control: a name, true or false, or the control and its options
-      for (const control of ["slider", "auto", "none", true, false])
+      // control: a name, auto or false, or the control and its options; one spelling each
+      for (const control of ["slider", "auto", false])
         expect(validate({ type, entity: "light.kitchen", control }), String(control)).toBeNull();
+      for (const control of ["none", true, { type: "auto" }])
+        expect(validate({ type, entity: "light.kitchen", control }), String(control)).toBeTruthy();
       for (const position of ["end", "block"])
         expect(
           validate({ type, entity: "light.kitchen", control: { type: "slider", position } }),
