@@ -1,5 +1,5 @@
-// Which kind a card draws (pure): the poster type as written (`poster`), else detected from the
-// entity, first match wins: the domain (or the entity id: sun.sun), the device class, else
+// Which kind a card draws (pure): the kind as written (`kind`), else detected from the entity,
+// first match wins: the domain (or the entity id: sun.sun), the device class, else
 // `entity`. An entity has one domain and at most one device class, so detection is never
 // ambiguous. The keys a kind takes never decide it.
 import { domainOf } from "../color.ts";
@@ -7,12 +7,12 @@ import type { HassEntity } from "../ha.ts";
 import { KIND_NAMES, KINDS } from "./registry.ts";
 import type { Kind } from "./types.ts";
 
-// `poster` as written: a type's name (null: none written, detect it)
-export const parsePoster = (raw: unknown, cardType: string): string | null => {
+// `kind` as written: a kind's name (null: none written, detect it)
+export const parseKind = (raw: unknown, cardType: string): string | null => {
   if (raw === undefined || raw === null) return null;
   if (typeof raw !== "string" || !(raw in KINDS))
     throw new Error(
-      `${cardType}: poster must be one of ${KIND_NAMES.join(" | ")}, not ${JSON.stringify(raw)}`,
+      `${cardType}: kind must be one of ${KIND_NAMES.join(" | ")}, not ${JSON.stringify(raw)}`,
     );
   return raw;
 };
@@ -46,7 +46,7 @@ export const resolveKind = (
   const kind = KINDS[name];
   if (!canRead(kind, entity))
     throw new Error(
-      `${cardType}: the ${kind.name} poster reads ${kind.readsText}, not ${entity ?? "a card without an entity"}`,
+      `${cardType}: the ${kind.name} kind reads ${kind.readsText}, not ${entity ?? "a card without an entity"}`,
     );
   return kind;
 };

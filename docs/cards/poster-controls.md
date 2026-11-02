@@ -1,25 +1,25 @@
 # Poster controls
 
-A poster can carry one control: a switch, a slider, a stepper, speeds, buttons, a select or a button to hold. Every [poster type](/cards/poster-types) takes `control`, the same key as on the [entity cards](/cards/controls). A control needs an entity that supports it, and your own `buttons` can run any action. Poster types for a domain (light, cover, media player …) bring their own controls: a light poster has a switch and a dimmer without any config.
+A poster can carry one control: a switch, a slider, a stepper, speeds, buttons, a select or a button to hold. Every [kind](/cards/poster-types) takes `control`: a control's name as on the [entity cards](/cards/controls), or the control with its options (`control: { type: slider, position: block }`). A control needs an entity that supports it, and your own `buttons` can run any action. Kinds for a domain (light, cover, media player …) bring their own controls: a light poster has a switch and a dimmer without any config.
 
-A tap on the poster opens more-info. The control and the [badges](/cards/poster-badges) take their own taps, and the icon has [actions of its own](#the-icon). This page covers what each poster type brings, every control, where it sits, your own buttons and holds. The [overview](/cards/poster-card) explains the poster around them.
+A tap on the poster opens more-info. The control and the [badges](/cards/poster-badges) take their own taps, and the icon has [actions of its own](#the-icon). This page covers what each kind brings, every control, where it sits, your own buttons and holds. The [overview](/cards/poster-card) explains the poster around them.
 
-## What the poster types bring
+## What the kinds bring
 
-Without `control` (or with `control: auto`), a domain poster type draws its own controls:
+Without `control` (or with `control: auto`), a domain kind draws its own controls:
 
-| Poster type            | Controls                                                              |
+| Kind                   | Controls                                                              |
 | ---------------------- | --------------------------------------------------------------------- |
 | `light`                | a switch beside the value, brightness below it                        |
 | `fan`                  | its speeds                                                            |
 | `climate`              | a stepper for the target temperature                                  |
-| `lock`                 | hold the icon to lock or unlock (`icon_hold_action`)                  |
+| `lock`                 | hold the icon to lock or unlock (`icon: { hold_action }`)             |
 | `alarm_control_panel`  | hold the icon to arm or disarm, unless the panel wants a code         |
 | `media_player`         | previous, play / pause and next beside the title, the volume below it |
 | `cover`                | open, stop and close                                                  |
 | `vacuum`, `lawn_mower` | start / pause and back to the dock                                    |
 
-Every other poster type (a sensor, the weather, the wind, the energy types …) has no control unless you set one.
+Every other kind (a sensor, the weather, the wind, the energy kinds …) has no control unless you set one.
 
 ::: live
 
@@ -48,7 +48,7 @@ Every other poster type (a sensor, the weather, the wind, the energy types …) 
 
 ## Another control, or none
 
-`control` with a name shows that control in place of the poster type's. `control: false` (or `none`) shows none. A light that only dims, a fan that only switches, a thermostat to look at:
+`control` with a name shows that control in place of the kind's. `control: false` (or `none`) shows none. A light that only dims, a fan that only switches, a thermostat to look at:
 
 ::: live
 
@@ -69,11 +69,11 @@ Every other poster type (a sensor, the weather, the wind, the energy types …) 
 
 :::
 
-A card names one control. Some poster types draw a pair by default: a light's switch and brightness, a player's transport and volume. `control: slider` on a light shows the slider alone.
+A card names one control. Some kinds draw a pair by default: a light's switch and brightness, a player's transport and volume. `control: slider` on a light shows the slider alone.
 
 ## A control on any poster
 
-Every poster takes a control its entity supports, whatever its poster type. The names:
+Every poster takes a control its entity supports, whatever its kind. The names:
 
 | `control`  | Draws                      | For                                                             |
 | ---------- | -------------------------- | --------------------------------------------------------------- |
@@ -105,8 +105,7 @@ A stepper beside the value that steps that very number takes the value's place, 
 - type: custom:poster-card-pro
   entity: climate.bedroom
   name: Bedroom
-  control: segments
-  control_attribute: hvac_mode
+  control: { type: segments, attribute: hvac_mode }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: script.check_windows
@@ -118,7 +117,9 @@ A stepper beside the value that steps that very number takes the value's place, 
 
 :::
 
-On a thermostat or a fan, `control_attribute` picks what segments and a select change: `hvac_mode`, `preset_mode` or `fan_mode`. By default it is the attribute the poster shows, else the main mode. `control_options` limits segments and selects to the options listed, each with its own `label` and `icon`:
+## The control's options
+
+A control with options is an object: its `type` (the name above) and what it takes. On a thermostat or a fan, `attribute` picks what segments and a select change: `hvac_mode`, `preset_mode` or `fan_mode`. By default it is the attribute the poster shows, else the main mode. `options` limits segments and selects to the options listed, each with its own `label` and `icon`:
 
 ::: live
 
@@ -127,24 +128,25 @@ type: custom:poster-card-pro
 entity: input_select.house_mode
 name: House
 icon: mdi:home-account
-control: segments
-control_position: block
-control_options:
-  - { value: Home, icon: mdi:home }
-  - { value: Away, icon: mdi:home-export-outline }
-  - { value: Night, icon: mdi:weather-night }
+control:
+  type: segments
+  position: block
+  options:
+    - { value: Home, icon: mdi:home }
+    - { value: Away, icon: mdi:home-export-outline }
+    - { value: Night, icon: mdi:weather-night }
 ```
 
 :::
 
 ## Where it sits
 
-A control has two places on a poster, set with `control_position`:
+A control has two places on a poster, set with its `position`:
 
-| `control_position` | Place                                    | The default of                                 |
-| ------------------ | ---------------------------------------- | ---------------------------------------------- |
-| `end`              | at the right, beside the value           | switch, stepper, speeds, buttons, select, hold |
-| `block`            | under the value, across the whole poster | slider                                         |
+| `position` | Place                                    | The default of                                 |
+| ---------- | ---------------------------------------- | ---------------------------------------------- |
+| `end`      | at the right, beside the value           | switch, stepper, speeds, buttons, select, hold |
+| `block`    | under the value, across the whole poster | slider                                         |
 
 ::: live
 
@@ -156,8 +158,7 @@ A control has two places on a poster, set with `control_position`:
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: cover.garage_door
-  control: buttons
-  control_position: block
+  control: { type: buttons, position: block }
   grid_options: { columns: 6 }
 ```
 
@@ -167,7 +168,7 @@ On a narrow poster, a control at the `end` moves under the value rather than squ
 
 ## Your own buttons
 
-`control: buttons` with `control_options` draws your own buttons. Each button does one of these:
+`control: { type: buttons, options: [ … ] }` draws your own buttons. Each button does one of these:
 
 - **Runs its `entity`:** a scene or a script turns on, a button is pressed.
 - **Switches its `entity`:** a light, a switch or a fan. The button is filled while it is on.
@@ -184,26 +185,28 @@ A poster of buttons needs no entity: a `name`, an `icon` and a `value` or `statu
   value: Living room
   status: "{{ 'Lights on' if is_state('light.living_room', 'on') else 'All off' }}"
   color: deep-purple
-  control: buttons
-  control_position: block
-  control_options:
-    - { entity: scene.dimmed, label: Dim, color: amber }
-    - { entity: scene.movie_night, label: Movie, color: deep-purple }
-    - { entity: light.living_room, label: Ceiling, color: orange }
+  control:
+    type: buttons
+    position: block
+    options:
+      - { entity: scene.dimmed, label: Dim, color: amber }
+      - { entity: scene.movie_night, label: Movie, color: deep-purple }
+      - { entity: light.living_room, label: Ceiling, color: orange }
   grid_options: { columns: 12 }
 - type: custom:poster-card-pro
   entity: vacuum.robot
   name: Robot
-  control: buttons
-  control_options:
-    - icon: mdi:play
-      action:
-        action: perform-action
-        perform_action: vacuum.start
-        target: { entity_id: vacuum.robot }
-    - icon: mdi:home-import-outline
-      entity: vacuum.robot
-      action: { action: perform-action, perform_action: vacuum.return_to_base }
+  control:
+    type: buttons
+    options:
+      - icon: mdi:play
+        action:
+          action: perform-action
+          perform_action: vacuum.start
+          target: { entity_id: vacuum.robot }
+      - icon: mdi:home-import-outline
+        entity: vacuum.robot
+        action: { action: perform-action, perform_action: vacuum.return_to_base }
   grid_options: { columns: 6 }
 ```
 
@@ -228,18 +231,19 @@ A button with `visibility` comes and goes with its conditions. Here the dock but
 type: custom:poster-card-pro
 entity: vacuum.robot
 name: Robot
-control: buttons
-control_options:
-  - entity: vacuum.robot
-    label: Clean
-    icon: mdi:play
-    action: { action: perform-action, perform_action: vacuum.start }
-  - entity: vacuum.robot
-    label: Dock
-    icon: mdi:home-import-outline
-    action: { action: perform-action, perform_action: vacuum.return_to_base }
-    visibility:
-      - { condition: state, entity: vacuum.robot, state_not: docked }
+control:
+  type: buttons
+  options:
+    - entity: vacuum.robot
+      label: Clean
+      icon: mdi:play
+      action: { action: perform-action, perform_action: vacuum.start }
+    - entity: vacuum.robot
+      label: Dock
+      icon: mdi:home-import-outline
+      action: { action: perform-action, perform_action: vacuum.return_to_base }
+      visibility:
+        - { condition: state, entity: vacuum.robot, state_not: docked }
 ```
 
 :::
@@ -248,22 +252,22 @@ control_options:
 
 Some things should not happen by a stray tap. A hold fills a ring around the button for a second and runs when it is full. Letting go earlier cancels.
 
-- `control_confirm: true` turns a switch or buttons into holds, each button its own.
+- `confirm: true` on the control turns a switch or buttons into holds, each button its own.
 - `control: hold` is a button to hold for any entity that switches.
-- `icon_hold_action` holds the icon. Locks and alarm panels do this by default, unless the panel wants a code.
+- `icon: { hold_action }` holds the icon. Locks and alarm panels do this by default, unless the panel wants a code.
 
 ::: live
 
 ```yaml
 - type: custom:poster-card-pro
   entity: cover.garage_door
-  control: buttons
-  control_confirm: true
+  control: { type: buttons, confirm: true }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: switch.garden_pump
-  icon: mdi:water-pump
-  icon_hold_action: { action: toggle }
+  icon:
+    name: mdi:water-pump
+    hold_action: { action: toggle }
   grid_options: { columns: 6 }
 ```
 
@@ -273,16 +277,21 @@ A held icon shows the entity as it is, and its label says what holding does ("Ho
 
 ## The icon
 
-The icon has its own actions, as on Home Assistant's tile card: `icon_tap_action`, `icon_hold_action` and `icon_double_tap_action`. [The icon](/cards/poster-custom#the-icon) on Custom posters explains them, with examples.
+The icon has its own actions, as on Home Assistant's tile card: `tap_action`, `hold_action` and `double_tap_action` in the icon's object (`icon: { name: mdi:coffee-maker, tap_action: { action: toggle } }`). [The icon](/cards/poster-custom#the-icon) on Custom posters explains them, with examples.
 
 ## Reference
 
-| Key                 | Default                      | Description                                                                                                                        |
-| ------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `control`           | `auto`                       | `auto` (the poster type's), `toggle`, `slider`, `stepper`, `segments`, `select`, `buttons`, `button`, `hold`, or `false` / `none`. |
-| `control_position`  | the control's own            | `end` or `block`.                                                                                                                  |
-| `control_attribute` | the shown one, else the mode | `hvac_mode`, `preset_mode` or `fan_mode`: what segments and a select change on a thermostat or fan.                                |
-| `control_options`   | the entity's                 | Segments and select: the options (`value`, `label`, `icon`). Buttons: [your own buttons](#your-own-buttons).                       |
-| `control_confirm`   | `false`                      | Turns the switch and the buttons into holds.                                                                                       |
+`control` is a control's name, `true` / `auto` (the kind's), `false` / `none` (no control), or an object:
+
+| Key         | Default                      | Description                                                                                                  |
+| ----------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `type`      | the kind's                   | `auto`, `toggle`, `slider`, `stepper`, `segments`, `select`, `buttons`, `button`, `hold` or `none`.          |
+| `position`  | the control's own            | `end` or `block`.                                                                                            |
+| `attribute` | the shown one, else the mode | `hvac_mode`, `preset_mode` or `fan_mode`: what segments and a select change on a thermostat or fan.          |
+| `step`      | the entity's, else 1         | The step of a slider or a stepper (a thermostat: 0.5).                                                       |
+| `options`   | the entity's                 | Segments and select: the options (`value`, `label`, `icon`). Buttons: [your own buttons](#your-own-buttons). |
+| `confirm`   | `false`                      | Turns the switch and the buttons into holds.                                                                 |
+
+An object without `type` changes the kind's own controls: `control: { step: 1 }` steps a thermostat by whole degrees, `control: { attribute: preset_mode }` gives it its presets as segments.
 
 What a control does, how it shows a call on its way and what it does when one fails is the same on every card: see [Controls](/cards/controls).

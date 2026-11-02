@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://malte-wessel.github.io/pro-cards/schema/tile-group-card-pro.schema.json",
   "title": "custom:tile-group-card-pro",
-  "description": "Several tiles on one card under a header (title, icon, badges): one under the other (list) or vertical tiles side by side (row). Every key the card does not take itself is a default for every tile; a tile's own value wins. Strings containing {{ }} are Jinja templates rendered by Home Assistant.",
+  "description": "Several tiles on one card under a header (title, icon, badges): one under the other (list) or vertical tiles side by side (row). The group sets nothing on its tiles but their layout: each tile says everything about itself. Strings containing {{ }} are Jinja templates rendered by Home Assistant.",
   "type": "object",
   "properties": {
     "type": {
@@ -30,11 +30,10 @@
       "$ref": "entity.schema.json#/$defs/headerEntities",
       "description": "The header's badges, plain and small unless they say otherwise"
     },
-    "entity": false,
-    "entities": {
+    "tiles": {
       "type": "array",
       "minItems": 1,
-      "description": "The tiles: entity ids or tiles (the tile card's keys, without type and grid_options)",
+      "description": "The tiles: entity ids or tiles (the tile card's keys, without type, grid_options and vertical: the layout decides it)",
       "items": {
         "oneOf": [
           {
@@ -51,7 +50,8 @@
               "visibility": {
                 "$ref": "defs.schema.json#/$defs/haCardExtras/visibility",
                 "description": "Shows the tile only while the conditions hold"
-              }
+              },
+              "vertical": false
             },
             "unevaluatedProperties": false
           }
@@ -59,11 +59,8 @@
       }
     }
   },
-  "required": ["type", "entities"],
+  "required": ["type", "tiles"],
   "allOf": [
-    {
-      "$ref": "tile-card-pro.schema.json#/$defs/tile"
-    },
     {
       "$ref": "entity.schema.json#/$defs/haExtras"
     }

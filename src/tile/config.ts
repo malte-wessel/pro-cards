@@ -1,8 +1,9 @@
 // Config of the tile card (pure): the raw YAML shape and the normalised one. The card is one
-// entity (or none) as a tile, filled the way its poster type (its kind) says
-// (src/shared/kinds/config.ts): the icon, the name, one line under it, controls at its end. What
-// needs a second row is asked for: a slider below, the type's picture.
-import { normalizeHistoryOptions, normalizeValue, type ValueSrc } from "../shared/entity/config.ts";
+// entity (or none) as a tile, filled the way its kind says (src/shared/kinds/config.ts): the icon,
+// the name, one line under it, controls at its end; its icon and its visual as its places say
+// (src/shared/kinds/places.ts). A visual below the line (a plot, the sun's day) and a slider below
+// take a second row.
+import { normalizeValue, type ValueSrc } from "../shared/entity/config.ts";
 import { domainOf } from "../shared/color.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
 import {
@@ -18,36 +19,30 @@ import { CARD_TYPE } from "./constants.ts";
 export interface RawTileCardConfig extends RawKindCardConfig {
   status?: unknown;
   status_badge?: unknown;
-  icon_badge?: unknown;
   badges?: unknown;
-  show_picture?: unknown;
   vertical?: unknown;
 }
 
 export interface TileConfig extends KindConfig {
   // the status's item (null: `status: false`) and its text as written (null: the kind's, else the
   // matching rule's label): on the line after the value, or a badge before the badges where the
-  // card says so (`status_badge`, or `status` in the list of badges)
+  // card says so (`status_badge: true`)
   statusIdx: number | null;
   statusText: ValueSrc | null;
   statusBadge: boolean;
-  // the type's picture below the line (a second row)
-  showPicture: boolean;
-  // `visual: glow`: the tile lit from below in its colour, as strong as its level (a light's)
-  glow: boolean;
   // the icon on top, the name and the line centred under it, the controls under them
   vertical: boolean;
-  // the badge on the icon: Home Assistant's (auto), none (false), or the card's own icon and
-  // colour, each text or a template (an empty icon: none; no colour: the tile's)
-  iconBadge: "auto" | false | { icon: ValueSrc | null; color: ValueSrc | null };
 }
 
-// `icon_badge` as written
-const parseIconBadge = (v: unknown): TileConfig["iconBadge"] => {
+// the badge on the icon (`icon: { badge }`, the card's or a rule's): Home Assistant's (auto), none
+// (false), or one of the card's own, its icon and colour each text or a template (an empty icon:
+// none; no colour: the tile's)
+export type IconBadgeConfig = "auto" | false | { icon: ValueSrc | null; color: ValueSrc | null };
+export const parseIconBadge = (v: unknown): IconBadgeConfig => {
   if (v === undefined || v === null || v === true || v === "auto") return "auto";
   if (v === false || v === "none") return false;
   if (isObj(v)) return { icon: normalizeValue(v.icon), color: normalizeValue(v.color) };
-  throw new Error(`${CARD_TYPE}: icon_badge takes auto, false or { icon, color }`);
+  throw new Error(`${CARD_TYPE}: icon: { badge } takes auto, false or { icon, color }`);
 };
 
 // the domains whose icon toggles them by default, as on Home Assistant's tile (its DOMAINS_TOGGLE),
@@ -79,17 +74,12 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
     throw new Error(`${CARD_TYPE}: toggle is control: toggle on the tile card`);
   if (typeof written.visual === "string" && GONE[written.visual])
     throw new Error(`${CARD_TYPE}: ${GONE[written.visual]}`);
-  const k = normalizeKindItem(
-    written,
-    hass,
-    CARD_TYPE,
-    "tile card",
-    written.visual === "none" || written.visual === "glow" ? { visual: "icon" } : {},
-  );
+  const k = normalizeKindItem(written, hass, CARD_TYPE, "tile card");
   const main = k.entities[0];
   // the icon toggles what switches and presses what runs, unless the card or the type says else
+  const iconTap = k.places.icon ? k.places.icon.tap_action : undefined;
   if (
-    written.icon_tap_action === undefined &&
+    iconTap === undefined &&
     !k.iconActions.tap &&
     k.entity &&
     ICON_TOGGLES.has(domainOf(k.entity))
@@ -103,15 +93,17 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
   }
   // the badges at the end of the first row, and the status among them where the card says so
   const { statusIdx, statusText, corner: all } = normalizeCorner(k, CARD_TYPE, "a tile's badges");
-  const listed = Array.isArray(written.badges) && written.badges.includes("status");
-  const statusBadge = written.status_badge === true || listed;
+  if (written.status_badge !== undefined && typeof written.status_badge !== "boolean")
+    throw new Error(`${CARD_TYPE}: status_badge takes true or false`);
+  const statusBadge = written.status_badge === true;
+  // the icon's badge, the card's and its rules', checked now
+  for (const p of [k.places, ...k.rulePlaces.values()]) if (p.icon) parseIconBadge(p.icon.badge);
   const corner = statusBadge ? all : all.filter((i) => i !== statusIdx);
   return {
     layout: "tile",
     title: null,
     titleTap: null,
     icon: null,
-    ...normalizeHistoryOptions(k.raw),
     columns: 1,
     ...k.ctx,
     type: CARD_TYPE,
@@ -129,15 +121,10 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
     ],
     headerIdxs: [],
     hasHeader: false,
-    ...kindConfigOf(k, main.rules),
+    ...kindConfigOf(k),
     statusIdx,
     statusText,
     statusBadge,
-    // a trend is its lines: without them it is a value alone
-    showPicture:
-      typeof written.show_picture === "boolean" ? written.show_picture : k.kind.name === "trend",
-    glow: k.raw.visual === "glow",
     vertical: written.vertical === true,
-    iconBadge: parseIconBadge(written.icon_badge),
   };
 };

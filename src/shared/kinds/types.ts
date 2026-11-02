@@ -1,6 +1,6 @@
-// The kinds (pure types): what an entity is, and what a card draws for it by default. A kind (a
-// poster type) is detected from the entity (its domain, then its device class) or set with
-// `poster`; the poster card draws its places the kind's way.
+// The kinds (pure types): what an entity is, and what a card draws for it by default. A kind is
+// detected from the entity (its domain, then its device class) or set with `kind`; the poster and
+// the tile card draw their places (places.ts) the kind's way.
 import type { EntityItem, RawEntity, RuleUnit } from "../entity/config.ts";
 import type { Placement } from "../entity/control.ts";
 import type { EntityModel, RenderCtx } from "../entity/model.ts";
@@ -10,6 +10,7 @@ import type { StringKey } from "../i18n.ts";
 import type { SunCurveHost } from "../sun/curve.ts";
 import type { Visibility } from "../visibility.ts";
 import type { Finder } from "./discover.ts";
+import type { IconPlace, VisualPlace } from "./places.ts";
 
 // one of a kind's own rules, as written in rules.ts: its label is ours and translated
 export interface KindRule {
@@ -67,8 +68,10 @@ export interface KindCtx {
   m: EntityModel;
   opts: Record<string, unknown>;
   input(key: string): Read | null;
-  // the card's own `hours_to_show` (null: not set)
+  // the visual's `hours` as written (null: the kind's own window)
   hours: number | null;
+  // the places as drawn now: the kind's default, the card's and the matching rule's
+  place: { icon: IconPlace; visual: VisualPlace | false };
   host: KindHost;
   // the card it draws for, and the size its lead is drawn at (the poster's 40 px, the tile's 36)
   card: "poster" | "tile";
@@ -109,8 +112,18 @@ export interface Kind {
 
   // ----- drawing (all optional: a kind without them draws as `entity`) -----
   // the card's item where the card sets neither `value` nor `attribute` (a weather entity's
-  // temperature), and keys it defaults (`show_entity_picture`)
+  // temperature)
   main?(entity: string | null, raw: RawEntity, opts: Record<string, unknown>): Partial<RawEntity>;
+  // what its places draw where the card says nothing (places.ts): a person's photo in the icon and
+  // behind the card, a light's glow, the sun's day. Left out: the icon, and no visual
+  icon?: IconPlace;
+  visual?: VisualPlace;
+  // its default visual on a tile where it differs (false: none; a drawing that only reads on a
+  // poster's room: a cover, a robot's path, the grid's line)
+  tileVisual?: VisualPlace | false;
+  // the things only it draws (flow, sun, forecast, cover, path, line), and a thing every kind has
+  // that it draws its own way (a trend's sparkline: its series)
+  draws?: readonly string[];
   inputs?: readonly InputDef[];
   // the entities whose history it draws besides the card's own, the templates it renders and the
   // conditions it evaluates (a trend's series)
@@ -130,13 +143,12 @@ export interface Kind {
   // how strong `visual: glow` lights it, 0 to 1 (a light's brightness; null or left out: the
   // value between min and max, else on or off)
   level?(c: KindCtx): number | null;
+  // its animated icon (a fan's blades, the wind), where the icon is the kind's own
   lead?: Persistent;
+  // what it draws behind the texts (its flow, cover, path or line: the key is "" while the visual
+  // is none of them), and its own glow (a climate warm or cool, an alarm's pulse)
   backdrop?: Persistent;
-  // a picture behind the poster under the scrim (a person's photo), where the card sets no `image`
-  image?(c: KindCtx): string | null;
-  // the picture behind the poster is blurred unless the card says `image_blur` (a person's photo,
-  // a cover art: the icon shows it sharp)
-  imageBlur?: boolean;
+  glow?: Persistent;
   // run on every render after the fill: what follows the clock or the size (a curve)
   live?(c: KindCtx, row: HTMLElement): void;
   // run on every render once the value is fitted, where the texts have their place: what fills

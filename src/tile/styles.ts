@@ -3,7 +3,8 @@
 import { PLOT_H } from "../shared/entity/constants.ts";
 import { STYLE_ENTITY_CARD } from "../shared/entity/render/styles.ts";
 import { STYLE_FLOW, STYLE_FLOW_MOTION } from "../shared/flow/styles.ts";
-import { STYLE_KIND_CARD_FOCUS, STYLE_KINDS } from "../shared/kinds/styles.ts";
+import { CARD_BG, iconBg } from "../shared/constants.ts";
+import { STYLE_KIND_BACKDROP, STYLE_KIND_CARD_FOCUS, STYLE_KINDS } from "../shared/kinds/styles.ts";
 import { STYLE_RAIN } from "../shared/rain/styles.ts";
 import { STYLE_SUN_CURVE } from "../shared/sun/styles.ts";
 import { STYLE_TREND } from "../shared/trend/styles.ts";
@@ -22,11 +23,14 @@ const STYLE_TILE_CARD = `
   .tlead img.picture.pwait { opacity: 0; }
   .tlead img.picture.pfade { animation: tfade .7s ease both; }
   @media (prefers-reduced-motion: reduce) { .tlead img.picture.pfade { animation: none; } }
-  /* visual: glow (a light's): the tile's colour from its bottom edge, as strong as its level (its
-     opacity, set by the card: a new level fades); nothing at 0. Under the content and its layers */
-  ha-card.layout-tile > .body:has(> .tglow) { isolation: isolate; }
-  .tglow { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(90% 140% at 50% 150%, color-mix(in srgb, var(--glow) 50%, transparent) 0%, transparent 80%); opacity: 0; transition: opacity .6s; }
-  @media (prefers-reduced-motion: reduce) { .tglow { transition: none; } }
+  /* what is behind the texts (backdrop.ts: a picture, the kind's drawing, a glow) fills the tile
+     under the content and its layers. A glow (a light's) is the tile's colour from its bottom
+     edge, as strong as its level; over a kind's drawing the icon keeps a solid circle */
+  ha-card.layout-tile > .body:has(> .pback:not([hidden])) { isolation: isolate; }
+  ha-card.layout-tile .pglow { background: radial-gradient(90% 140% at 50% 150%, color-mix(in srgb, var(--glow) 50%, transparent) 0%, transparent 80%); }
+  @media (prefers-reduced-motion: reduce) { .pglow { transition: none; } }
+  ha-card.pdraw .tlead .lead .shape { background: ${iconBg("var(--fe-color)", CARD_BG)}; }
+  ha-card.pdraw .tlead .lead.plain .shape { background: transparent; }
   /* a kind's curve below the line (show_picture: the sun's day, a trend's lines) is as tall as a
      tile's sparkline; on a poster it reaches up behind the texts, here it keeps below them */
   .row.tile > .pcurve { position: relative; flex: 1 1 auto; height: ${PLOT_H.sparkline}px; min-height: 40px; min-width: 0; margin: 0; touch-action: pan-y; }
@@ -100,6 +104,7 @@ export const STYLE_TILE_CARD_ALL =
   STYLE_SUN_CURVE +
   STYLE_TREND +
   STYLE_KINDS +
+  STYLE_KIND_BACKDROP +
   STYLE_KIND_CARD_FOCUS +
   STYLE_TILE_CARD +
   STYLE_FLOW_MOTION;

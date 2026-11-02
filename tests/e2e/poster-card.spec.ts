@@ -132,7 +132,7 @@ test.describe("poster card", () => {
     await mount(page, {
       type: P,
       entity: "weather.home",
-      badges: ["status", { attribute: "humidity", icon: "mdi:water-percent" }],
+      badges: [{ attribute: "humidity", icon: "mdi:water-percent" }],
     });
     const corner = card(page).locator(".corner");
     const badges = corner.locator(":scope > .hval");
@@ -210,13 +210,17 @@ test.describe("poster card", () => {
     }
   });
 
-  test("an image lies behind a scrim; image: false drops a poster type's picture", async ({
+  test("an image lies behind a scrim; visual: false drops a poster type's picture", async ({
     page,
   }) => {
     await mount(page, [
-      { type: P, entity: "sensor.living_room_temperature", image: "/local/garden.jpg" },
+      {
+        type: P,
+        entity: "sensor.living_room_temperature",
+        visual: { type: "image", src: "/local/garden.jpg" },
+      },
       { type: P, entity: "person.malte" },
-      { type: P, entity: "person.malte", image: false },
+      { type: P, entity: "person.malte", visual: false },
     ]);
     const back = card(page, 0).locator(".pback");
     await expect(back).toHaveClass(/scrim/);
@@ -230,15 +234,18 @@ test.describe("poster card", () => {
   }) => {
     await mount(page, [
       { type: P, entity: "person.malte" },
-      { type: P, entity: "person.malte", image_blur: false, show_entity_picture: false },
+      { type: P, entity: "person.malte", visual: { blur: false }, icon: { type: "icon" } },
       { type: P, entity: "person.kim" },
       { type: P, entity: "media_player.living_room_speaker" },
-      { type: P, entity: "sensor.living_room_temperature", image: "/local/garden.jpg" },
       {
         type: P,
         entity: "sensor.living_room_temperature",
-        image: "/local/garden.jpg",
-        image_blur: 6,
+        visual: { type: "image", src: "/local/garden.jpg" },
+      },
+      {
+        type: P,
+        entity: "sensor.living_room_temperature",
+        visual: { type: "image", src: "/local/garden.jpg", blur: 6 },
       },
     ]);
     const blurOf = (i: number) =>
@@ -250,9 +257,12 @@ test.describe("poster card", () => {
     expect(await blurOf(0)).toBe("20px");
     const src = await malte.locator(".pback img").getAttribute("src");
     await expect(malte.locator(".plead img.picture")).toHaveAttribute("src", src!);
-    // sharp, and no icon over their face
+    // sharp, and their icon in place of the photo
     await expect(card(page, 1).locator(".pback")).not.toHaveClass(/blur/);
-    await expect(card(page, 1).locator(".plead .plead-none")).toBeAttached();
+    await expect(card(page, 1).locator(".plead img.picture")).toHaveCount(0);
+    await expect(
+      card(page, 1).locator(".plead ha-state-icon, .plead ha-icon").first(),
+    ).toBeAttached();
     // without a picture: their icon, nothing behind
     await expect(
       card(page, 2).locator(".plead ha-state-icon, .plead ha-icon").first(),
@@ -309,9 +319,7 @@ test.describe("poster card", () => {
       {
         type: P,
         entity: "sensor.living_room_temperature",
-        image: "/local/garden.jpg",
-        image_opacity: 0.6,
-        image_tint: "blue",
+        visual: { type: "image", src: "/local/garden.jpg", opacity: 0.6, tint: "blue" },
       },
       {
         type: P,
@@ -319,12 +327,8 @@ test.describe("poster card", () => {
         rules: [
           {
             state: "on",
-            image: "camera.garden",
-            image_opacity: 0.5,
-            image_tint: "amber",
-            icon_style: "plain",
-            icon_ring: true,
-            icon_image: "person.malte",
+            visual: { type: "image", src: "camera.garden", opacity: 0.5, tint: "amber" },
+            icon: { type: "image", src: "person.malte", style: "plain", ring: true },
           },
         ],
       },
@@ -364,21 +368,24 @@ test.describe("poster card", () => {
     await expect(pump.locator(".plead .ring")).toHaveCount(0);
   });
 
-  test("icon_image: a picture of its own in the icon, the icon while it has none", async ({
+  test("an image icon: a picture of its own in the icon, the icon while it has none", async ({
     page,
   }) => {
     await mount(page, [
-      { type: P, name: "Garden", icon_image: "/local/garden.jpg" },
-      { type: P, name: "Malte", icon_image: "person.malte" },
+      { type: P, name: "Garden", icon: { type: "image", src: "/local/garden.jpg" } },
+      { type: P, name: "Malte", icon: { type: "image", src: "person.malte" } },
       {
         type: P,
         name: "Template",
-        icon_image: "{{ state_attr('person.malte', 'entity_picture') }}",
-        icon_ring: true,
+        icon: {
+          type: "image",
+          src: "{{ state_attr('person.malte', 'entity_picture') }}",
+          ring: true,
+        },
         value: 40,
       },
-      { type: P, name: "Kim", icon: "mdi:star", icon_image: "person.kim" },
-      { type: P, entity: "sensor.wind_speed", icon_image: "/local/garden.jpg" },
+      { type: P, name: "Kim", icon: { type: "image", src: "person.kim", name: "mdi:star" } },
+      { type: P, entity: "sensor.wind_speed", icon: { type: "image", src: "/local/garden.jpg" } },
       { type: P, entity: "person.malte" },
     ]);
     const pic = (i: number) => card(page, i).locator(".plead img.picture");
@@ -390,7 +397,9 @@ test.describe("poster card", () => {
     await expect(card(page, 2).locator(".plead .ring")).toBeAttached();
     // no picture now: the icon
     await expect(pic(3)).toHaveCount(0);
-    await expect(card(page, 3).locator(".plead ha-icon")).toHaveAttribute("icon", "mdi:star");
+    await expect(
+      card(page, 3).locator(".plead ha-icon, .plead ha-state-icon").first(),
+    ).toBeAttached();
     // the wind's arrow gives way to the picture
     await expect(pic(4)).toHaveAttribute("src", "/local/garden.jpg");
   });
@@ -419,7 +428,11 @@ test.describe("poster types", () => {
   test("wind drawn as lines: the field fills the poster and keeps running through a new speed", async ({
     page,
   }) => {
-    await mount(page, { type: P, entity: "sensor.wind_speed", variant: "lines" });
+    await mount(page, {
+      type: P,
+      entity: "sensor.wind_speed",
+      visual: { type: "flow", style: "lines" },
+    });
     const c = card(page);
     const field = c.locator(".pback > *");
     await expect(field).toBeAttached();
@@ -438,14 +451,14 @@ test.describe("poster types", () => {
   }) => {
     await mount(page, [
       { type: P, entity: "sensor.robot_battery" },
-      { type: P, entity: "sensor.phone_battery", poster: "battery" },
+      { type: P, entity: "sensor.phone_battery", kind: "battery" },
       {
         type: P,
         entity: "sensor.balcony_battery_soc",
         charge: "sensor.balcony_battery_charge_power",
         discharge: "sensor.balcony_battery_discharge_power",
       },
-      { type: P, entity: "sensor.robot_battery", visual: "none" },
+      { type: P, entity: "sensor.robot_battery", visual: false },
     ]);
     const fills = (i: number) =>
       card(page, i)
@@ -525,7 +538,7 @@ test.describe("poster types", () => {
     await toggle.click();
     expect(await services(page)).toEqual(["homeassistant.toggle"]);
     // the glow is the light's picture: another visual replaces it
-    await mount(page, { type: P, entity: "light.living_room", visual: "none" });
+    await mount(page, { type: P, entity: "light.living_room", visual: false });
     await expect(card(page).locator(".row.poster")).toBeVisible();
     await expect(card(page).locator(".pglow")).toHaveCount(0);
   });
@@ -537,7 +550,7 @@ test.describe("poster types", () => {
       { type: P, entity: "fan.bedroom", control: "toggle" },
       { type: P, entity: "light.desk_lamp", visual: "sparkline", control: "toggle" },
       { type: P, entity: "sensor.living_room_temperature" },
-      { type: P, entity: "lock.front_door", icon_hold_action: "none" },
+      { type: P, entity: "lock.front_door", icon: { hold_action: "none" } },
     ]);
     const before = [await layoutOf(card(page, 0)), await layoutOf(card(page, 1))];
     await setState(page, "fan.bedroom", "on", { percentage: 50 });
@@ -645,8 +658,7 @@ test.describe("poster types", () => {
         {
           type: P,
           entity: "climate.bedroom",
-          control: "segments",
-          control_attribute: "hvac_mode",
+          control: { type: "segments", attribute: "hvac_mode" },
           grid_options: { columns: 6 },
         },
         { ...house, control: "select" },
@@ -682,11 +694,13 @@ test.describe("poster types", () => {
     await mount(page, {
       type: P,
       entity: "vacuum.robot",
-      control: "buttons",
-      control_options: [
-        { entity: "scene.dimmed", label: "Dim" },
-        { entity: "scene.movie_night", label: "Movie" },
-      ],
+      control: {
+        type: "buttons",
+        options: [
+          { entity: "scene.dimmed", label: "Dim" },
+          { entity: "scene.movie_night", label: "Movie" },
+        ],
+      },
     });
     const c = card(page);
     const chips = c.locator(".pmain > .end .ctl-buttons.custom > .chip");
@@ -754,11 +768,10 @@ test.describe("poster types", () => {
       {
         type: P,
         entity: "sensor.heat_pump_power",
-        poster: "appliance",
-        variant: "heat_pump",
+        kind: "heat_pump",
         running_above: 50,
       },
-      { type: P, entity: "sensor.washer_power", poster: "appliance", variant: "washer" },
+      { type: P, entity: "sensor.washer_power", kind: "washer" },
     ]);
     const pump = card(page, 0);
     await expect(pump.locator(".pstatus")).toHaveText("Running");
@@ -794,7 +807,7 @@ test.describe("poster types", () => {
   });
 
   test("the sun without an entity: the next event, how soon, the curve", async ({ page }) => {
-    await mount(page, { type: P, poster: "sun" });
+    await mount(page, { type: P, kind: "sun" });
     const row = card(page).locator(".row.poster");
     await expect(row.locator(".pname")).toHaveText("Sunset");
     await expect(row.locator(".pstatus")).toContainText(/in \d+ hours?/i);
@@ -818,7 +831,7 @@ test.describe("poster config", () => {
 
   test("an unknown poster type is a config error that names the types", async ({ page }) => {
     await mount(page, { type: P, entity: "sensor.wind_speed" });
-    const msg = await configError(page, { poster: "nonsense" });
+    const msg = await configError(page, { kind: "nonsense" });
     expect(msg).toMatch(/^poster-card-pro: .*nonsense/);
     expect(msg).toMatch(/\bwind\b/);
   });
@@ -828,13 +841,103 @@ test.describe("poster config", () => {
   }) => {
     await mount(page, { type: P, entity: "sensor.wind_speed" });
     const ring = await configError(page, { entity: "sensor.living_room_humidity", visual: "ring" });
-    expect(ring).toMatch(/^poster-card-pro: .*icon_ring/);
+    expect(ring).toMatch(/^poster-card-pro: .*icon: \{ ring: true \}/);
     const lead = await configError(page, {
       entity: "switch.coffee_machine",
-      control: "toggle",
-      control_position: "lead",
+      control: { type: "toggle", position: "lead" },
     });
-    expect(lead).toMatch(/^poster-card-pro: .*icon_tap_action/);
+    expect(lead).toMatch(/^poster-card-pro: .*icon: \{ tap_action, hold_action \}/);
+  });
+});
+
+test.describe("poster places", () => {
+  test("the wind's icon draws the flow in the style it names", async ({ page }) => {
+    await mount(page, [
+      { type: P, entity: "sensor.wind_speed", icon: { type: "flow", style: "swoosh" } },
+      { type: P, entity: "sensor.wind_speed", icon: { type: "flow", style: "lines" } },
+      { type: P, entity: "sensor.wind_speed" },
+    ]);
+    const lead = (i: number) => card(page, i).locator(".plead");
+    await expect(lead(0).locator("svg path.lsw")).toHaveCount(3);
+    await expect(lead(0).locator(".lfield")).toHaveCount(0);
+    await expect(lead(1).locator(".lfield > .ls")).toHaveCount(3);
+    // dots by default
+    await expect(lead(2).locator(".lfield > .ld:not(.trail)")).toHaveCount(3);
+    // the animation is in the icon alone: nothing behind the card
+    for (const i of [0, 1, 2]) await expect(card(page, i).locator(".pback .wflow")).toHaveCount(0);
+  });
+
+  test("a flow visual runs behind the poster; the icon is the arrow", async ({ page }) => {
+    await mount(page, {
+      type: P,
+      entity: "sensor.wind_speed",
+      visual: { type: "flow", style: "vectors" },
+    });
+    const c = card(page);
+    await expect(c.locator(".body > .pback > .wflow .field")).toBeAttached();
+    await expect(c.locator(".plead ha-icon.arrow")).toBeAttached();
+    await expect(c.locator(".plead .lfield")).toHaveCount(0);
+  });
+
+  test("a rule switches the visual by the value; its colour beats the card's", async ({ page }) => {
+    await mount(page, {
+      type: P,
+      entity: "sensor.living_room_temperature",
+      color: "blue",
+      visual: "sparkline",
+      rules: [{ above: 25, color: "red", visual: "glow" }],
+    });
+    const c = card(page);
+    // the poster's colour, which its row and badges read
+    const color = () =>
+      c.locator(".body").evaluate((e) => (e as HTMLElement).style.getPropertyValue("--pc-tint"));
+    await expect(c.locator(".pbody .plot")).toHaveCount(1);
+    await expect.poll(color).toContain("--blue-color");
+    await setState(page, "sensor.living_room_temperature", "28");
+    await expect(c.locator(".body > .pback > .pglow")).toHaveCount(1);
+    await expect(c.locator(".pbody .plot")).toHaveCount(0);
+    await expect.poll(color).toContain("--red-color");
+    await setState(page, "sensor.living_room_temperature", "21");
+    await expect(c.locator(".pbody .plot")).toHaveCount(1);
+    await expect(c.locator(".pglow")).toHaveCount(0);
+    await expect.poll(color).toContain("--blue-color");
+  });
+
+  test("a cover, a robot and the grid draw their picture behind the poster by default", async ({
+    page,
+  }) => {
+    await mount(page, [
+      { type: P, entity: "cover.office_blinds" },
+      { type: P, entity: "vacuum.robot" },
+      { type: P, entity: "sensor.grid_power", kind: "grid" },
+      { type: P, entity: "cover.office_blinds", visual: false },
+    ]);
+    await expect(card(page, 0).locator(".pback > .pcov")).toBeAttached();
+    await expect(card(page, 1).locator(".pback > .ppath")).toBeAttached();
+    await expect(card(page, 2).locator(".pback > .pline")).toBeAttached();
+    await expect(card(page, 3).locator(".pcov")).toHaveCount(0);
+  });
+
+  test("the old keys are config errors that name the new spelling", async ({ page }) => {
+    await mount(page, { type: P, entity: "sensor.wind_speed" });
+    const err = (c: Record<string, unknown>) => configError(page, c);
+    expect(await err({ poster: "wind" })).toMatch(/kind/);
+    expect(await err({ variant: "lines" })).toMatch(/visual: \{ type: flow, style: lines \}/);
+    expect(await err({ variant: "garage" })).toMatch(/kind: garage/);
+    expect(await err({ image: "/local/garden.jpg" })).toMatch(/visual: \{ type: image/);
+    expect(await err({ icon_image: "person.malte" })).toMatch(/icon: \{ type: image/);
+    expect(await err({ hours_to_show: 6 })).toMatch(/visual: \{ hours/);
+    expect(await err({ visual: "none" })).toMatch(/false/);
+    // the animation in one place
+    expect(
+      await err({ icon: { type: "flow" }, visual: { type: "flow", style: "lines" } }),
+    ).not.toBeNull();
+    // a rule fetches no history
+    expect(
+      await err({ visual: "sparkline", rules: [{ above: 20, visual: { hours: 6 } }] }),
+    ).toMatch(/rule sets no hours/);
+    // the new spelling is fine
+    expect(await err({ visual: { type: "flow", style: "lines" } })).toBeNull();
   });
 });
 
@@ -862,22 +965,28 @@ test.describe("poster glow and icon", () => {
     await expect.poll(async () => Number(await glowOf(coffee))).toBeGreaterThan(0.3);
   });
 
-  test("icon_ring draws the value as a ring around the icon", async ({ page }) => {
+  test("icon: { ring: true } draws the value as a ring around the icon", async ({ page }) => {
     await mount(page, [
-      { type: P, entity: "sensor.living_room_humidity", icon_ring: true, min: 0, max: 100 },
+      {
+        type: P,
+        entity: "sensor.living_room_humidity",
+        icon: { ring: true },
+        min: 0,
+        max: 100,
+      },
       { type: P, entity: "sensor.living_room_humidity" },
     ]);
     await expect(card(page, 0).locator(".plead .lead.ring")).toBeVisible();
     await expect(card(page, 1).locator(".plead .lead.ring")).toHaveCount(0);
   });
 
-  test("icon_tap_action: toggle switches the entity from its icon, opening nothing", async ({
+  test("icon: { tap_action: toggle } switches the entity from its icon, opening nothing", async ({
     page,
   }) => {
     await mount(page, {
       type: P,
       entity: "switch.coffee_machine",
-      icon_tap_action: { action: "toggle" },
+      icon: { tap_action: { action: "toggle" } },
     });
     const c = card(page);
     const lead = c.locator(".plead .lead.tap");
@@ -895,7 +1004,7 @@ test.describe("poster glow and icon", () => {
     await mount(page, {
       type: P,
       entity: "sensor.living_room_temperature",
-      icon_tap_action: nav,
+      icon: { tap_action: nav },
     });
     const c = card(page);
     const navs = async () =>
@@ -917,11 +1026,11 @@ test.describe("poster glow and icon", () => {
     expect(await navs()).toHaveLength(1);
   });
 
-  test("icon_hold_action runs once the icon is held", async ({ page }) => {
+  test("icon: { hold_action } runs once the icon is held", async ({ page }) => {
     const nav = { action: "navigate", navigation_path: "/config" };
     await mount(
       page,
-      { type: P, entity: "sensor.living_room_temperature", icon_hold_action: nav },
+      { type: P, entity: "sensor.living_room_temperature", icon: { hold_action: nav } },
       live,
     );
     const b = (await card(page).locator(".plead").boundingBox())!;
@@ -993,8 +1102,8 @@ test.describe("poster cards in the layout card", () => {
         columns: 4,
         cards: [
           { type: P, entity: "weather.home" },
-          { type: P, poster: "sun" },
-          { type: P, entity: "sensor.wind_speed", variant: "lines" },
+          { type: P, kind: "sun" },
+          { type: P, entity: "sensor.wind_speed", visual: { type: "flow", style: "lines" } },
           { type: P, entity: "sensor.ev_battery", badges: ["sensor.ev_range"] },
           { type: P, entity: "sensor.solar_power", visual: "sparkline" },
           { type: P, entity: "light.kitchen" },
@@ -1009,7 +1118,7 @@ test.describe("poster cards in the layout card", () => {
               { entity: "light.living_room", control: "slider" },
             ],
           },
-          { type: P, poster: "trend", series: ["sensor.power_consumption"] },
+          { type: P, kind: "trend", series: ["sensor.power_consumption"] },
         ],
       },
       { width: 960 },

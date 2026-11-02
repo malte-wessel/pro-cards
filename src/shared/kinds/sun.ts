@@ -66,6 +66,9 @@ export const SUN: Kind = {
   entityless: true,
   keys: [],
   timed: true,
+  // its day below the texts
+  visual: { type: "sun" },
+  draws: ["sun"],
   color: (c) => (isUp(c) ? "amber" : "indigo"),
   status: (c) => {
     const ev = eventOf(c);

@@ -2018,8 +2018,7 @@ const CASES = {
       type: PC,
       entity: "sensor.power_consumption",
       name: "Power",
-      visual: "sparkline",
-      hours_to_show: 12,
+      visual: { type: "sparkline", hours: 12 },
       rules: [
         { below: 1000, color: "green", label: "Low" },
         { below: 3000, color: "amber", label: "Normal" },
@@ -2043,7 +2042,7 @@ const CASES = {
   // a battery without power: its cell alone, the texts short of it; a template sensor made one
   "pc-battery": [
     { type: PC, entity: "sensor.robot_battery", name: "Robot", icon: "mdi:robot-vacuum" },
-    { type: PC, entity: "sensor.phone_battery", name: "Phone", poster: "battery" },
+    { type: PC, entity: "sensor.phone_battery", name: "Phone", kind: "battery" },
   ],
   // columns past the card's edges (the first and last bar cut, no rounded feet); a strip in the padding
   "pc-plots": [
@@ -2081,17 +2080,22 @@ const CASES = {
       type: PC,
       entity: "sensor.rain_rate_roof",
       name: "Rain",
-      variant: "drops",
+      visual: { type: "flow", style: "drops" },
       wind: "sensor.wind_speed",
       direction: "sensor.wind_direction",
     },
-    { type: PC, entity: "sensor.wind_speed", name: "Wind", variant: "lines" },
+    {
+      type: PC,
+      entity: "sensor.wind_speed",
+      name: "Wind",
+      visual: { type: "flow", style: "lines" },
+    },
     {
       type: PC,
       name: "Outside",
       icon: "mdi:thermometer",
-      hours_to_show: 12,
-      poster: "trend",
+      kind: "trend",
+      visual: { hours: 12 },
       series: [
         { entity: "sensor.outdoor_temperature", name: "Temperature", color: "orange" },
         { entity: "sensor.dew_point", name: "Dew point", color: "teal" },
@@ -2116,15 +2120,14 @@ const CASES = {
     { type: PC, entity: "lawn_mower.garden" },
   ],
   "pc-energy": [
-    { type: PC, entity: "sensor.grid_power", name: "Grid", poster: "grid" },
-    { type: PC, entity: "sensor.solar_power", name: "Solar", poster: "solar" },
-    { type: PC, entity: "sensor.ev_battery", name: "Car", poster: "car" },
+    { type: PC, entity: "sensor.grid_power", name: "Grid", kind: "grid" },
+    { type: PC, entity: "sensor.solar_power", name: "Solar", kind: "solar" },
+    { type: PC, entity: "sensor.ev_battery", name: "Car", kind: "car" },
     {
       type: PC,
       entity: "sensor.heat_pump_power",
       name: "Heat pump",
-      poster: "appliance",
-      variant: "heat_pump",
+      kind: "heat_pump",
       running_above: 50,
     },
   ],

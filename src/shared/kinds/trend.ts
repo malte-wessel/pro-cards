@@ -37,8 +37,9 @@ const specOf = (c: KindCtx, shown: TrendSeries[]) => {
     t0: c.ctx.now - hours * 3600e3,
     t1: c.ctx.now,
     layout: "overlay" as const,
-    xAxis: false,
-    yAxis: false,
+    // the visual's axes (visual: { axis: true })
+    xAxis: !!(c.place.visual && c.place.visual.axis),
+    yAxis: !!(c.place.visual && c.place.visual.axis),
     smoothing: { minutes: null },
     text: c.ctx.text,
     fill: true,
@@ -66,6 +67,9 @@ export const TREND: Kind = {
   readsText: "its own entities",
   entityless: true,
   keys: ["series"],
+  // its series' lines below the texts: the sparkline is its own
+  visual: { type: "sparkline" },
+  draws: ["sparkline"],
   // the first series is the card's entity when it has none
   main: (entity, _raw, opts) => {
     const first = seriesOf(opts)[0];
@@ -103,6 +107,7 @@ export const TREND: Kind = {
     if (c.host.hoverT !== null) showTrendHover(plot, c.host.hoverT);
   },
   extra: (c) => [
+    !!(c.place.visual && c.place.visual.axis),
     shownOf(c)
       .map((s) => s.entity)
       .join(),

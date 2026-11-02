@@ -1,11 +1,14 @@
-// The element base of the cards that draw a poster type (the poster and the tile card): the kind
-// resolved again once hass tells the device class and the registry the inputs, the forecasts, the
-// minute timer, what the kind reads beyond the card's items, the places it fills, its icon (an
-// animated lead kept through fills) and its colour. The card supplies `_normalize` (a KindConfig)
-// and draws its places.
+// The element base of the cards that draw a kind (the poster and the tile card): the kind resolved
+// again once hass tells the device class and the registry the inputs, the forecasts, the minute
+// timer, what the kind reads beyond the card's items, the places it fills, its two places resolved
+// on every render (the kind's default, the card's, the matching rule's: places.ts), its icon (an
+// animated lead kept through fills), what it draws behind the texts and its colour. The card
+// supplies `_normalize` (a KindConfig) and draws its places.
 import { cssColor } from "../color.ts";
+import { CARD_BG } from "../constants.ts";
 import { EntityCardBase } from "../entity/base.ts";
-import type { EntityCardConfig, EntityItem } from "../entity/config.ts";
+import type { EntityCardConfig, EntityItem, PlotOptions } from "../entity/config.ts";
+import type { Visual } from "../entity/constants.ts";
 import type { EntityModel, RenderCtx } from "../entity/model.ts";
 import type { KindSlots } from "../entity/render/fill.ts";
 import type { HomeAssistant, WeatherForecastType } from "../ha.ts";
@@ -13,16 +16,41 @@ import type { SunCurveHost } from "../sun/curve.ts";
 import type { Visibility } from "../visibility.ts";
 import { ForecastFeed } from "../weather/feed.ts";
 import { dailyTypeOf, supportsForecast } from "../weather/forecast.ts";
+import { IMAGE_OPACITY, updateBackdrop } from "./backdrop.ts";
 import {
   foundInputs,
   hasIconActions,
-  type IconLook,
+  parseImage,
   type ImageSrc,
   type KindConfig,
+  type Places,
 } from "./config.ts";
-import { detectKind, parsePoster, unusedKeys } from "./detect.ts";
+import { detectKind, parseKind, unusedKeys } from "./detect.ts";
+import { stripEl } from "./energy.ts";
+import {
+  BEHIND,
+  BELOW,
+  HISTORY_THINGS,
+  KIND_THINGS,
+  resolvePlaces,
+  type IconPlace,
+  type VisualPlace,
+} from "./places.ts";
 import { KINDS } from "./registry.ts";
-import type { KindCtx, KindHost } from "./types.ts";
+import { glowLevel, glowOpacity, imageUrl } from "./render.ts";
+import type { Kind, KindCtx, KindHost } from "./types.ts";
+
+// the visuals the item draws itself below the texts (its block: a plot, a bar, a gauge)
+const ITEM_VISUALS: readonly string[] = ["sparkline", "columns", "strip", "bar", "gauge"];
+// whether the kind draws the visual itself: a thing only it has (the sun's day), or one it draws its
+// own way (a trend's and a weather's sparkline: its series, the hours ahead), unless the visual
+// plots another entity's history (`src`): that is a plot of its own
+const kindDraws = (kind: Kind, v: VisualPlace) =>
+  !!v.type &&
+  !!kind.draws?.includes(v.type) &&
+  !(v.src !== undefined && HISTORY_THINGS.includes(v.type));
+// the things behind the texts a kind draws (its backdrop)
+const KIND_BEHIND: readonly string[] = ["flow", "cover", "path", "line"];
 
 export abstract class KindCardBase extends EntityCardBase {
   // what the card is called in messages ("the rain poster reads no gust") and in KindCtx; the
@@ -101,9 +129,9 @@ export abstract class KindCardBase extends EntityCardBase {
   // (written, no entity, or its state is in: the device class decides)
   _warnUnused() {
     const cfg = this._config;
-    const raw = this._raw as { entity?: string; poster?: unknown } | undefined;
+    const raw = this._raw as { entity?: string; kind?: unknown } | undefined;
     if (!cfg || !raw || this._warnedFor === raw) return;
-    if (raw.poster == null && raw.entity && !this._hass?.states[raw.entity]) return;
+    if (raw.kind == null && raw.entity && !this._hass?.states[raw.entity]) return;
     this._warnedFor = raw;
     const unused = unusedKeys(cfg.kind, raw as Record<string, unknown>);
     const thing = (this.constructor as typeof KindCardBase).thing;
@@ -116,11 +144,11 @@ export abstract class KindCardBase extends EntityCardBase {
   // state) and the inputs found on the entity's device (Home Assistant replaces its registry on
   // any change anywhere: only a change of what was found counts)
   _resolveInputs(hass: HomeAssistant | undefined): unknown[] {
-    const raw = (this._raw ?? {}) as { entity?: string; poster?: unknown };
+    const raw = (this._raw ?? {}) as { entity?: string; kind?: unknown };
     let kind: string | null = null;
     try {
       kind =
-        parsePoster(raw.poster, this._cardType()) ??
+        parseKind(raw.kind, this._cardType()) ??
         detectKind(raw.entity || null, hass?.states[raw.entity ?? ""]).name;
     } catch {
       // setConfig reports it
@@ -198,34 +226,96 @@ export abstract class KindCardBase extends EntityCardBase {
       ...this._pictures(c).flatMap((src) => (src && src.kind === "entity" ? [src.entity] : [])),
     ];
   }
-  // the pictures the card and its rules name (the icon's)
-  _pictures(c: KindConfig): (ImageSrc | false | null | undefined)[] {
-    const rules = [...c.ruleLooks.values()];
-    return [c.iconImage, ...rules.map((r) => r.iconImage)];
+  // the places the card and its rules write
+  _written(c: KindConfig): Places[] {
+    return [c.places, ...c.rulePlaces.values()];
   }
+  // the pictures the card and its rules name (an icon's, a visual's)
+  _pictures(c: KindConfig): (ImageSrc | false | null | undefined)[] {
+    return this._written(c).flatMap((p) => [
+      p.icon && p.icon.src ? parseImage(p.icon.src) : null,
+      p.visual && p.visual.src && !HISTORY_THINGS.includes(p.visual.type ?? "image")
+        ? parseImage(p.visual.src)
+        : null,
+    ]);
+  }
+  // the kind's history, and the plots' entities: the card's own, or another's (`src`)
   _extraHistoryIds(cfg: EntityCardConfig): string[] {
     const c = cfg as KindConfig;
-    return c.kind.history?.(c.kindOpts, c.entities[0].entity) ?? [];
+    const entity = c.entities[0].entity;
+    const plots = [c.kind.visual, ...this._written(c).map((p) => p.visual)].flatMap((v) =>
+      v && v.type && HISTORY_THINGS.includes(v.type) && !kindDraws(c.kind, v)
+        ? [v.src ?? entity]
+        : [],
+    );
+    // a src merged onto the kind's plot (visual: { src: … } on a solar card)
+    const own = c.places.visual;
+    if (own && own.src && !own.type) plots.push(own.src);
+    return [
+      ...(c.kind.history?.(c.kindOpts, entity) ?? []),
+      ...plots.filter((x): x is string => !!x),
+    ];
   }
   _visibilityTrees(): Visibility[] {
     const cfg = this._config as KindConfig;
     return [...super._visibilityTrees(), ...(cfg.kind.visibility?.(cfg.kindOpts) ?? [])];
   }
 
+  // the places now: the kind's default, the card's, the matching rule's. A thing only some kinds
+  // draw (a flow, the sun's day) falls back to the kind's own on another, said once
+  _warnedPlaces = new Set<string>();
+  _placesFor(m: EntityModel): { icon: IconPlace; visual: VisualPlace | false } {
+    const cfg = this._config as KindConfig;
+    const kind = cfg.kind;
+    const rule = m.look.rule ? cfg.rulePlaces.get(m.look.rule) : undefined;
+    const r = resolvePlaces([
+      { icon: kind.icon, visual: this._kindVisual() },
+      cfg.places,
+      ...(rule ? [rule] : []),
+    ]);
+    const fits = (t: string) => !KIND_THINGS.includes(t) || !!kind.draws?.includes(t);
+    const warn = (what: string) => {
+      if (this._warnedPlaces.has(what)) return;
+      this._warnedPlaces.add(what);
+      console.warn(`${this._cardType()}: the ${kind.name} kind draws no ${what}; left out`);
+    };
+    if (r.visual && !fits(r.visual.type as string)) {
+      warn(`visual: ${r.visual.type}`);
+      r.visual = this._kindVisual() || false;
+    }
+    if (r.icon.type === "flow" && !fits("flow")) {
+      warn("icon: flow");
+      r.icon = { ...r.icon, type: "icon", style: undefined };
+    }
+    return r;
+  }
+
+  // the kind's default visual on this card (a tile's may differ: none for a cover)
+  _kindVisual(): VisualPlace | false | undefined {
+    const kind = (this._config as KindConfig).kind;
+    const tile = (this.constructor as typeof KindCardBase).thing === "tile";
+    return tile && kind.tileVisual !== undefined ? kind.tileVisual : kind.visual;
+  }
+
   // what the kind reads now
   _kindCtx(ctx: RenderCtx): KindCtx {
     const cfg = this._config as KindConfig;
     this._sunHost._hass = ctx.hass;
+    const m = this._modelAt(ctx, 0);
+    const place = this._placesFor(m);
+    const hours =
+      place.visual && typeof place.visual.hours === "number" ? place.visual.hours : null;
     return {
       ctx,
       ent: cfg.entities[0],
-      m: this._modelAt(ctx, 0),
+      m,
       opts: cfg.kindOpts,
       input: (key) => {
         const i = cfg.inputs[key];
         return i === undefined ? null : { ent: cfg.entities[i], m: this._modelAt(ctx, i) };
       },
-      hours: cfg.hoursSet,
+      hours,
+      place,
       host: this._host,
       card: (this.constructor as typeof KindCardBase).thing,
       leadSize: (this.constructor as typeof KindCardBase).leadSize,
@@ -244,17 +334,25 @@ export abstract class KindCardBase extends EntityCardBase {
       delete o.word;
     }
     if (raw.secondary !== undefined) delete o.secondary;
-    if (raw.visual !== undefined) delete o.picture;
+    // the kind's picture below the texts while the visual is one it draws (the sun's day, a
+    // trend's lines); a player's progress along the edge is no visual and always stays
+    const v = c.place.visual;
+    const own = !!v && BELOW.includes(v.type as never) && kindDraws(cfg.kind, v);
+    if (!own && !o.picture?.classList.contains("pprog")) delete o.picture;
+    // a battery's segments for any value between min and max
+    if (v && v.type === "segments" && !own)
+      o.picture = stripEl(c.m.progress === null ? null : c.m.progress * 100, false);
     return o;
   }
-  // the card draws its own lead: its `icon` or `icon_image` (the card's or the matching rule's), or
-  // an icon with actions of its own (an animated lead gives way to them)
+  // the card draws its own lead: an icon it names (the card's), a picture it names, or an icon
+  // with actions of its own (an animated lead gives way to them)
   _userIcon(kc?: KindCtx) {
     const cfg = this._config;
-    const image = kc ? this._iconLook(kc).iconImage : cfg?.iconImage;
+    const named = !!cfg?.places.icon && cfg.places.icon.name !== undefined;
+    const icon = kc ? kc.place.icon : cfg?.places.icon || undefined;
     return (
-      ((this._raw ?? {}) as Record<string, unknown>).icon !== undefined ||
-      !!image ||
+      named ||
+      (!!icon && icon.type === "image" && !!icon.src) ||
       (!!cfg && this._actionsTakeLead(cfg))
     );
   }
@@ -262,27 +360,46 @@ export abstract class KindCardBase extends EntityCardBase {
   _actionsTakeLead(cfg: KindConfig) {
     return hasIconActions(cfg.iconActions);
   }
-  // the matching rule's look of the icon, if any (a rule's key wins: the card's is the default)
-  _ruleLook(kc: KindCtx): IconLook {
-    const rule = kc.m.look.rule;
-    return (rule && (this._config as KindConfig).ruleLooks.get(rule)) || {};
-  }
-  // the icon as the card writes it, with what the matching rule changes
+  // the icon as its place draws it now: its style, its ring, its picture (an image of its own, or
+  // the entity's)
   _iconLook(kc: KindCtx) {
-    const cfg = this._config as KindConfig;
-    const r = this._ruleLook(kc);
+    const i = kc.place.icon;
+    const entity = kc.ent.entity;
+    const image: ImageSrc | null =
+      i.type !== "image"
+        ? null
+        : i.src
+          ? parseImage(i.src) || null
+          : entity
+            ? { kind: "entity", entity }
+            : null;
     return {
-      iconStyle: r.iconStyle ?? kc.ent.iconStyle,
-      iconRing: r.iconRing ?? !!kc.ent.iconRing,
-      iconImage: "iconImage" in r ? (r.iconImage ?? null) : cfg.iconImage,
+      iconStyle: i.style === "plain" || i.style === "circle" ? i.style : kc.ent.iconStyle,
+      iconRing: !!i.ring,
+      iconImage: image,
     };
   }
-  // the item as its icon is drawn: the matching rule's style and ring
-  _iconItem(kc: KindCtx, ent: EntityItem) {
+  // the item as the card draws it now: its icon's style and ring, and the visual it draws itself
+  // below the texts (a plot with its own window, a bar, a gauge; none where the kind draws it)
+  _drawItem(kc: KindCtx, ent: EntityItem): EntityItem {
     const look = this._iconLook(kc);
-    return look.iconStyle === ent.iconStyle && look.iconRing === !!ent.iconRing
-      ? ent
-      : { ...ent, iconStyle: look.iconStyle, iconRing: look.iconRing };
+    const v = kc.place.visual;
+    const cfg = this._config as KindConfig;
+    const block =
+      v && ITEM_VISUALS.includes(v.type as string) && !kindDraws(cfg.kind, v)
+        ? (v.type as Visual)
+        : "icon";
+    const plot: PlotOptions | undefined =
+      v && block !== "icon"
+        ? { hours: v.hours, bucket: v.bucket, smoothing: v.smoothing, axis: v.axis, src: v.src }
+        : undefined;
+    return {
+      ...ent,
+      iconStyle: look.iconStyle,
+      iconRing: look.iconRing,
+      visual: block,
+      plot,
+    };
   }
   // an animated lead is built once (per key, the icon and its style) and kept through fills: its
   // animation runs on. A ring around the icon takes its place, as the card's own icon does. True:
@@ -290,7 +407,14 @@ export abstract class KindCardBase extends EntityCardBase {
   _keepLead(kc: KindCtx, slot: HTMLElement | null, icon: EntityItem): boolean {
     const lead = (this._config as KindConfig).kind.lead;
     const look = this._iconLook(kc);
-    if (!lead || !slot || !kc.ent.item.showIcon || this._userIcon(kc) || look.iconRing) {
+    if (
+      !lead ||
+      !slot ||
+      !kc.ent.item.showIcon ||
+      this._userIcon(kc) ||
+      look.iconRing ||
+      kc.place.icon.type === "image"
+    ) {
       if (slot) delete slot.dataset.key;
       return false;
     }
@@ -344,7 +468,64 @@ export abstract class KindCardBase extends EntityCardBase {
   _kindInputs(kc: KindCtx): unknown[] {
     const cfg = this._config as KindConfig;
     const own = Object.values(cfg.inputs).map((i) => this._modelAt(kc.ctx, i));
-    return [...own, ...(cfg.kind.extra?.(kc) ?? [])];
+    // the places as drawn now (a rule that matches changes them)
+    return [...own, JSON.stringify(kc.place), ...(cfg.kind.extra?.(kc) ?? [])];
+  }
+
+  // what the card draws behind its texts now: the visual's picture, the kind's drawing (its flow,
+  // cover, path or line) or a glow (the kind's own, else the card's colour from its bottom edge, as
+  // strong as its level). The icon keeps a solid circle over a drawing or a glow (pflow)
+  _drawBehind(body: HTMLElement, row: HTMLElement, kc: KindCtx) {
+    const cfg = this._config as KindConfig,
+      card = this._root;
+    const v = kc.place.visual;
+    const behind = v && BEHIND.includes(v.type as never) ? v : null;
+    const ctx = kc.ctx;
+    let url: string | null = null;
+    if (behind?.type === "image") {
+      const entity = kc.ent.entity;
+      const src: ImageSrc | null = behind.src
+        ? parseImage(behind.src) || null
+        : entity
+          ? { kind: "entity", entity }
+          : null;
+      url = imageUrl(ctx, src);
+    }
+    const back = cfg.kind.backdrop,
+      glowOwn = cfg.kind.glow;
+    const key = behind && back && KIND_BEHIND.includes(behind.type!) ? back.key(kc) : "";
+    const ownGlow = behind?.type === "glow" && glowOwn ? glowOwn : null;
+    const part = key
+      ? { key, build: () => (back as NonNullable<typeof back>).build(kc) }
+      : ownGlow
+        ? { key: `glow ${ownGlow.key(kc)}`, build: () => ownGlow.build(kc) }
+        : null;
+    const { part: el, glow } = updateBackdrop(
+      body,
+      ctx,
+      url,
+      part,
+      behind?.type === "glow" && !ownGlow,
+      url && behind ? (behind.blur ?? 0) : 0,
+    );
+    const pback = body.querySelector<HTMLElement>(":scope > .pback"),
+      color = row.style.getPropertyValue("--fe-color");
+    pback?.style.setProperty("--fe-color", color);
+    // the picture's shade: as much as the picture does not show, the card's surface with its tint
+    // mixed in half and half (so the theme's text keeps reading); both fade to a new value
+    const tint = behind?.tint ? cssColor(behind.tint, "") : "";
+    pback?.style.setProperty("--pc-shade", String(1 - (behind?.opacity ?? IMAGE_OPACITY)));
+    pback?.style.setProperty(
+      "--pc-shade-color",
+      tint ? `color-mix(in srgb, ${tint} 50%, ${CARD_BG})` : CARD_BG,
+    );
+    if (glow) {
+      glow.style.setProperty("--glow", color);
+      glow.style.opacity = glowOpacity(glowLevel(cfg.kind, kc));
+    }
+    card?.classList.toggle("pflow", !!el || !!glow);
+    card?.classList.toggle("pdraw", !!el);
+    if (el) (key ? back?.update : ownGlow?.update)?.(el, kc, row);
   }
   // the kind's colour where neither the item nor its rule names one (null: none of its own)
   _kindColor(ent: EntityItem, m: EntityModel): string | null {

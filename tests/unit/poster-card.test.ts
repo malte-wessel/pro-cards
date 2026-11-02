@@ -1,15 +1,12 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
 import { PosterCard } from "../../src/poster-card.ts";
-import {
-  IMAGE_BLUR,
-  normalizePosterConfig,
-  parseImageBlur,
-  ruleLookOf,
-} from "../../src/poster/config.ts";
+import { normalizePosterConfig, type PosterConfig } from "../../src/poster/config.ts";
 import { parseImage } from "../../src/shared/kinds/config.ts";
+import { IMAGE_BLUR, resolvePlaces } from "../../src/shared/kinds/places.ts";
 import { imageUrl, statusText } from "../../src/shared/kinds/render.ts";
 import { cssColor } from "../../src/shared/color.ts";
 import { placementsOf } from "../../src/shared/entity/control.ts";
+import { normalizeEntityCardConfig } from "../../src/entity-card.ts";
 import { modelOf } from "../../src/shared/entity/model.ts";
 import { BATTERY_RULES, toRule, WIND_RULES } from "../../src/shared/kinds/rules.ts";
 import { snapshot, world } from "../../docs/.vitepress/theme/ha-shim/hass.ts";
@@ -24,6 +21,9 @@ const st = (id: string, state: string, attributes: Record<string, unknown> = {})
   ({ entity_id: id, state, attributes }) as unknown as HassEntity;
 const withStates = (states: Record<string, HassEntity>) =>
   ({ states, locale: { language: "en" } }) as unknown as HomeAssistant;
+// what the poster's places draw while no rule matches: the kind's default under the card's
+const drawn = (c: PosterConfig) =>
+  resolvePlaces([{ icon: c.kind.icon, visual: c.kind.visual }, c.places]);
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -32,12 +32,162 @@ describe("poster-card config", () => {
     expect(customElements.get(T)).toBe(PosterCard);
     expect(window.customCards?.some((c) => c.type === T)).toBe(true);
     expect(() => norm(null as never)).toThrow(`${T}: invalid config`);
-    expect(() => norm({ entity: "light.kitchen", poster: "room" })).toThrow(
-      /poster must be one of entity \| battery/,
+    expect(() => norm({ entity: "light.kitchen", kind: "room" })).toThrow(
+      /kind must be one of entity \| battery/,
     );
-    expect(() => norm({ entity: "light.kitchen", poster: "wind" })).toThrow(
-      `${T}: the wind poster reads a wind_speed sensor or a weather entity`,
+    expect(() => norm({ entity: "light.kitchen", kind: "wind" })).toThrow(
+      `${T}: the wind kind reads a wind_speed sensor or a weather entity`,
     );
+  });
+
+  it("names the new spelling of every key the places replaced", () => {
+    const E = "sensor.living_room_temperature";
+    const fails = (o: Record<string, unknown>, msg: string) =>
+      expect(() => norm({ entity: E, ...o })).toThrow(`${T}: ${msg}`);
+    fails({ poster: "solar" }, "poster: solar is kind: solar");
+    fails({ name_position: "below" }, "name_position is gone: the name is above the value");
+    fails({ image: "/local/a.jpg" }, "image is visual: { type: image, src: /local/a.jpg }");
+    fails({ image: false }, "image: false is visual: false");
+    fails({ image_opacity: 0.5 }, "image_opacity is visual: { type: image, opacity: 0.5 }");
+    fails({ image_tint: "blue" }, "image_tint is visual: { type: image, tint: blue }");
+    fails({ image_blur: 4 }, "image_blur is visual: { type: image, blur: 4 }");
+    fails({ icon_image: "/local/a.png" }, "icon_image is icon: { type: image, src: /local/a.png }");
+    fails({ show_entity_picture: true }, "show_entity_picture: true is icon: { type: image }");
+    fails({ icon_ring: true }, "icon_ring: true is icon: { ring: true }");
+    fails({ icon_style: "plain" }, "icon_style: plain is icon: { style: plain }");
+    fails({ show_picture: true }, "show_picture is gone");
+    fails({ hours_to_show: 6 }, "hours_to_show is visual: { hours: 6 }");
+    fails({ bucket_minutes: 15 }, "bucket_minutes is visual: { bucket: 15 }");
+    fails({ smoothing_minutes: 15 }, "smoothing_minutes is visual: { smoothing: 15 }");
+    // variant: a flow's style is the visual's, a device's look is its kind
+    fails({ variant: "lines" }, "variant: lines is visual: { type: flow, style: lines }");
+    fails({ variant: "drops" }, "variant: drops is visual: { type: flow, style: drops }");
+    fails({ variant: "garage" }, "variant: garage is kind: garage");
+    fails({ variant: "washer" }, "variant: washer is kind: washer");
+    // the same keys in a rule, named by the rule
+    fails(
+      { rules: [{ state: "on" }, { above: 5, image: "/a.jpg" }] },
+      "rules[1]: image is visual:",
+    );
+    fails(
+      { rules: [{ state: "on", icon_style: "plain" }] },
+      "rules[0]: icon_style: plain is icon:",
+    );
+    // a key left undefined is no key
+    expect(norm({ entity: E, image: undefined }).kind.name).toBe("entity");
+  });
+
+  it("names the new spelling of the flat control, icon action and badge keys", () => {
+    const E = "light.living_room";
+    const fails = (o: Record<string, unknown>, msg: string) =>
+      expect(() => norm({ entity: E, ...o })).toThrow(`${T}: ${msg}`);
+    fails({ control_position: "block" }, "control_position is control: { position: block }");
+    fails({ control_attribute: "preset_mode" }, "control_attribute is control: { attribute:");
+    fails({ control_step: 5 }, "control_step is control: { step: 5 }");
+    fails({ control_options: ["a"] }, "control_options is control: { options: [ … ] }");
+    fails({ control_confirm: true }, "control_confirm is control: { confirm: true }");
+    fails({ icon_tap_action: "toggle" }, "icon_tap_action is icon: { tap_action: … }");
+    fails({ icon_hold_action: "none" }, "icon_hold_action is icon: { hold_action: … }");
+    fails(
+      { icon_double_tap_action: "none" },
+      "icon_double_tap_action is icon: { double_tap_action: … }",
+    );
+    fails({ icon_badge: false }, "icon_badge is icon: { badge: false }");
+    fails(
+      { status_badge: true },
+      "a poster's status is always the badge in its corner: leave out status_badge",
+    );
+    fails(
+      { status_badge: false },
+      "a poster's status is always the badge in its corner: leave out status_badge",
+    );
+    fails({ rules: [{ state: "on", icon_badge: false }] }, "rules[0]: icon_badge is icon:");
+  });
+
+  it("takes the control's options in one object, as the entity card's flat keys", () => {
+    const flat = (cfg: Record<string, unknown>) =>
+      normalizeEntityCardConfig(cfg).entities[0].control;
+    const C = "climate.living_room";
+    expect(
+      norm({
+        entity: C,
+        control: {
+          type: "segments",
+          position: "block",
+          attribute: "preset_mode",
+          step: 10,
+          confirm: true,
+        },
+      }).entities[0].control,
+    ).toEqual(
+      flat({
+        entity: C,
+        control: "segments",
+        control_position: "block",
+        control_attribute: "preset_mode",
+        control_step: 10,
+        control_confirm: true,
+      }),
+    );
+    const S = "input_select.house_mode";
+    const options = ["Home", { value: "Away", icon: "mdi:car" }];
+    expect(norm({ entity: S, control: { type: "segments", options } }).entities[0].control).toEqual(
+      flat({ entity: S, control: "segments", control_options: options }),
+    );
+    const buttons = [{ entity: "scene.movie_night" }, { entity: "script.check_windows" }];
+    const b = norm({ entity: S, control: { type: "buttons", options: buttons } }).entities[0];
+    expect(b.control).toEqual(flat({ entity: S, control: "buttons", control_options: buttons }));
+    expect(b.control?.buttons).toHaveLength(2);
+    // a name is the type alone
+    expect(norm({ entity: S, control: "segments" }).entities[0].control).toEqual(
+      norm({ entity: S, control: { type: "segments" } }).entities[0].control,
+    );
+    expect(() => norm({ entity: S, control: { type: "segments", size: 2 } })).toThrow(
+      `${T}: control takes type, position, attribute, step, options, confirm, not size`,
+    );
+  });
+
+  it("changes the kind's own controls with a control object that names no type", () => {
+    const E = "light.living_room";
+    const plain = norm({ entity: E }).entities[0].control;
+    const stepped = norm({ entity: E, control: { step: 10 } }).entities[0].control;
+    expect(stepped).toEqual({ ...plain, step: 10 });
+    // confirm makes the kind's toggle a hold, as control_confirm on the entity card's auto control
+    const confirmed = norm({ entity: E, control: { confirm: true } }).entities[0];
+    expect(kinds(placementsOf(confirmed, "poster"))).toEqual(["hold@end", "slider@block"]);
+  });
+
+  it("takes the icon's actions in the icon, never from a rule", () => {
+    expect(
+      norm({ entity: "lock.front_door", icon: { name: "mdi:door", tap_action: "more-info" } }),
+    ).toMatchObject({
+      iconActions: { tap: { action: "more-info" }, hold: { action: "toggle" } },
+      places: { icon: { type: "icon", name: "mdi:door" } },
+    });
+    for (const k of ["tap_action", "hold_action", "double_tap_action"])
+      expect(() =>
+        norm({ entity: "lock.front_door", rules: [{ state: "locked", icon: { [k]: "none" } }] }),
+      ).toThrow(`${T}: rules[0].icon: a rule sets no ${k}`);
+  });
+
+  it("has no badge on its icon, and its status is always a badge", () => {
+    const E = "sensor.living_room_temperature";
+    const msg = `${T}: a poster's icon has no badge (its corner has the badges)`;
+    expect(() => norm({ entity: E, icon: { badge: false } })).toThrow(msg);
+    expect(() => norm({ entity: E, rules: [{ above: 0, icon: { badge: "auto" } }] })).toThrow(msg);
+    // the status is the first badge, a tag without an icon or a name
+    const plain = norm({ entity: E });
+    expect(plain.groups[0].badgeIdxs?.[0]).toBe(plain.statusIdx);
+    expect(plain.entities[plain.statusIdx!].badge).toEqual({ style: "tag", size: "s" });
+    expect(plain.entities[plain.statusIdx!].item).toMatchObject({
+      showIcon: false,
+      showName: false,
+    });
+    // status: badge is no keyword: just the text "badge"
+    expect(norm({ entity: E, status: "badge" }).statusText).toEqual({
+      kind: "text",
+      text: "badge",
+    });
   });
 
   it("is one poster: its item, then the status badge first in the corner", () => {
@@ -57,16 +207,17 @@ describe("poster-card config", () => {
     const w = norm({ entity: "weather.home" });
     expect(w.kind.name).toBe("weather");
     expect(w.entities[0].valueSrc).toEqual({ kind: "attribute", key: "temperature" });
-    expect(w.entities[0].picture).toBe(true);
+    // the condition's picture in the icon, its sparkline (the forecast) below the texts
+    expect(drawn(w)).toEqual({ icon: { type: "image" }, visual: { type: "sparkline" } });
     expect(
       norm({ entity: "weather.home", attribute: "humidity" }).entities[0].valueSrc,
     ).toMatchObject({ key: "humidity" });
     expect(norm({ entity: "weather.home", value: "{{ 1 }}" }).entities[0].valueSrc.kind).toBe(
       "template",
     );
-    expect(norm({ entity: "weather.home", show_entity_picture: false }).entities[0].picture).toBe(
-      false,
-    );
+    expect(drawn(norm({ entity: "weather.home", icon: { type: "icon" } })).icon).toEqual({
+      type: "icon",
+    });
     expect(norm({ entity: "climate.living_room" }).entities[0].valueSrc).toMatchObject({
       key: "current_temperature",
     });
@@ -89,12 +240,12 @@ describe("poster-card config", () => {
       [],
     );
     // the wind rules are written in km/h: the value is converted before they match
-    const wind = norm({ entity: "sensor.wind_speed", poster: "wind" });
+    const wind = norm({ entity: "sensor.wind_speed", kind: "wind" });
     expect(wind.entities[0].rules).toEqual(WIND_RULES.map(toRule));
     expect(wind.entities[0].ruleUnit).toBe("km/h");
     expect(wind.entities[wind.statusIdx!].ruleUnit).toBe("km/h");
     expect(
-      norm({ entity: "sensor.wind_speed", poster: "wind", rules: [] }).entities[0].ruleUnit,
+      norm({ entity: "sensor.wind_speed", kind: "wind", rules: [] }).entities[0].ruleUnit,
     ).toBeUndefined();
   });
 
@@ -134,9 +285,11 @@ describe("poster-card config", () => {
   it("takes the icon's actions as written over the type's, none dropping one", () => {
     const c = norm({
       entity: "lock.front_door",
-      icon_tap_action: "more-info",
-      icon_hold_action: { action: "navigate", navigation_path: "/doors" },
-      icon_double_tap_action: { action: "toggle" },
+      icon: {
+        tap_action: "more-info",
+        hold_action: { action: "navigate", navigation_path: "/doors" },
+        double_tap_action: { action: "toggle" },
+      },
     });
     expect(c.iconActions).toEqual({
       tap: { action: "more-info" },
@@ -144,56 +297,141 @@ describe("poster-card config", () => {
       dbl: { action: "toggle" },
     });
     // a written one replaces only its own gesture: the lock keeps its hold beside a tap
-    const tap = norm({ entity: "lock.front_door", icon_tap_action: "toggle" });
+    const tap = norm({ entity: "lock.front_door", icon: { tap_action: "toggle" } });
     expect(tap.iconActions).toEqual({
       tap: { action: "toggle" },
       hold: { action: "toggle" },
       dbl: null,
     });
     expect(
-      norm({ entity: "lock.front_door", icon_hold_action: "none" }).iconActions.hold,
+      norm({ entity: "lock.front_door", icon: { hold_action: "none" } }).iconActions.hold,
     ).toBeNull();
     // an object without an action is more-info, as tap_action
     expect(
-      norm({ entity: "switch.coffee_machine", icon_tap_action: { entity: "light.kitchen" } })
+      norm({ entity: "switch.coffee_machine", icon: { tap_action: { entity: "light.kitchen" } } })
         .iconActions.tap,
     ).toEqual({ action: "more-info", entity: "light.kitchen" });
   });
 
-  it("draws visual: glow and none as no picture of the item's own; a light glows by default", () => {
+  it("keeps the visual as written in its place, the item drawing none of its own", () => {
     const H = "sensor.living_room_humidity";
     const glow = norm({ entity: H, visual: "glow" });
-    expect(glow.glow).toBe(true);
+    expect(glow.places.visual).toEqual({ type: "glow" });
     expect(glow.entities[0].visual).toBe("icon");
-    const none = norm({ entity: H, visual: "none" });
-    expect(none.glow).toBe(false);
+    const none = norm({ entity: H, visual: false });
+    expect(none.places.visual).toBe(false);
     expect(none.entities[0].visual).toBe("icon");
-    expect(norm({ entity: H, visual: "bar" }).entities[0].visual).toBe("bar");
-    expect(norm({ entity: H }).glow).toBe(false);
-    // the light's own picture is its glow; another visual replaces it
-    expect(norm({ entity: "light.living_room" }).glow).toBe(true);
-    for (const visual of ["none", "bar"])
-      expect(norm({ entity: "light.living_room", visual }).glow).toBe(false);
+    const bar = norm({ entity: H, visual: "bar" });
+    expect(bar.places.visual).toEqual({ type: "bar" });
+    expect(bar.entities[0].visual).toBe("icon");
+    expect(drawn(norm({ entity: H })).visual).toBe(false);
+    // the light's default visual is its glow; another visual or false replaces it
+    expect(drawn(norm({ entity: "light.living_room" })).visual).toEqual({ type: "glow" });
+    for (const visual of [false, "bar"])
+      expect(drawn(norm({ entity: "light.living_room", visual })).visual).not.toEqual({
+        type: "glow",
+      });
   });
 
-  it("draws a ring around the icon with icon_ring", () => {
+  it("gives every kind its default places", () => {
+    const of = (cfg: Record<string, unknown>) => drawn(norm(cfg));
+    expect(of({ entity: "climate.living_room" }).visual).toEqual({ type: "glow" });
+    expect(of({ entity: "alarm_control_panel.home" }).visual).toEqual({ type: "glow" });
+    expect(of({ entity: "sensor.wind_speed", kind: "wind" })).toEqual({
+      icon: { type: "flow", style: "dots" },
+      visual: false,
+    });
+    expect(of({ entity: "sensor.rain_rate", kind: "rain" }).icon).toEqual({
+      type: "flow",
+      style: "drops",
+    });
+    for (const entity of ["person.malte", "media_player.living_room_speaker"])
+      expect(of({ entity })).toEqual({
+        icon: { type: "image" },
+        visual: { type: "image", blur: IMAGE_BLUR },
+      });
+    expect(of({ entity: "cover.living_room_blinds" }).visual).toEqual({ type: "cover" });
+    expect(of({ entity: "cover.garage_door", kind: "garage" }).visual).toEqual({ type: "cover" });
+    expect(of({ entity: "vacuum.robot" }).visual).toEqual({ type: "path" });
+    expect(of({ entity: "lawn_mower.garden" }).visual).toEqual({ type: "path" });
+    expect(of({ entity: "sensor.grid_power", kind: "grid" }).visual).toEqual({ type: "line" });
+    expect(of({ entity: "sensor.solar_power", kind: "solar" }).visual).toEqual({
+      type: "sparkline",
+      hours: "today",
+    });
+    expect(of({ entity: "sensor.phone_battery", kind: "battery" }).visual).toEqual({
+      type: "segments",
+    });
+    expect(of({ entity: "sun.sun" }).visual).toEqual({ type: "sun" });
+    expect(of({ kind: "trend", series: ["sensor.outdoor_temperature"] }).visual).toEqual({
+      type: "sparkline",
+    });
+    // the plain kind draws the icon and nothing else
+    expect(of({ entity: "sensor.living_room_temperature" })).toEqual({
+      icon: { type: "icon" },
+      visual: false,
+    });
+  });
+
+  it("merges an object without a type onto the kind's default, one with a type replaces it", () => {
+    const S = "sensor.solar_power";
+    expect(drawn(norm({ entity: S, kind: "solar", visual: { hours: 6 } })).visual).toEqual({
+      type: "sparkline",
+      hours: 6,
+    });
+    expect(drawn(norm({ entity: S, kind: "solar", visual: { type: "columns" } })).visual).toEqual({
+      type: "columns",
+    });
+    expect(drawn(norm({ entity: "person.malte", visual: { blur: false } })).visual).toEqual({
+      type: "image",
+      blur: 0,
+    });
+    // nothing to merge onto: nothing drawn
+    expect(drawn(norm({ entity: "sensor.x", visual: { hours: 6 } })).visual).toBe(false);
+    // a string is the icon's name: it makes the place an icon (over a photo too)
+    expect(norm({ entity: "sensor.x", icon: "mdi:sofa" }).places.icon).toEqual({
+      type: "icon",
+      name: "mdi:sofa",
+    });
+    expect(norm({ entity: "sensor.x", icon: "mdi:sofa" }).entities[0].icon).toBe("mdi:sofa");
+    expect(drawn(norm({ entity: "person.malte", icon: { ring: true } })).icon).toEqual({
+      type: "image",
+      ring: true,
+    });
+  });
+
+  it("draws the animation in one place", () => {
+    const W = "sensor.wind_speed";
+    expect(() =>
+      norm({ entity: W, kind: "wind", icon: { type: "flow" }, visual: { type: "flow" } }),
+    ).toThrow(`${T}: the animation goes in one place: icon or visual, not both`);
+    // a flow behind the card makes the wind's icon the still one
+    expect(
+      drawn(norm({ entity: W, kind: "wind", visual: { type: "flow", style: "lines" } })),
+    ).toEqual({ icon: { type: "icon" }, visual: { type: "flow", style: "lines" } });
+  });
+
+  it("takes a ring around the icon as the icon's option", () => {
     const H = "sensor.living_room_humidity";
-    expect(norm({ entity: H, icon_ring: true }).entities[0].iconRing).toBe(true);
-    expect(norm({ entity: H }).entities[0].iconRing).toBeUndefined();
+    expect(norm({ entity: H, icon: { ring: true } }).places.icon).toEqual({ ring: true });
+    expect(
+      norm({ entity: H, icon: { type: "icon", name: "mdi:water", ring: true } }).places.icon,
+    ).toEqual({ type: "icon", name: "mdi:water", ring: true });
+    expect(norm({ entity: H }).places.icon).toBeUndefined();
     // the badges keep their own visual
-    const c = norm({ entity: H, icon_ring: true, badges: [{ entity: H, visual: "ring" }] });
+    const c = norm({ entity: H, icon: { ring: true }, badges: [{ entity: H, visual: "ring" }] });
     expect(c.entities.at(-1)?.visual).toBe("ring");
     expect(c.entities.at(-1)?.iconRing).toBeUndefined();
   });
 
-  it("names the poster's own keys in place of visual: ring and control_position: lead", () => {
+  it("names the poster's own keys in place of visual: ring and control: { position: lead }", () => {
     expect(() => norm({ entity: "sensor.living_room_humidity", visual: "ring" })).toThrow(
-      `${T}: visual: ring is icon_ring: true on the poster card`,
+      `${T}: visual: ring is icon: { ring: true } on the poster card`,
     );
     expect(() =>
-      norm({ entity: "switch.coffee_machine", control: "toggle", control_position: "lead" }),
+      norm({ entity: "switch.coffee_machine", control: { type: "toggle", position: "lead" } }),
     ).toThrow(
-      `${T}: the icon's own actions are icon_tap_action / icon_hold_action, not control_position: lead`,
+      `${T}: the icon's own actions are icon: { tap_action, hold_action }, not control: { position: lead }`,
     );
   });
 
@@ -201,7 +439,7 @@ describe("poster-card config", () => {
     const info = vi.spyOn(console, "info").mockImplementation(() => {});
     const set = norm({
       entity: "sensor.wind_speed",
-      poster: "wind",
+      kind: "wind",
       direction: "sensor.wind_direction",
       gust: false,
     });
@@ -209,9 +447,9 @@ describe("poster-card config", () => {
     expect(set.entities[set.inputs.direction].entity).toBe("sensor.wind_direction");
     expect(set.kindOpts).toEqual({ direction: "sensor.wind_direction", gust: false });
     // without hass nothing is found yet
-    expect(norm({ entity: "sensor.wind_speed", poster: "wind" }).inputs).toEqual({});
+    expect(norm({ entity: "sensor.wind_speed", kind: "wind" }).inputs).toEqual({});
 
-    const weather = norm({ entity: "weather.home", poster: "wind" });
+    const weather = norm({ entity: "weather.home", kind: "wind" });
     expect(weather.entities[0].valueSrc).toMatchObject({ key: "wind_speed" });
     const gust = weather.entities[weather.inputs.gust];
     expect(gust.valueSrc).toMatchObject({ kind: "attribute", key: "wind_gust_speed" });
@@ -242,18 +480,16 @@ describe("poster-card config", () => {
     const speed = withStates({
       "sensor.wind_speed": st("sensor.wind_speed", "12", { device_class: "wind_speed" }),
     });
-    const wind = norm({ entity: "sensor.wind_speed", variant: "lines", today: "sensor.t" }, speed);
+    const wind = norm({ entity: "sensor.wind_speed", gust: false, today: "sensor.t" }, speed);
     expect(wind.kind.name).toBe("wind");
-    expect(wind.kindOpts).toEqual({ variant: "lines" });
-    const cover = norm({ entity: "cover.garage_door", variant: "garage" });
-    expect(cover.kindOpts).toEqual({ variant: "garage" });
-    const pump = norm({
-      entity: "sensor.washer_power",
-      poster: "appliance",
-      variant: "washer",
-      running_above: 10,
-    });
-    expect(pump.kindOpts).toEqual({ variant: "washer", running_above: 10 });
+    expect(wind.kindOpts).toEqual({ gust: false });
+    // a cover's and an appliance's look is a kind of its own
+    const cover = norm({ entity: "cover.garage_door", kind: "garage" });
+    expect(cover.kind.name).toBe("garage");
+    expect(cover.kindOpts).toEqual({});
+    const washer = norm({ entity: "sensor.washer_power", kind: "washer", running_above: 10 });
+    expect(washer.kind.name).toBe("washer");
+    expect(washer.kindOpts).toEqual({ running_above: 10 });
     // the keys never decide the type: a grid's meters on a sensor of no class draw an entity
     const plain = norm({ entity: "sensor.grid_power", import: "sensor.a", export: "sensor.b" });
     expect(plain.kind.name).toBe("entity");
@@ -261,56 +497,56 @@ describe("poster-card config", () => {
     expect(plain.inputs).toEqual({});
   });
 
-  it("turns every default off with poster: entity", () => {
-    const own = norm({ entity: "weather.home", poster: "entity" });
+  it("turns every default off with kind: entity", () => {
+    const own = norm({ entity: "weather.home", kind: "entity" });
     expect(own.kind.name).toBe("entity");
     expect(own.entities[0].valueSrc).toEqual({ kind: "state" });
     expect(own.inputs).toEqual({});
-    const light = norm({ entity: "light.kitchen", poster: "entity" });
+    expect(drawn(own)).toEqual({ icon: { type: "icon" }, visual: false });
+    const light = norm({ entity: "light.kitchen", kind: "entity" });
     expect(light.entities[0].control).toBeFalsy();
+    expect(drawn(light).visual).toBe(false);
   });
 
-  it("takes the status as text, a template, an object or false", () => {
+  it("takes the status as a text, a template or false, its look the poster's", () => {
     const E = "sensor.living_room_temperature";
     expect(norm({ entity: E, status: "Cosy" }).statusText).toEqual({ kind: "text", text: "Cosy" });
     expect(norm({ entity: E, status: "{{ 'x' }}" }).statusText).toMatchObject({
       kind: "template",
     });
-    const o = norm({ entity: E, status: { value: "Cosy", icon: "mdi:sofa", style: "filled" } });
-    expect(o.statusText).toEqual({ kind: "text", text: "Cosy" });
-    const badge = o.entities[o.statusIdx!];
-    expect(badge.badge?.style).toBe("filled");
-    expect(badge.item).toMatchObject({ showIcon: true, showName: false });
-    expect(norm({ entity: E }).entities[1].item.showIcon).toBe(false);
-    // its own rules, name and icon as written
-    const own = norm({
-      entity: E,
-      rules: [{ below: 30, label: "Poster" }],
-      status: { rules: [{ below: 20, label: "Cool" }], show_name: true, show_icon: true },
-    });
-    const ownBadge = own.entities[own.statusIdx!];
-    expect(ownBadge.rules.map((r) => r.label)).toEqual(["Cool"]);
-    expect(ownBadge.item).toMatchObject({ showIcon: true, showName: true });
-    expect(
-      norm({ entity: E, status: { icon: "mdi:sofa", show_icon: false } }).entities[1].item.showIcon,
-    ).toBe(false);
+    const look = `${T}: status takes a text, a template or false (its look is the card's: a tag in its colour)`;
+    for (const status of [
+      { value: "Cosy", icon: "mdi:sofa", style: "filled" },
+      { badge: true },
+      { rules: [{ below: 20, label: "Cool" }] },
+      true,
+      3,
+    ])
+      expect(() => norm({ entity: E, status })).toThrow(look);
+    // the card's rules, as a tag without an icon
+    const own = norm({ entity: E, status: "Cosy", rules: [{ below: 30, label: "Poster" }] });
+    const badge = own.entities[own.statusIdx!];
+    expect(badge.rules.map((r) => r.label)).toEqual(["Poster"]);
+    expect(badge.badge).toEqual({ style: "tag", size: "s" });
+    expect(badge.item).toMatchObject({ showIcon: false, showName: false });
     const none = norm({ entity: E, status: false });
     expect(none.statusIdx).toBeNull();
     expect(none.groups[0].badgeIdxs).toEqual([]);
   });
 
-  it("puts the badges in the written order, the status where `status` says", () => {
+  it("puts the status first, then the badges in the written order", () => {
     const E = "weather.home";
     const first = norm({ entity: E, badges: ["sensor.outdoor_humidity"] });
     expect(first.groups[0].badgeIdxs).toEqual([1, 2]);
     expect(first.entities[2].entity).toBe("sensor.outdoor_humidity");
     expect(first.entities[2].badge).toEqual({ style: "outline", size: "s" });
-    const placed = norm({ entity: E, badges: ["sensor.outdoor_humidity", "status"] });
-    expect(placed.groups[0].badgeIdxs).toEqual([2, 1]);
-    // `status` with the status off places nothing
+    // `status` is no entry of the list
+    for (const badges of [["sensor.outdoor_humidity", "status"], ["status"]])
+      expect(() => norm({ entity: E, badges })).toThrow(
+        `${T}: status is no badge of the list: the status comes first (on a tile: status_badge: true)`,
+      );
     expect(
-      norm({ entity: E, status: false, badges: ["status", "sensor.outdoor_humidity"] }).groups[0]
-        .badgeIdxs,
+      norm({ entity: E, status: false, badges: ["sensor.outdoor_humidity"] }).groups[0].badgeIdxs,
     ).toEqual([1]);
   });
 
@@ -333,17 +569,17 @@ describe("poster-card config", () => {
     expect(c.hold).toEqual({ action: "none" });
     expect(norm({ name: "Hello", tap_action: { action: "navigate" } }).tap.action).toBe("navigate");
     expect(norm({ name: "Hello" }).entities[0].valueSrc).toEqual({ kind: "text", text: "" });
-    expect(norm({ poster: "sun" }).kind.name).toBe("sun");
+    expect(norm({ kind: "sun" }).kind.name).toBe("sun");
     // a grid without an entity opens its import meter; a trend's first series is its entity
     const grid = norm({
-      poster: "grid",
+      kind: "grid",
       import: "sensor.grid_import",
       export: "sensor.grid_export",
     });
     expect(grid.kind.name).toBe("grid");
     expect(grid.entities[0].entity).toBe("sensor.grid_import");
     const trend = norm({
-      poster: "trend",
+      kind: "trend",
       series: [{ entity: "sensor.outdoor_temperature", name: "Out" }, "sensor.x"],
     });
     expect(trend.entities[0]).toMatchObject({ entity: "sensor.outdoor_temperature", name: "Out" });
@@ -352,14 +588,33 @@ describe("poster-card config", () => {
       "sensor.x",
     ]);
     // a series is named by its place in errors
-    expect(() =>
-      norm({ poster: "trend", series: [{ entity: "sensor.x", visibility: 3 }] }),
-    ).toThrow(`${T}: 'series[0].visibility'`);
+    expect(() => norm({ kind: "trend", series: [{ entity: "sensor.x", visibility: 3 }] })).toThrow(
+      `${T}: 'series[0].visibility'`,
+    );
   });
 
-  it("keeps hours_to_show as written", () => {
-    expect(norm({ entity: "weather.home" }).hoursSet).toBeNull();
-    expect(norm({ entity: "weather.home", hours_to_show: 24 }).hoursSet).toBe(24);
+  it("reads the history's window, bucket and smoothing from the visual", () => {
+    const E = "sensor.outdoor_temperature";
+    const of = (c: PosterConfig) => [c.hoursSet, c.hours, c.bucketMin, c.smoothMin];
+    expect(of(norm({ entity: "weather.home" }))).toEqual([null, 24, 60, null]);
+    expect(of(norm({ entity: "weather.home", visual: { hours: 12 } }))).toEqual([12, 12, 60, null]);
+    expect(
+      of(norm({ entity: E, visual: { type: "sparkline", hours: 48, bucket: 15, smoothing: 30 } })),
+    ).toEqual([48, 48, 15, 30]);
+    // today is no number of hours: a day of history
+    expect(of(norm({ entity: E, visual: { type: "sparkline", hours: "today" } }))).toEqual([
+      null,
+      24,
+      60,
+      null,
+    ]);
+    expect(of(norm({ entity: "sensor.solar_power", kind: "solar" }))).toEqual([null, 24, 60, null]);
+    expect(() => norm({ entity: E, visual: { type: "sparkline", hours: 0 } })).toThrow(
+      "visual: hours must be a number of hours or today",
+    );
+    expect(() => norm({ entity: E, visual: { type: "bar", hours: 6 } })).toThrow(
+      "visual: bar takes no options, not hours",
+    );
   });
 });
 
@@ -381,89 +636,112 @@ describe("poster-card image and status", () => {
     expect(parseImage("plan.svg")).toEqual({ kind: "url", url: "plan.svg" });
   });
 
-  it("blurs the image by true, a number of px, or not by false; unset is the type's", () => {
-    expect(parseImageBlur(undefined)).toBeNull();
-    expect(parseImageBlur(true)).toBe(IMAGE_BLUR);
-    expect(parseImageBlur(8)).toBe(8);
-    expect(parseImageBlur(0)).toBe(0);
-    expect(parseImageBlur(false)).toBe(0);
-    expect(() => norm({ entity: "sensor.x", image_blur: "soft" })).toThrow(
-      `${T}: image_blur must be true, false or a number of px`,
-    );
-    expect(() => norm({ entity: "sensor.x", image_blur: -2 })).toThrow(/image_blur/);
-    expect(norm({ entity: "sensor.x", image_blur: 6 }).imageBlur).toBe(6);
+  it("blurs the image by true, a number of px, or not by false; unset is the kind's", () => {
+    const blur = (v: unknown) =>
+      (norm({ entity: "sensor.x", visual: { type: "image", blur: v } }).places.visual || {}).blur;
+    expect(blur(true)).toBe(IMAGE_BLUR);
+    expect(blur(8)).toBe(8);
+    expect(blur(0)).toBe(0);
+    expect(blur(false)).toBe(0);
+    expect(blur(undefined)).toBeUndefined();
+    expect(() => blur("soft")).toThrow("visual: blur must be true, false or a number of px");
+    expect(() => blur(-2)).toThrow(/visual: blur/);
+    // a person's photo behind the card is blurred unless the card says not
+    expect(drawn(norm({ entity: "person.malte" })).visual).toMatchObject({ blur: IMAGE_BLUR });
+    expect(drawn(norm({ entity: "person.malte", visual: { blur: 4 } })).visual).toMatchObject({
+      blur: 4,
+    });
   });
 
-  it("takes the shade's opacity and tint; a bad opacity names the key", () => {
-    const cfg = norm({ entity: "sensor.x", image_opacity: 0.6, image_tint: "blue" });
-    expect([cfg.imageOpacity, cfg.imageTint]).toEqual([0.6, "blue"]);
-    expect([
-      norm({ entity: "sensor.x" }).imageOpacity,
-      norm({ entity: "sensor.x" }).imageTint,
-    ]).toEqual([null, null]);
-    expect(() => norm({ entity: "sensor.x", image_opacity: 2 })).toThrow(
-      `${T}: image_opacity must be a number from 0 to 1`,
+  it("takes the shade's opacity and tint; a bad opacity names the option", () => {
+    const cfg = norm({
+      entity: "sensor.x",
+      visual: { type: "image", src: "/local/a.jpg", opacity: 0.6, tint: "blue" },
+    });
+    expect(cfg.places.visual).toEqual({
+      type: "image",
+      src: "/local/a.jpg",
+      opacity: 0.6,
+      tint: "blue",
+    });
+    expect(() => norm({ entity: "sensor.x", visual: { type: "image", opacity: 2 } })).toThrow(
+      "visual: opacity must be a number from 0 to 1",
     );
   });
 
-  it("reads what a rule changes of the icon and the backdrop, only the keys it writes", () => {
-    expect(
-      ruleLookOf({
-        state: "on",
-        icon_style: "plain",
-        icon_image: "person.malte",
-        icon_ring: true,
-        image: "camera.garden",
-        image_blur: true,
-        image_opacity: 0.5,
-        image_tint: "amber",
-      }),
-    ).toEqual({
-      iconStyle: "plain",
-      iconImage: { kind: "entity", entity: "person.malte" },
-      iconRing: true,
-      image: { kind: "entity", entity: "camera.garden" },
-      imageBlur: IMAGE_BLUR,
-      imageOpacity: 0.5,
-      imageTint: "amber",
+  it("keeps what a rule writes of the icon and the visual, by rule", () => {
+    const cfg = norm({
+      entity: "sensor.x",
+      rules: [
+        {
+          state: "on",
+          icon: { type: "image", src: "person.malte", ring: true, style: "plain" },
+          visual: { type: "image", src: "camera.garden", blur: true, opacity: 0.5, tint: "amber" },
+        },
+        { above: 5, visual: false, icon: "mdi:fire" },
+        { below: 0, color: "blue" },
+      ],
     });
-    // false: no picture while it matches
-    expect(ruleLookOf({ state: "off", image: false, icon_image: false })).toEqual({
-      image: false,
-      iconImage: null,
+    const [on, hot, cold] = cfg.entities[0].rules;
+    expect(cfg.rulePlaces.get(on)).toEqual({
+      icon: { type: "image", src: "person.malte", ring: true, style: "plain" },
+      visual: {
+        type: "image",
+        src: "camera.garden",
+        blur: IMAGE_BLUR,
+        opacity: 0.5,
+        tint: "amber",
+      },
     });
-    expect(ruleLookOf({ state: "on", color: "red" })).toEqual({});
-    // every rule of the card, by rule
-    const cfg = norm({ entity: "sensor.x", rules: [{ above: 5, image: "/local/a.jpg" }] });
-    expect(cfg.ruleLooks.get(cfg.entities[0].rules[0])).toEqual({
-      image: { kind: "url", url: "/local/a.jpg" },
+    // false: nothing there while it matches; a name is the rule's icon
+    expect(cfg.rulePlaces.get(hot)).toEqual({
+      icon: { type: "icon", name: "mdi:fire" },
+      visual: false,
     });
+    expect(hot.icon).toBe("mdi:fire");
+    // an object's name is the rule's icon too
+    const named = norm({ entity: "sensor.x", rules: [{ state: "on", icon: { name: "mdi:x" } }] });
+    expect(named.entities[0].rules[0].icon).toBe("mdi:x");
+    // a rule that writes neither has its places left out
+    expect(cfg.rulePlaces.get(cold)).toEqual({ icon: undefined, visual: undefined });
+    // the kind's own rules have none
+    const battery = norm({ entity: "sensor.phone_battery", kind: "battery" });
+    expect(battery.rulePlaces.size).toBe(0);
+  });
+
+  it("never lets a rule fetch another history", () => {
+    const E = "sensor.outdoor_temperature";
+    const rule = (visual: unknown) => norm({ entity: E, rules: [{ above: 5, visual }] });
+    expect(() => rule({ hours: 6 })).toThrow(
+      `rules[0].visual: a rule sets no hours (it is the card's: a rule must not fetch history)`,
+    );
+    expect(() => rule({ type: "sparkline", bucket: 15 })).toThrow(/a rule sets no bucket/);
+    expect(() => rule({ type: "sparkline", smoothing: 15 })).toThrow(/a rule sets no smoothing/);
+    expect(() => rule({ type: "sparkline", src: "sensor.x" })).toThrow(
+      "rules[0].visual: a rule sets no src of a plot (it is the card's history)",
+    );
+    // a plot without data of its own, and an image's src, are a rule's to set
+    expect(rule({ type: "columns", axis: true }).rulePlaces.size).toBe(1);
+    expect(rule({ type: "image", src: "camera.garden" }).rulePlaces.size).toBe(1);
   });
 
   it("takes a picture for the icon as a URL, a template or an entity's", () => {
-    expect(norm({ icon_image: "/local/a.png" }).iconImage).toEqual({
-      kind: "url",
-      url: "/local/a.png",
+    for (const src of ["/local/a.png", "person.malte", "{{ x }}"])
+      expect(norm({ icon: { type: "image", src } }).places.icon).toEqual({ type: "image", src });
+    // without a src: the entity's own picture
+    expect(norm({ entity: "sensor.x", icon: { type: "image" } }).places.icon).toEqual({
+      type: "image",
     });
-    expect(norm({ icon_image: "person.malte" }).iconImage).toEqual({
-      kind: "entity",
-      entity: "person.malte",
-    });
-    expect(norm({ icon_image: "{{ x }}" }).iconImage).toEqual({
-      kind: "template",
-      template: "{{ x }}",
-    });
-    expect(norm({ icon_image: false }).iconImage).toBeNull();
-    expect(norm({ name: "x" }).iconImage).toBeNull();
+    expect(() => norm({ icon: { type: "image", src: "" } })).toThrow("icon: src must be a text");
+    expect(norm({ name: "x" }).places.icon).toBeUndefined();
   });
 
   it("shows a person's and a player's picture in the icon unless the card says not", () => {
-    for (const entity of ["person.malte", "media_player.tv"]) {
-      expect(norm({ entity }).entities[0].picture).toBe(true);
-      expect(norm({ entity, show_entity_picture: false }).entities[0].picture).toBe(false);
-      expect(norm({ entity }).kind.imageBlur).toBe(true);
+    for (const entity of ["person.malte", "media_player.living_room_speaker"]) {
+      expect(drawn(norm({ entity })).icon).toEqual({ type: "image" });
+      expect(drawn(norm({ entity, icon: { type: "icon" } })).icon).toEqual({ type: "icon" });
     }
-    expect(norm({ entity: "sensor.x" }).entities[0].picture).toBe(false);
+    expect(drawn(norm({ entity: "sensor.x" })).icon).toEqual({ type: "icon" });
   });
 
   it("reads the image now", () => {
@@ -567,7 +845,7 @@ describe("poster-card element", () => {
   it("warns once about another type's keys, once the type is known", () => {
     vi.spyOn(console, "info").mockImplementation(() => {});
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const el = mount({ entity: "sensor.rain_rate", gust: "sensor.wind_gust", variant: "lines" });
+    const el = mount({ entity: "sensor.rain_rate", gust: "sensor.wind_gust" });
     // no state yet: the device class may still make it a wind poster
     expect(warn).not.toHaveBeenCalled();
     const hass = snapshot();
@@ -577,9 +855,9 @@ describe("poster-card element", () => {
     el.hass = { ...hass };
     expect(warn).toHaveBeenCalledTimes(1);
     // a written type is known at once; a config with nothing stray says nothing
-    el.setConfig({ poster: "sun", today: "sensor.x" });
+    el.setConfig({ kind: "sun", today: "sensor.x" });
     expect(warn).toHaveBeenLastCalledWith(`${T}: the sun poster reads no today; left out`);
-    el.setConfig({ poster: "sun" });
+    el.setConfig({ kind: "sun" });
     expect(warn).toHaveBeenCalledTimes(2);
   });
 });
@@ -691,18 +969,17 @@ describe("poster-card drawing", () => {
     expect(q(r, ".pvalue > .big > b").textContent).toBe("Home");
   });
 
-  it("adds the secondary line under the value, the name under it with name_position: below", () => {
+  it("adds the secondary line under the value, the name above them", () => {
     const r = draw({ entity: TEMP, name: "Living room", secondary: "Feels like 20" });
     expect(bodyParts(r)).toEqual(["pname", "pvalue", "secondary"]);
     expect(q(r, ".pname").textContent).toBe("Living room");
     expect(q(r, ".ptext > .secondary").textContent).toBe("Feels like 20");
-    expect(bodyParts(draw({ entity: TEMP, name_position: "below" }))).toEqual(["pvalue", "pname"]);
   });
 
   it("lets a stepper that shows the very same number take the value's place", () => {
     const same = draw({
       entity: "climate.living_room",
-      poster: "entity",
+      kind: "entity",
       attribute: "temperature",
       control: "stepper",
     });
@@ -717,7 +994,7 @@ describe("poster-card drawing", () => {
   it("keeps the value beside segments, a select and a button", () => {
     const seg = draw({
       entity: "climate.living_room",
-      poster: "entity",
+      kind: "entity",
       attribute: "hvac_mode",
       control: "segments",
     });
@@ -739,11 +1016,6 @@ describe("poster-card drawing", () => {
     expect(q(r, ".pbody").classList.contains("pgauge")).toBe(true);
     expect(r.querySelector(".pbody .big")).toBeNull();
     expect(bodyParts(r)).toEqual(["gauge", "pname"]);
-    // the name stays under the arc
-    expect(bodyParts(draw({ entity: H, visual: "gauge", name_position: "below" }))).toEqual([
-      "gauge",
-      "pname",
-    ]);
     // any other visual leaves the body as it is
     const bar = draw({ entity: H, visual: "bar" });
     expect(q(bar, ".pbody").classList.contains("pgauge")).toBe(false);
@@ -788,36 +1060,110 @@ describe("poster-card drawing", () => {
     set(L, "off");
     expect(glow.style.opacity).toBe("0");
     expect(q(r, ".pback > .pglow")).toBe(glow);
-    for (const visual of ["none", "bar"])
+    for (const visual of [false, "bar"])
       expect(draw({ entity: L, visual }).querySelector(".pglow")).toBeNull();
   });
 
-  it("keeps the glow over a type's drawing, under an image's scrim", () => {
+  it("draws a picture behind the texts under its shade, blurred and tinted as the visual says", () => {
     const r = draw({
       entity: "sensor.living_room_humidity",
-      visual: "glow",
-      image: "/local/garden.jpg",
+      visual: { type: "image", src: "/local/garden.jpg", opacity: 0.6, tint: "blue", blur: 8 },
     });
-    const back = q(r, ".pback");
+    const back = q(r, ".body > .pback");
+    expect(back.hidden).toBe(false);
     expect(back.classList.contains("scrim")).toBe(true);
-    expect([...back.children].map((c) => c.tagName.toLowerCase() + "." + c.className)).toEqual([
-      "img.",
-      "div.pglow",
-    ]);
+    expect(back.classList.contains("blur")).toBe(true);
+    expect(back.style.getPropertyValue("--pblur")).toBe("8px");
+    expect(back.style.getPropertyValue("--pc-shade")).toBe("0.4");
+    expect(back.style.getPropertyValue("--pc-shade-color")).toContain("var(--blue-color) 50%");
+    expect([...back.children].map((c) => c.getAttribute("src"))).toEqual(["/local/garden.jpg"]);
+    // the default shade, no blur, no tint
+    const plain = q(draw({ entity: TEMP, visual: { type: "image", src: "/a.jpg" } }), ".pback");
+    expect(plain.classList.contains("blur")).toBe(false);
+    expect(plain.style.getPropertyValue("--pc-shade")).toBe("0.7");
+    // a person's photo, blurred
+    const person = q(draw({ entity: "person.malte" }), ".pback");
+    expect(person.style.getPropertyValue("--pblur")).toBe(`${IMAGE_BLUR}px`);
+    // no visual: an empty layer, hidden
+    expect(q(draw({ entity: TEMP }), ".pback").hidden).toBe(true);
   });
 
-  it("draws icon_ring around the icon", () => {
-    const r = draw({ entity: "sensor.living_room_humidity", icon_ring: true });
+  it("puts a matching rule's picture behind the texts while it matches", () => {
+    set(TEMP, 21);
+    const r = draw({
+      entity: TEMP,
+      rules: [{ above: 25, visual: { type: "image", src: "/hot.jpg" } }],
+    });
+    expect(q(r, ".pback").hidden).toBe(true);
+    set(TEMP, 30);
+    expect(q(r, ".pback > img").getAttribute("src")).toBe("/hot.jpg");
+    set(TEMP, 20);
+    expect(q(r, ".pback").hidden).toBe(true);
+  });
+
+  it("lets a matching rule's colour and icon win over the card's", () => {
+    set(TEMP, 21);
+    const r = draw({
+      entity: TEMP,
+      color: "red",
+      icon: "mdi:sofa",
+      rules: [{ above: 25, color: "blue", icon: "mdi:fire" }],
+    });
+    const icon = () => q(r, ".plead ha-icon").getAttribute("icon");
+    expect(icon()).toBe("mdi:sofa");
+    set(TEMP, 30);
+    expect(icon()).toBe("mdi:fire");
+    const cfg = (r.host as PosterCard)._config!;
+    const m = modelOf({ hass: snapshot(), tplResult: new Map() }, cfg.entities[0]);
+    expect(m.look.color).toBe("blue");
+  });
+
+  it("draws a picture of its own in the icon", () => {
+    const r = draw({ entity: TEMP, icon: { type: "image", src: "/local/a.png" } });
+    expect(q(r, ".plead > .lead img.picture").getAttribute("src")).toBe("/local/a.png");
+    // a person's own photo, unless the icon is the icon
+    expect(draw({ entity: "person.malte" }).querySelector(".plead img.picture")).not.toBeNull();
+    const plain = draw({ entity: "person.malte", icon: { type: "icon" } });
+    expect(plain.querySelector(".plead img.picture")).toBeNull();
+    expect(plain.querySelector(".plead ha-icon")).not.toBeNull();
+  });
+
+  it("animates the wind in the icon, or behind the texts with the arrow in the icon", () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    const W = "sensor.wind_speed";
+    const lead = draw({ entity: W });
+    expect(lead.querySelector(".plead > .wlead")).not.toBeNull();
+    expect(q(lead, ".pback").hidden).toBe(true);
+    const behind = draw({ entity: W, visual: { type: "flow", style: "lines" } });
+    expect(behind.querySelector(".plead > .wlead")).toBeNull();
+    expect(behind.querySelector(".plead ha-icon.arrow")).not.toBeNull();
+    expect(q(behind, ".pback").dataset.key).toBe("lines");
+    expect(behind.querySelector(".pback > .wflow")).not.toBeNull();
+  });
+
+  it("leaves out a thing its kind does not draw, said once", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const r = draw({ entity: TEMP, visual: "sun" });
+    expect(q(r, ".pback").hidden).toBe(true);
+    expect(r.querySelector(".pbody > .plot")).toBeNull();
+    expect(warn).toHaveBeenCalledWith(`${T}: the entity kind draws no visual: sun; left out`);
+    const calls = warn.mock.calls.length;
+    set(TEMP, 22);
+    expect(warn.mock.calls.length).toBe(calls);
+  });
+
+  it("draws a ring around the icon", () => {
+    const r = draw({ entity: "sensor.living_room_humidity", icon: { ring: true } });
     expect(q(r, ".plead > .lead").classList.contains("ring")).toBe(true);
     expect(r.querySelector(".plead > .lead svg .track")).not.toBeNull();
     // an animated lead gives way to the ring, the card's or the matching rule's
-    const fan = draw({ entity: "fan.living_room", icon_ring: true });
+    const fan = draw({ entity: "fan.living_room", icon: { ring: true } });
     expect(q(fan, ".plead > .lead").classList.contains("ring")).toBe(true);
     expect(fan.querySelector(".plead > .pfan")).toBeNull();
     set("fan.living_room", "on", { percentage: 66 });
     const ruled = draw({
       entity: "fan.living_room",
-      rules: [{ state: "off", icon_ring: true }],
+      rules: [{ state: "off", icon: { ring: true } }],
     });
     expect(ruled.querySelector(".plead > .pfan")).not.toBeNull();
     set("fan.living_room", "off", { percentage: 0 });
@@ -829,7 +1175,7 @@ describe("poster-card drawing", () => {
     set("fan.living_room", "on", { percentage: 66 });
     const r = draw({
       entity: "fan.living_room",
-      rules: [{ state: "off", icon: "mdi:fan-off", icon_style: "plain" }],
+      rules: [{ state: "off", icon: { name: "mdi:fan-off", style: "plain" } }],
     });
     const lead = q(r, ".plead > .pfan");
     expect(lead.classList.contains("plain")).toBe(false);
@@ -842,11 +1188,13 @@ describe("poster-card drawing", () => {
     expect(off.querySelector("ha-icon")?.getAttribute("icon")).toBe("mdi:fan-off");
   });
 
-  it("lets the status badge's own colour win over the type's", () => {
-    const r = draw({ entity: "sensor.solar_power", poster: "solar", status: { color: "red" } });
+  it("draws the status in the card's colour", () => {
+    const r = draw({ entity: "sensor.living_room_temperature", status: "Cosy", color: "red" });
     const status = q(r, ".corner > .row.pstatus");
-    expect(status.style.getPropertyValue("--fe-color")).toBe(cssColor("red", ""));
-    expect(q(r, ".row.poster").style.getPropertyValue("--fe-color")).toBe("var(--pc-tint)");
+    expect(q(r, ".body").style.getPropertyValue("--pc-tint")).toBe(cssColor("red", ""));
+    expect(status.style.getPropertyValue("--fe-color")).toBe("var(--pc-tint)");
+    expect(status.textContent).toContain("Cosy");
+    expect(status.querySelector("ha-icon")).toBeNull();
   });
 
   // the card with its calls and actions recorded
@@ -879,7 +1227,7 @@ describe("poster-card drawing", () => {
       expect(calls).toEqual(["lock.unlock"]);
       expect(fired).toEqual([]);
       // beside a tap action of its own: a press let go early is a tap
-      const tap = drawCalls({ entity: "lock.front_door", icon_tap_action: "more-info" });
+      const tap = drawCalls({ entity: "lock.front_door", icon: { tap_action: "more-info" } });
       const both = q(tap.r, ".plead > button.ctl-hold");
       both.dispatchEvent(new PointerEvent("pointerdown", { button: 0, bubbles: true }));
       vi.advanceTimersByTime(200);
@@ -888,9 +1236,9 @@ describe("poster-card drawing", () => {
         { entity: "lock.front_door", tap_action: { action: "more-info" } },
       ]);
       expect(tap.calls).toEqual([]);
-      // icon_hold_action: none leaves the plain icon
+      // icon: { hold_action: none } leaves the plain icon
       expect(
-        draw({ entity: "lock.front_door", icon_hold_action: "none" }).querySelector(
+        draw({ entity: "lock.front_door", icon: { hold_action: "none" } }).querySelector(
           ".plead > .lead:not(.tap)",
         ),
       ).not.toBeNull();
@@ -899,11 +1247,11 @@ describe("poster-card drawing", () => {
     }
   });
 
-  it("makes the icon a switch with icon_tap_action: toggle", () => {
+  it("makes the icon a switch with icon: { tap_action: toggle }", () => {
     set("switch.coffee_machine", "off");
     const { r, calls, fired } = drawCalls({
       entity: "switch.coffee_machine",
-      icon_tap_action: "toggle",
+      icon: { tap_action: "toggle" },
     });
     const lead = q(r, ".plead > .lead.tap");
     expect(lead.getAttribute("role")).toBe("switch");
@@ -918,8 +1266,10 @@ describe("poster-card drawing", () => {
     try {
       const { r, calls, fired } = drawCalls({
         entity: "sensor.living_room_humidity",
-        icon_tap_action: { action: "navigate", navigation_path: "/climate" },
-        icon_double_tap_action: "more-info",
+        icon: {
+          tap_action: { action: "navigate", navigation_path: "/climate" },
+          double_tap_action: "more-info",
+        },
       });
       const lead = q(r, ".plead > .lead.tap.act");
       expect(lead.getAttribute("role")).toBe("button");

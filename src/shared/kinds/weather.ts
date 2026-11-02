@@ -47,7 +47,9 @@ const lead = (c: KindCtx) => {
     { ...c.m, look: { ...c.m.look, icon, picture: null } },
     c.leadSize,
   );
-  if (c.ent.picture && c.m.model.avail && !c.m.look.icon) {
+  // the condition's picture where the icon is an image of the entity's own (its default)
+  const own = c.place.icon.type === "image" && !c.place.icon.src;
+  if (own && c.m.model.avail && !c.m.look.icon) {
     const pic = conditionEl({ base: "hass", map: {} }, state, night, null);
     if (pic.tagName !== "HA-ICON") {
       el.classList.add("picture");
@@ -64,12 +66,13 @@ export const WEATHER: Kind = {
   readsText: "a weather entity",
   keys: [],
   rules: WEATHER_RULES,
-  // the temperature (its unit is the entity's temperature_unit); Home Assistant's pictures unless
-  // the card says show_entity_picture: false
-  main: (_entity, raw) => ({
-    attribute: "temperature",
-    ...(raw.show_entity_picture === undefined ? { show_entity_picture: true } : {}),
-  }),
+  // the temperature (its unit is the entity's temperature_unit); Home Assistant's picture of the
+  // condition in the icon (icon: icon draws its mdi icon), the hourly forecast below the texts: its
+  // sparkline is the hours ahead (a weather entity's state is a word, it has no line of its past)
+  main: () => ({ attribute: "temperature" }),
+  icon: { type: "image" },
+  visual: { type: "sparkline" },
+  draws: ["sparkline"],
   watch: ["sun.sun"],
   forecast: ["hourly", "daily", "twice_daily"],
   status: (c) =>

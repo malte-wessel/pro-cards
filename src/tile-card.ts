@@ -12,14 +12,13 @@
  *   show_picture: true                     # the type's picture below the line (a weather curve)
  *   control: slider                        # the type's controls at the line's end; a slider below
  *   icon_image: person.alex                # a picture in the icon: a URL, a template or an entity's
- *   icon_ring / icon_tap_action / icon_hold_action / icon_double_tap_action   # the icon's own
+ *   icon: { tap_action, hold_action, double_tap_action, badge }   # the icon's own
  *   show_icon / show_name / show_value / tap_action / hold_action / double_tap_action / hover
  *   hours_to_show / bucket_minutes / smoothing_minutes
  */
 import { registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
-import { BLOCK_VISUALS } from "./shared/entity/constants.ts";
 import type { EntityItem, ValueSrc } from "./shared/entity/config.ts";
 import { hasTileControl, tileMinColumns } from "./shared/entity/control.ts";
 import { asText } from "./shared/entity/look.ts";
@@ -29,11 +28,12 @@ import { fillTileSlots, tileCorner, tileLead, tileValueText } from "./shared/ent
 import { KindCardBase } from "./shared/kinds/card.ts";
 import { div } from "./shared/kinds/dom.ts";
 import { stateText } from "./shared/kinds/domains.ts";
-import { fillStatus, glowLevel, glowOpacity, imageUrl, statusText } from "./shared/kinds/render.ts";
+import { BELOW, resolvePlaces } from "./shared/kinds/places.ts";
+import { fillStatus, imageUrl, statusText } from "./shared/kinds/render.ts";
 import type { KindCtx } from "./shared/kinds/types.ts";
 import { isNum } from "./shared/util.ts";
 import { iconBadgeOf, type IconBadge } from "./tile/badge.ts";
-import { normalizeTileConfig, type TileConfig } from "./tile/config.ts";
+import { normalizeTileConfig, parseIconBadge, type TileConfig } from "./tile/config.ts";
 import { CARD_TYPE } from "./tile/constants.ts";
 import { STYLE_TILE_CARD_ALL } from "./tile/styles.ts";
 
@@ -62,16 +62,19 @@ export class TileCard extends KindCardBase {
   _extraTemplates(cfg: TileConfig): string[] {
     const out = super._extraTemplates(cfg);
     if (cfg.statusText?.kind === "template") out.push(cfg.statusText.template);
-    if (cfg.iconBadge && cfg.iconBadge !== "auto")
-      for (const v of [cfg.iconBadge.icon, cfg.iconBadge.color])
-        if (v?.kind === "template") out.push(v.template);
+    // the icon's badges of the card and its rules
+    for (const p of this._written(cfg)) {
+      const b = p.icon ? parseIconBadge(p.icon.badge) : "auto";
+      if (b && b !== "auto")
+        for (const v of [b.icon, b.color]) if (v?.kind === "template") out.push(v.template);
+    }
     return out;
   }
 
   // the badge on the icon: Home Assistant's, none, or the card's own (its templates rendered; an
   // empty icon: none, no colour: the tile's)
   _iconBadge(ctx: RenderCtx, m: EntityModel): IconBadge | null {
-    const b = (this._config as TileConfig).iconBadge;
+    const b = parseIconBadge(this._placesFor(m).icon.badge);
     if (b === false) return null;
     if (b === "auto") return iconBadgeOf(ctx.hass, m.st);
     const text = (v: ValueSrc | null) => {
@@ -144,16 +147,13 @@ export class TileCard extends KindCardBase {
     const slots = this._slots(kc);
     // the status on the line, unless it is a badge
     slots.status = cfg.statusBadge ? null : this._status(kc);
-    // the type's picture is a second row: drawn when asked for, unless it runs along the edge (a
-    // media player's progress)
-    if (!cfg.showPicture && !slots.picture?.classList.contains("pprog")) delete slots.picture;
     // a vertical tile's line is narrow: the value and the status, the type's line left out (one
     // the card writes stays)
     if (cfg.vertical && slots.secondary !== undefined) slots.secondary = null;
-    // icon_image: its picture in the icon while it has one, else the icon; the icon's style and
-    // ring as the matching rule says
+    // the icon place's picture while it has one, else the icon; the icon's style and ring, and the
+    // visual the item draws below the line, as the places say now
     const pic = imageUrl(ctx, this._iconLook(kc).iconImage);
-    const icon = this._iconItem(kc, ent);
+    const icon = this._drawItem(kc, ent);
     this._lineValue = ent.item.showValue
       ? tileValueText(slots.value === undefined ? m.fmt : slots.value)
       : "";
@@ -246,19 +246,10 @@ export class TileCard extends KindCardBase {
       row = body?.querySelector<HTMLElement>(":scope > .row.tile");
     if (!cfg || !body || !row || !this._hass) return;
     const kc = this._kindCtx(this._ctx());
-    // the kind's lead follows every render (a new speed, a new direction)
+    // the kind's lead follows every render (a new speed, a new direction), and what is behind the
+    // texts (a glow, a picture, the kind's drawing)
     this._updateLead(kc, row, tileLead(row));
-    // the glow in the tile's colour, as strong as its level (its opacity: a new level fades)
-    let glow = body.querySelector<HTMLElement>(":scope > .tglow");
-    if (cfg.glow && !glow) glow = body.insertBefore(div("tglow"), body.firstChild);
-    else if (!cfg.glow && glow) {
-      glow.remove();
-      glow = null;
-    }
-    if (glow) {
-      glow.style.setProperty("--glow", row.style.getPropertyValue("--fe-color"));
-      glow.style.opacity = glowOpacity(glowLevel(cfg.kind, kc));
-    }
+    this._drawBehind(body, row, kc);
     // what follows the clock or the size (a curve, the progress) checks itself whether it changed
     cfg.kind.live?.(kc, row);
     if (this._root) this._fitControls(this._root, row, cfg.vertical);
@@ -303,6 +294,12 @@ export class TileCard extends KindCardBase {
     set(this._ctlFit.mode);
   }
 
+  // the visual as the card and its kind say, without a rule's (the size never follows a state)
+  _writtenVisual() {
+    const cfg = this._config as TileConfig;
+    return resolvePlaces([{ icon: undefined, visual: this._kindVisual() }, cfg.places]).visual;
+  }
+
   getGridOptions(): GridOptions {
     const cfg = this._config;
     if (!cfg) return { columns: 6, rows: "auto" };
@@ -310,7 +307,11 @@ export class TileCard extends KindCardBase {
     // row; a block visual or a control makes it taller (a control on the line wraps under the name
     // when the tile is narrow). A card around it may give it less (a swipe card, a stack)
     const ent = cfg.entities[0];
-    const plot = ent.visual === "sparkline" || ent.visual === "columns" || cfg.showPicture;
+    // the visual below the line as the card writes it (or the kind's): a plot or the kind's
+    // picture needs a second row, a bar or a gauge takes one too
+    const v = this._writtenVisual();
+    const below = !!v && BELOW.includes(v.type as never) && v.type !== "segments";
+    const plot = below && v.type !== "bar" && v.type !== "gauge";
     // a vertical tile: the icon over two lines of text, as narrow as its controls let it be (a
     // quarter of a section); two rows for those, one more for a control under them, one more for
     // a plot, one more for the badges above the icon
@@ -320,7 +321,7 @@ export class TileCard extends KindCardBase {
       const rows = 2 + (hasTileControl(ent) ? 1 : 0) + (plot ? 1 : 0) + (badges ? 1 : 0);
       return { columns, rows: "auto", min_columns: columns, min_rows: rows };
     }
-    if (!BLOCK_VISUALS.has(ent.visual) && !hasTileControl(ent) && !cfg.showPicture)
+    if (!below && !hasTileControl(ent))
       return { columns: 6, rows: "auto", min_columns: 3, min_rows: 1 };
     // a plot needs two rows: in one it would have no room at all
     return { columns: 6, rows: "auto", min_columns: tileMinColumns(ent), min_rows: plot ? 2 : 1 };

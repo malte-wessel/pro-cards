@@ -36,8 +36,8 @@ add(
     t("sensor.tt_co2_high"),
     t("sensor.outdoor_aqi"),
     t("sensor.living_room_pm25"),
-    t("sensor.robot_battery"),
-    t("sensor.tt_battery_low"),
+    t("sensor.robot_battery", { visual: false }),
+    t("sensor.tt_battery_low", { visual: false }),
   ],
   {
     states: {
@@ -49,15 +49,15 @@ add(
 add(
   "tt-weather",
   [
-    t("weather.home"),
-    t("weather.tt_rainy"),
-    t("sun.sun"),
+    t("weather.home", { visual: false }),
+    t("weather.tt_rainy", { visual: false }),
+    t("sun.sun", { visual: false }),
     t("sensor.wind_speed"),
     t("sensor.coast_wind_speed"),
     t("sensor.rain_rate"),
     t("sensor.tt_rain_heavy"),
     t(null, {
-      poster: "trend",
+      kind: "trend",
       name: "Temperatures",
       series: ["sensor.living_room_temperature", "sensor.outdoor_temperature"],
     }),
@@ -74,8 +74,8 @@ add("tt-devices", [
   t("light.office"),
   t("fan.living_room"),
   t("fan.bedroom"),
-  t("climate.living_room"),
-  t("climate.bedroom"),
+  t("climate.living_room", { visual: false }),
+  t("climate.bedroom", { visual: false }),
   t("cover.living_room_blinds"),
   t("cover.garage_door"),
 ]);
@@ -84,12 +84,12 @@ add(
   [
     t("lock.front_door"),
     t("lock.tt_jammed"),
-    t("alarm_control_panel.home"),
-    t("alarm_control_panel.tt_triggered"),
+    t("alarm_control_panel.home", { visual: false }),
+    t("alarm_control_panel.tt_triggered", { visual: false }),
     t("vacuum.robot"),
     t("vacuum.basement"),
-    t("media_player.living_room_speaker"),
-    t("person.malte"),
+    t("media_player.living_room_speaker", { visual: false }),
+    t("person.malte", { visual: false }),
   ],
   {
     states: {
@@ -99,22 +99,22 @@ add(
   },
 );
 add("tt-energy", [
-  t("sensor.grid_power", { poster: "grid" }),
+  t("sensor.grid_power", { kind: "grid" }),
   t(null, {
-    poster: "grid",
+    kind: "grid",
     name: "Grid",
     import: "sensor.grid_import_power",
     export: "sensor.grid_export_power",
   }),
-  t("sensor.solar_power", { poster: "solar", today: "sensor.energy_today" }),
-  t("sensor.battery_soc", { power: "sensor.battery_power" }),
-  t("sensor.ev_battery", { poster: "car" }),
-  t("sensor.washer_power", { poster: "appliance", variant: "washer" }),
+  t("sensor.solar_power", { visual: false, kind: "solar", today: "sensor.energy_today" }),
+  t("sensor.battery_soc", { visual: false, power: "sensor.battery_power" }),
+  t("sensor.ev_battery", { kind: "car" }),
+  t("sensor.washer_power", { kind: "washer" }),
 ]);
 // unavailable, and an entity that does not exist
 add("tt-unavailable", [
   t("light.shed"),
-  t("climate.shed"),
+  t("climate.shed", { visual: false }),
   t("cover.shed_door"),
   t("lock.shed"),
   t("sensor.not_in_this_home"),
@@ -137,17 +137,17 @@ add("to-line", [
   }),
 ]);
 add("to-icon", [
-  t("sensor.living_room_humidity", { icon_ring: true }),
-  t("sensor.living_room_humidity", { icon_style: "plain" }),
+  t("sensor.living_room_humidity", { icon: { ring: true } }),
+  t("sensor.living_room_humidity", { icon: { style: "plain" } }),
   t("sensor.wind_speed", { icon: "mdi:weather-windy" }),
-  t(null, { name: "Malte", value: "Home", icon_image: "person.malte" }),
-  t("light.desk_lamp", { icon_tap_action: { action: "toggle" }, control: false }),
-  t("media_player.living_room_speaker", { show_entity_picture: false }),
+  t(null, { name: "Malte", value: "Home", icon: { type: "image", src: "person.malte" } }),
+  t("light.desk_lamp", { icon: { tap_action: { action: "toggle" } }, control: false }),
+  t("media_player.living_room_speaker", { visual: false, icon: { type: "icon" } }),
 ]);
 add("to-picture", [
-  t("weather.home", { show_picture: true }),
-  t("sun.sun", { show_picture: true }),
-  t("sensor.solar_power", { poster: "solar", show_picture: true }),
+  t("weather.home"),
+  t("sun.sun"),
+  t("sensor.solar_power", { kind: "solar" }),
   t("sensor.outdoor_temperature", { visual: "sparkline" }),
   t("sensor.power_consumption", { visual: "columns" }),
   t("binary_sensor.door_front", { visual: "strip" }),
@@ -156,11 +156,11 @@ add("to-picture", [
 ]);
 add("to-controls", [
   t("light.living_room", { control: "slider" }),
-  t("light.living_room", { visual: "none" }),
+  t("light.living_room", { visual: false }),
   t("light.living_room", { control: false }),
   t("cover.living_room_blinds", { control: "slider" }),
   t("fan.living_room", { control: "toggle" }),
-  t("media_player.living_room_speaker", { control: false }),
+  t("media_player.living_room_speaker", { visual: false, control: false }),
 ]);
 
 // vertical: the icon on top, the name and the line centred, the controls below; each at the
@@ -171,31 +171,35 @@ add("to-vertical", [
   v("sensor.living_room_co2"),
   v("light.desk_lamp"),
   v("fan.living_room"),
-  v("climate.living_room"),
+  v("climate.living_room", { visual: false }),
   v("cover.living_room_blinds"),
   v("vacuum.robot"),
-  v("media_player.living_room_speaker"),
+  v("media_player.living_room_speaker", { visual: false }),
   v("sensor.wind_speed"),
-  v("weather.home", { show_picture: true }),
+  v("weather.home"),
   v("lock.front_door"),
-  v("person.malte"),
+  v("person.malte", { visual: false }),
 ]);
 
-// the status on the line, as a badge with status_badge; badges at the end of the first row, always
+// the status on the line, as the first badge with status_badge; badges at the end of the first row, always
 // all of them (the name gives way); the badge on the icon (an action, a zone, unavailable)
 const AIR = ["sensor.living_room_temperature", "sensor.living_room_humidity"];
 add("to-badges", [
   t(CO2, { grid_options: { columns: 6 } }),
   t(CO2, { name: "CO₂", status_badge: true, grid_options: { columns: 6 } }),
-  t(CO2, { badges: [...AIR, "status"], grid_options: { columns: 12 } }),
+  t(CO2, { badges: AIR, status_badge: true, grid_options: { columns: 12 } }),
   t(CO2, { badges: AIR, grid_options: { columns: 6 } }),
   t(CO2, {
     name: "Air",
-    status_badge: true,
-    status: { style: "filled", icon: "mdi:air-filter" },
+    badges: [{ style: "filled", icon: "mdi:air-filter" }],
     grid_options: { columns: 6 },
   }),
-  t("climate.living_room", { name: "Heat", status_badge: true, grid_options: { columns: 6 } }),
+  t("climate.living_room", {
+    visual: false,
+    name: "Heat",
+    status_badge: true,
+    grid_options: { columns: 6 },
+  }),
   t(CO2, {
     name: "CO₂",
     vertical: true,
@@ -203,14 +207,19 @@ add("to-badges", [
     badges: ["sensor.living_room_temperature"],
     grid_options: { columns: 6 },
   }),
-  t("person.malte", { vertical: true }),
+  t("person.malte", { visual: false, vertical: true }),
   t("light.shed", { grid_options: { columns: 6 } }),
   t("sensor.wind_speed", {
     name: "Wind",
-    icon_badge: { icon: "mdi:alert", color: "red" },
+    icon: { badge: { icon: "mdi:alert", color: "red" } },
     grid_options: { columns: 6 },
   }),
-  t("climate.living_room", { name: "Heat", icon_badge: false, grid_options: { columns: 6 } }),
+  t("climate.living_room", {
+    visual: false,
+    name: "Heat",
+    icon: { badge: false },
+    grid_options: { columns: 6 },
+  }),
 ]);
 
 // ----- sizes, widths and themes -----
@@ -227,14 +236,14 @@ const WIDE = [h(12, 1), h(6, 1), h(6, 2), vt(6, 3)];
 const SIZED: Record<string, [CardConfigBase, Size[]]> = {
   entity: [t("sensor.outdoor_temperature"), ALL],
   air: [t("sensor.living_room_co2"), ALL],
-  battery: [t("sensor.battery_soc", { power: "sensor.battery_power" }), ALL],
-  weather: [t("weather.home"), ALL],
-  sun: [t("sun.sun"), ALL],
+  battery: [t("sensor.battery_soc", { visual: false, power: "sensor.battery_power" }), ALL],
+  weather: [t("weather.home", { visual: false }), ALL],
+  sun: [t("sun.sun", { visual: false }), ALL],
   wind: [t("sensor.wind_speed"), ALL],
   rain: [t("sensor.rain_rate_roof"), ALL],
   trend: [
     t(null, {
-      poster: "trend",
+      kind: "trend",
       name: "Temperatures",
       series: ["sensor.living_room_temperature", "sensor.outdoor_temperature"],
     }),
@@ -242,17 +251,20 @@ const SIZED: Record<string, [CardConfigBase, Size[]]> = {
   ],
   light: [t("light.living_room"), SWITCH],
   fan: [t("fan.living_room"), WIDE],
-  climate: [t("climate.living_room"), WIDE],
+  climate: [t("climate.living_room", { visual: false }), WIDE],
   lock: [t("lock.front_door"), ALL],
-  alarm: [t("alarm_control_panel.home"), ALL],
-  person: [t("person.malte"), ALL],
-  media: [t("media_player.living_room_speaker"), WIDE],
+  alarm: [t("alarm_control_panel.home", { visual: false }), ALL],
+  person: [t("person.malte", { visual: false }), ALL],
+  media: [t("media_player.living_room_speaker", { visual: false }), WIDE],
   cover: [t("cover.office_blinds"), WIDE],
   vacuum: [t("vacuum.robot"), WIDE],
-  grid: [t("sensor.grid_power", { poster: "grid" }), ALL],
-  solar: [t("sensor.solar_power", { poster: "solar", today: "sensor.energy_today" }), ALL],
-  car: [t("sensor.ev_battery", { poster: "car" }), ALL],
-  appliance: [t("sensor.washer_power", { poster: "appliance", variant: "washer" }), ALL],
+  grid: [t("sensor.grid_power", { kind: "grid" }), ALL],
+  solar: [
+    t("sensor.solar_power", { visual: false, kind: "solar", today: "sensor.energy_today" }),
+    ALL,
+  ],
+  car: [t("sensor.ev_battery", { kind: "car" }), ALL],
+  appliance: [t("sensor.washer_power", { kind: "washer" }), ALL],
 };
 for (const [name, [card, sizes]] of Object.entries(SIZED))
   add(
@@ -276,7 +288,7 @@ add(
     v("light.living_room"),
     v("fan.living_room"),
     v("cover.living_room_blinds"),
-    v("media_player.living_room_speaker"),
+    v("media_player.living_room_speaker", { visual: false }),
     v("vacuum.robot"),
   ],
   { width: 358 },
@@ -284,11 +296,11 @@ add(
 
 const FEW = [
   t("light.living_room"),
-  t("climate.living_room"),
-  t("media_player.living_room_speaker"),
+  t("climate.living_room", { visual: false }),
+  t("media_player.living_room_speaker", { visual: false }),
   t("sensor.wind_speed"),
   t("vacuum.robot"),
-  t("weather.home"),
+  t("weather.home", { visual: false }),
 ];
 // a phone 390 px wide: its section 358 px, half of it 175
 add("ts-phone", FEW, { width: 358 });

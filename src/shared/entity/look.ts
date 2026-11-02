@@ -128,10 +128,12 @@ export const resolveLook = (
   const picture = ent.picture ? pictureOf(st) : null;
   const fallbackIcon =
     st?.attributes?.icon || DEVICE_CLASS_ICON[st?.attributes?.device_class ?? ""] || null;
+  // the v3 cards: the item's colour and icon are defaults, a matching rule's win
+  const first = ent.ruleWins;
   if (!model.avail) {
     return {
       color: explicitColor || "grey",
-      icon: explicitIcon || rule?.icon || null,
+      icon: (first ? rule?.icon || explicitIcon : explicitIcon || rule?.icon) || null,
       fallbackIcon: fallbackIcon || "mdi:help-circle-outline",
       picture,
       label: ruleLabel || t(hass, "common.unavailable"),
@@ -145,8 +147,11 @@ export const resolveLook = (
   const offish = fromState && model.raw !== null && OFF_STATES.has(model.raw);
   const stateColor = fromState ? stateColorCss(st, model.raw ?? undefined) : null;
   return {
-    color: explicitColor || rule?.color || stateColor || (offish ? "grey" : "primary"),
-    icon: explicitIcon || rule?.icon || null,
+    color:
+      (first ? rule?.color || explicitColor : explicitColor || rule?.color) ||
+      stateColor ||
+      (offish ? "grey" : "primary"),
+    icon: (first ? rule?.icon || explicitIcon : explicitIcon || rule?.icon) || null,
     fallbackIcon: fallbackIcon || "mdi:eye",
     picture,
     label: ruleLabel || null,

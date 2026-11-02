@@ -33,10 +33,26 @@ export interface PlotCtx {
   series?: Point[];
   buckets?: number;
   loaded?: boolean;
+  // a plot's own window (hours back, or since midnight), bucket and smoothing (the v3 cards'
+  // visual), and its axes
+  hours?: number | "today";
+  bucketMin?: number;
+  smoothMin?: number;
+  axis?: boolean;
 }
-// the window a plot draws: the card's history window unless the plot brought its own
-export const windowOf = (ctx: RenderCtx, plot: PlotElement) =>
-  plot._ctx.window ?? { t0: ctx.t0, t1: ctx.now };
+const startOfDay = (t: number) => {
+  const d = new Date(t);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+};
+// the window a plot draws: the one it brought, else its own hours back (or since midnight), else
+// the card's history window
+export const windowOf = (ctx: RenderCtx, plot: PlotElement) => {
+  const c = plot._ctx;
+  if (c.window) return c.window;
+  if (c.hours === "today") return { t0: startOfDay(ctx.now), t1: ctx.now };
+  if (typeof c.hours === "number") return { t0: ctx.now - c.hours * 3600e3, t1: ctx.now };
+  return { t0: ctx.t0, t1: ctx.now };
+};
 // the plot element carries its render context and the layout results the hover needs
 export interface PlotElement extends HTMLDivElement {
   _ctx: PlotCtx;
@@ -67,6 +83,39 @@ export const addLabel = (
   el.style.top = `${top}px`;
   if (width) el.style.width = `${width}px`;
   container.appendChild(el);
+};
+
+// the labels' distance from the plot's sides: a plot runs to the card's edges, its labels keep to
+// the card's padding
+const INSET = 12;
+// `axis: true` (the v3 cards' visual): faint lines at the scale's top and bottom with their values
+// on the left, the window's start and now on the right (top and bottom). Labels lie over the plot;
+// a plot too short for two lines of them shows the top value and now alone
+const axisLabels = (
+  ctx: RenderCtx,
+  plot: PlotElement,
+  labels: HTMLElement,
+  lines: { v: number; y: number }[],
+  W: number,
+  H: number,
+  t0: number,
+  now: number,
+): string => {
+  if (!plot._ctx.axis) return "";
+  const fmt = (v: number) => fmtNumber(ctx, plot._ctx.ent, v, plot._ctx.st);
+  const line = measure(ctx.text, labels, ["label"], [10, 12]).line;
+  const both = H >= line * 3;
+  let html = "";
+  lines.forEach(({ v, y }, i) => {
+    html += `<line class="grid" x1="0" x2="${W}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"/>`;
+    if (i > 0 && !both) return;
+    const top = i === 0 ? y + 1 : y - line - 1;
+    addLabel(labels, "axis", fmt(v), INSET, Math.max(0, Math.min(H - line, top)));
+  });
+  const n = Math.round((now - t0) / 3600e3);
+  if (both) addLabel(labels, "axis right", tr(ctx.hass, "common.minus_hours", { n }), W - INSET, 1);
+  addLabel(labels, "axis right", tr(ctx.hass, "common.now"), W - INSET, H - line - 2);
+  return html;
 };
 
 // ctx also needs { cfg, series, fetched, now, t0 }; `size` is the plot's box when the caller
@@ -112,7 +161,8 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
       t0,
       now,
     );
-    const sampled = lineMeans(pts, t0, now, lineBuckets(now - t0, ctx.cfg.smoothMin, W));
+    const smooth = plot._ctx.smoothMin ?? ctx.cfg.smoothMin;
+    const sampled = lineMeans(pts, t0, now, lineBuckets(now - t0, smooth, W));
     if (sampled.length < 2) return empty();
     let lo = Infinity,
       hi = -Infinity;
@@ -131,7 +181,21 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
     const xy = sampled.map((p) => [+xOf(p.t).toFixed(1), +yOf(p.v).toFixed(1)]);
     const d = smoothPath(xy);
     const last = xy[xy.length - 1];
+    const axis = axisLabels(
+      ctx,
+      plot,
+      labels,
+      [
+        { v: hi - pad, y: yOf(hi - pad) },
+        { v: lo + pad, y: yOf(lo + pad) },
+      ],
+      W,
+      H,
+      t0,
+      now,
+    );
     svg.innerHTML =
+      axis +
       `<path class="area" d="${d} L${last[0]},${H} L${xy[0][0]},${H} Z"/><path class="line" d="${d}"/><circle class="dot" cx="${last[0]}" cy="${last[1]}" r="3.5"/>` +
       `<g class="hover"><line class="hair" y1="0" y2="${H}"/><circle class="dot" r="4"/></g>`;
     plot._sampled = sampled;
@@ -142,7 +206,8 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
   // never finer than one bucket per 2 px (as lineBuckets for the sparkline): a week of 5 minute
   // buckets would otherwise draw thousands of bars into a small plot
   const nb = Math.min(
-    plot._ctx.buckets ?? Math.max(1, Math.round((ctx.cfg.hours * 60) / ctx.cfg.bucketMin)),
+    plot._ctx.buckets ??
+      Math.max(1, Math.round((now - t0) / 60e3 / (plot._ctx.bucketMin ?? ctx.cfg.bucketMin))),
     Math.max(1, Math.floor(W / 2)),
   );
   const bw = W / nb;
@@ -170,7 +235,7 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
       }
     });
     const gap = Math.min(3, bw * 0.25);
-    let html = "";
+    let html = axisLabels(ctx, plot, labels, [{ v: vmax, y: yOf(vmax) }], W, H, t0, now);
     buckets.forEach((b, i) => {
       if (!b) return;
       const y = Math.min(yOf(b.v), y0),

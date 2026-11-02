@@ -59,7 +59,7 @@ const cardGroups = [
     text: "Tile Card Pro",
     items: [
       { text: "Overview", link: "/cards/tile-card" },
-      { text: "Tile types", link: "/cards/tile-types" },
+      { text: "Kinds", link: "/cards/tile-types" },
       { text: "Custom tiles", link: "/cards/tile-custom" },
       { text: "Controls", link: "/cards/tile-controls" },
       { text: "Badges", link: "/cards/tile-badges" },
@@ -74,7 +74,7 @@ const cardGroups = [
     text: "Poster Card Pro",
     items: [
       { text: "Overview", link: "/cards/poster-card" },
-      { text: "Poster types", link: "/cards/poster-types" },
+      { text: "Kinds", link: "/cards/poster-types" },
       { text: "Custom posters", link: "/cards/poster-custom" },
       { text: "Controls", link: "/cards/poster-controls" },
       { text: "Badges", link: "/cards/poster-badges" },

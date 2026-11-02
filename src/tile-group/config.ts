@@ -1,7 +1,7 @@
 // The tile group card's config (pure): the header (title, icon, its badges), the layout and the
-// tiles. Every key the card does not take itself is a default for every tile; a tile's own value
-// wins. The tiles are tile cards of their own (the group hosts them), so their configs are tile
-// card configs, checked by the tile card.
+// tiles. The group sets nothing on its tiles but their layout (a row's are vertical): each tile
+// says everything about itself. The tiles are tile cards of their own (the group hosts them), so
+// their configs are tile card configs, checked by the tile card.
 import type { CardConfigBase } from "../shared/ha.ts";
 import {
   normalizeActionDefaults,
@@ -10,7 +10,6 @@ import {
   normalizeTitleAction,
   type EntityCardConfig,
   type RawAction,
-  type RawHistoryOptions,
 } from "../shared/entity/config.ts";
 import { normalizeVisibility, type Visibility } from "../shared/visibility.ts";
 
@@ -19,8 +18,8 @@ export const TILE_TYPE = "tile-card-pro";
 export const TILE_GROUP_LAYOUTS = ["list", "row"] as const;
 export type TileGroupLayout = (typeof TILE_GROUP_LAYOUTS)[number];
 
-// the card's own keys: the header, the layout, the tiles and Home Assistant's; every other key is
-// a default for the tiles
+// the card's own keys: the header, the layout, the tiles and Home Assistant's. It sets nothing on
+// its tiles but their layout (`row`: vertical): each tile says everything about itself
 const CARD_KEYS = new Set([
   "type",
   "layout",
@@ -28,7 +27,7 @@ const CARD_KEYS = new Set([
   "icon",
   "title_tap_action",
   "badges",
-  "entities",
+  "tiles",
   "grid_options",
   "visibility",
   "view_layout",
@@ -48,14 +47,13 @@ export interface TileGroupConfig extends EntityCardConfig {
   tiles: TileGroupTile[];
 }
 
-interface RawTileGroupConfig extends CardConfigBase, RawHistoryOptions {
+interface RawTileGroupConfig extends CardConfigBase {
   layout?: unknown;
   title?: string | null;
   title_tap_action?: RawAction;
   icon?: string | null;
   badges?: unknown;
-  entities?: unknown;
-  hover?: boolean | null;
+  tiles?: unknown;
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
@@ -67,34 +65,41 @@ export const normalizeTileGroupConfig = (input: unknown): TileGroupConfig => {
   const layout = raw.layout ?? "list";
   if (!TILE_GROUP_LAYOUTS.includes(layout as TileGroupLayout))
     throw new Error(`${CARD_TYPE}: layout takes ${TILE_GROUP_LAYOUTS.join(" or ")}`);
-  if (raw.entity !== undefined)
-    throw new Error(`${CARD_TYPE}: entity belongs on each tile, under entities`);
-  if (!Array.isArray(raw.entities) || !raw.entities.length)
-    throw new Error(`${CARD_TYPE}: entities must be a list of entities or tiles`);
-  const defaults = Object.fromEntries(Object.entries(raw).filter(([k]) => !CARD_KEYS.has(k)));
-  const tiles = raw.entities.map((e, i): TileGroupTile => {
-    const label = `entities[${i}]`;
+  if (raw.entities !== undefined) throw new Error(`${CARD_TYPE}: entities is tiles`);
+  for (const k of Object.keys(raw))
+    if (!CARD_KEYS.has(k) && raw[k] !== undefined)
+      throw new Error(
+        `${CARD_TYPE}: a tile group sets nothing on its tiles: ${k} goes on each tile`,
+      );
+  if (!Array.isArray(raw.tiles) || !raw.tiles.length)
+    throw new Error(`${CARD_TYPE}: tiles must be a list of entities or tiles`);
+  const tiles = raw.tiles.map((e, i): TileGroupTile => {
+    const label = `tiles[${i}]`;
     const own = typeof e === "string" ? { entity: e } : isObj(e) ? e : null;
     if (!own) throw new Error(`${CARD_TYPE}: ${label} must be an entity id or a tile`);
     if (own.type !== undefined || own.grid_options !== undefined)
       throw new Error(`${CARD_TYPE}: ${label}: a tile in a group takes no type or grid_options`);
+    // the group's layout decides it: a row's tiles are vertical, a list's are not
+    if (own.vertical !== undefined)
+      throw new Error(`${CARD_TYPE}: ${label}: vertical is the group's layout (layout: row)`);
     const { visibility, ...rest } = own;
     const entity = typeof rest.entity === "string" ? rest.entity : null;
     return {
-      config: { type: `custom:${TILE_TYPE}`, vertical: layout === "row", ...defaults, ...rest },
+      config: { type: `custom:${TILE_TYPE}`, ...rest, vertical: layout === "row" },
       visibility: normalizeVisibility(visibility, { type: CARD_TYPE, label, entity }),
     };
   });
   // the header's badges as the group card draws them (plain and small unless they say
-  // otherwise): their own actions, not the tiles' defaults
-  const ctx = { type: CARD_TYPE, ...normalizeActionDefaults({ hover: raw.hover }) };
+  // otherwise), with their own actions
+  const ctx = { type: CARD_TYPE, ...normalizeActionDefaults({}) };
   const badges = normalizeHeaderEntities(raw.badges, ctx, "badges");
   return {
     layout: layout as TileGroupLayout,
     title: raw.title ?? null,
     titleTap: normalizeTitleAction(raw),
     icon: raw.icon ?? null,
-    ...normalizeHistoryOptions(raw),
+    // the header badges' history (a sparkline badge): the default window
+    ...normalizeHistoryOptions({}),
     ...ctx,
     columns: 1,
     entities: badges,

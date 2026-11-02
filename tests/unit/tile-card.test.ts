@@ -1,7 +1,8 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
 import { TileCard } from "../../src/tile-card.ts";
 import { iconBadgeOf } from "../../src/tile/badge.ts";
-import { normalizeTileConfig } from "../../src/tile/config.ts";
+import { normalizeTileConfig, parseIconBadge } from "../../src/tile/config.ts";
+import { normalizeEntityCardConfig } from "../../src/entity-card.ts";
 import { placementsOf } from "../../src/shared/entity/control.ts";
 import { snapshot } from "../../docs/.vitepress/theme/ha-shim/hass.ts";
 
@@ -17,15 +18,30 @@ describe("tile-card config", () => {
     expect(customElements.get(T)).toBe(TileCard);
     expect(window.customCards?.some((c) => c.type === T)).toBe(true);
     expect(() => norm(null as never)).toThrow(`${T}: invalid config`);
-    expect(() => norm({ entity: "light.kitchen", poster: "wind" })).toThrow(
-      `${T}: the wind poster reads a wind_speed sensor or a weather entity`,
+    expect(() => norm({ entity: "light.kitchen", kind: "wind" })).toThrow(
+      `${T}: the wind kind reads a wind_speed sensor or a weather entity`,
     );
+  });
+
+  it("names the new spelling of the keys the places replaced", () => {
+    const e = "sensor.living_room_temperature";
+    const fails = (o: Record<string, unknown>, msg: string) =>
+      expect(() => norm({ entity: e, ...o })).toThrow(`${T}: ${msg}`);
+    fails({ poster: "wind" }, "poster: wind is kind: wind");
+    fails({ name_position: "below" }, "name_position is gone");
+    fails({ show_picture: false }, "show_picture: false is visual: false");
+    fails({ icon_ring: true }, "icon_ring: true is icon: { ring: true }");
+    fails({ icon_style: "plain" }, "icon_style: plain is icon: { style: plain }");
+    fails({ hours_to_show: 6 }, "hours_to_show is visual: { hours: 6 }");
+    fails({ variant: "lines" }, "variant: lines is visual: { type: flow, style: lines }");
+    expect(() => norm({ entity: e, visual: "none" })).toThrow("visual: none is false (no visual)");
+    fails({ rules: [{ state: "on", icon_ring: true }] }, "rules[0]: icon_ring: true is icon:");
   });
 
   it("names the tile's own keys in place of the entity card's", () => {
     const e = "sensor.living_room_temperature";
     expect(() => norm({ entity: e, visual: "ring" })).toThrow(
-      `${T}: visual: ring is icon_ring: true on the tile card`,
+      `${T}: visual: ring is icon: { ring: true } on the tile card`,
     );
     expect(() => norm({ entity: "light.desk_lamp", toggle: true })).toThrow(
       `${T}: toggle is control: toggle on the tile card`,
@@ -76,8 +92,10 @@ describe("tile-card config", () => {
     for (const e of ["sensor.living_room_temperature", "cover.office_blinds", "lock.front_door"])
       expect(tap(e), e).toBeNull();
     expect(norm({ entity: "lock.front_door" }).iconActions.hold?.action).toBe("toggle");
-    expect(tap("light.desk_lamp", { icon_tap_action: "none" })).toBeNull();
-    expect(tap("light.desk_lamp", { icon_tap_action: { action: "more-info" } })).toBe("more-info");
+    expect(tap("light.desk_lamp", { icon: { tap_action: "none" } })).toBeNull();
+    expect(tap("light.desk_lamp", { icon: { tap_action: { action: "more-info" } } })).toBe(
+      "more-info",
+    );
   });
 
   it("keeps the status on the line unless it is asked for as a badge", () => {
@@ -88,35 +106,157 @@ describe("tile-card config", () => {
     expect(line.groups[0].badgeIdxs).toHaveLength(2);
     // a badge without an entity reads the tile's
     expect(line.entities[line.groups[0].badgeIdxs![1]].entity).toBe("sensor.living_room_co2");
-    // status_badge: first among the badges, a tag
+    // status_badge: true: first among the badges, a tag in the tile's colour
     const badge = norm({ entity: "sensor.living_room_co2", status_badge: true, badges });
     expect(badge.statusBadge).toBe(true);
+    expect(badge.statusText).toBeNull();
+    expect(badge.groups[0].badgeIdxs).toHaveLength(3);
     expect(badge.groups[0].badgeIdxs?.[0]).toBe(badge.statusIdx);
     expect(badge.entities[badge.statusIdx!].badge).toEqual({ style: "tag", size: "s" });
-    // `status` in the list places it, and asks for it
-    const placed = norm({ entity: "sensor.living_room_co2", badges: ["sensor.a", "status"] });
-    expect(placed.statusBadge).toBe(true);
-    expect(placed.groups[0].badgeIdxs?.at(-1)).toBe(placed.statusIdx);
+    // with a text of its own, still first
+    const own = norm({
+      entity: "sensor.living_room_co2",
+      status: "Fresh",
+      status_badge: true,
+      badges,
+    });
+    expect(own.statusText).toEqual({ kind: "text", text: "Fresh" });
+    expect(own.groups[0].badgeIdxs?.[0]).toBe(own.statusIdx);
+    expect(own.entities[own.statusIdx!].badge).toEqual({ style: "tag", size: "s" });
+    // status: badge is just the text "badge", on the line
+    const word = norm({ entity: "sensor.living_room_co2", status: "badge", badges });
+    expect(word.statusBadge).toBe(false);
+    expect(word.statusText).toEqual({ kind: "text", text: "badge" });
+    expect(word.groups[0].badgeIdxs).not.toContain(word.statusIdx);
+    // status_badge: false keeps it on the line; no status, no badge
+    expect(norm({ entity: "sensor.living_room_co2", status_badge: false }).statusBadge).toBe(false);
     expect(
-      norm({ entity: "sensor.living_room_co2", status: false, status_badge: true }).groups[0]
-        .badgeIdxs,
-    ).toEqual([]);
+      norm({ entity: "sensor.living_room_co2", status: false, status_badge: true, badges })
+        .groups[0].badgeIdxs,
+    ).toHaveLength(2);
+  });
+
+  it("takes the status as a text, a template or false, its look the tile's", () => {
+    const e = "sensor.living_room_co2";
+    const fails = (o: Record<string, unknown>, msg: string) =>
+      expect(() => norm({ entity: e, ...o })).toThrow(`${T}: ${msg}`);
+    const look =
+      "status takes a text, a template or false (its look is the card's: a tag in its colour)";
+    fails({ status: { value: "Fresh" } }, look);
+    fails({ status: { badge: true, style: "filled" } }, look);
+    fails({ status: true }, look);
+    fails({ status: 3 }, look);
+    fails(
+      { badges: ["sensor.a", "status"] },
+      "status is no badge of the list: the status comes first (on a tile: status_badge: true)",
+    );
+    fails({ status_badge: "yes" }, "status_badge takes true or false");
+    fails({ status_badge: 1 }, "status_badge takes true or false");
   });
 
   it("takes the icon's badge as Home Assistant's, none or its own", () => {
     const e = "sensor.wind_speed";
-    expect(norm({ entity: e }).iconBadge).toBe("auto");
-    expect(norm({ entity: e, icon_badge: "auto" }).iconBadge).toBe("auto");
-    expect(norm({ entity: e, icon_badge: false }).iconBadge).toBe(false);
-    expect(
-      norm({ entity: e, icon_badge: { icon: "mdi:alert", color: "{{ 'red' }}" } }).iconBadge,
-    ).toEqual({
+    const badge = (cfg: Record<string, unknown>) => {
+      const c = norm({ entity: e, ...cfg });
+      return parseIconBadge(c.places.icon ? c.places.icon.badge : undefined);
+    };
+    expect(badge({})).toBe("auto");
+    expect(badge({ icon: { badge: "auto" } })).toBe("auto");
+    expect(badge({ icon: { badge: false } })).toBe(false);
+    expect(badge({ icon: { badge: { icon: "mdi:alert", color: "{{ 'red' }}" } } })).toEqual({
       icon: { kind: "text", text: "mdi:alert" },
       color: { kind: "template", template: "{{ 'red' }}" },
     });
-    expect(() => norm({ entity: e, icon_badge: 3 })).toThrow(
-      "tile-card-pro: icon_badge takes auto, false or { icon, color }",
+    // beside the icon's name and its actions
+    expect(norm({ entity: e, icon: { name: "mdi:x", badge: false } }).places.icon).toEqual({
+      type: "icon",
+      name: "mdi:x",
+      badge: false,
+    });
+    expect(() => norm({ entity: e, icon: { badge: 3 } })).toThrow(
+      "tile-card-pro: icon: { badge } takes auto, false or { icon, color }",
     );
+    expect(() => norm({ entity: e, rules: [{ above: 0, icon: { badge: 3 } }] })).toThrow(
+      "tile-card-pro: icon: { badge } takes auto, false or { icon, color }",
+    );
+  });
+
+  it("draws the icon's badge of the card, else of the matching rule", () => {
+    const tiles: TileCard[] = [];
+    const badge = (cfg: Record<string, unknown>) => {
+      const el = new TileCard();
+      el.setConfig(cfg);
+      document.body.appendChild(el);
+      el.hass = snapshot() as never;
+      tiles.push(el);
+      const b = el.shadowRoot?.querySelector(".tibadge > ha-icon");
+      return b ? b.getAttribute("icon") : null;
+    };
+    try {
+      const C = "climate.living_room";
+      expect(badge({ entity: C })).toBe("mdi:fire");
+      expect(badge({ entity: C, icon: { badge: false } })).toBeNull();
+      expect(badge({ entity: C, icon: { badge: { icon: "mdi:sofa" } } })).toBe("mdi:sofa");
+      // a matching rule's badge wins, one that does not match leaves the card's
+      const rule = (above: number) => [{ above, icon: { badge: { icon: "mdi:alert" } } }];
+      expect(badge({ entity: C, rules: rule(0) })).toBe("mdi:alert");
+      expect(badge({ entity: C, rules: rule(1000) })).toBe("mdi:fire");
+      expect(
+        badge({
+          entity: C,
+          icon: { badge: false },
+          rules: [{ above: 0, icon: { badge: "auto" } }],
+        }),
+      ).toBe("mdi:fire");
+    } finally {
+      for (const t of tiles) t.remove();
+    }
+  });
+
+  it("names the new spelling of the flat control, icon action and badge keys", () => {
+    const e = "light.desk_lamp";
+    const fails = (o: Record<string, unknown>, msg: string) =>
+      expect(() => norm({ entity: e, ...o })).toThrow(`${T}: ${msg}`);
+    fails({ control_step: 5 }, "control_step is control: { step: 5 }");
+    fails({ control_position: "end" }, "control_position is control: { position: end }");
+    fails({ icon_tap_action: "none" }, "icon_tap_action is icon: { tap_action: … }");
+    fails({ icon_badge: false }, "icon_badge is icon: { badge: false }");
+    fails({ icon_badge: "auto" }, "icon_badge is icon: { badge: … }");
+  });
+
+  it("takes the control's options in one object, the kind's controls without a type", () => {
+    const e = "light.desk_lamp";
+    const slider = norm({ entity: e, control: { type: "slider", position: "block", step: 5 } });
+    expect(slider.entities[0].control).toEqual(
+      normalizeEntityCardConfig({
+        entity: e,
+        control: "slider",
+        control_position: "block",
+        control_step: 5,
+      }).entities[0].control,
+    );
+    // without a type: the kind's own controls (the toggle at the line's end), its step changed
+    const plain = norm({ entity: e }).entities[0].control;
+    const stepped = norm({ entity: e, control: { step: 5 } }).entities[0].control;
+    expect(stepped).toEqual({ ...plain, step: 5 });
+    expect(
+      kinds(placementsOf(norm({ entity: e, control: { step: 5 } }).entities[0], "tile")),
+    ).toEqual(kinds(placementsOf(norm({ entity: e }).entities[0], "tile")));
+  });
+
+  it("takes the icon's actions in the icon, never from a rule", () => {
+    const c = norm({
+      entity: "light.desk_lamp",
+      icon: { hold_action: "more-info", double_tap_action: { action: "toggle" } },
+    });
+    expect(c.iconActions).toEqual({
+      tap: { action: "toggle" },
+      hold: { action: "more-info" },
+      dbl: { action: "toggle" },
+    });
+    expect(() =>
+      norm({ entity: "light.desk_lamp", rules: [{ state: "on", icon: { tap_action: "none" } }] }),
+    ).toThrow(`${T}: rules[0].icon: a rule sets no tap_action`);
   });
 
   it("draws Home Assistant's badge on the icon: an action, a zone, unavailable", () => {
@@ -148,6 +288,50 @@ describe("tile-card config", () => {
     expect(iconBadgeOf(withZone, st("person.a", "Work"))?.icon).toBe("mdi:briefcase");
   });
 
+  it("draws the kind's visual as a poster does, but no drawing that needs a poster's room", () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    const tiles: TileCard[] = [];
+    const draw = (cfg: Record<string, unknown>) => {
+      const el = new TileCard();
+      el.setConfig(cfg);
+      document.body.appendChild(el);
+      el.hass = snapshot() as never;
+      tiles.push(el);
+      return el.shadowRoot as ShadowRoot;
+    };
+    try {
+      // what's behind the texts is one layer in the body, as on the poster
+      expect(
+        draw({ entity: "light.living_room" }).querySelector(".body > .pback > .pglow"),
+      ).not.toBeNull();
+      expect(
+        draw({ entity: "climate.living_room" }).querySelector(".pback > .pclimate"),
+      ).not.toBeNull();
+      expect(
+        draw({ entity: "light.living_room", visual: false }).querySelector(".pglow"),
+      ).toBeNull();
+      expect(draw({ entity: "person.malte" }).querySelector(".pback.scrim > img")).not.toBeNull();
+      expect(draw({ entity: "light.living_room" }).querySelector(".tglow")).toBeNull();
+      // a cover's drawing, a robot's path and the grid's line only on a poster
+      for (const cfg of [
+        { entity: "cover.living_room_blinds" },
+        { entity: "vacuum.robot" },
+        { entity: "sensor.grid_power", kind: "grid" },
+      ]) {
+        const back = draw(cfg).querySelector<HTMLElement>(".pback");
+        expect(back?.hidden ?? true, JSON.stringify(cfg)).toBe(true);
+      }
+      // unless the card asks for it
+      expect(
+        draw({ entity: "cover.living_room_blinds", visual: "cover" }).querySelector(
+          ".pback > .pcov",
+        ),
+      ).not.toBeNull();
+    } finally {
+      for (const t of tiles) t.remove();
+    }
+  });
+
   it("takes one row unless something below the line needs a second", () => {
     const grid = (cfg: Record<string, unknown>) => {
       const el = new TileCard();
@@ -163,8 +347,15 @@ describe("tile-card config", () => {
     expect(grid({ entity: "sensor.living_room_temperature", visual: "sparkline" })).toMatchObject({
       min_rows: 2,
     });
-    expect(grid({ entity: "weather.home", show_picture: true })).toMatchObject({ min_rows: 2 });
+    // the kind's visual below the line by default (a weather's forecast, the sun's day, a solar
+    // day); visual: false leaves it out
+    expect(grid({ entity: "weather.home" })).toMatchObject({ min_rows: 2 });
+    expect(grid({ entity: "sun.sun" })).toMatchObject({ min_rows: 2 });
+    expect(grid({ entity: "sensor.solar_power", kind: "solar" })).toMatchObject({ min_rows: 2 });
+    expect(grid({ entity: "weather.home", visual: false })).toMatchObject({ min_rows: 1 });
+    // a cover's drawing and a battery's segments take no row of their own
     expect(grid({ entity: "cover.living_room_blinds" })).toMatchObject({ min_rows: 1 });
+    expect(grid({ entity: "sensor.phone_battery" })).toMatchObject({ min_rows: 1 });
     // vertical: as narrow as its controls let it be, two rows at least
     expect(grid({ entity: "sensor.living_room_temperature", vertical: true })).toEqual({
       columns: 3,

@@ -333,9 +333,8 @@ export const fillPosterSlots = (
     block.querySelector("svg")?.setAttribute("viewBox", GAUGE_CROP);
     body.appendChild(block);
   }
-  // the name on top across the poster; below the value it is part of the value's block
-  const below = ent.item.namePosition === "below" && !gauge;
-  if (!below && showName) body.appendChild(name);
+  // the name on top across the poster
+  if (showName) body.appendChild(name);
   const text = document.createElement("div");
   text.className = "ptext";
   if (showValue && !repeats && !gaugeShown && fmt) {
@@ -347,7 +346,6 @@ export const fillPosterSlots = (
     value.appendChild(big);
     text.appendChild(value);
   }
-  if (below && showName) text.appendChild(name);
   const sec = o.secondary !== undefined ? o.secondary : tplOf(ctx, ent.secondary);
   if (typeof sec === "string") text.appendChild(textEl("secondary", sec));
   else if (sec) text.appendChild(sec);

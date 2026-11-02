@@ -2,23 +2,19 @@
  * poster-card-pro – one entity (or none) as a poster, drawn the way its poster type says.
  *
  *   type: custom:poster-card-pro
- *   entity: sensor.living_room_co2         # optional; its domain and device class pick the type
- *   poster: carbon_dioxide                 # the poster type; detected when left out
- *   variant / direction / gust / today / …  # the type's own keys, flat on the card
- *   name / icon / value / secondary / color   # the slots, plain text or templates
- *   status: "{{ … }}"                      # the status badge's text, an object of badge keys, or false
- *   badges: [sensor.x, { attribute: humidity }, status]   # the corner; `status` places the status
- *   image: camera.garden                   # the backdrop: a URL, a template or an entity's picture
- *   image_blur: true                       # the backdrop blurred (px; a person's and a player's are)
- *   rules: [...]                           # replace the type's own rules as a whole
- *   visual: glow                           # sparkline … gauge, glow (lit by its level), none
- *   icon_image: person.malte                # a picture in the icon: a URL, a template or an entity's
- *   icon_ring / icon_tap_action / icon_hold_action / icon_double_tap_action   # the icon's own
- *   control / tap_action / hold_action / double_tap_action / hover / hours_to_show
+ *   entity: sensor.living_room_co2         # optional; its domain and device class pick the kind
+ *   kind: carbon_dioxide                   # what the entity is; detected when left out
+ *   direction / gust / today / …           # the kind's own keys, flat on the card
+ *   name / value / secondary / color       # the slots, plain text or templates
+ *   icon: mdi:sofa | { type: icon | image | flow, name, ring, style, src }   # the icon's place
+ *   visual: glow | { type: image | flow | sparkline | …, … } | false        # what fills the card
+ *   status: "{{ … }}"                      # the status: a text, a template, or false (first in the corner)
+ *   badges: [sensor.x, { attribute: humidity }]   # the corner, after the status
+ *   rules: [...]                           # replace the kind's own rules as a whole; set places too
+ *   icon: { tap_action, hold_action, double_tap_action }   # the icon's own actions
+ *   control / tap_action / hold_action / double_tap_action / hover
  */
 import { registerCard } from "./shared/card.ts";
-import { cssColor } from "./shared/color.ts";
-import { CARD_BG } from "./shared/constants.ts";
 import { overflows } from "./shared/entity/base.ts";
 import type { EntityCardConfig, EntityItem } from "./shared/entity/config.ts";
 import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
@@ -27,17 +23,9 @@ import { posterParts, secondaryEl } from "./shared/entity/render/lead.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { hideHover } from "./shared/hover.ts";
 import { KindCardBase } from "./shared/kinds/card.ts";
-import { fillStatus, glowLevel, glowOpacity, imageUrl, statusText } from "./shared/kinds/render.ts";
-import type { KindCtx } from "./shared/kinds/types.ts";
-import {
-  IMAGE_BLUR,
-  IMAGE_OPACITY,
-  normalizePosterConfig,
-  type PosterConfig,
-  type RuleLook,
-} from "./poster/config.ts";
+import { fillStatus, imageUrl, statusText } from "./shared/kinds/render.ts";
+import { normalizePosterConfig, type PosterConfig } from "./poster/config.ts";
 import { CARD_TYPE } from "./poster/constants.ts";
-import { updateBackdrop } from "./poster/render.ts";
 import { STYLE_POSTER_CARD_ALL } from "./poster/styles.ts";
 
 export class PosterCard extends KindCardBase {
@@ -57,29 +45,12 @@ export class PosterCard extends KindCardBase {
     return STYLE_POSTER_CARD_ALL;
   }
 
-  // ----- what the card reads beyond its items: the status's template, the backdrop's picture -----
+  // ----- what the card reads beyond its items: the status's template -----
   _extraTemplates(cfg: EntityCardConfig): string[] {
     const c = cfg as PosterConfig;
     const out = super._extraTemplates(c);
     if (c.statusText?.kind === "template") out.push(c.statusText.template);
     return out;
-  }
-  _pictures(c: PosterConfig) {
-    const rules = [...c.ruleLooks.values()];
-    return [...super._pictures(c), c.image, ...rules.map((r) => r.image)];
-  }
-
-  // the backdrop as the card writes it, with what the matching rule changes (a rule's key wins:
-  // the card's is the default)
-  _look(kc: KindCtx) {
-    const cfg = this._config as PosterConfig;
-    const r: RuleLook = this._ruleLook(kc);
-    return {
-      image: "image" in r ? (r.image ?? null) : cfg.image,
-      imageBlur: r.imageBlur ?? cfg.imageBlur ?? (cfg.kind.imageBlur ? IMAGE_BLUR : 0),
-      imageOpacity: r.imageOpacity ?? cfg.imageOpacity ?? IMAGE_OPACITY,
-      imageTint: r.imageTint ?? cfg.imageTint,
-    };
   }
 
   // ----- DOM -----
@@ -112,10 +83,10 @@ export class PosterCard extends KindCardBase {
         ent.valueSrc.text === ""
       )
         slots.value = null;
-      // icon_image: its picture in the icon while it has one, else the icon; the icon's style and
-      // ring as the matching rule says
+      // the icon place's picture while it has one, else the icon; the icon's style and ring, and
+      // the visual the item draws below the texts, as the places say now
       const pic = imageUrl(ctx, this._iconLook(kc).iconImage);
-      const icon = this._iconItem(kc, ent);
+      const icon = this._drawItem(kc, ent);
       const plead = row.querySelector<HTMLElement>(":scope > .ptop > .plead");
       if (this._keepLead(kc, plead, icon)) slots.lead = "keep";
       fillPosterSlots(
@@ -181,37 +152,7 @@ export class PosterCard extends KindCardBase {
       kc = this._kindCtx(ctx);
     // the lead's and the backdrop's motion follow every render (a new speed, a new direction)
     this._updateLead(kc, row, row.querySelector<HTMLElement>(":scope > .ptop > .plead"));
-    const look = this._look(kc);
-    const url =
-      imageUrl(ctx, look.image) ?? (look.image === false ? null : (cfg.kind.image?.(kc) ?? null));
-    const back = look.image === false ? null : cfg.kind.backdrop;
-    const key = !url && back ? back.key(kc) : "";
-    const { part, glow } = updateBackdrop(
-      body,
-      ctx,
-      url,
-      key && back ? { key, build: () => back.build(kc) } : null,
-      cfg.glow,
-      look.imageBlur,
-    );
-    const pback = body.querySelector<HTMLElement>(":scope > .pback"),
-      color = row.style.getPropertyValue("--fe-color");
-    pback?.style.setProperty("--fe-color", color);
-    // the picture's shade: as much as the picture does not show, the card's surface with its tint
-    // mixed in half and half (so the theme's text keeps reading); both fade to a new value
-    const tint = look.imageTint ? cssColor(look.imageTint, "") : "";
-    pback?.style.setProperty("--pc-shade", String(1 - look.imageOpacity));
-    pback?.style.setProperty(
-      "--pc-shade-color",
-      tint ? `color-mix(in srgb, ${tint} 50%, ${CARD_BG})` : CARD_BG,
-    );
-    // the glow in the poster's colour, as strong as its level (its opacity: a new level fades)
-    if (glow) {
-      glow.style.setProperty("--glow", color);
-      glow.style.opacity = glowOpacity(glowLevel(cfg.kind, kc));
-    }
-    card.classList.toggle("pflow", !!part || !!glow);
-    if (part && back?.update) back.update(part, kc, row);
+    this._drawBehind(body, row, kc);
     // what follows the clock or the size (a curve) checks itself whether it changed
     cfg.kind.live?.(kc, row);
     this._fitValue(card, row);
@@ -343,20 +284,6 @@ export class PosterCard extends KindCardBase {
   }
   getCardSize() {
     return 3;
-  }
-}
-
-// the poster's colour and its backdrop's shade as typed values, so they can fade (once per page;
-// another copy of the bundle has done it)
-for (const [name, syntax, initialValue] of [
-  ["--pc-tint", "<color>", "transparent"],
-  ["--pc-shade", "<number>", "0.7"],
-  ["--pc-shade-color", "<color>", "transparent"],
-]) {
-  try {
-    CSS.registerProperty({ name, syntax, inherits: true, initialValue });
-  } catch {
-    // registered already, or no CSS Properties API: the value changes at once
   }
 }
 

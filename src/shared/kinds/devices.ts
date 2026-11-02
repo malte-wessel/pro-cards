@@ -1,14 +1,15 @@
 // The domain kinds that draw their device: a media player (its cover art in the icon and blurred
-// behind the poster, its colour, the progress along the bottom), a cover (the window itself, its
-// slats or panels at the position, gliding while they move) and the robots (a vacuum's or a lawn
-// mower's path drawing itself while it works, the dock while it rests).
+// behind the card, its colour, the progress along the bottom), a cover (the window itself, its
+// slats or panels at the position, gliding while they move: `visual: cover`; a kind per look, the
+// device class's by default) and the robots (a vacuum's or a lawn mower's path drawing itself while
+// it works, the dock while it rests: `visual: path`).
 import { numAttr as num, pictureOf } from "../entity/look.ts";
 import { leadEl, secondaryEl } from "../entity/render/lead.ts";
 import type { HassEntity } from "../ha.ts";
-import { oneOf } from "../util.ts";
 import { artColor, artPending } from "./art.ts";
 import { div, partOf, pctValue, str, SVG, wordValue } from "./dom.ts";
 import { place, stateText } from "./domains.ts";
+import { IMAGE_BLUR } from "./places.ts";
 import { attention } from "./rules.ts";
 import type { Kind, KindCtx, KindHost } from "./types.ts";
 
@@ -48,11 +49,9 @@ export const MEDIA: Kind = {
   readsText: "a media player",
   keys: [],
   controls: [place("buttons", "end"), place("slider", "block")],
-  // the art in the icon unless the card says show_entity_picture: false
-  main: (_entity, raw) =>
-    raw.show_entity_picture === undefined ? { show_entity_picture: true } : {},
-  image: (c) => pictureOf(c.m.st),
-  imageBlur: true,
+  // the art in the icon, and blurred behind the card
+  icon: { type: "image" },
+  visual: { type: "image", blur: IMAGE_BLUR },
   // the art's own colour, once it has been read
   color: coverColor,
   status: (c) => c.m.look.label ?? stateText(c),
@@ -98,7 +97,15 @@ export const MEDIA: Kind = {
 
 // ----- cover -----
 
-const COVER_STYLES = ["shutter", "blind", "curtain", "garage", "gate", "awning", "window"] as const;
+export const COVER_STYLES = [
+  "shutter",
+  "blind",
+  "curtain",
+  "garage",
+  "gate",
+  "awning",
+  "window",
+] as const;
 type CoverStyle = (typeof COVER_STYLES)[number];
 const BY_CLASS: Record<string, CoverStyle> = {
   shutter: "shutter",
@@ -112,11 +119,9 @@ const BY_CLASS: Record<string, CoverStyle> = {
   window: "window",
   damper: "window",
 };
-// `variant`, else the device class's drawing, else a window pane
-const styleOf = (c: KindCtx): CoverStyle =>
-  oneOf(COVER_STYLES, c.opts.variant)
-    ? c.opts.variant
-    : (BY_CLASS[String(c.m.st?.attributes?.device_class)] ?? "window");
+// the device class's drawing, else a window pane
+const classStyle = (c: KindCtx): CoverStyle =>
+  BY_CLASS[String(c.m.st?.attributes?.device_class)] ?? "window";
 // the position drawn: the entity's, where the cover really is (a cover on its way passes every
 // position between); a cover without a position is open or closed
 const moving = (c: KindCtx) => c.m.st?.state === "opening" || c.m.st?.state === "closing";
@@ -134,34 +139,45 @@ const coverEl = (style: CoverStyle) => {
   return el;
 };
 
-export const COVER: Kind = {
-  name: "cover",
-  domains: ["cover"],
-  reads: ["cover"],
-  readsText: "a cover",
-  keys: ["variant"],
-  controls: [place("buttons", "end")],
-  status: (c) => c.m.look.label ?? stateText(c),
-  slots: (c) => {
-    const p = num(c.m.st, "current_position");
-    return p === null ? {} : { value: pctValue(c.ctx.hass, p), word: false };
-  },
-  backdrop: {
-    key: (c) => styleOf(c),
-    build: (c) => coverEl(styleOf(c)),
-    update: (el, c) => {
-      const st = c.m.st;
-      const p = positionOf(c);
-      // the variables sit on the pback, around the drawing
-      const back = el.parentElement ?? el;
-      back.style.setProperty("--p", String(p ?? 0));
-      back.style.setProperty("--tilt", String(num(st, "current_tilt_position") ?? 50));
-      el.classList.toggle("unknown", p === null);
-      el.classList.toggle("moving", moving(c));
+// a cover kind: drawn as `look` (null: the device class's look), detected by the domain (the
+// generic cover) or named (a garage door whose device class says nothing)
+const coverKind = (name: string, look: CoverStyle | null): Kind => {
+  const styleOf = (c: KindCtx) => look ?? classStyle(c);
+  const drawn = (c: KindCtx) => c.place.visual && c.place.visual.type === "cover";
+  return {
+    name,
+    ...(look ? {} : { domains: ["cover"] }),
+    reads: ["cover"],
+    readsText: "a cover",
+    keys: [],
+    controls: [place("buttons", "end")],
+    visual: { type: "cover" },
+    tileVisual: false,
+    draws: ["cover"],
+    status: (c) => c.m.look.label ?? stateText(c),
+    slots: (c) => {
+      const p = num(c.m.st, "current_position");
+      return p === null ? {} : { value: pctValue(c.ctx.hass, p), word: false };
     },
-  },
-  extra: (c) => [num(c.m.st, "current_tilt_position")],
+    backdrop: {
+      key: (c) => (drawn(c) ? styleOf(c) : ""),
+      build: (c) => coverEl(styleOf(c)),
+      update: (el, c) => {
+        const st = c.m.st;
+        const p = positionOf(c);
+        // the variables sit on the pback, around the drawing
+        const back = el.parentElement ?? el;
+        back.style.setProperty("--p", String(p ?? 0));
+        back.style.setProperty("--tilt", String(num(st, "current_tilt_position") ?? 50));
+        el.classList.toggle("unknown", p === null);
+        el.classList.toggle("moving", moving(c));
+      },
+    },
+    extra: (c) => [num(c.m.st, "current_tilt_position")],
+  };
 };
+export const COVER = coverKind("cover", null);
+export const COVER_KINDS = Object.fromEntries(COVER_STYLES.map((s) => [s, coverKind(s, s)]));
 
 // ----- vacuum and lawn mower -----
 
@@ -297,6 +313,10 @@ const robot = (name: string, domain: string, readsText: string): Kind => ({
   keys: [],
   controls: [place("buttons", "end")],
   rules: attention("error"),
+  // its route behind the card
+  visual: { type: "path" },
+  tileVisual: false,
+  draws: ["path"],
   // its battery and the room it is in, where the integration reports them
   slots: (c) => {
     const st = c.m.st;
@@ -320,7 +340,7 @@ const robot = (name: string, domain: string, readsText: string): Kind => ({
     update: (el, c) => el.classList.toggle("working", WORKING.has(String(c.m.st?.state))),
   },
   backdrop: {
-    key: () => domain,
+    key: (c) => (c.place.visual && c.place.visual.type === "path" ? domain : ""),
     build: () => {
       const el = div(`ppath ${domain === "lawn_mower" ? "lawn" : "floor"}`);
       el.appendChild(robotSvg());

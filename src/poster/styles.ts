@@ -4,7 +4,7 @@
 import { CARD_BG, iconBg } from "../shared/constants.ts";
 import { STYLE_ENTITY_CARD } from "../shared/entity/render/styles.ts";
 import { STYLE_FLOW, STYLE_FLOW_MOTION } from "../shared/flow/styles.ts";
-import { STYLE_KIND_CARD_FOCUS, STYLE_KINDS } from "../shared/kinds/styles.ts";
+import { STYLE_KIND_BACKDROP, STYLE_KIND_CARD_FOCUS, STYLE_KINDS } from "../shared/kinds/styles.ts";
 import { STYLE_RAIN } from "../shared/rain/styles.ts";
 import { STYLE_SUN_CURVE } from "../shared/sun/styles.ts";
 import { STYLE_TREND } from "../shared/trend/styles.ts";
@@ -19,33 +19,6 @@ const STYLE_POSTER_CARD = `
   /* the poster's colour (PosterCard._rowColor) fades to a new one */
   ha-card.layout-poster > .body { transition: --pc-tint .8s ease; }
   @media (prefers-reduced-motion: reduce) { ha-card.layout-poster > .body { transition: none; } }
-  .pback { position: absolute; inset: 0; z-index: -2; pointer-events: none; overflow: hidden; border-radius: inherit; }
-  .pback[hidden] { display: none; }
-  .pback > img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  /* a new picture fades in over the one before (updateBackdrop) */
-  .pback > img.pin { position: absolute; inset: 0; opacity: 0; transition: opacity .7s ease; }
-  .pback > img.pin.on { opacity: 1; }
-  /* the icon's new picture (the next song's cover) fades in once it has loaded */
-  .plead img.picture.pwait { opacity: 0; }
-  .plead img.picture.pfade { animation: pfade .7s ease both; }
-  @keyframes pfade { from { opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) { .pback > img.pin, .plead img.picture.pfade { transition: none; animation: none; } }
-  /* image_blur: drawn larger by twice the blur on every side, so the blur's soft edge (where it
-     fades into nothing) lies outside the card, also while a new picture fades in over the last */
-  .pback.blur > img { position: absolute; left: calc(var(--pblur) * -2); top: calc(var(--pblur) * -2); width: calc(100% + var(--pblur) * 4); height: calc(100% + var(--pblur) * 4); filter: blur(var(--pblur)); }
-  /* the scrim: the card's own surface evenly over the whole picture, so the theme's text reads on
-     any picture; as strong as the picture does not show (image_opacity), a tint (image_tint) mixed
-     into the surface (PosterCard._render). A new strength or tint fades */
-  .pback { transition: --pc-shade .6s ease, --pc-shade-color .6s ease; }
-  @media (prefers-reduced-motion: reduce) { .pback { transition: none; } }
-  .pback.scrim::after { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, var(--pc-shade-color, ${CARD_BG}) calc(var(--pc-shade, .7) * 100%), transparent); }
-  /* over a picture the status badge is filled with the poster's colour, so it reads on any picture */
-  ha-card:has(> .body > .pback.scrim) .row.poster > .ptop > .corner > .row.hval.b-tag { --b-ink: var(--text-primary-color, #fff); background: var(--fe-color); border-color: transparent; }
-  ha-card:has(> .body > .pback.scrim) .row.poster > .ptop > .corner > .row.hval.b-tag :is(ha-icon, ha-state-icon, .state, .state.accent, .secondary) { color: var(--b-ink); }
-  /* visual: glow: the poster's colour from the bottom of the card, as strong as its level (its
-     opacity, set by the card: a new level fades as switching does); nothing at 0. The last part
-     of the backdrop: over a kind's drawing, under an image's scrim */
-  .pglow { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 105%, color-mix(in srgb, var(--glow) 60%, transparent) 0%, transparent 72%); opacity: 0; transition: opacity .6s; }
   .row.hval.pstatus.empty { display: none; }
   /* the corner floats over the poster's top right, so the badges take no height from the name,
      the value and the picture (the top line is as tall as the lead); more badges than the poster
@@ -54,9 +27,7 @@ const STYLE_POSTER_CARD = `
   ha-card.layout-poster .row.poster { position: static; }
   ha-card.layout-poster .row.poster > .ptop > .corner { position: absolute; z-index: 2; top: 16px; right: 16px; max-width: calc(100% - 88px); }
 
-  /* a kind's field as the backdrop (wind, rain): the band fills the card; the lead keeps a solid
-     circle over it */
-  .pback > .wflow.bg { position: absolute; inset: 0; border-radius: 0; }
+  /* over a drawing or a glow behind the texts the lead keeps a solid circle */
   ha-card.pflow .plead .lead .shape { background: ${iconBg("var(--fe-color)", CARD_BG)}; }
   ha-card.pflow .plead .lead.plain .shape { background: transparent; }
 
@@ -96,6 +67,7 @@ export const STYLE_POSTER_CARD_ALL =
   STYLE_SUN_CURVE +
   STYLE_TREND +
   STYLE_KINDS +
+  STYLE_KIND_BACKDROP +
   STYLE_KIND_CARD_FOCUS +
   STYLE_POSTER_CARD +
   STYLE_FLOW_MOTION;

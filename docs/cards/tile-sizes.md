@@ -4,18 +4,18 @@ outline: [2, 2]
 
 # Tile sizes
 
-How a [tile](/cards/tile-card) fits its size, then every [poster type](/cards/tile-types) at six sizes in one section. First three horizontal: 12 × 1 (the whole section), 6 × 1 (the default's width) and 6 × 2. Then three vertical: 6 × 2, 6 × 3 and 4 × 2.
+How a [tile](/cards/tile-card) fits its size, then every [kind](/cards/tile-types) at six sizes in one section. First three horizontal: 12 × 1 (the whole section), 6 × 1 (the default's width) and 6 × 2. Then three vertical: 6 × 2, 6 × 3 and 4 × 2.
 
-A type that asks for more room shows the sizes it takes instead, as Home Assistant draws a smaller one at the least a card asks for: a trend's lines take two rows, three vertical; a vertical tile with a control takes three rows, six columns with a stepper, buttons or speeds.
+A kind that asks for more room shows the sizes it takes instead, as Home Assistant draws a smaller one at the least a card asks for: a visual below the line (a trend's lines, the sun's day, a battery's segments, today's production) takes two rows, three vertical; a vertical tile with a control takes three rows, six columns with a stepper, buttons or speeds.
 
-Where a type's status fits as a badge beside the whole name, the tile shows it so (`status_badge: true`): on the whole section and on most vertical tiles. At half a section it stays on the line, where a badge would cut the name; see [Badges](/cards/tile-badges).
+Where a kind's status fits as a badge beside the whole name, the tile shows it so (`status_badge: true`): on the whole section and on most vertical tiles. At half a section it stays on the line, where a badge would cut the name; see [Badges](/cards/tile-badges).
 
 ## How a tile fits its size
 
 A tile takes half a section (six columns), and its height follows its content (`rows: auto`): one 56 px row for the icon, the name and the line, more for what sits below the line.
 
-- **Below the line** go a picture (`visual`, `show_picture`) and a control at `block` (a slider). A tile with a plot or a picture asks the grid for two rows at least.
-- **At the end of the line** go the type's controls. On a narrow tile they move under the line rather than squeeze the name, and the tile grows by their height. A tile with a control on its line asks the grid for more columns: four for a switch or a hold, six for anything wider (a stepper, speeds, buttons).
+- **Below the line** go a visual (a plot, a bar, the kind's own: the sun's day, the forecast, a battery's segments) and a control at `block` (a slider). A tile with a visual below the line asks the grid for two rows at least; `visual: false` keeps it to one.
+- **At the end of the line** go the kind's controls. On a narrow tile they move under the line rather than squeeze the name, and the tile grows by their height. A tile with a control on its line asks the grid for more columns: four for a switch or a hold, six for anything wider (a stepper, speeds, buttons).
 - **Without room under the line** (a fixed row, a card around it giving less), the controls stay on the line beside the name, cut to 40 px at least. Where even that does not fit, they are left out, and a tap opens more-info with them.
 - **The line** is cut at its end where it is too long, and the name above it too.
 
@@ -44,9 +44,9 @@ A tile takes half a section (six columns), and its height follows its content (`
 
 ## A vertical tile
 
-`vertical: true` puts the icon on top, with the name and the line centred under it and the controls under them, as Home Assistant's own tile does. Its line is narrow: it shows the value and the status, not what the type adds after them (a `secondary` you write stays).
+`vertical: true` puts the icon on top, with the name and the line centred under it and the controls under them, as Home Assistant's own tile does. Its line is narrow: it shows the value and the status, not what the kind adds after them (a `secondary` you write stays).
 
-A vertical tile takes a quarter of a section and two rows at least. A control under the name takes a third row, a plot or a picture one more. A stepper, a select, buttons or speeds need half a section across it, so with one of them it takes six columns.
+A vertical tile takes a quarter of a section and two rows at least. A control under the name takes a third row, a visual below the line one more. A stepper, a select, buttons or speeds need half a section across it, so with one of them it takes six columns.
 
 ## Entity
 
@@ -156,33 +156,39 @@ The line holds the charge, Discharging and the power: at 6 × 1 it is cut at its
 
 ## Weather
 
-Without `show_picture`, the condition's picture, the temperature and the condition.
+Without its forecast (`visual: false`), the condition's picture, the temperature and the condition.
 
 ::: live
 
 ```yaml
 - type: custom:tile-card-pro
   entity: weather.home
+  visual: false
   status_badge: true
   grid_options: { columns: 12, rows: 1 }
 - type: custom:tile-card-pro
   entity: weather.home
+  visual: false
   grid_options: { columns: 6, rows: 1 }
 - type: custom:tile-card-pro
   entity: weather.home
+  visual: false
   grid_options: { columns: 6, rows: 2 }
 - type: custom:tile-card-pro
   entity: weather.home
+  visual: false
   vertical: true
   status_badge: true
   grid_options: { columns: 6, rows: 2 }
 - type: custom:tile-card-pro
   entity: weather.home
+  visual: false
   vertical: true
   status_badge: true
   grid_options: { columns: 6, rows: 3 }
 - type: custom:tile-card-pro
   entity: weather.home
+  visual: false
   vertical: true
   status_badge: true
   grid_options: { columns: 4, rows: 2 }
@@ -226,7 +232,7 @@ Without `show_picture`, the condition's picture, the temperature and the conditi
 
 ## Wind
 
-The direction and the gusts are the type's line: the vertical tiles leave them out.
+The direction and the gusts are the kind's line: the vertical tiles leave them out.
 
 ::: live
 
@@ -296,31 +302,31 @@ The direction and the gusts are the type's line: the vertical tiles leave them o
 
 ## Trend
 
-Its lines are its picture, so it takes two rows at least, three vertical: 12 × 2 and 6 × 2, then 6 × 3 and 4 × 3.
+Its lines are its visual, so it takes two rows at least, three vertical: 12 × 2 and 6 × 2, then 6 × 3 and 4 × 3.
 
 ::: live
 
 ```yaml
 - type: custom:tile-card-pro
-  poster: trend
+  kind: trend
   name: Temperatures
   series: [sensor.living_room_temperature, sensor.outdoor_temperature]
   status_badge: true
   grid_options: { columns: 12, rows: 2 }
 - type: custom:tile-card-pro
-  poster: trend
+  kind: trend
   name: Temperatures
   series: [sensor.living_room_temperature, sensor.outdoor_temperature]
   grid_options: { columns: 6, rows: 2 }
 - type: custom:tile-card-pro
-  poster: trend
+  kind: trend
   name: Temperatures
   series: [sensor.living_room_temperature, sensor.outdoor_temperature]
   vertical: true
   status_badge: true
   grid_options: { columns: 6, rows: 3 }
 - type: custom:tile-card-pro
-  poster: trend
+  kind: trend
   name: Temperatures
   series: [sensor.living_room_temperature, sensor.outdoor_temperature]
   vertical: true
@@ -583,32 +589,32 @@ Its two buttons keep to the line at 6 × 1, the name and the line giving way to 
 ```yaml
 - type: custom:tile-card-pro
   entity: sensor.grid_power
-  poster: grid
+  kind: grid
   status_badge: true
   grid_options: { columns: 12, rows: 1 }
 - type: custom:tile-card-pro
   entity: sensor.grid_power
-  poster: grid
+  kind: grid
   grid_options: { columns: 6, rows: 1 }
 - type: custom:tile-card-pro
   entity: sensor.grid_power
-  poster: grid
+  kind: grid
   grid_options: { columns: 6, rows: 2 }
 - type: custom:tile-card-pro
   entity: sensor.grid_power
-  poster: grid
+  kind: grid
   vertical: true
   status_badge: true
   grid_options: { columns: 6, rows: 2 }
 - type: custom:tile-card-pro
   entity: sensor.grid_power
-  poster: grid
+  kind: grid
   vertical: true
   status_badge: true
   grid_options: { columns: 6, rows: 3 }
 - type: custom:tile-card-pro
   entity: sensor.grid_power
-  poster: grid
+  kind: grid
   vertical: true
   status_badge: true
   grid_options: { columns: 4, rows: 2 }
@@ -623,34 +629,34 @@ Its two buttons keep to the line at 6 × 1, the name and the line giving way to 
 ```yaml
 - type: custom:tile-card-pro
   entity: sensor.solar_power
-  poster: solar
+  kind: solar
   today: sensor.energy_today
   grid_options: { columns: 12, rows: 1 }
 - type: custom:tile-card-pro
   entity: sensor.solar_power
-  poster: solar
+  kind: solar
   today: sensor.energy_today
   grid_options: { columns: 6, rows: 1 }
 - type: custom:tile-card-pro
   entity: sensor.solar_power
-  poster: solar
+  kind: solar
   today: sensor.energy_today
   grid_options: { columns: 6, rows: 2 }
 - type: custom:tile-card-pro
   entity: sensor.solar_power
-  poster: solar
+  kind: solar
   today: sensor.energy_today
   vertical: true
   grid_options: { columns: 6, rows: 2 }
 - type: custom:tile-card-pro
   entity: sensor.solar_power
-  poster: solar
+  kind: solar
   today: sensor.energy_today
   vertical: true
   grid_options: { columns: 6, rows: 3 }
 - type: custom:tile-card-pro
   entity: sensor.solar_power
-  poster: solar
+  kind: solar
   today: sensor.energy_today
   vertical: true
   grid_options: { columns: 4, rows: 2 }
@@ -665,32 +671,32 @@ Its two buttons keep to the line at 6 × 1, the name and the line giving way to 
 ```yaml
 - type: custom:tile-card-pro
   entity: sensor.ev_battery
-  poster: car
+  kind: car
   status_badge: true
   grid_options: { columns: 12, rows: 1 }
 - type: custom:tile-card-pro
   entity: sensor.ev_battery
-  poster: car
+  kind: car
   grid_options: { columns: 6, rows: 1 }
 - type: custom:tile-card-pro
   entity: sensor.ev_battery
-  poster: car
+  kind: car
   grid_options: { columns: 6, rows: 2 }
 - type: custom:tile-card-pro
   entity: sensor.ev_battery
-  poster: car
+  kind: car
   vertical: true
   status_badge: true
   grid_options: { columns: 6, rows: 2 }
 - type: custom:tile-card-pro
   entity: sensor.ev_battery
-  poster: car
+  kind: car
   vertical: true
   status_badge: true
   grid_options: { columns: 6, rows: 3 }
 - type: custom:tile-card-pro
   entity: sensor.ev_battery
-  poster: car
+  kind: car
   vertical: true
   status_badge: true
   grid_options: { columns: 4, rows: 2 }
@@ -705,38 +711,32 @@ Its two buttons keep to the line at 6 × 1, the name and the line giving way to 
 ```yaml
 - type: custom:tile-card-pro
   entity: sensor.washer_power
-  poster: appliance
-  variant: washer
+  kind: washer
   status_badge: true
   grid_options: { columns: 12, rows: 1 }
 - type: custom:tile-card-pro
   entity: sensor.washer_power
-  poster: appliance
-  variant: washer
+  kind: washer
   grid_options: { columns: 6, rows: 1 }
 - type: custom:tile-card-pro
   entity: sensor.washer_power
-  poster: appliance
-  variant: washer
+  kind: washer
   grid_options: { columns: 6, rows: 2 }
 - type: custom:tile-card-pro
   entity: sensor.washer_power
-  poster: appliance
-  variant: washer
+  kind: washer
   vertical: true
   status_badge: true
   grid_options: { columns: 6, rows: 2 }
 - type: custom:tile-card-pro
   entity: sensor.washer_power
-  poster: appliance
-  variant: washer
+  kind: washer
   vertical: true
   status_badge: true
   grid_options: { columns: 6, rows: 3 }
 - type: custom:tile-card-pro
   entity: sensor.washer_power
-  poster: appliance
-  variant: washer
+  kind: washer
   vertical: true
   grid_options: { columns: 4, rows: 2 }
 ```

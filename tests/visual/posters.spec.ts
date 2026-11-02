@@ -42,7 +42,7 @@ add("pt-entity", [
   p("switch.coffee_machine"),
   p("input_select.house_mode"),
   p("input_number.target_humidity"),
-  p("light.living_room", { poster: "entity" }),
+  p("light.living_room", { kind: "entity" }),
 ]);
 add("pt-entity-states", [
   p("switch.shed_heater"),
@@ -59,7 +59,7 @@ add("pt-entity-states", [
     "pt-battery",
     [
       ...b.ids.map((id) => p(id)),
-      p("sensor.phone_battery", { poster: "battery" }),
+      p("sensor.phone_battery", { kind: "battery" }),
       p(b.ids[3], { name: "No rules", rules: [] }),
     ],
     { states: b.states },
@@ -111,8 +111,8 @@ add(
 
 add("pt-weather", [
   p("weather.home"),
-  p("weather.home", { show_entity_picture: false }),
-  p("weather.home", { hours_to_show: 24, name: "24 hours" }),
+  p("weather.home", { icon: { type: "icon" } }),
+  p("weather.home", { visual: { hours: 24 }, name: "24 hours" }),
   p("weather.home", { rules: [{ state: "partlycloudy", color: "teal", label: "Mild" }] }),
 ]);
 {
@@ -132,19 +132,19 @@ add("pt-weather", [
   const n = levels("weather.home", "pt_night", ["clear-night", "partlycloudy"]);
   add(
     "pt-weather-night",
-    [...n.ids.map((id) => p(id)), ...n.ids.map((id) => p(id, { show_entity_picture: false }))],
+    [...n.ids.map((id) => p(id)), ...n.ids.map((id) => p(id, { icon: { type: "icon" } }))],
     { states: { ...n.states, "sun.sun": { state: "below_horizon" } }, time: at(12) },
   );
 }
 
 add("pt-sun", [
   p("sun.sun"),
-  p(null, { poster: "sun", name: "Sun" }),
+  p(null, { kind: "sun", name: "Sun" }),
   p("sun.sun", { color: "deep-orange", name: "Own colour" }),
   p("sun.sun", { grid_options: { columns: 6, rows: 4 } }),
 ]);
-add("pt-sun-evening", [p("sun.sun"), p(null, { poster: "sun" })], { time: at(7) });
-add("pt-sun-night", [p("sun.sun"), p(null, { poster: "sun" })], { time: at(12) });
+add("pt-sun-evening", [p("sun.sun"), p(null, { kind: "sun" })], { time: at(7) });
+add("pt-sun-night", [p("sun.sun"), p(null, { kind: "sun" })], { time: at(12) });
 
 {
   const inputs = { direction: "sensor.wind_direction", gust: "sensor.wind_gust" };
@@ -153,7 +153,7 @@ add("pt-sun-night", [p("sun.sun"), p(null, { poster: "sun" })], { time: at(12) }
     "pt-wind",
     [
       p("sensor.wind_speed"),
-      p("weather.home", { poster: "wind" }),
+      p("weather.home", { kind: "wind" }),
       p("sensor.wind_speed", { direction: false, gust: false, name: "No direction" }),
       p(w.ids[0], inputs),
     ],
@@ -185,7 +185,7 @@ add("pt-sun-night", [p("sun.sun"), p(null, { poster: "sun" })], { time: at(12) }
 }
 add("pt-trend", [
   p(null, {
-    poster: "trend",
+    kind: "trend",
     name: "Temperatures",
     series: [
       "sensor.living_room_temperature",
@@ -194,19 +194,19 @@ add("pt-trend", [
     ],
   }),
   p(null, {
-    poster: "trend",
+    kind: "trend",
     name: "Named and coloured",
-    hours_to_show: 24,
+    visual: { hours: 24 },
     series: [
       { entity: "sensor.living_room_humidity", name: "Living", color: "teal" },
       { entity: "sensor.bathroom_humidity", name: "Bath", color: "purple" },
     ],
   }),
   p("sensor.outdoor_humidity", {
-    poster: "trend",
+    kind: "trend",
     series: ["sensor.outdoor_humidity", "sensor.kitchen_humidity"],
   }),
-  p(null, { poster: "trend", name: "One line", series: ["sensor.power_consumption"] }),
+  p(null, { kind: "trend", name: "One line", series: ["sensor.power_consumption"] }),
 ]);
 
 add(
@@ -292,8 +292,8 @@ add(
     p("person.sam"),
     p("person.kim"),
     p("person.pt_work"),
-    p("person.malte", { show_entity_picture: false, name: "No picture in the icon" }),
-    p("person.malte", { image_blur: false, name: "Sharp" }),
+    p("person.malte", { icon: false, name: "No picture in the icon" }),
+    p("person.malte", { visual: { blur: false }, name: "Sharp" }),
   ],
   {
     states: {
@@ -306,7 +306,7 @@ add(
   [
     p("media_player.living_room_speaker"),
     p("media_player.bedroom_speaker"),
-    p("media_player.kitchen_speaker", { show_entity_picture: false }),
+    p("media_player.kitchen_speaker", { icon: { type: "icon" } }),
     p("media_player.pt_off"),
   ],
   {
@@ -369,11 +369,11 @@ add(
 add(
   "pt-grid",
   [
-    p("sensor.grid_power", { poster: "grid" }),
-    p("sensor.pt_grid_in", { poster: "grid" }),
-    p("sensor.pt_grid_idle", { poster: "grid" }),
+    p("sensor.grid_power", { kind: "grid" }),
+    p("sensor.pt_grid_in", { kind: "grid" }),
+    p("sensor.pt_grid_idle", { kind: "grid" }),
     p(null, {
-      poster: "grid",
+      kind: "grid",
       name: "Grid",
       import: "sensor.grid_import_power",
       export: "sensor.grid_export_power",
@@ -389,20 +389,20 @@ add(
 add(
   "pt-solar",
   [
-    p("sensor.solar_power", { poster: "solar", today: "sensor.energy_today" }),
-    p("sensor.solar_power", { poster: "solar", today: false, name: "No today" }),
-    p("sensor.balcony_solar_power", { poster: "solar" }),
-    p("sensor.pt_solar_off", { poster: "solar", today: "sensor.energy_today" }),
+    p("sensor.solar_power", { kind: "solar", today: "sensor.energy_today" }),
+    p("sensor.solar_power", { kind: "solar", today: false, name: "No today" }),
+    p("sensor.balcony_solar_power", { kind: "solar" }),
+    p("sensor.pt_solar_off", { kind: "solar", today: "sensor.energy_today" }),
   ],
   { states: { "sensor.pt_solar_off": like("sensor.solar_power", 0) } },
 );
 add(
   "pt-car",
   [
-    p("sensor.ev_battery", { poster: "car" }),
-    p("sensor.ev_battery", { poster: "car", charging: false, name: "Plugged in" }),
-    p("sensor.ev_battery", { poster: "car", charging: false, plugged: false, name: "Away" }),
-    p("sensor.pt_ev_low", { poster: "car", range: "sensor.pt_ev_range", charging: false }),
+    p("sensor.ev_battery", { kind: "car" }),
+    p("sensor.ev_battery", { kind: "car", charging: false, name: "Plugged in" }),
+    p("sensor.ev_battery", { kind: "car", charging: false, plugged: false, name: "Away" }),
+    p("sensor.pt_ev_low", { kind: "car", range: "sensor.pt_ev_range", charging: false }),
   ],
   {
     states: {
@@ -413,30 +413,30 @@ add(
   },
 );
 add("pt-appliance", [
-  p("sensor.washer_power", { poster: "appliance" }),
-  p("sensor.dryer_power", { poster: "appliance" }),
-  p("sensor.heat_pump_power", { poster: "appliance", variant: "heat_pump" }),
-  p("sensor.office_power", { poster: "appliance", running_above: 200, name: "Below threshold" }),
+  p("sensor.washer_power", { kind: "appliance" }),
+  p("sensor.dryer_power", { kind: "appliance" }),
+  p("sensor.heat_pump_power", { kind: "heat_pump" }),
+  p("sensor.office_power", { kind: "appliance", running_above: 200, name: "Below threshold" }),
 ]);
 
 // ----- the variants -----
 
 add(
   "pv-wind",
-  ["dots", "lines", "swoosh", "vectors"].map((variant) =>
-    p("sensor.wind_speed", { variant, name: variant }),
+  ["dots", "lines", "swoosh", "vectors"].map((style) =>
+    p("sensor.wind_speed", { visual: { type: "flow", style }, name: style }),
   ),
 );
 add("pv-rain", [
-  ...["drops", "ripples", "fill"].map((variant) =>
-    p("sensor.rain_rate_roof", { variant, name: variant }),
+  ...["drops", "ripples", "fill"].map((style) =>
+    p("sensor.rain_rate_roof", { visual: { type: "flow", style }, name: style }),
   ),
-  p("sensor.rain_rate", { variant: "fill", name: "fill, dry" }),
+  p("sensor.rain_rate", { visual: { type: "flow", style: "fill" }, name: "fill, dry" }),
 ]);
 add(
   "pv-cover",
-  ["shutter", "blind", "curtain", "garage", "gate", "awning", "window"].map((variant) =>
-    p("cover.pt_half", { variant, name: variant }),
+  ["shutter", "blind", "curtain", "garage", "gate", "awning", "window"].map((kind) =>
+    p("cover.pt_half", { kind, name: kind }),
   ),
   {
     states: {
@@ -448,27 +448,30 @@ add(
   },
 );
 add("pv-appliance", [
-  ...["pump", "washer", "dryer", "dishwasher", "heat_pump"].map((variant) =>
-    p("sensor.washer_power", { poster: "appliance", variant, name: variant }),
+  ...["pump", "washer", "dryer", "dishwasher", "heat_pump"].map((kind) =>
+    p("sensor.washer_power", { kind, name: kind }),
   ),
-  p("sensor.dryer_power", { poster: "appliance", variant: "dryer", name: "dryer, off" }),
+  p("sensor.dryer_power", { kind: "dryer", name: "dryer, off" }),
 ]);
 
 // ----- the poster's options -----
 
 add("po-texts", [
   p("sensor.outdoor_temperature", { name: "Outside", secondary: "In the shade" }),
-  p("sensor.outdoor_temperature", { name_position: "below" }),
   p("sensor.outdoor_temperature", { prefix: "≈ ", suffix: " now", decimals: 0 }),
   p("sensor.pressure", { unit: "mbar", name: "Unit of its own" }),
-  p("weather.home", { poster: "entity", attribute: "humidity", name: "An attribute" }),
+  p("weather.home", { kind: "entity", attribute: "humidity", name: "An attribute" }),
   p(null, { name: "Note", icon: "mdi:note-outline", value: "Bins out" }),
 ]);
 add("po-hide", [
   p("sensor.wind_speed", { show_name: false }),
   p("sensor.wind_speed", { show_icon: false }),
   p("sensor.wind_speed", { show_value: false }),
-  p("switch.garden_pump", { image: "camera.garden", show_icon: false, show_value: false }),
+  p("switch.garden_pump", {
+    visual: { type: "image", src: "camera.garden" },
+    show_icon: false,
+    show_value: false,
+  }),
 ]);
 add("po-no-data", [
   p("sensor.robot_current_room", { visual: "sparkline" }),
@@ -490,25 +493,34 @@ add("po-templates", [
 ]);
 add("po-icon", [
   p("sensor.outdoor_temperature", { icon: "mdi:sun-thermometer" }),
-  p("sensor.outdoor_temperature", { icon_style: "plain" }),
-  p("sensor.robot_battery", { poster: "entity", icon_ring: true }),
-  p("sensor.living_room_humidity", { icon_ring: true, min: 30, max: 70, icon_style: "plain" }),
-  p("switch.garden_pump", { icon_image: "camera.garden" }),
+  p("sensor.outdoor_temperature", { icon: { style: "plain" } }),
+  p("sensor.robot_battery", { kind: "entity", icon: { ring: true } }),
+  p("sensor.living_room_humidity", {
+    icon: { ring: true, style: "plain" },
+    min: 30,
+    max: 70,
+  }),
+  p("switch.garden_pump", { icon: { type: "image", src: "camera.garden" } }),
   p(null, {
     name: "Malte",
     value: "{{ states('person.malte') }}",
-    icon_image: "person.malte",
-    icon_ring: true,
+    icon: { type: "image", src: "person.malte", ring: true },
   }),
 ]);
 add("po-icon-image", [
-  p("sensor.wind_speed", { icon_image: "person.sam", name: "Over the animated lead" }),
+  p("sensor.wind_speed", {
+    icon: { type: "image", src: "person.sam" },
+    name: "Over the animated lead",
+  }),
   p(null, {
     name: "From a template",
-    icon_image: "{{ state_attr('person.sam', 'entity_picture') }}",
+    icon: { type: "image", src: "{{ state_attr('person.sam', 'entity_picture') }}" },
   }),
-  p(null, { name: "No picture: the icon", icon_image: "person.kim", icon: "mdi:star" }),
-  p("camera.garden", { show_entity_picture: true }),
+  p(null, {
+    name: "No picture: the icon",
+    icon: { type: "image", src: "person.kim", name: "mdi:star" },
+  }),
+  p("camera.garden", { icon: { type: "image" } }),
 ]);
 add("po-colour", [
   p("sensor.outdoor_temperature", { color: "red" }),
@@ -530,50 +542,65 @@ add("po-visuals", [
   p("sensor.living_room_humidity", { visual: "gauge", min: 0, max: 100 }),
   p("sensor.living_room_temperature", { visual: "glow", min: 15, max: 25 }),
   p("switch.coffee_machine", { visual: "glow", name: "Glow, off" }),
-  p("light.living_room", { visual: "none", name: "No glow" }),
+  p("light.living_room", { visual: false, name: "No glow" }),
 ]);
 add("po-image", [
-  p("switch.garden_pump", { image: "camera.garden", name: "Default" }),
-  p("switch.garden_pump", { image: "camera.garden", image_opacity: 0.8, name: "0.8" }),
-  p("switch.garden_pump", { image: "camera.garden", image_blur: true, name: "Blurred" }),
+  p("switch.garden_pump", { visual: { type: "image", src: "camera.garden" }, name: "Default" }),
   p("switch.garden_pump", {
-    image: "camera.garden",
-    image_blur: 4,
-    image_opacity: 0.6,
+    visual: { type: "image", src: "camera.garden", opacity: 0.8 },
+    name: "0.8",
+  }),
+  p("switch.garden_pump", {
+    visual: { type: "image", src: "camera.garden", blur: true },
+    name: "Blurred",
+  }),
+  p("switch.garden_pump", {
+    visual: { type: "image", src: "camera.garden", blur: 4, opacity: 0.6 },
     name: "4 px",
   }),
   p("switch.garden_pump", {
-    image: "camera.garden",
-    image_tint: "indigo",
-    image_opacity: 0.5,
+    visual: { type: "image", src: "camera.garden", tint: "indigo", opacity: 0.5 },
     name: "Tinted",
   }),
-  p("person.malte", { image: false, name: "No backdrop" }),
+  p("person.malte", { visual: false, name: "No backdrop" }),
 ]);
 add("po-image-sources", [
   p("sensor.outdoor_temperature", {
-    image: "{{ state_attr('camera.garden', 'entity_picture') }}",
+    visual: { type: "image", src: "{{ state_attr('camera.garden', 'entity_picture') }}" },
   }),
-  p("sensor.outdoor_temperature", { image: "person.sam", image_opacity: 0.7 }),
-  p("media_player.living_room_speaker", { image: false }),
-  p("media_player.living_room_speaker", { image_blur: false, image_opacity: 0.6 }),
+  p("sensor.outdoor_temperature", {
+    visual: { type: "image", src: "person.sam", opacity: 0.7 },
+  }),
+  p("media_player.living_room_speaker", { visual: false }),
+  p("media_player.living_room_speaker", { visual: { blur: false, opacity: 0.6 } }),
 ]);
 add("po-rule-looks", [
   p("switch.garden_pump", {
     name: "Matches",
-    rules: [{ state: "off", image: "camera.garden", image_opacity: 0.6, color: "green" }],
+    rules: [
+      {
+        state: "off",
+        visual: { type: "image", src: "camera.garden", opacity: 0.6 },
+        color: "green",
+      },
+    ],
   }),
   p("switch.garden_pump", {
     name: "Does not match",
-    rules: [{ state: "on", image: "camera.garden", image_opacity: 0.6 }],
+    rules: [{ state: "on", visual: { type: "image", src: "camera.garden", opacity: 0.6 } }],
   }),
-  p("light.living_room", { rules: [{ state: "on", icon_style: "plain", icon_ring: true }] }),
-  p("person.malte", { rules: [{ state: "home", image: false, icon_image: false }] }),
-  p("sensor.outdoor_temperature", { rules: [{ above: 0, icon_image: "person.malte" }] }),
+  p("light.living_room", {
+    rules: [{ state: "on", icon: { style: "plain", ring: true } }],
+  }),
+  p("person.malte", {
+    rules: [{ state: "home", visual: false }],
+  }),
+  p("sensor.outdoor_temperature", {
+    rules: [{ above: 0, icon: { type: "image", src: "person.malte" } }],
+  }),
   p("switch.garden_pump", {
-    image: "camera.garden",
-    image_opacity: 0.2,
-    rules: [{ state: "off", image_tint: "blue", image_blur: 8, image_opacity: 0.7 }],
+    visual: { type: "image", src: "camera.garden", opacity: 0.2 },
+    rules: [{ state: "off", visual: { tint: "blue", blur: 8, opacity: 0.7 } }],
   }),
 ]);
 add("po-controls", [
@@ -581,7 +608,7 @@ add("po-controls", [
   p("light.attic", { control: "slider" }),
   p("input_number.target_humidity", { control: "stepper" }),
   p("fan.living_room"),
-  p("climate.living_room", { control: "segments", control_attribute: "preset_mode" }),
+  p("climate.living_room", { control: { type: "segments", attribute: "preset_mode" } }),
   p("input_select.house_mode", { control: "select" }),
   p("button.restart_router", { control: "button" }),
   p("lock.front_door", { control: "hold" }),
@@ -591,18 +618,20 @@ add("po-controls-buttons", [
     name: "Living room",
     icon: "mdi:sofa",
     value: "Evening",
-    control: "buttons",
-    control_options: [
-      { entity: "light.living_room", label: "Ceiling" },
-      { entity: "light.kitchen", icon: "mdi:lightbulb-outline" },
-      { icon: "mdi:movie-open", label: "Movie", action: { action: "none" } },
-    ],
+    control: {
+      type: "buttons",
+      options: [
+        { entity: "light.living_room", label: "Ceiling" },
+        { entity: "light.kitchen", icon: "mdi:lightbulb-outline" },
+        { icon: "mdi:movie-open", label: "Movie", action: { action: "none" } },
+      ],
+    },
     grid_options: { columns: 12 },
   }),
   p("light.living_room", { control: false, name: "No control" }),
-  p("light.attic", { control: "slider", control_position: "end", name: "Slider at the end" }),
-  p("input_number.target_humidity", { control: "stepper", control_position: "block" }),
-  p("fan.living_room", { control: "segments", control_position: "block" }),
+  p("light.attic", { control: { type: "slider", position: "end" }, name: "Slider at the end" }),
+  p("input_number.target_humidity", { control: { type: "stepper", position: "block" } }),
+  p("fan.living_room", { control: { type: "segments", position: "block" } }),
 ]);
 
 // ----- the status and the badges -----
@@ -610,18 +639,13 @@ add("po-controls-buttons", [
 add("pb-status", [
   p("light.living_room", { status: false, name: "No status" }),
   p("light.living_room", { status: "Reading light" }),
-  p("sensor.outdoor_temperature", {
-    status: {
-      value: "{{ states('sensor.outdoor_humidity') }} %",
-      style: "filled",
-      icon: "mdi:water",
-    },
+  p("sensor.outdoor_temperature", { status: "{{ states('sensor.outdoor_humidity') }} %" }),
+  // its look is the card's: a tag in its colour
+  p("sensor.outdoor_temperature", { status: "Mild", color: "teal" }),
+  p("light.living_room", { badges: [{ entity: "sensor.living_room_temperature" }] }),
+  p("sensor.living_room_temperature", {
+    rules: [{ above: 20, color: "orange", label: "Warm" }],
   }),
-  p("sensor.outdoor_temperature", {
-    status: { value: "Mild", color: "teal", style: "soft", show_icon: true, icon: "mdi:leaf" },
-  }),
-  p("light.living_room", { badges: [{ entity: "sensor.living_room_temperature" }, "status"] }),
-  p("fan.living_room", { status: { size: "m", style: "filled" } }),
 ]);
 add("pb-styles", [
   p("sensor.outdoor_temperature", {
@@ -751,18 +775,18 @@ const SIZED: Record<string, CardConfigBase> = {
   vacuum: p("vacuum.robot"),
   weather: p("weather.home"),
   sun: p("sun.sun"),
-  wind: p("sensor.wind_speed", { variant: "lines" }),
-  rain: p("sensor.rain_rate_roof", { variant: "fill" }),
+  wind: p("sensor.wind_speed", { visual: { type: "flow", style: "lines" } }),
+  rain: p("sensor.rain_rate_roof", { visual: { type: "flow", style: "fill" } }),
   trend: p(null, {
-    poster: "trend",
+    kind: "trend",
     name: "Temperatures",
     series: ["sensor.living_room_temperature", "sensor.outdoor_temperature"],
   }),
   battery: p("sensor.battery_soc", { power: "sensor.battery_power" }),
-  car: p("sensor.ev_battery", { poster: "car" }),
-  grid: p("sensor.grid_power", { poster: "grid" }),
-  solar: p("sensor.solar_power", { poster: "solar", today: "sensor.energy_today" }),
-  appliance: p("sensor.washer_power", { poster: "appliance", variant: "washer" }),
+  car: p("sensor.ev_battery", { kind: "car" }),
+  grid: p("sensor.grid_power", { kind: "grid" }),
+  solar: p("sensor.solar_power", { kind: "solar", today: "sensor.energy_today" }),
+  appliance: p("sensor.washer_power", { kind: "washer" }),
   air: p("sensor.living_room_co2"),
 };
 for (const [name, card] of Object.entries(SIZED))
@@ -792,7 +816,7 @@ const FEW = [
   p("light.living_room"),
   p("climate.living_room"),
   p("media_player.living_room_speaker"),
-  p("sensor.wind_speed", { variant: "lines" }),
+  p("sensor.wind_speed", { visual: { type: "flow", style: "lines" } }),
   p("weather.home"),
   p("sensor.battery_soc", { power: "sensor.battery_power" }),
 ];

@@ -7,14 +7,13 @@
 import { COLORS } from "../flow-tree/constants.ts";
 import { setRate } from "../flow/dom.ts";
 import { unitOf, type FmtValue } from "../entity/model.ts";
-import { plotEl } from "../entity/render/blocks.ts";
 import { leadEl, secondaryEl } from "../entity/render/lead.ts";
 import { fmtDuration, fmtNumber } from "../format.ts";
 import type { HassEntity, HomeAssistant } from "../ha.ts";
 import type { Point } from "../history.ts";
 import { t } from "../i18n.ts";
 import { powerParts, UNIT_TO_W, wattsOf } from "../power.ts";
-import { isNum, oneOf } from "../util.ts";
+import { isNum } from "../util.ts";
 import { div, wordValue } from "./dom.ts";
 import { BATTERY_RULES } from "./rules.ts";
 import type { Kind, KindCtx, Read } from "./types.ts";
@@ -88,8 +87,12 @@ export const GRID: Kind = {
       ...(v ? { value: v, word: false } : {}),
     };
   },
+  // its power line behind the card, the flow running in its direction
+  visual: { type: "line" },
+  tileVisual: false,
+  draws: ["line"],
   backdrop: {
-    key: () => "grid",
+    key: (c) => (c.place.visual && c.place.visual.type === "line" ? "grid" : ""),
     build: () => lineEl("grid"),
     update: (el, c) => flow(el, gridW(c)),
   },
@@ -111,6 +114,8 @@ export const SOLAR: Kind = {
   reads: ["sensor", "input_number", "number"],
   readsText: "a power sensor",
   keys: ["today"],
+  // today's production below the texts
+  visual: { type: "sparkline", hours: "today" },
   inputs: [
     {
       key: "today",
@@ -128,13 +133,6 @@ export const SOLAR: Kind = {
     const w = watts({ ent: c.ent, m: c.m });
     const v = power(c, w);
     const today = c.input("today");
-    const pts = todayOf(c);
-    // the curve is there from the start: it fills in once the history has loaded
-    const picture = plotEl(c.ctx, c.ent, 0, c.m, {
-      kind: "sparkline",
-      series: pts,
-      window: { t0: startOfDay(c.ctx.now), t1: c.ctx.now },
-    });
     return {
       lead: leadEl(
         c.ctx,
@@ -150,7 +148,6 @@ export const SOLAR: Kind = {
               : null,
           }
         : {}),
-      picture,
     };
   },
   extra: (c) => [c.ctx.fetched, todayOf(c).length],
@@ -173,7 +170,7 @@ export const segments = (pct: number | null, n = 10): number[] => {
   return Array.from({ length: n }, (_, i) => Math.max(0, Math.min(1, f - i)));
 };
 // the strip of segments with a battery's tip; the first one not full pulses while power flows
-const stripEl = (pct: number | null, flowing: boolean) => {
+export const stripEl = (pct: number | null, flowing: boolean) => {
   const el = div("pstrip");
   el.classList.toggle("flow", flowing);
   const fills = segments(pct);
@@ -195,6 +192,9 @@ export const BATTERY: Kind = {
   readsText: "a battery sensor (%)",
   keys: ["power", "charge", "discharge"],
   rules: BATTERY_RULES,
+  // its charge as segments below the texts, the one charging pulsing
+  visual: { type: "segments" },
+  draws: ["segments"],
   inputs: [
     { key: "power", find: { domains: ["sensor"], deviceClasses: ["power"] } },
     { key: "charge" },
@@ -280,7 +280,7 @@ const ICONS: Record<(typeof APPLIANCE_STYLES)[number], string> = {
 };
 const thresholdOf = (c: KindCtx) =>
   isNum(c.opts.running_above) ? Number(c.opts.running_above) : 5;
-const styleOf = (c: KindCtx) => (oneOf(APPLIANCE_STYLES, c.opts.variant) ? c.opts.variant : null);
+type ApplianceStyle = (typeof APPLIANCE_STYLES)[number];
 // this run: since the history last fell to the threshold (`whole`: it never did, the run started
 // before the window), and its energy (W over time)
 const runOf = (c: KindCtx, st: HassEntity | undefined) => {
@@ -303,11 +303,13 @@ const runOf = (c: KindCtx, st: HassEntity | undefined) => {
   return { since: (c.ctx.now - start) / 1000, kwh: wh / 1000, whole: i < 0 && run.length > 0 };
 };
 
-export const APPLIANCE: Kind = {
-  name: "appliance",
+// an appliance kind: the generic one (a plug), or a device of its own (a washer's drum, a pump's
+// impeller)
+const applianceKind = (name: string, style: ApplianceStyle | null): Kind => ({
+  name,
   reads: ["sensor", "input_number", "number"],
   readsText: "a power sensor",
-  keys: ["variant", "running_above"],
+  keys: ["running_above"],
   history: (_opts, entity) => (entity ? [entity] : []),
   timed: true,
   status: (c) => {
@@ -346,9 +348,8 @@ export const APPLIANCE: Kind = {
     };
   },
   lead: {
-    key: (c) => styleOf(c) ?? "power",
+    key: () => style ?? "power",
     build: (c) => {
-      const style = styleOf(c);
       const icon = c.m.look.icon ?? (style ? ICONS[style] : "mdi:power-plug");
       const el = leadEl(
         c.ctx,
@@ -368,4 +369,8 @@ export const APPLIANCE: Kind = {
     },
   },
   extra: (c) => [c.ctx.fetched, Math.floor(c.ctx.now / 60e3)],
-};
+});
+export const APPLIANCE = applianceKind("appliance", null);
+export const APPLIANCE_KINDS = Object.fromEntries(
+  APPLIANCE_STYLES.map((s) => [s, applianceKind(s, s)]),
+);

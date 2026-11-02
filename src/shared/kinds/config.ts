@@ -1,8 +1,9 @@
-// Config shared by the cards that draw a poster type (pure): the type and its own keys, the card's
-// item with the type's defaults, rules and controls, the inputs the type reads, the icon's own
-// actions and picture. The poster card adds its corner and backdrop, the tile card its line.
+// Config shared by the cards that draw a kind (pure): the kind and its own keys, the card's item
+// with the kind's defaults, rules and controls, the inputs the kind reads, the icon's own actions,
+// and the two places (places.ts) as the card and its rules write them. The poster card adds its
+// corner, the tile card its line.
 import { domainOf } from "../color.ts";
-import { isTemplate, numOrNull, oneOf } from "../util.ts";
+import { isTemplate, oneOf } from "../util.ts";
 import {
   normalizeAction,
   normalizeActionDefaults,
@@ -18,25 +19,31 @@ import {
   type Rule,
   type ValueSrc,
 } from "../entity/config.ts";
+import { DEFAULTS, ITEM_DEFAULTS, type BadgeSize, type BadgeStyle } from "../entity/constants.ts";
 import {
-  ICON_STYLES,
-  ITEM_DEFAULTS,
-  type BadgeSize,
-  type BadgeStyle,
-  type IconStyle,
-} from "../entity/constants.ts";
-import { normalizeControl, type IconActions } from "../entity/control.ts";
+  CONTROL_ATTRIBUTES,
+  CONTROL_POSITIONS,
+  normalizeControl,
+  type IconActions,
+} from "../entity/control.ts";
 import type { ActionConfig, HassEntity, HomeAssistant } from "../ha.ts";
 import { ATTRIBUTES } from "../weather/constants.ts";
-import { parsePoster, resolveKind } from "./detect.ts";
+import { parseKind, resolveKind } from "./detect.ts";
 import { deviceSiblings, findInput, logOnce } from "./discover.ts";
+import {
+  goneKey,
+  parseIcon,
+  parseVisual,
+  type IconPlace,
+  type VisualPlace,
+  type Written,
+} from "./places.ts";
 import { toRule } from "./rules.ts";
 import type { Kind } from "./types.ts";
 
 export interface RawKindCardConfig extends RawEntityCardBase, RawEntity {
-  // the poster type (a kind's name; detected when left out) and how it draws its subject
-  poster?: unknown;
-  variant?: unknown;
+  // what the entity is (a kind's name; detected when left out)
+  kind?: unknown;
   // the entities a type reads besides the card's own: an id, or false for none
   direction?: unknown;
   gust?: unknown;
@@ -54,12 +61,6 @@ export interface RawKindCardConfig extends RawEntityCardBase, RawEntity {
   // the appliance's threshold, the trend's entities
   running_above?: unknown;
   series?: unknown;
-  // the lead: a ring of the value around the icon, a picture of its own, the icon's own actions
-  icon_ring?: unknown;
-  icon_image?: unknown;
-  icon_tap_action?: RawAction;
-  icon_hold_action?: RawAction;
-  icon_double_tap_action?: RawAction;
 }
 
 // a picture: an image URL, a template that renders one, or an entity's picture (a camera's
@@ -69,12 +70,10 @@ export type ImageSrc =
   | { kind: "template"; template: string }
   | { kind: "entity"; entity: string };
 
-// what a matching rule changes of the icon; a key it leaves out is the card's (a key it writes
-// wins over the card's: the card's is the default)
-export interface IconLook {
-  iconStyle?: IconStyle;
-  iconImage?: ImageSrc | null;
-  iconRing?: boolean;
+// the two places as written (left out: the layer below's)
+export interface Places {
+  icon: Written<IconPlace>;
+  visual: Written<VisualPlace>;
 }
 
 export interface KindConfig extends EntityCardConfig {
@@ -82,12 +81,12 @@ export interface KindConfig extends EntityCardConfig {
   kindOpts: Record<string, unknown>;
   // the kind's inputs: key → item (not drawn as rows: read by the kind)
   inputs: Record<string, number>;
-  // `hours_to_show` as written (null: the kind's window)
+  // the visual's hours as written (null: the kind's window)
   hoursSet: number | null;
-  // a picture of the card's own in the icon (null: the icon's, or the entity's picture)
-  iconImage: ImageSrc | null;
-  // what each of the card's rules changes of the icon, by rule
-  ruleLooks: Map<Rule, IconLook>;
+  // the places as the card writes them, and as each of its rules does (a rule's win while it
+  // matches; the kind's are the defaults under the card's)
+  places: Places;
+  rulePlaces: Map<Rule, Places>;
   // the icon's own actions: as written, else the kind's (a lock's hold)
   iconActions: IconActions;
 }
@@ -104,14 +103,18 @@ export const parseImage = (v: unknown): ImageSrc | false | null => {
   return { kind: "url", url: v };
 };
 
-// a rule's own keys for the icon, as the card's are read
-export const iconLookOf = (src: Readonly<Record<string, unknown>> | undefined): IconLook => {
-  const out: IconLook = {};
-  if (!src) return out;
-  if (oneOf(ICON_STYLES, src.icon_style)) out.iconStyle = src.icon_style;
-  if (src.icon_image !== undefined) out.iconImage = parseImage(src.icon_image) || null;
-  if (typeof src.icon_ring === "boolean") out.iconRing = src.icon_ring;
-  return out;
+// the history the card fetches for its plots: as long as the longest window its places ask for
+// (today: a day), the card's bucket and smoothing where its visual names one
+export const historyOf = (kind: Kind, places: Places) => {
+  const hours: number[] = [];
+  for (const v of [kind.visual, places.visual])
+    if (v && v.hours !== undefined) hours.push(v.hours === "today" ? 24 : v.hours);
+  const v = places.visual || undefined;
+  return {
+    hours: Math.max(1, ...(hours.length ? hours : [DEFAULTS.hours_to_show])),
+    bucketMin: v?.bucket ?? DEFAULTS.bucket_minutes,
+    smoothMin: v?.smoothing ?? null,
+  };
 };
 
 // the input of `def` found on the entity's device, where the card sets none (an id, or false) and
@@ -188,6 +191,43 @@ const iconAction = (written: RawAction | undefined, own: ActionConfig | undefine
 // whether the icon has an action of its own
 export const hasIconActions = (a: IconActions) => !!(a.tap || a.hold || a.dbl);
 
+// `control` as written: a control's name (as on the entity cards), true or false, or the control and
+// its options (`{ type, position, attribute, step, options, confirm }`; without `type` its options
+// change the kind's own controls), as the entity cards' flat keys
+const CONTROL_KEYS: Record<string, string> = {
+  position: "control_position",
+  attribute: "control_attribute",
+  step: "control_step",
+  options: "control_options",
+  confirm: "control_confirm",
+};
+const controlOf = (c: unknown, type: string): Partial<RawKindCardConfig> => {
+  if (!isObj(c)) return {};
+  const out: Record<string, unknown> = { control: c.type ?? "auto" };
+  for (const [k, v] of Object.entries(c)) {
+    if (k === "type" || v === undefined) continue;
+    if (!(k in CONTROL_KEYS))
+      throw new Error(
+        `${type}: control takes type, ${Object.keys(CONTROL_KEYS).join(", ")}, not ${k}`,
+      );
+    out[CONTROL_KEYS[k]] = v;
+  }
+  if (c.position === "lead")
+    throw new Error(
+      `${type}: the icon's own actions are icon: { tap_action, hold_action }, not control: { position: lead }`,
+    );
+  // its values checked here, named as written (the entity cards' messages name their flat keys)
+  if (c.position !== undefined && !oneOf(CONTROL_POSITIONS, c.position))
+    throw new Error(
+      `${type}: control: { position } must be one of ${CONTROL_POSITIONS.join(" | ")}`,
+    );
+  if (c.attribute !== undefined && !oneOf(CONTROL_ATTRIBUTES, c.attribute))
+    throw new Error(
+      `${type}: control: { attribute } must be one of ${CONTROL_ATTRIBUTES.join(" | ")}`,
+    );
+  return out as Partial<RawKindCardConfig>;
+};
+
 // the card's kind and its item, as a card that draws a kind reads them
 export interface KindItem {
   kind: Kind;
@@ -203,6 +243,8 @@ export interface KindItem {
   entities: EntityItem[];
   inputs: Record<string, number>;
   iconActions: IconActions;
+  places: Places;
+  rulePlaces: Map<Rule, Places>;
 }
 
 // the kind (written, else detected) and the card's item with what the kind gives it: its value
@@ -216,15 +258,40 @@ export const normalizeKindItem = (
   thing: string,
   ownKeys: Partial<RawEntity> = {},
 ): KindItem => {
-  // the lead's options are the card's own: the ring and the icon's actions
+  // the keys the places replaced, on the card and in its rules
+  const gone = goneKey(written as Record<string, unknown>);
+  if (gone) throw new Error(`${type}: ${gone}`);
+  const writtenRules = Array.isArray(written.rules) ? written.rules : [];
+  for (const [i, r] of writtenRules.entries()) {
+    const g = isObj(r) ? goneKey(r) : null;
+    if (g) throw new Error(`${type}: rules[${i}]: ${g}`);
+  }
+  // the icon's ring and its own actions are the icon's
   if (written.visual === "ring")
-    throw new Error(`${type}: visual: ring is icon_ring: true on the ${thing}`);
-  if (written.control_position === "lead")
-    throw new Error(
-      `${type}: the icon's own actions are icon_tap_action / icon_hold_action, not control_position: lead`,
-    );
+    throw new Error(`${type}: visual: ring is icon: { ring: true } on the ${thing}`);
+  const control = controlOf(written.control, type);
+  // the places as written, and the rules' (an icon object's name is the rule's icon)
+  const places: Places = {
+    icon: parseIcon(written.icon, `${type}: icon`),
+    visual: parseVisual(written.visual, `${type}: visual`),
+  };
+  const flow = (p: Written<{ type?: string }>) => !!p && p.type === "flow";
+  if (flow(places.icon) && flow(places.visual))
+    throw new Error(`${type}: the animation goes in one place: icon or visual, not both`);
+  const byRule = new Map<object, Places>();
+  const rules = writtenRules.map((r, i) => {
+    if (!isObj(r)) return r;
+    const at = `${type}: rules[${i}]`;
+    const p: Places = {
+      icon: parseIcon(r.icon, `${at}.icon`, true),
+      visual: parseVisual(r.visual, `${at}.visual`, true),
+    };
+    const out = { ...r, icon: p.icon ? p.icon.name : undefined, visual: undefined };
+    byRule.set(out, p);
+    return out;
+  });
   const kind = resolveKind(
-    parsePoster(written.poster, type),
+    parseKind(written.kind, type),
     written.entity || null,
     written.entity ? hass?.states[written.entity] : undefined,
     type,
@@ -238,7 +305,11 @@ export const normalizeKindItem = (
   // the kind's defaults for the card's item: what it shows where the card sets neither `value`
   // nor `attribute`, and keys the card leaves out (a trend's first series as the entity)
   const defaults = kind.main?.(written.entity || null, written, opts) ?? {};
-  const raw: RawKindCardConfig = { ...written };
+  const raw: RawKindCardConfig = {
+    ...written,
+    ...control,
+    ...(Array.isArray(written.rules) ? { rules: rules as RawKindCardConfig["rules"] } : {}),
+  };
   for (const [k, v] of Object.entries(defaults)) {
     const key = k as keyof RawEntity;
     if (key === "attribute" || key === "value") {
@@ -260,14 +331,26 @@ export const normalizeKindItem = (
   };
   // a card-level `visibility` is Home Assistant's (it hides the whole card); a card without an
   // entity or a value still has its name
+  // the item draws no visual and no picture of its own: the places say what the card draws (the
+  // card resolves them on every render); its icon is the place's name
   const own: RawEntity = {
     ...raw,
     visibility: undefined,
     value: raw.value ?? (entity || raw.attribute ? undefined : ""),
+    icon: places.icon ? places.icon.name : undefined,
+    visual: undefined,
+    // icon: false leaves the icon out, as show_icon: false does
+    ...(places.icon === false ? { show_icon: false } : {}),
     ...ownKeys,
   };
   const main = normalizeEntity(own, ctx, "the card", ITEM_DEFAULTS.other, { buttons: true });
-  if (raw.icon_ring === true) main.iconRing = true;
+  // the card's colour and icon are defaults: a matching rule's win
+  main.ruleWins = true;
+  const rulePlaces = new Map<Rule, Places>();
+  for (const r of main.rules) {
+    const p = r.src ? byRule.get(r.src) : undefined;
+    if (p) rulePlaces.set(r, p);
+  }
   // the kind's own rules, unless the card has its own (`rules: []` drops them)
   if (raw.rules === undefined && kind.rules) {
     main.rules = kind.rules.map(toRule);
@@ -285,36 +368,54 @@ export const normalizeKindItem = (
 
   // the icon's own actions, each as written or else the kind's
   const kindIcon = kind.iconActions?.(st) ?? {};
+  const icon = places.icon || {};
   const iconActions: IconActions = {
-    tap: iconAction(raw.icon_tap_action, kindIcon.tap),
-    hold: iconAction(raw.icon_hold_action, kindIcon.hold),
-    dbl: iconAction(raw.icon_double_tap_action, kindIcon.dbl),
+    tap: iconAction(icon.tap_action as RawAction | undefined, kindIcon.tap),
+    hold: iconAction(icon.hold_action as RawAction | undefined, kindIcon.hold),
+    dbl: iconAction(icon.double_tap_action as RawAction | undefined, kindIcon.dbl),
   };
 
   const entities: EntityItem[] = [main];
   const inputs = inputsOf(kind, opts, entity, hass, ctx, entities);
-  return { kind, opts, raw, own, entity, st, ctx, entities, inputs, iconActions };
+  return {
+    kind,
+    opts,
+    raw,
+    own,
+    entity,
+    st,
+    ctx,
+    entities,
+    inputs,
+    iconActions,
+    places,
+    rulePlaces,
+  };
 };
 
-// the KindConfig keys a card's item gives, besides its entities and groups
-export const kindConfigOf = (k: KindItem, rules: Rule[]) => ({
-  kind: k.kind,
-  kindOpts: k.opts,
-  inputs: k.inputs,
-  hoursSet: numOrNull(k.raw.hours_to_show),
-  iconImage: parseImage(k.raw.icon_image) || null,
-  iconActions: k.iconActions,
-  ruleLooks: new Map<Rule, IconLook>(rules.map((r) => [r, iconLookOf(r.src)])),
-});
+// the KindConfig keys a card's item gives, besides its entities and groups, and its history
+export const kindConfigOf = (k: KindItem) => {
+  const v = k.places.visual;
+  return {
+    ...historyOf(k.kind, k.places),
+    kind: k.kind,
+    kindOpts: k.opts,
+    inputs: k.inputs,
+    hoursSet: v && typeof v.hours === "number" ? v.hours : null,
+    iconActions: k.iconActions,
+    places: k.places,
+    rulePlaces: k.rulePlaces,
+  };
+};
 
 // a badge that names no style or size: an outline pill, small; the status badge: a tag
 const BADGE: { style: BadgeStyle; size: BadgeSize } = { style: "outline", size: "s" };
 const STATUS: { style: BadgeStyle; size: BadgeSize } = { style: "tag", size: "s" };
 
-// the status badge and the badges of a card that draws a kind (the poster's corner, the end of a
-// tile's name line), added to the card's items: `status` (a text, a template, badge keys with
-// `value` for its text, or false) and `badges` (entities or badges of their own, `status` placing
-// the status badge, first unless placed). `where` names the place in messages
+// the status and the badges of a card that draws a kind (the poster's corner, the end of a tile's
+// name line), added to the card's items: `status` (a text, a template, or false: its look is the
+// card's, a tag in its colour) and `badges` (entities or badges of their own). The status comes
+// first where it is a badge. `where` names the place in messages
 export const normalizeCorner = (k: KindItem, type: string, where: string) => {
   const raw = k.raw as RawKindCardConfig & { status?: unknown; badges?: unknown };
   const { entity, own, ctx, entities } = k;
@@ -322,15 +423,15 @@ export const normalizeCorner = (k: KindItem, type: string, where: string) => {
   // the badges keep the card's defaults as written: a badge's own entity opens its more-info
   const badgeCtx = { type, ...normalizeActionDefaults(raw) };
 
-  // the status badge: the card's own value, rules and colour, drawn as a tag with the status text
+  // the status: the card's own value, rules and colour, drawn as a tag with the status text
+  if (raw.status !== undefined && raw.status !== false && typeof raw.status !== "string")
+    throw new Error(
+      `${type}: status takes a text, a template or false (its look is the card's: a tag in its colour)`,
+    );
   let statusIdx: number | null = null,
     statusText: ValueSrc | null = null;
   if (raw.status !== false) {
-    const o = isObj(raw.status) ? raw.status : {};
-    statusText =
-      typeof raw.status === "string" ? normalizeValue(raw.status) : normalizeValue(o.value);
-    const keys = { ...o };
-    delete keys.value;
+    statusText = typeof raw.status === "string" ? normalizeValue(raw.status) : null;
     const status = normalizeBadge(
       {
         entity: own.entity,
@@ -339,36 +440,29 @@ export const normalizeCorner = (k: KindItem, type: string, where: string) => {
         color: own.color,
         unit: own.unit,
         decimals: own.decimals,
-        ...keys,
       } as RawEntity,
       ctx,
       "status",
       STATUS,
       where,
     );
-    // the card's rules, no name and an icon only where it names one, unless it says otherwise
-    if (o.rules === undefined) {
-      status.rules = main.rules;
-      if (main.ruleUnit) status.ruleUnit = main.ruleUnit;
-    }
-    status.item = {
-      ...status.item,
-      showIcon: o.show_icon == null ? typeof o.icon === "string" : status.item.showIcon,
-      showName: o.show_name == null ? false : status.item.showName,
-    };
+    // the card's rules (its colour is the card's default too: a matching rule's wins), no name, no
+    // icon
+    status.rules = main.rules;
+    if (main.ruleUnit) status.ruleUnit = main.ruleUnit;
+    status.ruleWins = true;
+    status.item = { ...status.item, showIcon: false, showName: false };
     statusIdx = entities.push(status) - 1;
   }
 
-  // the badges in the written order; `status` places the status badge (first unless placed)
+  // the badges in the written order, after the status
   const list = Array.isArray(raw.badges) ? raw.badges : [];
   const corner: number[] = [];
-  let placed = false;
   list.forEach((b, i) => {
-    if (b === "status") {
-      if (statusIdx !== null && !placed) corner.push(statusIdx);
-      placed = true;
-      return;
-    }
+    if (b === "status")
+      throw new Error(
+        `${type}: status is no badge of the list: the status comes first (on a tile: status_badge: true)`,
+      );
     let o: RawEntity | string | null = typeof b === "string" || isObj(b) ? (b as RawEntity) : null;
     // a badge without an entity reads the card's: its attribute, else the card's value again
     if (isObj(o) && !o.entity && entity) {
@@ -389,6 +483,6 @@ export const normalizeCorner = (k: KindItem, type: string, where: string) => {
     }
     corner.push(entities.push(ent) - 1);
   });
-  if (statusIdx !== null && !placed) corner.unshift(statusIdx);
+  if (statusIdx !== null) corner.unshift(statusIdx);
   return { statusIdx, statusText, corner };
 };

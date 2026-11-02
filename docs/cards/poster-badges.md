@@ -14,7 +14,7 @@ The top right of a [poster](/cards/poster-card) is its corner: a column of small
   icon: mdi:home-floor-g
   value: "{{ states('sensor.living_room_temperature') }}"
   unit: °C
-  status: { value: "{{ 'Lights on' if is_state('light.living_room', 'on') else 'Dark' }}", style: soft }
+  status: "{{ 'Lights on' if is_state('light.living_room', 'on') else 'Dark' }}"
   badges:
     - sensor.living_room_humidity
     - { entity: sensor.living_room_co2, icon: mdi:molecule-co2 }
@@ -27,7 +27,7 @@ The top right of a [poster](/cards/poster-card) is its corner: a column of small
   entity: sensor.ev_battery
   name: Car
   icon: mdi:car-electric
-  poster: entity
+  kind: entity
   status: false
   badges:
     - { visual: ring, show_icon: false }
@@ -218,15 +218,14 @@ A badge without `entity` reads the poster's entity. `attribute` shows one of its
 
 ## The status badge
 
-The first badge is the status badge. It shows the poster type's status, else the matching rule's label. With nothing to show, it takes no room. It is a `tag` in the poster's colour, without an icon. A rule's `style` and `pulse` apply to it. Under `status`, its own `color`, `icon`, `show_name` and `rules` win over the poster's.
+The first badge is always the status badge; your `badges` follow it. It shows the kind's status, else the matching rule's label. With nothing to show, it takes no room. Its look is the poster's: a `tag` in the poster's colour, without an icon or a name. A rule's `style` and `pulse` apply to it.
 
-`status` sets it:
+`status` sets its text:
 
 - a text or a template;
-- badge keys, with `value` for the text;
 - `false` to drop it.
 
-`- status` in `badges` moves it to that place:
+A poster takes no `status_badge`: its status is always this badge. On a [tile](/cards/tile-badges#the-status-badge), the status is on the line unless `status_badge: true`.
 
 ::: live
 
@@ -238,14 +237,12 @@ The first badge is the status badge. It shows the poster type's status, else the
   rules:
     - { below: 20, color: red, label: Low }
     - { above: 20, color: green, label: Ready }
-  status: { style: soft, icon: mdi:battery }
   badges:
     - entity: binary_sensor.ev_plugged
       rules:
         - { state: "on", color: green, icon: mdi:power-plug, label: Plugged in }
         - { state: "off", color: grey, icon: mdi:power-plug-off, label: Unplugged }
     - sensor.ev_range
-    - status
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: sensor.dishwasher_status
@@ -262,7 +259,7 @@ The first badge is the status badge. It shows the poster type's status, else the
 
 ## How the corner behaves
 
-The badges float over the poster, so adding one never moves the texts. The status wraps onto a second line where it has a space and the corner is narrow (Partly / cloudy on a phone); a single word too long for it ends in an ellipsis. The other badges keep one line. Many badges reach down over the picture, and more than the poster has room for reach over the value and the controls too: make the poster larger or drop a badge. A badge that only shows sometimes (`visibility`, a status that only a rule gives) needs that room too.
+The badges float over the poster, so adding one never moves the texts. The status wraps onto a second line where it has a space and the corner is narrow (Partly / cloudy on a phone); a single word too long for it ends in an ellipsis. The other badges keep one line. Many badges reach down over the visual, and more than the poster has room for reach over the value and the controls too: make the poster larger or drop a badge. A badge that only shows sometimes (`visibility`, a status that only a rule gives) needs that room too.
 
 ::: live
 
@@ -293,7 +290,7 @@ The badges float over the poster, so adding one never moves the texts. The statu
 
 ### Badge keys
 
-A badge is an entity id, `status`, or an object with these keys. It also takes the [entity options](/cards/entity-options#entity-options), such as `name`, `icon`, `color`, `unit`, `min` and `max`.
+A badge is an entity id or an object with these keys. It also takes the [entity options](/cards/entity-options#entity-options), such as `name`, `icon`, `color`, `unit`, `min` and `max`.
 
 | Key                                      | Default             | Description                                                                                         |
 | ---------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------- |
@@ -311,4 +308,4 @@ A badge is an entity id, `status`, or an object with these keys. It also takes t
 | `tap_action` …                           | the poster's        | `tap_action`, `hold_action`, `double_tap_action`, on the badge's own entity.                        |
 | `visibility`                             | –                   | Conditions; a hidden badge takes no room.                                                           |
 
-On the poster, `status` takes these keys for the [status badge](#the-status-badge).
+The [status badge](#the-status-badge) takes none of them: `status` is its text (a text, a template, or `false`), and its look is the poster's.

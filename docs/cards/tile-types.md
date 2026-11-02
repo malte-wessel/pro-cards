@@ -2,25 +2,24 @@
 outline: [2, 2]
 ---
 
-# Tile types
+# Kinds
 
-A tile takes the [poster types](/cards/poster-types): what the entity is, and what the [tile card](/cards/tile-card) draws for it. This page shows every type on a tile. Each type's own options (the entities it reads, its `variant`) are the poster's, listed on [Poster types](/cards/poster-types).
+A tile takes the poster's [kinds](/cards/poster-types): what the entity is, and what the [tile card](/cards/tile-card) draws for it. This page shows every kind on a tile. Each kind's own options (the entities it reads) are the poster's, listed on [Kinds](/cards/poster-types).
 
-A type fills a tile as it fills a poster, less what needs a poster's room:
+A kind fills a tile as it fills a poster, less what needs a poster's room:
 
-- **The icon:** the type's own. A fan, a vacuum, a lawn mower and an appliance move while they run; wind and rain animate theirs. A media player shows its cover art, a person their picture.
-- **The line:** the type's value, then its status (a rule's label, Heating, Cleaning, Exporting), then what it puts under a poster's value (the direction and gusts, today's total, the battery and the room).
-- **The controls:** those a type puts beside a poster's value, at the end of the line. See [Tile controls](/cards/tile-controls).
-- **The edge:** a light glows from the bottom of the tile, as bright as it is, and a media player's progress runs along the bottom edge.
-- **The picture** (a curve, a trend's lines) only with `show_picture: true`, on a second row. The backdrop (a cover's window, a robot's path, a wind field) and the badges are a poster's alone.
+- **The icon:** the kind's own. A fan, a vacuum, a lawn mower and an appliance move while they run; wind and rain animate theirs. A media player shows its cover art, a person their picture.
+- **The line:** the kind's value, then its status (a rule's label, Heating, Cleaning, Exporting), then what it puts under a poster's value (the direction and gusts, today's total, the battery and the room).
+- **The controls:** those a kind puts beside a poster's value, at the end of the line. See [Tile controls](/cards/tile-controls).
+- **The visual:** the kind's, as on the poster. Below the line, on a second row: the weather's forecast, the sun's day, the solar production, a battery's segments, a trend's lines. Behind the texts: a light's and a thermostat's glow, a person's photo and a player's art; a media player's progress runs along the bottom edge. `visual: false` leaves it out. A cover's window, a robot's path and the grid's line are a poster's alone; see [The places](/cards/tile-custom#the-places).
 
-The type is detected from the entity's domain, then its device class, else it is `entity`. `poster` sets a type by name.
+The kind is detected from the entity's domain, then its device class, else it is `entity`. `kind` sets it by name.
 
 ## Entity
 
 **Reads** any entity.
 
-The fallback: the entity's icon, name and value, then the matching rule's label. `visual` adds a picture below the line: `sparkline`, `columns`, `strip`, `bar` or `gauge`. See [Poster types: Entity](/cards/poster-types#entity).
+The fallback: the entity's icon, name and value, then the matching rule's label. `visual` adds a visual below the line: `sparkline`, `columns`, `strip`, `bar`, `gauge` or `segments`. See [Kinds: Entity](/cards/poster-types#entity).
 
 ::: live
 
@@ -52,7 +51,7 @@ The fallback: the entity's icon, name and value, then the matching rule's label.
 
 **Reads** a battery's charge (device class `battery`).
 
-The charge, orange and Low below 20 %, red and Critical below 10 %. A template sensor often has no device class: `poster: battery` makes it a battery, like the phone here. The remote is low, the smoke detector critical. See [Poster types: Battery](/cards/poster-types#battery).
+The charge, orange and Low below 20 %, red and Critical below 10 %, with its ten segments below the line. A template sensor often has no device class: `kind: battery` makes it a battery, like the phone here. The remote is low, the smoke detector critical. See [Kinds: Battery](/cards/poster-types#battery).
 
 ::: live
 
@@ -65,7 +64,7 @@ The charge, orange and Low below 20 %, red and Critical below 10 %. A template s
 - type: custom:tile-card-pro
   entity: sensor.phone_battery
   name: Phone
-  poster: battery
+  kind: battery
   status_badge: true
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
@@ -81,7 +80,7 @@ The charge, orange and Low below 20 %, red and Critical below 10 %. A template s
 
 :::
 
-With a power sensor, it is a home battery: Charging or Discharging and its power follow the charge on the line. `power` is positive while it charges; `charge` and `discharge` take a sensor each instead. Without them, the type finds the power on the battery's device.
+With a power sensor, it is a home battery: Charging or Discharging and its power follow the charge on the line. `power` is positive while it charges; `charge` and `discharge` take a sensor each instead. Without them, the kind finds the power on the battery's device.
 
 ::: live
 
@@ -106,7 +105,7 @@ With a power sensor, it is a home battery: Charging or Discharging and its power
 
 **Reads** a CO₂, PM2.5, PM10 or air quality index sensor (by device class).
 
-The value, coloured and labelled by the bands of its standard. See [Poster types: Air quality](/cards/poster-types#air-quality).
+The value, coloured and labelled by the bands of its standard. See [Kinds: Air quality](/cards/poster-types#air-quality).
 
 ::: live
 
@@ -131,7 +130,7 @@ The value, coloured and labelled by the bands of its standard. See [Poster types
 
 **Reads** a `weather.*` entity.
 
-The condition's picture as the icon, the temperature, the condition, and today's high and low. `show_picture: true` draws the next hours as a curve, `hours_to_show` sets how far it looks ahead, and `show_entity_picture: false` draws the condition's icon in place of its picture. See [Poster types: Weather](/cards/poster-types#weather).
+The condition's picture as the icon, the temperature, the condition, and today's high and low, with the next hours as a curve below (its `sparkline`: the hours ahead). `visual: false` keeps the tile to one row, `visual: { hours: 24 }` sets how far the curve looks ahead, and `icon: { type: icon }` draws the condition's icon in place of its picture. See [Kinds: Weather](/cards/poster-types#weather).
 
 ::: live
 
@@ -139,18 +138,17 @@ The condition's picture as the icon, the temperature, the condition, and today's
 - type: custom:tile-card-pro
   entity: weather.home
   name: Outside
+  visual: false
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: weather.home
   name: Next hours
-  show_picture: true
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: weather.home
   name: Next day
-  show_picture: true
-  hours_to_show: 24
-  show_entity_picture: false
+  icon: { type: icon }
+  visual: { hours: 24 }
   status_badge: true
   grid_options: { columns: 12 }
 ```
@@ -178,19 +176,19 @@ grid_options: { columns: 6 }
 
 ## Sun
 
-**Reads** `sun.sun` (or `poster: sun`).
+**Reads** `sun.sun` (or `kind: sun`).
 
-The next sunrise or sunset as the name, its time, and how long until then. `show_picture: true` draws the day's curve with the sun on it. See [Poster types: Sun](/cards/poster-types#sun).
+The next sunrise or sunset as the name, its time, and how long until then, with the day's curve below and the sun on it (the `sun` visual); `visual: false` keeps the tile to one row. See [Kinds: Sun](/cards/poster-types#sun).
 
 ::: live
 
 ```yaml
 - type: custom:tile-card-pro
   entity: sun.sun
+  visual: false
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sun.sun
-  show_picture: true
   grid_options: { columns: 6 }
 ```
 
@@ -198,9 +196,9 @@ The next sunrise or sunset as the name, its time, and how long until then. `show
 
 ## Wind
 
-**Reads** a wind speed sensor (device class `wind_speed`), or a `weather.*` entity with `poster: wind`.
+**Reads** a wind speed sensor (device class `wind_speed`), or a `weather.*` entity with `kind: wind`.
 
-Particles cross the icon in the wind's direction, as fast as it blows. The line gives the speed, the wind's label, its direction and the gusts, which the type finds on the same device (`direction`, `gust`; `false` leaves one out). A `variant` draws the poster's field, which a tile has no room for: with one, the icon is an arrow turned to where the wind blows. See [Poster types: Wind](/cards/poster-types#wind).
+Particles cross the icon in the wind's direction, as fast as it blows. The line gives the speed, the wind's label, its direction and the gusts, which the kind finds on the same device (`direction`, `gust`; `false` leaves one out). The particles are the icon's flow (`icon: { type: flow, style: dots }`); its `style` is one of `dots`, `lines`, `swoosh` and `vectors`. `visual: { type: flow }` draws the field behind the whole tile instead, and the icon is an arrow turned to where the wind blows. See [Kinds: Wind](/cards/poster-types#wind).
 
 ::: live
 
@@ -216,12 +214,12 @@ Particles cross the icon in the wind's direction, as fast as it blows. The line 
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.wind_speed
-  name: Arrow
-  variant: lines
+  name: Field
+  visual: { type: flow, style: lines }
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: weather.home
-  poster: wind
+  kind: wind
   name: Forecast wind
   grid_options: { columns: 6 }
 ```
@@ -249,7 +247,7 @@ grid_options: { columns: 6 }
 
 **Reads** a rain rate sensor (device class `precipitation_intensity`).
 
-Drops fall through the icon as fast as it rains. The line gives the rate, its label and today's total, which the type finds on the same device (`today`). See [Poster types: Rain](/cards/poster-types#rain).
+Drops fall through the icon as fast as it rains. The line gives the rate, its label and today's total, which the kind finds on the same device (`today`). The drops are the icon's flow (`icon: { type: flow, style: drops }`; `ripples` or `fill` as its `style`), and `visual: { type: flow }` lets it rain behind the whole tile. See [Kinds: Rain](/cards/poster-types#rain).
 
 ::: live
 
@@ -269,15 +267,15 @@ Drops fall through the icon as fast as it rains. The line gives the rate, its la
 
 ## Trend
 
-**Reads** its own entities (`poster: trend`).
+**Reads** its own entities (`kind: trend`).
 
-The first series' value, the time window, and the lines of its `series` on one scale below. A trend's tile draws its lines by default: without them it is a value alone, and `show_picture: false` leaves them out. See [Poster types: Trend](/cards/poster-types#trend).
+The first series' value, the time window, and the lines of its `series` on one scale below (its `sparkline` visual): without them it is a value alone, and `visual: false` leaves them out. See [Kinds: Trend](/cards/poster-types#trend).
 
 ::: live
 
 ```yaml
 type: custom:tile-card-pro
-poster: trend
+kind: trend
 name: Temperatures
 series:
   - { entity: sensor.outdoor_temperature, name: Outside, color: orange }
@@ -290,7 +288,7 @@ series:
 
 **Reads** a `light.*` entity.
 
-Its brightness and On or Off, a switch at the end of the line, and a glow from the tile's bottom edge in the light's own colour, as bright as it is. `control: slider` puts a dimmer below the line instead of the switch; `visual: none` drops the glow. See [Poster types: Light](/cards/poster-types#light).
+Its brightness and On or Off, a switch at the end of the line, and a glow from the tile's bottom edge in the light's own colour, as bright as it is. `control: slider` puts a dimmer below the line instead of the switch; `visual: false` drops the glow. See [Kinds: Light](/cards/poster-types#light).
 
 ::: live
 
@@ -309,7 +307,7 @@ Its brightness and On or Off, a switch at the end of the line, and a glow from t
 
 **Reads** a `fan.*` entity.
 
-The blades in the icon turn at the fan's speed. The line gives the speed, and its speeds sit at the end of the line, under it on a narrow tile. See [Poster types: Fan](/cards/poster-types#fan).
+The blades in the icon turn at the fan's speed. The line gives the speed, and its speeds sit at the end of the line, under it on a narrow tile. See [Kinds: Fan](/cards/poster-types#fan).
 
 ::: live
 
@@ -329,7 +327,7 @@ The blades in the icon turn at the fan's speed. The line gives the speed, and it
 
 **Reads** a `climate.*` entity.
 
-The current temperature, what it is doing (Heating, Cooling, Idle), and a stepper for the target at the end of the line. The icon's badge says what it is doing too; `status_badge: true` puts the status in a tag at the end of the first row, in place of on the line ([Badges](/cards/tile-badges)). See [Poster types: Climate](/cards/poster-types#climate).
+The current temperature, what it is doing (Heating, Cooling, Idle), and a stepper for the target at the end of the line. The tile glows warm while it heats and cool while it cools. The icon's badge says what it is doing too; `status_badge: true` puts the status in a tag at the end of the first row, in place of on the line ([Badges](/cards/tile-badges)). See [Kinds: Climate](/cards/poster-types#climate).
 
 ::: live
 
@@ -350,7 +348,7 @@ The current temperature, what it is doing (Heating, Cooling, Idle), and a steppe
 
 **Reads** a `lock.*` entity.
 
-Locked or Unlocked; a jammed lock in red. Hold the padlock to lock or unlock: a ring fills around it and the lock runs when it is full. See [Poster types: Lock](/cards/poster-types#lock).
+Locked or Unlocked; a jammed lock in red. Hold the padlock to lock or unlock: a ring fills around it and the lock runs when it is full. See [Kinds: Lock](/cards/poster-types#lock).
 
 ::: live
 
@@ -369,7 +367,7 @@ Locked or Unlocked; a jammed lock in red. Hold the padlock to lock or unlock: a 
 
 **Reads** an `alarm_control_panel.*` entity.
 
-Its state (Disarmed, Armed away …); a triggered alarm in red. Hold the shield to arm or disarm, unless the panel wants a code. See [Poster types: Alarm](/cards/poster-types#alarm).
+Its state (Disarmed, Armed away …); a triggered alarm in red. Hold the shield to arm or disarm, unless the panel wants a code. See [Kinds: Alarm](/cards/poster-types#alarm).
 
 ::: live
 
@@ -388,7 +386,7 @@ Its state (Disarmed, Armed away …); a triggered alarm in red. Hold the shield 
 
 **Reads** a `person.*` entity.
 
-Their picture as the icon, with their zone's badge on it, their zone and for how long they have been there. A person without a picture has the person icon. See [Poster types: Person](/cards/poster-types#person).
+Their picture as the icon, with their zone's badge on it, and their photo behind the tile, blurred; their zone and for how long they have been there. A person without a picture has the person icon. See [Kinds: Person](/cards/poster-types#person).
 
 ::: live
 
@@ -403,14 +401,15 @@ Their picture as the icon, with their zone's badge on it, their zone and for how
 
 :::
 
-`show_entity_picture: false` draws the icon in place of the picture:
+`icon: { type: icon }` draws the icon in place of the picture, `visual: false` leaves the photo behind out:
 
 ::: live
 
 ```yaml
 type: custom:tile-card-pro
 entity: person.malte
-show_entity_picture: false
+icon: { type: icon }
+visual: false
 grid_options: { columns: 6 }
 ```
 
@@ -420,7 +419,7 @@ grid_options: { columns: 6 }
 
 **Reads** a `media_player.*` entity.
 
-The cover art as the icon and the tile's colour, the title, Playing or Paused, the artist and the album. Previous, play / pause and next sit at the end of the line, and the track's progress runs along the bottom edge. `control: slider` puts the volume below the line instead. See [Poster types: Media player](/cards/poster-types#media-player).
+The cover art as the icon, behind the tile (blurred) and as the tile's colour, the title, Playing or Paused, the artist and the album. Previous, play / pause and next sit at the end of the line, and the track's progress runs along the bottom edge. `control: slider` puts the volume below the line instead. See [Kinds: Media player](/cards/poster-types#media-player).
 
 ::: live
 
@@ -456,14 +455,14 @@ Other players, the kitchen's without its buttons (`control: false`):
 
 :::
 
-`show_entity_picture: false` draws the player's icon in place of the art:
+`icon: { type: icon }` draws the player's icon in place of the art:
 
 ::: live
 
 ```yaml
 type: custom:tile-card-pro
 entity: media_player.kitchen_speaker
-show_entity_picture: false
+icon: { type: icon }
 grid_options: { columns: 12 }
 ```
 
@@ -473,7 +472,7 @@ grid_options: { columns: 12 }
 
 **Reads** a `cover.*` entity.
 
-Its position and Open, Closed, Opening or Closing, with open, stop and close at the end of the line; the icon is Home Assistant's for its device class and state. `control: slider` puts the position below the line instead. See [Poster types: Cover](/cards/poster-types#cover).
+Its position and Open, Closed, Opening or Closing, with open, stop and close at the end of the line; the icon is Home Assistant's for its device class and state. `control: slider` puts the position below the line instead. See [Kinds: Cover](/cards/poster-types#cover).
 
 ::: live
 
@@ -502,7 +501,7 @@ Its position and Open, Closed, Opening or Closing, with open, stop and close at 
 
 **Reads** a `vacuum.*` or `lawn_mower.*` entity.
 
-The robot in the icon moves while it works. The line gives its state, its battery and the room, where the integration reports them; an error in red. Start / pause and back to the dock sit at the end of the line. See [Poster types: Vacuum and lawn mower](/cards/poster-types#vacuum-and-lawn-mower).
+The robot in the icon moves while it works. The line gives its state, its battery and the room, where the integration reports them; an error in red. Start / pause and back to the dock sit at the end of the line. See [Kinds: Vacuum and lawn mower](/cards/poster-types#vacuum-and-lawn-mower).
 
 ::: live
 
@@ -519,22 +518,22 @@ The robot in the icon moves while it works. The line gives its state, its batter
 
 ## Grid
 
-**Reads** a power sensor, + importing and − exporting (`poster: grid`), or `import` and `export`.
+**Reads** a power sensor, + importing and − exporting (`kind: grid`), or `import` and `export`.
 
-The power in W or kW, Importing or Exporting, in Home Assistant's energy colours. See [Poster types: Grid](/cards/poster-types#grid).
+The power in W or kW, Importing or Exporting, in Home Assistant's energy colours. See [Kinds: Grid](/cards/poster-types#grid).
 
 ::: live
 
 ```yaml
 - type: custom:tile-card-pro
   entity: sensor.grid_power
-  poster: grid
+  kind: grid
   name: Grid
   status_badge: true
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   name: Grid
-  poster: grid
+  kind: grid
   import: sensor.grid_import_power
   export: sensor.grid_export_power
   status_badge: true
@@ -545,23 +544,23 @@ The power in W or kW, Importing or Exporting, in Home Assistant's energy colours
 
 ## Solar
 
-**Reads** a power sensor (`poster: solar`).
+**Reads** a power sensor (`kind: solar`).
 
-The power now in the solar colour, and today's energy. `show_picture: true` draws today's production. See [Poster types: Solar](/cards/poster-types#solar).
+The power now in the solar colour, and today's energy, with today's production below (`visual: { type: sparkline, hours: today }`); `visual: false` keeps the tile to one row. See [Kinds: Solar](/cards/poster-types#solar).
 
 ::: live
 
 ```yaml
 - type: custom:tile-card-pro
   entity: sensor.solar_power
-  poster: solar
+  kind: solar
   name: Solar
+  visual: false
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.solar_power
-  poster: solar
+  kind: solar
   name: Today
-  show_picture: true
   grid_options: { columns: 6 }
 ```
 
@@ -569,21 +568,21 @@ The power now in the solar colour, and today's energy. `show_picture: true` draw
 
 ## Car
 
-**Reads** its charge (`poster: car`) and the inputs it finds on its device.
+**Reads** its charge (`kind: car`) and the inputs it finds on its device.
 
-The charge, Charging, Plugged in or the zone while away, and the range. See [Poster types: Car](/cards/poster-types#car).
+The charge, Charging, Plugged in or the zone while away, and the range. See [Kinds: Car](/cards/poster-types#car).
 
 ::: live
 
 ```yaml
 - type: custom:tile-card-pro
   entity: sensor.ev_battery
-  poster: car
+  kind: car
   name: EV
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.van_battery
-  poster: car
+  kind: car
   name: Van
   grid_options: { columns: 6 }
 ```
@@ -592,23 +591,21 @@ The charge, Charging, Plugged in or the zone while away, and the range. See [Pos
 
 ## Appliance
 
-**Reads** a power sensor (`poster: appliance`).
+**Reads** a power sensor (`kind: appliance`, or the device's own kind: `pump`, `washer`, `dryer`, `dishwasher`, `heat_pump`).
 
-The device in the icon moves while it runs above `running_above` (a pump's impeller turns, a drum shakes). The line gives how long it has run, Running or Off, and the energy of this run. See [Poster types: Appliance](/cards/poster-types#appliance).
+The device in the icon moves while it runs above `running_above` (a pump's impeller turns, a drum shakes); `appliance` draws a plug. The line gives how long it has run, Running or Off, and the energy of this run. See [Kinds: Appliance](/cards/poster-types#appliance).
 
 ::: live
 
 ```yaml
 - type: custom:tile-card-pro
   entity: sensor.washer_power
-  poster: appliance
-  variant: washer
+  kind: washer
   name: Washer
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.heat_pump_power
-  poster: appliance
-  variant: heat_pump
+  kind: heat_pump
   name: Heat pump
   grid_options: { columns: 6 }
 ```

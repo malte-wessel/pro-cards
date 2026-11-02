@@ -1,17 +1,17 @@
 # Custom tiles
 
-A tile has a few places: the icon, the name, the line under it and the controls at its end, with a picture or a slider below where asked for. A [poster type](/cards/tile-types) fills these places for an entity. Every place also has a key of its own, so a tile can show anything: a value you compute, another entity's picture, or only your own buttons. This page builds tiles from those keys. The [overview](/cards/tile-card) shows how a tile is laid out.
+A tile has a few parts: the icon, the name, the line under it and the controls at its end, with a visual or a slider below where asked for. The entity's [kind](/cards/tile-types) fills these parts. Every part also has a key of its own, so a tile can show anything: a value you compute, another entity's picture, or only your own buttons. This page builds tiles from those keys. The [overview](/cards/tile-card) shows how a tile is laid out.
 
-## The places
+## The parts
 
-| Place    | Key                            | Takes                                                                                  | Default                                                 |
-| -------- | ------------------------------ | -------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Icon     | `icon`                         | an `mdi:` icon, a template; `icon_image`, `icon_ring` and its own [actions](#the-icon) | the entity's icon or picture, the type's own            |
-| Name     | `name`                         | a text, a template                                                                     | the friendly name                                       |
-| The line | `value`, `status`, `secondary` | a text or a template each; see [The line](#the-line)                                   | the state, the type's status, the type's line           |
-| Colour   | `color`, `rules`               | a colour token, hex or a template; [rules](#colour-and-rules) by value                 | the matching rule's, else Home Assistant's state colour |
-| Picture  | `visual`, `show_picture`       | a [picture](#a-second-row) of the value, or the type's own, below the line             | none; a light's glow                                    |
-| Control  | `control`                      | any [control](/cards/tile-controls), or your own buttons                               | the type's                                              |
+| Part     | Key                            | Takes                                                                                                                     | Default                                                 |
+| -------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Icon     | `icon`                         | an icon's name, a template, or a [place's thing](#the-places): a picture, a ring, [its own actions](#the-icon), its badge | the entity's icon, or the kind's                        |
+| Name     | `name`                         | a text, a template                                                                                                        | the friendly name                                       |
+| The line | `value`, `status`, `secondary` | a text or a template each; see [The line](#the-line)                                                                      | the state, the kind's status, the kind's line           |
+| Colour   | `color`, `rules`               | a colour token, hex or a template; [rules](#colour-and-rules) by value                                                    | the matching rule's, else Home Assistant's state colour |
+| Visual   | `visual`                       | a [place's thing](#the-places): a plot or a bar [below the line](#a-second-row), a glow or a picture behind               | the kind's                                              |
+| Control  | `control`                      | any [control](/cards/tile-controls) by its name or `{ type, …options }`, or your own buttons                              | the kind's                                              |
 
 A tile needs no entity: the keys alone can fill it. Without an entity, a tap does nothing until you set `tap_action`.
 
@@ -40,9 +40,9 @@ A tile needs no entity: the keys alone can fill it. Without an entity, a tap doe
 
 The line under the name joins its parts with a dot, and is cut at the end where it is too long:
 
-- the **value**: the type's (a thermostat's temperature, a media player's title), else the state. `value` and `attribute` set it; `unit`, `decimals`, `prefix` and `suffix` format a number.
-- the **status**: the type's, else the matching rule's label. `status` sets it (a text or a template), `false` leaves it out. A status that only repeats the value is left out: a vacuum's Cleaning shows once. `status_badge: true` makes it a badge instead, shown even where it repeats the value; see [Badges](/cards/tile-badges).
-- the **secondary**: what the type adds (the direction and gusts, the artist and the album). `secondary` sets it.
+- the **value**: the kind's (a thermostat's temperature, a media player's title), else the state. `value` and `attribute` set it; `unit`, `decimals`, `prefix` and `suffix` format a number.
+- the **status**: the kind's, else the matching rule's label. `status` sets it (a text or a template), `false` leaves it out. A status that only repeats the value is left out: a vacuum's Cleaning shows once. `status_badge: true` makes it the first badge instead, shown even where it repeats the value; see [Badges](/cards/tile-badges).
+- the **secondary**: what the kind adds (the direction and gusts, the artist and the album). `secondary` sets it.
 
 `show_value: false` leaves the value out, `show_name: false` the name above it.
 
@@ -77,7 +77,7 @@ The line under the name joins its parts with a dot, and is cut at the end where 
 
 ## Status and badges
 
-The status is on the line; `status_badge: true` makes it a badge at the end of the first row, centred on the icon. `badges` adds badges of your own there, and `icon_badge` decides the badge on the icon. [Badges](/cards/tile-badges) shows them all.
+The status is on the line; `status_badge: true` makes it the first badge at the end of the first row, centred on the icon, a tag in the tile's colour. `badges` adds badges of your own there, and the icon's `badge` (`icon: { badge: … }`) decides the badge on the icon. [Badges](/cards/tile-badges) shows them all.
 
 ::: live
 
@@ -89,9 +89,9 @@ The status is on the line; `status_badge: true` makes it a badge at the end of t
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.living_room_co2
+  status_badge: true
   badges:
     - sensor.living_room_temperature
-    - status
   grid_options: { columns: 12 }
 ```
 
@@ -126,18 +126,18 @@ The status is on the line; `status_badge: true` makes it a badge at the end of t
 
 ## An entity, your own look
 
-With an `entity`, the tile takes its name, icon, state and colour from it, and its poster type adds the rest. A key you set changes its own place and leaves the others as they are:
+With an `entity`, the tile takes its name, icon, state and colour from it, and its kind adds the rest. A key you set changes its own place and leaves the others as they are:
 
 - `attribute` shows an attribute of the entity in place of its state.
-- `control: false` drops the poster type's control and keeps the rest. The thermostat below keeps its status.
-- `poster: entity` drops the type's status, controls, rules and animated icon. The tile shows only what you write.
+- `control: false` drops the kind's control and keeps the rest. The thermostat below keeps its status.
+- `kind: entity` drops the kind's status, controls, rules, visual and animated icon. The tile shows only what you write.
 
 ::: live
 
 ```yaml
 - type: custom:tile-card-pro
   entity: light.living_room
-  poster: entity
+  kind: entity
   name: Ceiling
   value: "{{ (state_attr('light.living_room', 'brightness') | float(0) / 2.55) | round }}"
   unit: "%"
@@ -167,11 +167,13 @@ With an `entity`, the tile takes its name, icon, state and colour from it, and i
 
 On a tile, a rule can also set:
 
-- `label`: the status on the line.
+- `label`: the status, on the line or as its badge.
 - `tint_card: true`: the whole tile in the rule's colour ([tinted tiles](#tinted-tiles)).
-- the icon: `icon_style`, `icon_image` and `icon_ring` ([below](#the-icon-by-rule)).
+- the two places: `icon` and `visual` ([by rule](#by-rule)).
 
-A poster type brings its own rules (the [predefined sets](/cards/poster-types#predefined-rules)). Your `rules` take their place as a whole, and `rules: []` drops them.
+On a tile, a rule's `color` and `icon` win over the card's: `color` and `icon` on the card are its defaults, which a matching rule changes. (On the entity cards it is the other way round: a fixed `color` or `icon` beats the rules.)
+
+A kind brings its own rules (the [predefined sets](/cards/poster-types#predefined-rules)). Your `rules` take their place as a whole, and `rules: []` drops them.
 
 ::: live
 
@@ -223,18 +225,131 @@ A poster type brings its own rules (the [predefined sets](/cards/poster-types#pr
 
 Rules match a template value by its text: the last tile's rules read `Open` and `Closed` and need no entity.
 
-### The icon by rule
+## The places
 
-A rule can change the icon with the keys the card has for it. A key the rule writes wins over the card's while the rule matches; a key it leaves out stays the card's. `icon_image: false` drops the icon's picture.
+Two places say what a tile draws besides its texts, as on the [poster](/cards/poster-custom#the-places):
+
+- `icon`: the icon;
+- `visual`: what fills the tile behind its texts (a glow, a picture, the wind's field), or [below the line](#a-second-row) in a second row (a plot of the history, a bar, a gauge, the sun's day, the weather's forecast as its sparkline).
+
+Each place takes one **thing**:
+
+- its name: `visual: sparkline`;
+- the thing with its options: `visual: { type: sparkline, hours: 12 }`;
+- `false` for nothing: `visual: false` draws no visual, `icon: false` no icon;
+- left out: the [kind's default](#the-kinds-defaults).
+
+`icon` written as a text is always the icon's name, `icon: mdi:sofa`, and a name makes the place an icon: on a person it shows in place of the photo. Its other things take the object: `icon: { type: image }`.
+
+### The things
+
+| Place    | Thing          | Options                                       | Draws                                                                                                                          | Kinds      |
+| -------- | -------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| `icon`   | `icon`         | `name`, `ring`, `style`                       | an icon, the entity's unless `name` says another                                                                               | every kind |
+| `icon`   | `image`        | `src`, `ring`, `style`                        | a picture in the icon, the entity's unless `src` says another                                                                  | every kind |
+| `icon`   | `flow`         | `style`                                       | the animation in the icon                                                                                                      | wind, rain |
+| `visual` | `glow`         | –                                             | the tile lit from its bottom edge in its colour                                                                                | every kind |
+| `visual` | `image`        | `src`, `opacity`, `tint`, `blur`              | a picture behind the whole tile                                                                                                | every kind |
+| `visual` | `flow`         | `style`                                       | the animation behind the whole tile                                                                                            | wind, rain |
+| `visual` | `sparkline`    | `hours`, `bucket`, `smoothing`, `axis`, `src` | a line of the history, below the line; a trend's: its series, a weather's: the hours ahead (unless `src` names another entity) | every kind |
+| `visual` | `columns`      | `hours`, `bucket`, `axis`, `src`              | a bar per bucket, below the line                                                                                               | every kind |
+| `visual` | `strip`        | `hours`, `bucket`, `src`                      | a block per bucket, coloured by the rule each one matched                                                                      | every kind |
+| `visual` | `bar`, `gauge` | –                                             | the value between `min` and `max`, below the line                                                                              | every kind |
+| `visual` | `segments`     | –                                             | ten segments, filled to the value                                                                                              | every kind |
+| `visual` | `sun`          | `hours`                                       | the sun's day, with the sun where it is now                                                                                    | sun        |
+
+A poster's `cover`, `path` and `line` are the covers', the robots' and the grid's drawings; a tile leaves them out by default. The options are the poster's: see [the things](/cards/poster-custom#the-things). A thing that only some kinds draw is left out on another kind, with a warning in the browser's console.
+
+### The kinds' defaults
+
+A place left out draws the kind's default. Where it is a visual below the line, the tile takes a second row; `visual: false` keeps it to one.
+
+| Kind                                                                               | `icon`                           | `visual`                                       |
+| ---------------------------------------------------------------------------------- | -------------------------------- | ---------------------------------------------- |
+| [light](/cards/tile-types#light)                                                   |                                  | `glow`: the light's colour and brightness      |
+| [climate](/cards/tile-types#climate)                                               |                                  | `glow`: warm while heating, cool while cooling |
+| [alarm_control_panel](/cards/tile-types#alarm)                                     |                                  | `glow`: a red pulse while triggered            |
+| [wind](/cards/tile-types#wind)                                                     | `{ type: flow, style: dots }`    |                                                |
+| [rain](/cards/tile-types#rain)                                                     | `{ type: flow, style: drops }`   |                                                |
+| [person](/cards/tile-types#person), [media_player](/cards/tile-types#media-player) | `{ type: image }`                | `{ type: image, blur: 20 }`: behind the tile   |
+| [solar](/cards/tile-types#solar)                                                   |                                  | `{ type: sparkline, hours: today }`            |
+| [battery](/cards/tile-types#battery)                                               |                                  | `segments`                                     |
+| [sun](/cards/tile-types#sun)                                                       |                                  | `sun`                                          |
+| [weather](/cards/tile-types#weather)                                               | `{ type: image }`: the condition | `sparkline`: the hours ahead                   |
+| [trend](/cards/tile-types#trend)                                                   |                                  | `sparkline`: its series                        |
+
+Every other kind (the covers, the robots and the grid too) draws the entity's icon and no visual.
 
 ::: live
 
 ```yaml
-type: custom:tile-card-pro
-entity: light.garden
-rules:
-  - { state: "off", icon_style: plain }
-  - { state: "on", icon_ring: true }
+- type: custom:tile-card-pro
+  entity: sensor.battery_soc
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: sensor.battery_soc
+  visual: false
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: person.malte
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: person.malte
+  icon: mdi:account-heart
+  visual: false
+  grid_options: { columns: 6 }
+```
+
+:::
+
+### Changing a default
+
+An object without `type` keeps the thing and changes its options (with a `name` it is an icon): `visual: { hours: 24 }` makes the weather's forecast look a day ahead, `visual: { blur: false }` shows a person's photo sharp, `icon: { ring: true }` puts a ring around whatever the icon is. An object with the default's own `type` merges the same way; another `type` replaces it.
+
+In a [tile group](/cards/tile-group-card), a tile's `visual` without `type` merges onto the group's: a bucket of its own over the group's sparkline.
+
+### One place for the animation
+
+The wind's and the rain's animation is drawn in one place: by default the icon. `visual: { type: flow }` makes it fill the whole tile, and the icon becomes the wind's arrow (the rain's icon). Writing a flow in both places is a config error.
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: sensor.wind_speed
+  name: Wind
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: sensor.wind_speed
+  name: Wind
+  visual: { type: flow, style: lines }
+  grid_options: { columns: 6 }
+```
+
+:::
+
+### By rule
+
+A rule takes `icon` and `visual` too, read as the card's and drawn over them while it matches: an object without `type` changes options only, a `type` draws another thing, `false` empties the place. A rule sets no window: `hours`, `bucket`, `smoothing` and a plot's `src` stay the card's.
+
+What a place draws comes from, each over the one before: the kind's default, the card's, the first matching rule's.
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: light.garden
+  rules:
+    - { state: "off", icon: { style: plain } }
+    - { state: "on", icon: { ring: true } }
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: switch.garden_pump
+  icon: mdi:water-pump
+  visual: { type: image, src: camera.garden, opacity: 0 }
+  rules:
+    - { state: "on", color: blue, label: Watering, visual: { opacity: 0.6 } }
+  grid_options: { columns: 6 }
 ```
 
 :::
@@ -243,9 +358,9 @@ rules:
 
 A tile keeps to one row unless it is asked for more:
 
-- `show_picture: true` draws the type's picture below the line: the weather's next hours, the sun's day, the solar production, a trend's lines (on by default).
-- `visual` draws the entity's value below the line, as on the poster: `sparkline`, `columns` or `strip` from its history over `hours_to_show`; `bar` or `gauge` between `min` and `max`.
-- `control: slider` (or another control `control_position: block`) adds a control there; see [Tile controls](/cards/tile-controls#where-it-sits).
+- a kind's visual below the line, by default: the weather's next hours, the sun's day, the solar production, a battery's segments, a trend's lines. `visual: false` leaves it out.
+- `visual` draws the entity's value below the line, as on the poster: `sparkline`, `columns` or `strip` from its history over `hours` (24 by default); `bar`, `gauge` or `segments` between `min` and `max`.
+- `control: slider` (or another control with `position: block`, `control: { type: buttons, position: block }`) adds a control there; see [Tile controls](/cards/tile-controls#where-it-sits).
 
 A plot or a curve runs to the tile's left, right and bottom edges, as on a poster; a strip keeps the tile's padding.
 
@@ -254,19 +369,15 @@ A plot or a curve runs to the tile's left, right and bottom edges, as on a poste
 ```yaml
 - type: custom:tile-card-pro
   entity: weather.home
-  show_picture: true
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sun.sun
-  show_picture: true
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.power_consumption
   name: House
   icon: mdi:home-lightning-bolt
-  visual: columns
-  hours_to_show: 12
-  bucket_minutes: 30
+  visual: { type: columns, hours: 12, bucket: 30 }
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.living_room_co2
@@ -276,8 +387,7 @@ A plot or a curve runs to the tile's left, right and bottom edges, as on a poste
 - type: custom:tile-card-pro
   entity: sensor.outdoor_temperature
   name: Outside
-  visual: sparkline
-  hours_to_show: 12
+  visual: { type: sparkline, hours: 12 }
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.living_room_humidity
@@ -288,7 +398,7 @@ A plot or a curve runs to the tile's left, right and bottom edges, as on a poste
 
 :::
 
-`glow` takes no row: it lights the tile from its bottom edge in its colour, as strong as the value's level between `min` and `max`, a light's brightness, or on and off. It is the light's default, and any tile can use it; `visual: none` drops it.
+`glow` takes no row: it lights the tile from its bottom edge in its colour, as strong as the value's level between `min` and `max`, a light's brightness, or on and off. It is the light's default, and any tile can use it; `visual: false` drops it.
 
 ::: live
 
@@ -316,13 +426,13 @@ The coffee machine is off: switch it on and it glows.
 
 ## The icon
 
-The icon shows the entity's icon, or the poster type's own: the padlock, the fan, the animated wind.
+The icon shows the entity's icon, or the kind's own: the padlock, the fan, the animated wind. `icon` sets [its thing](#the-places):
 
-- `icon` sets an `mdi:` icon, or a template that renders one. It takes the place of a type's animated icon too.
-- `icon_style: plain` draws the icon without its circle.
-- `show_entity_picture: true` shows the entity's picture where it has one. The weather, a person and a media player do this by default.
-- `icon_ring: true` puts a ring of the value around the icon, filled between `min` and `max` (the entity's own, else 0 and 100).
-- `icon_image` shows a picture of your own: a URL, a template that renders one, or an entity, whose picture it shows. While it has no picture, the tile shows `icon`.
+- a text is an `mdi:` icon, or a template that renders one: `icon: mdi:sofa`. It takes the place of a kind's picture or animated icon too.
+- `icon: { style: plain }` draws the icon without its circle.
+- `icon: { ring: true }` puts a ring of the value around the icon, filled between `min` and `max` (the entity's own, else 0 and 100).
+- `icon: { type: image }` shows the entity's picture where it has one. The weather, a person and a media player do this by default; `icon: { type: icon }` draws their icon.
+- `icon: { type: image, src: … }` shows a picture of your own: a URL, a template that renders one, or an entity, whose picture it shows. Its `name` is the icon while there is no picture.
 
 ::: live
 
@@ -330,31 +440,31 @@ The icon shows the entity's icon, or the poster type's own: the padlock, the fan
 - type: custom:tile-card-pro
   entity: sensor.robot_progress
   name: Cleaning
-  icon: mdi:robot-vacuum
-  icon_ring: true
+  icon: { name: mdi:robot-vacuum, ring: true }
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.living_room_humidity
   name: Humidity
-  icon_style: plain
+  icon: { style: plain }
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   name: Malte
-  icon: mdi:account
-  icon_image: person.malte
+  icon: { type: image, src: person.malte }
   value: "{{ 'Home' if is_state('person.malte', 'home') else 'Away' }}"
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   name: Now playing
-  icon: mdi:speaker
-  icon_image: "{{ state_attr('media_player.living_room_speaker', 'entity_picture') }}"
+  icon:
+    type: image
+    src: "{{ state_attr('media_player.living_room_speaker', 'entity_picture') }}"
+    name: mdi:music
   value: "{{ state_attr('media_player.living_room_speaker', 'media_title') }}"
   grid_options: { columns: 6 }
 ```
 
 :::
 
-The icon takes actions of its own, as on Home Assistant's tile card: `icon_tap_action`, `icon_hold_action` and `icon_double_tap_action`. As there, the icon toggles what switches (a light, a switch, a fan, an input boolean, a group, an automation, a humidifier, a valve) and presses what runs (a button, a scene) by default; `icon_tap_action: none` makes it part of the tile again. An icon without actions of its own is part of the tile: a tap there runs the tile's `tap_action`. A fan's blades keep turning with the toggle on them. On the icon, `toggle` locks or unlocks a lock, arms or disarms an alarm panel and switches anything else. A hold runs after a second, so it [confirms](/cards/tile-controls#hold-to-confirm): locks and alarm panels hold their icon by default.
+The icon takes actions of its own, as on Home Assistant's tile card: `tap_action`, `hold_action` and `double_tap_action` in the icon's object, beside its `name` (`icon: { name: mdi:coffee-maker, tap_action: { action: toggle } }`), or alone to keep the kind's icon (`icon: { tap_action: … }`). A rule changes the icon's look, never what a tap on it does. As there, the icon toggles what switches (a light, a switch, a fan, an input boolean, a group, an automation, a humidifier, a valve) and presses what runs (a button, a scene) by default; `icon: { tap_action: none }` makes it part of the tile again. An icon without actions of its own is part of the tile: a tap there runs the tile's `tap_action`. A fan's blades keep turning with the toggle on them. On the icon, `toggle` locks or unlocks a lock, arms or disarms an alarm panel and switches anything else. A hold runs after a second, so it [confirms](/cards/tile-controls#hold-to-confirm): locks and alarm panels hold their icon by default.
 
 ::: live
 
@@ -362,13 +472,13 @@ The icon takes actions of its own, as on Home Assistant's tile card: `icon_tap_a
 - type: custom:tile-card-pro
   entity: switch.coffee_machine
   name: Coffee
-  icon: mdi:coffee-maker
-  icon_tap_action: { action: toggle }
+  icon: { name: mdi:coffee-maker, tap_action: { action: toggle } }
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: switch.garden_pump
-  icon: mdi:water-pump
-  icon_hold_action: { action: toggle }
+  icon:
+    name: mdi:water-pump
+    hold_action: { action: toggle }
   grid_options: { columns: 6 }
 ```
 
@@ -386,13 +496,14 @@ name: Scenes
 icon: mdi:palette
 value: Living room
 color: deep-purple
-control: buttons
-control_position: block
-control_options:
-  - { entity: scene.bright, label: Bright, color: amber }
-  - { entity: scene.dinner, label: Dinner, color: orange }
-  - { entity: scene.movie_night, label: Movie, color: deep-purple }
-  - { entity: scene.good_night, label: Night, color: indigo }
+control:
+  type: buttons
+  position: block
+  options:
+    - { entity: scene.bright, label: Bright, color: amber }
+    - { entity: scene.dinner, label: Dinner, color: orange }
+    - { entity: scene.movie_night, label: Movie, color: deep-purple }
+    - { entity: scene.good_night, label: Night, color: indigo }
 ```
 
 :::
@@ -437,13 +548,14 @@ type: custom:tile-card-pro
 entity: input_select.house_mode
 name: House
 icon: mdi:home-account
-control: segments
-control_position: block
-control_options:
-  - { value: Home, icon: mdi:home }
-  - { value: Away, icon: mdi:home-export-outline }
-  - { value: Night, icon: mdi:weather-night }
-  - { value: Guest, icon: mdi:account-multiple }
+control:
+  type: segments
+  position: block
+  options:
+    - { value: Home, icon: mdi:home }
+    - { value: Away, icon: mdi:home-export-outline }
+    - { value: Night, icon: mdi:weather-night }
+    - { value: Guest, icon: mdi:account-multiple }
 ```
 
 :::
@@ -457,9 +569,7 @@ type: custom:tile-card-pro
 entity: sensor.energy_today
 name: Today
 icon: mdi:lightning-bolt
-visual: columns
-hours_to_show: 24
-bucket_minutes: 60
+visual: { type: columns, hours: 24, bucket: 60 }
 secondary: "{{ (states('sensor.energy_today') | float(0) * states('sensor.electricity_price') | float(0)) | round(2) }} € at {{ states('sensor.electricity_price') }} €/kWh"
 status: "{{ 'Cheap' if states('sensor.electricity_price') | float(0) < 0.25 else 'Expensive' }}"
 color: "{{ 'green' if states('sensor.electricity_price') | float(0) < 0.25 else 'orange' }}"
@@ -467,4 +577,4 @@ color: "{{ 'green' if states('sensor.electricity_price') | float(0) < 0.25 else 
 
 :::
 
-The tile card's options are in the [reference](/cards/tile-card#reference), every poster type on a tile on [Tile types](/cards/tile-types).
+The tile card's options are in the [reference](/cards/tile-card#reference), every kind on a tile on [Kinds](/cards/tile-types).

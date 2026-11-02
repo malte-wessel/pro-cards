@@ -171,6 +171,14 @@ export interface ActionDefaults {
   // `hover: false` on the card: header badges, which answer by default, keep still too
   hoverOff?: boolean;
 }
+// a plot's own options (the v3 cards' `visual: { hours, bucket, smoothing, axis, src }`)
+export interface PlotOptions {
+  hours?: number | "today";
+  bucket?: number;
+  smoothing?: number;
+  axis?: boolean;
+  src?: string;
+}
 export interface EntityItem extends ActionDefaults {
   entity: string | null;
   name: string | null;
@@ -192,6 +200,11 @@ export interface EntityItem extends ActionDefaults {
   iconRing?: boolean;
   // the entity's picture (a person's photo) in place of its icon, where it has one
   picture: boolean;
+  // the matching rule's colour and icon win over the item's own (the v3 cards: the item's are the
+  // defaults); left out, the item's are fixed and beat the rules (the entity cards)
+  ruleWins?: boolean;
+  // a plot's own window, bucket, smoothing, axes and entity (the v3 cards' visual), over the card's
+  plot?: PlotOptions;
   min: number | null;
   max: number | null;
   rules: Rule[];

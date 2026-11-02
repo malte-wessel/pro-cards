@@ -1,6 +1,6 @@
 # Badges
 
-A [tile](/cards/tile-card) can carry small badges at the end of its first row, centred on its icon. A badge shows another entity, an attribute of the tile's entity, or a value of your own, and takes its own taps. The status can be one of them, and the icon carries a badge of its own.
+A [tile](/cards/tile-card) can carry small badges at the end of its first row, centred on its icon. A badge shows another entity, an attribute of the tile's entity, or a value of your own, and takes its own taps. The status can be the first of them, and the icon carries a badge of its own.
 
 ## Badges on a tile
 
@@ -27,7 +27,7 @@ The badges always show, all of them. The name and the line give way beside them;
   entity: sensor.ev_battery
   name: Car
   icon: mdi:car-electric
-  poster: entity
+  kind: entity
   status: false
   badges:
     - { visual: ring, show_icon: false }
@@ -231,15 +231,12 @@ A badge without `entity` reads the tile's entity. `attribute` shows one of its a
 
 ## The status badge
 
-The status is on the line after the value. `status_badge: true` makes it a badge instead, before the others: a `tag` in the tile's colour, without an icon. It shows the poster type's status, else the matching rule's label, else the entity's state (a vacuum's Cleaning, a lock's Locked), even where that repeats the value: you asked for the badge. A rule's `style` and `pulse` apply to it.
+The status is on the line after the value. `status_badge: true` makes it a badge instead, before the others: it always comes first. Its look is the tile's: a `tag` in the tile's colour, without an icon or a name. It shows the kind's status, else the matching rule's label, else the entity's state (a vacuum's Cleaning, a lock's Locked), even where that repeats the value: you asked for the badge. A rule's `style` and `pulse` apply to it.
 
-`status` sets it:
+`status` sets its text, on the line or as a badge:
 
 - a text or a template;
-- badge keys, with `value` for the text: its own `color`, `icon`, `show_name` and `rules` win over the tile's;
 - `false` to drop it, on the line and as a badge.
-
-`- status` in `badges` moves it to that place, and makes it a badge too:
 
 ::: live
 
@@ -252,8 +249,8 @@ The status is on the line after the value. `status_badge: true` makes it a badge
 - type: custom:tile-card-pro
   entity: sensor.living_room_co2
   name: Air
+  status: "{{ 'Stuffy' if states('sensor.living_room_co2') | int(0) > 700 else 'Fresh' }}"
   status_badge: true
-  status: { style: filled, icon: mdi:air-filter }
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.ev_battery
@@ -262,9 +259,9 @@ The status is on the line after the value. `status_badge: true` makes it a badge
   rules:
     - { below: 20, color: red, label: Low }
     - { above: 20, color: green, label: Ready }
+  status_badge: true
   badges:
     - sensor.ev_range
-    - status
   grid_options: { columns: 12 }
 ```
 
@@ -293,7 +290,7 @@ The icon carries a small badge of its own, as on Home Assistant's tile: what a t
 
 :::
 
-`icon_badge` decides what it shows: `auto` (the default) is Home Assistant's, `false` none at all, and `{ icon, color }` one of your own. Both take a template, and an icon that renders empty shows no badge, so a template can show it only when something needs a look. Without a colour, the badge takes the tile's. Here a warning while the wind blows above 5 km/h (the demo's wind blows at 9), a window to open whatever the air, and a thermostat without its badge:
+The icon's `badge` decides what it shows (`icon: { badge: … }`, beside the icon's other options): `auto` (the default) is Home Assistant's, `false` none at all, and `{ icon, color }` one of your own. Both take a template, and an icon that renders empty shows no badge, so a template can show it only when something needs a look. Without a colour, the badge takes the tile's. A rule sets it too, while it matches (`rules: [{ above: 1000, icon: { badge: { icon: mdi:window-open-variant } } }]`). Here a warning while the wind blows above 5 km/h (the demo's wind blows at 9), a window to open whatever the air, and a thermostat without its badge:
 
 ::: live
 
@@ -301,19 +298,20 @@ The icon carries a small badge of its own, as on Home Assistant's tile: what a t
 - type: custom:tile-card-pro
   entity: sensor.wind_speed
   name: Wind
-  icon_badge:
-    icon: "{{ 'mdi:alert' if states('sensor.wind_speed') | float(0) > 5 else '' }}"
-    color: red
+  icon:
+    badge:
+      icon: "{{ 'mdi:alert' if states('sensor.wind_speed') | float(0) > 5 else '' }}"
+      color: red
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.living_room_co2
   name: CO₂
-  icon_badge: { icon: mdi:window-open-variant }
+  icon: { badge: { icon: mdi:window-open-variant } }
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: climate.living_room
   name: Heat
-  icon_badge: false
+  icon: { badge: false }
   grid_options: { columns: 6 }
 ```
 
@@ -330,23 +328,23 @@ On a vertical tile, the badges are a row of their own at the top right, above th
 ```yaml
 - type: custom:tile-card-pro
   entity: sensor.living_room_co2
+  status_badge: true
   badges:
     - sensor.living_room_temperature
-    - status
   grid_options: { columns: 12 }
 - type: custom:tile-card-pro
   entity: sensor.living_room_co2
+  status_badge: true
   badges:
     - sensor.living_room_temperature
-    - status
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.living_room_co2
   name: CO₂
   vertical: true
+  status_badge: true
   badges:
     - sensor.living_room_temperature
-    - status
   grid_options: { columns: 6 }
 ```
 
@@ -356,16 +354,16 @@ On a vertical tile, the badges are a row of their own at the top right, above th
 
 ### Card options
 
-| Key            | Default | Description                                                                                                             |
-| -------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `badges`       | –       | The badges at the end of the first row, in order; `status` places the status badge among them.                          |
-| `status_badge` | `false` | The status as a badge before the others, in place of on the line.                                                       |
-| `status`       | –       | The status: a text, a template, badge keys with `value` for the text, or `false`.                                       |
-| `icon_badge`   | `auto`  | The badge on the icon: `auto` (Home Assistant's), `false`, or `{ icon, color }` of your own, each a text or a template. |
+| Key            | Default    | Description                                                                                                                                                       |
+| -------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `badges`       | –          | The badges at the end of the first row, in order, after the status badge.                                                                                         |
+| `status`       | the kind's | The status: a text, a template, or `false`. Its look is the tile's: a tag in its colour.                                                                          |
+| `status_badge` | `false`    | `true`: the status as the first badge, in place of on the line.                                                                                                   |
+| `icon.badge`   | `auto`     | The badge on the icon (`icon: { badge: … }`): `auto` (Home Assistant's), `false`, or `{ icon, color }` of your own, each a text or a template. A rule may set it. |
 
 ### Badge keys
 
-A badge is an entity id, `status`, or an object with these keys. It also takes the [entity options](/cards/entity-options#entity-options), such as `name`, `icon`, `color`, `unit`, `min` and `max`.
+A badge is an entity id or an object with these keys. It also takes the [entity options](/cards/entity-options#entity-options), such as `name`, `icon`, `color`, `unit`, `min` and `max`.
 
 | Key                                      | Default             | Description                                                                                         |
 | ---------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------- |

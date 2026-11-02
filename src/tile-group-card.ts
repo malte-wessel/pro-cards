@@ -8,13 +8,12 @@
  *   title_tap_action                       # the title (and its icon)
  *   badges:                                # the header's badges (plain and small unless they say otherwise)
  *     - sensor.kitchen_temperature
- *   status_badge: true                     # any other key: a default for every tile (a tile's own wins)
- *   entities:                              # entity ids or tiles (tile-card-pro's keys, without type)
- *     - light.kitchen
- *     - { entity: switch.coffee_machine, visibility: [...] }
+ *   tiles:                                 # entity ids or tiles (tile-card-pro's keys, without type,
+ *     - light.kitchen                      #   grid_options and vertical: the layout decides it)
+ *     - { entity: switch.coffee_machine, status_badge: true, visibility: [...] }
  *
  * The tiles are tile cards of their own, hosted flat on the group's surface: everything a tile does
- * (poster types, controls, status, badges) works the same in a group.
+ * (kinds, controls, status, badges) works the same in a group.
  */
 import { registerCard } from "./shared/card.ts";
 import { childKey, reconcile } from "./shared/cards/children.ts";
@@ -52,7 +51,7 @@ export class TileGroupCard extends EntityCardBase {
   _tiles: Tile[] = [];
 
   static getStubConfig(hass: HomeAssistant | undefined, entities?: string[]) {
-    return { title: t(hass, "group.stub_title"), entities: (entities || []).slice(0, 3) };
+    return { title: t(hass, "group.stub_title"), tiles: (entities || []).slice(0, 3) };
   }
   _normalize(raw: unknown) {
     const cfg = normalizeTileGroupConfig(raw);
@@ -82,7 +81,7 @@ export class TileGroupCard extends EntityCardBase {
           el.setConfig(x.config);
         } catch (e) {
           const msg = String((e as Error)?.message ?? e).replace(`${TILE_TYPE}: `, "");
-          throw new Error(`${CARD_TYPE}: entities[${i}]: ${msg}`, { cause: e });
+          throw new Error(`${CARD_TYPE}: tiles[${i}]: ${msg}`, { cause: e });
         }
       }
       if (this._hass && !old) el.hass = this._hass;

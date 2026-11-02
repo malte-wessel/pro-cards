@@ -7,7 +7,7 @@ import {
   type ControlPosition,
   type Placement,
 } from "../entity/control.ts";
-import { numAttr as num, pictureOf } from "../entity/look.ts";
+import { numAttr as num } from "../entity/look.ts";
 import type { FmtValue } from "../entity/model.ts";
 import { leadEl, secondaryEl } from "../entity/render/lead.ts";
 import { setRate } from "../flow/dom.ts";
@@ -15,6 +15,7 @@ import { fmtDuration, fmtNumber } from "../format.ts";
 import type { HassEntity } from "../ha.ts";
 import { t, type StringKey } from "../i18n.ts";
 import { div, pctValue } from "./dom.ts";
+import { IMAGE_BLUR } from "./places.ts";
 import { attention } from "./rules.ts";
 import type { Kind, KindCtx } from "./types.ts";
 
@@ -57,8 +58,8 @@ export const LIGHT: Kind = {
   readsText: "a light",
   keys: [],
   controls: [place("toggle", "end"), place("slider", "block")],
-  // lit from below in its colour unless the card draws another picture
-  main: () => ({ visual: "glow" }),
+  // lit from below in its colour unless the card draws another visual
+  visual: { type: "glow" },
   // the light's own colour while it is on
   color: (c) => (c.m.st?.state === "on" ? rgbOf(c.m.st) : null),
   status: (c) => c.m.look.label ?? stateText(c),
@@ -66,7 +67,7 @@ export const LIGHT: Kind = {
     const v = percent(c, brightness(c.m.st));
     return v ? { value: v, word: false } : {};
   },
-  // its glow (the poster's `visual: glow`, its default) as strong as its brightness, dark while off
+  // its glow (its default visual) as strong as its brightness, dark while off
   level: (c) => (c.m.st?.state === "on" ? (brightness(c.m.st) ?? 100) / 100 : 0),
   extra: (c) => [String(c.m.st?.attributes?.rgb_color), num(c.m.st, "brightness")],
 };
@@ -163,7 +164,9 @@ export const CLIMATE: Kind = {
           }),
     };
   },
-  backdrop: {
+  // its glow: warm while heating, cool while cooling
+  visual: { type: "glow" },
+  glow: {
     key: () => "climate",
     build: () => div("pclimate"),
     update: (el, c) => {
@@ -200,14 +203,16 @@ export const ALARM: Kind = {
       ? {}
       : { hold: { action: "toggle" } },
   rules: attention("triggered"),
-  backdrop: {
+  // its glow: a red pulse from the edges while triggered
+  visual: { type: "glow" },
+  glow: {
     key: () => "alarm",
     build: () => div("palarm"),
     update: (el, c) => el.classList.toggle("on", c.m.st?.state === "triggered"),
   },
 };
 
-// ----- person: their photo in the icon and blurred behind the poster, the zone, since when -----
+// ----- person: their photo in the icon and blurred behind the card, the zone, since when -----
 
 export const PERSON: Kind = {
   name: "person",
@@ -216,17 +221,13 @@ export const PERSON: Kind = {
   readsText: "a person or a device tracker",
   keys: [],
   timed: true,
-  // their photo in the icon unless the card says show_entity_picture: false
-  main: (_entity, raw) =>
-    raw.show_entity_picture === undefined ? { show_entity_picture: true } : {},
-  image: (c) => pictureOf(c.m.st),
-  imageBlur: true,
+  // their photo in the icon, and blurred behind the card (the icon shows it sharp)
+  icon: { type: "image" },
+  visual: { type: "image", blur: IMAGE_BLUR },
   slots: (c) => {
     const st = c.m.st;
     const since = st ? (c.ctx.now - new Date(st.last_changed).getTime()) / 1000 : NaN;
     return {
-      // with their photo behind it and none in the icon: no icon over their face
-      ...(pictureOf(st) && !c.m.look.picture ? { lead: div("plead-none") } : {}),
       secondary: Number.isFinite(since)
         ? secondaryEl([
             {

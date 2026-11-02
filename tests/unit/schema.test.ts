@@ -317,129 +317,351 @@ describe("card config schemas", () => {
     ).toBeNull();
   });
 
-  it("checks the poster card's type, its variant and its flat keys", () => {
+  it("checks the poster card's kind and its flat keys", () => {
     const PC = "custom:poster-card-pro";
-    expect(validate({ type: PC, entity: "sensor.a", poster: "room" })).toMatch(/enum|allowed/);
-    expect(validate({ type: PC, entity: "sensor.a", kind: "wind" })).toBeTruthy();
-    expect(validate({ type: PC, entity: "sensor.a", variant: "snow" })).toMatch(/enum|allowed/);
-    // a written type takes only its own variants
-    expect(validate({ type: PC, entity: "sensor.a", poster: "wind", variant: "lines" })).toBeNull();
+    expect(validate({ type: PC, entity: "sensor.a", kind: "room" })).toMatch(/enum|allowed/);
+    expect(validate({ type: PC, entity: "sensor.a", kind: "wind" })).toBeNull();
+    // the covers and the appliances are kinds of their own
+    for (const kind of ["garage", "shutter", "window", "washer", "heat_pump"])
+      expect(validate({ type: PC, entity: "sensor.a", kind }), kind).toBeNull();
+    expect(validate({ type: PC, kind: "trend" })).toMatch(/series/);
     expect(
-      validate({ type: PC, entity: "sensor.a", poster: "wind", variant: "fill" }),
-    ).toBeTruthy();
-    expect(
-      validate({ type: PC, entity: "light.a", poster: "light", variant: "lines" }),
-    ).toBeTruthy();
-    // a detected type: only the shapes
-    expect(validate({ type: PC, entity: "cover.a", variant: "garage" })).toBeNull();
-    expect(validate({ type: PC, poster: "trend" })).toMatch(/series/);
-    expect(
-      validate({ type: PC, poster: "trend", series: ["sensor.a", { entity: "sensor.b" }] }),
+      validate({ type: PC, kind: "trend", series: ["sensor.a", { entity: "sensor.b" }] }),
     ).toBeNull();
     expect(
       validate({ type: PC, entity: "sensor.a", gust: false, direction: "sensor.b" }),
     ).toBeNull();
     expect(validate({ type: PC, entity: "sensor.a", gust: "gusty" })).toBeTruthy();
-    // a written type takes none of another type's keys; a detected one leaves that to the card
-    expect(validate({ type: PC, entity: "sensor.r", poster: "rain", gust: "sensor.g" })).toMatch(
+    // a written kind takes none of another kind's keys; a detected one leaves that to the card
+    expect(validate({ type: PC, entity: "sensor.r", kind: "rain", gust: "sensor.g" })).toMatch(
       /gust/,
     );
-    expect(
-      validate({ type: PC, entity: "sensor.w", poster: "wind", gust: "sensor.g", variant: "dots" }),
-    ).toBeNull();
-    expect(validate({ type: PC, poster: "grid", import: "sensor.i", running_above: 5 })).toMatch(
+    expect(validate({ type: PC, entity: "sensor.w", kind: "wind", gust: "sensor.g" })).toBeNull();
+    expect(validate({ type: PC, kind: "grid", import: "sensor.i", running_above: 5 })).toMatch(
       /running_above/,
     );
     expect(
       validate({ type: PC, entity: "sensor.r", gust: "sensor.g", today: "sensor.t" }),
     ).toBeNull();
-    expect(validate({ type: PC, poster: "grid", import: false })).toBeTruthy();
+    expect(validate({ type: PC, kind: "grid", import: false })).toBeTruthy();
+    expect(validate({ type: PC, kind: "washer", entity: "sensor.p", running_above: 8 })).toBeNull();
+  });
+
+  it("rejects the keys the places replaced", () => {
+    const H = "sensor.living_room_humidity";
+    const gone = {
+      poster: "wind",
+      variant: "lines",
+      image: "/local/x.jpg",
+      image_opacity: 0.5,
+      image_tint: "red",
+      image_blur: true,
+      icon_image: "/local/x.jpg",
+      show_entity_picture: true,
+      icon_ring: true,
+      icon_style: "plain",
+      show_picture: true,
+      hours_to_show: 12,
+      bucket_minutes: 30,
+      smoothing_minutes: 10,
+      // control's options, the icon's actions and badge
+      control_position: "block",
+      control_attribute: "preset_mode",
+      control_step: 1,
+      control_options: ["eco"],
+      control_confirm: true,
+      icon_tap_action: "toggle",
+      icon_hold_action: "toggle",
+      icon_double_tap_action: "toggle",
+      icon_badge: false,
+    };
+    for (const type of ["custom:poster-card-pro", "custom:tile-card-pro"])
+      for (const [key, v] of Object.entries(gone)) {
+        expect(validate({ type, entity: H, [key]: v }), `${type} ${key}`).toMatch(/unevaluated/);
+        if (key === "poster" || key.includes("minutes") || key === "hours_to_show") continue;
+        if (key.startsWith("control_") || key.endsWith("_action") || key.endsWith("_badge"))
+          continue;
+        expect(
+          validate({ type, entity: H, rules: [{ above: 1, [key]: v }] }),
+          `${type} rules ${key}`,
+        ).toMatch(/additional|unevaluated/);
+      }
+    expect(
+      validate({ type: "custom:tile-group-card-pro", tiles: [{ entity: H, poster: "solar" }] }),
+    ).toBeTruthy();
+    // the group sets nothing on its tiles: a tile's key on the group is unknown
+    for (const key of ["hours_to_show", "status", "control", "visual", "entities"])
+      expect(validate({ type: "custom:tile-group-card-pro", tiles: [H], [key]: 1 }), key).toMatch(
+        /unevaluated/,
+      );
+    // its layout decides a tile's vertical
+    expect(
+      validate({ type: "custom:tile-group-card-pro", tiles: [{ entity: H, vertical: true }] }),
+    ).toBeTruthy();
     expect(
       validate({
-        type: PC,
-        poster: "appliance",
-        entity: "sensor.p",
-        variant: "washer",
-        running_above: 8,
+        type: "custom:tile-group-card-pro",
+        layout: "row",
+        tiles: [
+          H,
+          {
+            entity: "light.kitchen",
+            status_badge: true,
+            control: { type: "slider", step: 5 },
+          },
+        ],
+      }),
+    ).toBeNull();
+    // the v2 cards keep the flat keys
+    const flat = {
+      entity: "climate.living_room",
+      control: "segments",
+      control_position: "block",
+      control_attribute: "preset_mode",
+      control_options: ["eco"],
+      control_confirm: true,
+    };
+    expect(validate({ type: "custom:entity-card-pro", ...flat })).toBeNull();
+    expect(validate({ type: "custom:entity-group-card-pro", entities: [flat] })).toBeNull();
+    expect(
+      validate({ type: "custom:entity-card-pro", ...flat, control: { type: "segments" } }),
+    ).toBeTruthy();
+  });
+
+  it("checks the two places: the icon and the visual", () => {
+    const H = "sensor.living_room_humidity";
+    for (const type of ["custom:poster-card-pro", "custom:tile-card-pro"]) {
+      const ok = (c: object, what: string) => expect(validate({ type, ...c }), what).toBeNull();
+      const bad = (c: object, what: string) => expect(validate({ type, ...c }), what).toBeTruthy();
+      // a thing's name, false, or the thing with its options
+      for (const visual of [
+        "sparkline",
+        "columns",
+        "strip",
+        "bar",
+        "gauge",
+        "segments",
+        "glow",
+        "image",
+        false,
+      ])
+        ok({ entity: H, visual }, `visual ${visual}`);
+      for (const visual of ["none", "ring", "icon", "badge", "trend", true])
+        bad({ entity: H, visual }, `visual ${visual}`);
+      ok(
+        { entity: H, visual: { type: "sparkline", hours: "today", smoothing: 10, axis: true } },
+        "sparkline",
+      );
+      ok(
+        { entity: H, visual: { type: "columns", hours: 12, bucket: 30, src: "sensor.b" } },
+        "columns",
+      );
+      ok(
+        {
+          entity: H,
+          visual: { type: "image", src: "/local/x.jpg", opacity: 0.5, tint: "red", blur: true },
+        },
+        "image",
+      );
+      bad({ entity: H, visual: { type: "image", hours: 12 } }, "an image has no hours");
+      bad({ entity: H, visual: { type: "glow", style: "lines" } }, "a glow has no options");
+      bad({ entity: H, visual: { type: "columns", smoothing: 10 } }, "columns are not smoothed");
+      bad({ entity: H, visual: { type: "sparkline", hours: 0 } }, "hours above 0");
+      bad({ entity: H, visual: { type: "image", opacity: 2 } }, "opacity to 1");
+      // without a type, the options merge onto what the place draws: any of them
+      ok({ entity: "person.a", visual: { blur: 0 } }, "merge a blur");
+      ok({ entity: H, visual: { hours: 6, bucket: 15 } }, "merge a window");
+      bad({ entity: H, visual: { size: 2 } }, "no such option");
+      // the icon: a name, false, or a thing
+      ok({ entity: H, icon: "mdi:sofa" }, "icon name");
+      ok({ entity: H, icon: false }, "icon false");
+      ok({ entity: H, icon: { ring: true } }, "icon ring");
+      ok({ entity: H, icon: { name: "mdi:x", ring: true, style: "plain" } }, "icon options");
+      ok({ entity: H, icon: { type: "image", src: "person.a", ring: true } }, "icon image");
+      ok({ entity: "sensor.w", icon: { type: "flow", style: "swoosh" } }, "icon flow");
+      bad({ entity: H, icon: "image" }, "a string is an icon's name");
+      bad({ entity: H, icon: { type: "flow", name: "mdi:x" } }, "a flow has no name");
+      bad({ entity: H, icon: { name: "mdi:x", src: "/local/x.jpg" } }, "a name makes it an icon");
+      bad({ entity: H, icon: { type: "icon", style: "dots" } }, "an icon's style");
+      bad({ entity: H, icon: { type: "picture" } }, "no such thing");
+      // what only a kind draws fits only that kind
+      ok({ entity: "sensor.w", kind: "wind", visual: { type: "flow", style: "lines" } }, "flow");
+      bad(
+        { entity: "sensor.w", kind: "wind", visual: { type: "flow", style: "drops" } },
+        "rain's style",
+      );
+      ok(
+        { entity: "sensor.r", kind: "rain", icon: { type: "flow", style: "ripples" } },
+        "rain icon",
+      );
+      bad({ entity: "light.a", kind: "light", visual: "flow" }, "a light has no flow");
+      bad({ entity: "light.a", kind: "light", icon: { type: "flow" } }, "nor in its icon");
+      bad({ entity: "sun.sun", kind: "sun", visual: "cover" }, "the sun has no cover");
+      ok({ entity: "cover.a", kind: "garage", visual: "cover" }, "a garage's cover");
+      ok(
+        { entity: "weather.home", kind: "weather", visual: { type: "sparkline", hours: 12 } },
+        "a weather's sparkline: its forecast",
+      );
+      bad({ entity: "weather.home", visual: "forecast" }, "forecast is a weather's sparkline");
+      // the animation goes in one place
+      bad(
+        { entity: "sensor.w", icon: { type: "flow" }, visual: { type: "flow" } },
+        "a flow in both places",
+      );
+      bad({ entity: "sensor.w", icon: { type: "flow" }, visual: "flow" }, "a flow in both places");
+      // rules: the same places, without the history's window or a plot's src
+      ok(
+        {
+          entity: H,
+          rules: [
+            { above: 60, color: "red", icon: "mdi:water", visual: { opacity: 0.6 } },
+            { above: 40, icon: { ring: true, style: "plain" }, visual: false },
+            { below: 20, visual: { type: "image", src: "/local/dry.jpg", blur: 4 } },
+            { state: "x", visual: "sparkline" },
+          ],
+        },
+        "rules",
+      );
+      bad(
+        { entity: H, rules: [{ above: 1, visual: { type: "sparkline", hours: 6 } }] },
+        "rule hours",
+      );
+      bad({ entity: H, rules: [{ above: 1, visual: { bucket: 15 } }] }, "rule bucket");
+      bad({ entity: H, rules: [{ above: 1, visual: { smoothing: 15 } }] }, "rule smoothing");
+      bad(
+        { entity: H, rules: [{ above: 1, visual: { type: "columns", src: "sensor.b" } }] },
+        "rule plot src",
+      );
+    }
+    // a tile in a group takes the places as a tile card does
+    expect(
+      validate({
+        type: "custom:tile-group-card-pro",
+        tiles: [
+          { entity: "sensor.a", visual: { type: "sparkline", hours: 6 } },
+          { entity: "sensor.b", kind: "solar", visual: false },
+        ],
       }),
     ).toBeNull();
   });
 
-  it("checks the tile card: the poster's types and keys, less the poster's own parts", () => {
+  it("checks the tile card: the poster's kinds and keys, less the poster's own parts", () => {
     const TC = "custom:tile-card-pro";
     const H = "sensor.living_room_humidity";
     expect(validate({ type: TC, entity: H })).toBeNull();
-    expect(validate({ type: TC, entity: "sensor.a", poster: "wind", variant: "lines" })).toBeNull();
-    expect(validate({ type: TC, entity: "sensor.r", poster: "rain", gust: "sensor.g" })).toMatch(
+    expect(
+      validate({
+        type: TC,
+        entity: "sensor.a",
+        kind: "wind",
+        visual: { type: "flow", style: "lines" },
+      }),
+    ).toBeNull();
+    expect(validate({ type: TC, entity: "sensor.r", kind: "rain", gust: "sensor.g" })).toMatch(
       /gust/,
     );
-    for (const visual of ["sparkline", "columns", "strip", "bar", "gauge", "glow", "none"])
-      expect(validate({ type: TC, entity: H, visual }), visual).toBeNull();
-    for (const visual of ["ring", "icon", "badge", "trend"])
-      expect(validate({ type: TC, entity: H, visual }), visual).toMatch(/enum|allowed/);
-    expect(validate({ type: TC, entity: "weather.home", show_picture: true })).toBeNull();
     expect(validate({ type: TC, entity: H, vertical: true })).toBeNull();
     expect(validate({ type: TC, entity: H, vertical: "yes" })).toBeTruthy();
     expect(validate({ type: TC, entity: H, status: false })).toBeNull();
     expect(validate({ type: TC, entity: H, status: "{{ 'Dry' }}" })).toBeNull();
-    expect(
-      validate({ type: TC, entity: H, status: { style: "filled", icon: "mdi:air" } }),
-    ).toBeNull();
+    // the status is a text or false: its look is the card's
+    for (const status of [{ style: "filled", icon: "mdi:air" }, { badge: true }, { value: "Dry" }])
+      expect(validate({ type: TC, entity: H, status }), JSON.stringify(status)).toBeTruthy();
+    expect(validate({ type: TC, entity: H, status: true })).toBeTruthy();
+    // as a badge before the badges: status_badge
     expect(validate({ type: TC, entity: H, status_badge: true })).toBeNull();
-    expect(validate({ type: TC, entity: H, icon_badge: false })).toBeNull();
-    expect(
-      validate({ type: TC, entity: H, icon_badge: { icon: "{{ 'mdi:alert' }}", color: "red" } }),
-    ).toBeNull();
-    expect(validate({ type: TC, entity: H, icon_badge: { color: "red" } })).toBeTruthy();
-    // the poster's status is always a badge
-    expect(validate({ type: "custom:poster-card-pro", entity: H, status_badge: true })).toMatch(
-      /unevaluated/,
-    );
-    expect(
-      validate({ type: TC, entity: H, badges: ["sensor.a", { attribute: "x" }, "status"] }),
-    ).toBeNull();
-    // the poster's corner and backdrop, and the entity card's toggle, are not the tile's
-    for (const key of ["image", "image_blur", "toggle"])
-      expect(validate({ type: TC, entity: H, [key]: true }), key).toMatch(/unevaluated/);
-    expect(
-      validate({ type: TC, entity: H, rules: [{ above: 60, color: "red", image: false }] }),
-    ).toMatch(/unevaluated|additional/);
-    expect(
-      validate({ type: TC, entity: H, rules: [{ above: 60, color: "red", icon_ring: true }] }),
-    ).toBeNull();
-  });
-
-  it("checks the poster's picture and its icon's own keys", () => {
-    const PC = "custom:poster-card-pro";
-    const H = "sensor.living_room_humidity";
-    for (const visual of ["sparkline", "columns", "strip", "bar", "gauge", "glow", "none"])
-      expect(validate({ type: PC, entity: H, visual }), visual).toBeNull();
-    // the ring is the icon's (icon_ring), the old "no picture" is none
-    for (const visual of ["ring", "icon", "badge", "trend"])
-      expect(validate({ type: PC, entity: H, visual }), visual).toMatch(/enum|allowed/);
-    expect(validate({ type: PC, entity: H, icon_ring: true })).toBeNull();
-    expect(validate({ type: PC, entity: H, icon_ring: "yes" })).toBeTruthy();
+    expect(validate({ type: TC, entity: H, status: "Dry", status_badge: false })).toBeNull();
+    expect(validate({ type: TC, entity: H, status_badge: "yes" })).toBeTruthy();
+    // the badge on the icon is the icon's, the card's or a rule's
+    expect(validate({ type: TC, entity: H, icon: { badge: false } })).toBeNull();
+    expect(validate({ type: TC, entity: H, icon: { name: "mdi:x", badge: "auto" } })).toBeNull();
     expect(
       validate({
-        type: PC,
-        entity: "switch.coffee_machine",
-        icon_tap_action: "toggle",
-        icon_hold_action: { action: "navigate", navigation_path: "/kitchen" },
-        icon_double_tap_action: { action: "more-info" },
+        type: TC,
+        entity: H,
+        icon: { badge: { icon: "{{ 'mdi:alert' }}", color: "red" } },
       }),
     ).toBeNull();
-    expect(validate({ type: PC, entity: H, icon_tap_action: "explode" })).toBeTruthy();
-    expect(validate({ type: PC, entity: H, icon_action: "toggle" })).toMatch(/unevaluated/);
-    // the control beside the value or under it; the icon's own actions replace lead
-    for (const control_position of ["end", "block"])
-      expect(
-        validate({ type: PC, entity: "light.kitchen", control: "slider", control_position }),
-      ).toBeNull();
+    expect(validate({ type: TC, entity: H, icon: { badge: { color: "red" } } })).toBeTruthy();
     expect(
-      validate({ type: PC, entity: "lock.front_door", control: "hold", control_position: "lead" }),
-    ).toMatch(/enum|allowed/);
+      validate({
+        type: TC,
+        entity: H,
+        rules: [{ above: 80, icon: { badge: { icon: "mdi:water" } } }],
+      }),
+    ).toBeNull();
+    // a poster's status is always a badge; its icon has none
+    const PC = "custom:poster-card-pro";
+    expect(validate({ type: PC, entity: H, status: "Dry" })).toBeNull();
+    expect(validate({ type: PC, entity: H, status: { value: "Dry" } })).toBeTruthy();
+    expect(validate({ type: PC, entity: H, status_badge: true })).toMatch(/unevaluated/);
+    expect(validate({ type: PC, entity: H, icon: { badge: false } })).toMatch(/unevaluated/);
+    expect(
+      validate({ type: PC, entity: H, rules: [{ above: 1, icon: { badge: false } }] }),
+    ).toBeTruthy();
+    expect(validate({ type: TC, entity: H, badges: ["sensor.a", { attribute: "x" }] })).toBeNull();
+    // the status is no entry of the badges: it comes first
+    for (const type of [TC, PC])
+      expect(validate({ type, entity: H, badges: ["sensor.a", "status"] }), type).toBeTruthy();
+    // the entity card's toggle is not the tile's
+    expect(validate({ type: TC, entity: H, toggle: true })).toMatch(/unevaluated/);
+  });
+
+  it("checks the icon's own actions and the control, on the poster and the tile", () => {
+    const H = "sensor.living_room_humidity";
+    for (const type of ["custom:poster-card-pro", "custom:tile-card-pro"]) {
+      // the icon's actions are the icon's, not a rule's
+      expect(
+        validate({
+          type,
+          entity: "switch.coffee_machine",
+          icon: {
+            tap_action: "toggle",
+            hold_action: { action: "navigate", navigation_path: "/kitchen" },
+            double_tap_action: { action: "more-info" },
+          },
+        }),
+        type,
+      ).toBeNull();
+      expect(
+        validate({ type, entity: H, icon: { name: "mdi:x", tap_action: "toggle" } }),
+      ).toBeNull();
+      expect(validate({ type, entity: H, icon: { tap_action: "explode" } })).toBeTruthy();
+      expect(
+        validate({ type, entity: H, rules: [{ above: 1, icon: { tap_action: "toggle" } }] }),
+      ).toBeTruthy();
+      // control: a name, true or false, or the control and its options
+      for (const control of ["slider", "auto", "none", true, false])
+        expect(validate({ type, entity: "light.kitchen", control }), String(control)).toBeNull();
+      for (const position of ["end", "block"])
+        expect(
+          validate({ type, entity: "light.kitchen", control: { type: "slider", position } }),
+        ).toBeNull();
+      expect(
+        validate({
+          type,
+          entity: "climate.living_room",
+          control: { type: "segments", attribute: "preset_mode", options: ["eco", "comfort"] },
+        }),
+      ).toBeNull();
+      expect(
+        validate({ type, entity: "lock.front_door", control: { type: "button", confirm: true } }),
+      ).toBeNull();
+      // without a type it changes the kind's own controls
+      expect(validate({ type, entity: "climate.living_room", control: { step: 1 } })).toBeNull();
+      expect(validate({ type, entity: H, control: { type: "dial" } })).toBeTruthy();
+      expect(validate({ type, entity: H, control: { step: 0 } })).toBeTruthy();
+      expect(validate({ type, entity: H, control: { size: 2 } })).toBeTruthy();
+      expect(
+        validate({ type, entity: "lock.front_door", control: { type: "hold", position: "lead" } }),
+      ).toBeTruthy();
+      expect(validate({ type, entity: H, control: { type: "buttons", options: [] } })).toBeTruthy();
+      expect(
+        validate({ type, control: { type: "buttons", options: [{ entity: "scene.a" }] } }),
+      ).toBeNull();
+    }
+    const PC = "custom:poster-card-pro";
     // the item's other keys still check as an entity's
-    expect(validate({ type: PC, entity: H, control: "buttons", control_options: [] })).toBeTruthy();
     expect(validate({ type: PC, entity: H, decimals: 5 })).toBeTruthy();
     expect(validate({ type: PC, entity: H, rules: [{ color: "red" }] })).toBeTruthy();
     // the badges keep the entity's visuals

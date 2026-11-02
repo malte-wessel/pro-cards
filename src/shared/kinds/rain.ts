@@ -1,10 +1,11 @@
-// The rain kind: a rain rate sensor. The animated lead rains at the rate, slanted by the wind;
-// `variant` fills the whole poster with rain (with the rain icon as its lead). Today's total is
+// The rain kind: a rain rate sensor. The animation (`flow`, in its style) rains at the rate,
+// slanted by the wind, in the icon (its default) or behind the whole card, with the rain icon in
+// the icon then (the animation is drawn in one place). Today's total is
 // found on the rate sensor's device; the wind and its direction are set on the card (`wind`, `direction`).
 import { buildBand, builtLead, setRate, vars } from "../flow/dom.ts";
 import { secondaryEl } from "../entity/render/lead.ts";
 import { oneOf } from "../util.ts";
-import { CHIP_ICON, RAIN_STYLES, type RainStyle } from "../rain/constants.ts";
+import { CHIP_ICON, RAIN_STYLES } from "../rain/constants.ts";
 import { fieldEl, updateBand } from "../rain/field.ts";
 import { animatedLead, rainIcon, rainLead } from "../rain/lead.ts";
 import { rainNow } from "../rain/now.ts";
@@ -12,8 +13,9 @@ import { fallRate, isWet, leadFall, levelOf, tanOf } from "../rain/rain.ts";
 import { RAIN_RULES } from "./rules.ts";
 import type { Kind, KindCtx } from "./types.ts";
 
-const flowOf = (c: KindCtx): RainStyle | null =>
-  oneOf(RAIN_STYLES, c.opts.variant) ? c.opts.variant : null;
+// the animation's style in a place (null: the place draws no flow)
+const flowIn = (p: { type?: string; style?: unknown } | false) =>
+  p && p.type === "flow" ? (oneOf(RAIN_STYLES, p.style) ? p.style : "drops") : null;
 const nowOf = (c: KindCtx) =>
   rainNow(c.ctx, { ent: c.ent, m: c.m }, c.input("today"), c.input("wind"), c.input("direction"));
 
@@ -22,8 +24,10 @@ export const RAIN: Kind = {
   deviceClasses: ["precipitation_intensity"],
   reads: ["sensor", "input_number", "number"],
   readsText: "a precipitation_intensity sensor (mm/h or in/h)",
-  keys: ["today", "wind", "direction", "variant"],
+  keys: ["today", "wind", "direction"],
   rules: RAIN_RULES,
+  icon: { type: "flow", style: "drops" },
+  draws: ["flow"],
   ruleUnit: "mm/h",
   inputs: [
     {
@@ -44,8 +48,13 @@ export const RAIN: Kind = {
     return { secondary: chip ? secondaryEl([{ text: chip }]) : null };
   },
   lead: {
-    key: (c) => (flowOf(c) ? "icon" : "animated"),
-    build: (c) => (flowOf(c) ? rainLead(c.leadSize) : animatedLead("drops", c.leadSize)),
+    key: (c) => flowIn(c.place.icon) ?? "icon",
+    build: (c) => {
+      const style = flowIn(c.place.icon);
+      return style
+        ? animatedLead(style, c.leadSize)
+        : rainLead(c.leadSize, c.place.icon.style === "plain" ? "plain" : "circle");
+    },
     // the row slants the drops (--t, --sl) and times them; a new rate scales their rate
     update: (el, c, row) => {
       const now = nowOf(c);
@@ -64,12 +73,12 @@ export const RAIN: Kind = {
     },
   },
   backdrop: {
-    key: (c) => flowOf(c) ?? "",
+    key: (c) => flowIn(c.place.visual) ?? "",
     build: () => buildBand("bg", rainIcon(CHIP_ICON), fieldEl()),
     update: (el, c) => {
       const now = nowOf(c);
       updateBand(el, {
-        style: flowOf(c) ?? "drops",
+        style: flowIn(c.place.visual) ?? "drops",
         rate: now.rate,
         today: now.today,
         slant: now.slant,

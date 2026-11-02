@@ -61,15 +61,15 @@ test.describe("tile line", () => {
 });
 
 test.describe("tile pictures", () => {
-  test("draws the type's picture below the line only when asked, its edge and glow always", async ({
+  test("draws the kind's picture below the line unless visual: false, its edge and glow too", async ({
     page,
   }) => {
     await mount(page, [
+      { type: T, entity: "sun.sun", visual: false },
       { type: T, entity: "sun.sun" },
-      { type: T, entity: "sun.sun", show_picture: true },
       { type: T, entity: "media_player.living_room_speaker" },
       { type: T, entity: "light.desk_lamp" },
-      { type: T, entity: "light.desk_lamp", visual: "none" },
+      { type: T, entity: "light.desk_lamp", visual: false },
     ]);
     await expect(card(page, 0).locator(".row.tile > .psun")).toHaveCount(0);
     await expect(card(page, 1).locator(".row.tile > .psun svg .curve").first()).toBeVisible();
@@ -83,11 +83,11 @@ test.describe("tile pictures", () => {
     await expect
       .poll(() =>
         card(page, 3)
-          .locator(".body > .tglow")
+          .locator(".body > .pback > .pglow")
           .evaluate((e) => getComputedStyle(e).opacity),
       )
       .not.toBe("0");
-    await expect(card(page, 4).locator(".body > .tglow")).toHaveCount(0);
+    await expect(card(page, 4).locator(".pglow")).toHaveCount(0);
   });
 });
 
@@ -164,7 +164,7 @@ test.describe("tile plots", () => {
   test("run to the tile's edges, as on a poster; a strip keeps the padding", async ({ page }) => {
     await mount(page, [
       { type: T, entity: "sensor.outdoor_temperature", visual: "sparkline" },
-      { type: T, entity: "sun.sun", show_picture: true },
+      { type: T, entity: "sun.sun" },
       { type: T, entity: "sensor.outdoor_temperature", visual: "sparkline", vertical: true },
       { type: T, entity: "binary_sensor.door_front", visual: "strip" },
     ]);
@@ -236,12 +236,17 @@ test.describe("tile status and badges", () => {
   test("badges always show in full: the name and the line give way, never a badge", async ({
     page,
   }) => {
-    const badges = ["sensor.living_room_temperature", "status"];
+    const cfg = {
+      type: T,
+      entity: "sensor.living_room_co2",
+      badges: ["sensor.living_room_temperature"],
+      status_badge: true,
+    };
     await mount(
       page,
       [
-        { type: T, entity: "sensor.living_room_co2", badges, grid_options: { columns: 12 } },
-        { type: T, entity: "sensor.living_room_co2", badges, grid_options: { columns: 6 } },
+        { ...cfg, grid_options: { columns: 12 } },
+        { ...cfg, grid_options: { columns: 6 } },
       ],
       { width: 500 },
     );
@@ -249,8 +254,8 @@ test.describe("tile status and badges", () => {
       const pills = card(page, i).locator(".tcorner > .row.hval");
       await expect(pills).toHaveCount(2);
       for (const b of await pills.all()) await expect(b).toBeVisible();
-      // `status` placed last
-      await expect(pills.last()).toHaveText("Good");
+      // the status first
+      await expect(pills.first()).toHaveText("Good");
     }
     // half a section: the name is cut, the badges are whole and centred on the icon
     const name = card(page, 1).locator(".tinfo > .texts > .primary");
@@ -259,23 +264,23 @@ test.describe("tile status and badges", () => {
     const pill = (await card(page, 1).locator(".tcorner > .row.hval").first().boundingBox())!;
     expect(Math.abs(pill.y + pill.height / 2 - (lead.y + lead.height / 2))).toBeLessThan(2);
     // a badge opens its own entity
-    await card(page, 0).locator(".tcorner > .row.hval").first().locator("> .hit").click();
+    await card(page, 0).locator(".tcorner > .row.hval").last().locator("> .hit").click();
     expect(await infos(page)).toEqual([
       { type: "more-info", entityId: "sensor.living_room_temperature" },
     ]);
   });
 
-  test("icon_badge: none, or a badge of the card's own that a template shows and hides", async ({
+  test("icon: { badge }: none, or a badge of the card's own that a template shows and hides", async ({
     page,
   }) => {
     const alert = "{{ 'mdi:alert' if states('sensor.wind_speed') | float(0) > 50 else '' }}";
     await mount(page, [
-      { type: T, entity: "sensor.wind_speed", icon_badge: { icon: alert, color: "red" } },
-      { type: T, entity: "climate.living_room", icon_badge: false },
+      { type: T, entity: "sensor.wind_speed", icon: { badge: { icon: alert, color: "red" } } },
+      { type: T, entity: "climate.living_room", icon: { badge: false } },
       {
         type: T,
         entity: "sensor.living_room_co2",
-        icon_badge: { icon: "mdi:window-open-variant" },
+        icon: { badge: { icon: "mdi:window-open-variant" } },
       },
     ]);
     const badge = (i: number) => card(page, i).locator(".tlead > .tibadge");
@@ -356,7 +361,7 @@ test.describe("tile pointer", () => {
       { type: T, entity: "light.desk_lamp" },
       { type: T, entity: "fan.living_room" },
       { type: T, entity: "scene.movie_night" },
-      { type: T, entity: "light.desk_lamp", icon_tap_action: "none" },
+      { type: T, entity: "light.desk_lamp", icon: { tap_action: "none" } },
       { type: T, entity: "sensor.living_room_temperature" },
     ]);
     const lead = (i: number) => card(page, i).locator(".tlead > .lead");
@@ -432,12 +437,16 @@ test.describe("tile card", () => {
     expect(await page.evaluate(() => window.pc.errors)).toEqual([]);
   });
 
-  test("icon_image puts a picture in the icon; icon_tap_action runs from it alone", async ({
+  test("an image icon puts a picture in the icon; icon: { tap_action } runs from it alone", async ({
     page,
   }) => {
     await mount(page, [
-      { type: T, entity: "sensor.wind_speed", icon_image: "/local/a.png" },
-      { type: T, entity: "light.desk_lamp", icon_tap_action: { action: "toggle" } },
+      {
+        type: T,
+        entity: "sensor.wind_speed",
+        icon: { type: "image", src: "/local/a.png" },
+      },
+      { type: T, entity: "light.desk_lamp", icon: { tap_action: { action: "toggle" } } },
     ]);
     await expect(card(page, 0).locator(".tlead img.picture")).toHaveAttribute(
       "src",
@@ -446,5 +455,128 @@ test.describe("tile card", () => {
     await card(page, 1).locator(".tlead .lead").click();
     expect(await services(page)).toEqual(["homeassistant.toggle"]);
     expect(await infos(page)).toEqual([]);
+  });
+});
+
+test.describe("tile places", () => {
+  const feColor = (page: Page, i = 0) =>
+    card(page, i)
+      .locator(".row.tile")
+      .evaluate((e) => (e as HTMLElement).style.getPropertyValue("--fe-color"));
+
+  test("a flow visual runs the wind behind the tile; the icon is the arrow", async ({ page }) => {
+    await mount(page, [
+      { type: T, entity: "sensor.wind_speed", visual: { type: "flow", style: "lines" } },
+      { type: T, entity: "sensor.wind_speed" },
+    ]);
+    const flow = card(page, 0);
+    await expect(flow.locator(".body > .pback > .wflow .field")).toBeAttached();
+    await expect(flow.locator(".tlead ha-icon.arrow")).toBeAttached();
+    await expect(flow.locator(".tlead .lfield")).toHaveCount(0);
+    // by default the animation is in the icon, nothing behind
+    const icon = card(page, 1);
+    await expect(icon.locator(".tlead .lfield")).toBeAttached();
+    await expect(icon.locator(".pback .wflow")).toHaveCount(0);
+  });
+
+  test("an image visual lies behind the tile under its scrim", async ({ page }) => {
+    await mount(page, {
+      type: T,
+      entity: "sensor.living_room_temperature",
+      visual: { type: "image", src: "/local/garden.jpg", opacity: 0.6 },
+    });
+    const back = card(page).locator(".body > .pback");
+    await expect(back).toHaveClass(/scrim/);
+    await expect(back.locator("img")).toHaveAttribute("src", "/local/garden.jpg");
+    expect(
+      await back.evaluate((e) => (e as HTMLElement).style.getPropertyValue("--pc-shade")),
+    ).toBe("0.4");
+  });
+
+  test("a rule switches the visual by the value, and back", async ({ page }) => {
+    await mount(page, {
+      type: T,
+      entity: "sensor.living_room_temperature",
+      visual: "sparkline",
+      rules: [{ above: 25, visual: "glow" }],
+    });
+    const c = card(page);
+    await expect(c.locator(".row.tile > .plot")).toHaveCount(1);
+    await expect(c.locator(".pglow")).toHaveCount(0);
+    await setState(page, "sensor.living_room_temperature", "28");
+    await expect(c.locator(".body > .pback > .pglow")).toHaveCount(1);
+    await expect(c.locator(".row.tile > .plot")).toHaveCount(0);
+    await setState(page, "sensor.living_room_temperature", "21");
+    await expect(c.locator(".row.tile > .plot")).toHaveCount(1);
+    await expect(c.locator(".pglow")).toHaveCount(0);
+  });
+
+  test("a matching rule's colour and icon win over the card's", async ({ page }) => {
+    await mount(page, {
+      type: T,
+      entity: "sensor.living_room_temperature",
+      color: "blue",
+      icon: "mdi:sofa",
+      rules: [{ above: 25, color: "red", icon: "mdi:fire" }],
+    });
+    const icon = card(page).locator(".tlead ha-icon");
+    await expect.poll(() => feColor(page)).toContain("--blue-color");
+    await expect(icon).toHaveAttribute("icon", "mdi:sofa");
+    await setState(page, "sensor.living_room_temperature", "28");
+    await expect.poll(() => feColor(page)).toContain("--red-color");
+    await expect(icon).toHaveAttribute("icon", "mdi:fire");
+  });
+
+  test("a sparkline of its own: its hours, another entity's history, its axes", async ({
+    page,
+  }) => {
+    const spark = { type: "sparkline", hours: 6, axis: true };
+    await mount(page, [
+      {
+        type: T,
+        entity: "sensor.living_room_temperature",
+        visual: { ...spark, src: "sensor.power_consumption" },
+      },
+      { type: T, entity: "sensor.power_consumption", visual: spark },
+      { type: T, entity: "sensor.living_room_temperature", visual: "sparkline" },
+    ]);
+    const axis = (i: number) => card(page, i).locator(".row.tile > .plot .label.axis");
+    // the scale's values on the left, the window's start and now on the right
+    await expect(card(page, 0).locator(".plot .label.axis.right").first()).toBeAttached();
+    const right = await card(page, 0).locator(".plot .label.axis.right").allTextContents();
+    expect(right).toContain("now");
+    expect(right.some((t) => /6 h/.test(t))).toBe(true);
+    // drawn from the power's history: the same scale as the power's own sparkline
+    const nums = async (i: number) =>
+      (await axis(i).allTextContents())
+        .filter((t) => /\d/.test(t) && !/ h$/.test(t))
+        .map((t) => Math.round(Number(t.replace(/[^\d.-]/g, ""))));
+    await expect.poll(() => nums(0)).not.toEqual([]);
+    expect(await nums(0)).toEqual(await nums(1));
+    // no axes unless asked
+    await expect(card(page, 2).locator(".row.tile > .plot")).toHaveCount(1);
+    await expect(axis(2)).toHaveCount(0);
+  });
+
+  test("a cover, a robot and the grid draw nothing behind a tile unless asked", async ({
+    page,
+  }) => {
+    await mount(page, [
+      { type: T, entity: "cover.office_blinds" },
+      { type: T, entity: "cover.office_blinds", visual: "cover" },
+      { type: T, entity: "vacuum.robot" },
+      { type: T, entity: "vacuum.robot", visual: "path" },
+      { type: T, entity: "sensor.grid_power", kind: "grid" },
+      { type: T, entity: "sensor.grid_power", kind: "grid", visual: "line" },
+    ]);
+    for (const [i, sel] of [
+      [0, ".pcov"],
+      [2, ".ppath"],
+      [4, ".pline"],
+    ] as const) {
+      await expect(card(page, i).locator(".row.tile")).toBeVisible();
+      await expect(card(page, i).locator(sel)).toHaveCount(0);
+      await expect(card(page, i + 1).locator(`.body > .pback > ${sel}`)).toBeAttached();
+    }
   });
 });

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   canRead,
   detectKind,
-  parsePoster,
+  parseKind,
   resolveKind,
   unusedKeys,
 } from "../../../../src/shared/kinds/detect.ts";
@@ -12,23 +12,26 @@ import type { HassEntity } from "../../../../src/shared/ha.ts";
 const T = "poster-card-pro";
 const st = (id: string, attributes: Record<string, unknown> = {}, state = "1") =>
   ({ entity_id: id, state, attributes }) as unknown as HassEntity;
-const poster = (raw: unknown) => parsePoster(raw, T);
+const kind = (raw: unknown) => parseKind(raw, T);
 
-describe("parsePoster", () => {
-  it("reads nothing or a poster type's name", () => {
-    expect(poster(undefined)).toBeNull();
-    expect(poster(null)).toBeNull();
-    expect(poster("wind")).toBe("wind");
-    expect(poster("entity")).toBe("entity");
+describe("parseKind", () => {
+  it("reads nothing or a kind's name", () => {
+    expect(kind(undefined)).toBeNull();
+    expect(kind(null)).toBeNull();
+    expect(kind("wind")).toBe("wind");
+    expect(kind("entity")).toBe("entity");
+    // covers and appliances have kinds of their own
+    expect(kind("garage")).toBe("garage");
+    expect(kind("washer")).toBe("washer");
   });
 
-  it("names the poster types when one is unknown", () => {
-    expect(() => poster("room")).toThrow(
-      `${T}: poster must be one of entity | battery | carbon_dioxide`,
+  it("names the kinds when one is unknown", () => {
+    expect(() => kind("room")).toThrow(
+      `${T}: kind must be one of entity | battery | carbon_dioxide`,
     );
-    expect(() => poster("room")).toThrow(/ \| appliance, not "room"$/);
-    expect(() => poster({ type: "wind" })).toThrow(/poster must be one of/);
-    expect(() => poster(3)).toThrow(/not 3/);
+    expect(() => kind("room")).toThrow(/, not "room"$/);
+    expect(() => kind({ type: "wind" })).toThrow(/kind must be one of/);
+    expect(() => kind(3)).toThrow(/not 3/);
   });
 });
 
@@ -38,6 +41,10 @@ describe("detectKind", () => {
     expect(detectKind("weather.home", undefined).name).toBe("weather");
     expect(detectKind("sun.sun", undefined).name).toBe("sun");
     expect(detectKind("lawn_mower.garden", undefined).name).toBe("lawn_mower");
+    // a cover is the generic cover kind, drawn by its device class; its own kinds are only named
+    expect(detectKind("cover.garage", st("cover.garage", { device_class: "garage" })).name).toBe(
+      "cover",
+    );
     const dc = (device_class: string) =>
       detectKind("sensor.x", st("sensor.x", { device_class })).name;
     expect(dc("wind_speed")).toBe("wind");
@@ -88,13 +95,15 @@ describe("resolveKind", () => {
   it("takes the written type, checked against the entity", () => {
     expect(resolve("grid", "sensor.grid_power")).toBe("grid");
     expect(resolve("cover", "cover.garage_door")).toBe("cover");
+    expect(resolve("garage", "cover.garage_door")).toBe("garage");
+    expect(() => resolve("garage", "sensor.x")).toThrow(`${T}: the garage kind reads a cover`);
     expect(resolve("entity", "weather.home")).toBe("entity");
     expect(resolve("sun", null)).toBe("sun");
     expect(() => resolve("wind", "light.kitchen")).toThrow(
-      `${T}: the wind poster reads a wind_speed sensor or a weather entity (wind_speed, wind_bearing, wind_gust_speed), not light.kitchen`,
+      `${T}: the wind kind reads a wind_speed sensor or a weather entity (wind_speed, wind_bearing, wind_gust_speed), not light.kitchen`,
     );
     expect(() => resolve("light", null)).toThrow(
-      `${T}: the light poster reads a light, not a card without an entity`,
+      `${T}: the light kind reads a light, not a card without an entity`,
     );
   });
 
@@ -115,13 +124,18 @@ describe("unusedKeys", () => {
       "import",
       "series",
     ]);
-    expect(unusedKeys(KINDS.cover, { variant: "garage", running_above: 3 })).toEqual([
+    expect(unusedKeys(KINDS.garage, { kind: "garage", running_above: 3 })).toEqual([
       "running_above",
     ]);
+    expect(unusedKeys(KINDS.washer, { kind: "washer", running_above: 3 })).toEqual([]);
     // the card's own keys are never another type's
     expect(unusedKeys(KINDS.light, { entity: "light.x", name: "A", color: "red" })).toEqual([]);
-    expect(unusedKeys(KINDS.wind, { variant: "lines", direction: false, gust: undefined })).toEqual(
-      [],
-    );
+    expect(
+      unusedKeys(KINDS.wind, {
+        visual: { type: "flow", style: "lines" },
+        direction: false,
+        gust: undefined,
+      }),
+    ).toEqual([]);
   });
 });

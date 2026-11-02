@@ -1,8 +1,8 @@
 // Every kind by name (the list is fixed for a major version: a kind added later changes how
 // existing cards of its domain look, unasked).
 import { AQI_RULES, CO2_RULES, PM10_RULES, PM25_RULES } from "./rules.ts";
-import { APPLIANCE, BATTERY, CAR, GRID, SOLAR } from "./energy.ts";
-import { COVER, LAWN_MOWER, MEDIA, VACUUM } from "./devices.ts";
+import { APPLIANCE, APPLIANCE_KINDS, BATTERY, CAR, GRID, SOLAR } from "./energy.ts";
+import { COVER, COVER_KINDS, LAWN_MOWER, MEDIA, VACUUM } from "./devices.ts";
 import { ALARM, CLIMATE, FAN, LIGHT, LOCK, PERSON } from "./domains.ts";
 import { RAIN } from "./rain.ts";
 import { SUN } from "./sun.ts";
@@ -41,12 +41,16 @@ export const KINDS: Record<string, Kind> = {
   person: PERSON,
   media_player: MEDIA,
   cover: COVER,
+  // a cover drawn as its kind says, whatever its device class (a garage door without one)
+  ...COVER_KINDS,
   vacuum: VACUUM,
   lawn_mower: LAWN_MOWER,
   grid: GRID,
   solar: SOLAR,
   car: CAR,
   appliance: APPLIANCE,
+  // an appliance that is a device of its own (a washer's drum shakes while it runs)
+  ...APPLIANCE_KINDS,
 };
 
 export const KIND_NAMES = Object.keys(KINDS);

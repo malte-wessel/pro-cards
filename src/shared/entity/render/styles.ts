@@ -506,6 +506,9 @@ export const STYLE_PLOT = `
   .plot .hair { stroke: var(--secondary-text-color); stroke-width: 1; opacity: .6; }
   .plot .col { fill: var(--fe-color); }
   .plot .hl { fill: none; stroke: var(--primary-text-color); stroke-width: 1.5; }
+  /* axis: true: faint lines at the scale's top and bottom, their values and the window's ends in
+     the plot's corners */
+  .plot .grid { stroke: var(--divider-color); stroke-width: 1; stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }
   .label { position: absolute; ${font(10, 12)} color: var(--secondary-text-color); white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
   .label.right { transform: translateX(-100%); }
   ${tipStyle()}

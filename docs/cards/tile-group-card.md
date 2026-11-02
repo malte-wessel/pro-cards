@@ -1,6 +1,6 @@
 # Tile Group Card Pro
 
-`custom:tile-group-card-pro` puts several tiles on one card, under a header with a title, an icon and badges. The tiles are [tile cards](/cards/tile-card) drawn flat on the group's surface, so everything a tile does works the same in a group: its poster type, its controls, its status and its badges.
+`custom:tile-group-card-pro` puts several tiles on one card, under a header with a title, an icon and badges. The tiles are [tile cards](/cards/tile-card) drawn flat on the group's surface, so everything a tile does works the same in a group: its kind, its visual, its controls, its status and its badges.
 
 ::: info Beta
 The tile group card is new in 3.0 and in beta: its options may still change.
@@ -8,13 +8,13 @@ The tile group card is new in 3.0 and in beta: its options may still change.
 
 ## Basic
 
-The type and a list of entities. Each one becomes a tile, one under the other.
+The type and its `tiles`: entity ids, or tiles of their own. Each one becomes a tile, one under the other.
 
 ::: live
 
 ```yaml
 type: custom:tile-group-card-pro
-entities:
+tiles:
   - light.kitchen
   - switch.coffee_machine
   - sensor.kitchen_temperature
@@ -35,7 +35,7 @@ icon: mdi:silverware-fork-knife
 badges:
   - sensor.kitchen_temperature
   - sensor.kitchen_humidity
-entities:
+tiles:
   - light.kitchen
   - switch.coffee_machine
   - vacuum.robot
@@ -45,7 +45,7 @@ entities:
 
 ## Row
 
-`layout: row` draws vertical tiles side by side: the icon on top, the name and the line under it, the controls under them. The tiles share the width in columns alike, as wide as the widest tile needs: a tile with wide controls (a cover's buttons) asks for more. A card too narrow for all of them wraps, and a line that is not full keeps the columns' width.
+`layout: row` draws vertical tiles side by side: the icon on top, the name and the line under it, the controls under them. The layout decides it for every tile: a tile in a group takes no `vertical`. The tiles share the width in columns alike, as wide as the widest tile needs: a tile with wide controls (a cover's buttons) asks for more. A card too narrow for all of them wraps, and a line that is not full keeps the columns' width.
 
 ::: live
 
@@ -56,7 +56,7 @@ title: Living room
 icon: mdi:sofa
 badges:
   - sensor.living_room_temperature
-entities:
+tiles:
   - light.living_room
   - light.bedroom
   - lock.front_door
@@ -64,29 +64,9 @@ entities:
 
 :::
 
-## Defaults for every tile
-
-Every key the card does not take itself is a default for every tile; a tile's own value wins. The card's own keys are `layout`, `title`, `icon`, `title_tap_action`, `badges` and `entities` (and Home Assistant's), so `icon` and `badges` on the card are the header's.
-
-::: live
-
-```yaml
-type: custom:tile-group-card-pro
-title: Climate
-icon: mdi:home-thermometer
-visual: sparkline
-hours_to_show: 12
-entities:
-  - sensor.living_room_temperature
-  - { entity: sensor.living_room_co2, status_badge: true }
-  - { entity: sensor.kitchen_humidity, visual: none }
-```
-
-:::
-
 ## Tiles of their own
 
-An entity in the list can be a tile: the [tile card's keys](/cards/tile-card#reference) without `type` and `grid_options`. Its controls, badges and pictures are a tile's.
+A tile in the list takes the [tile card's keys](/cards/tile-card#reference), without `type`, `grid_options` and `vertical`: its kind, its visual, its controls, its status and its badges. The group sets nothing on its tiles but their layout, so a tile looks the same in a group as on its own; what several tiles share is written on each (in YAML, an anchor writes it once: `visual: &spark { … }`, then `visual: *spark`).
 
 ::: live
 
@@ -94,9 +74,14 @@ An entity in the list can be a tile: the [tile card's keys](/cards/tile-card#ref
 type: custom:tile-group-card-pro
 title: Living room
 icon: mdi:sofa
-entities:
+tiles:
   - entity: light.living_room
     control: slider
+  - entity: sensor.living_room_co2
+    visual: &day { type: sparkline, hours: 12 }
+    status_badge: true
+  - entity: sensor.kitchen_humidity
+    visual: *day
   - climate.living_room
   - entity: media_player.living_room_speaker
   - entity: sensor.living_room_temperature
@@ -117,7 +102,7 @@ A tile's `visibility` shows it only while its [conditions](/guide/visibility) ho
 type: custom:tile-group-card-pro
 title: Kitchen
 icon: mdi:silverware-fork-knife
-entities:
+tiles:
   - light.kitchen
   - entity: switch.coffee_machine
     visibility:
@@ -131,7 +116,7 @@ entities:
 
 ### History
 
-Each tile picks its own picture of the last hours below its line: a `sparkline` of the temperature, `columns` of the power, a `strip` of when the motion sensor saw someone, a `bar` of the battery between `min` and `max`. `hours_to_show` on the card sets the window for all of them, `bucket_minutes` the time each column and each block of the strip stands for.
+Each tile picks its own visual of the last hours below its line: a `sparkline` of the temperature, `columns` of the power, a `strip` of when the motion sensor saw someone, a `bar` of the battery between `min` and `max`. Each one names its window: `hours`, and `bucket`, the time each column and each block of the strip stands for.
 
 ::: live
 
@@ -139,12 +124,10 @@ Each tile picks its own picture of the last hours below its line: a `sparkline` 
 type: custom:tile-group-card-pro
 title: Last 12 hours
 icon: mdi:chart-line
-hours_to_show: 12
-bucket_minutes: 15
-entities:
-  - { entity: sensor.living_room_temperature, name: Temperature, visual: sparkline }
-  - { entity: sensor.power_consumption, name: Power, visual: columns }
-  - { entity: binary_sensor.motion_hallway, name: Hallway motion, visual: strip }
+tiles:
+  - { entity: sensor.living_room_temperature, name: Temperature, visual: { type: sparkline, hours: 12 } }
+  - { entity: sensor.power_consumption, name: Power, visual: { type: columns, hours: 12, bucket: 15 } }
+  - { entity: binary_sensor.motion_hallway, name: Hallway motion, visual: { type: strip, hours: 12, bucket: 15 } }
   - { entity: sensor.battery_soc, name: Battery, visual: bar }
 ```
 
@@ -152,7 +135,7 @@ entities:
 
 ### Rooms in a row
 
-`visual: sparkline` on the card gives every vertical tile its line, under the name and the value: one temperature per room, side by side.
+`visual: sparkline` gives each vertical tile its line, under the name and the value: one temperature per room, side by side.
 
 ::: live
 
@@ -161,18 +144,17 @@ type: custom:tile-group-card-pro
 layout: row
 title: Temperatures
 icon: mdi:thermometer
-visual: sparkline
-entities:
-  - { entity: sensor.living_room_temperature, name: Living room }
-  - { entity: sensor.bedroom_temperature, name: Bedroom }
-  - { entity: sensor.office_temperature, name: Office }
+tiles:
+  - { entity: sensor.living_room_temperature, name: Living room, visual: sparkline }
+  - { entity: sensor.bedroom_temperature, name: Bedroom, visual: sparkline }
+  - { entity: sensor.office_temperature, name: Office, visual: sparkline }
 ```
 
 :::
 
 ### Gauges
 
-`visual: gauge` draws the value on a dial between `min` and `max` below the line, in the colour of the matching rule (or of the type's own levels).
+`visual: gauge` draws the value on a dial between `min` and `max` below the line, in the colour of the matching rule (or of the kind's own levels).
 
 ::: live
 
@@ -181,18 +163,17 @@ type: custom:tile-group-card-pro
 layout: row
 title: Air
 icon: mdi:air-filter
-visual: gauge
-entities:
-  - { entity: sensor.living_room_co2, name: CO₂, min: 400, max: 2000 }
-  - { entity: sensor.living_room_humidity, name: Humidity }
-  - { entity: sensor.living_room_pm25, name: PM2.5, min: 0, max: 100 }
+tiles:
+  - { entity: sensor.living_room_co2, name: CO₂, visual: gauge, min: 400, max: 2000 }
+  - { entity: sensor.living_room_humidity, name: Humidity, visual: gauge }
+  - { entity: sensor.living_room_pm25, name: PM2.5, visual: gauge, min: 0, max: 100 }
 ```
 
 :::
 
 ### Batteries
 
-`icon_ring: true` puts the value as a ring around every icon, filled from `min` to `max` (0 to 100 % by default); the battery types colour it by their charge.
+`icon: { ring: true }` on a tile puts the value as a ring around its icon, filled from `min` to `max` (0 to 100 % by default); the battery's rules colour it by the charge. `visual: false` leaves out the batteries' segments, so each tile keeps to one row.
 
 ::: live
 
@@ -200,19 +181,18 @@ entities:
 type: custom:tile-group-card-pro
 title: Batteries
 icon: mdi:battery-heart-variant
-icon_ring: true
-entities:
-  - { entity: sensor.phone_battery, name: Phone }
-  - { entity: sensor.robot_battery, name: Robot vacuum }
-  - { entity: sensor.smoke_detector_battery, name: Smoke detector }
-  - { entity: sensor.remote_battery, name: Remote }
+tiles:
+  - { entity: sensor.phone_battery, name: Phone, icon: { ring: true }, visual: false }
+  - { entity: sensor.robot_battery, name: Robot vacuum, icon: { ring: true }, visual: false }
+  - { entity: sensor.smoke_detector_battery, name: Smoke detector, icon: { ring: true }, visual: false }
+  - { entity: sensor.remote_battery, name: Remote, icon: { ring: true }, visual: false }
 ```
 
 :::
 
-### The types' pictures
+### The kinds' visuals
 
-`show_picture: true` draws what a poster type draws below its line: the sun's day with its position now, today's solar production, the lines of a trend's series.
+A tile draws its kind's visual below its line by default: the sun's day with its position now, today's solar production, the lines of a trend's series.
 
 ::: live
 
@@ -220,11 +200,10 @@ entities:
 type: custom:tile-group-card-pro
 title: Today
 icon: mdi:calendar-today
-show_picture: true
-entities:
+tiles:
   - sun.sun
-  - { entity: sensor.solar_power, poster: solar, name: Solar }
-  - poster: trend
+  - { entity: sensor.solar_power, kind: solar, name: Solar }
+  - kind: trend
     name: Temperatures
     series:
       - { entity: sensor.outdoor_temperature, name: Outside, color: orange }
@@ -235,7 +214,7 @@ entities:
 
 ### Lights
 
-A row of lights, each one switched by a tap on its tile (`tap_action: toggle` for every tile); a hold still opens it. The header counts the ones on.
+A row of lights, each one switched by a tap on its tile (`tap_action: toggle`); a hold still opens it. The header counts the ones on.
 
 ::: live
 
@@ -246,14 +225,13 @@ title: Lights
 icon: mdi:lightbulb-group
 badges:
   - { entity: group.downstairs_lights, visual: count }
-tap_action: toggle
-entities:
-  - light.living_room
-  - light.kitchen
-  - light.dining_table
-  - light.hallway
-  - light.desk_lamp
-  - light.bedroom
+tiles:
+  - { entity: light.living_room, tap_action: toggle }
+  - { entity: light.kitchen, tap_action: toggle }
+  - { entity: light.dining_table, tap_action: toggle }
+  - { entity: light.hallway, tap_action: toggle }
+  - { entity: light.desk_lamp, tap_action: toggle }
+  - { entity: light.bedroom, tap_action: toggle }
 ```
 
 :::
@@ -269,7 +247,7 @@ type: custom:tile-group-card-pro
 layout: row
 title: Family
 icon: mdi:home-account
-entities:
+tiles:
   - person.malte
   - person.sam
   - person.kim
@@ -279,7 +257,7 @@ entities:
 
 ### Outside
 
-The poster types do the work: the weather's condition, the wind's direction and gusts, the rain's total today, the sun's next event. The header carries the temperature and the humidity.
+The kinds do the work: the weather's condition and its next hours, the wind's direction and gusts, the rain's total today, the sun's next event. The header carries the temperature and the humidity.
 
 ::: live
 
@@ -290,7 +268,7 @@ icon: mdi:tree
 badges:
   - sensor.outdoor_temperature
   - sensor.outdoor_humidity
-entities:
+tiles:
   - { entity: weather.home, name: Weather }
   - { entity: sensor.wind_speed, name: Wind }
   - { entity: sensor.rain_rate, name: Rain }
@@ -302,7 +280,7 @@ entities:
 
 ### Energy
 
-The energy types are named on each tile (`poster`): the solar power and today's yield, the grid importing or exporting in its colours, the home battery, the car's charge and range. The header gives the price and today's use.
+The energy kinds are named on each tile (`kind`): the solar power and today's production, the grid importing or exporting in its colours, the home battery with its segments, the car's charge and range. The header gives the price and today's use.
 
 ::: live
 
@@ -313,18 +291,18 @@ icon: mdi:lightning-bolt
 badges:
   - sensor.electricity_price
   - sensor.energy_today
-entities:
-  - { entity: sensor.solar_power, poster: solar, name: Solar }
-  - { entity: sensor.grid_power, poster: grid, name: Grid, status_badge: true }
+tiles:
+  - { entity: sensor.solar_power, kind: solar, name: Solar }
+  - { entity: sensor.grid_power, kind: grid, name: Grid, status_badge: true }
   - { entity: sensor.battery_soc, name: Battery }
-  - { entity: sensor.ev_battery, poster: car, name: EV }
+  - { entity: sensor.ev_battery, kind: car, name: EV }
 ```
 
 :::
 
 ### Appliances
 
-`poster: appliance` on the card makes every tile an appliance; each one names its own `variant`, and its icon moves while it runs.
+Each tile names its appliance as its `kind`, and its icon moves while it runs.
 
 ::: live
 
@@ -332,11 +310,10 @@ entities:
 type: custom:tile-group-card-pro
 title: Utility room
 icon: mdi:washing-machine
-poster: appliance
-entities:
-  - { entity: sensor.washer_power, variant: washer, name: Washer }
-  - { entity: sensor.dryer_power, variant: dryer, name: Dryer }
-  - { entity: sensor.heat_pump_power, variant: heat_pump, name: Heat pump }
+tiles:
+  - { entity: sensor.washer_power, kind: washer, name: Washer }
+  - { entity: sensor.dryer_power, kind: dryer, name: Dryer }
+  - { entity: sensor.heat_pump_power, kind: heat_pump, name: Heat pump }
 ```
 
 :::
@@ -353,7 +330,7 @@ title: Heating
 icon: mdi:radiator
 badges:
   - sensor.outdoor_temperature
-entities:
+tiles:
   - { entity: climate.living_room, name: Living room }
   - { entity: climate.bedroom, name: Bedroom }
   - { entity: climate.office, name: Office }
@@ -372,14 +349,12 @@ type: custom:tile-group-card-pro
 layout: row
 title: Scenes
 icon: mdi:palette
-tap_action: toggle
-show_value: false
-entities:
-  - scene.bright
-  - scene.dimmed
-  - scene.dinner
-  - scene.movie_night
-  - scene.good_night
+tiles:
+  - { entity: scene.bright, tap_action: toggle, show_value: false }
+  - { entity: scene.dimmed, tap_action: toggle, show_value: false }
+  - { entity: scene.dinner, tap_action: toggle, show_value: false }
+  - { entity: scene.movie_night, tap_action: toggle, show_value: false }
+  - { entity: scene.good_night, tap_action: toggle, show_value: false }
 ```
 
 :::
@@ -396,7 +371,7 @@ title: Security
 icon: mdi:shield-home
 badges:
   - binary_sensor.motion_hallway
-entities:
+tiles:
   - lock.front_door
   - lock.back_door
   - alarm_control_panel.home
@@ -414,15 +389,16 @@ entities:
 
 ### Card options
 
-| Option             | Default | Description                                                                                                                                         |
-| ------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entities`         |         | Entity ids or tiles: the [tile card's keys](/cards/tile-card#reference) without `type` and `grid_options`, plus `visibility` (required).            |
-| `layout`           | `list`  | `list`: the tiles one under the other. `row`: vertical tiles side by side, wrapping when narrow.                                                    |
-| `title`            |         | Header text. Template allowed.                                                                                                                      |
-| `icon`             |         | Header icon. Template allowed.                                                                                                                      |
-| `title_tap_action` | none    | Action when the title or its icon is tapped; see [Actions](/cards/entity-options#actions).                                                          |
-| `badges`           |         | Badges at the end of the title line, plain and small unless they say otherwise; the [heading card's badge keys](/cards/heading-card#badge-options). |
-| any tile key       |         | A default for every tile (`status_badge`, `tap_action`, `hours_to_show`, `visual` …); a tile's own value wins.                                      |
+| Option             | Default | Description                                                                                                                                          |
+| ------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tiles`            |         | Entity ids or tiles: the [tile card's keys](/cards/tile-card#reference) without `type`, `grid_options` and `vertical`, plus `visibility` (required). |
+| `layout`           | `list`  | `list`: the tiles one under the other. `row`: vertical tiles side by side, wrapping when narrow. The layout decides every tile's `vertical`.         |
+| `title`            |         | Header text. Template allowed.                                                                                                                       |
+| `icon`             |         | Header icon. Template allowed.                                                                                                                       |
+| `title_tap_action` | none    | Action when the title or its icon is tapped; see [Actions](/cards/entity-options#actions).                                                           |
+| `badges`           |         | Badges at the end of the title line, plain and small unless they say otherwise; the [heading card's badge keys](/cards/heading-card#badge-options).  |
+
+The group sets nothing on its tiles but their layout: any other key on the card is a config error that names its place (each tile).
 
 ### Grid defaults
 

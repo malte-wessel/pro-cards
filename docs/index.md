@@ -24,27 +24,26 @@ hero:
             - type: custom:poster-card-pro
               entity: sensor.solar_power
               name: Solar
-              poster: solar
+              kind: solar
             - type: custom:poster-card-pro
               entity: weather.home
               name: Outside
             - type: custom:poster-card-pro
               entity: sensor.wind_speed
               name: Wind
-              variant: lines
+              visual: { type: flow, style: lines }
             - type: custom:poster-card-pro
               entity: sensor.rain_rate_roof
               name: Rain
-              variant: drops
+              visual: { type: flow, style: drops }
               wind: sensor.wind_speed
               direction: sensor.wind_direction
             - type: custom:poster-card-pro
-              poster: sun
+              kind: sun
             - type: custom:poster-card-pro
               entity: sensor.heat_pump_power
               name: Heat pump
-              poster: appliance
-              variant: heat_pump
+              kind: heat_pump
               running_above: 50
             - type: custom:poster-card-pro
               entity: climate.living_room
@@ -53,8 +52,8 @@ hero:
               name: Power
               icon: mdi:flash
               color: amber
-              hours_to_show: 12
-              poster: trend
+              kind: trend
+              visual: { hours: 12 }
               series:
                 - { entity: sensor.power_consumption, name: Home, color: amber }
                 - { entity: sensor.heat_pump_power, name: Heat pump, color: deep-orange }
@@ -93,15 +92,12 @@ hero:
             - type: custom:poster-card-pro
               entity: sensor.living_room_co2
               name: Air
-              visual: columns
-              hours_to_show: 12
-              bucket_minutes: 30
+              visual: { type: columns, hours: 12, bucket: 30 }
             - type: custom:poster-card-pro
               entity: sensor.living_room_temperature
               name: Temperature
               decimals: 1
-              visual: sparkline
-              hours_to_show: 24
+              visual: { type: sparkline, hours: 24 }
               rules:
                 - { below: 18, color: blue, label: Cool }
                 - { below: 24, color: green, label: Comfortable }
@@ -123,7 +119,7 @@ hero:
             - type: custom:poster-card-pro
               entity: sensor.grid_power
               name: Grid
-              poster: grid
+              kind: grid
             - type: custom:power-flow-card-pro
               title: Now
               icon: mdi:flash
@@ -161,8 +157,7 @@ hero:
               entity: sensor.pressure
               name: Pressure
               decimals: 0
-              visual: sparkline
-              hours_to_show: 24
+              visual: { type: sparkline, hours: 24 }
               color: indigo
 # the feature rows below the hero (FeatureRows.vue): copy and live cards, sides alternating
 feature_rows:
@@ -197,11 +192,11 @@ feature_rows:
       - type: custom:poster-card-pro
         entity: sensor.wind_speed
         name: Wind
-        variant: lines
+        visual: { type: flow, style: lines }
       - type: custom:poster-card-pro
         entity: sensor.rain_rate_roof
         name: Rain
-        variant: drops
+        visual: { type: flow, style: drops }
         wind: sensor.wind_speed
         direction: sensor.wind_direction
   - title: "Control, right on the card."
@@ -315,9 +310,7 @@ feature_rows:
       - type: custom:poster-card-pro
         entity: sensor.living_room_co2
         name: Air
-        visual: columns
-        hours_to_show: 12
-        bucket_minutes: 30
+        visual: { type: columns, hours: 12, bucket: 30 }
   - title: "Follow the sun."
     text: "Its path through the day, the time to sunset, and which side of your house it shines on right now."
     link: /cards/sun-path-card
@@ -325,7 +318,7 @@ feature_rows:
     columns: 2
     cards:
       - type: custom:poster-card-pro
-        poster: sun
+        kind: sun
       - type: custom:sun-azimuth-card-pro
         show_summary: false
         camera: 280

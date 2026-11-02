@@ -2,40 +2,15 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://malte-wessel.github.io/pro-cards/schema/poster-card-pro.schema.json",
   "title": "custom:poster-card-pro",
-  "description": "One entity (or none) as a poster, drawn the way its poster type says: the lead and the badges on top, the name, the large value and the picture at the bottom, a backdrop behind. The poster type is detected from the entity (its domain, then its device class) or set with `poster`; its own keys (`variant`, the entities it reads, `running_above`, `series`) sit flat on the card and never decide the type. Strings containing {{ }} are Jinja templates rendered by Home Assistant (name, secondary, icon, color, value, status, image).",
+  "description": "One entity (or none) as a poster, drawn the way its kind says: the icon and the badges on top, the name, the large value and the visual at the bottom. The kind is detected from the entity (its domain, then its device class) or set with `kind`; its own keys (the entities it reads, `running_above`, `series`) sit flat on the card and never decide the kind. Two places say what the card draws: `icon` and `visual`, each a thing with its options, false, or left out for the kind's. Strings containing {{ }} are Jinja templates rendered by Home Assistant (name, secondary, icon, color, value, status, an image's src).",
   "type": "object",
   "properties": {
     "type": {
       "const": "custom:poster-card-pro"
     },
-    "poster": {
-      "description": "The poster type, forced or one that is never detected (trend, grid, solar, car, appliance). Left out: detected from the entity's domain and device class; `entity` turns every default off",
-      "$ref": "#/$defs/posterType"
-    },
-    "variant": {
-      "type": "string",
-      "enum": [
-        "dots",
-        "lines",
-        "swoosh",
-        "vectors",
-        "drops",
-        "ripples",
-        "fill",
-        "shutter",
-        "blind",
-        "curtain",
-        "garage",
-        "gate",
-        "awning",
-        "window",
-        "pump",
-        "washer",
-        "dryer",
-        "dishwasher",
-        "heat_pump"
-      ],
-      "description": "How the type draws its subject: wind (dots, lines, swoosh, vectors) and rain (drops, ripples, fill) make the whole poster the animated field; cover (shutter, blind, curtain, garage, gate, awning, window; default: the device class) and appliance (pump, washer, dryer, dishwasher, heat_pump) pick the drawing"
+    "kind": {
+      "description": "What the entity is, forced or one that is never detected (trend, grid, solar, car, appliance, a named cover or appliance). Left out: detected from the entity's domain and device class; `entity` turns every default off",
+      "$ref": "#/$defs/kind"
     },
     "direction": {
       "$ref": "#/$defs/input",
@@ -103,27 +78,21 @@
       "description": "trend: the series, ids or objects (entity, name, color, rules, visibility)"
     },
     "status": {
-      "description": "The status badge: its text (a template allowed), an object of badge keys with `value` for its text, or false for none. Default: the poster type's status, else the matching rule's label",
       "oneOf": [
-        {
-          "const": false
-        },
         {
           "type": "string"
         },
         {
-          "$ref": "#/$defs/statusBadge"
+          "const": false
         }
-      ]
+      ],
+      "description": "The status in the corner: a text or a template, or false for none. Default: the kind's status, else the matching rule's label. Its look is the card's: a tag in its colour"
     },
     "badges": {
       "type": "array",
-      "description": "The badges in the corner, in this order; `status` places the status badge (first unless placed). A badge without an entity reads the poster's: its attribute, else the poster's value",
+      "description": "The badges in the corner, in this order. A badge without an entity reads the poster's: its attribute, else the poster's value",
       "items": {
         "oneOf": [
-          {
-            "const": "status"
-          },
           {
             "$ref": "defs.schema.json#/$defs/entityId"
           },
@@ -133,79 +102,15 @@
         ]
       }
     },
-    "image": {
-      "description": "The backdrop behind the whole poster: an image URL, a template, or an entity whose picture it shows (a camera, a media player, a person); false drops the poster type's own backdrop",
-      "oneOf": [
-        {
-          "const": false
-        },
-        {
-          "type": "string"
-        }
-      ]
-    },
-    "icon_image": {
-      "type": "string",
-      "description": "A picture in the icon: an image URL, a template that renders one, or an entity whose picture it shows. Without a picture now, the icon is `icon`'s"
-    },
-    "image_opacity": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 1,
-      "default": 0.3,
-      "description": "How much of the backdrop's picture shows through its shade, 0 to 1"
-    },
-    "image_tint": {
-      "$ref": "defs.schema.json#/$defs/color",
-      "description": "The colour of the shade over the backdrop's picture: a theme colour name, a hex or a var(). Default: the card's surface"
-    },
-    "image_blur": {
-      "description": "Blurs the backdrop: true for the default blur, a number of px, false for a sharp picture. Default: a person's photo and a media player's cover art are blurred",
-      "oneOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "number",
-          "minimum": 0
-        }
-      ]
-    },
     "visual": {
-      "type": "string",
-      "enum": ["sparkline", "columns", "strip", "bar", "gauge", "glow", "none"],
-      "description": "The picture along the bottom: a plot of the history, a bar or a gauge of the value, glow (the poster lit from below in its colour, as strong as its level: min to max, a light's brightness, or on / off), or none. Default: the poster type's (a light glows); set, it replaces the type's picture"
-    },
-    "control_position": {
-      "type": "string",
-      "enum": ["end", "block"],
-      "description": "Where the control sits: beside the value, or in a block under it. The icon's own actions are icon_tap_action / icon_hold_action"
-    },
-    "icon_ring": {
-      "type": "boolean",
-      "default": false,
-      "description": "A ring of the value (min to max) around the icon"
-    },
-    "icon_tap_action": {
-      "$ref": "defs.schema.json#/$defs/action",
-      "description": "Run when the icon is tapped; toggle is the card's own (a lock locks or unlocks, an alarm panel arms or disarms, the rest switch). Default: none, a tap on the icon is the poster's"
-    },
-    "icon_hold_action": {
-      "$ref": "defs.schema.json#/$defs/action",
-      "description": "Run when the icon is held, a filling ring confirms it. Default: toggle on a lock and an alarm panel (none when it wants a code), else none"
-    },
-    "icon_double_tap_action": {
-      "$ref": "defs.schema.json#/$defs/action",
-      "description": "Run on a double tap of the icon"
+      "$ref": "#/$defs/visualPlace",
+      "description": "The visual: behind the texts (glow, image, flow, and a kind's cover, path or line), or below them (a plot of the history, a bar, a gauge, segments, the sun's day; a weather's sparkline is its forecast); false for none. Left out: the kind's"
     }
   },
   "required": ["type"],
   "allOf": [
     {
       "$ref": "#/$defs/posterKeys"
-    },
-    {
-      "$ref": "entity.schema.json#/$defs/historyOptions"
     },
     {
       "$ref": "entity.schema.json#/$defs/actionDefaults"
@@ -215,13 +120,16 @@
     },
     {
       "$ref": "#/$defs/typeKeys"
+    },
+    {
+      "$ref": "#/$defs/oneFlow"
     }
   ],
   "unevaluatedProperties": false,
   "$defs": {
-    "posterRule": {
+    "ruleKeys": {
       "type": "object",
-      "description": "First matching rule wins, in the order written. Besides the colour, icon and label it changes the poster's icon and backdrop; a key it writes wins over the card's",
+      "description": "A rule's keys, its icon left to the card's rule (the poster's, the tile's)",
       "properties": {
         "state": {
           "$ref": "entity.schema.json#/$defs/rule/properties/state"
@@ -233,10 +141,11 @@
           "$ref": "entity.schema.json#/$defs/rule/properties/above"
         },
         "color": {
-          "$ref": "entity.schema.json#/$defs/rule/properties/color"
+          "$ref": "defs.schema.json#/$defs/color",
+          "description": "The card's colour while the rule matches (wins over the card's `color`)"
         },
         "icon": {
-          "$ref": "entity.schema.json#/$defs/rule/properties/icon"
+          "description": "The icon while the rule matches"
         },
         "label": {
           "$ref": "entity.schema.json#/$defs/rule/properties/label"
@@ -250,43 +159,8 @@
         "pulse": {
           "$ref": "entity.schema.json#/$defs/rule/properties/pulse"
         },
-        "icon_style": {
-          "$ref": "entity.schema.json#/$defs/entityKeys/properties/icon_style"
-        },
-        "icon_image": {
-          "oneOf": [
-            {
-              "const": false
-            },
-            {
-              "type": "string"
-            }
-          ],
-          "description": "A picture in the icon while the rule matches, or false for the icon"
-        },
-        "icon_ring": {
-          "type": "boolean",
-          "description": "A ring of the value around the icon"
-        },
-        "image": {
-          "oneOf": [
-            {
-              "const": false
-            },
-            {
-              "type": "string"
-            }
-          ],
-          "description": "The backdrop while the rule matches, or false for none"
-        },
-        "image_blur": {
-          "$ref": "#/properties/image_blur"
-        },
-        "image_opacity": {
-          "$ref": "#/properties/image_opacity"
-        },
-        "image_tint": {
-          "$ref": "#/properties/image_tint"
+        "visual": {
+          "$ref": "#/$defs/ruleVisualPlace"
         }
       },
       "anyOf": [
@@ -302,8 +176,21 @@
       ],
       "additionalProperties": false
     },
+    "posterRule": {
+      "description": "First matching rule wins, in the order written. Its colour and icon win over the card's; its icon and visual merge onto the card's as the places do (an object without type changes options only)",
+      "allOf": [
+        {
+          "$ref": "#/$defs/ruleKeys"
+        }
+      ],
+      "properties": {
+        "icon": {
+          "$ref": "#/$defs/ruleIconPlace"
+        }
+      }
+    },
     "posterKeys": {
-      "description": "The poster's item: an entity's keys, less the picture and the control's place, which are the poster's own (visual, control_position)",
+      "description": "The poster's item: an entity's keys, less the icon and the visual, which are the card's places",
       "type": "object",
       "properties": {
         "entity": {
@@ -316,10 +203,12 @@
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/secondary"
         },
         "icon": {
-          "$ref": "entity.schema.json#/$defs/entityKeys/properties/icon"
+          "$ref": "#/$defs/iconPlace",
+          "description": "The icon: an icon's name (mdi:…, a template), { type: icon | image | flow, … }, or false for no icon. Left out: the kind's. A name makes the place an icon, and is a default: a matching rule's icon wins"
         },
         "color": {
-          "$ref": "entity.schema.json#/$defs/entityKeys/properties/color"
+          "$ref": "defs.schema.json#/$defs/color",
+          "description": "The card's colour. A default: a matching rule's colour wins. Template allowed"
         },
         "attribute": {
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/attribute"
@@ -339,12 +228,6 @@
         "suffix": {
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/suffix"
         },
-        "icon_style": {
-          "$ref": "entity.schema.json#/$defs/entityKeys/properties/icon_style"
-        },
-        "show_entity_picture": {
-          "$ref": "entity.schema.json#/$defs/entityKeys/properties/show_entity_picture"
-        },
         "min": {
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/min"
         },
@@ -358,19 +241,7 @@
           }
         },
         "control": {
-          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control"
-        },
-        "control_attribute": {
-          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_attribute"
-        },
-        "control_step": {
-          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_step"
-        },
-        "control_options": {
-          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_options"
-        },
-        "control_confirm": {
-          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_confirm"
+          "$ref": "#/$defs/control"
         },
         "toggle": {
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/toggle"
@@ -383,9 +254,6 @@
         },
         "show_icon": {
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/show_icon"
-        },
-        "name_position": {
-          "$ref": "entity.schema.json#/$defs/entityKeys/properties/name_position"
         },
         "tap_action": {
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/tap_action"
@@ -401,15 +269,76 @@
           "default": true,
           "description": "Home Assistant's hover and press, as on its tile card: a light layer under a mouse, a ripple from where you press, a ring around the card while it has the keyboard's focus. false keeps it still"
         }
-      },
-      "if": {
-        "$ref": "entity.schema.json#/$defs/entityKeys/if"
-      },
-      "then": {
-        "$ref": "entity.schema.json#/$defs/entityKeys/then"
       }
     },
-    "posterType": {
+    "control": {
+      "description": "The control: a control's name (auto or true: the kind's or the domain's; false or none: no control), or { type, position, attribute, step, options, confirm }. An object without type changes the kind's own controls (control: { step: 10 })",
+      "oneOf": [
+        {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control"
+        },
+        {
+          "$ref": "#/$defs/controlThing"
+        }
+      ]
+    },
+    "controlThing": {
+      "type": "object",
+      "description": "The control and its options. Without type they change the kind's own controls",
+      "properties": {
+        "type": {
+          "enum": [
+            "auto",
+            "toggle",
+            "slider",
+            "stepper",
+            "segments",
+            "buttons",
+            "button",
+            "select",
+            "hold"
+          ],
+          "description": "The control drawn: auto picks the kind's or the domain's (control: false draws none)"
+        },
+        "position": {
+          "type": "string",
+          "enum": ["end", "block"],
+          "description": "Where the control sits: at the end of the line (a poster's: beside the value), or in a block under it. The icon's own actions are icon: { tap_action, hold_action }"
+        },
+        "attribute": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_attribute"
+        },
+        "step": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_step"
+        },
+        "options": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_options"
+        },
+        "confirm": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_confirm"
+        }
+      },
+      "additionalProperties": false,
+      "if": {
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "const": "buttons"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "options": {
+            "minItems": 1,
+            "items": {
+              "$ref": "entity.schema.json#/$defs/buttonOption"
+            }
+          }
+        }
+      }
+    },
+    "kind": {
       "type": "string",
       "enum": [
         "entity",
@@ -431,13 +360,590 @@
         "person",
         "media_player",
         "cover",
+        "shutter",
+        "blind",
+        "curtain",
+        "garage",
+        "gate",
+        "awning",
+        "window",
         "vacuum",
         "lawn_mower",
         "grid",
         "solar",
         "car",
-        "appliance"
+        "appliance",
+        "pump",
+        "washer",
+        "dryer",
+        "dishwasher",
+        "heat_pump"
       ]
+    },
+    "iconPlace": {
+      "description": "The icon: an icon's name (mdi:…, a template), { type: icon | image | flow, … }, or false for no icon. A name makes the place an icon (over a photo or an animation too). Left out: the kind's (a person's photo, the wind's animation)",
+      "oneOf": [
+        {
+          "const": false
+        },
+        {
+          "$ref": "defs.schema.json#/$defs/icon"
+        },
+        {
+          "$ref": "#/$defs/iconThing"
+        }
+      ]
+    },
+    "ruleIconPlace": {
+      "description": "The icon while the rule matches: an icon's name, { type, … } or options to merge, false for none; no actions",
+      "oneOf": [
+        {
+          "const": false
+        },
+        {
+          "$ref": "defs.schema.json#/$defs/icon"
+        },
+        {
+          "$ref": "#/$defs/ruleIconThing"
+        }
+      ]
+    },
+    "iconOptions": {
+      "type": "object",
+      "description": "The icon's options, whatever it draws: type: icon (an icon: name, ring, style), image (a picture: src, ring, style, and name: the icon while there is no picture) or flow (the kind's animation: style; wind and rain only); and the icon's own actions. Without type its options merge onto what the place draws (the kind's icon, the card's in a rule); with a name it is an icon",
+      "properties": {
+        "type": {
+          "enum": ["icon", "image", "flow"],
+          "description": "icon: an icon; image: a picture in the icon's circle; flow: the wind's or the rain's animation"
+        },
+        "name": {
+          "$ref": "defs.schema.json#/$defs/icon",
+          "description": "icon: the icon's name (mdi:…, a template). Default: the entity's. image: the icon while there is no picture"
+        },
+        "ring": {
+          "type": "boolean",
+          "description": "icon, image: a ring of the value (min to max) around it"
+        },
+        "style": {
+          "enum": [
+            "circle",
+            "plain",
+            "dots",
+            "lines",
+            "swoosh",
+            "vectors",
+            "drops",
+            "ripples",
+            "fill"
+          ],
+          "description": "icon, image: circle (default) or plain (no circle); flow: the animation's style, wind: dots, lines, swoosh, vectors; rain: drops, ripples, fill"
+        },
+        "src": {
+          "type": "string",
+          "minLength": 1,
+          "description": "image: an image URL, a template that renders one, or an entity whose picture it shows. Default: the card's entity's picture"
+        },
+        "tap_action": {
+          "$ref": "defs.schema.json#/$defs/action",
+          "description": "Run when the icon is tapped; toggle is the card's own (a lock locks or unlocks, an alarm panel arms or disarms, the rest switch). Default: none, a tap on the icon is the card's (a tile's icon toggles a light, a switch, a fan …)"
+        },
+        "hold_action": {
+          "$ref": "defs.schema.json#/$defs/action",
+          "description": "Run when the icon is held, a filling ring confirms it. Default: toggle on a lock and an alarm panel (none when it wants a code), else none"
+        },
+        "double_tap_action": {
+          "$ref": "defs.schema.json#/$defs/action",
+          "description": "Run on a double tap of the icon"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "icon"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "src": false,
+              "style": {
+                "enum": ["circle", "plain"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "image"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "style": {
+                "enum": ["circle", "plain"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "flow"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "name": false,
+              "ring": false,
+              "src": false,
+              "style": {
+                "enum": ["dots", "lines", "swoosh", "vectors", "drops", "ripples", "fill"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["name"],
+            "not": {
+              "required": ["type"]
+            }
+          },
+          "then": {
+            "properties": {
+              "src": false,
+              "style": {
+                "enum": ["circle", "plain"]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "iconThing": {
+      "description": "The poster's icon: its thing, options and own actions (a poster's icon has no badge: its corner has the badges)",
+      "allOf": [
+        {
+          "$ref": "#/$defs/iconOptions"
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "ruleIconThing": {
+      "description": "A rule's icon: as the card's, without the icon's actions (a rule changes the look, not what a tap does)",
+      "allOf": [
+        {
+          "$ref": "#/$defs/iconOptions"
+        }
+      ],
+      "properties": {
+        "tap_action": false,
+        "hold_action": false,
+        "double_tap_action": false
+      },
+      "unevaluatedProperties": false
+    },
+    "visualPlace": {
+      "description": "What fills the card besides the icon and the texts: a thing's name, { type, … } with its options, or false for nothing. Left out: the kind's (a light's glow, the sun's day, a cover's drawing)",
+      "oneOf": [
+        {
+          "const": false
+        },
+        {
+          "enum": [
+            "glow",
+            "image",
+            "flow",
+            "cover",
+            "path",
+            "line",
+            "sparkline",
+            "columns",
+            "strip",
+            "bar",
+            "gauge",
+            "segments",
+            "sun"
+          ]
+        },
+        {
+          "$ref": "#/$defs/visualThing"
+        }
+      ]
+    },
+    "visualThing": {
+      "type": "object",
+      "description": "The visual's thing and its options. Without type its options merge onto what the place draws (the kind's visual, the card's in a rule)",
+      "properties": {
+        "type": {
+          "enum": [
+            "glow",
+            "image",
+            "flow",
+            "cover",
+            "path",
+            "line",
+            "sparkline",
+            "columns",
+            "strip",
+            "bar",
+            "gauge",
+            "segments",
+            "sun"
+          ],
+          "description": "Behind the texts: glow, image, flow, and what only a kind draws (cover, path, line). Below them: sparkline, columns, strip (the history), bar, gauge, segments (the value), sun (the sun's day). A trend's sparkline is its series, a weather's its forecast, unless it plots another entity (src)"
+        },
+        "src": {
+          "type": "string",
+          "minLength": 1,
+          "description": "image: an image URL, a template that renders one, or an entity whose picture it shows; sparkline, columns, strip: another entity whose history it draws"
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "image: how much of the picture shows through its shade, 0 to 1 (default 0.3)"
+        },
+        "tint": {
+          "$ref": "defs.schema.json#/$defs/color",
+          "description": "image: the colour of the shade over the picture. Default: the card's surface"
+        },
+        "blur": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "number",
+              "minimum": 0
+            }
+          ],
+          "description": "image: blurs the picture, a number of px; true is 20, false a sharp picture"
+        },
+        "style": {
+          "enum": ["dots", "lines", "swoosh", "vectors", "drops", "ripples", "fill"],
+          "description": "flow: the animation's style, wind: dots, lines, swoosh, vectors; rain: drops, ripples, fill"
+        },
+        "hours": {
+          "oneOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "const": "today"
+            }
+          ],
+          "description": "sparkline, columns, strip, sun: the window in hours (a weather's sparkline: the hours ahead), or today (since midnight). Default: 24"
+        },
+        "bucket": {
+          "type": "number",
+          "minimum": 5,
+          "description": "sparkline, columns, strip: a bucket's minutes (default 60)"
+        },
+        "axis": {
+          "type": "boolean",
+          "description": "sparkline, columns: the plot's axes"
+        },
+        "smoothing": {
+          "type": "number",
+          "minimum": 5,
+          "description": "sparkline: the averaging bucket in minutes (default: one point per 12 px)"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "glow"
+              }
+            }
+          },
+          "then": {
+            "propertyNames": {
+              "enum": ["type"]
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "image"
+              }
+            }
+          },
+          "then": {
+            "propertyNames": {
+              "enum": ["type", "src", "opacity", "tint", "blur"]
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "flow"
+              }
+            }
+          },
+          "then": {
+            "propertyNames": {
+              "enum": ["type", "style"]
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "cover"
+              }
+            }
+          },
+          "then": {
+            "propertyNames": {
+              "enum": ["type"]
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "path"
+              }
+            }
+          },
+          "then": {
+            "propertyNames": {
+              "enum": ["type"]
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "line"
+              }
+            }
+          },
+          "then": {
+            "propertyNames": {
+              "enum": ["type"]
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "sparkline"
+              }
+            }
+          },
+          "then": {
+            "propertyNames": {
+              "enum": ["type", "hours", "bucket", "src", "axis", "smoothing"]
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "columns"
+              }
+            }
+          },
+          "then": {
+            "propertyNames": {
+              "enum": ["type", "hours", "bucket", "src", "axis"]
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "strip"
+              }
+            }
+          },
+          "then": {
+            "propertyNames": {
+              "enum": ["type", "hours", "bucket", "src"]
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "bar"
+              }
+            }
+          },
+          "then": {
+            "propertyNames": {
+              "enum": ["type"]
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "gauge"
+              }
+            }
+          },
+          "then": {
+            "propertyNames": {
+              "enum": ["type"]
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "segments"
+              }
+            }
+          },
+          "then": {
+            "propertyNames": {
+              "enum": ["type"]
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "sun"
+              }
+            }
+          },
+          "then": {
+            "propertyNames": {
+              "enum": ["type", "hours"]
+            }
+          }
+        }
+      ]
+    },
+    "ruleVisualPlace": {
+      "description": "The visual while the rule matches, as the card's visual; a rule sets no hours, bucket or smoothing, nor a plot's src (the history is the card's)",
+      "allOf": [
+        {
+          "$ref": "#/$defs/visualPlace"
+        },
+        {
+          "if": {
+            "type": "object"
+          },
+          "then": {
+            "properties": {
+              "hours": false,
+              "bucket": false,
+              "smoothing": false
+            }
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "enum": ["sparkline", "columns", "strip"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "src": false
+            }
+          }
+        }
+      ]
+    },
+    "oneFlow": {
+      "description": "The animation is drawn in one place: icon or visual, not both",
+      "not": {
+        "required": ["icon", "visual"],
+        "properties": {
+          "icon": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "flow"
+              }
+            }
+          },
+          "visual": {
+            "anyOf": [
+              {
+                "const": "flow"
+              },
+              {
+                "type": "object",
+                "required": ["type"],
+                "properties": {
+                  "type": {
+                    "const": "flow"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
     },
     "badgeKeys": {
       "type": "object",
@@ -480,18 +986,6 @@
           "$ref": "#/$defs/badgeKeys"
         }
       ],
-      "unevaluatedProperties": false
-    },
-    "statusBadge": {
-      "description": "The status badge's keys (a tag without an icon unless set); `value` is its text",
-      "allOf": [
-        {
-          "$ref": "#/$defs/badgeKeys"
-        }
-      ],
-      "not": {
-        "required": ["entity"]
-      },
       "unevaluatedProperties": false
     },
     "input": {
@@ -538,20 +1032,44 @@
       ]
     },
     "typeKeys": {
-      "description": "The keys each poster type takes: another type's are not allowed",
+      "description": "The keys each kind takes (another kind's are not allowed), and the kinds that draw a kind's own thing (flow, sun, cover, path, line)",
       "allOf": [
         {
           "if": {
-            "required": ["poster"],
+            "required": ["kind"],
             "properties": {
-              "poster": {
-                "const": "entity"
+              "kind": {
+                "enum": [
+                  "entity",
+                  "carbon_dioxide",
+                  "pm25",
+                  "pm10",
+                  "aqi",
+                  "weather",
+                  "sun",
+                  "light",
+                  "fan",
+                  "climate",
+                  "lock",
+                  "alarm_control_panel",
+                  "person",
+                  "media_player",
+                  "cover",
+                  "shutter",
+                  "blind",
+                  "curtain",
+                  "garage",
+                  "gate",
+                  "awning",
+                  "window",
+                  "vacuum",
+                  "lawn_mower"
+                ]
               }
             }
           },
           "then": {
             "properties": {
-              "variant": false,
               "direction": false,
               "gust": false,
               "today": false,
@@ -572,16 +1090,15 @@
         },
         {
           "if": {
-            "required": ["poster"],
+            "required": ["kind"],
             "properties": {
-              "poster": {
+              "kind": {
                 "const": "battery"
               }
             }
           },
           "then": {
             "properties": {
-              "variant": false,
               "direction": false,
               "gust": false,
               "today": false,
@@ -599,198 +1116,15 @@
         },
         {
           "if": {
-            "required": ["poster"],
+            "required": ["kind"],
             "properties": {
-              "poster": {
-                "const": "carbon_dioxide"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "variant": false,
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
-              "running_above": false,
-              "series": false
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["poster"],
-            "properties": {
-              "poster": {
-                "const": "pm25"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "variant": false,
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
-              "running_above": false,
-              "series": false
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["poster"],
-            "properties": {
-              "poster": {
-                "const": "pm10"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "variant": false,
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
-              "running_above": false,
-              "series": false
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["poster"],
-            "properties": {
-              "poster": {
-                "const": "aqi"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "variant": false,
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
-              "running_above": false,
-              "series": false
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["poster"],
-            "properties": {
-              "poster": {
-                "const": "weather"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "variant": false,
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
-              "running_above": false,
-              "series": false
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["poster"],
-            "properties": {
-              "poster": {
-                "const": "sun"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "variant": false,
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
-              "running_above": false,
-              "series": false
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["poster"],
-            "properties": {
-              "poster": {
+              "kind": {
                 "const": "wind"
               }
             }
           },
           "then": {
             "properties": {
-              "variant": {
-                "enum": ["dots", "lines", "swoosh", "vectors"]
-              },
               "today": false,
               "wind": false,
               "power": false,
@@ -803,24 +1137,57 @@
               "charging": false,
               "location": false,
               "running_above": false,
-              "series": false
+              "series": false,
+              "icon": {
+                "if": {
+                  "type": "object",
+                  "required": ["type"],
+                  "properties": {
+                    "type": {
+                      "const": "flow"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "style": {
+                      "enum": ["dots", "lines", "swoosh", "vectors"]
+                    }
+                  }
+                }
+              },
+              "visual": {
+                "if": {
+                  "type": "object",
+                  "required": ["type"],
+                  "properties": {
+                    "type": {
+                      "const": "flow"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "style": {
+                      "enum": ["dots", "lines", "swoosh", "vectors"]
+                    }
+                  }
+                }
+              }
             }
           }
         },
         {
           "if": {
-            "required": ["poster"],
+            "required": ["kind"],
             "properties": {
-              "poster": {
+              "kind": {
                 "const": "rain"
               }
             }
           },
           "then": {
             "properties": {
-              "variant": {
-                "enum": ["drops", "ripples", "fill"]
-              },
               "gust": false,
               "power": false,
               "charge": false,
@@ -832,22 +1199,57 @@
               "charging": false,
               "location": false,
               "running_above": false,
-              "series": false
+              "series": false,
+              "icon": {
+                "if": {
+                  "type": "object",
+                  "required": ["type"],
+                  "properties": {
+                    "type": {
+                      "const": "flow"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "style": {
+                      "enum": ["drops", "ripples", "fill"]
+                    }
+                  }
+                }
+              },
+              "visual": {
+                "if": {
+                  "type": "object",
+                  "required": ["type"],
+                  "properties": {
+                    "type": {
+                      "const": "flow"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "style": {
+                      "enum": ["drops", "ripples", "fill"]
+                    }
+                  }
+                }
+              }
             }
           }
         },
         {
           "if": {
-            "required": ["poster"],
+            "required": ["kind"],
             "properties": {
-              "poster": {
+              "kind": {
                 "const": "trend"
               }
             }
           },
           "then": {
             "properties": {
-              "variant": false,
               "direction": false,
               "gust": false,
               "today": false,
@@ -868,318 +1270,15 @@
         },
         {
           "if": {
-            "required": ["poster"],
+            "required": ["kind"],
             "properties": {
-              "poster": {
-                "const": "light"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "variant": false,
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
-              "running_above": false,
-              "series": false
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["poster"],
-            "properties": {
-              "poster": {
-                "const": "fan"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "variant": false,
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
-              "running_above": false,
-              "series": false
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["poster"],
-            "properties": {
-              "poster": {
-                "const": "climate"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "variant": false,
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
-              "running_above": false,
-              "series": false
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["poster"],
-            "properties": {
-              "poster": {
-                "const": "lock"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "variant": false,
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
-              "running_above": false,
-              "series": false
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["poster"],
-            "properties": {
-              "poster": {
-                "const": "alarm_control_panel"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "variant": false,
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
-              "running_above": false,
-              "series": false
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["poster"],
-            "properties": {
-              "poster": {
-                "const": "person"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "variant": false,
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
-              "running_above": false,
-              "series": false
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["poster"],
-            "properties": {
-              "poster": {
-                "const": "media_player"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "variant": false,
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
-              "running_above": false,
-              "series": false
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["poster"],
-            "properties": {
-              "poster": {
-                "const": "cover"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "variant": {
-                "enum": ["shutter", "blind", "curtain", "garage", "gate", "awning", "window"]
-              },
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
-              "running_above": false,
-              "series": false
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["poster"],
-            "properties": {
-              "poster": {
-                "const": "vacuum"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "variant": false,
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
-              "running_above": false,
-              "series": false
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["poster"],
-            "properties": {
-              "poster": {
-                "const": "lawn_mower"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "variant": false,
-              "direction": false,
-              "gust": false,
-              "today": false,
-              "wind": false,
-              "power": false,
-              "charge": false,
-              "discharge": false,
-              "import": false,
-              "export": false,
-              "range": false,
-              "plugged": false,
-              "charging": false,
-              "location": false,
-              "running_above": false,
-              "series": false
-            }
-          }
-        },
-        {
-          "if": {
-            "required": ["poster"],
-            "properties": {
-              "poster": {
+              "kind": {
                 "const": "grid"
               }
             }
           },
           "then": {
             "properties": {
-              "variant": false,
               "direction": false,
               "gust": false,
               "today": false,
@@ -1198,16 +1297,15 @@
         },
         {
           "if": {
-            "required": ["poster"],
+            "required": ["kind"],
             "properties": {
-              "poster": {
+              "kind": {
                 "const": "solar"
               }
             }
           },
           "then": {
             "properties": {
-              "variant": false,
               "direction": false,
               "gust": false,
               "wind": false,
@@ -1227,16 +1325,15 @@
         },
         {
           "if": {
-            "required": ["poster"],
+            "required": ["kind"],
             "properties": {
-              "poster": {
+              "kind": {
                 "const": "car"
               }
             }
           },
           "then": {
             "properties": {
-              "variant": false,
               "direction": false,
               "gust": false,
               "today": false,
@@ -1253,18 +1350,15 @@
         },
         {
           "if": {
-            "required": ["poster"],
+            "required": ["kind"],
             "properties": {
-              "poster": {
-                "const": "appliance"
+              "kind": {
+                "enum": ["appliance", "pump", "washer", "dryer", "dishwasher", "heat_pump"]
               }
             }
           },
           "then": {
             "properties": {
-              "variant": {
-                "enum": ["pump", "washer", "dryer", "dishwasher", "heat_pump"]
-              },
               "direction": false,
               "gust": false,
               "today": false,
@@ -1279,6 +1373,188 @@
               "charging": false,
               "location": false,
               "series": false
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["kind", "visual"],
+            "properties": {
+              "visual": {
+                "anyOf": [
+                  {
+                    "const": "flow"
+                  },
+                  {
+                    "type": "object",
+                    "required": ["type"],
+                    "properties": {
+                      "type": {
+                        "const": "flow"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "enum": ["wind", "rain"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["kind", "visual"],
+            "properties": {
+              "visual": {
+                "anyOf": [
+                  {
+                    "const": "sun"
+                  },
+                  {
+                    "type": "object",
+                    "required": ["type"],
+                    "properties": {
+                      "type": {
+                        "const": "sun"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "enum": ["sun"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["kind", "visual"],
+            "properties": {
+              "visual": {
+                "anyOf": [
+                  {
+                    "const": "cover"
+                  },
+                  {
+                    "type": "object",
+                    "required": ["type"],
+                    "properties": {
+                      "type": {
+                        "const": "cover"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "cover",
+                  "shutter",
+                  "blind",
+                  "curtain",
+                  "garage",
+                  "gate",
+                  "awning",
+                  "window"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["kind", "visual"],
+            "properties": {
+              "visual": {
+                "anyOf": [
+                  {
+                    "const": "path"
+                  },
+                  {
+                    "type": "object",
+                    "required": ["type"],
+                    "properties": {
+                      "type": {
+                        "const": "path"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "enum": ["vacuum", "lawn_mower"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["kind", "visual"],
+            "properties": {
+              "visual": {
+                "anyOf": [
+                  {
+                    "const": "line"
+                  },
+                  {
+                    "type": "object",
+                    "required": ["type"],
+                    "properties": {
+                      "type": {
+                        "const": "line"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "enum": ["grid"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["kind", "icon"],
+            "properties": {
+              "icon": {
+                "type": "object",
+                "required": ["type"],
+                "properties": {
+                  "type": {
+                    "const": "flow"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "enum": ["wind", "rain"]
+              }
             }
           }
         }

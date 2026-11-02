@@ -1,6 +1,26 @@
-// The poster card's own parts (DOM): the backdrop and the glow.
-import type { RenderCtx } from "../shared/entity/model.ts";
-import { div } from "../shared/kinds/dom.ts";
+// What a card that draws a kind puts behind its texts (DOM), the poster's and the tile's alike:
+// the visual's picture under its scrim, the kind's drawing (its flow, cover, path or line), or its
+// glow (the kind's own, or the card's colour from its bottom edge). One layer, built once in the
+// card's body and kept: a new picture fades in, a drawing is rebuilt only when its key changes.
+import type { RenderCtx } from "../entity/model.ts";
+import { div } from "./dom.ts";
+
+// how much of a picture behind the card shows through its scrim by default
+export const IMAGE_OPACITY = 0.3;
+
+// the poster's colour and the layer's shade as typed values, so they can fade (once per page;
+// another copy of the bundle has done it)
+for (const [name, syntax, initialValue] of [
+  ["--pc-tint", "<color>", "transparent"],
+  ["--pc-shade", "<number>", "0.7"],
+  ["--pc-shade-color", "<color>", "transparent"],
+]) {
+  try {
+    CSS.registerProperty({ name, syntax, inherits: true, initialValue });
+  } catch {
+    // registered already, or no CSS Properties API: the value changes at once
+  }
+}
 
 const imgEl = (src: string) => {
   const img = document.createElement("img");
@@ -31,11 +51,10 @@ const fadeIn = (back: HTMLElement, last: HTMLImageElement, next: HTMLImageElemen
   }
 };
 
-// the backdrop in the body (built once): an image under its scrim (blurred by `blur` px), else a
+// the layer in the body (built once): an image under its scrim (blurred by `blur` px), else a
 // kind's part (built once per key, so its animations keep running; returned for its update), else
-// nothing. The glow
-// (`visual: glow`) is built once and kept last: over a kind's drawing, under an image's scrim (the
-// pback's ::after), so a new level fades rather than being drawn again
+// nothing. The card's glow is built once and kept last: over a kind's drawing, under an image's
+// scrim (the pback's ::after), so a new level fades rather than being drawn again
 export const updateBackdrop = (
   body: HTMLElement,
   ctx: RenderCtx,

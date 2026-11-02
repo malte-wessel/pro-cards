@@ -4,13 +4,13 @@ outline: [2, 2]
 
 # Poster sizes
 
-How a [poster](/cards/poster-card) fits its size, then every [poster type](/cards/poster-types) at four sizes in one section: 6 × 3 (the default), 6 × 4, 12 × 3 (the full section) and 8 × 3 (about the size of the showcases' posters).
+How a [poster](/cards/poster-card) fits its size, then every [kind](/cards/poster-types) at four sizes in one section: 6 × 3 (the default), 6 × 4, 12 × 3 (the full section) and 8 × 3 (about the size of the showcases' posters).
 
 ## How a poster fits its size
 
-A poster takes half a section (six columns) and three rows, by default and at least: the icon and its badges, the name, the large value and the picture need that much room. An entity in less room is what a tile is for, such as the [entity card](/cards/entity-card)'s. `grid_options` makes a poster larger, and the dashboard editor does not let it get smaller. A card around it, such as a swipe card or a stack, may still give it less: the poster then fits its content as well as it can.
+A poster takes half a section (six columns) and three rows, by default and at least: the icon and its badges, the name, the large value and the visual need that much room. An entity in less room is what a tile is for, such as the [entity card](/cards/entity-card)'s. `grid_options` makes a poster larger, and the dashboard editor does not let it get smaller. A card around it, such as a swipe card or a stack, may still give it less: the poster then fits its content as well as it can.
 
-The content sits at the bottom of the card. More rows give the picture and the backdrop more room, and the icon and the badges stay at the top. Where the content needs more room than the card has, the value shrinks and a slider may be hidden (more-info still has it).
+The content sits at the bottom of the card. More rows give the visual more room, and the icon and the badges stay at the top. Where the content needs more room than the card has, the value shrinks and a slider may be hidden (more-info still has it).
 
 `rows: auto` makes the poster as tall as its content; so does a masonry view or a vertical stack. Beside a taller card, the poster stretches to the row's height. `fill_height: false` keeps its own height, see [Filling the height](/guide/sizing#filling-the-height). The player at three rows, its volume hidden, and with `rows: auto`:
 
@@ -37,8 +37,7 @@ A sensor with its history and badges: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 - type: custom:poster-card-pro
   entity: sensor.power_consumption
   name: Power
-  visual: sparkline
-  hours_to_show: 12
+  visual: { type: sparkline, hours: 12 }
   rules:
     - { below: 1000, color: green, label: Low }
     - { below: 3000, color: amber, label: Normal }
@@ -49,8 +48,7 @@ A sensor with its history and badges: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 - type: custom:poster-card-pro
   entity: sensor.power_consumption
   name: Power
-  visual: sparkline
-  hours_to_show: 12
+  visual: { type: sparkline, hours: 12 }
   rules:
     - { below: 1000, color: green, label: Low }
     - { below: 3000, color: amber, label: Normal }
@@ -61,8 +59,7 @@ A sensor with its history and badges: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 - type: custom:poster-card-pro
   entity: sensor.power_consumption
   name: Power
-  visual: sparkline
-  hours_to_show: 12
+  visual: { type: sparkline, hours: 12 }
   rules:
     - { below: 1000, color: green, label: Low }
     - { below: 3000, color: amber, label: Normal }
@@ -73,8 +70,7 @@ A sensor with its history and badges: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 - type: custom:poster-card-pro
   entity: sensor.power_consumption
   name: Power
-  visual: sparkline
-  hours_to_show: 12
+  visual: { type: sparkline, hours: 12 }
   rules:
     - { below: 1000, color: green, label: Low }
     - { below: 3000, color: amber, label: Normal }
@@ -212,22 +208,22 @@ The field behind the poster: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 - type: custom:poster-card-pro
   entity: sensor.wind_speed
   name: Wind
-  variant: lines
+  visual: { type: flow, style: lines }
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.wind_speed
   name: Wind
-  variant: lines
+  visual: { type: flow, style: lines }
   grid_options: { columns: 6, rows: 4 }
 - type: custom:poster-card-pro
   entity: sensor.wind_speed
   name: Wind
-  variant: lines
+  visual: { type: flow, style: lines }
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.wind_speed
   name: Wind
-  variant: lines
+  visual: { type: flow, style: lines }
   grid_options: { columns: 8, rows: 3 }
 ```
 
@@ -243,28 +239,28 @@ The drops behind the poster: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 - type: custom:poster-card-pro
   entity: sensor.rain_rate_roof
   name: Rain
-  variant: drops
+  visual: { type: flow, style: drops }
   wind: sensor.wind_speed
   direction: sensor.wind_direction
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.rain_rate_roof
   name: Rain
-  variant: drops
+  visual: { type: flow, style: drops }
   wind: sensor.wind_speed
   direction: sensor.wind_direction
   grid_options: { columns: 6, rows: 4 }
 - type: custom:poster-card-pro
   entity: sensor.rain_rate_roof
   name: Rain
-  variant: drops
+  visual: { type: flow, style: drops }
   wind: sensor.wind_speed
   direction: sensor.wind_direction
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.rain_rate_roof
   name: Rain
-  variant: drops
+  visual: { type: flow, style: drops }
   wind: sensor.wind_speed
   direction: sensor.wind_direction
   grid_options: { columns: 8, rows: 3 }
@@ -282,8 +278,8 @@ Several lines on one scale: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 - type: custom:poster-card-pro
   name: Outside
   icon: mdi:thermometer
-  hours_to_show: 12
-  poster: trend
+  kind: trend
+  visual: { hours: 12 }
   series:
     - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
     - { entity: sensor.dew_point, name: Dew point, color: teal }
@@ -291,8 +287,8 @@ Several lines on one scale: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 - type: custom:poster-card-pro
   name: Outside
   icon: mdi:thermometer
-  hours_to_show: 12
-  poster: trend
+  kind: trend
+  visual: { hours: 12 }
   series:
     - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
     - { entity: sensor.dew_point, name: Dew point, color: teal }
@@ -300,8 +296,8 @@ Several lines on one scale: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 - type: custom:poster-card-pro
   name: Outside
   icon: mdi:thermometer
-  hours_to_show: 12
-  poster: trend
+  kind: trend
+  visual: { hours: 12 }
   series:
     - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
     - { entity: sensor.dew_point, name: Dew point, color: teal }
@@ -309,8 +305,8 @@ Several lines on one scale: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 - type: custom:poster-card-pro
   name: Outside
   icon: mdi:thermometer
-  hours_to_show: 12
-  poster: trend
+  kind: trend
+  visual: { hours: 12 }
   series:
     - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
     - { entity: sensor.dew_point, name: Dew point, color: teal }
@@ -540,22 +536,22 @@ The power line: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 - type: custom:poster-card-pro
   entity: sensor.grid_power
   name: Grid
-  poster: grid
+  kind: grid
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.grid_power
   name: Grid
-  poster: grid
+  kind: grid
   grid_options: { columns: 6, rows: 4 }
 - type: custom:poster-card-pro
   entity: sensor.grid_power
   name: Grid
-  poster: grid
+  kind: grid
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.grid_power
   name: Grid
-  poster: grid
+  kind: grid
   grid_options: { columns: 8, rows: 3 }
 ```
 
@@ -571,22 +567,22 @@ The output and today's production: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 - type: custom:poster-card-pro
   entity: sensor.solar_power
   name: Solar
-  poster: solar
+  kind: solar
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.solar_power
   name: Solar
-  poster: solar
+  kind: solar
   grid_options: { columns: 6, rows: 4 }
 - type: custom:poster-card-pro
   entity: sensor.solar_power
   name: Solar
-  poster: solar
+  kind: solar
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.solar_power
   name: Solar
-  poster: solar
+  kind: solar
   grid_options: { columns: 8, rows: 3 }
 ```
 
@@ -602,22 +598,22 @@ The charge, the range and the status: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 - type: custom:poster-card-pro
   entity: sensor.ev_battery
   name: Car
-  poster: car
+  kind: car
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.ev_battery
   name: Car
-  poster: car
+  kind: car
   grid_options: { columns: 6, rows: 4 }
 - type: custom:poster-card-pro
   entity: sensor.ev_battery
   name: Car
-  poster: car
+  kind: car
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.ev_battery
   name: Car
-  poster: car
+  kind: car
   grid_options: { columns: 8, rows: 3 }
 ```
 
@@ -633,29 +629,25 @@ How long it runs and the energy of this run: 6 × 3, 6 × 4, 12 × 3 and 8 × 3.
 - type: custom:poster-card-pro
   entity: sensor.heat_pump_power
   name: Heat pump
-  poster: appliance
-  variant: heat_pump
+  kind: heat_pump
   running_above: 50
   grid_options: { columns: 6, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.heat_pump_power
   name: Heat pump
-  poster: appliance
-  variant: heat_pump
+  kind: heat_pump
   running_above: 50
   grid_options: { columns: 6, rows: 4 }
 - type: custom:poster-card-pro
   entity: sensor.heat_pump_power
   name: Heat pump
-  poster: appliance
-  variant: heat_pump
+  kind: heat_pump
   running_above: 50
   grid_options: { columns: 12, rows: 3 }
 - type: custom:poster-card-pro
   entity: sensor.heat_pump_power
   name: Heat pump
-  poster: appliance
-  variant: heat_pump
+  kind: heat_pump
   running_above: 50
   grid_options: { columns: 8, rows: 3 }
 ```

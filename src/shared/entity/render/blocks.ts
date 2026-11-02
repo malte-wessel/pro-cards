@@ -86,6 +86,32 @@ export const blockEl = (
 ): HTMLElement | null => {
   if (ent.visual === "bar") return barEl(m);
   if (ent.visual === "gauge") return gaugeEl(ctx, ent, m);
-  if (HISTORY_VISUALS.has(ent.visual)) return plotEl(ctx, ent, idx, m);
+  if (HISTORY_VISUALS.has(ent.visual)) {
+    // a plot of its own (the v3 cards' visual): its window, bucket, smoothing, axes and entity
+    const p = ent.plot;
+    if (!p) return plotEl(ctx, ent, idx, m);
+    // another entity's history in its own unit and precision: its state, not the card's
+    if (p.src) {
+      const st = ctx.hass?.states[p.src];
+      return plotEl(
+        ctx,
+        { ...ent, entity: p.src, unit: null, decimals: null },
+        idx,
+        { ...m, st },
+        {
+          hours: p.hours,
+          bucketMin: p.bucket,
+          smoothMin: p.smoothing,
+          axis: p.axis,
+        },
+      );
+    }
+    return plotEl(ctx, ent, idx, m, {
+      hours: p.hours,
+      bucketMin: p.bucket,
+      smoothMin: p.smoothing,
+      axis: p.axis,
+    });
+  }
   return null;
 };
