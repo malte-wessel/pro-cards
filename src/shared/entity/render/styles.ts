@@ -49,9 +49,9 @@ export const STYLE_TILE = `
   .row.tile > .gauge { align-self: center; margin-top: auto; }
   .row.tile:has(> .gauge) > :last-child { margin-bottom: auto; }
 `;
-// the poster's texts: the name in small capitals and the large value's light weight
+// the poster's texts: the name in small capitals, the large value in the regular weight
 const POSTER_NAME = `${type(11, 16)} font-weight: ${fw("medium")}; letter-spacing: .1em; text-transform: uppercase; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;`;
-const POSTER_VALUE = `font-weight: ${fw("light")}; letter-spacing: -.02em;`;
+const POSTER_VALUE = `font-weight: ${fw("normal")}; letter-spacing: -.02em;`;
 // a poster (the poster card's row; fill.ts: fillPosterSlots): the icon and the corner's badges at
 // the top, the name, the big value and what follows them anchored to the bottom of whatever height
 // it is given (unlike a tile, which centres); its natural height is its content's. A sparkline or

@@ -65,7 +65,7 @@
   .row.tile:has(> .gauge) { flex: 1 1 auto; }
   .row.tile > .gauge { align-self: center; margin-top: auto; }
   .row.tile:has(> .gauge) > :last-child { margin-bottom: auto; }
-`,L1=`${Z(11,16)} font-weight: ${q("medium")}; letter-spacing: .1em; text-transform: uppercase; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;`,z1=`font-weight: ${q("light")}; letter-spacing: -.02em;`,A1=`
+`,L1=`${Z(11,16)} font-weight: ${q("medium")}; letter-spacing: .1em; text-transform: uppercase; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;`,z1=`font-weight: ${q("normal")}; letter-spacing: -.02em;`,A1=`
   ha-card.layout-poster .body { flex: 1 1 auto; min-height: 0; padding: 16px; }
   /* the top line keeps the top (its auto margin takes the room); with no room left, the content
      packs to the bottom and overflows at the top */
