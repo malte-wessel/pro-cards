@@ -7,3 +7,5 @@ test-results-docs/
 playwright-report/
 coverage/
 tests/harness/dist/
+test/ha/world/
+__pycache__/

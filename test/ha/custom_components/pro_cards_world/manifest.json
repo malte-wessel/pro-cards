@@ -1,0 +1,10 @@
+{
+  "domain": "pro_cards_world",
+  "name": "Pro Cards demo world",
+  "codeowners": [],
+  "dependencies": ["recorder"],
+  "documentation": "https://github.com/malte-wessel/pro-cards",
+  "iot_class": "local_push",
+  "requirements": [],
+  "version": "1.0.0"
+}

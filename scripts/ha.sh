@@ -24,11 +24,14 @@ case "$1" in
 esac
 if ! docker info >/dev/null 2>&1; then echo "Docker is not running." >&2; exit 2; fi
 [ -f dist/pro-cards.js ] || npm run build >/dev/null
+node scripts/ha-world.ts
 docker rm -f "$NAME" >/dev/null 2>&1 || true
 docker run -d --name "$NAME" -p 8123:8123 -e TZ=Europe/Berlin \
   -v "$VOLUME":/config \
   -v "$PWD/dist":/config/www/pro-cards:ro \
   -v "$PWD/test/ha":/config/test \
+  -v "$PWD/test/ha/custom_components":/config/custom_components:ro \
+  -v "$PWD/test/ha/world/www":/config/www/world:ro \
   -v "$PWD/test/ha/configuration.yaml":/config/configuration.yaml \
   "ghcr.io/home-assistant/home-assistant:$HA_VERSION" >/dev/null
 echo "Home Assistant $HA_VERSION is starting…"

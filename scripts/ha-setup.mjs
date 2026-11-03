@@ -1,6 +1,9 @@
 // First-time setup of the dev Home Assistant, idempotent: finishes onboarding with the dev user and
-// registers the bundle (dist/, mounted at /config/www/pro-cards) as a dashboard resource, through
-// the same REST and websocket calls the frontend uses. Node 22, no deps.
+// registers the bundle (dist/, mounted at /config/www/pro-cards) as a dashboard resource and
+// writes the showcase dashboards, through the same REST and websocket calls the frontend uses.
+// Node 22, no deps.
+import { readFile } from "node:fs/promises";
+
 const BASE = process.env.HA_URL ?? "http://localhost:8123";
 const USERNAME = process.env.HASS_USERNAME ?? "dev";
 const PASSWORD = process.env.HASS_PASSWORD ?? "dev";
@@ -125,7 +128,53 @@ async function ensureResource(token) {
   c.close();
 }
 
+// one dashboard per showcase page (test/ha/world/dashboards.json, from scripts/ha-world.ts),
+// written again on every start so it follows the docs
+async function ensureShowcases(token) {
+  const file = new URL("../test/ha/world/dashboards.json", import.meta.url);
+  const showcases = JSON.parse(await readFile(file, "utf8"));
+  const c = await connect(token);
+  const have = new Set((await c.send({ type: "lovelace/dashboards/list" })).map((d) => d.url_path));
+  for (const d of showcases) {
+    if (!have.has(d.url_path))
+      await c.send({
+        type: "lovelace/dashboards/create",
+        url_path: d.url_path,
+        title: d.title,
+        icon: "mdi:star-outline",
+        mode: "storage",
+        show_in_sidebar: true,
+        require_admin: false,
+      });
+    await c.send({ type: "lovelace/config/save", url_path: d.url_path, config: d.config });
+  }
+  console.log(`showcase dashboards: ${showcases.map((d) => d.url_path).join(", ")}`);
+  c.close();
+}
+
+// the demo world's entities under the ids the docs use: one that came second to another
+// integration's (the demo's garage door) takes its id, the other one moves to `<id>_<platform>`
+async function ensureWorldIds(token) {
+  const c = await connect(token);
+  const entries = await c.send({ type: "config/entity_registry/list" });
+  const byId = new Map(entries.map((e) => [e.entity_id, e]));
+  const rename = (from, to) =>
+    c.send({ type: "config/entity_registry/update", entity_id: from, new_entity_id: to });
+  for (const e of entries) {
+    if (e.platform !== "pro_cards_world") continue;
+    const want = e.unique_id.replace(/^pro_cards_world_/, "");
+    if (e.entity_id === want) continue;
+    const holder = byId.get(want);
+    if (holder) await rename(want, `${want}_${holder.platform}`);
+    await rename(e.entity_id, want);
+    console.log(`entity ${want}: taken from ${holder?.platform ?? "nobody"}`);
+  }
+  c.close();
+}
+
 const onboarded = await onboard();
 const token = onboarded ?? (await login());
 await ensureResource(token);
+await ensureWorldIds(token);
+await ensureShowcases(token);
 console.log(`ready: ${BASE}  (user ${USERNAME} / ${PASSWORD})`);

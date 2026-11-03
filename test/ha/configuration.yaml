@@ -14,6 +14,12 @@ homeassistant:
   time_zone: Europe/Berlin
   currency: EUR
   country: DE
+  # the docs' demo home: helpers, scenes, the script, the group and the people (scripts/ha-world.ts)
+  packages:
+    world: !include test/world/package.yaml
+
+# the rest of the demo home as real entities (test/ha/custom_components/pro_cards_world)
+pro_cards_world:
 
 demo:
 
