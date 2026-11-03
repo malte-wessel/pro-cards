@@ -498,6 +498,22 @@ export const kindConfigOf = (k: KindItem) => {
   };
 };
 
+// the domains whose icon toggles them by default on a tile, as on Home Assistant's tile (its DOMAINS_TOGGLE),
+// and those it presses (a toggle runs them: actionServiceFor)
+export const TILE_ICON_TOGGLES: ReadonlySet<string> = new Set([
+  "fan",
+  "input_boolean",
+  "light",
+  "switch",
+  "group",
+  "automation",
+  "humidifier",
+  "valve",
+  "button",
+  "input_button",
+  "scene",
+]);
+
 // a badge that names no style or size: an outline pill, small; the status badge: a tag
 const BADGE: { style: BadgeStyle; size: BadgeSize } = { style: "outline", size: "s" };
 const STATUS: { style: BadgeStyle; size: BadgeSize } = { style: "tag", size: "s" };

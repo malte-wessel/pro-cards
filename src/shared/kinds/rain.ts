@@ -39,8 +39,9 @@ export const RAIN: Kind = {
         needsKey: true,
       },
     },
-    { key: "wind" },
-    { key: "direction" },
+    { key: "wind", accepts: [{ domains: ["sensor"], deviceClasses: ["wind_speed"] }] },
+    // a direction sensor often has no device class: any sensor
+    { key: "direction", accepts: [{ domains: ["sensor"] }] },
   ],
   slots: (c) => {
     const chip = nowOf(c).chip;

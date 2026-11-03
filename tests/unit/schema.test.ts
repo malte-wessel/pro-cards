@@ -1,59 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync } from "node:fs";
 import yaml from "js-yaml";
 import { makeValidator } from "../../scripts/schema-validator.ts";
+import { docExamples, walk } from "./docs-examples.ts";
 import { PRESETS } from "../../docs/.vitepress/theme/presets.ts";
 import { normalizeLayoutConfig } from "../../src/layout/config.ts";
 import { normalizeSwipeConfig } from "../../src/swipe/config.ts";
 
 const validate = makeValidator();
-const walk = (d: string): string[] =>
-  readdirSync(d).flatMap((f) => {
-    const p = join(d, f);
-    return statSync(p).isDirectory()
-      ? f.startsWith(".")
-        ? []
-        : walk(p)
-      : p.endsWith(".md")
-        ? [p]
-        : [];
-  });
-
-// Home Assistant's own cards the docs shim has: not ours to validate
-const CORE = new Set(["heading", "energy-date-selection"]);
-const core = (c: unknown) => CORE.has(String((c as { type?: unknown } | null)?.type));
-// every card config the docs site renders: ::: live fences, DashboardGrid sections, the home page embeds DashboardGrids too,
-// the home hero's backdrop (`hero.dashboard` in the frontmatter) and its feature rows (`feature_rows`)
-const docExamples = () => {
-  const out: { file: string; cfg: unknown }[] = [];
-  for (const file of walk("docs")) {
-    const md = readFileSync(file, "utf8");
-    const front = /^---\n([\s\S]*?)\n---/.exec(md);
-    const fm = front
-      ? (yaml.load(front[1]) as { hero?: { dashboard?: unknown }; feature_rows?: unknown } | null)
-      : null;
-    if (Array.isArray(fm?.hero?.dashboard))
-      for (const s of fm.hero.dashboard as { cards?: unknown[] }[])
-        for (const c of s.cards || []) if (!core(c)) out.push({ file, cfg: c });
-    if (Array.isArray(fm?.feature_rows))
-      for (const t of fm.feature_rows as { cards?: unknown[] }[])
-        for (const c of t.cards || []) if (!core(c)) out.push({ file, cfg: c });
-    for (const m of md.matchAll(/^::: live[^\n]*\n\n?```yaml\n([\s\S]*?)```/gm)) {
-      const doc = yaml.load(m[1]);
-      for (const c of Array.isArray(doc) ? doc : [doc]) if (!core(c)) out.push({ file, cfg: c });
-    }
-    for (const m of md.matchAll(/<DashboardGrid b64="([A-Za-z0-9+/=]+)"/g)) {
-      const sections = yaml.load(Buffer.from(m[1], "base64").toString("utf8")) as {
-        cards?: { type?: string }[];
-      }[];
-      for (const s of sections)
-        for (const c of s.cards || []) if (!core(c)) out.push({ file, cfg: c });
-    }
-  }
-  return out;
-};
-
 describe("card config schemas", () => {
   it("accept every example on the docs site", () => {
     const ex = docExamples();

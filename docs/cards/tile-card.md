@@ -123,6 +123,10 @@ The tile card takes over the [entity card](/cards/entity-card)'s tile. Most of i
 
 The old keys stop the card with an error that names the new one.
 
+## The visual editor
+
+Home Assistant's card editor shows a form for the tile: the entity and its kind at the top, then sections for the content, the icon and the visual, the controls, the other entities the kind reads, the status and the badges, the rules, the interactions and the layout. It offers only what applies to the kind: a light's switch and glow, a wind sensor's animation and its direction and gust sensors. A field left alone keeps the kind's default and writes nothing to the YAML. Try it in the [Playground](/playground), or with **Edit** under any example.
+
 ## Reference
 
 ### Card options

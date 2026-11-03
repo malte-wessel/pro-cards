@@ -2,6 +2,8 @@
 // ha-state-icon. The icons are built as Home Assistant builds them: an unstyled ha-state-icon
 // around an inline ha-icon around an ha-svg-icon that is inline-flex and aligned to the middle of
 // the text line, so a card that leaves a line box around its icon shows the same offset here.
+import { defineEditors } from "./editors.ts";
+import { defineForm } from "./form.ts";
 import type { HassEntity, HomeAssistant } from "../../../../src/shared/ha.ts";
 import { conditionIcon } from "../../../../src/shared/weather/conditions.ts";
 import { defineHuiElements } from "./hui-card.ts";
@@ -220,5 +222,8 @@ export const defineElements = () => {
   if (!customElements.get("ha-card")) customElements.define("ha-card", HaCard);
   // the wrapper the layout card hosts its cards in
   defineHuiElements();
+  // the cards' editors: Home Assistant's form, a card's editor and the card picker
+  defineForm();
+  defineEditors();
   loadMdi();
 };

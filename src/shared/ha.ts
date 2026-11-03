@@ -163,6 +163,10 @@ export interface CardHelpers {
 export interface HaFormSchema {
   name: string;
   selector?: Record<string, unknown>;
+  // a select that always has a value (no clear button)
+  required?: boolean;
+  // a `constant` row's text, after its label
+  value?: string;
   type?: string;
   schema?: HaFormSchema[];
   title?: string;

@@ -11,6 +11,7 @@ import {
   kindConfigOf,
   normalizeCorner,
   normalizeKindItem,
+  TILE_ICON_TOGGLES,
   type KindConfig,
   type RawKindCardConfig,
 } from "../shared/kinds/config.ts";
@@ -45,22 +46,6 @@ export const parseIconBadge = (v: unknown): IconBadgeConfig => {
   throw new Error(`${CARD_TYPE}: icon: { badge } takes auto, false or { icon, color }`);
 };
 
-// the domains whose icon toggles them by default, as on Home Assistant's tile (its DOMAINS_TOGGLE),
-// and those it presses (a toggle runs them: actionServiceFor)
-const ICON_TOGGLES: ReadonlySet<string> = new Set([
-  "fan",
-  "input_boolean",
-  "light",
-  "switch",
-  "group",
-  "automation",
-  "humidifier",
-  "valve",
-  "button",
-  "input_button",
-  "scene",
-]);
-
 // the entity card's visuals the tile draws no more, and what takes their place
 const GONE: Record<string, string> = {
   icon: "visual: icon is the tile's own: leave it out",
@@ -82,7 +67,7 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
     iconTap === undefined &&
     !k.iconActions.tap &&
     k.entity &&
-    ICON_TOGGLES.has(domainOf(k.entity))
+    TILE_ICON_TOGGLES.has(domainOf(k.entity))
   )
     k.iconActions.tap = { action: "toggle" };
   // a kind's controls below the line need a second row: only those at the end of the line are

@@ -503,6 +503,10 @@ cards:
 
 In a section the layout card takes the full width of the section, whatever its `column_span`, and sizes to its cards (`rows: auto`); a fixed row count (`grid_options: { rows: 6 }`) gives it a height its grid fills. Its `getCardSize`, which masonry views use, is an estimate from its cards' sizes: the tallest card of each row for a grid (spans not counted), the tallest column for masonry. As a panel view's only card it fills the view, and the cards inside keep their borders, as in Home Assistant's stacks (the panel view takes the border of its one card away). See [Sizing](/guide/sizing).
 
+## The visual editor
+
+Home Assistant's card editor shows the layout's options and its breakpoints, then a tab for each card. The selected card is edited in its own editor: a tile's or a poster's form, Home Assistant's for its own cards, YAML for the others. The buttons beside the tabs move, duplicate and delete it, and **+** adds one from the card picker. Under the selected card, **Place in the layout** sets its span, the column it starts in, its order and how it sits in its row; a place that changes with the width stays in YAML. Try it in the [Playground](/playground).
+
 ## Reference
 
 ### Card options

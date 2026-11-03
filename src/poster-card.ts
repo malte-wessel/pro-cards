@@ -15,7 +15,7 @@
  *   control: slider | { type, position, attribute, step, options, confirm }   # the kind's, or this
  *   tap_action / hold_action / double_tap_action / hover
  */
-import { registerCard } from "./shared/card.ts";
+import { defineElement, registerCard } from "./shared/card.ts";
 import { overflows } from "./shared/entity/base.ts";
 import type { EntityCardConfig, EntityItem } from "./shared/entity/config.ts";
 import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
@@ -24,6 +24,7 @@ import { posterParts, secondaryEl } from "./shared/entity/render/lead.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { hideHover } from "./shared/hover.ts";
 import { KindCardBase } from "./shared/kinds/card.ts";
+import { KindCardEditor } from "./shared/kinds/editor.ts";
 import { fillStatus, imageUrl, statusText } from "./shared/kinds/render.ts";
 import { normalizePosterConfig, type PosterConfig } from "./poster/config.ts";
 import { CARD_TYPE } from "./poster/constants.ts";
@@ -33,6 +34,9 @@ export class PosterCard extends KindCardBase {
   static cardType = CARD_TYPE;
   static thing = "poster" as const;
   static leadSize = 40;
+  static getConfigElement() {
+    return document.createElement(`${CARD_TYPE}-editor`);
+  }
   static getStubConfig(hass: HomeAssistant | undefined, entities?: string[]) {
     return { entity: (entities || [])[0] || Object.keys(hass?.states || {})[0] || "" };
   }
@@ -293,3 +297,8 @@ registerCard(PosterCard, {
   description:
     "One entity as a poster drawn the way its poster type says: weather, wind, rain, sun, media, covers, locks, lights and more",
 });
+
+class PosterCardEditor extends KindCardEditor {
+  static thing = "poster" as const;
+}
+defineElement(`${CARD_TYPE}-editor`, PosterCardEditor);

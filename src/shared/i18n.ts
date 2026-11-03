@@ -39,6 +39,9 @@ export const stringsFor = (hass: HomeAssistant | null | undefined): Translation 
   return LANGUAGES[tag] ?? LANGUAGES[tag.split("-")[0]] ?? en;
 };
 
+// whether `key` is one of the strings (a key built from a value, such as a field's helper)
+export const hasString = (key: string): key is StringKey => key in en;
+
 // the text of `key` for the user's language, with `{name}` placeholders filled from `vars`
 export const t = (
   hass: HomeAssistant | null | undefined,

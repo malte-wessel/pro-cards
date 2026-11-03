@@ -27,10 +27,18 @@ export interface KindRule {
 
 // an entity the kind reads besides the card's own: set on the card (an id, or false for none),
 // else found on the same device, else (on a weather entity) one of its attributes
-interface InputDef {
+// entities of these domains (and, where given, these device classes)
+export interface InputFilter {
+  domains: readonly string[];
+  deviceClasses?: readonly string[];
+}
+export interface InputDef {
   key: string;
   find?: Finder;
   weather?: string;
+  // what the editor's entity picker lists for it, any of these: what the kind takes, wider than
+  // what it looks for on the device (`find`, else any sensor)
+  accepts?: readonly InputFilter[];
 }
 
 // an item the kind reads and its model now

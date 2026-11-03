@@ -76,14 +76,14 @@ export type Written<P> = P | false | undefined;
 // the options each thing takes
 // what every icon takes, whatever it draws: its own actions and the badge on it
 const ICON_ALL = ["tap_action", "hold_action", "double_tap_action", "badge"];
-const ICON_OPTIONS: Record<IconThing, readonly string[]> = {
+export const ICON_OPTIONS: Record<IconThing, readonly string[]> = {
   icon: ["name", "ring", "style", ...ICON_ALL],
   // its name: the icon while there is no picture
   image: ["src", "ring", "style", "name", ...ICON_ALL],
   flow: ["variant", "style", ...ICON_ALL],
 };
 const PLOT = ["hours", "bucket", "src"];
-const VISUAL_OPTIONS: Record<VisualThing, readonly string[]> = {
+export const VISUAL_OPTIONS: Record<VisualThing, readonly string[]> = {
   glow: [],
   image: ["src", "opacity", "tint", "blur"],
   flow: ["variant"],

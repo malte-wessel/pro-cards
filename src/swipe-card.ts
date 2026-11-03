@@ -19,13 +19,14 @@
  *     - type: custom:entity-card-pro
  *       entity: sensor.outdoor_temperature
  */
-import { registerCard, syncKeepHeight } from "./shared/card.ts";
+import { defineElement, registerCard, syncKeepHeight } from "./shared/card.ts";
 import { applyStyle, CardsBase, placeNodes, type Style } from "./shared/cards/base.ts";
 import { resolveAt } from "./shared/cards/breakpoints.ts";
 import { themeGap } from "./shared/cards/units.ts";
 import { depsChanged } from "./shared/deps.ts";
 import { langOf } from "./shared/format.ts";
 import type { CardConfigBase } from "./shared/ha.ts";
+import { SwipeCardEditor } from "./swipe/editor.ts";
 import { t } from "./shared/i18n.ts";
 import {
   CARD_TYPE,
@@ -54,6 +55,9 @@ export class SwipeCard extends CardsBase {
   _measured = new WeakMap<object, readonly unknown[]>();
   _scrollFrame = 0;
 
+  static getConfigElement() {
+    return document.createElement(`${CARD_TYPE}-editor`);
+  }
   static getStubConfig() {
     return { per_page: 1.15, cards: [] };
   }
@@ -250,3 +254,5 @@ registerCard(SwipeCard, {
   name: "Swipe Card Pro",
   description: "Any cards side by side in a strip you swipe through, with dots",
 });
+
+defineElement(`${CARD_TYPE}-editor`, SwipeCardEditor);

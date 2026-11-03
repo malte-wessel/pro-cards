@@ -1,4 +1,34 @@
 export const PRESETS: Record<string, string> = {
+  "Tile Card Pro": `type: custom:tile-card-pro
+entity: light.living_room
+`,
+  "Poster Card Pro": `type: custom:poster-card-pro
+entity: sensor.wind_speed
+name: Wind
+visual: { type: flow, variant: lines }
+`,
+  "Layout Card Pro": `type: custom:layout-card-pro
+columns: 2
+cards:
+  - type: custom:poster-card-pro
+    entity: weather.home
+    name: Outside
+  - type: custom:poster-card-pro
+    entity: climate.living_room
+  - type: custom:tile-card-pro
+    entity: light.kitchen
+    view_layout: { span: 2 }
+`,
+  "Swipe Card Pro": `type: custom:swipe-card-pro
+per_page: 1.5
+cards:
+  - type: custom:poster-card-pro
+    entity: light.living_room
+  - type: custom:poster-card-pro
+    entity: fan.living_room
+  - type: custom:poster-card-pro
+    entity: media_player.living_room_speaker
+`,
   "Tile with rules": `type: custom:entity-card-pro
 entity: sensor.living_room_temperature
 name: Living room

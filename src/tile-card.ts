@@ -17,7 +17,7 @@
  *   vertical: true                         # the icon on top, the texts centred under it
  *   show_name / show_value / tap_action / hold_action / double_tap_action / hover
  */
-import { registerCard } from "./shared/card.ts";
+import { defineElement, registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import type { EntityItem, ValueSrc } from "./shared/entity/config.ts";
@@ -27,6 +27,7 @@ import { tplOf, type EntityModel, type RenderCtx } from "./shared/entity/model.t
 import { bindKeptLeadTap, leadTapState } from "./shared/entity/render/controls.ts";
 import { fillTileSlots, tileCorner, tileLead, tileValueText } from "./shared/entity/render/fill.ts";
 import { KindCardBase } from "./shared/kinds/card.ts";
+import { KindCardEditor } from "./shared/kinds/editor.ts";
 import { div } from "./shared/kinds/dom.ts";
 import { stateText } from "./shared/kinds/domains.ts";
 import { BELOW, resolvePlaces } from "./shared/kinds/places.ts";
@@ -42,6 +43,9 @@ export class TileCard extends KindCardBase {
   static cardType = CARD_TYPE;
   static thing = "tile" as const;
   static leadSize = 36;
+  static getConfigElement() {
+    return document.createElement(`${CARD_TYPE}-editor`);
+  }
   static getStubConfig(hass: HomeAssistant | undefined, entities?: string[]) {
     const e =
       (entities || []).find(
@@ -334,3 +338,8 @@ registerCard(TileCard, {
   description:
     "One entity as a tile drawn the way its poster type says: an animated icon, its value and status on one line, controls at its end",
 });
+
+class TileCardEditor extends KindCardEditor {
+  static thing = "tile" as const;
+}
+defineElement(`${CARD_TYPE}-editor`, TileCardEditor);

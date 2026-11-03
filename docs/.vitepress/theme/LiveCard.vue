@@ -3,7 +3,9 @@ import { ref, watch, onMounted, onBeforeUnmount, computed, type PropType } from 
 import yamlLib from "js-yaml";
 import { mountGrid, loadRuntime, type MountHandle } from "./mount.ts";
 import { THEMES, useExampleTheme, nextMode, type Mode, type ThemeId } from "./exampleTheme.ts";
+import { withBase } from "vitepress";
 import type { CardConfigBase } from "../../../src/shared/ha.ts";
+import { dumpYaml, encodeEdit, hasEditable } from "./editable.ts";
 
 const props = defineProps({
   yaml: { type: String, default: "" },
@@ -12,7 +14,8 @@ const props = defineProps({
   width: { type: String, default: "" },   // px number, "full", or css length
   mode: { type: String as PropType<Mode>, default: "auto" }, // auto | light | dark
   theme: { type: String as PropType<ThemeId | "">, default: "" }, // pin a theme; "" follows the site-wide choice
-  grid: { type: Boolean, default: false }, // keep each card's own grid_options width instead of full width
+    grid: { type: Boolean, default: false }, // keep each card's own grid_options width instead of full width
+  edit: { type: Boolean, default: true }, // an "Edit" link to the Playground for a card it edits
 });
 
 const host = ref<HTMLDivElement | null>(null);
@@ -63,6 +66,18 @@ onMounted(() => { loadRuntime().then(render); });
 onBeforeUnmount(() => handle?.dispose?.());
 watch(source, () => { render(); });
 const showYaml = ref(false);
+// an example with a card the Playground edits: its link there
+const editHref = computed(() => {
+  if (!props.edit) return "";
+  try {
+    const doc = parse(source.value);
+    if (!hasEditable(doc)) return "";
+    const text = typeof source.value === "string" ? source.value : dumpYaml(doc);
+    return withBase(`/playground#edit=${encodeEdit(text)}`);
+  } catch {
+    return "";
+  }
+});
 const cycle = () => { mode.value = nextMode(mode.value); };
 </script>
 
@@ -81,6 +96,13 @@ const cycle = () => { mode.value = nextMode(mode.value); };
       >
         {{ showYaml ? "Hide YAML" : "Show YAML" }}
       </button>
+      <a
+        v-if="editHref"
+        class="edit-link"
+        :href="editHref"
+        title="Open this example in the visual editor"
+        >Edit</a
+      >
       <select v-if="!props.theme" v-model="siteTheme" title="Home Assistant theme of every example">
         <option v-for="t in THEMES" :key="t.id" :value="t.id">{{ t.label }}</option>
       </select>

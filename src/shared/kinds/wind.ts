@@ -35,6 +35,8 @@ export const WIND: Kind = {
     {
       key: "direction",
       find: { domains: ["sensor"], deviceClasses: ["wind_direction"], unit: "°" },
+      // a direction sensor often has no device class: any sensor
+      accepts: [{ domains: ["sensor"] }],
       weather: "wind_bearing",
     },
     {

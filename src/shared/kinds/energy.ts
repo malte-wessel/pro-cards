@@ -18,6 +18,9 @@ import { div, wordValue } from "./dom.ts";
 import { BATTERY_RULES } from "./rules.ts";
 import type { Kind, KindCtx, Read } from "./types.ts";
 
+// a power sensor, for an input the editor lists
+const POWER = [{ domains: ["sensor"], deviceClasses: ["power"] }] as const;
+
 // below this a flow counts as none (sensor noise)
 const IDLE_W = 10;
 const watts = (r: Read | null) => (r ? wattsOf(r.ent, r.m) : null);
@@ -64,7 +67,10 @@ export const GRID: Kind = {
   // without an entity, the import meter is what a tap opens
   main: (entity, _raw, opts) =>
     entity || typeof opts.import !== "string" ? {} : { entity: opts.import },
-  inputs: [{ key: "import" }, { key: "export" }],
+  inputs: [
+    { key: "import", accepts: POWER },
+    { key: "export", accepts: POWER },
+  ],
   color: (c) => {
     const w = gridW(c);
     return w === null || Math.abs(w) < IDLE_W ? null : w > 0 ? COLORS.gridIn : COLORS.gridOut;
@@ -197,8 +203,8 @@ export const BATTERY: Kind = {
   draws: ["segments"],
   inputs: [
     { key: "power", find: { domains: ["sensor"], deviceClasses: ["power"] } },
-    { key: "charge" },
-    { key: "discharge" },
+    { key: "charge", accepts: POWER },
+    { key: "discharge", accepts: POWER },
   ],
   status: (c) => {
     if (c.m.look.label || !isHome(c)) return c.m.look.label;
@@ -240,6 +246,11 @@ export const CAR: Kind = {
     {
       key: "charging",
       find: { domains: ["binary_sensor"], deviceClasses: ["battery_charging"] },
+      // or a wallbox's power: charging above 0
+      accepts: [
+        { domains: ["binary_sensor"], deviceClasses: ["battery_charging"] },
+        { domains: ["sensor"], deviceClasses: ["power"] },
+      ],
     },
     { key: "location", find: { domains: ["device_tracker"] } },
   ],

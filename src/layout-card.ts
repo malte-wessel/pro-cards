@@ -16,9 +16,10 @@
  *       entity: sensor.outdoor_temperature
  *       view_layout: { span: { 1: 1, 2: 2 } }
  */
-import { syncKeepHeight, registerCard } from "./shared/card.ts";
+import { defineElement, syncKeepHeight, registerCard } from "./shared/card.ts";
 import { applyStyle, CardsBase, placeNodes } from "./shared/cards/base.ts";
 import type { CardConfigBase } from "./shared/ha.ts";
+import { LayoutCardEditor } from "./layout/editor.ts";
 import { resolveOptions } from "./layout/breakpoints.ts";
 import { CARD_TYPE, normalizeLayoutConfig, type LayoutConfig } from "./layout/config.ts";
 import { cardSize, planLayout, type KidState, type Plan } from "./layout/place.ts";
@@ -29,6 +30,9 @@ export class LayoutCard extends CardsBase {
 
   _cfg?: LayoutConfig;
 
+  static getConfigElement() {
+    return document.createElement(`${CARD_TYPE}-editor`);
+  }
   static getStubConfig() {
     return { layout: "grid", columns: 2, cards: [] };
   }
@@ -109,3 +113,5 @@ registerCard(LayoutCard, {
   name: "Layout Card Pro",
   description: "Any cards in a grid or masonry, with breakpoints, spacing and spans",
 });
+
+defineElement(`${CARD_TYPE}-editor`, LayoutCardEditor);

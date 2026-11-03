@@ -222,6 +222,10 @@ A slider, a plot you scrub and similar controls take a sideways drag for themsel
 
 In a section the swipe card takes the full width of the section and sizes to its cards (`rows: auto`). Its `getCardSize` is the tallest card's; unfolded, the tallest card of each row. See [Sizing](/guide/sizing).
 
+## The visual editor
+
+Home Assistant's card editor shows the swipe card's options and its breakpoints, then a tab for each card. The selected card is edited in its own editor: a tile's or a poster's form, Home Assistant's for its own cards, YAML for the others. The buttons beside the tabs move, duplicate and delete it, and **+** adds one from the card picker. Try it in the [Playground](/playground).
+
 ## Reference
 
 ### Card options

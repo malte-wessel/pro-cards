@@ -7,7 +7,7 @@ pageClass: wide
 
 # Playground
 
-Pick a preset or paste your own YAML. Only entities of the simulated home exist here, see the [entity list](#entities) below.
+Pick a preset or paste your own YAML. Tiles, posters, layout and swipe cards open in their visual editor, as in Home Assistant's card editor; **YAML** shows the text. **Edit** under an example on the other pages opens it here. Only entities of the simulated home exist here, see the [entity list](#entities) below.
 
 <ClientOnly><Playground /></ClientOnly>
 
