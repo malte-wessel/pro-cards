@@ -105,7 +105,7 @@ While its entity is unavailable, a poster draws a dash for the value, its status
 
 ## The visual editor
 
-Home Assistant's card editor shows a form for the poster: the entity and its kind at the top, then sections for the content, the icon and the visual, the controls, the other entities the kind reads, the status and the badges, the rules and the interactions. It offers only what applies to the kind: a thermostat's stepper and glow, a wind sensor's animation and its direction and gust sensors. A field left alone keeps the kind's default and writes nothing to the YAML. Try it in the [Playground](/playground), or with **Edit** under any example.
+Home Assistant's card editor shows a form for the poster: the entity and its kind at the top, then sections for the content, the icon and the visual, the controls, the other entities the kind reads, the status and the badges, the rules and the interactions. It offers only what applies to the kind: a thermostat's stepper and glow, a wind sensor's animation and its direction and gust sensors. A field left alone keeps the kind's default and writes nothing to the YAML. The rules list shows the kind's own while the card has none; changing one copies them all into the card (their thresholds in the sensor's unit), and **Predefined** goes back to the kind's. Try it in the [Playground](/playground), or with **Edit** under any example.
 
 ## Reference
 

@@ -1,4 +1,7 @@
 import { describe, it, expect } from "vitest";
+import { t, type StringKey } from "../../../../src/shared/i18n.ts";
+import { WIND } from "../../../../src/shared/kinds/wind.ts";
+import { RAIN } from "../../../../src/shared/kinds/rain.ts";
 import { normalizePosterConfig } from "../../../../src/poster/config.ts";
 import { modelOf } from "../../../../src/shared/entity/model.ts";
 import { mainColor } from "../../../../src/shared/kinds/art.ts";
@@ -10,6 +13,7 @@ import {
   RAIN_RULES,
   toRule,
   WEATHER_RULES,
+  writtenRules,
   WIND_RULES,
 } from "../../../../src/shared/kinds/rules.ts";
 import type { KindRule } from "../../../../src/shared/kinds/types.ts";
@@ -112,5 +116,32 @@ describe("cover art colour", () => {
       ...px(40, [120, 120, 120, 255]),
     ]);
     expect(mainColor(mixed)).toMatch(/^hsl\(240,/);
+  });
+});
+
+describe("a kind's rules as a card writes them", () => {
+  const en = (key: StringKey) => t(undefined, key);
+  it("carry the labels as status, in the kind's unit where the sensor has it", () => {
+    const rules = writtenRules(WIND, en, "km/h");
+    expect(rules[0]).toEqual({ below: 5, color: "blue-grey", status: "Calm" });
+    expect(rules.at(-1)).toEqual({ above: 50, color: "red", status: "Stormy", tint_card: true });
+  });
+
+  it("convert the thresholds into the sensor's unit", () => {
+    const below = (unit: string | null) =>
+      writtenRules(WIND, en, unit).map((r) => r.below ?? r.above);
+    expect(below("m/s")).toEqual([1.39, 5.56, 9.72, 13.9, 13.9]);
+    expect(below("mph")[0]).toBe(3.11);
+    // Beaufort is a scale: its force for the speed
+    expect(below("Beaufort")[0]).toBeCloseTo(1.4, 2);
+    // a unit not known, or none: as written
+    expect(below("furlongs/fortnight")).toEqual(below("km/h"));
+    expect(below(null)).toEqual(below("km/h"));
+    expect(writtenRules(RAIN, en, "in/h")[0].below).toBe(0.00394);
+  });
+
+  it("speak the user's language", () => {
+    const de = { language: "de", locale: { language: "de" } } as unknown as HomeAssistant;
+    expect(writtenRules(WIND, (k) => t(de, k), "km/h")[0].status).toBe(t(de, "kind.wind.calm"));
   });
 });

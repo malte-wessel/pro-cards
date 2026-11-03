@@ -45,7 +45,7 @@ describe("the editor's sections", () => {
       "Icon and visual",
       "Controls",
       "Status and badges",
-      "Colour by value",
+      "Rules",
       "Interactions",
     ]);
     // a tile's badges sit beside its texts, and it has a layout
@@ -383,12 +383,31 @@ describe("the editor's status and badges", () => {
 });
 
 describe("the editor's rules", () => {
-  it("say which rules the kind brings while the card has none", () => {
-    const wind = field(schemaOf("poster", { entity: "sensor.wind_speed" }), "kind_rules");
-    expect(wind?.type).toBe("constant");
-    expect(String(wind?.value)).toMatch(/\(> \d+ km\/h\)/);
-    expect(field(schemaOf("poster", LIGHT), "kind_rules")).toBeUndefined();
-    expect(sectionOf(schemaOf("poster", LIGHT), "Colour by value")).toEqual(["rules"]);
+  it("pick the kind's or the card's own, where the kind has some", () => {
+    const wind = schemaOf("poster", { entity: "sensor.wind_speed" });
+    expect(sectionOf(wind, "Rules")).toEqual(["rules_from", "rules"]);
+    expect(options(wind, "rules_from").map((o) => o.label)).toEqual([
+      "Predefined (Wind)",
+      "Your own",
+    ]);
+    // a light has none: the list alone
+    expect(sectionOf(schemaOf("poster", LIGHT), "Rules")).toEqual(["rules"]);
+  });
+
+  it("compare in the value's unit, and pick a state of the entity", () => {
+    const fields = (cfg: Raw) =>
+      (
+        field(schemaOf("poster", cfg), "rules")?.selector as {
+          object: { fields: Record<string, { selector: Record<string, Record<string, unknown>> }> };
+        }
+      ).object.fields;
+    const temp = fields(TEMP);
+    expect(temp.above.selector.number.unit_of_measurement).toBe(
+      hass.states["sensor.living_room_temperature"].attributes.unit_of_measurement,
+    );
+    expect(temp.state.selector).toEqual({ state: { entity_id: "sensor.living_room_temperature" } });
+    // nothing to pick without an entity
+    expect(fields({ name: "Hello" }).state.selector).toEqual({ text: {} });
   });
 });
 

@@ -167,6 +167,21 @@ interface Field {
   set(v: unknown): void;
 }
 
+// the states an entity may be in, for a state picker: on and off where it switches, its options
+// (a select's, a thermostat's modes), else the one it has now
+const TOGGLES = new Set(["light", "switch", "fan", "input_boolean", "binary_sensor", "automation"]);
+const statesOf = (st: { entity_id: string; state: string; attributes: Raw } | undefined) => {
+  if (!st) return [];
+  const a = st.attributes;
+  const list = Array.isArray(a.options)
+    ? a.options
+    : Array.isArray(a.hvac_modes)
+      ? a.hvac_modes
+      : [];
+  const own = TOGGLES.has(st.entity_id.split(".")[0]) ? ["on", "off"] : [];
+  return [...new Set([st.state, ...own, ...list.map(String)])];
+};
+
 // the focused element in a shadow root (happy-dom, under the unit tests, throws where the focus
 // is in a shadow root around this one: none here, as in a browser)
 const activeIn = (root: ShadowRoot): HTMLElement | null => {
@@ -182,6 +197,8 @@ export class HaFormShim extends HTMLElement {
   computeLabel?: (s: Schema) => string;
   computeHelper?: (s: Schema) => string | undefined;
   _data: Raw = {};
+  // the datalists' numbers (their ids are unique in the form)
+  _lists = 0;
   _schema: Schema[] = [];
   _key = "";
   _fields = new Map<string, Field>();
@@ -418,6 +435,7 @@ export class HaFormShim extends HTMLElement {
         return this._entity(s, conf);
       case "attribute":
       case "icon":
+      case "state":
       case "text":
       default:
         return this._textLike(s, kind, conf);
@@ -451,6 +469,18 @@ export class HaFormShim extends HTMLElement {
     const input = document.createElement("input");
     input.type = "text";
     input.spellcheck = false;
+    // a state picker: the entity's states suggested, any text taken (as Home Assistant's)
+    let states: HTMLDataListElement | null = null;
+    if (kind === "state") {
+      states = document.createElement("datalist");
+      states.id = `states-${s.name}-${++this._lists}`;
+      input.setAttribute("list", states.id);
+      for (const v of statesOf(this.hass?.states[String(conf.entity_id ?? "")])) {
+        const o = document.createElement("option");
+        o.value = v;
+        states.appendChild(o);
+      }
+    }
     let preview: HTMLElement | null = null;
     // the placeholder: the field's default, an icon picker's own or its entity's icon
     const ownIcon = () => {
@@ -467,6 +497,10 @@ export class HaFormShim extends HTMLElement {
     }
     input.addEventListener("change", () => this._emit(name, input.value.trim() || undefined));
     let control: HTMLElement = input;
+    if (states) {
+      control = document.createElement("div");
+      control.append(input, states);
+    }
     if (preview) {
       const row = document.createElement("div");
       row.className = "row";

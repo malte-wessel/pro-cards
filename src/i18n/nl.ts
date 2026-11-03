@@ -284,6 +284,11 @@ const nl: Translation = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (herkend)",
+  "editor.card.field.rules_from": "Regelset",
+  "editor.card.rules_from.kind": "Vooraf ingesteld ({kind})",
+  "editor.card.rules_from.own": "Eigen",
+  "editor.card.help.rules_from":
+    "De regels van de soort gelden tot er een wordt gewijzigd: dan heeft de kaart eigen regels. Vooraf ingesteld zet ze terug",
   "editor.card.attribute_state": "Status",
   "editor.card.none": "Geen",
   "editor.card.control_auto": "Die van de entiteit: {controls}",
@@ -392,7 +397,7 @@ const nl: Translation = {
   "editor.card.section.controls": "Bediening",
   "editor.card.section.badges_poster": "Status en badges",
   "editor.card.section.badges_tile": "Status en badges",
-  "editor.card.section.rules": "Kleur per waarde",
+  "editor.card.section.rules": "Regels",
   "editor.card.section.actions": "Interacties",
   "editor.card.section.layout": "Indeling",
   "editor.card.field.entity": "Entiteit",
@@ -445,7 +450,6 @@ const nl: Translation = {
   "editor.card.field.icon_badge_color": "Kleur van de badge",
   "editor.card.field.badges": "Badges",
   "editor.card.field.rules": "Regels",
-  "editor.card.field.kind_rules": "Zonder eigen regels: die van de soort",
   "editor.card.field.tap_action": "Tikken",
   "editor.card.field.hold_action": "Vasthouden",
   "editor.card.field.double_tap_action": "Dubbeltikken",
@@ -514,7 +518,7 @@ const nl: Translation = {
   "editor.card.help.status":
     "Een tekst of een template. Leeg: die van de soort of van de passende regel",
   "editor.card.help.rules":
-    "De eerste regel die past bepaalt de kleur, het pictogram en de status. Je eigen regels vervangen die van de soort",
+    "De eerste regel die past verandert het uiterlijk: de kleur, het pictogram, de status en meer",
   "editor.card.help.badges":
     "Per badge: een entiteit, de naam en het uiterlijk. Meer (YAML) bevat de regels en de zichtbaarheid",
   "editor.card.help.control_confirm":

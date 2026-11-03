@@ -284,6 +284,11 @@ const pl: Translation = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (wykryto)",
+  "editor.card.field.rules_from": "Zestaw reguł",
+  "editor.card.rules_from.kind": "Predefiniowane ({kind})",
+  "editor.card.rules_from.own": "Własne",
+  "editor.card.help.rules_from":
+    "Obowiązują reguły rodzaju, dopóki jedna nie zostanie zmieniona: wtedy karta ma własne. Predefiniowane je przywraca",
   "editor.card.attribute_state": "Stan",
   "editor.card.none": "Brak",
   "editor.card.control_auto": "Własne encji: {controls}",
@@ -392,7 +397,7 @@ const pl: Translation = {
   "editor.card.section.controls": "Sterowanie",
   "editor.card.section.badges_poster": "Status i plakietki",
   "editor.card.section.badges_tile": "Status i plakietki",
-  "editor.card.section.rules": "Kolor według wartości",
+  "editor.card.section.rules": "Reguły",
   "editor.card.section.actions": "Interakcje",
   "editor.card.section.layout": "Układ",
   "editor.card.field.entity": "Encja",
@@ -445,7 +450,6 @@ const pl: Translation = {
   "editor.card.field.icon_badge_color": "Kolor plakietki",
   "editor.card.field.badges": "Plakietki",
   "editor.card.field.rules": "Reguły",
-  "editor.card.field.kind_rules": "Bez własnych reguł: reguły rodzaju",
   "editor.card.field.tap_action": "Dotknięcie",
   "editor.card.field.hold_action": "Przytrzymanie",
   "editor.card.field.double_tap_action": "Podwójne dotknięcie",
@@ -512,7 +516,7 @@ const pl: Translation = {
   "editor.card.help.visual_bucket": "Minuty na kolumnę lub blok",
   "editor.card.help.status": "Tekst lub szablon. Puste: status rodzaju lub pasującej reguły",
   "editor.card.help.rules":
-    "Pierwsza pasująca reguła ustala kolor, ikonę i status. Twoje reguły zastępują reguły rodzaju",
+    "Pierwsza pasująca reguła zmienia wygląd: kolor, ikonę, status i więcej",
   "editor.card.help.badges":
     "Każda plakietka: encja, jej nazwa i wygląd. Więcej (YAML) zawiera jej reguły i widoczność",
   "editor.card.help.control_confirm":

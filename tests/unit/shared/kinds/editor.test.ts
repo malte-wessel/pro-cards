@@ -10,7 +10,8 @@ import type { CardConfigBase, HaFormSchema } from "../../../../src/shared/ha.ts"
 import { editorSchema, rangeInfo } from "../../../../src/shared/kinds/editor-schema.ts";
 import { kindsOf } from "../../../../src/shared/kinds/editor.ts";
 import { KINDS } from "../../../../src/shared/kinds/registry.ts";
-import { hasString } from "../../../../src/shared/i18n.ts";
+import { writtenRules } from "../../../../src/shared/kinds/rules.ts";
+import { hasString, t } from "../../../../src/shared/i18n.ts";
 import { isNum } from "../../../../src/shared/util.ts";
 import { docExamples, withNested } from "../../docs-examples.ts";
 
@@ -38,11 +39,15 @@ describe("the poster's and the tile's editor", () => {
         const thing = THINGS[String(card?.type)];
         if (!thing) continue;
         const kind = kindOf(card);
+        // the kind's rules shown in the list, as the editor does
+        const rules = writtenRules(kind, (k) => t(hass, k), null);
         const back = formToConfig(
-          configToForm(card as CardConfigBase, kind, thing),
+          configToForm(card as CardConfigBase, kind, thing, rules),
           card as CardConfigBase,
           kind,
           thing,
+          kind,
+          { before: rules, now: rules },
         );
         expect(back, `${file}: ${JSON.stringify(card)}`).toEqual(card);
         n++;

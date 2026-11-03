@@ -283,6 +283,11 @@ const it: Translation = {
   "editor.multi_trend.layout.lanes": "Corsie (una scala per entità)",
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (rilevato)",
+  "editor.card.field.rules_from": "Insieme di regole",
+  "editor.card.rules_from.kind": "Predefinite ({kind})",
+  "editor.card.rules_from.own": "Personalizzate",
+  "editor.card.help.rules_from":
+    "Valgono le regole del tipo finché una non viene modificata: allora la scheda ha le sue. Predefinite le ripristina",
   "editor.card.attribute_state": "Stato",
   "editor.card.none": "Nessuno",
   "editor.card.control_auto": "Quelli dell'entità: {controls}",
@@ -391,7 +396,7 @@ const it: Translation = {
   "editor.card.section.controls": "Controlli",
   "editor.card.section.badges_poster": "Stato e badge",
   "editor.card.section.badges_tile": "Stato e badge",
-  "editor.card.section.rules": "Colore in base al valore",
+  "editor.card.section.rules": "Regole",
   "editor.card.section.actions": "Interazioni",
   "editor.card.section.layout": "Disposizione",
   "editor.card.field.entity": "Entità",
@@ -444,7 +449,6 @@ const it: Translation = {
   "editor.card.field.icon_badge_color": "Colore del badge",
   "editor.card.field.badges": "Badge",
   "editor.card.field.rules": "Regole",
-  "editor.card.field.kind_rules": "Senza regole proprie, quelle del tipo",
   "editor.card.field.tap_action": "Tocco",
   "editor.card.field.hold_action": "Pressione prolungata",
   "editor.card.field.double_tap_action": "Doppio tocco",
@@ -512,7 +516,7 @@ const it: Translation = {
   "editor.card.help.status":
     "Un testo o un template. Vuoto: quello del tipo o della regola corrispondente",
   "editor.card.help.rules":
-    "La prima regola corrispondente imposta il colore, l'icona e lo stato. Le tue regole sostituiscono quelle del tipo",
+    "La prima regola che corrisponde cambia l'aspetto: il colore, l'icona, lo stato e altro",
   "editor.card.help.badges":
     "Ogni badge: un'entità, il suo nome e il suo aspetto. Altro (YAML) contiene le sue regole e la visibilità",
   "editor.card.help.control_confirm":

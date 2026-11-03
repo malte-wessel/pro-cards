@@ -284,6 +284,11 @@ const ru: Translation = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (определено)",
+  "editor.card.field.rules_from": "Набор правил",
+  "editor.card.rules_from.kind": "Предустановленные ({kind})",
+  "editor.card.rules_from.own": "Свои",
+  "editor.card.help.rules_from":
+    "Действуют правила типа, пока одно не изменено: тогда у карточки свои. «Предустановленные» возвращает их",
   "editor.card.attribute_state": "Состояние",
   "editor.card.none": "Нет",
   "editor.card.control_auto": "Собственные объекта: {controls}",
@@ -392,7 +397,7 @@ const ru: Translation = {
   "editor.card.section.controls": "Элементы управления",
   "editor.card.section.badges_poster": "Статус и бейджи",
   "editor.card.section.badges_tile": "Статус и бейджи",
-  "editor.card.section.rules": "Цвет по значению",
+  "editor.card.section.rules": "Правила",
   "editor.card.section.actions": "Взаимодействие",
   "editor.card.section.layout": "Макет",
   "editor.card.field.entity": "Объект",
@@ -445,7 +450,6 @@ const ru: Translation = {
   "editor.card.field.icon_badge_color": "Цвет бейджа",
   "editor.card.field.badges": "Бейджи",
   "editor.card.field.rules": "Правила",
-  "editor.card.field.kind_rules": "Без своих правил действуют правила типа",
   "editor.card.field.tap_action": "Нажатие",
   "editor.card.field.hold_action": "Удержание",
   "editor.card.field.double_tap_action": "Двойное нажатие",
@@ -511,8 +515,7 @@ const ru: Translation = {
   "editor.card.help.visual_opacity": "Насколько сильно проступает изображение",
   "editor.card.help.visual_bucket": "Минут на столбец или блок",
   "editor.card.help.status": "Текст или шаблон. Пусто: статус типа или подходящего правила",
-  "editor.card.help.rules":
-    "Первое подходящее правило задаёт цвет, значок и статус. Ваши правила заменяют правила типа",
+  "editor.card.help.rules": "Первое подходящее правило меняет вид: цвет, значок, статус и другое",
   "editor.card.help.badges":
     "Каждый бейдж: объект, его название и вид. В «Дополнительно (YAML)» — его правила и видимость",
   "editor.card.help.control_confirm":

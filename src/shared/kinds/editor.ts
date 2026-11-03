@@ -19,6 +19,7 @@ import {
 } from "./editor-form.ts";
 import { editorSchema, rangeInfo, type SchemaCtx } from "./editor-schema.ts";
 import { KINDS } from "./registry.ts";
+import { writtenRules } from "./rules.ts";
 import type { Kind } from "./types.ts";
 
 type Raw = Record<string, unknown>;
@@ -71,7 +72,20 @@ export abstract class KindCardEditor extends FormEditorBase {
   }
 
   _toForm(config: CardConfigBase): HaFormData {
-    return configToForm(config, kindsOf(config as Raw, this._hass).kind, this._thing);
+    const { kind } = kindsOf(config as Raw, this._hass);
+    return configToForm(config, kind, this._thing, this._kindRules(kind, config as Raw));
+  }
+  // the kind's rules as this card would write them: in the user's language, their thresholds in
+  // the unit of the value the rules read
+  _kindRules(kind: Kind, c: { entity?: unknown; attribute?: unknown }) {
+    const entity = typeof c.entity === "string" ? c.entity : "";
+    const st = this._hass?.states[entity];
+    const written = typeof c.attribute === "string" && c.attribute ? c.attribute : "";
+    const attr =
+      written || kind.main?.(entity || null, { entity } as RawEntity, {}).attribute || "";
+    // a weather entity's attribute has its unit beside it (wind_speed_unit)
+    const unit = attr ? st?.attributes[`${attr}_unit`] : st?.attributes.unit_of_measurement;
+    return writtenRules(kind, (key) => t(this._hass, key), typeof unit === "string" ? unit : null);
   }
 
   // another entity: a kind written that cannot read it goes back to the detected one (dropping what
@@ -83,10 +97,14 @@ export abstract class KindCardEditor extends FormEditorBase {
     const written = typeof d.kind === "string" ? KINDS[d.kind] : undefined;
     if (moved && written && !canRead(written, entity)) d = { ...d, kind: DETECTED };
     const { kind } = kindsOf(d, this._hass);
-    const c = formToConfig(d, prev, kind, this._thing, kindsOf(prev as Raw, this._hass).kind);
+    const was = kindsOf(prev as Raw, this._hass).kind;
+    const c = formToConfig(d, prev, kind, this._thing, was, {
+      before: this._kindRules(was, prev as Raw),
+      now: this._kindRules(kind, d),
+    });
     if (!moved) return c;
     const st = entity ? this._hass?.states[entity] : undefined;
-    return fitEntity(c, kind, this._thing, st ? Object.keys(st.attributes) : null);
+    return fitEntity(c, kind, this._thing, st ? Object.keys(st.attributes) : null, was);
   }
 
   _schema(hass: HomeAssistant, data: HaFormData): HaFormSchema[] {

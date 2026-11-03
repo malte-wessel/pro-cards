@@ -284,6 +284,11 @@ const cs: Translation = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (rozpoznáno)",
+  "editor.card.field.rules_from": "Sada pravidel",
+  "editor.card.rules_from.kind": "Předdefinovaná ({kind})",
+  "editor.card.rules_from.own": "Vlastní",
+  "editor.card.help.rules_from":
+    "Platí pravidla druhu, dokud se jedno nezmění: pak má karta vlastní. Předdefinovaná je obnoví",
   "editor.card.attribute_state": "Stav",
   "editor.card.none": "Žádné",
   "editor.card.control_auto": "Vlastní ovládání entity: {controls}",
@@ -392,7 +397,7 @@ const cs: Translation = {
   "editor.card.section.controls": "Ovládací prvky",
   "editor.card.section.badges_poster": "Stav a odznaky",
   "editor.card.section.badges_tile": "Stav a odznaky",
-  "editor.card.section.rules": "Barva podle hodnoty",
+  "editor.card.section.rules": "Pravidla",
   "editor.card.section.actions": "Interakce",
   "editor.card.section.layout": "Rozvržení",
   "editor.card.field.entity": "Entita",
@@ -445,7 +450,6 @@ const cs: Translation = {
   "editor.card.field.icon_badge_color": "Barva odznaku",
   "editor.card.field.badges": "Odznaky",
   "editor.card.field.rules": "Pravidla",
-  "editor.card.field.kind_rules": "Bez vlastních pravidel platí pravidla druhu",
   "editor.card.field.tap_action": "Klepnutí",
   "editor.card.field.hold_action": "Podržení",
   "editor.card.field.double_tap_action": "Dvojité klepnutí",
@@ -510,8 +514,7 @@ const cs: Translation = {
   "editor.card.help.visual_opacity": "Jak moc obrázek prosvítá",
   "editor.card.help.visual_bucket": "Minuty na sloupec nebo blok",
   "editor.card.help.status": "Text nebo šablona. Prázdné: stav druhu nebo odpovídajícího pravidla",
-  "editor.card.help.rules":
-    "První odpovídající pravidlo nastaví barvu, ikonu a stav. Vaše pravidla nahrazují pravidla druhu",
+  "editor.card.help.rules": "První odpovídající pravidlo mění vzhled: barvu, ikonu, stav a další",
   "editor.card.help.badges":
     "Každý odznak: entita, její název a vzhled. Další (YAML) obsahuje jeho pravidla a viditelnost",
   "editor.card.help.control_confirm":

@@ -283,6 +283,11 @@ const de: Translation = {
   "editor.multi_trend.layout.lanes": "Spuren (eine Skala je Entität)",
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (erkannt)",
+  "editor.card.field.rules_from": "Regelsatz",
+  "editor.card.rules_from.kind": "Vordefiniert ({kind})",
+  "editor.card.rules_from.own": "Eigene",
+  "editor.card.help.rules_from":
+    "Die Regeln der Art gelten, bis eine geändert wird: dann hat die Karte eigene. Vordefiniert stellt sie wieder her",
   "editor.card.attribute_state": "Zustand",
   "editor.card.none": "Keine",
   "editor.card.control_auto": "Von der Entität: {controls}",
@@ -391,7 +396,7 @@ const de: Translation = {
   "editor.card.section.controls": "Steuerelemente",
   "editor.card.section.badges_poster": "Status und Badges",
   "editor.card.section.badges_tile": "Status und Badges",
-  "editor.card.section.rules": "Farbe nach Wert",
+  "editor.card.section.rules": "Regeln",
   "editor.card.section.actions": "Interaktionen",
   "editor.card.section.layout": "Layout",
   "editor.card.field.entity": "Entität",
@@ -444,7 +449,6 @@ const de: Translation = {
   "editor.card.field.icon_badge_color": "Badge-Farbe",
   "editor.card.field.badges": "Badges",
   "editor.card.field.rules": "Regeln",
-  "editor.card.field.kind_rules": "Ohne eigene Regeln die der Art",
   "editor.card.field.tap_action": "Tippen",
   "editor.card.field.hold_action": "Halten",
   "editor.card.field.double_tap_action": "Doppeltippen",
@@ -512,7 +516,7 @@ const de: Translation = {
   "editor.card.help.status":
     "Ein Text oder ein Template. Leer: der der Art oder der passenden Regel",
   "editor.card.help.rules":
-    "Die erste passende Regel setzt Farbe, Symbol und Status. Eigene Regeln ersetzen die der Art",
+    "Die erste passende Regel ändert das Aussehen: Farbe, Symbol, Status und mehr",
   "editor.card.help.badges":
     "Jedes Badge: eine Entität, ihr Name und Aussehen. Mehr (YAML) enthält seine Regeln und Sichtbarkeit",
   "editor.card.help.control_confirm":

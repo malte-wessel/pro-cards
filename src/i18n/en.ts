@@ -283,6 +283,11 @@ const en = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (detected)",
+  "editor.card.field.rules_from": "Rule set",
+  "editor.card.rules_from.kind": "Predefined ({kind})",
+  "editor.card.rules_from.own": "Your own",
+  "editor.card.help.rules_from":
+    "The kind's rules apply until one is changed: then the card has its own. Predefined goes back to them",
   "editor.card.attribute_state": "State",
   "editor.card.none": "None",
   "editor.card.control_auto": "The entity's own: {controls}",
@@ -391,7 +396,7 @@ const en = {
   "editor.card.section.controls": "Controls",
   "editor.card.section.badges_poster": "Status and badges",
   "editor.card.section.badges_tile": "Status and badges",
-  "editor.card.section.rules": "Colour by value",
+  "editor.card.section.rules": "Rules",
   "editor.card.section.actions": "Interactions",
   "editor.card.section.layout": "Layout",
   "editor.card.field.entity": "Entity",
@@ -444,7 +449,6 @@ const en = {
   "editor.card.field.icon_badge_color": "Badge colour",
   "editor.card.field.badges": "Badges",
   "editor.card.field.rules": "Rules",
-  "editor.card.field.kind_rules": "Without rules of your own, the kind's",
   "editor.card.field.tap_action": "Tap",
   "editor.card.field.hold_action": "Hold",
   "editor.card.field.double_tap_action": "Double tap",
@@ -511,7 +515,7 @@ const en = {
   "editor.card.help.visual_bucket": "Minutes per column or block",
   "editor.card.help.status": "A text or a template. Empty: the kind's or the matching rule's",
   "editor.card.help.rules":
-    "The first rule that matches sets the colour, the icon and the status. Your rules replace the kind's own",
+    "The first rule that matches changes the look: the colour, the icon, the status and more",
   "editor.card.help.badges":
     "Each badge: an entity, its name and look. More (YAML) holds its rules and visibility",
   "editor.card.help.control_confirm":

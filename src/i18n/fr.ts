@@ -283,6 +283,11 @@ const fr: Translation = {
   "editor.multi_trend.layout.lanes": "Pistes (une échelle par entité)",
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (détecté)",
+  "editor.card.field.rules_from": "Jeu de règles",
+  "editor.card.rules_from.kind": "Prédéfinies ({kind})",
+  "editor.card.rules_from.own": "Personnalisées",
+  "editor.card.help.rules_from":
+    "Les règles du type s'appliquent jusqu'à ce qu'une soit modifiée : la carte a alors les siennes. Prédéfinies les rétablit",
   "editor.card.attribute_state": "État",
   "editor.card.none": "Aucun",
   "editor.card.control_auto": "Ceux de l'entité : {controls}",
@@ -391,7 +396,7 @@ const fr: Translation = {
   "editor.card.section.controls": "Commandes",
   "editor.card.section.badges_poster": "Statut et badges",
   "editor.card.section.badges_tile": "Statut et badges",
-  "editor.card.section.rules": "Couleur selon la valeur",
+  "editor.card.section.rules": "Règles",
   "editor.card.section.actions": "Interactions",
   "editor.card.section.layout": "Disposition",
   "editor.card.field.entity": "Entité",
@@ -444,7 +449,6 @@ const fr: Translation = {
   "editor.card.field.icon_badge_color": "Couleur du badge",
   "editor.card.field.badges": "Badges",
   "editor.card.field.rules": "Règles",
-  "editor.card.field.kind_rules": "Sans règles propres, celles du type",
   "editor.card.field.tap_action": "Appui",
   "editor.card.field.hold_action": "Appui long",
   "editor.card.field.double_tap_action": "Double appui",
@@ -512,7 +516,7 @@ const fr: Translation = {
   "editor.card.help.status":
     "Un texte ou un modèle. Vide : celui du type ou de la règle correspondante",
   "editor.card.help.rules":
-    "La première règle qui correspond définit la couleur, l'icône et le statut. Vos règles remplacent celles du type",
+    "La première règle qui correspond change l'apparence : la couleur, l'icône, le statut et plus",
   "editor.card.help.badges":
     "Chaque badge : une entité, son nom et son apparence. Plus (YAML) contient ses règles et sa visibilité",
   "editor.card.help.control_confirm":

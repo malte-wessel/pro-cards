@@ -588,30 +588,34 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
     },
   ];
 
-  // ----- rules: the kind's own apply while the card has none -----
-  const kindRules = (kind.rules ?? [])
-    .map((r) => {
-      const when =
-        r.below !== undefined
-          ? `< ${r.below}`
-          : r.above !== undefined
-            ? `> ${r.above}`
-            : r.state !== undefined
-              ? `= ${r.state}`
-              : "";
-      const what = r.labelKey ? t(hass, r.labelKey) : (r.color ?? "");
-      return `${what} (${when}${kind.ruleUnit ? ` ${kind.ruleUnit}` : ""})`;
-    })
-    .join(", ");
+  // ----- rules: the kind's (predefined) while the card has none, else its own -----
+  // (they read the value the card shows, in its unit; a state is one of the entity's)
+  const ruleFields = fieldsOf(hass, RULE_KEYS, "rule", {
+    ...(entity ? { state: { state: { entity_id: entity } } } : {}),
+    ...Object.fromEntries(
+      (["above", "below"] as const).map((k) => [
+        k,
+        { number: { mode: "box", ...(shown.unit ? { unit_of_measurement: shown.unit } : {}) } },
+      ]),
+    ),
+  });
   const rules: HaFormSchema[] = [
-    ...(kindRules ? [{ name: "kind_rules", type: "constant", value: kindRules }] : []),
+    ...(kind.rules?.length
+      ? [
+          pick("rules_from", [
+            opt(DEFAULT, tr("rules_from.kind", { kind: kindLabel(hass, kind.name) })),
+            opt("own", tr("rules_from.own")),
+          ]),
+        ]
+      : []),
     {
       name: "rules",
       selector: {
         object: {
           multiple: true,
           label_field: "status",
-          fields: fieldsOf(hass, RULE_KEYS, "rule"),
+          description_field: "color",
+          fields: ruleFields,
         },
       },
     },
@@ -699,10 +703,12 @@ const fieldsOf = (
   hass: HomeAssistant | undefined,
   keys: readonly string[],
   of: "badge" | "rule" | "series" | "option" | "button",
+  // selectors of this form's own (a rule's state picker for its entity)
+  own: Record<string, unknown> = {},
 ): Record<string, unknown> => {
   const out: Record<string, unknown> = {};
   for (const k of keys) {
-    let selector = FIELD_SELECTORS[k];
+    let selector = own[k] ?? FIELD_SELECTORS[k];
     if (k === "style")
       selector = {
         select: {

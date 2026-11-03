@@ -11,6 +11,8 @@ import {
   type CardThing,
 } from "../../../../src/shared/kinds/editor-form.ts";
 import { kindsOf } from "../../../../src/shared/kinds/editor.ts";
+import { writtenRules } from "../../../../src/shared/kinds/rules.ts";
+import { t } from "../../../../src/shared/i18n.ts";
 import type { CardConfigBase, HaFormData } from "../../../../src/shared/ha.ts";
 
 const hass = snapshot();
@@ -666,6 +668,7 @@ describe("the editor form's selects", () => {
       control_type: DEFAULT,
       control_position: DEFAULT,
       control_attribute: DEFAULT,
+      rules_from: DEFAULT,
     });
     expect(withDefaults({ kind: "fan", icon_thing: "", visual_thing: null })).toMatchObject({
       kind: "fan",
@@ -678,5 +681,69 @@ describe("the editor form's selects", () => {
     const cleared = Object.fromEntries(Object.keys(withDefaults({})).map((k) => [k, ""]));
     for (const cfg of [LIGHT, WIND, { type: LIGHT.type, entity: "climate.living_room" }])
       expect(edit(cfg, { ...cleared, entity: cfg.entity })).toEqual(cfg);
+  });
+});
+
+describe("the editor form: the kind's rules", () => {
+  // as the editor does: the kind's rules as the card would write them, before and now
+  const rulesOf = (cfg: Raw) => {
+    const kind = kindsOf(cfg, hass).kind;
+    const st = hass.states[String(cfg.entity ?? "")];
+    const unit = st?.attributes.unit_of_measurement;
+    return writtenRules(kind, (k) => t(hass, k), typeof unit === "string" ? unit : null);
+  };
+  const formWith = (cfg: Raw) =>
+    configToForm(cfg as CardConfigBase, kindsOf(cfg, hass).kind, "poster", rulesOf(cfg));
+  const editWith = (cfg: Raw, change: (form: HaFormData) => HaFormData) => {
+    const data = { ...formWith(cfg), ...change(formWith(cfg)) };
+    return formToConfig(
+      data,
+      cfg as CardConfigBase,
+      kindsOf(data, hass).kind,
+      "poster",
+      kindsOf(cfg, hass).kind,
+      { before: rulesOf(cfg), now: rulesOf(data) },
+    ) as Raw;
+  };
+  const kindRules = rulesOf(WIND);
+
+  it("are shown, as predefined, while the card has none, and write nothing", () => {
+    const form = formWith(WIND);
+    expect(form.rules_from).toBe(DEFAULT);
+    expect((form.rules as Raw[]).map((r) => r.status)).toEqual([
+      "Calm",
+      "Breezy",
+      "Windy",
+      "Strong wind",
+      "Stormy",
+    ]);
+    expect(editWith(WIND, () => ({ name: "Roof" }))).toEqual({ ...WIND, name: "Roof" });
+  });
+
+  it("are copied, all of them, when one is changed", () => {
+    const out = editWith(WIND, (f) => ({
+      rules: (f.rules as Raw[]).map((r, i) => (i === 1 ? { ...r, color: "green" } : r)),
+    }));
+    expect(out.rules).toEqual(kindRules.map((r, i) => (i === 1 ? { ...r, color: "green" } : r)));
+    // the card's own now
+    expect(formWith(out).rules_from).toBe("own");
+    // all deleted: none at all
+    expect(editWith(WIND, () => ({ rules: [] })).rules).toEqual([]);
+  });
+
+  it("come back when predefined is picked, and are copied when own is", () => {
+    const own = { ...WIND, rules: [{ above: 10, color: "red" }] };
+    expect(editWith(own, () => ({ rules_from: DEFAULT }))).toEqual(WIND);
+    expect(editWith(WIND, () => ({ rules_from: "own" })).rules).toEqual(kindRules);
+    // the card's own stay as written
+    expect(editWith(own, () => ({ name: "Roof" }))).toEqual({ ...own, name: "Roof" });
+  });
+
+  it("are the card's alone on a kind without rules", () => {
+    expect(formWith(LIGHT)).toMatchObject({ rules_from: "own", rules: [] });
+    expect(editWith(LIGHT, () => ({ rules: [] }))).toEqual(LIGHT);
+    expect(editWith(LIGHT, () => ({ rules: [{ state: "on", color: "amber" }] })).rules).toEqual([
+      { state: "on", color: "amber" },
+    ]);
   });
 });

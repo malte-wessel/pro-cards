@@ -346,6 +346,22 @@ describe("another entity picked in the editor", () => {
     expect(bad).toEqual([]);
   }, 30_000);
 
+  it("keeps the rules for the same kind, and drops them for another", async () => {
+    const rules = [{ above: 30, color: "red", status: "Stormy" }];
+    const other = open("poster", { entity: "sensor.wind_speed", rules });
+    await tick();
+    other.change({ entity: "light.kitchen" });
+    await tick();
+    expect(other.sent.at(-1)).toEqual({ type: "custom:poster-card-pro", entity: "light.kitchen" });
+    // the gust sensor is a wind speed too: the rules still fit
+    const same = open("poster", { entity: "sensor.wind_speed", rules });
+    await tick();
+    same.change({ entity: "sensor.wind_gust" });
+    await tick();
+    expect(same.sent.at(-1)).toMatchObject({ entity: "sensor.wind_gust", rules });
+    for (const e of [other, same]) e.ed.remove();
+  });
+
   it("goes back to the detected kind where the kind written cannot read it", async () => {
     const e = open("tile", {
       entity: "sensor.rain_rate",

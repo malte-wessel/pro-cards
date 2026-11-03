@@ -283,6 +283,11 @@ const es: Translation = {
   "editor.multi_trend.layout.lanes": "Carriles (una escala por entidad)",
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (detectado)",
+  "editor.card.field.rules_from": "Conjunto de reglas",
+  "editor.card.rules_from.kind": "Predefinidas ({kind})",
+  "editor.card.rules_from.own": "Propias",
+  "editor.card.help.rules_from":
+    "Se aplican las reglas del tipo hasta que se cambie una: entonces la tarjeta tiene las suyas. Predefinidas las restablece",
   "editor.card.attribute_state": "Estado",
   "editor.card.none": "Ninguno",
   "editor.card.control_auto": "Los de la entidad: {controls}",
@@ -391,7 +396,7 @@ const es: Translation = {
   "editor.card.section.controls": "Controles",
   "editor.card.section.badges_poster": "Estado e insignias",
   "editor.card.section.badges_tile": "Estado e insignias",
-  "editor.card.section.rules": "Color según el valor",
+  "editor.card.section.rules": "Reglas",
   "editor.card.section.actions": "Interacciones",
   "editor.card.section.layout": "Disposición",
   "editor.card.field.entity": "Entidad",
@@ -444,7 +449,6 @@ const es: Translation = {
   "editor.card.field.icon_badge_color": "Color de la insignia",
   "editor.card.field.badges": "Insignias",
   "editor.card.field.rules": "Reglas",
-  "editor.card.field.kind_rules": "Sin reglas propias, las del tipo",
   "editor.card.field.tap_action": "Tocar",
   "editor.card.field.hold_action": "Mantener",
   "editor.card.field.double_tap_action": "Doble toque",
@@ -512,7 +516,7 @@ const es: Translation = {
   "editor.card.help.status":
     "Un texto o una plantilla. Vacío: el del tipo o el de la regla que coincide",
   "editor.card.help.rules":
-    "La primera regla que coincide fija el color, el icono y el estado. Tus reglas sustituyen a las del tipo",
+    "La primera regla que coincide cambia el aspecto: el color, el icono, el estado y más",
   "editor.card.help.badges":
     "Cada insignia: una entidad, su nombre y su aspecto. Más (YAML) contiene sus reglas y su visibilidad",
   "editor.card.help.control_confirm":

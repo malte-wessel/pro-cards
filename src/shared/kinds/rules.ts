@@ -2,7 +2,10 @@
 // tint). A card's `rules` replace them as a whole; they are written in one unit (Kind.ruleUnit)
 // and their labels are translated.
 import type { Rule } from "../entity/config.ts";
-import type { KindRule } from "./types.ts";
+import { UNIT_TO_KMH } from "../flow/constants.ts";
+import type { StringKey } from "../i18n.ts";
+import { RATE_TO_MMH } from "../rain/constants.ts";
+import type { Kind, KindRule } from "./types.ts";
 
 // the four air quality bands as below / below / below / above
 const air = (a: number, b: number, c: number): KindRule[] => [
@@ -90,3 +93,39 @@ export const toRule = (r: KindRule): Rule => ({
   pulse: !!r.pulse,
   ...(r.labelKey ? { labelKey: r.labelKey } : {}),
 });
+
+// a kind's rules as a card writes them, to copy and change: the labels as `status` in the user's
+// language, the thresholds from the kind's unit into the sensor's (a card's own rules read the
+// value as it is: 5 km/h is 1.39 m/s), rounded to three figures; a unit not known stays as it is
+export const writtenRules = (
+  kind: Kind,
+  label: (key: StringKey) => string,
+  unit: string | null | undefined,
+): Record<string, unknown>[] => {
+  const from = kind.ruleUnit;
+  const u = (unit ?? "").trim().toLowerCase();
+  const into = (v: number): number => {
+    if (!from || !u || u === from) return v;
+    let out: number;
+    if (from === "km/h" && (u === "beaufort" || u === "bft"))
+      out = Math.pow(v / 3.6 / 0.836, 2 / 3);
+    else {
+      const factor = (from === "km/h" ? UNIT_TO_KMH : RATE_TO_MMH)[u];
+      if (!factor) return v;
+      out = v / factor;
+    }
+    return Number(out.toPrecision(3));
+  };
+  return (kind.rules ?? []).map((r) => {
+    const o: Record<string, unknown> = {};
+    if (r.state !== undefined) o.state = r.state;
+    if (r.above !== undefined) o.above = into(r.above);
+    if (r.below !== undefined) o.below = into(r.below);
+    if (r.color) o.color = r.color;
+    if (r.icon) o.icon = r.icon;
+    if (r.labelKey) o.status = label(r.labelKey);
+    if (r.tintCard) o.tint_card = true;
+    if (r.pulse) o.pulse = true;
+    return o;
+  });
+};

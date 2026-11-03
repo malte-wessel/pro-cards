@@ -284,6 +284,11 @@ const pt: Translation = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (detetado)",
+  "editor.card.field.rules_from": "Conjunto de regras",
+  "editor.card.rules_from.kind": "Predefinidas ({kind})",
+  "editor.card.rules_from.own": "Próprias",
+  "editor.card.help.rules_from":
+    "Aplicam-se as regras do tipo até uma ser alterada: depois o cartão tem as suas. Predefinidas repõe-nas",
   "editor.card.attribute_state": "Estado",
   "editor.card.none": "Nenhum",
   "editor.card.control_auto": "Os da entidade: {controls}",
@@ -392,7 +397,7 @@ const pt: Translation = {
   "editor.card.section.controls": "Controlos",
   "editor.card.section.badges_poster": "Estado e emblemas",
   "editor.card.section.badges_tile": "Estado e emblemas",
-  "editor.card.section.rules": "Cor pelo valor",
+  "editor.card.section.rules": "Regras",
   "editor.card.section.actions": "Interações",
   "editor.card.section.layout": "Disposição",
   "editor.card.field.entity": "Entidade",
@@ -445,7 +450,6 @@ const pt: Translation = {
   "editor.card.field.icon_badge_color": "Cor do emblema",
   "editor.card.field.badges": "Emblemas",
   "editor.card.field.rules": "Regras",
-  "editor.card.field.kind_rules": "Sem regras próprias, as do tipo",
   "editor.card.field.tap_action": "Toque",
   "editor.card.field.hold_action": "Toque longo",
   "editor.card.field.double_tap_action": "Toque duplo",
@@ -512,7 +516,7 @@ const pt: Translation = {
   "editor.card.help.visual_bucket": "Minutos por coluna ou bloco",
   "editor.card.help.status": "Um texto ou um modelo. Vazio: o do tipo ou da regra correspondente",
   "editor.card.help.rules":
-    "A primeira regra correspondente define a cor, o ícone e o estado. As suas regras substituem as do tipo",
+    "A primeira regra que corresponde muda o aspeto: a cor, o ícone, o estado e mais",
   "editor.card.help.badges":
     "Cada emblema: uma entidade, o seu nome e aspeto. Mais (YAML) guarda as suas regras e visibilidade",
   "editor.card.help.control_confirm":

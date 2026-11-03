@@ -123,6 +123,7 @@ const SELECT_DEFAULTS: Record<string, string> = {
   control_type: DEFAULT,
   control_position: DEFAULT,
   control_attribute: DEFAULT,
+  rules_from: DEFAULT,
 };
 export const withDefaults = (data: HaFormData): HaFormData => {
   const d = { ...data };
@@ -186,7 +187,14 @@ export const defaultPosition = (type: string, entity: unknown, kind: Kind, thing
   return first ?? (drawnControls(type, entity, kind, thing)[0] === "slider" ? "block" : "end");
 };
 
-export const configToForm = (config: CardConfigBase, kind: Kind, thing: CardThing): HaFormData => {
+// `kindRules`: the kind's rules as the card would write them (writtenRules: in the user's language
+// and the sensor's unit), shown in the list while the card has none of its own
+export const configToForm = (
+  config: CardConfigBase,
+  kind: Kind,
+  thing: CardThing,
+  kindRules: readonly Raw[] = [],
+): HaFormData => {
   const c = config as Raw;
   const d: HaFormData = {
     entity: c.entity ?? "",
@@ -287,7 +295,10 @@ export const configToForm = (config: CardConfigBase, kind: Kind, thing: CardThin
   else d.status = c.status ?? "";
   d.status_badge = c.status_badge === true;
   d.badges = listToForm(c.badges, BADGE_KEYS);
-  d.rules = listToForm(c.rules, RULE_KEYS);
+  // the rules: the kind's (predefined) while the card writes none, else its own
+  const predefined = c.rules === undefined && kindRules.length > 0;
+  d.rules_from = predefined ? DEFAULT : "own";
+  d.rules = listToForm(predefined ? kindRules : c.rules, RULE_KEYS);
   if (thing === "tile") d.vertical = c.vertical === true;
   return withDefaults(d);
 };
@@ -402,7 +413,8 @@ const controlFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknow
   return has ? { type, ...o } : type;
 };
 
-// a config whose entity changed in the form, cut to what the new one takes: an attribute it has
+// a config whose entity changed in the form, cut to what the new one takes: rules only for the
+// same kind, an attribute it has
 // (`attrs`, null while not known), a control its domain draws (your own buttons fit any), and the
 // options of a place written without a thing that the kind's thing there takes (a wind's
 // `variant` on a light's icon goes)
@@ -411,8 +423,12 @@ export const fitEntity = (
   kind: Kind,
   thing: CardThing,
   attrs: readonly string[] | null,
+  // the kind before: rules are written for one kind's values (a wind's km/h, a light's on), so
+  // another kind's own come in their place
+  was: Kind = kind,
 ): CardConfigBase => {
   const c: Raw = { ...config };
+  if (was.name !== kind.name) delete c.rules;
   const domain = typeof c.entity === "string" ? c.entity.split(".")[0] : "";
   if (typeof c.attribute === "string" && attrs && !attrs.includes(c.attribute)) delete c.attribute;
   const ctl = c.control;
@@ -448,6 +464,9 @@ export const formToConfig = (
   thing: CardThing,
   // the kind the config had: another one drops the keys and inputs only it read
   was: Kind = kind,
+  // the kind's rules as the card would write them (configToForm's kindRules), for the config before
+  // (its kind and entity) and now
+  kindRules: { before: readonly Raw[]; now: readonly Raw[] } = { before: [], now: [] },
 ): CardConfigBase => {
   const data = withDefaults(written);
   const c: Raw = { ...prev };
@@ -460,7 +479,7 @@ export const formToConfig = (
   // rewrites only what was changed
   // (the form shows the config as the kind it had read it: a kind changed since keeps the places
   // and controls written for the one before, where the new one draws them)
-  const before = configToForm(prev, was, thing);
+  const before = configToForm(prev, was, thing, kindRules.before);
   const changed = (prefix: string, also: readonly string[] = []) =>
     Object.keys({ ...before, ...data })
       .filter((k) => k.startsWith(prefix) || also.includes(k))
@@ -494,11 +513,15 @@ export const formToConfig = (
     const badges = listFromForm(data.badges, BADGE_KEYS, "entity");
     put("badges", badges.length ? badges : undefined);
   }
-  // no rules of your own brings the kind's back
-  if (changed("rules")) {
+  // the rules: back to the kind's (predefined), or the list as the card's own, a copy of the
+  // kind's on its first change; none of them (all deleted) is `rules: []` where the kind has some
+  const same = (k: string) => JSON.stringify(before[k]) === JSON.stringify(data[k]);
+  const list = () => {
     const rules = listFromForm(data.rules, RULE_KEYS, null);
-    put("rules", rules.length ? rules : undefined);
-  }
+    return rules.length ? rules : kindRules.now.length ? [] : undefined;
+  };
+  if (!same("rules_from")) put("rules", data.rules_from === DEFAULT ? undefined : list());
+  else if (!same("rules")) put("rules", list());
   if (thing === "tile") setOrDrop(c, "vertical", true, data.vertical !== true);
   if (was.name !== kind.name) dropUnused(c, kind, was);
   return c as CardConfigBase;

@@ -284,6 +284,11 @@ const nb: Translation = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (gjenkjent)",
+  "editor.card.field.rules_from": "Regelsett",
+  "editor.card.rules_from.kind": "Forhåndsdefinerte ({kind})",
+  "editor.card.rules_from.own": "Egne",
+  "editor.card.help.rules_from":
+    "Typens regler gjelder til en endres: da har kortet egne. Forhåndsdefinerte tilbakestiller dem",
   "editor.card.attribute_state": "Tilstand",
   "editor.card.none": "Ingen",
   "editor.card.control_auto": "Entitetens egne: {controls}",
@@ -392,7 +397,7 @@ const nb: Translation = {
   "editor.card.section.controls": "Kontroller",
   "editor.card.section.badges_poster": "Status og merker",
   "editor.card.section.badges_tile": "Status og merker",
-  "editor.card.section.rules": "Farge etter verdi",
+  "editor.card.section.rules": "Regler",
   "editor.card.section.actions": "Interaksjoner",
   "editor.card.section.layout": "Oppsett",
   "editor.card.field.entity": "Entitet",
@@ -445,7 +450,6 @@ const nb: Translation = {
   "editor.card.field.icon_badge_color": "Merkets farge",
   "editor.card.field.badges": "Merker",
   "editor.card.field.rules": "Regler",
-  "editor.card.field.kind_rules": "Uten egne regler: typens",
   "editor.card.field.tap_action": "Trykk",
   "editor.card.field.hold_action": "Hold inne",
   "editor.card.field.double_tap_action": "Dobbelttrykk",
@@ -512,7 +516,7 @@ const nb: Translation = {
   "editor.card.help.visual_bucket": "Minutter per søyle eller blokk",
   "editor.card.help.status": "En tekst eller en mal. Tom: typens eller den samsvarende regelens",
   "editor.card.help.rules":
-    "Den første regelen som samsvarer, setter fargen, ikonet og statusen. Dine regler erstatter typens egne",
+    "Den første regelen som passer endrer utseendet: fargen, ikonet, statusen og mer",
   "editor.card.help.badges":
     "Hvert merke: en entitet, navnet og utseendet. Mer (YAML) har reglene og synligheten",
   "editor.card.help.control_confirm":

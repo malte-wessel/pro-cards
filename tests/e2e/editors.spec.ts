@@ -178,8 +178,12 @@ test("the poster's badges are added and edited in their dialog", async ({ page }
 });
 
 test("the poster's rules are added, ordered and deleted", async ({ page }) => {
-  const e = await openEditor(page, { type: "custom:poster-card-pro", entity: "sensor.wind_speed" });
-  await openSection(e.form, "Colour by value");
+  // (a temperature: its kind brings no rules of its own)
+  const e = await openEditor(page, {
+    type: "custom:poster-card-pro",
+    entity: "sensor.living_room_temperature",
+  });
+  await openSection(e.form, "Rules");
   const first = await addItem(e.form, "rules");
   await fill(first, "above", "30");
   await choose(first, "color", "red");
@@ -204,6 +208,39 @@ test("the poster's rules are added, ordered and deleted", async ({ page }) => {
   });
   await rules.locator(".item").nth(0).getByRole("button", { name: "Delete" }).click();
   await expect.poll(e.last).toMatchObject({ rules: [{ above: 30, status: "Stormy" }] });
+});
+
+test("the kind's rules are shown, copied when one changes, and come back", async ({ page }) => {
+  const wind = { type: "custom:poster-card-pro", entity: "sensor.wind_speed" };
+  const e = await openEditor(page, wind);
+  await openSection(e.form, "Rules");
+  const rules = field(e.form, "rules");
+  await expect(rules.locator(".item .main")).toHaveText([
+    "Calm",
+    "Breezy",
+    "Windy",
+    "Strong wind",
+    "Stormy",
+  ]);
+  await expect(field(e.form, "rules_from").locator("select")).toHaveValue("default");
+  // Breezy green: all five become the card's, with the change
+  await rules.locator(".item").nth(1).getByRole("button", { name: "Edit" }).click();
+  const breezy = rules.locator(".edit ha-form");
+  await choose(breezy, "color", "green");
+  await saveItem(e.form, "rules");
+  await expect.poll(e.last).toMatchObject({
+    rules: [
+      { below: 5, status: "Calm" },
+      { below: 20, color: "green", status: "Breezy" },
+      { below: 35, status: "Windy" },
+      { below: 50, status: "Strong wind" },
+      { above: 50, status: "Stormy", tint_card: true },
+    ],
+  });
+  await expect(field(e.form, "rules_from").locator("select")).toHaveValue("own");
+  // back to the kind's
+  await choose(e.form, "rules_from", "default");
+  await expect.poll(e.last).toEqual(wind);
 });
 
 test("the tile's controls and status badge", async ({ page }) => {
