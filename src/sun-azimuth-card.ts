@@ -63,6 +63,7 @@ import { sideDays, sidesAt, timelineSpan, type Side, type SideDay } from "./sun-
 import { STYLE } from "./sun-azimuth/styles.ts";
 import { sceneBox } from "./sun-azimuth/scene.ts";
 import { nearestOnTrack, type TrackPoint } from "./sun-azimuth/track.ts";
+import { ofDomain } from "./shared/suggest.ts";
 
 const CARD_TYPE = "sun-azimuth-card-pro";
 
@@ -492,4 +493,5 @@ registerCard(SunAzimuthCard, {
   name: "Sun Azimuth Card Pro",
   description:
     "Where the sun is around the house: 3D scene or sky dial, and the sides it shines on today",
+  suggest: ofDomain("sun"),
 });

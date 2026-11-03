@@ -140,6 +140,7 @@ export interface CardConfigBase {
 export interface CardConstructor {
   new (): HTMLElement;
   cardType: string;
+  getStubConfig?(hass: HomeAssistant | undefined, entities?: string[]): Record<string, unknown>;
 }
 
 // Home Assistant's wrapper around one card of a view, a section or a stack: it creates the card

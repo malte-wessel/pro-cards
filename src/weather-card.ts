@@ -50,6 +50,7 @@ import { buildForecast, drawForecast } from "./weather/render/forecast.ts";
 import { sectionShell } from "./weather/render/section.ts";
 import { buildTrend, drawTrendSection, type ForecastTrendEl } from "./weather/render/trend.ts";
 import { STYLE_WEATHER_CARD } from "./weather/styles.ts";
+import { ofDomain } from "./shared/suggest.ts";
 
 // what is shown, with a flag per section
 interface WeatherVis extends VisState {
@@ -363,4 +364,5 @@ registerCard(WeatherCard, {
   name: "Weather Card Pro",
   description:
     "A weather entity as a tile or as sections: hero, attribute rows, forecast rows and trend charts",
+  suggest: ofDomain("weather"),
 });

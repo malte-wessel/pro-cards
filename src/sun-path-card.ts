@@ -37,6 +37,7 @@ import { defaultLabel, fmtEvent, type SunEvent } from "./shared/sun/events.ts";
 import { solarDay, solarDayAround } from "./shared/solar.ts";
 import { STYLE } from "./sun-path/styles.ts";
 import { TextCache, themeChanged } from "./shared/typography.ts";
+import { ofDomain } from "./shared/suggest.ts";
 
 const CARD_TYPE = "sun-path-card-pro";
 
@@ -218,4 +219,5 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
 registerCard(SunPathCard, {
   name: "Sun Path Card Pro",
   description: "Today's sun path: sunrise, sunset, dawn, dusk and the current position of the sun",
+  suggest: ofDomain("sun"),
 });

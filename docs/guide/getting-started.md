@@ -105,7 +105,7 @@ control: auto
 
 :::
 
-Every card page continues like this: the smallest configuration first, then one option at a time. All eighteen cards appear in the card picker as "Entity Card Pro", "Weather Card Pro" and so on; the three with visual editors can be configured there without YAML.
+Every card page continues like this: the smallest configuration first, then one option at a time. All eighteen cards appear in the card picker as "Entity Card Pro", "Weather Card Pro" and so on; the ones with a visual editor can be configured there without YAML. Pick an entity in the picker instead and Home Assistant suggests the cards that fit it: the poster and the tile for an entity with a kind of its own (a light, a cover, a battery, the weather …), the weather and sun cards for their entities, the multi trend card for a numeric sensor.
 
 ## Completion and validation in your editor
 

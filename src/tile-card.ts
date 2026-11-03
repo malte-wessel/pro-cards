@@ -41,6 +41,7 @@ import { CARD_TYPE } from "./tile/constants.ts";
 // what can be in a zone (its badge is the zone's icon)
 const ZONED = new Set(["person", "device_tracker"]);
 import { STYLE_TILE_CARD_ALL } from "./tile/styles.ts";
+import { hasKind } from "./shared/suggest.ts";
 
 export class TileCard extends KindCardBase {
   static cardType = CARD_TYPE;
@@ -343,6 +344,7 @@ registerCard(TileCard, {
   name: "Tile Card Pro",
   description:
     "One entity as a tile drawn the way its poster type says: an animated icon, its value and status on one line, controls at its end",
+  suggest: hasKind,
 });
 
 class TileCardEditor extends KindCardEditor {

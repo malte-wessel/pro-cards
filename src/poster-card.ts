@@ -30,6 +30,7 @@ import { fillStatus, imageUrl, statusText } from "./shared/kinds/render.ts";
 import { normalizePosterConfig, type PosterConfig } from "./poster/config.ts";
 import { CARD_TYPE } from "./poster/constants.ts";
 import { STYLE_POSTER_CARD_ALL } from "./poster/styles.ts";
+import { hasKind } from "./shared/suggest.ts";
 
 export class PosterCard extends KindCardBase {
   static cardType = CARD_TYPE;
@@ -306,6 +307,7 @@ registerCard(PosterCard, {
   name: "Poster Card Pro",
   description:
     "One entity as a poster drawn the way its poster type says: weather, wind, rain, sun, media, covers, locks, lights and more",
+  suggest: hasKind,
 });
 
 class PosterCardEditor extends KindCardEditor {

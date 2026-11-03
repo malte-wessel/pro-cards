@@ -61,6 +61,7 @@ import {
 } from "./shared/trend/plot.ts";
 import { STYLE } from "./multi-trend/styles.ts";
 import { TextCache, themeChanged } from "./shared/typography.ts";
+import { plottable } from "./shared/suggest.ts";
 
 const CARD_TYPE = "multi-trend-card-pro";
 
@@ -435,4 +436,5 @@ export class MultiTrendCard extends HTMLElement {
 registerCard(MultiTrendCard, {
   name: "Multi Trend Card Pro",
   description: "Tile-style trend graph for several sensors with hover tooltip",
+  suggest: plottable,
 });

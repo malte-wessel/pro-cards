@@ -5,7 +5,9 @@ import type {
   CardConfigBase,
   CardConstructor,
   HapticType,
+  HomeAssistant,
 } from "./ha.ts";
+import type { Fits } from "./suggest.ts";
 
 // defines an element unless the name is already taken (another resource, or this bundle loaded
 // twice): the define would throw and abort the whole bundle, taking every card after it down with
@@ -21,14 +23,32 @@ export const defineElement = (tag: string, cls: CustomElementConstructor) => {
   return true;
 };
 
-// registers the element (its static `cardType`) and its card picker entry
+// registers the element (its static `cardType`) and its card picker entry; `suggest` names the
+// entities the picker suggests the card for (src/shared/suggest.ts), with the card's stub for
+// that entity as the suggestion's config
 export const registerCard = (
   cls: CardConstructor,
-  { name, description }: { name: string; description: string },
+  { name, description, suggest }: { name: string; description: string; suggest?: Fits },
 ) => {
   if (!defineElement(cls.cardType, cls)) return;
   window.customCards = window.customCards || [];
-  window.customCards.push({ type: cls.cardType, name, description, preview: true });
+  window.customCards.push({
+    type: cls.cardType,
+    name,
+    description,
+    preview: true,
+    ...(suggest && {
+      getEntitySuggestion: (hass: HomeAssistant, entityId: string) =>
+        suggest(hass, entityId)
+          ? {
+              config: {
+                type: `custom:${cls.cardType}`,
+                ...cls.getStubConfig?.(hass, [entityId]),
+              },
+            }
+          : null,
+    }),
+  });
 };
 
 // a composed, bubbling custom event the Home Assistant frontend listens for
