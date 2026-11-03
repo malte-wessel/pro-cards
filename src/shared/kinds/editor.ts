@@ -8,7 +8,15 @@ import { hasString, t, type StringKey } from "../i18n.ts";
 import { isNum } from "../util.ts";
 import { foundInputs } from "./config.ts";
 import { canRead, detectKind, parseKind, resolveKind } from "./detect.ts";
-import { DETECTED, configToForm, fitEntity, formToConfig, type CardThing } from "./editor-form.ts";
+import {
+  DEFAULT,
+  DETECTED,
+  configToForm,
+  defaultVisual,
+  fitEntity,
+  formToConfig,
+  type CardThing,
+} from "./editor-form.ts";
 import { editorSchema, rangeInfo, type SchemaCtx } from "./editor-schema.ts";
 import { KINDS } from "./registry.ts";
 import type { Kind } from "./types.ts";
@@ -118,12 +126,22 @@ export abstract class KindCardEditor extends FormEditorBase {
     return ids;
   }
 
+  // a picture's source behind the card is named as the icon's picture is (a URL, a template or an
+  // entity), not as a plot's (another entity's history)
+  _nameOf(sch: HaFormSchema): string {
+    const x = this._ctx;
+    if (sch.name !== "visual_src" || !x) return sch.name;
+    const v = x.data.visual_thing;
+    const thing = v === undefined || v === DEFAULT ? defaultVisual(x.kind, x.thing) : v;
+    return thing === "image" ? "icon_src" : sch.name;
+  }
+
   _label(sch: HaFormSchema): string {
-    return t(this._hass, labelKey(sch.name));
+    return t(this._hass, labelKey(this._nameOf(sch)));
   }
 
   _helper(sch: HaFormSchema): string | undefined {
-    const name = sch.name;
+    const name = this._nameOf(sch);
     // what applies where the range is left empty; a range that fills nothing
     if ((name === "min" || name === "max") && this._ctx) {
       const r = rangeInfo(this._ctx);

@@ -283,6 +283,7 @@ const es: Translation = {
   "editor.multi_trend.layout.lanes": "Carriles (una escala por entidad)",
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (detectado)",
+  "editor.card.attribute_state": "Estado",
   "editor.card.none": "Ninguno",
   "editor.card.control_auto": "Los de la entidad: {controls}",
   "editor.card.more": "Más (YAML)",

@@ -33,6 +33,7 @@ export interface HomeAssistant {
   formatEntityState?: (st: HassEntity) => string;
   // an attribute's value as Home Assistant shows it (a climate's preset or fan mode, translated)
   formatEntityAttributeValue?: (st: HassEntity, attribute: string, value?: unknown) => string;
+  formatEntityAttributeName?: (st: HassEntity, attribute: string) => string;
   // a path on the Home Assistant server as a full URL (an entity picture on a cast device)
   hassUrl?: (path?: string) => string;
   // the dashboard's url path ("dashboard-energy"): Home Assistant's energy cards share their period

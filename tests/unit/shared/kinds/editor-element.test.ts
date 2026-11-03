@@ -160,6 +160,22 @@ describe("the editor's number fields", () => {
   });
 });
 
+describe("the source of a picture behind the card", () => {
+  it("is named as a picture's, a plot's as another entity's history", async () => {
+    const person = open("poster", { entity: "person.malte" });
+    await tick();
+    const f = person.form();
+    expect(f.computeLabel({ name: "visual_src" })).toBe("Picture");
+    expect(f.computeHelper({ name: "visual_src" })).toMatch(/^A URL, a template or an entity/);
+    // the opacity starts at the card's own
+    expect(flat(f.schema).find((s) => s.name === "visual_opacity")?.default).toBe(0.3);
+    const temp = open("poster", { entity: "sensor.living_room_temperature", visual: "sparkline" });
+    await tick();
+    expect(temp.form().computeHelper({ name: "visual_src" })).toMatch(/history/);
+    for (const e of [person, temp]) e.ed.remove();
+  });
+});
+
 describe("the editor's helper texts", () => {
   it("name the inputs found on the device, or say none was", () => {
     const wind = open("poster", { entity: "sensor.wind_speed" });

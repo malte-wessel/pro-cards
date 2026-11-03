@@ -37,6 +37,7 @@ import {
   type IconThing,
   type VisualThing,
 } from "./places.ts";
+import { IMAGE_OPACITY } from "./backdrop.ts";
 import { canRead } from "./detect.ts";
 import { KINDS } from "./registry.ts";
 import type { Kind } from "./types.ts";
@@ -182,8 +183,13 @@ export const placeholders = (x: SchemaCtx): Record<string, string> => {
   const name = st.attributes.friendly_name;
   if (typeof name === "string" && name) out.name = name;
   const written = typeof x.data.attribute === "string" && x.data.attribute ? x.data.attribute : "";
-  const attr =
-    written || kind.main?.(st.entity_id, { entity: st.entity_id } as RawEntity, {}).attribute || "";
+  const own = kind.main?.(st.entity_id, { entity: st.entity_id } as RawEntity, {}).attribute ?? "";
+  const attr = written || own;
+  // the attribute picker without a pick: the state, or the kind's attribute by its name
+  out.attribute = own
+    ? (hass?.formatEntityAttributeName?.(st, own) ??
+      own.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()))
+    : L(hass, "attribute_state");
   const raw = attr ? st.attributes[attr] : st.state;
   if (raw !== undefined && raw !== null && raw !== "")
     out.value = isNum(raw)
@@ -252,7 +258,15 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   // ----- content: the texts, the value's range -----
   const range = rangeInfo(x);
   const content: HaFormSchema[] = [
-    ...(entity ? [{ name: "attribute", selector: { attribute: { entity_id: entity } } }] : []),
+    ...(entity
+      ? [
+          {
+            name: "attribute",
+            selector: { attribute: { entity_id: entity } },
+            ...(shown.attribute !== undefined ? { default: shown.attribute } : {}),
+          },
+        ]
+      : []),
     grid(text("value"), { name: "secondary", selector: { text: {} } }),
     ...(x.numeric
       ? [
@@ -395,6 +409,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
           {
             name: "visual_opacity",
             selector: { number: { min: 0, max: 1, step: 0.05, mode: "slider" } },
+            default: IMAGE_OPACITY,
           },
           grid(
             { name: "visual_tint", selector: { ui_color: {} } },

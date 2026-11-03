@@ -283,6 +283,7 @@ const en = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (detected)",
+  "editor.card.attribute_state": "State",
   "editor.card.none": "None",
   "editor.card.control_auto": "The entity's own: {controls}",
   "editor.card.more": "More (YAML)",

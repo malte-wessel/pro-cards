@@ -284,6 +284,7 @@ const cs: Translation = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (rozpoznáno)",
+  "editor.card.attribute_state": "Stav",
   "editor.card.none": "Žádné",
   "editor.card.control_auto": "Vlastní ovládání entity: {controls}",
   "editor.card.more": "Další (YAML)",

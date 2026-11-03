@@ -284,6 +284,7 @@ const pl: Translation = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (wykryto)",
+  "editor.card.attribute_state": "Stan",
   "editor.card.none": "Brak",
   "editor.card.control_auto": "Własne encji: {controls}",
   "editor.card.more": "Więcej (YAML)",

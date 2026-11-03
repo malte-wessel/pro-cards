@@ -284,6 +284,7 @@ const ru: Translation = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (определено)",
+  "editor.card.attribute_state": "Состояние",
   "editor.card.none": "Нет",
   "editor.card.control_auto": "Собственные объекта: {controls}",
   "editor.card.more": "Дополнительно (YAML)",

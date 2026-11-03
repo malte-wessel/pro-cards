@@ -283,6 +283,7 @@ const fr: Translation = {
   "editor.multi_trend.layout.lanes": "Pistes (une échelle par entité)",
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (détecté)",
+  "editor.card.attribute_state": "État",
   "editor.card.none": "Aucun",
   "editor.card.control_auto": "Ceux de l'entité : {controls}",
   "editor.card.more": "Plus (YAML)",

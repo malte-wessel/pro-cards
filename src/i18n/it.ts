@@ -283,6 +283,7 @@ const it: Translation = {
   "editor.multi_trend.layout.lanes": "Corsie (una scala per entità)",
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (rilevato)",
+  "editor.card.attribute_state": "Stato",
   "editor.card.none": "Nessuno",
   "editor.card.control_auto": "Quelli dell'entità: {controls}",
   "editor.card.more": "Altro (YAML)",

@@ -89,6 +89,12 @@ const STYLE = `
   .swatch { width: 20px; height: 20px; border-radius: 50%; flex: none; margin-right: 36px; border: 1px solid var(--divider-color); }
   .icon-preview { flex: none; width: 24px; height: 24px; margin-right: 12px; color: var(--secondary-text-color); }
   .icon-preview.own { opacity: 0.5; }
+  select.unset { color: var(--secondary-text-color); }
+  .field.has-slider .slider { display: flex; align-items: center; gap: 12px; padding: 26px 12px 10px; }
+  .field.has-slider input[type="range"] { flex: 1; min-width: 0; min-height: 0; height: 20px; padding: 0; margin: 0;
+    accent-color: var(--primary-color); cursor: pointer; }
+  .slider-value { flex: none; min-width: 36px; text-align: right; font-size: 14px; }
+  .slider-value.unset { color: var(--secondary-text-color); }
   .helper { font-size: 12px; color: var(--secondary-text-color); margin: 4px 12px 0; line-height: 1.35; }
   .toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; }
   .toggle .text { font-size: 14px; }
@@ -346,13 +352,33 @@ export class HaFormShim extends HTMLElement {
         );
         if (s.default !== undefined && !s.required) input.placeholder = String(s.default);
         const unit = conf.unit_of_measurement ? ` (${conf.unit_of_measurement})` : "";
-        const box = this._box({ ...s, name }, input);
+        // a slider: its track under the label, the value beside it (the default, faint, while
+        // none is set: an empty range would sit in its middle)
+        const out = document.createElement("span");
+        out.className = "slider-value";
+        let control: HTMLElement = input;
+        if (slider) {
+          control = document.createElement("div");
+          control.className = "slider";
+          control.append(input, out);
+          input.addEventListener("input", () => {
+            out.textContent = input.value;
+            out.classList.remove("unset");
+          });
+        }
+        const box = this._box({ ...s, name }, control, slider ? "has-slider" : "");
         if (unit) box.querySelector(".label")!.append(unit);
         return {
           el: box,
           set: (v) => {
-            if (activeIn(this.shadowRoot!) !== input)
-              input.value = typeof v === "number" ? String(v) : "";
+            if (activeIn(this.shadowRoot!) === input) return;
+            const set = typeof v === "number";
+            const shown = set ? v : typeof s.default === "number" ? s.default : undefined;
+            input.value = shown === undefined ? "" : String(shown);
+            if (slider) {
+              out.textContent = shown === undefined ? "" : String(shown);
+              out.classList.toggle("unset", !set);
+            }
           },
         };
       }
@@ -410,10 +436,16 @@ export class HaFormShim extends HTMLElement {
         value: a,
         label: title(a),
       }));
-      const select = this._select(s, attrs, "", (v) => this._emit(name, v || undefined));
+      // no pick: what the field's placeholder says it shows (the state)
+      const none = s.default !== undefined && !s.required ? String(s.default) : "";
+      const select = this._select(s, attrs, none, (v) => this._emit(name, v || undefined));
       return {
         el: this._box(s, select, "select"),
-        set: (v) => (select.value = typeof v === "string" ? v : ""),
+        set: (v) => {
+          select.value = typeof v === "string" ? v : "";
+          // no pick: the placeholder, faint (as Home Assistant's picker draws it)
+          select.classList.toggle("unset", !select.value);
+        },
       };
     }
     const input = document.createElement("input");

@@ -284,6 +284,7 @@ const sv: Translation = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (identifierad)",
+  "editor.card.attribute_state": "Tillstånd",
   "editor.card.none": "Ingen",
   "editor.card.control_auto": "Entitetens egna: {controls}",
   "editor.card.more": "Mer (YAML)",

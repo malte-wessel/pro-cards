@@ -459,6 +459,17 @@ describe("the editor's placeholders", () => {
     });
   });
 
+  it("name what the card shows where no attribute is picked", () => {
+    const attr = (cfg: Raw, change: HaFormData = {}) =>
+      field(schemaOf("poster", cfg, change), "attribute")?.default;
+    expect(attr(TEMP)).toBe("State");
+    // a thermostat's temperature, also while another attribute is picked
+    expect(attr({ entity: "climate.living_room" })).toBe("Current temperature");
+    expect(attr({ entity: "climate.living_room" }, { attribute: "humidity" })).toBe(
+      "Current temperature",
+    );
+  });
+
   it("show the entity's icon in the icon picker", () => {
     expect(field(schemaOf("poster", LIGHT), "icon")?.context).toEqual({ icon_entity: "entity" });
   });

@@ -283,6 +283,7 @@ const de: Translation = {
   "editor.multi_trend.layout.lanes": "Spuren (eine Skala je Entität)",
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (erkannt)",
+  "editor.card.attribute_state": "Zustand",
   "editor.card.none": "Keine",
   "editor.card.control_auto": "Von der Entität: {controls}",
   "editor.card.more": "Mehr (YAML)",

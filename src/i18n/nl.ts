@@ -284,6 +284,7 @@ const nl: Translation = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (herkend)",
+  "editor.card.attribute_state": "Status",
   "editor.card.none": "Geen",
   "editor.card.control_auto": "Die van de entiteit: {controls}",
   "editor.card.more": "Meer (YAML)",
