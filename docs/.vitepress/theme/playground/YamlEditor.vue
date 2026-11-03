@@ -8,7 +8,12 @@ const props = defineProps<{
   modelValue: string;
   error: { message: string; line?: number } | null;
 }>();
-const emit = defineEmits<{ "update:modelValue": [value: string] }>();
+// typed: the text as typed; undo and redo: the keys for them, taken from CodeMirror's own history
+const emit = defineEmits<{
+  "update:modelValue": [value: string];
+  undo: [];
+  redo: [];
+}>();
 
 const host = ref<HTMLDivElement | null>(null);
 type CM = typeof import("./codemirror.ts");
@@ -31,7 +36,10 @@ const mark = () => {
 onMounted(async () => {
   cm = await import("./codemirror.ts");
   if (!host.value) return;
-  view = cm.createEditor(host.value, props.modelValue, (text) => emit("update:modelValue", text));
+  view = cm.createEditor(host.value, props.modelValue, (text) => emit("update:modelValue", text), {
+    undo: () => emit("undo"),
+    redo: () => emit("redo"),
+  });
   mark();
 });
 onBeforeUnmount(() => view?.destroy());

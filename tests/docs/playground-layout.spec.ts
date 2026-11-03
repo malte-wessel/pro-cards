@@ -106,7 +106,7 @@ test.describe("on a phone", () => {
     await expect(bar(page).getByRole("button", { name: "Share" })).toBeVisible();
 
     const more = await openMenu(page, "⋯");
-    await expect(more.getByRole("button")).toHaveText(["Save", "New", "Copy YAML"]);
+    await expect(more.getByRole("button")).toHaveText(["Undo", "Redo", "Save", "New", "Copy YAML"]);
     // within the screen
     const r = (await more.boundingBox())!;
     expect(r.x).toBeGreaterThanOrEqual(0);

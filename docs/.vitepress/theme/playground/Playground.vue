@@ -11,6 +11,7 @@ import type { CardConfigBase } from "../../../../src/shared/ha.ts";
 import Menu from "./Menu.vue";
 import PreviewPane from "./PreviewPane.vue";
 import YamlEditor from "./YamlEditor.vue";
+import { undoStack } from "./undo.ts";
 import {
   decodeShare,
   isUnsaved,
@@ -82,8 +83,41 @@ const cardLabel = (c: CardConfigBase, i: number) =>
 
 let timer: ReturnType<typeof setTimeout> | undefined;
 let fromEditor = false;
+// ----- undo and redo: one history of the YAML, whatever changed it -----
+// (Material Design Icons' undo and redo)
+const UNDO_PATH =
+  "M12.5,8C9.85,8 7.45,9 5.6,10.6L2,7V16H11L7.38,12.38C8.77,11.22 10.54,10.5 12.5,10.5C16.04,10.5 19.05,12.81 20.1,16L22.47,15.22C21.08,11.03 17.15,8 12.5,8Z";
+const REDO_PATH =
+  "M18.4,10.6C16.55,9 14.15,8 11.5,8C6.85,8 2.92,11.03 1.54,15.22L3.9,16C4.95,12.81 7.95,10.5 11.5,10.5C13.45,10.5 15.23,11.22 16.62,12.38L13,16H22V7L18.4,10.6Z";
+// (a step carries the card's name too: an example undone takes its name back with it)
+const steps = undoStack<{ text: string; name: string }>({ text: "", name: "" }, {
+  key: (v) => v.text,
+});
+// what the history allows now (its buttons)
+const canUndo = ref(false);
+const canRedo = ref(false);
+// the next change: typed in the YAML (joins the step being typed), or an undo or a redo (none)
+let typing = false;
+let stepping = false;
+const typed = (t: string) => {
+  if (t === text.value) return;
+  typing = true;
+  text.value = t;
+};
+const step = (to: { text: string; name: string } | null) => {
+  if (to === null || to.text === text.value) return;
+  stepping = true;
+  text.value = to.text;
+  name.value = to.name;
+};
+const undo = () => step(steps.undo());
+const redo = () => step(steps.redo());
 watch(text, (t) => {
   clearTimeout(timer);
+  if (stepping) stepping = false;
+  else steps.record({ text: t, name: name.value }, typing);
+  typing = false;
+  [canUndo.value, canRedo.value] = [steps.canUndo(), steps.canRedo()];
   if (fromEditor) {
     fromEditor = false;
     live.value = t;
@@ -93,6 +127,24 @@ watch(text, (t) => {
   }
   scheduleDraft();
 });
+// the keys anywhere on the page (CodeMirror hands its own over): a field being typed in keeps the
+// browser's undo of its text
+const IS_MAC = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+const KEYS = IS_MAC ? { undo: "⌘Z", redo: "⇧⌘Z" } : { undo: "Ctrl+Z", redo: "Ctrl+Y" };
+const onKey = (ev: KeyboardEvent) => {
+  if (ev.defaultPrevented || !(IS_MAC ? ev.metaKey : ev.ctrlKey) || ev.altKey) return;
+  const key = ev.key.toLowerCase();
+  const back = key === "z" && !ev.shiftKey;
+  const forth = (key === "z" && ev.shiftKey) || (key === "y" && !IS_MAC);
+  if (!back && !forth) return;
+  const target = ev.composedPath()[0] as HTMLElement | undefined;
+  if (target?.closest?.(".cm-editor")) return;
+  if (target && (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable))
+    return;
+  ev.preventDefault();
+  if (back) undo();
+  else redo();
+};
 watch(name, scheduleDraft);
 
 // another card in its place: one with unsaved changes is kept among the saved ones first (an
@@ -339,6 +391,10 @@ onMounted(async () => {
     else load(PRESETS[Object.keys(PRESETS)[0]], Object.keys(PRESETS)[0]);
   }
   window.addEventListener("hashchange", onHash);
+  window.addEventListener("keydown", onKey);
+  // the history starts at the card the page opened with
+  steps.reset({ text: text.value, name: name.value });
+  [canUndo.value, canRedo.value] = [false, false];
   ready.value = true;
   await nextTick();
   void syncEditor();
@@ -347,6 +403,7 @@ onBeforeUnmount(() => {
   unsubscribe?.();
   mq?.removeEventListener("change", onMq);
   window.removeEventListener("hashchange", onHash);
+  window.removeEventListener("keydown", onKey);
 });
 </script>
 
@@ -404,6 +461,28 @@ onBeforeUnmount(() => {
           Save
         </button>
         <button type="button" class="tb-btn" title="Start a new card" @click="fresh">New</button>
+        <span class="pg-steps">
+          <button
+            type="button"
+            class="tb-btn icon"
+            :title="`Undo (${KEYS.undo})`"
+            aria-label="Undo"
+            :disabled="!canUndo"
+            @click="undo"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path :d="UNDO_PATH" /></svg>
+          </button>
+          <button
+            type="button"
+            class="tb-btn icon"
+            :title="`Redo (${KEYS.redo})`"
+            aria-label="Redo"
+            :disabled="!canRedo"
+            @click="redo"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path :d="REDO_PATH" /></svg>
+          </button>
+        </span>
       </template>
       <span class="grow"></span>
       <button v-if="!narrow" type="button" class="tb-btn" title="Copy the YAML" @click="copyYaml">
@@ -412,6 +491,12 @@ onBeforeUnmount(() => {
       <!-- a phone: one row, the rest in ⋯ -->
       <Menu v-else label="⋯" title="More" align="right">
         <template #default="{ close }">
+          <button type="button" class="pg-item" :disabled="!canUndo" @click="(undo(), close())">
+            Undo
+          </button>
+          <button type="button" class="pg-item" :disabled="!canRedo" @click="(redo(), close())">
+            Redo
+          </button>
           <button type="button" class="pg-item" @click="(save(), close())">Save</button>
           <button type="button" class="pg-item" @click="(fresh(), close())">New</button>
           <button type="button" class="pg-item" @click="(copyYaml(), close())">Copy YAML</button>
@@ -462,7 +547,13 @@ onBeforeUnmount(() => {
           <div ref="editorHost"></div>
         </div>
         <div v-show="view === 'yaml'" class="pg-yaml">
-          <YamlEditor v-model="text" :error="error" />
+          <YamlEditor
+            :model-value="text"
+            :error="error"
+            @update:model-value="typed"
+            @undo="undo"
+            @redo="redo"
+          />
         </div>
         <div v-if="error" class="pg-error" role="status">
           <b>{{ error.line ? `Line ${error.line}:` : "Error:" }}</b> {{ error.message }}
