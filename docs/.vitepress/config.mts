@@ -120,14 +120,13 @@ const cardGroups = [
   },
 ];
 
-// the guide, the playground and the changelog; the nav dropdown and the sidebar both list them
+// the guide and the changelog; the nav dropdown and the sidebar both list them
 const guide = [
   { text: "Getting started", link: "/guide/getting-started" },
   { text: "Look & themes", link: "/guide/colours" },
   { text: "Sizing in sections", link: "/guide/sizing" },
   { text: "Languages", link: "/guide/languages" },
   { text: "Visibility", link: "/guide/visibility" },
-  { text: "Playground", link: "/playground" },
   { text: "Changelog", link: "/changelog/" },
 ];
 
@@ -201,6 +200,7 @@ export default defineConfig({
         text: "Showcase",
         items: showcase,
       },
+      { text: "Playground", link: "/playground" },
       { text: `v${pkg.version}`, link: "https://github.com/malte-wessel/pro-cards/releases" },
     ],
     sidebar: [

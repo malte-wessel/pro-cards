@@ -345,12 +345,24 @@ onBeforeUnmount(() => {
           </div>
         </template>
       </Menu>
-      <button type="button" class="tb-btn" title="Save in this browser" @click="save">Save</button>
-      <button type="button" class="tb-btn" title="Start a new card" @click="fresh">New</button>
+      <template v-if="!narrow">
+        <button type="button" class="tb-btn" title="Save in this browser" @click="save">
+          Save
+        </button>
+        <button type="button" class="tb-btn" title="Start a new card" @click="fresh">New</button>
+      </template>
       <span class="grow"></span>
-      <button type="button" class="tb-btn" title="Copy the YAML" @click="copyYaml">
+      <button v-if="!narrow" type="button" class="tb-btn" title="Copy the YAML" @click="copyYaml">
         Copy YAML
       </button>
+      <!-- a phone: one row, the rest in ⋯ -->
+      <Menu v-else label="⋯" title="More" align="right">
+        <template #default="{ close }">
+          <button type="button" class="pg-item" @click="(save(), close())">Save</button>
+          <button type="button" class="pg-item" @click="(fresh(), close())">New</button>
+          <button type="button" class="pg-item" @click="(copyYaml(), close())">Copy YAML</button>
+        </template>
+      </Menu>
       <button type="button" class="tb-btn primary" title="Copy a link to this card" @click="share">
         Share
       </button>

@@ -1,15 +1,26 @@
-/* The Playground: one framed editor window in the page, its top bar, two panes and a splitter */
+/* The Playground's page: the editor alone, right under the nav bar and as tall as the screen
+   below it (no footer). It takes the whole width up to the nav bar container's widest (the
+   layout's width less 64 px); a wider screen centres it there, between borders */
+.playground-page .VPDoc,
+.playground-page .VPDoc .container,
+.playground-page .VPDoc .content,
+.playground-page .VPDoc .content-container,
+.playground-page .vp-doc > div {
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* The Playground: its top bar, two panes and a splitter */
 .pg {
   position: relative;
   display: flex;
   flex-direction: column;
-  /* the screen below the page's heading */
-  height: max(560px, calc(100dvh - var(--vp-nav-height, 64px) - 220px));
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 12px;
+  max-width: calc(var(--vp-layout-max-width, 1440px) - 64px);
+  margin: 0 auto;
+  height: calc(100dvh - var(--vp-nav-height, 64px));
   overflow: hidden;
   background: var(--vp-c-bg);
-  box-shadow: var(--vp-shadow-2);
   font-family: var(--vp-font-family-base);
 }
 .pg .grow {
@@ -259,7 +270,16 @@
 .pg.narrow .pg-pane.collapsed {
   flex: none;
 }
+
 .pg.narrow .pg-name {
   width: 100%;
   max-width: none;
+}
+
+/* wider than the container: centred between borders */
+@media (min-width: 1377px) {
+  .pg {
+    border-left: 1px solid var(--vp-c-divider);
+    border-right: 1px solid var(--vp-c-divider);
+  }
 }
