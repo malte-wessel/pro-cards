@@ -207,9 +207,10 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   const fits = (th: string) => !KIND_THINGS.includes(th) || !!kind.draws?.includes(th);
 
   // ----- the top: the entity, its kind, its name and icon, the colour -----
-  // the kinds that read the entity (the one written too, so the select shows it)
+  // the kinds that read the entity, the detected one only as detected (the one written too, so the
+  // select shows it)
   const kinds = Object.keys(KINDS)
-    .filter((k) => k === data.kind || canRead(KINDS[k], entity))
+    .filter((k) => k === data.kind || (k !== x.detected.name && canRead(KINDS[k], entity)))
     .map((k) => opt(k, kindLabel(hass, k)))
     .sort((a, b) => a.label.localeCompare(b.label));
   const top: HaFormSchema[] = [

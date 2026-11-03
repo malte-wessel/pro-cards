@@ -339,7 +339,7 @@ A rain rate sensor. The animated icon (`icon: { type: flow, variant: drops }`) r
 
 ## Trend
 
-**Reads** its own entities (`kind: trend`).
+**Reads** its own entities (`kind: trend`), and as its large value a sensor, a number or a counter.
 
 `kind: trend` draws the entities of its `series` on one scale, as lines along the bottom (its `sparkline` visual). Hover them to read every value at that time. The large value is the card's `entity`, else the first series. The status is the time window: `visual: { hours: 12 }` sets it, 6 hours by default.
 

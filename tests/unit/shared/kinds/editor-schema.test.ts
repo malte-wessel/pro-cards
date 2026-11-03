@@ -80,15 +80,22 @@ describe("the editor's kind", () => {
     const opts = options(schemaOf("poster", { entity: "sensor.wind_speed" }), "kind");
     expect(opts[0]).toEqual({ value: "detected", label: "Wind (detected)" });
     const values = opts.slice(1).map((o) => o.value);
+    // the detected kind once, as detected
     expect(values.sort()).toEqual(
       Object.keys(KINDS)
-        .filter((k) => canRead(KINDS[k], "sensor.wind_speed"))
+        .filter((k) => k !== "wind" && canRead(KINDS[k], "sensor.wind_speed"))
         .sort(),
     );
-    expect(values).toContain("wind");
-    // a light is no weather
+    expect(values).toContain("trend");
+    // a light is no weather and no trend: none, or a light as written
     const light = options(schemaOf("poster", { entity: "light.living_room" }), "kind");
-    expect(light.map((o) => o.value)).not.toContain("weather");
+    expect(light.map((o) => o.label)).toEqual(["Light (detected)", "None (the entity as it is)"]);
+    // written, the detected kind is listed as written too
+    expect(
+      options(schemaOf("poster", { entity: "light.living_room" }, { kind: "light" }), "kind").map(
+        (o) => o.value,
+      ),
+    ).toContain("light");
     // a kind written for it shows all the same
     const written = options(
       schemaOf("poster", { entity: "light.living_room" }, { kind: "weather" }),

@@ -63,8 +63,9 @@ const specOf = (c: KindCtx, shown: TrendSeries[]) => {
 
 export const TREND: Kind = {
   name: "trend",
-  reads: "any",
-  readsText: "its own entities",
+  // the card's entity is its large value, a number; its lines are its series
+  reads: ["sensor", "number", "input_number", "counter"],
+  readsText: "a sensor, a number or a counter (its series, without an entity)",
   entityless: true,
   keys: ["series"],
   // its series' lines below the texts: the sparkline is its own

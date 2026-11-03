@@ -268,7 +268,7 @@ Drops fall through the icon as fast as it rains. The line gives the rate, its st
 
 ## Trend
 
-**Reads** its own entities (`kind: trend`).
+**Reads** its own entities (`kind: trend`), and as its large value a sensor, a number or a counter.
 
 The first series' value, the time window, and the lines of its `series` on one scale below (its `sparkline` visual): without them it is a value alone, and `visual: false` leaves them out. See [Kinds: Trend](/cards/poster-types#trend).
 

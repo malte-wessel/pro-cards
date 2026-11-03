@@ -38,6 +38,11 @@ describe("poster-card config", () => {
     expect(() => norm({ entity: "light.kitchen", kind: "wind" })).toThrow(
       `${T}: the wind kind reads a wind_speed sensor or a weather entity`,
     );
+    // a trend's large value is a number
+    expect(() => norm({ entity: "light.kitchen", kind: "trend" })).toThrow(
+      `${T}: the trend kind reads a sensor, a number or a counter`,
+    );
+    expect(() => norm({ entity: "sensor.outdoor_temperature", kind: "trend" })).not.toThrow();
   });
 
   it("names the new spelling of every key the places replaced", () => {
