@@ -412,7 +412,7 @@ describe("poster-card config", () => {
     // a flow behind the card makes the wind's icon the still one
     expect(
       drawn(norm({ entity: W, kind: "wind", visual: { type: "flow", variant: "lines" } })),
-    ).toEqual({ icon: { type: "icon" }, visual: { type: "flow", variant: "lines" } });
+    ).toEqual({ icon: { type: "icon", still: true }, visual: { type: "flow", variant: "lines" } });
     // the icon's animation in another drawing, and without its circle
     expect(
       drawn(

@@ -46,8 +46,10 @@ export interface IconPlace {
   // which drawing of the thing (a flow's: dots, lines, swoosh …)
   variant?: FlowStyleAny;
   src?: string;
-  // resolved only: the place emptied (icon: false, the card's or a rule's)
+  // resolved only: the place emptied (icon: false, the card's or a rule's); the kind's still
+  // drawing in place of its animation, which is drawn behind the card (the wind's arrow)
   hidden?: boolean;
+  still?: boolean;
   // the icon's own actions (as written: the card parses them), and the badge on it (a tile's)
   tap_action?: unknown;
   hold_action?: unknown;
@@ -289,7 +291,7 @@ export const resolvePlaces = (
   if (v && v.type === "flow" && i.type === "flow") {
     const { variant: _variant, ...rest } = i;
     void _variant;
-    i = { ...rest, type: "icon" };
+    i = { ...rest, type: "icon", still: true };
   }
   return { icon: i, visual: v };
 };

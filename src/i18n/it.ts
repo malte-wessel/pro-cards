@@ -320,6 +320,8 @@ const it: Translation = {
   "editor.card.icon_thing.icon": "Icona",
   "editor.card.icon_thing.image": "Immagine",
   "editor.card.icon_thing.flow": "Animazione",
+  "editor.card.icon_thing.still.wind": "Freccia della direzione del vento",
+  "editor.card.icon_thing.still.rain": "Icona della pioggia",
   "editor.card.visual_thing.glow": "Bagliore",
   "editor.card.visual_thing.image": "Immagine di sfondo",
   "editor.card.visual_thing.flow": "Animazione di sfondo",

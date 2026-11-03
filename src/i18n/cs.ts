@@ -321,6 +321,8 @@ const cs: Translation = {
   "editor.card.icon_thing.icon": "Ikona",
   "editor.card.icon_thing.image": "Obrázek",
   "editor.card.icon_thing.flow": "Animace",
+  "editor.card.icon_thing.still.wind": "Šipka směru větru",
+  "editor.card.icon_thing.still.rain": "Ikona deště",
   "editor.card.visual_thing.glow": "Záře",
   "editor.card.visual_thing.image": "Obrázek v pozadí",
   "editor.card.visual_thing.flow": "Animace v pozadí",

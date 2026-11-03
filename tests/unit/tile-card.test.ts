@@ -368,6 +368,35 @@ describe("tile-card config", () => {
     }
   });
 
+  it("draws the wind's arrow with the flow behind, and the entity's icon where the icon is asked", () => {
+    const tiles: TileCard[] = [];
+    const lead = (cfg: Record<string, unknown>) => {
+      const el = new TileCard();
+      el.setConfig(cfg);
+      document.body.appendChild(el);
+      el.hass = snapshot() as never;
+      tiles.push(el);
+      return el.shadowRoot!.querySelector(".tlead")!;
+    };
+    try {
+      const W = { entity: "sensor.wind_speed", visual: { type: "flow" } };
+      expect(lead(W).querySelector("ha-icon.arrow")).not.toBeNull();
+      // the entity's own icon
+      const icon = lead({ ...W, icon: { type: "icon" } });
+      expect(icon.querySelector("ha-icon.arrow")).toBeNull();
+      expect(icon.querySelector("ha-icon")?.getAttribute("icon")).toBe("mdi:weather-windy");
+      // and the animation in the icon gives way to it the same
+      const still = lead({ entity: "sensor.wind_speed", icon: { type: "icon" } });
+      expect(still.querySelector(".wlead")).toBeNull();
+      expect(still.querySelector("ha-icon")?.getAttribute("icon")).toBe("mdi:weather-windy");
+      // one named
+      const named = lead({ ...W, icon: { type: "icon", name: "mdi:flag" } });
+      expect(named.querySelector("ha-icon")?.getAttribute("icon")).toBe("mdi:flag");
+    } finally {
+      for (const t of tiles) t.remove();
+    }
+  });
+
   it("gives the kinds today as the hours since midnight, the weather its own hours", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const card = (cfg: Record<string, unknown>) => {

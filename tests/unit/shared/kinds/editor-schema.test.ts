@@ -223,6 +223,22 @@ describe("the editor's icon and visual", () => {
   });
 });
 
+describe("the wind's and the rain's icon with the animation behind", () => {
+  it("names the still drawing, and offers an icon of its own", () => {
+    const wind = { entity: "sensor.wind_speed" };
+    const labels = (cfg: Raw) => options(schemaOf("poster", cfg), "icon_thing").map((o) => o.label);
+    expect(labels(wind)).toEqual(["Default: Animation", "Icon", "Picture", "None"]);
+    const behind = { ...wind, visual: { type: "flow" } };
+    expect(labels(behind)).toEqual(["Default: Wind direction arrow", "Icon", "Picture", "None"]);
+    // the arrow has no variants
+    expect(names(schemaOf("poster", behind))).not.toContain("icon_variant");
+    expect(names(schemaOf("poster", wind))).toContain("icon_variant");
+    expect(labels({ entity: "sensor.rain_rate", visual: { type: "flow" } })[0]).toBe(
+      "Default: Rain icon",
+    );
+  });
+});
+
 describe("the editor's other entities", () => {
   it("are the kind's inputs, none for a weather entity", () => {
     expect(names(schemaOf("poster", { entity: "sensor.rain_rate" }))).toEqual(

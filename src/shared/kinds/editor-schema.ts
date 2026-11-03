@@ -6,7 +6,7 @@ import { domainOf } from "../color.ts";
 import type { ControlKind } from "../entity/control.ts";
 import { BADGE_SIZES, BADGE_STYLES, HEADER_VISUALS } from "../entity/constants.ts";
 import type { HaFormData, HaFormSchema, HassEntity, HomeAssistant } from "../ha.ts";
-import { t, type StringKey } from "../i18n.ts";
+import { hasString, t, type StringKey } from "../i18n.ts";
 import { RAIN_STYLES } from "../rain/constants.ts";
 import { FLOW_STYLES } from "../wind/constants.ts";
 import { TILE_ICON_TOGGLES } from "./config.ts";
@@ -266,11 +266,18 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   ];
 
   // ----- look: the icon's and the visual's thing, then that thing's options -----
+  // the animation is drawn in one place: behind the card, the icon's flow is its still drawing (the
+  // wind's arrow, the rain's icon)
+  const still = visualThing === "flow";
+  const iconLabel = (th: string) =>
+    th === "flow" && still && hasString(`editor.card.icon_thing.still.${kind.name}`)
+      ? tr(`icon_thing.still.${kind.name}`)
+      : tr(`icon_thing.${th}`);
   const iconThings = [
-    opt(DEFAULT, named(tr(`icon_thing.${defaultIcon(kind)}`))),
+    opt(DEFAULT, named(iconLabel(defaultIcon(kind)))),
     ...(["icon", "image", "flow"] as const)
       .filter((th) => th !== defaultIcon(kind) && fits(th))
-      .map((th) => opt(th, tr(`icon_thing.${th}`))),
+      .map((th) => opt(th, iconLabel(th))),
     opt("none", tr("none")),
   ];
   // a drawing's variants, the default named (the kind's, else the device class's)
@@ -284,7 +291,8 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
       ? []
       : [
           ...(iconThing === "image" ? [{ name: "icon_src", selector: { text: {} } }] : []),
-          ...(iconThing === "flow"
+          // (the still drawing has no variants)
+          ...(iconThing === "flow" && !still
             ? [variants("icon_variant", kind.name, kind.icon?.variant)]
             : []),
           grid(

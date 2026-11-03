@@ -451,7 +451,7 @@ describe("resolvePlaces", () => {
       visual: false,
     });
     expect(resolvePlaces([wind, layer({ visual: { type: "flow", variant: "lines" } })])).toEqual({
-      icon: { type: "icon" },
+      icon: { type: "icon", still: true },
       visual: { type: "flow", variant: "lines" },
     });
     // the icon's other options stay
@@ -460,11 +460,16 @@ describe("resolvePlaces", () => {
         wind,
         layer({ icon: { ring: true }, visual: { type: "flow", variant: "swoosh" } }),
       ]).icon,
-    ).toEqual({ type: "icon", ring: true });
+    ).toEqual({ type: "icon", ring: true, still: true });
     // a rule that moves the flow behind the card while it matches
     expect(resolvePlaces([wind, none, layer({ visual: { type: "flow" } })]).icon).toEqual({
       type: "icon",
+      still: true,
     });
+    // an icon asked for is no still one
+    expect(
+      resolvePlaces([wind, layer({ icon: { type: "icon" }, visual: { type: "flow" } })]).icon,
+    ).toEqual({ type: "icon" });
   });
 });
 

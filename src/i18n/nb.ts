@@ -321,6 +321,8 @@ const nb: Translation = {
   "editor.card.icon_thing.icon": "Ikon",
   "editor.card.icon_thing.image": "Bilde",
   "editor.card.icon_thing.flow": "Animasjon",
+  "editor.card.icon_thing.still.wind": "Vindretningspil",
+  "editor.card.icon_thing.still.rain": "Regnikon",
   "editor.card.visual_thing.glow": "Glød",
   "editor.card.visual_thing.image": "Bilde bak",
   "editor.card.visual_thing.flow": "Animasjon bak",

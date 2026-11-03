@@ -305,7 +305,7 @@ Options that would do nothing are caught. Where the config alone decides it, it 
 
 ### One place for the animation
 
-The wind's and the rain's animation is drawn in one place: by default the icon. `visual: { type: flow }` makes it fill the whole poster, and the icon becomes the wind's arrow (the rain's icon). A flow's `variant` picks its drawing: the wind's `dots`, `lines`, `swoosh` or `vectors`, the rain's `drops`, `ripples` or `fill`. Writing a flow in both places is a config error.
+The wind's and the rain's animation is drawn in one place: by default the icon. `visual: { type: flow }` makes it fill the whole poster, and the icon becomes the wind's arrow (the rain's icon); `icon: { type: icon }` draws the entity's icon instead (or the one `name` gives). A flow's `variant` picks its drawing: the wind's `dots`, `lines`, `swoosh` or `vectors`, the rain's `drops`, `ripples` or `fill`. Writing a flow in both places is a config error.
 
 ::: live
 

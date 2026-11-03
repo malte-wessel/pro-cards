@@ -321,6 +321,8 @@ const pl: Translation = {
   "editor.card.icon_thing.icon": "Ikona",
   "editor.card.icon_thing.image": "Obraz",
   "editor.card.icon_thing.flow": "Animacja",
+  "editor.card.icon_thing.still.wind": "Strzałka kierunku wiatru",
+  "editor.card.icon_thing.still.rain": "Ikona deszczu",
   "editor.card.visual_thing.glow": "Poświata",
   "editor.card.visual_thing.image": "Obraz w tle",
   "editor.card.visual_thing.flow": "Animacja w tle",

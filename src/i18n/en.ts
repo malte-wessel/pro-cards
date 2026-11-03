@@ -320,6 +320,8 @@ const en = {
   "editor.card.icon_thing.icon": "Icon",
   "editor.card.icon_thing.image": "Picture",
   "editor.card.icon_thing.flow": "Animation",
+  "editor.card.icon_thing.still.wind": "Wind direction arrow",
+  "editor.card.icon_thing.still.rain": "Rain icon",
   "editor.card.visual_thing.glow": "Glow",
   "editor.card.visual_thing.image": "Picture behind",
   "editor.card.visual_thing.flow": "Animation behind",

@@ -321,6 +321,8 @@ const sv: Translation = {
   "editor.card.icon_thing.icon": "Ikon",
   "editor.card.icon_thing.image": "Bild",
   "editor.card.icon_thing.flow": "Animation",
+  "editor.card.icon_thing.still.wind": "Vindriktningspil",
+  "editor.card.icon_thing.still.rain": "Regnikon",
   "editor.card.visual_thing.glow": "Sken",
   "editor.card.visual_thing.image": "Bild bakom",
   "editor.card.visual_thing.flow": "Animation bakom",

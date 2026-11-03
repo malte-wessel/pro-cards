@@ -321,6 +321,8 @@ const ru: Translation = {
   "editor.card.icon_thing.icon": "Значок",
   "editor.card.icon_thing.image": "Изображение",
   "editor.card.icon_thing.flow": "Анимация",
+  "editor.card.icon_thing.still.wind": "Стрелка направления ветра",
+  "editor.card.icon_thing.still.rain": "Значок дождя",
   "editor.card.visual_thing.glow": "Свечение",
   "editor.card.visual_thing.image": "Изображение на фоне",
   "editor.card.visual_thing.flow": "Анимация на фоне",

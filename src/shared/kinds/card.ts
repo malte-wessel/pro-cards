@@ -405,8 +405,9 @@ export abstract class KindCardBase extends EntityCardBase {
       o.picture = stripEl(c.m.progress === null ? null : c.m.progress * 100, false);
     return o;
   }
-  // the card draws its own lead: an icon it names (the card's), a picture it names, or an icon
-  // with actions of its own (an animated lead gives way to them)
+  // the card draws its own lead: an icon it names (the card's), a picture it names, an icon where
+  // the kind draws its animation (the wind's, the rain's: the entity's icon then, not their arrow
+  // or still drawing), or an icon with actions of its own (an animated lead gives way to them)
   _userIcon(kc?: KindCtx) {
     const cfg = this._config;
     const named = !!cfg?.places.icon && cfg.places.icon.name !== undefined;
@@ -414,6 +415,7 @@ export abstract class KindCardBase extends EntityCardBase {
     return (
       named ||
       (!!icon && icon.type === "image" && !!icon.src) ||
+      (!!icon && icon.type === "icon" && !icon.still && cfg?.kind.icon?.type === "flow") ||
       (!!cfg && this._actionsTakeLead(cfg))
     );
   }

@@ -321,6 +321,8 @@ const nl: Translation = {
   "editor.card.icon_thing.icon": "Pictogram",
   "editor.card.icon_thing.image": "Afbeelding",
   "editor.card.icon_thing.flow": "Animatie",
+  "editor.card.icon_thing.still.wind": "Windrichtingspijl",
+  "editor.card.icon_thing.still.rain": "Regenpictogram",
   "editor.card.visual_thing.glow": "Gloed",
   "editor.card.visual_thing.image": "Afbeelding erachter",
   "editor.card.visual_thing.flow": "Animatie erachter",
