@@ -2,7 +2,8 @@
 // built for the card's kind (editor-schema.ts) and written back as the shortest YAML that draws
 // the same (editor-form.ts). What the form does not show stays as written.
 import { FormEditorBase } from "../editor.ts";
-import type { CardConfigBase, HaFormData, HaFormSchema, HomeAssistant } from "../ha.ts";
+import type { RawEntity } from "../entity/config.ts";
+import type { CardConfigBase, HaFormData, HaFormSchema, HassEntity, HomeAssistant } from "../ha.ts";
 import { hasString, t, type StringKey } from "../i18n.ts";
 import { isNum } from "../util.ts";
 import { foundInputs } from "./config.ts";
@@ -16,6 +17,21 @@ type Raw = Record<string, unknown>;
 
 // the kind the card draws for the form's entity and kind: the written one where it reads the
 // entity, else the detected one (the form stays usable while a choice is half made)
+// whether the value the card shows is a number (its unit and decimals apply): the attribute
+// written, else the kind's (a thermostat's current temperature), else the state
+const shownIsNum = (
+  data: { entity?: unknown; attribute?: unknown },
+  kind: Kind,
+  st: HassEntity | undefined,
+) => {
+  const entity = typeof data.entity === "string" && data.entity ? data.entity : null;
+  const attr =
+    typeof data.attribute === "string" && data.attribute
+      ? data.attribute
+      : kind.main?.(entity, { entity } as RawEntity, {}).attribute;
+  return isNum(typeof attr === "string" ? st?.attributes[attr] : st?.state);
+};
+
 export const kindsOf = (
   data: { entity?: unknown; kind?: unknown },
   hass: HomeAssistant | undefined,
@@ -59,7 +75,15 @@ export abstract class KindCardEditor extends FormEditorBase {
     const { kind, detected } = kindsOf(data, hass);
     const entity = typeof data.entity === "string" ? data.entity : "";
     const st = hass.states[entity];
-    this._ctx = { hass, thing: this._thing, kind, detected, data, numeric: isNum(st?.state), st };
+    this._ctx = {
+      hass,
+      thing: this._thing,
+      kind,
+      detected,
+      data,
+      numeric: shownIsNum(data, kind, st),
+      st,
+    };
     return editorSchema(this._ctx);
   }
 
@@ -69,12 +93,19 @@ export abstract class KindCardEditor extends FormEditorBase {
     const c = (this._config ?? {}) as Raw;
     const entity = typeof c.entity === "string" ? c.entity : "";
     const { kind, detected } = kindsOf(c, hass);
-    return [detected.name, isNum(hass.states[entity]?.state), this._found(kind, hass)];
+    return [detected.name, shownIsNum(c, kind, hass.states[entity]), this._found(kind, hass)];
   }
 
-  // the inputs the kind would find on the device, whatever the card sets
+  // the inputs the kind would find on the device, whatever the card sets (looked for again only
+  // for another kind, config or registry: a new state anywhere in the home changes none of them)
+  _foundFor?: { kind: Kind; config: unknown; entities: unknown; ids: (string | null)[] };
   _found(kind: Kind, hass: HomeAssistant | undefined) {
-    return foundInputs(kind, { ...(this._config ?? {}), inputs: {} }, hass);
+    const f = this._foundFor;
+    if (f && f.kind === kind && f.config === this._config && f.entities === hass?.entities)
+      return f.ids;
+    const ids = foundInputs(kind, { ...(this._config ?? {}), inputs: {} }, hass);
+    this._foundFor = { kind, config: this._config, entities: hass?.entities, ids };
+    return ids;
   }
 
   _label(sch: HaFormSchema): string {

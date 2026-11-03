@@ -911,6 +911,23 @@ describe("poster-card element", () => {
     expect(Object.keys(el._config!.inputs)).toEqual(["direction"]);
   });
 
+  it("resolves its icon's actions again from the state hass brings", () => {
+    const A = "alarm_control_panel.home";
+    const el = mount({ entity: A });
+    // no state yet: the hold arms
+    expect(el._config?.iconActions.hold).toEqual({ action: "toggle" });
+    const hass = snapshot();
+    const coded = {
+      ...hass.states[A],
+      attributes: { ...hass.states[A].attributes, code_format: "number" },
+    };
+    el.hass = { ...hass, states: { ...hass.states, [A]: coded } };
+    expect(el._config?.iconActions.hold).toBeNull();
+    // and back, once the panel no longer wants a code
+    el.hass = hass;
+    expect(el._config?.iconActions.hold).toEqual({ action: "toggle" });
+  });
+
   it("takes hass before its config", () => {
     vi.spyOn(console, "info").mockImplementation(() => {});
     const el = new PosterCard();
@@ -1020,6 +1037,21 @@ describe("poster-card drawing", () => {
     expect(badges[1].classList.contains("b-filled")).toBe(true);
     expect(badges[0].textContent).toContain("55");
     expect(badges[1].textContent).toContain("640");
+  });
+
+  it("leaves out a status that repeats the value", () => {
+    const L = "light.living_room";
+    set(L, "on", { brightness: 204 });
+    const r = draw({ entity: L });
+    const status = () => q(r, ".corner > .pstatus");
+    expect(status().classList.contains("empty")).toBe(false);
+    expect(status().textContent).toContain("On");
+    // off: the value says Off, the corner nothing
+    set(L, "off", {});
+    expect(q(r, ".pvalue").textContent).toContain("Off");
+    expect(status().classList.contains("empty")).toBe(true);
+    set(L, "on", { brightness: 204 });
+    expect(status().classList.contains("empty")).toBe(false);
   });
 
   it("keeps its badges when the poster is filled again, and fills a badge in place", () => {

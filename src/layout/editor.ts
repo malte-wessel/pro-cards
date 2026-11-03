@@ -138,7 +138,7 @@ export const placeSchema = (
   const byWidth = placeByWidth(card);
   const data = placeToForm(card);
   const n = (min: number, max?: number) => ({
-    number: { min, ...(max ? { max } : {}), mode: "box" },
+    number: { min, ...(max ? { max } : {}), step: 1, mode: "box" },
   });
   return [
     ...(byWidth.includes("span")
@@ -154,7 +154,7 @@ export const placeSchema = (
       ...(byWidth.includes("column") ? [] : [{ name: "column", selector: n(1, 24) }]),
       ...(byWidth.includes("order")
         ? []
-        : [{ name: "order", selector: { number: { mode: "box" } } }]),
+        : [{ name: "order", selector: { number: { step: 1, mode: "box" } } }]),
     ),
     ...(byWidth.includes("align")
       ? []

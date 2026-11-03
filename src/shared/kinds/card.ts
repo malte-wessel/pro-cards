@@ -154,7 +154,8 @@ export abstract class KindCardBase extends EntityCardBase {
     }
   }
   // what the kind is resolved from: the detected kind (the device class arrives with the first
-  // state) and the inputs found on the entity's device (Home Assistant replaces its registry on
+  // state), the icon's actions the kind reads from the state (an alarm that wants a code has no
+  // hold) and the inputs found on the entity's device (Home Assistant replaces its registry on
   // any change anywhere: only a change of what was found counts)
   _resolveInputs(hass: HomeAssistant | undefined): unknown[] {
     const raw = (this._raw ?? {}) as { entity?: string; kind?: unknown };
@@ -176,7 +177,8 @@ export abstract class KindCardBase extends EntityCardBase {
         raw: this._raw,
         ids: foundInputs(KINDS[kind], raw as Record<string, unknown>, hass),
       };
-    return [kind, ...found.ids];
+    const actions = KINDS[kind].iconActions?.(hass?.states[raw.entity ?? ""]);
+    return [kind, actions ? JSON.stringify(actions) : "", ...found.ids];
   }
   _setHass(hass: HomeAssistant) {
     const now = this._resolveInputs(hass);

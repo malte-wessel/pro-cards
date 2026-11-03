@@ -157,6 +157,16 @@ interface Field {
   set(v: unknown): void;
 }
 
+// the focused element in a shadow root (happy-dom, under the unit tests, throws where the focus
+// is in a shadow root around this one: none here, as in a browser)
+const activeIn = (root: ShadowRoot): HTMLElement | null => {
+  try {
+    return root.activeElement as HTMLElement | null;
+  } catch {
+    return null;
+  }
+};
+
 export class HaFormShim extends HTMLElement {
   hass?: HassLike;
   computeLabel?: (s: Schema) => string;
@@ -190,7 +200,8 @@ export class HaFormShim extends HTMLElement {
     this._queued = true;
     queueMicrotask(() => {
       this._queued = false;
-      this._render();
+      // a form taken off the page meanwhile draws when it is back (connectedCallback)
+      if (this.isConnected) this._render();
     });
   }
 
@@ -213,7 +224,7 @@ export class HaFormShim extends HTMLElement {
     const key = JSON.stringify(this._schema);
     if (key !== this._key) {
       // a new schema: built again, the focused field focused again
-      const active = root.activeElement as HTMLElement | null;
+      const active = activeIn(root);
       const focusName = active?.closest<HTMLElement>("[data-name]")?.dataset.name;
       // the sections open now stay open (their toggle event may not have come yet)
       for (const d of root.querySelectorAll<HTMLDetailsElement>("details[data-id]"))
@@ -335,7 +346,7 @@ export class HaFormShim extends HTMLElement {
         return {
           el: box,
           set: (v) => {
-            if (this.shadowRoot!.activeElement !== input)
+            if (activeIn(this.shadowRoot!) !== input)
               input.value = typeof v === "number" ? String(v) : "";
           },
         };
@@ -422,7 +433,7 @@ export class HaFormShim extends HTMLElement {
       el: this._box(s, control),
       set: (v) => {
         const next = typeof v === "string" ? v : "";
-        if (input.value !== next && this.shadowRoot!.activeElement !== input) input.value = next;
+        if (input.value !== next && activeIn(this.shadowRoot!) !== input) input.value = next;
         if (preview) {
           (preview as HTMLElement & { icon?: string }).icon = next || undefined;
           preview.hidden = !next;
@@ -587,7 +598,7 @@ export class HaFormShim extends HTMLElement {
       el: box,
       set: (v) => {
         value = typeof v === "string" ? v : "";
-        if (this.shadowRoot!.activeElement !== input) show();
+        if (activeIn(this.shadowRoot!) !== input) show();
       },
     };
   }
@@ -623,7 +634,7 @@ export class HaFormShim extends HTMLElement {
         extraBox.hidden = !key;
         if (key) {
           extraBox.querySelector(".label")!.textContent = title(key);
-          if (this.shadowRoot!.activeElement !== extra) extra.value = String(current?.[key] ?? "");
+          if (activeIn(this.shadowRoot!) !== extra) extra.value = String(current?.[key] ?? "");
         }
       },
     };
@@ -647,7 +658,7 @@ export class HaFormShim extends HTMLElement {
     return {
       el: box,
       set: (v) => {
-        if (this.shadowRoot!.activeElement === ta) return;
+        if (activeIn(this.shadowRoot!) === ta) return;
         ta.value = v === undefined || v === null ? "" : yaml.dump(v, { lineWidth: -1 });
       },
     };

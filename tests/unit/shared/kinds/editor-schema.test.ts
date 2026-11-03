@@ -6,6 +6,7 @@ import { configToForm, DEFAULT, type CardThing } from "../../../../src/shared/ki
 import { editorSchema } from "../../../../src/shared/kinds/editor-schema.ts";
 import { kindsOf } from "../../../../src/shared/kinds/editor.ts";
 import { KIND_THINGS } from "../../../../src/shared/kinds/places.ts";
+import { canRead } from "../../../../src/shared/kinds/detect.ts";
 import { KINDS } from "../../../../src/shared/kinds/registry.ts";
 import type { CardConfigBase, HaFormData, HaFormSchema } from "../../../../src/shared/ha.ts";
 import { isNum } from "../../../../src/shared/util.ts";
@@ -75,15 +76,25 @@ describe("the editor's sections", () => {
 });
 
 describe("the editor's kind", () => {
-  it("names the detected kind first, then every kind by its name", () => {
+  it("names the detected kind first, then every kind that reads the entity by its name", () => {
     const opts = options(schemaOf("poster", { entity: "sensor.wind_speed" }), "kind");
     expect(opts[0]).toEqual({ value: "detected", label: "Detected: Wind" });
-    expect(
-      opts
-        .slice(1)
-        .map((o) => o.value)
+    const values = opts.slice(1).map((o) => o.value);
+    expect(values.sort()).toEqual(
+      Object.keys(KINDS)
+        .filter((k) => canRead(KINDS[k], "sensor.wind_speed"))
         .sort(),
-    ).toEqual(Object.keys(KINDS).sort());
+    );
+    expect(values).toContain("wind");
+    // a light is no weather
+    const light = options(schemaOf("poster", { entity: "light.living_room" }), "kind");
+    expect(light.map((o) => o.value)).not.toContain("weather");
+    // a kind written for it shows all the same
+    const written = options(
+      schemaOf("poster", { entity: "light.living_room" }, { kind: "weather" }),
+      "kind",
+    );
+    expect(written.map((o) => o.value)).toContain("weather");
     const labels = opts.slice(1).map((o) => o.label);
     expect(labels).toEqual([...labels].sort((a, b) => a.localeCompare(b)));
   });
@@ -371,12 +382,15 @@ describe("the editor's interactions", () => {
       tap_action: "more-info",
       hold_action: "more-info",
       double_tap_action: "none",
-      icon_tap_action: "none",
-      icon_hold_action: "none",
+      // an icon without actions of its own passes the gesture to the card
+      icon_tap_action: "more-info",
+      icon_hold_action: "more-info",
     });
+    const nav = { action: "navigate", navigation_path: "/lights" };
+    expect(defaults("poster", { ...LIGHT, tap_action: nav }).icon_tap_action).toBe("navigate");
     // a tile's icon toggles what it can
     expect(defaults("tile", LIGHT).icon_tap_action).toBe("toggle");
-    expect(defaults("tile", TEMP).icon_tap_action).toBe("none");
+    expect(defaults("tile", TEMP).icon_tap_action).toBe("more-info");
     // nothing to show without an entity
     expect(defaults("poster", { name: "Hello" }).tap_action).toBe("none");
   });

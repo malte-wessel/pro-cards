@@ -13,12 +13,15 @@ import PreviewPane from "./PreviewPane.vue";
 import YamlEditor from "./YamlEditor.vue";
 import {
   decodeShare,
+  isUnsaved,
+  keepUnsaved,
   deleteSaved,
   encodeShare,
   listSaved,
   loadDraft,
   putSaved,
   saveDraft,
+  type Draft,
   type Saved,
 } from "./store.ts";
 import "./playground.css";
@@ -92,7 +95,23 @@ watch(text, (t) => {
 });
 watch(name, scheduleDraft);
 
+// another card in its place: one with unsaved changes is kept among the saved ones first (an
+// example, New or a link never loses your work)
+const KNOWN = [NEW_CARD, ...Object.values(PRESETS)];
+const keep = (d: Draft) => {
+  if (!isUnsaved(d, KNOWN)) return;
+  let doc: unknown = null;
+  try {
+    doc = yamlLib.load(d.yaml);
+  } catch {
+    // text that fails: named as a card
+  }
+  const entry = keepUnsaved(d, typeName(listOf(doc)[0]));
+  saved.value = listSaved();
+  say(`Your changes are kept in Saved as “${entry.name}”`);
+};
 const load = (yaml: string, as: string, savedId?: string) => {
+  if (ready.value && yaml !== text.value) keep({ name: name.value, yaml: text.value, id: id.value });
   name.value = as;
   id.value = savedId;
   text.value = yaml;
@@ -127,8 +146,11 @@ const syncEditor = async () => {
       const config = (ev as CustomEvent).detail.config as CardConfigBase;
       const next = cards.value.slice();
       next[pick.value] = config;
+      const yaml = dumpYaml(Array.isArray(parsed.value.doc) ? next : next[0]);
+      // (the same text changes nothing, and must leave no flag for the next change)
+      if (yaml === text.value) return;
       fromEditor = true;
-      text.value = dumpYaml(Array.isArray(parsed.value.doc) ? next : next[0]);
+      text.value = yaml;
     });
     editorHost.value.replaceChildren(editor);
   }
@@ -137,7 +159,7 @@ const syncEditor = async () => {
 watch([pick, editorHost, () => editable.value.length], () => void syncEditor());
 
 // the picked card's grid size from the preview, into its YAML
-const setGrid = (g: { columns?: number; rows?: number | "auto" }) => {
+const setGrid = (g: { columns?: number | "full"; rows?: number | "auto" }) => {
   const next = cards.value.map((c) => ({ ...c }));
   const c = next[pick.value] as CardConfigBase & { grid_options?: Record<string, unknown> };
   if (!c) return;
@@ -254,21 +276,44 @@ const drag = (ev: PointerEvent) => {
   const up = () => {
     window.removeEventListener("pointermove", move);
     window.removeEventListener("pointerup", up);
-    try {
-      localStorage.setItem(SPLIT, String(Math.round(split.value)));
-    } catch {
-      // refused: not remembered
-    }
+    keepSplit();
   };
   window.addEventListener("pointermove", move);
   window.addEventListener("pointerup", up);
   ev.preventDefault();
+};
+const keepSplit = () => {
+  try {
+    localStorage.setItem(SPLIT, String(Math.round(split.value)));
+  } catch {
+    // refused: not remembered
+  }
+};
+// the splitter by the keyboard: the arrows by 5 %, Home and End to its ends
+const splitKey = (ev: KeyboardEvent) => {
+  const to =
+    ev.key === "ArrowLeft"
+      ? split.value - 5
+      : ev.key === "ArrowRight"
+        ? split.value + 5
+        : ev.key === "Home"
+          ? 25
+          : ev.key === "End"
+            ? 75
+            : null;
+  if (to === null) return;
+  ev.preventDefault();
+  split.value = Math.min(75, Math.max(25, to));
+  keepSplit();
 };
 
 // the card a link carries in the hash, opened and the hash cleared (a reload keeps your edits)
 const openLink = async () => {
   const linked = location.hash ? await decodeShare(location.hash) : null;
   if (!linked) return false;
+  // opened with the page: the draft it replaces is the one in the browser
+  const draft = ready.value ? null : loadDraft();
+  if (draft && draft.yaml !== linked.yaml) keep(draft);
   load(linked.yaml, linked.name);
   history.replaceState(null, "", location.pathname + location.search);
   return true;
@@ -427,8 +472,14 @@ onBeforeUnmount(() => {
         v-if="!narrow"
         class="pg-split"
         role="separator"
+        tabindex="0"
         aria-orientation="vertical"
+        aria-label="Resize the panes"
+        aria-valuemin="25"
+        aria-valuemax="75"
+        :aria-valuenow="Math.round(split)"
         @pointerdown="drag"
+        @keydown="splitKey"
       ></div>
       <section v-show="!narrow || view === 'preview'" class="pg-pane">
         <PreviewPane

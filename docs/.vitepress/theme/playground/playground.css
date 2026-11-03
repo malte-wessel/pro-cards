@@ -188,8 +188,10 @@
   padding: 0 2px;
   touch-action: none;
 }
-.pg-split:hover {
+.pg-split:hover,
+.pg-split:focus-visible {
   background-color: var(--vp-c-brand-1);
+  outline: none;
 }
 .pg-tabs {
   display: flex;

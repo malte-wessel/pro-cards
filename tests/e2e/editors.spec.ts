@@ -265,7 +265,7 @@ test("the layout's editor writes its options, breakpoints and a card's place", a
 test("the layout's editor adds a card from the picker and arranges its cards", async ({ page }) => {
   const tile = { type: "custom:tile-card-pro", entity: "light.kitchen" };
   const e = await openEditor(page, { type: "custom:layout-card-pro", cards: [tile] });
-  await e.editor.getByRole("button", { name: "Add a card" }).click();
+  await e.editor.getByRole("tab", { name: "Add a card" }).click();
   await e.editor.locator("hui-card-picker button", { hasText: "Poster Card Pro" }).click();
   await expect.poll(async () => ((await e.last())?.cards as Raw[])?.length).toBe(2);
   await expect(e.editor.locator(".tab")).toHaveText(["1Tile Pro", "2Poster Pro"]);

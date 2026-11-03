@@ -7,7 +7,13 @@ import type { ControlKind } from "../entity/control.ts";
 import type { CardConfigBase, HaFormData } from "../ha.ts";
 import { isObj, placeDefaults } from "./config.ts";
 import { INPUT_KEYS, kindKeysOf, unusedKeys } from "./detect.ts";
-import { ICON_OPTIONS, VISUAL_OPTIONS, type IconThing, type VisualThing } from "./places.ts";
+import {
+  ICON_OPTIONS,
+  KIND_THINGS,
+  VISUAL_OPTIONS,
+  type IconThing,
+  type VisualThing,
+} from "./places.ts";
 import type { Kind } from "./types.ts";
 
 type Raw = Record<string, unknown>;
@@ -131,6 +137,17 @@ const listToForm = (v: unknown, keys: readonly string[], id = "entity") =>
 const listFromForm = (v: unknown, keys: readonly string[], id: string | null) =>
   Array.isArray(v) ? (v as Raw[]).map((x) => itemFromForm(x, keys, id)) : [];
 
+// the control's type in the form: none, the kind's own (also `auto` where the kind has controls),
+// the domain's (`auto`, and options without a type where the kind has none) or the one named
+const controlTypeOf = (c: CardConfigBase, kind: Kind, thing: CardThing): string => {
+  const ctl = c.control;
+  if (ctl === false) return "none";
+  if (ctl === "auto" && kind.controls?.length) return DEFAULT;
+  if (typeof ctl === "string") return ctl;
+  if (isObj(ctl) && typeof ctl.type === "string") return ctl.type;
+  return isObj(ctl) && autoOf(c, kind, thing).length ? "auto" : DEFAULT;
+};
+
 export const configToForm = (config: CardConfigBase, kind: Kind, thing: CardThing): HaFormData => {
   const c = config as Raw;
   const d: HaFormData = {
@@ -204,16 +221,7 @@ export const configToForm = (config: CardConfigBase, kind: Kind, thing: CardThin
 
   // the control: its thing (the kind's, none, auto or a control) and its options
   const ctl = c.control;
-  d.control_type =
-    ctl === false
-      ? "none"
-      : typeof ctl === "string"
-        ? ctl
-        : isObj(ctl) && ctl.type
-          ? ctl.type
-          : isObj(ctl) && autoOf(c, kind, thing).length
-            ? "auto"
-            : DEFAULT;
+  d.control_type = controlTypeOf(c, kind, thing);
   if (isObj(ctl)) {
     d.control_position = ctl.position ?? DEFAULT;
     d.control_step = num(ctl.step);
@@ -303,18 +311,40 @@ const inputsFromForm = (data: HaFormData, kind: Kind, written: Raw): unknown => 
   return Object.keys(out).length ? out : undefined;
 };
 
-const controlFromForm = (data: HaFormData): unknown => {
+// the controls a control's type draws: the kind's own, the domain's (auto), or the one named
+export const drawnControls = (
+  type: string,
+  entity: unknown,
+  kind: Kind,
+  thing: CardThing,
+): readonly string[] =>
+  type === DEFAULT
+    ? ownControls(kind, thing).map((c) => c.kind)
+    : type === "auto"
+      ? autoOf({ entity } as CardConfigBase, kind, thing)
+      : type === "none"
+        ? []
+        : [type];
+
+// only the options what it draws takes (a slider's step goes when it becomes a toggle)
+const controlFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknown => {
   const type = data.control_type as string;
   if (type === "none") return false;
+  const drawn = drawnControls(type, data.entity, kind, thing);
+  const draws = (...ks: string[]) => drawn.some((c) => ks.includes(c));
   const o: Raw = {};
-  if (chosen(data.control_position)) o.position = data.control_position;
-  if (num(data.control_step) !== undefined) o.step = data.control_step;
-  if (chosen(data.control_attribute)) o.attribute = data.control_attribute;
-  if (data.control_confirm === true) o.confirm = true;
+  if (drawn.length && chosen(data.control_position)) o.position = data.control_position;
+  if (draws("slider", "stepper") && num(data.control_step) !== undefined)
+    o.step = data.control_step;
+  if (draws("segments", "select") && chosen(data.control_attribute))
+    o.attribute = data.control_attribute;
+  if (draws("toggle", "button", "buttons") && data.control_confirm === true) o.confirm = true;
   const opts =
     type === "buttons"
       ? listFromForm(data.control_buttons, BUTTON_KEYS, null)
-      : listFromForm(data.control_options, OPTION_KEYS, "value");
+      : draws("segments", "select")
+        ? listFromForm(data.control_options, OPTION_KEYS, "value")
+        : [];
   if (opts.length) o.options = opts;
   const has = Object.keys(o).length > 0;
   // an object without a type changes the kind's own controls (or the domain's: auto)
@@ -339,7 +369,9 @@ export const formToConfig = (
   };
   // a part whose fields are as the config had them keeps its spelling as written: the editor
   // rewrites only what was changed
-  const before = configToForm(prev, kind, thing);
+  // (the form shows the config as the kind it had read it: a kind changed since keeps the places
+  // and controls written for the one before, where the new one draws them)
+  const before = configToForm(prev, was, thing);
   const changed = (prefix: string, also: readonly string[] = []) =>
     Object.keys({ ...before, ...data })
       .filter((k) => k.startsWith(prefix) || also.includes(k))
@@ -350,9 +382,10 @@ export const formToConfig = (
   setOrDrop(c, "name", data.name, !data.name);
   setOrDrop(c, "color", data.color, !data.color);
   for (const k of TEXTS) setOrDrop(c, k, data[k], !filled(data[k]));
-  setOrDrop(c, "decimals", data.decimals, num(data.decimals) === undefined);
-  setOrDrop(c, "min", data.min, num(data.min) === undefined);
-  setOrDrop(c, "max", data.max, num(data.max) === undefined);
+  // numbers as their fields have them (one written as text, `min: "10"`, stays until its field
+  // changes)
+  for (const k of ["decimals", "min", "max", "running_above"])
+    if (changed(k)) setOrDrop(c, k, data[k], num(data[k]) === undefined);
   setOrDrop(c, "show_name", false, data.show_name !== false);
   setOrDrop(c, "show_value", false, data.show_value !== false);
   setOrDrop(c, "hover", false, data.hover !== false);
@@ -360,12 +393,11 @@ export const formToConfig = (
   if (changed("icon_", ["icon"])) put("icon", iconFromForm(data, kind, thing));
   if (changed("visual_")) put("visual", visualFromForm(data, kind, thing));
   if (changed("input_")) put("inputs", inputsFromForm(data, kind, isObj(p.inputs) ? p.inputs : {}));
-  setOrDrop(c, "running_above", data.running_above, num(data.running_above) === undefined);
   if (changed("series")) {
     const series = listFromForm(data.series, SERIES_KEYS, "entity");
     put("series", series.length ? series : undefined);
   }
-  if (changed("control_")) put("control", controlFromForm(data));
+  if (changed("control_")) put("control", controlFromForm(data, kind, thing));
   if (data.hide_status === true) c.status = false;
   else setOrDrop(c, "status", data.status, !filled(data.status));
   if (thing === "tile") setOrDrop(c, "status_badge", true, data.status_badge !== true);
@@ -383,9 +415,15 @@ export const formToConfig = (
   return c as CardConfigBase;
 };
 
-// the keys and inputs `was` read and `kind` does not (a config error on a written kind); others
-// stay as written
+// the keys and inputs `was` read and `kind` does not, and a place's thing only `was` draws (a
+// config error on a written kind); others stay as written
 const dropUnused = (c: Raw, kind: Kind, was: Kind) => {
+  for (const place of ["icon", "visual"] as const) {
+    const p = c[place];
+    const type = typeof p === "string" ? p : isObj(p) ? p.type : undefined;
+    if (typeof type === "string" && KIND_THINGS.includes(type) && !kind.draws?.includes(type))
+      delete c[place];
+  }
   const inputs: Raw = isObj(c.inputs) ? { ...c.inputs } : {};
   for (const k of unusedKeys(kind, kindKeysOf(c)).filter((k) => was.keys.includes(k))) {
     if (INPUT_KEYS.has(k)) delete inputs[k];

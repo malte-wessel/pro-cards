@@ -362,6 +362,43 @@ describe("the container editors from outside", () => {
     expect(e.selected()).toBe(0);
   });
 
+  it("move between the tabs by the arrow keys, only the selected one in the tab order", async () => {
+    const e = await editor(LAYOUT, { cards: [tile, poster] });
+    const bar = e.root.querySelector(".bar")!;
+    const key = async (k: string) => {
+      bar.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true }));
+      await tick();
+    };
+    const order = () =>
+      [...e.root.querySelectorAll<HTMLElement>(".tab, .icon.add")].map((t) => t.tabIndex);
+    expect(order()).toEqual([0, -1, -1]);
+    await key("ArrowRight");
+    expect(e.selected()).toBe(1);
+    expect(order()).toEqual([-1, 0, -1]);
+    await key("End");
+    expect(e.selected()).toBe(2);
+    expect(e.root.activeElement).toBe(e.root.querySelector(".icon.add"));
+    await key("ArrowRight");
+    expect(e.selected()).toBe(2);
+    await key("Home");
+    expect(e.selected()).toBe(0);
+  });
+
+  it("keep their tabs and tools through a new hass, and pass it on", async () => {
+    const e = await editor(LAYOUT, { cards: [tile, poster] });
+    const tab = e.root.querySelector(".tab");
+    const tool = e.button("Delete");
+    const hass = snapshot();
+    e.ed.hass = hass;
+    await tick();
+    expect(e.root.querySelector(".tab")).toBe(tab);
+    expect(e.button("Delete")).toBe(tool);
+    expect((e.child() as unknown as { hass: unknown }).hass).toBe(hass);
+    expect(
+      (e.root.querySelector(".options ha-form, ha-form") as unknown as { hass: unknown }).hass,
+    ).toBe(hass);
+  });
+
   it("wait for hass before drawing", async () => {
     const ed = document.createElement("layout-card-pro-editor") as Editor;
     ed.setConfig({ type: LAYOUT, cards: [tile] } as CardConfigBase);

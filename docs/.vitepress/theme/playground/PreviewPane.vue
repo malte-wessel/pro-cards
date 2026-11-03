@@ -10,7 +10,7 @@ import StatePanel from "./StatePanel.vue";
 
 const props = defineProps<{ cards: unknown[]; pick: number }>();
 const emit = defineEmits<{
-  grid: [value: { columns?: number; rows?: number | "auto" }];
+  grid: [value: { columns?: number | "full"; rows?: number | "auto" }];
   error: [message: string | null];
 }>();
 
@@ -58,16 +58,25 @@ const theme = useExampleTheme();
 const host = ref<HTMLDivElement | null>(null);
 const error = ref("");
 let handle: MountHandle | null = null;
+// the latest render: one that finishes after a newer one started is disposed at once
+let current = 0;
 const render = async () => {
   if (!host.value) return;
+  const mine = ++current;
   handle?.dispose();
   handle = null;
   error.value = "";
   try {
     if (!props.cards.length) throw new Error("No card yet: pick an example or write one");
-    handle = await mountGrid(host.value, props.cards, { fullWidth: false });
+    const h = await mountGrid(host.value, props.cards, { fullWidth: false });
+    if (mine !== current) {
+      h.dispose();
+      return;
+    }
+    handle = h;
     emit("error", null);
   } catch (e) {
+    if (mine !== current || !host.value) return;
     host.value.textContent = "";
     error.value = e instanceof Error ? e.message : String(e);
     emit("error", error.value);
@@ -85,9 +94,17 @@ const card = computed(
 );
 const columns = computed(() => String(card.value.grid_options?.columns ?? ""));
 const rows = computed(() => String(card.value.grid_options?.rows ?? ""));
-const setColumns = (v: string) => emit("grid", { columns: v ? Number(v) : undefined });
-const setRows = (v: string) =>
-  emit("grid", { rows: v === "auto" ? "auto" : v ? Number(v) : undefined });
+// the choices, and the YAML's own value where it is none of them (`columns: full`, `rows: 10`)
+const withOwn = (list: string[], own: string) => (!own || list.includes(own) ? list : [...list, own]);
+const columnChoices = computed(() =>
+  withOwn([...Array.from({ length: 12 }, (_, i) => String(i + 1)), "full"], columns.value),
+);
+const rowChoices = computed(() =>
+  withOwn(["auto", ...Array.from({ length: 8 }, (_, i) => String(i + 1))], rows.value),
+);
+const value = (v: string) => (!v ? undefined : /^\d+$/.test(v) ? Number(v) : v);
+const setColumns = (v: string) => emit("grid", { columns: value(v) as number | "full" | undefined });
+const setRows = (v: string) => emit("grid", { rows: value(v) as number | "auto" | undefined });
 </script>
 
 <template>
@@ -110,15 +127,14 @@ const setRows = (v: string) =>
         Columns
         <select :value="columns" @change="setColumns(($event.target as HTMLSelectElement).value)">
           <option value="">Default</option>
-          <option v-for="n in 12" :key="n" :value="String(n)">{{ n }}</option>
+          <option v-for="c in columnChoices" :key="c" :value="c">{{ c }}</option>
         </select>
       </label>
       <label class="field" title="The card's rows of 56 px (grid_options)">
         Rows
         <select :value="rows" @change="setRows(($event.target as HTMLSelectElement).value)">
           <option value="">Default</option>
-          <option value="auto">auto</option>
-          <option v-for="n in 8" :key="n" :value="String(n)">{{ n }}</option>
+          <option v-for="r in rowChoices" :key="r" :value="r">{{ r }}</option>
         </select>
       </label>
     </div>

@@ -85,6 +85,19 @@ export const deleteSaved = (id: string) =>
     listSaved().filter((s) => s.id !== id),
   );
 
+// a card that would be lost if another replaced it: text that is not an example (`known`) and not
+// as it was saved
+export const isUnsaved = (d: Draft, known: readonly string[]): boolean => {
+  const yaml = d.yaml.trim();
+  if (!yaml || known.some((k) => k.trim() === yaml)) return false;
+  const was = d.id ? listSaved().find((s) => s.id === d.id) : undefined;
+  return !was || was.yaml.trim() !== yaml;
+};
+// such a card kept among the saved ones before another replaces it: its name marked, the saved
+// card it came from left as it was
+export const keepUnsaved = (d: Draft, fallback: string, now = Date.now()): Saved =>
+  putSaved({ name: `${d.name.trim() || fallback} (unsaved)`, yaml: d.yaml }, now);
+
 // ----- share links -----
 
 const toB64url = (bytes: Uint8Array) => {

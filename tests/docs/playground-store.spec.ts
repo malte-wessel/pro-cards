@@ -98,7 +98,12 @@ test("New starts a card of its own: Save then adds one", async ({ page }) => {
   await expect(tab(page, "Visual")).toHaveAttribute("aria-selected", "true");
   await nameField(page).fill("Second");
   await bar(page).getByRole("button", { name: "Save", exact: true }).click();
-  expect((await savedCards(page)).map((s) => s.name)).toEqual(["Second", "Tile Card Pro"]);
+  // the poster typed over the saved tile was kept before New replaced it
+  expect((await savedCards(page)).map((s) => s.name)).toEqual([
+    "Second",
+    "Tile Card Pro (unsaved)",
+    "Tile Card Pro",
+  ]);
 });
 
 test("deletes a saved card only when asked twice", async ({ page }) => {
@@ -177,6 +182,9 @@ test("a link wins over the draft", async ({ page }) => {
     `#edit=${encodeEdit("type: custom:tile-card-pro\nentity: light.attic\n")}`,
   );
   await expect(previewCard(page).locator(".primary")).toHaveText("Attic");
+  // the draft it replaced is kept among the saved cards
+  const menu = await openMenu(page, "Saved");
+  await expect(menu).toContainText("(unsaved)");
 });
 
 test("a link pasted into the open Playground opens its card", async ({ page }) => {

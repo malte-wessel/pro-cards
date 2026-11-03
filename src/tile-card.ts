@@ -18,7 +18,7 @@
  *   show_name / show_value / tap_action / hold_action / double_tap_action / hover
  */
 import { defineElement, registerCard } from "./shared/card.ts";
-import { cssColor } from "./shared/color.ts";
+import { cssColor, domainOf } from "./shared/color.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import type { EntityItem, ValueSrc } from "./shared/entity/config.ts";
 import { hasTileControl, tileMinColumns } from "./shared/entity/control.ts";
@@ -37,6 +37,9 @@ import { isNum } from "./shared/util.ts";
 import { iconBadgeOf, type IconBadge } from "./tile/badge.ts";
 import { normalizeTileConfig, parseIconBadge, type TileConfig } from "./tile/config.ts";
 import { CARD_TYPE } from "./tile/constants.ts";
+
+// what can be in a zone (its badge is the zone's icon)
+const ZONED = new Set(["person", "device_tracker"]);
 import { STYLE_TILE_CARD_ALL } from "./tile/styles.ts";
 
 export class TileCard extends KindCardBase {
@@ -224,11 +227,14 @@ export class TileCard extends KindCardBase {
       ...this._kindInputs(kc),
       this._status(kc),
       imageUrl(ctx, this._iconLook(kc).iconImage),
-      // the badge on the icon, and a person's zone (its icon on Home Assistant's)
+      // the badge on the icon, and a person's zone (its icon on Home Assistant's): the zones are
+      // looked through only for what is in one
       JSON.stringify(this._iconBadge(ctx, m)),
-      ...Object.keys(ctx.hass?.states ?? {})
-        .filter((id) => id.startsWith("zone."))
-        .map((id) => ctx.hass?.states[id]),
+      ...(ZONED.has(domainOf(m.st?.entity_id ?? ""))
+        ? Object.keys(ctx.hass?.states ?? {})
+            .filter((id) => id.startsWith("zone."))
+            .map((id) => ctx.hass?.states[id])
+        : []),
     ];
   }
   _rowColor(row: HTMLElement, ent: EntityItem, m: EntityModel) {

@@ -141,6 +141,23 @@ describe("the poster's and the tile's editor element", () => {
   });
 });
 
+describe("the editor's number fields", () => {
+  it("follow the value the card shows, not the state", async () => {
+    // a thermostat's state is its mode; it shows its temperature
+    const climate = open("poster", { entity: "climate.living_room" });
+    await tick();
+    expect(names(climate.form())).toEqual(expect.arrayContaining(["unit", "decimals"]));
+    const light = open("poster", { entity: "light.living_room" });
+    await tick();
+    expect(names(light.form())).not.toContain("decimals");
+    // an attribute written that is a number
+    const lit = open("poster", { entity: "light.living_room", attribute: "brightness" });
+    await tick();
+    expect(names(lit.form())).toContain("decimals");
+    for (const e of [climate, light, lit]) e.ed.remove();
+  });
+});
+
 describe("the editor's helper texts", () => {
   it("name the inputs found on the device, or say none was", () => {
     const wind = open("poster", { entity: "sensor.wind_speed" });

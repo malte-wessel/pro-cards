@@ -104,6 +104,13 @@ test("Columns and Rows write the card's grid_options", async ({ page }) => {
   );
   await expect(columns).toHaveValue("12");
   await expect(rows).toHaveValue("1");
+  // and those the lists do not have
+  await typeYaml(
+    page,
+    "type: custom:tile-card-pro\nentity: light.kitchen\ngrid_options: { columns: full, rows: 10 }\n",
+  );
+  await expect(columns).toHaveValue("full");
+  await expect(rows).toHaveValue("10");
 });
 
 test("the grid size goes to the picked card of several", async ({ page }) => {
@@ -239,6 +246,14 @@ test("the splitter resizes the panes and is remembered", async ({ page }) => {
   await page.mouse.move(box.x + 10, s2.y + s2.height / 2, { steps: 5 });
   await page.mouse.up();
   await expect(body).toHaveAttribute("style", /grid-template-columns: 25% 6px 1fr/);
+  // and by the keyboard
+  await split.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(body).toHaveAttribute("style", /grid-template-columns: 30% 6px 1fr/);
+  await expect(split).toHaveAttribute("aria-valuenow", "30");
+  await page.keyboard.press("End");
+  await expect(body).toHaveAttribute("style", /grid-template-columns: 75% 6px 1fr/);
+  await page.keyboard.press("Home");
   await page.reload();
   await expect(page.locator(".pg-body")).toHaveAttribute(
     "style",

@@ -28,7 +28,7 @@ export const toast = (page: Page) => page.locator(".pg-toast");
 // a menu of the top bar opened, its panel
 export const openMenu = async (page: Page, label: string | RegExp) => {
   await bar(page).getByRole("button", { name: label }).first().click();
-  const panel = bar(page).getByRole("menu");
+  const panel = bar(page).locator(".menu > .panel");
   await expect(panel).toBeVisible();
   return panel;
 };

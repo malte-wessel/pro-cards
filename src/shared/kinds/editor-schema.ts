@@ -21,6 +21,7 @@ import {
   SERIES_KEYS,
   defaultIcon,
   defaultVisual,
+  drawnControls,
   ownControls,
   withDefaults,
   type CardThing,
@@ -32,6 +33,7 @@ import {
   type IconThing,
   type VisualThing,
 } from "./places.ts";
+import { canRead } from "./detect.ts";
 import { KINDS } from "./registry.ts";
 import type { Kind } from "./types.ts";
 
@@ -133,14 +135,7 @@ const controlsOf = (x: SchemaCtx, data: HaFormData) => {
   const auto = domain && !own.length ? (DOMAIN_AUTO[domain] ?? []) : [];
   const domainControls = domain ? (DOMAIN_CONTROLS[domain] ?? []) : [];
   const type = data.control_type as string;
-  const drawn: readonly string[] =
-    type === DEFAULT
-      ? own.map((c) => c.kind)
-      : type === "auto"
-        ? auto
-        : type === "none"
-          ? []
-          : [type];
+  const drawn = drawnControls(type, entity, x.kind, x.thing);
   return { domain, own, auto, domainControls, type, drawn };
 };
 
@@ -212,7 +207,9 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   const fits = (th: string) => !KIND_THINGS.includes(th) || !!kind.draws?.includes(th);
 
   // ----- the top: the entity, its kind, its name and icon, the colour -----
+  // the kinds that read the entity (the one written too, so the select shows it)
   const kinds = Object.keys(KINDS)
+    .filter((k) => k === data.kind || canRead(KINDS[k], entity))
     .map((k) => opt(k, kindLabel(hass, k)))
     .sort((a, b) => a.label.localeCompare(b.label));
   const top: HaFormSchema[] = [
@@ -239,7 +236,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
       ? [
           grid(
             { name: "unit", selector: { text: {} } },
-            { name: "decimals", selector: { number: { min: 0, max: 6, mode: "box" } } },
+            { name: "decimals", selector: { number: { min: 0, max: 3, step: 1, mode: "box" } } },
           ),
         ]
       : []),
@@ -331,7 +328,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
                   {
                     name: "visual_hours",
                     selector: {
-                      number: { min: 1, max: 168, mode: "box", unit_of_measurement: "h" },
+                      number: { min: 0.5, step: 0.5, mode: "box", unit_of_measurement: "h" },
                     },
                   },
                 ]),
@@ -571,11 +568,22 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
     name,
     selector: { ui_action: { default_action: def } },
   });
-  // what the icon does unless told: the kind's own (a lock is held), a tile's toggle
+  // what the card does unless told, and the icon: the kind's own (a lock is held), a tile's
+  // toggle, else the card's (an icon without an action of its own passes the gesture on)
+  const cardAction = (k: string) => {
+    const a = data[k];
+    return a && typeof a === "object" && "action" in a
+      ? String((a as { action: unknown }).action)
+      : entity
+        ? "more-info"
+        : "none";
+  };
   const iconOwn = kind.iconActions?.(x.st) ?? {};
   const iconTap =
     iconOwn.tap?.action ??
-    (thing === "tile" && domain && TILE_ICON_TOGGLES.has(domain) ? "toggle" : "none");
+    (thing === "tile" && domain && TILE_ICON_TOGGLES.has(domain)
+      ? "toggle"
+      : cardAction("tap_action"));
   const actions: HaFormSchema[] = [
     action("tap_action", entity ? "more-info" : "none"),
     action("hold_action", entity ? "more-info" : "none"),
@@ -584,7 +592,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
       ? []
       : [
           action("icon_tap_action", iconTap),
-          action("icon_hold_action", iconOwn.hold?.action ?? "none"),
+          action("icon_hold_action", iconOwn.hold?.action ?? cardAction("hold_action")),
         ]),
     { name: "hover", selector: { boolean: {} } },
   ];

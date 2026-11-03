@@ -3,6 +3,7 @@
 import {
   test,
   expect,
+  bar,
   errorLine,
   expectYaml,
   field,
@@ -47,11 +48,20 @@ test("loads an example from the menu: its name, YAML and preview", async ({ page
 test("the menus close on Escape and on a click outside", async ({ page }) => {
   await openPlayground(page);
   const menu = await openMenu(page, "Examples");
+  // the first item takes the focus, the arrows move it, round at the ends
+  const items = menu.locator("button");
+  await expect(items.first()).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(items.nth(1)).toBeFocused();
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("ArrowUp");
+  await expect(items.last()).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
+  await expect(bar(page).getByRole("button", { name: "Examples" })).toBeFocused();
   await openMenu(page, "Examples");
   await preview(page).click({ position: { x: 5, y: 5 } });
-  await expect(page.getByRole("menu")).toBeHidden();
+  await expect(page.locator(".menu > .panel")).toBeHidden();
 });
 
 test("a visual edit writes the YAML and redraws the preview", async ({ page }) => {

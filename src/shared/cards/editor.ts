@@ -128,9 +128,19 @@ export abstract class CardsEditorBase extends HTMLElement {
     this._config = { ...config, cards: Array.isArray(config.cards) ? config.cards : [] };
     this._render();
   }
+  // a new hass (any state in the home changed) goes to the forms and the card's editor: the tabs
+  // and tools are drawn again only for another config, selection or language, so a focus, a hover
+  // or a click on them survives it
   set hass(hass: HomeAssistant) {
+    const lang = this._hass ? langOf(this._hass) : null;
     this._hass = hass;
-    this._render();
+    if (!this._built || lang !== langOf(hass)) {
+      this._render();
+      return;
+    }
+    this._form!.hass = hass;
+    if (this._placeForm) this._placeForm.hass = hass;
+    if (this._child) this._child.hass = hass;
   }
   set lovelace(lovelace: unknown) {
     this._lovelace = lovelace;
@@ -163,8 +173,27 @@ export abstract class CardsEditorBase extends HTMLElement {
   _build() {
     const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
     root.innerHTML = `<style>${STYLE}</style><div class="options"></div>
-      <div class="cards"><div class="bar"><div class="tabs" role="tablist"></div></div>
-      <div class="tools"></div><div class="child"></div><div class="place" hidden></div></div>`;
+      <div class="cards"><div class="bar" role="tablist"><div class="tabs" role="presentation"></div></div>
+      <div class="tools"></div><div class="child" id="card" role="tabpanel"></div><div class="place" hidden></div></div>`;
+    // the tabs by the keyboard: the arrows to the one before or after, Home and End to the ends
+    root.querySelector(".bar")!.addEventListener("keydown", (ev) => {
+      const key = (ev as KeyboardEvent).key;
+      const last = this._cards.length;
+      const to =
+        key === "ArrowLeft"
+          ? this._selected - 1
+          : key === "ArrowRight"
+            ? this._selected + 1
+            : key === "Home"
+              ? 0
+              : key === "End"
+                ? last
+                : null;
+      if (to === null || to < 0 || to > last) return;
+      ev.preventDefault();
+      this._select(to);
+      root.querySelectorAll<HTMLElement>(".tab, .icon.add")[to]?.focus();
+    });
     this._form = document.createElement("ha-form");
     this._form.computeLabel = (s) => this._label(s);
     this._form.computeHelper = (s) => this._helper(s);
@@ -179,6 +208,14 @@ export abstract class CardsEditorBase extends HTMLElement {
       this._childFor = undefined;
       this._render();
     });
+  }
+
+  // a tab of the bar (a card's, or "+" for the picker): only the selected one is in the tab order
+  _tab(b: HTMLElement, selected: boolean) {
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", String(selected));
+    b.setAttribute("aria-controls", "card");
+    b.tabIndex = selected ? 0 : -1;
   }
 
   _label(s: HaFormSchema): string {
@@ -209,23 +246,27 @@ export abstract class CardsEditorBase extends HTMLElement {
     }
 
     // the tabs: one per card, then "+"
+    // (kept and updated in place, so the focus stays on the one that has it)
     const tabs = root.querySelector(".tabs")!;
-    tabs.replaceChildren(
-      ...cards.map((c, i) => {
-        const b = this._button("tab", () => this._select(i));
-        b.setAttribute("role", "tab");
-        b.setAttribute("aria-selected", String(i === this._selected));
-        b.innerHTML = `<span class="n">${i + 1}</span>`;
-        b.append(cardName(c));
-        return b;
-      }),
-    );
+    const kept = [...tabs.children] as HTMLElement[];
+    cards.forEach((c, i) => {
+      let b = kept[i];
+      if (!b) tabs.appendChild((b = this._button("tab", () => this._select(i))));
+      this._tab(b, i === this._selected);
+      b.innerHTML = `<span class="n">${i + 1}</span>`;
+      b.append(cardName(c));
+    });
+    for (const b of kept.slice(cards.length)) b.remove();
     const bar = root.querySelector(".bar")!;
-    bar.querySelector(".icon.add")?.remove();
-    const add = this._icon(ICONS.plus, this._t("add"), () => this._select(cards.length));
-    add.classList.add("add");
-    add.setAttribute("aria-selected", String(this._selected === cards.length));
-    bar.appendChild(add);
+    let add = bar.querySelector<HTMLElement>(".icon.add");
+    if (!add) {
+      add = this._icon(ICONS.plus, this._t("add"), () => this._select(this._cards.length));
+      add.classList.add("add");
+      bar.appendChild(add);
+    }
+    add.title = this._t("add");
+    add.setAttribute("aria-label", this._t("add"));
+    this._tab(add, this._selected === cards.length);
 
     // the selected card's tools
     const tools = root.querySelector(".tools") as HTMLElement;
@@ -233,26 +274,36 @@ export abstract class CardsEditorBase extends HTMLElement {
     const card = cards[i];
     tools.hidden = !card;
     if (card) {
-      const mode = this._icon(
-        this._guiMode ? ICONS.code : ICONS.form,
-        this._t(this._guiMode ? "show_code" : "show_visual"),
-        () => (this._child as CardElementEditor | undefined)?.toggleMode?.(),
-      );
-      mode.toggleAttribute("disabled", !this._guiAvailable);
-      tools.replaceChildren(
-        mode,
-        this._icon(ICONS.left, this._t("move_left"), () => this._move(-1), i === 0),
-        this._icon(ICONS.right, this._t("move_right"), () => this._move(1), i === cards.length - 1),
-        this._icon(ICONS.copy, this._t("duplicate"), () => this._duplicate()),
-        this._icon(ICONS.delete, this._t("delete"), () => this._delete()),
-      );
+      // (built once and updated in place: a focused tool keeps the focus, Move right pressed again)
+      if (!tools.children.length)
+        tools.append(
+          this._icon(ICONS.code, "", () =>
+            (this._child as CardElementEditor | undefined)?.toggleMode?.(),
+          ),
+          this._icon(ICONS.left, "", () => this._move(-1)),
+          this._icon(ICONS.right, "", () => this._move(1)),
+          this._icon(ICONS.copy, "", () => this._duplicate()),
+          this._icon(ICONS.delete, "", () => this._delete()),
+        );
+      const [mode, left, right, copy, del] = [...tools.children] as HTMLElement[];
+      const set = (b: HTMLElement, label: string, disabled = false) => {
+        b.title = label;
+        b.setAttribute("aria-label", label);
+        b.toggleAttribute("disabled", disabled);
+      };
+      set(mode, this._t(this._guiMode ? "show_code" : "show_visual"), !this._guiAvailable);
+      mode.querySelector("path")!.setAttribute("d", this._guiMode ? ICONS.code : ICONS.form);
+      set(left, this._t("move_left"), i === 0);
+      set(right, this._t("move_right"), i === cards.length - 1);
+      set(copy, this._t("duplicate"));
+      set(del, this._t("delete"));
     }
 
     // the selected card's editor, or the picker
     const host = root.querySelector(".child")!;
     if (this._childFor !== i || !this._child) {
       this._childFor = i;
-      this._child = card ? this._cardEditor() : this._picker();
+      this._child = card ? this._cardEditor(i) : this._picker();
       host.replaceChildren(this._child);
     }
     this._child.hass = this._hass;
@@ -285,7 +336,8 @@ export abstract class CardsEditorBase extends HTMLElement {
     }
   }
 
-  _cardEditor(): CardElementEditor {
+  // the editor of the card at `at` (replaced when another card is selected)
+  _cardEditor(at: number): CardElementEditor {
     const tag = customElements.get("hui-card-element-editor") ? "hui-card-element-editor" : "div";
     const ed = document.createElement(tag) as CardElementEditor;
     ed.lovelace = this._lovelace;
@@ -298,9 +350,9 @@ export abstract class CardsEditorBase extends HTMLElement {
       if (d.guiModeAvailable !== undefined) this._guiAvailable = d.guiModeAvailable;
       if (!d.config) return;
       // an editor that reports what it was given (one settling as it opens) changes nothing
-      if (JSON.stringify(d.config) === JSON.stringify(this._cards[this._selected])) return;
+      if (JSON.stringify(d.config) === JSON.stringify(this._cards[at])) return;
       const all = this._cards;
-      all[this._selected] = d.config;
+      all[at] = d.config;
       // the editor already shows this config: keep it, so its own state (a dialog, a focus) stays
       ed.value = d.config;
       this._setCards(all);

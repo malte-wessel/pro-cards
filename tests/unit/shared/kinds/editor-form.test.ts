@@ -101,6 +101,12 @@ describe("the editor form: the content", () => {
     expect(formOf({ ...TEMP, min: "low" }).min).toBeUndefined();
   });
 
+  it("keeps a number written as text until its field changes", () => {
+    const quoted = { ...TEMP, min: "10", max: "30" };
+    expect(edit(quoted, { name: "Room" }, "tile")).toEqual({ ...quoted, name: "Room" });
+    expect(edit(quoted, { min: 5 }, "tile")).toEqual({ ...quoted, min: 5 });
+  });
+
   it("writes only the switches turned off", () => {
     expect(formOf(TEMP)).toMatchObject({ show_name: true, show_value: true, hover: true });
     expect(edit(TEMP, { show_name: false, show_value: false, hover: false }, "tile")).toEqual({
@@ -364,6 +370,18 @@ describe("the editor form: the other entities", () => {
     });
   });
 
+  it("keeps the places written when the kind or the entity changes", () => {
+    const glow = { ...LIGHT, visual: "glow" };
+    expect(edit(glow, { kind: "none" })).toEqual({ ...glow, kind: "none" });
+    expect(edit(glow, { entity: "sensor.living_room_temperature" })).toEqual({
+      ...glow,
+      entity: "sensor.living_room_temperature",
+    });
+    // a thing only the old kind draws goes with it
+    const flow = { ...WIND, visual: { type: "flow", variant: "lines" } };
+    expect(edit(flow, { kind: "none" })).toEqual({ ...WIND, kind: "none" });
+  });
+
   it("writes an appliance's threshold and a trend's series", () => {
     const washer = { type: LIGHT.type, kind: "washer", entity: "sensor.washer_power" };
     expect(edit(washer, { running_above: 5 })).toEqual({ ...washer, running_above: 5 });
@@ -400,6 +418,25 @@ describe("the editor form: the controls", () => {
     expect(edit(SWITCH, { control_type: "auto" }, "tile")).toEqual({ ...SWITCH, control: "auto" });
     expect(edit(LIGHT, { control_type: "slider" })).toEqual({ ...LIGHT, control: "slider" });
     expect(formOf({ ...LIGHT, control: { type: "hold" } }).control_type).toBe("hold");
+  });
+
+  it("reads auto on a kind with controls of its own as the kind's", () => {
+    expect(formOf({ ...LIGHT, control: "auto" }).control_type).toBe(DEFAULT);
+    expect(edit({ ...LIGHT, control: "auto" }, { name: "Lamp" })).toEqual({
+      ...LIGHT,
+      control: "auto",
+      name: "Lamp",
+    });
+  });
+
+  it("writes only the options the control picked now takes", () => {
+    const slider = { ...LIGHT, control: { type: "slider", step: 5, confirm: true } };
+    expect(edit(slider, { control_type: "toggle" })).toEqual({
+      ...LIGHT,
+      control: { type: "toggle", confirm: true },
+    });
+    const select = { ...LIGHT, control: { type: "select", options: [{ value: "a" }] } };
+    expect(edit(select, { control_type: "slider" })).toEqual({ ...LIGHT, control: "slider" });
   });
 
   it("writes a control's options with its type, or on the kind's own without one", () => {

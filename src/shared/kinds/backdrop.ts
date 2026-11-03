@@ -35,8 +35,14 @@ const FADE_MS = 700;
 const fadeIn = (back: HTMLElement, last: HTMLImageElement, next: HTMLImageElement) => {
   next.classList.add("pin");
   last.after(next);
+  // the pictures under it go (one that came after it fades in on its own: pictures changing
+  // faster than a fade never leave the layer empty)
   const drop = () => {
-    for (const o of back.querySelectorAll(":scope > img")) if (o !== next) o.remove();
+    if (!next.isConnected) return;
+    for (const o of back.querySelectorAll(":scope > img")) {
+      if (o === next) break;
+      o.remove();
+    }
     next.classList.remove("pin", "on");
   };
   const show = () => {
@@ -47,7 +53,8 @@ const fadeIn = (back: HTMLElement, last: HTMLImageElement, next: HTMLImageElemen
   if (next.complete) show();
   else {
     next.addEventListener("load", show, { once: true });
-    next.addEventListener("error", drop, { once: true });
+    // a picture that fails leaves the one before
+    next.addEventListener("error", () => next.remove(), { once: true });
   }
 };
 

@@ -19,12 +19,13 @@ import { defineElement, registerCard } from "./shared/card.ts";
 import { overflows } from "./shared/entity/base.ts";
 import type { EntityCardConfig, EntityItem } from "./shared/entity/config.ts";
 import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
-import { fillPosterSlots } from "./shared/entity/render/fill.ts";
+import { fillPosterSlots, tileValueText } from "./shared/entity/render/fill.ts";
 import { posterParts, secondaryEl } from "./shared/entity/render/lead.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { hideHover } from "./shared/hover.ts";
 import { KindCardBase } from "./shared/kinds/card.ts";
 import { KindCardEditor } from "./shared/kinds/editor.ts";
+import type { KindCtx } from "./shared/kinds/types.ts";
 import { fillStatus, imageUrl, statusText } from "./shared/kinds/render.ts";
 import { normalizePosterConfig, type PosterConfig } from "./poster/config.ts";
 import { CARD_TYPE } from "./poster/constants.ts";
@@ -70,8 +71,7 @@ export class PosterCard extends KindCardBase {
   _fill(ctx: RenderCtx, row: HTMLElement, ent: EntityItem, idx: number, m: EntityModel) {
     const cfg = this._config as PosterConfig;
     if (idx === cfg.statusIdx && row.classList.contains("hval")) {
-      const kc = this._kindCtx(ctx);
-      fillStatus(ctx, row, ent, idx, m, statusText(ctx, cfg, m, cfg.kind.status?.(kc) ?? null));
+      fillStatus(ctx, row, ent, idx, m, this._status(this._kindCtx(ctx)));
       return;
     }
     if (idx === 0 && row.classList.contains("poster")) {
@@ -92,6 +92,9 @@ export class PosterCard extends KindCardBase {
       // the visual the item draws below the texts, as the places say now
       const pic = imageUrl(ctx, this._iconLook(kc).iconImage);
       const icon = this._drawItem(kc, ent);
+      this._shownValue = ent.item.showValue
+        ? tileValueText(slots.value === undefined ? m.fmt : slots.value)
+        : "";
       const plead = row.querySelector<HTMLElement>(":scope > .ptop > .plead");
       if (this._keepLead(kc, plead, icon)) slots.lead = "keep";
       fillPosterSlots(
@@ -108,6 +111,14 @@ export class PosterCard extends KindCardBase {
     }
     super._fill(ctx, row, ent, idx, m);
   }
+  // the status in the corner, unless it repeats the value (an Off light's "Off"); the poster's row
+  // is filled before it, so the value is the one drawn now
+  _status(kc: KindCtx) {
+    const cfg = this._config as PosterConfig;
+    const s = statusText(kc.ctx, cfg, kc.m, cfg.kind.status?.(kc) ?? null);
+    return s && s.toLowerCase() === this._shownValue.toLowerCase() ? null : s;
+  }
+  _shownValue = "";
   // the poster reads its inputs and what its kind says; the status its text and the kind's
   _rowInputs(ctx: RenderCtx, row: HTMLElement, idx: number, m: EntityModel) {
     const inputs = super._rowInputs(ctx, row, idx, m);
@@ -115,8 +126,7 @@ export class PosterCard extends KindCardBase {
     if (!inputs || (idx !== 0 && idx !== cfg.statusIdx)) return inputs;
     const kc = this._kindCtx(ctx);
     const kind = this._kindInputs(kc);
-    if (idx === cfg.statusIdx)
-      return [...inputs, kc.m, ...kind, statusText(ctx, cfg, m, cfg.kind.status?.(kc) ?? null)];
+    if (idx === cfg.statusIdx) return [...inputs, kc.m, ...kind, this._status(kc)];
     return [...inputs, ...kind, imageUrl(ctx, this._iconLook(kc).iconImage)];
   }
   // the kind's colour where neither the item (the poster, the status badge) nor its rule names one.

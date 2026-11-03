@@ -4,6 +4,8 @@ import {
   deleteSaved,
   encodeShare,
   entitiesOf,
+  isUnsaved,
+  keepUnsaved,
   listSaved,
   loadDraft,
   putSaved,
@@ -178,6 +180,35 @@ describe("the Playground's memory", () => {
     localStorage.setItem("pro-cards:playground:draft", JSON.stringify({ yaml: 3 }));
     expect(listSaved()).toEqual([]);
     expect(loadDraft()).toBeNull();
+  });
+});
+
+describe("the Playground's unsaved work", () => {
+  const EXAMPLE = "type: custom:tile-card-pro\nentity: light.living_room\n";
+  it("is a card that is no example and not as it was saved", () => {
+    expect(isUnsaved({ name: "", yaml: "type: custom:tile-card-pro\n" }, [EXAMPLE])).toBe(true);
+    // an example, empty text: nothing to lose
+    expect(isUnsaved({ name: "", yaml: `${EXAMPLE}\n` }, [EXAMPLE])).toBe(false);
+    expect(isUnsaved({ name: "x", yaml: "  \n" }, [EXAMPLE])).toBe(false);
+    // a saved card, as saved and then changed
+    const s = putSaved({ name: "Lamp", yaml: "type: custom:tile-card-pro\n" });
+    expect(isUnsaved({ ...s, yaml: s.yaml }, [])).toBe(false);
+    expect(isUnsaved({ ...s, yaml: `${s.yaml}name: Desk\n` }, [])).toBe(true);
+    // one whose saved card is gone
+    deleteSaved(s.id);
+    expect(isUnsaved(s, [])).toBe(true);
+  });
+
+  it("is kept as a saved card of its own, the one it came from left alone", () => {
+    const s = putSaved({ name: "Lamp", yaml: "a: 1\n" }, 1);
+    const kept = keepUnsaved({ ...s, yaml: "a: 2\n" }, "Tile", 2);
+    expect(kept).toMatchObject({ name: "Lamp (unsaved)", yaml: "a: 2\n" });
+    expect(kept.id).not.toBe(s.id);
+    expect(listSaved().map((x) => [x.name, x.yaml])).toEqual([
+      ["Lamp (unsaved)", "a: 2\n"],
+      ["Lamp", "a: 1\n"],
+    ]);
+    expect(keepUnsaved({ name: " ", yaml: "b: 1\n" }, "Tile", 3).name).toBe("Tile (unsaved)");
   });
 });
 
