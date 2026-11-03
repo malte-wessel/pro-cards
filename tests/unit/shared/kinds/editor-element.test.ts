@@ -1,6 +1,6 @@
 // The poster's and the tile's editor elements over the docs' stand-in ha-form: the form they
 // build, what they send back, how the form follows the entity and the kind, and their helper texts.
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, vi } from "vitest";
 import { snapshot } from "../../../../docs/.vitepress/theme/ha-shim/hass.ts";
 import { kindsOf } from "../../../../src/shared/kinds/editor.ts";
 import type {
@@ -228,5 +228,129 @@ describe("the kind the editor builds its form for", () => {
     expect(kindsOf({ entity: "sensor.wind_speed", kind: "wind" }, undefined).kind.name).toBe(
       "wind",
     );
+  });
+});
+
+describe("another entity picked in the editor", () => {
+  // configs rich in what belongs to their entity and kind
+  const FROM: ["poster" | "tile", Record<string, unknown>][] = [
+    [
+      "tile",
+      {
+        entity: "sensor.rain_rate",
+        kind: "rain",
+        icon: { variant: "ripples" },
+        visual: "sparkline",
+        inputs: { today: "sensor.rain_today" },
+      },
+    ],
+    ["poster", { entity: "sensor.wind_speed", visual: { type: "flow", variant: "lines" } }],
+    ["poster", { entity: "sensor.wind_speed", icon: { variant: "swoosh", style: "plain" } }],
+    [
+      "poster",
+      {
+        entity: "light.living_room",
+        attribute: "brightness",
+        control: { type: "slider", step: 5 },
+      },
+    ],
+    [
+      "poster",
+      { entity: "climate.living_room", control: { type: "segments", attribute: "preset_mode" } },
+    ],
+    [
+      "poster",
+      { entity: "sensor.grid_power", kind: "grid", inputs: { import: "sensor.grid_import_power" } },
+    ],
+    ["tile", { entity: "sensor.washer_power", kind: "washer", running_above: 5 }],
+    [
+      "poster",
+      { entity: "sensor.outdoor_temperature", kind: "trend", series: ["sensor.dew_point"] },
+    ],
+    ["poster", { entity: "cover.awning", visual: { type: "cover", variant: "garage" } }],
+  ];
+  const TO = [
+    "alarm_control_panel.home",
+    "light.kitchen",
+    "sensor.wind_speed",
+    "sensor.rain_rate",
+    "climate.living_room",
+    "person.malte",
+    "weather.home",
+    "switch.coffee_machine",
+    "sun.sun",
+    "sensor.outdoor_temperature",
+    "fan.living_room",
+    "lock.front_door",
+    "vacuum.robot",
+    "input_select.house_mode",
+    "cover.bedroom_blinds",
+    "media_player.kitchen_speaker",
+  ];
+
+  it("leaves a config the card takes, whatever the entities", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    const bad: string[] = [];
+    try {
+      for (const [type, cfg] of FROM)
+        for (const to of TO) {
+          if (to === cfg.entity) continue;
+          const e = open(type, cfg);
+          await tick();
+          e.change({ entity: to });
+          await tick();
+          const out = e.sent.at(-1)!;
+          e.ed.remove();
+          expect(out.entity).toBe(to);
+          // the card with hass first: a config error throws, a detected kind's warns
+          const card = document.createElement(`${type}-card-pro`) as HTMLElement & {
+            hass: HomeAssistant;
+            setConfig(c: unknown): void;
+          };
+          card.hass = hass;
+          warn.mockClear();
+          try {
+            card.setConfig(out);
+            document.body.appendChild(card);
+            card.hass = hass;
+          } catch (err) {
+            bad.push(`${JSON.stringify(cfg)} → ${to}: ${(err as Error).message}`);
+          }
+          for (const c of warn.mock.calls)
+            bad.push(`${JSON.stringify(cfg)} → ${to}: ${c.join(" ")}`);
+          card.remove();
+        }
+    } finally {
+      warn.mockRestore();
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it("goes back to the detected kind where the kind written cannot read it", async () => {
+    const e = open("tile", {
+      entity: "sensor.rain_rate",
+      kind: "rain",
+      inputs: { today: "sensor.rain_today" },
+    });
+    await tick();
+    e.change({ entity: "alarm_control_panel.home" });
+    await tick();
+    expect(e.sent.at(-1)).toEqual({
+      type: "custom:tile-card-pro",
+      entity: "alarm_control_panel.home",
+    });
+    // a kind that reads the new one stays
+    const w = open("tile", { entity: "sensor.washer_power", kind: "washer", running_above: 5 });
+    await tick();
+    w.change({ entity: "sensor.grid_power" });
+    await tick();
+    expect(w.sent.at(-1)).toEqual({
+      type: "custom:tile-card-pro",
+      entity: "sensor.grid_power",
+      kind: "washer",
+      running_above: 5,
+    });
+    for (const x of [e, w]) x.ed.remove();
   });
 });

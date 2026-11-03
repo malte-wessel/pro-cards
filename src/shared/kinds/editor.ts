@@ -7,8 +7,8 @@ import type { CardConfigBase, HaFormData, HaFormSchema, HassEntity, HomeAssistan
 import { hasString, t, type StringKey } from "../i18n.ts";
 import { isNum } from "../util.ts";
 import { foundInputs } from "./config.ts";
-import { detectKind, parseKind, resolveKind } from "./detect.ts";
-import { DETECTED, configToForm, formToConfig, type CardThing } from "./editor-form.ts";
+import { canRead, detectKind, parseKind, resolveKind } from "./detect.ts";
+import { DETECTED, configToForm, fitEntity, formToConfig, type CardThing } from "./editor-form.ts";
 import { editorSchema, rangeInfo, type SchemaCtx } from "./editor-schema.ts";
 import { KINDS } from "./registry.ts";
 import type { Kind } from "./types.ts";
@@ -66,9 +66,19 @@ export abstract class KindCardEditor extends FormEditorBase {
     return configToForm(config, kindsOf(config as Raw, this._hass).kind, this._thing);
   }
 
+  // another entity: a kind written that cannot read it goes back to the detected one (dropping what
+  // only it read), and what belonged to the entity before goes where the new one cannot take it
   _fromForm(data: HaFormData, prev: CardConfigBase): CardConfigBase {
-    const { kind } = kindsOf(data, this._hass);
-    return formToConfig(data, prev, kind, this._thing, kindsOf(prev as Raw, this._hass).kind);
+    const entity = typeof data.entity === "string" && data.entity ? data.entity : null;
+    const moved = entity !== ((prev as Raw).entity ?? null);
+    let d = data;
+    const written = typeof d.kind === "string" ? KINDS[d.kind] : undefined;
+    if (moved && written && !canRead(written, entity)) d = { ...d, kind: DETECTED };
+    const { kind } = kindsOf(d, this._hass);
+    const c = formToConfig(d, prev, kind, this._thing, kindsOf(prev as Raw, this._hass).kind);
+    if (!moved) return c;
+    const st = entity ? this._hass?.states[entity] : undefined;
+    return fitEntity(c, kind, this._thing, st ? Object.keys(st.attributes) : null);
   }
 
   _schema(hass: HomeAssistant, data: HaFormData): HaFormSchema[] {

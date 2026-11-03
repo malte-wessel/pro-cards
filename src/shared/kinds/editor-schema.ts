@@ -4,7 +4,6 @@
 // is (Glow; the kind as "Wind (detected)"): leaving a field alone is a choice the form shows, and
 // writes nothing.
 import { domainOf } from "../color.ts";
-import type { ControlKind } from "../entity/control.ts";
 import { BADGE_SIZES, BADGE_STYLES, HEADER_VISUALS } from "../entity/constants.ts";
 import type { HaFormData, HaFormSchema, HassEntity, HomeAssistant } from "../ha.ts";
 import { hasString, t, type StringKey } from "../i18n.ts";
@@ -17,6 +16,7 @@ import {
   DEFAULT,
   DETECTED,
   DEFAULT_ATTRIBUTE,
+  DOMAIN_CONTROLS,
   DOMAIN_AUTO,
   OPTION_KEYS,
   RULE_KEYS,
@@ -71,27 +71,6 @@ const ICONS = {
     "M19,5V7H15V5H19M9,5V11H5V5H9M19,13V19H15V13H19M9,17V19H5V17H9M21,3H13V9H21V3M11,3H3V13H11V3M21,11H13V21H21V11M11,15H3V21H11V15Z",
 };
 
-// the controls an entity's domain takes besides your own buttons, which any entity can carry
-const DOMAIN_CONTROLS: Record<string, readonly ControlKind[]> = {
-  light: ["toggle", "slider", "hold"],
-  switch: ["toggle", "hold"],
-  input_boolean: ["toggle", "hold"],
-  fan: ["toggle", "segments", "select", "slider"],
-  cover: ["buttons", "slider", "hold"],
-  climate: ["stepper", "segments", "select"],
-  lock: ["hold", "toggle"],
-  media_player: ["buttons", "slider", "toggle"],
-  number: ["slider", "stepper"],
-  input_number: ["slider", "stepper"],
-  select: ["select", "segments"],
-  input_select: ["select", "segments"],
-  script: ["button", "hold"],
-  scene: ["button", "hold"],
-  button: ["button", "hold"],
-  input_button: ["button", "hold"],
-  vacuum: ["buttons"],
-  lawn_mower: ["buttons"],
-};
 // the modes segments and a select set on a climate or a fan
 const ATTRIBUTES: Record<string, readonly string[]> = {
   climate: ["hvac_mode", "preset_mode", "fan_mode"],

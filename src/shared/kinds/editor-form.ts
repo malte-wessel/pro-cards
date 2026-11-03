@@ -74,6 +74,27 @@ export const DOMAIN_AUTO: Record<string, readonly ControlKind[]> = {
   button: ["button"],
   input_button: ["button"],
 };
+// the controls an entity's domain takes besides your own buttons, which any entity can carry
+export const DOMAIN_CONTROLS: Record<string, readonly ControlKind[]> = {
+  light: ["toggle", "slider", "hold"],
+  switch: ["toggle", "hold"],
+  input_boolean: ["toggle", "hold"],
+  fan: ["toggle", "segments", "select", "slider"],
+  cover: ["buttons", "slider", "hold"],
+  climate: ["stepper", "segments", "select"],
+  lock: ["hold", "toggle"],
+  media_player: ["buttons", "slider", "toggle"],
+  number: ["slider", "stepper"],
+  input_number: ["slider", "stepper"],
+  select: ["select", "segments"],
+  input_select: ["select", "segments"],
+  script: ["button", "hold"],
+  scene: ["button", "hold"],
+  button: ["button", "hold"],
+  input_button: ["button", "hold"],
+  vacuum: ["buttons"],
+  lawn_mower: ["buttons"],
+};
 // what segments and a select set where the card names nothing: a thermostat's mode, a fan's speed
 export const DEFAULT_ATTRIBUTE: Record<string, string> = { climate: "hvac_mode", fan: "speed" };
 // the kind's own controls on this card (a tile's are those at the line's end)
@@ -357,6 +378,45 @@ const controlFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknow
   // an object without a type changes the kind's own controls (or the domain's: auto)
   if (type === DEFAULT || type === "auto") return has ? o : type === "auto" ? "auto" : undefined;
   return has ? { type, ...o } : type;
+};
+
+// a config whose entity changed in the form, cut to what the new one takes: an attribute it has
+// (`attrs`, null while not known), a control its domain draws (your own buttons fit any), and the
+// options of a place written without a thing that the kind's thing there takes (a wind's
+// `variant` on a light's icon goes)
+export const fitEntity = (
+  config: CardConfigBase,
+  kind: Kind,
+  thing: CardThing,
+  attrs: readonly string[] | null,
+): CardConfigBase => {
+  const c: Raw = { ...config };
+  const domain = typeof c.entity === "string" ? c.entity.split(".")[0] : "";
+  if (typeof c.attribute === "string" && attrs && !attrs.includes(c.attribute)) delete c.attribute;
+  const ctl = c.control;
+  const type = typeof ctl === "string" ? ctl : isObj(ctl) ? ctl.type : undefined;
+  if (
+    typeof type === "string" &&
+    type !== "auto" &&
+    type !== "buttons" &&
+    !(DOMAIN_CONTROLS[domain] ?? []).includes(type as ControlKind)
+  )
+    delete c.control;
+  const places = {
+    icon: [defaultIcon(kind), ICON_OPTIONS],
+    visual: [defaultVisual(kind, thing), VISUAL_OPTIONS],
+  } as const;
+  for (const [place, [byDefault, options]] of Object.entries(places)) {
+    const p = c[place];
+    if (!isObj(p) || p.type !== undefined) continue;
+    const takes: readonly string[] = byDefault
+      ? ((options as Record<string, readonly string[]>)[byDefault] ?? [])
+      : [];
+    const kept = Object.fromEntries(Object.entries(p).filter(([k]) => takes.includes(k)));
+    if (Object.keys(kept).length) c[place] = kept;
+    else delete c[place];
+  }
+  return c as CardConfigBase;
 };
 
 export const formToConfig = (
