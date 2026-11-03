@@ -15,6 +15,9 @@ interface Schema {
   iconPath?: string;
   value?: string;
   required?: boolean;
+  // an optional field's placeholder, and the form's data a selector reads (as Home Assistant's)
+  default?: unknown;
+  context?: Record<string, string>;
 }
 interface HassLike {
   states: Record<string, { entity_id: string; state: string; attributes: Raw }>;
@@ -85,6 +88,7 @@ const STYLE = `
   .row .grow { flex: 1; min-width: 0; }
   .swatch { width: 20px; height: 20px; border-radius: 50%; flex: none; margin-right: 36px; border: 1px solid var(--divider-color); }
   .icon-preview { flex: none; width: 24px; height: 24px; margin-right: 12px; color: var(--secondary-text-color); }
+  .icon-preview.own { opacity: 0.5; }
   .helper { font-size: 12px; color: var(--secondary-text-color); margin: 4px 12px 0; line-height: 1.35; }
   .toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; }
   .toggle .text { font-size: 14px; }
@@ -340,6 +344,7 @@ export class HaFormShim extends HTMLElement {
         input.addEventListener(slider ? "input" : "change", () =>
           this._emit(name, input.value === "" ? undefined : Number(input.value)),
         );
+        if (s.default !== undefined && !s.required) input.placeholder = String(s.default);
         const unit = conf.unit_of_measurement ? ` (${conf.unit_of_measurement})` : "";
         const box = this._box({ ...s, name }, input);
         if (unit) box.querySelector(".label")!.append(unit);
@@ -415,10 +420,18 @@ export class HaFormShim extends HTMLElement {
     input.type = "text";
     input.spellcheck = false;
     let preview: HTMLElement | null = null;
+    // the placeholder: the field's default, an icon picker's own or its entity's icon
+    const ownIcon = () => {
+      const entity = s.context?.icon_entity ? this._data[s.context.icon_entity] : undefined;
+      const icon =
+        typeof entity === "string" ? this.hass?.states[entity]?.attributes.icon : undefined;
+      return typeof icon === "string" ? icon : "";
+    };
+    if (s.default !== undefined && !s.required) input.placeholder = String(s.default);
     if (kind === "icon") {
       preview = document.createElement("ha-icon");
       preview.className = "icon-preview";
-      input.placeholder = "mdi:…";
+      input.placeholder = String(conf.placeholder ?? "") || "mdi:…";
     }
     input.addEventListener("change", () => this._emit(name, input.value.trim() || undefined));
     let control: HTMLElement = input;
@@ -435,8 +448,12 @@ export class HaFormShim extends HTMLElement {
         const next = typeof v === "string" ? v : "";
         if (input.value !== next && activeIn(this.shadowRoot!) !== input) input.value = next;
         if (preview) {
-          (preview as HTMLElement & { icon?: string }).icon = next || undefined;
-          preview.hidden = !next;
+          // the entity's icon while none is written, faint
+          const own = next ? "" : ownIcon();
+          if (own) input.placeholder = own;
+          (preview as HTMLElement & { icon?: string }).icon = next || own || undefined;
+          preview.hidden = !next && !own;
+          preview.classList.toggle("own", !next && !!own);
         }
       },
     };

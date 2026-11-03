@@ -421,3 +421,45 @@ describe("the editor's interactions", () => {
     expect(defaults("poster", { name: "Hello" }).tap_action).toBe("none");
   });
 });
+
+describe("the editor's placeholders", () => {
+  const shown = (cfg: Raw, change: HaFormData = {}) => {
+    const schema = schemaOf("poster", cfg, change);
+    return Object.fromEntries(
+      ["name", "value", "unit", "decimals"].map((n) => [n, field(schema, n)?.default]),
+    );
+  };
+
+  it("show what the entity gives where the card writes nothing", () => {
+    const st = hass.states["sensor.living_room_temperature"];
+    expect(shown(TEMP)).toMatchObject({
+      name: st.attributes.friendly_name,
+      value: st.state,
+      unit: st.attributes.unit_of_measurement,
+    });
+    // a word, as Home Assistant formats it
+    expect(shown({ entity: "switch.coffee_machine" }).value).toBe(
+      hass.formatEntityState(hass.states["switch.coffee_machine"]),
+    );
+    // a thermostat's temperature, not its mode
+    const climate = hass.states["climate.living_room"];
+    expect(shown({ entity: "climate.living_room" }).value).toBe(
+      String(climate.attributes.current_temperature),
+    );
+    // the attribute written
+    expect(shown(LIGHT, { attribute: "brightness" }).value).toBe(
+      String(hass.states["light.living_room"].attributes.brightness),
+    );
+    // nothing without an entity
+    expect(shown({ name: "Hello" })).toEqual({
+      name: undefined,
+      value: undefined,
+      unit: undefined,
+      decimals: undefined,
+    });
+  });
+
+  it("show the entity's icon in the icon picker", () => {
+    expect(field(schemaOf("poster", LIGHT), "icon")?.context).toEqual({ icon_entity: "entity" });
+  });
+});

@@ -4,10 +4,12 @@
 // is (Glow; the kind as "Wind (detected)"): leaving a field alone is a choice the form shows, and
 // writes nothing.
 import { domainOf } from "../color.ts";
+import type { RawEntity } from "../entity/config.ts";
 import { BADGE_SIZES, BADGE_STYLES, HEADER_VISUALS } from "../entity/constants.ts";
 import type { HaFormData, HaFormSchema, HassEntity, HomeAssistant } from "../ha.ts";
 import { hasString, t, type StringKey } from "../i18n.ts";
 import { RAIN_STYLES } from "../rain/constants.ts";
+import { isNum } from "../util.ts";
 import { FLOW_STYLES } from "../wind/constants.ts";
 import { TILE_ICON_TOGGLES } from "./config.ts";
 import {
@@ -170,6 +172,37 @@ export const rangeInfo = (x: SchemaCtx) => {
   };
 };
 
+// what the entity gives where the card writes nothing, as the fields' placeholders: its name, the
+// value it shows (the attribute written, else the kind's: a thermostat's temperature), its unit
+// and its decimals
+export const placeholders = (x: SchemaCtx): Record<string, string> => {
+  const { hass, st, kind } = x;
+  if (!st) return {};
+  const out: Record<string, string> = {};
+  const name = st.attributes.friendly_name;
+  if (typeof name === "string" && name) out.name = name;
+  const written = typeof x.data.attribute === "string" && x.data.attribute ? x.data.attribute : "";
+  const attr =
+    written || kind.main?.(st.entity_id, { entity: st.entity_id } as RawEntity, {}).attribute || "";
+  const raw = attr ? st.attributes[attr] : st.state;
+  if (raw !== undefined && raw !== null && raw !== "")
+    out.value = isNum(raw)
+      ? String(raw)
+      : attr
+        ? (hass?.formatEntityAttributeValue?.(st, attr) ?? String(raw))
+        : (hass?.formatEntityState?.(st) ?? String(raw));
+  const unit = attr
+    ? /temperature/.test(attr) && domainOf(st.entity_id) === "climate"
+      ? (hass?.config?.unit_system?.temperature ?? "")
+      : ""
+    : st.attributes.unit_of_measurement;
+  if (typeof unit === "string" && unit) out.unit = unit;
+  const precision = (hass?.entities?.[st.entity_id] as { display_precision?: unknown } | undefined)
+    ?.display_precision;
+  if (typeof precision === "number") out.decimals = String(precision);
+  return out;
+};
+
 export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   const { hass, thing, kind } = x;
   const data = withDefaults(x.data);
@@ -185,6 +218,14 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
     VisualThing | "none" | null;
   const fits = (th: string) => !KIND_THINGS.includes(th) || !!kind.draws?.includes(th);
 
+  // a text field, what the entity gives there as its placeholder
+  const shown = placeholders(x);
+  const text = (name: string): HaFormSchema => ({
+    name,
+    selector: { text: {} },
+    ...(shown[name] !== undefined ? { default: shown[name] } : {}),
+  });
+
   // ----- the top: the entity, its kind, its name and icon, the colour -----
   // the kinds that read the entity, the detected one only as detected (the one written too, so the
   // select shows it)
@@ -199,9 +240,10 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
       ...kinds,
     ]),
     grid(
-      { name: "name", selector: { text: {} } },
+      text("name"),
+      // the entity's own icon in its place while none is written
       ...(iconThing === "icon" || iconThing === "image"
-        ? [{ name: "icon", selector: { icon: {} } }]
+        ? [{ name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } }]
         : []),
     ),
     { name: "color", selector: { ui_color: { default_color: "state", include_state: true } } },
@@ -211,13 +253,14 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   const range = rangeInfo(x);
   const content: HaFormSchema[] = [
     ...(entity ? [{ name: "attribute", selector: { attribute: { entity_id: entity } } }] : []),
-    grid({ name: "value", selector: { text: {} } }, { name: "secondary", selector: { text: {} } }),
+    grid(text("value"), { name: "secondary", selector: { text: {} } }),
     ...(x.numeric
       ? [
-          grid(
-            { name: "unit", selector: { text: {} } },
-            { name: "decimals", selector: { number: { min: 0, max: 3, step: 1, mode: "box" } } },
-          ),
+          grid(text("unit"), {
+            name: "decimals",
+            selector: { number: { min: 0, max: 3, step: 1, mode: "box" } },
+            ...(shown.decimals !== undefined ? { default: shown.decimals } : {}),
+          }),
         ]
       : []),
     // around a value the card shows: an entity's, or one written

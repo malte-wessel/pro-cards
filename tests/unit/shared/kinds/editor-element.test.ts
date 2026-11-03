@@ -147,6 +147,8 @@ describe("the editor's number fields", () => {
     const climate = open("poster", { entity: "climate.living_room" });
     await tick();
     expect(names(climate.form())).toEqual(expect.arrayContaining(["unit", "decimals"]));
+    // its unit as the placeholder: the home's temperature unit
+    expect(flat(climate.form().schema).find((s) => s.name === "unit")?.default).toBe("°C");
     const light = open("poster", { entity: "light.living_room" });
     await tick();
     expect(names(light.form())).not.toContain("decimals");
@@ -288,6 +290,7 @@ describe("another entity picked in the editor", () => {
     "media_player.kitchen_speaker",
   ];
 
+  // (144 editors opened one after another: longer than a test's usual 5 s on a busy machine)
   it("leaves a config the card takes, whatever the entities", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.spyOn(console, "info").mockImplementation(() => {});
@@ -325,7 +328,7 @@ describe("another entity picked in the editor", () => {
       warn.mockRestore();
     }
     expect(bad).toEqual([]);
-  });
+  }, 30_000);
 
   it("goes back to the detected kind where the kind written cannot read it", async () => {
     const e = open("tile", {

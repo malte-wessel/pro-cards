@@ -167,6 +167,10 @@ export interface HaFormSchema {
   required?: boolean;
   // a `constant` row's text, after its label
   value?: string;
+  // what an optional field shows as its placeholder (Home Assistant's form), and the form's data a
+  // selector reads (`{ icon_entity: "entity" }`: the icon picker shows that entity's icon)
+  default?: unknown;
+  context?: Record<string, string>;
   type?: string;
   schema?: HaFormSchema[];
   title?: string;
