@@ -284,6 +284,12 @@ const pt: Translation = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (detetado)",
+  "editor.card.rules_hint.never":
+    "A regra {n} nunca corresponde: o seu limite inferior não está abaixo do superior",
+  "editor.card.rules_hint.always":
+    "A regra {n} corresponde a qualquer valor: as regras seguintes nunca se aplicam",
+  "editor.card.rules_hint.covered":
+    "A regra {n} nunca se aplica: a regra {m} antes dela corresponde a todos os seus valores",
   "editor.card.field.rules_from": "Conjunto de regras",
   "editor.card.rules_from.kind": "Predefinidas ({kind})",
   "editor.card.rules_from.own": "Próprias",
@@ -535,6 +541,13 @@ const pt: Translation = {
   "editor.cards.no_picker": "Escolha um cartão no editor de código",
   "editor.cards.more": "Mais (YAML)",
   "editor.cards.field.layout": "Disposição",
+  "editor.cards.field.title": "Título",
+  "editor.cards.field.icon": "Ícone",
+  "editor.cards.field.title_tap_action": "Toque no título",
+  "editor.cards.group_layout.list": "Um por baixo do outro",
+  "editor.cards.group_layout.row": "Lado a lado",
+  "editor.cards.tile": "Mosaico",
+  "editor.cards.none_yet": "Ainda sem mosaicos: + adiciona um",
   "editor.cards.field.columns": "Colunas",
   "editor.cards.field.rows": "Linhas",
   "editor.cards.field.align_items": "Alinhar cartões",

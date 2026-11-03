@@ -176,6 +176,32 @@ describe("the source of a picture behind the card", () => {
   });
 });
 
+describe("the editor's hints on the rules", () => {
+  it("say which rule never matches or never applies, before the list's help", async () => {
+    const e = open("poster", {
+      entity: "sensor.living_room_temperature",
+      rules: [
+        { below: 20, color: "blue" },
+        { below: 10, color: "indigo" },
+        { above: 30, below: 25 },
+      ],
+    });
+    await tick();
+    const help = e.form().computeHelper({ name: "rules" }) ?? "";
+    expect(help).toContain("⚠ Rule 2 never applies: rule 1 before it matches all its values");
+    expect(help).toContain("⚠ Rule 3 never matches");
+    expect(help).toMatch(/The first rule that matches/);
+    // rules that each match something: the help alone
+    const ok = open("poster", {
+      entity: "sensor.living_room_temperature",
+      rules: [{ below: 10 }, { below: 20 }],
+    });
+    await tick();
+    expect(ok.form().computeHelper({ name: "rules" })).not.toContain("⚠");
+    for (const x of [e, ok]) x.ed.remove();
+  });
+});
+
 describe("the editor's helper texts", () => {
   it("name the inputs found on the device, or say none was", () => {
     const wind = open("poster", { entity: "sensor.wind_speed" });

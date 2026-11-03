@@ -284,6 +284,11 @@ const nl: Translation = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (herkend)",
+  "editor.card.rules_hint.never":
+    "Regel {n} past nooit: de ondergrens ligt niet onder de bovengrens",
+  "editor.card.rules_hint.always": "Regel {n} past op elke waarde: de regels erna gelden nooit",
+  "editor.card.rules_hint.covered":
+    "Regel {n} geldt nooit: regel {m} ervoor past op al haar waarden",
   "editor.card.field.rules_from": "Regelset",
   "editor.card.rules_from.kind": "Vooraf ingesteld ({kind})",
   "editor.card.rules_from.own": "Eigen",
@@ -537,6 +542,13 @@ const nl: Translation = {
   "editor.cards.no_picker": "Kies een kaart in de code-editor",
   "editor.cards.more": "Meer (YAML)",
   "editor.cards.field.layout": "Indeling",
+  "editor.cards.field.title": "Titel",
+  "editor.cards.field.icon": "Pictogram",
+  "editor.cards.field.title_tap_action": "Tik op de titel",
+  "editor.cards.group_layout.list": "Onder elkaar",
+  "editor.cards.group_layout.row": "Naast elkaar",
+  "editor.cards.tile": "Tegel",
+  "editor.cards.none_yet": "Nog geen tegels: + voegt er een toe",
   "editor.cards.field.columns": "Kolommen",
   "editor.cards.field.rows": "Rijen",
   "editor.cards.field.align_items": "Kaarten uitlijnen",

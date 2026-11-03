@@ -8,6 +8,7 @@ export const EDITABLE = new Set([
   "custom:poster-card-pro",
   "custom:layout-card-pro",
   "custom:swipe-card-pro",
+  "custom:tile-group-card-pro",
 ]);
 export const isEditable = (c: unknown) =>
   !!c && typeof c === "object" && EDITABLE.has(String((c as CardConfigBase).type));

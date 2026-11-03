@@ -283,6 +283,12 @@ const fr: Translation = {
   "editor.multi_trend.layout.lanes": "Pistes (une échelle par entité)",
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (détecté)",
+  "editor.card.rules_hint.never":
+    "La règle {n} ne correspond jamais : sa limite basse n'est pas sous sa limite haute",
+  "editor.card.rules_hint.always":
+    "La règle {n} correspond à toute valeur : les règles suivantes ne s'appliquent jamais",
+  "editor.card.rules_hint.covered":
+    "La règle {n} ne s'applique jamais : la règle {m} avant elle correspond à toutes ses valeurs",
   "editor.card.field.rules_from": "Jeu de règles",
   "editor.card.rules_from.kind": "Prédéfinies ({kind})",
   "editor.card.rules_from.own": "Personnalisées",
@@ -535,6 +541,13 @@ const fr: Translation = {
   "editor.cards.no_picker": "Choisissez une carte dans l'éditeur de code",
   "editor.cards.more": "Plus (YAML)",
   "editor.cards.field.layout": "Disposition",
+  "editor.cards.field.title": "Titre",
+  "editor.cards.field.icon": "Icône",
+  "editor.cards.field.title_tap_action": "Appui sur le titre",
+  "editor.cards.group_layout.list": "L'une sous l'autre",
+  "editor.cards.group_layout.row": "Côte à côte",
+  "editor.cards.tile": "Tuile",
+  "editor.cards.none_yet": "Pas encore de tuiles : + en ajoute une",
   "editor.cards.field.columns": "Colonnes",
   "editor.cards.field.rows": "Lignes",
   "editor.cards.field.align_items": "Aligner les cartes",

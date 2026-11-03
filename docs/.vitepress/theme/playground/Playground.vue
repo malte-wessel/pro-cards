@@ -69,6 +69,7 @@ watch(live, (t) => {
 });
 const editable = computed(() => cards.value.map((c, i) => (isEditable(c) ? i : -1)).filter((i) => i >= 0));
 const configError = ref<string | null>(null);
+const warnings = ref<string[]>([]);
 const error = computed(() =>
   parsed.value.error ?? (configError.value ? { message: configError.value } : null),
 );
@@ -547,16 +548,14 @@ onBeforeUnmount(() => {
           <div ref="editorHost"></div>
         </div>
         <div v-show="view === 'yaml'" class="pg-yaml">
-          <YamlEditor
-            :model-value="text"
-            :error="error"
-            @update:model-value="typed"
-            @undo="undo"
-            @redo="redo"
-          />
+          <YamlEditor :model-value="text" @update:model-value="typed" @undo="undo" @redo="redo" />
         </div>
         <div v-if="error" class="pg-error" role="status">
           <b>{{ error.line ? `Line ${error.line}:` : "Error:" }}</b> {{ error.message }}
+        </div>
+        <!-- what the card warns of: it draws, leaving something out -->
+        <div v-else-if="warnings.length" class="pg-warnings" role="status">
+          <p v-for="w in warnings" :key="w"><b>Warning:</b> {{ w }}</p>
         </div>
       </section>
       <div
@@ -578,6 +577,7 @@ onBeforeUnmount(() => {
           :pick="pick"
           @grid="setGrid"
           @error="configError = $event"
+          @warnings="warnings = $event"
         />
       </section>
     </div>

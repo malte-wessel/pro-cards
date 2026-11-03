@@ -260,9 +260,30 @@
   flex: none;
   padding: 8px 12px;
   font-size: 12px;
+  line-height: 1.5;
   color: var(--vp-c-danger-1);
   background: var(--vp-c-danger-soft);
   border-top: 1px solid var(--vp-c-divider);
+}
+/* what the card warns of: as the error line, one paragraph each (the docs' own paragraph and
+   list styles kept out) */
+.pg-warnings {
+  flex: none;
+  max-height: 30%;
+  overflow-y: auto;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--vp-c-warning-1);
+  background: var(--vp-c-warning-soft);
+  border-top: 1px solid var(--vp-c-divider);
+}
+.pg .pg-warnings p {
+  margin: 0;
+  line-height: inherit;
+}
+.pg .pg-warnings p + p {
+  margin-top: 4px;
 }
 .pg-toast {
   position: absolute;

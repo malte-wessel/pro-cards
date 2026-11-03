@@ -284,6 +284,11 @@ const cs: Translation = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (rozpoznáno)",
+  "editor.card.rules_hint.never": "Pravidlo {n} nikdy neodpovídá: jeho dolní mez není pod horní",
+  "editor.card.rules_hint.always":
+    "Pravidlo {n} odpovídá každé hodnotě: pravidla za ním se nikdy neuplatní",
+  "editor.card.rules_hint.covered":
+    "Pravidlo {n} se nikdy neuplatní: pravidlo {m} před ním odpovídá všem jeho hodnotám",
   "editor.card.field.rules_from": "Sada pravidel",
   "editor.card.rules_from.kind": "Předdefinovaná ({kind})",
   "editor.card.rules_from.own": "Vlastní",
@@ -533,6 +538,13 @@ const cs: Translation = {
   "editor.cards.no_picker": "Vyberte kartu v editoru kódu",
   "editor.cards.more": "Další (YAML)",
   "editor.cards.field.layout": "Rozvržení",
+  "editor.cards.field.title": "Název",
+  "editor.cards.field.icon": "Ikona",
+  "editor.cards.field.title_tap_action": "Klepnutí na název",
+  "editor.cards.group_layout.list": "Pod sebou",
+  "editor.cards.group_layout.row": "Vedle sebe",
+  "editor.cards.tile": "Dlaždice",
+  "editor.cards.none_yet": "Zatím žádné dlaždice: + přidá jednu",
   "editor.cards.field.columns": "Sloupce",
   "editor.cards.field.rows": "Řádky",
   "editor.cards.field.align_items": "Zarovnání karet",

@@ -183,3 +183,55 @@ test("the layout card's editor edits the cards inside it", async ({ page }) => {
     .toMatch(/- type: custom:tile-card-pro\n(?: {4}.*\n)* {4}name: Worktop/);
   await expect(previewCard(page)).toContainText("Worktop");
 });
+
+test("lists what the card warns of, and nothing once it is fixed", async ({ page }) => {
+  await openPlayground(page);
+  // a ring does nothing on the wind's animation: the card draws, and says so
+  await typeYaml(
+    page,
+    "type: custom:poster-card-pro\nentity: sensor.wind_speed\nicon: { ring: true }\n",
+  );
+  const warnings = page.locator(".pg-warnings");
+  await expect(warnings).toContainText("poster-card-pro:");
+  await expect(warnings).toContainText("ring");
+  await expect(previewCard(page)).toBeAttached();
+  await typeYaml(page, "type: custom:poster-card-pro\nentity: sensor.wind_speed\n");
+  await expect(warnings).toHaveCount(0);
+});
+
+test("marks what the schema does not take, where it is written", async ({ page }) => {
+  await openPlayground(page);
+  await typeYaml(page, "type: custom:tile-card-pro\nentity: light.living_room\ncolour: red\n");
+  // the unknown key underlined on its line, its message in the gutter's mark
+  const mark = page.locator(".pg-yaml .cm-lintRange-error");
+  await expect(mark).toHaveText("colour: red");
+  await page.locator(".pg-yaml .cm-lint-marker-error").hover();
+  await expect(page.locator(".cm-tooltip-lint")).toContainText('unknown key "colour"');
+  await typeYaml(page, "type: custom:tile-card-pro\nentity: light.living_room\ncolor: red\n");
+  await expect(mark).toHaveCount(0);
+});
+
+test("offers the keys and values the schema takes", async ({ page }) => {
+  await openPlayground(page);
+  await typeYaml(page, "type: custom:tile-card-pro\nentity: light.living_room\n");
+  await page.keyboard.type("vis", { delay: 30 });
+  const options = page.locator(".cm-tooltip-autocomplete li");
+  await expect(options.filter({ hasText: "visual" })).toHaveCount(1);
+  await options.filter({ hasText: /^visual/ }).click();
+  await expectYaml(page, "type: custom:tile-card-pro\nentity: light.living_room\nvisual:");
+  // a value, taken by Enter
+  await typeYaml(page, "type: custom:tile-card-pro\nentity: light.living_room\nvisual: ");
+  await page.keyboard.type("spark", { delay: 30 });
+  await expect(options.filter({ hasText: "sparkline" })).toHaveAttribute("aria-selected", "true");
+  // (CodeMirror takes no Enter for a moment after its list opens, so a key typed on is not lost)
+  await page.waitForTimeout(200);
+  await page.keyboard.press("Enter");
+  await expectYaml(
+    page,
+    "type: custom:tile-card-pro\nentity: light.living_room\nvisual: sparkline",
+  );
+  // an entity: the demo home's
+  await typeYaml(page, "type: custom:tile-card-pro\nentity: light.liv");
+  await page.keyboard.press("Control+Space");
+  await expect(options.filter({ hasText: "light.living_room" })).toHaveCount(1);
+});

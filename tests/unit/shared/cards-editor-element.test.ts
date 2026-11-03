@@ -419,3 +419,66 @@ describe("the container editors from outside", () => {
     expect(e.root.querySelector(".place h3")!.textContent).toBe("Platzierung im Layout");
   });
 });
+
+describe("the tile group's editor", () => {
+  const GROUP = "custom:tile-group-card-pro";
+  it("edits its tiles in the tile's editor, written without their type", async () => {
+    await import("../../../src/tile-group-card.ts");
+    const e = await editor(GROUP, {
+      title: "Lights",
+      tiles: ["light.kitchen", { entity: "light.living_room", name: "Sofa" }],
+    });
+    // the tabs by name: the tile's own, else its entity's
+    expect(e.tabs()).toEqual(["1Kitchen", "2Sofa"]);
+    expect((e.child() as unknown as { value: { type: string } }).value).toEqual({
+      type: "custom:tile-card-pro",
+      entity: "light.kitchen",
+    });
+    // a tile changed: written back as the group writes tiles
+    e.child().dispatchEvent(
+      new CustomEvent("config-changed", {
+        detail: {
+          config: { type: "custom:tile-card-pro", entity: "light.kitchen", name: "Worktop" },
+        },
+      }),
+    );
+    await tick();
+    expect(e.last()).toEqual({
+      type: GROUP,
+      title: "Lights",
+      tiles: [
+        { entity: "light.kitchen", name: "Worktop" },
+        { entity: "light.living_room", name: "Sofa" },
+      ],
+    });
+    // "+" adds a tile and opens it, no picker of every card
+    await e.press("Add a card");
+    expect((e.last().tiles as unknown[]).length).toBe(3);
+    expect(e.root.querySelector(".child hui-card-picker")).toBeNull();
+    expect(e.selected()).toBe(2);
+  });
+
+  it("keeps an untouched tile as it was written", async () => {
+    const e = await editor(GROUP, { tiles: [{ entity: "light.kitchen" }, "light.living_room"] });
+    await e.press("Move right");
+    expect(e.last().tiles).toEqual(["light.living_room", { entity: "light.kitchen" }]);
+  });
+
+  it("writes its title and layout, the defaults as nothing", async () => {
+    const e = await editor(GROUP, { tiles: ["light.kitchen"] });
+    const form = e.root.querySelector<HTMLElement>(".options ha-form")!;
+    form.dispatchEvent(
+      new CustomEvent("value-changed", { detail: { value: { layout: "row", title: "Lights" } } }),
+    );
+    await tick();
+    expect(e.last()).toEqual({
+      type: GROUP,
+      layout: "row",
+      title: "Lights",
+      tiles: ["light.kitchen"],
+    });
+    form.dispatchEvent(new CustomEvent("value-changed", { detail: { value: { layout: "list" } } }));
+    await tick();
+    expect(e.last()).toEqual({ type: GROUP, tiles: ["light.kitchen"] });
+  });
+});

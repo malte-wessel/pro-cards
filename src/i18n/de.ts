@@ -283,6 +283,11 @@ const de: Translation = {
   "editor.multi_trend.layout.lanes": "Spuren (eine Skala je Entität)",
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (erkannt)",
+  "editor.card.rules_hint.never":
+    "Regel {n} passt nie: ihre untere Grenze liegt nicht unter der oberen",
+  "editor.card.rules_hint.always": "Regel {n} passt auf jeden Wert: die Regeln danach greifen nie",
+  "editor.card.rules_hint.covered":
+    "Regel {n} greift nie: Regel {m} davor passt auf alle ihre Werte",
   "editor.card.field.rules_from": "Regelsatz",
   "editor.card.rules_from.kind": "Vordefiniert ({kind})",
   "editor.card.rules_from.own": "Eigene",
@@ -535,6 +540,13 @@ const de: Translation = {
   "editor.cards.no_picker": "Karte im Code-Editor wählen",
   "editor.cards.more": "Mehr (YAML)",
   "editor.cards.field.layout": "Layout",
+  "editor.cards.field.title": "Titel",
+  "editor.cards.field.icon": "Symbol",
+  "editor.cards.field.title_tap_action": "Tippen auf den Titel",
+  "editor.cards.group_layout.list": "Untereinander",
+  "editor.cards.group_layout.row": "Nebeneinander",
+  "editor.cards.tile": "Kachel",
+  "editor.cards.none_yet": "Noch keine Kacheln: + fügt eine hinzu",
   "editor.cards.field.columns": "Spalten",
   "editor.cards.field.rows": "Zeilen",
   "editor.cards.field.align_items": "Karten ausrichten",

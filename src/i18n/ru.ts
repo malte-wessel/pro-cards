@@ -284,6 +284,12 @@ const ru: Translation = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (определено)",
+  "editor.card.rules_hint.never":
+    "Правило {n} никогда не подходит: его нижняя граница не ниже верхней",
+  "editor.card.rules_hint.always":
+    "Правило {n} подходит для любого значения: правила после него не применяются",
+  "editor.card.rules_hint.covered":
+    "Правило {n} никогда не применяется: правило {m} перед ним подходит для всех его значений",
   "editor.card.field.rules_from": "Набор правил",
   "editor.card.rules_from.kind": "Предустановленные ({kind})",
   "editor.card.rules_from.own": "Свои",
@@ -534,6 +540,13 @@ const ru: Translation = {
   "editor.cards.no_picker": "Выберите карточку в редакторе кода",
   "editor.cards.more": "Дополнительно (YAML)",
   "editor.cards.field.layout": "Макет",
+  "editor.cards.field.title": "Заголовок",
+  "editor.cards.field.icon": "Значок",
+  "editor.cards.field.title_tap_action": "Нажатие на заголовок",
+  "editor.cards.group_layout.list": "Друг под другом",
+  "editor.cards.group_layout.row": "Рядом",
+  "editor.cards.tile": "Плитка",
+  "editor.cards.none_yet": "Плиток пока нет: + добавляет одну",
   "editor.cards.field.columns": "Столбцы",
   "editor.cards.field.rows": "Строки",
   "editor.cards.field.align_items": "Выравнивание карточек",

@@ -12,6 +12,7 @@ const props = defineProps<{ cards: unknown[]; pick: number }>();
 const emit = defineEmits<{
   grid: [value: { columns?: number | "full"; rows?: number | "auto" }];
   error: [message: string | null];
+  warnings: [messages: string[]];
 }>();
 
 // the widths: a phone, one to three sections (the view columns they span), the whole pane
@@ -54,6 +55,30 @@ watch(
 const width = computed(() => WIDTHS.find((w) => w.id === prefs.value.width) ?? WIDTHS[1]);
 const theme = useExampleTheme();
 
+// what the cards warn of in the console (options that do nothing, another kind's keys …), shown
+// in the Playground: caught while the cards drawn now run, again from the start for every new
+// mount (a card warns once, when it is built)
+const CARD_MESSAGE = /^[a-z-]+-card(-pro)?: /;
+let warned: string[] = [];
+const told = (args: unknown[]) => {
+  const text = args.map((a) => (a instanceof Error ? a.message : String(a))).join(" ");
+  if (!CARD_MESSAGE.test(text) || warned.includes(text)) return;
+  warned = [...warned, text];
+  emit("warnings", warned);
+};
+let consoleWarn: typeof console.warn | null = null;
+onMounted(() => {
+  consoleWarn = console.warn;
+  const own = consoleWarn;
+  console.warn = (...args: unknown[]) => {
+    told(args);
+    own.apply(console, args);
+  };
+});
+onBeforeUnmount(() => {
+  if (consoleWarn) console.warn = consoleWarn;
+});
+
 // the cards, mounted again for every change of them
 const host = ref<HTMLDivElement | null>(null);
 const error = ref("");
@@ -66,6 +91,8 @@ const render = async () => {
   handle?.dispose();
   handle = null;
   error.value = "";
+  warned = [];
+  emit("warnings", warned);
   try {
     if (!props.cards.length) throw new Error("No card yet: pick an example or write one");
     const h = await mountGrid(host.value, props.cards, { fullWidth: false });

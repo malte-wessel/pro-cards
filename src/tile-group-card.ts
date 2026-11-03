@@ -15,7 +15,7 @@
  * The tiles are tile cards of their own, hosted flat on the group's surface: everything a tile does
  * (kinds, controls, status, badges) works the same in a group.
  */
-import { registerCard } from "./shared/card.ts";
+import { defineElement, registerCard } from "./shared/card.ts";
 import { childKey, reconcile } from "./shared/cards/children.ts";
 import { EntityCardBase, type VisState } from "./shared/entity/base.ts";
 import type { CardConfigBase, GridOptions, HomeAssistant } from "./shared/ha.ts";
@@ -27,6 +27,7 @@ import {
   TILE_TYPE,
   type TileGroupConfig,
 } from "./tile-group/config.ts";
+import { TileGroupCardEditor } from "./tile-group/editor.ts";
 import { STYLE_TILE_GROUP_CARD } from "./tile-group/styles.ts";
 
 // a hosted tile card
@@ -50,6 +51,9 @@ export class TileGroupCard extends EntityCardBase {
   static cardType = CARD_TYPE;
   _tiles: Tile[] = [];
 
+  static getConfigElement() {
+    return document.createElement(`${CARD_TYPE}-editor`);
+  }
   static getStubConfig(hass: HomeAssistant | undefined, entities?: string[]) {
     return { title: t(hass, "group.stub_title"), tiles: (entities || []).slice(0, 3) };
   }
@@ -135,3 +139,4 @@ registerCard(TileGroupCard, {
   name: "Tile Group Card Pro",
   description: "Several tiles on one card under a header, one under the other or side by side",
 });
+defineElement(`${CARD_TYPE}-editor`, TileGroupCardEditor);

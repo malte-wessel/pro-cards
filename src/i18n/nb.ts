@@ -284,6 +284,12 @@ const nb: Translation = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (gjenkjent)",
+  "editor.card.rules_hint.never":
+    "Regel {n} passer aldri: den nedre grensen er ikke under den øvre",
+  "editor.card.rules_hint.always":
+    "Regel {n} passer på alle verdier: reglene etter den gjelder aldri",
+  "editor.card.rules_hint.covered":
+    "Regel {n} gjelder aldri: regel {m} før den passer på alle verdiene dens",
   "editor.card.field.rules_from": "Regelsett",
   "editor.card.rules_from.kind": "Forhåndsdefinerte ({kind})",
   "editor.card.rules_from.own": "Egne",
@@ -535,6 +541,13 @@ const nb: Translation = {
   "editor.cards.no_picker": "Velg et kort i koderedigeringen",
   "editor.cards.more": "Mer (YAML)",
   "editor.cards.field.layout": "Oppsett",
+  "editor.cards.field.title": "Tittel",
+  "editor.cards.field.icon": "Ikon",
+  "editor.cards.field.title_tap_action": "Trykk på tittelen",
+  "editor.cards.group_layout.list": "Under hverandre",
+  "editor.cards.group_layout.row": "Side om side",
+  "editor.cards.tile": "Flis",
+  "editor.cards.none_yet": "Ingen fliser ennå: + legger til en",
   "editor.cards.field.columns": "Kolonner",
   "editor.cards.field.rows": "Rader",
   "editor.cards.field.align_items": "Juster kort",

@@ -283,6 +283,12 @@ const es: Translation = {
   "editor.multi_trend.layout.lanes": "Carriles (una escala por entidad)",
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (detectado)",
+  "editor.card.rules_hint.never":
+    "La regla {n} nunca coincide: su límite inferior no está por debajo del superior",
+  "editor.card.rules_hint.always":
+    "La regla {n} coincide con cualquier valor: las reglas siguientes nunca se aplican",
+  "editor.card.rules_hint.covered":
+    "La regla {n} nunca se aplica: la regla {m} anterior coincide con todos sus valores",
   "editor.card.field.rules_from": "Conjunto de reglas",
   "editor.card.rules_from.kind": "Predefinidas ({kind})",
   "editor.card.rules_from.own": "Propias",
@@ -535,6 +541,13 @@ const es: Translation = {
   "editor.cards.no_picker": "Elige una tarjeta en el editor de código",
   "editor.cards.more": "Más (YAML)",
   "editor.cards.field.layout": "Diseño",
+  "editor.cards.field.title": "Título",
+  "editor.cards.field.icon": "Icono",
+  "editor.cards.field.title_tap_action": "Toque en el título",
+  "editor.cards.group_layout.list": "Uno debajo de otro",
+  "editor.cards.group_layout.row": "Uno al lado de otro",
+  "editor.cards.tile": "Mosaico",
+  "editor.cards.none_yet": "Aún no hay mosaicos: + añade uno",
   "editor.cards.field.columns": "Columnas",
   "editor.cards.field.rows": "Filas",
   "editor.cards.field.align_items": "Alinear tarjetas",

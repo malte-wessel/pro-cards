@@ -124,8 +124,29 @@ export abstract class CardsEditorBase extends HTMLElement {
     return card;
   }
 
+  // the card's list of cards as it writes it (a tile group's `tiles`), each card as its own
+  // editor takes it and back (a tile with its `type`), and the card "+" adds (none: the picker)
+  _listKey = "cards";
+  _toCard(item: unknown): CardConfigBase {
+    return item as CardConfigBase;
+  }
+  _fromCard(card: CardConfigBase): unknown {
+    return card;
+  }
+  _newCard(): CardConfigBase | null {
+    return null;
+  }
+  // a card's name for its tab
+  _cardName(card: CardConfigBase): string {
+    return cardName(card);
+  }
+
   setConfig(config: CardConfigBase) {
-    this._config = { ...config, cards: Array.isArray(config.cards) ? config.cards : [] };
+    // kept as `cards` (each as its editor takes it), written back under the card's own key
+    const { [this._listKey]: list, ...rest } = config as Record<string, unknown>;
+    this._written = Array.isArray(list) ? list : [];
+    const cards = this._written.map((x) => this._toCard(x));
+    this._config = { ...(rest as CardConfigBase), cards };
     this._render();
   }
   // a new hass (any state in the home changed) goes to the forms and the card's editor: the tabs
@@ -155,10 +176,26 @@ export abstract class CardsEditorBase extends HTMLElement {
     return hasString(k) ? t(this._hass, k, vars) : key;
   }
 
+  // the list as the card wrote it: a card left as it was keeps its spelling (a tile as
+  // `{ entity }` stays so), wherever it moved to
+  _written: unknown[] = [];
   _emit(config: CardConfigBase) {
     this._config = config;
+    const { cards, ...rest } = config;
+    const pool = this._written.map((x) => ({ x, as: JSON.stringify(this._toCard(x)) }));
+    const list = ((cards as CardConfigBase[] | undefined) ?? []).map((c) => {
+      const as = JSON.stringify(c);
+      const i = pool.findIndex((p) => p.as === as);
+      return i >= 0 ? pool.splice(i, 1)[0].x : this._fromCard(c);
+    });
+    this._written = list;
+    const written = { ...rest, [this._listKey]: list } as CardConfigBase;
     this.dispatchEvent(
-      new CustomEvent("config-changed", { detail: { config }, bubbles: true, composed: true }),
+      new CustomEvent("config-changed", {
+        detail: { config: written },
+        bubbles: true,
+        composed: true,
+      }),
     );
     this._render();
   }
@@ -254,13 +291,13 @@ export abstract class CardsEditorBase extends HTMLElement {
       if (!b) tabs.appendChild((b = this._button("tab", () => this._select(i))));
       this._tab(b, i === this._selected);
       b.innerHTML = `<span class="n">${i + 1}</span>`;
-      b.append(cardName(c));
+      b.append(this._cardName(c));
     });
     for (const b of kept.slice(cards.length)) b.remove();
     const bar = root.querySelector(".bar")!;
     let add = bar.querySelector<HTMLElement>(".icon.add");
     if (!add) {
-      add = this._icon(ICONS.plus, this._t("add"), () => this._select(this._cards.length));
+      add = this._icon(ICONS.plus, this._t("add"), () => this._add());
       add.classList.add("add");
       bar.appendChild(add);
     }
@@ -303,7 +340,7 @@ export abstract class CardsEditorBase extends HTMLElement {
     const host = root.querySelector(".child")!;
     if (this._childFor !== i || !this._child) {
       this._childFor = i;
-      this._child = card ? this._cardEditor(i) : this._picker();
+      this._child = card ? this._cardEditor(i) : this._newCard() ? this._none() : this._picker();
       host.replaceChildren(this._child);
     }
     this._child.hass = this._hass;
@@ -367,6 +404,13 @@ export abstract class CardsEditorBase extends HTMLElement {
     return ed;
   }
 
+  // no card, where "+" adds one of the card's own (a tile group without tiles)
+  _none(): CardPicker {
+    const p = document.createElement("div") as unknown as CardPicker;
+    (p as unknown as HTMLElement).className = "empty";
+    (p as unknown as HTMLElement).textContent = this._t("none_yet");
+    return p;
+  }
   _picker(): CardPicker {
     const tag = customElements.get("hui-card-picker") ? "hui-card-picker" : "div";
     const p = document.createElement(tag) as CardPicker;
@@ -387,7 +431,15 @@ export abstract class CardsEditorBase extends HTMLElement {
     return p;
   }
 
+  // "+": the card's own new card added and opened, else the picker
+  _add() {
+    const card = this._newCard();
+    if (card) this._setCards([...this._cards, card], this._cards.length);
+    else this._select(this._cards.length);
+  }
   _select(i: number) {
+    // "+" reached by the keyboard adds as a click does, where the card has its own new card
+    if (i === this._cards.length && this._newCard()) return this._add();
     if (i === this._selected) return;
     this._selected = i;
     this._guiMode = true;

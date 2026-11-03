@@ -283,6 +283,11 @@ const en = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (detected)",
+  "editor.card.rules_hint.never":
+    "Rule {n} never matches: its lower limit is not below its upper one",
+  "editor.card.rules_hint.always": "Rule {n} matches every value: the rules after it never apply",
+  "editor.card.rules_hint.covered":
+    "Rule {n} never applies: rule {m} before it matches all its values",
   "editor.card.field.rules_from": "Rule set",
   "editor.card.rules_from.kind": "Predefined ({kind})",
   "editor.card.rules_from.own": "Your own",
@@ -534,6 +539,13 @@ const en = {
   "editor.cards.no_picker": "Pick a card in the code editor",
   "editor.cards.more": "More (YAML)",
   "editor.cards.field.layout": "Layout",
+  "editor.cards.field.title": "Title",
+  "editor.cards.field.icon": "Icon",
+  "editor.cards.field.title_tap_action": "Tap on the title",
+  "editor.cards.group_layout.list": "One under the other",
+  "editor.cards.group_layout.row": "Side by side",
+  "editor.cards.tile": "Tile",
+  "editor.cards.none_yet": "No tiles yet: + adds one",
   "editor.cards.field.columns": "Columns",
   "editor.cards.field.rows": "Rows",
   "editor.cards.field.align_items": "Align cards",

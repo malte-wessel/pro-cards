@@ -4,13 +4,11 @@
 import { basicSetup } from "codemirror";
 import { yaml } from "@codemirror/lang-yaml";
 import { HighlightStyle, syntaxHighlighting, indentUnit } from "@codemirror/language";
-import { lintGutter, setDiagnostics } from "@codemirror/lint";
+import { linter, lintGutter } from "@codemirror/lint";
 import { EditorState, Prec } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { indentWithTab } from "@codemirror/commands";
 import { tags as t } from "@lezer/highlight";
-
-export { setDiagnostics };
 
 // the editor in the site's look: its background, text and code colours
 const theme = EditorView.theme({
@@ -53,15 +51,45 @@ const highlight = HighlightStyle.define([
   { tag: [t.keyword, t.meta, t.typeName, t.labelName], color: "var(--vp-c-purple-1)" },
 ]);
 
+// what the Playground checks and completes in the YAML (schema-check.ts): problems with their
+// place, and what fits at the cursor
+export interface Check {
+  problems(text: string): { from: number; to: number; message: string }[];
+  complete(
+    text: string,
+    pos: number,
+  ): {
+    from: number;
+    options: { label: string; detail?: string; apply?: string; type: string }[];
+  } | null;
+}
+// (the completion's context as CodeMirror hands it over)
+interface CompletionContext {
+  state: EditorState;
+  pos: number;
+  explicit: boolean;
+  matchBefore(re: RegExp): { from: number; to: number; text: string } | null;
+}
+
 // `history`: the Playground's undo and redo, which take the keys before CodeMirror's own (one
-// history for the YAML and the visual editor)
+// history for the YAML and the visual editor); `check`: the schema's errors marked where they are,
+// and its keys and values offered as you type
 export const createEditor = (
   parent: HTMLElement,
   doc: string,
   onChange: (text: string) => void,
   history: { undo(): void; redo(): void },
-) =>
-  new EditorView({
+  check: Check,
+) => {
+  // the completion source, one for the editor's life (a new one per call would restart it)
+  const complete = (ctx: CompletionContext) => {
+    // a word being typed, or asked for (Ctrl+Space)
+    const word = ctx.matchBefore(/[\w$.-]*/);
+    if (!ctx.explicit && (!word || word.from === word.to)) return null;
+    const r = check.complete(ctx.state.doc.toString(), ctx.pos);
+    return r ? { from: r.from, options: r.options, validFor: /^[\w$.-]*$/ } : null;
+  };
+  return new EditorView({
     parent,
     state: EditorState.create({
       doc,
@@ -81,9 +109,18 @@ export const createEditor = (
         lintGutter(),
         theme,
         syntaxHighlighting(highlight),
+        linter(
+          (view) =>
+            check
+              .problems(view.state.doc.toString())
+              .map((p) => ({ ...p, severity: "error" as const })),
+          { delay: 400 },
+        ),
+        EditorState.languageData.of(() => [{ autocomplete: complete }]),
         EditorView.updateListener.of((u) => {
           if (u.docChanged) onChange(u.state.doc.toString());
         }),
       ],
     }),
   });
+};

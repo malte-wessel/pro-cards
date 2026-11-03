@@ -1,13 +1,11 @@
 <script setup lang="ts">
 // The Playground's YAML: CodeMirror 6 with YAML highlighting, loaded on this page only, in the
-// site's colours (VitePress's variables, so it follows light and dark). An error with a line is
-// marked on that line.
+// site's colours (VitePress's variables, so it follows light and dark). It is checked against the
+// cards' schemas as you type, the problems marked where they are (a YAML error too), and offers
+// the keys and values that fit where the cursor is.
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 
-const props = defineProps<{
-  modelValue: string;
-  error: { message: string; line?: number } | null;
-}>();
+const props = defineProps<{ modelValue: string }>();
 // typed: the text as typed; undo and redo: the keys for them, taken from CodeMirror's own history
 const emit = defineEmits<{
   "update:modelValue": [value: string];
@@ -16,31 +14,18 @@ const emit = defineEmits<{
 }>();
 
 const host = ref<HTMLDivElement | null>(null);
-type CM = typeof import("./codemirror.ts");
-let cm: CM | null = null;
 let view: import("@codemirror/view").EditorView | null = null;
 
-// the error as a lint mark on its line (none: no marks)
-const mark = () => {
-  if (!view || !cm) return;
-  const doc = view.state.doc;
-  const e = props.error;
-  const line = e?.line && e.line <= doc.lines ? doc.line(e.line) : null;
-  view.dispatch(
-    cm.setDiagnostics(view.state, line && e
-      ? [{ from: line.from, to: line.to, severity: "error", message: e.message }]
-      : []),
-  );
-};
-
 onMounted(async () => {
-  cm = await import("./codemirror.ts");
+  const [cm, check] = await Promise.all([import("./codemirror.ts"), import("./schema-check.ts")]);
   if (!host.value) return;
-  view = cm.createEditor(host.value, props.modelValue, (text) => emit("update:modelValue", text), {
-    undo: () => emit("undo"),
-    redo: () => emit("redo"),
-  });
-  mark();
+  view = cm.createEditor(
+    host.value,
+    props.modelValue,
+    (text) => emit("update:modelValue", text),
+    { undo: () => emit("undo"), redo: () => emit("redo") },
+    { problems: check.problemsOf, complete: check.completionsAt },
+  );
 });
 onBeforeUnmount(() => view?.destroy());
 
@@ -56,7 +41,6 @@ watch(
     });
   },
 );
-watch(() => props.error, mark);
 
 defineExpose({ focus: () => view?.focus() });
 </script>

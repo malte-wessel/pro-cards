@@ -20,6 +20,8 @@ import { SWIPE_CONVS, swipeSchema } from "../../../src/swipe/editor.ts";
 import { cardName } from "../../../src/shared/cards/editor.ts";
 import { snapshot } from "../../../docs/.vitepress/theme/ha-shim/hass.ts";
 import type { CardConfigBase, HaFormData, HaFormSchema } from "../../../src/shared/ha.ts";
+import { TILE_GROUP_CONVS, cardToTile, tileToCard } from "../../../src/tile-group/editor.ts";
+import { docExamples, withNested } from "../docs-examples.ts";
 
 const hass = snapshot();
 const LAYOUT = "custom:layout-card-pro";
@@ -450,5 +452,26 @@ describe("a card's name on its tab", () => {
     expect(cardName({ type: "custom:mushroom-light-card" })).toBe("Mushroom light");
     expect(cardName({} as CardConfigBase)).toBe("?");
     expect(cardName(undefined)).toBe("?");
+  });
+});
+
+describe("the tile group's editor", () => {
+  it("writes every docs example's header, layout and tiles back as they were", () => {
+    let n = 0;
+    for (const { file, cfg } of docExamples())
+      for (const c of withNested(cfg)) {
+        const card = c as CardConfigBase;
+        if (card?.type !== "custom:tile-group-card-pro") continue;
+        expect(
+          optionsFromForm(optionsToForm(card, TILE_GROUP_CONVS), card, TILE_GROUP_CONVS),
+          file,
+        ).toEqual(card);
+        // a tile as the tile's editor takes it, and back (the editor keeps an untouched tile's
+        // own spelling: `{ entity }` stays an object)
+        for (const tile of (card.tiles as unknown[]) ?? [])
+          expect(tileToCard(cardToTile(tileToCard(tile))), file).toEqual(tileToCard(tile));
+        n++;
+      }
+    expect(n).toBeGreaterThan(3);
   });
 });

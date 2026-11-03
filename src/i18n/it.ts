@@ -283,6 +283,12 @@ const it: Translation = {
   "editor.multi_trend.layout.lanes": "Corsie (una scala per entità)",
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (rilevato)",
+  "editor.card.rules_hint.never":
+    "La regola {n} non corrisponde mai: il suo limite inferiore non è sotto quello superiore",
+  "editor.card.rules_hint.always":
+    "La regola {n} corrisponde a ogni valore: le regole successive non si applicano mai",
+  "editor.card.rules_hint.covered":
+    "La regola {n} non si applica mai: la regola {m} prima di essa corrisponde a tutti i suoi valori",
   "editor.card.field.rules_from": "Insieme di regole",
   "editor.card.rules_from.kind": "Predefinite ({kind})",
   "editor.card.rules_from.own": "Personalizzate",
@@ -535,6 +541,13 @@ const it: Translation = {
   "editor.cards.no_picker": "Scegli una scheda nell'editor di codice",
   "editor.cards.more": "Altro (YAML)",
   "editor.cards.field.layout": "Layout",
+  "editor.cards.field.title": "Titolo",
+  "editor.cards.field.icon": "Icona",
+  "editor.cards.field.title_tap_action": "Tocco sul titolo",
+  "editor.cards.group_layout.list": "Una sotto l'altra",
+  "editor.cards.group_layout.row": "Una accanto all'altra",
+  "editor.cards.tile": "Riquadro",
+  "editor.cards.none_yet": "Ancora nessun riquadro: + ne aggiunge uno",
   "editor.cards.field.columns": "Colonne",
   "editor.cards.field.rows": "Righe",
   "editor.cards.field.align_items": "Allinea le schede",

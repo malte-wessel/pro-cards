@@ -284,6 +284,11 @@ const sv: Translation = {
 
   // the poster's and the tile's editor
   "editor.card.kind_detected": "{kind} (identifierad)",
+  "editor.card.rules_hint.never":
+    "Regel {n} passar aldrig: dess nedre gräns ligger inte under den övre",
+  "editor.card.rules_hint.always": "Regel {n} passar alla värden: reglerna efter den gäller aldrig",
+  "editor.card.rules_hint.covered":
+    "Regel {n} gäller aldrig: regel {m} före den passar alla dess värden",
   "editor.card.field.rules_from": "Regeluppsättning",
   "editor.card.rules_from.kind": "Fördefinierade ({kind})",
   "editor.card.rules_from.own": "Egna",
@@ -535,6 +540,13 @@ const sv: Translation = {
   "editor.cards.no_picker": "Välj ett kort i kodredigeraren",
   "editor.cards.more": "Mer (YAML)",
   "editor.cards.field.layout": "Layout",
+  "editor.cards.field.title": "Rubrik",
+  "editor.cards.field.icon": "Ikon",
+  "editor.cards.field.title_tap_action": "Tryck på rubriken",
+  "editor.cards.group_layout.list": "Under varandra",
+  "editor.cards.group_layout.row": "Bredvid varandra",
+  "editor.cards.tile": "Ruta",
+  "editor.cards.none_yet": "Inga rutor än: + lägger till en",
   "editor.cards.field.columns": "Kolumner",
   "editor.cards.field.rows": "Rader",
   "editor.cards.field.align_items": "Justera kort",

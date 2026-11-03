@@ -19,6 +19,7 @@ import {
 } from "./editor-form.ts";
 import { editorSchema, rangeInfo, type SchemaCtx } from "./editor-schema.ts";
 import { KINDS } from "./registry.ts";
+import { ruleHints } from "./rule-hints.ts";
 import { writtenRules } from "./rules.ts";
 import type { Kind } from "./types.ts";
 
@@ -176,6 +177,17 @@ export abstract class KindCardEditor extends FormEditorBase {
       return found
         ? t(this._hass, "editor.card.help.found", { entity: found })
         : t(this._hass, "editor.card.help.not_found");
+    }
+    // the card's own rules: what never or always matches, in front of the list's help
+    if (name === "rules") {
+      const hints = ruleHints((this._config as Raw | undefined)?.rules).map((h) =>
+        t(this._hass, `editor.card.rules_hint.${h.kind}`, {
+          n: String(h.rule + 1),
+          ...(h.kind === "covered" ? { m: String(h.by + 1) } : {}),
+        }),
+      );
+      if (hints.length)
+        return [...hints.map((h) => `⚠ ${h}`), t(this._hass, "editor.card.help.rules")].join(". ");
     }
     const key = `editor.card.help.${name}`;
     return hasString(key) ? t(this._hass, key) : undefined;

@@ -346,3 +346,20 @@ test("the swipe card's editor edits a poster through the poster's own editor", a
   await e.editor.getByRole("button", { name: "Show visual editor" }).click();
   await expect(field(child, "entity").locator("input")).toHaveValue("Wind gust");
 });
+
+test("the tile group's editor edits a tile in the tile's own editor", async ({ page }) => {
+  const e = await openEditor(page, {
+    type: "custom:tile-group-card-pro",
+    title: "Lights",
+    tiles: ["light.kitchen", "light.living_room"],
+  });
+  await expect(e.editor.locator(".tab")).toHaveText(["1Kitchen", "2Living room"]);
+  const tile = e.editor.locator("hui-card-element-editor tile-card-pro-editor ha-form").first();
+  await fill(tile, "name", "Worktop");
+  await expect.poll(e.last).toEqual({
+    type: "custom:tile-group-card-pro",
+    title: "Lights",
+    tiles: [{ entity: "light.kitchen", name: "Worktop" }, "light.living_room"],
+  });
+  await expect(e.editor.locator(".tab").first()).toHaveText("1Worktop");
+});
