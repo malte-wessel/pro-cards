@@ -273,50 +273,6 @@ html {
   line-height: 0;
 }
 
-/* playground */
-.playground {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 16px;
-  align-items: start;
-}
-@media (max-width: 860px) {
-  .playground {
-    grid-template-columns: 1fr;
-  }
-}
-.playground textarea {
-  width: 100%;
-  min-height: 420px;
-  font: 13px/18px var(--vp-font-family-mono);
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid var(--vp-c-divider);
-  background: var(--vp-c-bg-alt);
-  color: var(--vp-c-text-1);
-  resize: vertical;
-  box-sizing: border-box;
-  tab-size: 2;
-}
-.playground .bar {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
-}
-.playground select {
-  font: 13px var(--vp-font-family-base);
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid var(--vp-c-divider);
-  background: var(--vp-c-bg);
-  color: var(--vp-c-text-1);
-}
-.playground .live {
-  margin: 0;
-}
-
 /* showcase pages (pageClass: wide): as wide as the home layout */
 .wide .VPDoc .container,
 .wide .VPDoc:not(.has-sidebar) .container {
@@ -368,50 +324,6 @@ html {
     grid-column: span 12 !important;
   }
 }
-.playground .switch {
-  display: inline-flex;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
-  overflow: hidden;
-}
-.playground .switch button {
-  font: 13px var(--vp-font-family-base);
-  padding: 6px 10px;
-  border: 0;
-  background: var(--vp-c-bg);
-  color: var(--vp-c-text-2);
-  cursor: pointer;
-}
-.playground .switch button[aria-selected="true"] {
-  background: var(--vp-c-brand-soft);
-  color: var(--vp-c-brand-1);
-}
-.playground .switch button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-.playground .editor {
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid var(--vp-c-divider);
-  background: var(--card-background-color);
-}
-.playground .written {
-  margin-top: 12px;
-  font-size: 13px;
-}
-.playground .written summary {
-  cursor: pointer;
-  color: var(--vp-c-text-2);
-}
-.playground .written pre {
-  margin: 8px 0 0;
-  padding: 12px;
-  border-radius: 8px;
-  background: var(--vp-c-bg-alt);
-  font: 12px/17px var(--vp-font-family-mono);
-  overflow-x: auto;
-}
 .live .tools .edit-link {
   font: 12px var(--vp-font-family-base);
   padding: 4px 10px;
@@ -423,14 +335,4 @@ html {
 .live .tools .edit-link:hover {
   color: var(--vp-c-brand-1);
   border-color: var(--vp-c-brand-1);
-}
-/* the card stays in view beside a long editor */
-.playground > .live {
-  position: sticky;
-  top: calc(var(--vp-nav-height, 64px) + 16px);
-}
-@media (max-width: 860px) {
-  .playground > .live {
-    position: static;
-  }
 }

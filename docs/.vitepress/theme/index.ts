@@ -2,7 +2,7 @@ import DefaultTheme from "vitepress/theme";
 import type { Theme } from "vitepress";
 import LiveCard from "./LiveCard.vue";
 import DashboardGrid from "./DashboardGrid.vue";
-import Playground from "./Playground.vue";
+import Playground from "./playground/Playground.vue";
 import ChangelogPager from "./ChangelogPager.vue";
 import FeatureRows from "./FeatureRows.vue";
 import DashboardLinks from "./DashboardLinks.vue";

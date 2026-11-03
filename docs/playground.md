@@ -7,24 +7,6 @@ pageClass: wide
 
 # Playground
 
-Pick a preset or paste your own YAML. Tiles, posters, layout and swipe cards open in their visual editor, as in Home Assistant's card editor; **YAML** shows the text. **Edit** under an example on the other pages opens it here. Only entities of the simulated home exist here, see the [entity list](#entities) below.
+Build a card visually or in YAML and watch it live. It stays in this browser as you type; **Save** keeps it under a name, **Share** copies a link to it, and **Edit** under any example in the docs opens it here.
 
 <ClientOnly><Playground /></ClientOnly>
-
-## Entities
-
-The simulated home has these entities. Values drift every few seconds and have a history. `light.attic` and every lock answer their services after a moment, so a control's pending ghost is easy to see on them; the offline ones are permanently `unavailable`.
-
-- **Weather station**: `binary_sensor.rain`, `sensor.dew_point`, `sensor.illuminance`, `sensor.outdoor_humidity`, `sensor.outdoor_temperature`, `sensor.pressure`, `sensor.rain_rate`, `sensor.rain_rate_roof`, `sensor.rain_today`, `sensor.uv_index`, `sensor.weather_station_battery`, `sensor.wind_direction`, `sensor.wind_gust`, `sensor.wind_speed`, `sun.sun`, `weather.home`
-- **Rooms**: `sensor.bathroom_humidity`, `sensor.bathroom_temperature`, `sensor.bedroom_temperature`, `sensor.hallway_temperature`, `sensor.kitchen_humidity`, `sensor.kitchen_temperature`, `sensor.living_room_co2`, `sensor.living_room_humidity`, `sensor.living_room_temperature`, `sensor.office_co2`, `sensor.office_temperature`
-- **Lights, switches, covers, climate**: `climate.bedroom`, `climate.living_room`, `cover.awning`, `cover.bedroom_blinds`, `cover.garage_door`, `cover.living_room_blinds`, `cover.office_blinds`, `fan.bathroom`, `fan.bedroom`, `fan.living_room`, `light.attic`, `light.bedroom`, `light.desk_lamp`, `light.dining_table`, `light.garden`, `light.hallway`, `light.kitchen`, `light.living_room`, `light.office`, `switch.coffee_machine`, `switch.garden_pump`
-- **Doors, windows, motion**: `binary_sensor.door_front`, `binary_sensor.motion_hallway`, `binary_sensor.window_bathroom`, `binary_sensor.window_bedroom`, `binary_sensor.window_kitchen`, `binary_sensor.window_office`
-- **Appliances and media**: `media_player.bedroom_speaker`, `media_player.kitchen_speaker`, `media_player.living_room_speaker`, `sensor.dishwasher_status`, `sensor.robot_battery`, `sensor.robot_current_room`, `sensor.robot_dustbin_remaining`, `sensor.robot_last_area`, `sensor.robot_progress`, `sensor.robot_total_cleanings`, `sensor.switch_temperature`, `sensor.washer_remaining`, `sensor.washer_status`, `vacuum.robot`
-- **Locks and helpers (controls)**: `lock.front_door`, `lock.garage_side_door`, `input_number.heating_boost`, `input_number.target_humidity`, `number.ev_charge_limit`, `input_select.house_mode`, `select.thermostat_schedule`, `input_button.ring_doorbell`, `button.restart_router`
-- **Offline (unavailable)**: `light.shed`, `switch.shed_heater`, `climate.shed`, `cover.shed_door`, `lock.shed`, `select.shed_program`
-- **People, modes, scenes, scripts**: `input_boolean.away_mode`, `input_boolean.guest_mode`, `input_boolean.night_mode`, `input_boolean.vacation_mode`, `person.malte`, `person.kim`, `person.sam`, `scene.bright`, `scene.dimmed`, `scene.dinner`, `scene.good_night`, `scene.movie_night`, `script.check_windows`
-- **Energy**: `binary_sensor.grid_outage`, `sensor.balcony_battery_charge_power`, `sensor.balcony_battery_discharge_power`, `sensor.balcony_battery_power`, `sensor.balcony_battery_soc`, `sensor.balcony_grid_power`, `sensor.balcony_solar_power`, `sensor.battery_power`, `sensor.battery_soc`, `sensor.battery_temperature`, `sensor.dining_light_power`, `sensor.dryer_power`, `sensor.electricity_price`, `sensor.energy_today`, `sensor.generator_power`, `sensor.grid_fossil_percentage`, `sensor.grid_power`, `sensor.heat_pump_power`, `sensor.office_power`, `sensor.power_consumption`, `sensor.range_hood_power`, `sensor.solar_east`, `sensor.solar_power`, `sensor.solar_west`, `sensor.washer_power`
-- **Energy meters** (lifetime totals with long-term statistics, for the energy flow card): `sensor.battery_charge_energy`, `sensor.battery_discharge_energy`, `sensor.ev_charger_energy`, `sensor.grid_export_energy`, `sensor.grid_import_energy`, `sensor.heat_pump_energy` (Wh), `sensor.heat_pump_heat_energy` (MWh), `sensor.heating_ground_floor_energy`, `sensor.heating_upper_floor_energy`, `sensor.home_energy`, `sensor.hot_water_energy`, `sensor.office_energy`, `sensor.solar_energy`, `sensor.washer_energy`
-- **Water flow** (L/min): `sensor.bathroom_water_flow`, `sensor.garden_water_flow`, `sensor.kitchen_water_flow`, `sensor.water_flow`
-- **Electric car**: `binary_sensor.ev_plugged`, `sensor.ev_battery`, `sensor.ev_charger_power`, `sensor.ev_range`
-- **Device batteries**: `sensor.kitchen_window_battery`, `sensor.motion_hallway_battery`
