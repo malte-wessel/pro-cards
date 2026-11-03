@@ -283,8 +283,7 @@ const ru: Translation = {
   "editor.multi_trend.layout.lanes": "Дорожки (своя шкала для каждого объекта)",
 
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "Определено: {kind}",
-  "editor.card.default_named": "По умолчанию: {value}",
+  "editor.card.kind_detected": "{kind} (определено)",
   "editor.card.none": "Нет",
   "editor.card.control_auto": "Собственные объекта: {controls}",
   "editor.card.more": "Дополнительно (YAML)",
@@ -351,7 +350,7 @@ const ru: Translation = {
   "editor.card.variant.awning": "Маркиза",
   "editor.card.variant.window": "Окно",
   "editor.card.variant.by_class": "По классу устройства",
-  "editor.card.attribute.default": "По умолчанию",
+  "editor.card.attribute.speed": "Скорость",
   "editor.card.style.circle": "В круге",
   "editor.card.style.plain": "Без фона",
   "editor.card.control.toggle": "Переключатель",

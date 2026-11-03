@@ -283,8 +283,7 @@ const pt: Translation = {
   "editor.multi_trend.layout.lanes": "Faixas (uma escala por entidade)",
 
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "Detetado: {kind}",
-  "editor.card.default_named": "Padrão: {value}",
+  "editor.card.kind_detected": "{kind} (detetado)",
   "editor.card.none": "Nenhum",
   "editor.card.control_auto": "Os da entidade: {controls}",
   "editor.card.more": "Mais (YAML)",
@@ -351,7 +350,7 @@ const pt: Translation = {
   "editor.card.variant.awning": "Toldo",
   "editor.card.variant.window": "Janela",
   "editor.card.variant.by_class": "Pela classe do dispositivo",
-  "editor.card.attribute.default": "Padrão",
+  "editor.card.attribute.speed": "Velocidade",
   "editor.card.style.circle": "Num círculo",
   "editor.card.style.plain": "Simples",
   "editor.card.control.toggle": "Interruptor",

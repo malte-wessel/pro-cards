@@ -282,8 +282,7 @@ const fr: Translation = {
   "editor.multi_trend.layout.overlay": "Superposé (une échelle)",
   "editor.multi_trend.layout.lanes": "Pistes (une échelle par entité)",
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "Détecté : {kind}",
-  "editor.card.default_named": "Par défaut : {value}",
+  "editor.card.kind_detected": "{kind} (détecté)",
   "editor.card.none": "Aucun",
   "editor.card.control_auto": "Ceux de l'entité : {controls}",
   "editor.card.more": "Plus (YAML)",
@@ -350,7 +349,7 @@ const fr: Translation = {
   "editor.card.variant.awning": "Store banne",
   "editor.card.variant.window": "Fenêtre",
   "editor.card.variant.by_class": "Selon sa classe d'appareil",
-  "editor.card.attribute.default": "Par défaut",
+  "editor.card.attribute.speed": "Vitesse",
   "editor.card.style.circle": "Dans un cercle",
   "editor.card.style.plain": "Simple",
   "editor.card.control.toggle": "Interrupteur",

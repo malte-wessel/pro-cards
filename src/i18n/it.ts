@@ -282,8 +282,7 @@ const it: Translation = {
   "editor.multi_trend.layout.overlay": "Sovrapposto (una scala)",
   "editor.multi_trend.layout.lanes": "Corsie (una scala per entità)",
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "Rilevato: {kind}",
-  "editor.card.default_named": "Predefinito: {value}",
+  "editor.card.kind_detected": "{kind} (rilevato)",
   "editor.card.none": "Nessuno",
   "editor.card.control_auto": "Quelli dell'entità: {controls}",
   "editor.card.more": "Altro (YAML)",
@@ -350,7 +349,7 @@ const it: Translation = {
   "editor.card.variant.awning": "Tenda da sole",
   "editor.card.variant.window": "Finestra",
   "editor.card.variant.by_class": "In base alla classe del dispositivo",
-  "editor.card.attribute.default": "Predefinito",
+  "editor.card.attribute.speed": "Velocità",
   "editor.card.style.circle": "In un cerchio",
   "editor.card.style.plain": "Semplice",
   "editor.card.control.toggle": "Interruttore",

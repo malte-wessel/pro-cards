@@ -283,8 +283,7 @@ const cs: Translation = {
   "editor.multi_trend.layout.lanes": "Dráhy (jedna stupnice na entitu)",
 
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "Rozpoznáno: {kind}",
-  "editor.card.default_named": "Výchozí: {value}",
+  "editor.card.kind_detected": "{kind} (rozpoznáno)",
   "editor.card.none": "Žádné",
   "editor.card.control_auto": "Vlastní ovládání entity: {controls}",
   "editor.card.more": "Další (YAML)",
@@ -351,7 +350,7 @@ const cs: Translation = {
   "editor.card.variant.awning": "Markýza",
   "editor.card.variant.window": "Okno",
   "editor.card.variant.by_class": "Podle třídy zařízení",
-  "editor.card.attribute.default": "Výchozí",
+  "editor.card.attribute.speed": "Rychlost",
   "editor.card.style.circle": "V kruhu",
   "editor.card.style.plain": "Prostá",
   "editor.card.control.toggle": "Přepínač",

@@ -283,8 +283,7 @@ const sv: Translation = {
   "editor.multi_trend.layout.lanes": "Banor (en skala per entitet)",
 
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "Identifierad: {kind}",
-  "editor.card.default_named": "Standard: {value}",
+  "editor.card.kind_detected": "{kind} (identifierad)",
   "editor.card.none": "Ingen",
   "editor.card.control_auto": "Entitetens egna: {controls}",
   "editor.card.more": "Mer (YAML)",
@@ -351,7 +350,7 @@ const sv: Translation = {
   "editor.card.variant.awning": "Markis",
   "editor.card.variant.window": "Fönster",
   "editor.card.variant.by_class": "Efter enhetsklass",
-  "editor.card.attribute.default": "Standard",
+  "editor.card.attribute.speed": "Hastighet",
   "editor.card.style.circle": "I en cirkel",
   "editor.card.style.plain": "Enkel",
   "editor.card.control.toggle": "Brytare",

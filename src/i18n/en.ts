@@ -282,8 +282,7 @@ const en = {
   "editor.multi_trend.layout.lanes": "Lanes (one scale per entity)",
 
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "Detected: {kind}",
-  "editor.card.default_named": "Default: {value}",
+  "editor.card.kind_detected": "{kind} (detected)",
   "editor.card.none": "None",
   "editor.card.control_auto": "The entity's own: {controls}",
   "editor.card.more": "More (YAML)",
@@ -350,7 +349,7 @@ const en = {
   "editor.card.variant.awning": "Awning",
   "editor.card.variant.window": "Window",
   "editor.card.variant.by_class": "By its device class",
-  "editor.card.attribute.default": "Default",
+  "editor.card.attribute.speed": "Speed",
   "editor.card.style.circle": "In a circle",
   "editor.card.style.plain": "Plain",
   "editor.card.control.toggle": "Switch",

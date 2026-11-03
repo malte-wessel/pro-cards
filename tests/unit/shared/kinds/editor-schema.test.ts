@@ -78,7 +78,7 @@ describe("the editor's sections", () => {
 describe("the editor's kind", () => {
   it("names the detected kind first, then every kind that reads the entity by its name", () => {
     const opts = options(schemaOf("poster", { entity: "sensor.wind_speed" }), "kind");
-    expect(opts[0]).toEqual({ value: "detected", label: "Detected: Wind" });
+    expect(opts[0]).toEqual({ value: "detected", label: "Wind (detected)" });
     const values = opts.slice(1).map((o) => o.value);
     expect(values.sort()).toEqual(
       Object.keys(KINDS)
@@ -126,11 +126,11 @@ describe("the editor's content", () => {
 describe("the editor's icon and visual", () => {
   it("names the kind's own thing as the default", () => {
     const light = schemaOf("poster", LIGHT);
-    expect(options(light, "icon_thing")[0]).toEqual({ value: DEFAULT, label: "Default: Icon" });
-    expect(options(light, "visual_thing")[0]).toEqual({ value: DEFAULT, label: "Default: Glow" });
+    expect(options(light, "icon_thing")[0]).toEqual({ value: DEFAULT, label: "Icon" });
+    expect(options(light, "visual_thing")[0]).toEqual({ value: DEFAULT, label: "Glow" });
     // what draws nothing there by default has no none: the default is none
     const fan = schemaOf("poster", { entity: "fan.living_room" });
-    expect(options(fan, "visual_thing")[0]).toEqual({ value: DEFAULT, label: "Default: None" });
+    expect(options(fan, "visual_thing")[0]).toEqual({ value: DEFAULT, label: "None" });
     expect(values(fan, "visual_thing")).not.toContain("none");
     expect(values(light, "visual_thing")).toContain("none");
     expect(values(light, "icon_thing")).toEqual([DEFAULT, "image", "none"]);
@@ -213,13 +213,13 @@ describe("the editor's icon and visual", () => {
 
   it("offers a cover's drawings, the device class's by default", () => {
     const cover = schemaOf("poster", { entity: "cover.garage_door" });
-    expect(options(cover, "visual_variant")[0].label).toBe("Default: By its device class");
+    expect(options(cover, "visual_variant")[0].label).toBe("By its device class");
     expect(values(cover, "visual_variant")).toEqual(
       expect.arrayContaining(["shutter", "garage", "gate", "window"]),
     );
     // a wind's flow behind the card
     const wind = schemaOf("poster", { entity: "sensor.wind_speed" }, { visual_thing: "flow" });
-    expect(options(wind, "visual_variant")[0].label).toBe("Default: Dots");
+    expect(options(wind, "visual_variant")[0].label).toBe("Dots");
   });
 });
 
@@ -227,15 +227,13 @@ describe("the wind's and the rain's icon with the animation behind", () => {
   it("names the still drawing, and offers an icon of its own", () => {
     const wind = { entity: "sensor.wind_speed" };
     const labels = (cfg: Raw) => options(schemaOf("poster", cfg), "icon_thing").map((o) => o.label);
-    expect(labels(wind)).toEqual(["Default: Animation", "Icon", "Picture", "None"]);
+    expect(labels(wind)).toEqual(["Animation", "Icon", "Picture", "None"]);
     const behind = { ...wind, visual: { type: "flow" } };
-    expect(labels(behind)).toEqual(["Default: Wind direction arrow", "Icon", "Picture", "None"]);
+    expect(labels(behind)).toEqual(["Wind direction arrow", "Icon", "Picture", "None"]);
     // the arrow has no variants
     expect(names(schemaOf("poster", behind))).not.toContain("icon_variant");
     expect(names(schemaOf("poster", wind))).toContain("icon_variant");
-    expect(labels({ entity: "sensor.rain_rate", visual: { type: "flow" } })[0]).toBe(
-      "Default: Rain icon",
-    );
+    expect(labels({ entity: "sensor.rain_rate", visual: { type: "flow" } })[0]).toBe("Rain icon");
   });
 });
 
@@ -257,10 +255,8 @@ describe("the editor's controls", () => {
   const SWITCH = { entity: "switch.coffee_machine" };
 
   it("names the kind's own as the default, a tile's at its line's end only", () => {
-    expect(options(schemaOf("poster", LIGHT), "control_type")[0].label).toBe(
-      "Default: Switch + Slider",
-    );
-    expect(options(schemaOf("tile", LIGHT), "control_type")[0].label).toBe("Default: Switch");
+    expect(options(schemaOf("poster", LIGHT), "control_type")[0].label).toBe("Switch + Slider");
+    expect(options(schemaOf("tile", LIGHT), "control_type")[0].label).toBe("Switch");
     expect(values(schemaOf("poster", LIGHT), "control_type")).toEqual([
       DEFAULT,
       "none",
@@ -274,7 +270,7 @@ describe("the editor's controls", () => {
   it("offers the entity's own where the kind has none", () => {
     const sw = schemaOf("tile", SWITCH);
     expect(values(sw, "control_type")).toEqual([DEFAULT, "auto", "toggle", "hold", "buttons"]);
-    expect(options(sw, "control_type")[0].label).toBe("Default: None");
+    expect(options(sw, "control_type")[0].label).toBe("None");
     expect(options(sw, "control_type")[1].label).toBe("The entity's own: Switch");
     expect(values(schemaOf("poster", { entity: "climate.living_room" }), "control_type")).toEqual(
       expect.arrayContaining(["stepper", "segments", "select"]),
@@ -304,7 +300,14 @@ describe("the editor's controls", () => {
         schemaOf("poster", { entity: "climate.living_room" }, { control_type: "select" }),
         "control_attribute",
       ),
-    ).toEqual([DEFAULT, "hvac_mode", "preset_mode", "fan_mode"]);
+    ).toEqual([DEFAULT, "preset_mode", "fan_mode"]);
+    // the default named as what it sets: a thermostat's mode, a fan's speed
+    const attrLabels = (entity: string) =>
+      options(schemaOf("poster", { entity }, { control_type: "select" }), "control_attribute").map(
+        (o) => o.label,
+      );
+    expect(attrLabels("climate.living_room")).toEqual(["Mode", "Preset", "Fan mode"]);
+    expect(attrLabels("fan.living_room")).toEqual(["Speed", "Preset"]);
     // a select of its own options has no attribute to pick
     expect(ctl({ entity: "input_select.house_mode" }, { control_type: "select" })).toEqual([
       "control_position",
@@ -321,11 +324,11 @@ describe("the editor's controls", () => {
     const pos = (thing: CardThing, cfg: Raw, change: HaFormData = {}) =>
       options(schemaOf(thing, cfg, change), "control_position")[0].label;
     // the kind's own: where its first sits
-    expect(pos("poster", LIGHT)).toBe("Default: Beside the value");
+    expect(pos("poster", LIGHT)).toBe("Beside the value");
     // one named: a slider below, anything else at the end
-    expect(pos("poster", LIGHT, { control_type: "slider" })).toBe("Default: Below the value");
-    expect(pos("poster", LIGHT, { control_type: "hold" })).toBe("Default: Beside the value");
-    expect(pos("tile", SWITCH, { control_type: "auto" })).toBe("Default: At the end of the line");
+    expect(pos("poster", LIGHT, { control_type: "slider" })).toBe("Below the value");
+    expect(pos("poster", LIGHT, { control_type: "hold" })).toBe("Beside the value");
+    expect(pos("tile", SWITCH, { control_type: "auto" })).toBe("At the end of the line");
     expect(values(schemaOf("tile", SWITCH, { control_type: "auto" }), "control_position")).toEqual([
       DEFAULT,
       "end",

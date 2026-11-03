@@ -282,8 +282,7 @@ const es: Translation = {
   "editor.multi_trend.layout.overlay": "Superpuesto (una escala)",
   "editor.multi_trend.layout.lanes": "Carriles (una escala por entidad)",
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "Detectado: {kind}",
-  "editor.card.default_named": "Predeterminado: {value}",
+  "editor.card.kind_detected": "{kind} (detectado)",
   "editor.card.none": "Ninguno",
   "editor.card.control_auto": "Los de la entidad: {controls}",
   "editor.card.more": "Más (YAML)",
@@ -350,7 +349,7 @@ const es: Translation = {
   "editor.card.variant.awning": "Toldo",
   "editor.card.variant.window": "Ventana",
   "editor.card.variant.by_class": "Según su clase de dispositivo",
-  "editor.card.attribute.default": "Predeterminado",
+  "editor.card.attribute.speed": "Velocidad",
   "editor.card.style.circle": "En un círculo",
   "editor.card.style.plain": "Simple",
   "editor.card.control.toggle": "Interruptor",

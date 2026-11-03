@@ -1,7 +1,8 @@
 // The poster's and the tile's editor (pure): the ha-form schema for one card, built from its kind.
 // Only what applies shows: the things the kind draws, the options of the thing chosen, the
-// kind's inputs, the controls its domain takes. Defaults are named in their select ("Default:
-// Glow"), so leaving a field alone is a choice the form can show.
+// kind's inputs, the controls its domain takes. A select's default comes first, named as what it
+// is (Glow; the kind as "Wind (detected)"): leaving a field alone is a choice the form shows, and
+// writes nothing.
 import { domainOf } from "../color.ts";
 import type { ControlKind } from "../entity/control.ts";
 import { BADGE_SIZES, BADGE_STYLES, HEADER_VISUALS } from "../entity/constants.ts";
@@ -15,6 +16,7 @@ import {
   BUTTON_KEYS,
   DEFAULT,
   DETECTED,
+  DEFAULT_ATTRIBUTE,
   DOMAIN_AUTO,
   OPTION_KEYS,
   RULE_KEYS,
@@ -196,8 +198,6 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   const opt = (value: string, label: string) => ({ value, label });
   const entity = typeof data.entity === "string" && data.entity ? data.entity : null;
   const domain = entity ? domainOf(entity) : null;
-  const named = (v: string) => tr("default_named", { value: v });
-
   // the places' things now: chosen, else the kind's
   const iconThing = (data.icon_thing === DEFAULT ? defaultIcon(kind) : data.icon_thing) as
     IconThing | "none";
@@ -274,16 +274,16 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
       ? tr(`icon_thing.still.${kind.name}`)
       : tr(`icon_thing.${th}`);
   const iconThings = [
-    opt(DEFAULT, named(iconLabel(defaultIcon(kind)))),
+    opt(DEFAULT, iconLabel(defaultIcon(kind))),
     ...(["icon", "image", "flow"] as const)
       .filter((th) => th !== defaultIcon(kind) && fits(th))
       .map((th) => opt(th, iconLabel(th))),
     opt("none", tr("none")),
   ];
-  // a drawing's variants, the default named (the kind's, else the device class's)
+  // a drawing's variants, the default first (the kind's, else the device class's)
   const variants = (name: string, of: string, byDefault: string | undefined) =>
     pick(name, [
-      opt(DEFAULT, named(byDefault ? tr(`variant.${byDefault}`) : tr("variant.by_class"))),
+      opt(DEFAULT, byDefault ? tr(`variant.${byDefault}`) : tr("variant.by_class")),
       ...(VARIANTS[of] ?? []).map((v) => opt(v, tr(`variant.${v}`))),
     ]);
   const iconOptions: HaFormSchema[] =
@@ -319,7 +319,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
     "line",
   ];
   const visualThings = [
-    opt(DEFAULT, named(byDefault ? tr(`visual_thing.${byDefault}`) : tr("none"))),
+    opt(DEFAULT, byDefault ? tr(`visual_thing.${byDefault}`) : tr("none")),
     ...VISUAL_ORDER.filter((th) => th !== byDefault && fits(th)).map((th) =>
       opt(th, tr(`visual_thing.${th}`)),
     ),
@@ -443,7 +443,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   const { own, auto, domainControls, type, drawn } = controlsOf(x, data);
   const names = (ks: readonly string[]) => ks.map((k) => tr(`control.${k}`)).join(" + ");
   const controlTypes = [
-    opt(DEFAULT, named(own.length ? names(own.map((c) => c.kind)) : tr("none"))),
+    opt(DEFAULT, own.length ? names(own.map((c) => c.kind)) : tr("none")),
     ...(own.length ? [opt("none", tr("none"))] : []),
     ...(auto.length ? [opt("auto", tr("control_auto", { controls: names(auto) }))] : []),
     ...[...new Set([...domainControls, "buttons" as const])].map((c) => opt(c, tr(`control.${c}`))),
@@ -454,7 +454,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   const controlOptions: HaFormSchema[] = drawn.length
     ? [
         pick("control_position", [
-          opt(DEFAULT, named(tr(`position.${defaultPosition}_${thing}`))),
+          opt(DEFAULT, tr(`position.${defaultPosition}_${thing}`)),
           opt("end", tr(`position.end_${thing}`)),
           opt("block", tr(`position.block_${thing}`)),
         ]),
@@ -464,8 +464,10 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
         ...(domain && ATTRIBUTES[domain] && drawn.some((c) => c === "segments" || c === "select")
           ? [
               pick("control_attribute", [
-                opt(DEFAULT, tr("attribute.default")),
-                ...ATTRIBUTES[domain].map((a) => opt(a, tr(`attribute.${a}`))),
+                opt(DEFAULT, tr(`attribute.${DEFAULT_ATTRIBUTE[domain]}`)),
+                ...ATTRIBUTES[domain]
+                  .filter((a) => a !== DEFAULT_ATTRIBUTE[domain])
+                  .map((a) => opt(a, tr(`attribute.${a}`))),
               ]),
             ]
           : []),

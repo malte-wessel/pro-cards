@@ -74,6 +74,8 @@ export const DOMAIN_AUTO: Record<string, readonly ControlKind[]> = {
   button: ["button"],
   input_button: ["button"],
 };
+// what segments and a select set where the card names nothing: a thermostat's mode, a fan's speed
+export const DEFAULT_ATTRIBUTE: Record<string, string> = { climate: "hvac_mode", fan: "speed" };
 // the kind's own controls on this card (a tile's are those at the line's end)
 // what `auto` draws for the card's entity where the kind brings no controls of its own: an object
 // without a type means it too
@@ -225,7 +227,12 @@ export const configToForm = (config: CardConfigBase, kind: Kind, thing: CardThin
   if (isObj(ctl)) {
     d.control_position = ctl.position ?? DEFAULT;
     d.control_step = num(ctl.step);
-    d.control_attribute = ctl.attribute ?? DEFAULT;
+    // (the mode set by default, written, is the default)
+    const domain = typeof c.entity === "string" ? c.entity.split(".")[0] : "";
+    d.control_attribute =
+      ctl.attribute === undefined || ctl.attribute === DEFAULT_ATTRIBUTE[domain]
+        ? DEFAULT
+        : ctl.attribute;
     d.control_confirm = ctl.confirm === true;
     if (ctl.type === "buttons") d.control_buttons = listToForm(ctl.options, BUTTON_KEYS);
     else d.control_options = listToForm(ctl.options, OPTION_KEYS, "value");

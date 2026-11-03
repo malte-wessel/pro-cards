@@ -283,8 +283,7 @@ const nl: Translation = {
   "editor.multi_trend.layout.lanes": "Banen (één schaal per entiteit)",
 
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "Herkend: {kind}",
-  "editor.card.default_named": "Standaard: {value}",
+  "editor.card.kind_detected": "{kind} (herkend)",
   "editor.card.none": "Geen",
   "editor.card.control_auto": "Die van de entiteit: {controls}",
   "editor.card.more": "Meer (YAML)",
@@ -351,7 +350,7 @@ const nl: Translation = {
   "editor.card.variant.awning": "Zonnescherm",
   "editor.card.variant.window": "Raam",
   "editor.card.variant.by_class": "Volgens de apparaatklasse",
-  "editor.card.attribute.default": "Standaard",
+  "editor.card.attribute.speed": "Snelheid",
   "editor.card.style.circle": "In een cirkel",
   "editor.card.style.plain": "Eenvoudig",
   "editor.card.control.toggle": "Schakelaar",

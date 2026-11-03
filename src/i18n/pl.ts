@@ -283,8 +283,7 @@ const pl: Translation = {
   "editor.multi_trend.layout.lanes": "Tory (jedna skala na encję)",
 
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "Wykryto: {kind}",
-  "editor.card.default_named": "Domyślnie: {value}",
+  "editor.card.kind_detected": "{kind} (wykryto)",
   "editor.card.none": "Brak",
   "editor.card.control_auto": "Własne encji: {controls}",
   "editor.card.more": "Więcej (YAML)",
@@ -351,7 +350,7 @@ const pl: Translation = {
   "editor.card.variant.awning": "Markiza",
   "editor.card.variant.window": "Okno",
   "editor.card.variant.by_class": "Według klasy urządzenia",
-  "editor.card.attribute.default": "Domyślny",
+  "editor.card.attribute.speed": "Prędkość",
   "editor.card.style.circle": "W kółku",
   "editor.card.style.plain": "Bez kółka",
   "editor.card.control.toggle": "Przełącznik",

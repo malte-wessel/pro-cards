@@ -429,6 +429,17 @@ describe("the editor form: the controls", () => {
     });
   });
 
+  it("reads the mode a control sets by default, written, as the default", () => {
+    const cfg = { ...CLIMATE, control: { type: "segments", attribute: "hvac_mode" } };
+    expect(formOf(cfg).control_attribute).toBe(DEFAULT);
+    // and keeps it as written while the field stays
+    expect(edit(cfg, { name: "Hall" })).toEqual({ ...cfg, name: "Hall" });
+    expect(
+      formOf({ ...CLIMATE, control: { type: "segments", attribute: "preset_mode" } })
+        .control_attribute,
+    ).toBe("preset_mode");
+  });
+
   it("writes only the options the control picked now takes", () => {
     const slider = { ...LIGHT, control: { type: "slider", step: 5, confirm: true } };
     expect(edit(slider, { control_type: "toggle" })).toEqual({
