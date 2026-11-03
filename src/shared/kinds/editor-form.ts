@@ -3,8 +3,10 @@
 // is the shortest YAML that draws the same: nothing for the kind's default, a name for a thing
 // without options, `{ type, … }` else. Keys the form does not show are kept as written.
 import { setOrDrop } from "../editor.ts";
+import type { ControlKind } from "../entity/control.ts";
 import type { CardConfigBase, HaFormData } from "../ha.ts";
 import { isObj, placeDefaults } from "./config.ts";
+import { INPUT_KEYS, kindKeysOf, unusedKeys } from "./detect.ts";
 import { ICON_OPTIONS, VISUAL_OPTIONS, type IconThing, type VisualThing } from "./places.ts";
 import type { Kind } from "./types.ts";
 
@@ -51,6 +53,30 @@ export const defaultVisual = (kind: Kind, thing: CardThing): VisualThing | null 
   const v = placeDefaults(kind, thing).visual;
   return v && v.type ? v.type : null;
 };
+
+// what `auto` draws for a domain where the kind brings no controls of its own
+export const DOMAIN_AUTO: Record<string, readonly ControlKind[]> = {
+  switch: ["toggle"],
+  input_boolean: ["toggle"],
+  lock: ["hold"],
+  number: ["slider"],
+  input_number: ["slider"],
+  select: ["select"],
+  input_select: ["select"],
+  script: ["button"],
+  scene: ["button"],
+  button: ["button"],
+  input_button: ["button"],
+};
+// the kind's own controls on this card (a tile's are those at the line's end)
+// what `auto` draws for the card's entity where the kind brings no controls of its own: an object
+// without a type means it too
+const autoOf = (c: CardConfigBase, kind: Kind, thing: CardThing): readonly ControlKind[] =>
+  typeof c.entity === "string" && !ownControls(kind, thing).length
+    ? (DOMAIN_AUTO[c.entity.split(".")[0]] ?? [])
+    : [];
+export const ownControls = (kind: Kind, thing: CardThing) =>
+  (kind.controls ?? []).filter((c) => thing === "poster" || c.position === "end");
 
 const filled = (v: unknown) => v !== undefined && v !== null && v !== "";
 // a select set to something other than its default
@@ -185,7 +211,9 @@ export const configToForm = (config: CardConfigBase, kind: Kind, thing: CardThin
         ? ctl
         : isObj(ctl) && ctl.type
           ? ctl.type
-          : DEFAULT;
+          : isObj(ctl) && autoOf(c, kind, thing).length
+            ? "auto"
+            : DEFAULT;
   if (isObj(ctl)) {
     d.control_position = ctl.position ?? DEFAULT;
     d.control_step = num(ctl.step);
@@ -230,7 +258,10 @@ const iconFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknown =
   if (iconThing !== defaultIcon(kind) || (o.name !== undefined && iconThing !== "icon"))
     o.type = iconThing;
   // a name alone is always an icon: written as the name, whatever the kind draws there
-  const ks = Object.keys(o).filter((k) => !(k === "type" && o.type === "icon"));
+  // (an icon where the kind draws something else keeps its type when nothing else says so)
+  const ks = Object.keys(o).filter(
+    (k) => !(k === "type" && o.type === "icon" && Object.keys(o).length > 1),
+  );
   return !ks.length ? undefined : ks.length === 1 && ks[0] === "name" ? o.name : o;
 };
 
@@ -296,6 +327,8 @@ export const formToConfig = (
   prev: CardConfigBase,
   kind: Kind,
   thing: CardThing,
+  // the kind the config had: another one drops the keys and inputs only it read
+  was: Kind = kind,
 ): CardConfigBase => {
   const data = withDefaults(written);
   const c: Raw = { ...prev };
@@ -346,5 +379,20 @@ export const formToConfig = (
     put("rules", rules.length ? rules : undefined);
   }
   if (thing === "tile") setOrDrop(c, "vertical", true, data.vertical !== true);
+  if (was.name !== kind.name) dropUnused(c, kind, was);
   return c as CardConfigBase;
+};
+
+// the keys and inputs `was` read and `kind` does not (a config error on a written kind); others
+// stay as written
+const dropUnused = (c: Raw, kind: Kind, was: Kind) => {
+  const inputs: Raw = isObj(c.inputs) ? { ...c.inputs } : {};
+  for (const k of unusedKeys(kind, kindKeysOf(c)).filter((k) => was.keys.includes(k))) {
+    if (INPUT_KEYS.has(k)) delete inputs[k];
+    else delete c[k];
+  }
+  if (isObj(c.inputs)) {
+    if (Object.keys(inputs).length) c.inputs = inputs;
+    else delete c.inputs;
+  }
 };

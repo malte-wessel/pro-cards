@@ -67,6 +67,28 @@ jobs:
           path: playwright-report
           retention-days: 7
 
+  docs:
+    name: Docs build + Playground tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run docs:build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:docs
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-docs
+          path: |
+            playwright-report
+            test-results-docs
+          retention-days: 7
+
   visual:
     name: Visual regression (Linux baselines)
     runs-on: ubuntu-latest

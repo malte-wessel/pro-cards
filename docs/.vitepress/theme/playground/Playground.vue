@@ -265,6 +265,17 @@ const drag = (ev: PointerEvent) => {
   ev.preventDefault();
 };
 
+// the card a link carries in the hash, opened and the hash cleared (a reload keeps your edits)
+const openLink = async () => {
+  const linked = location.hash ? await decodeShare(location.hash) : null;
+  if (!linked) return false;
+  load(linked.yaml, linked.name);
+  history.replaceState(null, "", location.pathname + location.search);
+  return true;
+};
+// a link pasted into the address bar of an open Playground
+const onHash = () => void openLink();
+
 onMounted(async () => {
   mq = window.matchMedia("(max-width: 860px)");
   mq.addEventListener("change", onMq);
@@ -277,15 +288,12 @@ onMounted(async () => {
   }
   saved.value = listSaved();
   // a link's card, else the draft, else the first example
-  const linked = location.hash ? await decodeShare(location.hash) : null;
-  if (linked) {
-    load(linked.yaml, linked.name);
-    history.replaceState(null, "", location.pathname + location.search);
-  } else {
+  if (!(await openLink())) {
     const draft = loadDraft();
     if (draft) load(draft.yaml, draft.name, draft.id);
     else load(PRESETS[Object.keys(PRESETS)[0]], Object.keys(PRESETS)[0]);
   }
+  window.addEventListener("hashchange", onHash);
   ready.value = true;
   await nextTick();
   void syncEditor();
@@ -293,6 +301,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   unsubscribe?.();
   mq?.removeEventListener("change", onMq);
+  window.removeEventListener("hashchange", onHash);
 });
 </script>
 

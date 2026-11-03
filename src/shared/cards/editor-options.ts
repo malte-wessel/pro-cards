@@ -61,7 +61,9 @@ export const optionsToForm = (
   d.breakpoints = Object.entries(bps).map(([at, o]) => {
     const item: Raw = { at: Number(at), ...levelToForm(isObj(o) ? o : {}, convs) };
     const more: Raw = {};
-    if (isObj(o)) for (const [k, v] of Object.entries(o)) if (!(k in convs)) more[k] = v;
+    // keys without a field, and `null` (back to the default here), which no field can say
+    if (isObj(o))
+      for (const [k, v] of Object.entries(o)) if (!(k in convs) || v === null) more[k] = v;
     if (Object.keys(more).length) item.more = more;
     // a list item has no empty fields
     for (const k of Object.keys(item)) if (item[k] === "" || item[k] === undefined) delete item[k];

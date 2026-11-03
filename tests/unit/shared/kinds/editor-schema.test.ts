@@ -1,0 +1,383 @@
+// The poster's and the tile's editor form, as shown: which sections and fields a card gets for its
+// entity, its kind and the things it draws, and what their selects offer.
+import { describe, it, expect } from "vitest";
+import { snapshot } from "../../../../docs/.vitepress/theme/ha-shim/hass.ts";
+import { configToForm, DEFAULT, type CardThing } from "../../../../src/shared/kinds/editor-form.ts";
+import { editorSchema } from "../../../../src/shared/kinds/editor-schema.ts";
+import { kindsOf } from "../../../../src/shared/kinds/editor.ts";
+import { KIND_THINGS } from "../../../../src/shared/kinds/places.ts";
+import { KINDS } from "../../../../src/shared/kinds/registry.ts";
+import type { CardConfigBase, HaFormData, HaFormSchema } from "../../../../src/shared/ha.ts";
+import { isNum } from "../../../../src/shared/util.ts";
+
+const hass = snapshot();
+type Raw = Record<string, unknown>;
+
+// the schema of a card, with the form's data changed as a user would
+const schemaOf = (thing: CardThing, cfg: Raw, change: HaFormData = {}) => {
+  const base = configToForm(cfg as CardConfigBase, kindsOf(cfg, hass).kind, thing);
+  const data = { ...base, ...change };
+  const { kind, detected } = kindsOf(data, hass);
+  const st = hass.states[String(data.entity ?? "")];
+  return editorSchema({ hass, thing, kind, detected, data, numeric: isNum(st?.state), st });
+};
+const flat = (schema: HaFormSchema[]): HaFormSchema[] =>
+  schema.flatMap((s) => [s, ...(s.schema ? flat(s.schema) : [])]);
+const names = (schema: HaFormSchema[]) => flat(schema).flatMap((s) => (s.name ? [s.name] : []));
+const field = (schema: HaFormSchema[], name: string) => flat(schema).find((s) => s.name === name);
+const options = (schema: HaFormSchema[], name: string) =>
+  (field(schema, name)?.selector as { select: { options: { value: string; label: string }[] } })
+    ?.select.options ?? [];
+const values = (schema: HaFormSchema[], name: string) => options(schema, name).map((o) => o.value);
+const sections = (schema: HaFormSchema[]) =>
+  schema.filter((s) => s.type === "expandable").map((s) => s.title);
+const sectionOf = (schema: HaFormSchema[], title: string) =>
+  names(schema.find((s) => s.title === title)?.schema ?? []);
+
+const LIGHT = { entity: "light.living_room" };
+const TEMP = { entity: "sensor.living_room_temperature" };
+
+describe("the editor's sections", () => {
+  it("are the card's own, with inputs and controls only where they apply", () => {
+    expect(sections(schemaOf("poster", LIGHT))).toEqual([
+      "Content",
+      "Icon and visual",
+      "Controls",
+      "Status and badges",
+      "Colour by value",
+      "Interactions",
+    ]);
+    // a tile's badges sit beside its texts, and it has a layout
+    const tile = sections(schemaOf("tile", { entity: "sensor.wind_speed" }));
+    expect(tile).toContain("Other entities");
+    expect(tile).toContain("Layout");
+    expect(tile).not.toContain("Controls");
+    expect(tile.filter((t) => !["Other entities", "Layout"].includes(t ?? ""))).toHaveLength(5);
+    // a sensor has no controls unless the form names one
+    expect(sections(schemaOf("poster", TEMP))).not.toContain("Controls");
+    expect(sections(schemaOf("poster", TEMP, { control_type: "buttons" }))).toContain("Controls");
+  });
+
+  it("start with the entity, the kind, the name, the icon and the colour", () => {
+    const schema = schemaOf("poster", LIGHT);
+    expect(names(schema.filter((s) => s.type !== "expandable"))).toEqual([
+      "entity",
+      "kind",
+      "name",
+      "icon",
+      "color",
+    ]);
+    // an icon of its own only where the place draws an icon or a picture
+    expect(names(schemaOf("poster", LIGHT, { icon_thing: "none" }))).not.toContain("icon");
+    expect(names(schemaOf("poster", { entity: "sensor.wind_speed" }))).not.toContain("icon");
+    expect(names(schemaOf("poster", LIGHT, { icon_thing: "image" }))).toContain("icon");
+  });
+});
+
+describe("the editor's kind", () => {
+  it("names the detected kind first, then every kind by its name", () => {
+    const opts = options(schemaOf("poster", { entity: "sensor.wind_speed" }), "kind");
+    expect(opts[0]).toEqual({ value: "detected", label: "Detected: Wind" });
+    expect(
+      opts
+        .slice(1)
+        .map((o) => o.value)
+        .sort(),
+    ).toEqual(Object.keys(KINDS).sort());
+    const labels = opts.slice(1).map((o) => o.label);
+    expect(labels).toEqual([...labels].sort((a, b) => a.localeCompare(b)));
+  });
+
+  it("builds the form for the kind picked", () => {
+    // a temperature read as a washer: its threshold, as a trend: its series
+    expect(names(schemaOf("poster", TEMP, { kind: "washer" }))).toContain("running_above");
+    expect(names(schemaOf("poster", TEMP))).not.toContain("running_above");
+    expect(names(schemaOf("poster", TEMP, { kind: "trend" }))).toContain("series");
+    expect(names(schemaOf("poster", TEMP))).not.toContain("series");
+    expect(names(schemaOf("poster", TEMP, { kind: "car" }))).toEqual(
+      expect.arrayContaining(["input_range", "input_plugged", "input_charging", "input_location"]),
+    );
+  });
+});
+
+describe("the editor's content", () => {
+  it("shows an attribute picker for the entity, unit and decimals for a number", () => {
+    const temp = schemaOf("tile", TEMP);
+    expect(field(temp, "attribute")?.selector).toEqual({
+      attribute: { entity_id: "sensor.living_room_temperature" },
+    });
+    expect(names(temp)).toEqual(expect.arrayContaining(["unit", "decimals"]));
+    expect(names(schemaOf("tile", { name: "Hello" }))).not.toContain("attribute");
+    expect(names(schemaOf("tile", { entity: "input_select.house_mode" }))).not.toContain("unit");
+  });
+});
+
+describe("the editor's icon and visual", () => {
+  it("names the kind's own thing as the default", () => {
+    const light = schemaOf("poster", LIGHT);
+    expect(options(light, "icon_thing")[0]).toEqual({ value: DEFAULT, label: "Default: Icon" });
+    expect(options(light, "visual_thing")[0]).toEqual({ value: DEFAULT, label: "Default: Glow" });
+    // what draws nothing there by default has no none: the default is none
+    const fan = schemaOf("poster", { entity: "fan.living_room" });
+    expect(options(fan, "visual_thing")[0]).toEqual({ value: DEFAULT, label: "Default: None" });
+    expect(values(fan, "visual_thing")).not.toContain("none");
+    expect(values(light, "visual_thing")).toContain("none");
+    expect(values(light, "icon_thing")).toEqual([DEFAULT, "image", "none"]);
+  });
+
+  it("never offers a drawing the kind does not make", () => {
+    for (const kind of Object.values(KINDS))
+      for (const thing of ["poster", "tile"] as const) {
+        const schema = schemaOf(thing, { kind: kind.name, entity: "sensor.outdoor_temperature" });
+        for (const name of ["icon_thing", "visual_thing"])
+          for (const v of values(schema, name))
+            if (KIND_THINGS.includes(v))
+              expect(kind.draws ?? [], `${thing} ${kind.name} ${name}: ${v}`).toContain(v);
+        // only its own inputs
+        const inputs = names(schema).filter((n) => n.startsWith("input_"));
+        expect(inputs, kind.name).toEqual((kind.inputs ?? []).map((d) => `input_${d.key}`));
+      }
+  });
+
+  it("shows the options of the icon's thing", () => {
+    const icon = names(schemaOf("poster", LIGHT));
+    expect(icon).toEqual(expect.arrayContaining(["icon_ring", "icon_style"]));
+    expect(icon).not.toContain("icon_src");
+    expect(icon).not.toContain("icon_variant");
+    expect(names(schemaOf("poster", LIGHT, { icon_thing: "image" }))).toContain("icon_src");
+    // a flow: its drawings, no ring
+    const wind = names(schemaOf("poster", { entity: "sensor.wind_speed" }));
+    expect(wind).toContain("icon_variant");
+    expect(wind).not.toContain("icon_ring");
+    expect(values(schemaOf("poster", { entity: "sensor.rain_rate" }), "icon_variant")).toEqual([
+      DEFAULT,
+      "drops",
+      "ripples",
+      "fill",
+    ]);
+    // none: no options, and no actions of its own
+    const none = names(schemaOf("poster", LIGHT, { icon_thing: "none" }));
+    expect(none.filter((n) => n.startsWith("icon_") && n !== "icon_thing")).toEqual([]);
+  });
+
+  it("shows the options of the visual's thing", () => {
+    const visual = (change: HaFormData) =>
+      names(schemaOf("poster", LIGHT, change)).filter(
+        (n) => n.startsWith("visual_") && n !== "visual_thing",
+      );
+    expect(visual({})).toEqual([]);
+    expect(visual({ visual_thing: "bar" })).toEqual([]);
+    expect(visual({ visual_thing: "sparkline" })).toEqual([
+      "visual_hours",
+      "visual_today",
+      "visual_bucket",
+      "visual_smoothing",
+      "visual_axis",
+      "visual_src",
+    ]);
+    // today takes the place of the hours
+    expect(visual({ visual_thing: "columns", visual_today: true })).toEqual([
+      "visual_today",
+      "visual_bucket",
+      "visual_axis",
+      "visual_src",
+    ]);
+    expect(visual({ visual_thing: "strip" })).not.toContain("visual_axis");
+    expect(visual({ visual_thing: "image" })).toEqual([
+      "visual_src",
+      "visual_opacity",
+      "visual_tint",
+      "visual_blur",
+    ]);
+    // a plot reads another entity's history, a picture a URL
+    const light = schemaOf("poster", LIGHT, { visual_thing: "sparkline" });
+    expect(field(light, "visual_src")?.selector).toEqual({ entity: {} });
+    expect(
+      field(schemaOf("poster", LIGHT, { visual_thing: "image" }), "visual_src")?.selector,
+    ).toEqual({ text: {} });
+    // the sun's hours, without today
+    expect(names(schemaOf("poster", { entity: "sun.sun" }))).toContain("visual_hours");
+    expect(names(schemaOf("poster", { entity: "sun.sun" }))).not.toContain("visual_today");
+  });
+
+  it("offers a cover's drawings, the device class's by default", () => {
+    const cover = schemaOf("poster", { entity: "cover.garage_door" });
+    expect(options(cover, "visual_variant")[0].label).toBe("Default: By its device class");
+    expect(values(cover, "visual_variant")).toEqual(
+      expect.arrayContaining(["shutter", "garage", "gate", "window"]),
+    );
+    // a wind's flow behind the card
+    const wind = schemaOf("poster", { entity: "sensor.wind_speed" }, { visual_thing: "flow" });
+    expect(options(wind, "visual_variant")[0].label).toBe("Default: Dots");
+  });
+});
+
+describe("the editor's other entities", () => {
+  it("are the kind's inputs, none for a weather entity", () => {
+    expect(names(schemaOf("poster", { entity: "sensor.rain_rate" }))).toEqual(
+      expect.arrayContaining(["input_today", "input_wind", "input_direction"]),
+    );
+    expect(
+      names(schemaOf("poster", { entity: "weather.home", kind: "wind" })).filter((n) =>
+        n.startsWith("input_"),
+      ),
+    ).toEqual([]);
+    expect(names(schemaOf("poster", LIGHT)).some((n) => n.startsWith("input_"))).toBe(false);
+  });
+});
+
+describe("the editor's controls", () => {
+  const SWITCH = { entity: "switch.coffee_machine" };
+
+  it("names the kind's own as the default, a tile's at its line's end only", () => {
+    expect(options(schemaOf("poster", LIGHT), "control_type")[0].label).toBe(
+      "Default: Switch + Slider",
+    );
+    expect(options(schemaOf("tile", LIGHT), "control_type")[0].label).toBe("Default: Switch");
+    expect(values(schemaOf("poster", LIGHT), "control_type")).toEqual([
+      DEFAULT,
+      "none",
+      "toggle",
+      "slider",
+      "hold",
+      "buttons",
+    ]);
+  });
+
+  it("offers the entity's own where the kind has none", () => {
+    const sw = schemaOf("tile", SWITCH);
+    expect(values(sw, "control_type")).toEqual([DEFAULT, "auto", "toggle", "hold", "buttons"]);
+    expect(options(sw, "control_type")[0].label).toBe("Default: None");
+    expect(options(sw, "control_type")[1].label).toBe("The entity's own: Switch");
+    expect(values(schemaOf("poster", { entity: "climate.living_room" }), "control_type")).toEqual(
+      expect.arrayContaining(["stepper", "segments", "select"]),
+    );
+  });
+
+  it("shows the options of the controls drawn", () => {
+    const ctl = (cfg: Raw, change: HaFormData) =>
+      names(schemaOf("poster", cfg, change)).filter(
+        (n) => n.startsWith("control_") && n !== "control_type",
+      );
+    // nothing drawn: no options
+    expect(ctl(SWITCH, {})).toEqual([]);
+    expect(ctl(LIGHT, { control_type: "none" })).toEqual([]);
+    // the light's toggle and slider
+    expect(ctl(LIGHT, {})).toEqual(["control_position", "control_step", "control_confirm"]);
+    expect(ctl(LIGHT, { control_type: "hold" })).toEqual(["control_position"]);
+    expect(ctl(SWITCH, { control_type: "auto" })).toEqual(["control_position", "control_confirm"]);
+    // a thermostat's modes
+    expect(ctl({ entity: "climate.living_room" }, { control_type: "segments" })).toEqual([
+      "control_position",
+      "control_attribute",
+      "control_options",
+    ]);
+    expect(
+      values(
+        schemaOf("poster", { entity: "climate.living_room" }, { control_type: "select" }),
+        "control_attribute",
+      ),
+    ).toEqual([DEFAULT, "hvac_mode", "preset_mode", "fan_mode"]);
+    // a select of its own options has no attribute to pick
+    expect(ctl({ entity: "input_select.house_mode" }, { control_type: "select" })).toEqual([
+      "control_position",
+      "control_options",
+    ]);
+    expect(ctl(LIGHT, { control_type: "buttons" })).toEqual([
+      "control_position",
+      "control_buttons",
+      "control_confirm",
+    ]);
+  });
+
+  it("names where the control sits by default", () => {
+    const pos = (thing: CardThing, cfg: Raw, change: HaFormData = {}) =>
+      options(schemaOf(thing, cfg, change), "control_position")[0].label;
+    // the kind's own: where its first sits
+    expect(pos("poster", LIGHT)).toBe("Default: Beside the value");
+    // one named: a slider below, anything else at the end
+    expect(pos("poster", LIGHT, { control_type: "slider" })).toBe("Default: Below the value");
+    expect(pos("poster", LIGHT, { control_type: "hold" })).toBe("Default: Beside the value");
+    expect(pos("tile", SWITCH, { control_type: "auto" })).toBe("Default: At the end of the line");
+    expect(values(schemaOf("tile", SWITCH, { control_type: "auto" }), "control_position")).toEqual([
+      DEFAULT,
+      "end",
+      "block",
+    ]);
+  });
+});
+
+describe("the editor's status and badges", () => {
+  it("hides the status's text while it is hidden", () => {
+    expect(names(schemaOf("poster", LIGHT))).toContain("status");
+    expect(names(schemaOf("poster", LIGHT, { hide_status: true }))).not.toContain("status");
+  });
+
+  it("gives a tile its status badge and the badge on its icon", () => {
+    const tile = names(schemaOf("tile", LIGHT));
+    expect(tile).toEqual(expect.arrayContaining(["status_badge", "icon_badge"]));
+    expect(tile).not.toContain("icon_badge_icon");
+    expect(names(schemaOf("tile", LIGHT, { icon_badge: "custom" }))).toEqual(
+      expect.arrayContaining(["icon_badge_icon", "icon_badge_color"]),
+    );
+    const poster = names(schemaOf("poster", LIGHT));
+    expect(poster).not.toContain("status_badge");
+    expect(poster).not.toContain("icon_badge");
+  });
+
+  it("edits the badges in a dialog with their other keys as YAML", () => {
+    const badges = field(schemaOf("poster", LIGHT), "badges")?.selector as {
+      object: { multiple: boolean; fields: Record<string, { label: string }> };
+    };
+    expect(badges.object.multiple).toBe(true);
+    expect(Object.keys(badges.object.fields)).toEqual([
+      "entity",
+      "name",
+      "icon",
+      "color",
+      "visual",
+      "style",
+      "size",
+      "show_name",
+      "more",
+    ]);
+    expect(badges.object.fields.more.label).toBe("More (YAML)");
+  });
+});
+
+describe("the editor's rules", () => {
+  it("say which rules the kind brings while the card has none", () => {
+    const wind = field(schemaOf("poster", { entity: "sensor.wind_speed" }), "kind_rules");
+    expect(wind?.type).toBe("constant");
+    expect(String(wind?.value)).toMatch(/\(> \d+ km\/h\)/);
+    expect(field(schemaOf("poster", LIGHT), "kind_rules")).toBeUndefined();
+    expect(sectionOf(schemaOf("poster", LIGHT), "Colour by value")).toEqual(["rules"]);
+  });
+});
+
+describe("the editor's interactions", () => {
+  const defaults = (thing: CardThing, cfg: Raw) =>
+    Object.fromEntries(
+      flat(schemaOf(thing, cfg))
+        .filter((s) => s.name.endsWith("_action"))
+        .map((s) => [
+          s.name,
+          (s.selector as { ui_action: { default_action: string } }).ui_action.default_action,
+        ]),
+    );
+
+  it("name what a tap does unless told", () => {
+    expect(defaults("poster", LIGHT)).toEqual({
+      tap_action: "more-info",
+      hold_action: "more-info",
+      double_tap_action: "none",
+      icon_tap_action: "none",
+      icon_hold_action: "none",
+    });
+    // a tile's icon toggles what it can
+    expect(defaults("tile", LIGHT).icon_tap_action).toBe("toggle");
+    expect(defaults("tile", TEMP).icon_tap_action).toBe("none");
+    // nothing to show without an entity
+    expect(defaults("poster", { name: "Hello" }).tap_action).toBe("none");
+  });
+});

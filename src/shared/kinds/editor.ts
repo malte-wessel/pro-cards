@@ -51,7 +51,8 @@ export abstract class KindCardEditor extends FormEditorBase {
   }
 
   _fromForm(data: HaFormData, prev: CardConfigBase): CardConfigBase {
-    return formToConfig(data, prev, kindsOf(data, this._hass).kind, this._thing);
+    const { kind } = kindsOf(data, this._hass);
+    return formToConfig(data, prev, kind, this._thing, kindsOf(prev as Raw, this._hass).kind);
   }
 
   _schema(hass: HomeAssistant, data: HaFormData): HaFormSchema[] {

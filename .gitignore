@@ -3,6 +3,7 @@ node_modules/
 docs/.vitepress/cache/
 docs/.vitepress/dist/
 test-results/
+test-results-docs/
 playwright-report/
 coverage/
 tests/harness/dist/

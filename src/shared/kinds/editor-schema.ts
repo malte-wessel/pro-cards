@@ -15,11 +15,13 @@ import {
   BUTTON_KEYS,
   DEFAULT,
   DETECTED,
+  DOMAIN_AUTO,
   OPTION_KEYS,
   RULE_KEYS,
   SERIES_KEYS,
   defaultIcon,
   defaultVisual,
+  ownControls,
   withDefaults,
   type CardThing,
 } from "./editor-form.ts";
@@ -86,20 +88,6 @@ const DOMAIN_CONTROLS: Record<string, readonly ControlKind[]> = {
   vacuum: ["buttons"],
   lawn_mower: ["buttons"],
 };
-// what `auto` draws for a domain where the kind brings no controls of its own
-const DOMAIN_AUTO: Record<string, readonly ControlKind[]> = {
-  switch: ["toggle"],
-  input_boolean: ["toggle"],
-  lock: ["hold"],
-  number: ["slider"],
-  input_number: ["slider"],
-  select: ["select"],
-  input_select: ["select"],
-  script: ["button"],
-  scene: ["button"],
-  button: ["button"],
-  input_button: ["button"],
-};
 // the modes segments and a select set on a climate or a fan
 const ATTRIBUTES: Record<string, readonly string[]> = {
   climate: ["hvac_mode", "preset_mode", "fan_mode"],
@@ -141,7 +129,7 @@ export const kindLabel = (hass: HomeAssistant | undefined, name: string) => L(ha
 const controlsOf = (x: SchemaCtx, data: HaFormData) => {
   const entity = typeof data.entity === "string" && data.entity ? data.entity : null;
   const domain = entity ? domainOf(entity) : null;
-  const own = (x.kind.controls ?? []).filter((c) => x.thing === "poster" || c.position === "end");
+  const own = ownControls(x.kind, x.thing);
   const auto = domain && !own.length ? (DOMAIN_AUTO[domain] ?? []) : [];
   const domainControls = domain ? (DOMAIN_CONTROLS[domain] ?? []) : [];
   const type = data.control_type as string;

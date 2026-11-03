@@ -1,16 +1,17 @@
 # Testing
 
-Pro Cards has three test layers. They share one idea: the cards are plain web components, so they can run outside Home Assistant against the same simulated home that powers the live examples on the docs site.
+Pro Cards has three test layers for the cards, and one for the docs site. They share one idea: the cards are plain web components, so they can run outside Home Assistant against the same simulated home that powers the live examples on the docs site.
 
 | Layer             | Tool                  | Runs in                        | Command               |
 | ----------------- | --------------------- | ------------------------------ | --------------------- |
 | Unit              | Vitest with happy-dom | Node                           | `npm test`            |
 | Integration       | Playwright, Chromium  | a real browser on your machine | `npm run test:e2e`    |
 | Visual regression | Playwright, Chromium  | the Playwright Docker image    | `npm run test:visual` |
+| Docs site         | Playwright, Chromium  | the built docs site            | `npm run test:docs`   |
 
 A fourth, manual layer is a real Home Assistant in Docker (`npm run ha`), see [Real Home Assistant](#real-home-assistant) below.
 
-`npm run test:all` runs all three in that order; `npm run check` runs Prettier, ESLint, the TypeScript type check, the build, the unit and integration tests and the docs build, which is the definition of done before a commit (about 2 minutes). `npm run check:fast` runs the first three side by side (`scripts/parallel.mjs`), then the build and the unit tests (about 15 s): enough while working, with the integration specs a change touches. The docs examples mount one after another into one page per worker (`sharedTest` in `tests/e2e/util.ts`, as the visual cases), which keeps them at about 25 s. CI runs the same commands on every push and pull request (`.github/workflows/validate.yml`).
+`npm run test:all` runs the first three in that order; `npm run check` runs Prettier, ESLint, the TypeScript type check, the build, the unit and integration tests, the docs build and the docs site's tests, which is the definition of done before a commit (about 2 minutes). `npm run check:fast` runs the first three side by side (`scripts/parallel.mjs`), then the build and the unit tests (about 15 s): enough while working, with the integration specs a change touches. The docs examples mount one after another into one page per worker (`sharedTest` in `tests/e2e/util.ts`, as the visual cases), which keeps them at about 25 s. CI runs the same commands on every push and pull request (`.github/workflows/validate.yml`).
 
 ## Unit tests
 
@@ -115,14 +116,27 @@ To add a case, append an entry to `CASES` in `cards.spec.ts`. The key becomes th
 
 Never run `--update-snapshots` natively on macOS: the PNGs would be rendered with macOS fonts and CI would fail on every one of them. The `snapshotPathTemplate` in `playwright.config.ts` deliberately drops Playwright's platform suffix so there is exactly one baseline per case.
 
+## Docs site tests
+
+`tests/docs/*.spec.ts` test what only the docs site has: the Playground (`docs/.vitepress/theme/playground/`) and the examples' Edit links into it. They run against the built site, so `npm run docs:build` comes first; `npm run test:docs` (`playwright.docs.config.ts`) serves `docs/.vitepress/dist` with `vitepress preview` on port 4175 and runs them in Chromium, its results in `test-results-docs/` (an integration run clears `test-results/` when it starts). Every test has a page of its own, so it starts with nothing in localStorage: no draft, nothing saved, the default preview settings. `tests/docs/util.ts` opens the Playground, reads and replaces the CodeMirror text (`expectYaml`, `typeYaml`: the YAML view, as CodeMirror draws only what it shows) and finds the visual editor's fields.
+
+What is covered: the first example, the Examples menu, a visual edit into the YAML and the preview and typed YAML back into the form, YAML and config errors (the preview keeps the last card that parsed), several cards and the picker, a card the visual editor does not edit, a layout's card edited through its own editor; the draft across a reload, saving, reopening, renaming, deleting with the in-menu confirmation, New, Copy YAML, share links in another browser (the hash cleared), `#edit=` links and an example's Edit link; the width presets and their view columns (a layout card's breakpoints), Columns and Rows into `grid_options`, the mode and the theme, the grid guides, the States drawer (a switch, a number, a select, Reset, freezing the demo home), the splitter; the page itself (the nav bar's link, no footer or heading, as tall as the screen, the nav bar container's width and its borders beyond it) and a phone (the view tabs, the ⋯ menu). The store and the Edit links' codec have unit tests of their own (`tests/unit/playground-store.test.ts`, `tests/unit/editable.test.ts`).
+
+```sh
+npm run docs:build && npm run test:docs     # the whole suite
+npm run test:docs -- playground-store       # one file; -g "Share" for one test
+```
+
 ## Continuous integration
 
-`validate.yml` runs four jobs:
+`validate.yml` runs six jobs:
 
 1. **HACS validation** of `hacs.json`, README and repository metadata.
-2. **Bundle is up to date**: builds `dist/pro-cards.js` and fails if it differs from the committed file.
-3. **Unit + integration tests** on Ubuntu with Chromium installed by Playwright.
-4. **Visual regression** inside the Playwright container.
+2. **Prettier + ESLint** and the type check.
+3. **Bundle is up to date**: builds `dist/pro-cards.js` and fails if it differs from the committed file.
+4. **Unit + integration tests** on Ubuntu with Chromium installed by Playwright.
+5. **Docs build + Playground tests**: builds the docs site and runs `npm run test:docs` against it.
+6. **Visual regression** inside the Playwright container.
 
 Failed browser jobs upload the Playwright report and the diff images as artifacts.
 

@@ -194,7 +194,8 @@ export abstract class CardsEditorBase extends HTMLElement {
     if (!this._built) this._build();
     const root = this.shadowRoot!;
     const cards = this._cards;
-    if (this._selected > cards.length) this._selected = cards.length;
+    // fewer cards than the selected tab: the last card (the picker when there is none)
+    if (this._selected > cards.length) this._selected = Math.max(0, cards.length - 1);
 
     // the card's options: rebuilt only for another config or language
     const form = this._form!;
