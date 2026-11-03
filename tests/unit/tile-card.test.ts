@@ -74,6 +74,9 @@ describe("tile-card config", () => {
     const slider = norm({ entity: "light.desk_lamp", control: "slider" }).entities[0];
     expect(kinds(placementsOf(slider, "tile"))).toEqual(["slider@block"]);
     expect(norm({ entity: "light.desk_lamp", control: false }).entities[0].control).toBeNull();
+    // control: { position } puts the kind's own primary control there
+    const under = norm({ entity: "cover.living_room_blinds", control: { position: "block" } });
+    expect(kinds(placementsOf(under.entities[0], "tile"))).toEqual(["buttons@block"]);
   });
 
   it("answers the pointer and toggles from its icon by default, as Home Assistant's tile", () => {

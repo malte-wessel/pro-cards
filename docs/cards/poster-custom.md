@@ -7,7 +7,7 @@ A poster has a few parts: an icon at the top, badges in the corner, and a name, 
 | Part            | Key              | Takes                                                                                                          | Default                                                 |
 | --------------- | ---------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
 | Icon            | `icon`           | an icon's name, a template, or a [place's thing](#the-places): a picture, a ring, [its own actions](#the-icon) | the entity's icon, or the kind's                        |
-| Status          | `status`         | a text, a template, or `false` (always the first badge, a tag in the poster's colour)                          | the kind's status, else the matching rule's status      |
+| Status          | `status`         | a text, a template, or `false` (always the first badge, a tag in the poster's colour)                          | the matching rule's status, else the kind's status      |
 | Badges          | `badges`         | entities or [badges](/cards/poster-badges) of your own, in order                                               | none                                                    |
 | Name            | `name`           | a text, a template                                                                                             | the friendly name                                       |
 | Value           | `value`          | a text, a template; `attribute` shows an attribute                                                             | the entity's state                                      |

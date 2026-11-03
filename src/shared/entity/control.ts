@@ -310,9 +310,13 @@ export const placementsOf = (ent: EntityItem, row: RowKind): Placement[] => {
   // a header badge holds a switch and nothing else (normalizeHeaderEntities)
   if (row === "hval")
     return c.kind === "toggle" ? [{ kind: "toggle", position: "end", small: true }] : [];
+  // auto keeps the domain's own slots; a kind's controls (a poster's, a tile's) put their primary
+  // (the first) where the card says: control: { position } changes the kind's own controls
   let list: Placement[] =
     c.kind === "auto"
-      ? (c.defaults ?? defaultPlacements(ent))
+      ? c.defaults
+        ? c.defaults.map((x, i) => (i === 0 && c.position ? { ...x, position: c.position } : x))
+        : defaultPlacements(ent)
       : [{ kind: c.kind, position: c.position ?? defaultPosition(c.kind, row), small: false }];
   if (c.confirm) {
     // hold to confirm replaces the primary (toggle / button / hold); every button of a group

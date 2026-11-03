@@ -8,7 +8,8 @@ import { fillBadge } from "../entity/render/badge.ts";
 import type { ImageSrc } from "./config.ts";
 import type { Kind, KindCtx } from "./types.ts";
 
-// the status text: the card's, else the kind's, else the matching rule's label
+// the status text: the card's, else the matching rule's (it wins over the kind's, as its colour
+// and icon do), else the kind's
 export const statusText = (
   ctx: RenderCtx,
   cfg: { statusText: ValueSrc | null },
@@ -18,7 +19,7 @@ export const statusText = (
   const own = cfg.statusText;
   if (own?.kind === "text") return own.text;
   if (own?.kind === "template") return asText(tplOf(ctx, own.template));
-  return kindStatus ?? m.look.label;
+  return m.look.label ?? kindStatus;
 };
 
 // a picture's URL now (null: none)

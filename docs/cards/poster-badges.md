@@ -218,7 +218,7 @@ A badge without `entity` reads the poster's entity. `attribute` shows one of its
 
 ## The status badge
 
-The first badge is always the status badge; your `badges` follow it. It shows the kind's status, else the matching rule's label. With nothing to show, it takes no room. Its look is the poster's: a `tag` in the poster's colour, without an icon or a name. A rule's `style` and `pulse` apply to it.
+The first badge is always the status badge; your `badges` follow it. It shows the matching rule's status, else the kind's. With nothing to show, it takes no room. Its look is the poster's: a `tag` in the poster's colour, without an icon or a name. A rule's `style` and `pulse` apply to it.
 
 `status` sets its text:
 

@@ -838,14 +838,17 @@ describe("poster-card image and status", () => {
     );
   });
 
-  it("says the card's status, else the kind's, else the matching rule's label", () => {
+  it("says the card's status, else the matching rule's, else the kind's", () => {
     const E = "sensor.x";
     const hass = withStates({ [E]: st(E, "5") });
     const ctx = { hass, tplResult: new Map<string, unknown>([["{{ s }}", "Rendered"]]) };
     const cfg = norm({ entity: E, rules: [{ below: 10, status: "Low" }] });
     const m = modelOf(ctx, cfg.entities[0]);
     expect(statusText(ctx as never, cfg, m, null)).toBe("Low");
-    expect(statusText(ctx as never, cfg, m, "Kind's")).toBe("Kind's");
+    // a matching rule's status wins over the kind's (the sun's next event, a trend's window)
+    expect(statusText(ctx as never, cfg, m, "Kind's")).toBe("Low");
+    const none = norm({ entity: E, rules: [{ above: 10, status: "High" }] });
+    expect(statusText(ctx as never, none, modelOf(ctx, none.entities[0]), "Kind's")).toBe("Kind's");
     expect(
       statusText(ctx as never, { ...cfg, statusText: { kind: "text", text: "Own" } }, m, "K"),
     ).toBe("Own");

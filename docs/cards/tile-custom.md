@@ -41,7 +41,7 @@ A tile needs no entity: the keys alone can fill it. Without an entity, a tap doe
 The line under the name joins its parts with a dot, and is cut at the end where it is too long:
 
 - the **value**: the kind's (a thermostat's temperature, a media player's title), else the state. `value` and `attribute` set it; `unit`, `decimals`, `prefix` and `suffix` format a number.
-- the **status**: the kind's, else the matching rule's status. `status` sets it (a text or a template), `false` leaves it out. A status that only repeats the value is left out: a vacuum's Cleaning shows once. `status_badge: true` makes it the first badge instead, shown even where it repeats the value; see [Badges](/cards/tile-badges).
+- the **status**: the matching rule's, else the kind's. `status` sets it (a text or a template), `false` leaves it out. A status that only repeats the value is left out: a vacuum's Cleaning shows once. `status_badge: true` makes it the first badge instead, shown even where it repeats the value; see [Badges](/cards/tile-badges).
 - the **secondary**: what the kind adds (the direction and gusts, the artist and the album). `secondary` sets it.
 
 `show_value: false` leaves the value out, `show_name: false` the name above it.
