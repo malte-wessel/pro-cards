@@ -440,6 +440,47 @@ describe("the editor form: the controls", () => {
     ).toBe("preset_mode");
   });
 
+  it("keeps your own buttons on a kind whose own control is buttons", () => {
+    const COVER = { type: "custom:poster-card-pro", entity: "cover.awning" };
+    const own = {
+      type: "buttons",
+      options: [{ entity: "script.check_windows", label: "Morning" }],
+    };
+    const form = formOf({ ...COVER, control: own });
+    // the cover's own control is its buttons: the default, with your buttons in its list
+    expect(form.control_type).toBe(DEFAULT);
+    expect(form.control_buttons).toEqual([{ entity: "script.check_windows", label: "Morning" }]);
+    // untouched: as written; a button added: still the buttons
+    expect(edit({ ...COVER, control: own }, { name: "Awning" })).toEqual({
+      ...COVER,
+      control: own,
+      name: "Awning",
+    });
+    const more = [...(form.control_buttons as object[]), { entity: "script.check_windows" }];
+    const out = edit({ ...COVER, control: own }, { control_buttons: more });
+    expect((out.control as { options: unknown[] }).options).toHaveLength(2);
+  });
+
+  it("reads a place, a variant or a control written as the default as the default", () => {
+    expect(formOf({ ...LIGHT, control: { position: "end" } }).control_position).toBe(DEFAULT);
+    expect(
+      formOf({ ...LIGHT, control: { type: "slider", position: "block" } }).control_position,
+    ).toBe(DEFAULT);
+    expect(
+      formOf({ ...LIGHT, control: { type: "slider", position: "end" } }).control_position,
+    ).toBe("end");
+    expect(formOf({ ...WIND, icon: { variant: "dots" } }).icon_variant).toBe(DEFAULT);
+    expect(formOf({ ...WIND, visual: { type: "flow", variant: "dots" } }).visual_variant).toBe(
+      DEFAULT,
+    );
+    expect(formOf({ ...WIND, visual: { type: "flow", variant: "lines" } }).visual_variant).toBe(
+      "lines",
+    );
+    // and keeps them as written while their fields stay
+    const cfg = { ...LIGHT, control: { position: "end" } };
+    expect(edit(cfg, { name: "Lamp" })).toEqual({ ...cfg, name: "Lamp" });
+  });
+
   it("writes only the options the control picked now takes", () => {
     const slider = { ...LIGHT, control: { type: "slider", step: 5, confirm: true } };
     expect(edit(slider, { control_type: "toggle" })).toEqual({

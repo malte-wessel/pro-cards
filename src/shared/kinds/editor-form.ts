@@ -166,9 +166,24 @@ const controlTypeOf = (c: CardConfigBase, kind: Kind, thing: CardThing): string 
   const ctl = c.control;
   if (ctl === false) return "none";
   if (ctl === "auto" && kind.controls?.length) return DEFAULT;
-  if (typeof ctl === "string") return ctl;
-  if (isObj(ctl) && typeof ctl.type === "string") return ctl.type;
+  const type = typeof ctl === "string" ? ctl : isObj(ctl) ? ctl.type : undefined;
+  if (typeof type === "string") return sameAsOwn(type, kind, thing) ? DEFAULT : type;
   return isObj(ctl) && autoOf(c, kind, thing).length ? "auto" : DEFAULT;
+};
+// the drawing a visual thing has unless told: the rain's drops, the wind's dots (a cover's follows
+// its device class: none here)
+export const visualVariant = (visual: string | null, kind: Kind) =>
+  visual === "flow" ? (kind.name === "rain" ? "drops" : "dots") : undefined;
+// a control named that is all the kind draws itself (a cover's buttons): the kind's own
+export const sameAsOwn = (type: string, kind: Kind, thing: CardThing) => {
+  const own = ownControls(kind, thing);
+  return own.length === 1 && own[0].kind === type;
+};
+// where the controls drawn sit unless told: the kind's first own control's place, else under the
+// value for a slider and beside it for the rest
+export const defaultPosition = (type: string, entity: unknown, kind: Kind, thing: CardThing) => {
+  const first = type === DEFAULT ? ownControls(kind, thing)[0]?.position : undefined;
+  return first ?? (drawnControls(type, entity, kind, thing)[0] === "slider" ? "block" : "end");
 };
 
 export const configToForm = (config: CardConfigBase, kind: Kind, thing: CardThing): HaFormData => {
@@ -203,7 +218,7 @@ export const configToForm = (config: CardConfigBase, kind: Kind, thing: CardThin
     d.icon_ring = icon.ring === true;
     d.icon_style = icon.style ?? "";
     d.icon_src = icon.src ?? "";
-    d.icon_variant = icon.variant ?? "";
+    d.icon_variant = icon.variant === kind.icon?.variant ? "" : (icon.variant ?? "");
     for (const k of ACTIONS) if (icon[k] !== undefined) d[`icon_${k}`] = icon[k];
     const b = icon.badge;
     if (b === false || b === "none") d.icon_badge = "none";
@@ -231,7 +246,8 @@ export const configToForm = (config: CardConfigBase, kind: Kind, thing: CardThin
     d.visual_opacity = num(v.opacity);
     d.visual_tint = v.tint ?? "";
     d.visual_blur = v.blur === true ? 20 : v.blur === false ? 0 : num(v.blur);
-    d.visual_variant = v.variant ?? "";
+    const drawn = visualThing === DEFAULT ? defaultVisual(kind, thing) : visualThing;
+    d.visual_variant = v.variant === visualVariant(drawn, kind) ? "" : (v.variant ?? "");
   }
   d.visual_thing = visualThing === defaultVisual(kind, thing) ? DEFAULT : visualThing;
 
@@ -246,7 +262,12 @@ export const configToForm = (config: CardConfigBase, kind: Kind, thing: CardThin
   const ctl = c.control;
   d.control_type = controlTypeOf(c, kind, thing);
   if (isObj(ctl)) {
-    d.control_position = ctl.position ?? DEFAULT;
+    // (the place it has anyway, written, is the default)
+    d.control_position =
+      ctl.position === undefined ||
+      ctl.position === defaultPosition(d.control_type as string, c.entity, kind, thing)
+        ? DEFAULT
+        : ctl.position;
     d.control_step = num(ctl.step);
     // (the mode set by default, written, is the default)
     const domain = typeof c.entity === "string" ? c.entity.split(".")[0] : "";
@@ -255,7 +276,9 @@ export const configToForm = (config: CardConfigBase, kind: Kind, thing: CardThin
         ? DEFAULT
         : ctl.attribute;
     d.control_confirm = ctl.confirm === true;
-    if (ctl.type === "buttons") d.control_buttons = listToForm(ctl.options, BUTTON_KEYS);
+    // buttons' options as buttons, also on the kind's own (a cover's, written as Buttons)
+    const drawn = drawnControls(d.control_type as string, c.entity, kind, thing);
+    if (drawn.includes("buttons")) d.control_buttons = listToForm(ctl.options, BUTTON_KEYS);
     else d.control_options = listToForm(ctl.options, OPTION_KEYS, "value");
   }
 
@@ -367,12 +390,11 @@ const controlFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknow
   if (draws("segments", "select") && chosen(data.control_attribute))
     o.attribute = data.control_attribute;
   if (draws("toggle", "button", "buttons") && data.control_confirm === true) o.confirm = true;
-  const opts =
-    type === "buttons"
-      ? listFromForm(data.control_buttons, BUTTON_KEYS, null)
-      : draws("segments", "select")
-        ? listFromForm(data.control_options, OPTION_KEYS, "value")
-        : [];
+  const opts = draws("buttons")
+    ? listFromForm(data.control_buttons, BUTTON_KEYS, null)
+    : draws("segments", "select")
+      ? listFromForm(data.control_options, OPTION_KEYS, "value")
+      : [];
   if (opts.length) o.options = opts;
   const has = Object.keys(o).length > 0;
   // an object without a type changes the kind's own controls (or the domain's: auto)

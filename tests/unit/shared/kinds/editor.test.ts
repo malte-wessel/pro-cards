@@ -113,13 +113,7 @@ describe("the poster's and the tile's editor form", () => {
     const wind = schemaFor("poster", { entity: "sensor.wind_speed" });
     expect(namesOf(wind)).toEqual(expect.arrayContaining(["input_direction", "input_gust"]));
     expect(namesOf(wind)).not.toContain("control_type");
-    expect(optionsOf(wind, "icon_variant")).toEqual([
-      "default",
-      "dots",
-      "lines",
-      "swoosh",
-      "vectors",
-    ]);
+    expect(optionsOf(wind, "icon_variant")).toEqual(["default", "lines", "swoosh", "vectors"]);
     expect(optionsOf(wind, "visual_thing")).toContain("flow");
 
     // a tile draws a cover's window only where it names it

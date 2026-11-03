@@ -18,6 +18,9 @@ import {
   DEFAULT,
   DETECTED,
   DEFAULT_ATTRIBUTE,
+  defaultPosition,
+  sameAsOwn,
+  visualVariant,
   DOMAIN_CONTROLS,
   DOMAIN_AUTO,
   OPTION_KEYS,
@@ -321,7 +324,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   const variants = (name: string, of: string, byDefault: string | undefined) =>
     pick(name, [
       opt(DEFAULT, byDefault ? tr(`variant.${byDefault}`) : tr("variant.by_class")),
-      ...(VARIANTS[of] ?? []).map((v) => opt(v, tr(`variant.${v}`))),
+      ...(VARIANTS[of] ?? []).filter((v) => v !== byDefault).map((v) => opt(v, tr(`variant.${v}`))),
     ]);
   const iconOptions: HaFormSchema[] =
     iconThing === "none"
@@ -425,7 +428,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
           variants(
             "visual_variant",
             visualThing === "cover" ? "cover" : kind.name,
-            visualThing === "flow" ? (kind.name === "rain" ? "drops" : "dots") : undefined,
+            visualVariant(visualThing, kind),
           ),
         ]
       : []),
@@ -484,17 +487,20 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
     opt(DEFAULT, own.length ? names(own.map((c) => c.kind)) : tr("none")),
     ...(own.length ? [opt("none", tr("none"))] : []),
     ...(auto.length ? [opt("auto", tr("control_auto", { controls: names(auto) }))] : []),
-    ...[...new Set([...domainControls, "buttons" as const])].map((c) => opt(c, tr(`control.${c}`))),
+    ...[...new Set([...domainControls, "buttons" as const])]
+      .filter((c) => !sameAsOwn(c, kind, thing))
+      .map((c) => opt(c, tr(`control.${c}`))),
   ];
 
-  const firstOwn = type === DEFAULT ? own[0]?.position : undefined;
-  const defaultPosition = firstOwn ?? (drawn[0] === "slider" ? "block" : "end");
+  // where they sit: unless told, first; the other place after it
+  const byPlace = defaultPosition(type, entity, kind, thing);
   const controlOptions: HaFormSchema[] = drawn.length
     ? [
         pick("control_position", [
-          opt(DEFAULT, tr(`position.${defaultPosition}_${thing}`)),
-          opt("end", tr(`position.end_${thing}`)),
-          opt("block", tr(`position.block_${thing}`)),
+          opt(DEFAULT, tr(`position.${byPlace}_${thing}`)),
+          ...(["end", "block"] as const)
+            .filter((p) => p !== byPlace)
+            .map((p) => opt(p, tr(`position.${p}_${thing}`))),
         ]),
         ...(drawn.some((c) => c === "slider" || c === "stepper")
           ? [{ name: "control_step", selector: { number: { min: 0, step: 0.1, mode: "box" } } }]
@@ -509,7 +515,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
               ]),
             ]
           : []),
-        ...(type === "segments" || type === "select"
+        ...(!drawn.includes("buttons") && drawn.some((c) => c === "segments" || c === "select")
           ? [
               {
                 name: "control_options",
@@ -523,7 +529,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
               },
             ]
           : []),
-        ...(type === "buttons"
+        ...(drawn.includes("buttons")
           ? [
               {
                 name: "control_buttons",

@@ -169,7 +169,6 @@ describe("the editor's icon and visual", () => {
     expect(wind).not.toContain("icon_ring");
     expect(values(schemaOf("poster", { entity: "sensor.rain_rate" }), "icon_variant")).toEqual([
       DEFAULT,
-      "drops",
       "ripples",
       "fill",
     ]);
@@ -279,9 +278,11 @@ describe("the editor's controls", () => {
     expect(values(sw, "control_type")).toEqual([DEFAULT, "auto", "toggle", "hold", "buttons"]);
     expect(options(sw, "control_type")[0].label).toBe("None");
     expect(options(sw, "control_type")[1].label).toBe("The entity's own: Switch");
-    expect(values(schemaOf("poster", { entity: "climate.living_room" }), "control_type")).toEqual(
-      expect.arrayContaining(["stepper", "segments", "select"]),
-    );
+    // a thermostat's own stepper is the default, not listed again
+    const climate = schemaOf("poster", { entity: "climate.living_room" });
+    expect(options(climate, "control_type")[0].label).toBe("Stepper");
+    expect(values(climate, "control_type")).toEqual(expect.arrayContaining(["segments", "select"]));
+    expect(values(climate, "control_type")).not.toContain("stepper");
   });
 
   it("shows the options of the controls drawn", () => {
@@ -338,7 +339,6 @@ describe("the editor's controls", () => {
     expect(pos("tile", SWITCH, { control_type: "auto" })).toBe("At the end of the line");
     expect(values(schemaOf("tile", SWITCH, { control_type: "auto" }), "control_position")).toEqual([
       DEFAULT,
-      "end",
       "block",
     ]);
   });
@@ -473,4 +473,33 @@ describe("the editor's placeholders", () => {
   it("show the entity's icon in the icon picker", () => {
     expect(field(schemaOf("poster", LIGHT), "icon")?.context).toEqual({ icon_entity: "entity" });
   });
+});
+
+describe("the editor's selects", () => {
+  it("never list one choice twice, for any entity of the demo home", () => {
+    const CHANGES: HaFormData[] = [
+      {},
+      { control_type: "slider" },
+      { control_type: "buttons" },
+      { control_type: "toggle" },
+      { control_type: "segments" },
+      { control_type: "auto" },
+      { visual_thing: "flow" },
+      { visual_thing: "cover" },
+      { icon_thing: "flow" },
+    ];
+    const twice: string[] = [];
+    for (const thing of ["poster", "tile"] as const)
+      for (const entity of Object.keys(hass.states))
+        for (const change of CHANGES)
+          for (const f of flat(schemaOf(thing, { entity }, change))) {
+            const labels = (
+              f.selector as { select?: { options: { label: string }[] } } | undefined
+            )?.select?.options.map((o) => o.label);
+            const again = labels?.filter((l, i) => labels.indexOf(l) !== i) ?? [];
+            if (again.length)
+              twice.push(`${thing} ${entity} ${JSON.stringify(change)}: ${f.name} ${again}`);
+          }
+    expect(twice).toEqual([]);
+  }, 30_000);
 });
