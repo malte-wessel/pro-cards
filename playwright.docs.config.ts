@@ -1,7 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // The docs site's own tests (the Playground, the examples' Edit links), against the built site:
-// `npm run docs:build` first, `npm run test:docs` serves docs/.vitepress/dist and runs them
+// `npm run docs:build` first (`npm run check:docs` does both), `npm run test:docs` serves
+// docs/.vitepress/dist and runs them
 export default defineConfig({
   testDir: "tests/docs",
   testMatch: "**/*.spec.ts",
@@ -22,7 +23,10 @@ export default defineConfig({
     locale: "en-GB",
   },
   webServer: {
-    command: "npx vitepress preview docs --port 4175 --strictPort",
+    // Vite's preview of the built site: VitePress's own compresses every response as it sends it
+    // (Brotli, most of a second for a large chunk), which made the browsers wait on one server
+    command:
+      "npx vite preview --outDir docs/.vitepress/dist --base /pro-cards/ --port 4175 --strictPort",
     url: "http://localhost:4175/pro-cards/",
     // always its own: a server left running would serve an older build
     reuseExistingServer: false,

@@ -133,11 +133,28 @@ test.describe("hover", () => {
     await mount(page, { type: T, entity: "light.kitchen", hover: true });
     const hit = card(page).locator(".row.hover-fx > .hit");
     await point(page, hit, 0.6);
+    // the page notes when the press shows and when it goes (a busy machine only makes it longer,
+    // so the times say it, not a look right after the click)
+    await hit.evaluate((e) => {
+      const ripple = e.querySelector(":scope > .ripple") as HTMLElement;
+      const times: number[] = [];
+      (window as unknown as { pressTimes: number[] }).pressTimes = times;
+      let was = ripple.classList.contains("pressed");
+      new MutationObserver(() => {
+        const now = ripple.classList.contains("pressed");
+        if (now !== was) times.push(performance.now());
+        was = now;
+      }).observe(ripple, { attributes: true, attributeFilter: ["class"] });
+    });
     await page.mouse.down();
     await page.mouse.up();
-    // at least 225 ms, then it fades
-    expect(await pressed(hit)).toBe(true);
-    await expect.poll(() => pressed(hit)).toBe(false);
+    // shown, then gone after at least 225 ms
+    const times = () =>
+      page.evaluate(() => (window as unknown as { pressTimes: number[] }).pressTimes);
+    await expect.poll(async () => (await times()).length).toBe(2);
+    const [shown, gone] = await times();
+    expect(gone - shown).toBeGreaterThanOrEqual(225);
+    expect(await pressed(hit)).toBe(false);
   });
 
   test("list rows, heroes and table fields keep still; cells and header entities answer", async ({
