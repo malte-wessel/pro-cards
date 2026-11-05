@@ -86,7 +86,10 @@ const ICON: BadgeIcon = { type: "icon", ring: false, src: null };
 const iconOver = (base: BadgeIcon, over: IconWritten | false | undefined): BadgeIcon => {
   if (over === undefined) return base;
   if (over === false) return { type: "none", ring: false, src: null };
-  const type = over.type ?? (base.type === "none" ? "icon" : base.type);
+  // (a name alone over none or a dot is an icon, as a poster's)
+  const type =
+    over.type ??
+    (base.type === "none" || (base.type === "dot" && over.name !== undefined) ? "icon" : base.type);
   const rings = type === "icon" || type === "image";
   const src = over.src !== undefined ? parseImage(over.src) || null : null;
   return {

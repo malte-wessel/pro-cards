@@ -375,6 +375,19 @@ describe("card config schemas", () => {
         ],
       }),
     ).toBeNull();
+    // a badge rule's picture without a type: the badge's own picture, another source
+    expect(
+      validate({
+        type: "custom:heading-card-pro",
+        badges: [
+          {
+            entity: "person.malte",
+            icon: { type: "image" },
+            rules: [{ state: "home", icon: { src: "/local/home.png" } }],
+          },
+        ],
+      }),
+    ).toBeNull();
     // a table's rows: the name, the value and one control or visual (a badge's), nothing else
     const table = (tile: unknown) =>
       validate({ type: "custom:tile-group-card-pro", layout: "table", tiles: [tile] });

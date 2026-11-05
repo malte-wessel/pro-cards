@@ -5,6 +5,8 @@ import { snapshot } from "../../../../docs/.vitepress/theme/ha-shim/hass.ts";
 import {
   DEFAULT,
   DETECTED,
+  badgeFromForm,
+  badgeToForm,
   configToForm,
   formToConfig,
   withDefaults,
@@ -647,12 +649,11 @@ describe("the editor form: a badge's places, kind and switch", () => {
       control: true,
       kind: "none",
     });
-    // what the fields cannot say stays as written: a picture's src, a window of today
+    // a picture's src has its field; what the fields cannot say stays as written (a window of
+    // today)
     expect(
-      field({ entity: "person.x", icon: { type: "image", src: "/local/m.jpg" } }).more,
-    ).toEqual({
-      icon: { type: "image", src: "/local/m.jpg" },
-    });
+      field({ entity: "person.x", icon: { type: "image", src: "/local/m.jpg" } }),
+    ).toMatchObject({ icon_type: "image", icon_src: "/local/m.jpg" });
     expect(
       field({ entity: "sensor.x", visual: { type: "sparkline", hours: "today" } }).more,
     ).toEqual({ visual: { type: "sparkline", hours: "today" } });
@@ -871,6 +872,32 @@ describe("the editor form: a row of a tile group's table", () => {
     expect(edit(lamp, { visual_thing: "bar" }, "row")).toEqual({
       entity: "light.desk_lamp",
       visual: "bar",
+    });
+  });
+});
+
+describe("the editor form: a badge's picture and kind", () => {
+  it("keeps a picture's source through the dialog", () => {
+    const pic = { entity: "light.desk", icon: { type: "image", src: "person.malte" } };
+    const item = badgeToForm(pic);
+    expect(item).toMatchObject({ icon_type: "image", icon_src: "person.malte" });
+    expect(item.more).toBeUndefined();
+    expect(badgeFromForm(item)).toEqual(pic);
+    expect(badgeFromForm({ ...item, icon_ring: true })).toEqual({
+      entity: "light.desk",
+      icon: { type: "image", ring: true, src: "person.malte" },
+    });
+  });
+
+  it("leaves out a kind that cannot read the badge's entity", () => {
+    expect(badgeFromForm({ entity: "light.desk", kind: "battery" })).toBe("light.desk");
+    expect(badgeFromForm({ entity: "sensor.phone_battery", kind: "battery" })).toEqual({
+      entity: "sensor.phone_battery",
+      kind: "battery",
+    });
+    expect(badgeFromForm({ entity: "light.desk", kind: "none" })).toEqual({
+      entity: "light.desk",
+      kind: "none",
     });
   });
 });

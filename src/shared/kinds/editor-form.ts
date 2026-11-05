@@ -6,7 +6,8 @@ import { setOrDrop } from "../editor.ts";
 import type { ControlKind } from "../entity/control.ts";
 import type { CardConfigBase, HaFormData } from "../ha.ts";
 import { isObj, placeDefaults } from "./config.ts";
-import { INPUT_KEYS, kindKeysOf, unusedKeys } from "./detect.ts";
+import { canRead, INPUT_KEYS, kindKeysOf, unusedKeys } from "./detect.ts";
+import { KINDS } from "./registry.ts";
 import {
   ICON_OPTIONS,
   KIND_THINGS,
@@ -32,6 +33,7 @@ export const BADGE_KEYS = [
   "kind",
   "icon",
   "icon_type",
+  "icon_src",
   "icon_ring",
   "color",
   "visual",
@@ -131,8 +133,12 @@ const autoOf = (c: CardConfigBase, kind: Kind, thing: CardThing): readonly Contr
 // (a row has no icon: what a tile controls with it, a switch, a lock, a select, is the domain's
 // control at the row's end)
 export const ownControls = (kind: Kind, thing: CardThing, entity?: unknown) => {
-  const own = (kind.controls ?? []).filter((c) => thing === "poster" || c.position === "end");
-  if (thing !== "row" || own.length || typeof entity !== "string") return own;
+  const all = kind.controls ?? [];
+  const own = all.filter((c) => thing === "poster" || c.position === "end");
+  if (thing !== "row" || own.length) return own;
+  // (a row's first control goes to its end where none is there)
+  if (all.length) return [{ ...all[0], position: "end" as const }];
+  if (typeof entity !== "string") return own;
   return (DOMAIN_AUTO[entity.split(".")[0]] ?? []).map((k) => ({
     kind: k,
     position: "end" as const,
@@ -207,10 +213,12 @@ export const badgeToForm = (x: unknown): Raw => {
   for (const [k, v] of Object.entries(o)) {
     if (k === "icon" && v === false) item.icon_type = "none";
     else if (k === "icon" && typeof v === "string") item.icon = v;
-    else if (k === "icon" && isObj(v) && only(v, ["type", "name", "ring"])) {
+    else if (k === "icon" && isObj(v) && only(v, ["type", "name", "ring", "src"])) {
       if (typeof v.type === "string") item.icon_type = v.type;
       if (typeof v.name === "string") item.icon = v.name;
       if (v.ring === true) item.icon_ring = true;
+      // (a picture's source, as written: a URL, a template or an entity)
+      if (typeof v.src === "string") item.icon_src = v.src;
     } else if (k === "visual" && typeof v === "string") item.visual = v;
     else if (k === "visual" && isObj(v) && only(v, ["type", "hours"]) && v.hours !== "today") {
       item.visual = v.type;
@@ -226,16 +234,25 @@ export const badgeToForm = (x: unknown): Raw => {
 };
 // the dialog's item → the badge as written, the shortest spelling of what it says
 export const badgeFromForm = (item: Raw): unknown => {
-  const { more, kind, icon, icon_type, icon_ring, visual, hours, control } = item;
+  const { more, kind, icon, icon_type, icon_src, icon_ring, visual, hours, control } = item;
   const o: Raw = {};
   for (const k of BADGE_PLAIN) if (filled(item[k])) o[k] = item[k];
-  if (filled(kind) && kind !== DETECTED) o.kind = kind;
+  // a kind that cannot read the badge's entity is left out (the entity's own is drawn): the card
+  // would not take it
+  const entity = typeof item.entity === "string" ? item.entity : null;
+  if (
+    filled(kind) &&
+    kind !== DETECTED &&
+    (kind === "none" || !KINDS[kind as string] || canRead(KINDS[kind as string], entity))
+  )
+    o.kind = kind;
   const type = filled(icon_type) ? icon_type : "icon";
   const name = filled(icon) ? { name: icon } : {};
   const ring = icon_ring === true && (type === "icon" || type === "image") ? { ring: true } : {};
   if (type === "none") o.icon = false;
   else if (type === "dot") o.icon = { type: "dot" };
-  else if (type === "image") o.icon = { type: "image", ...name, ...ring };
+  else if (type === "image")
+    o.icon = { type: "image", ...name, ...ring, ...(filled(icon_src) ? { src: icon_src } : {}) };
   else if (icon_ring === true) o.icon = { ...name, ring: true };
   else if (filled(icon)) o.icon = icon;
   if (filled(visual))

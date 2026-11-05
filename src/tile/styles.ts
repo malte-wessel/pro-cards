@@ -110,9 +110,10 @@ const STYLE_TILE_CARD = `
   ha-card.ttable .tname { flex: 1 1 0; min-width: 40px; ${POSTER_NAME} }
   ha-card.ttable .row.tile .line > .end { flex: 0 1 auto; min-width: 0; max-width: none; justify-content: flex-start; flex-wrap: nowrap; }
   /* the value keeps its width, the status after it gives way: where even the value does not fit
-     beside the control, the control goes (TileCard._fitControls) */
+     beside the control, the control goes (TileCard._fitTable) */
   ha-card.ttable .end > :is(.state, .tstatus) { ${type(14, 20)} font-weight: ${fw("medium")}; white-space: nowrap; font-variant-numeric: tabular-nums; }
-  ha-card.ttable .end > .state { flex: none; color: var(--primary-text-color); }
+  /* the value cut only where it does not fit alone (a long title): beside a control it is whole */
+  ha-card.ttable .end > .state { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--primary-text-color); }
   ha-card.ttable .end > .tstatus { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--fe-color); }
   ha-card.ttable .end > .state + .tstatus { margin-inline-start: -4px; }
   ha-card.ttable .end > .state + .tstatus::before { content: "·\\00a0"; color: var(--primary-text-color); }

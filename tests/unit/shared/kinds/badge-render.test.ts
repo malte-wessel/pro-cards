@@ -81,6 +81,18 @@ describe("a v3 badge's pill", () => {
     expect(parts(none)).toEqual(["state"]);
   });
 
+  it("draws a rule's icon name over a dot as an icon, as a poster's", () => {
+    const [b] = badges([
+      {
+        entity: "sensor.battery",
+        icon: { type: "dot" },
+        rules: [{ above: 50, icon: "mdi:alert" }],
+      },
+    ]);
+    expect(parts(b)).toEqual(["icon", "state"]);
+    expect(b.querySelector("ha-icon")?.getAttribute("icon")).toBe("mdi:alert");
+  });
+
   it("follows the entity whose picture it shows, which ends none of its calls", () => {
     const el = new HeadingCard();
     el.setConfig({

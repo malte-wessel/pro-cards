@@ -43,6 +43,34 @@ export const tileGroupSchema = (hass: HomeAssistant | undefined): HaFormSchema[]
   { name: "title_tap_action", selector: { ui_action: { default_action: "none" } } },
 ];
 
+// a tile cut to what the layout draws, as the editor switches it: no tile in a group takes
+// `vertical`; a table's row draws no icon, secondary or badges, and after its value a badge's
+// visual or a control; a tile no badge's trend
+const ROW_VISUALS = ["bar", "sparkline", "trend"];
+const visualType = (v: unknown) =>
+  typeof v === "string"
+    ? v
+    : v && typeof v === "object"
+      ? (v as { type?: unknown }).type
+      : undefined;
+export const fitLayout = (card: CardConfigBase, layout: string): CardConfigBase => {
+  const c = { ...card } as Record<string, unknown>;
+  delete c.vertical;
+  const v = c.visual;
+  if (layout === "table") {
+    for (const k of ["icon", "secondary", "badges", "status_badge"]) delete c[k];
+    if (v !== undefined && v !== false && !ROW_VISUALS.includes(String(visualType(v))))
+      delete c.visual;
+    else if (v !== undefined && v !== false) {
+      // a badge's visual takes its window alone, and no control beside it
+      const hours = v && typeof v === "object" ? (v as { hours?: unknown }).hours : undefined;
+      c.visual = hours === undefined ? visualType(v) : { type: visualType(v), hours };
+      if (c.control !== false) delete c.control;
+    }
+  } else if (visualType(v) === "trend") delete c.visual;
+  return c as CardConfigBase;
+};
+
 // a tile as the group writes it ⇄ as the tile card's editor takes it
 export const tileToCard = (tile: unknown): CardConfigBase =>
   typeof tile === "string"
@@ -92,7 +120,14 @@ export class TileGroupCardEditor extends CardsEditorBase {
   _optionsToForm(config: CardConfigBase) {
     return optionsToForm(config, TILE_GROUP_CONVS, DEFAULTS);
   }
+  // another layout: each tile cut to what it draws
   _optionsFromForm(data: HaFormData, prev: CardConfigBase) {
-    return optionsFromForm(data, prev, TILE_GROUP_CONVS, DEFAULTS);
+    const next = optionsFromForm(data, prev, TILE_GROUP_CONVS, DEFAULTS);
+    const layout = (c: CardConfigBase) => (c as { layout?: string }).layout ?? "list";
+    if (layout(next) === layout(prev) || !Array.isArray(next.cards)) return next;
+    return {
+      ...next,
+      cards: (next.cards as CardConfigBase[]).map((c) => fitLayout(c, layout(next))),
+    };
   }
 }

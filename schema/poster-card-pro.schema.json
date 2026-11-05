@@ -1613,7 +1613,7 @@
       "additionalProperties": false
     },
     "badgeIcon": {
-      "description": "The badge's icon: an icon's name (mdi:…, a template), { type: icon | image | dot, … }, or false for none. Without type its options change the icon",
+      "description": "The badge's icon: an icon's name (mdi:…, a template), { type: icon | image | dot, … }, or false for none. Without type its options change the icon below it (a rule's src the badge's picture)",
       "oneOf": [
         {
           "const": false
@@ -1654,18 +1654,6 @@
               },
               "then": {
                 "maxProperties": 1
-              }
-            },
-            {
-              "if": {
-                "not": {
-                  "required": ["type"]
-                }
-              },
-              "then": {
-                "not": {
-                  "required": ["src"]
-                }
               }
             },
             {

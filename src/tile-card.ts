@@ -70,6 +70,8 @@ export class TileCard extends KindCardBase {
   declare _config?: TileConfig;
 
   _normalize(raw: unknown) {
+    // another config: the controls' and a table row's fit found again
+    this._ctlFit = null;
     return normalizeTileConfig(raw, this._nextHass ?? this._hass);
   }
   _styles() {
@@ -323,7 +325,10 @@ export class TileCard extends KindCardBase {
           const b = c.getBoundingClientRect();
           if (!b.width) return true;
           if (mode === "tkeep" && c.scrollWidth > c.clientWidth + 0.5) return false;
-          return b.right <= box.right + 0.5 && b.bottom <= box.bottom + 0.5;
+          // (both edges: in a right-to-left language the card runs out on the left)
+          return (
+            b.left >= box.left - 0.5 && b.right <= box.right + 0.5 && b.bottom <= box.bottom + 0.5
+          );
         });
       };
       const modes = vertical ? ["", "tdrop"] : ["", "tkeep", "tdrop"];
@@ -356,13 +361,17 @@ export class TileCard extends KindCardBase {
       const has = tail().length > 0;
       // nothing past the line's end (the card's padding), no speeds cut at it (a hold's ring
       // reaches past its button, so only the speeds count as cut)
+      // (both edges: in a right-to-left language the line runs out on the left); and the value
+      // whole beside them, which is cut only where it does not fit alone
       const fits = () => {
-        const right = line ? line.getBoundingClientRect().right : Infinity;
+        const l = line?.getBoundingClientRect();
+        const value = row.querySelector<HTMLElement>(".end > .state");
+        if (value && value.scrollWidth > value.clientWidth + 0.5) return false;
         return tail().every((c) => {
           if (c.classList.contains("ctl-segments") && c.scrollWidth > c.clientWidth + 0.5)
             return false;
           const b = c.getBoundingClientRect();
-          return !b.width || b.right <= right + 0.5;
+          return !b.width || !l || (b.left >= l.left - 0.5 && b.right <= l.right + 0.5);
         });
       };
       // the name whole, and the status too (never cut to its first letters)

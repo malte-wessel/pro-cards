@@ -373,6 +373,7 @@ describe("the editor's status and badges", () => {
       "kind",
       "icon",
       "icon_type",
+      "icon_src",
       "icon_ring",
       "color",
       "visual",

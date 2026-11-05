@@ -772,7 +772,13 @@ const fieldsOf = (
         },
       };
     if (of === "badge" && (k === "icon_ring" || k === "control")) selector = { boolean: {} };
-    if (of === "badge" && k === "hours") selector = { number: { mode: "box", min: 1, step: 1 } };
+    if (of === "badge" && k === "hours")
+      selector = { number: { mode: "box", min: 0.5, step: 0.5 } };
+    // a picture's source: named as the card's own icon's picture is
+    if (of === "badge" && k === "icon_src") {
+      out[k] = { selector: { text: {} }, label: L(hass, "field.icon_src") };
+      continue;
+    }
     out[k] = { selector, label: L(hass, `${of}.${k}`) };
   }
   out.more = { selector: { object: {} }, label: L(hass, "more") };

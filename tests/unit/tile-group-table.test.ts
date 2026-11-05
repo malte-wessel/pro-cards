@@ -5,6 +5,7 @@ import { TileCard } from "../../src/tile-card.ts";
 import { TileGroupCard } from "../../src/tile-group-card.ts";
 import { normalizeTileConfig } from "../../src/tile/config.ts";
 import { normalizeTileGroupConfig } from "../../src/tile-group/config.ts";
+import { fitLayout } from "../../src/tile-group/editor.ts";
 import { placementsOf } from "../../src/shared/entity/control.ts";
 import { snapshot } from "../../docs/.vitepress/theme/ha-shim/hass.ts";
 
@@ -79,6 +80,9 @@ describe("a tile group's table", () => {
     expect(ends({ entity: "input_select.house_mode" })).toEqual(["select"]);
     expect(ends({ entity: "light.kitchen", control: "slider" })).toEqual(["slider"]);
     expect(ends({ entity: "light.kitchen", control: false })).toEqual([]);
+    // where nothing is at the end, the first goes there: a number's slider
+    expect(ends({ entity: "input_number.target_humidity" })).toEqual(["slider"]);
+    expect(ends({ entity: "number.ev_charge_limit" })).toEqual(["slider"]);
     // a visual takes the place of the kind's control, and fetches its own window
     const v = row({ entity: "light.kitchen", visual: { type: "sparkline", hours: 48 } });
     expect(placementsOf(v.entities[0], "tile")).toEqual([]);
@@ -110,5 +114,46 @@ describe("a tile group's table", () => {
     // a badge's visual after the value
     expect(battery.end.slice(-1)).toEqual(["bbar"]);
     expect(spark.end).toEqual(["state", "bspark"]);
+  });
+
+  it("cuts a tile to what the layout draws as the editor switches it", () => {
+    const T2 = "custom:tile-card-pro";
+    const tile = {
+      type: T2,
+      entity: "light.kitchen",
+      icon: "mdi:lamp",
+      secondary: "x",
+      badges: ["sensor.kitchen_humidity"],
+      status_badge: true,
+      vertical: true,
+      control: "slider",
+      visual: { type: "sparkline", hours: 6, bucket: 30 },
+    };
+    // a row: a badge's visual with its window alone, no control beside it
+    expect(fitLayout(tile, "table")).toEqual({
+      type: T2,
+      entity: "light.kitchen",
+      visual: { type: "sparkline", hours: 6 },
+    });
+    expect(fitLayout({ type: T2, entity: "light.kitchen", visual: "glow" }, "table")).toEqual({
+      type: T2,
+      entity: "light.kitchen",
+    });
+    // a tile: no vertical in a group, no badge's trend
+    expect(
+      fitLayout({ type: T2, entity: "sensor.x", visual: "trend", vertical: true }, "row"),
+    ).toEqual({ type: T2, entity: "sensor.x" });
+    expect(fitLayout(tile, "list")).toMatchObject({
+      icon: "mdi:lamp",
+      badges: ["sensor.kitchen_humidity"],
+    });
+  });
+
+  it("finds a row's fit again for a new config", () => {
+    const el = new TileCard();
+    el.setConfig({ entity: "light.kitchen", table: true });
+    el._ctlFit = { size: "100x34", mode: "drop" };
+    el.setConfig({ entity: "light.kitchen", name: "Worktop", table: true });
+    expect(el._ctlFit).toBeNull();
   });
 });

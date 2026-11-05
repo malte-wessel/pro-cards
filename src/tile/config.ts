@@ -6,7 +6,7 @@
 import { normalizeValue, type ValueSrc } from "../shared/entity/config.ts";
 import { domainOf } from "../shared/color.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
-import { defaultPlacements, normalizeControl } from "../shared/entity/control.ts";
+import { defaultPlacements, normalizeControl, type Placement } from "../shared/entity/control.ts";
 import { parseBadgeVisual } from "../shared/kinds/badge.ts";
 import {
   isObj,
@@ -65,6 +65,12 @@ const GONE: Record<string, string> = {
   badge: "visual: badge is gone: the status is on the line under the name",
 };
 
+// the controls at the line's end; for a table's row, else the first one moved there (a number's
+// slider)
+const endOrFirst = (list: readonly Placement[], table: boolean): Placement[] => {
+  const end = list.filter((p) => p.position === "end");
+  return end.length || !table || !list.length ? end : [{ ...list[0], position: "end" }];
+};
 // the keys a table row cannot draw
 const TABLE_GONE: Record<string, string> = {
   icon: "draws no icon",
@@ -118,8 +124,9 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
     k.iconActions.tap = { action: "toggle" };
   // a kind's controls below the line need a second row: only those at the end of the line are
   // drawn unless the card names them (`control: slider`)
+  // (a table's row has no room below either: where none is at the end, its first goes there)
   if (main.control?.defaults) {
-    const end = main.control.defaults.filter((p) => p.position === "end");
+    const end = endOrFirst(main.control.defaults, !!table);
     main.control = end.length ? { ...main.control, defaults: end } : null;
   }
   if (table) {
@@ -130,7 +137,7 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
       main.visual = table.visual;
     } else if (!main.control && written.control === undefined) {
       // no icon to tap or hold (a switch's, a lock's): the domain's control at the line's end
-      const end = defaultPlacements(main).filter((p) => p.position === "end");
+      const end = endOrFirst(defaultPlacements(main), true);
       const auto = end.length ? normalizeControl({ control: "auto" }, k.ctx, "the card") : null;
       main.control = auto && { ...auto, defaults: end };
     }

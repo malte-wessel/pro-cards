@@ -128,7 +128,7 @@ tiles:
 
 :::
 
-A row stays one line. Where the card is narrow it gives way in this order: the status, then the name (down to 40 px, cut at its end), then the control or the visual (more-info has them); the value always shows in full.
+A row stays one line. Where the card is narrow it gives way in this order: the status, then the name (down to 40 px, cut at its end), then the control or the visual (more-info has them). The value shows in full beside them; one too long even alone (a song's title) is cut at its end.
 
 ## Tiles of their own
 
