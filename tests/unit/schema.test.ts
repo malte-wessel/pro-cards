@@ -375,6 +375,24 @@ describe("card config schemas", () => {
         ],
       }),
     ).toBeNull();
+    // where the content sits in a taller tile or group
+    expect(
+      validate({ type: "custom:tile-card-pro", entity: H, vertical_align: "bottom" }),
+    ).toBeNull();
+    expect(
+      validate({ type: "custom:tile-group-card-pro", vertical_align: "center", tiles: [H] }),
+    ).toBeNull();
+    expect(
+      validate({ type: "custom:tile-card-pro", entity: H, vertical_align: "middle" }),
+    ).toBeTruthy();
+    // a table's rows are one line: no alignment of their own
+    expect(
+      validate({
+        type: "custom:tile-group-card-pro",
+        layout: "table",
+        tiles: [{ entity: H, vertical_align: "top" }],
+      }),
+    ).toBeTruthy();
     // a badge rule's picture without a type: the badge's own picture, another source
     expect(
       validate({

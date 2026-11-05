@@ -45,6 +45,8 @@ import { iconBadgeOf, type IconBadge } from "./tile/badge.ts";
 import { normalizeTileConfig, parseIconBadge, type TileConfig } from "./tile/config.ts";
 import { CARD_TYPE } from "./tile/constants.ts";
 
+// vertical_align as the body's flex alignment
+const ALIGN = { top: "flex-start", center: "center", bottom: "flex-end" } as const;
 // what can be in a zone (its badge is the zone's icon)
 const ZONED = new Set(["person", "device_tracker"]);
 import { STYLE_TILE_CARD_ALL } from "./tile/styles.ts";
@@ -280,6 +282,10 @@ export class TileCard extends KindCardBase {
     // vertical: the icon on top, before anything is laid out; a table's row: one line
     this._root?.classList.toggle("tvertical", !!this._config?.vertical);
     this._root?.classList.toggle("ttable", !!this._config?.table);
+    // where the content sits in a taller tile: written, else centred (or the group row's top)
+    const align = this._config?.vAlign;
+    if (align) this._root?.style.setProperty("--pro-cards-tile-align", ALIGN[align]);
+    else this._root?.style.removeProperty("--pro-cards-tile-align");
     super._render();
     const cfg = this._config,
       body = this._root?.querySelector<HTMLElement>(":scope > .body"),

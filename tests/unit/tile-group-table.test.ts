@@ -61,7 +61,6 @@ describe("a tile group's table", () => {
       expect(() => normalizeTileGroupConfig({ tiles: ["light.kitchen"], ...o })).toThrow(msg);
     fails({ header_entities: ["sensor.x"] }, "header_entities is badges");
     fails({ align: "start" }, "align is gone");
-    fails({ vertical_align: "center" }, "vertical_align is gone");
     fails({ layout: "column" }, "layout: column is list");
     fails({ layout: "grid" }, "layout: grid is a layout card of posters");
     fails({ layout: "hero" }, "layout: hero is a layout card");
@@ -164,5 +163,41 @@ describe("a tile group's table", () => {
     el._ctlFit = { size: "100x34", mode: "drop" };
     el.setConfig({ entity: "light.kitchen", name: "Worktop", table: true });
     expect(el._ctlFit).toBeNull();
+  });
+});
+
+describe("vertical_align", () => {
+  it("places a tile's content in a taller tile, centred unless written", () => {
+    const tile = (o: Record<string, unknown>) => {
+      const el = new TileCard();
+      el.setConfig({ entity: "sensor.living_room_temperature", ...o });
+      document.body.appendChild(el);
+      el.hass = snapshot() as never;
+      cards.push(el);
+      return (el.shadowRoot?.querySelector("ha-card") as HTMLElement).style.getPropertyValue(
+        "--pro-cards-tile-align",
+      );
+    };
+    // left out: no value of its own, so a group's row can still set the top
+    expect(tile({})).toBe("");
+    expect(tile({ vertical_align: "top" })).toBe("flex-start");
+    expect(tile({ vertical_align: "bottom" })).toBe("flex-end");
+    expect(() =>
+      normalizeTileConfig({ entity: "light.kitchen", vertical_align: "middle" }),
+    ).toThrow("vertical_align must be one of top | center | bottom");
+  });
+
+  it("places a tile group's tiles in a taller card, at the top unless written", () => {
+    expect(normalizeTileGroupConfig({ tiles: ["light.kitchen"] }).valign).toBe("top");
+    const g = new TileGroupCard();
+    g.setConfig({
+      type: "custom:tile-group-card-pro",
+      vertical_align: "bottom",
+      tiles: ["light.kitchen"],
+    });
+    document.body.appendChild(g);
+    g.hass = snapshot() as never;
+    cards.push(g);
+    expect(g.shadowRoot?.querySelector("ha-card")?.classList.contains("valign-bottom")).toBe(true);
   });
 });

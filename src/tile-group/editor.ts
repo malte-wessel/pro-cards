@@ -17,10 +17,11 @@ export const TILE_GROUP_CONVS: Record<string, Conv> = {
   title: AS_IS,
   icon: AS_IS,
   layout: AS_IS,
+  vertical_align: AS_IS,
   title_tap_action: AS_IS,
 };
 // what the form shows where the card sets nothing
-const DEFAULTS = { layout: "list" };
+const DEFAULTS = { layout: "list", vertical_align: "top" };
 const TILE = `custom:${TILE_TYPE}`;
 
 const L = (hass: HomeAssistant | undefined, key: string) => {
@@ -37,6 +38,22 @@ export const tileGroupSchema = (hass: HomeAssistant | undefined): HaFormSchema[]
       select: {
         mode: "dropdown",
         options: TILE_GROUP_LAYOUTS.map((v) => ({ value: v, label: L(hass, `group_layout.${v}`) })),
+      },
+    },
+  },
+  // where the tiles sit in a taller card (the layout card's words for its own alignment)
+  {
+    name: "vertical_align",
+    selector: {
+      select: {
+        mode: "dropdown",
+        options: (
+          [
+            ["top", "start"],
+            ["center", "center"],
+            ["bottom", "end"],
+          ] as const
+        ).map(([value, word]) => ({ value, label: L(hass, `align.${word}`) })),
       },
     },
   },

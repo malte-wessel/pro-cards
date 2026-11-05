@@ -3,7 +3,12 @@
 // the name, one line under it, controls at its end; its icon and its visual as its places say
 // (src/shared/kinds/places.ts). A visual below the line (a plot, the sun's day) and a slider below
 // take a second row.
-import { normalizeValue, type ValueSrc } from "../shared/entity/config.ts";
+import {
+  normalizeValue,
+  normalizeVerticalAlign,
+  type ValueSrc,
+  type VerticalAlign,
+} from "../shared/entity/config.ts";
 import { domainOf } from "../shared/color.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
 import { defaultPlacements, normalizeControl, type Placement } from "../shared/entity/control.ts";
@@ -24,6 +29,7 @@ export interface RawTileCardConfig extends RawKindCardConfig {
   status_badge?: unknown;
   badges?: unknown;
   vertical?: unknown;
+  vertical_align?: unknown;
   // a row of a tile group's table (the group's, never written on a tile)
   table?: unknown;
 }
@@ -43,6 +49,9 @@ export interface TileConfig extends KindConfig {
   statusBadge: boolean;
   // the icon on top, the name and the line centred under it, the controls under them
   vertical: boolean;
+  // where the content sits in a tile taller than it (null: as written nowhere, centred, or as the
+  // tile group's row lays its tiles out)
+  vAlign: VerticalAlign | null;
   // a row of a tile group's table: the name, the value and one control or visual after it; no
   // icon, no badges, no secondary, nothing behind the texts
   table: TableRow | null;
@@ -186,6 +195,10 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
     statusText,
     statusBadge,
     vertical: written.vertical === true,
+    vAlign:
+      written.vertical_align === undefined
+        ? null
+        : normalizeVerticalAlign(written.vertical_align, CARD_TYPE),
     table,
   };
 };

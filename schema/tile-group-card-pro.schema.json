@@ -14,6 +14,11 @@
       "default": "list",
       "description": "list: the tiles one under the other; row: vertical tiles side by side, in columns alike, wrapping when narrow; table: one line each, the name, the value and one control or visual"
     },
+    "vertical_align": {
+      "enum": ["top", "center", "bottom"],
+      "default": "top",
+      "description": "Where the tiles sit in a card taller than they are (a fixed row count, a taller card beside it); the title stays on top"
+    },
     "title": {
       "type": "string",
       "description": "Header text. Template allowed."

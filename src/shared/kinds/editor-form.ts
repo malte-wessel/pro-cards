@@ -430,7 +430,10 @@ export const configToForm = (
   const predefined = c.rules === undefined && kindRules.length > 0;
   d.rules_from = predefined ? DEFAULT : "own";
   d.rules = listToForm(predefined ? kindRules : c.rules, RULE_KEYS);
-  if (thing === "tile") d.vertical = c.vertical === true;
+  if (thing === "tile") {
+    d.vertical = c.vertical === true;
+    d.vertical_align = typeof c.vertical_align === "string" ? c.vertical_align : "center";
+  }
   return withDefaults(d);
 };
 
@@ -661,6 +664,14 @@ export const formToConfig = (
   if (!same("rules_from")) put("rules", data.rules_from === DEFAULT ? undefined : list());
   else if (!same("rules")) put("rules", list());
   if (thing === "tile") setOrDrop(c, "vertical", true, data.vertical !== true);
+  // (centre, the default, writes nothing; one left as written keeps its spelling)
+  if (thing === "tile" && changed("vertical_align"))
+    setOrDrop(
+      c,
+      "vertical_align",
+      data.vertical_align,
+      !chosen(data.vertical_align) || data.vertical_align === "center",
+    );
   if (was.name !== kind.name) dropUnused(c, kind, was);
   return c as CardConfigBase;
 };

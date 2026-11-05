@@ -6,6 +6,7 @@ import type { CardConfigBase } from "../shared/ha.ts";
 import {
   normalizeActionDefaults,
   normalizeTitleAction,
+  normalizeVerticalAlign,
   type EntityCardConfig,
   type RawAction,
 } from "../shared/entity/config.ts";
@@ -33,6 +34,7 @@ const CARD_KEYS = new Set([
   "layout_options",
   "card_mod",
   "fill_height",
+  "vertical_align",
 ]);
 
 export interface TileGroupTile {
@@ -67,7 +69,6 @@ const OLD_LAYOUTS: Record<string, string> = {
 const OLD_KEYS: Record<string, string> = {
   header_entities: "header_entities is badges",
   align: "align is gone: a tile lays out its own line",
-  vertical_align: "vertical_align is gone: the tiles sit at the top",
   name_position: "name_position is gone: a tile's name is above its line",
 };
 
@@ -124,6 +125,8 @@ export const normalizeTileGroupConfig = (input: unknown): TileGroupConfig => {
     layout: layout as TileGroupLayout,
     title: raw.title ?? null,
     titleTap: normalizeTitleAction(raw),
+    // where the tiles sit in a card taller than they are: at the top, the centre or the bottom
+    valign: normalizeVerticalAlign(raw.vertical_align, CARD_TYPE),
     icon: raw.icon ?? null,
     // the header badges' history: the longest window they draw
     ...badgeWindow(badges),

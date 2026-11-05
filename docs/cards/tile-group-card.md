@@ -97,6 +97,25 @@ tiles:
 
 :::
 
+## In a taller card
+
+In a card taller than its tiles (a fixed row count, a taller card beside it), `vertical_align` puts the tiles at the `top` (the default), the `center` or the `bottom`. The title stays on top.
+
+::: live
+
+```yaml
+type: custom:tile-group-card-pro
+title: Living room
+icon: mdi:sofa
+vertical_align: bottom
+tiles:
+  - { entity: light.living_room, name: Ceiling }
+  - { entity: climate.living_room, name: Thermostat }
+grid_options: { columns: 6, rows: 5 }
+```
+
+:::
+
 ## Visibility
 
 A tile's `visibility` shows it only while its [conditions](/guide/visibility) hold; the other tiles close up. When every tile is hidden and the header is empty, the card takes no room.
@@ -195,6 +214,7 @@ Home Assistant's card editor shows the group's title, icon, layout and title tap
 | ------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | `tiles`            | –       | Required. Entity ids or tiles: the [tile card's keys](/cards/tile-card) without `type`, `grid_options` and `vertical`, plus `visibility`. |
 | `layout`           | `list`  | `list`: one under the other. `row`: vertical tiles side by side, wrapping when narrow. `table`: one line each.                            |
+| `vertical_align`   | `top`   | Where the tiles sit in a taller card: `top`, `center` or `bottom`; the title stays on top.                                                |
 | `title`            | –       | The header's text. Template allowed.                                                                                                      |
 | `icon`             | –       | The header's icon. Template allowed.                                                                                                      |
 | `title_tap_action` | `none`  | What a tap on the title or its icon does; see [Actions & hover](/cards/actions).                                                          |

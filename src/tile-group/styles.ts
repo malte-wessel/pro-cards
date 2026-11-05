@@ -32,6 +32,11 @@ const STYLE_TILES = `
   .tiles > .tile > * { height: auto; flex: 1 1 auto; }
   /* list: the tiles one under the other */
   .tiles.layout-list { flex-direction: column; }
+  /* vertical_align: in a card taller than its tiles the body takes the room under the header and
+     puts the tiles at the centre or the bottom */
+  ha-card:is(.valign-center, .valign-bottom) > .body { flex: 1 1 auto; }
+  ha-card.valign-center > .body { justify-content: center; }
+  ha-card.valign-bottom > .body { justify-content: flex-end; }
   /* table: the rows one under the other, close together */
   .tiles.layout-table { flex-direction: column; gap: 0; }
   /* row: vertical tiles side by side in columns alike, as many as fit at the width the widest

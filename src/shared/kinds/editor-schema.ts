@@ -107,6 +107,8 @@ const section = (title: string, icon: string, schema: HaFormSchema[]): HaFormSch
 const grid = (...schema: HaFormSchema[]): HaFormSchema => ({ name: "", type: "grid", schema });
 
 // a label of the editor's own words (a key the schema builds from a value)
+// vertical_align's values as the layout card's alignment words
+const ALIGN_WORD = { top: "start", center: "center", bottom: "end" } as const;
 const L = (hass: HomeAssistant | undefined, key: string, vars?: Record<string, string>) =>
   t(hass, `editor.card.${key}` as StringKey, vars);
 
@@ -691,6 +693,13 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
       ? [
           section(tr("section.layout"), ICONS.layout, [
             { name: "vertical", selector: { boolean: {} } },
+            // where the content sits in a taller tile (the layout card's words for its own)
+            pick(
+              "vertical_align",
+              (["center", "top", "bottom"] as const).map((v) =>
+                opt(v, t(hass, `editor.cards.align.${ALIGN_WORD[v]}` as StringKey)),
+              ),
+            ),
           ]),
         ]
       : []),

@@ -117,6 +117,31 @@ Every part has a key of its own: `name`, `icon`, `color`, `value`, `status`, `vi
 
 :::
 
+## In a taller cell
+
+A tile is as tall as its content, but a fixed row count or a taller card beside it in its row can make it taller. `vertical_align` sets where the content sits then: `center` (the default), `top` or `bottom`. A plot below the line grows into the room instead.
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: sensor.living_room_temperature
+  name: Top
+  vertical_align: top
+  grid_options: { columns: 4, rows: 2 }
+- type: custom:tile-card-pro
+  entity: sensor.living_room_temperature
+  name: Centre
+  grid_options: { columns: 4, rows: 2 }
+- type: custom:tile-card-pro
+  entity: sensor.living_room_temperature
+  name: Bottom
+  vertical_align: bottom
+  grid_options: { columns: 4, rows: 2 }
+```
+
+:::
+
 ## An unavailable entity
 
 While its entity is unavailable, a tile draws a dash for the value, its status says Unavailable and its controls are greyed out. An entity that does not exist draws the same, its line naming the missing entity.
@@ -169,13 +194,14 @@ Coming from the entity card? [Moving to 3.0](/guide/migrating) maps its keys to 
 
 ### Look
 
-| Key        | Default    | Description                                                                                                                                                                                                 |
-| ---------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `icon`     | the kind's | An icon's name or a template; `{ type: icon \| image \| flow, … }` with its options, its own actions and the `badge` on it; or `false` for none. See [Look](/cards/look) and [Badges](/cards/badges).       |
-| `visual`   | the kind's | Below the line: `sparkline`, `columns`, `strip`, `bar`, `gauge`, `segments`, `sun`. Behind the texts: `glow`, `image`, `flow`. A name, `{ type, … }` with its options, or `false`; see [Look](/cards/look). |
-| `color`    | the kind's | The tile's colour: a colour name, a hex or a template. A matching rule's colour wins.                                                                                                                       |
-| `rules`    | the kind's | Colour, icon, status, tint and the visual by value or state; the first match wins. Yours replace the kind's, `[]` drops them. See [Look](/cards/look).                                                      |
-| `vertical` | `false`    | The icon on top, the name and the line centred under it.                                                                                                                                                    |
+| Key              | Default    | Description                                                                                                                                                                                                 |
+| ---------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `icon`           | the kind's | An icon's name or a template; `{ type: icon \| image \| flow, … }` with its options, its own actions and the `badge` on it; or `false` for none. See [Look](/cards/look) and [Badges](/cards/badges).       |
+| `visual`         | the kind's | Below the line: `sparkline`, `columns`, `strip`, `bar`, `gauge`, `segments`, `sun`. Behind the texts: `glow`, `image`, `flow`. A name, `{ type, … }` with its options, or `false`; see [Look](/cards/look). |
+| `color`          | the kind's | The tile's colour: a colour name, a hex or a template. A matching rule's colour wins.                                                                                                                       |
+| `rules`          | the kind's | Colour, icon, status, tint and the visual by value or state; the first match wins. Yours replace the kind's, `[]` drops them. See [Look](/cards/look).                                                      |
+| `vertical_align` | `center`   | Where the content sits in a taller tile: `top`, `center` or `bottom`.                                                                                                                                       |
+| `vertical`       | `false`    | The icon on top, the name and the line centred under it.                                                                                                                                                    |
 
 ### Controls, badges and actions
 

@@ -913,3 +913,20 @@ describe("the editor form: actions", () => {
     });
   });
 });
+
+describe("the editor form: a tile's vertical alignment", () => {
+  it("writes top or bottom, nothing for the centre, and keeps one left as written", () => {
+    const T = { entity: "sensor.living_room_temperature" };
+    expect(formOf(T, "tile").vertical_align).toBe("center");
+    expect(edit(T, { vertical_align: "bottom" }, "tile")).toEqual({
+      ...T,
+      vertical_align: "bottom",
+    });
+    expect(edit({ ...T, vertical_align: "top" }, { vertical_align: "center" }, "tile")).toEqual(T);
+    const written = { ...T, vertical_align: "center" };
+    expect(edit(written, { name: "Living room" }, "tile")).toEqual({
+      ...written,
+      name: "Living room",
+    });
+  });
+});

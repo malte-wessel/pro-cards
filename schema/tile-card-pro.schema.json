@@ -33,6 +33,11 @@
           "default": false,
           "description": "The icon on top, the name and the value with its status centred under it, the controls under them; as narrow as its controls let it be, two rows at least, three with a control. The poster type's line under the value is left out (a written `secondary` stays)"
         },
+        "vertical_align": {
+          "enum": ["top", "center", "bottom"],
+          "default": "center",
+          "description": "Where the content sits in a tile taller than it (a fixed row count, a taller card beside it): at the top, the centre or the bottom. A plot that grows into the room leaves none"
+        },
         "badges": {
           "type": "array",
           "description": "Badges at the end of the first row, centred on the icon, always all of them: the name and the line give way. Entities or badges of your own",
