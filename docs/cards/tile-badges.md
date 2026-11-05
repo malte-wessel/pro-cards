@@ -191,7 +191,7 @@ grid_options: { columns: 12 }
 
 ### Actions and visibility
 
-A badge takes its own taps. `tap_action`, `hold_action` and `double_tap_action` act on the badge's entity ([Actions](/cards/entity-options#actions)): here a tap toggles the light. Without them, a badge with an entity of its own opens that one's more-info.
+A badge takes its own taps. `tap_action`, `hold_action` and `double_tap_action` act on the badge's entity ([Actions](/cards/tile-custom#actions)): here a tap toggles the light. Without them, a badge with an entity of its own opens that one's more-info.
 
 `visibility` shows a badge only while its conditions hold, here the open windows. A hidden badge takes no room.
 

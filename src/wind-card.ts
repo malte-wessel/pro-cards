@@ -86,4 +86,5 @@ registerCard(WindCard, {
   name: "Wind Card Pro",
   description:
     "Wind speed, direction and gusts as a tile, a flow tile or a hero with an animated wind field",
+  deprecated: "the poster or tile card with kind: wind",
 });

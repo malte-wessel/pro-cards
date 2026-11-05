@@ -1,5 +1,11 @@
 # Wind Card Pro
 
+::: warning Deprecated
+
+The wind card is deprecated: it still works in 3.0 and goes in 4.0. Use a poster or a tile of the [wind kind](/cards/poster-types#wind); [Moving to 3.0](/guide/migrating#the-wind-and-rain-cards) says what changes.
+
+:::
+
 `custom:wind-card-pro` shows the wind: its speed, where it comes from and how hard it gusts, with an animated wind field whose particles travel where the wind blows. The speed sets their pace, the gusts raise the waves and send streaks across, and your `rules` colour them, label the value and may tint the card. Without options it is a tile like the [entity card](/cards/entity-card); `visual: flow` makes the whole tile the field, `layout: hero` adds the big value and a flow band. YAML only.
 
 ## Tile

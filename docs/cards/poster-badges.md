@@ -209,7 +209,7 @@ badges:
 
 ### Actions and visibility
 
-A badge takes its own taps. `tap_action`, `hold_action` and `double_tap_action` act on the badge's entity ([Actions](/cards/entity-options#actions)): here a tap toggles the light. Without them, it takes the poster's actions, more-info by default.
+A badge takes its own taps. `tap_action`, `hold_action` and `double_tap_action` act on the badge's entity ([Actions](/cards/poster-custom#actions)): here a tap toggles the light. Without them, it takes the poster's actions, more-info by default.
 
 `visibility` shows a badge only while its conditions hold, here the open windows. A hidden badge takes no room.
 

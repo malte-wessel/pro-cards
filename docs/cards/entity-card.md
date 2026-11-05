@@ -1,5 +1,11 @@
 # Entity Card Pro
 
+::: warning Deprecated
+
+The entity card is deprecated: it still works in 3.0 and goes in 4.0. Use a [tile](/cards/tile-card), or a [poster](/cards/poster-card) for one large value; [Moving to 3.0](/guide/migrating#the-entity-card) says what changes.
+
+:::
+
 `custom:entity-card-pro` shows one entity as a tile: icon, name and value in one row of the sections grid, or with a gauge, bar or graph below. The entity keys sit directly on the card; the [entity options](/cards/entity-options) explain every one of them. This page builds a tile up option by option. For one entity as a poster, with a large value, a status badge and what its poster type draws, see the [poster card](/cards/poster-card).
 
 ## Basic

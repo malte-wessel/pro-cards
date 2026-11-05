@@ -839,3 +839,12 @@ describe("the editor form: the kind's rules", () => {
     ]);
   });
 });
+
+describe("the editor form: an empty text", () => {
+  it("keeps a text written empty while its field stays empty (unit: '' hides the unit)", () => {
+    const card = { ...LIGHT, unit: "" };
+    expect(edit(card, { name: "Sofa" })).toEqual({ ...card, name: "Sofa" });
+    // filled in, it is written
+    expect(edit(card, { unit: "lx" })).toEqual({ ...LIGHT, unit: "lx" });
+  });
+});

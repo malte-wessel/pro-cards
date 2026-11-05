@@ -12,7 +12,7 @@
  *   breakpoints:
  *     2: { columns: 2 }           # from 2 view columns on
  *   cards:
- *     - type: custom:entity-card-pro
+ *     - type: custom:tile-card-pro
  *       entity: sensor.outdoor_temperature
  *       view_layout: { span: { 1: 1, 2: 2 } }
  */

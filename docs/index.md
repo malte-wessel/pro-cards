@@ -65,25 +65,18 @@ hero:
               rows: [1fr, 1fr, 1fr]
               view_layout: { span: [1, 3] }
               cards:
-                - type: custom:entity-card-pro
+                - type: custom:tile-card-pro
                   entity: media_player.living_room_speaker
                   name: Music
-                  icon: mdi:speaker
-                  attribute: media_title
-                  color: deep-purple
-                - type: custom:entity-card-pro
+                - type: custom:tile-card-pro
                   entity: media_player.kitchen_speaker
                   name: Speaker
-                  icon: mdi:speaker
-                  attribute: media_title
-                  color: green
-                - type: custom:entity-card-pro
+                - type: custom:tile-card-pro
                   entity: switch.coffee_machine
                   name: Coffee machine
                   icon: mdi:coffee
-                  control: toggle
-                  control_position: lead
                   color: brown
+                  control: false
             - type: custom:poster-card-pro
               entity: sensor.battery_soc
               name: Battery
@@ -199,7 +192,7 @@ feature_rows:
         inputs: { wind: sensor.wind_speed, direction: sensor.wind_direction }
   - title: "Control, right on the card."
     text: "Steppers, sliders, segments, locks and your own buttons sit on the card itself. Swipe through and try them, no dialog opens."
-    link: /cards/controls
+    link: /cards/poster-controls
     label: Controls
     cards:
       - type: custom:swipe-card-pro
@@ -233,64 +226,42 @@ feature_rows:
             badges:
               - sensor.robot_current_room
   - title: "A whole room in one card."
-    text: "Lights, scenes and devices together in one card, or as tiles stacked in one cell. Lay them out your way with the layout card."
-    link: /cards/entity-group-card
-    label: Group card
+    text: "Lights, scenes and devices together in a tile group, or as tiles stacked in one cell. Lay them out your way with the layout card."
+    link: /cards/tile-group-card
+    label: Tile group
     columns: 2
     cards:
-      - type: custom:entity-group-card-pro
+      - type: custom:tile-group-card-pro
         title: Living room
         icon: mdi:sofa
-        layout: table
-        vertical_align: bottom
-        entities:
-          - entity: light.desk_lamp
-            name: Desk lamp
-            control: toggle
-            rules: &lamp
-              - { state: "on", color: amber }
-              - { state: "off", color: grey }
-          - entity: light.living_room
-            name: Ceiling
-            control: slider
-            rules: *lamp
-          - entity: cover.living_room_blinds
-            name: Blinds
-            icon: mdi:blinds-horizontal
-            attribute: current_position
-            unit: "%"
-            control: slider
-            color: indigo
+        tiles:
+          - { entity: light.desk_lamp, name: Desk lamp }
+          - { entity: light.living_room, name: Ceiling, control: slider }
+          - { entity: cover.living_room_blinds, name: Blinds, control: slider }
           - name: Scenes
             icon: mdi:palette
-            control: buttons
-            control_options:
-              - { entity: scene.bright, icon: mdi:white-balance-sunny, color: amber }
-              - { entity: scene.dinner, icon: mdi:silverware-fork-knife, color: deep-orange }
-              - { entity: scene.movie_night, icon: mdi:movie-open, color: deep-purple }
-              - { entity: scene.good_night, icon: mdi:weather-night, color: indigo }
+            control:
+              type: buttons
+              options:
+                - { entity: scene.bright, icon: mdi:white-balance-sunny, color: amber }
+                - { entity: scene.dinner, icon: mdi:silverware-fork-knife, color: deep-orange }
+                - { entity: scene.movie_night, icon: mdi:movie-open, color: deep-purple }
+                - { entity: scene.good_night, icon: mdi:weather-night, color: indigo }
       - type: custom:layout-card-pro
         rows: [1fr, 1fr, 1fr]
         cards:
-          - type: custom:entity-card-pro
+          - type: custom:tile-card-pro
             entity: media_player.living_room_speaker
             name: Music
-            icon: mdi:speaker
-            attribute: media_title
-            color: deep-purple
-          - type: custom:entity-card-pro
+          - type: custom:tile-card-pro
             entity: media_player.kitchen_speaker
             name: Speaker
-            icon: mdi:speaker
-            attribute: media_title
-            color: green
-          - type: custom:entity-card-pro
+          - type: custom:tile-card-pro
             entity: switch.coffee_machine
             name: Coffee machine
             icon: mdi:coffee
-            control: toggle
-            control_position: lead
             color: brown
+            control: false
   - title: "One value, front and centre."
     text: "A poster gives any entity one big value, a status and badges. It knows what the entity is and draws it that way; rules turn thresholds into colours, labels and icons, so a glance is enough."
     link: /cards/poster-card

@@ -581,7 +581,8 @@ export const formToConfig = (
   setOrDrop(c, "kind", data.kind, !data.kind || data.kind === DETECTED);
   setOrDrop(c, "name", data.name, !data.name);
   setOrDrop(c, "color", data.color, !data.color);
-  for (const k of TEXTS) setOrDrop(c, k, data[k], !filled(data[k]));
+  // (a text written empty stays while its field is: `unit: ""` hides the unit)
+  for (const k of TEXTS) setOrDrop(c, k, data[k], !filled(data[k]) && !(p[k] === "" && !data[k]));
   // numbers as their fields have them (one written as text, `min: "10"`, stays until its field
   // changes)
   for (const k of ["decimals", "min", "max", "running_above"])

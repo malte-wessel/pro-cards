@@ -8,7 +8,7 @@ How a [poster](/cards/poster-card) fits its size, then every [kind](/cards/poste
 
 ## How a poster fits its size
 
-A poster takes half a section (six columns) and three rows, by default and at least: the icon and its badges, the name, the large value and the visual need that much room. An entity in less room is what a tile is for, such as the [entity card](/cards/entity-card)'s. `grid_options` makes a poster larger, and the dashboard editor does not let it get smaller. A card around it, such as a swipe card or a stack, may still give it less: the poster then fits its content as well as it can.
+A poster takes half a section (six columns) and three rows, by default and at least: the icon and its badges, the name, the large value and the visual need that much room. An entity in less room is what a tile is for, such as the [tile](/cards/tile-card). `grid_options` makes a poster larger, and the dashboard editor does not let it get smaller. A card around it, such as a swipe card or a stack, may still give it less: the poster then fits its content as well as it can.
 
 The content sits at the bottom of the card. More rows give the visual more room, and the icon and the badges stay at the top. Where the content needs more room than the card has, the value shrinks and a slider may be hidden (more-info still has it).
 

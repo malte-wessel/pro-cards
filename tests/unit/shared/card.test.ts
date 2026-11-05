@@ -88,3 +88,36 @@ describe("freshShadow", () => {
     expect(root.firstElementChild?.matches("style[data-pro]")).toBe(true);
   });
 });
+
+describe("a deprecated card", () => {
+  it("says so in the card picker, and once in the console whatever the number of cards", () => {
+    class OldCard extends HTMLElement {
+      static cardType = "old-test-card-pro";
+      seen: unknown[] = [];
+      setConfig(config: unknown) {
+        this.seen.push(config);
+      }
+    }
+    registerCard(OldCard, {
+      name: "Old Card",
+      description: "Draws things",
+      deprecated: "the new card",
+    });
+    const entry = window.customCards?.find((c) => c.type === "old-test-card-pro");
+    expect(entry?.name).toBe("Old Card (deprecated)");
+    expect(entry?.description).toBe("Deprecated: use the new card. Draws things");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const a = new OldCard(),
+      b = new OldCard();
+    a.setConfig({ x: 1 });
+    a.setConfig({ x: 2 });
+    b.setConfig({ x: 3 });
+    // the card still takes its config
+    expect([a.seen, b.seen]).toEqual([[{ x: 1 }, { x: 2 }], [{ x: 3 }]]);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toBe(
+      "old-test-card-pro is deprecated and goes in 4.0: use the new card (https://malte-wessel.github.io/pro-cards/guide/migrating)",
+    );
+    warn.mockRestore();
+  });
+});

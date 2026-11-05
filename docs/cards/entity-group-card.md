@@ -1,5 +1,11 @@
 # Entity Group Card Pro
 
+::: warning Deprecated
+
+The entity group card is deprecated: it still works in 3.0 and goes in 4.0. Use a [tile group](/cards/tile-group-card); [Moving to 3.0](/guide/migrating#the-entity-group-card) says what changes, and how its grid, hero and table become a layout card.
+
+:::
+
 `custom:entity-group-card-pro` shows many entities in one card. Every entity takes the same [entity options](/cards/entity-options) as the entity card; `layout` decides how they are arranged. This page starts with a plain list and adds options one at a time, then walks through the other layouts. One entity with the others as badges in its corner is a [poster card](/cards/poster-card).
 
 ## Basic

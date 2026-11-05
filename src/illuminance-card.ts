@@ -304,4 +304,6 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
 registerCard(IlluminanceCard, {
   name: "Illuminance Card Pro",
   description: "Illuminance as a gauge arc, a trend with zones or a colour band",
+  deprecated:
+    "a tile with visual: { type: strip } and rules (the illuminance card has no successor)",
 });

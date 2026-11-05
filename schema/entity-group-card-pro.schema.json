@@ -2,11 +2,17 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://malte-wessel.github.io/pro-cards/schema/entity-group-card-pro.schema.json",
   "title": "custom:entity-group-card-pro",
-  "description": "Many entities in one layout: list, grid, hero, row, column or table. Optional header with title, icon and header entities.",
+  "description": "Deprecated: use the tile group card (guide/migrating on the docs site). Many entities in one layout: list, grid, hero, row, column or table. Optional header with title, icon and header entities.",
+  "deprecated": true,
   "type": "object",
   "properties": {
-    "type": { "const": "custom:entity-group-card-pro" },
-    "title": { "type": "string", "description": "Header text. Template allowed." },
+    "type": {
+      "const": "custom:entity-group-card-pro"
+    },
+    "title": {
+      "type": "string",
+      "description": "Header text. Template allowed."
+    },
     "title_tap_action": {
       "$ref": "defs.schema.json#/$defs/action",
       "description": "Action when the title or its icon is tapped, e.g. navigate to the room's dashboard (default: none)"
@@ -15,7 +21,9 @@
       "$ref": "defs.schema.json#/$defs/icon",
       "description": "Header icon. Template allowed."
     },
-    "header_entities": { "$ref": "entity.schema.json#/$defs/headerEntities" },
+    "header_entities": {
+      "$ref": "entity.schema.json#/$defs/headerEntities"
+    },
     "vertical_align": {
       "type": "string",
       "enum": ["top", "center", "bottom"],
@@ -25,10 +33,18 @@
   },
   "required": ["type", "entities"],
   "allOf": [
-    { "$ref": "entity.schema.json#/$defs/groupKeys" },
-    { "$ref": "entity.schema.json#/$defs/historyOptions" },
-    { "$ref": "entity.schema.json#/$defs/actionDefaults" },
-    { "$ref": "entity.schema.json#/$defs/haExtras" }
+    {
+      "$ref": "entity.schema.json#/$defs/groupKeys"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/historyOptions"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/actionDefaults"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/haExtras"
+    }
   ],
   "unevaluatedProperties": false
 }

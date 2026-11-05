@@ -23,19 +23,43 @@ export const defineElement = (tag: string, cls: CustomElementConstructor) => {
   return true;
 };
 
+// the migration guide a deprecated card's warning points to
+export const MIGRATION_GUIDE = "https://malte-wessel.github.io/pro-cards/guide/migrating";
+// the card types that said they are deprecated (once each, however many cards a dashboard has)
+const warned = new Set<string>();
+export const warnDeprecated = (type: string, successor: string) => {
+  if (warned.has(type)) return;
+  warned.add(type);
+  console.warn(`${type} is deprecated and goes in 4.0: use ${successor} (${MIGRATION_GUIDE})`);
+};
+
 // registers the element (its static `cardType`) and its card picker entry; `suggest` names the
 // entities the picker suggests the card for (src/shared/suggest.ts), with the card's stub for
-// that entity as the suggestion's config
+// that entity as the suggestion's config. A card that is `deprecated` names its successor: the
+// picker says so, and a card configured says it once in the console
 export const registerCard = (
   cls: CardConstructor,
-  { name, description, suggest }: { name: string; description: string; suggest?: Fits },
+  {
+    name,
+    description,
+    suggest,
+    deprecated,
+  }: { name: string; description: string; suggest?: Fits; deprecated?: string },
 ) => {
   if (!defineElement(cls.cardType, cls)) return;
+  if (deprecated) {
+    const proto = cls.prototype as { setConfig(config: unknown): void };
+    const setConfig = proto.setConfig;
+    proto.setConfig = function (this: unknown, config: unknown) {
+      warnDeprecated(cls.cardType, deprecated);
+      return setConfig.call(this, config);
+    };
+  }
   window.customCards = window.customCards || [];
   window.customCards.push({
     type: cls.cardType,
-    name,
-    description,
+    name: deprecated ? `${name} (deprecated)` : name,
+    description: deprecated ? `Deprecated: use ${deprecated}. ${description}` : description,
     preview: true,
     ...(suggest && {
       getEntitySuggestion: (hass: HomeAssistant, entityId: string) =>

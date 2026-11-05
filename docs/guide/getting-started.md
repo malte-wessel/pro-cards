@@ -4,12 +4,12 @@ Pro Cards adds these cards to the dashboard editor:
 
 **Entities**
 
-| Card                                                    | `type`                            | Editor        |
-| ------------------------------------------------------- | --------------------------------- | ------------- |
-| [Entity Card Pro](/cards/entity-card)                   | `custom:entity-card-pro`          | YAML          |
-| [Entity Group Card Pro](/cards/entity-group-card)       | `custom:entity-group-card-pro`    | YAML          |
-| [Entity Sections Card Pro](/cards/entity-sections-card) | `custom:entity-sections-card-pro` | YAML          |
-| [Multi Trend Card Pro](/cards/multi-trend-card)         | `custom:multi-trend-card-pro`     | Visual + YAML |
+| Card                                            | `type`                        | Editor        |
+| ----------------------------------------------- | ----------------------------- | ------------- |
+| [Tile Card Pro](/cards/tile-card)               | `custom:tile-card-pro`        | Visual + YAML |
+| [Poster Card Pro](/cards/poster-card)           | `custom:poster-card-pro`      | Visual + YAML |
+| [Tile Group Card Pro](/cards/tile-group-card)   | `custom:tile-group-card-pro`  | Visual + YAML |
+| [Multi Trend Card Pro](/cards/multi-trend-card) | `custom:multi-trend-card-pro` | Visual + YAML |
 
 **Energy**
 
@@ -20,22 +20,30 @@ Pro Cards adds these cards to the dashboard editor:
 
 **Layout**
 
-| Card                                    | `type`                    | Editor |
-| --------------------------------------- | ------------------------- | ------ |
-| [Layout Card Pro](/cards/layout-card)   | `custom:layout-card-pro`  | YAML   |
-| [Heading Card Pro](/cards/heading-card) | `custom:heading-card-pro` | YAML   |
-| [Swipe Card Pro](/cards/swipe-card)     | `custom:swipe-card-pro`   | YAML   |
+| Card                                    | `type`                    | Editor        |
+| --------------------------------------- | ------------------------- | ------------- |
+| [Layout Card Pro](/cards/layout-card)   | `custom:layout-card-pro`  | Visual + YAML |
+| [Heading Card Pro](/cards/heading-card) | `custom:heading-card-pro` | YAML          |
+| [Swipe Card Pro](/cards/swipe-card)     | `custom:swipe-card-pro`   | Visual + YAML |
 
 **Weather**
 
 | Card                                            | `type`                        | Editor        |
 | ----------------------------------------------- | ----------------------------- | ------------- |
 | [Weather Card Pro](/cards/weather-card)         | `custom:weather-card-pro`     | YAML          |
-| [Wind Card Pro](/cards/wind-card)               | `custom:wind-card-pro`        | YAML          |
-| [Rain Card Pro](/cards/rain-card)               | `custom:rain-card-pro`        | YAML          |
 | [Sun Path Card Pro](/cards/sun-path-card)       | `custom:sun-path-card-pro`    | Visual + YAML |
 | [Sun Azimuth Card Pro](/cards/sun-azimuth-card) | `custom:sun-azimuth-card-pro` | YAML          |
-| [Illuminance Card Pro](/cards/illuminance-card) | `custom:illuminance-card-pro` | Visual + YAML |
+
+**Deprecated** (still working in 3.0, gone in 4.0: [Moving to 3.0](/guide/migrating) names what takes over)
+
+| Card                                                    | `type`                            |
+| ------------------------------------------------------- | --------------------------------- |
+| [Entity Card Pro](/cards/entity-card)                   | `custom:entity-card-pro`          |
+| [Entity Group Card Pro](/cards/entity-group-card)       | `custom:entity-group-card-pro`    |
+| [Entity Sections Card Pro](/cards/entity-sections-card) | `custom:entity-sections-card-pro` |
+| [Wind Card Pro](/cards/wind-card)                       | `custom:wind-card-pro`            |
+| [Rain Card Pro](/cards/rain-card)                       | `custom:rain-card-pro`            |
+| [Illuminance Card Pro](/cards/illuminance-card)         | `custom:illuminance-card-pro`     |
 
 Requires Home Assistant 2026.4 or newer.
 
@@ -70,42 +78,46 @@ Add a card in the dashboard editor, pick **Manual** and paste two lines:
 ::: live
 
 ```yaml
-type: custom:entity-card-pro
+type: custom:tile-card-pro
 entity: sensor.living_room_temperature
 ```
 
 :::
 
-That is a complete card: the entity's icon, name and value, coloured like Home Assistant would colour it. Everything else is optional. Give it a shorter name, round the value and add `rules` so the colour, icon and label follow the temperature:
+That is a complete card: the entity's icon, name and value, coloured like Home Assistant would colour it. Everything else is optional. Give it a shorter name, round the value, draw its last hours and add `rules` so the colour, the icon and the status follow the temperature:
 
 ::: live
 
 ```yaml
-type: custom:entity-card-pro
+type: custom:tile-card-pro
 entity: sensor.living_room_temperature
 name: Living room
 decimals: 1
+visual: { type: sparkline, hours: 12 }
 rules:
-  - { below: 19, color: blue, icon: mdi:snowflake, label: Too cold }
-  - { below: 24, color: green, icon: mdi:thermometer, label: Comfortable }
-  - { above: 24, color: orange, icon: mdi:sun-thermometer, label: Warm, tint_card: true }
+  - { below: 19, color: blue, icon: mdi:snowflake, status: Too cold }
+  - { below: 24, color: green, icon: mdi:thermometer, status: Comfortable }
+  - { above: 24, color: orange, icon: mdi:sun-thermometer, status: Warm, tint_card: true }
 ```
 
 :::
 
-An entity that can be operated gets its control with one more key: `control: auto` adds a switch and brightness slider to a light, buttons and a position slider to a cover, a stepper to a thermostat, see [Controls](/cards/controls).
+A tile draws its entity as its [kind](/cards/tile-types): a light brings its switch and its glow, a cover its buttons, a thermostat its stepper, a battery its colours by level. `kind: none` draws the entity as it is; `control: false` or `visual: false` leave one part out. The [poster](/cards/poster-card) draws the same kinds larger.
 
 ::: live
 
 ```yaml
-type: custom:entity-card-pro
-entity: light.living_room
-control: auto
+- type: custom:tile-card-pro
+  entity: light.living_room
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: cover.living_room_blinds
+  grid_options: { columns: 6 }
 ```
 
 :::
 
-Every card page continues like this: the smallest configuration first, then one option at a time. All eighteen cards appear in the card picker as "Entity Card Pro", "Weather Card Pro" and so on; the ones with a visual editor can be configured there without YAML. Pick an entity in the picker instead and Home Assistant suggests the cards that fit it: the poster and the tile for an entity with a kind of its own (a light, a cover, a battery, the weather …), the weather and sun cards for their entities, the multi trend card for a numeric sensor.
+Every card page continues like this: the smallest configuration first, then one option at a time. All eighteen cards appear in the card picker as "Tile Card Pro", "Weather Card Pro" and so on, the deprecated ones last; the ones with a visual editor can be configured there without YAML. Pick an entity in the picker instead and Home Assistant suggests the cards that fit it: the poster and the tile for an entity with a kind of its own (a light, a cover, a battery, the weather …), the weather and sun cards for their entities, the multi trend card for a numeric sensor.
 
 ## Completion and validation in your editor
 
@@ -113,11 +125,11 @@ Every card has a JSON Schema, so an editor with a YAML language server can compl
 
 ```yaml
 # yaml-language-server: $schema=https://malte-wessel.github.io/pro-cards/schema/pro-cards.schema.json
-type: custom:entity-card-pro
+type: custom:tile-card-pro
 entity: sensor.living_room_temperature
 ```
 
-It accepts any of the eighteen cards and picks the right one by `type`. Home Assistant's own keys (`grid_options`, `visibility`, `layout_options`, `view_layout`, `card_mod`) are allowed; anything else unknown is an error, so `visula: ring` surfaces as you type it instead of as a card that ignores your option. A single card's schema is `https://malte-wessel.github.io/pro-cards/schema/<type>.schema.json`, for example `entity-card-pro.schema.json`.
+It accepts any of the eighteen cards and picks the right one by `type`. Home Assistant's own keys (`grid_options`, `visibility`, `layout_options`, `view_layout`, `card_mod`) are allowed; anything else unknown is an error, so `visula: sparkline` surfaces as you type it instead of as a card that ignores your option. A single card's schema is `https://malte-wessel.github.io/pro-cards/schema/<type>.schema.json`, for example `tile-card-pro.schema.json`. The deprecated cards' schemas say so, and editors strike them through.
 
 ## About the examples on this site
 

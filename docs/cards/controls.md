@@ -1,5 +1,11 @@
 # Controls
 
+::: warning Deprecated
+
+This page is the deprecated entity cards' controls. The tile's and the poster's are on their own pages: [tile controls](/cards/tile-controls), [poster controls](/cards/poster-controls).
+
+:::
+
 The [entity card](/cards/entity-card), the [entity group card](/cards/entity-group-card) and the [entity sections card](/cards/entity-sections-card) can do more than show an entity: one key, `control`, adds a switch, a slider, a stepper, mode segments, buttons or a hold-to-confirm button to it. Every control is built from the library the cards already draw, so it looks like the display it replaces and takes the entity's colour and rules. The examples on this page are live: tap, drag and hold them.
 
 ## One key

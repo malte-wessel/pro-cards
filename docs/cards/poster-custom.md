@@ -105,7 +105,7 @@ With an `entity`, the poster takes its name, icon, state and colour from it, and
 
 ## Colour and rules
 
-`rules` pick the colour, the icon and the status by the value or the entity's state, as on every Pro card ([rules](/cards/entity-options#rules)). They match in the order written, and the first match wins.
+`rules` pick the colour, the icon and the status by the value or the entity's state. They match in the order written, and the first match wins.
 
 - `below` and `above` compare the value as a number.
 - `state` matches the value **or** the entity's state, so `{ state: playing }` works on a media player that shows its title.

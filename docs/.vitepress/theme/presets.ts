@@ -29,107 +29,69 @@ cards:
   - type: custom:poster-card-pro
     entity: media_player.living_room_speaker
 `,
-  "Tile with rules": `type: custom:entity-card-pro
+  "Tile with rules": `type: custom:tile-card-pro
 entity: sensor.living_room_temperature
 name: Living room
 decimals: 1
+visual: { type: sparkline, hours: 12 }
 rules:
-  - { below: 19, color: blue, icon: mdi:snowflake, label: Too cold }
-  - { below: 24, color: green, icon: mdi:thermometer, label: Comfortable }
-  - { above: 24, color: orange, icon: mdi:sun-thermometer, label: Warm, tint_card: true }
+  - { below: 19, color: blue, icon: mdi:snowflake, status: Too cold }
+  - { below: 24, color: green, icon: mdi:thermometer, status: Comfortable }
+  - { above: 24, color: orange, icon: mdi:sun-thermometer, status: Warm, tint_card: true }
 `,
-  "Hero with sparkline": `type: custom:entity-group-card-pro
-title: Weather station
-icon: mdi:weather-partly-cloudy
-layout: hero
-hours_to_show: 24
-entities:
-  - entity: sensor.outdoor_temperature
-    name: Temperature
+  "Poster over a tile group": `type: custom:layout-card-pro
+card_style: seamless
+cards:
+  - type: custom:poster-card-pro
+    entity: sensor.outdoor_temperature
+    name: Weather station
     decimals: 1
-    visual: sparkline
+    visual: { type: sparkline, hours: 24 }
     rules:
-      - { below: 0, color: indigo, icon: mdi:snowflake, label: Frost, tint_card: true }
-      - { below: 16, color: blue, icon: mdi:thermometer-low, label: Cool }
-      - { below: 26, color: green, icon: mdi:thermometer, label: Pleasant }
-      - { above: 26, color: orange, icon: mdi:thermometer-high, label: Hot, tint_card: true }
-  - { entity: sensor.outdoor_humidity, name: Humidity, visual: badge }
-  - { entity: sensor.wind_speed, name: Wind, visual: badge }
-  - { entity: sensor.pressure, name: Pressure, decimals: 0, visual: badge }
-  - entity: sensor.uv_index
-    name: UV index
-    visual: bar
-    min: 0
-    max: 11
-    rules:
-      - { below: 3, color: green, label: Low }
-      - { below: 6, color: amber, label: Moderate }
-      - { below: 8, color: orange, label: High }
-      - { above: 8, color: red, label: Very high }
+      - { below: 0, color: indigo, icon: mdi:snowflake, status: Frost, tint_card: true }
+      - { below: 16, color: blue, icon: mdi:thermometer-low, status: Cool }
+      - { below: 26, color: green, icon: mdi:thermometer, status: Pleasant }
+      - { above: 26, color: orange, icon: mdi:thermometer-high, status: Hot }
+  - type: custom:tile-group-card-pro
+    tiles:
+      - { entity: sensor.outdoor_humidity, name: Humidity }
+      - { entity: sensor.wind_speed, name: Wind }
+      - entity: sensor.uv_index
+        name: UV index
+        visual: bar
+        min: 0
+        max: 11
+        rules:
+          - { below: 3, color: green, status: Low }
+          - { below: 6, color: amber, status: Moderate }
+          - { below: 8, color: orange, status: High }
+          - { above: 8, color: red, status: Very high }
 `,
-  "List with controls": `type: custom:entity-group-card-pro
+  "Tile group with controls": `type: custom:tile-group-card-pro
 title: Living room
 icon: mdi:sofa
-entities:
-  - entity: light.living_room
-    rules:
-      - { state: "on", color: amber, label: "On" }
-      - { state: "off", color: grey, label: "Off" }
-    control: auto
-  - entity: light.dining_table
-    rules:
-      - { state: "on", color: amber, label: "On" }
-      - { state: "off", color: grey, label: "Off" }
-    control: toggle
-  - entity: cover.living_room_blinds
-    icon: mdi:window-shutter
-    attribute: current_position
-    unit: "%"
-    control: auto
-  - entity: media_player.living_room_speaker
-    visual: badge
-    control: auto
-    rules:
-      - { state: playing, color: green, icon: mdi:play-circle, label: Playing }
-      - { state: idle, color: grey, label: Idle }
+badges:
+  - sensor.living_room_temperature
+tiles:
+  - light.living_room
+  - { entity: light.dining_table, control: slider }
+  - cover.living_room_blinds
+  - media_player.living_room_speaker
 `,
-  "Grid with gauges": `type: custom:entity-group-card-pro
-title: Air quality
-icon: mdi:air-filter
-layout: grid
+  "Posters with gauges": `type: custom:layout-card-pro
 columns: 2
-entities:
-  - entity: sensor.living_room_co2
-    name: Living room
-    visual: gauge
-    min: 400
-    max: 2000
-    rules:
-      - { below: 800, color: green }
-      - { below: 1200, color: amber }
-      - { above: 1200, color: red }
-  - entity: sensor.office_co2
-    name: Office
-    visual: gauge
-    min: 400
-    max: 2000
-    rules:
-      - { below: 800, color: green }
-      - { below: 1200, color: amber }
-      - { above: 1200, color: red }
-  - entity: sensor.bathroom_humidity
-    name: Bathroom
-    visual: ring
-    rules:
-      - { below: 60, color: green }
-      - { above: 60, color: red }
-  - { entity: sensor.solar_power, name: Solar today, visual: columns }
+cards:
+  - { type: custom:poster-card-pro, entity: sensor.living_room_co2, name: Living room, visual: gauge }
+  - { type: custom:poster-card-pro, entity: sensor.office_co2, name: Office, visual: gauge }
+  - { type: custom:poster-card-pro, entity: sensor.bathroom_humidity, name: Bathroom, visual: gauge, min: 0, max: 100 }
+  - { type: custom:poster-card-pro, entity: sensor.solar_power, kind: solar, name: Solar, visual: columns }
 `,
-  "Template value": `type: custom:entity-card-pro
+  "Template value": `type: custom:tile-card-pro
 entity: light.living_room
 name: Lights on
 icon: mdi:lightbulb-group
 color: amber
+control: false
 value: "{{ states.light | selectattr('state', 'eq', 'on') | list | count }} of {{ states.light | list | count }}"
 `,
   "Heading card": `type: custom:heading-card-pro
@@ -161,12 +123,6 @@ house: { front: 20, sides: { front: Street, back: Garden } }
 show_sun_times: true
 show_sides: true
 `,
-  "Illuminance card": `type: custom:illuminance-card-pro
-entity: sensor.illuminance
-mode: trend
-name: Outdoor light
-zones: { night: { label: Night }, twilight: { label: Twilight }, overcast: { label: Overcast }, day: { label: Day }, sun: { label: Sun } }
-`,
   "Weather card": `type: custom:weather-card-pro
 entity: weather.home
 title: Home
@@ -180,20 +136,11 @@ sections:
   - { type: trend, mode: hourly, hours: 12 }
   - { type: forecast, mode: daily, days: 7 }
 `,
-  "Rain card": `type: custom:rain-card-pro
+  "Rain poster": `type: custom:poster-card-pro
 entity: sensor.rain_rate_roof
-today: sensor.rain_today
-wind: sensor.wind_speed
-direction: sensor.wind_direction
-title: Rain
-layout: hero
-flow: { style: drops }
-rules:
-  - { below: 0.1, color: blue-grey, label: Dry }
-  - { below: 2.5, color: light-blue, label: Light rain }
-  - { below: 7.6, color: blue, label: Moderate rain }
-  - { below: 50, color: indigo, label: Heavy rain }
-  - { above: 50, color: deep-purple, label: Violent rain, tint_card: true }
+name: Rain
+visual: { type: flow, variant: drops }
+inputs: { wind: sensor.wind_speed, direction: sensor.wind_direction }
 `,
   "Power flow card": `type: custom:power-flow-card-pro
 title: Energy
@@ -222,49 +169,9 @@ consumers:
   - { entity: sensor.washer_energy, name: Washer, icon: mdi:washing-machine }
   - { entity: sensor.office_energy, name: Office, icon: mdi:monitor }
 `,
-  "Layout card": `type: custom:layout-card-pro
-columns: 2
-breakpoints:
-  2: { columns: 4 }
-cards:
-  - type: custom:entity-card-pro
-    entity: sensor.outdoor_temperature
-    visual: sparkline
-    view_layout: { span: { 1: full, 2: [2, 2] } }
-  - type: custom:entity-card-pro
-    entity: light.kitchen
-  - type: custom:entity-card-pro
-    entity: light.living_room
-  - type: custom:entity-card-pro
-    entity: cover.living_room_blinds
-`,
-  "Swipe card": `type: custom:swipe-card-pro
-per_page: 1.15
-cards:
-  - type: custom:entity-card-pro
-    entity: sensor.living_room_temperature
-    name: Living room
-    visual: sparkline
-  - type: custom:entity-card-pro
-    entity: sensor.kitchen_temperature
-    name: Kitchen
-    visual: sparkline
-  - type: custom:entity-card-pro
-    entity: sensor.bedroom_temperature
-    name: Bedroom
-    visual: sparkline
-`,
-  "Wind card": `type: custom:wind-card-pro
+  "Wind poster": `type: custom:poster-card-pro
 entity: sensor.wind_speed
-direction: sensor.wind_direction
-gust: sensor.wind_gust
-title: Wind
-layout: hero
-rules:
-  - { below: 5, color: blue-grey, label: Calm }
-  - { below: 20, color: teal, label: Light breeze }
-  - { below: 35, color: amber, label: Fresh }
-  - { below: 50, color: orange, label: Strong }
-  - { above: 50, color: red, label: Storm, tint_card: true }
+name: Wind
+visual: { type: flow, variant: swoosh }
 `,
 };

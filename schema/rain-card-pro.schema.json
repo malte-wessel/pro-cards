@@ -2,7 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://malte-wessel.github.io/pro-cards/schema/rain-card-pro.schema.json",
   "title": "custom:rain-card-pro",
-  "description": "The rain rate as a tile, a flow tile or a hero, with falling drops, ripples or a filling gauge that rules colour.",
+  "description": "Deprecated: use a poster or tile with kind: rain (guide/migrating on the docs site). The rain rate as a tile, a flow tile or a hero, with falling drops, ripples or a filling gauge that rules colour.",
+  "deprecated": true,
   "type": "object",
   "properties": {
     "type": {

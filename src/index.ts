@@ -2,21 +2,22 @@
 import "./poster-card.ts";
 import "./tile-card.ts";
 import "./tile-group-card.ts";
-import "./entity-card.ts";
-import "./entity-group-card.ts";
-import "./entity-sections-card.ts";
 import "./heading-card.ts";
 import "./multi-trend-card.ts";
 import "./sun-path-card.ts";
 import "./sun-azimuth-card.ts";
-import "./illuminance-card.ts";
 import "./weather-card.ts";
-import "./wind-card.ts";
-import "./rain-card.ts";
 import "./power-flow-card.ts";
 import "./energy-flow-card.ts";
 import "./layout-card.ts";
 import "./swipe-card.ts";
+// deprecated (3.0), removed in 4.0: last in the card picker
+import "./entity-card.ts";
+import "./entity-group-card.ts";
+import "./entity-sections-card.ts";
+import "./wind-card.ts";
+import "./rain-card.ts";
+import "./illuminance-card.ts";
 
 console.info(
   `%c PRO-CARDS %c v${__VERSION__} `,

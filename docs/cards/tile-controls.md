@@ -1,6 +1,6 @@
 # Tile controls
 
-A tile can carry one control: a switch, a slider, a stepper, speeds, buttons, a select or a button to hold. Every [kind](/cards/tile-types) takes `control`, as the [poster](/cards/poster-controls) does: a control's name as on the [entity cards](/cards/controls), or the control with its options (`control: { type: slider, step: 5 }`). A control needs an entity that supports it, and your own `buttons` can run any action. Kinds for a domain (light, cover, media player …) bring their own controls: a light's tile has a switch without any config.
+A tile can carry one control: a switch, a slider, a stepper, speeds, buttons, a select or a button to hold. Every [kind](/cards/tile-types) takes `control`, as the [poster](/cards/poster-controls) does: a control's name (`toggle`, `slider`, `stepper`, `segments`, `buttons`, `button`, `select`, `hold`), or the control with its options (`control: { type: slider, step: 5 }`). A control needs an entity that supports it, and your own `buttons` can run any action. Kinds for a domain (light, cover, media player …) bring their own controls: a light's tile has a switch without any config.
 
 A tap on the tile opens more-info. The control takes its own taps, and the icon has [actions of its own](#the-icon). This page covers what each kind brings, every control, where it sits, your own buttons and holds. The [overview](/cards/tile-card) explains the tile around them.
 
@@ -286,4 +286,40 @@ The icon has its own actions, as on Home Assistant's tile card: `tap_action`, `h
 
 An object without `type` changes the kind's own controls: `control: { position: block }` puts a cover's buttons below the line, `control: { confirm: true }` makes them holds, `control: { step: 1 }` steps a thermostat by whole degrees.
 
-What a control does, how it shows a call on its way and what it does when one fails is the same on every card: see [Controls](/cards/controls).
+## States
+
+A control shows what it asked for right away, as a ghost: the knob pulses, the fill is translucent, the segment is outlined, until the entity's state changes (or five seconds pass, when the device never answers). An unavailable entity greys its control out. The demo's attic light and lock take a moment to answer, so their ghosts are easy to see; the rest of the demo home answers at once.
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: light.attic
+  name: Pending · tap or drag
+  grid_options: { columns: 12 }
+- type: custom:tile-card-pro
+  entity: lock.garage_side_door
+  name: Pending · hold to lock
+  control: hold
+  grid_options: { columns: 12 }
+- type: custom:tile-card-pro
+  entity: switch.shed_heater
+  name: Unavailable · offline
+  control: toggle
+  grid_options: { columns: 12 }
+```
+
+:::
+
+## Keyboard and screen readers
+
+Every control works without a pointer. Tab reaches the card's own action first (a button behind the content, named after the entity), then its controls in order; the focus stays where it is while the card updates.
+
+- **Switch**: a switch (`role="switch"`), Space or Enter flips it.
+- **Slider**: the arrow keys step, PageUp and PageDown jump ten steps, Home and End go to the ends; the call follows a short pause.
+- **Segments**: a radio group with one tab stop; the arrow keys move along the segments and choose, Home and End jump to the ends.
+- **Stepper, buttons, Run**: plain buttons.
+- **Select**: the browser's own menu.
+- **Hold to confirm**: keep Space or Enter pressed for a second. A screen reader cannot hold, so it presses twice: the first press arms the button ("Press again to …"), a second press within five seconds runs it.
+
+A failed service call shows Home Assistant's toast with the error and fires the failure haptic.

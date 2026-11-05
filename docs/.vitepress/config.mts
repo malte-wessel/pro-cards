@@ -51,7 +51,7 @@ const liveContainer = (md: MarkdownIt) => {
 const base = "/pro-cards/";
 const site = `https://malte-wessel.github.io${base}`;
 const description =
-  "Beautiful, customizable cards for Home Assistant dashboards: entity, group and sections cards, multi trend, sun path, illuminance, weather, wind, rain and power flow cards that look like they belong in Home Assistant.";
+  "Beautiful, customizable cards for Home Assistant dashboards: tiles, posters and tile groups for every kind of entity, headings, layout and swipe cards, weather, multi trend, sun path and power and energy flow cards that look like they belong in Home Assistant.";
 
 // the cards by category; the nav dropdown and the sidebar both list them this way
 const cardGroups = [
@@ -84,12 +84,8 @@ const cardGroups = [
   {
     text: "Entities",
     items: [
-      { text: "Entity Card Pro", link: "/cards/entity-card" },
-      { text: "Entity Group Card Pro", link: "/cards/entity-group-card" },
-      { text: "Entity Sections Card Pro", link: "/cards/entity-sections-card" },
-      { text: "Entity Options", link: "/cards/entity-options" },
-      { text: "Controls", link: "/cards/controls" },
       { text: "Multi Trend Card Pro", link: "/cards/multi-trend-card" },
+      { text: "Entity Options", link: "/cards/entity-options" },
     ],
   },
   {
@@ -111,10 +107,20 @@ const cardGroups = [
     text: "Weather",
     items: [
       { text: "Weather Card Pro", link: "/cards/weather-card" },
-      { text: "Wind Card Pro", link: "/cards/wind-card" },
-      { text: "Rain Card Pro", link: "/cards/rain-card" },
       { text: "Sun Path Card Pro", link: "/cards/sun-path-card" },
       { text: "Sun Azimuth Card Pro", link: "/cards/sun-azimuth-card" },
+    ],
+  },
+  // still working in 3.0, gone in 4.0 (guide/migrating names what takes over)
+  {
+    text: "Deprecated",
+    items: [
+      { text: "Entity Card Pro", link: "/cards/entity-card" },
+      { text: "Entity Group Card Pro", link: "/cards/entity-group-card" },
+      { text: "Entity Sections Card Pro", link: "/cards/entity-sections-card" },
+      { text: "Controls of the entity cards", link: "/cards/controls" },
+      { text: "Wind Card Pro", link: "/cards/wind-card" },
+      { text: "Rain Card Pro", link: "/cards/rain-card" },
       { text: "Illuminance Card Pro", link: "/cards/illuminance-card" },
     ],
   },
@@ -123,6 +129,7 @@ const cardGroups = [
 // the guide and the changelog; the nav dropdown and the sidebar both list them
 const guide = [
   { text: "Getting started", link: "/guide/getting-started" },
+  { text: "Moving to 3.0", link: "/guide/migrating" },
   { text: "Look & themes", link: "/guide/colours" },
   { text: "Sizing in sections", link: "/guide/sizing" },
   { text: "Languages", link: "/guide/languages" },

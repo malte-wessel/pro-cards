@@ -2,7 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://malte-wessel.github.io/pro-cards/schema/wind-card-pro.schema.json",
   "title": "custom:wind-card-pro",
-  "description": "Wind speed, direction and gusts as a tile, a flow tile or a hero, with an animated wind field that rules colour.",
+  "description": "Deprecated: use a poster or tile with kind: wind (guide/migrating on the docs site). Wind speed, direction and gusts as a tile, a flow tile or a hero, with an animated wind field that rules colour.",
+  "deprecated": true,
   "type": "object",
   "properties": {
     "type": {

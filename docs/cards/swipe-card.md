@@ -18,19 +18,19 @@ To arrange cards in columns that change with the width, use the [layout card](/c
 ```yaml
 type: custom:swipe-card-pro
 cards:
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.living_room_temperature
     name: Living room
     visual: sparkline
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.kitchen_temperature
     name: Kitchen
     visual: sparkline
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.bedroom_temperature
     name: Bedroom
     visual: sparkline
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.office_temperature
     name: Office
     visual: sparkline
@@ -48,17 +48,17 @@ cards:
 type: custom:swipe-card-pro
 per_page: 2.5
 cards:
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.living_room
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.kitchen
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.dining_table
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.office
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.bedroom
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.hallway
 ```
 
@@ -75,13 +75,13 @@ type: custom:swipe-card-pro
 per_page: 1.3
 snap: center
 cards:
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.living_room
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.kitchen
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.bedroom
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.hallway
 ```
 
@@ -114,19 +114,19 @@ type: custom:swipe-card-pro
 breakpoints:
   2: { unfold: 4 }
 cards:
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.living_room_temperature
     name: Living room
     visual: sparkline
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.kitchen_temperature
     name: Kitchen
     visual: sparkline
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.bedroom_temperature
     name: Bedroom
     visual: sparkline
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.office_temperature
     name: Office
     visual: sparkline
@@ -141,19 +141,19 @@ type: custom:swipe-card-pro
 breakpoints:
   2: { unfold: 4 }
 cards:
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.living_room_temperature
     name: Living room
     visual: sparkline
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.kitchen_temperature
     name: Kitchen
     visual: sparkline
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.bedroom_temperature
     name: Bedroom
     visual: sparkline
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.office_temperature
     name: Office
     visual: sparkline
@@ -176,8 +176,8 @@ cards:
       - type: custom:heading-card-pro
         title: Living room
         icon: mdi:sofa
-      - type: custom:entity-group-card-pro
-        entities:
+      - type: custom:tile-group-card-pro
+        tiles:
           - light.living_room
           - light.dining_table
           - cover.living_room_blinds
@@ -188,8 +188,8 @@ cards:
       - type: custom:heading-card-pro
         title: Kitchen
         icon: mdi:stove
-      - type: custom:entity-group-card-pro
-        entities:
+      - type: custom:tile-group-card-pro
+        tiles:
           - light.kitchen
           - media_player.kitchen_speaker
   - type: custom:layout-card-pro
@@ -198,8 +198,8 @@ cards:
       - type: custom:heading-card-pro
         title: Bedroom
         icon: mdi:bed
-      - type: custom:entity-group-card-pro
-        entities:
+      - type: custom:tile-group-card-pro
+        tiles:
           - light.bedroom
           - cover.bedroom_blinds
 ```

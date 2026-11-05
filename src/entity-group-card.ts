@@ -90,4 +90,5 @@ export class EntityGroupCard extends EntityCardBase {
 registerCard(EntityGroupCard, {
   name: "Entity Group Card Pro",
   description: "Several entities as a list, grid, hero, row, column or table",
+  deprecated: "the tile group card",
 });

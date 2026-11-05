@@ -7,6 +7,31 @@ views:
     type: sections
     max_columns: 3
     sections:
+      # the 3.0 cards (the deprecated ones below keep their sections while they ship)
+      - type: grid
+        cards:
+          - type: custom:heading-card-pro
+            title: 3.0 cards
+            icon: mdi:new-box
+            badges:
+              - sensor.outdoor_temperature
+              - { entity: light.kitchen, control: toggle }
+          - { type: custom:tile-card-pro, entity: light.kitchen }
+          - { type: custom:tile-card-pro, entity: cover.living_room_blinds }
+          - {
+              type: custom:poster-card-pro,
+              entity: sensor.wind_speed,
+              visual: { type: flow, variant: lines },
+            }
+          - {
+              type: custom:poster-card-pro,
+              entity: sensor.roof_rain_rate,
+              visual: { type: flow, variant: drops },
+            }
+          - type: custom:tile-group-card-pro
+            title: Living room
+            icon: mdi:sofa
+            tiles: [light.living_room, cover.living_room_blinds, sensor.living_room_temperature]
       - type: grid
         cards:
           - type: heading

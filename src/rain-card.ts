@@ -93,4 +93,5 @@ registerCard(RainCard, {
   name: "Rain Card Pro",
   description:
     "Rain rate and today's total as a tile, a flow tile or a hero, with falling drops, ripples or a filling gauge",
+  deprecated: "the poster or tile card with kind: rain",
 });

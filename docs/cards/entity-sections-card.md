@@ -1,5 +1,11 @@
 # Entity Sections Card Pro
 
+::: warning Deprecated
+
+The entity sections card is deprecated: it still works in 3.0 and goes in 4.0. Use a [layout card](/cards/layout-card) of a heading and tile groups; [Moving to 3.0](/guide/migrating#the-entity-sections-card) shows how.
+
+:::
+
 `custom:entity-sections-card-pro` stacks several groups of entities under one header. Each section is an [entity group](/cards/entity-group-card) body with its own `layout`, so one card can hold a hero on top of a row of controls, or a table over a grid. This page starts with two bare sections and adds options one at a time.
 
 ## Basic

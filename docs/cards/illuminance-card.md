@@ -1,5 +1,11 @@
 # Illuminance Card Pro
 
+::: warning Deprecated
+
+The illuminance card is deprecated: it still works in 3.0 and goes in 4.0, without a successor. [Moving to 3.0](/guide/migrating#the-illuminance-card) shows the nearest tile.
+
+:::
+
 `custom:illuminance-card-pro` shows an outdoor illuminance sensor on a logarithmic scale that is split into zones: night, twilight, overcast, day and sun. It ships with a visual editor.
 
 ## Basic

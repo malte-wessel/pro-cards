@@ -2,6 +2,24 @@
 
 All cards report a default size to the sections grid through `getGridOptions`, so they land with a sensible footprint and you can resize them with the grid handles or `grid_options`.
 
+| Card                                 | Default                  | Minimum           | Notes                                                            |
+| ------------------------------------ | ------------------------ | ----------------- | ---------------------------------------------------------------- |
+| Tile                                 | 6 columns, `rows: auto`  | 3 columns, 1 row  | Exactly one row on its own                                       |
+| Tile with a plot, a bar or a control | 6 columns, `rows: auto`  | 3 / 4 / 6         | 2 rows at least with a sparkline, columns or a strip             |
+| Tile, `vertical: true`               | 3 columns, `rows: auto`  | its own, 2 rows   | One row more for a control under the name, a plot and the badges |
+| Poster                               | 6 columns, 3 rows        | 6 columns, 3 rows | Less room is a tile's                                            |
+| Tile group                           | 6 columns, `rows: auto`  | 6 columns         | `layout: row`: 12 columns; height follows the tiles              |
+| Heading card                         | full width, `rows: auto` | 3 columns         |                                                                  |
+| Layout and swipe card                | full width, `rows: auto` |                   | Height follows their cards                                       |
+| Multi trend card                     | 12 columns, `rows: auto` | 6 columns, 2 rows | Height follows the plot: one band, or one lane per entity        |
+| Sun path card                        | 12 columns, `rows: auto` | 6 columns         |                                                                  |
+| Sun azimuth card                     | 12 columns, `rows: auto` | 6 columns         | Height follows the view and the sides footer                     |
+| Weather card, tile                   | 6 columns, `rows: auto`  | 3 columns, 1 row  | Exactly one row on its own, 2 with a header                      |
+| Weather card with `sections`         | 12 columns, `rows: auto` | 6 columns, 2 rows |                                                                  |
+| Power flow card                      | 12 columns, `rows: auto` | 6 columns, 3 rows | Height follows the config, not the width                         |
+
+The deprecated cards:
+
 | Card                                         | Default                  | Minimum           | Notes                                                                                             |
 | -------------------------------------------- | ------------------------ | ----------------- | ------------------------------------------------------------------------------------------------- |
 | Entity card, plain tile                      | 6 columns, `rows: auto`  | 3 columns, 1 row  | Exactly one row on its own                                                                        |
@@ -9,15 +27,9 @@ All cards report a default size to the sections grid through `getGridOptions`, s
 | Entity group card, every layout but `hero`   | 12 columns, `rows: auto` | 6 columns, 2 rows | Height follows the number of entities                                                             |
 | Entity group card, `hero`                    | 12 columns, `rows: auto` | 6 columns, 3 rows |                                                                                                   |
 | Entity sections card                         | 12 columns, `rows: auto` | 6 columns, 2 rows | 3 rows when a section is a `hero`; height follows the sections                                    |
-| Multi trend card                             | 12 columns, `rows: auto` | 6 columns, 2 rows | Height follows the plot: one band, or one lane per entity                                         |
-| Sun path card                                | 12 columns, `rows: auto` | 6 columns         |                                                                                                   |
-| Sun azimuth card                             | 12 columns, `rows: auto` | 6 columns         | Height follows the view and the sides footer                                                      |
-| Illuminance card                             | 12 columns, `rows: auto` | 6 columns         |                                                                                                   |
-| Weather card, tile                           | 6 columns, `rows: auto`  | 3 columns, 1 row  | Exactly one row on its own, 2 with a header                                                       |
-| Weather card with `sections`                 | 12 columns, `rows: auto` | 6 columns, 2 rows |                                                                                                   |
 | Wind and rain card, tile                     | 6 columns, `rows: auto`  | 3 columns, 1 row  | Exactly one row on its own, 2 with a header                                                       |
 | Wind and rain card, `layout: hero`           | 12 columns, `rows: auto` | 6 columns, 3 rows |                                                                                                   |
-| Power flow card                              | 12 columns, `rows: auto` | 6 columns, 3 rows | Height follows the config, not the width                                                          |
+| Illuminance card                             | 12 columns, `rows: auto` | 6 columns         |                                                                                                   |
 
 The minimums (`min_columns`, `min_rows`) keep the grid handles from making a card unreadable; `grid_options` can override any of them. A tile with a control needs more room than a plain one: 4 columns for a switch or a hold button on its line, 6 for anything wider, 3 when the control sits under the line. Every tile sizes to its content: a plain tile is exactly one 56 px row on its own (two with a header), a block visual or a control makes it taller.
 
@@ -39,9 +51,9 @@ Pick column counts that divide 12, 24 and 36 so rows stay full on every screen:
 `rows: auto` lets the card size itself to its content. Numbers pin the height: 56 px per row plus 8 px gaps. The cards set this for you, override only when the layout needs it:
 
 ```yaml
-type: custom:entity-group-card-pro
+type: custom:tile-group-card-pro
 title: Rooms
-entities: ["..."]
+tiles: ["..."]
 grid_options: { columns: 12, rows: 4 }
 ```
 
@@ -52,12 +64,12 @@ Like Home Assistant's own cards, every card takes the height it is given. That i
 ::: live
 
 ```yaml
-- type: custom:entity-card-pro
+- type: custom:tile-card-pro
   entity: sensor.power_consumption
   name: Power
   visual: sparkline
   grid_options: { columns: 6, rows: 3 }
-- type: custom:entity-card-pro
+- type: custom:tile-card-pro
   entity: sensor.outdoor_temperature
   name: Outside
   visual: columns
@@ -66,17 +78,15 @@ Like Home Assistant's own cards, every card takes the height it is given. That i
 
 :::
 
-| Card                                  | What fills the height                                                                                            |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Entity card, tiles                    | The `sparkline` or `columns` plot; a `gauge` centres under the icon and name; any other tile centres its content |
-| Entity group and entity sections card | The `sparkline` and `columns` plots, an even share each; without them the rows stay at the top                   |
-| Weather card                          | The trends and the plots of its entity sections; the tile centres its content                                    |
-| Wind and rain card                    | The hero's band (`flow.height` is its height everywhere else); the tile centres its content                      |
-| Multi trend card                      | The plot                                                                                                         |
-| Sun path card                         | The plot                                                                                                         |
-| Sun azimuth card                      | The picture, centred                                                                                             |
-| Illuminance card                      | The trend (`mode: trend`); the arc and the band keep their size, centred                                         |
-| Power flow card                       | The tree: spread out in a taller cell, scaled down as a whole in a smaller one                                   |
+| Card             | What fills the height                                                                         |
+| ---------------- | --------------------------------------------------------------------------------------------- |
+| Tile             | The plot below the line (`sparkline`, `columns`, `strip`); any other tile centres its content |
+| Poster           | Its content sits at the bottom, the plot or the picture behind it fills the rest              |
+| Weather card     | The trends and the plots of its entity sections; the tile centres its content                 |
+| Multi trend card | The plot                                                                                      |
+| Sun path card    | The plot                                                                                      |
+| Sun azimuth card | The picture, centred                                                                          |
+| Power flow card  | The tree: spread out in a taller cell, scaled down as a whole in a smaller one                |
 
 Wherever the height follows the content (a masonry view, a vertical stack, a card alone in its row), every card keeps its own height. In a panel view the card takes the whole view.
 
@@ -87,14 +97,14 @@ Wherever the height follows the content (a masonry view, a vertical stack, a car
 ::: live
 
 ```yaml
-- type: custom:entity-group-card-pro
+- type: custom:tile-group-card-pro
   title: Bedroom
   fill_height: false
-  entities: [light.living_room, light.kitchen]
+  tiles: [light.living_room, light.kitchen]
   grid_options: { columns: 6 }
-- type: custom:entity-group-card-pro
+- type: custom:tile-group-card-pro
   title: Studio
-  entities: [light.living_room, light.kitchen, light.office, sensor.outdoor_temperature]
+  tiles: [light.living_room, light.kitchen, light.office, sensor.outdoor_temperature]
   grid_options: { columns: 6 }
 ```
 
@@ -102,7 +112,7 @@ Wherever the height follows the content (a masonry view, a vertical stack, a car
 
 ## Masonry and panel views
 
-The sections grid is where the cards are at home, but they work in the older view types too. In a masonry view every card reports its height through `getCardSize` instead, so Home Assistant can balance the columns: a plain tile counts as one unit, a card with a header one more, and the group, sections, weather, power flow, wind and rain cards add up what they actually draw. There is nothing to configure, and `grid_options` has no effect there — a masonry card always fills its column, so use `columns` (the card's own key) and the layouts to shape it. In a panel view the single card takes the whole view.
+The sections grid is where the cards are at home, but they work in the older view types too. In a masonry view every card reports its height through `getCardSize` instead, so Home Assistant can balance the columns: a plain tile counts as one unit, a card with a header one more, and the tile group, weather and power flow cards add up what they actually draw. There is nothing to configure, and `grid_options` has no effect there — a masonry card always fills its column, so use `columns` (the card's own key) and the layouts to shape it. In a panel view the single card takes the whole view.
 
 ## Width of the examples here
 

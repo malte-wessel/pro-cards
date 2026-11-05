@@ -24,24 +24,24 @@ The room's header, its light with a slider and three buttons in a row, merged in
 type: custom:layout-card-pro
 card_style: seamless
 cards:
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.living_room_temperature
     name: Living room
     visual: sparkline
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.living_room
     control: auto
   - type: custom:layout-card-pro
     columns: 3
     card_style: seamless
     cards:
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: cover.living_room_blinds
         name: Blinds
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: media_player.living_room_speaker
         name: Music
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: climate.living_room
         name: Heating
 ```
@@ -60,21 +60,21 @@ columns: 2
 breakpoints:
   2: { columns: 4 }
 cards:
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.living_room
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.kitchen
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.dining_table
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.office
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.desk_lamp
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.bedroom
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.hallway
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.garden
 ```
 
@@ -101,13 +101,13 @@ cards:
         days: 5
   - type: custom:layout-card-pro
     cards:
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: lock.front_door
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: cover.garage_door
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: lock.garage_side_door
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: cover.awning
 ```
 
@@ -129,29 +129,29 @@ cards:
       2: { columns: 4 }
     gap: 4
     cards:
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: light.living_room
         name: Lights
         tap_action: { action: toggle }
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: switch.coffee_machine
         name: Coffee
         tap_action: { action: toggle }
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: vacuum.robot
         name: Robot
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: lock.front_door
         name: Door
   - type: custom:layout-card-pro
     columns: 3
     card_style: seamless
     cards:
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: sensor.outdoor_temperature
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: sensor.power_consumption
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: sensor.battery_soc
 ```
 
@@ -173,34 +173,34 @@ cards:
   - type: custom:layout-card-pro
     card_style: seamless
     cards:
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: sensor.kitchen_temperature
         name: Kitchen
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: light.kitchen
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: light.dining_table
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: media_player.kitchen_speaker
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: switch.coffee_machine
   - type: custom:layout-card-pro
     card_style: seamless
     cards:
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: sensor.bedroom_temperature
         name: Bedroom
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: light.bedroom
   - type: custom:layout-card-pro
     card_style: seamless
     cards:
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: sensor.office_temperature
         name: Office
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: light.office
-      - type: custom:entity-card-pro
+      - type: custom:tile-card-pro
         entity: light.desk_lamp
 ```
 
@@ -225,18 +225,18 @@ cards:
       - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
       - { type: grid, power: sensor.grid_power }
     view_layout: { span: { 1: full, 2: [2, 3] } }
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.battery_soc
-    visual: ring
-  - type: custom:entity-card-pro
+    icon: { ring: true }
+  - type: custom:tile-card-pro
     entity: sensor.heat_pump_power
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.ev_charger_power
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.washer_power
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.solar_power
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.grid_power
 ```
 
@@ -252,16 +252,16 @@ cards:
 type: custom:layout-card-pro
 columns: 2
 cards:
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.outdoor_temperature
     view_layout: { span: full }
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.outdoor_humidity
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.pressure
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.kitchen
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.living_room
 ```
 
@@ -277,9 +277,9 @@ A list makes columns of their own widths, as CSS's `grid-template-columns` does:
 type: custom:layout-card-pro
 columns: [1fr, 2fr]
 cards:
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.kitchen
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.outdoor_temperature
     visual: sparkline
 ```
@@ -296,15 +296,15 @@ A row is as tall as its tallest card and the cards stretch to it (`align_items: 
 type: custom:layout-card-pro
 columns: 2
 cards:
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.outdoor_temperature
     visual: sparkline
     view_layout: { span: [1, 3] }
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.kitchen
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.living_room
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.office
 ```
 
@@ -327,13 +327,13 @@ cards:
       - type: forecast
         mode: daily
         days: 5
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.kitchen
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.living_room
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.office
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.outdoor_temperature
     view_layout: { column: 1 }
 ```
@@ -364,11 +364,11 @@ columns: 1
 breakpoints:
   2: { columns: 3 }
 cards:
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.outdoor_temperature
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.outdoor_humidity
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.pressure
 ```
 
@@ -382,11 +382,11 @@ columns: 1
 breakpoints:
   2: { columns: 3 }
 cards:
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.outdoor_temperature
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.outdoor_humidity
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.pressure
 ```
 
@@ -404,13 +404,13 @@ columns: 2
 gap: [4, 16]
 padding: [8, 0]
 cards:
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.kitchen_temperature
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.kitchen_humidity
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.bathroom_temperature
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.bathroom_humidity
 ```
 
@@ -427,13 +427,13 @@ type: custom:layout-card-pro
 columns: 2
 card_style: seamless
 cards:
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.kitchen
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.living_room
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: cover.living_room_blinds
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: climate.living_room
 ```
 
@@ -463,14 +463,14 @@ type: custom:layout-card-pro
 columns: 2
 align_items: start
 cards:
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.outdoor_temperature
     visual: sparkline
     view_layout: { span: { 1: full, 2: 1 } }
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.kitchen
     view_layout: { align: center }
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: lock.front_door
     view_layout: { order: -1, span: full }
 ```
@@ -487,13 +487,13 @@ Every card inside keeps Home Assistant's own `visibility`, with all its conditio
 type: custom:layout-card-pro
 columns: 2
 cards:
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: light.kitchen
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: media_player.living_room_speaker
     visibility:
       - { condition: state, entity: media_player.living_room_speaker, state_not: "off" }
-  - type: custom:entity-card-pro
+  - type: custom:tile-card-pro
     entity: sensor.outdoor_temperature
 ```
 

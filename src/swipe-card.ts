@@ -16,7 +16,7 @@
  *     2: { per_page: 2.2 }          # from 2 view columns on
  *     3: { unfold: 4 }              # a grid of 4 from 3 view columns on
  *   cards:
- *     - type: custom:entity-card-pro
+ *     - type: custom:tile-card-pro
  *       entity: sensor.outdoor_temperature
  */
 import { defineElement, registerCard, syncKeepHeight } from "./shared/card.ts";

@@ -110,4 +110,5 @@ registerCard(EntityCard, {
   name: "Entity Card Pro",
   description:
     "One entity as a tile with icon, ring, gauge, bar, sparkline, columns, badge or status strip",
+  deprecated: "the tile card, or the poster card",
 });

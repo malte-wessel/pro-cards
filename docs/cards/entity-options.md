@@ -1,5 +1,11 @@
 # Entity options
 
+::: info For the weather, power flow and energy flow cards, and the deprecated entity cards
+
+These keys describe an entity in the [weather card](/cards/weather-card)'s sections and in the `header_entities` of the weather, [power flow](/cards/power-flow-card) and [energy flow](/cards/energy-flow-card) cards. The entity cards they were made for are deprecated: the [tile](/cards/tile-card), the [poster](/cards/poster-card) and the [tile group](/cards/tile-group-card) write an entity their own way ([Moving to 3.0](/guide/migrating)).
+
+:::
+
 The [entity card](/cards/entity-card), the [entity group card](/cards/entity-group-card) and the [entity sections card](/cards/entity-sections-card) describe an entity with the same keys. On the entity card they sit directly on the card; in a group or section they are the items of `entities`, either a plain entity id or an object. The first row below is the bare id, the second an object with the options this page explains.
 
 ::: live

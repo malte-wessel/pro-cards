@@ -35,7 +35,7 @@ entities:
 
 ## Rules
 
-`rules` colour a series by its current value, like the [rules of the entity cards](/cards/entity-options#rules): the first entry whose `below` (exclusive), `above` (inclusive) or `state` matches decides the colour of the whole line, its legend swatch and its tooltip swatch. A fixed `color` wins over the rules and may be a template. A series with neither, no matching rule or an unavailable value keeps its palette colour.
+`rules` colour a series by its current value, like a tile's [rules](/cards/tile-custom#colour-and-rules): the first entry whose `below` (exclusive), `above` (inclusive) or `state` matches decides the colour of the whole line, its legend swatch and its tooltip swatch. A fixed `color` wins over the rules and may be a template. A series with neither, no matching rule or an unavailable value keeps its palette colour.
 
 ::: live
 

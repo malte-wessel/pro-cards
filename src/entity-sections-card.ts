@@ -99,4 +99,5 @@ export class EntitySectionsCard extends EntityCardBase {
 registerCard(EntitySectionsCard, {
   name: "Entity Sections Card Pro",
   description: "Several groups of entities, each with its own layout, in one card",
+  deprecated: "a layout card of heading cards and tile groups",
 });

@@ -11,14 +11,14 @@ Try it on this site: every example has a theme picker in its top-right corner, a
 ::: live theme=graphite
 
 ```yaml
-- type: custom:entity-group-card-pro
+- type: custom:tile-group-card-pro
   title: Living room
   icon: mdi:sofa
-  entities:
-    - { entity: light.living_room, control: toggle, rules: [{ state: "on", color: amber, label: On }, { state: "off", color: grey, label: Off }] }
-    - { entity: sensor.living_room_temperature, name: Temperature, decimals: 1, rules: [{ below: 19, color: blue, label: Cold }, { below: 24, color: green, label: Comfortable }, { above: 24, color: orange, label: Warm }] }
-    - { entity: sensor.living_room_co2, name: CO₂, visual: strip, rules: [{ below: 800, color: green }, { below: 1200, color: amber }, { above: 1200, color: red }] }
-    - { entity: sensor.robot_battery, name: Battery, visual: ring }
+  tiles:
+    - light.living_room
+    - { entity: sensor.living_room_temperature, name: Temperature, decimals: 1, rules: [{ below: 19, color: blue, status: Cold }, { below: 24, color: green, status: Comfortable }, { above: 24, color: orange, status: Warm }] }
+    - { entity: sensor.living_room_co2, name: CO₂, visual: strip }
+    - { entity: sensor.robot_battery, name: Battery, icon: { ring: true } }
 - type: custom:multi-trend-card-pro
   title: Outdoor
   icon: mdi:thermometer
@@ -61,11 +61,11 @@ These are the variables of a Home Assistant theme the cards read. Set them in a 
 
 **Icons**
 
-| Variable                     | What it changes                                                                                                                               |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ha-tile-icon-border-radius` | the shape behind an icon, as on Home Assistant's tile card (round by default; a ring and the power flow's nodes stay round)                   |
-| `tile-icon-opacity`          | how strong the soft colour behind an icon is (`0.2` by default; `0` leaves the icon alone on the card)                                        |
-| `tile-icon-hover-opacity`    | the same under the pointer, on an icon with its own action of an entity with [`hover: true`](/cards/entity-options#hover) (`0.35` by default) |
+| Variable                     | What it changes                                                                                                                                                                      |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ha-tile-icon-border-radius` | the shape behind an icon, as on Home Assistant's tile card (round by default; a ring and the power flow's nodes stay round)                                                          |
+| `tile-icon-opacity`          | how strong the soft colour behind an icon is (`0.2` by default; `0` leaves the icon alone on the card)                                                                               |
+| `tile-icon-hover-opacity`    | the same under the pointer, on an icon with its own action (a [tile's](/cards/tile-custom#actions) or a poster's, which answer the pointer unless `hover: false`; `0.35` by default) |
 
 For example, a theme with rounded-square icons on a transparent background:
 
@@ -112,11 +112,11 @@ Pick **Large text** in an example's theme picker to see any example at `ha-font-
 ::: live theme=large
 
 ```yaml
-- type: custom:entity-group-card-pro
+- type: custom:tile-group-card-pro
   title: Living room
   icon: mdi:sofa
-  entities:
-    - { entity: light.living_room, control: toggle }
+  tiles:
+    - light.living_room
     - { entity: sensor.living_room_temperature, name: Temperature, decimals: 1 }
     - { entity: sensor.living_room_co2, name: CO₂, visual: strip }
 - type: custom:multi-trend-card-pro
@@ -146,78 +146,72 @@ Named tokens resolve to the theme's `--<name>-color`, so a theme that redefines 
 ::: live
 
 ```yaml
-type: custom:entity-group-card-pro
-title: The same sensor in six colours
-layout: grid
+type: custom:layout-card-pro
 columns: 3
-entities:
-  - { entity: sensor.outdoor_humidity, name: primary, color: primary, visual: ring }
-  - { entity: sensor.outdoor_humidity, name: teal, color: teal, visual: ring }
-  - { entity: sensor.outdoor_humidity, name: deep-purple, color: deep-purple, visual: ring }
-  - { entity: sensor.outdoor_humidity, name: "#ff5252", color: "#ff5252", visual: ring }
-  - { entity: sensor.outdoor_humidity, name: blue-grey, color: blue-grey, visual: ring }
-  - { entity: sensor.outdoor_humidity, name: amber, color: amber, visual: ring }
+cards:
+  - { type: custom:tile-card-pro, entity: sensor.outdoor_humidity, name: primary, color: primary, icon: { ring: true } }
+  - { type: custom:tile-card-pro, entity: sensor.outdoor_humidity, name: teal, color: teal, icon: { ring: true } }
+  - { type: custom:tile-card-pro, entity: sensor.outdoor_humidity, name: deep-purple, color: deep-purple, icon: { ring: true } }
+  - { type: custom:tile-card-pro, entity: sensor.outdoor_humidity, name: "#ff5252", color: "#ff5252", icon: { ring: true } }
+  - { type: custom:tile-card-pro, entity: sensor.outdoor_humidity, name: blue-grey, color: blue-grey, icon: { ring: true } }
+  - { type: custom:tile-card-pro, entity: sensor.outdoor_humidity, name: amber, color: amber, icon: { ring: true } }
 ```
 
 :::
 
 ## Where colour comes from
 
-For the entity cards the colour of an entity is decided in this order:
+On a tile, a poster and their badges, the colour of an entity is decided in this order:
 
-1. the entity's explicit `color` (a template is allowed)
-2. the first matching `rules` entry that sets `color` (rules are tried in the order written)
-3. Home Assistant's own state colour for the entity's domain and state: lights and switches amber when on, locks green when locked and red when unlocked, people green at home, covers purple while open, media players light blue while playing, batteries green / orange / red by level, and grey for inactive states. These are the theme's `--state-<domain>-<state>-color` tokens, so a theme that recolours HA's tile cards recolours these cards too.
-4. `grey` for off-like states of other domains (`off`, `closed`, `idle`, `standby`, `docked`, `not_home`, `disarmed`, `clear`), otherwise `primary`. Plain sensors have no state colour and stay `primary`.
+1. the first matching `rules` entry that sets `color` (rules are tried in the order written; without rules of its own the card has its [kind](/cards/tile-types)'s, a battery's levels or the air's bands)
+2. the card's `color` (a template is allowed): a default, which a matching rule beats
+3. the kind's colour from the state: a light in its own colour, a thermostat warm while it heats and cool while it cools
+4. Home Assistant's own state colour for the entity's domain and state: lights and switches amber when on, locks green when locked and red when unlocked, people green at home, covers purple while open, media players light blue while playing, batteries green / orange / red by level, and grey for inactive states. These are the theme's `--state-<domain>-<state>-color` tokens, so a theme that recolours HA's tile cards recolours these cards too.
+5. `grey` for off-like states of other domains (`off`, `closed`, `idle`, `standby`, `docked`, `not_home`, `disarmed`, `clear`), otherwise `primary`. Plain sensors have no state colour and stay `primary`.
 
-So set `color` only when the colour should never change; leave it out to let the rules or the state drive it. The same order applies to the icon: explicit `icon`, then the matching entry, then the entity's own icon. Labels come from the matching entry only.
+So set `color` for the usual colour and let the rules say when it changes. The same order applies to the icon: the matching rule's `icon`, then the card's, then the entity's own. The status comes from the matching rule, else the kind. The deprecated entity cards and the `header_entities` of the weather, power flow and energy flow cards keep the order they had: an explicit `color` and `icon` beat the rules there ([Entity options](/cards/entity-options#rules)).
 
 ::: live
 
 ```yaml
-type: custom:entity-group-card-pro
-title: Coloured like Home Assistant
-layout: grid
+type: custom:layout-card-pro
 columns: 3
-entities:
-  - { entity: light.living_room, name: Light on }
-  - { entity: light.kitchen, name: Light off }
-  - { entity: cover.living_room_blinds, name: Blinds open }
-  - { entity: person.malte, name: At home }
-  - { entity: person.sam, name: Away }
-  - { entity: media_player.living_room_speaker, name: Playing }
-  - { entity: sensor.robot_battery, name: Battery, visual: ring }
-  - { entity: sensor.kitchen_window_battery, name: Low battery, visual: ring }
-  - { entity: sensor.outdoor_temperature, name: Plain sensor }
+cards:
+  - { type: custom:tile-card-pro, entity: light.living_room, name: Light on, control: false }
+  - { type: custom:tile-card-pro, entity: light.kitchen, name: Light off, control: false }
+  - { type: custom:tile-card-pro, entity: cover.living_room_blinds, name: Blinds open, control: false }
+  - { type: custom:tile-card-pro, entity: person.malte, name: At home }
+  - { type: custom:tile-card-pro, entity: person.sam, name: Away }
+  - { type: custom:tile-card-pro, entity: media_player.living_room_speaker, name: Playing, control: false }
+  - { type: custom:tile-card-pro, entity: sensor.robot_battery, name: Battery, icon: { ring: true } }
+  - { type: custom:tile-card-pro, entity: sensor.motion_hallway_battery, name: Low battery, icon: { ring: true } }
+  - { type: custom:tile-card-pro, entity: sensor.outdoor_temperature, name: Plain sensor }
 ```
 
 :::
 
 ## Card tint
 
-`tint_card: true` on a rule washes the whole card in that entry's colour while it matches. Use it for the states that deserve attention, not for the normal case.
+`tint_card: true` on a rule washes the card in that entry's colour while it matches; in a tile group, that tile. Use it for the states that deserve attention, not for the normal case.
 
 ::: live
 
 ```yaml
-type: custom:entity-group-card-pro
+type: custom:tile-group-card-pro
 title: Batteries
 icon: mdi:battery-heart-variant
-entities:
+tiles:
   - entity: sensor.motion_hallway_battery
     name: Hallway motion
     visual: bar
-    rules:
-      - { below: 20, color: red, icon: mdi:battery-alert, label: Replace, tint_card: true }
-      - { below: 50, color: amber, icon: mdi:battery-50, label: Half }
-      - { above: 50, color: green, icon: mdi:battery, label: Good }
+    rules: &batteries
+      - { below: 20, color: red, icon: mdi:battery-alert, status: Replace, tint_card: true }
+      - { below: 50, color: amber, icon: mdi:battery-50, status: Half }
+      - { above: 50, color: green, icon: mdi:battery, status: Good }
   - entity: sensor.kitchen_window_battery
     name: Kitchen window
     visual: bar
-    rules:
-      - { below: 20, color: red, icon: mdi:battery-alert, label: Replace, tint_card: true }
-      - { below: 50, color: amber, icon: mdi:battery-50, label: Half }
-      - { above: 50, color: green, icon: mdi:battery, label: Good }
+    rules: *batteries
 ```
 
 :::

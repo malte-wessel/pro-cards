@@ -280,7 +280,7 @@ badges:
 
 ## Actions
 
-`title_tap_action` runs when the title (or its icon) is tapped, for example to open the room's dashboard. `icon_tap_action` gives the icon an action of its own; `icon_tap_action: none` keeps it still under a tappable title. Every badge keeps its entity's `tap_action`, `hold_action` and `double_tap_action`; the card's own set the defaults for all of them. See [Actions](/cards/entity-options#actions).
+`title_tap_action` runs when the title (or its icon) is tapped, for example to open the room's dashboard. `icon_tap_action` gives the icon an action of its own; `icon_tap_action: none` keeps it still under a tappable title. Every badge keeps its entity's `tap_action`, `hold_action` and `double_tap_action`; the card's own set the defaults for all of them. See [Actions](/cards/tile-custom#actions).
 
 ::: live
 
@@ -336,7 +336,7 @@ The [poster](/cards/poster-badges), the [tile](/cards/tile-badges) and the [tile
 | `badge_style`                                      | `outline`                       | The pill of every badge: `outline`, `soft`, `filled`, `tag` or `plain`.              |
 | `badge_size`                                       | `m`                             | The size of every badge: `s`, `m` or `l`.                                            |
 | `badges`                                           |                                 | Entity ids or badge objects.                                                         |
-| `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none    | Defaults for every badge, see [Actions](/cards/entity-options#actions).              |
+| `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none    | Defaults for every badge, see [Actions](/cards/tile-custom#actions).                 |
 | `hover`                                            | on for badges with an action    | `false` turns the hover and press layers off for every badge, see [Hover](#hover).   |
 
 ### Badge options
