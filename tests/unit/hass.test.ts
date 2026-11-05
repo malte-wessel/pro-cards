@@ -128,3 +128,20 @@ describe("hass shim", () => {
     expect(bad).toEqual(["{% if x %}y{% endif %}"]);
   });
 });
+
+describe("the shim's state icons", () => {
+  it("draws a binary sensor by its device class, on and off, as Home Assistant does", async () => {
+    const { stateIcon } = await import("../../docs/.vitepress/theme/ha-shim/elements.ts");
+    const b = (dc: string, state: string) =>
+      stateIcon(st("binary_sensor.x", state, { device_class: dc }));
+    expect([b("plug", "on"), b("plug", "off")]).toEqual(["mdi:power-plug", "mdi:power-plug-off"]);
+    expect(b("battery_charging", "on")).toBe("mdi:battery-charging");
+    expect([b("problem", "on"), b("problem", "off")]).toEqual([
+      "mdi:alert-circle",
+      "mdi:check-circle",
+    ]);
+    // a class it does not know: the domain's own; a sensor of the same class keeps its icon
+    expect(b("unknown_class", "on")).toBe("mdi:radiobox-blank");
+    expect(stateIcon(st("sensor.x", "64", { device_class: "battery" }))).toBe("mdi:battery");
+  });
+});

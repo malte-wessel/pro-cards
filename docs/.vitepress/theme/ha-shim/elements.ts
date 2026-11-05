@@ -112,6 +112,7 @@ const DOMAIN_ICON: Record<string, (s: string) => string> = {
   sensor: () => "mdi:eye",
   binary_sensor: () => "mdi:radiobox-blank",
 };
+// a sensor's icon by its device class
 const DC_ICON: Record<string, string | ((s: string) => string)> = {
   temperature: "mdi:thermometer",
   humidity: "mdi:water-percent",
@@ -131,11 +132,44 @@ const DC_ICON: Record<string, string | ((s: string) => string)> = {
   motion: (s) => (s === "on" ? "mdi:motion-sensor" : "mdi:motion-sensor-off"),
   occupancy: (s) => (s === "on" ? "mdi:home" : "mdi:home-outline"),
 };
+// a binary sensor's icon by its device class, on and off, as Home Assistant's frontend draws it
+// (binarySensorIcon): the classes mean other icons on a sensor (battery, power)
+const BINARY_DC_ICON: Record<string, [on: string, off: string]> = {
+  battery: ["mdi:battery-outline", "mdi:battery"],
+  battery_charging: ["mdi:battery-charging", "mdi:battery"],
+  carbon_monoxide: ["mdi:smoke-detector-alert", "mdi:smoke-detector"],
+  cold: ["mdi:snowflake", "mdi:thermometer"],
+  connectivity: ["mdi:check-network-outline", "mdi:close-network-outline"],
+  door: ["mdi:door-open", "mdi:door-closed"],
+  garage_door: ["mdi:garage-open", "mdi:garage"],
+  gas: ["mdi:alert-circle", "mdi:check-circle"],
+  heat: ["mdi:fire", "mdi:thermometer"],
+  light: ["mdi:brightness-7", "mdi:brightness-5"],
+  lock: ["mdi:lock-open", "mdi:lock"],
+  moisture: ["mdi:water", "mdi:water-off"],
+  motion: ["mdi:motion-sensor", "mdi:motion-sensor-off"],
+  occupancy: ["mdi:home", "mdi:home-outline"],
+  opening: ["mdi:square-outline", "mdi:square"],
+  plug: ["mdi:power-plug", "mdi:power-plug-off"],
+  power: ["mdi:power-plug", "mdi:power-plug-off"],
+  presence: ["mdi:home", "mdi:home-outline"],
+  problem: ["mdi:alert-circle", "mdi:check-circle"],
+  running: ["mdi:play", "mdi:stop"],
+  safety: ["mdi:alert-circle", "mdi:check-circle"],
+  smoke: ["mdi:smoke-detector-variant-alert", "mdi:smoke-detector-variant"],
+  sound: ["mdi:music-note", "mdi:music-note-off"],
+  tamper: ["mdi:alert-circle", "mdi:check-circle"],
+  update: ["mdi:package-up", "mdi:package"],
+  vibration: ["mdi:vibrate", "mdi:crop-portrait"],
+  window: ["mdi:window-open", "mdi:window-closed"],
+};
 export const stateIcon = (st?: HassEntity | null): string => {
   if (!st) return "mdi:help-circle-outline";
   if (st.attributes?.icon) return st.attributes.icon;
   const domain = st.entity_id.split(".")[0];
   const dc: string | undefined = st.attributes?.device_class;
+  const binary = domain === "binary_sensor" && dc ? BINARY_DC_ICON[dc] : undefined;
+  if (binary) return binary[st.state === "on" ? 0 : 1];
   const byDc = dc ? DC_ICON[dc] : undefined;
   if (byDc) return typeof byDc === "function" ? byDc(st.state) : byDc;
   if (domain === "sensor" && dc === "battery") return "mdi:battery";
