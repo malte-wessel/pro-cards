@@ -21,22 +21,40 @@ const host = ref<HTMLDivElement | null>(null);
 const shown = ref(false);
 const handles: MountHandle[] = [];
 
-// The first section's first card is the wall (a layout card): its cards repeat until they fill
-// the stage's rows, and stop there on a short one, each pass three cards on so a copy never sits
-// under its original. Columns as the container queries below give them on the stage (larger than
-// the screen from 960 px, where it is tilted: TILTED); a poster is about 190 px tall.
-const POSTER = 190;
-const TILTED = { width: 1.35, height: 1.15 };
-const fill = (secs: Section[]): Section[] => {
+// The first section's first card is the wall (a layout card): its cards repeat until their cells
+// cover the stage, and stop there, each pass three cards on so a copy never sits under its
+// original. The stage is measured (its layout box: the tilt turns it away from its right edge,
+// so it never shows more than that); columns as the container queries below give them on the
+// grid. A cell is one row of the sections grid with its gap; a card takes its `view_layout`
+// span, else a poster's one column and three rows. A span that does not fit the end of a row
+// leaves a hole, so the wall comes out at least as tall as its cells.
+const ROW = 64;
+interface WallCard {
+  view_layout?: { span?: number | [number, number] };
+}
+const cellsOf = (card: unknown, cols: number): number => {
+  const span = (card as WallCard)?.view_layout?.span;
+  const [c, r] = Array.isArray(span) ? span : [typeof span === "number" ? span : 1, 3];
+  return Math.min(c, cols) * r;
+};
+const fill = (secs: Section[], grid: HTMLElement): Section[] => {
   const wall = secs[0]?.cards?.[0];
   const cards = wall?.cards;
-  if (!cards?.length) return secs;
-  const tilted = innerWidth >= 960;
-  const width = innerWidth * (tilted ? TILTED.width : 1);
-  const cols = width >= 1184 ? 6 : width >= 624 ? 4 : 2;
-  const n = cols * (Math.ceil((innerHeight * (tilted ? TILTED.height : 1)) / POSTER) + 1);
+  const stage = grid.parentElement;
+  if (!cards?.length || !stage) return secs;
+  const pad = getComputedStyle(stage);
+  const height = stage.clientHeight - parseFloat(pad.paddingTop) - parseFloat(pad.paddingBottom);
+  const width = grid.clientWidth;
+  const cols = width >= 1200 ? 6 : width >= 640 ? 4 : 2;
+  // (the last row has no gap after it, so the wall may end a gap short: under the bottom fade)
+  const need = cols * Math.ceil(height / ROW);
   const len = cards.length;
-  const filled = Array.from({ length: n }, (_, i) => cards[(i + Math.floor(i / len) * 3) % len]);
+  const filled: unknown[] = [];
+  for (let i = 0, cells = 0; cells < need; i++) {
+    const card = cards[(i + Math.floor(i / len) * 3) % len];
+    filled.push(card);
+    cells += cellsOf(card, cols);
+  }
   return [{ ...secs[0], cards: [{ ...wall, cards: filled }, ...secs[0].cards!.slice(1)] }, ...secs.slice(1)];
 };
 
@@ -44,7 +62,7 @@ onMounted(async () => {
   if (!sections.value) return;
   try {
     await loadRuntime();
-    handles.push(...(await mountSections(host.value!, fill(sections.value))));
+    handles.push(...(await mountSections(host.value!, fill(sections.value, host.value!))));
     requestAnimationFrame(() => (shown.value = true));
   } catch (err) {
     console.error("hero dashboard:", err);
