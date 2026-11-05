@@ -53,7 +53,8 @@ describe("multi-trend-card helpers", () => {
       }),
       {},
     );
-    expect(defaults).toEqual({ entities: [{ entity: "sensor.a" }] });
+    // (an entity with nothing of its own is written as its id)
+    expect(defaults).toEqual({ entities: ["sensor.a"] });
     // a cleared smoothing field drops the key
     expect(formToConfig({ ...data, smoothing_minutes: undefined }, cfg)).not.toHaveProperty(
       "smoothing_minutes",
@@ -77,12 +78,13 @@ describe("multi-trend-card helpers", () => {
     data["ent__sensor.a__name"] = "Renamed";
     expect(formToConfig(data, cfg).entities).toEqual([
       { entity: "sensor.a", name: "Renamed", visibility: vis, rules },
-      { entity: "sensor.b" },
+      // written as its id, it stays one
+      "sensor.b",
     ]);
-    // an entity added in the form starts empty; a moved one keeps its keys
+    // an entity added in the form starts empty (its id); a moved one keeps its keys
     data.entities = ["sensor.c", "sensor.a"];
     expect(formToConfig(data, cfg).entities).toEqual([
-      { entity: "sensor.c" },
+      "sensor.c",
       { entity: "sensor.a", name: "Renamed", visibility: vis, rules },
     ]);
   });

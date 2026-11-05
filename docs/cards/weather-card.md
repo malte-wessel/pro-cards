@@ -184,6 +184,10 @@ sections:
 
 :::
 
+## The visual editor
+
+Home Assistant's card editor shows the card's own options at the top: the entity, the texts, the header and its badges, the condition icons, the defaults of the entity sections and, as YAML, the rules. Below, each section has a tab with a form of its type: the lead, a forecast (daily or hourly, rows or columns, the rain figures), a trend (its window, its lines in order, the layout and axes) or an entity group (its layout and what it shows; its entities as YAML). **+** adds a section (the lead first), and the buttons over a tab move, duplicate or delete it; without sections the card is a tile. A value left at its default writes nothing, and what the form does not show stays in the YAML as written. Try it in the [Playground](/playground), or with **Edit** under any example.
+
 ## Reference
 
 ### Conditions

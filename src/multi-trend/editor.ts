@@ -79,7 +79,7 @@ export const formToConfig = (
   setOrDrop(config, "x_axis", true, !data.x_axis);
   setOrDrop(config, "y_axis", true, !data.y_axis);
   // each entity starts from the one it was (the first unused with its id), so the keys the form
-  // does not show (visibility) stay
+  // does not show (visibility) stay, and so does a bare id
   const before = (prev.entities || []).map((e) => (typeof e === "string" ? { entity: e } : e));
   const used = new Set<number>();
   config.entities = entityIds(data).map((id) => {
@@ -93,7 +93,9 @@ export const formToConfig = (
       color = data[`ent__${id}__color`];
     if (name) o.name = String(name);
     if (color) o.color = String(color);
-    return o;
+    // an entity with nothing of its own stays its id, unless it was written as an object
+    const was = k >= 0 ? prev.entities?.[k] : undefined;
+    return Object.keys(o).length === 1 && typeof was !== "object" ? id : o;
   });
   return config;
 };

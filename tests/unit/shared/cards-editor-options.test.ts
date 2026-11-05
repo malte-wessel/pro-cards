@@ -20,7 +20,12 @@ import { SWIPE_CONVS, swipeSchema } from "../../../src/swipe/editor.ts";
 import { cardName } from "../../../src/shared/cards/editor.ts";
 import { snapshot } from "../../../docs/.vitepress/theme/ha-shim/hass.ts";
 import type { CardConfigBase, HaFormData, HaFormSchema } from "../../../src/shared/ha.ts";
-import { TILE_GROUP_CONVS, cardToTile, tileToCard } from "../../../src/tile-group/editor.ts";
+import {
+  TILE_GROUP_CONVS,
+  TileGroupCardEditor,
+  cardToTile,
+  tileToCard,
+} from "../../../src/tile-group/editor.ts";
 import { docExamples, withNested } from "../docs-examples.ts";
 
 const hass = snapshot();
@@ -455,6 +460,9 @@ describe("a card's name on its tab", () => {
   });
 });
 
+// the editor's options form, which reads nothing of the element
+const ed = TileGroupCardEditor.prototype;
+
 describe("the tile group's editor", () => {
   it("writes every docs example's header, layout and tiles back as they were", () => {
     let n = 0;
@@ -466,6 +474,8 @@ describe("the tile group's editor", () => {
           optionsFromForm(optionsToForm(card, TILE_GROUP_CONVS), card, TILE_GROUP_CONVS),
           file,
         ).toEqual(card);
+        // the header's badges too, through the editor's own form
+        expect(ed._optionsFromForm(ed._optionsToForm(card), card), file).toEqual(card);
         // a tile as the tile's editor takes it, and back (the editor keeps an untouched tile's
         // own spelling: `{ entity }` stays an object)
         for (const tile of (card.tiles as unknown[]) ?? [])
@@ -473,5 +483,33 @@ describe("the tile group's editor", () => {
         n++;
       }
     expect(n).toBeGreaterThan(3);
+  });
+
+  it("edits the header's badges in the badge list, a badge left alone as written", () => {
+    const card = {
+      type: "custom:tile-group-card-pro",
+      title: "Living room",
+      badges: [
+        "sensor.living_room_temperature",
+        { entity: "sensor.living_room_co2", visual: "sparkline" },
+      ],
+      tiles: ["light.living_room"],
+    } as CardConfigBase;
+    const form = ed._optionsToForm(card);
+    expect(form.badges).toHaveLength(2);
+    // a badge added: written in its shortest spelling, the others as they were
+    const added = {
+      ...form,
+      badges: [...(form.badges as HaFormData[]), { entity: "sensor.battery_soc" }],
+    };
+    expect(ed._optionsFromForm(added, card).badges).toEqual([
+      "sensor.living_room_temperature",
+      { entity: "sensor.living_room_co2", visual: "sparkline" },
+      "sensor.battery_soc",
+    ]);
+    // all removed: the key goes
+    expect(ed._optionsFromForm({ ...form, badges: [] }, card)).not.toHaveProperty("badges");
+    // another option changed: the badges are not touched
+    expect(ed._optionsFromForm({ ...form, title: "Lounge" }, card).badges).toBe(card.badges);
   });
 });

@@ -1,7 +1,7 @@
 // Visual editor of the tile group card: its header and layout (ha-form), its tiles in tabs, each
 // in the tile card's own editor (CardsEditorBase): a tile is a tile card's config without its
 // type, an entity alone written as its id. "+" adds a tile, not a card of any kind. The header's
-// badges stay as written (YAML).
+// badges are the poster's and tile's badge list (a dialog per badge).
 import { CardsEditorBase } from "../shared/cards/editor.ts";
 import {
   AS_IS,
@@ -11,6 +11,8 @@ import {
 } from "../shared/cards/editor-options.ts";
 import type { CardConfigBase, HaFormData, HaFormSchema, HomeAssistant } from "../shared/ha.ts";
 import { hasString, t } from "../shared/i18n.ts";
+import { badgesFromForm, badgesToForm } from "../shared/kinds/editor-form.ts";
+import { badgesField } from "../shared/kinds/editor-schema.ts";
 import { TILE_GROUP_LAYOUTS, TILE_TYPE } from "./config.ts";
 
 export const TILE_GROUP_CONVS: Record<string, Conv> = {
@@ -58,6 +60,7 @@ export const tileGroupSchema = (hass: HomeAssistant | undefined): HaFormSchema[]
     },
   },
   { name: "title_tap_action", selector: { ui_action: { default_action: "none" } } },
+  badgesField(hass),
 ];
 
 // a tile cut to what the layout draws, as the editor switches it: no tile in a group takes
@@ -135,11 +138,21 @@ export class TileGroupCardEditor extends CardsEditorBase {
     return tileGroupSchema(hass);
   }
   _optionsToForm(config: CardConfigBase) {
-    return optionsToForm(config, TILE_GROUP_CONVS, DEFAULTS);
+    return {
+      ...optionsToForm(config, TILE_GROUP_CONVS, DEFAULTS),
+      badges: badgesToForm(config.badges),
+    };
   }
   // another layout: each tile cut to what it draws
   _optionsFromForm(data: HaFormData, prev: CardConfigBase) {
     const next = optionsFromForm(data, prev, TILE_GROUP_CONVS, DEFAULTS);
+    // the header's badges: rewritten only when the list changed, a badge left as it was keeps
+    // its spelling (outside the convs, which do not see what was written)
+    if (JSON.stringify(data.badges ?? []) !== JSON.stringify(badgesToForm(prev.badges))) {
+      const badges = badgesFromForm(data.badges, prev.badges);
+      if (badges.length) (next as Record<string, unknown>).badges = badges;
+      else delete (next as Record<string, unknown>).badges;
+    }
     const layout = (c: CardConfigBase) => (c as { layout?: string }).layout ?? "list";
     if (layout(next) === layout(prev) || !Array.isArray(next.cards)) return next;
     return {

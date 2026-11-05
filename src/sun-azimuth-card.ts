@@ -25,7 +25,7 @@
  *   night_color: indigo
  *   sky_color: light-blue
  */
-import { freshShadow, syncKeepHeight, registerCard } from "./shared/card.ts";
+import { defineElement, freshShadow, syncKeepHeight, registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
 import { fmtTime, langOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
@@ -57,6 +57,7 @@ import { renderDial } from "./sun-azimuth/render/dial.ts";
 import { eventsHtml, fillEvents, fillHouse, houseHtml } from "./sun-azimuth/render/events.ts";
 import { fillHead, headHtml } from "./sun-azimuth/render/head.ts";
 import { renderScene } from "./sun-azimuth/render/scene.ts";
+import { SunAzimuthCardEditor } from "./sun-azimuth/editor.ts";
 import { renderSides } from "./sun-azimuth/render/sides.ts";
 import { compass, deg } from "./sun-azimuth/render/text.ts";
 import { sideDays, sidesAt, timelineSpan, type Side, type SideDay } from "./sun-azimuth/sides.ts";
@@ -66,6 +67,7 @@ import { nearestOnTrack, type TrackPoint } from "./sun-azimuth/track.ts";
 import { ofDomain } from "./shared/suggest.ts";
 
 const CARD_TYPE = "sun-azimuth-card-pro";
+defineElement(`${CARD_TYPE}-editor`, SunAzimuthCardEditor);
 
 export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
   // the card's text styles, measured once per theme (typography.ts)
@@ -146,6 +148,9 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
   _plotHeight = Infinity;
   _naturalHeight = 0;
 
+  static getConfigElement() {
+    return document.createElement(`${CARD_TYPE}-editor`);
+  }
   static getStubConfig(hass?: HomeAssistant) {
     return { title: t(hass, "azimuth.stub_title") };
   }

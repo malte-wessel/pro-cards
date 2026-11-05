@@ -1,9 +1,18 @@
-// The heading card: its config, and its title and icon as buttons (happy-dom). The badges' look is
-// covered by the visual cases (hc-*), their normalisation in shared/entity/config.test.ts.
+// The heading card: its config, its title and icon as buttons, and its visual editor (happy-dom).
+// The badges' look is covered by the visual cases (hc-*), their normalisation in
+// shared/entity/config.test.ts, their dialog in shared/kinds/editor-form.test.ts.
 import { afterEach, describe, expect, it } from "vitest";
 import { HeadingCard } from "../../src/heading-card.ts";
 import { normalizeHeadingCardConfig } from "../../src/heading/config.ts";
-import type { HassEntity, HomeAssistant } from "../../src/shared/ha.ts";
+import type { HaFormSchema, HassEntity, HomeAssistant } from "../../src/shared/ha.ts";
+import {
+  configToForm,
+  editorSchema,
+  formToConfig,
+  HEADING_LABELS,
+} from "../../src/heading/editor.ts";
+import { hasString } from "../../src/shared/i18n.ts";
+import { docExamples, withNested } from "./docs-examples.ts";
 
 const hass = () =>
   ({
@@ -135,5 +144,88 @@ describe("heading-card-pro title and icon", () => {
     expect(header.querySelector(".subtitle")?.textContent).toBe("3 lights on");
     const empty = mount({});
     expect((empty.header.querySelector(".subtitle") as HTMLElement).hidden).toBe(true);
+  });
+});
+
+describe("heading-card-pro editor", () => {
+  const T = "custom:heading-card-pro";
+
+  it("is the card's config element", () => {
+    expect(HeadingCard.getConfigElement().tagName).toBe("HEADING-CARD-PRO-EDITOR");
+  });
+
+  it("writes every docs example back as it was", () => {
+    let n = 0;
+    for (const { file, cfg } of docExamples())
+      for (const c of withNested(cfg)) {
+        const card = c as Record<string, unknown>;
+        if (card?.type !== T) continue;
+        expect(formToConfig(configToForm(card), card), file).toEqual(card);
+        n++;
+      }
+    expect(n).toBeGreaterThan(3);
+  });
+
+  it("writes nothing for a select left at its default, and the choice otherwise", () => {
+    const card = { type: T, title: "Office" };
+    const form = configToForm(card);
+    expect(form).toMatchObject({ style: "title", align: "start", badge_size: "m", hover: true });
+    expect(formToConfig({ ...form, style: "big", badges_position: "below" }, card)).toEqual({
+      ...card,
+      style: "big",
+      badges_position: "below",
+    });
+    // back to the defaults: the keys go; a turned-off hover is the only boolean written
+    const big = { ...card, style: "big", overflow: "scroll" };
+    expect(formToConfig({ ...configToForm(big), style: "title", overflow: "wrap" }, big)).toEqual(
+      card,
+    );
+    expect(formToConfig({ ...form, hover: false }, card)).toEqual({ ...card, hover: false });
+  });
+
+  it("keeps what it does not show and what it was not asked to change", () => {
+    const card = {
+      type: T,
+      title: "Office",
+      align: "start",
+      badges: [{ entity: "sensor.office_co2", visual: { type: "sparkline", hours: 6 } }],
+      grid_options: { columns: 6 },
+      visibility: [{ condition: "screen", media_query: "(min-width: 0px)" }],
+    };
+    // the subtitle typed: the written default and the badge's own spelling stay
+    expect(formToConfig({ ...configToForm(card), subtitle: "Upstairs" }, card)).toEqual({
+      ...card,
+      subtitle: "Upstairs",
+    });
+    // cleared texts and actions go
+    const full = { ...card, icon: "mdi:desk", title_tap_action: { action: "none" } };
+    const cleared = { ...configToForm(full), icon: "", title_tap_action: undefined };
+    expect(formToConfig(cleared, full)).toEqual(card);
+  });
+
+  it("edits the badges in the badge list, a badge left alone as written", () => {
+    const card = {
+      type: T,
+      title: "Office",
+      badges: ["sensor.office_temperature", { entity: "sensor.office_co2", visual: "sparkline" }],
+    };
+    const form = configToForm(card);
+    const badges = form.badges as Record<string, unknown>[];
+    expect(
+      formToConfig({ ...form, badges: [badges[1], { entity: "sensor.battery_soc" }] }, card),
+    ).toEqual({
+      ...card,
+      badges: [{ entity: "sensor.office_co2", visual: "sparkline" }, "sensor.battery_soc"],
+    });
+    expect(formToConfig({ ...form, badges: [] }, card)).toEqual({ type: T, title: "Office" });
+  });
+
+  it("labels every field it draws, in its own words", () => {
+    const names = (s: HaFormSchema[]): string[] =>
+      s.flatMap((x) => (x.schema ? names(x.schema as HaFormSchema[]) : [x.name]));
+    for (const name of names(editorSchema())) {
+      expect(HEADING_LABELS[name], name).toBeDefined();
+      expect(hasString(HEADING_LABELS[name]), name).toBe(true);
+    }
   });
 });

@@ -117,6 +117,10 @@ sky_color: teal
 
 :::
 
+## The visual editor
+
+Home Assistant's card editor shows a form for the sun azimuth card: the title, the icon and the view, then **House** (where the front faces, the roof, and each side's name or a shared wall; an empty name shows the direction the side faces), **3D view** (the camera's bearing and its slider; not for the dial), **Content** (what is shown under the plot) and the colours. A value left at its default writes nothing, and what the form does not show stays in the YAML as written. Try it in the [Playground](/playground), or with **Edit** under any example.
+
 ## Reference
 
 | Key              | Default      | Description                                                                                                                                 |

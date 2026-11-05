@@ -9,6 +9,11 @@ export const EDITABLE = new Set([
   "custom:layout-card-pro",
   "custom:swipe-card-pro",
   "custom:tile-group-card-pro",
+  "custom:heading-card-pro",
+  "custom:sun-azimuth-card-pro",
+  "custom:sun-path-card-pro",
+  "custom:multi-trend-card-pro",
+  "custom:weather-card-pro",
 ]);
 export const isEditable = (c: unknown) =>
   !!c && typeof c === "object" && EDITABLE.has(String((c as CardConfigBase).type));

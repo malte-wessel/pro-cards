@@ -17,7 +17,7 @@
  *   tap_action / hold_action / double_tap_action   # more-info / more-info / none
  *   hover: false                           # Home Assistant's hover and press layers (also per section)
  */
-import { registerCard } from "./shared/card.ts";
+import { defineElement, registerCard } from "./shared/card.ts";
 import { EntityCardBase, groupCardSize, type VisState } from "./shared/entity/base.ts";
 import { cssColor } from "./shared/color.ts";
 import type { EntityItem } from "./shared/entity/config.ts";
@@ -50,6 +50,10 @@ import { buildForecast, drawForecast } from "./weather/render/forecast.ts";
 import { sectionShell } from "./weather/render/section.ts";
 import { buildTrend, drawTrendSection, type ForecastTrendEl } from "./weather/render/trend.ts";
 import { STYLE_WEATHER_CARD } from "./weather/styles.ts";
+import { SECTION_EDITOR, WeatherCardEditor, WeatherSectionEditor } from "./weather/editor.ts";
+
+defineElement(`${CARD_TYPE}-editor`, WeatherCardEditor);
+defineElement(SECTION_EDITOR, WeatherSectionEditor);
 import { ofDomain } from "./shared/suggest.ts";
 
 // what is shown, with a flag per section
@@ -59,6 +63,9 @@ interface WeatherVis extends VisState {
 
 export class WeatherCard extends EntityCardBase {
   static cardType = CARD_TYPE;
+  static getConfigElement() {
+    return document.createElement(`${CARD_TYPE}-editor`);
+  }
   static getStubConfig(hass: HomeAssistant | undefined, entities?: string[]) {
     const e =
       (entities || []).find((id) => id.startsWith("weather.")) ||

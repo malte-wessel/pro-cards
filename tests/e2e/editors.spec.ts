@@ -392,3 +392,93 @@ test("the tile group's editor edits a tile in the tile's own editor", async ({ p
   });
   await expect(e.editor.locator(".tab").first()).toHaveText("1Worktop");
 });
+
+test("the heading's style, layout and badges are set in its form", async ({ page }) => {
+  const e = await openEditor(page, { type: "custom:heading-card-pro", title: "Office" });
+  await choose(e.form, "style", "big");
+  await expect
+    .poll(e.last)
+    .toEqual({ type: "custom:heading-card-pro", title: "Office", style: "big" });
+  // a badge added in its dialog: the entity alone is written as its id
+  const item = await addItem(e.form, "badges");
+  await pickEntity(item, "entity", "gust", "Wind gust");
+  await saveItem(e.form, "badges");
+  await expect.poll(e.last).toMatchObject({ style: "big", badges: ["sensor.wind_gust"] });
+  // where the badges sit, from the Layout section; back to the default writes nothing
+  await openSection(e.form, "Layout");
+  await choose(e.form, "badges_position", "below");
+  await expect.poll(e.last).toMatchObject({ badges_position: "below" });
+  await choose(e.form, "badges_position", "end");
+  await expect.poll(e.last).toEqual({
+    type: "custom:heading-card-pro",
+    title: "Office",
+    style: "big",
+    badges: ["sensor.wind_gust"],
+  });
+});
+
+test("the tile group's header badges are added in the badge list", async ({ page }) => {
+  const e = await openEditor(page, {
+    type: "custom:tile-group-card-pro",
+    title: "Living room",
+    tiles: ["light.living_room"],
+  });
+  const item = await addItem(e.form, "badges");
+  await pickEntity(item, "entity", "gust", "Wind gust");
+  await saveItem(e.form, "badges");
+  await expect.poll(e.last).toEqual({
+    type: "custom:tile-group-card-pro",
+    title: "Living room",
+    badges: ["sensor.wind_gust"],
+    tiles: ["light.living_room"],
+  });
+});
+
+test("the sun azimuth's house and view are set in its form", async ({ page }) => {
+  const e = await openEditor(page, { type: "custom:sun-azimuth-card-pro", house: { front: 110 } });
+  await openSection(e.form, "House");
+  // a side's default name is where it faces from the front's bearing
+  await expect(field(e.form, "side_front")).toContainText("Default: East side");
+  await choose(e.form, "roof", "hip");
+  await expect.poll(e.last).toEqual({
+    type: "custom:sun-azimuth-card-pro",
+    house: { front: 110, roof: "hip" },
+  });
+  await toggle(e.form, "wall_left");
+  await expect.poll(e.last).toMatchObject({ house: { sides: { left: false } } });
+  // a dial has no camera
+  await expect(e.form.locator("summary", { hasText: "3D view" })).toHaveCount(1);
+  await choose(e.form, "view", "dial");
+  await expect.poll(e.last).toMatchObject({ view: "dial" });
+  await expect(e.form.locator("summary", { hasText: "3D view" })).toHaveCount(0);
+});
+
+test("the weather card's sections are edited in tabs, each in a form of its type", async ({
+  page,
+}) => {
+  const e = await openEditor(page, { type: "custom:weather-card-pro", entity: "weather.home" });
+  // no sections: a tile; "+" adds the lead, then a forecast
+  await expect(e.editor.locator(".child")).toContainText("the card is a tile");
+  await e.editor.locator(".icon.add").click();
+  await expect.poll(e.last).toEqual({
+    type: "custom:weather-card-pro",
+    entity: "weather.home",
+    sections: [{ type: "hero" }],
+  });
+  await e.editor.locator(".icon.add").click();
+  await expect(e.editor.locator(".tab")).toHaveText(["1Lead", "2Forecast"]);
+  // the forecast's own form: hourly shows hours
+  const section = e.editor.locator("weather-card-pro-section-editor ha-form");
+  await choose(section, "mode", "hourly");
+  await fill(section, "hours", "24");
+  await expect.poll(e.last).toMatchObject({
+    sections: [{ type: "hero" }, { type: "forecast", mode: "hourly", hours: 24 }],
+  });
+  // a section has no code view of its own
+  await expect(e.editor.locator(".tools .icon").first()).toBeHidden();
+  // both deleted: a tile again, without an empty list
+  await e.editor.getByRole("button", { name: "Delete" }).click();
+  await e.editor.locator(".tab").first().click();
+  await e.editor.getByRole("button", { name: "Delete" }).click();
+  await expect.poll(e.last).toEqual({ type: "custom:weather-card-pro", entity: "weather.home" });
+});

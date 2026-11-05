@@ -220,7 +220,7 @@ test("an example's Edit link opens its card", async ({ page }) => {
 });
 
 test("an example that is not a Pro card the editor edits has no Edit link", async ({ page }) => {
-  await page.goto("cards/sun-path-card");
+  await page.goto("cards/rain-card");
   await expect(page.locator(".live").first()).toBeVisible({ timeout: 20_000 });
   await expect(page.locator("a.edit-link")).toHaveCount(0);
 });

@@ -23,7 +23,7 @@
  *       kind: none                         # its kind's colours (left out: the entity's)
  *       rules: [{ above: 24, color: orange, value: Warm, style: filled, pulse: true }]
  */
-import { registerCard } from "./shared/card.ts";
+import { defineElement, registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
@@ -32,10 +32,16 @@ import { tplOf } from "./shared/entity/model.ts";
 import { isNum, qs } from "./shared/util.ts";
 import { CARD_TYPE, normalizeHeadingCardConfig, type HeadingCardConfig } from "./heading/config.ts";
 import { STYLE_HEADING_CARD } from "./heading/styles.ts";
+import { HeadingCardEditor } from "./heading/editor.ts";
+
+defineElement(`${CARD_TYPE}-editor`, HeadingCardEditor);
 
 export class HeadingCard extends EntityCardBase {
   static cardType = CARD_TYPE;
   declare _config?: HeadingCardConfig;
+  static getConfigElement() {
+    return document.createElement(`${CARD_TYPE}-editor`);
+  }
   static getStubConfig(hass: HomeAssistant | undefined, entities?: string[]) {
     const sensor = (entities || []).find(
       (id) => id.startsWith("sensor.") && hass?.states[id] && isNum(hass.states[id].state),

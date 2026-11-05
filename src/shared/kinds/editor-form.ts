@@ -275,9 +275,11 @@ const sameValue = (a: unknown, b: unknown): boolean => {
     return a.length === b.length && a.every((x, i) => sameValue(x, b[i]));
   return a === b;
 };
+// the badges as written → the dialog's items
+export const badgesToForm = (v: unknown): Raw[] => (Array.isArray(v) ? v.map(badgeToForm) : []);
 // the dialog's badges → the badges as written: one whose fields are as a written one's keeps
 // its spelling (wherever it moved), the others are written from their fields
-const badgesFromForm = (v: unknown, written: unknown): unknown[] => {
+export const badgesFromForm = (v: unknown, written: unknown): unknown[] => {
   const was = Array.isArray(written) ? written : [];
   const forms: (Raw | null)[] = was.map(badgeToForm);
   return (Array.isArray(v) ? (v as Raw[]) : []).map((item) => {
@@ -425,7 +427,7 @@ export const configToForm = (
   if (c.status === false) d.hide_status = true;
   else d.status = c.status ?? "";
   d.status_badge = c.status_badge === true;
-  d.badges = (Array.isArray(c.badges) ? c.badges : []).map(badgeToForm);
+  d.badges = badgesToForm(c.badges);
   // the rules: the kind's (predefined) while the card writes none, else its own
   const predefined = c.rules === undefined && kindRules.length > 0;
   d.rules_from = predefined ? DEFAULT : "own";

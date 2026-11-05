@@ -31,12 +31,12 @@ Pro Cards are polished dashboard cards that look like they belong in Home Assist
 | Tile Group Card Pro  | `custom:tile-group-card-pro`  | Several tiles on one card under a title with badges: a room or a set of devices.                                                             | Visual    |
 | Multi Trend Card Pro | `custom:multi-trend-card-pro` | Tile-style trend graph for several sensors with a hover/touch tooltip.                                                                       | Visual    |
 | Sun Path Card Pro    | `custom:sun-path-card-pro`    | Today's sun elevation with sunrise, sunset, dawn, noon and dusk.                                                                             | Visual    |
-| Sun Azimuth Card Pro | `custom:sun-azimuth-card-pro` | Where the sun is around the house: 3D scene or sky dial, and the sides it shines on today.                                                   | YAML only |
-| Weather Card Pro     | `custom:weather-card-pro`     | Current conditions, attributes and the hourly / daily forecast of a weather entity, with rules, sections and templates.                      | YAML only |
+| Sun Azimuth Card Pro | `custom:sun-azimuth-card-pro` | Where the sun is around the house: 3D scene or sky dial, and the sides it shines on today.                                                   | Visual    |
+| Weather Card Pro     | `custom:weather-card-pro`     | Current conditions, attributes and the hourly / daily forecast of a weather entity, with rules, sections and templates.                      | Visual    |
 | Power Flow Card Pro  | `custom:power-flow-card-pro`  | Solar, battery and grid → home → rooms and devices as a tree with animated flow, the state of the home and its self-sufficiency.             | YAML only |
 | Energy Flow Card Pro | `custom:energy-flow-card-pro` | The power flow's tree over a period (today, this week, month or year) from energy meters and their long-term statistics.                     | YAML only |
 | Layout Card Pro      | `custom:layout-card-pro`      | Cards inside a section in a grid or masonry, arranged by how many view columns the section spans, as separate cards or one seamless surface. | Visual    |
-| Heading Card Pro     | `custom:heading-card-pro`     | A heading with live badges: values, rings, dots, pictures, bars, sparklines, trends and switches, in their kind's colours.                   | YAML only |
+| Heading Card Pro     | `custom:heading-card-pro`     | A heading with live badges: values, rings, dots, pictures, bars, sparklines, trends and switches, in their kind's colours.                   | Visual    |
 | Swipe Card Pro       | `custom:swipe-card-pro`       | Cards side by side in a strip you swipe through, the next one peeking in, with dots; a grid once the section is wide enough.                 | Visual    |
 
 Deprecated in 3.0 and gone in 4.0 ([Moving to 3.0](https://malte-wessel.github.io/pro-cards/guide/migrating)):

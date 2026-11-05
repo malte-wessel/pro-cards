@@ -1,4 +1,12 @@
 import { describe, it, expect } from "vitest";
+import {
+  AZIMUTH_LABELS,
+  configToForm,
+  editorSchema,
+  formToConfig,
+} from "../../src/sun-azimuth/editor.ts";
+import { hasString } from "../../src/shared/i18n.ts";
+import { docExamples, withNested } from "./docs-examples.ts";
 import { solarPosition } from "../../src/shared/solar.ts";
 import {
   angleDiff,
@@ -29,7 +37,7 @@ import {
   pointOf,
   SCENE,
 } from "../../src/sun-azimuth/constants.ts";
-import type { HomeAssistant } from "../../src/shared/ha.ts";
+import type { HaFormSchema, HomeAssistant } from "../../src/shared/ha.ts";
 import { SunAzimuthCard } from "../../src/sun-azimuth-card.ts";
 import { chipSvg, timeChip } from "../../src/sun-azimuth/render/text.ts";
 
@@ -656,5 +664,92 @@ describe("sun-azimuth-card element", () => {
     expect(el._config.front).toBe(0);
     expect(el._config.hidden).toEqual([]);
     expect(el._config.camera).toBe(180);
+  });
+});
+
+describe("sun-azimuth-card-pro editor", () => {
+  const T = "custom:sun-azimuth-card-pro";
+
+  it("is the card's config element", () => {
+    expect(SunAzimuthCard.getConfigElement().tagName).toBe("SUN-AZIMUTH-CARD-PRO-EDITOR");
+  });
+
+  it("writes every docs example back as it was", () => {
+    let n = 0;
+    for (const { file, cfg } of docExamples())
+      for (const c of withNested(cfg)) {
+        const card = c as Record<string, unknown>;
+        if (card?.type !== T) continue;
+        expect(formToConfig(configToForm(card), card), file).toEqual(card);
+        n++;
+      }
+    expect(n).toBeGreaterThan(3);
+  });
+
+  it("writes nothing for a value at its default, and the value otherwise", () => {
+    const card = { type: T };
+    const form = configToForm(card);
+    expect(form).toMatchObject({
+      view: "3d",
+      front: 0,
+      roof: "gable",
+      camera: 180,
+      show_summary: true,
+    });
+    expect(formToConfig({ ...form, view: "dial", camera: 90, show_sides: true }, card)).toEqual({
+      type: T,
+      view: "dial",
+      camera: 90,
+      show_sides: true,
+    });
+    // back to the defaults: the keys go; a switch off by default is written only when on
+    const set = { type: T, view: "dial", show_summary: false, sun_color: "orange" };
+    const back = { ...configToForm(set), view: "3d", show_summary: true, sun_color: "amber" };
+    expect(formToConfig(back, set)).toEqual(card);
+  });
+
+  it("edits the house's parts, keeping what it does not change", () => {
+    const card = {
+      type: T,
+      house: { front: 110, sides: { front: "Street" } },
+      grid_options: { rows: 6 },
+    };
+    const form = configToForm(card);
+    // a roof: the front and the names stay as written
+    expect(formToConfig({ ...form, roof: "hip" }, card)).toEqual({
+      ...card,
+      house: { front: 110, sides: { front: "Street" }, roof: "hip" },
+    });
+    // a shared wall: no name, written as false
+    expect(formToConfig({ ...form, wall_left: true }, card)).toEqual({
+      ...card,
+      house: { front: 110, sides: { front: "Street", left: false } },
+    });
+    // a name typed for a wall: the wall gets sun after all
+    const wall = { type: T, house: { sides: { left: false } } };
+    expect(formToConfig({ ...configToForm(wall), side_left: "Garden" }, wall)).toEqual({
+      type: T,
+      house: { sides: { left: "Garden" } },
+    });
+    // everything back to its default: no house left
+    expect(formToConfig({ ...form, front: 0, side_front: "" }, card)).toEqual({
+      type: T,
+      grid_options: { rows: 6 },
+    });
+  });
+
+  it("shows the camera only for the 3D view", () => {
+    const titles = (s: HaFormSchema[]) => s.map((x) => x.title).filter(Boolean);
+    expect(titles(editorSchema(undefined, { view: "3d" }))).toContain("3D view");
+    expect(titles(editorSchema(undefined, { view: "dial" }))).not.toContain("3D view");
+  });
+
+  it("labels every field it draws, in its own words", () => {
+    const names = (s: HaFormSchema[]): string[] =>
+      s.flatMap((x) => (x.schema ? names(x.schema as HaFormSchema[]) : [x.name]));
+    for (const name of names(editorSchema(undefined, { view: "3d" }))) {
+      expect(AZIMUTH_LABELS[name], name).toBeDefined();
+      expect(hasString(AZIMUTH_LABELS[name]), name).toBe(true);
+    }
   });
 });

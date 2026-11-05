@@ -127,8 +127,8 @@ test("several cards: a picker chooses the one the form edits", async ({ page }) 
     [
       "- type: custom:tile-card-pro",
       "  entity: light.kitchen",
-      "- type: custom:heading-card-pro",
-      "  title: Not edited",
+      "- type: custom:rain-card-pro",
+      "  entity: sensor.rain_rate_roof",
       "- type: custom:poster-card-pro",
       "  entity: sensor.wind_speed",
       "",
@@ -159,7 +159,10 @@ test("a card the visual editor does not edit opens in YAML", async ({ page }) =>
   await menu.getByRole("button", { name: "Power flow card", exact: true }).click();
   await expect(tab(page, "YAML")).toHaveAttribute("aria-selected", "true");
   await expect(tab(page, "Visual")).toBeDisabled();
-  await expect(tab(page, "Visual")).toHaveAttribute("title", /edits tiles, posters, layout/);
+  await expect(tab(page, "Visual")).toHaveAttribute(
+    "title",
+    /edits tiles, posters, tile groups, headings, layout/,
+  );
   await expect(previewCard(page)).toHaveJSProperty("tagName", "POWER-FLOW-CARD-PRO");
   // an editable card again: Visual comes back
   await openMenu(page, "Examples").then((m) =>
@@ -234,4 +237,39 @@ test("offers the keys and values the schema takes", async ({ page }) => {
   await typeYaml(page, "type: custom:tile-card-pro\nentity: light.liv");
   await page.keyboard.press("Control+Space");
   await expect(options.filter({ hasText: "light.living_room" })).toHaveCount(1);
+});
+
+test("a heading opens in its own form", async ({ page }) => {
+  await openPlayground(page);
+  const menu = await openMenu(page, "Examples");
+  await menu.getByRole("button", { name: "Heading card", exact: true }).click();
+  await expect(tab(page, "Visual")).toBeEnabled();
+  await tab(page, "Visual").click();
+  await field(page, "style").locator("select").selectOption("big");
+  await expect.poll(() => yamlText(page)).toContain("style: big");
+  await expect(previewCard(page)).toHaveJSProperty("tagName", "HEADING-CARD-PRO");
+});
+
+test("a sun azimuth card opens in its own form", async ({ page }) => {
+  await openPlayground(page);
+  const menu = await openMenu(page, "Examples");
+  await menu.getByRole("button", { name: "Sun azimuth card", exact: true }).click();
+  await tab(page, "Visual").click();
+  await field(page, "view").locator("select").selectOption("dial");
+  await expect.poll(() => yamlText(page)).toContain("view: dial");
+  await expect(previewCard(page)).toHaveJSProperty("tagName", "SUN-AZIMUTH-CARD-PRO");
+});
+
+test("a weather card opens in its own form, its sections in tabs", async ({ page }) => {
+  await openPlayground(page);
+  const menu = await openMenu(page, "Examples");
+  await menu.getByRole("button", { name: "Weather card", exact: true }).click();
+  await tab(page, "Visual").click();
+  const editor = page.locator(".pg-visual weather-card-pro-editor");
+  await expect(editor.locator(".tab")).toHaveText(["1Lead", "2Entities", "3Trend", "4Forecast"]);
+  await editor.locator(".tab").nth(3).click();
+  const section = editor.locator("weather-card-pro-section-editor ha-form");
+  await fill(section.locator('[data-name="days"] input'), "5");
+  await expect.poll(() => yamlText(page)).toMatch(/type: forecast[\s\S]*days: 5/);
+  await expect(previewCard(page)).toHaveJSProperty("tagName", "WEATHER-CARD-PRO");
 });

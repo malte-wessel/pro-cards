@@ -517,7 +517,7 @@ onBeforeUnmount(() => {
             role="tab"
             :aria-selected="view === 'visual'"
             :disabled="!editable.length"
-            :title="editable.length ? 'Edit with the card\'s own form' : 'The visual editor edits tiles, posters, layout and swipe cards'"
+            :title="editable.length ? 'Edit with the card\'s own form' : 'The visual editor edits tiles, posters, tile groups, headings, layout, swipe, sun path, sun azimuth and multi trend cards'"
             @click="view = 'visual'"
           >
             Visual

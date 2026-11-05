@@ -1,3 +1,14 @@
+import {
+  sectionFromForm,
+  sectionSchema,
+  sectionToForm,
+  WEATHER_LABELS,
+  weatherFromForm,
+  weatherSchema,
+  weatherToForm,
+} from "../../src/weather/editor.ts";
+import { hasString } from "../../src/shared/i18n.ts";
+import { docExamples, withNested } from "./docs-examples.ts";
 import { describe, it, expect } from "vitest";
 import { WeatherCard } from "../../src/weather-card.ts";
 import { normalizeWeatherCardConfig, wantedForecasts } from "../../src/weather/config.ts";
@@ -13,7 +24,12 @@ import {
   hoursOf,
   supportsForecast,
 } from "../../src/shared/weather/forecast.ts";
-import type { ForecastEntry, HassEntity, HomeAssistant } from "../../src/shared/ha.ts";
+import type {
+  ForecastEntry,
+  HaFormSchema,
+  HassEntity,
+  HomeAssistant,
+} from "../../src/shared/ha.ts";
 
 const W = "weather.home";
 const st = (attributes: Record<string, unknown>, state = "sunny") =>
@@ -613,5 +629,128 @@ describe("hover", () => {
       true,
     ]);
     expect(normalizeWeatherCardConfig({ entity: "weather.home" }).entities[0].hover).toBe(false);
+  });
+});
+
+describe("weather-card-pro editor", () => {
+  const T = "custom:weather-card-pro";
+  const E = "weather.home";
+
+  it("is the card's config element, with a form for each section", () => {
+    expect(WeatherCard.getConfigElement().tagName).toBe("WEATHER-CARD-PRO-EDITOR");
+    expect(customElements.get("weather-card-pro-section-editor")).toBeDefined();
+  });
+
+  it("writes every docs example back as it was, the card and each section", () => {
+    let n = 0;
+    for (const { file, cfg } of docExamples())
+      for (const c of withNested(cfg)) {
+        const card = c as Record<string, unknown>;
+        if (card?.type !== T) continue;
+        expect(weatherFromForm(weatherToForm(card), card), file).toEqual(card);
+        for (const s of (card.sections as Record<string, unknown>[]) ?? [])
+          expect(sectionFromForm(sectionToForm(s), s), file).toEqual(s);
+        n++;
+      }
+    expect(n).toBeGreaterThan(5);
+  });
+
+  it("writes nothing for a value at its default, and the value otherwise", () => {
+    const card = { type: T, entity: E };
+    const form = weatherToForm(card);
+    expect(form).toMatchObject({ icon_style: "circle", icon_size: 36, icons: "hass" });
+    expect(weatherFromForm({ ...form, icons: "mdi", icon_size: 48 }, card)).toEqual({
+      ...card,
+      icons: "mdi",
+      icon_size: 48,
+    });
+    const set = { ...card, icon_style: "plain", icons: "mdi" };
+    expect(
+      weatherFromForm({ ...weatherToForm(set), icon_style: "circle", icons: "hass" }, set),
+    ).toEqual(card);
+    // a map of the card's own icons stays as written
+    const own = { ...card, icons: { rainy: "mdi:umbrella" } };
+    expect(weatherToForm(own).icons).toBe("custom");
+    expect(weatherFromForm({ ...weatherToForm(own), title: "Outside" }, own)).toEqual({
+      ...own,
+      title: "Outside",
+    });
+  });
+
+  it("edits a forecast's window, direction and rain figures", () => {
+    const s = { type: "forecast", mode: "hourly", hours: 24 };
+    const form = sectionToForm(s);
+    expect(sectionFromForm({ ...form, mode: "daily" }, s)).toEqual({ type: "forecast", hours: 24 });
+    expect(sectionFromForm({ ...form, forecast_layout: "horizontal" }, s)).toEqual({
+      ...s,
+      layout: "horizontal",
+    });
+    // the chance of rain alone is the default; both, or none, are written
+    expect(sectionFromForm({ ...form, rain_amount: true }, s)).toEqual({
+      ...s,
+      show: ["probability", "precipitation"],
+    });
+    expect(sectionFromForm({ ...form, rain_probability: false }, s)).toEqual({ ...s, show: [] });
+  });
+
+  it("writes a trend's lines in their shortest spelling, in their order", () => {
+    const s = { type: "trend" };
+    const form = sectionToForm(s);
+    expect(form.lines).toEqual([{ quantity: "temperature" }, { quantity: "precipitation" }]);
+    const lines = [{ quantity: "wind" }, { quantity: "temperature", name: "Air" }];
+    expect(sectionFromForm({ ...form, lines }, s)).toEqual({
+      type: "trend",
+      show: ["wind", { quantity: "temperature", name: "Air" }],
+    });
+    // back to the default lines: the key goes
+    const set = { type: "trend", show: ["wind"] };
+    const back = {
+      ...sectionToForm(set),
+      lines: [{ quantity: "temperature" }, { quantity: "precipitation" }],
+    };
+    expect(sectionFromForm(back, set)).toEqual(s);
+  });
+
+  it("keeps an entity group's layout as written, `type` or `layout`", () => {
+    const typed = { type: "row", entities: ["humidity"] };
+    expect(sectionFromForm({ ...sectionToForm(typed), group_layout: "grid" }, typed)).toEqual({
+      type: "grid",
+      entities: ["humidity"],
+    });
+    const laid = { layout: "row", entities: ["humidity"] };
+    expect(sectionFromForm({ ...sectionToForm(laid), group_layout: "table" }, laid)).toEqual({
+      layout: "table",
+      entities: ["humidity"],
+    });
+  });
+
+  it("starts a section of another type from scratch, keeping its title and line", () => {
+    const s = { type: "forecast", title: "Next days", divider: true, days: 5 };
+    expect(sectionFromForm({ ...sectionToForm(s), kind: "trend" }, s)).toEqual({
+      type: "trend",
+      title: "Next days",
+      divider: true,
+    });
+    expect(sectionFromForm({ ...sectionToForm(s), kind: "entities" }, s)).toEqual({
+      type: "list",
+      title: "Next days",
+      divider: true,
+      entities: ["humidity", "pressure"],
+    });
+  });
+
+  it("labels every field it draws, in its own words", () => {
+    const names = (s: HaFormSchema[]): string[] =>
+      s.flatMap((x) => (x.schema ? names(x.schema as HaFormSchema[]) : [x.name]));
+    const all = [
+      ...names(weatherSchema(undefined)),
+      ...["hero", "forecast", "trend", "entities"].flatMap((kind) =>
+        names(sectionSchema(undefined, { kind, mode: "daily", group_layout: "grid" })),
+      ),
+    ];
+    for (const name of new Set(all)) {
+      expect(WEATHER_LABELS[name], name).toBeDefined();
+      expect(hasString(WEATHER_LABELS[name]), name).toBe(true);
+    }
   });
 });

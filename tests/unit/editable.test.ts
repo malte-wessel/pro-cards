@@ -11,13 +11,18 @@ import {
 import { docExamples } from "./docs-examples.ts";
 
 describe("the cards the Playground edits visually", () => {
-  it("are the tile, the poster, the tile group, the layout and the swipe card", () => {
+  it("are the cards with a visual editor", () => {
     expect([...EDITABLE].sort()).toEqual([
+      "custom:heading-card-pro",
       "custom:layout-card-pro",
+      "custom:multi-trend-card-pro",
       "custom:poster-card-pro",
+      "custom:sun-azimuth-card-pro",
+      "custom:sun-path-card-pro",
       "custom:swipe-card-pro",
       "custom:tile-card-pro",
       "custom:tile-group-card-pro",
+      "custom:weather-card-pro",
     ]);
     for (const type of EDITABLE) expect(isEditable({ type })).toBe(true);
     for (const c of [

@@ -56,6 +56,7 @@ const STYLE = `
     border-radius: 50%; background: none; color: var(--secondary-text-color); cursor: pointer; padding: 0; }
   .icon:hover:not([disabled]) { background: var(--secondary-background-color); color: var(--primary-text-color); }
   .icon[disabled] { opacity: 0.4; cursor: default; }
+  .icon[hidden] { display: none; }
   .icon svg { width: 24px; height: 24px; fill: currentColor; }
   .tools { display: flex; align-items: center; justify-content: flex-end; gap: 2px; padding: 4px 0; }
   .child { padding-top: 8px; }
@@ -146,6 +147,16 @@ export abstract class CardsEditorBase extends HTMLElement {
   _cardName(card: CardConfigBase): string {
     return cardName(card);
   }
+  // the editor of the card at `at`: Home Assistant's card editor, or one of the card's own (a
+  // weather section's form); either sends config-changed with the card and takes `value`
+  _childEditor(at: number): CardElementEditor {
+    return this._cardEditor(at);
+  }
+  // an empty list is left out of the config, not written as [] (a weather card without sections)
+  _dropEmptyList = false;
+  // the children have a code view of their own (a weather section's form has none: the card's
+  // YAML is it), so the tools offer it
+  _childCode = true;
 
   setConfig(config: CardConfigBase) {
     // kept as `cards` (each as its editor takes it), written back under the card's own key
@@ -195,7 +206,9 @@ export abstract class CardsEditorBase extends HTMLElement {
       return i >= 0 ? pool.splice(i, 1)[0].x : this._fromCard(c);
     });
     this._written = list;
-    const written = { ...rest, [this._listKey]: list } as CardConfigBase;
+    const written = (
+      list.length || !this._dropEmptyList ? { ...rest, [this._listKey]: list } : rest
+    ) as CardConfigBase;
     this.dispatchEvent(
       new CustomEvent("config-changed", {
         detail: { config: written },
@@ -335,6 +348,7 @@ export abstract class CardsEditorBase extends HTMLElement {
         b.toggleAttribute("disabled", disabled);
       };
       set(mode, this._t(this._guiMode ? "show_code" : "show_visual"), !this._guiAvailable);
+      mode.hidden = !this._childCode;
       mode.querySelector("path")!.setAttribute("d", this._guiMode ? ICONS.code : ICONS.form);
       set(left, this._t("move_left"), i === 0);
       set(right, this._t("move_right"), i === cards.length - 1);
@@ -347,7 +361,7 @@ export abstract class CardsEditorBase extends HTMLElement {
     if (this._childFor !== i || !this._child || this._childCtx !== this._childContext()) {
       this._childFor = i;
       this._childCtx = this._childContext();
-      this._child = card ? this._cardEditor(i) : this._newCard() ? this._none() : this._picker();
+      this._child = card ? this._childEditor(i) : this._newCard() ? this._none() : this._picker();
       host.replaceChildren(this._child);
     }
     this._child.hass = this._hass;
