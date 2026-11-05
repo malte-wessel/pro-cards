@@ -9,6 +9,7 @@
 // new spelling.
 import {
   normalizeEntity,
+  normalizeHeaderEntities,
   normalizeRules,
   type BadgeIcon,
   type BadgeKindLook,
@@ -350,3 +351,34 @@ export const badgeWindow = (items: readonly EntityItem[]) => ({
   bucketMin: DEFAULTS.bucket_minutes,
   smoothMin: null,
 });
+
+// the badges of a header that had `header_entities` (the weather and the flow cards): `badges`,
+// written as the 3.0 cards' are, plain and small; the old `header_entities` still draws (said
+// once per card type) until 4.0, never both. The history window covers what the badges draw
+const warnedHeader = new Set<string>();
+export const normalizeHeaderBadges = (
+  raw: { badges?: unknown; header_entities?: unknown },
+  ctx: NormalizeCtx,
+  hours: number,
+): { items: EntityItem[]; fetchHours?: number } => {
+  if (raw.badges !== undefined && raw.header_entities !== undefined)
+    throw new Error(`${ctx.type}: header_entities is badges: write badges only`);
+  if (raw.badges === undefined) {
+    if (raw.header_entities !== undefined && !warnedHeader.has(ctx.type)) {
+      warnedHeader.add(ctx.type);
+      console.warn(
+        `${ctx.type}: header_entities is deprecated and goes in 4.0: use badges (https://malte-wessel.github.io/pro-cards/guide/migrating#header-entities)`,
+      );
+    }
+    return { items: normalizeHeaderEntities(raw.header_entities, ctx) };
+  }
+  const items = normalizePills(
+    raw.badges,
+    ctx,
+    "badges",
+    { style: "plain", size: "s" },
+    "the header",
+  );
+  const h = badgeHours(items);
+  return { items, ...(h > hours ? { fetchHours: h } : {}) };
+};

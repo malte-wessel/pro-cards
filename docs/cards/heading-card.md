@@ -315,7 +315,7 @@ badges:
 
 ## In other cards
 
-The [poster](/cards/poster-badges), the [tile](/cards/tile-badges) and the [tile group](/cards/tile-group-card)'s header take the same badges. The cards with a header from before (the group, sections, weather, wind, rain, power flow and energy flow cards) draw their `header_entities` with their old keys (`visual: ring`, `show_icon`, a rule's `label`: [Entity options](/cards/entity-options)), `plain` and `s` unless a badge says otherwise.
+The [poster](/cards/poster-badges), the [tile](/cards/tile-badges) and the [tile group](/cards/tile-group-card)'s header take the same badges. So do the weather, power flow and energy flow cards' `badges`. Their old `header_entities`, and those of the deprecated cards, keep the old keys (`visual: ring`, `show_icon`, a rule's `label`: [Entity options](/cards/entity-options)) until 4.0; [Moving to 3.0](/guide/migrating#header-entities) maps them.
 
 ## Reference
 

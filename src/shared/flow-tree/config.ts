@@ -7,7 +7,6 @@
 import {
   normalizeTitleAction,
   normalizeEntity,
-  normalizeHeaderEntities,
   normalizeHistoryOptions,
   type EntityCardConfig,
   type EntityItem,
@@ -34,6 +33,7 @@ import {
   type IdleLinks,
   type LabelLines,
 } from "./constants.ts";
+import { normalizeHeaderBadges } from "../kinds/badge.ts";
 
 // ----- the raw config as written in YAML -----
 
@@ -402,7 +402,9 @@ export const normalizeFlowTree = (
     });
   }
 
-  const header = normalizeHeaderEntities(raw.header_entities, ctx);
+  // the header's badges (the old header_entities until 4.0)
+  const history = normalizeHistoryOptions(raw);
+  const { items: header, fetchHours } = normalizeHeaderBadges(raw, ctx, history.hours);
   const headerIdxs = header.map((_, i) => entities.length + i);
   entities.push(...header);
 
@@ -411,7 +413,8 @@ export const normalizeFlowTree = (
     title: raw.title ?? null,
     titleTap: normalizeTitleAction(raw),
     icon: raw.icon ?? null,
-    ...normalizeHistoryOptions(raw),
+    ...history,
+    ...(fetchHours ? { fetchHours } : {}),
     ...ctx,
     entities,
     groups: [],

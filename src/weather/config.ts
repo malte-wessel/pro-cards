@@ -10,7 +10,6 @@ import {
   normalizeActionDefaults,
   normalizeEntity,
   normalizeGroup,
-  normalizeHeaderEntities,
   normalizeHistoryOptions,
   type EntityCardConfig,
   type EntityItem,
@@ -41,6 +40,7 @@ import {
   type RainFigure,
   type TrendLayoutOption,
 } from "./constants.ts";
+import { normalizeHeaderBadges } from "../shared/kinds/badge.ts";
 
 // ----- the raw config as written in YAML -----
 
@@ -396,7 +396,9 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
     }
   });
 
-  const header = normalizeHeaderEntities(raw.header_entities, ctx);
+  // the header's badges (the old header_entities until 4.0)
+  const history = normalizeHistoryOptions(raw);
+  const { items: header, fetchHours } = normalizeHeaderBadges(raw, ctx, history.hours);
   const headerIdxs = header.map((_, i) => entities.length + i);
   entities.push(...header);
 
@@ -406,7 +408,8 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
     title: raw.title ?? null,
     titleTap: normalizeTitleAction(raw),
     icon: raw.icon ?? null,
-    ...normalizeHistoryOptions(raw),
+    ...history,
+    ...(fetchHours ? { fetchHours } : {}),
     ...ctx,
     entities,
     groups,

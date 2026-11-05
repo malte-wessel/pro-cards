@@ -180,6 +180,39 @@ A wind or a rain sensor is a poster or a tile of the [wind](/cards/poster-types#
 
 What the new cards leave out: the hero's band under the lead and its `flow.height` (the animation fills the poster), the wind field's `density`, and a still direction arrow without the animation behind it.
 
+## Header entities
+
+The weather, power flow and energy flow cards stay, and take `badges` in their header, written as a [poster's badges](/cards/poster-badges#badge-reference) are. Their `header_entities` still work until 4.0 (said once in the browser console); a card takes one or the other.
+
+| `header_entities`                         | `badges`                                                                                           |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `visual: ring`                            | `icon: { ring: true }`                                                                             |
+| `visual: dot`                             | `icon: { type: dot }`                                                                              |
+| `visual: icon`                            | leave it out: the icon shows unless `icon: false`                                                  |
+| `visual: badge`                           | `style: soft`                                                                                      |
+| `visual: sparkline` (in the icon's place) | `visual: sparkline` after the value, its window inside it: `visual: { type: sparkline, hours: 6 }` |
+| `visual: count`                           | a template in `value`                                                                              |
+| `trend_hours`                             | `visual: { type: trend, hours }`                                                                   |
+| `show_icon: false`, `show_entity_picture` | `icon: false`, `icon: { type: image }`                                                             |
+| `toggle: true`, `control: toggle`         | `control: toggle`, the one control a badge holds                                                   |
+| `rules[].label`                           | `rules[].value`                                                                                    |
+| `rules[].tint_card`                       | gone: the card's own rules tint it                                                                 |
+
+As on the new cards, `color` and `icon` are defaults that a matching rule's beat, and a badge takes its entity's kind's colours (a battery red when it runs low).
+
+::: live
+
+```yaml
+type: custom:weather-card-pro
+entity: weather.home
+title: Home
+badges:
+  - { entity: sensor.outdoor_humidity, icon: { ring: true } }
+  - { entity: sensor.uv_index, max: 11, visual: bar }
+```
+
+:::
+
 ## The illuminance card
 
 The illuminance card goes without a successor. Its log scale, its zones and its arc have no match on the new cards. The nearest is a tile with the history as a strip, coloured by rules:

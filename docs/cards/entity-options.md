@@ -2,7 +2,7 @@
 
 ::: info For the weather, power flow and energy flow cards, and the deprecated entity cards
 
-These keys describe an entity in the [weather card](/cards/weather-card)'s sections and in the `header_entities` of the weather, [power flow](/cards/power-flow-card) and [energy flow](/cards/energy-flow-card) cards. The entity cards they were made for are deprecated: the [tile](/cards/tile-card), the [poster](/cards/poster-card) and the [tile group](/cards/tile-group-card) write an entity their own way ([Moving to 3.0](/guide/migrating)).
+These keys describe an entity in the [weather card](/cards/weather-card)'s sections and in the old `header_entities` (deprecated: the weather, [power flow](/cards/power-flow-card) and [energy flow](/cards/energy-flow-card) cards take `badges` now). The entity cards they were made for are deprecated: the [tile](/cards/tile-card), the [poster](/cards/poster-card) and the [tile group](/cards/tile-group-card) write an entity their own way ([Moving to 3.0](/guide/migrating)).
 
 :::
 

@@ -51,7 +51,9 @@
           "type": "boolean",
           "description": "Flips the sign of the signed `power` sensor"
         },
-        "hover": { "$ref": "defs.schema.json#/$defs/hover" }
+        "hover": {
+          "$ref": "defs.schema.json#/$defs/hover"
+        }
       }
     },
     "solar": {
@@ -516,8 +518,24 @@
       "$ref": "defs.schema.json#/$defs/icon",
       "description": "Header icon. Template allowed."
     },
+    "badges": {
+      "type": "array",
+      "description": "The header's badges, plain and small unless they say otherwise: a poster's badge keys",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "defs.schema.json#/$defs/entityId"
+          },
+          {
+            "$ref": "poster-card-pro.schema.json#/$defs/badge"
+          }
+        ]
+      }
+    },
     "header_entities": {
-      "$ref": "entity.schema.json#/$defs/headerEntities"
+      "$ref": "entity.schema.json#/$defs/headerEntities",
+      "deprecated": true,
+      "description": "Deprecated, goes in 4.0: use badges (guide/migrating on the docs site). The old header badges, with the entity cards' keys"
     }
   },
   "required": ["type", "sources"],
@@ -530,6 +548,12 @@
     },
     {
       "$ref": "entity.schema.json#/$defs/haExtras"
+    },
+    {
+      "description": "badges or the old header_entities, not both",
+      "not": {
+        "required": ["badges", "header_entities"]
+      }
     }
   ],
   "unevaluatedProperties": false

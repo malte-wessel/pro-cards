@@ -62,8 +62,24 @@
       "$ref": "defs.schema.json#/$defs/icon",
       "description": "Header icon. Template allowed."
     },
+    "badges": {
+      "type": "array",
+      "description": "The header's badges, plain and small unless they say otherwise: a poster's badge keys",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "defs.schema.json#/$defs/entityId"
+          },
+          {
+            "$ref": "poster-card-pro.schema.json#/$defs/badge"
+          }
+        ]
+      }
+    },
     "header_entities": {
-      "$ref": "entity.schema.json#/$defs/headerEntities"
+      "$ref": "entity.schema.json#/$defs/headerEntities",
+      "deprecated": true,
+      "description": "Deprecated, goes in 4.0: use badges (guide/migrating on the docs site). The old header badges, with the entity cards' keys"
     },
     "columns": {
       "type": "integer",
@@ -119,7 +135,9 @@
                 "default": false,
                 "description": "Line above the section (never drawn for the first)"
               },
-              "visibility": { "$ref": "defs.schema.json#/$defs/visibility" },
+              "visibility": {
+                "$ref": "defs.schema.json#/$defs/visibility"
+              },
               "icon_size": {
                 "type": "integer",
                 "minimum": 12,
@@ -223,7 +241,9 @@
                 "default": false,
                 "description": "Line above the section"
               },
-              "visibility": { "$ref": "defs.schema.json#/$defs/visibility" },
+              "visibility": {
+                "$ref": "defs.schema.json#/$defs/visibility"
+              },
               "entities": {
                 "type": "array",
                 "minItems": 1,
@@ -240,7 +260,9 @@
                         }
                       ],
                       "properties": {
-                        "visibility": { "$ref": "defs.schema.json#/$defs/visibility" }
+                        "visibility": {
+                          "$ref": "defs.schema.json#/$defs/visibility"
+                        }
                       },
                       "unevaluatedProperties": false,
                       "description": "An entity item; without `entity` it reads the weather entity (with `attribute`)"
@@ -338,7 +360,9 @@
                 "default": false,
                 "description": "Line above the section (never drawn for the first)"
               },
-              "visibility": { "$ref": "defs.schema.json#/$defs/visibility" },
+              "visibility": {
+                "$ref": "defs.schema.json#/$defs/visibility"
+              },
               "icon_size": {
                 "type": "integer",
                 "minimum": 12,
@@ -539,7 +563,9 @@
                 "default": false,
                 "description": "Line above the section (never drawn for the first)"
               },
-              "visibility": { "$ref": "defs.schema.json#/$defs/visibility" },
+              "visibility": {
+                "$ref": "defs.schema.json#/$defs/visibility"
+              },
               "hours": {
                 "type": "integer",
                 "minimum": 1,
@@ -651,6 +677,12 @@
     },
     {
       "$ref": "entity.schema.json#/$defs/haExtras"
+    },
+    {
+      "description": "badges or the old header_entities, not both",
+      "not": {
+        "required": ["badges", "header_entities"]
+      }
     }
   ],
   "unevaluatedProperties": false
