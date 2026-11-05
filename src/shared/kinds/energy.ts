@@ -13,7 +13,7 @@ import type { HassEntity, HomeAssistant } from "../ha.ts";
 import type { Point } from "../history.ts";
 import { t } from "../i18n.ts";
 import { powerParts, UNIT_TO_W, wattsOf } from "../power.ts";
-import { isNum } from "../util.ts";
+import { isNum, startOfDay } from "../util.ts";
 import { div, wordValue } from "./dom.ts";
 import { BATTERY_RULES } from "./rules.ts";
 import type { Kind, KindCtx, Read } from "./types.ts";
@@ -106,10 +106,6 @@ export const GRID: Kind = {
 
 // ----- solar: the output, today's energy and production -----
 
-const startOfDay = (now: number) => {
-  const d = new Date(now);
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-};
 const todayOf = (c: KindCtx): Point[] => {
   const id = c.ent.entity;
   const t0 = startOfDay(c.ctx.now);

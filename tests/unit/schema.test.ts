@@ -708,6 +708,9 @@ describe("card config schemas", () => {
       ])
         expect(ok(b), `${type} ${JSON.stringify(b)}`).toBeTruthy();
     }
+    // the poster's switch is its control, as on the tile
+    for (const type of ["custom:poster-card-pro", "custom:tile-card-pro"])
+      expect(validate({ type, entity: "light.kitchen", toggle: true }), type).toBeTruthy();
     // the heading's window is each badge's own
     expect(
       validate({ type: "custom:heading-card-pro", hours_to_show: 6, badges: [H] }),

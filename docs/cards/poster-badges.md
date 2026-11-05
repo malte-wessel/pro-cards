@@ -106,7 +106,7 @@ How many of a group's members are on is a template: <code v-pre>value: "{{ expan
 
 ### Colours and kinds
 
-A badge takes its entity's [kind](/cards/poster-types) as a poster does, but only its colours: a battery red when it runs low, carbon dioxide, particles and air quality by their bands, the wind and the rain by their speed, a light in its own colour, a thermostat warm while it heats. The value stays the number; the kind's words are the poster's status. A badge that shows an attribute or a value of its own reads no kind's thresholds. `kind` names one for an entity the poster cannot tell (`kind: battery` on a sensor without a device class), `kind: none` leaves it out, and the badge's own `rules` replace the kind's.
+A badge takes its entity's [kind](/cards/poster-types) as a poster does, but only its colours: a battery red when it runs low, carbon dioxide, particles and air quality by their bands, the wind and the rain by their speed, a light in its own colour, a thermostat warm while it heats. A kind that calls for attention pulses its badge too (a jammed lock, hazardous air). The value stays the number; the kind's words are the poster's status. A badge that shows an attribute or a value of its own reads no kind's thresholds. `kind` names one for an entity the poster cannot tell (`kind: battery` on a sensor without a device class), `kind: none` leaves it out (Home Assistant's own state colour stays: a low battery is red either way), and the badge's own `rules` replace the kind's.
 
 `color` and `icon` on a badge are defaults, as on the poster: a matching rule's win.
 
@@ -121,7 +121,7 @@ badges:
   - sensor.office_co2
   - light.living_room
   - climate.living_room
-  - { entity: sensor.smoke_detector_battery, kind: none }
+  - { entity: sensor.office_co2, kind: none }
 ```
 
 :::
@@ -336,7 +336,7 @@ The badges float over the poster, so adding one never moves the texts. The statu
 
 ## Reference
 
-### Badge keys
+### Badge reference
 
 A badge is an entity id or an object with these keys. It also takes `name`, `unit`, `decimals`, `prefix`, `suffix`, `min` and `max` as the poster does.
 

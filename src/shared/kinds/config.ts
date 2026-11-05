@@ -127,10 +127,15 @@ export const foundInputs = (
 };
 
 // a text as written: a boolean is a word YAML read as one (Off, No, On, Yes unquoted), an error that
-// says so and, for the name and the value, how to hide them
-const textOf = (v: unknown, key: string, type: string) => {
+// says so and, for a name and a value (`hides`: the card's or a badge's own), how to hide them
+export const textOf = (
+  v: unknown,
+  key: string,
+  type: string,
+  hides: "name" | "value" | null = key === "name" || key === "value" ? key : null,
+) => {
   if (typeof v !== "boolean") return;
-  const hide = key === "name" || key === "value" ? `to hide the ${key}: show_${key}: false; ` : "";
+  const hide = hides ? `to hide the ${hides}: show_${hides}: false; ` : "";
   throw new Error(
     `${type}: ${key} takes a text, not ${v} (${hide}a word such as ${v ? "On or Yes" : "Off or No"} is read as ${v} unless quoted: "${v ? "On" : "Off"}")`,
   );
@@ -547,6 +552,8 @@ export const normalizeCorner = (k: KindItem, type: string, where: string) => {
   }
 
   // the badges in the written order, after the status
+  if (raw.badges !== undefined && raw.badges !== null && !Array.isArray(raw.badges))
+    throw new Error(`${type}: badges must be a list`);
   const list = Array.isArray(raw.badges) ? raw.badges : [];
   const corner: number[] = [];
   list.forEach((b, i) => {

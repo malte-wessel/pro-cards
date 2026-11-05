@@ -29,6 +29,7 @@ import {
 import { parseImage } from "../entity/image.ts";
 import type { HassEntity } from "../ha.ts";
 import { oneOf } from "../util.ts";
+import { textOf } from "./config.ts";
 import { detectKind, parseKind, resolveKind } from "./detect.ts";
 import { optionsOf } from "./places.ts";
 import { KINDS } from "./registry.ts";
@@ -70,8 +71,13 @@ const parseIcon = (raw: unknown, at: string): IconWritten | false | undefined =>
     throw new Error(
       `${at}: type must be one of ${ICON_THINGS.join(", ")}, not ${JSON.stringify(type)}`,
     );
-  const opts = optionsOf(raw, type ? ICON_OPTIONS[type] : ["name", "ring"], at, type, false);
+  const opts = optionsOf(raw, type ? ICON_OPTIONS[type] : ["name", "ring", "src"], at, type, false);
   return { ...(type ? { type } : {}), ...opts } as IconWritten;
+};
+// an object without a type merges onto the place below: a src only onto a picture
+const srcFits = (below: BadgeIcon, over: IconWritten | false | undefined, at: string) => {
+  if (over && !over.type && over.src !== undefined && below.type !== "image")
+    throw new Error(`${at}: src is a picture's: icon: { type: image, src: ${over.src} }`);
 };
 const ICON: BadgeIcon = { type: "icon", ring: false, src: null };
 // a place over the one below: false empties it, another thing replaces it (a ring stays where the
@@ -228,6 +234,15 @@ export const normalizePill = (
   const at = `${ctx.type}: ${label}`;
   for (const k of Object.keys(o))
     if (o[k] !== undefined && k in GONE) throw new Error(`${at}: ${GONE[k](o[k])}`);
+  // a word YAML reads as a boolean (On, Off unquoted) is no text
+  textOf(o.name, `${label}.name`, ctx.type, "name");
+  textOf(o.value, `${label}.value`, ctx.type, "value");
+  for (const [k, list] of [
+    ["style", BADGE_STYLES],
+    ["size", BADGE_SIZES],
+  ] as const)
+    if (o[k] !== undefined && o[k] !== null && !oneOf(list, o[k]))
+      throw new Error(`${at}: ${k} must be one of ${list.join(", ")}, not ${val(o[k])}`);
   const entity = typeof o.entity === "string" && o.entity ? o.entity : null;
 
   const visual = parseVisual(o.visual, `${at}.visual`, entity);
@@ -235,17 +250,25 @@ export const normalizePill = (
   const control = parseControl(o.control, `${at}.control`);
 
   // the rules: each with its icon place merged over the badge's
+  srcFits(ICON, icon, `${at}.icon`);
   const base = iconOver(ICON, icon);
   const ruleIcons = new Map<Rule, BadgeIcon>();
   const rules: Rule[] = [];
   if (o.rules !== undefined && !Array.isArray(o.rules))
     throw new Error(`${at}.rules must be a list`);
   ((o.rules as unknown[] | undefined) ?? []).forEach((r, i) => {
-    if (!isObj(r)) return;
+    if (!isObj(r))
+      throw new Error(`${at}.rules[${i}] must be a rule: { state | above | below, … }`);
     for (const k of Object.keys(r))
       if (r[k] !== undefined && k in RULE_GONE)
         throw new Error(`${at}.rules[${i}]: ${RULE_GONE[k]}`);
+    textOf(r.value, `${label}.rules[${i}].value`, ctx.type);
+    if (r.style !== undefined && r.style !== null && !oneOf(BADGE_STYLES, r.style))
+      throw new Error(
+        `${at}.rules[${i}]: style must be one of ${BADGE_STYLES.join(", ")}, not ${val(r.style)}`,
+      );
     const place = parseIcon(r.icon, `${at}.rules[${i}].icon`);
+    srcFits(base, place, `${at}.rules[${i}].icon`);
     const [rule] = normalizeRules([
       {
         ...r,
@@ -276,16 +299,15 @@ export const normalizePill = (
   });
   ent.rules = rules;
   ent.ruleWins = true;
-  // what the pill draws after the value; a trend's window is its own
+  // what the pill draws after the value, over its own window
   const hours = visual?.hours ?? (visual?.type === "trend" ? 1 : 24);
   ent.visual = visual?.type ?? "icon";
-  if (visual?.type === "trend" && typeof hours === "number") ent.trendHours = hours;
   // a badge is a button, as Home Assistant's: it answers the pointer unless the badge or the card
   // says hover: false
   if (typeof o.hover !== "boolean") ent.hover = ctx.hover || !ctx.hoverOff;
   ent.badge = {
-    style: oneOf(BADGE_STYLES, o.style) ? o.style : defaults.style,
-    size: oneOf(BADGE_SIZES, o.size) ? o.size : defaults.size,
+    style: (o.style as BadgeStyle | undefined) ?? defaults.style,
+    size: (o.size as BadgeSize | undefined) ?? defaults.size,
   };
   ent.pill = {
     icon: base,

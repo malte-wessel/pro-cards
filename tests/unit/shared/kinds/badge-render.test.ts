@@ -81,6 +81,22 @@ describe("a v3 badge's pill", () => {
     expect(parts(none)).toEqual(["state"]);
   });
 
+  it("follows the entity whose picture it shows, which ends none of its calls", () => {
+    const el = new HeadingCard();
+    el.setConfig({
+      badges: [
+        { entity: "light.desk", control: "toggle", icon: { type: "image", src: "person.malte" } },
+      ],
+    });
+    // the picture's entity redraws the badge, but a change of it is no answer to the switch
+    const card = el as unknown as {
+      _idsByItem: string[][];
+      _idxsByEntity: Map<string, number[]>;
+    };
+    expect(card._idsByItem[0]).toEqual(["light.desk", "person.malte"]);
+    expect([...card._idxsByEntity.keys()]).toEqual(["light.desk"]);
+  });
+
   it("takes a light's own colour", () => {
     const [desk] = badges(["light.desk"]);
     expect(desk.style.getPropertyValue("--fe-color")).toContain("255, 120, 0");

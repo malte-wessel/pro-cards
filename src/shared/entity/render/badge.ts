@@ -11,7 +11,7 @@ import {
   fmtPowerAuto,
   fmtRelative,
 } from "../../format.ts";
-import { decimalsOf } from "../../util.ts";
+import { decimalsOf, startOfDay } from "../../util.ts";
 import type { EntityItem } from "../config.ts";
 import { placementsOf } from "../control.ts";
 import { staleAge } from "../look.ts";
@@ -157,11 +157,8 @@ const pillOf = (ctx: RenderCtx, el: HTMLElement, ent: EntityItem, m: EntityModel
   return age;
 };
 // the start of a v3 badge's window: its hours back, or midnight
-const startOf = (now: number, hours: number | "today") => {
-  if (hours !== "today") return now - hours * 3600e3;
-  const d = new Date(now);
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-};
+const startOf = (now: number, hours: number | "today") =>
+  hours === "today" ? startOfDay(now) : now - hours * 3600e3;
 
 // a v3 card's badge: its icon place, the name, the value, the visual after it, the switch
 const fillPill = (

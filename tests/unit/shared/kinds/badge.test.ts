@@ -54,7 +54,7 @@ describe("a v3 badge as written", () => {
     const spark = pill({ entity: "sensor.x", visual: "sparkline" });
     expect([spark.visual, spark.pill?.hours]).toEqual(["sparkline", 24]);
     const trend = pill({ entity: "sensor.x", visual: { type: "trend", hours: 6 } });
-    expect([trend.visual, trend.pill?.hours, trend.trendHours]).toEqual(["trend", 6, 6]);
+    expect([trend.visual, trend.pill?.hours]).toEqual(["trend", 6]);
     expect(pill({ entity: "sensor.x", visual: "trend" }).pill?.hours).toBe(1);
     expect(pill({ entity: "sensor.x", visual: false }).visual).toBe("icon");
     fails(
@@ -131,6 +131,44 @@ describe("a v3 badge as written", () => {
     );
   });
 
+  it("takes texts, styles and rules as written, never a word YAML read as true", () => {
+    fails(
+      { entity: "sensor.x", value: true },
+      '.value takes a text, not true (to hide the value: show_value: false; a word such as On or Yes is read as true unless quoted: "On")',
+    );
+    fails(
+      { entity: "sensor.x", rules: [{ state: "on", value: false }] },
+      ".rules[0].value takes a text, not false",
+    );
+    fails(
+      { entity: "sensor.x", style: "pill" },
+      ": style must be one of outline, soft, filled, plain, tag, not pill",
+    );
+    fails({ entity: "sensor.x", size: "xl" }, ": size must be one of s, m, l, not xl");
+    fails({ entity: "sensor.x", rules: ["on"] }, ".rules[0] must be a rule");
+    fails(
+      { entity: "sensor.x", rules: [{ state: "on", style: "x" }] },
+      ".rules[0]: style must be one of",
+    );
+  });
+
+  it("merges a src onto a picture, and only there", () => {
+    const b = pill({
+      entity: "person.malte",
+      icon: { type: "image" },
+      rules: [{ state: "not_home", icon: { src: "/local/away.jpg" } }],
+    });
+    expect(b.pill?.ruleIcons.get(b.rules[0])).toEqual({
+      type: "image",
+      ring: false,
+      src: { kind: "url", url: "/local/away.jpg" },
+    });
+    fails(
+      { entity: "person.malte", icon: { src: "/local/m.jpg" } },
+      ".icon: src is a picture's: icon: { type: image, src: /local/m.jpg }",
+    );
+  });
+
   it("knows the window its badges draw", () => {
     expect(badgeHours([pill("sensor.x")])).toBe(0);
     expect(
@@ -178,13 +216,21 @@ describe("a v3 badge as drawn", () => {
   });
 
   it("leaves its kind out where it says so, shows something else, or writes rules", () => {
-    const low = st("sensor.robot_battery", 6, BATTERY);
-    expect(look({ entity: "sensor.robot_battery", kind: "none" }, [low]).color).not.toBe("red");
+    const co2 = st("sensor.co2", 1180, {
+      device_class: "carbon_dioxide",
+      unit_of_measurement: "ppm",
+    });
+    expect(look("sensor.co2", [co2]).color).toBe("amber");
+    expect(look({ entity: "sensor.co2", kind: "none" }, [co2]).color).toBe("primary");
+    // without its kind a battery keeps Home Assistant's own state colour, the kind's in its place
+    const low = st("sensor.robot_battery", 15, BATTERY);
+    expect(look("sensor.robot_battery", [low]).color).toBe("orange");
+    expect(look({ entity: "sensor.robot_battery", kind: "none" }, [low]).color).toBe(
+      "var(--state-sensor-battery-low-color)",
+    );
     // an attribute reads no kind's thresholds
-    const withAttr = st("sensor.robot_battery", 6, { ...BATTERY, voltage: 3 });
-    expect(
-      look({ entity: "sensor.robot_battery", attribute: "voltage" }, [withAttr]).color,
-    ).not.toBe("red");
+    const withAttr = st("sensor.co2", 1180, { device_class: "carbon_dioxide", level: 1180 });
+    expect(look({ entity: "sensor.co2", attribute: "level" }, [withAttr]).color).toBe("primary");
     // its own rules replace the kind's
     const own = { entity: "sensor.robot_battery", rules: [{ below: 50, color: "blue" }] };
     expect(look(own, [low]).color).toBe("blue");

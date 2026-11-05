@@ -1971,7 +1971,7 @@ const CASES = {
         "light.living_room",
         "climate.living_room",
         "weather.home",
-        { entity: "sensor.smoke_detector_battery", kind: "none" },
+        { entity: "sensor.office_co2", kind: "none" },
       ],
     },
     {

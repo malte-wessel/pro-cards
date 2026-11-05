@@ -204,22 +204,24 @@ export abstract class EntityCardBase extends HTMLElement {
   setConfig(config: unknown) {
     const cfg = this._normalize(config);
     this._config = cfg;
-    // the entities a row follows: its own and those of its custom buttons
-    // (and the entity whose picture a badge shows)
+    // the entities a row acts on: its own and those of its custom buttons (a change of one ends
+    // its pending call); and those it follows besides: the entity whose picture a badge shows
     const idsOf = (e: EntityItem) =>
-      [
-        e.entity,
-        ...(e.control?.buttons ?? []).map((b) => b.entity),
-        ...(e.pill ? [e.pill.icon, ...e.pill.ruleIcons.values()] : []).map((i) =>
-          i.src?.kind === "entity" ? i.src.entity : null,
-        ),
-      ].filter((id): id is string => !!id);
-    this._idsByItem = cfg.entities.map(idsOf);
+      [e.entity, ...(e.control?.buttons ?? []).map((b) => b.entity)].filter(
+        (id): id is string => !!id,
+      );
+    const readsOf = (e: EntityItem) => [
+      ...idsOf(e),
+      ...(e.pill ? [e.pill.icon, ...e.pill.ruleIcons.values()] : []).flatMap((i) =>
+        i.src?.kind === "entity" ? [i.src.entity] : [],
+      ),
+    ];
+    this._idsByItem = cfg.entities.map(readsOf);
     this._itemTpl = cfg.entities.map((e) => itemTemplates(e).length > 0);
     this._itemModels = [];
     this._fillEpoch++;
     this._resized = true;
-    this._entityIds = [...new Set(cfg.entities.flatMap(idsOf))];
+    this._entityIds = [...new Set(cfg.entities.flatMap(readsOf))];
     this._historyIds = [
       ...new Set([
         ...cfg.entities

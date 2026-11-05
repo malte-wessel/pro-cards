@@ -12,6 +12,11 @@ export const numOrNull = (v: unknown): number | null => {
 export const isNum = (s: unknown): boolean => numOrNull(s) !== null;
 export const isTemplate = (s: unknown): s is string => typeof s === "string" && /\{\{|\{%/.test(s);
 export const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+// the local midnight of an instant's day (a window of `today`)
+export const startOfDay = (t: number) => {
+  const d = new Date(t);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+};
 export const decimalsOf = (s: unknown) => {
   const m = String(s ?? "").match(/\.(\d+)$/);
   return m ? Math.min(m[1].length, 2) : 0;

@@ -24,7 +24,7 @@ tiles:
 
 ## Title, icon and badges
 
-`title` and `icon` head the card, as on the entity group card; `title_tap_action` makes the title a button (open the room's dashboard). `badges` sit at the end of the title line: plain and small, as the group card's header entities, unless a badge sets its `style` or `size`. They take a [poster's badge keys](/cards/poster-badges#badge-keys).
+`title` and `icon` head the card, as on the entity group card; `title_tap_action` makes the title a button (open the room's dashboard). `badges` sit at the end of the title line: plain and small, as the group card's header entities, unless a badge sets its `style` or `size`. They take a [poster's badge keys](/cards/poster-badges#badge-reference).
 
 ::: live
 
@@ -401,7 +401,7 @@ Home Assistant's card editor shows a form for the group: its title, icon, layout
 | `title`            |         | Header text. Template allowed.                                                                                                                       |
 | `icon`             |         | Header icon. Template allowed.                                                                                                                       |
 | `title_tap_action` | none    | Action when the title or its icon is tapped; see [Actions](/cards/entity-options#actions).                                                           |
-| `badges`           |         | Badges at the end of the title line, plain and small unless they say otherwise; a [poster's badge keys](/cards/poster-badges#badge-keys).            |
+| `badges`           |         | Badges at the end of the title line, plain and small unless they say otherwise; a [poster's badge keys](/cards/poster-badges#badge-reference).       |
 
 The group sets nothing on its tiles but their layout: any other key on the card is a config error that names its place (each tile).
 

@@ -15,7 +15,7 @@ import {
 import { nearestPoint, placeTip } from "../../hover.ts";
 import { t as tr } from "../../i18n.ts";
 import { measure } from "../../typography.ts";
-import { qs } from "../../util.ts";
+import { qs, startOfDay } from "../../util.ts";
 import type { EntityItem } from "../config.ts";
 import { PLOT_H, type HistoryVisual } from "../constants.ts";
 import { resolveLook } from "../look.ts";
@@ -40,10 +40,6 @@ export interface PlotCtx {
   smoothMin?: number;
   axis?: boolean;
 }
-const startOfDay = (t: number) => {
-  const d = new Date(t);
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-};
 // the window a plot draws: the one it brought, else its own hours back (or since midnight), else
 // the card's history window
 export const windowOf = (ctx: RenderCtx, plot: PlotElement) => {

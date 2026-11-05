@@ -1,6 +1,6 @@
 # Heading Card Pro
 
-`custom:heading-card-pro` names a part of a dashboard: a room, a group of devices, the state of the house. Like Home Assistant's own heading it has no card around it. Its badges are written as a [poster's](/cards/poster-badges#badge-keys): an icon place, a visual after the value, rules and their entity's kind, so they draw more than a value: a ring, a dot, a picture, a bar, a sparkline, a trend or a switch. This page starts with a title and adds options one at a time.
+`custom:heading-card-pro` names a part of a dashboard: a room, a group of devices, the state of the house. Like Home Assistant's own heading it has no card around it. Its badges are written as a [poster's](/cards/poster-badges#badge-reference): an icon place, a visual after the value, rules and their entity's kind, so they draw more than a value: a ring, a dot, a picture, a bar, a sparkline, a trend or a switch. This page starts with a title and adds options one at a time.
 
 ## Basic
 
@@ -341,7 +341,7 @@ The [poster](/cards/poster-badges), the [tile](/cards/tile-badges) and the [tile
 
 ### Badge options
 
-A badge takes a [poster's badge keys](/cards/poster-badges#badge-keys): `entity`, `name`, `attribute`, `value`, `unit`, `decimals`, `prefix`, `suffix`, `min`, `max`, `icon`, `visual`, `color`, `kind`, `show_name`, `show_value`, `format`, `stale_after`, `control`, `rules`, the actions, `hover` and `visibility`. Its `style` and `size` default to the card's `badge_style` and `badge_size`. The card's `hours_to_show`, `bucket_minutes` and `smoothing_minutes` are gone: a badge says its own window (`visual: { type: sparkline, hours }`).
+A badge takes a [poster's badge keys](/cards/poster-badges#badge-reference): `entity`, `name`, `attribute`, `value`, `unit`, `decimals`, `prefix`, `suffix`, `min`, `max`, `icon`, `visual`, `color`, `kind`, `show_name`, `show_value`, `format`, `stale_after`, `control`, `rules`, the actions, `hover` and `visibility`. Its `style` and `size` default to the card's `badge_style` and `badge_size`. The card's `hours_to_show`, `bucket_minutes` and `smoothing_minutes` are gone: a badge says its own window (`visual: { type: sparkline, hours }`).
 
 ### Grid defaults
 

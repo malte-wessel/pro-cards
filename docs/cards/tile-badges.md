@@ -79,7 +79,7 @@ A badge is written as the tile is, with the keys of a [poster's badge](/cards/po
 
 ### Colours and kinds
 
-A badge takes its entity's kind as the tile does, but only its colours: a battery red when it runs low, air quality by its bands, a light in its own colour, a thermostat warm while it heats. Its value stays the number. `kind: none` leaves it out, and the badge's own `rules` replace the kind's. `color` and `icon` on a badge are defaults: a matching rule's win.
+A badge takes its entity's kind as the tile does, but only its colours: a battery red when it runs low, air quality by its bands, a light in its own colour, a thermostat warm while it heats. A kind that calls for attention pulses its badge too. Its value stays the number. `kind: none` leaves it out (Home Assistant's own state colour stays), and the badge's own `rules` replace the kind's. `color` and `icon` on a badge are defaults: a matching rule's win.
 
 ::: live
 
@@ -376,6 +376,6 @@ On a vertical tile, the badges are a row of their own at the top right, above th
 | `status_badge` | `false`    | `true`: the status as the first badge, in place of on the line.                                                                                                   |
 | `icon.badge`   | `auto`     | The badge on the icon (`icon: { badge: … }`): `auto` (Home Assistant's), `false`, or `{ icon, color }` of your own, each a text or a template. A rule may set it. |
 
-### Badge keys
+### Badge reference
 
-A badge is an entity id or an object with a [poster's badge keys](/cards/poster-badges#badge-keys): `entity`, `attribute`, `value`, `icon`, `visual`, `color`, `kind`, `style`, `size`, `show_name`, `show_value`, `format`, `stale_after`, `control`, `rules`, the actions and `visibility`. Without `entity`, a badge reads the tile's.
+A badge is an entity id or an object with a [poster's badge keys](/cards/poster-badges#badge-reference): `entity`, `attribute`, `value`, `icon`, `visual`, `color`, `kind`, `style`, `size`, `show_name`, `show_value`, `format`, `stale_after`, `control`, `rules`, the actions and `visibility`. Without `entity`, a badge reads the tile's.

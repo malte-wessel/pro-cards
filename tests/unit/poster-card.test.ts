@@ -444,6 +444,8 @@ describe("poster-card config", () => {
       norm({ entity: H, icon: { type: "icon", name: "mdi:water", ring: true } }).places.icon,
     ).toEqual({ type: "icon", name: "mdi:water", ring: true });
     expect(norm({ entity: H }).places.icon).toBeUndefined();
+    // badges are a list, as on every card that takes them
+    expect(() => norm({ entity: H, badges: { entity: H } })).toThrow(`${T}: badges must be a list`);
     // a badge's ring is its own icon's
     const c = norm({ entity: H, badges: [{ entity: H, icon: { ring: true } }] });
     expect(c.entities.at(-1)?.pill?.icon).toEqual({ type: "icon", ring: true, src: null });
