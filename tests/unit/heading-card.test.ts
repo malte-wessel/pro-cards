@@ -25,7 +25,7 @@ describe("heading-card-pro config", () => {
     expect(customElements.get("heading-card-pro")).toBe(HeadingCard);
     expect(window.customCards?.some((c) => c.type === "heading-card-pro")).toBe(true);
   });
-  it("defaults to a title with outline badges of size m and six hours of history", () => {
+  it("defaults to a title with outline badges of size m", () => {
     const c = normalizeHeadingCardConfig({ title: "Living room", badges: ["sensor.temp"] });
     expect(c).toMatchObject({
       layout: "heading",
@@ -33,7 +33,6 @@ describe("heading-card-pro config", () => {
       align: "start",
       badgesPosition: "end",
       overflow: "wrap",
-      hours: 6,
       groups: [],
       headerIdxs: [0],
       hasHeader: true,
@@ -49,14 +48,30 @@ describe("heading-card-pro config", () => {
       overflow: "scroll",
       badge_style: "soft",
       badge_size: "l",
-      hours_to_show: 24,
       badges: ["sensor.temp"],
     });
     expect(c).toMatchObject({ style: "hero", align: "center", badgesPosition: "below" });
-    expect(c).toMatchObject({ overflow: "scroll", hours: 24 });
+    expect(c).toMatchObject({ overflow: "scroll" });
     expect(c.entities[0].badge).toEqual({ style: "soft", size: "l" });
     const d = normalizeHeadingCardConfig({ style: "x", badges_position: "x", badge_style: "x" });
     expect(d).toMatchObject({ style: "title", badgesPosition: "end", entities: [] });
+  });
+  it("fetches the longest window its badges draw, each badge its own", () => {
+    const window = (badges: unknown[]) => normalizeHeadingCardConfig({ badges }).hours;
+    expect(window(["sensor.temp"])).toBe(1);
+    expect(window([{ entity: "sensor.temp", visual: "sparkline" }])).toBe(24);
+    expect(window([{ entity: "sensor.temp", visual: { type: "trend", hours: 3 } }])).toBe(3);
+    expect(
+      window([
+        { entity: "sensor.temp", visual: { type: "sparkline", hours: 48 } },
+        { entity: "sensor.temp", visual: "trend" },
+      ]),
+    ).toBe(48);
+    // the card's window is gone: a badge says its own
+    for (const k of ["hours_to_show", "bucket_minutes", "smoothing_minutes"])
+      expect(() => normalizeHeadingCardConfig({ [k]: 6 })).toThrow(
+        `heading-card-pro: ${k} is gone: a badge draws its own window (visual: { type: sparkline, hours })`,
+      );
   });
   it("keeps icon_tap_action: none apart from unset", () => {
     expect(normalizeHeadingCardConfig({}).iconTap).toBeNull();

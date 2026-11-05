@@ -139,8 +139,8 @@ const itemToForm = (x: unknown, keys: readonly string[], id = "entity"): Raw => 
   const item: Raw = {};
   const more: Raw = {};
   for (const [k, v] of Object.entries(o)) {
-    // a rule's icon as an object (a place) is the rule's YAML
-    const inForm = keys.includes(k) && !(k === "icon" && typeof v !== "string");
+    // an icon or a visual as an object (a place, a window) is the item's YAML
+    const inForm = keys.includes(k) && !((k === "icon" || k === "visual") && typeof v !== "string");
     (inForm ? item : more)[k] = v;
   }
   if (Object.keys(more).length) item.more = more;

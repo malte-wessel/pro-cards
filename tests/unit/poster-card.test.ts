@@ -444,10 +444,10 @@ describe("poster-card config", () => {
       norm({ entity: H, icon: { type: "icon", name: "mdi:water", ring: true } }).places.icon,
     ).toEqual({ type: "icon", name: "mdi:water", ring: true });
     expect(norm({ entity: H }).places.icon).toBeUndefined();
-    // the badges keep their own visual
-    const c = norm({ entity: H, icon: { ring: true }, badges: [{ entity: H, visual: "ring" }] });
-    expect(c.entities.at(-1)?.visual).toBe("ring");
-    expect(c.entities.at(-1)?.iconRing).toBeUndefined();
+    // a badge's ring is its own icon's
+    const c = norm({ entity: H, badges: [{ entity: H, icon: { ring: true } }] });
+    expect(c.entities.at(-1)?.pill?.icon).toEqual({ type: "icon", ring: true, src: null });
+    expect(c.entities[0].iconRing).toBeUndefined();
   });
 
   it("names the poster's own keys in place of visual: ring and control: { position: lead }", () => {

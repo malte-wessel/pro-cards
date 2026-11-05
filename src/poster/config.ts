@@ -28,6 +28,8 @@ export interface PosterConfig extends KindConfig {
 
 export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): PosterConfig => {
   if (!isObj(input)) throw new Error(`${CARD_TYPE}: invalid config`);
+  if ((input as { toggle?: unknown }).toggle !== undefined)
+    throw new Error(`${CARD_TYPE}: toggle is control: toggle on the poster card`);
   if ((input as { status_badge?: unknown }).status_badge !== undefined)
     throw new Error(
       `${CARD_TYPE}: a poster's status is always the badge in its corner: leave out status_badge`,
@@ -39,7 +41,12 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
       throw new Error(`${CARD_TYPE}: a poster's icon has no badge (its corner has the badges)`);
 
   const { ctx, entities } = k;
-  const { statusIdx, statusText, corner } = normalizeCorner(k, CARD_TYPE, "a poster's corner");
+  const { statusIdx, statusText, corner, badgeHours } = normalizeCorner(
+    k,
+    CARD_TYPE,
+    "a poster's corner",
+  );
+  const kc = kindConfigOf(k);
 
   return {
     layout: "poster",
@@ -63,7 +70,8 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
     ],
     headerIdxs: [],
     hasHeader: false,
-    ...kindConfigOf(k),
+    ...kc,
+    ...(badgeHours > kc.hours ? { fetchHours: badgeHours } : {}),
     statusIdx,
     statusText,
   };

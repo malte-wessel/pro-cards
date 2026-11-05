@@ -4,7 +4,7 @@ import { DEVICE_CLASS_ICON } from "../constants.ts";
 import type { HassEntity, HomeAssistant } from "../ha.ts";
 import { t } from "../i18n.ts";
 import { clamp01, isNum, isTemplate } from "../util.ts";
-import type { EntityItem, Rule } from "./config.ts";
+import type { BadgeIcon, EntityItem, Rule } from "./config.ts";
 import { OFF_STATES, type BadgeStyle } from "./constants.ts";
 
 // the rendered result of a template (null until Home Assistant answered)
@@ -32,6 +32,8 @@ export interface Look {
   // a header badge: the matching rule's pill (null or left out: the badge's own) and its pulse
   style?: BadgeStyle | null;
   pulse?: boolean;
+  // a v3 card's badge: its icon place now (the matching rule's, else its own)
+  badgeIcon?: BadgeIcon;
 }
 
 export const readValue = (
@@ -104,7 +106,8 @@ export const pictureOf = (st: HassEntity | undefined): string | null => {
 // locks green / red, batteries by level …), then grey for off-like states, else primary
 // `ruleModel` is the value the rules read when it differs from the shown one (a card's own rules
 // in their unit: modelOf); `now` false: the value is not the entity's of now (a past bucket of
-// its history), so a rule's state matches that value alone, never the entity's current state
+// its history), so a rule's state matches that value alone, never the entity's current state;
+// `kindColor` the colour a v3 badge's kind gives it (under the item's and the rule's)
 export const resolveLook = (
   ent: EntityItem,
   model: ValueModel,
@@ -113,9 +116,15 @@ export const resolveLook = (
   hass?: HomeAssistant,
   ruleModel: ValueModel = model,
   now = true,
+  kindColor: string | null = null,
 ): Look => {
   const rule = ent.rules.find((r) => matchRule(r, ruleModel, now ? st?.state : null)) ?? null;
-  const ruleLabel = rule?.labelKey ? t(hass, rule.labelKey) : (rule?.label ?? null);
+  // a v3 badge's rule writes its text as a value, a template too
+  const label =
+    ent.pill && rule?.label && isTemplate(rule.label)
+      ? asText(tplGet(rule.label))
+      : (rule?.label ?? null);
+  const ruleLabel = rule?.labelKey ? t(hass, rule.labelKey) : label;
   // a colour that is no plain colour token (a template rendering markup) counts as none
   const explicitColor = safeColor(
     ent.color ? (isTemplate(ent.color) ? asText(tplGet(ent.color)) : ent.color) : null,
@@ -149,6 +158,7 @@ export const resolveLook = (
   return {
     color:
       (first ? rule?.color || explicitColor : explicitColor || rule?.color) ||
+      safeColor(kindColor) ||
       stateColor ||
       (offish ? "grey" : "primary"),
     icon: (first ? rule?.icon || explicitIcon : explicitIcon || rule?.icon) || null,

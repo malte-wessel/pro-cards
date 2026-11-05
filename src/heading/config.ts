@@ -1,16 +1,16 @@
 // Heading Card Pro: config types and normalization (pure). The card is the entity cards' header
-// alone: a title with its icon and subtitle, and the badges (header items) beside or below it.
+// alone: a title with its icon and subtitle, and the badges (src/shared/kinds/badge.ts) beside or
+// below it.
 import { BADGE_SIZES, BADGE_STYLES } from "../shared/entity/constants.ts";
 import {
   normalizeAction,
   normalizeActionDefaults,
-  normalizeHeaderEntities,
-  normalizeHistoryOptions,
   normalizeTitleAction,
   type EntityCardConfig,
   type RawAction,
   type RawEntityCardBase,
 } from "../shared/entity/config.ts";
+import { badgeWindow, normalizePills } from "../shared/kinds/badge.ts";
 import { oneOf } from "../shared/util.ts";
 
 export const CARD_TYPE = "heading-card-pro";
@@ -22,9 +22,6 @@ export const HEADING_ALIGNS = ["start", "center"] as const;
 export const BADGE_POSITIONS = ["end", "inline", "below"] as const;
 // more badges than fit: they wrap onto more lines, or scroll on one
 export const OVERFLOWS = ["wrap", "scroll"] as const;
-// the history window of the sparkline and trend badges
-export const DEFAULT_HOURS = 6;
-
 export type HeadingStyle = (typeof HEADING_STYLES)[number];
 
 export interface RawHeadingCardConfig extends RawEntityCardBase {
@@ -49,11 +46,23 @@ export interface HeadingCardConfig extends EntityCardConfig {
 export const normalizeHeadingCardConfig = (input: unknown): HeadingCardConfig => {
   if (!input || typeof input !== "object") throw new Error(`${CARD_TYPE}: invalid config`);
   const raw = input as RawHeadingCardConfig;
+  // the history of the badges is each badge's own window (visual: { type: sparkline, hours })
+  for (const k of ["hours_to_show", "bucket_minutes", "smoothing_minutes"] as const)
+    if (raw[k] !== undefined)
+      throw new Error(
+        `${CARD_TYPE}: ${k} is gone: a badge draws its own window (visual: { type: sparkline, hours })`,
+      );
   const ctx = { type: CARD_TYPE, ...normalizeActionDefaults(raw) };
-  const badges = normalizeHeaderEntities(raw.badges, ctx, "badges", {
-    style: oneOf(BADGE_STYLES, raw.badge_style) ? raw.badge_style : "outline",
-    size: oneOf(BADGE_SIZES, raw.badge_size) ? raw.badge_size : "m",
-  });
+  const badges = normalizePills(
+    raw.badges,
+    ctx,
+    "badges",
+    {
+      style: oneOf(BADGE_STYLES, raw.badge_style) ? raw.badge_style : "outline",
+      size: oneOf(BADGE_SIZES, raw.badge_size) ? raw.badge_size : "m",
+    },
+    "the heading",
+  );
   return {
     layout: "heading",
     title: raw.title ?? null,
@@ -66,7 +75,7 @@ export const normalizeHeadingCardConfig = (input: unknown): HeadingCardConfig =>
       raw.icon_tap_action === undefined || raw.icon_tap_action === null
         ? null
         : normalizeAction(raw.icon_tap_action, { action: "none" }),
-    ...normalizeHistoryOptions({ ...raw, hours_to_show: raw.hours_to_show ?? DEFAULT_HOURS }),
+    ...badgeWindow(badges),
     columns: 1,
     ...ctx,
     entities: badges,

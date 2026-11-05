@@ -28,11 +28,12 @@ import {
   type NamePosition,
   type Visual,
 } from "./constants.ts";
-import type { ActionConfig, CardConfigBase } from "../ha.ts";
+import type { ActionConfig, CardConfigBase, HassEntity } from "../ha.ts";
 import type { StringKey } from "../i18n.ts";
 import { normalizeSmoothing } from "../history.ts";
 import { isTemplate, numOrNull, oneOf } from "../util.ts";
 import { normalizeVisibility, type Visibility } from "../visibility.ts";
+import type { ImageSrc } from "./image.ts";
 import {
   defaultPlacements,
   ITEM_CONTROLS,
@@ -179,6 +180,34 @@ export interface PlotOptions {
   axis?: boolean;
   src?: string;
 }
+// a badge of the v3 cards (the poster's, the tile's, the tile group's and the heading's badges,
+// src/shared/kinds/badge.ts): its icon place, its visual after the value, and what its kind gives
+// it. The entity cards' badges have none (their old keys draw them)
+export interface BadgeIcon {
+  // the icon, a picture (its src, else the entity's), a dot in its place, or nothing
+  type: "icon" | "image" | "dot" | "none";
+  // a ring of the value (min to max) around it
+  ring: boolean;
+  src: ImageSrc | null;
+}
+export interface BadgeKindLook {
+  // the kind's rules (no texts: a badge shows its value) in their unit, and its colour from the
+  // state (a light's own, a thermostat's while it heats)
+  rules: Rule[];
+  ruleUnit?: RuleUnit;
+  color: string | null;
+}
+export interface BadgeParts {
+  icon: BadgeIcon;
+  // the icon a matching rule switches to (its place merged over the badge's)
+  ruleIcons: Map<Rule, BadgeIcon>;
+  // the window of a sparkline or a trend
+  hours: number | "today";
+  // `rules` written (even none): the kind's are not used
+  ownRules: boolean;
+  // the badge's kind for the entity's state now (null: none)
+  kindOf: (st: HassEntity | undefined) => BadgeKindLook | null;
+}
 export interface EntityItem extends ActionDefaults {
   entity: string | null;
   name: string | null;
@@ -222,6 +251,8 @@ export interface EntityItem extends ActionDefaults {
   // set by cards that build items themselves: the unit a card's own rules are written in (the
   // value is converted to it before they match; a user's rules read the sensor's own unit)
   ruleUnit?: RuleUnit;
+  // a v3 card's badge (left out: the entity cards' badges and every other item)
+  pill?: BadgeParts;
 }
 // the units a card's own rules can be written in
 export type RuleUnit = "km/h" | "mm/h";
@@ -254,6 +285,9 @@ export interface EntityCardConfig extends ActionDefaults {
   iconColor?: string | null;
   iconTap?: ActionConfig | null;
   hours: number;
+  // the history fetched, in hours, where the card's badges need more than its window (left out:
+  // `hours`)
+  fetchHours?: number;
   bucketMin: number;
   // bucket size of the sparkline in minutes (null: one point per LINE_POINT_PX)
   smoothMin: number | null;
@@ -610,6 +644,11 @@ export const itemTemplates = (e: EntityItem): string[] =>
     e.icon,
     e.color,
     e.valueSrc.kind === "template" ? e.valueSrc.template : null,
+    // a badge's rules write their text as a value (a template too), and its picture
+    ...(e.pill ? e.rules.map((r) => r.label) : []),
+    ...(e.pill ? [e.pill.icon, ...e.pill.ruleIcons.values()] : []).map((i) =>
+      i.src?.kind === "template" ? i.src.template : null,
+    ),
   ].filter((x): x is string => isTemplate(x));
 export const collectTemplates = (cfg: EntityCardConfig): Set<string> => {
   const s = new Set<string>();

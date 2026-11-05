@@ -25,6 +25,8 @@ const states = {
   "binary_sensor.w2": st("binary_sensor.w2", "off", { device_class: "window" }),
   "binary_sensor.m": st("binary_sensor.m", "on", { device_class: "motion" }),
   "person.malte": st("person.malte", "home"),
+  "group.lights": st("group.lights", "on", { entity_id: ["light.b", "light.a", "group.more"] }),
+  "group.more": st("group.more", "on", { entity_id: ["light.c", "light.a"] }),
 };
 const r = (tpl: string) => renderTemplate(tpl, states);
 
@@ -85,6 +87,20 @@ describe("renderTemplate", () => {
     expect(r("{{ states('sensor.t') | float > 10 }} {{ 3 == 3.0 }} {{ 'a' != 'b' }}").result).toBe(
       "True True True",
     );
+  });
+  it("expands groups and counts their members that are on, as Home Assistant's idiom does", () => {
+    // a group in a group too, each member once, by id
+    expect(r("{{ expand('group.lights') | map(attribute='entity_id') | list }}").result).toBe(
+      '["light.a","light.b","light.c"]',
+    );
+    expect(
+      r("{{ expand('group.lights') | selectattr('state', 'eq', 'on') | list | count }}").result,
+    ).toBe("2");
+    expect(
+      r("{{ state_attr('group.more', 'entity_id') | select('is_state', 'on') | list | count }}")
+        .result,
+    ).toBe("2");
+    expect(r("{{ 'light.b' is is_state('off') }}").result).toBe("True");
   });
   it("supports inline if/else, in and is tests", () => {
     expect(r("{{ 'warm' if states('sensor.t') | float > 15 else 'cold' }}").result).toBe("warm");

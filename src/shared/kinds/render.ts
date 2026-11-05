@@ -2,10 +2,10 @@
 // picture's URL, the glow's level.
 import type { EntityItem, ValueSrc } from "../entity/config.ts";
 import { isOn } from "../entity/control.ts";
-import { asText, pictureOf } from "../entity/look.ts";
+import { imageSrcUrl, type ImageSrc } from "../entity/image.ts";
+import { asText } from "../entity/look.ts";
 import { tplOf, type EntityModel, type RenderCtx } from "../entity/model.ts";
 import { fillBadge } from "../entity/render/badge.ts";
-import type { ImageSrc } from "./config.ts";
 import type { Kind, KindCtx } from "./types.ts";
 
 // the status text: the card's, else the matching rule's (it wins over the kind's, as its colour
@@ -23,12 +23,8 @@ export const statusText = (
 };
 
 // a picture's URL now (null: none)
-export const imageUrl = (ctx: RenderCtx, src: ImageSrc | false | null): string | null => {
-  if (!src) return null;
-  if (src.kind === "url") return src.url;
-  if (src.kind === "template") return asText(tplOf(ctx, src.template));
-  return pictureOf(ctx.hass?.states[src.entity]);
-};
+export const imageUrl = (ctx: RenderCtx, src: ImageSrc | false | null): string | null =>
+  imageSrcUrl(src, ctx.hass?.states, (t) => tplOf(ctx, t));
 
 // how strong `visual: glow` lights the poster, 0 to 1: the kind's level (a light's brightness),
 // else the value between min and max, else on or off

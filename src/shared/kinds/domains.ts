@@ -50,6 +50,8 @@ const rgbOf = (st: HassEntity | undefined) => {
     ? `rgb(${c.join(", ")})`
     : null;
 };
+// the light's own colour while it is on
+const lightColor = (st: HassEntity | undefined) => (st?.state === "on" ? rgbOf(st) : null);
 
 export const LIGHT: Kind = {
   name: "light",
@@ -60,8 +62,8 @@ export const LIGHT: Kind = {
   controls: [place("toggle", "end"), place("slider", "block")],
   // lit from below in its colour unless the card draws another visual
   visual: { type: "glow" },
-  // the light's own colour while it is on
-  color: (c) => (c.m.st?.state === "on" ? rgbOf(c.m.st) : null),
+  color: (c) => lightColor(c.m.st),
+  stateColor: (st) => lightColor(st),
   status: (c) => c.m.look.label ?? stateText(c),
   slots: (c) => {
     const v = percent(c, brightness(c.m.st));
@@ -124,6 +126,13 @@ const actionOf = (st: HassEntity | undefined) => {
   const a = st?.attributes?.hvac_action;
   return typeof a === "string" ? a : null;
 };
+// warm while it heats, cool while it cools
+const climateColor = (st: HassEntity | undefined) => {
+  const a = actionOf(st);
+  if (a === "heating") return "var(--state-climate-heat-color, var(--deep-orange-color))";
+  if (a === "cooling") return "var(--state-climate-cool-color, var(--blue-color))";
+  return null;
+};
 const tempUnit = (c: KindCtx) => c.ctx.hass?.config?.unit_system?.temperature ?? "°C";
 
 export const CLIMATE: Kind = {
@@ -134,12 +143,8 @@ export const CLIMATE: Kind = {
   keys: [],
   controls: [place("stepper", "end")],
   main: () => ({ attribute: "current_temperature" }),
-  color: (c) => {
-    const a = actionOf(c.m.st);
-    if (a === "heating") return "var(--state-climate-heat-color, var(--deep-orange-color))";
-    if (a === "cooling") return "var(--state-climate-cool-color, var(--blue-color))";
-    return null;
-  },
+  color: (c) => climateColor(c.m.st),
+  stateColor: (st) => climateColor(st),
   status: (c) => {
     if (c.m.look.label) return c.m.look.label;
     const a = actionOf(c.m.st);

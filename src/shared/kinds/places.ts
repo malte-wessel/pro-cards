@@ -160,8 +160,8 @@ const optionOf = (k: string, v: unknown, at: string): unknown => {
 };
 
 // the options of a written object, checked against what its thing takes (all of the place's
-// things when it names none: it merges onto whatever the place draws)
-const optionsOf = (
+// things when it names none: it merges onto whatever the place draws); a badge's places use it too
+export const optionsOf = (
   o: Record<string, unknown>,
   allowed: readonly string[],
   at: string,

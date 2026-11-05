@@ -1853,12 +1853,24 @@ const CASES = {
       title: "Rings",
       badges_position: "below",
       badges: [
-        { entity: "sensor.battery_soc", visual: "ring", icon: "mdi:home-battery", size: "s" },
-        { entity: "sensor.battery_soc", visual: "ring", icon: "mdi:home-battery" },
-        { entity: "sensor.battery_soc", visual: "ring", icon: "mdi:home-battery", size: "l" },
-        { entity: "sensor.battery_soc", visual: "ring", icon: "mdi:home-battery", style: "soft" },
-        { entity: "sensor.battery_soc", visual: "ring", icon: "mdi:home-battery", style: "filled" },
-        { entity: "sensor.battery_soc", visual: "ring", icon: "mdi:home-battery", style: "plain" },
+        { entity: "sensor.battery_soc", icon: { name: "mdi:home-battery", ring: true }, size: "s" },
+        { entity: "sensor.battery_soc", icon: { name: "mdi:home-battery", ring: true } },
+        { entity: "sensor.battery_soc", icon: { name: "mdi:home-battery", ring: true }, size: "l" },
+        {
+          entity: "sensor.battery_soc",
+          icon: { name: "mdi:home-battery", ring: true },
+          style: "soft",
+        },
+        {
+          entity: "sensor.battery_soc",
+          icon: { name: "mdi:home-battery", ring: true },
+          style: "filled",
+        },
+        {
+          entity: "sensor.battery_soc",
+          icon: { name: "mdi:home-battery", ring: true },
+          style: "plain",
+        },
       ],
     },
     {
@@ -1869,7 +1881,13 @@ const CASES = {
         { entity: "sensor.power_consumption", visual: "sparkline", format: "power" },
         { entity: "sensor.living_room_temperature", visual: "trend" },
         { entity: "sensor.ev_battery", visual: "bar", icon: "mdi:car-electric" },
-        { entity: "group.downstairs_lights", visual: "count", name: "Lights", show_name: true },
+        {
+          entity: "group.downstairs_lights",
+          value:
+            "{{ expand('group.downstairs_lights') | selectattr('state', 'eq', 'on') | list | count }}",
+          name: "Lights",
+          show_name: true,
+        },
       ],
     },
     {
@@ -1877,10 +1895,10 @@ const CASES = {
       title: "House",
       badges_position: "below",
       badges: [
-        { entity: "person.malte", show_entity_picture: true, show_name: true, show_value: false },
+        { entity: "person.malte", icon: { type: "image" }, show_name: true, show_value: false },
         {
           entity: "binary_sensor.window_kitchen",
-          visual: "dot",
+          icon: { type: "dot" },
           name: "Kitchen window",
           show_name: true,
           show_value: false,
@@ -1895,7 +1913,7 @@ const CASES = {
       ],
     },
   ],
-  // rules on badges (colour, a pill, a still pulse with reduced motion, the tint), the value
+  // rules on badges (colour, a pill, a still pulse with reduced motion, a value), the value
   // formats and a stale badge
   "hc-rules-formats": [
     {
@@ -1917,9 +1935,8 @@ const CASES = {
               state: "on",
               color: "red",
               style: "filled",
-              label: "Open",
+              value: "Open",
               pulse: true,
-              tint_card: true,
             },
           ],
         },
@@ -1935,6 +1952,41 @@ const CASES = {
         { entity: "sensor.washer_remaining", format: "duration" },
         { entity: "sensor.dishwasher_finishes", format: "relative", icon: "mdi:dishwasher" },
         { entity: "sensor.weather_station_battery", stale_after: "30s" },
+      ],
+    },
+  ],
+  // badges in their entity's kind's colours (a battery running low, air quality, the wind, a
+  // light's own colour, a thermostat heating), none where they say so, and the icon place
+  "hc-badge-kinds": [
+    {
+      type: HC,
+      title: "Kinds",
+      badges_position: "below",
+      badges: [
+        "sensor.smoke_detector_battery",
+        "sensor.remote_battery",
+        "sensor.office_co2",
+        "sensor.city_aqi",
+        "sensor.wind_speed",
+        "light.living_room",
+        "climate.living_room",
+        "weather.home",
+        { entity: "sensor.smoke_detector_battery", kind: "none" },
+      ],
+    },
+    {
+      type: HC,
+      title: "Icons",
+      badges_position: "below",
+      badges: [
+        { entity: "sensor.battery_soc", icon: { ring: true } },
+        { entity: "person.malte", icon: { type: "image" }, show_name: true },
+        { entity: "binary_sensor.window_kitchen", icon: { type: "dot" }, show_name: true },
+        { entity: "sensor.outdoor_temperature", icon: false },
+        {
+          entity: "binary_sensor.window_kitchen",
+          rules: [{ state: "on", icon: { type: "dot" }, value: "Open", color: "red" }],
+        },
       ],
     },
   ],

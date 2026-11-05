@@ -24,7 +24,7 @@ tiles:
 
 ## Title, icon and badges
 
-`title` and `icon` head the card, as on the entity group card; `title_tap_action` makes the title a button (open the room's dashboard). `badges` sit at the end of the title line: plain and small, as the group card's header entities, unless a badge sets its `style` or `size`. They take the [heading card's badge keys](/cards/heading-card#badge-options).
+`title` and `icon` head the card, as on the entity group card; `title_tap_action` makes the title a button (open the room's dashboard). `badges` sit at the end of the title line: plain and small, as the group card's header entities, unless a badge sets its `style` or `size`. They take a [poster's badge keys](/cards/poster-badges#badge-keys).
 
 ::: live
 
@@ -224,7 +224,8 @@ layout: row
 title: Lights
 icon: mdi:lightbulb-group
 badges:
-  - { entity: group.downstairs_lights, visual: count }
+  - entity: group.downstairs_lights
+    value: "{{ expand('group.downstairs_lights') | selectattr('state', 'eq', 'on') | list | count }}"
 tiles:
   - { entity: light.living_room, tap_action: toggle }
   - { entity: light.kitchen, tap_action: toggle }
@@ -400,7 +401,7 @@ Home Assistant's card editor shows a form for the group: its title, icon, layout
 | `title`            |         | Header text. Template allowed.                                                                                                                       |
 | `icon`             |         | Header icon. Template allowed.                                                                                                                       |
 | `title_tap_action` | none    | Action when the title or its icon is tapped; see [Actions](/cards/entity-options#actions).                                                           |
-| `badges`           |         | Badges at the end of the title line, plain and small unless they say otherwise; the [heading card's badge keys](/cards/heading-card#badge-options).  |
+| `badges`           |         | Badges at the end of the title line, plain and small unless they say otherwise; a [poster's badge keys](/cards/poster-badges#badge-keys).            |
 
 The group sets nothing on its tiles but their layout: any other key on the card is a config error that names its place (each tile).
 

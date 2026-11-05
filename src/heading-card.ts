@@ -11,16 +11,17 @@
  *   badges_position: end                   # end | inline | below (end moves below on a narrow card)
  *   overflow: wrap                         # wrap | scroll
  *   badge_style: outline / badge_size: m   # defaults: outline | soft | filled | tag | plain, s | m | l
- *   hours_to_show: 6                       # history of the sparkline and trend badges
  *   tap_action / hold_action / double_tap_action / hover   # defaults for every badge
- *   badges:                                # header entities (see entity-card-pro for the keys)
+ *   badges:                                # a poster's badges (src/shared/kinds/badge.ts)
  *     - entity: sensor.living_room_temperature
- *       visual: icon                       # icon | ring | bar | sparkline | trend | count | dot
+ *       icon: { ring: true }               # a name, { type: icon | image | dot, ring, src }, false
+ *       visual: { type: trend, hours: 6 }  # after the value: bar | sparkline | trend
  *       style: soft / size: l              # this badge's pill and size
  *       format: auto                       # auto | power | duration | relative
- *       stale_after: 2h / trend_hours: 1
- *       control: toggle                    # a switch in the badge
- *       rules: [{ above: 24, color: orange, style: filled, pulse: true }]
+ *       stale_after: 2h
+ *       control: toggle                    # a switch at its end
+ *       kind: none                         # its kind's colours (left out: the entity's)
+ *       rules: [{ above: 24, color: orange, value: Warm, style: filled, pulse: true }]
  */
 import { registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
@@ -104,5 +105,5 @@ export class HeadingCard extends EntityCardBase {
 registerCard(HeadingCard, {
   name: "Heading Card Pro",
   description:
-    "A heading with an icon, a subtitle and live badges: values, rings, bars, sparklines, trends and switches",
+    "A heading with an icon, a subtitle and live badges: values, rings, dots, bars, sparklines, trends and switches",
 });

@@ -5,7 +5,7 @@
 // writes nothing.
 import { domainOf } from "../color.ts";
 import type { RawEntity } from "../entity/config.ts";
-import { BADGE_SIZES, BADGE_STYLES, HEADER_VISUALS } from "../entity/constants.ts";
+import { BADGE_SIZES, BADGE_STYLES } from "../entity/constants.ts";
 import type { HaFormData, HaFormSchema, HassEntity, HomeAssistant } from "../ha.ts";
 import { hasString, t, type StringKey } from "../i18n.ts";
 import { RAIN_STYLES } from "../rain/constants.ts";
@@ -699,6 +699,7 @@ const FIELD_SELECTORS: Record<string, Record<string, unknown>> = {
   show_name: { boolean: {} },
   action: { ui_action: {} },
 };
+const BADGE_VISUALS = ["bar", "sparkline", "trend"] as const;
 const fieldsOf = (
   hass: HomeAssistant | undefined,
   keys: readonly string[],
@@ -727,9 +728,8 @@ const fieldsOf = (
       selector = {
         select: {
           mode: "dropdown",
-          options: [...HEADER_VISUALS]
-            .filter((v) => v !== "badge")
-            .map((v) => ({ value: v, label: L(hass, `badge_visual.${v}`) })),
+          // what a badge draws after its value (none: left empty)
+          options: BADGE_VISUALS.map((v) => ({ value: v, label: L(hass, `badge_visual.${v}`) })),
         },
       };
     out[k] = { selector, label: L(hass, `${of}.${k}`) };

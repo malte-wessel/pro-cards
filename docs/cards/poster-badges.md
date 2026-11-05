@@ -20,8 +20,8 @@ The top right of a [poster](/cards/poster-card) is its corner: a column of small
     - { entity: sensor.living_room_co2, icon: mdi:molecule-co2 }
     - entity: binary_sensor.window_kitchen
       rules:
-        - { state: "on", color: red, icon: mdi:window-open, label: Open }
-        - { state: "off", color: green, icon: mdi:window-closed, label: Closed }
+        - { state: "on", color: red, icon: mdi:window-open, value: Open }
+        - { state: "off", color: green, icon: mdi:window-closed, value: Closed }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: sensor.ev_battery
@@ -30,7 +30,7 @@ The top right of a [poster](/cards/poster-card) is its corner: a column of small
   kind: none
   status: false
   badges:
-    - { visual: ring, show_icon: false }
+    - { icon: { ring: true } }
     - { entity: sensor.ev_range, icon: mdi:map-marker-distance }
     - { value: "{{ states('number.ev_charge_limit') }} %", icon: mdi:battery-lock, name: Limit }
   grid_options: { columns: 6 }
@@ -40,18 +40,17 @@ The top right of a [poster](/cards/poster-card) is its corner: a column of small
 
 ## Badge keys
 
-A badge takes the keys of a [heading card's badge](/cards/heading-card#badges). The sections below show them on a poster, and the [reference](#reference) lists them all.
+A badge is written as the poster is: an `icon` place, a `visual`, `rules` and its entity's kind. Its pill holds, in this order, the icon, the name, the value, the visual and a switch. The keys are the same on a [tile](/cards/tile-badges), a [tile group](/cards/tile-group-card) and a [heading card](/cards/heading-card#badges). The sections below show them on a poster, and the [reference](#reference) lists them all.
 
-### Visuals
+### The icon
 
-`visual` changes what a badge draws:
+`icon` is the badge's icon place:
 
-- `ring`: a progress ring around the icon, between `min` and `max`.
-- `bar`: a short bar before the value, between `min` and `max`.
-- `sparkline`: the history in the icon's place.
-- `trend`: how much the value changed over `trend_hours`.
-- `count`: how many members of a group are on.
-- `dot`: a coloured dot in the icon's place.
+- an icon's name (`mdi:…`, a template too);
+- `{ type: image }`: the entity's picture, or `src` for another (an image URL, a template or an entity);
+- `{ type: dot }`: a dot in the badge's colour in the icon's place;
+- `{ ring: true }`: a ring of the value around the icon, between `min` and `max` (an image takes a ring too);
+- `false`: no icon.
 
 `show_name: true` writes the name before the value. `show_value: false` shows the icon alone.
 
@@ -62,18 +61,67 @@ A badge takes the keys of a [heading card's badge](/cards/heading-card#badges). 
   entity: sensor.power_consumption
   name: Home
   badges:
-    - { entity: sensor.battery_soc, visual: ring, icon: mdi:home-battery }
+    - { entity: sensor.battery_soc, icon: { name: mdi:home-battery, ring: true } }
+    - { entity: person.malte, icon: { type: image }, show_name: true }
+    - { entity: binary_sensor.window_kitchen, icon: { type: dot }, name: Window, show_name: true, show_value: false }
+    - { entity: sensor.outdoor_temperature, icon: false }
+  grid_options: { columns: 6 }
+```
+
+:::
+
+### Visuals
+
+`visual` draws something after the value:
+
+- `bar`: a short bar of the value, between `min` and `max`.
+- `sparkline`: the history, over the last 24 hours unless `hours` says another window (`{ type: sparkline, hours: 6 }`, or `today` since midnight).
+- `trend`: how much the value changed over the last hour, or over `hours`.
+
+How many of a group's members are on is a template: <code v-pre>value: "{{ expand('group.downstairs_lights') | selectattr('state', 'eq', 'on') | list | count }}"</code>.
+
+::: live
+
+```yaml
+- type: custom:poster-card-pro
+  entity: sensor.power_consumption
+  name: Home
+  badges:
     - { entity: sensor.ev_battery, visual: bar, icon: mdi:car-electric }
-    - { entity: sensor.solar_power, visual: sparkline, format: power }
+    - { entity: sensor.solar_power, visual: { type: sparkline, hours: 12 }, format: power }
+    - { entity: sensor.outdoor_temperature, visual: { type: trend, hours: 6 }, icon: mdi:home-export-outline }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: sensor.living_room_temperature
   name: Living room
   badges:
-    - { entity: sensor.outdoor_temperature, visual: trend, icon: mdi:home-export-outline }
-    - { entity: group.downstairs_lights, visual: count, name: Lights, show_name: true }
-    - { entity: binary_sensor.window_kitchen, visual: dot, name: Window, show_name: true, show_value: false }
+    - entity: group.downstairs_lights
+      name: Lights
+      show_name: true
+      value: "{{ expand('group.downstairs_lights') | selectattr('state', 'eq', 'on') | list | count }}"
   grid_options: { columns: 6 }
+```
+
+:::
+
+### Colours and kinds
+
+A badge takes its entity's [kind](/cards/poster-types) as a poster does, but only its colours: a battery red when it runs low, carbon dioxide, particles and air quality by their bands, the wind and the rain by their speed, a light in its own colour, a thermostat warm while it heats. The value stays the number; the kind's words are the poster's status. A badge that shows an attribute or a value of its own reads no kind's thresholds. `kind` names one for an entity the poster cannot tell (`kind: battery` on a sensor without a device class), `kind: none` leaves it out, and the badge's own `rules` replace the kind's.
+
+`color` and `icon` on a badge are defaults, as on the poster: a matching rule's win.
+
+::: live
+
+```yaml
+type: custom:poster-card-pro
+entity: sensor.living_room_temperature
+name: Living room
+badges:
+  - sensor.smoke_detector_battery
+  - sensor.office_co2
+  - light.living_room
+  - climate.living_room
+  - { entity: sensor.smoke_detector_battery, kind: none }
 ```
 
 :::
@@ -144,7 +192,7 @@ badges:
 
 ### A switch in a badge
 
-`control: toggle` puts a switch into the badge. The rest of the badge keeps its own action.
+`control: toggle` puts a switch at the end of the badge; the badge itself keeps its own action. A switch is the one control a badge holds.
 
 ::: live
 
@@ -189,7 +237,7 @@ badges:
 
 ## Badges reading the poster's entity
 
-A badge without `entity` reads the poster's entity. `attribute` shows one of its attributes, with its unit. A badge with neither shows the poster's value again, say as a ring.
+A badge without `entity` reads the poster's entity. `attribute` shows one of its attributes, with its unit. A badge with neither shows the poster's value again, say in a ring.
 
 ::: live
 
@@ -208,7 +256,7 @@ A badge without `entity` reads the poster's entity. `attribute` shows one of its
   name: Car
   icon: mdi:car-electric
   badges:
-    - { visual: ring, show_icon: false }
+    - { icon: { ring: true } }
     - binary_sensor.ev_plugged
     - sensor.ev_range
   grid_options: { columns: 6 }
@@ -240,8 +288,8 @@ A poster takes no `status_badge`: its status is always this badge. On a [tile](/
   badges:
     - entity: binary_sensor.ev_plugged
       rules:
-        - { state: "on", color: green, icon: mdi:power-plug, label: Plugged in }
-        - { state: "off", color: grey, icon: mdi:power-plug-off, label: Unplugged }
+        - { state: "on", color: green, icon: mdi:power-plug, value: Plugged in }
+        - { state: "off", color: grey, icon: mdi:power-plug-off, value: Unplugged }
     - sensor.ev_range
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
@@ -290,22 +338,26 @@ The badges float over the poster, so adding one never moves the texts. The statu
 
 ### Badge keys
 
-A badge is an entity id or an object with these keys. It also takes the [entity options](/cards/entity-options#entity-options), such as `name`, `icon`, `color`, `unit`, `min` and `max`.
+A badge is an entity id or an object with these keys. It also takes `name`, `unit`, `decimals`, `prefix`, `suffix`, `min` and `max` as the poster does.
 
-| Key                                      | Default             | Description                                                                                         |
-| ---------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------- |
-| `entity`                                 | the poster's        | The entity. Without one, the badge reads the poster's entity.                                       |
-| `attribute`, `value`                     | the poster's value  | An attribute of the entity, or a text or a template of your own.                                    |
-| `visual`                                 | `icon`              | `icon`, `ring`, `bar`, `sparkline`, `trend`, `count` or `dot`.                                      |
-| `style`                                  | `outline`           | `outline`, `soft`, `filled`, `plain` or `tag`.                                                      |
-| `size`                                   | `s`                 | `s`, `m` or `l`.                                                                                    |
-| `show_name` / `show_value` / `show_icon` | false / true / true | What the badge shows.                                                                               |
-| `format`                                 | `auto`              | `auto`, `power`, `duration` or `relative`.                                                          |
-| `stale_after`                            | –                   | Grey with its age when the entity has not reported for this long: minutes, or `90s`, `30min`, `2h`. |
-| `trend_hours`                            | `1`                 | `trend`: the hours the change is measured over.                                                     |
-| `control`                                | –                   | `toggle`: a switch in the badge.                                                                    |
-| `rules`                                  | –                   | Colour, icon and label by value or state; a rule's `style` changes the pill, `pulse: true` pulses.  |
-| `tap_action` …                           | the poster's        | `tap_action`, `hold_action`, `double_tap_action`, on the badge's own entity.                        |
-| `visibility`                             | –                   | Conditions; a hidden badge takes no room.                                                           |
+| Key                        | Default            | Description                                                                                                           |
+| -------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `entity`                   | the poster's       | The entity. Without one, the badge reads the poster's entity.                                                         |
+| `attribute`, `value`       | the poster's value | An attribute of the entity, or a text or a template of your own.                                                      |
+| `icon`                     | the entity's icon  | An icon's name, `{ type: icon \| image \| dot, name, ring, src }`, or `false`.                                        |
+| `visual`                   | –                  | After the value: `bar`, `sparkline` or `trend`; `{ type, hours }` for a sparkline's or a trend's window.              |
+| `color`                    | the kind's         | The badge's colour; a matching rule's wins.                                                                           |
+| `kind`                     | the entity's       | The kind whose colours it takes; `none` for none.                                                                     |
+| `style`                    | `outline`          | `outline`, `soft`, `filled`, `plain` or `tag`.                                                                        |
+| `size`                     | `s`                | `s`, `m` or `l`.                                                                                                      |
+| `show_name` / `show_value` | false / true       | What the badge shows besides its icon.                                                                                |
+| `format`                   | `auto`             | `auto`, `power`, `duration` or `relative`.                                                                            |
+| `stale_after`              | –                  | Grey with its age when the entity has not reported for this long: minutes, or `90s`, `30min`, `2h`.                   |
+| `control`                  | –                  | `toggle`: a switch at the badge's end.                                                                                |
+| `rules`                    | the kind's         | `state`, `above`, `below`; their `color`, `icon` (a name or the icon place), `value` (the text), `style` and `pulse`. |
+| `tap_action` …             | the poster's       | `tap_action`, `hold_action`, `double_tap_action`, on the badge's own entity.                                          |
+| `visibility`               | –                  | Conditions; a hidden badge takes no room.                                                                             |
+
+The old keys name their new spelling in an error: `visual: ring` is `icon: { ring: true }`, `visual: dot` is `icon: { type: dot }`, `show_icon: false` is `icon: false`, `show_entity_picture` is `icon: { type: image }`, `trend_hours` is `visual: { type: trend, hours }`, a rule's `label` is its `value`, and `visual: count` is the template above.
 
 The [status badge](#the-status-badge) takes none of them: `status` is its text (a text, a template, or `false`), and its look is the poster's.

@@ -5,12 +5,11 @@
 import type { CardConfigBase } from "../shared/ha.ts";
 import {
   normalizeActionDefaults,
-  normalizeHeaderEntities,
-  normalizeHistoryOptions,
   normalizeTitleAction,
   type EntityCardConfig,
   type RawAction,
 } from "../shared/entity/config.ts";
+import { badgeWindow, normalizePills } from "../shared/kinds/badge.ts";
 import { normalizeVisibility, type Visibility } from "../shared/visibility.ts";
 
 export const CARD_TYPE = "tile-group-card-pro";
@@ -92,14 +91,20 @@ export const normalizeTileGroupConfig = (input: unknown): TileGroupConfig => {
   // the header's badges as the group card draws them (plain and small unless they say
   // otherwise), with their own actions
   const ctx = { type: CARD_TYPE, ...normalizeActionDefaults({}) };
-  const badges = normalizeHeaderEntities(raw.badges, ctx, "badges");
+  const badges = normalizePills(
+    raw.badges,
+    ctx,
+    "badges",
+    { style: "plain", size: "s" },
+    "the group's header",
+  );
   return {
     layout: layout as TileGroupLayout,
     title: raw.title ?? null,
     titleTap: normalizeTitleAction(raw),
     icon: raw.icon ?? null,
-    // the header badges' history (a sparkline badge): the default window
-    ...normalizeHistoryOptions({}),
+    // the header badges' history: the longest window they draw
+    ...badgeWindow(badges),
     ...ctx,
     columns: 1,
     entities: badges,

@@ -148,6 +148,9 @@ export interface Kind {
   status?(c: KindCtx): string | null;
   // its colour where no rule and no `color` says one (the sun's by day and by night)
   color?(c: KindCtx): string | null;
+  // that colour where it follows the entity's state alone (a light's, a thermostat's): a badge of
+  // the kind takes it
+  stateColor?(st: HassEntity | undefined): string | null;
   // how strong `visual: glow` lights it, 0 to 1 (a light's brightness; null or left out: the
   // value between min and max, else on or off)
   level?(c: KindCtx): number | null;

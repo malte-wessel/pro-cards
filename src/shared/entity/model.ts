@@ -3,12 +3,14 @@
 import {
   asText,
   membersOf,
+  pictureOf,
   progressOf,
   readValue,
   resolveLook,
   type Look,
   type ValueModel,
 } from "./look.ts";
+import { imageSrcUrl } from "./image.ts";
 import { OFF_STATES } from "./constants.ts";
 import { stateActive } from "../color.ts";
 import type { EntityCardConfig, EntityItem } from "./config.ts";
@@ -191,6 +193,30 @@ export const ruleModelOf = (
   return { ...model, num };
 };
 
+// a v3 card's badge with its kind for the state now: the kind's rules where it writes none and
+// shows the entity's state (an attribute or a value of its own reads no kind's thresholds), and
+// the kind's colour from the state
+const withKind = (ent: EntityItem, st: HassEntity | undefined) => {
+  const k = ent.pill?.kindOf(st) ?? null;
+  if (!k) return { ent, color: null };
+  const rules = !ent.pill?.ownRules && ent.valueSrc.kind === "state";
+  return {
+    ent: rules ? { ...ent, rules: k.rules, ruleUnit: k.ruleUnit } : ent,
+    color: k.color,
+  };
+};
+// a v3 card's badge: its icon place now, the matching rule's over its own, and the picture it
+// draws (its src, else the entity's; none yet: the icon)
+const badgeIconOf = (ctx: FormatCtx, ent: EntityItem, look: Look, st: HassEntity | undefined) => {
+  const pill = ent.pill as NonNullable<EntityItem["pill"]>;
+  const icon = (look.rule && pill.ruleIcons.get(look.rule)) || pill.icon;
+  look.badgeIcon = icon;
+  if (icon.type === "image")
+    look.picture = icon.src
+      ? imageSrcUrl(icon.src, ctx.hass?.states, tplGetter(ctx))
+      : pictureOf(st);
+};
+
 export const modelOf = (ctx: FormatCtx, ent: EntityItem): EntityModel => {
   const st = stateOf(ctx, ent);
   const tplGet = tplGetter(ctx);
@@ -200,7 +226,18 @@ export const modelOf = (ctx: FormatCtx, ent: EntityItem): EntityModel => {
     model.avail = false;
     model.missing = true;
   }
-  const look = resolveLook(ent, model, st, tplGet, ctx.hass, ruleModelOf(ent, model, st));
+  const k = withKind(ent, st);
+  const look = resolveLook(
+    k.ent,
+    model,
+    st,
+    tplGet,
+    ctx.hass,
+    ruleModelOf(k.ent, model, st),
+    true,
+    k.color,
+  );
+  if (ent.pill) badgeIconOf(ctx, ent, look, st);
   if (model.missing) look.label = t(ctx.hass, "common.not_found", { entity: ent.entity ?? "" });
   return {
     st,

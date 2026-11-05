@@ -676,8 +676,8 @@ add("pb-visuals", [
     status: false,
     grid_options: { columns: 12, rows: 4 },
     badges: [
-      { entity: "sensor.robot_battery", visual: "icon" },
-      { entity: "sensor.robot_battery", visual: "ring" },
+      "sensor.robot_battery",
+      { entity: "sensor.robot_battery", icon: { ring: true } },
       { entity: "sensor.ev_battery", visual: "bar" },
       { entity: "sensor.power_consumption", visual: "sparkline" },
     ],
@@ -688,8 +688,12 @@ add("pb-visuals", [
     grid_options: { columns: 12, rows: 4 },
     badges: [
       { entity: "sensor.outdoor_temperature", visual: "trend" },
-      { entity: "group.downstairs_lights", visual: "count" },
-      { entity: "binary_sensor.window_kitchen", visual: "dot" },
+      {
+        entity: "group.downstairs_lights",
+        value:
+          "{{ expand('group.downstairs_lights') | selectattr('state', 'eq', 'on') | list | count }}",
+      },
+      { entity: "binary_sensor.window_kitchen", icon: { type: "dot" } },
     ],
   }),
 ]);

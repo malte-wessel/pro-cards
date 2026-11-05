@@ -39,7 +39,7 @@ Pro Cards are polished dashboard cards that look like they belong in Home Assist
 | Power Flow Card Pro      | `custom:power-flow-card-pro`      | Solar, battery and grid → home → rooms and devices as a tree with animated flow, the state of the home and its self-sufficiency.              | YAML only |
 | Energy Flow Card Pro     | `custom:energy-flow-card-pro`     | The power flow's tree over a period (today, this week, month or year) from energy meters and their long-term statistics.                      | YAML only |
 | Layout Card Pro          | `custom:layout-card-pro`          | Cards inside a section in a grid or masonry, arranged by how many view columns the section spans, as separate cards or one seamless surface.  | YAML only |
-| Heading Card Pro         | `custom:heading-card-pro`         | A heading with live badges: values, rings, bars, sparklines, trends, counts and switches.                                                     | YAML only |
+| Heading Card Pro         | `custom:heading-card-pro`         | A heading with live badges: values, rings, dots, pictures, bars, sparklines, trends and switches, in their kind's colours.                    | YAML only |
 | Swipe Card Pro           | `custom:swipe-card-pro`           | Cards side by side in a strip you swipe through, the next one peeking in, with dots; a grid once the section is wide enough.                  | YAML only |
 
 All cards support the sections grid (`grid_options`). Requires Home Assistant 2026.4 or newer.
@@ -198,7 +198,7 @@ cards:
 
 #### Heading Card Pro
 
-A heading for a room or a part of a view, without a card around it. Its badges are entities with rules and actions, and can draw a ring, a bar, a sparkline, a trend, a count or a switch.
+A heading for a room or a part of a view, without a card around it. Its badges are written as a poster's: an icon (a ring, a dot, a picture), a bar, a sparkline or a trend after the value, a switch, rules and their entity's kind colours.
 
 ```yaml
 type: custom:heading-card-pro

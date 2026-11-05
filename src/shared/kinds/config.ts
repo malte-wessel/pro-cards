@@ -3,7 +3,7 @@
 // and the two places (places.ts) as the card and its rules write them. The poster card adds its
 // corner, the tile card its line.
 import { domainOf } from "../color.ts";
-import { isTemplate, oneOf } from "../util.ts";
+import { oneOf } from "../util.ts";
 import {
   normalizeAction,
   normalizeActionDefaults,
@@ -50,6 +50,7 @@ import {
   type VisualPlace,
   type Written,
 } from "./places.ts";
+import { badgeHours, normalizePill } from "./badge.ts";
 import { toRule } from "./rules.ts";
 import type { Kind } from "./types.ts";
 
@@ -63,12 +64,8 @@ export interface RawKindCardConfig extends RawEntityCardBase, RawEntity {
   series?: unknown;
 }
 
-// a picture: an image URL, a template that renders one, or an entity's picture (a camera's
-// snapshot, a media player's art, a person's photo)
-export type ImageSrc =
-  | { kind: "url"; url: string }
-  | { kind: "template"; template: string }
-  | { kind: "entity"; entity: string };
+// a picture (src/shared/entity/image.ts: a badge's icon reads one too)
+export { parseImage, type ImageSrc } from "../entity/image.ts";
 
 // the two places as written (left out: the layer below's)
 export interface Places {
@@ -90,18 +87,6 @@ export interface KindConfig extends EntityCardConfig {
   // the icon's own actions: as written, else the kind's (a lock's hold)
   iconActions: IconActions;
 }
-
-const ENTITY_ID = /^[a-z_]+\.[a-z0-9_]+$/;
-// a file name looks like an entity id (garden.jpg): it is a picture's URL
-const IMAGE_FILE = /\.(jpe?g|png|gif|webp|svg|avif)$/i;
-
-export const parseImage = (v: unknown): ImageSrc | false | null => {
-  if (v === false) return false;
-  if (typeof v !== "string" || !v) return null;
-  if (isTemplate(v)) return { kind: "template", template: v };
-  if (ENTITY_ID.test(v) && !IMAGE_FILE.test(v)) return { kind: "entity", entity: v };
-  return { kind: "url", url: v };
-};
 
 // the history the card fetches for its plots: the window of the visual it draws without a rule (the
 // kind's, with the card's merged or in its place; today: a day), else the default; the card's
@@ -579,7 +564,7 @@ export const normalizeCorner = (k: KindItem, type: string, where: string) => {
         ...o,
       };
     }
-    const ent = normalizeBadge(o, badgeCtx, `badges[${i}]`, BADGE, where);
+    const ent = normalizePill(o, badgeCtx, `badges[${i}]`, BADGE, where);
     // a weather attribute has its own unit (humidity: %) or keeps it in a sibling attribute
     // (wind_gust_speed: wind_speed_unit)
     const def = ent.valueSrc.kind === "attribute" ? ATTRIBUTES[ent.valueSrc.key] : undefined;
@@ -590,5 +575,7 @@ export const normalizeCorner = (k: KindItem, type: string, where: string) => {
     corner.push(entities.push(ent) - 1);
   });
   if (statusIdx !== null) corner.unshift(statusIdx);
-  return { statusIdx, statusText, corner };
+  // the history its badges draw (the card fetches its own window, or more where they need it)
+  const hours = badgeHours(corner.map((i) => entities[i]));
+  return { statusIdx, statusText, corner, badgeHours: hours };
 };

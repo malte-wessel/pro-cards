@@ -299,7 +299,7 @@ entities:
 | `badge`     | a coloured pill with the rule label or the value                   | `rules[].label`                            | everywhere             |
 | `strip`     | a timeline coloured by the matching rule per bucket                | `hours_to_show`, `bucket_minutes`, `rules` | tile, list, grid, hero |
 
-"Everywhere" includes the compact items of the row, column and table layouts; header entities draw the [badge visuals](/cards/heading-card#visuals). See [Visuals in items and headers](#visuals-in-items-and-headers) for what happens to the others there.
+"Everywhere" includes the compact items of the row, column and table layouts; header entities draw the badge visuals. See [Visuals in items and headers](#visuals-in-items-and-headers) for them and for what happens to the others there.
 
 ### Icon
 
@@ -871,7 +871,7 @@ entities:
 
 ### Visuals in items and headers
 
-The row, column and table layouts show every entity as a compact item, and `header_entities` sit on the title line. There is no room for a block there, so items draw `icon`, `ring` and `badge` only. The header line draws badges: `icon`, `ring`, `bar` (beside the value), `sparkline` (in the icon's place), `trend`, `count`, `dot` and `badge`, see [Heading Card Pro](/cards/heading-card#visuals). Any other visual on such an entity falls back to `icon` and logs a warning in the browser console. `show_icon`, `show_value` and `show_name` decide what the item shows; see [Item options](#item-options).
+The row, column and table layouts show every entity as a compact item, and `header_entities` sit on the title line. There is no room for a block there, so items draw `icon`, `ring` and `badge` only. The header line draws badges: `icon`, `ring` (around the icon), `bar` (beside the value), `sparkline` (in the icon's place, over the card's `hours_to_show`), `trend` (the change over `trend_hours`, 1 by default), `count` (how many members of a group are on), `dot` (in the icon's place) and `badge` (a soft pill); `control: toggle` adds a switch. The [heading card](/cards/heading-card) and the v3 cards write their badges another way ([a poster's badge keys](/cards/poster-badges#badge-keys)). Any other visual on such an entity falls back to `icon` and logs a warning in the browser console. `show_icon`, `show_value` and `show_name` decide what the item shows; see [Item options](#item-options).
 
 ## Actions
 

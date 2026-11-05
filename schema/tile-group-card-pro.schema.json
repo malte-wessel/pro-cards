@@ -27,8 +27,18 @@
       "description": "Header icon. Template allowed."
     },
     "badges": {
-      "$ref": "entity.schema.json#/$defs/headerEntities",
-      "description": "The header's badges, plain and small unless they say otherwise"
+      "type": "array",
+      "description": "The header's badges, plain and small unless they say otherwise",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "defs.schema.json#/$defs/entityId"
+          },
+          {
+            "$ref": "poster-card-pro.schema.json#/$defs/badge"
+          }
+        ]
+      }
     },
     "tiles": {
       "type": "array",

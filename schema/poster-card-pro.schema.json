@@ -909,12 +909,79 @@
     },
     "badgeKeys": {
       "type": "object",
-      "allOf": [
-        {
-          "$ref": "entity.schema.json#/$defs/entityKeys"
-        }
-      ],
       "properties": {
+        "entity": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/entity"
+        },
+        "name": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/name"
+        },
+        "color": {
+          "$ref": "defs.schema.json#/$defs/color",
+          "description": "The badge's colour, a default: a matching rule's wins. Template allowed"
+        },
+        "attribute": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/attribute"
+        },
+        "value": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/value"
+        },
+        "unit": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/unit"
+        },
+        "decimals": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/decimals"
+        },
+        "prefix": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/prefix"
+        },
+        "suffix": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/suffix"
+        },
+        "min": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/min"
+        },
+        "max": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/max"
+        },
+        "show_name": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/show_name"
+        },
+        "show_value": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/show_value"
+        },
+        "tap_action": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/tap_action"
+        },
+        "hold_action": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/hold_action"
+        },
+        "double_tap_action": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/double_tap_action"
+        },
+        "hover": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/hover"
+        },
+        "icon": {
+          "$ref": "#/$defs/badgeIcon"
+        },
+        "visual": {
+          "$ref": "#/$defs/badgeVisual"
+        },
+        "control": {
+          "$ref": "#/$defs/badgeControl"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/badgeRule"
+          },
+          "description": "Colour, icon, value, pill and pulse by value or state; first match wins. Left out: the kind's colours"
+        },
+        "kind": {
+          "$ref": "#/$defs/kind",
+          "description": "The kind whose colours the badge takes (left out: the entity's; none: no kind)"
+        },
         "visibility": {
           "$ref": "defs.schema.json#/$defs/visibility"
         },
@@ -933,16 +1000,11 @@
           "type": ["number", "string"],
           "pattern": "^\\s*\\d+(\\.\\d+)?\\s*(s|m|min|h|d)?\\s*$",
           "description": "Grey with its age when the entity has not reported for this long"
-        },
-        "trend_hours": {
-          "type": "number",
-          "exclusiveMinimum": 0,
-          "description": "visual: trend, the hours it looks back"
         }
       }
     },
     "badge": {
-      "description": "A badge in the poster's corner (an outline pill unless a style is set)",
+      "description": "A badge: an icon, its name and value, a visual after it and a switch, in its pill (an outline pill unless a style is set)",
       "allOf": [
         {
           "$ref": "#/$defs/badgeKeys"
@@ -1551,6 +1613,189 @@
           "description": "car: its device tracker"
         }
       },
+      "additionalProperties": false
+    },
+    "badgeIcon": {
+      "description": "The badge's icon: an icon's name (mdi:…, a template), { type: icon | image | dot, … }, or false for none. Without type its options change the icon",
+      "oneOf": [
+        {
+          "const": false
+        },
+        {
+          "$ref": "defs.schema.json#/$defs/icon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": ["icon", "image", "dot"],
+              "description": "icon: an icon; image: a picture (src, else the entity's); dot: a dot in the icon's place"
+            },
+            "name": {
+              "$ref": "defs.schema.json#/$defs/icon",
+              "description": "icon: the icon's name. image: the icon while there is no picture"
+            },
+            "ring": {
+              "type": "boolean",
+              "description": "icon, image: a ring of the value (min to max) around it"
+            },
+            "src": {
+              "type": "string",
+              "minLength": 1,
+              "description": "image: an image URL, a template that renders one, or an entity whose picture it shows"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "dot"
+                  }
+                },
+                "required": ["type"]
+              },
+              "then": {
+                "maxProperties": 1
+              }
+            },
+            {
+              "if": {
+                "not": {
+                  "required": ["type"]
+                }
+              },
+              "then": {
+                "not": {
+                  "required": ["src"]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "icon"
+                  }
+                },
+                "required": ["type"]
+              },
+              "then": {
+                "not": {
+                  "required": ["src"]
+                }
+              }
+            }
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "badgeVisual": {
+      "description": "What the badge draws after its value: bar (the value from min to max), sparkline (the history), trend (how much it changed), or false for none",
+      "oneOf": [
+        {
+          "const": false
+        },
+        {
+          "enum": ["bar", "sparkline", "trend"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": ["bar", "sparkline", "trend"]
+            },
+            "hours": {
+              "oneOf": [
+                {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                {
+                  "const": "today"
+                }
+              ],
+              "description": "sparkline, trend: the window, hours back or today (since midnight). Default: 24 for a sparkline, 1 for a trend"
+            }
+          },
+          "required": ["type"],
+          "if": {
+            "properties": {
+              "type": {
+                "const": "bar"
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "required": ["hours"]
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "badgeControl": {
+      "description": "A switch in the badge (toggle), or none (false); the badge keeps its own tap",
+      "oneOf": [
+        {
+          "enum": ["toggle", false]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "toggle"
+            }
+          },
+          "required": ["type"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "badgeRule": {
+      "type": "object",
+      "description": "First matching rule wins, in the order written: its colour, icon, value, pill and pulse win over the badge's",
+      "properties": {
+        "state": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/state"
+        },
+        "below": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/below"
+        },
+        "above": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/above"
+        },
+        "color": {
+          "$ref": "defs.schema.json#/$defs/color"
+        },
+        "icon": {
+          "$ref": "#/$defs/badgeIcon"
+        },
+        "value": {
+          "type": ["string", "number"],
+          "description": "The text in place of the value, in the rule's colour. Template allowed"
+        },
+        "style": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/style",
+          "description": "The pill while the rule matches"
+        },
+        "pulse": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/pulse"
+        }
+      },
+      "anyOf": [
+        {
+          "required": ["state"]
+        },
+        {
+          "required": ["below"]
+        },
+        {
+          "required": ["above"]
+        }
+      ],
       "additionalProperties": false
     }
   }

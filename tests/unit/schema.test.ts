@@ -657,8 +657,61 @@ describe("card config schemas", () => {
     // the item's other keys still check as an entity's
     expect(validate({ type: PC, entity: H, decimals: 5 })).toBeTruthy();
     expect(validate({ type: PC, entity: H, rules: [{ color: "red" }] })).toBeTruthy();
-    // the badges keep the entity's visuals
-    expect(validate({ type: PC, entity: H, badges: [{ entity: H, visual: "ring" }] })).toBeNull();
+  });
+
+  it("checks a v3 card's badges: the icon place, a visual after the value, a switch, rules", () => {
+    const H = "sensor.living_room_humidity";
+    for (const type of [
+      "custom:poster-card-pro",
+      "custom:tile-card-pro",
+      "custom:tile-group-card-pro",
+      "custom:heading-card-pro",
+    ]) {
+      const ok = (badge: unknown) => {
+        const card =
+          type === "custom:tile-group-card-pro"
+            ? { type, tiles: [H], badges: [badge] }
+            : {
+                type,
+                ...(type === "custom:heading-card-pro" ? {} : { entity: H }),
+                badges: [badge],
+              };
+        return validate(card);
+      };
+      for (const b of [
+        { entity: H, icon: { ring: true } },
+        { entity: H, icon: { type: "dot" } },
+        { entity: "person.malte", icon: { type: "image", src: "/local/m.jpg", ring: true } },
+        { entity: H, icon: false, visual: "bar" },
+        { entity: H, visual: { type: "sparkline", hours: 6 } },
+        { entity: H, visual: { type: "trend", hours: "today" } },
+        { entity: "light.kitchen", control: "toggle", kind: "none" },
+        { entity: H, color: "grey", rules: [{ above: 60, color: "red", value: "Humid" }] },
+        { entity: H, rules: [{ state: "on", icon: { type: "dot" } }] },
+      ])
+        expect(ok(b), `${type} ${JSON.stringify(b)}`).toBeNull();
+      // the old keys, and what a badge does not take
+      for (const b of [
+        { entity: H, visual: "ring" },
+        { entity: H, visual: "count" },
+        { entity: H, show_icon: false },
+        { entity: H, show_entity_picture: true },
+        { entity: H, trend_hours: 2 },
+        { entity: H, icon: { style: "plain" } },
+        { entity: H, icon: { type: "dot", ring: true } },
+        { entity: H, visual: { type: "bar", hours: 2 } },
+        { entity: H, control: "slider" },
+        { entity: H, control: { type: "toggle", confirm: true } },
+        { entity: H, rules: [{ state: "on", label: "On" }] },
+        { entity: H, rules: [{ state: "on", tint_card: true }] },
+        { entity: H, secondary: "x" },
+      ])
+        expect(ok(b), `${type} ${JSON.stringify(b)}`).toBeTruthy();
+    }
+    // the heading's window is each badge's own
+    expect(
+      validate({ type: "custom:heading-card-pro", hours_to_show: 6, badges: [H] }),
+    ).toBeTruthy();
   });
 
   it("checks layout cards, their breakpoints and the cards inside", () => {

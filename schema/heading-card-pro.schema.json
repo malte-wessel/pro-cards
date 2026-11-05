@@ -5,14 +5,19 @@
   "description": "A heading with an icon, a subtitle and live badges, without a card around it.",
   "type": "object",
   "properties": {
-    "type": { "const": "custom:heading-card-pro" },
+    "type": {
+      "const": "custom:heading-card-pro"
+    },
     "style": {
       "type": "string",
       "enum": ["section", "title", "subtitle", "big", "hero"],
       "default": "title",
       "description": "section: small caps and a line; title and subtitle as Home Assistant's heading; big: a larger title beside the icon in a circle; hero: a greeting's size"
     },
-    "title": { "type": "string", "description": "The heading's text. Template allowed." },
+    "title": {
+      "type": "string",
+      "description": "The heading's text. Template allowed."
+    },
     "subtitle": {
       "type": "string",
       "description": "The line under the title. Template allowed."
@@ -61,13 +66,29 @@
       "default": "m",
       "description": "The size of every badge that names none"
     },
-    "badges": { "$ref": "entity.schema.json#/$defs/headerEntities" }
+    "badges": {
+      "type": "array",
+      "description": "The badges on the title line, in this order",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "defs.schema.json#/$defs/entityId"
+          },
+          {
+            "$ref": "poster-card-pro.schema.json#/$defs/badge"
+          }
+        ]
+      }
+    }
   },
   "required": ["type"],
   "allOf": [
-    { "$ref": "entity.schema.json#/$defs/historyOptions" },
-    { "$ref": "entity.schema.json#/$defs/actionDefaults" },
-    { "$ref": "entity.schema.json#/$defs/haExtras" }
+    {
+      "$ref": "entity.schema.json#/$defs/actionDefaults"
+    },
+    {
+      "$ref": "entity.schema.json#/$defs/haExtras"
+    }
   ],
   "unevaluatedProperties": false
 }

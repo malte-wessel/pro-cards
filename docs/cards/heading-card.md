@@ -1,6 +1,6 @@
 # Heading Card Pro
 
-`custom:heading-card-pro` names a part of a dashboard: a room, a group of devices, the state of the house. Like Home Assistant's own heading it has no card around it. Its badges are entities with the same keys, rules and actions as every Pro card, and they can draw more than a value: a ring, a bar, a sparkline, a trend, a count or a switch. This page starts with a title and adds options one at a time.
+`custom:heading-card-pro` names a part of a dashboard: a room, a group of devices, the state of the house. Like Home Assistant's own heading it has no card around it. Its badges are written as a [poster's](/cards/poster-badges#badge-keys): an icon place, a visual after the value, rules and their entity's kind, so they draw more than a value: a ring, a dot, a picture, a bar, a sparkline, a trend or a switch. This page starts with a title and adds options one at a time.
 
 ## Basic
 
@@ -111,9 +111,9 @@ badges:
 
 :::
 
-## Visuals
+## Icons and visuals
 
-`visual` changes what a badge draws. `ring` puts a progress ring around the icon and `bar` a short bar before the value (both on `min` and `max`, as everywhere). `sparkline` draws the history of the last `hours_to_show` (6 by default) in the icon's place. `trend` adds how much the value changed over `trend_hours` (1 by default). `count` shows how many members of a group are on, and `dot` is a coloured dot instead of the icon. `show_name: true` writes the name before the value; `show_value: false` leaves the icon alone.
+A badge's pill holds its icon, its name, its value, its visual and a switch, in that order. `icon` is the icon place: an icon's name, `{ ring: true }` for a ring of the value around the icon (on `min` and `max`, as everywhere), `{ type: dot }` for a dot in the badge's colour, `{ type: image }` for the entity's picture, or `false`. `visual` draws after the value: `bar` a short bar of the value, `sparkline` the history of the last 24 hours, `trend` how much the value changed over the last hour; `{ type: sparkline, hours: 6 }` gives either its own window (`today`: since midnight). `show_name: true` writes the name before the value; `show_value: false` leaves the icon alone. How many of a group's members are on is a template in `value`.
 
 ::: live
 
@@ -122,8 +122,8 @@ type: custom:heading-card-pro
 title: Energy
 icon: mdi:flash
 badges:
-  - { entity: sensor.power_consumption, visual: sparkline, format: power }
-  - { entity: sensor.battery_soc, visual: ring, icon: mdi:home-battery }
+  - { entity: sensor.power_consumption, visual: { type: sparkline, hours: 6 }, format: power }
+  - { entity: sensor.battery_soc, icon: { name: mdi:home-battery, ring: true } }
   - { entity: sensor.living_room_temperature, visual: trend }
 ```
 
@@ -137,16 +137,19 @@ title: Living room
 icon: mdi:sofa
 badges:
   - { entity: sensor.ev_battery, visual: bar, icon: mdi:car-electric }
-  - { entity: group.downstairs_lights, visual: count, name: Lights, show_name: true }
-  - { entity: person.malte, show_entity_picture: true, show_name: true, show_value: false }
-  - { entity: binary_sensor.window_kitchen, visual: dot, name: Kitchen window, show_name: true, show_value: false }
+  - entity: group.downstairs_lights
+    name: Lights
+    show_name: true
+    value: "{{ expand('group.downstairs_lights') | selectattr('state', 'eq', 'on') | list | count }}"
+  - { entity: person.malte, icon: { type: image }, show_name: true, show_value: false }
+  - { entity: binary_sensor.window_kitchen, icon: { type: dot }, name: Kitchen window, show_name: true, show_value: false }
 ```
 
 :::
 
 ## A switch in a badge
 
-`control: toggle` puts a switch into the badge; the badge itself keeps its action. It is the only control a badge holds.
+`control: toggle` puts a switch at the end of the badge; the badge itself keeps its action. It is the only control a badge holds.
 
 ::: live
 
@@ -162,7 +165,7 @@ badges:
 
 ## Rules
 
-`rules` work as on every Pro card: the first match sets `color`, `icon` and `label`. On a badge a rule can also change its pill (`style`) and make it pulse (`pulse: true`); `tint_card` tints the heading. `visibility` shows a badge only while its conditions hold, here the open kitchen window.
+`rules` work as on the poster: the first match sets `color`, `icon` (a name, or the icon place: `{ type: dot }`) and `value`, the text in place of the value; they win over the badge's own `color` and `icon`. A rule can also change the pill (`style`) and make it pulse (`pulse: true`). Without rules a badge takes its entity's kind's colours: a battery red when it runs low, air quality by its bands, a light in its own colour; `kind: none` leaves them out. `visibility` shows a badge only while its conditions hold, here the open kitchen window.
 
 ::: live
 
@@ -180,7 +183,7 @@ badges:
     visibility:
       - { condition: state, state: "on" }
     rules:
-      - { state: "on", color: red, style: filled, label: Open, pulse: true, tint_card: true }
+      - { state: "on", color: red, style: filled, value: Open, pulse: true }
 ```
 
 :::
@@ -312,7 +315,7 @@ badges:
 
 ## In other cards
 
-The cards with a header (the group, sections, weather, wind, rain, power flow and energy flow cards) draw their `header_entities` with the same badges. There they are `plain` and `s` unless a badge says otherwise, so headers keep the look they had.
+The [poster](/cards/poster-badges), the [tile](/cards/tile-badges) and the [tile group](/cards/tile-group-card)'s header take the same badges. The cards with a header from before (the group, sections, weather, wind, rain, power flow and energy flow cards) draw their `header_entities` with their old keys (`visual: ring`, `show_icon`, a rule's `label`: [Entity options](/cards/entity-options)), `plain` and `s` unless a badge says otherwise.
 
 ## Reference
 
@@ -333,27 +336,12 @@ The cards with a header (the group, sections, weather, wind, rain, power flow an
 | `badge_style`                                      | `outline`                       | The pill of every badge: `outline`, `soft`, `filled`, `tag` or `plain`.              |
 | `badge_size`                                       | `m`                             | The size of every badge: `s`, `m` or `l`.                                            |
 | `badges`                                           |                                 | Entity ids or badge objects.                                                         |
-| `hours_to_show`                                    | `6`                             | History window of `sparkline` and `trend`, at least 1.                               |
-| `smoothing_minutes`                                |                                 | Averaging bucket of `sparkline` in minutes, at least 5.                              |
 | `tap_action` / `hold_action` / `double_tap_action` | more-info / more-info / none    | Defaults for every badge, see [Actions](/cards/entity-options#actions).              |
 | `hover`                                            | on for badges with an action    | `false` turns the hover and press layers off for every badge, see [Hover](#hover).   |
 
 ### Badge options
 
-A badge takes the [entity options](/cards/entity-options#entity-options) (`entity`, `name`, `icon`, `color`, `attribute`, `value`, `unit`, `decimals`, `prefix`, `suffix`, `min`, `max`, `show_entity_picture`, `rules`, the actions, `hover`, `visibility`) and these:
-
-| Option                                   | Default             | Description                                                                                         |
-| ---------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------- |
-| `visual`                                 | `icon`              | `icon`, `ring`, `bar`, `sparkline`, `trend`, `count` or `dot`.                                      |
-| `style`                                  | `badge_style`       | `outline`, `soft`, `filled`, `tag` or `plain`.                                                      |
-| `size`                                   | `badge_size`        | `s`, `m` or `l`.                                                                                    |
-| `show_name` / `show_value` / `show_icon` | false / true / true | What the badge shows.                                                                               |
-| `format`                                 | `auto`              | `auto`, `power`, `duration` or `relative`.                                                          |
-| `stale_after`                            |                     | Grey with its age when the entity has not reported for this long: minutes, or `90s`, `30min`, `2h`. |
-| `trend_hours`                            | `1`                 | `trend`: the hours the change is measured over (at most `hours_to_show`).                           |
-| `control`                                |                     | `toggle`: a switch in the badge.                                                                    |
-
-A badge's rules also take `style` (the pill while the rule matches) and `pulse: true` (a ring that pulses around it).
+A badge takes a [poster's badge keys](/cards/poster-badges#badge-keys): `entity`, `name`, `attribute`, `value`, `unit`, `decimals`, `prefix`, `suffix`, `min`, `max`, `icon`, `visual`, `color`, `kind`, `show_name`, `show_value`, `format`, `stale_after`, `control`, `rules`, the actions, `hover` and `visibility`. Its `style` and `size` default to the card's `badge_style` and `badge_size`. The card's `hours_to_show`, `bucket_minutes` and `smoothing_minutes` are gone: a badge says its own window (`visual: { type: sparkline, hours }`).
 
 ### Grid defaults
 

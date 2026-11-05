@@ -77,7 +77,13 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
     main.control = end.length ? { ...main.control, defaults: end } : null;
   }
   // the badges at the end of the first row, and the status among them where the card says so
-  const { statusIdx, statusText, corner: all } = normalizeCorner(k, CARD_TYPE, "a tile's badges");
+  const {
+    statusIdx,
+    statusText,
+    corner: all,
+    badgeHours,
+  } = normalizeCorner(k, CARD_TYPE, "a tile's badges");
+  const kc = kindConfigOf(k);
   if (written.status_badge !== undefined && typeof written.status_badge !== "boolean")
     throw new Error(`${CARD_TYPE}: status_badge takes true or false`);
   const statusBadge = written.status_badge === true;
@@ -106,7 +112,8 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
     ],
     headerIdxs: [],
     hasHeader: false,
-    ...kindConfigOf(k),
+    ...kc,
+    ...(badgeHours > kc.hours ? { fetchHours: badgeHours } : {}),
     statusIdx,
     statusText,
     statusBadge,

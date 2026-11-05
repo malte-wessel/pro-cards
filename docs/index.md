@@ -222,8 +222,8 @@ feature_rows:
             badges:
               - entity: binary_sensor.door_front
                 rules:
-                  - { state: "on", color: red, icon: mdi:door-open, label: Open }
-                  - { state: "off", color: green, icon: mdi:door-closed, label: Closed }
+                  - { state: "on", color: red, icon: mdi:door-open, value: Open }
+                  - { state: "off", color: green, icon: mdi:door-closed, value: Closed }
           - type: custom:poster-card-pro
             entity: media_player.kitchen_speaker
             name: Kitchen speaker
@@ -303,8 +303,8 @@ feature_rows:
         badges:
           - entity: binary_sensor.door_front
             rules:
-              - { state: "on", color: red, icon: mdi:door-open, label: Open }
-              - { state: "off", color: green, icon: mdi:door-closed, label: Closed }
+              - { state: "on", color: red, icon: mdi:door-open, value: Open }
+              - { state: "off", color: green, icon: mdi:door-closed, value: Closed }
       - type: custom:poster-card-pro
         entity: sensor.living_room_co2
         name: Air

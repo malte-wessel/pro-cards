@@ -205,10 +205,15 @@ export abstract class EntityCardBase extends HTMLElement {
     const cfg = this._normalize(config);
     this._config = cfg;
     // the entities a row follows: its own and those of its custom buttons
+    // (and the entity whose picture a badge shows)
     const idsOf = (e: EntityItem) =>
-      [e.entity, ...(e.control?.buttons ?? []).map((b) => b.entity)].filter(
-        (id): id is string => !!id,
-      );
+      [
+        e.entity,
+        ...(e.control?.buttons ?? []).map((b) => b.entity),
+        ...(e.pill ? [e.pill.icon, ...e.pill.ruleIcons.values()] : []).map((i) =>
+          i.src?.kind === "entity" ? i.src.entity : null,
+        ),
+      ].filter((id): id is string => !!id);
     this._idsByItem = cfg.entities.map(idsOf);
     this._itemTpl = cfg.entities.map((e) => itemTemplates(e).length > 0);
     this._itemModels = [];
@@ -574,7 +579,7 @@ export abstract class EntityCardBase extends HTMLElement {
       ids = this._historyIds;
     if (!hass || !cfg || !ids.length) return;
     return this._history.run(
-      () => fetchHistory(hass, ids, cfg.hours),
+      () => fetchHistory(hass, ids, cfg.fetchHours ?? cfg.hours),
       (res) => {
         for (const [id, pts] of res) this._series.set(id, pts);
       },

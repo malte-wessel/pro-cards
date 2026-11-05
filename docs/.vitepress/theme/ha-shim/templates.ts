@@ -1,5 +1,6 @@
 // A small Jinja subset for `{{ ... }}` expressions, enough for typical card templates:
-// states('x'), state_attr('x','a'), is_state('x','on'), states.light (iterable), filters
+// states('x'), state_attr('x','a'), is_state('x','on'), expand('group.x'), states.light
+// (iterable), the `is_state` test (`select('is_state', 'on')`), filters
 // (float, int, round, replace, upper, lower, list, count, length, select, selectattr, reject,
 // rejectattr, map, join, default, abs, max, min, first, last, title, trim), arithmetic,
 // comparisons, and/or/not, `a if cond else b`. Unsupported input throws; callers fall back.
@@ -10,8 +11,10 @@ export type Test = (x: unknown, a?: unknown) => boolean;
 
 const list = (v: unknown): unknown[] =>
   Array.isArray(v) ? v : Array.from((v ?? []) as Iterable<unknown>);
+// the tests of the template being rendered: TESTS, and those that read the states (renderTemplate)
+let active: Record<string, Test> | null = null;
 const testOf = (name: unknown): Test => {
-  const t = TESTS[String(name ?? "truthy")];
+  const t = (active ?? TESTS)[String(name ?? "truthy")];
   if (!t) throw new Error(`test ${name}`);
   return t;
 };
@@ -423,6 +426,7 @@ export interface Scope {
   states: StatesProxy;
   state_attr(id: string, a: string): unknown;
   is_state(id: string, v: unknown): boolean;
+  expand(...items: unknown[]): HassEntity[];
   is_state_attr(id: string, a: string, v: unknown): boolean;
   has_value(id: string): boolean;
   now(): Date;
@@ -511,6 +515,24 @@ export const makeScope = (states: HassEntities): Scope => {
     is_state: (id, v) =>
       Array.isArray(v) ? v.includes(states[id]?.state) : states[id]?.state === v,
     is_state_attr: (id, a, v) => states[id]?.attributes?.[a] == v,
+    // entities, their ids or lists of them, with every group's members in its place (a group in a
+    // group too), each once, by id
+    expand: (...items) => {
+      const out = new Map<string, HassEntity>();
+      const seen = new Set<string>();
+      const add = (x: unknown): void => {
+        if (Array.isArray(x)) return x.forEach(add);
+        const id = typeof x === "string" ? x : (x as HassEntity | null)?.entity_id;
+        const st = id ? states[id] : undefined;
+        if (!id || !st || seen.has(id)) return;
+        seen.add(id);
+        const members = st.attributes?.entity_id;
+        if (Array.isArray(members)) members.forEach(add);
+        else out.set(id, st);
+      };
+      items.forEach(add);
+      return [...out.values()].sort((a, b) => a.entity_id.localeCompare(b.entity_id));
+    },
     has_value: (id) => !!states[id] && !["unknown", "unavailable"].includes(states[id].state),
     now: dateNow,
     utcnow: dateNow,
@@ -545,11 +567,18 @@ export const renderTemplate = (tpl: string, states: HassEntities): RenderResult 
   try {
     if (/\{%/.test(tpl)) throw new Error("statements are not supported");
     const S = makeScope(states);
+    // an entity (or its id) in the state named
+    const idOf = (x: unknown) =>
+      typeof x === "string" ? x : String((x as HassEntity | null)?.entity_id ?? "");
+    active = { ...TESTS, is_state: (x, v) => S.is_state(idOf(x), v) };
+    const tests = active;
     const out = tpl.replace(/\{\{\s*([\s\S]*?)\s*\}\}/g, (_, expr: string) =>
-      fmt(compile(expr)(S, helpers, TESTS)),
+      fmt(compile(expr)(S, helpers, tests)),
     );
     return { ok: true, result: out.trim() };
   } catch (err) {
     return { ok: false, result: tpl, error: err instanceof Error ? err.message : String(err) };
+  } finally {
+    active = null;
   }
 };

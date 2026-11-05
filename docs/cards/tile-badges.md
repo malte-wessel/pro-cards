@@ -20,8 +20,8 @@ The badges always show, all of them. The name and the line give way beside them;
     - sensor.living_room_humidity
     - entity: binary_sensor.window_kitchen
       rules:
-        - { state: "on", color: red, icon: mdi:window-open, label: Open }
-        - { state: "off", color: green, icon: mdi:window-closed, label: Closed }
+        - { state: "on", color: red, icon: mdi:window-open, value: Open }
+        - { state: "off", color: green, icon: mdi:window-closed, value: Closed }
   grid_options: { columns: 12 }
 - type: custom:tile-card-pro
   entity: sensor.ev_battery
@@ -30,7 +30,7 @@ The badges always show, all of them. The name and the line give way beside them;
   kind: none
   status: false
   badges:
-    - { visual: ring, show_icon: false }
+    - { icon: { ring: true } }
     - { entity: sensor.ev_range, icon: mdi:map-marker-distance }
   grid_options: { columns: 12 }
 ```
@@ -39,18 +39,11 @@ The badges always show, all of them. The name and the line give way beside them;
 
 ## Badge keys
 
-A badge takes the keys of a [heading card's badge](/cards/heading-card#badges), as on the [poster](/cards/poster-badges). The sections below show them on a tile, and the [reference](#reference) lists them all.
+A badge is written as the tile is, with the keys of a [poster's badge](/cards/poster-badges#badge-keys): an `icon` place, a `visual` after the value, `rules` and its entity's kind, in a pill that holds the icon, the name, the value, the visual and a switch. The sections below show them on a tile, and the [reference](#reference) lists them all.
 
-### Visuals
+### The icon and the visual
 
-`visual` changes what a badge draws:
-
-- `ring`: a progress ring around the icon, between `min` and `max`.
-- `bar`: a short bar before the value, between `min` and `max`.
-- `sparkline`: the history in the icon's place.
-- `trend`: how much the value changed over `trend_hours`.
-- `count`: how many members of a group are on.
-- `dot`: a coloured dot in the icon's place.
+`icon` is an icon's name, `{ type: image }` (a picture), `{ type: dot }` (a dot in the badge's colour), `{ ring: true }` (a ring of the value around the icon), or `false`. `visual` draws `bar`, `sparkline` or `trend` after the value; a sparkline looks back 24 hours and a trend one, unless `hours` says another window (`{ type: trend, hours: 6 }`).
 
 `show_name: true` writes the name before the value. `show_value: false` shows the icon alone.
 
@@ -61,22 +54,44 @@ A badge takes the keys of a [heading card's badge](/cards/heading-card#badges), 
   entity: sensor.power_consumption
   name: Home
   badges:
-    - { entity: sensor.battery_soc, visual: ring, icon: mdi:home-battery }
+    - { entity: sensor.battery_soc, icon: { name: mdi:home-battery, ring: true } }
     - { entity: sensor.solar_power, visual: sparkline, format: power }
   grid_options: { columns: 12 }
 - type: custom:tile-card-pro
   entity: sensor.living_room_temperature
   name: Living room
   badges:
-    - { entity: sensor.outdoor_temperature, visual: trend, icon: mdi:home-export-outline }
-    - { entity: group.downstairs_lights, visual: count, name: Lights, show_name: true }
+    - { entity: sensor.outdoor_temperature, visual: { type: trend, hours: 6 }, icon: mdi:home-export-outline }
+    - entity: group.downstairs_lights
+      name: Lights
+      show_name: true
+      value: "{{ expand('group.downstairs_lights') | selectattr('state', 'eq', 'on') | list | count }}"
   grid_options: { columns: 12 }
 - type: custom:tile-card-pro
   entity: sensor.kitchen_temperature
   name: Kitchen
   badges:
-    - { entity: binary_sensor.window_kitchen, visual: dot, name: Window, show_name: true, show_value: false }
+    - { entity: binary_sensor.window_kitchen, icon: { type: dot }, name: Window, show_name: true, show_value: false }
   grid_options: { columns: 12 }
+```
+
+:::
+
+### Colours and kinds
+
+A badge takes its entity's kind as the tile does, but only its colours: a battery red when it runs low, air quality by its bands, a light in its own colour, a thermostat warm while it heats. Its value stays the number. `kind: none` leaves it out, and the badge's own `rules` replace the kind's. `color` and `icon` on a badge are defaults: a matching rule's win.
+
+::: live
+
+```yaml
+type: custom:tile-card-pro
+entity: sensor.living_room_temperature
+name: Living room
+badges:
+  - sensor.smoke_detector_battery
+  - sensor.office_co2
+  - light.living_room
+grid_options: { columns: 12 }
 ```
 
 :::
@@ -158,7 +173,7 @@ A badge takes the keys of a [heading card's badge](/cards/heading-card#badges), 
 
 ### A switch in a badge
 
-`control: toggle` puts a switch into the badge. The rest of the badge keeps its own action.
+`control: toggle` puts a switch at the end of the badge; the badge itself keeps its own action. A switch is the one control a badge holds.
 
 ::: live
 
@@ -205,7 +220,7 @@ grid_options: { columns: 12 }
 
 ## Badges reading the tile's entity
 
-A badge without `entity` reads the tile's entity. `attribute` shows one of its attributes, with its unit. A badge with neither shows the tile's value again, say as a ring.
+A badge without `entity` reads the tile's entity. `attribute` shows one of its attributes, with its unit. A badge with neither shows the tile's value again, say in a ring.
 
 ::: live
 
@@ -222,7 +237,7 @@ A badge without `entity` reads the tile's entity. `attribute` shows one of its a
   name: Car
   icon: mdi:car-electric
   badges:
-    - { visual: ring, show_icon: false }
+    - { icon: { ring: true } }
     - binary_sensor.ev_plugged
   grid_options: { columns: 12 }
 ```
@@ -231,7 +246,7 @@ A badge without `entity` reads the tile's entity. `attribute` shows one of its a
 
 ## The status badge
 
-The status is on the line after the value. `status_badge: true` makes it a badge instead, before the others: it always comes first. Its look is the tile's: a `tag` in the tile's colour, without an icon or a name. It shows the kind's status, else the matching rule's label, else the entity's state (a vacuum's Cleaning, a lock's Locked), even where that repeats the value: you asked for the badge. A rule's `style` and `pulse` apply to it.
+The status is on the line after the value. `status_badge: true` makes it a badge instead, before the others: it always comes first. Its look is the tile's: a `tag` in the tile's colour, without an icon or a name. It shows the kind's status, else the matching rule's status, else the entity's state (a vacuum's Cleaning, a lock's Locked), even where that repeats the value: you asked for the badge. A rule's `style` and `pulse` apply to it.
 
 `status` sets its text, on the line or as a badge:
 
@@ -363,20 +378,4 @@ On a vertical tile, the badges are a row of their own at the top right, above th
 
 ### Badge keys
 
-A badge is an entity id or an object with these keys. It also takes the [entity options](/cards/entity-options#entity-options), such as `name`, `icon`, `color`, `unit`, `min` and `max`.
-
-| Key                                      | Default             | Description                                                                                         |
-| ---------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------- |
-| `entity`                                 | the tile's          | The entity. Without one, the badge reads the tile's entity.                                         |
-| `attribute`, `value`                     | the tile's value    | An attribute of the entity, or a text or a template of your own.                                    |
-| `visual`                                 | `icon`              | `icon`, `ring`, `bar`, `sparkline`, `trend`, `count` or `dot`.                                      |
-| `style`                                  | `outline`           | `outline`, `soft`, `filled`, `plain` or `tag`.                                                      |
-| `size`                                   | `s`                 | `s`, `m` or `l`.                                                                                    |
-| `show_name` / `show_value` / `show_icon` | false / true / true | What the badge shows.                                                                               |
-| `format`                                 | `auto`              | `auto`, `power`, `duration` or `relative`.                                                          |
-| `stale_after`                            | –                   | Grey with its age when the entity has not reported for this long: minutes, or `90s`, `30min`, `2h`. |
-| `trend_hours`                            | `1`                 | `trend`: the hours the change is measured over.                                                     |
-| `control`                                | –                   | `toggle`: a switch in the badge.                                                                    |
-| `rules`                                  | –                   | Colour, icon and label by value or state; a rule's `style` changes the pill, `pulse: true` pulses.  |
-| `tap_action` …                           | the tile's          | `tap_action`, `hold_action`, `double_tap_action`, on the badge's own entity.                        |
-| `visibility`                             | –                   | Conditions; a hidden badge takes no room.                                                           |
+A badge is an entity id or an object with a [poster's badge keys](/cards/poster-badges#badge-keys): `entity`, `attribute`, `value`, `icon`, `visual`, `color`, `kind`, `style`, `size`, `show_name`, `show_value`, `format`, `stale_after`, `control`, `rules`, the actions and `visibility`. Without `entity`, a badge reads the tile's.
