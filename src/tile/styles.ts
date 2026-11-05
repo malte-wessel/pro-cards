@@ -63,6 +63,10 @@ const STYLE_TILE_CARD = `
   ha-card.tvertical .row.tile .line { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 8px; }
   ha-card.tvertical .row.tile .line > .tinfo { flex: none; display: block; }
   ha-card.tvertical .row.tile .line > .end { max-width: none; justify-content: center; }
+  /* the texts and the line's controls at least as tall as the icon, centred in it: a single line
+     beside a control (a select, buttons) sits level with the icon, not at its top; controls that
+     wrap under the line make it taller and start at the top as before */
+  ha-card.layout-tile:not(.tvertical, .ttable) .row.tile > .top > .main { min-height: 36px; justify-content: center; }
   /* a tile with no room for its controls under the line (TileCard._fitControls) keeps them on
      the line beside the name, else leaves them out */
   ha-card.layout-tile .row.tile.tkeep > .top > .main > .line { flex-wrap: nowrap; }

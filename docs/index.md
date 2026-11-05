@@ -176,25 +176,73 @@ feature_rows:
           - { below: 3000, color: amber, label: Busy }
           - { above: 3000, color: red, label: Peak }
   - title: "One value, front and centre."
-    text: "A poster gives any entity one big value, a status and badges. It knows what the entity is and draws it that way; rules turn thresholds into colours, statuses and icons, so a glance is enough."
+    text: "A poster gives any entity one big value, a status and badges, and draws it the way it is: the air in its colours, a gauge, the power with its rules, the sun's day, a dishwasher that is done. Swipe through them."
     link: /cards/poster-card
     label: Posters
-    columns: 2
     cards:
-      - type: custom:poster-card-pro
-        entity: lock.front_door
-        name: Front door
-        badges:
-          - entity: binary_sensor.door_front
-            rules:
-              - { state: "on", color: red, icon: mdi:door-open, value: Open }
-              - { state: "off", color: green, icon: mdi:door-closed, value: Closed }
-      - type: custom:poster-card-pro
-        entity: sensor.living_room_co2
-        name: Air
-        visual: { type: columns, hours: 12, bucket: 30 }
+      - type: custom:swipe-card-pro
+        per_page: 1.2
+        breakpoints:
+          2: { per_page: 2.2 }
+        cards:
+          - type: custom:layout-card-pro
+            cards:
+              - type: custom:poster-card-pro
+                entity: sensor.living_room_co2
+                name: Air
+                visual: { type: columns, hours: 12, bucket: 30 }
+          - type: custom:layout-card-pro
+            cards:
+              - type: custom:poster-card-pro
+                entity: sensor.living_room_humidity
+                name: Humidity
+                decimals: 0
+                visual: gauge
+                min: 0
+                max: 100
+                rules:
+                  - { below: 40, color: amber, status: Dry }
+                  - { below: 60, color: teal, status: Good }
+                  - { above: 60, color: blue, status: Humid }
+          - type: custom:layout-card-pro
+            cards:
+              - type: custom:poster-card-pro
+                entity: sensor.power_consumption
+                name: Power
+                visual: { type: sparkline, hours: 12 }
+                rules:
+                  - { below: 1000, color: green, status: Low }
+                  - { below: 3000, color: amber, status: Normal }
+                  - { above: 3000, color: red, status: High, style: filled, pulse: true }
+          - type: custom:layout-card-pro
+            cards:
+              - type: custom:poster-card-pro
+                entity: sensor.battery_soc
+                name: Home battery
+          - type: custom:layout-card-pro
+            cards:
+              - type: custom:poster-card-pro
+                entity: sensor.solar_power
+                name: Solar
+                kind: solar
+          - type: custom:layout-card-pro
+            cards:
+              - type: custom:poster-card-pro
+                entity: sun.sun
+          - type: custom:layout-card-pro
+            cards:
+              - type: custom:poster-card-pro
+                entity: sensor.dishwasher_status
+                name: Dishwasher
+                value: "{{ states('sensor.dishwasher_status') | replace('power_off', 'Off') | replace('run', 'Running') | replace('end', 'Done') }}"
+                rules:
+                  - { state: Running, color: green, icon: mdi:dishwasher }
+                  - { state: Done, color: teal, icon: mdi:dishwasher-alert }
+                  - { state: "Off", color: grey, icon: mdi:dishwasher-off }
+                badges:
+                  - { entity: sensor.dishwasher_finishes, format: relative, icon: mdi:timer-outline }
   - title: "A whole room in one card."
-    text: "Lights, scenes and devices together in a tile group, or as tiles stacked in one cell. Lay them out your way with the layout card."
+    text: "Lights, scenes and devices together in a tile group, and the room's last day beside them, hour by hour in its colours."
     link: /cards/tile-group-card
     label: Tile group
     columns: 2
@@ -215,56 +263,90 @@ feature_rows:
                 - { entity: scene.dinner, icon: mdi:silverware-fork-knife, color: deep-orange }
                 - { entity: scene.movie_night, icon: mdi:movie-open, color: deep-purple }
                 - { entity: scene.good_night, icon: mdi:weather-night, color: indigo }
-      - type: custom:layout-card-pro
-        rows: [1fr, 1fr, 1fr]
-        cards:
-          - type: custom:tile-card-pro
-            entity: media_player.living_room_speaker
-            name: Music
-          - type: custom:tile-card-pro
-            entity: media_player.kitchen_speaker
-            name: Speaker
-          - type: custom:tile-card-pro
-            entity: switch.coffee_machine
-            name: Coffee machine
-            icon: mdi:coffee
-            color: brown
-            control: false
+      - type: custom:tile-group-card-pro
+        title: Last 24 hours
+        icon: mdi:chart-timeline
+        tiles:
+          - entity: sensor.living_room_temperature
+            name: Temperature
+            decimals: 1
+            visual: { type: strip, hours: 24, bucket: 60 }
+            rules:
+              - { below: 18, color: blue, icon: mdi:thermometer-low }
+              - { below: 24, color: green, icon: mdi:thermometer }
+              - { above: 24, color: orange, icon: mdi:thermometer-high }
+          - entity: sensor.living_room_humidity
+            name: Humidity
+            decimals: 0
+            visual: { type: strip, hours: 24, bucket: 60 }
+            rules:
+              - { below: 40, color: amber, status: Dry }
+              - { below: 60, color: teal, status: Good }
+              - { above: 60, color: blue, status: Humid }
+          - entity: sensor.living_room_co2
+            name: Air
+            visual: { type: strip, hours: 24, bucket: 60 }
   - title: "Control, right on the card."
     text: "Steppers, sliders, segments, locks and your own buttons sit on the card itself. Swipe through and try them, no dialog opens."
     link: /cards/controls
     label: Controls
     cards:
       - type: custom:swipe-card-pro
-        per_page: 1.3
+        per_page: 1.2
         breakpoints:
-          2: { per_page: 2.3 }
+          2: { per_page: 2.2 }
         cards:
-          - type: custom:poster-card-pro
-            entity: climate.living_room
-            name: Thermostat
-          - type: custom:poster-card-pro
-            entity: fan.living_room
-            name: Fan
-          - type: custom:poster-card-pro
-            entity: cover.living_room_blinds
-            name: Blinds
-          - type: custom:poster-card-pro
-            entity: lock.front_door
-            name: Front door
-            badges:
-              - entity: binary_sensor.door_front
-                rules:
-                  - { state: "on", color: red, icon: mdi:door-open, value: Open }
-                  - { state: "off", color: green, icon: mdi:door-closed, value: Closed }
-          - type: custom:poster-card-pro
-            entity: media_player.kitchen_speaker
-            name: Kitchen speaker
-          - type: custom:poster-card-pro
-            entity: vacuum.robot
-            name: Robot
-            badges:
-              - sensor.robot_current_room
+          - type: custom:layout-card-pro
+            cards:
+              - type: custom:poster-card-pro
+                entity: climate.living_room
+                name: Thermostat
+          # three tiles stacked: a poster's height
+          - type: custom:layout-card-pro
+            cards:
+              - type: custom:tile-card-pro
+                entity: light.desk_lamp
+                name: Desk lamp
+              - type: custom:tile-card-pro
+                entity: cover.living_room_blinds
+                name: Blinds
+              - type: custom:tile-card-pro
+                entity: input_select.house_mode
+                name: Mode
+                control: select
+                show_value: false
+          - type: custom:layout-card-pro
+            cards:
+              - type: custom:poster-card-pro
+                entity: fan.living_room
+                name: Fan
+          - type: custom:layout-card-pro
+            cards:
+              - type: custom:poster-card-pro
+                entity: cover.living_room_blinds
+                name: Blinds
+          - type: custom:layout-card-pro
+            cards:
+              - type: custom:poster-card-pro
+                entity: lock.front_door
+                name: Front door
+                badges:
+                  - entity: binary_sensor.door_front
+                    rules:
+                      - { state: "on", color: red, icon: mdi:door-open, value: Open }
+                      - { state: "off", color: green, icon: mdi:door-closed, value: Closed }
+          - type: custom:layout-card-pro
+            cards:
+              - type: custom:poster-card-pro
+                entity: media_player.kitchen_speaker
+                name: Kitchen speaker
+          - type: custom:layout-card-pro
+            cards:
+              - type: custom:poster-card-pro
+                entity: vacuum.robot
+                name: Robot
+                badges:
+                  - sensor.robot_current_room
   - title: "Weather you can see moving."
     text: "Wind and rain are animated fields that follow your sensors: faster in a storm, still on a calm day, always from the right direction."
     link: /cards/kinds#wind
@@ -284,13 +366,18 @@ feature_rows:
     text: "Its path through the day, the time to sunset, and which side of your house it shines on right now."
     link: /cards/sun-path-card
     label: Sun cards
-    columns: 2
     cards:
-      - type: custom:poster-card-pro
-        kind: sun
-      - type: custom:sun-azimuth-card-pro
-        show_summary: false
-        camera: 280
+      # one layout row of the posters' height: both cards the same size
+      - type: custom:layout-card-pro
+        columns: 2
+        rows: [232px]
+        cards:
+          - type: custom:poster-card-pro
+            kind: sun
+            grid_options: { rows: auto }
+          - type: custom:sun-azimuth-card-pro
+            show_summary: false
+            camera: 280
 # the dashboards below the feature rows (DashboardLinks.vue): each a page of the Showcase
 dashboards:
   - title: Home
