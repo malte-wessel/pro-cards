@@ -160,6 +160,21 @@ const pillOf = (ctx: RenderCtx, el: HTMLElement, ent: EntityItem, m: EntityModel
 const startOf = (now: number, hours: number | "today") =>
   hours === "today" ? startOfDay(now) : now - hours * 3600e3;
 
+// what a tile group's table row draws after its value: a badge's bar, sparkline or trend, over its
+// own window
+export const inlineVisualEl = (
+  ctx: RenderCtx,
+  ent: EntityItem,
+  m: EntityModel,
+  visual: "bar" | "sparkline" | "trend",
+  hours: number | "today",
+): HTMLElement | null => {
+  if (visual === "bar") return barEl(m);
+  const t0 = startOf(ctx.now, hours);
+  if (visual === "sparkline") return sparkEl(ctx, ent, t0, null);
+  return trendEl(ctx, ent, m, (ctx.now - t0) / 3600e3);
+};
+
 // a v3 card's badge: its icon place, the name, the value, the visual after it, the switch
 const fillPill = (
   ctx: RenderCtx,

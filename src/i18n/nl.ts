@@ -552,6 +552,7 @@ const nl: Translation = {
   "editor.cards.field.title_tap_action": "Tik op de titel",
   "editor.cards.group_layout.list": "Onder elkaar",
   "editor.cards.group_layout.row": "Naast elkaar",
+  "editor.cards.group_layout.table": "Als tabel",
   "editor.cards.tile": "Tegel",
   "editor.cards.none_yet": "Nog geen tegels: + voegt er een toe",
   "editor.cards.field.columns": "Kolommen",

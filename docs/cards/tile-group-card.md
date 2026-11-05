@@ -64,9 +64,75 @@ tiles:
 
 :::
 
+## Table
+
+`layout: table` draws each tile as one line, a key and its value: the name in small capitals at the start, the value at the end with the status after it in the tile's colour, and after them one thing: a control, or a visual. A row has no icon, no `secondary` and no badges.
+
+::: live
+
+```yaml
+type: custom:tile-group-card-pro
+layout: table
+title: Washing machine
+icon: mdi:washing-machine
+tiles:
+  - entity: sensor.washer_status
+    name: Status
+    show_value: false
+    rules:
+      - { state: run, color: green, status: Running }
+      - { state: pause, color: amber, status: Paused }
+      - { state: end, color: teal, status: Done }
+  - { entity: sensor.washer_remaining, name: Remaining }
+  - { entity: sensor.washer_power, name: Power, visual: sparkline }
+  - { entity: sensor.power_consumption, name: House, visual: trend }
+```
+
+:::
+
+The control is the tile's: the kind's own (a light's switch, a cover's buttons, a thermostat's stepper), or the one it names, a slider too, at the end of the line. A switch, a lock or a select that a tile controls with its icon has no icon here: a row draws the domain's control in its place (a switch, a hold to lock, the dropdown). Beside a switch the status is left out, which would say on or off once more.
+
+::: live
+
+```yaml
+type: custom:tile-group-card-pro
+layout: table
+title: Living room
+icon: mdi:sofa
+tiles:
+  - { entity: light.living_room, name: Ceiling }
+  - { entity: light.desk_lamp, name: Desk lamp, control: slider }
+  - { entity: climate.living_room, name: Thermostat }
+  - { entity: cover.living_room_blinds, name: Blinds }
+  - { entity: input_boolean.night_mode, name: Night mode }
+  - { entity: lock.front_door, name: Front door }
+```
+
+:::
+
+The visual is a [badge's](/cards/poster-badges#visuals): `bar` (the value from `min` to `max`), `sparkline` (the history) or `trend` (how much it changed), each over its own `hours` (a day, an hour for the trend). A row draws a control or a visual: one that names a visual draws no control.
+
+::: live
+
+```yaml
+type: custom:tile-group-card-pro
+layout: table
+title: Batteries
+icon: mdi:battery
+tiles:
+  - { entity: sensor.phone_battery, name: Phone, visual: bar }
+  - { entity: sensor.kitchen_window_battery, name: Kitchen window, visual: bar }
+  - { entity: sensor.remote_battery, name: Remote, visual: bar }
+  - { entity: sensor.living_room_temperature, name: Temperature, visual: { type: sparkline, hours: 12 } }
+```
+
+:::
+
+A row stays one line. Where the card is narrow it gives way in this order: the status, then the name (down to 40 px, cut at its end), then the control or the visual (more-info has them); the value always shows in full.
+
 ## Tiles of their own
 
-A tile in the list takes the [tile card's keys](/cards/tile-card#reference), without `type`, `grid_options` and `vertical`: its kind, its visual, its controls, its status and its badges. The group sets nothing on its tiles but their layout, so a tile looks the same in a group as on its own; what several tiles share is written on each (in YAML, an anchor writes it once: `visual: &spark { … }`, then `visual: *spark`).
+A tile in the list takes the [tile card's keys](/cards/tile-card#reference), without `type`, `grid_options` and `vertical` (a table's rows, see [Table](#table), also without `icon`, `secondary` and badges): its kind, its visual, its controls, its status and its badges. The group sets nothing on its tiles but their layout, so a tile looks the same in a group as on its own; what several tiles share is written on each (in YAML, an anchor writes it once: `visual: &spark { … }`, then `visual: *spark`).
 
 ::: live
 
@@ -394,20 +460,20 @@ Home Assistant's card editor shows a form for the group: its title, icon, layout
 
 ### Card options
 
-| Option             | Default | Description                                                                                                                                          |
-| ------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tiles`            |         | Entity ids or tiles: the [tile card's keys](/cards/tile-card#reference) without `type`, `grid_options` and `vertical`, plus `visibility` (required). |
-| `layout`           | `list`  | `list`: the tiles one under the other. `row`: vertical tiles side by side, wrapping when narrow. The layout decides every tile's `vertical`.         |
-| `title`            |         | Header text. Template allowed.                                                                                                                       |
-| `icon`             |         | Header icon. Template allowed.                                                                                                                       |
-| `title_tap_action` | none    | Action when the title or its icon is tapped; see [Actions](/cards/tile-custom#actions).                                                              |
-| `badges`           |         | Badges at the end of the title line, plain and small unless they say otherwise; a [poster's badge keys](/cards/poster-badges#badge-reference).       |
+| Option             | Default | Description                                                                                                                                                                                                                                                                   |
+| ------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tiles`            |         | Entity ids or tiles: the [tile card's keys](/cards/tile-card#reference) without `type`, `grid_options` and `vertical`, plus `visibility` (required). In a table: no `icon`, `secondary`, `badges` or `status_badge`, and `visual` is a badge's (`bar`, `sparkline`, `trend`). |
+| `layout`           | `list`  | `list`: the tiles one under the other. `row`: vertical tiles side by side, wrapping when narrow. `table`: one line each, the name, the value and one control or visual. The layout decides every tile's `vertical`.                                                           |
+| `title`            |         | Header text. Template allowed.                                                                                                                                                                                                                                                |
+| `icon`             |         | Header icon. Template allowed.                                                                                                                                                                                                                                                |
+| `title_tap_action` | none    | Action when the title or its icon is tapped; see [Actions](/cards/tile-custom#actions).                                                                                                                                                                                       |
+| `badges`           |         | Badges at the end of the title line, plain and small unless they say otherwise; a [poster's badge keys](/cards/poster-badges#badge-reference).                                                                                                                                |
 
 The group sets nothing on its tiles but their layout: any other key on the card is a config error that names its place (each tile).
 
 ### Grid defaults
 
-`rows: auto`; a `list` is 6 columns wide (a tile's width), a `row` 12. The sections grid will not shrink either below 6 columns. See [Sizing in sections](/guide/sizing).
+`rows: auto`; a `list` and a `table` are 6 columns wide (a tile's width), a `row` 12. The sections grid will not shrink either below 6 columns. See [Sizing in sections](/guide/sizing).
 
 ### Home Assistant options
 

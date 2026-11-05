@@ -64,15 +64,16 @@ One entity is a tile, or a poster where its value should be large. Most keys are
 
 Several entities are a tile group: a title, an icon, badges in the header and its `tiles`. Each tile says everything about itself: the group passes nothing down to its tiles (`show_name`, the actions, the history window are set per tile).
 
-| Entity group card                             | Tile group                                                       |
-| --------------------------------------------- | ---------------------------------------------------------------- |
-| `entities`                                    | `tiles`, with a tile's keys                                      |
-| `layout: list`, `column`                      | `layout: list`                                                   |
-| `layout: row`                                 | `layout: row` (vertical tiles side by side)                      |
-| `layout: grid`, `hero`, `table`               | a layout card, see below                                         |
-| `header_entities`                             | `badges`, with a [badge's keys](/cards/poster-badges#badge-keys) |
-| `show_icon`, `show_name`, actions on the card | on each tile                                                     |
-| `align`, `name_position`, `vertical_align`    | none                                                             |
+| Entity group card                                                 | Tile group                                                       |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `entities`                                                        | `tiles`, with a tile's keys                                      |
+| `layout: list`, `column`                                          | `layout: list`                                                   |
+| `layout: row`                                                     | `layout: row` (vertical tiles side by side)                      |
+| `layout: table`                                                   | `layout: table`: the name, the value and one control or visual   |
+| `layout: grid`, `hero`                                            | a layout card, see below                                         |
+| `header_entities`                                                 | `badges`, with a [badge's keys](/cards/poster-badges#badge-keys) |
+| `show_icon`, `show_name`, actions on the card                     | on each tile                                                     |
+| `align`, `name_position`, `vertical_align`, a table's `show_icon` | none                                                             |
 
 ::: live
 
@@ -93,8 +94,7 @@ tiles:
 The group card's other layouts are a [layout card](/cards/layout-card) of new cards:
 
 - **grid:** posters in a layout card with `columns`;
-- **hero:** a poster above a tile group, `card_style: seamless` making them one surface;
-- **table:** a tile group in `layout: list`.
+- **hero:** a poster above a tile group, `card_style: seamless` making them one surface.
 
 ::: live
 

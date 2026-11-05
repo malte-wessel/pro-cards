@@ -6,6 +6,8 @@
 import { normalizeValue, type ValueSrc } from "../shared/entity/config.ts";
 import { domainOf } from "../shared/color.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
+import { defaultPlacements, normalizeControl } from "../shared/entity/control.ts";
+import { parseBadgeVisual } from "../shared/kinds/badge.ts";
 import {
   isObj,
   kindConfigOf,
@@ -22,6 +24,14 @@ export interface RawTileCardConfig extends RawKindCardConfig {
   status_badge?: unknown;
   badges?: unknown;
   vertical?: unknown;
+  // a row of a tile group's table (the group's, never written on a tile)
+  table?: unknown;
+}
+
+// what a table row draws after its value instead of a control (a badge's visuals, its window)
+export interface TableRow {
+  visual: "bar" | "sparkline" | "trend" | null;
+  hours: number | "today";
 }
 
 export interface TileConfig extends KindConfig {
@@ -33,6 +43,9 @@ export interface TileConfig extends KindConfig {
   statusBadge: boolean;
   // the icon on top, the name and the line centred under it, the controls under them
   vertical: boolean;
+  // a row of a tile group's table: the name, the value and one control or visual after it; no
+  // icon, no badges, no secondary, nothing behind the texts
+  table: TableRow | null;
 }
 
 // the badge on the icon (`icon: { badge }`, the card's or a rule's): Home Assistant's (auto), none
@@ -52,6 +65,32 @@ const GONE: Record<string, string> = {
   badge: "visual: badge is gone: the status is on the line under the name",
 };
 
+// the keys a table row cannot draw
+const TABLE_GONE: Record<string, string> = {
+  icon: "draws no icon",
+  secondary: "draws no secondary",
+  badges: "draws no badges",
+  status_badge: "draws no badges: the status follows the value",
+  vertical: "is a line of its own",
+};
+// a table row as written: a visual after the value (a badge's: bar, sparkline, trend) or a control
+const tableOf = (written: RawTileCardConfig): TableRow => {
+  for (const k of Object.keys(TABLE_GONE))
+    if ((written as Record<string, unknown>)[k] !== undefined)
+      throw new Error(`${CARD_TYPE}: in a table, a tile ${TABLE_GONE[k]} (${k})`);
+  const v = parseBadgeVisual(written.visual, `${CARD_TYPE}: in a table, visual`, null);
+  if (v && written.control !== undefined && written.control !== false)
+    throw new Error(`${CARD_TYPE}: in a table, a tile draws a control or a visual, not both`);
+  return { visual: v?.type ?? null, hours: v?.hours ?? (v?.type === "trend" ? 1 : 24) };
+};
+// the history a table row's visual draws, in hours
+const tableHours = (t: TableRow | null) =>
+  t && (t.visual === "sparkline" || t.visual === "trend")
+    ? t.hours === "today"
+      ? 24
+      : t.hours
+    : 0;
+
 export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileConfig => {
   if (!isObj(input)) throw new Error(`${CARD_TYPE}: invalid config`);
   const written = input as RawTileCardConfig;
@@ -59,7 +98,14 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
     throw new Error(`${CARD_TYPE}: toggle is control: toggle on the tile card`);
   if (typeof written.visual === "string" && GONE[written.visual])
     throw new Error(`${CARD_TYPE}: ${GONE[written.visual]}`);
-  const k = normalizeKindItem(written, hass, CARD_TYPE, "tile card");
+  const table = written.table === true ? tableOf(written) : null;
+  // a table row draws no icon and no visual of the kind's: its own after the value
+  const k = normalizeKindItem(
+    table ? ({ ...written, icon: false, visual: false } as unknown as RawTileCardConfig) : written,
+    hass,
+    CARD_TYPE,
+    "tile card",
+  );
   const main = k.entities[0];
   // the icon toggles what switches and presses what runs, unless the card or the type says else
   const iconTap = k.places.icon ? k.places.icon.tap_action : undefined;
@@ -75,6 +121,19 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
   if (main.control?.defaults) {
     const end = main.control.defaults.filter((p) => p.position === "end");
     main.control = end.length ? { ...main.control, defaults: end } : null;
+  }
+  if (table) {
+    // one thing after the value: the visual where the row names one, else the control (the
+    // kind's, or a lock's hold, which a tile has on its icon)
+    if (table.visual) {
+      main.control = null;
+      main.visual = table.visual;
+    } else if (!main.control && written.control === undefined) {
+      // no icon to tap or hold (a switch's, a lock's): the domain's control at the line's end
+      const end = defaultPlacements(main).filter((p) => p.position === "end");
+      const auto = end.length ? normalizeControl({ control: "auto" }, k.ctx, "the card") : null;
+      main.control = auto && { ...auto, defaults: end };
+    }
   }
   // the badges at the end of the first row, and the status among them where the card says so
   const {
@@ -113,10 +172,13 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
     headerIdxs: [],
     hasHeader: false,
     ...kc,
-    ...(badgeHours > kc.hours ? { fetchHours: badgeHours } : {}),
+    ...(Math.max(badgeHours, tableHours(table)) > kc.hours
+      ? { fetchHours: Math.max(badgeHours, tableHours(table)) }
+      : {}),
     statusIdx,
     statusText,
     statusBadge,
     vertical: written.vertical === true,
+    table,
   };
 };

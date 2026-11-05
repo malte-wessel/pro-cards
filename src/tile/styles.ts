@@ -1,7 +1,8 @@
 // CSS of the tile card on top of the entity layer's tile: the icon slot (kept through fills, so a
 // kind's animated lead runs on) and the kinds' leads.
 import { PLOT_H } from "../shared/entity/constants.ts";
-import { STYLE_ENTITY_CARD } from "../shared/entity/render/styles.ts";
+import { POSTER_NAME, STYLE_ENTITY_CARD } from "../shared/entity/render/styles.ts";
+import { fw, type } from "../shared/typography.ts";
 import { STYLE_FLOW, STYLE_FLOW_MOTION } from "../shared/flow/styles.ts";
 import { CARD_BG, iconBg } from "../shared/constants.ts";
 import { STYLE_KIND_BACKDROP, STYLE_KIND_CARD_FOCUS, STYLE_KINDS } from "../shared/kinds/styles.ts";
@@ -91,6 +92,37 @@ const STYLE_TILE_CARD = `
   /* the badge on the icon, as Home Assistant's tile: 16 px over the circle's top right */
   .tlead { position: relative; }
   .tibadge { position: absolute; top: -3px; right: -3px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--tibadge); color: var(--white-color, #fff); --mdc-icon-size: 12px; line-height: 0; pointer-events: none; transition: background-color 280ms ease-in-out; }
+  /* a table's row (a tile group's layout: table): one line of 34 px, the name in small capitals at
+     its start and the value at its end, then one control or visual; the name gives way first */
+  ha-card.layout-tile.ttable { min-height: 34px; }
+  ha-card.layout-tile.ttable .body { padding-block: 2px; }
+  /* the small controls (the entity cards' table's) no taller than a row's 28 px: the speeds and a
+     hold too */
+  ha-card.ttable .end > .ctl-segments .seg { height: 22px; }
+  ha-card.ttable .end > .ctl-hold { width: 28px; height: 28px; --mdc-icon-size: 16px; }
+  /* no room for the control: it goes, the value stays */
+  ha-card.layout-tile.ttable .row.tile.tdrop > .top > .main > .line > .end { display: flex; }
+  ha-card.ttable .row.tile.tdrop .end > :is(.ctl, .bbar, .bspark, .btr) { display: none; }
+  /* no room for the status beside a whole name: it goes first */
+  ha-card.ttable .row.tile.tbare .end > .tstatus { display: none; }
+  ha-card.ttable .row.tile { min-height: 28px; justify-content: center; }
+  ha-card.ttable .row.tile .line { flex-wrap: nowrap; gap: 12px; }
+  ha-card.ttable .tname { flex: 1 1 0; min-width: 40px; ${POSTER_NAME} }
+  ha-card.ttable .row.tile .line > .end { flex: 0 1 auto; min-width: 0; max-width: none; justify-content: flex-start; flex-wrap: nowrap; }
+  /* the value keeps its width, the status after it gives way: where even the value does not fit
+     beside the control, the control goes (TileCard._fitControls) */
+  ha-card.ttable .end > :is(.state, .tstatus) { ${type(14, 20)} font-weight: ${fw("medium")}; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  ha-card.ttable .end > .state { flex: none; color: var(--primary-text-color); }
+  ha-card.ttable .end > .tstatus { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--fe-color); }
+  ha-card.ttable .end > .state + .tstatus { margin-inline-start: -4px; }
+  ha-card.ttable .end > .state + .tstatus::before { content: "·\\00a0"; color: var(--primary-text-color); }
+  ha-card.ttable .end > .bbar { flex: none; width: 40px; height: 4px; border-radius: 2px; overflow: hidden; background: color-mix(in srgb, var(--fe-color) 22%, transparent); }
+  ha-card.ttable .end > .bbar > i { display: block; height: 100%; border-radius: inherit; background: var(--fe-color); }
+  ha-card.ttable .end > .bspark { flex: none; display: block; width: 48px; height: 16px; }
+  ha-card.ttable .end > .bspark svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  ha-card.ttable .end > .bspark path { fill: none; stroke: var(--fe-color); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+  ha-card.ttable .end > .btr { flex: none; display: inline-flex; align-items: center; gap: 2px; ${type(12, 16)} font-weight: ${fw("medium")}; color: var(--secondary-text-color); font-variant-numeric: tabular-nums; }
+  ha-card.ttable .end > .btr :is(ha-icon, ha-state-icon) { --mdc-icon-size: 16px; color: var(--fe-color); }
   /* a media player's progress runs along the tile's bottom edge, taking no row */
   .row.tile > .pprog { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: color-mix(in srgb, var(--fe-color) 22%, transparent); }
 `;

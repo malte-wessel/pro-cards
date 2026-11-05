@@ -551,6 +551,7 @@ const pt: Translation = {
   "editor.cards.field.title_tap_action": "Toque no título",
   "editor.cards.group_layout.list": "Um por baixo do outro",
   "editor.cards.group_layout.row": "Lado a lado",
+  "editor.cards.group_layout.table": "Como tabela",
   "editor.cards.tile": "Mosaico",
   "editor.cards.none_yet": "Ainda sem mosaicos: + adiciona um",
   "editor.cards.field.columns": "Colunas",

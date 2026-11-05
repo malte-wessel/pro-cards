@@ -550,6 +550,7 @@ const de: Translation = {
   "editor.cards.field.title_tap_action": "Tippen auf den Titel",
   "editor.cards.group_layout.list": "Untereinander",
   "editor.cards.group_layout.row": "Nebeneinander",
+  "editor.cards.group_layout.table": "Als Tabelle",
   "editor.cards.tile": "Kachel",
   "editor.cards.none_yet": "Noch keine Kacheln: + fügt eine hinzu",
   "editor.cards.field.columns": "Spalten",

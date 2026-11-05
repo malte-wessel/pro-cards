@@ -25,7 +25,14 @@ import { hasTileControl, tileMinColumns } from "./shared/entity/control.ts";
 import { asText } from "./shared/entity/look.ts";
 import { tplOf, type EntityModel, type RenderCtx } from "./shared/entity/model.ts";
 import { bindKeptLeadTap, leadTapState } from "./shared/entity/render/controls.ts";
-import { fillTileSlots, tileCorner, tileLead, tileValueText } from "./shared/entity/render/fill.ts";
+import { inlineVisualEl } from "./shared/entity/render/badge.ts";
+import {
+  fillTableSlots,
+  fillTileSlots,
+  tileCorner,
+  tileLead,
+  tileValueText,
+} from "./shared/entity/render/fill.ts";
 import { KindCardBase } from "./shared/kinds/card.ts";
 import { KindCardEditor } from "./shared/kinds/editor.ts";
 import { div } from "./shared/kinds/dom.ts";
@@ -154,6 +161,17 @@ export class TileCard extends KindCardBase {
     if (idx !== 0 || !row.classList.contains("tile")) return super._fill(ctx, row, ent, idx, m);
     const kc = this._kindCtx(ctx);
     const slots = this._slots(kc);
+    if (cfg.table) {
+      // a table's row: the name, the value and its status, one control or visual after them
+      this._lineValue = ent.item.showValue
+        ? tileValueText(slots.value === undefined ? m.fmt : slots.value)
+        : "";
+      slots.status = this._status(kc);
+      const t = cfg.table;
+      const inline = t.visual ? inlineVisualEl(ctx, ent, m, t.visual, t.hours) : null;
+      fillTableSlots(ctx, row, ent, idx, m, slots, inline);
+      return;
+    }
     // the status on the line, unless it is a badge
     slots.status = cfg.statusBadge ? null : this._status(kc);
     // a vertical tile's line is narrow: the value and the status, the type's line left out (one
@@ -221,6 +239,13 @@ export class TileCard extends KindCardBase {
     const cfg = this._config as TileConfig;
     if (!inputs || (idx !== 0 && idx !== cfg.statusIdx)) return inputs;
     const kc = this._kindCtx(ctx);
+    // a table's row: its visual's history too
+    if (cfg.table) {
+      const v = cfg.table.visual;
+      const id = cfg.entities[0].entity;
+      const hist = (v === "sparkline" || v === "trend") && id ? ctx.series.get(id) : null;
+      return [...inputs, ...this._kindInputs(kc), this._status(kc), hist];
+    }
     if (idx === cfg.statusIdx)
       return [...inputs, kc.m, ...this._kindInputs(kc), this._lineValue, this._status(kc)];
     return [
@@ -250,13 +275,19 @@ export class TileCard extends KindCardBase {
     return own;
   }
   _render() {
-    // vertical: the icon on top, before anything is laid out
+    // vertical: the icon on top, before anything is laid out; a table's row: one line
     this._root?.classList.toggle("tvertical", !!this._config?.vertical);
+    this._root?.classList.toggle("ttable", !!this._config?.table);
     super._render();
     const cfg = this._config,
       body = this._root?.querySelector<HTMLElement>(":scope > .body"),
       row = body?.querySelector<HTMLElement>(":scope > .row.tile");
     if (!cfg || !body || !row || !this._hass) return;
+    // a table's row has no lead and nothing behind or below its texts
+    if (cfg.table) {
+      if (this._root) this._fitTable(this._root, row);
+      return;
+    }
     const kc = this._kindCtx(this._ctx());
     // the kind's lead follows every render (a new speed, a new direction), and what is behind the
     // texts (a glow, a picture, the kind's drawing)
@@ -300,6 +331,60 @@ export class TileCard extends KindCardBase {
       for (mode of modes) {
         set(mode);
         if (fits(mode)) break;
+      }
+      this._ctlFit = { size, mode };
+    }
+    set(this._ctlFit.mode);
+  }
+
+  // a table's row is one line, and gives way in this order: the status, then the name (to 40 px),
+  // then the control or the visual (more-info has them). Found once per card size, as a tile's
+  // controls
+  _fitTable(card: HTMLElement, row: HTMLElement) {
+    const set = (mode: string) => {
+      row.classList.toggle("tkeep", !mode.startsWith("drop"));
+      row.classList.toggle("tdrop", mode.startsWith("drop"));
+      row.classList.toggle("tbare", mode.endsWith("bare"));
+    };
+    const size = `${card.clientWidth}x${card.clientHeight}`;
+    if (this._ctlFit?.size !== size) {
+      const line = row.querySelector<HTMLElement>(".line");
+      const name = row.querySelector<HTMLElement>(".tname");
+      const tail = () => [
+        ...row.querySelectorAll<HTMLElement>(".end > :is(.ctl, .bbar, .bspark, .btr)"),
+      ];
+      const has = tail().length > 0;
+      // nothing past the line's end (the card's padding), no speeds cut at it (a hold's ring
+      // reaches past its button, so only the speeds count as cut)
+      const fits = () => {
+        const right = line ? line.getBoundingClientRect().right : Infinity;
+        return tail().every((c) => {
+          if (c.classList.contains("ctl-segments") && c.scrollWidth > c.clientWidth + 0.5)
+            return false;
+          const b = c.getBoundingClientRect();
+          return !b.width || b.right <= right + 0.5;
+        });
+      };
+      // the name whole, and the status too (never cut to its first letters)
+      const whole = () =>
+        [name, row.querySelector<HTMLElement>(".end > .tstatus")].every(
+          (e) => !e || e.scrollWidth <= e.clientWidth + 0.5,
+        );
+      // the status goes where the name would be cut beside it; without it the name may be (to its
+      // 40 px), and only then the control goes
+      const ok: Record<string, () => boolean> = {
+        keep: () => fits() && whole(),
+        "keep bare": fits,
+        drop: whole,
+      };
+      let mode = "drop bare";
+      for (const m of ["keep", "keep bare", "drop"]) {
+        if (m === "drop" && !has) continue;
+        set(m);
+        if (ok[m]()) {
+          mode = m;
+          break;
+        }
       }
       this._ctlFit = { size, mode };
     }

@@ -549,6 +549,7 @@ const en = {
   "editor.cards.field.title_tap_action": "Tap on the title",
   "editor.cards.group_layout.list": "One under the other",
   "editor.cards.group_layout.row": "Side by side",
+  "editor.cards.group_layout.table": "As a table",
   "editor.cards.tile": "Tile",
   "editor.cards.none_yet": "No tiles yet: + adds one",
   "editor.cards.field.columns": "Columns",

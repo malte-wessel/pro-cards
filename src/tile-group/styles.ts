@@ -32,6 +32,8 @@ const STYLE_TILES = `
   .tiles > .tile > * { height: auto; flex: 1 1 auto; }
   /* list: the tiles one under the other */
   .tiles.layout-list { flex-direction: column; }
+  /* table: the rows one under the other, close together */
+  .tiles.layout-table { flex-direction: column; gap: 0; }
   /* row: vertical tiles side by side in columns alike, as many as fit at the width the widest
      tile needs at least (--tg-col: its grid columns); a line that is not full keeps the columns'
      width. The tiles of a line are as tall as the tallest, their content at the top, so their

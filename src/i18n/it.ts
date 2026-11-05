@@ -551,6 +551,7 @@ const it: Translation = {
   "editor.cards.field.title_tap_action": "Tocco sul titolo",
   "editor.cards.group_layout.list": "Una sotto l'altra",
   "editor.cards.group_layout.row": "Una accanto all'altra",
+  "editor.cards.group_layout.table": "Come tabella",
   "editor.cards.tile": "Riquadro",
   "editor.cards.none_yet": "Ancora nessun riquadro: + ne aggiunge uno",
   "editor.cards.field.columns": "Colonne",

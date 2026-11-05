@@ -551,6 +551,7 @@ const nb: Translation = {
   "editor.cards.field.title_tap_action": "Trykk på tittelen",
   "editor.cards.group_layout.list": "Under hverandre",
   "editor.cards.group_layout.row": "Side om side",
+  "editor.cards.group_layout.table": "Som tabell",
   "editor.cards.tile": "Flis",
   "editor.cards.none_yet": "Ingen fliser ennå: + legger til en",
   "editor.cards.field.columns": "Kolonner",

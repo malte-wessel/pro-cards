@@ -78,6 +78,21 @@ tiles:
   - cover.living_room_blinds
   - media_player.living_room_speaker
 `,
+  "Tile group as a table": `type: custom:tile-group-card-pro
+layout: table
+title: Washing machine
+icon: mdi:washing-machine
+tiles:
+  - entity: sensor.washer_status
+    name: Status
+    show_value: false
+    rules:
+      - { state: run, color: green, status: Running }
+      - { state: end, color: teal, status: Done }
+  - { entity: sensor.washer_remaining, name: Remaining }
+  - { entity: sensor.washer_power, name: Power, visual: sparkline }
+  - { entity: switch.coffee_machine, name: Coffee machine }
+`,
   "Posters with gauges": `type: custom:layout-card-pro
 columns: 2
 cards:

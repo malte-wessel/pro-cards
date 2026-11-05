@@ -550,6 +550,7 @@ const sv: Translation = {
   "editor.cards.field.title_tap_action": "Tryck på rubriken",
   "editor.cards.group_layout.list": "Under varandra",
   "editor.cards.group_layout.row": "Bredvid varandra",
+  "editor.cards.group_layout.table": "Som tabell",
   "editor.cards.tile": "Ruta",
   "editor.cards.none_yet": "Inga rutor än: + lägger till en",
   "editor.cards.field.columns": "Kolumner",

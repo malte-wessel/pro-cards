@@ -78,6 +78,7 @@ const PF_CONS = [
 ];
 
 const HC = "custom:heading-card-pro";
+const TG = "custom:tile-group-card-pro";
 const EF = "custom:energy-flow-card-pro";
 // the demo world's meters (meters.ts): their statistics follow the frozen clock
 const EF_SRC = [
@@ -2189,6 +2190,57 @@ const CASES = {
   "pc-sizes": [
     { type: PC, entity: "weather.home", name: "Outside", grid_options: { columns: 12, rows: 3 } },
     { type: PC, entity: "climate.living_room", grid_options: { columns: 9, rows: 4 } },
+  ],
+  // a tile group's table: one line a tile, the name, the value and one control or visual; at a
+  // quarter of the width the rows give way (the status, the name, the control)
+  "tg-table": [
+    {
+      type: TG,
+      layout: "table",
+      title: "Living room",
+      icon: "mdi:sofa",
+      tiles: [
+        { entity: "light.living_room", name: "Ceiling" },
+        { entity: "light.desk_lamp", name: "Desk lamp", control: "slider" },
+        { entity: "climate.living_room", name: "Thermostat" },
+        { entity: "fan.living_room", name: "Fan" },
+        { entity: "cover.living_room_blinds", name: "Blinds" },
+        { entity: "lock.front_door", name: "Front door" },
+        { entity: "input_select.house_mode", name: "House mode" },
+      ],
+      grid_options: { columns: 12 },
+    },
+    {
+      type: TG,
+      layout: "table",
+      title: "Washing machine",
+      icon: "mdi:washing-machine",
+      tiles: [
+        {
+          entity: "sensor.washer_status",
+          name: "Status",
+          show_value: false,
+          rules: [{ state: "run", color: "green", status: "Running" }],
+        },
+        { entity: "sensor.washer_remaining", name: "Remaining" },
+        { entity: "sensor.washer_power", name: "Power", visual: "sparkline" },
+        { entity: "sensor.power_consumption", name: "House", visual: "trend" },
+        { entity: "sensor.phone_battery", name: "Phone", visual: "bar" },
+      ],
+      grid_options: { columns: 12 },
+    },
+    {
+      type: TG,
+      layout: "table",
+      title: "Narrow",
+      tiles: [
+        { entity: "light.living_room", name: "Ceiling" },
+        { entity: "climate.living_room", name: "Thermostat" },
+        { entity: "cover.living_room_blinds", name: "Blinds" },
+        { entity: "sensor.phone_battery", name: "Remote control", visual: "bar" },
+      ],
+      grid_options: { columns: 6 },
+    },
   ],
   // badges without a title: the heading is only as tall as its badges
   "hc-badges-only": {

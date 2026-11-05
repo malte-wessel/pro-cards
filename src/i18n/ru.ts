@@ -550,6 +550,7 @@ const ru: Translation = {
   "editor.cards.field.title_tap_action": "Нажатие на заголовок",
   "editor.cards.group_layout.list": "Друг под другом",
   "editor.cards.group_layout.row": "Рядом",
+  "editor.cards.group_layout.table": "Таблицей",
   "editor.cards.tile": "Плитка",
   "editor.cards.none_yet": "Плиток пока нет: + добавляет одну",
   "editor.cards.field.columns": "Столбцы",

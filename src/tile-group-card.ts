@@ -2,7 +2,7 @@
  * tile-group-card-pro – several tiles on one card, under the entity group card's header.
  *
  *   type: custom:tile-group-card-pro
- *   layout: list                           # list (tiles one under the other) | row (vertical tiles side by side)
+ *   layout: list                           # list (tiles one under the other) | row (vertical tiles side by side) | table (one line each)
  *   title: Kitchen                         # template allowed
  *   icon: mdi:silverware-fork-knife        # the header's icon; template allowed
  *   title_tap_action                       # the title (and its icon)
@@ -126,7 +126,12 @@ export class TileGroupCard extends EntityCardBase {
   getCardSize() {
     const cfg = this._config as TileGroupConfig | undefined;
     if (!cfg) return 2;
-    return this._headerRows() + (cfg.layout === "row" ? 2 : this._tiles.length);
+    const n = this._tiles.length;
+    // a table's rows are 34 px, a sections row 56
+    return (
+      this._headerRows() +
+      (cfg.layout === "row" ? 2 : cfg.layout === "table" ? Math.ceil((n * 34) / 56) : n)
+    );
   }
   getGridOptions(): GridOptions {
     const cfg = this._config as TileGroupConfig | undefined;

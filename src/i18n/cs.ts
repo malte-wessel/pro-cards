@@ -548,6 +548,7 @@ const cs: Translation = {
   "editor.cards.field.title_tap_action": "Klepnutí na název",
   "editor.cards.group_layout.list": "Pod sebou",
   "editor.cards.group_layout.row": "Vedle sebe",
+  "editor.cards.group_layout.table": "Jako tabulka",
   "editor.cards.tile": "Dlaždice",
   "editor.cards.none_yet": "Zatím žádné dlaždice: + přidá jednu",
   "editor.cards.field.columns": "Sloupce",

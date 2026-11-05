@@ -551,6 +551,7 @@ const fr: Translation = {
   "editor.cards.field.title_tap_action": "Appui sur le titre",
   "editor.cards.group_layout.list": "L'une sous l'autre",
   "editor.cards.group_layout.row": "Côte à côte",
+  "editor.cards.group_layout.table": "En tableau",
   "editor.cards.tile": "Tuile",
   "editor.cards.none_yet": "Pas encore de tuiles : + en ajoute une",
   "editor.cards.field.columns": "Colonnes",

@@ -14,7 +14,7 @@ import { normalizeVisibility, type Visibility } from "../shared/visibility.ts";
 
 export const CARD_TYPE = "tile-group-card-pro";
 export const TILE_TYPE = "tile-card-pro";
-export const TILE_GROUP_LAYOUTS = ["list", "row"] as const;
+export const TILE_GROUP_LAYOUTS = ["list", "row", "table"] as const;
 export type TileGroupLayout = (typeof TILE_GROUP_LAYOUTS)[number];
 
 // the card's own keys: the header, the layout, the tiles and Home Assistant's. It sets nothing on
@@ -63,7 +63,7 @@ export const normalizeTileGroupConfig = (input: unknown): TileGroupConfig => {
   const raw = input as RawTileGroupConfig;
   const layout = raw.layout ?? "list";
   if (!TILE_GROUP_LAYOUTS.includes(layout as TileGroupLayout))
-    throw new Error(`${CARD_TYPE}: layout takes ${TILE_GROUP_LAYOUTS.join(" or ")}`);
+    throw new Error(`${CARD_TYPE}: layout takes list, row or table`);
   if (raw.entities !== undefined) throw new Error(`${CARD_TYPE}: entities is tiles`);
   for (const k of Object.keys(raw))
     if (!CARD_KEYS.has(k) && raw[k] !== undefined)
@@ -81,10 +81,17 @@ export const normalizeTileGroupConfig = (input: unknown): TileGroupConfig => {
     // the group's layout decides it: a row's tiles are vertical, a list's are not
     if (own.vertical !== undefined)
       throw new Error(`${CARD_TYPE}: ${label}: vertical is the group's layout (layout: row)`);
+    if (own.table !== undefined)
+      throw new Error(`${CARD_TYPE}: ${label}: table is the group's layout (layout: table)`);
     const { visibility, ...rest } = own;
     const entity = typeof rest.entity === "string" ? rest.entity : null;
     return {
-      config: { type: `custom:${TILE_TYPE}`, ...rest, vertical: layout === "row" },
+      config: {
+        type: `custom:${TILE_TYPE}`,
+        ...rest,
+        // a table's rows: the name, the value and one thing after it
+        ...(layout === "table" ? { table: true } : { vertical: layout === "row" }),
+      },
       visibility: normalizeVisibility(visibility, { type: CARD_TYPE, label, entity }),
     };
   });

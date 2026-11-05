@@ -289,6 +289,55 @@ export const fillTileSlots = (
   appendControls(ctx, ent, idx, m, c.block, row);
 };
 
+// a row of a tile group's table: the name, then at the line's end the value (the status after
+// it, in the row's colour) and one thing: the controls, all of them at the end (a slider too), or
+// the visual the card draws after the value (`inline`). No icon, no secondary, nothing below
+export const fillTableSlots = (
+  ctx: RenderCtx,
+  row: HTMLElement,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+  o: KindSlots,
+  inline: HTMLElement | null,
+) => {
+  const ps = ctx.ctl ? placementsOf(ent, "tile") : [];
+  row.replaceChildren();
+  const { showName, showValue } = ent.item;
+  const ctls = endControls(
+    ctx,
+    ent,
+    idx,
+    m,
+    // as small as the entity cards' table fields: a row is one line of text
+    ps.map((p) => ({ ...p, position: "end" as const, small: true })),
+  );
+  const end = document.createElement("div");
+  end.className = "end";
+  // the value, unless a control shows it (a stepper); the status after it where it says more
+  const text =
+    showValue && !ctls.showsValue ? tileValueText(o.value === undefined ? m.fmt : o.value) : "";
+  const status = o.status === undefined ? m.look.label : o.status;
+  if (text) end.appendChild(textEl("state", text));
+  // (the separator before the status is the CSS's: the status alone may be cut); beside a switch
+  // it would say On or Off once more
+  const sw = ctls.els.some((e) => e.classList.contains("toggle"));
+  if (status && !sw && status.toLowerCase() !== text.toLowerCase())
+    end.appendChild(textEl("tstatus", status));
+  if (inline) end.appendChild(inline);
+  end.append(...ctls.els);
+  const line = document.createElement("div");
+  line.className = "line";
+  line.append(textEl("tname", showName ? (o.name ?? nameOf(ctx, ent, m.st)) : ""), end);
+  const main = document.createElement("div");
+  main.className = "main";
+  main.appendChild(line);
+  const top = document.createElement("div");
+  top.className = "top";
+  top.appendChild(main);
+  row.appendChild(top);
+};
+
 // a poster (the poster card's row): the icon at the top left, and at the bottom the name, then
 // the big value and the secondary line as one block with the controls beside it (under it where
 // they do not fit), then the block visual or controls; `show_icon`, `show_name` and `show_value`

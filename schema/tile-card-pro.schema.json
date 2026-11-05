@@ -24,37 +24,6 @@
       "type": "object",
       "description": "A tile's keys: the card's, and a tile's in a tile group",
       "properties": {
-        "kind": {
-          "description": "What the entity is, forced or one that is never detected (trend, grid, solar, car, appliance, a named cover or appliance). Left out: detected from the entity's domain and device class; `entity` turns every default off",
-          "$ref": "poster-card-pro.schema.json#/$defs/kind"
-        },
-        "inputs": {
-          "$ref": "poster-card-pro.schema.json#/$defs/inputs"
-        },
-        "running_above": {
-          "type": "number",
-          "minimum": 0,
-          "description": "appliance: the power (W) above which it runs"
-        },
-        "series": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "$ref": "poster-card-pro.schema.json#/$defs/trendEntity"
-          },
-          "description": "trend: the series, ids or objects (entity, name, color, rules, visibility)"
-        },
-        "status": {
-          "oneOf": [
-            {
-              "type": "string"
-            },
-            {
-              "const": false
-            }
-          ],
-          "description": "The status: a text or a template, or false for none; on the line after the value, or a badge before the badges with status_badge. Default: the kind's status, else the matching rule's label. Its look is the card's"
-        },
         "visual": {
           "$ref": "poster-card-pro.schema.json#/$defs/visualPlace",
           "description": "The visual: behind the texts (glow, image, flow), or below the line in a second row (a plot of the history, a bar, a gauge, segments, the sun's day, the forecast); false for none. Left out: the kind's (a cover's, a robot's and the grid's drawings are the poster's only)"
@@ -86,6 +55,51 @@
       },
       "allOf": [
         {
+          "$ref": "#/$defs/tileCommon"
+        },
+        {
+          "$ref": "poster-card-pro.schema.json#/$defs/oneFlow"
+        }
+      ]
+    },
+    "tileCommon": {
+      "type": "object",
+      "description": "The keys of a tile and of a row in a tile group's table",
+      "properties": {
+        "kind": {
+          "description": "What the entity is, forced or one that is never detected (trend, grid, solar, car, appliance, a named cover or appliance). Left out: detected from the entity's domain and device class; `entity` turns every default off",
+          "$ref": "poster-card-pro.schema.json#/$defs/kind"
+        },
+        "inputs": {
+          "$ref": "poster-card-pro.schema.json#/$defs/inputs"
+        },
+        "running_above": {
+          "type": "number",
+          "minimum": 0,
+          "description": "appliance: the power (W) above which it runs"
+        },
+        "series": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "poster-card-pro.schema.json#/$defs/trendEntity"
+          },
+          "description": "trend: the series, ids or objects (entity, name, color, rules, visibility)"
+        },
+        "status": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "const": false
+            }
+          ],
+          "description": "The status: a text or a template, or false for none; on the line after the value, or a badge before the badges with status_badge. Default: the kind's status, else the matching rule's label. Its look is the card's"
+        }
+      },
+      "allOf": [
+        {
           "$ref": "#/$defs/tileKeys"
         },
         {
@@ -93,9 +107,43 @@
         },
         {
           "$ref": "poster-card-pro.schema.json#/$defs/typeKeys"
+        }
+      ]
+    },
+    "tableRow": {
+      "type": "object",
+      "description": "A row of a tile group's table (layout: table): the name, the value with its status, and one control or visual after them; no icon, no secondary, no badges",
+      "properties": {
+        "visual": {
+          "$ref": "poster-card-pro.schema.json#/$defs/badgeVisual",
+          "description": "What the row draws after its value instead of a control: bar, sparkline or trend, as a badge does; false for none"
+        },
+        "icon": false,
+        "secondary": false
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/tileCommon"
         },
         {
-          "$ref": "poster-card-pro.schema.json#/$defs/oneFlow"
+          "description": "A control or a visual, not both",
+          "if": {
+            "required": ["visual"],
+            "properties": {
+              "visual": {
+                "not": {
+                  "const": false
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "control": {
+                "const": false
+              }
+            }
+          }
         }
       ]
     },

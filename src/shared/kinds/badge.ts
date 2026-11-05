@@ -114,7 +114,7 @@ const OLD_VISUALS: Record<string, (entity: string | null) => string> = {
     `visual: count is a template in value: "{{ expand('${e ?? "group.…"}') | selectattr('state', 'eq', 'on') | list | count }}"`,
   none: () => "visual: none is false (no visual)",
 };
-const parseVisual = (
+export const parseBadgeVisual = (
   raw: unknown,
   at: string,
   entity: string | null,
@@ -245,7 +245,7 @@ export const normalizePill = (
       throw new Error(`${at}: ${k} must be one of ${list.join(", ")}, not ${val(o[k])}`);
   const entity = typeof o.entity === "string" && o.entity ? o.entity : null;
 
-  const visual = parseVisual(o.visual, `${at}.visual`, entity);
+  const visual = parseBadgeVisual(o.visual, `${at}.visual`, entity);
   const icon = parseIcon(o.icon, `${at}.icon`);
   const control = parseControl(o.control, `${at}.control`);
 

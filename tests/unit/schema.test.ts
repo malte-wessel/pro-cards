@@ -375,6 +375,37 @@ describe("card config schemas", () => {
         ],
       }),
     ).toBeNull();
+    // a table's rows: the name, the value and one control or visual (a badge's), nothing else
+    const table = (tile: unknown) =>
+      validate({ type: "custom:tile-group-card-pro", layout: "table", tiles: [tile] });
+    expect(
+      validate({
+        type: "custom:tile-group-card-pro",
+        layout: "table",
+        tiles: [
+          H,
+          { entity: "light.kitchen", control: "slider" },
+          { entity: "sensor.washer_power", visual: { type: "sparkline", hours: 6 } },
+          { entity: "sensor.phone_battery", visual: "trend", control: false },
+          { entity: "sensor.washer_status", rules: [{ state: "run", status: "Running" }] },
+        ],
+      }),
+    ).toBeNull();
+    for (const [key, v] of Object.entries({
+      icon: "mdi:sofa",
+      secondary: "x",
+      badges: [H],
+      status_badge: true,
+      vertical: true,
+      table: true,
+    }))
+      expect(table({ entity: H, [key]: v }), key).toBeTruthy();
+    expect(table({ entity: H, visual: "gauge" })).toBeTruthy();
+    expect(table({ entity: H, visual: "bar", control: "toggle" })).toBeTruthy();
+    // a list's tiles keep theirs, and take no badge's visual
+    expect(
+      validate({ type: "custom:tile-group-card-pro", tiles: [{ entity: H, visual: "trend" }] }),
+    ).toBeTruthy();
     // the v2 cards keep the flat keys
     const flat = {
       entity: "climate.living_room",
