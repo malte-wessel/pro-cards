@@ -20,9 +20,10 @@ const hero = computed(() => frontmatter.value.hero ?? {});
 </template>
 
 <style scoped>
-/* VPHero's scoped styles do not reach slot content. */
+/* VPHero's scoped styles do not reach slot content. On a phone the nav's logo and name are right
+   above, so the brand line is left out there. */
 .brand {
-  display: flex;
+  display: none;
   align-items: center;
   gap: 10px;
   margin-bottom: 16px;
@@ -60,6 +61,7 @@ const hero = computed(() => frontmatter.value.hero ?? {});
 }
 @media (min-width: 640px) {
   .brand {
+    display: flex;
     margin-bottom: 20px;
   }
   .mark {

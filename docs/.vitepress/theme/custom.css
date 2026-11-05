@@ -48,6 +48,22 @@
   --vp-c-border: rgba(225, 225, 225, 0.24);
 }
 
+/* VitePress shows the full nav menu from 768 px, but ours (search, five menus, the version) needs
+   about 940: up to 959 px the hamburger and its menu screen stay, as on a phone, so the bar never
+   runs past the window. (The screen renders only while open; VitePress closes it on a resize.) */
+@media (min-width: 768px) and (max-width: 959px) {
+  .VPNavBarMenu,
+  .VPNavBarExtra {
+    display: none !important;
+  }
+  .VPNavBarHamburger {
+    display: flex !important;
+  }
+  .VPNavScreen {
+    display: block !important;
+  }
+}
+
 /* The home hero fills the screen over HeroDashboard's backdrop, its text on the left, centred
    top to bottom: .main gives up its positioning so the backdrop covers the whole hero (under the
    transparent nav too), and the text and buttons sit above it. */
@@ -70,6 +86,14 @@
 .VPHome .VPHero.VPHomeHero .actions {
   position: relative;
   z-index: 1;
+}
+/* on a phone the hero has no backdrop but a swipe card of posters under its buttons
+   (HeroSwipe.vue): it is as tall as its content, the text at the top */
+@media (max-width: 639px) {
+  .VPHome .VPHero.VPHomeHero {
+    justify-content: flex-start;
+    min-height: 0;
+  }
 }
 /* VPHero draws its actions at the medium size; the home hero's are larger from 640 px (on a
    phone they stay medium, so both fit in a row) */

@@ -11,6 +11,18 @@ hero:
     - theme: alt
       text: Get started
       link: /guide/introduction
+  # on a phone, in place of the backdrop: these posters in a swipe card under the buttons
+  # (HeroSwipe.vue; each in a layout card, which gives it a poster's three rows)
+  swipe:
+    - { entity: sensor.wind_speed, name: Wind, visual: { type: flow, variant: lines } }
+    - entity: sensor.rain_rate_roof
+      name: Rain
+      visual: { type: flow, variant: drops }
+      inputs: { wind: sensor.wind_speed, direction: sensor.wind_direction }
+    - { kind: sun }
+    - { entity: climate.living_room, name: Thermostat }
+    - { entity: sensor.battery_soc, name: Battery, inputs: { power: sensor.battery_power } }
+    - { entity: vacuum.robot, name: Robot, badges: [sensor.robot_current_room] }
   # the hero's backdrop (HeroDashboard.vue): posters picked from the dashboards below, live but inert
   dashboard:
     - column_span: 4
