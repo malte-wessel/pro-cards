@@ -40,13 +40,13 @@ hero:
             - type: custom:poster-card-pro
               kind: sun
             - type: custom:poster-card-pro
+              entity: climate.living_room
+              name: Thermostat
+            - type: custom:poster-card-pro
               entity: sensor.heat_pump_power
               name: Heat pump
               kind: heat_pump
               running_above: 50
-            - type: custom:poster-card-pro
-              entity: climate.living_room
-              name: Thermostat
             - type: custom:poster-card-pro
               name: Power
               icon: mdi:flash
@@ -66,17 +66,25 @@ hero:
               view_layout: { span: [1, 3] }
               cards:
                 - type: custom:tile-card-pro
-                  entity: media_player.living_room_speaker
-                  name: Music
-                - type: custom:tile-card-pro
-                  entity: media_player.kitchen_speaker
-                  name: Speaker
-                - type: custom:tile-card-pro
-                  entity: switch.coffee_machine
-                  name: Coffee machine
-                  icon: mdi:coffee
-                  color: brown
+                  entity: fan.living_room
+                  name: Fan
                   control: false
+                  status_badge: true
+                - type: custom:tile-card-pro
+                  entity: sensor.ev_battery
+                  name: Car
+                  kind: car
+                  status_badge: true
+                - type: custom:tile-card-pro
+                  name: Laundry
+                  icon: mdi:washing-machine
+                  value: "{{ states('sensor.washer_remaining') }}"
+                  unit: min
+                  secondary: "{{ states('sensor.washer_power') | round }} W now"
+                  status: "{{ 'Running' if states('sensor.washer_remaining') | int(0) > 0 else 'Done' }}"
+                  color: "{{ 'teal' if states('sensor.washer_remaining') | int(0) > 0 else 'grey' }}"
+                  tap_action: { action: more-info, entity: sensor.washer_status }
+                  status_badge: true
             - type: custom:poster-card-pro
               entity: sensor.battery_soc
               name: Battery
