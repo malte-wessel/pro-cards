@@ -87,6 +87,8 @@ describe("poster-card config", () => {
     const fails = (o: Record<string, unknown>, msg: string) =>
       expect(() => norm({ entity: E, ...o })).toThrow(`${T}: ${msg}`);
     fails({ control_position: "block" }, "control_position is control: { position: block }");
+    fails({ visual: "icon" }, "visual: icon is the poster's own: leave it out");
+    fails({ visual: "badge" }, "visual: badge is gone: the status is the badge in the corner");
     fails({ control_attribute: "preset_mode" }, "control_attribute is control: { attribute:");
     fails({ control_step: 5 }, "control_step is control: { step: 5 }");
     fails({ control_options: ["a"] }, "control_options is control: { options: [ … ] }");

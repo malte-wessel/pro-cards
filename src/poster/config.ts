@@ -30,6 +30,12 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
   if (!isObj(input)) throw new Error(`${CARD_TYPE}: invalid config`);
   if ((input as { toggle?: unknown }).toggle !== undefined)
     throw new Error(`${CARD_TYPE}: toggle is control: toggle on the poster card`);
+  // the entity card's visuals the poster draws no more, and what takes their place
+  const visual = (input as { visual?: unknown }).visual;
+  if (visual === "icon")
+    throw new Error(`${CARD_TYPE}: visual: icon is the poster's own: leave it out`);
+  if (visual === "badge")
+    throw new Error(`${CARD_TYPE}: visual: badge is gone: the status is the badge in the corner`);
   if ((input as { status_badge?: unknown }).status_badge !== undefined)
     throw new Error(
       `${CARD_TYPE}: a poster's status is always the badge in its corner: leave out status_badge`,

@@ -60,7 +60,8 @@ export const registerCard = (
     type: cls.cardType,
     name: deprecated ? `${name} (deprecated)` : name,
     description: deprecated ? `Deprecated: use ${deprecated}. ${description}` : description,
-    preview: true,
+    // (a deprecated card draws no preview: the picker would make it say so in the console)
+    preview: !deprecated,
     ...(suggest && {
       getEntitySuggestion: (hass: HomeAssistant, entityId: string) =>
         suggest(hass, entityId)

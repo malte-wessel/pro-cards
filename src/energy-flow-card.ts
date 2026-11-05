@@ -15,7 +15,7 @@
  *   consumer_style / direction / flow_style / idle_links / other   # as the power flow card
  *   hide_consumers_below: 0.5              # hide consumers below this (kWh); hide_below per room / consumer
  *   rules: [...]                           # on the home's energy in kWh: label, colour, tint_card
- *   title / icon / header_entities / tap_action / hold_action / double_tap_action
+ *   title / icon / badges / tap_action / hold_action / double_tap_action
  */
 import {
   daysRange,

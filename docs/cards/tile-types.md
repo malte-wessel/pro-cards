@@ -19,7 +19,7 @@ The kind is detected from the entity's domain, then its device class, else it is
 
 **Reads** any entity.
 
-The fallback: the entity's icon, name and value, then the matching rule's status. `visual` adds a visual below the line: `sparkline`, `columns`, `strip`, `bar`, `gauge` or `segments`. See [Kinds: Entity](/cards/poster-types#entity).
+The fallback: the entity's icon, name and value, then the matching rule's status. `visual` adds a visual below the line: `sparkline`, `columns`, `strip`, `bar`, `gauge` or `segments`. See [Kinds: None](/cards/poster-types#none).
 
 ::: live
 

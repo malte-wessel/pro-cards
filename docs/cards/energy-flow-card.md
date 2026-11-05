@@ -175,6 +175,24 @@ consumers:
 
 :::
 
+## Header
+
+`badges` sit at the end of the title line, beside the period picker, plain and small unless a badge sets its `style` or `size`. They take a [poster's badge keys](/cards/poster-badges#badge-reference) and show the state now, not the period's: here the grid's fossil share. The picker takes most of a narrow card's title line, so keep them few there.
+
+::: live
+
+```yaml
+type: custom:energy-flow-card-pro
+badges:
+  - sensor.grid_fossil_percentage
+home: sensor.home_energy
+sources:
+  - { type: solar, entity: sensor.solar_energy }
+  - { type: grid, import: sensor.grid_import_energy, export: sensor.grid_export_energy }
+```
+
+:::
+
 ## Hover
 
 `hover: true` shows what a click will do, as on the [power flow card](/cards/power-flow-card#hover): a node's circle brightens under the pointer, and header entities take a light layer; consumers drawn as a list keep still. On the card it is the default for every node; a source, the home or a consumer sets its own. See [Hover](/cards/entity-options#hover).

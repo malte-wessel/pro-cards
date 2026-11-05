@@ -16,7 +16,7 @@ Beautiful, customizable cards for Home Assistant dashboards.
 Pro Cards are polished dashboard cards that look like they belong in Home Assistant: same spacing, typography and colours, dark mode included. Every detail can be adjusted, from icons, colours and labels driven by values and templates to layouts, graphs and actions. Themes change the look of all cards at once.
 
 - **High quality.** Crisp rendering, sensible defaults, smooth graphs, tested against a real Home Assistant and pixel by pixel in CI.
-- **Highly customizable.** Rules switch icon, colour, label and card tint by value or state; templates fill names and values; six layouts, eight visuals, a weather card with forecasts, animated wind and rain cards, a power flow tree, every action Home Assistant offers.
+- **Highly customizable.** Rules switch icon, colour, status and card tint by value or state; templates fill names and values; a kind for what each entity is, a weather card with forecasts, the wind and the rain animated on posters and tiles, a power and an energy flow tree, every action Home Assistant offers.
 - **Home Assistant design.** The cards use the theme's colours, fonts, radii and state colours, so they blend in with the built-in tile cards, and a custom theme restyles them along with the rest of the dashboard.
 
 <picture>

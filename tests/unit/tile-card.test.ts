@@ -227,6 +227,24 @@ describe("tile-card config", () => {
     fails({ icon_tap_action: "none" }, "icon_tap_action is icon: { tap_action: … }");
     fails({ icon_badge: false }, "icon_badge is icon: { badge: false }");
     fails({ icon_badge: "auto" }, "icon_badge is icon: { badge: … }");
+    // the place it leads to, not a spelling that fails again
+    fails(
+      { control_position: "lead" },
+      "control_position: lead is the icon's own actions: icon: { tap_action, hold_action }",
+    );
+  });
+
+  it("names where the wind and rain cards' keys went", () => {
+    const fails = (o: Record<string, unknown>, msg: string) =>
+      expect(() => norm({ entity: "sensor.wind_speed", ...o })).toThrow(`${T}: ${msg}`);
+    fails({ flow: { style: "lines" } }, "flow is visual: { type: flow, variant: lines }");
+    fails({ layout: "hero" }, "layout: hero is visual: { type: flow }");
+    fails({ lead: "icon" }, "lead: icon is icon: mdi:…");
+    fails({ title: "Wind" }, "title is a tile group's or a heading's");
+    fails(
+      { header_entities: ["sensor.wind_gust"] },
+      "header_entities is a tile group's or a heading's badges",
+    );
   });
 
   it("takes the control's options in one object, the kind's controls without a type", () => {

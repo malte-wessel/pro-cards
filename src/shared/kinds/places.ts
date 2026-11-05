@@ -431,11 +431,32 @@ export const GONE_KEYS: Record<string, (v: unknown) => string> = {
   icon_hold_action: () => "icon_hold_action is icon: { hold_action: … }",
   icon_double_tap_action: () => "icon_double_tap_action is icon: { double_tap_action: … }",
   icon_badge: (v) => `icon_badge is icon: { badge: ${v === false ? "false" : "…"} }`,
-  control_position: (v) => `control_position is control: { position: ${val(v)} }`,
+  control_position: (v) =>
+    v === "lead"
+      ? "control_position: lead is the icon's own actions: icon: { tap_action, hold_action }"
+      : `control_position is control: { position: ${val(v)} }`,
   control_attribute: (v) => `control_attribute is control: { attribute: ${val(v)} }`,
   control_step: (v) => `control_step is control: { step: ${val(v)} }`,
   control_options: () => "control_options is control: { options: [ … ] }",
   control_confirm: () => "control_confirm is control: { confirm: true }",
+  // the wind and rain cards' keys: their kinds draw the animation in a place
+  flow: (v) => {
+    const style = v && typeof v === "object" ? (v as { style?: unknown }).style : undefined;
+    return `flow is visual: { type: flow${style === undefined ? "" : `, variant: ${val(style)}`} }`;
+  },
+  layout: (v) =>
+    v === "hero"
+      ? "layout: hero is visual: { type: flow }: the animation behind the card"
+      : v === "tile"
+        ? "layout: tile is the tile card, the animation in its icon"
+        : `layout is gone: the card is laid out as its kind says`,
+  lead: (v) =>
+    v === "icon" || v === false
+      ? `lead: ${val(v)} is icon: mdi:… (the animation behind the card: visual: { type: flow })`
+      : "lead is the icon's place: icon: { type: flow } or icon: mdi:…",
+  title: () => "title is a tile group's or a heading's: put the card in one, or a heading above",
+  header_entities: () =>
+    "header_entities is a tile group's or a heading's badges: put the card in one, or a heading above",
 };
 // `variant` on the card is the drawing's now: a flow's or a cover's in the visual; an appliance is
 // its kind

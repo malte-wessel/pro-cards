@@ -614,6 +614,12 @@ describe("the keys the places replaced", () => {
         "control_step",
         "control_options",
         "control_confirm",
+        // the wind and rain cards'
+        "flow",
+        "layout",
+        "lead",
+        "title",
+        "header_entities",
       ].sort(),
     );
   });

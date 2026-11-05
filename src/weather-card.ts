@@ -4,7 +4,7 @@
  *   type: custom:weather-card-pro
  *   entity: weather.home                   # required
  *   title: Home / icon: mdi:home           # header like the group cards (template allowed)
- *   header_entities: [...]                 # compact icon + value items on the title line
+ *   badges: [...]                          # the header's badges, as a poster's (header_entities: the old ones, until 4.0)
  *   name / secondary / color               # of the lead (tile and hero); templates allowed
  *   rules:                                 # on the condition (state: rainy), colour / icon / label / tint_card
  *   temperature_rules:                     # on the temperature (below / above), colour + label of the value

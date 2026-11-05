@@ -27,6 +27,7 @@ import {
   type BadgeSize,
   type BadgeStyle,
 } from "../entity/constants.ts";
+import { MIGRATION_GUIDE } from "../card.ts";
 import { parseImage } from "../entity/image.ts";
 import type { HassEntity } from "../ha.ts";
 import { oneOf } from "../util.ts";
@@ -370,7 +371,7 @@ export const normalizeHeaderBadges = (
     if (raw.header_entities !== undefined && !warnedHeader.has(ctx.type)) {
       warnedHeader.add(ctx.type);
       console.warn(
-        `${ctx.type}: header_entities is deprecated and goes in 4.0: use badges (https://malte-wessel.github.io/pro-cards/guide/migrating#header-entities)`,
+        `${ctx.type}: header_entities is deprecated and goes in 4.0: use badges (${MIGRATION_GUIDE}#header-entities)`,
       );
     }
     return { items: normalizeHeaderEntities(raw.header_entities, ctx) };

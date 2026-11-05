@@ -410,6 +410,28 @@ consumers:
 
 :::
 
+## Header
+
+`title` and `icon` head the card; `badges` sit at the end of the title line, plain and small unless a badge sets its `style` or `size`. They take a [poster's badge keys](/cards/poster-badges#badge-reference): here the price with its last 12 hours, and the battery's charge with a ring.
+
+::: live
+
+```yaml
+type: custom:power-flow-card-pro
+title: Power
+icon: mdi:flash
+badges:
+  - { entity: sensor.electricity_price, visual: { type: sparkline, hours: 12 } }
+  - { entity: sensor.battery_soc, icon: { ring: true } }
+home: sensor.power_consumption
+sources:
+  - { type: solar, entity: sensor.solar_power }
+  - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
+  - { type: grid, power: sensor.grid_power }
+```
+
+:::
+
 ## Hover
 
 `hover: true` shows what a click will do, as Home Assistant's tile does: a node's circle brightens under the pointer, and header entities take a light layer; consumers drawn as a list (`consumer_style: list`) keep still, as list rows do. On the card it is the default for every node; a source, the home or a consumer sets its own. See [Hover](/cards/entity-options#hover).

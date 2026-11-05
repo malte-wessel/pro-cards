@@ -142,6 +142,7 @@ export class TileGroupCard extends EntityCardBase {
 
 registerCard(TileGroupCard, {
   name: "Tile Group Card Pro",
-  description: "Several tiles on one card under a header, one under the other or side by side",
+  description:
+    "Several tiles on one card under a header, one under the other, side by side or as a table",
 });
 defineElement(`${CARD_TYPE}-editor`, TileGroupCardEditor);

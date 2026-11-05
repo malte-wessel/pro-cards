@@ -58,17 +58,32 @@ interface RawTileGroupConfig extends CardConfigBase {
 const isObj = (v: unknown): v is Record<string, unknown> =>
   !!v && typeof v === "object" && !Array.isArray(v);
 
+// the entity group card's layouts and keys, and what takes their place
+const OLD_LAYOUTS: Record<string, string> = {
+  column: "layout: column is list",
+  grid: "layout: grid is a layout card of posters (guide/migrating on the docs site)",
+  hero: "layout: hero is a layout card of a poster above a tile group (guide/migrating on the docs site)",
+};
+const OLD_KEYS: Record<string, string> = {
+  header_entities: "header_entities is badges",
+  align: "align is gone: a tile lays out its own line",
+  vertical_align: "vertical_align is gone: the tiles sit at the top",
+  name_position: "name_position is gone: a tile's name is above its line",
+};
+
 export const normalizeTileGroupConfig = (input: unknown): TileGroupConfig => {
   if (!isObj(input)) throw new Error(`${CARD_TYPE}: invalid config`);
   const raw = input as RawTileGroupConfig;
   const layout = raw.layout ?? "list";
   if (!TILE_GROUP_LAYOUTS.includes(layout as TileGroupLayout))
-    throw new Error(`${CARD_TYPE}: layout takes list, row or table`);
+    throw new Error(
+      `${CARD_TYPE}: ${OLD_LAYOUTS[String(layout)] ?? "layout takes list, row or table"}`,
+    );
   if (raw.entities !== undefined) throw new Error(`${CARD_TYPE}: entities is tiles`);
   for (const k of Object.keys(raw))
     if (!CARD_KEYS.has(k) && raw[k] !== undefined)
       throw new Error(
-        `${CARD_TYPE}: a tile group sets nothing on its tiles: ${k} goes on each tile`,
+        `${CARD_TYPE}: ${OLD_KEYS[k] ?? `a tile group sets nothing on its tiles: ${k} goes on each tile`}`,
       );
   if (!Array.isArray(raw.tiles) || !raw.tiles.length)
     throw new Error(`${CARD_TYPE}: tiles must be a list of entities or tiles`);

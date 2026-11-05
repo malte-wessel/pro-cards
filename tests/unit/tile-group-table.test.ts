@@ -50,12 +50,21 @@ describe("a tile group's table", () => {
     expect(normalizeTileGroupConfig({ tiles: ["light.kitchen"] }).tiles[0].config).toMatchObject({
       vertical: false,
     });
-    expect(() => normalizeTileGroupConfig({ layout: "grid", tiles: ["light.kitchen"] })).toThrow(
-      "layout takes list, row or table",
-    );
+    expect(() =>
+      normalizeTileGroupConfig({ layout: "carousel", tiles: ["light.kitchen"] }),
+    ).toThrow("layout takes list, row or table");
     expect(() =>
       normalizeTileGroupConfig({ tiles: [{ entity: "light.kitchen", table: true }] }),
     ).toThrow("tiles[0]: table is the group's layout (layout: table)");
+    // the entity group card's keys and layouts name what took their place
+    const fails = (o: Record<string, unknown>, msg: string) =>
+      expect(() => normalizeTileGroupConfig({ tiles: ["light.kitchen"], ...o })).toThrow(msg);
+    fails({ header_entities: ["sensor.x"] }, "header_entities is badges");
+    fails({ align: "start" }, "align is gone");
+    fails({ vertical_align: "center" }, "vertical_align is gone");
+    fails({ layout: "column" }, "layout: column is list");
+    fails({ layout: "grid" }, "layout: grid is a layout card of posters");
+    fails({ layout: "hero" }, "layout: hero is a layout card");
   });
 
   it("names what a row cannot draw", () => {
