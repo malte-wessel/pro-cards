@@ -593,7 +593,13 @@ describe("the editor form: the status and the badges", () => {
   it("keeps a badge's other keys in its YAML field", () => {
     const badge = { entity: "light.kitchen", name: "K", tap_action: { action: "toggle" } };
     expect(formOf({ ...LIGHT, badges: [badge] }).badges).toEqual([
-      { entity: "light.kitchen", name: "K", more: { tap_action: { action: "toggle" } } },
+      {
+        entity: "light.kitchen",
+        name: "K",
+        kind: "detected",
+        icon_type: "icon",
+        more: { tap_action: { action: "toggle" } },
+      },
     ]);
     // edited in the dialog, its other keys stay
     expect(
@@ -614,6 +620,92 @@ describe("the editor form: the status and the badges", () => {
     expect(
       edit(LIGHT, { badges: [{ entity: "light.kitchen", name: "A", more: { name: "B" } }] }),
     ).toEqual({ ...LIGHT, badges: [{ entity: "light.kitchen", name: "A" }] });
+  });
+});
+
+describe("the editor form: a badge's places, kind and switch", () => {
+  const field = (badge: unknown) => (formOf({ ...LIGHT, badges: [badge] }).badges as Raw[])[0];
+  const written = (item: Raw) =>
+    (
+      edit(LIGHT, { badges: [{ kind: "detected", icon_type: "icon", ...item }] })
+        .badges as unknown[]
+    )[0];
+
+  it("reads the icon place, the visual, the kind and the switch into fields", () => {
+    expect(field({ entity: "sensor.x", icon: { name: "mdi:x", ring: true } })).toMatchObject({
+      icon: "mdi:x",
+      icon_type: "icon",
+      icon_ring: true,
+    });
+    expect(field({ entity: "sensor.x", icon: { type: "dot" } }).icon_type).toBe("dot");
+    expect(field({ entity: "sensor.x", icon: false }).icon_type).toBe("none");
+    expect(field({ entity: "sensor.x", visual: { type: "trend", hours: 6 } })).toMatchObject({
+      visual: "trend",
+      hours: 6,
+    });
+    expect(field({ entity: "light.x", control: "toggle", kind: "none" })).toMatchObject({
+      control: true,
+      kind: "none",
+    });
+    // what the fields cannot say stays as written: a picture's src, a window of today
+    expect(
+      field({ entity: "person.x", icon: { type: "image", src: "/local/m.jpg" } }).more,
+    ).toEqual({
+      icon: { type: "image", src: "/local/m.jpg" },
+    });
+    expect(
+      field({ entity: "sensor.x", visual: { type: "sparkline", hours: "today" } }).more,
+    ).toEqual({ visual: { type: "sparkline", hours: "today" } });
+  });
+
+  it("writes the fields back as the shortest spelling", () => {
+    expect(written({ entity: "sensor.x" })).toBe("sensor.x");
+    expect(written({ entity: "sensor.x", icon_type: "dot" })).toEqual({
+      entity: "sensor.x",
+      icon: { type: "dot" },
+    });
+    expect(written({ entity: "sensor.x", icon_ring: true })).toEqual({
+      entity: "sensor.x",
+      icon: { ring: true },
+    });
+    expect(written({ entity: "person.x", icon_type: "image", icon_ring: true })).toEqual({
+      entity: "person.x",
+      icon: { type: "image", ring: true },
+    });
+    // a dot takes no ring; none is false
+    expect(written({ entity: "sensor.x", icon_type: "dot", icon_ring: true })).toEqual({
+      entity: "sensor.x",
+      icon: { type: "dot" },
+    });
+    expect(written({ entity: "sensor.x", icon_type: "none" })).toEqual({
+      entity: "sensor.x",
+      icon: false,
+    });
+    expect(written({ entity: "sensor.x", visual: "sparkline", hours: 12 })).toEqual({
+      entity: "sensor.x",
+      visual: { type: "sparkline", hours: 12 },
+    });
+    // a bar has no window
+    expect(written({ entity: "sensor.x", visual: "bar", hours: 12 })).toEqual({
+      entity: "sensor.x",
+      visual: "bar",
+    });
+    expect(written({ entity: "light.x", control: true, kind: "none" })).toEqual({
+      entity: "light.x",
+      kind: "none",
+      control: "toggle",
+    });
+  });
+
+  it("keeps the spelling of a badge nobody changed, wherever it moved", () => {
+    const a = { entity: "sensor.a", icon: { type: "icon", ring: true }, visual: { type: "trend" } };
+    const b = { entity: "sensor.b", control: { type: "toggle" } };
+    const form = formOf({ ...LIGHT, badges: [a, b] }).badges as Raw[];
+    const edited = { ...form[1], name: "B" };
+    expect(edit({ ...LIGHT, badges: [a, b] }, { badges: [edited, form[0]] }).badges).toEqual([
+      { entity: "sensor.b", name: "B", control: "toggle" },
+      a,
+    ]);
   });
 });
 

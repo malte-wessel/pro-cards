@@ -27,13 +27,33 @@ export const DETECTED = "detected";
 export const BADGE_KEYS = [
   "entity",
   "name",
+  "kind",
   "icon",
+  "icon_type",
+  "icon_ring",
   "color",
   "visual",
+  "hours",
+  "control",
   "style",
   "size",
   "show_name",
 ] as const;
+// the kinds whose colours a badge takes (the rest draw texts and places a badge has not)
+export const BADGE_KINDS = [
+  "battery",
+  "carbon_dioxide",
+  "pm25",
+  "pm10",
+  "aqi",
+  "wind",
+  "rain",
+  "light",
+  "climate",
+  "weather",
+] as const;
+// a badge's icon place in its dialog: what it draws
+export const BADGE_ICONS = ["icon", "image", "dot", "none"] as const;
 export const RULE_KEYS = [
   "state",
   "above",
@@ -155,6 +175,78 @@ const itemFromForm = (item: Raw, keys: readonly string[], id: string | null): un
   if (isObj(more)) for (const [k, v] of Object.entries(more)) if (!(k in o)) o[k] = v;
   const ks = Object.keys(o);
   return id && ks.length === 1 && ks[0] === id ? o[id] : o;
+};
+// a badge as written → its dialog's item: the icon place and the visual as flat fields (a picture's
+// src, a window of today and the rest under `more`), the kind, the switch
+const BADGE_PLAIN = ["entity", "name", "color", "style", "size", "show_name"];
+export const badgeToForm = (x: unknown): Raw => {
+  const o: Raw = typeof x === "string" ? { entity: x } : isObj(x) ? { ...x } : {};
+  const item: Raw = { kind: DETECTED, icon_type: "icon" };
+  const more: Raw = {};
+  const only = (v: Raw, keys: string[]) => Object.keys(v).every((k) => keys.includes(k));
+  for (const [k, v] of Object.entries(o)) {
+    if (k === "icon" && v === false) item.icon_type = "none";
+    else if (k === "icon" && typeof v === "string") item.icon = v;
+    else if (k === "icon" && isObj(v) && only(v, ["type", "name", "ring"])) {
+      if (typeof v.type === "string") item.icon_type = v.type;
+      if (typeof v.name === "string") item.icon = v.name;
+      if (v.ring === true) item.icon_ring = true;
+    } else if (k === "visual" && typeof v === "string") item.visual = v;
+    else if (k === "visual" && isObj(v) && only(v, ["type", "hours"]) && v.hours !== "today") {
+      item.visual = v.type;
+      if (v.hours !== undefined) item.hours = v.hours;
+    } else if (k === "control" && (v === "toggle" || (isObj(v) && only(v, ["type"]))))
+      item.control = true;
+    else if (k === "kind" && typeof v === "string") item.kind = v;
+    else if (BADGE_PLAIN.includes(k)) item[k] = v;
+    else more[k] = v;
+  }
+  if (Object.keys(more).length) item.more = more;
+  return item;
+};
+// the dialog's item → the badge as written, the shortest spelling of what it says
+export const badgeFromForm = (item: Raw): unknown => {
+  const { more, kind, icon, icon_type, icon_ring, visual, hours, control } = item;
+  const o: Raw = {};
+  for (const k of BADGE_PLAIN) if (filled(item[k])) o[k] = item[k];
+  if (filled(kind) && kind !== DETECTED) o.kind = kind;
+  const type = filled(icon_type) ? icon_type : "icon";
+  const name = filled(icon) ? { name: icon } : {};
+  const ring = icon_ring === true && (type === "icon" || type === "image") ? { ring: true } : {};
+  if (type === "none") o.icon = false;
+  else if (type === "dot") o.icon = { type: "dot" };
+  else if (type === "image") o.icon = { type: "image", ...name, ...ring };
+  else if (icon_ring === true) o.icon = { ...name, ring: true };
+  else if (filled(icon)) o.icon = icon;
+  if (filled(visual))
+    o.visual = num(hours) !== undefined && visual !== "bar" ? { type: visual, hours } : visual;
+  if (control === true) o.control = "toggle";
+  if (isObj(more)) for (const [k, v] of Object.entries(more)) if (!(k in o)) o[k] = v;
+  const ks = Object.keys(o);
+  return ks.length === 1 && ks[0] === "entity" ? o.entity : o;
+};
+// the same value, whatever order its keys come in
+const sameValue = (a: unknown, b: unknown): boolean => {
+  if (isObj(a) && isObj(b)) {
+    const ka = Object.keys(a).filter((k) => a[k] !== undefined);
+    const kb = Object.keys(b).filter((k) => b[k] !== undefined);
+    return ka.length === kb.length && ka.every((k) => sameValue(a[k], b[k]));
+  }
+  if (Array.isArray(a) && Array.isArray(b))
+    return a.length === b.length && a.every((x, i) => sameValue(x, b[i]));
+  return a === b;
+};
+// the dialog's badges → the badges as written: one whose fields are as a written one's keeps
+// its spelling (wherever it moved), the others are written from their fields
+const badgesFromForm = (v: unknown, written: unknown): unknown[] => {
+  const was = Array.isArray(written) ? written : [];
+  const forms: (Raw | null)[] = was.map(badgeToForm);
+  return (Array.isArray(v) ? (v as Raw[]) : []).map((item) => {
+    const i = forms.findIndex((f) => f && sameValue(f, item));
+    if (i < 0) return badgeFromForm(item);
+    forms[i] = null;
+    return was[i];
+  });
 };
 const listToForm = (v: unknown, keys: readonly string[], id = "entity") =>
   Array.isArray(v) ? v.map((x) => itemToForm(x, keys, id)) : [];
@@ -294,7 +386,7 @@ export const configToForm = (
   if (c.status === false) d.hide_status = true;
   else d.status = c.status ?? "";
   d.status_badge = c.status_badge === true;
-  d.badges = listToForm(c.badges, BADGE_KEYS);
+  d.badges = (Array.isArray(c.badges) ? c.badges : []).map(badgeToForm);
   // the rules: the kind's (predefined) while the card writes none, else its own
   const predefined = c.rules === undefined && kindRules.length > 0;
   d.rules_from = predefined ? DEFAULT : "own";
@@ -510,7 +602,7 @@ export const formToConfig = (
   else setOrDrop(c, "status", data.status, !filled(data.status));
   if (thing === "tile") setOrDrop(c, "status_badge", true, data.status_badge !== true);
   if (changed("badges")) {
-    const badges = listFromForm(data.badges, BADGE_KEYS, "entity");
+    const badges = badgesFromForm(data.badges, p.badges);
     put("badges", badges.length ? badges : undefined);
   }
   // the rules: back to the kind's (predefined), or the list as the card's own, a copy of the

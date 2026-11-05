@@ -13,7 +13,9 @@ import { isNum } from "../util.ts";
 import { FLOW_STYLES } from "../wind/constants.ts";
 import { TILE_ICON_TOGGLES } from "./config.ts";
 import {
+  BADGE_ICONS,
   BADGE_KEYS,
+  BADGE_KINDS,
   BUTTON_KEYS,
   DEFAULT,
   DETECTED,
@@ -732,6 +734,31 @@ const fieldsOf = (
           options: BADGE_VISUALS.map((v) => ({ value: v, label: L(hass, `badge_visual.${v}`) })),
         },
       };
+    // a badge's kind: the entity's (detected), none, or one whose colours it takes; its icon
+    // place, its ring, its window and its switch
+    if (of === "badge" && k === "kind")
+      selector = {
+        select: {
+          mode: "dropdown",
+          options: [
+            { value: DETECTED, label: L(hass, "badge_kind.detected") },
+            { value: "none", label: L(hass, "none") },
+            ...BADGE_KINDS.map((n) => ({ value: n, label: kindLabel(hass, n) })),
+          ],
+        },
+      };
+    if (of === "badge" && k === "icon_type")
+      selector = {
+        select: {
+          mode: "dropdown",
+          options: BADGE_ICONS.map((t) => ({
+            value: t,
+            label: L(hass, t === "none" ? "none" : `badge_icon.${t}`),
+          })),
+        },
+      };
+    if (of === "badge" && (k === "icon_ring" || k === "control")) selector = { boolean: {} };
+    if (of === "badge" && k === "hours") selector = { number: { mode: "box", min: 1, step: 1 } };
     out[k] = { selector, label: L(hass, `${of}.${k}`) };
   }
   out.more = { selector: { object: {} }, label: L(hass, "more") };

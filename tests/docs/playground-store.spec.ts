@@ -142,6 +142,9 @@ test("copies the YAML", async ({ page }) => {
 });
 
 test("shares a card as a link that opens it anywhere", async ({ page, browser, baseURL }) => {
+  // the Playground loads three times (here, in another browser, after a reload): beside the other
+  // workers that takes longer than one test's time
+  test.slow();
   await openPlayground(page);
   await nameField(page).fill("Wind ☀");
   await typeYaml(page, "type: custom:poster-card-pro\nentity: sensor.wind_speed\nname: Böen\n");

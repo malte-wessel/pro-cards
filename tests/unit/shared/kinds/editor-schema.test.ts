@@ -370,14 +370,32 @@ describe("the editor's status and badges", () => {
     expect(Object.keys(badges.object.fields)).toEqual([
       "entity",
       "name",
+      "kind",
       "icon",
+      "icon_type",
+      "icon_ring",
       "color",
       "visual",
+      "hours",
+      "control",
       "style",
       "size",
       "show_name",
       "more",
     ]);
+    // the kinds whose colours a badge takes, after the detected one and none
+    const kinds = (
+      badges.object.fields.kind as unknown as {
+        selector: { select: { options: { value: string; label: string }[] } };
+      }
+    ).selector.select.options;
+    expect(kinds.slice(0, 3).map((o) => o.label)).toEqual(["Detected", "None", "Battery"]);
+    const icons = (
+      badges.object.fields.icon_type as unknown as {
+        selector: { select: { options: { label: string }[] } };
+      }
+    ).selector.select.options;
+    expect(icons.map((o) => o.label)).toEqual(["Icon", "Picture", "Dot", "None"]);
     expect(badges.object.fields.more.label).toBe("More (YAML)");
   });
 });

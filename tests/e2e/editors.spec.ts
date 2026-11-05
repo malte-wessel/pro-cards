@@ -177,6 +177,35 @@ test("the poster's badges are added and edited in their dialog", async ({ page }
     .toEqual({ type: "custom:poster-card-pro", entity: "sensor.wind_speed" });
 });
 
+test("a badge's icon place, visual, kind and switch are set in its dialog", async ({ page }) => {
+  const e = await openEditor(page, {
+    type: "custom:poster-card-pro",
+    entity: "sensor.wind_speed",
+    badges: ["sensor.battery_soc"],
+  });
+  await openSection(e.form, "Status and badges");
+  const badges = field(e.form, "badges");
+  await badges.getByRole("button", { name: "Edit" }).click();
+  const dialog = badges.locator(".edit ha-form");
+  await choose(dialog, "icon_type", "dot");
+  await choose(dialog, "visual", "trend");
+  await fill(dialog, "hours", "6");
+  await choose(dialog, "kind", "none");
+  await toggle(dialog, "control");
+  await saveItem(e.form, "badges");
+  await expect.poll(e.last).toMatchObject({
+    badges: [
+      {
+        entity: "sensor.battery_soc",
+        kind: "none",
+        icon: { type: "dot" },
+        visual: { type: "trend", hours: 6 },
+        control: "toggle",
+      },
+    ],
+  });
+});
+
 test("the poster's rules are added, ordered and deleted", async ({ page }) => {
   // (a temperature: its kind brings no rules of its own)
   const e = await openEditor(page, {
