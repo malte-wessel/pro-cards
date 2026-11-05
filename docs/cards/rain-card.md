@@ -2,7 +2,7 @@
 
 ::: warning Deprecated
 
-The rain card is deprecated: it still works in 3.0 and goes in 4.0. Use a poster or a tile of the [rain kind](/cards/poster-types#rain); [Moving to 3.0](/guide/migrating#the-wind-and-rain-cards) says what changes.
+The rain card is deprecated: it still works in 3.0 and goes in 4.0. Use a poster or a tile of the [rain kind](/cards/kinds#rain); [Moving to 3.0](/guide/migrating#the-wind-and-rain-cards) says what changes.
 
 :::
 
@@ -85,7 +85,7 @@ rules:
 
 :::
 
-For the rain as a poster, with the rate large and the drops behind it, see the [rain poster](/cards/poster-types#rain) (`variant: drops`).
+For the rain as a poster, with the rate large and the drops behind it, see the [rain poster](/cards/kinds#rain) (`variant: drops`).
 
 ## Wind and direction
 

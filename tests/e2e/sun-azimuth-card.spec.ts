@@ -647,3 +647,13 @@ test("moves the sun with time", async ({ page }) => {
   expect(early).toBeGreaterThan(150); // east of the house in the morning
   expect(late).toBeLessThan(150); // west in the evening
 });
+
+test("half a section wide, the card is laid out once, without a resize loop", async ({ page }) => {
+  const card = { type: "custom:sun-azimuth-card-pro", house: { front: 20, roof: "hip" } };
+  await mount(page, [
+    { ...card, title: "Hip", grid_options: { columns: 6 } },
+    { ...card, view: "dial", grid_options: { columns: 6 } },
+  ]);
+  await page.waitForTimeout(1000);
+  expect(await page.evaluate(() => window.pc.errors)).toEqual([]);
+});

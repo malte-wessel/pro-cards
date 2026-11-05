@@ -1,31 +1,31 @@
 # Moving to the 3.0 cards
 
-3.0 brings the [tile](/cards/tile-card), the [poster](/cards/poster-card), the [tile group](/cards/tile-group-card), the [heading](/cards/heading-card) and the [layout card](/cards/layout-card). They take over from six older cards, which are deprecated: they still work in 3.0, say so once in the browser console, and go in 4.0.
+3.0 brings the [tile](/cards/tile-card), the [poster](/cards/poster-card), the [tile group](/cards/tile-group-card), the [heading](/cards/heading-card) and the [layout card](/cards/layout-card). They replace six older cards. Those still work in 3.0, warn once in the browser console, and go in 4.0.
 
 | Deprecated card                                     | Use instead                                                     |
 | --------------------------------------------------- | --------------------------------------------------------------- |
 | [Entity card](/cards/entity-card)                   | a [tile](/cards/tile-card), or a [poster](/cards/poster-card)   |
 | [Entity group card](/cards/entity-group-card)       | a [tile group](/cards/tile-group-card)                          |
 | [Entity sections card](/cards/entity-sections-card) | a [layout card](/cards/layout-card) of headings and tile groups |
-| [Wind card](/cards/wind-card)                       | a poster or a tile of the [wind kind](/cards/poster-types#wind) |
-| [Rain card](/cards/rain-card)                       | a poster or a tile of the [rain kind](/cards/poster-types#rain) |
+| [Wind card](/cards/wind-card)                       | a poster or a tile of the [wind kind](/cards/kinds)             |
+| [Rain card](/cards/rain-card)                       | a poster or a tile of the [rain kind](/cards/kinds)             |
 | [Illuminance card](/cards/illuminance-card)         | nothing: it goes (see [below](#the-illuminance-card))           |
 
-The new cards say every old key they no longer take in an error that names its new spelling, so a card moved over tells you what to change.
+An old key on a new card shows an error that names its new spelling, so a moved card tells you what to change.
 
 ## What changes on every card
 
-Three things work the other way round on the new cards, also where the keys look the same:
+Three things work differently, even where the keys look the same:
 
-- **The kind's defaults come on.** A tile or a poster draws its entity as its [kind](/cards/poster-types): a light brings its switch and its glow, a battery its colours by level, a cover its buttons. `kind: none` turns all of that off; `rules: []`, `control: false` or `visual: false` drop one part.
-- **`color` and `icon` are defaults.** On the old cards they beat the rules; now a matching rule's colour and icon win. Leave them out to let the value decide, as before.
-- **A rule's text is its `status`.** The old cards' `label` is `status` on a tile and a poster, and `value` on a [badge](/cards/poster-badges).
+- **The kind's defaults come on.** A tile or a poster draws its entity as its [kind](/cards/kinds): a light brings its switch and its glow, a battery its colours by level, a cover its buttons. `kind: none` turns all of that off; `rules: []`, `control: false` or `visual: false` drop one part.
+- **`color` and `icon` are defaults.** On the old cards they beat the rules; now a matching rule's colour and icon win (see [Look](/cards/look)). Leave them out to let the value decide.
+- **A rule's text is its `status`.** The old `label` is `status` on a tile and a poster, and `value` on a [badge](/cards/badges).
 
-`hover` is on by default, as on Home Assistant's own tile.
+`hover` is on by default, as on Home Assistant's own tile (see [Actions](/cards/actions)).
 
 ## The entity card
 
-One entity is a tile, or a poster where its value should be large. Most keys are the same; these change:
+One entity is a tile, or a poster where its value should be large. Most keys stay; these change (see [Look](/cards/look) and [Controls](/cards/controls)):
 
 | Entity card                                             | Tile or poster                                                                                        |
 | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -62,18 +62,18 @@ One entity is a tile, or a poster where its value should be large. Most keys are
 
 ## The entity group card
 
-Several entities are a tile group: a title, an icon, badges in the header and its `tiles`. Each tile says everything about itself: the group passes nothing down to its tiles (`show_name`, the actions, the history window are set per tile).
+Several entities are a tile group: a title, an icon, header badges and its `tiles`. The group passes nothing down: `show_name`, the actions and the history window are set on each tile.
 
-| Entity group card                                                 | Tile group                                                       |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `entities`                                                        | `tiles`, with a tile's keys                                      |
-| `layout: list`, `column`                                          | `layout: list`                                                   |
-| `layout: row`                                                     | `layout: row` (vertical tiles side by side)                      |
-| `layout: table`                                                   | `layout: table`: the name, the value and one control or visual   |
-| `layout: grid`, `hero`                                            | a layout card, see below                                         |
-| `header_entities`                                                 | `badges`, with a [badge's keys](/cards/poster-badges#badge-keys) |
-| `show_icon`, `show_name`, actions on the card                     | on each tile                                                     |
-| `align`, `name_position`, `vertical_align`, a table's `show_icon` | none                                                             |
+| Entity group card                                                 | Tile group                                                     |
+| ----------------------------------------------------------------- | -------------------------------------------------------------- |
+| `entities`                                                        | `tiles`, with a tile's keys                                    |
+| `layout: list`, `column`                                          | `layout: list`                                                 |
+| `layout: row`                                                     | `layout: row` (vertical tiles side by side)                    |
+| `layout: table`                                                   | `layout: table`: the name, the value and one control or visual |
+| `layout: grid`, `hero`                                            | a layout card, see below                                       |
+| `header_entities`                                                 | `badges`, with a [badge's keys](/cards/badges#badge-keys)      |
+| `show_icon`, `show_name`, actions on the card                     | on each tile                                                   |
+| `align`, `name_position`, `vertical_align`, a table's `show_icon` | none                                                           |
 
 ::: live
 
@@ -91,35 +91,13 @@ tiles:
 
 :::
 
-The group card's other layouts are a [layout card](/cards/layout-card) of new cards:
+The group card's grid and hero layouts are a [layout card](/cards/layout-card) of new cards: posters in a layout card with `columns` for a grid; a poster above a tile group with `card_style: seamless` for a hero.
 
-- **grid:** posters in a layout card with `columns`;
-- **hero:** a poster above a tile group, `card_style: seamless` making them one surface.
-
-::: live
-
-```yaml
-type: custom:layout-card-pro
-card_style: seamless
-cards:
-  - type: custom:poster-card-pro
-    entity: sensor.living_room_temperature
-    name: Living room
-    visual: { type: sparkline, hours: 12 }
-  - type: custom:tile-group-card-pro
-    tiles:
-      - light.living_room
-      - cover.living_room_blinds
-      - sensor.living_room_humidity
-```
-
-:::
-
-Two looks have no match: the group's ring with the value inside it (a ring is around the icon now), and one rule tinting the whole group (a tile's `tint_card` tints that tile).
+Two looks have no match: the ring with the value inside it (a ring now goes around the icon), and a rule tinting the whole group (a tile's `tint_card` tints only that tile).
 
 ## The entity sections card
 
-A card of sections is a layout card: a [heading](/cards/heading-card) for its title and badges, a tile group for each section (with a title of its own where it helps), `card_style: seamless` for one surface. A section's `visibility` is that tile group's.
+A card of sections is a layout card: a [heading](/cards/heading-card) for the title and badges, a tile group per section (with its own title where it helps), and `card_style: seamless` for one surface. A section's `visibility` goes on its tile group.
 
 ::: live
 
@@ -147,11 +125,11 @@ cards:
 
 :::
 
-The seamless surface draws a line between every two cards: a section without a divider has none on one surface. The card's defaults for its sections (`show_*`, the actions, the window) are set on each tile.
+The seamless surface draws a line between every two cards, so sections without a divider have no match. The old card's defaults for its sections (`show_*`, the actions, the window) go on each tile.
 
 ## The wind and rain cards
 
-A wind or a rain sensor is a poster or a tile of the [wind](/cards/poster-types#wind) or [rain](/cards/poster-types#rain) kind: its speed or rate in the kind's colours, the animation in its icon, the direction and gusts (or today's total) found on its device.
+A wind or rain sensor is a poster or a tile of the wind or rain [kind](/cards/kinds): the speed or rate in the kind's colours, the animation in its icon, and the direction and gusts (or today's total) found on its device.
 
 | Wind or rain card                    | Poster or tile                                                                                       |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------- |
@@ -178,11 +156,11 @@ A wind or a rain sensor is a poster or a tile of the [wind](/cards/poster-types#
 
 :::
 
-What the new cards leave out: the hero's band under the lead and its `flow.height` (the animation fills the poster), the wind field's `density`, and a still direction arrow without the animation behind it.
+Left out: the hero's band and its `flow.height` (the animation fills the poster), the wind field's `density`, and a still direction arrow without the animation behind it.
 
 ## Header entities
 
-The weather, power flow and energy flow cards stay, and take `badges` in their header, written as a [poster's badges](/cards/poster-badges#badge-reference) are. Their `header_entities` still work until 4.0 (said once in the browser console); a card takes one or the other.
+The weather, power flow and energy flow cards stay and take `badges` in their header, written as a [poster's badges](/cards/badges#badge-keys). Their `header_entities` work until 4.0 and warn once in the browser console; a card takes one or the other.
 
 | `header_entities`                         | `badges`                                                                                           |
 | ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
@@ -198,7 +176,7 @@ The weather, power flow and energy flow cards stay, and take `badges` in their h
 | `rules[].label`                           | `rules[].value`                                                                                    |
 | `rules[].tint_card`                       | gone: the card's own rules tint it                                                                 |
 
-As on the new cards, `color` and `icon` are defaults that a matching rule's beat, and a badge takes its entity's kind's colours (a battery red when it runs low).
+As on the new cards, `color` and `icon` are defaults that a matching rule beats, and a badge takes its entity's kind's colours (a battery turns red when it runs low).
 
 ::: live
 
@@ -215,7 +193,7 @@ badges:
 
 ## The illuminance card
 
-The illuminance card goes without a successor. Its log scale, its zones and its arc have no match on the new cards. The nearest is a tile with the history as a strip, coloured by rules:
+The illuminance card has no successor: its log scale, zones and arc have no match. The nearest is a tile with the history as a strip, coloured by rules:
 
 ::: live
 

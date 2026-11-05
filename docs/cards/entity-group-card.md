@@ -74,7 +74,7 @@ entities:
 
 ## Mixed visuals
 
-Every row can have its own `visual` and its own [control](/cards/controls): a switch and brightness slider for the light, buttons and a position slider for the blinds (`control: auto` picks them by domain), a sparkline for the temperature and a badge for the speaker. `hours_to_show` sets one history window for the whole card.
+Every row can have its own `visual` and its own [control](/cards/entity-controls): a switch and brightness slider for the light, buttons and a position slider for the blinds (`control: auto` picks them by domain), a sparkline for the temperature and a badge for the speaker. `hours_to_show` sets one history window for the whole card.
 
 ::: live
 
@@ -627,7 +627,7 @@ entities:
 
 ## Hover
 
-`hover: true` on the card shows what a click will do on every entity, as Home Assistant's tile does; `hover` on an entity turns it on or off for that one. Grid cells and header entities take a light layer under the pointer and a stronger one while pressed; the items of a row or column layout brighten their icon; list rows, heroes and table fields keep still, while their icons and [controls](/cards/controls) answer. See [Hover](/cards/entity-options#hover).
+`hover: true` on the card shows what a click will do on every entity, as Home Assistant's tile does; `hover` on an entity turns it on or off for that one. Grid cells and header entities take a light layer under the pointer and a stronger one while pressed; the items of a row or column layout brighten their icon; list rows, heroes and table fields keep still, while their icons and [controls](/cards/entity-controls) answer. See [Hover](/cards/entity-options#hover).
 
 ::: live
 

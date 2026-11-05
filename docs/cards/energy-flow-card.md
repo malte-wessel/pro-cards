@@ -1,10 +1,10 @@
-# Energy Flow Card Pro
+# Energy flow
 
-`custom:energy-flow-card-pro` shows where your energy came from and where it went over a period: today, yesterday, this week, this month or this year. It is the [power flow card](/cards/power-flow-card)'s tree (solar, battery and grid on the left, the home in the middle, rooms and devices on the right), drawn from energy meters instead of power sensors. The line above the tree names the period, what the grid imported and exported, and how self-sufficient the home was. YAML only.
+`custom:energy-flow-card-pro` shows where your energy came from and where it went over a period: today, yesterday, this week, month or year. It draws the [power flow card](/cards/power-flow-card)'s tree from energy meters instead of power sensors; consumers, rooms, direction, flow style, node sizes, visibility and actions work as they do there.
 
-## Sources and home
+## Energy meters
 
-Every source is an energy meter: the solar production, a battery's `charge` and `discharge`, a grid's `import` and `export`. The card reads what each meter counted in the period from Home Assistant's long-term statistics, so the meters need them: `device_class: energy` with a `state_class` of `total` or `total_increasing`, the meters the Energy dashboard accepts. The unit does not matter (Wh, kWh, MWh, GJ …); the card converts to kWh. Meters that count something else (water in m³ or L, gas in m³) are shown in their own unit, the unit of the card's first meter, as written, and the summary line leaves out imported, exported and self-sufficient; all of the card's meters should count the same. What a meter counted since the last compiled hour comes from its live state, so the numbers move as the meters count.
+Every source is an energy meter: a solar array's production, a battery's `charge` and `discharge`, a grid's `import` and `export`. The card reads what each meter counted in the period from Home Assistant's long-term statistics, so the meters are the ones the Energy dashboard accepts: `device_class: energy` with a `state_class` of `total` or `total_increasing`. Any energy unit works; the card shows kWh, and MWh from 1000 kWh. The numbers move as the meters count.
 
 ::: live
 
@@ -22,21 +22,23 @@ sources:
 
 :::
 
-Over a period a battery both charges and discharges, and a grid both imports and exports, so their nodes show both values: what went in `↓` and what came out `↑`, in one line where there is room, else one over the other. `soc` still puts the battery's state of charge, as it is now, on its node as a ring. Without `home` the card adds the sources up: production, discharge and import, less charge and export.
+Over a period a battery both charges and discharges, and a grid both imports and exports, so their nodes show both values, in `↓` and out `↑`. `soc` draws the battery's charge as it is now. Without `home` the card adds the sources up. The flows split the way Home Assistant's Energy dashboard splits them, hour by hour for a day and day by day for longer periods. A battery with `charge_from: solar` (or the entities of some solar sources) takes only the panels' energy.
 
-The flows split the way Home Assistant's Energy dashboard splits them, hour by hour for a day and day by day for longer periods: what the grid imported beyond the home charged the battery; solar charged the battery, then covered the export, and the battery covered the rest of it; the grid charged what the battery still took; the home took what was left of solar, then of the battery, then the grid. A battery with `charge_from: solar` (or a list of solar entities) takes only those panels' energy and never the grid's.
+The line above the tree names what the grid imported and exported and how self-sufficient the home was. Meters that count something else, such as water in m³, show in the unit of the card's first meter, and the line leaves those out.
 
-## Periods
+## Periods and the picker
 
-`period` picks the stretch of time the card shows (and comes back to, see the picker below): `today` (the default), `yesterday`, `week` (from Monday), `month` or `year`. The periods follow the calendar in Home Assistant's time zone (or the browser's, as your profile says), and the card turns over by itself at midnight, on Monday and on the first of the month.
+`period` sets what the card shows: `today` (the default), `yesterday`, `week` (from Monday), `month` or `year`, following the calendar in the time zone of your Home Assistant profile.
+
+The header carries a picker. **‹** and **›** step to the period before and after, and the button between them opens a calendar: quick picks for today, yesterday, this week, month and year and the last 7 and 30 days, or any range of days with two clicks. The pick is the viewer's own: after ten minutes untouched, or on a reload, the card goes back to its `period`, so a wall tablet returns to today. `period_picker: false` leaves the picker out. Without a `title` the card is titled **Energy**.
 
 ::: live
 
 ```yaml
 type: custom:energy-flow-card-pro
-period: month
-title: This month
-icon: mdi:calendar-month
+title: Energy
+icon: mdi:lightning-bolt
+period: week
 sources:
   - { type: solar, entity: sensor.solar_energy }
   - { type: battery, charge: sensor.battery_charge_energy, discharge: sensor.battery_discharge_energy }
@@ -50,30 +52,9 @@ consumers:
 
 :::
 
-### Picking the time frame
+## Following the dashboard's period
 
-The header carries a picker: **‹** goes to the period before, **›** to the one after (up to the running one), and the button between them names the period shown (Today, Yesterday, Fri 23 Oct, 6 – 10 Oct, March 2026) and opens a calendar, as Home Assistant's date picker does. The button keeps one width whatever it names, so nothing in the header moves as you step; a long range is cut, its tooltip names it in full. Quick picks give today, yesterday, this week, month and year and the last 7 and 30 days; on the calendar two clicks pick any range of days, its first day and then its last (the same day twice: that day). The calendar's title opens the months and the years, to get to a far month quickly. A range that is exactly a day, a week (Monday to Sunday), a month or a year steps by it with ‹ ›, any other range by its own length. Nothing after today can be picked; the arrow keys move through the calendar, Page Up and Page Down turn its page, Escape closes it. The pick is the viewer's own and lasts while the page is open: after ten minutes without a touch, and on a reload, the card shows its `period` again, so a wall tablet comes back to today. `period_picker: false` leaves the picker out for a card that always shows its `period`; the summary line then names the period. Without a `title` the card is titled **Energy**.
-
-::: live
-
-```yaml
-type: custom:energy-flow-card-pro
-title: Energy
-icon: mdi:lightning-bolt
-period: week
-sources:
-  - { type: solar, entity: sensor.solar_energy }
-  - { type: grid, import: sensor.grid_import_energy, export: sensor.grid_export_energy }
-consumers:
-  - { entity: sensor.heat_pump_energy, name: Heat pump }
-  - { entity: sensor.ev_charger_energy, name: EV }
-```
-
-:::
-
-### Following the dashboard's period
-
-On a dashboard with Home Assistant's energy date picker (the `energy-date-selection` card), `period: dashboard` makes the card show the period picked there, as Home Assistant's own energy cards do: one picker for the whole dashboard. The card then has no picker of its own and its summary line names the period. Without a date picker on the dashboard it shows today. `collection_key` follows another picker, the one with the same `collection_key` (Home Assistant's own option, it starts with `energy_`).
+On a dashboard with Home Assistant's energy date picker (the `energy-date-selection` card), `period: dashboard` shows the period picked there, as Home Assistant's own energy cards do. The card then has no picker of its own, and without a date picker on the dashboard it shows today. `collection_key` follows the picker with that `collection_key` (it starts with `energy_`).
 
 ::: live width=full
 
@@ -94,9 +75,7 @@ On a dashboard with Home Assistant's energy date picker (the `energy-date-select
 
 ## Consumers and rooms
 
-Consumers, rooms, `consumer_style: list`, `direction`, `flow_style` (`none` keeps the links still), `idle_links`, `other` (`{ name, icon }` renames it), `icon_size` and `visibility` work as on the [power flow card](/cards/power-flow-card#consumers), with energy meters for the devices. The **Other** node takes what the home used beyond the consumers.
-
-The dots move by each link's share of the home's total, so the busiest link is the one that carried the most. `idle_below` (default `0.05` kWh) leaves a link that carried less without motion, and `hide_consumers_below` (or a room's or device's `hide_below`) hides a device that used less in the period, in kWh. The card's `rules` match the home's energy in the period in kWh, and a source's or consumer's rules match its meter's energy in the period.
+Consumers and rooms take energy meters and work as on the [power flow card](/cards/power-flow-card#consumers). The thresholds read kWh in the period: `hide_consumers_below` hides a device that used less, `idle_below` (0.05 kWh) keeps a link still, and the card's `rules` match the home's energy. The dots move by each link's share of the home, so the busiest link is the one that carried the most.
 
 ::: live
 
@@ -123,7 +102,7 @@ rules:
 
 ## Power and energy side by side
 
-The two cards take the same layout, so a power card for the moment and an energy card for the day read as a pair. In a sections dashboard give each half the width (`grid_options: { columns: 6 }`). (The demo's power sensors and energy meters are simulated apart, so their numbers do not match the way a real home's do.)
+The two cards share their layout, so a power card for the moment and an energy card for the day read as a pair. In a sections view give each half the width. (The demo's power and energy sensors are simulated apart, so their numbers do not match.)
 
 ::: live width=full
 
@@ -155,7 +134,7 @@ The two cards take the same layout, so a power card for the moment and an energy
 
 ## Heat distribution
 
-The tree is not tied to electricity. A heat pump's heat meter as the source and the heat meters of the floors and the hot water as consumers show where the heat went. The source is a `solar` source with its own name and icon; `other: false` leaves out the **Other** node when the consumers account for all of it. Without a grid source there is nothing to be self-sufficient of, so the summary line leaves the self-sufficiency out.
+The tree is not tied to electricity. A heat pump's heat meter as a `solar` source with its own name and icon, and the floors' heat meters as consumers, show where the heat went. `other: false` drops the **Other** node when the consumers account for everything.
 
 ::: live
 
@@ -177,74 +156,42 @@ consumers:
 
 ## Header
 
-`badges` sit at the end of the title line, beside the period picker, plain and small unless a badge sets its `style` or `size`. They take a [poster's badge keys](/cards/poster-badges#badge-reference) and show the state now, not the period's: here the grid's fossil share. The picker takes most of a narrow card's title line, so keep them few there.
-
-::: live
-
-```yaml
-type: custom:energy-flow-card-pro
-badges:
-  - sensor.grid_fossil_percentage
-home: sensor.home_energy
-sources:
-  - { type: solar, entity: sensor.solar_energy }
-  - { type: grid, import: sensor.grid_import_energy, export: sensor.grid_export_energy }
-```
-
-:::
-
-## Hover
-
-`hover: true` shows what a click will do, as on the [power flow card](/cards/power-flow-card#hover): a node's circle brightens under the pointer, and header entities take a light layer; consumers drawn as a list keep still. On the card it is the default for every node; a source, the home or a consumer sets its own. See [Hover](/cards/entity-options#hover).
-
-::: live
-
-```yaml
-type: custom:energy-flow-card-pro
-home: sensor.home_energy
-hover: true
-sources:
-  - { type: solar, entity: sensor.solar_energy }
-  - type: battery
-    charge: sensor.battery_charge_energy
-    discharge: sensor.battery_discharge_energy
-    soc: sensor.battery_soc
-  - { type: grid, import: sensor.grid_import_energy, export: sensor.grid_export_energy, hover: false }
-```
-
-:::
+`badges` sit at the end of the title line, beside the picker, and take the [badge keys](/cards/badges#badge-keys). They show the state now, not the period's. On a narrow card the picker takes most of the line, so keep them few. `hover: true` brightens a node under the pointer, as on the power flow card.
 
 ## Reference
 
 ### Card options
 
-| Option                                                                                         | Default                | Description                                                                                                                                                                                                                        |
-| ---------------------------------------------------------------------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sources`                                                                                      | required               | Solar, battery and grid entries (below), in drawing order.                                                                                                                                                                         |
-| `period`                                                                                       | `today`                | `today`, `yesterday`, `week` (from Monday), `month` or `year`, in the time zone the user's profile sets (Home Assistant's or the browser's); `dashboard`: the period of the dashboard's energy date picker.                        |
-| `collection_key`                                                                               | the dashboard's        | With `period: dashboard`: the `collection_key` of the energy date picker to follow.                                                                                                                                                |
-| `period_picker`                                                                                | `true`                 | The picker in the header: the viewer steps to another day, week, month or year; back to `period` after ten minutes untouched. `false`: always `period`.                                                                            |
-| `title`                                                                                        | Energy                 | The header's text, templates allowed.                                                                                                                                                                                              |
-| `badges`                                                                                       | –                      | The header's badges, plain and small unless they say otherwise, a [badge's keys](/cards/poster-badges#badge-reference). The old `header_entities` still work and go in 4.0, see [Moving to 3.0](/guide/migrating#header-entities). |
-| `home`                                                                                         | sum of the sources     | The home's energy meter, or an entity object with `name`, `icon`, `rules` and actions.                                                                                                                                             |
-| `consumers`                                                                                    | –                      | Devices (`{ entity, name, icon }`) or rooms (`{ group, icon, entities }`) with energy meters, in drawing order.                                                                                                                    |
-| `idle_below`                                                                                   | `0.05`                 | kWh below which a link is idle (no motion); `0` lets every trickle flow.                                                                                                                                                           |
-| `decimals`                                                                                     | `{ kwh: 1, mwh: 2 }`   | Decimals of the values: one number for both units, or `{ kwh, mwh }`. Values show in MWh from 1000 kWh.                                                                                                                            |
-| `hide_consumers_below`                                                                         | –                      | Hides a consumer while it used less than this many kWh in the period. A room or consumer's own `hide_below` overrides it, `0` never hides.                                                                                         |
-| `rules`                                                                                        | –                      | `[{ below, above, color, label, tint_card }]` on the home's energy in the period in kWh; first match wins.                                                                                                                         |
-| `consumer_style`, `other`, `direction`, `flow_style`, `idle_links`, `icon`, actions, `hover` … | as the power flow card | See the [power flow card's options](/cards/power-flow-card#card-options).                                                                                                                                                          |
+| Option                                                                                                                                                                  | Default                | Description                                                                                                                            |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `sources`                                                                                                                                                               | required               | Solar, battery and grid entries ([below](#sources)), in drawing order.                                                                 |
+| `home`                                                                                                                                                                  | sum of the sources     | The home's energy meter, or an object with `entity`, `name`, `icon`, `rules`, `icon_size` and actions.                                 |
+| `consumers`                                                                                                                                                             | –                      | Devices and rooms with energy meters, as on the [power flow card](/cards/power-flow-card#home-consumers-and-rooms) (without `invert`). |
+| `period`                                                                                                                                                                | `today`                | `today`, `yesterday`, `week`, `month`, `year`, or `dashboard` to follow the dashboard's energy date picker.                            |
+| `collection_key`                                                                                                                                                        | the dashboard's        | With `period: dashboard`: the `collection_key` of the date picker to follow.                                                           |
+| `period_picker`                                                                                                                                                         | `true`                 | The picker in the header; `false` always shows `period`.                                                                               |
+| `title`                                                                                                                                                                 | Energy                 | The header's text. Template allowed.                                                                                                   |
+| `idle_below`                                                                                                                                                            | `0.05`                 | kWh below which a link is idle; `0` lets every trickle flow.                                                                           |
+| `decimals`                                                                                                                                                              | `{ kwh: 1, mwh: 2 }`   | Decimals of the values: one number for both units, or `{ kwh, mwh }`.                                                                  |
+| `hide_consumers_below`                                                                                                                                                  | –                      | Hides a consumer that used less than this many kWh in the period; its energy counts in **Other**.                                      |
+| `rules`                                                                                                                                                                 | –                      | `{ below, above, color, label, tint_card }` on the home's energy in the period in kWh; the first match wins.                           |
+| `consumer_style`, `other`, `direction`, `flow_style`, `idle_links`, `icon`, `title_tap_action`, `badges`, `header_entities`, `hours_to_show` …, `tap_action` …, `hover` | as the power flow card | See the [power flow card's options](/cards/power-flow-card#card-options).                                                              |
 
 ### Sources
 
-| Option                                          | Applies to | Description                                                                                                                                       |
-| ----------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `type`                                          | all        | `solar`, `battery` or `grid`.                                                                                                                     |
-| `entity`                                        | solar      | Production: an energy meter.                                                                                                                      |
-| `charge`, `discharge`                           | battery    | The energy into and out of the battery: two energy meters, both required.                                                                         |
-| `import`, `export`                              | grid       | The energy from and to the grid: energy meters (`export` optional).                                                                               |
-| `soc`                                           | battery    | State of charge in %, shown as the node's ring (as it is now).                                                                                    |
-| `charge_from`                                   | battery    | `solar`: only the panels charge this battery, never the grid. The entity of a solar source (or a list of them): only those panels. Default `any`. |
-| `name`, `icon`, `color`, `rules`, `decimals`    | all        | As on every entity; `rules` match the meter's energy in the period (kWh).                                                                         |
-| `secondary`, `icon_size`, `visibility`, `hover` | all        | As on the [power flow card](/cards/power-flow-card#sources).                                                                                      |
+| Option                                                                               | Applies to | Description                                                                                       |
+| ------------------------------------------------------------------------------------ | ---------- | ------------------------------------------------------------------------------------------------- |
+| `type`                                                                               | all        | `solar`, `battery` or `grid`.                                                                     |
+| `entity`                                                                             | solar      | The production meter.                                                                             |
+| `charge`, `discharge`                                                                | battery    | The energy into and out of the battery; both required.                                            |
+| `soc`                                                                                | battery    | The state of charge in %, drawn as the node's ring (as it is now).                                |
+| `charge_from`                                                                        | battery    | `any` (default); `solar`: only the panels charge it; or the entity of a solar source (or a list). |
+| `import`, `export`                                                                   | grid       | The energy from and to the grid; `export` is optional.                                            |
+| `rules`                                                                              | all        | Colour and icon of the node by the meter's energy in the period (kWh).                            |
+| `name`, `icon`, `color`, `secondary`, `decimals`, `icon_size`, `visibility`, `hover` | all        | As on the [power flow card](/cards/power-flow-card#sources).                                      |
 
-The power flow card's `power`, `both_ways`, `invert`, `peak`, `price`, `offline`, `generator` and `fossil` describe a moment and are not options here; the card says so when it meets one.
+The power flow card's `power`, `invert`, `both_ways`, `peak`, `price`, `offline`, `generator`, `fossil` and `non_fossil` describe a moment and are errors here.
+
+### Grid and Home Assistant options
+
+As the power flow card: 12 columns, `rows: auto`, and Home Assistant's `grid_options`, `fill_height`, `visibility`, `view_layout` and `card_mod`; see its [grid options](/cards/power-flow-card#grid-and-home-assistant-options).

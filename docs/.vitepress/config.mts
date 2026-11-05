@@ -53,88 +53,56 @@ const site = `https://malte-wessel.github.io${base}`;
 const description =
   "Beautiful, customizable cards for Home Assistant dashboards: tiles, posters and tile groups for every kind of entity, headings, layout and swipe cards, weather, multi trend, sun path and power and energy flow cards that look like they belong in Home Assistant.";
 
-// the cards by category; the nav dropdown and the sidebar both list them this way
-const cardGroups = [
-  {
-    text: "Tile Card Pro",
-    items: [
-      { text: "Overview", link: "/cards/tile-card" },
-      { text: "Kinds", link: "/cards/tile-types" },
-      { text: "Custom tiles", link: "/cards/tile-custom" },
-      { text: "Controls", link: "/cards/tile-controls" },
-      { text: "Badges", link: "/cards/tile-badges" },
-      { text: "Sizes", link: "/cards/tile-sizes" },
-    ],
-  },
-  {
-    text: "Tile Group Card Pro",
-    items: [{ text: "Overview", link: "/cards/tile-group-card" }],
-  },
-  {
-    text: "Poster Card Pro",
-    items: [
-      { text: "Overview", link: "/cards/poster-card" },
-      { text: "Kinds", link: "/cards/poster-types" },
-      { text: "Custom posters", link: "/cards/poster-custom" },
-      { text: "Controls", link: "/cards/poster-controls" },
-      { text: "Badges", link: "/cards/poster-badges" },
-      { text: "Sizes", link: "/cards/poster-sizes" },
-    ],
-  },
-  {
-    text: "Entities",
-    items: [
-      { text: "Multi Trend Card Pro", link: "/cards/multi-trend-card" },
-      { text: "Entity Options", link: "/cards/entity-options" },
-    ],
-  },
-  {
-    text: "Energy",
-    items: [
-      { text: "Power Flow Card Pro", link: "/cards/power-flow-card" },
-      { text: "Energy Flow Card Pro", link: "/cards/energy-flow-card" },
-    ],
-  },
-  {
-    text: "Layout",
-    items: [
-      { text: "Layout Card Pro", link: "/cards/layout-card" },
-      { text: "Heading Card Pro", link: "/cards/heading-card" },
-      { text: "Swipe Card Pro", link: "/cards/swipe-card" },
-    ],
-  },
-  {
-    text: "Weather",
-    items: [
-      { text: "Weather Card Pro", link: "/cards/weather-card" },
-      { text: "Sun Path Card Pro", link: "/cards/sun-path-card" },
-      { text: "Sun Azimuth Card Pro", link: "/cards/sun-azimuth-card" },
-    ],
-  },
-  // still working in 3.0, gone in 4.0 (guide/migrating names what takes over)
-  {
-    text: "Deprecated",
-    items: [
-      { text: "Entity Card Pro", link: "/cards/entity-card" },
-      { text: "Entity Group Card Pro", link: "/cards/entity-group-card" },
-      { text: "Entity Sections Card Pro", link: "/cards/entity-sections-card" },
-      { text: "Controls of the entity cards", link: "/cards/controls" },
-      { text: "Wind Card Pro", link: "/cards/wind-card" },
-      { text: "Rain Card Pro", link: "/cards/rain-card" },
-      { text: "Illuminance Card Pro", link: "/cards/illuminance-card" },
-    ],
-  },
-];
-
-// the guide and the changelog; the nav dropdown and the sidebar both list them
-const guide = [
-  { text: "Getting started", link: "/guide/getting-started" },
+// the site's sections: the sidebar lists them all, the nav the same without the old cards. The
+// tile and the poster share their topic pages: each concept once, shown on both
+const getStarted = [
+  { text: "Introduction", link: "/guide/introduction" },
+  { text: "Install & first card", link: "/guide/getting-started" },
   { text: "Moving to 3.0", link: "/guide/migrating" },
-  { text: "Look & themes", link: "/guide/colours" },
+];
+const tilePoster = [
+  { text: "Tile", link: "/cards/tile-card" },
+  { text: "Poster", link: "/cards/poster-card" },
+  { text: "Kinds", link: "/cards/kinds" },
+  { text: "Look", link: "/cards/look" },
+  { text: "Controls", link: "/cards/controls" },
+  { text: "Badges", link: "/cards/badges" },
+  { text: "Actions & hover", link: "/cards/actions" },
+  { text: "Sizes", link: "/cards/sizes" },
+];
+const arrange = [
+  { text: "Tile group", link: "/cards/tile-group-card" },
+  { text: "Heading", link: "/cards/heading-card" },
+  { text: "Layout", link: "/cards/layout-card" },
+  { text: "Swipe", link: "/cards/swipe-card" },
+];
+const energy = [
+  { text: "Power flow", link: "/cards/power-flow-card" },
+  { text: "Energy flow", link: "/cards/energy-flow-card" },
+];
+const moreCards = [
+  { text: "Weather", link: "/cards/weather-card" },
+  { text: "Sun path", link: "/cards/sun-path-card" },
+  { text: "Sun azimuth", link: "/cards/sun-azimuth-card" },
+  { text: "Multi trend", link: "/cards/multi-trend-card" },
+];
+const guides = [
+  { text: "Themes & colours", link: "/guide/colours" },
   { text: "Sizing in sections", link: "/guide/sizing" },
-  { text: "Languages", link: "/guide/languages" },
   { text: "Visibility", link: "/guide/visibility" },
+  { text: "Languages", link: "/guide/languages" },
   { text: "Changelog", link: "/changelog/" },
+];
+// still working in 3.0, gone in 4.0 (Moving to 3.0 names what takes over)
+const olderCards = [
+  { text: "Entity card", link: "/cards/entity-card" },
+  { text: "Entity group card", link: "/cards/entity-group-card" },
+  { text: "Entity sections card", link: "/cards/entity-sections-card" },
+  { text: "Entity options", link: "/cards/entity-options" },
+  { text: "Controls of the entity cards", link: "/cards/entity-controls" },
+  { text: "Wind card", link: "/cards/wind-card" },
+  { text: "Rain card", link: "/cards/rain-card" },
+  { text: "Illuminance card", link: "/cards/illuminance-card" },
 ];
 
 // the showcase dashboards, linked from the home page
@@ -201,8 +169,17 @@ export default defineConfig({
   themeConfig: {
     logo: "/logo.svg",
     nav: [
-      { text: "Guide", items: guide },
-      { text: "Cards", items: cardGroups },
+      { text: "Get started", items: getStarted },
+      {
+        text: "Cards",
+        items: [
+          { text: "Tile & poster", items: tilePoster },
+          { text: "Energy", items: energy },
+          { text: "Group & arrange", items: arrange },
+          { text: "More cards", items: moreCards },
+        ],
+      },
+      { text: "Guides", items: guides },
       {
         text: "Showcase",
         items: showcase,
@@ -211,12 +188,14 @@ export default defineConfig({
       { text: `v${pkg.version}`, link: "https://github.com/malte-wessel/pro-cards/releases" },
     ],
     sidebar: [
-      { text: "Guide", items: guide },
-      { text: "Cards", items: cardGroups },
-      {
-        text: "Showcase",
-        items: showcase,
-      },
+      { text: "Get started", items: getStarted },
+      { text: "Tile & poster", items: tilePoster },
+      { text: "Energy", items: energy },
+      { text: "Group & arrange", items: arrange },
+      { text: "More cards", items: moreCards },
+      { text: "Guides", items: guides },
+      { text: "Showcase", items: showcase },
+      { text: "Older cards (deprecated)", collapsed: true, items: olderCards },
     ],
     socialLinks: [{ icon: "github", link: "https://github.com/malte-wessel/pro-cards" }],
     search: { provider: "local" },

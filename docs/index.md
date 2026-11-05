@@ -10,7 +10,7 @@ hero:
       link: https://my.home-assistant.io/redirect/hacs_repository/?owner=malte-wessel&repository=pro-cards&category=plugin
     - theme: alt
       text: Get started
-      link: /guide/getting-started
+      link: /guide/introduction
   # the hero's backdrop (HeroDashboard.vue): posters picked from the dashboards below, live but inert
   dashboard:
     - column_span: 4
@@ -175,56 +175,24 @@ feature_rows:
           - { below: 500, color: green, label: Quiet }
           - { below: 3000, color: amber, label: Busy }
           - { above: 3000, color: red, label: Peak }
-  - title: "Weather you can see moving."
-    text: "Wind and rain are animated fields that follow your sensors: faster in a storm, still on a calm day, always from the right direction."
-    link: /cards/poster-types#wind
-    label: Wind and rain posters
+  - title: "One value, front and centre."
+    text: "A poster gives any entity one big value, a status and badges. It knows what the entity is and draws it that way; rules turn thresholds into colours, statuses and icons, so a glance is enough."
+    link: /cards/poster-card
+    label: Posters
     columns: 2
     cards:
       - type: custom:poster-card-pro
-        entity: sensor.wind_speed
-        name: Wind
-        visual: { type: flow, variant: lines }
+        entity: lock.front_door
+        name: Front door
+        badges:
+          - entity: binary_sensor.door_front
+            rules:
+              - { state: "on", color: red, icon: mdi:door-open, value: Open }
+              - { state: "off", color: green, icon: mdi:door-closed, value: Closed }
       - type: custom:poster-card-pro
-        entity: sensor.rain_rate_roof
-        name: Rain
-        visual: { type: flow, variant: drops }
-        inputs: { wind: sensor.wind_speed, direction: sensor.wind_direction }
-  - title: "Control, right on the card."
-    text: "Steppers, sliders, segments, locks and your own buttons sit on the card itself. Swipe through and try them, no dialog opens."
-    link: /cards/poster-controls
-    label: Controls
-    cards:
-      - type: custom:swipe-card-pro
-        per_page: 1.3
-        breakpoints:
-          2: { per_page: 2.3 }
-        cards:
-          - type: custom:poster-card-pro
-            entity: climate.living_room
-            name: Thermostat
-          - type: custom:poster-card-pro
-            entity: fan.living_room
-            name: Fan
-          - type: custom:poster-card-pro
-            entity: cover.living_room_blinds
-            name: Blinds
-          - type: custom:poster-card-pro
-            entity: lock.front_door
-            name: Front door
-            badges:
-              - entity: binary_sensor.door_front
-                rules:
-                  - { state: "on", color: red, icon: mdi:door-open, value: Open }
-                  - { state: "off", color: green, icon: mdi:door-closed, value: Closed }
-          - type: custom:poster-card-pro
-            entity: media_player.kitchen_speaker
-            name: Kitchen speaker
-          - type: custom:poster-card-pro
-            entity: vacuum.robot
-            name: Robot
-            badges:
-              - sensor.robot_current_room
+        entity: sensor.living_room_co2
+        name: Air
+        visual: { type: columns, hours: 12, bucket: 30 }
   - title: "A whole room in one card."
     text: "Lights, scenes and devices together in a tile group, or as tiles stacked in one cell. Lay them out your way with the layout card."
     link: /cards/tile-group-card
@@ -262,24 +230,56 @@ feature_rows:
             icon: mdi:coffee
             color: brown
             control: false
-  - title: "One value, front and centre."
-    text: "A poster gives any entity one big value, a status and badges. It knows what the entity is and draws it that way; rules turn thresholds into colours, labels and icons, so a glance is enough."
-    link: /cards/poster-card
-    label: Posters
+  - title: "Control, right on the card."
+    text: "Steppers, sliders, segments, locks and your own buttons sit on the card itself. Swipe through and try them, no dialog opens."
+    link: /cards/controls
+    label: Controls
+    cards:
+      - type: custom:swipe-card-pro
+        per_page: 1.3
+        breakpoints:
+          2: { per_page: 2.3 }
+        cards:
+          - type: custom:poster-card-pro
+            entity: climate.living_room
+            name: Thermostat
+          - type: custom:poster-card-pro
+            entity: fan.living_room
+            name: Fan
+          - type: custom:poster-card-pro
+            entity: cover.living_room_blinds
+            name: Blinds
+          - type: custom:poster-card-pro
+            entity: lock.front_door
+            name: Front door
+            badges:
+              - entity: binary_sensor.door_front
+                rules:
+                  - { state: "on", color: red, icon: mdi:door-open, value: Open }
+                  - { state: "off", color: green, icon: mdi:door-closed, value: Closed }
+          - type: custom:poster-card-pro
+            entity: media_player.kitchen_speaker
+            name: Kitchen speaker
+          - type: custom:poster-card-pro
+            entity: vacuum.robot
+            name: Robot
+            badges:
+              - sensor.robot_current_room
+  - title: "Weather you can see moving."
+    text: "Wind and rain are animated fields that follow your sensors: faster in a storm, still on a calm day, always from the right direction."
+    link: /cards/kinds#wind
+    label: Wind and rain posters
     columns: 2
     cards:
       - type: custom:poster-card-pro
-        entity: lock.front_door
-        name: Front door
-        badges:
-          - entity: binary_sensor.door_front
-            rules:
-              - { state: "on", color: red, icon: mdi:door-open, value: Open }
-              - { state: "off", color: green, icon: mdi:door-closed, value: Closed }
+        entity: sensor.wind_speed
+        name: Wind
+        visual: { type: flow, variant: lines }
       - type: custom:poster-card-pro
-        entity: sensor.living_room_co2
-        name: Air
-        visual: { type: columns, hours: 12, bucket: 30 }
+        entity: sensor.rain_rate_roof
+        name: Rain
+        visual: { type: flow, variant: drops }
+        inputs: { wind: sensor.wind_speed, direction: sensor.wind_direction }
   - title: "Follow the sun."
     text: "Its path through the day, the time to sunset, and which side of your house it shines on right now."
     link: /cards/sun-path-card

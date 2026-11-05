@@ -141,6 +141,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
   _timer?: ReturnType<typeof setInterval>;
   // the dial and the 3D scene are drawn in px at the column's width: redrawn when it changes
   _ro?: ResizeObserver;
+  _resizeFrame = 0;
   _visualWidth = 0;
   _plotHeight = Infinity;
   _naturalHeight = 0;
@@ -207,14 +208,19 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     // another place may have another theme (a view's own)
     this._textCache.clear();
     this._timer = setInterval(() => this._render(), 60000);
+    // a new size draws the plot a frame later, not inside the observer's pass: a plot that changes
+    // the card's height would be observed again at once (a resize loop, at half a section)
     this._ro = new ResizeObserver(() => {
-      const visual = this._root?.querySelector<HTMLElement>(".visual");
-      if (
-        visual &&
-        (visual.clientWidth !== this._visualWidth ||
-          this._visualHeight(visual) !== this._plotHeight)
-      )
-        this._renderPlot();
+      cancelAnimationFrame(this._resizeFrame);
+      this._resizeFrame = requestAnimationFrame(() => {
+        const visual = this._root?.querySelector<HTMLElement>(".visual");
+        if (
+          visual &&
+          (visual.clientWidth !== this._visualWidth ||
+            this._visualHeight(visual) !== this._plotHeight)
+        )
+          this._renderPlot();
+      });
     });
     this._observe();
     document.addEventListener("pointerdown", this._onDocPointer);
@@ -222,6 +228,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
   disconnectedCallback() {
     clearInterval(this._timer);
     cancelAnimationFrame(this._frame);
+    cancelAnimationFrame(this._resizeFrame);
     this._frame = 0;
     this._ro?.disconnect();
     document.removeEventListener("pointerdown", this._onDocPointer);

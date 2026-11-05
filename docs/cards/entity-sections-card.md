@@ -335,7 +335,7 @@ sections:
 
 ## Hover
 
-`hover` cascades as the actions do: on the card for every entity, on a section for its entities, on an entity for that one. It shows what a click will do, as Home Assistant's tile does: grid cells and header entities take a light layer under the pointer, items brighten their icon, and the [controls](/cards/controls) answer everywhere; list rows, heroes and table fields keep still. See [Hover](/cards/entity-options#hover).
+`hover` cascades as the actions do: on the card for every entity, on a section for its entities, on an entity for that one. It shows what a click will do, as Home Assistant's tile does: grid cells and header entities take a light layer under the pointer, items brighten their icon, and the [controls](/cards/entity-controls) answer everywhere; list rows, heroes and table fields keep still. See [Hover](/cards/entity-options#hover).
 
 ::: live
 

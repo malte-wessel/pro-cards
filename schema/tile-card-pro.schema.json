@@ -67,7 +67,7 @@
       "description": "The keys of a tile and of a row in a tile group's table",
       "properties": {
         "kind": {
-          "description": "What the entity is, forced or one that is never detected (trend, grid, solar, car, appliance, a named cover or appliance). Left out: detected from the entity's domain and device class; `entity` turns every default off",
+          "description": "What the entity is, forced or one that is never detected (trend, grid, solar, car, appliance, a named cover or appliance). Left out: detected from the entity's domain and device class; `none` turns every default off",
           "$ref": "poster-card-pro.schema.json#/$defs/kind"
         },
         "inputs": {
@@ -95,7 +95,7 @@
               "const": false
             }
           ],
-          "description": "The status: a text or a template, or false for none; on the line after the value, or a badge before the badges with status_badge. Default: the kind's status, else the matching rule's label. Its look is the card's"
+          "description": "The status: a text or a template, or false for none; on the line after the value, or a badge before the badges with status_badge. Default: the matching rule's status, else the kind's. Its look is the card's"
         }
       },
       "allOf": [

@@ -901,3 +901,15 @@ describe("the editor form: a badge's picture and kind", () => {
     });
   });
 });
+
+describe("the editor form: actions", () => {
+  it("shows a bare action name in the picker and keeps its spelling while it is left alone", () => {
+    const tile = { entity: "light.desk_lamp", tap_action: "toggle" };
+    expect(formOf(tile, "tile").tap_action).toEqual({ action: "toggle" });
+    expect(edit(tile, { name: "Desk" }, "tile")).toEqual({ ...tile, name: "Desk" });
+    expect(edit(tile, { tap_action: { action: "more-info" } }, "tile")).toEqual({
+      entity: "light.desk_lamp",
+      tap_action: { action: "more-info" },
+    });
+  });
+});

@@ -1,119 +1,107 @@
 # Sizing in sections
 
-All cards report a default size to the sections grid through `getGridOptions`, so they land with a sensible footprint and you can resize them with the grid handles or `grid_options`.
+Every card tells Home Assistant's sections view how large it wants to be, so it lands with a sensible size. This guide explains the grid, each card's default size, and how cards fill the height they are given.
 
-| Card                                 | Default                  | Minimum           | Notes                                                            |
-| ------------------------------------ | ------------------------ | ----------------- | ---------------------------------------------------------------- |
-| Tile                                 | 6 columns, `rows: auto`  | 3 columns, 1 row  | Exactly one row on its own                                       |
-| Tile with a plot, a bar or a control | 6 columns, `rows: auto`  | 3 / 4 / 6         | 2 rows at least with a sparkline, columns or a strip             |
-| Tile, `vertical: true`               | 3 columns, `rows: auto`  | its own, 2 rows   | One row more for a control under the name, a plot and the badges |
-| Poster                               | 6 columns, 3 rows        | 6 columns, 3 rows | Less room is a tile's                                            |
-| Tile group                           | 6 columns, `rows: auto`  | 6 columns         | `layout: row`: 12 columns; height follows the tiles              |
-| Heading card                         | full width, `rows: auto` | 3 columns         |                                                                  |
-| Layout and swipe card                | full width, `rows: auto` |                   | Height follows their cards                                       |
-| Multi trend card                     | 12 columns, `rows: auto` | 6 columns, 2 rows | Height follows the plot: one band, or one lane per entity        |
-| Sun path card                        | 12 columns, `rows: auto` | 6 columns         |                                                                  |
-| Sun azimuth card                     | 12 columns, `rows: auto` | 6 columns         | Height follows the view and the sides footer                     |
-| Weather card, tile                   | 6 columns, `rows: auto`  | 3 columns, 1 row  | Exactly one row on its own, 2 with a header                      |
-| Weather card with `sections`         | 12 columns, `rows: auto` | 6 columns, 2 rows |                                                                  |
-| Power flow card                      | 12 columns, `rows: auto` | 6 columns, 3 rows | Height follows the config, not the width                         |
+## The grid
 
-The deprecated cards:
+A section is 12 columns wide and made of rows of 56 px, with 8 px gaps. `grid_options` sets a card's size: `columns` (6 is half a section, `full` the whole width) and `rows`. The dashboard editor's layout tab and the grid handles write the same keys.
 
-| Card                                         | Default                  | Minimum           | Notes                                                                                             |
-| -------------------------------------------- | ------------------------ | ----------------- | ------------------------------------------------------------------------------------------------- |
-| Entity card, plain tile                      | 6 columns, `rows: auto`  | 3 columns, 1 row  | Exactly one row on its own                                                                        |
-| Entity card with a block visual or a control | 6 columns, `rows: auto`  | 3 / 4 / 6         | Block visuals: gauge, bar, sparkline, columns, strip; 2 rows at least with a sparkline or columns |
-| Entity group card, every layout but `hero`   | 12 columns, `rows: auto` | 6 columns, 2 rows | Height follows the number of entities                                                             |
-| Entity group card, `hero`                    | 12 columns, `rows: auto` | 6 columns, 3 rows |                                                                                                   |
-| Entity sections card                         | 12 columns, `rows: auto` | 6 columns, 2 rows | 3 rows when a section is a `hero`; height follows the sections                                    |
-| Wind and rain card, tile                     | 6 columns, `rows: auto`  | 3 columns, 1 row  | Exactly one row on its own, 2 with a header                                                       |
-| Wind and rain card, `layout: hero`           | 12 columns, `rows: auto` | 6 columns, 3 rows |                                                                                                   |
-| Illuminance card                             | 12 columns, `rows: auto` | 6 columns         |                                                                                                   |
-
-The minimums (`min_columns`, `min_rows`) keep the grid handles from making a card unreadable; `grid_options` can override any of them. A tile with a control needs more room than a plain one: 4 columns for a switch or a hold button on its line, 6 for anything wider, 3 when the control sits under the line. Every tile sizes to its content: a plain tile is exactly one 56 px row on its own (two with a header), a block visual or a control makes it taller.
-
-Besides `grid_options`, every card accepts the Home Assistant keys `visibility`, `layout_options` (the older spelling of `grid_options`), `view_layout` and `card_mod`. The cards do not read them; Home Assistant applies them.
-
-## Columns in spanned sections
-
-A section has 12 columns. A section with `column_span: 2` or `3` gets 12 columns **per visible column**, and that number shrinks with the viewport: 36 on a wide desktop, 24 in a narrower window, 12 on a phone.
-
-Pick column counts that divide 12, 24 and 36 so rows stay full on every screen:
-
-- `columns: 12` → 1 tile per row on a phone, 2 on a two-column window, 3 on a wide desktop
-- `columns: 6` → 2 / 4 / 6 per row
-
-`columns: 9` looks right on a phone (75 %) but leaves a gap on desktops (37.5 % of a 24-column row). Avoid it.
-
-## Rows
-
-`rows: auto` lets the card size itself to its content. Numbers pin the height: 56 px per row plus 8 px gaps. The cards set this for you, override only when the layout needs it:
+`rows: auto` makes a card as tall as its content. Most cards use it by default; a number pins the height:
 
 ```yaml
 type: custom:tile-group-card-pro
 title: Rooms
-tiles: ["..."]
+tiles: [light.living_room, light.desk_lamp, climate.living_room]
 grid_options: { columns: 12, rows: 4 }
 ```
 
-### Filling the height
+Every card also takes Home Assistant's own keys `visibility`, `layout_options` (the old spelling of `grid_options`), `view_layout` and `card_mod`; Home Assistant applies them, not the card.
 
-Like Home Assistant's own cards, every card takes the height it is given. That is the height of its cell with a number of rows, and with `rows: auto` the height of its grid row: the cards side by side in a row are all as tall as the tallest of them. A horizontal stack works the same way. The part of a card that can stretch fills that height: a plot grows into the room the rest of the card leaves and is drawn at that height, so the card lines up with its neighbours, a core sensor card among them. In a smaller cell the plot shrinks, down to a floor.
+## Default sizes
+
+Each card's least size (`min_columns`, `min_rows`) keeps the grid handles from making it unreadable. `grid_options` can override any of them.
+
+| Card                     | Default            | Least                                                                                    |
+| ------------------------ | ------------------ | ---------------------------------------------------------------------------------------- |
+| Tile                     | 6 columns, `auto`  | 3 columns, 1 row; 4 with a switch or hold button on the line, 6 with a wider control     |
+| Tile with a plot         | 6 columns, `auto`  | 2 rows                                                                                   |
+| Vertical tile            | its least, `auto`  | 3 columns (6 with a wide control), 2 rows; a row more each for a control, a plot, badges |
+| Poster                   | 6 columns, 3 rows  | 6 columns, 3 rows                                                                        |
+| Tile group               | 6 columns, `auto`  | 6 columns; `layout: row` defaults to 12                                                  |
+| Heading card             | full width, `auto` | 3 columns                                                                                |
+| Layout and swipe card    | full width, `auto` | –                                                                                        |
+| Weather card             | 6 columns, `auto`  | 3 columns, 1 row (2 with a header)                                                       |
+| Weather card, `sections` | 12 columns, `auto` | 6 columns, 2 rows                                                                        |
+| Sun path card            | 12 columns, `auto` | 6 columns                                                                                |
+| Sun azimuth card         | 12 columns, `auto` | 6 columns                                                                                |
+| Multi trend card         | 12 columns, `auto` | 6 columns, 2 rows                                                                        |
+| Power and energy flow    | 12 columns, `auto` | 6 columns, 3 rows                                                                        |
+
+[Sizes](/cards/sizes) shows the tile's and the poster's sizes in detail.
+
+## Spanned sections
+
+A section with `column_span: 2` or `3` has 12 columns per visible column, and the count shrinks with the screen: 36 on a wide desktop, 24 in a narrower window, 12 on a phone.
+
+Pick widths that divide 12, 24 and 36, so rows stay full on every screen. `columns: 12` gives one card per row on a phone, two in a narrower window, three on a desktop; `columns: 6` gives two, four and six. `columns: 9` looks right on a phone but leaves gaps on a desktop.
+
+## Filling the height
+
+As Home Assistant's own cards do, every card takes the height it is given: its cell's with a number of rows, and with `rows: auto` its grid row's, so cards side by side are as tall as the tallest of them. A horizontal stack works the same way. The part of a card that can stretch fills that height, so the card lines up with its neighbours:
+
+| Card                  | What fills the height                                           |
+| --------------------- | --------------------------------------------------------------- |
+| Tile                  | the plot below the line; any other tile centres its content     |
+| Poster                | the visual behind; the content stays at the bottom              |
+| Weather card          | its trends and plots; without `sections` it centres its content |
+| Multi trend card      | the plot                                                        |
+| Sun path card         | the plot                                                        |
+| Sun azimuth card      | the picture, centred                                            |
+| Power and energy flow | the tree: spread out when taller, scaled down when smaller      |
 
 ::: live
 
 ```yaml
 - type: custom:tile-card-pro
-  entity: sensor.power_consumption
-  name: Power
+  entity: sensor.living_room_temperature
   visual: sparkline
   grid_options: { columns: 6, rows: 3 }
 - type: custom:tile-card-pro
-  entity: sensor.outdoor_temperature
-  name: Outside
+  entity: sensor.living_room_co2
   visual: columns
   grid_options: { columns: 6, rows: 3 }
 ```
 
 :::
 
-| Card             | What fills the height                                                                         |
-| ---------------- | --------------------------------------------------------------------------------------------- |
-| Tile             | The plot below the line (`sparkline`, `columns`, `strip`); any other tile centres its content |
-| Poster           | Its content sits at the bottom, the plot or the picture behind it fills the rest              |
-| Weather card     | The trends and the plots of its entity sections; the tile centres its content                 |
-| Multi trend card | The plot                                                                                      |
-| Sun path card    | The plot                                                                                      |
-| Sun azimuth card | The picture, centred                                                                          |
-| Power flow card  | The tree: spread out in a taller cell, scaled down as a whole in a smaller one                |
+### Keeping a card's own height
 
-Wherever the height follows the content (a masonry view, a vertical stack, a card alone in its row), every card keeps its own height. In a panel view the card takes the whole view.
-
-#### Keeping a card's own height
-
-`fill_height: false` keeps a card at its own height in a taller grid row or a horizontal stack, with the room left under it, for example a short room list beside longer ones. It does the same in a cell with a number of rows and in a panel view; a cell smaller than the card cuts it off at the cell's bottom.
+`fill_height: false` keeps a card at its own height in a taller row or a horizontal stack, with the room left under it: a short room beside a longer one, for example. A cell smaller than the card cuts it off at the bottom.
 
 ::: live
 
 ```yaml
 - type: custom:tile-group-card-pro
-  title: Bedroom
+  title: Desk
   fill_height: false
-  tiles: [light.living_room, light.kitchen]
+  tiles: [light.desk_lamp, sensor.living_room_temperature]
   grid_options: { columns: 6 }
 - type: custom:tile-group-card-pro
-  title: Studio
-  tiles: [light.living_room, light.kitchen, light.office, sensor.outdoor_temperature]
+  title: Living room
+  tiles: [light.living_room, climate.living_room, cover.living_room_blinds, media_player.living_room_speaker]
   grid_options: { columns: 6 }
 ```
 
 :::
 
+## Inside other cards
+
+The least sizes bind only the sections grid. A [layout card](/cards/layout-card), a [swipe card](/cards/swipe-card) or a stack may give a card less room, and the card fits into it as well as it can. In a layout card, a card's `view_layout` sets its span and place.
+
 ## Masonry and panel views
 
-The sections grid is where the cards are at home, but they work in the older view types too. In a masonry view every card reports its height through `getCardSize` instead, so Home Assistant can balance the columns: a plain tile counts as one unit, a card with a header one more, and the tile group, weather and power flow cards add up what they actually draw. There is nothing to configure, and `grid_options` has no effect there — a masonry card always fills its column, so use `columns` (the card's own key) and the layouts to shape it. In a panel view the single card takes the whole view.
+The cards work in the older views too. In a masonry view each card reports its height so Home Assistant can balance the columns; there is nothing to set, and `grid_options` does nothing there. Wherever the height follows the content, as in masonry or a vertical stack, every card keeps its own height. In a panel view the one card takes the whole view.
 
-## Width of the examples here
+## The examples here
 
-The examples on this site are rendered at the width of a single Home Assistant section column (400 px). Tiles with `grid_options.columns: 6` are shown at half that, the same proportion they have in a dashboard.
+The examples on this site are drawn at the width of one section (400 px). A card with `columns: 6` takes half of that, as it would on your dashboard.

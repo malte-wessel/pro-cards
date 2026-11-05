@@ -1,12 +1,10 @@
-# Look & themes
+# Themes & colours
 
-Pro Cards follow the Home Assistant design. Card background, corner radius, typography, dividers, icon sizes and the named colours all come from the active theme, so the cards sit next to the built-in tile cards without looking foreign. Dark mode applies automatically.
+Pro Cards follow your Home Assistant theme, so they look at home next to the built-in cards. This guide shows what a theme changes, which colours you can write, and where a card's colour comes from.
 
 ## Themes
 
-Any Home Assistant theme restyles Pro Cards together with the rest of the dashboard: the cards read the same variables as the built-in cards, so there is nothing to configure per card. Per card you adjust colours, icons, labels and visuals in YAML, as the card pages show.
-
-Try it on this site: every example has a theme picker in its top-right corner, and the **auto / light / dark** button next to it switches that example between the light and dark variant. The example below is pinned to [Graphite](https://github.com/TilmanGriesel/graphite), a theme by Tilman Griesel.
+Any Home Assistant theme restyles the cards with the rest of the dashboard; there is nothing to set per card. Every example here has a theme picker in its top-right corner. This one is pinned to [Graphite](https://github.com/TilmanGriesel/graphite), a theme by Tilman Griesel.
 
 ::: live theme=graphite
 
@@ -31,43 +29,33 @@ Try it on this site: every example has a theme picker in its top-right corner, a
 
 :::
 
+## Dark mode
+
+The cards follow Home Assistant's dark mode and a theme's dark variant on their own. The **auto / light / dark** button beside an example's theme picker shows it in either mode.
+
 ## Theme variables
 
-These are the variables of a Home Assistant theme the cards read. Set them in a theme (without the leading `--`, as Home Assistant's themes do) and every Pro Card follows, together with the built-in cards that read them too.
+The cards read these theme variables. Set them in a theme (without the leading `--`) and every Pro Card follows, as do the built-in cards that read them.
 
-**Card**
+| Variable                                                                                    | What it changes                                                        |
+| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `ha-card-background`, `card-background-color`                                               | the card's background                                                  |
+| `ha-card-border-radius`, `ha-card-border-width`, `ha-card-border-color`                     | the card's corners and border                                          |
+| `ha-card-box-shadow`                                                                        | the card's shadow                                                      |
+| `primary-color`                                                                             | the default colour of an entity, the power flow's home                 |
+| `primary-text-color`, `secondary-text-color`                                                | the text                                                               |
+| `text-primary-color`                                                                        | the text on a filled button (a pressed control)                        |
+| `divider-color`                                                                             | dividers, grid lines, the power flow's idle links                      |
+| `disabled-color`                                                                            | the power flow's idle nodes                                            |
+| `red-color`, `amber-color` … (every [named colour](#colour-values))                         | that colour wherever a card uses it                                    |
+| `state-<domain>-<state>-color`, `state-icon-color`, `state-unavailable-color`               | an entity's [colour by its state](#where-colour-comes-from)            |
+| `energy-solar-color`, `energy-grid-consumption-color`, `energy-battery-in-color` …          | the power and energy flow's sources and links, as on the energy panel  |
+| `weather-icon-sun-color`, `-moon-color`, `-cloud-front-color`, `-rain-color`, `-snow-color` | the weather icons, as on the weather forecast card                     |
+| `switch-unchecked-track-color`                                                              | a toggle that is off                                                   |
+| `ha-tile-icon-border-radius`                                                                | the shape behind an icon (round by default; a ring stays round)        |
+| `tile-icon-opacity`, `tile-icon-hover-opacity`                                              | the soft colour behind an icon (`0.2`), and under the pointer (`0.35`) |
 
-| Variable                                       | What it changes                                                                      |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `ha-card-background`, `card-background-color`  | the card's background (also behind the power flow's nodes and the flow cards' icons) |
-| `ha-card-border-radius`                        | the card's corners                                                                   |
-| `ha-card-border-width`, `ha-card-border-color` | the card's border                                                                    |
-| `ha-card-box-shadow`                           | the card's shadow                                                                    |
-
-**Colours**
-
-| Variable                                                                                                                                                            | What it changes                                                                    |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `primary-color`                                                                                                                                                     | the default colour of an entity, the power flow's home and summary                 |
-| `primary-text-color`, `secondary-text-color`                                                                                                                        | the text                                                                           |
-| `text-primary-color`                                                                                                                                                | the text on a filled button (a pressed control)                                    |
-| `divider-color`                                                                                                                                                     | dividers, grid lines, tooltips' borders, the power flow's idle links               |
-| `disabled-color`                                                                                                                                                    | the power flow's idle nodes                                                        |
-| `red-color`, `amber-color`, … (every [named token](#colour-values))                                                                                                 | the colour of that name wherever a card uses it                                    |
-| `state-<domain>-<state>-color`, `state-icon-color`, `state-unavailable-color`                                                                                       | the [colour of an entity by its state](#where-colour-comes-from), as on tile cards |
-| `energy-solar-color`, `energy-grid-consumption-color`, `energy-grid-return-color`, `energy-battery-in-color`, `energy-battery-out-color`, `energy-non-fossil-color` | the power flow's sources and links, as on the energy dashboard                     |
-| `weather-icon-sun-color`, `-moon-color`, `-cloud-front-color`, `-cloud-back-color`, `-rain-color`, `-snow-color`, `-snow-stroke-color`                              | the weather card's condition icons, as on the weather forecast card                |
-| `switch-unchecked-track-color`                                                                                                                                      | a toggle that is off                                                               |
-
-**Icons**
-
-| Variable                     | What it changes                                                                                                                                                                      |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ha-tile-icon-border-radius` | the shape behind an icon, as on Home Assistant's tile card (round by default; a ring and the power flow's nodes stay round)                                                          |
-| `tile-icon-opacity`          | how strong the soft colour behind an icon is (`0.2` by default; `0` leaves the icon alone on the card)                                                                               |
-| `tile-icon-hover-opacity`    | the same under the pointer, on an icon with its own action (a [tile's](/cards/tile-custom#actions) or a poster's, which answer the pointer unless `hover: false`; `0.35` by default) |
-
-For example, a theme with rounded-square icons on a transparent background:
+For example, rounded-square icons with no colour behind them:
 
 ```yaml
 frontend:
@@ -77,25 +65,19 @@ frontend:
       tile-icon-opacity: 0
 ```
 
-Home Assistant's own tile card keeps its icon background at 20 %: it sets `tile-icon-opacity` on the icon itself, so only the shape follows a theme there.
-
-**Text**: the typography variables, see [Text size](#text-size) below.
-
-card_mod and UIX can still style the cards, but the class names inside them are not a stable interface and can change with any release. Prefer the variables above where they cover what you want.
+card_mod and UIX still work, but the cards' inner class names can change with any release, so prefer the variables.
 
 ## Text size
 
-The text follows Home Assistant's typography variables, the same ones the built-in cards read. A theme that changes them changes the Pro Cards with the rest of the dashboard, with no card_mod and no per-card option:
+The text follows Home Assistant's typography variables. A theme with larger text, for a wall tablet or for easier reading, makes every Pro Card's text larger too.
 
-| Variable                                             | What it changes                                                                                                                                                |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ha-font-size-scale`                                 | every text size at once (`1.15` makes everything 15 % larger)                                                                                                  |
-| `ha-font-size-xs` … `ha-font-size-5xl`               | one step of the scale (10, 12, 14, 16, 20, 24, 28, 32 and 40 px by default)                                                                                    |
-| `ha-font-weight-normal`, `-medium`                   | the weights                                                                                                                                                    |
-| `ha-font-family-body`                                | the font                                                                                                                                                       |
-| `ha-tile-info-primary-*`, `ha-tile-info-secondary-*` | the name and the secondary line of tiles and list rows, as on Home Assistant's tile card: `font-size`, `font-weight`, `line-height`, `letter-spacing`, `color` |
-
-For example, a theme that makes all text a little larger and the secondary line of tiles clearly larger:
+| Variable                                             | What it changes                                                              |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `ha-font-size-scale`                                 | every text size at once (`1.15` makes everything 15 % larger)                |
+| `ha-font-size-xs` … `ha-font-size-5xl`               | one step of the scale (10 to 40 px)                                          |
+| `ha-font-weight-normal`, `-medium`                   | the weights                                                                  |
+| `ha-font-family-body`                                | the font                                                                     |
+| `ha-tile-info-primary-*`, `ha-tile-info-secondary-*` | a tile's name and line: `font-size`, `font-weight`, `line-height`, `color` … |
 
 ```yaml
 frontend:
@@ -105,9 +87,7 @@ frontend:
       ha-tile-info-secondary-font-size: 15px
 ```
 
-Whatever sits around the text grows with it: axis labels keep their room, the power flow's labels their place beside the nodes, a tile its two lines (so a tile with larger text can be taller than one row). Text inside a drawing that scales as a whole, such as the gauge's value, the illuminance arc and the value in an icon's circle, keeps its proportion to the drawing.
-
-Pick **Large text** in an example's theme picker to see any example at `ha-font-size-scale: 1.25`, or look at this one:
+The cards make room for it: a tile grows taller, a plot keeps space for its labels. Text inside a drawing, such as a gauge's value, scales with the drawing. **Large text** in the theme picker shows any example at `ha-font-size-scale: 1.25`:
 
 ::: live theme=large
 
@@ -134,14 +114,14 @@ Pick **Large text** in an example's theme picker to see any example at `ha-font-
 
 ## Colour values
 
-Wherever a card accepts a colour you can use:
+Wherever a card takes a colour, you can write:
 
-- a **named token**: `primary`, `accent`, `red`, `pink`, `purple`, `deep-purple`, `indigo`, `blue`, `light-blue`, `cyan`, `teal`, `green`, `light-green`, `lime`, `yellow`, `amber`, `orange`, `deep-orange`, `brown`, `grey`, `blue-grey`, `black`, `white`
-- a **hex** value such as `#7e57c2`
-- an **rgb()** / **hsl()** value
-- any **CSS variable** such as `var(--my-color)`
+- a **name**: `primary`, `accent`, `red`, `pink`, `purple`, `deep-purple`, `indigo`, `blue`, `light-blue`, `cyan`, `teal`, `green`, `light-green`, `lime`, `yellow`, `amber`, `orange`, `deep-orange`, `brown`, `grey`, `blue-grey`, `black`, `white`;
+- a **hex** value such as `#7e57c2`, or `rgb()` / `hsl()`;
+- a **CSS variable** such as `var(--my-color)`;
+- on a tile, a poster and their badges, a **template** that gives one of these.
 
-Named tokens resolve to the theme's `--<name>-color`, so a theme that redefines `--amber-color` changes every card that uses `amber`.
+A name is the theme's `--<name>-color`, so a theme that changes `amber-color` changes every card that uses `amber`.
 
 ::: live
 
@@ -149,27 +129,27 @@ Named tokens resolve to the theme's `--<name>-color`, so a theme that redefines 
 type: custom:layout-card-pro
 columns: 3
 cards:
-  - { type: custom:tile-card-pro, entity: sensor.outdoor_humidity, name: primary, color: primary, icon: { ring: true } }
-  - { type: custom:tile-card-pro, entity: sensor.outdoor_humidity, name: teal, color: teal, icon: { ring: true } }
-  - { type: custom:tile-card-pro, entity: sensor.outdoor_humidity, name: deep-purple, color: deep-purple, icon: { ring: true } }
-  - { type: custom:tile-card-pro, entity: sensor.outdoor_humidity, name: "#ff5252", color: "#ff5252", icon: { ring: true } }
-  - { type: custom:tile-card-pro, entity: sensor.outdoor_humidity, name: blue-grey, color: blue-grey, icon: { ring: true } }
-  - { type: custom:tile-card-pro, entity: sensor.outdoor_humidity, name: amber, color: amber, icon: { ring: true } }
+  - { type: custom:tile-card-pro, entity: sensor.living_room_humidity, name: primary, color: primary, icon: { ring: true } }
+  - { type: custom:tile-card-pro, entity: sensor.living_room_humidity, name: teal, color: teal, icon: { ring: true } }
+  - { type: custom:tile-card-pro, entity: sensor.living_room_humidity, name: deep-purple, color: deep-purple, icon: { ring: true } }
+  - { type: custom:tile-card-pro, entity: sensor.living_room_humidity, name: "#ff5252", color: "#ff5252", icon: { ring: true } }
+  - { type: custom:tile-card-pro, entity: sensor.living_room_humidity, name: blue-grey, color: blue-grey, icon: { ring: true } }
+  - { type: custom:tile-card-pro, entity: sensor.living_room_humidity, name: amber, color: amber, icon: { ring: true } }
 ```
 
 :::
 
 ## Where colour comes from
 
-On a tile, a poster and their badges, the colour of an entity is decided in this order:
+On a tile, a poster, a tile group and the badges of every card, an entity's colour is the first of these that has one:
 
-1. the first matching `rules` entry that sets `color` (rules are tried in the order written; without rules of its own the card has its [kind](/cards/tile-types)'s, a battery's levels or the air's bands)
-2. the card's `color` (a template is allowed): a default, which a matching rule beats
-3. the kind's colour from the state: a light in its own colour, a thermostat warm while it heats and cool while it cools
-4. Home Assistant's own state colour for the entity's domain and state: lights and switches amber when on, locks green when locked and red when unlocked, people green at home, covers purple while open, media players light blue while playing, batteries green / orange / red by level, and grey for inactive states. These are the theme's `--state-<domain>-<state>-color` tokens, so a theme that recolours HA's tile cards recolours these cards too.
-5. `grey` for off-like states of other domains (`off`, `closed`, `idle`, `standby`, `docked`, `not_home`, `disarmed`, `clear`), otherwise `primary`. Plain sensors have no state colour and stay `primary`.
+1. the first matching rule's `color` (yours, or the [kind](/cards/kinds)'s own rules, such as a battery's levels);
+2. the card's `color`;
+3. the kind's colour: a light in its own colour, a thermostat warm while it heats and cool while it cools;
+4. Home Assistant's colour for the entity's state, the theme's `state-<domain>-<state>-color`: lights amber when on, locks green or red, people green at home, media players light blue while playing, batteries by level;
+5. `grey` for an off-like state (`off`, `closed`, `idle`, `standby`, `docked`, `not_home` …) or an unavailable entity, otherwise `primary`. A plain sensor stays `primary`.
 
-So set `color` for the usual colour and let the rules say when it changes. The same order applies to the icon: the matching rule's `icon`, then the card's, then the entity's own. The status comes from the matching rule, else the kind. The deprecated entity cards and the `header_entities` of the weather, power flow and energy flow cards keep the order they had: an explicit `color` and `icon` beat the rules there ([Entity options](/cards/entity-options#rules)).
+So set `color` for the usual colour and let rules say when it changes. The icon works the same way: the rule's, then the card's, then the entity's own ([Look](/cards/look)). In the deprecated cards and the old `header_entities`, `color` and `icon` beat the rules instead ([Moving to 3.0](/guide/migrating)).
 
 ::: live
 
@@ -179,20 +159,20 @@ columns: 3
 cards:
   - { type: custom:tile-card-pro, entity: light.living_room, name: Light on, control: false }
   - { type: custom:tile-card-pro, entity: light.kitchen, name: Light off, control: false }
-  - { type: custom:tile-card-pro, entity: cover.living_room_blinds, name: Blinds open, control: false }
+  - { type: custom:tile-card-pro, entity: lock.front_door, name: Front door, control: false }
   - { type: custom:tile-card-pro, entity: person.malte, name: At home }
   - { type: custom:tile-card-pro, entity: person.sam, name: Away }
   - { type: custom:tile-card-pro, entity: media_player.living_room_speaker, name: Playing, control: false }
   - { type: custom:tile-card-pro, entity: sensor.robot_battery, name: Battery, icon: { ring: true } }
   - { type: custom:tile-card-pro, entity: sensor.motion_hallway_battery, name: Low battery, icon: { ring: true } }
-  - { type: custom:tile-card-pro, entity: sensor.outdoor_temperature, name: Plain sensor }
+  - { type: custom:tile-card-pro, entity: sensor.living_room_temperature, name: Plain sensor }
 ```
 
 :::
 
-## Card tint
+## Tinted cards
 
-`tint_card: true` on a rule washes the card in that entry's colour while it matches; in a tile group, that tile. Use it for the states that deserve attention, not for the normal case.
+`tint_card: true` on a rule washes the card in the rule's colour while it matches; in a tile group, just that tile. Keep it for states that need attention.
 
 ::: live
 

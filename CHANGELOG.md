@@ -62,6 +62,7 @@ _Beta_
 - A lock or an alarm panel held on its icon shows its own state's icon (a locked padlock while locked); the button's label says what the hold does
 - Rules: `state` matches the value or the entity's own state, so `{ state: playing }` works on a media player shown by its `media_title` and `{ state: "on" }` on a light shown by a brightness template
 - Fix: a grid cell's value that is a fraction of a pixel too wide is made smaller instead of cut with an ellipsis, and the values are fitted again when a web font arrives after the card was drawn
+- Fix: sun azimuth: half a section wide, the card no longer runs into a resize loop (the browser reported it, and the scene was drawn twice)
 - Fix: energy flow: the period picker no longer makes the header taller, so a power and an energy flow card side by side start their trees at the same height
 - Fix: power and energy flow: the home sits level with the source nearest its height, so that source's line runs straight in instead of taking a small step that looked like a crack, and every line into the home meets its circle
 - Fix: a history strip and its tooltip colour and name each past bucket by its own value, not by the entity's state now; columns of a series below zero stay inside the plot

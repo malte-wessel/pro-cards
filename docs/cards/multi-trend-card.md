@@ -1,24 +1,10 @@
-# Multi Trend Card Pro
+# Multi trend
 
-`custom:multi-trend-card-pro` draws one or more sensors as smooth lines in a tile-style card. Hover or touch the plot for a crosshair that lists every value at that time. It ships with a visual editor.
+`custom:multi-trend-card-pro` draws one or more numeric sensors as smooth lines on one card. Hover or touch the plot for a crosshair that lists every value at that time. For the same lines as a tile or a poster, use the [trend kind](/cards/kinds).
 
-## Basic
+## Sensors
 
-The type and a list of sensors with numeric states. The header takes the first entity's name and icon.
-
-::: live
-
-```yaml
-type: custom:multi-trend-card-pro
-entities:
-  - sensor.outdoor_temperature
-```
-
-:::
-
-## Several sensors
-
-Every entity can be an object with a `name` and a `color`. Without a `color` the series take `primary`, `orange`, `green`, `purple`, `cyan` and `pink` in that order. `title` and `icon` set the header.
+`entities` lists the sensors: entity ids, or objects with a `name` and a `color`. Without a colour the series take `primary`, `orange`, `green`, `purple`, `cyan` and `pink` in turn. `title` and `icon` set the header; without them it takes the first entity's name and icon. A tap on the header opens that entity's more-info dialog.
 
 ::: live
 
@@ -35,7 +21,7 @@ entities:
 
 ## Rules
 
-`rules` colour a series by its current value, like a tile's [rules](/cards/tile-custom#colour-and-rules): the first entry whose `below` (exclusive), `above` (inclusive) or `state` matches decides the colour of the whole line, its legend swatch and its tooltip swatch. A fixed `color` wins over the rules and may be a template. A series with neither, no matching rule or an unavailable value keeps its palette colour.
+`rules` colour a series by its current value, as a tile's [rules](/cards/look) do: the first entry whose `state`, `below` or `above` matches colours the whole line. A fixed `color` wins over the rules and may be a template.
 
 ::: live
 
@@ -57,28 +43,9 @@ entities:
 
 :::
 
-## Time window
-
-`hours_to_show` sets the history window from 1 to 168 hours. The default is 6. Each line is averaged into buckets so sensor noise does not show as a zigzag: one point per 12 px of width by default, or one per `smoothing_minutes` when set. Hovering shows the mean of the bucket under the pointer.
-
-::: live
-
-```yaml
-type: custom:multi-trend-card-pro
-title: Temperature & dew point
-icon: mdi:thermometer
-hours_to_show: 24
-smoothing_minutes: 30
-entities:
-  - { entity: sensor.outdoor_temperature, name: Temperature, color: red }
-  - { entity: sensor.dew_point, name: Dew point, color: blue }
-```
-
-:::
-
 ## Overlay or lanes
 
-With `layout: auto` the card overlays all series on one scale when every entity shares a unit, and otherwise gives each entity its own lane. Force either with `overlay` or `lanes`.
+With `layout: auto` the series share one scale when they share a unit; otherwise each gets its own lane. `overlay` or `lanes` forces either. `hours_to_show` sets the window, 6 hours by default.
 
 ::: live
 
@@ -86,7 +53,6 @@ With `layout: auto` the card overlays all series on one scale when every entity 
 type: custom:multi-trend-card-pro
 title: Wind
 icon: mdi:weather-windy
-hours_to_show: 6
 layout: lanes
 entities:
   - { entity: sensor.wind_speed, name: Speed, color: teal }
@@ -96,11 +62,9 @@ entities:
 
 :::
 
-For the lines as a poster, with the first value large and the lines along the bottom, see the [trend poster](/cards/poster-types#trend) (`poster: trend`, `series`).
+## Axes and smoothing
 
-## Axes and legend
-
-`x_axis` adds time labels with vertical gridlines, `y_axis` adds value labels with horizontal gridlines (per lane in the lanes layout). Both are off by default to keep the tile calm. `show_legend` lists the overlaid series under the header; `color` colours the header icon.
+`x_axis` adds time labels and `y_axis` value labels, each with gridlines; both are off by default. The lines are averaged so sensor noise does not zigzag; `smoothing_minutes` sets how many minutes each point averages.
 
 ::: live
 
@@ -110,9 +74,9 @@ title: Power
 icon: mdi:flash
 color: amber
 hours_to_show: 24
+smoothing_minutes: 30
 x_axis: true
 y_axis: true
-show_legend: true
 entities:
   - { entity: sensor.power_consumption, name: Consumption, color: red }
   - { entity: sensor.dining_light_power, name: Dining light, color: amber }
@@ -122,17 +86,19 @@ entities:
 
 ## Reference
 
-| Option              | Default           | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| ------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entities`          |                   | List of entity ids or `{ entity, name, color, rules, visibility }` (required, sensors with numeric states). `color` fixes the series colour (template allowed) and wins over `rules`, a list of `{ state, below, above, color }` whose first match on the current value colours the series (see [Rules](#rules)). Without either the series take `primary`, `orange`, `green`, `purple`, `cyan`, `pink` in that order. A series with [`visibility`](/guide/visibility) is drawn only while its conditions hold. |
-| `title`             | first entity name | Header text.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `icon`              | entity icon       | Header icon: `icon`, else the first entity's icon, else by device class.                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `color`             | state icon colour | Header icon colour.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `hours_to_show`     | `6`               | History window, 1 to 168 hours.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `smoothing_minutes` |                   | Averaging bucket of the lines in minutes, at least 5. Without it one point per 12 px of width.                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `layout`            | `auto`            | `auto`, `overlay` or `lanes`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `show_legend`       | `true`            | Legend for overlaid series with two or more entities.                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `x_axis`            | `false`           | Time labels and vertical gridlines.                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `y_axis`            | `false`           | Value labels and horizontal gridlines.                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Key                 | Default                 | Description                                                                                                                                  |
+| ------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entities`          | –                       | Required. Entity ids, or `{ entity, name, color, rules, visibility }`. A series with [`visibility`](/guide/visibility) shows while it holds. |
+| `title`             | the first entity's name | The header's text.                                                                                                                           |
+| `icon`              | the first entity's icon | The header's icon.                                                                                                                           |
+| `color`             | the state's icon colour | The header icon's colour.                                                                                                                    |
+| `hours_to_show`     | `6`                     | The window, 1 to 168 hours.                                                                                                                  |
+| `smoothing_minutes` | one point per 12 px     | Minutes each point averages, at least 5.                                                                                                     |
+| `layout`            | `auto`                  | `auto` (overlay when the units match, else lanes), `overlay` or `lanes`.                                                                     |
+| `show_legend`       | `true`                  | A legend under the header for two or more overlaid series.                                                                                   |
+| `x_axis`            | `false`                 | Time labels and vertical gridlines.                                                                                                          |
+| `y_axis`            | `false`                 | Value labels and horizontal gridlines, per lane.                                                                                             |
 
-Tapping the header opens the more-info dialog of the first entity. The default size is 12 columns with `rows: auto`: the card is as tall as its plot, two rows at least. The plot fills whatever height the card is given, see [Filling the height](/guide/sizing#filling-the-height). `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod` are passed through to Home Assistant. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height).
+A series' `rules` are `{ state | below | above, color }`; `below` is exclusive, `above` inclusive.
+
+The card takes 12 columns and is as tall as its plot (`rows: auto`, two rows at least); it fills a taller cell. It also takes Home Assistant's `grid_options`, `visibility`, `view_layout` and `card_mod`, plus `fill_height` (`false` keeps its own height); see [Sizing in sections](/guide/sizing). The card has a visual editor.

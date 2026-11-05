@@ -1,17 +1,12 @@
-# Swipe Card Pro
+# Swipe
 
-`custom:swipe-card-pro` puts cards side by side in a strip you swipe through. The strip snaps to each card, the next card peeks in so it is clear there is more, and dots below show the page. Once the section is wide enough the cards can unfold into a plain grid, and like the layout card's, every option can change at breakpoints. Any card works inside: Pro Cards and Home Assistant's own. The cards keep their own `visibility`. YAML only for now.
+`custom:swipe-card-pro` puts cards side by side in a strip you swipe through. Use it for more cards of one sort than a phone has room for (the rooms, the cameras, the people at home), or for a row that should stay a row on a phone. Where the section is wider, the cards can unfold into a plain grid.
 
-## When to use it
+The strip snaps to each card, the next card peeks in, and dots below show where you are. Any card works inside, Home Assistant's own too, and each keeps its own `visibility`. To rearrange cards in columns by the width, use the [layout card](/cards/layout-card).
 
-- **More cards than a phone has room for, one kind of thing each:** the rooms, the cameras, the members of the household. Swiping keeps them on one line instead of a long column.
-- **A row that should stay a row on a phone:** a section's twelfths put four tiles in a row on a desktop and stack them on a phone. In a swipe card they stay side by side and you swipe to the rest.
+## A strip of cards
 
-To arrange cards in columns that change with the width, use the [layout card](/cards/layout-card); to show one card or another by the screen size, use Home Assistant's `screen` condition.
-
-## Basic
-
-`per_page: 1.15` is the default: one card and the start of the next. Swipe, scroll sideways with a trackpad, or tap a dot.
+By default one card fills the strip and the start of the next peeks in. Swipe, scroll sideways with a trackpad, or tap a dot.
 
 ::: live width=400
 
@@ -38,9 +33,13 @@ cards:
 
 :::
 
+A slider or a plot takes a sideways drag for itself: swipe beside it, or tap a dot. With the keyboard, focus the strip and use the arrow keys.
+
 ## Cards per page
 
-`per_page` is how many cards fit across the strip, from 1 to 12. A whole number shows exactly that many; a fraction lets the next card peek in. Small tiles fit two and a half. There is a dot for every place the strip stops at, so the last cards of a page share the last dot. A strip whose cards all fit on one page shows no dots, and fewer cards than `per_page` fill the strip.
+`per_page` is how many cards fit across the strip, from 1 to 12. A whole number shows exactly that many; a fraction lets the next card peek in. When every card fits on one page, there are no dots.
+
+`snap` says where a card stops: `start` lines it up with the start of the strip, `center` puts it in the middle with its neighbours peeking in on both sides, and `free` scrolls without stopping.
 
 ::: live width=400
 
@@ -51,11 +50,11 @@ cards:
   - type: custom:tile-card-pro
     entity: light.living_room
   - type: custom:tile-card-pro
+    entity: light.desk_lamp
+  - type: custom:tile-card-pro
     entity: light.kitchen
   - type: custom:tile-card-pro
     entity: light.dining_table
-  - type: custom:tile-card-pro
-    entity: light.office
   - type: custom:tile-card-pro
     entity: light.bedroom
   - type: custom:tile-card-pro
@@ -64,36 +63,56 @@ cards:
 
 :::
 
-## Snap
+## Rooms of equal height
 
-`snap` says where a card stops: `start` (the default) lines it up with the start of the strip, `center` puts the current card in the middle with the cards on both sides peeking in, `free` scrolls without stopping at any card.
+With `height: equal`, the default, every card is as tall as the tallest; `height: auto` lets each keep its own. Here each slide is a [layout card](/cards/layout-card) with a heading over a tile group, and `rows: [auto, 1fr]` gives the extra height to the tiles, so the headings line up.
 
 ::: live width=400
 
 ```yaml
 type: custom:swipe-card-pro
-per_page: 1.3
-snap: center
 cards:
-  - type: custom:tile-card-pro
-    entity: light.living_room
-  - type: custom:tile-card-pro
-    entity: light.kitchen
-  - type: custom:tile-card-pro
-    entity: light.bedroom
-  - type: custom:tile-card-pro
-    entity: light.hallway
+  - type: custom:layout-card-pro
+    rows: [auto, 1fr]
+    cards:
+      - type: custom:heading-card-pro
+        title: Living room
+        icon: mdi:sofa
+      - type: custom:tile-group-card-pro
+        tiles:
+          - light.living_room
+          - light.desk_lamp
+          - cover.living_room_blinds
+          - media_player.living_room_speaker
+  - type: custom:layout-card-pro
+    rows: [auto, 1fr]
+    cards:
+      - type: custom:heading-card-pro
+        title: Kitchen
+        icon: mdi:stove
+      - type: custom:tile-group-card-pro
+        tiles:
+          - light.kitchen
+          - media_player.kitchen_speaker
+  - type: custom:layout-card-pro
+    rows: [auto, 1fr]
+    cards:
+      - type: custom:heading-card-pro
+        title: Bedroom
+        icon: mdi:bed
+      - type: custom:tile-group-card-pro
+        tiles:
+          - light.bedroom
+          - cover.bedroom_blinds
 ```
 
 :::
 
-## Unfold
-
-`unfold` shows the cards as a plain grid of that many columns instead of the strip: no swiping, no dots. On its own it makes little sense; it belongs in a breakpoint, so a phone swipes and a wider section shows every card.
-
 ## Breakpoints
 
-The swipe card's breakpoints are the [layout card's](/cards/layout-card#breakpoints): view columns, the unit Home Assistant's sections view places sections in. The top-level options apply in one view column, on a phone or in a section with `column_span: 1`. Each breakpoint under `breakpoints` names a number of view columns (2, 3 …) and lists only what changes once the card's section spans that many, inherited by every wider one. Every option can change there.
+The swipe card takes the [layout card's breakpoints](/cards/layout-card#breakpoints): the top-level options apply in one view column, and each entry under `breakpoints` lists what changes once the section spans that many view columns. Every option can change there.
+
+`unfold` shows the cards as a grid of that many columns instead of the strip, with no swiping and no dots. It belongs in a breakpoint: a phone swipes, a wider section shows every card. `unfold: false` in a wider breakpoint goes back to the strip.
 
 ```yaml
 type: custom:swipe-card-pro
@@ -103,36 +122,7 @@ breakpoints:
   3: { unfold: 4 } # three or more: a grid of four
 ```
 
-`unfold: false` in a wider breakpoint goes back to the strip, and `gap:` or `padding:` left empty go back to their defaults. Outside a section (a panel view, a stack, a layout card) the card counts its own width in the sections view's columns, 500 px at most each, as the layout card does.
-
-The same card in a narrow frame and in one as wide as two view columns, where it unfolds:
-
-::: live width=400
-
-```yaml
-type: custom:swipe-card-pro
-breakpoints:
-  2: { unfold: 4 }
-cards:
-  - type: custom:tile-card-pro
-    entity: sensor.living_room_temperature
-    name: Living room
-    visual: sparkline
-  - type: custom:tile-card-pro
-    entity: sensor.kitchen_temperature
-    name: Kitchen
-    visual: sparkline
-  - type: custom:tile-card-pro
-    entity: sensor.bedroom_temperature
-    name: Bedroom
-    visual: sparkline
-  - type: custom:tile-card-pro
-    entity: sensor.office_temperature
-    name: Office
-    visual: sparkline
-```
-
-:::
+The first example again with `unfold: 4` from two view columns, in a frame as wide as two:
 
 ::: live width=full
 
@@ -161,66 +151,9 @@ cards:
 
 :::
 
-## Rooms of equal height
-
-A slide can be a [layout card](/cards/layout-card) of its own: here each room is a heading over its lights. With `height: equal` every slide is as tall as the tallest, and the layout card's `rows: [auto, 1fr]` gives that height to the lights, so the headings stay at their own height and line up.
-
-::: live width=400
-
-```yaml
-type: custom:swipe-card-pro
-cards:
-  - type: custom:layout-card-pro
-    rows: [auto, 1fr]
-    cards:
-      - type: custom:heading-card-pro
-        title: Living room
-        icon: mdi:sofa
-      - type: custom:tile-group-card-pro
-        tiles:
-          - light.living_room
-          - light.dining_table
-          - cover.living_room_blinds
-          - media_player.living_room_speaker
-  - type: custom:layout-card-pro
-    rows: [auto, 1fr]
-    cards:
-      - type: custom:heading-card-pro
-        title: Kitchen
-        icon: mdi:stove
-      - type: custom:tile-group-card-pro
-        tiles:
-          - light.kitchen
-          - media_player.kitchen_speaker
-  - type: custom:layout-card-pro
-    rows: [auto, 1fr]
-    cards:
-      - type: custom:heading-card-pro
-        title: Bedroom
-        icon: mdi:bed
-      - type: custom:tile-group-card-pro
-        tiles:
-          - light.bedroom
-          - cover.bedroom_blinds
-```
-
-:::
-
-## Spacing and height
-
-`gap` is the space between the cards (the theme's section gap by default). `padding` is the space around them; its left and right are an inset at both ends of the strip, where a card also stops. `height: equal` (the default) makes every card as tall as the tallest; `height: auto` lets each keep its own height.
-
 ## Visibility
 
-Every card inside keeps Home Assistant's own `visibility`. A hidden card leaves the strip and takes its dot with it. When every card is hidden the swipe card hides too.
-
-## Swiping and controls
-
-A slider, a plot you scrub and similar controls take a sideways drag for themselves: swipe beside them, on the card's name or icon, or tap a dot. The strip can be focused with the keyboard, and the arrow keys scroll it.
-
-## Sizing
-
-In a section the swipe card takes the full width of the section and sizes to its cards (`rows: auto`). Its `getCardSize` is the tallest card's; unfolded, the tallest card of each row. See [Sizing](/guide/sizing).
+Every card inside keeps Home Assistant's own `visibility`. A hidden card leaves the strip and takes its dot with it, and when every card is hidden the swipe card hides too.
 
 ## The visual editor
 
@@ -232,14 +165,26 @@ Home Assistant's card editor shows the swipe card's options and its breakpoints,
 
 Every option but `breakpoints` and `cards` may change in a breakpoint.
 
-| Option        | Default | Description                                                                                                              |
-| ------------- | ------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `per_page`    | `1.15`  | How many cards fit across the strip, 1 to 12; a fraction lets the next card peek in.                                     |
-| `gap`         | theme   | The space between the cards.                                                                                             |
-| `padding`     | `0`     | Around the cards: 1, 2 or 4 values, or `{ top, right, bottom, left }`. Left and right are the inset of the strip.        |
-| `snap`        | `start` | `start`, `center` or `free`.                                                                                             |
-| `height`      | `equal` | `equal` (every card as tall as the tallest) or `auto`.                                                                   |
-| `indicator`   | `dots`  | `dots` or `none`.                                                                                                        |
-| `unfold`      | –       | A grid of this many columns (1 to 12) instead of the strip; `false` goes back to the strip in a breakpoint.              |
-| `breakpoints` | –       | `{ 2: { …options }, 3: { … } }`: the options that change once the section spans that many view columns. The base is one. |
-| `cards`       | `[]`    | The cards.                                                                                                               |
+| Option        | Default | Description                                                                                            |
+| ------------- | ------- | ------------------------------------------------------------------------------------------------------ |
+| `per_page`    | `1.15`  | How many cards fit across the strip, 1 to 12; a fraction lets the next card peek in.                   |
+| `snap`        | `start` | Where a card stops: `start`, `center` or `free`.                                                       |
+| `height`      | `equal` | `equal` (every card as tall as the tallest) or `auto` (each its own height).                           |
+| `indicator`   | `dots`  | `dots` below the strip, or `none`.                                                                     |
+| `unfold`      | –       | A grid of this many columns (1 to 12) instead of the strip; `false` goes back to the strip.            |
+| `gap`         | theme   | The space between the cards.                                                                           |
+| `padding`     | `0`     | Around the cards: 1, 2 or 4 values, or `{ top, right, bottom, left }`. Left and right inset the strip. |
+| `breakpoints` | –       | `{ 2: { …options }, 3: { … } }`: what changes once the section spans that many view columns (2 to 12). |
+| `cards`       | `[]`    | The cards.                                                                                             |
+
+### Grid and Home Assistant options
+
+The swipe card takes the full width of its section and sizes its height to its cards (`rows: auto`). See [Sizing](/guide/sizing).
+
+| Key            | Default | Description                                                                    |
+| -------------- | ------- | ------------------------------------------------------------------------------ |
+| `grid_options` | –       | Home Assistant's size in a sections view: `columns`, `rows`.                   |
+| `fill_height`  | `true`  | Fills the height the card is given; `false` keeps the swipe card's own height. |
+| `visibility`   | –       | Home Assistant's conditions that show or hide the whole card.                  |
+| `view_layout`  | –       | Placement in a [layout card](/cards/layout-card) or a custom view.             |
+| `card_mod`     | –       | Styles for the card-mod plugin.                                                |

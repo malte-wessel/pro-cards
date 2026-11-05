@@ -2,7 +2,7 @@
 
 ::: warning Deprecated
 
-The wind card is deprecated: it still works in 3.0 and goes in 4.0. Use a poster or a tile of the [wind kind](/cards/poster-types#wind); [Moving to 3.0](/guide/migrating#the-wind-and-rain-cards) says what changes.
+The wind card is deprecated: it still works in 3.0 and goes in 4.0. Use a poster or a tile of the [wind kind](/cards/kinds#wind); [Moving to 3.0](/guide/migrating#the-wind-and-rain-cards) says what changes.
 
 :::
 
@@ -126,7 +126,7 @@ rules:
 
 :::
 
-For the wind as a poster, with the speed large and the field behind it, see the [wind poster](/cards/poster-types#wind) (`variant: lines`).
+For the wind as a poster, with the speed large and the field behind it, see the [wind poster](/cards/kinds#wind) (`variant: lines`).
 
 ## Rules and colours
 

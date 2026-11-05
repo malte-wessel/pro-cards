@@ -76,7 +76,7 @@ rules:
 
 ## Controls
 
-`control: auto` adds the control the entity's domain calls for: a light gets a switch and a brightness slider, a cover its buttons and a position slider, a thermostat a stepper. `control: toggle` and the other names pick one; see [Controls](/cards/controls). `grid_options` here sizes the tiles to half a section, see [Sizing in sections](/guide/sizing).
+`control: auto` adds the control the entity's domain calls for: a light gets a switch and a brightness slider, a cover its buttons and a position slider, a thermostat a stepper. `control: toggle` and the other names pick one; see [Controls](/cards/entity-controls). `grid_options` here sizes the tiles to half a section, see [Sizing in sections](/guide/sizing).
 
 ::: live
 
@@ -341,7 +341,7 @@ A tile is a button. `tap_action` runs a scene, opens a dashboard or a URL, or to
 
 ## Hover
 
-`hover: true` shows what a click will do, as Home Assistant's tile does: the whole tile takes a light layer in its colour under the pointer, and a stronger one while pressed. An icon that is a switch (`control_position: lead`) brightens its circle instead and grows a little when pressed, and every [control](/cards/controls) answers on its own: the tile's layer gives way to it. Touch screens show only the press. See [Hover](/cards/entity-options#hover) for the details and the theme variable.
+`hover: true` shows what a click will do, as Home Assistant's tile does: the whole tile takes a light layer in its colour under the pointer, and a stronger one while pressed. An icon that is a switch (`control_position: lead`) brightens its circle instead and grows a little when pressed, and every [control](/cards/entity-controls) answers on its own: the tile's layer gives way to it. Touch screens show only the press. See [Hover](/cards/entity-options#hover) for the details and the theme variable.
 
 ::: live
 

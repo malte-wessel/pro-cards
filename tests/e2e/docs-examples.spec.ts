@@ -93,7 +93,7 @@ for (const file of walk("docs")) {
 }
 
 test("the controls page draws working controls", async ({ page }) => {
-  const cards = examples(readFileSync("docs/cards/controls.md", "utf8"));
+  const cards = examples(readFileSync("docs/cards/entity-controls.md", "utf8"));
   await mount(page, cards, { liveClock: true });
   const count = await page.evaluate(() =>
     [...document.querySelectorAll("#root .cell > *")].reduce(

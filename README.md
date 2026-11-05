@@ -269,7 +269,7 @@ entity: sensor.rain_rate_roof
 visual: { type: flow, variant: drops }
 ```
 
-[The wind and rain kinds](https://malte-wessel.github.io/pro-cards/cards/poster-types#wind)
+[The wind and rain kinds](https://malte-wessel.github.io/pro-cards/cards/kinds#wind)
 
 #### Sun Path Card Pro
 

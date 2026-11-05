@@ -76,6 +76,8 @@ export const BUTTON_KEYS = ["entity", "label", "icon", "color", "action"] as con
 // the content keys, written as they are
 const TEXTS = ["attribute", "value", "secondary", "unit", "prefix", "suffix"] as const;
 const ACTIONS = ["tap_action", "hold_action", "double_tap_action"] as const;
+// an action as the form's action picker takes it: a bare name (`tap_action: toggle`) as its object
+const actionToForm = (v: unknown) => (typeof v === "string" ? { action: v } : v);
 
 // what the kind draws in each place on this card, by default
 export const defaultIcon = (kind: Kind): IconThing => kind.icon?.type ?? "icon";
@@ -339,7 +341,7 @@ export const configToForm = (
     hover: c.hover !== false,
   };
   for (const k of TEXTS) d[k] = c[k] ?? "";
-  for (const k of ACTIONS) if (c[k] !== undefined) d[k] = c[k];
+  for (const k of ACTIONS) if (c[k] !== undefined) d[k] = actionToForm(c[k]);
 
   // the icon: its thing, its options, its own actions and (a tile's) badge
   const icon = c.icon;
@@ -356,7 +358,7 @@ export const configToForm = (
     d.icon_style = icon.style ?? "";
     d.icon_src = icon.src ?? "";
     d.icon_variant = icon.variant === kind.icon?.variant ? "" : (icon.variant ?? "");
-    for (const k of ACTIONS) if (icon[k] !== undefined) d[`icon_${k}`] = icon[k];
+    for (const k of ACTIONS) if (icon[k] !== undefined) d[`icon_${k}`] = actionToForm(icon[k]);
     const b = icon.badge;
     if (b === false || b === "none") d.icon_badge = "none";
     else if (isObj(b)) {
@@ -627,7 +629,10 @@ export const formToConfig = (
   setOrDrop(c, "show_name", false, data.show_name !== false);
   setOrDrop(c, "show_value", false, data.show_value !== false);
   setOrDrop(c, "hover", false, data.hover !== false);
-  for (const k of ACTIONS) setOrDrop(c, k, data[k], !isObj(data[k]));
+  // (an action left as it was keeps its spelling: a bare name stays one)
+  for (const k of ACTIONS)
+    if (JSON.stringify(data[k]) !== JSON.stringify(actionToForm(p[k])))
+      setOrDrop(c, k, data[k], !isObj(data[k]));
   if (changed("icon_", ["icon"])) put("icon", iconFromForm(data, kind, thing));
   if (changed("visual_")) put("visual", visualFromForm(data, kind, thing));
   if (changed("input_")) put("inputs", inputsFromForm(data, kind, isObj(p.inputs) ? p.inputs : {}));
