@@ -540,3 +540,38 @@ describe("the editor's selects", () => {
     expect(twice).toEqual([]);
   }, 30_000);
 });
+
+describe("the editor of a row in a tile group's table", () => {
+  const ROW = { entity: "sensor.washer_power" };
+  it("has no icon, no secondary and no badges: the status goes with the content", () => {
+    const row = schemaOf("row", ROW);
+    expect(sections(row)).not.toContain("Status and badges");
+    expect(sections(row)).not.toContain("Layout");
+    const ns = names(row);
+    for (const n of [
+      "icon",
+      "icon_thing",
+      "secondary",
+      "badges",
+      "status_badge",
+      "icon_tap_action",
+    ])
+      expect(ns, n).not.toContain(n);
+    expect(sectionOf(row, "Content")).toEqual(expect.arrayContaining(["status", "hide_status"]));
+  });
+
+  it("offers a badge's visuals after the value, none by default", () => {
+    const row = schemaOf("row", ROW);
+    expect(values(row, "visual_thing")).toEqual([DEFAULT, "bar", "sparkline", "trend"]);
+    expect(options(row, "visual_thing")[0].label).toBe("None");
+    expect(names(schemaOf("row", ROW, { visual_thing: "trend" }))).toContain("visual_hours");
+    expect(names(schemaOf("row", ROW, { visual_thing: "bar" }))).not.toContain("visual_hours");
+  });
+
+  it("draws the domain's control by default, at the end, and none beside a visual", () => {
+    const flag = { entity: "input_boolean.night_mode" };
+    expect(options(schemaOf("row", flag), "control_type")[0].label).toBe("Switch");
+    expect(names(schemaOf("row", flag))).not.toContain("control_position");
+    expect(sections(schemaOf("row", flag, { visual_thing: "bar" }))).not.toContain("Controls");
+  });
+});

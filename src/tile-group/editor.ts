@@ -77,6 +77,15 @@ export class TileGroupCardEditor extends CardsEditorBase {
     const name = entity ? this._hass?.states[entity]?.attributes.friendly_name : undefined;
     return typeof name === "string" && name ? name : entity || L(this._hass, "tile");
   }
+  // the layout the tiles' editors read (a table's tiles are edited as rows, no tile in a group
+  // takes `vertical`): a new one builds the selected tile's editor anew
+  get tileGroupLayout(): string {
+    const layout = (this._config as { layout?: unknown } | undefined)?.layout;
+    return typeof layout === "string" ? layout : "list";
+  }
+  _childContext() {
+    return this.tileGroupLayout;
+  }
   _optionsSchema(hass: HomeAssistant | undefined) {
     return tileGroupSchema(hass);
   }

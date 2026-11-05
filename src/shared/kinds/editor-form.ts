@@ -17,7 +17,9 @@ import {
 import type { Kind } from "./types.ts";
 
 type Raw = Record<string, unknown>;
-export type CardThing = "poster" | "tile";
+// the card the form edits: a poster, a tile, or a row of a tile group's table (a tile without its
+// icon, its secondary and its badges, a badge's visual or a control after its value)
+export type CardThing = "poster" | "tile" | "row";
 
 // the select value of a place, a control or the kind the card leaves to its kind (written: nothing)
 export const DEFAULT = "default";
@@ -76,6 +78,8 @@ const ACTIONS = ["tap_action", "hold_action", "double_tap_action"] as const;
 // what the kind draws in each place on this card, by default
 export const defaultIcon = (kind: Kind): IconThing => kind.icon?.type ?? "icon";
 export const defaultVisual = (kind: Kind, thing: CardThing): VisualThing | null => {
+  // (a row draws a visual only where it names one)
+  if (thing === "row") return null;
   const v = placeDefaults(kind, thing).visual;
   return v && v.type ? v.type : null;
 };
@@ -121,11 +125,27 @@ export const DEFAULT_ATTRIBUTE: Record<string, string> = { climate: "hvac_mode",
 // what `auto` draws for the card's entity where the kind brings no controls of its own: an object
 // without a type means it too
 const autoOf = (c: CardConfigBase, kind: Kind, thing: CardThing): readonly ControlKind[] =>
-  typeof c.entity === "string" && !ownControls(kind, thing).length
+  typeof c.entity === "string" && !ownControls(kind, thing, c.entity).length
     ? (DOMAIN_AUTO[c.entity.split(".")[0]] ?? [])
     : [];
-export const ownControls = (kind: Kind, thing: CardThing) =>
-  (kind.controls ?? []).filter((c) => thing === "poster" || c.position === "end");
+// (a row has no icon: what a tile controls with it, a switch, a lock, a select, is the domain's
+// control at the row's end)
+export const ownControls = (kind: Kind, thing: CardThing, entity?: unknown) => {
+  const own = (kind.controls ?? []).filter((c) => thing === "poster" || c.position === "end");
+  if (thing !== "row" || own.length || typeof entity !== "string") return own;
+  return (DOMAIN_AUTO[entity.split(".")[0]] ?? []).map((k) => ({
+    kind: k,
+    position: "end" as const,
+  }));
+};
+// what a visual thing takes on this card (a row's are a badge's)
+const ROW_VISUAL_OPTIONS: Record<string, readonly string[]> = {
+  bar: [],
+  sparkline: ["hours"],
+  trend: ["hours"],
+};
+export const visualOptionsOf = (thing: CardThing): Record<string, readonly string[]> =>
+  thing === "row" ? ROW_VISUAL_OPTIONS : VISUAL_OPTIONS;
 
 const filled = (v: unknown) => v !== undefined && v !== null && v !== "";
 // a select set to something other than its default
@@ -275,7 +295,7 @@ export const sameAsOwn = (type: string, kind: Kind, thing: CardThing) => {
 // where the controls drawn sit unless told: the kind's first own control's place, else under the
 // value for a slider and beside it for the rest
 export const defaultPosition = (type: string, entity: unknown, kind: Kind, thing: CardThing) => {
-  const first = type === DEFAULT ? ownControls(kind, thing)[0]?.position : undefined;
+  const first = type === DEFAULT ? ownControls(kind, thing, entity)[0]?.position : undefined;
   return first ?? (drawnControls(type, entity, kind, thing)[0] === "slider" ? "block" : "end");
 };
 
@@ -434,7 +454,7 @@ const visualFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknown
     data.visual_thing === DEFAULT ? byDefault : data.visual_thing
   ) as VisualThing | null;
   if (!visualThing) return undefined;
-  const takes = VISUAL_OPTIONS[visualThing] ?? [];
+  const takes = visualOptionsOf(thing)[visualThing] ?? [];
   const o: Raw = {};
   if (takes.includes("hours") && data.visual_today === true) o.hours = "today";
   else if (takes.includes("hours") && num(data.visual_hours) !== undefined)
@@ -473,7 +493,7 @@ export const drawnControls = (
   thing: CardThing,
 ): readonly string[] =>
   type === DEFAULT
-    ? ownControls(kind, thing).map((c) => c.kind)
+    ? ownControls(kind, thing, entity).map((c) => c.kind)
     : type === "auto"
       ? autoOf({ entity } as CardConfigBase, kind, thing)
       : type === "none"
@@ -534,7 +554,7 @@ export const fitEntity = (
     delete c.control;
   const places = {
     icon: [defaultIcon(kind), ICON_OPTIONS],
-    visual: [defaultVisual(kind, thing), VISUAL_OPTIONS],
+    visual: [defaultVisual(kind, thing), visualOptionsOf(thing)],
   } as const;
   for (const [place, [byDefault, options]] of Object.entries(places)) {
     const p = c[place];
@@ -599,6 +619,9 @@ export const formToConfig = (
     put("series", series.length ? series : undefined);
   }
   if (changed("control_")) put("control", controlFromForm(data, kind, thing));
+  // a row draws a control or a visual: one chosen leaves the control out
+  if (thing === "row" && chosen(data.visual_thing) && data.visual_thing !== "none")
+    delete c.control;
   if (data.hide_status === true) c.status = false;
   else setOrDrop(c, "status", data.status, !filled(data.status));
   if (thing === "tile") setOrDrop(c, "status_badge", true, data.status_badge !== true);

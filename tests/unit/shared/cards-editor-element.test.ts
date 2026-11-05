@@ -481,4 +481,24 @@ describe("the tile group's editor", () => {
     await tick();
     expect(e.last()).toEqual({ type: GROUP, tiles: ["light.kitchen"] });
   });
+
+  it("edits a table's tiles as rows, and no tile's vertical: the group's layout decides", async () => {
+    // the tile's own editor, as the card element editor shows it, and its form's fields
+    const tileEditor = (e: Awaited<ReturnType<typeof editor>>) =>
+      e.child().shadowRoot!.querySelector("tile-card-pro-editor") as unknown as {
+        _thing: string;
+        _ctx: { grouped?: boolean };
+      };
+    const e = await editor(GROUP, { layout: "table", tiles: ["light.kitchen"] });
+    await tick();
+    expect(tileEditor(e)._thing).toBe("row");
+    // another layout: the tile's editor built anew, a tile again, still in a group
+    const form = e.root.querySelector<HTMLElement>(".options ha-form")!;
+    form.dispatchEvent(new CustomEvent("value-changed", { detail: { value: { layout: "row" } } }));
+    e.ed.setConfig(e.last());
+    await tick();
+    await tick();
+    expect(tileEditor(e)._thing).toBe("tile");
+    expect(tileEditor(e)._ctx.grouped).toBe(true);
+  });
 });

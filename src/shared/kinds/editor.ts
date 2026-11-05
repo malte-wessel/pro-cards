@@ -68,8 +68,25 @@ export abstract class KindCardEditor extends FormEditorBase {
   // what the schema was last built from (the helpers read it)
   _ctx?: SchemaCtx;
 
+  // a tile in a tile group's table is edited as a row
   get _thing(): CardThing {
-    return (this.constructor as typeof KindCardEditor).thing;
+    const thing = (this.constructor as typeof KindCardEditor).thing;
+    return thing === "tile" && this._group() === "table" ? "row" : thing;
+  }
+  // the layout of the tile group whose tile this edits (null: a card of its own): the group's
+  // editor, an element above this one across the editors' shadow roots, says it
+  _group(): string | null {
+    let n: Node | null = this.parentNode;
+    while (n) {
+      if ("tileGroupLayout" in n)
+        return String((n as { tileGroupLayout: unknown }).tileGroupLayout);
+      n = n.parentNode ?? (n instanceof ShadowRoot ? n.host : null);
+    }
+    return null;
+  }
+  // put in its place only now: the form again where that is in a group
+  connectedCallback() {
+    this._render();
   }
 
   _toForm(config: CardConfigBase): HaFormData {
@@ -115,6 +132,7 @@ export abstract class KindCardEditor extends FormEditorBase {
     this._ctx = {
       hass,
       thing: this._thing,
+      grouped: this._group() !== null,
       kind,
       detected,
       data,
@@ -130,7 +148,12 @@ export abstract class KindCardEditor extends FormEditorBase {
     const c = (this._config ?? {}) as Raw;
     const entity = typeof c.entity === "string" ? c.entity : "";
     const { kind, detected } = kindsOf(c, hass);
-    return [detected.name, shownIsNum(c, kind, hass.states[entity]), this._found(kind, hass)];
+    return [
+      detected.name,
+      shownIsNum(c, kind, hass.states[entity]),
+      this._found(kind, hass),
+      this._group(),
+    ];
   }
 
   // the inputs the kind would find on the device, whatever the card sets (looked for again only

@@ -136,6 +136,12 @@ export abstract class CardsEditorBase extends HTMLElement {
   _newCard(): CardConfigBase | null {
     return null;
   }
+  // what the selected card's editor reads of this card (a tile group's layout): another builds it
+  // anew
+  _childContext(): string {
+    return "";
+  }
+  _childCtx?: string;
   // a card's name for its tab
   _cardName(card: CardConfigBase): string {
     return cardName(card);
@@ -338,8 +344,9 @@ export abstract class CardsEditorBase extends HTMLElement {
 
     // the selected card's editor, or the picker
     const host = root.querySelector(".child")!;
-    if (this._childFor !== i || !this._child) {
+    if (this._childFor !== i || !this._child || this._childCtx !== this._childContext()) {
       this._childFor = i;
+      this._childCtx = this._childContext();
       this._child = card ? this._cardEditor(i) : this._newCard() ? this._none() : this._picker();
       host.replaceChildren(this._child);
     }

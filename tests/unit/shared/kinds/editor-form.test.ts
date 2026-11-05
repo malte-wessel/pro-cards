@@ -848,3 +848,29 @@ describe("the editor form: an empty text", () => {
     expect(edit(card, { unit: "lx" })).toEqual({ ...LIGHT, unit: "lx" });
   });
 });
+
+describe("the editor form: a row of a tile group's table", () => {
+  const ROW = { entity: "sensor.washer_power" };
+  it("writes a badge's visual after the value, with its window", () => {
+    expect(edit(ROW, { visual_thing: "trend", visual_hours: 2 }, "row")).toEqual({
+      ...ROW,
+      visual: { type: "trend", hours: 2 },
+    });
+    expect(edit(ROW, { visual_thing: "sparkline" }, "row")).toEqual({
+      ...ROW,
+      visual: "sparkline",
+    });
+    // as written, and back to none
+    const spark = { ...ROW, visual: { type: "sparkline", hours: 6 } };
+    expect(formOf(spark, "row")).toMatchObject({ visual_thing: "sparkline", visual_hours: 6 });
+    expect(edit(spark, { visual_thing: "none" }, "row")).toEqual(ROW);
+  });
+
+  it("leaves the control out where it draws a visual", () => {
+    const lamp = { entity: "light.desk_lamp", control: "slider" };
+    expect(edit(lamp, { visual_thing: "bar" }, "row")).toEqual({
+      entity: "light.desk_lamp",
+      visual: "bar",
+    });
+  });
+});

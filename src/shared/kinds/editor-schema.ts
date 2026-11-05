@@ -34,14 +34,9 @@ import {
   ownControls,
   withDefaults,
   type CardThing,
+  visualOptionsOf,
 } from "./editor-form.ts";
-import {
-  COVER_VARIANTS,
-  KIND_THINGS,
-  VISUAL_OPTIONS,
-  type IconThing,
-  type VisualThing,
-} from "./places.ts";
+import { COVER_VARIANTS, KIND_THINGS, type IconThing, type VisualThing } from "./places.ts";
 import { IMAGE_OPACITY } from "./backdrop.ts";
 import { canRead } from "./detect.ts";
 import { KINDS } from "./registry.ts";
@@ -58,6 +53,8 @@ export interface SchemaCtx {
   // the entity's state is a number (its unit and decimals apply)
   numeric: boolean;
   st: HassEntity | undefined;
+  // a tile in a tile group: the group's layout decides its `vertical`
+  grouped?: boolean;
 }
 
 // the sections' icons (Material Design Icons, as Home Assistant's own editors use)
@@ -120,7 +117,7 @@ export const kindLabel = (hass: HomeAssistant | undefined, name: string) => L(ha
 const controlsOf = (x: SchemaCtx, data: HaFormData) => {
   const entity = typeof data.entity === "string" && data.entity ? data.entity : null;
   const domain = entity ? domainOf(entity) : null;
-  const own = ownControls(x.kind, x.thing);
+  const own = ownControls(x.kind, x.thing, entity);
   const auto = domain && !own.length ? (DOMAIN_AUTO[domain] ?? []) : [];
   const domainControls = domain ? (DOMAIN_CONTROLS[domain] ?? []) : [];
   const type = data.control_type as string;
@@ -253,7 +250,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
     grid(
       text("name"),
       // the entity's own icon in its place while none is written
-      ...(iconThing === "icon" || iconThing === "image"
+      ...((iconThing === "icon" || iconThing === "image") && thing !== "row"
         ? [{ name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } }]
         : []),
     ),
@@ -272,7 +269,10 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
           },
         ]
       : []),
-    grid(text("value"), { name: "secondary", selector: { text: {} } }),
+    // (a row has no secondary)
+    thing === "row"
+      ? text("value")
+      : grid(text("value"), { name: "secondary", selector: { text: {} } }),
     ...(x.numeric
       ? [
           grid(text("unit"), {
@@ -360,14 +360,18 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
     "path",
     "line",
   ];
+  // (a row draws a badge's: after its value)
   const visualThings = [
     opt(DEFAULT, byDefault ? tr(`visual_thing.${byDefault}`) : tr("none")),
-    ...VISUAL_ORDER.filter((th) => th !== byDefault && fits(th)).map((th) =>
-      opt(th, tr(`visual_thing.${th}`)),
-    ),
+    ...(thing === "row"
+      ? BADGE_VISUALS.map((th) => opt(th, L(hass, `badge_visual.${th}`)))
+      : VISUAL_ORDER.filter((th) => th !== byDefault && fits(th)).map((th) =>
+          opt(th, tr(`visual_thing.${th}`)),
+        )),
     ...(byDefault ? [opt("none", tr("none"))] : []),
   ];
-  const takes = visualThing && visualThing !== "none" ? VISUAL_OPTIONS[visualThing] : [];
+  const takes =
+    visualThing && visualThing !== "none" ? (visualOptionsOf(thing)[visualThing] ?? []) : [];
   const visualOptions: HaFormSchema[] = [
     ...(takes.includes("hours")
       ? [
@@ -435,9 +439,9 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
         ]
       : []),
   ];
+  // (a row has no icon)
   const look: HaFormSchema[] = [
-    pick("icon_thing", iconThings),
-    ...iconOptions,
+    ...(thing === "row" ? [] : [pick("icon_thing", iconThings), ...iconOptions]),
     pick("visual_thing", visualThings),
     ...visualOptions,
   ];
@@ -498,12 +502,17 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   const byPlace = defaultPosition(type, entity, kind, thing);
   const controlOptions: HaFormSchema[] = drawn.length
     ? [
-        pick("control_position", [
-          opt(DEFAULT, tr(`position.${byPlace}_${thing}`)),
-          ...(["end", "block"] as const)
-            .filter((p) => p !== byPlace)
-            .map((p) => opt(p, tr(`position.${p}_${thing}`))),
-        ]),
+        // (a row draws them all at its end)
+        ...(thing === "row"
+          ? []
+          : [
+              pick("control_position", [
+                opt(DEFAULT, tr(`position.${byPlace}_${thing}`)),
+                ...(["end", "block"] as const)
+                  .filter((p) => p !== byPlace)
+                  .map((p) => opt(p, tr(`position.${p}_${thing}`))),
+              ]),
+            ]),
         ...(drawn.some((c) => c === "slider" || c === "stepper")
           ? [{ name: "control_step", selector: { number: { min: 0, step: 0.1, mode: "box" } } }]
           : []),
@@ -551,14 +560,17 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
           : []),
       ]
     : [];
-  const hasControls = own.length > 0 || domainControls.length > 0 || type !== DEFAULT;
+  const hasControls =
+    (own.length > 0 || domainControls.length > 0 || type !== DEFAULT) &&
+    !(thing === "row" && visualThing && visualThing !== "none");
 
   // ----- the status and the badges -----
+  const status = grid(
+    ...(data.hide_status === true ? [] : [{ name: "status", selector: { text: {} } }]),
+    { name: "hide_status", selector: { boolean: {} } },
+  );
   const badges: HaFormSchema[] = [
-    grid(...(data.hide_status === true ? [] : [{ name: "status", selector: { text: {} } }]), {
-      name: "hide_status",
-      selector: { boolean: {} },
-    }),
+    status,
     ...(thing === "tile"
       ? [
           { name: "status_badge", selector: { boolean: {} } },
@@ -648,7 +660,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
     action("tap_action", entity ? "more-info" : "none"),
     action("hold_action", entity ? "more-info" : "none"),
     action("double_tap_action", "none"),
-    ...(iconThing === "none"
+    ...(iconThing === "none" || thing === "row"
       ? []
       : [
           action("icon_tap_action", iconTap),
@@ -659,8 +671,9 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
 
   return [
     ...top,
-    section(tr("section.content"), ICONS.content, content),
-    section(tr("section.look"), ICONS.look, look),
+    section(tr("section.content"), ICONS.content, thing === "row" ? [...content, status] : content),
+    // (a row's is its visual alone)
+    section(tr(thing === "row" ? "field.visual_thing" : "section.look"), ICONS.look, look),
     ...(inputs.length ? [section(tr("section.inputs"), ICONS.inputs, inputs)] : []),
     ...(hasControls
       ? [
@@ -670,10 +683,11 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
           ]),
         ]
       : []),
-    section(tr(`section.badges_${thing}`), ICONS.badges, badges),
+    ...(thing === "row" ? [] : [section(tr(`section.badges_${thing}`), ICONS.badges, badges)]),
     section(tr("section.rules"), ICONS.rules, rules),
     section(tr("section.actions"), ICONS.actions, actions),
-    ...(thing === "tile"
+    // (in a tile group its layout decides it)
+    ...(thing === "tile" && !x.grouped
       ? [
           section(tr("section.layout"), ICONS.layout, [
             { name: "vertical", selector: { boolean: {} } },
