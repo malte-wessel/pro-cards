@@ -553,3 +553,66 @@ describe("the editor's sections", () => {
     expect(schema.find((s) => s.title === "Status and badges")?.expanded).toBeFalsy();
   });
 });
+
+describe("the lists in views of their own", () => {
+  // the editor with an item's view open (`from`: the form the list is in), and its edits
+  const openItem = (e: ReturnType<typeof open>, key: string, index: number, from: Form) =>
+    from.dispatchEvent(
+      new CustomEvent("pro-cards-edit-item", {
+        detail: { key, index },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  const viewOf = (e: ReturnType<typeof open>) => e.ed.querySelectorAll("ha-form")[1] as Form;
+  const edit = (e: ReturnType<typeof open>, fields: HaFormData) =>
+    viewOf(e).dispatchEvent(
+      new CustomEvent("value-changed", { detail: { value: { ...viewOf(e).data, ...fields } } }),
+    );
+  const last = (e: ReturnType<typeof open>) => e.sent.at(-1) as Record<string, unknown>;
+
+  it("edit a trend's line, its rules and its conditions on top of it", () => {
+    const e = open("poster", { kind: "trend", series: ["sensor.outdoor_temperature"] });
+    openItem(e, "series", 0, e.form());
+    edit(e, { name: "Outside" });
+    expect(last(e).series).toEqual([{ entity: "sensor.outdoor_temperature", name: "Outside" }]);
+    // a rule on top of the line: its colour above a value
+    openItem(e, "rules", 0, viewOf(e));
+    expect(flat(viewOf(e).schema).map((s) => s.name)).toEqual(
+      expect.arrayContaining(["above", "below", "color"]),
+    );
+    expect(flat(viewOf(e).schema).map((s) => s.name)).not.toContain("status");
+    edit(e, { above: 25, color: "red" });
+    expect(last(e).series).toEqual([
+      {
+        entity: "sensor.outdoor_temperature",
+        name: "Outside",
+        rules: [{ above: 25, color: "red" }],
+      },
+    ]);
+    // back to the line, then a condition on top of it
+    (e.ed.querySelector("button.back") as HTMLButtonElement).click();
+    openItem(e, "visibility", 0, viewOf(e));
+    edit(e, { condition: "screen", media_query: "(min-width: 1280px)" });
+    expect((last(e).series as Record<string, unknown>[])[0].visibility).toEqual([
+      { condition: "screen", media_query: "(min-width: 1280px)" },
+    ]);
+  });
+
+  it("edit a control's options and buttons", () => {
+    const e = open("tile", {
+      entity: "input_select.house_mode",
+      control: { type: "segments", options: ["home", "away"] },
+    });
+    openItem(e, "control_options", 1, e.form());
+    edit(e, { label: "Away", icon: "mdi:car" });
+    expect(last(e).control).toEqual({
+      type: "segments",
+      options: ["home", { value: "away", label: "Away", icon: "mdi:car" }],
+    });
+    const b = open("tile", { entity: "light.kitchen", control: "buttons" });
+    openItem(b, "control_buttons", 0, b.form());
+    edit(b, { label: "Movie" });
+    expect(last(b).control).toEqual({ type: "buttons", options: [{ label: "Movie" }] });
+  });
+});

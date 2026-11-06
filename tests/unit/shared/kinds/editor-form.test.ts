@@ -7,8 +7,12 @@ import {
   DETECTED,
   badgeFromForm,
   badgeToForm,
+  conditionFromForm,
+  conditionToForm,
   configToForm,
   formToConfig,
+  seriesFromForm,
+  seriesToForm,
   withDefaults,
   type CardThing,
 } from "../../../../src/shared/kinds/editor-form.ts";
@@ -950,5 +954,71 @@ describe("the editor form: a tile's vertical alignment", () => {
       ...written,
       name: "Living room",
     });
+  });
+});
+
+describe("the editor form: a trend's lines", () => {
+  const TREND = { kind: "trend" };
+  it("are a list, each with its rules and conditions, written back as short as before", () => {
+    const series = [
+      "sensor.outdoor_temperature",
+      {
+        entity: "sensor.bedroom_temperature",
+        color: "blue",
+        rules: [{ above: 25, color: "red" }],
+        visibility: { condition: "screen", media_query: "(min-width: 1280px)" },
+      },
+    ];
+    const items = seriesToForm(series);
+    expect(items[0]).toEqual({ entity: "sensor.outdoor_temperature", rules: [], visibility: [] });
+    expect(items[1].rules).toEqual([{ above: 25, color: "red" }]);
+    // one condition as written is a list of one
+    expect(items[1].visibility).toEqual([
+      { condition: "screen", media_query: "(min-width: 1280px)" },
+    ]);
+    expect(seriesFromForm(items)).toEqual([
+      "sensor.outdoor_temperature",
+      { ...(series[1] as Raw), visibility: [(series[1] as Raw).visibility] },
+    ]);
+    // a line left as it was keeps its spelling; one changed is written from its fields
+    expect(edit({ ...TREND, series }, {}).series).toBe(series);
+    const named = [{ ...items[0], name: "Outside" }, items[1]];
+    expect((edit({ ...TREND, series }, { series: named }).series as unknown[])[0]).toEqual({
+      entity: "sensor.outdoor_temperature",
+      name: "Outside",
+    });
+  });
+});
+
+describe("the editor form: a condition", () => {
+  it("has the fields of its type, the rest as its YAML", () => {
+    expect(conditionToForm({ condition: "state", entity: "light.kitchen", state: "on" })).toEqual({
+      condition: "state",
+      entity: "light.kitchen",
+      state: "on",
+    });
+    // a list of states, and another type's keys, stay as written
+    const states = conditionToForm({ condition: "state", state: ["on", "off"] });
+    expect(states.more).toEqual({ state: ["on", "off"] });
+    const and = { condition: "and", conditions: [{ condition: "user", users: ["x"] }] };
+    expect(conditionFromForm(conditionToForm(and))).toEqual(and);
+    // a time's weekdays as picked, and nothing for a field left empty
+    expect(
+      conditionFromForm({ condition: "time", after: "08:00", before: "", weekdays: ["mon"] }),
+    ).toEqual({ condition: "time", after: "08:00", weekdays: ["mon"] });
+  });
+});
+
+describe("the editor form: the height", () => {
+  it("writes only a card that keeps its own height", () => {
+    expect(edit({ entity: "light.kitchen" }, { fill_height: false })).toMatchObject({
+      fill_height: false,
+    });
+    expect(edit({ entity: "light.kitchen", fill_height: false }, { fill_height: true })).toEqual({
+      entity: "light.kitchen",
+    });
+    expect(
+      configToForm({ type: "x" } as CardConfigBase, kindsOf({}, hass).kind, "tile"),
+    ).toMatchObject({ fill_height: true });
   });
 });

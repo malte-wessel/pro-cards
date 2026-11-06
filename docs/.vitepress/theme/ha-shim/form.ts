@@ -81,6 +81,8 @@ const STYLE = `
   .field input, .field select, .field textarea { box-sizing: border-box; width: 100%; border: 0; outline: 0; background: transparent;
     color: inherit; font: inherit; font-size: 14px; padding: 22px 12px 8px; min-height: 52px; }
   .field select { appearance: none; padding-right: 32px; cursor: pointer; }
+  .checks { display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 8px 12px; }
+  .checks label { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; }
   .field select option { color: var(--primary-text-color); background: var(--card-background-color); }
   .field.select::after { content: ""; position: absolute; right: 14px; top: 26px; border: 5px solid transparent;
     border-top-color: var(--secondary-text-color); pointer-events: none; }
@@ -481,6 +483,31 @@ export class HaFormShim extends HTMLElement {
       }
       case "select": {
         const options = optionsOf(conf);
+        // several at once: a checkbox each, as Home Assistant's list of a few options
+        if (conf.multiple) {
+          const row = document.createElement("div");
+          row.className = "checks";
+          const boxes = options.map((o) => {
+            const l = document.createElement("label");
+            const box = document.createElement("input");
+            box.type = "checkbox";
+            box.value = o.value;
+            box.addEventListener("change", () => {
+              const on = boxes.filter((b) => b.checked).map((b) => b.value);
+              this._emit(name, on.length ? on : undefined);
+            });
+            l.append(box, document.createTextNode(o.label));
+            row.append(l);
+            return box;
+          });
+          return {
+            el: this._box(s, row),
+            set: (v) => {
+              const on = Array.isArray(v) ? v.map(String) : [];
+              for (const b of boxes) b.checked = on.includes(b.value);
+            },
+          };
+        }
         const select = this._select(s, options, s.required ? null : "", (v) =>
           this._emit(name, v || undefined),
         );

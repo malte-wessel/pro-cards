@@ -317,6 +317,82 @@ export const badgeFromForm = (item: Raw): unknown => {
   const ks = Object.keys(o);
   return ks.length === 1 && ks[0] === "entity" ? o.entity : o;
 };
+// ----- visibility: a list of conditions, each in its form -----
+// the fields a condition's form has, by its type; the rest of it (another type's: user, location,
+// and / or / not; a list of states) is its YAML
+export const CONDITION_FIELDS: Record<string, readonly string[]> = {
+  state: ["entity", "attribute", "state", "state_not"],
+  numeric_state: ["entity", "attribute", "above", "below"],
+  screen: ["media_query"],
+  time: ["after", "before", "weekdays"],
+  template: ["value_template"],
+};
+// a condition as written → its form: its type, the fields of that type it says as one value
+export const conditionToForm = (x: unknown): Raw => {
+  const o: Raw = isObj(x) ? { ...x } : {};
+  const type = typeof o.condition === "string" ? o.condition : "state";
+  const fields = CONDITION_FIELDS[type] ?? [];
+  const item: Raw = { condition: type };
+  const more: Raw = {};
+  for (const [k, v] of Object.entries(o)) {
+    if (k === "condition") continue;
+    const plain =
+      typeof v === "string" ||
+      typeof v === "number" ||
+      (k === "weekdays" && Array.isArray(v) && v.every((d) => typeof d === "string"));
+    (fields.includes(k) && plain ? item : more)[k] = v;
+  }
+  if (Object.keys(more).length) item.more = more;
+  return item;
+};
+export const conditionFromForm = (item: Raw): Raw => {
+  const { condition, more, ...rest } = item;
+  const o: Raw = { condition: typeof condition === "string" ? condition : "state" };
+  for (const k of CONDITION_FIELDS[o.condition as string] ?? [])
+    if (filled(rest[k]) && !(Array.isArray(rest[k]) && !(rest[k] as unknown[]).length))
+      o[k] = rest[k];
+  if (isObj(more)) for (const [k, v] of Object.entries(more)) if (!(k in o)) o[k] = v;
+  return o;
+};
+// a visibility as written (one condition or a list) → its conditions' forms, and back as a list
+export const conditionsToForm = (v: unknown): Raw[] =>
+  (v === undefined || v === null ? [] : Array.isArray(v) ? v : [v]).map(conditionToForm);
+export const conditionsFromForm = (v: unknown): Raw[] =>
+  Array.isArray(v) ? (v as Raw[]).map(conditionFromForm) : [];
+// a condition that says nothing beyond its type
+export const conditionIsEmpty = (item: Raw): boolean => {
+  const o = conditionFromForm(item);
+  return Object.keys(o).length === 1;
+};
+
+// ----- a trend's lines: each in its form, its rules (when, its colour) and its visibility as
+// lists of their own -----
+export const LINE_RULE_KEYS = ["state", "above", "below", "color"] as const;
+export const seriesToForm = (v: unknown): Raw[] =>
+  Array.isArray(v)
+    ? v.map((x) => {
+        const o: Raw = typeof x === "string" ? { entity: x } : isObj(x) ? { ...x } : {};
+        const { rules, visibility, ...rest } = o;
+        const item = itemToForm(rest, SERIES_KEYS);
+        item.rules = listToForm(rules, LINE_RULE_KEYS);
+        item.visibility = conditionsToForm(visibility);
+        return item;
+      })
+    : [];
+export const seriesFromForm = (v: unknown): unknown[] =>
+  Array.isArray(v)
+    ? (v as Raw[]).map((item) => {
+        const { rules, visibility, ...rest } = item;
+        const line = itemFromForm(rest, SERIES_KEYS, null) as Raw;
+        const r = listFromForm(rules, LINE_RULE_KEYS, null);
+        if (r.length) line.rules = r;
+        const shown = conditionsFromForm(visibility);
+        if (shown.length) line.visibility = shown;
+        const ks = Object.keys(line);
+        return ks.length === 1 && ks[0] === "entity" ? line.entity : line;
+      })
+    : [];
+
 // the same value, whatever order its keys come in
 const sameValue = (a: unknown, b: unknown): boolean => {
   if (isObj(a) && isObj(b)) {
@@ -394,6 +470,7 @@ export const configToForm = (
     show_name: c.show_name !== false,
     show_value: c.show_value !== false,
     hover: c.hover !== false,
+    fill_height: c.fill_height !== false,
   };
   for (const k of TEXTS) d[k] = c[k] ?? "";
   for (const k of ACTIONS) if (c[k] !== undefined) d[k] = actionToForm(c[k]);
@@ -450,7 +527,7 @@ export const configToForm = (
   for (const def of kind.inputs ?? [])
     d[`input_${def.key}`] = typeof inputs[def.key] === "string" ? inputs[def.key] : "";
   d.running_above = num(c.running_above);
-  d.series = listToForm(c.series, SERIES_KEYS);
+  d.series = seriesToForm(c.series);
 
   // the control: its thing (the kind's, none, auto or a control) and its options
   const ctl = c.control;
@@ -687,6 +764,7 @@ export const formToConfig = (
   setOrDrop(c, "show_name", false, data.show_name !== false);
   setOrDrop(c, "show_value", false, data.show_value !== false);
   setOrDrop(c, "hover", false, data.hover !== false);
+  setOrDrop(c, "fill_height", false, data.fill_height !== false);
   // (an action left as it was keeps its spelling: a bare name stays one)
   for (const k of ACTIONS)
     if (JSON.stringify(data[k]) !== JSON.stringify(actionToForm(p[k])))
@@ -695,7 +773,7 @@ export const formToConfig = (
   if (changed("visual_")) put("visual", visualFromForm(data, kind, thing));
   if (changed("input_")) put("inputs", inputsFromForm(data, kind, isObj(p.inputs) ? p.inputs : {}));
   if (changed("series")) {
-    const series = listFromForm(data.series, SERIES_KEYS, "entity");
+    const series = seriesFromForm(data.series);
     put("series", series.length ? series : undefined);
   }
   if (changed("control_")) put("control", controlFromForm(data, kind, thing));

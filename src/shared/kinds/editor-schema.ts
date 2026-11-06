@@ -17,7 +17,6 @@ import {
   BADGE_KEYS,
   BADGE_RULE_KEYS,
   BADGE_KINDS,
-  BUTTON_KEYS,
   DEFAULT,
   DETECTED,
   DEFAULT_ATTRIBUTE,
@@ -26,9 +25,7 @@ import {
   visualVariant,
   DOMAIN_CONTROLS,
   DOMAIN_AUTO,
-  OPTION_KEYS,
   RULE_KEYS,
-  SERIES_KEYS,
   defaultIcon,
   defaultVisual,
   drawnControls,
@@ -42,6 +39,8 @@ import { IMAGE_OPACITY } from "./backdrop.ts";
 import { canRead, detectKind } from "./detect.ts";
 import { KINDS } from "./registry.ts";
 import type { InputFilter, Kind } from "./types.ts";
+import { SCREENS } from "./item-lists.ts";
+import { WEEKDAYS } from "../visibility.ts";
 
 // what the schema is built from: the card, its kind now (written, else detected) and the
 // detected one, the entity's state
@@ -81,6 +80,8 @@ export const ICONS = {
     "M10,9A1,1 0 0,1 11,8A1,1 0 0,1 12,9V13.47L13.21,13.6L18.15,15.79C18.68,16.03 19,16.56 19,17.14V21.5C18.97,22.32 18.32,22.97 17.5,23H11C10.62,23 10.26,22.85 10,22.57L5.1,18.37L5.84,17.6C6.03,17.39 6.3,17.28 6.58,17.28H6.8L10,19V9M11,5A4,4 0 0,1 15,9C15,10.5 14.2,11.77 13,12.46V11.24C13.61,10.69 14,9.89 14,9A3,3 0 0,0 11,6A3,3 0 0,0 8,9C8,9.89 8.39,10.69 9,11.24V12.46C7.8,11.77 7,10.5 7,9A4,4 0 0,1 11,5Z",
   layout:
     "M19,5V7H15V5H19M9,5V11H5V5H9M19,13V19H15V13H19M9,17V19H5V17H9M21,3H13V9H21V3M11,3H3V13H11V3M21,11H13V21H21V11M11,15H3V21H11V15Z",
+  visibility:
+    "M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z",
 };
 
 // the modes segments and a select set on a climate or a fan
@@ -346,7 +347,7 @@ export const badgeItemSchema = (
 export const ruleItemSchema = (
   hass: HomeAssistant | undefined,
   item: Record<string, unknown>,
-  ctx: { entity: string; unit: string; numeric: boolean; badge?: boolean },
+  ctx: { entity: string; unit: string; numeric: boolean; badge?: boolean; line?: boolean },
 ): HaFormSchema[] => {
   const f = fieldsOf(hass, ctx.badge ? BADGE_RULE_KEYS : RULE_KEYS, "rule", {
     ...(ctx.entity ? { state: { state: { entity_id: ctx.entity } } } : {}),
@@ -361,13 +362,18 @@ export const ruleItemSchema = (
   const has = (k: string) => item[k] !== undefined && item[k] !== null && item[k] !== "";
   const sub = (title: string, icon: string, expanded: boolean, schema: HaFormSchema[]) =>
     ({ ...section(title, icon, schema), expanded }) as HaFormSchema;
+  const when = sub(L(hass, "section.rule_when"), ICONS.rules, true, [
+    ...(ctx.numeric || has("above") || has("below") ? [grid(field("above"), field("below"))] : []),
+    ...(!ctx.numeric || has("state") ? [field("state")] : []),
+  ]);
+  const advanced = sub(L(hass, "section.advanced"), ICONS.code, false, [
+    { name: "more", selector: { object: {} } },
+  ]);
+  // a trend line's: its colour while it matches
+  if (ctx.line)
+    return [when, sub(L(hass, "section.rule_then"), ICONS.look, true, [field("color")]), advanced];
   return [
-    sub(L(hass, "section.rule_when"), ICONS.rules, true, [
-      ...(ctx.numeric || has("above") || has("below")
-        ? [grid(field("above"), field("below"))]
-        : []),
-      ...(!ctx.numeric || has("state") ? [field("state")] : []),
-    ]),
+    when,
     sub(L(hass, "section.rule_then"), ICONS.look, true, [
       field(ctx.badge ? "value" : "status"),
       grid(field("color"), field("icon")),
@@ -380,9 +386,158 @@ export const ruleItemSchema = (
         ? [field("style"), field("pulse")]
         : [field("style"), field("tint_card"), field("pulse")],
     ),
-    sub(L(hass, "section.advanced"), ICONS.code, false, [
+    advanced,
+  ];
+};
+
+// ----- the other lists' items, each in a view of its own -----
+const advancedOf = (hass: HomeAssistant | undefined) =>
+  ({
+    ...section(L(hass, "section.advanced"), ICONS.code, [
       { name: "more", selector: { object: {} } },
     ]),
+    expanded: false,
+  }) as HaFormSchema;
+const field = (name: string, selector: Record<string, unknown>): HaFormSchema => ({
+  name,
+  selector,
+});
+// a trend's line: its entity (a number), name and colour; its rules (its colour by its value) and
+// when it shows, lists of their own
+export const seriesItemSchema = (
+  hass: HomeAssistant | undefined,
+  item: Record<string, unknown>,
+): HaFormSchema[] => {
+  const entity = typeof item.entity === "string" ? item.entity : "";
+  const unit = entity ? hass?.states[entity]?.attributes.unit_of_measurement : undefined;
+  return [
+    field("entity", { entity: entitiesFor(hass, "trend", entity) }),
+    grid(field("name", { text: {} }), field("color", { ui_color: {} })),
+    {
+      ...section(L(hass, "section.rules"), ICONS.rules, [
+        field("rules", {
+          pro_cards_rules: {
+            entity,
+            unit: typeof unit === "string" ? unit : "",
+            hide_label: true,
+          },
+        }),
+      ]),
+      expanded: false,
+    } as HaFormSchema,
+    {
+      ...section(L(hass, "section.visibility"), ICONS.visibility, [
+        field("visibility", {
+          pro_cards_list: { key: "visibility", of: "condition", entity, hide_label: true },
+        }),
+      ]),
+      expanded: false,
+    } as HaFormSchema,
+    advancedOf(hass),
+  ];
+};
+// a segments' or a select's option: its value, its label and icon
+export const optionItemSchema = (hass: HomeAssistant | undefined): HaFormSchema[] => [
+  grid(field("value", { text: {} }), field("label", { text: {} })),
+  field("icon", { icon: {} }),
+  advancedOf(hass),
+];
+// one of your own buttons: what it shows (an entity, a label, an icon, a colour) and what it does
+export const buttonItemSchema = (hass: HomeAssistant | undefined): HaFormSchema[] => [
+  field("entity", { entity: {} }),
+  grid(field("label", { text: {} }), field("icon", { icon: {} })),
+  field("color", { ui_color: {} }),
+  field("action", { ui_action: {} }),
+  advancedOf(hass),
+];
+// a visibility condition: its type, then its fields (whose entity, empty: the item's own `host`);
+// another type's (user, location, and / or / not) in its YAML
+const CONDITIONS = [
+  "state",
+  "numeric_state",
+  "screen",
+  "time",
+  "template",
+  "user",
+  "location",
+  "and",
+  "or",
+  "not",
+] as const;
+export const conditionItemSchema = (
+  hass: HomeAssistant | undefined,
+  item: Record<string, unknown>,
+  host: string,
+): HaFormSchema[] => {
+  const type = typeof item.condition === "string" ? item.condition : "state";
+  const own = typeof item.entity === "string" ? item.entity : "";
+  const reads = own || host;
+  const entity = (): HaFormSchema[] => [
+    { name: "entity", selector: { entity: {} }, ...(host ? { default: host } : {}) },
+    ...(reads ? [field("attribute", { attribute: { entity_id: reads } })] : []),
+  ];
+  const lang = hass?.locale?.language ?? "en";
+  const day = new Intl.DateTimeFormat(lang, { weekday: "short" });
+  const fields: HaFormSchema[] =
+    type === "state"
+      ? [
+          ...entity(),
+          grid(
+            field("state", { state: { entity_id: reads } }),
+            field("state_not", { state: { entity_id: reads } }),
+          ),
+        ]
+      : type === "numeric_state"
+        ? [
+            ...entity(),
+            grid(
+              field("above", { number: { mode: "box" } }),
+              field("below", { number: { mode: "box" } }),
+            ),
+          ]
+        : type === "screen"
+          ? [
+              field("media_query", {
+                select: {
+                  mode: "dropdown",
+                  custom_value: true,
+                  options: Object.entries(SCREENS).map(([q, n]) => ({
+                    value: q,
+                    label: L(hass, `screen.${n}`),
+                  })),
+                },
+              }),
+            ]
+          : type === "time"
+            ? [
+                grid(field("after", { time: {} }), field("before", { time: {} })),
+                field("weekdays", {
+                  select: {
+                    multiple: true,
+                    // (Sunday the 4th of January 1970: the days in the viewer's language)
+                    options: WEEKDAYS.map((d, i) => ({
+                      value: d,
+                      label: day.format(new Date(Date.UTC(1970, 0, 4 + i, 12))),
+                    })),
+                  },
+                }),
+              ]
+            : type === "template"
+              ? [field("value_template", { template: {} })]
+              : [];
+  return [
+    {
+      name: "condition",
+      required: true,
+      selector: {
+        select: {
+          mode: "dropdown",
+          options: CONDITIONS.map((c) => ({ value: c, label: L(hass, `condition.${c}`) })),
+        },
+      },
+    } as HaFormSchema,
+    ...fields,
+    advancedOf(hass),
   ];
 };
 // a rule field's label, as fieldsOf names it
@@ -818,18 +973,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
         ]
       : []),
     ...(kind.keys.includes("series")
-      ? [
-          {
-            name: "series",
-            selector: {
-              object: {
-                multiple: true,
-                label_field: "entity",
-                fields: fieldsOf(hass, SERIES_KEYS, "series"),
-              },
-            },
-          },
-        ]
+      ? [{ name: "series", selector: { pro_cards_list: { key: "series", of: "series" } } }]
       : []),
   ];
 
@@ -877,13 +1021,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
           ? [
               {
                 name: "control_options",
-                selector: {
-                  object: {
-                    multiple: true,
-                    label_field: "value",
-                    fields: fieldsOf(hass, OPTION_KEYS, "option"),
-                  },
-                },
+                selector: { pro_cards_list: { key: "control_options", of: "option" } },
               },
             ]
           : []),
@@ -891,14 +1029,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
           ? [
               {
                 name: "control_buttons",
-                selector: {
-                  object: {
-                    multiple: true,
-                    label_field: "label",
-                    description_field: "entity",
-                    fields: fieldsOf(hass, BUTTON_KEYS, "button"),
-                  },
-                },
+                selector: { pro_cards_list: { key: "control_buttons", of: "button" } },
               },
             ]
           : []),
@@ -989,6 +1120,13 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
       : [
           action("icon_tap_action", iconTap),
           action("icon_hold_action", iconOwn.hold?.action ?? cardAction("hold_action")),
+          // (a double tap does nothing unless told: the card's, else none)
+          action(
+            "icon_double_tap_action",
+            data.double_tap_action && typeof data.double_tap_action === "object"
+              ? String((data.double_tap_action as { action?: unknown }).action ?? "none")
+              : "none",
+          ),
         ]),
     { name: "hover", selector: { boolean: {} } },
   ];
@@ -1006,6 +1144,26 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
       thing === "row" ? [...valueFields, status] : valueFields,
     ),
     section(tr("section.look"), ICONS.look, look),
+    // how it sits in its cell (in a tile group its layout decides it; a row has none)
+    ...(thing === "poster" || (thing === "tile" && !x.grouped)
+      ? [
+          section(tr("section.layout"), ICONS.layout, [
+            ...(thing === "tile"
+              ? [
+                  { name: "vertical", selector: { boolean: {} } },
+                  // where the content sits in a taller tile (the layout card's words for its own)
+                  pick(
+                    "vertical_align",
+                    (["center", "top", "bottom"] as const).map((v) =>
+                      opt(v, t(hass, `editor.cards.align.${ALIGN_WORD[v]}` as StringKey)),
+                    ),
+                  ),
+                ]
+              : []),
+            { name: "fill_height", selector: { boolean: {} } },
+          ]),
+        ]
+      : []),
     ...(hasControls
       ? [
           section(tr("section.controls"), ICONS.controls, [
@@ -1017,21 +1175,6 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
     ...(thing === "row" ? [] : [section(tr(`section.badges_${thing}`), ICONS.badges, badges)]),
     section(tr("section.rules"), ICONS.rules, rules),
     section(tr("section.actions"), ICONS.actions, actions),
-    // (in a tile group its layout decides it)
-    ...(thing === "tile" && !x.grouped
-      ? [
-          section(tr("section.layout"), ICONS.layout, [
-            { name: "vertical", selector: { boolean: {} } },
-            // where the content sits in a taller tile (the layout card's words for its own)
-            pick(
-              "vertical_align",
-              (["center", "top", "bottom"] as const).map((v) =>
-                opt(v, t(hass, `editor.cards.align.${ALIGN_WORD[v]}` as StringKey)),
-              ),
-            ),
-          ]),
-        ]
-      : []),
   ];
 };
 

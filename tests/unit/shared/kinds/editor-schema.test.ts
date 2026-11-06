@@ -54,6 +54,7 @@ describe("the editor's sections", () => {
       "Name",
       "Value",
       "Appearance",
+      "Layout",
       "Controls",
       "Status and badges",
       "Rules",
@@ -64,11 +65,20 @@ describe("the editor's sections", () => {
       "Name",
       "Value",
       "Appearance",
+      "Layout",
       "Status and badges",
       "Rules",
       "Interactions",
-      "Layout",
     ]);
+    // how it sits in its cell: a tile's direction and alignment, both cards' height
+    expect(sectionOf(schemaOf("tile", TEMP), "Layout")).toEqual([
+      "vertical",
+      "vertical_align",
+      "fill_height",
+    ]);
+    expect(sectionOf(schemaOf("poster", TEMP), "Layout")).toEqual(["fill_height"]);
+    // a row has none, a tile in a group takes its group's
+    expect(sections(schemaOf("row", TEMP))).not.toContain("Layout");
     // a sensor has no controls unless the form names one
     expect(sections(schemaOf("poster", TEMP))).not.toContain("Controls");
     expect(sections(schemaOf("poster", TEMP, { control_type: "buttons" }))).toContain("Controls");
@@ -551,6 +561,7 @@ describe("the editor's interactions", () => {
       // an icon without actions of its own passes the gesture to the card
       icon_tap_action: "more-info",
       icon_hold_action: "more-info",
+      icon_double_tap_action: "none",
     });
     const nav = { action: "navigate", navigation_path: "/lights" };
     expect(defaults("poster", { ...LIGHT, tap_action: nav }).icon_tap_action).toBe("navigate");

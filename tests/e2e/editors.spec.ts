@@ -566,3 +566,22 @@ test("the power flow's sources are edited in tabs, and stay before its consumers
     "flow_style",
   ]);
 });
+
+test("a trend's lines are added in a view of their own, with their rules", async ({ page }) => {
+  const e = await openEditor(page, { type: "custom:poster-card-pro", kind: "trend" });
+  const lines = e.form.locator("ha-selector-pro_cards_list");
+  await lines.locator("button.new").click();
+  await pickEntity(itemView(e.editor), "entity", "outdoor temp", "Outdoor temperature");
+  await expect.poll(e.last).toMatchObject({ series: ["sensor.outdoor_temperature"] });
+  // its rule, on top of the line: red above 25
+  await openSection(itemView(e.editor), "Rules");
+  await listOf(itemView(e.editor), "rules").locator("button.new").click();
+  await fill(itemView(e.editor), "above", "25");
+  await choose(itemView(e.editor), "color", "red");
+  await expect.poll(e.last).toMatchObject({
+    series: [{ entity: "sensor.outdoor_temperature", rules: [{ above: 25, color: "red" }] }],
+  });
+  await back(e.editor);
+  await back(e.editor);
+  await expect(rowTitles(lines)).toHaveText(["Outdoor temperature"]);
+});

@@ -13,7 +13,9 @@ import {
   DETECTED,
   badgeFromForm,
   badgeToForm,
+  conditionIsEmpty,
   configToForm,
+  seriesFromForm,
   defaultVisual,
   fitEntity,
   formToConfig,
@@ -25,7 +27,11 @@ import {
   ruleFieldLabel,
   ruleItemSchema,
   badgeItemSchema,
+  buttonItemSchema,
+  conditionItemSchema,
   editorSchema,
+  optionItemSchema,
+  seriesItemSchema,
   fitsKind,
   rangeInfo,
   type SchemaCtx,
@@ -33,10 +39,12 @@ import {
 import { BADGE_LIST, BadgeListSelector } from "./badge-list.ts";
 import { RULE_LIST, RuleListSelector } from "./rule-list.ts";
 import { defineSelector } from "../editor-list.ts";
+import { ITEM_LIST, ItemList } from "./item-lists.ts";
 
 // the badges' list field: ha-selector draws `ha-selector-<type>` for a selector of that type
 defineSelector(BADGE_LIST, BadgeListSelector);
 defineSelector(RULE_LIST, RuleListSelector);
+defineSelector(ITEM_LIST, ItemList);
 import { KINDS } from "./registry.ts";
 import { ruleHints } from "./rule-hints.ts";
 import { writtenRules } from "./rules.ts";
@@ -289,7 +297,23 @@ export abstract class KindCardEditor extends FormEditorBase {
     }
     if (path === "badges/rules")
       return ruleItemSchema(hass, item, { ...this._badgeReads(), badge: true });
+    if (path === "series") return seriesItemSchema(hass, item);
+    // a line's rules read its value; its conditions read its entity unless they name one
+    if (path === "series/rules")
+      return ruleItemSchema(hass, item, { ...this._lineReads(), line: true });
+    if (path === "series/visibility")
+      return conditionItemSchema(hass, item, this._lineReads().entity);
+    if (path === "control_options") return optionItemSchema(hass);
+    if (path === "control_buttons") return buttonItemSchema(hass);
     return [];
+  }
+  // what the open trend line reads: its entity, a number in its unit or a state
+  _lineReads(): { entity: string; unit: string; numeric: boolean } {
+    const line = this._subItems()?.[0] ?? {};
+    const entity = typeof line.entity === "string" ? line.entity : "";
+    const st = entity ? this._hass?.states[entity] : undefined;
+    const unit = st?.attributes.unit_of_measurement;
+    return { entity, unit: typeof unit === "string" ? unit : "", numeric: isNum(st?.state) };
   }
   _cardEntity(): string {
     const card = (this._config as Raw | undefined)?.entity;
@@ -308,12 +332,20 @@ export abstract class KindCardEditor extends FormEditorBase {
   }
   // a new badge or rule: an empty one, added by its first change that says something
   _subNew(path: string): Raw | undefined {
-    return path === "badges" ? badgeToForm({}) : path.endsWith("rules") ? {} : undefined;
+    if (path === "badges") return badgeToForm({});
+    if (path === "series") return { rules: [], visibility: [] };
+    if (path.endsWith("visibility")) return { condition: "state" };
+    return path.endsWith("rules") || path.startsWith("control_") ? {} : undefined;
   }
   // a badge that says nothing: nothing at all, or one of your own without its text yet; a rule
   // without anything
   _subIsEmpty(path: string, item: Raw, hint: Raw): boolean {
-    if (path.endsWith("rules"))
+    if (path.endsWith("visibility")) return conditionIsEmpty(item);
+    if (path === "series") {
+      const line = seriesFromForm([item])[0];
+      return line === undefined || (typeof line === "object" && !Object.keys(line as Raw).length);
+    }
+    if (path.endsWith("rules") || path.startsWith("control_"))
       return !Object.entries(item).some(
         ([k, v]) =>
           v !== undefined &&
@@ -412,6 +444,9 @@ export abstract class KindCardEditor extends FormEditorBase {
   _subHelper(sch: HaFormSchema): string | undefined {
     const L = (k: string, vars?: Record<string, string>) =>
       t(this._hass, `editor.card.${k}` as StringKey, vars);
+    // a condition without an entity reads the line's
+    if (this._subPath().endsWith("visibility") && sch.name === "entity")
+      return L("cond_help.entity");
     if (this._subPath() !== "badges") return undefined;
     if (sch.name === "entity") return L("badge_help.entity");
     if (sch.name === "value") return L("badge_help.value");
@@ -422,13 +457,31 @@ export abstract class KindCardEditor extends FormEditorBase {
     return undefined;
   }
   _subLabel(sch: HaFormSchema): string {
-    return this._subPath().endsWith("rules")
-      ? ruleFieldLabel(this._hass, sch.name)
-      : badgeFieldLabel(this._hass, sch.name);
+    const path = this._subPath();
+    const L = (k: string) => t(this._hass, `editor.card.${k}` as StringKey);
+    if (path.endsWith("rules")) return ruleFieldLabel(this._hass, sch.name);
+    if (path === "badges") return badgeFieldLabel(this._hass, sch.name);
+    if (sch.name === "more") return L("more");
+    const of = path.endsWith("visibility")
+      ? "cond"
+      : path === "series"
+        ? "series"
+        : path === "control_options"
+          ? "option"
+          : "button";
+    return L(`${of}.${sch.name}`);
   }
   _subTitle(path: string, index: number, item: Raw): string {
-    if (path.endsWith("rules"))
-      return t(this._hass, "editor.card.rule_title", { n: String(index + 1) });
+    const n = { n: String(index + 1) };
+    if (path.endsWith("rules")) return t(this._hass, "editor.card.rule_title", n);
+    if (path.endsWith("visibility")) return t(this._hass, "editor.card.condition_title", n);
+    if (path === "control_options") return t(this._hass, "editor.card.option_title", n);
+    if (path === "control_buttons") return t(this._hass, "editor.card.button_title", n);
+    if (path === "series") {
+      const id = typeof item.entity === "string" ? item.entity : "";
+      const name = (id && this._hass?.states[id]?.attributes.friendly_name) || id;
+      return `${t(this._hass, "editor.card.line_title", n)}${name ? ` · ${name}` : ""}`;
+    }
     const id = typeof item.entity === "string" ? item.entity : "";
     const name = (id && this._hass?.states[id]?.attributes.friendly_name) || id;
     return `${t(this._hass, "editor.card.badge_title", { n: String(index + 1) })}${name ? ` · ${name}` : ""}`;
