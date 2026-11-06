@@ -20,6 +20,8 @@ import type { Kind, KindCtx, Read } from "./types.ts";
 
 // a power sensor, for an input the editor lists
 const POWER = [{ domains: ["sensor"], deviceClasses: ["power"] }] as const;
+// a power sensor, as the editor offers one (a template's by its unit)
+const POWER_OFFERS = { deviceClasses: ["power"], units: ["W", "kW", "MW"] } as const;
 
 // below this a flow counts as none (sensor noise)
 const IDLE_W = 10;
@@ -62,6 +64,7 @@ export const GRID: Kind = {
   name: "grid",
   reads: ["sensor", "input_number", "number"],
   readsText: "a power sensor (+ importing, − exporting)",
+  offers: POWER_OFFERS,
   entityless: true,
   keys: ["import", "export"],
   // without an entity, the import meter is what a tap opens
@@ -115,6 +118,7 @@ export const SOLAR: Kind = {
   name: "solar",
   reads: ["sensor", "input_number", "number"],
   readsText: "a power sensor",
+  offers: POWER_OFFERS,
   keys: ["today"],
   // today's production below the texts
   visual: { type: "sparkline", hours: "today" },
@@ -192,6 +196,7 @@ export const BATTERY: Kind = {
   deviceClasses: ["battery"],
   reads: ["sensor", "input_number", "number"],
   readsText: "a battery sensor (%)",
+  offers: { deviceClasses: ["battery"], units: ["%"] },
   keys: ["power", "charge", "discharge"],
   rules: BATTERY_RULES,
   // its charge as segments below the texts, the one charging pulsing
@@ -234,6 +239,7 @@ export const CAR: Kind = {
   name: "car",
   reads: ["sensor", "input_number", "number"],
   readsText: "the car's battery (%)",
+  offers: { deviceClasses: ["battery"], units: ["%"] },
   keys: ["range", "charging", "plugged", "location"],
   rules: BATTERY_RULES,
   inputs: [
@@ -316,6 +322,7 @@ const applianceKind = (name: string, style: ApplianceStyle | null): Kind => ({
   name,
   reads: ["sensor", "input_number", "number"],
   readsText: "a power sensor",
+  offers: POWER_OFFERS,
   keys: ["running_above"],
   history: (_opts, entity) => (entity ? [entity] : []),
   timed: true,

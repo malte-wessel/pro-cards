@@ -31,6 +31,8 @@ export interface KindRule {
 export interface InputFilter {
   domains: readonly string[];
   deviceClasses?: readonly string[];
+  // or, where an entity names no device class, one in these units (a template's direction in °)
+  units?: readonly string[];
 }
 export interface InputDef {
   key: string;
@@ -105,6 +107,9 @@ export interface Kind {
   // cannot read is a config error that names `readsText`
   reads: readonly string[] | "any";
   readsText: string;
+  // the numbers the visual editor offers for it beside those detected as it: of these device
+  // classes, or a sensor in one of these units that names no class (a template's)
+  offers?: { deviceClasses: readonly string[]; units: readonly string[] };
   // it draws without an entity too (the sun, a trend of its own entities, the grid from its meters)
   entityless?: boolean;
   // the keys it takes on the card (inputs among them); a card that sets another kind's is warned

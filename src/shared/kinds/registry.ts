@@ -17,6 +17,8 @@ const ruleKind = (name: string, rules: readonly KindRule[], unit: string): Kind 
   deviceClasses: [name],
   reads: ["sensor", "input_number", "number"],
   readsText: `a ${name} sensor (${unit})`,
+  // (an index has no unit: a template's needs its class)
+  offers: { deviceClasses: [name], units: unit === "index" ? [] : [unit] },
   keys: [],
   rules,
 });

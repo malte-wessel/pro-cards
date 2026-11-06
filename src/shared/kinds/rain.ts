@@ -24,6 +24,7 @@ export const RAIN: Kind = {
   deviceClasses: ["precipitation_intensity"],
   reads: ["sensor", "input_number", "number"],
   readsText: "a precipitation_intensity sensor (mm/h or in/h)",
+  offers: { deviceClasses: ["precipitation_intensity"], units: ["mm/h", "in/h", "mm/d", "in/d"] },
   keys: ["today", "wind", "direction"],
   rules: RAIN_RULES,
   icon: { type: "flow", variant: "drops" },
@@ -41,7 +42,11 @@ export const RAIN: Kind = {
     },
     { key: "wind", accepts: [{ domains: ["sensor"], deviceClasses: ["wind_speed"] }] },
     // a direction sensor often has no device class: any sensor
-    { key: "direction", accepts: [{ domains: ["sensor"] }] },
+    {
+      key: "direction",
+      // (a direction sensor often has no device class: one in degrees then)
+      accepts: [{ domains: ["sensor"], deviceClasses: ["wind_direction"], units: ["°"] }],
+    },
   ],
   slots: (c) => {
     const chip = nowOf(c).chip;

@@ -41,7 +41,7 @@ import { COVER_VARIANTS, KIND_THINGS, type IconThing, type VisualThing } from ".
 import { IMAGE_OPACITY } from "./backdrop.ts";
 import { canRead, detectKind } from "./detect.ts";
 import { KINDS } from "./registry.ts";
-import type { Kind } from "./types.ts";
+import type { InputFilter, Kind } from "./types.ts";
 
 // what the schema is built from: the card, its kind now (written, else detected) and the
 // detected one, the entity's state
@@ -124,46 +124,60 @@ export const entitiesFor = (
   if (!KINDS[kind] || !hass || kind === "none") return {};
   const fit = Object.keys(hass.states).filter((id) => fitsKind(hass, kind, id));
   if (written && !fit.includes(written)) fit.push(written);
-  return fit.length ? { include_entities: fit } : {};
+  // (none that fits: none offered, not every entity)
+  return { include_entities: fit };
 };
-// every entity's detected kind and the kinds anything is detected as, found once per set of states
-// (Home Assistant hands a new object for every change, so a form drawn again for the same states
-// looks nothing up)
-interface Detected {
-  byId: Map<string, string>;
-  kinds: Set<string>;
-}
-const detectedOf = new WeakMap<object, Detected>();
-const detectedIn = (hass: HomeAssistant): Detected => {
+// every entity's detected kind, found once per set of states (Home Assistant hands a new object
+// for every change, so a form drawn again for the same states looks nothing up)
+const detectedOf = new WeakMap<object, Map<string, string>>();
+const detectedAs = (hass: HomeAssistant, id: string): string => {
   let d = detectedOf.get(hass.states);
-  if (d) return d;
-  d = { byId: new Map(), kinds: new Set() };
-  for (const [id, st] of Object.entries(hass.states)) {
-    const name = detectKind(id, st).name;
-    d.byId.set(id, name);
-    d.kinds.add(name);
+  if (!d) {
+    d = new Map();
+    for (const [e, st] of Object.entries(hass.states)) d.set(e, detectKind(e, st).name);
+    detectedOf.set(hass.states, d);
   }
-  detectedOf.set(hass.states, d);
-  return d;
+  return d.get(id) ?? detectKind(id, hass.states[id]).name;
 };
 // whether an entity fits a kind: any entity fits none (the entity as it is); else one detected as
-// it, or one it reads that is detected as nothing else: a sensor without a device class (a
-// template's battery level), an entity of another domain the kind names (a weather entity's wind,
-// a device tracker's person). Where nothing is detected as the kind (one only ever named: solar,
-// grid, a car, the appliances) every entity it reads fits.
+// it, or one it reads that measures what it does: of another domain the kind names (a weather
+// entity's wind, a device tracker's person, a counter's trend); a number of a device class it
+// offers (a car its battery, solar, the grid and the appliances a power sensor), or a sensor that
+// names no class in a unit it offers (a template's battery in %); for a kind that offers none (a
+// trend), a number
 export const fitsKind = (hass: HomeAssistant | undefined, kind: string, id: string): boolean => {
   const k = KINDS[kind];
   if (!k || !hass) return false;
   if (kind === "none") return true;
-  const d = detectedIn(hass);
-  const is = d.byId.get(id) ?? detectKind(id, hass.states[id]).name;
-  if (is === kind) return true;
+  if (detectedAs(hass, id) === kind) return true;
   if (!canRead(k, id)) return false;
-  if (!d.kinds.has(kind)) return true;
-  if (k.reads === "any") return false;
-  // (a number's device class says what it measures; another domain the kind names is its own)
-  if (!NUMBERS.has(domainOf(id))) return true;
-  return is === "none" && !hass.states[id]?.attributes.device_class;
+  const domain = domainOf(id);
+  if (!NUMBERS.has(domain)) return true;
+  const st = hass.states[id];
+  const dc = typeof st?.attributes.device_class === "string" ? st.attributes.device_class : "";
+  const unit =
+    typeof st?.attributes.unit_of_measurement === "string" ? st.attributes.unit_of_measurement : "";
+  if (!k.offers) return isNum(st?.state) || !!unit;
+  if (dc) return k.offers.deviceClasses.includes(dc);
+  return domain === "sensor" && k.offers.units.includes(unit);
+};
+// whether an entity is one an input takes: of a filter's domains, and its device classes, or where
+// it names none, its units
+const takesEntity = (
+  hass: HomeAssistant | undefined,
+  takes: readonly InputFilter[],
+  id: string,
+): boolean => {
+  const a = hass?.states[id]?.attributes;
+  const dc = typeof a?.device_class === "string" ? a.device_class : "";
+  const unit = typeof a?.unit_of_measurement === "string" ? a.unit_of_measurement : "";
+  return takes.some(
+    (f) =>
+      f.domains.includes(domainOf(id)) &&
+      (!f.deviceClasses ||
+        f.deviceClasses.includes(dc) ||
+        (!dc && !!unit && !!f.units?.includes(unit))),
+  );
 };
 // a label of the editor's own words (a key the schema builds from a value)
 // vertical_align's values as the layout card's alignment words
@@ -775,18 +789,26 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   // a weather entity is its own direction and gusts
   const ownInputs = domain === "weather" ? [] : (kind.inputs ?? []);
   const inputs: HaFormSchema[] = [
-    ...ownInputs.map((def) => ({
-      name: `input_${def.key}`,
-      // what the kind takes there: any of these filters
-      selector: {
-        entity: {
-          filter: (def.accepts ?? (def.find ? [def.find] : [{ domains: ["sensor"] }])).map((a) => ({
-            domain: [...a.domains],
-            ...(a.deviceClasses ? { device_class: [...a.deviceClasses] } : {}),
-          })),
-        },
-      },
-    })),
+    ...ownInputs.map((def) => {
+      // what the kind takes there: any of these filters; one by unit (which Home Assistant's
+      // filter has not) as the list of those entities, the one written with them
+      const takes = def.accepts ?? (def.find ? [def.find] : [{ domains: ["sensor"] }]);
+      const written = data[`input_${def.key}`];
+      const entity = takes.some((a) => "units" in a && a.units)
+        ? {
+            include_entities: [
+              ...Object.keys(hass?.states ?? {}).filter((id) => takesEntity(hass, takes, id)),
+              ...(typeof written === "string" && written ? [written] : []),
+            ],
+          }
+        : {
+            filter: takes.map((a) => ({
+              domain: [...a.domains],
+              ...(a.deviceClasses ? { device_class: [...a.deviceClasses] } : {}),
+            })),
+          };
+      return { name: `input_${def.key}`, selector: { entity } };
+    }),
     ...(kind.keys.includes("running_above")
       ? [
           {

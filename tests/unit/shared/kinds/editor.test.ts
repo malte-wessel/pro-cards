@@ -166,7 +166,13 @@ describe("the poster's and the tile's editor form", () => {
 
 describe("the editor's inputs", () => {
   // what an entity picker with these filters lists (any filter matches)
-  const listed = (filter: { domain: string[]; device_class?: string[] }[]) =>
+  // what an input's picker lists: Home Assistant's filter, or the list of entities (by unit)
+  type Picks = {
+    filter?: { domain: string[]; device_class?: string[] }[];
+    include_entities?: string[];
+  };
+  const listed = ({ filter = [], include_entities }: Picks) =>
+    include_entities ??
     Object.values(hass.states)
       .filter((st) =>
         filter.some(
@@ -185,11 +191,7 @@ describe("the editor's inputs", () => {
       xs
         .flatMap((s) => (s.name === `input_${key}` ? [s] : s.schema ? [find(s.schema)] : []))
         .find(Boolean);
-    return (
-      find(schema)!.selector as {
-        entity: { filter: { domain: string[]; device_class?: string[] }[] };
-      }
-    ).entity.filter;
+    return (find(schema)!.selector as { entity: Picks }).entity;
   };
 
   it("lists the entities each input takes", () => {
@@ -199,8 +201,10 @@ describe("the editor's inputs", () => {
           listed(filterOf(kind.name, def.key)).length,
           `${kind.name}.${def.key}`,
         ).toBeGreaterThan(0);
-    // a direction sensor without a device class; a wallbox's power as charging
-    expect(listed(filterOf("wind", "direction"))).toContain("sensor.wind_direction");
+    // a direction sensor without a device class, by its unit (no other sensor); a wallbox's power
+    // as charging
+    expect(listed(filterOf("wind", "direction"))).toEqual(["sensor.wind_direction"]);
+    expect(listed(filterOf("rain", "direction"))).toEqual(["sensor.wind_direction"]);
     expect(listed(filterOf("car", "charging"))).toEqual(
       expect.arrayContaining(["binary_sensor.ev_charging", "sensor.ev_charger_power"]),
     );

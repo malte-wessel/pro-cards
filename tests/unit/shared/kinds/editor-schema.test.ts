@@ -159,8 +159,26 @@ describe("what the editor shows", () => {
     expect(include({}, { kind: "person" })).toContain("device_tracker.van");
     // the entity as it is: every entity
     expect(include(TEMP)).toBeUndefined();
-    // a kind only ever named: what it reads
-    expect(include({}, { kind: "solar" })).toContain("sensor.solar_power");
+    // a sensor without a device class only in the kind's unit (no wind direction), and no
+    // setting in that unit (a humidity target)
+    expect(battery).not.toContain("sensor.wind_direction");
+    expect(battery).not.toContain("input_number.target_humidity");
+    // a kind none of the home's entities fit: none offered, not every entity
+    expect(include({}, { kind: "pm10" })).toEqual([]);
+    // a trend: numbers, no text or time
+    const trend = include({}, { kind: "trend" })!;
+    expect(trend).toContain("sensor.outdoor_temperature");
+    for (const id of ["sensor.washer_status", "sensor.dishwasher_finishes", "light.kitchen"])
+      expect(trend, id).not.toContain(id);
+    // a kind only ever named: what it measures (a car its battery, solar a power sensor)
+    const car = include({}, { kind: "car" })!;
+    expect(car).toEqual(expect.arrayContaining(["sensor.battery_soc", "sensor.phone_battery"]));
+    expect(car).not.toContain("sensor.solar_power");
+    expect(car).not.toContain("sensor.living_room_temperature");
+    const solar = include({}, { kind: "solar" })!;
+    expect(solar).toContain("sensor.solar_power");
+    expect(solar).not.toContain("sensor.battery_soc");
+    expect(include({}, { kind: "washer" })).toEqual(solar);
     // your own: no entity
     expect(names(schemaOf("poster", {}))).not.toContain("entity");
   });

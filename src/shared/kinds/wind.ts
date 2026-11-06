@@ -25,6 +25,7 @@ export const WIND: Kind = {
   deviceClasses: ["wind_speed"],
   reads: ["sensor", "weather", "input_number", "number"],
   readsText: "a wind_speed sensor or a weather entity (wind_speed, wind_bearing, wind_gust_speed)",
+  offers: { deviceClasses: ["wind_speed"], units: ["km/h", "m/s", "mph", "kn", "ft/s"] },
   keys: ["direction", "gust"],
   rules: WIND_RULES,
   icon: { type: "flow", variant: "dots" },
@@ -35,8 +36,8 @@ export const WIND: Kind = {
     {
       key: "direction",
       find: { domains: ["sensor"], deviceClasses: ["wind_direction"], unit: "°" },
-      // a direction sensor often has no device class: any sensor
-      accepts: [{ domains: ["sensor"] }],
+      // a direction sensor often has no device class: one in degrees then
+      accepts: [{ domains: ["sensor"], deviceClasses: ["wind_direction"], units: ["°"] }],
       weather: "wind_bearing",
     },
     {
