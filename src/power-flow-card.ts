@@ -29,11 +29,10 @@ import type { HomeAssistant } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
 import { normalizePowerFlowConfig, type PowerFlowConfig } from "./power-flow/config.ts";
 import { CARD_TYPE } from "./power-flow/constants.ts";
-import { FlowSourceEditor, PowerFlowCardEditor, SOURCE_EDITOR } from "./shared/flow-tree/editor.ts";
+import { PowerFlowCardEditor } from "./shared/flow-tree/editor.ts";
 
 defineElement(`${CARD_TYPE}-editor`, PowerFlowCardEditor);
 // (both flow cards define it; the second one finds it there)
-if (!customElements.get(SOURCE_EDITOR)) defineElement(SOURCE_EDITOR, FlowSourceEditor);
 import { allocate, powerNow, summaryState, type PowerNow } from "./power-flow/model.ts";
 import { fmtPower, isPowerUnit } from "./shared/power.ts";
 

@@ -87,8 +87,26 @@ export interface ViewHost {
   showMain(on: boolean): void;
   // the editor drawn again (an item opened or closed: `closed` when one closed)
   render(closed?: boolean): void;
+  // where its forms are (the element, or its shadow root): a list is found there again
+  root(): ParentNode;
   hooks: ViewHooks;
 }
+
+// a list field by its name, through shadow roots (a list keeps its field's name as `_key`)
+const findList = (at: ParentNode, key: string): HTMLElement | null => {
+  for (const el of at.querySelectorAll<HTMLElement>("*")) {
+    if (
+      (el as HTMLElement & { _key?: unknown })._key === key &&
+      el.tagName.startsWith("HA-SELECTOR-")
+    )
+      return el;
+    if (el.shadowRoot) {
+      const inner = findList(el.shadowRoot, key);
+      if (inner) return inner;
+    }
+  }
+  return null;
+};
 
 export class ItemViews {
   subs: SubLevel[] = [];
@@ -152,10 +170,18 @@ export class ItemViews {
     this.key = undefined;
     this.host.render();
   }
+  // back: one view down, the list the item came from scrolled into sight again (the form drawn
+  // anew starts at its top)
   close() {
-    this.subs.pop();
+    const key = this.subs.pop()?.key;
     this.key = undefined;
     this.host.render(true);
+    if (!key) return;
+    const at = this.subs.length ? this.view : this.host.root();
+    requestAnimationFrame(() => {
+      const list = at ? findList(at, key) : null;
+      list?.scrollIntoView({ block: "center" });
+    });
   }
   // the deepest item's form changed: each level puts its item into the list above, the host writes
   // its own level

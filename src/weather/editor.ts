@@ -1,10 +1,9 @@
-// Visual editor of the weather card: its own options (ha-form) above, its sections in tabs below
-// (CardsEditorBase), each in a form of its type: the lead (hero), a forecast, a trend or an entity
-// group. "+" adds a section (the lead first); without sections the card is a tile. Both forms
+// Visual editor of the weather card (FormEditorBase): its entity, then its options in sections, its
+// sections a list (each in a view of its own, in a form of its type: the lead (hero), a forecast, a
+// trend or an entity group; a new one the lead first); without sections the card is a tile. Both forms
 // write back only what they changed: a part as the config had it keeps its spelling, a value at
 // its default writes nothing. The badges, the rules (the entity cards' rule format), a trend's lines
 // and an entity group's entities are lists, each item in a view of its own.
-import { CardsEditorBase } from "../shared/cards/editor.ts";
 import { FormEditorBase, setOrDrop } from "../shared/editor.ts";
 import type { CardConfigBase, HaFormData, HaFormSchema, HomeAssistant } from "../shared/ha.ts";
 import { hasString, t, type StringKey } from "../shared/i18n.ts";
@@ -15,7 +14,7 @@ import {
   listFromForm,
   listToForm,
 } from "../shared/kinds/editor-form.ts";
-import { badgesField, ICONS } from "../shared/kinds/editor-schema.ts";
+import { ICONS } from "../shared/kinds/editor-schema.ts";
 import type { ItemType, RuleReads } from "../shared/kinds/item-views.ts";
 import { DEFAULTS, QUANTITIES, TREND_LAYOUTS } from "./constants.ts";
 
@@ -147,31 +146,52 @@ export const weatherFromForm = (data: HaFormData, prev: Raw): Raw => {
 export const weatherSchema = (
   hass: HomeAssistant | undefined,
   written: Raw = {},
-): HaFormSchema[] => [
-  { name: "entity", selector: { entity: { filter: { domain: "weather" } } } },
-  grid({ name: "name", selector: { text: {} } }, { name: "secondary", selector: { text: {} } }),
-  grid({ name: "title", selector: { text: {} } }, { name: "icon", selector: { icon: {} } }),
-  grid(
-    { name: "color", selector: { ui_color: {} } },
-    select("icon_style", ["circle", "plain"], (v) =>
-      t(hass, `editor.card.style.${v}` as StringKey),
-    ),
-  ),
-  grid(iconsSelect(hass, written.icons), num("icon_size", 12, 160), num("decimals", 0, 3)),
-  { name: "title_tap_action", selector: { ui_action: { default_action: "none" } } },
-  badgesField(typeof written.entity === "string" ? written.entity : ""),
-  section(W(hass, "section.groups"), ICONS.layout, [
-    grid(
-      num("columns", 1, 4),
-      select("align", ALIGNS, (v) => W(hass, `align.${v}`)),
-    ),
-  ]),
-  section(
-    t(hass, "editor.card.section.rules"),
-    ICONS.rules,
-    rulesFields(hass, typeof written.entity === "string" ? written.entity : ""),
-  ),
-];
+): HaFormSchema[] => {
+  const entity = typeof written.entity === "string" ? written.entity : "";
+  const T = (k: string) => t(hass, k as StringKey);
+  return [
+    { name: "entity", selector: { entity: { filter: { domain: "weather" } } } },
+    // the tile's texts (open: the fields changed most), the header's above the sections
+    {
+      ...section(T("editor.card.field.name"), ICONS.name, [
+        grid(
+          { name: "name", selector: { text: {} } },
+          { name: "secondary", selector: { text: {} } },
+        ),
+      ]),
+      expanded: true,
+    } as HaFormSchema,
+    section(T("editor.card.section.header"), ICONS.content, [
+      grid({ name: "title", selector: { text: {} } }, { name: "icon", selector: { icon: {} } }),
+    ]),
+    section(T("editor.card.section.look"), ICONS.look, [
+      grid(
+        { name: "color", selector: { ui_color: {} } },
+        select("icon_style", ["circle", "plain"], (v) => T(`editor.card.style.${v}`)),
+      ),
+      grid(iconsSelect(hass, written.icons), num("icon_size", 12, 160), num("decimals", 0, 3)),
+    ]),
+    section(W(hass, "section.sections"), ICONS.layout, [
+      {
+        name: "sections",
+        selector: { pro_cards_list: { key: "sections", of: "section", hide_label: true } },
+      },
+    ]),
+    section(W(hass, "section.groups"), ICONS.layout, [
+      grid(
+        num("columns", 1, 4),
+        select("align", ALIGNS, (v) => W(hass, `align.${v}`)),
+      ),
+    ]),
+    section(T("editor.card.field.badges"), ICONS.badges, [
+      { name: "badges", selector: { pro_cards_badges: { entity, hide_label: true } } },
+    ]),
+    section(T("editor.card.section.rules"), ICONS.rules, rulesFields(hass, entity)),
+    section(T("editor.card.section.actions"), ICONS.actions, [
+      { name: "title_tap_action", selector: { ui_action: { default_action: "none" } } },
+    ]),
+  ];
+};
 
 // ---- a section ------------------------------------------------------------------------------
 
@@ -391,7 +411,12 @@ export const sectionSchema = (
     return [
       ...head,
       ...window,
-      { name: "lines", selector: { pro_cards_list: { key: "lines", of: "quantity" } } },
+      section(L("field.lines"), ICONS.chart, [
+        {
+          name: "lines",
+          selector: { pro_cards_list: { key: "lines", of: "quantity", hide_label: true } },
+        },
+      ]),
       select("trend_layout", TREND_LAYOUTS, (v) =>
         t(hass, `editor.multi_trend.layout.${v}` as StringKey),
       ),
@@ -408,7 +433,12 @@ export const sectionSchema = (
       select("group_layout", GROUPS, (v) => L(`group_layout.${v}`)),
       ...(data.group_layout === "grid" ? [num("columns", 1, 4)] : []),
     ),
-    { name: "entities", selector: { pro_cards_list: { key: "entities", of: "entity", entity } } },
+    section(L("field.entities"), ICONS.content, [
+      {
+        name: "entities",
+        selector: { pro_cards_list: { key: "entities", of: "entity", entity, hide_label: true } },
+      },
+    ]),
     select("align", ALIGNS, (v) => L(`align.${v}`)),
     grid(
       { name: "show_name", selector: { boolean: {} } },
@@ -430,6 +460,7 @@ export const WEATHER_LABELS: Record<string, StringKey> = {
   icon_style: "editor.card.field.icon_style",
   decimals: "editor.card.field.decimals",
   badges: "editor.card.field.badges",
+  sections: "editor.weather.section.sections",
   title_tap_action: "editor.cards.field.title_tap_action",
   columns: "editor.cards.field.columns",
   show_name: "editor.card.field.show_name",
@@ -518,98 +549,78 @@ const groupEntityType = (
 
 // ---- the elements ---------------------------------------------------------------------------
 
-export const SECTION_EDITOR = "weather-card-pro-section-editor";
+// a section in a view of its own: the section as written travels with its form (`__written`), so
+// what the form does not show stays, and its spelling
+const sectionItem = (written: Raw): Raw => ({ ...sectionToForm(written), __written: written });
+export const sectionsToForm = (v: unknown): Raw[] =>
+  (Array.isArray(v) ? v : []).map((x) => sectionItem(isObj(x) ? x : {}));
+export const sectionsFromForm = (v: unknown): Raw[] =>
+  (Array.isArray(v) ? (v as Raw[]) : []).map((x) => (isObj(x.__written) ? x.__written : {}));
+const sectionType = (
+  hass: () => HomeAssistant | undefined,
+  weather: () => string,
+  // the sections the card has: a new one is the lead first, then a forecast
+  have: () => number,
+): ItemType => ({
+  schema: (h, item) =>
+    sectionSchema(h, item, isObj(item.__written) ? item.__written : {}, weather()),
+  create: () => sectionItem({ type: have() ? "forecast" : "hero" }),
+  isEmpty: () => false,
+  label: (name) => labelOf(hass(), { name } as HaFormSchema),
+  title: (_index, item) => {
+    const kind = W(hass(), `kind.${String(item.kind ?? "entities")}`);
+    const title = typeof item.title === "string" && item.title ? ` · ${item.title}` : "";
+    return `${kind}${title}`;
+  },
+  fromForm: (data) => {
+    const { __written, ...form } = data;
+    return sectionItem(sectionFromForm(form, isObj(__written) ? __written : {}));
+  },
+});
 
-// one section's form, in its tab: takes the section as `value`, sends config-changed with it
-export class WeatherSectionEditor extends FormEditorBase {
-  // the weather card's entity: what the section's rules and an entity group read
-  entity = "";
-  set value(v: CardConfigBase) {
-    this.setConfig(v);
-  }
-  _cardEntity() {
-    return this.entity;
-  }
-  _ruleReads(key: string) {
-    return weatherRuleReads(this._hass, this.entity, key);
-  }
-  _itemTypes() {
-    return {
-      lines: lineType(() => this._hass),
-      entities: groupEntityType(
-        () => this._hass,
-        () => this.entity,
-      ),
-    };
-  }
-  get value(): CardConfigBase | undefined {
-    return this._config;
-  }
-  _label(s: HaFormSchema) {
-    return labelOf(this._hass, s);
-  }
-  _toForm(config: Raw) {
-    return sectionToForm(config);
-  }
-  _fromForm(data: HaFormData, prev: Raw) {
-    return sectionFromForm(data, prev);
-  }
-  _schema(hass: HomeAssistant, data: HaFormData) {
-    return sectionSchema(hass, data, this._config, this.entity);
-  }
-}
-
-export class WeatherCardEditor extends CardsEditorBase {
-  _listKey = "sections";
-  _dropEmptyList = true;
-  _childCode = false;
-  // the lead first, then forecasts
-  _newCard(): CardConfigBase {
-    return { type: this._cards.length ? "forecast" : "hero" } as CardConfigBase;
-  }
-  // no sections yet: the card is a tile
-  _none() {
-    const p = super._none();
-    (p as unknown as HTMLElement).textContent = W(this._hass, "none");
-    return p;
-  }
-  _cardName(s: CardConfigBase) {
-    const title = (s as Raw).title;
-    return typeof title === "string" && title ? title : W(this._hass, `kind.${kindOf(s as Raw)}`);
-  }
-  _ruleReads(key: string) {
-    return weatherRuleReads(this._hass, this._cardEntity(), key);
-  }
-  // (a section's form reads the weather entity: another one builds it anew)
-  _childContext() {
-    return this._cardEntity();
-  }
-  _childEditor(at: number) {
-    const ed = document.createElement(SECTION_EDITOR) as WeatherSectionEditor;
-    ed.entity = this._cardEntity();
-    ed.addEventListener("config-changed", (ev) => {
-      ev.stopPropagation();
-      const config = (ev as CustomEvent).detail?.config as CardConfigBase | undefined;
-      if (!config || same(config, this._cards[at])) return;
-      const all = this._cards;
-      all[at] = config;
-      this._setCards(all);
-    });
-    return ed as never;
-  }
+export class WeatherCardEditor extends FormEditorBase {
   _label(s: HaFormSchema) {
     return labelOf(this._hass, s);
   }
   _helper(s: HaFormSchema) {
     return s.name === "columns" || s.name === "align" ? W(this._hass, "help.groups") : undefined;
   }
-  _optionsSchema(hass: HomeAssistant | undefined) {
-    return weatherSchema(hass, this._config as Raw);
+  // the card's and a section's rules read the weather entity
+  _ruleReads(key: string) {
+    return weatherRuleReads(this._hass, this._cardEntity(), key);
   }
-  _optionsToForm(config: CardConfigBase) {
-    return weatherToForm(config as Raw);
+  _itemTypes() {
+    const sections = () => {
+      const v = (this._config as Raw | undefined)?.sections;
+      return Array.isArray(v) ? v.length : 0;
+    };
+    return {
+      sections: sectionType(
+        () => this._hass,
+        () => this._cardEntity(),
+        sections,
+      ),
+      lines: lineType(() => this._hass),
+      entities: groupEntityType(
+        () => this._hass,
+        () => this._cardEntity(),
+      ),
+    };
   }
-  _optionsFromForm(data: HaFormData, prev: CardConfigBase) {
-    return weatherFromForm(data, prev as Raw) as CardConfigBase;
+  _toForm(config: CardConfigBase) {
+    return { ...weatherToForm(config as Raw), sections: sectionsToForm((config as Raw).sections) };
+  }
+  // (an empty list of sections is left out: the card is a tile)
+  _fromForm(data: HaFormData, prev: CardConfigBase) {
+    const { sections, ...rest } = data;
+    const c = weatherFromForm(rest, prev as Raw);
+    if (!same(sections, sectionsToForm((prev as Raw).sections))) {
+      const list = sectionsFromForm(sections);
+      setOrDrop(c, "sections", list, !list.length);
+    }
+    return c as CardConfigBase;
+  }
+  _schema(hass: HomeAssistant) {
+    return weatherSchema(hass, (this._config ?? {}) as Raw);
   }
 }

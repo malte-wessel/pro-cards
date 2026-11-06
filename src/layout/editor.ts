@@ -13,6 +13,7 @@ import {
 } from "../shared/cards/editor-options.ts";
 import type { CardConfigBase, HaFormData, HaFormSchema, HomeAssistant } from "../shared/ha.ts";
 import { hasString, t } from "../shared/i18n.ts";
+import { ICONS } from "../shared/kinds/editor-schema.ts";
 import { CARD_STYLES, ITEM_ALIGNS, LAYOUTS } from "./config.ts";
 
 type Raw = Record<string, unknown>;
@@ -41,6 +42,14 @@ const select = (hass: HomeAssistant | undefined, of: string, values: readonly st
   },
 });
 const grid = (...schema: HaFormSchema[]): HaFormSchema => ({ name: "", type: "grid", schema });
+const section = (title: string, icon: string, schema: HaFormSchema[]): HaFormSchema => ({
+  name: "",
+  type: "expandable",
+  flatten: true,
+  title,
+  iconPath: icon,
+  schema,
+});
 
 // the options a level takes (the card's, or a breakpoint's)
 export const layoutFields = (
@@ -69,7 +78,13 @@ export const layoutSchema = (hass: HomeAssistant | undefined, data: HaFormData):
       { name: "gap", selector: fields.gap },
       ...(data.layout === "masonry" ? [] : [{ name: "rows", selector: fields.rows }]),
     ),
-    { name: "breakpoints", selector: { pro_cards_list: { key: "breakpoints", of: "breakpoint" } } },
+    // (its own section: a row a breakpoint)
+    section(L(hass, "field.breakpoints"), ICONS.layout, [
+      {
+        name: "breakpoints",
+        selector: { pro_cards_list: { key: "breakpoints", of: "breakpoint", hide_label: true } },
+      },
+    ]),
   ];
 };
 

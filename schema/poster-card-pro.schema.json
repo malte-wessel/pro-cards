@@ -1112,7 +1112,9 @@
                   "range": false,
                   "plugged": false,
                   "charging": false,
-                  "location": false
+                  "location": false,
+                  "remaining": false,
+                  "phase": false
                 }
               },
               "running_above": false,
@@ -1143,7 +1145,9 @@
                   "range": false,
                   "plugged": false,
                   "charging": false,
-                  "location": false
+                  "location": false,
+                  "remaining": false,
+                  "phase": false
                 }
               },
               "running_above": false,
@@ -1209,7 +1213,9 @@
                   "range": false,
                   "plugged": false,
                   "charging": false,
-                  "location": false
+                  "location": false,
+                  "remaining": false,
+                  "phase": false
                 }
               },
               "running_above": false,
@@ -1293,7 +1299,9 @@
                   "range": false,
                   "plugged": false,
                   "charging": false,
-                  "location": false
+                  "location": false,
+                  "remaining": false,
+                  "phase": false
                 }
               },
               "running_above": false,
@@ -1325,7 +1333,9 @@
                   "range": false,
                   "plugged": false,
                   "charging": false,
-                  "location": false
+                  "location": false,
+                  "remaining": false,
+                  "phase": false
                 }
               },
               "running_above": false,
@@ -1354,7 +1364,9 @@
                   "charge": false,
                   "discharge": false,
                   "import": false,
-                  "export": false
+                  "export": false,
+                  "remaining": false,
+                  "phase": false
                 }
               },
               "running_above": false,
@@ -1373,7 +1385,23 @@
           },
           "then": {
             "properties": {
-              "inputs": false,
+              "inputs": {
+                "properties": {
+                  "direction": false,
+                  "gust": false,
+                  "today": false,
+                  "wind": false,
+                  "power": false,
+                  "charge": false,
+                  "discharge": false,
+                  "import": false,
+                  "export": false,
+                  "range": false,
+                  "plugged": false,
+                  "charging": false,
+                  "location": false
+                }
+              },
               "series": false
             }
           }
@@ -1608,6 +1636,14 @@
         "location": {
           "$ref": "#/$defs/input",
           "description": "car: its device tracker"
+        },
+        "remaining": {
+          "$ref": "#/$defs/input",
+          "description": "an appliance (washer, dryer …): the time left, a duration or when it finishes"
+        },
+        "phase": {
+          "$ref": "#/$defs/input",
+          "description": "an appliance: its phase (an enum, a select: Washing, Rinsing …), shown as its status"
         }
       },
       "additionalProperties": false

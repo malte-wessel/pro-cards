@@ -193,7 +193,8 @@ export const itemHooks = (ctx: ItemCtx): ViewHooks => {
         flavor: "badge",
       };
     if (parentType === "series") return { ...readsOf(str(parent.entity)), flavor: "line" };
-    return { ...readsOf(str(parent.entity)), flavor: "entity" };
+    // another item's (a weather section's): what the card says its rules of that name read
+    return ctx.rules?.(key) ?? { ...readsOf(str(parent.entity)), flavor: "entity" };
   };
   const hostOf = (path: string) => str(parentsOf(path).at(-1)?.entity) || ctx.cardEntity();
 
@@ -260,7 +261,8 @@ export const itemHooks = (ctx: ItemCtx): ViewHooks => {
       // a condition without an entity reads the item's
       if (type === "visibility" && sch.name === "entity") return L("cond_help.entity");
       if (type !== "badges") return undefined;
-      if (sch.name === "entity") return L("badge_help.entity");
+      if (sch.name === "entity")
+        return str(ctx.items()?.at(-1)?.entity) ? undefined : L("badge_help.entity");
       if (sch.name === "value") return L("badge_help.value");
       if (sch.name === "prefix" || sch.name === "suffix") return L(`help.${sch.name}`);
       if (sch.name === "style")

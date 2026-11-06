@@ -10,6 +10,7 @@ import {
 } from "../shared/cards/editor-options.ts";
 import type { CardConfigBase, HaFormData, HaFormSchema, HomeAssistant } from "../shared/ha.ts";
 import { hasString, t } from "../shared/i18n.ts";
+import { ICONS } from "../shared/kinds/editor-schema.ts";
 import { HEIGHTS, INDICATORS, MAX_PER_PAGE, SNAPS } from "./config.ts";
 
 // unfold: a grid of this many columns; 0 is the strip (false, which a breakpoint needs)
@@ -40,6 +41,14 @@ const select = (hass: HomeAssistant | undefined, of: string, values: readonly st
   },
 });
 const grid = (...schema: HaFormSchema[]): HaFormSchema => ({ name: "", type: "grid", schema });
+const section = (title: string, icon: string, schema: HaFormSchema[]): HaFormSchema => ({
+  name: "",
+  type: "expandable",
+  flatten: true,
+  title,
+  iconPath: icon,
+  schema,
+});
 
 // the options a level takes (the card's, or a breakpoint's)
 export const swipeFields = (
@@ -62,7 +71,13 @@ export const swipeSchema = (hass: HomeAssistant | undefined): HaFormSchema[] => 
       { name: "indicator", selector: fields.indicator },
       { name: "unfold", selector: fields.unfold },
     ),
-    { name: "breakpoints", selector: { pro_cards_list: { key: "breakpoints", of: "breakpoint" } } },
+    // (its own section: a row a breakpoint)
+    section(L(hass, "field.breakpoints"), ICONS.layout, [
+      {
+        name: "breakpoints",
+        selector: { pro_cards_list: { key: "breakpoints", of: "breakpoint", hide_label: true } },
+      },
+    ]),
   ];
 };
 

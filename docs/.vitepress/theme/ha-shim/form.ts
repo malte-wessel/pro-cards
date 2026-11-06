@@ -102,6 +102,7 @@ const STYLE = `
   .helper { font-size: 12px; color: var(--secondary-text-color); margin: 4px 12px 0; line-height: 1.35; }
   .toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; }
   .toggle .text { font-size: 14px; }
+  .fresh, .fresh * { transition: none !important; }
   .switch { position: relative; flex: none; width: 36px; height: 20px; }
   .switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
   .switch .track { position: absolute; inset: 3px 0; border-radius: 7px; background: var(--switch-unchecked-track-color, color-mix(in srgb, var(--primary-text-color) 30%, transparent)); transition: background 0.15s; }
@@ -287,10 +288,13 @@ export class HaFormShim extends HTMLElement {
       this._key = key;
       this._fields.clear();
       const stack = document.createElement("div");
-      stack.className = "stack";
+      // (built anew: no transitions until it is drawn, so a switch shows its state at once and
+      // does not slide into it, as Home Assistant's form updates its fields in place)
+      stack.className = "stack fresh";
       for (const s of this._schema) stack.appendChild(this._node(s));
       root.innerHTML = `<style>${STYLE}</style>`;
       root.appendChild(stack);
+      requestAnimationFrame(() => requestAnimationFrame(() => stack.classList.remove("fresh")));
       if (focusName)
         root
           .querySelector<HTMLElement>(

@@ -196,6 +196,7 @@ export abstract class CardsEditorBase extends HTMLElement {
       this._emit({ ...next, cards: this._cards });
     },
     mount: (view) => this.shadowRoot!.querySelector(".options")!.after(view),
+    root: (): ParentNode => this.shadowRoot ?? this,
     showMain: (on) => {
       for (const el of this.shadowRoot?.querySelectorAll<HTMLElement>(".options, .cards") ?? [])
         el.style.display = on ? "" : "none";

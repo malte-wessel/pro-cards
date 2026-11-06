@@ -5,6 +5,7 @@ import { FormEditorBase, setOrDrop } from "../shared/editor.ts";
 import type { HaFormData, HaFormSchema, HomeAssistant } from "../shared/ha.ts";
 import { t, type StringKey } from "../shared/i18n.ts";
 import { seriesFromForm, seriesToForm } from "../shared/kinds/editor-form.ts";
+import { ICONS } from "../shared/kinds/editor-schema.ts";
 import type { MultiTrendCardConfig } from "./config.ts";
 import { DEFAULT_HOURS } from "../shared/trend/scale.ts";
 
@@ -78,24 +79,34 @@ export const formToConfig = (
   return config;
 };
 
+const section = (title: string, icon: string, schema: HaFormSchema[]): HaFormSchema => ({
+  name: "",
+  type: "expandable",
+  flatten: true,
+  title,
+  iconPath: icon,
+  schema,
+});
+const grid = (...schema: HaFormSchema[]): HaFormSchema => ({ name: "", type: "grid", schema });
 export const editorSchema = (
   hass: HomeAssistant | undefined,
   _data: HaFormData,
 ): HaFormSchema[] => {
+  const L = (k: string) => t(hass, k as StringKey);
   const schema: HaFormSchema[] = [
-    { name: "title", selector: { text: {} } },
+    grid({ name: "title", selector: { text: {} } }, { name: "icon", selector: { icon: {} } }),
+    // its lines (open: what the card is), each in a view of its own
     {
-      name: "",
-      type: "grid",
-      schema: [
-        { name: "icon", selector: { icon: {} } },
-        { name: "color", selector: { ui_color: { default_color: "state", include_state: true } } },
-      ],
-    },
-    {
-      name: "",
-      type: "grid",
-      schema: [
+      ...section(L("editor.multi_trend.entities"), ICONS.chart, [
+        {
+          name: "entities",
+          selector: { pro_cards_list: { key: "entities", of: "series", hide_label: true } },
+        },
+      ]),
+      expanded: true,
+    } as HaFormSchema,
+    section(L("editor.card.section.content"), ICONS.content, [
+      grid(
         {
           name: "hours_to_show",
           selector: {
@@ -104,27 +115,27 @@ export const editorSchema = (
         },
         {
           name: "smoothing_minutes",
-          selector: {
-            number: { min: 5, step: 1, mode: "box", unit_of_measurement: "min" },
-          },
+          selector: { number: { min: 5, step: 1, mode: "box", unit_of_measurement: "min" } },
         },
+      ),
+      grid(
+        { name: "show_legend", selector: { boolean: {} } },
+        { name: "x_axis", selector: { boolean: {} } },
+        { name: "y_axis", selector: { boolean: {} } },
+      ),
+    ]),
+    section(L("editor.card.section.look"), ICONS.look, [
+      grid(
+        { name: "color", selector: { ui_color: { default_color: "state", include_state: true } } },
         {
           name: "layout",
           selector: { select: { mode: "dropdown", options: layoutOptions(hass) } },
         },
-      ],
-    },
-    {
-      name: "",
-      type: "grid",
-      schema: [
-        { name: "show_legend", selector: { boolean: {} } },
-        { name: "x_axis", selector: { boolean: {} } },
-        { name: "y_axis", selector: { boolean: {} } },
-        { name: "fill_height", selector: { boolean: {} } },
-      ],
-    },
-    { name: "entities", selector: { pro_cards_list: { key: "entities", of: "series" } } },
+      ),
+    ]),
+    section(L("editor.card.section.layout"), ICONS.layout, [
+      { name: "fill_height", selector: { boolean: {} } },
+    ]),
   ];
   return schema;
 };

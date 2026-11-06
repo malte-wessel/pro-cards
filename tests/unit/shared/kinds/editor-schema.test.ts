@@ -34,7 +34,9 @@ const schemaOf = (thing: CardThing, cfg: Raw, change: HaFormData = {}) => {
 };
 const flat = (schema: HaFormSchema[]): HaFormSchema[] =>
   schema.flatMap((s) => [s, ...(s.schema ? flat(s.schema) : [])]);
-const names = (schema: HaFormSchema[]) => flat(schema).flatMap((s) => (s.name ? [s.name] : []));
+// (a heading between a section's groups is no field)
+const names = (schema: HaFormSchema[]) =>
+  flat(schema).flatMap((s) => (s.name && !s.selector?.pro_cards_heading ? [s.name] : []));
 const field = (schema: HaFormSchema[], name: string) => flat(schema).find((s) => s.name === name);
 const options = (schema: HaFormSchema[], name: string) =>
   (field(schema, name)?.selector as { select: { options: { value: string; label: string }[] } })
@@ -53,10 +55,11 @@ describe("the editor's sections", () => {
     expect(sections(schemaOf("poster", LIGHT))).toEqual([
       "Name",
       "Value",
+      "Status",
       "Appearance",
       "Layout",
       "Controls",
-      "Status and badges",
+      "Badges",
       "Rules",
       "Interactions",
     ]);
@@ -64,9 +67,10 @@ describe("the editor's sections", () => {
     expect(sections(schemaOf("tile", { entity: "sensor.wind_speed" }))).toEqual([
       "Name",
       "Value",
+      "Status",
       "Appearance",
       "Layout",
-      "Status and badges",
+      "Badges",
       "Rules",
       "Interactions",
     ]);
@@ -453,7 +457,7 @@ describe("the editor's status and badges", () => {
 
   it("lists the badges in a list of its own, each badge's form by what it shows", () => {
     expect(field(schemaOf("poster", LIGHT), "badges")?.selector).toEqual({
-      pro_cards_badges: { entity: LIGHT.entity },
+      pro_cards_badges: { entity: LIGHT.entity, hide_label: true },
     });
     const names = (item: Raw) =>
       flat(badgeItemSchema(hass, badgeToForm(item), "")).map((s) => s.name);
@@ -657,7 +661,7 @@ describe("the editor's selects", () => {
 
 describe("the editor of a row in a tile group's table", () => {
   const ROW = { entity: "sensor.washer_power" };
-  it("has no icon, no secondary and no badges: the status goes with the value", () => {
+  it("has no icon, no secondary and no badges, its status a section of its own", () => {
     const row = schemaOf("row", ROW);
     expect(sections(row)).not.toContain("Status and badges");
     expect(sections(row)).not.toContain("Layout");
@@ -671,7 +675,7 @@ describe("the editor of a row in a tile group's table", () => {
       "icon_tap_action",
     ])
       expect(ns, n).not.toContain(n);
-    expect(sectionOf(row, "Value")).toEqual(expect.arrayContaining(["status", "hide_status"]));
+    expect(sectionOf(row, "Status")).toEqual(expect.arrayContaining(["status", "hide_status"]));
   });
 
   it("offers a badge's visuals after the value, none by default", () => {
@@ -687,5 +691,38 @@ describe("the editor of a row in a tile group's table", () => {
     expect(options(schemaOf("row", flag), "control_type")[0].label).toBe("Switch");
     expect(names(schemaOf("row", flag))).not.toContain("control_position");
     expect(sections(schemaOf("row", flag, { visual_thing: "bar" }))).not.toContain("Controls");
+  });
+});
+
+describe("the editor's headings and placeholders", () => {
+  // a section's entries in their order, its headings among them
+  const entries = (schema: HaFormSchema[], title: string) =>
+    flat(schema.find((s) => s.title === title)?.schema ?? []).flatMap((s) =>
+      s.name ? [s.name] : [],
+    );
+  it("head the groups of a big section: the icon and the visual, how a value is written", () => {
+    const look = entries(schemaOf("poster", LIGHT), "Appearance");
+    expect(look.indexOf("icon_heading")).toBeLessThan(look.indexOf("icon_thing"));
+    expect(look.indexOf("visual_heading")).toBeLessThan(look.indexOf("visual_thing"));
+    expect(look.indexOf("icon_heading")).toBeGreaterThan(look.indexOf("color"));
+    const value = entries(schemaOf("poster", TEMP), "Value");
+    expect(value.indexOf("format_heading")).toBeLessThan(value.indexOf("unit"));
+    const actions = entries(schemaOf("poster", LIGHT), "Interactions");
+    expect(actions.indexOf("icon_actions_heading")).toBeLessThan(
+      actions.indexOf("icon_tap_action"),
+    );
+    // a heading says its group's name
+    const heading = flat(schemaOf("poster", LIGHT)).find((s) => s.name === "visual_heading");
+    expect(heading?.selector).toEqual({ pro_cards_heading: { text: "Visual" } });
+  });
+  it("say what the kind draws in a field's place, and show the kind's own icon", () => {
+    const sun = schemaOf("poster", { entity: "sun.sun" });
+    expect(field(sun, "name")?.default).toBe("Shown by the kind (Sun)");
+    const washer = schemaOf("poster", { entity: "sensor.washer_power", kind: "washer" });
+    expect(field(washer, "icon")?.selector).toEqual({
+      icon: { placeholder: "mdi:washing-machine" },
+    });
+    // the entity's own where the kind draws nothing in its place
+    expect(field(schemaOf("poster", TEMP), "name")?.default).toBe("Living room temperature");
   });
 });

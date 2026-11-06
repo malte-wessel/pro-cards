@@ -362,8 +362,11 @@ describe("a card's place in the layout", () => {
 });
 
 describe("the layout's and the swipe card's options form", () => {
+  // the fields in their order, through grids and sections
   const top = (s: HaFormSchema[]): string[] =>
-    s.flatMap((x) => (x.type === "grid" ? top(x.schema ?? []) : [x.name]));
+    s.flatMap((x) =>
+      x.type === "grid" || x.type === "expandable" ? top(x.schema ?? []) : [x.name],
+    );
   // a breakpoint's view: its fields' names, labels
   const viewOf = (fields: ReturnType<typeof layoutFields>) => breakpointType(() => hass, fields);
   const namesOf = (s: HaFormSchema[]): string[] =>
@@ -382,8 +385,10 @@ describe("the layout's and the swipe card's options form", () => {
     expect(top(layoutSchema(hass, { layout: "masonry" }))).not.toContain("rows");
     // the breakpoints: a list, each in a view that takes every option, the view columns it
     // starts at and More
-    expect(layoutSchema(hass, {}).find((x) => x.name === "breakpoints")?.selector).toEqual({
-      pro_cards_list: { key: "breakpoints", of: "breakpoint" },
+    const bp = layoutSchema(hass, {}).find((x) => x.type === "expandable");
+    expect(bp?.title).toBe("Breakpoints");
+    expect(bp?.schema?.[0].selector).toEqual({
+      pro_cards_list: { key: "breakpoints", of: "breakpoint", hide_label: true },
     });
     const view = viewOf(layoutFields(hass));
     expect(namesOf(view.schema(hass, {}, []))).toEqual([

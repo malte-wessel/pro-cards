@@ -107,6 +107,10 @@ export interface Kind {
   // cannot read is a config error that names `readsText`
   reads: readonly string[] | "any";
   readsText: string;
+  // what its drawing puts in place of the entity's name, value and secondary line (the editor's
+  // placeholders say so), and the icon it draws where it has one of its own
+  fills?: readonly ("name" | "value" | "secondary")[];
+  iconName?: string;
   // the numbers the visual editor offers for it beside those detected as it: of these device
   // classes, or a sensor in one of these units that names no class (a template's)
   offers?: { deviceClasses: readonly string[]; units: readonly string[] };

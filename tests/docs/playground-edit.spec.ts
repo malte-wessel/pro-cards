@@ -241,6 +241,7 @@ test("a heading opens in its own form", async ({ page }) => {
   await menu.getByRole("button", { name: "Heading card", exact: true }).click();
   await expect(tab(page, "Visual")).toBeEnabled();
   await tab(page, "Visual").click();
+  await page.locator(".pg-visual summary", { hasText: "Appearance" }).first().click();
   await field(page, "style").locator("select").selectOption("big");
   await expect.poll(() => yamlText(page)).toContain("style: big");
   await expect(previewCard(page)).toHaveJSProperty("tagName", "HEADING-CARD-PRO");
@@ -256,28 +257,38 @@ test("a sun azimuth card opens in its own form", async ({ page }) => {
   await expect(previewCard(page)).toHaveJSProperty("tagName", "SUN-AZIMUTH-CARD-PRO");
 });
 
-test("a weather card opens in its own form, its sections in tabs", async ({ page }) => {
+test("a weather card opens in its own form, its sections a list", async ({ page }) => {
   await openPlayground(page);
   const menu = await openMenu(page, "Examples");
   await menu.getByRole("button", { name: "Weather card", exact: true }).click();
   await tab(page, "Visual").click();
   const editor = page.locator(".pg-visual weather-card-pro-editor");
-  await expect(editor.locator(".tab")).toHaveText(["1Lead", "2Entities", "3Trend", "4Forecast"]);
-  await editor.locator(".tab").nth(3).click();
-  const section = editor.locator("weather-card-pro-section-editor ha-form");
-  await fill(section.locator('[data-name="days"] input'), "5");
+  await editor
+    .locator("summary", { hasText: /^\s*Sections\s*$/ })
+    .first()
+    .click();
+  const rows = editor.locator('[data-name="sections"] .row .title');
+  await expect(rows).toHaveText(["Lead", "Entities", "Trend", "Forecast"]);
+  // a section in a view of its own
+  await editor.locator('[data-name="sections"] .main').nth(3).click();
+  await fill(editor.locator('.item-view [data-name="days"] input').first(), "5");
   await expect.poll(() => yamlText(page)).toMatch(/type: forecast[\s\S]*days: 5/);
   await expect(previewCard(page)).toHaveJSProperty("tagName", "WEATHER-CARD-PRO");
 });
 
-test("a power flow card opens in its own form, its sources in tabs", async ({ page }) => {
+test("a power flow card opens in its own form, its sources a list", async ({ page }) => {
   await openPlayground(page);
   const menu = await openMenu(page, "Examples");
   await menu.getByRole("button", { name: "Power flow card", exact: true }).click();
   await tab(page, "Visual").click();
   const editor = page.locator(".pg-visual power-flow-card-pro-editor");
-  await expect(editor.locator(".tab")).toHaveText(["1Solar", "2Battery", "3Grid"]);
-  await editor.locator("summary", { hasText: "Drawing" }).first().click();
+  await editor.locator("summary", { hasText: "Sources" }).first().click();
+  await expect(editor.locator('[data-name="sources"] .row .title')).toHaveText([
+    "Solar",
+    "Battery",
+    "Grid",
+  ]);
+  await editor.locator("summary", { hasText: "Appearance" }).first().click();
   await editor.locator('[data-name="flow_style"] select').first().selectOption("arrows");
   // the sources stay where they were written, before the consumers
   await expect

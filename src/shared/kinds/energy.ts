@@ -196,6 +196,7 @@ export const BATTERY: Kind = {
   deviceClasses: ["battery"],
   reads: ["sensor", "input_number", "number"],
   readsText: "a battery sensor (%)",
+  fills: ["secondary"],
   offers: { deviceClasses: ["battery"], units: ["%"] },
   keys: ["power", "charge", "discharge"],
   rules: BATTERY_RULES,
@@ -239,6 +240,7 @@ export const CAR: Kind = {
   name: "car",
   reads: ["sensor", "input_number", "number"],
   readsText: "the car's battery (%)",
+  fills: ["secondary"],
   offers: { deviceClasses: ["battery"], units: ["%"] },
   keys: ["range", "charging", "plugged", "location"],
   rules: BATTERY_RULES,
@@ -318,21 +320,80 @@ const runOf = (c: KindCtx, st: HassEntity | undefined) => {
 
 // an appliance kind: the generic one (a plug), or a device of its own (a washer's drum, a pump's
 // impeller)
+// what an appliance reports beside its power, found on its device: the time left (a duration, or
+// the time it finishes) and its phase (an enum's or a select's state: Washing, Rinsing …), its status
+const REMAINING = { domains: ["sensor"], deviceClasses: ["duration", "timestamp"] } as const;
+const STATUS_OF = {
+  domains: ["sensor"],
+  deviceClasses: ["enum"],
+  translationKey: /status|state|operation|program|phase/i,
+  needsKey: true,
+} as const;
+// the seconds left: a duration in its unit, or until a timestamp (none: not running down)
+const secondsLeft = (r: Read | null): number | null => {
+  const st = r?.m.st;
+  if (!st) return null;
+  if (st.attributes.device_class === "timestamp") {
+    const at = Date.parse(st.state);
+    return Number.isFinite(at) ? Math.max(0, (at - Date.now()) / 1000) : null;
+  }
+  if (!isNum(st.state)) return null;
+  const unit = String(st.attributes.unit_of_measurement ?? "min");
+  const per = { s: 1, min: 60, h: 3600, d: 86400 }[unit] ?? 60;
+  return Number(st.state) * per;
+};
+
 const applianceKind = (name: string, style: ApplianceStyle | null): Kind => ({
   name,
   reads: ["sensor", "input_number", "number"],
   readsText: "a power sensor",
   offers: POWER_OFFERS,
-  keys: ["running_above"],
+  keys: ["running_above", "remaining", "phase"],
+  fills: ["value", "secondary"],
+  iconName: style ? ICONS[style] : "mdi:power-plug",
+  inputs: [
+    {
+      key: "remaining",
+      find: REMAINING,
+      accepts: [{ ...REMAINING, units: ["s", "min", "h", "d"] }],
+    },
+    {
+      key: "phase",
+      find: STATUS_OF,
+      accepts: [{ domains: ["sensor", "select", "input_select"] }],
+    },
+  ],
   history: (_opts, entity) => (entity ? [entity] : []),
   timed: true,
+  // its phase where it reports one (Washing, Rinsing …), else whether it runs
   status: (c) => {
     if (c.m.look.label) return c.m.look.label;
+    const own = c.input("phase")?.m.st;
+    if (own && own.state !== "unavailable" && own.state !== "unknown")
+      return c.ctx.hass?.formatEntityState?.(own) ?? own.state;
     const w = watts({ ent: c.ent, m: c.m });
     return w !== null && w > thresholdOf(c) ? t(c.ctx.hass, "kind.appliance.running") : null;
   },
   slots: (c) => {
     const run = runOf(c, c.m.st);
+    // the time it has left, while running down: in place of how long it has run
+    const left = secondsLeft(c.input("remaining"));
+    // (also for a run longer than the history: the device knows how long it has left)
+    if (left !== null && left > 0 && run) {
+      const kwh = fmtKwh(c.ctx.hass, run.kwh);
+      return {
+        value: wordValue(
+          t(c.ctx.hass, "kind.appliance.left", {
+            d: fmtDuration(c.ctx.hass, Math.max(60, left), true),
+          }),
+        ),
+        word: false,
+        secondary:
+          run.kwh > 0
+            ? secondaryEl([{ text: t(c.ctx.hass, "kind.appliance.this_run", { v: kwh }) }])
+            : null,
+      };
+    }
     if (!run) {
       return { value: wordValue(t(c.ctx.hass, "control.off")), word: true, secondary: null };
     }

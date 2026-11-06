@@ -43,8 +43,12 @@ const choose = (scope: Locator, name: string, value: string) =>
 // a switch, turned by its label (its knob covers the checkbox)
 const toggle = (scope: Locator, name: string) =>
   field(scope, name).locator("label").first().click();
+// (by its whole title: "Sections" is not "Entity sections")
 const openSection = (form: Locator, title: string) =>
-  form.locator("summary", { hasText: title }).click();
+  form
+    .locator("summary", { hasText: new RegExp(`^\\s*${title}\\s*$`) })
+    .first()
+    .click();
 // the entity picker: searched, then an entity picked from its list by name
 const pickEntity = async (scope: Locator, name: string, query: string, option: string) => {
   const input = field(scope, name).locator("input").first();
@@ -173,7 +177,7 @@ test("the poster's badges are added in a view of their own, edited and deleted",
   page,
 }) => {
   const e = await openEditor(page, { type: "custom:poster-card-pro", entity: "sensor.wind_speed" });
-  await openSection(e.form, "Status and badges");
+  await openSection(e.form, "Badges");
   const badges = listOf(e.form, "badges");
   // a new badge: its view on a draft, added by its entity
   await badges.locator("button.new").click();
@@ -204,7 +208,7 @@ test("a badge's kind, look and visual are set in its view, by what it shows", as
     entity: "sensor.wind_speed",
     badges: ["sensor.battery_soc"],
   });
-  await openSection(e.form, "Status and badges");
+  await openSection(e.form, "Badges");
   await listOf(e.form, "badges").locator(".row .main").first().click();
   const view = itemView(e.editor);
   await expect(field(view, "shows").locator("select")).toHaveValue("battery");
@@ -235,7 +239,7 @@ test("a badge's rules open on top of the badge's view", async ({ page }) => {
     entity: "sensor.wind_speed",
     badges: [{ entity: "sensor.battery_soc", rules: [{ below: 20, color: "red" }] }],
   });
-  await openSection(e.form, "Status and badges");
+  await openSection(e.form, "Badges");
   await listOf(e.form, "badges").locator(".row .main").first().click();
   await openSection(itemView(e.editor), "Rules");
   const rules = listOf(itemView(e.editor), "rules");
@@ -328,7 +332,7 @@ test("the tile's controls and status badge", async ({ page }) => {
   // the kind's own again: nothing written
   await choose(e.form, "control_type", "default");
   await expect.poll(e.last).toEqual({ type: "custom:tile-card-pro", entity: "light.living_room" });
-  await openSection(e.form, "Status and badges");
+  await openSection(e.form, "Status");
   await toggle(e.form, "status_badge");
   await expect.poll(e.last).toEqual({
     type: "custom:tile-card-pro",
@@ -359,6 +363,7 @@ test("the layout's editor writes its options, breakpoints and a card's place", a
     cards: [tile],
   });
   // a breakpoint in a view of its own: from where, then what it changes
+  await openSection(e.form, "Breakpoints");
   await field(e.form, "breakpoints").locator("button.new").click();
   await fill(itemView(e.editor), "at", "3");
   await fill(itemView(e.editor), "columns", "4");
@@ -443,11 +448,13 @@ test("the tile group's editor edits a tile in the tile's own editor", async ({ p
 
 test("the heading's style, layout and badges are set in its form", async ({ page }) => {
   const e = await openEditor(page, { type: "custom:heading-card-pro", title: "Office" });
+  await openSection(e.form, "Appearance");
   await choose(e.form, "style", "big");
   await expect
     .poll(e.last)
     .toEqual({ type: "custom:heading-card-pro", title: "Office", style: "big" });
   // a badge added in its view: the entity alone is written as its id
+  await openSection(e.form, "Badges");
   await listOf(e.form, "badges").locator("button.new").click();
   await pickEntity(itemView(e.editor), "entity", "gust", "Wind gust");
   await expect.poll(e.last).toMatchObject({ style: "big", badges: ["sensor.wind_gust"] });
@@ -472,6 +479,7 @@ test("the tile group's header badges are added in the badge list", async ({ page
     tiles: ["light.living_room"],
   });
   // in a view on top of the group's options (and its tiles)
+  await openSection(e.form, "Badges");
   await listOf(e.form, "badges").locator("button.new").click();
   await expect(e.editor.locator(".options")).toBeHidden();
   await pickEntity(itemView(e.editor), "entity", "gust", "Wind gust");
@@ -504,37 +512,34 @@ test("the sun azimuth's house and view are set in its form", async ({ page }) =>
   await expect(e.form.locator("summary", { hasText: "3D view" })).toHaveCount(0);
 });
 
-test("the weather card's sections are edited in tabs, each in a form of its type", async ({
-  page,
-}) => {
+test("the weather card's sections are a list, each in a form of its type", async ({ page }) => {
   const e = await openEditor(page, { type: "custom:weather-card-pro", entity: "weather.home" });
-  // no sections: a tile; "+" adds the lead, then a forecast
-  await expect(e.editor.locator(".child")).toContainText("the card is a tile");
-  await e.editor.locator(".icon.add").click();
-  await expect.poll(e.last).toEqual({
-    type: "custom:weather-card-pro",
-    entity: "weather.home",
-    sections: [{ type: "hero" }],
-  });
-  await e.editor.locator(".icon.add").click();
-  await expect(e.editor.locator(".tab")).toHaveText(["1Lead", "2Forecast"]);
-  // the forecast's own form: hourly shows hours
-  const section = e.editor.locator("weather-card-pro-section-editor ha-form");
-  await choose(section, "mode", "hourly");
-  await fill(section, "hours", "24");
+  await openSection(e.form, "Sections");
+  const list = field(e.form, "sections");
+  // a new section: the lead first, written by its first change
+  await list.locator("button.new").click();
+  await fill(itemView(e.editor), "title", "Now");
+  await expect.poll(e.last).toMatchObject({ sections: [{ type: "hero", title: "Now" }] });
+  await back(e.editor);
+  // then a forecast: hourly shows hours
+  await list.locator("button.new").click();
+  await choose(itemView(e.editor), "mode", "hourly");
+  await fill(itemView(e.editor), "hours", "24");
   await expect.poll(e.last).toMatchObject({
-    sections: [{ type: "hero" }, { type: "forecast", mode: "hourly", hours: 24 }],
+    sections: [
+      { type: "hero", title: "Now" },
+      { type: "forecast", mode: "hourly", hours: 24 },
+    ],
   });
-  // a section has no code view of its own
-  await expect(e.editor.locator(".tools .icon").first()).toBeHidden();
+  await back(e.editor);
+  await expect(list.locator(".row .title")).toHaveText(["Now", "Forecast"]);
   // both deleted: a tile again, without an empty list
-  await e.editor.getByRole("button", { name: "Delete" }).click();
-  await e.editor.locator(".tab").first().click();
-  await e.editor.getByRole("button", { name: "Delete" }).click();
+  await list.getByRole("button", { name: "Delete" }).first().click();
+  await list.getByRole("button", { name: "Delete" }).first().click();
   await expect.poll(e.last).toEqual({ type: "custom:weather-card-pro", entity: "weather.home" });
 });
 
-test("the power flow's sources are edited in tabs, and stay before its consumers", async ({
+test("the power flow's sources are a list before its consumers, each in a form of its type", async ({
   page,
 }) => {
   const e = await openEditor(page, {
@@ -542,15 +547,17 @@ test("the power flow's sources are edited in tabs, and stay before its consumers
     sources: [{ type: "solar", entity: "sensor.solar_power" }],
     consumers: ["sensor.heat_pump_power"],
   });
-  // "+" adds the next source a home usually has: a battery, measured by one signed sensor
-  await e.editor.locator(".icon.add").click();
-  await expect(e.editor.locator(".tab")).toHaveText(["1Solar", "2Battery"]);
-  const source = e.editor.locator("flow-tree-source-editor ha-form");
+  await openSection(e.form, "Sources");
+  // a new source: the next a home usually has, a battery, measured by one signed sensor or a pair
+  await field(e.form, "sources").locator("button.new").click();
+  const source = itemView(e.editor);
   await choose(source, "measure", "pair");
   await expect(field(source, "charge")).toBeVisible();
   await expect(field(source, "power")).toHaveCount(0);
+  await back(e.editor);
+  await expect(field(e.form, "sources").locator(".row .title")).toHaveText(["Solar", "Battery"]);
   // an option of the card's own: the sources keep their place in the config
-  await openSection(e.form, "Drawing");
+  await openSection(e.form, "Appearance");
   await choose(e.form, "flow_style", "arrows");
   await expect.poll(e.last).toMatchObject({
     sources: [{ type: "solar", entity: "sensor.solar_power" }, { type: "battery" }],
@@ -598,14 +605,14 @@ test("the weather card's rules and a section's lines open in views of their own"
   await fill(itemView(e.editor), "label", "Rain");
   await expect.poll(e.last).toMatchObject({ rules: [{ state: "rainy", label: "Rain" }] });
   await back(e.editor);
-  // the trend section's lines, in the section's tab
-  const section = e.editor.locator("weather-card-pro-section-editor");
-  await expect(section.locator("ha-selector-pro_cards_list .row .title")).toHaveText([
-    "Temperature",
-    "Precipitation",
-  ]);
-  await section.locator("ha-selector-pro_cards_list .main").first().click();
-  await fill(section.locator("ha-form").nth(1), "name", "Outside");
+  // the trend section's lines, in its view: a line on top of the section
+  await openSection(e.form, "Sections");
+  await field(e.form, "sections").locator(".main").first().click();
+  await openSection(itemView(e.editor), "Lines");
+  const lines = field(itemView(e.editor), "lines");
+  await expect(lines.locator(".row .title")).toHaveText(["Temperature", "Precipitation"]);
+  await lines.locator(".main").first().click();
+  await fill(itemView(e.editor), "name", "Outside");
   await expect.poll(e.last).toMatchObject({
     sections: [{ show: [{ quantity: "temperature", name: "Outside" }, "precipitation"] }],
   });
@@ -618,6 +625,7 @@ test("a power flow's consumer opens in a view, its picker offering power sensors
     type: "custom:power-flow-card-pro",
     sources: [{ type: "solar", entity: "sensor.solar_power" }],
   });
+  await openSection(e.form, "Consumers");
   await field(e.form, "consumers").locator("button.new").click();
   const view = itemView(e.editor);
   const input = field(view, "entity").locator("input");

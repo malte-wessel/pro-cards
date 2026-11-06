@@ -27,7 +27,12 @@ describe("the flow cards' editor", () => {
   it("is each card's config element, the sources in a form of their own", () => {
     expect(PowerFlowCard.getConfigElement().tagName).toBe("POWER-FLOW-CARD-PRO-EDITOR");
     expect(EnergyFlowCard.getConfigElement().tagName).toBe("ENERGY-FLOW-CARD-PRO-EDITOR");
-    expect(customElements.get("flow-tree-source-editor")).toBeDefined();
+    // its sources a list before its consumers, each in a view of its own
+    const flat = (xs: HaFormSchema[]): HaFormSchema[] =>
+      xs.flatMap((x) => [x, ...flat(x.schema ?? [])]);
+    const names = flat(flowSchema(undefined, {}, "power")).map((x) => x.name);
+    expect(names.indexOf("sources")).toBeLessThan(names.indexOf("consumers"));
+    expect(names.indexOf("sources")).toBeGreaterThan(-1);
   });
 
   it("writes every docs example back as it was, the card and each source", () => {

@@ -435,6 +435,7 @@ export class MultiTrendCard extends HTMLElement {
 
 registerCard(MultiTrendCard, {
   name: "Multi Trend Card Pro",
-  description: "Tile-style trend graph for several sensors with hover tooltip",
+  description:
+    "Several sensors as lines on one trend graph, overlaid or in lanes, with their values on hover",
   suggest: plottable,
 });

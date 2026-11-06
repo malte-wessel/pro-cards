@@ -616,3 +616,52 @@ describe("the lists in views of their own", () => {
     expect(last(b).control).toEqual({ type: "buttons", options: [{ label: "Movie" }] });
   });
 });
+
+describe("a kind waiting for its entity, and back from a view", () => {
+  it("builds the form for the waiting kind and says so on the entity", () => {
+    const e = open("poster", { entity: "sensor.washer_power", kind: "washer" });
+    expect(names(e.form())).toContain("input_remaining");
+    e.change({ shows: "lawn_mower" });
+    // the washer's inputs gone at once, the config as it was until a mower is picked
+    expect(names(e.form())).not.toContain("input_remaining");
+    expect(helperOf(e.form(), "entity")).toBe(
+      "Pick a Lawn mower entity: until then the card stays as it was",
+    );
+  });
+
+  it("returns to the list it came from", async () => {
+    const seen: string[] = [];
+    const was = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = function (this: Element) {
+      seen.push(String((this as Element & { _key?: unknown })._key ?? this.tagName));
+    };
+    try {
+      const e = open("poster", { entity: "light.kitchen", badges: ["sensor.battery_soc"] });
+      e.form().dispatchEvent(
+        new CustomEvent("pro-cards-edit-item", {
+          detail: { key: "badges", index: 0 },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+      (e.ed.querySelector(".item-view button.back") as HTMLButtonElement).click();
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      expect(seen).toEqual(["badges"]);
+    } finally {
+      Element.prototype.scrollIntoView = was;
+    }
+  });
+});
+
+describe("the heading between a section's groups", () => {
+  it("draws its text and holds no value", () => {
+    const h = document.createElement("ha-selector-pro_cards_heading") as HTMLElement & {
+      selector: unknown;
+      value: unknown;
+    };
+    h.selector = { pro_cards_heading: { text: "Visual" } };
+    h.value = "anything";
+    expect(h.shadowRoot?.querySelector(".heading")?.textContent).toBe("Visual");
+    expect(h.shadowRoot?.querySelector(".heading")?.getAttribute("role")).toBe("heading");
+  });
+});

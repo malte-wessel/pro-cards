@@ -40,7 +40,6 @@ import { stateText } from "./shared/kinds/domains.ts";
 import { BELOW, resolvePlaces } from "./shared/kinds/places.ts";
 import { fillStatus, imageUrl, statusText } from "./shared/kinds/render.ts";
 import type { KindCtx } from "./shared/kinds/types.ts";
-import { isNum } from "./shared/util.ts";
 import { iconBadgeOf, type IconBadge } from "./tile/badge.ts";
 import { normalizeTileConfig, parseIconBadge, type TileConfig } from "./tile/config.ts";
 import { CARD_TYPE } from "./tile/constants.ts";
@@ -51,6 +50,7 @@ const ALIGN = { top: "flex-start", center: "center", bottom: "flex-end" } as con
 const ZONED = new Set(["person", "device_tracker"]);
 import { STYLE_TILE_CARD_ALL } from "./tile/styles.ts";
 import { hasKind } from "./shared/suggest.ts";
+import { stubEntity } from "./shared/kinds/detect.ts";
 
 export class TileCard extends KindCardBase {
   static cardType = CARD_TYPE;
@@ -59,14 +59,9 @@ export class TileCard extends KindCardBase {
   static getConfigElement() {
     return document.createElement(`${CARD_TYPE}-editor`);
   }
+  // (an entity with a kind of its own, else a number: kinds/detect.ts)
   static getStubConfig(hass: HomeAssistant | undefined, entities?: string[]) {
-    const e =
-      (entities || []).find(
-        (id) => id.startsWith("sensor.") && hass?.states[id] && isNum(hass.states[id].state),
-      ) ||
-      (entities || [])[0] ||
-      "";
-    return { entity: e };
+    return { entity: stubEntity(hass, entities) };
   }
 
   declare _config?: TileConfig;
@@ -443,7 +438,7 @@ export class TileCard extends KindCardBase {
 registerCard(TileCard, {
   name: "Tile Card Pro",
   description:
-    "One entity as a tile drawn the way its poster type says: an animated icon, its value and status on one line, controls at its end",
+    "A compact card for one entity, drawn as what it is: its icon, name, value and status on one line, controls beside or below",
   suggest: hasKind,
 });
 

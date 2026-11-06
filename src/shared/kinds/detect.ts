@@ -85,3 +85,32 @@ export const unusedText = (kind: Kind, unused: readonly string[], who: string) =
 // the keys of other kinds the card sets that `kind` does not take (left out), as written
 export const unusedKeys = (kind: Kind, raw: Record<string, unknown>): string[] =>
   Object.keys(raw).filter((k) => ALL_KEYS.has(k) && raw[k] !== undefined && !kind.keys.includes(k));
+
+// the entity a new card starts on (the card picker's stub): one with a kind of its own (a light, a
+// thermostat, the weather …) among those offered, else a number, else the first
+const STUB_KINDS = [
+  "light",
+  "climate",
+  "weather",
+  "fan",
+  "media_player",
+  "cover",
+  "lock",
+  "battery",
+];
+export const stubEntity = (
+  hass: { states: Record<string, HassEntity> } | undefined,
+  entities: readonly string[] | undefined,
+): string => {
+  const ids = entities?.length ? entities : Object.keys(hass?.states ?? {});
+  const kindOf = (id: string) => detectKind(id, hass?.states[id]).name;
+  for (const k of STUB_KINDS) {
+    const found = ids.find((id) => hass?.states[id] && kindOf(id) === k);
+    if (found) return found;
+  }
+  const num = ids.find((id) => {
+    const v = hass?.states[id]?.state;
+    return id.startsWith("sensor.") && v !== undefined && v !== "" && Number.isFinite(Number(v));
+  });
+  return num ?? ids[0] ?? "";
+};

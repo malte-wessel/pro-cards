@@ -12,7 +12,7 @@ import {
 import type { CardConfigBase, HaFormData, HaFormSchema, HomeAssistant } from "../shared/ha.ts";
 import { hasString, t } from "../shared/i18n.ts";
 import { badgesFromForm, badgesToForm } from "../shared/kinds/editor-form.ts";
-import { badgesField } from "../shared/kinds/editor-schema.ts";
+import { ICONS } from "../shared/kinds/editor-schema.ts";
 import { TILE_GROUP_LAYOUTS, TILE_TYPE } from "./config.ts";
 
 export const TILE_GROUP_CONVS: Record<string, Conv> = {
@@ -31,36 +31,53 @@ const L = (hass: HomeAssistant | undefined, key: string) => {
   return hasString(k) ? t(hass, k) : key;
 };
 const grid = (...schema: HaFormSchema[]): HaFormSchema => ({ name: "", type: "grid", schema });
+const section = (title: string, icon: string, schema: HaFormSchema[]): HaFormSchema => ({
+  name: "",
+  type: "expandable",
+  flatten: true,
+  title,
+  iconPath: icon,
+  schema,
+});
 
 export const tileGroupSchema = (hass: HomeAssistant | undefined): HaFormSchema[] => [
   grid({ name: "title", selector: { text: {} } }, { name: "icon", selector: { icon: {} } }),
-  {
-    name: "layout",
-    selector: {
-      select: {
-        mode: "dropdown",
-        options: TILE_GROUP_LAYOUTS.map((v) => ({ value: v, label: L(hass, `group_layout.${v}`) })),
+  section(t(hass, "editor.card.section.layout"), ICONS.layout, [
+    {
+      name: "layout",
+      selector: {
+        select: {
+          mode: "dropdown",
+          options: TILE_GROUP_LAYOUTS.map((v) => ({
+            value: v,
+            label: L(hass, `group_layout.${v}`),
+          })),
+        },
       },
     },
-  },
-  // where the tiles sit in a taller card (the layout card's words for its own alignment)
-  {
-    name: "vertical_align",
-    selector: {
-      select: {
-        mode: "dropdown",
-        options: (
-          [
-            ["top", "start"],
-            ["center", "center"],
-            ["bottom", "end"],
-          ] as const
-        ).map(([value, word]) => ({ value, label: L(hass, `align.${word}`) })),
+    // where the tiles sit in a taller card (the layout card's words for its own alignment)
+    {
+      name: "vertical_align",
+      selector: {
+        select: {
+          mode: "dropdown",
+          options: (
+            [
+              ["top", "start"],
+              ["center", "center"],
+              ["bottom", "end"],
+            ] as const
+          ).map(([value, word]) => ({ value, label: L(hass, `align.${word}`) })),
+        },
       },
     },
-  },
-  { name: "title_tap_action", selector: { ui_action: { default_action: "none" } } },
-  badgesField(),
+  ]),
+  section(t(hass, "editor.card.field.badges"), ICONS.badges, [
+    { name: "badges", selector: { pro_cards_badges: { entity: "", hide_label: true } } },
+  ]),
+  section(t(hass, "editor.card.section.actions"), ICONS.actions, [
+    { name: "title_tap_action", selector: { ui_action: { default_action: "none" } } },
+  ]),
 ];
 
 // a tile cut to what the layout draws, as the editor switches it: no tile in a group takes

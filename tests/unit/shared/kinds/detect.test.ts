@@ -5,6 +5,7 @@ import {
   parseKind,
   resolveKind,
   unusedKeys,
+  stubEntity,
 } from "../../../../src/shared/kinds/detect.ts";
 import { KINDS } from "../../../../src/shared/kinds/registry.ts";
 import type { HassEntity } from "../../../../src/shared/ha.ts";
@@ -140,5 +141,25 @@ describe("unusedKeys", () => {
         gust: undefined,
       }),
     ).toEqual([]);
+  });
+});
+
+describe("the entity a new card starts on", () => {
+  const st = (state: string, attributes: Record<string, unknown> = {}) =>
+    ({ state, attributes }) as never;
+  const hass = {
+    states: {
+      "sensor.backup_manager_state": st("idle"),
+      "sensor.temperature": st("21.5", { unit_of_measurement: "°C" }),
+      "light.kitchen": st("on"),
+    },
+  };
+  it("is one with a kind of its own, else a number, else the first", () => {
+    expect(stubEntity(hass, undefined)).toBe("light.kitchen");
+    expect(stubEntity(hass, ["sensor.backup_manager_state", "sensor.temperature"])).toBe(
+      "sensor.temperature",
+    );
+    expect(stubEntity(hass, ["sensor.backup_manager_state"])).toBe("sensor.backup_manager_state");
+    expect(stubEntity(undefined, [])).toBe("");
   });
 });

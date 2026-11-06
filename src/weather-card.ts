@@ -50,10 +50,9 @@ import { buildForecast, drawForecast } from "./weather/render/forecast.ts";
 import { sectionShell } from "./weather/render/section.ts";
 import { buildTrend, drawTrendSection, type ForecastTrendEl } from "./weather/render/trend.ts";
 import { STYLE_WEATHER_CARD } from "./weather/styles.ts";
-import { SECTION_EDITOR, WeatherCardEditor, WeatherSectionEditor } from "./weather/editor.ts";
+import { WeatherCardEditor } from "./weather/editor.ts";
 
 defineElement(`${CARD_TYPE}-editor`, WeatherCardEditor);
-defineElement(SECTION_EDITOR, WeatherSectionEditor);
 import { ofDomain } from "./shared/suggest.ts";
 
 // what is shown, with a flag per section

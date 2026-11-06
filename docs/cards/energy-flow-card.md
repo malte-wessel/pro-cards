@@ -160,7 +160,7 @@ consumers:
 
 ## The visual editor
 
-Home Assistant's card editor shows the same form as the [power flow card's](/cards/power-flow-card#the-visual-editor), with energy meters in place of power sensors: the period and its picker at the top (with the energy dashboard's date picker to follow for **As the energy dashboard**), the home, the consumers, the drawing and the values in kWh, and each source in a tab: a solar array's meter, a battery's charge and discharge meters with its level, a grid's import and export. Try it in the [Playground](/playground), or with **Edit** under any example.
+Home Assistant's card editor shows the same form as the [power flow card's](/cards/power-flow-card#the-visual-editor), with energy meters in place of power sensors: the period and its picker at the top (with the energy dashboard's date picker to follow for **As the energy dashboard**), the home, the sources and the consumers, the drawing and the values in kWh, each source in a view of its own: a solar array's meter, a battery's charge and discharge meters with its level, a grid's import and export. Try it in the [Playground](/playground), or with **Edit** under any example.
 
 ## Reference
 

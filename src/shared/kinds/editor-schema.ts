@@ -81,6 +81,11 @@ export const ICONS = {
     "M10,9A1,1 0 0,1 11,8A1,1 0 0,1 12,9V13.47L13.21,13.6L18.15,15.79C18.68,16.03 19,16.56 19,17.14V21.5C18.97,22.32 18.32,22.97 17.5,23H11C10.62,23 10.26,22.85 10,22.57L5.1,18.37L5.84,17.6C6.03,17.39 6.3,17.28 6.58,17.28H6.8L10,19V9M11,5A4,4 0 0,1 15,9C15,10.5 14.2,11.77 13,12.46V11.24C13.61,10.69 14,9.89 14,9A3,3 0 0,0 11,6A3,3 0 0,0 8,9C8,9.89 8.39,10.69 9,11.24V12.46C7.8,11.77 7,10.5 7,9A4,4 0 0,1 11,5Z",
   layout:
     "M19,5V7H15V5H19M9,5V11H5V5H9M19,13V19H15V13H19M9,17V19H5V17H9M21,3H13V9H21V3M11,3H3V13H11V3M21,11H13V21H21V11M11,15H3V21H11V15Z",
+  // the status: a label (mdi:label-outline)
+  status:
+    "M16,17H5V7H16L19.55,12M17.63,5.84C17.27,5.33 16.67,5 16,5H5A2,2 0 0,0 3,7V17A2,2 0 0,0 5,19H16C16.67,19 17.27,18.66 17.63,18.15L22,12L17.63,5.84Z",
+  // (a flow's sources: the lightning bolt)
+  source: "M11,15H6L13,1V9H18L11,23V15Z",
   visibility:
     "M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z",
 };
@@ -284,7 +289,19 @@ export const badgeItemSchema = (
           } as HaFormSchema,
         ]),
     // its name: whether it shows, then the name
-    sub(T("field.name"), ICONS.name, true, [field("show_name"), ...(named ? [field("name")] : [])]),
+    // (its name where it names none: its entity's)
+    sub(T("field.name"), ICONS.name, true, [
+      field("show_name"),
+      ...(named
+        ? [
+            field("name", {
+              ...(reads && hass?.states[reads]?.attributes.friendly_name
+                ? { default: String(hass.states[reads].attributes.friendly_name) }
+                : {}),
+            } as Partial<HaFormSchema>),
+          ]
+        : []),
+    ]),
     // how its value is written: whether it shows, then (where it does) its format (for a number
     // or a date), its unit and decimals (for a number), a text before and after it
     // (open for one of your own: its text is what it says)
@@ -393,16 +410,20 @@ export const ruleItemSchema = (
   ]);
   // a trend line's: its colour while it matches
   if (ctx.line)
-    return [when, sub(L(hass, "section.rule_then"), ICONS.look, true, [field("color")]), advanced];
+    return [
+      when,
+      sub(L(hass, "section.rule_then"), ICONS.content, true, [field("color")]),
+      advanced,
+    ];
   return [
     when,
-    sub(L(hass, "section.rule_then"), ICONS.look, true, [
+    sub(L(hass, "section.rule_then"), ICONS.content, true, [
       field(ctx.badge ? "value" : ctx.entityRule ? "label" : "status"),
       grid(field("color"), field("icon")),
     ]),
     sub(
       L(hass, "section.badge_look"),
-      ICONS.badges,
+      ICONS.look,
       false,
       ctx.badge
         ? [field("style"), field("pulse")]
@@ -695,6 +716,9 @@ export const placeholders = (x: SchemaCtx): Record<string, string> => {
   const precision = (hass?.entities?.[st.entity_id] as { display_precision?: unknown } | undefined)
     ?.display_precision;
   if (typeof precision === "number") out.decimals = String(precision);
+  // what the kind draws in their place: its own (the sun's next event, a washer's time)
+  for (const f of kind.fills ?? [])
+    out[f] = L(hass, "placeholder.kind", { kind: kindLabel(hass, kind.name) });
   return out;
 };
 
@@ -702,6 +726,11 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   const { hass, thing, kind } = x;
   const data = withDefaults(x.data);
   const tr = (key: string, vars?: Record<string, string>) => L(hass, key, vars);
+  // a heading between groups of a section's fields (editor-heading.ts), its text its field's label
+  const heading = (name: string): HaFormSchema => ({
+    name,
+    selector: { pro_cards_heading: { text: tr(`field.${name}`) } },
+  });
   const opt = (value: string, label: string) => ({ value, label });
   const entity = typeof data.entity === "string" && data.entity ? data.entity : null;
   const domain = entity ? domainOf(entity) : null;
@@ -763,18 +792,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   // is written, only while it shows (a field filled in stays); its range; the line under it
   const valueShown = data.show_value !== false;
   const writes = (k: string) => valueShown || filledIn(k);
-  const valueFields: HaFormSchema[] = [
-    { name: "show_value", selector: { boolean: {} } },
-    ...(entity
-      ? [
-          {
-            name: "attribute",
-            selector: { attribute: { entity_id: entity } },
-            ...(shown.attribute !== undefined ? { default: shown.attribute } : {}),
-          },
-        ]
-      : []),
-    ...(writes("value") ? [text("value")] : []),
+  const format: HaFormSchema[] = [
     ...(x.numeric && (writes("unit") || writes("decimals"))
       ? [
           grid(text("unit"), {
@@ -793,9 +811,35 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
           ),
         ]
       : []),
-    // the value's range, where something reads it: what it does on this card, then the pair
+  ];
+  // what it shows (its attribute, a text of its own, the line under it), then how it is written,
+  // then its range where something reads it (what it does on this card, then the pair)
+  const valueFields: HaFormSchema[] = [
+    { name: "show_value", selector: { boolean: {} } },
+    ...(entity
+      ? [
+          {
+            name: "attribute",
+            selector: { attribute: { entity_id: entity } },
+            ...(shown.attribute !== undefined ? { default: shown.attribute } : {}),
+          },
+        ]
+      : []),
+    ...(writes("value") ? [text("value")] : []),
+    // (a row has no secondary)
+    ...(thing === "row"
+      ? []
+      : [
+          {
+            name: "secondary",
+            selector: { text: {} },
+            ...(shown.secondary !== undefined ? { default: shown.secondary } : {}),
+          },
+        ]),
+    ...(format.length ? [heading("format_heading"), ...format] : []),
     ...(range.shown
       ? [
+          heading("range_heading"),
           { name: "range", type: "constant", value: range.uses },
           grid(
             { name: "min", selector: { number: { mode: "box", step: "any" } } },
@@ -803,8 +847,6 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
           ),
         ]
       : []),
-    // (a row has no secondary)
-    ...(thing === "row" ? [] : [{ name: "secondary", selector: { text: {} } }]),
   ];
 
   // ----- look: the icon's and the visual's thing, then that thing's options -----
@@ -942,17 +984,44 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   // (a row has no icon)
   // the card's colour first, then the icon's thing, the icon (the entity's own in its place while
   // none is written) and that thing's options, then the visual
+  // a tile's badge on its icon, with the icon
+  const iconBadge: HaFormSchema[] =
+    thing === "tile" && iconThing !== "none"
+      ? [
+          pick("icon_badge", [
+            opt("auto", tr("icon_badge.auto")),
+            opt("none", tr("none")),
+            opt("custom", tr("icon_badge.custom")),
+          ]),
+          ...(data.icon_badge === "custom"
+            ? [
+                grid(
+                  { name: "icon_badge_icon", selector: { icon: {} } },
+                  { name: "icon_badge_color", selector: { ui_color: {} } },
+                ),
+              ]
+            : []),
+        ]
+      : [];
   const look: HaFormSchema[] = [
     { name: "color", selector: { ui_color: { default_color: "state", include_state: true } } },
     ...(thing === "row"
       ? []
       : [
+          heading("icon_heading"),
           pick("icon_thing", iconThings),
           ...(iconThing === "icon" || iconThing === "image"
-            ? [{ name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } }]
+            ? [
+                kind.iconName
+                  ? // (the kind's own icon in its place, a washer's)
+                    { name: "icon", selector: { icon: { placeholder: kind.iconName } } }
+                  : { name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } },
+              ]
             : []),
           ...iconOptions,
+          ...iconBadge,
         ]),
+    heading("visual_heading"),
     pick("visual_thing", visualThings),
     ...visualOptions,
   ];
@@ -1064,28 +1133,14 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
     ...(data.hide_status === true ? [] : [{ name: "status", selector: { text: {} } }]),
     { name: "hide_status", selector: { boolean: {} } },
   );
-  const badges: HaFormSchema[] = [
+  // the status with the value (a tile can show it as its first badge)
+  const statusFields: HaFormSchema[] = [
     status,
-    ...(thing === "tile"
-      ? [
-          { name: "status_badge", selector: { boolean: {} } },
-          pick("icon_badge", [
-            opt("auto", tr("icon_badge.auto")),
-            opt("none", tr("none")),
-            opt("custom", tr("icon_badge.custom")),
-          ]),
-          ...(data.icon_badge === "custom"
-            ? [
-                grid(
-                  { name: "icon_badge_icon", selector: { icon: {} } },
-                  { name: "icon_badge_color", selector: { ui_color: {} } },
-                ),
-              ]
-            : []),
-        ]
-      : []),
-    // our own list (badge-list.ts): a row a badge, its form in the editor's sub-view
-    { name: "badges", selector: { pro_cards_badges: { entity } } },
+    ...(thing === "tile" ? [{ name: "status_badge", selector: { boolean: {} } }] : []),
+  ];
+  // our own list (badge-list.ts): a row a badge, its form in the editor's sub-view
+  const badges: HaFormSchema[] = [
+    { name: "badges", selector: { pro_cards_badges: { entity, hide_label: true } } },
   ];
 
   // ----- rules: the kind's (predefined) while the card has none, else its own -----
@@ -1132,9 +1187,11 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
     action("tap_action", entity ? "more-info" : "none"),
     action("hold_action", entity ? "more-info" : "none"),
     action("double_tap_action", "none"),
+    { name: "hover", selector: { boolean: {} } },
     ...(iconThing === "none" || thing === "row"
       ? []
       : [
+          heading("icon_actions_heading"),
           action("icon_tap_action", iconTap),
           action("icon_hold_action", iconOwn.hold?.action ?? cardAction("hold_action")),
           // (a double tap does nothing unless told: the card's, else none)
@@ -1145,7 +1202,6 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
               : "none",
           ),
         ]),
-    { name: "hover", selector: { boolean: {} } },
   ];
 
   // what the kind reads right under what it shows: its entity, then its other inputs (a wind's
@@ -1155,11 +1211,9 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
     ...inputs,
     // (open: the field changed most)
     { ...section(tr("field.name"), ICONS.name, nameFields), expanded: true } as HaFormSchema,
-    section(
-      tr("field.value"),
-      ICONS.value,
-      thing === "row" ? [...valueFields, status] : valueFields,
-    ),
+    section(tr("field.value"), ICONS.value, valueFields),
+    // the status: its text (or none), a tile's as its first badge
+    section(tr("field.status"), ICONS.status, statusFields),
     section(tr("section.look"), ICONS.look, look),
     // how it sits in its cell (in a tile group its layout decides it; a row has none)
     ...(thing === "poster" || (thing === "tile" && !x.grouped)
@@ -1189,7 +1243,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
           ]),
         ]
       : []),
-    ...(thing === "row" ? [] : [section(tr(`section.badges_${thing}`), ICONS.badges, badges)]),
+    ...(thing === "row" ? [] : [section(tr("field.badges"), ICONS.badges, badges)]),
     section(tr("section.rules"), ICONS.rules, rules),
     section(tr("section.actions"), ICONS.actions, actions),
   ];

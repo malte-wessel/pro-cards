@@ -21,6 +21,7 @@ import {
   placeholders,
   editorSchema,
   fitsKind,
+  kindLabel,
   rangeInfo,
   type SchemaCtx,
 } from "./editor-schema.ts";
@@ -205,7 +206,11 @@ export abstract class KindCardEditor extends FormEditorBase {
   }
 
   _schema(hass: HomeAssistant, data: HaFormData): HaFormSchema[] {
-    const { kind, detected } = kindsOf(data, hass);
+    // (a kind waiting for its entity: its form, not the one the config still has)
+    const waiting = this._waiting();
+    const found = kindsOf(data, hass);
+    const kind = waiting && KINDS[waiting] ? KINDS[waiting] : found.kind;
+    const detected = found.detected;
     const entity = typeof data.entity === "string" ? data.entity : "";
     const st = hass.states[entity];
     this._ctx = {
@@ -275,6 +280,10 @@ export abstract class KindCardEditor extends FormEditorBase {
 
   _helper(sch: HaFormSchema): string | undefined {
     const name = this._nameOf(sch);
+    // a kind chosen that waits for its entity: the card (and its preview) as it was until then
+    const waiting = this._waiting();
+    if (name === "entity" && waiting)
+      return t(this._hass, "editor.card.help.waiting", { kind: kindLabel(this._hass, waiting) });
     // what applies where the range is left empty; a range that fills nothing
     if ((name === "min" || name === "max") && this._ctx) {
       const r = rangeInfo(this._ctx);

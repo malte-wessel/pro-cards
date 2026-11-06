@@ -28,7 +28,7 @@ const STYLE = `
   .row:hover, .row:has(.main:focus-visible) { background: var(--secondary-background-color); }
   .main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 4px 4px 4px 8px;
     cursor: pointer; outline: none; }
-  .icon { flex: none; width: 24px; height: 24px; display: grid; place-items: center; color: var(--state-icon-color, var(--secondary-text-color)); }
+  .icon { flex: none; width: 24px; height: 24px; display: grid; place-items: center; color: var(--secondary-text-color); }
   .dot { width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
   .texts { min-width: 0; }
   .title { font-size: 14px; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

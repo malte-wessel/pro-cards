@@ -57,15 +57,10 @@ import {
   type EnergyFlowConfig,
 } from "./energy-flow/config.ts";
 import { CARD_TYPE, GAP_KWH, IDLE_KWH } from "./energy-flow/constants.ts";
-import {
-  FlowSourceEditor,
-  EnergyFlowCardEditor,
-  SOURCE_EDITOR,
-} from "./shared/flow-tree/editor.ts";
+import { EnergyFlowCardEditor } from "./shared/flow-tree/editor.ts";
 
 defineElement(`${CARD_TYPE}-editor`, EnergyFlowCardEditor);
 // (both flow cards define it; the second one finds it there)
-if (!customElements.get(SOURCE_EDITOR)) defineElement(SOURCE_EDITOR, FlowSourceEditor);
 import {
   collectionKey,
   findCollection,

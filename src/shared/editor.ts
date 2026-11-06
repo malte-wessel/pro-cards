@@ -82,6 +82,7 @@ export abstract class FormEditorBase extends HTMLElement {
       this._send();
     },
     mount: (view) => this.appendChild(view),
+    root: (): ParentNode => this,
     showMain: (on) => {
       if (this._form) this._form.style.display = on ? "" : "none";
     },

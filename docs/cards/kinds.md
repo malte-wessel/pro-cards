@@ -281,7 +281,7 @@ With a power sensor it is a home battery: the status says Charging or Dischargin
 
 ### Appliance
 
-An appliance reads a power sensor. Above `running_above` (5 W unless set) it runs: the card shows for how long and the energy of this run. Below it, the card says Off. `appliance` draws a plug; a device with a kind of its own moves while it runs: `pump` and `heat_pump` turn, `washer`, `dryer` and `dishwasher` shake.
+An appliance reads a power sensor. Above `running_above` (5 W unless set) it runs: the card shows for how long and the energy of this run. Below it, the card says Off. Where the device reports more, the kind finds it on the device or takes it from `inputs`: `remaining`, the time left (a duration, or the time it finishes), shown in place of how long it has run; `phase`, its program's phase (Washing, Rinsing …), shown as its status. `appliance` draws a plug; a device with a kind of its own moves while it runs: `pump` and `heat_pump` turn, `washer`, `dryer` and `dishwasher` shake.
 
 ::: live
 
@@ -566,5 +566,7 @@ These keys are the same on the tile and the poster. A key the kind does not read
 | `inputs.plugged`   | on the car's device                                   | Car: a plug binary sensor, or `false`.                                                       |
 | `inputs.charging`  | on the car's device                                   | Car: a charging binary sensor, or a wallbox's power sensor (charging above 0 W), or `false`. |
 | `inputs.location`  | on the car's device                                   | Car: its device tracker, or `false`.                                                         |
+| `inputs.remaining` | on the appliance's device                             | Appliance kinds: the time left, a duration or a timestamp when it finishes, or `false`.      |
+| `inputs.phase`     | on the appliance's device                             | Appliance kinds: its phase (an enum or a select), shown as its status, or `false`.           |
 | `running_above`    | `5`                                                   | Appliance kinds: the power in W above which it runs.                                         |
 | `series`           | required for `trend`                                  | Trend: entity ids, or `{ entity, name, color, rules, visibility }`.                          |

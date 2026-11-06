@@ -31,6 +31,7 @@ import { normalizePosterConfig, type PosterConfig } from "./poster/config.ts";
 import { CARD_TYPE } from "./poster/constants.ts";
 import { STYLE_POSTER_CARD_ALL } from "./poster/styles.ts";
 import { hasKind } from "./shared/suggest.ts";
+import { stubEntity } from "./shared/kinds/detect.ts";
 
 export class PosterCard extends KindCardBase {
   static cardType = CARD_TYPE;
@@ -40,7 +41,8 @@ export class PosterCard extends KindCardBase {
     return document.createElement(`${CARD_TYPE}-editor`);
   }
   static getStubConfig(hass: HomeAssistant | undefined, entities?: string[]) {
-    return { entity: (entities || [])[0] || Object.keys(hass?.states || {})[0] || "" };
+    // (an entity with a kind of its own, else a number: kinds/detect.ts)
+    return { entity: stubEntity(hass, entities) };
   }
 
   declare _config?: PosterConfig;
@@ -306,7 +308,7 @@ export class PosterCard extends KindCardBase {
 registerCard(PosterCard, {
   name: "Poster Card Pro",
   description:
-    "One entity as a poster drawn the way its poster type says: weather, wind, rain, sun, media, covers, locks, lights and more",
+    "A large card for one entity, drawn as what it is: a light, a thermostat, the weather, a battery, a washer and more; big value, controls, badges",
   suggest: hasKind,
 });
 

@@ -172,13 +172,17 @@ export const editorSchema = (hass?: HomeAssistant, data: HaFormData = {}): HaFor
       { name: "show_sun_times", selector: { boolean: {} } },
       { name: "show_sides", selector: { boolean: {} } },
       { name: "hover_preview", selector: { boolean: {} } },
+    ]),
+    section(L("editor.card.section.look"), ICONS.look, [
+      grid(
+        { name: "sun_color", selector: { ui_color: { default_color: DEFAULTS.sun_color } } },
+        { name: "night_color", selector: { ui_color: { default_color: DEFAULTS.night_color } } },
+        { name: "sky_color", selector: { ui_color: { default_color: DEFAULTS.sky_color } } },
+      ),
+    ]),
+    section(L("editor.card.section.layout"), ICONS.layout, [
       { name: "fill_height", selector: { boolean: {} } },
     ]),
-    grid(
-      { name: "sun_color", selector: { ui_color: { default_color: DEFAULTS.sun_color } } },
-      { name: "night_color", selector: { ui_color: { default_color: DEFAULTS.night_color } } },
-      { name: "sky_color", selector: { ui_color: { default_color: DEFAULTS.sky_color } } },
-    ),
   ];
 };
 
@@ -186,6 +190,8 @@ export class SunAzimuthCardEditor extends FormEditorBase {
   static labels = AZIMUTH_LABELS;
   // a side's name: by default where it faces from the front's bearing
   _helper(sch: HaFormSchema) {
+    // (which way the camera turns: the bearing it looks toward)
+    if (sch.name === "camera") return t(this._hass, "editor.azimuth.help.camera");
     if (!sch.name.startsWith("side_")) return undefined;
     const front = Number(configToForm(this._config ?? {}).front) || 0;
     const normal = SIDE_ANGLE[sch.name.slice(5) as SideKey] + front;

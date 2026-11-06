@@ -1,12 +1,11 @@
-// Visual editor of the power flow and the energy flow card (CardsEditorBase): the card's own options
-// above (the header, the home, the consumers as a list with a view each, how the tree is drawn,
-// the values; the energy card's period), the sources in tabs below, each in a form of its type
-// (solar, battery, grid). The power card reads power sensors, the energy card energy meters: the
+// Visual editor of the power flow and the energy flow card (FormEditorBase): the header (and the
+// energy card's period), the home, then the sources and the consumers as lists (each in a view of
+// its own: a source in a form of its type, solar, battery or grid), how the tree is drawn, the
+// values, the badges, the home's rules and the interactions, each in a section. The power card reads power sensors, the energy card energy meters: the
 // forms differ only in those, and their pickers offer those. Both write back only what they changed:
 // a part as the config had it keeps its spelling, a value at its default writes nothing. The badges,
 // the home's rules (the entity cards' format) and the consumers are lists, each item in a view of
 // its own; a room's devices are its YAML.
-import { CardsEditorBase, type CardElementEditor } from "../cards/editor.ts";
 import { FormEditorBase, setOrDrop } from "../editor.ts";
 import type { CardConfigBase, HaFormData, HaFormSchema, HomeAssistant } from "../ha.ts";
 import { hasString, t, type StringKey } from "../i18n.ts";
@@ -17,7 +16,7 @@ import {
   listFromForm,
   listToForm,
 } from "../kinds/editor-form.ts";
-import { badgesField, ICONS, pickerOf } from "../kinds/editor-schema.ts";
+import { ICONS, pickerOf } from "../kinds/editor-schema.ts";
 import type { ItemType, RuleReads } from "../kinds/item-views.ts";
 
 export type FlowCard = "power" | "energy";
@@ -247,25 +246,27 @@ export const flowSchema = (
             : []),
         ]
       : [];
+  // a list in a section of its own (its rows named by the section)
+  const list = (key: string, of: string) => ({
+    name: key,
+    selector: { pro_cards_list: { key, of, card, hide_label: true } },
+  });
   return [
     grid({ name: "title", selector: { text: {} } }, { name: "icon", selector: { icon: {} } }),
     ...period,
-    { name: "title_tap_action", selector: { ui_action: { default_action: "none" } } },
-    badgesField(),
-    section(t(hass, "power.home"), ICONS.content, [
-      meter(hass, "home_entity", card, data.home_entity),
-      grid(
-        { name: "home_name", selector: { text: {} } },
-        { name: "home_icon", selector: { icon: {} } },
-      ),
-      // (its rules read the home's value, in W or kWh)
-      {
-        name: "rules",
-        selector: { pro_cards_rules: { key: "rules", entity: str(data.home_entity), unit } },
-      },
-    ]),
-    { name: "consumers", selector: { pro_cards_list: { key: "consumers", of: "consumer" } } },
-    section(F(hass, "section.drawing"), ICONS.layout, [
+    {
+      ...section(t(hass, "power.home"), ICONS.content, [
+        meter(hass, "home_entity", card, data.home_entity),
+        grid(
+          { name: "home_name", selector: { text: {} } },
+          { name: "home_icon", selector: { icon: {} } },
+        ),
+      ]),
+      expanded: true,
+    } as HaFormSchema,
+    section(F(hass, "section.sources"), ICONS.source, [list("sources", "source")]),
+    section(F(hass, "field.consumers"), ICONS.inputs, [list("consumers", "consumer")]),
+    section(t(hass, "editor.card.section.look"), ICONS.look, [
       grid(
         ...Object.entries(DRAWING).map(([k, values]) =>
           select(k, values, (v) => F(hass, `${k}.${v}`)),
@@ -288,6 +289,21 @@ export const flowSchema = (
             grid(amount("slow_below", "W"), amount("fast_above", "W")),
           ]
         : []),
+    ]),
+    section(t(hass, "editor.card.field.badges"), ICONS.badges, [
+      { name: "badges", selector: { pro_cards_badges: { entity: "", hide_label: true } } },
+    ]),
+    // (the home's: its value, in W or kWh)
+    section(t(hass, "editor.card.section.rules"), ICONS.rules, [
+      {
+        name: "rules",
+        selector: {
+          pro_cards_rules: { key: "rules", entity: str(data.home_entity), unit, hide_label: true },
+        },
+      },
+    ]),
+    section(t(hass, "editor.card.section.actions"), ICONS.actions, [
+      { name: "title_tap_action", selector: { ui_action: { default_action: "none" } } },
     ]),
   ];
 };
@@ -458,6 +474,7 @@ export const FLOW_LABELS: Record<string, StringKey> = {
   icon: "editor.cards.field.icon",
   title_tap_action: "editor.cards.field.title_tap_action",
   badges: "editor.card.field.badges",
+  sources: "editor.flow.section.sources",
   name: "editor.card.field.name",
   color: "editor.card.field.color",
   decimals: "editor.card.field.decimals",
@@ -552,74 +569,57 @@ const homeReads = (data: Raw, card: FlowCard): RuleReads => ({
   flavor: "entity",
 });
 
+// ---- a source in a view of its own: the source as written travels with its form (`__written`), so
+// what the form does not show stays and its spelling with it ----
+
+const sourceItem = (written: Raw, card: FlowCard, measure?: string): Raw => ({
+  ...sourceToForm(written, card, measure),
+  __written: written,
+});
+export const sourcesToForm = (v: unknown, card: FlowCard): Raw[] =>
+  (Array.isArray(v) ? v : []).map((x) => sourceItem(isObj(x) ? x : {}, card));
+export const sourcesFromForm = (v: unknown): Raw[] =>
+  (Array.isArray(v) ? (v as Raw[]) : []).map((x) => (isObj(x.__written) ? x.__written : {}));
+const sourceType = (
+  hass: () => HomeAssistant | undefined,
+  card: FlowCard,
+  // the sources the card has: a new one is the next a home usually has (solar, a battery, the grid)
+  have: () => Raw[],
+): ItemType => ({
+  schema: (h, item) => sourceSchema(h, item, card, isObj(item.__written) ? item.__written : {}),
+  create: () => {
+    const types = new Set(have().map((x) => typeOf(x)));
+    return sourceItem({ type: TYPES.find((ty) => !types.has(ty)) ?? "solar" }, card);
+  },
+  isEmpty: () => false,
+  label: (name) => labelOf(hass(), { name }),
+  title: (_index, item) => {
+    const name = str(item.name);
+    return `${t(hass(), `power.${typeOf(item)}` as StringKey)}${name ? ` · ${name}` : ""}`;
+  },
+  // how a battery or a grid without its sensors yet is measured: as last chosen in the form (the
+  // config cannot say it), so the form shows that way's fields
+  toForm: (item, hint) =>
+    typeof hint.measure === "string"
+      ? sourceItem(isObj(item.__written) ? item.__written : {}, card, hint.measure)
+      : item,
+  fromForm: (data, _was, hint) => {
+    if (typeof data.measure === "string") hint.measure = data.measure;
+    const { __written, ...form } = data;
+    const next = sourceFromForm(
+      form,
+      isObj(__written) ? __written : {},
+      card,
+      hint.measure as string,
+    );
+    return sourceItem(next, card, hint.measure as string);
+  },
+});
+
 // ---- the elements ---------------------------------------------------------------------------
 
-export const SOURCE_EDITOR = "flow-tree-source-editor";
-
-// one source's form, in its tab: takes the source as `value` and the card it is in as `card`
-export class FlowSourceEditor extends FormEditorBase {
-  card: FlowCard = "power";
-  set value(v: CardConfigBase) {
-    this.setConfig(v);
-  }
-  get value(): CardConfigBase | undefined {
-    return this._config;
-  }
-  _label(s: HaFormSchema) {
-    return labelOf(this._hass, s);
-  }
-  // how a battery or a grid without its sensors yet is measured: as last chosen here (the
-  // config cannot say it), so the form shows that way's fields
-  _measure?: string;
-  _schemaInputs() {
-    return this._measure ?? null;
-  }
-  _toForm(config: Raw) {
-    return sourceToForm(config, this.card, this._measure);
-  }
-  _fromForm(data: HaFormData, prev: Raw) {
-    const next = sourceFromForm(data, prev, this.card, this._measure);
-    if (typeof data.measure === "string") this._measure = data.measure;
-    return next;
-  }
-  _schema(hass: HomeAssistant, data: HaFormData) {
-    return sourceSchema(hass, data, this.card, this._config);
-  }
-}
-
-export abstract class FlowCardEditor extends CardsEditorBase {
+export abstract class FlowCardEditor extends FormEditorBase {
   abstract card: FlowCard;
-  _listKey = "sources";
-  _childCode = false;
-  // the next source a home usually has: solar, then a battery, then the grid
-  _newCard(): CardConfigBase {
-    const have = new Set(this._cards.map((s) => typeOf(s as Raw)));
-    return { type: TYPES.find((t) => !have.has(t)) ?? "solar" } as CardConfigBase;
-  }
-  _none() {
-    const p = super._none();
-    (p as unknown as HTMLElement).textContent = F(this._hass, "none");
-    return p;
-  }
-  _cardName(s: CardConfigBase) {
-    const name = (s as Raw).name;
-    return typeof name === "string" && name
-      ? name
-      : t(this._hass, `power.${typeOf(s as Raw)}` as StringKey);
-  }
-  _childEditor(at: number): CardElementEditor {
-    const ed = document.createElement(SOURCE_EDITOR) as FlowSourceEditor;
-    ed.card = this.card;
-    ed.addEventListener("config-changed", (ev) => {
-      ev.stopPropagation();
-      const config = (ev as CustomEvent).detail?.config as CardConfigBase | undefined;
-      if (!config || same(config, this._cards[at])) return;
-      const all = this._cards;
-      all[at] = config;
-      this._setCards(all);
-    });
-    return ed as unknown as CardElementEditor;
-  }
   _label(s: HaFormSchema) {
     return labelOf(this._hass, s);
   }
@@ -630,16 +630,33 @@ export abstract class FlowCardEditor extends CardsEditorBase {
     return homeReads((this._config ?? {}) as Raw, this.card);
   }
   _itemTypes() {
-    return { consumers: consumerType(() => this._hass, this.card) };
+    return {
+      consumers: consumerType(() => this._hass, this.card),
+      sources: sourceType(
+        () => this._hass,
+        this.card,
+        () => {
+          const v = (this._config as Raw | undefined)?.sources;
+          return Array.isArray(v) ? (v as Raw[]) : [];
+        },
+      ),
+    };
   }
-  _optionsSchema(hass: HomeAssistant | undefined, data: HaFormData) {
+  _toForm(config: CardConfigBase) {
+    return {
+      ...flowToForm(config as Raw, this.card),
+      sources: sourcesToForm((config as Raw).sources, this.card),
+    };
+  }
+  _fromForm(data: HaFormData, prev: CardConfigBase) {
+    const { sources, ...rest } = data;
+    const c = flowFromForm(rest, prev as Raw, this.card);
+    if (!same(sources, sourcesToForm((prev as Raw).sources, this.card)))
+      c.sources = sourcesFromForm(sources);
+    return c as CardConfigBase;
+  }
+  _schema(hass: HomeAssistant, data: HaFormData) {
     return flowSchema(hass, data, this.card);
-  }
-  _optionsToForm(config: CardConfigBase) {
-    return flowToForm(config as Raw, this.card);
-  }
-  _optionsFromForm(data: HaFormData, prev: CardConfigBase) {
-    return flowFromForm(data, prev as Raw, this.card) as CardConfigBase;
   }
 }
 export class PowerFlowCardEditor extends FlowCardEditor {

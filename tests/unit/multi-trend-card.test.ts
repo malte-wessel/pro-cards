@@ -3,7 +3,7 @@ import { niceStep, decimalsForStep, DEFAULT_HOURS } from "../../src/shared/trend
 import { configToForm, formToConfig, editorSchema } from "../../src/multi-trend/editor.ts";
 import { MultiTrendCard } from "../../src/multi-trend-card.ts";
 import type { MultiTrendCardConfig } from "../../src/multi-trend/config.ts";
-import type { HomeAssistant } from "../../src/shared/ha.ts";
+import type { HaFormSchema, HomeAssistant } from "../../src/shared/ha.ts";
 
 describe("multi-trend-card helpers", () => {
   it("picks nice tick steps", () => {
@@ -68,10 +68,18 @@ describe("multi-trend-card helpers", () => {
       } as unknown as HomeAssistant,
       data,
     );
-    expect(schema.find((s) => s.name === "entities")?.selector).toEqual({
-      pro_cards_list: { key: "entities", of: "series" },
+    const flat = (xs: HaFormSchema[]): HaFormSchema[] =>
+      xs.flatMap((x) => [x, ...flat(x.schema ?? [])]);
+    expect(flat(schema).find((s) => s.name === "entities")?.selector).toEqual({
+      pro_cards_list: { key: "entities", of: "series", hide_label: true },
     });
-    expect(schema.filter((s) => s.type === "expandable").length).toBe(0);
+    // the lines, what it shows, how it looks, its layout
+    expect(schema.filter((s) => s.type === "expandable").map((s) => s.title)).toEqual([
+      "Entities",
+      "Content",
+      "Appearance",
+      "Layout",
+    ]);
   });
   it("keeps an entity's keys the form does not show, such as visibility and rules", () => {
     const vis = [{ condition: "state", entity: "light.a", state: "on" }];

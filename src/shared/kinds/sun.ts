@@ -60,6 +60,7 @@ const isUp = (c: KindCtx) => {
 
 export const SUN: Kind = {
   name: "sun",
+  fills: ["name", "value"],
   ids: ["sun.sun"],
   reads: ["sun"],
   readsText: "sun.sun, or no entity",

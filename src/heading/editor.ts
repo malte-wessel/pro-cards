@@ -7,7 +7,7 @@ import { BADGE_SIZES, BADGE_STYLES } from "../shared/entity/constants.ts";
 import type { HaFormData, HaFormSchema, HomeAssistant } from "../shared/ha.ts";
 import { t, type StringKey } from "../shared/i18n.ts";
 import { badgesFromForm, badgesToForm } from "../shared/kinds/editor-form.ts";
-import { badgesField, ICONS } from "../shared/kinds/editor-schema.ts";
+import { ICONS } from "../shared/kinds/editor-schema.ts";
 import { BADGE_POSITIONS, HEADING_ALIGNS, HEADING_STYLES, OVERFLOWS } from "./config.ts";
 
 type Raw = Record<string, unknown>;
@@ -105,21 +105,26 @@ export const editorSchema = (hass?: HomeAssistant): HaFormSchema[] => {
   return [
     grid({ name: "title", selector: { text: {} } }, { name: "icon", selector: { icon: {} } }),
     { name: "subtitle", selector: { text: {} } },
-    grid(
-      select("style", HEADING_STYLES, (v) => L(`editor.heading.style.${v}`)),
-      { name: "color", selector: { ui_color: {} } },
-    ),
-    badgesField(),
+    section(L("editor.card.section.look"), ICONS.look, [
+      grid(
+        select("style", HEADING_STYLES, (v) => L(`editor.heading.style.${v}`)),
+        { name: "color", selector: { ui_color: {} } },
+      ),
+    ]),
+    // the badges, and how they all look unless one says otherwise
+    section(L("editor.card.field.badges"), ICONS.badges, [
+      { name: "badges", selector: { pro_cards_badges: { entity: "", hide_label: true } } },
+      grid(
+        select("badge_style", BADGE_STYLES, (v) => L(`editor.card.badge_style.${v}`)),
+        select("badge_size", BADGE_SIZES, (v) => L(`editor.card.badge_size.${v}`)),
+      ),
+    ]),
     section(L("editor.card.section.layout"), ICONS.layout, [
       grid(
         select("align", HEADING_ALIGNS, (v) => L(`editor.heading.align.${v}`)),
         select("badges_position", BADGE_POSITIONS, (v) => L(`editor.heading.badges_position.${v}`)),
       ),
       select("overflow", OVERFLOWS, (v) => L(`editor.heading.overflow.${v}`)),
-      grid(
-        select("badge_style", BADGE_STYLES, (v) => L(`editor.card.badge_style.${v}`)),
-        select("badge_size", BADGE_SIZES, (v) => L(`editor.card.badge_size.${v}`)),
-      ),
     ]),
     section(L("editor.card.section.actions"), ICONS.actions, [
       { name: "title_tap_action", selector: { ui_action: { default_action: "none" } } },

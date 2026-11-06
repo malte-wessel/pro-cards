@@ -784,6 +784,26 @@ test.describe("poster types", () => {
     await expect(pump.locator(".pvalue .big")).toHaveText("Off");
   });
 
+  test("an appliance shows its time left and its phase, as its device reports them", async ({
+    page,
+  }) => {
+    await mount(page, {
+      type: P,
+      entity: "sensor.washer_power",
+      kind: "washer",
+      inputs: { remaining: "sensor.washer_remaining", phase: "sensor.washer_status" },
+    });
+    const c = card(page);
+    // the time left in place of how long it has run, its phase as the status
+    await expect(c.locator(".pvalue .big")).toContainText("left");
+    await expect(c.locator(".pvalue .big")).toContainText("42");
+    await expect(c.locator(".pstatus")).not.toHaveText("Running");
+    await expect(c.locator(".pstatus")).toHaveText(/run/i);
+    // nothing left: how long it has run again
+    await setState(page, "sensor.washer_remaining", "0");
+    await expect(c.locator(".pvalue .big")).not.toContainText("left");
+  });
+
   test("a media player's volume gives way on a card too short for it", async ({ page }) => {
     const cfg = { type: P, entity: "media_player.living_room_speaker" };
     await mount(

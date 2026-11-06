@@ -554,30 +554,65 @@ describe("the container editors' items in views of their own", () => {
     expect(e.last()).toMatchObject({ breakpoints: { 3: { columns: 2, gap: "8px" } } });
   });
 
-  it("edit a weather rule with its label, and a flow's consumer", async () => {
+  it("edit a weather rule with its label, and a flow's source and consumer", async () => {
     await import("../../../src/weather-card.ts");
     await import("../../../src/power-flow-card.ts");
-    const w = await editor("custom:weather-card-pro", { entity: "weather.home" });
-    openItem(w.root, "temperature_rules", 0);
-    await tick();
+    // (their editors are forms of their own: the view on top of the form)
+    type Ed = HTMLElement & { setConfig(c: unknown): void; hass: unknown };
+    const formEditor = async (type: string, config: Record<string, unknown>) => {
+      const ed = document.createElement(`${type}-editor`) as Ed;
+      ed.setConfig({ type: `custom:${type}`, ...config });
+      ed.hass = snapshot();
+      document.body.appendChild(ed);
+      open.push(ed as unknown as Editor);
+      await tick();
+      const sent: Record<string, unknown>[] = [];
+      ed.addEventListener("config-changed", (e) => sent.push((e as CustomEvent).detail.config));
+      const openIt = async (key: string, index: number) => {
+        ed.querySelector("ha-form")!.dispatchEvent(
+          new CustomEvent("pro-cards-edit-item", {
+            detail: { key, index },
+            bubbles: true,
+            composed: true,
+          }),
+        );
+        await tick();
+      };
+      const view = () => ed.querySelector(".item-view ha-form") as Form;
+      const change = (fields: Record<string, unknown>) =>
+        view().dispatchEvent(
+          new CustomEvent("value-changed", { detail: { value: { ...view().data, ...fields } } }),
+        );
+      return { sent, openIt, view, change };
+    };
+    const w = await formEditor("weather-card-pro", { entity: "weather.home" });
+    await w.openIt("temperature_rules", 0);
     // the temperature's rules read a number in its unit: above and below, a label
-    expect(
-      viewForm(w.root).schema.flatMap((s) => [
-        s.name,
-        ...((s as { schema?: { name: string }[] }).schema ?? []).flatMap((x) => [
-          x.name,
-          ...((x as { schema?: { name: string }[] }).schema ?? []).map((y) => y.name),
-        ]),
-      ]),
-    ).toEqual(expect.arrayContaining(["above", "below", "label"]));
-    edit(w.root, { below: 5, label: "Cold" });
-    expect(w.last()).toMatchObject({ temperature_rules: [{ below: 5, label: "Cold" }] });
-    const f = await editor("custom:power-flow-card-pro", { sources: [] });
-    openItem(f.root, "consumers", 0);
-    await tick();
-    edit(f.root, { entity: "sensor.washer_power", group: "Laundry" });
-    expect(f.last()).toMatchObject({
+    type Node = { name: string; schema?: Node[] };
+    const names = (xs: Node[]): string[] => xs.flatMap((x) => [x.name, ...names(x.schema ?? [])]);
+    expect(names(w.view().schema as Node[])).toEqual(
+      expect.arrayContaining(["above", "below", "label"]),
+    );
+    w.change({ below: 5, label: "Cold" });
+    expect(w.sent.at(-1)).toMatchObject({ temperature_rules: [{ below: 5, label: "Cold" }] });
+    // (a key its form does not show: kept through an edit in its view)
+    const f = await formEditor("power-flow-card-pro", {
+      sources: [{ type: "solar", entity: "sensor.solar_power", decimals: 1 }],
+    });
+    await f.openIt("consumers", 0);
+    f.change({ entity: "sensor.washer_power", group: "Laundry" });
+    expect(f.sent.at(-1)).toMatchObject({
       consumers: [{ entity: "sensor.washer_power", group: "Laundry" }],
+    });
+    // a source in its view: written back as a source, what its form does not show kept
+    (
+      document.querySelector("power-flow-card-pro-editor .item-view button.back") as HTMLElement
+    ).click();
+    await tick();
+    await f.openIt("sources", 0);
+    f.change({ name: "Roof" });
+    expect(f.sent.at(-1)).toMatchObject({
+      sources: [{ type: "solar", entity: "sensor.solar_power", decimals: 1, name: "Roof" }],
     });
   });
 });

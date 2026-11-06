@@ -5,6 +5,7 @@ import { t, type StringKey } from "../shared/i18n.ts";
 import type { SunPathCardConfig } from "./config.ts";
 import { defaultLabel, SUN_EVENTS, type SunEvent, type SunLabels } from "../shared/sun/events.ts";
 import { DEFAULTS } from "./constants.ts";
+import { ICONS } from "../shared/kinds/editor-schema.ts";
 
 export const EDITOR_LABELS: Record<string, StringKey> = {
   title: "editor.sun.title",
@@ -61,35 +62,40 @@ export const formToConfig = (
   return config;
 };
 
-export const editorSchema = (hass?: HomeAssistant): HaFormSchema[] => [
-  { name: "title", selector: { text: {} } },
-  { name: "icon", selector: { icon: {} } },
-  { name: "show_dawn_dusk", selector: { boolean: {} } },
-  { name: "show_tooltip", selector: { boolean: {} } },
-  { name: "fill_height", selector: { boolean: {} } },
-  {
-    name: "",
-    type: "grid",
-    schema: [
-      { name: "day_color", selector: { ui_color: { default_color: "light-blue" } } },
-      { name: "night_color", selector: { ui_color: { default_color: "indigo" } } },
-      { name: "sun_color", selector: { ui_color: { default_color: "amber" } } },
-    ],
-  },
-  {
-    name: "",
-    type: "expandable",
-    title: t(hass, "editor.sun.section_labels"),
-    flatten: true,
-    schema: [
-      {
-        name: "",
-        type: "grid",
-        schema: SUN_EVENTS.map((k) => ({ name: `label_${k}`, selector: { text: {} } })),
-      },
-    ],
-  },
-];
+const section = (title: string, icon: string, schema: HaFormSchema[]): HaFormSchema => ({
+  name: "",
+  type: "expandable",
+  flatten: true,
+  title,
+  iconPath: icon,
+  schema,
+});
+const grid = (...schema: HaFormSchema[]): HaFormSchema => ({ name: "", type: "grid", schema });
+export const editorSchema = (hass?: HomeAssistant): HaFormSchema[] => {
+  const L = (k: string) => t(hass, k as StringKey);
+  return [
+    grid({ name: "title", selector: { text: {} } }, { name: "icon", selector: { icon: {} } }),
+    section(L("editor.card.section.content"), ICONS.content, [
+      grid(
+        { name: "show_dawn_dusk", selector: { boolean: {} } },
+        { name: "show_tooltip", selector: { boolean: {} } },
+      ),
+    ]),
+    section(L("editor.card.section.look"), ICONS.look, [
+      grid(
+        { name: "day_color", selector: { ui_color: { default_color: "light-blue" } } },
+        { name: "night_color", selector: { ui_color: { default_color: "indigo" } } },
+        { name: "sun_color", selector: { ui_color: { default_color: "amber" } } },
+      ),
+    ]),
+    section(L("editor.sun.section_labels"), ICONS.name, [
+      grid(...SUN_EVENTS.map((k) => ({ name: `label_${k}`, selector: { text: {} } }))),
+    ]),
+    section(L("editor.card.section.layout"), ICONS.layout, [
+      { name: "fill_height", selector: { boolean: {} } },
+    ]),
+  ];
+};
 
 export class SunPathCardEditor extends FormEditorBase {
   static labels = EDITOR_LABELS;

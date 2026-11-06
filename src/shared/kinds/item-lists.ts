@@ -19,7 +19,10 @@ export type ListOf =
   | "quantity"
   | "entity"
   | "consumer"
-  | "breakpoint";
+  | "breakpoint"
+  // a flow's source, a weather card's section
+  | "source"
+  | "section";
 
 const str = (v: unknown) => (typeof v === "string" ? v : typeof v === "number" ? String(v) : "");
 const nameOf = (hass: HomeAssistant | undefined, id: string) =>
@@ -125,6 +128,23 @@ export const itemLines = (
         ...(room ? [room] : []),
       ].join(" · "),
     };
+  }
+  if (of === "source") {
+    const type = str(item.type) || "solar";
+    const what = t(hass, `power.${type}` as StringKey);
+    // its meter: the one sensor, else the pair's first
+    const meter = str(item.entity) || str(item.power) || str(item.charge) || str(item.import);
+    return {
+      title: str(item.name) || what,
+      detail: [...(str(item.name) ? [what] : []), ...(meter ? [nameOf(hass, meter)] : [])].join(
+        " · ",
+      ),
+    };
+  }
+  if (of === "section") {
+    const kind = str(item.kind) || "entities";
+    const what = t(hass, `editor.weather.kind.${kind}` as StringKey);
+    return { title: str(item.title) || what, detail: str(item.title) ? what : "" };
   }
   if (of === "breakpoint") {
     const { at, more: _more, ...rest } = item;

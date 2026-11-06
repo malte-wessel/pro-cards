@@ -640,7 +640,14 @@ describe("weather-card-pro editor", () => {
 
   it("is the card's config element, with a form for each section", () => {
     expect(WeatherCard.getConfigElement().tagName).toBe("WEATHER-CARD-PRO-EDITOR");
-    expect(customElements.get("weather-card-pro-section-editor")).toBeDefined();
+    // its sections a list, each in a view of its own
+    const flat = (xs: HaFormSchema[]): HaFormSchema[] =>
+      xs.flatMap((x) => [x, ...flat(x.schema ?? [])]);
+    expect(
+      flat(weatherSchema(undefined)).find((x) => x.name === "sections")?.selector,
+    ).toMatchObject({
+      pro_cards_list: { key: "sections", of: "section" },
+    });
   });
 
   it("writes every docs example back as it was, the card and each section", () => {
