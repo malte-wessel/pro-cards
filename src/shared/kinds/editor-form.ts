@@ -84,6 +84,18 @@ export const RULE_KEYS = [
   "style",
   "pulse",
 ] as const;
+// an entity layer's rule (the weather's, the power and energy flows' home): its status is `label`
+export const ENTITY_RULE_KEYS = [
+  "state",
+  "above",
+  "below",
+  "color",
+  "icon",
+  "label",
+  "tint_card",
+  "style",
+  "pulse",
+] as const;
 // a badge's rule: when (state, above, below), then its colour, icon, a text in place of its value,
 // its pill's style and a pulse
 export const BADGE_RULE_KEYS = [
@@ -418,9 +430,9 @@ export const badgesFromForm = (v: unknown, written: unknown): unknown[] => {
     return was[i];
   });
 };
-const listToForm = (v: unknown, keys: readonly string[], id = "entity") =>
+export const listToForm = (v: unknown, keys: readonly string[], id = "entity") =>
   Array.isArray(v) ? v.map((x) => itemToForm(x, keys, id)) : [];
-const listFromForm = (v: unknown, keys: readonly string[], id: string | null) =>
+export const listFromForm = (v: unknown, keys: readonly string[], id: string | null) =>
   Array.isArray(v) ? (v as Raw[]).map((x) => itemFromForm(x, keys, id)) : [];
 
 // the control's type in the form: none, the kind's own (also `auto` where the kind has controls),

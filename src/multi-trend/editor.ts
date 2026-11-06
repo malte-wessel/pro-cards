@@ -1,11 +1,13 @@
-// Visual editor of the multi trend card (ha-form).
+// Visual editor of the multi trend card (ha-form): its options, then its entities as a list of
+// lines, each in a view of its own (its entity, name, colour, rules and visibility), as the trend
+// poster's lines.
 import { FormEditorBase, setOrDrop } from "../shared/editor.ts";
 import type { HaFormData, HaFormSchema, HomeAssistant } from "../shared/ha.ts";
 import { t, type StringKey } from "../shared/i18n.ts";
-import type { MultiTrendCardConfig, MultiTrendEntity } from "./config.ts";
+import { seriesFromForm, seriesToForm } from "../shared/kinds/editor-form.ts";
+import type { MultiTrendCardConfig } from "./config.ts";
 import { DEFAULT_HOURS } from "../shared/trend/scale.ts";
 
-const MAX_EDIT_ENTITIES = 8;
 export const EDITOR_LABELS: Record<string, StringKey> = {
   title: "editor.multi_trend.title",
   icon: "editor.multi_trend.icon",
@@ -18,8 +20,6 @@ export const EDITOR_LABELS: Record<string, StringKey> = {
   x_axis: "editor.multi_trend.x_axis",
   y_axis: "editor.multi_trend.y_axis",
   entities: "editor.multi_trend.entities",
-  name: "editor.multi_trend.name",
-  ecolor: "editor.multi_trend.ecolor",
 };
 export const layoutOptions = (hass?: HomeAssistant) => [
   { value: "auto", label: t(hass, "editor.multi_trend.layout.auto") },
@@ -29,7 +29,6 @@ export const layoutOptions = (hass?: HomeAssistant) => [
 
 // card config -> flat ha-form data
 export const configToForm = (config: MultiTrendCardConfig): HaFormData => {
-  const entities: string[] = [];
   const data: HaFormData = {
     title: config.title ?? "",
     icon: config.icon ?? "",
@@ -41,14 +40,8 @@ export const configToForm = (config: MultiTrendCardConfig): HaFormData => {
     fill_height: config.fill_height ?? true,
     x_axis: !!config.x_axis,
     y_axis: !!config.y_axis,
-    entities,
+    entities: seriesToForm(config.entities),
   };
-  (config.entities || []).forEach((e) => {
-    const o = typeof e === "string" ? { entity: e } : e;
-    entities.push(o.entity);
-    data[`ent__${o.entity}__name`] = o.name ?? "";
-    data[`ent__${o.entity}__color`] = o.color ?? "";
-  });
   return data;
 };
 
@@ -78,33 +71,17 @@ export const formToConfig = (
   setOrDrop(config, "fill_height", false, data.fill_height !== false);
   setOrDrop(config, "x_axis", true, !data.x_axis);
   setOrDrop(config, "y_axis", true, !data.y_axis);
-  // each entity starts from the one it was (the first unused with its id), so the keys the form
-  // does not show (visibility) stay, and so does a bare id
-  const before = (prev.entities || []).map((e) => (typeof e === "string" ? { entity: e } : e));
-  const used = new Set<number>();
-  config.entities = entityIds(data).map((id) => {
-    const k = before.findIndex((e, i) => e.entity === id && !used.has(i));
-    if (k >= 0) used.add(k);
-    // name and colour come from the form
-    const o: MultiTrendEntity = { ...(k >= 0 ? before[k] : {}), entity: id };
-    delete o.name;
-    delete o.color;
-    const name = data[`ent__${id}__name`],
-      color = data[`ent__${id}__color`];
-    if (name) o.name = String(name);
-    if (color) o.color = String(color);
-    // an entity with nothing of its own stays its id, unless it was written as an object
-    const was = k >= 0 ? prev.entities?.[k] : undefined;
-    return Object.keys(o).length === 1 && typeof was !== "object" ? id : o;
-  });
+  // the lines: as written while they are as the form had them, else from the form (each its id
+  // alone where it says nothing else)
+  if (JSON.stringify(data.entities ?? []) !== JSON.stringify(seriesToForm(prev.entities)))
+    config.entities = seriesFromForm(data.entities) as MultiTrendCardConfig["entities"];
   return config;
 };
 
-// the entity ids the form holds
-const entityIds = (data: HaFormData): string[] =>
-  Array.isArray(data.entities) ? data.entities.map(String) : [];
-
-export const editorSchema = (hass: HomeAssistant | undefined, data: HaFormData): HaFormSchema[] => {
+export const editorSchema = (
+  hass: HomeAssistant | undefined,
+  _data: HaFormData,
+): HaFormSchema[] => {
   const schema: HaFormSchema[] = [
     { name: "title", selector: { text: {} } },
     {
@@ -147,44 +124,16 @@ export const editorSchema = (hass: HomeAssistant | undefined, data: HaFormData):
         { name: "fill_height", selector: { boolean: {} } },
       ],
     },
-    {
-      name: "entities",
-      selector: {
-        entity: { multiple: true, filter: [{ domain: ["sensor", "number", "input_number"] }] },
-      },
-    },
+    { name: "entities", selector: { pro_cards_list: { key: "entities", of: "series" } } },
   ];
-  entityIds(data)
-    .slice(0, MAX_EDIT_ENTITIES)
-    .forEach((id) => {
-      const st = hass?.states?.[id];
-      schema.push({
-        name: "",
-        type: "expandable",
-        iconPath: "",
-        flatten: true,
-        title: st?.attributes.friendly_name || id,
-        schema: [
-          {
-            name: "",
-            type: "grid",
-            schema: [
-              { name: `ent__${id}__name`, selector: { text: {} } },
-              { name: `ent__${id}__color`, selector: { ui_color: { default_color: "state" } } },
-            ],
-          },
-        ],
-      });
-    });
   return schema;
 };
 
 export class MultiTrendCardEditor extends FormEditorBase {
   static labels = EDITOR_LABELS;
-  _label(sch: HaFormSchema) {
-    const m = sch.name.match(/^ent__.+__(name|color)$/);
-    if (m) return t(this._hass, EDITOR_LABELS[m[1] === "color" ? "ecolor" : "name"]);
-    return super._label(sch);
+  // its entities are trend lines (item-views.ts)
+  _itemTypes() {
+    return { entities: "series" };
   }
   _toForm(config: MultiTrendCardConfig) {
     return configToForm(config);
@@ -194,13 +143,5 @@ export class MultiTrendCardEditor extends FormEditorBase {
   }
   _schema(hass: HomeAssistant, data: HaFormData) {
     return editorSchema(hass, data);
-  }
-  // the entities' sections are titled by their friendly names: a rename shows
-  _schemaInputs(hass: HomeAssistant) {
-    const ents = (this._config as MultiTrendCardConfig | undefined)?.entities ?? [];
-    return ents.map((e) => {
-      const id = typeof e === "string" ? e : e.entity;
-      return hass.states?.[id]?.attributes.friendly_name ?? null;
-    });
   }
 }

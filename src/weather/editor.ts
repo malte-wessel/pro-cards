@@ -2,14 +2,21 @@
 // (CardsEditorBase), each in a form of its type: the lead (hero), a forecast, a trend or an entity
 // group. "+" adds a section (the lead first); without sections the card is a tile. Both forms
 // write back only what they changed: a part as the config had it keeps its spelling, a value at
-// its default writes nothing. The rules (the entity cards' rule format) and an entity group's
-// entities (the entity cards' keys) are YAML fields.
+// its default writes nothing. The badges, the rules (the entity cards' rule format), a trend's lines
+// and an entity group's entities are lists, each item in a view of its own.
 import { CardsEditorBase } from "../shared/cards/editor.ts";
 import { FormEditorBase, setOrDrop } from "../shared/editor.ts";
 import type { CardConfigBase, HaFormData, HaFormSchema, HomeAssistant } from "../shared/ha.ts";
 import { hasString, t, type StringKey } from "../shared/i18n.ts";
-import { badgesFromForm, badgesToForm } from "../shared/kinds/editor-form.ts";
+import {
+  ENTITY_RULE_KEYS,
+  badgesFromForm,
+  badgesToForm,
+  listFromForm,
+  listToForm,
+} from "../shared/kinds/editor-form.ts";
 import { badgesField, ICONS } from "../shared/kinds/editor-schema.ts";
+import type { ItemType, RuleReads } from "../shared/kinds/item-views.ts";
 import { DEFAULTS, QUANTITIES, TREND_LAYOUTS } from "./constants.ts";
 
 type Raw = Record<string, unknown>;
@@ -45,7 +52,31 @@ const num = (name: string, min: number, max: number) => ({
   name,
   selector: { number: { mode: "box", min, max, step: 1 } },
 });
-const yamlField = (name: string) => ({ name, selector: { object: {} } });
+
+// ---- the rules: the condition's (its states) and the temperature's (a number in its unit) ----
+const rulesToForm = (v: unknown) => listToForm(v, ENTITY_RULE_KEYS);
+const rulesFromForm = (v: unknown) => listFromForm(v, ENTITY_RULE_KEYS, null);
+const tempUnit = (hass: HomeAssistant | undefined, entity: string) => {
+  const u = entity ? hass?.states[entity]?.attributes.temperature_unit : undefined;
+  return typeof u === "string" ? u : "";
+};
+export const weatherRuleReads = (
+  hass: HomeAssistant | undefined,
+  entity: string,
+  key: string,
+): RuleReads =>
+  key === "temperature_rules"
+    ? { entity, unit: tempUnit(hass, entity), numeric: true, flavor: "entity" }
+    : { entity, unit: "", numeric: false, flavor: "entity" };
+const rulesFields = (hass: HomeAssistant | undefined, entity: string): HaFormSchema[] => [
+  { name: "rules", selector: { pro_cards_rules: { key: "rules", entity, unit: "" } } },
+  {
+    name: "temperature_rules",
+    selector: {
+      pro_cards_rules: { key: "temperature_rules", entity, unit: tempUnit(hass, entity) },
+    },
+  },
+];
 
 // the condition icons: Home Assistant's pictures, mdi icons, or a map of the card's own (YAML)
 const iconsToForm = (v: unknown) => (isObj(v) ? "custom" : v === "mdi" ? "mdi" : "hass");
@@ -76,8 +107,8 @@ export const weatherToForm = (c: Raw): HaFormData => {
   if (c.title_tap_action !== undefined && c.title_tap_action !== null)
     d.title_tap_action = c.title_tap_action;
   d.badges = badgesToForm(c.badges);
-  d.rules = c.rules;
-  d.temperature_rules = c.temperature_rules;
+  d.rules = rulesToForm(c.rules);
+  d.temperature_rules = rulesToForm(c.temperature_rules);
   return d;
 };
 
@@ -99,8 +130,13 @@ export const weatherFromForm = (data: HaFormData, prev: Raw): Raw => {
       empty(data.icon_size) || Number(data.icon_size) === DEFAULTS.tileIconSize,
     );
   if (changed("icons")) putIcons(c, data.icons);
-  for (const k of ["align", "title_tap_action", "rules", "temperature_rules"])
+  for (const k of ["align", "title_tap_action"])
     if (changed(k)) setOrDrop(c, k, data[k], empty(data[k]));
+  for (const k of ["rules", "temperature_rules"])
+    if (changed(k)) {
+      const rules = rulesFromForm(data[k]);
+      setOrDrop(c, k, rules, !rules.length);
+    }
   if (changed("badges")) {
     const badges = badgesFromForm(data.badges, prev.badges);
     setOrDrop(c, "badges", badges, !badges.length);
@@ -123,17 +159,18 @@ export const weatherSchema = (
   ),
   grid(iconsSelect(hass, written.icons), num("icon_size", 12, 160), num("decimals", 0, 3)),
   { name: "title_tap_action", selector: { ui_action: { default_action: "none" } } },
-  badgesField(hass),
+  badgesField(typeof written.entity === "string" ? written.entity : ""),
   section(W(hass, "section.groups"), ICONS.layout, [
     grid(
       num("columns", 1, 4),
       select("align", ALIGNS, (v) => W(hass, `align.${v}`)),
     ),
   ]),
-  section(t(hass, "editor.card.section.rules"), ICONS.rules, [
-    yamlField("rules"),
-    yamlField("temperature_rules"),
-  ]),
+  section(
+    t(hass, "editor.card.section.rules"),
+    ICONS.rules,
+    rulesFields(hass, typeof written.entity === "string" ? written.entity : ""),
+  ),
 ];
 
 // ---- a section ------------------------------------------------------------------------------
@@ -161,6 +198,24 @@ const linesFromForm = (v: unknown): unknown[] =>
     if (x.name) o.name = x.name;
     if (x.color) o.color = x.color;
     return Object.keys(o).length === 1 ? [o.quantity] : [o];
+  });
+
+// an entity group's entities: an entity, an attribute of the weather entity (a name without a dot),
+// or an entity item (its entity, else the weather entity's attribute), each in a view of its own
+const GROUP_KEYS = ["entity", "attribute", "name", "icon"] as const;
+export const groupEntitiesToForm = (v: unknown): Raw[] =>
+  (Array.isArray(v) ? v : []).map((x) =>
+    typeof x === "string"
+      ? x.includes(".")
+        ? { entity: x }
+        : { attribute: x }
+      : (listToForm([x], GROUP_KEYS)[0] ?? {}),
+  );
+export const groupEntitiesFromForm = (v: unknown): unknown[] =>
+  listFromForm(v, GROUP_KEYS, null).map((o) => {
+    const x = o as Raw;
+    const ks = Object.keys(x);
+    return ks.length === 1 && (ks[0] === "entity" || ks[0] === "attribute") ? x[ks[0]] : x;
   });
 
 export const sectionToForm = (s: Raw): HaFormData => {
@@ -198,11 +253,11 @@ export const sectionToForm = (s: Raw): HaFormData => {
     d.show_legend = s.show_legend !== false;
   }
   if (kind !== "entities") {
-    d.rules = s.rules;
-    d.temperature_rules = s.temperature_rules;
+    d.rules = rulesToForm(s.rules);
+    d.temperature_rules = rulesToForm(s.temperature_rules);
   } else {
     d.group_layout = groupLayoutOf(s);
-    d.entities = s.entities;
+    d.entities = groupEntitiesToForm(s.entities);
     d.columns = typeof s.columns === "number" ? s.columns : undefined;
     d.align = typeof s.align === "string" ? s.align : "";
     for (const k of ["show_name", "show_value", "show_icon"]) d[k] = s[k] !== false;
@@ -243,7 +298,10 @@ export const sectionFromForm = (data: HaFormData, prev: Raw): Raw => {
     setOrDrop(c, "columns", Number(data.columns), empty(data.columns) || !Number(data.columns));
   if (changed("icons")) putIcons(c, data.icons);
   for (const k of ["rules", "temperature_rules"])
-    if (changed(k)) setOrDrop(c, k, data[k], empty(data[k]));
+    if (changed(k)) {
+      const rules = rulesFromForm(data[k]);
+      setOrDrop(c, k, rules, !rules.length);
+    }
   if (kind === "forecast") {
     if (changed("forecast_layout"))
       setOrDrop(c, "layout", data.forecast_layout, data.forecast_layout !== "horizontal");
@@ -273,8 +331,11 @@ export const sectionFromForm = (data: HaFormData, prev: Raw): Raw => {
       if (prev.type === undefined && prev.layout !== undefined) c.layout = data.group_layout;
       else c.type = data.group_layout;
     }
-    if (changed("entities") && Array.isArray(data.entities) && data.entities.length)
-      c.entities = data.entities;
+    // (an entity group has one at least: the last one deleted leaves them as written)
+    if (changed("entities")) {
+      const entities = groupEntitiesFromForm(data.entities);
+      if (entities.length) c.entities = entities;
+    }
     for (const k of ["show_name", "show_value", "show_icon"])
       if (changed(k)) setOrDrop(c, k, false, data[k] !== false);
   }
@@ -285,6 +346,8 @@ export const sectionSchema = (
   hass: HomeAssistant | undefined,
   data: HaFormData,
   written: Raw = {},
+  // the weather card's entity (what its rules and an entity group read)
+  entity = "",
 ): HaFormSchema[] => {
   const kind = data.kind as Kind;
   const L = (k: string) => W(hass, k);
@@ -300,10 +363,11 @@ export const sectionSchema = (
         : num("days", 1, DEFAULTS.maxDays),
     ),
   ];
-  const rules = section(t(hass, "editor.card.section.rules"), ICONS.rules, [
-    yamlField("rules"),
-    yamlField("temperature_rules"),
-  ]);
+  const rules = section(
+    t(hass, "editor.card.section.rules"),
+    ICONS.rules,
+    rulesFields(hass, entity),
+  );
   if (kind === "hero")
     return [
       ...head,
@@ -327,24 +391,7 @@ export const sectionSchema = (
     return [
       ...head,
       ...window,
-      {
-        name: "lines",
-        selector: {
-          object: {
-            multiple: true,
-            label_field: "quantity",
-            description_field: "name",
-            fields: {
-              quantity: {
-                label: L("field.quantity"),
-                selector: select("", QUANTITIES, (v) => L(`quantity.${v}`)).selector,
-              },
-              name: { label: t(hass, "editor.card.field.name"), selector: { text: {} } },
-              color: { label: t(hass, "editor.card.field.color"), selector: { ui_color: {} } },
-            },
-          },
-        },
-      },
+      { name: "lines", selector: { pro_cards_list: { key: "lines", of: "quantity" } } },
       select("trend_layout", TREND_LAYOUTS, (v) =>
         t(hass, `editor.multi_trend.layout.${v}` as StringKey),
       ),
@@ -361,7 +408,7 @@ export const sectionSchema = (
       select("group_layout", GROUPS, (v) => L(`group_layout.${v}`)),
       ...(data.group_layout === "grid" ? [num("columns", 1, 4)] : []),
     ),
-    yamlField("entities"),
+    { name: "entities", selector: { pro_cards_list: { key: "entities", of: "entity", entity } } },
     select("align", ALIGNS, (v) => L(`align.${v}`)),
     grid(
       { name: "show_name", selector: { boolean: {} } },
@@ -418,14 +465,82 @@ const labelOf = (hass: HomeAssistant | undefined, s: HaFormSchema) => {
   return k && hasString(k) ? t(hass, k) : s.name;
 };
 
+// ---- the items in views of their own: a trend's line, an entity group's entity ---------------
+
+const lineType = (hass: () => HomeAssistant | undefined): ItemType => ({
+  schema: (h) => [
+    { ...select("quantity", QUANTITIES, (v) => W(h, `quantity.${v}`)), required: true },
+    grid({ name: "name", selector: { text: {} } }, { name: "color", selector: { ui_color: {} } }),
+  ],
+  create: () => ({}),
+  isEmpty: (item) => !item.quantity,
+  label: (name) =>
+    name === "quantity"
+      ? W(hass(), "field.quantity")
+      : t(hass(), `editor.card.field.${name}` as StringKey),
+  title: (index, item) => {
+    const q =
+      typeof item.quantity === "string" ? ` · ${W(hass(), `quantity.${item.quantity}`)}` : "";
+    return `${t(hass(), "editor.card.line_title", { n: String(index + 1) })}${q}`;
+  },
+});
+// (the weather entity's attributes where it names no entity)
+const groupEntityType = (
+  hass: () => HomeAssistant | undefined,
+  weather: () => string,
+): ItemType => ({
+  schema: (_h, item) => {
+    const reads = (typeof item.entity === "string" && item.entity) || weather();
+    return [
+      { name: "entity", selector: { entity: {} }, ...(weather() ? { default: weather() } : {}) },
+      ...(reads ? [{ name: "attribute", selector: { attribute: { entity_id: reads } } }] : []),
+      grid({ name: "name", selector: { text: {} } }, { name: "icon", selector: { icon: {} } }),
+      {
+        ...section(t(hass(), "editor.card.section.advanced"), ICONS.code, [
+          { name: "more", selector: { object: {} } },
+        ]),
+        expanded: false,
+      } as HaFormSchema,
+    ];
+  },
+  create: () => ({}),
+  label: (name) => t(hass(), `editor.card.field.${name}` as StringKey),
+  helper: (name) => (name === "entity" ? W(hass(), "help.entity") : undefined),
+  title: (index, item) => {
+    const id = typeof item.entity === "string" ? item.entity : "";
+    const shown =
+      (typeof item.name === "string" && item.name) ||
+      (id && String(hass()?.states[id]?.attributes.friendly_name ?? id)) ||
+      (typeof item.attribute === "string" ? item.attribute : "");
+    return `${t(hass(), "editor.card.entity_title", { n: String(index + 1) })}${shown ? ` · ${shown}` : ""}`;
+  },
+});
+
 // ---- the elements ---------------------------------------------------------------------------
 
 export const SECTION_EDITOR = "weather-card-pro-section-editor";
 
 // one section's form, in its tab: takes the section as `value`, sends config-changed with it
 export class WeatherSectionEditor extends FormEditorBase {
+  // the weather card's entity: what the section's rules and an entity group read
+  entity = "";
   set value(v: CardConfigBase) {
     this.setConfig(v);
+  }
+  _cardEntity() {
+    return this.entity;
+  }
+  _ruleReads(key: string) {
+    return weatherRuleReads(this._hass, this.entity, key);
+  }
+  _itemTypes() {
+    return {
+      lines: lineType(() => this._hass),
+      entities: groupEntityType(
+        () => this._hass,
+        () => this.entity,
+      ),
+    };
   }
   get value(): CardConfigBase | undefined {
     return this._config;
@@ -440,7 +555,7 @@ export class WeatherSectionEditor extends FormEditorBase {
     return sectionFromForm(data, prev);
   }
   _schema(hass: HomeAssistant, data: HaFormData) {
-    return sectionSchema(hass, data, this._config);
+    return sectionSchema(hass, data, this._config, this.entity);
   }
 }
 
@@ -462,8 +577,16 @@ export class WeatherCardEditor extends CardsEditorBase {
     const title = (s as Raw).title;
     return typeof title === "string" && title ? title : W(this._hass, `kind.${kindOf(s as Raw)}`);
   }
+  _ruleReads(key: string) {
+    return weatherRuleReads(this._hass, this._cardEntity(), key);
+  }
+  // (a section's form reads the weather entity: another one builds it anew)
+  _childContext() {
+    return this._cardEntity();
+  }
   _childEditor(at: number) {
     const ed = document.createElement(SECTION_EDITOR) as WeatherSectionEditor;
+    ed.entity = this._cardEntity();
     ed.addEventListener("config-changed", (ev) => {
       ev.stopPropagation();
       const config = (ev as CustomEvent).detail?.config as CardConfigBase | undefined;

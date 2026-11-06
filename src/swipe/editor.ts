@@ -1,6 +1,6 @@
 // Visual editor of the swipe card: its options and breakpoints (ha-form), its cards in tabs with
 // their own editors (CardsEditorBase).
-import { CardsEditorBase } from "../shared/cards/editor.ts";
+import { CardsEditorBase, breakpointType } from "../shared/cards/editor.ts";
 import {
   AS_IS,
   LENGTHS,
@@ -41,15 +41,20 @@ const select = (hass: HomeAssistant | undefined, of: string, values: readonly st
 });
 const grid = (...schema: HaFormSchema[]): HaFormSchema => ({ name: "", type: "grid", schema });
 
+// the options a level takes (the card's, or a breakpoint's)
+export const swipeFields = (
+  hass: HomeAssistant | undefined,
+): Record<string, HaFormSchema["selector"]> => ({
+  per_page: { number: { min: 1, max: MAX_PER_PAGE, step: 0.05, mode: "box" } },
+  gap: { text: {} },
+  snap: select(hass, "snap", SNAPS),
+  height: select(hass, "height", HEIGHTS),
+  indicator: select(hass, "indicator", INDICATORS),
+  unfold: { number: { min: 0, max: 12, mode: "box" } },
+});
+
 export const swipeSchema = (hass: HomeAssistant | undefined): HaFormSchema[] => {
-  const fields: Record<string, HaFormSchema["selector"]> = {
-    per_page: { number: { min: 1, max: MAX_PER_PAGE, step: 0.05, mode: "box" } },
-    gap: { text: {} },
-    snap: select(hass, "snap", SNAPS),
-    height: select(hass, "height", HEIGHTS),
-    indicator: select(hass, "indicator", INDICATORS),
-    unfold: { number: { min: 0, max: 12, mode: "box" } },
-  };
+  const fields = swipeFields(hass);
   return [
     grid({ name: "per_page", selector: fields.per_page }, { name: "gap", selector: fields.gap }),
     grid({ name: "snap", selector: fields.snap }, { name: "height", selector: fields.height }),
@@ -57,34 +62,15 @@ export const swipeSchema = (hass: HomeAssistant | undefined): HaFormSchema[] => 
       { name: "indicator", selector: fields.indicator },
       { name: "unfold", selector: fields.unfold },
     ),
-    {
-      name: "breakpoints",
-      selector: {
-        object: {
-          multiple: true,
-          label_field: "at",
-          description_field: "per_page",
-          fields: {
-            at: {
-              label: L(hass, "field.at"),
-              required: true,
-              selector: { number: { min: 2, max: 12, mode: "box" } },
-            },
-            ...Object.fromEntries(
-              Object.entries(fields).map(([k, selector]) => [
-                k,
-                { label: L(hass, `field.${k}`), selector },
-              ]),
-            ),
-            more: { label: L(hass, "more"), selector: { object: {} } },
-          },
-        },
-      },
-    },
+    { name: "breakpoints", selector: { pro_cards_list: { key: "breakpoints", of: "breakpoint" } } },
   ];
 };
 
 export class SwipeCardEditor extends CardsEditorBase {
+  // a breakpoint in a view of its own: the card's options at that width
+  _itemTypes() {
+    return { breakpoints: breakpointType(() => this._hass, swipeFields(this._hass)) };
+  }
   _optionsSchema(hass: HomeAssistant | undefined) {
     return swipeSchema(hass);
   }

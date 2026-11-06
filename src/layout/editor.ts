@@ -1,7 +1,7 @@
 // Visual editor of the layout card: its options and breakpoints (ha-form), its cards in tabs with
 // their own editors (CardsEditorBase), and the selected card's place in the layout (its
 // `view_layout`: span, column, order, align). A place that changes by view columns stays YAML.
-import { CardsEditorBase } from "../shared/cards/editor.ts";
+import { CardsEditorBase, breakpointType } from "../shared/cards/editor.ts";
 import {
   AS_IS,
   LENGTHS,
@@ -42,15 +42,20 @@ const select = (hass: HomeAssistant | undefined, of: string, values: readonly st
 });
 const grid = (...schema: HaFormSchema[]): HaFormSchema => ({ name: "", type: "grid", schema });
 
+// the options a level takes (the card's, or a breakpoint's)
+export const layoutFields = (
+  hass: HomeAssistant | undefined,
+): Record<string, HaFormSchema["selector"]> => ({
+  layout: select(hass, "layout", LAYOUTS),
+  columns: { text: {} },
+  rows: { text: {} },
+  align_items: select(hass, "align", ITEM_ALIGNS),
+  gap: { text: {} },
+  card_style: select(hass, "card_style", CARD_STYLES),
+});
+
 export const layoutSchema = (hass: HomeAssistant | undefined, data: HaFormData): HaFormSchema[] => {
-  const fields: Record<string, HaFormSchema["selector"]> = {
-    layout: select(hass, "layout", LAYOUTS),
-    columns: { text: {} },
-    rows: { text: {} },
-    align_items: select(hass, "align", ITEM_ALIGNS),
-    gap: { text: {} },
-    card_style: select(hass, "card_style", CARD_STYLES),
-  };
+  const fields = layoutFields(hass);
   return [
     grid(
       { name: "layout", selector: fields.layout },
@@ -64,30 +69,7 @@ export const layoutSchema = (hass: HomeAssistant | undefined, data: HaFormData):
       { name: "gap", selector: fields.gap },
       ...(data.layout === "masonry" ? [] : [{ name: "rows", selector: fields.rows }]),
     ),
-    {
-      name: "breakpoints",
-      selector: {
-        object: {
-          multiple: true,
-          label_field: "at",
-          description_field: "columns",
-          fields: {
-            at: {
-              label: L(hass, "field.at"),
-              required: true,
-              selector: { number: { min: 2, max: 12, mode: "box" } },
-            },
-            ...Object.fromEntries(
-              Object.entries(fields).map(([k, selector]) => [
-                k,
-                { label: L(hass, `field.${k}`), selector },
-              ]),
-            ),
-            more: { label: L(hass, "more"), selector: { object: {} } },
-          },
-        },
-      },
-    },
+    { name: "breakpoints", selector: { pro_cards_list: { key: "breakpoints", of: "breakpoint" } } },
   ];
 };
 
@@ -164,6 +146,10 @@ export const placeSchema = (
 };
 
 export class LayoutCardEditor extends CardsEditorBase {
+  // a breakpoint in a view of its own: the card's options at that width
+  _itemTypes() {
+    return { breakpoints: breakpointType(() => this._hass, layoutFields(this._hass)) };
+  }
   _optionsSchema(hass: HomeAssistant | undefined, data: HaFormData) {
     return layoutSchema(hass, data);
   }

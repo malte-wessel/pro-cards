@@ -16,6 +16,7 @@ import {
   BADGE_ICONS,
   BADGE_KEYS,
   BADGE_RULE_KEYS,
+  ENTITY_RULE_KEYS,
   BADGE_KINDS,
   DEFAULT,
   DETECTED,
@@ -179,6 +180,18 @@ const takesEntity = (
         f.deviceClasses.includes(dc) ||
         (!dc && !!unit && !!f.units?.includes(unit))),
   );
+};
+// an entity picker offering what any of these filters takes (a device class, else a unit where an
+// entity names none), the one written always (no hass: no filter)
+export const pickerOf = (
+  hass: HomeAssistant | undefined,
+  takes: readonly InputFilter[],
+  written = "",
+): Record<string, unknown> => {
+  if (!hass) return {};
+  const fit = Object.keys(hass.states).filter((id) => takesEntity(hass, takes, id));
+  if (written && !fit.includes(written)) fit.push(written);
+  return { include_entities: fit };
 };
 // a label of the editor's own words (a key the schema builds from a value)
 // vertical_align's values as the layout card's alignment words
@@ -347,9 +360,18 @@ export const badgeItemSchema = (
 export const ruleItemSchema = (
   hass: HomeAssistant | undefined,
   item: Record<string, unknown>,
-  ctx: { entity: string; unit: string; numeric: boolean; badge?: boolean; line?: boolean },
+  ctx: {
+    entity: string;
+    unit: string;
+    numeric: boolean;
+    badge?: boolean;
+    line?: boolean;
+    // an entity layer's rule (the weather's, the flows'): its status is its `label`
+    entityRule?: boolean;
+  },
 ): HaFormSchema[] => {
-  const f = fieldsOf(hass, ctx.badge ? BADGE_RULE_KEYS : RULE_KEYS, "rule", {
+  const keys = ctx.badge ? BADGE_RULE_KEYS : ctx.entityRule ? ENTITY_RULE_KEYS : RULE_KEYS;
+  const f = fieldsOf(hass, keys, "rule", {
     ...(ctx.entity ? { state: { state: { entity_id: ctx.entity } } } : {}),
     ...Object.fromEntries(
       (["above", "below"] as const).map((k) => [
@@ -375,7 +397,7 @@ export const ruleItemSchema = (
   return [
     when,
     sub(L(hass, "section.rule_then"), ICONS.look, true, [
-      field(ctx.badge ? "value" : "status"),
+      field(ctx.badge ? "value" : ctx.entityRule ? "label" : "status"),
       grid(field("color"), field("icon")),
     ]),
     sub(
@@ -541,8 +563,9 @@ export const conditionItemSchema = (
   ];
 };
 // a rule field's label, as fieldsOf names it
+// (an entity layer's `label` is the status the poster's rule writes)
 export const ruleFieldLabel = (hass: HomeAssistant | undefined, name: string) =>
-  name === "more" ? L(hass, "more") : L(hass, `rule.${name}`);
+  name === "more" ? L(hass, "more") : L(hass, `rule.${name === "label" ? "status" : name}`);
 
 // a badge field's label, as fieldsOf names it
 // (what a badge says as the card says it is labelled as the card's field is)
@@ -568,18 +591,12 @@ export const badgeFieldLabel = (hass: HomeAssistant | undefined, name: string) =
       ? L(hass, `field.${name}`)
       : L(hass, `badge.${name}`);
 
-// the badges as a list, one dialog per badge (the poster, the tile, the heading, the tile group's
-// header): its form items are badgesToForm's (editor-form.ts)
-export const badgesField = (hass: HomeAssistant | undefined, name = "badges"): HaFormSchema => ({
-  name,
-  selector: {
-    object: {
-      multiple: true,
-      label_field: "entity",
-      description_field: "name",
-      fields: fieldsOf(hass, BADGE_KEYS, "badge"),
-    },
-  },
+// the badges as a list, a view per badge (the heading, the tile group's header, the weather and the
+// flow cards; `entity`: what a badge without one reads): its items are badgesToForm's
+// (editor-form.ts)
+export const badgesField = (entity = ""): HaFormSchema => ({
+  name: "badges",
+  selector: { pro_cards_badges: { entity } },
 });
 
 // the controls the card draws now: the kind's own (a tile's at the line's end), the domain's

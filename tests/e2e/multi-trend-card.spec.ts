@@ -155,7 +155,8 @@ test("editor element loads with a form", async ({ page }) => {
   expect(ok).toEqual({
     tag: "multi-trend-card-pro-editor",
     hasForm: true,
-    entities: ["sensor.outdoor_temperature"],
+    // (its lines, each opening in a view of its own)
+    entities: [{ entity: "sensor.outdoor_temperature", rules: [], visibility: [] }],
   });
 });
 

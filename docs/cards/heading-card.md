@@ -151,7 +151,7 @@ badges:
 
 ## The visual editor
 
-Home Assistant's card editor shows a form for the heading: the title with its icon, the subtitle, the style and the colour, then the badges as a list, each edited in a dialog with the [badge keys](/cards/badges). **Layout** sets the alignment, where the badges sit, what happens when they do not fit and their style and size; **Interactions** the actions of the title, the icon and the badges. A field left at its default writes nothing, and what the form does not show stays in the YAML as written. Try it in the [Playground](/playground), or with **Edit** under any example.
+Home Assistant's card editor shows a form for the heading: the title with its icon, the subtitle, the style and the colour, then the badges as a list: a row each, opening its form in a view of its own with the [badge keys](/cards/badges), as the poster's badges (a back arrow returns). **Layout** sets the alignment, where the badges sit, what happens when they do not fit and their style and size; **Interactions** the actions of the title, the icon and the badges. A field left at its default writes nothing, and what the form does not show stays in the YAML as written. Try it in the [Playground](/playground), or with **Edit** under any example.
 
 ## Reference
 

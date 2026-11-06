@@ -1,4 +1,6 @@
 import {
+  groupEntitiesFromForm,
+  groupEntitiesToForm,
   sectionFromForm,
   sectionSchema,
   sectionToForm,
@@ -752,5 +754,36 @@ describe("weather-card-pro editor", () => {
       expect(WEATHER_LABELS[name], name).toBeDefined();
       expect(hasString(WEATHER_LABELS[name]), name).toBe(true);
     }
+  });
+});
+
+describe("the weather editor's lists", () => {
+  it("edit an entity group's entities: an attribute, an entity, an item, each as written", () => {
+    const written = [
+      "humidity",
+      "sensor.outdoor_temperature",
+      { attribute: "pressure", name: "P" },
+    ];
+    const items = groupEntitiesToForm(written);
+    expect(items).toEqual([
+      { attribute: "humidity" },
+      { entity: "sensor.outdoor_temperature" },
+      { attribute: "pressure", name: "P" },
+    ]);
+    expect(groupEntitiesFromForm(items)).toEqual(written);
+    // a group's last entity deleted leaves them as written (a group has one at least)
+    const s = { type: "list", entities: ["humidity"] };
+    expect(sectionFromForm({ ...sectionToForm(s), entities: [] }, s).entities).toEqual([
+      "humidity",
+    ]);
+  });
+  it("edit the rules as lists, the label as the entity layer's status", () => {
+    const c = { entity: "weather.home", rules: [{ state: "rainy", color: "blue" }] };
+    const form = weatherToForm(c);
+    expect(form.rules).toEqual([{ state: "rainy", color: "blue" }]);
+    const changed = [{ state: "rainy", color: "blue", label: "Rain" }];
+    expect(weatherFromForm({ ...form, rules: changed }, c).rules).toEqual(changed);
+    // all deleted: none written
+    expect(weatherFromForm({ ...form, rules: [] }, c)).not.toHaveProperty("rules");
   });
 });

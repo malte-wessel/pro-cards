@@ -10,14 +10,15 @@ import {
 } from "../../../src/shared/cards/editor-options.ts";
 import {
   LAYOUT_CONVS,
+  layoutFields,
   layoutSchema,
   placeByWidth,
   placeFromForm,
   placeSchema,
   placeToForm,
 } from "../../../src/layout/editor.ts";
-import { SWIPE_CONVS, swipeSchema } from "../../../src/swipe/editor.ts";
-import { cardName } from "../../../src/shared/cards/editor.ts";
+import { SWIPE_CONVS, swipeFields, swipeSchema } from "../../../src/swipe/editor.ts";
+import { breakpointType, cardName } from "../../../src/shared/cards/editor.ts";
 import { snapshot } from "../../../docs/.vitepress/theme/ha-shim/hass.ts";
 import type { CardConfigBase, HaFormData, HaFormSchema } from "../../../src/shared/ha.ts";
 import {
@@ -363,10 +364,10 @@ describe("a card's place in the layout", () => {
 describe("the layout's and the swipe card's options form", () => {
   const top = (s: HaFormSchema[]): string[] =>
     s.flatMap((x) => (x.type === "grid" ? top(x.schema ?? []) : [x.name]));
-  const fieldsOf = (s: HaFormSchema[]) => {
-    const bp = s.find((x) => x.name === "breakpoints")!;
-    return (bp.selector as { object: { fields: Record<string, { label: string }> } }).object.fields;
-  };
+  // a breakpoint's view: its fields' names, labels
+  const viewOf = (fields: ReturnType<typeof layoutFields>) => breakpointType(() => hass, fields);
+  const namesOf = (s: HaFormSchema[]): string[] =>
+    s.flatMap((x) => (x.schema ? namesOf(x.schema) : x.name ? [x.name] : []));
 
   it("shows the layout's options, rows only for a grid", () => {
     expect(top(layoutSchema(hass, { layout: "grid" }))).toEqual([
@@ -379,9 +380,13 @@ describe("the layout's and the swipe card's options form", () => {
       "breakpoints",
     ]);
     expect(top(layoutSchema(hass, { layout: "masonry" }))).not.toContain("rows");
-    // a breakpoint takes every option, the view columns it starts at and More
-    const fields = fieldsOf(layoutSchema(hass, {}));
-    expect(Object.keys(fields)).toEqual([
+    // the breakpoints: a list, each in a view that takes every option, the view columns it
+    // starts at and More
+    expect(layoutSchema(hass, {}).find((x) => x.name === "breakpoints")?.selector).toEqual({
+      pro_cards_list: { key: "breakpoints", of: "breakpoint" },
+    });
+    const view = viewOf(layoutFields(hass));
+    expect(namesOf(view.schema(hass, {}, []))).toEqual([
       "at",
       "layout",
       "columns",
@@ -391,8 +396,10 @@ describe("the layout's and the swipe card's options form", () => {
       "card_style",
       "more",
     ]);
-    expect(fields.at.label).toBe("From view columns");
-    expect(fields.more.label).toBe("More (YAML)");
+    expect(view.label("at")).toBe("From view columns");
+    expect(view.title(0, { at: 3 })).toBe("From 3 columns");
+    // a draft until it says from where
+    expect(view.isEmpty?.({ columns: 2 })).toBe(true);
   });
 
   it("shows the swipe card's options", () => {
@@ -406,7 +413,7 @@ describe("the layout's and the swipe card's options form", () => {
       "unfold",
       "breakpoints",
     ]);
-    expect(Object.keys(fieldsOf(s))).toEqual([
+    expect(namesOf(viewOf(swipeFields(hass)).schema(hass, {}, []))).toEqual([
       "at",
       "per_page",
       "gap",

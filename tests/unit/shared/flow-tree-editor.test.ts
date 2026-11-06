@@ -15,6 +15,7 @@ import {
   type FlowCard,
 } from "../../../src/shared/flow-tree/editor.ts";
 import type { HaFormSchema } from "../../../src/shared/ha.ts";
+import { snapshot } from "../../../docs/.vitepress/theme/ha-shim/hass.ts";
 import { hasString } from "../../../src/shared/i18n.ts";
 import { docExamples, withNested } from "../docs-examples.ts";
 
@@ -199,5 +200,27 @@ describe("the flow cards' editor", () => {
       expect(FLOW_LABELS[name], name).toBeDefined();
       expect(hasString(FLOW_LABELS[name]), name).toBe(true);
     }
+  });
+});
+
+describe("the flow editors' pickers", () => {
+  // what a source's meter picker offers: the card's meters (a template's by its unit)
+  const offered = (card: FlowCard, type: string, name: string) => {
+    const flat = (xs: HaFormSchema[]): HaFormSchema[] =>
+      xs.flatMap((x) => [x, ...flat(x.schema ?? [])]);
+    const field = flat(sourceSchema(snapshot(), { type, measure: "pair" }, card)).find(
+      (x) => x.name === name,
+    );
+    return (field?.selector as { entity: { include_entities?: string[] } }).entity.include_entities;
+  };
+  it("offer power sensors on the power card, energy meters on the energy card", () => {
+    expect(offered("power", "solar", "entity")).toContain("sensor.solar_power");
+    expect(offered("power", "solar", "entity")).not.toContain("sensor.solar_energy");
+    expect(offered("energy", "solar", "entity")).toContain("sensor.solar_energy");
+    expect(offered("energy", "solar", "entity")).not.toContain("sensor.solar_power");
+    expect(offered("power", "grid", "import")).not.toContain("sensor.outdoor_temperature");
+    // a battery's charge: in %
+    expect(offered("power", "battery", "soc")).toContain("sensor.battery_soc");
+    expect(offered("power", "battery", "soc")).not.toContain("sensor.battery_power");
   });
 });

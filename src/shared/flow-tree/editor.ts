@@ -1,16 +1,24 @@
 // Visual editor of the power flow and the energy flow card (CardsEditorBase): the card's own options
-// above (the header, the home, the consumers as a list with a dialog each, how the tree is drawn,
+// above (the header, the home, the consumers as a list with a view each, how the tree is drawn,
 // the values; the energy card's period), the sources in tabs below, each in a form of its type
 // (solar, battery, grid). The power card reads power sensors, the energy card energy meters: the
-// forms differ only in those. Both write back only what they changed: a part as the config had
-// it keeps its spelling, a value at its default writes nothing. The home's rules (the entity
-// cards' format) and a room's devices are YAML fields.
+// forms differ only in those, and their pickers offer those. Both write back only what they changed:
+// a part as the config had it keeps its spelling, a value at its default writes nothing. The badges,
+// the home's rules (the entity cards' format) and the consumers are lists, each item in a view of
+// its own; a room's devices are its YAML.
 import { CardsEditorBase, type CardElementEditor } from "../cards/editor.ts";
 import { FormEditorBase, setOrDrop } from "../editor.ts";
 import type { CardConfigBase, HaFormData, HaFormSchema, HomeAssistant } from "../ha.ts";
 import { hasString, t, type StringKey } from "../i18n.ts";
-import { badgesFromForm, badgesToForm } from "../kinds/editor-form.ts";
-import { badgesField, ICONS } from "../kinds/editor-schema.ts";
+import {
+  ENTITY_RULE_KEYS,
+  badgesFromForm,
+  badgesToForm,
+  listFromForm,
+  listToForm,
+} from "../kinds/editor-form.ts";
+import { badgesField, ICONS, pickerOf } from "../kinds/editor-schema.ts";
+import type { ItemType, RuleReads } from "../kinds/item-views.ts";
 
 export type FlowCard = "power" | "energy";
 type Raw = Record<string, unknown>;
@@ -44,12 +52,24 @@ const select = (name: string, values: readonly string[], label: (v: string) => s
   },
 });
 const sensor = (name: string) => ({ name, selector: { entity: { filter: { domain: "sensor" } } } });
+// a meter of the card: a power sensor (power card), an energy meter (energy card), a battery's
+// charge in %; a template's by its unit
+const METER_OF = {
+  power: { domains: ["sensor"], deviceClasses: ["power"], units: ["W", "kW", "MW"] },
+  energy: { domains: ["sensor"], deviceClasses: ["energy"], units: ["Wh", "kWh", "MWh"] },
+  battery: { domains: ["sensor"], deviceClasses: ["battery"], units: ["%"] },
+} as const;
+const meter = (
+  hass: HomeAssistant | undefined,
+  name: string,
+  of: keyof typeof METER_OF,
+  written: unknown,
+) => ({ name, selector: { entity: pickerOf(hass, [METER_OF[of]], str(written)) } });
 const any = (name: string) => ({ name, selector: { entity: {} } });
 const amount = (name: string, unit: string, step = 1) => ({
   name,
   selector: { number: { mode: "box", min: 0, step, unit_of_measurement: unit } },
 });
-const yamlField = (name: string) => ({ name, selector: { object: {} } });
 const bool = (name: string) => ({ name, selector: { boolean: {} } });
 
 // the units a card's thresholds read, and their defaults
@@ -115,7 +135,7 @@ export const flowToForm = (c: Raw, card: FlowCard): HaFormData => {
     idle_below: numOr(c.idle_below, IDLE[card]),
     decimals: numOr(c.decimals, undefined),
     hide_consumers_below: numOr(c.hide_consumers_below, undefined),
-    rules: c.rules,
+    rules: listToForm(c.rules, ENTITY_RULE_KEYS),
   };
   if (c.title_tap_action !== undefined && c.title_tap_action !== null)
     d.title_tap_action = c.title_tap_action;
@@ -139,8 +159,12 @@ export const flowFromForm = (data: HaFormData, prev: Raw, card: FlowCard): Raw =
   const c: Raw = { ...prev };
   const was = flowToForm(prev, card);
   const changed = (...ks: string[]) => ks.some((k) => !same(data[k], was[k]));
-  for (const k of ["title", "icon", "title_tap_action", "rules", "collection_key"])
+  for (const k of ["title", "icon", "title_tap_action", "collection_key"])
     if (changed(k)) setOrDrop(c, k, data[k], empty(data[k]));
+  if (changed("rules")) {
+    const rules = listFromForm(data.rules, ENTITY_RULE_KEYS, null);
+    setOrDrop(c, "rules", rules, !rules.length);
+  }
   // the home: its entity id alone, else an object (keeping what the form does not show)
   if (changed("home_entity", "home_name", "home_icon")) {
     const home: Raw = { ...homeOf(prev.home) };
@@ -227,37 +251,20 @@ export const flowSchema = (
     grid({ name: "title", selector: { text: {} } }, { name: "icon", selector: { icon: {} } }),
     ...period,
     { name: "title_tap_action", selector: { ui_action: { default_action: "none" } } },
-    badgesField(hass),
+    badgesField(),
     section(t(hass, "power.home"), ICONS.content, [
-      sensor("home_entity"),
+      meter(hass, "home_entity", card, data.home_entity),
       grid(
         { name: "home_name", selector: { text: {} } },
         { name: "home_icon", selector: { icon: {} } },
       ),
-      yamlField("rules"),
-    ]),
-    {
-      name: "consumers",
-      selector: {
-        object: {
-          multiple: true,
-          label_field: "entity",
-          description_field: "name",
-          fields: {
-            entity: { label: t(hass, "editor.card.field.entity"), selector: { entity: {} } },
-            group: { label: F(hass, "field.room"), selector: { text: {} } },
-            name: { label: t(hass, "editor.card.field.name"), selector: { text: {} } },
-            icon: { label: t(hass, "editor.cards.field.icon"), selector: { icon: {} } },
-            color: { label: t(hass, "editor.card.field.color"), selector: { ui_color: {} } },
-            hide_below: {
-              label: F(hass, "field.hide_below"),
-              selector: amount("", unit, card === "energy" ? 0.1 : 1).selector,
-            },
-            more: { label: t(hass, "editor.card.more"), selector: { object: {} } },
-          },
-        },
+      // (its rules read the home's value, in W or kWh)
+      {
+        name: "rules",
+        selector: { pro_cards_rules: { key: "rules", entity: str(data.home_entity), unit } },
       },
-    },
+    ]),
+    { name: "consumers", selector: { pro_cards_list: { key: "consumers", of: "consumer" } } },
     section(F(hass, "section.drawing"), ICONS.layout, [
       grid(
         ...Object.entries(DRAWING).map(([k, values]) =>
@@ -414,30 +421,29 @@ export const sourceSchema = (
       : CHARGE_FROM,
     (v) => F(hass, `charge_from.${v}`),
   );
+  const m = (name: string) => meter(hass, name, card, data[name]);
   if (type === "solar")
-    return [...head, sensor("entity"), ...(card === "power" ? [amount("peak", "W")] : [])];
+    return [...head, m("entity"), ...(card === "power" ? [amount("peak", "W")] : [])];
   if (type === "battery")
     return [
       ...head,
       ...measure,
-      ...(pair
-        ? [grid(sensor("charge"), sensor("discharge"))]
-        : [grid(sensor("power"), bool("invert"))]),
-      sensor("soc"),
+      ...(pair ? [grid(m("charge"), m("discharge"))] : [grid(m("power"), bool("invert"))]),
+      meter(hass, "soc", "battery", data.soc),
       chargeFrom,
     ];
   return [
     ...head,
     ...measure,
     ...(pair
-      ? [grid(sensor("import"), sensor("export")), ...(card === "power" ? [bool("both_ways")] : [])]
-      : [grid(sensor("power"), bool("invert"))]),
+      ? [grid(m("import"), m("export")), ...(card === "power" ? [bool("both_ways")] : [])]
+      : [grid(m("power"), bool("invert"))]),
     ...(card === "power"
       ? [
           section(F(hass, "section.grid_more"), ICONS.inputs, [
             sensor("price"),
             any("offline"),
-            sensor("generator"),
+            m("generator"),
             grid(sensor("fossil"), sensor("non_fossil")),
           ]),
         ]
@@ -503,6 +509,48 @@ const labelOf = (hass: HomeAssistant | undefined, s: HaFormSchema) => {
 };
 const helperOf = (hass: HomeAssistant | undefined, s: HaFormSchema) =>
   s.name === "home_entity" ? F(hass, "help.home") : undefined;
+
+// ---- a consumer in a view of its own: a device (its meter) or a room (its devices as YAML) ----
+
+const consumerType = (hass: () => HomeAssistant | undefined, card: FlowCard): ItemType => ({
+  schema: (h, item) => [
+    meter(h, "entity", card, item.entity),
+    { name: "group", selector: { text: {} } },
+    grid({ name: "name", selector: { text: {} } }, { name: "icon", selector: { icon: {} } }),
+    grid(
+      { name: "color", selector: { ui_color: {} } },
+      amount("hide_below", UNIT[card], card === "energy" ? 0.1 : 1),
+    ),
+    {
+      ...section(t(h, "editor.card.section.advanced"), ICONS.code, [
+        { name: "more", selector: { object: {} } },
+      ]),
+      expanded: false,
+    } as HaFormSchema,
+  ],
+  create: () => ({}),
+  label: (name) =>
+    name === "group"
+      ? F(hass(), "field.room")
+      : name === "hide_below"
+        ? F(hass(), "field.hide_below")
+        : name === "icon"
+          ? t(hass(), "editor.cards.field.icon")
+          : t(hass(), `editor.card.field.${name}` as StringKey),
+  title: (index, item) => {
+    const id = str(item.entity);
+    const shown =
+      str(item.name) || (id && String(hass()?.states[id]?.attributes.friendly_name ?? id));
+    return `${t(hass(), "editor.card.consumer_title", { n: String(index + 1) })}${shown ? ` · ${shown}` : ""}`;
+  },
+});
+// the home's rules: its value, in W or kWh
+const homeReads = (data: Raw, card: FlowCard): RuleReads => ({
+  entity: str(homeOf(data.home).entity),
+  unit: UNIT[card],
+  numeric: true,
+  flavor: "entity",
+});
 
 // ---- the elements ---------------------------------------------------------------------------
 
@@ -577,6 +625,12 @@ export abstract class FlowCardEditor extends CardsEditorBase {
   }
   _helper(s: HaFormSchema) {
     return helperOf(this._hass, s);
+  }
+  _ruleReads() {
+    return homeReads((this._config ?? {}) as Raw, this.card);
+  }
+  _itemTypes() {
+    return { consumers: consumerType(() => this._hass, this.card) };
   }
   _optionsSchema(hass: HomeAssistant | undefined, data: HaFormData) {
     return flowSchema(hass, data, this.card);

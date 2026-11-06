@@ -502,3 +502,82 @@ describe("the tile group's editor", () => {
     expect(tileEditor(e)._ctx.grouped).toBe(true);
   });
 });
+
+describe("the container editors' items in views of their own", () => {
+  // an item of the options opened (as its list's row sends it), and its view's form edited
+  const openItem = (root: ShadowRoot, key: string, index: number) =>
+    root.querySelector(".options ha-form")!.dispatchEvent(
+      new CustomEvent("pro-cards-edit-item", {
+        detail: { key, index },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  type Form = HTMLElement & { data: Record<string, unknown>; schema: { name: string }[] };
+  const viewForm = (root: ShadowRoot) => root.querySelector(".item-view ha-form") as Form;
+  const edit = (root: ShadowRoot, fields: Record<string, unknown>) =>
+    viewForm(root).dispatchEvent(
+      new CustomEvent("value-changed", {
+        detail: { value: { ...viewForm(root).data, ...fields } },
+      }),
+    );
+
+  it("open on top of the options and the cards, written through the options", async () => {
+    const e = await editor("custom:tile-group-card-pro", {
+      title: "Lights",
+      tiles: ["light.kitchen"],
+    });
+    openItem(e.root, "badges", 0);
+    await tick();
+    expect((e.root.querySelector(".options") as HTMLElement).style.display).toBe("none");
+    expect((e.root.querySelector(".cards") as HTMLElement).style.display).toBe("none");
+    edit(e.root, { entity: "sensor.battery_soc" });
+    expect(e.last()).toEqual({
+      type: "custom:tile-group-card-pro",
+      title: "Lights",
+      badges: ["sensor.battery_soc"],
+      tiles: ["light.kitchen"],
+    });
+    // back: the options and the cards again
+    (e.root.querySelector(".item-view button.back") as HTMLButtonElement).click();
+    await tick();
+    expect((e.root.querySelector(".options") as HTMLElement).style.display).toBe("");
+    expect(e.tabs()).toHaveLength(1);
+  });
+
+  it("edit a breakpoint from where it starts", async () => {
+    const e = await editor(LAYOUT, { cards: [tile], breakpoints: { 3: { columns: 2 } } });
+    openItem(e.root, "breakpoints", 0);
+    await tick();
+    expect(e.root.querySelector(".item-view .title")?.textContent).toBe("From 3 columns");
+    edit(e.root, { gap: "8px" });
+    expect(e.last()).toMatchObject({ breakpoints: { 3: { columns: 2, gap: "8px" } } });
+  });
+
+  it("edit a weather rule with its label, and a flow's consumer", async () => {
+    await import("../../../src/weather-card.ts");
+    await import("../../../src/power-flow-card.ts");
+    const w = await editor("custom:weather-card-pro", { entity: "weather.home" });
+    openItem(w.root, "temperature_rules", 0);
+    await tick();
+    // the temperature's rules read a number in its unit: above and below, a label
+    expect(
+      viewForm(w.root).schema.flatMap((s) => [
+        s.name,
+        ...((s as { schema?: { name: string }[] }).schema ?? []).flatMap((x) => [
+          x.name,
+          ...((x as { schema?: { name: string }[] }).schema ?? []).map((y) => y.name),
+        ]),
+      ]),
+    ).toEqual(expect.arrayContaining(["above", "below", "label"]));
+    edit(w.root, { below: 5, label: "Cold" });
+    expect(w.last()).toMatchObject({ temperature_rules: [{ below: 5, label: "Cold" }] });
+    const f = await editor("custom:power-flow-card-pro", { sources: [] });
+    openItem(f.root, "consumers", 0);
+    await tick();
+    edit(f.root, { entity: "sensor.washer_power", group: "Laundry" });
+    expect(f.last()).toMatchObject({
+      consumers: [{ entity: "sensor.washer_power", group: "Laundry" }],
+    });
+  });
+});

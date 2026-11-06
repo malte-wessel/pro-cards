@@ -11,7 +11,11 @@ import type {
   HaFormSchema,
   HomeAssistant,
 } from "../ha.ts";
+import { ItemViews, Sections, type ViewHooks } from "../editor-views.ts";
 import { langOf } from "../format.ts";
+import { ICONS as SECTION_ICONS } from "../kinds/editor-schema.ts";
+import { itemHooks, type ItemType, type RuleReads } from "../kinds/item-views.ts";
+import "../kinds/selectors.ts";
 import { hasString, t, type StringKey } from "../i18n.ts";
 
 type Raw = Record<string, unknown>;
@@ -96,6 +100,52 @@ const loadHuiEditors = async () => {
   }
 };
 
+// a breakpoint of a container card's options in a view of its own: from how many view columns, then
+// the options it changes (the card's own fields, two by two), the rest (a `null`, another key) as
+// its YAML; a draft until it says from where
+export const breakpointType = (
+  hass: () => HomeAssistant | undefined,
+  fields: Record<string, HaFormSchema["selector"]>,
+): ItemType => {
+  const L = (k: string, vars?: Record<string, string>) => {
+    const key = `editor.cards.${k}`;
+    return hasString(key) ? t(hass(), key as StringKey, vars) : k;
+  };
+  return {
+    schema: (h) => {
+      const names = Object.keys(fields);
+      const rows: HaFormSchema[] = [];
+      for (let i = 0; i < names.length; i += 2)
+        rows.push({
+          name: "",
+          type: "grid",
+          schema: names.slice(i, i + 2).map((n) => ({ name: n, selector: fields[n] })),
+        });
+      return [
+        { name: "at", required: true, selector: { number: { min: 2, max: 12, mode: "box" } } },
+        ...rows,
+        {
+          name: "",
+          type: "expandable",
+          flatten: true,
+          title: t(h, "editor.card.section.advanced"),
+          iconPath: SECTION_ICONS.code,
+          expanded: false,
+          schema: [{ name: "more", selector: { object: {} } }],
+        },
+      ];
+    },
+    create: () => ({}),
+    isEmpty: (item) => typeof item.at !== "number",
+    label: (name) => L(`field.${name}`),
+    helper: (name) => (name === "at" ? L("help.breakpoints") : undefined),
+    title: (index, item) =>
+      typeof item.at === "number"
+        ? L("breakpoint_title", { n: String(item.at) })
+        : `${L("field.breakpoints")} ${index + 1}`,
+  };
+};
+
 export abstract class CardsEditorBase extends HTMLElement {
   _config?: CardConfigBase;
   _hass?: HomeAssistant;
@@ -110,6 +160,61 @@ export abstract class CardsEditorBase extends HTMLElement {
   _child?: CardElementEditor | CardPicker;
   _childFor?: number;
   _built = false;
+  _sections = new Sections();
+
+  // ---- an item of a list in the options in a view of its own (editor-views.ts): a badge, a rule,
+  // a consumer, a breakpoint …; the view takes the options' and the cards' place while it is open.
+  // A card says what its badges without an entity read, what its own rules read, and its own item
+  // types (item-views.ts)
+  _cardEntity(): string {
+    const e = (this._config as Record<string, unknown> | undefined)?.entity;
+    return typeof e === "string" ? e : "";
+  }
+  _ruleReads(_key: string): RuleReads {
+    return { entity: this._cardEntity(), unit: "", numeric: false, flavor: "entity" };
+  }
+  _itemTypes(): Record<string, ItemType | string> {
+    return {};
+  }
+  _items: ViewHooks = ((self: CardsEditorBase) =>
+    itemHooks({
+      hass: () => self._hass,
+      path: () => self._views.path(),
+      items: () => self._views.items(),
+      cardEntity: () => self._cardEntity(),
+      rules: (key) => self._ruleReads(key),
+      get types() {
+        return self._itemTypes();
+      },
+    }))(this);
+  _views = new ItemViews({
+    hass: () => this._hass,
+    top: () =>
+      this._config ? (this._optionsToForm(this._config) as Record<string, unknown>) : undefined,
+    write: (top) => {
+      const next = this._optionsFromForm(top as HaFormData, this._config as CardConfigBase);
+      this._emit({ ...next, cards: this._cards });
+    },
+    mount: (view) => this.shadowRoot!.querySelector(".options")!.after(view),
+    showMain: (on) => {
+      for (const el of this.shadowRoot?.querySelectorAll<HTMLElement>(".options, .cards") ?? [])
+        el.style.display = on ? "" : "none";
+    },
+    render: (closed) => {
+      if (closed) this._formKey = undefined;
+      this._render();
+    },
+    hooks: {
+      schema: (hass, path, item) => this._items.schema(hass, path, item),
+      label: (sch) => this._items.label(sch),
+      helper: (sch) => this._items.helper(sch),
+      title: (path, index, item) => this._items.title(path, index, item),
+      toForm: (path, item, hint) => this._items.toForm(path, item, hint),
+      fromForm: (path, data, was, hint) => this._items.fromForm(path, data, was, hint),
+      create: (path) => this._items.create(path),
+      isEmpty: (path, item, hint) => this._items.isEmpty(path, item, hint),
+    },
+  });
 
   abstract _optionsSchema(hass: HomeAssistant | undefined, data: HaFormData): HaFormSchema[];
   abstract _optionsToForm(config: CardConfigBase): HaFormData;
@@ -178,6 +283,7 @@ export abstract class CardsEditorBase extends HTMLElement {
       return;
     }
     this._form!.hass = hass;
+    this._views.setHass(hass);
     if (this._placeForm) this._placeForm.hass = hass;
     if (this._child) this._child.hass = hass;
   }
@@ -258,20 +364,28 @@ export abstract class CardsEditorBase extends HTMLElement {
       this._select(to);
       root.querySelectorAll<HTMLElement>(".tab, .icon.add")[to]?.focus();
     });
-    this._form = document.createElement("ha-form");
-    this._form.computeLabel = (s) => this._label(s);
-    this._form.computeHelper = (s) => this._helper(s);
-    this._form.addEventListener("value-changed", (ev) => {
-      ev.stopPropagation();
-      const next = this._optionsFromForm(ev.detail.value, this._config as CardConfigBase);
-      this._emit({ ...next, cards: this._cards });
-    });
+    this._form = this._makeForm();
     root.querySelector(".options")!.appendChild(this._form);
+    this._views.listen(root);
     this._built = true;
     void loadHuiEditors().then(() => {
       this._childFor = undefined;
       this._render();
     });
+  }
+
+  // the options' form (its sections remembered by their title)
+  _makeForm(): HaFormElement {
+    const f = document.createElement("ha-form");
+    f.computeLabel = (s) => this._label(s);
+    f.computeHelper = (s) => this._helper(s);
+    f.addEventListener("value-changed", (ev) => {
+      ev.stopPropagation();
+      const next = this._optionsFromForm(ev.detail.value, this._config as CardConfigBase);
+      this._emit({ ...next, cards: this._cards });
+    });
+    this._sections.watch(f);
+    return f;
   }
 
   // a tab of the bar (a card's, or "+" for the picker): only the selected one is in the tab order
@@ -297,16 +411,26 @@ export abstract class CardsEditorBase extends HTMLElement {
     const cards = this._cards;
     // fewer cards than the selected tab: the last card (the picker when there is none)
     if (this._selected > cards.length) this._selected = Math.max(0, cards.length - 1);
+    // an item of the options open: its view alone
+    if (this._views.render()) return;
 
-    // the card's options: rebuilt only for another config or language
-    const form = this._form!;
+    // the card's options: rebuilt only for another config or language (a new form where its top
+    // level changes its shape, its sections as they were left)
+    let form = this._form!;
     form.hass = this._hass;
     const key = JSON.stringify([langOf(this._hass), { ...this._config, cards: undefined }]);
     if (key !== this._formKey) {
       this._formKey = key;
       const data = this._optionsToForm(this._config);
+      const schema = this._optionsSchema(this._hass, data);
+      if (this._sections.reshaped(schema)) {
+        const next = this._makeForm();
+        form.replaceWith(next);
+        this._form = form = next;
+        form.hass = this._hass;
+      }
       form.data = data;
-      form.schema = this._optionsSchema(this._hass, data);
+      form.schema = this._sections.apply(schema);
     }
 
     // the tabs: one per card, then "+"

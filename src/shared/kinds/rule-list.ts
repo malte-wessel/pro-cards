@@ -32,6 +32,8 @@ export const ruleLines = (
   if (filled(r.below)) when.push(`${L("rule.below")} ${num(r.below)}`);
   const then: string[] = [];
   if (filled(r.status)) then.push(`“${r.status}”`);
+  // (an entity layer's status)
+  if (filled(r.label)) then.push(`“${r.label}”`);
   // (a badge's rule: a text in place of the badge's value)
   if (filled(r.value)) then.push(`“${r.value}”`);
   if (filled(r.color)) then.push(String(r.color));
@@ -42,7 +44,10 @@ export const ruleLines = (
 };
 
 export class RuleListSelector extends ItemListSelector {
-  _key = "rules";
+  // its field's name (`rules`, a weather card's `temperature_rules`)
+  get _key(): string {
+    return typeof this._options.key === "string" ? this._options.key : "rules";
+  }
   _type = RULE_LIST;
   _lines(r: Raw) {
     const o = this._options;

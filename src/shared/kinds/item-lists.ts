@@ -10,7 +10,16 @@ import { t, type StringKey } from "../i18n.ts";
 
 type Raw = Record<string, unknown>;
 export const ITEM_LIST = "pro_cards_list";
-export type ListOf = "series" | "option" | "button" | "condition";
+export type ListOf =
+  | "series"
+  | "option"
+  | "button"
+  | "condition"
+  // a weather trend's line, an entity group's entity, a flow's consumer, a breakpoint
+  | "quantity"
+  | "entity"
+  | "consumer"
+  | "breakpoint";
 
 const str = (v: unknown) => (typeof v === "string" ? v : typeof v === "number" ? String(v) : "");
 const nameOf = (hass: HomeAssistant | undefined, id: string) =>
@@ -93,6 +102,41 @@ export const itemLines = (
       ].join(" · "),
     };
   }
+  if (of === "quantity") {
+    const q = str(item.quantity);
+    const what = q ? t(hass, `editor.weather.quantity.${q}` as StringKey) : "";
+    return {
+      title: str(item.name) || what,
+      detail: [
+        ...(str(item.name) ? [what] : []),
+        ...(str(item.color) ? [str(item.color)] : []),
+      ].join(" · "),
+    };
+  }
+  if (of === "entity" || of === "consumer") {
+    const entity = str(item.entity);
+    const attr = str(item.attribute);
+    const room = of === "consumer" ? str(item.group) : "";
+    return {
+      title: str(item.name) || nameOf(hass, entity) || attr || nameOf(hass, host),
+      detail: [
+        ...(str(item.name) && entity ? [nameOf(hass, entity)] : []),
+        ...(attr && (str(item.name) || entity) ? [attr] : []),
+        ...(room ? [room] : []),
+      ].join(" · "),
+    };
+  }
+  if (of === "breakpoint") {
+    const { at, more: _more, ...rest } = item;
+    void _more;
+    return {
+      title: t(hass, "editor.cards.breakpoint_title", { n: str(at) || "…" }),
+      detail: Object.entries(rest)
+        .filter(([, v]) => v !== undefined && v !== "" && v !== null)
+        .map(([k, v]) => `${t(hass, `editor.cards.field.${k}` as StringKey)} ${String(v)}`)
+        .join(" · "),
+    };
+  }
   return { title: conditionLine(hass, item, host), detail: L(`condition.${str(item.condition)}`) };
 };
 
@@ -122,13 +166,16 @@ export class ItemList extends ItemListSelector {
       const el = document.createElement("ha-icon");
       el.setAttribute("icon", icon);
       slot.append(el);
-    } else if (entity && this._of !== "condition") {
+    } else if (
+      (entity || (this._of === "entity" && str(this._options.entity))) &&
+      this._of !== "condition"
+    ) {
       const el = document.createElement("ha-state-icon") as HTMLElement & {
         hass?: HomeAssistant;
         stateObj?: unknown;
       };
       el.hass = this._hass;
-      el.stateObj = this._hass?.states[entity];
+      el.stateObj = this._hass?.states[entity || str(this._options.entity)];
       slot.append(el);
     } else slot.innerHTML = `<span class="dot"></span>`;
     return slot;

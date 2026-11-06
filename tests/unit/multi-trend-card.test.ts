@@ -39,9 +39,12 @@ describe("multi-trend-card helpers", () => {
       x_axis: true,
       y_axis: false,
       show_legend: true,
-      entities: ["sensor.a", "sensor.b"],
     });
-    expect(data["ent__sensor.a__name"]).toBe("A");
+    // the entities as lines (each in a view of its own)
+    expect(data.entities).toEqual([
+      { entity: "sensor.a", name: "A", color: "red", rules: [], visibility: [] },
+      { entity: "sensor.b", rules: [], visibility: [] },
+    ]);
     const back = formToConfig(data, cfg);
     expect(back).toEqual(cfg);
     const defaults = formToConfig(
@@ -65,8 +68,10 @@ describe("multi-trend-card helpers", () => {
       } as unknown as HomeAssistant,
       data,
     );
-    expect(schema.some((s) => s.name === "entities")).toBe(true);
-    expect(schema.filter((s) => s.type === "expandable").length).toBe(2);
+    expect(schema.find((s) => s.name === "entities")?.selector).toEqual({
+      pro_cards_list: { key: "entities", of: "series" },
+    });
+    expect(schema.filter((s) => s.type === "expandable").length).toBe(0);
   });
   it("keeps an entity's keys the form does not show, such as visibility and rules", () => {
     const vis = [{ condition: "state", entity: "light.a", state: "on" }];
@@ -75,17 +80,18 @@ describe("multi-trend-card helpers", () => {
       entities: [{ entity: "sensor.a", name: "A", visibility: vis, rules }, "sensor.b"],
     };
     const data = configToForm(cfg);
-    data["ent__sensor.a__name"] = "Renamed";
-    expect(formToConfig(data, cfg).entities).toEqual([
-      { entity: "sensor.a", name: "Renamed", visibility: vis, rules },
+    const lines = data.entities as Record<string, unknown>[];
+    lines[0] = { ...lines[0], name: "Renamed" };
+    expect(formToConfig({ ...data, entities: lines }, cfg).entities).toEqual([
+      { entity: "sensor.a", name: "Renamed", rules, visibility: vis },
       // written as its id, it stays one
       "sensor.b",
     ]);
-    // an entity added in the form starts empty (its id); a moved one keeps its keys
-    data.entities = ["sensor.c", "sensor.a"];
-    expect(formToConfig(data, cfg).entities).toEqual([
+    // a line added in the form is its id
+    const added = [{ entity: "sensor.c", rules: [], visibility: [] }, lines[0]];
+    expect(formToConfig({ ...data, entities: added }, cfg).entities).toEqual([
       "sensor.c",
-      { entity: "sensor.a", name: "Renamed", visibility: vis, rules },
+      { entity: "sensor.a", name: "Renamed", rules, visibility: vis },
     ]);
   });
   it("registers card and editor and sizes by layout", () => {
@@ -203,27 +209,25 @@ describe("trend scale", async () => {
   });
 });
 
-describe("multi-trend-card editor titles", () => {
-  it("shows an entity's new name after a rename", () => {
+describe("multi-trend-card editor lines", () => {
+  it("opens a line in a view of its own, its title the entity's name", () => {
     const ed = MultiTrendCard.getConfigElement() as HTMLElement & {
       setConfig(c: unknown): void;
       hass: HomeAssistant;
     };
-    const hass = (name: string) =>
-      ({
-        states: { "sensor.a": { state: "1", attributes: { friendly_name: name } } },
-        locale: { language: "en" },
-      }) as unknown as HomeAssistant;
     ed.setConfig({ entities: ["sensor.a"] });
-    ed.hass = hass("Outdoor");
-    const form = ed.querySelector("ha-form") as unknown as { schema: { title?: string }[] };
-    const titles = () => form.schema.map((s) => s.title).filter(Boolean);
-    expect(titles()).toEqual(["Outdoor"]);
-    const schema = form.schema;
-    // another update with the same name: the form stays
-    ed.hass = hass("Outdoor");
-    expect(form.schema).toBe(schema);
-    ed.hass = hass("Garden");
-    expect(titles()).toEqual(["Garden"]);
+    ed.hass = {
+      states: { "sensor.a": { state: "1", attributes: { friendly_name: "Outdoor" } } },
+      locale: { language: "en" },
+    } as unknown as HomeAssistant;
+    const form = ed.querySelector("ha-form") as HTMLElement;
+    form.dispatchEvent(
+      new CustomEvent("pro-cards-edit-item", {
+        detail: { key: "entities", index: 0 },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+    expect(ed.querySelector(".item-view .title")?.textContent).toBe("Line 1 · Outdoor");
   });
 });

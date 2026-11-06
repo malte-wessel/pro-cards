@@ -52,14 +52,6 @@ const pickEntity = async (scope: Locator, name: string, query: string, option: s
   await input.fill(query);
   await field(scope, name).locator(".opt", { hasText: option }).first().click();
 };
-// a list's dialog for a new item, or for its n-th
-const addItem = async (scope: Locator, name: string) => {
-  await field(scope, name).getByRole("button", { name: "Add", exact: true }).click();
-  return field(scope, name).locator(".edit ha-form");
-};
-const saveItem = (scope: Locator, name: string) =>
-  field(scope, name).locator(".edit").getByRole("button", { name: "Save" }).click();
-
 test("the tile's editor writes the visual it is given", async ({ page }) => {
   const e = await openEditor(page, { type: "custom:tile-card-pro", entity: "light.living_room" });
   await openSection(e.form, "Appearance");
@@ -174,7 +166,7 @@ test("the poster shows a kind, its entities and inputs right under it", async ({
 const listOf = (form: Locator, name: string) =>
   field(form, name).locator(`ha-selector-pro_cards_${name}`);
 const rowTitles = (list: Locator) => list.locator(".row .title");
-const itemView = (editor: Locator) => editor.locator("ha-form").nth(1);
+const itemView = (editor: Locator) => editor.locator(".item-view ha-form").first();
 const back = (editor: Locator) => editor.locator("button[title='Back']").click();
 
 test("the poster's badges are added in a view of their own, edited and deleted", async ({
@@ -366,11 +358,13 @@ test("the layout's editor writes its options, breakpoints and a card's place", a
     columns: ["1fr", "2fr"],
     cards: [tile],
   });
-  const bp = await addItem(e.form, "breakpoints");
-  await fill(bp, "at", "3");
-  await fill(bp, "columns", "4");
-  await saveItem(e.form, "breakpoints");
+  // a breakpoint in a view of its own: from where, then what it changes
+  await field(e.form, "breakpoints").locator("button.new").click();
+  await fill(itemView(e.editor), "at", "3");
+  await fill(itemView(e.editor), "columns", "4");
   await expect.poll(e.last).toMatchObject({ breakpoints: { 3: { columns: 4 } } });
+  await back(e.editor);
+  await expect(field(e.form, "breakpoints").locator(".row .title")).toHaveText(["From 3 columns"]);
   // the selected card's place
   const place = e.editor.locator(".place ha-form");
   await expect(e.editor.locator(".place h3")).toHaveText("Place in the layout");
@@ -453,11 +447,11 @@ test("the heading's style, layout and badges are set in its form", async ({ page
   await expect
     .poll(e.last)
     .toEqual({ type: "custom:heading-card-pro", title: "Office", style: "big" });
-  // a badge added in its dialog: the entity alone is written as its id
-  const item = await addItem(e.form, "badges");
-  await pickEntity(item, "entity", "gust", "Wind gust");
-  await saveItem(e.form, "badges");
+  // a badge added in its view: the entity alone is written as its id
+  await listOf(e.form, "badges").locator("button.new").click();
+  await pickEntity(itemView(e.editor), "entity", "gust", "Wind gust");
   await expect.poll(e.last).toMatchObject({ style: "big", badges: ["sensor.wind_gust"] });
+  await back(e.editor);
   // where the badges sit, from the Layout section; back to the default writes nothing
   await openSection(e.form, "Layout");
   await choose(e.form, "badges_position", "below");
@@ -477,9 +471,12 @@ test("the tile group's header badges are added in the badge list", async ({ page
     title: "Living room",
     tiles: ["light.living_room"],
   });
-  const item = await addItem(e.form, "badges");
-  await pickEntity(item, "entity", "gust", "Wind gust");
-  await saveItem(e.form, "badges");
+  // in a view on top of the group's options (and its tiles)
+  await listOf(e.form, "badges").locator("button.new").click();
+  await expect(e.editor.locator(".options")).toBeHidden();
+  await pickEntity(itemView(e.editor), "entity", "gust", "Wind gust");
+  await back(e.editor);
+  await expect(e.editor.locator(".options")).toBeVisible();
   await expect.poll(e.last).toEqual({
     type: "custom:tile-group-card-pro",
     title: "Living room",
@@ -584,4 +581,75 @@ test("a trend's lines are added in a view of their own, with their rules", async
   await back(e.editor);
   await back(e.editor);
   await expect(rowTitles(lines)).toHaveText(["Outdoor temperature"]);
+});
+
+test("the weather card's rules and a section's lines open in views of their own", async ({
+  page,
+}) => {
+  const e = await openEditor(page, {
+    type: "custom:weather-card-pro",
+    entity: "weather.home",
+    sections: [{ type: "trend" }],
+  });
+  // a condition rule: its status is the entity layer's label
+  await openSection(e.form, "Rules");
+  await field(e.form, "rules").locator("button.new").click();
+  await fill(itemView(e.editor), "state", "rainy");
+  await fill(itemView(e.editor), "label", "Rain");
+  await expect.poll(e.last).toMatchObject({ rules: [{ state: "rainy", label: "Rain" }] });
+  await back(e.editor);
+  // the trend section's lines, in the section's tab
+  const section = e.editor.locator("weather-card-pro-section-editor");
+  await expect(section.locator("ha-selector-pro_cards_list .row .title")).toHaveText([
+    "Temperature",
+    "Precipitation",
+  ]);
+  await section.locator("ha-selector-pro_cards_list .main").first().click();
+  await fill(section.locator("ha-form").nth(1), "name", "Outside");
+  await expect.poll(e.last).toMatchObject({
+    sections: [{ show: [{ quantity: "temperature", name: "Outside" }, "precipitation"] }],
+  });
+});
+
+test("a power flow's consumer opens in a view, its picker offering power sensors", async ({
+  page,
+}) => {
+  const e = await openEditor(page, {
+    type: "custom:power-flow-card-pro",
+    sources: [{ type: "solar", entity: "sensor.solar_power" }],
+  });
+  await field(e.form, "consumers").locator("button.new").click();
+  const view = itemView(e.editor);
+  const input = field(view, "entity").locator("input");
+  await input.click();
+  await input.fill("temperature");
+  await expect(field(view, "entity").locator(".none")).toBeVisible();
+  await input.press("Escape");
+  await pickEntity(view, "entity", "washer power", "Washer power");
+  await fill(view, "group", "Laundry");
+  await expect
+    .poll(e.last)
+    .toMatchObject({ consumers: [{ entity: "sensor.washer_power", group: "Laundry" }] });
+});
+
+test("the multi trend card's lines open in views, with their rules", async ({ page }) => {
+  const e = await openEditor(page, {
+    type: "custom:multi-trend-card-pro",
+    entities: ["sensor.outdoor_temperature"],
+  });
+  await field(e.form, "entities").locator(".main").first().click();
+  await fill(itemView(e.editor), "name", "Outside");
+  await openSection(itemView(e.editor), "Rules");
+  await listOf(itemView(e.editor), "rules").locator("button.new").click();
+  await fill(itemView(e.editor), "above", "25");
+  await choose(itemView(e.editor), "color", "red");
+  await expect.poll(e.last).toMatchObject({
+    entities: [
+      {
+        entity: "sensor.outdoor_temperature",
+        name: "Outside",
+        rules: [{ above: 25, color: "red" }],
+      },
+    ],
+  });
 });

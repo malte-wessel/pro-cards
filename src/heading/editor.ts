@@ -1,5 +1,5 @@
 // Visual editor of the heading card (ha-form): the title with its icon, subtitle, style and
-// colour, the badges in the poster's and tile's badge list (a dialog per badge), then where the
+// colour, the badges in the poster's and tile's badge list (a view per badge), then where the
 // badges sit and how they look, and the actions. It writes back only what the form changed: a
 // field as the config had it keeps its spelling, a select at its default writes nothing.
 import { FormEditorBase, setOrDrop } from "../shared/editor.ts";
@@ -109,7 +109,7 @@ export const editorSchema = (hass?: HomeAssistant): HaFormSchema[] => {
       select("style", HEADING_STYLES, (v) => L(`editor.heading.style.${v}`)),
       { name: "color", selector: { ui_color: {} } },
     ),
-    badgesField(hass),
+    badgesField(),
     section(L("editor.card.section.layout"), ICONS.layout, [
       grid(
         select("align", HEADING_ALIGNS, (v) => L(`editor.heading.align.${v}`)),

@@ -1,7 +1,7 @@
 // Visual editor of the tile group card: its header and layout (ha-form), its tiles in tabs, each
 // in the tile card's own editor (CardsEditorBase): a tile is a tile card's config without its
 // type, an entity alone written as its id. "+" adds a tile, not a card of any kind. The header's
-// badges are the poster's and tile's badge list (a dialog per badge).
+// badges are the poster's and tile's badge list (a view per badge, on top of the options).
 import { CardsEditorBase } from "../shared/cards/editor.ts";
 import {
   AS_IS,
@@ -60,7 +60,7 @@ export const tileGroupSchema = (hass: HomeAssistant | undefined): HaFormSchema[]
     },
   },
   { name: "title_tap_action", selector: { ui_action: { default_action: "none" } } },
-  badgesField(hass),
+  badgesField(),
 ];
 
 // a tile cut to what the layout draws, as the editor switches it: no tile in a group takes

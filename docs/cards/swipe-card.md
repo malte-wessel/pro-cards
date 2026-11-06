@@ -157,7 +157,7 @@ Every card inside keeps Home Assistant's own `visibility`. A hidden card leaves 
 
 ## The visual editor
 
-Home Assistant's card editor shows the swipe card's options and its breakpoints, then a tab for each card. The selected card is edited in its own editor: a tile's or a poster's form, Home Assistant's for its own cards, YAML for the others. The buttons beside the tabs move, duplicate and delete it, and **+** adds one from the card picker. Try it in the [Playground](/playground).
+Home Assistant's card editor shows the swipe card's options and its breakpoints (a row each, opening in a view of its own: from how many view columns, and the options it changes), then a tab for each card. The selected card is edited in its own editor: a tile's or a poster's form, Home Assistant's for its own cards, YAML for the others. The buttons beside the tabs move, duplicate and delete it, and **+** adds one from the card picker. Try it in the [Playground](/playground).
 
 ## Reference
 

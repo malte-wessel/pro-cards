@@ -101,4 +101,4 @@ entities:
 
 A series' `rules` are `{ state | below | above, color }`; `below` is exclusive, `above` inclusive.
 
-The card takes 12 columns and is as tall as its plot (`rows: auto`, two rows at least); it fills a taller cell. It also takes Home Assistant's `grid_options`, `visibility`, `view_layout` and `card_mod`, plus `fill_height` (`false` keeps its own height); see [Sizing in sections](/guide/sizing). The card has a visual editor.
+The card takes 12 columns and is as tall as its plot (`rows: auto`, two rows at least); it fills a taller cell. It also takes Home Assistant's `grid_options`, `visibility`, `view_layout` and `card_mod`, plus `fill_height` (`false` keeps its own height); see [Sizing in sections](/guide/sizing). The card has a visual editor: its options, then its entities as lines, a row each that opens in a view of its own (the entity, its name and colour, its rules and when it shows), as the trend poster's lines.

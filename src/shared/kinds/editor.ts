@@ -11,40 +11,21 @@ import { canRead, detectKind, parseKind, resolveKind } from "./detect.ts";
 import {
   DEFAULT,
   DETECTED,
-  badgeFromForm,
-  badgeToForm,
-  conditionIsEmpty,
   configToForm,
-  seriesFromForm,
   defaultVisual,
   fitEntity,
   formToConfig,
   type CardThing,
 } from "./editor-form.ts";
 import {
-  badgeFieldLabel,
   placeholders,
-  ruleFieldLabel,
-  ruleItemSchema,
-  badgeItemSchema,
-  buttonItemSchema,
-  conditionItemSchema,
   editorSchema,
-  optionItemSchema,
-  seriesItemSchema,
   fitsKind,
   rangeInfo,
   type SchemaCtx,
 } from "./editor-schema.ts";
-import { BADGE_LIST, BadgeListSelector } from "./badge-list.ts";
-import { RULE_LIST, RuleListSelector } from "./rule-list.ts";
-import { defineSelector } from "../editor-list.ts";
-import { ITEM_LIST, ItemList } from "./item-lists.ts";
-
-// the badges' list field: ha-selector draws `ha-selector-<type>` for a selector of that type
-defineSelector(BADGE_LIST, BadgeListSelector);
-defineSelector(RULE_LIST, RuleListSelector);
-defineSelector(ITEM_LIST, ItemList);
+import "./selectors.ts";
+import type { RuleReads } from "./item-views.ts";
 import { KINDS } from "./registry.ts";
 import { ruleHints } from "./rule-hints.ts";
 import { writtenRules } from "./rules.ts";
@@ -281,210 +262,15 @@ export abstract class KindCardEditor extends FormEditorBase {
     return t(this._hass, labelKey(this._nameOf(sch)));
   }
 
-  // an item in the sub-view, by its path: a badge ("badges"), a card's rule ("rules") or a
-  // badge's rule ("badges/rules"); its own form, titled by its number (and a badge's entity)
-  _subSchema(hass: HomeAssistant, path: string, item: Raw): HaFormSchema[] {
-    const entity = this._cardEntity();
-    if (path === "badges") return badgeItemSchema(hass, item, entity);
-    if (path === "rules") {
-      // what the card's rules read: its value, a number in its unit or a state of its entity
-      const x = this._ctx;
-      return ruleItemSchema(hass, item, {
-        entity,
-        unit: x ? (placeholders(x).unit ?? "") : "",
-        numeric: !!x?.numeric,
-      });
-    }
-    if (path === "badges/rules")
-      return ruleItemSchema(hass, item, { ...this._badgeReads(), badge: true });
-    if (path === "series") return seriesItemSchema(hass, item);
-    // a line's rules read its value; its conditions read its entity unless they name one
-    if (path === "series/rules")
-      return ruleItemSchema(hass, item, { ...this._lineReads(), line: true });
-    if (path === "series/visibility")
-      return conditionItemSchema(hass, item, this._lineReads().entity);
-    if (path === "control_options") return optionItemSchema(hass);
-    if (path === "control_buttons") return buttonItemSchema(hass);
-    return [];
-  }
-  // what the open trend line reads: its entity, a number in its unit or a state
-  _lineReads(): { entity: string; unit: string; numeric: boolean } {
-    const line = this._subItems()?.[0] ?? {};
-    const entity = typeof line.entity === "string" ? line.entity : "";
-    const st = entity ? this._hass?.states[entity] : undefined;
-    const unit = st?.attributes.unit_of_measurement;
-    return { entity, unit: typeof unit === "string" ? unit : "", numeric: isNum(st?.state) };
-  }
-  _cardEntity(): string {
-    const card = (this._config as Raw | undefined)?.entity;
-    return typeof card === "string" ? card : "";
-  }
-  // what the open badge's rules read: its entity (else the card's) and its attribute, a number
-  // in the entity's unit or a state
-  _badgeReads(): { entity: string; unit: string; numeric: boolean } {
-    const b = this._subItems()?.[0] ?? {};
-    const entity = (typeof b.entity === "string" && b.entity) || this._cardEntity();
-    const st = entity ? this._hass?.states[entity] : undefined;
-    const attr = typeof b.attribute === "string" ? b.attribute : "";
-    const shown = attr ? st?.attributes[attr] : st?.state;
-    const unit = !attr ? st?.attributes.unit_of_measurement : undefined;
-    return { entity, unit: typeof unit === "string" ? unit : "", numeric: isNum(shown) };
-  }
-  // a new badge or rule: an empty one, added by its first change that says something
-  _subNew(path: string): Raw | undefined {
-    if (path === "badges") return badgeToForm({});
-    if (path === "series") return { rules: [], visibility: [] };
-    if (path.endsWith("visibility")) return { condition: "state" };
-    return path.endsWith("rules") || path.startsWith("control_") ? {} : undefined;
-  }
-  // a badge that says nothing: nothing at all, or one of your own without its text yet; a rule
-  // without anything
-  _subIsEmpty(path: string, item: Raw, hint: Raw): boolean {
-    if (path.endsWith("visibility")) return conditionIsEmpty(item);
-    if (path === "series") {
-      const line = seriesFromForm([item])[0];
-      return line === undefined || (typeof line === "object" && !Object.keys(line as Raw).length);
-    }
-    if (path.endsWith("rules") || path.startsWith("control_"))
-      return !Object.entries(item).some(
-        ([k, v]) =>
-          v !== undefined &&
-          v !== null &&
-          v !== "" &&
-          v !== false &&
-          !(k === "more" && typeof v === "object" && !Object.keys(v as object).length),
-      );
-    if (path !== "badges") return false;
-    if (hint.source === "custom" && !item.value) return true;
-    const b = badgeFromForm(item);
-    return typeof b === "object" && b !== null && !Object.keys(b).length;
-  }
-  // what a badge shows in its form, as the card's: one of your own where it says a text and reads
-  // no entity (or Custom was last chosen while the form is open), else its written kind, else the
-  // kind of the entity it reads (its own, else the card's), else the entity as it is
-  _badgeShows(item: Raw): string {
-    if (typeof item.kind === "string" && item.kind && item.kind !== DETECTED) return item.kind;
-    const reads = (typeof item.entity === "string" && item.entity) || this._cardEntity();
-    return reads ? detectKind(reads, this._hass?.states[reads]).name : "none";
-  }
-  // (`chosen`: a kind chosen for the badge, written or waiting, which its entity picker follows; a
-  // kind that only follows the entity it reads leaves every entity to pick)
-  _subToForm(path: string, item: Raw, hint: Raw): Raw {
-    if (path !== "badges") return item;
-    if (typeof hint.wait === "string")
-      return { ...item, shows: hint.wait, entity: "", chosen: true };
-    const own = !!item.value && !item.entity && !item.attribute;
-    const custom = hint.source ? hint.source === "custom" : own;
-    const chosen = typeof item.kind === "string" && !!item.kind && item.kind !== DETECTED;
-    return { ...item, shows: custom ? "custom" : this._badgeShows(item), chosen };
-  }
-  // another choice in Shows: Custom drops what an entity's badge says; a kind takes the entity the
-  // badge reads (its own, else the card's) where it fits, written only where that one is not
-  // detected as it anyway; else it waits for one that fits (`hint.wait`), the badge as it was.
-  // Another entity drops a kind it is detected as anyway.
-  _subFromForm(path: string, data: Raw, was: Raw, hint: Raw): Raw {
-    if (path !== "badges") return data;
-    const { shows, chosen: _chosen, ...item } = data;
-    void _chosen;
-    const str = (v: unknown) => (typeof v === "string" ? v : "");
-    const detectedAs = (e: string) => (e ? detectKind(e, this._hass?.states[e]).name : "none");
-    // a kind taken with the entity the badge reads now: Shows' value, or none written
-    const take = (kind: string) => {
-      hint.source = "entity";
-      delete item.value;
-      const reads = str(item.entity) || this._cardEntity();
-      item.kind = kind === detectedAs(reads) ? DETECTED : kind;
-      // (an attribute the new entity lacks goes)
-      const attr = str(item.attribute);
-      const st = reads ? this._hass?.states[reads] : undefined;
-      if (attr && !(st && attr in st.attributes)) delete item.attribute;
-      return item;
+  // the card's rules read its value: a number in its unit, or a state of its entity
+  _ruleReads(_key: string): RuleReads {
+    const x = this._ctx;
+    return {
+      entity: this._cardEntity(),
+      unit: x ? (placeholders(x).unit ?? "") : "",
+      numeric: !!x?.numeric,
+      flavor: "card",
     };
-    const waiting = typeof hint.wait === "string" ? hint.wait : undefined;
-    if (typeof shows === "string" && shows !== was.shows) {
-      hint.wait = undefined;
-      if (shows === "custom") {
-        hint.source = "custom";
-        for (const k of ["entity", "attribute", "control"]) delete item[k];
-        item.kind = DETECTED;
-        return item;
-      }
-      const own = waiting ? str(hint.held) : str(item.entity);
-      const reads = own || this._cardEntity();
-      if (reads ? fitsKind(this._hass, shows, reads) : shows === "none") {
-        item.entity = own;
-        return take(shows);
-      }
-      // waits: the badge as it was (its entity shown empty)
-      if (!waiting) hint.held = own;
-      hint.wait = shows;
-      const { shows: _s, chosen: _c, ...before } = was;
-      void _s;
-      void _c;
-      return waiting ? { ...before, entity: str(hint.held) } : before;
-    }
-    if (waiting) {
-      const own = str(item.entity);
-      if (own && fitsKind(this._hass, waiting, own)) {
-        hint.wait = undefined;
-        return take(waiting);
-      }
-      // anything else changed while it waits: on the badge as it was
-      item.entity = str(hint.held);
-      return item;
-    }
-    if (
-      item.entity !== was.entity &&
-      item.kind === detectedAs(str(item.entity) || this._cardEntity())
-    )
-      item.kind = DETECTED;
-    return item;
-  }
-  // what a badge field does where it is left empty: the card's entity, the pill's defaults
-  _subHelper(sch: HaFormSchema): string | undefined {
-    const L = (k: string, vars?: Record<string, string>) =>
-      t(this._hass, `editor.card.${k}` as StringKey, vars);
-    // a condition without an entity reads the line's
-    if (this._subPath().endsWith("visibility") && sch.name === "entity")
-      return L("cond_help.entity");
-    if (this._subPath() !== "badges") return undefined;
-    if (sch.name === "entity") return L("badge_help.entity");
-    if (sch.name === "value") return L("badge_help.value");
-    if (sch.name === "prefix" || sch.name === "suffix") return L(`help.${sch.name}`);
-    if (sch.name === "style")
-      return t(this._hass, "editor.default", { value: L("badge_style.outline") });
-    if (sch.name === "size") return t(this._hass, "editor.default", { value: L("badge_size.m") });
-    return undefined;
-  }
-  _subLabel(sch: HaFormSchema): string {
-    const path = this._subPath();
-    const L = (k: string) => t(this._hass, `editor.card.${k}` as StringKey);
-    if (path.endsWith("rules")) return ruleFieldLabel(this._hass, sch.name);
-    if (path === "badges") return badgeFieldLabel(this._hass, sch.name);
-    if (sch.name === "more") return L("more");
-    const of = path.endsWith("visibility")
-      ? "cond"
-      : path === "series"
-        ? "series"
-        : path === "control_options"
-          ? "option"
-          : "button";
-    return L(`${of}.${sch.name}`);
-  }
-  _subTitle(path: string, index: number, item: Raw): string {
-    const n = { n: String(index + 1) };
-    if (path.endsWith("rules")) return t(this._hass, "editor.card.rule_title", n);
-    if (path.endsWith("visibility")) return t(this._hass, "editor.card.condition_title", n);
-    if (path === "control_options") return t(this._hass, "editor.card.option_title", n);
-    if (path === "control_buttons") return t(this._hass, "editor.card.button_title", n);
-    if (path === "series") {
-      const id = typeof item.entity === "string" ? item.entity : "";
-      const name = (id && this._hass?.states[id]?.attributes.friendly_name) || id;
-      return `${t(this._hass, "editor.card.line_title", n)}${name ? ` · ${name}` : ""}`;
-    }
-    const id = typeof item.entity === "string" ? item.entity : "";
-    const name = (id && this._hass?.states[id]?.attributes.friendly_name) || id;
-    return `${t(this._hass, "editor.card.badge_title", { n: String(index + 1) })}${name ? ` · ${name}` : ""}`;
   }
 
   _helper(sch: HaFormSchema): string | undefined {
