@@ -232,6 +232,11 @@ const pt: Translation = {
   "calendar.pick_last": "Escolha o último dia",
 
   "editor.default": "Padrão: {value}",
+  "editor.card.field.shows": "Mostra",
+  "editor.card.shows_entity": "Entidade: o seu estado tal como está",
+  "editor.card.shows_custom": "Personalizado: textos seus",
+  "editor.card.help.shows":
+    "O que o cartão desenha: um tipo traz aspeto, controlos e regras, e propõe as entidades que lhe servem; Personalizado mostra textos e modelos seus",
   "editor.card.badge.format": "Formato",
   "editor.card.badge_format.auto": "Como a entidade o escreve",
   "editor.card.badge_format.power": "Potência (W, kW, MW)",
@@ -246,9 +251,6 @@ const pt: Translation = {
   "editor.card.section.badge_look": "Aspeto",
   "editor.card.section.badge_visual": "Visual",
   "editor.card.section.advanced": "Avançado",
-  "editor.card.badge.source": "Emblema",
-  "editor.card.badge_source.entity": "Entidade",
-  "editor.card.badge_source.custom": "Personalizado",
   "editor.card.badge_card_value": "O valor do cartão",
   "editor.card.badge.attribute": "Atributo",
   "editor.card.badge.value": "Valor",
@@ -469,7 +471,6 @@ const pt: Translation = {
   "editor.multi_trend.layout.lanes": "Faixas (uma escala por entidade)",
 
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "{kind} (detetado)",
   "editor.card.rules_hint.never":
     "A regra {n} nunca corresponde: o seu limite inferior não está abaixo do superior",
   "editor.card.rules_hint.always":
@@ -580,8 +581,7 @@ const pt: Translation = {
   "editor.card.badge_visual.sparkline": "Linha do histórico",
   "editor.card.badge_visual.trend": "Variação",
   "editor.card.section.content": "Conteúdo",
-  "editor.card.section.look": "Ícone e visual",
-  "editor.card.section.inputs": "Outras entidades",
+  "editor.card.section.look": "Aparência",
   "editor.card.section.controls": "Controlos",
   "editor.card.section.badges_poster": "Estado e emblemas",
   "editor.card.section.badges_tile": "Estado e emblemas",
@@ -589,7 +589,6 @@ const pt: Translation = {
   "editor.card.section.actions": "Interações",
   "editor.card.section.layout": "Disposição",
   "editor.card.field.entity": "Entidade",
-  "editor.card.field.kind": "Tipo",
   "editor.card.field.name": "Nome",
   "editor.card.field.icon": "Ícone",
   "editor.card.field.color": "Cor",
@@ -605,7 +604,7 @@ const pt: Translation = {
   "editor.card.field.max": "Até (máx)",
   "editor.card.field.show_name": "Mostrar nome",
   "editor.card.field.show_value": "Mostrar valor",
-  "editor.card.field.icon_thing": "Ícone",
+  "editor.card.field.icon_thing": "O ícone mostra",
   "editor.card.field.icon_src": "Imagem",
   "editor.card.field.icon_variant": "Animação",
   "editor.card.field.icon_ring": "Anel com o valor",
@@ -706,8 +705,6 @@ const pt: Translation = {
   "editor.card.help.suffix": "Depois do valor",
   "editor.card.help.found": "Encontrado no dispositivo: {entity}",
   "editor.card.help.not_found": "Nada encontrado no dispositivo da entidade",
-  "editor.card.help.kind":
-    "O que a entidade é: decide o ícone, as cores, o estado, os controlos e o visual",
   "editor.card.help.icon_src":
     "Um URL, um modelo ou uma entidade cuja imagem mostrar. Vazio: a da própria entidade",
   "editor.card.help.visual_src": "O histórico de outra entidade. Vazio: o deste cartão",

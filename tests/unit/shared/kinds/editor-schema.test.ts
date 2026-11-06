@@ -13,9 +13,8 @@ import {
   editorSchema,
   ruleItemSchema,
 } from "../../../../src/shared/kinds/editor-schema.ts";
-import { kindsOf } from "../../../../src/shared/kinds/editor.ts";
+import { kindsOf, showsOf } from "../../../../src/shared/kinds/editor.ts";
 import { KIND_THINGS } from "../../../../src/shared/kinds/places.ts";
-import { canRead } from "../../../../src/shared/kinds/detect.ts";
 import { KINDS } from "../../../../src/shared/kinds/registry.ts";
 import type { CardConfigBase, HaFormData, HaFormSchema } from "../../../../src/shared/ha.ts";
 import { isNum } from "../../../../src/shared/util.ts";
@@ -27,6 +26,8 @@ type Raw = Record<string, unknown>;
 const schemaOf = (thing: CardThing, cfg: Raw, change: HaFormData = {}) => {
   const base = configToForm(cfg as CardConfigBase, kindsOf(cfg, hass).kind, thing);
   const data = { ...base, ...change };
+  // what it shows: as the editor finds it for these data, unless the change names it
+  data.shows ??= showsOf(data, hass);
   const { kind, detected } = kindsOf(data, hass);
   const st = hass.states[String(data.entity ?? "")];
   return editorSchema({ hass, thing, kind, detected, data, numeric: isNum(st?.state), st });
@@ -48,73 +49,124 @@ const LIGHT = { entity: "light.living_room" };
 const TEMP = { entity: "sensor.living_room_temperature" };
 
 describe("the editor's sections", () => {
-  it("are the card's own, with inputs and controls only where they apply", () => {
+  it("are the card's own, with controls only where they apply", () => {
     expect(sections(schemaOf("poster", LIGHT))).toEqual([
-      "Content",
-      "Icon and visual",
+      "Name",
+      "Value",
+      "Appearance",
       "Controls",
       "Status and badges",
       "Rules",
       "Interactions",
     ]);
-    // a tile's badges sit beside its texts, and it has a layout
-    const tile = sections(schemaOf("tile", { entity: "sensor.wind_speed" }));
-    expect(tile).toContain("Other entities");
-    expect(tile).toContain("Layout");
-    expect(tile).not.toContain("Controls");
-    expect(tile.filter((t) => !["Other entities", "Layout"].includes(t ?? ""))).toHaveLength(5);
+    // a tile has a layout; a sensor no controls
+    expect(sections(schemaOf("tile", { entity: "sensor.wind_speed" }))).toEqual([
+      "Name",
+      "Value",
+      "Appearance",
+      "Status and badges",
+      "Rules",
+      "Interactions",
+      "Layout",
+    ]);
     // a sensor has no controls unless the form names one
     expect(sections(schemaOf("poster", TEMP))).not.toContain("Controls");
     expect(sections(schemaOf("poster", TEMP, { control_type: "buttons" }))).toContain("Controls");
   });
 
-  it("start with the entity, the kind, the name, the icon and the colour", () => {
-    const schema = schemaOf("poster", LIGHT);
-    expect(names(schema.filter((s) => s.type !== "expandable"))).toEqual([
+  it("start with what the card shows, the entity and what else the kind reads", () => {
+    const top = (cfg: Raw, change: HaFormData = {}) =>
+      names(schemaOf("poster", cfg, change).filter((s) => s.type !== "expandable"));
+    expect(top(LIGHT)).toEqual(["shows", "entity"]);
+    expect(top({ entity: "sensor.wind_speed" })).toEqual([
+      "shows",
       "entity",
-      "kind",
-      "name",
-      "icon",
-      "color",
+      "input_direction",
+      "input_gust",
     ]);
+    expect(top({})).toEqual(["shows"]);
+    expect(top(TEMP, { kind: "trend" })).toEqual(["shows", "entity", "series"]);
+  });
+
+  it("open the name, and put the colour and the icon with the look", () => {
+    const schema = schemaOf("poster", LIGHT);
+    expect(schema.find((s) => s.title === "Name")?.expanded).toBe(true);
+    expect(schema.find((s) => s.title === "Value")?.expanded).toBeFalsy();
+    expect(sectionOf(schema, "Appearance").slice(0, 3)).toEqual(["color", "icon_thing", "icon"]);
     // an icon of its own only where the place draws an icon or a picture
     expect(names(schemaOf("poster", LIGHT, { icon_thing: "none" }))).not.toContain("icon");
     expect(names(schemaOf("poster", { entity: "sensor.wind_speed" }))).not.toContain("icon");
     expect(names(schemaOf("poster", LIGHT, { icon_thing: "image" }))).toContain("icon");
   });
+
+  it("show the name and how the value is written only while they show", () => {
+    const shown = schemaOf("poster", TEMP);
+    expect(sectionOf(shown, "Name")).toEqual(["show_name", "name"]);
+    expect(sectionOf(shown, "Value")).toEqual(
+      expect.arrayContaining(["show_value", "attribute", "value", "unit", "decimals", "prefix"]),
+    );
+    const hidden = schemaOf("poster", TEMP, { show_name: false, show_value: false });
+    expect(sectionOf(hidden, "Name")).toEqual(["show_name"]);
+    // what the visual reads too stays, and the line under the value
+    expect(sectionOf(hidden, "Value")).toEqual(["show_value", "attribute", "secondary"]);
+    // a field filled in stays, so it can be cleared
+    expect(
+      sectionOf(schemaOf("poster", { ...TEMP, show_name: false, name: "Hi" }), "Name"),
+    ).toEqual(["show_name", "name"]);
+  });
+});
+
+describe("what the editor shows", () => {
+  const include = (cfg: Raw, change: HaFormData = {}) =>
+    (field(schemaOf("poster", cfg, change), "entity")?.selector as { entity: Raw }).entity
+      .include_entities as string[] | undefined;
+
+  it("offers the entity as it is, one of your own, then every kind by its name", () => {
+    const opts = options(schemaOf("poster", TEMP), "shows");
+    expect(opts.slice(0, 2).map((o) => o.value)).toEqual(["none", "custom"]);
+    expect(opts[0].label).toBe("Entity: its state as it is");
+    const kinds = opts.slice(2);
+    expect(kinds.map((o) => o.value).sort()).toEqual(
+      Object.keys(KINDS)
+        .filter((k) => k !== "none")
+        .sort(),
+    );
+    const labels = kinds.map((o) => o.label);
+    expect(labels).toEqual([...labels].sort((a, b) => a.localeCompare(b)));
+    expect(field(schemaOf("poster", TEMP), "shows")?.required).toBe(true);
+  });
+
+  it("is the kind written, else the entity's, else your own", () => {
+    const shows = (cfg: Raw) => showsOf(cfg, hass);
+    expect(shows({ entity: "sensor.wind_speed" })).toBe("wind");
+    expect(shows(TEMP)).toBe("none");
+    expect(shows({ ...TEMP, kind: "trend" })).toBe("trend");
+    expect(shows({})).toBe("custom");
+    expect(shows({ kind: "sun" })).toBe("sun");
+  });
+
+  it("offers the entities that fit the kind", () => {
+    // (with no entity written: the one written is always offered)
+    // a battery: those detected as one, and a sensor without a device class (a template's)
+    const battery = include({}, { kind: "battery" })!;
+    expect(battery).toEqual(expect.arrayContaining(["sensor.battery_soc", "sensor.phone_battery"]));
+    expect(battery).not.toContain("sensor.living_room_temperature");
+    // the wind: its sensors and a weather entity, no temperature
+    const wind = include({}, { kind: "wind" })!;
+    expect(wind).toEqual(expect.arrayContaining(["sensor.wind_speed", "weather.home"]));
+    expect(wind).not.toContain("sensor.living_room_temperature");
+    // a person: a device tracker too
+    expect(include({}, { kind: "person" })).toContain("device_tracker.van");
+    // the entity as it is: every entity
+    expect(include(TEMP)).toBeUndefined();
+    // a kind only ever named: what it reads
+    expect(include({}, { kind: "solar" })).toContain("sensor.solar_power");
+    // your own: no entity
+    expect(names(schemaOf("poster", {}))).not.toContain("entity");
+  });
 });
 
 describe("the editor's kind", () => {
-  it("names the detected kind first, then every kind that reads the entity by its name", () => {
-    const opts = options(schemaOf("poster", { entity: "sensor.wind_speed" }), "kind");
-    expect(opts[0]).toEqual({ value: "detected", label: "Wind (detected)" });
-    const values = opts.slice(1).map((o) => o.value);
-    // the detected kind once, as detected
-    expect(values.sort()).toEqual(
-      Object.keys(KINDS)
-        .filter((k) => k !== "wind" && canRead(KINDS[k], "sensor.wind_speed"))
-        .sort(),
-    );
-    expect(values).toContain("trend");
-    // a light is no weather and no trend: none, or a light as written
-    const light = options(schemaOf("poster", { entity: "light.living_room" }), "kind");
-    expect(light.map((o) => o.label)).toEqual(["Light (detected)", "None (the entity as it is)"]);
-    // written, the detected kind is listed as written too
-    expect(
-      options(schemaOf("poster", { entity: "light.living_room" }, { kind: "light" }), "kind").map(
-        (o) => o.value,
-      ),
-    ).toContain("light");
-    // a kind written for it shows all the same
-    const written = options(
-      schemaOf("poster", { entity: "light.living_room" }, { kind: "weather" }),
-      "kind",
-    );
-    expect(written.map((o) => o.value)).toContain("weather");
-    const labels = opts.slice(1).map((o) => o.label);
-    expect(labels).toEqual([...labels].sort((a, b) => a.localeCompare(b)));
-  });
-
   it("builds the form for the kind picked", () => {
     // a temperature read as a washer: its threshold, as a trend: its series
     expect(names(schemaOf("poster", TEMP, { kind: "washer" }))).toContain("running_above");
@@ -389,12 +441,35 @@ describe("the editor's status and badges", () => {
     const light = names({ entity: "light.kitchen" });
     expect(light).toContain("control");
     for (const k of ["unit", "visual", "format"]) expect(light, k).not.toContain(k);
-    // one of your own: a text, no entity or kind
+    // one of your own: a text, no entity
     const own = flat(
-      badgeItemSchema(hass, { ...badgeToForm({ value: "Open" }), source: "custom" }, ""),
+      badgeItemSchema(hass, { ...badgeToForm({ value: "Open" }), shows: "custom" }, ""),
     );
     expect(own.map((s) => s.name)).not.toContain("entity");
-    expect(own.map((s) => s.name)).not.toContain("kind");
+    expect(own.map((s) => s.name)).toContain("value");
+    // what it shows: the entity as it is, your own, the kinds whose colours a badge takes
+    const shows = flat(badgeItemSchema(hass, badgeToForm({ entity: "light.kitchen" }), "")).find(
+      (s) => s.name === "shows",
+    )?.selector as { select: { options: { value: string }[] } };
+    const values = shows.select.options.map((o) => o.value);
+    expect(values.slice(0, 2)).toEqual(["none", "custom"]);
+    expect(values).toEqual(expect.arrayContaining(["battery", "wind", "light"]));
+    expect(values).not.toContain("washer");
+    // its entity picker follows a kind chosen for it, not the one it is detected as
+    const picker = (item: Raw) =>
+      (
+        flat(badgeItemSchema(hass, item, "light.kitchen")).find((s) => s.name === "entity")
+          ?.selector as { entity: Raw }
+      ).entity.include_entities;
+    expect(picker({ ...badgeToForm({}), shows: "light" })).toBeUndefined();
+    expect(picker({ ...badgeToForm({}), shows: "battery", chosen: true })).toContain(
+      "sensor.battery_soc",
+    );
+    // its name only while it shows (a badge hides it unless told)
+    const named = (item: Raw) =>
+      flat(badgeItemSchema(hass, badgeToForm(item), "")).map((s) => s.name);
+    expect(named({ entity: "sensor.battery_soc" })).not.toContain("name");
+    expect(named({ entity: "sensor.battery_soc", show_name: true })).toContain("name");
     // the value hidden: nothing about how it is written
     const hidden = names({ entity: "sensor.battery_soc", show_value: false });
     for (const k of ["format", "unit", "prefix"]) expect(hidden, k).not.toContain(k);
@@ -553,7 +628,7 @@ describe("the editor's selects", () => {
 
 describe("the editor of a row in a tile group's table", () => {
   const ROW = { entity: "sensor.washer_power" };
-  it("has no icon, no secondary and no badges: the status goes with the content", () => {
+  it("has no icon, no secondary and no badges: the status goes with the value", () => {
     const row = schemaOf("row", ROW);
     expect(sections(row)).not.toContain("Status and badges");
     expect(sections(row)).not.toContain("Layout");
@@ -567,7 +642,7 @@ describe("the editor of a row in a tile group's table", () => {
       "icon_tap_action",
     ])
       expect(ns, n).not.toContain(n);
-    expect(sectionOf(row, "Content")).toEqual(expect.arrayContaining(["status", "hide_status"]));
+    expect(sectionOf(row, "Value")).toEqual(expect.arrayContaining(["status", "hide_status"]));
   });
 
   it("offers a badge's visuals after the value, none by default", () => {

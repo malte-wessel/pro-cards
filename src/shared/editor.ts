@@ -28,6 +28,41 @@ export const setOrDrop = (
 };
 
 type Raw = Record<string, unknown>;
+
+// Home Assistant's form draws its schema without keys: a section's panel is reused by its place,
+// so a field or a section that comes or goes before it hands the panel's open state to another.
+// The sections opened or closed are remembered by their title (`expanded-changed`, which a panel
+// sends when it is toggled), every schema says so, and a form whose top level changes its shape is
+// drawn anew (a new element: every panel takes `expanded` from the schema).
+class Sections {
+  open = new Map<string, boolean>();
+  shape?: string;
+  watch(form: HTMLElement) {
+    form.addEventListener("expanded-changed", (ev) => {
+      const section = ev
+        .composedPath()
+        .find((n) => (n as { schema?: HaFormSchema }).schema?.type === "expandable") as
+        { schema: HaFormSchema } | undefined;
+      const title = section?.schema.title;
+      if (title) this.open.set(title, !!(ev as CustomEvent).detail?.expanded);
+    });
+  }
+  apply(schema: HaFormSchema[]): HaFormSchema[] {
+    return schema.map((s) =>
+      s.type === "expandable" && s.title && this.open.has(s.title)
+        ? { ...s, expanded: this.open.get(s.title) }
+        : s,
+    );
+  }
+  // whether the top level's shape changed since the last schema (not for the first): its fields
+  // and sections by place (a section renamed in its place keeps its panel, rightly)
+  reshaped(schema: HaFormSchema[]): boolean {
+    const shape = JSON.stringify(schema.map((s) => [s.type ?? "", s.name]));
+    const was = this.shape;
+    this.shape = shape;
+    return was !== undefined && was !== shape;
+  }
+}
 // one open item: its list field's name and index, and what its form keeps (see _subs)
 interface SubLevel {
   key: string;
@@ -89,6 +124,8 @@ export abstract class FormEditorBase extends HTMLElement {
   _subView?: HTMLElement;
   _subForm?: HaFormElement;
   _subKey?: string;
+  _sections = new Sections();
+  _subSections = new Sections();
   // the open item's path: the list fields' names from the card down ("badges", "badges/rules")
   _subPath(depth = this._subs.length): string {
     return this._subs
@@ -230,13 +267,7 @@ export abstract class FormEditorBase extends HTMLElement {
           <svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:currentColor"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"/></svg>
         </button><span class="title" style="font-size:16px;font-weight:500;color:var(--primary-text-color)"></span></div>`;
       v.querySelector("button")!.addEventListener("click", () => this._closeSub());
-      const f = document.createElement("ha-form");
-      f.computeLabel = (sch) => this._subLabel(sch);
-      f.computeHelper = (sch) => this._subHelper(sch);
-      f.addEventListener("value-changed", (ev) => {
-        ev.stopPropagation();
-        this._subChanged(ev.detail.value as Raw);
-      });
+      const f = this._makeSubForm();
       v.append(f);
       this.appendChild(v);
       this._subView = v;
@@ -253,10 +284,48 @@ export abstract class FormEditorBase extends HTMLElement {
     const key = JSON.stringify([langOf(this._hass), path, level, item, items.slice(0, -1)]);
     if (key !== this._subKey) {
       this._subKey = key;
-      f.data = item;
-      f.schema = this._subSchema(this._hass, path, item);
+      const schema = this._subSchema(this._hass, path, item);
+      let form = f;
+      if (this._subSections.reshaped(schema)) {
+        form = this._makeSubForm();
+        f.replaceWith(form);
+        this._subForm = form;
+        form.hass = this._hass;
+      }
+      form.data = item;
+      form.schema = this._subSections.apply(schema);
     }
     return true;
+  }
+  _makeSubForm(): HaFormElement {
+    const f = document.createElement("ha-form");
+    f.computeLabel = (sch) => this._subLabel(sch);
+    f.computeHelper = (sch) => this._subHelper(sch);
+    f.addEventListener("value-changed", (ev) => {
+      ev.stopPropagation();
+      this._subChanged(ev.detail.value as Raw);
+    });
+    this._subSections.watch(f);
+    return f;
+  }
+  _makeForm(): HaFormElement {
+    const f = document.createElement("ha-form");
+    f.computeLabel = (sch) => this._label(sch);
+    f.computeHelper = (sch) => this._helper(sch);
+    f.addEventListener("value-changed", (ev) => {
+      ev.stopPropagation();
+      this._config = this._fromForm(ev.detail.value, this._config ?? {});
+      this._render();
+      this.dispatchEvent(
+        new CustomEvent("config-changed", {
+          detail: { config: this._config },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+    });
+    this._sections.watch(f);
+    return f;
   }
 
   _render() {
@@ -269,21 +338,7 @@ export abstract class FormEditorBase extends HTMLElement {
         const nested = !!this._subForm && ev.composedPath().includes(this._subForm);
         this._openSub(d.key, d.index, nested && this._subs.length > 0);
       });
-      this._form = document.createElement("ha-form");
-      this._form.computeLabel = (sch) => this._label(sch);
-      this._form.computeHelper = (sch) => this._helper(sch);
-      this._form.addEventListener("value-changed", (ev) => {
-        ev.stopPropagation();
-        this._config = this._fromForm(ev.detail.value, this._config ?? {});
-        this._render();
-        this.dispatchEvent(
-          new CustomEvent("config-changed", {
-            detail: { config: this._config },
-            bubbles: true,
-            composed: true,
-          }),
-        );
-      });
+      this._form = this._makeForm();
       this.appendChild(this._form);
     }
     if (this._renderSub()) return;
@@ -295,7 +350,14 @@ export abstract class FormEditorBase extends HTMLElement {
     if (key === this._formKey) return;
     this._formKey = key;
     const data = this._toForm(this._config);
+    const schema = this._schema(this._hass, data);
+    if (this._sections.reshaped(schema)) {
+      const form = this._makeForm();
+      this._form.replaceWith(form);
+      this._form = form;
+      form.hass = this._hass;
+    }
     this._form.data = data;
-    this._form.schema = this._schema(this._hass, data);
+    this._form.schema = this._sections.apply(schema);
   }
 }

@@ -231,6 +231,11 @@ const en = {
   "calendar.pick_last": "Pick the last day",
 
   "editor.default": "Default: {value}",
+  "editor.card.field.shows": "Shows",
+  "editor.card.shows_entity": "Entity: its state as it is",
+  "editor.card.shows_custom": "Custom: your own texts",
+  "editor.card.help.shows":
+    "What the card draws: a kind brings its look, controls and rules, and offers the entities it fits; Custom shows texts and templates of your own",
   "editor.card.badge.format": "Format",
   "editor.card.badge_format.auto": "As the entity writes it",
   "editor.card.badge_format.power": "Power (W, kW, MW)",
@@ -245,9 +250,6 @@ const en = {
   "editor.card.section.badge_look": "Look",
   "editor.card.section.badge_visual": "Visual",
   "editor.card.section.advanced": "Advanced",
-  "editor.card.badge.source": "Badge",
-  "editor.card.badge_source.entity": "Entity",
-  "editor.card.badge_source.custom": "Custom",
   "editor.card.badge_card_value": "The card's value",
   "editor.card.badge.attribute": "Attribute",
   "editor.card.badge.value": "Value",
@@ -468,7 +470,6 @@ const en = {
   "editor.multi_trend.layout.lanes": "Lanes (one scale per entity)",
 
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "{kind} (detected)",
   "editor.card.rules_hint.never":
     "Rule {n} never matches: its lower limit is not below its upper one",
   "editor.card.rules_hint.always": "Rule {n} matches every value: the rules after it never apply",
@@ -578,8 +579,7 @@ const en = {
   "editor.card.badge_visual.sparkline": "History line",
   "editor.card.badge_visual.trend": "Change",
   "editor.card.section.content": "Content",
-  "editor.card.section.look": "Icon and visual",
-  "editor.card.section.inputs": "Other entities",
+  "editor.card.section.look": "Appearance",
   "editor.card.section.controls": "Controls",
   "editor.card.section.badges_poster": "Status and badges",
   "editor.card.section.badges_tile": "Status and badges",
@@ -587,7 +587,6 @@ const en = {
   "editor.card.section.actions": "Interactions",
   "editor.card.section.layout": "Layout",
   "editor.card.field.entity": "Entity",
-  "editor.card.field.kind": "Kind",
   "editor.card.field.name": "Name",
   "editor.card.field.icon": "Icon",
   "editor.card.field.color": "Colour",
@@ -603,7 +602,7 @@ const en = {
   "editor.card.field.max": "To (max)",
   "editor.card.field.show_name": "Show name",
   "editor.card.field.show_value": "Show value",
-  "editor.card.field.icon_thing": "Icon",
+  "editor.card.field.icon_thing": "Icon shows",
   "editor.card.field.icon_src": "Picture",
   "editor.card.field.icon_variant": "Animation",
   "editor.card.field.icon_ring": "Ring with the value",
@@ -704,8 +703,6 @@ const en = {
   "editor.card.help.suffix": "After the value",
   "editor.card.help.found": "Found on the device: {entity}",
   "editor.card.help.not_found": "None found on the entity's device",
-  "editor.card.help.kind":
-    "What the entity is: it decides the icon, the colours, the status, the controls and the visual",
   "editor.card.help.icon_src":
     "A URL, a template or an entity whose picture to show. Empty: the entity's own",
   "editor.card.help.visual_src": "Another entity's history. Empty: this card's",

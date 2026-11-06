@@ -39,7 +39,7 @@ import {
 } from "./editor-form.ts";
 import { COVER_VARIANTS, KIND_THINGS, type IconThing, type VisualThing } from "./places.ts";
 import { IMAGE_OPACITY } from "./backdrop.ts";
-import { canRead } from "./detect.ts";
+import { canRead, detectKind } from "./detect.ts";
 import { KINDS } from "./registry.ts";
 import type { Kind } from "./types.ts";
 
@@ -65,6 +65,7 @@ export const ICONS = {
   chart:
     "M16,11.78L20.24,4.45L21.97,5.45L16.74,14.5L10.23,10.75L5.46,19H22V21H2V3H4V17.54L9.5,8L16,11.78Z",
   code: "M8,3A2,2 0 0,0 6,5V9A2,2 0 0,1 4,11H3V13H4A2,2 0 0,1 6,15V19A2,2 0 0,0 8,21H10V19H8V14A2,2 0 0,0 6,12A2,2 0 0,0 8,10V5H10V3M16,3A2,2 0 0,1 18,5V9A2,2 0 0,0 20,11H21V13H20A2,2 0 0,0 18,15V19A2,2 0 0,1 16,21H14V19H16V14A2,2 0 0,1 18,12A2,2 0 0,1 16,10V5H14V3H16Z",
+  name: "M5,4V7H10.5V19H13.5V7H19V4H5Z",
   content:
     "M5,3C3.89,3 3,3.89 3,5V19C3,20.11 3.89,21 5,21H19C20.11,21 21,20.11 21,19V5C21,3.89 20.11,3 19,3H5M5,5H19V19H5V5M7,7V9H17V7H7M7,11V13H17V11H7M7,15V17H14V15H7Z",
   look: "M12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2C17.5,2 22,6 22,11A6,6 0 0,1 16,17H14.2C13.9,17 13.7,17.2 13.7,17.5C13.7,17.6 13.8,17.7 13.8,17.8C14.2,18.3 14.4,18.9 14.4,19.5C14.5,20.9 13.4,22 12,22M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C12.3,20 12.5,19.8 12.5,19.5C12.5,19.3 12.4,19.2 12.4,19.1C12,18.6 11.8,18.1 11.8,17.5C11.8,16.1 12.9,15 14.3,15H16A4,4 0 0,0 20,11C20,7.1 16.4,4 12,4M6.5,10C7.3,10 8,10.7 8,11.5C8,12.3 7.3,13 6.5,13C5.7,13 5,12.3 5,11.5C5,10.7 5.7,10 6.5,10M9.5,6C10.3,6 11,6.7 11,7.5C11,8.3 10.3,9 9.5,9C8.7,9 8,8.3 8,7.5C8,6.7 8.7,6 9.5,6M14.5,6C15.3,6 16,6.7 16,7.5C16,8.3 15.3,9 14.5,9C13.7,9 13,8.3 13,7.5C13,6.7 13.7,6 14.5,6M17.5,10C18.3,10 19,10.7 19,11.5C19,12.3 18.3,13 17.5,13C16.7,13 16,12.3 16,11.5C16,10.7 16.7,10 17.5,10Z",
@@ -112,6 +113,58 @@ const section = (title: string, icon: string, schema: HaFormSchema[]): HaFormSch
 });
 const grid = (...schema: HaFormSchema[]): HaFormSchema => ({ name: "", type: "grid", schema });
 
+const NUMBERS = new Set(["sensor", "number", "input_number"]);
+// the entity picker for a kind: the entities that fit it (fitsKind), the one written always (none:
+// every entity)
+export const entitiesFor = (
+  hass: HomeAssistant | undefined,
+  kind: string,
+  written: string,
+): Record<string, unknown> => {
+  if (!KINDS[kind] || !hass || kind === "none") return {};
+  const fit = Object.keys(hass.states).filter((id) => fitsKind(hass, kind, id));
+  if (written && !fit.includes(written)) fit.push(written);
+  return fit.length ? { include_entities: fit } : {};
+};
+// every entity's detected kind and the kinds anything is detected as, found once per set of states
+// (Home Assistant hands a new object for every change, so a form drawn again for the same states
+// looks nothing up)
+interface Detected {
+  byId: Map<string, string>;
+  kinds: Set<string>;
+}
+const detectedOf = new WeakMap<object, Detected>();
+const detectedIn = (hass: HomeAssistant): Detected => {
+  let d = detectedOf.get(hass.states);
+  if (d) return d;
+  d = { byId: new Map(), kinds: new Set() };
+  for (const [id, st] of Object.entries(hass.states)) {
+    const name = detectKind(id, st).name;
+    d.byId.set(id, name);
+    d.kinds.add(name);
+  }
+  detectedOf.set(hass.states, d);
+  return d;
+};
+// whether an entity fits a kind: any entity fits none (the entity as it is); else one detected as
+// it, or one it reads that is detected as nothing else: a sensor without a device class (a
+// template's battery level), an entity of another domain the kind names (a weather entity's wind,
+// a device tracker's person). Where nothing is detected as the kind (one only ever named: solar,
+// grid, a car, the appliances) every entity it reads fits.
+export const fitsKind = (hass: HomeAssistant | undefined, kind: string, id: string): boolean => {
+  const k = KINDS[kind];
+  if (!k || !hass) return false;
+  if (kind === "none") return true;
+  const d = detectedIn(hass);
+  const is = d.byId.get(id) ?? detectKind(id, hass.states[id]).name;
+  if (is === kind) return true;
+  if (!canRead(k, id)) return false;
+  if (!d.kinds.has(kind)) return true;
+  if (k.reads === "any") return false;
+  // (a number's device class says what it measures; another domain the kind names is its own)
+  if (!NUMBERS.has(domainOf(id))) return true;
+  return is === "none" && !hass.states[id]?.attributes.device_class;
+};
 // a label of the editor's own words (a key the schema builds from a value)
 // vertical_align's values as the layout card's alignment words
 const ALIGN_WORD = { top: "start", center: "center", bottom: "end" } as const;
@@ -147,8 +200,12 @@ export const badgeItemSchema = (
     !(k === "icon_type" && item[k] === "icon");
   const when = (cond: boolean, k: string) => cond || filled(k);
   const type = typeof item.icon_type === "string" ? item.icon_type : "icon";
+  // what it shows: the entity as it is, one of your own (a text or a template), or a kind whose
+  // colours it takes (the badges' kinds, and the one its entity is detected as)
+  const shows = typeof item.shows === "string" ? item.shows : "none";
+  const custom = shows === "custom";
   const own = typeof item.entity === "string" && item.entity ? item.entity : "";
-  const reads = item.source === "custom" ? "" : own || cardEntity;
+  const reads = custom ? "" : own || cardEntity;
   const st = reads ? hass?.states[reads] : undefined;
   const text = filled("value");
   const attr = typeof item.attribute === "string" ? item.attribute : "";
@@ -162,46 +219,54 @@ export const badgeItemSchema = (
   const ranged = item.visual === "bar" || item.icon_ring === true;
   const iconed = type === "icon" || type === "image";
   const plot = item.visual === "sparkline" || item.visual === "trend";
-  // an entity's badge (its entity, else the card's, and an attribute) or one of your own (a text
-  // or a template)
-  const custom = item.source === "custom";
   const T = (k: string) => L(hass, k);
   const sub = (title: string, icon: string, expanded: boolean, schema: HaFormSchema[]) =>
     ({ ...section(title, icon, schema), expanded }) as HaFormSchema;
+  const kinds = [
+    ...new Set<string>([...BADGE_KINDS, ...(shows !== "none" && !custom ? [shows] : [])]),
+  ]
+    .map((k) => ({ value: k, label: kindLabel(hass, k) }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+  // (a badge hides its name unless told)
+  const named = item.show_name === true || filled("name");
   const out: (HaFormSchema | false)[] = [
     {
-      name: "source",
+      name: "shows",
+      required: true,
       selector: {
-        pro_cards_toggle: {
-          options: ["entity", "custom"].map((v) => ({
-            value: v,
-            label: L(hass, `badge_source.${v}`),
-          })),
+        select: {
+          mode: "dropdown",
+          options: [
+            { value: "none", label: L(hass, "shows_entity") },
+            { value: "custom", label: L(hass, "shows_custom") },
+            ...kinds,
+          ],
         },
       },
     } as HaFormSchema,
-    // what it shows, then its name beside the value and whether the name shows
-    sub(T("section.content"), ICONS.content, true, [
-      ...(custom
-        ? []
-        : [
-            field("entity", { default: L(hass, "none") } as Partial<HaFormSchema>),
-            ...(reads
-              ? [
-                  {
-                    name: "attribute",
-                    selector: { attribute: { entity_id: reads } },
-                  } as HaFormSchema,
-                ]
-              : []),
-          ]),
-      grid(field("name"), ...(custom || filled("value") ? [field("value")] : [])),
-      field("show_name"),
-    ]),
+    // the entity it reads (empty: the card's), of those its kind fits
+    ...(custom
+      ? []
+      : [
+          {
+            name: "entity",
+            // (filtered only by a kind chosen for the badge, not one that follows its entity)
+            selector: { entity: entitiesFor(hass, item.chosen === true ? shows : "none", own) },
+            default: L(hass, "none"),
+          } as HaFormSchema,
+        ]),
+    // its name: whether it shows, then the name
+    sub(T("field.name"), ICONS.name, true, [field("show_name"), ...(named ? [field("name")] : [])]),
     // how its value is written: whether it shows, then (where it does) its format (for a number
     // or a date), its unit and decimals (for a number), a text before and after it
-    sub(T("section.badge_value"), ICONS.value, false, [
+    // (open for one of your own: its text is what it says)
+    sub(T("section.badge_value"), ICONS.value, custom, [
       field("show_value"),
+      // what it reads: an attribute of its entity; or a text of your own
+      ...(reads
+        ? [{ name: "attribute", selector: { attribute: { entity_id: reads } } } as HaFormSchema]
+        : []),
+      ...(custom || filled("value") ? [field("value")] : []),
       ...(showsValue
         ? [
             ...(when(numeric || dated, "format") ? [field("format")] : []),
@@ -214,9 +279,9 @@ export const badgeItemSchema = (
     ]),
     // its look: the pill, the colour and the kind's, then the icon (an icon's name only for an
     // icon, a picture's source only for a picture)
-    sub(T("section.badge_look"), ICONS.look, false, [
+    sub(T("section.look"), ICONS.look, false, [
       grid(field("style"), field("size")),
-      grid(field("color"), ...(when(!!reads && !text, "kind") ? [field("kind")] : [])),
+      field("color"),
       grid(field("icon_type"), ...(when(type === "icon", "icon") ? [field("icon")] : [])),
       ...(type === "image" ? [field("icon_src")] : []),
     ]),
@@ -313,6 +378,7 @@ export const ruleFieldLabel = (hass: HomeAssistant | undefined, name: string) =>
 // a badge field's label, as fieldsOf names it
 // (what a badge says as the card says it is labelled as the card's field is)
 const CARD_WORDS = new Set([
+  "shows",
   "show_value",
   "unit",
   "decimals",
@@ -469,32 +535,50 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
     ...(shown[name] !== undefined ? { default: shown[name] } : {}),
   });
 
-  // ----- the top: the entity, its kind, its name and icon, the colour -----
-  // the kinds that read the entity, the detected one only as detected (the one written too, so the
-  // select shows it)
+  // ----- the top: what it shows, the entity that reads, its name and icon, the colour -----
+  // first the two plain ones: an entity as it is (the kind `none`, what a plain sensor is) and
+  // Custom (no entity: texts and templates of your own); then every kind by its name (a select
+  // field has no group headings); then the entity, of those the kind fits (none for a kind that
+  // reads no entity, nor for Custom)
+  const shows = typeof data.shows === "string" ? data.shows : "custom";
   const kinds = Object.keys(KINDS)
-    .filter((k) => k === data.kind || (k !== x.detected.name && canRead(KINDS[k], entity)))
+    .filter((k) => k !== "none")
     .map((k) => opt(k, kindLabel(hass, k)))
     .sort((a, b) => a.label.localeCompare(b.label));
+  const reads = shows !== "custom";
   const top: HaFormSchema[] = [
-    { name: "entity", selector: { entity: {} } },
-    pick("kind", [
-      opt(DETECTED, tr("kind_detected", { kind: kindLabel(hass, x.detected.name) })),
-      ...kinds,
-    ]),
-    grid(
-      text("name"),
-      // the entity's own icon in its place while none is written
-      ...((iconThing === "icon" || iconThing === "image") && thing !== "row"
-        ? [{ name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } }]
-        : []),
-    ),
-    { name: "color", selector: { ui_color: { default_color: "state", include_state: true } } },
+    {
+      ...pick("shows", [
+        opt("none", tr("shows_entity")),
+        opt("custom", tr("shows_custom")),
+        ...kinds,
+      ]),
+      required: true,
+    },
+    ...(reads
+      ? [
+          {
+            name: "entity",
+            selector: { entity: entitiesFor(hass, shows, entity ?? "") },
+          } as HaFormSchema,
+        ]
+      : []),
   ];
 
   // ----- content: the texts, the value's range -----
   const range = rangeInfo(x);
-  const content: HaFormSchema[] = [
+  // the name: whether it shows, then the name (a name written stays, so it can be cleared)
+  const filledIn = (k: string) => data[k] !== undefined && data[k] !== null && data[k] !== "";
+  const nameFields: HaFormSchema[] = [
+    { name: "show_name", selector: { boolean: {} } },
+    ...(data.show_name !== false || filledIn("name") ? [text("name")] : []),
+  ];
+  // the value: whether it shows; what it reads (the attribute, also what the visual reads); how it
+  // is written, only while it shows (a field filled in stays); its range; the line under it
+  const valueShown = data.show_value !== false;
+  const writes = (k: string) => valueShown || filledIn(k);
+  const valueFields: HaFormSchema[] = [
+    { name: "show_value", selector: { boolean: {} } },
     ...(entity
       ? [
           {
@@ -504,11 +588,8 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
           },
         ]
       : []),
-    // (a row has no secondary)
-    thing === "row"
-      ? text("value")
-      : grid(text("value"), { name: "secondary", selector: { text: {} } }),
-    ...(x.numeric
+    ...(writes("value") ? [text("value")] : []),
+    ...(x.numeric && (writes("unit") || writes("decimals"))
       ? [
           grid(text("unit"), {
             name: "decimals",
@@ -518,7 +599,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
         ]
       : []),
     // around a value the card shows: an entity's, or one written
-    ...(data.show_value !== false && (entity || data.value)
+    ...((entity || data.value) && (writes("prefix") || writes("suffix"))
       ? [
           grid(
             { name: "prefix", selector: { text: {} } },
@@ -536,10 +617,8 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
           ),
         ]
       : []),
-    grid(
-      { name: "show_name", selector: { boolean: {} } },
-      { name: "show_value", selector: { boolean: {} } },
-    ),
+    // (a row has no secondary)
+    ...(thing === "row" ? [] : [{ name: "secondary", selector: { text: {} } }]),
   ];
 
   // ----- look: the icon's and the visual's thing, then that thing's options -----
@@ -675,8 +754,19 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
       : []),
   ];
   // (a row has no icon)
+  // the card's colour first, then the icon's thing, the icon (the entity's own in its place while
+  // none is written) and that thing's options, then the visual
   const look: HaFormSchema[] = [
-    ...(thing === "row" ? [] : [pick("icon_thing", iconThings), ...iconOptions]),
+    { name: "color", selector: { ui_color: { default_color: "state", include_state: true } } },
+    ...(thing === "row"
+      ? []
+      : [
+          pick("icon_thing", iconThings),
+          ...(iconThing === "icon" || iconThing === "image"
+            ? [{ name: "icon", selector: { icon: {} }, context: { icon_entity: "entity" } }]
+            : []),
+          ...iconOptions,
+        ]),
     pick("visual_thing", visualThings),
     ...visualOptions,
   ];
@@ -881,12 +971,19 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
     { name: "hover", selector: { boolean: {} } },
   ];
 
+  // what the kind reads right under what it shows: its entity, then its other inputs (a wind's
+  // direction, a trend's series), before anything that draws them
   return [
     ...top,
-    section(tr("section.content"), ICONS.content, thing === "row" ? [...content, status] : content),
-    // (a row's is its visual alone)
-    section(tr(thing === "row" ? "field.visual_thing" : "section.look"), ICONS.look, look),
-    ...(inputs.length ? [section(tr("section.inputs"), ICONS.inputs, inputs)] : []),
+    ...inputs,
+    // (open: the field changed most)
+    { ...section(tr("field.name"), ICONS.name, nameFields), expanded: true } as HaFormSchema,
+    section(
+      tr("field.value"),
+      ICONS.value,
+      thing === "row" ? [...valueFields, status] : valueFields,
+    ),
+    section(tr("section.look"), ICONS.look, look),
     ...(hasControls
       ? [
           section(tr("section.controls"), ICONS.controls, [

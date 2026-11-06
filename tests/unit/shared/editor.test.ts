@@ -46,7 +46,8 @@ describe("FormEditorBase", () => {
     );
     form.dispatchEvent(new CustomEvent("value-changed", { detail: { value: { title: "" } } }));
     expect(seen).toEqual([{ type: "custom:x", grid_options: { columns: 6 } }]);
-    expect(form.schema?.[1].name).toBe("y");
+    // (another field in its place: a form drawn anew, one still)
+    expect(ed.querySelector("ha-form")!.schema?.[1].name).toBe("y");
     expect(ed.querySelectorAll("ha-form").length).toBe(1);
   });
   it("only hands a new hass to the form; data and schema follow the config and the language", () => {

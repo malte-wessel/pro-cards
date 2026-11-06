@@ -26,13 +26,13 @@ import {
   ruleItemSchema,
   badgeItemSchema,
   editorSchema,
+  fitsKind,
   rangeInfo,
   type SchemaCtx,
 } from "./editor-schema.ts";
 import { BADGE_LIST, BadgeListSelector } from "./badge-list.ts";
 import { RULE_LIST, RuleListSelector } from "./rule-list.ts";
 import { defineSelector } from "../editor-list.ts";
-import "../editor-toggle.ts";
 
 // the badges' list field: ha-selector draws `ha-selector-<type>` for a selector of that type
 defineSelector(BADGE_LIST, BadgeListSelector);
@@ -59,6 +59,14 @@ const shownIsNum = (
       ? data.attribute
       : kind.main?.(entity, { entity } as RawEntity, {}).attribute;
   return isNum(typeof attr === "string" ? st?.attributes[attr] : st?.state);
+};
+
+// what a card shows: its kind as written, else its entity's detected kind, else Custom (no entity:
+// texts and templates of your own)
+export const showsOf = (c: Raw, hass: HomeAssistant | undefined): string => {
+  if (typeof c.kind === "string" && c.kind && c.kind !== DETECTED) return c.kind;
+  const entity = typeof c.entity === "string" && c.entity ? c.entity : null;
+  return entity ? detectKind(entity, hass?.states[entity]).name : "custom";
 };
 
 export const kindsOf = (
@@ -110,7 +118,20 @@ export abstract class KindCardEditor extends FormEditorBase {
 
   _toForm(config: CardConfigBase): HaFormData {
     const { kind } = kindsOf(config as Raw, this._hass);
-    return configToForm(config, kind, this._thing, this._kindRules(kind, config as Raw));
+    const d = configToForm(config, kind, this._thing, this._kindRules(kind, config as Raw));
+    const waiting = this._waiting();
+    // (a kind waiting for an entity: its picker empty until one is picked)
+    return waiting
+      ? { ...d, shows: waiting, entity: "" }
+      : { ...d, shows: showsOf(config as Raw, this._hass) };
+  }
+  // a kind chosen in Shows that the card's entity does not fit waits here for one that does: the
+  // config stays as it was (a kind without its entity is no card) until one is picked; the config
+  // changed elsewhere (its YAML) drops it
+  _wait?: { shows: string; config: string };
+  _waiting(): string | undefined {
+    const w = this._wait;
+    return w && w.config === JSON.stringify(this._config ?? {}) ? w.shows : undefined;
   }
   // the kind's rules as this card would write them: in the user's language, their thresholds in
   // the unit of the value the rules read
@@ -125,14 +146,64 @@ export abstract class KindCardEditor extends FormEditorBase {
     return writtenRules(kind, (key) => t(this._hass, key), typeof unit === "string" ? unit : null);
   }
 
+  // what the card shows, chosen first: a kind, then the entity it reads (a kind written only where
+  // the entity would not be detected as it); or Custom, no entity: texts and templates of your own.
+  // A kind the entity does not fit waits for one that does (`_wait`), the config as it was.
+  _fromForm(form: HaFormData, prev: CardConfigBase): CardConfigBase {
+    const { shows, ...data } = form;
+    const p = prev as Raw;
+    const waiting = this._waiting();
+    const was = waiting ?? showsOf(p, this._hass);
+    let chose = typeof shows === "string" && shows !== was;
+    let kind: string | undefined = chose ? (shows as string) : undefined;
+    if (chose) this._wait = undefined;
+    if (!chose && waiting) {
+      // waiting: an entity picked that fits takes the kind; else the entity stays as it was
+      const e = typeof data.entity === "string" ? data.entity : "";
+      if (e && fitsKind(this._hass, waiting, e)) {
+        this._wait = undefined;
+        chose = true;
+        kind = waiting;
+      } else data.entity = p.entity ?? "";
+    }
+    // (your own: no entity, nor an attribute of one)
+    if (chose && kind === "custom")
+      Object.assign(data, { entity: "", attribute: "", kind: DETECTED });
+    else if (chose && kind && KINDS[kind]) {
+      // the entity picked, else the one the card had, where it fits the kind
+      const e =
+        (typeof data.entity === "string" && data.entity) ||
+        (typeof p.entity === "string" ? p.entity : "");
+      if (e && fitsKind(this._hass, kind, e)) Object.assign(data, { entity: e, kind });
+      // a kind that needs no entity is a card without one
+      else if (KINDS[kind].entityless) Object.assign(data, { entity: "", kind });
+      else {
+        this._wait = { shows: kind, config: JSON.stringify(prev) };
+        return prev;
+      }
+    }
+    const out = this._fromData(data, prev);
+    // a kind written that its entity is detected as anyway says nothing
+    const o = out as Raw;
+    const moved = (o.entity ?? null) !== (p.entity ?? null);
+    if ((chose || moved) && typeof o.kind === "string" && typeof o.entity === "string") {
+      const st = this._hass?.states[o.entity];
+      if (detectKind(o.entity, st).name === o.kind) delete o.kind;
+    }
+    // (still waiting: for the config as it is now)
+    if (this._wait && !chose) this._wait = { ...this._wait, config: JSON.stringify(out) };
+    return out;
+  }
   // another entity: a kind written that cannot read it goes back to the detected one (dropping what
   // only it read), and what belonged to the entity before goes where the new one cannot take it
-  _fromForm(data: HaFormData, prev: CardConfigBase): CardConfigBase {
+  _fromData(data: HaFormData, prev: CardConfigBase): CardConfigBase {
     const entity = typeof data.entity === "string" && data.entity ? data.entity : null;
     const moved = entity !== ((prev as Raw).entity ?? null);
     let d = data;
     const written = typeof d.kind === "string" ? KINDS[d.kind] : undefined;
-    if (moved && written && !canRead(written, entity)) d = { ...d, kind: DETECTED };
+    // another entity the written kind cannot read drops it (an entity cleared keeps it: the kind
+    // chosen in Shows waits for one)
+    if (moved && entity && written && !canRead(written, entity)) d = { ...d, kind: DETECTED };
     const { kind } = kindsOf(d, this._hass);
     const was = kindsOf(prev as Raw, this._hass).kind;
     const c = formToConfig(d, prev, kind, this._thing, was, {
@@ -169,6 +240,7 @@ export abstract class KindCardEditor extends FormEditorBase {
     const { kind, detected } = kindsOf(c, hass);
     return [
       detected.name,
+      this._waiting() ?? null,
       shownIsNum(c, kind, hass.states[entity]),
       this._found(kind, hass),
       this._group(),
@@ -255,23 +327,85 @@ export abstract class KindCardEditor extends FormEditorBase {
     const b = badgeFromForm(item);
     return typeof b === "object" && b !== null && !Object.keys(b).length;
   }
-  // a badge's source in its form: one of your own where it says a text and reads no entity, else
-  // an entity's; as last chosen while the form is open. Switching drops what the other one says
+  // what a badge shows in its form, as the card's: one of your own where it says a text and reads
+  // no entity (or Custom was last chosen while the form is open), else its written kind, else the
+  // kind of the entity it reads (its own, else the card's), else the entity as it is
+  _badgeShows(item: Raw): string {
+    if (typeof item.kind === "string" && item.kind && item.kind !== DETECTED) return item.kind;
+    const reads = (typeof item.entity === "string" && item.entity) || this._cardEntity();
+    return reads ? detectKind(reads, this._hass?.states[reads]).name : "none";
+  }
+  // (`chosen`: a kind chosen for the badge, written or waiting, which its entity picker follows; a
+  // kind that only follows the entity it reads leaves every entity to pick)
   _subToForm(path: string, item: Raw, hint: Raw): Raw {
     if (path !== "badges") return item;
+    if (typeof hint.wait === "string")
+      return { ...item, shows: hint.wait, entity: "", chosen: true };
     const own = !!item.value && !item.entity && !item.attribute;
-    return { ...item, source: hint.source ?? (own ? "custom" : "entity") };
+    const custom = hint.source ? hint.source === "custom" : own;
+    const chosen = typeof item.kind === "string" && !!item.kind && item.kind !== DETECTED;
+    return { ...item, shows: custom ? "custom" : this._badgeShows(item), chosen };
   }
+  // another choice in Shows: Custom drops what an entity's badge says; a kind takes the entity the
+  // badge reads (its own, else the card's) where it fits, written only where that one is not
+  // detected as it anyway; else it waits for one that fits (`hint.wait`), the badge as it was.
+  // Another entity drops a kind it is detected as anyway.
   _subFromForm(path: string, data: Raw, was: Raw, hint: Raw): Raw {
     if (path !== "badges") return data;
-    const { source, ...item } = data;
-    if (source !== was.source) {
-      hint.source = source;
-      if (source === "custom") {
+    const { shows, chosen: _chosen, ...item } = data;
+    void _chosen;
+    const str = (v: unknown) => (typeof v === "string" ? v : "");
+    const detectedAs = (e: string) => (e ? detectKind(e, this._hass?.states[e]).name : "none");
+    // a kind taken with the entity the badge reads now: Shows' value, or none written
+    const take = (kind: string) => {
+      hint.source = "entity";
+      delete item.value;
+      const reads = str(item.entity) || this._cardEntity();
+      item.kind = kind === detectedAs(reads) ? DETECTED : kind;
+      // (an attribute the new entity lacks goes)
+      const attr = str(item.attribute);
+      const st = reads ? this._hass?.states[reads] : undefined;
+      if (attr && !(st && attr in st.attributes)) delete item.attribute;
+      return item;
+    };
+    const waiting = typeof hint.wait === "string" ? hint.wait : undefined;
+    if (typeof shows === "string" && shows !== was.shows) {
+      hint.wait = undefined;
+      if (shows === "custom") {
+        hint.source = "custom";
         for (const k of ["entity", "attribute", "control"]) delete item[k];
         item.kind = DETECTED;
-      } else delete item.value;
+        return item;
+      }
+      const own = waiting ? str(hint.held) : str(item.entity);
+      const reads = own || this._cardEntity();
+      if (reads ? fitsKind(this._hass, shows, reads) : shows === "none") {
+        item.entity = own;
+        return take(shows);
+      }
+      // waits: the badge as it was (its entity shown empty)
+      if (!waiting) hint.held = own;
+      hint.wait = shows;
+      const { shows: _s, chosen: _c, ...before } = was;
+      void _s;
+      void _c;
+      return waiting ? { ...before, entity: str(hint.held) } : before;
     }
+    if (waiting) {
+      const own = str(item.entity);
+      if (own && fitsKind(this._hass, waiting, own)) {
+        hint.wait = undefined;
+        return take(waiting);
+      }
+      // anything else changed while it waits: on the badge as it was
+      item.entity = str(hint.held);
+      return item;
+    }
+    if (
+      item.entity !== was.entity &&
+      item.kind === detectedAs(str(item.entity) || this._cardEntity())
+    )
+      item.kind = DETECTED;
     return item;
   }
   // what a badge field does where it is left empty: the card's entity, the pill's defaults
@@ -312,6 +446,8 @@ export abstract class KindCardEditor extends FormEditorBase {
       // what the kind finds on the device, where the card names none
       const written = (this._config as Raw | undefined)?.inputs as Raw | undefined;
       if (typeof written?.[name.slice(6)] === "string") return undefined;
+      // (no entity yet: no device to look on)
+      if (!(this._config as Raw | undefined)?.entity) return undefined;
       const { kind } = kindsOf((this._config ?? {}) as Raw, this._hass);
       const i = (kind.inputs ?? []).findIndex((d) => `input_${d.key}` === name);
       const found = i >= 0 ? this._found(kind, this._hass)[i] : null;

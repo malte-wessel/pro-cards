@@ -232,6 +232,11 @@ const de: Translation = {
   "calendar.pick_last": "Letzten Tag wählen",
 
   "editor.default": "Standard: {value}",
+  "editor.card.field.shows": "Zeigt",
+  "editor.card.shows_entity": "Entität: ihr Zustand, wie er ist",
+  "editor.card.shows_custom": "Benutzerdefiniert: eigene Texte",
+  "editor.card.help.shows":
+    "Was die Karte zeichnet: eine Art bringt Aussehen, Bedienelemente und Regeln mit und bietet die passenden Entitäten an; Benutzerdefiniert zeigt eigene Texte und Vorlagen",
   "editor.card.badge.format": "Format",
   "editor.card.badge_format.auto": "Wie die Entität ihn schreibt",
   "editor.card.badge_format.power": "Leistung (W, kW, MW)",
@@ -246,9 +251,6 @@ const de: Translation = {
   "editor.card.section.badge_look": "Aussehen",
   "editor.card.section.badge_visual": "Darstellung",
   "editor.card.section.advanced": "Erweitert",
-  "editor.card.badge.source": "Badge",
-  "editor.card.badge_source.entity": "Entität",
-  "editor.card.badge_source.custom": "Benutzerdefiniert",
   "editor.card.badge_card_value": "Der Wert der Karte",
   "editor.card.badge.attribute": "Attribut",
   "editor.card.badge.value": "Wert",
@@ -468,7 +470,6 @@ const de: Translation = {
   "editor.multi_trend.layout.overlay": "Überlagert (eine Skala)",
   "editor.multi_trend.layout.lanes": "Spuren (eine Skala je Entität)",
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "{kind} (erkannt)",
   "editor.card.rules_hint.never":
     "Regel {n} passt nie: ihre untere Grenze liegt nicht unter der oberen",
   "editor.card.rules_hint.always": "Regel {n} passt auf jeden Wert: die Regeln danach greifen nie",
@@ -578,8 +579,7 @@ const de: Translation = {
   "editor.card.badge_visual.sparkline": "Verlaufslinie",
   "editor.card.badge_visual.trend": "Änderung",
   "editor.card.section.content": "Inhalt",
-  "editor.card.section.look": "Symbol und Grafik",
-  "editor.card.section.inputs": "Weitere Entitäten",
+  "editor.card.section.look": "Darstellung",
   "editor.card.section.controls": "Steuerelemente",
   "editor.card.section.badges_poster": "Status und Badges",
   "editor.card.section.badges_tile": "Status und Badges",
@@ -587,7 +587,6 @@ const de: Translation = {
   "editor.card.section.actions": "Interaktionen",
   "editor.card.section.layout": "Layout",
   "editor.card.field.entity": "Entität",
-  "editor.card.field.kind": "Art",
   "editor.card.field.name": "Name",
   "editor.card.field.icon": "Symbol",
   "editor.card.field.color": "Farbe",
@@ -603,7 +602,7 @@ const de: Translation = {
   "editor.card.field.max": "Bis (max)",
   "editor.card.field.show_name": "Name anzeigen",
   "editor.card.field.show_value": "Wert anzeigen",
-  "editor.card.field.icon_thing": "Symbol",
+  "editor.card.field.icon_thing": "Symbol zeigt",
   "editor.card.field.icon_src": "Bild",
   "editor.card.field.icon_variant": "Animation",
   "editor.card.field.icon_ring": "Ring mit dem Wert",
@@ -704,8 +703,6 @@ const de: Translation = {
   "editor.card.help.suffix": "Nach dem Wert",
   "editor.card.help.found": "Am Gerät gefunden: {entity}",
   "editor.card.help.not_found": "Keine am Gerät der Entität gefunden",
-  "editor.card.help.kind":
-    "Was die Entität ist: bestimmt Symbol, Farben, Status, Steuerelemente und Grafik",
   "editor.card.help.icon_src":
     "Eine URL, ein Template oder eine Entität, deren Bild gezeigt wird. Leer: das der Entität",
   "editor.card.help.visual_src": "Der Verlauf einer anderen Entität. Leer: der dieser Karte",

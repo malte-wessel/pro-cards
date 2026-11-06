@@ -232,6 +232,11 @@ const cs: Translation = {
   "calendar.pick_last": "Vyberte poslední den",
 
   "editor.default": "Výchozí: {value}",
+  "editor.card.field.shows": "Zobrazuje",
+  "editor.card.shows_entity": "Entita: její stav tak, jak je",
+  "editor.card.shows_custom": "Vlastní: vlastní texty",
+  "editor.card.help.shows":
+    "Co karta kreslí: druh přináší vzhled, ovládání a pravidla a nabízí entity, které mu odpovídají; Vlastní ukazuje vlastní texty a šablony",
   "editor.card.badge.format": "Formát",
   "editor.card.badge_format.auto": "Jak jej entita zapisuje",
   "editor.card.badge_format.power": "Výkon (W, kW, MW)",
@@ -246,9 +251,6 @@ const cs: Translation = {
   "editor.card.section.badge_look": "Vzhled",
   "editor.card.section.badge_visual": "Vizualizace",
   "editor.card.section.advanced": "Pokročilé",
-  "editor.card.badge.source": "Odznak",
-  "editor.card.badge_source.entity": "Entita",
-  "editor.card.badge_source.custom": "Vlastní",
   "editor.card.badge_card_value": "Hodnota karty",
   "editor.card.badge.attribute": "Atribut",
   "editor.card.badge.value": "Hodnota",
@@ -469,7 +471,6 @@ const cs: Translation = {
   "editor.multi_trend.layout.lanes": "Dráhy (jedna stupnice na entitu)",
 
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "{kind} (rozpoznáno)",
   "editor.card.rules_hint.never": "Pravidlo {n} nikdy neodpovídá: jeho dolní mez není pod horní",
   "editor.card.rules_hint.always":
     "Pravidlo {n} odpovídá každé hodnotě: pravidla za ním se nikdy neuplatní",
@@ -579,8 +580,7 @@ const cs: Translation = {
   "editor.card.badge_visual.sparkline": "Čára historie",
   "editor.card.badge_visual.trend": "Změna",
   "editor.card.section.content": "Obsah",
-  "editor.card.section.look": "Ikona a vizuál",
-  "editor.card.section.inputs": "Další entity",
+  "editor.card.section.look": "Vzhled",
   "editor.card.section.controls": "Ovládací prvky",
   "editor.card.section.badges_poster": "Stav a odznaky",
   "editor.card.section.badges_tile": "Stav a odznaky",
@@ -588,7 +588,6 @@ const cs: Translation = {
   "editor.card.section.actions": "Interakce",
   "editor.card.section.layout": "Rozvržení",
   "editor.card.field.entity": "Entita",
-  "editor.card.field.kind": "Druh",
   "editor.card.field.name": "Název",
   "editor.card.field.icon": "Ikona",
   "editor.card.field.color": "Barva",
@@ -604,7 +603,7 @@ const cs: Translation = {
   "editor.card.field.max": "Do (max)",
   "editor.card.field.show_name": "Zobrazit název",
   "editor.card.field.show_value": "Zobrazit hodnotu",
-  "editor.card.field.icon_thing": "Ikona",
+  "editor.card.field.icon_thing": "Ikona zobrazuje",
   "editor.card.field.icon_src": "Obrázek",
   "editor.card.field.icon_variant": "Animace",
   "editor.card.field.icon_ring": "Prstenec s hodnotou",
@@ -705,7 +704,6 @@ const cs: Translation = {
   "editor.card.help.suffix": "Za hodnotou",
   "editor.card.help.found": "Nalezeno na zařízení: {entity}",
   "editor.card.help.not_found": "Na zařízení entity nebylo nic nalezeno",
-  "editor.card.help.kind": "Co entita je: určuje ikonu, barvy, stav, ovládací prvky a vizuál",
   "editor.card.help.icon_src":
     "URL, šablona nebo entita, jejíž obrázek se zobrazí. Prázdné: obrázek entity",
   "editor.card.help.visual_src": "Historie jiné entity. Prázdné: entita této karty",

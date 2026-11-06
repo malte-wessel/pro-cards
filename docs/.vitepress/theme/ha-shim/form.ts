@@ -224,6 +224,7 @@ export class HaFormShim extends HTMLElement {
   _open = new Set<string>();
   // sections closed by hand: one the schema opens (`expanded`) stays closed once closed
   _closed = new Set<string>();
+  _expanded = new Map<string, boolean>();
   _queued = false;
 
   set data(d: Raw | undefined) {
@@ -309,7 +310,17 @@ export class HaFormShim extends HTMLElement {
       const d = document.createElement("details");
       const id = s.title ?? s.name;
       d.dataset.id = id;
+      // a section's `expanded` that changes opens or closes it, as Home Assistant's panel takes
+      // the new value (a toggle of the viewer's stays while it does not)
+      if (this._expanded.get(id) !== !!s.expanded) {
+        this._expanded.set(id, !!s.expanded);
+        if (s.expanded) {
+          this._closed.delete(id);
+        } else this._open.delete(id);
+      }
       d.open = this._open.has(id) || (!!s.expanded && !this._closed.has(id));
+      // (the section's schema on it, as on Home Assistant's ha-form-expandable)
+      (d as HTMLDetailsElement & { schema?: Schema }).schema = s;
       d.addEventListener("toggle", () => {
         if (d.open) {
           this._open.add(id);
@@ -318,6 +329,14 @@ export class HaFormShim extends HTMLElement {
           this._open.delete(id);
           this._closed.add(id);
         }
+        // as Home Assistant's panel tells of a toggle
+        d.dispatchEvent(
+          new CustomEvent("expanded-changed", {
+            detail: { expanded: d.open },
+            bubbles: true,
+            composed: true,
+          }),
+        );
       });
       const sum = document.createElement("summary");
       sum.innerHTML = s.iconPath ? svg(s.iconPath) : "";
@@ -597,8 +616,11 @@ export class HaFormShim extends HTMLElement {
     }));
     const states = () => this.hass?.states ?? {};
     const nameOf = (id: string) => String(states()[id]?.attributes.friendly_name ?? id);
+    // (as Home Assistant: only these entities, where the selector names them)
+    const only = Array.isArray(conf.include_entities) ? conf.include_entities.map(String) : null;
     const candidates = () =>
       Object.values(states())
+        .filter((st) => !only || only.includes(st.entity_id))
         .filter((st) => {
           const d = st.entity_id.split(".")[0];
           const dc = String(st.attributes.device_class);

@@ -62,7 +62,7 @@ const saveItem = (scope: Locator, name: string) =>
 
 test("the tile's editor writes the visual it is given", async ({ page }) => {
   const e = await openEditor(page, { type: "custom:tile-card-pro", entity: "light.living_room" });
-  await openSection(e.form, "Icon and visual");
+  await openSection(e.form, "Appearance");
   await choose(e.form, "visual_thing", "sparkline");
   await expect.poll(e.last).toEqual({
     type: "custom:tile-card-pro",
@@ -77,10 +77,14 @@ test("the tile's editor writes the visual it is given", async ({ page }) => {
 test("the entity picker searches the demo home and picks by click or keyboard", async ({
   page,
 }) => {
-  const e = await openEditor(page, { type: "custom:tile-card-pro", entity: "light.kitchen" });
+  // (the entity as it is: every entity to pick)
+  const e = await openEditor(page, {
+    type: "custom:tile-card-pro",
+    entity: "sensor.living_room_temperature",
+  });
   const entity = field(e.form, "entity");
   const input = entity.locator("input");
-  await expect(input).toHaveValue("Kitchen");
+  await expect(input).toHaveValue("Living room temperature");
   await input.click();
   // a search shows what matches every word, by name or id
   await input.fill("living temp");
@@ -91,14 +95,15 @@ test("the entity picker searches the demo home and picks by click or keyboard", 
   await expect(entity.locator(".none")).toHaveText("No matching entities");
   // Escape leaves the entity as it was
   await input.press("Escape");
-  await expect(input).toHaveValue("Kitchen");
+  await expect(input).toHaveValue("Living room temperature");
   expect(await e.count()).toBe(0);
   // the keyboard picks
   await input.click();
-  await input.fill("living room");
+  await input.fill("light.living");
   await input.press("ArrowDown");
   await input.press("Enter");
-  await expect.poll(e.last).toMatchObject({ entity: expect.stringMatching(/living_room/) });
+  await expect.poll(e.last).toMatchObject({ entity: "light.living_room" });
+  // (a light now: the picker offers lights)
   // a click picks
   await pickEntity(e.form, "entity", "kitchen", "Kitchen");
   await expect.poll(e.last).toEqual({ type: "custom:tile-card-pro", entity: "light.kitchen" });
@@ -108,20 +113,17 @@ test("the entity picker searches the demo home and picks by click or keyboard", 
   await expect.poll(e.last).toEqual({ type: "custom:tile-card-pro" });
 });
 
-test("the poster's kind decides its sections, and an input lists what it takes", async ({
-  page,
-}) => {
+test("the poster shows a kind, its entities and inputs right under it", async ({ page }) => {
   const e = await openEditor(page, { type: "custom:poster-card-pro", entity: "sensor.grid_power" });
-  await expect(e.form.locator("summary", { hasText: "Content" })).toBeVisible();
-  await expect(e.form.locator("summary", { hasText: "Other entities" })).toHaveCount(0);
-  await choose(e.form, "kind", "grid");
+  await expect(field(e.form, "shows").locator("select")).toHaveValue("none");
+  await expect(field(e.form, "input_import")).toHaveCount(0);
+  await choose(e.form, "shows", "grid");
   await expect.poll(e.last).toEqual({
     type: "custom:poster-card-pro",
     entity: "sensor.grid_power",
     kind: "grid",
   });
-  // the grid reads its import and export: a section of their own
-  await openSection(e.form, "Other entities");
+  // the grid reads its import and export, right under its entity
   const input = field(e.form, "input_import").locator("input");
   await input.click();
   await input.fill("kitchen");
@@ -139,13 +141,33 @@ test("the poster's kind decides its sections, and an input lists what it takes",
     kind: "grid",
     inputs: { import: "sensor.grid_import_power" },
   });
-  // back to the detected kind: its section and the inputs only the grid read go
-  await choose(e.form, "kind", "detected");
+  // the entity as it is again: the inputs only the grid read go
+  await choose(e.form, "shows", "none");
   await expect.poll(e.last).toEqual({
     type: "custom:poster-card-pro",
     entity: "sensor.grid_power",
   });
-  await expect(e.form.locator("summary", { hasText: "Other entities" })).toHaveCount(0);
+  await expect(field(e.form, "input_import")).toHaveCount(0);
+  // a kind the entity does not fit waits for one that does, its picker offering only those
+  await choose(e.form, "shows", "wind");
+  await expect(field(e.form, "entity").locator("input")).toHaveValue("");
+  const entity = field(e.form, "entity").locator("input");
+  await entity.click();
+  await entity.fill("temperature");
+  await expect(field(e.form, "entity").locator(".none")).toBeVisible();
+  await entity.press("Escape");
+  await expect.poll(e.last).toEqual({
+    type: "custom:poster-card-pro",
+    entity: "sensor.grid_power",
+  });
+  await pickEntity(e.form, "entity", "wind speed", "Wind speed");
+  await expect
+    .poll(e.last)
+    .toEqual({ type: "custom:poster-card-pro", entity: "sensor.wind_speed" });
+  // your own texts: no entity
+  await choose(e.form, "shows", "custom");
+  await expect.poll(e.last).toEqual({ type: "custom:poster-card-pro" });
+  await expect(field(e.form, "entity")).toHaveCount(0);
 });
 
 // a list of our own (badges, rules): its rows, an item's view on top of the form, back again
@@ -169,9 +191,11 @@ test("the poster's badges are added in a view of their own, edited and deleted",
   // the row names the entity; its view edits it
   await expect(rowTitles(badges)).toHaveText(["Wind gust"]);
   await badges.locator(".row .main").first().click();
+  // its name: shown, then written
+  await toggle(itemView(e.editor), "show_name");
   await fill(itemView(e.editor), "name", "Gusts");
   await expect.poll(e.last).toMatchObject({
-    badges: [{ entity: "sensor.wind_gust", name: "Gusts" }],
+    badges: [{ entity: "sensor.wind_gust", name: "Gusts", show_name: true }],
   });
   await back(e.editor);
   await expect(rowTitles(badges)).toHaveText(["Gusts"]);
@@ -182,7 +206,7 @@ test("the poster's badges are added in a view of their own, edited and deleted",
     .toEqual({ type: "custom:poster-card-pro", entity: "sensor.wind_speed" });
 });
 
-test("a badge's look, visual and kind are set in its view, by what it shows", async ({ page }) => {
+test("a badge's kind, look and visual are set in its view, by what it shows", async ({ page }) => {
   const e = await openEditor(page, {
     type: "custom:poster-card-pro",
     entity: "sensor.wind_speed",
@@ -191,9 +215,10 @@ test("a badge's look, visual and kind are set in its view, by what it shows", as
   await openSection(e.form, "Status and badges");
   await listOf(e.form, "badges").locator(".row .main").first().click();
   const view = itemView(e.editor);
-  await openSection(view, "Look");
+  await expect(field(view, "shows").locator("select")).toHaveValue("battery");
+  await choose(view, "shows", "none");
+  await openSection(view, "Appearance");
   await choose(view, "icon_type", "dot");
-  await choose(view, "kind", "none");
   // a number: after it a trend over its hours
   await openSection(view, "Visual");
   await choose(view, "visual", "trend");

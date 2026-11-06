@@ -232,6 +232,11 @@ const nl: Translation = {
   "calendar.pick_last": "Kies de laatste dag",
 
   "editor.default": "Standaard: {value}",
+  "editor.card.field.shows": "Toont",
+  "editor.card.shows_entity": "Entiteit: de status zoals die is",
+  "editor.card.shows_custom": "Aangepast: eigen teksten",
+  "editor.card.help.shows":
+    "Wat de kaart tekent: een soort brengt uiterlijk, bediening en regels mee en biedt de entiteiten die passen; Aangepast toont eigen teksten en sjablonen",
   "editor.card.badge.format": "Opmaak",
   "editor.card.badge_format.auto": "Zoals de entiteit hem schrijft",
   "editor.card.badge_format.power": "Vermogen (W, kW, MW)",
@@ -246,9 +251,6 @@ const nl: Translation = {
   "editor.card.section.badge_look": "Uiterlijk",
   "editor.card.section.badge_visual": "Visueel",
   "editor.card.section.advanced": "Geavanceerd",
-  "editor.card.badge.source": "Badge",
-  "editor.card.badge_source.entity": "Entiteit",
-  "editor.card.badge_source.custom": "Aangepast",
   "editor.card.badge_card_value": "De waarde van de kaart",
   "editor.card.badge.attribute": "Attribuut",
   "editor.card.badge.value": "Waarde",
@@ -469,7 +471,6 @@ const nl: Translation = {
   "editor.multi_trend.layout.lanes": "Banen (één schaal per entiteit)",
 
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "{kind} (herkend)",
   "editor.card.rules_hint.never":
     "Regel {n} past nooit: de ondergrens ligt niet onder de bovengrens",
   "editor.card.rules_hint.always": "Regel {n} past op elke waarde: de regels erna gelden nooit",
@@ -579,8 +580,7 @@ const nl: Translation = {
   "editor.card.badge_visual.sparkline": "Geschiedenislijn",
   "editor.card.badge_visual.trend": "Verandering",
   "editor.card.section.content": "Inhoud",
-  "editor.card.section.look": "Pictogram en weergave",
-  "editor.card.section.inputs": "Andere entiteiten",
+  "editor.card.section.look": "Weergave",
   "editor.card.section.controls": "Bediening",
   "editor.card.section.badges_poster": "Status en badges",
   "editor.card.section.badges_tile": "Status en badges",
@@ -588,7 +588,6 @@ const nl: Translation = {
   "editor.card.section.actions": "Interacties",
   "editor.card.section.layout": "Indeling",
   "editor.card.field.entity": "Entiteit",
-  "editor.card.field.kind": "Soort",
   "editor.card.field.name": "Naam",
   "editor.card.field.icon": "Pictogram",
   "editor.card.field.color": "Kleur",
@@ -604,7 +603,7 @@ const nl: Translation = {
   "editor.card.field.max": "Tot (max)",
   "editor.card.field.show_name": "Naam tonen",
   "editor.card.field.show_value": "Waarde tonen",
-  "editor.card.field.icon_thing": "Pictogram",
+  "editor.card.field.icon_thing": "Pictogram toont",
   "editor.card.field.icon_src": "Afbeelding",
   "editor.card.field.icon_variant": "Animatie",
   "editor.card.field.icon_ring": "Ring met de waarde",
@@ -705,8 +704,6 @@ const nl: Translation = {
   "editor.card.help.suffix": "Na de waarde",
   "editor.card.help.found": "Gevonden op het apparaat: {entity}",
   "editor.card.help.not_found": "Niets gevonden op het apparaat van de entiteit",
-  "editor.card.help.kind":
-    "Wat de entiteit is: bepaalt het pictogram, de kleuren, de status, de bediening en de weergave",
   "editor.card.help.icon_src":
     "Een URL, een template of een entiteit waarvan de afbeelding getoond wordt. Leeg: die van de entiteit zelf",
   "editor.card.help.visual_src":

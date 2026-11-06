@@ -232,6 +232,11 @@ const sv: Translation = {
   "calendar.pick_last": "Välj sista dagen",
 
   "editor.default": "Standard: {value}",
+  "editor.card.field.shows": "Visar",
+  "editor.card.shows_entity": "Entitet: dess tillstånd som det är",
+  "editor.card.shows_custom": "Anpassat: egna texter",
+  "editor.card.help.shows":
+    "Vad kortet ritar: en typ ger utseende, kontroller och regler och erbjuder de entiteter som passar; Anpassat visar egna texter och mallar",
   "editor.card.badge.format": "Format",
   "editor.card.badge_format.auto": "Som entiteten skriver det",
   "editor.card.badge_format.power": "Effekt (W, kW, MW)",
@@ -246,9 +251,6 @@ const sv: Translation = {
   "editor.card.section.badge_look": "Utseende",
   "editor.card.section.badge_visual": "Visualisering",
   "editor.card.section.advanced": "Avancerat",
-  "editor.card.badge.source": "Märke",
-  "editor.card.badge_source.entity": "Entitet",
-  "editor.card.badge_source.custom": "Anpassat",
   "editor.card.badge_card_value": "Kortets värde",
   "editor.card.badge.attribute": "Attribut",
   "editor.card.badge.value": "Värde",
@@ -469,7 +471,6 @@ const sv: Translation = {
   "editor.multi_trend.layout.lanes": "Banor (en skala per entitet)",
 
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "{kind} (identifierad)",
   "editor.card.rules_hint.never":
     "Regel {n} passar aldrig: dess nedre gräns ligger inte under den övre",
   "editor.card.rules_hint.always": "Regel {n} passar alla värden: reglerna efter den gäller aldrig",
@@ -579,8 +580,7 @@ const sv: Translation = {
   "editor.card.badge_visual.sparkline": "Historiklinje",
   "editor.card.badge_visual.trend": "Förändring",
   "editor.card.section.content": "Innehåll",
-  "editor.card.section.look": "Ikon och visualisering",
-  "editor.card.section.inputs": "Andra entiteter",
+  "editor.card.section.look": "Utseende",
   "editor.card.section.controls": "Kontroller",
   "editor.card.section.badges_poster": "Status och märken",
   "editor.card.section.badges_tile": "Status och märken",
@@ -588,7 +588,6 @@ const sv: Translation = {
   "editor.card.section.actions": "Interaktioner",
   "editor.card.section.layout": "Layout",
   "editor.card.field.entity": "Entitet",
-  "editor.card.field.kind": "Typ",
   "editor.card.field.name": "Namn",
   "editor.card.field.icon": "Ikon",
   "editor.card.field.color": "Färg",
@@ -604,7 +603,7 @@ const sv: Translation = {
   "editor.card.field.max": "Till (max)",
   "editor.card.field.show_name": "Visa namn",
   "editor.card.field.show_value": "Visa värde",
-  "editor.card.field.icon_thing": "Ikon",
+  "editor.card.field.icon_thing": "Ikonen visar",
   "editor.card.field.icon_src": "Bild",
   "editor.card.field.icon_variant": "Animation",
   "editor.card.field.icon_ring": "Ring med värdet",
@@ -705,8 +704,6 @@ const sv: Translation = {
   "editor.card.help.suffix": "Efter värdet",
   "editor.card.help.found": "Hittad på enheten: {entity}",
   "editor.card.help.not_found": "Ingen hittad på entitetens enhet",
-  "editor.card.help.kind":
-    "Vad entiteten är: avgör ikonen, färgerna, statusen, kontrollerna och visualiseringen",
   "editor.card.help.icon_src":
     "En URL, en mall eller en entitet vars bild visas. Tom: entitetens egen",
   "editor.card.help.visual_src": "En annan entitets historik. Tom: detta korts",

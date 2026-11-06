@@ -232,6 +232,11 @@ const pl: Translation = {
   "calendar.pick_last": "Wybierz ostatni dzień",
 
   "editor.default": "Domyślnie: {value}",
+  "editor.card.field.shows": "Pokazuje",
+  "editor.card.shows_entity": "Encja: jej stan bez zmian",
+  "editor.card.shows_custom": "Własne: własne teksty",
+  "editor.card.help.shows":
+    "Co rysuje karta: rodzaj wnosi wygląd, sterowanie i reguły oraz proponuje pasujące encje; Własne pokazuje własne teksty i szablony",
   "editor.card.badge.format": "Format",
   "editor.card.badge_format.auto": "Tak, jak zapisuje ją encja",
   "editor.card.badge_format.power": "Moc (W, kW, MW)",
@@ -246,9 +251,6 @@ const pl: Translation = {
   "editor.card.section.badge_look": "Wygląd",
   "editor.card.section.badge_visual": "Wizualizacja",
   "editor.card.section.advanced": "Zaawansowane",
-  "editor.card.badge.source": "Odznaka",
-  "editor.card.badge_source.entity": "Encja",
-  "editor.card.badge_source.custom": "Własna",
   "editor.card.badge_card_value": "Wartość karty",
   "editor.card.badge.attribute": "Atrybut",
   "editor.card.badge.value": "Wartość",
@@ -469,7 +471,6 @@ const pl: Translation = {
   "editor.multi_trend.layout.lanes": "Tory (jedna skala na encję)",
 
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "{kind} (wykryto)",
   "editor.card.rules_hint.never":
     "Reguła {n} nigdy nie pasuje: jej dolna granica nie jest poniżej górnej",
   "editor.card.rules_hint.always":
@@ -580,8 +581,7 @@ const pl: Translation = {
   "editor.card.badge_visual.sparkline": "Linia historii",
   "editor.card.badge_visual.trend": "Zmiana",
   "editor.card.section.content": "Treść",
-  "editor.card.section.look": "Ikona i wizualizacja",
-  "editor.card.section.inputs": "Inne encje",
+  "editor.card.section.look": "Wygląd",
   "editor.card.section.controls": "Sterowanie",
   "editor.card.section.badges_poster": "Status i plakietki",
   "editor.card.section.badges_tile": "Status i plakietki",
@@ -589,7 +589,6 @@ const pl: Translation = {
   "editor.card.section.actions": "Interakcje",
   "editor.card.section.layout": "Układ",
   "editor.card.field.entity": "Encja",
-  "editor.card.field.kind": "Rodzaj",
   "editor.card.field.name": "Nazwa",
   "editor.card.field.icon": "Ikona",
   "editor.card.field.color": "Kolor",
@@ -605,7 +604,7 @@ const pl: Translation = {
   "editor.card.field.max": "Do (maks)",
   "editor.card.field.show_name": "Pokaż nazwę",
   "editor.card.field.show_value": "Pokaż wartość",
-  "editor.card.field.icon_thing": "Ikona",
+  "editor.card.field.icon_thing": "Ikona pokazuje",
   "editor.card.field.icon_src": "Obraz",
   "editor.card.field.icon_variant": "Animacja",
   "editor.card.field.icon_ring": "Pierścień z wartością",
@@ -706,8 +705,6 @@ const pl: Translation = {
   "editor.card.help.suffix": "Po wartości",
   "editor.card.help.found": "Znaleziono na urządzeniu: {entity}",
   "editor.card.help.not_found": "Nic nie znaleziono na urządzeniu encji",
-  "editor.card.help.kind":
-    "Czym jest encja: decyduje o ikonie, kolorach, statusie, sterowaniu i wizualizacji",
   "editor.card.help.icon_src":
     "URL, szablon lub encja, której obraz pokazać. Puste: własny obraz encji",
   "editor.card.help.visual_src": "Historia innej encji. Puste: tej karty",

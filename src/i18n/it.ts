@@ -232,6 +232,11 @@ const it: Translation = {
   "calendar.pick_last": "Scegli l'ultimo giorno",
 
   "editor.default": "Predefinito: {value}",
+  "editor.card.field.shows": "Mostra",
+  "editor.card.shows_entity": "Entità: il suo stato così com'è",
+  "editor.card.shows_custom": "Personalizzato: testi tuoi",
+  "editor.card.help.shows":
+    "Cosa disegna la scheda: un tipo porta aspetto, controlli e regole, e propone le entità adatte; Personalizzato mostra testi e modelli tuoi",
   "editor.card.badge.format": "Formato",
   "editor.card.badge_format.auto": "Come lo scrive l'entità",
   "editor.card.badge_format.power": "Potenza (W, kW, MW)",
@@ -246,9 +251,6 @@ const it: Translation = {
   "editor.card.section.badge_look": "Aspetto",
   "editor.card.section.badge_visual": "Visuale",
   "editor.card.section.advanced": "Avanzate",
-  "editor.card.badge.source": "Badge",
-  "editor.card.badge_source.entity": "Entità",
-  "editor.card.badge_source.custom": "Personalizzato",
   "editor.card.badge_card_value": "Il valore della scheda",
   "editor.card.badge.attribute": "Attributo",
   "editor.card.badge.value": "Valore",
@@ -468,7 +470,6 @@ const it: Translation = {
   "editor.multi_trend.layout.overlay": "Sovrapposto (una scala)",
   "editor.multi_trend.layout.lanes": "Corsie (una scala per entità)",
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "{kind} (rilevato)",
   "editor.card.rules_hint.never":
     "La regola {n} non corrisponde mai: il suo limite inferiore non è sotto quello superiore",
   "editor.card.rules_hint.always":
@@ -579,8 +580,7 @@ const it: Translation = {
   "editor.card.badge_visual.sparkline": "Linea dello storico",
   "editor.card.badge_visual.trend": "Variazione",
   "editor.card.section.content": "Contenuto",
-  "editor.card.section.look": "Icona e visuale",
-  "editor.card.section.inputs": "Altre entità",
+  "editor.card.section.look": "Aspetto",
   "editor.card.section.controls": "Controlli",
   "editor.card.section.badges_poster": "Stato e badge",
   "editor.card.section.badges_tile": "Stato e badge",
@@ -588,7 +588,6 @@ const it: Translation = {
   "editor.card.section.actions": "Interazioni",
   "editor.card.section.layout": "Disposizione",
   "editor.card.field.entity": "Entità",
-  "editor.card.field.kind": "Tipo",
   "editor.card.field.name": "Nome",
   "editor.card.field.icon": "Icona",
   "editor.card.field.color": "Colore",
@@ -604,7 +603,7 @@ const it: Translation = {
   "editor.card.field.max": "A (max)",
   "editor.card.field.show_name": "Mostra il nome",
   "editor.card.field.show_value": "Mostra il valore",
-  "editor.card.field.icon_thing": "Icona",
+  "editor.card.field.icon_thing": "L'icona mostra",
   "editor.card.field.icon_src": "Immagine",
   "editor.card.field.icon_variant": "Animazione",
   "editor.card.field.icon_ring": "Anello con il valore",
@@ -705,8 +704,6 @@ const it: Translation = {
   "editor.card.help.suffix": "Dopo il valore",
   "editor.card.help.found": "Trovato sul dispositivo: {entity}",
   "editor.card.help.not_found": "Nessuno trovato sul dispositivo dell'entità",
-  "editor.card.help.kind":
-    "Che cosa è l'entità: decide l'icona, i colori, lo stato, i controlli e la visuale",
   "editor.card.help.icon_src":
     "Un URL, un template o un'entità di cui mostrare l'immagine. Vuoto: quella dell'entità",
   "editor.card.help.visual_src": "Lo storico di un'altra entità. Vuoto: quello di questa scheda",

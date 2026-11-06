@@ -177,6 +177,8 @@ export interface HaFormSchema {
   type?: string;
   schema?: HaFormSchema[];
   title?: string;
+  // an expandable section open from the start (Home Assistant applies it again where it changes)
+  expanded?: boolean;
   flatten?: boolean;
   iconPath?: string;
   column_min_width?: string;

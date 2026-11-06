@@ -232,6 +232,11 @@ const ru: Translation = {
   "calendar.pick_last": "Выберите последний день",
 
   "editor.default": "По умолчанию: {value}",
+  "editor.card.field.shows": "Показывает",
+  "editor.card.shows_entity": "Объект: его состояние как есть",
+  "editor.card.shows_custom": "Своё: собственные тексты",
+  "editor.card.help.shows":
+    "Что рисует карточка: тип задаёт вид, управление и правила и предлагает подходящие объекты; Своё показывает собственные тексты и шаблоны",
   "editor.card.badge.format": "Формат",
   "editor.card.badge_format.auto": "Как его пишет объект",
   "editor.card.badge_format.power": "Мощность (Вт, кВт, МВт)",
@@ -246,9 +251,6 @@ const ru: Translation = {
   "editor.card.section.badge_look": "Внешний вид",
   "editor.card.section.badge_visual": "Визуализация",
   "editor.card.section.advanced": "Дополнительно",
-  "editor.card.badge.source": "Значок",
-  "editor.card.badge_source.entity": "Объект",
-  "editor.card.badge_source.custom": "Свой",
   "editor.card.badge_card_value": "Значение карточки",
   "editor.card.badge.attribute": "Атрибут",
   "editor.card.badge.value": "Значение",
@@ -469,7 +471,6 @@ const ru: Translation = {
   "editor.multi_trend.layout.lanes": "Дорожки (своя шкала для каждого объекта)",
 
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "{kind} (определено)",
   "editor.card.rules_hint.never":
     "Правило {n} никогда не подходит: его нижняя граница не ниже верхней",
   "editor.card.rules_hint.always":
@@ -580,8 +581,7 @@ const ru: Translation = {
   "editor.card.badge_visual.sparkline": "Линия истории",
   "editor.card.badge_visual.trend": "Изменение",
   "editor.card.section.content": "Содержимое",
-  "editor.card.section.look": "Значок и визуализация",
-  "editor.card.section.inputs": "Другие объекты",
+  "editor.card.section.look": "Внешний вид",
   "editor.card.section.controls": "Элементы управления",
   "editor.card.section.badges_poster": "Статус и бейджи",
   "editor.card.section.badges_tile": "Статус и бейджи",
@@ -589,7 +589,6 @@ const ru: Translation = {
   "editor.card.section.actions": "Взаимодействие",
   "editor.card.section.layout": "Макет",
   "editor.card.field.entity": "Объект",
-  "editor.card.field.kind": "Тип",
   "editor.card.field.name": "Название",
   "editor.card.field.icon": "Значок",
   "editor.card.field.color": "Цвет",
@@ -605,7 +604,7 @@ const ru: Translation = {
   "editor.card.field.max": "До (макс.)",
   "editor.card.field.show_name": "Показывать название",
   "editor.card.field.show_value": "Показывать значение",
-  "editor.card.field.icon_thing": "Значок",
+  "editor.card.field.icon_thing": "Значок показывает",
   "editor.card.field.icon_src": "Изображение",
   "editor.card.field.icon_variant": "Анимация",
   "editor.card.field.icon_ring": "Кольцо со значением",
@@ -706,8 +705,6 @@ const ru: Translation = {
   "editor.card.help.suffix": "После значения",
   "editor.card.help.found": "Найдено на устройстве: {entity}",
   "editor.card.help.not_found": "На устройстве объекта ничего не найдено",
-  "editor.card.help.kind":
-    "Что это за объект: определяет значок, цвета, статус, элементы управления и визуализацию",
   "editor.card.help.icon_src":
     "URL, шаблон или объект, изображение которого показать. Пусто: изображение самого объекта",
   "editor.card.help.visual_src": "История другого объекта. Пусто: объекта этой карточки",

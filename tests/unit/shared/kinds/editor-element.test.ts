@@ -415,3 +415,141 @@ describe("another entity picked in the editor", () => {
     for (const x of [e, w]) x.ed.remove();
   });
 });
+
+describe("what the card shows, chosen in the editor", () => {
+  const last = (sent: CardConfigBase[]) => {
+    const { type: _t, ...c } = sent.at(-1) as Record<string, unknown>;
+    void _t;
+    return c;
+  };
+
+  it("keeps the entity where it fits the kind, writing the kind only where it is not detected", () => {
+    for (const [entity, kind] of [
+      ["sensor.phone_battery", "battery"],
+      ["weather.home", "wind"],
+      ["device_tracker.van", "person"],
+      ["sensor.living_room_temperature", "trend"],
+    ]) {
+      const e = open("poster", { entity });
+      e.change({ shows: kind });
+      expect(last(e.sent), kind).toEqual({ entity, kind });
+    }
+    // the kind its entity is detected as anyway: nothing written
+    const e = open("poster", { entity: "sensor.wind_speed", kind: "wind" });
+    e.change({ shows: "none" });
+    e.change({ shows: "wind" });
+    expect(last(e.sent)).toEqual({ entity: "sensor.wind_speed" });
+  });
+
+  it("waits for an entity that fits, the config as it was", () => {
+    const e = open("poster", { entity: "sensor.living_room_temperature" });
+    e.change({ shows: "wind" });
+    expect(last(e.sent)).toEqual({ entity: "sensor.living_room_temperature" });
+    expect(e.form().data).toMatchObject({ shows: "wind", entity: "" });
+    // another field changed meanwhile: on the card as it is
+    e.change({ name: "Outside" });
+    expect(last(e.sent)).toEqual({ entity: "sensor.living_room_temperature", name: "Outside" });
+    expect(e.form().data.shows).toBe("wind");
+    // one that fits: the wind's
+    e.change({ entity: "sensor.wind_speed" });
+    expect(last(e.sent)).toEqual({ entity: "sensor.wind_speed", name: "Outside" });
+    expect(e.form().data.shows).toBe("wind");
+  });
+
+  it("drops a kind waiting where the config changes from outside", () => {
+    const e = open("poster", {});
+    e.change({ shows: "light" });
+    expect(last(e.sent)).toEqual({});
+    expect(e.form().data.shows).toBe("light");
+    e.ed.setConfig({ type: "custom:poster-card-pro", entity: "sensor.battery_soc" });
+    expect(e.form().data.shows).toBe("battery");
+  });
+
+  it("drops the entity for your own texts, and takes a kind that reads none at once", () => {
+    const e = open("poster", { entity: "sensor.living_room_temperature", attribute: "x" });
+    e.change({ shows: "custom" });
+    expect(last(e.sent)).toEqual({});
+    expect(e.form().data.shows).toBe("custom");
+    e.change({ shows: "sun" });
+    expect(last(e.sent)).toEqual({ kind: "sun" });
+  });
+});
+
+describe("what a badge shows, chosen in its view", () => {
+  // the poster's editor with its first badge's view open (or a new one's)
+  const badge = (config: Record<string, unknown>, index = 0) => {
+    const e = open("poster", config);
+    e.form().dispatchEvent(
+      new CustomEvent("pro-cards-edit-item", {
+        detail: { key: "badges", index },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+    const view = () => e.ed.querySelectorAll("ha-form")[1] as Form;
+    const edit = (fields: HaFormData) =>
+      view().dispatchEvent(
+        new CustomEvent("value-changed", { detail: { value: { ...view().data, ...fields } } }),
+      );
+    const badges = () => (e.sent.at(-1) as Record<string, unknown> | undefined)?.badges;
+    return { ...e, view, edit, badges };
+  };
+  const picker = (form: Form) =>
+    (flat(form.schema).find((s) => s.name === "entity")?.selector as { entity: Raw }).entity
+      .include_entities;
+  type Raw = Record<string, unknown>;
+
+  it("waits for an entity that fits, the badge as it was", () => {
+    const b = badge({ entity: "light.kitchen", badges: ["sensor.battery_soc"] });
+    expect(b.view().data.shows).toBe("battery");
+    b.edit({ shows: "wind" });
+    expect(b.badges()).toEqual(["sensor.battery_soc"]);
+    expect(b.view().data).toMatchObject({ shows: "wind", entity: "" });
+    expect(picker(b.view())).toContain("sensor.wind_speed");
+    b.edit({ entity: "sensor.wind_speed" });
+    expect(b.badges()).toEqual(["sensor.wind_speed"]);
+  });
+
+  it("drops an attribute the entity picked lacks", () => {
+    const b = badge({ entity: "light.kitchen", badges: [{ attribute: "brightness" }] });
+    b.edit({ shows: "battery" });
+    expect(b.badges()).toEqual([{ attribute: "brightness" }]);
+    b.edit({ entity: "sensor.battery_soc" });
+    expect(b.badges()).toEqual(["sensor.battery_soc"]);
+  });
+
+  it("offers every entity to a new badge, until a kind is chosen for it", () => {
+    const b = badge({ entity: "light.kitchen" });
+    expect(b.view().data.shows).toBe("light");
+    expect(picker(b.view())).toBeUndefined();
+    b.edit({ entity: "sensor.battery_soc" });
+    expect(b.badges()).toEqual(["sensor.battery_soc"]);
+  });
+
+  it("drops the entity for a text of your own", () => {
+    const b = badge({ entity: "light.kitchen", badges: ["sensor.battery_soc"] });
+    b.edit({ shows: "custom" });
+    b.edit({ value: "Hello" });
+    expect(b.badges()).toEqual([{ value: "Hello" }]);
+  });
+});
+
+describe("the editor's sections", () => {
+  it("stay open by their title when fields before them come or go", async () => {
+    const e = open("poster", { entity: "light.kitchen" });
+    await tick();
+    const section = (title: string) =>
+      [...e.form().shadowRoot!.querySelectorAll<HTMLDetailsElement>("details")].find((d) =>
+        d.querySelector("summary")?.textContent?.includes(title),
+      )!;
+    const appearance = section("Appearance");
+    appearance.open = true;
+    appearance.dispatchEvent(new Event("toggle"));
+    // your own texts: no entity field, no controls before it
+    e.change({ shows: "custom" });
+    await tick();
+    const schema = e.form().schema;
+    expect(schema.find((s) => s.title === "Appearance")?.expanded).toBe(true);
+    expect(schema.find((s) => s.title === "Status and badges")?.expanded).toBeFalsy();
+  });
+});

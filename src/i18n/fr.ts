@@ -232,6 +232,11 @@ const fr: Translation = {
   "calendar.pick_last": "Choisissez le dernier jour",
 
   "editor.default": "Par défaut : {value}",
+  "editor.card.field.shows": "Affiche",
+  "editor.card.shows_entity": "Entité : son état tel quel",
+  "editor.card.shows_custom": "Personnalisé : vos propres textes",
+  "editor.card.help.shows":
+    "Ce que dessine la carte : un type apporte son apparence, ses contrôles et ses règles, et propose les entités qui lui conviennent ; Personnalisé affiche vos propres textes et modèles",
   "editor.card.badge.format": "Format",
   "editor.card.badge_format.auto": "Comme l'entité l'écrit",
   "editor.card.badge_format.power": "Puissance (W, kW, MW)",
@@ -246,9 +251,6 @@ const fr: Translation = {
   "editor.card.section.badge_look": "Apparence",
   "editor.card.section.badge_visual": "Visuel",
   "editor.card.section.advanced": "Avancé",
-  "editor.card.badge.source": "Badge",
-  "editor.card.badge_source.entity": "Entité",
-  "editor.card.badge_source.custom": "Personnalisé",
   "editor.card.badge_card_value": "La valeur de la carte",
   "editor.card.badge.attribute": "Attribut",
   "editor.card.badge.value": "Valeur",
@@ -468,7 +470,6 @@ const fr: Translation = {
   "editor.multi_trend.layout.overlay": "Superposé (une échelle)",
   "editor.multi_trend.layout.lanes": "Pistes (une échelle par entité)",
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "{kind} (détecté)",
   "editor.card.rules_hint.never":
     "La règle {n} ne correspond jamais : sa limite basse n'est pas sous sa limite haute",
   "editor.card.rules_hint.always":
@@ -579,8 +580,7 @@ const fr: Translation = {
   "editor.card.badge_visual.sparkline": "Courbe d'historique",
   "editor.card.badge_visual.trend": "Variation",
   "editor.card.section.content": "Contenu",
-  "editor.card.section.look": "Icône et visuel",
-  "editor.card.section.inputs": "Autres entités",
+  "editor.card.section.look": "Apparence",
   "editor.card.section.controls": "Commandes",
   "editor.card.section.badges_poster": "Statut et badges",
   "editor.card.section.badges_tile": "Statut et badges",
@@ -588,7 +588,6 @@ const fr: Translation = {
   "editor.card.section.actions": "Interactions",
   "editor.card.section.layout": "Disposition",
   "editor.card.field.entity": "Entité",
-  "editor.card.field.kind": "Type",
   "editor.card.field.name": "Nom",
   "editor.card.field.icon": "Icône",
   "editor.card.field.color": "Couleur",
@@ -604,7 +603,7 @@ const fr: Translation = {
   "editor.card.field.max": "À (max)",
   "editor.card.field.show_name": "Afficher le nom",
   "editor.card.field.show_value": "Afficher la valeur",
-  "editor.card.field.icon_thing": "Icône",
+  "editor.card.field.icon_thing": "L'icône affiche",
   "editor.card.field.icon_src": "Image",
   "editor.card.field.icon_variant": "Animation",
   "editor.card.field.icon_ring": "Anneau avec la valeur",
@@ -705,8 +704,6 @@ const fr: Translation = {
   "editor.card.help.suffix": "Après la valeur",
   "editor.card.help.found": "Trouvé sur l'appareil : {entity}",
   "editor.card.help.not_found": "Aucun trouvé sur l'appareil de l'entité",
-  "editor.card.help.kind":
-    "Ce qu'est l'entité : il détermine l'icône, les couleurs, le statut, les commandes et le visuel",
   "editor.card.help.icon_src":
     "Une URL, un modèle ou une entité dont afficher l'image. Vide : celle de l'entité",
   "editor.card.help.visual_src": "L'historique d'une autre entité. Vide : celui de cette carte",

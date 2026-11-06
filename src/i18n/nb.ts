@@ -232,6 +232,11 @@ const nb: Translation = {
   "calendar.pick_last": "Velg siste dag",
 
   "editor.default": "Standard: {value}",
+  "editor.card.field.shows": "Viser",
+  "editor.card.shows_entity": "Entitet: tilstanden slik den er",
+  "editor.card.shows_custom": "Egendefinert: egne tekster",
+  "editor.card.help.shows":
+    "Hva kortet tegner: en type tar med utseende, kontroller og regler og tilbyr entitetene som passer; Egendefinert viser egne tekster og maler",
   "editor.card.badge.format": "Format",
   "editor.card.badge_format.auto": "Slik entiteten skriver den",
   "editor.card.badge_format.power": "Effekt (W, kW, MW)",
@@ -246,9 +251,6 @@ const nb: Translation = {
   "editor.card.section.badge_look": "Utseende",
   "editor.card.section.badge_visual": "Visualisering",
   "editor.card.section.advanced": "Avansert",
-  "editor.card.badge.source": "Merke",
-  "editor.card.badge_source.entity": "Entitet",
-  "editor.card.badge_source.custom": "Egendefinert",
   "editor.card.badge_card_value": "Kortets verdi",
   "editor.card.badge.attribute": "Attributt",
   "editor.card.badge.value": "Verdi",
@@ -469,7 +471,6 @@ const nb: Translation = {
   "editor.multi_trend.layout.lanes": "Baner (én skala per entitet)",
 
   // the poster's and the tile's editor
-  "editor.card.kind_detected": "{kind} (gjenkjent)",
   "editor.card.rules_hint.never":
     "Regel {n} passer aldri: den nedre grensen er ikke under den øvre",
   "editor.card.rules_hint.always":
@@ -580,8 +581,7 @@ const nb: Translation = {
   "editor.card.badge_visual.sparkline": "Historikklinje",
   "editor.card.badge_visual.trend": "Endring",
   "editor.card.section.content": "Innhold",
-  "editor.card.section.look": "Ikon og visualisering",
-  "editor.card.section.inputs": "Andre entiteter",
+  "editor.card.section.look": "Utseende",
   "editor.card.section.controls": "Kontroller",
   "editor.card.section.badges_poster": "Status og merker",
   "editor.card.section.badges_tile": "Status og merker",
@@ -589,7 +589,6 @@ const nb: Translation = {
   "editor.card.section.actions": "Interaksjoner",
   "editor.card.section.layout": "Oppsett",
   "editor.card.field.entity": "Entitet",
-  "editor.card.field.kind": "Type",
   "editor.card.field.name": "Navn",
   "editor.card.field.icon": "Ikon",
   "editor.card.field.color": "Farge",
@@ -605,7 +604,7 @@ const nb: Translation = {
   "editor.card.field.max": "Til (maks)",
   "editor.card.field.show_name": "Vis navn",
   "editor.card.field.show_value": "Vis verdi",
-  "editor.card.field.icon_thing": "Ikon",
+  "editor.card.field.icon_thing": "Ikonet viser",
   "editor.card.field.icon_src": "Bilde",
   "editor.card.field.icon_variant": "Animasjon",
   "editor.card.field.icon_ring": "Ring med verdien",
@@ -706,8 +705,6 @@ const nb: Translation = {
   "editor.card.help.suffix": "Etter verdien",
   "editor.card.help.found": "Funnet på enheten: {entity}",
   "editor.card.help.not_found": "Ingen funnet på entitetens enhet",
-  "editor.card.help.kind":
-    "Hva entiteten er: bestemmer ikonet, fargene, statusen, kontrollene og visualiseringen",
   "editor.card.help.icon_src":
     "En URL, en mal eller en entitet hvis bilde vises. Tom: entitetens eget",
   "editor.card.help.visual_src": "En annen entitets historikk. Tom: dette kortets",
