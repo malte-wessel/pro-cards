@@ -139,7 +139,7 @@ tiles:
 
 ## The visual editor and the Playground
 
-You do not have to write YAML. All cards appear in the card picker as "Tile Card Pro", "Poster Card Pro" and so on. The tile, the poster, the tile group, the heading, the layout, swipe, sun path, sun azimuth, multi trend and weather cards have a visual editor; the tile's and the poster's offer only the options that apply to the entity's kind. Pick an entity in the picker instead, and Home Assistant suggests the cards that fit it.
+You do not have to write YAML. All cards appear in the card picker as "Tile Card Pro", "Poster Card Pro" and so on. Every current card has a visual editor; the tile's and the poster's offer only the options that apply to the entity's kind. Pick an entity in the picker instead, and Home Assistant suggests the cards that fit it.
 
 The [Playground](/playground) runs the editors of all these cards on this site, next to the YAML. Examples of these cards have an **Edit** link that opens them there.
 

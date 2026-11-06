@@ -154,16 +154,12 @@ test("several cards: a picker chooses the one the form edits", async ({ page }) 
 });
 
 test("a card the visual editor does not edit opens in YAML", async ({ page }) => {
+  // (every example has an editor; the deprecated cards have none)
   await openPlayground(page);
-  const menu = await openMenu(page, "Examples");
-  await menu.getByRole("button", { name: "Power flow card", exact: true }).click();
-  await expect(tab(page, "YAML")).toHaveAttribute("aria-selected", "true");
+  await typeYaml(page, "type: custom:rain-card-pro\nentity: sensor.rain_rate_roof\n");
   await expect(tab(page, "Visual")).toBeDisabled();
-  await expect(tab(page, "Visual")).toHaveAttribute(
-    "title",
-    /edits tiles, posters, tile groups, headings, layout/,
-  );
-  await expect(previewCard(page)).toHaveJSProperty("tagName", "POWER-FLOW-CARD-PRO");
+  await expect(tab(page, "Visual")).toHaveAttribute("title", /edits tiles, posters, tile groups/);
+  await expect(previewCard(page)).toHaveJSProperty("tagName", "RAIN-CARD-PRO");
   // an editable card again: Visual comes back
   await openMenu(page, "Examples").then((m) =>
     m.getByRole("button", { name: "Tile Card Pro", exact: true }).click(),
@@ -272,4 +268,30 @@ test("a weather card opens in its own form, its sections in tabs", async ({ page
   await fill(section.locator('[data-name="days"] input'), "5");
   await expect.poll(() => yamlText(page)).toMatch(/type: forecast[\s\S]*days: 5/);
   await expect(previewCard(page)).toHaveJSProperty("tagName", "WEATHER-CARD-PRO");
+});
+
+test("a power flow card opens in its own form, its sources in tabs", async ({ page }) => {
+  await openPlayground(page);
+  const menu = await openMenu(page, "Examples");
+  await menu.getByRole("button", { name: "Power flow card", exact: true }).click();
+  await tab(page, "Visual").click();
+  const editor = page.locator(".pg-visual power-flow-card-pro-editor");
+  await expect(editor.locator(".tab")).toHaveText(["1Solar", "2Battery", "3Grid"]);
+  await editor.locator("summary", { hasText: "Drawing" }).first().click();
+  await editor.locator('[data-name="flow_style"] select').first().selectOption("arrows");
+  // the sources stay where they were written, before the consumers
+  await expect
+    .poll(() => yamlText(page))
+    .toMatch(/sources:[\s\S]*consumers:[\s\S]*flow_style: arrows/);
+  await expect(previewCard(page)).toHaveJSProperty("tagName", "POWER-FLOW-CARD-PRO");
+});
+
+test("an energy flow card opens in its own form", async ({ page }) => {
+  await openPlayground(page);
+  const menu = await openMenu(page, "Examples");
+  await menu.getByRole("button", { name: "Energy flow card", exact: true }).click();
+  await tab(page, "Visual").click();
+  await field(page, "period").locator("select").selectOption("week");
+  await expect.poll(() => yamlText(page)).toContain("period: week");
+  await expect(previewCard(page)).toHaveJSProperty("tagName", "ENERGY-FLOW-CARD-PRO");
 });

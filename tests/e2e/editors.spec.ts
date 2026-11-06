@@ -482,3 +482,33 @@ test("the weather card's sections are edited in tabs, each in a form of its type
   await e.editor.getByRole("button", { name: "Delete" }).click();
   await expect.poll(e.last).toEqual({ type: "custom:weather-card-pro", entity: "weather.home" });
 });
+
+test("the power flow's sources are edited in tabs, and stay before its consumers", async ({
+  page,
+}) => {
+  const e = await openEditor(page, {
+    type: "custom:power-flow-card-pro",
+    sources: [{ type: "solar", entity: "sensor.solar_power" }],
+    consumers: ["sensor.heat_pump_power"],
+  });
+  // "+" adds the next source a home usually has: a battery, measured by one signed sensor
+  await e.editor.locator(".icon.add").click();
+  await expect(e.editor.locator(".tab")).toHaveText(["1Solar", "2Battery"]);
+  const source = e.editor.locator("flow-tree-source-editor ha-form");
+  await choose(source, "measure", "pair");
+  await expect(field(source, "charge")).toBeVisible();
+  await expect(field(source, "power")).toHaveCount(0);
+  // an option of the card's own: the sources keep their place in the config
+  await openSection(e.form, "Drawing");
+  await choose(e.form, "flow_style", "arrows");
+  await expect.poll(e.last).toMatchObject({
+    sources: [{ type: "solar", entity: "sensor.solar_power" }, { type: "battery" }],
+    flow_style: "arrows",
+  });
+  expect(Object.keys((await e.last()) ?? {})).toEqual([
+    "type",
+    "sources",
+    "consumers",
+    "flow_style",
+  ]);
+});

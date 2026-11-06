@@ -266,6 +266,10 @@ A tap on a node opens its entity's more-info dialog. `tap_action`, `hold_action`
 
 The card takes the full width of a section and is as tall as its tree. With a fixed number of `rows` in `grid_options`, the tree fills the cell: more room spreads it out, less room scales it down. `fill_height: false` keeps the card at its own height in a stretched row; see [Filling the height](/guide/sizing#filling-the-height).
 
+## The visual editor
+
+Home Assistant's card editor shows the card's own options at the top: the title and its badges, the home (its sensor, name and icon; its rules as YAML), the consumers as a list with a dialog each (a device's entity, name, icon, colour and threshold, or a room with its devices as YAML), how the tree is drawn and the values: idle and kW thresholds, the price for Expensive, the animation's range. Below, each source has a tab: a solar array (its sensor and peak), a battery or a grid connection, measured by one signed sensor or by a pair (charge and discharge, import and export); a grid also takes its price, outage, generator and fuel mix. **+** adds the next source a home usually has. A value left at its default writes nothing, and what the form does not show stays in the YAML as written. Try it in the [Playground](/playground), or with **Edit** under any example.
+
 ## Reference
 
 ### Card options

@@ -18,7 +18,7 @@ type Raw = Record<string, unknown>;
 
 // Home Assistant's editor of one card and its card picker (frontend-internal, loaded with the
 // card editor dialog; the docs have stand-ins of the same shape)
-interface CardElementEditor extends HTMLElement {
+export interface CardElementEditor extends HTMLElement {
   hass?: HomeAssistant;
   value?: CardConfigBase;
   lovelace?: unknown;
@@ -162,6 +162,7 @@ export abstract class CardsEditorBase extends HTMLElement {
     // kept as `cards` (each as its editor takes it), written back under the card's own key
     const { [this._listKey]: list, ...rest } = config as Record<string, unknown>;
     this._written = Array.isArray(list) ? list : [];
+    this._keys = Object.keys(config);
     const cards = this._written.map((x) => this._toCard(x));
     this._config = { ...(rest as CardConfigBase), cards };
     this._render();
@@ -196,6 +197,8 @@ export abstract class CardsEditorBase extends HTMLElement {
   // the list as the card wrote it: a card left as it was keeps its spelling (a tile as
   // `{ entity }` stays so), wherever it moved to
   _written: unknown[] = [];
+  // the config's keys in the order it wrote them
+  _keys: string[] = [];
   _emit(config: CardConfigBase) {
     this._config = config;
     const { cards, ...rest } = config;
@@ -206,9 +209,14 @@ export abstract class CardsEditorBase extends HTMLElement {
       return i >= 0 ? pool.splice(i, 1)[0].x : this._fromCard(c);
     });
     this._written = list;
-    const written = (
-      list.length || !this._dropEmptyList ? { ...rest, [this._listKey]: list } : rest
+    // the list where the card wrote it (a power flow's sources before its consumers), else last
+    const all: Record<string, unknown> = { ...rest, [this._listKey]: list };
+    if (!list.length && this._dropEmptyList) delete all[this._listKey];
+    const order = [...this._keys.filter((k) => k in all), ...Object.keys(all)];
+    const written = Object.fromEntries(
+      [...new Set(order)].map((k) => [k, all[k]]),
     ) as CardConfigBase;
+    this._keys = Object.keys(written);
     this.dispatchEvent(
       new CustomEvent("config-changed", {
         detail: { config: written },

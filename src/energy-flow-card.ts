@@ -31,7 +31,7 @@ import {
   type PeriodKind,
   type PeriodRange,
 } from "./shared/calendar.ts";
-import { registerCard } from "./shared/card.ts";
+import { defineElement, registerCard } from "./shared/card.ts";
 import { resolveLook } from "./shared/entity/look.ts";
 import { tplGetter, unitOf, type EntityModel, type RenderCtx } from "./shared/entity/model.ts";
 import { FlowTreeCardBase } from "./shared/flow-tree/base.ts";
@@ -57,6 +57,15 @@ import {
   type EnergyFlowConfig,
 } from "./energy-flow/config.ts";
 import { CARD_TYPE, GAP_KWH, IDLE_KWH } from "./energy-flow/constants.ts";
+import {
+  FlowSourceEditor,
+  EnergyFlowCardEditor,
+  SOURCE_EDITOR,
+} from "./shared/flow-tree/editor.ts";
+
+defineElement(`${CARD_TYPE}-editor`, EnergyFlowCardEditor);
+// (both flow cards define it; the second one finds it there)
+if (!customElements.get(SOURCE_EDITOR)) defineElement(SOURCE_EDITOR, FlowSourceEditor);
 import {
   collectionKey,
   findCollection,
@@ -99,6 +108,9 @@ const CURRENT_KEYS = {
 
 export class EnergyFlowCard extends FlowTreeCardBase<EnergyFlowConfig> {
   static cardType = CARD_TYPE;
+  static getConfigElement() {
+    return document.createElement(`${CARD_TYPE}-editor`);
+  }
   static getStubConfig(hass: HomeAssistant | undefined, entities?: string[]) {
     const states = hass?.states || {};
     const ids = [...(entities || []), ...Object.keys(states)];

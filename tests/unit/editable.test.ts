@@ -13,10 +13,12 @@ import { docExamples } from "./docs-examples.ts";
 describe("the cards the Playground edits visually", () => {
   it("are the cards with a visual editor", () => {
     expect([...EDITABLE].sort()).toEqual([
+      "custom:energy-flow-card-pro",
       "custom:heading-card-pro",
       "custom:layout-card-pro",
       "custom:multi-trend-card-pro",
       "custom:poster-card-pro",
+      "custom:power-flow-card-pro",
       "custom:sun-azimuth-card-pro",
       "custom:sun-path-card-pro",
       "custom:swipe-card-pro",

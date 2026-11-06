@@ -158,6 +158,10 @@ consumers:
 
 `badges` sit at the end of the title line, beside the picker, and take the [badge keys](/cards/badges#badge-keys). They show the state now, not the period's. On a narrow card the picker takes most of the line, so keep them few. `hover: true` brightens a node under the pointer, as on the power flow card.
 
+## The visual editor
+
+Home Assistant's card editor shows the same form as the [power flow card's](/cards/power-flow-card#the-visual-editor), with energy meters in place of power sensors: the period and its picker at the top (with the energy dashboard's date picker to follow for **As the energy dashboard**), the home, the consumers, the drawing and the values in kWh, and each source in a tab: a solar array's meter, a battery's charge and discharge meters with its level, a grid's import and export. Try it in the [Playground](/playground), or with **Edit** under any example.
+
 ## Reference
 
 ### Card options

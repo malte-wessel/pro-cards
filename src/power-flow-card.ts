@@ -18,7 +18,7 @@
  *   rules: [...]                           # on the home power in W: label, colour, tint_card
  *   title / icon / badges / tap_action / hold_action / double_tap_action / hover
  */
-import { registerCard } from "./shared/card.ts";
+import { defineElement, registerCard } from "./shared/card.ts";
 import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
 import { FlowTreeCardBase } from "./shared/flow-tree/base.ts";
 import type { Motion } from "./shared/flow-tree/flow.ts";
@@ -29,11 +29,19 @@ import type { HomeAssistant } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
 import { normalizePowerFlowConfig, type PowerFlowConfig } from "./power-flow/config.ts";
 import { CARD_TYPE } from "./power-flow/constants.ts";
+import { FlowSourceEditor, PowerFlowCardEditor, SOURCE_EDITOR } from "./shared/flow-tree/editor.ts";
+
+defineElement(`${CARD_TYPE}-editor`, PowerFlowCardEditor);
+// (both flow cards define it; the second one finds it there)
+if (!customElements.get(SOURCE_EDITOR)) defineElement(SOURCE_EDITOR, FlowSourceEditor);
 import { allocate, powerNow, summaryState, type PowerNow } from "./power-flow/model.ts";
 import { fmtPower, isPowerUnit } from "./shared/power.ts";
 
 export class PowerFlowCard extends FlowTreeCardBase<PowerFlowConfig> {
   static cardType = CARD_TYPE;
+  static getConfigElement() {
+    return document.createElement(`${CARD_TYPE}-editor`);
+  }
   static getStubConfig(hass: HomeAssistant | undefined, entities?: string[]) {
     const states = hass?.states || {};
     const ids = [...(entities || []), ...Object.keys(states)];
