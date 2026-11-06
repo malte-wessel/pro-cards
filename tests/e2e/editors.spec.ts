@@ -148,28 +148,33 @@ test("the poster's kind decides its sections, and an input lists what it takes",
   await expect(e.form.locator("summary", { hasText: "Other entities" })).toHaveCount(0);
 });
 
-test("the poster's badges are added and edited in their dialog", async ({ page }) => {
+// a list of our own (badges, rules): its rows, an item's view on top of the form, back again
+const listOf = (form: Locator, name: string) =>
+  field(form, name).locator(`ha-selector-pro_cards_${name}`);
+const rowTitles = (list: Locator) => list.locator(".row .title");
+const itemView = (editor: Locator) => editor.locator("ha-form").nth(1);
+const back = (editor: Locator) => editor.locator("button[title='Back']").click();
+
+test("the poster's badges are added in a view of their own, edited and deleted", async ({
+  page,
+}) => {
   const e = await openEditor(page, { type: "custom:poster-card-pro", entity: "sensor.wind_speed" });
   await openSection(e.form, "Status and badges");
-  const item = await addItem(e.form, "badges");
-  await pickEntity(item, "entity", "gust", "Wind gust");
-  await saveItem(e.form, "badges");
+  const badges = listOf(e.form, "badges");
+  // a new badge: its view on a draft, added by its entity
+  await badges.locator("button.new").click();
+  await pickEntity(itemView(e.editor), "entity", "gust", "Wind gust");
   await expect.poll(e.last).toMatchObject({ badges: ["sensor.wind_gust"] });
-  // the row names the entity; its dialog edits it
-  const badges = field(e.form, "badges");
-  await expect(badges.locator(".item .main")).toHaveText(["Wind gust"]);
-  await badges.getByRole("button", { name: "Edit" }).click();
-  await fill(badges.locator(".edit ha-form"), "name", "Gusts");
-  await saveItem(e.form, "badges");
+  await back(e.editor);
+  // the row names the entity; its view edits it
+  await expect(rowTitles(badges)).toHaveText(["Wind gust"]);
+  await badges.locator(".row .main").first().click();
+  await fill(itemView(e.editor), "name", "Gusts");
   await expect.poll(e.last).toMatchObject({
     badges: [{ entity: "sensor.wind_gust", name: "Gusts" }],
   });
-  // a dialog cancelled changes nothing
-  const n = await e.count();
-  await badges.getByRole("button", { name: "Edit" }).click();
-  await fill(badges.locator(".edit ha-form"), "name", "Other");
-  await badges.locator(".edit").getByRole("button", { name: "Cancel" }).click();
-  expect(await e.count()).toBe(n);
+  await back(e.editor);
+  await expect(rowTitles(badges)).toHaveText(["Gusts"]);
   // deleted
   await badges.getByRole("button", { name: "Delete" }).click();
   await expect
@@ -177,22 +182,22 @@ test("the poster's badges are added and edited in their dialog", async ({ page }
     .toEqual({ type: "custom:poster-card-pro", entity: "sensor.wind_speed" });
 });
 
-test("a badge's icon place, visual, kind and switch are set in its dialog", async ({ page }) => {
+test("a badge's look, visual and kind are set in its view, by what it shows", async ({ page }) => {
   const e = await openEditor(page, {
     type: "custom:poster-card-pro",
     entity: "sensor.wind_speed",
     badges: ["sensor.battery_soc"],
   });
   await openSection(e.form, "Status and badges");
-  const badges = field(e.form, "badges");
-  await badges.getByRole("button", { name: "Edit" }).click();
-  const dialog = badges.locator(".edit ha-form");
-  await choose(dialog, "icon_type", "dot");
-  await choose(dialog, "visual", "trend");
-  await fill(dialog, "hours", "6");
-  await choose(dialog, "kind", "none");
-  await toggle(dialog, "control");
-  await saveItem(e.form, "badges");
+  await listOf(e.form, "badges").locator(".row .main").first().click();
+  const view = itemView(e.editor);
+  await openSection(view, "Look");
+  await choose(view, "icon_type", "dot");
+  await choose(view, "kind", "none");
+  // a number: after it a trend over its hours
+  await openSection(view, "Visual");
+  await choose(view, "visual", "trend");
+  await fill(view, "hours", "6");
   await expect.poll(e.last).toMatchObject({
     badges: [
       {
@@ -200,10 +205,35 @@ test("a badge's icon place, visual, kind and switch are set in its dialog", asyn
         kind: "none",
         icon: { type: "dot" },
         visual: { type: "trend", hours: 6 },
-        control: "toggle",
       },
     ],
   });
+  // a battery does not switch: no switch to set
+  await expect(field(view, "control")).toHaveCount(0);
+});
+
+test("a badge's rules open on top of the badge's view", async ({ page }) => {
+  const e = await openEditor(page, {
+    type: "custom:poster-card-pro",
+    entity: "sensor.wind_speed",
+    badges: [{ entity: "sensor.battery_soc", rules: [{ below: 20, color: "red" }] }],
+  });
+  await openSection(e.form, "Status and badges");
+  await listOf(e.form, "badges").locator(".row .main").first().click();
+  await openSection(itemView(e.editor), "Rules");
+  const rules = listOf(itemView(e.editor), "rules");
+  await expect(rowTitles(rules)).toHaveText(["Below 20 %"]);
+  await rules.locator(".row .main").first().click();
+  // a badge's rule writes a text in place of the badge's value
+  await fill(itemView(e.editor), "value", "Low");
+  await expect.poll(e.last).toMatchObject({
+    badges: [{ entity: "sensor.battery_soc", rules: [{ below: 20, color: "red", value: "Low" }] }],
+  });
+  // back to the badge, then to the card
+  await back(e.editor);
+  await expect(rowTitles(listOf(itemView(e.editor), "rules"))).toHaveText(["Below 20 %"]);
+  await back(e.editor);
+  await expect(listOf(e.form, "badges")).toBeVisible();
 });
 
 test("the poster's rules are added, ordered and deleted", async ({ page }) => {
@@ -213,29 +243,29 @@ test("the poster's rules are added, ordered and deleted", async ({ page }) => {
     entity: "sensor.living_room_temperature",
   });
   await openSection(e.form, "Rules");
-  const first = await addItem(e.form, "rules");
-  await fill(first, "above", "30");
-  await choose(first, "color", "red");
-  await fill(first, "status", "Stormy");
-  await saveItem(e.form, "rules");
+  const rules = listOf(e.form, "rules");
+  await rules.locator("button.new").click();
+  await fill(itemView(e.editor), "above", "30");
+  await choose(itemView(e.editor), "color", "red");
+  await fill(itemView(e.editor), "status", "Stormy");
   await expect.poll(e.last).toMatchObject({
     rules: [{ above: 30, color: "red", status: "Stormy" }],
   });
-  const second = await addItem(e.form, "rules");
-  await fill(second, "above", "10");
-  await fill(second, "status", "Windy");
-  await saveItem(e.form, "rules");
-  const rules = field(e.form, "rules");
-  await expect(rules.locator(".item .main")).toHaveText(["Stormy", "Windy"]);
+  await back(e.editor);
+  await rules.locator("button.new").click();
+  await fill(itemView(e.editor), "above", "10");
+  await fill(itemView(e.editor), "status", "Windy");
+  await back(e.editor);
+  await expect(rowTitles(rules)).toHaveText(["Above 30 °C", "Above 10 °C"]);
   // rules match in the order written: moved up, the second comes first
-  await rules.locator(".item").nth(1).getByRole("button", { name: "Move up" }).click();
+  await rules.locator(".row").nth(1).getByRole("button", { name: "Move up" }).click();
   await expect.poll(e.last).toMatchObject({
     rules: [
       { above: 10, status: "Windy" },
       { above: 30, color: "red", status: "Stormy" },
     ],
   });
-  await rules.locator(".item").nth(0).getByRole("button", { name: "Delete" }).click();
+  await rules.locator(".row").nth(0).getByRole("button", { name: "Delete" }).click();
   await expect.poll(e.last).toMatchObject({ rules: [{ above: 30, status: "Stormy" }] });
 });
 
@@ -243,20 +273,18 @@ test("the kind's rules are shown, copied when one changes, and come back", async
   const wind = { type: "custom:poster-card-pro", entity: "sensor.wind_speed" };
   const e = await openEditor(page, wind);
   await openSection(e.form, "Rules");
-  const rules = field(e.form, "rules");
-  await expect(rules.locator(".item .main")).toHaveText([
-    "Calm",
-    "Breezy",
-    "Windy",
-    "Strong wind",
-    "Stormy",
+  const rules = listOf(e.form, "rules");
+  await expect(rowTitles(rules)).toHaveText([
+    "Below 5 km/h",
+    "Below 20 km/h",
+    "Below 35 km/h",
+    "Below 50 km/h",
+    "Above 50 km/h",
   ]);
   await expect(field(e.form, "rules_from").locator("select")).toHaveValue("default");
   // Breezy green: all five become the card's, with the change
-  await rules.locator(".item").nth(1).getByRole("button", { name: "Edit" }).click();
-  const breezy = rules.locator(".edit ha-form");
-  await choose(breezy, "color", "green");
-  await saveItem(e.form, "rules");
+  await rules.locator(".row .main").nth(1).click();
+  await choose(itemView(e.editor), "color", "green");
   await expect.poll(e.last).toMatchObject({
     rules: [
       { below: 5, status: "Calm" },
@@ -266,6 +294,7 @@ test("the kind's rules are shown, copied when one changes, and come back", async
       { above: 50, status: "Stormy", tint_card: true },
     ],
   });
+  await back(e.editor);
   await expect(field(e.form, "rules_from").locator("select")).toHaveValue("own");
   // back to the kind's
   await choose(e.form, "rules_from", "default");

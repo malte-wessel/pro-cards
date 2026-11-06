@@ -11,13 +11,32 @@ import { canRead, detectKind, parseKind, resolveKind } from "./detect.ts";
 import {
   DEFAULT,
   DETECTED,
+  badgeFromForm,
+  badgeToForm,
   configToForm,
   defaultVisual,
   fitEntity,
   formToConfig,
   type CardThing,
 } from "./editor-form.ts";
-import { editorSchema, rangeInfo, type SchemaCtx } from "./editor-schema.ts";
+import {
+  badgeFieldLabel,
+  placeholders,
+  ruleFieldLabel,
+  ruleItemSchema,
+  badgeItemSchema,
+  editorSchema,
+  rangeInfo,
+  type SchemaCtx,
+} from "./editor-schema.ts";
+import { BADGE_LIST, BadgeListSelector } from "./badge-list.ts";
+import { RULE_LIST, RuleListSelector } from "./rule-list.ts";
+import { defineSelector } from "../editor-list.ts";
+import "../editor-toggle.ts";
+
+// the badges' list field: ha-selector draws `ha-selector-<type>` for a selector of that type
+defineSelector(BADGE_LIST, BadgeListSelector);
+defineSelector(RULE_LIST, RuleListSelector);
 import { KINDS } from "./registry.ts";
 import { ruleHints } from "./rule-hints.ts";
 import { writtenRules } from "./rules.ts";
@@ -180,6 +199,105 @@ export abstract class KindCardEditor extends FormEditorBase {
 
   _label(sch: HaFormSchema): string {
     return t(this._hass, labelKey(this._nameOf(sch)));
+  }
+
+  // an item in the sub-view, by its path: a badge ("badges"), a card's rule ("rules") or a
+  // badge's rule ("badges/rules"); its own form, titled by its number (and a badge's entity)
+  _subSchema(hass: HomeAssistant, path: string, item: Raw): HaFormSchema[] {
+    const entity = this._cardEntity();
+    if (path === "badges") return badgeItemSchema(hass, item, entity);
+    if (path === "rules") {
+      // what the card's rules read: its value, a number in its unit or a state of its entity
+      const x = this._ctx;
+      return ruleItemSchema(hass, item, {
+        entity,
+        unit: x ? (placeholders(x).unit ?? "") : "",
+        numeric: !!x?.numeric,
+      });
+    }
+    if (path === "badges/rules")
+      return ruleItemSchema(hass, item, { ...this._badgeReads(), badge: true });
+    return [];
+  }
+  _cardEntity(): string {
+    const card = (this._config as Raw | undefined)?.entity;
+    return typeof card === "string" ? card : "";
+  }
+  // what the open badge's rules read: its entity (else the card's) and its attribute, a number
+  // in the entity's unit or a state
+  _badgeReads(): { entity: string; unit: string; numeric: boolean } {
+    const b = this._subItems()?.[0] ?? {};
+    const entity = (typeof b.entity === "string" && b.entity) || this._cardEntity();
+    const st = entity ? this._hass?.states[entity] : undefined;
+    const attr = typeof b.attribute === "string" ? b.attribute : "";
+    const shown = attr ? st?.attributes[attr] : st?.state;
+    const unit = !attr ? st?.attributes.unit_of_measurement : undefined;
+    return { entity, unit: typeof unit === "string" ? unit : "", numeric: isNum(shown) };
+  }
+  // a new badge or rule: an empty one, added by its first change that says something
+  _subNew(path: string): Raw | undefined {
+    return path === "badges" ? badgeToForm({}) : path.endsWith("rules") ? {} : undefined;
+  }
+  // a badge that says nothing: nothing at all, or one of your own without its text yet; a rule
+  // without anything
+  _subIsEmpty(path: string, item: Raw, hint: Raw): boolean {
+    if (path.endsWith("rules"))
+      return !Object.entries(item).some(
+        ([k, v]) =>
+          v !== undefined &&
+          v !== null &&
+          v !== "" &&
+          v !== false &&
+          !(k === "more" && typeof v === "object" && !Object.keys(v as object).length),
+      );
+    if (path !== "badges") return false;
+    if (hint.source === "custom" && !item.value) return true;
+    const b = badgeFromForm(item);
+    return typeof b === "object" && b !== null && !Object.keys(b).length;
+  }
+  // a badge's source in its form: one of your own where it says a text and reads no entity, else
+  // an entity's; as last chosen while the form is open. Switching drops what the other one says
+  _subToForm(path: string, item: Raw, hint: Raw): Raw {
+    if (path !== "badges") return item;
+    const own = !!item.value && !item.entity && !item.attribute;
+    return { ...item, source: hint.source ?? (own ? "custom" : "entity") };
+  }
+  _subFromForm(path: string, data: Raw, was: Raw, hint: Raw): Raw {
+    if (path !== "badges") return data;
+    const { source, ...item } = data;
+    if (source !== was.source) {
+      hint.source = source;
+      if (source === "custom") {
+        for (const k of ["entity", "attribute", "control"]) delete item[k];
+        item.kind = DETECTED;
+      } else delete item.value;
+    }
+    return item;
+  }
+  // what a badge field does where it is left empty: the card's entity, the pill's defaults
+  _subHelper(sch: HaFormSchema): string | undefined {
+    const L = (k: string, vars?: Record<string, string>) =>
+      t(this._hass, `editor.card.${k}` as StringKey, vars);
+    if (this._subPath() !== "badges") return undefined;
+    if (sch.name === "entity") return L("badge_help.entity");
+    if (sch.name === "value") return L("badge_help.value");
+    if (sch.name === "prefix" || sch.name === "suffix") return L(`help.${sch.name}`);
+    if (sch.name === "style")
+      return t(this._hass, "editor.default", { value: L("badge_style.outline") });
+    if (sch.name === "size") return t(this._hass, "editor.default", { value: L("badge_size.m") });
+    return undefined;
+  }
+  _subLabel(sch: HaFormSchema): string {
+    return this._subPath().endsWith("rules")
+      ? ruleFieldLabel(this._hass, sch.name)
+      : badgeFieldLabel(this._hass, sch.name);
+  }
+  _subTitle(path: string, index: number, item: Raw): string {
+    if (path.endsWith("rules"))
+      return t(this._hass, "editor.card.rule_title", { n: String(index + 1) });
+    const id = typeof item.entity === "string" ? item.entity : "";
+    const name = (id && this._hass?.states[id]?.attributes.friendly_name) || id;
+    return `${t(this._hass, "editor.card.badge_title", { n: String(index + 1) })}${name ? ` · ${name}` : ""}`;
   }
 
   _helper(sch: HaFormSchema): string | undefined {

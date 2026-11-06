@@ -15,6 +15,7 @@ import { TILE_ICON_TOGGLES } from "./config.ts";
 import {
   BADGE_ICONS,
   BADGE_KEYS,
+  BADGE_RULE_KEYS,
   BADGE_KINDS,
   BUTTON_KEYS,
   DEFAULT,
@@ -59,6 +60,11 @@ export interface SchemaCtx {
 
 // the sections' icons (Material Design Icons, as Home Assistant's own editors use)
 export const ICONS = {
+  value:
+    "M4,17V9H2V7H6V17H4M22,15C22,16.11 21.1,17 20,17H16V15H20V13H18V11H20V9H16V7H20A2,2 0 0,1 22,9V10.5A1.5,1.5 0 0,1 20.5,12A1.5,1.5 0 0,1 22,13.5V15M14,15V17H8V13C8,11.89 8.9,11 10,11H12V9H8V7H12A2,2 0 0,1 14,9V11C14,12.11 13.1,13 12,13H10V15H14Z",
+  chart:
+    "M16,11.78L20.24,4.45L21.97,5.45L16.74,14.5L10.23,10.75L5.46,19H22V21H2V3H4V17.54L9.5,8L16,11.78Z",
+  code: "M8,3A2,2 0 0,0 6,5V9A2,2 0 0,1 4,11H3V13H4A2,2 0 0,1 6,15V19A2,2 0 0,0 8,21H10V19H8V14A2,2 0 0,0 6,12A2,2 0 0,0 8,10V5H10V3M16,3A2,2 0 0,1 18,5V9A2,2 0 0,0 20,11H21V13H20A2,2 0 0,0 18,15V19A2,2 0 0,1 16,21H14V19H16V14A2,2 0 0,1 18,12A2,2 0 0,1 16,10V5H14V3H16Z",
   content:
     "M5,3C3.89,3 3,3.89 3,5V19C3,20.11 3.89,21 5,21H19C20.11,21 21,20.11 21,19V5C21,3.89 20.11,3 19,3H5M5,5H19V19H5V5M7,7V9H17V7H7M7,11V13H17V11H7M7,15V17H14V15H7Z",
   look: "M12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2C17.5,2 22,6 22,11A6,6 0 0,1 16,17H14.2C13.9,17 13.7,17.2 13.7,17.5C13.7,17.6 13.8,17.7 13.8,17.8C14.2,18.3 14.4,18.9 14.4,19.5C14.5,20.9 13.4,22 12,22M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C12.3,20 12.5,19.8 12.5,19.5C12.5,19.3 12.4,19.2 12.4,19.1C12,18.6 11.8,18.1 11.8,17.5C11.8,16.1 12.9,15 14.3,15H16A4,4 0 0,0 20,11C20,7.1 16.4,4 12,4M6.5,10C7.3,10 8,10.7 8,11.5C8,12.3 7.3,13 6.5,13C5.7,13 5,12.3 5,11.5C5,10.7 5.7,10 6.5,10M9.5,6C10.3,6 11,6.7 11,7.5C11,8.3 10.3,9 9.5,9C8.7,9 8,8.3 8,7.5C8,6.7 8.7,6 9.5,6M14.5,6C15.3,6 16,6.7 16,7.5C16,8.3 15.3,9 14.5,9C13.7,9 13,8.3 13,7.5C13,6.7 13.7,6 14.5,6M17.5,10C18.3,10 19,10.7 19,11.5C19,12.3 18.3,13 17.5,13C16.7,13 16,12.3 16,11.5C16,10.7 16.7,10 17.5,10Z",
@@ -113,6 +119,219 @@ const L = (hass: HomeAssistant | undefined, key: string, vars?: Record<string, s
   t(hass, `editor.card.${key}` as StringKey, vars);
 
 export const kindLabel = (hass: HomeAssistant | undefined, name: string) => L(hass, `kind.${name}`);
+
+// one badge's form in the editor's sub-view: only what applies to it, by what it reads and shows
+// (a field already filled in stays, so it can be cleared):
+// - an entity's badge: the entity (empty: the card's, "None") and an attribute of it; or one of
+//   your own: a text or a template (the switch at the top)
+// - its kind's colours, for an entity's value (not a text of its own)
+// - the icon, its picture's source, and a ring only around a number
+// - after the value only for a number, its hours only for a sparkline or a trend
+// - a switch only for an entity that switches
+// (`cardEntity`: what a badge without an entity reads, the card's own)
+export const badgeItemSchema = (
+  hass: HomeAssistant | undefined,
+  item: Record<string, unknown>,
+  cardEntity = "",
+) => {
+  const f = fieldsOf(hass, BADGE_KEYS, "badge") as Record<string, { selector: unknown }>;
+  const field = (name: string, extra: Partial<HaFormSchema> = {}): HaFormSchema =>
+    ({ name, selector: f[name].selector as never, ...extra }) as HaFormSchema;
+  // (a select at its default says nothing: the detected kind, the icon as an icon)
+  const filled = (k: string) =>
+    item[k] !== undefined &&
+    item[k] !== null &&
+    item[k] !== "" &&
+    item[k] !== false &&
+    !(k === "kind" && item[k] === DETECTED) &&
+    !(k === "icon_type" && item[k] === "icon");
+  const when = (cond: boolean, k: string) => cond || filled(k);
+  const type = typeof item.icon_type === "string" ? item.icon_type : "icon";
+  const own = typeof item.entity === "string" && item.entity ? item.entity : "";
+  const reads = item.source === "custom" ? "" : own || cardEntity;
+  const st = reads ? hass?.states[reads] : undefined;
+  const text = filled("value");
+  const attr = typeof item.attribute === "string" ? item.attribute : "";
+  const shown = attr ? st?.attributes[attr] : st?.state;
+  const numeric = !text && isNum(shown);
+  const switches = !!reads && TILE_ICON_TOGGLES.has(domainOf(reads)) && !attr && !text;
+  // a date (the time from now is written for it)
+  const dated = !text && typeof shown === "string" && /^\d{4}-\d{2}-\d{2}/.test(shown);
+  const showsValue = item.show_value !== false;
+  // the range of a bar or a ring
+  const ranged = item.visual === "bar" || item.icon_ring === true;
+  const iconed = type === "icon" || type === "image";
+  const plot = item.visual === "sparkline" || item.visual === "trend";
+  // an entity's badge (its entity, else the card's, and an attribute) or one of your own (a text
+  // or a template)
+  const custom = item.source === "custom";
+  const T = (k: string) => L(hass, k);
+  const sub = (title: string, icon: string, expanded: boolean, schema: HaFormSchema[]) =>
+    ({ ...section(title, icon, schema), expanded }) as HaFormSchema;
+  const out: (HaFormSchema | false)[] = [
+    {
+      name: "source",
+      selector: {
+        pro_cards_toggle: {
+          options: ["entity", "custom"].map((v) => ({
+            value: v,
+            label: L(hass, `badge_source.${v}`),
+          })),
+        },
+      },
+    } as HaFormSchema,
+    // what it shows, then its name beside the value and whether the name shows
+    sub(T("section.content"), ICONS.content, true, [
+      ...(custom
+        ? []
+        : [
+            field("entity", { default: L(hass, "none") } as Partial<HaFormSchema>),
+            ...(reads
+              ? [
+                  {
+                    name: "attribute",
+                    selector: { attribute: { entity_id: reads } },
+                  } as HaFormSchema,
+                ]
+              : []),
+          ]),
+      grid(field("name"), ...(custom || filled("value") ? [field("value")] : [])),
+      field("show_name"),
+    ]),
+    // how its value is written: whether it shows, then (where it does) its format (for a number
+    // or a date), its unit and decimals (for a number), a text before and after it
+    sub(T("section.badge_value"), ICONS.value, false, [
+      field("show_value"),
+      ...(showsValue
+        ? [
+            ...(when(numeric || dated, "format") ? [field("format")] : []),
+            ...(when(numeric, "unit") || filled("decimals")
+              ? [grid(field("unit"), field("decimals"))]
+              : []),
+            grid(field("prefix"), field("suffix")),
+          ]
+        : []),
+    ]),
+    // its look: the pill, the colour and the kind's, then the icon (an icon's name only for an
+    // icon, a picture's source only for a picture)
+    sub(T("section.badge_look"), ICONS.look, false, [
+      grid(field("style"), field("size")),
+      grid(field("color"), ...(when(!!reads && !text, "kind") ? [field("kind")] : [])),
+      grid(field("icon_type"), ...(when(type === "icon", "icon") ? [field("icon")] : [])),
+      ...(type === "image" ? [field("icon_src")] : []),
+    ]),
+    // what a number draws: after it a bar, a sparkline or a trend over its hours, a ring around
+    // the icon, and the range a bar or a ring fills
+    when(numeric, "visual") &&
+      sub(T("section.badge_visual"), ICONS.chart, false, [
+        grid(field("visual"), ...(plot ? [field("hours")] : [])),
+        ...(when(iconed && numeric, "icon_ring") ? [field("icon_ring")] : []),
+        ...(ranged || filled("min") || filled("max") ? [grid(field("min"), field("max"))] : []),
+      ]),
+    // a switch, for an entity that switches
+    when(switches, "control") &&
+      sub(T("section.controls"), ICONS.controls, false, [field("control")]),
+    // its own taps (by default the card's) and its hover effect
+    sub(T("section.actions"), ICONS.actions, false, [
+      field("tap_action"),
+      field("hold_action"),
+      field("double_tap_action"),
+      field("hover"),
+    ]),
+    // its rules: a list, each rule in a view on top of the badge's (they read what it reads)
+    sub(T("section.rules"), ICONS.rules, false, [
+      {
+        name: "rules",
+        selector: {
+          pro_cards_rules: {
+            hide_label: true,
+            entity: reads,
+            unit:
+              !attr && typeof st?.attributes.unit_of_measurement === "string"
+                ? st.attributes.unit_of_measurement
+                : "",
+          },
+        },
+      } as HaFormSchema,
+    ]),
+    sub(T("section.advanced"), ICONS.code, false, [{ name: "more", selector: { object: {} } }]),
+  ];
+  return out.filter((x): x is HaFormSchema => !!x);
+};
+// one rule's form in the editor's sub-view, in sections: when it matches (above and below in the
+// value's unit for a number, the entity's states else; a field filled in stays), what it changes
+// (its status, colour and icon), the status's look (its style, the card's tint, a pulse), and what
+// else it says as YAML
+// (`badge`: a badge's rule, which writes a text in place of the badge's value and sets its pill,
+// where a card's sets the status and may tint the card)
+export const ruleItemSchema = (
+  hass: HomeAssistant | undefined,
+  item: Record<string, unknown>,
+  ctx: { entity: string; unit: string; numeric: boolean; badge?: boolean },
+): HaFormSchema[] => {
+  const f = fieldsOf(hass, ctx.badge ? BADGE_RULE_KEYS : RULE_KEYS, "rule", {
+    ...(ctx.entity ? { state: { state: { entity_id: ctx.entity } } } : {}),
+    ...Object.fromEntries(
+      (["above", "below"] as const).map((k) => [
+        k,
+        { number: { mode: "box", ...(ctx.unit ? { unit_of_measurement: ctx.unit } : {}) } },
+      ]),
+    ),
+  }) as Record<string, { selector: unknown }>;
+  const field = (name: string): HaFormSchema => ({ name, selector: f[name].selector as never });
+  const has = (k: string) => item[k] !== undefined && item[k] !== null && item[k] !== "";
+  const sub = (title: string, icon: string, expanded: boolean, schema: HaFormSchema[]) =>
+    ({ ...section(title, icon, schema), expanded }) as HaFormSchema;
+  return [
+    sub(L(hass, "section.rule_when"), ICONS.rules, true, [
+      ...(ctx.numeric || has("above") || has("below")
+        ? [grid(field("above"), field("below"))]
+        : []),
+      ...(!ctx.numeric || has("state") ? [field("state")] : []),
+    ]),
+    sub(L(hass, "section.rule_then"), ICONS.look, true, [
+      field(ctx.badge ? "value" : "status"),
+      grid(field("color"), field("icon")),
+    ]),
+    sub(
+      L(hass, "section.badge_look"),
+      ICONS.badges,
+      false,
+      ctx.badge
+        ? [field("style"), field("pulse")]
+        : [field("style"), field("tint_card"), field("pulse")],
+    ),
+    sub(L(hass, "section.advanced"), ICONS.code, false, [
+      { name: "more", selector: { object: {} } },
+    ]),
+  ];
+};
+// a rule field's label, as fieldsOf names it
+export const ruleFieldLabel = (hass: HomeAssistant | undefined, name: string) =>
+  name === "more" ? L(hass, "more") : L(hass, `rule.${name}`);
+
+// a badge field's label, as fieldsOf names it
+// (what a badge says as the card says it is labelled as the card's field is)
+const CARD_WORDS = new Set([
+  "show_value",
+  "unit",
+  "decimals",
+  "prefix",
+  "suffix",
+  "min",
+  "max",
+  "tap_action",
+  "hold_action",
+  "double_tap_action",
+  "hover",
+  "icon_src",
+]);
+export const badgeFieldLabel = (hass: HomeAssistant | undefined, name: string) =>
+  name === "more"
+    ? L(hass, "more")
+    : CARD_WORDS.has(name)
+      ? L(hass, `field.${name}`)
+      : L(hass, `badge.${name}`);
 
 // the badges as a list, one dialog per badge (the poster, the tile, the heading, the tile group's
 // header): its form items are badgesToForm's (editor-form.ts)
@@ -605,20 +824,12 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
             : []),
         ]
       : []),
-    badgesField(hass),
+    // our own list (badge-list.ts): a row a badge, its form in the editor's sub-view
+    { name: "badges", selector: { pro_cards_badges: { entity } } },
   ];
 
   // ----- rules: the kind's (predefined) while the card has none, else its own -----
   // (they read the value the card shows, in its unit; a state is one of the entity's)
-  const ruleFields = fieldsOf(hass, RULE_KEYS, "rule", {
-    ...(entity ? { state: { state: { entity_id: entity } } } : {}),
-    ...Object.fromEntries(
-      (["above", "below"] as const).map((k) => [
-        k,
-        { number: { mode: "box", ...(shown.unit ? { unit_of_measurement: shown.unit } : {}) } },
-      ]),
-    ),
-  });
   const rules: HaFormSchema[] = [
     ...(kind.rules?.length
       ? [
@@ -628,16 +839,11 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
           ]),
         ]
       : []),
+    // our own list (rule-list.ts): a box a rule, its form in the editor's sub-view
+    // (its section's title names it)
     {
       name: "rules",
-      selector: {
-        object: {
-          multiple: true,
-          label_field: "status",
-          description_field: "color",
-          fields: ruleFields,
-        },
-      },
+      selector: { pro_cards_rules: { entity, unit: shown.unit ?? "", hide_label: true } },
     },
   ];
 
@@ -727,7 +933,22 @@ const FIELD_SELECTORS: Record<string, Record<string, unknown>> = {
   pulse: { boolean: {} },
   show_name: { boolean: {} },
   action: { ui_action: {} },
+  // a badge's value, range and actions
+  show_value: { boolean: {} },
+  unit: { text: {} },
+  decimals: { number: { mode: "box", min: 0, max: 3, step: 1 } },
+  prefix: { text: {} },
+  suffix: { text: {} },
+  min: { number: { mode: "box" } },
+  max: { number: { mode: "box" } },
+  tap_action: { ui_action: {} },
+  hold_action: { ui_action: {} },
+  double_tap_action: { ui_action: {} },
+  hover: { boolean: {} },
 };
+// how a badge's value is written: as the entity formats it, in W / kW / MW, as a duration, or the
+// time from now of a date
+const BADGE_FORMATS = ["auto", "power", "duration", "relative"] as const;
 const BADGE_VISUALS = ["bar", "sparkline", "trend"] as const;
 const fieldsOf = (
   hass: HomeAssistant | undefined,
@@ -785,6 +1006,15 @@ const fieldsOf = (
         },
       };
     if (of === "badge" && (k === "icon_ring" || k === "control")) selector = { boolean: {} };
+    if (of === "badge" && k === "format")
+      selector = {
+        select: {
+          mode: "dropdown",
+          options: BADGE_FORMATS.map((v) => ({ value: v, label: L(hass, `badge_format.${v}`) })),
+        },
+      };
+    // (in a dialog an attribute is typed; the sub-view picks it from the entity's)
+    if (of === "badge" && k === "attribute") selector = { text: {} };
     if (of === "badge" && k === "hours")
       selector = { number: { mode: "box", min: 0.5, step: 0.5 } };
     // a picture's source: named as the card's own icon's picture is
@@ -792,7 +1022,10 @@ const fieldsOf = (
       out[k] = { selector: { text: {} }, label: L(hass, "field.icon_src") };
       continue;
     }
-    out[k] = { selector, label: L(hass, `${of}.${k}`) };
+    out[k] = {
+      selector,
+      label: of === "badge" ? badgeFieldLabel(hass, k) : L(hass, `${of}.${k}`),
+    };
   }
   out.more = { selector: { object: {} }, label: L(hass, "more") };
   return out;

@@ -13,6 +13,8 @@ interface Schema {
   schema?: Schema[];
   title?: string;
   iconPath?: string;
+  // a section open from the start (Home Assistant's `expanded`)
+  expanded?: boolean;
   value?: string;
   required?: boolean;
   // an optional field's placeholder, and the form's data a selector reads (as Home Assistant's)
@@ -165,6 +167,8 @@ const svg = (d: string) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d=
 interface Field {
   el: HTMLElement;
   set(v: unknown): void;
+  // the field draws its own helper (a selector of a card's own)
+  ownHelper?: boolean;
 }
 
 // the states an entity may be in, for a state picker: on and off where it switches, its options
@@ -192,6 +196,21 @@ const activeIn = (root: ShadowRoot): HTMLElement | null => {
   }
 };
 
+// the selectors this stand-in draws itself; any other names an element of its own
+const BUILTIN = new Set([
+  "boolean",
+  "number",
+  "select",
+  "ui_color",
+  "entity",
+  "attribute",
+  "icon",
+  "state",
+  "text",
+  "ui_action",
+  "object",
+]);
+
 export class HaFormShim extends HTMLElement {
   hass?: HassLike;
   computeLabel?: (s: Schema) => string;
@@ -203,6 +222,8 @@ export class HaFormShim extends HTMLElement {
   _key = "";
   _fields = new Map<string, Field>();
   _open = new Set<string>();
+  // sections closed by hand: one the schema opens (`expanded`) stays closed once closed
+  _closed = new Set<string>();
   _queued = false;
 
   set data(d: Raw | undefined) {
@@ -256,7 +277,10 @@ export class HaFormShim extends HTMLElement {
       // the sections open now stay open (their toggle event may not have come yet)
       for (const d of root.querySelectorAll<HTMLDetailsElement>("details[data-id]"))
         if (d.open) this._open.add(d.dataset.id!);
-        else this._open.delete(d.dataset.id!);
+        else {
+          this._open.delete(d.dataset.id!);
+          this._closed.add(d.dataset.id!);
+        }
       this._key = key;
       this._fields.clear();
       const stack = document.createElement("div");
@@ -285,8 +309,16 @@ export class HaFormShim extends HTMLElement {
       const d = document.createElement("details");
       const id = s.title ?? s.name;
       d.dataset.id = id;
-      d.open = this._open.has(id);
-      d.addEventListener("toggle", () => (d.open ? this._open.add(id) : this._open.delete(id)));
+      d.open = this._open.has(id) || (!!s.expanded && !this._closed.has(id));
+      d.addEventListener("toggle", () => {
+        if (d.open) {
+          this._open.add(id);
+          this._closed.delete(id);
+        } else {
+          this._open.delete(id);
+          this._closed.add(id);
+        }
+      });
       const sum = document.createElement("summary");
       sum.innerHTML = s.iconPath ? svg(s.iconPath) : "";
       sum.append(s.title ?? "");
@@ -309,7 +341,7 @@ export class HaFormShim extends HTMLElement {
     const f = this._field(s);
     this._fields.set(s.name, f);
     wrap.appendChild(f.el);
-    const help = this.computeHelper?.(s);
+    const help = f.ownHelper ? undefined : this.computeHelper?.(s);
     if (help) {
       const h = document.createElement("div");
       h.className = "helper";
@@ -347,6 +379,35 @@ export class HaFormShim extends HTMLElement {
     const kind = Object.keys(sel)[0] ?? "text";
     const conf = (sel[kind] ?? {}) as Raw;
     const name = s.name;
+    // a selector of a card's own: as Home Assistant's ha-selector does, the element named
+    // ha-selector-<type>, given the field's value, label and hass, sending value-changed
+    const own = customElements.get(`ha-selector-${kind}`);
+    if (own && !BUILTIN.has(kind)) {
+      type Own = HTMLElement & {
+        hass?: unknown;
+        value?: unknown;
+        label?: string;
+        helper?: string;
+        selector?: unknown;
+      };
+      const el = document.createElement(`ha-selector-${kind}`) as Own;
+      el.label = this._label(s);
+      // (it draws its own helper, as Home Assistant's selectors draw theirs)
+      el.helper = this.computeHelper?.(s);
+      el.selector = sel;
+      el.addEventListener("value-changed", (ev) => {
+        ev.stopPropagation();
+        this._emit(name, (ev as CustomEvent).detail?.value);
+      });
+      return {
+        el,
+        ownHelper: true,
+        set: (v) => {
+          el.hass = this.hass;
+          el.value = v;
+        },
+      };
+    }
     switch (kind) {
       case "boolean": {
         const el = document.createElement("label");
@@ -569,7 +630,9 @@ export class HaFormShim extends HTMLElement {
       <div class="menu" role="listbox" hidden></div>`;
     box.querySelector(".label")!.textContent = this._label(s);
     const input = box.querySelector("input")!;
-    input.placeholder = "Search entities";
+    // (as Home Assistant: a field's default is its placeholder, a picker's "None")
+    input.placeholder =
+      s.default !== undefined && !s.required ? String(s.default) : "Search entities";
     const lead = box.querySelector(".lead")!;
     const clear = box.querySelector<HTMLButtonElement>(".clear")!;
     const menu = box.querySelector<HTMLElement>(".menu")!;

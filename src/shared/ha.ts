@@ -30,7 +30,8 @@ export interface HomeAssistant {
   // the logged-in user (visibility's `user` and `location` conditions)
   user?: Pick<HassUser, "id" | "name" | "is_admin">;
   // frontend versions without it fall back to the card's own formatting
-  formatEntityState?: (st: HassEntity) => string;
+  // (a state of its own in place of the entity's, as Home Assistant takes it)
+  formatEntityState?: (st: HassEntity, state?: string) => string;
   // an attribute's value as Home Assistant shows it (a climate's preset or fan mode, translated)
   formatEntityAttributeValue?: (st: HassEntity, attribute: string, value?: unknown) => string;
   formatEntityAttributeName?: (st: HassEntity, attribute: string) => string;

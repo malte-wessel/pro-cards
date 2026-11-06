@@ -593,35 +593,57 @@ describe("the editor form: the status and the badges", () => {
   });
 
   it("keeps a badge's other keys in its YAML field", () => {
-    const badge = { entity: "light.kitchen", name: "K", tap_action: { action: "toggle" } };
+    const vis = [{ condition: "screen", media_query: "(min-width: 0px)" }];
+    const badge = { entity: "light.kitchen", name: "K", visibility: vis };
     expect(formOf({ ...LIGHT, badges: [badge] }).badges).toEqual([
       {
         entity: "light.kitchen",
         name: "K",
         kind: "detected",
         icon_type: "icon",
-        more: { tap_action: { action: "toggle" } },
+        show_value: true,
+        hover: true,
+        more: { visibility: vis },
       },
     ]);
-    // edited in the dialog, its other keys stay
+    // edited in its form, its other keys stay
     expect(
       edit(
         { ...LIGHT, badges: [badge] },
-        {
-          badges: [
-            {
-              entity: "light.kitchen",
-              name: "Kitchen",
-              more: { tap_action: { action: "toggle" } },
-            },
-          ],
-        },
+        { badges: [{ entity: "light.kitchen", name: "Kitchen", more: { visibility: vis } }] },
       ),
     ).toEqual({ ...LIGHT, badges: [{ ...badge, name: "Kitchen" }] });
     // a key the form shows wins over the same key in the YAML field
     expect(
       edit(LIGHT, { badges: [{ entity: "light.kitchen", name: "A", more: { name: "B" } }] }),
     ).toEqual({ ...LIGHT, badges: [{ entity: "light.kitchen", name: "A" }] });
+  });
+
+  it("writes a badge's value, range and actions from their fields, the value and hover only off", () => {
+    const tap = { action: "toggle" };
+    const badge = { entity: "sensor.battery_soc", decimals: 1, min: 10, tap_action: tap };
+    const form = (formOf({ ...LIGHT, badges: [badge] }).badges as Raw[])[0];
+    expect(form).toMatchObject({
+      decimals: 1,
+      min: 10,
+      tap_action: tap,
+      show_value: true,
+      hover: true,
+    });
+    expect(
+      edit(LIGHT, { badges: [{ ...form, show_value: false, hover: false, suffix: "!" }] }).badges,
+    ).toEqual([{ ...badge, suffix: "!", show_value: false, hover: false }]);
+  });
+
+  it("puts a badge's rules in their own list, each rule's keys as a badge's rule takes them", () => {
+    const badge = {
+      entity: "sensor.battery_soc",
+      rules: [{ below: 20, color: "red", value: "Low" }],
+    };
+    const form = (formOf({ ...LIGHT, badges: [badge] }).badges as Raw[])[0];
+    expect(form.rules).toEqual([{ below: 20, color: "red", value: "Low" }]);
+    const rules = [{ below: 20, color: "red", value: "Low" }, { above: 80 }];
+    expect(edit(LIGHT, { badges: [{ ...form, rules }] }).badges).toEqual([{ ...badge, rules }]);
   });
 });
 

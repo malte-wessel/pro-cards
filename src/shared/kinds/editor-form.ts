@@ -29,6 +29,8 @@ export const DETECTED = "detected";
 // their "more" field (YAML)
 export const BADGE_KEYS = [
   "entity",
+  "attribute",
+  "value",
   "name",
   "kind",
   "icon",
@@ -42,6 +44,19 @@ export const BADGE_KEYS = [
   "style",
   "size",
   "show_name",
+  // how its value is written, its range, its actions
+  "show_value",
+  "format",
+  "unit",
+  "decimals",
+  "prefix",
+  "suffix",
+  "min",
+  "max",
+  "tap_action",
+  "hold_action",
+  "double_tap_action",
+  "hover",
 ] as const;
 // the kinds whose colours a badge takes (the rest draw texts and places a badge has not)
 export const BADGE_KINDS = [
@@ -66,6 +81,18 @@ export const RULE_KEYS = [
   "icon",
   "status",
   "tint_card",
+  "style",
+  "pulse",
+] as const;
+// a badge's rule: when (state, above, below), then its colour, icon, a text in place of its value,
+// its pill's style and a pulse
+export const BADGE_RULE_KEYS = [
+  "state",
+  "above",
+  "below",
+  "color",
+  "icon",
+  "value",
   "style",
   "pulse",
 ] as const;
@@ -206,10 +233,31 @@ const itemFromForm = (item: Raw, keys: readonly string[], id: string | null): un
 };
 // a badge as written → its dialog's item: the icon place and the visual as flat fields (a picture's
 // src, a window of today and the rest under `more`), the kind, the switch
-const BADGE_PLAIN = ["entity", "name", "color", "style", "size", "show_name"];
+const BADGE_PLAIN = [
+  "entity",
+  "attribute",
+  "value",
+  "name",
+  "color",
+  "style",
+  "size",
+  "show_name",
+  "format",
+  "unit",
+  "decimals",
+  "prefix",
+  "suffix",
+  "min",
+  "max",
+  "tap_action",
+  "hold_action",
+  "double_tap_action",
+];
+// (the value and the hover effect show unless turned off: only `false` is written)
+const BADGE_ON = ["show_value", "hover"];
 export const badgeToForm = (x: unknown): Raw => {
   const o: Raw = typeof x === "string" ? { entity: x } : isObj(x) ? { ...x } : {};
-  const item: Raw = { kind: DETECTED, icon_type: "icon" };
+  const item: Raw = { kind: DETECTED, icon_type: "icon", show_value: true, hover: true };
   const more: Raw = {};
   const only = (v: Raw, keys: string[]) => Object.keys(v).every((k) => keys.includes(k));
   for (const [k, v] of Object.entries(o)) {
@@ -228,6 +276,9 @@ export const badgeToForm = (x: unknown): Raw => {
     } else if (k === "control" && (v === "toggle" || (isObj(v) && only(v, ["type"]))))
       item.control = true;
     else if (k === "kind" && typeof v === "string") item.kind = v;
+    else if (BADGE_ON.includes(k) && typeof v === "boolean") item[k] = v;
+    // its rules as a list of their own (each in its form)
+    else if (k === "rules" && Array.isArray(v)) item.rules = listToForm(v, BADGE_RULE_KEYS);
     else if (BADGE_PLAIN.includes(k)) item[k] = v;
     else more[k] = v;
   }
@@ -236,7 +287,7 @@ export const badgeToForm = (x: unknown): Raw => {
 };
 // the dialog's item → the badge as written, the shortest spelling of what it says
 export const badgeFromForm = (item: Raw): unknown => {
-  const { more, kind, icon, icon_type, icon_src, icon_ring, visual, hours, control } = item;
+  const { more, kind, icon, icon_type, icon_src, icon_ring, visual, hours, control, rules } = item;
   const o: Raw = {};
   for (const k of BADGE_PLAIN) if (filled(item[k])) o[k] = item[k];
   // a kind that cannot read the badge's entity is left out (the entity's own is drawn): the card
@@ -260,6 +311,8 @@ export const badgeFromForm = (item: Raw): unknown => {
   if (filled(visual))
     o.visual = num(hours) !== undefined && visual !== "bar" ? { type: visual, hours } : visual;
   if (control === true) o.control = "toggle";
+  for (const k of BADGE_ON) if (item[k] === false) o[k] = false;
+  if (Array.isArray(rules) && rules.length) o.rules = listFromForm(rules, BADGE_RULE_KEYS, null);
   if (isObj(more)) for (const [k, v] of Object.entries(more)) if (!(k in o)) o[k] = v;
   const ks = Object.keys(o);
   return ks.length === 1 && ks[0] === "entity" ? o.entity : o;

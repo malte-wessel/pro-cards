@@ -39,7 +39,7 @@ export interface HassSnapshot extends HomeAssistant {
   language: string;
   user: { id: string; name: string; is_admin: boolean };
   themes: { darkMode: boolean };
-  formatEntityState: (st: HassEntity) => string;
+  formatEntityState: (st: HassEntity, state?: string) => string;
 }
 
 declare global {
@@ -91,8 +91,8 @@ const moreInfo = (entityId: string) => {
   popEl.classList.add("on");
 };
 
-const formatEntityState = (st: HassEntity): string => {
-  const v = st.state;
+const formatEntityState = (st: HassEntity, state?: string): string => {
+  const v = state ?? st.state;
   const unit = st.attributes?.unit_of_measurement;
   const n = Number(v);
   if (v !== "" && Number.isFinite(n)) {

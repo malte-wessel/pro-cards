@@ -204,7 +204,7 @@ tiles:
 
 ## The visual editor
 
-Home Assistant's card editor shows the group's title, icon, layout, title tap and badges (each in a dialog, as on the [poster and the tile](/cards/badges)), then one tab per tile. A tile is edited in the tile card's own form, without `vertical`; in a table, as a row. **+** adds a tile, and the buttons over a tile move, duplicate or delete it. Try it in the [Playground](/playground), or with **Edit** under any example.
+Home Assistant's card editor shows the group's title, icon, layout, title tap and badges (each in a dialog, with the [badge keys](/cards/badges)), then one tab per tile. A tile is edited in the tile card's own form, without `vertical`; in a table, as a row. **+** adds a tile, and the buttons over a tile move, duplicate or delete it. Try it in the [Playground](/playground), or with **Edit** under any example.
 
 ## Reference
 

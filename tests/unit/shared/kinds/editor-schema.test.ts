@@ -2,8 +2,17 @@
 // entity, its kind and the things it draws, and what their selects offer.
 import { describe, it, expect } from "vitest";
 import { snapshot } from "../../../../docs/.vitepress/theme/ha-shim/hass.ts";
-import { configToForm, DEFAULT, type CardThing } from "../../../../src/shared/kinds/editor-form.ts";
-import { editorSchema } from "../../../../src/shared/kinds/editor-schema.ts";
+import {
+  badgeToForm,
+  configToForm,
+  DEFAULT,
+  type CardThing,
+} from "../../../../src/shared/kinds/editor-form.ts";
+import {
+  badgeItemSchema,
+  editorSchema,
+  ruleItemSchema,
+} from "../../../../src/shared/kinds/editor-schema.ts";
 import { kindsOf } from "../../../../src/shared/kinds/editor.ts";
 import { KIND_THINGS } from "../../../../src/shared/kinds/places.ts";
 import { canRead } from "../../../../src/shared/kinds/detect.ts";
@@ -362,42 +371,33 @@ describe("the editor's status and badges", () => {
     expect(poster).not.toContain("icon_badge");
   });
 
-  it("edits the badges in a dialog with their other keys as YAML", () => {
-    const badges = field(schemaOf("poster", LIGHT), "badges")?.selector as {
-      object: { multiple: boolean; fields: Record<string, { label: string }> };
-    };
-    expect(badges.object.multiple).toBe(true);
-    expect(Object.keys(badges.object.fields)).toEqual([
-      "entity",
-      "name",
-      "kind",
-      "icon",
-      "icon_type",
-      "icon_src",
-      "icon_ring",
-      "color",
-      "visual",
-      "hours",
-      "control",
-      "style",
-      "size",
-      "show_name",
-      "more",
-    ]);
-    // the kinds whose colours a badge takes, after the detected one and none
-    const kinds = (
-      badges.object.fields.kind as unknown as {
-        selector: { select: { options: { value: string; label: string }[] } };
-      }
-    ).selector.select.options;
-    expect(kinds.slice(0, 3).map((o) => o.label)).toEqual(["Detected", "None", "Battery"]);
-    const icons = (
-      badges.object.fields.icon_type as unknown as {
-        selector: { select: { options: { label: string }[] } };
-      }
-    ).selector.select.options;
-    expect(icons.map((o) => o.label)).toEqual(["Icon", "Picture", "Dot", "None"]);
-    expect(badges.object.fields.more.label).toBe("More (YAML)");
+  it("lists the badges in a list of its own, each badge's form by what it shows", () => {
+    expect(field(schemaOf("poster", LIGHT), "badges")?.selector).toEqual({
+      pro_cards_badges: { entity: LIGHT.entity },
+    });
+    const names = (item: Raw) =>
+      flat(badgeItemSchema(hass, badgeToForm(item), "")).map((s) => s.name);
+    // a number: its unit and decimals, a format, after it a visual and a ring; no switch
+    const battery = names({ entity: "sensor.battery_soc" });
+    for (const k of ["format", "unit", "decimals", "visual", "icon_ring", "tap_action", "rules"])
+      expect(battery, k).toContain(k);
+    expect(battery).not.toContain("control");
+    // a bar or a ring: its range
+    expect(names({ entity: "sensor.battery_soc", visual: "bar" })).toContain("min");
+    expect(battery).not.toContain("min");
+    // a light: its switch, no unit or visual
+    const light = names({ entity: "light.kitchen" });
+    expect(light).toContain("control");
+    for (const k of ["unit", "visual", "format"]) expect(light, k).not.toContain(k);
+    // one of your own: a text, no entity or kind
+    const own = flat(
+      badgeItemSchema(hass, { ...badgeToForm({ value: "Open" }), source: "custom" }, ""),
+    );
+    expect(own.map((s) => s.name)).not.toContain("entity");
+    expect(own.map((s) => s.name)).not.toContain("kind");
+    // the value hidden: nothing about how it is written
+    const hidden = names({ entity: "sensor.battery_soc", show_value: false });
+    for (const k of ["format", "unit", "prefix"]) expect(hidden, k).not.toContain(k);
   });
 });
 
@@ -413,20 +413,29 @@ describe("the editor's rules", () => {
     expect(sectionOf(schemaOf("poster", LIGHT), "Rules")).toEqual(["rules"]);
   });
 
-  it("compare in the value's unit, and pick a state of the entity", () => {
-    const fields = (cfg: Raw) =>
-      (
-        field(schemaOf("poster", cfg), "rules")?.selector as {
-          object: { fields: Record<string, { selector: Record<string, Record<string, unknown>> }> };
-        }
-      ).object.fields;
-    const temp = fields(TEMP);
-    expect(temp.above.selector.number.unit_of_measurement).toBe(
-      hass.states["sensor.living_room_temperature"].attributes.unit_of_measurement,
+  it("list the rules in a list of its own, each rule's form in the value's unit or the entity's states", () => {
+    expect(field(schemaOf("poster", TEMP), "rules")?.selector).toEqual({
+      pro_cards_rules: {
+        entity: TEMP.entity,
+        unit: hass.states["sensor.living_room_temperature"].attributes.unit_of_measurement,
+        hide_label: true,
+      },
+    });
+    const ctx = { entity: "sensor.living_room_temperature", unit: "°C", numeric: true };
+    const temp = flat(ruleItemSchema(hass, {}, ctx));
+    expect(temp.find((s) => s.name === "above")?.selector).toEqual({
+      number: { mode: "box", unit_of_measurement: "°C" },
+    });
+    expect(temp.map((s) => s.name)).not.toContain("state");
+    // a state of the entity where its value is no number; a badge's rule writes a value
+    const light = flat(
+      ruleItemSchema(hass, {}, { entity: "light.kitchen", unit: "", numeric: false, badge: true }),
     );
-    expect(temp.state.selector).toEqual({ state: { entity_id: "sensor.living_room_temperature" } });
-    // nothing to pick without an entity
-    expect(fields({ name: "Hello" }).state.selector).toEqual({ text: {} });
+    expect(light.find((s) => s.name === "state")?.selector).toEqual({
+      state: { entity_id: "light.kitchen" },
+    });
+    expect(light.map((s) => s.name)).toContain("value");
+    expect(light.map((s) => s.name)).not.toContain("status");
   });
 });
 
