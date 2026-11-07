@@ -401,6 +401,28 @@ describe("card config schemas", () => {
         ],
       }),
     ).toBeNull();
+    // a control's shape, not a slider's or a switch's
+    const H2 = "climate.living_room";
+    expect(
+      validate({ type: "custom:tile-card-pro", entity: H2, control: { variant: "round" } }),
+    ).toBeNull();
+    expect(
+      validate({
+        type: "custom:tile-card-pro",
+        entity: H2,
+        control: { type: "stepper", variant: "square" },
+      }),
+    ).toBeNull();
+    expect(
+      validate({
+        type: "custom:tile-card-pro",
+        entity: "light.kitchen",
+        control: { type: "slider", variant: "round" },
+      }),
+    ).not.toBeNull();
+    expect(
+      validate({ type: "custom:tile-card-pro", entity: H2, control: { variant: "oval" } }),
+    ).not.toBeNull();
     // where the content sits in a taller tile or group
     expect(
       validate({ type: "custom:tile-card-pro", entity: H, vertical_align: "bottom" }),

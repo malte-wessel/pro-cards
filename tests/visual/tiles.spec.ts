@@ -172,6 +172,36 @@ add("to-controls", [
   t("media_player.living_room_speaker", { visual: false, control: false }),
 ]);
 
+// the controls' shape: square (the default) and round, every control that takes one; your own
+// buttons grey until on, then tinted in their entity's colour (or their own)
+const ROOM: Opts = {
+  name: "Living room",
+  icon: { name: "mdi:sofa-outline", style: "plain" },
+  secondary: "{{ states('sensor.living_room_temperature') }} °C",
+  control: {
+    type: "buttons",
+    options: [
+      { entity: "cover.living_room_blinds" },
+      { entity: "light.living_room" },
+      { entity: "light.to_lamp_off" },
+      { entity: "scene.dimmed", label: "Dim", color: "deep-purple" },
+    ],
+  },
+  grid_options: { columns: 12 },
+};
+const shapes = (variant: string) => [
+  t(null, { ...ROOM, control: { ...(ROOM.control as Opts), variant } }),
+  t("climate.living_room", { control: { variant } }),
+  t("climate.office", { control: { type: "segments", variant } }),
+  t("input_select.house_mode", { control: { type: "select", variant } }),
+  t("script.check_windows", { control: { type: "button", variant } }),
+  t("lock.front_door", { control: { type: "hold", variant } }),
+  t("media_player.living_room_speaker", { visual: false, control: { variant } }),
+];
+const SHAPE_STATES = { "light.to_lamp_off": like("light.living_room", "off") };
+add("to-controls-square", shapes("square"), { states: SHAPE_STATES });
+add("to-controls-round", shapes("round"), { states: SHAPE_STATES });
+
 // vertical: the icon on top, the name and the line centred, the controls below; each at the
 // columns it asks for
 const v = (entity: string | null, o: Opts = {}) => t(entity, { vertical: true, ...o });

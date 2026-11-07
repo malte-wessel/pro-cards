@@ -344,19 +344,43 @@ export const STYLE_CONTROLS = `
   /* custom buttons: each in its own colour (its --fe-color), soft until on, many of them wrap */
   .ctl-buttons.custom { flex: 0 1 auto; flex-wrap: wrap; min-width: 0; }
   .end > .ctl-buttons.custom, .val > .ctl-buttons.custom { justify-content: flex-end; }
-  .ctl-buttons.custom > button { background: color-mix(in srgb, var(--fe-color) 20%, transparent); color: var(--fe-color); transition: background-color .2s, color .2s; }
-  .ctl-buttons.custom > button.on { background: var(--fe-color); color: var(--text-primary-color, #fff); }
+  .ctl-buttons.custom > button { background-color: color-mix(in srgb, var(--fe-color) 20%, transparent); color: var(--fe-color); transition: background-color .2s, color .2s; }
+  .ctl-buttons.custom > button.on { background-color: var(--fe-color); color: var(--text-primary-color, #fff); }
   .ctl-buttons.custom > button.pending { animation: ctl-pulse 1s ease-in-out infinite; }
+  /* a kind card's: grey while off, a soft tint of their colour while on */
+  .ctl-buttons.custom.tint > button { background-color: var(--fe-track); color: var(--primary-text-color); }
+  .ctl-buttons.custom.tint > button.on { background-color: color-mix(in srgb, var(--fe-color) 20%, transparent); color: var(--fe-color); }
+  /* square controls (variant: square): rounded squares, as Home Assistant's tile features, in
+     the round ones' footprint (a tile's fit is the same either way) */
+  .ctl-buttons.square > button { border-radius: 10px; }
+  .ctl-buttons.square.sm > button { border-radius: 8px; }
+  .ctl-buttons.square > button.chip { border-radius: 10px; }
+  .ctl-buttons.square.sm > button.chip { border-radius: 8px; }
+  .ctl-stepper.square .round { border-radius: 10px; }
+  .ctl-stepper.square.sm .round { border-radius: 8px; }
+  .ctl-segments.square { border-radius: 12px; }
+  .ctl-segments.square .seg { border-radius: 9px; }
+  .ctl-segments.square.sm { border-radius: 10px; }
+  .ctl-segments.square.sm .seg { border-radius: 7px; }
+  .ctl-select.square { border-radius: 10px; }
+  .ctl-chip.square { border-radius: 10px; }
+  .ctl-chip.square.sm { border-radius: 8px; }
+  .ctl-hold.square { border-radius: 12px; }
+  .ctl-hold.square.sm { border-radius: 10px; }
+  /* a square hold fills from the left: a ring is round */
+  .ctl-hold.square { --fill: color-mix(in srgb, var(--fe-color) 45%, transparent); background-image: linear-gradient(var(--fill), var(--fill)); background-repeat: no-repeat; background-size: 0 100%; }
+  .ctl-hold.square:is(.armed, .holding) { background-size: 100% 100%; }
+  .ctl-hold.square.holding { transition: background-size 1s linear; }
   .ctl-buttons.custom > .chip { flex: 0 1 auto; display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; height: 32px; padding: 0 14px 0 10px; border: 0; border-radius: 999px; font-size: ${fs(13)}; font-weight: ${fw("medium")}; white-space: nowrap; cursor: pointer; --mdc-icon-size: 18px; }
   .ctl-buttons.custom > .chip span { overflow: hidden; text-overflow: ellipsis; }
   /* the colour stays on the icon and the tint; the label reads in the text colour until filled */
-  .ctl-buttons.custom > .chip:not(.on) span { color: var(--primary-text-color); }
+  .ctl-buttons.custom > .chip:not(.on) span, .ctl-buttons.custom.tint > .chip span { color: var(--primary-text-color); }
   .ctl-buttons.custom.sm > .chip { height: 28px; font-size: ${fs(12)}; padding: 0 12px 0 8px; --mdc-icon-size: 16px; }
-  /* a chip to hold fills from the left instead of a ring */
-  .ctl-buttons.custom > .chip.hold { --fill: var(--fe-color); background-image: linear-gradient(var(--fill), var(--fill)); background-repeat: no-repeat; background-size: 0 100%; touch-action: none; -webkit-user-select: none; user-select: none; }
-  .ctl-buttons.custom > .chip.hold.on { --fill: color-mix(in srgb, var(--fe-color) 45%, ${CARD_BG}); }
-  .ctl-buttons.custom > .chip.hold.armed { background-size: 100% 100%; --fill: color-mix(in srgb, var(--fe-color) 45%, transparent); }
-  .ctl-buttons.custom > .chip.hold.holding { background-size: 100% 100%; transition: background-size 1s linear; }
+  /* a chip or a square button to hold fills from the left instead of a ring */
+  :is(.ctl-buttons.custom > .chip, .ctl-buttons.square > button).hold { --fill: var(--fe-color); background-image: linear-gradient(var(--fill), var(--fill)); background-repeat: no-repeat; background-size: 0 100%; touch-action: none; -webkit-user-select: none; user-select: none; }
+  :is(.ctl-buttons.custom > .chip, .ctl-buttons.square > button).hold.on { --fill: color-mix(in srgb, var(--fe-color) 45%, ${CARD_BG}); }
+  :is(.ctl-buttons.custom > .chip, .ctl-buttons.square > button).hold.armed { background-size: 100% 100%; --fill: color-mix(in srgb, var(--fe-color) 45%, transparent); }
+  :is(.ctl-buttons.custom > .chip, .ctl-buttons.square > button).hold.holding { background-size: 100% 100%; transition: background-size 1s linear; }
   .ctl-stepper { display: flex; align-items: center; gap: 4px; flex: none; }
   .ctl-stepper .val { min-width: 48px; text-align: center; ${type(14, 20)} font-weight: ${fw("medium")}; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .ctl-stepper.sm .val { min-width: 40px; font-size: ${fs(13)}; }

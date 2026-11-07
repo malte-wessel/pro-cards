@@ -272,9 +272,22 @@
         },
         "confirm": {
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_confirm"
+        },
+        "variant": {
+          "type": "string",
+          "enum": ["round", "square"],
+          "description": "The control's shape: square (default: rounded squares, as Home Assistant's tile features) or round (pills and circles). Buttons, a stepper, segments, a select, a button and a hold; a slider and a switch have one shape"
         }
       },
       "additionalProperties": false,
+      "not": {
+        "required": ["type", "variant"],
+        "properties": {
+          "type": {
+            "enum": ["slider", "toggle"]
+          }
+        }
+      },
       "if": {
         "required": ["type"],
         "properties": {

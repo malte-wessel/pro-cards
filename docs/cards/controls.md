@@ -165,7 +165,7 @@ A slider sits at `block`, every other control at `end`. On a narrow card a contr
 `control: { type: buttons, options: [ … ] }` draws a row of your own buttons. Each button does one of three things:
 
 - **Runs its `entity`:** a scene or a script turns on, a button is pressed.
-- **Switches its `entity`:** a light, a switch or a fan. The button is filled while it is on.
+- **Switches its `entity`:** a light, a switch or a fan. The button is grey while it is off and tinted in its entity's colour while it is on.
 - **Runs its `action`:** any [Home Assistant action](https://www.home-assistant.io/dashboards/actions/), written like `tap_action`. Without a target, the action uses the button's `entity`: a robot's Dock button is `entity: vacuum.robot` with `action: { action: perform-action, perform_action: vacuum.return_to_base }`.
 
 A card of buttons needs no entity: a `name` and an `icon` are enough. A button with `visibility` comes and goes with its conditions; below, Movie shows only while the speaker plays.
@@ -203,9 +203,45 @@ A card of buttons needs no entity: a `name` and an `icon` are enough. A button w
 
 :::
 
+## Square or round
+
+Controls are rounded squares, as Home Assistant's tile features: buttons, a stepper's two buttons, segments, a select, a button and a hold. `variant: round` draws them as pills and circles. A slider and a switch have one shape, and a button standing in for the icon keeps the icon's circle. Your own buttons are grey while off and tinted while on, in their entity's colour unless they name one: a light amber, a fan cyan, a cover purple. A room's tile with its blinds, lights and fan, then the same round:
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  name: Living room
+  icon: { name: mdi:sofa-outline, style: plain }
+  secondary: "{{ states('sensor.living_room_temperature') }} °C · {{ states('sensor.living_room_humidity') }} %"
+  control:
+    type: buttons
+    options:
+      - entity: cover.living_room_blinds
+      - entity: light.living_room
+      - entity: fan.living_room
+  grid_options: { columns: 12 }
+- type: custom:tile-card-pro
+  name: Living room
+  icon: { name: mdi:sofa-outline, style: plain }
+  secondary: "{{ states('sensor.living_room_temperature') }} °C · {{ states('sensor.living_room_humidity') }} %"
+  control:
+    type: buttons
+    variant: round
+    options:
+      - entity: cover.living_room_blinds
+      - entity: light.living_room
+      - entity: fan.living_room
+  grid_options: { columns: 12 }
+```
+
+:::
+
+Without `type` it shapes the kind's own controls: `control: { variant: round }` on a cover, a thermostat or a media player.
+
 ## Hold to confirm
 
-Some things should not happen by a stray tap. A hold fills a ring around the button for a second and runs when it is full; letting go earlier cancels. There are three ways to get one:
+Some things should not happen by a stray tap. A hold fills the button for a second (a round one: a ring around it) and runs when it is full; letting go earlier cancels. There are three ways to get one:
 
 - `confirm: true` on the control turns a switch or buttons into holds, each button its own.
 - `control: hold` is a button to hold for any entity that switches.
@@ -247,7 +283,7 @@ Every control works without a pointer. Tab reaches the card first, then its cont
 | `segments` | one segment per option     | fan speeds, a thermostat's modes, selects                    |
 | `select`   | a dropdown                 | selects, input selects, modes                                |
 | `buttons`  | a row of buttons           | covers, media players, robots; or your own                   |
-| `button`   | one round button           | scripts, scenes, buttons                                     |
+| `button`   | one button                 | scripts, scenes, buttons                                     |
 | `hold`     | a button held for a second | locks, alarm panels; any switch that must not go by accident |
 
 ### Control options
@@ -260,16 +296,17 @@ Every control works without a pointer. Tab reaches the card first, then its cont
 | `attribute` | the shown one, else the mode | `hvac_mode`, `preset_mode` or `fan_mode`: what segments and a select change on a thermostat or fan.               |
 | `options`   | the entity's                 | Segments and select: the options, each `{ value, label, icon }`. Buttons: your own buttons (below).               |
 | `confirm`   | `false`                      | Turns the switch and the buttons into holds.                                                                      |
+| `variant`   | `square`                     | `square` or `round`: the shape of buttons, a stepper, segments, a select. Not a slider or a switch.               |
 
 ### Your own buttons
 
 Each entry of `options` with `type: buttons`. A button needs an `entity` or an `action`.
 
-| Key          | Default           | Description                                                                   |
-| ------------ | ----------------- | ----------------------------------------------------------------------------- |
-| `entity`     |                   | What the button runs or switches, and the target of its `action`.             |
-| `action`     | the entity's own  | A Home Assistant action to run (`perform-action`, `navigate`, `more-info` …). |
-| `label`      | none              | Text beside the icon. Without one the button is round.                        |
-| `icon`       | the entity's icon | `mdi:` icon.                                                                  |
-| `color`      | the card's colour | Colour token, hex or `var()`. A soft tint, filled while its entity is on.     |
-| `visibility` | always            | [Conditions](/guide/visibility): the button is drawn only while they hold.    |
+| Key          | Default           | Description                                                                      |
+| ------------ | ----------------- | -------------------------------------------------------------------------------- |
+| `entity`     |                   | What the button runs or switches, and the target of its `action`.                |
+| `action`     | the entity's own  | A Home Assistant action to run (`perform-action`, `navigate`, `more-info` …).    |
+| `label`      | none              | Text beside the icon. Without one the button holds its icon alone.               |
+| `icon`       | the entity's icon | `mdi:` icon.                                                                     |
+| `color`      | its entity's      | Colour token, hex or `var()`: the tint while its entity is on (else the card's). |
+| `visibility` | always            | [Conditions](/guide/visibility): the button is drawn only while they hold.       |

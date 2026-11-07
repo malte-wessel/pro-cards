@@ -2,7 +2,7 @@
 // hold to confirm. Each draws the entity's current value (or the value of a pending call) and
 // hands the service call to the card (ctx.ctl). A control swallows its pointer and key events so
 // the row's own tap / hold actions never fire.
-import { cssColor, domainOf } from "../../color.ts";
+import { activeColorCss, cssColor, domainOf } from "../../color.ts";
 import { fmtNumber } from "../../format.ts";
 import type { ActionConfig, ActionKind, HapticType, HassEntity } from "../../ha.ts";
 import { t } from "../../i18n.ts";
@@ -59,7 +59,7 @@ const button = (cls: string, label: string) => {
 };
 const root = (kind: string, p: Placement, idx: number, tag = "div") => {
   const el = document.createElement(tag);
-  el.className = `ctl ctl-${kind}${p.small ? " sm" : ""}`;
+  el.className = `ctl ctl-${kind}${p.small ? " sm" : ""}${p.square ? " square" : ""}`;
   el.dataset.idx = String(idx);
   guard(el);
   return el;
@@ -448,7 +448,8 @@ export const buttonsEl = (
     const btn = button(`round${b.primary ? " f" : ""}`, t(ctx.hass, b.labelKey));
     const ic =
       b.id === "play_pause" ? (m.st?.state === "playing" ? "mdi:pause" : "mdi:play") : b.icon;
-    if (p.confirm) btn.appendChild(ringEl());
+    // (a square button fills from the left as a chip does: a ring is round)
+    if (p.confirm && !p.square) btn.appendChild(ringEl());
     btn.appendChild(icon(ic));
     btn.classList.toggle("pending", pend === b.id);
     const run = () =>
@@ -471,11 +472,11 @@ export const buttonsEl = (
   return el;
 };
 
-// a lock or cover is filled while unlocked / open: that is no "pressed"
+// a lock or cover is on while unlocked / open: that is no "pressed"
 const OPEN_DOMAINS: ReadonlySet<string> = new Set(["lock", "cover"]);
 // `control: buttons` with `control_options`: one round button (or a chip with its label) per
-// entry, in its own colour; a button runs its entity (a scene, a script) or switches it (filled
-// while on), or runs its action. Each button keeps its own call in flight (host.buttonPending).
+// entry, on while its entity is (a kind card's grey until then, else tinted and filled while on); a
+// button runs its entity (a scene, a script) or switches it, or runs its action. Each button keeps its own call in flight (host.buttonPending).
 const customButtonsEl = (
   ctx: RenderCtx,
   ent: EntityItem,
@@ -486,6 +487,10 @@ const customButtonsEl = (
   const host = ctx.ctl as ControlHost;
   const el = root("buttons", p, idx);
   el.classList.add("custom");
+  // a kind card's buttons are grey until on, then tinted in their entity's colour; the entity
+  // cards' (no variant) keep their look: tinted in the card's colour, filled while on
+  const tint = ent.control?.variant != null;
+  if (tint) el.classList.add("tint");
   list.forEach((b, i) => {
     // a hidden button is left out; the others keep their index (their calls are keyed by it)
     if (ctx.shown && !ctx.shown(b.visibility)) return;
@@ -496,7 +501,8 @@ const customButtonsEl = (
       pending = host.buttonPending.has(`${idx}:${key}`);
     const btn = button(b.label ? "chip" : "round", name);
     if (!p.confirm) btn.title = name;
-    const color = cssColor(b.color);
+    // its own colour, else (tinted) its entity's while on (a light's amber), else the card's
+    const color = cssColor(b.color) ?? (tint ? activeColorCss(st) : null);
     if (color) btn.style.setProperty("--fe-color", color);
     // filled while on; a pending switch shows where it goes, a run flashes filled ("done")
     const active = buttonActive(b, st);
@@ -504,7 +510,7 @@ const customButtonsEl = (
     btn.classList.toggle("pending", pending && !runs);
     if (b.entity && !runs && !OPEN_DOMAINS.has(domainOf(b.entity)))
       btn.setAttribute("aria-pressed", String(active));
-    if (p.confirm && !b.label) btn.appendChild(ringEl());
+    if (p.confirm && !b.label && !p.square) btn.appendChild(ringEl());
     // its own icon, else its entity's, else a generic one
     btn.appendChild(iconEl(ctx, { icon: b.icon, fallbackIcon: "mdi:gesture-tap-button" }, st));
     if (b.label) {
@@ -730,7 +736,9 @@ const holdButton = (
   el.type = "button";
   if (p.position === "lead") el.classList.add("lead-size");
   el.setAttribute("aria-label", t(ctx.hass, "control.hold_to", { action }));
-  el.append(ringEl(), holdIcon(ctx, ent, m, p));
+  // (a square one fills from the left: a ring is round)
+  if (!p.square) el.appendChild(ringEl());
+  el.appendChild(holdIcon(ctx, ent, m, p));
   el.classList.toggle("pending", host.pending.has(idx));
   return el;
 };

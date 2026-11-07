@@ -101,6 +101,7 @@ export interface RawEntity extends RawItemOptions, RawActionDefaults {
   control_step?: unknown;
   control_options?: unknown;
   control_confirm?: boolean;
+  control_variant?: unknown;
   toggle?: boolean;
   visibility?: unknown;
   // header badges: the pill and its size, how the value is written, when it counts as stale (minutes

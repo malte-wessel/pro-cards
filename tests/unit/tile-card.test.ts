@@ -250,14 +250,16 @@ describe("tile-card config", () => {
   it("takes the control's options in one object, the kind's controls without a type", () => {
     const e = "light.desk_lamp";
     const slider = norm({ entity: e, control: { type: "slider", position: "block", step: 5 } });
-    expect(slider.entities[0].control).toEqual(
-      normalizeEntityCardConfig({
+    expect(slider.entities[0].control).toEqual({
+      ...normalizeEntityCardConfig({
         entity: e,
         control: "slider",
         control_position: "block",
         control_step: 5,
       }).entities[0].control,
-    );
+      // (square unless written: the entity cards' controls have no variant)
+      variant: "square",
+    });
     // without a type: the kind's own controls (the toggle at the line's end), its step changed
     const plain = norm({ entity: e }).entities[0].control;
     const stepped = norm({ entity: e, control: { step: 5 } }).entities[0].control;

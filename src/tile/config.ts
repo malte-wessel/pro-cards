@@ -18,6 +18,7 @@ import {
   kindConfigOf,
   normalizeCorner,
   normalizeKindItem,
+  shapeControl,
   TILE_ICON_TOGGLES,
   type KindConfig,
   type RawKindCardConfig,
@@ -151,6 +152,7 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
       main.control = auto && { ...auto, defaults: end };
     }
   }
+  shapeControl(main);
   // the badges at the end of the first row, and the status among them where the card says so
   const {
     statusIdx,

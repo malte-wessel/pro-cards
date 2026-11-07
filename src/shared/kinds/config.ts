@@ -22,6 +22,7 @@ import {
 import { DEFAULTS, ITEM_DEFAULTS, type BadgeSize, type BadgeStyle } from "../entity/constants.ts";
 import {
   CONTROL_ATTRIBUTES,
+  CONTROL_VARIANTS,
   CONTROL_POSITIONS,
   normalizeControl,
   type IconActions,
@@ -200,6 +201,11 @@ const inputsOf = (
   return out;
 };
 
+// a kind card's control: square unless written otherwise
+export const shapeControl = (item: EntityItem) => {
+  if (item.control) item.control = { ...item.control, variant: item.control.variant ?? "square" };
+};
+
 export const isObj = (v: unknown): v is Record<string, unknown> =>
   !!v && typeof v === "object" && !Array.isArray(v);
 
@@ -215,7 +221,7 @@ const iconAction = (written: RawAction | undefined, own: ActionConfig | undefine
 export const hasIconActions = (a: IconActions) => !!(a.tap || a.hold || a.dbl);
 
 // `control` as written: a control's name (as on the entity cards), true or false, or the control and
-// its options (`{ type, position, attribute, step, options, confirm }`; without `type` its options
+// its options (`{ type, position, attribute, step, options, confirm, variant }`; without `type` its options
 // change the kind's own controls), as the entity cards' flat keys
 const CONTROL_KEYS: Record<string, string> = {
   position: "control_position",
@@ -223,6 +229,7 @@ const CONTROL_KEYS: Record<string, string> = {
   step: "control_step",
   options: "control_options",
   confirm: "control_confirm",
+  variant: "control_variant",
 };
 const controlOf = (c: unknown, type: string): Partial<RawKindCardConfig> => {
   if (!isObj(c)) return {};
@@ -248,6 +255,11 @@ const controlOf = (c: unknown, type: string): Partial<RawKindCardConfig> => {
     throw new Error(
       `${type}: control: { attribute } must be one of ${CONTROL_ATTRIBUTES.join(" | ")}`,
     );
+  if (c.variant !== undefined && !oneOf(CONTROL_VARIANTS, c.variant))
+    throw new Error(`${type}: control: { variant } must be one of ${CONTROL_VARIANTS.join(" | ")}`);
+  // (a slider and a switch have one shape; without a type, the kind's own controls take it)
+  if (c.variant !== undefined && (c.type === "slider" || c.type === "toggle"))
+    throw new Error(`${type}: control: { variant } shapes buttons, not a ${String(c.type)}`);
   return out as Partial<RawKindCardConfig>;
 };
 
@@ -430,6 +442,9 @@ export const normalizeKindItem = (
     const c = normalizeControl({ ...own, control: "auto" }, ctx, "the card");
     main.control = c && kind.controls.length ? { ...c, defaults: [...kind.controls] } : null;
   }
+  // the poster's and the tile's controls are square unless the card says round (the entity
+  // cards' have no variant: their look of before)
+  shapeControl(main);
 
   // the icon's own actions, each as written or else the kind's
   const kindIcon = kind.iconActions?.(st) ?? {};

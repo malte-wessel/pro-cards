@@ -223,6 +223,17 @@ export const stateColorProperties = (
   return props;
 };
 
+// the colour an entity takes while it is active (on, open, playing), whatever its state now: a
+// button that switches it shows it while on and while it turns on; null for a domain HA does not
+// colour
+export const activeColorCss = (st: HassEntity | undefined): string | null => {
+  const domain = domainOf(st?.entity_id);
+  if (!STATE_COLORED_DOMAIN.has(domain)) return null;
+  return st && stateActive(st)
+    ? stateColorCss(st)
+    : `var(--state-${domain}-active-color, var(--state-active-color))`;
+};
+
 // HA's colour for an entity in `state` as a CSS value (nested var() fallbacks), or null
 export const stateColorCss = (st: HassEntity | undefined, state?: string): string | null => {
   const s = state !== undefined ? state : st?.state;

@@ -112,8 +112,11 @@ describe("poster-card config", () => {
   });
 
   it("takes the control's options in one object, as the entity card's flat keys", () => {
-    const flat = (cfg: Record<string, unknown>) =>
-      normalizeEntityCardConfig(cfg).entities[0].control;
+    // (square unless written: the entity cards' controls have no variant)
+    const flat = (cfg: Record<string, unknown>) => ({
+      ...normalizeEntityCardConfig(cfg).entities[0].control,
+      variant: "square",
+    });
     const C = "climate.living_room";
     expect(
       norm({
@@ -150,8 +153,31 @@ describe("poster-card config", () => {
       norm({ entity: S, control: { type: "segments" } }).entities[0].control,
     );
     expect(() => norm({ entity: S, control: { type: "segments", size: 2 } })).toThrow(
-      `${T}: control takes type, position, attribute, step, options, confirm, not size`,
+      `${T}: control takes type, position, attribute, step, options, confirm, variant, not size`,
     );
+  });
+
+  it("draws its controls square unless the card says round; a slider and a switch have one shape", () => {
+    const E = "climate.living_room";
+    const shapes = (cfg: Record<string, unknown>) =>
+      placementsOf(norm({ entity: E, ...cfg }).entities[0], "poster").map(
+        (p) => `${p.kind}${p.square ? " square" : ""}`,
+      );
+    expect(shapes({})).toEqual(["stepper square"]);
+    expect(shapes({ control: { variant: "round" } })).toEqual(["stepper"]);
+    expect(shapes({ control: { type: "segments" } })).toEqual(["segments square"]);
+    // a light's switch and slider: nothing to shape
+    expect(
+      placementsOf(norm({ entity: "light.living_room" }).entities[0], "poster").some(
+        (p) => p.square,
+      ),
+    ).toBe(false);
+    expect(() => norm({ entity: E, control: { variant: "oval" } })).toThrow(
+      `${T}: control: { variant } must be one of round | square`,
+    );
+    expect(() =>
+      norm({ entity: "light.x", control: { type: "slider", variant: "round" } }),
+    ).toThrow(`${T}: control: { variant } shapes buttons, not a slider`);
   });
 
   it("changes the kind's own controls with a control object that names no type", () => {
@@ -1011,6 +1037,45 @@ describe("poster-card drawing", () => {
         : [c.className],
     );
   const TEMP = "sensor.living_room_temperature";
+
+  it("draws your own buttons grey until on, then tinted in their entity's colour", () => {
+    set("light.kitchen", "on");
+    set("light.desk_lamp", "off");
+    const r = draw({
+      type: "custom:poster-card-pro",
+      name: "Scenes",
+      control: {
+        type: "buttons",
+        options: [
+          { entity: "light.kitchen" },
+          { entity: "light.desk_lamp" },
+          { entity: "scene.dimmed", color: "deep-purple" },
+        ],
+      },
+    });
+    const row = q(r, ".ctl-buttons.custom");
+    expect([...row.classList]).toEqual(expect.arrayContaining(["square", "tint"]));
+    const [kitchen, desk, scene] = [...row.children] as HTMLElement[];
+    expect(kitchen.classList.contains("on")).toBe(true);
+    expect(desk.classList.contains("on")).toBe(false);
+    // its entity's colour, while on and while off (the tint it turns on to)
+    expect(kitchen.style.getPropertyValue("--fe-color")).toContain("--state-light");
+    expect(desk.style.getPropertyValue("--fe-color")).toBe(
+      "var(--state-light-active-color, var(--state-active-color))",
+    );
+    // a colour of its own wins; a scene has no state colour of its own
+    expect(scene.style.getPropertyValue("--fe-color")).toBe("var(--deep-purple-color)");
+    // round, as written
+    const round = draw({
+      type: "custom:poster-card-pro",
+      name: "Scenes",
+      control: { type: "buttons", variant: "round", options: [{ entity: "light.kitchen" }] },
+    });
+    expect([...q(round, ".ctl-buttons.custom").classList]).toEqual(
+      expect.arrayContaining(["tint"]),
+    );
+    expect(q(round, ".ctl-buttons.custom").classList.contains("square")).toBe(false);
+  });
 
   it("has the lead and the corner on top and the body below, no label pill", () => {
     const r = draw({ entity: TEMP });

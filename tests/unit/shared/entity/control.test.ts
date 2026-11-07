@@ -52,6 +52,21 @@ describe("control config", () => {
     expect(ent({ control: undefined, toggle: true }).control?.kind).toBe("toggle");
     expect(ent({ control: undefined }).control).toBeNull();
   });
+  it("has no shape of its own on the entity cards: round, as before", () => {
+    expect(ent({ control: "buttons" }).control?.variant).toBeNull();
+    expect(placementsOf(ent({ control: "buttons" }), "tile")[0].square).toBeUndefined();
+  });
+  it("shapes all but a slider and a switch, and never a control standing in for the icon", () => {
+    const sq = (o: RawEntity, row: Parameters<typeof placementsOf>[1] = "tile") =>
+      placementsOf(ent({ control_variant: "square", ...o }), row).map(
+        (p) => `${p.kind}@${p.position}${p.square ? " square" : ""}`,
+      );
+    expect(sq({})).toEqual(["toggle@end", "slider@block"]);
+    expect(sq({ control: "hold" })).toEqual(["hold@end square"]);
+    expect(sq({ control: "buttons" })).toEqual(["buttons@end square"]);
+    expect(sq({ control: "hold" }, "item-row")).toEqual(["hold@lead"]);
+    expect(() => ent({ control_variant: "oval" })).toThrow(/control_variant must be one of/);
+  });
   it("rejects unknown names and positions", () => {
     expect(() => ent({ control: "knob" })).toThrow(/control must be one of/);
     expect(() => ent({ control_position: "top" })).toThrow(/control_position must be one of/);

@@ -23,6 +23,7 @@ import {
   DEFAULT_ATTRIBUTE,
   defaultPosition,
   sameAsOwn,
+  shaped,
   visualVariant,
   DOMAIN_CONTROLS,
   DOMAIN_AUTO,
@@ -1127,6 +1128,14 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
                 name: "control_buttons",
                 selector: { pro_cards_list: { key: "control_buttons", of: "button" } },
               },
+            ]
+          : []),
+        ...(shaped(drawn, data.control_confirm === true)
+          ? [
+              pick("control_variant", [
+                opt(DEFAULT, tr("variant.square")),
+                opt("round", tr("variant.round")),
+              ]),
             ]
           : []),
         ...(drawn.some((c) => c === "toggle" || c === "button" || c === "buttons")

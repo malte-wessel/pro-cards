@@ -5,6 +5,7 @@ import {
   resolveHex,
   safeColor,
   stateActive,
+  activeColorCss,
   stateColorCss,
   stateColorProperties,
 } from "../../../src/shared/color.ts";
@@ -78,6 +79,20 @@ describe("Home Assistant state colours", () => {
     expect(stateColorCss(st("light.a", "on"), "off")).toBe(
       "var(--state-light-off-color, var(--state-light-inactive-color, var(--state-inactive-color)))",
     );
+  });
+});
+
+describe("the colour an entity turns on to", () => {
+  it("is its state colour while active, else its domain's active colour; none for a sensor", () => {
+    expect(activeColorCss(st("light.a", "on"))).toBe(stateColorCss(st("light.a", "on")));
+    expect(activeColorCss(st("light.a", "off"))).toBe(
+      "var(--state-light-active-color, var(--state-active-color))",
+    );
+    expect(activeColorCss(st("cover.a", "closed"))).toBe(
+      "var(--state-cover-active-color, var(--state-active-color))",
+    );
+    expect(activeColorCss(st("sensor.a", "5"))).toBeNull();
+    expect(activeColorCss(undefined)).toBeNull();
   });
 });
 
