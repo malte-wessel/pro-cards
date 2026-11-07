@@ -396,15 +396,19 @@ describe("the editor's controls", () => {
     expect(ctl(SWITCH, {})).toEqual([]);
     expect(ctl(LIGHT, { control_type: "none" })).toEqual([]);
     // the light's toggle and slider
-    expect(ctl(LIGHT, {})).toEqual(["control_position", "control_step", "control_confirm"]);
-    expect(ctl(LIGHT, { control_type: "hold" })).toEqual(["control_position", "control_variant"]);
+    expect(ctl(LIGHT, {})).toEqual([
+      "control_position",
+      "control_step",
+      "control_variant",
+      "control_confirm",
+    ]);
+    expect(ctl(LIGHT, { control_type: "hold" })).toEqual(["control_position"]);
     expect(ctl(SWITCH, { control_type: "auto" })).toEqual(["control_position", "control_confirm"]);
     // a thermostat's modes
     expect(ctl({ entity: "climate.living_room" }, { control_type: "segments" })).toEqual([
       "control_position",
       "control_attribute",
       "control_options",
-      "control_variant",
     ]);
     expect(
       values(
@@ -423,12 +427,10 @@ describe("the editor's controls", () => {
     expect(ctl({ entity: "input_select.house_mode" }, { control_type: "select" })).toEqual([
       "control_position",
       "control_options",
-      "control_variant",
     ]);
     expect(ctl(LIGHT, { control_type: "buttons" })).toEqual([
       "control_position",
       "control_buttons",
-      "control_variant",
       "control_confirm",
     ]);
   });

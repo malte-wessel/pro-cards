@@ -401,27 +401,27 @@ describe("card config schemas", () => {
         ],
       }),
     ).toBeNull();
-    // a control's shape, not a slider's or a switch's
-    const H2 = "climate.living_room";
+    // a slider's look, the kind's own slider's without a type
+    const L = "light.kitchen";
     expect(
-      validate({ type: "custom:tile-card-pro", entity: H2, control: { variant: "round" } }),
+      validate({ type: "custom:tile-card-pro", entity: L, control: { variant: "line" } }),
     ).toBeNull();
     expect(
       validate({
         type: "custom:tile-card-pro",
-        entity: H2,
-        control: { type: "stepper", variant: "square" },
+        entity: L,
+        control: { type: "slider", variant: "bar" },
       }),
     ).toBeNull();
     expect(
       validate({
         type: "custom:tile-card-pro",
-        entity: "light.kitchen",
-        control: { type: "slider", variant: "round" },
+        entity: "climate.living_room",
+        control: { type: "stepper", variant: "line" },
       }),
     ).not.toBeNull();
     expect(
-      validate({ type: "custom:tile-card-pro", entity: H2, control: { variant: "oval" } }),
+      validate({ type: "custom:tile-card-pro", entity: L, control: { variant: "round" } }),
     ).not.toBeNull();
     // where the content sits in a taller tile or group
     expect(

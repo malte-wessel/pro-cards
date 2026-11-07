@@ -106,6 +106,9 @@ const STYLE_POSTER = `
      card draws every value smaller (PosterCard._fitValue) */
   .row.poster .big.word b { letter-spacing: 0; }
   .pbody > :is(.bar, .gauge, .ctl-slider, .ctl-segments, .ctl-buttons, .plot) { margin-top: 8px; }
+  /* a slider's bar is a control's height: it keeps only the body's gap below the value (whose line
+     already leaves room under the digits), so a light's poster at three rows keeps its brightness */
+  .pbody > .ctl-slider.thick { margin-top: 0; }
   .pbody > .gauge { align-self: center; }
   /* a gauge poster: the arc and its name centred across; the arc takes the room under the top line,
      from 80 px high (three rows at any width) up to 204 × 136, drawn whole in its box (cropped to
@@ -334,6 +337,15 @@ export const STYLE_CONTROLS = `
   ${STYLE_SLIDER}
   .end .ctl-slider, .val .ctl-slider { flex: 0 1 120px; width: 120px; min-width: 64px; }
   .ctl-slider.pending .fill { opacity: .55; }
+  /* a slider's bar (variant: bar, a kind card's default): Home Assistant's, filled to the value
+     with a handle in its fill, as tall as the other controls. The track clips the fill (so its
+     handle goes with it at the start); the bubble, placed on the slider, shows above it */
+  .ctl-slider.thick { position: relative; height: 36px; border-radius: 10px; }
+  .ctl-slider.thick .track { position: static; height: 100%; border-radius: 10px; overflow: hidden; background: color-mix(in srgb, var(--fe-color) 20%, transparent); }
+  .ctl-slider.thick .fill { position: relative; display: block; height: 100%; border-radius: 0; }
+  .ctl-slider.thick .fill::after { content: ""; position: absolute; top: 50%; right: 6px; width: 4px; height: 14px; margin-top: -7px; border-radius: 2px; background: var(--text-primary-color, #fff); }
+  .ctl-slider.thick .knob { display: none; }
+  .ctl-slider.thick .bubble { bottom: calc(100% + 6px); }
   .ctl-slider.pending .knob { background: transparent; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--fe-color) 55%, transparent); animation: ctl-pulse 1s ease-in-out infinite; }
   .ctl .round { flex: none; position: relative; width: 32px; height: 32px; border: 0; padding: 0; border-radius: 50%; background: var(--fe-track); color: var(--primary-text-color); display: flex; align-items: center; justify-content: center; cursor: pointer; --mdc-icon-size: 20px; }
   .ctl .round.s { width: 30px; height: 30px; --mdc-icon-size: 18px; }
@@ -350,23 +362,33 @@ export const STYLE_CONTROLS = `
   /* a kind card's: grey while off, a soft tint of their colour while on */
   .ctl-buttons.custom.tint > button { background-color: var(--fe-track); color: var(--primary-text-color); }
   .ctl-buttons.custom.tint > button.on { background-color: color-mix(in srgb, var(--fe-color) 20%, transparent); color: var(--fe-color); }
-  /* square controls (variant: square): rounded squares, as Home Assistant's tile features, in
-     the round ones' footprint (a tile's fit is the same either way) */
+  /* the poster's and the tile's controls (square): rounded squares, all as tall as a segments
+     control (36 px), as Home Assistant's tile features; the entity cards' keep their look of before */
   .ctl-buttons.square > button { border-radius: 10px; }
+  /* (4 px apart: three of them fit under a tile's line at half a phone's width) */
+  .ctl-buttons.square:not(.sm) { gap: 4px; }
+  .ctl-buttons.square:not(.sm) > button { width: 36px; height: 36px; }
   .ctl-buttons.square.sm > button { border-radius: 8px; }
   .ctl-buttons.square > button.chip { border-radius: 10px; }
+  .ctl-buttons.square:not(.sm) > button.chip { width: auto; }
   .ctl-buttons.square.sm > button.chip { border-radius: 8px; }
-  .ctl-stepper.square .round { border-radius: 10px; }
+  /* a stepper is one bar: minus, the value and plus in it (each 32 px wide, so the bar fits under
+     a tile's line at half a phone's width) */
+  .ctl-stepper.square:not(.sm) { height: 36px; gap: 0; border-radius: 10px; background: var(--fe-track); }
+  .ctl-stepper.square:not(.sm) .round { width: 32px; height: 36px; border-radius: 10px; background: transparent; }
   .ctl-stepper.square.sm .round { border-radius: 8px; }
   .ctl-segments.square { border-radius: 12px; }
   .ctl-segments.square .seg { border-radius: 9px; }
   .ctl-segments.square.sm { border-radius: 10px; }
   .ctl-segments.square.sm .seg { border-radius: 7px; }
   .ctl-select.square { border-radius: 10px; }
+  .ctl-select.square:not(.sm) { height: 36px; padding: 0 6px 0 12px; }
+  .ctl-select.square:not(.sm) select { height: 36px; line-height: 36px; font-size: ${fs(13)}; }
   .ctl-chip.square { border-radius: 10px; }
+  .ctl-chip.square:not(.sm) { height: 36px; }
   .ctl-chip.square.sm { border-radius: 8px; }
-  .ctl-hold.square { border-radius: 12px; }
-  .ctl-hold.square.sm { border-radius: 10px; }
+  .ctl-hold.square { border-radius: 10px; }
+  .ctl-hold.square.sm { border-radius: 8px; }
   /* a square hold fills from the left: a ring is round */
   .ctl-hold.square { --fill: color-mix(in srgb, var(--fe-color) 45%, transparent); background-image: linear-gradient(var(--fill), var(--fill)); background-repeat: no-repeat; background-size: 0 100%; }
   .ctl-hold.square:is(.armed, .holding) { background-size: 100% 100%; }

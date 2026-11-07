@@ -52,19 +52,30 @@ describe("control config", () => {
     expect(ent({ control: undefined, toggle: true }).control?.kind).toBe("toggle");
     expect(ent({ control: undefined }).control).toBeNull();
   });
-  it("has no shape of its own on the entity cards: round, as before", () => {
+  it("has no shape of its own on the entity cards: their look of before", () => {
     expect(ent({ control: "buttons" }).control?.variant).toBeNull();
     expect(placementsOf(ent({ control: "buttons" }), "tile")[0].square).toBeUndefined();
+    expect(placementsOf(ent({ control: "slider" }), "tile")[0].thick).toBeUndefined();
   });
-  it("shapes all but a slider and a switch, and never a control standing in for the icon", () => {
+  it("on a kind card squares all but a slider and a switch, never a control standing in for the icon", () => {
+    // (as a kind card's config leaves it: shapeControl)
+    const kindCard = (o: RawEntity) => {
+      const e = ent(o);
+      return {
+        ...e,
+        control: e.control && { ...e.control, square: true, variant: "bar" as const },
+      };
+    };
     const sq = (o: RawEntity, row: Parameters<typeof placementsOf>[1] = "tile") =>
-      placementsOf(ent({ control_variant: "square", ...o }), row).map(
-        (p) => `${p.kind}@${p.position}${p.square ? " square" : ""}`,
+      placementsOf(kindCard(o), row).map(
+        (p) => `${p.kind}@${p.position}${p.square ? " square" : ""}${p.thick ? " bar" : ""}`,
       );
-    expect(sq({})).toEqual(["toggle@end", "slider@block"]);
+    expect(sq({})).toEqual(["toggle@end", "slider@block bar"]);
     expect(sq({ control: "hold" })).toEqual(["hold@end square"]);
     expect(sq({ control: "buttons" })).toEqual(["buttons@end square"]);
     expect(sq({ control: "hold" }, "item-row")).toEqual(["hold@lead"]);
+    // a small row's slider keeps the line
+    expect(sq({ control: "slider" }, "cell")).toEqual(["slider@block"]);
     expect(() => ent({ control_variant: "oval" })).toThrow(/control_variant must be one of/);
   });
   it("rejects unknown names and positions", () => {

@@ -275,8 +275,8 @@
         },
         "variant": {
           "type": "string",
-          "enum": ["round", "square"],
-          "description": "The control's shape: square (default: rounded squares, as Home Assistant's tile features) or round (pills and circles). Buttons, a stepper, segments, a select, a button and a hold; a slider and a switch have one shape"
+          "enum": ["bar", "line"],
+          "description": "A slider's look: bar (default: a thick bar filled to the value, as Home Assistant's tile features) or line (a thin track with a round knob). Without type it changes the kind's own slider"
         }
       },
       "additionalProperties": false,
@@ -284,7 +284,7 @@
         "required": ["type", "variant"],
         "properties": {
           "type": {
-            "enum": ["slider", "toggle"]
+            "not": { "const": "slider" }
           }
         }
       },

@@ -521,16 +521,20 @@ describe("the editor form: the controls", () => {
       ...CLIMATE,
       control: { type: "segments", attribute: "preset_mode" },
     });
-    // round is written, square (the default) is not, and a slider takes no shape
-    expect(edit(CLIMATE, { control_type: "segments", control_variant: "round" })).toEqual({
-      ...CLIMATE,
-      control: { type: "segments", variant: "round" },
-    });
-    expect(formOf({ ...CLIMATE, control: { variant: "round" } }).control_variant).toBe("round");
-    expect(formOf({ ...CLIMATE, control: { variant: "square" } }).control_variant).toBe(DEFAULT);
-    expect(edit(LIGHT, { control_type: "slider", control_variant: "round" })).toEqual({
+    // a slider's line is written, the bar (the default) is not, and nothing else takes a variant
+    expect(edit(LIGHT, { control_type: "slider", control_variant: "line" })).toEqual({
       ...LIGHT,
-      control: "slider",
+      control: { type: "slider", variant: "line" },
+    });
+    expect(edit(LIGHT, { control_variant: "line" })).toEqual({
+      ...LIGHT,
+      control: { variant: "line" },
+    });
+    expect(formOf({ ...LIGHT, control: { variant: "line" } }).control_variant).toBe("line");
+    expect(formOf({ ...LIGHT, control: { variant: "bar" } }).control_variant).toBe(DEFAULT);
+    expect(edit(CLIMATE, { control_type: "segments", control_variant: "line" })).toEqual({
+      ...CLIMATE,
+      control: "segments",
     });
     // the defaults of its selects write nothing
     expect(

@@ -22,7 +22,7 @@ import {
 import { DEFAULTS, ITEM_DEFAULTS, type BadgeSize, type BadgeStyle } from "../entity/constants.ts";
 import {
   CONTROL_ATTRIBUTES,
-  CONTROL_VARIANTS,
+  SLIDER_VARIANTS,
   CONTROL_POSITIONS,
   normalizeControl,
   type IconActions,
@@ -201,9 +201,10 @@ const inputsOf = (
   return out;
 };
 
-// a kind card's control: square unless written otherwise
+// a kind card's control: rounded squares of one height, a slider a bar unless written otherwise
 export const shapeControl = (item: EntityItem) => {
-  if (item.control) item.control = { ...item.control, variant: item.control.variant ?? "square" };
+  if (item.control)
+    item.control = { ...item.control, square: true, variant: item.control.variant ?? "bar" };
 };
 
 export const isObj = (v: unknown): v is Record<string, unknown> =>
@@ -255,11 +256,13 @@ const controlOf = (c: unknown, type: string): Partial<RawKindCardConfig> => {
     throw new Error(
       `${type}: control: { attribute } must be one of ${CONTROL_ATTRIBUTES.join(" | ")}`,
     );
-  if (c.variant !== undefined && !oneOf(CONTROL_VARIANTS, c.variant))
-    throw new Error(`${type}: control: { variant } must be one of ${CONTROL_VARIANTS.join(" | ")}`);
-  // (a slider and a switch have one shape; without a type, the kind's own controls take it)
-  if (c.variant !== undefined && (c.type === "slider" || c.type === "toggle"))
-    throw new Error(`${type}: control: { variant } shapes buttons, not a ${String(c.type)}`);
+  if (c.variant !== undefined && !oneOf(SLIDER_VARIANTS, c.variant))
+    throw new Error(`${type}: control: { variant } must be one of ${SLIDER_VARIANTS.join(" | ")}`);
+  // (a slider's alone; without a type, the kind's own slider takes it)
+  if (c.variant !== undefined && c.type !== undefined && c.type !== "slider")
+    throw new Error(
+      `${type}: control: { variant } is a slider's (${SLIDER_VARIANTS.join(" | ")}), not a ${String(c.type)}'s`,
+    );
   return out as Partial<RawKindCardConfig>;
 };
 
@@ -442,8 +445,8 @@ export const normalizeKindItem = (
     const c = normalizeControl({ ...own, control: "auto" }, ctx, "the card");
     main.control = c && kind.controls.length ? { ...c, defaults: [...kind.controls] } : null;
   }
-  // the poster's and the tile's controls are square unless the card says round (the entity
-  // cards' have no variant: their look of before)
+  // the poster's and the tile's controls are rounded squares of one height, a slider a bar
+  // unless the card says line (the entity cards' keep their look of before)
   shapeControl(main);
 
   // the icon's own actions, each as written or else the kind's

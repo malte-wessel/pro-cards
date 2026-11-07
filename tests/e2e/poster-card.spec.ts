@@ -1106,7 +1106,8 @@ test.describe("poster value fit", () => {
         { ...cfg, grid_options: { columns: 6, rows: 3 } },
         { ...cfg, grid_options: { columns: 12, rows: 4 } },
       ],
-      { width: 400 },
+      // (half of it wide enough for the robot's two buttons beside a shrunk value)
+      { width: 440 },
     );
     const small = card(page, 0),
       big = card(page, 1);

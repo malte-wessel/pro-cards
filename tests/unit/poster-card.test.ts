@@ -112,10 +112,11 @@ describe("poster-card config", () => {
   });
 
   it("takes the control's options in one object, as the entity card's flat keys", () => {
-    // (square unless written: the entity cards' controls have no variant)
+    // (rounded squares, a slider a bar unless written: the entity cards' controls keep their look)
     const flat = (cfg: Record<string, unknown>) => ({
       ...normalizeEntityCardConfig(cfg).entities[0].control,
-      variant: "square",
+      square: true,
+      variant: "bar",
     });
     const C = "climate.living_room";
     expect(
@@ -157,27 +158,25 @@ describe("poster-card config", () => {
     );
   });
 
-  it("draws its controls square unless the card says round; a slider and a switch have one shape", () => {
-    const E = "climate.living_room";
+  it("draws its controls in rounded squares and its slider as a bar unless the card says line", () => {
     const shapes = (cfg: Record<string, unknown>) =>
-      placementsOf(norm({ entity: E, ...cfg }).entities[0], "poster").map(
-        (p) => `${p.kind}${p.square ? " square" : ""}`,
+      placementsOf(norm(cfg).entities[0], "poster").map(
+        (p) => `${p.kind}${p.square ? " square" : ""}${p.thick ? " bar" : ""}`,
       );
-    expect(shapes({})).toEqual(["stepper square"]);
-    expect(shapes({ control: { variant: "round" } })).toEqual(["stepper"]);
-    expect(shapes({ control: { type: "segments" } })).toEqual(["segments square"]);
-    // a light's switch and slider: nothing to shape
-    expect(
-      placementsOf(norm({ entity: "light.living_room" }).entities[0], "poster").some(
-        (p) => p.square,
-      ),
-    ).toBe(false);
-    expect(() => norm({ entity: E, control: { variant: "oval" } })).toThrow(
-      `${T}: control: { variant } must be one of round | square`,
+    const E = "climate.living_room";
+    expect(shapes({ entity: E })).toEqual(["stepper square"]);
+    expect(shapes({ entity: E, control: { type: "segments" } })).toEqual(["segments square"]);
+    // a light's switch keeps its shape; its slider is a bar, or the line where the card says so
+    const L = "light.living_room";
+    expect(shapes({ entity: L })).toEqual(["toggle", "slider bar"]);
+    expect(shapes({ entity: L, control: { variant: "line" } })).toEqual(["toggle", "slider"]);
+    expect(shapes({ entity: L, control: { type: "slider", variant: "line" } })).toEqual(["slider"]);
+    expect(() => norm({ entity: L, control: { variant: "oval" } })).toThrow(
+      `${T}: control: { variant } must be one of bar | line`,
     );
-    expect(() =>
-      norm({ entity: "light.x", control: { type: "slider", variant: "round" } }),
-    ).toThrow(`${T}: control: { variant } shapes buttons, not a slider`);
+    expect(() => norm({ entity: E, control: { type: "stepper", variant: "line" } })).toThrow(
+      `${T}: control: { variant } is a slider's (bar | line), not a stepper's`,
+    );
   });
 
   it("changes the kind's own controls with a control object that names no type", () => {
@@ -1065,16 +1064,14 @@ describe("poster-card drawing", () => {
     );
     // a colour of its own wins; a scene has no state colour of its own
     expect(scene.style.getPropertyValue("--fe-color")).toBe("var(--deep-purple-color)");
-    // round, as written
-    const round = draw({
-      type: "custom:poster-card-pro",
-      name: "Scenes",
-      control: { type: "buttons", variant: "round", options: [{ entity: "light.kitchen" }] },
-    });
-    expect([...q(round, ".ctl-buttons.custom").classList]).toEqual(
-      expect.arrayContaining(["tint"]),
-    );
-    expect(q(round, ".ctl-buttons.custom").classList.contains("square")).toBe(false);
+  });
+
+  it("draws a slider as a bar unless the card says line", () => {
+    set("light.kitchen", "on", { brightness: 128 });
+    const slider = (control: Record<string, unknown>) =>
+      q(draw({ type: "custom:poster-card-pro", entity: "light.kitchen", control }), ".ctl-slider");
+    expect(slider({ type: "slider" }).classList.contains("thick")).toBe(true);
+    expect(slider({ type: "slider", variant: "line" }).classList.contains("thick")).toBe(false);
   });
 
   it("has the lead and the corner on top and the body below, no label pill", () => {

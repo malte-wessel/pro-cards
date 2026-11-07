@@ -29,10 +29,9 @@ export type ControlPosition = (typeof CONTROL_POSITIONS)[number];
 // the mode a segments / select control sets on a climate or fan entity (`control_attribute`)
 export const CONTROL_ATTRIBUTES = ["hvac_mode", "preset_mode", "fan_mode"] as const;
 export type ControlAttribute = (typeof CONTROL_ATTRIBUTES)[number];
-// a control's shape: round (pills and circles) or square (rounded squares, as Home Assistant's
-// tile features); a slider and a switch have one shape
-export const CONTROL_VARIANTS = ["round", "square"] as const;
-export type ControlVariant = (typeof CONTROL_VARIANTS)[number];
+// a slider's look: a thick bar filled to the value (Home Assistant's) or a line with a knob
+export const SLIDER_VARIANTS = ["bar", "line"] as const;
+export type SliderVariant = (typeof SLIDER_VARIANTS)[number];
 
 export interface ControlOption {
   value: string;
@@ -61,8 +60,11 @@ export interface ControlConfig {
   // `control: buttons` with `control_options`: the buttons drawn (null: the domain's own)
   buttons: CustomButton[] | null;
   confirm: boolean;
-  // its shape (null: round)
-  variant: ControlVariant | null;
+  // the slider's look (null: the line)
+  variant: SliderVariant | null;
+  // drawn as the poster's and the tile's: rounded squares of one height (the entity cards' keep
+  // their look of before)
+  square?: boolean;
   // what `auto` draws when a card's kind decides it (the poster's kinds), in place of the domain's
   defaults?: Placement[];
 }
@@ -72,8 +74,10 @@ export interface Placement {
   position: ControlPosition;
   small: boolean;
   confirm?: boolean;
-  // drawn in rounded squares (`variant: square`)
+  // drawn in a rounded square of the controls' height (a kind card's)
   square?: boolean;
+  // a slider drawn as a bar (`variant: bar`)
+  thick?: boolean;
 }
 // the row kinds the fill functions draw (the `.row` classes; items split by their layout)
 export type RowKind =
@@ -211,9 +215,9 @@ export const normalizeControl = (
       `${ctx.type}: ${label}.control_attribute must be one of ${CONTROL_ATTRIBUTES.join(" | ")}`,
     );
   const cv = raw.control_variant;
-  if (cv !== undefined && cv !== null && !oneOf(CONTROL_VARIANTS, cv))
+  if (cv !== undefined && cv !== null && !oneOf(SLIDER_VARIANTS, cv))
     throw new Error(
-      `${ctx.type}: ${label}.control_variant must be one of ${CONTROL_VARIANTS.join(" | ")}`,
+      `${ctx.type}: ${label}.control_variant must be one of ${SLIDER_VARIANTS.join(" | ")}`,
     );
   const shown = raw.attribute;
   const step = numOrNull(raw.control_step);
@@ -226,7 +230,7 @@ export const normalizeControl = (
     // filled in by normalizeEntity, which parses the actions of the buttons
     buttons: null,
     confirm: !!raw.control_confirm,
-    variant: oneOf(CONTROL_VARIANTS, cv) ? cv : null,
+    variant: oneOf(SLIDER_VARIANTS, cv) ? cv : null,
   };
 };
 
@@ -236,8 +240,8 @@ const BLOCK_ROWS: ReadonlySet<RowKind> = new Set(["tile", "poster", "list", "her
 const SMALL_ROWS: ReadonlySet<RowKind> = new Set(["cell", "item-column", "field", "hval"]);
 // kinds that can stand in for the lead of a row item
 const LEAD_KINDS: ReadonlySet<ControlKind> = new Set(["toggle", "button", "hold"]);
-// the controls that take a variant: all but the slider and the switch
-export const VARIANT_KINDS: ReadonlySet<ControlKind> = new Set([
+// the controls drawn in rounded squares on a kind card: all but the slider and the switch
+export const SQUARE_KINDS: ReadonlySet<ControlKind> = new Set([
   "stepper",
   "segments",
   "buttons",
@@ -374,9 +378,8 @@ export const placementsOf = (ent: EntityItem, row: RowKind): Placement[] => {
       small: SMALL_ROWS.has(row),
       ...(x.confirm ? { confirm: true } : {}),
       // (one standing in for the icon keeps the icon's circle)
-      ...(c.variant === "square" && VARIANT_KINDS.has(kind) && position !== "lead"
-        ? { square: true }
-        : {}),
+      ...(c.square && SQUARE_KINDS.has(kind) && position !== "lead" ? { square: true } : {}),
+      ...(kind === "slider" && c.variant === "bar" && !SMALL_ROWS.has(row) ? { thick: true } : {}),
     });
   }
   return out;

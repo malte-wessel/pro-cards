@@ -168,11 +168,22 @@ A slider sits at `block`, every other control at `end`. On a narrow card a contr
 - **Switches its `entity`:** a light, a switch or a fan. The button is grey while it is off and tinted in its entity's colour while it is on.
 - **Runs its `action`:** any [Home Assistant action](https://www.home-assistant.io/dashboards/actions/), written like `tap_action`. Without a target, the action uses the button's `entity`: a robot's Dock button is `entity: vacuum.robot` with `action: { action: perform-action, perform_action: vacuum.return_to_base }`.
 
-A card of buttons needs no entity: a `name` and an `icon` are enough. A button with `visibility` comes and goes with its conditions; below, Movie shows only while the speaker plays.
+A card of buttons needs no entity: a `name` and an `icon` are enough. A button takes its entity's colour (a light amber, a fan cyan, a cover purple) unless it names one. A button with `visibility` comes and goes with its conditions; below, Movie shows only while the speaker plays.
 
 ::: live
 
 ```yaml
+- type: custom:tile-card-pro
+  name: Living room
+  icon: { name: mdi:sofa-outline, style: plain }
+  secondary: "{{ states('sensor.living_room_temperature') }} °C · {{ states('sensor.living_room_humidity') }} %"
+  control:
+    type: buttons
+    options:
+      - entity: cover.living_room_blinds
+      - entity: light.living_room
+      - entity: fan.living_room
+  grid_options: { columns: 12 }
 - type: custom:tile-card-pro
   name: Evening
   icon: mdi:weather-night
@@ -203,45 +214,37 @@ A card of buttons needs no entity: a `name` and an `icon` are enough. A button w
 
 :::
 
-## Square or round
+## Bar or line
 
-Controls are rounded squares, as Home Assistant's tile features: buttons, a stepper's two buttons, segments, a select, a button and a hold. `variant: round` draws them as pills and circles. A slider and a switch have one shape, and a button standing in for the icon keeps the icon's circle. Your own buttons are grey while off and tinted while on, in their entity's colour unless they name one: a light amber, a fan cyan, a cover purple. A room's tile with its blinds, lights and fan, then the same round:
+A slider is a bar, as Home Assistant's tile features draw it: filled to the value, with a short handle in the fill. `variant: line` draws a thin line with a round knob instead. Without `type` it changes the kind's own slider, a light's brightness or a player's volume: `control: { variant: line }`.
 
 ::: live
 
 ```yaml
 - type: custom:tile-card-pro
-  name: Living room
-  icon: { name: mdi:sofa-outline, style: plain }
-  secondary: "{{ states('sensor.living_room_temperature') }} °C · {{ states('sensor.living_room_humidity') }} %"
-  control:
-    type: buttons
-    options:
-      - entity: cover.living_room_blinds
-      - entity: light.living_room
-      - entity: fan.living_room
-  grid_options: { columns: 12 }
+  entity: light.living_room
+  control: slider
+  grid_options: { columns: 6 }
 - type: custom:tile-card-pro
-  name: Living room
-  icon: { name: mdi:sofa-outline, style: plain }
-  secondary: "{{ states('sensor.living_room_temperature') }} °C · {{ states('sensor.living_room_humidity') }} %"
-  control:
-    type: buttons
-    variant: round
-    options:
-      - entity: cover.living_room_blinds
-      - entity: light.living_room
-      - entity: fan.living_room
-  grid_options: { columns: 12 }
+  entity: light.living_room
+  control: { type: slider, variant: line }
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: media_player.living_room_speaker
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: media_player.living_room_speaker
+  control: { variant: line }
+  grid_options: { columns: 6 }
 ```
 
 :::
 
-Without `type` it shapes the kind's own controls: `control: { variant: round }` on a cover, a thermostat or a media player.
+Every other control is a rounded square of the same height: buttons, a stepper (minus, the value and plus in one bar), segments, a select, a button and a hold. A switch keeps its shape, and a button standing in for the icon keeps the icon's circle.
 
 ## Hold to confirm
 
-Some things should not happen by a stray tap. A hold fills the button for a second (a round one: a ring around it) and runs when it is full; letting go earlier cancels. There are three ways to get one:
+Some things should not happen by a stray tap. A hold fills the button for a second (one standing in for the icon: a ring around it) and runs when it is full; letting go earlier cancels. There are three ways to get one:
 
 - `confirm: true` on the control turns a switch or buttons into holds, each button its own.
 - `control: hold` is a button to hold for any entity that switches.
@@ -296,7 +299,7 @@ Every control works without a pointer. Tab reaches the card first, then its cont
 | `attribute` | the shown one, else the mode | `hvac_mode`, `preset_mode` or `fan_mode`: what segments and a select change on a thermostat or fan.               |
 | `options`   | the entity's                 | Segments and select: the options, each `{ value, label, icon }`. Buttons: your own buttons (below).               |
 | `confirm`   | `false`                      | Turns the switch and the buttons into holds.                                                                      |
-| `variant`   | `square`                     | `square` or `round`: the shape of buttons, a stepper, segments, a select. Not a slider or a switch.               |
+| `variant`   | `bar`                        | A slider's look: `bar` (filled to the value) or `line` (a thin line with a knob).                                 |
 
 ### Your own buttons
 

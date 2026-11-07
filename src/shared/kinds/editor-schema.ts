@@ -23,7 +23,6 @@ import {
   DEFAULT_ATTRIBUTE,
   defaultPosition,
   sameAsOwn,
-  shaped,
   visualVariant,
   DOMAIN_CONTROLS,
   DOMAIN_AUTO,
@@ -1130,11 +1129,11 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
               },
             ]
           : []),
-        ...(shaped(drawn, data.control_confirm === true)
+        ...(drawn.includes("slider")
           ? [
               pick("control_variant", [
-                opt(DEFAULT, tr("variant.square")),
-                opt("round", tr("variant.round")),
+                opt(DEFAULT, tr("variant.bar")),
+                opt("line", tr("variant.line")),
               ]),
             ]
           : []),

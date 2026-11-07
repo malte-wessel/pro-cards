@@ -3,7 +3,7 @@
 // is the shortest YAML that draws the same: nothing for the kind's default, a name for a thing
 // without options, `{ type, … }` else. Keys the form does not show are kept as written.
 import { setOrDrop } from "../editor.ts";
-import { VARIANT_KINDS, type ControlKind } from "../entity/control.ts";
+import type { ControlKind } from "../entity/control.ts";
 import type { CardConfigBase, HaFormData } from "../ha.ts";
 import { isObj, placeDefaults } from "./config.ts";
 import { canRead, INPUT_KEYS, kindKeysOf, unusedKeys } from "./detect.ts";
@@ -567,8 +567,8 @@ export const configToForm = (
         ? DEFAULT
         : ctl.attribute;
     d.control_confirm = ctl.confirm === true;
-    // (square, written, is the default)
-    d.control_variant = ctl.variant === "round" ? "round" : DEFAULT;
+    // (the bar, written, is the default)
+    d.control_variant = ctl.variant === "line" ? "line" : DEFAULT;
     // buttons' options as buttons, also on the kind's own (a cover's, written as Buttons)
     const drawn = drawnControls(d.control_type as string, c.entity, kind, thing);
     if (drawn.includes("buttons")) d.control_buttons = listToForm(ctl.options, BUTTON_KEYS);
@@ -676,10 +676,6 @@ export const drawnControls = (
         ? []
         : [type];
 
-// whether what it draws takes a shape: anything but a slider and a switch, a switch held to confirm
-export const shaped = (drawn: readonly string[], confirm: boolean) =>
-  drawn.some((c) => VARIANT_KINDS.has(c as ControlKind) || (confirm && c === "toggle"));
-
 // only the options what it draws takes (a slider's step goes when it becomes a toggle)
 const controlFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknown => {
   const type = data.control_type as string;
@@ -693,8 +689,7 @@ const controlFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknow
   if (draws("segments", "select") && chosen(data.control_attribute))
     o.attribute = data.control_attribute;
   if (draws("toggle", "button", "buttons") && data.control_confirm === true) o.confirm = true;
-  if (shaped(drawn, o.confirm === true) && chosen(data.control_variant))
-    o.variant = data.control_variant;
+  if (draws("slider") && chosen(data.control_variant)) o.variant = data.control_variant;
   const opts = draws("buttons")
     ? listFromForm(data.control_buttons, BUTTON_KEYS, null)
     : draws("segments", "select")

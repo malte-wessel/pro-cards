@@ -59,7 +59,8 @@ const button = (cls: string, label: string) => {
 };
 const root = (kind: string, p: Placement, idx: number, tag = "div") => {
   const el = document.createElement(tag);
-  el.className = `ctl ctl-${kind}${p.small ? " sm" : ""}${p.square ? " square" : ""}`;
+  // (a small slider, a table's, keeps the line: a bar is a control's height)
+  el.className = `ctl ctl-${kind}${p.small ? " sm" : ""}${p.square ? " square" : ""}${p.thick && !p.small ? " thick" : ""}`;
   el.dataset.idx = String(idx);
   guard(el);
   return el;
@@ -489,7 +490,7 @@ const customButtonsEl = (
   el.classList.add("custom");
   // a kind card's buttons are grey until on, then tinted in their entity's colour; the entity
   // cards' (no variant) keep their look: tinted in the card's colour, filled while on
-  const tint = ent.control?.variant != null;
+  const tint = !!ent.control?.square;
   if (tint) el.classList.add("tint");
   list.forEach((b, i) => {
     // a hidden button is left out; the others keep their index (their calls are keyed by it)
