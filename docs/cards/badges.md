@@ -132,7 +132,7 @@ grid_options: { columns: 6 }
 
 ## Switches, taps and visibility
 
-`control: toggle` puts a switch at the end of a badge. It is the one control a badge holds; the badge itself keeps its own tap.
+`control: toggle` puts a switch at the end of a badge: a round button with the power icon, grey while off and filled in the badge's colour while on. It is the one control a badge holds; the badge itself keeps its own tap.
 
 A badge takes its own taps. `tap_action`, `hold_action` and `double_tap_action` act on the badge's entity, as described in [Actions & hover](/cards/actions). Without them a badge takes the card's actions on its own entity: more-info by default.
 
@@ -266,7 +266,7 @@ A badge is an entity id, or an object with these keys. Every key is optional.
 | `size`             | see below                  | `s`, `m` or `l` (24, 30 or 36 px high).                                                                                              |
 | `format`           | `auto`                     | `auto`, `power` (W / kW / MW), `duration` or `relative`.                                                                             |
 | `stale_after`      | –                          | Grey, with its age, when the entity has not reported for this long: minutes, or `90s`, `30min`, `2h`, `1d`.                          |
-| `control`          | –                          | `toggle`: a switch at the badge's end.                                                                                               |
+| `control`          | –                          | `toggle`: a switch at the badge's end, a round power button.                                                                         |
 | `tap_action` …     | the card's                 | `tap_action`, `hold_action`, `double_tap_action`, on the badge's own entity.                                                         |
 | `hover`            | the card's                 | Show Home Assistant's hover and press layers on the badge.                                                                           |
 | `visibility`       | –                          | Conditions; a hidden badge takes no room.                                                                                            |

@@ -275,8 +275,8 @@
         },
         "variant": {
           "type": "string",
-          "enum": ["bar", "line"],
-          "description": "A slider's look: bar (default: a thick bar filled to the value, as Home Assistant's tile features) or line (a thin track with a round knob). Without type it changes the kind's own slider"
+          "enum": ["fill", "tinted"],
+          "description": "How a switch, a button, buttons and segments show what is on or chosen: fill (default: filled in its colour, the icon white) or tinted (its colour at 20 %, the icon in its colour). A button, with no on state, rests that way. Without type it changes the kind's own controls"
         }
       },
       "additionalProperties": false,
@@ -284,7 +284,7 @@
         "required": ["type", "variant"],
         "properties": {
           "type": {
-            "not": { "const": "slider" }
+            "enum": ["slider", "stepper", "select", "hold"]
           }
         }
       },

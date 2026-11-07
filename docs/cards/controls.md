@@ -165,7 +165,7 @@ A slider sits at `block`, every other control at `end`. On a narrow card a contr
 `control: { type: buttons, options: [ … ] }` draws a row of your own buttons. Each button does one of three things:
 
 - **Runs its `entity`:** a scene or a script turns on, a button is pressed.
-- **Switches its `entity`:** a light, a switch or a fan. The button is grey while it is off and tinted in its entity's colour while it is on.
+- **Switches its `entity`:** a light, a switch or a fan. The button is grey while it is off and filled in its entity's colour while it is on (tinted with `variant: tinted`).
 - **Runs its `action`:** any [Home Assistant action](https://www.home-assistant.io/dashboards/actions/), written like `tap_action`. Without a target, the action uses the button's `entity`: a robot's Dock button is `entity: vacuum.robot` with `action: { action: perform-action, perform_action: vacuum.return_to_base }`.
 
 A card of buttons needs no entity: a `name` and an `icon` are enough. A button takes its entity's colour (a light amber, a fan cyan, a cover purple) unless it names one. A button with `visibility` comes and goes with its conditions; below, Movie shows only while the speaker plays.
@@ -214,37 +214,37 @@ A card of buttons needs no entity: a `name` and an `icon` are enough. A button t
 
 :::
 
-## Bar or line
+## Filled or tinted
 
-A slider is a bar, as Home Assistant's tile features draw it: filled to the value, with a short handle in the fill. `variant: line` draws a thin line with a round knob instead. Without `type` it changes the kind's own slider, a light's brightness or a player's volume: `control: { variant: line }`.
+Controls are rounded squares of one height, as Home Assistant's tile features: a switch (a button with the power icon), buttons, a stepper (minus, the value and plus in one bar), segments, a select, a button and a hold. A slider is a bar filled to the value, with a short handle in the fill. A button standing in for the icon keeps the icon's circle.
+
+At rest the switch, buttons, segments, the stepper, the select and the hold are grey; a slider's bar is its colour at 20 % behind the fill. What is on or chosen is filled in its colour with a white icon: a switch that is on, your own buttons while their entity is on, a player's play button, the chosen segment. `variant: tinted` draws it in its colour at 20 % with the icon in its colour instead. A button (Run), which has no on, rests filled or tinted. Without `type` the variant changes the kind's own controls: `control: { variant: tinted }` on a light tints its switch.
 
 ::: live
 
 ```yaml
 - type: custom:tile-card-pro
   entity: light.living_room
-  control: slider
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: light.living_room
-  control: { type: slider, variant: line }
+  control: { variant: tinted }
   grid_options: { columns: 6 }
-- type: custom:poster-card-pro
-  entity: media_player.living_room_speaker
+- type: custom:tile-card-pro
+  entity: fan.living_room
+  control: segments
   grid_options: { columns: 6 }
-- type: custom:poster-card-pro
-  entity: media_player.living_room_speaker
-  control: { variant: line }
+- type: custom:tile-card-pro
+  entity: fan.living_room
+  control: { type: segments, variant: tinted }
   grid_options: { columns: 6 }
 ```
 
 :::
 
-Every other control is a rounded square of the same height: buttons, a stepper (minus, the value and plus in one bar), segments, a select, a button and a hold. A switch keeps its shape, and a button standing in for the icon keeps the icon's circle.
-
 ## Hold to confirm
 
-Some things should not happen by a stray tap. A hold fills the button for a second (one standing in for the icon: a ring around it) and runs when it is full; letting go earlier cancels. There are three ways to get one:
+Some things should not happen by a stray tap. A hold fills the button from the left for a second (one standing in for the icon: a ring around it) and runs when it is full; letting go earlier cancels. There are three ways to get one:
 
 - `confirm: true` on the control turns a switch or buttons into holds, each button its own.
 - `control: hold` is a button to hold for any entity that switches.
@@ -266,7 +266,7 @@ Some things should not happen by a stray tap. A hold fills the button for a seco
 
 ## States
 
-A control shows what you asked for right away, as a ghost: the knob pulses, the fill is translucent, the segment is outlined. It turns solid once the entity's state changes, or after five seconds if the device never answers. An unavailable entity greys its control out. A failed call shows Home Assistant's error toast.
+A control shows what you asked for right away, as a ghost: a switch pulses, a slider's fill is translucent, the segment is outlined. It turns solid once the entity's state changes, or after five seconds if the device never answers. An unavailable entity greys its control out. A failed call shows Home Assistant's error toast.
 
 ## Keyboard and screen readers
 
@@ -299,7 +299,7 @@ Every control works without a pointer. Tab reaches the card first, then its cont
 | `attribute` | the shown one, else the mode | `hvac_mode`, `preset_mode` or `fan_mode`: what segments and a select change on a thermostat or fan.               |
 | `options`   | the entity's                 | Segments and select: the options, each `{ value, label, icon }`. Buttons: your own buttons (below).               |
 | `confirm`   | `false`                      | Turns the switch and the buttons into holds.                                                                      |
-| `variant`   | `bar`                        | A slider's look: `bar` (filled to the value) or `line` (a thin line with a knob).                                 |
+| `variant`   | `fill`                       | `fill` or `tinted`: how a switch, a button, buttons and segments show what is on or chosen.                       |
 
 ### Your own buttons
 

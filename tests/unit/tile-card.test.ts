@@ -257,9 +257,8 @@ describe("tile-card config", () => {
         control_position: "block",
         control_step: 5,
       }).entities[0].control,
-      // (rounded squares, a slider a bar unless written: the entity cards' controls keep their look)
+      // (rounded squares, a slider a bar: the entity cards' controls keep their look)
       square: true,
-      variant: "bar",
     });
     // without a type: the kind's own controls (the toggle at the line's end), its step changed
     const plain = norm({ entity: e }).entities[0].control;

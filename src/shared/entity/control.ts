@@ -29,9 +29,10 @@ export type ControlPosition = (typeof CONTROL_POSITIONS)[number];
 // the mode a segments / select control sets on a climate or fan entity (`control_attribute`)
 export const CONTROL_ATTRIBUTES = ["hvac_mode", "preset_mode", "fan_mode"] as const;
 export type ControlAttribute = (typeof CONTROL_ATTRIBUTES)[number];
-// a slider's look: a thick bar filled to the value (Home Assistant's) or a line with a knob
-export const SLIDER_VARIANTS = ["bar", "line"] as const;
-export type SliderVariant = (typeof SLIDER_VARIANTS)[number];
+// how a kind card's switch, button, buttons and segments show what is on or chosen: filled in its
+// colour with a white icon, or tinted (its colour at 20 %, the icon in its colour)
+export const CONTROL_VARIANTS = ["fill", "tinted"] as const;
+export type ControlVariant = (typeof CONTROL_VARIANTS)[number];
 
 export interface ControlOption {
   value: string;
@@ -60,10 +61,10 @@ export interface ControlConfig {
   // `control: buttons` with `control_options`: the buttons drawn (null: the domain's own)
   buttons: CustomButton[] | null;
   confirm: boolean;
-  // the slider's look (null: the line)
-  variant: SliderVariant | null;
-  // drawn as the poster's and the tile's: rounded squares of one height (the entity cards' keep
-  // their look of before)
+  // what is on or chosen, filled or tinted (null: filled; a kind card's alone)
+  variant: ControlVariant | null;
+  // drawn as the poster's and the tile's: rounded squares of one height, the switch a button,
+  // a slider a bar (the entity cards' keep their look of before)
   square?: boolean;
   // what `auto` draws when a card's kind decides it (the poster's kinds), in place of the domain's
   defaults?: Placement[];
@@ -74,10 +75,12 @@ export interface Placement {
   position: ControlPosition;
   small: boolean;
   confirm?: boolean;
-  // drawn in a rounded square of the controls' height (a kind card's)
+  // drawn in a rounded square of the controls' height (a kind card's; a badge's switch round)
   square?: boolean;
-  // a slider drawn as a bar (`variant: bar`)
+  // a slider drawn as a bar (a kind card's)
   thick?: boolean;
+  // what is on or chosen tinted rather than filled (`variant: tinted`)
+  tinted?: boolean;
 }
 // the row kinds the fill functions draw (the `.row` classes; items split by their layout)
 export type RowKind =
@@ -215,9 +218,9 @@ export const normalizeControl = (
       `${ctx.type}: ${label}.control_attribute must be one of ${CONTROL_ATTRIBUTES.join(" | ")}`,
     );
   const cv = raw.control_variant;
-  if (cv !== undefined && cv !== null && !oneOf(SLIDER_VARIANTS, cv))
+  if (cv !== undefined && cv !== null && !oneOf(CONTROL_VARIANTS, cv))
     throw new Error(
-      `${ctx.type}: ${label}.control_variant must be one of ${SLIDER_VARIANTS.join(" | ")}`,
+      `${ctx.type}: ${label}.control_variant must be one of ${CONTROL_VARIANTS.join(" | ")}`,
     );
   const shown = raw.attribute;
   const step = numOrNull(raw.control_step);
@@ -230,7 +233,7 @@ export const normalizeControl = (
     // filled in by normalizeEntity, which parses the actions of the buttons
     buttons: null,
     confirm: !!raw.control_confirm,
-    variant: oneOf(SLIDER_VARIANTS, cv) ? cv : null,
+    variant: oneOf(CONTROL_VARIANTS, cv) ? cv : null,
   };
 };
 
@@ -240,14 +243,23 @@ const BLOCK_ROWS: ReadonlySet<RowKind> = new Set(["tile", "poster", "list", "her
 const SMALL_ROWS: ReadonlySet<RowKind> = new Set(["cell", "item-column", "field", "hval"]);
 // kinds that can stand in for the lead of a row item
 const LEAD_KINDS: ReadonlySet<ControlKind> = new Set(["toggle", "button", "hold"]);
-// the controls drawn in rounded squares on a kind card: all but the slider and the switch
+// the controls drawn in rounded squares on a kind card: all but the slider (the switch a button
+// with the power icon)
 export const SQUARE_KINDS: ReadonlySet<ControlKind> = new Set([
+  "toggle",
   "stepper",
   "segments",
   "buttons",
   "button",
   "select",
   "hold",
+]);
+// the controls that show something on or chosen, filled or tinted (`variant`)
+export const VARIANT_KINDS: ReadonlySet<ControlKind> = new Set([
+  "toggle",
+  "button",
+  "buttons",
+  "segments",
 ]);
 // kinds a row / column / table item can hold at all (checked at config time, see normalizeGroup)
 export const ITEM_CONTROLS: Record<string, ReadonlySet<ControlName>> = {
@@ -334,9 +346,12 @@ const defaultPosition = (kind: ControlKind, row: RowKind): ControlPosition => {
 export const placementsOf = (ent: EntityItem, row: RowKind): Placement[] => {
   const c = ent.control;
   if (!c) return [];
-  // a header badge holds a switch and nothing else (normalizeHeaderEntities)
+  // a header badge holds a switch and nothing else (normalizeHeaderEntities); a current card's
+  // badge (a pill) a round button, filled while on
   if (row === "hval")
-    return c.kind === "toggle" ? [{ kind: "toggle", position: "end", small: true }] : [];
+    return c.kind === "toggle"
+      ? [{ kind: "toggle", position: "end", small: true, ...(ent.pill ? { square: true } : {}) }]
+      : [];
   // auto keeps the domain's own slots; a kind's controls (a poster's, a tile's) put their primary
   // (the first) where the card says: control: { position } changes the kind's own controls
   let list: Placement[] =
@@ -379,7 +394,8 @@ export const placementsOf = (ent: EntityItem, row: RowKind): Placement[] => {
       ...(x.confirm ? { confirm: true } : {}),
       // (one standing in for the icon keeps the icon's circle)
       ...(c.square && SQUARE_KINDS.has(kind) && position !== "lead" ? { square: true } : {}),
-      ...(kind === "slider" && c.variant === "bar" && !SMALL_ROWS.has(row) ? { thick: true } : {}),
+      ...(c.square && kind === "slider" ? { thick: true } : {}),
+      ...(c.square && c.variant === "tinted" && VARIANT_KINDS.has(kind) ? { tinted: true } : {}),
     });
   }
   return out;

@@ -403,12 +403,17 @@ describe("the editor's controls", () => {
       "control_confirm",
     ]);
     expect(ctl(LIGHT, { control_type: "hold" })).toEqual(["control_position"]);
-    expect(ctl(SWITCH, { control_type: "auto" })).toEqual(["control_position", "control_confirm"]);
+    expect(ctl(SWITCH, { control_type: "auto" })).toEqual([
+      "control_position",
+      "control_variant",
+      "control_confirm",
+    ]);
     // a thermostat's modes
     expect(ctl({ entity: "climate.living_room" }, { control_type: "segments" })).toEqual([
       "control_position",
       "control_attribute",
       "control_options",
+      "control_variant",
     ]);
     expect(
       values(
@@ -431,8 +436,17 @@ describe("the editor's controls", () => {
     expect(ctl(LIGHT, { control_type: "buttons" })).toEqual([
       "control_position",
       "control_buttons",
+      "control_variant",
       "control_confirm",
     ]);
+    // a switch held to confirm is a hold, which has nothing to fill or tint either
+    expect(ctl(SWITCH, { control_type: "auto", control_confirm: true })).not.toContain(
+      "control_variant",
+    );
+    // a stepper and a select have nothing on or chosen to fill or tint
+    expect(ctl({ entity: "climate.living_room" }, { control_type: "stepper" })).not.toContain(
+      "control_variant",
+    );
   });
 
   it("names where the control sits by default", () => {

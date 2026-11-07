@@ -102,9 +102,8 @@ const STYLE_TILE_CARD = `
      its start and the value at its end, then one control or visual; the name gives way first */
   ha-card.layout-tile.ttable { min-height: 34px; }
   ha-card.layout-tile.ttable .body { padding-block: 2px; }
-  /* the small controls (the entity cards' table's) no taller than a row's 28 px: the speeds and a
-     hold too */
-  ha-card.ttable .end > .ctl-segments .seg { height: 22px; }
+  /* the small controls no taller than a row's 28 px: a hold too (the speeds, a stepper, a slider
+     and a switch are 28 px already) */
   ha-card.ttable .end > .ctl-hold { width: 28px; height: 28px; --mdc-icon-size: 16px; }
   /* no room for the control: it goes, the value stays */
   ha-card.layout-tile.ttable .row.tile.tdrop > .top > .main > .line > .end { display: flex; }

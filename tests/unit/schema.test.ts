@@ -401,27 +401,25 @@ describe("card config schemas", () => {
         ],
       }),
     ).toBeNull();
-    // a slider's look, the kind's own slider's without a type
+    // what is on or chosen, filled or tinted: a switch, a button, buttons and segments, and the
+    // kind's own controls without a type
     const L = "light.kitchen";
     expect(
+      validate({ type: "custom:tile-card-pro", entity: L, control: { variant: "tinted" } }),
+    ).toBeNull();
+    expect(
+      validate({
+        type: "custom:tile-card-pro",
+        entity: "fan.living_room",
+        control: { type: "segments", variant: "fill" },
+      }),
+    ).toBeNull();
+    for (const type of ["slider", "stepper", "select", "hold"])
+      expect(
+        validate({ type: "custom:tile-card-pro", entity: L, control: { type, variant: "tinted" } }),
+      ).not.toBeNull();
+    expect(
       validate({ type: "custom:tile-card-pro", entity: L, control: { variant: "line" } }),
-    ).toBeNull();
-    expect(
-      validate({
-        type: "custom:tile-card-pro",
-        entity: L,
-        control: { type: "slider", variant: "bar" },
-      }),
-    ).toBeNull();
-    expect(
-      validate({
-        type: "custom:tile-card-pro",
-        entity: "climate.living_room",
-        control: { type: "stepper", variant: "line" },
-      }),
-    ).not.toBeNull();
-    expect(
-      validate({ type: "custom:tile-card-pro", entity: L, control: { variant: "round" } }),
     ).not.toBeNull();
     // where the content sits in a taller tile or group
     expect(

@@ -521,20 +521,20 @@ describe("the editor form: the controls", () => {
       ...CLIMATE,
       control: { type: "segments", attribute: "preset_mode" },
     });
-    // a slider's line is written, the bar (the default) is not, and nothing else takes a variant
-    expect(edit(LIGHT, { control_type: "slider", control_variant: "line" })).toEqual({
-      ...LIGHT,
-      control: { type: "slider", variant: "line" },
-    });
-    expect(edit(LIGHT, { control_variant: "line" })).toEqual({
-      ...LIGHT,
-      control: { variant: "line" },
-    });
-    expect(formOf({ ...LIGHT, control: { variant: "line" } }).control_variant).toBe("line");
-    expect(formOf({ ...LIGHT, control: { variant: "bar" } }).control_variant).toBe(DEFAULT);
-    expect(edit(CLIMATE, { control_type: "segments", control_variant: "line" })).toEqual({
+    // tinted is written, fill (the default) is not, and only what has an on or a choice takes one
+    expect(edit(CLIMATE, { control_type: "segments", control_variant: "tinted" })).toEqual({
       ...CLIMATE,
-      control: "segments",
+      control: { type: "segments", variant: "tinted" },
+    });
+    expect(edit(LIGHT, { control_variant: "tinted" })).toEqual({
+      ...LIGHT,
+      control: { variant: "tinted" },
+    });
+    expect(formOf({ ...LIGHT, control: { variant: "tinted" } }).control_variant).toBe("tinted");
+    expect(formOf({ ...LIGHT, control: { variant: "fill" } }).control_variant).toBe(DEFAULT);
+    expect(edit(LIGHT, { control_type: "slider", control_variant: "tinted" })).toEqual({
+      ...LIGHT,
+      control: "slider",
     });
     // the defaults of its selects write nothing
     expect(

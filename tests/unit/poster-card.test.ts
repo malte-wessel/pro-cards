@@ -116,7 +116,6 @@ describe("poster-card config", () => {
     const flat = (cfg: Record<string, unknown>) => ({
       ...normalizeEntityCardConfig(cfg).entities[0].control,
       square: true,
-      variant: "bar",
     });
     const C = "climate.living_room";
     expect(
@@ -158,24 +157,31 @@ describe("poster-card config", () => {
     );
   });
 
-  it("draws its controls in rounded squares and its slider as a bar unless the card says line", () => {
+  it("draws its controls in rounded squares, its slider a bar, what is on filled unless tinted", () => {
     const shapes = (cfg: Record<string, unknown>) =>
       placementsOf(norm(cfg).entities[0], "poster").map(
-        (p) => `${p.kind}${p.square ? " square" : ""}${p.thick ? " bar" : ""}`,
+        (p) =>
+          `${p.kind}${p.square ? " square" : ""}${p.thick ? " bar" : ""}${p.tinted ? " tinted" : ""}`,
       );
     const E = "climate.living_room";
     expect(shapes({ entity: E })).toEqual(["stepper square"]);
     expect(shapes({ entity: E, control: { type: "segments" } })).toEqual(["segments square"]);
-    // a light's switch keeps its shape; its slider is a bar, or the line where the card says so
+    expect(shapes({ entity: E, control: { type: "segments", variant: "tinted" } })).toEqual([
+      "segments square tinted",
+    ]);
+    // a light's switch is a button, its slider a bar; without a type the variant reaches the
+    // kind's controls that take one
     const L = "light.living_room";
-    expect(shapes({ entity: L })).toEqual(["toggle", "slider bar"]);
-    expect(shapes({ entity: L, control: { variant: "line" } })).toEqual(["toggle", "slider"]);
-    expect(shapes({ entity: L, control: { type: "slider", variant: "line" } })).toEqual(["slider"]);
+    expect(shapes({ entity: L })).toEqual(["toggle square", "slider bar"]);
+    expect(shapes({ entity: L, control: { variant: "tinted" } })).toEqual([
+      "toggle square tinted",
+      "slider bar",
+    ]);
     expect(() => norm({ entity: L, control: { variant: "oval" } })).toThrow(
-      `${T}: control: { variant } must be one of bar | line`,
+      `${T}: control: { variant } must be one of fill | tinted`,
     );
-    expect(() => norm({ entity: E, control: { type: "stepper", variant: "line" } })).toThrow(
-      `${T}: control: { variant } is a slider's (bar | line), not a stepper's`,
+    expect(() => norm({ entity: E, control: { type: "stepper", variant: "tinted" } })).toThrow(
+      `${T}: control: { variant } is for a toggle, a button, buttons or segments, not a stepper`,
     );
   });
 
@@ -1037,7 +1043,7 @@ describe("poster-card drawing", () => {
     );
   const TEMP = "sensor.living_room_temperature";
 
-  it("draws your own buttons grey until on, then tinted in their entity's colour", () => {
+  it("draws your own buttons grey until on, then filled in their entity's colour", () => {
     set("light.kitchen", "on");
     set("light.desk_lamp", "off");
     const r = draw({
@@ -1053,11 +1059,11 @@ describe("poster-card drawing", () => {
       },
     });
     const row = q(r, ".ctl-buttons.custom");
-    expect([...row.classList]).toEqual(expect.arrayContaining(["square", "tint"]));
+    expect([...row.classList]).toEqual(expect.arrayContaining(["square", "flat"]));
     const [kitchen, desk, scene] = [...row.children] as HTMLElement[];
     expect(kitchen.classList.contains("on")).toBe(true);
     expect(desk.classList.contains("on")).toBe(false);
-    // its entity's colour, while on and while off (the tint it turns on to)
+    // its entity's colour, while on and while off (the colour it turns on to)
     expect(kitchen.style.getPropertyValue("--fe-color")).toContain("--state-light");
     expect(desk.style.getPropertyValue("--fe-color")).toBe(
       "var(--state-light-active-color, var(--state-active-color))",
@@ -1066,12 +1072,21 @@ describe("poster-card drawing", () => {
     expect(scene.style.getPropertyValue("--fe-color")).toBe("var(--deep-purple-color)");
   });
 
-  it("draws a slider as a bar unless the card says line", () => {
+  it("draws its switch as a button with the power icon, a slider as a bar, tinted where it says so", () => {
     set("light.kitchen", "on", { brightness: 128 });
-    const slider = (control: Record<string, unknown>) =>
-      q(draw({ type: "custom:poster-card-pro", entity: "light.kitchen", control }), ".ctl-slider");
-    expect(slider({ type: "slider" }).classList.contains("thick")).toBe(true);
-    expect(slider({ type: "slider", variant: "line" }).classList.contains("thick")).toBe(false);
+    const r = draw({ type: "custom:poster-card-pro", entity: "light.kitchen" });
+    const sw = q(r, ".toggle");
+    expect([...sw.classList]).toEqual(expect.arrayContaining(["square", "on"]));
+    expect(sw.classList.contains("tinted")).toBe(false);
+    expect(sw.querySelector("ha-icon")?.getAttribute("icon")).toBe("mdi:power");
+    expect(q(r, ".ctl-slider").classList.contains("thick")).toBe(true);
+    const tinted = draw({
+      type: "custom:poster-card-pro",
+      entity: "light.kitchen",
+      control: { variant: "tinted" },
+    });
+    expect(q(tinted, ".toggle").classList.contains("tinted")).toBe(true);
+    expect(q(tinted, ".ctl-slider").classList.contains("tinted")).toBe(false);
   });
 
   it("has the lead and the corner on top and the body below, no label pill", () => {

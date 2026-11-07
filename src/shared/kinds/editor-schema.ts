@@ -31,6 +31,7 @@ import {
   defaultVisual,
   drawnControls,
   ownControls,
+  variable,
   withDefaults,
   type CardThing,
   visualOptionsOf,
@@ -1129,11 +1130,11 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
               },
             ]
           : []),
-        ...(drawn.includes("slider")
+        ...(variable(drawn, data.control_confirm === true)
           ? [
               pick("control_variant", [
-                opt(DEFAULT, tr("variant.bar")),
-                opt("line", tr("variant.line")),
+                opt(DEFAULT, tr("look.fill")),
+                opt("tinted", tr("look.tinted")),
               ]),
             ]
           : []),

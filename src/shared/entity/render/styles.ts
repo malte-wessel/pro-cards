@@ -83,6 +83,9 @@ const STYLE_POSTER = `
      end on the block's last baseline: the block sits where it sits without them, and an empty last
      item makes the controls' baseline their bottom edge (its gap given back) */
   .pmain { display: flex; flex-wrap: wrap; align-items: last baseline; gap: 8px 12px; min-width: 0; }
+  /* a switch beside the value is centred on its line (a button's baseline is its icon's, which
+     would lift it above the digits and make the line taller) */
+  .pmain > .end:has(> .toggle.square) { align-self: center; }
   .ptext { flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .ptext > :is(.pname, .secondary) { contain: inline-size; }
   .pvalue { display: flex; min-width: 0; }
@@ -337,7 +340,7 @@ export const STYLE_CONTROLS = `
   ${STYLE_SLIDER}
   .end .ctl-slider, .val .ctl-slider { flex: 0 1 120px; width: 120px; min-width: 64px; }
   .ctl-slider.pending .fill { opacity: .55; }
-  /* a slider's bar (variant: bar, a kind card's default): Home Assistant's, filled to the value
+  /* a slider's bar (a kind card's, a table's too): Home Assistant's, filled to the value
      with a handle in its fill, as tall as the other controls. The track clips the fill (so its
      handle goes with it at the start); the bubble, placed on the slider, shows above it */
   .ctl-slider.thick { position: relative; height: 36px; border-radius: 10px; }
@@ -346,6 +349,10 @@ export const STYLE_CONTROLS = `
   .ctl-slider.thick .fill::after { content: ""; position: absolute; top: 50%; right: 6px; width: 4px; height: 14px; margin-top: -7px; border-radius: 2px; background: var(--text-primary-color, #fff); }
   .ctl-slider.thick .knob { display: none; }
   .ctl-slider.thick .bubble { bottom: calc(100% + 6px); }
+  /* in a table: 28 px, the small controls' height */
+  .ctl-slider.thick.sm { height: 28px; border-radius: 8px; }
+  .ctl-slider.thick.sm .track { height: 100%; border-radius: 8px; }
+  .ctl-slider.thick.sm .fill::after { right: 5px; width: 3px; height: 12px; margin-top: -6px; }
   .ctl-slider.pending .knob { background: transparent; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--fe-color) 55%, transparent); animation: ctl-pulse 1s ease-in-out infinite; }
   .ctl .round { flex: none; position: relative; width: 32px; height: 32px; border: 0; padding: 0; border-radius: 50%; background: var(--fe-track); color: var(--primary-text-color); display: flex; align-items: center; justify-content: center; cursor: pointer; --mdc-icon-size: 20px; }
   .ctl .round.s { width: 30px; height: 30px; --mdc-icon-size: 18px; }
@@ -359,9 +366,6 @@ export const STYLE_CONTROLS = `
   .ctl-buttons.custom > button { background-color: color-mix(in srgb, var(--fe-color) 20%, transparent); color: var(--fe-color); transition: background-color .2s, color .2s; }
   .ctl-buttons.custom > button.on { background-color: var(--fe-color); color: var(--text-primary-color, #fff); }
   .ctl-buttons.custom > button.pending { animation: ctl-pulse 1s ease-in-out infinite; }
-  /* a kind card's: grey while off, a soft tint of their colour while on */
-  .ctl-buttons.custom.tint > button { background-color: var(--fe-track); color: var(--primary-text-color); }
-  .ctl-buttons.custom.tint > button.on { background-color: color-mix(in srgb, var(--fe-color) 20%, transparent); color: var(--fe-color); }
   /* the poster's and the tile's controls (square): rounded squares, all as tall as a segments
      control (36 px), as Home Assistant's tile features; the entity cards' keep their look of before */
   .ctl-buttons.square > button { border-radius: 10px; }
@@ -373,14 +377,22 @@ export const STYLE_CONTROLS = `
   .ctl-buttons.square:not(.sm) > button.chip { width: auto; }
   .ctl-buttons.square.sm > button.chip { border-radius: 8px; }
   /* a stepper is one bar: minus, the value and plus in it (each 32 px wide, so the bar fits under
-     a tile's line at half a phone's width) */
-  .ctl-stepper.square:not(.sm) { height: 36px; gap: 0; border-radius: 10px; background: var(--fe-track); }
-  .ctl-stepper.square:not(.sm) .round { width: 32px; height: 36px; border-radius: 10px; background: transparent; }
+     a tile's line at half a phone's width; 28 px in a table) */
+  .ctl-stepper.square { gap: 0; border-radius: 10px; background: var(--fe-track); }
+  .ctl-stepper.square .round { background: transparent; }
+  .ctl-stepper.square:not(.sm) { height: 36px; }
+  .ctl-stepper.square:not(.sm) .round { width: 32px; height: 36px; border-radius: 10px; }
+  .ctl-stepper.square.sm { height: 28px; border-radius: 8px; }
   .ctl-stepper.square.sm .round { border-radius: 8px; }
-  .ctl-segments.square { border-radius: 12px; }
-  .ctl-segments.square .seg { border-radius: 9px; }
-  .ctl-segments.square.sm { border-radius: 10px; }
-  .ctl-segments.square.sm .seg { border-radius: 7px; }
+  /* segments without the inset: the chosen one fills the bar's height, every option 2 px wider
+     on each side for the inset and the gaps it gave up (the bar as wide as before for two options,
+     2 px wider for every one more: never narrower, so a tile's fit keeps them where they were); none
+     narrower than the bar is high, so where the bar has no room it scrolls rather than squeezing a
+     digit out of its option */
+  .ctl-segments.square { padding: 0; gap: 0; border-radius: 10px; }
+  .ctl-segments.square .seg { height: 36px; min-width: 36px; padding: 0 12px; border-radius: 10px; }
+  .ctl-segments.square.sm { border-radius: 8px; }
+  .ctl-segments.square.sm .seg { height: 28px; min-width: 28px; padding: 0 10px; border-radius: 8px; }
   .ctl-select.square { border-radius: 10px; }
   .ctl-select.square:not(.sm) { height: 36px; padding: 0 6px 0 12px; }
   .ctl-select.square:not(.sm) select { height: 36px; line-height: 36px; font-size: ${fs(13)}; }
@@ -396,7 +408,7 @@ export const STYLE_CONTROLS = `
   .ctl-buttons.custom > .chip { flex: 0 1 auto; display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; height: 32px; padding: 0 14px 0 10px; border: 0; border-radius: 999px; font-size: ${fs(13)}; font-weight: ${fw("medium")}; white-space: nowrap; cursor: pointer; --mdc-icon-size: 18px; }
   .ctl-buttons.custom > .chip span { overflow: hidden; text-overflow: ellipsis; }
   /* the colour stays on the icon and the tint; the label reads in the text colour until filled */
-  .ctl-buttons.custom > .chip:not(.on) span, .ctl-buttons.custom.tint > .chip span { color: var(--primary-text-color); }
+  .ctl-buttons.custom > .chip:not(.on) span { color: var(--primary-text-color); }
   .ctl-buttons.custom.sm > .chip { height: 28px; font-size: ${fs(12)}; padding: 0 12px 0 8px; --mdc-icon-size: 16px; }
   /* a chip or a square button to hold fills from the left instead of a ring */
   :is(.ctl-buttons.custom > .chip, .ctl-buttons.square > button).hold { --fill: var(--fe-color); background-image: linear-gradient(var(--fill), var(--fill)); background-repeat: no-repeat; background-size: 0 100%; touch-action: none; -webkit-user-select: none; user-select: none; }
@@ -437,8 +449,31 @@ export const STYLE_CONTROLS = `
   .ctl .holding .ring .prog, .ctl.holding .ring .prog { stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear; }
   .ctl .armed, .ctl.armed { box-shadow: 0 0 0 2px var(--fe-soft); }
   .ctl .armed .ring .prog, .ctl.armed .ring .prog { stroke-dashoffset: 0; opacity: .45; }
+  /* a kind card's controls (square): at rest grey with the text colour; what is on or chosen
+     filled in its colour with a white icon, or tinted (variant: tinted: its colour at 20 %, the
+     icon in its colour). The switch is a button with the power icon (a badge's round, sized to its
+     pill); the button (Run) has no on, so it rests filled or tinted */
+  .toggle.square { width: 36px; height: 36px; border-radius: 10px; background: var(--fe-track); color: var(--primary-text-color); display: flex; align-items: center; justify-content: center; --mdc-icon-size: 20px; transition: background-color .2s, color .2s; }
+  .toggle.square.sm { width: 28px; height: 28px; border-radius: 8px; --mdc-icon-size: 16px; }
+  .row.hval.pb > .toggle.square { width: var(--b-th); height: var(--b-th); border-radius: 50%; }
+  /* (its icon sized on the icon: a badge's icons carry a size of their own) */
+  .row.hval.b-s > .toggle.square > ha-icon { --mdc-icon-size: 10px; }
+  .row.hval.b-m > .toggle.square > ha-icon { --mdc-icon-size: 14px; }
+  .row.hval.b-l > .toggle.square > ha-icon { --mdc-icon-size: 16px; }
+  /* a tap area of at least 24 px round a small one, as the icon's own */
+  .row.hval.pb > .toggle.square::before { content: ""; position: absolute; inset: min(0px, calc((var(--b-th) - 24px) / 2)); border-radius: 50%; }
+  /* (its icon in the button's colour, not the pill's) */
+  .row.hval.pb > .toggle.square > ha-icon { color: inherit; }
+  .toggle.square.pending { animation: ctl-pulse 1s ease-in-out infinite; }
+  .toggle.square.pending:not(.on) { background: var(--fe-track); }
+  .ctl-buttons.custom.flat > button, .ctl-hold.square { background-color: var(--fe-track); color: var(--primary-text-color); }
+  .ctl-segments.square .seg { color: var(--primary-text-color); }
+  .toggle.square.on, .ctl-buttons.custom.flat > button.on, .ctl-buttons.square > .round.f, .ctl-segments.square .seg.on, .ctl-chip.square:not(.round), .ctl-chip.square.done { background-color: var(--fe-color); color: var(--text-primary-color, #fff); }
+  .toggle.square.tinted.on, .ctl-buttons.custom.flat.tinted > button.on, .ctl-buttons.square.tinted > .round.f, .ctl-segments.square.tinted .seg.on, .ctl-chip.square.tinted:not(.round, .done) { background-color: color-mix(in srgb, var(--fe-color) 20%, transparent); color: var(--fe-color); }
+  /* a badge's switch in a filled pill (the colour already): the pill's ink, the icon in the colour */
+  .row.hval.b-filled > .toggle.square.on { background-color: var(--b-ink); color: var(--fe-color); }
   @keyframes ctl-pulse { 50% { opacity: .45; } }
-  @media (prefers-reduced-motion: reduce) { .ctl, .ctl *, .toggle i, .lead.tap .shape { animation: none !important; transition: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .ctl, .ctl *, .toggle, .toggle i, .lead.tap .shape { animation: none !important; transition: none !important; } }
 `;
 export const STYLE_GROUP = `
   /* vertical_align: in a card taller than its content the body takes the room under the header

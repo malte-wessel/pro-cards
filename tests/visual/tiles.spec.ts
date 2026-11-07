@@ -202,17 +202,50 @@ add(
   ],
   { states: { "light.to_lamp_off": like("light.living_room", "off") } },
 );
-// a slider as a bar (the default) and as a line, under the line and at its end
+// a slider: a bar under the line and at its end; on and tinted in the switch's place
 const SLIDER = { visual: false, grid_options: { columns: 6 } };
 add("to-slider", [
   t("light.living_room", { ...SLIDER, control: "slider" }),
-  t("light.living_room", { ...SLIDER, control: { type: "slider", variant: "line" } }),
+  t("light.living_room", { ...SLIDER, control: { variant: "tinted" } }),
   t("cover.living_room_blinds", { ...SLIDER, control: { type: "slider", position: "end" } }),
-  t("input_number.heating_boost", {
-    ...SLIDER,
-    control: { type: "slider", variant: "line", position: "end" },
-  }),
+  t("input_number.heating_boost", { ...SLIDER, control: { type: "slider", position: "end" } }),
 ]);
+// tinted where filled is the default: a switch, segments, a button and your own buttons; a badge's
+// switch in a small pill and in a filled one
+add(
+  "to-variants",
+  [
+    t("light.living_room", { ...SLIDER, control: { variant: "tinted" } }),
+    t("fan.living_room", { ...SLIDER, control: { type: "segments", variant: "tinted" } }),
+    t("scene.movie_night", {
+      ...SLIDER,
+      name: "Movie",
+      color: "deep-purple",
+      control: { type: "button", variant: "tinted" },
+    }),
+    t(null, { ...ROOM, control: { ...(ROOM.control as Opts), variant: "tinted" } }),
+    t("climate.living_room", {
+      visual: false,
+      badges: [
+        { entity: "light.living_room", control: "toggle" },
+        { entity: "light.to_lamp_off", name: "Lamp", control: "toggle" },
+      ],
+      grid_options: { columns: 12 },
+    }),
+    {
+      type: "custom:heading-card-pro",
+      title: "Filled badges",
+      style: "subtitle",
+      badge_style: "filled",
+      badges: [
+        { entity: "light.living_room", control: "toggle" },
+        { entity: "light.to_lamp_off", name: "Lamp", control: "toggle" },
+      ],
+      grid_options: { columns: 12 },
+    },
+  ],
+  { states: { "light.to_lamp_off": like("light.living_room", "off") } },
+);
 
 // vertical: the icon on top, the name and the line centred, the controls below; each at the
 // columns it asks for

@@ -57,26 +57,38 @@ describe("control config", () => {
     expect(placementsOf(ent({ control: "buttons" }), "tile")[0].square).toBeUndefined();
     expect(placementsOf(ent({ control: "slider" }), "tile")[0].thick).toBeUndefined();
   });
-  it("on a kind card squares all but a slider and a switch, never a control standing in for the icon", () => {
+  it("on a kind card squares every control, a slider a bar, never one standing in for the icon", () => {
     // (as a kind card's config leaves it: shapeControl)
     const kindCard = (o: RawEntity) => {
       const e = ent(o);
-      return {
-        ...e,
-        control: e.control && { ...e.control, square: true, variant: "bar" as const },
-      };
+      return { ...e, control: e.control && { ...e.control, square: true } };
     };
     const sq = (o: RawEntity, row: Parameters<typeof placementsOf>[1] = "tile") =>
       placementsOf(kindCard(o), row).map(
-        (p) => `${p.kind}@${p.position}${p.square ? " square" : ""}${p.thick ? " bar" : ""}`,
+        (p) =>
+          `${p.kind}@${p.position}${p.square ? " square" : ""}${p.thick ? " bar" : ""}${p.tinted ? " tinted" : ""}`,
       );
-    expect(sq({})).toEqual(["toggle@end", "slider@block bar"]);
+    expect(sq({})).toEqual(["toggle@end square", "slider@block bar"]);
     expect(sq({ control: "hold" })).toEqual(["hold@end square"]);
     expect(sq({ control: "buttons" })).toEqual(["buttons@end square"]);
     expect(sq({ control: "hold" }, "item-row")).toEqual(["hold@lead"]);
-    // a small row's slider keeps the line
-    expect(sq({ control: "slider" }, "cell")).toEqual(["slider@block"]);
+    // a small row's slider is a bar too (a table's, 28 px)
+    expect(sq({ control: "slider" }, "cell")).toEqual(["slider@block bar"]);
+    // tinted: the switch, a button, buttons and segments; nothing else has an on to tint
+    expect(sq({ control_variant: "tinted" })).toEqual([
+      "toggle@end square tinted",
+      "slider@block bar",
+    ]);
+    expect(sq({ control: "segments", control_variant: "tinted" })).toEqual([
+      "segments@end square tinted",
+    ]);
+    expect(sq({ control: "stepper", control_variant: "tinted" })).toEqual(["stepper@end square"]);
     expect(() => ent({ control_variant: "oval" })).toThrow(/control_variant must be one of/);
+  });
+  it("draws a current card's badge switch as a button, a header entity's as a switch", () => {
+    const badge = ent({ control: "toggle" });
+    expect(placementsOf(badge, "hval")).toEqual([{ kind: "toggle", position: "end", small: true }]);
+    expect(placementsOf({ ...badge, pill: {} as never }, "hval")[0].square).toBe(true);
   });
   it("rejects unknown names and positions", () => {
     expect(() => ent({ control: "knob" })).toThrow(/control must be one of/);

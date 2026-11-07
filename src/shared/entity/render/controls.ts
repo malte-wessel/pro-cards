@@ -57,10 +57,12 @@ const button = (cls: string, label: string) => {
   b.setAttribute("aria-label", label);
   return b;
 };
+// a placement's classes: small, a kind card's square (a slider's bar) and tinted
+const shapeOf = (p: Placement) =>
+  `${p.small ? " sm" : ""}${p.square ? " square" : ""}${p.thick ? " thick" : ""}${p.tinted ? " tinted" : ""}`;
 const root = (kind: string, p: Placement, idx: number, tag = "div") => {
   const el = document.createElement(tag);
-  // (a small slider, a table's, keeps the line: a bar is a control's height)
-  el.className = `ctl ctl-${kind}${p.small ? " sm" : ""}${p.square ? " square" : ""}${p.thick && !p.small ? " thick" : ""}`;
+  el.className = `ctl ctl-${kind}${shapeOf(p)}`;
   el.dataset.idx = String(idx);
   guard(el);
   return el;
@@ -113,7 +115,7 @@ export const toggleEl = (
   p: Placement = { kind: "toggle", position: "end", small: false },
 ) => {
   const b = button(
-    `ctl toggle${p.small ? " sm" : ""}`,
+    `ctl toggle${shapeOf(p)}`,
     t(ctx.hass, "control.toggle", { name: nameOf(ctx, ent, m.st) }),
   );
   b.dataset.idx = String(idx);
@@ -123,7 +125,10 @@ export const toggleEl = (
   b.classList.toggle("pending", pending);
   b.setAttribute("role", "switch");
   b.setAttribute("aria-checked", String(on));
-  b.innerHTML = "<i></i>";
+  // a kind card's switch is a square button with the power icon, filled while on; the entity
+  // cards' (and a badge's) a track with its knob
+  if (p.square) b.appendChild(icon("mdi:power"));
+  else b.innerHTML = "<i></i>";
   if (!canControl(ent, m.st)) disable(b);
   else bindToggle(b, ctx, ent, idx, m, on);
   return b;
@@ -476,7 +481,7 @@ export const buttonsEl = (
 // a lock or cover is on while unlocked / open: that is no "pressed"
 const OPEN_DOMAINS: ReadonlySet<string> = new Set(["lock", "cover"]);
 // `control: buttons` with `control_options`: one round button (or a chip with its label) per
-// entry, on while its entity is (a kind card's grey until then, else tinted and filled while on); a
+// entry, on while its entity is (filled then; a kind card's grey until then, else tinted); a
 // button runs its entity (a scene, a script) or switches it, or runs its action. Each button keeps its own call in flight (host.buttonPending).
 const customButtonsEl = (
   ctx: RenderCtx,
@@ -488,10 +493,10 @@ const customButtonsEl = (
   const host = ctx.ctl as ControlHost;
   const el = root("buttons", p, idx);
   el.classList.add("custom");
-  // a kind card's buttons are grey until on, then tinted in their entity's colour; the entity
-  // cards' (no variant) keep their look: tinted in the card's colour, filled while on
-  const tint = !!ent.control?.square;
-  if (tint) el.classList.add("tint");
+  // a kind card's buttons are grey until on, then filled in their entity's colour; the entity
+  // cards' keep their look: tinted in the card's colour, filled while on
+  const flat = !!ent.control?.square;
+  if (flat) el.classList.add("flat");
   list.forEach((b, i) => {
     // a hidden button is left out; the others keep their index (their calls are keyed by it)
     if (ctx.shown && !ctx.shown(b.visibility)) return;
@@ -502,8 +507,8 @@ const customButtonsEl = (
       pending = host.buttonPending.has(`${idx}:${key}`);
     const btn = button(b.label ? "chip" : "round", name);
     if (!p.confirm) btn.title = name;
-    // its own colour, else (tinted) its entity's while on (a light's amber), else the card's
-    const color = cssColor(b.color) ?? (tint ? activeColorCss(st) : null);
+    // its own colour, else (a kind card's) its entity's while on (a light's amber), else the card's
+    const color = cssColor(b.color) ?? (flat ? activeColorCss(st) : null);
     if (color) btn.style.setProperty("--fe-color", color);
     // filled while on; a pending switch shows where it goes, a run flashes filled ("done")
     const active = buttonActive(b, st);
