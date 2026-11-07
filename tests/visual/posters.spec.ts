@@ -36,10 +36,12 @@ const add = (name: string, cards: CardConfigBase[], o: Omit<Shot, "cards"> = {})
 
 // ----- the types -----
 
+// (entities without a kind of their own: a pressure sensor, a plug's binary sensor, a switch that
+// names no device class)
 add("pt-entity", [
-  p("sensor.living_room_temperature"),
-  p("binary_sensor.door_front"),
-  p("switch.coffee_machine"),
+  p("sensor.pressure"),
+  p("binary_sensor.ev_plugged"),
+  p("switch.garden_pump"),
   p("input_select.house_mode"),
   p("input_number.target_humidity"),
   p("light.living_room", { kind: "none" }),
@@ -48,10 +50,48 @@ add("pt-entity-states", [
   p("switch.shed_heater"),
   p("sensor.not_in_this_home"),
   p("input_boolean.guest_mode"),
-  p("binary_sensor.window_kitchen"),
+  p("binary_sensor.ev_charging"),
   p("sensor.robot_current_room"),
   p("sensor.washer_remaining"),
 ]);
+
+// the home's sensors: today's low and high over the day's line, the light's bands
+{
+  const lux = levels("sensor.illuminance", "pt_lux", [3, 120]);
+  add(
+    "pt-sensors",
+    [
+      p("sensor.living_room_temperature"),
+      p("sensor.living_room_humidity"),
+      p("sensor.illuminance"),
+      ...lux.ids.map((id) => p(id)),
+    ],
+    { states: lux.states },
+  );
+}
+// a door, a window and motion: for how long, the strip along the edge (and as a timeline); a leak
+// and smoke, clear and alerting
+add(
+  "pt-opening",
+  [
+    p("binary_sensor.window_kitchen"),
+    p("binary_sensor.door_front"),
+    p("binary_sensor.motion_hallway"),
+    p("binary_sensor.pt_motion_on"),
+    p("binary_sensor.door_front", { visual: { variant: "timeline" } }),
+  ],
+  { states: { "binary_sensor.pt_motion_on": like("binary_sensor.motion_hallway", "on") } },
+);
+add("pt-safety", [p("binary_sensor.smoke_hallway"), p("binary_sensor.pt_leak_on")], {
+  states: { "binary_sensor.pt_leak_on": like("binary_sensor.water_leak_bathroom", "on") },
+});
+// a plug: its switch, the power it draws while on, its history as columns
+add("pt-plug", [p("switch.coffee_machine"), p("device_tracker.van")], {
+  states: {
+    "switch.coffee_machine": { state: "on" },
+    "sensor.coffee_machine_power": { state: 1450 },
+  },
+});
 
 {
   const b = levels("sensor.robot_battery", "pt_battery", [100, 55, 18, 6]);

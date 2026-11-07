@@ -1080,7 +1080,7 @@ describe("poster-card drawing", () => {
 
   it("shows the name and the big value with its unit", () => {
     set(TEMP, 21.4);
-    const r = draw({ entity: TEMP });
+    const r = draw({ entity: TEMP, kind: "none" });
     expect(q(r, ".pbody > .pname").textContent).toBe("Living room temperature");
     expect(q(r, ".pvalue > .big > b").textContent).toBe("21.4");
     expect(q(r, ".pvalue > .big > span").textContent).toBe("°C");
@@ -1095,7 +1095,7 @@ describe("poster-card drawing", () => {
   });
 
   it("adds the secondary line under the value, the name above them", () => {
-    const r = draw({ entity: TEMP, name: "Living room", secondary: "Feels like 20" });
+    const r = draw({ entity: TEMP, kind: "none", name: "Living room", secondary: "Feels like 20" });
     expect(bodyParts(r)).toEqual(["pname", "pvalue", "secondary"]);
     expect(q(r, ".pname").textContent).toBe("Living room");
     expect(q(r, ".ptext > .secondary").textContent).toBe("Feels like 20");
@@ -1137,12 +1137,12 @@ describe("poster-card drawing", () => {
 
   it("draws a gauge as its picture: the arc first, no big value", () => {
     const H = "sensor.living_room_humidity";
-    const r = draw({ entity: H, visual: "gauge" });
+    const r = draw({ entity: H, kind: "none", visual: "gauge" });
     expect(q(r, ".pbody").classList.contains("pgauge")).toBe(true);
     expect(r.querySelector(".pbody .big")).toBeNull();
     expect(bodyParts(r)).toEqual(["gauge", "pname"]);
     // any other visual leaves the body as it is
-    const bar = draw({ entity: H, visual: "bar" });
+    const bar = draw({ entity: H, kind: "none", visual: "bar" });
     expect(q(bar, ".pbody").classList.contains("pgauge")).toBe(false);
     expect(bodyParts(bar)).toEqual(["pname", "pvalue", "bar"]);
   });
@@ -1150,7 +1150,7 @@ describe("poster-card drawing", () => {
   it("lights visual: glow from below as strong as its level, the same element at every level", () => {
     const H = "sensor.living_room_humidity";
     set(H, 50);
-    const r = draw({ entity: H, visual: "glow", min: 0, max: 100 });
+    const r = draw({ entity: H, kind: "none", visual: "glow", min: 0, max: 100 });
     const glow = q(r, ".body > .pback > .pglow");
     expect(glow.style.opacity).toBe("0.650");
     expect(glow.style.getPropertyValue("--glow")).not.toBe("");
@@ -1300,12 +1300,14 @@ describe("poster-card drawing", () => {
 
   it("leaves out a thing its kind does not draw, said once", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const r = draw({ entity: TEMP, visual: "sun" });
+    // (a pressure sensor has no kind of its own)
+    const P = "sensor.pressure";
+    const r = draw({ entity: P, visual: "sun" });
     expect(q(r, ".pback").hidden).toBe(true);
     expect(r.querySelector(".pbody > .plot")).toBeNull();
     expect(warn).toHaveBeenCalledWith(`${T}: a card without a kind draws no visual: sun; left out`);
     const calls = warn.mock.calls.length;
-    set(TEMP, 22);
+    set(P, 1012);
     expect(warn.mock.calls.length).toBe(calls);
   });
 

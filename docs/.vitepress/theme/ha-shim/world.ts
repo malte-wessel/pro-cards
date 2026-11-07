@@ -382,7 +382,15 @@ def("light.desk_lamp", "on", {
   supported_color_modes: ["brightness"],
 });
 def("light.garden", "off", { friendly_name: "Garden", supported_color_modes: ["onoff"] });
-def("switch.coffee_machine", "off", { friendly_name: "Coffee machine" });
+// a smart plug, with its power on the same device
+def("switch.coffee_machine", "off", { device_class: "outlet", friendly_name: "Coffee machine" });
+def(
+  "sensor.coffee_machine_power",
+  0,
+  { unit_of_measurement: "W", device_class: "power", friendly_name: "Coffee machine power" },
+  "power",
+  { noise: 0, min: 0, decimals: 0 },
+);
 def("switch.garden_pump", "off", { friendly_name: "Garden pump" });
 
 // covers & climate
@@ -602,6 +610,22 @@ def(
   { device_class: "motion", friendly_name: "Hallway motion" },
   "binary",
   { duty: 0.2 },
+);
+
+// safety: a smoke detector and a leak sensor, both clear
+def(
+  "binary_sensor.smoke_hallway",
+  "off",
+  { device_class: "smoke", friendly_name: "Hallway smoke" },
+  "binary",
+  { duty: 0 },
+);
+def(
+  "binary_sensor.water_leak_bathroom",
+  "off",
+  { device_class: "moisture", friendly_name: "Bathroom leak" },
+  "binary",
+  { duty: 0 },
 );
 
 // a phone's battery from a template sensor: no device class
@@ -1307,10 +1331,15 @@ function series(id: string, start: number, end: number): HistoryPoint[] {
     return d.getHours() + d.getMinutes() / 60;
   };
   if (e.kind === "binary" || !Number.isFinite(Number(e.state))) {
-    // on/off segments with a duty cycle; the last segment matches the current state
-    let cur = rand() < (e.duty ?? 0.2) ? "on" : "off";
+    // on/off segments on for about `duty` of the time, each on a while (it goes off at a quarter
+    // per step; it comes on so often that the share holds); the last segment matches the current
+    // state (a duty of 0: never on, a sensor that stays clear)
+    const duty = Math.min(0.9, e.duty ?? 0.2);
+    const off = 0.25,
+      on = (off * duty) / (1 - duty);
+    let cur = rand() < duty ? "on" : "off";
     for (let t = start; t < end; t += step) {
-      if (rand() < 0.08) cur = cur === "on" ? "off" : "on";
+      if (rand() < (cur === "on" ? off : on)) cur = cur === "on" ? "off" : "on";
       out.push({ s: cur, lu: t / 1000 });
     }
     if (out.length) out[out.length - 1].s = st.state;

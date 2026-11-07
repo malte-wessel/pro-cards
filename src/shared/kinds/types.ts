@@ -141,10 +141,14 @@ export interface Kind {
   // the things only it draws (flow, sun, forecast, cover, path, line), and a thing every kind has
   // that it draws its own way (a trend's sparkline: its series)
   draws?: readonly string[];
+  // the input its default plot draws (a plug's power: no plot without it)
+  visualInput?: string;
   inputs?: readonly InputDef[];
   // the entities whose history it draws besides the card's own, the templates it renders and the
   // conditions it evaluates (a trend's series)
   history?(opts: Record<string, unknown>, entity: string | null): string[];
+  // the hours of history it needs at least, whatever window its visual draws (today's low and high)
+  historyHours?: number;
   templates?(opts: Record<string, unknown>): string[];
   visibility?(opts: Record<string, unknown>): Visibility[];
   // entities it follows besides its own and its inputs (the sun, for a night icon)

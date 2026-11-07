@@ -258,7 +258,10 @@ describe("the kind the editor builds its form for", () => {
     expect(of({ entity: "sensor.wind_speed" })).toEqual(["wind", "wind"]);
     expect(of({ entity: "light.living_room", kind: "wind" })).toEqual(["wind", "light"]);
     expect(of({ entity: "light.living_room", kind: "detected" })).toEqual(["light", "light"]);
-    expect(of({ entity: "sensor.outdoor_temperature", kind: "grid" })).toEqual(["grid", "none"]);
+    expect(of({ entity: "sensor.outdoor_temperature", kind: "grid" })).toEqual([
+      "grid",
+      "temperature",
+    ]);
     // half made: no entity, or one the home lacks, or a kind that is none
     expect(of({})).toEqual(["none", "none"]);
     expect(of({ entity: "sensor.nowhere" })).toEqual(["none", "none"]);
@@ -427,14 +430,16 @@ describe("what the card shows, chosen in the editor", () => {
     for (const [entity, kind] of [
       ["sensor.phone_battery", "battery"],
       ["weather.home", "wind"],
-      ["device_tracker.van", "person"],
       ["sensor.living_room_temperature", "trend"],
     ]) {
       const e = open("poster", { entity });
       e.change({ shows: kind });
       expect(last(e.sent), kind).toEqual({ entity, kind });
     }
-    // the kind its entity is detected as anyway: nothing written
+    // the kind its entity is detected as anyway: nothing written (a device tracker is a person)
+    const van = open("poster", { entity: "device_tracker.van" });
+    van.change({ shows: "person" });
+    expect(last(van.sent)).toEqual({ entity: "device_tracker.van" });
     const e = open("poster", { entity: "sensor.wind_speed", kind: "wind" });
     e.change({ shows: "none" });
     e.change({ shows: "wind" });

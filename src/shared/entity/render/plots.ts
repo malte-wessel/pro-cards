@@ -39,6 +39,8 @@ export interface PlotCtx {
   bucketMin?: number;
   smoothMin?: number;
   axis?: boolean;
+  // a strip as a ribbon along the card's bottom edge: no times, its own height
+  edge?: boolean;
 }
 // the window a plot draws: the one it brought, else its own hours back (or since midnight), else
 // the card's history window
@@ -125,11 +127,13 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
   // a growing plot is drawn at the height it has (its own as the basis, more or less in a cell
   // with fixed rows), never stretched to it: that would turn the dots into ellipses
   const grow = plot.classList.contains("grow");
-  const H = (grow && (size?.h ?? plot.clientHeight)) || PLOT_H[kind];
+  // a ribbon along the edge: the height its styles give it, no times below it
+  const edge = !!plot._ctx.edge;
+  const H = ((grow || edge) && (size?.h ?? plot.clientHeight)) || PLOT_H[kind];
   // a strip keeps its own height: the timeline and its labels below (STRIP_AXIS_CSS), whose line
   // follows the theme's text
   const labelLine = () => measure(ctx.text, labels, ["label"], [10, 12]).line;
-  svg.setAttribute("viewBox", `0 0 ${W} ${grow ? H : PLOT_H[kind] + labelLine() + 2}`);
+  svg.setAttribute("viewBox", `0 0 ${W} ${grow || edge ? H : PLOT_H[kind] + labelLine() + 2}`);
   const { t0, t1: now } = windowOf(ctx, plot);
   const series = plot._ctx.series ?? ((ent.entity && ctx.series.get(ent.entity)) || []);
   const loaded = plot._ctx.loaded ?? ctx.fetched;
@@ -261,11 +265,14 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
         nb,
         true,
       )
-    : bucketLast(clampedSeries(series, t0, now), t0, now, nb);
+    : bucketLast(clampedSeries(series, t0, now), t0, now, nb, (s) => s === "on");
   if (!buckets.some(Boolean)) return empty();
   const tplGet = tplGetter(ctx);
-  const gap = Math.min(2, bw * 0.2);
+  const gap = edge ? 0 : Math.min(2, bw * 0.2);
   let html = "";
+  // a ribbon: each run of one colour one block, drawn opaque in a group that takes the opacity, so
+  // where two blocks meet no seam shows (two translucent edges would overlap, or leave a hairline)
+  const runs: { from: number; to: number; col: string }[] = [];
   buckets.forEach((b, i) => {
     if (!b) return;
     const bm =
@@ -277,30 +284,47 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
       resolveLook(ent, bm, plot._ctx.st, tplGet, undefined, bm, false).color,
       "var(--primary-color)",
     );
+    if (edge) {
+      const last = runs[runs.length - 1];
+      if (last && last.col === col && last.to === i) last.to = i + 1;
+      else runs.push({ from: i, to: i + 1, col });
+      return;
+    }
     const stroke =
       i === buckets.length - 1 ? ` stroke="var(--primary-text-color)" stroke-width="1.5"` : "";
     html += `<rect x="${(i * bw + gap / 2).toFixed(1)}" y="0" width="${Math.max(1, bw - gap).toFixed(1)}" height="${H}" rx="2" fill="${col}" opacity=".7"${stroke}/>`;
   });
-  html += `<g class="hover"><rect class="hl" y="0" width="${Math.max(1, bw - gap).toFixed(1)}" height="${H}" rx="2"/></g>`;
+  if (edge) {
+    // (each block reaches under the next, which is drawn over it: no gap between them)
+    html += `<g opacity=".7">${runs
+      .map(
+        (r, k) =>
+          `<rect x="${(r.from * bw).toFixed(1)}" y="0" width="${((r.to - r.from) * bw + (k < runs.length - 1 ? 1 : 0)).toFixed(1)}" height="${H}" fill="${r.col}"/>`,
+      )
+      .join("")}</g>`;
+  }
+  html += `<g class="hover"><rect class="hl" y="0" width="${Math.max(1, bw - gap).toFixed(1)}" height="${H}" rx="${edge ? 0 : 2}"/></g>`;
   svg.innerHTML = html;
   plot._hlOff = gap / 2;
   // history windows end now, forward windows (forecasts) start now
   const forward = !!plot._ctx.window && t0 >= ctx.now - 3600e3;
   const n = Math.round(hours);
-  addLabel(
-    labels,
-    "",
-    forward ? tr(ctx.hass, "common.now") : tr(ctx.hass, "common.minus_hours", { n }),
-    0,
-    H + 3,
-  );
-  addLabel(
-    labels,
-    "right",
-    forward ? tr(ctx.hass, "common.plus_hours", { n }) : tr(ctx.hass, "common.now"),
-    W,
-    H + 3,
-  );
+  if (!edge) {
+    addLabel(
+      labels,
+      "",
+      forward ? tr(ctx.hass, "common.now") : tr(ctx.hass, "common.minus_hours", { n }),
+      0,
+      H + 3,
+    );
+    addLabel(
+      labels,
+      "right",
+      forward ? tr(ctx.hass, "common.plus_hours", { n }) : tr(ctx.hass, "common.now"),
+      W,
+      H + 3,
+    );
+  }
   plot._buckets = buckets;
   plot._sampled = null;
   plot._numeric = numeric;

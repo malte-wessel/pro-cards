@@ -153,7 +153,8 @@ describe("what the editor shows", () => {
   it("is the kind written, else the entity's, else your own", () => {
     const shows = (cfg: Raw) => showsOf(cfg, hass);
     expect(shows({ entity: "sensor.wind_speed" })).toBe("wind");
-    expect(shows(TEMP)).toBe("none");
+    expect(shows(TEMP)).toBe("temperature");
+    expect(shows({ entity: "sensor.pressure" })).toBe("none");
     expect(shows({ ...TEMP, kind: "trend" })).toBe("trend");
     expect(shows({})).toBe("custom");
     expect(shows({ kind: "sun" })).toBe("sun");
@@ -172,7 +173,15 @@ describe("what the editor shows", () => {
     // a person: a device tracker too
     expect(include({}, { kind: "person" })).toContain("device_tracker.van");
     // the entity as it is: every entity
-    expect(include(TEMP)).toBeUndefined();
+    expect(include({ entity: "sensor.pressure" })).toBeUndefined();
+    // a door: binary sensors of its classes only; a plug: a switch of its class, or of none
+    const opening = include({}, { kind: "opening" })!;
+    expect(opening).toEqual(
+      expect.arrayContaining(["binary_sensor.door_front", "binary_sensor.window_kitchen"]),
+    );
+    expect(opening).not.toContain("binary_sensor.motion_hallway");
+    const plug = include({}, { kind: "plug" })!;
+    expect(plug).toEqual(expect.arrayContaining(["switch.coffee_machine", "switch.garden_pump"]));
     // a sensor without a device class only in the kind's unit (no wind direction), and no
     // setting in that unit (a humidity target)
     expect(battery).not.toContain("sensor.wind_direction");
@@ -351,7 +360,7 @@ describe("the editor's other entities", () => {
 });
 
 describe("the editor's controls", () => {
-  const SWITCH = { entity: "switch.coffee_machine" };
+  const SWITCH = { entity: "switch.garden_pump" };
 
   it("names the kind's own as the default, a tile's at its line's end only", () => {
     expect(options(schemaOf("poster", LIGHT), "control_type")[0].label).toBe("Switch + Slider");

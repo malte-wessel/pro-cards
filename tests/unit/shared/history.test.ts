@@ -60,6 +60,25 @@ describe("history helpers", () => {
       "x",
     ]);
   });
+  it("shows an active state that came and went inside a bucket", () => {
+    const on = (s: string) => s === "on";
+    // a door open for a moment in the second bucket, and open into the fourth
+    const pts = [
+      { t: 0, s: "off" },
+      { t: 30, s: "on" },
+      { t: 31, s: "off" },
+      { t: 70, s: "on" },
+      { t: 85, s: "off" },
+    ];
+    expect(bucketLast(pts, 0, 100, 5).map((p) => p?.s)).toEqual(["off", "off", "off", "on", "off"]);
+    expect(bucketLast(pts, 0, 100, 5, on).map((p) => p?.s)).toEqual([
+      "off",
+      "on",
+      "off",
+      "on",
+      "on",
+    ]);
+  });
   it("draws a smooth path that never goes back in x", () => {
     expect(smoothPath([])).toBe("");
     expect(

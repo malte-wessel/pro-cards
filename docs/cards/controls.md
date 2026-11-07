@@ -11,6 +11,7 @@ Without `control`, a kind draws its own controls. A poster has room for a second
 | Kind                   | Tile                              | Poster                               |
 | ---------------------- | --------------------------------- | ------------------------------------ |
 | `light`                | a switch                          | a switch, brightness below the value |
+| `plug`                 | a switch                          | a switch                             |
 | `fan`                  | its speeds                        | its speeds                           |
 | `climate`              | a stepper for the target          | a stepper for the target             |
 | `cover`                | open, stop and close              | open, stop and close                 |

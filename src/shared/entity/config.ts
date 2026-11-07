@@ -179,6 +179,8 @@ export interface PlotOptions {
   smoothing?: number;
   axis?: boolean;
   src?: string;
+  // a strip as a ribbon along the card's bottom edge
+  edge?: boolean;
 }
 // a badge of the v3 cards (the poster's, the tile's, the tile group's and the heading's badges,
 // src/shared/kinds/badge.ts): its icon place, its visual after the value, and what its kind gives

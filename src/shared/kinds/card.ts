@@ -334,9 +334,15 @@ export abstract class KindCardBase extends EntityCardBase {
 
   // the kind's default visual on this card (a tile's may differ: none for a cover)
   _kindVisual(): VisualPlace | false | undefined {
-    const kind = (this._config as KindConfig).kind;
+    const cfg = this._config as KindConfig;
+    const kind = cfg.kind;
     const tile = (this.constructor as typeof KindCardBase).thing === "tile";
-    return tile && kind.tileVisual !== undefined ? kind.tileVisual : kind.visual;
+    const v = tile && kind.tileVisual !== undefined ? kind.tileVisual : kind.visual;
+    if (!v || !kind.visualInput) return v;
+    // a plot of one of its inputs (a plug's power): none without it
+    const idx = cfg.inputs?.[kind.visualInput];
+    const src = idx === undefined ? null : cfg.entities[idx]?.entity;
+    return src ? { ...v, src } : false;
   }
 
   // the visual's window for the kind's own drawing, in hours (null: the kind's own): today is the
@@ -454,7 +460,14 @@ export abstract class KindCardBase extends EntityCardBase {
         : "icon";
     const plot: PlotOptions | undefined =
       v && block !== "icon"
-        ? { hours: v.hours, bucket: v.bucket, smoothing: v.smoothing, axis: v.axis, src: v.src }
+        ? {
+            hours: v.hours,
+            bucket: v.bucket,
+            smoothing: v.smoothing,
+            axis: v.axis,
+            src: v.src,
+            ...(v.type === "strip" && v.variant === "edge" ? { edge: true } : {}),
+          }
         : undefined;
     return {
       ...ent,

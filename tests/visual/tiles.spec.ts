@@ -32,6 +32,10 @@ add(
   [
     t("sensor.living_room_temperature"),
     t("binary_sensor.door_front"),
+    t("binary_sensor.tt_motion_on"),
+    t("binary_sensor.tt_leak_on"),
+    t("sensor.illuminance"),
+    t("switch.coffee_machine"),
     t("sensor.living_room_co2"),
     t("sensor.tt_co2_high"),
     t("sensor.outdoor_aqi"),
@@ -42,6 +46,8 @@ add(
   {
     states: {
       "sensor.tt_co2_high": like("sensor.living_room_co2", 2600),
+      "binary_sensor.tt_motion_on": like("binary_sensor.motion_hallway", "on"),
+      "binary_sensor.tt_leak_on": like("binary_sensor.water_leak_bathroom", "on"),
       "sensor.tt_battery_low": like("sensor.robot_battery", 6),
     },
   },

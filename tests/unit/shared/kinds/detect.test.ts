@@ -60,14 +60,26 @@ describe("detectKind", () => {
     expect(dc("carbon_dioxide")).toBe("carbon_dioxide");
     expect(dc("pm25")).toBe("pm25");
     expect(dc("aqi")).toBe("aqi");
+    expect(dc("temperature")).toBe("temperature");
+    expect(dc("humidity")).toBe("humidity");
+    expect(dc("illuminance")).toBe("illuminance");
+    // a binary sensor by what it watches, a switch that is a plug, a device tracker as a person
+    const bin = (device_class: string) =>
+      detectKind("binary_sensor.x", st("binary_sensor.x", { device_class })).name;
+    for (const c of ["door", "window", "garage_door", "opening"]) expect(bin(c)).toBe("opening");
+    for (const c of ["motion", "occupancy", "presence"]) expect(bin(c)).toBe("motion");
+    for (const c of ["moisture", "smoke", "gas", "carbon_monoxide", "safety", "problem", "tamper"])
+      expect(bin(c)).toBe("safety");
+    expect(bin("plug")).toBe("none");
+    expect(detectKind("switch.x", st("switch.x", { device_class: "outlet" })).name).toBe("plug");
+    expect(detectKind("switch.x", st("switch.x")).name).toBe("none");
+    expect(detectKind("device_tracker.van", undefined).name).toBe("person");
   });
 
   it("falls back to entity, and never detects a role kind", () => {
     expect(detectKind(null, undefined).name).toBe("none");
     expect(detectKind("sensor.x", undefined).name).toBe("none");
-    expect(detectKind("sensor.x", st("sensor.x", { device_class: "temperature" })).name).toBe(
-      "none",
-    );
+    expect(detectKind("sensor.x", st("sensor.x", { device_class: "pressure" })).name).toBe("none");
     // grid, solar, car, appliance and trend have no domain and no device class of their own
     expect(detectKind("sensor.x", st("sensor.x", { device_class: "power" })).name).toBe("none");
     expect(detectKind("sensor.x", st("sensor.x", { device_class: "energy" })).name).toBe("none");
@@ -76,6 +88,8 @@ describe("detectKind", () => {
   it("goes by the device class only for a domain the type reads", () => {
     const b = "binary_sensor.phone_battery_low";
     expect(detectKind(b, st(b, { device_class: "battery" })).name).toBe("none");
+    // a sensor of a binary sensor's class is no door
+    expect(detectKind("sensor.x", st("sensor.x", { device_class: "moisture" })).name).toBe("none");
     const n = "number.co2_target";
     expect(detectKind(n, st(n, { device_class: "carbon_dioxide" })).name).toBe("carbon_dioxide");
   });

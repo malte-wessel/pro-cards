@@ -65,6 +65,8 @@ export const BADGE_KINDS = [
   "pm25",
   "pm10",
   "aqi",
+  "illuminance",
+  "safety",
   "wind",
   "rain",
   "light",
@@ -447,8 +449,13 @@ const controlTypeOf = (c: CardConfigBase, kind: Kind, thing: CardThing): string 
 };
 // the drawing a visual thing has unless told: the rain's drops, the wind's dots (a cover's follows
 // its device class: none here)
-export const visualVariant = (visual: string | null, kind: Kind) =>
-  visual === "flow" ? (kind.name === "rain" ? "drops" : "dots") : undefined;
+export const visualVariant = (visual: string | null, kind: Kind, thing: CardThing) => {
+  if (visual === "flow") return kind.name === "rain" ? "drops" : "dots";
+  if (visual !== "strip") return undefined;
+  // a strip: the kind's own drawing of it on this card (a door's along the edge), else a timeline
+  const own = thing === "row" ? null : placeDefaults(kind, thing).visual;
+  return (own && own.type === "strip" && own.variant) || "timeline";
+};
 // a control named that is all the kind draws itself (a cover's buttons): the kind's own
 export const sameAsOwn = (type: string, kind: Kind, thing: CardThing) => {
   const own = ownControls(kind, thing);
@@ -530,7 +537,7 @@ export const configToForm = (
     d.visual_tint = v.tint ?? "";
     d.visual_blur = v.blur === true ? 20 : v.blur === false ? 0 : num(v.blur);
     const drawn = visualThing === DEFAULT ? defaultVisual(kind, thing) : visualThing;
-    d.visual_variant = v.variant === visualVariant(drawn, kind) ? "" : (v.variant ?? "");
+    d.visual_variant = v.variant === visualVariant(drawn, kind, thing) ? "" : (v.variant ?? "");
   }
   d.visual_thing = visualThing === defaultVisual(kind, thing) ? DEFAULT : visualThing;
 

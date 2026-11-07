@@ -126,6 +126,9 @@ const STYLE_POSTER = `
   ha-card.layout-poster .pbody > .plot { width: auto; margin: 8px -16px -16px; }
   ha-card.layout-poster .pbody > .plot[data-kind="strip"] { margin: 8px 0 -6px; }
   ha-card.layout-poster .pbody > .plot[data-kind="columns"] { margin: 8px -18px -20px; }
+  /* a strip as a ribbon along the card's bottom edge, behind the texts: it takes no room */
+  ha-card.layout-poster .pbody > .plot.edge { position: absolute; inset: auto 0 0; height: 6px; margin: 0; }
+  ha-card.layout-poster .pbody > .plot.edge > .tip { bottom: 10px; }
   /* a poster's plot runs to the card's edges: its placeholder (no data, loading) keeps the padding */
   ha-card.layout-poster .pbody > .plot .label.placeholder { margin-left: 16px; }
   ha-card.layout-poster .pbody > .plot[data-kind="columns"] .label.placeholder { margin-left: 18px; }

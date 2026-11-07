@@ -91,8 +91,31 @@ const moreInfo = (entityId: string) => {
   popEl.classList.add("on");
 };
 
+// a binary sensor's on and off as Home Assistant words them for its device class
+const BINARY_WORDS: Record<string, [on: string, off: string]> = {
+  door: ["Open", "Closed"],
+  window: ["Open", "Closed"],
+  garage_door: ["Open", "Closed"],
+  opening: ["Open", "Closed"],
+  motion: ["Detected", "Clear"],
+  occupancy: ["Detected", "Clear"],
+  presence: ["Home", "Away"],
+  moisture: ["Wet", "Dry"],
+  smoke: ["Detected", "Clear"],
+  gas: ["Detected", "Clear"],
+  carbon_monoxide: ["Detected", "Clear"],
+  safety: ["Unsafe", "Safe"],
+  problem: ["Problem", "OK"],
+  tamper: ["Tampering detected", "Clear"],
+  plug: ["Plugged in", "Unplugged"],
+  battery_charging: ["Charging", "Not charging"],
+};
 const formatEntityState = (st: HassEntity, state?: string): string => {
   const v = state ?? st.state;
+  const words = st.entity_id.startsWith("binary_sensor.")
+    ? BINARY_WORDS[st.attributes?.device_class as string]
+    : undefined;
+  if (words && (v === "on" || v === "off")) return words[v === "on" ? 0 : 1];
   const unit = st.attributes?.unit_of_measurement;
   const n = Number(v);
   if (v !== "" && Number.isFinite(n)) {

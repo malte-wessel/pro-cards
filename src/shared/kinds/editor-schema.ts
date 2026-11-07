@@ -35,7 +35,13 @@ import {
   type CardThing,
   visualOptionsOf,
 } from "./editor-form.ts";
-import { COVER_VARIANTS, KIND_THINGS, type IconThing, type VisualThing } from "./places.ts";
+import {
+  COVER_VARIANTS,
+  KIND_THINGS,
+  STRIP_VARIANTS,
+  type IconThing,
+  type VisualThing,
+} from "./places.ts";
 import { IMAGE_OPACITY } from "./backdrop.ts";
 import { canRead, detectKind } from "./detect.ts";
 import { KINDS } from "./registry.ts";
@@ -100,6 +106,7 @@ const VARIANTS: Partial<Record<string, readonly string[]>> = {
   wind: FLOW_STYLES,
   rain: RAIN_STYLES,
   cover: COVER_VARIANTS,
+  strip: STRIP_VARIANTS,
 };
 
 const selectOf = (options: { value: string; label: string }[]) => ({
@@ -151,7 +158,7 @@ const detectedAs = (hass: HomeAssistant, id: string): string => {
 // entity's wind, a device tracker's person, a counter's trend); a number of a device class it
 // offers (a car its battery, solar, the grid and the appliances a power sensor), or a sensor that
 // names no class in a unit it offers (a template's battery in %); for a kind that offers none (a
-// trend), a number
+// trend), a number; a binary sensor of a class it offers, a switch of one or of none (a plug)
 export const fitsKind = (hass: HomeAssistant | undefined, kind: string, id: string): boolean => {
   const k = KINDS[kind];
   if (!k || !hass) return false;
@@ -159,9 +166,12 @@ export const fitsKind = (hass: HomeAssistant | undefined, kind: string, id: stri
   if (detectedAs(hass, id) === kind) return true;
   if (!canRead(k, id)) return false;
   const domain = domainOf(id);
-  if (!NUMBERS.has(domain)) return true;
   const st = hass.states[id];
   const dc = typeof st?.attributes.device_class === "string" ? st.attributes.device_class : "";
+  if (!NUMBERS.has(domain)) {
+    if (!k.offers || (domain !== "binary_sensor" && domain !== "switch")) return true;
+    return dc ? k.offers.deviceClasses.includes(dc) : domain === "switch";
+  }
   const unit =
     typeof st?.attributes.unit_of_measurement === "string" ? st.attributes.unit_of_measurement : "";
   if (!k.offers) return isNum(st?.state) || !!unit;
@@ -975,8 +985,8 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
       ? [
           variants(
             "visual_variant",
-            visualThing === "cover" ? "cover" : kind.name,
-            visualVariant(visualThing, kind),
+            visualThing === "cover" || visualThing === "strip" ? visualThing : kind.name,
+            visualVariant(visualThing, kind, thing),
           ),
         ]
       : []),

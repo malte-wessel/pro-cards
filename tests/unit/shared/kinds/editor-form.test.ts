@@ -417,7 +417,7 @@ describe("the editor form: the other entities", () => {
 describe("the editor form: the controls", () => {
   const FAN = { type: "custom:poster-card-pro", entity: "fan.living_room" };
   const CLIMATE = { type: "custom:poster-card-pro", entity: "climate.living_room" };
-  const SWITCH = { type: "custom:tile-card-pro", entity: "switch.coffee_machine" };
+  const SWITCH = { type: "custom:tile-card-pro", entity: "switch.garden_pump" };
 
   it("writes the kind's, none, the entity's own or one named", () => {
     expect(formOf(LIGHT).control_type).toBe(DEFAULT);

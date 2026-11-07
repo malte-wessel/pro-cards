@@ -6,6 +6,7 @@ import { docExamples, walk } from "./docs-examples.ts";
 import { PRESETS } from "../../docs/.vitepress/theme/presets.ts";
 import { normalizeLayoutConfig } from "../../src/layout/config.ts";
 import { normalizeSwipeConfig } from "../../src/swipe/config.ts";
+import { KIND_NAMES } from "../../src/shared/kinds/registry.ts";
 
 const validate = makeValidator();
 describe("card config schemas", () => {
@@ -271,6 +272,11 @@ describe("card config schemas", () => {
     ).toBeNull();
   });
 
+  it("names every kind the cards know, and no other", () => {
+    const poster = JSON.parse(readFileSync("schema/poster-card-pro.schema.json", "utf8"));
+    expect([...poster.$defs.kind.enum].sort()).toEqual([...KIND_NAMES].sort());
+  });
+
   it("checks the poster card's kind, its inputs and its keys", () => {
     const PC = "custom:poster-card-pro";
     expect(validate({ type: PC, entity: "sensor.a", kind: "room" })).toMatch(/enum|allowed/);
@@ -280,6 +286,26 @@ describe("card config schemas", () => {
       expect(validate({ type: PC, entity: "sensor.a", kind }), kind).toBeNull();
     for (const kind of ["garage", "shutter", "blind", "curtain", "gate", "awning", "window"])
       expect(validate({ type: PC, entity: "cover.a", kind }), kind).toMatch(/enum|allowed/);
+    // a plug takes its power, a door nothing
+    expect(
+      validate({ type: PC, entity: "switch.a", kind: "plug", inputs: { power: "sensor.p" } }),
+    ).toBeNull();
+    expect(
+      validate({ type: PC, entity: "switch.a", kind: "plug", inputs: { today: "sensor.e" } }),
+    ).not.toBeNull();
+    expect(
+      validate({ type: PC, entity: "binary_sensor.a", kind: "opening", inputs: {} }),
+    ).not.toBeNull();
+    expect(
+      validate({ type: PC, entity: "binary_sensor.a", visual: { type: "strip", variant: "edge" } }),
+    ).toBeNull();
+    expect(
+      validate({
+        type: PC,
+        entity: "binary_sensor.a",
+        visual: { type: "strip", variant: "drops" },
+      }),
+    ).not.toBeNull();
     expect(validate({ type: PC, kind: "trend" })).toMatch(/series/);
     expect(
       validate({ type: PC, kind: "trend", series: ["sensor.a", { entity: "sensor.b" }] }),

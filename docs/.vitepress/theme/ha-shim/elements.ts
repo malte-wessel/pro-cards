@@ -81,6 +81,7 @@ const DOMAIN_ICON: Record<string, (s: string) => string> = {
   light: (s) => (s === "on" ? "mdi:lightbulb" : "mdi:lightbulb-outline"),
   switch: (s) => (s === "on" ? "mdi:toggle-switch-variant" : "mdi:toggle-switch-variant-off"),
   person: (s) => (s === "home" ? "mdi:account" : "mdi:account-arrow-right"),
+  device_tracker: (s) => (s === "home" ? "mdi:account" : "mdi:account-arrow-right"),
   climate: () => "mdi:thermostat",
   cover: (s) => (s === "closed" ? "mdi:window-shutter" : "mdi:window-shutter-open"),
   vacuum: () => "mdi:robot-vacuum",
@@ -170,6 +171,8 @@ export const stateIcon = (st?: HassEntity | null): string => {
   const dc: string | undefined = st.attributes?.device_class;
   const binary = domain === "binary_sensor" && dc ? BINARY_DC_ICON[dc] : undefined;
   if (binary) return binary[st.state === "on" ? 0 : 1];
+  if (domain === "switch" && dc === "outlet")
+    return st.state === "on" ? "mdi:power-plug" : "mdi:power-plug-off";
   const byDc = dc ? DC_ICON[dc] : undefined;
   if (byDc) return typeof byDc === "function" ? byDc(st.state) : byDc;
   if (domain === "sensor" && dc === "battery") return "mdi:battery";

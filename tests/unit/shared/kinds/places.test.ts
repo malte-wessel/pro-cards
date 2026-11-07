@@ -220,7 +220,7 @@ describe("parseVisual", () => {
       "visual: image takes src, opacity, tint, blur, not hours",
     );
     expect(() => visual({ type: "strip", smoothing: 10 })).toThrow(
-      "visual: strip takes hours, bucket, src, not smoothing",
+      "visual: strip takes hours, bucket, src, variant, not smoothing",
     );
     expect(() => visual({ ring: true })).toThrow("visual: ring is no option here");
     expect(() => visual({ type: "image", opacity: 1.5 })).toThrow(

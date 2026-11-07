@@ -33,14 +33,19 @@ describe("the card picker's suggestions for an entity", () => {
     expect(suggested("sensor.wind_speed")).toEqual(["poster", "tile", "multi-trend"]);
     expect(suggested("sensor.rain_rate")).toEqual(["poster", "tile", "multi-trend"]);
     // the wind, rain and illuminance cards, soon deprecated, leave them to the poster and the tile
-    expect(suggested("sensor.illuminance")).toEqual(["multi-trend"]);
+    expect(suggested("sensor.illuminance")).toEqual(["poster", "tile", "multi-trend"]);
+    // a sensor of a kind of its own, a door, a plug
+    expect(suggested("sensor.kitchen_temperature")).toEqual(["poster", "tile", "multi-trend"]);
+    expect(suggested("binary_sensor.door_front")).toEqual(["poster", "tile"]);
+    expect(suggested("switch.coffee_machine")).toEqual(["poster", "tile"]);
   });
 
   it("offer a numeric sensor only the trend, and nothing for the rest", () => {
-    expect(suggested("sensor.kitchen_temperature")).toEqual(["multi-trend"]);
+    expect(suggested("sensor.pressure")).toEqual(["multi-trend"]);
     // a sensor with a word for a state, entities our cards draw as Home Assistant's tile does
     expect(suggested("sensor.dishwasher_status")).toEqual([]);
-    expect(suggested("binary_sensor.door_front")).toEqual([]);
+    expect(suggested("binary_sensor.ev_plugged")).toEqual([]);
+    expect(suggested("switch.garden_pump")).toEqual([]);
     expect(suggested("input_boolean.guest_mode")).toEqual([]);
     expect(suggested("scene.dinner")).toEqual([]);
   });

@@ -345,11 +345,14 @@ describe("tile-card config", () => {
         rules: [{ above: 0, visual: { src: "sensor.outdoor_temperature" } }],
       });
       expect(plot._historyIds).toEqual([T]);
-      // the history is the one the card and its rules can draw: none for no plot
-      expect(draw({ entity: T, visual: false })._historyIds).toEqual([]);
+      // the history is the one the card and its rules can draw: none for no plot (a temperature's
+      // own, for today's low and high, aside)
+      expect(draw({ entity: T, kind: "none", visual: false })._historyIds).toEqual([]);
       expect(
-        draw({ entity: T, visual: false, rules: [{ above: 50, visual: "columns" }] })._historyIds,
+        draw({ entity: T, kind: "none", visual: false, rules: [{ above: 50, visual: "columns" }] })
+          ._historyIds,
       ).toEqual([T]);
+      expect(draw({ entity: T, visual: false })._historyIds).toEqual([T]);
       // the window is the plot's: a visual with fewer hours fetches fewer
       expect(draw({ entity: T, visual: { type: "columns", hours: 6 } })._config?.hours).toBe(6);
     } finally {

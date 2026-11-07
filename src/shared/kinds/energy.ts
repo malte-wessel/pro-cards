@@ -10,12 +10,12 @@ import { unitOf, type FmtValue } from "../entity/model.ts";
 import { leadEl, secondaryEl } from "../entity/render/lead.ts";
 import { fmtDuration, fmtNumber } from "../format.ts";
 import type { HassEntity, HomeAssistant } from "../ha.ts";
-import type { Point } from "../history.ts";
 import { t } from "../i18n.ts";
 import { powerParts, UNIT_TO_W, wattsOf } from "../power.ts";
-import { isNum, startOfDay } from "../util.ts";
+import { isNum } from "../util.ts";
 import { div, wordValue } from "./dom.ts";
 import { BATTERY_RULES } from "./rules.ts";
+import { todayOf } from "./sensors.ts";
 import type { Kind, KindCtx, Read } from "./types.ts";
 
 // a power sensor, for an input the editor lists
@@ -109,11 +109,6 @@ export const GRID: Kind = {
 
 // ----- solar: the output, today's energy and production -----
 
-const todayOf = (c: KindCtx): Point[] => {
-  const id = c.ent.entity;
-  const t0 = startOfDay(c.ctx.now);
-  return (id ? (c.ctx.series.get(id) ?? []) : []).filter((p) => p.t >= t0);
-};
 export const SOLAR: Kind = {
   name: "solar",
   reads: ["sensor", "input_number", "number"],

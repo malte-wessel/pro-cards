@@ -33,8 +33,12 @@ export const COVER_VARIANTS = [
   "window",
 ] as const;
 export type CoverVariant = (typeof COVER_VARIANTS)[number];
-// the drawings of the things that have more than one: the wind's or the rain's flow, a cover
-const VARIANTS = [...FLOW_ALL, ...COVER_VARIANTS] as const;
+// a strip's drawings: a timeline below the texts with its times, or a ribbon along the card's
+// bottom edge behind them (a door's or motion's, where the value keeps its size)
+export const STRIP_VARIANTS = ["timeline", "edge"] as const;
+// the drawings of the things that have more than one: the wind's or the rain's flow, a cover, a
+// strip
+const VARIANTS = [...FLOW_ALL, ...COVER_VARIANTS, ...STRIP_VARIANTS] as const;
 export type Variant = (typeof VARIANTS)[number];
 
 export interface IconPlace {
@@ -91,7 +95,7 @@ export const VISUAL_OPTIONS: Record<VisualThing, readonly string[]> = {
   flow: ["variant"],
   sparkline: [...PLOT, "axis", "smoothing"],
   columns: [...PLOT, "axis"],
-  strip: PLOT,
+  strip: [...PLOT, "variant"],
   bar: [],
   gauge: [],
   segments: [],
@@ -232,6 +236,8 @@ export const parseVisual = (raw: unknown, at: string, rule = false): Written<Vis
     throw new Error(`${at}: a flow's variant is one of ${list(FLOW_ALL)}`);
   if (type === "cover" && opts.variant !== undefined && !oneOf(COVER_VARIANTS, opts.variant))
     throw new Error(`${at}: a cover's variant is one of ${list(COVER_VARIANTS)}`);
+  if (type === "strip" && opts.variant !== undefined && !oneOf(STRIP_VARIANTS, opts.variant))
+    throw new Error(`${at}: a strip's variant is one of ${list(STRIP_VARIANTS)}`);
   if (rule && opts.src !== undefined && type && HISTORY_THINGS.includes(type))
     throw new Error(`${at}: a rule sets no src of a plot (it is the card's history)`);
   return type ? { type, ...opts } : opts;

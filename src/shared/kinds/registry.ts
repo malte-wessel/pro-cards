@@ -1,10 +1,11 @@
-// Every kind by name (the list is fixed for a major version: a kind added later changes how
-// existing cards of its domain look, unasked).
+// Every kind by name (the list is fixed from 3.0 on, until the next major version: a kind added
+// later changes how existing cards of its domain look, unasked).
 import { AQI_RULES, CO2_RULES, PM10_RULES, PM25_RULES } from "./rules.ts";
 import { APPLIANCE, APPLIANCE_KINDS, BATTERY, CAR, GRID, SOLAR } from "./energy.ts";
 import { COVER, LAWN_MOWER, MEDIA, VACUUM } from "./devices.ts";
 import { ALARM, CLIMATE, FAN, LIGHT, LOCK, PERSON } from "./domains.ts";
 import { RAIN } from "./rain.ts";
+import { HUMIDITY, ILLUMINANCE, MOTION, OPENING, PLUG, SAFETY, TEMPERATURE } from "./sensors.ts";
 import { SUN } from "./sun.ts";
 import { TREND } from "./trend.ts";
 import type { Kind, KindRule } from "./types.ts";
@@ -31,6 +32,13 @@ export const KINDS: Record<string, Kind> = {
   pm25: ruleKind("pm25", PM25_RULES, "µg/m³"),
   pm10: ruleKind("pm10", PM10_RULES, "µg/m³"),
   aqi: ruleKind("aqi", AQI_RULES, "index"),
+  temperature: TEMPERATURE,
+  humidity: HUMIDITY,
+  illuminance: ILLUMINANCE,
+  opening: OPENING,
+  motion: MOTION,
+  safety: SAFETY,
+  plug: PLUG,
   weather: WEATHER,
   sun: SUN,
   wind: WIND,

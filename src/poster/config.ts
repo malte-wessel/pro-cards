@@ -77,7 +77,9 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
     headerIdxs: [],
     hasHeader: false,
     ...kc,
-    ...(badgeHours > kc.hours ? { fetchHours: badgeHours } : {}),
+    ...(Math.max(badgeHours, kc.kind.historyHours ?? 0) > kc.hours
+      ? { fetchHours: Math.max(badgeHours, kc.kind.historyHours ?? 0) }
+      : {}),
     statusIdx,
     statusText,
   };

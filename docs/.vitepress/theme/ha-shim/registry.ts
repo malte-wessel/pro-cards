@@ -21,6 +21,7 @@ const DEVICE_TABLE: [string, RegExp][] = [
   ["washer", /^sensor\.washer_/],
   ["dishwasher", /^sensor\.dishwasher_/],
   ["heat_pump", /^sensor\.heat_pump_/],
+  ["coffee_plug", /^(switch\.coffee_machine|sensor\.coffee_machine_power)$/],
 ];
 // the integrations' own names for entities discovery tells apart by them
 const TRANSLATION_KEYS: Record<string, string> = {

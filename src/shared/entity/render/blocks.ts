@@ -64,11 +64,13 @@ export const plotEl = (
   const plot = document.createElement("div") as PlotElement;
   // sparkline and columns grow into a taller card; a strip is a timeline and keeps its height
   // (styles: STYLE_PLOT)
-  plot.className = GROW_VISUALS.has(kind) ? "plot grow" : "plot";
+  plot.className = GROW_VISUALS.has(kind) ? "plot grow" : extra.edge ? "plot edge" : "plot";
   // what it draws, for the styles (a poster lets a line, not columns, reach up under its value)
   plot.dataset.kind = kind;
-  plot.style.height =
-    kind === "strip" ? `calc(${PLOT_H.strip}px + ${STRIP_AXIS_CSS})` : `${PLOT_H[kind]}px`;
+  // (a ribbon along the edge: its height from the styles)
+  if (!extra.edge)
+    plot.style.height =
+      kind === "strip" ? `calc(${PLOT_H.strip}px + ${STRIP_AXIS_CSS})` : `${PLOT_H[kind]}px`;
   plot.innerHTML = `<svg class="abs" preserveAspectRatio="none"></svg><div class="labels"></div><div class="tip"></div>`;
   plot._ctx = { ...extra, ent, idx, kind, st: m.st };
   const hs = ctx.plotHandlers;
@@ -103,6 +105,7 @@ export const blockEl = (
           bucketMin: p.bucket,
           smoothMin: p.smoothing,
           axis: p.axis,
+          edge: p.edge,
         },
       );
     }
@@ -111,6 +114,7 @@ export const blockEl = (
       bucketMin: p.bucket,
       smoothMin: p.smoothing,
       axis: p.axis,
+      edge: p.edge,
     });
   }
   return null;

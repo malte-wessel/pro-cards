@@ -532,11 +532,8 @@ test.describe("tile places", () => {
   }) => {
     const spark = { type: "sparkline", hours: 6, axis: true };
     await mount(page, [
-      {
-        type: T,
-        entity: "sensor.living_room_temperature",
-        visual: { ...spark, src: "sensor.power_consumption" },
-      },
+      // (a pressure sensor: no kind of its own, no history beyond the plot's)
+      { type: T, entity: "sensor.pressure", visual: { ...spark, src: "sensor.power_consumption" } },
       { type: T, entity: "sensor.power_consumption", visual: spark },
       { type: T, entity: "sensor.living_room_temperature", visual: "sparkline" },
     ]);

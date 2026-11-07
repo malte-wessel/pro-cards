@@ -303,6 +303,13 @@
         "pm25",
         "pm10",
         "aqi",
+        "temperature",
+        "humidity",
+        "illuminance",
+        "opening",
+        "motion",
+        "safety",
+        "plug",
         "weather",
         "sun",
         "wind",
@@ -582,9 +589,11 @@
             "garage",
             "gate",
             "awning",
-            "window"
+            "window",
+            "timeline",
+            "edge"
           ],
-          "description": "flow: the animation's drawing, wind: dots, lines, swoosh, vectors; rain: drops, ripples, fill. cover: the window's drawing, shutter, blind, curtain, garage, gate, awning, window. Default: the kind's (a cover's device class's)"
+          "description": "flow: the animation's drawing, wind: dots, lines, swoosh, vectors; rain: drops, ripples, fill. cover: the window's drawing, shutter, blind, curtain, garage, gate, awning, window. strip: timeline (below the texts, with its times) or edge (a ribbon along the card's bottom edge). Default: the kind's (a cover's device class's, a door's or motion's strip: edge)"
         },
         "hours": {
           "oneOf": [
@@ -765,7 +774,12 @@
           },
           "then": {
             "propertyNames": {
-              "enum": ["type", "hours", "bucket", "src"]
+              "enum": ["type", "hours", "bucket", "src", "variant"]
+            },
+            "properties": {
+              "variant": {
+                "enum": ["timeline", "edge"]
+              }
             }
           }
         },
@@ -1066,6 +1080,12 @@
                   "pm25",
                   "pm10",
                   "aqi",
+                  "temperature",
+                  "humidity",
+                  "illuminance",
+                  "opening",
+                  "motion",
+                  "safety",
                   "weather",
                   "sun",
                   "light",
@@ -1085,6 +1105,40 @@
           "then": {
             "properties": {
               "inputs": false,
+              "running_above": false,
+              "series": false
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["kind"],
+            "properties": {
+              "kind": {
+                "const": "plug"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "inputs": {
+                "properties": {
+                  "direction": false,
+                  "gust": false,
+                  "today": false,
+                  "wind": false,
+                  "charge": false,
+                  "discharge": false,
+                  "import": false,
+                  "export": false,
+                  "range": false,
+                  "plugged": false,
+                  "charging": false,
+                  "location": false,
+                  "remaining": false,
+                  "phase": false
+                }
+              },
               "running_above": false,
               "series": false
             }
@@ -1603,7 +1657,7 @@
         },
         "power": {
           "$ref": "defs.schema.json#/$defs/entityId",
-          "description": "battery: its power, + charging"
+          "description": "battery: its power, + charging; plug: the power it draws"
         },
         "charge": {
           "$ref": "defs.schema.json#/$defs/entityId",

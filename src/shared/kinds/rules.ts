@@ -38,6 +38,12 @@ export const AQI_RULES: readonly KindRule[] = [
   { above: 301, color: "deep-purple", labelKey: "kind.level.hazardous", pulse: true },
 ];
 
+// the light level in lx: its word and icon, no colour
+export const ILLUMINANCE_RULES: readonly KindRule[] = [
+  { below: 10, icon: "mdi:brightness-4", labelKey: "kind.light.dark" },
+  { below: 200, icon: "mdi:brightness-5", labelKey: "kind.light.dim" },
+  { above: 200, icon: "mdi:brightness-7", labelKey: "kind.light.bright" },
+];
 // five bands of the wind speed in km/h, from calm to a storm (the whole card red)
 export const WIND_RULES: readonly KindRule[] = [
   { below: 5, color: "blue-grey", labelKey: "kind.wind.calm" },

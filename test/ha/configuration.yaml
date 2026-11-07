@@ -17,6 +17,10 @@ homeassistant:
   # the docs' demo home: helpers, scenes, the script, the group and the people (scripts/ha-world.ts)
   packages:
     world: !include test/world/package.yaml
+  # a template switch names no device class: the coffee machine is a plug, as in the docs
+  customize:
+    switch.coffee_machine:
+      device_class: outlet
 
 # the rest of the demo home as real entities (test/ha/custom_components/pro_cards_world)
 pro_cards_world:

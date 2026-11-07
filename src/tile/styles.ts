@@ -47,6 +47,8 @@ const STYLE_TILE_CARD = `
   ha-card.tvertical .row.tile > :is(.plot, .pcurve) { margin: 0 -12px -12px; }
   ha-card.tvertical .row.tile > .plot[data-kind="strip"] { margin: 0; }
   ha-card.tvertical .row.tile > .plot[data-kind="columns"] { margin: 0 -14px -16px; }
+  /* a strip as a ribbon along the tile's bottom edge: it takes no room */
+  ha-card.layout-tile .row.tile > .plot.edge { position: absolute; inset: auto 0 0; height: 4px; margin: 0; }
   ha-card.layout-tile .row.tile > .plot .label.placeholder { margin-left: 12px; }
   ha-card.layout-tile .row.tile > .plot[data-kind="columns"] .label.placeholder { margin-left: 14px; }
   /* a picture's tooltip opens upward from its bottom, over the line: one opening downward would

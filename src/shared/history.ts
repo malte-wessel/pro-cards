@@ -206,17 +206,32 @@ export const trendOf = (
   }
   return before === null ? null : current - before;
 };
-// last state per bucket (for non-numeric strips), carried forward into empty buckets
+// last state per bucket (for non-numeric strips), carried forward into empty buckets; with
+// `active`, a bucket in which an active state occurred shows it (a door open for 30 s), the last
+// state still carried on
 export const bucketLast = (
   pts: readonly { t: number; s: string; v?: number | null }[],
   t0: number,
   now: number,
   nb: number,
+  active?: (s: string) => boolean,
 ): (LastBucket | null)[] => {
-  const out: ({ t: number; s: string; v?: number | null } | null)[] = new Array(nb).fill(null);
+  type P = { t: number; s: string; v?: number | null };
+  const last: (P | null)[] = new Array(nb).fill(null);
+  const hit: (P | null)[] = new Array(nb).fill(null);
   const span = now - t0 || 1;
-  for (const p of pts) out[Math.min(nb - 1, Math.max(0, Math.floor(((p.t - t0) / span) * nb)))] = p;
-  for (let i = 1; i < nb; i++) if (!out[i]) out[i] = out[i - 1];
+  for (const p of pts) {
+    const i = Math.min(nb - 1, Math.max(0, Math.floor(((p.t - t0) / span) * nb)));
+    last[i] = p;
+    if (active?.(p.s)) hit[i] ??= p;
+  }
+  // the state each bucket starts in: the one carried in from before it
+  const out: (P | null)[] = last.slice();
+  for (let i = 1; i < nb; i++) {
+    if (!last[i]) last[i] = last[i - 1];
+    out[i] = hit[i] ?? (active && last[i - 1] && active(last[i - 1]!.s) ? last[i - 1] : last[i]);
+  }
+  out[0] = hit[0] ?? out[0];
   return out.map((p, i) =>
     p ? { s: p.s, v: p.v ?? null, t1: t0 + (i * span) / nb, t2: t0 + ((i + 1) * span) / nb } : null,
   );

@@ -76,22 +76,22 @@ test("the entity picker searches the demo home and picks by click or keyboard", 
   // (the entity as it is: every entity to pick)
   const e = await openEditor(page, {
     type: "custom:tile-card-pro",
-    entity: "sensor.living_room_temperature",
+    entity: "sensor.pressure",
   });
   const entity = field(e.form, "entity");
   const input = entity.locator("input");
-  await expect(input).toHaveValue("Living room temperature");
+  await expect(input).toHaveValue("Air pressure");
   await input.click();
   // a search shows what matches every word, by name or id
   await input.fill("living temp");
-  await expect(entity.locator(".opt .main")).toHaveText(["Living room temperature"]);
+  await expect(entity.locator(".opt .main").first()).toHaveText("Living room temperature");
   await input.fill("light.living");
   await expect(entity.locator(".opt .sub").first()).toHaveText("light.living_room");
   await input.fill("no such thing");
   await expect(entity.locator(".none")).toHaveText("No matching entities");
   // Escape leaves the entity as it was
   await input.press("Escape");
-  await expect(input).toHaveValue("Living room temperature");
+  await expect(input).toHaveValue("Air pressure");
   expect(await e.count()).toBe(0);
   // the keyboard picks
   await input.click();

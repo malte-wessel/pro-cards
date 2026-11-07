@@ -11,10 +11,10 @@ import { numAttr as num } from "../entity/look.ts";
 import type { FmtValue } from "../entity/model.ts";
 import { leadEl, secondaryEl } from "../entity/render/lead.ts";
 import { setRate } from "../flow/dom.ts";
-import { fmtDuration, fmtNumber } from "../format.ts";
+import { fmtNumber } from "../format.ts";
 import type { HassEntity } from "../ha.ts";
 import { t, type StringKey } from "../i18n.ts";
-import { div, pctValue } from "./dom.ts";
+import { alertGlow, div, pctValue, sinceEl } from "./dom.ts";
 import { IMAGE_BLUR } from "./places.ts";
 import { attention } from "./rules.ts";
 import type { Kind, KindCtx } from "./types.ts";
@@ -210,18 +210,14 @@ export const ALARM: Kind = {
   rules: attention("triggered"),
   // its glow: a red pulse from the edges while triggered
   visual: { type: "glow" },
-  glow: {
-    key: () => "alarm",
-    build: () => div("palarm"),
-    update: (el, c) => el.classList.toggle("on", c.m.st?.state === "triggered"),
-  },
+  glow: alertGlow((c) => c.m.st?.state === "triggered"),
 };
 
 // ----- person: their photo in the icon and blurred behind the card, the zone, since when -----
 
 export const PERSON: Kind = {
   name: "person",
-  domains: ["person"],
+  domains: ["person", "device_tracker"],
   reads: ["person", "device_tracker"],
   readsText: "a person or a device tracker",
   keys: [],
@@ -229,20 +225,6 @@ export const PERSON: Kind = {
   // their photo in the icon, and blurred behind the card (the icon shows it sharp)
   icon: { type: "image" },
   visual: { type: "image", blur: IMAGE_BLUR },
-  slots: (c) => {
-    const st = c.m.st;
-    const since = st ? (c.ctx.now - new Date(st.last_changed).getTime()) / 1000 : NaN;
-    return {
-      secondary: Number.isFinite(since)
-        ? secondaryEl([
-            {
-              text: t(c.ctx.hass, "kind.person.since", {
-                t: fmtDuration(c.ctx.hass, Math.max(60, since), true),
-              }),
-            },
-          ])
-        : null,
-    };
-  },
+  slots: (c) => ({ secondary: sinceEl(c) }),
   extra: (c) => [Math.floor(c.ctx.now / 60e3)],
 };
