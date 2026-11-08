@@ -404,12 +404,14 @@
   .ctl-buttons.square > button.chip { border-radius: 10px; }
   .ctl-buttons.square:not(.sm) > button.chip { width: auto; }
   .ctl-buttons.square.sm > button.chip { border-radius: 8px; }
-  /* a stepper is one bar: minus, the value and plus in it (each 32 px wide, so the bar fits under
-     a tile's line at half a phone's width; 28 px in a table) */
+  /* a stepper is one bar: minus, the value and plus in it, the value 4 px clear of each (minus and
+     plus 30 px wide, so the bar fits under a tile's line at half a phone's width; 28 px in a
+     table) */
   .ctl-stepper.square { gap: 0; border-radius: 10px; background: var(--fe-track); }
   .ctl-stepper.square .round { background: transparent; }
   .ctl-stepper.square:not(.sm) { height: 36px; }
-  .ctl-stepper.square:not(.sm) .round { width: 32px; height: 36px; border-radius: 10px; }
+  .ctl-stepper.square:not(.sm) .round { width: 30px; height: 36px; border-radius: 10px; }
+  .ctl-stepper.square .val { padding: 0 4px; }
   .ctl-stepper.square.sm { height: 28px; border-radius: 8px; }
   .ctl-stepper.square.sm .round { border-radius: 8px; }
   /* segments without the inset: the chosen one fills the bar's height, every option 2 px wider
