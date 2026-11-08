@@ -416,3 +416,46 @@ describe("badges", () => {
     expect(off).toMatchObject({ style: null, pulse: false });
   });
 });
+
+describe("the current cards' colour, as Home Assistant's tile and badge", () => {
+  // (a tile's or poster's item: its rules beat its colour)
+  const v3 = (o: RawEntity, id = "sensor.x") => ({
+    ...normalizeEntity({ entity: id, ...o }, ctx, "e"),
+    ruleWins: true,
+  });
+  const off: ValueModel = { raw: null, num: null, avail: false };
+  it("takes the state icon colour without one of its own, a badge the primary", () => {
+    expect(resolveLook(v3({}), num(21.5), st(21.5), tpl).color).toBe("var(--state-icon-color)");
+    const badge = { ...v3({}), pill: {} as never };
+    expect(resolveLook(badge, num(21.5), st(21.5), tpl).color).toBe("primary");
+    // a word is no off state for a plain sensor: only off, unknown and unavailable are
+    expect(resolveLook(v3({}), txt("idle"), st("idle"), tpl).color).toBe("var(--state-icon-color)");
+  });
+  it("draws its own colour while active, the state's while not", () => {
+    const door = (s: string) => st(s, { device_class: "door" }, "binary_sensor.door");
+    const e = v3({ color: "red" }, "binary_sensor.door");
+    expect(resolveLook(e, txt("on"), door("on"), tpl).color).toBe("red");
+    expect(resolveLook(e, txt("off"), door("off"), tpl).color).toContain("--state-inactive-color");
+    // a rule's colour applies in every state
+    e.rules = [rule({ state: "off", color: "blue" })];
+    expect(resolveLook(e, txt("off"), door("off"), tpl).color).toBe("blue");
+  });
+  it("takes the state's colour whatever value it shows: a thermostat's mode", () => {
+    const heat = st("heat", { hvac_action: "idle", current_temperature: 21 }, "climate.x");
+    const e = v3({ attribute: "current_temperature" }, "climate.x");
+    expect(resolveLook(e, num(21), heat, tpl).color).toContain("--state-climate-heat-color");
+    const offSt = st("off", { current_temperature: 21 }, "climate.x");
+    expect(resolveLook(e, num(21), offSt, tpl).color).toContain("--state-inactive-color");
+  });
+  it("draws unavailable and unknown in Home Assistant's colours", () => {
+    expect(resolveLook(v3({}), off, st("unavailable"), tpl).color).toBe(
+      "var(--state-unavailable-color)",
+    );
+    expect(resolveLook(v3({}), off, st("unknown"), tpl).color).toBe("var(--state-inactive-color)");
+  });
+  it("leaves the deprecated cards' colours as they were", () => {
+    expect(resolveLook(ent({}), num(21.5), st(21.5), tpl).color).toBe("primary");
+    expect(resolveLook(ent({}), txt("idle"), st("idle"), tpl).color).toBe("grey");
+    expect(resolveLook(ent({}), off, st("unavailable"), tpl).color).toBe("grey");
+  });
+});

@@ -1,5 +1,6 @@
 // CSS of the heading card: the entity cards' header on its own, without a card around it (as Home
 // Assistant's heading); a tinted heading takes a soft background in the card's shape.
+import { STYLE_KIND_TRACK } from "../shared/kinds/styles.ts";
 import { ICON_RADIUS, iconBg } from "../shared/constants.ts";
 import {
   STYLE_BASE,
@@ -91,4 +92,10 @@ const STYLE_HEADING = `
 `;
 
 export const STYLE_HEADING_CARD =
-  STYLE_BASE + STYLE_HEADER + STYLE_ROW + STYLE_CONTROLS + STYLE_HOVER + STYLE_HEADING;
+  STYLE_BASE +
+  STYLE_HEADER +
+  STYLE_ROW +
+  STYLE_CONTROLS +
+  STYLE_HOVER +
+  STYLE_HEADING +
+  STYLE_KIND_TRACK;

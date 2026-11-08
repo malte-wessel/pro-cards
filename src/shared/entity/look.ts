@@ -1,5 +1,5 @@
 // Value reading and look resolution (pure).
-import { safeColor, stateColorCss } from "../color.ts";
+import { safeColor, stateActive, stateColorCss } from "../color.ts";
 import { DEVICE_CLASS_ICON } from "../constants.ts";
 import type { HassEntity, HomeAssistant } from "../ha.ts";
 import { t } from "../i18n.ts";
@@ -101,6 +101,34 @@ export const pictureOf = (st: HassEntity | undefined): string | null => {
   return typeof url === "string" && url ? url : null;
 };
 
+// the v3 cards' colour, as Home Assistant's tile and badge pick it: a matching rule's; the card's
+// own while the entity is active (inactive it falls to the state's); the kind's; Home Assistant's
+// colour for the entity's state, whatever value is shown (a thermostat's mode beside its
+// temperature); else the state icon colour while active (a badge: the primary, as Home
+// Assistant's badge), the inactive colour while not. Active is Home Assistant's rule (off,
+// unknown and the domain's own off states), not a list of words.
+const v3Color = (
+  ent: EntityItem,
+  model: ValueModel,
+  st: HassEntity | undefined,
+  ruleColor: string | null,
+  explicit: string | null,
+  kind: string | null,
+  now: boolean,
+): string => {
+  // (a past bucket of the history: its own value, not the entity's of now)
+  const s = ent.valueSrc.kind === "state" || !now ? (model.raw ?? undefined) : undefined;
+  const active = !st || stateActive(st, s);
+  const state = st && (now || ent.valueSrc.kind === "state") ? stateColorCss(st, s) : null;
+  return (
+    ruleColor ||
+    (active ? explicit : null) ||
+    kind ||
+    state ||
+    (active ? (ent.pill ? "primary" : "var(--state-icon-color)") : "var(--state-inactive-color)")
+  );
+};
+
 // { color, icon, fallbackIcon, picture, label, tint, rule }: explicit colour / icon win, then the first
 // matching rule (author order), then Home Assistant's state colour for the value (lights amber,
 // locks green / red, batteries by level …), then grey for off-like states, else primary
@@ -141,7 +169,14 @@ export const resolveLook = (
   const first = ent.ruleWins;
   if (!model.avail) {
     return {
-      color: explicitColor || "grey",
+      // (the v3 cards: Home Assistant's unavailable colour, an unknown state its inactive chain)
+      color: first
+        ? rule?.color ||
+          (st ? stateColorCss(st) : null) ||
+          (st && st.state !== "unavailable"
+            ? "var(--state-inactive-color)"
+            : "var(--state-unavailable-color)")
+        : explicitColor || "grey",
       icon: (first ? rule?.icon || explicitIcon : explicitIcon || rule?.icon) || null,
       fallbackIcon: fallbackIcon || "mdi:help-circle-outline",
       picture,
@@ -156,11 +191,13 @@ export const resolveLook = (
   const offish = fromState && model.raw !== null && OFF_STATES.has(model.raw);
   const stateColor = fromState ? stateColorCss(st, model.raw ?? undefined) : null;
   return {
-    color:
-      (first ? rule?.color || explicitColor : explicitColor || rule?.color) ||
-      safeColor(kindColor) ||
-      stateColor ||
-      (offish ? "grey" : "primary"),
+    color: first
+      ? v3Color(ent, model, st, rule?.color ?? null, explicitColor, safeColor(kindColor), now)
+      : explicitColor ||
+        rule?.color ||
+        safeColor(kindColor) ||
+        stateColor ||
+        (offish ? "grey" : "primary"),
     icon: (first ? rule?.icon || explicitIcon : explicitIcon || rule?.icon) || null,
     fallbackIcon: fallbackIcon || "mdi:eye",
     picture,

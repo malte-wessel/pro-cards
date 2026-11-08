@@ -111,6 +111,6 @@ describe("a v3 badge's pill", () => {
 
   it("takes a light's own colour", () => {
     const [desk] = badges(["light.desk"]);
-    expect(desk.style.getPropertyValue("--fe-color")).toContain("255, 120, 0");
+    expect(desk.style.getPropertyValue("--fe-color")).toBe("#ff7800");
   });
 });

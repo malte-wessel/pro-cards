@@ -7,6 +7,7 @@ import {
   type ControlPosition,
   type Placement,
 } from "../entity/control.ts";
+import { lightColorHex } from "../color.ts";
 import { numAttr as num } from "../entity/look.ts";
 import type { FmtValue } from "../entity/model.ts";
 import { leadEl, secondaryEl } from "../entity/render/lead.ts";
@@ -44,10 +45,11 @@ const brightness = (st: HassEntity | undefined) => {
   const b = num(st, "brightness");
   return st?.state === "on" && b !== null ? Math.round((b / 255) * 100) : null;
 };
+// (as Home Assistant's tile: a pale colour more saturated, white a light grey, so it shows)
 const rgbOf = (st: HassEntity | undefined) => {
   const c = st?.attributes?.rgb_color;
   return Array.isArray(c) && c.length === 3 && c.every((x) => typeof x === "number")
-    ? `rgb(${c.join(", ")})`
+    ? lightColorHex(c)
     : null;
 };
 // the light's own colour while it is on

@@ -1,5 +1,6 @@
 // CSS of the tile group card: the entity group card's header (title, icon, badges) and the tiles
 // flat on the card's surface, as the layout card's seamless style draws its cards.
+import { STYLE_KIND_TRACK } from "../shared/kinds/styles.ts";
 import { CARD_BG } from "../shared/constants.ts";
 import {
   STYLE_BASE,
@@ -47,4 +48,10 @@ const STYLE_TILES = `
 `;
 
 export const STYLE_TILE_GROUP_CARD =
-  STYLE_BASE + STYLE_HEADER + STYLE_ROW + STYLE_CONTROLS + STYLE_HOVER + STYLE_TILES;
+  STYLE_BASE +
+  STYLE_HEADER +
+  STYLE_ROW +
+  STYLE_CONTROLS +
+  STYLE_HOVER +
+  STYLE_TILES +
+  STYLE_KIND_TRACK;

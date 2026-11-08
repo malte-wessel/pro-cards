@@ -53,6 +53,7 @@ test.describe("themes", () => {
     );
     const c = card(page);
     expect(await style(c.locator("ha-card"), "background-color")).toBe("rgb(28, 28, 28)");
-    expect(await style(c, "--primary-color")).toBe("#03a9f4");
+    // (Home Assistant's current primary, in dark as in light)
+    expect(await style(c, "--primary-color")).toBe("#009ac7");
   });
 });

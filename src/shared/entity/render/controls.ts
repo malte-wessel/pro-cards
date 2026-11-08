@@ -2,7 +2,7 @@
 // hold to confirm. Each draws the entity's current value (or the value of a pending call) and
 // hands the service call to the card (ctx.ctl). A control swallows its pointer and key events so
 // the row's own tap / hold actions never fire.
-import { activeColorCss, cssColor, domainOf } from "../../color.ts";
+import { activeColorCss, cssColor, domainOf, stateColorCss } from "../../color.ts";
 import { fmtNumber } from "../../format.ts";
 import type { ActionConfig, ActionKind, HapticType, HassEntity } from "../../ha.ts";
 import { t } from "../../i18n.ts";
@@ -241,6 +241,12 @@ export const sliderEl = (
     },
     root("slider", p, idx),
   );
+  // a kind card's cover slider stays in the open colour while closed (or the card's own), as
+  // Home Assistant's position slider: its fill is how far it is open
+  if (p.thick && domainOf(ent.entity) === "cover" && m.st) {
+    const c = (typeof ent.color === "string" && cssColor(ent.color)) || stateColorCss(m.st, "open");
+    if (c) el.style.setProperty("--fe-color", c);
+  }
   if (off) disable(el);
   else el.classList.toggle("pending", pv !== null);
   return el;

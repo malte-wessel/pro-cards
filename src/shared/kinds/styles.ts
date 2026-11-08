@@ -48,7 +48,16 @@ export const STYLE_KIND_BACKDROP = `
   .pback > .wflow.bg { position: absolute; inset: 0; border-radius: 0; }
 `;
 
+// the current cards' neutral control track, Home Assistant's: its disabled colour at 20 % (the
+// tile group's and the heading's badges take it too)
+export const STYLE_KIND_TRACK = `
+  .row { --fe-track: color-mix(in srgb, var(--disabled-color, #bdbdbd) 20%, transparent); }
+`;
 export const STYLE_KINDS = `
+  ${STYLE_KIND_TRACK}
+  /* an icon that switches, while off: the state's colour (Home Assistant's inactive grey) at 20 %
+     behind it, as its tile, not the text colour */
+  .row .lead.tap.off .shape { color: var(--fe-color); background: color-mix(in srgb, var(--fe-color) 20%, transparent); }
   /* fan: one turn a second as built (the speed scales the playback rate) */
   .lead.pfan :is(ha-icon, ha-state-icon) { transform: rotate(20deg); }
   .lead.pfan.spin :is(ha-icon, ha-state-icon) { animation: pfan-spin 1s linear infinite; }

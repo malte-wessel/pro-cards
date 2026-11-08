@@ -11,15 +11,46 @@ const HEX = /^#[0-9a-f]{3,8}$/i;
 export const safeColor = (c: unknown): string | null =>
   typeof c === "string" && SAFE_COLOR.test(c) && !/url\(/i.test(c) ? c : null;
 
-// a config colour (HA token name, hex, rgb()/hsl()/var()) as a CSS value; an unsafe one is none
+// Home Assistant's colour names (computeCssColor): each its theme variable; any other colour is
+// CSS as written (a hex, rgb(), var(), a CSS name such as tomato)
+const THEME_COLORS = new Set([
+  "primary",
+  "accent",
+  "red",
+  "pink",
+  "purple",
+  "deep-purple",
+  "indigo",
+  "blue",
+  "light-blue",
+  "cyan",
+  "teal",
+  "green",
+  "light-green",
+  "lime",
+  "yellow",
+  "amber",
+  "orange",
+  "deep-orange",
+  "brown",
+  "light-grey",
+  "grey",
+  "dark-grey",
+  "blue-grey",
+  "black",
+  "white",
+  "primary-text",
+  "secondary-text",
+  "disabled",
+]);
+// a config colour (HA colour name, hex, rgb()/hsl()/var(), a CSS name) as a CSS value; an unsafe
+// one is none
 export function cssColor(c: Color, fallback: string): string;
 export function cssColor(c: Color): string | undefined;
 export function cssColor(c: Color, fallback?: string) {
   if (!c || !safeColor(c)) return fallback;
-  if (c === "primary") return "var(--primary-color)";
-  if (c === "accent") return "var(--accent-color)";
-  if (/^(#|rgb|hsl|var\()/.test(c)) return c;
-  return `var(--${c}-color)`;
+  if (THEME_COLORS.has(c)) return `var(--${c}-color)`;
+  return c;
 }
 
 // fallback hex for token names when the theme does not define them (HA default theme values)
@@ -39,13 +70,15 @@ export const TOKEN_HEX: Record<string, string> = {
   yellow: "#ffeb3b",
   amber: "#ffc107",
   orange: "#ff9800",
-  "deep-orange": "#ff5722",
+  "deep-orange": "#ff6f22",
   brown: "#795548",
+  "light-grey": "#bdbdbd",
   grey: "#9e9e9e",
+  "dark-grey": "#606060",
   "blue-grey": "#607d8b",
   black: "#000000",
   white: "#ffffff",
-  primary: "#03a9f4",
+  primary: "#009ac7",
   accent: "#ff9800",
 };
 
@@ -58,6 +91,27 @@ export const rgbToHex = (r: number, g: number, b: number) =>
         .padStart(2, "0"),
     )
     .join("");
+
+// a light's colour as Home Assistant's tile draws it: its rgb_color with the saturation raised to
+// at least 40 % so a pale colour reads, and white a light grey (#e1e1e1) so it shows on a card
+export const lightColorHex = (rgb: readonly number[]): string => {
+  const [r, g, b] = rgb;
+  const v = Math.max(r, g, b);
+  const c = v - Math.min(r, g, b);
+  const h0 = c && (v === r ? (g - b) / c : v === g ? 2 + (b - r) / c : 4 + (r - g) / c);
+  const h = 60 * (h0 < 0 ? h0 + 6 : h0);
+  let s = v && c / v;
+  let val = v;
+  if (s < 0.4) {
+    if (s < 0.1) val = 225;
+    else s = 0.4;
+  }
+  const f = (n: number) => {
+    const k = (n + h / 60) % 6;
+    return val - val * s * Math.max(Math.min(k, 4 - k, 1), 0);
+  };
+  return rgbToHex(f(5), f(3), f(1));
+};
 
 // #rgb, #rgba, #rrggbb or #rrggbbaa as red, green, blue (the alpha is dropped: blends are opaque)
 export const hexToRgb = (hex: string): [number, number, number] => {
@@ -137,7 +191,24 @@ const STATE_COLORED_DOMAIN = new Set([
   "water_heater",
   "weather",
 ]);
-const TIMESTAMP_STATE_DOMAINS = new Set(["button", "event", "input_button", "scene"]);
+// (Home Assistant's: their state is when they last ran, so they are active unless unavailable)
+const TIMESTAMP_STATE_DOMAINS = new Set([
+  "ai_task",
+  "button",
+  "conversation",
+  "event",
+  "image",
+  "infrared",
+  "input_button",
+  "notify",
+  "radio_frequency",
+  "scene",
+  "stt",
+  "tag",
+  "tts",
+  "wake_word",
+  "datetime",
+]);
 
 export const domainOf = (entityId: string | null | undefined) =>
   String(entityId || "").split(".")[0];
@@ -210,8 +281,15 @@ export const stateColorProperties = (
     const p = batteryProperty(s);
     return p ? [p] : null;
   }
-  if (!STATE_COLORED_DOMAIN.has(domain)) return null;
-  const active = stateActive(st, s) ? "active" : "inactive";
+  // an old-style group takes its members' domain where they share one (a group of covers purple)
+  const members = domain === "group" ? st.attributes?.entity_id : null;
+  const domains = Array.isArray(members) ? [...new Set(members.map((m) => domainOf(m)))] : [];
+  const own = domains.length === 1 && STATE_COLORED_DOMAIN.has(domains[0]) ? domains[0] : domain;
+  if (!STATE_COLORED_DOMAIN.has(own)) return null;
+  return domainProps(own, dc, s, stateActive(st, s));
+};
+const domainProps = (domain: string, dc: unknown, s: string, isActive: boolean): string[] => {
+  const active = isActive ? "active" : "inactive";
   const props: string[] = [];
   // the attribute is the integration's string: slugged like the state, it stays a property name
   if (dc) props.push(`--state-${domain}-${slug(dc)}-${slug(s)}-color`);

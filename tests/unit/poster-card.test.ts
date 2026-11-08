@@ -1255,7 +1255,7 @@ describe("poster-card drawing", () => {
     // the poster's colour, which fades to a new one (the body's --pc-tint)
     expect(glow.style.getPropertyValue("--glow")).toBe("var(--pc-tint)");
     expect((glow.closest(".body") as HTMLElement).style.getPropertyValue("--pc-tint")).toBe(
-      "rgb(255, 200, 100)",
+      "#ffc864",
     );
     set(L, "on", { brightness: 0.4 * 255 });
     expect(glow.style.opacity).toBe("0.580");

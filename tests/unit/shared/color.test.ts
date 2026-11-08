@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   cssColor,
   domainOf,
+  lightColorHex,
   resolveHex,
   safeColor,
   stateActive,
@@ -154,5 +155,31 @@ describe("hex colours", async () => {
     expect(hexToRgb("#ff0000")).toEqual([255, 0, 0]);
     expect(hexToRgb("#ff000080")).toEqual([255, 0, 0]);
     expect(hexToRgb("#0080ff")).toEqual([0, 128, 255]);
+  });
+});
+
+describe("Home Assistant's colour rules", () => {
+  it("names its theme colours and passes any other colour through", () => {
+    expect(cssColor("red")).toBe("var(--red-color)");
+    expect(cssColor("light-grey")).toBe("var(--light-grey-color)");
+    expect(cssColor("primary-text")).toBe("var(--primary-text-color)");
+    expect(cssColor("tomato")).toBe("tomato");
+    expect(cssColor("#abc")).toBe("#abc");
+  });
+  it("draws a light's colour so it reads: a pale one more saturated, white a light grey", () => {
+    expect(lightColorHex([255, 255, 255])).toBe("#e1e1e1");
+    expect(lightColorHex([255, 209, 163])).toBe("#ffcc99");
+    expect(lightColorHex([255, 120, 0])).toBe("#ff7800");
+  });
+  it("colours an old-style group by its members' domain", () => {
+    const covers = st("group.blinds", "open", { entity_id: ["cover.a", "cover.b"] });
+    expect(stateColorCss(covers)).toContain("--state-cover-open-color");
+    const mixed = st("group.mixed", "on", { entity_id: ["cover.a", "light.b"] });
+    expect(stateColorCss(mixed)).toContain("--state-group-on-color");
+  });
+  it("counts a button, a scene or a date as active unless unavailable", () => {
+    expect(stateActive(st("button.x", "unknown"))).toBe(true);
+    expect(stateActive(st("datetime.x", "unknown"))).toBe(true);
+    expect(stateActive(st("button.x", "unavailable"))).toBe(false);
   });
 });

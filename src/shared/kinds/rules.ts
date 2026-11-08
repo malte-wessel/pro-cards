@@ -15,9 +15,15 @@ const air = (a: number, b: number, c: number): KindRule[] => [
   { above: c, color: "red", labelKey: "kind.level.very_poor" },
 ];
 
+// Home Assistant's battery colours (red below 30 %, orange below 70 %, green above), through its
+// theme variables; our words for the lowest two bands
+const BATTERY_LOW = "var(--state-sensor-battery-low-color, var(--red-color))";
 export const BATTERY_RULES: readonly KindRule[] = [
-  { below: 10, color: "red", labelKey: "kind.level.critical" },
-  { below: 20, color: "orange", labelKey: "kind.level.low" },
+  { below: 10, color: BATTERY_LOW, labelKey: "kind.level.critical" },
+  { below: 20, color: BATTERY_LOW, labelKey: "kind.level.low" },
+  { below: 30, color: BATTERY_LOW },
+  { below: 70, color: "var(--state-sensor-battery-medium-color, var(--orange-color))" },
+  { below: Number.MAX_VALUE, color: "var(--state-sensor-battery-high-color, var(--green-color))" },
 ];
 export const CO2_RULES: readonly KindRule[] = [
   { below: 800, color: "green", labelKey: "kind.level.good" },
@@ -60,31 +66,33 @@ export const RAIN_RULES: readonly KindRule[] = [
   { below: 50, color: "indigo", labelKey: "kind.rain.heavy" },
   { above: 50, color: "deep-purple", labelKey: "kind.rain.violent", pulse: true },
 ];
-// colours only: the condition is the status (its name, translated)
-export const WEATHER_RULES: readonly KindRule[] = (
-  [
-    ["sunny", "amber"],
-    ["clear-night", "indigo"],
-    ["partlycloudy", "light-blue"],
-    ["cloudy", "blue-grey"],
-    ["fog", "grey"],
-    ["windy", "teal"],
-    ["windy-variant", "teal"],
-    ["rainy", "blue"],
-    ["pouring", "indigo"],
-    ["snowy", "light-blue"],
-    ["snowy-rainy", "light-blue"],
-    ["hail", "deep-purple"],
-    ["lightning", "deep-orange"],
-    ["lightning-rainy", "deep-orange"],
-  ] as const
-)
-  .map(([state, color]): KindRule => ({ state, color }))
-  .concat([{ state: "exceptional", color: "red", pulse: true }]);
-// Home Assistant's state names and colours; a pulse where something needs attention
-export const attention = (state: string): readonly KindRule[] => [
-  { state, color: "red", pulse: true },
-];
+// colours only: the condition is the status (its name, translated); each Home Assistant's
+// --state-weather-<condition>-color, so a theme recolours it
+const WEATHER_CONDITIONS = [
+  "sunny",
+  "clear-night",
+  "partlycloudy",
+  "cloudy",
+  "fog",
+  "windy",
+  "windy-variant",
+  "rainy",
+  "pouring",
+  "snowy",
+  "snowy-rainy",
+  "hail",
+  "lightning",
+  "lightning-rainy",
+  "exceptional",
+] as const;
+export const WEATHER_RULES: readonly KindRule[] = WEATHER_CONDITIONS.map((state): KindRule => ({
+  state,
+  color: `var(--state-weather-${state.replace(/-/g, "_")}-color)`,
+  ...(state === "exceptional" ? { pulse: true } : {}),
+}));
+// a pulse where something needs attention, in Home Assistant's colour for that state (a jammed
+// lock, a triggered alarm, a leak: red unless the theme says otherwise)
+export const attention = (state: string): readonly KindRule[] => [{ state, pulse: true }];
 
 // a kind's rule as the entity layer keeps rules
 export const toRule = (r: KindRule): Rule => ({

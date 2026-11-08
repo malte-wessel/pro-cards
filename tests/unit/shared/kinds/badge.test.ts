@@ -202,12 +202,12 @@ describe("a v3 badge as drawn", () => {
   });
 
   it("takes its kind's colours without its texts", () => {
-    // a battery: red below 10 %, its value stays the number
+    // a battery: Home Assistant's low colour below 30 %, its value stays the number
     const low = look("sensor.robot_battery", [st("sensor.robot_battery", 6, BATTERY)]);
-    expect(low).toMatchObject({ color: "red", label: null });
+    expect(low).toMatchObject({ color: expect.stringContaining("battery-low"), label: null });
     // a light in its own colour, a thermostat warm while it heats
     const light = st("light.desk", "on", { rgb_color: [255, 120, 0] });
-    expect(look("light.desk", [light]).color).toBe("rgb(255, 120, 0)");
+    expect(look("light.desk", [light]).color).toBe("#ff7800");
     const climate = st("climate.living", "heat", { hvac_action: "heating" });
     expect(look("climate.living", [climate]).color).toContain("--state-climate-heat-color");
     // a wind sensor in m/s matches the kind's km/h bands
@@ -221,10 +221,12 @@ describe("a v3 badge as drawn", () => {
       unit_of_measurement: "ppm",
     });
     expect(look("sensor.co2", [co2]).color).toBe("amber");
+    // (without it, the primary colour, as Home Assistant's badge)
     expect(look({ entity: "sensor.co2", kind: "none" }, [co2]).color).toBe("primary");
     // without its kind a battery keeps Home Assistant's own state colour, the kind's in its place
     const low = st("sensor.robot_battery", 15, BATTERY);
-    expect(look("sensor.robot_battery", [low]).color).toBe("orange");
+    // (15 %: Home Assistant's low band, red below 30 %, the same colour either way)
+    expect(look("sensor.robot_battery", [low]).color).toContain("battery-low");
     expect(look({ entity: "sensor.robot_battery", kind: "none" }, [low]).color).toBe(
       "var(--state-sensor-battery-low-color)",
     );
@@ -236,7 +238,9 @@ describe("a v3 badge as drawn", () => {
     expect(look(own, [low]).color).toBe("blue");
     // a written kind reads a sensor without a device class
     const plain = st("sensor.cells", 6, { unit_of_measurement: "%" });
-    expect(look({ entity: "sensor.cells", kind: "battery" }, [plain]).color).toBe("red");
+    expect(look({ entity: "sensor.cells", kind: "battery" }, [plain]).color).toContain(
+      "battery-low",
+    );
     expect(() => pill({ entity: "light.x", kind: "battery" })).toThrow(
       "poster-card-pro: the battery kind reads",
     );
