@@ -17,6 +17,8 @@ import {
   type CardThing,
 } from "../../../../src/shared/kinds/editor-form.ts";
 import { kindsOf } from "../../../../src/shared/kinds/editor.ts";
+import { buttonsOf } from "../../../../src/shared/entity/control.ts";
+import { normalizePosterConfig } from "../../../../src/poster/config.ts";
 import { writtenRules } from "../../../../src/shared/kinds/rules.ts";
 import { t } from "../../../../src/shared/i18n.ts";
 import type { CardConfigBase, HaFormData } from "../../../../src/shared/ha.ts";
@@ -613,6 +615,13 @@ describe("the editor form: the controls", () => {
     expect(
       edit(ROBOT, { control_type: "buttons", control_button_ids: ["start_pause", "dock"] }),
     ).toEqual({ ...ROBOT, control: "buttons" });
+    // the kind's own buttons, named: what the card then draws
+    const own = edit(ROBOT, { control_button_ids: ["start_pause", "stop"] });
+    expect(own).toEqual({ ...ROBOT, control: { options: ["start_pause", "stop"] } });
+    expect(buttonsOf(normalizePosterConfig(own as never).entities[0]).map((b) => b.id)).toEqual([
+      "start_pause",
+      "stop",
+    ]);
   });
 
   it("keeps the control's spelling while its fields stay as they were", () => {

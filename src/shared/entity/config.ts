@@ -352,11 +352,13 @@ export const normalizeValue = (v: unknown): ValueSrc | null => {
 // `control_options` of `control: buttons` that name the domain's own buttons (`[lock, unlock]`):
 // those ids, checked against the entity's domain; null for your own buttons (entries with an
 // entity or an action)
-const buttonIdsFrom = (
+export const buttonIdsFrom = (
   list: unknown,
   entity: string | null,
   ctx: NormalizeCtx,
   label: string,
+  // a name that is not one of the domain's is an error (false: no buttons, nothing said)
+  strict = true,
 ): ButtonId[] | null => {
   // (names only, on an entity whose domain has buttons; anything else is your own buttons, where
   // a name is an entry without an entity, left out with a warning as ever)
@@ -366,10 +368,12 @@ const buttonIdsFrom = (
   const own = domain ? buttonIdsOf(domain) : [];
   if (!own.length) return null;
   for (const id of list as string[])
-    if (!own.includes(id as ButtonId))
+    if (!own.includes(id as ButtonId)) {
+      if (!strict) return null;
       throw new Error(
         `${ctx.type}: ${label}.control_options: ${id} is not a button of a ${domain} (${own.join(" | ")})`,
       );
+    }
   return list as ButtonId[];
 };
 // the `control_options` of `control: buttons`: entries with an entity or an action (parsed as any
@@ -475,6 +479,14 @@ export const normalizeEntity = (
     const ids = buttonIdsFrom(o.control_options, o.entity || null, ctx, label);
     if (ids) control.buttonIds = ids;
     else control.buttons = normalizeButtons(o.control_options, ctx, label, o.entity || null);
+  } else if (control?.kind === "auto") {
+    // the kind's own controls: names that are all the domain's buttons pick its buttons (a
+    // robot's stop and locate); anything else stays the options of its segments
+    const ids = buttonIdsFrom(o.control_options, o.entity || null, ctx, label, false);
+    if (ids) {
+      control.buttonIds = ids;
+      control.options = null;
+    }
   }
   const onlyButtons = !o.entity && valueSrc.kind === "state" && !!control?.buttons;
   // a row of custom buttons needs nothing else: a name and the buttons

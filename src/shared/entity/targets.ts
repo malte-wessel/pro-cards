@@ -51,8 +51,14 @@ export interface Target {
   optionButtons?: boolean;
   // the option chosen now (default: the attribute's value, or the state)
   current?: (ent: EntityItem, st: HassEntity | undefined) => string | null;
-  // the call that sets it to a value (a number from a slider or a stepper, an option's value)
-  set: (v: number | string, ent: EntityItem, st: HassEntity | undefined) => ServiceCall | null;
+  // the call that sets it to a value (a number from a slider or a stepper, an option's value);
+  // `dir` a stepper's step, up or down
+  set: (
+    v: number | string,
+    ent: EntityItem,
+    st: HassEntity | undefined,
+    dir?: 1 | -1,
+  ) => ServiceCall | null;
 }
 
 export const HVAC_ICON: Record<string, string> = {
@@ -572,8 +578,13 @@ export const TARGETS: Record<string, readonly Target[]> = {
         value: st && isNum(st.state) ? Number(st.state) : null,
         unit: "",
       }),
-      set: (v, ent, st) =>
-        call(ent, "counter", Number(v) < Number(st?.state) ? "decrement" : "increment"),
+      // (by the step's own direction: the state may not have caught up with the step before)
+      set: (v, ent, st, dir) =>
+        call(
+          ent,
+          "counter",
+          (dir ?? (Number(v) < Number(st?.state) ? -1 : 1)) < 0 ? "decrement" : "increment",
+        ),
     },
   ],
   number: [
@@ -621,6 +632,25 @@ export const TARGET_KEYS: readonly string[] = [
 // the attributes a domain's controls can set, its default first
 export const targetKeysOf = (domain: string): string[] =>
   (TARGETS[domain] ?? []).map((t) => t.key).filter((k): k is string => k !== null);
+// the domain's modes: what a control sets where the card shows it (a thermostat's preset, a
+// speaker's source), as the controls always took a shown mode; a level or a position never
+export const modeKeysOf = (domain: string): string[] =>
+  (TARGETS[domain] ?? [])
+    .filter((t) => t.key !== null && t.options && !t.range && !t.favorites && !t.optionButtons)
+    .map((t) => t.key as string);
+// what a control of these types sets unless it names another: the shown mode where it is one of
+// them, else the first (a switch's power, a domain's own buttons)
+export const attributeDefault = (
+  domain: string,
+  drawn: readonly string[],
+  shown: unknown,
+  ownButtons = false,
+): string | undefined => {
+  const choices = attributeChoices(domain, drawn, undefined, ownButtons);
+  return typeof shown === "string" && modeKeysOf(domain).includes(shown) && choices.includes(shown)
+    ? shown
+    : choices[0];
+};
 // what controls of these types can set on the domain, the one they set by default first; a switch's
 // own is the entity's power ("power", never written)
 export const attributeChoices = (
@@ -662,7 +692,10 @@ export const targetOf = (
   const fits = (t: Target) => !need || !!t[need];
   const named = a === null ? undefined : ts.find((t) => t.key === a);
   if (named && fits(named)) return named;
-  return (kind && ts.find((t) => fits(t) && t.kinds.includes(kind))) || ts.find(fits) || null;
+  // (a type picks only what it draws: a slider on a counter, which only steps, sets nothing)
+  return kind
+    ? (ts.find((t) => fits(t) && t.kinds.includes(kind)) ?? null)
+    : (ts.find(fits) ?? null);
 };
 // the attribute the entity's control sets, as its options are read and written (null: none, or
 // its state)

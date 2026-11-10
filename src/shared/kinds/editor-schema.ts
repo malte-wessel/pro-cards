@@ -3,7 +3,7 @@
 // kind's inputs, the controls its domain takes. A select's default comes first, named as what it
 // is (Glow; the kind as "Wind (detected)"): leaving a field alone is a choice the form shows, and
 // writes nothing.
-import { TARGETS, attributeChoices } from "../entity/targets.ts";
+import { TARGETS, attributeChoices, attributeDefault } from "../entity/targets.ts";
 import { BUTTONS } from "../entity/control.ts";
 import { domainOf } from "../color.ts";
 import type { RawEntity } from "../entity/config.ts";
@@ -1087,6 +1087,10 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
     domain && entity
       ? attributeChoices(domain, drawn, x.hass?.states?.[entity], !!BUTTONS[domain])
       : [];
+  // what it sets unless the form names another: the shown mode, else the first (as the card does)
+  const byDefaultSets = domain
+    ? attributeDefault(domain, drawn, data.attribute, !!BUTTONS[domain])
+    : undefined;
   // (buttons that set what it names, a timer's presets, are no buttons of the domain's)
   const setsOptions = !!TARGETS[domain ?? ""]?.find((t) => t.key === data.control_attribute)
     ?.optionButtons;
@@ -1113,11 +1117,13 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
           : []),
         // what it sets, where the domain has more than one thing for it (a light's slider: its
         // brightness, colour temperature, hue or saturation)
-        ...(attrs.length > 1
+        ...(attrs.length > 1 && byDefaultSets
           ? [
               pick("control_attribute", [
-                opt(DEFAULT, tr(`attribute.${attrs[0]}`)),
-                ...attrs.slice(1).map((a) => opt(a, tr(`attribute.${a}`))),
+                opt(DEFAULT, tr(`attribute.${byDefaultSets}`)),
+                ...attrs
+                  .filter((a) => a !== byDefaultSets)
+                  .map((a) => opt(a, tr(`attribute.${a}`))),
               ]),
             ]
           : []),

@@ -1,6 +1,5 @@
 // CSS of the energy flow card's period picker, on top of the flow tree's. The picker sits outside
 // any row, so it defines the control tokens rows carry for themselves.
-import { STYLE_DATEPICKER } from "../shared/datepicker.ts";
 import { controlLayer } from "../shared/entity/render/styles.ts";
 import { STYLE_FLOW_TREE } from "../shared/flow-tree/styles.ts";
 import { fs, fw } from "../shared/typography.ts";
@@ -30,4 +29,4 @@ const STYLE_PICKER = `
   .ppicker { margin-bottom: -12px; }
 `;
 
-export const STYLE_ENERGY_FLOW_CARD = STYLE_FLOW_TREE + STYLE_PICKER + STYLE_DATEPICKER;
+export const STYLE_ENERGY_FLOW_CARD = STYLE_FLOW_TREE + STYLE_PICKER;

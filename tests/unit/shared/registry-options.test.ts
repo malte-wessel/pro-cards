@@ -67,3 +67,23 @@ describe("an entity's registry options", () => {
     expect(registryOptions(hass, "timer.a")).toEqual({ timer: { presets: [2] } });
   });
 });
+
+describe("a registry fetch that failed", () => {
+  it("is asked again after a minute, three times at most", async () => {
+    vi.useFakeTimers();
+    try {
+      const { hass, callWS } = hassWith(async () => {
+        throw new Error("dropped");
+      });
+      registryOptions(hass, "cover.b");
+      await vi.advanceTimersByTimeAsync(0);
+      expect(registryOptions(hass, "cover.b")).toBeNull();
+      await vi.advanceTimersByTimeAsync(60e3);
+      await vi.advanceTimersByTimeAsync(60e3);
+      await vi.advanceTimersByTimeAsync(60e3);
+      expect(callWS).toHaveBeenCalledTimes(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

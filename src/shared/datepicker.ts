@@ -147,6 +147,13 @@ export const openDatePicker = (
 ) => {
   opened.get(host)?.();
   host.querySelector(".dp")?.remove();
+  // its styles, once per card: only a card that opens it carries them
+  if (!host.querySelector("style[data-datepicker]")) {
+    const style = document.createElement("style");
+    style.dataset.datepicker = "";
+    style.textContent = STYLE_DATEPICKER;
+    host.appendChild(style);
+  }
   const { hass, tz, lang } = o;
   const now = Date.now();
   // the latest instant a page or a pick may reach: today, unless any day may be picked

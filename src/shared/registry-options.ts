@@ -9,7 +9,12 @@ export type RegistryOptions = Record<string, Record<string, unknown>>;
 
 const got = new Map<string, RegistryOptions | null>();
 const asking = new Set<string>();
-const listeners = new Set<() => void>();
+// a fetch that failed (a dropped message, a reconnect) is asked again after a minute, three times
+// at most (a user who may not read the registry is not asked forever)
+const failures = new Map<string, number>();
+const RETRY_MS = 60e3;
+const RETRIES = 3;
+const listeners = new Set<(id: string) => void>();
 let watching: HomeAssistant["connection"] | null = null;
 
 const ask = (hass: HomeAssistant, id: string) => {
@@ -21,13 +26,21 @@ const ask = (hass: HomeAssistant, id: string) => {
       entity_id: id,
     })
     .then(
-      (e) => (e && typeof e.options === "object" && e.options ? e.options : null),
-      () => null,
+      (e) => {
+        failures.delete(id);
+        return e && typeof e.options === "object" && e.options ? e.options : null;
+      },
+      () => {
+        const n = (failures.get(id) ?? 0) + 1;
+        failures.set(id, n);
+        if (n < RETRIES) setTimeout(() => ask(hass, id), RETRY_MS);
+        return null;
+      },
     )
     .then((o) => {
       asking.delete(id);
       got.set(id, o);
-      for (const fn of listeners) fn();
+      for (const fn of listeners) fn(id);
     });
 };
 
@@ -62,8 +75,9 @@ export const registryOptions = (
   return undefined;
 };
 
-// called whenever an entity's options arrive (the cards render again); returns the unsubscribe
-export const onRegistryOptions = (fn: () => void) => {
+// called with the entity whenever its options arrive (its cards render again); returns the
+// unsubscribe
+export const onRegistryOptions = (fn: (id: string) => void) => {
   listeners.add(fn);
   return () => {
     listeners.delete(fn);
@@ -74,5 +88,6 @@ export const onRegistryOptions = (fn: () => void) => {
 export const resetRegistryOptions = () => {
   got.clear();
   asking.clear();
+  failures.clear();
   watching = null;
 };

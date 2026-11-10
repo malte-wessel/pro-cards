@@ -94,7 +94,8 @@ const pendingStr = (p: Pending | undefined) => (typeof p?.value === "string" ? p
 const later = (ms = PENDING_MS) => Date.now() + ms;
 
 // the entity's favourites in the registry, where the control reads them (fetched the first time:
-// undefined until they arrive, and the card renders again then)
+// undefined until they arrive – the control waits, drawing nothing, rather than show other
+// favourites first – and the card renders again then)
 const favoritesOf = (ctx: RenderCtx, ent: EntityItem, kind: ControlKind) =>
   readsFavorites(ent, kind) ? registryOptions(ctx.hass, ent.entity) : null;
 
@@ -107,11 +108,19 @@ const askCode = (host: ControlHost, ent: EntityItem, m: EntityModel, target?: st
 
 // ----- toggle and lead tap -----
 
-const toggleTarget = (ctx: RenderCtx, ent: EntityItem, idx: number, m: EntityModel) => {
+// (`attribute`: a placed switch, which flips what its control sets – a fan's oscillation; the
+// icon as a switch is always the entity's power)
+const toggleTarget = (
+  ctx: RenderCtx,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+  attribute = false,
+) => {
   const p = ctx.ctl?.pending.get(idx);
   const s = pendingStr(p);
   const pending = s === "on" || s === "off";
-  return { on: pending ? s === "on" : onOf(ent, m.st), pending };
+  return { on: pending ? s === "on" : onOf(ent, m.st, attribute), pending };
 };
 const bindToggle = (
   el: HTMLElement,
@@ -120,10 +129,11 @@ const bindToggle = (
   idx: number,
   m: EntityModel,
   on: boolean,
+  attribute = false,
 ) => {
   el.addEventListener("click", (ev) => {
     ev.stopPropagation();
-    ctx.ctl?.call(el, idx, ent, serviceFor(ent, m.st, { type: "toggle" }), {
+    ctx.ctl?.call(el, idx, ent, serviceFor(ent, m.st, { type: "toggle", attribute }), {
       until: later(),
       value: on ? "off" : "on",
     });
@@ -142,7 +152,7 @@ export const toggleEl = (
   );
   b.dataset.idx = String(idx);
   guard(b);
-  const { on, pending } = toggleTarget(ctx, ent, idx, m);
+  const { on, pending } = toggleTarget(ctx, ent, idx, m, true);
   b.classList.toggle("on", on);
   b.classList.toggle("pending", pending);
   b.setAttribute("role", "switch");
@@ -152,7 +162,7 @@ export const toggleEl = (
   if (p.square) b.appendChild(icon("mdi:power"));
   else b.innerHTML = "<i></i>";
   if (!canControl(ent, m.st)) disable(b);
-  else bindToggle(b, ctx, ent, idx, m, on);
+  else bindToggle(b, ctx, ent, idx, m, on, true);
   return b;
 };
 // the lead itself toggles: filled when on, grey when off
@@ -343,11 +353,14 @@ const optionText = (
   st: HassEntity | undefined,
   value: string,
   label: string | null,
+  // the control drawing it: a light's select names its effects, its buttons its favourites
+  kind: ControlKind,
 ) => {
   if (label !== null) return label;
   const hass = ctx.hass,
-    t = targetOf(ent, "options");
-  // a mode attribute in Home Assistant's words for it; an option that is a state in the state's
+    t = targetOf(ent, "options", kind);
+  // a mode attribute in Home Assistant's words for it (a preset, an effect); an option that is a
+  // state in Home Assistant's words for that state (a thermostat's mode, a select's option)
   const own =
     st && hass
       ? t?.attributeLabels && t.key
@@ -367,7 +380,9 @@ export const segmentsEl = (
   p: Placement,
 ) => {
   const host = ctx.ctl as ControlHost;
-  const opts = optionsOf(ent, m.st, favoritesOf(ctx, ent, "segments"), "segments");
+  const fav = favoritesOf(ctx, ent, "segments");
+  if (fav === undefined) return null;
+  const opts = optionsOf(ent, m.st, fav, "segments");
   if (!opts.length) return null;
   const el = root("segments", p, idx);
   el.setAttribute("role", "radiogroup");
@@ -378,7 +393,7 @@ export const segmentsEl = (
   const compact = p.small || p.position !== "block";
   const segs: HTMLButtonElement[] = [];
   for (const o of opts) {
-    const text = optionText(ctx, ent, m.st, o.value, o.label);
+    const text = optionText(ctx, ent, m.st, o.value, o.label, "segments");
     // a segment drawn as an icon alone (the fan's power) still needs a name
     const b = button("seg", text || t(ctx.hass, "control.off"));
     b.setAttribute("role", "radio");
@@ -433,7 +448,9 @@ export const selectEl = (
   p: Placement,
 ) => {
   const host = ctx.ctl as ControlHost;
-  const opts = optionsOf(ent, m.st, favoritesOf(ctx, ent, "select"), "select");
+  const fav = favoritesOf(ctx, ent, "select");
+  if (fav === undefined) return null;
+  const opts = optionsOf(ent, m.st, fav, "select");
   if (!opts.length) return null;
   const el = root("select", p, idx);
   const sel = document.createElement("select");
@@ -443,14 +460,14 @@ export const selectEl = (
   for (const o of opts) {
     const opt = document.createElement("option");
     opt.value = o.value;
-    opt.textContent = optionText(ctx, ent, m.st, o.value, o.label);
+    opt.textContent = optionText(ctx, ent, m.st, o.value, o.label, "select");
     opt.selected = o.value === current;
     sel.appendChild(opt);
   }
   if (current !== null && !opts.some((o) => o.value === current)) {
     const opt = document.createElement("option");
     opt.value = current;
-    opt.textContent = optionText(ctx, ent, m.st, current, null);
+    opt.textContent = optionText(ctx, ent, m.st, current, null, "select");
     opt.selected = true;
     sel.appendChild(opt);
   }
@@ -537,13 +554,15 @@ const optionButtonsEl = (
   p: Placement,
 ) => {
   const host = ctx.ctl as ControlHost;
-  const opts = optionsOf(ent, m.st, favoritesOf(ctx, ent, "buttons"), "buttons");
+  const fav = favoritesOf(ctx, ent, "buttons");
+  if (fav === undefined) return null;
+  const opts = optionsOf(ent, m.st, fav, "buttons");
   if (!opts.length) return null;
   const el = root("buttons", p, idx);
   el.classList.add("options");
   const pend = pendingStr(host.pending.get(idx));
   for (const o of opts) {
-    const text = optionText(ctx, ent, m.st, o.value, o.label);
+    const text = optionText(ctx, ent, m.st, o.value, o.label, "buttons");
     const b = button(o.color ? "swatch" : "chip", text);
     if (o.color) b.style.setProperty("--swatch", o.color);
     else {
@@ -701,6 +720,9 @@ export const dateEl = (
   m: EntityModel,
   p: Placement,
 ) => {
+  // (an input date and time without a date has no day to set)
+  if (domainOf(ent.entity) === "input_datetime" && m.st?.attributes?.has_date === false)
+    return null;
   const host = ctx.ctl as ControlHost;
   const hass = ctx.hass;
   const tz = hass ? timeZoneOf(hass) : undefined;
@@ -724,7 +746,11 @@ export const dateEl = (
           month: "short",
         }).format(at);
   el.appendChild(s);
-  el.setAttribute("aria-label", t(hass, "control.set_date_of", { name: nameOf(ctx, ent, m.st) }));
+  // (its name says the day it shows, then what it does)
+  el.setAttribute(
+    "aria-label",
+    `${s.textContent}, ${t(hass, "control.set_date_of", { name: nameOf(ctx, ent, m.st) })}`,
+  );
   if (!canControl(ent, m.st) || !hass || !tz) {
     disable(el);
     return el;

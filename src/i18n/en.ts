@@ -642,7 +642,6 @@ const en = {
   "editor.card.look.fill": "Filled",
   "editor.card.look.tinted": "Tinted",
   "editor.card.variant.by_class": "By its device class",
-  "editor.card.attribute.speed": "Speed",
   "editor.card.style.circle": "In a circle",
   "editor.card.style.plain": "Plain",
   "editor.card.control.toggle": "Switch",

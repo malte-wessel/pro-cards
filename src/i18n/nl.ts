@@ -644,7 +644,6 @@ const nl: Translation = {
   "editor.card.look.fill": "Gevuld",
   "editor.card.look.tinted": "Getint",
   "editor.card.variant.by_class": "Volgens de apparaatklasse",
-  "editor.card.attribute.speed": "Snelheid",
   "editor.card.style.circle": "In een cirkel",
   "editor.card.style.plain": "Eenvoudig",
   "editor.card.control.toggle": "Schakelaar",

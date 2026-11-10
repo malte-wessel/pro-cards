@@ -643,7 +643,6 @@ const sv: Translation = {
   "editor.card.look.fill": "Fyllda",
   "editor.card.look.tinted": "Tonade",
   "editor.card.variant.by_class": "Efter enhetsklass",
-  "editor.card.attribute.speed": "Hastighet",
   "editor.card.style.circle": "I en cirkel",
   "editor.card.style.plain": "Enkel",
   "editor.card.control.toggle": "Brytare",

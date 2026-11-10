@@ -644,7 +644,6 @@ const it: Translation = {
   "editor.card.look.fill": "Pieni",
   "editor.card.look.tinted": "Tinti",
   "editor.card.variant.by_class": "In base alla classe del dispositivo",
-  "editor.card.attribute.speed": "Velocità",
   "editor.card.style.circle": "In un cerchio",
   "editor.card.style.plain": "Semplice",
   "editor.card.control.toggle": "Interruttore",

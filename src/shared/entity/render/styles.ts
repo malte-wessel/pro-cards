@@ -14,7 +14,6 @@ import {
   type,
 } from "../../typography.ts";
 import { STYLE_SLIDER } from "../../slider.ts";
-import { STYLE_DATEPICKER } from "../../datepicker.ts";
 
 export const STYLE_BASE = `
   ${STYLE_ICONS}
@@ -339,7 +338,6 @@ export const STYLE_CONTROLS = `
   .lead.tap.off .shape { color: var(--secondary-text-color); background: ${iconBg("var(--primary-text-color)", "transparent", 0.4)}; }
   .lead.tap.pending .shape { animation: ctl-pulse 1s ease-in-out infinite; }
   ${STYLE_SLIDER}
-  ${STYLE_DATEPICKER}
   .end .ctl-slider, .val .ctl-slider { flex: 0 1 120px; width: 120px; min-width: 64px; }
   .ctl-slider.pending .fill { opacity: .55; }
   /* a slider's bar (a kind card's, a table's too): Home Assistant's, filled to the value
@@ -362,7 +360,6 @@ export const STYLE_CONTROLS = `
   .ctl-slider.grad.thick .knob, .ctl-slider.grad.thick.dragging .knob { display: block; top: 6px; bottom: 6px; width: 8px; height: auto; margin: 0 0 0 calc(var(--p, 0) * -8px); box-sizing: border-box; border: 2px solid var(--text-primary-color, #fff); border-radius: 4px; background: transparent; box-shadow: 0 0 2px rgba(0,0,0,.35), inset 0 0 2px rgba(0,0,0,.35); animation: none; }
   .ctl-slider.grad.thick.sm .knob { top: 4px; bottom: 4px; }
   .ctl-slider.grad.dim .track { filter: saturate(.5); opacity: .4; }
-  /* a light's favourite colours: each segment its colour, a light one ringed, the chosen none */
   .ctl-slider.thick.sm .track { height: 100%; border-radius: 8px; }
   .ctl-slider.thick.sm .fill::after { right: 5px; width: 3px; height: 12px; margin-top: -6px; }
   .ctl-slider.pending .knob { background: transparent; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--fe-color) 55%, transparent); animation: ctl-pulse 1s ease-in-out infinite; }

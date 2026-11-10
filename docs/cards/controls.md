@@ -141,7 +141,7 @@ An object without `type` changes the kind's own controls: `control: { step: 1 }`
 
 ## What a control sets
 
-`type` says how a control is drawn, `attribute` what it sets, by Home Assistant's name for it: a light's slider sets its `brightness`, or its `color_temp_kelvin`, `hue` or `saturation`. Left out, a control sets what the card shows where it can (`attribute: current_tilt_position` on the card: the slider tilts), else what its type sets by default: a light's slider its brightness, its buttons its favourite colours, its select its effects. The [reference](#what-each-entity-sets) lists every one.
+`type` says how a control is drawn, `attribute` what it sets, by Home Assistant's name for it: a light's slider sets its `brightness`, or its `color_temp_kelvin`, `hue` or `saturation`. Left out, a control sets the mode the card shows (a thermostat's card showing `attribute: preset_mode`: its segments set the preset), else what its type sets by default: a light's slider its brightness, its buttons its favourite colours, its select its effects. The [reference](#what-each-entity-sets) lists every one.
 
 ### A light's colour
 

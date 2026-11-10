@@ -2,7 +2,7 @@
 // A place is a thing and its options in the form (`icon_thing` + `icon_ring` …); written back, it
 // is the shortest YAML that draws the same: nothing for the kind's default, a name for a thing
 // without options, `{ type, … }` else. Keys the form does not show are kept as written.
-import { attributeChoices, targetKeysOf } from "../entity/targets.ts";
+import { attributeChoices, attributeDefault, targetKeysOf } from "../entity/targets.ts";
 import { BUTTONS, buttonIdsOf, defaultButtonIds, type ButtonId } from "../entity/control.ts";
 import { setOrDrop } from "../editor.ts";
 import { VARIANT_KINDS, type ControlKind } from "../entity/control.ts";
@@ -585,7 +585,7 @@ export const configToForm = (
     // (what it sets by default, written, is the default)
     d.control_attribute =
       ctl.attribute === undefined ||
-      ctl.attribute === attributeChoices(domain, drawn, undefined, !!BUTTONS[domain])[0]
+      ctl.attribute === attributeDefault(domain, drawn, c.attribute, !!BUTTONS[domain])
         ? DEFAULT
         : ctl.attribute;
     d.control_confirm = ctl.confirm === true;
@@ -725,7 +725,7 @@ const controlFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknow
     chosen(data.control_attribute) &&
     data.control_attribute !== "power" &&
     data.control_attribute !== "buttons" &&
-    data.control_attribute !== attrs[0] &&
+    data.control_attribute !== attributeDefault(domain, drawn, data.attribute, !!BUTTONS[domain]) &&
     attrs.includes(data.control_attribute as string)
   )
     o.attribute = data.control_attribute;

@@ -113,7 +113,6 @@ export const lightColorHex = (rgb: readonly number[]): string => {
   return rgbToHex(f(5), f(3), f(1));
 };
 
-// #rgb, #rgba, #rrggbb or #rrggbbaa as red, green, blue (the alpha is dropped: blends are opaque)
 // a colour temperature as the light it gives, Tanner Helland's blackbody fit (as Home Assistant's
 // temperature2rgb): warm orange at 2000 K, white near 6500 K, blue beyond
 export const kelvinToRgb = (kelvin: number): [number, number, number] => {
@@ -152,6 +151,7 @@ export const hsToRgb = (h: number, sPct: number): [number, number, number] => {
   };
   return [f(5), f(3), f(1)];
 };
+// #rgb, #rgba, #rrggbb or #rrggbbaa as red, green, blue (the alpha is dropped: blends are opaque)
 export const hexToRgb = (hex: string): [number, number, number] => {
   let h = hex.replace("#", "");
   if (h.length === 3 || h.length === 4)

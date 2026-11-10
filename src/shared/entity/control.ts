@@ -14,6 +14,7 @@ import {
   speedCount,
   stateRange,
   targetKeyOf,
+  modeKeysOf,
   targetKeysOf,
   targetOf,
   MAX_SPEED_SEGMENTS,
@@ -152,7 +153,8 @@ export interface ControlButton {
   disabled?: (st: HassEntity | undefined) => boolean;
 }
 export type ControlInput =
-  | { type: "toggle" }
+  // (`attribute`: a placed switch flips what its control sets, a fan's oscillation; else power)
+  | { type: "toggle"; attribute?: boolean }
   | { type: "value"; value: number }
   // (a stepper's own step: a volume's 5 % where its slider moves by 1)
   | { type: "step"; dir: 1 | -1; from: number; step?: number }
@@ -253,17 +255,17 @@ export const normalizeControl = (
       `${ctx.type}: ${label}.control_position must be one of ${CONTROL_POSITIONS.join(" | ")}`,
     );
   const ca = raw.control_attribute;
-  // (the attributes the entity's domain sets, where it is known: a light's, a thermostat's)
-  const domain = typeof raw.entity === "string" && raw.entity ? domainOf(raw.entity) : null;
-  const keys = domain ? targetKeysOf(domain) : [];
-  const own = keys.length ? keys : null;
-  if (ca !== undefined && ca !== null) {
-    const allowed = own ?? CONTROL_ATTRIBUTES;
-    if (typeof ca !== "string" || !allowed.includes(ca))
-      throw new Error(
-        `${ctx.type}: ${label}.control_attribute must be one of ${allowed.join(" | ")}${own ? ` (a ${domain})` : ""}`,
-      );
-  }
+  // a name no control sets is an error; one another domain's control sets is left out, as ever
+  // (the poster's and the tile's config names the entity's own: kinds/config.ts)
+  if (
+    ca !== undefined &&
+    ca !== null &&
+    (typeof ca !== "string" || !CONTROL_ATTRIBUTES.includes(ca))
+  )
+    throw new Error(
+      `${ctx.type}: ${label}.control_attribute must be one of ${CONTROL_ATTRIBUTES.join(" | ")}`,
+    );
+  const domain = typeof raw.entity === "string" && raw.entity ? domainOf(raw.entity) : "";
   const cv = raw.control_variant;
   if (cv !== undefined && cv !== null && !oneOf(CONTROL_VARIANTS, cv))
     throw new Error(
@@ -274,10 +276,12 @@ export const normalizeControl = (
   return {
     kind,
     position: oneOf(CONTROL_POSITIONS, pos) ? pos : null,
+    // (the shown attribute where it is one of the domain's modes: a thermostat showing its preset
+    // sets its preset; a tilt or a humidity shown changes nothing a control does)
     attribute:
-      typeof ca === "string" && ca
+      typeof ca === "string" && targetKeysOf(domain).includes(ca)
         ? ca
-        : typeof shown === "string" && own?.includes(shown)
+        : typeof shown === "string" && modeKeysOf(domain).includes(shown)
           ? shown
           : null,
     step: step !== null && step > 0 ? step : null,
@@ -545,8 +549,8 @@ export const canControlId = (id: string | null, st: HassEntity | undefined) =>
 export const canControl = (ent: EntityItem, st: HassEntity | undefined) =>
   canControlId(ent.entity, st);
 // whether a switch shows on: the attribute it flips (a fan's oscillation), else the entity
-export const onOf = (ent: EntityItem, st: HassEntity | undefined): boolean => {
-  const t = targetOf(ent);
+export const onOf = (ent: EntityItem, st: HassEntity | undefined, attribute = false): boolean => {
+  const t = attribute ? targetOf(ent) : null;
   return t?.on ? !!st && st.state !== "unavailable" && t.on(st) : isOn(st);
 };
 // the day a date entity is on (YYYY-MM-DD), as its state says: a date's, an input_datetime's with
@@ -826,7 +830,7 @@ export const serviceFor = (
   switch (input.type) {
     case "toggle": {
       // a switch for an attribute flips it (a fan's oscillation), else the entity's power
-      const t = targetOf(ent);
+      const t = input.attribute ? targetOf(ent) : null;
       return t?.toggle ? t.toggle(ent, st) : call("homeassistant", "toggle");
     }
     case "value":
@@ -838,7 +842,7 @@ export const serviceFor = (
           ? clampStep(input.value, r)
           : clampStep(input.from + input.dir * (input.step ?? r.step), r);
       const t = targetOf(ent, "range", kind);
-      return t ? t.set(v, ent, st) : null;
+      return t ? t.set(v, ent, st, input.type === "step" ? input.dir : undefined) : null;
     }
     case "option": {
       const t = targetOf(ent, "options", input.kind);

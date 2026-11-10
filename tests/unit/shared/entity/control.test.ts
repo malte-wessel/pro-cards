@@ -125,14 +125,17 @@ describe("control config", () => {
       climate({ attribute: "temperature", control_attribute: "hvac_mode" }).control?.attribute,
     ).toBe("hvac_mode");
     expect(climate({ attribute: "current_temperature" }).control?.attribute).toBeNull();
-    // a light's own: what a thermostat sets is not one
+    // a light's own: what a thermostat sets is not one, left out as ever (the poster's and the
+    // tile's config names the entity's own)
     expect(ent({ attribute: "fan_mode" }).control?.attribute).toBeNull();
-    expect(() => ent({ control_attribute: "preset_mode" })).toThrow(
-      /e\.control_attribute must be one of brightness \| color_temp_kelvin .* \(a light\)/,
-    );
+    expect(ent({ control_attribute: "preset_mode" }).control?.attribute).toBeNull();
     expect(() => climate({ control_attribute: "swing" })).toThrow(
-      /control_attribute must be one of temperature \| hvac_mode/,
+      /control_attribute must be one of/,
     );
+    // a level or a position shown changes nothing a control does
+    expect(
+      ent({ entity: "cover.x", attribute: "current_tilt_position" }).control?.attribute,
+    ).toBeNull();
   });
 });
 

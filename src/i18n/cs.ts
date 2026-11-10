@@ -644,7 +644,6 @@ const cs: Translation = {
   "editor.card.look.fill": "Vyplněné",
   "editor.card.look.tinted": "Tónované",
   "editor.card.variant.by_class": "Podle třídy zařízení",
-  "editor.card.attribute.speed": "Rychlost",
   "editor.card.style.circle": "V kruhu",
   "editor.card.style.plain": "Prostá",
   "editor.card.control.toggle": "Přepínač",

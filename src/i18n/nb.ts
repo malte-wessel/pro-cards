@@ -643,7 +643,6 @@ const nb: Translation = {
   "editor.card.look.fill": "Fylte",
   "editor.card.look.tinted": "Tonede",
   "editor.card.variant.by_class": "Etter enhetsklassen",
-  "editor.card.attribute.speed": "Hastighet",
   "editor.card.style.circle": "I en sirkel",
   "editor.card.style.plain": "Enkel",
   "editor.card.control.toggle": "Bryter",

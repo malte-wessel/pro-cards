@@ -661,3 +661,21 @@ test.describe("what a tile's control sets", () => {
     await expect(chip).toHaveText("Fri 26 Jun");
   });
 });
+
+test.describe("a switch that sets an attribute", () => {
+  test("flips the fan's oscillation; the icon still switches its power", async ({ page }) => {
+    await mount(page, {
+      type: T,
+      entity: "fan.living_room",
+      icon: { tap_action: { action: "toggle" } },
+      control: { type: "toggle", attribute: "oscillating" },
+    });
+    const c = card(page);
+    // the fan runs, it does not swing: the icon on, the switch off
+    await expect(c.locator(".ctl.toggle")).toHaveAttribute("aria-checked", "false");
+    await c.locator(".ctl.toggle").click();
+    expect(await services(page)).toEqual(["fan.oscillate"]);
+    await c.locator(".row.tile .lead").first().click();
+    expect(await services(page)).toEqual(["fan.oscillate", "homeassistant.toggle"]);
+  });
+});

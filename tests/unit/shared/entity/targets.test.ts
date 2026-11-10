@@ -106,10 +106,15 @@ describe("the attributes a control sets", () => {
   it("switches a fan's oscillation and turns its direction", () => {
     const osc = ent("fan.x", { control: "toggle", control_attribute: "oscillating" });
     const s = st("fan.x", "on", { oscillating: false, direction: "forward" });
-    expect(onOf(osc, s)).toBe(false);
-    expect(set(osc, s, { type: "toggle" })).toBe('fan.oscillate {"oscillating":true}');
+    expect(onOf(osc, s, true)).toBe(false);
+    expect(set(osc, s, { type: "toggle", attribute: true })).toBe(
+      'fan.oscillate {"oscillating":true}',
+    );
+    // the icon as a switch stays the fan's power
+    expect(onOf(osc, s)).toBe(true);
+    expect(set(osc, s, { type: "toggle" })).toBe("homeassistant.toggle {}");
     // a fan's own switch is its power
-    expect(onOf(ent("fan.x", { control: "toggle" }), s)).toBe(true);
+    expect(onOf(ent("fan.x", { control: "toggle" }), s, true)).toBe(true);
     const dir = ent("fan.x", { control: "segments", control_attribute: "direction" });
     expect(optionsOf(dir, s).map((o) => o.value)).toEqual(["forward", "reverse"]);
     expect(currentOptionOf(dir, s)).toBe("forward");
@@ -177,10 +182,10 @@ describe("the attributes a control sets", () => {
     expect(set(tilt, s, { type: "value", value: 70 })).toBe(
       'cover.set_cover_tilt_position {"tilt_position":70}',
     );
-    // the displayed tilt is what the slider sets
+    // a tilt shown changes nothing: the slider moves the cover, as ever
     expect(
       rangeOf(ent("cover.x", { control: "slider", attribute: "current_tilt_position" }), s).value,
-    ).toBe(40);
+    ).toBe(60);
     const v = st("valve.x", "open", { current_position: 30 });
     expect(set(ent("valve.x", { control: "slider" }), v, { type: "value", value: 80 })).toBe(
       'valve.set_valve_position {"position":80}',
@@ -544,5 +549,29 @@ describe("a date entity's day", () => {
       'datetime.set_value {"datetime":"2026-12-01T06:30:00.000Z"}',
     );
     expect(kinds(placementsOf(ent("date.x"), "tile"))).toEqual(["date@end"]);
+  });
+});
+
+describe("the review's cases", () => {
+  it("names the kind's own buttons without a type; other words stay its segments' options", () => {
+    // (control: auto, the kind's own)
+    const robot = ent("vacuum.x", { control_options: ["stop", "locate"] });
+    expect(robot.control?.buttonIds).toEqual(["stop", "locate"]);
+    expect(buttonsOf(robot).map((b) => b.id)).toEqual(["stop", "locate"]);
+    expect(robot.control?.options).toBeNull();
+    const modes = ent("climate.x", { control_options: ["heat", "off"] });
+    expect(modes.control?.buttonIds).toBeUndefined();
+    expect(modes.control?.options?.map((o) => o.value)).toEqual(["heat", "off"]);
+  });
+  it("steps a counter by the step's own direction while its state still lags", () => {
+    const e = ent("counter.x", { control: "stepper" });
+    // + went to 5 → 6, the state still says 5: − from the shown 6 decrements
+    expect(set(e, st("counter.x", 5, { step: 1 }), { type: "step", dir: -1, from: 6 })).toBe(
+      "counter.decrement {}",
+    );
+    // a slider on a counter, which only steps, sets nothing
+    expect(
+      set(ent("counter.x", { control: "slider" }), st("counter.x", 5), { type: "value", value: 9 }),
+    ).toBeNull();
   });
 });

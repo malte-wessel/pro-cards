@@ -9,6 +9,7 @@ import {
   normalizeAction,
   normalizeActionDefaults,
   normalizeBadge,
+  buttonIdsFrom,
   normalizeEntity,
   normalizeValue,
   type EntityCardConfig,
@@ -452,6 +453,9 @@ export const normalizeKindItem = (
     (raw.control === undefined || raw.control === true || raw.control === "auto")
   ) {
     const c = normalizeControl({ ...own, control: "auto" }, ctx, "the card");
+    // (names that are all the domain's buttons pick the kind's own buttons: a robot's stop)
+    const ids = c && buttonIdsFrom(own.control_options, entity || null, ctx, "the card", false);
+    if (c && ids) Object.assign(c, { buttonIds: ids, options: null });
     main.control = c && kind.controls.length ? { ...c, defaults: [...kind.controls] } : null;
   }
   // the poster's and the tile's controls are rounded squares of one height, the switch a button,

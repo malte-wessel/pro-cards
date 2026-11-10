@@ -336,7 +336,9 @@ export abstract class EntityCardBase extends HTMLElement {
     this._visWatch.connect();
     // an entity's favourites arriving from the registry: the rows that read them fill again
     this._unregistry?.();
-    this._unregistry = onRegistryOptions(() => this._render());
+    this._unregistry = onRegistryOptions((id) => {
+      if (this._entityIds?.includes(id)) this._render();
+    });
     // ghosts that expired while the card was away (another view) go now, the rest get their timer
     if ((this._pending.size || this._buttonPending.size) && this._sweepPending()) this._render();
     if (this._hass && this._templates?.size && this._tpl.size === 0) this._subscribeTemplates();

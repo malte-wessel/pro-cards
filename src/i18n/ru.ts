@@ -644,7 +644,6 @@ const ru: Translation = {
   "editor.card.look.fill": "Заливка",
   "editor.card.look.tinted": "Оттенок",
   "editor.card.variant.by_class": "По классу устройства",
-  "editor.card.attribute.speed": "Скорость",
   "editor.card.style.circle": "В круге",
   "editor.card.style.plain": "Без фона",
   "editor.card.control.toggle": "Переключатель",
