@@ -34,11 +34,14 @@ import { normalizeSmoothing } from "../history.ts";
 import { isTemplate, numOrNull, oneOf } from "../util.ts";
 import { normalizeVisibility, type Visibility } from "../visibility.ts";
 import type { ImageSrc } from "./image.ts";
+import { domainOf } from "../color.ts";
 import {
+  buttonIdsOf,
   defaultPlacements,
   ITEM_CONTROLS,
   normalizeControl,
   placementsOf,
+  type ButtonId,
   type ControlConfig,
   type CustomButton,
 } from "./control.ts";
@@ -346,6 +349,29 @@ export const normalizeValue = (v: unknown): ValueSrc | null => {
   const s = String(v);
   return isTemplate(s) ? { kind: "template", template: s } : { kind: "text", text: s };
 };
+// `control_options` of `control: buttons` that name the domain's own buttons (`[lock, unlock]`):
+// those ids, checked against the entity's domain; null for your own buttons (entries with an
+// entity or an action)
+const buttonIdsFrom = (
+  list: unknown,
+  entity: string | null,
+  ctx: NormalizeCtx,
+  label: string,
+): ButtonId[] | null => {
+  // (names only, on an entity whose domain has buttons; anything else is your own buttons, where
+  // a name is an entry without an entity, left out with a warning as ever)
+  if (!Array.isArray(list) || !list.length || !list.every((x) => typeof x === "string"))
+    return null;
+  const domain = entity ? domainOf(entity) : null;
+  const own = domain ? buttonIdsOf(domain) : [];
+  if (!own.length) return null;
+  for (const id of list as string[])
+    if (!own.includes(id as ButtonId))
+      throw new Error(
+        `${ctx.type}: ${label}.control_options: ${id} is not a button of a ${domain} (${own.join(" | ")})`,
+      );
+  return list as ButtonId[];
+};
 // the `control_options` of `control: buttons`: entries with an entity or an action (parsed as any
 // other action: a bare name, or an object that defaults to more-info); null when none is usable
 export const normalizeButtons = (
@@ -445,8 +471,11 @@ export const normalizeEntity = (
     valueSrc = { kind: "attribute", key: String(o.attribute) };
   } else valueSrc = normalizeValue(o.value) ?? { kind: "state" };
   const control = normalizeControl(o, ctx, label);
-  if (control?.kind === "buttons")
-    control.buttons = normalizeButtons(o.control_options, ctx, label, o.entity || null);
+  if (control?.kind === "buttons") {
+    const ids = buttonIdsFrom(o.control_options, o.entity || null, ctx, label);
+    if (ids) control.buttonIds = ids;
+    else control.buttons = normalizeButtons(o.control_options, ctx, label, o.entity || null);
+  }
   const onlyButtons = !o.entity && valueSrc.kind === "state" && !!control?.buttons;
   // a row of custom buttons needs nothing else: a name and the buttons
   if (onlyButtons && place.buttons) valueSrc = { kind: "text", text: "" };

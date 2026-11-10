@@ -111,7 +111,7 @@ Any tile or poster takes a control its entity supports, whatever its kind: a sli
 
 ## The control's options
 
-A control with options is an object: its `type` and what it takes. `step` sets the step of a slider or a stepper. On a thermostat or a fan, `attribute` picks what segments and a select change: `hvac_mode`, `preset_mode` or `fan_mode`. `options` limits segments and a select to the ones you list, each with its own `label` and `icon`.
+A control with options is an object: its `type` and what it takes. `step` sets the step of a slider or a stepper. `attribute` picks what it sets ([below](#what-a-control-sets)). `options` limits segments and a select to the ones you list, each with its own `label` and `icon`.
 
 An object without `type` changes the kind's own controls: `control: { step: 1 }` steps a thermostat by whole degrees, `control: { confirm: true }` makes a cover's buttons holds.
 
@@ -138,6 +138,185 @@ An object without `type` changes the kind's own controls: `control: { step: 1 }`
 ```
 
 :::
+
+## What a control sets
+
+`type` says how a control is drawn, `attribute` what it sets, by Home Assistant's name for it: a light's slider sets its `brightness`, or its `color_temp_kelvin`, `hue` or `saturation`. Left out, a control sets what the card shows where it can (`attribute: current_tilt_position` on the card: the slider tilts), else what its type sets by default: a light's slider its brightness, its buttons its favourite colours, its select its effects. The [reference](#what-each-entity-sets) lists every one.
+
+### A light's colour
+
+`color_temp_kelvin`, `hue` and `saturation` draw the slider as the colours it sets; while the light is off it is faded, and a drag turns it on in that colour. Buttons are the light's favourite colours, each a swatch that sets it; a select sets its effect.
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: light.reading_lamp
+  control: { type: slider, attribute: color_temp_kelvin }
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: light.living_room
+  control: { type: slider, attribute: hue }
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: light.reading_lamp
+  control: { type: buttons, position: block }
+  grid_options: { columns: 12 }
+- type: custom:tile-card-pro
+  entity: light.reading_lamp
+  name: Effect
+  control: { type: select, attribute: effect }
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: light.living_room
+  name: Saturation
+  control: { type: slider, attribute: saturation }
+  grid_options: { columns: 6 }
+```
+
+:::
+
+### Climate and air
+
+A thermostat's segments or select set its `hvac_mode`, `preset_mode`, `fan_mode`, `swing_mode` or `swing_horizontal_mode`, a stepper its `temperature` or `humidity`. A humidifier takes a switch, its target `humidity` and its `mode`; a water heater its `temperature` and its `operation_mode`. A fan's switch sets its power, or its `oscillating`; segments its speed, its `preset_mode` or its `direction`.
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: climate.living_room
+  name: Swing
+  control: { type: segments, attribute: swing_mode }
+  grid_options: { columns: 12 }
+- type: custom:tile-card-pro
+  entity: humidifier.bedroom
+  control: stepper
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: humidifier.bedroom
+  name: Mode
+  control: { type: select, attribute: mode }
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: water_heater.boiler
+  control: stepper
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: fan.living_room
+  name: Oscillate
+  control: { type: toggle, attribute: oscillating }
+  grid_options: { columns: 6 }
+```
+
+:::
+
+### Covers and valves
+
+A cover's slider and buttons move it, or tilt it with `attribute: current_tilt_position`; its segments are its favourite positions. A valve takes a switch, its buttons (open, stop, close) and a slider where it has a position.
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: cover.patio_blind
+  name: Slats
+  control: { type: slider, attribute: current_tilt_position }
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: cover.patio_blind
+  name: Tilt
+  control: { type: buttons, attribute: current_tilt_position }
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: cover.living_room_blinds
+  control: { type: segments, position: block }
+  grid_options: { columns: 12 }
+- type: custom:tile-card-pro
+  entity: valve.garden_irrigation
+  control: buttons
+  grid_options: { columns: 6 }
+```
+
+:::
+
+### Media, robots, locks and alarms
+
+A speaker's select sets its `source` or `sound_mode`, its stepper the volume by 5 %. A robot's select sets its `fan_speed`. A domain's buttons are named in `options`, in your order: a robot's `start_pause`, `stop`, `clean_spot`, `locate` and `dock`, a lock's `lock`, `unlock` and `open_door` (always held for a second). An alarm panel's segments arm it in the modes it supports and disarm it. A lock or a panel that wants a code opens Home Assistant's dialog for it instead.
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: media_player.living_room_speaker
+  name: Source
+  control: { type: select, attribute: source }
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: vacuum.robot
+  name: Suction
+  control: { type: select, attribute: fan_speed }
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: vacuum.robot
+  control:
+    type: buttons
+    options:
+      - start_pause
+      - stop
+      - locate
+      - dock
+  grid_options: { columns: 12 }
+- type: custom:tile-card-pro
+  entity: lock.front_door
+  control:
+    type: buttons
+    options:
+      - lock
+      - unlock
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: alarm_control_panel.home
+  control: { type: segments, position: block }
+  grid_options: { columns: 6 }
+```
+
+:::
+
+### Helpers, updates and dates
+
+A counter steps by its own step, or takes buttons (`decrement`, `reset`, `increment`). A timer takes `start`, `pause`, `cancel` and `finish`, or its presets as buttons with `attribute: presets`. An update takes `install` and `skip`. A date, a date and time or an input date takes `control: date`: a chip with the day that opens a calendar.
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: counter.coffee_cups
+  control: stepper
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: date.bin_day
+  control: date
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: timer.laundry
+  control: buttons
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: timer.laundry
+  name: Presets
+  control: { type: buttons, attribute: presets, position: block }
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: update.router_firmware
+  control: buttons
+  grid_options: { columns: 6 }
+```
+
+:::
+
+### Favourites
+
+A light's favourite colours, a cover's or a valve's favourite positions and a timer's presets are those you set in Home Assistant, in the entity's more-info dialog. The card reads them from Home Assistant's entity registry, as Home Assistant's own tile does. Without any, a cover offers 0, 25, 75 and 100 % and a light four whites across its range and four colours; a timer without presets shows none. `options` sets your own in the card instead.
 
 ## Where it sits
 
@@ -278,28 +457,64 @@ Every control works without a pointer. Tab reaches the card first, then its cont
 
 ### Control types
 
-| `control`  | Draws                      | For                                                          |
-| ---------- | -------------------------- | ------------------------------------------------------------ |
-| `toggle`   | a switch                   | lights, switches, fans, input booleans, media players …      |
-| `slider`   | a slider                   | brightness, cover position, volume, fan speed, numbers       |
-| `stepper`  | − and + around the value   | thermostats, numbers                                         |
-| `segments` | one segment per option     | fan speeds, a thermostat's modes, selects                    |
-| `select`   | a dropdown                 | selects, input selects, modes                                |
-| `buttons`  | a row of buttons           | covers, media players, robots; or your own                   |
-| `button`   | one button                 | scripts, scenes, buttons                                     |
-| `hold`     | a button held for a second | locks, alarm panels; any switch that must not go by accident |
+| `control`  | Draws                      | For                                                                                  |
+| ---------- | -------------------------- | ------------------------------------------------------------------------------------ |
+| `toggle`   | a switch                   | lights, switches, fans, input booleans, media players …                              |
+| `slider`   | a slider                   | brightness, cover position, volume, fan speed, numbers                               |
+| `stepper`  | − and + around the value   | thermostats, numbers                                                                 |
+| `segments` | one segment per option     | fan speeds, a thermostat's modes, selects                                            |
+| `select`   | a dropdown                 | selects, input selects, modes                                                        |
+| `buttons`  | a row of buttons           | covers, valves, media players, robots, locks, counters, timers, updates; or your own |
+| `button`   | one button                 | scripts, scenes, buttons                                                             |
+| `hold`     | a button held for a second | locks, alarm panels; any switch that must not go by accident                         |
+| `date`     | a chip with the day        | dates, dates and times, input dates                                                  |
 
 ### Control options
 
-| Key         | Default                      | Description                                                                                                       |
-| ----------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `type`      | the kind's                   | One of the control types. Without it, the other options change the kind's own controls.                           |
-| `position`  | the control's own            | `end` (end of the line, beside a poster's value) or `block` (below it). A slider's is `block`, the others' `end`. |
-| `step`      | the entity's, else 1         | The step of a slider or a stepper (a thermostat: 0.5).                                                            |
-| `attribute` | the shown one, else the mode | `hvac_mode`, `preset_mode` or `fan_mode`: what segments and a select change on a thermostat or fan.               |
-| `options`   | the entity's                 | Segments and select: the options, each `{ value, label, icon }`. Buttons: your own buttons (below).               |
-| `confirm`   | `false`                      | Turns the switch and the buttons into holds.                                                                      |
-| `variant`   | `fill`                       | `fill` or `tinted`: how a switch, a button, buttons and segments show what is on or chosen.                       |
+| Key         | Default                        | Description                                                                                                                                         |
+| ----------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`      | the kind's                     | One of the control types. Without it, the other options change the kind's own controls.                                                             |
+| `position`  | the control's own              | `end` (end of the line, beside a poster's value) or `block` (below it). A slider's is `block`, the others' `end`.                                   |
+| `step`      | the entity's, else 1           | The step of a slider or a stepper (a thermostat: 0.5).                                                                                              |
+| `attribute` | the shown one, else the type's | What it sets, by Home Assistant's name ([below](#what-each-entity-sets)).                                                                           |
+| `options`   | the entity's                   | Segments and select: the options, each `{ value, label, icon }`. Buttons: the domain's own by name (`[stop, locate]`), or your own buttons (below). |
+| `confirm`   | `false`                        | Turns the switch and the buttons into holds.                                                                                                        |
+| `variant`   | `fill`                         | `fill` or `tinted`: how a switch, a button, buttons and segments show what is on or chosen.                                                         |
+
+### What each entity sets
+
+The first is what a control of its type sets unless `attribute` names another.
+
+| Entity                         | `attribute`                                                                                              | Types                                                            |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| light                          | `brightness`, `color_temp_kelvin`, `hue`, `saturation`, `favorite_colors`, `effect`                      | slider, stepper; buttons (favourite colours), select (effects)   |
+| fan                            | `percentage`, `preset_mode`, `oscillating`, `direction`                                                  | slider, segments, select; toggle (oscillating)                   |
+| climate                        | `temperature`, `hvac_mode`, `preset_mode`, `fan_mode`, `swing_mode`, `swing_horizontal_mode`, `humidity` | stepper, slider; segments, select                                |
+| humidifier                     | `humidity`, `mode`                                                                                       | slider, stepper; segments, select; toggle (power)                |
+| water_heater                   | `temperature`, `operation_mode`                                                                          | stepper, slider; segments, select                                |
+| cover                          | `current_position`, `current_tilt_position`                                                              | slider, stepper, buttons; segments (favourite positions)         |
+| valve                          | `current_position`                                                                                       | slider, stepper; segments (favourite positions); buttons, toggle |
+| media_player                   | `volume_level`, `source`, `sound_mode`                                                                   | slider, stepper (5 %); select, segments                          |
+| vacuum                         | `fan_speed`                                                                                              | select, segments                                                 |
+| alarm_control_panel            | its mode                                                                                                 | segments, select                                                 |
+| counter, timer                 | its value; a timer's `presets`                                                                           | stepper (a counter); buttons (a timer's presets)                 |
+| date, datetime, input_datetime | its day                                                                                                  | date                                                             |
+
+### A domain's buttons
+
+`options` of `type: buttons` naming them, in your order. Left out, the first ones.
+
+| Entity       | Buttons                                                                  |
+| ------------ | ------------------------------------------------------------------------ |
+| cover        | `open`, `stop`, `close`; tilting: `tilt_open`, `tilt_stop`, `tilt_close` |
+| valve        | `open`, `stop`, `close`                                                  |
+| media_player | `previous`, `play_pause`, `next`                                         |
+| vacuum       | `start_pause`, `dock`; also `stop`, `clean_spot`, `locate`               |
+| lawn_mower   | `start_pause`, `dock`                                                    |
+| lock         | `lock`, `unlock`; also `open_door` (always held)                         |
+| counter      | `decrement`, `reset`, `increment`                                        |
+| timer        | `start`, `pause`, `cancel`; also `finish`                                |
+| update       | `skip`, `install`                                                        |
 
 ### Your own buttons
 

@@ -247,6 +247,75 @@ add(
   { states: { "light.to_lamp_off": like("light.living_room", "off") } },
 );
 
+// what a control sets: a light's colour on gradient sliders and its favourite colours, a
+// thermostat's swing, a humidifier's target, a cover's tilt and favourite positions
+const W6 = { grid_options: { columns: 6 } };
+add(
+  "to-controls-colour",
+  [
+    t("light.reading_lamp", { ...W6, control: { type: "slider", attribute: "color_temp_kelvin" } }),
+    t("light.living_room", { ...W6, control: { type: "slider", attribute: "hue" } }),
+    t("light.living_room", {
+      ...W6,
+      name: "Saturation",
+      control: { type: "slider", attribute: "saturation" },
+    }),
+    // off: the track faded
+    t("light.kitchen", {
+      ...W6,
+      control: { type: "slider", attribute: "color_temp_kelvin" },
+    }),
+    t("light.reading_lamp", {
+      control: { type: "buttons", position: "block" },
+      grid_options: { columns: 12 },
+    }),
+    t("climate.living_room", {
+      name: "Swing",
+      control: { type: "segments", attribute: "swing_mode" },
+      grid_options: { columns: 12 },
+    }),
+  ],
+  {
+    states: {
+      "light.kitchen": like("light.reading_lamp", "off", { color_temp_kelvin: null }),
+    },
+  },
+);
+// the domains' own: a cover's tilt and favourite positions, a valve, a robot's and a lock's
+// buttons by name, an alarm's modes, the helpers, an update and a date
+add(
+  "to-controls-more",
+  [
+    t("cover.patio_blind", {
+      ...W6,
+      name: "Tilt",
+      control: { type: "buttons", attribute: "current_tilt_position" },
+    }),
+    t("cover.living_room_blinds", {
+      control: { type: "segments", position: "block" },
+      grid_options: { columns: 12 },
+    }),
+    t("valve.garden_irrigation", { ...W6, control: "buttons" }),
+    t("humidifier.bedroom", { ...W6, control: "stepper" }),
+    t("vacuum.robot", {
+      control: { type: "buttons", options: ["start_pause", "stop", "locate", "dock"] },
+      grid_options: { columns: 12 },
+    }),
+    t("lock.front_door", { ...W6, control: { type: "buttons", options: ["lock", "unlock"] } }),
+    t("alarm_control_panel.home", { ...W6, control: { type: "segments", position: "block" } }),
+    t("counter.coffee_cups", { ...W6, control: "stepper" }),
+    t("timer.laundry", { ...W6, control: "buttons" }),
+    t("timer.laundry", {
+      ...W6,
+      name: "Presets",
+      control: { type: "buttons", attribute: "presets", position: "block" },
+    }),
+    t("update.router_firmware", { ...W6, control: "buttons" }),
+    t("date.bin_day", { ...W6, control: "date" }),
+  ],
+  { states: { "date.bin_day": { state: "2026-06-24" } } },
+);
+
 // vertical: the icon on top, the name and the line centred, the controls below; each at the
 // columns it asks for
 const v = (entity: string | null, o: Opts = {}) => t(entity, { vertical: true, ...o });

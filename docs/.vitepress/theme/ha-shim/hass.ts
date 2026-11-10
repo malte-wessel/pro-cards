@@ -1,6 +1,7 @@
 // Builds the `hass` object the cards expect, backed by the demo world, and wires the
 // document-level events HA would normally handle (actions, more-info, navigation, toasts).
 import { SONGS, world } from "./world.ts";
+import { hsToRgb, kelvinToRgb } from "../../../../src/shared/color.ts";
 import { ENTITIES } from "./registry.ts";
 import { renderTemplate } from "./templates.ts";
 import type {
@@ -178,6 +179,11 @@ export interface ServiceTarget {
 
 // the demo's state machine for service calls: what a real Home Assistant would make the device do
 const COVER_OPEN = (pos: number) => (pos <= 0 ? "closed" : "open");
+// what the demo's entity registry keeps as an entity's options: its favourites
+const REGISTRY_OPTIONS: Record<string, Record<string, Record<string, unknown>>> = {
+  "timer.laundry": { timer: { presets: [600, 1800, 2700] } },
+  "cover.living_room_blinds": { cover: { favorite_positions: [0, 30, 70, 100] } },
+};
 // a player's position where it stops or starts again: what it played meanwhile counts
 const played = (st: HassEntity) => {
   const pos = Number(st.attributes.media_position),
@@ -316,7 +322,37 @@ const callService = async (
     case "light.turn_on":
       each((id, st) => {
         const pct = num("brightness_pct");
-        if (Number.isFinite(pct)) world.set(id, "on", { brightness: Math.round(pct * 2.55) });
+        // its colour: a temperature, a hue and saturation or an RGB colour, an effect
+        const colour: Record<string, unknown> = {};
+        const k = num("color_temp_kelvin");
+        if (Number.isFinite(k))
+          Object.assign(colour, {
+            color_mode: "color_temp",
+            color_temp_kelvin: Math.round(k),
+            rgb_color: kelvinToRgb(k),
+          });
+        const hs = data.hs_color;
+        if (Array.isArray(hs))
+          Object.assign(colour, {
+            color_mode: "hs",
+            hs_color: hs,
+            rgb_color: hsToRgb(Number(hs[0]), Number(hs[1])),
+            color_temp_kelvin: null,
+          });
+        if (Array.isArray(data.rgb_color))
+          Object.assign(colour, {
+            color_mode: "rgb",
+            rgb_color: data.rgb_color,
+            color_temp_kelvin: null,
+          });
+        if (typeof data.effect === "string") colour.effect = data.effect;
+        if (Number.isFinite(pct))
+          world.set(id, "on", { brightness: Math.round(pct * 2.55), ...colour });
+        else if (Object.keys(colour).length)
+          world.set(id, "on", {
+            ...colour,
+            ...(st.attributes.brightness ? {} : { brightness: 255 }),
+          });
         else onOff(id, st, true);
       });
       break;
@@ -334,6 +370,156 @@ const callService = async (
       break;
     case "fan.set_preset_mode":
       each((id) => world.set(id, "on", { preset_mode: data.preset_mode }));
+      break;
+    case "fan.oscillate":
+      each((id) => world.set(id, undefined, { oscillating: data.oscillating === true }));
+      break;
+    case "fan.set_direction":
+      each((id) => world.set(id, undefined, { direction: data.direction }));
+      break;
+    // a cover's slats, a valve as a cover (they travel at once)
+    case "cover.set_cover_tilt_position":
+      each((id) => world.set(id, undefined, { current_tilt_position: num("tilt_position") }));
+      break;
+    case "cover.open_cover_tilt":
+    case "cover.close_cover_tilt":
+      each((id) =>
+        world.set(id, undefined, {
+          current_tilt_position: service === "open_cover_tilt" ? 100 : 0,
+        }),
+      );
+      break;
+    case "cover.stop_cover_tilt":
+    case "valve.stop_valve":
+      break;
+    case "valve.open_valve":
+    case "valve.close_valve":
+    case "valve.toggle":
+      each((id, st) => {
+        const open = service === "toggle" ? st.state === "closed" : service === "open_valve";
+        world.set(id, open ? "open" : "closed", { current_position: open ? 100 : 0 });
+      });
+      break;
+    case "valve.set_valve_position":
+      each((id) => {
+        const pos = num("position");
+        world.set(id, pos > 0 ? "open" : "closed", { current_position: pos });
+      });
+      break;
+    case "humidifier.set_humidity":
+    case "climate.set_humidity":
+      each((id) => world.set(id, undefined, { humidity: num("humidity") }));
+      break;
+    case "humidifier.set_mode":
+      each((id) => world.set(id, undefined, { mode: data.mode }));
+      break;
+    case "humidifier.toggle":
+    case "humidifier.turn_on":
+    case "humidifier.turn_off":
+      each((id, st) =>
+        world.set(id, service === "toggle" ? (st.state === "on" ? "off" : "on") : service.slice(5)),
+      );
+      break;
+    case "water_heater.set_temperature":
+      each((id) => world.set(id, undefined, { temperature: num("temperature") }));
+      break;
+    case "water_heater.set_operation_mode":
+      each((id) =>
+        world.set(id, String(data.operation_mode), { operation_mode: data.operation_mode }),
+      );
+      break;
+    case "climate.set_swing_mode":
+      each((id) => world.set(id, undefined, { swing_mode: data.swing_mode }));
+      break;
+    case "climate.set_swing_horizontal_mode":
+      each((id) => world.set(id, undefined, { swing_horizontal_mode: data.swing_horizontal_mode }));
+      break;
+    case "media_player.select_source":
+      each((id) => world.set(id, undefined, { source: data.source }));
+      break;
+    case "media_player.select_sound_mode":
+      each((id) => world.set(id, undefined, { sound_mode: data.sound_mode }));
+      break;
+    case "vacuum.set_fan_speed":
+      each((id) => world.set(id, undefined, { fan_speed: data.fan_speed }));
+      break;
+    case "vacuum.stop":
+      each((id) => world.set(id, "idle", { status: "Idle" }));
+      break;
+    case "vacuum.locate":
+      toast(`Locating: ${ids.join(", ")}`);
+      break;
+    case "vacuum.clean_spot":
+      each((id) => world.set(id, "cleaning", { status: "Spot cleaning" }));
+      break;
+    case "lock.open":
+      each((id) => {
+        world.set(id, "open");
+        setTimeoutState(id, "unlocked", {}, 2000);
+      });
+      break;
+    // a counter counts by its step, held within its bounds
+    case "counter.increment":
+    case "counter.decrement":
+    case "counter.reset":
+      each((id, st) => {
+        const a = st.attributes;
+        const step = Number(a.step ?? 1);
+        const v =
+          service === "reset"
+            ? Number(a.initial ?? 0)
+            : Number(st.state) + (service === "increment" ? step : -step);
+        const lo =
+          Number.isFinite(Number(a.minimum)) && a.minimum !== null ? Number(a.minimum) : -Infinity;
+        const hi =
+          Number.isFinite(Number(a.maximum)) && a.maximum !== null ? Number(a.maximum) : Infinity;
+        world.set(id, Math.min(hi, Math.max(lo, v)));
+      });
+      break;
+    // a timer runs for its duration (or the one given), pauses, and is cancelled or finished
+    case "timer.start":
+      each((id, st) => {
+        const secs = num("duration");
+        const dur = Number.isFinite(secs)
+          ? new Date(secs * 1000).toISOString().slice(11, 19).replace(/^0/, "")
+          : st.attributes.duration;
+        world.set(id, "active", {
+          duration: dur,
+          remaining: dur,
+          finishes_at: new Date(
+            Date.now() + (Number.isFinite(secs) ? secs * 1000 : 0),
+          ).toISOString(),
+        });
+      });
+      break;
+    case "timer.pause":
+      each((id) => world.set(id, "paused"));
+      break;
+    case "timer.cancel":
+    case "timer.finish":
+      each((id) => world.set(id, "idle", { finishes_at: null }));
+      break;
+    // an update installs for a moment, then is current; a skipped one is current as well
+    case "update.install":
+      each((id, st) => {
+        world.set(id, "on", { in_progress: true });
+        setTimeoutState(
+          id,
+          "off",
+          { in_progress: false, installed_version: st.attributes.latest_version },
+          2000,
+        );
+      });
+      break;
+    case "update.skip":
+      each((id, st) => world.set(id, "off", { skipped_version: st.attributes.latest_version }));
+      break;
+    case "date.set_value":
+    case "input_datetime.set_datetime":
+      each((id) => world.set(id, String(data.date)));
+      break;
+    case "datetime.set_value":
+      each((id) => world.set(id, String(data.datetime)));
       break;
     case "cover.open_cover":
       each((id) => travel(id, 100));
@@ -429,9 +615,13 @@ const callService = async (
       break;
     // an alarm arms after a short countdown and disarms at once
     case "alarm_control_panel.alarm_arm_away":
+    case "alarm_control_panel.alarm_arm_home":
+    case "alarm_control_panel.alarm_arm_night":
+    case "alarm_control_panel.alarm_arm_vacation":
+    case "alarm_control_panel.alarm_arm_custom_bypass":
       each((id) => {
         world.set(id, "arming");
-        setTimeout(() => world.set(id, "armed_away"), 1200);
+        setTimeout(() => world.set(id, `armed_${service.slice("alarm_arm_".length)}`), 1200);
       });
       break;
     case "alarm_control_panel.alarm_disarm":
@@ -585,6 +775,8 @@ const connection = {
         off();
       };
     }
+    // events (the entity registry's changes): the demo's registry never changes
+    if (msg.type === "subscribe_events") return async () => {};
     if (msg.type !== "render_template") throw new Error("unsupported");
     const push = () => {
       const r = renderTemplate(msg.template, world.states);
@@ -623,6 +815,11 @@ export const snapshot = (): HassSnapshot => ({
   // HA's callWS / subscribeMessage are generic in the caller's result type, so the shim asserts
   // its concrete answers to it (history rows here, template results below)
   callWS: async <T>(msg: MessageBase): Promise<T> => {
+    // an entity's registry options: the demo's favourites (a timer's presets)
+    if (msg.type === "config/entity_registry/get") {
+      const options = REGISTRY_OPTIONS[String(msg.entity_id)];
+      return { entity_id: msg.entity_id, options: options ?? {} } as T;
+    }
     if (msg.type === "history/history_during_period") {
       return world.history(
         msg.entity_ids || [],

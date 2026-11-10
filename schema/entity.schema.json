@@ -203,6 +203,7 @@
                 "button",
                 "select",
                 "hold",
+                "date",
                 "none"
               ]
             }
@@ -216,8 +217,34 @@
         },
         "control_attribute": {
           "type": "string",
-          "enum": ["hvac_mode", "preset_mode", "fan_mode"],
-          "description": "The mode a segments or select control sets on a climate or fan entity (default: the displayed attribute when it is one of these, else hvac_mode / the fan speed)"
+          "enum": [
+            "brightness",
+            "color_temp_kelvin",
+            "hue",
+            "saturation",
+            "favorite_colors",
+            "effect",
+            "current_position",
+            "current_tilt_position",
+            "volume_level",
+            "source",
+            "sound_mode",
+            "fan_speed",
+            "percentage",
+            "preset_mode",
+            "oscillating",
+            "direction",
+            "temperature",
+            "hvac_mode",
+            "fan_mode",
+            "swing_mode",
+            "swing_horizontal_mode",
+            "humidity",
+            "mode",
+            "operation_mode",
+            "presets"
+          ],
+          "description": "What the control sets, as Home Assistant names it: a light's brightness, color_temp_kelvin, hue, saturation, favorite_colors or effect; a fan's percentage, preset_mode, oscillating or direction; a thermostat's temperature, hvac_mode, preset_mode, fan_mode, swing_mode, swing_horizontal_mode or humidity; a cover's current_position or current_tilt_position; a speaker's volume_level, source or sound_mode; a humidifier's humidity or mode; a water heater's temperature or operation_mode; a robot's fan_speed; a timer's presets (as buttons). Default: the displayed attribute where the control can set it, else the domain's first (for its control type)"
         },
         "control_step": {
           "type": "number",
@@ -243,7 +270,7 @@
               { "$ref": "#/$defs/buttonOption" }
             ]
           },
-          "description": "Options of segments and select (default: the entity's modes or options); with control: buttons, the buttons: { entity, icon, label, color, action }"
+          "description": "Options of segments and select (default: the entity's modes or options, a cover's or light's favourites); with control: buttons, the domain's own buttons by name ([stop, locate]) or your own: { entity, icon, label, color, action }"
         },
         "control_confirm": {
           "type": "boolean",
@@ -267,9 +294,45 @@
       "if": { "required": ["control"], "properties": { "control": { "const": "buttons" } } },
       "then": {
         "properties": {
-          "control_options": { "minItems": 1, "items": { "$ref": "#/$defs/buttonOption" } }
+          "control_options": {
+            "minItems": 1,
+            "items": {
+              "oneOf": [{ "$ref": "#/$defs/buttonId" }, { "$ref": "#/$defs/buttonOption" }]
+            }
+          }
         }
       }
+    },
+    "buttonId": {
+      "type": "string",
+      "enum": [
+        "open",
+        "stop",
+        "close",
+        "tilt_open",
+        "tilt_stop",
+        "tilt_close",
+        "previous",
+        "play_pause",
+        "next",
+        "start_pause",
+        "clean_spot",
+        "locate",
+        "dock",
+        "lock",
+        "unlock",
+        "open_door",
+        "decrement",
+        "reset",
+        "increment",
+        "start",
+        "pause",
+        "cancel",
+        "finish",
+        "skip",
+        "install"
+      ],
+      "description": "One of the domain's own buttons, by name: a cover's open, stop, close, tilt_open, tilt_stop, tilt_close; a valve's open, stop, close; a speaker's previous, play_pause, next; a robot's start_pause, stop, clean_spot, locate, dock; a lock's lock, unlock, open_door; a counter's decrement, reset, increment; a timer's start, pause, cancel, finish; an update's skip, install"
     },
     "buttonOption": {
       "type": "object",

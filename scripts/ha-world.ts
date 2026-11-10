@@ -53,6 +53,8 @@ const PACKAGE_DOMAINS = new Set([
   "script",
   "group",
   "person",
+  "counter",
+  "timer",
 ]);
 const pkg: Record<string, Record<string, unknown> | unknown[]> = {};
 const add = (domain: string, key: string, value: Record<string, unknown>) =>
@@ -109,6 +111,16 @@ for (const [id, st] of Object.entries(world.states)) {
   else if (domain === "scene") ((pkg.scene ??= []) as unknown[]).push({ ...named, entities: {} });
   else if (domain === "script") add(domain, key, { alias: name, icon, sequence: [] });
   else if (domain === "group") add(domain, key, { ...named, entities: a.entity_id });
+  else if (domain === "counter")
+    add(domain, key, {
+      ...named,
+      initial: a.initial ?? Number(st.state),
+      step: a.step,
+      minimum: a.minimum,
+      maximum: a.maximum,
+    });
+  // (its presets are the registry's: set them in the timer's more-info)
+  else if (domain === "timer") add(domain, key, { ...named, duration: a.duration });
   // a person is home or away by a tracker the integration makes for them
   else if (domain === "person") {
     ((pkg.person ??= []) as unknown[]).push({

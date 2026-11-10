@@ -14,6 +14,7 @@ import {
   type,
 } from "../../typography.ts";
 import { STYLE_SLIDER } from "../../slider.ts";
+import { STYLE_DATEPICKER } from "../../datepicker.ts";
 
 export const STYLE_BASE = `
   ${STYLE_ICONS}
@@ -338,6 +339,7 @@ export const STYLE_CONTROLS = `
   .lead.tap.off .shape { color: var(--secondary-text-color); background: ${iconBg("var(--primary-text-color)", "transparent", 0.4)}; }
   .lead.tap.pending .shape { animation: ctl-pulse 1s ease-in-out infinite; }
   ${STYLE_SLIDER}
+  ${STYLE_DATEPICKER}
   .end .ctl-slider, .val .ctl-slider { flex: 0 1 120px; width: 120px; min-width: 64px; }
   .ctl-slider.pending .fill { opacity: .55; }
   /* a slider's bar (a kind card's, a table's too): Home Assistant's, filled to the value
@@ -351,6 +353,16 @@ export const STYLE_CONTROLS = `
   .ctl-slider.thick .bubble { bottom: calc(100% + 6px); }
   /* in a table: 28 px, the small controls' height */
   .ctl-slider.thick.sm { height: 28px; border-radius: 8px; }
+  /* a colour slider: its track the colours it sets, no fill, the handle ringed to show on white */
+  .ctl-slider.grad .track { background: var(--grad); }
+  .ctl-slider.grad .fill { background: transparent; }
+  /* its handle a hollow capsule the colour shows through (8 × 24, a 2 px white ring with a faint
+     shadow so it shows on white too), kept inside the bar at either end (--p: where it is, 0 to 1) */
+  .ctl-slider.grad.thick .fill::after { display: none; }
+  .ctl-slider.grad.thick .knob, .ctl-slider.grad.thick.dragging .knob { display: block; top: 6px; bottom: 6px; width: 8px; height: auto; margin: 0 0 0 calc(var(--p, 0) * -8px); box-sizing: border-box; border: 2px solid var(--text-primary-color, #fff); border-radius: 4px; background: transparent; box-shadow: 0 0 2px rgba(0,0,0,.35), inset 0 0 2px rgba(0,0,0,.35); animation: none; }
+  .ctl-slider.grad.thick.sm .knob { top: 4px; bottom: 4px; }
+  .ctl-slider.grad.dim .track { filter: saturate(.5); opacity: .4; }
+  /* a light's favourite colours: each segment its colour, a light one ringed, the chosen none */
   .ctl-slider.thick.sm .track { height: 100%; border-radius: 8px; }
   .ctl-slider.thick.sm .fill::after { right: 5px; width: 3px; height: 12px; margin-top: -6px; }
   .ctl-slider.pending .knob { background: transparent; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--fe-color) 55%, transparent); animation: ctl-pulse 1s ease-in-out infinite; }
@@ -366,6 +378,14 @@ export const STYLE_CONTROLS = `
   .ctl-buttons.custom > button { background-color: color-mix(in srgb, var(--fe-color) 20%, transparent); color: var(--fe-color); transition: background-color .2s, color .2s; }
   .ctl-buttons.custom > button.on { background-color: var(--fe-color); color: var(--text-primary-color, #fff); }
   .ctl-buttons.custom > button.pending { animation: ctl-pulse 1s ease-in-out infinite; }
+  /* buttons that each set an option (a light's favourite colours, a timer's presets): grey with
+     the option's name, or the colour itself ringed to show on white; many of them wrap */
+  .ctl-buttons.options { flex: 0 1 auto; flex-wrap: wrap; min-width: 0; }
+  .end > .ctl-buttons.options, .val > .ctl-buttons.options { justify-content: flex-end; }
+  .ctl-buttons.options > button { flex: none; width: 32px; height: 32px; border: 0; padding: 0; border-radius: 50%; background: var(--fe-track); color: var(--primary-text-color); cursor: pointer; font: inherit; }
+  .ctl-buttons.options > button.chip { width: auto; padding: 0 12px; border-radius: 999px; font-size: ${fs(13)}; font-weight: ${fw("medium")}; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .ctl-buttons.options > button.swatch { background: var(--swatch); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--divider-color, var(--primary-text-color)) 60%, transparent); }
+  .ctl-buttons.options > button.pending { animation: ctl-pulse 1s ease-in-out infinite; }
   /* the poster's and the tile's controls (square): rounded squares, all as tall as a segments
      control (36 px), as Home Assistant's tile features; the entity cards' keep their look of before */
   .ctl-buttons.square > button { border-radius: 10px; }
@@ -655,6 +675,7 @@ export const STYLE_HOVER = `
   @media (hover: hover) {
     /* the slider: a halo around the knob, lighter than the one while dragging */
     .row.hover-fx .ctl-slider:not(.dragging, .pending):hover .knob { box-shadow: var(--knob-shadow), 0 0 0 6px color-mix(in srgb, var(--fe-color) 12%, transparent); }
+    .row.hover-fx .ctl-slider.grad.thick:not(.dragging, .pending):hover .knob { box-shadow: 0 0 2px rgba(0,0,0,.35), inset 0 0 2px rgba(0,0,0,.35); }
   }
   .row.hover-fx .lead.tap:not(.disabled):active .shape { transform: scale(1.2); }
   /* reduced motion: no growing and no fades; each selector repeats the one it overrides */

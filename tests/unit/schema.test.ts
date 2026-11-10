@@ -7,6 +7,8 @@ import { PRESETS } from "../../docs/.vitepress/theme/presets.ts";
 import { normalizeLayoutConfig } from "../../src/layout/config.ts";
 import { normalizeSwipeConfig } from "../../src/swipe/config.ts";
 import { KIND_NAMES } from "../../src/shared/kinds/registry.ts";
+import { TARGET_KEYS } from "../../src/shared/entity/targets.ts";
+import { BUTTONS } from "../../src/shared/entity/control.ts";
 
 const validate = makeValidator();
 describe("card config schemas", () => {
@@ -1372,5 +1374,36 @@ describe("docs showcases", () => {
         expect(Buffer.from(m[1], "base64").toString("utf8"), file).toBe(m[2]);
       }
     }
+  });
+});
+
+describe("schema: what a control sets and the domain's buttons", () => {
+  const entity = JSON.parse(readFileSync("schema/entity.schema.json", "utf8"));
+  it("names every attribute a control sets, and every domain's button", () => {
+    const attrs = entity.$defs.entityKeys.properties.control_attribute.enum as string[];
+    expect([...attrs].sort()).toEqual([...TARGET_KEYS].sort());
+    const ids = entity.$defs.buttonId.enum as string[];
+    const all = [...new Set(Object.values(BUTTONS).flatMap((bs) => bs.map((b) => b.id)))];
+    expect([...ids].sort()).toEqual(all.sort());
+  });
+  it("takes a domain's buttons by name, a date control, a light's colour", () => {
+    const ok = (c: Record<string, unknown>) =>
+      expect(validate({ type: "custom:tile-card-pro", ...c }), JSON.stringify(c)).toBeNull();
+    ok({
+      entity: "vacuum.robot",
+      control: { type: "buttons", options: ["start_pause", "locate"] },
+    });
+    ok({ entity: "date.bin_day", control: "date" });
+    ok({
+      entity: "light.living_room",
+      control: { type: "slider", attribute: "color_temp_kelvin" },
+    });
+    expect(
+      validate({
+        type: "custom:tile-card-pro",
+        entity: "vacuum.robot",
+        control: { type: "buttons", options: ["fly"] },
+      }),
+    ).not.toBeNull();
   });
 });

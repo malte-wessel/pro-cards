@@ -2,6 +2,8 @@
 // A place is a thing and its options in the form (`icon_thing` + `icon_ring` …); written back, it
 // is the shortest YAML that draws the same: nothing for the kind's default, a name for a thing
 // without options, `{ type, … }` else. Keys the form does not show are kept as written.
+import { attributeChoices, targetKeysOf } from "../entity/targets.ts";
+import { BUTTONS, buttonIdsOf, defaultButtonIds, type ButtonId } from "../entity/control.ts";
 import { setOrDrop } from "../editor.ts";
 import { VARIANT_KINDS, type ControlKind } from "../entity/control.ts";
 import type { CardConfigBase, HaFormData } from "../ha.ts";
@@ -142,17 +144,27 @@ export const DOMAIN_AUTO: Record<string, readonly ControlKind[]> = {
   scene: ["button"],
   button: ["button"],
   input_button: ["button"],
+  // (the domains without a kind)
+  humidifier: ["toggle", "slider"],
+  water_heater: ["stepper"],
+  valve: ["toggle", "slider"],
+  counter: ["stepper"],
+  timer: ["buttons"],
+  update: ["buttons"],
+  date: ["date"],
+  datetime: ["date"],
+  input_datetime: ["date"],
 };
 // the controls an entity's domain takes besides your own buttons, which any entity can carry
 export const DOMAIN_CONTROLS: Record<string, readonly ControlKind[]> = {
-  light: ["toggle", "slider", "hold"],
+  light: ["toggle", "slider", "select", "hold"],
   switch: ["toggle", "hold"],
   input_boolean: ["toggle", "hold"],
   fan: ["toggle", "segments", "select", "slider"],
-  cover: ["buttons", "slider", "hold"],
-  climate: ["stepper", "segments", "select"],
-  lock: ["hold", "toggle"],
-  media_player: ["buttons", "slider", "toggle"],
+  cover: ["buttons", "slider", "segments", "hold"],
+  climate: ["stepper", "segments", "select", "slider"],
+  lock: ["hold", "buttons", "toggle"],
+  media_player: ["buttons", "slider", "stepper", "select", "toggle"],
   number: ["slider", "stepper"],
   input_number: ["slider", "stepper"],
   select: ["select", "segments"],
@@ -161,11 +173,19 @@ export const DOMAIN_CONTROLS: Record<string, readonly ControlKind[]> = {
   scene: ["button", "hold"],
   button: ["button", "hold"],
   input_button: ["button", "hold"],
-  vacuum: ["buttons"],
+  vacuum: ["buttons", "select", "segments"],
   lawn_mower: ["buttons"],
+  humidifier: ["toggle", "slider", "stepper", "segments", "select"],
+  water_heater: ["stepper", "slider", "segments", "select"],
+  valve: ["toggle", "buttons", "slider", "segments"],
+  alarm_control_panel: ["hold", "segments", "select"],
+  counter: ["stepper", "buttons"],
+  timer: ["buttons", "select"],
+  update: ["buttons"],
+  date: ["date"],
+  datetime: ["date"],
+  input_datetime: ["date"],
 };
-// what segments and a select set where the card names nothing: a thermostat's mode, a fan's speed
-export const DEFAULT_ATTRIBUTE: Record<string, string> = { climate: "hvac_mode", fan: "speed" };
 // the kind's own controls on this card (a tile's are those at the line's end)
 // what `auto` draws for the card's entity where the kind brings no controls of its own: an object
 // without a type means it too
@@ -560,18 +580,25 @@ export const configToForm = (
         ? DEFAULT
         : ctl.position;
     d.control_step = num(ctl.step);
-    // (the mode set by default, written, is the default)
     const domain = typeof c.entity === "string" ? c.entity.split(".")[0] : "";
+    const drawn = drawnControls(d.control_type as string, c.entity, kind, thing);
+    // (what it sets by default, written, is the default)
     d.control_attribute =
-      ctl.attribute === undefined || ctl.attribute === DEFAULT_ATTRIBUTE[domain]
+      ctl.attribute === undefined ||
+      ctl.attribute === attributeChoices(domain, drawn, undefined, !!BUTTONS[domain])[0]
         ? DEFAULT
         : ctl.attribute;
     d.control_confirm = ctl.confirm === true;
     // (fill, written, is the default)
     d.control_variant = ctl.variant === "tinted" ? "tinted" : DEFAULT;
-    // buttons' options as buttons, also on the kind's own (a cover's, written as Buttons)
-    const drawn = drawnControls(d.control_type as string, c.entity, kind, thing);
-    if (drawn.includes("buttons")) d.control_buttons = listToForm(ctl.options, BUTTON_KEYS);
+    // buttons' options as buttons, also on the kind's own (a cover's, written as Buttons); the
+    // domain's own by name
+    const names =
+      Array.isArray(ctl.options) &&
+      ctl.options.length > 0 &&
+      ctl.options.every((o) => typeof o === "string");
+    if (drawn.includes("buttons") && names) d.control_button_ids = [...(ctl.options as string[])];
+    else if (drawn.includes("buttons")) d.control_buttons = listToForm(ctl.options, BUTTON_KEYS);
     else d.control_options = listToForm(ctl.options, OPTION_KEYS, "value");
   }
 
@@ -691,16 +718,35 @@ const controlFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknow
   if (drawn.length && chosen(data.control_position)) o.position = data.control_position;
   if (draws("slider", "stepper") && num(data.control_step) !== undefined)
     o.step = data.control_step;
-  if (draws("segments", "select") && chosen(data.control_attribute))
+  const domain = typeof data.entity === "string" ? data.entity.split(".")[0] : "";
+  const attrs = attributeChoices(domain, drawn, undefined, !!BUTTONS[domain]);
+  // (a switch's own power and a domain's own buttons are no attribute)
+  if (
+    chosen(data.control_attribute) &&
+    data.control_attribute !== "power" &&
+    data.control_attribute !== "buttons" &&
+    data.control_attribute !== attrs[0] &&
+    attrs.includes(data.control_attribute as string)
+  )
     o.attribute = data.control_attribute;
   if (draws("toggle", "button", "buttons") && data.control_confirm === true) o.confirm = true;
   if (variable(drawn, o.confirm === true) && chosen(data.control_variant))
     o.variant = data.control_variant;
-  const opts = draws("buttons")
-    ? listFromForm(data.control_buttons, BUTTON_KEYS, null)
-    : draws("segments", "select")
-      ? listFromForm(data.control_options, OPTION_KEYS, "value")
-      : [];
+  // your own buttons, else the domain's by name where they are not its default
+  const own = draws("buttons") ? listFromForm(data.control_buttons, BUTTON_KEYS, null) : [];
+  const ids = Array.isArray(data.control_button_ids)
+    ? (data.control_button_ids as string[]).filter((id) =>
+        buttonIdsOf(domain).includes(id as ButtonId),
+      )
+    : [];
+  const byDefault = defaultButtonIds(domain, o.attribute === "current_tilt_position");
+  const opts = own.length
+    ? own
+    : draws("buttons") && ids.length && ids.join() !== byDefault.join()
+      ? ids
+      : draws("segments", "select") && !draws("buttons")
+        ? listFromForm(data.control_options, OPTION_KEYS, "value")
+        : [];
   if (opts.length) o.options = opts;
   const has = Object.keys(o).length > 0;
   // an object without a type changes the kind's own controls (or the domain's: auto)
@@ -735,6 +781,16 @@ export const fitEntity = (
     !(DOMAIN_CONTROLS[domain] ?? []).includes(type as ControlKind)
   )
     delete c.control;
+  // an attribute the control sets that the new domain does not have (a thermostat's preset on a
+  // select): the control stays, setting the domain's own
+  const set = isObj(c.control) ? c.control.attribute : undefined;
+  if (typeof set === "string" && !targetKeysOf(domain).includes(set)) {
+    const rest = { ...(c.control as Raw) };
+    delete rest.attribute;
+    const n = Object.keys(rest).length;
+    if (!n) delete c.control;
+    else c.control = n === 1 && typeof rest.type === "string" ? rest.type : rest;
+  }
   const places = {
     icon: [defaultIcon(kind), ICON_OPTIONS],
     visual: [defaultVisual(kind, thing), visualOptionsOf(thing)],

@@ -114,6 +114,44 @@ export const lightColorHex = (rgb: readonly number[]): string => {
 };
 
 // #rgb, #rgba, #rrggbb or #rrggbbaa as red, green, blue (the alpha is dropped: blends are opaque)
+// a colour temperature as the light it gives, Tanner Helland's blackbody fit (as Home Assistant's
+// temperature2rgb): warm orange at 2000 K, white near 6500 K, blue beyond
+export const kelvinToRgb = (kelvin: number): [number, number, number] => {
+  const t = kelvin / 100;
+  const c = (v: number) => Math.round(Math.min(255, Math.max(0, v)));
+  const r = t <= 66 ? 255 : 329.698727446 * Math.pow(t - 60, -0.1332047592);
+  const g =
+    t <= 66
+      ? 99.4708025861 * Math.log(t) - 161.1195681661
+      : 288.1221695283 * Math.pow(t - 60, -0.0755148492);
+  const b = t >= 66 ? 255 : t <= 19 ? 0 : 138.5177312231 * Math.log(t - 10) - 305.0447927307;
+  return [c(r), c(g), c(b)];
+};
+// the stops of a slider's track (`linear-gradient(to right, …)`): a colour temperature's range in
+// eleven steps, the hues around the circle, a hue from white to its fullest
+export const kelvinGradient = (min: number, max: number) =>
+  Array.from({ length: 11 }, (_, i) => {
+    const [r, g, b] = kelvinToRgb(min + ((max - min) * i) / 10);
+    return `rgb(${r} ${g} ${b}) ${i * 10}%`;
+  }).join(", ");
+export const hueGradient = () =>
+  Array.from(
+    { length: 7 },
+    (_, i) => `hsl(${i * 60} 100% 50%) ${((i * 100) / 6).toFixed(1)}%`,
+  ).join(", ");
+export const saturationGradient = (hue: number | null) =>
+  hue === null
+    ? "hsl(0 0% 100%) 0%, hsl(0 0% 60%) 100%"
+    : `hsl(${Math.round(hue)} 0% 100%) 0%, hsl(${Math.round(hue)} 100% 50%) 100%`;
+// a hue and saturation at full brightness, as Home Assistant shows a light's hs colour
+export const hsToRgb = (h: number, sPct: number): [number, number, number] => {
+  const s = Math.max(0, Math.min(1, sPct / 100));
+  const f = (n: number) => {
+    const k = (n + h / 60) % 6;
+    return Math.round(255 * (1 - s * Math.max(0, Math.min(k, 4 - k, 1))));
+  };
+  return [f(5), f(3), f(1)];
+};
 export const hexToRgb = (hex: string): [number, number, number] => {
   let h = hex.replace("#", "");
   if (h.length === 3 || h.length === 4)

@@ -117,14 +117,22 @@ describe("control config", () => {
     expect(ent({ control_options: [] }).control?.options).toBeNull();
     expect(ent({ control_confirm: true }).control?.confirm).toBe(true);
   });
-  it("targets the mode of control_attribute, else the displayed mode attribute", () => {
-    expect(ent({ control_attribute: "preset_mode" }).control?.attribute).toBe("preset_mode");
-    expect(ent({ attribute: "fan_mode" }).control?.attribute).toBe("fan_mode");
+  it("sets the attribute of control_attribute, else the displayed one its domain sets", () => {
+    const climate = (o: RawEntity) => ent({ entity: "climate.x", ...o });
+    expect(climate({ control_attribute: "preset_mode" }).control?.attribute).toBe("preset_mode");
+    expect(climate({ attribute: "fan_mode" }).control?.attribute).toBe("fan_mode");
     expect(
-      ent({ attribute: "temperature", control_attribute: "hvac_mode" }).control?.attribute,
+      climate({ attribute: "temperature", control_attribute: "hvac_mode" }).control?.attribute,
     ).toBe("hvac_mode");
-    expect(ent({ attribute: "current_temperature" }).control?.attribute).toBeNull();
-    expect(() => ent({ control_attribute: "swing" })).toThrow(/control_attribute must be one of/);
+    expect(climate({ attribute: "current_temperature" }).control?.attribute).toBeNull();
+    // a light's own: what a thermostat sets is not one
+    expect(ent({ attribute: "fan_mode" }).control?.attribute).toBeNull();
+    expect(() => ent({ control_attribute: "preset_mode" })).toThrow(
+      /e\.control_attribute must be one of brightness \| color_temp_kelvin .* \(a light\)/,
+    );
+    expect(() => climate({ control_attribute: "swing" })).toThrow(
+      /control_attribute must be one of temperature \| hvac_mode/,
+    );
   });
 });
 
@@ -523,7 +531,7 @@ describe("services", () => {
       service: "select_option",
       data: { option: "Eco" },
     });
-    expect(svc("light.a", {}, undefined, { type: "option", value: "x" })).toBeNull();
+    expect(svc("switch.a", {}, undefined, { type: "option", value: "x" })).toBeNull();
   });
   it("maps the transport buttons, press and hold", () => {
     expect(svc("cover.a", {}, undefined, { type: "button", id: "stop" })).toMatchObject({

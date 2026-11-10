@@ -680,6 +680,24 @@ add("po-controls-buttons", [
   p("fan.living_room", { control: { type: "segments", position: "block" } }),
 ]);
 
+// what a control sets on a poster: a lamp's colour temperature, a water heater's target and
+// operation, a speaker's source, a robot's suction
+add("po-controls-more", [
+  p("light.reading_lamp", { control: { type: "slider", attribute: "color_temp_kelvin" } }),
+  p("water_heater.boiler", { control: "stepper" }),
+  p("water_heater.boiler", {
+    name: "Operation",
+    control: { type: "segments", position: "block" },
+    grid_options: { columns: 12 },
+  }),
+  p("media_player.living_room_speaker", {
+    visual: false,
+    control: { type: "select", attribute: "source" },
+  }),
+  p("vacuum.robot", { control: { type: "select", attribute: "fan_speed" } }),
+  p("humidifier.bedroom", { control: { type: "select", attribute: "mode" } }),
+]);
+
 // ----- the status and the badges -----
 
 add("pb-status", [

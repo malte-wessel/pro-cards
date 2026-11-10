@@ -577,3 +577,87 @@ test.describe("tile places", () => {
     }
   });
 });
+
+test.describe("what a tile's control sets", () => {
+  const at = async (loc: ReturnType<typeof card>, fx: number) => {
+    const b = (await loc.boundingBox())!;
+    return { x: b.x + b.width * fx, y: b.y + b.height / 2 };
+  };
+
+  test("a colour temperature slider draws its colours and sets the light's temperature", async ({
+    page,
+  }) => {
+    await mount(
+      page,
+      {
+        type: T,
+        entity: "light.reading_lamp",
+        control: { type: "slider", attribute: "color_temp_kelvin" },
+      },
+      live,
+    );
+    const s = card(page).locator(".ctl-slider.grad");
+    await expect(s).toHaveAttribute("aria-valuenow", "3000");
+    expect(await s.evaluate((el) => el.style.getPropertyValue("--grad"))).toMatch(
+      /^linear-gradient\(to right, rgb\(/,
+    );
+    const p = await at(s.locator(".track"), 1);
+    await page.mouse.click(p.x - 1, p.y);
+    await expect.poll(() => services(page)).toEqual(["light.turn_on"]);
+    expect((await calls(page))[0].data).toMatchObject({ color_temp_kelvin: 6500 });
+  });
+
+  test("segments on a cover are its favourite positions from the registry", async ({ page }) => {
+    await mount(
+      page,
+      { type: T, entity: "cover.living_room_blinds", control: { type: "segments" } },
+      live,
+    );
+    const segs = card(page).locator(".ctl-segments .seg");
+    // (the demo's registry keeps 0, 30, 70 and 100)
+    await expect(segs).toHaveText(["0 %", "30 %", "70 %", "100 %"]);
+    await expect(segs.nth(3)).toHaveClass(/on/);
+    await segs.nth(1).click();
+    expect((await calls(page))[0]).toMatchObject({
+      service: "set_cover_position",
+      data: { position: 30 },
+    });
+  });
+
+  test("a robot's buttons are the ones it names, each calling its own", async ({ page }) => {
+    await mount(page, {
+      type: T,
+      entity: "vacuum.robot",
+      control: { type: "buttons", options: ["stop", "locate"] },
+    });
+    const b = card(page).locator(".ctl-buttons button");
+    await expect(b).toHaveCount(2);
+    await b.nth(1).click();
+    expect(await services(page)).toEqual(["vacuum.locate"]);
+  });
+
+  test("a lock that wants a code opens Home Assistant's dialog instead of calling", async ({
+    page,
+  }) => {
+    await mount(page, { type: T, entity: "lock.front_door", control: "buttons" });
+    await setState(page, "lock.front_door", "locked", { code_format: "^\\d{4}$" });
+    await card(page).locator(".ctl-buttons button").nth(1).click();
+    expect(await infos(page)).toEqual([{ type: "more-info", entityId: "lock.front_door" }]);
+    expect(await calls(page)).toEqual([]);
+  });
+
+  test("a date opens the calendar on its day, and a pick sets the new one", async ({ page }) => {
+    await mount(page, { type: T, entity: "date.bin_day", control: "date" }, live);
+    await setState(page, "date.bin_day", "2026-06-24");
+    const chip = card(page).locator(".ctl-chip.date");
+    await expect(chip).toHaveText("Wed 24 Jun");
+    await chip.click();
+    const dp = card(page).locator(".dp");
+    await expect(dp).toBeVisible();
+    await expect(dp.locator(".dp-preset")).toHaveCount(0);
+    await dp.locator(".dp-cell:not(.dim)", { hasText: /^26$/ }).click();
+    await expect.poll(() => services(page)).toEqual(["date.set_value"]);
+    expect((await calls(page))[0].data).toMatchObject({ date: "2026-06-26" });
+    await expect(chip).toHaveText("Fri 26 Jun");
+  });
+});

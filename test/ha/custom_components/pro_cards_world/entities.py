@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import base64
 import random
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from homeassistant.components.alarm_control_panel import (
@@ -36,7 +36,17 @@ from homeassistant.components.lawn_mower import (
     LawnMowerEntity,
     LawnMowerEntityFeature,
 )
-from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_HS_COLOR, ColorMode, LightEntity
+from homeassistant.components.date import DateEntity
+from homeassistant.components.humidifier import HumidifierEntity, HumidifierEntityFeature
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
+    ATTR_EFFECT,
+    ATTR_HS_COLOR,
+    ColorMode,
+    LightEntity,
+    LightEntityFeature,
+)
 from homeassistant.components.lock import LockEntity
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
@@ -48,6 +58,9 @@ from homeassistant.components.number import NumberEntity
 from homeassistant.components.select import SelectEntity
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
+from homeassistant.components.valve import ValveEntity, ValveEntityFeature
+from homeassistant.components.water_heater import WaterHeaterEntity, WaterHeaterEntityFeature
 from homeassistant.components.vacuum import StateVacuumEntity, VacuumActivity, VacuumEntityFeature
 from homeassistant.components.weather import Forecast, WeatherEntity, WeatherEntityFeature
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -183,7 +196,19 @@ class WorldSwitch(World, SwitchEntity):
 
 class WorldLight(World, LightEntity):
     own = frozenset(
-        {"brightness", "color_mode", "hs_color", "rgb_color", "xy_color", "supported_color_modes"}
+        {
+            "brightness",
+            "color_mode",
+            "hs_color",
+            "rgb_color",
+            "xy_color",
+            "supported_color_modes",
+            "color_temp_kelvin",
+            "min_color_temp_kelvin",
+            "max_color_temp_kelvin",
+            "effect_list",
+            "effect",
+        }
     )
 
     def __init__(self, item: dict, world: dict) -> None:
@@ -191,6 +216,19 @@ class WorldLight(World, LightEntity):
         modes = self._a.get("supported_color_modes") or ["onoff"]
         self._attr_supported_color_modes = {ColorMode(m) for m in modes}
         self._mode = ColorMode(self._a.get("color_mode") or modes[0])
+        self._attr_min_color_temp_kelvin = self._a.get("min_color_temp_kelvin", 2000)
+        self._attr_max_color_temp_kelvin = self._a.get("max_color_temp_kelvin", 6500)
+        self._attr_effect_list = self._a.get("effect_list")
+        if self._attr_effect_list:
+            self._attr_supported_features = LightEntityFeature.EFFECT
+
+    @property
+    def color_temp_kelvin(self) -> int | None:
+        return self._a.get("color_temp_kelvin")
+
+    @property
+    def effect(self) -> str | None:
+        return self._a.get("effect")
 
     @property
     def is_on(self) -> bool:
@@ -215,6 +253,12 @@ class WorldLight(World, LightEntity):
             changes["brightness"] = kwargs[ATTR_BRIGHTNESS]
         if ATTR_HS_COLOR in kwargs:
             changes["hs_color"] = list(kwargs[ATTR_HS_COLOR])
+            self._mode = ColorMode.HS
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            changes["color_temp_kelvin"] = kwargs[ATTR_COLOR_TEMP_KELVIN]
+            self._mode = ColorMode.COLOR_TEMP
+        if ATTR_EFFECT in kwargs:
+            changes["effect"] = kwargs[ATTR_EFFECT]
         self._set("on", **changes)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -303,6 +347,10 @@ class WorldClimate(World, ClimateEntity):
             "target_temp_step",
             "preset_modes",
             "preset_mode",
+            "fan_modes",
+            "fan_mode",
+            "swing_modes",
+            "swing_mode",
         }
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -316,7 +364,13 @@ class WorldClimate(World, ClimateEntity):
         )
         if self._a.get("preset_modes"):
             f |= ClimateEntityFeature.PRESET_MODE
+        if self._a.get("fan_modes"):
+            f |= ClimateEntityFeature.FAN_MODE
+        if self._a.get("swing_modes"):
+            f |= ClimateEntityFeature.SWING_MODE
         self._attr_supported_features = f
+        self._attr_fan_modes = self._a.get("fan_modes")
+        self._attr_swing_modes = self._a.get("swing_modes")
         self._attr_hvac_modes = [HVACMode(m) for m in self._a.get("hvac_modes") or ["off"]]
         self._attr_preset_modes = self._a.get("preset_modes")
         for key, attr in (
@@ -368,6 +422,20 @@ class WorldClimate(World, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         self._set(preset_mode=preset_mode)
 
+    @property
+    def fan_mode(self) -> str | None:
+        return self._a.get("fan_mode")
+
+    @property
+    def swing_mode(self) -> str | None:
+        return self._a.get("swing_mode")
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        self._set(fan_mode=fan_mode)
+
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        self._set(swing_mode=swing_mode)
+
     async def async_turn_on(self) -> None:
         on = next((m for m in self._attr_hvac_modes if m != HVACMode.OFF), HVACMode.OFF)
         await self.async_set_hvac_mode(on)
@@ -377,7 +445,9 @@ class WorldClimate(World, ClimateEntity):
 
 
 class WorldFan(World, FanEntity):
-    own = frozenset({"percentage", "percentage_step", "preset_modes", "preset_mode"})
+    own = frozenset(
+        {"percentage", "percentage_step", "preset_modes", "preset_mode", "oscillating", "direction"}
+    )
 
     def __init__(self, item: dict, world: dict) -> None:
         super().__init__(item, world)
@@ -386,6 +456,10 @@ class WorldFan(World, FanEntity):
             f |= FanEntityFeature.SET_SPEED
         if self._a.get("preset_modes"):
             f |= FanEntityFeature.PRESET_MODE
+        if "oscillating" in self._a:
+            f |= FanEntityFeature.OSCILLATE
+        if "direction" in self._a:
+            f |= FanEntityFeature.DIRECTION
         self._attr_supported_features = f
         self._attr_preset_modes = self._a.get("preset_modes")
         step = self._a.get("percentage_step")
@@ -426,6 +500,20 @@ class WorldFan(World, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         self._set("on", preset_mode=preset_mode)
+
+    @property
+    def oscillating(self) -> bool | None:
+        return self._a.get("oscillating")
+
+    @property
+    def current_direction(self) -> str | None:
+        return self._a.get("direction")
+
+    async def async_oscillate(self, oscillating: bool) -> None:
+        self._set(oscillating=oscillating)
+
+    async def async_set_direction(self, direction: str) -> None:
+        self._set(direction=direction)
 
 
 class WorldLock(World, LockEntity):
@@ -510,6 +598,10 @@ class WorldMediaPlayer(World, MediaPlayerEntity):
             "media_position",
             "media_position_updated_at",
             "app_name",
+            "source_list",
+            "source",
+            "sound_mode_list",
+            "sound_mode",
         }
     )
     _attr_supported_features = (
@@ -530,6 +622,28 @@ class WorldMediaPlayer(World, MediaPlayerEntity):
     def __init__(self, item: dict, world: dict) -> None:
         super().__init__(item, world)
         self._updated = dt_util.utcnow()
+        f = type(self)._attr_supported_features
+        if self._a.get("source_list"):
+            f |= MediaPlayerEntityFeature.SELECT_SOURCE
+        if self._a.get("sound_mode_list"):
+            f |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
+        self._attr_supported_features = f
+        self._attr_source_list = self._a.get("source_list")
+        self._attr_sound_mode_list = self._a.get("sound_mode_list")
+
+    @property
+    def source(self) -> str | None:
+        return self._a.get("source")
+
+    @property
+    def sound_mode(self) -> str | None:
+        return self._a.get("sound_mode")
+
+    async def async_select_source(self, source: str) -> None:
+        self._set(source=source)
+
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
+        self._set(sound_mode=sound_mode)
 
     @property
     def state(self) -> MediaPlayerState | None:
@@ -620,13 +734,34 @@ class WorldMediaPlayer(World, MediaPlayerEntity):
 
 
 class WorldVacuum(World, StateVacuumEntity):
+    own = frozenset({"fan_speed_list", "fan_speed"})
     _attr_supported_features = (
         VacuumEntityFeature.START
         | VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.STATE
+        | VacuumEntityFeature.LOCATE
+        | VacuumEntityFeature.CLEAN_SPOT
+        | VacuumEntityFeature.FAN_SPEED
     )
+
+    def __init__(self, item: dict, world: dict) -> None:
+        super().__init__(item, world)
+        self._attr_fan_speed_list = self._a.get("fan_speed_list") or []
+
+    @property
+    def fan_speed(self) -> str | None:
+        return self._a.get("fan_speed")
+
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
+        self._set(fan_speed=fan_speed)
+
+    async def async_locate(self, **kwargs: Any) -> None:
+        return None
+
+    async def async_clean_spot(self, **kwargs: Any) -> None:
+        self._set("cleaning", status="Spot cleaning")
 
     @property
     def activity(self) -> VacuumActivity | None:
@@ -810,6 +945,141 @@ class WorldWeather(World, WeatherEntity):
         return self._shifted("hourly", HOUR)
 
 
+class WorldHumidifier(World, HumidifierEntity):
+    own = frozenset(
+        {"humidity", "current_humidity", "min_humidity", "max_humidity", "available_modes", "mode"}
+    )
+
+    def __init__(self, item: dict, world: dict) -> None:
+        super().__init__(item, world)
+        self._attr_available_modes = self._a.get("available_modes")
+        if self._attr_available_modes:
+            self._attr_supported_features = HumidifierEntityFeature.MODES
+        self._attr_min_humidity = self._a.get("min_humidity", 0)
+        self._attr_max_humidity = self._a.get("max_humidity", 100)
+
+    @property
+    def is_on(self) -> bool:
+        return self._value == "on"
+
+    @property
+    def target_humidity(self) -> float | None:
+        return self._a.get("humidity")
+
+    @property
+    def current_humidity(self) -> float | None:
+        return self._a.get("current_humidity")
+
+    @property
+    def mode(self) -> str | None:
+        return self._a.get("mode")
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        self._set("on")
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        self._set("off")
+
+    async def async_set_humidity(self, humidity: int) -> None:
+        self._set(humidity=humidity)
+
+    async def async_set_mode(self, mode: str) -> None:
+        self._set(mode=mode)
+
+
+class WorldWaterHeater(World, WaterHeaterEntity):
+    own = frozenset(
+        {"temperature", "current_temperature", "min_temp", "max_temp", "operation_list", "operation_mode"}
+    )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_supported_features = (
+        WaterHeaterEntityFeature.TARGET_TEMPERATURE | WaterHeaterEntityFeature.OPERATION_MODE
+    )
+
+    def __init__(self, item: dict, world: dict) -> None:
+        super().__init__(item, world)
+        self._attr_operation_list = self._a.get("operation_list")
+        self._attr_min_temp = self._a.get("min_temp", 40)
+        self._attr_max_temp = self._a.get("max_temp", 65)
+
+    @property
+    def current_operation(self) -> str | None:
+        return self._value
+
+    @property
+    def target_temperature(self) -> float | None:
+        return self._a.get("temperature")
+
+    @property
+    def current_temperature(self) -> float | None:
+        return self._a.get("current_temperature")
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        self._set(temperature=kwargs.get(ATTR_TEMPERATURE))
+
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
+        self._set(operation_mode, operation_mode=operation_mode)
+
+
+class WorldValve(World, ValveEntity):
+    own = frozenset({"current_position"})
+    _attr_reports_position = True
+
+    def __init__(self, item: dict, world: dict) -> None:
+        super().__init__(item, world)
+        self._attr_supported_features = ValveEntityFeature(self._a.get("supported_features", 15))
+
+    @property
+    def current_valve_position(self) -> int | None:
+        return self._a.get("current_position")
+
+    async def async_open_valve(self) -> None:
+        self._set("open", current_position=100)
+
+    async def async_close_valve(self) -> None:
+        self._set("closed", current_position=0)
+
+    async def async_stop_valve(self) -> None:
+        return None
+
+    async def async_set_valve_position(self, position: int) -> None:
+        self._set("open" if position else "closed", current_position=position)
+
+
+class WorldUpdate(World, UpdateEntity):
+    own = frozenset(
+        {"installed_version", "latest_version", "title", "in_progress", "skipped_version"}
+    )
+    _attr_supported_features = UpdateEntityFeature.INSTALL
+
+    @property
+    def installed_version(self) -> str | None:
+        return self._a.get("installed_version")
+
+    @property
+    def latest_version(self) -> str | None:
+        return self._a.get("latest_version")
+
+    @property
+    def title(self) -> str | None:
+        return self._a.get("title")
+
+    async def async_install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
+        self._set(installed_version=self.latest_version)
+
+
+class WorldDate(World, DateEntity):
+    @property
+    def native_value(self) -> date | None:
+        try:
+            return date.fromisoformat(str(self._value))
+        except ValueError:
+            return None
+
+    async def async_set_value(self, value: date) -> None:
+        self._set(value.isoformat())
+
+
 CLASSES: dict[str, type[World]] = {
     "alarm_control_panel": WorldAlarm,
     "binary_sensor": WorldBinarySensor,
@@ -817,6 +1087,8 @@ CLASSES: dict[str, type[World]] = {
     "camera": WorldCamera,
     "climate": WorldClimate,
     "cover": WorldCover,
+    "date": WorldDate,
+    "humidifier": WorldHumidifier,
     "fan": WorldFan,
     "lawn_mower": WorldLawnMower,
     "light": WorldLight,
@@ -826,7 +1098,10 @@ CLASSES: dict[str, type[World]] = {
     "select": WorldSelect,
     "sensor": WorldSensor,
     "switch": WorldSwitch,
+    "update": WorldUpdate,
     "vacuum": WorldVacuum,
+    "valve": WorldValve,
+    "water_heater": WorldWaterHeater,
     "weather": WorldWeather,
 }
 

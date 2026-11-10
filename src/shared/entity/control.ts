@@ -5,10 +5,21 @@ import { domainOf, stateActive } from "../color.ts";
 import type { ActionConfig, ActionKind, HapticType, HassEntity, HomeAssistant } from "../ha.ts";
 import type { Visibility } from "../visibility.ts";
 import type { StringKey } from "../i18n.ts";
-import { isNum, numOrNull, oneOf, snapTo } from "../util.ts";
+import { numOrNull, oneOf, snapTo } from "../util.ts";
 import type { EntityItem, NormalizeCtx, RawEntity } from "./config.ts";
 import { OFF_STATES } from "./constants.ts";
-import { numAttr, scaleOf } from "./look.ts";
+import { numAttr } from "./look.ts";
+import {
+  TARGET_KEYS,
+  speedCount,
+  stateRange,
+  targetKeyOf,
+  targetKeysOf,
+  targetOf,
+  MAX_SPEED_SEGMENTS,
+} from "./targets.ts";
+
+export { currentOptionOf, optionsOf, HVAC_ICON, MAX_SPEED_SEGMENTS } from "./targets.ts";
 
 export const CONTROLS = [
   "auto",
@@ -20,15 +31,16 @@ export const CONTROLS = [
   "button",
   "select",
   "hold",
+  "date",
   "none",
 ] as const;
 export type ControlName = (typeof CONTROLS)[number];
 export type ControlKind = Exclude<ControlName, "auto" | "none">;
 export const CONTROL_POSITIONS = ["end", "block", "lead"] as const;
 export type ControlPosition = (typeof CONTROL_POSITIONS)[number];
-// the mode a segments / select control sets on a climate or fan entity (`control_attribute`)
-export const CONTROL_ATTRIBUTES = ["hvac_mode", "preset_mode", "fan_mode"] as const;
-export type ControlAttribute = (typeof CONTROL_ATTRIBUTES)[number];
+// the Home Assistant attribute a control sets (`control_attribute`): every domain's, in targets.ts
+export const CONTROL_ATTRIBUTES = TARGET_KEYS;
+export type ControlAttribute = string;
 // how a kind card's switch, button, buttons and segments show what is on or chosen: filled in its
 // colour with a white icon, or tinted (its colour at 20 %, the icon in its colour)
 export const CONTROL_VARIANTS = ["fill", "tinted"] as const;
@@ -38,6 +50,8 @@ export interface ControlOption {
   value: string;
   label: string | null;
   icon: string | null;
+  // a colour swatch in its place (a light's favourite colour: the label is its name)
+  color?: string;
 }
 // a button of `control: buttons` from `control_options`: runs its entity (or its own action), in its own colour
 export interface CustomButton {
@@ -53,13 +67,15 @@ export interface CustomButton {
 export interface ControlConfig {
   kind: "auto" | ControlKind;
   position: ControlPosition | null;
-  // what the control targets on a climate / fan: `control_attribute`, else the displayed
-  // attribute when it is a mode, else the domain's main mode
+  // the attribute the control sets (targets.ts): `control_attribute`, else the displayed attribute
+  // where the domain can set it, else null (the domain's first)
   attribute: ControlAttribute | null;
   step: number | null;
   options: ControlOption[] | null;
   // `control: buttons` with `control_options`: the buttons drawn (null: the domain's own)
   buttons: CustomButton[] | null;
+  // `control: buttons` with `control_options` naming the domain's buttons: those, in that order
+  buttonIds?: ButtonId[] | null;
   confirm: boolean;
   // what is on or chosen, filled or tinted (null: filled; a kind card's alone)
   variant: ControlVariant | null;
@@ -98,20 +114,54 @@ export interface Range {
   unit: string;
 }
 export type ButtonId =
-  "open" | "stop" | "close" | "previous" | "play_pause" | "next" | "start_pause" | "dock";
+  | "open"
+  | "stop"
+  | "close"
+  | "tilt_open"
+  | "tilt_stop"
+  | "tilt_close"
+  | "previous"
+  | "play_pause"
+  | "next"
+  | "start_pause"
+  | "clean_spot"
+  | "locate"
+  | "dock"
+  | "lock"
+  | "unlock"
+  | "open_door"
+  | "decrement"
+  | "reset"
+  | "increment"
+  | "start"
+  | "pause"
+  | "cancel"
+  | "finish"
+  | "skip"
+  | "install";
 export interface ControlButton {
   id: ButtonId;
   icon: string;
   labelKey: StringKey;
   primary: boolean;
+  // always a hold, whatever `confirm` says (a lock's door opener)
+  confirm?: boolean;
+  // the supported_features bit it needs (an entity that reports its features without it: left out)
+  feature?: number;
+  // greyed out now, as Home Assistant's are (a lock that is locked cannot lock)
+  disabled?: (st: HassEntity | undefined) => boolean;
 }
 export type ControlInput =
   | { type: "toggle" }
   | { type: "value"; value: number }
-  | { type: "step"; dir: 1 | -1; from: number }
-  | { type: "option"; value: string }
+  // (a stepper's own step: a volume's 5 % where its slider moves by 1)
+  | { type: "step"; dir: 1 | -1; from: number; step?: number }
+  // (the control that chose it: segments on a light set a favourite colour, a select its effect)
+  | { type: "option"; value: string; kind?: ControlKind }
   | { type: "button"; id: ButtonId }
   | { type: "press" }
+  // a day (YYYY-MM-DD) for a date entity; a date and time's new instant (ISO), its time kept
+  | { type: "date"; value: string; datetime?: string }
   | { type: "hold" };
 
 // a service call in flight: the control shows `value` as a ghost until the entity's state object
@@ -159,16 +209,6 @@ export const ARM_MS = 5000;
 export const PENDING_MS = 5000;
 export const DONE_MS = 1500;
 
-export const HVAC_ICON: Record<string, string> = {
-  off: "mdi:power",
-  heat: "mdi:fire",
-  cool: "mdi:snowflake",
-  auto: "mdi:thermostat-auto",
-  heat_cool: "mdi:sun-snowflake-variant",
-  dry: "mdi:water-percent",
-  fan_only: "mdi:fan",
-};
-
 // ----- config -----
 
 const normalizeOptions = (list: unknown): ControlOption[] | null => {
@@ -213,10 +253,17 @@ export const normalizeControl = (
       `${ctx.type}: ${label}.control_position must be one of ${CONTROL_POSITIONS.join(" | ")}`,
     );
   const ca = raw.control_attribute;
-  if (ca !== undefined && ca !== null && !oneOf(CONTROL_ATTRIBUTES, ca))
-    throw new Error(
-      `${ctx.type}: ${label}.control_attribute must be one of ${CONTROL_ATTRIBUTES.join(" | ")}`,
-    );
+  // (the attributes the entity's domain sets, where it is known: a light's, a thermostat's)
+  const domain = typeof raw.entity === "string" && raw.entity ? domainOf(raw.entity) : null;
+  const keys = domain ? targetKeysOf(domain) : [];
+  const own = keys.length ? keys : null;
+  if (ca !== undefined && ca !== null) {
+    const allowed = own ?? CONTROL_ATTRIBUTES;
+    if (typeof ca !== "string" || !allowed.includes(ca))
+      throw new Error(
+        `${ctx.type}: ${label}.control_attribute must be one of ${allowed.join(" | ")}${own ? ` (a ${domain})` : ""}`,
+      );
+  }
   const cv = raw.control_variant;
   if (cv !== undefined && cv !== null && !oneOf(CONTROL_VARIANTS, cv))
     throw new Error(
@@ -227,7 +274,12 @@ export const normalizeControl = (
   return {
     kind,
     position: oneOf(CONTROL_POSITIONS, pos) ? pos : null,
-    attribute: oneOf(CONTROL_ATTRIBUTES, ca) ? ca : oneOf(CONTROL_ATTRIBUTES, shown) ? shown : null,
+    attribute:
+      typeof ca === "string" && ca
+        ? ca
+        : typeof shown === "string" && own?.includes(shown)
+          ? shown
+          : null,
     step: step !== null && step > 0 ? step : null,
     options: kind === "buttons" ? null : normalizeOptions(raw.control_options),
     // filled in by normalizeEntity, which parses the actions of the buttons
@@ -246,6 +298,7 @@ const LEAD_KINDS: ReadonlySet<ControlKind> = new Set(["toggle", "button", "hold"
 // the controls drawn in rounded squares on a kind card: all but the slider (the switch a button
 // with the power icon)
 export const SQUARE_KINDS: ReadonlySet<ControlKind> = new Set([
+  "date",
   "toggle",
   "stepper",
   "segments",
@@ -288,8 +341,6 @@ export const ITEM_CONTROLS: Record<string, ReadonlySet<ControlName>> = {
   ]),
 };
 
-const modeAttr = (ent: EntityItem) => ent.control?.attribute ?? null;
-
 // the domain default of `control: auto`, as (kind, position) pairs
 export const defaultPlacements = (ent: EntityItem): Placement[] => {
   const p = (kind: ControlKind, position: ControlPosition): Placement => ({
@@ -304,17 +355,14 @@ export const defaultPlacements = (ent: EntityItem): Placement[] => {
     case "input_boolean":
       return [p("toggle", "end")];
     case "fan":
-      return modeAttr(ent) === "preset_mode"
+      return targetKeyOf(ent) === "preset_mode"
         ? [p("segments", "end")]
         : [p("toggle", "end"), p("segments", "end")];
     case "cover":
       return [p("buttons", "end"), p("slider", "block")];
-    case "climate": {
-      const a = modeAttr(ent);
-      return a === "hvac_mode" || a === "preset_mode" || a === "fan_mode"
-        ? [p("segments", "end")]
-        : [p("stepper", "end")];
-    }
+    case "climate":
+      // (a mode it names: its segments; else the target temperature)
+      return targetOf(ent)?.options ? [p("segments", "end")] : [p("stepper", "end")];
     case "lock":
       return [p("hold", "end")];
     case "script":
@@ -330,6 +378,22 @@ export const defaultPlacements = (ent: EntityItem): Placement[] => {
       return [p("slider", "block")];
     case "media_player":
       return [p("buttons", "end"), p("slider", "block")];
+    // (the domains without a kind: what `control: auto` draws for them)
+    case "humidifier":
+      return [p("toggle", "end"), p("slider", "block")];
+    case "water_heater":
+    case "counter":
+      return [p("stepper", "end")];
+    case "valve":
+      return [p("toggle", "end"), p("slider", "block")];
+    case "timer":
+    case "update":
+      return [p("buttons", "end")];
+    case "date":
+    case "datetime":
+      return [p("date", "end")];
+    case "input_datetime":
+      return [p("date", "end")];
     default:
       return [];
   }
@@ -480,159 +544,89 @@ export const canControlId = (id: string | null, st: HassEntity | undefined) =>
   !!st && st.state !== "unavailable" && (st.state !== "unknown" || pressKindOf(id) === "run");
 export const canControl = (ent: EntityItem, st: HassEntity | undefined) =>
   canControlId(ent.entity, st);
+// whether a switch shows on: the attribute it flips (a fan's oscillation), else the entity
+export const onOf = (ent: EntityItem, st: HassEntity | undefined): boolean => {
+  const t = targetOf(ent);
+  return t?.on ? !!st && st.state !== "unavailable" && t.on(st) : isOn(st);
+};
+// the day a date entity is on (YYYY-MM-DD), as its state says: a date's, an input_datetime's with
+// a date (its time after it), a date and time's in the given zone; null when it has none
+export const dateOf = (ent: EntityItem, st: HassEntity | undefined, tz?: string): string | null => {
+  const s = st?.state ?? "";
+  const d = domainOf(ent.entity);
+  if (d === "date" || (d === "input_datetime" && st?.attributes?.has_date !== false)) {
+    const m = /^(\d{4}-\d{2}-\d{2})/.exec(s);
+    return m ? m[1] : null;
+  }
+  if (d !== "datetime") return null;
+  const t = Date.parse(s);
+  if (!Number.isFinite(t)) return null;
+  try {
+    // (en-CA writes a day as YYYY-MM-DD)
+    return new Intl.DateTimeFormat("en-CA", { timeZone: tz, dateStyle: "short" }).format(t);
+  } catch {
+    return new Date(t).toISOString().slice(0, 10);
+  }
+};
+// whether a call wants a code first, as Home Assistant asks for one: a lock with a code format, an
+// alarm panel disarmed with one or armed where arming needs it (`target` the option it sets, or a
+// lock's or panel's button). The card opens Home Assistant's dialog for it instead
+export const wantsCode = (ent: EntityItem, st: HassEntity | undefined, target?: string) => {
+  const a = st?.attributes;
+  if (!a?.code_format) return false;
+  switch (domainOf(ent.entity)) {
+    case "lock":
+      return true;
+    case "alarm_control_panel":
+      return target === "disarmed" || target === "disarm" || a.code_arm_required !== false;
+    default:
+      return false;
+  }
+};
 export const isOn = (st: HassEntity | undefined): boolean => {
   if (!st || st.state === "unavailable" || st.state === "unknown") return false;
   return stateActive(st) && !OFF_STATES.has(st.state);
 };
 // an on/off light without brightness, a cover without a position …: the slider has no value
 export const sliderApplies = (ent: EntityItem, st: HassEntity | undefined): boolean => {
-  const d = domainOf(ent.entity);
-  if (d === "light") {
-    const modes = st?.attributes?.supported_color_modes;
-    return !(Array.isArray(modes) && modes.length > 0 && modes.every((m) => m === "onoff"));
-  }
-  if (d === "cover") return numAttr(st, "current_position") !== null;
-  if (d === "fan") return numAttr(st, "percentage") !== null || st?.state === "off";
-  return true;
+  const t = targetOf(ent, "range");
+  return t?.applies ? t.applies(st) : true;
 };
 
 // the nearest valid value: steps are counted from the minimum, as Home Assistant counts them
 // (min 1, step 2: 1, 3, 5 …), then held inside the bounds
 export const clampStep = (v: number, r: Range) => snapTo(v, r.min, r.max, r.step);
 
-// the slider / stepper range of the entity: value, bounds, step and unit by domain
+// the slider / stepper range of the entity: value, bounds, step and unit of what it sets (a
+// number's own scale where the domain sets nothing of its own: a sensor shown on a slider)
 export const rangeOf = (
   ent: EntityItem,
   st: HassEntity | undefined,
   hass?: HomeAssistant,
+  // the control drawing it: a stepper may step further than a slider (a volume's 5 %)
+  kind?: ControlKind,
 ): Range => {
-  const step = ent.control?.step;
-  const d = domainOf(ent.entity);
-  // brightness, position, volume and speed are percentages: the display's min / max never apply
-  const pct = (value: number | null, s: number | null) => ({
-    min: 0,
-    max: 100,
-    step: step ?? s ?? 1,
-    value,
-    unit: "%",
-  });
-  switch (d) {
-    case "light": {
-      const b = numAttr(st, "brightness");
-      return pct(st?.state === "off" ? 0 : b === null ? null : Math.round((b / 255) * 100), null);
-    }
-    case "cover":
-      return pct(numAttr(st, "current_position"), null);
-    case "media_player": {
-      const v = numAttr(st, "volume_level");
-      return pct(v === null ? null : Math.round(v * 100), null);
-    }
-    case "fan":
-      return pct(
-        st?.state === "off" ? 0 : numAttr(st, "percentage"),
-        numAttr(st, "percentage_step"),
-      );
-    case "climate": {
-      const unit = hass?.config?.unit_system?.temperature ?? "°C";
-      return {
-        min: ent.min ?? numAttr(st, "min_temp") ?? 7,
-        max: ent.max ?? numAttr(st, "max_temp") ?? 35,
-        step: step ?? numAttr(st, "target_temp_step") ?? 0.5,
-        value: numAttr(st, "temperature"),
-        unit,
-      };
-    }
-    default: {
-      const { min, max } = scaleOf(ent, st);
-      const u = st?.attributes?.unit_of_measurement;
-      return {
-        min,
-        max,
-        step: step ?? numAttr(st, "step") ?? 1,
-        value: st && isNum(st.state) ? Number(st.state) : null,
-        unit: typeof u === "string" ? u : "",
-      };
-    }
-  }
+  const t = targetOf(ent, "range", kind);
+  const r = t?.range ? t.range(ent, st, hass) : stateRange(ent, st);
+  return kind === "stepper" && t?.stepperStep && ent.control?.step == null
+    ? { ...r, step: t.stepperStep }
+    : r;
 };
 
-const strList = (v: unknown): string[] =>
-  Array.isArray(v) ? v.filter((x) => x !== null && x !== undefined).map(String) : [];
-// more speeds than this do not fit a pill group: the fan gets a slider instead
-export const MAX_SPEED_SEGMENTS = 6;
-const speedCount = (st: HassEntity | undefined) => {
-  const s = numAttr(st, "percentage_step");
-  return s === null || s <= 0 ? 0 : Math.max(1, Math.round(100 / s));
-};
 // a fan's speed segments would be too many (percentage_step 1 makes 100): draw a slider
 export const speedsAsSlider = (ent: EntityItem, st: HassEntity | undefined) =>
   domainOf(ent.entity) === "fan" &&
-  modeAttr(ent) !== "preset_mode" &&
+  targetKeyOf(ent) !== "preset_mode" &&
   !ent.control?.options &&
   speedCount(st) > MAX_SPEED_SEGMENTS;
-// fan speeds from percentage_step: 0 (off), then every step up to 100
-const fanSpeeds = (st: HassEntity | undefined): ControlOption[] => {
-  const n = speedCount(st);
-  if (n === 0 || n > MAX_SPEED_SEGMENTS) return [];
-  const out: ControlOption[] = [{ value: "0", label: "", icon: "mdi:power" }];
-  for (let i = 1; i <= n; i++)
-    out.push({ value: String(Math.round((100 * i) / n)), label: String(i), icon: null });
-  return out;
-};
-
-// the options of segments / select: the config list, else the entity's own modes
-export const optionsOf = (ent: EntityItem, st: HassEntity | undefined): ControlOption[] => {
-  if (ent.control?.options) return ent.control.options;
-  const d = domainOf(ent.entity),
-    a = modeAttr(ent);
-  const plain = (vals: string[]) => vals.map((v) => ({ value: v, label: null, icon: null }));
-  if (d === "climate") {
-    if (a === "preset_mode") return plain(strList(st?.attributes?.preset_modes));
-    if (a === "fan_mode") return plain(strList(st?.attributes?.fan_modes));
-    return strList(st?.attributes?.hvac_modes).map((v) => ({
-      value: v,
-      label: null,
-      icon: HVAC_ICON[v] ?? null,
-    }));
-  }
-  if (d === "fan") {
-    if (a === "preset_mode") return plain(strList(st?.attributes?.preset_modes));
-    return fanSpeeds(st);
-  }
-  return plain(strList(st?.attributes?.options));
-};
-// the option that is active now
-export const currentOptionOf = (ent: EntityItem, st: HassEntity | undefined): string | null => {
-  if (!st) return null;
-  const d = domainOf(ent.entity),
-    a = modeAttr(ent);
-  if (d === "fan" && a !== "preset_mode") {
-    // the segment nearest to the fan's percentage, among the options drawn (own or speeds)
-    const p = st.state === "off" ? 0 : numAttr(st, "percentage");
-    if (p === null) return null;
-    let best: ControlOption | null = null;
-    for (const o of optionsOf(ent, st)) {
-      const v = Number(o.value);
-      if (!Number.isFinite(v)) continue;
-      if (best === null || Math.abs(v - p) < Math.abs(Number(best.value) - p)) best = o;
-    }
-    return best?.value ?? String(p);
-  }
-  // the climate's hvac mode is its state; presets and fan modes are attributes
-  if (a && a !== "hvac_mode") {
-    const v = st.attributes?.[a];
-    return v === null || v === undefined ? null : String(v);
-  }
-  return st.state;
-};
 
 // whether a custom button shows its entity as on (a scene's state is a time, never "on")
 export const buttonActive = (b: CustomButton, st: HassEntity | undefined) =>
   pressKindOf(b.entity) === "switch" && isOn(st);
 // the keys that name what a service call acts on, in `target` or in its data
-const TARGET_KEYS = ["entity_id", "device_id", "area_id", "floor_id", "label_id"];
+const CALL_TARGET_KEYS = ["entity_id", "device_id", "area_id", "floor_id", "label_id"];
 const namesTarget = (o: unknown) =>
-  !!o && typeof o === "object" && TARGET_KEYS.some((k) => k in (o as object));
+  !!o && typeof o === "object" && CALL_TARGET_KEYS.some((k) => k in (o as object));
 // the action a custom button runs: its entity is the action's entity (more-info, toggle) and, for
 // a service call that names no target of its own, the target
 export const actionOf = (b: CustomButton): ActionConfig => {
@@ -652,34 +646,141 @@ export const actionOf = (b: CustomButton): ActionConfig => {
 // whether pressing a custom button runs something rather than switching it (a "done" flash)
 export const buttonRuns = (b: CustomButton) => pressKindOf(b.entity) !== "switch";
 
-export const buttonsOf = (ent: EntityItem): ControlButton[] => {
-  switch (domainOf(ent.entity)) {
-    case "cover":
-      return [
-        { id: "open", icon: "mdi:arrow-up", labelKey: "control.open", primary: false },
-        { id: "stop", icon: "mdi:stop", labelKey: "control.stop", primary: false },
-        { id: "close", icon: "mdi:arrow-down", labelKey: "control.close", primary: false },
-      ];
-    case "media_player":
-      return [
-        { id: "previous", icon: "mdi:skip-previous", labelKey: "control.previous", primary: false },
-        { id: "play_pause", icon: "mdi:play-pause", labelKey: "control.play_pause", primary: true },
-        { id: "next", icon: "mdi:skip-next", labelKey: "control.next", primary: false },
-      ];
-    case "vacuum":
-    case "lawn_mower":
-      return [
-        {
-          id: "start_pause",
-          icon: "mdi:play-pause",
-          labelKey: "control.start_pause",
-          primary: true,
-        },
-        { id: "dock", icon: "mdi:home-import-outline", labelKey: "control.dock", primary: false },
-      ];
-    default:
-      return [];
-  }
+const btn = (
+  id: ButtonId,
+  icon: string,
+  o: Partial<Omit<ControlButton, "id" | "icon" | "labelKey">> & { label?: StringKey } = {},
+): ControlButton => {
+  const { label, ...rest } = o;
+  return {
+    id,
+    icon,
+    labelKey: label ?? (`control.button.${id}` as StringKey),
+    primary: false,
+    ...rest,
+  };
+};
+const numState = (st: HassEntity | undefined) => (st ? Number(st.state) : NaN);
+const at = (st: HassEntity | undefined, k: string) => numAttr(st, k);
+const updateSkipped = (st: HassEntity | undefined) => {
+  const a = st?.attributes;
+  return !!a?.skipped_version && a.skipped_version === a.latest_version;
+};
+// every domain's buttons, in Home Assistant's order; `DEFAULT_BUTTONS` says which a group shows
+// unless the card names its own
+export const BUTTONS: Record<string, readonly ControlButton[]> = {
+  cover: [
+    btn("open", "mdi:arrow-up", { label: "control.open" }),
+    btn("stop", "mdi:stop", { label: "control.stop" }),
+    btn("close", "mdi:arrow-down", { label: "control.close" }),
+    btn("tilt_open", "mdi:arrow-top-right", {
+      feature: 16,
+      disabled: (st) => at(st, "current_tilt_position") === 100,
+    }),
+    btn("tilt_stop", "mdi:stop", { feature: 64 }),
+    btn("tilt_close", "mdi:arrow-bottom-left", {
+      feature: 32,
+      disabled: (st) => at(st, "current_tilt_position") === 0,
+    }),
+  ],
+  valve: [
+    btn("open", "mdi:valve-open", { feature: 1, label: "control.open" }),
+    btn("stop", "mdi:stop", { feature: 8, label: "control.stop" }),
+    btn("close", "mdi:valve-closed", { feature: 2, label: "control.close" }),
+  ],
+  media_player: [
+    btn("previous", "mdi:skip-previous", { label: "control.previous" }),
+    btn("play_pause", "mdi:play-pause", { primary: true, label: "control.play_pause" }),
+    btn("next", "mdi:skip-next", { label: "control.next" }),
+  ],
+  vacuum: [
+    btn("start_pause", "mdi:play-pause", { primary: true, label: "control.start_pause" }),
+    btn("stop", "mdi:stop", {
+      feature: 8,
+      label: "control.stop",
+      disabled: (st) => ["docked", "off", "idle"].includes(String(st?.state)),
+    }),
+    btn("clean_spot", "mdi:target-variant", { feature: 1024 }),
+    btn("locate", "mdi:map-marker", { feature: 512 }),
+    btn("dock", "mdi:home-import-outline", { label: "control.dock" }),
+  ],
+  lawn_mower: [
+    btn("start_pause", "mdi:play-pause", { primary: true, label: "control.start_pause" }),
+    btn("dock", "mdi:home-import-outline", { label: "control.dock" }),
+  ],
+  lock: [
+    btn("lock", "mdi:lock", {
+      disabled: (st) =>
+        !st?.attributes?.assumed_state && ["locked", "locking"].includes(String(st?.state)),
+    }),
+    btn("unlock", "mdi:lock-open-variant", {
+      disabled: (st) =>
+        !st?.attributes?.assumed_state && ["unlocked", "unlocking"].includes(String(st?.state)),
+    }),
+    btn("open_door", "mdi:door-open", { feature: 1, confirm: true }),
+  ],
+  counter: [
+    btn("decrement", "mdi:minus", {
+      disabled: (st) => numState(st) <= (at(st, "minimum") ?? -Infinity),
+    }),
+    btn("reset", "mdi:restore"),
+    btn("increment", "mdi:plus", {
+      disabled: (st) => numState(st) >= (at(st, "maximum") ?? Infinity),
+    }),
+  ],
+  timer: [
+    btn("start", "mdi:play"),
+    btn("pause", "mdi:pause", { disabled: (st) => st?.state !== "active" }),
+    btn("cancel", "mdi:stop", { disabled: (st) => st?.state === "idle" }),
+    btn("finish", "mdi:flag-checkered", { disabled: (st) => st?.state === "idle" }),
+  ],
+  update: [
+    btn("skip", "mdi:cancel", {
+      disabled: (st) => st?.state === "off" || updateSkipped(st) || !!st?.attributes?.in_progress,
+    }),
+    btn("install", "mdi:download", {
+      feature: 1,
+      disabled: (st) =>
+        (st?.state === "off" && !updateSkipped(st)) || !!st?.attributes?.in_progress,
+    }),
+  ],
+};
+// what a domain's buttons show unless the card names them (a cover's tilt where its control sets
+// the tilt)
+const DEFAULT_BUTTONS: Record<string, readonly ButtonId[]> = {
+  cover: ["open", "stop", "close"],
+  cover_tilt: ["tilt_open", "tilt_stop", "tilt_close"],
+  vacuum: ["start_pause", "dock"],
+  lock: ["lock", "unlock"],
+  timer: ["start", "pause", "cancel"],
+};
+// the ids a domain's buttons take (`control_options` naming them)
+export const buttonIdsOf = (domain: string): ButtonId[] => (BUTTONS[domain] ?? []).map((b) => b.id);
+// the ones it shows unless the card names them (a cover's tilt ones where it sets the tilt)
+export const defaultButtonIds = (domain: string, tilt = false): ButtonId[] => [
+  ...(DEFAULT_BUTTONS[tilt && domain === "cover" ? "cover_tilt" : domain] ?? buttonIdsOf(domain)),
+];
+
+// what buttons set instead of being the domain's own: a light's favourite colours (it has no
+// buttons of its own), a timer's presets where the control names them
+export const optionButtonsOf = (ent: EntityItem) => {
+  const t = targetOf(ent, "options", "buttons");
+  if (!t?.optionButtons) return null;
+  if (ent.control?.attribute === t.key) return t;
+  return BUTTONS[domainOf(ent.entity)]?.length ? null : t;
+};
+// the domain's buttons a control draws: those the card names, else the domain's default; an
+// entity that reports its features shows only those it supports
+export const buttonsOf = (ent: EntityItem, st?: HassEntity): ControlButton[] => {
+  const d = domainOf(ent.entity);
+  const all = BUTTONS[d] ?? [];
+  const tilt = d === "cover" && targetKeyOf(ent) === "current_tilt_position";
+  const ids = ent.control?.buttonIds ?? DEFAULT_BUTTONS[tilt ? "cover_tilt" : d] ?? null;
+  const list = ids
+    ? ids.map((id) => all.find((b) => b.id === id)).filter((b): b is ControlButton => !!b)
+    : [...all];
+  const f = numAttr(st, "supported_features");
+  return f === null ? list : list.filter((b) => !b.feature || f & b.feature);
 };
 
 // ----- services -----
@@ -716,72 +817,50 @@ export const serviceFor = (
 ): ServiceCall | null => {
   const id = ent.entity;
   if (!id) return null;
-  const d = domainOf(id),
-    a = modeAttr(ent);
+  const d = domainOf(id);
   const call = (domain: string, service: string, data: Record<string, unknown> = {}) => ({
     domain,
     service,
     data: { entity_id: id, ...data },
   });
   switch (input.type) {
-    case "toggle":
-      return call("homeassistant", "toggle");
+    case "toggle": {
+      // a switch for an attribute flips it (a fan's oscillation), else the entity's power
+      const t = targetOf(ent);
+      return t?.toggle ? t.toggle(ent, st) : call("homeassistant", "toggle");
+    }
     case "value":
     case "step": {
-      const r = rangeOf(ent, st);
+      const kind = input.type === "step" ? "stepper" : "slider";
+      const r = rangeOf(ent, st, undefined, kind);
       const v =
         input.type === "value"
           ? clampStep(input.value, r)
-          : clampStep(input.from + input.dir * r.step, r);
-      switch (d) {
-        case "light":
-          return v <= 0
-            ? call("light", "turn_off")
-            : call("light", "turn_on", { brightness_pct: Math.round(v) });
-        case "cover":
-          return call("cover", "set_cover_position", { position: Math.round(v) });
-        case "media_player":
-          return call("media_player", "volume_set", { volume_level: v / 100 });
-        case "fan":
-          return v <= 0
-            ? call("fan", "turn_off")
-            : call("fan", "set_percentage", { percentage: Math.round(v) });
-        case "climate":
-          return call("climate", "set_temperature", { temperature: v });
-        case "number":
-        case "input_number":
-          return call(d, "set_value", { value: v });
-        default:
-          return null;
-      }
+          : clampStep(input.from + input.dir * (input.step ?? r.step), r);
+      const t = targetOf(ent, "range", kind);
+      return t ? t.set(v, ent, st) : null;
     }
     case "option": {
-      const o = input.value;
-      switch (d) {
-        case "climate":
-          if (a === "preset_mode") return call("climate", "set_preset_mode", { preset_mode: o });
-          if (a === "fan_mode") return call("climate", "set_fan_mode", { fan_mode: o });
-          return call("climate", "set_hvac_mode", { hvac_mode: o });
-        case "fan":
-          if (a === "preset_mode") return call("fan", "set_preset_mode", { preset_mode: o });
-          return Number(o) <= 0
-            ? call("fan", "turn_off")
-            : call("fan", "set_percentage", { percentage: Number(o) });
-        case "select":
-        case "input_select":
-          return call(d, "select_option", { option: o });
-        default:
-          return null;
-      }
+      const t = targetOf(ent, "options", input.kind);
+      return t ? t.set(input.value, ent, st) : null;
     }
     case "button":
       switch (input.id) {
+        // a cover's and a valve's travel
         case "open":
-          return call("cover", "open_cover");
+          return d === "valve" ? call("valve", "open_valve") : call("cover", "open_cover");
         case "stop":
+          if (d === "valve") return call("valve", "stop_valve");
+          if (d === "vacuum") return call("vacuum", "stop");
           return call("cover", "stop_cover");
         case "close":
-          return call("cover", "close_cover");
+          return d === "valve" ? call("valve", "close_valve") : call("cover", "close_cover");
+        case "tilt_open":
+          return call("cover", "open_cover_tilt");
+        case "tilt_stop":
+          return call("cover", "stop_cover_tilt");
+        case "tilt_close":
+          return call("cover", "close_cover_tilt");
         case "previous":
           return call("media_player", "media_previous_track");
         case "play_pause":
@@ -794,6 +873,26 @@ export const serviceFor = (
           return call("vacuum", st?.state === "cleaning" ? "pause" : "start");
         case "dock":
           return d === "lawn_mower" ? call(d, "dock") : call("vacuum", "return_to_base");
+        case "clean_spot":
+        case "locate":
+          return call("vacuum", input.id);
+        case "lock":
+        case "unlock":
+          return call("lock", input.id);
+        case "open_door":
+          return call("lock", "open");
+        case "decrement":
+        case "reset":
+        case "increment":
+          return call("counter", input.id);
+        case "start":
+        case "pause":
+        case "cancel":
+        case "finish":
+          return call("timer", input.id);
+        case "skip":
+        case "install":
+          return call("update", input.id);
       }
       return null;
     case "press":
@@ -809,5 +908,13 @@ export const serviceFor = (
       }
     case "hold":
       return actionServiceFor(id, st);
+    case "date": {
+      if (d === "date") return call("date", "set_value", { date: input.value });
+      if (d === "input_datetime") return call(d, "set_datetime", { date: input.value });
+      if (d !== "datetime") return null;
+      return call("datetime", "set_value", {
+        datetime: input.datetime ?? `${input.value}T00:00:00`,
+      });
+    }
   }
 };

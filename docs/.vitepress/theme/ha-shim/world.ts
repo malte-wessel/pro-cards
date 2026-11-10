@@ -444,6 +444,10 @@ def("climate.living_room", "heat", {
   target_temp_step: 0.5,
   preset_modes: ["none", "eco", "comfort", "boost"],
   preset_mode: "comfort",
+  fan_modes: ["auto", "low", "high"],
+  fan_mode: "auto",
+  swing_modes: ["off", "vertical", "horizontal", "both"],
+  swing_mode: "off",
 });
 def("climate.bedroom", "off", {
   friendly_name: "Bedroom thermostat",
@@ -465,6 +469,8 @@ def("fan.living_room", "on", {
   percentage_step: 33.333,
   preset_modes: ["auto", "sleep"],
   preset_mode: null,
+  oscillating: false,
+  direction: "forward",
 });
 def("fan.bedroom", "off", { friendly_name: "Bedroom fan", percentage: 0, percentage_step: 25 });
 def("fan.bathroom", "on", { friendly_name: "Bathroom fan" });
@@ -474,7 +480,8 @@ def("alarm_control_panel.home", "disarmed", {
   friendly_name: "Alarm",
   code_arm_required: false,
   code_format: null,
-  supported_features: 3,
+  // arm home, away and night
+  supported_features: 7,
 });
 // the garden camera: a snapshot of the garden as its picture
 def("camera.garden", "idle", {
@@ -641,6 +648,8 @@ def("vacuum.robot", "cleaning", {
   friendly_name: "Robot vacuum",
   battery_level: 72,
   status: "Cleaning",
+  fan_speed_list: ["quiet", "standard", "max"],
+  fan_speed: "standard",
 });
 def(
   "sensor.robot_battery",
@@ -746,6 +755,10 @@ def("media_player.living_room_speaker", "playing", {
   media_position_updated_at: iso(Date.now()),
   app_name: "Spotify",
   volume_level: 0.4,
+  source_list: ["Spotify", "TV", "Radio"],
+  source: "Spotify",
+  sound_mode_list: ["Music", "Movie", "Night"],
+  sound_mode: "Music",
 });
 def("media_player.bedroom_speaker", "paused", {
   friendly_name: "Bedroom speaker",
@@ -780,6 +793,77 @@ def("alarm_control_panel.studio", "armed_away", {
   supported_features: 3,
 });
 def("lock.back_door", "jammed", { friendly_name: "Back door" });
+
+// the controls that need no kind of their own: a lamp with a colour temperature and effects, a
+// humidifier, a water heater, an irrigation valve, the helpers, a firmware update, a date
+def("light.reading_lamp", "on", {
+  friendly_name: "Reading lamp",
+  brightness: 200,
+  color_mode: "color_temp",
+  color_temp_kelvin: 3000,
+  min_color_temp_kelvin: 2200,
+  max_color_temp_kelvin: 6500,
+  hs_color: [32, 52],
+  rgb_color: [255, 180, 107],
+  supported_color_modes: ["color_temp", "hs"],
+  effect_list: ["Candle", "Rainbow", "Night light"],
+  effect: null,
+  supported_features: 4,
+});
+def("humidifier.bedroom", "on", {
+  friendly_name: "Bedroom humidifier",
+  device_class: "humidifier",
+  humidity: 45,
+  current_humidity: 41,
+  min_humidity: 30,
+  max_humidity: 70,
+  available_modes: ["normal", "eco", "sleep"],
+  mode: "eco",
+  supported_features: 1,
+});
+def("water_heater.boiler", "eco", {
+  friendly_name: "Boiler",
+  temperature: 50,
+  current_temperature: 48,
+  min_temp: 40,
+  max_temp: 65,
+  operation_list: ["eco", "electric", "performance", "off"],
+  operation_mode: "eco",
+  supported_features: 3,
+});
+def("valve.garden_irrigation", "closed", {
+  friendly_name: "Garden irrigation",
+  device_class: "water",
+  current_position: 0,
+  supported_features: 15,
+});
+def("counter.coffee_cups", 3, {
+  friendly_name: "Coffee cups",
+  icon: "mdi:coffee",
+  initial: 0,
+  step: 1,
+  minimum: 0,
+  maximum: 20,
+});
+def("timer.laundry", "idle", {
+  friendly_name: "Laundry timer",
+  duration: "0:45:00",
+  remaining: "0:45:00",
+});
+def("update.router_firmware", "on", {
+  friendly_name: "Router firmware",
+  title: "Router firmware",
+  installed_version: "1.2.0",
+  latest_version: "1.3.1",
+  in_progress: false,
+  skipped_version: null,
+  supported_features: 1,
+});
+// the bins go out in three days
+def("date.bin_day", new Date(Date.now() + 3 * 86400e3).toISOString().slice(0, 10), {
+  friendly_name: "Bin day",
+  icon: "mdi:trash-can-outline",
+});
 def("vacuum.upstairs", "docked", { friendly_name: "Upstairs vacuum", battery_level: 100 });
 def("vacuum.basement", "error", {
   friendly_name: "Basement vacuum",

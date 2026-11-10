@@ -30,8 +30,10 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.DATE,
     Platform.DEVICE_TRACKER,
     Platform.FAN,
+    Platform.HUMIDIFIER,
     Platform.LAWN_MOWER,
     Platform.LIGHT,
     Platform.LOCK,
@@ -40,7 +42,10 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
     Platform.VACUUM,
+    Platform.VALVE,
+    Platform.WATER_HEATER,
     Platform.WEATHER,
 ]
 

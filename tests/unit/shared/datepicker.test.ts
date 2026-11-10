@@ -47,4 +47,26 @@ describe("date picker", () => {
     close();
     expect(host.querySelectorAll(".dp")).toHaveLength(1);
   });
+
+  it("picks one day with a click, any day, without the period presets", () => {
+    const { host, anchor } = setup();
+    const onPick = vi.fn();
+    // a day next month
+    const later = rangeAt("day", Date.now() + 40 * 86400e3, Date.now(), TZ);
+    openDatePicker(anchor, host, {
+      hass: HASS,
+      tz: TZ,
+      lang: "en",
+      start: later.start,
+      end: later.end,
+      single: true,
+      onPick,
+    });
+    expect(host.querySelectorAll(".dp-preset")).toHaveLength(0);
+    // the page opens on that day, the future open
+    const cell = host.querySelector<HTMLButtonElement>(`.dp-cell[data-t="${later.start}"]`)!;
+    expect(cell.disabled).toBe(false);
+    cell.click();
+    expect(onPick).toHaveBeenCalledWith(later.start, later.end);
+  });
 });

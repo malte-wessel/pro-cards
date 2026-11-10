@@ -576,6 +576,45 @@ describe("the editor form: the controls", () => {
     ).toEqual([{ entity: "scene.bright", label: "Bright" }]);
   });
 
+  it("writes what a control sets where it is not its default", () => {
+    const LAMP = { type: "custom:poster-card-pro", entity: "light.reading_lamp" };
+    expect(edit(LAMP, { control_type: "slider", control_attribute: "color_temp_kelvin" })).toEqual({
+      ...LAMP,
+      control: { type: "slider", attribute: "color_temp_kelvin" },
+    });
+    // its brightness is the slider's default: nothing written
+    expect(edit(LAMP, { control_type: "slider", control_attribute: "brightness" })).toEqual({
+      ...LAMP,
+      control: "slider",
+    });
+    // a switch's own power is no attribute
+    expect(
+      edit(
+        { type: "custom:tile-card-pro", entity: "fan.living_room" },
+        {
+          control_type: "toggle",
+          control_attribute: "power",
+        },
+      ),
+    ).toEqual({ type: "custom:tile-card-pro", entity: "fan.living_room", control: "toggle" });
+  });
+
+  it("picks the domain's own buttons by name, the default writing nothing", () => {
+    const ROBOT = { type: "custom:poster-card-pro", entity: "vacuum.robot" };
+    const picked = edit(ROBOT, {
+      control_type: "buttons",
+      control_button_ids: ["start_pause", "stop", "locate"],
+    });
+    expect(picked).toEqual({
+      ...ROBOT,
+      control: { type: "buttons", options: ["start_pause", "stop", "locate"] },
+    });
+    expect(formOf(picked).control_button_ids).toEqual(["start_pause", "stop", "locate"]);
+    expect(
+      edit(ROBOT, { control_type: "buttons", control_button_ids: ["start_pause", "dock"] }),
+    ).toEqual({ ...ROBOT, control: "buttons" });
+  });
+
   it("keeps the control's spelling while its fields stay as they were", () => {
     const cfg = { ...LIGHT, control: { type: "toggle" } };
     expect(edit(cfg, { name: "Sofa" })).toEqual({ ...cfg, name: "Sofa" });

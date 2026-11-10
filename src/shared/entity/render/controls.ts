@@ -3,7 +3,7 @@
 // hands the service call to the card (ctx.ctl). A control swallows its pointer and key events so
 // the row's own tap / hold actions never fire.
 import { activeColorCss, cssColor, domainOf, stateColorCss } from "../../color.ts";
-import { fmtNumber } from "../../format.ts";
+import { fmtNumber, langOf } from "../../format.ts";
 import type { ActionConfig, ActionKind, HapticType, HassEntity } from "../../ha.ts";
 import { t } from "../../i18n.ts";
 import { slider } from "../../slider.ts";
@@ -18,12 +18,17 @@ import {
   buttonRuns,
   buttonsOf,
   canControl,
+  dateOf,
+  optionButtonsOf,
+  type ControlKind,
   canControlId,
   clampStep,
   currentOptionOf,
   DONE_MS,
   HOLD_CONFIRM_MS,
   isOn,
+  onOf,
+  wantsCode,
   optionsOf,
   PENDING_MS,
   rangeOf,
@@ -37,6 +42,11 @@ import {
   type Placement,
   type Range,
 } from "../control.ts";
+import { readsFavorites, targetOf } from "../targets.ts";
+import { openDatePicker } from "../../datepicker.ts";
+import { zonedMidnight, zonedParts } from "../../calendar.ts";
+import { timeZoneOf } from "../../visibility.ts";
+import { registryOptions } from "../../registry-options.ts";
 import { nameOf, type EntityModel, type RenderCtx } from "../model.ts";
 import { iconEl, leadEl } from "./lead.ts";
 
@@ -83,13 +93,25 @@ const pendingNum = (p: Pending | undefined) => (typeof p?.value === "number" ? p
 const pendingStr = (p: Pending | undefined) => (typeof p?.value === "string" ? p.value : null);
 const later = (ms = PENDING_MS) => Date.now() + ms;
 
+// the entity's favourites in the registry, where the control reads them (fetched the first time:
+// undefined until they arrive, and the card renders again then)
+const favoritesOf = (ctx: RenderCtx, ent: EntityItem, kind: ControlKind) =>
+  readsFavorites(ent, kind) ? registryOptions(ctx.hass, ent.entity) : null;
+
+// a call that wants a code opens Home Assistant's dialog for the entity instead (true: it did)
+const askCode = (host: ControlHost, ent: EntityItem, m: EntityModel, target?: string) => {
+  if (!wantsCode(ent, m.st, target)) return false;
+  host.runAction(ent, { action: "more-info" }, "tap");
+  return true;
+};
+
 // ----- toggle and lead tap -----
 
-const toggleTarget = (ctx: RenderCtx, idx: number, m: EntityModel) => {
+const toggleTarget = (ctx: RenderCtx, ent: EntityItem, idx: number, m: EntityModel) => {
   const p = ctx.ctl?.pending.get(idx);
   const s = pendingStr(p);
   const pending = s === "on" || s === "off";
-  return { on: pending ? s === "on" : isOn(m.st), pending };
+  return { on: pending ? s === "on" : onOf(ent, m.st), pending };
 };
 const bindToggle = (
   el: HTMLElement,
@@ -120,7 +142,7 @@ export const toggleEl = (
   );
   b.dataset.idx = String(idx);
   guard(b);
-  const { on, pending } = toggleTarget(ctx, idx, m);
+  const { on, pending } = toggleTarget(ctx, ent, idx, m);
   b.classList.toggle("on", on);
   b.classList.toggle("pending", pending);
   b.setAttribute("role", "switch");
@@ -144,7 +166,7 @@ export const bindLeadTap = (
   const usable = leadTapState(lead, ctx, ent, idx, m);
   guard(lead);
   if (!usable) return;
-  bindToggle(lead, ctx, ent, idx, m, toggleTarget(ctx, idx, m).on);
+  bindToggle(lead, ctx, ent, idx, m, toggleTarget(ctx, ent, idx, m).on);
   lead.addEventListener("keydown", (ev) => {
     if (ev.key === "Enter" || ev.key === " ") {
       ev.preventDefault();
@@ -162,7 +184,7 @@ export const leadTapState = (
   m: EntityModel,
 ) => {
   lead.classList.add("tap");
-  const { on, pending } = toggleTarget(ctx, idx, m);
+  const { on, pending } = toggleTarget(ctx, ent, idx, m);
   lead.classList.toggle("off", !on);
   lead.classList.toggle("pending", pending);
   lead.setAttribute("role", "switch");
@@ -188,7 +210,7 @@ export const bindKeptLeadTap = (
     ev.stopPropagation();
     if (lead.classList.contains("disabled")) return;
     const { ctx, ent, idx, m } = now();
-    const { on } = toggleTarget(ctx, idx, m);
+    const { on } = toggleTarget(ctx, ent, idx, m);
     ctx.ctl?.call(lead, idx, ent, serviceFor(ent, m.st, { type: "toggle" }), {
       until: later(),
       value: on ? "off" : "on",
@@ -241,6 +263,14 @@ export const sliderEl = (
     },
     root("slider", p, idx),
   );
+  // a colour slider: the track is the colours it sets, with only its handle; faded while the
+  // light is off (a drag turns it on there)
+  const grad = targetOf(ent, "range")?.gradient;
+  if (grad) {
+    el.classList.add("grad");
+    el.classList.toggle("dim", !isOn(m.st));
+    el.style.setProperty("--grad", `linear-gradient(to right, ${grad(ent, m.st)})`);
+  }
   // a kind card's cover slider stays in the open colour while closed (or the card's own), as
   // Home Assistant's position slider: its fill is how far it is open
   if (p.thick && domainOf(ent.entity) === "cover" && m.st) {
@@ -262,7 +292,7 @@ export const stepperEl = (
   p: Placement,
 ) => {
   const host = ctx.ctl as ControlHost;
-  const r = rangeOf(ent, m.st, ctx.hass);
+  const r = rangeOf(ent, m.st, ctx.hass, "stepper");
   const el = root("stepper", p, idx);
   const name = nameOf(ctx, ent, m.st);
   const dec = button("round s", t(ctx.hass, "control.decrease", { name }));
@@ -289,7 +319,7 @@ export const stepperEl = (
       el,
       idx,
       ent,
-      serviceFor(ent, m.st, { type: "step", dir, from: shown }),
+      serviceFor(ent, m.st, { type: "step", dir, from: shown, step: r.step }),
       { until: later(), value: next },
       "selection",
     );
@@ -316,12 +346,12 @@ const optionText = (
 ) => {
   if (label !== null) return label;
   const hass = ctx.hass,
-    a = ent.control?.attribute ?? null,
-    d = domainOf(ent.entity);
+    t = targetOf(ent, "options");
+  // a mode attribute in Home Assistant's words for it; an option that is a state in the state's
   const own =
     st && hass
-      ? a && a !== "hvac_mode" && (d === "climate" || d === "fan")
-        ? hass.formatEntityAttributeValue?.(st, a, value)
+      ? t?.attributeLabels && t.key
+        ? hass.formatEntityAttributeValue?.(st, t.key, value)
         : hass.formatEntityState?.({ ...st, state: value })
       : undefined;
   return own && own !== value
@@ -337,13 +367,13 @@ export const segmentsEl = (
   p: Placement,
 ) => {
   const host = ctx.ctl as ControlHost;
-  const opts = optionsOf(ent, m.st);
+  const opts = optionsOf(ent, m.st, favoritesOf(ctx, ent, "segments"), "segments");
   if (!opts.length) return null;
   const el = root("segments", p, idx);
   el.setAttribute("role", "radiogroup");
   el.setAttribute("aria-label", t(ctx.hass, "control.choose", { name: nameOf(ctx, ent, m.st) }));
   const pend = pendingStr(host.pending.get(idx));
-  const current = pend ?? currentOptionOf(ent, m.st);
+  const current = pend ?? currentOptionOf(ent, m.st, "segments");
   // on the line the segments are icons where they have one; the text stays for the block
   const compact = p.small || p.position !== "block";
   const segs: HTMLButtonElement[] = [];
@@ -367,7 +397,9 @@ export const segmentsEl = (
     b.title = text || t(ctx.hass, "control.off");
     b.addEventListener("click", () => {
       if (o.value === current) return;
-      host.call(el, idx, ent, serviceFor(ent, m.st, { type: "option", value: o.value }), {
+      if (askCode(host, ent, m, o.value)) return;
+      const svc = serviceFor(ent, m.st, { type: "option", value: o.value, kind: "segments" });
+      host.call(el, idx, ent, svc, {
         until: later(),
         value: o.value,
       });
@@ -401,13 +433,13 @@ export const selectEl = (
   p: Placement,
 ) => {
   const host = ctx.ctl as ControlHost;
-  const opts = optionsOf(ent, m.st);
+  const opts = optionsOf(ent, m.st, favoritesOf(ctx, ent, "select"), "select");
   if (!opts.length) return null;
   const el = root("select", p, idx);
   const sel = document.createElement("select");
   sel.setAttribute("aria-label", t(ctx.hass, "control.choose", { name: nameOf(ctx, ent, m.st) }));
   const pend = pendingStr(host.pending.get(idx));
-  const current = pend ?? currentOptionOf(ent, m.st);
+  const current = pend ?? currentOptionOf(ent, m.st, "select");
   for (const o of opts) {
     const opt = document.createElement("option");
     opt.value = o.value;
@@ -429,7 +461,12 @@ export const selectEl = (
   // while the select has the focus its row is kept (an open list would close); catch up after
   sel.addEventListener("blur", () => host.redraw());
   sel.addEventListener("change", () => {
-    host.call(el, idx, ent, serviceFor(ent, m.st, { type: "option", value: sel.value }), {
+    if (askCode(host, ent, m, sel.value)) {
+      sel.value = current ?? "";
+      return;
+    }
+    const svc = serviceFor(ent, m.st, { type: "option", value: sel.value, kind: "select" });
+    host.call(el, idx, ent, svc, {
       until: later(),
       value: sel.value,
     });
@@ -452,7 +489,8 @@ export const buttonsEl = (
 ) => {
   const host = ctx.ctl as ControlHost;
   if (ent.control?.buttons) return customButtonsEl(ctx, ent, idx, ent.control.buttons, p);
-  const list = buttonsOf(ent);
+  if (optionButtonsOf(ent)) return optionButtonsEl(ctx, ent, idx, m, p);
+  const list = buttonsOf(ent, m.st);
   if (!list.length) return null;
   const el = root("buttons", p, idx);
   const pend = pendingStr(host.pending.get(idx));
@@ -460,25 +498,72 @@ export const buttonsEl = (
     const btn = button(`round${b.primary ? " f" : ""}`, t(ctx.hass, b.labelKey));
     const ic =
       b.id === "play_pause" ? (m.st?.state === "playing" ? "mdi:pause" : "mdi:play") : b.icon;
+    // (a lock's door opener is always held)
+    const hold = p.confirm || !!b.confirm;
     // (a square button fills from the left as a chip does: a ring is round)
-    if (p.confirm && !p.square) btn.appendChild(ringEl());
+    if (hold && !p.square) btn.appendChild(ringEl());
     btn.appendChild(icon(ic));
     btn.classList.toggle("pending", pend === b.id);
-    const run = () =>
+    if (b.disabled?.(m.st)) btn.disabled = true;
+    const run = () => {
+      if (askCode(host, ent, m, b.id)) return;
       host.call(
         el,
         idx,
         ent,
         serviceFor(ent, m.st, { type: "button", id: b.id }),
         { until: later(), value: b.id },
-        p.confirm ? "success" : "light",
+        hold ? "success" : "light",
       );
+    };
     // with confirm every button is a hold of its own (the ring fills around it)
-    if (p.confirm && canControl(ent, m.st)) {
+    if (hold && canControl(ent, m.st) && !btn.disabled) {
       btn.classList.add("hold");
       bindHold(btn, ctx, host, idx, `${idx}:${b.id}`, t(ctx.hass, b.labelKey), run);
     } else btn.addEventListener("click", run);
     el.appendChild(btn);
+  }
+  if (!canControl(ent, m.st)) disable(el);
+  return el;
+};
+
+// buttons that each set one of the entity's options, none of them chosen: a light's favourite
+// colours as swatches (their name for the ear), a timer's presets by their length
+const optionButtonsEl = (
+  ctx: RenderCtx,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+  p: Placement,
+) => {
+  const host = ctx.ctl as ControlHost;
+  const opts = optionsOf(ent, m.st, favoritesOf(ctx, ent, "buttons"), "buttons");
+  if (!opts.length) return null;
+  const el = root("buttons", p, idx);
+  el.classList.add("options");
+  const pend = pendingStr(host.pending.get(idx));
+  for (const o of opts) {
+    const text = optionText(ctx, ent, m.st, o.value, o.label);
+    const b = button(o.color ? "swatch" : "chip", text);
+    if (o.color) b.style.setProperty("--swatch", o.color);
+    else {
+      const s = document.createElement("span");
+      s.textContent = text;
+      b.appendChild(s);
+    }
+    b.title = text;
+    b.classList.toggle("pending", pend === o.value);
+    b.addEventListener("click", () =>
+      host.call(
+        el,
+        idx,
+        ent,
+        serviceFor(ent, m.st, { type: "option", value: o.value, kind: "buttons" }),
+        { until: later(), value: o.value },
+        "light",
+      ),
+    );
+    el.appendChild(b);
   }
   if (!canControl(ent, m.st)) disable(el);
   return el;
@@ -605,6 +690,78 @@ export const buttonEl = (
   });
   if (!canControl(ent, m.st)) disable(el);
   return el;
+};
+
+// a date entity's day: a chip with the date that opens the calendar on it; a pick sets the day (a
+// date and time keeps its time of day, in the profile's time zone)
+export const dateEl = (
+  ctx: RenderCtx,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+  p: Placement,
+) => {
+  const host = ctx.ctl as ControlHost;
+  const hass = ctx.hass;
+  const tz = hass ? timeZoneOf(hass) : undefined;
+  const pend = pendingStr(host.pending.get(idx));
+  const day = pend ?? dateOf(ent, m.st, tz);
+  const el = root("chip", p, idx, "button") as HTMLButtonElement;
+  el.classList.add("date");
+  el.type = "button";
+  el.classList.toggle("pending", pend !== null);
+  el.appendChild(icon("mdi:calendar"));
+  const s = document.createElement("span");
+  const [y, mo, d] = (day ?? "").split("-").map(Number);
+  const at = day && tz ? zonedMidnight(y, mo, d, tz) : null;
+  s.textContent =
+    at === null
+      ? t(hass, "control.set_date")
+      : new Intl.DateTimeFormat(langOf(hass), {
+          timeZone: tz,
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+        }).format(at);
+  el.appendChild(s);
+  el.setAttribute("aria-label", t(hass, "control.set_date_of", { name: nameOf(ctx, ent, m.st) }));
+  if (!canControl(ent, m.st) || !hass || !tz) {
+    disable(el);
+    return el;
+  }
+  el.addEventListener("click", () => {
+    const home = el.getRootNode();
+    if (!(home instanceof ShadowRoot)) return;
+    const start = at ?? zonedMidnight(...todayOf(tz), tz);
+    openDatePicker(el, home, {
+      hass,
+      tz,
+      lang: langOf(hass),
+      start,
+      end: start + 86400e3,
+      single: true,
+      onPick: (a) => {
+        const { y: py, m: pm, d: pd } = zonedParts(a, tz);
+        const value = `${py}-${String(pm).padStart(2, "0")}-${String(pd).padStart(2, "0")}`;
+        // a date and time: the same time of day on the new day
+        const was = Date.parse(m.st?.state ?? "");
+        let datetime: string | undefined;
+        if (domainOf(ent.entity) === "datetime" && Number.isFinite(was)) {
+          const w = zonedParts(was, tz);
+          datetime = new Date(a + (was - zonedMidnight(w.y, w.m, w.d, tz))).toISOString();
+        }
+        host.call(el, idx, ent, serviceFor(ent, m.st, { type: "date", value, datetime }), {
+          until: later(),
+          value,
+        });
+      },
+    });
+  });
+  return el;
+};
+const todayOf = (tz: string): [number, number, number] => {
+  const { y, m, d } = zonedParts(Date.now(), tz);
+  return [y, m, d];
 };
 
 // what holding does: a lock's next state, a run, a cover's travel, else power; on the icon (the
@@ -910,6 +1067,8 @@ export const controlEl = (
       return buttonEl(ctx, ent, idx, m, p);
     case "hold":
       return holdEl(ctx, ent, idx, m, p);
+    case "date":
+      return dateEl(ctx, ent, idx, m, p);
   }
 };
 // appends the controls of `list` to `slot`

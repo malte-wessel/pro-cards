@@ -231,7 +231,8 @@
             "buttons",
             "button",
             "select",
-            "hold"
+            "hold",
+            "date"
           ]
         },
         {
@@ -252,7 +253,8 @@
             "buttons",
             "button",
             "select",
-            "hold"
+            "hold",
+            "date"
           ],
           "description": "The control drawn (without type: the kind's own, its options changed)"
         },
@@ -284,7 +286,7 @@
         "required": ["type", "variant"],
         "properties": {
           "type": {
-            "enum": ["slider", "stepper", "select", "hold"]
+            "enum": ["slider", "stepper", "select", "hold", "date"]
           }
         }
       },
@@ -301,7 +303,10 @@
           "options": {
             "minItems": 1,
             "items": {
-              "$ref": "entity.schema.json#/$defs/buttonOption"
+              "oneOf": [
+                { "$ref": "entity.schema.json#/$defs/buttonId" },
+                { "$ref": "entity.schema.json#/$defs/buttonOption" }
+              ]
             }
           }
         }

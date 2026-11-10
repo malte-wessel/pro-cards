@@ -370,6 +370,7 @@ describe("the editor's controls", () => {
       "none",
       "toggle",
       "slider",
+      "select",
       "hold",
       "buttons",
     ]);
@@ -395,10 +396,11 @@ describe("the editor's controls", () => {
     // nothing drawn: no options
     expect(ctl(SWITCH, {})).toEqual([]);
     expect(ctl(LIGHT, { control_type: "none" })).toEqual([]);
-    // the light's toggle and slider
+    // the light's toggle and slider; its slider sets its brightness, else its colour
     expect(ctl(LIGHT, {})).toEqual([
       "control_position",
       "control_step",
+      "control_attribute",
       "control_variant",
       "control_confirm",
     ]);
@@ -420,14 +422,16 @@ describe("the editor's controls", () => {
         schemaOf("poster", { entity: "climate.living_room" }, { control_type: "select" }),
         "control_attribute",
       ),
-    ).toEqual([DEFAULT, "preset_mode", "fan_mode"]);
+    ).toEqual([DEFAULT, "preset_mode", "fan_mode", "swing_mode"]);
     // the default named as what it sets: a thermostat's mode, a fan's speed
     const attrLabels = (entity: string) =>
       options(schemaOf("poster", { entity }, { control_type: "select" }), "control_attribute").map(
         (o) => o.label,
       );
-    expect(attrLabels("climate.living_room")).toEqual(["Mode", "Preset", "Fan mode"]);
-    expect(attrLabels("fan.living_room")).toEqual(["Speed", "Preset"]);
+    expect(attrLabels("climate.living_room")).toEqual(["Mode", "Preset", "Fan mode", "Swing"]);
+    expect(attrLabels("fan.living_room")).toEqual(["Speed", "Preset", "Direction"]);
+    // only what the entity has: a thermostat without swing modes offers none
+    expect(attrLabels("climate.bedroom")).toEqual(["Mode", "Preset"]);
     // a select of its own options has no attribute to pick
     expect(ctl({ entity: "input_select.house_mode" }, { control_type: "select" })).toEqual([
       "control_position",

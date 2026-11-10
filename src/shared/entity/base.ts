@@ -3,6 +3,7 @@
 //   _normalize(raw)            – the normalised config (see config.ts)
 //   _styles()                  – the CSS string for the shadow root
 //   getGridOptions()           – the sections grid footprint
+import { onRegistryOptions, registryOptions } from "../registry-options.ts";
 import { fireAction, fireEvent, fireHaptic, freshShadow, syncKeepHeight } from "../card.ts";
 import { cssColor } from "../color.ts";
 import { REFRESH_MS } from "../constants.ts";
@@ -158,6 +159,7 @@ export abstract class EntityCardBase extends HTMLElement {
   _rowInputsDrawn = new WeakMap<object, readonly unknown[]>();
   _plotInputs = new WeakMap<object, readonly unknown[]>();
   _fillEpoch = 0;
+  _unregistry?: () => void;
   _resized = true;
   // hass.locale by value, read once per render (Home Assistant keeps the object, a test double
   // may not)
@@ -332,6 +334,9 @@ export abstract class EntityCardBase extends HTMLElement {
     document.fonts?.addEventListener("loadingdone", this._onFonts);
     document.addEventListener("pointerdown", this._onDocPointer);
     this._visWatch.connect();
+    // an entity's favourites arriving from the registry: the rows that read them fill again
+    this._unregistry?.();
+    this._unregistry = onRegistryOptions(() => this._render());
     // ghosts that expired while the card was away (another view) go now, the rest get their timer
     if ((this._pending.size || this._buttonPending.size) && this._sweepPending()) this._render();
     if (this._hass && this._templates?.size && this._tpl.size === 0) this._subscribeTemplates();
@@ -371,6 +376,8 @@ export abstract class EntityCardBase extends HTMLElement {
     if (this._root) this._fitCells([this._root]);
   };
   disconnectedCallback() {
+    this._unregistry?.();
+    this._unregistry = undefined;
     this._unripple?.();
     this._unripple = undefined;
     document.fonts?.removeEventListener("loadingdone", this._onFonts);
@@ -944,6 +951,8 @@ export abstract class EntityCardBase extends HTMLElement {
       ...own(this._buttonPending),
       ...own(this._armed),
       ...(ent.control?.buttons ?? []).map((b) => this._shown(b.visibility)),
+      // (its favourites in the registry, once they arrive: a cover's positions, a light's colours)
+      ent.control ? registryOptions(undefined, ent.entity) : null,
       this._fillEpoch,
       ctx.hass?.user?.id,
       ctx.hass?.user?.is_admin,

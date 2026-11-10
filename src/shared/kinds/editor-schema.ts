@@ -3,6 +3,8 @@
 // kind's inputs, the controls its domain takes. A select's default comes first, named as what it
 // is (Glow; the kind as "Wind (detected)"): leaving a field alone is a choice the form shows, and
 // writes nothing.
+import { TARGETS, attributeChoices } from "../entity/targets.ts";
+import { BUTTONS } from "../entity/control.ts";
 import { domainOf } from "../color.ts";
 import type { RawEntity } from "../entity/config.ts";
 import { BADGE_SIZES, BADGE_STYLES } from "../entity/constants.ts";
@@ -20,7 +22,6 @@ import {
   BADGE_KINDS,
   DEFAULT,
   DETECTED,
-  DEFAULT_ATTRIBUTE,
   defaultPosition,
   sameAsOwn,
   visualVariant,
@@ -97,11 +98,6 @@ export const ICONS = {
     "M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z",
 };
 
-// the modes segments and a select set on a climate or a fan
-const ATTRIBUTES: Record<string, readonly string[]> = {
-  climate: ["hvac_mode", "preset_mode", "fan_mode"],
-  fan: ["preset_mode"],
-};
 // a flow's and a cover's drawings, by kind
 const VARIANTS: Partial<Record<string, readonly string[]>> = {
   wind: FLOW_STYLES,
@@ -1086,6 +1082,17 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
       .map((c) => opt(c, tr(`control.${c}`))),
   ];
 
+  // what it sets, and the domain's own buttons
+  const attrs =
+    domain && entity
+      ? attributeChoices(domain, drawn, x.hass?.states?.[entity], !!BUTTONS[domain])
+      : [];
+  // (buttons that set what it names, a timer's presets, are no buttons of the domain's)
+  const setsOptions = !!TARGETS[domain ?? ""]?.find((t) => t.key === data.control_attribute)
+    ?.optionButtons;
+  const domainButtons = domain ? (BUTTONS[domain] ?? []) : [];
+  const ownButtons = Array.isArray(data.control_buttons) && data.control_buttons.length > 0;
+
   // where they sit: unless told, first; the other place after it
   const byPlace = defaultPosition(type, entity, kind, thing);
   const controlOptions: HaFormSchema[] = drawn.length
@@ -1104,13 +1111,13 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
         ...(drawn.some((c) => c === "slider" || c === "stepper")
           ? [{ name: "control_step", selector: { number: { min: 0, step: 0.1, mode: "box" } } }]
           : []),
-        ...(domain && ATTRIBUTES[domain] && drawn.some((c) => c === "segments" || c === "select")
+        // what it sets, where the domain has more than one thing for it (a light's slider: its
+        // brightness, colour temperature, hue or saturation)
+        ...(attrs.length > 1
           ? [
               pick("control_attribute", [
-                opt(DEFAULT, tr(`attribute.${DEFAULT_ATTRIBUTE[domain]}`)),
-                ...ATTRIBUTES[domain]
-                  .filter((a) => a !== DEFAULT_ATTRIBUTE[domain])
-                  .map((a) => opt(a, tr(`attribute.${a}`))),
+                opt(DEFAULT, tr(`attribute.${attrs[0]}`)),
+                ...attrs.slice(1).map((a) => opt(a, tr(`attribute.${a}`))),
               ]),
             ]
           : []),
@@ -1122,7 +1129,26 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
               },
             ]
           : []),
-        ...(drawn.includes("buttons")
+        // the domain's own buttons it shows (a robot's stop and locate), else your own
+        ...(drawn.includes("buttons") && domainButtons.length && !ownButtons && !setsOptions
+          ? [
+              {
+                name: "control_button_ids",
+                selector: {
+                  select: {
+                    multiple: true,
+                    mode: "list",
+                    options: domainButtons.map((b) => ({
+                      value: b.id,
+                      label: t(x.hass, b.labelKey),
+                    })),
+                  },
+                },
+              },
+            ]
+          : []),
+        ...(drawn.includes("buttons") &&
+        !(Array.isArray(data.control_button_ids) && data.control_button_ids.length)
           ? [
               {
                 name: "control_buttons",

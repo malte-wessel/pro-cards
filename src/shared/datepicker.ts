@@ -20,6 +20,8 @@ export interface DatePickerOpts {
   end: number; // … and the first instant after it
   // a pick: the first instant of its first day and the first instant after its last day
   onPick: (start: number, end: number) => void;
+  // one day, any day (a date entity's): the first click picks it, the future is open, no presets
+  single?: boolean;
 }
 
 const fmts = new Map<string, Intl.DateTimeFormat>();
@@ -147,15 +149,17 @@ export const openDatePicker = (
   host.querySelector(".dp")?.remove();
   const { hass, tz, lang } = o;
   const now = Date.now();
-  const shown = { start: o.start, end: Math.min(o.end, dayEnd(now, tz)) };
+  // the latest instant a page or a pick may reach: today, unless any day may be picked
+  const last = o.single ? Infinity : now;
+  const shown = { start: o.start, end: Math.min(o.end, o.single ? o.end : dayEnd(now, tz)) };
   // the first day picked, while the last is still to come (null: none yet)
   let first: number | null = null;
   // the day under the pointer or the focus, for the band while the last day is chosen
   let over: number | null = null;
-  const startParts = zonedParts(Math.min(shown.start, now), tz);
+  const startParts = zonedParts(Math.min(shown.start, last), tz);
   let page: Page = { view: "day", y: startParts.y, m: startParts.m };
   // the cell that holds the focus (its start)
-  let focusT = cellStart("day", Math.min(shown.start, now), tz);
+  let focusT = cellStart("day", Math.min(shown.start, last), tz);
 
   const box = el("div", "dp");
   box.setAttribute("role", "dialog");
@@ -182,7 +186,7 @@ export const openDatePicker = (
     [t(hass, "energy.period.last_7"), day(-6), day(1)],
     [t(hass, "energy.period.last_30"), day(-29), day(1)],
   ];
-  for (const [text, a, b] of presets) {
+  for (const [text, a, b] of o.single ? [] : presets) {
     const btn = el("button", "dp-preset", text);
     btn.type = "button";
     // the period shown, as it ends (a running week ends on Sunday, after today)
@@ -212,13 +216,14 @@ export const openDatePicker = (
   title.addEventListener("click", () => {
     if (page.view === "year") return;
     page = { ...page, view: page.view === "day" ? "month" : "year" };
-    focusT = cellStart(page.view, Math.min(focusT, now), tz);
+    focusT = cellStart(page.view, Math.min(focusT, last), tz);
     draw(false);
   });
 
   const cal = el("div", "dp-cal");
   cal.append(head, week, grid, hint);
-  box.append(quick, cal);
+  if (o.single) box.classList.add("single");
+  box.append(...(o.single ? [] : [quick]), cal);
   host.appendChild(box);
 
   const pick = (a: number, b: number) => {
@@ -229,7 +234,7 @@ export const openDatePicker = (
   const turn = (dir: number) => {
     page = shift(page, dir);
     const cells = cellsOf(page, tz, lang).filter((c) => !c.dim);
-    focusT = Math.min(cells[0].t, cellStart(page.view, now, tz));
+    focusT = Math.min(cells[0].t, o.single ? Infinity : cellStart(page.view, now, tz));
     draw(false);
   };
 
@@ -244,7 +249,14 @@ export const openDatePicker = (
   // the band and the focus on the cells drawn (the pointer moving over the days changes only these)
   const paint = () => {
     if (page.view !== "day") return;
-    hint.textContent = t(hass, first === null ? "calendar.pick_first" : "calendar.pick_last");
+    hint.textContent = t(
+      hass,
+      o.single
+        ? "calendar.pick_day"
+        : first === null
+          ? "calendar.pick_first"
+          : "calendar.pick_last",
+    );
     const r = band();
     const cells = [...grid.querySelectorAll<HTMLButtonElement>(".dp-cell")];
     cells.forEach((b, i) => {
@@ -276,8 +288,9 @@ export const openDatePicker = (
     hint.textContent = "";
     const cells = cellsOf(page, tz, lang);
     const nowCell = cellStart(page.view, now, tz);
+    const lastCell = o.single ? Infinity : nowCell;
     // no page that starts after today
-    next.disabled = cellsOf(shift(page, 1), tz, lang).filter((c) => !c.dim)[0].t > nowCell;
+    next.disabled = cellsOf(shift(page, 1), tz, lang).filter((c) => !c.dim)[0].t > lastCell;
     grid.replaceChildren(
       ...cells.map((c, i) => {
         const b = el("button", "dp-cell", c.text);
@@ -287,7 +300,7 @@ export const openDatePicker = (
         b.tabIndex = c.t === focusT ? 0 : -1;
         b.classList.toggle("now", c.t === nowCell);
         if (c.t === nowCell) b.setAttribute("aria-current", "date");
-        b.disabled = c.t > nowCell;
+        b.disabled = c.t > lastCell;
         if (page.view !== "day") {
           // a month or a year: open its days (or months)
           b.classList.toggle(
@@ -297,7 +310,7 @@ export const openDatePicker = (
           b.addEventListener("click", () => {
             const p = zonedParts(c.t, tz);
             page = { view: page.view === "year" ? "month" : "day", y: p.y, m: p.m };
-            focusT = cellStart(page.view, Math.min(c.t, now), tz);
+            focusT = cellStart(page.view, Math.min(c.t, last), tz);
             draw(true);
           });
           return b;
@@ -309,6 +322,7 @@ export const openDatePicker = (
         b.addEventListener("focus", () => preview(c.t));
         // the first click: the range's first day; the second: its last
         b.addEventListener("click", () => {
+          if (o.single) return pick(c.t, dayEnd(c.t, tz));
           if (first === null) {
             first = over = focusT = c.t;
             paint();
@@ -351,7 +365,7 @@ export const openDatePicker = (
         : page.view === "month"
           ? zonedMidnight(y, m + step, 1, tz)
           : zonedMidnight(y + step, 1, 1, tz);
-    if (to > cellStart(page.view, now, tz)) return;
+    if (!o.single && to > cellStart(page.view, now, tz)) return;
     // past the page's edge: the page that holds it
     if (!cellsOf(page, tz, lang).some((c) => c.t === to && !c.dim)) {
       const p = zonedParts(to, tz);
@@ -448,6 +462,7 @@ export const STYLE_DATEPICKER = `
   .dp-grid.day .dp-cell.in.first.last { border-radius: 999px; }
   .dp-grid.day .dp-cell.in:nth-child(7n + 1) { border-top-left-radius: 999px; border-bottom-left-radius: 999px; }
   .dp-grid.day .dp-cell.in:nth-child(7n) { border-top-right-radius: 999px; border-bottom-right-radius: 999px; }
+  .dp.single { width: min(300px, calc(100vw - 16px)); }
   .dp-cell.now::after { content: ""; position: absolute; inset: 3px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--dp-c); pointer-events: none; }
   .dp-grid.day .dp-cell.now::after { inset: 2px calc(50% - 15px); }
   @media (max-width: 460px) {

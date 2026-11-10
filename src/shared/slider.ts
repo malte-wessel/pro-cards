@@ -56,7 +56,10 @@ export const slider = (
   let v = spec.value;
   const paint = (value: number) => {
     v = value;
-    const pct = `${(clamp01((v - min) / span) * 100).toFixed(1)}%`;
+    const at = clamp01((v - min) / span);
+    const pct = `${(at * 100).toFixed(1)}%`;
+    // (where it is, 0 to 1: a handle kept inside the bar shifts by it)
+    el.style.setProperty("--p", at.toFixed(3));
     fill.style.width = pct;
     knob.style.left = pct;
     bubble.style.left = pct;

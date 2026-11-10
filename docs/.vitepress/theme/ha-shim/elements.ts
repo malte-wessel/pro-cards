@@ -112,6 +112,15 @@ const DOMAIN_ICON: Record<string, (s: string) => string> = {
   weather: (s) => conditionIcon(s),
   sensor: () => "mdi:eye",
   binary_sensor: () => "mdi:radiobox-blank",
+  humidifier: (s) => (s === "on" ? "mdi:air-humidifier" : "mdi:air-humidifier-off"),
+  water_heater: (s) => (s === "off" ? "mdi:water-boiler-off" : "mdi:water-boiler"),
+  valve: (s) => (s === "closed" ? "mdi:valve-closed" : "mdi:valve-open"),
+  counter: () => "mdi:counter",
+  timer: (s) => (s === "paused" ? "mdi:timer-pause" : "mdi:timer-outline"),
+  update: (s) => (s === "on" ? "mdi:package-up" : "mdi:package"),
+  date: () => "mdi:calendar",
+  datetime: () => "mdi:calendar-clock",
+  input_datetime: () => "mdi:calendar-clock",
 };
 // a sensor's icon by its device class
 const DC_ICON: Record<string, string | ((s: string) => string)> = {

@@ -2,6 +2,7 @@
 // with the kind's defaults, rules and controls, the inputs the kind reads, the icon's own actions,
 // and the two places (places.ts) as the card and its rules write them. The poster card adds its
 // corner, the tile card its line.
+import { targetKeysOf } from "../entity/targets.ts";
 import { domainOf } from "../color.ts";
 import { oneOf } from "../util.ts";
 import {
@@ -233,7 +234,7 @@ const CONTROL_KEYS: Record<string, string> = {
   confirm: "control_confirm",
   variant: "control_variant",
 };
-const controlOf = (c: unknown, type: string): Partial<RawKindCardConfig> => {
+const controlOf = (c: unknown, type: string, entity: string | null): Partial<RawKindCardConfig> => {
   if (!isObj(c)) return {};
   const out: Record<string, unknown> = { control: c.type ?? "auto" };
   for (const [k, v] of Object.entries(c)) {
@@ -253,9 +254,12 @@ const controlOf = (c: unknown, type: string): Partial<RawKindCardConfig> => {
     throw new Error(
       `${type}: control: { position } must be one of ${CONTROL_POSITIONS.join(" | ")}`,
     );
-  if (c.attribute !== undefined && !oneOf(CONTROL_ATTRIBUTES, c.attribute))
+  // (the attributes the entity's domain sets, where the card names one: a light's, a thermostat's)
+  const own = entity ? targetKeysOf(entity.split(".")[0]) : [];
+  const attrs = own.length ? own : CONTROL_ATTRIBUTES;
+  if (c.attribute !== undefined && !(attrs as readonly unknown[]).includes(c.attribute))
     throw new Error(
-      `${type}: control: { attribute } must be one of ${CONTROL_ATTRIBUTES.join(" | ")}`,
+      `${type}: control: { attribute } must be one of ${attrs.join(" | ")}${own.length ? ` (a ${entity?.split(".")[0]})` : ""}`,
     );
   if (c.variant !== undefined && !oneOf(CONTROL_VARIANTS, c.variant))
     throw new Error(`${type}: control: { variant } must be one of ${CONTROL_VARIANTS.join(" | ")}`);
@@ -325,7 +329,11 @@ export const normalizeKindItem = (
   // the icon's ring and its own actions are the icon's
   if (written.visual === "ring")
     throw new Error(`${type}: visual: ring is icon: { ring: true } on the ${thing}`);
-  const control = controlOf(written.control, type);
+  const control = controlOf(
+    written.control,
+    type,
+    typeof written.entity === "string" && written.entity ? written.entity : null,
+  );
   // the places as written, and the rules' (an icon object's name is the rule's icon)
   const places: Places = {
     icon: parseIcon(written.icon, `${type}: icon`),
