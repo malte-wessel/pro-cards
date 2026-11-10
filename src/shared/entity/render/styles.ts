@@ -80,17 +80,15 @@ const STYLE_POSTER = `
   /* the value and the line under it as one block, the controls beside it; where they do not fit
      beside it, under it. The block is as wide as its value (the line under it takes the room it is
      given, cut where it ends) and grows to push the controls to the right. Beside it, the controls
-     end on the block's last baseline: the block sits where it sits without them, and an empty last
-     item makes the controls' baseline their bottom edge (its gap given back) */
+     are centred on the block: a control as tall as the value's line then neither lifts the name
+     nor sits above the value (on its baseline it reached 7 px above the value and pushed the name
+     up). The block itself sits on its last baseline, where it sits without them */
   .pmain { display: flex; flex-wrap: wrap; align-items: last baseline; gap: 8px 12px; min-width: 0; }
-  /* a switch beside the value is centred on its line (a button's baseline is its icon's, which
-     would lift it above the digits and make the line taller) */
-  .pmain > .end:has(> .toggle.square) { align-self: center; }
+  .pmain > .end { align-self: center; }
   .ptext { flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .ptext > :is(.pname, .secondary) { contain: inline-size; }
   .pvalue { display: flex; min-width: 0; }
   .pvalue > .big { flex: 0 1 auto; }
-  .pmain > .end::after { content: ""; align-self: last baseline; margin-inline-start: -8px; }
   .pmain > .end { min-width: 0; max-width: 100%; }
   /* the place the card found for its size (PosterCard._placeControls) holds: beside, a wider value
      is drawn smaller; under, a narrower one leaves the controls where they are */

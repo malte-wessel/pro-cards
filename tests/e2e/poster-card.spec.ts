@@ -668,12 +668,15 @@ test.describe("poster types", () => {
       ],
       { width: 400 },
     );
-    // beside: the buttons end on the last line's baseline (the line under the value)
+    // beside: the buttons centred on the value and the line under it
     const robot = card(page, 0);
     const value = await rect(robot.locator(".pvalue"));
     const end = await rect(robot.locator(".pmain > .end"));
+    const text = await rect(robot.locator(".ptext"));
     expect(end.left).toBeGreaterThan(value.right);
-    expect(end.bottom).toBeCloseTo(await baselineOf(robot.locator(".ptext > .secondary")), 0);
+    expect(Math.abs((end.top + end.bottom) / 2 - (text.top + text.bottom) / 2)).toBeLessThanOrEqual(
+      1,
+    );
     // the name is not cut by the controls: it runs over them
     const name = await rect(robot.locator(".pbody > .pname"));
     expect(name.right).toBeGreaterThan(end.left);
@@ -682,12 +685,20 @@ test.describe("poster types", () => {
     const line = await rect(bed.locator(".ptext > .secondary"));
     const segs = await rect(bed.locator(".pmain > .end"));
     expect(segs.top).toBeGreaterThanOrEqual(line.bottom);
-    // the value sits where it sits without a control; the select ends on its baseline
+    // the value and the name sit where they sit without a control; the select centred on the value
     const [withSelect, without] = [card(page, 2), card(page, 3)];
-    const at = async (c: Locator) => (await rect(c.locator(".pvalue"))).top - (await inner(c)).top;
-    expect(await at(withSelect)).toBeCloseTo(await at(without), 0);
+    const at = async (c: Locator, sel: string) =>
+      (await rect(c.locator(sel))).top - (await inner(c)).top;
+    expect(await at(withSelect, ".pvalue")).toBeCloseTo(await at(without, ".pvalue"), 0);
+    // (a 36 px select beside a 35 px line: the name 1 px higher at most)
+    expect(Math.abs((await at(withSelect, ".pname")) - (await at(without, ".pname")))).toBeLessThan(
+      1.5,
+    );
     const select = await rect(withSelect.locator(".pmain > .end"));
-    expect(select.bottom).toBeCloseTo(await baselineOf(withSelect.locator(".pvalue .big b")), 0);
+    const big = await rect(withSelect.locator(".pvalue"));
+    expect(
+      Math.abs((select.top + select.bottom) / 2 - (big.top + big.bottom) / 2),
+    ).toBeLessThanOrEqual(1);
   });
 
   test("your own buttons with labels sit on the value's line, each in its place", async ({

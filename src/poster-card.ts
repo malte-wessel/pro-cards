@@ -265,10 +265,13 @@ export class PosterCard extends KindCardBase {
     // 0 % as large as an open one's 100 %); a word (Cleaning) is drawn smaller anyway and keeps
     // them beside it
     const besideMin = big.classList.contains("word") ? min : Math.round(base * 0.8);
+    // short of height, the value gives up a fifth of its size at most while a slider below it
+    // can go instead: the value is the poster's point (a player keeps its title, not its volume)
+    const tallLeast = () => (sliders.length && !fit.drop ? Math.round(base * 0.8) : min);
     const shrink = (from: number, least = min) => {
       let px = from;
       apply(px);
-      while (misses() && px > least) {
+      while (px > least && (overflows(b) || (short() > 0.5 && px > tallLeast()))) {
         px = Math.max(least, px - 2);
         apply(px);
       }
