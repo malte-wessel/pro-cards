@@ -391,7 +391,10 @@
   .ctl ha-icon, .ctl ha-state-icon { display: inline-flex; flex: none; width: var(--mdc-icon-size, 24px); height: var(--mdc-icon-size, 24px); }
   .ctl.disabled, .lead.tap.disabled { opacity: .4; pointer-events: none; }
   .ctl button:disabled { opacity: .38; cursor: default; }
-  .ctl:focus-visible, .ctl button:focus-visible, .ctl select:focus-visible, .toggle:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--fe-color); }
+  .ctl:focus-visible, .ctl button:focus-visible, .toggle:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--fe-color); }
+  /* a select's ring goes round the whole control, its corners, not the bare select inside it */
+  .ctl select:focus-visible { outline: none; }
+  .ctl-select:has(> select:focus-visible) { box-shadow: 0 0 0 2px var(--fe-color); }
   .toggle { flex: none; width: 48px; height: 28px; border: 0; border-radius: 14px; padding: 0; position: relative; cursor: pointer; background: var(--switch-unchecked-track-color, rgba(128,128,128,.4)); }
   .toggle.on { background: var(--fe-color); }
   .toggle i { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--text-primary-color, #fff); transition: left .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
