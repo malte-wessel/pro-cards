@@ -268,7 +268,7 @@ The card takes the full width of a section and is as tall as its tree. With a fi
 
 ## The visual editor
 
-Home Assistant's card editor shows the title and icon, then the card's options in sections: the home, the sources and the consumers (each in a view of its own), Appearance, the values (thresholds, the price for **Expensive**, the animation's range), the badges, the home's rules (in W) and the title's tap action. A source is measured by one signed sensor or by a pair; a grid also takes its price, outage, generator and fuel mix. A room's devices stay in YAML. A value left at its default writes nothing, and what the form does not show stays in the YAML as written. Try it in the [Playground](/playground), or with **Edit** under any example.
+Home Assistant's card editor has the home, the sources and the consumers (each in a form of its own), the appearance, the values, the badges and the rules. A room's devices stay in YAML. Try it in the [Playground](/playground), or with **Edit** under any example.
 
 ## Reference
 

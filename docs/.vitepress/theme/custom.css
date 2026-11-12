@@ -421,3 +421,10 @@ html {
   line-height: 1.4;
   color: var(--vp-c-text-2);
 }
+
+/* HACS, struck through, beside the Marketplace it became (Marketplace.vue) */
+.marketplace-old {
+  color: var(--vp-c-text-3);
+  text-decoration-thickness: 2px;
+  margin-right: 0.1em;
+}

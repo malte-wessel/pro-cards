@@ -4,19 +4,17 @@ This page installs Pro Cards and walks you through your first tile, poster and t
 
 Pro Cards requires Home Assistant 2026.4 or newer. Coming from an older version? [Moving to 3.0](/guide/migrating) lists what changed.
 
-## Install with HACS
+## Install from the <Marketplace /> {#install}
 
-[![Open your Home Assistant instance and open this repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=malte-wessel&repository=pro-cards&category=plugin)
+Since Home Assistant 2026.11, HACS is part of Home Assistant as the Marketplace. Before 2026.11, the same steps work in HACS.
 
-Or open HACS, search for **Pro Cards**, download it and reload the browser when HACS asks.
+[![Open your Home Assistant instance and open this repository in the Marketplace.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=malte-wessel&repository=pro-cards&category=plugin)
 
-If HACS does not list it yet, add it as a custom repository first:
+Or go to **Settings → Marketplace**, search for **Pro Cards**, install it and reload the browser.
 
-1. Open HACS, click the three-dot menu and choose **Custom repositories**.
-2. Add `https://github.com/malte-wessel/pro-cards` with the category **Dashboard**.
-3. Search for **Pro Cards** and download it.
+If it is not listed yet, add it first: **Settings → Marketplace → Add from link**, then `malte-wessel/pro-cards`. In HACS: three-dot menu → **Custom repositories**, `https://github.com/malte-wessel/pro-cards` with the category **Dashboard**.
 
-HACS registers the resource `/hacsfiles/pro-cards/pro-cards.js` for you. Updates arrive through HACS like any other card. Beta versions appear only when you enable **Show beta versions** for Pro Cards in HACS.
+The Marketplace adds the dashboard resource for you (unless you keep your resources in YAML: then its install dialog shows the line to add). Updates arrive like any other. For pre-releases, turn on the **Pre-release** switch on Pro Cards' device under **Settings → Devices & services → Marketplace** (enable that entity first); in HACS, **Show beta versions**.
 
 ## Install manually
 
@@ -139,7 +137,7 @@ tiles:
 
 ## The visual editor and the Playground
 
-You do not have to write YAML. The cards appear in the card picker as "Tile Card Pro", "Poster Card Pro" and so on, and every current card has a visual editor; the tile's and the poster's offer only the options that apply to the entity's kind. Pick an entity in the picker instead, and Home Assistant suggests the cards that fit it.
+You do not have to write YAML. The cards appear in the card picker as "Tile Card Pro", "Poster Card Pro" and so on, and every current card has a visual editor; the tile's and the poster's offer only the options that apply to the entity's kind. Pick an entity in the picker instead, and Home Assistant suggests the cards that fit it. The editors write only what you change: a field left at its default writes nothing, and what a form does not show stays in the YAML as written.
 
 The [Playground](/playground) runs these editors on this site, next to the YAML. Their examples have an **Edit** link that opens them there.
 

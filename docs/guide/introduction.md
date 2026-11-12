@@ -2,7 +2,7 @@
 
 Pro Cards is a set of custom cards for Home Assistant dashboards. They look like Home Assistant's own cards, follow your theme, and draw each entity the way it deserves: a light with its glow, a thermostat with its stepper, the wind as a moving field.
 
-The cards install with HACS as one bundle, need nothing else, and speak 12 languages: they follow the language you set in Home Assistant.
+The cards install from the <Marketplace /> as one bundle, need nothing else, and speak 12 languages: they follow the language you set in Home Assistant.
 
 ## Kinds
 

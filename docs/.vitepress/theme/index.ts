@@ -6,6 +6,7 @@ import Playground from "./playground/Playground.vue";
 import ChangelogPager from "./ChangelogPager.vue";
 import FeatureRows from "./FeatureRows.vue";
 import DashboardLinks from "./DashboardLinks.vue";
+import Marketplace from "./Marketplace.vue";
 import Layout from "./Layout.vue";
 import { holdAnchorSoon } from "./anchor.ts";
 import "./ha.css";
@@ -30,5 +31,6 @@ export default {
     app.component("ChangelogPager", ChangelogPager);
     app.component("FeatureRows", FeatureRows);
     app.component("DashboardLinks", DashboardLinks);
+    app.component("Marketplace", Marketplace);
   },
 } satisfies Theme;

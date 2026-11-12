@@ -339,7 +339,7 @@ Every card inside keeps Home Assistant's own `visibility`. A hidden card leaves 
 
 ## The visual editor
 
-Home Assistant's card editor shows the layout's options and its breakpoints (each opens in a view of its own: from how many view columns, and what changes), then a tab for each card. The selected card is edited in its own editor: a tile's or a poster's form, Home Assistant's for its own cards, YAML for the others. The buttons beside the tabs move, duplicate and delete it, and **+** adds one from the card picker. **Place in the layout** sets the selected card's span, column, order and alignment; a place that changes with the view columns stays in YAML. Try it in the [Playground](/playground).
+Home Assistant's card editor has the layout's options and its breakpoints, then a tab per card, edited in that card's own editor. **+** adds a card; the buttons beside the tabs move, duplicate or delete one. **Place in the layout** sets the selected card's span, column, order and alignment; a place that changes with the view columns stays in YAML. Try it in the [Playground](/playground).
 
 ## Reference
 

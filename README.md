@@ -54,17 +54,15 @@ All cards support the sections grid (`grid_options`). Requires Home Assistant 20
 
 ## Installation
 
-### HACS (recommended)
+### ~~HACS~~ Marketplace (recommended)
 
-[![Open your Home Assistant instance and open this repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=malte-wessel&repository=pro-cards&category=plugin)
+Since Home Assistant 2026.11, HACS is part of Home Assistant as the Marketplace; before 2026.11 the same steps work in HACS.
 
-Or open HACS, search for **Pro Cards**, download it and reload the browser. HACS registers the resource `/hacsfiles/pro-cards/pro-cards.js` automatically.
+[![Open your Home Assistant instance and open this repository in the Marketplace.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=malte-wessel&repository=pro-cards&category=plugin)
 
-If HACS does not list it yet, add it as a custom repository first:
+Or go to **Settings → Marketplace**, search for **Pro Cards**, install it and reload the browser. The Marketplace adds the dashboard resource for you.
 
-1. HACS → three-dot menu → **Custom repositories**.
-2. Add `https://github.com/malte-wessel/pro-cards` with category **Dashboard**.
-3. Search for **Pro Cards**, download it and reload the browser.
+If it is not listed yet: **Settings → Marketplace → Add from link**, `malte-wessel/pro-cards`. In HACS: three-dot menu → **Custom repositories**, `https://github.com/malte-wessel/pro-cards` with category **Dashboard**.
 
 ### Manual
 

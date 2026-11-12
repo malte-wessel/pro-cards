@@ -199,7 +199,7 @@ sections:
 
 ## The visual editor
 
-Home Assistant's card editor shows the entity, then the card's options in sections: the tile's name and secondary line, the header, the appearance (the colour, the condition icons, their size), the sections, the badges, the rules (the condition's and the temperature's) and the interactions. Each section opens in a view with a form of its type; **Add a section** adds one, the hero first. An entity section already in the card still edits there. A value left at its default writes nothing, and what the form does not show stays in the YAML as written. Try it in the [Playground](/playground), or with **Edit** under any example.
+Home Assistant's card editor has every option. The sections are a list, each in a form of its type. Try it in the [Playground](/playground), or with **Edit** under any example.
 
 ## Reference
 

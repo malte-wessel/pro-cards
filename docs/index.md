@@ -3,10 +3,10 @@ layout: home
 hero:
   name: Pro Cards
   text: Every card your dashboard needs.
-  tagline: Cards that match the look and feel of Home Assistant and adapt to your dashboard with rules, templates, layouts and animated flows. Installed with HACS, styled by your theme.
+  tagline: Cards that match the look and feel of Home Assistant and adapt to your dashboard with rules, templates, layouts and animated flows. Installed from the Marketplace, styled by your theme.
   actions:
     - theme: brand
-      text: Install with HACS
+      text: Install from the Marketplace
       link: https://my.home-assistant.io/redirect/hacs_repository/?owner=malte-wessel&repository=pro-cards&category=plugin
     - theme: alt
       text: Get started

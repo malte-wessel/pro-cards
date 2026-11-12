@@ -157,7 +157,7 @@ While its entity is unavailable, a tile draws a dash for the value, its status s
 
 ## The visual editor
 
-Home Assistant's card editor shows a form for the tile. It starts with what the tile shows: the entity as it is, texts of your own (no entity), or a kind; then the entity, offering only those that fit the kind, and the other entities the kind reads. While the entity does not fit the kind, or is cleared, the YAML stays as it was. Sections follow for the name, the value, the status, the appearance (the colour, the icon, the visual), the layout (vertical, the alignment, filling the height), the controls, the badges, the rules and the interactions (the card's taps, then the icon's). The form offers only what applies, and a field left alone keeps the kind's default and writes nothing to the YAML. The badges, the rules, a trend's lines and a control's options are lists: a row each, opening its own form (a back arrow returns); a badge's form reads the tile's entity where its own is empty. Try it in the [Playground](/playground), or with **Edit** under any example.
+Every option has a field in Home Assistant's card editor. First choose what the tile shows (an entity, a kind or texts of your own); the form then offers only what fits it. Badges, rules and a control's options are lists, each item in a form of its own. Try it in the [Playground](/playground), or with **Edit** under any example.
 
 Coming from the entity card? [Moving to 3.0](/guide/migrating) maps its keys to the tile's.
 
