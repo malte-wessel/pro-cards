@@ -7,6 +7,7 @@ import {
   normalizeActionDefaults,
   normalizeTitleAction,
   normalizeVerticalAlign,
+  GROUP_ALIGNS,
   type EntityCardConfig,
   type RawAction,
 } from "../shared/entity/config.ts";
@@ -125,8 +126,9 @@ export const normalizeTileGroupConfig = (input: unknown): TileGroupConfig => {
     layout: layout as TileGroupLayout,
     title: raw.title ?? null,
     titleTap: normalizeTitleAction(raw),
-    // where the tiles sit in a card taller than they are: at the top, the centre or the bottom
-    valign: normalizeVerticalAlign(raw.vertical_align, CARD_TYPE),
+    // where the tiles sit in a card taller than they are: at the top, the centre or the bottom, or
+    // stretched to share its height
+    valign: normalizeVerticalAlign(raw.vertical_align, CARD_TYPE, GROUP_ALIGNS),
     icon: raw.icon ?? null,
     // the header badges' history: the longest window they draw
     ...badgeWindow(badges),

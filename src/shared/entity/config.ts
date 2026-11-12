@@ -302,9 +302,10 @@ export interface EntityCardConfig extends ActionDefaults {
   groups: Group[];
   headerIdxs: number[];
   hasHeader: boolean;
-  // where the body sits in a card taller than its content (the group and sections cards; the
-  // header stays on top): unset is the top
-  valign?: VerticalAlign;
+  // where the body sits in a card taller than its content (the tile group, and the deprecated group
+  // and sections cards; the header stays on top): unset is the top; `stretch` (the tile group's
+  // alone) grows the body's lines to fill it
+  valign?: GroupAlign;
 }
 
 export const normalizeAction = (a: RawAction | undefined, fallback: ActionConfig): ActionConfig => {
@@ -333,13 +334,26 @@ export const normalizeHistoryOptions = (raw: RawHistoryOptions) => ({
 });
 export const VERTICAL_ALIGNS = ["top", "center", "bottom"] as const;
 export type VerticalAlign = (typeof VERTICAL_ALIGNS)[number];
-// `vertical_align`: top (the default), center or bottom
-export const normalizeVerticalAlign = (v: unknown, type: string): VerticalAlign => {
+// a group of tiles may also stretch them over the height it is given (the tile group)
+export const GROUP_ALIGNS = [...VERTICAL_ALIGNS, "stretch"] as const;
+export type GroupAlign = (typeof GROUP_ALIGNS)[number];
+// `vertical_align`: top (the default), center or bottom, or one of the values the card names
+export function normalizeVerticalAlign(v: unknown, type: string): VerticalAlign;
+export function normalizeVerticalAlign<T extends string>(
+  v: unknown,
+  type: string,
+  values: readonly T[],
+): T;
+export function normalizeVerticalAlign(
+  v: unknown,
+  type: string,
+  values: readonly string[] = VERTICAL_ALIGNS,
+): string {
   if (v === undefined || v === null) return "top";
-  if (!oneOf(VERTICAL_ALIGNS, v))
-    throw new Error(`${type}: vertical_align must be one of ${VERTICAL_ALIGNS.join(" | ")}`);
+  if (!oneOf(values, v))
+    throw new Error(`${type}: vertical_align must be one of ${values.join(" | ")}`);
   return v;
-};
+}
 export const clampColumns = (v: unknown, fallback: number) =>
   Math.max(1, Math.min(4, Math.round(numOrNull(v) ?? fallback)));
 

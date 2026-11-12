@@ -99,7 +99,7 @@ tiles:
 
 ## In a taller card
 
-In a card taller than its tiles (a fixed row count, a taller card beside it), `vertical_align` puts the tiles at the `top` (the default), the `center` or the `bottom`. The title stays on top.
+In a card taller than its tiles (a fixed row count, a taller card beside it), `vertical_align` puts the tiles at the `top` (the default), the `center` or the `bottom`, or `stretch`es them to share the height: every line grows alike and each tile centres its content (unless the tile's own `vertical_align` says otherwise; a plot below a tile's line grows into the room instead), so the tiles fill the card as a single tile fills its cell. The title stays on top.
 
 ::: live
 
@@ -112,6 +112,20 @@ tiles:
   - { entity: light.living_room, name: Ceiling }
   - { entity: climate.living_room, name: Thermostat }
 grid_options: { columns: 6, rows: 5 }
+```
+
+:::
+
+::: live
+
+```yaml
+type: custom:tile-group-card-pro
+layout: row
+title: Scenes
+icon: mdi:palette
+vertical_align: stretch
+tiles: [scene.bright, scene.dimmed, scene.dinner, scene.movie_night]
+grid_options: { columns: 12, rows: 4 }
 ```
 
 :::
@@ -214,7 +228,7 @@ Home Assistant's card editor shows the group's title, icon, layout, title tap an
 | ------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | `tiles`            | –       | Required. Entity ids or tiles: the [tile card's keys](/cards/tile-card) without `type`, `grid_options` and `vertical`, plus `visibility`. |
 | `layout`           | `list`  | `list`: one under the other. `row`: vertical tiles side by side, wrapping when narrow. `table`: one line each.                            |
-| `vertical_align`   | `top`   | Where the tiles sit in a taller card: `top`, `center` or `bottom`; the title stays on top.                                                |
+| `vertical_align`   | `top`   | Where the tiles sit in a taller card: `top`, `center` or `bottom`, or `stretch` to share its height; the title stays on top.              |
 | `title`            | –       | The header's text. Template allowed.                                                                                                      |
 | `icon`             | –       | The header's icon. Template allowed.                                                                                                      |
 | `title_tap_action` | `none`  | What a tap on the title or its icon does; see [Actions & hover](/cards/actions).                                                          |

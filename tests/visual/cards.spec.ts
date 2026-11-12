@@ -2211,6 +2211,27 @@ const CASES = {
     { type: PC, entity: "weather.home", name: "Outside", grid_options: { columns: 12, rows: 3 } },
     { type: PC, entity: "climate.living_room", grid_options: { columns: 9, rows: 4 } },
   ],
+  // a tile group stretched over a fixed height: a row's lines and a table's rows grow alike, each
+  // tile's content centred
+  "tg-stretch": [
+    {
+      type: TG,
+      layout: "row",
+      title: "Scenes",
+      icon: "mdi:palette",
+      vertical_align: "stretch",
+      tiles: ["scene.bright", "scene.dimmed", "scene.dinner", "scene.movie_night"],
+      grid_options: { columns: 12, rows: 6 },
+    },
+    {
+      type: TG,
+      layout: "table",
+      title: "Switches",
+      vertical_align: "stretch",
+      tiles: ["switch.coffee_machine", "switch.garden_pump", "switch.shed_heater"],
+      grid_options: { columns: 12, rows: 6 },
+    },
+  ],
   // a tile group's table: one line a tile, the name, the value and one control or visual; at a
   // quarter of the width the rows give way (the status, the name, the control)
   "tg-table": [

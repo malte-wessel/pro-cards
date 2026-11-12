@@ -38,6 +38,14 @@ const STYLE_TILES = `
   ha-card:is(.valign-center, .valign-bottom) > .body { flex: 1 1 auto; }
   ha-card.valign-center > .body { justify-content: center; }
   ha-card.valign-bottom > .body { justify-content: flex-end; }
+  /* stretch: the lines share the room equally (a list's or a table's tiles grow alike, a row's grid
+     lines are stretched as auto tracks are); each tile places its own content (vertical_align on
+     the tile, centred unless told) */
+  ha-card.valign-stretch > .body { flex: 1 1 auto; }
+  ha-card.valign-stretch .tiles { flex: 1 1 auto; }
+  ha-card.valign-stretch .tiles:is(.layout-list, .layout-table) > .tile { flex: 1 1 auto; }
+  /* a stretched row centres its tiles' content (their icons level while the tiles say as much) */
+  ha-card.valign-stretch .tiles.layout-row { --pro-cards-tile-align: center; }
   /* table: the rows one under the other, close together */
   .tiles.layout-table { flex-direction: column; gap: 0; }
   /* row: vertical tiles side by side in columns alike, as many as fit at the width the widest

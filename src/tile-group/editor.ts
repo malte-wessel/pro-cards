@@ -66,6 +66,7 @@ export const tileGroupSchema = (hass: HomeAssistant | undefined): HaFormSchema[]
               ["top", "start"],
               ["center", "center"],
               ["bottom", "end"],
+              ["stretch", "stretch"],
             ] as const
           ).map(([value, word]) => ({ value, label: L(hass, `align.${word}`) })),
         },

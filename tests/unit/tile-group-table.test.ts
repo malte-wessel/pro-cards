@@ -200,4 +200,16 @@ describe("vertical_align", () => {
     cards.push(g);
     expect(g.shadowRoot?.querySelector("ha-card")?.classList.contains("valign-bottom")).toBe(true);
   });
+
+  it("stretches a tile group's tiles over its height, where a tile has no such value", () => {
+    expect(
+      normalizeTileGroupConfig({ tiles: ["light.kitchen"], vertical_align: "stretch" }).valign,
+    ).toBe("stretch");
+    expect(() =>
+      normalizeTileGroupConfig({ tiles: ["light.kitchen"], vertical_align: "middle" }),
+    ).toThrow("vertical_align must be one of top | center | bottom | stretch");
+    expect(() =>
+      normalizeTileConfig({ entity: "light.kitchen", vertical_align: "stretch" }),
+    ).toThrow(/vertical_align must be one of top \| center \| bottom$/);
+  });
 });

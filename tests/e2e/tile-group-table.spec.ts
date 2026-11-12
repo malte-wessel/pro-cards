@@ -60,3 +60,74 @@ test.describe("tile group table", () => {
     }
   });
 });
+
+test.describe("tile group vertical_align: stretch", () => {
+  // the card's box, and the room under its header: the body's box, less its 4 px padding
+  const fill = async (page: import("@playwright/test").Page, layout: string, n: number) => {
+    const tiles = ["light.living_room", "light.kitchen", "light.bedroom"].slice(0, n);
+    await mount(page, [
+      { type: G, layout, title: "T", tiles, grid_options: { columns: 12, rows: 6 } },
+      {
+        type: G,
+        layout,
+        title: "T",
+        tiles,
+        vertical_align: "stretch",
+        grid_options: { columns: 12, rows: 6 },
+      },
+    ]);
+    const out = [];
+    for (const i of [0, 1]) {
+      const c = card(page, i);
+      const body = (await c.locator("ha-card > .body").first().boundingBox())!;
+      const box = (await c.boundingBox())!;
+      const cards = c.locator("tile-card-pro ha-card");
+      const first = (await cards.first().boundingBox())!;
+      const last = (await cards.last().boundingBox())!;
+      out.push({ body, box, first, last });
+    }
+    return out;
+  };
+  for (const [layout, n] of [
+    ["list", 2],
+    ["table", 3],
+    ["row", 3],
+  ] as const)
+    test(`${layout}: the tiles share the card's height, alike`, async ({ page }) => {
+      const [top, stretch] = await fill(page, layout, n);
+      // at the top: the tiles end well above the card's bottom
+      expect(top.box.y + top.box.height - (top.last.y + top.last.height)).toBeGreaterThan(16);
+      // stretched: they reach it, and the first is as tall as the last
+      expect(
+        Math.abs(stretch.body.y + stretch.body.height - 4 - (stretch.last.y + stretch.last.height)),
+      ).toBeLessThan(2);
+      expect(Math.abs(stretch.first.height - stretch.last.height)).toBeLessThan(2);
+    });
+  test("row: wrapped lines grow alike, each tile's content centred", async ({ page }) => {
+    const scenes = ["bright", "dimmed", "dinner", "movie_night", "good_night"].map(
+      (s) => `scene.${s}`,
+    );
+    await mount(page, {
+      type: G,
+      layout: "row",
+      title: "Scenes",
+      tiles: scenes,
+      vertical_align: "stretch",
+      grid_options: { columns: 6, rows: 8 },
+    });
+    const tiles = card(page).locator("tile-card-pro ha-card");
+    const first = (await tiles.first().boundingBox())!;
+    const last = (await tiles.last().boundingBox())!;
+    // two lines at least, as tall as each other
+    expect(last.y).toBeGreaterThan(first.y + first.height - 1);
+    expect(Math.abs(first.height - last.height)).toBeLessThan(2);
+    // the content in the middle of the tile: as much room above it as below it
+    const parts = tiles.first().locator(".body > *:visible");
+    const top = (await parts.first().boundingBox())!;
+    const bottom = (await parts.last().boundingBox())!;
+    const above = top.y - first.y;
+    const below = first.y + first.height - (bottom.y + bottom.height);
+    expect(above).toBeGreaterThan(24);
+    expect(Math.abs(above - below)).toBeLessThan(4);
+  });
+});
