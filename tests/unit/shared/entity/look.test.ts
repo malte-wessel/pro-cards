@@ -169,6 +169,15 @@ describe("a rule's own attribute", () => {
     expect(ruleMatches(rule({ above: 20 }), shown, heat)).toBe(true);
     expect(ruleMatches(rule({ above: 20 }), shown, heat, false)).toBe(true);
   });
+  it("is the v3 cards' alone: the entity cards' rules read the value as ever", () => {
+    const e = ent({
+      entity: "climate.a",
+      rules: [{ attribute: "hvac_action", state: "heating", icon: "mdi:fire" }],
+    });
+    expect(resolveLook(e, txt("21.6"), heat, tpl).rule).toBeNull();
+    e.ruleWins = true;
+    expect(resolveLook(e, txt("21.6"), heat, tpl).rule).not.toBeNull();
+  });
   it("decides the look as any rule does", () => {
     const e = ent({
       entity: "climate.a",

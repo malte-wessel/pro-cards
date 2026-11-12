@@ -57,6 +57,18 @@ describe("an attribute as Home Assistant writes it", () => {
       "Heating",
     );
   });
+  it("keeps our number where Home Assistant scales it, as the rules compare ours", () => {
+    const lamp = st("on", { brightness: 128 });
+    const pct = { formatEntityAttributeValue: () => "50%" } as Partial<HomeAssistant>;
+    expect(
+      fmtValue(
+        ctx({}, pct),
+        item({ attribute: "brightness" }),
+        { raw: "128", num: 128, avail: true },
+        lamp,
+      ).text,
+    ).toBe("128");
+  });
   it("keeps our unit where Home Assistant writes the number without one", () => {
     const w = st("sunny", { wind_speed: 9.4, wind_speed_unit: "km/h" });
     const bare = { formatEntityAttributeValue: () => "9.4" } as Partial<HomeAssistant>;

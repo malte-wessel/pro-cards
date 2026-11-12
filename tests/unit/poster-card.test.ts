@@ -1098,6 +1098,27 @@ describe("poster-card drawing", () => {
     expect(norm({ entity: "climate.living_room" }).entities[0].haAttribute).toBe(false);
   });
 
+  it("says a switch's state as its entity's, whatever its fill shows", () => {
+    set("humidifier.bedroom", "on", { action: "idle" });
+    set("light.kitchen", "on");
+    const r = draw({
+      type: "custom:poster-card-pro",
+      name: "Room",
+      control: {
+        type: "buttons",
+        options: [
+          { entity: "humidifier.bedroom" },
+          { entity: "light.kitchen", rules: [{ state: "on", active: false }] },
+        ],
+      },
+    });
+    for (const b of [...q(r, ".ctl-buttons.custom").children] as HTMLElement[]) {
+      // grey (idle; a rule keeps it so), yet on: a tap turns it off
+      expect(b.classList.contains("on")).toBe(false);
+      expect(b.getAttribute("aria-pressed")).toBe("true");
+    }
+  });
+
   it("draws a button's name, value and rules, filled while its entity is active", () => {
     set("binary_sensor.window_kitchen", "on", { device_class: "window" });
     set("climate.living_room", "heat", { hvac_action: "heating", current_temperature: 21.6 });

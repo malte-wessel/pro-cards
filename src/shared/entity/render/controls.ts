@@ -750,15 +750,18 @@ const customButtonsEl = (
     // its own colour, else (a kind card's) its entity's while on (a light's amber), else the card's
     const color = own ? own.color : (cssColor(b.color) ?? (flat ? activeColorCss(st) : null));
     if (color) btn.style.setProperty("--fe-color", color);
-    // filled while on; a pending switch shows where it goes, a run flashes filled ("done")
-    const active = own ? own.active : buttonActive(b, st);
-    btn.classList.toggle("on", pending ? runs || !active : active);
+    // filled while on (a kind card's: as buttonFill says); a pending switch shows where it goes,
+    // from whether its entity is on, whatever the fill shows (a humidifier on but idle is grey and
+    // still turns off), a run flashes filled ("done")
+    const on = buttonActive(b, st);
+    const active = own ? own.active : on;
+    btn.classList.toggle("on", pending ? runs || !on : active);
     btn.classList.toggle("pending", pending && !runs);
     // (grey with a matching rule's colour: the icon in it; a rule's pulse)
-    btn.classList.toggle("icon-c", !!own?.tint && !active);
+    btn.classList.toggle("icon-c", !!own?.tint && !active && !pending);
     btn.classList.toggle("pulse", !!own?.pulse);
     if (b.entity && !runs && !OPEN_DOMAINS.has(domainOf(b.entity)))
-      btn.setAttribute("aria-pressed", String(active));
+      btn.setAttribute("aria-pressed", String(on));
     if (p.confirm && !texts.length && !p.square) btn.appendChild(ringEl());
     // its own icon (a rule's), else its entity's, else a generic one
     btn.appendChild(

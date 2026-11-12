@@ -339,9 +339,6 @@ const domainProps = (domain: string, dc: unknown, s: string, isActive: boolean):
   return props;
 };
 
-// the colour an entity takes while it is active (on, open, playing), whatever its state now: a
-// button that switches it shows it while on and while it turns on; null for a domain HA does not
-// colour
 // whether Home Assistant colours the domain by its state (a light, a lock, a binary sensor); a
 // sensor, a number or a select has no colour of its state
 export const stateColored = (domain: string) => STATE_COLORED_DOMAIN.has(domain);
@@ -382,6 +379,9 @@ export const actionModeOf = (st: HassEntity | undefined): string | null => {
   return typeof a === "string" && d.map[a] ? d.map[a][1] : null;
 };
 
+// the colour an entity takes while it is active (on, open, playing), whatever its state now: a
+// button that switches it shows it while on and while it turns on; null for a domain HA does not
+// colour
 export const activeColorCss = (st: HassEntity | undefined): string | null => {
   const domain = domainOf(st?.entity_id);
   if (!STATE_COLORED_DOMAIN.has(domain)) return null;

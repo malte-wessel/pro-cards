@@ -11,6 +11,11 @@ describe("a rule's box", () => {
       ruleLines(hass, { attribute: "hvac_action", state: "heating" }, "climate.living_room", "°C"),
     ).toEqual({ title: "Hvac action: Heating", detail: "" });
     expect(ruleLines(hass, { below: 20 }, "sensor.battery_soc", "%").title).toBe("Below 20 %");
+    // (an attribute's numbers without the value's unit)
+    expect(
+      ruleLines(hass, { attribute: "current_humidity", above: 60 }, "climate.living_room", "°C")
+        .title,
+    ).toBe("Current humidity: Above 60");
   });
   it("says whether a button's rule fills it or keeps it grey", () => {
     expect(ruleLines(hass, { state: "on", active: "true" }, "", "").detail).toBe("Filled");

@@ -168,7 +168,13 @@ export const resolveLook = (
   now = true,
   kindColor: string | null = null,
 ): Look => {
-  const rule = ent.rules.find((r) => ruleMatches(r, ruleModel, st, now)) ?? null;
+  // (a rule's own attribute is the v3 cards'; the entity cards' rules read the value as ever)
+  const rule =
+    ent.rules.find((r) =>
+      ent.ruleWins
+        ? ruleMatches(r, ruleModel, st, now)
+        : matchRule(r, ruleModel, now ? st?.state : null),
+    ) ?? null;
   // a v3 badge's and a button's rule writes its text as a value, a template too
   const label =
     ent.valueRules && rule?.label && isTemplate(rule.label)

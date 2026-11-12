@@ -90,7 +90,7 @@ export const normalizeKindButtons = (
         throw new Error(`${here}: label is name with show_name: true: write name only`);
       warnDeprecatedKey(ctx.type, "a button's label", "write name with show_name: true", ANCHOR);
     }
-    if (x.action !== undefined) {
+    if (x.action !== undefined && x.action !== null) {
       if (x.tap_action !== undefined)
         throw new Error(`${here}: action is tap_action: write tap_action only`);
       warnDeprecatedKey(ctx.type, "a button's action", "write tap_action", ANCHOR);

@@ -22,9 +22,10 @@ export const ruleLines = (
 ): { title: string; detail: string } => {
   const L = (k: string) => t(hass, `editor.card.${k}` as StringKey);
   const st = entity ? hass?.states[entity] : undefined;
-  const num = (v: unknown) => `${v}${unit ? ` ${unit}` : ""}`;
   // (a rule that reads an attribute of its own: that attribute's words)
   const attr = filled(r.attribute) ? String(r.attribute) : "";
+  // (the value's unit; an attribute's numbers are written without it)
+  const num = (v: unknown) => `${v}${unit && !attr ? ` ${unit}` : ""}`;
   const when: string[] = [];
   if (filled(r.state)) {
     const s = String(r.state);

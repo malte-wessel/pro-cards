@@ -406,7 +406,7 @@ A button fills in Home Assistant's colour for its entity while the entity is act
 | a cover, a valve                | it is open                                            |
 | a lock                          | it is unlocked                                        |
 | a binary sensor                 | it is on: a window open, motion seen, smoke detected  |
-| a person, a tracker             | they are home                                         |
+| a person, a tracker             | they are not away: home or in a zone                  |
 | a thermostat                    | it heats, cools or dries (`hvac_action`), not by mode |
 | a humidifier                    | it humidifies or dries, else while it is on           |
 | a scene, a script, a button     | never: it flashes when pressed                        |

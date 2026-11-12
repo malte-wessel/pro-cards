@@ -148,9 +148,12 @@ export const fmtValue = (
   const hass = ctx.hass;
   const ha = haAttributeText(ctx, ent, st);
   const m = ha !== null && model.num !== null ? NUM_UNIT.exec(ha) : null;
-  // (a number Home Assistant writes without a unit where ours finds one, a weather entity's
-  // `<attribute>_unit`: ours)
-  if (ha !== null && !(model.num !== null && !m && unitOf(ent, st))) {
+  // Home Assistant's words, where its number is the one the rules and the visual read: ours for a
+  // number it scales (a light's brightness as a percentage, 128 → 50 %) and for a number it writes
+  // without a unit where ours finds one (a weather entity's `<attribute>_unit`)
+  const same =
+    model.num === null || (m !== null && m[1].trim() === fmtNumber(ctx, ent, model.num, st, false));
+  if (ha !== null && same) {
     const num = m ? m[1] : ha,
       unit = m ? m[2].trim() : "";
     return {
