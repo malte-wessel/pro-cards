@@ -668,3 +668,60 @@ test("the multi trend card's lines open in views, with their rules", async ({ pa
     ],
   });
 });
+
+test("a container's tabs wider than its editor scroll by the chevrons, the wheel and the selection", async ({
+  page,
+}) => {
+  const e = await openEditor(page, {
+    type: "custom:tile-group-card-pro",
+    tiles: [
+      "light.kitchen",
+      "light.living_room",
+      "light.desk_lamp",
+      "light.bedroom",
+      "sensor.outdoor_humidity",
+      "sensor.kitchen_humidity",
+      "sensor.bathroom_humidity",
+    ],
+  });
+  await e.editor.evaluate((el) => (el.style.cssText = "display: block; width: 440px"));
+  const tabs = e.editor.locator(".tabs");
+  const [back, forward] = [
+    e.editor.locator(".icon.scroll").first(),
+    e.editor.locator(".icon.scroll").last(),
+  ];
+  const inView = (i: number) =>
+    e.editor
+      .locator(".tab")
+      .nth(i)
+      .evaluate((t) => {
+        const [r, bar] = [t.getBoundingClientRect(), t.parentElement!.getBoundingClientRect()];
+        return r.left >= bar.left - 1 && r.right <= bar.right + 1;
+      });
+  // at the start: only the way on
+  await expect(forward).toBeEnabled();
+  await expect(back).toBeDisabled();
+  expect(await inView(6)).toBe(false);
+  // the wheel scrolls the tabs sideways, to their end
+  await tabs.hover();
+  await page.mouse.wheel(0, 2000);
+  await expect(forward).toBeDisabled();
+  await expect(back).toBeEnabled();
+  // the chevron back to the start
+  // (a smooth scroll each, so clicked until the start)
+  await expect(async () => {
+    await back.click();
+    await expect(back).toBeDisabled({ timeout: 1000 });
+  }).toPass();
+  await expect(forward).toBeEnabled();
+  // a tab chosen by the keyboard comes into view
+  await e.editor.locator(".tab").first().focus();
+  await page.keyboard.press("End");
+  await page.keyboard.press("ArrowLeft");
+  await expect.poll(() => inView(6)).toBe(true);
+  // tabs that fit show no chevrons
+  await e.editor.evaluate((el) => (el.style.cssText = "display: block; width: 2000px"));
+  await expect(e.editor.locator(".icon.scroll")).toHaveCount(2);
+  await expect(back).toBeHidden();
+  await expect(forward).toBeHidden();
+});
