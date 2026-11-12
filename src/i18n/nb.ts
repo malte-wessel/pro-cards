@@ -309,7 +309,7 @@ const nb: Translation = {
   "editor.card.screen.wide": "Bred",
   "editor.card.entity_title": "Entitet {n}",
   "editor.card.consumer_title": "Forbruker {n}",
-  "editor.cards.breakpoint_title": "Fra {n} kolonner",
+  "editor.cards.breakpoint_title": "Fra {n} visningskolonner",
   "editor.card.list.add_quantity": "Legg til en linje",
   "editor.card.list.add_entity": "Legg til en entitet",
   "editor.card.list.add_consumer": "Legg til en forbruker",
@@ -860,6 +860,7 @@ const nb: Translation = {
   "editor.cards.tile": "Flis",
   "editor.cards.none_yet": "Ingen fliser ennå: + legger til en",
   "editor.cards.field.columns": "Kolonner",
+  "editor.cards.field.min_column_width": "Smaleste kolonne",
   "editor.cards.field.rows": "Rader",
   "editor.cards.field.align_items": "Juster kort",
   "editor.cards.field.gap": "Mellomrom",
@@ -893,11 +894,14 @@ const nb: Translation = {
   "editor.cards.height.auto": "Hver sin egen",
   "editor.cards.indicator.dots": "Prikker",
   "editor.cards.indicator.none": "Ingen",
-  "editor.cards.help.columns": "Et antall kolonner, eller breddene deres: 1fr 2fr",
+  "editor.cards.help.columns":
+    "Et antall kolonner eller breddene deres: 1fr 2fr. Med smaleste kolonne: flest kolonner",
+  "editor.cards.help.min_column_width":
+    "Så mange kolonner av minst denne bredden som får plass: 180, 12rem",
   "editor.cards.help.rows": "Høydene til de første radene: auto 1fr",
   "editor.cards.help.gap": "Én lengde, eller radenes og kolonnenes: 8 16",
   "editor.cards.help.breakpoints":
-    "Alternativer som endres når seksjonen spenner over så mange visningskolonner",
+    "En visningskolonne er én kolonne i seksjonsvisningen, rundt 500 px: en telefon viser én, en seksjon med column_span 2 spenner over to. Disse valgene gjelder når seksjonen spenner over så mange",
   "editor.cards.help.per_page": "En brøk lar neste kort titte frem",
   "editor.cards.help.unfold":
     "Et rutenett med så mange kolonner i stedet for stripen; 0 beholder stripen",

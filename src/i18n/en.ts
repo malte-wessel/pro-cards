@@ -308,7 +308,7 @@ const en = {
   "editor.card.screen.wide": "Wide",
   "editor.card.entity_title": "Entity {n}",
   "editor.card.consumer_title": "Consumer {n}",
-  "editor.cards.breakpoint_title": "From {n} columns",
+  "editor.cards.breakpoint_title": "From {n} view columns",
   "editor.card.list.add_quantity": "Add a line",
   "editor.card.list.add_entity": "Add an entity",
   "editor.card.list.add_consumer": "Add a consumer",
@@ -859,6 +859,7 @@ const en = {
   "editor.cards.tile": "Tile",
   "editor.cards.none_yet": "No tiles yet: + adds one",
   "editor.cards.field.columns": "Columns",
+  "editor.cards.field.min_column_width": "Narrowest column",
   "editor.cards.field.rows": "Rows",
   "editor.cards.field.align_items": "Align cards",
   "editor.cards.field.gap": "Gap",
@@ -892,11 +893,13 @@ const en = {
   "editor.cards.height.auto": "Each its own",
   "editor.cards.indicator.dots": "Dots",
   "editor.cards.indicator.none": "None",
-  "editor.cards.help.columns": "A number of columns, or their widths: 1fr 2fr",
+  "editor.cards.help.columns":
+    "A number of columns, or their widths: 1fr 2fr. With a narrowest column: the most columns",
+  "editor.cards.help.min_column_width": "As many columns of at least this width as fit: 180, 12rem",
   "editor.cards.help.rows": "The first rows' heights: auto 1fr",
   "editor.cards.help.gap": "One length, or the rows' and the columns': 8 16",
   "editor.cards.help.breakpoints":
-    "Options that change once the section spans this many view columns",
+    "A view column is one column of the sections view, about 500 px: a phone shows one, a section with column_span 2 spans two. These options apply once the section spans this many",
   "editor.cards.help.per_page": "A fraction lets the next card peek in",
   "editor.cards.help.unfold":
     "A grid of this many columns in place of the strip; 0 keeps the strip",

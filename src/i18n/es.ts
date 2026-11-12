@@ -310,7 +310,7 @@ const es: Translation = {
   "editor.card.screen.wide": "Ancha",
   "editor.card.entity_title": "Entidad {n}",
   "editor.card.consumer_title": "Consumidor {n}",
-  "editor.cards.breakpoint_title": "Desde {n} columnas",
+  "editor.cards.breakpoint_title": "Desde {n} columnas de vista",
   "editor.card.list.add_quantity": "Añadir una línea",
   "editor.card.list.add_entity": "Añadir una entidad",
   "editor.card.list.add_consumer": "Añadir un consumidor",
@@ -864,6 +864,7 @@ const es: Translation = {
   "editor.cards.tile": "Mosaico",
   "editor.cards.none_yet": "Aún no hay mosaicos: + añade uno",
   "editor.cards.field.columns": "Columnas",
+  "editor.cards.field.min_column_width": "Columna más estrecha",
   "editor.cards.field.rows": "Filas",
   "editor.cards.field.align_items": "Alinear tarjetas",
   "editor.cards.field.gap": "Espacio",
@@ -897,11 +898,14 @@ const es: Translation = {
   "editor.cards.height.auto": "Cada una la suya",
   "editor.cards.indicator.dots": "Puntos",
   "editor.cards.indicator.none": "Ninguno",
-  "editor.cards.help.columns": "Un número de columnas, o sus anchos: 1fr 2fr",
+  "editor.cards.help.columns":
+    "Un número de columnas o sus anchos: 1fr 2fr. Con una columna mínima: el máximo de columnas",
+  "editor.cards.help.min_column_width":
+    "Tantas columnas de al menos este ancho como quepan: 180, 12rem",
   "editor.cards.help.rows": "Las alturas de las primeras filas: auto 1fr",
   "editor.cards.help.gap": "Una longitud, o la de las filas y la de las columnas: 8 16",
   "editor.cards.help.breakpoints":
-    "Opciones que cambian cuando la sección abarca este número de columnas de la vista",
+    "Una columna de vista es una columna de la vista de secciones, unos 500 px: un móvil muestra una, una sección con column_span 2 ocupa dos. Estas opciones se aplican cuando la sección ocupa tantas",
   "editor.cards.help.per_page": "Una fracción deja asomar la siguiente tarjeta",
   "editor.cards.help.unfold":
     "Una cuadrícula de este número de columnas en lugar de la franja; 0 mantiene la franja",

@@ -22,6 +22,7 @@ const isObj = (v: unknown): v is Raw => !!v && typeof v === "object" && !Array.i
 export const LAYOUT_CONVS: Record<string, Conv> = {
   layout: AS_IS,
   columns: TRACKS,
+  min_column_width: LENGTHS,
   rows: ROWS,
   align_items: AS_IS,
   gap: LENGTHS,
@@ -57,6 +58,7 @@ export const layoutFields = (
 ): Record<string, HaFormSchema["selector"]> => ({
   layout: select(hass, "layout", LAYOUTS),
   columns: { text: {} },
+  min_column_width: { text: {} },
   rows: { text: {} },
   align_items: select(hass, "align", ITEM_ALIGNS),
   gap: { text: {} },
@@ -70,14 +72,17 @@ export const layoutSchema = (hass: HomeAssistant | undefined, data: HaFormData):
       { name: "layout", selector: fields.layout },
       { name: "card_style", selector: fields.card_style },
     ),
+    // (the most columns, and the narrowest one: as many as fit)
     grid(
       { name: "columns", selector: fields.columns },
-      { name: "align_items", selector: fields.align_items },
+      { name: "min_column_width", selector: fields.min_column_width },
     ),
+    // (a masonry has no rows: the gap alone in its row, so the form keeps its shape)
     grid(
       { name: "gap", selector: fields.gap },
       ...(data.layout === "masonry" ? [] : [{ name: "rows", selector: fields.rows }]),
     ),
+    grid({ name: "align_items", selector: fields.align_items }),
     // (its own section: a row a breakpoint)
     section(L(hass, "field.breakpoints"), ICONS.layout, [
       {

@@ -97,6 +97,7 @@ describe("the layout card's options in its form", () => {
       card_style: "cards",
       align_items: "stretch",
       columns: "",
+      min_column_width: "",
       rows: "",
       gap: "",
       breakpoints: [],
@@ -377,9 +378,10 @@ describe("the layout's and the swipe card's options form", () => {
       "layout",
       "card_style",
       "columns",
-      "align_items",
+      "min_column_width",
       "gap",
       "rows",
+      "align_items",
       "breakpoints",
     ]);
     expect(top(layoutSchema(hass, { layout: "masonry" }))).not.toContain("rows");
@@ -395,6 +397,7 @@ describe("the layout's and the swipe card's options form", () => {
       "at",
       "layout",
       "columns",
+      "min_column_width",
       "rows",
       "align_items",
       "gap",
@@ -402,7 +405,7 @@ describe("the layout's and the swipe card's options form", () => {
       "more",
     ]);
     expect(view.label("at")).toBe("From view columns");
-    expect(view.title(0, { at: 3 })).toBe("From 3 columns");
+    expect(view.title(0, { at: 3 })).toBe("From 3 view columns");
     // a draft until it says from where
     expect(view.isEmpty?.({ columns: 2 })).toBe(true);
   });

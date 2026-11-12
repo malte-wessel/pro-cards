@@ -4,7 +4,11 @@
 // lists only what changes once the layout's section spans that many view columns. Each child
 // card's own placement lives in its `view_layout`, which Home Assistant's card editors keep (a key
 // of their own would make them refuse the config); per-child values may be maps by view columns.
-import { optionsOf, type Breakpoint as BreakpointOf } from "../shared/cards/breakpoints.ts";
+import {
+  optionsOf,
+  resolveAt,
+  type Breakpoint as BreakpointOf,
+} from "../shared/cards/breakpoints.ts";
 import { checks, isObj } from "../shared/cards/checks.ts";
 import type { Sides } from "../shared/cards/units.ts";
 import type { CardConfigBase } from "../shared/ha.ts";
@@ -23,6 +27,10 @@ export type ItemAlign = (typeof ITEM_ALIGNS)[number];
 export interface LayoutOptions {
   layout: LayoutType;
   columns: number | string[]; // a count, or CSS tracks (fr already as minmax(0, Nfr))
+  // as many columns of at least this width as fit (a CSS length; null: `columns` as written).
+  // `columns` is then the most there may be, where a level writes it (`columns_set`)
+  min_column_width: string | null;
+  columns_set?: boolean;
   rows: string[] | null; // the first rows' tracks, the rest auto; null: all auto
   align_items: ItemAlign;
   row_gap: string | null; // from `gap`; null: the theme's gap
@@ -62,6 +70,7 @@ export interface LayoutConfig {
 export const DEFAULT_OPTIONS: LayoutOptions = {
   layout: "grid",
   columns: 1,
+  min_column_width: null,
   rows: null,
   align_items: "stretch",
   row_gap: null,
@@ -90,7 +99,21 @@ export const parseOptions = (raw: Record<string, unknown>, at: string): Override
         break;
       case "columns":
         o.columns = typeof v === "number" ? int(v, p(k), 1, 24) : trackTokens(v, p(k));
+        o.columns_set = true;
         break;
+      case "min_column_width": {
+        if (v === null) {
+          o.min_column_width = null;
+          break;
+        }
+        // (a column's least width, not a share of the layout: columns: n says that)
+        if (typeof v === "string" && v.includes("%"))
+          throw err(`'${p(k)}' must be a length such as 180, 12rem or var(--x), not a %`);
+        const len = cssLength(v, p(k));
+        if (/^0(px|rem|em|vw|vh|svh|dvh)?$/.test(len)) throw err(`'${p(k)}' must be more than 0`);
+        o.min_column_width = len;
+        break;
+      }
       case "rows":
         o.rows = v === null ? null : rowTokens(v, p(k));
         break;
@@ -171,8 +194,21 @@ export const normalizeLayoutConfig = (raw: unknown): LayoutConfig => {
     config: c,
     place: normalizeViewLayout(c.view_layout, `cards[${i}]`),
   }));
-  return {
-    ...optionsOf(raw, DEFAULT_OPTIONS, OPTION_KEYS, check, parseOptions, "{ 2: { columns: 4 } }"),
-    children,
-  };
+  const options = optionsOf(
+    raw,
+    DEFAULT_OPTIONS,
+    OPTION_KEYS,
+    check,
+    parseOptions,
+    "{ 2: { columns: 4 } }",
+  );
+  // (at every level: a minimum width counts columns, it cannot fit a list of their widths)
+  for (const at of [1, ...options.breakpoints.map((b) => b.columns)]) {
+    const o = resolveAt(options.base, options.breakpoints, at);
+    if (o.min_column_width !== null && Array.isArray(o.columns))
+      throw err(
+        `'min_column_width' takes a number of columns (the most there may be), not their widths${at > 1 ? ` (from ${at} view columns)` : ""}`,
+      );
+  }
+  return { ...options, children };
 };

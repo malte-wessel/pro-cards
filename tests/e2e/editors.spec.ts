@@ -369,7 +369,9 @@ test("the layout's editor writes its options, breakpoints and a card's place", a
   await fill(itemView(e.editor), "columns", "4");
   await expect.poll(e.last).toMatchObject({ breakpoints: { 3: { columns: 4 } } });
   await back(e.editor);
-  await expect(field(e.form, "breakpoints").locator(".row .title")).toHaveText(["From 3 columns"]);
+  await expect(field(e.form, "breakpoints").locator(".row .title")).toHaveText([
+    "From 3 view columns",
+  ]);
   // the selected card's place
   const place = e.editor.locator(".place ha-form");
   await expect(e.editor.locator(".place h3")).toHaveText("Place in the layout");

@@ -310,7 +310,7 @@ const de: Translation = {
   "editor.card.screen.wide": "Breit",
   "editor.card.entity_title": "Entität {n}",
   "editor.card.consumer_title": "Verbraucher {n}",
-  "editor.cards.breakpoint_title": "Ab {n} Spalten",
+  "editor.cards.breakpoint_title": "Ab {n} Ansichtsspalten",
   "editor.card.list.add_quantity": "Linie hinzufügen",
   "editor.card.list.add_entity": "Entität hinzufügen",
   "editor.card.list.add_consumer": "Verbraucher hinzufügen",
@@ -862,6 +862,7 @@ const de: Translation = {
   "editor.cards.tile": "Kachel",
   "editor.cards.none_yet": "Noch keine Kacheln: + fügt eine hinzu",
   "editor.cards.field.columns": "Spalten",
+  "editor.cards.field.min_column_width": "Schmalste Spalte",
   "editor.cards.field.rows": "Zeilen",
   "editor.cards.field.align_items": "Karten ausrichten",
   "editor.cards.field.gap": "Abstand",
@@ -895,11 +896,14 @@ const de: Translation = {
   "editor.cards.height.auto": "Jede ihre eigene",
   "editor.cards.indicator.dots": "Punkte",
   "editor.cards.indicator.none": "Keine",
-  "editor.cards.help.columns": "Eine Anzahl von Spalten oder ihre Breiten: 1fr 2fr",
+  "editor.cards.help.columns":
+    "Eine Anzahl von Spalten oder ihre Breiten: 1fr 2fr. Mit schmalster Spalte: die meisten Spalten",
+  "editor.cards.help.min_column_width":
+    "So viele Spalten mindestens dieser Breite, wie passen: 180, 12rem",
   "editor.cards.help.rows": "Die Höhen der ersten Zeilen: auto 1fr",
   "editor.cards.help.gap": "Ein Abstand oder der der Zeilen und der Spalten: 8 16",
   "editor.cards.help.breakpoints":
-    "Optionen, die sich ändern, sobald der Bereich so viele Spalten der Ansicht umfasst",
+    "Eine Ansichtsspalte ist eine Spalte der Abschnittsansicht, etwa 500 px: Ein Handy zeigt eine, ein Abschnitt mit column_span 2 umfasst zwei. Diese Optionen gelten, sobald der Abschnitt so viele umfasst",
   "editor.cards.help.per_page": "Ein Bruchteil lässt die nächste Karte hereinschauen",
   "editor.cards.help.unfold":
     "Ein Raster mit so vielen Spalten statt des Streifens; 0 behält den Streifen",

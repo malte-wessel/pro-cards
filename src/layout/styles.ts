@@ -23,6 +23,8 @@ export const STYLE = `
     --pl-border-width: var(--restore-card-border-width, 1px);
     --pl-shadow: var(--restore-card-box-shadow, none);
   }
+  /* min_column_width resolved to px: a box of that width, never seen */
+  .minw { position: absolute; height: 0; visibility: hidden; pointer-events: none; }
   .col { display: flex; flex-direction: column; gap: var(--pl-row-gap); min-width: 0; contain: inline-size; }
   .col > .item > hui-card { height: auto; }
 

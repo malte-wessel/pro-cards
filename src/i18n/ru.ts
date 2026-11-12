@@ -309,7 +309,7 @@ const ru: Translation = {
   "editor.card.screen.wide": "Широкий",
   "editor.card.entity_title": "Объект {n}",
   "editor.card.consumer_title": "Потребитель {n}",
-  "editor.cards.breakpoint_title": "От {n} столбцов",
+  "editor.cards.breakpoint_title": "От {n} колонок вида",
   "editor.card.list.add_quantity": "Добавить линию",
   "editor.card.list.add_entity": "Добавить объект",
   "editor.card.list.add_consumer": "Добавить потребителя",
@@ -860,6 +860,7 @@ const ru: Translation = {
   "editor.cards.tile": "Плитка",
   "editor.cards.none_yet": "Плиток пока нет: + добавляет одну",
   "editor.cards.field.columns": "Столбцы",
+  "editor.cards.field.min_column_width": "Самая узкая колонка",
   "editor.cards.field.rows": "Строки",
   "editor.cards.field.align_items": "Выравнивание карточек",
   "editor.cards.field.gap": "Отступ",
@@ -893,11 +894,14 @@ const ru: Translation = {
   "editor.cards.height.auto": "У каждой своя",
   "editor.cards.indicator.dots": "Точки",
   "editor.cards.indicator.none": "Нет",
-  "editor.cards.help.columns": "Число столбцов или их ширины: 1fr 2fr",
+  "editor.cards.help.columns":
+    "Число колонок или их ширины: 1fr 2fr. С самой узкой колонкой: наибольшее число колонок",
+  "editor.cards.help.min_column_width":
+    "Столько колонок не уже этой ширины, сколько поместится: 180, 12rem",
   "editor.cards.help.rows": "Высоты первых строк: auto 1fr",
   "editor.cards.help.gap": "Одна длина, или для строк и для столбцов: 8 16",
   "editor.cards.help.breakpoints":
-    "Параметры, которые меняются, когда раздел занимает столько столбцов вида",
+    "Колонка вида — это одна колонка вида с секциями, около 500 px: телефон показывает одну, секция с column_span 2 занимает две. Эти параметры действуют, когда секция занимает столько колонок",
   "editor.cards.help.per_page": "Дробное число показывает край следующей карточки",
   "editor.cards.help.unfold": "Сетка из стольких столбцов вместо ленты; 0 оставляет ленту",
   "editor.cards.help.order":

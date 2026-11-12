@@ -69,9 +69,104 @@ cards:
 
 A card that draws its own background without the theme's card variables keeps it.
 
+## Columns by width
+
+`min_column_width` makes as many columns of at least that width as fit, and the cards flow into them: two on a phone, more as the section gets wider. It is often all a grid needs to follow the width, with no breakpoints at all. `columns` is then the most columns there may be. Columns no card fills stay empty, so a card is one column wide in every row.
+
+The lights of the house at `min_column_width: 160`, in a frame as wide as a phone and in a wide one:
+
+::: live width=400
+
+```yaml
+type: custom:layout-card-pro
+min_column_width: 160
+cards:
+  - type: custom:tile-card-pro
+    entity: light.living_room
+  - type: custom:tile-card-pro
+    entity: light.desk_lamp
+  - type: custom:tile-card-pro
+    entity: light.kitchen
+  - type: custom:tile-card-pro
+    entity: light.dining_table
+  - type: custom:tile-card-pro
+    entity: light.office
+  - type: custom:tile-card-pro
+    entity: light.bedroom
+  - type: custom:tile-card-pro
+    entity: light.hallway
+  - type: custom:tile-card-pro
+    entity: light.garden
+```
+
+:::
+
+::: live width=full
+
+```yaml
+type: custom:layout-card-pro
+min_column_width: 160
+cards:
+  - type: custom:tile-card-pro
+    entity: light.living_room
+  - type: custom:tile-card-pro
+    entity: light.desk_lamp
+  - type: custom:tile-card-pro
+    entity: light.kitchen
+  - type: custom:tile-card-pro
+    entity: light.dining_table
+  - type: custom:tile-card-pro
+    entity: light.office
+  - type: custom:tile-card-pro
+    entity: light.bedroom
+  - type: custom:tile-card-pro
+    entity: light.hallway
+  - type: custom:tile-card-pro
+    entity: light.garden
+```
+
+:::
+
+`min_column_width` takes a length (`180`, `12rem`) and changes in a breakpoint like any option; `min_column_width:` left empty there goes back to a fixed `columns`. It counts columns, so it does not go with a list of their widths.
+
 ## Breakpoints
 
-Breakpoints count view columns, the unit Home Assistant's sections view places sections in. The top-level options apply in one view column: on a phone, or in a section with `column_span: 1`. Each entry under `breakpoints` names a number of view columns (2, 3 …) and lists only what changes once the section spans that many; wider ones inherit it. A `gap`, `padding` or `rows` left empty (`gap:`) goes back to its default.
+Breakpoints count **view columns**, the unit Home Assistant's sections view places sections in: one view column is one column of the dashboard, about 500 px wide. A section spans as many view columns as its `column_span` asks for and the screen has room for. The layout's own `columns` are something else: how its cards are arranged inside that section.
+
+<div class="vcols">
+  <div class="vcols-screen">
+    <div class="vcols-view" style="--n: 1">
+      <span class="vcols-col" style="--i: 1"></span>
+      <div class="vcols-section" style="--span: 1"><div class="vcols-layout" style="--c: 2"><i></i><i></i><i></i><i></i></div></div>
+    </div>
+    <p class="vcols-caption"><strong>A phone</strong><br />the section spans 1 view column: <code>columns: 2</code></p>
+  </div>
+  <div class="vcols-screen">
+    <div class="vcols-view" style="--n: 3">
+      <span class="vcols-col" style="--i: 1"></span><span class="vcols-col" style="--i: 2"></span><span class="vcols-col" style="--i: 3"></span>
+      <div class="vcols-section" style="--span: 1"><div class="vcols-layout" style="--c: 2"><i></i><i></i><i></i><i></i></div></div>
+    </div>
+    <p class="vcols-caption"><strong>A wide screen, <code>column_span: 1</code></strong><br />still 1 view column: <code>columns: 2</code></p>
+  </div>
+  <div class="vcols-screen">
+    <div class="vcols-view" style="--n: 3">
+      <span class="vcols-col" style="--i: 1"></span><span class="vcols-col" style="--i: 2"></span><span class="vcols-col" style="--i: 3"></span>
+      <div class="vcols-section" style="--span: 2"><div class="vcols-layout" style="--c: 4"><i></i><i></i><i></i><i></i></div></div>
+    </div>
+    <p class="vcols-caption"><strong>A wide screen, <code>column_span: 2</code></strong><br />2 view columns: breakpoint <code>2</code>, <code>columns: 4</code></p>
+  </div>
+</div>
+
+A section of `column_span: 1` stays at one view column on any screen, so it never reaches breakpoint 2; give the section a larger `column_span` for that. Four things in a dashboard are called columns:
+
+| Columns                   | What it is                                                                                                 |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| view columns              | The dashboard's columns, about 500 px each. What `breakpoints` count.                                      |
+| a section's `column_span` | How many view columns a section asks to span (Home Assistant's).                                           |
+| `grid_options.columns`    | How wide a card is in its section's grid: 12 columns per view column the section spans (Home Assistant's). |
+| the layout's `columns`    | How many columns the layout arranges its own cards in.                                                     |
+
+The top-level options apply in one view column: on a phone, or in a section with `column_span: 1`. Each entry under `breakpoints` names a number of view columns (2, 3 …) and lists only what changes once the section spans that many; wider ones inherit it. A `gap`, `padding` or `rows` left empty (`gap:`) goes back to its default.
 
 ```yaml
 type: custom:layout-card-pro
@@ -252,17 +347,18 @@ Home Assistant's card editor shows the layout's options and its breakpoints (a r
 
 Every option but `breakpoints` and `cards` may change in a breakpoint.
 
-| Option        | Default   | Description                                                                                                                    |
-| ------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `layout`      | `grid`    | `grid` or `masonry` (columns filled by height).                                                                                |
-| `columns`     | `1`       | A count (1 to 24), or a list of widths: `fr`, a length or `minmax()` (`[2fr, 1fr]`, `[320px, 1fr]`).                           |
-| `rows`        | –         | Grid only: the first rows' heights (`[auto, 1fr]`): `auto`, `fr`, a length or `minmax()`; the rest are as tall as their cards. |
-| `align_items` | `stretch` | `stretch`, `start`, `center` or `end`: how the cards sit in their row.                                                         |
-| `gap`         | theme     | The space between cards: one length or `[row, column]`. `0` with `card_style: seamless`.                                       |
-| `padding`     | `0`       | Around the cards, inside the layout: 1, 2 or 4 values, or `{ top, right, bottom, left }`.                                      |
-| `card_style`  | `cards`   | `cards`, or `seamless`: one surface with dividers.                                                                             |
-| `breakpoints` | –         | `{ 2: { …options }, 3: { … } }`: what changes once the section spans that many view columns (2 to 12).                         |
-| `cards`       | `[]`      | The cards, each with an optional `view_layout`.                                                                                |
+| Option             | Default   | Description                                                                                                                                     |
+| ------------------ | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `layout`           | `grid`    | `grid` or `masonry` (columns filled by height).                                                                                                 |
+| `columns`          | `1`       | A count (1 to 24), or a list of widths: `fr`, a length or `minmax()` (`[2fr, 1fr]`, `[320px, 1fr]`). With `min_column_width`: the most columns. |
+| `min_column_width` | –         | As many columns of at least this length as fit (`180`, `12rem`); empty columns stay. Not with a list of widths.                                 |
+| `rows`             | –         | Grid only: the first rows' heights (`[auto, 1fr]`): `auto`, `fr`, a length or `minmax()`; the rest are as tall as their cards.                  |
+| `align_items`      | `stretch` | `stretch`, `start`, `center` or `end`: how the cards sit in their row.                                                                          |
+| `gap`              | theme     | The space between cards: one length or `[row, column]`. `0` with `card_style: seamless`.                                                        |
+| `padding`          | `0`       | Around the cards, inside the layout: 1, 2 or 4 values, or `{ top, right, bottom, left }`.                                                       |
+| `card_style`       | `cards`   | `cards`, or `seamless`: one surface with dividers.                                                                                              |
+| `breakpoints`      | –         | `{ 2: { …options }, 3: { … } }`: what changes once the section spans that many [view columns](#breakpoints) (2 to 12).                          |
+| `cards`            | `[]`      | The cards, each with an optional `view_layout`.                                                                                                 |
 
 Lengths are numbers (px) or strings with `px`, `rem`, `%` or a theme variable such as `var(--ha-space-4)`.
 

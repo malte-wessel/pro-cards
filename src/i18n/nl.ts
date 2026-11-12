@@ -310,7 +310,7 @@ const nl: Translation = {
   "editor.card.screen.wide": "Breed",
   "editor.card.entity_title": "Entiteit {n}",
   "editor.card.consumer_title": "Verbruiker {n}",
-  "editor.cards.breakpoint_title": "Vanaf {n} kolommen",
+  "editor.cards.breakpoint_title": "Vanaf {n} weergavekolommen",
   "editor.card.list.add_quantity": "Lijn toevoegen",
   "editor.card.list.add_entity": "Entiteit toevoegen",
   "editor.card.list.add_consumer": "Verbruiker toevoegen",
@@ -863,6 +863,7 @@ const nl: Translation = {
   "editor.cards.tile": "Tegel",
   "editor.cards.none_yet": "Nog geen tegels: + voegt er een toe",
   "editor.cards.field.columns": "Kolommen",
+  "editor.cards.field.min_column_width": "Smalste kolom",
   "editor.cards.field.rows": "Rijen",
   "editor.cards.field.align_items": "Kaarten uitlijnen",
   "editor.cards.field.gap": "Tussenruimte",
@@ -896,11 +897,14 @@ const nl: Translation = {
   "editor.cards.height.auto": "Elk zijn eigen",
   "editor.cards.indicator.dots": "Stippen",
   "editor.cards.indicator.none": "Geen",
-  "editor.cards.help.columns": "Een aantal kolommen, of hun breedtes: 1fr 2fr",
+  "editor.cards.help.columns":
+    "Een aantal kolommen of hun breedtes: 1fr 2fr. Met een smalste kolom: het meeste aantal kolommen",
+  "editor.cards.help.min_column_width":
+    "Zoveel kolommen van minstens deze breedte als er passen: 180, 12rem",
   "editor.cards.help.rows": "De hoogtes van de eerste rijen: auto 1fr",
   "editor.cards.help.gap": "Eén lengte, of die van de rijen en de kolommen: 8 16",
   "editor.cards.help.breakpoints":
-    "Opties die veranderen zodra de sectie zoveel kolommen van de weergave beslaat",
+    "Een weergavekolom is één kolom van de sectieweergave, ongeveer 500 px: een telefoon toont er één, een sectie met column_span 2 beslaat er twee. Deze opties gelden zodra de sectie er zoveel beslaat",
   "editor.cards.help.per_page": "Met een breuk piept de volgende kaart er net in",
   "editor.cards.help.unfold":
     "Een raster met zoveel kolommen in plaats van de strook; 0 houdt de strook",

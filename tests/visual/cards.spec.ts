@@ -98,6 +98,22 @@ const EF_CONS = [
   { entity: "sensor.office_energy", name: "Office", icon: "mdi:monitor" },
 ];
 
+const MIN_WIDTH = {
+  type: "custom:layout-card-pro",
+  min_column_width: 180,
+  cards: [
+    {
+      type: "custom:tile-card-pro",
+      entity: "sensor.outdoor_temperature",
+      visual: "sparkline",
+      view_layout: { span: "full" },
+    },
+    ...["living_room", "desk_lamp", "kitchen", "dining_table", "office"].map((l) => ({
+      type: "custom:tile-card-pro",
+      entity: `light.${l}`,
+    })),
+  ],
+};
 const CASES = {
   "ec-visuals": [
     {
@@ -1761,6 +1777,10 @@ const CASES = {
       { type: "custom:entity-card-pro", entity: "light.office" },
     ],
   },
+  // the layout card's columns by a minimum width: as many tiles of 180 px as fit, a full-width
+  // card above them; the same config at the default width and in a wide frame
+  "lc-min-width": MIN_WIDTH,
+  "lc-min-width-wide": MIN_WIDTH,
   // the swipe card: a card and the start of the next with the dots below (the first one the
   // current page's pill), small tiles two and a half to a page, and unfolded into a grid
   "sw-peek": {
@@ -2266,6 +2286,7 @@ const WIDTHS: Record<string, number> = {
   "ef-month-list": 640,
   // two view columns: the swipe card unfolds
   "sw-unfold": 880,
+  "lc-min-width-wide": 900,
 };
 
 shoot(ALL, { skins: SKINS, widths: WIDTHS });

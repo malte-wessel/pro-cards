@@ -3,6 +3,7 @@
 import { checks } from "../shared/cards/checks.ts";
 import { lengths } from "../shared/cards/units.ts";
 import { CARD_TYPE } from "./type.ts";
+import { HYSTERESIS_PX } from "../shared/cards/view-columns.ts";
 
 export const { cssLength, boxSides } = lengths(CARD_TYPE);
 const { err } = checks(CARD_TYPE);
@@ -65,3 +66,23 @@ export const rowTokens = (v: unknown, at: string): string[] => {
 export const trackList = (cols: number | string[]): string =>
   Array.isArray(cols) ? cols.join(" ") : `repeat(${cols}, minmax(0, 1fr))`;
 export const trackCountOf = (cols: number | string[]) => (Array.isArray(cols) ? cols.length : cols);
+
+// How many columns of at least `min` px fit in `width` px with `gap` px between them: at least
+// one, at most `most`. The count shown now (`prev`) stays while the width is within HYSTERESIS_PX
+// below what it needs: more columns make the cards narrower and the layout taller, which can bring
+// up the page's scrollbar; that narrows the layout a little, and fewer columns would then make it
+// shorter again, take the scrollbar away, and so on.
+export const fitColumns = (
+  width: number,
+  gap: number,
+  min: number,
+  most: number,
+  prev?: number,
+): number => {
+  const cap = Math.max(1, Math.floor(most));
+  const fits = Math.floor((width + gap) / (Math.max(1, min) + gap));
+  const n = Math.min(cap, Math.max(1, fits));
+  if (prev && prev > n && prev <= cap && width >= prev * min + (prev - 1) * gap - HYSTERESIS_PX)
+    return prev;
+  return n;
+};

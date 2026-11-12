@@ -859,7 +859,6 @@ describe("card config schemas", () => {
     // the options the card no longer has
     for (const gone of [
       "fold",
-      "min_column_width",
       "max_columns",
       "wrap",
       "margin",
@@ -876,6 +875,21 @@ describe("card config schemas", () => {
     ])
       expect(validate({ type: LC, [gone]: 1 }), gone).toMatch(/unevaluated/);
     expect(validate({ type: LC, layout: "stack" })).not.toBeNull();
+    // as many columns of at least a width as fit, the most where columns says; off in a breakpoint
+    expect(validate({ type: LC, min_column_width: 180, columns: 4 })).toBeNull();
+    expect(
+      validate({
+        type: LC,
+        min_column_width: "12rem",
+        breakpoints: { 3: { min_column_width: null } },
+      }),
+    ).toBeNull();
+    expect(validate({ type: LC, min_column_width: "wide" })).not.toBeNull();
+    // a least width, not a share; more than nothing; a count, not a list of widths
+    for (const bad of ["30%", 0, "0px", "calc(50% - 8px)"])
+      expect(validate({ type: LC, min_column_width: bad }), String(bad)).not.toBeNull();
+    expect(validate({ type: LC, min_column_width: 180, columns: ["1fr", "2fr"] })).not.toBeNull();
+    expect(validate({ type: LC, min_column_width: "var(--card-width)", columns: 3 })).toBeNull();
     for (const gone of [
       "priority",
       "sticky",

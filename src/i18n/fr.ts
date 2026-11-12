@@ -310,7 +310,7 @@ const fr: Translation = {
   "editor.card.screen.wide": "Large",
   "editor.card.entity_title": "Entité {n}",
   "editor.card.consumer_title": "Consommateur {n}",
-  "editor.cards.breakpoint_title": "À partir de {n} colonnes",
+  "editor.cards.breakpoint_title": "À partir de {n} colonnes de vue",
   "editor.card.list.add_quantity": "Ajouter une ligne",
   "editor.card.list.add_entity": "Ajouter une entité",
   "editor.card.list.add_consumer": "Ajouter un consommateur",
@@ -862,6 +862,7 @@ const fr: Translation = {
   "editor.cards.tile": "Tuile",
   "editor.cards.none_yet": "Pas encore de tuiles : + en ajoute une",
   "editor.cards.field.columns": "Colonnes",
+  "editor.cards.field.min_column_width": "Colonne la plus étroite",
   "editor.cards.field.rows": "Lignes",
   "editor.cards.field.align_items": "Aligner les cartes",
   "editor.cards.field.gap": "Espacement",
@@ -895,11 +896,14 @@ const fr: Translation = {
   "editor.cards.height.auto": "Chacune la sienne",
   "editor.cards.indicator.dots": "Points",
   "editor.cards.indicator.none": "Aucun",
-  "editor.cards.help.columns": "Un nombre de colonnes, ou leurs largeurs : 1fr 2fr",
+  "editor.cards.help.columns":
+    "Un nombre de colonnes ou leurs largeurs : 1fr 2fr. Avec une colonne minimale : le maximum de colonnes",
+  "editor.cards.help.min_column_width":
+    "Autant de colonnes d'au moins cette largeur qu'il en tient : 180, 12rem",
   "editor.cards.help.rows": "Les hauteurs des premières lignes : auto 1fr",
   "editor.cards.help.gap": "Une longueur, ou celle des lignes et celle des colonnes : 8 16",
   "editor.cards.help.breakpoints":
-    "Options qui changent dès que la section couvre autant de colonnes de la vue",
+    "Une colonne de vue est une colonne de la vue en sections, environ 500 px : un téléphone en montre une, une section avec column_span 2 en couvre deux. Ces options s'appliquent dès que la section en couvre autant",
   "editor.cards.help.per_page": "Une fraction laisse apparaître la carte suivante",
   "editor.cards.help.unfold":
     "Une grille de ce nombre de colonnes au lieu de la bande ; 0 garde la bande",

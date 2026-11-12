@@ -310,7 +310,7 @@ const pl: Translation = {
   "editor.card.screen.wide": "Szeroki",
   "editor.card.entity_title": "Encja {n}",
   "editor.card.consumer_title": "Odbiornik {n}",
-  "editor.cards.breakpoint_title": "Od {n} kolumn",
+  "editor.cards.breakpoint_title": "Od {n} kolumn widoku",
   "editor.card.list.add_quantity": "Dodaj linię",
   "editor.card.list.add_entity": "Dodaj encję",
   "editor.card.list.add_consumer": "Dodaj odbiornik",
@@ -862,6 +862,7 @@ const pl: Translation = {
   "editor.cards.tile": "Kafelek",
   "editor.cards.none_yet": "Brak kafelków: + dodaje jeden",
   "editor.cards.field.columns": "Kolumny",
+  "editor.cards.field.min_column_width": "Najwęższa kolumna",
   "editor.cards.field.rows": "Wiersze",
   "editor.cards.field.align_items": "Wyrównanie kart",
   "editor.cards.field.gap": "Odstęp",
@@ -895,11 +896,14 @@ const pl: Translation = {
   "editor.cards.height.auto": "Każda własna",
   "editor.cards.indicator.dots": "Kropki",
   "editor.cards.indicator.none": "Brak",
-  "editor.cards.help.columns": "Liczba kolumn lub ich szerokości: 1fr 2fr",
+  "editor.cards.help.columns":
+    "Liczba kolumn lub ich szerokości: 1fr 2fr. Z najwęższą kolumną: najwięcej kolumn",
+  "editor.cards.help.min_column_width":
+    "Tyle kolumn o co najmniej tej szerokości, ile się zmieści: 180, 12rem",
   "editor.cards.help.rows": "Wysokości pierwszych wierszy: auto 1fr",
   "editor.cards.help.gap": "Jedna długość lub osobno dla wierszy i kolumn: 8 16",
   "editor.cards.help.breakpoints":
-    "Opcje, które zmieniają się, gdy sekcja obejmuje tyle kolumn widoku",
+    "Kolumna widoku to jedna kolumna widoku sekcji, około 500 px: telefon pokazuje jedną, sekcja z column_span 2 zajmuje dwie. Te opcje obowiązują, gdy sekcja zajmuje tyle kolumn",
   "editor.cards.help.per_page": "Ułamek odsłania skrawek następnej karty",
   "editor.cards.help.unfold": "Siatka o tylu kolumnach zamiast paska; 0 zostawia pasek",
   "editor.cards.help.order": "Przesuwa kartę bez przesuwania jej na liście; ujemne idą najpierw",

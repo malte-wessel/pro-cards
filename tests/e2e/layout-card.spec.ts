@@ -55,6 +55,111 @@ test.describe("layout-card-pro", () => {
     expect(Math.abs(y.w - 2 * x.w)).toBeLessThanOrEqual(1);
   });
 
+  test("fits as many columns of a minimum width as there is room for, at most columns", async ({
+    page,
+  }) => {
+    const cards = [ec(T), ec(H), ec(K), ec(P), ec(T), ec(H)];
+    // 180 px columns, 8 px apart: two in 400 px, five in 1000 px, four when columns says so
+    await mount(page, { type: LC, min_column_width: 180, gap: 8, cards }, { width: 400 });
+    const perRow = async () => {
+      const b = await items(page);
+      return b.filter((x) => x.y === b[0].y).length;
+    };
+    expect(await perRow()).toBe(2);
+    expect((await items(page))[0].w).toBeGreaterThanOrEqual(180);
+    await resize(page, 1000);
+    expect(await perRow()).toBe(5);
+    await mount(
+      page,
+      { type: LC, min_column_width: 180, columns: 4, gap: 8, cards },
+      { width: 1000 },
+    );
+    expect(await perRow()).toBe(4);
+    // fewer cards than columns: they keep one column's width, the rest of the row stays empty
+    await mount(
+      page,
+      { type: LC, min_column_width: 180, gap: 8, cards: [ec(T), ec(H)] },
+      {
+        width: 1000,
+      },
+    );
+    const [a] = await items(page);
+    expect(a.w).toBeLessThan(220);
+  });
+
+  test("spans and masonry take the fitted columns; a breakpoint switches it off", async ({
+    page,
+  }) => {
+    await mount(
+      page,
+      {
+        type: LC,
+        min_column_width: 180,
+        gap: 8,
+        cards: [ec(T, { span: "full" }), ec(H), ec(K), ec(P)],
+      },
+      { width: 1000 },
+    );
+    const [full, first] = await items(page);
+    expect(full.w).toBeGreaterThan(900);
+    expect(first.y).toBeGreaterThan(full.y);
+    await mount(
+      page,
+      { type: LC, layout: "masonry", min_column_width: 300, gap: 8, cards: [ec(T), ec(H), ec(K)] },
+      { width: 1000 },
+    );
+    const cols = await page.evaluate(
+      () => window.pc.card(0).shadowRoot!.querySelectorAll(".body > .col").length,
+    );
+    expect(cols).toBe(3);
+    // from two view columns (here: the frame's width) back to a count
+    await mount(
+      page,
+      {
+        type: LC,
+        min_column_width: 180,
+        gap: 8,
+        breakpoints: { 2: { min_column_width: null, columns: 2 } },
+        cards: [ec(T), ec(H), ec(K)],
+      },
+      { width: 1000 },
+    );
+    const b = await items(page);
+    expect(b.filter((x) => x.y === b[0].y)).toHaveLength(2);
+  });
+
+  test("deals a masonry by its minimum width once: no card moved on mount or a new config", async ({
+    page,
+  }) => {
+    const cards = [ec(T), ec(H), ec(K), ec(P), ec(T), ec(H)];
+    const cfg = { type: LC, layout: "masonry", min_column_width: 300, gap: 8, cards };
+    // every card the layout moves (a card that leaves one column for another is removed there)
+    await page.addInitScript(() => {
+      (window as unknown as { moved: number }).moved = 0;
+      new MutationObserver((list) => {
+        for (const m of list)
+          for (const n of m.removedNodes)
+            if ((n as HTMLElement).classList?.contains("item"))
+              (window as unknown as { moved: number }).moved++;
+      }).observe(document, { childList: true, subtree: true });
+    });
+    const moved = () => page.evaluate(() => (window as unknown as { moved: number }).moved);
+    await mount(page, cfg, { width: 1000 });
+    expect(
+      await page.evaluate(
+        () => window.pc.card(0).shadowRoot!.querySelectorAll(".body > .col").length,
+      ),
+    ).toBe(3);
+    expect(await moved()).toBe(0);
+    // a new config of the same card (the editor's preview): the cards stay where they are
+    await page.evaluate(
+      (c) => (window.pc.card(0) as unknown as { setConfig(c: unknown): void }).setConfig(c),
+      { ...cfg, gap: 12 },
+    );
+    await page.waitForTimeout(150);
+    expect(await moved()).toBe(0);
+  });
+
   test("shrinks a span wider than the grid and moves a start column so the card fits", async ({
     page,
   }) => {

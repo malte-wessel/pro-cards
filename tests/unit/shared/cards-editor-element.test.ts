@@ -549,7 +549,7 @@ describe("the container editors' items in views of their own", () => {
     const e = await editor(LAYOUT, { cards: [tile], breakpoints: { 3: { columns: 2 } } });
     openItem(e.root, "breakpoints", 0);
     await tick();
-    expect(e.root.querySelector(".item-view .title")?.textContent).toBe("From 3 columns");
+    expect(e.root.querySelector(".item-view .title")?.textContent).toBe("From 3 view columns");
     edit(e.root, { gap: "8px" });
     expect(e.last()).toMatchObject({ breakpoints: { 3: { columns: 2, gap: "8px" } } });
   });

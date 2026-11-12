@@ -360,3 +360,64 @@ html {
   color: var(--vp-c-brand-1);
   border-color: var(--vp-c-brand-1);
 }
+
+/* the layout card's breakpoints: three dashboards, the view columns dashed, the section spanning
+   some of them, the layout's own columns inside it */
+.vcols {
+  display: grid;
+  grid-template-columns: 0.6fr 1fr 1fr;
+  gap: 16px;
+  margin: 20px 0;
+}
+@media (max-width: 640px) {
+  .vcols {
+    grid-template-columns: 1fr;
+  }
+}
+.vcols-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.vcols-view {
+  display: grid;
+  grid-template-columns: repeat(var(--n), 1fr);
+  gap: 6px;
+  height: 84px;
+  padding: 8px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  background: var(--vp-c-bg-soft);
+}
+.vcols-col {
+  grid-row: 1;
+  grid-column: var(--i);
+  border: 1px dashed var(--vp-c-text-3);
+  border-radius: 4px;
+}
+.vcols-section {
+  grid-row: 1;
+  grid-column: 1 / span var(--span);
+  z-index: 1;
+  padding: 6px;
+  border: 2px solid var(--vp-c-brand-1);
+  border-radius: 4px;
+  background: var(--vp-c-bg);
+}
+.vcols-layout {
+  display: grid;
+  grid-template-columns: repeat(var(--c), 1fr);
+  gap: 4px;
+}
+.vcols-layout i {
+  height: 14px;
+  border-radius: 3px;
+  background: var(--vp-c-brand-soft);
+}
+.vp-doc .vcols-caption {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--vp-c-text-2);
+}

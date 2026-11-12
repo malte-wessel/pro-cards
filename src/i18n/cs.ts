@@ -310,7 +310,7 @@ const cs: Translation = {
   "editor.card.screen.wide": "Široká",
   "editor.card.entity_title": "Entita {n}",
   "editor.card.consumer_title": "Spotřebič {n}",
-  "editor.cards.breakpoint_title": "Od {n} sloupců",
+  "editor.cards.breakpoint_title": "Od {n} sloupců zobrazení",
   "editor.card.list.add_quantity": "Přidat čáru",
   "editor.card.list.add_entity": "Přidat entitu",
   "editor.card.list.add_consumer": "Přidat spotřebič",
@@ -860,6 +860,7 @@ const cs: Translation = {
   "editor.cards.tile": "Dlaždice",
   "editor.cards.none_yet": "Zatím žádné dlaždice: + přidá jednu",
   "editor.cards.field.columns": "Sloupce",
+  "editor.cards.field.min_column_width": "Nejužší sloupec",
   "editor.cards.field.rows": "Řádky",
   "editor.cards.field.align_items": "Zarovnání karet",
   "editor.cards.field.gap": "Mezera",
@@ -893,11 +894,14 @@ const cs: Translation = {
   "editor.cards.height.auto": "Každá vlastní",
   "editor.cards.indicator.dots": "Tečky",
   "editor.cards.indicator.none": "Žádný",
-  "editor.cards.help.columns": "Počet sloupců nebo jejich šířky: 1fr 2fr",
+  "editor.cards.help.columns":
+    "Počet sloupců nebo jejich šířky: 1fr 2fr. S nejužším sloupcem: nejvíce sloupců",
+  "editor.cards.help.min_column_width":
+    "Tolik sloupců alespoň této šířky, kolik se vejde: 180, 12rem",
   "editor.cards.help.rows": "Výšky prvních řádků: auto 1fr",
   "editor.cards.help.gap": "Jedna délka, nebo pro řádky a sloupce: 8 16",
   "editor.cards.help.breakpoints":
-    "Možnosti, které se změní, jakmile sekce zabírá tolik sloupců zobrazení",
+    "Sloupec zobrazení je jeden sloupec zobrazení sekcí, asi 500 px: telefon ukazuje jeden, sekce s column_span 2 zabírá dva. Tyto volby platí, jakmile sekce zabírá tolik sloupců",
   "editor.cards.help.per_page": "Zlomek nechá nahlédnout další kartu",
   "editor.cards.help.unfold": "Mřížka s tolika sloupci místo pásu; 0 ponechá pás",
   "editor.cards.help.order": "Posune kartu, aniž by se posunula v seznamu; záporné jde první",

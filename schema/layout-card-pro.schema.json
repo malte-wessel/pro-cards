@@ -15,7 +15,7 @@
     },
     "breakpoints": {
       "type": "object",
-      "description": "The options that change once the layout's section spans this many view columns (2 to 12); the top-level options apply in one. Outside a section the view columns are counted from the card's width, by the sections view's 500 px columns",
+      "description": "The options that change once the section spans this many view columns (2 to 12); the top-level options apply in one. A view column is one column of Home Assistant's sections view, about 500 px: a phone shows one, a section with column_span 2 spans two, and a section of column_span 1 stays at one on any screen. Not the layout's own columns. Outside a section the view columns are counted from the card's width, by the sections view's 500 px columns",
       "propertyNames": {
         "pattern": "^([2-9]|1[0-2])$"
       },
@@ -130,7 +130,7 @@
           "description": "grid: columns and rows, cards can span; masonry: columns filled by card size"
         },
         "columns": {
-          "description": "How many equal columns, or the columns' widths like grid-template-columns",
+          "description": "How many equal columns, or the columns' widths like grid-template-columns. With min_column_width: the most columns there may be",
           "oneOf": [
             {
               "type": "integer",
@@ -146,6 +146,25 @@
             }
           ],
           "default": 1
+        },
+        "min_column_width": {
+          "description": "As many columns of at least this width as fit (CSS's repeat(auto-fill, minmax(…, 1fr))); columns, where written, is then the most there may be. Columns no card fills stay empty. A length such as 180, 12rem or var(--x): not a %, more than 0. null: off (in a breakpoint). Takes a number of columns, not a list of widths",
+          "oneOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "string",
+              "pattern": "^\\s*(\\d*\\.?\\d+(px|rem|em|vw|vh|svh|dvh)?|(var|calc|min|max|clamp)\\([^%]+\\))\\s*$",
+              "not": {
+                "pattern": "^\\s*0*\\.?0*(px|rem|em|vw|vh|svh|dvh)?\\s*$"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "rows": {
           "description": "layout: grid only. The first rows' heights like grid-template-rows, the rest as tall as their cards: auto (as tall as its cards), fr (a share of the height the layout is given beyond its cards; several fr rows keep their proportions, as in CSS), a length or minmax(); [auto, 1fr] keeps a heading row at its height and gives the rest to the row below. null: all as tall as their cards",
@@ -201,6 +220,19 @@
           "enum": ["cards", "seamless"],
           "default": "cards",
           "description": "seamless: the cards share one surface with dividers"
+        }
+      },
+      "not": {
+        "required": ["min_column_width", "columns"],
+        "properties": {
+          "min_column_width": {
+            "not": {
+              "type": "null"
+            }
+          },
+          "columns": {
+            "type": "array"
+          }
         }
       }
     },

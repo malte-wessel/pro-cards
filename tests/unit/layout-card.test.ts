@@ -13,7 +13,14 @@ import {
 import { normalizeLayoutConfig, type LayoutConfig } from "../../src/layout/config.ts";
 import { distribute, tallest } from "../../src/layout/masonry.ts";
 import { cardSize, planLayout, type KidState } from "../../src/layout/place.ts";
-import { boxSides, cssLength, rowTokens, trackList, trackTokens } from "../../src/layout/units.ts";
+import {
+  boxSides,
+  cssLength,
+  fitColumns,
+  rowTokens,
+  trackList,
+  trackTokens,
+} from "../../src/layout/units.ts";
 import type { HuiCardElement } from "../../src/shared/ha.ts";
 
 defineHuiElements();
@@ -73,7 +80,7 @@ describe("layout-card config", () => {
   it("has its base options in one view column and breakpoints by view columns", () => {
     const c = cfg({ columns: 2, breakpoints: { 3: { columns: 6 }, 2: { columns: 4 } }, cards: [] });
     expect(c.base).toMatchObject({ layout: "grid", columns: 2, card_style: "cards" });
-    expect(c.breakpoints).toEqual([
+    expect(c.breakpoints).toMatchObject([
       { columns: 2, overrides: { columns: 4 } },
       { columns: 3, overrides: { columns: 6 } },
     ]);
@@ -373,5 +380,50 @@ describe("layout-card-pro element", () => {
     el.preview = true;
     expect(el.hasAttribute("hidden")).toBe(false);
     el.remove();
+  });
+});
+
+describe("layout-card columns by a minimum width", () => {
+  it("fits as many columns of at least the width as there is room for, the most where written", () => {
+    // 400 px, 8 px gaps: 180 + 8 + 180 = 368 fits two, three need 556
+    expect(fitColumns(400, 8, 180, 24)).toBe(2);
+    expect(fitColumns(1000, 8, 180, 24)).toBe(5);
+    expect(fitColumns(1000, 8, 180, 4)).toBe(4);
+    // never fewer than one, however narrow
+    expect(fitColumns(120, 8, 180, 24)).toBe(1);
+  });
+  it("keeps the count it had while the width is a scrollbar narrower", () => {
+    // three columns need 556 px: at 540 it keeps three, at 520 it drops to two
+    expect(fitColumns(540, 8, 180, 24, 3)).toBe(3);
+    expect(fitColumns(520, 8, 180, 24, 3)).toBe(2);
+    // a cap below what it had wins
+    expect(fitColumns(1000, 8, 180, 2, 5)).toBe(2);
+  });
+  it("takes a length, off again with null in a breakpoint, never with a list of widths", () => {
+    const cfg = normalizeLayoutConfig({
+      min_column_width: "12rem",
+      columns: 4,
+      breakpoints: { 3: { min_column_width: null, columns: 6 } },
+    });
+    expect(resolveOptions(cfg, 1)).toMatchObject({
+      min_column_width: "12rem",
+      columns: 4,
+      columns_set: true,
+    });
+    expect(resolveOptions(cfg, 3)).toMatchObject({ min_column_width: null, columns: 6 });
+    expect(resolveOptions(normalizeLayoutConfig({ min_column_width: 180 }), 1)).toMatchObject({
+      min_column_width: "180px",
+    });
+    expect(() => normalizeLayoutConfig({ min_column_width: "30%" })).toThrow(/not a %/);
+    expect(() => normalizeLayoutConfig({ min_column_width: 0 })).toThrow(/more than 0/);
+    expect(() => normalizeLayoutConfig({ min_column_width: 180, columns: ["1fr", "2fr"] })).toThrow(
+      /'min_column_width' takes a number of columns/,
+    );
+    expect(() =>
+      normalizeLayoutConfig({
+        columns: ["1fr", "2fr"],
+        breakpoints: { 2: { min_column_width: 180 } },
+      }),
+    ).toThrow(/from 2 view columns/);
   });
 });

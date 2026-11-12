@@ -310,7 +310,7 @@ const it: Translation = {
   "editor.card.screen.wide": "Ampio",
   "editor.card.entity_title": "Entità {n}",
   "editor.card.consumer_title": "Utenza {n}",
-  "editor.cards.breakpoint_title": "Da {n} colonne",
+  "editor.cards.breakpoint_title": "Da {n} colonne di vista",
   "editor.card.list.add_quantity": "Aggiungi una linea",
   "editor.card.list.add_entity": "Aggiungi un'entità",
   "editor.card.list.add_consumer": "Aggiungi un'utenza",
@@ -862,6 +862,7 @@ const it: Translation = {
   "editor.cards.tile": "Riquadro",
   "editor.cards.none_yet": "Ancora nessun riquadro: + ne aggiunge uno",
   "editor.cards.field.columns": "Colonne",
+  "editor.cards.field.min_column_width": "Colonna più stretta",
   "editor.cards.field.rows": "Righe",
   "editor.cards.field.align_items": "Allinea le schede",
   "editor.cards.field.gap": "Spaziatura",
@@ -895,11 +896,14 @@ const it: Translation = {
   "editor.cards.height.auto": "Ognuna la sua",
   "editor.cards.indicator.dots": "Punti",
   "editor.cards.indicator.none": "Nessuno",
-  "editor.cards.help.columns": "Un numero di colonne, o le loro larghezze: 1fr 2fr",
+  "editor.cards.help.columns":
+    "Un numero di colonne o le loro larghezze: 1fr 2fr. Con una colonna minima: il massimo di colonne",
+  "editor.cards.help.min_column_width":
+    "Tante colonne di almeno questa larghezza quante ne stanno: 180, 12rem",
   "editor.cards.help.rows": "Le altezze delle prime righe: auto 1fr",
   "editor.cards.help.gap": "Una lunghezza, o quella delle righe e quella delle colonne: 8 16",
   "editor.cards.help.breakpoints":
-    "Opzioni che cambiano quando la sezione occupa questo numero di colonne della vista",
+    "Una colonna di vista è una colonna della vista a sezioni, circa 500 px: un telefono ne mostra una, una sezione con column_span 2 ne occupa due. Queste opzioni valgono quando la sezione ne occupa tante",
   "editor.cards.help.per_page": "Una frazione lascia intravedere la scheda successiva",
   "editor.cards.help.unfold":
     "Una griglia di questo numero di colonne al posto della striscia; 0 mantiene la striscia",

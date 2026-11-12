@@ -309,7 +309,7 @@ const sv: Translation = {
   "editor.card.screen.wide": "Bred",
   "editor.card.entity_title": "Entitet {n}",
   "editor.card.consumer_title": "Förbrukare {n}",
-  "editor.cards.breakpoint_title": "Från {n} kolumner",
+  "editor.cards.breakpoint_title": "Från {n} vykolumner",
   "editor.card.list.add_quantity": "Lägg till en linje",
   "editor.card.list.add_entity": "Lägg till en entitet",
   "editor.card.list.add_consumer": "Lägg till en förbrukare",
@@ -860,6 +860,7 @@ const sv: Translation = {
   "editor.cards.tile": "Ruta",
   "editor.cards.none_yet": "Inga rutor än: + lägger till en",
   "editor.cards.field.columns": "Kolumner",
+  "editor.cards.field.min_column_width": "Smalaste kolumn",
   "editor.cards.field.rows": "Rader",
   "editor.cards.field.align_items": "Justera kort",
   "editor.cards.field.gap": "Mellanrum",
@@ -893,11 +894,14 @@ const sv: Translation = {
   "editor.cards.height.auto": "Var och en sin egen",
   "editor.cards.indicator.dots": "Prickar",
   "editor.cards.indicator.none": "Ingen",
-  "editor.cards.help.columns": "Ett antal kolumner, eller deras bredder: 1fr 2fr",
+  "editor.cards.help.columns":
+    "Ett antal kolumner eller deras bredder: 1fr 2fr. Med smalaste kolumn: flest kolumner",
+  "editor.cards.help.min_column_width":
+    "Så många kolumner av minst denna bredd som får plats: 180, 12rem",
   "editor.cards.help.rows": "De första radernas höjder: auto 1fr",
   "editor.cards.help.gap": "En längd, eller radernas och kolumnernas: 8 16",
   "editor.cards.help.breakpoints":
-    "Alternativ som ändras när sektionen spänner över så många vykolumner",
+    "En vykolumn är en kolumn i sektionsvyn, cirka 500 px: en telefon visar en, en sektion med column_span 2 spänner över två. De här valen gäller när sektionen spänner över så många",
   "editor.cards.help.per_page": "Ett bråktal låter nästa kort titta fram",
   "editor.cards.help.unfold":
     "Ett rutnät med så många kolumner i stället för remsan; 0 behåller remsan",

@@ -15,7 +15,7 @@
     },
     "breakpoints": {
       "type": "object",
-      "description": "The options that change once the card spans this many view columns (2 to 12); the top-level options apply in one. Outside a section the view columns are counted from the card's width, by the sections view's 500 px columns",
+      "description": "The options that change once the section spans this many view columns (2 to 12); the top-level options apply in one. A view column is one column of Home Assistant's sections view, about 500 px: a phone shows one, a section with column_span 2 spans two, and a section of column_span 1 stays at one on any screen. Outside a section the view columns are counted from the card's width, by the sections view's 500 px columns",
       "propertyNames": {
         "pattern": "^([2-9]|1[0-2])$"
       },

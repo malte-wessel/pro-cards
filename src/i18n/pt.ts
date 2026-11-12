@@ -310,7 +310,7 @@ const pt: Translation = {
   "editor.card.screen.wide": "Largo",
   "editor.card.entity_title": "Entidade {n}",
   "editor.card.consumer_title": "Consumidor {n}",
-  "editor.cards.breakpoint_title": "A partir de {n} colunas",
+  "editor.cards.breakpoint_title": "A partir de {n} colunas de vista",
   "editor.card.list.add_quantity": "Adicionar uma linha",
   "editor.card.list.add_entity": "Adicionar uma entidade",
   "editor.card.list.add_consumer": "Adicionar um consumidor",
@@ -862,6 +862,7 @@ const pt: Translation = {
   "editor.cards.tile": "Mosaico",
   "editor.cards.none_yet": "Ainda sem mosaicos: + adiciona um",
   "editor.cards.field.columns": "Colunas",
+  "editor.cards.field.min_column_width": "Coluna mais estreita",
   "editor.cards.field.rows": "Linhas",
   "editor.cards.field.align_items": "Alinhar cartões",
   "editor.cards.field.gap": "Espaçamento",
@@ -895,11 +896,14 @@ const pt: Translation = {
   "editor.cards.height.auto": "Cada um a sua",
   "editor.cards.indicator.dots": "Pontos",
   "editor.cards.indicator.none": "Nenhum",
-  "editor.cards.help.columns": "Um número de colunas, ou as suas larguras: 1fr 2fr",
+  "editor.cards.help.columns":
+    "Um número de colunas ou as suas larguras: 1fr 2fr. Com uma coluna mínima: o máximo de colunas",
+  "editor.cards.help.min_column_width":
+    "Tantas colunas de pelo menos esta largura quantas couberem: 180, 12rem",
   "editor.cards.help.rows": "As alturas das primeiras linhas: auto 1fr",
   "editor.cards.help.gap": "Um comprimento, ou o das linhas e o das colunas: 8 16",
   "editor.cards.help.breakpoints":
-    "Opções que mudam quando a secção ocupa este número de colunas da vista",
+    "Uma coluna de vista é uma coluna da vista de secções, cerca de 500 px: um telemóvel mostra uma, uma secção com column_span 2 ocupa duas. Estas opções aplicam-se quando a secção ocupa tantas",
   "editor.cards.help.per_page": "Uma fração deixa espreitar o cartão seguinte",
   "editor.cards.help.unfold":
     "Uma grelha com este número de colunas em vez da faixa; 0 mantém a faixa",
