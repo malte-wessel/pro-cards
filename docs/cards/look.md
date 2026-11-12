@@ -84,6 +84,7 @@ The card's colour paints its icon, its visual and its status. It comes from the 
 
 - `state` matches the value or the entity's state. Quote `"on"` and `"off"`.
 - `below` matches a value under the number, `above` a value at or over it.
+- `attribute` makes the rule read that attribute of the entity in place of the value: `{ attribute: hvac_action, state: heating, … }` on a thermostat that shows its temperature. It reads the entity as it is now, so a plot's past values never match it.
 
 A matching rule can set:
 

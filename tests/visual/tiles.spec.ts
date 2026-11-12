@@ -184,7 +184,7 @@ const ROOM: Opts = {
       { entity: "cover.living_room_blinds" },
       { entity: "light.living_room" },
       { entity: "light.to_lamp_off" },
-      { entity: "scene.dimmed", label: "Dim", color: "deep-purple" },
+      { entity: "scene.dimmed", name: "Dim", show_name: true, color: "deep-purple" },
     ],
   },
   grid_options: { columns: 12 },

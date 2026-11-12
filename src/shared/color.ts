@@ -342,6 +342,46 @@ const domainProps = (domain: string, dc: unknown, s: string, isActive: boolean):
 // the colour an entity takes while it is active (on, open, playing), whatever its state now: a
 // button that switches it shows it while on and while it turns on; null for a domain HA does not
 // colour
+// whether Home Assistant colours the domain by its state (a light, a lock, a binary sensor); a
+// sensor, a number or a select has no colour of its state
+export const stateColored = (domain: string) => STATE_COLORED_DOMAIN.has(domain);
+
+// what a thermostat or a humidifier is doing: per action its icon and the mode whose colour it
+// takes, idle as off (Home Assistant's CLIMATE_HVAC_ACTION_TO_MODE, HUMIDIFIER_ACTION_MODE and
+// their icons), by the attribute that holds it
+export const DEVICE_ACTIONS: Record<
+  string,
+  { attr: string; map: Record<string, readonly [icon: string, mode: string]> }
+> = {
+  climate: {
+    attr: "hvac_action",
+    map: {
+      heating: ["mdi:fire", "heat"],
+      preheating: ["mdi:heat-wave", "heat"],
+      defrosting: ["mdi:snowflake-melt", "heat"],
+      cooling: ["mdi:snowflake", "cool"],
+      drying: ["mdi:water-percent", "dry"],
+      fan: ["mdi:fan", "fan_only"],
+      idle: ["mdi:clock-outline", "off"],
+    },
+  },
+  humidifier: {
+    attr: "action",
+    map: {
+      humidifying: ["mdi:arrow-up-bold", "on"],
+      drying: ["mdi:arrow-down-bold", "on"],
+      idle: ["mdi:clock-outline", "off"],
+    },
+  },
+};
+// the mode a thermostat's or a humidifier's action takes the colour of (`off` while idle); null
+// for another entity or one that reports no action
+export const actionModeOf = (st: HassEntity | undefined): string | null => {
+  const d = DEVICE_ACTIONS[domainOf(st?.entity_id)];
+  const a = d && st?.attributes?.[d.attr];
+  return typeof a === "string" && d.map[a] ? d.map[a][1] : null;
+};
+
 export const activeColorCss = (st: HassEntity | undefined): string | null => {
   const domain = domainOf(st?.entity_id);
   if (!STATE_COLORED_DOMAIN.has(domain)) return null;

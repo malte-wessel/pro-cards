@@ -81,6 +81,7 @@ export const RULE_KEYS = [
   "state",
   "above",
   "below",
+  "attribute",
   "color",
   "icon",
   "status",
@@ -106,16 +107,45 @@ export const BADGE_RULE_KEYS = [
   "state",
   "above",
   "below",
+  "attribute",
   "color",
   "icon",
   "value",
   "style",
   "pulse",
 ] as const;
+// a button's rule: when (state, above, below, on its value or an attribute), then its colour, icon,
+// a text in place of its value, whether it is filled and a pulse
+export const BUTTON_RULE_KEYS = [
+  "state",
+  "above",
+  "below",
+  "attribute",
+  "color",
+  "icon",
+  "value",
+  "active",
+  "pulse",
+] as const;
 export const SERIES_KEYS = ["entity", "name", "color"] as const;
-// a segments' or a select's option, and one of your own buttons
+// a segments' or a select's option
 export const OPTION_KEYS = ["value", "label", "icon"] as const;
-export const BUTTON_KEYS = ["entity", "label", "icon", "color", "action"] as const;
+// one of your own buttons: a badge's keys (its rules and visibility are lists of their own)
+export const BUTTON_KEYS = [
+  "entity",
+  "name",
+  "show_name",
+  "attribute",
+  "value",
+  "show_value",
+  "unit",
+  "decimals",
+  "prefix",
+  "suffix",
+  "icon",
+  "color",
+  "tap_action",
+] as const;
 // the content keys, written as they are
 const TEXTS = ["attribute", "value", "secondary", "unit", "prefix", "suffix"] as const;
 const ACTIONS = ["tap_action", "hold_action", "double_tap_action"] as const;
@@ -429,6 +459,48 @@ export const seriesFromForm = (v: unknown): unknown[] =>
       })
     : [];
 
+// ----- your own buttons: each in its form, its rules and its visibility as lists of their own -----
+// (a rule's fill is a select: the button's own (empty), filled or grey)
+const activeToForm = (r: Raw): Raw =>
+  typeof r.active === "boolean" ? { ...r, active: String(r.active) } : r;
+const activeFromForm = (r: unknown): unknown => {
+  if (!isObj(r) || (r.active !== "true" && r.active !== "false")) return r;
+  return { ...r, active: r.active === "true" };
+};
+// a button as written → its form: the 3.0 keys as their spelling now (a label is a name that
+// shows, an action the tap's)
+export const buttonToForm = (x: unknown): Raw => {
+  const o: Raw = typeof x === "string" ? { entity: x } : isObj(x) ? { ...x } : {};
+  const { rules, visibility, ...rest } = o;
+  if (rest.label !== undefined && rest.name === undefined && rest.show_name === undefined) {
+    rest.name = rest.label;
+    rest.show_name = true;
+    delete rest.label;
+  }
+  if (rest.action !== undefined && rest.tap_action === undefined) {
+    rest.tap_action = actionToForm(rest.action);
+    delete rest.action;
+  }
+  const item = itemToForm(rest, BUTTON_KEYS);
+  item.rules = listToForm(rules, BUTTON_RULE_KEYS).map(activeToForm);
+  item.visibility = conditionsToForm(visibility);
+  return item;
+};
+// the form → the button as written: what it says, a name and a value shown only where they are
+export const buttonFromForm = (item: Raw): Raw => {
+  const { rules, visibility, show_name, show_value, ...rest } = item;
+  const b = itemFromForm(rest, BUTTON_KEYS, null) as Raw;
+  if (show_name === true) b.show_name = true;
+  if (show_value === true) b.show_value = true;
+  const r = listFromForm(rules, BUTTON_RULE_KEYS, null).map(activeFromForm);
+  if (r.length) b.rules = r;
+  const shown = conditionsFromForm(visibility);
+  if (shown.length) b.visibility = shown;
+  return b;
+};
+// the buttons as written → their forms
+export const buttonsToForm = (v: unknown): Raw[] => (Array.isArray(v) ? v.map(buttonToForm) : []);
+
 // the same value, whatever order its keys come in
 const sameValue = (a: unknown, b: unknown): boolean => {
   if (isObj(a) && isObj(b)) {
@@ -454,6 +526,18 @@ export const badgesFromForm = (
   return (Array.isArray(v) ? (v as Raw[]) : []).map((item) => {
     const i = forms.findIndex((f) => f && sameValue(f, item));
     if (i < 0) return badgeFromForm(item, cardEntity);
+    forms[i] = null;
+    return was[i];
+  });
+};
+// the forms → the buttons as written: one whose form is as a written one's keeps its spelling
+// (a 3.0 `label` stays until the button is changed), the others are written from their fields
+export const buttonsFromForm = (v: unknown, written: unknown): unknown[] => {
+  const was = Array.isArray(written) ? written : [];
+  const forms: (Raw | null)[] = was.map(buttonToForm);
+  return (Array.isArray(v) ? (v as Raw[]) : []).map((item) => {
+    const i = forms.findIndex((f) => f && sameValue(f, item));
+    if (i < 0) return buttonFromForm(item);
     forms[i] = null;
     return was[i];
   });
@@ -621,7 +705,7 @@ export const configToForm = (
       ctl.options.length > 0 &&
       ctl.options.every((o) => typeof o === "string");
     if (drawn.includes("buttons") && names) d.control_button_ids = [...(ctl.options as string[])];
-    else if (drawn.includes("buttons")) d.control_buttons = listToForm(ctl.options, BUTTON_KEYS);
+    else if (drawn.includes("buttons")) d.control_buttons = buttonsToForm(ctl.options);
     else d.control_options = listToForm(ctl.options, OPTION_KEYS, "value");
   }
 
@@ -762,9 +846,7 @@ const controlFromForm = (
   if (variable(drawn, o.confirm === true) && chosen(data.control_variant))
     o.variant = data.control_variant;
   // your own buttons, else the domain's by name where they are not its default
-  const own = draws("buttons")
-    ? keptFromForm(data.control_buttons, written, BUTTON_KEYS, null)
-    : [];
+  const own = draws("buttons") ? buttonsFromForm(data.control_buttons, written) : [];
   const ids = Array.isArray(data.control_button_ids)
     ? (data.control_button_ids as string[]).filter((id) =>
         buttonIdsOf(domain).includes(id as ButtonId),

@@ -429,6 +429,20 @@ export const STYLE_CONTROLS = `
   .ctl-buttons.custom > .chip span { overflow: hidden; text-overflow: ellipsis; }
   /* the colour stays on the icon and the tint; the label reads in the text colour until filled */
   .ctl-buttons.custom > .chip:not(.on) span { color: var(--primary-text-color); }
+  /* a kind card's button: its value after its name, in the regular weight (grey until filled) */
+  .ctl-buttons.custom > .chip span.v { font-weight: ${fw("normal")}; font-variant-numeric: tabular-nums; }
+  .ctl-buttons.custom > .chip:not(.on) span.v { color: var(--secondary-text-color); }
+  /* grey with a matching rule's colour: the icon in it */
+  .ctl-buttons.custom > button.icon-c:not(.on) > :is(ha-icon, ha-state-icon) { color: var(--fe-color); }
+  /* a rule's pulse: a ring that grows and fades; with reduced motion a still ring */
+  .ctl-buttons.custom > button.pulse:not(.pending) { animation: btn-pulse 2s ease-out infinite; }
+  @keyframes btn-pulse {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--fe-color) 50%, transparent); }
+    70%, 100% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--fe-color) 0%, transparent); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ctl-buttons.custom > button.pulse:not(.pending) { animation: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--fe-color) 40%, transparent); }
+  }
   .ctl-buttons.custom.sm > .chip { height: 28px; font-size: ${fs(12)}; padding: 0 12px 0 8px; --mdc-icon-size: 16px; }
   /* a chip or a square button to hold fills from the left instead of a ring */
   :is(.ctl-buttons.custom > .chip, .ctl-buttons.square > button).hold { --fill: var(--fe-color); background-image: linear-gradient(var(--fill), var(--fill)); background-repeat: no-repeat; background-size: 0 100%; touch-action: none; -webkit-user-select: none; user-select: none; }

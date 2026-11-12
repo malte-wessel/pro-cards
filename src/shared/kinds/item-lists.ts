@@ -96,11 +96,13 @@ export const itemLines = (
       detail: str(item.label) ? str(item.value) : "",
     };
   if (of === "button") {
-    const action = (item.action as Raw | undefined)?.action;
+    // (a 3.0 button's label and action, until 4.0)
+    const action = ((item.tap_action ?? item.action) as Raw | undefined)?.action;
+    const name = str(item.name) || str(item.label);
     return {
-      title: str(item.label) || nameOf(hass, str(item.entity)) || str(action),
+      title: name || nameOf(hass, str(item.entity)) || str(action),
       detail: [
-        ...(str(item.label) && str(item.entity) ? [nameOf(hass, str(item.entity))] : []),
+        ...(name && str(item.entity) ? [nameOf(hass, str(item.entity))] : []),
         ...(str(action) ? [str(action)] : []),
       ].join(" · "),
     };

@@ -262,6 +262,41 @@ test("a badge's rules open on top of the badge's view", async ({ page }) => {
   await expect(listOf(e.form, "badges")).toBeVisible();
 });
 
+test("a button's rules open on top of the button's view and read its entity", async ({ page }) => {
+  const e = await openEditor(page, {
+    type: "custom:poster-card-pro",
+    entity: "sensor.living_room_temperature",
+    control: { type: "buttons", options: [{ entity: "climate.living_room", label: "Heat" }] },
+  });
+  await openSection(e.form, "Controls");
+  const buttons = field(e.form, "control_buttons").locator("ha-selector-pro_cards_list");
+  await buttons.locator(".row .main").first().click();
+  // a 3.0 label reads as a name that shows
+  await expect(field(itemView(e.editor), "name").locator("input")).toHaveValue("Heat");
+  await openSection(itemView(e.editor), "Rules");
+  await listOf(itemView(e.editor), "rules").getByRole("button", { name: "Add a rule" }).click();
+  const rule = itemView(e.editor);
+  await choose(rule, "attribute", "Hvac action");
+  await fill(rule, "state", "heating");
+  await fill(rule, "icon", "mdi:fire");
+  await choose(rule, "active", "Filled");
+  await expect.poll(e.last).toMatchObject({
+    control: {
+      type: "buttons",
+      options: [
+        {
+          entity: "climate.living_room",
+          name: "Heat",
+          show_name: true,
+          rules: [{ attribute: "hvac_action", state: "heating", icon: "mdi:fire", active: true }],
+        },
+      ],
+    },
+  });
+  await back(e.editor);
+  await expect(rowTitles(listOf(itemView(e.editor), "rules"))).toHaveText(["Hvac action: Heating"]);
+});
+
 test("the poster's rules are added, ordered and deleted", async ({ page }) => {
   // (a temperature: its kind brings no rules of its own)
   const e = await openEditor(page, {

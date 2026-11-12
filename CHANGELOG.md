@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.1.0 – Buttons that show state
+
+_Unreleased_
+
+### What's new
+
+- **Buttons that show state:** the poster's and the tile's own buttons (`control: { type: buttons }`) take a badge's keys: `name` and `show_name`, `attribute`, `value` and `show_value`, `unit`, `decimals`, `prefix`, `suffix`, and `rules` that set the icon, the colour, the text, a pulse and whether the button is filled (`active`). A room's poster can carry its lights, blinds, windows and heating in one row, and with `visibility` show only what needs attention. [Controls](https://malte-wessel.github.io/pro-cards/cards/controls#buttons-that-show-state)
+- **A rule's own `attribute`:** a rule on a button, a badge, a tile or a poster can read an attribute in place of the shown value, such as a thermostat's `hvac_action` beside its temperature. [Look](https://malte-wessel.github.io/pro-cards/cards/look#rules)
+- **Attributes as Home Assistant writes them:** an `attribute` you name on a tile, a poster, a badge or a button shows with its unit and in Home Assistant's words ("60 %", "21.6 °C", "Heating"). A `unit` or `decimals` of your own still win.
+
+### Changed
+
+- A button fills while its entity is active, as Home Assistant colours it: a window or a door open, motion or smoke seen, a person home, a thermostat while it heats or cools. Before, only buttons that switch their entity filled. A sensor, a number, a scene and a script stay grey.
+
+### Deprecated, gone in 4.0
+
+- A button's `label` is `name` with `show_name: true`, and its `action` is `tap_action`. [Moving](https://malte-wessel.github.io/pro-cards/guide/migrating#button-keys)
+
 ## 3.0.0 – Poster and tile cards, energy flow, heading and swipe cards
 
 _2026-11-12_

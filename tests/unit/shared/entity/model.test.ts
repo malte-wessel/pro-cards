@@ -36,6 +36,53 @@ const ctx = (
   tplResult: new Map<string, unknown>([["{{ t }}", "rendered"]]),
 });
 
+describe("an attribute as Home Assistant writes it", () => {
+  const cover = st("open", { current_position: 60, hvac_action: "heating" });
+  const words = (_: HassEntity, a: string) => (a === "current_position" ? "60 %" : "Heating");
+  const hass = { formatEntityAttributeValue: words } as Partial<HomeAssistant>;
+  const item = (o: RawEntity) => {
+    const e = ent(o);
+    e.haAttribute = true;
+    return e;
+  };
+  const pos = { raw: "60", num: 60, avail: true };
+  it("takes its words and its unit, the number apart for the big value", () => {
+    expect(fmtValue(ctx({}, hass), item({ attribute: "current_position" }), pos, cover)).toEqual({
+      text: "60 %",
+      num: "60",
+      unit: "%",
+    });
+    const action = { raw: "heating", num: null, avail: true };
+    expect(fmtValue(ctx({}, hass), item({ attribute: "hvac_action" }), action, cover).text).toBe(
+      "Heating",
+    );
+  });
+  it("keeps our unit where Home Assistant writes the number without one", () => {
+    const w = st("sunny", { wind_speed: 9.4, wind_speed_unit: "km/h" });
+    const bare = { formatEntityAttributeValue: () => "9.4" } as Partial<HomeAssistant>;
+    expect(
+      fmtValue(
+        ctx({}, bare),
+        item({ attribute: "wind_speed" }),
+        { raw: "9.4", num: 9.4, avail: true },
+        w,
+      ).text,
+    ).toBe("9.4 km/h");
+  });
+  it("leaves it to ours with a unit or decimals of its own, and on the entity cards", () => {
+    expect(
+      fmtValue(ctx({}, hass), item({ attribute: "current_position", unit: "pc" }), pos, cover).text,
+    ).toBe("60 pc");
+    expect(
+      fmtValue(ctx({}, hass), item({ attribute: "current_position", decimals: 1 }), pos, cover)
+        .text,
+    ).toBe("60.0");
+    expect(fmtValue(ctx({}, hass), ent({ attribute: "current_position" }), pos, cover).text).toBe(
+      "60",
+    );
+  });
+});
+
 describe("formatting", () => {
   it("splits number and unit, honouring decimals, unit, prefix and suffix", () => {
     const s = st("21.456", { unit_of_measurement: "°C" });

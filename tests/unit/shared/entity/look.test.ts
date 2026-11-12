@@ -16,6 +16,7 @@ import {
   progressOf,
   scaleOf,
   resolveLook,
+  ruleMatches,
   staleAge,
 } from "../../../../src/shared/entity/look.ts";
 
@@ -135,6 +136,49 @@ describe("rule matching", () => {
       ],
     });
     expect(resolveLook(shadow, num(40), st(40), tpl).label).toBe("any");
+  });
+});
+
+describe("a rule's own attribute", () => {
+  const heat = st(
+    21.6,
+    { hvac_action: "heating", is_volume_muted: true, current_position: 40 },
+    "climate.a",
+  );
+  const shown = num(21.6);
+  it("reads that attribute of the entity now in place of the shown value", () => {
+    expect(ruleMatches(rule({ attribute: "hvac_action", state: "heating" }), shown, heat)).toBe(
+      true,
+    );
+    expect(ruleMatches(rule({ attribute: "hvac_action", state: "idle" }), shown, heat)).toBe(false);
+    expect(ruleMatches(rule({ attribute: "current_position", below: 50 }), shown, heat)).toBe(true);
+    // (a boolean reads as its text: `state: true` is normalised to "true")
+    expect(ruleMatches(rule({ attribute: "is_volume_muted", state: "true" }), shown, heat)).toBe(
+      true,
+    );
+    // an attribute the entity lacks matches nothing; a thermostat's hvac_mode is its state
+    expect(ruleMatches(rule({ attribute: "humidity", state: "x" }), shown, heat)).toBe(false);
+    expect(ruleMatches(rule({ attribute: "hvac_mode", state: "21.6" }), txt("x"), heat)).toBe(true);
+  });
+  it("never matches a past bucket, nor without the entity", () => {
+    const r = rule({ attribute: "hvac_action", state: "heating" });
+    expect(ruleMatches(r, shown, heat, false)).toBe(false);
+    expect(ruleMatches(r, shown, undefined)).toBe(false);
+  });
+  it("lets a rule without one read the value as before", () => {
+    expect(ruleMatches(rule({ above: 20 }), shown, heat)).toBe(true);
+    expect(ruleMatches(rule({ above: 20 }), shown, heat, false)).toBe(true);
+  });
+  it("decides the look as any rule does", () => {
+    const e = ent({
+      entity: "climate.a",
+      attribute: "current_temperature",
+      rules: [{ attribute: "hvac_action", state: "heating", icon: "mdi:fire", color: "red" }],
+    });
+    e.ruleWins = true;
+    const look = resolveLook(e, shown, heat, tpl);
+    expect(look.icon).toBe("mdi:fire");
+    expect(look.color).toBe("red");
   });
 });
 

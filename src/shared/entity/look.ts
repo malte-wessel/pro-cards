@@ -94,6 +94,28 @@ export const matchRule = (rule: Rule, model: ValueModel, state?: string | null) 
   (rule.below === null || (model.num !== null && model.num < rule.below)) &&
   (rule.above === null || (model.num !== null && model.num >= rule.above));
 
+// the value a rule with its own `attribute` reads: that attribute of the entity now (`hvac_mode`
+// is a thermostat's state); a boolean reads as its text, so `state: true` matches it
+const attrModel = (st: HassEntity, key: string): ValueModel => {
+  const raw =
+    key === "hvac_mode" && st.entity_id.startsWith("climate.") ? st.state : st.attributes?.[key];
+  if (raw === undefined || raw === null) return { raw: null, num: null, avail: false };
+  const s = typeof raw === "object" ? JSON.stringify(raw) : String(raw);
+  return { raw: s, num: isNum(s) ? Number(s) : null, avail: true };
+};
+// whether a rule matches: on the value it reads (`ruleModel`), or on its own attribute of the
+// entity now; `now` false (a past bucket of the history) leaves an attribute's rule out, as no
+// attribute of then is known
+export const ruleMatches = (
+  rule: Rule,
+  model: ValueModel,
+  st: HassEntity | undefined,
+  now = true,
+): boolean =>
+  rule.attribute
+    ? now && !!st && matchRule(rule, attrModel(st, rule.attribute))
+    : matchRule(rule, model, now ? st?.state : null);
+
 // the entity's picture: the local copy Home Assistant keeps, else the integration's URL
 export const pictureOf = (st: HassEntity | undefined): string | null => {
   const a = st?.attributes;
@@ -146,10 +168,10 @@ export const resolveLook = (
   now = true,
   kindColor: string | null = null,
 ): Look => {
-  const rule = ent.rules.find((r) => matchRule(r, ruleModel, now ? st?.state : null)) ?? null;
-  // a v3 badge's rule writes its text as a value, a template too
+  const rule = ent.rules.find((r) => ruleMatches(r, ruleModel, st, now)) ?? null;
+  // a v3 badge's and a button's rule writes its text as a value, a template too
   const label =
-    ent.pill && rule?.label && isTemplate(rule.label)
+    ent.valueRules && rule?.label && isTemplate(rule.label)
       ? asText(tplGet(rule.label))
       : (rule?.label ?? null);
   const ruleLabel = rule?.labelKey ? t(hass, rule.labelKey) : label;

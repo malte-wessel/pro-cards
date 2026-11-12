@@ -152,7 +152,7 @@ Coming from the entity card? [Moving to 3.0](/guide/migrating) maps its keys to 
 | `icon`   | the kind's | An icon's name or a template; `{ type: icon \| image \| flow, … }` with its options and its own actions; or `false` for none. See [Look](/cards/look).                                                                                             |
 | `visual` | the kind's | Along the bottom: `sparkline`, `columns`, `strip`, `bar`, `gauge`, `segments`, `sun`. Behind it all: `glow`, `image`, `flow`, and a kind's `cover`, `path` or `line`. A name, `{ type, … }` with its options, or `false`; see [Look](/cards/look). |
 | `color`  | the kind's | The poster's colour: a colour name, a hex or a template. A matching rule's colour wins.                                                                                                                                                            |
-| `rules`  | the kind's | Colour, icon, status, visual, `tint_card` and `pulse` by value or state; the first match wins. Yours replace the kind's, `[]` drops them. See [Look](/cards/look).                                                                                 |
+| `rules`  | the kind's | Colour, icon, status, visual, `tint_card` and `pulse` by value, state or an attribute; the first match wins. Yours replace the kind's, `[]` drops them. See [Look](/cards/look).                                                                   |
 
 ### Controls, badges and actions
 

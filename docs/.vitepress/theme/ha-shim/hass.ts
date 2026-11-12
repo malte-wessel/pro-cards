@@ -41,6 +41,7 @@ export interface HassSnapshot extends HomeAssistant {
   user: { id: string; name: string; is_admin: boolean };
   themes: { darkMode: boolean };
   formatEntityState: (st: HassEntity, state?: string) => string;
+  formatEntityAttributeValue: (st: HassEntity, attribute: string, value?: unknown) => string;
 }
 
 declare global {
@@ -170,6 +171,51 @@ const formatEntityState = (st: HassEntity, state?: string): string => {
   }
   if (st.entity_id.startsWith("scene.") && /^\d{4}-/.test(v)) return "Scene";
   return map[v] || v.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+};
+
+// an attribute as Home Assistant writes it (compute_attribute_display.ts): a number with the
+// attribute's unit where Home Assistant knows one (a position's %, a thermostat's °C; a light's
+// brightness and a speaker's volume as a percentage), a word capitalised, true and false as Yes
+// and No
+const ATTRIBUTE_UNITS: Record<string, Record<string, string>> = {
+  climate: { humidity: "%", current_humidity: "%" },
+  cover: { current_position: "%", current_tilt_position: "%" },
+  fan: { percentage: "%" },
+  humidifier: { humidity: "%", current_humidity: "%" },
+  light: { color_temp_kelvin: "K", brightness: "%" },
+  sun: { azimuth: "°", elevation: "°" },
+  vacuum: { battery_level: "%" },
+  valve: { current_position: "%" },
+  media_player: { volume_level: "%" },
+};
+const TEMPERATURE_ATTRIBUTES = new Set([
+  "temperature",
+  "current_temperature",
+  "target_temp_low",
+  "target_temp_high",
+  "min_temp",
+  "max_temp",
+]);
+const formatEntityAttributeValue = (st: HassEntity, attribute: string, value?: unknown): string => {
+  const v = value !== undefined ? value : st.attributes?.[attribute];
+  if (v === undefined || v === null) return "";
+  if (typeof v === "boolean") return v ? "Yes" : "No";
+  const domain = st.entity_id.split(".")[0];
+  let n = typeof v === "number" ? v : typeof v === "string" && v !== "" ? Number(v) : NaN;
+  if (Number.isFinite(n)) {
+    // (a weather entity names its units: temperature_unit, wind_speed_unit …)
+    const own = st.attributes?.[`${attribute}_unit`];
+    let unit = ATTRIBUTE_UNITS[domain]?.[attribute] ?? (typeof own === "string" ? own : "");
+    if (!unit && TEMPERATURE_ATTRIBUTES.has(attribute) && domain !== "weather") unit = "°C";
+    if (attribute === "brightness" && domain === "light") n = Math.round((n / 255) * 100);
+    if (attribute === "volume_level" && domain === "media_player") n = Math.round(n * 100);
+    const txt = new Intl.NumberFormat("en", { maximumFractionDigits: 2 }).format(n);
+    return unit === "%" ? `${txt}%` : unit ? `${txt} ${unit}` : txt;
+  }
+  if (typeof v === "object") return JSON.stringify(v);
+  return String(v)
+    .replace(/_/g, " ")
+    .replace(/^\w/, (c) => c.toUpperCase());
 };
 
 // the target of a service call as the cards pass it (`target: { entity_id }` from the YAML)
@@ -809,6 +855,7 @@ export const snapshot = (): HassSnapshot => ({
   },
   themes: themesNow(),
   formatEntityState,
+  formatEntityAttributeValue,
   // the registry keeps its identity: a card looks into it again only when it changes
   entities: ENTITIES,
   callService,

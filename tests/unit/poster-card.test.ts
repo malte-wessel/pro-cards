@@ -146,8 +146,15 @@ describe("poster-card config", () => {
     );
     const buttons = [{ entity: "scene.movie_night" }, { entity: "script.check_windows" }];
     const b = norm({ entity: S, control: { type: "buttons", options: buttons } }).entities[0];
-    expect(b.control).toEqual(flat({ entity: S, control: "buttons", control_options: buttons }));
-    expect(b.control?.buttons).toHaveLength(2);
+    // (its own buttons are items of their own, which the entity card's are not)
+    expect({ ...b.control, buttons: null }).toEqual({
+      ...flat({ entity: S, control: "buttons", control_options: buttons }),
+      buttons: null,
+    });
+    expect(b.control?.buttons?.map((x) => x.item?.entity)).toEqual([
+      "scene.movie_night",
+      "script.check_windows",
+    ]);
     // a name is the type alone
     expect(norm({ entity: S, control: "segments" }).entities[0].control).toEqual(
       norm({ entity: S, control: { type: "segments" } }).entities[0].control,
@@ -1077,6 +1084,73 @@ describe("poster-card drawing", () => {
     );
     // a colour of its own wins; a scene has no state colour of its own
     expect(scene.style.getPropertyValue("--fe-color")).toBe("var(--deep-purple-color)");
+  });
+
+  it("matches a rule on an attribute of its own, its attribute as Home Assistant writes it", () => {
+    const r = norm({
+      entity: "climate.living_room",
+      attribute: "current_temperature",
+      rules: [{ attribute: "hvac_action", state: "heating", status: "Warming up" }],
+    }).entities[0];
+    expect(r.rules[0]).toMatchObject({ attribute: "hvac_action", state: "heating" });
+    expect(r.haAttribute).toBe(true);
+    // a kind's own attribute keeps the kind's way of writing it
+    expect(norm({ entity: "climate.living_room" }).entities[0].haAttribute).toBe(false);
+  });
+
+  it("draws a button's name, value and rules, filled while its entity is active", () => {
+    set("binary_sensor.window_kitchen", "on", { device_class: "window" });
+    set("climate.living_room", "heat", { hvac_action: "heating", current_temperature: 21.6 });
+    set("sensor.washer_power", "640", { unit_of_measurement: "W" });
+    set("binary_sensor.motion_hallway", "on", { device_class: "motion" });
+    const r = draw({
+      type: "custom:poster-card-pro",
+      name: "Room",
+      control: {
+        type: "buttons",
+        options: [
+          { entity: "binary_sensor.window_kitchen", name: "Window", show_name: true },
+          {
+            entity: "climate.living_room",
+            attribute: "current_temperature",
+            unit: "°C",
+            show_value: true,
+            rules: [{ attribute: "hvac_action", state: "heating", icon: "mdi:fire" }],
+          },
+          {
+            entity: "sensor.washer_power",
+            rules: [{ above: 5, value: "Running", color: "teal", active: true, pulse: true }],
+          },
+          {
+            entity: "binary_sensor.motion_hallway",
+            rules: [{ state: "on", color: "amber", active: false }],
+          },
+        ],
+      },
+    });
+    const [win, den, washer, motion] = [...q(r, ".ctl-buttons.custom").children] as HTMLElement[];
+    const texts = (b: HTMLElement) => [...b.querySelectorAll("span")].map((s) => s.textContent);
+    // a window open fills; its name shows
+    expect(win.classList.contains("on")).toBe(true);
+    expect(texts(win)).toEqual(["Window"]);
+    // a thermostat while it heats, in its heat colour, a rule on its action swapping the icon
+    expect(den.classList.contains("on")).toBe(true);
+    expect(den.style.getPropertyValue("--fe-color")).toContain("--state-climate-heat-color");
+    expect(den.querySelector("ha-icon")?.getAttribute("icon")).toBe("mdi:fire");
+    expect(texts(den)).toEqual(["21.6 °C"]);
+    // a sensor fills where a rule says, its text shows while the rule matches, and pulses
+    expect(washer.classList.contains("on")).toBe(true);
+    expect(washer.classList.contains("pulse")).toBe(true);
+    expect(texts(washer)).toEqual(["Running"]);
+    expect(washer.style.getPropertyValue("--fe-color")).toBe("var(--teal-color)");
+    // grey where a rule says, its icon in the rule's colour
+    expect(motion.classList.contains("on")).toBe(false);
+    expect(motion.classList.contains("icon-c")).toBe(true);
+    // below the rule's threshold: grey, its icon alone
+    set("sensor.washer_power", "1", { unit_of_measurement: "W" });
+    const washerNow = [...q(r, ".ctl-buttons.custom").children][2] as HTMLElement;
+    expect(washerNow.classList.contains("on")).toBe(false);
+    expect(texts(washerNow)).toEqual([]);
   });
 
   it("draws its switch as a button with the power icon, a slider as a bar, tinted where it says so", () => {

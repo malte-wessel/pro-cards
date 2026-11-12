@@ -1,7 +1,7 @@
 // The badge on a tile's icon (pure), as Home Assistant's tile draws it: what a thermostat or a
 // humidifier is doing, a person's zone, an entity that is unavailable; nothing for the rest. Its
 // colour is the state colour of what it says (a heating thermostat's heat colour).
-import { domainOf, stateColorCss } from "../shared/color.ts";
+import { DEVICE_ACTIONS, domainOf, stateColorCss } from "../shared/color.ts";
 import type { HassEntity, HomeAssistant } from "../shared/ha.ts";
 
 export interface IconBadge {
@@ -11,23 +11,9 @@ export interface IconBadge {
   label: string | null;
 }
 
-// a thermostat's action: its icon and the mode whose colour it takes (Home Assistant's
-// CLIMATE_HVAC_ACTION_TO_MODE and the hvac_action icons)
-const CLIMATE: Record<string, [string, string]> = {
-  heating: ["mdi:fire", "heat"],
-  preheating: ["mdi:heat-wave", "heat"],
-  defrosting: ["mdi:snowflake-melt", "heat"],
-  cooling: ["mdi:snowflake", "cool"],
-  drying: ["mdi:water-percent", "dry"],
-  fan: ["mdi:fan", "fan_only"],
-  idle: ["mdi:clock-outline", "off"],
-};
-// a humidifier's action (HUMIDIFIER_ACTION_MODE and the action icons)
-const HUMIDIFIER: Record<string, [string, string]> = {
-  humidifying: ["mdi:arrow-up-bold", "on"],
-  drying: ["mdi:arrow-down-bold", "on"],
-  idle: ["mdi:clock-outline", "off"],
-};
+// a thermostat's and a humidifier's action: its icon and the mode whose colour it takes
+const CLIMATE = DEVICE_ACTIONS.climate.map;
+const HUMIDIFIER = DEVICE_ACTIONS.humidifier.map;
 
 // the zone a person or tracker is in, by its state (the zone's name; zone.home is `home`)
 const zoneOf = (st: HassEntity, hass: HomeAssistant | undefined) => {
@@ -48,7 +34,7 @@ const action = (
   hass: HomeAssistant | undefined,
   st: HassEntity,
   attr: string,
-  map: Record<string, [string, string]>,
+  map: Record<string, readonly [string, string]>,
 ): IconBadge | null => {
   const a = st.attributes[attr];
   if (typeof a !== "string" || !map[a]) return null;

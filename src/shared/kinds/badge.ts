@@ -173,6 +173,7 @@ const RULE_GONE: Record<string, string> = {
   status: "status is value (the text in place of the value)",
   tint_card: "a badge's rule tints no card (the card's own rules do)",
   visual: "a badge's rule sets no visual",
+  active: "a badge is never filled: active is a button's",
 };
 
 // the control: a switch, or none
@@ -313,6 +314,8 @@ export const normalizePill = (
   });
   ent.rules = rules;
   ent.ruleWins = true;
+  ent.valueRules = true;
+  ent.haAttribute = true;
   // what the pill draws after the value, over its own window
   const hours = visual?.hours ?? (visual?.type === "trend" ? 1 : 24);
   ent.visual = visual?.type ?? "icon";
