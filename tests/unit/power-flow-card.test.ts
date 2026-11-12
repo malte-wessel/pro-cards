@@ -514,6 +514,24 @@ describe("power flow numbers", () => {
     expect(night.f.selfSufficiency).toBe(0);
   });
 
+  it("flips a home sensor that counts the other way round with invert", () => {
+    const states = {
+      "sensor.solar": "3400",
+      "sensor.home": "-1240",
+      "sensor.battery": "-1200",
+      "sensor.grid": "-960",
+    };
+    const flipped = flowsOf(
+      normalizePowerFlowConfig({ home: { entity: "sensor.home", invert: true }, sources: SRC }),
+      states,
+    );
+    expect(flipped.f.H).toBe(1240);
+    // as written, the negative reading is a home that draws nothing
+    expect(
+      flowsOf(normalizePowerFlowConfig({ home: "sensor.home", sources: SRC }), states).f.H,
+    ).toBe(0);
+  });
+
   it("computes the home from the sources when none is given", () => {
     const cfg = normalizePowerFlowConfig({ sources: SRC });
     const { f } = flowsOf(cfg, {

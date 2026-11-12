@@ -335,6 +335,19 @@ describe("card config schemas", () => {
       validate({ type: PC, entity: "sensor.r", inputs: { gust: "sensor.g", today: "sensor.t" } }),
     ).toBeNull();
     expect(validate({ type: PC, kind: "grid", inputs: { import: false } })).toBeTruthy();
+    // a flow card's source takes actions of its own
+    for (const type of ["custom:power-flow-card-pro", "custom:energy-flow-card-pro"])
+      expect(
+        validate({
+          type,
+          sources: [{ type: "solar", entity: "sensor.s", tap_action: { action: "none" } }],
+        }),
+        type,
+      ).toBeNull();
+    // a plug told not to look for its power on the device
+    expect(
+      validate({ type: PC, entity: "switch.a", kind: "plug", inputs: { power: false } }),
+    ).toBeNull();
     expect(validate({ type: PC, kind: "washer", entity: "sensor.p", running_above: 8 })).toBeNull();
   });
 

@@ -87,7 +87,8 @@ export const powerNow = (cfg: PowerFlowConfig, models: EntityModel[]): PowerNow 
     };
   });
   const leaves = leafValues(cfg, w);
-  const homeW = cfg.homeEntity ? w(cfg.homeIdx) : null;
+  const read = cfg.homeEntity ? w(cfg.homeIdx) : null;
+  const homeW = read !== null && cfg.homeInvert ? -read : read;
   return {
     sources,
     leaves,

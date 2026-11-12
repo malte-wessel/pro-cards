@@ -53,6 +53,18 @@
         },
         "hover": {
           "$ref": "defs.schema.json#/$defs/hover"
+        },
+        "tap_action": {
+          "$ref": "defs.schema.json#/$defs/action",
+          "description": "This source's own tap (default: the card's)"
+        },
+        "hold_action": {
+          "$ref": "defs.schema.json#/$defs/action",
+          "description": "This source's own hold (default: the card's)"
+        },
+        "double_tap_action": {
+          "$ref": "defs.schema.json#/$defs/action",
+          "description": "This source's own double tap (default: the card's)"
         }
       }
     },

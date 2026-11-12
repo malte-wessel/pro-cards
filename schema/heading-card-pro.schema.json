@@ -91,6 +91,11 @@
           }
         ]
       }
+    },
+    "hover": {
+      "$ref": "defs.schema.json#/$defs/hover",
+      "default": true,
+      "description": "Home Assistant's hover and press on the badges; false keeps them still"
     }
   },
   "required": ["type"],

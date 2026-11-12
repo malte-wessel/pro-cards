@@ -304,8 +304,12 @@
             "minItems": 1,
             "items": {
               "oneOf": [
-                { "$ref": "entity.schema.json#/$defs/buttonId" },
-                { "$ref": "entity.schema.json#/$defs/buttonOption" }
+                {
+                  "$ref": "entity.schema.json#/$defs/buttonId"
+                },
+                {
+                  "$ref": "entity.schema.json#/$defs/buttonOption"
+                }
               ]
             }
           }
@@ -1674,7 +1678,7 @@
           "description": "rain: the wind speed that slants the drops"
         },
         "power": {
-          "$ref": "defs.schema.json#/$defs/entityId",
+          "$ref": "#/$defs/input",
           "description": "battery: its power, + charging; plug: the power it draws"
         },
         "charge": {

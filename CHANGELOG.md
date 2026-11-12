@@ -89,6 +89,7 @@ _Beta_
 - Fix: favourites (a cover's positions, a light's colours) no longer stay missing for minutes when the entity has no registry entry
 - Fix: the multi trend card names an unavailable or unknown sensor in the viewer's language, and takes `color: state` as its default colour
 - Fix: the weather card's hero keeps today's high and low after midnight while the forecast still starts with yesterday; a weather card added from the card picker starts with the lead and the daily forecast
+- Fix: power flow: `invert` on the home flips its sensor (it was accepted but did nothing); the schemas take a flow source's own `tap_action`, `hold_action` and `double_tap_action`, and a plug's `inputs: { power: false }`
 - Fix: a power flow card added from the card picker takes its solar and grid sources and its home by their names; the grid's sensor is no longer taken for the home
 - Fix: layout card: a card with `view_layout: { align }` in a masonry layout no longer shrinks to nothing (masonry has no rows and ignores it); the layout and swipe editors keep `minmax()`, `calc()`, `clamp()` and `var()` values whole, and editing one breakpoint leaves the others as written
 

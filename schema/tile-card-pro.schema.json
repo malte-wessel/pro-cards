@@ -26,7 +26,7 @@
       "properties": {
         "visual": {
           "$ref": "poster-card-pro.schema.json#/$defs/visualPlace",
-          "description": "The visual: behind the texts (glow, image, flow), or below the line in a second row (a plot of the history, a bar, a gauge, segments, the sun's day, the forecast); false for none. Left out: the kind's (a cover's, a robot's and the grid's drawings are the poster's only)"
+          "description": "The visual: behind the texts (glow, image, flow), or below the line in a second row (a plot of the history, a bar, a gauge, segments, the sun's day, the forecast); false for none. Left out: the kind's (a cover's, a robot's and the grid's drawings show on a tile only when named: cover, path, line)"
         },
         "vertical": {
           "type": "boolean",

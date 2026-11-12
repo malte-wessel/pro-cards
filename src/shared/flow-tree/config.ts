@@ -140,6 +140,7 @@ export interface FlowTreeConfig extends EntityCardConfig {
   homeIdx: number;
   homeD: number; // the home node's diameter (px)
   homeEntity: boolean; // false: the home is computed from the sources; the item carries name / icon / rules
+  homeInvert: boolean; // `invert` on the home: its sensor counts the other way round
   sources: Source[];
   consumers: Consumer[];
   hasGroups: boolean;
@@ -346,8 +347,15 @@ export const normalizeFlowTree = (
 
   // the home: a sensor, an entity object, or nothing (computed); the card's rules live on it
   const h = raw.home;
-  const { icon_size: homeSize, ...homeRaw }: RawEntity & RawNode =
-    typeof h === "string" ? { entity: h } : h && typeof h === "object" ? { ...h } : {};
+  const {
+    icon_size: homeSize,
+    invert: homeInvert,
+    ...homeRaw
+  }: RawEntity & RawNode & { invert?: boolean | null } = typeof h === "string"
+    ? { entity: h }
+    : h && typeof h === "object"
+      ? { ...h }
+      : {};
   if (h !== undefined && h !== null && typeof h !== "string" && typeof h !== "object")
     throw new Error(`${type}: 'home' must be a sensor entity or an entity object`);
   const homeEntity = !!homeRaw.entity || homeRaw.value !== undefined;
@@ -431,6 +439,7 @@ export const normalizeFlowTree = (
     homeIdx,
     homeD: nodeSize(homeSize, NODE_D.home),
     homeEntity,
+    homeInvert: !!homeInvert,
     sources,
     consumers,
     hasGroups: consumers.some((c) => c.kind === "group"),

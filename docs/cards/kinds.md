@@ -569,7 +569,7 @@ Their picture as the icon, and their photo behind the card, blurred. The value i
 
 ## The kinds' rules
 
-Battery, car, air quality, illuminance, wind, rain and weather bring rules of their own: the colours, icons and statuses above. A jammed lock, a triggered alarm, a leak or smoke and a robot with an error have one rule each that makes the status badge pulse. The kind's rules apply until the card has `rules` of its own, which replace them as a whole; `rules: []` drops them. The statuses follow the user's language. Copy a set to change one band:
+Battery, car, air quality, illuminance, wind, rain and weather bring rules of their own: the colours, icons and statuses above. A jammed lock, a triggered alarm, a leak or smoke and a robot with an error have one rule each that makes the status badge pulse. The kind's rules apply until the card has `rules` of its own, which replace them as a whole; `rules: []` drops them. The statuses follow the user's language. Copy a set to change one band (on a home battery, rules of your own also replace its charging and discharging colours):
 
 ::: code-group
 
