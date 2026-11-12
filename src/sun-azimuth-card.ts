@@ -27,7 +27,7 @@
  */
 import { defineElement, freshShadow, syncKeepHeight, registerCard } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
-import { fmtTime, langOf } from "./shared/format.ts";
+import { fmtTime, formatKeyOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { leaveHides, outsideHides } from "./shared/hover.ts";
 import { solarDayAround } from "./shared/solar.ts";
@@ -199,7 +199,7 @@ export class SunAzimuthCard extends HTMLElement implements SunAzimuthHost {
     this._root?.classList.toggle("dark", !!hass.themes?.darkMode);
     const minute = Math.floor(Date.now() / 60000);
     // once a minute, and at once when the language changed (words, times)
-    if (minute !== this._lastMinute || langOf(prev) !== langOf(hass)) {
+    if (minute !== this._lastMinute || formatKeyOf(prev) !== formatKeyOf(hass)) {
       this._lastMinute = minute;
       this._render();
     }

@@ -15,6 +15,7 @@ import {
 import { nearestPoint, placeTip } from "../../hover.ts";
 import { t as tr } from "../../i18n.ts";
 import { measure } from "../../typography.ts";
+import { timeZoneOf } from "../../format.ts";
 import { qs, startOfDay } from "../../util.ts";
 import type { EntityItem } from "../config.ts";
 import { PLOT_H, type HistoryVisual } from "../constants.ts";
@@ -47,7 +48,7 @@ export interface PlotCtx {
 export const windowOf = (ctx: RenderCtx, plot: PlotElement) => {
   const c = plot._ctx;
   if (c.window) return c.window;
-  if (c.hours === "today") return { t0: startOfDay(ctx.now), t1: ctx.now };
+  if (c.hours === "today") return { t0: startOfDay(ctx.now, timeZoneOf(ctx.hass)), t1: ctx.now };
   if (typeof c.hours === "number") return { t0: ctx.now - c.hours * 3600e3, t1: ctx.now };
   return { t0: ctx.t0, t1: ctx.now };
 };

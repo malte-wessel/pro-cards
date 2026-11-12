@@ -3,6 +3,7 @@
 import { describe, it, expect, beforeAll, vi } from "vitest";
 import { snapshot } from "../../../../docs/.vitepress/theme/ha-shim/hass.ts";
 import { kindsOf } from "../../../../src/shared/kinds/editor.ts";
+import { normalizePosterConfig } from "../../../../src/poster/config.ts";
 import type {
   CardConfigBase,
   HaFormData,
@@ -478,6 +479,29 @@ describe("what the card shows, chosen in the editor", () => {
     e.change({ shows: "sun" });
     expect(last(e.sent)).toEqual({ kind: "sun" });
   });
+
+  it("keeps the card as it was while its entity is cleared to pick another", () => {
+    const control = { type: "slider", step: 5 };
+    const e = open("tile", { entity: "light.kitchen", control });
+    e.change({ entity: "" });
+    // the card and what it shows stay, the picker empty and still there
+    expect(last(e.sent)).toEqual({ entity: "light.kitchen", control });
+    expect(e.form().data).toMatchObject({ shows: "light", entity: "" });
+    expect(names(e.form())).toContain("entity");
+    // another light picked: its control kept, as picking it at once would
+    e.change({ entity: "light.living_room" });
+    expect(last(e.sent)).toEqual({ entity: "light.living_room", control });
+    expect(e.form().data).toMatchObject({ shows: "light", entity: "light.living_room" });
+    // a written kind too, and your own texts are still a choice in Shows
+    const b = open("poster", { entity: "sensor.battery_soc", kind: "battery", name: "Car" });
+    b.change({ entity: "" });
+    expect(last(b.sent)).toEqual({ entity: "sensor.battery_soc", kind: "battery", name: "Car" });
+    expect(b.form().data.shows).toBe("battery");
+    b.change({ shows: "custom" });
+    expect(last(b.sent)).toEqual({ name: "Car" });
+    e.ed.remove();
+    b.ed.remove();
+  });
 });
 
 describe("what a badge shows, chosen in its view", () => {
@@ -513,6 +537,18 @@ describe("what a badge shows, chosen in its view", () => {
     expect(picker(b.view())).toContain("sensor.wind_speed");
     b.edit({ entity: "sensor.wind_speed" });
     expect(b.badges()).toEqual(["sensor.wind_speed"]);
+  });
+
+  it("keeps a kind chosen for a badge that reads the card's entity", () => {
+    // a phone's battery is a % sensor not detected as one: the badge reads it as a battery
+    const b = badge({ entity: "sensor.phone_battery", badges: [{ name: "Phone" }] });
+    expect(b.view().data.shows).toBe("none");
+    b.edit({ shows: "battery" });
+    expect(b.badges()).toEqual([{ name: "Phone", kind: "battery" }]);
+    expect(b.view().data.shows).toBe("battery");
+    // which the card takes
+    expect(() => normalizePosterConfig(b.sent.at(-1), hass)).not.toThrow();
+    b.ed.remove();
   });
 
   it("drops an attribute the entity picked lacks", () => {

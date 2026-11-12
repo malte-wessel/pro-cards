@@ -58,4 +58,18 @@ describe("time ticks", () => {
     expect(clockTicks(now, now - h, h)).toEqual([]);
     expect(clockTicks(now - 24 * h, Infinity, 4 * h)).toEqual([]);
   });
+  it("puts the ticks on whole hours of the zone the labels are written in", () => {
+    const h = 3600e3;
+    // a window in Kolkata (UTC+5:30): its 4-hour boundaries are xx:30 in UTC
+    const t0 = Date.UTC(2026, 5, 22, 1, 0);
+    const ticks = clockTicks(t0, t0 + 12 * h, 4 * h, "Asia/Kolkata");
+    const hours = ticks.map((t) =>
+      new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Asia/Kolkata",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(t),
+    );
+    expect(hours).toEqual(["08:00", "12:00", "16:00"]);
+  });
 });

@@ -6,13 +6,7 @@ import { plotEl } from "../entity/render/blocks.ts";
 import { leadEl, secondaryEl } from "../entity/render/lead.ts";
 import { fmtNumber } from "../format.ts";
 import { conditionIcon, conditionText, isNight } from "../weather/conditions.ts";
-import {
-  dailyTypeOf,
-  daysOf,
-  hoursOf,
-  isTodayEntry,
-  supportsForecast,
-} from "../weather/forecast.ts";
+import { dailyTypeOf, hoursOf, supportsForecast, todayOf } from "../weather/forecast.ts";
 import { conditionEl } from "../weather/icon.ts";
 import { WEATHER_RULES } from "./rules.ts";
 import type { Kind, KindCtx } from "./types.ts";
@@ -23,7 +17,7 @@ const HOURS = 12;
 const hiLo = (c: KindCtx): string | null => {
   const type = dailyTypeOf(c.m.st);
   if (!type) return null;
-  const today = daysOf(c.host.forecast(type), type, 2).find((d) => isTodayEntry(d.t, c.ctx.now));
+  const today = todayOf(c.host.forecast(type), type, c.ctx.now);
   if (!today || today.hi === null || today.lo === null) return null;
   return `${fmtNumber(c.ctx.hass, today.hi, 0)}° / ${fmtNumber(c.ctx.hass, today.lo, 0)}°`;
 };

@@ -46,14 +46,26 @@ export class PowerFlowCard extends FlowTreeCardBase<PowerFlowConfig> {
     const ids = [...(entities || []), ...Object.keys(states)];
     const isPower = (id: string) =>
       id.startsWith("sensor.") && states[id]?.attributes?.device_class === "power";
-    const solar = ids.find((id) => isPower(id) && /solar|pv/.test(id));
-    const home = ids.find((id) => isPower(id) && id !== solar);
-    // always a config the card accepts: a power sensor, any sensor, or a placeholder
+    const named = (re: RegExp) => ids.find((id) => isPower(id) && re.test(id));
+    // the sources by their names; none of them is ever the home
+    const solar = named(/solar|pv|photovoltai/);
+    const grid = named(/grid|mains|utility/);
+    const battery = named(/batter/);
+    const others = ids.filter((id) => isPower(id) && ![solar, grid, battery].includes(id));
+    // the home: a sensor named for what the house draws, else the first other power sensor
+    const home = others.find((id) => /home|house|consumption|load/.test(id)) ?? others[0];
+    const sources: Record<string, string>[] = [];
+    if (solar) sources.push({ type: "solar", entity: solar });
+    if (grid) sources.push({ type: "grid", power: grid });
+    // always a config the card accepts: without a named source, the one power sensor as the grid
+    // (the home is then what it brings), else any sensor, or a placeholder
     const any = ids.find((id) => id.startsWith("sensor.")) || "sensor.solar_power";
+    const alone = !sources.length;
+    if (alone) sources.push({ type: "grid", power: home ?? any });
     return {
       title: t(hass, "power.stub_title"),
-      ...(home ? { home } : {}),
-      sources: [solar ? { type: "solar", entity: solar } : { type: "grid", power: home ?? any }],
+      ...(home && !alone ? { home } : {}),
+      sources,
     };
   }
 

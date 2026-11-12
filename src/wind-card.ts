@@ -16,7 +16,7 @@
 import { registerCard } from "./shared/card.ts";
 import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
 import { depsChanged } from "./shared/deps.ts";
-import { langOf } from "./shared/format.ts";
+import { formatKeyOf } from "./shared/format.ts";
 import { FlowCardBase } from "./shared/flow/base.ts";
 import type { RowKind } from "./shared/flow/dom.ts";
 import type { HomeAssistant } from "./shared/ha.ts";
@@ -60,7 +60,7 @@ export class WindCard extends FlowCardBase {
     const cfg = this._config as WindConfig;
     const at = (i: number | null) => (i === null ? null : this._modelAt(ctx, i));
     const cm: CurrentModels = { speed, dir: at(cfg.dirIdx), gust: at(cfg.gustIdx) };
-    if (depsChanged(this._nowInputs, this, [cm.speed, cm.dir, cm.gust, langOf(ctx.hass)]))
+    if (depsChanged(this._nowInputs, this, [cm.speed, cm.dir, cm.gust, formatKeyOf(ctx.hass)]))
       this._windNow = windNow(ctx, cfg, cm);
     return { cm, now: this._windNow as WindNow };
   }

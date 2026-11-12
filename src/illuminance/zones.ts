@@ -1,6 +1,6 @@
 // Illuminance zones and the log scale (pure).
 import { mixHex, resolveHex } from "../shared/color.ts";
-import { langOf, numberFormat } from "../shared/format.ts";
+import { numberFormat } from "../shared/format.ts";
 import type { HomeAssistant } from "../shared/ha.ts";
 import { lineMeans, type MeanBucket } from "../shared/history.ts";
 import { t } from "../shared/i18n.ts";
@@ -90,8 +90,8 @@ export const scaleTop = (maxLx: number, peak: number) => (peak > maxLx ? niceCei
 // compact lux text for the axis in the user's locale: 1, 100, 10k, 30k, 1.5k (1,5k in German)
 export const fmtAxisLx = (v: number, hass?: HomeAssistant | null) =>
   v >= 1000
-    ? `${numberFormat(langOf(hass), { maximumFractionDigits: 1 }).format(v / 1000)}k`
-    : numberFormat(langOf(hass), {}).format(v);
+    ? `${numberFormat(hass, { maximumFractionDigits: 1 }).format(v / 1000)}k`
+    : numberFormat(hass, {}).format(v);
 // y axis labels: the zone thresholds strictly inside (min, max)
 export const yLabels = (zones: readonly Zone[], min: number, max: number) =>
   zones

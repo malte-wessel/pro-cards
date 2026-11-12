@@ -102,6 +102,9 @@ export const planLayout = (o: LayoutOptions, kids: KidState[], columns: number):
     const items = kids.map((k, i) => {
       const s = common(k);
       delete s.order; // the sequence already has it
+      // a masonry has no rows to align a card in: in its column (a flex column) align-self would
+      // act across it and shrink the card to its content's width, which contain: inline-size makes 0
+      delete s["align-self"];
       return item(i, s, { column: colOf[i] });
     });
     return { rootClass, root, body, columns: n, sequence, items };

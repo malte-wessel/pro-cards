@@ -314,8 +314,8 @@ describe("the editor's icon and visual", () => {
     expect(
       field(schemaOf("poster", LIGHT, { visual_thing: "image" }), "visual_src")?.selector,
     ).toEqual({ text: {} });
-    // the sun's hours, without today
-    expect(names(schemaOf("poster", { entity: "sun.sun" }))).toContain("visual_hours");
+    // the sun's day is today's: no window
+    expect(names(schemaOf("poster", { entity: "sun.sun" }))).not.toContain("visual_hours");
     expect(names(schemaOf("poster", { entity: "sun.sun" }))).not.toContain("visual_today");
   });
 

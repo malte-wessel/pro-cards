@@ -44,6 +44,9 @@ interface Tile {
   visibility: Visibility;
 }
 
+// the key of a tile whose element took a config the group then rejected (matches no config)
+const STALE = "";
+
 // a grid column's width in a sections view (the row layout's least width per tile)
 const COLUMN_PX = 40;
 
@@ -84,6 +87,12 @@ export class TileGroupCard extends EntityCardBase {
         try {
           el.setConfig(x.config);
         } catch (e) {
+          // the group keeps its tiles of before, but those configured already (this one too) took
+          // the rejected config: their keys no longer say what they draw, the next config sets them
+          for (let k = 0; k <= i; k++) {
+            const j = reuse[k];
+            if (j !== null && prev[j].key !== keys[k]) prev[j].key = STALE;
+          }
           const msg = String((e as Error)?.message ?? e).replace(`${TILE_TYPE}: `, "");
           throw new Error(`${CARD_TYPE}: tiles[${i}]: ${msg}`, { cause: e });
         }

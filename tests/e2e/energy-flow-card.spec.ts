@@ -226,6 +226,22 @@ test.describe("energy flow card", () => {
     await expect(named).toHaveText("This month");
   });
 
+  test("closes its calendar from the period's button and on a click elsewhere", async ({
+    page,
+  }) => {
+    await mount(page, { type: T, home: HOME, sources: SRC });
+    const c = card(page);
+    await chip(c).click();
+    await expect(dp(c)).toBeVisible();
+    await chip(c).click();
+    await expect(dp(c)).toHaveCount(0);
+    await expect(chip(c)).toHaveAttribute("aria-expanded", "false");
+    await chip(c).click();
+    await expect(dp(c)).toBeVisible();
+    await page.mouse.click(2, 2);
+    await expect(dp(c)).toHaveCount(0);
+  });
+
   test("closes its calendar when it leaves the page", async ({ page }) => {
     await mount(page, { type: T, home: HOME, sources: SRC });
     const c = card(page);

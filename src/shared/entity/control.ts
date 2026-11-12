@@ -147,8 +147,10 @@ export interface ControlButton {
   primary: boolean;
   // always a hold, whatever `confirm` says (a lock's door opener)
   confirm?: boolean;
-  // the supported_features bit it needs (an entity that reports its features without it: left out)
+  // the supported_features bits it needs, any of them (an entity that reports its features without
+  // them: left out); `featureAll`: all of them, as the service it calls requires
   feature?: number;
+  featureAll?: boolean;
   // greyed out now, as Home Assistant's are (a lock that is locked cannot lock)
   disabled?: (st: HassEntity | undefined) => boolean;
 }
@@ -674,9 +676,9 @@ const updateSkipped = (st: HassEntity | undefined) => {
 // unless the card names its own
 export const BUTTONS: Record<string, readonly ControlButton[]> = {
   cover: [
-    btn("open", "mdi:arrow-up", { label: "control.open" }),
-    btn("stop", "mdi:stop", { label: "control.stop" }),
-    btn("close", "mdi:arrow-down", { label: "control.close" }),
+    btn("open", "mdi:arrow-up", { feature: 1, label: "control.open" }),
+    btn("stop", "mdi:stop", { feature: 8, label: "control.stop" }),
+    btn("close", "mdi:arrow-down", { feature: 2, label: "control.close" }),
     btn("tilt_open", "mdi:arrow-top-right", {
       feature: 16,
       disabled: (st) => at(st, "current_tilt_position") === 100,
@@ -693,12 +695,23 @@ export const BUTTONS: Record<string, readonly ControlButton[]> = {
     btn("close", "mdi:valve-closed", { feature: 2, label: "control.close" }),
   ],
   media_player: [
-    btn("previous", "mdi:skip-previous", { label: "control.previous" }),
-    btn("play_pause", "mdi:play-pause", { primary: true, label: "control.play_pause" }),
-    btn("next", "mdi:skip-next", { label: "control.next" }),
+    btn("previous", "mdi:skip-previous", { feature: 16, label: "control.previous" }),
+    // (media_play_pause: Home Assistant asks for pause 1 and play 16384 both)
+    btn("play_pause", "mdi:play-pause", {
+      feature: 1 | 16384,
+      featureAll: true,
+      primary: true,
+      label: "control.play_pause",
+    }),
+    btn("next", "mdi:skip-next", { feature: 32, label: "control.next" }),
   ],
   vacuum: [
-    btn("start_pause", "mdi:play-pause", { primary: true, label: "control.start_pause" }),
+    // (start 8192 or pause 4)
+    btn("start_pause", "mdi:play-pause", {
+      feature: 8192 | 4,
+      primary: true,
+      label: "control.start_pause",
+    }),
     btn("stop", "mdi:stop", {
       feature: 8,
       label: "control.stop",
@@ -706,11 +719,16 @@ export const BUTTONS: Record<string, readonly ControlButton[]> = {
     }),
     btn("clean_spot", "mdi:target-variant", { feature: 1024 }),
     btn("locate", "mdi:map-marker", { feature: 512 }),
-    btn("dock", "mdi:home-import-outline", { label: "control.dock" }),
+    btn("dock", "mdi:home-import-outline", { feature: 16, label: "control.dock" }),
   ],
   lawn_mower: [
-    btn("start_pause", "mdi:play-pause", { primary: true, label: "control.start_pause" }),
-    btn("dock", "mdi:home-import-outline", { label: "control.dock" }),
+    // (start mowing 1 or pause 2)
+    btn("start_pause", "mdi:play-pause", {
+      feature: 1 | 2,
+      primary: true,
+      label: "control.start_pause",
+    }),
+    btn("dock", "mdi:home-import-outline", { feature: 4, label: "control.dock" }),
   ],
   lock: [
     btn("lock", "mdi:lock", {
@@ -784,7 +802,11 @@ export const buttonsOf = (ent: EntityItem, st?: HassEntity): ControlButton[] => 
     ? ids.map((id) => all.find((b) => b.id === id)).filter((b): b is ControlButton => !!b)
     : [...all];
   const f = numAttr(st, "supported_features");
-  return f === null ? list : list.filter((b) => !b.feature || f & b.feature);
+  return f === null
+    ? list
+    : list.filter(
+        (b) => !b.feature || (b.featureAll ? (f & b.feature) === b.feature : (f & b.feature) !== 0),
+      );
 };
 
 // ----- services -----
@@ -829,9 +851,12 @@ export const serviceFor = (
   });
   switch (input.type) {
     case "toggle": {
-      // a switch for an attribute flips it (a fan's oscillation), else the entity's power
+      // a switch for an attribute flips it (a fan's oscillation), else the entity's power; a lock
+      // and an alarm panel have no toggle: their next state, as pressing them
       const t = input.attribute ? targetOf(ent) : null;
-      return t?.toggle ? t.toggle(ent, st) : call("homeassistant", "toggle");
+      if (t?.toggle) return t.toggle(ent, st);
+      if (d === "lock" || d === "alarm_control_panel") return actionServiceFor(id, st);
+      return call("homeassistant", "toggle");
     }
     case "value":
     case "step": {

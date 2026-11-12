@@ -6,6 +6,7 @@ import { fmtNumber, type FmtValue } from "../entity/model.ts";
 import { secondaryEl } from "../entity/render/lead.ts";
 import type { Point } from "../history.ts";
 import { powerParts, wattsOf } from "../power.ts";
+import { timeZoneOf } from "../format.ts";
 import { startOfDay } from "../util.ts";
 import { alertGlow, sinceEl } from "./dom.ts";
 import { place } from "./domains.ts";
@@ -17,7 +18,7 @@ import type { Kind, KindCtx } from "./types.ts";
 // the points of the card's entity since midnight
 export const todayOf = (c: KindCtx): Point[] => {
   const id = c.ent.entity;
-  const t0 = startOfDay(c.ctx.now);
+  const t0 = startOfDay(c.ctx.now, timeZoneOf(c.ctx.hass));
   return (id ? (c.ctx.series.get(id) ?? []) : []).filter((p) => p.t >= t0);
 };
 // the lowest and the highest of the points' values (null: none), the value now among them

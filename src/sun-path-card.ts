@@ -23,7 +23,7 @@
  */
 import { defineElement, syncKeepHeight, registerCard, freshShadow } from "./shared/card.ts";
 import { cssColor } from "./shared/color.ts";
-import { langOf } from "./shared/format.ts";
+import { formatKeyOf } from "./shared/format.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { qs } from "./shared/util.ts";
 import type { SunPathCardConfig, SunPathConfig, SunPathHost } from "./sun-path/config.ts";
@@ -95,7 +95,7 @@ export class SunPathCard extends HTMLElement implements SunPathHost {
     if (!this._root) this._buildDom();
     const minute = Math.floor(Date.now() / 60000);
     // once a minute, and at once when the language changed (labels, times)
-    if (minute !== this._lastMinute || langOf(prev) !== langOf(hass)) {
+    if (minute !== this._lastMinute || formatKeyOf(prev) !== formatKeyOf(hass)) {
       this._lastMinute = minute;
       this._render();
     }

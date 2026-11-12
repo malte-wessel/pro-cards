@@ -11,14 +11,18 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import UTC, datetime, timedelta
 
-from homeassistant.components.recorder.models import StatisticMeanType
+from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.db_schema import StatisticsShortTerm
+from homeassistant.components.recorder.models import StatisticMeanType, StatisticMetaData
 from homeassistant.components.recorder.statistics import async_import_statistics
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
+
+from .meters import meter_statistics
 
 DOMAIN = "pro_cards_world"
 _LOGGER = logging.getLogger(__name__)
@@ -68,30 +72,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 def _import_statistics(hass: HomeAssistant, world: dict) -> None:
-    """The meters' compiled hours up to the last full one, as the recorder would have them."""
-    first = world["first"] / 1000
-    last_full = int(datetime.now(UTC).timestamp() // 3600) - int(first // 3600) - 1
+    """The meters' compiled hours up to the last full one, as the recorder would have them, and
+    their last five minutes, which the recorder's own statistics count on from (meters.py)."""
+    now = dt_util.utcnow().timestamp()
+    decimals = {item["id"]: item.get("decimals") for item in world["entities"]}
     for statistic_id, meter in world["meters"].items():
-        readings = meter["readings"]
-        stats = [
-            {
-                "start": datetime.fromtimestamp(first, UTC) + timedelta(hours=i),
-                "state": readings[i + 1],
-                "sum": readings[i + 1] - readings[0],
-            }
-            for i in range(min(last_full, len(readings) - 1))
-        ]
-        async_import_statistics(
-            hass,
-            {
-                "mean_type": StatisticMeanType.NONE,
-                "has_sum": True,
-                "name": meter["name"],
-                "source": "recorder",
-                "statistic_id": statistic_id,
-                "unit_class": "energy",
-                "unit_of_measurement": meter["unit"],
-            },
-            stats,
-        )
+        hours, short = meter_statistics(world, meter, now, decimals.get(statistic_id))
+        metadata: StatisticMetaData = {
+            "mean_type": StatisticMeanType.NONE,
+            "has_sum": True,
+            "name": meter["name"],
+            "source": "recorder",
+            "statistic_id": statistic_id,
+            "unit_class": "energy",
+            "unit_of_measurement": meter["unit"],
+        }
+        async_import_statistics(hass, metadata, hours)
+        # Home Assistant's public import takes hours only; the recorder's own takes either table
+        get_instance(hass).async_import_statistics(metadata, [short], StatisticsShortTerm)
     _LOGGER.info("imported the statistics of %d meters", len(world["meters"]))

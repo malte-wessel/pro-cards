@@ -13,7 +13,24 @@ export interface Conv {
   fromForm(v: unknown): unknown;
 }
 const numeric = (s: string): string | number => (/^-?\d+(\.\d+)?$/.test(s) ? Number(s) : s);
-const words = (v: unknown) => (typeof v === "string" ? v.trim().split(/\s+/).filter(Boolean) : []);
+// the text's words, split at the spaces outside parentheses: a CSS function is one word
+// ("minmax(200px, 1fr)", "calc(8px + 1vw)")
+const words = (v: unknown): string[] => {
+  if (typeof v !== "string") return [];
+  const out: string[] = [];
+  let word = "";
+  let depth = 0;
+  for (const ch of v) {
+    if (ch === "(") depth++;
+    else if (ch === ")") depth = Math.max(0, depth - 1);
+    if (depth === 0 && /\s/.test(ch)) {
+      if (word) out.push(word);
+      word = "";
+    } else word += ch;
+  }
+  if (word) out.push(word);
+  return out;
+};
 // a count, or column tracks ("1fr 2fr")
 export const TRACKS: Conv = {
   toForm: (v) => (Array.isArray(v) ? v.join(" ") : v === undefined ? "" : String(v)),
@@ -89,9 +106,18 @@ export const optionsFromForm = (
     if (!same(k)) put(k, data[k] === defaults[k] ? undefined : conv.fromForm(data[k]));
   if (!same("breakpoints")) {
     const out: Raw = {};
+    // a breakpoint the form leaves as it showed it keeps its spelling (another one edited)
+    const written = isObj((prev as Raw).breakpoints) ? ((prev as Raw).breakpoints as Raw) : {};
+    const shown = new Map(
+      (before.breakpoints as Raw[]).map((item) => [item.at, JSON.stringify(item)]),
+    );
     for (const item of Array.isArray(data.breakpoints) ? (data.breakpoints as Raw[]) : []) {
       const at = Number(item.at);
       if (!Number.isInteger(at) || at < 2) continue;
+      if (shown.get(at) === JSON.stringify(item) && String(at) in written) {
+        out[at] = written[at];
+        continue;
+      }
       const o: Raw = isObj(item.more) ? { ...item.more } : {};
       for (const [k, conv] of Object.entries(convs)) {
         const v = conv.fromForm(item[k]);

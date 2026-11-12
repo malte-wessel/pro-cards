@@ -178,7 +178,7 @@ An object without `type` changes the kind's own controls: `control: { step: 1 }`
 
 ### Climate and air
 
-A thermostat's segments or select set its `hvac_mode`, `preset_mode`, `fan_mode`, `swing_mode` or `swing_horizontal_mode`, a stepper its `temperature` or `humidity`. A humidifier takes a switch, its target `humidity` and its `mode`; a water heater its `temperature` and its `operation_mode`. A fan's switch sets its power, or its `oscillating`; segments its speed, its `preset_mode` or its `direction`.
+A thermostat's segments or select set its `hvac_mode`, `preset_mode`, `fan_mode`, `swing_mode` or `swing_horizontal_mode`, a stepper its `temperature` or `humidity`. A thermostat holding a range (`heat_cool`) gets a stepper for its low and one for its high target, as Home Assistant's own. A humidifier takes a switch, its target `humidity` and its `mode`; a water heater its `temperature` and its `operation_mode`. A fan's switch sets its power, or its `oscillating`; segments its speed, its `preset_mode` or its `direction`.
 
 ::: live
 
@@ -241,7 +241,7 @@ A cover's slider and buttons move it, or tilt it with `attribute: current_tilt_p
 
 ### Media, robots, locks and alarms
 
-A speaker's select sets its `source` or `sound_mode`, its stepper the volume by 5 %. A robot's select sets its `fan_speed`. A domain's buttons are named in `options`, in your order: a robot's `start_pause`, `stop`, `clean_spot`, `locate` and `dock`, a lock's `lock`, `unlock` and `open_door` (always held for a second). An alarm panel's segments arm it in the modes it supports and disarm it. A lock or a panel that wants a code opens Home Assistant's dialog for it instead.
+A speaker's select sets its `source` or `sound_mode`, its stepper the volume by 5 %. A robot's select sets its `fan_speed`. A domain's buttons are named in `options`, in your order: a robot's `start_pause`, `stop`, `clean_spot`, `locate` and `dock`, a lock's `lock`, `unlock` and `open_door` (always held for a second). A domain's buttons leave out what the entity says it does not support: a garage door that only opens and closes has no stop, a TV without tracks no previous or next. A switch on a lock locks and unlocks it. An alarm panel's segments arm it in the modes it supports and disarm it. A lock or a panel that wants a code opens Home Assistant's dialog for it instead, from a switch or a hold too.
 
 ::: live
 

@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { HomeAssistant } from "../../../src/shared/ha.ts";
 import {
+  knownRegistryOptions,
   onRegistryOptions,
   registryOptions,
   resetRegistryOptions,
@@ -53,6 +54,15 @@ describe("an entity's registry options", () => {
     expect(registryOptions(hass, "light.none")).toBeNull();
     // without Home Assistant (a render before it) nothing is asked
     expect(registryOptions(undefined, "light.other")).toBeNull();
+  });
+  it("tell an answer of none apart from no answer yet, asking nothing", async () => {
+    const { hass, callWS } = hassWith(async () => null);
+    expect(knownRegistryOptions("cover.none")).toBeUndefined();
+    expect(callWS).not.toHaveBeenCalled();
+    registryOptions(hass, "cover.none");
+    expect(knownRegistryOptions("cover.none")).toBeUndefined();
+    await flush();
+    expect(knownRegistryOptions("cover.none")).toBeNull();
   });
   it("are fetched again when the registry says the entity changed", async () => {
     let n = 0;

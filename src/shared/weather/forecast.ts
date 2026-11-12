@@ -152,3 +152,10 @@ export const entryDate = (t: number): Date => {
 // whether a daily forecast entry is today's
 export const isTodayEntry = (t: number, now: number) =>
   entryDate(t).toDateString() === new Date(now).toDateString();
+// today's day of a daily forecast: its first two days, as an integration pushes a new forecast
+// only when it updates, so for a while after midnight the first is still yesterday's
+export const todayOf = (
+  fc: readonly ForecastEntry[] | null | undefined,
+  type: "daily" | "twice_daily",
+  now: number,
+): Day | null => daysOf(fc, type, 2).find((d) => isTodayEntry(d.t, now)) ?? null;

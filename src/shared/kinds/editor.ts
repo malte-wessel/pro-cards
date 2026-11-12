@@ -117,8 +117,9 @@ export abstract class KindCardEditor extends FormEditorBase {
   }
   // a kind chosen in Shows that the card's entity does not fit waits here for one that does: the
   // config stays as it was (a kind without its entity is no card) until one is picked; the config
-  // changed elsewhere (its YAML) drops it
-  _wait?: { shows: string; config: string };
+  // changed elsewhere (its YAML) drops it. An entity cleared waits the same way for the next one
+  // (`cleared`: any entity the picker offers ends it)
+  _wait?: { shows: string; config: string; cleared?: boolean };
   _waiting(): string | undefined {
     const w = this._wait;
     return w && w.config === JSON.stringify(this._config ?? {}) ? w.shows : undefined;
@@ -147,10 +148,20 @@ export abstract class KindCardEditor extends FormEditorBase {
     let chose = typeof shows === "string" && shows !== was;
     let kind: string | undefined = chose ? (shows as string) : undefined;
     if (chose) this._wait = undefined;
-    if (!chose && waiting) {
+    const picked = typeof data.entity === "string" ? data.entity : "";
+    const cleared = !picked && typeof p.entity === "string" && !!p.entity;
+    if (!chose && !waiting && cleared && !KINDS[was]?.entityless) {
+      // the entity cleared, to pick another: the card waits as it was (its kind, its control)
+      // for one, rather than becoming one of your own texts without them (a kind that reads no
+      // entity is a card without one)
+      this._wait = { shows: was, config: JSON.stringify(prev), cleared: true };
+      data.entity = p.entity;
+    } else if (!chose && waiting && picked && this._wait?.cleared) {
+      // an entity picked after one was cleared: as if picked over the card as it was
+      this._wait = undefined;
+    } else if (!chose && waiting) {
       // waiting: an entity picked that fits takes the kind; else the entity stays as it was
-      const e = typeof data.entity === "string" ? data.entity : "";
-      if (e && fitsKind(this._hass, waiting, e)) {
+      if (picked && fitsKind(this._hass, waiting, picked)) {
         this._wait = undefined;
         chose = true;
         kind = waiting;

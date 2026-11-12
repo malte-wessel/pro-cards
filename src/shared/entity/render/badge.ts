@@ -10,6 +10,7 @@ import {
   fmtNumber,
   fmtPowerAuto,
   fmtRelative,
+  timeZoneOf,
 } from "../../format.ts";
 import { decimalsOf, startOfDay } from "../../util.ts";
 import type { EntityItem } from "../config.ts";
@@ -156,9 +157,9 @@ const pillOf = (ctx: RenderCtx, el: HTMLElement, ent: EntityItem, m: EntityModel
   el.classList.toggle("stale", age !== null);
   return age;
 };
-// the start of a v3 badge's window: its hours back, or midnight
-const startOf = (now: number, hours: number | "today") =>
-  hours === "today" ? startOfDay(now) : now - hours * 3600e3;
+// the start of a v3 badge's window: its hours back, or midnight in the profile's zone
+const startOf = (ctx: RenderCtx, hours: number | "today") =>
+  hours === "today" ? startOfDay(ctx.now, timeZoneOf(ctx.hass)) : ctx.now - hours * 3600e3;
 
 // what a tile group's table row draws after its value: a badge's bar, sparkline or trend, over its
 // own window
@@ -170,7 +171,7 @@ export const inlineVisualEl = (
   hours: number | "today",
 ): HTMLElement | null => {
   if (visual === "bar") return barEl(m);
-  const t0 = startOf(ctx.now, hours);
+  const t0 = startOf(ctx, hours);
   if (visual === "sparkline") return sparkEl(ctx, ent, t0, null);
   return trendEl(ctx, ent, m, (ctx.now - t0) / 3600e3);
 };
@@ -193,9 +194,9 @@ const fillPill = (
   if (ent.item.showValue) el.appendChild(valueEl(ctx, ent, m, age));
   if (ent.visual === "bar") el.appendChild(barEl(m));
   else if (ent.visual === "sparkline")
-    el.appendChild(sparkEl(ctx, ent, startOf(ctx.now, pill.hours), null));
+    el.appendChild(sparkEl(ctx, ent, startOf(ctx, pill.hours), null));
   else if (ent.visual === "trend") {
-    const t0 = startOf(ctx.now, pill.hours);
+    const t0 = startOf(ctx, pill.hours);
     const tr = trendEl(ctx, ent, m, (ctx.now - t0) / 3600e3);
     if (tr) el.appendChild(tr);
   }

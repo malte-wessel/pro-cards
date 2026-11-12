@@ -439,6 +439,11 @@ export const STYLE_CONTROLS = `
   .ctl-stepper .val { min-width: 48px; text-align: center; ${type(14, 20)} font-weight: ${fw("medium")}; color: var(--primary-text-color); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .ctl-stepper.sm .val { min-width: 40px; font-size: ${fs(13)}; }
   .ctl-stepper.pending .val { color: var(--fe-color); }
+  /* a thermostat holding a range: a stepper for each target side by side (square: a bar each) */
+  .ctl-stepper.range { gap: 8px; }
+  .ctl-stepper .half { display: flex; align-items: center; gap: 4px; }
+  .ctl-stepper.range.square { background: none; }
+  .ctl-stepper.range.square .half { gap: 0; height: 100%; border-radius: inherit; background: var(--fe-track); }
   .ctl-segments { display: flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--fe-track); flex: none; max-width: 100%; box-sizing: border-box; }
   .ctl-segments .seg { flex: 0 1 auto; min-width: 26px; height: 30px; border: 0; padding: 0 10px; border-radius: 999px; background: transparent; color: var(--secondary-text-color); display: flex; align-items: center; justify-content: center; gap: 4px; font-size: ${fs(12)}; font-weight: ${fw("medium")}; white-space: nowrap; cursor: pointer; overflow: hidden; --mdc-icon-size: 18px; }
   /* in the block slot the segments share the width */

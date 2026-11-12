@@ -191,10 +191,7 @@ export abstract class CardsEditorBase extends HTMLElement {
     hass: () => this._hass,
     top: () =>
       this._config ? (this._optionsToForm(this._config) as Record<string, unknown>) : undefined,
-    write: (top) => {
-      const next = this._optionsFromForm(top as HaFormData, this._config as CardConfigBase);
-      this._emit({ ...next, cards: this._cards });
-    },
+    write: (top) => this._writeOptions(top as HaFormData),
     mount: (view) => this.shadowRoot!.querySelector(".options")!.after(view),
     root: (): ParentNode => this.shadowRoot ?? this,
     showMain: (on) => {
@@ -219,7 +216,13 @@ export abstract class CardsEditorBase extends HTMLElement {
 
   abstract _optionsSchema(hass: HomeAssistant | undefined, data: HaFormData): HaFormSchema[];
   abstract _optionsToForm(config: CardConfigBase): HaFormData;
+  // the options written onto `prev`, its `cards` with them: the card may change those too (a tile
+  // group's tiles cut to another layout)
   abstract _optionsFromForm(data: HaFormData, prev: CardConfigBase): CardConfigBase;
+  _writeOptions(data: HaFormData) {
+    const next = this._optionsFromForm(data, this._config as CardConfigBase);
+    this._emit({ ...next, cards: Array.isArray(next.cards) ? next.cards : this._cards });
+  }
   // the form of the selected card's place in this card (null: none)
   _placeSchema(_card: CardConfigBase): HaFormSchema[] | null {
     return null;
@@ -382,8 +385,7 @@ export abstract class CardsEditorBase extends HTMLElement {
     f.computeHelper = (s) => this._helper(s);
     f.addEventListener("value-changed", (ev) => {
       ev.stopPropagation();
-      const next = this._optionsFromForm(ev.detail.value, this._config as CardConfigBase);
-      this._emit({ ...next, cards: this._cards });
+      this._writeOptions(ev.detail.value);
     });
     this._sections.watch(f);
     return f;

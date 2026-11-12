@@ -2,7 +2,7 @@
 // hover tooltip. Functions take the card element; the layout results the hover needs are kept
 // on the element (`_mode`, `_sampled`, `_buckets`, `_xOf`, `_yOf`, `_bw`, `_gutter`, `_plotW`).
 import { addLabel } from "../../shared/entity/render/plots.ts";
-import { fmtNumber, fmtTime, textWidth } from "../../shared/format.ts";
+import { fmtNumber, fmtTime, textWidth, timeZoneOf } from "../../shared/format.ts";
 import type { HomeAssistant } from "../../shared/ha.ts";
 import { nearestPoint, placeTip } from "../../shared/hover.ts";
 import { t } from "../../shared/i18n.ts";
@@ -93,7 +93,12 @@ export const xTicks = (
     nowW = textWidth(nowLabel, ax.font);
   const x0 = xOf(t0);
   let lastRight = -Infinity;
-  for (const t of clockTicks(t0, now, timeStep(card._config.hours_to_show))) {
+  for (const t of clockTicks(
+    t0,
+    now,
+    timeStep(card._config.hours_to_show),
+    timeZoneOf(card._hass),
+  )) {
     const x = xOf(t),
       txt = fmtTime(card._hass, t),
       w = textWidth(txt, ax.font);

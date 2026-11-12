@@ -109,3 +109,51 @@ describe("the container cards' editor", () => {
     ed.remove();
   });
 });
+
+describe("the tile group's editor", () => {
+  it("cuts its tiles to what the layout draws as the layout changes", async () => {
+    await import("../../../src/tile-group-card.ts");
+    await import("../../../src/tile-card.ts");
+    const { defineElements } = await import("../../../docs/.vitepress/theme/ha-shim/elements.ts");
+    const { snapshot } = await import("../../../docs/.vitepress/theme/ha-shim/hass.ts");
+    defineElements();
+    const tick = () => new Promise((r) => setTimeout(r, 0));
+    const ed = document.createElement("tile-group-card-pro-editor") as HTMLElement & {
+      setConfig(c: CardConfigBase): void;
+      hass: unknown;
+    };
+    ed.setConfig({
+      type: "custom:tile-group-card-pro",
+      tiles: [{ entity: "light.kitchen", icon: "mdi:lamp", secondary: "hi" }, "light.living_room"],
+    } as CardConfigBase);
+    ed.hass = snapshot();
+    document.body.appendChild(ed);
+    await tick();
+    const sent: Record<string, unknown>[] = [];
+    ed.addEventListener("config-changed", (e) => sent.push((e as CustomEvent).detail.config));
+    const form = ed.shadowRoot!.querySelector<HTMLElement & { data: Record<string, unknown> }>(
+      ".options ha-form",
+    )!;
+    const pick = async (value: Record<string, unknown>) => {
+      form.dispatchEvent(new CustomEvent("value-changed", { detail: { value } }));
+      await tick();
+    };
+    // a table's row draws no icon or secondary: they go (the tile left as its entity alone)
+    await pick({ ...form.data, layout: "table" });
+    expect(sent.at(-1)).toEqual({
+      type: "custom:tile-group-card-pro",
+      tiles: ["light.kitchen", "light.living_room"],
+      layout: "table",
+    });
+    // and back to a list: a row's trend, which a tile does not draw, goes
+    ed.setConfig({
+      type: "custom:tile-group-card-pro",
+      layout: "table",
+      tiles: [{ entity: "sensor.living_room_temperature", visual: "trend" }],
+    } as CardConfigBase);
+    await tick();
+    await pick({ ...form.data, layout: "list" });
+    expect(sent.at(-1)!.tiles).toEqual(["sensor.living_room_temperature"]);
+    ed.remove();
+  });
+});

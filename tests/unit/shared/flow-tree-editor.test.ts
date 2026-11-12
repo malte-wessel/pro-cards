@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 import { PowerFlowCard } from "../../../src/power-flow-card.ts";
 import { EnergyFlowCard } from "../../../src/energy-flow-card.ts";
+import { normalizeEnergyFlowConfig } from "../../../src/energy-flow/config.ts";
 import {
   FLOW_LABELS,
   flowFromForm,
@@ -95,6 +96,22 @@ describe("the flow cards' editor", () => {
     });
   });
 
+  it("drops a dashboard's collection_key with its period, so the card takes the new one", () => {
+    const sources = [{ type: "solar", entity: "sensor.solar_energy" }];
+    const card = { type: E, period: "dashboard", collection_key: "energy_mydash", sources };
+    // (the form keeps the hidden field's value)
+    const out = flowFromForm({ ...flowToForm(card, "energy"), period: "month" }, card, "energy");
+    expect(out).toEqual({ type: E, period: "month", sources });
+    expect(() => normalizeEnergyFlowConfig(out)).not.toThrow();
+    // back to the dashboard: a key typed in its field is written
+    const back = flowFromForm(
+      { ...flowToForm(out, "energy"), period: "dashboard", collection_key: "energy_x" },
+      out,
+      "energy",
+    );
+    expect(back).toMatchObject({ period: "dashboard", collection_key: "energy_x" });
+  });
+
   it("writes the home as its entity id alone, else as an object", () => {
     const card = { type: P, home: "sensor.power_consumption", sources: [] };
     const form = flowToForm(card, "power");
@@ -154,6 +171,31 @@ describe("the flow cards' editor", () => {
     ).toEqual({
       type: "grid",
     });
+  });
+
+  it("drops a two-way grid's both_ways with its pair, so the card takes the one sensor", () => {
+    const grid = {
+      type: "grid",
+      import: "sensor.grid_import",
+      export: "sensor.grid_export",
+      both_ways: true,
+    };
+    // measured by one sensor, then that sensor picked (the form keeps the hidden field's value)
+    const one = sourceFromForm(
+      { ...sourceToForm(grid, "power"), measure: "power" },
+      grid,
+      "power",
+      "power",
+    );
+    expect(one).toEqual({ type: "grid" });
+    const picked = sourceFromForm(
+      { ...sourceToForm(one, "power", "power"), power: "sensor.grid_power" },
+      one,
+      "power",
+      "power",
+    );
+    expect(picked).toEqual({ type: "grid", power: "sensor.grid_power" });
+    expect(() => new PowerFlowCard().setConfig({ type: P, sources: [picked] })).not.toThrow();
   });
 
   it("shows a source without its sensors yet measured the way last chosen", () => {

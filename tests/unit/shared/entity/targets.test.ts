@@ -318,6 +318,42 @@ describe("a domain's buttons", () => {
     expect(ids(e, st("valve.x", "open", { supported_features: 3 }))).toEqual(["open", "close"]);
     expect(ids(e, st("valve.x", "open"))).toEqual(["open", "stop", "close"]);
   });
+  it("leaves out a cover's stop, a player's skips and a robot's dock where they are not supported", () => {
+    // a garage door that only opens (1) and closes (2)
+    const garage = st("cover.x", "closed", { supported_features: 3 });
+    expect(ids(ent("cover.x", { control: "buttons" }), garage)).toEqual(["open", "close"]);
+    expect(
+      ids(
+        ent("cover.x", { control: "buttons" }),
+        st("cover.x", "closed", { supported_features: 15 }),
+      ),
+    ).toEqual(["open", "stop", "close"]);
+    // a TV that pauses (1), sets its volume (4) and plays (16384), no previous (16) or next (32)
+    const tv = st("media_player.x", "playing", { supported_features: 1 | 4 | 16384 });
+    expect(ids(ent("media_player.x", { control: "buttons" }), tv)).toEqual(["play_pause"]);
+    const speaker = st("media_player.x", "playing", { supported_features: 1 | 16 | 32 | 16384 });
+    expect(ids(ent("media_player.x", { control: "buttons" }), speaker)).toEqual([
+      "previous",
+      "play_pause",
+      "next",
+    ]);
+    // play and pause are one call that Home Assistant offers only where the player does both
+    const playOnly = st("media_player.x", "idle", { supported_features: 16 | 32 | 16384 });
+    expect(ids(ent("media_player.x", { control: "buttons" }), playOnly)).toEqual([
+      "previous",
+      "next",
+    ]);
+    // a robot that starts (8192) but has no dock to return to (16)
+    const robot = st("vacuum.x", "docked", { supported_features: 8192 });
+    expect(ids(ent("vacuum.x", { control: "buttons" }), robot)).toEqual(["start_pause"]);
+    // a mower that starts (1) and docks (4), and one that only pauses (2)
+    const mower = (f: number) => st("lawn_mower.x", "docked", { supported_features: f });
+    expect(ids(ent("lawn_mower.x", { control: "buttons" }), mower(5))).toEqual([
+      "start_pause",
+      "dock",
+    ]);
+    expect(ids(ent("lawn_mower.x", { control: "buttons" }), mower(2))).toEqual(["start_pause"]);
+  });
   it("greys out what does nothing now, as Home Assistant's", () => {
     const off = (id: string, e: ReturnType<typeof ent>, s: HassEntity) =>
       buttonsOf(e, s)

@@ -24,7 +24,7 @@ import type { EntityItem } from "./shared/entity/config.ts";
 import { modelOf, type EntityModel, type RenderCtx } from "./shared/entity/model.ts";
 import type { GridOptions, HomeAssistant, WeatherForecastType } from "./shared/ha.ts";
 import { depsChanged } from "./shared/deps.ts";
-import { langOf } from "./shared/format.ts";
+import { formatKeyOf } from "./shared/format.ts";
 import { hideHover, leaveHides } from "./shared/hover.ts";
 import { t } from "./shared/i18n.ts";
 import type { Visibility } from "./shared/visibility.ts";
@@ -41,7 +41,7 @@ import {
   hourStart,
   hoursOf,
   supportsForecast,
-  isTodayEntry,
+  todayOf,
   type Day,
 } from "./shared/weather/forecast.ts";
 import { showTrendHover, trendTimeAt } from "./shared/trend/plot.ts";
@@ -73,11 +73,7 @@ export class WeatherCard extends EntityCardBase {
     return {
       entity: e,
       title: t(hass, "weather.stub_title"),
-      sections: [
-        { type: "hero" },
-        { type: "row", entities: ["humidity", "wind_speed", "pressure"] },
-        { type: "forecast", mode: "daily" },
-      ],
+      sections: [{ type: "hero" }, { type: "forecast", mode: "daily" }],
     };
   }
 
@@ -250,8 +246,8 @@ export class WeatherCard extends EntityCardBase {
     const c = row.classList;
     if (c.contains("wtile") || c.contains("whero")) {
       // the hero shows today's high / low; the tile does not read the forecast
-      const days = c.contains("whero") ? this._days(1) : null;
-      const today = days?.find((d) => isTodayEntry(d.t, ctx.now)) ?? null;
+      const daily = c.contains("whero") ? dailyTypeOf(this._hass?.states[cfg.entity]) : null;
+      const today = daily ? todayOf(this._feed.forecast[daily], daily, ctx.now) : null;
       const secEl = row.closest<HTMLElement>("[data-sec]");
       const sec = secEl ? cfg.sections[Number(secEl.dataset.sec)] : undefined;
       const hero = sec?.kind === "hero" ? sec : null;
@@ -311,7 +307,7 @@ export class WeatherCard extends EntityCardBase {
       !depsChanged(this._sectionInputs, el, [
         mode === "hourly" ? hourly : daily && this._feed.forecast[daily],
         st,
-        langOf(this._hass),
+        formatKeyOf(this._hass),
         // the location (night hours) and units; by value, a test double rebuilds the object
         this._hass?.config?.latitude,
         this._hass?.config?.longitude,

@@ -15,6 +15,7 @@ import {
   placeByWidth,
   placeFromForm,
   placeSchema,
+  masonryAlways,
   placeToForm,
 } from "../../../src/layout/editor.ts";
 import { SWIPE_CONVS, swipeFields, swipeSchema } from "../../../src/swipe/editor.ts";
@@ -87,6 +88,22 @@ describe("tracks, rows and lengths as text", () => {
     expect(LENGTHS.fromForm("1.5 -2")).toEqual([1.5, -2]);
     expect(LENGTHS.fromForm("1rem 8")).toEqual(["1rem", 8]);
     expect(LENGTHS.fromForm("")).toBeUndefined();
+  });
+
+  it("keep a CSS function with spaces inside as one track or length", () => {
+    const tracks = ["minmax(200px, 1fr)", "1fr"];
+    expect(TRACKS.fromForm(TRACKS.toForm(tracks))).toEqual(tracks);
+    expect(TRACKS.fromForm("repeat(2, minmax(0, 1fr))  2fr")).toEqual([
+      "repeat(2, minmax(0, 1fr))",
+      "2fr",
+    ]);
+    expect(ROWS.fromForm(ROWS.toForm(["auto", "minmax(80px, 1fr)"]))).toEqual([
+      "auto",
+      "minmax(80px, 1fr)",
+    ]);
+    expect(LENGTHS.fromForm(LENGTHS.toForm("calc(8px + 1vw)"))).toBe("calc(8px + 1vw)");
+    expect(LENGTHS.fromForm("var(--gap, 8px) 16")).toEqual(["var(--gap, 8px)", 16]);
+    expect(LENGTHS.fromForm(" clamp(4px, 1vw, 12px) ")).toBe("clamp(4px, 1vw, 12px)");
   });
 });
 
@@ -235,6 +252,32 @@ describe("the layout card's breakpoints in its form", () => {
     });
   });
 
+  it("leave a breakpoint as written while another one is edited or added", () => {
+    const bps = {
+      2: { columns: ["minmax(200px, 1fr)", "1fr"], gap: "calc(4px + 0.5rem)" },
+      3: { gap: 8 },
+    };
+    const form = layout.toForm({ breakpoints: bps }).breakpoints as Record<string, unknown>[];
+    const edited = [form[0], { ...form[1], gap: "16" }];
+    expect(layout.edit({ breakpoints: bps }, set("breakpoints", edited)).breakpoints).toEqual({
+      2: bps[2],
+      3: { gap: 16 },
+    });
+    const added = [...form, { at: 6, rows: "auto minmax(80px, 1fr)" }];
+    expect(layout.edit({ breakpoints: bps }, set("breakpoints", added)).breakpoints).toEqual({
+      ...bps,
+      6: { rows: ["auto", "minmax(80px, 1fr)"] },
+    });
+    // the swipe card's too
+    const sbps = { 2: { gap: "calc(4px + 0.5rem)" }, 3: { per_page: 2 } };
+    const sform = swipe.toForm({ breakpoints: sbps }).breakpoints as Record<string, unknown>[];
+    const sedited = [sform[0], { ...sform[1], per_page: 3 }];
+    expect(swipe.edit({ breakpoints: sbps }, set("breakpoints", sedited)).breakpoints).toEqual({
+      2: sbps[2],
+      3: { per_page: 3 },
+    });
+  });
+
   it("write a breakpoint's empty item as an empty breakpoint", () => {
     expect(layout.edit({}, set("breakpoints", [{ at: 2 }])).breakpoints).toEqual({ 2: {} });
   });
@@ -359,6 +402,29 @@ describe("a card's place in the layout", () => {
     const byWidth = placeSchema(hass, withPlace({ span: { 2: 2 }, align: { 3: "end" } }));
     expect(names(byWidth)).toEqual(["column", "order", "by_width"]);
     expect(byWidth.at(-1)).toMatchObject({ type: "constant", value: "span, align" });
+  });
+
+  it("offers no alignment where the layout is a masonry at every width", () => {
+    const names = (s: HaFormSchema[]): string[] =>
+      s.flatMap((x) => (x.schema ? names(x.schema) : x.name ? [x.name] : []));
+    expect(names(placeSchema(hass, tile, true))).not.toContain("align");
+    const layout = (raw: Record<string, unknown>) =>
+      ({ type: "custom:layout-card-pro", cards: [], ...raw }) as CardConfigBase;
+    expect(masonryAlways(layout({ layout: "masonry" }))).toBe(true);
+    expect(masonryAlways(layout({ layout: "masonry", breakpoints: { 3: { columns: 3 } } }))).toBe(
+      true,
+    );
+    expect(masonryAlways(layout({}))).toBe(false);
+    // a breakpoint that goes back to the grid has rows again
+    expect(
+      masonryAlways(layout({ layout: "masonry", breakpoints: { 3: { layout: "grid" } } })),
+    ).toBe(false);
+    expect(masonryAlways(layout({ layout: "masonry", breakpoints: { 3: { layout: null } } }))).toBe(
+      false,
+    );
+    // the alignment the card has stays in its view_layout
+    const aligned = withPlace({ align: "center" });
+    expect(placeFromForm(placeToForm(aligned), aligned)).toEqual(aligned);
   });
 });
 

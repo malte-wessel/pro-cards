@@ -577,6 +577,26 @@ describe("the date of a forecast day", async () => {
     expect(isTodayEntry(Date.UTC(2026, 5, 22), now)).toBe(true);
     expect(isTodayEntry(Date.UTC(2026, 5, 23), now)).toBe(false);
   });
+  it("finds today's day while the forecast still starts with yesterday, and none older", async () => {
+    const { todayOf } = await import("../../src/shared/weather/forecast.ts");
+    const at = (d: number, h: number, temperature: number, templow?: number, day = true) =>
+      ({
+        datetime: new Date(2026, 5, d, h).toISOString(),
+        temperature,
+        templow,
+        is_daytime: day,
+      }) as ForecastEntry;
+    const now = new Date(2026, 5, 23, 0, 10).getTime();
+    const daily = [at(22, 12, 20, 11), at(23, 12, 14, 9), at(24, 12, 16, 10)];
+    expect(todayOf(daily, "daily", now)).toMatchObject({ hi: 14, lo: 9 });
+    // a day and a night per date
+    const night = (d: number, t: number) => at(d, 18, t, undefined, false);
+    const twice = [at(22, 6, 20), night(22, 11), at(23, 6, 14), night(23, 9)];
+    expect(todayOf(twice, "twice_daily", now)).toMatchObject({ hi: 14, lo: 9 });
+    // two days behind: nothing to show rather than a wrong day
+    expect(todayOf(daily.slice(0, 1), "daily", now)).toBeNull();
+    expect(todayOf(null, "daily", now)).toBeNull();
+  });
 });
 
 describe("the daily trend", async () => {
@@ -867,5 +887,63 @@ describe("the weather editor's lists", () => {
     ).toEqual([{ state: "rainy", status: "Wet" }]);
     // all deleted: none written
     expect(weatherFromForm({ ...form, rules: [] }, c)).not.toHaveProperty("rules");
+  });
+});
+
+describe("a card added from the picker", () => {
+  it("starts with sections that are not deprecated", () => {
+    resetDeprecatedKeys();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const stub = WeatherCard.getStubConfig(hass({ [W]: st({ temperature: 12 }) }));
+      expect(stub.entity).toBe(W);
+      const c = normalizeWeatherCardConfig(stub);
+      expect(c.sections.map((s) => s.kind)).toEqual(["hero", "forecast"]);
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
+  });
+});
+
+describe("the hero's high and low", async () => {
+  const { snapshot } = await import("../../docs/.vitepress/theme/ha-shim/hass.ts");
+  it("finds today's after midnight while the daily forecast still starts with yesterday", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    // ten past midnight: the integration has not pushed today's forecast yet
+    vi.setSystemTime(new Date(2026, 5, 23, 0, 10));
+    const el = new WeatherCard();
+    try {
+      const day = (d: number, hi: number, lo: number): ForecastEntry => ({
+        datetime: new Date(2026, 5, d, 12).toISOString(),
+        condition: "sunny",
+        temperature: hi,
+        templow: lo,
+      });
+      const fc = [day(22, 20, 11), day(23, 14, 9), day(24, 16, 10)];
+      const h = {
+        ...snapshot(),
+        connection: {
+          subscribeMessage: async (
+            cb: (m: unknown) => void,
+            msg: { type: string; forecast_type?: string },
+          ) => {
+            if (msg.type === "weather/subscribe_forecast")
+              cb({ type: msg.forecast_type, forecast: msg.forecast_type === "daily" ? fc : null });
+            return () => {};
+          },
+        },
+      } as unknown as HomeAssistant;
+      el.setConfig({ entity: W, sections: [{ type: "hero" }] });
+      document.body.appendChild(el);
+      el.hass = h;
+      el.hass = h;
+      const hero = el.shadowRoot!.querySelector(".row.whero");
+      expect(hero?.querySelector(".big")?.textContent).toBe("17.4°C");
+      expect(hero?.querySelector(".secondary")?.textContent).toBe("14° / 9°");
+    } finally {
+      el.remove();
+      vi.useRealTimers();
+    }
   });
 });

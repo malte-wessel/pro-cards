@@ -9,16 +9,17 @@ import {
   fmtTime,
   numberFormat,
 } from "../../../src/shared/format.ts";
+import { startOfDay } from "../../../src/shared/util.ts";
 import type { HomeAssistant } from "../../../src/shared/ha.ts";
 
 const hass = (language: string) => ({ locale: { language } }) as unknown as HomeAssistant;
 
 describe("locale formatting", () => {
   it("keeps one formatter per language and options", () => {
-    const a = numberFormat("de", { maximumFractionDigits: 1 });
-    expect(numberFormat("de", { maximumFractionDigits: 1 })).toBe(a);
-    expect(numberFormat("en", { maximumFractionDigits: 1 })).not.toBe(a);
-    expect(numberFormat("de", { maximumFractionDigits: 2 })).not.toBe(a);
+    const a = numberFormat(hass("de"), { maximumFractionDigits: 1 });
+    expect(numberFormat(hass("de"), { maximumFractionDigits: 1 })).toBe(a);
+    expect(numberFormat(hass("en"), { maximumFractionDigits: 1 })).not.toBe(a);
+    expect(numberFormat(hass("de"), { maximumFractionDigits: 2 })).not.toBe(a);
     const d = dateFormat("de", { weekday: "short" });
     expect(dateFormat("de", { weekday: "short" })).toBe(d);
   });
@@ -61,5 +62,89 @@ describe("durations, moments and power", () => {
     expect(fmtPowerAuto(hass("en"), 3.4, "kW", null)).toBe("3.4 kW");
     expect(fmtPowerAuto(hass("en"), 2500000, "W", 1)).toBe("2.5 MW");
     expect(fmtPowerAuto(hass("en"), 5, "%", null)).toBeNull();
+  });
+});
+
+// the profile's settings beside the language (Home Assistant's FrontendLocaleData)
+const profile = (locale: Record<string, string>, timeZone?: string) =>
+  ({
+    locale: { language: "en", ...locale },
+    config: { time_zone: timeZone },
+  }) as unknown as HomeAssistant;
+
+describe("the profile's number format", () => {
+  it("writes numbers with the separators the profile picks, not the language's", () => {
+    expect(fmtNumber(profile({ number_format: "decimal_comma" }), 1234.5, 1)).toBe("1.234,5");
+    expect(fmtNumber(profile({ number_format: "comma_decimal", language: "de" }), 1234.5, 1)).toBe(
+      "1,234.5",
+    );
+    expect(fmtNumber(profile({ number_format: "space_comma" }), 1234.5, 1)).toMatch(/^1\s234,5$/);
+    expect(fmtNumber(profile({ number_format: "quote_decimal" }), 1234.5, 1)).toMatch(
+      /^1[’']234\.5$/,
+    );
+    expect(fmtNumber(profile({ number_format: "none" }), 1234.5, 1)).toBe("1234.5");
+    expect(fmtNumber(profile({ number_format: "language", language: "de" }), 1234.5, 1)).toBe(
+      "1.234,5",
+    );
+  });
+  it("writes a power with the profile's separators", () => {
+    expect(fmtPowerAuto(profile({ number_format: "decimal_comma" }), 1240, "W", null)).toBe(
+      "1,24 kW",
+    );
+  });
+  it("keeps the language's unit words in a duration", () => {
+    expect(fmtDuration(profile({ number_format: "decimal_comma" }), 4320)).toBe("1h 12m");
+  });
+});
+
+describe("the profile's time format and time zone", () => {
+  const evening = new Date(2026, 5, 21, 20, 30);
+  it("writes a time of day with the hours the profile picks", () => {
+    expect(fmtTime(profile({}), evening)).toBe("08:30 PM");
+    expect(fmtTime(profile({ time_format: "language" }), evening)).toBe("08:30 PM");
+    expect(fmtTime(profile({ time_format: "24" }), evening)).toBe("20:30");
+    expect(fmtTime(profile({ time_format: "12", language: "en-GB" }), evening)).toMatch(
+      /^08:30\s?pm$/i,
+    );
+  });
+  it("writes a time of day in the server's zone when the profile says so", () => {
+    const at = Date.UTC(2026, 5, 21, 12, 0);
+    const en24 = { language: "en-GB" };
+    // the tests run in Europe/Berlin (UTC+2 in June)
+    expect(fmtTime(profile(en24, "America/New_York"), at)).toBe("14:00");
+    expect(fmtTime(profile({ ...en24, time_zone: "server" }, "America/New_York"), at)).toBe(
+      "08:00",
+    );
+    // an unknown zone: the browser's
+    expect(fmtTime(profile({ ...en24, time_zone: "server" }, "Nowhere/Else"), at)).toBe("14:00");
+  });
+  it("starts today at the midnight of the profile's zone", () => {
+    const now = Date.UTC(2026, 5, 21, 3, 0); // 05:00 in Berlin, 23:00 the day before in New York
+    expect(startOfDay(now)).toBe(Date.UTC(2026, 5, 20, 22, 0));
+    expect(startOfDay(now, "America/New_York")).toBe(Date.UTC(2026, 5, 20, 4, 0));
+  });
+});
+
+describe("relative days", () => {
+  const at = (d: number, h: number, m = 0) => new Date(2026, 5, d, h, m).getTime();
+  const rel = (t: number, now: number) => fmtRelative(hass("en"), t, now);
+  it("counts the calendar days between the two moments", () => {
+    // 20:00 → 02:00 the day after tomorrow (30 h)
+    expect(rel(at(23, 2), at(21, 20))).toBe("in 2 days");
+    // 08:00 → 23:00 two days before (33 h)
+    expect(rel(at(19, 23), at(21, 8))).toBe("2 days ago");
+    expect(rel(at(22, 18), at(21, 10))).toBe("tomorrow");
+    expect(rel(at(20, 2), at(21, 10))).toBe("yesterday");
+  });
+  it("never says tomorrow for a moment later the same day", () => {
+    expect(rel(at(21, 23, 46), at(21, 0, 10))).toBe("in 24 hours");
+  });
+  it("keeps hours for a moment less than a day away on the next day", () => {
+    expect(rel(at(22, 1), at(21, 20))).toBe("in 5 hours");
+  });
+  it("counts the days in the profile's zone", () => {
+    // 20:00 in Berlin is 14:00 in New York; 02:00 in Berlin two days on is 20:00 there tomorrow
+    const ny = profile({ time_zone: "server" }, "America/New_York");
+    expect(fmtRelative(ny, at(23, 2), at(21, 20))).toBe("tomorrow");
   });
 });

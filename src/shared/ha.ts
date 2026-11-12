@@ -25,8 +25,14 @@ export interface HomeAssistant {
   config: Pick<HassConfig, "latitude" | "longitude" | "time_zone" | "version"> & {
     unit_system?: Partial<HassConfig["unit_system"]>;
   };
-  // `time_zone`: the profile's choice between the server's zone and the browser's
-  locale?: { language: string; time_zone?: "local" | "server" };
+  // the profile's settings: `time_zone` picks between the server's zone and the browser's,
+  // `number_format` the separators of numbers, `time_format` 12 or 24 hours (format.ts)
+  locale?: {
+    language: string;
+    time_zone?: "local" | "server";
+    number_format?: string;
+    time_format?: string;
+  };
   // the logged-in user (visibility's `user` and `location` conditions)
   user?: Pick<HassUser, "id" | "name" | "is_admin">;
   // frontend versions without it fall back to the card's own formatting

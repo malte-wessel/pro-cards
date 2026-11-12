@@ -7,6 +7,8 @@
 import { cssColor } from "../color.ts";
 import { CARD_BG } from "../constants.ts";
 import { EntityCardBase } from "../entity/base.ts";
+import { timeZoneOf } from "../format.ts";
+import { startOfDay } from "../util.ts";
 import type { EntityCardConfig, EntityItem, PlotOptions } from "../entity/config.ts";
 import type { Visual } from "../entity/constants.ts";
 import type { EntityModel, RenderCtx } from "../entity/model.ts";
@@ -248,7 +250,19 @@ export abstract class KindCardBase extends EntityCardBase {
   // the pictures the card and its rules name (an icon's, a visual's)
   // the visual the card draws without a rule: the kind's, with the card's merged or in its place
   _baseVisual(c: KindConfig): VisualPlace | false {
-    return resolvePlaces([{ icon: undefined, visual: this._kindVisual() }, c.places]).visual;
+    return this._ontoInput(
+      resolvePlaces([{ icon: undefined, visual: this._kindVisual() }, c.places]).visual,
+    );
+  }
+  // a plot that names no src of its own draws the input the kind plots (a plug's power, not its
+  // on and off), whatever plot the card or a rule names; without that input, the card's entity
+  _ontoInput<V extends VisualPlace | false | null>(v: V): V {
+    const cfg = this._config as KindConfig;
+    const key = cfg.kind.visualInput;
+    if (!v || !key || v.src !== undefined || !HISTORY_THINGS.includes(v.type as never)) return v;
+    const idx = cfg.inputs?.[key];
+    const src = idx === undefined ? null : cfg.entities[idx]?.entity;
+    return src ? { ...v, src } : v;
   }
   // whether a rule's visual merges onto a plot (a type of its own replaces it)
   _ontoPlot(c: KindConfig, v: VisualPlace | false | undefined) {
@@ -273,7 +287,7 @@ export abstract class KindCardBase extends EntityCardBase {
     const c = cfg as KindConfig;
     const entity = c.entities[0].entity;
     const rules = [...c.rulePlaces.values()].map((p) =>
-      p.visual && p.visual.type ? p.visual : null,
+      p.visual && p.visual.type ? this._ontoInput(p.visual) : null,
     );
     const plots = [this._baseVisual(c), ...rules].flatMap((v) =>
       v && v.type && HISTORY_THINGS.includes(v.type) && !kindDraws(c.kind, v)
@@ -325,6 +339,7 @@ export abstract class KindCardBase extends EntityCardBase {
       warn(`visual: ${r.visual.type}`);
       r.visual = this._kindVisual() || false;
     }
+    r.visual = this._ontoInput(r.visual);
     if (r.icon.type === "flow" && !fits("flow")) {
       warn("icon: flow");
       r.icon = { ...r.icon, type: "icon", style: undefined };
@@ -360,8 +375,7 @@ export abstract class KindCardBase extends EntityCardBase {
       }
       return null;
     }
-    const d = new Date(now);
-    const midnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const midnight = startOfDay(now, timeZoneOf(this._hass));
     return Math.max(1 / 60, (now - midnight) / 3600e3);
   }
 
@@ -372,7 +386,7 @@ export abstract class KindCardBase extends EntityCardBase {
     const m = this._modelAt(ctx, 0);
     const place = this._placesFor(m);
     const hours = this._hoursOf(place.visual, ctx.now);
-    return {
+    const kc: KindCtx = {
       ctx,
       ent: cfg.entities[0],
       m,
@@ -387,6 +401,11 @@ export abstract class KindCardBase extends EntityCardBase {
       card: (this.constructor as typeof KindCardBase).thing,
       leadSize: (this.constructor as typeof KindCardBase).leadSize,
     };
+    // the item with its icon as the place draws it now (its style, its ring): a kind that builds
+    // its own lead (the weather's condition, the sun, a solar's) draws it so
+    const look = this._iconLook(kc);
+    kc.ent = { ...kc.ent, iconStyle: look.iconStyle, iconRing: look.iconRing };
+    return kc;
   }
   // the places the kind fills, less those the card sets itself; the icon's own actions take the
   // lead (the plain icon, or the hold button in its place)
@@ -606,10 +625,15 @@ export abstract class KindCardBase extends EntityCardBase {
     card?.classList.toggle("pdraw", !!el);
     if (el) (key ? back?.update : ownGlow?.update)?.(el, kc, row);
   }
-  // the kind's colour where neither the item nor its rule names one (null: none of its own)
+  // the kind's colour where neither the item nor its rule names one (null: none of its own). Of
+  // the kind's own rules only one that says something (a battery's Low, Critical) names one: those
+  // that only colour (a battery's bands) stand in for Home Assistant's state colour, which comes
+  // after the kind's (a home battery charging)
   _kindColor(ent: EntityItem, m: EntityModel): string | null {
     const cfg = this._config as KindConfig;
-    if (!cfg.kind.color || !this._hass || ent.color || m.look.rule?.color) return null;
+    const rule = m.look.rule;
+    const ruled = !!rule?.color && (!!rule.src || !!rule.labelKey);
+    if (!cfg.kind.color || !this._hass || ent.color || ruled) return null;
     const c = cfg.kind.color(this._kindCtx(this._ctx()));
     return c ? cssColor(c, "var(--primary-color)") : null;
   }

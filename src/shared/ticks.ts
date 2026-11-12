@@ -1,4 +1,6 @@
 // Time axis helpers shared by the cards that plot a history window (pure).
+import { zonedMidnight, zonedParts } from "./calendar.ts";
+import { LOCAL_ZONE } from "./format.ts";
 
 // time tick interval (ms) for a window of `hours`
 export const timeStep = (hours: number) => {
@@ -15,10 +17,22 @@ export const timeStep = (hours: number) => {
 // in wall-clock time from the local midnight of t0's day, so a DST change inside the window keeps
 // the ticks on the boundaries (the Date constructor carries over days and moves a time in a
 // skipped hour forward; a tick that lands on the one before it is dropped)
-export const clockTicks = (t0: number, now: number, step: number): number[] => {
+// `tz`: the zone the axis labels are written in (the profile's); left out or the browser's own,
+// the browser's calendar. In another zone the steps count from that zone's midnight, so a label
+// reads a whole hour of that zone's clock
+export const clockTicks = (t0: number, now: number, step: number, tz?: string): number[] => {
   // a time that is not one (a forecast date that did not parse) has no ticks: the loop below ends
   // only by passing `now`
   if (!Number.isFinite(t0) || !Number.isFinite(now) || !(step > 0) || now < t0) return [];
+  if (tz && tz !== LOCAL_ZONE) {
+    const p = zonedParts(t0, tz);
+    const midnight = zonedMidnight(p.y, p.m, p.d, tz);
+    const ms = Math.max(1, Math.round(step / 60e3)) * 60e3;
+    const out: number[] = [];
+    for (let t = midnight + Math.max(0, Math.ceil((t0 - midnight) / ms)) * ms; t <= now; t += ms)
+      out.push(t);
+    return out;
+  }
   const start = new Date(t0);
   const y = start.getFullYear(),
     m = start.getMonth(),

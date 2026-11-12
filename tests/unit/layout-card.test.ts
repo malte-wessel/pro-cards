@@ -292,6 +292,16 @@ describe("layout-card plan", () => {
     expect(plan.items.map((i) => i.column)).toEqual([1, 0, 0]);
     expect(cardSize(c.base, [kid(c, 0, { size: 4 }), kid(c, 1), kid(c, 2)], plan)).toBe(4);
   });
+  it("aligns a card in its grid row, and keeps a masonry card as wide as its column", () => {
+    const cards = [{ type: "a", view_layout: { align: "center" } }, { type: "b" }];
+    const grid = cfg({ columns: 2, cards });
+    expect(planLayout(grid.base, [kid(grid, 0), kid(grid, 1)], 1).items[0].style).toMatchObject({
+      "align-self": "center",
+    });
+    const masonry = cfg({ layout: "masonry", columns: 2, cards });
+    const plan = planLayout(masonry.base, [kid(masonry, 0), kid(masonry, 1)], 1);
+    expect(plan.items[0].style).not.toHaveProperty("align-self");
+  });
   it("counts the card size by rows of the grid", () => {
     const c = cfg({ columns: 2, cards: [{ type: "a" }, { type: "b" }, { type: "c" }] });
     const kids = [kid(c, 0, { size: 3 }), kid(c, 1, { size: 1 }), kid(c, 2, { size: 2 })];

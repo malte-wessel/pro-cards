@@ -2,7 +2,8 @@
 // lanes with one scale each, optional time / value axes with gridlines and a crosshair tooltip.
 // Used by the multi trend card (history) and the weather card (forecasts). Layout results the
 // hover needs (scales, x mapping, gutter) stay on the plot element.
-import { fmtNumber, fmtTime, textWidth } from "../format.ts";
+import { fmtNumber, fmtTime, textWidth, timeZoneOf } from "../format.ts";
+import { zonedParts } from "../calendar.ts";
 import type { HomeAssistant } from "../ha.ts";
 import {
   bucketMean,
@@ -79,8 +80,12 @@ const fmtDay = (hass: HomeAssistant | undefined, t: number) =>
   fmtTime(hass, t, { weekday: "short" });
 // time of day; with the weekday when `t` is not today (tooltips), never for axis labels (`short`)
 const fmtClock = (hass: HomeAssistant | undefined, t: number, short?: boolean) => {
-  const d = new Date(t);
-  const sameDay = short || d.toDateString() === new Date().toDateString();
+  // (today in the zone the time is written in)
+  const day = (x: number) => {
+    const p = zonedParts(x, timeZoneOf(hass));
+    return `${p.y}-${p.m}-${p.d}`;
+  };
+  const sameDay = short || day(t) === day(Date.now());
   return fmtTime(
     hass,
     t,
@@ -169,7 +174,10 @@ export const drawTrend = (plot: TrendPlotEl, spec: TrendSpec) => {
         const step = niceStep(sc.max - sc.min, lanes ? 2 : 3);
         const dec = decimalsForStep(step);
         const ticks: { v: number; y: number; label: string }[] = [];
-        for (let v = Math.ceil(sc.min / step) * step; v <= sc.max + 1e-9; v += step) {
+        // each tick counted from the first (never a sum that may stop growing), a handful at most
+        const first = Math.ceil(sc.min / step);
+        for (let k = first; k - first < 12 && k * step <= sc.max + 1e-9; k++) {
+          const v = k * step;
           const y = sc.y(v);
           // stay inside the drawable band (half a label above its foot)
           if (y < sc.top + sc.topPad - 1 || y > sc.top + sc.h - (ax.line / 2 - 1)) continue;
@@ -220,7 +228,7 @@ export const drawTrend = (plot: TrendPlotEl, spec: TrendSpec) => {
     const hours = (now - t0) / 3600e3;
     const step = timeStep(hours);
     const xTicks: { t: number; x: number }[] = [];
-    for (const t of clockTicks(t0, now, step)) {
+    for (const t of clockTicks(t0, now, step, timeZoneOf(hass))) {
       const x = xOf(t);
       if (x - gutter < -0.5) continue;
       xTicks.push({ t, x });

@@ -39,7 +39,7 @@ import {
 } from "./multi-trend/config.ts";
 import { cssColor } from "./shared/color.ts";
 import { DEVICE_CLASS_ICON, REFRESH_MS } from "./shared/constants.ts";
-import { fmtNumber, langOf } from "./shared/format.ts";
+import { fmtNumber, formatKeyOf } from "./shared/format.ts";
 import { fetchHistory, type Point } from "./shared/history.ts";
 import { HistoryFeed } from "./shared/history-feed.ts";
 import { t } from "./shared/i18n.ts";
@@ -145,7 +145,7 @@ export class MultiTrendCard extends HTMLElement {
       return;
     }
     // Live append of new states between refreshes; a new language re-renders the axis times
-    let changed = langOf(prev) !== langOf(hass);
+    let changed = formatKeyOf(prev) !== formatKeyOf(hass);
     this._config.entities.forEach((e, i) => {
       const st = hass.states[e.entity];
       const pst = prev?.states[e.entity];
@@ -268,6 +268,19 @@ export class MultiTrendCard extends HTMLElement {
     return u ? `${n} ${u}` : n;
   }
 
+  // entity i's state in the header: a number with its decimals and unit, a word as Home
+  // Assistant formats it (in the viewer's language), an unavailable one as ours without that
+  _stateText(i: number): string {
+    const st = this._state(i);
+    if (!st) return "—";
+    if (isNum(st.state)) return this._fmt(i, Number(st.state));
+    const shown = this._hass?.formatEntityState?.(st);
+    if (shown) return shown;
+    return st.state === "unavailable" || st.state === "unknown" || st.state === ""
+      ? t(this._hass, "common.unavailable")
+      : st.state;
+  }
+
   _fetchHistory() {
     const hass = this._hass,
       cfg = this._config;
@@ -314,7 +327,9 @@ export class MultiTrendCard extends HTMLElement {
     // observed while on the page (connectedCallback observes a card built while away)
     if (this.isConnected) this._ro?.observe(plot);
 
-    card.style.setProperty("--tile-color", cssColor(this._config.color, "var(--state-icon-color)"));
+    // `state` (the editor's default) is the state icon colour, as no colour is
+    const color = this._config.color === "state" ? undefined : this._config.color;
+    card.style.setProperty("--tile-color", cssColor(color, "var(--state-icon-color)"));
 
     this._render();
   }
@@ -349,15 +364,13 @@ export class MultiTrendCard extends HTMLElement {
     const sec = qs(card, ".secondary");
     sec.textContent = "";
     shown.forEach((i, k) => {
-      const st = this._state(i);
       if (k > 0) {
         const s = document.createElement("span");
         s.className = "sep";
         s.textContent = "·";
         sec.appendChild(s);
       }
-      const txt = st && isNum(st.state) ? this._fmt(i, Number(st.state)) : st ? st.state : "—";
-      sec.appendChild(document.createTextNode(txt));
+      sec.appendChild(document.createTextNode(this._stateText(i)));
     });
 
     // Legend: only for >=2 overlaid series (lanes carry their own labels)

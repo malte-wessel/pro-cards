@@ -28,7 +28,7 @@ import type {
 } from "./illuminance/config.ts";
 import { cssColor, resolveHex } from "./shared/color.ts";
 import { REFRESH_MS } from "./shared/constants.ts";
-import { fmtTime, langOf } from "./shared/format.ts";
+import { fmtTime, formatKeyOf, langOf } from "./shared/format.ts";
 import { fetchHistory, normalizeSmoothing } from "./shared/history.ts";
 import { HistoryFeed } from "./shared/history-feed.ts";
 import { depsChanged } from "./shared/deps.ts";
@@ -138,7 +138,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
         if (s.length === 0 || t > s[s.length - 1].t) s.push({ t, v: Number(st.state) });
       }
       this._render();
-    } else if (!prev || langOf(prev) !== langOf(hass)) this._render();
+    } else if (!prev || formatKeyOf(prev) !== formatKeyOf(hass)) this._render();
     if (themeChanged(prev, hass)) {
       this._textCache.clear();
       // drawn again in the next frame, once the theme's variables apply: a render in this update
@@ -234,7 +234,7 @@ export class IlluminanceCard extends HTMLElement implements IlluminanceHost {
       w,
       body.clientHeight,
       cfg,
-      langOf(hass),
+      formatKeyOf(hass),
       hass.themes,
       Math.floor(now / Math.max(step, 1)),
     ]);

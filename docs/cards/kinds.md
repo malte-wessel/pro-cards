@@ -287,9 +287,9 @@ The light level in lux, its icon and status by how light it is: Dark below 10 lx
 
 ### Battery
 
-The charge, with ten segments below it, filled to the charge. It turns orange and says Low below 20 %, red and Critical below 10 %. A template sensor often has no device class: `kind: battery` makes it a battery, like the phone here.
+The charge, with ten segments below it, filled to the charge, in Home Assistant's battery colours: red below 30 %, orange below 70 %, green above. It says Low below 20 % and Critical below 10 %. A template sensor often has no device class: `kind: battery` makes it a battery, like the phone here.
 
-With a power sensor it is a home battery: the status says Charging or Discharging, the power sits beside the charge, and the next segment pulses while power flows. The kind finds the power on the battery's device. Name it with `inputs: { power }` (positive while it charges), or give `inputs: { charge, discharge }`, a sensor each.
+With a power sensor it is a home battery: while power flows the status says Charging or Discharging and the card takes the energy colours (Low and Critical stay red), the power sits beside the charge, and the next segment pulses. The kind finds the power on the battery's device. Name it with `inputs: { power }` (positive while it charges), or give `inputs: { charge, discharge }`, a sensor each.
 
 ::: live
 
@@ -372,7 +372,7 @@ With a power sensor it is a home battery: the status says Charging or Dischargin
 
 ### Appliance
 
-An appliance reads a power sensor. Above `running_above` (5 W unless set) it runs: the card shows for how long and the energy of this run. Below it, the card says Off. Where the device reports more, the kind finds it on the device or takes it from `inputs`: `remaining`, the time left (a duration, or the time it finishes), shown in place of how long it has run; `phase`, its program's phase (Washing, Rinsing …), shown as its status. `appliance` draws a plug; a device with a kind of its own moves while it runs: `pump` and `heat_pump` turn, `washer`, `dryer` and `dishwasher` shake.
+An appliance reads a power sensor. Above `running_above` (5 W unless set) it runs: the card shows for how long and the energy of this run. Below it, the card says Off; a power it does not know (unavailable, unknown) shows as any value does, not as Off. Where the device reports more, the kind finds it on the device or takes it from `inputs`: `remaining`, the time left (a duration, or the time it finishes), shown in place of how long it has run; `phase`, its program's phase (Washing, Rinsing …), shown as its status. `appliance` draws a plug; a device with a kind of its own moves while it runs: `pump` and `heat_pump` turn, `washer`, `dryer` and `dishwasher` shake.
 
 ::: live
 
@@ -412,7 +412,7 @@ The brightness, On or Off, and a switch. The card glows from its bottom edge in 
 
 ### Plug
 
-A switch of class `outlet`: its switch at the line's end, and while it is on, the power it draws as the value. It finds that power on the plug's device (`inputs: { power }` names another); the poster draws it in columns over the last 24 hours. A switch without a device class becomes a plug with `kind: plug`.
+A switch of class `outlet`: its switch at the line's end, and while it is on, the power it draws as the value. It finds that power on the plug's device (`inputs: { power }` names another); the poster draws it in columns over the last 24 hours, and a plot the card names (`visual: sparkline` on a tile, say) draws that power too. A switch without a device class becomes a plug with `kind: plug`.
 
 ::: live
 

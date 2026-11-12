@@ -418,7 +418,7 @@ The icon also takes its own `tap_action`, `hold_action` and `double_tap_action` 
 | `bar`       | –                                             | The value between `min` and `max` as a bar.                                 |
 | `gauge`     | –                                             | The value between `min` and `max` as an arc.                                |
 | `segments`  | –                                             | Ten segments, filled to the value.                                          |
-| `sun`       | `hours`                                       | The sun's day, with the sun where it is now. Sun only.                      |
+| `sun`       | –                                             | The sun's day, with the sun where it is now. Sun only.                      |
 
 | Option      | What it does                                                                                                        |
 | ----------- | ------------------------------------------------------------------------------------------------------------------- |

@@ -212,4 +212,25 @@ describe("vertical_align", () => {
       normalizeTileConfig({ entity: "light.kitchen", vertical_align: "stretch" }),
     ).toThrow(/vertical_align must be one of top \| center \| bottom$/);
   });
+
+  it("draws its tiles as written again after a config it rejected", () => {
+    const g = new TileGroupCard();
+    const tiles = ["light.kitchen", { entity: "light.kitchen", icon: "mdi:lamp" }];
+    g.setConfig({ type: "custom:tile-group-card-pro", tiles });
+    document.body.appendChild(g);
+    g.hass = snapshot() as never;
+    cards.push(g);
+    const tables = () =>
+      [...(g.shadowRoot as ShadowRoot).querySelectorAll<TileCard>(T)].map(
+        (t) => !!t.shadowRoot?.querySelector("ha-card.ttable"),
+      );
+    expect(tables()).toEqual([false, false]);
+    // the second tile's icon is not drawn in a table: the group refuses the config
+    expect(() =>
+      g.setConfig({ type: "custom:tile-group-card-pro", layout: "table", tiles }),
+    ).toThrow("tiles[1]: in a table, a tile draws no icon");
+    g.setConfig({ type: "custom:tile-group-card-pro", tiles });
+    g.hass = snapshot() as never;
+    expect(tables()).toEqual([false, false]);
+  });
 });

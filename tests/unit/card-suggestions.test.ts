@@ -57,7 +57,7 @@ describe("the card picker's suggestions for an entity", () => {
     expect(suggestion("weather-card-pro", "weather.home")?.config).toMatchObject({
       type: "custom:weather-card-pro",
       entity: "weather.home",
-      sections: [{ type: "hero" }, { type: "row" }, { type: "forecast" }],
+      sections: [{ type: "hero" }, { type: "forecast" }],
     });
     expect(suggestion("multi-trend-card-pro", "sensor.kitchen_temperature")?.config).toMatchObject({
       entities: [{ entity: "sensor.kitchen_temperature" }],

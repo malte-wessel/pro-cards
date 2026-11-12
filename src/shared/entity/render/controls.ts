@@ -41,11 +41,18 @@ import {
   type Pending,
   type Placement,
   type Range,
+  type ServiceCall,
 } from "../control.ts";
-import { readsFavorites, targetOf } from "../targets.ts";
+import {
+  readsFavorites,
+  setpointsCall,
+  setpointsOf,
+  targetOf,
+  temperatureRange,
+} from "../targets.ts";
 import { openDatePicker } from "../../datepicker.ts";
 import { zonedMidnight, zonedParts } from "../../calendar.ts";
-import { timeZoneOf } from "../../visibility.ts";
+import { timeZoneOf } from "../../format.ts";
 import { registryOptions } from "../../registry-options.ts";
 import { nameOf, type EntityModel, type RenderCtx } from "../model.ts";
 import { iconEl, leadEl } from "./lead.ts";
@@ -106,6 +113,10 @@ const askCode = (host: ControlHost, ent: EntityItem, m: EntityModel, target?: st
   return true;
 };
 
+// what a call sets, as a code is asked for it: a lock's lock or unlock, an alarm panel's disarm or
+// arm mode
+const codeTarget = (svc: ServiceCall | null) => svc?.service.replace(/^alarm_/, "");
+
 // ----- toggle and lead tap -----
 
 // (`attribute`: a placed switch, which flips what its control sets – a fan's oscillation; the
@@ -133,10 +144,12 @@ const bindToggle = (
 ) => {
   el.addEventListener("click", (ev) => {
     ev.stopPropagation();
-    ctx.ctl?.call(el, idx, ent, serviceFor(ent, m.st, { type: "toggle", attribute }), {
-      until: later(),
-      value: on ? "off" : "on",
-    });
+    const host = ctx.ctl;
+    if (!host) return;
+    const svc = serviceFor(ent, m.st, { type: "toggle", attribute });
+    // (a lock's or an alarm panel's that wants a code: Home Assistant's dialog)
+    if (askCode(host, ent, m, codeTarget(svc))) return;
+    host.call(el, idx, ent, svc, { until: later(), value: on ? "off" : "on" });
   });
 };
 export const toggleEl = (
@@ -302,6 +315,9 @@ export const stepperEl = (
   p: Placement,
 ) => {
   const host = ctx.ctl as ControlHost;
+  // a thermostat holding a range: its low and its high target
+  const pair = targetOf(ent, "range", "stepper")?.key === "temperature" ? setpointsOf(m.st) : null;
+  if (pair) return setpointsEl(ctx, ent, idx, m, p, pair);
   const r = rangeOf(ent, m.st, ctx.hass, "stepper");
   const el = root("stepper", p, idx);
   const name = nameOf(ctx, ent, m.st);
@@ -336,6 +352,66 @@ export const stepperEl = (
   };
   dec.addEventListener("click", () => step(-1));
   inc.addEventListener("click", () => step(1));
+  return el;
+};
+// a pending pair of targets ("20.5:24")
+const pendingPair = (p: Pending | undefined): [number, number] | null => {
+  const v = pendingStr(p)?.split(":").map(Number);
+  return v?.length === 2 && v.every(Number.isFinite) ? [v[0], v[1]] : null;
+};
+// a thermostat that holds a range: a stepper for its low and one for its high target, as Home
+// Assistant's; each stays on its side of the other, and both are set together
+const setpointsEl = (
+  ctx: RenderCtx,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+  p: Placement,
+  pair: [number, number],
+) => {
+  const host = ctx.ctl as ControlHost;
+  const el = root("stepper", p, idx);
+  el.classList.add("range");
+  const r = temperatureRange("climate", ent, m.st, ctx.hass, null);
+  const pend = pendingPair(host.pending.get(idx));
+  const shown = pend ?? pair;
+  const name = nameOf(ctx, ent, m.st);
+  (["target_temp_low", "target_temp_high"] as const).forEach((key, i) => {
+    const label = (m.st && ctx.hass?.formatEntityAttributeName?.(m.st, key)) || name;
+    const half = document.createElement("span");
+    half.className = "half";
+    const dec = button("round s", t(ctx.hass, "control.decrease", { name: label }));
+    dec.appendChild(icon("mdi:minus"));
+    const val = document.createElement("span");
+    val.className = "val";
+    val.textContent = fmtRange(ctx, r, shown[i]);
+    const inc = button("round s", t(ctx.hass, "control.increase", { name: label }));
+    inc.appendChild(icon("mdi:plus"));
+    half.append(dec, val, inc);
+    el.appendChild(half);
+    // (the low target never above the high one, nor the high below the low)
+    const min = i === 0 ? r.min : shown[0],
+      max = i === 0 ? shown[1] : r.max;
+    dec.disabled = shown[i] <= min;
+    inc.disabled = shown[i] >= max;
+    const step = (dir: 1 | -1) => {
+      const next = Math.min(max, Math.max(min, clampStep(shown[i] + dir * r.step, r)));
+      if (next === shown[i]) return;
+      const both: [number, number] = i === 0 ? [next, shown[1]] : [shown[0], next];
+      host.call(
+        el,
+        idx,
+        ent,
+        setpointsCall(ent, both),
+        { until: later(), value: both.join(":") },
+        "selection",
+      );
+    };
+    dec.addEventListener("click", () => step(-1));
+    inc.addEventListener("click", () => step(1));
+  });
+  el.classList.toggle("pending", pend !== null);
+  if (!canControl(ent, m.st)) disable(el);
   return el;
 };
 
@@ -457,6 +533,17 @@ export const selectEl = (
   sel.setAttribute("aria-label", t(ctx.hass, "control.choose", { name: nameOf(ctx, ent, m.st) }));
   const pend = pendingStr(host.pending.get(idx));
   const current = pend ?? currentOptionOf(ent, m.st, "select");
+  // none chosen (no effect running, a timer's presets): an empty choice, never listed, stands for
+  // it; else the select would show its first option as chosen, and choosing it would change nothing
+  if (current === null) {
+    const none = document.createElement("option");
+    none.value = "";
+    none.textContent = "–";
+    none.disabled = true;
+    none.hidden = true;
+    none.selected = true;
+    sel.appendChild(none);
+  }
   for (const o of opts) {
     const opt = document.createElement("option");
     opt.value = o.value;
@@ -472,7 +559,7 @@ export const selectEl = (
     sel.appendChild(opt);
   }
   // set the choice once every option is in (an option's own flag is not enough in every engine)
-  if (current !== null) sel.value = current;
+  sel.value = current ?? "";
   el.classList.toggle("pending", pend !== null);
   el.append(sel, icon("mdi:menu-down"));
   // while the select has the focus its row is kept (an open list would close); catch up after
@@ -946,15 +1033,13 @@ const holdCall = (
   m: EntityModel,
   el: HTMLElement,
   haptic: HapticType,
-) =>
-  (ctx.ctl as ControlHost).call(
-    el,
-    idx,
-    ent,
-    serviceFor(ent, m.st, { type: "hold" }),
-    { until: later() },
-    haptic,
-  );
+) => {
+  const host = ctx.ctl as ControlHost;
+  const svc = serviceFor(ent, m.st, { type: "hold" });
+  // (a lock's or an alarm panel's that wants a code: Home Assistant's dialog)
+  if (askCode(host, ent, m, codeTarget(svc))) return;
+  host.call(el, idx, ent, svc, { until: later() }, haptic);
+};
 // the hold-to-confirm button: locks, or any toggle / button with `control_confirm`
 export const holdEl = (
   ctx: RenderCtx,

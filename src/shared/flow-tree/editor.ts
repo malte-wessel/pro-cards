@@ -216,8 +216,11 @@ export const flowFromForm = (data: HaFormData, prev: Raw, card: FlowCard): Raw =
       setOrDrop(c, "animation", anim, !Object.keys(anim).length);
     }
   } else {
-    if (changed("period"))
+    if (changed("period")) {
       setOrDrop(c, "period", data.period, !data.period || data.period === "today");
+      // a dashboard's collection key goes with it (the form keeps its hidden field's value)
+      if (data.period !== "dashboard") delete c.collection_key;
+    }
     if (changed("period_picker"))
       setOrDrop(c, "period_picker", false, data.period_picker !== false);
   }
@@ -395,13 +398,16 @@ export const sourceFromForm = (data: HaFormData, prev: Raw, card: FlowCard, hint
   const c: Raw = { ...prev };
   for (const k of ["name", "icon", "color"])
     if (changed(k)) setOrDrop(c, k, data[k], empty(data[k]));
-  // measured another way: the other way's keys go
+  // measured another way: the other way's keys go (a grid's both_ways with its pair)
+  const pairOnly = (k: string) => k === "both_ways" && data.measure !== "pair";
   if (changed("measure")) {
-    const drop = data.measure === "pair" ? ["power", "invert"] : PAIR[type];
-    for (const k of drop ?? []) delete c[k];
+    const drop =
+      data.measure === "pair" ? ["power", "invert"] : [...(PAIR[type] ?? []), "both_ways"];
+    for (const k of drop) delete c[k];
   }
   for (const k of METERS[card][type]) {
-    if (!changed(k)) continue;
+    // (a field the form no longer shows keeps its value there: it writes nothing)
+    if (!changed(k) || pairOnly(k)) continue;
     if (k === "invert" || k === "both_ways") setOrDrop(c, k, true, data[k] !== true);
     else if (k === "peak")
       setOrDrop(c, k, Number(data[k]), empty(data[k]) || !(Number(data[k]) > 0));

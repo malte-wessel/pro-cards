@@ -3,7 +3,7 @@ import type { EntityItem } from "../config.ts";
 import { HISTORY_VISUALS, PLOT_H, STRIP_AXIS_CSS, type HistoryVisual } from "../constants.ts";
 import { numberFormat } from "../../format.ts";
 import { scaleOf } from "../look.ts";
-import { langOf, type EntityModel, type RenderCtx } from "../model.ts";
+import type { EntityModel, RenderCtx } from "../model.ts";
 import type { PlotCtx, PlotElement } from "./plots.ts";
 
 export const barEl = (m: EntityModel) => {
@@ -23,7 +23,7 @@ export const gaugeEl = (ctx: RenderCtx, ent: EntityItem, m: EntityModel) => {
   const len = Math.PI * 46,
     p = m.progress;
   const sc = scaleOf(ent, m.st);
-  const fmt = (v: number) => numberFormat(langOf(ctx), { maximumFractionDigits: 1 }).format(v);
+  const fmt = (v: number) => numberFormat(ctx.hass, { maximumFractionDigits: 1 }).format(v);
   d.innerHTML = `<svg viewBox="0 0 120 80">
       <path class="track" d="M14 62 A46 46 0 0 1 106 62" stroke-width="9"/>
       ${p === null ? "" : `<path class="prog" d="M14 62 A46 46 0 0 1 106 62" stroke-width="9" stroke-dasharray="${len.toFixed(1)}" stroke-dashoffset="${(len * (1 - p)).toFixed(1)}"/>`}

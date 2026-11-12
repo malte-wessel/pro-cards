@@ -370,6 +370,8 @@ const applianceKind = (name: string, style: ApplianceStyle | null): Kind => ({
     return w !== null && w > thresholdOf(c) ? t(c.ctx.hass, "kind.appliance.running") : null;
   },
   slots: (c) => {
+    // a power not known (unavailable, unknown) says so as any value does: not that it is off
+    if (!c.m.model.avail) return { secondary: null };
     const run = runOf(c, c.m.st);
     // the time it has left, while running down: in place of how long it has run
     const left = secondsLeft(c.input("remaining"));

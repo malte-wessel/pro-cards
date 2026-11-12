@@ -75,6 +75,11 @@ export const registryOptions = (
   return undefined;
 };
 
+// what is known of them now, asking nothing: undefined until an answer came, then the answer (null
+// for none), so a row reading it changes when the answer comes, whatever it is
+export const knownRegistryOptions = (id: string | null): RegistryOptions | null | undefined =>
+  id ? got.get(id) : null;
+
 // called with the entity whenever its options arrive (its cards render again); returns the
 // unsubscribe
 export const onRegistryOptions = (fn: (id: string) => void) => {

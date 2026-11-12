@@ -3,11 +3,11 @@
 //   _normalize(raw)            – the normalised config (see config.ts)
 //   _styles()                  – the CSS string for the shadow root
 //   getGridOptions()           – the sections grid footprint
-import { onRegistryOptions, registryOptions } from "../registry-options.ts";
+import { knownRegistryOptions, onRegistryOptions } from "../registry-options.ts";
 import { fireAction, fireEvent, fireHaptic, freshShadow, syncKeepHeight } from "../card.ts";
 import { cssColor } from "../color.ts";
 import { REFRESH_MS } from "../constants.ts";
-import { langOf } from "../format.ts";
+import { formatKeyOf } from "../format.ts";
 import type { ActionConfig, ActionKind, GridOptions, HapticType, HomeAssistant } from "../ha.ts";
 import { fetchHistory, pointOf, type Point } from "../history.ts";
 import { HistoryFeed } from "../history-feed.ts";
@@ -275,8 +275,9 @@ export abstract class EntityCardBase extends HTMLElement {
     // the history arrives later and renders then; the update below runs meanwhile, so a device's
     // answer still ends its pending call
     if (this._historyIds.length && this._history.due()) this._fetchHistory();
-    // a new language (profile setting) re-renders too: words, times and numbers follow it
-    let changed = !prev || langOf(prev) !== langOf(hass);
+    // a new language, number or time format or time zone (profile settings) re-renders too: words,
+    // times and numbers follow them
+    let changed = !prev || formatKeyOf(prev) !== formatKeyOf(hass);
     // conditions on the user (or the user's whereabouts) look again when they change
     const deps = this._visDeps;
     if (deps.user && prev?.user?.id !== hass.user?.id) changed = true;
@@ -921,7 +922,7 @@ export abstract class EntityCardBase extends HTMLElement {
       ...this._idsByItem[idx].map((id) => hass?.states[id]),
       ...members.map((id) => hass?.states[id]),
       this._itemTpl[idx] ? this._tpl.version : 0,
-      langOf(hass),
+      formatKeyOf(hass),
       this._localeKey,
       hass?.formatEntityState,
     ];
@@ -953,8 +954,9 @@ export abstract class EntityCardBase extends HTMLElement {
       ...own(this._buttonPending),
       ...own(this._armed),
       ...(ent.control?.buttons ?? []).map((b) => this._shown(b.visibility)),
-      // (its favourites in the registry, once they arrive: a cover's positions, a light's colours)
-      ent.control ? registryOptions(undefined, ent.entity) : null,
+      // (its favourites in the registry: none yet, then the answer, even none – a cover's positions,
+      // a light's colours)
+      ent.control ? knownRegistryOptions(ent.entity) : null,
       this._fillEpoch,
       ctx.hass?.user?.id,
       ctx.hass?.user?.is_admin,
@@ -984,7 +986,7 @@ export abstract class EntityCardBase extends HTMLElement {
         pc.st,
         Math.floor(t0 / msPerPx),
         Math.floor(t1 / msPerPx),
-        langOf(ctx.hass),
+        formatKeyOf(ctx.hass),
         this._fillEpoch,
       ];
       if (depsChanged(this._plotInputs, plot, inputs)) drawPlot(ctx, plot, { w, h });

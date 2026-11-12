@@ -3,6 +3,7 @@
 // a condition copied from HA's editor works here: state, numeric_state, screen, user, location,
 // time, and / or / not, plus `template` (HA's core template condition, `value_template`), rendered
 // by the cards' own template subscriptions. A list means all of them; `not` is not-all (as in HA).
+import { timeZoneOf } from "./format.ts";
 import type { HomeAssistant } from "./ha.ts";
 import { isTemplate, numOrNull } from "./util.ts";
 
@@ -210,10 +211,8 @@ export const userPerson = (hass: HomeAssistant): string | null => {
 };
 
 // the time zone `time` conditions use: the server's when the profile says so, else the browser's
-export const timeZoneOf = (hass: HomeAssistant): string =>
-  hass.locale?.time_zone === "server" && hass.config?.time_zone
-    ? hass.config.time_zone
-    : Intl.DateTimeFormat().resolvedOptions().timeZone;
+// (the one the cards write their times in)
+export { timeZoneOf };
 
 const clockFormats = new Map<string, Intl.DateTimeFormat>();
 // the wall clock in a time zone: seconds of the day (with the ms) and the weekday

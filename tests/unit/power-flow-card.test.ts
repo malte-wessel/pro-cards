@@ -329,6 +329,29 @@ describe("power-flow-card config", () => {
       home: "sensor.house",
       sources: [{ type: "solar", entity: "sensor.solar_roof" }],
     });
+    // the grid's sensor is a source, never the home; the home is the one named for consumption
+    const home = PowerFlowCard.getStubConfig(
+      hass({
+        "sensor.battery_power": st("power"),
+        "sensor.grid_power": st("power"),
+        "sensor.solar_power": st("power"),
+        "sensor.power_consumption": st("power"),
+      }),
+    );
+    expect(home).toEqual({
+      title: expect.any(String),
+      home: "sensor.power_consumption",
+      sources: [
+        { type: "solar", entity: "sensor.solar_power" },
+        { type: "grid", power: "sensor.grid_power" },
+      ],
+    });
+    expect(() => normalizePowerFlowConfig(home)).not.toThrow();
+    // one power sensor alone: the grid, the home left to what it brings
+    expect(PowerFlowCard.getStubConfig(hass({ "sensor.house": st("power") }))).toEqual({
+      title: expect.any(String),
+      sources: [{ type: "grid", power: "sensor.house" }],
+    });
   });
 
   it("defaults and clamps the options", () => {

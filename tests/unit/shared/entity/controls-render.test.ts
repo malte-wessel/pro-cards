@@ -8,6 +8,7 @@ import { EntityGroupCard } from "../../../../src/entity-group-card.ts";
 import { EntitySectionsCard } from "../../../../src/entity-sections-card.ts";
 import type { HassEntity, HomeAssistant } from "../../../../src/shared/ha.ts";
 import { ARM_MS, HOLD_CONFIRM_MS, PENDING_MS } from "../../../../src/shared/entity/control.ts";
+import { resetRegistryOptions } from "../../../../src/shared/registry-options.ts";
 
 interface Call {
   domain: string;
@@ -189,6 +190,26 @@ describe("toggle", () => {
     h.language = "de";
     const r = h.mount(EntityCard, { entity: "switch.pump", control: "toggle" });
     expect(q(r, ".toggle").getAttribute("aria-label")).toBe("Pump umschalten");
+  });
+  it("locks and unlocks a lock, which has no toggle, and asks for its code first", () => {
+    const fired: unknown[] = [];
+    document.addEventListener("hass-action", (e) => fired.push((e as CustomEvent).detail));
+    let r = h.mount(EntityCard, { entity: "lock.door", control: "toggle" });
+    q(r, ".toggle").click();
+    expect(h.calls).toEqual([
+      { domain: "lock", service: "unlock", data: { entity_id: "lock.door" } },
+    ]);
+    h.set("lock.door", "unlocked");
+    q(r, ".toggle").click();
+    expect(h.svc()).toEqual(["lock.unlock", "lock.lock"]);
+    // a lock with a code: Home Assistant's dialog, no call
+    h.set("lock.door", "locked", { code_format: "^\\d{4}$" });
+    r = h.mount(EntityCard, { entity: "lock.door", control: "toggle" });
+    q(r, ".toggle").click();
+    expect(h.calls).toHaveLength(2);
+    expect(fired).toEqual([
+      { config: { entity: "lock.door", tap_action: { action: "more-info" } }, action: "tap" },
+    ]);
   });
   it("keeps working as the old toggle: true", () => {
     const r = h.mount(EntityCard, { entity: "switch.pump", toggle: true });
@@ -407,6 +428,33 @@ describe("stepper", () => {
     expect(rows[1].querySelector(".end > .state")?.textContent).toContain("20.4");
     expect(rows[2].querySelector(".end > .state")).toBeNull();
   });
+  it("steps a thermostat holding a range by its low and its high target, set together", () => {
+    h.set("climate.living", "heat_cool", {
+      temperature: null,
+      target_temp_low: 20,
+      target_temp_high: 21,
+    });
+    const r = h.mount(EntityCard, { entity: "climate.living", control: "stepper" });
+    const vals = () => qa(r, ".ctl-stepper .val").map((v) => v.textContent);
+    const btns = () => qa<HTMLButtonElement>(r, ".ctl-stepper button");
+    expect(q(r, ".ctl-stepper").classList.contains("disabled")).toBe(false);
+    expect(vals()).toEqual(["20.0 °C", "21.0 °C"]);
+    btns()[0].click();
+    expect(h.calls).toEqual([
+      {
+        domain: "climate",
+        service: "set_temperature",
+        data: { entity_id: "climate.living", target_temp_low: 19.5, target_temp_high: 21 },
+      },
+    ]);
+    // the high target steps from the low one still on its way
+    btns()[3].click();
+    expect(h.calls[1].data).toMatchObject({ target_temp_low: 19.5, target_temp_high: 21.5 });
+    expect(vals()).toEqual(["19.5 °C", "21.5 °C"]);
+    // neither passes the other
+    h.set("climate.living", "heat_cool", { target_temp_low: 21, target_temp_high: 21 });
+    expect(btns().map((b) => b.disabled)).toEqual([false, true, true, false]);
+  });
   it("is disabled and shows the plain value while unavailable", () => {
     h.set("climate.living", "unavailable");
     const r = h.mount(EntityCard, { entity: "climate.living", control: "stepper" });
@@ -564,6 +612,36 @@ describe("select", () => {
     const sel = q<HTMLSelectElement>(r, ".ctl-select select");
     expect(chosen(sel)).toBe("Party");
     expect([...sel.options].map((o) => o.value)).toEqual(["Home", "Away", "Night", "Party"]);
+  });
+  it("chooses none while the entity has none, so its first option can still be picked", () => {
+    h.def("light.fx", "off", {
+      friendly_name: "Strip",
+      effect_list: ["rainbow", "candle"],
+      effect: null,
+    });
+    const r = h.mount(EntityCard, {
+      entity: "light.fx",
+      control: "select",
+      control_attribute: "effect",
+    });
+    const sel = q<HTMLSelectElement>(r, ".ctl-select select");
+    // an empty choice, never listed, stands for none
+    expect(chosen(sel)).toBe("");
+    expect([...sel.options].map((o) => [o.value, o.hidden])).toEqual([
+      ["", true],
+      ["rainbow", false],
+      ["candle", false],
+    ]);
+    sel.options[1].selected = true;
+    sel.value = "rainbow";
+    sel.dispatchEvent(new Event("change"));
+    expect(h.calls).toEqual([
+      {
+        domain: "light",
+        service: "turn_on",
+        data: { entity_id: "light.fx", effect: "rainbow" },
+      },
+    ]);
   });
   it("replaces the row's value text and is disabled while unavailable", () => {
     let r = h.mount(EntityGroupCard, {
@@ -861,6 +939,20 @@ describe("hold to confirm", () => {
       { domain: "lock", service: "unlock", data: { entity_id: "lock.door" } },
     ]);
     expect(q(r, ".ctl-hold").classList.contains("pending")).toBe(true);
+  });
+  it("opens Home Assistant's dialog for a lock that wants a code instead of calling", () => {
+    const fired: { config: Record<string, unknown> }[] = [];
+    document.addEventListener("hass-action", (e) =>
+      fired.push((e as CustomEvent).detail as { config: Record<string, unknown> }),
+    );
+    h.set("lock.door", "locked", { code_format: "^\\d{4}$" });
+    const r = h.mount(EntityCard, { entity: "lock.door", control: "hold" });
+    pointer(q(r, ".ctl-hold"), "pointerdown");
+    vi.advanceTimersByTime(HOLD_CONFIRM_MS + 10);
+    expect(h.calls).toEqual([]);
+    expect(fired.map((f) => [f.config.entity, f.config.tap_action])).toEqual([
+      ["lock.door", { action: "more-info" }],
+    ]);
   });
   it("cancels when let go, cancelled or blurred early", () => {
     const r = h.mount(EntityCard, { entity: "lock.door", control: "hold" });
@@ -1741,5 +1833,30 @@ describe("the hold button's icon", () => {
       control_position: "lead",
     });
     expect(q(r, ".ctl-hold.lead-size ha-icon").getAttribute("icon")).toBe("mdi:water-pump");
+  });
+});
+
+describe("favourites", () => {
+  afterEach(() => resetRegistryOptions());
+  it("draw the defaults once the registry answers that the entity has none", async () => {
+    // a cover without a registry entry (YAML without a unique_id): the registry answers null
+    let answer: (v: unknown) => void = () => {};
+    const callWS = vi.fn(() => new Promise((r) => (answer = r)));
+    const hassOf = h.hass.bind(h);
+    h.hass = () => ({ ...hassOf(), callWS }) as unknown as HomeAssistant;
+    h.def("cover.yaml", "open", { friendly_name: "Yaml cover", current_position: 40 });
+    const r = h.mount(EntityCard, { entity: "cover.yaml", control: "segments" });
+    // waiting for the answer: nothing drawn yet
+    expect(r.querySelector(".ctl-segments")).toBeNull();
+    expect(callWS).toHaveBeenCalledTimes(1);
+    answer(null);
+    await settle();
+    await settle();
+    expect(qa(r, ".ctl-segments button").map((b) => b.textContent)).toEqual([
+      "0 %",
+      "25 %",
+      "75 %",
+      "100 %",
+    ]);
   });
 });

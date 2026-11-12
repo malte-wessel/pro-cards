@@ -48,7 +48,11 @@ export class PosterCard extends KindCardBase {
   declare _config?: PosterConfig;
 
   _normalize(raw: unknown) {
-    return normalizePosterConfig(raw, this._nextHass ?? this._hass);
+    const cfg = normalizePosterConfig(raw, this._nextHass ?? this._hass);
+    // a new config finds the value's size and the controls' place again, at the same card size
+    // too (the card editor's preview keeps the element)
+    this._valueFit = null;
+    return cfg;
   }
   _styles() {
     return STYLE_POSTER_CARD_ALL;

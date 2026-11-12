@@ -405,6 +405,13 @@ describe("poster-card config", () => {
       type: "segments",
     });
     expect(of({ entity: "sun.sun" }).visual).toEqual({ type: "sun" });
+    // the sun's day is today's: a window does nothing there
+    expect(() => norm({ kind: "sun", visual: { hours: 12 } })).toThrow(
+      "a sun poster's visual is sun, which takes no options, not hours",
+    );
+    expect(() => norm({ kind: "sun", visual: { type: "sun", hours: 12 } })).toThrow(
+      "sun takes no options, not hours",
+    );
     expect(of({ kind: "trend", series: ["sensor.outdoor_temperature"] }).visual).toEqual({
       type: "sparkline",
     });
@@ -1421,6 +1428,24 @@ describe("poster-card drawing", () => {
     expect(q(ruled, ".plead > .lead").classList.contains("ring")).toBe(true);
   });
 
+  it("draws the icon's style and ring on a kind that builds its own icon", () => {
+    const lead = (r: ShadowRoot) => q(r, ".plead > .lead").classList;
+    for (const cfg of [
+      { entity: "weather.home" },
+      { entity: "sun.sun" },
+      { entity: "sensor.grid_power", kind: "grid" },
+      { entity: "sensor.solar_power", kind: "solar" },
+    ]) {
+      const what = JSON.stringify(cfg);
+      expect(lead(draw(cfg)).contains("plain"), what).toBe(false);
+      expect(
+        lead(draw({ ...cfg, icon: { type: "icon", style: "plain" } })).contains("plain"),
+        what,
+      ).toBe(true);
+      expect(lead(draw({ ...cfg, icon: { ring: true } })).contains("ring"), what).toBe(true);
+    }
+  });
+
   it("builds an animated lead again for a new icon or icon style, keeps it otherwise", () => {
     set("fan.living_room", "on", { percentage: 66 });
     const r = draw({
@@ -1546,6 +1571,57 @@ describe("poster-card drawing", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("plots a plug's power in the plot it names, not the switch's on and off", () => {
+    const S = "switch.coffee_machine",
+      P = "sensor.coffee_machine_power";
+    set(S, "on");
+    const ids = (cfg: Record<string, unknown>) => {
+      draw(cfg);
+      return cards[cards.length - 1]._historyIds;
+    };
+    expect(ids({ entity: S })).toEqual([P]);
+    expect(ids({ entity: S, visual: "columns" })).toEqual([P]);
+    expect(ids({ entity: S, visual: "sparkline" })).toEqual([P]);
+    expect(ids({ entity: S, visual: { type: "strip", variant: "edge" } })).toEqual([P]);
+  });
+
+  it("says an appliance whose power is not known is unavailable, not off", () => {
+    const W = "sensor.coffee_machine_power";
+    for (const state of ["unavailable", "unknown"]) {
+      set(W, state);
+      const r = draw({ entity: W, kind: "washer" });
+      expect(q(r, ".pvalue").textContent, state).not.toContain("Off");
+    }
+    // a known power below the threshold is off
+    set(W, 0);
+    const off = draw({ entity: W, kind: "washer" });
+    expect(q(off, ".pvalue").textContent).toContain("Off");
+  });
+
+  it("colours a home battery as it charges or discharges, a low one by its warning", () => {
+    const B = "sensor.battery_soc",
+      P = "sensor.battery_power";
+    const tint = (r: ShadowRoot) => q(r, ".body").style.getPropertyValue("--pc-tint");
+    set(B, 64);
+    set(P, -1500);
+    const r = draw({ entity: B });
+    expect(q(r, ".corner > .pstatus").textContent).toContain("Discharging");
+    expect(tint(r)).toBe("var(--energy-battery-out-color, #4db6ac)");
+    set(P, 1500);
+    expect(tint(r)).toBe("var(--energy-battery-in-color, #f06292)");
+    // idle: the charge's band, as Home Assistant colours a battery
+    set(P, 0);
+    expect(tint(r)).toContain("--state-sensor-battery-medium-color");
+    // Low and Critical warn whatever the battery does
+    set(P, -1500);
+    set(B, 8);
+    expect(tint(r)).toContain("--state-sensor-battery-low-color");
+    // the card's own rules win
+    set(B, 64);
+    const own = draw({ entity: B, rules: [{ above: 50, color: "purple" }] });
+    expect(tint(own)).toContain("purple");
   });
 
   it("closes the body with a plot that names what it draws", () => {

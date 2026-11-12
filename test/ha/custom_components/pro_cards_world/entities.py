@@ -71,6 +71,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
 from . import DOMAIN
+from .meters import reading_at
 
 HOUR = 3600
 # set through the entity's own properties, never passed through
@@ -157,12 +158,8 @@ class WorldSensor(World, SensorEntity):
 
     def drift(self, write: bool = False) -> None:
         if self._meter:
-            readings = self._meter["readings"]
-            at = (dt_util.utcnow().timestamp() - self._world["first"] / 1000) / HOUR
-            i = max(0, min(int(at), len(readings) - 2))
-            frac = max(0.0, min(1.0, at - i))
-            value = readings[i] + (readings[i + 1] - readings[i]) * frac
-            self._value = round(value, 2 if self._decimals is None else self._decimals)
+            now = dt_util.utcnow().timestamp()
+            self._value = reading_at(self._world, self._meter, now, self._decimals)
         elif self._noise and random.random() < 0.25 and isinstance(self.native_value, float):
             v = self.native_value + (random.random() - 0.5) * self._noise
             if self._min is not None:

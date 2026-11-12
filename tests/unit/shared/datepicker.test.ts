@@ -32,20 +32,49 @@ describe("date picker", () => {
 
   it("closes the calendar it replaces, its listeners with it", () => {
     const { host, anchor } = setup();
+    const other = document.createElement("button");
+    host.appendChild(other);
     const day = rangeAt("day", Date.now(), Date.now(), TZ);
     const close = open(anchor, host, day.start, day.end);
-    open(anchor, host, day.start, day.end);
+    open(other, host, day.start, day.end);
     expect(host.querySelectorAll(".dp")).toHaveLength(1);
-    expect(anchor.getAttribute("aria-expanded")).toBe("true");
+    expect(anchor.getAttribute("aria-expanded")).toBe("false");
+    expect(other.getAttribute("aria-expanded")).toBe("true");
     // a touch on the new calendar keeps it open: the old one heard nothing of it
     host
       .querySelector(".dp-cell")!
       .dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
     expect(host.querySelectorAll(".dp")).toHaveLength(1);
-    expect(anchor.getAttribute("aria-expanded")).toBe("true");
+    expect(other.getAttribute("aria-expanded")).toBe("true");
     // the old close does nothing more
     close();
     expect(host.querySelectorAll(".dp")).toHaveLength(1);
+  });
+
+  it("closes again from the element that opened it, and on a press elsewhere", () => {
+    const { host, anchor } = setup();
+    const day = rangeAt("day", Date.now(), Date.now(), TZ);
+    const click = () => {
+      // a click is a press and its release: the press on the anchor leaves the calendar open
+      anchor.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, composed: true }));
+      open(anchor, host, day.start, day.end);
+    };
+    click();
+    expect(host.querySelectorAll(".dp")).toHaveLength(1);
+    expect(anchor.getAttribute("aria-expanded")).toBe("true");
+    click();
+    expect(host.querySelectorAll(".dp")).toHaveLength(0);
+    expect(anchor.getAttribute("aria-expanded")).toBe("false");
+    click();
+    expect(host.querySelectorAll(".dp")).toHaveLength(1);
+    document.body.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    expect(host.querySelectorAll(".dp")).toHaveLength(0);
+    // Escape closes it too
+    click();
+    host
+      .querySelector(".dp-cell")!
+      .dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    expect(host.querySelectorAll(".dp")).toHaveLength(0);
   });
 
   it("picks one day with a click, any day, without the period presets", () => {

@@ -189,7 +189,8 @@ describe("parseVisual", () => {
       hours: 12,
       src: "sensor.x",
     });
-    expect(visual({ type: "sun", hours: 48 })).toEqual({ type: "sun", hours: 48 });
+    // the sun's day is today's: it takes no window
+    expect(() => visual({ type: "sun", hours: 48 })).toThrow("sun takes no options, not hours");
     expect(() => visual("forecast")).toThrow("visual must be one of");
     // without a type: options for whatever the place draws
     expect(visual({ hours: 6 })).toEqual({ hours: 6 });
@@ -277,7 +278,6 @@ describe("parseVisual", () => {
         `rules[0].visual: a rule sets no ${k} (it is the card's: a rule must not fetch history)`,
       );
     expect(() => rule({ hours: 6 })).toThrow("a rule sets no hours");
-    expect(() => rule({ type: "sun", hours: 6 })).toThrow("a rule sets no hours");
     for (const type of ["sparkline", "columns", "strip"])
       expect(() => rule({ type, src: "sensor.x" })).toThrow(
         "rules[0].visual: a rule sets no src of a plot (it is the card's history)",

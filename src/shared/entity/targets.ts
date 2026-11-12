@@ -254,25 +254,45 @@ const humidityOf = (domain: string): Target => ({
   }),
   set: (v, ent) => call(ent, domain, "set_humidity", { humidity: Number(v) }),
 });
+// what a thermostat's or a water heater's temperatures move in: the card's limits, else the
+// entity's, its step and the unit
+export const temperatureRange = (
+  domain: string,
+  ent: EntityItem,
+  st: HassEntity | undefined,
+  hass: HomeAssistant | undefined,
+  value: number | null,
+): Range => {
+  const unit = hass?.config?.unit_system?.temperature ?? "°C";
+  return {
+    min: ent.min ?? numAttr(st, "min_temp") ?? 7,
+    max: ent.max ?? numAttr(st, "max_temp") ?? 35,
+    step:
+      ent.control?.step ??
+      numAttr(st, "target_temp_step") ??
+      (domain === "water_heater" && unit === "°F" ? 1 : 0.5),
+    value,
+    unit,
+  };
+};
 // a target temperature: a thermostat's, a water heater's
 const temperatureOf = (domain: string): Target => ({
   key: "temperature",
   kinds: ["stepper", "slider"],
-  range: (ent, st, hass) => {
-    const unit = hass?.config?.unit_system?.temperature ?? "°C";
-    return {
-      min: ent.min ?? numAttr(st, "min_temp") ?? 7,
-      max: ent.max ?? numAttr(st, "max_temp") ?? 35,
-      step:
-        ent.control?.step ??
-        numAttr(st, "target_temp_step") ??
-        (domain === "water_heater" && unit === "°F" ? 1 : 0.5),
-      value: numAttr(st, "temperature"),
-      unit,
-    };
-  },
+  range: (ent, st, hass) => temperatureRange(domain, ent, st, hass, numAttr(st, "temperature")),
   set: (v, ent) => call(ent, domain, "set_temperature", { temperature: v }),
 });
+// a thermostat that holds a range (heat_cool) has a low and a high target and no single one: its
+// two targets, else null
+export const setpointsOf = (st: HassEntity | undefined): [number, number] | null => {
+  if (domainOf(st?.entity_id) !== "climate" || numAttr(st, "temperature") !== null) return null;
+  const low = numAttr(st, "target_temp_low"),
+    high = numAttr(st, "target_temp_high");
+  return low === null || high === null ? null : [low, high];
+};
+// the call that sets both, as Home Assistant takes them: together
+export const setpointsCall = (ent: EntityItem, [low, high]: readonly [number, number]) =>
+  call(ent, "climate", "set_temperature", { target_temp_low: low, target_temp_high: high });
 
 // an alarm panel's arm modes by its supported features, Home Assistant's order and icons
 const ALARM_MODES: readonly [string, number, string][] = [

@@ -18,7 +18,7 @@
 import { registerCard } from "./shared/card.ts";
 import type { EntityModel, RenderCtx } from "./shared/entity/model.ts";
 import { depsChanged } from "./shared/deps.ts";
-import { langOf } from "./shared/format.ts";
+import { formatKeyOf } from "./shared/format.ts";
 import { FlowCardBase } from "./shared/flow/base.ts";
 import type { RowKind } from "./shared/flow/dom.ts";
 import type { HomeAssistant } from "./shared/ha.ts";
@@ -68,7 +68,15 @@ export class RainCard extends FlowCardBase {
       wind: at(cfg.windIdx),
       dir: at(cfg.dirIdx),
     };
-    if (depsChanged(this._nowInputs, this, [cm.rate, cm.today, cm.wind, cm.dir, langOf(ctx.hass)]))
+    if (
+      depsChanged(this._nowInputs, this, [
+        cm.rate,
+        cm.today,
+        cm.wind,
+        cm.dir,
+        formatKeyOf(ctx.hass),
+      ])
+    )
       this._rainNow = rainNow(ctx, cfg, cm);
     return { cm, now: this._rainNow as RainNow };
   }

@@ -366,12 +366,12 @@ Lengths are numbers (px) or strings with `px`, `rem`, `%` or a theme variable su
 
 On a card inside the layout. Each option takes one value or a map by view columns (`{ 1: full, 2: 2 }`).
 
-| Option   | Description                                                                                      |
-| -------- | ------------------------------------------------------------------------------------------------ |
-| `span`   | Columns (`2`), `[columns, rows]` or `full`. A span wider than the grid shrinks to it.            |
-| `column` | Grid: the column the card starts in. Masonry: the column it goes to.                             |
-| `order`  | Moves the card without moving its YAML; negative values come first.                              |
-| `align`  | `start`, `center`, `end` or `stretch`: how this card sits in its row, in place of `align_items`. |
+| Option   | Description                                                                                                                          |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `span`   | Columns (`2`), `[columns, rows]` or `full`. A span wider than the grid shrinks to it.                                                |
+| `column` | Grid: the column the card starts in. Masonry: the column it goes to.                                                                 |
+| `order`  | Moves the card without moving its YAML; negative values come first.                                                                  |
+| `align`  | `start`, `center`, `end` or `stretch`: how this card sits in its row, in place of `align_items`. Masonry has no rows and ignores it. |
 
 ### Grid and Home Assistant options
 

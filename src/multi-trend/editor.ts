@@ -57,7 +57,8 @@ export const formToConfig = (
   delete config.smoothing_minutes;
   setOrDrop(config, "title", data.title, !data.title);
   setOrDrop(config, "icon", data.icon, !data.icon);
-  setOrDrop(config, "color", data.color, !data.color);
+  // (the picker's State is the card's default: no colour)
+  setOrDrop(config, "color", data.color, !data.color || data.color === "state");
   setOrDrop(
     config,
     "hours",

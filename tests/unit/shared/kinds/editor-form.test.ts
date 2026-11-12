@@ -287,9 +287,9 @@ describe("the editor form: the visual", () => {
       ...LIGHT,
       visual: "bar",
     });
-    // a sun's hours, no today
+    // the sun's day takes no window
     const sun = { type: LIGHT.type, entity: "sun.sun" };
-    expect(edit(sun, { visual_hours: 12 })).toEqual({ ...sun, visual: { hours: 12 } });
+    expect(edit(sun, { visual_hours: 12 })).toEqual(sun);
     expect(
       edit(LIGHT, {
         visual_thing: "image",
@@ -469,6 +469,22 @@ describe("the editor form: the controls", () => {
     const more = [...(form.control_buttons as object[]), { entity: "script.check_windows" }];
     const out = edit({ ...COVER, control: own }, { control_buttons: more });
     expect((out.control as { options: unknown[] }).options).toHaveLength(2);
+  });
+
+  it("keeps a button's spelling while another control field or button changes", () => {
+    const COVER = { type: "custom:poster-card-pro", entity: "cover.living_room_blinds" };
+    // a name among your own buttons (one the card leaves out) never becomes a button's entity
+    const star = { icon: "mdi:star", action: { action: "toggle" } };
+    const mixed = { type: "buttons", options: ["open", star] };
+    expect(edit({ ...COVER, control: mixed }, { control_confirm: true }).control).toMatchObject({
+      options: ["open", star],
+      confirm: true,
+    });
+    const form = formOf({ ...COVER, control: mixed });
+    const added = [...(form.control_buttons as object[]), { entity: "script.check_windows" }];
+    expect(edit({ ...COVER, control: mixed }, { control_buttons: added }).control).toMatchObject({
+      options: ["open", star, { entity: "script.check_windows" }],
+    });
   });
 
   it("reads a place, a variant or a control written as the default as the default", () => {

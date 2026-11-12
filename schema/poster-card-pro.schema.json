@@ -623,7 +623,7 @@
               "const": "today"
             }
           ],
-          "description": "sparkline, columns, strip, sun: the window in hours (a weather's sparkline: the hours ahead), or today (since midnight). Default: 24"
+          "description": "sparkline, columns, strip: the window in hours (a weather's sparkline: the hours ahead), or today (since midnight). Default: 24"
         },
         "bucket": {
           "type": "number",
@@ -861,7 +861,7 @@
           },
           "then": {
             "propertyNames": {
-              "enum": ["type", "hours"]
+              "enum": ["type"]
             }
           }
         }

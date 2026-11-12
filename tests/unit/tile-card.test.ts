@@ -362,6 +362,63 @@ describe("tile-card config", () => {
     }
   });
 
+  it("plots a plug's power, not its on and off, in whatever plot the card names", () => {
+    const tiles: TileCard[] = [];
+    const draw = (cfg: Record<string, unknown>) => {
+      const el = new TileCard();
+      el.setConfig(cfg);
+      document.body.appendChild(el);
+      el.hass = snapshot() as never;
+      tiles.push(el);
+      return el;
+    };
+    try {
+      const S = "switch.coffee_machine",
+        P = "sensor.coffee_machine_power";
+      // a tile draws no plot of its own: none fetched
+      expect(draw({ entity: S })._historyIds).toEqual([]);
+      for (const visual of ["columns", "sparkline", { type: "strip", hours: 6 }])
+        expect(draw({ entity: S, visual })._historyIds, JSON.stringify(visual)).toEqual([P]);
+      // a rule's plot too
+      expect(
+        draw({ entity: S, visual: false, rules: [{ state: "on", visual: "sparkline" }] })
+          ._historyIds,
+      ).toEqual([P]);
+      // a plot of another entity stays that entity's
+      expect(
+        draw({ entity: S, visual: { type: "columns", src: "sensor.outdoor_temperature" } })
+          ._historyIds,
+      ).toEqual(["sensor.outdoor_temperature"]);
+      // without a power sensor: the switch's own
+      expect(draw({ entity: S, inputs: { power: false }, visual: "columns" })._historyIds).toEqual([
+        S,
+      ]);
+    } finally {
+      for (const t of tiles) t.remove();
+    }
+  });
+
+  it("draws the icon's style and ring on a kind that builds its own icon", () => {
+    const tiles: TileCard[] = [];
+    const lead = (cfg: Record<string, unknown>) => {
+      const el = new TileCard();
+      el.setConfig(cfg);
+      document.body.appendChild(el);
+      el.hass = snapshot() as never;
+      tiles.push(el);
+      return el.shadowRoot?.querySelector(".tlead .lead")?.classList;
+    };
+    try {
+      for (const entity of ["weather.home", "sun.sun"]) {
+        expect(lead({ entity })?.contains("plain"), entity).toBe(false);
+        expect(lead({ entity, icon: { style: "plain" } })?.contains("plain"), entity).toBe(true);
+        expect(lead({ entity, icon: { ring: true } })?.contains("ring"), entity).toBe(true);
+      }
+    } finally {
+      for (const t of tiles) t.remove();
+    }
+  });
+
   it("draws a flow icon in its variant, plain without its circle", () => {
     const tiles: TileCard[] = [];
     const lead = (cfg: Record<string, unknown>) => {
@@ -549,5 +606,26 @@ describe("tile-card config", () => {
     ).toMatchObject({
       min_rows: 3,
     });
+  });
+});
+
+describe("tile-card profile settings", () => {
+  it("writes its value again when the profile's number format changes", () => {
+    const el = new TileCard();
+    el.setConfig({ entity: "sensor.outdoor_temperature", decimals: 1 });
+    document.body.appendChild(el);
+    try {
+      const hass = (number_format: string) => {
+        const h = snapshot();
+        h.locale = { ...h.locale, number_format };
+        return h as never;
+      };
+      el.hass = hass("comma_decimal");
+      expect(el.shadowRoot?.textContent).toContain("17.4");
+      el.hass = hass("decimal_comma");
+      expect(el.shadowRoot?.textContent).toContain("17,4");
+    } finally {
+      el.remove();
+    }
   });
 });

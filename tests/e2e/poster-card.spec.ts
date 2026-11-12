@@ -1135,6 +1135,28 @@ test.describe("poster value fit", () => {
     expect(await fontPx(b(small))).toBe(px);
   });
 
+  test("a new config at the same size fits its value again", async ({ page }) => {
+    // the card editor's preview: the same element, the same size, another config
+    const cfg = { type: P, entity: "vacuum.robot", grid_options: { columns: 6, rows: 3 } };
+    await mount(page, [cfg, { ...cfg, grid_options: { columns: 12, rows: 4 } }], { width: 440 });
+    const small = card(page, 0),
+      big = card(page, 1);
+    const b = (c: Locator) => c.locator(".pvalue .big b");
+    await expect.poll(() => fontPx(b(small))).toBeLessThan(await fontPx(b(big)));
+    const full = await fontPx(b(big));
+    // without its buttons the value has the room it needs
+    await small.evaluate((el) =>
+      (el as HTMLElement & { setConfig(c: unknown): void }).setConfig({
+        type: "custom:poster-card-pro",
+        entity: "vacuum.robot",
+        control: false,
+        value: "On",
+      }),
+    );
+    await expect(b(small)).toHaveText("On");
+    await expect.poll(() => fontPx(b(small))).toBe(full);
+  });
+
   test("a number keeps its size rather than squeezing beside the controls", async ({ page }) => {
     // a closed cover's 0 % would fit beside its buttons only drawn small: they go under it, as
     // under an open cover's 100 %, and both are drawn at one size

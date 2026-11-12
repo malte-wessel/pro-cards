@@ -47,9 +47,12 @@ export const mkScale = (
     min = 0;
     max = 1;
   }
-  if (max === min) {
-    max = min + 1;
-    min = min - 1;
+  // a flat line, or one whose range is float noise (0.1 + 0.2 beside 0.3, the mean of a constant):
+  // one unit above and below it, never a scale whose ticks step by less than a value's precision
+  if (!(max - min > Math.max(Math.abs(min), Math.abs(max)) * 1e-9)) {
+    const mid = (min + max) / 2;
+    max = mid + 1;
+    min = mid - 1;
   }
   const pad = (max - min) * padFrac;
   min -= pad;

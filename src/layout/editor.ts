@@ -133,9 +133,11 @@ export const placeFromForm = (data: HaFormData, card: CardConfigBase): CardConfi
   else delete out.view_layout;
   return out as CardConfigBase;
 };
+// `masonry`: the layout is a masonry at every width, where a card has no row to align in
 export const placeSchema = (
   hass: HomeAssistant | undefined,
   card: CardConfigBase,
+  masonry = false,
 ): HaFormSchema[] => {
   const byWidth = placeByWidth(card);
   const data = placeToForm(card);
@@ -158,11 +160,21 @@ export const placeSchema = (
         ? []
         : [{ name: "order", selector: { number: { step: 1, mode: "box" } } }]),
     ),
-    ...(byWidth.includes("align")
+    ...(byWidth.includes("align") || masonry
       ? []
       : [{ name: "align", selector: select(hass, "align", ITEM_ALIGNS) }]),
     ...(byWidth.length ? [{ name: "by_width", type: "constant", value: byWidth.join(", ") }] : []),
   ];
+};
+
+// the layout is a masonry at every width: the card's and no breakpoint sets another layout
+export const masonryAlways = (config: CardConfigBase | undefined): boolean => {
+  if (config?.layout !== "masonry") return false;
+  const bps = (config as Raw).breakpoints;
+  return (
+    !isObj(bps) ||
+    Object.values(bps).every((b) => !isObj(b) || b.layout === undefined || b.layout === "masonry")
+  );
 };
 
 export class LayoutCardEditor extends CardsEditorBase {
@@ -180,7 +192,7 @@ export class LayoutCardEditor extends CardsEditorBase {
     return optionsFromForm(data, prev, LAYOUT_CONVS, DEFAULTS);
   }
   _placeSchema(card: CardConfigBase) {
-    return placeSchema(this._hass, card);
+    return placeSchema(this._hass, card, masonryAlways(this._config));
   }
   _placeToForm(card: CardConfigBase) {
     return placeToForm(card);

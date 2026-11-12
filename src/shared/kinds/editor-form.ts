@@ -321,13 +321,14 @@ export const badgeToForm = (x: unknown): Raw => {
   return item;
 };
 // the dialog's item → the badge as written, the shortest spelling of what it says
-export const badgeFromForm = (item: Raw): unknown => {
+// (`cardEntity`: what a badge without an entity reads on the card, a poster's or a tile's own)
+export const badgeFromForm = (item: Raw, cardEntity: string | null = null): unknown => {
   const { more, kind, icon, icon_type, icon_src, icon_ring, visual, hours, control, rules } = item;
   const o: Raw = {};
   for (const k of BADGE_PLAIN) if (filled(item[k])) o[k] = item[k];
   // a kind that cannot read the badge's entity is left out (the entity's own is drawn): the card
   // would not take it
-  const entity = typeof item.entity === "string" ? item.entity : null;
+  const entity = (typeof item.entity === "string" && item.entity) || cardEntity;
   if (
     filled(kind) &&
     kind !== DETECTED &&
@@ -443,12 +444,16 @@ const sameValue = (a: unknown, b: unknown): boolean => {
 export const badgesToForm = (v: unknown): Raw[] => (Array.isArray(v) ? v.map(badgeToForm) : []);
 // the dialog's badges → the badges as written: one whose fields are as a written one's keeps
 // its spelling (wherever it moved), the others are written from their fields
-export const badgesFromForm = (v: unknown, written: unknown): unknown[] => {
+export const badgesFromForm = (
+  v: unknown,
+  written: unknown,
+  cardEntity: string | null = null,
+): unknown[] => {
   const was = Array.isArray(written) ? written : [];
   const forms: (Raw | null)[] = was.map(badgeToForm);
   return (Array.isArray(v) ? (v as Raw[]) : []).map((item) => {
     const i = forms.findIndex((f) => f && sameValue(f, item));
-    if (i < 0) return badgeFromForm(item);
+    if (i < 0) return badgeFromForm(item, cardEntity);
     forms[i] = null;
     return was[i];
   });
@@ -457,6 +462,24 @@ export const listToForm = (v: unknown, keys: readonly string[], id = "entity") =
   Array.isArray(v) ? v.map((x) => itemToForm(x, keys, id)) : [];
 export const listFromForm = (v: unknown, keys: readonly string[], id: string | null) =>
   Array.isArray(v) ? (v as Raw[]).map((x) => itemFromForm(x, keys, id)) : [];
+// the same, an item the form left as listToForm showed it kept as written (a name among your own
+// buttons stays a name, not a button's entity)
+const keptFromForm = (
+  v: unknown,
+  written: unknown,
+  keys: readonly string[],
+  id: string | null,
+  formId = "entity",
+) => {
+  const was = Array.isArray(written) ? written : [];
+  const forms: (Raw | null)[] = was.map((x) => itemToForm(x, keys, formId));
+  return (Array.isArray(v) ? (v as Raw[]) : []).map((item) => {
+    const i = forms.findIndex((f) => f && sameValue(f, item));
+    if (i < 0) return itemFromForm(item, keys, id);
+    forms[i] = null;
+    return was[i];
+  });
+};
 
 // the control's type in the form: none, the kind's own (also `auto` where the kind has controls),
 // the domain's (`auto`, and options without a type where the kind has none) or the one named
@@ -709,7 +732,13 @@ export const variable = (drawn: readonly string[], confirm: boolean) =>
   drawn.some((c) => VARIANT_KINDS.has(c as ControlKind) && !(confirm && c === "toggle"));
 
 // only the options what it draws takes (a slider's step goes when it becomes a toggle)
-const controlFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknown => {
+const controlFromForm = (
+  data: HaFormData,
+  kind: Kind,
+  thing: CardThing,
+  // the options as written: an entry the form leaves as it was keeps its spelling
+  written?: unknown,
+): unknown => {
   const type = data.control_type as string;
   if (type === "none") return false;
   const drawn = drawnControls(type, data.entity, kind, thing);
@@ -733,7 +762,9 @@ const controlFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknow
   if (variable(drawn, o.confirm === true) && chosen(data.control_variant))
     o.variant = data.control_variant;
   // your own buttons, else the domain's by name where they are not its default
-  const own = draws("buttons") ? listFromForm(data.control_buttons, BUTTON_KEYS, null) : [];
+  const own = draws("buttons")
+    ? keptFromForm(data.control_buttons, written, BUTTON_KEYS, null)
+    : [];
   const ids = Array.isArray(data.control_button_ids)
     ? (data.control_button_ids as string[]).filter((id) =>
         buttonIdsOf(domain).includes(id as ButtonId),
@@ -745,7 +776,7 @@ const controlFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknow
     : draws("buttons") && ids.length && ids.join() !== byDefault.join()
       ? ids
       : draws("segments", "select") && !draws("buttons")
-        ? listFromForm(data.control_options, OPTION_KEYS, "value")
+        ? keptFromForm(data.control_options, written, OPTION_KEYS, "value", "value")
         : [];
   if (opts.length) o.options = opts;
   const has = Object.keys(o).length > 0;
@@ -861,7 +892,11 @@ export const formToConfig = (
     const series = seriesFromForm(data.series);
     put("series", series.length ? series : undefined);
   }
-  if (changed("control_")) put("control", controlFromForm(data, kind, thing));
+  if (changed("control_"))
+    put(
+      "control",
+      controlFromForm(data, kind, thing, isObj(p.control) ? p.control.options : undefined),
+    );
   // a row draws a control or a visual: one chosen leaves the control out
   if (thing === "row" && chosen(data.visual_thing) && data.visual_thing !== "none")
     delete c.control;
@@ -869,7 +904,9 @@ export const formToConfig = (
   else setOrDrop(c, "status", data.status, !filled(data.status));
   if (thing === "tile") setOrDrop(c, "status_badge", true, data.status_badge !== true);
   if (changed("badges")) {
-    const badges = badgesFromForm(data.badges, p.badges);
+    // (a badge without an entity reads the card's)
+    const entity = typeof data.entity === "string" && data.entity ? data.entity : null;
+    const badges = badgesFromForm(data.badges, p.badges, entity);
     put("badges", badges.length ? badges : undefined);
   }
   // the rules: back to the kind's (predefined), or the list as the card's own, a copy of the

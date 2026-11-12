@@ -99,7 +99,8 @@ export const VISUAL_OPTIONS: Record<VisualThing, readonly string[]> = {
   bar: [],
   gauge: [],
   segments: [],
-  sun: ["hours"],
+  // the sun's day: today's, from midnight to midnight
+  sun: [],
   cover: ["variant"],
   path: [],
   line: [],

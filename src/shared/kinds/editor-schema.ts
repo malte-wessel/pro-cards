@@ -935,7 +935,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
                     },
                   },
                 ]),
-            ...(visualThing === "sun" ? [] : [{ name: "visual_today", selector: { boolean: {} } }]),
+            { name: "visual_today", selector: { boolean: {} } },
           ),
         ]
       : []),

@@ -3,7 +3,9 @@
 // the last 7 and 30 days) and a month of days on which two clicks pick a range – its first day,
 // then its last (the same day twice: that day). The title opens the months of the year and a dozen
 // years, to get to a far month quickly. It opens in the browser's top layer (`popover`), so no
-// card's `overflow` cuts it, and sits under (or over) the element that opened it. Days are the
+// card's `overflow` cuts it, and sits under (or over) the element that opened it; that element
+// closes it again, as a press anywhere else does (a manual popover: an automatic one would close
+// on the press and open again on its click). Days are the
 // calendar's in the given time zone, weeks start on Monday (as the periods do), nothing after
 // today can be picked. The arrow keys move through the cells (Page Up / Down: the page before /
 // after), Enter picks, Escape closes.
@@ -132,20 +134,23 @@ const dayEnd = (t0: number, tz: string) => {
   return zonedMidnight(y, m, d + 1, tz);
 };
 
-// the calendar open in a host, by its close: a new one closes the old first (its listeners and
-// the anchor's state go with it)
-const opened = new WeakMap<ShadowRoot | HTMLElement, () => void>();
+// the calendar open in a host, by its close and the element that opened it: a new one closes the
+// old first (its listeners and the anchor's state go with it)
+const opened = new WeakMap<ShadowRoot | HTMLElement, { close: () => void; anchor: HTMLElement }>();
 
 // closes the calendar open in a host, if any: a card leaving the page does (its removal hides
 // the popover without a `toggle`, so its listeners and the anchor's state would stay)
-export const closeDatePicker = (host: ShadowRoot | HTMLElement) => opened.get(host)?.();
+export const closeDatePicker = (host: ShadowRoot | HTMLElement) => opened.get(host)?.close();
 
 export const openDatePicker = (
   anchor: HTMLElement,
   host: ShadowRoot | HTMLElement,
   o: DatePickerOpts,
-) => {
-  opened.get(host)?.();
+): (() => void) => {
+  // the element that opened the calendar open closes it
+  const was = opened.get(host);
+  was?.close();
+  if (was?.anchor === anchor) return () => {};
   host.querySelector(".dp")?.remove();
   // its styles, once per card: only a card that opens it carries them
   if (!host.querySelector("style[data-datepicker]")) {
@@ -172,7 +177,7 @@ export const openDatePicker = (
   box.setAttribute("role", "dialog");
   box.setAttribute("aria-label", t(hass, "calendar.choose"));
   const supportsPopover = typeof box.showPopover === "function";
-  if (supportsPopover) box.setAttribute("popover", "auto");
+  if (supportsPopover) box.setAttribute("popover", "manual");
 
   // quick picks
   const quick = el("div", "dp-quick");
@@ -387,7 +392,11 @@ export const openDatePicker = (
     if (!ev.composedPath().includes(box) && !ev.composedPath().includes(anchor)) close();
   };
   const onKey = (ev: KeyboardEvent) => {
-    if (ev.key === "Escape") close();
+    if (ev.key !== "Escape") return;
+    // the calendar's alone: a dialog around the card stays open
+    ev.preventDefault();
+    ev.stopPropagation();
+    close();
   };
   const place = () => {
     const a = anchor.getBoundingClientRect(),
@@ -405,29 +414,30 @@ export const openDatePicker = (
   const close = () => {
     if (closed) return;
     closed = true;
-    if (opened.get(host) === close) opened.delete(host);
+    if (opened.get(host)?.close === close) opened.delete(host);
     window.removeEventListener("resize", place);
     document.removeEventListener("pointerdown", outside, true);
-    box.removeEventListener("keydown", onKey);
+    document.removeEventListener("keydown", onKey, true);
     if (supportsPopover && box.matches(":popover-open")) box.hidePopover();
     box.remove();
     anchor.setAttribute("aria-expanded", "false");
     anchor.focus();
   };
 
-  opened.set(host, close);
+  opened.set(host, { close, anchor });
   draw(false);
   if (supportsPopover) {
     box.showPopover();
-    // light dismiss and Escape close a popover by themselves
+    // whatever else hides it closes it
     box.addEventListener("toggle", (ev) => {
       if ((ev as ToggleEvent).newState === "closed") close();
     });
-  } else {
-    box.classList.add("dp-fallback");
-    document.addEventListener("pointerdown", outside, true);
-    box.addEventListener("keydown", onKey);
-  }
+  } else box.classList.add("dp-fallback");
+  // a press outside it and its anchor (the anchor's click closes it), and Escape
+  document.addEventListener("pointerdown", outside, true);
+  // (on the document: a press on a part of the calendar that takes no focus leaves the focus
+  // outside it, and a manual popover closes on Escape only when told)
+  document.addEventListener("keydown", onKey, true);
   anchor.setAttribute("aria-expanded", "true");
   place();
   window.addEventListener("resize", place);

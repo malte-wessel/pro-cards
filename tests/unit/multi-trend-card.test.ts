@@ -199,6 +199,57 @@ describe("multi-trend-card history", () => {
   });
 });
 
+describe("multi-trend-card header", () => {
+  const st = (state: string, attributes: Record<string, unknown> = {}) => ({
+    state,
+    attributes,
+    last_changed: "2026-06-21T10:00:00Z",
+    last_updated: "2026-06-21T10:00:00Z",
+  });
+  const card = (config: MultiTrendCardConfig, hass: Partial<HomeAssistant>) => {
+    const el = new MultiTrendCard();
+    el.setConfig(config);
+    el.hass = {
+      locale: { language: "en" },
+      connection: { subscribeMessage: async () => () => {} },
+      callWS: () => new Promise(() => {}),
+      ...hass,
+    } as unknown as HomeAssistant;
+    return el.shadowRoot!;
+  };
+  it("shows an unavailable or unknown sensor in the viewer's language", () => {
+    const root = card({ entities: ["sensor.a", "sensor.b"] }, {
+      locale: { language: "de" },
+      states: { "sensor.a": st("unavailable"), "sensor.b": st("unknown") },
+    } as unknown as Partial<HomeAssistant>);
+    const text = root.querySelector(".secondary")!.textContent!;
+    expect(text).not.toContain("unavailable");
+    expect(text).not.toContain("unknown");
+    expect(text).toBe("nicht verfügbar·nicht verfügbar");
+  });
+  it("shows a word state as Home Assistant formats it", () => {
+    const root = card({ entities: ["sensor.a"] }, {
+      states: { "sensor.a": st("unavailable") },
+      formatEntityState: () => "Nicht verfügbar",
+    } as unknown as Partial<HomeAssistant>);
+    expect(root.querySelector(".secondary")!.textContent).toBe("Nicht verfügbar");
+  });
+  it("tints its icon with the state icon colour for color: state", () => {
+    const hass = { states: { "sensor.a": st("1") } } as unknown as Partial<HomeAssistant>;
+    const root = card({ entities: ["sensor.a"], color: "state" }, hass);
+    const tile = root.querySelector<HTMLElement>(".header")!.parentElement!;
+    expect(tile.style.getPropertyValue("--tile-color")).toBe("var(--state-icon-color)");
+    const red = card({ entities: ["sensor.a"], color: "red" }, hass);
+    const redTile = red.querySelector<HTMLElement>(".header")!.parentElement!;
+    expect(redTile.style.getPropertyValue("--tile-color")).toBe("var(--red-color)");
+  });
+  it("writes no colour when the editor's State, its default, is picked", () => {
+    const cfg: MultiTrendCardConfig = { entities: ["sensor.a"], color: "red" };
+    const back = formToConfig({ ...configToForm(cfg), color: "state" }, cfg);
+    expect(back.color).toBeUndefined();
+  });
+});
+
 describe("trend plot height", async () => {
   const { trendPlotEl, drawTrend } = await import("../../src/shared/trend/plot.ts");
   const spec = (layout: "overlay" | "lanes") => ({
@@ -252,6 +303,44 @@ describe("trend scale", async () => {
     expect([full.min, full.max]).toEqual([0, 10]);
     expect(full.y(10)).toBe(0);
     expect(full.y(0)).toBe(98);
+  });
+  it("takes a range of float noise for a flat one", () => {
+    // 0.1 + 0.2 beside 0.3, or the mean of a constant 22.1: one unit above and below, as a flat line
+    const noise = mkScale(0.3, 0.1 + 0.2, 0, 100, 0, 0, 0);
+    expect(noise.max - noise.min).toBeCloseTo(2);
+    const mean = mkScale(22.099999999999998, 22.1, 0, 100, 0, 0, 0);
+    expect(mean.max - mean.min).toBeCloseTo(2);
+    // a small but real range stays as it is
+    const small = mkScale(0.001, 0.002, 0, 100, 0, 0, 0);
+    expect([small.min, small.max]).toEqual([0.001, 0.002]);
+  });
+});
+
+describe("trend plot value axis", async () => {
+  const { trendPlotEl, drawTrend } = await import("../../src/shared/trend/plot.ts");
+  const draw = (vs: number[], layout: "overlay" | "lanes" = "overlay") => {
+    const plot = trendPlotEl();
+    drawTrend(plot, {
+      hass: undefined,
+      t0: 0,
+      t1: 3600e3,
+      layout,
+      xAxis: false,
+      yAxis: true,
+      series: [
+        {
+          pts: vs.map((v, i) => ({ t: (i * 3600e3) / Math.max(1, vs.length - 1), v })),
+          color: "red",
+          name: "A",
+          fmt: String,
+        },
+      ],
+    });
+    return [...plot.querySelectorAll(".axis-label.y")].map((e) => e.textContent);
+  };
+  it("labels a line that only differs by float noise as a flat one", () => {
+    expect(draw([0.3, 0.1 + 0.2, 0.3]).length).toBeGreaterThan(0);
+    expect(draw([22.1, 22.099999999999998], "lanes").length).toBeGreaterThan(0);
   });
 });
 

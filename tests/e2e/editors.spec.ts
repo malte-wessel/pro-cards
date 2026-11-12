@@ -104,9 +104,14 @@ test("the entity picker searches the demo home and picks by click or keyboard", 
   await pickEntity(e.form, "entity", "kitchen", "Kitchen");
   await expect.poll(e.last).toEqual({ type: "custom:tile-card-pro", entity: "light.kitchen" });
   await expect(input).toHaveValue("Kitchen");
-  // cleared
+  // cleared, to pick another: the card stays as it was until one is picked
+  const sent = await e.count();
   await entity.getByRole("button", { name: "Clear" }).click();
-  await expect.poll(e.last).toEqual({ type: "custom:tile-card-pro" });
+  await expect(input).toHaveValue("");
+  await expect.poll(e.last).toEqual({ type: "custom:tile-card-pro", entity: "light.kitchen" });
+  await pickEntity(e.form, "entity", "hallway", "Hallway");
+  await expect.poll(e.last).toEqual({ type: "custom:tile-card-pro", entity: "light.hallway" });
+  expect(await e.count()).toBeGreaterThan(sent);
 });
 
 test("the poster shows a kind, its entities and inputs right under it", async ({ page }) => {
