@@ -182,6 +182,7 @@ feature_rows:
         title: Now
         icon: mdi:flash
         home: sensor.power_consumption
+        tap_action: { action: navigate, navigation_path: /cards/power-flow-card }
         sources:
           - { type: solar, entity: sensor.solar_power }
           - { type: battery, power: sensor.battery_power, soc: sensor.battery_soc }
@@ -210,6 +211,7 @@ feature_rows:
               - type: custom:poster-card-pro
                 entity: sensor.living_room_co2
                 name: Air
+                tap_action: { action: navigate, navigation_path: /cards/kinds#air-quality }
                 visual: { type: columns, hours: 12, bucket: 30 }
           - type: custom:layout-card-pro
             cards:
@@ -218,6 +220,7 @@ feature_rows:
                 name: Humidity
                 decimals: 0
                 visual: gauge
+                tap_action: { action: navigate, navigation_path: /cards/look#the-places }
                 min: 0
                 max: 100
                 rules:
@@ -229,6 +232,7 @@ feature_rows:
               - type: custom:poster-card-pro
                 entity: sensor.power_consumption
                 name: Power
+                tap_action: { action: navigate, navigation_path: /cards/look#rules }
                 visual: { type: sparkline, hours: 12 }
                 rules:
                   - { below: 1000, color: green, status: Low }
@@ -239,21 +243,25 @@ feature_rows:
               - type: custom:poster-card-pro
                 entity: sensor.battery_soc
                 name: Home battery
+                tap_action: { action: navigate, navigation_path: /cards/kinds#battery }
           - type: custom:layout-card-pro
             cards:
               - type: custom:poster-card-pro
                 entity: sensor.solar_power
                 name: Solar
+                tap_action: { action: navigate, navigation_path: /cards/kinds#solar }
                 kind: solar
           - type: custom:layout-card-pro
             cards:
               - type: custom:poster-card-pro
                 entity: sun.sun
+                tap_action: { action: navigate, navigation_path: /cards/kinds#sun }
           - type: custom:layout-card-pro
             cards:
               - type: custom:poster-card-pro
                 entity: sensor.dishwasher_status
                 name: Dishwasher
+                tap_action: { action: navigate, navigation_path: /cards/look#values-from-templates }
                 value: "{{ states('sensor.dishwasher_status') | replace('power_off', 'Off') | replace('run', 'Running') | replace('end', 'Done') }}"
                 rules:
                   - { state: Running, color: green, icon: mdi:dishwasher }
@@ -270,12 +278,14 @@ feature_rows:
       - type: custom:tile-group-card-pro
         title: Living room
         icon: mdi:sofa
+        title_tap_action: &group { action: navigate, navigation_path: /cards/tile-group-card#tiles-and-header }
         tiles:
-          - { entity: light.desk_lamp, name: Desk lamp }
-          - { entity: light.living_room, name: Ceiling, control: slider }
-          - { entity: cover.living_room_blinds, name: Blinds, control: slider }
+          - { entity: light.desk_lamp, name: Desk lamp, tap_action: *group }
+          - { entity: light.living_room, name: Ceiling, control: slider, tap_action: *group }
+          - { entity: cover.living_room_blinds, name: Blinds, control: slider, tap_action: *group }
           - name: Scenes
             icon: mdi:palette
+            tap_action: *group
             control:
               type: buttons
               options:
@@ -286,9 +296,11 @@ feature_rows:
       - type: custom:tile-group-card-pro
         title: Last 24 hours
         icon: mdi:chart-timeline
+        title_tap_action: &own { action: navigate, navigation_path: /cards/tile-group-card#tiles-of-their-own }
         tiles:
           - entity: sensor.living_room_temperature
             name: Temperature
+            tap_action: *own
             decimals: 1
             visual: { type: strip, hours: 24, bucket: 60 }
             rules:
@@ -297,6 +309,7 @@ feature_rows:
               - { above: 24, color: orange, icon: mdi:thermometer-high }
           - entity: sensor.living_room_humidity
             name: Humidity
+            tap_action: *own
             decimals: 0
             visual: { type: strip, hours: 24, bucket: 60 }
             rules:
@@ -305,6 +318,7 @@ feature_rows:
               - { above: 60, color: blue, status: Humid }
           - entity: sensor.living_room_co2
             name: Air
+            tap_action: *own
             visual: { type: strip, hours: 24, bucket: 60 }
   - title: "Control, right on the card."
     text: "Steppers, sliders, segments, locks and your own buttons sit on the card itself. Swipe through and try them, no dialog opens."
@@ -321,18 +335,22 @@ feature_rows:
               - type: custom:poster-card-pro
                 entity: climate.living_room
                 name: Thermostat
+                tap_action: { action: navigate, navigation_path: /cards/controls#climate-and-air }
           # three tiles stacked: a poster's height
           - type: custom:layout-card-pro
             cards:
               - type: custom:tile-card-pro
                 entity: light.desk_lamp
                 name: Desk lamp
+                tap_action: { action: navigate, navigation_path: /cards/controls#what-the-kinds-bring }
               - type: custom:tile-card-pro
                 entity: cover.living_room_blinds
                 name: Blinds
+                tap_action: { action: navigate, navigation_path: /cards/controls#covers-and-valves }
               - type: custom:tile-card-pro
                 entity: input_select.house_mode
                 name: Mode
+                tap_action: { action: navigate, navigation_path: /cards/controls#helpers-updates-and-dates }
                 control: select
                 show_value: false
           - type: custom:layout-card-pro
@@ -340,16 +358,19 @@ feature_rows:
               - type: custom:poster-card-pro
                 entity: fan.living_room
                 name: Fan
+                tap_action: { action: navigate, navigation_path: /cards/controls#climate-and-air }
           - type: custom:layout-card-pro
             cards:
               - type: custom:poster-card-pro
                 entity: cover.living_room_blinds
                 name: Blinds
+                tap_action: { action: navigate, navigation_path: /cards/controls#covers-and-valves }
           - type: custom:layout-card-pro
             cards:
               - type: custom:poster-card-pro
                 entity: lock.front_door
                 name: Front door
+                tap_action: { action: navigate, navigation_path: /cards/controls#media-robots-locks-and-alarms }
                 badges:
                   - entity: binary_sensor.door_front
                     rules:
@@ -360,11 +381,13 @@ feature_rows:
               - type: custom:poster-card-pro
                 entity: media_player.kitchen_speaker
                 name: Kitchen speaker
+                tap_action: { action: navigate, navigation_path: /cards/controls#media-robots-locks-and-alarms }
           - type: custom:layout-card-pro
             cards:
               - type: custom:poster-card-pro
                 entity: vacuum.robot
                 name: Robot
+                tap_action: { action: navigate, navigation_path: /cards/controls#media-robots-locks-and-alarms }
                 badges:
                   - sensor.robot_current_room
   - title: "Weather you can see moving."
@@ -376,10 +399,12 @@ feature_rows:
       - type: custom:poster-card-pro
         entity: sensor.wind_speed
         name: Wind
+        tap_action: { action: navigate, navigation_path: /cards/kinds#wind }
         visual: { type: flow, variant: lines }
       - type: custom:poster-card-pro
         entity: sensor.rain_rate_roof
         name: Rain
+        tap_action: { action: navigate, navigation_path: /cards/kinds#rain }
         visual: { type: flow, variant: drops }
         inputs: { wind: sensor.wind_speed, direction: sensor.wind_direction }
   - title: "Follow the sun."
@@ -394,6 +419,7 @@ feature_rows:
         cards:
           - type: custom:poster-card-pro
             kind: sun
+            tap_action: { action: navigate, navigation_path: /cards/kinds#sun }
             grid_options: { rows: auto }
           - type: custom:sun-azimuth-card-pro
             show_summary: false

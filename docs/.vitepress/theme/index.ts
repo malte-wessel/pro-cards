@@ -7,13 +7,23 @@ import ChangelogPager from "./ChangelogPager.vue";
 import FeatureRows from "./FeatureRows.vue";
 import DashboardLinks from "./DashboardLinks.vue";
 import Layout from "./Layout.vue";
+import { holdAnchorSoon } from "./anchor.ts";
 import "./ha.css";
 import "./custom.css";
 
 export default {
   extends: DefaultTheme,
   Layout,
-  enhanceApp({ app }) {
+  enhanceApp({ app, router }) {
+    // a link to a section keeps it in view while the examples above it mount (anchor.ts)
+    if (typeof window !== "undefined") {
+      const after = router.onAfterRouteChange;
+      router.onAfterRouteChange = async (to) => {
+        await after?.(to);
+        holdAnchorSoon();
+      };
+      window.addEventListener("load", holdAnchorSoon, { once: true });
+    }
     app.component("LiveCard", LiveCard);
     app.component("DashboardGrid", DashboardGrid);
     app.component("Playground", Playground);

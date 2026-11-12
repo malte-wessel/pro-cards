@@ -1,9 +1,10 @@
 <script setup lang="ts">
 // The home page's feature rows: the rows of `feature_rows` in docs/index.md, each its copy on one
 // side and its live cards on the other, the sides alternating. A row's cards sit side by side
-// (`columns`), stacked on a phone.
+// (`columns`), stacked on a phone. A card's `navigate` action opens its docs section: the rows
+// catch it before the stand-in's own handler (which only says where it would go) and route it.
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import { useData, withBase } from "vitepress";
+import { useData, useRouter, withBase } from "vitepress";
 import { mountGrid, loadRuntime, type MountHandle } from "./mount.ts";
 import { useExampleTheme } from "./exampleTheme.ts";
 
@@ -22,6 +23,17 @@ const rows = computed(() => {
   return Array.isArray(r) ? (r as Row[]) : [];
 });
 const theme = useExampleTheme();
+const router = useRouter();
+// a tap (or hold) that navigates: a path on this site, opened here
+type Action = { action?: string; navigation_path?: unknown };
+const onAction = (ev: Event) => {
+  const d = (ev as CustomEvent<{ config?: Record<string, unknown>; action?: string }>).detail;
+  const a = d?.config?.[`${d.action}_action`] as Action | undefined;
+  const path = a?.action === "navigate" ? a.navigation_path : null;
+  if (typeof path !== "string" || !path.startsWith("/")) return;
+  ev.stopPropagation();
+  router.go(withBase(path));
+};
 const hosts: HTMLDivElement[][] = [];
 let handles: MountHandle[] = [];
 const error = ref("");
@@ -45,7 +57,7 @@ onBeforeUnmount(() => handles.forEach((h) => h.dispose()));
 </script>
 
 <template>
-  <section v-if="rows.length" class="features ha-theme" :data-theme="theme">
+  <section v-if="rows.length" class="features ha-theme" :data-theme="theme" @hass-action="onAction">
     <header class="head">
       <h2 class="headline">Cards that do more than show a number.</h2>
       <p class="lead">
