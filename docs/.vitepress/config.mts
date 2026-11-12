@@ -63,6 +63,7 @@ const getStarted = [
 const tilePoster = [
   { text: "Tile", link: "/cards/tile-card" },
   { text: "Poster", link: "/cards/poster-card" },
+  { text: "Tile group", link: "/cards/tile-group-card" },
   { text: "Kinds", link: "/cards/kinds" },
   { text: "Look", link: "/cards/look" },
   { text: "Controls", link: "/cards/controls" },
@@ -71,7 +72,6 @@ const tilePoster = [
   { text: "Sizes", link: "/cards/sizes" },
 ];
 const arrange = [
-  { text: "Tile group", link: "/cards/tile-group-card" },
   { text: "Heading", link: "/cards/heading-card" },
   { text: "Layout", link: "/cards/layout-card" },
   { text: "Swipe", link: "/cards/swipe-card" },
@@ -175,7 +175,7 @@ export default defineConfig({
         items: [
           { text: "Tile & poster", items: tilePoster },
           { text: "Energy", items: energy },
-          { text: "Group & arrange", items: arrange },
+          { text: "Arrange", items: arrange },
           { text: "More cards", items: moreCards },
         ],
       },
@@ -191,7 +191,7 @@ export default defineConfig({
       { text: "Get started", items: getStarted },
       { text: "Tile & poster", items: tilePoster },
       { text: "Energy", items: energy },
-      { text: "Group & arrange", items: arrange },
+      { text: "Arrange", items: arrange },
       { text: "More cards", items: moreCards },
       { text: "Guides", items: guides },
       { text: "Showcase", items: showcase },
