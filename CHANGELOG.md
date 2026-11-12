@@ -2,7 +2,7 @@
 
 ## 3.0.0 – Poster and tile cards, energy flow, heading and swipe cards
 
-_Beta_
+_2026-11-12_
 
 Requires Home Assistant 2026.4 or newer. [Moving to 3.0](https://malte-wessel.github.io/pro-cards/guide/migrating) maps the older cards and keys to the new ones.
 
