@@ -45,7 +45,7 @@ entities:
 
 ## Overlay or lanes
 
-With `layout: auto` the series share one scale when they share a unit; otherwise each gets its own lane. `overlay` or `lanes` forces either. `hours_to_show` sets the window, 6 hours by default.
+With `layout: auto` the series share one scale when they share a unit; otherwise each gets its own lane. `overlay` or `lanes` forces either. `hours` sets the window, 6 hours by default.
 
 ::: live
 
@@ -64,7 +64,7 @@ entities:
 
 ## Axes and smoothing
 
-`x_axis` adds time labels and `y_axis` value labels, each with gridlines; both are off by default. The lines are averaged so sensor noise does not zigzag; `smoothing_minutes` sets how many minutes each point averages.
+`x_axis` adds time labels and `y_axis` value labels, each with gridlines; both are off by default. The lines are averaged so sensor noise does not zigzag; `smoothing` sets how many minutes each point averages.
 
 ::: live
 
@@ -73,8 +73,8 @@ type: custom:multi-trend-card-pro
 title: Power
 icon: mdi:flash
 color: amber
-hours_to_show: 24
-smoothing_minutes: 30
+hours: 24
+smoothing: 30
 x_axis: true
 y_axis: true
 entities:
@@ -86,18 +86,18 @@ entities:
 
 ## Reference
 
-| Key                 | Default                 | Description                                                                                                                                  |
-| ------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entities`          | –                       | Required. Entity ids, or `{ entity, name, color, rules, visibility }`. A series with [`visibility`](/guide/visibility) shows while it holds. |
-| `title`             | the first entity's name | The header's text.                                                                                                                           |
-| `icon`              | the first entity's icon | The header's icon.                                                                                                                           |
-| `color`             | the state's icon colour | The header icon's colour.                                                                                                                    |
-| `hours_to_show`     | `6`                     | The window, 1 to 168 hours.                                                                                                                  |
-| `smoothing_minutes` | one point per 12 px     | Minutes each point averages, at least 5.                                                                                                     |
-| `layout`            | `auto`                  | `auto` (overlay when the units match, else lanes), `overlay` or `lanes`.                                                                     |
-| `show_legend`       | `true`                  | A legend under the header for two or more overlaid series.                                                                                   |
-| `x_axis`            | `false`                 | Time labels and vertical gridlines.                                                                                                          |
-| `y_axis`            | `false`                 | Value labels and horizontal gridlines, per lane.                                                                                             |
+| Key           | Default                 | Description                                                                                                                                  |
+| ------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entities`    | –                       | Required. Entity ids, or `{ entity, name, color, rules, visibility }`. A series with [`visibility`](/guide/visibility) shows while it holds. |
+| `title`       | the first entity's name | The header's text.                                                                                                                           |
+| `icon`        | the first entity's icon | The header's icon.                                                                                                                           |
+| `color`       | the state's icon colour | The header icon's colour.                                                                                                                    |
+| `hours`       | `6`                     | The window, 1 to 168 hours (`hours_to_show` until 4.0).                                                                                      |
+| `smoothing`   | one point per 12 px     | Minutes each point averages, at least 5 (`smoothing_minutes` until 4.0).                                                                     |
+| `layout`      | `auto`                  | `auto` (overlay when the units match, else lanes), `overlay` or `lanes`.                                                                     |
+| `show_legend` | `true`                  | A legend under the header for two or more overlaid series.                                                                                   |
+| `x_axis`      | `false`                 | Time labels and vertical gridlines.                                                                                                          |
+| `y_axis`      | `false`                 | Value labels and horizontal gridlines, per lane.                                                                                             |
 
 A series' `rules` are `{ state | below | above, color }`; `below` is exclusive, `above` inclusive.
 

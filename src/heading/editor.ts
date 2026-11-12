@@ -20,7 +20,7 @@ export const HEADING_LABELS: Record<string, StringKey> = {
   color: "editor.card.field.color",
   badges: "editor.card.field.badges",
   align: "editor.heading.field.align",
-  badges_position: "editor.heading.field.badges_position",
+  badge_position: "editor.heading.field.badge_position",
   overflow: "editor.heading.field.overflow",
   badge_style: "editor.heading.field.badge_style",
   badge_size: "editor.heading.field.badge_size",
@@ -36,23 +36,21 @@ export const HEADING_LABELS: Record<string, StringKey> = {
 const DEFAULTS: Raw = {
   style: "title",
   align: "start",
-  badges_position: "end",
+  badge_position: "end",
   overflow: "wrap",
   badge_style: "outline",
   badge_size: "m",
 };
-const TEXTS = ["title", "icon", "subtitle", "color"] as const;
-const ACTIONS = [
-  "title_tap_action",
-  "icon_tap_action",
-  "tap_action",
-  "hold_action",
-  "double_tap_action",
-] as const;
+const TEXTS = ["title", "subtitle", "color"] as const;
+const ACTIONS = ["title_tap_action", "tap_action", "hold_action", "double_tap_action"] as const;
+const isObj = (v: unknown): v is Raw => !!v && typeof v === "object" && !Array.isArray(v);
 
 export const configToForm = (c: Raw): HaFormData => {
   const d: HaFormData = {};
   for (const k of TEXTS) d[k] = typeof c[k] === "string" ? c[k] : "";
+  // the icon: its name, and its own tap where it is { name, tap_action }
+  d.icon = typeof c.icon === "string" ? c.icon : isObj(c.icon) ? (c.icon.name ?? "") : "";
+  if (isObj(c.icon) && c.icon.tap_action !== undefined) d.icon_tap_action = c.icon.tap_action;
   for (const [k, v] of Object.entries(DEFAULTS)) d[k] = typeof c[k] === "string" ? c[k] : v;
   for (const k of ACTIONS) if (c[k] !== undefined && c[k] !== null) d[k] = c[k];
   d.hover = c.hover !== false;
@@ -73,6 +71,13 @@ export const formToConfig = (data: HaFormData, prev: Raw): Raw => {
   for (const [k, v] of Object.entries(DEFAULTS))
     if (changed(k)) setOrDrop(c, k, data[k], empty(data[k]) || data[k] === v);
   for (const k of ACTIONS) if (changed(k)) setOrDrop(c, k, data[k], empty(data[k]));
+  // the icon: a name alone, or { name, tap_action } where it has a tap of its own
+  if (changed("icon") || changed("icon_tap_action")) {
+    const name = empty(data.icon) ? undefined : data.icon;
+    const tap = empty(data.icon_tap_action) ? undefined : data.icon_tap_action;
+    if (tap === undefined) setOrDrop(c, "icon", name, name === undefined);
+    else c.icon = { ...(name !== undefined ? { name } : {}), tap_action: tap };
+  }
   if (changed("hover")) setOrDrop(c, "hover", false, data.hover !== false);
   if (changed("badges")) {
     const badges = badgesFromForm(data.badges, prev.badges);
@@ -122,7 +127,7 @@ export const editorSchema = (hass?: HomeAssistant): HaFormSchema[] => {
     section(L("editor.card.section.layout"), ICONS.layout, [
       grid(
         select("align", HEADING_ALIGNS, (v) => L(`editor.heading.align.${v}`)),
-        select("badges_position", BADGE_POSITIONS, (v) => L(`editor.heading.badges_position.${v}`)),
+        select("badge_position", BADGE_POSITIONS, (v) => L(`editor.heading.badge_position.${v}`)),
       ),
       select("overflow", OVERFLOWS, (v) => L(`editor.heading.overflow.${v}`)),
     ]),

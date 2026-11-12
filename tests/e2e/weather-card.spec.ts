@@ -84,8 +84,8 @@ test.describe("weather card", () => {
       type: T,
       entity: W,
       temperature_rules: [
-        { below: 12, color: "blue", label: "Cool" },
-        { above: 12, color: "green", label: "Mild" },
+        { below: 12, color: "blue", status: "Cool" },
+        { above: 12, color: "green", status: "Mild" },
       ],
       sections: [{ type: "hero" }],
     });
@@ -242,14 +242,14 @@ test.describe("weather card", () => {
       type: T,
       entity: W,
       icons: "mdi",
-      rules: [{ state: "partlycloudy", color: "amber", label: "Card", tint_card: true }],
-      temperature_rules: [{ above: 0, color: "green", label: "Card temp" }],
+      rules: [{ state: "partlycloudy", color: "amber", status: "Card", tint_card: true }],
+      temperature_rules: [{ above: 0, color: "green", status: "Card temp" }],
       sections: [
         { type: "hero" },
         {
           type: "hero",
-          rules: [{ state: "partlycloudy", color: "purple", icon: "mdi:emoticon", label: "Own" }],
-          temperature_rules: [{ above: 0, color: "red", label: "Own temp" }],
+          rules: [{ state: "partlycloudy", color: "purple", icon: "mdi:emoticon", status: "Own" }],
+          temperature_rules: [{ above: 0, color: "red", status: "Own temp" }],
         },
         {
           type: "forecast",

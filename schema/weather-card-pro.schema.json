@@ -19,11 +19,11 @@
     },
     "secondary": {
       "type": "string",
-      "description": "The line under the name / temperature (default: temperature · condition, or labels · high / low). Template allowed."
+      "description": "The line under the name / temperature (default: temperature · condition, or status · high / low). Template allowed."
     },
     "color": {
       "$ref": "defs.schema.json#/$defs/color",
-      "description": "Fixed condition colour; overrides rules"
+      "description": "Fixed condition colour; overrides the rules until 4.0, when a matching rule's colour wins (as on the tile)"
     },
     "icon_style": {
       "type": "string",
@@ -39,16 +39,16 @@
     "rules": {
       "type": "array",
       "items": {
-        "$ref": "entity.schema.json#/$defs/rule"
+        "$ref": "#/$defs/rule"
       },
-      "description": "On the condition (state: rainy …): colour, icon, label and tint; first match wins"
+      "description": "On the condition (state: rainy …): colour, icon, status and tint; first match wins"
     },
     "temperature_rules": {
       "type": "array",
       "items": {
-        "$ref": "entity.schema.json#/$defs/rule"
+        "$ref": "#/$defs/rule"
       },
-      "description": "On the temperature (below / above): colour of the temperature, bars and lines, label and tint"
+      "description": "On the temperature (below / above): colour of the temperature, bars and lines, status and tint"
     },
     "title": {
       "type": "string",
@@ -85,11 +85,13 @@
       "type": "integer",
       "minimum": 1,
       "maximum": 4,
-      "description": "Default for grid sections"
+      "description": "Deprecated, goes in 4.0 with the entity sections: default for grid sections",
+      "deprecated": true
     },
     "align": {
       "$ref": "entity.schema.json#/$defs/align",
-      "description": "Default for every entity section"
+      "description": "Deprecated, goes in 4.0 with the entity sections: default for every entity section",
+      "deprecated": true
     },
     "sections": {
       "type": "array",
@@ -119,14 +121,14 @@
               "rules": {
                 "type": "array",
                 "items": {
-                  "$ref": "entity.schema.json#/$defs/rule"
+                  "$ref": "#/$defs/rule"
                 },
                 "description": "Condition rules for this section only (default: the card's)"
               },
               "temperature_rules": {
                 "type": "array",
                 "items": {
-                  "$ref": "entity.schema.json#/$defs/rule"
+                  "$ref": "#/$defs/rule"
                 },
                 "description": "Temperature rules for this section only (default: the card's)"
               },
@@ -226,7 +228,7 @@
           },
           {
             "type": "object",
-            "description": "An entity group like a section of the entity sections card (`type: row` or, as there, `layout: row` without `type`); entries may name attributes of the weather entity (humidity, pressure, wind_speed, wind_gust_speed, wind_bearing, apparent_temperature, dew_point, uv_index, cloud_coverage, visibility, ozone)",
+            "description": "Deprecated, goes in 4.0: a tile group beside the weather card in a layout card. An entity group like a section of the entity sections card (`type: row` or, as there, `layout: row` without `type`); entries may name attributes of the weather entity (humidity, pressure, wind_speed, wind_gust_speed, wind_bearing, apparent_temperature, dew_point, uv_index, cloud_coverage, visibility, ozone)",
             "properties": {
               "type": {
                 "type": "string",
@@ -303,7 +305,8 @@
               }
             },
             "required": ["entities"],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "deprecated": true
           },
           {
             "type": "object",
@@ -344,14 +347,14 @@
               "rules": {
                 "type": "array",
                 "items": {
-                  "$ref": "entity.schema.json#/$defs/rule"
+                  "$ref": "#/$defs/rule"
                 },
                 "description": "Condition rules for this section only (default: the card's)"
               },
               "temperature_rules": {
                 "type": "array",
                 "items": {
-                  "$ref": "entity.schema.json#/$defs/rule"
+                  "$ref": "#/$defs/rule"
                 },
                 "description": "Temperature rules for this section only (default: the card's)"
               },
@@ -547,14 +550,14 @@
               "rules": {
                 "type": "array",
                 "items": {
-                  "$ref": "entity.schema.json#/$defs/rule"
+                  "$ref": "#/$defs/rule"
                 },
                 "description": "Condition rules for this section only (default: the card's)"
               },
               "temperature_rules": {
                 "type": "array",
                 "items": {
-                  "$ref": "entity.schema.json#/$defs/rule"
+                  "$ref": "#/$defs/rule"
                 },
                 "description": "Temperature rules for this section only (default: the card's)"
               },
@@ -662,6 +665,11 @@
       "maximum": 160,
       "default": 36,
       "description": "Size of the tile's condition icon (px)"
+    },
+    "hover": {
+      "type": "boolean",
+      "default": true,
+      "description": "Home Assistant's hover and press effects, as on the tile; the default for every section and entity"
     }
   },
   "required": ["type", "entity"],
@@ -683,7 +691,95 @@
       "not": {
         "required": ["badges", "header_entities"]
       }
+    },
+    {
+      "description": "Deprecated, go in 4.0 with the entity sections (and header_entities)",
+      "properties": {
+        "show_name": {
+          "deprecated": true
+        },
+        "show_value": {
+          "deprecated": true
+        },
+        "show_icon": {
+          "deprecated": true
+        },
+        "name_position": {
+          "deprecated": true
+        },
+        "hours_to_show": {
+          "deprecated": true
+        },
+        "bucket_minutes": {
+          "deprecated": true
+        },
+        "smoothing_minutes": {
+          "deprecated": true
+        }
+      }
     }
   ],
-  "unevaluatedProperties": false
+  "unevaluatedProperties": false,
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "description": "First matching rule wins, in the order written. state matches the raw value, below is exclusive, above inclusive. A rule's text is its status, as on the tile.",
+      "properties": {
+        "state": {
+          "type": ["string", "number", "boolean"],
+          "description": "Matches the raw state / value text. Quote \"on\" and \"off\" in YAML."
+        },
+        "below": {
+          "$ref": "defs.schema.json#/$defs/numberish",
+          "description": "matches when value < below"
+        },
+        "above": {
+          "$ref": "defs.schema.json#/$defs/numberish",
+          "description": "matches when value >= above"
+        },
+        "color": {
+          "$ref": "defs.schema.json#/$defs/color"
+        },
+        "icon": {
+          "$ref": "defs.schema.json#/$defs/icon"
+        },
+        "status": {
+          "type": "string",
+          "description": "The text while the rule matches (the condition's or the temperature's status)"
+        },
+        "label": {
+          "type": "string",
+          "deprecated": true,
+          "description": "Deprecated, goes in 4.0: use status"
+        },
+        "tint_card": {
+          "type": "boolean",
+          "description": "Tint the whole card in the rule's colour"
+        },
+        "style": {
+          "$ref": "entity.schema.json#/$defs/badgeStyle",
+          "description": "Header badges: the pill while the rule matches"
+        },
+        "pulse": {
+          "type": "boolean",
+          "description": "Header badges: a ring pulses around the badge while the rule matches"
+        }
+      },
+      "anyOf": [
+        {
+          "required": ["state"]
+        },
+        {
+          "required": ["below"]
+        },
+        {
+          "required": ["above"]
+        }
+      ],
+      "additionalProperties": false,
+      "not": {
+        "required": ["label", "status"]
+      }
+    }
+  }
 }

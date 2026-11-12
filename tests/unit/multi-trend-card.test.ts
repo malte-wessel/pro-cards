@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { niceStep, decimalsForStep, DEFAULT_HOURS } from "../../src/shared/trend/scale.ts";
 import { configToForm, formToConfig, editorSchema } from "../../src/multi-trend/editor.ts";
 import { MultiTrendCard } from "../../src/multi-trend-card.ts";
-import type { MultiTrendCardConfig } from "../../src/multi-trend/config.ts";
+import { normalizeTrendConfig, type MultiTrendCardConfig } from "../../src/multi-trend/config.ts";
 import type { HaFormSchema, HomeAssistant } from "../../src/shared/ha.ts";
 
 describe("multi-trend-card helpers", () => {
@@ -23,8 +23,8 @@ describe("multi-trend-card helpers", () => {
     const cfg: MultiTrendCardConfig = {
       type: "custom:multi-trend-card-pro",
       title: "T",
-      hours_to_show: 12,
-      smoothing_minutes: 30,
+      hours: 12,
+      smoothing: 30,
       layout: "lanes",
       x_axis: true,
       entities: [{ entity: "sensor.a", name: "A", color: "red" }, { entity: "sensor.b" }],
@@ -33,8 +33,8 @@ describe("multi-trend-card helpers", () => {
     const data = configToForm(cfg);
     expect(data).toMatchObject({
       title: "T",
-      hours_to_show: 12,
-      smoothing_minutes: 30,
+      hours: 12,
+      smoothing: 30,
       layout: "lanes",
       x_axis: true,
       y_axis: false,
@@ -50,7 +50,7 @@ describe("multi-trend-card helpers", () => {
     const defaults = formToConfig(
       configToForm({
         entities: [{ entity: "sensor.a" }],
-        hours_to_show: DEFAULT_HOURS,
+        hours: DEFAULT_HOURS,
         layout: "auto",
         show_legend: true,
       }),
@@ -59,9 +59,15 @@ describe("multi-trend-card helpers", () => {
     // (an entity with nothing of its own is written as its id)
     expect(defaults).toEqual({ entities: ["sensor.a"] });
     // a cleared smoothing field drops the key
-    expect(formToConfig({ ...data, smoothing_minutes: undefined }, cfg)).not.toHaveProperty(
-      "smoothing_minutes",
-    );
+    expect(formToConfig({ ...data, smoothing: undefined }, cfg)).not.toHaveProperty("smoothing");
+    // the deprecated spelling is read, and written as the new one
+    const old = { entities: ["sensor.a"], hours_to_show: 12, smoothing_minutes: 30 };
+    expect(configToForm(old)).toMatchObject({ hours: 12, smoothing: 30 });
+    expect(formToConfig(configToForm(old), old)).toEqual({
+      entities: ["sensor.a"],
+      hours: 12,
+      smoothing: 30,
+    });
     const schema = editorSchema(
       {
         states: { "sensor.a": { attributes: { friendly_name: "A" } } },
@@ -124,6 +130,38 @@ describe("multi-trend-card helpers", () => {
       ["sensor.a", "sensor.b", "light.c"],
     );
     expect(stub.entities).toEqual([{ entity: "sensor.a" }]);
+  });
+});
+
+describe("multi-trend-card config", () => {
+  const T = "multi-trend-card-pro";
+  it("reads the window and the averaging from hours and smoothing", () => {
+    const c = normalizeTrendConfig({ entities: ["sensor.a"], hours: 12, smoothing: 2 }, T);
+    expect(c).toMatchObject({ hours: 12, smoothing: 5, layout: "auto", show_legend: true });
+    expect(normalizeTrendConfig({ entities: ["sensor.a"] }, T)).toMatchObject({
+      hours: DEFAULT_HOURS,
+      smoothing: null,
+    });
+  });
+  it("reads hours_to_show and smoothing_minutes until 4.0, saying so once", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const old = { entities: ["sensor.a"], hours_to_show: 24, smoothing_minutes: 30 };
+      const c = normalizeTrendConfig(old, "old-trend-card");
+      normalizeTrendConfig(old, "old-trend-card");
+      expect(c).toMatchObject({ hours: 24, smoothing: 30 });
+      expect(c).not.toHaveProperty("hours_to_show");
+      expect(warn).toHaveBeenCalledTimes(2);
+      expect(warn.mock.calls[0][0]).toContain("hours_to_show is deprecated and goes in 4.0");
+      expect(() =>
+        normalizeTrendConfig({ entities: ["sensor.a"], hours: 6, hours_to_show: 24 }, T),
+      ).toThrow("hours_to_show is hours: write hours only");
+    } finally {
+      warn.mockRestore();
+    }
+  });
+  it("needs entities", () => {
+    expect(() => normalizeTrendConfig({}, T)).toThrow("'entities' must be a non-empty list");
   });
 });
 

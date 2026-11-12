@@ -20,7 +20,7 @@ Any Home Assistant theme restyles the cards with the rest of the dashboard; ther
 - type: custom:multi-trend-card-pro
   title: Outdoor
   icon: mdi:thermometer
-  hours_to_show: 12
+  hours: 12
   x_axis: true
   entities:
     - { entity: sensor.outdoor_temperature, name: Temperature, color: red }
@@ -103,7 +103,7 @@ The cards make room for it: a tile grows taller, a plot keeps space for its labe
 - type: custom:multi-trend-card-pro
   title: Outdoor
   icon: mdi:thermometer
-  hours_to_show: 12
+  hours: 12
   x_axis: true
   y_axis: true
   entities:

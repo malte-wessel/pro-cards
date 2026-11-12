@@ -8,8 +8,9 @@
  *   title: Temperature & dew point    # optional (default: first entity name)
  *   icon: mdi:thermometer             # optional
  *   color: primary                    # optional icon color (HA color token or hex)
- *   hours_to_show: 6                  # default 6
- *   smoothing_minutes: 15             # optional: averaging bucket (default: one point per 12 px)
+ *   hours: 6                          # default 6 (was hours_to_show, until 4.0)
+ *   smoothing: 15                     # optional: averaging bucket in minutes (was smoothing_minutes;
+ *                                     # default: one point per 12 px)
  *   layout: auto | overlay | lanes    # auto = overlay when all units match, else lanes
  *   show_legend: true
  *   x_axis: false                     # time labels + vertical gridlines
@@ -30,11 +31,16 @@ import {
   freshShadow,
 } from "./shared/card.ts";
 import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
-import type { MultiTrendCardConfig, TrendConfig, TrendPoint } from "./multi-trend/config.ts";
+import {
+  normalizeTrendConfig,
+  type MultiTrendCardConfig,
+  type TrendConfig,
+  type TrendPoint,
+} from "./multi-trend/config.ts";
 import { cssColor } from "./shared/color.ts";
 import { DEVICE_CLASS_ICON, REFRESH_MS } from "./shared/constants.ts";
 import { fmtNumber, langOf } from "./shared/format.ts";
-import { fetchHistory, normalizeSmoothing, type Point } from "./shared/history.ts";
+import { fetchHistory, type Point } from "./shared/history.ts";
 import { HistoryFeed } from "./shared/history-feed.ts";
 import { t } from "./shared/i18n.ts";
 import { hideHover, leaveHides, outsideHides } from "./shared/hover.ts";
@@ -50,7 +56,6 @@ import { VisibilityWatch } from "./shared/visibility-watch.ts";
 import { MultiTrendCardEditor } from "./multi-trend/editor.ts";
 import { seriesColor } from "./shared/trend/color.ts";
 import { DEFAULT_HOURS } from "./shared/trend/scale.ts";
-import { normalizeSeries } from "./shared/trend/series.ts";
 import {
   drawTrend,
   trendPlotEl,
@@ -101,7 +106,7 @@ export class MultiTrendCard extends HTMLElement {
     const sensors = (entities || [])
       .filter((e) => e.startsWith("sensor.") && hass?.states[e] && isNum(hass.states[e].state))
       .slice(0, 2);
-    return { entities: sensors.map((entity) => ({ entity })), hours_to_show: DEFAULT_HOURS };
+    return { entities: sensors.map((entity) => ({ entity })), hours: DEFAULT_HOURS };
   }
 
   constructor() {
@@ -113,24 +118,8 @@ export class MultiTrendCard extends HTMLElement {
   }
 
   setConfig(config: MultiTrendCardConfig) {
-    if (!config || !Array.isArray(config.entities) || config.entities.length === 0) {
-      throw new Error(`${CARD_TYPE}: 'entities' must be a non-empty list`);
-    }
-    const entities = config.entities.map((e, i) => {
-      const s = normalizeSeries(e, i, CARD_TYPE, `entities[${i}]`);
-      if (!s) throw new Error(`${CARD_TYPE}: entities[${i}] has no 'entity'`);
-      return s;
-    });
-    this._config = {
-      hours_to_show: DEFAULT_HOURS,
-      layout: "auto",
-      show_legend: true,
-      x_axis: false,
-      y_axis: false,
-      ...config,
-      smoothing_minutes: normalizeSmoothing(config.smoothing_minutes),
-      entities,
-    };
+    this._config = normalizeTrendConfig(config, CARD_TYPE);
+    const entities = this._config.entities;
     this._series = entities.map(() => []);
     this._history.reset();
     this._visDeps = visibilityDeps(entities.map((e) => e.visibility));
@@ -285,7 +274,7 @@ export class MultiTrendCard extends HTMLElement {
     if (!hass || !cfg) return;
     const ids = cfg.entities.map((e) => e.entity);
     return this._history.run(
-      () => fetchHistory(hass, ids, cfg.hours_to_show),
+      () => fetchHistory(hass, ids, cfg.hours),
       (res) => {
         this._series = ids.map((id) =>
           (res.get(id) || []).filter((p): p is Point & { v: number } => p.v !== null),
@@ -346,7 +335,7 @@ export class MultiTrendCard extends HTMLElement {
     // Header text
     qs(card, ".primary").textContent = this._config.title || this._name(0);
     qs(card, ".range").textContent = t(this._hass, "common.hours", {
-      n: this._config.hours_to_show,
+      n: this._config.hours,
     });
     const icon = qs(card, "ha-icon");
     icon.setAttribute(
@@ -400,12 +389,12 @@ export class MultiTrendCard extends HTMLElement {
     const now = Date.now();
     return {
       hass: this._hass,
-      t0: now - this._config.hours_to_show * 3600e3,
+      t0: now - this._config.hours * 3600e3,
       t1: now,
       layout: this._layout(shown),
       xAxis: this._config.x_axis,
       yAxis: this._config.y_axis,
-      smoothing: { minutes: this._config.smoothing_minutes },
+      smoothing: { minutes: this._config.smoothing },
       text: this._textCache,
       series: shown.map((i) => ({
         pts: this._series[i],

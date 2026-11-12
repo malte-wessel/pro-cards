@@ -192,6 +192,50 @@ badges:
 
 :::
 
+## The weather card
+
+The weather card keeps its sections and speaks the tile's language. What changed still works in 3.0, says so once in the browser console, and goes in 4.0:
+
+| Before                                                                                                                              | Now                                                                                                        |
+| ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| a rule's `label`                                                                                                                    | its `status`, as on a tile (both on one rule is an error)                                                  |
+| `color` beats a matching rule                                                                                                       | until 4.0; then a matching rule's colour wins, as on a tile. Leave `color` out to let the rules decide now |
+| `hover` off unless `true`                                                                                                           | on, as on a tile; `hover: false` turns it off                                                              |
+| entity sections (`row`, `list`, `table`, `grid`, `column`)                                                                          | a [tile group](/cards/tile-group-card) beside the card in a [layout card](/cards/layout-card)              |
+| `columns`, `align`, `show_name`, `show_value`, `show_icon`, `name_position`, `hours_to_show`, `bucket_minutes`, `smoothing_minutes` | go with the entity sections they set                                                                       |
+
+An entity section's attributes of the weather entity become tiles of the sensors that report them:
+
+::: live
+
+```yaml
+type: custom:layout-card-pro
+cards:
+  - type: custom:weather-card-pro
+    entity: weather.home
+    sections:
+      - type: hero
+  - type: custom:tile-group-card-pro
+    layout: row
+    tiles:
+      - { entity: sensor.outdoor_humidity, name: Humidity }
+      - { entity: sensor.wind_speed, name: Wind }
+      - { entity: sensor.pressure, name: Pressure }
+```
+
+:::
+
+## The multi trend card
+
+The multi trend card's window and averaging take the names a tile's plot has. The old keys still work, say so once in the browser console, and go in 4.0; a card with both spellings of one is an error.
+
+| Old key             | Now         |
+| ------------------- | ----------- |
+| `hours_to_show`     | `hours`     |
+| `smoothing_minutes` | `smoothing` |
+
+The visual editor writes the new keys when it saves the card.
+
 ## The illuminance card
 
 The illuminance card has no successor: its log scale, zones and arc have no match. The nearest is a tile with the history as a strip, coloured by rules:

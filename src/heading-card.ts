@@ -6,9 +6,10 @@
  *   title: Living room                     # template allowed
  *   subtitle: "{{ ... }}"                  # the line under the title; template allowed
  *   icon: mdi:sofa / color: amber          # the icon and its colour (big: in a circle); templates allowed
- *   title_tap_action / icon_tap_action     # the title (and its icon), the icon on its own
+ *   title_tap_action                       # the title (and its icon)
+ *   icon: { name, tap_action }             # the icon, with a tap of its own
  *   align: start                           # start | center
- *   badges_position: end                   # end | inline | below (end moves below on a narrow card)
+ *   badge_position: end                    # end | inline | below (end moves below on a narrow card)
  *   overflow: wrap                         # wrap | scroll
  *   badge_style: outline / badge_size: m   # defaults: outline | soft | filled | tag | plain, s | m | l
  *   tap_action / hold_action / double_tap_action / hover   # defaults for every badge

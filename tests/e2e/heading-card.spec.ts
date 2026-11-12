@@ -13,7 +13,7 @@ test.describe("heading card", () => {
     await mount(page, {
       type: "custom:heading-card-pro",
       style: "subtitle",
-      badges_position: "inline",
+      badge_position: "inline",
       badges: ["sensor.outdoor_temperature", "sensor.outdoor_humidity"],
     });
     const c = card(page);

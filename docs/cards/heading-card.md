@@ -91,7 +91,7 @@ badges:
 
 ## Position and alignment
 
-`badges_position` places the badges: at the `end` of the line (the default; on a narrow card they move below the title), `inline` right after the title, or `below` on a line of their own. `align: center` centres the title, the subtitle and the badges. More badges than fit wrap onto more lines; `overflow: scroll` keeps them on one line that scrolls.
+`badge_position` places the badges: at the `end` of the line (the default; on a narrow card they move below the title), `inline` right after the title, or `below` on a line of their own. `align: center` centres the title, the subtitle and the badges. More badges than fit wrap onto more lines; `overflow: scroll` keeps them on one line that scrolls.
 
 ::: live
 
@@ -101,7 +101,7 @@ align: center
 style: big
 title: Living room
 icon: mdi:sofa
-badges_position: below
+badge_position: below
 badges:
   - sensor.living_room_temperature
   - sensor.living_room_humidity
@@ -113,16 +113,17 @@ badges:
 
 ## Actions and hover
 
-`title_tap_action` runs when the title or its icon is tapped, for example to open the room's dashboard. `icon_tap_action` gives the icon an action of its own; `none` keeps the icon still. The card's `tap_action`, `hold_action` and `double_tap_action` are the defaults for every badge, and a badge's own win. A badge with an action shows Home Assistant's hover and press effects; `hover: false` turns them off, on the card or on one badge. See [Actions & hover](/cards/actions).
+`title_tap_action` runs when the title or its icon is tapped, for example to open the room's dashboard. `icon: { name, tap_action }` gives the icon an action of its own; `none` keeps the icon still. The card's `tap_action`, `hold_action` and `double_tap_action` are the defaults for every badge, and a badge's own win. A badge with an action shows Home Assistant's hover and press effects; `hover: false` turns them off, on the card or on one badge. See [Actions & hover](/cards/actions).
 
 ::: live
 
 ```yaml
 type: custom:heading-card-pro
 title: Office
-icon: mdi:desk
 title_tap_action: { action: navigate, navigation_path: /dashboard-rooms/office }
-icon_tap_action: { action: toggle, entity: light.office }
+icon:
+  name: mdi:desk
+  tap_action: { action: toggle, entity: light.office }
 badges:
   - sensor.office_temperature
   - { entity: sensor.office_co2, tap_action: { action: none } }
@@ -157,25 +158,24 @@ Home Assistant's card editor shows a form for the heading: the title with its ic
 
 ### Card options
 
-| Key                 | Default                         | Description                                                                     |
-| ------------------- | ------------------------------- | ------------------------------------------------------------------------------- |
-| `title`             | –                               | The heading's text. Template allowed.                                           |
-| `subtitle`          | –                               | The line under the title. Template allowed.                                     |
-| `icon`              | –                               | The icon before the title. Template allowed.                                    |
-| `color`             | secondary text (`big`: primary) | The icon's colour: a colour name or any CSS colour. Template allowed.           |
-| `style`             | `title`                         | `section`, `title`, `subtitle`, `big` or `hero`.                                |
-| `align`             | `start`                         | `start` or `center`.                                                            |
-| `badges`            | –                               | Entity ids or badges with the [badge keys](/cards/badges#badge-keys), in order. |
-| `badges_position`   | `end`                           | `end` (below the title on a narrow card), `inline` or `below`.                  |
-| `overflow`          | `wrap`                          | Badges that do not fit: `wrap` onto more lines, or `scroll` on one.             |
-| `badge_style`       | `outline`                       | The pill of every badge: `outline`, `soft`, `filled`, `tag` or `plain`.         |
-| `badge_size`        | `m`                             | The size of every badge: `s`, `m` or `l` (24, 30 or 36 px high).                |
-| `title_tap_action`  | `none`                          | What a tap on the title or its icon does.                                       |
-| `icon_tap_action`   | the title's                     | What a tap on the icon does; `none` keeps the icon still.                       |
-| `tap_action`        | `more-info`                     | The default tap for every badge.                                                |
-| `hold_action`       | `more-info`                     | The default hold for every badge.                                               |
-| `double_tap_action` | `none`                          | The default double tap for every badge.                                         |
-| `hover`             | `true`                          | `false` turns the hover and press effects off for every badge.                  |
+| Key                 | Default                         | Description                                                                                                                                 |
+| ------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`             | –                               | The heading's text. Template allowed.                                                                                                       |
+| `subtitle`          | –                               | The line under the title. Template allowed.                                                                                                 |
+| `icon`              | –                               | The icon before the title, or `{ name, tap_action }` with a tap of its own (default: the title's; `none` keeps it still). Template allowed. |
+| `color`             | secondary text (`big`: primary) | The icon's colour: a colour name or any CSS colour. Template allowed.                                                                       |
+| `style`             | `title`                         | `section`, `title`, `subtitle`, `big` or `hero`.                                                                                            |
+| `align`             | `start`                         | `start` or `center`.                                                                                                                        |
+| `badges`            | –                               | Entity ids or badges with the [badge keys](/cards/badges#badge-keys), in order.                                                             |
+| `badge_position`    | `end`                           | `end` (below the title on a narrow card), `inline` or `below`.                                                                              |
+| `overflow`          | `wrap`                          | Badges that do not fit: `wrap` onto more lines, or `scroll` on one.                                                                         |
+| `badge_style`       | `outline`                       | The pill of every badge: `outline`, `soft`, `filled`, `tag` or `plain`.                                                                     |
+| `badge_size`        | `m`                             | The size of every badge: `s`, `m` or `l` (24, 30 or 36 px high).                                                                            |
+| `title_tap_action`  | `none`                          | What a tap on the title or its icon does.                                                                                                   |
+| `tap_action`        | `more-info`                     | The default tap for every badge.                                                                                                            |
+| `hold_action`       | `more-info`                     | The default hold for every badge.                                                                                                           |
+| `double_tap_action` | `none`                          | The default double tap for every badge.                                                                                                     |
+| `hover`             | `true`                          | `false` turns the hover and press effects off for every badge.                                                                              |
 
 ### Grid and Home Assistant options
 

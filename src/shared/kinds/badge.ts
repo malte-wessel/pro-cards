@@ -27,7 +27,7 @@ import {
   type BadgeSize,
   type BadgeStyle,
 } from "../entity/constants.ts";
-import { MIGRATION_GUIDE } from "../card.ts";
+import { warnDeprecatedKey } from "../card.ts";
 import { parseImage } from "../entity/image.ts";
 import type { HassEntity } from "../ha.ts";
 import { oneOf } from "../util.ts";
@@ -359,7 +359,6 @@ export const badgeWindow = (items: readonly EntityItem[]) => ({
 // the badges of a header that had `header_entities` (the weather and the flow cards): `badges`,
 // written as the 3.0 cards' are, plain and small; the old `header_entities` still draws (said
 // once per card type) until 4.0, never both. The history window covers what the badges draw
-const warnedHeader = new Set<string>();
 export const normalizeHeaderBadges = (
   raw: { badges?: unknown; header_entities?: unknown },
   ctx: NormalizeCtx,
@@ -368,12 +367,8 @@ export const normalizeHeaderBadges = (
   if (raw.badges !== undefined && raw.header_entities !== undefined)
     throw new Error(`${ctx.type}: header_entities is badges: write badges only`);
   if (raw.badges === undefined) {
-    if (raw.header_entities !== undefined && !warnedHeader.has(ctx.type)) {
-      warnedHeader.add(ctx.type);
-      console.warn(
-        `${ctx.type}: header_entities is deprecated and goes in 4.0: use badges (${MIGRATION_GUIDE}#header-entities)`,
-      );
-    }
+    if (raw.header_entities !== undefined)
+      warnDeprecatedKey(ctx.type, "header_entities", "use badges", "header-entities");
     return { items: normalizeHeaderEntities(raw.header_entities, ctx) };
   }
   const items = normalizePills(

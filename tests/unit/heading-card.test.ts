@@ -53,7 +53,7 @@ describe("heading-card-pro config", () => {
     const c = normalizeHeadingCardConfig({
       style: "hero",
       align: "center",
-      badges_position: "below",
+      badge_position: "below",
       overflow: "scroll",
       badge_style: "soft",
       badge_size: "l",
@@ -62,7 +62,7 @@ describe("heading-card-pro config", () => {
     expect(c).toMatchObject({ style: "hero", align: "center", badgesPosition: "below" });
     expect(c).toMatchObject({ overflow: "scroll" });
     expect(c.entities[0].badge).toEqual({ style: "soft", size: "l" });
-    const d = normalizeHeadingCardConfig({ style: "x", badges_position: "x", badge_style: "x" });
+    const d = normalizeHeadingCardConfig({ style: "x", badge_position: "x", badge_style: "x" });
     expect(d).toMatchObject({ style: "title", badgesPosition: "end", entities: [] });
   });
   it("fetches the longest window its badges draw, each badge its own", () => {
@@ -82,12 +82,24 @@ describe("heading-card-pro config", () => {
         `heading-card-pro: ${k} is gone: a badge draws its own window (visual: { type: sparkline, hours })`,
       );
   });
-  it("keeps icon_tap_action: none apart from unset", () => {
+  it("keeps the icon's tap_action: none apart from unset", () => {
     expect(normalizeHeadingCardConfig({}).iconTap).toBeNull();
-    expect(normalizeHeadingCardConfig({ icon_tap_action: "none" }).iconTap).toEqual({
-      action: "none",
-    });
-    expect(normalizeHeadingCardConfig({ icon_tap_action: NAV }).iconTap).toEqual(NAV);
+    const icon = (tap_action: unknown) => ({ icon: { name: "mdi:sofa", tap_action } });
+    expect(normalizeHeadingCardConfig(icon("none")).iconTap).toEqual({ action: "none" });
+    expect(normalizeHeadingCardConfig(icon(NAV)).iconTap).toEqual(NAV);
+    expect(normalizeHeadingCardConfig(icon(NAV)).icon).toBe("mdi:sofa");
+    expect(normalizeHeadingCardConfig({ icon: "mdi:sofa" }).icon).toBe("mdi:sofa");
+  });
+  it("names the new spelling of the 3.0 betas' keys", () => {
+    expect(() => normalizeHeadingCardConfig({ badges_position: "below" })).toThrow(
+      "heading-card-pro: badges_position is badge_position",
+    );
+    expect(() => normalizeHeadingCardConfig({ icon_tap_action: "none" })).toThrow(
+      "heading-card-pro: icon_tap_action is icon: { name, tap_action }",
+    );
+    expect(() => normalizeHeadingCardConfig({ icon: { name: "mdi:x", ring: true } })).toThrow(
+      "heading-card-pro: icon takes name and tap_action, not ring",
+    );
   });
   it("names the error of a badge without an entity or a value", () => {
     expect(() => normalizeHeadingCardConfig({ badges: [{ name: "x" }] })).toThrow(
@@ -118,14 +130,17 @@ describe("heading-card-pro title and icon", () => {
     const a = mount({ title_tap_action: NAV });
     a.icon.click();
     expect(a.fired).toHaveLength(1);
-    const b = mount({ title_tap_action: NAV, icon_tap_action: "more-info" });
+    const b = mount({ title_tap_action: NAV, icon: { name: "mdi:sofa", tap_action: "more-info" } });
     b.icon.click();
     expect(b.fired).toHaveLength(1);
     expect(b.icon.getAttribute("role")).toBe("button");
     expect(b.icon.getAttribute("aria-label")).toBe("Living room");
   });
-  it("icon_tap_action: none keeps the icon still under a tappable title", () => {
-    const { icon, fired, header } = mount({ title_tap_action: NAV, icon_tap_action: "none" });
+  it("an icon tap_action: none keeps the icon still under a tappable title", () => {
+    const { icon, fired, header } = mount({
+      title_tap_action: NAV,
+      icon: { name: "mdi:sofa", tap_action: "none" },
+    });
     icon.click();
     expect(fired).toHaveLength(0);
     expect(icon.hasAttribute("role")).toBe(false);
@@ -170,10 +185,10 @@ describe("heading-card-pro editor", () => {
     const card = { type: T, title: "Office" };
     const form = configToForm(card);
     expect(form).toMatchObject({ style: "title", align: "start", badge_size: "m", hover: true });
-    expect(formToConfig({ ...form, style: "big", badges_position: "below" }, card)).toEqual({
+    expect(formToConfig({ ...form, style: "big", badge_position: "below" }, card)).toEqual({
       ...card,
       style: "big",
-      badges_position: "below",
+      badge_position: "below",
     });
     // back to the defaults: the keys go; a turned-off hover is the only boolean written
     const big = { ...card, style: "big", overflow: "scroll" };
@@ -181,6 +196,22 @@ describe("heading-card-pro editor", () => {
       card,
     );
     expect(formToConfig({ ...form, hover: false }, card)).toEqual({ ...card, hover: false });
+  });
+
+  it("writes the icon's own tap into the icon, a name alone where it has none", () => {
+    const card = { type: T, title: "Office", icon: "mdi:desk" };
+    const form = configToForm(card);
+    expect(form).toMatchObject({ icon: "mdi:desk" });
+    const tapped = formToConfig({ ...form, icon_tap_action: { action: "none" } }, card);
+    expect(tapped).toEqual({ ...card, icon: { name: "mdi:desk", tap_action: { action: "none" } } });
+    expect(configToForm(tapped)).toMatchObject({
+      icon: "mdi:desk",
+      icon_tap_action: { action: "none" },
+    });
+    // the tap cleared: the name alone again
+    expect(formToConfig({ ...configToForm(tapped), icon_tap_action: undefined }, tapped)).toEqual(
+      card,
+    );
   });
 
   it("keeps what it does not show and what it was not asked to change", () => {

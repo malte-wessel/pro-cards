@@ -33,6 +33,39 @@ export const warnDeprecated = (type: string, successor: string) => {
   console.warn(`${type} is deprecated and goes in 4.0: use ${successor} (${MIGRATION_GUIDE})`);
 };
 
+// a key that has a new spelling and goes in 4.0: said once per card type and key (however many
+// cards write it); `instead` says what to write, `anchor` the migration guide's section
+const warnedKeys = new Set<string>();
+export const warnDeprecatedKey = (type: string, key: string, instead: string, anchor = "") => {
+  const id = `${type}|${key}`;
+  if (warnedKeys.has(id)) return;
+  warnedKeys.add(id);
+  console.warn(
+    `${type}: ${key} is deprecated and goes in 4.0: ${instead} (${MIGRATION_GUIDE}${anchor ? `#${anchor}` : ""})`,
+  );
+};
+// (tests: say every deprecated card and key again)
+export const resetDeprecatedKeys = () => {
+  warned.clear();
+  warnedKeys.clear();
+};
+// the value of a key that was renamed: the new one, else the old one (said once, deprecated);
+// both written is an error, so a config never says two things
+export const renamedKey = (
+  raw: Record<string, unknown>,
+  type: string,
+  key: string,
+  old: string,
+  anchor = "",
+): unknown => {
+  const now = raw[key],
+    was = raw[old];
+  if (was === undefined) return now;
+  if (now !== undefined) throw new Error(`${type}: ${old} is ${key}: write ${key} only`);
+  warnDeprecatedKey(type, old, `write ${key}`, anchor);
+  return was;
+};
+
 // registers the element (its static `cardType`) and its card picker entry; `suggest` names the
 // entities the picker suggests the card for (src/shared/suggest.ts), with the card's stub for
 // that entity as the suggestion's config. A card that is `deprecated` names its successor: the

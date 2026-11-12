@@ -9,7 +9,7 @@ const two = (extra = {}) => ({
     { entity: "sensor.outdoor_temperature", name: "Temperature", color: "red" },
     { entity: "sensor.dew_point", name: "Dew point" },
   ],
-  hours_to_show: 6,
+  hours: 6,
   ...extra,
 });
 
@@ -25,8 +25,8 @@ test("overlays series with the same unit and shows a legend", async ({ page }) =
   await expect(c.locator(".range")).toHaveText("6 h");
 });
 
-test("smoothing_minutes averages every line into buckets of that size", async ({ page }) => {
-  await mount(page, [two(), two({ smoothing_minutes: 60 })]);
+test("smoothing averages every line into buckets of that size", async ({ page }) => {
+  await mount(page, [two(), two({ smoothing: 60 })]);
   const segments = async (i: number) => {
     const line = card(page, i).locator("svg path.line").first();
     await expect(line).toHaveAttribute("d", /C/);
@@ -113,7 +113,7 @@ test("lane and axis labels stay in their lanes when the card is taller than its 
 });
 
 test("axes add labels and gridlines", async ({ page }) => {
-  await mount(page, two({ x_axis: true, y_axis: true, hours_to_show: 12 }));
+  await mount(page, two({ x_axis: true, y_axis: true, hours: 12 }));
   const c = card(page);
   await expect(c.locator(".axis-label.x").first()).toBeVisible();
   expect(await c.locator(".axis-label.x").count()).toBeGreaterThanOrEqual(3);

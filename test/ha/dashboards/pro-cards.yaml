@@ -181,7 +181,7 @@ views:
             heading: Multi trend card
           - type: custom:multi-trend-card-pro
             title: Outdoor
-            hours_to_show: 6
+            hours: 6
             x_axis: true
             y_axis: true
             entities:
@@ -189,7 +189,7 @@ views:
               - { entity: sensor.outdoor_humidity, name: Humidity, color: blue }
           - type: custom:multi-trend-card-pro
             title: Power (overlay)
-            hours_to_show: 12
+            hours: 12
             entities:
               - { entity: sensor.power_consumption, name: Consumption }
       - type: grid
@@ -338,12 +338,11 @@ views:
             entity: weather.demo_weather_south
             title: Weather
             temperature_rules:
-              - { below: 12, color: blue, label: Cool }
-              - { below: 20, color: green, label: Mild }
-              - { above: 20, color: amber, label: Warm }
+              - { below: 12, color: blue, status: Cool }
+              - { below: 20, color: green, status: Mild }
+              - { above: 20, color: amber, status: Warm }
             sections:
               - { type: hero }
-              - { type: row, entities: [humidity, wind_speed, pressure] }
               - { type: trend, mode: hourly, hours: 12 }
               - { type: forecast, mode: daily, days: 5 }
       - type: grid
@@ -475,7 +474,7 @@ views:
             grid_options: { columns: 12, rows: 6 }
           - type: custom:multi-trend-card-pro
             title: Outdoor
-            hours_to_show: 6
+            hours: 6
             entities:
               - { entity: sensor.outdoor_temperature, name: Temperature, color: orange }
               - { entity: sensor.outdoor_humidity, name: Humidity, color: blue }

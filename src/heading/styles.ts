@@ -26,7 +26,7 @@ const STYLE_HEADING = `
   .header .hline { display: none; }
   /* the badges give way first: they wrap down to their widest badge before the title is cut */
   .layout-heading .header .hvals { flex: 0 16 auto; min-width: min-content; max-width: none; flex-wrap: wrap; justify-content: flex-end; row-gap: 6px; }
-  /* icon_tap_action: the icon is a button of its own */
+  /* icon: { tap_action }: the icon is a button of its own */
   .header.icon-tap > ha-icon { cursor: pointer; border-radius: ${ICON_RADIUS}; outline: none; }
   .header.icon-tap > ha-icon:focus-visible { box-shadow: 0 0 0 2px var(--primary-color); }
 

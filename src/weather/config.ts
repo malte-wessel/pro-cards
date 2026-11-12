@@ -41,6 +41,7 @@ import {
   type TrendLayoutOption,
 } from "./constants.ts";
 import { normalizeHeaderBadges } from "../shared/kinds/badge.ts";
+import { warnDeprecatedKey } from "../shared/card.ts";
 
 // ----- the raw config as written in YAML -----
 
@@ -224,15 +225,50 @@ const markAttribute = (item: EntityItem, raw: unknown) => {
   if (def.unitAttr) item.unitAttr = def.unitAttr;
 };
 
+// the migration guide's part on the weather card
+const ANCHOR = "the-weather-card";
+// a rule's text is its `status`, as on the tile and the poster; `label` (the entity cards') is read
+// until 4.0 with a console warning. The entity layer reads it as `label`.
+export const statusRules = (v: unknown, where: string): unknown => {
+  if (!Array.isArray(v)) return v;
+  return v.map((r, i) => {
+    if (!r || typeof r !== "object") return r;
+    const o = r as Record<string, unknown>;
+    if (o.label !== undefined && o.status !== undefined)
+      throw new Error(`${CARD_TYPE}: ${where}[${i}]: label is status: write status only`);
+    if (o.label !== undefined) {
+      warnDeprecatedKey(CARD_TYPE, "a rule's label", "write status, as on the tile", ANCHOR);
+      return o;
+    }
+    if (o.status === undefined) return o;
+    const { status, ...rest } = o;
+    return { ...rest, label: status };
+  });
+};
+// the card-level keys that only ever set the entity sections (and the old header_entities)
+const GROUP_KEYS = [
+  "columns",
+  "align",
+  "show_name",
+  "show_value",
+  "show_icon",
+  "name_position",
+  "hours_to_show",
+  "bucket_minutes",
+  "smoothing_minutes",
+] as const;
+const SECTIONS_GO = "a tile group beside the weather card in a layout card";
+
 export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
   if (!input || typeof input !== "object") throw new Error(`${CARD_TYPE}: invalid config`);
   const raw = input as RawWeatherCardConfig;
   const entity = raw.entity;
   if (typeof entity !== "string" || !entity.startsWith("weather."))
     throw new Error(`${CARD_TYPE}: 'entity' must be a weather entity (weather.*)`);
+  // the pointer answers by default, as on the tile and the poster
   const ctx = {
     type: CARD_TYPE,
-    ...normalizeActionDefaults(raw),
+    ...normalizeActionDefaults({ ...raw, hover: raw.hover ?? true }),
     columns: clampColumns(raw.columns, ENTITY_DEFAULTS.columns),
   };
   const entities: EntityItem[] = [];
@@ -247,13 +283,18 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
       secondary: raw.secondary,
       color: raw.color,
       icon_style: raw.icon_style,
-      rules: raw.rules,
+      rules: statusRules(raw.rules, "rules"),
     },
     ctx,
     "the card",
   );
   const temp = normalizeEntity(
-    { entity, attribute: "temperature", rules: raw.temperature_rules, decimals: raw.decimals },
+    {
+      entity,
+      attribute: "temperature",
+      rules: statusRules(raw.temperature_rules, "temperature_rules"),
+      decimals: raw.decimals,
+    },
     ctx,
     "temperature",
   );
@@ -283,7 +324,10 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
         secondary: sec.secondary ?? raw.secondary,
         color: raw.color,
         icon_style: raw.icon_style,
-        rules: sec.rules ?? raw.rules,
+        rules:
+          sec.rules !== undefined
+            ? statusRules(sec.rules, `${label}.rules`)
+            : statusRules(raw.rules, "rules"),
       },
       ctx,
       label,
@@ -292,7 +336,10 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
       {
         entity,
         attribute: "temperature",
-        rules: sec.temperature_rules ?? raw.temperature_rules,
+        rules:
+          sec.temperature_rules !== undefined
+            ? statusRules(sec.temperature_rules, `${label}.temperature_rules`)
+            : statusRules(raw.temperature_rules, "temperature_rules"),
         decimals: raw.decimals,
       },
       ctx,
@@ -334,6 +381,7 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
         ...sectionItems(sec, label),
       });
     } else if (oneOf(GROUP_TYPES, type)) {
+      warnDeprecatedKey(CARD_TYPE, "an entity section", `use ${SECTIONS_GO}`, ANCHOR);
       const rawEntities = list(sec.entities);
       const r = normalizeGroup(
         {
@@ -395,6 +443,32 @@ export const normalizeWeatherCardConfig = (input: unknown): WeatherConfig => {
       });
     }
   });
+
+  // what goes in 4.0 with the entity sections
+  for (const k of GROUP_KEYS)
+    if ((raw as Record<string, unknown>)[k] !== undefined)
+      warnDeprecatedKey(
+        CARD_TYPE,
+        k,
+        `it sets the entity sections and the old header_entities, which go too (${SECTIONS_GO})`,
+        ANCHOR,
+      );
+  // from 4.0 a matching rule's colour wins over the card's color, as on the tile: say so where
+  // both are written
+  const rulesOf = [raw.rules, ...list(raw.sections).map((x) => (x as RawWeatherSection)?.rules)];
+  if (
+    typeof raw.color === "string" &&
+    raw.color &&
+    rulesOf.some(
+      (r) => Array.isArray(r) && r.some((x) => x && typeof x === "object" && "color" in x),
+    )
+  )
+    warnDeprecatedKey(
+      CARD_TYPE,
+      "color beside a rule's color",
+      "from 4.0 a matching rule's colour wins over color, as on the tile: leave color out to keep the rule's",
+      ANCHOR,
+    );
 
   // the header's badges (the old header_entities until 4.0)
   const history = normalizeHistoryOptions(raw);

@@ -23,8 +23,24 @@
       "description": "The line under the title. Template allowed."
     },
     "icon": {
-      "$ref": "defs.schema.json#/$defs/icon",
-      "description": "The icon before the title. Template allowed."
+      "description": "The icon before the title: its name, or { name, tap_action } with a tap of its own (default: the title's; none keeps it still). Template allowed.",
+      "oneOf": [
+        {
+          "$ref": "defs.schema.json#/$defs/icon"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "$ref": "defs.schema.json#/$defs/icon"
+            },
+            "tap_action": {
+              "$ref": "defs.schema.json#/$defs/action"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     },
     "color": {
       "$ref": "defs.schema.json#/$defs/color",
@@ -34,17 +50,13 @@
       "$ref": "defs.schema.json#/$defs/action",
       "description": "Action when the title or its icon is tapped, e.g. navigate to the room's dashboard (default: none)"
     },
-    "icon_tap_action": {
-      "$ref": "defs.schema.json#/$defs/action",
-      "description": "Action when the icon is tapped, instead of the title's (default: the title's); none keeps the icon still"
-    },
     "align": {
       "type": "string",
       "enum": ["start", "center"],
       "default": "start",
       "description": "center: the title, the subtitle and the badges centred"
     },
-    "badges_position": {
+    "badge_position": {
       "type": "string",
       "enum": ["end", "inline", "below"],
       "default": "end",

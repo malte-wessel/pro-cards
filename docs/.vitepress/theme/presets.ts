@@ -120,7 +120,7 @@ badges:
   "Multi trend card": `type: custom:multi-trend-card-pro
 title: Temperature & dew point
 icon: mdi:thermometer
-hours_to_show: 12
+hours: 12
 x_axis: true
 y_axis: true
 entities:
@@ -142,12 +142,11 @@ show_sides: true
 entity: weather.home
 title: Home
 temperature_rules:
-  - { below: 12, color: blue, label: Cool }
-  - { below: 20, color: green, label: Mild }
-  - { above: 20, color: amber, label: Warm }
+  - { below: 12, color: blue, status: Cool }
+  - { below: 20, color: green, status: Mild }
+  - { above: 20, color: amber, status: Warm }
 sections:
   - { type: hero }
-  - { type: row, entities: [humidity, wind_speed, pressure] }
   - { type: trend, mode: hourly, hours: 12 }
   - { type: forecast, mode: daily, days: 7 }
 `,

@@ -390,7 +390,7 @@ export const ruleItemSchema = (
     numeric: boolean;
     badge?: boolean;
     line?: boolean;
-    // an entity layer's rule (the weather's, the flows'): its status is its `label`
+    // an entity layer's rule (the flows'): its status is its `label`
     entityRule?: boolean;
   },
 ): HaFormSchema[] => {

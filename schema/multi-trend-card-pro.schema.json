@@ -5,15 +5,44 @@
   "description": "Tile-style trend graph for several numeric sensors with a hover/touch tooltip.",
   "type": "object",
   "properties": {
-    "type": { "const": "custom:multi-trend-card-pro" },
-    "title": { "type": "string", "description": "Default: first entity name" },
-    "icon": { "$ref": "defs.schema.json#/$defs/icon" },
-    "color": { "$ref": "defs.schema.json#/$defs/color", "description": "Header icon colour" },
-    "hours_to_show": { "type": "number", "minimum": 1, "maximum": 168, "default": 6 },
-    "smoothing_minutes": {
+    "type": {
+      "const": "custom:multi-trend-card-pro"
+    },
+    "title": {
+      "type": "string",
+      "description": "Default: first entity name"
+    },
+    "icon": {
+      "$ref": "defs.schema.json#/$defs/icon"
+    },
+    "color": {
+      "$ref": "defs.schema.json#/$defs/color",
+      "description": "Header icon colour"
+    },
+    "hours": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 168,
+      "default": 6,
+      "description": "The window in hours"
+    },
+    "smoothing": {
       "type": "number",
       "minimum": 5,
       "description": "Averaging bucket of the lines in minutes (default: one point per 12 px)"
+    },
+    "hours_to_show": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 168,
+      "deprecated": true,
+      "description": "Deprecated, goes in 4.0: use hours"
+    },
+    "smoothing_minutes": {
+      "type": "number",
+      "minimum": 5,
+      "deprecated": true,
+      "description": "Deprecated, goes in 4.0: use smoothing"
     },
     "layout": {
       "type": "string",
@@ -21,7 +50,10 @@
       "default": "auto",
       "description": "auto = overlay when all units match, else lanes"
     },
-    "show_legend": { "type": "boolean", "default": true },
+    "show_legend": {
+      "type": "boolean",
+      "default": true
+    },
     "x_axis": {
       "type": "boolean",
       "default": false,
@@ -37,22 +69,32 @@
       "minItems": 1,
       "items": {
         "oneOf": [
-          { "$ref": "defs.schema.json#/$defs/entityId" },
+          {
+            "$ref": "defs.schema.json#/$defs/entityId"
+          },
           {
             "type": "object",
             "properties": {
-              "entity": { "$ref": "defs.schema.json#/$defs/entityId" },
-              "name": { "type": "string" },
+              "entity": {
+                "$ref": "defs.schema.json#/$defs/entityId"
+              },
+              "name": {
+                "type": "string"
+              },
               "color": {
                 "$ref": "defs.schema.json#/$defs/color",
                 "description": "Fixed colour of the series (or a template); wins over the rules"
               },
               "rules": {
                 "type": "array",
-                "items": { "$ref": "#/$defs/rule" },
+                "items": {
+                  "$ref": "#/$defs/rule"
+                },
                 "description": "The first rule the current value matches colours the series"
               },
-              "visibility": { "$ref": "defs.schema.json#/$defs/visibility" }
+              "visibility": {
+                "$ref": "defs.schema.json#/$defs/visibility"
+              }
             },
             "required": ["entity"],
             "additionalProperties": false
@@ -60,12 +102,24 @@
         ]
       }
     },
-    "grid_options": { "$ref": "defs.schema.json#/$defs/haCardExtras/grid_options" },
-    "fill_height": { "$ref": "defs.schema.json#/$defs/fillHeight" },
-    "visibility": { "$ref": "defs.schema.json#/$defs/haCardExtras/visibility" },
-    "layout_options": { "$ref": "defs.schema.json#/$defs/haCardExtras/layout_options" },
-    "view_layout": { "$ref": "defs.schema.json#/$defs/haCardExtras/view_layout" },
-    "card_mod": { "$ref": "defs.schema.json#/$defs/haCardExtras/card_mod" }
+    "grid_options": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/grid_options"
+    },
+    "fill_height": {
+      "$ref": "defs.schema.json#/$defs/fillHeight"
+    },
+    "visibility": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/visibility"
+    },
+    "layout_options": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/layout_options"
+    },
+    "view_layout": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/view_layout"
+    },
+    "card_mod": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/card_mod"
+    }
   },
   "required": ["type", "entities"],
   "additionalProperties": false,
@@ -74,14 +128,46 @@
       "type": "object",
       "description": "A colour rule on the series' current value: state (text equality), below (exclusive) or above (inclusive). First match wins, in the order written.",
       "properties": {
-        "state": { "type": ["string", "number", "boolean"] },
-        "below": { "$ref": "defs.schema.json#/$defs/numberish" },
-        "above": { "$ref": "defs.schema.json#/$defs/numberish" },
-        "color": { "$ref": "defs.schema.json#/$defs/color" }
+        "state": {
+          "type": ["string", "number", "boolean"]
+        },
+        "below": {
+          "$ref": "defs.schema.json#/$defs/numberish"
+        },
+        "above": {
+          "$ref": "defs.schema.json#/$defs/numberish"
+        },
+        "color": {
+          "$ref": "defs.schema.json#/$defs/color"
+        }
       },
       "required": ["color"],
-      "anyOf": [{ "required": ["state"] }, { "required": ["below"] }, { "required": ["above"] }],
+      "anyOf": [
+        {
+          "required": ["state"]
+        },
+        {
+          "required": ["below"]
+        },
+        {
+          "required": ["above"]
+        }
+      ],
       "additionalProperties": false
     }
-  }
+  },
+  "allOf": [
+    {
+      "description": "hours or the old hours_to_show, not both",
+      "not": {
+        "required": ["hours", "hours_to_show"]
+      }
+    },
+    {
+      "description": "smoothing or the old smoothing_minutes, not both",
+      "not": {
+        "required": ["smoothing", "smoothing_minutes"]
+      }
+    }
+  ]
 }

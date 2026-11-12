@@ -88,7 +88,7 @@ export const RULE_KEYS = [
   "style",
   "pulse",
 ] as const;
-// an entity layer's rule (the weather's, the power and energy flows' home): its status is `label`
+// an entity layer's rule (the power and energy flows' home): its status is `label`
 export const ENTITY_RULE_KEYS = [
   "state",
   "above",

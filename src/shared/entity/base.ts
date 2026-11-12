@@ -695,7 +695,7 @@ export abstract class EntityCardBase extends HTMLElement {
       const hvals = qs(header, ".hvals");
       for (const i of cfg.headerIdxs) hvals.appendChild(this._row(i, "hval"));
       if (cfg.titleTap) this._bindTitle(header, cfg.titleTap);
-      // icon_tap_action: none keeps the icon still, also under a tappable title
+      // the icon's tap_action: none keeps it still, also under a tappable title
       if (cfg.iconTap && cfg.iconTap.action !== "none") this._bindIcon(header, cfg.iconTap);
       this._buildHeader(header);
       card.appendChild(header);
@@ -727,7 +727,7 @@ export abstract class EntityCardBase extends HTMLElement {
     if (this._config?.iconTap) header.classList.add("icon-own");
     else qs(header, "ha-icon").addEventListener("click", run);
   }
-  // `icon_tap_action` (the heading card): the icon is a button of its own
+  // the heading card's `icon: { tap_action }`: the icon is a button of its own
   _bindIcon(header: HTMLElement, a: ActionConfig) {
     header.classList.add("icon-tap");
     this._tapper(qs(header, "ha-icon"), a);

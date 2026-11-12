@@ -591,7 +591,7 @@ const CASES = {
     type: "custom:multi-trend-card-pro",
     title: "Temperature & dew point",
     icon: "mdi:thermometer",
-    hours_to_show: 12,
+    hours: 12,
     entities: [
       { entity: "sensor.outdoor_temperature", name: "Temperature", color: "red" },
       { entity: "sensor.dew_point", name: "Dew point", color: "blue" },
@@ -602,7 +602,7 @@ const CASES = {
     title: "Wind & pressure",
     icon: "mdi:weather-windy",
     color: "teal",
-    hours_to_show: 24,
+    hours: 24,
     x_axis: true,
     y_axis: true,
     entities: [
@@ -616,7 +616,7 @@ const CASES = {
       type: "custom:weather-card-pro",
       entity: "weather.home",
       name: "Garden",
-      rules: [{ state: "partlycloudy", color: "amber", label: "Some sun", tint_card: true }],
+      rules: [{ state: "partlycloudy", color: "amber", status: "Some sun", tint_card: true }],
       grid_options: { columns: 6 },
     },
   ],
@@ -625,9 +625,9 @@ const CASES = {
     entity: "weather.home",
     title: "Home",
     temperature_rules: [
-      { below: 12, color: "blue", label: "Cool" },
-      { below: 20, color: "green", label: "Mild" },
-      { above: 20, color: "amber", label: "Warm" },
+      { below: 12, color: "blue", status: "Cool" },
+      { below: 20, color: "green", status: "Mild" },
+      { above: 20, color: "amber", status: "Warm" },
     ],
     sections: [
       { type: "hero" },
@@ -670,9 +670,9 @@ const CASES = {
     type: "custom:weather-card-pro",
     entity: "weather.home",
     temperature_rules: [
-      { below: 12, color: "blue", label: "Cool" },
-      { below: 20, color: "green", label: "Mild" },
-      { above: 20, color: "amber", label: "Warm" },
+      { below: 12, color: "blue", status: "Cool" },
+      { below: 20, color: "green", status: "Mild" },
+      { above: 20, color: "amber", status: "Warm" },
     ],
     sections: [
       {
@@ -870,12 +870,12 @@ const CASES = {
       },
     ],
     secondary: "feels like {{ state_attr('weather.home', 'apparent_temperature') }}°",
-    rules: [{ state: "lightning-rainy", color: "red", label: "Storm warning", tint_card: true }],
+    rules: [{ state: "lightning-rainy", color: "red", status: "Storm warning", tint_card: true }],
     temperature_rules: [
-      { below: 5, color: "blue", label: "Cold" },
-      { below: 12, color: "cyan", label: "Cool" },
-      { below: 20, color: "green", label: "Mild" },
-      { above: 20, color: "amber", label: "Warm" },
+      { below: 5, color: "blue", status: "Cold" },
+      { below: 12, color: "cyan", status: "Cool" },
+      { below: 20, color: "green", status: "Mild" },
+      { above: 20, color: "amber", status: "Warm" },
     ],
     sections: [
       { type: "hero" },
@@ -1872,7 +1872,7 @@ const CASES = {
     {
       type: HC,
       title: "Rings",
-      badges_position: "below",
+      badge_position: "below",
       badges: [
         { entity: "sensor.battery_soc", icon: { name: "mdi:home-battery", ring: true }, size: "s" },
         { entity: "sensor.battery_soc", icon: { name: "mdi:home-battery", ring: true } },
@@ -1897,7 +1897,7 @@ const CASES = {
     {
       type: HC,
       title: "Energy",
-      badges_position: "below",
+      badge_position: "below",
       badges: [
         { entity: "sensor.power_consumption", visual: "sparkline", format: "power" },
         { entity: "sensor.living_room_temperature", visual: "trend" },
@@ -1914,7 +1914,7 @@ const CASES = {
     {
       type: HC,
       title: "House",
-      badges_position: "below",
+      badge_position: "below",
       badges: [
         { entity: "person.malte", icon: { type: "image" }, show_name: true, show_value: false },
         {
@@ -1967,7 +1967,7 @@ const CASES = {
       type: HC,
       title: "Appliances",
       icon: "mdi:washing-machine",
-      badges_position: "below",
+      badge_position: "below",
       badges: [
         { entity: "sensor.solar_power", format: "power", icon: "mdi:solar-power" },
         { entity: "sensor.washer_remaining", format: "duration" },
@@ -1982,7 +1982,7 @@ const CASES = {
     {
       type: HC,
       title: "Kinds",
-      badges_position: "below",
+      badge_position: "below",
       badges: [
         "sensor.smoke_detector_battery",
         "sensor.remote_battery",
@@ -1998,7 +1998,7 @@ const CASES = {
     {
       type: HC,
       title: "Icons",
-      badges_position: "below",
+      badge_position: "below",
       badges: [
         { entity: "sensor.battery_soc", icon: { ring: true } },
         { entity: "person.malte", icon: { type: "image" }, show_name: true },
@@ -2016,7 +2016,7 @@ const CASES = {
     {
       type: HC,
       title: "Inline",
-      badges_position: "inline",
+      badge_position: "inline",
       badges: ["sensor.living_room_temperature", "light.living_room"],
     },
     {

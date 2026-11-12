@@ -13,8 +13,8 @@ export const EDITOR_LABELS: Record<string, StringKey> = {
   title: "editor.multi_trend.title",
   icon: "editor.multi_trend.icon",
   color: "editor.multi_trend.color",
-  hours_to_show: "editor.multi_trend.hours_to_show",
-  smoothing_minutes: "editor.multi_trend.smoothing_minutes",
+  hours: "editor.multi_trend.hours",
+  smoothing: "editor.multi_trend.smoothing",
   layout: "editor.multi_trend.layout",
   show_legend: "editor.multi_trend.show_legend",
   fill_height: "editor.multi_trend.fill_height",
@@ -34,8 +34,8 @@ export const configToForm = (config: MultiTrendCardConfig): HaFormData => {
     title: config.title ?? "",
     icon: config.icon ?? "",
     color: config.color ?? "",
-    hours_to_show: config.hours_to_show ?? DEFAULT_HOURS,
-    smoothing_minutes: config.smoothing_minutes,
+    hours: config.hours ?? config.hours_to_show ?? DEFAULT_HOURS,
+    smoothing: config.smoothing ?? config.smoothing_minutes,
     layout: config.layout ?? "auto",
     show_legend: config.show_legend ?? true,
     fill_height: config.fill_height ?? true,
@@ -46,26 +46,29 @@ export const configToForm = (config: MultiTrendCardConfig): HaFormData => {
   return data;
 };
 
-// flat ha-form data -> card config (keeps unknown keys such as grid_options)
+// flat ha-form data -> card config (keeps unknown keys such as grid_options); the deprecated
+// `hours_to_show` and `smoothing_minutes` are written as `hours` and `smoothing`
 export const formToConfig = (
   data: HaFormData,
   prev: MultiTrendCardConfig,
 ): MultiTrendCardConfig => {
   const config: MultiTrendCardConfig = { ...prev };
+  delete config.hours_to_show;
+  delete config.smoothing_minutes;
   setOrDrop(config, "title", data.title, !data.title);
   setOrDrop(config, "icon", data.icon, !data.icon);
   setOrDrop(config, "color", data.color, !data.color);
   setOrDrop(
     config,
-    "hours_to_show",
-    Number(data.hours_to_show),
-    !data.hours_to_show || Number(data.hours_to_show) === DEFAULT_HOURS,
+    "hours",
+    Number(data.hours),
+    !data.hours || Number(data.hours) === DEFAULT_HOURS,
   );
   setOrDrop(
     config,
-    "smoothing_minutes",
-    Number(data.smoothing_minutes),
-    !data.smoothing_minutes || !(Number(data.smoothing_minutes) > 0),
+    "smoothing",
+    Number(data.smoothing),
+    !data.smoothing || !(Number(data.smoothing) > 0),
   );
   setOrDrop(config, "layout", data.layout, !data.layout || data.layout === "auto");
   setOrDrop(config, "show_legend", !!data.show_legend, data.show_legend !== false);
@@ -108,13 +111,13 @@ export const editorSchema = (
     section(L("editor.card.section.content"), ICONS.content, [
       grid(
         {
-          name: "hours_to_show",
+          name: "hours",
           selector: {
             number: { min: 1, max: 168, step: 1, mode: "box", unit_of_measurement: "h" },
           },
         },
         {
-          name: "smoothing_minutes",
+          name: "smoothing",
           selector: { number: { min: 5, step: 1, mode: "box", unit_of_measurement: "min" } },
         },
       ),

@@ -2,13 +2,14 @@
 // sections a list (each in a view of its own, in a form of its type: the lead (hero), a forecast, a
 // trend or an entity group; a new one the lead first); without sections the card is a tile. Both forms
 // write back only what they changed: a part as the config had it keeps its spelling, a value at
-// its default writes nothing. The badges, the rules (the entity cards' rule format), a trend's lines
-// and an entity group's entities are lists, each item in a view of its own.
+// its default writes nothing. The badges, the rules (a tile's: their text is `status`), a trend's lines
+// and an entity group's entities are lists, each item in a view of its own. An entity group
+// (deprecated until 4.0: a tile group beside the card instead) still edits; "+" no longer makes one.
 import { FormEditorBase, setOrDrop } from "../shared/editor.ts";
 import type { CardConfigBase, HaFormData, HaFormSchema, HomeAssistant } from "../shared/ha.ts";
 import { hasString, t, type StringKey } from "../shared/i18n.ts";
 import {
-  ENTITY_RULE_KEYS,
+  RULE_KEYS,
   badgesFromForm,
   badgesToForm,
   listFromForm,
@@ -53,8 +54,20 @@ const num = (name: string, min: number, max: number) => ({
 });
 
 // ---- the rules: the condition's (its states) and the temperature's (a number in its unit) ----
-const rulesToForm = (v: unknown) => listToForm(v, ENTITY_RULE_KEYS);
-const rulesFromForm = (v: unknown) => listFromForm(v, ENTITY_RULE_KEYS, null);
+// a rule's text is its `status`, as on the tile; a rule's `label` (deprecated until 4.0) is shown as
+// it, and written as `status` once the rules change
+const rulesToForm = (v: unknown) =>
+  listToForm(
+    Array.isArray(v)
+      ? v.map((r) => {
+          if (!isObj(r) || r.label === undefined || r.status !== undefined) return r;
+          const { label, ...rest } = r;
+          return { ...rest, status: label };
+        })
+      : v,
+    RULE_KEYS,
+  );
+const rulesFromForm = (v: unknown) => listFromForm(v, RULE_KEYS, null);
 const tempUnit = (hass: HomeAssistant | undefined, entity: string) => {
   const u = entity ? hass?.states[entity]?.attributes.temperature_unit : undefined;
   return typeof u === "string" ? u : "";
@@ -65,8 +78,8 @@ export const weatherRuleReads = (
   key: string,
 ): RuleReads =>
   key === "temperature_rules"
-    ? { entity, unit: tempUnit(hass, entity), numeric: true, flavor: "entity" }
-    : { entity, unit: "", numeric: false, flavor: "entity" };
+    ? { entity, unit: tempUnit(hass, entity), numeric: true, flavor: "card" }
+    : { entity, unit: "", numeric: false, flavor: "card" };
 const rulesFields = (hass: HomeAssistant | undefined, entity: string): HaFormSchema[] => [
   { name: "rules", selector: { pro_cards_rules: { key: "rules", entity, unit: "" } } },
   {
@@ -143,6 +156,12 @@ export const weatherFromForm = (data: HaFormData, prev: Raw): Raw => {
   return c;
 };
 
+// an entity section in the card, or the defaults for them written
+const hasGroups = (c: Raw) =>
+  c.columns !== undefined ||
+  c.align !== undefined ||
+  (Array.isArray(c.sections) && c.sections.some((x) => isObj(x) && kindOf(x) === "entities"));
+
 export const weatherSchema = (
   hass: HomeAssistant | undefined,
   written: Raw = {},
@@ -177,12 +196,17 @@ export const weatherSchema = (
         selector: { pro_cards_list: { key: "sections", of: "section", hide_label: true } },
       },
     ]),
-    section(W(hass, "section.groups"), ICONS.layout, [
-      grid(
-        num("columns", 1, 4),
-        select("align", ALIGNS, (v) => W(hass, `align.${v}`)),
-      ),
-    ]),
+    // the entity sections' defaults, while the card has some or writes them (until 4.0)
+    ...(hasGroups(written)
+      ? [
+          section(W(hass, "section.groups"), ICONS.layout, [
+            grid(
+              num("columns", 1, 4),
+              select("align", ALIGNS, (v) => W(hass, `align.${v}`)),
+            ),
+          ]),
+        ]
+      : []),
     section(T("editor.card.field.badges"), ICONS.badges, [
       { name: "badges", selector: { pro_cards_badges: { entity, hide_label: true } } },
     ]),
@@ -371,8 +395,10 @@ export const sectionSchema = (
 ): HaFormSchema[] => {
   const kind = data.kind as Kind;
   const L = (k: string) => W(hass, k);
+  // (an entity section is offered only to the one that is one: it goes in 4.0)
+  const kinds = KINDS.filter((k) => k !== "entities" || kind === "entities");
   const head: HaFormSchema[] = [
-    select("kind", KINDS, (v) => L(`kind.${v}`)),
+    select("kind", kinds, (v) => L(`kind.${v}`)),
     grid({ name: "title", selector: { text: {} } }, { name: "divider", selector: { boolean: {} } }),
   ];
   const window: HaFormSchema[] = [

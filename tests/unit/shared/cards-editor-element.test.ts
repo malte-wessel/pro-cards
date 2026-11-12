@@ -554,7 +554,7 @@ describe("the container editors' items in views of their own", () => {
     expect(e.last()).toMatchObject({ breakpoints: { 3: { columns: 2, gap: "8px" } } });
   });
 
-  it("edit a weather rule with its label, and a flow's source and consumer", async () => {
+  it("edit a weather rule with its status, and a flow's source and consumer", async () => {
     await import("../../../src/weather-card.ts");
     await import("../../../src/power-flow-card.ts");
     // (their editors are forms of their own: the view on top of the form)
@@ -587,14 +587,14 @@ describe("the container editors' items in views of their own", () => {
     };
     const w = await formEditor("weather-card-pro", { entity: "weather.home" });
     await w.openIt("temperature_rules", 0);
-    // the temperature's rules read a number in its unit: above and below, a label
+    // the temperature's rules read a number in its unit: above and below, a status
     type Node = { name: string; schema?: Node[] };
     const names = (xs: Node[]): string[] => xs.flatMap((x) => [x.name, ...names(x.schema ?? [])]);
     expect(names(w.view().schema as Node[])).toEqual(
-      expect.arrayContaining(["above", "below", "label"]),
+      expect.arrayContaining(["above", "below", "status"]),
     );
-    w.change({ below: 5, label: "Cold" });
-    expect(w.sent.at(-1)).toMatchObject({ temperature_rules: [{ below: 5, label: "Cold" }] });
+    w.change({ below: 5, status: "Cold" });
+    expect(w.sent.at(-1)).toMatchObject({ temperature_rules: [{ below: 5, status: "Cold" }] });
     // (a key its form does not show: kept through an edit in its view)
     const f = await formEditor("power-flow-card-pro", {
       sources: [{ type: "solar", entity: "sensor.solar_power", decimals: 1 }],

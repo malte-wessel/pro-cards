@@ -268,9 +268,9 @@ test("a weather card opens in its own form, its sections a list", async ({ page 
     .first()
     .click();
   const rows = editor.locator('[data-name="sections"] .row .title');
-  await expect(rows).toHaveText(["Lead", "Entities", "Trend", "Forecast"]);
+  await expect(rows).toHaveText(["Lead", "Trend", "Forecast"]);
   // a section in a view of its own
-  await editor.locator('[data-name="sections"] .main').nth(3).click();
+  await editor.locator('[data-name="sections"] .main').nth(2).click();
   await fill(editor.locator('.item-view [data-name="days"] input').first(), "5");
   await expect.poll(() => yamlText(page)).toMatch(/type: forecast[\s\S]*days: 5/);
   await expect(previewCard(page)).toHaveJSProperty("tagName", "WEATHER-CARD-PRO");

@@ -11,8 +11,9 @@ import {
 } from "../../src/weather/editor.ts";
 import { hasString } from "../../src/shared/i18n.ts";
 import { docExamples, withNested } from "./docs-examples.ts";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { WeatherCard } from "../../src/weather-card.ts";
+import { resetDeprecatedKeys } from "../../src/shared/card.ts";
 import { normalizeWeatherCardConfig, wantedForecasts } from "../../src/weather/config.ts";
 import { PICTURED, pictureSvg } from "../../src/shared/weather/pictures.ts";
 import { conditionIcon, conditionText, isNight } from "../../src/shared/weather/conditions.ts";
@@ -53,7 +54,7 @@ describe("weather-card config", () => {
       name: "Home",
       color: "amber",
       rules: [{ state: "rainy", color: "blue", tint_card: true }],
-      temperature_rules: [{ below: 5, color: "indigo", label: "Cold" }],
+      temperature_rules: [{ below: 5, color: "indigo", status: "Cold" }],
       tap_action: "none",
     });
     expect(c).toMatchObject({ layout: "tile", hasHeader: false, sections: [], groups: [] });
@@ -614,6 +615,68 @@ describe("the daily trend", async () => {
   });
 });
 
+describe("what goes in 4.0", () => {
+  const warned = (run: () => void) => {
+    resetDeprecatedKeys();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      run();
+      return warn.mock.calls.map((c) => String(c[0]));
+    } finally {
+      warn.mockRestore();
+    }
+  };
+  it("reads a rule's text from status, and from label with a warning", () => {
+    const c = normalizeWeatherCardConfig({
+      entity: W,
+      rules: [{ state: "rainy", status: "Wet" }],
+      sections: [{ type: "forecast", temperature_rules: [{ below: 0, status: "Frost" }] }],
+    });
+    expect(c.entities[c.condIdx].rules[0].label).toBe("Wet");
+    const sec = c.sections[0];
+    expect(sec.kind === "forecast" && c.entities[sec.tempIdx].rules[0].label).toBe("Frost");
+    const calls = warned(() => {
+      const o = normalizeWeatherCardConfig({
+        entity: W,
+        rules: [{ state: "rainy", label: "Wet" }],
+      });
+      expect(o.entities[o.condIdx].rules[0].label).toBe("Wet");
+    });
+    expect(calls.join()).toMatch(/a rule's label is deprecated and goes in 4.0: write status/);
+    expect(() =>
+      normalizeWeatherCardConfig({
+        entity: W,
+        rules: [{ state: "rainy", label: "a", status: "b" }],
+      }),
+    ).toThrow("rules[0]: label is status: write status only");
+  });
+  it("says that a rule's colour wins over color from 4.0, where both are written", () => {
+    expect(
+      warned(() => normalizeWeatherCardConfig({ entity: W, color: "amber", rules: [] })),
+    ).toEqual([]);
+    expect(
+      warned(() =>
+        normalizeWeatherCardConfig({
+          entity: W,
+          color: "amber",
+          rules: [{ state: "rainy", color: "blue" }],
+        }),
+      ).join(),
+    ).toMatch(/from 4.0 a matching rule's colour wins over color/);
+  });
+  it("says that entity sections and their card-level keys go", () => {
+    const calls = warned(() =>
+      normalizeWeatherCardConfig({
+        entity: W,
+        columns: 2,
+        sections: [{ type: "hero" }, { type: "row", entities: ["humidity"] }],
+      }),
+    ).join();
+    expect(calls).toMatch(/an entity section is deprecated and goes in 4.0: use a tile group/);
+    expect(calls).toMatch(/columns is deprecated and goes in 4.0/);
+  });
+});
+
 describe("hover", () => {
   it("is the card's default for the condition and every section's entities; a section overrides it", () => {
     const c = normalizeWeatherCardConfig({
@@ -630,7 +693,11 @@ describe("hover", () => {
       false,
       true,
     ]);
-    expect(normalizeWeatherCardConfig({ entity: "weather.home" }).entities[0].hover).toBe(false);
+    // on by default, as on the tile and the poster
+    expect(normalizeWeatherCardConfig({ entity: "weather.home" }).entities[0].hover).toBe(true);
+    expect(
+      normalizeWeatherCardConfig({ entity: "weather.home", hover: false }).entities[0].hover,
+    ).toBe(false);
   });
 });
 
@@ -784,12 +851,20 @@ describe("the weather editor's lists", () => {
       "humidity",
     ]);
   });
-  it("edit the rules as lists, the label as the entity layer's status", () => {
+  it("edit the rules as lists, their text as status (a written label shown as it)", () => {
     const c = { entity: "weather.home", rules: [{ state: "rainy", color: "blue" }] };
     const form = weatherToForm(c);
     expect(form.rules).toEqual([{ state: "rainy", color: "blue" }]);
-    const changed = [{ state: "rainy", color: "blue", label: "Rain" }];
+    const changed = [{ state: "rainy", color: "blue", status: "Rain" }];
     expect(weatherFromForm({ ...form, rules: changed }, c).rules).toEqual(changed);
+    // the deprecated label: shown as the status, kept as written until the rules change
+    const old = { entity: "weather.home", rules: [{ state: "rainy", label: "Rain" }] };
+    const oldForm = weatherToForm(old);
+    expect(oldForm.rules).toEqual([{ state: "rainy", status: "Rain" }]);
+    expect(weatherFromForm({ ...oldForm, name: "Home" }, old).rules).toEqual(old.rules);
+    expect(
+      weatherFromForm({ ...oldForm, rules: [{ state: "rainy", status: "Wet" }] }, old).rules,
+    ).toEqual([{ state: "rainy", status: "Wet" }]);
     // all deleted: none written
     expect(weatherFromForm({ ...form, rules: [] }, c)).not.toHaveProperty("rules");
   });

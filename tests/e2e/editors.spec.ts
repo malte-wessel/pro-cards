@@ -463,9 +463,9 @@ test("the heading's style, layout and badges are set in its form", async ({ page
   await back(e.editor);
   // where the badges sit, from the Layout section; back to the default writes nothing
   await openSection(e.form, "Layout");
-  await choose(e.form, "badges_position", "below");
-  await expect.poll(e.last).toMatchObject({ badges_position: "below" });
-  await choose(e.form, "badges_position", "end");
+  await choose(e.form, "badge_position", "below");
+  await expect.poll(e.last).toMatchObject({ badge_position: "below" });
+  await choose(e.form, "badge_position", "end");
   await expect.poll(e.last).toEqual({
     type: "custom:heading-card-pro",
     title: "Office",
@@ -600,12 +600,12 @@ test("the weather card's rules and a section's lines open in views of their own"
     entity: "weather.home",
     sections: [{ type: "trend" }],
   });
-  // a condition rule: its status is the entity layer's label
+  // a condition rule: its text is its status, as on the tile
   await openSection(e.form, "Rules");
   await field(e.form, "rules").locator("button.new").click();
   await fill(itemView(e.editor), "state", "rainy");
-  await fill(itemView(e.editor), "label", "Rain");
-  await expect.poll(e.last).toMatchObject({ rules: [{ state: "rainy", label: "Rain" }] });
+  await fill(itemView(e.editor), "status", "Rain");
+  await expect.poll(e.last).toMatchObject({ rules: [{ state: "rainy", status: "Rain" }] });
   await back(e.editor);
   // the trend section's lines, in its view: a line on top of the section
   await openSection(e.form, "Sections");

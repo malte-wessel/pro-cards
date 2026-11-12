@@ -1421,3 +1421,41 @@ describe("schema: what a control sets and the domain's buttons", () => {
     ).not.toBeNull();
   });
 });
+
+describe("schema: the keys the heading, multi trend and weather cards renamed", () => {
+  it("the heading's icon takes a tap of its own; its 3.0 beta keys are gone", () => {
+    const H = "custom:heading-card-pro";
+    expect(validate({ type: H, title: "x", icon: "mdi:sofa" })).toBeNull();
+    expect(
+      validate({ type: H, title: "x", icon: { name: "mdi:sofa", tap_action: { action: "none" } } }),
+    ).toBeNull();
+    expect(
+      validate({ type: H, title: "x", icon: { name: "mdi:sofa", color: "red" } }),
+    ).not.toBeNull();
+    expect(validate({ type: H, title: "x", badge_position: "below" })).toBeNull();
+    expect(validate({ type: H, title: "x", badges_position: "below" })).not.toBeNull();
+    expect(validate({ type: H, title: "x", icon_tap_action: { action: "none" } })).not.toBeNull();
+  });
+  it("the multi trend card takes hours and smoothing, or the old keys, never both", () => {
+    const M = { type: "custom:multi-trend-card-pro", entities: ["sensor.outdoor_temperature"] };
+    expect(validate({ ...M, hours: 12, smoothing: 30 })).toBeNull();
+    expect(validate({ ...M, hours_to_show: 12, smoothing_minutes: 30 })).toBeNull();
+    expect(validate({ ...M, hours: 12, hours_to_show: 12 })).not.toBeNull();
+    expect(validate({ ...M, smoothing: 30, smoothing_minutes: 30 })).not.toBeNull();
+  });
+  it("the weather card's rules take status, or the old label, never both", () => {
+    const W = { type: "custom:weather-card-pro", entity: "weather.home" };
+    expect(validate({ ...W, rules: [{ state: "rainy", status: "Wet" }] })).toBeNull();
+    expect(validate({ ...W, temperature_rules: [{ below: 0, label: "Frost" }] })).toBeNull();
+    expect(
+      validate({ ...W, rules: [{ state: "rainy", status: "Wet", label: "Wet" }] }),
+    ).not.toBeNull();
+    expect(
+      validate({
+        ...W,
+        sections: [{ type: "forecast", rules: [{ state: "rainy", status: "Wet" }] }],
+      }),
+    ).toBeNull();
+    expect(validate({ ...W, hover: false })).toBeNull();
+  });
+});

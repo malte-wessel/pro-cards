@@ -121,7 +121,7 @@ The [power flow card](/cards/power-flow-card) draws its tree without the hidden 
 
 ## Weather sections
 
-Any section of the [weather card](/cards/weather-card) takes conditions. Here the details show while it is not sunny, the hourly trend on wide screens only.
+Any section of the [weather card](/cards/weather-card) takes conditions. Here the hourly forecast shows while it is not sunny, the hourly trend on wide screens only.
 
 ::: live
 
@@ -130,10 +130,12 @@ type: custom:weather-card-pro
 entity: weather.home
 sections:
   - type: hero
-  - type: row
+  - type: forecast
+    mode: hourly
+    layout: horizontal
+    hours: 6
     divider: true
     visibility: [{ condition: state, state_not: sunny }]
-    entities: [humidity, wind_speed, pressure]
   - type: trend
     mode: hourly
     divider: true
