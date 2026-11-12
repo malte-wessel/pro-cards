@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.1
+
+_Unreleased_
+
+### Fixes
+
+- **Visual editors of the layout, swipe and tile group cards:** cards beyond the editor's width can be reached with a mouse. The tab bar shows a chevron at each end while its tabs overflow, the mouse wheel scrolls it sideways, and the selected tab scrolls into view.
+
 ## 3.0.0 – Poster and tile cards, energy flow, heading and swipe cards
 
 _2026-11-12_

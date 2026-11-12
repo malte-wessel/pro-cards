@@ -42,6 +42,8 @@ const ICONS = {
   code: "M14.6,16.6L19.2,12L14.6,7.4L16,6L22,12L16,18L14.6,16.6M9.4,16.6L4.8,12L9.4,7.4L8,6L2,12L8,18L9.4,16.6Z",
   form: "M3,3H21V5H3V3M3,7H15V9H3V7M3,11H21V13H3V11M3,15H15V17H3V15M3,19H21V21H3V19Z",
   plus: "M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z",
+  back: "M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z",
+  forward: "M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z",
 };
 
 const STYLE = `
@@ -49,7 +51,11 @@ const STYLE = `
   [hidden] { display: none !important; }
   .cards { margin-top: 24px; }
   .bar { display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--divider-color); }
-  .tabs { display: flex; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .tabs { position: relative; display: flex; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .icon.scroll { width: 32px; }
+  .icon.scroll[disabled] { visibility: hidden; }
+  :host(:dir(rtl)) .icon.scroll svg { transform: scaleX(-1); }
   .tab { flex: none; padding: 12px 14px; border: 0; background: none; cursor: pointer; font: inherit;
     font-size: var(--ha-font-size-m, 14px); color: var(--secondary-text-color);
     border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
@@ -160,6 +166,9 @@ export abstract class CardsEditorBase extends HTMLElement {
   _child?: CardElementEditor | CardPicker;
   _childFor?: number;
   _built = false;
+  // the tab bar's chevrons shown by where it is scrolled; the selection last scrolled into view
+  _scrolled?: () => void;
+  _revealed?: string;
   _sections = new Sections();
 
   // ---- an item of a list in the options in a view of its own (editor-views.ts): a badge, a rule,
@@ -368,6 +377,7 @@ export abstract class CardsEditorBase extends HTMLElement {
       this._select(to);
       root.querySelectorAll<HTMLElement>(".tab, .icon.add")[to]?.focus();
     });
+    this._buildScroll(root.querySelector(".bar")!);
     this._form = this._makeForm();
     root.querySelector(".options")!.appendChild(this._form);
     this._views.listen(root);
@@ -376,6 +386,76 @@ export abstract class CardsEditorBase extends HTMLElement {
       this._childFor = undefined;
       this._render();
     });
+  }
+
+  // more tabs than the bar's width: a chevron at each end (as Home Assistant's tab group), and the
+  // wheel scrolls them sideways; a mouse has no other way to them (the scrollbar is hidden). The
+  // keyboard moves between the tabs with the arrows, so the chevrons are not in its way.
+  _buildScroll(bar: HTMLElement) {
+    const tabs = bar.querySelector<HTMLElement>(".tabs")!;
+    // the way to the end: in right-to-left the scroll position runs from 0 down
+    const way = () => (getComputedStyle(tabs).direction === "rtl" ? -1 : 1);
+    const chevron = (path: string, to: 1 | -1) => {
+      const b = this._icon(path, "", () =>
+        tabs.scrollBy({ left: to * way() * tabs.clientWidth * 0.8, behavior: "smooth" }),
+      );
+      b.classList.add("scroll");
+      b.removeAttribute("title");
+      b.removeAttribute("aria-label");
+      b.setAttribute("aria-hidden", "true");
+      b.tabIndex = -1;
+      b.hidden = true;
+      return b;
+    };
+    const back = chevron(ICONS.back, -1);
+    const forward = chevron(ICONS.forward, 1);
+    tabs.before(back);
+    tabs.after(forward);
+    // (both shown while the tabs overflow, the one at its end keeping its room unseen, as Web
+    // Awesome's: the bar's width changes only with the overflow, never with where it is scrolled;
+    // once shown they go only when the tabs fit beside them, so they fit without them too)
+    this._scrolled = () => {
+      const over = tabs.scrollWidth > tabs.clientWidth + 1;
+      if (back.hidden ? over : tabs.scrollWidth <= tabs.clientWidth) {
+        back.hidden = forward.hidden = !back.hidden;
+      }
+      const at = Math.abs(tabs.scrollLeft);
+      back.toggleAttribute("disabled", at < 1);
+      forward.toggleAttribute("disabled", at + tabs.clientWidth >= tabs.scrollWidth - 1);
+    };
+    tabs.addEventListener("scroll", () => this._scrolled?.(), { passive: true });
+    if (typeof ResizeObserver !== "undefined")
+      new ResizeObserver(() => this._scrolled?.()).observe(tabs);
+    // a vertical wheel scrolls the tabs while they can go that way, else the page as ever
+    tabs.addEventListener(
+      "wheel",
+      (ev) => {
+        if (Math.abs(ev.deltaY) <= Math.abs(ev.deltaX)) return;
+        const at = Math.abs(tabs.scrollLeft);
+        const end = tabs.scrollWidth - tabs.clientWidth;
+        if (ev.deltaY < 0 ? at < 1 : at >= end - 1) return;
+        ev.preventDefault();
+        tabs.scrollLeft += ev.deltaY * way();
+      },
+      { passive: false },
+    );
+  }
+
+  // the selected tab scrolled into the bar's view, once per selection (a new hass leaves the bar
+  // where the user scrolled it)
+  _reveal(tabs: HTMLElement, tab: HTMLElement | undefined, key: string) {
+    if (key === this._revealed) return this._scrolled?.();
+    this._revealed = key;
+    if (tab && tabs.clientWidth) {
+      const start = tab.offsetLeft;
+      const end = start + tab.offsetWidth;
+      // (an offset is where the tab sits with the bar unscrolled, as the scroll position counts:
+      // in right-to-left both run below 0)
+      const left = tabs.scrollLeft;
+      if (start < left) tabs.scrollLeft += start - left;
+      else if (end > left + tabs.clientWidth) tabs.scrollLeft += end - left - tabs.clientWidth;
+    }
+    this._scrolled?.();
   }
 
   // the options' form (its sections remembered by their title)
@@ -448,6 +528,11 @@ export abstract class CardsEditorBase extends HTMLElement {
       b.append(this._cardName(c));
     });
     for (const b of kept.slice(cards.length)) b.remove();
+    this._reveal(
+      tabs as HTMLElement,
+      tabs.children[this._selected] as HTMLElement | undefined,
+      `${this._selected}/${cards.length}`,
+    );
     const bar = root.querySelector(".bar")!;
     let add = bar.querySelector<HTMLElement>(".icon.add");
     if (!add) {
