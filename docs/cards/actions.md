@@ -48,7 +48,7 @@ The icon takes `tap_action`, `hold_action` and `double_tap_action` of its own, i
 
 Some icons have actions by default:
 
-- On a tile, as on Home Assistant's tile, the icon toggles a light, a switch, a fan, an input boolean, a group, an automation, a humidifier and a valve, and presses a button and a scene. `icon: { tap_action: none }` makes it part of the tile again.
+- On a tile, as on Home Assistant's tile, the icon toggles a light, a switch, a fan, an input boolean, a group, an automation, a humidifier and a valve, and presses a button, an input button and a scene. `icon: { tap_action: none }` makes it part of the tile again.
 - On both cards, a lock's and an alarm panel's icon is held to lock or unlock, arm or disarm. A ring fills while you hold, so a short tap cannot do it by accident. An alarm panel that needs a code arms in Home Assistant's dialog instead.
 
 On the icon, `toggle` locks or unlocks a lock, arms or disarms an alarm panel and switches anything else. A rule changes the icon's look, never what a tap on it does.
@@ -77,23 +77,21 @@ On the icon, `toggle` locks or unlocks a lock, arms or disarms an alarm panel an
 
 :::
 
-Tap the desk lamp's icon to switch it, hold the front door's to unlock it. The fan poster switches from its icon; the rest of the poster still opens its dialog.
-
 ## Hover
 
 The cards answer the pointer as Home Assistant's tile does: a light layer in the card's colour under a mouse, a ripple from where you press, and a ring around the card while it has the keyboard's focus. `hover: false` keeps the card still; its actions still run.
 
 ## Reference
 
-| Key                           | Default                                            | What it does                                      |
-| ----------------------------- | -------------------------------------------------- | ------------------------------------------------- |
-| `tap_action`                  | `more-info` (none without entity)                  | Runs on a tap on the card.                        |
-| `hold_action`                 | `more-info` (none without entity)                  | Runs when the card is held.                       |
-| `double_tap_action`           | `none`                                             | Runs on a double tap on the card.                 |
-| `hover`                       | `true`                                             | Home Assistant's hover, press and focus feedback. |
-| `icon: { tap_action }`        | toggle on a tile's light, switch, fan …; else none | Runs on a tap on the icon.                        |
-| `icon: { hold_action }`       | toggle on a lock and an alarm panel; else none     | Runs when the icon is held.                       |
-| `icon: { double_tap_action }` | `none`                                             | Runs on a double tap on the icon.                 |
+| Key                           | Default                                                       | What it does                                      |
+| ----------------------------- | ------------------------------------------------------------- | ------------------------------------------------- |
+| `tap_action`                  | `more-info` (none without entity)                             | Runs on a tap on the card.                        |
+| `hold_action`                 | `more-info` (none without entity)                             | Runs when the card is held.                       |
+| `double_tap_action`           | `none`                                                        | Runs on a double tap on the card.                 |
+| `hover`                       | `true`                                                        | Home Assistant's hover, press and focus feedback. |
+| `icon: { tap_action }`        | toggle on a tile's light, switch, fan …; else none            | Runs on a tap on the icon.                        |
+| `icon: { hold_action }`       | toggle on a lock and an alarm panel without a code; else none | Runs when the icon is held.                       |
+| `icon: { double_tap_action }` | `none`                                                        | Runs on a double tap on the icon.                 |
 
 An action's own keys:
 

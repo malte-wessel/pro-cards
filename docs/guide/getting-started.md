@@ -1,6 +1,6 @@
 # Install & first card
 
-This page installs Pro Cards and walks you through your first tile, poster and tile group. It takes a few minutes, and every example can be pasted straight into your dashboard.
+This page installs Pro Cards and walks you through your first tile, poster and tile group. Every example can be pasted straight into your dashboard.
 
 Pro Cards requires Home Assistant 2026.4 or newer. Coming from an older version? [Moving to 3.0](/guide/migrating) lists what changed.
 
@@ -25,7 +25,7 @@ HACS registers the resource `/hacsfiles/pro-cards/pro-cards.js` for you. Updates
 3. Reload the browser. After an update, add a version to the resource URL, such as `?v=2`, so browsers drop the cached file.
 
 ::: tip Upgrading from 1.x
-Since 2.0 every card type ends in `-pro`: `custom:weather-card` is now `custom:weather-card-pro`. Add `-pro` to the `type:` of every Pro Card in your dashboards.
+Every card type ends in `-pro`, such as `custom:weather-card-pro`. Add `-pro` to the `type:` of every Pro Card in your dashboards.
 :::
 
 ## Your first tile
@@ -139,9 +139,9 @@ tiles:
 
 ## The visual editor and the Playground
 
-You do not have to write YAML. All cards appear in the card picker as "Tile Card Pro", "Poster Card Pro" and so on. Every current card has a visual editor; the tile's and the poster's offer only the options that apply to the entity's kind. Pick an entity in the picker instead, and Home Assistant suggests the cards that fit it.
+You do not have to write YAML. The cards appear in the card picker as "Tile Card Pro", "Poster Card Pro" and so on, and every current card has a visual editor; the tile's and the poster's offer only the options that apply to the entity's kind. Pick an entity in the picker instead, and Home Assistant suggests the cards that fit it.
 
-The [Playground](/playground) runs the editors of all these cards on this site, next to the YAML. Examples of these cards have an **Edit** link that opens them there.
+The [Playground](/playground) runs these editors on this site, next to the YAML. Their examples have an **Edit** link that opens them there.
 
 ## Completion in your YAML editor
 

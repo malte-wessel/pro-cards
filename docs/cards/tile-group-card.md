@@ -2,10 +2,6 @@
 
 `custom:tile-group-card-pro` puts several [tiles](/cards/tile-card) on one card, under a header with a title, an icon and badges. Use it for a room or any set of entities that belong together.
 
-::: info Beta
-The tile group card is new in 3.0 and in beta: its options may still change.
-:::
-
 ## Tiles and header
 
 `tiles` lists the tiles, one under the other. Each one is an entity id or a tile of its own. `title` and `icon` head the card, and `badges` sit at the end of the title line, plain and small; they take the [badge keys](/cards/badges#badge-keys). `title_tap_action` makes the title a button, for example to open the room's dashboard.
@@ -31,7 +27,7 @@ tiles:
 
 ## Tiles of their own
 
-A tile in the list takes the [tile card's keys](/cards/tile-card) without `type`, `grid_options` and `vertical`: its kind, visual, controls, status and badges. The group sets nothing on its tiles, so a tile looks the same in a group as on its own. To share a setting, write it on each tile; a YAML anchor writes it once (`visual: &day { … }`, then `visual: *day`).
+A tile in the list takes the [tile card's keys](/cards/tile-card) without `type`, `grid_options` and `vertical`: its kind, visual, controls, status and badges. The group sets nothing on its tiles but their layout, so a tile looks the same in a group as on its own. To share a setting, write it on each tile; a YAML anchor writes it once (`visual: &day { … }`, then `visual: *day`).
 
 ::: live
 
@@ -55,7 +51,7 @@ tiles:
 
 ## Row
 
-`layout: row` draws vertical tiles side by side: the icon on top, the name and the line under it, the controls below. The layout decides this for every tile, so a tile in a group takes no `vertical`. The tiles share the width in equal columns and wrap onto a new line when the card is too narrow.
+`layout: row` draws vertical tiles side by side: the icon on top, the name and the line under it, the controls below. The tiles share the width in equal columns and wrap onto a new line when the card is too narrow.
 
 ::: live
 
@@ -99,7 +95,7 @@ tiles:
 
 ## In a taller card
 
-In a card taller than its tiles (a fixed row count, a taller card beside it), `vertical_align` puts the tiles at the `top` (the default), the `center` or the `bottom`, or `stretch`es them to share the height: every line grows alike and each tile centres its content (unless the tile's own `vertical_align` says otherwise; a plot below a tile's line grows into the room instead), so the tiles fill the card as a single tile fills its cell. The title stays on top.
+In a card taller than its tiles (a fixed row count, a taller card beside it), `vertical_align` puts the tiles at the `top` (the default), the `center` or the `bottom`, or `stretch`es them to share the height: every line grows alike and each tile centres its content, unless its own `vertical_align` says otherwise. The title stays on top.
 
 ::: live
 
@@ -218,7 +214,7 @@ tiles:
 
 ## The visual editor
 
-Home Assistant's card editor shows the group's title, icon, layout, title tap and badges (a row each, opening its form in a view of its own with the [badge keys](/cards/badges)), then one tab per tile. A tile is edited in the tile card's own form, without `vertical`; in a table, as a row. **+** adds a tile, and the buttons over a tile move, duplicate or delete it. Try it in the [Playground](/playground), or with **Edit** under any example.
+Home Assistant's card editor shows the group's title and icon, its layout and alignment, its badges (a row each, opening its form in a view of its own with the [badge keys](/cards/badges)) and the title's tap, then one tab per tile. A tile is edited in the tile card's own form, without `vertical`; in a table, as a row. **+** adds a tile, and the buttons over a tile move, duplicate or delete it. Try it in the [Playground](/playground), or with **Edit** under any example.
 
 ## Reference
 

@@ -170,6 +170,7 @@ export default defineConfig({
     logo: "/logo.svg",
     nav: [
       { text: "Get started", items: getStarted },
+      { text: "Guides", items: guides },
       {
         text: "Cards",
         items: [
@@ -179,7 +180,6 @@ export default defineConfig({
           { text: "More cards", items: moreCards },
         ],
       },
-      { text: "Guides", items: guides },
       {
         text: "Showcase",
         items: showcase,
@@ -189,13 +189,13 @@ export default defineConfig({
     ],
     sidebar: [
       { text: "Get started", items: getStarted },
+      { text: "Guides", items: guides },
       { text: "Tile & poster", items: tilePoster },
       { text: "Energy", items: energy },
       { text: "Arrange", items: arrange },
       { text: "More cards", items: moreCards },
-      { text: "Guides", items: guides },
-      { text: "Showcase", items: showcase },
       { text: "Older cards (deprecated)", collapsed: true, items: olderCards },
+      { text: "Showcase", items: showcase },
     ],
     socialLinks: [{ icon: "github", link: "https://github.com/malte-wessel/pro-cards" }],
     search: { provider: "local" },

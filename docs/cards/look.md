@@ -8,7 +8,7 @@ Both cards show a name and a value. The tile puts the value on the line under th
 
 - `name`: the entity's friendly name by default.
 - `value`: the entity's state, or what its kind shows (a thermostat's temperature, a media player's title). `attribute` shows an attribute instead. `unit`, `decimals`, `prefix` and `suffix` format a number.
-- `status`: a word from the kind or from the matching rule, such as Cleaning or Good. On a tile it follows the value on the line; on a poster it is the first badge in the corner. A text of your own replaces it, `false` leaves it out. `status_badge: true` makes a tile's status a badge too.
+- `status`: a word from the kind or from the matching rule, such as Cleaning or Good. On a tile it follows the value on the line; on a poster it is the first badge in the corner. A text of your own replaces it, `false` leaves it out. `status_badge: true` makes a tile's status a badge instead.
 - `secondary`: the line the kind adds, such as the artist and the album, or the wind's direction and gusts. A text of your own replaces it.
 
 `show_name: false` hides the name, `show_value: false` the value.
@@ -72,7 +72,7 @@ Both cards show a name and a value. The tile puts the value on the line under th
 The card's colour paints its icon, its visual and its status. It comes from the first of these that has one:
 
 1. the matching [rule](#rules)'s `color`;
-2. the card's `color`;
+2. the card's `color`, while the entity is active (an entity that is off takes Home Assistant's colour for off);
 3. the kind's own colour: a light in its own colour, a thermostat warm while heating and cool while cooling;
 4. Home Assistant's colour for the entity's state.
 
@@ -143,7 +143,7 @@ The **icon** draws one of these:
 - `image`: a picture in the icon's circle;
 - `flow`: the wind's or the rain's animation.
 
-Every icon takes `ring: true`, a ring of the value around it, and `style: plain`, the icon without its circle.
+An `icon` or an `image` takes `ring: true`, a ring of the value around it. Every icon takes `style: plain`, the icon without its circle.
 
 The **visual** draws one of these:
 
@@ -370,18 +370,18 @@ A card needs no entity: templates fill it. This one counts the lights that are o
 
 ### Rule keys
 
-| Key         | What it does                                                                        |
-| ----------- | ----------------------------------------------------------------------------------- |
-| `state`     | Matches the value or the entity's state. Quote `"on"` and `"off"`.                  |
-| `below`     | Matches a value under this number.                                                  |
-| `above`     | Matches a value at or over this number.                                             |
-| `color`     | The card's colour while the rule matches. Wins over `color`.                        |
-| `icon`      | An icon's name, or the icon place's thing or options. Wins over `icon`.             |
-| `visual`    | The visual place's thing or options, or `false`. No `hours`, `bucket`, `smoothing`. |
-| `status`    | The status text while the rule matches.                                             |
-| `tint_card` | `true`: the whole card in the rule's colour.                                        |
-| `pulse`     | `true`: the status badge pulses.                                                    |
-| `style`     | The status badge's look: `outline`, `soft`, `filled`, `plain` or `tag`.             |
+| Key         | What it does                                                                                           |
+| ----------- | ------------------------------------------------------------------------------------------------------ |
+| `state`     | Matches the value or the entity's state. Quote `"on"` and `"off"`.                                     |
+| `below`     | Matches a value under this number.                                                                     |
+| `above`     | Matches a value at or over this number.                                                                |
+| `color`     | The card's colour while the rule matches. Wins over `color`.                                           |
+| `icon`      | An icon's name, or the icon place's thing or options (no actions). Wins over `icon`.                   |
+| `visual`    | The visual place's thing or options, or `false`. No `hours`, `bucket`, `smoothing`, or a plot's `src`. |
+| `status`    | The status text while the rule matches.                                                                |
+| `tint_card` | `true`: the whole card in the rule's colour.                                                           |
+| `pulse`     | `true`: the status badge pulses.                                                                       |
+| `style`     | The status badge's look: `outline`, `soft`, `filled`, `plain` or `tag`.                                |
 
 A rule needs at least one of `state`, `below` and `above`.
 
@@ -414,20 +414,20 @@ The icon also takes its own `tap_action`, `hold_action` and `double_tap_action` 
 | `line`      | –                                             | The power line. Grid only.                                                  |
 | `sparkline` | `hours`, `bucket`, `smoothing`, `axis`, `src` | A line of the history. A weather's: the hours ahead; a trend's: its series. |
 | `columns`   | `hours`, `bucket`, `axis`, `src`              | A bar per bucket.                                                           |
-| `strip`     | `hours`, `bucket`, `src`                      | A block per bucket, coloured by the rule each one matched.                  |
+| `strip`     | `hours`, `bucket`, `src`, `variant`           | A block per bucket, coloured by the rule each one matched.                  |
 | `bar`       | –                                             | The value between `min` and `max` as a bar.                                 |
 | `gauge`     | –                                             | The value between `min` and `max` as an arc.                                |
 | `segments`  | –                                             | Ten segments, filled to the value.                                          |
 | `sun`       | –                                             | The sun's day, with the sun where it is now. Sun only.                      |
 
-| Option      | What it does                                                                                                        |
-| ----------- | ------------------------------------------------------------------------------------------------------------------- |
-| `src`       | `image`: a URL, a template that renders one, or an entity whose picture it shows. A plot: another entity's history. |
-| `opacity`   | How much of the picture shows through its shade, `0` to `1`. Default `0.3`.                                         |
-| `tint`      | A colour mixed into the shade.                                                                                      |
-| `blur`      | Blurs the picture: a number of px, `true` for 20, `false` for none.                                                 |
-| `variant`   | Flow: as for the icon. Cover: `shutter`, `blind`, `curtain`, `garage`, `gate`, `awning`, `window`.                  |
-| `hours`     | The window in hours, or `today` (since midnight). Default 24; a weather's forecast 12 ahead, a trend 6 back.        |
-| `bucket`    | A bucket's minutes: a column or a block of the strip. Default 60.                                                   |
-| `smoothing` | The sparkline's averaging in minutes.                                                                               |
-| `axis`      | `true`: the plot's axes.                                                                                            |
+| Option      | What it does                                                                                                                                                                                     |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src`       | `image`: a URL, a template that renders one, or an entity whose picture it shows. A plot: another entity's history.                                                                              |
+| `opacity`   | How much of the picture shows through its shade, `0` to `1`. Default `0.3`.                                                                                                                      |
+| `tint`      | A colour mixed into the shade.                                                                                                                                                                   |
+| `blur`      | Blurs the picture: a number of px, `true` for 20, `false` for none.                                                                                                                              |
+| `variant`   | Flow: as for the icon. Cover: `shutter`, `blind`, `curtain`, `garage`, `gate`, `awning`, `window`. Strip: `timeline` (below the texts, with its times) or `edge` (along the card's bottom edge). |
+| `hours`     | The window in hours, or `today` (since midnight). Default 24; a weather's forecast 12 ahead, a trend 6 back, solar `today`.                                                                      |
+| `bucket`    | A bucket's minutes, at least 5: a column or a block of the strip. Default 60.                                                                                                                    |
+| `smoothing` | The sparkline's averaging in minutes, at least 5. Default: by the plot's width.                                                                                                                  |
+| `axis`      | `true`: the plot's axes.                                                                                                                                                                         |

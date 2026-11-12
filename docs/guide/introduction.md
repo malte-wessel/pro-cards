@@ -81,7 +81,7 @@ A tile in a group takes the same keys as a tile card, and a poster nearly the sa
 | [Sun azimuth](/cards/sun-azimuth-card) | Where the sun is around your house, and the sides it shines on today.              |
 | [Multi trend](/cards/multi-trend-card) | A trend graph of several sensors, with a tooltip on hover or touch.                |
 | [Power flow](/cards/power-flow-card)   | Solar, battery and grid to your home and its rooms, as a tree with animated flows. |
-| [Energy flow](/cards/energy-flow-card) | The same tree over a period (today, this week, month or year) from energy meters.  |
+| [Energy flow](/cards/energy-flow-card) | The same tree over a day, week, month or year, from energy meters.                 |
 
 ## Where to go next
 

@@ -1,6 +1,6 @@
 # Sizes
 
-A tile and a poster pick a sensible size on their own in a sections view. This page shows what that size is, what makes a card larger, and how to set another one.
+A tile and a poster pick a sensible size on their own in a sections view. This page shows that size, what makes a card larger, and how to set another.
 
 ## A tile
 
@@ -31,7 +31,7 @@ A tile can also be narrower. A plain one goes down to a quarter of a section; a 
 
 ## A vertical tile
 
-`vertical: true` puts the icon on top, with the name and the line centred under it, as Home Assistant's own tile does. A vertical tile is a quarter of a section wide and two rows high. A control under the name adds a row, and so does a plot. A stepper, a select, buttons or speeds need half a section across.
+`vertical: true` puts the icon on top, with the name and the line centred under it, as Home Assistant's own tile does. A vertical tile is a quarter of a section wide and two rows high. A control under the name adds a row, and so do a plot and badges. A stepper, a select, buttons or speeds need half a section across.
 
 ::: live
 

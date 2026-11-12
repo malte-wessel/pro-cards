@@ -1,6 +1,6 @@
 # Controls
 
-A tile or a poster can carry one control: a switch, a slider, a stepper, speeds, buttons, a select or a button to hold. Most kinds bring the right one on their own, and `control` changes it, adds one to any entity, or draws your own buttons.
+A tile or a poster can carry a control: a switch, a slider, a stepper, speeds, buttons, a select or a button to hold. Most kinds bring the right one on their own; `control` changes it, adds one to any entity, or draws your own buttons.
 
 A tap on the card still opens more-info. The control takes its own taps, and the icon has [actions of its own](/cards/actions).
 
@@ -20,7 +20,7 @@ Without `control`, a kind draws its own controls. A poster has room for a second
 | `lock`                 | hold the icon to lock or unlock   | hold the icon to lock or unlock      |
 | `alarm_control_panel`  | hold the icon to arm or disarm \* | hold the icon to arm or disarm \*    |
 
-\* Unless the panel wants a code. Every other kind (a sensor, the weather, the energy kinds …) has no control until you set one.
+\* Unless the panel wants a code. A fan with more than six speeds gets a slider in place of its speeds. Every other kind (a sensor, the weather, the energy kinds …) has no control until you set one.
 
 ::: live
 
@@ -49,9 +49,7 @@ Without `control`, a kind draws its own controls. A poster has room for a second
 
 ## Another control, or none
 
-A control's name shows that control in place of the kind's: a light that only dims takes `control: slider`. `control: false` shows none, for a thermostat you only want to look at.
-
-A card shows the one control you name. `control: slider` on a light shows the slider without the switch. On a tile, a light's icon toggles it by default, so a tap there still switches it.
+A control's name shows that control alone in place of the kind's: a light that only dims takes `control: slider`, which shows the slider without the switch (on a tile, the light's icon still switches it). `control: false` shows none, for a thermostat you only want to look at.
 
 ::: live
 
@@ -141,7 +139,7 @@ An object without `type` changes the kind's own controls: `control: { step: 1 }`
 
 ## What a control sets
 
-`type` says how a control is drawn, `attribute` what it sets, by Home Assistant's name for it: a light's slider sets its `brightness`, or its `color_temp_kelvin`, `hue` or `saturation`. Left out, a control sets the mode the card shows (a thermostat's card showing `attribute: preset_mode`: its segments set the preset), else what its type sets by default: a light's slider its brightness, its buttons its favourite colours, its select its effects. The [reference](#what-each-entity-sets) lists every one.
+`type` says how a control is drawn, `attribute` what it sets, by Home Assistant's name for it: a light's slider sets its `brightness`, or its `color_temp_kelvin`, `hue` or `saturation`. Left out, a control sets the mode the card shows (on a thermostat card showing `attribute: preset_mode`, segments set the preset), else what its type sets by default: on a light, a slider sets the brightness, buttons the favourite colours, a select the effect. An `attribute` the entity's domain cannot set is a config error. The [reference](#what-each-entity-sets) lists every one.
 
 ### A light's colour
 
@@ -284,7 +282,7 @@ A speaker's select sets its `source` or `sound_mode`, its stepper the volume by 
 
 ### Helpers, updates and dates
 
-A counter steps by its own step, or takes buttons (`decrement`, `reset`, `increment`). A timer takes `start`, `pause`, `cancel` and `finish`, or its presets as buttons with `attribute: presets`. An update takes `install` and `skip`. A date, a date and time or an input date takes `control: date`: a chip with the day that opens a calendar.
+A counter steps by its own step, or takes buttons (`decrement`, `reset`, `increment`). A timer's buttons are `start`, `pause` and `cancel` (`finish` when you name it), or its presets with `attribute: presets`. An update's are `skip` and `install`. A date, a date and time or an input date takes `control: date`: a chip with the day that opens a calendar.
 
 ::: live
 
@@ -316,7 +314,7 @@ A counter steps by its own step, or takes buttons (`decrement`, `reset`, `increm
 
 ### Favourites
 
-A light's favourite colours, a cover's or a valve's favourite positions and a timer's presets are those you set in Home Assistant, in the entity's more-info dialog. The card reads them from Home Assistant's entity registry, as Home Assistant's own tile does. Without any, a cover offers 0, 25, 75 and 100 % and a light four whites across its range and four colours; a timer without presets shows none. `options` sets your own in the card instead.
+A light's favourite colours, a cover's or a valve's favourite positions and a timer's presets are those you set in Home Assistant, in the entity's more-info dialog, as for Home Assistant's own tile. Without any, a cover offers 0, 25, 75 and 100 %, and a light four whites across its range plus four colours where it takes colours; a timer without presets shows none. `options` sets your own in the card instead.
 
 ## Where it sits
 
@@ -395,9 +393,9 @@ A card of buttons needs no entity: a `name` and an `icon` are enough. A button t
 
 ## Filled or tinted
 
-Controls are rounded squares of one height, as Home Assistant's tile features: a switch (a button with the power icon), buttons, a stepper (minus, the value and plus in one bar), segments, a select, a button and a hold. A slider is a bar filled to the value, with a short handle in the fill. A button standing in for the icon keeps the icon's circle.
+Controls are rounded squares of one height, as Home Assistant's tile features; the switch is a button with the power icon, and a slider is a bar filled to the value.
 
-At rest the switch, buttons, segments, the stepper, the select and the hold are grey; a slider's bar is its colour at 20 % behind the fill. What is on or chosen is filled in its colour with a white icon: a switch that is on, your own buttons while their entity is on, a player's play button, the chosen segment. `variant: tinted` draws it in its colour at 20 % with the icon in its colour instead. A button (Run), which has no on, rests filled or tinted. Without `type` the variant changes the kind's own controls: `control: { variant: tinted }` on a light tints its switch.
+At rest a control is grey; a slider's bar is its colour at 20 % behind the fill. What is on or chosen is filled in its colour with a white icon: a switch that is on, your own buttons while their entity is on, a player's play button, the chosen segment. `variant: tinted` draws it in its colour at 20 % with the icon in its colour instead. A button (Run), which has no on, rests filled or tinted. Without `type` the variant changes the kind's own controls: `control: { variant: tinted }` on a light tints its switch.
 
 ::: live
 
@@ -425,9 +423,9 @@ At rest the switch, buttons, segments, the stepper, the select and the hold are 
 
 Some things should not happen by a stray tap. A hold fills the button from the left for a second (one standing in for the icon: a ring around it) and runs when it is full; letting go earlier cancels. There are three ways to get one:
 
-- `confirm: true` on the control turns a switch or buttons into holds, each button its own.
-- `control: hold` is a button to hold for any entity that switches.
-- `icon: { hold_action: … }` holds the icon. Locks and alarm panels do this by default, and the icon's label says what holding does ("Hold to unlock").
+- `confirm: true` on the control turns a switch, a Run button or buttons into holds, each button its own.
+- `control: hold` is a button to hold, for any entity that switches or runs.
+- `icon: { hold_action: … }` holds the icon ([the icon's actions](/cards/actions#the-icon-s-own-actions)). Locks and alarm panels do this by default.
 
 ::: live
 
@@ -478,7 +476,7 @@ Every control works without a pointer. Tab reaches the card first, then its cont
 | `step`      | the entity's, else 1           | The step of a slider or a stepper (a thermostat: 0.5).                                                                                              |
 | `attribute` | the shown one, else the type's | What it sets, by Home Assistant's name ([below](#what-each-entity-sets)).                                                                           |
 | `options`   | the entity's                   | Segments and select: the options, each `{ value, label, icon }`. Buttons: the domain's own by name (`[stop, locate]`), or your own buttons (below). |
-| `confirm`   | `false`                        | Turns the switch and the buttons into holds.                                                                                                        |
+| `confirm`   | `false`                        | Turns a switch, a Run button or buttons into holds.                                                                                                 |
 | `variant`   | `fill`                         | `fill` or `tinted`: how a switch, a button, buttons and segments show what is on or chosen.                                                         |
 
 ### What each entity sets
@@ -488,7 +486,7 @@ The first is what a control of its type sets unless `attribute` names another.
 | Entity                         | `attribute`                                                                                              | Types                                                            |
 | ------------------------------ | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | light                          | `brightness`, `color_temp_kelvin`, `hue`, `saturation`, `favorite_colors`, `effect`                      | slider, stepper; buttons (favourite colours), select (effects)   |
-| fan                            | `percentage`, `preset_mode`, `oscillating`, `direction`                                                  | slider, segments, select; toggle (oscillating)                   |
+| fan                            | `percentage`, `preset_mode`, `oscillating`, `direction`                                                  | slider, stepper, segments, select; toggle (oscillating)          |
 | climate                        | `temperature`, `hvac_mode`, `preset_mode`, `fan_mode`, `swing_mode`, `swing_horizontal_mode`, `humidity` | stepper, slider; segments, select                                |
 | humidifier                     | `humidity`, `mode`                                                                                       | slider, stepper; segments, select; toggle (power)                |
 | water_heater                   | `temperature`, `operation_mode`                                                                          | stepper, slider; segments, select                                |
@@ -497,12 +495,14 @@ The first is what a control of its type sets unless `attribute` names another.
 | media_player                   | `volume_level`, `source`, `sound_mode`                                                                   | slider, stepper (5 %); select, segments                          |
 | vacuum                         | `fan_speed`                                                                                              | select, segments                                                 |
 | alarm_control_panel            | its mode                                                                                                 | segments, select                                                 |
-| counter, timer                 | its value; a timer's `presets`                                                                           | stepper (a counter); buttons (a timer's presets)                 |
+| number, input_number           | its value                                                                                                | slider, stepper                                                  |
+| select, input_select           | its option                                                                                               | select, segments                                                 |
+| counter, timer                 | its value; a timer's `presets`                                                                           | stepper (a counter); buttons, select (a timer's presets)         |
 | date, datetime, input_datetime | its day                                                                                                  | date                                                             |
 
 ### A domain's buttons
 
-`options` of `type: buttons` naming them, in your order. Left out, the first ones.
+`options` of `type: buttons` naming them, in your order. Left out, those not marked "also" (a cover with `attribute: current_tilt_position`: its tilt buttons).
 
 | Entity       | Buttons                                                                  |
 | ------------ | ------------------------------------------------------------------------ |

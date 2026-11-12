@@ -127,7 +127,7 @@ cards:
 
 :::
 
-`min_column_width` takes a length (`180`, `12rem`) and changes in a breakpoint like any option; `min_column_width:` left empty there goes back to a fixed `columns`. It counts columns, so it does not go with a list of their widths.
+`min_column_width` takes a length (`180`, `12rem`, not a `%`) and changes in a breakpoint like any option; `min_column_width:` left empty there goes back to a fixed `columns`. It does not go with a list of column widths.
 
 ## Breakpoints
 
@@ -339,7 +339,7 @@ Every card inside keeps Home Assistant's own `visibility`. A hidden card leaves 
 
 ## The visual editor
 
-Home Assistant's card editor shows the layout's options and its breakpoints (a row each, opening in a view of its own: from how many view columns, and the options it changes), then a tab for each card. The selected card is edited in its own editor: a tile's or a poster's form, Home Assistant's for its own cards, YAML for the others. The buttons beside the tabs move, duplicate and delete it, and **+** adds one from the card picker. **Place in the layout** sets the selected card's span, column, order and alignment; a place that changes with the view columns stays in YAML. Try it in the [Playground](/playground).
+Home Assistant's card editor shows the layout's options and its breakpoints (each opens in a view of its own: from how many view columns, and what changes), then a tab for each card. The selected card is edited in its own editor: a tile's or a poster's form, Home Assistant's for its own cards, YAML for the others. The buttons beside the tabs move, duplicate and delete it, and **+** adds one from the card picker. **Place in the layout** sets the selected card's span, column, order and alignment; a place that changes with the view columns stays in YAML. Try it in the [Playground](/playground).
 
 ## Reference
 
@@ -351,7 +351,7 @@ Every option but `breakpoints` and `cards` may change in a breakpoint.
 | ------------------ | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `layout`           | `grid`    | `grid` or `masonry` (columns filled by height).                                                                                                 |
 | `columns`          | `1`       | A count (1 to 24), or a list of widths: `fr`, a length or `minmax()` (`[2fr, 1fr]`, `[320px, 1fr]`). With `min_column_width`: the most columns. |
-| `min_column_width` | –         | As many columns of at least this length as fit (`180`, `12rem`); empty columns stay. Not with a list of widths.                                 |
+| `min_column_width` | –         | As many columns of at least this length as fit (`180`, `12rem`, not `%`); empty columns stay. Not with a list of widths.                        |
 | `rows`             | –         | Grid only: the first rows' heights (`[auto, 1fr]`): `auto`, `fr`, a length or `minmax()`; the rest are as tall as their cards.                  |
 | `align_items`      | `stretch` | `stretch`, `start`, `center` or `end`: how the cards sit in their row.                                                                          |
 | `gap`              | theme     | The space between cards: one length or `[row, column]`. `0` with `card_style: seamless`.                                                        |
@@ -360,7 +360,7 @@ Every option but `breakpoints` and `cards` may change in a breakpoint.
 | `breakpoints`      | –         | `{ 2: { …options }, 3: { … } }`: what changes once the section spans that many [view columns](#breakpoints) (2 to 12).                          |
 | `cards`            | `[]`      | The cards, each with an optional `view_layout`.                                                                                                 |
 
-Lengths are numbers (px) or strings with `px`, `rem`, `%` or a theme variable such as `var(--ha-space-4)`.
+Lengths are numbers (px) or strings with `px`, `rem`, `em`, `%`, `vw` or `vh`, or a theme variable such as `var(--ha-space-4)`.
 
 ### view_layout
 

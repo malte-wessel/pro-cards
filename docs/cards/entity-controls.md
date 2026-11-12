@@ -2,11 +2,11 @@
 
 ::: warning Deprecated
 
-This page is the deprecated entity cards' controls. The tile's and the poster's are on their own pages: [tile controls](/cards/controls), [poster controls](/cards/controls).
+This page is the deprecated entity cards' controls; they go in 4.0. The [tile](/cards/tile-card) and the [poster](/cards/poster-card) have [controls](/cards/controls) of their own.
 
 :::
 
-The [entity card](/cards/entity-card), the [entity group card](/cards/entity-group-card) and the [entity sections card](/cards/entity-sections-card) can do more than show an entity: one key, `control`, adds a switch, a slider, a stepper, mode segments, buttons or a hold-to-confirm button to it. Every control is built from the library the cards already draw, so it looks like the display it replaces and takes the entity's colour and rules. The examples on this page are live: tap, drag and hold them.
+The [entity card](/cards/entity-card), the [entity group card](/cards/entity-group-card) and the [entity sections card](/cards/entity-sections-card) can do more than show an entity: one key, `control`, adds a switch, a slider, a stepper, mode segments, buttons or a hold-to-confirm button to it. A control takes the entity's colour and rules. The examples on this page are live: tap, drag and hold them.
 
 ## One key
 
@@ -30,41 +30,45 @@ entities:
 
 :::
 
-| Option              | Default                           | Description                                                                                                                                                                                                      |
-| ------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `control`           |                                   | `auto` (or `true`) picks the domain default; `toggle`, `slider`, `stepper`, `segments`, `buttons`, `button`, `select` or `hold` pick one; `none` draws nothing.                                                  |
-| `control_position`  | per control                       | `end` puts the control on the line, `block` under it, `lead` makes the icon the control (toggle, button, hold); a table field or ring has no icon, the control goes to the end.                                  |
-| `control_attribute` | the shown mode, else the main one | What segments or a select set on a thermostat or fan: `hvac_mode`, `preset_mode` or `fan_mode`.                                                                                                                  |
-| `control_step`      | entity step, else 1 (climate 0.5) | Step of a slider or stepper.                                                                                                                                                                                     |
-| `control_options`   | the entity's modes or options     | Options of segments and select: values, or `{ value, label, icon }`. With `control: buttons`, your own buttons: `{ entity, icon, label, color, action, visibility }`, see [Your own buttons](#your-own-buttons). |
-| `control_confirm`   | `false`                           | The primary control becomes hold to confirm; every button of a group holds on its own.                                                                                                                           |
+| Option              | Default                           | Description                                                                                                                                                                                                                                                         |
+| ------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `control`           |                                   | `auto` (or `true`) picks the domain default; `toggle`, `slider`, `stepper`, `segments`, `buttons`, `button`, `select`, `hold` or `date` pick one; `none` draws nothing.                                                                                             |
+| `control_position`  | per control                       | `end` puts the control on the line, `block` under it, `lead` makes the icon the control (toggle, button, hold); a table field or ring has no icon, the control goes to the end.                                                                                     |
+| `control_attribute` | the shown mode, else the main one | The attribute the control sets, by Home Assistant's name: `hvac_mode`, `preset_mode`, `fan_mode`, `brightness`, `color_temp_kelvin`, `current_tilt_position` …; one the entity's domain cannot set is ignored.                                                      |
+| `control_step`      | entity step, else 1 (climate 0.5) | Step of a slider or stepper.                                                                                                                                                                                                                                        |
+| `control_options`   | the entity's modes or options     | Options of segments and select: values, or `{ value, label, icon }`. With `control: buttons`, the domain's buttons by name (`[lock, unlock]`) or your own buttons: `{ entity, icon, label, color, action, visibility }`, see [Your own buttons](#your-own-buttons). |
+| `control_confirm`   | `false`                           | The primary control becomes hold to confirm; every button of a group holds on its own.                                                                                                                                                                              |
 
-`toggle: true` from earlier versions still works and means `control: toggle`.
+`toggle: true` still works and means `control: toggle`.
 
 ### Domain defaults
 
 What `control: auto` draws, and the service each control calls:
 
-| Domain                                      | Controls                                                              | Services                                                                     |
-| ------------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `light`                                     | toggle, brightness slider under the line (not for on/off lights)      | `homeassistant.toggle`, `light.turn_on` with `brightness_pct`                |
-| `switch`, `input_boolean`                   | toggle                                                                | `homeassistant.toggle`                                                       |
-| `fan`                                       | toggle and speed segments (from `percentage_step`)                    | `fan.set_percentage`, `fan.turn_off`                                         |
-| `cover`                                     | open / stop / close buttons, position slider (when it has a position) | `cover.open_cover`, `stop_cover`, `close_cover`, `set_cover_position`        |
-| `climate`                                   | target temperature stepper; with `attribute: hvac_mode` mode segments | `climate.set_temperature`, `set_hvac_mode`, `set_preset_mode`                |
-| `lock`                                      | hold to lock / unlock                                                 | `lock.lock`, `lock.unlock`                                                   |
-| `script`, `scene`, `button`, `input_button` | Run chip (a round button in row items)                                | `script.turn_on`, `scene.turn_on`, `button.press`, `input_button.press`      |
-| `input_select`, `select`                    | select                                                                | `select_option`                                                              |
-| `input_number`, `number`                    | slider under the line; a stepper where there is no room               | `set_value`                                                                  |
-| `media_player`                              | previous / play-pause / next, volume slider                           | `media_previous_track`, `media_play_pause`, `media_next_track`, `volume_set` |
+| Domain                                      | Controls                                                                                           | Services                                                                      |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `light`                                     | toggle, brightness slider under the line (not for on/off lights)                                   | `homeassistant.toggle`, `light.turn_on` with `brightness_pct`                 |
+| `switch`, `input_boolean`                   | toggle                                                                                             | `homeassistant.toggle`                                                        |
+| `fan`                                       | toggle and speed segments (from `percentage_step`)                                                 | `homeassistant.toggle`, `fan.set_percentage`, `fan.turn_off`                  |
+| `cover`                                     | open / stop / close buttons, position slider (when it has a position)                              | `cover.open_cover`, `stop_cover`, `close_cover`, `set_cover_position`         |
+| `climate`                                   | target temperature stepper; segments where it shows or names a mode (`hvac_mode`, `preset_mode` …) | `climate.set_temperature`, `set_hvac_mode`, `set_preset_mode`                 |
+| `lock`                                      | hold to lock / unlock                                                                              | `lock.lock`, `lock.unlock`                                                    |
+| `script`, `scene`, `button`, `input_button` | Run chip (a round button in row items)                                                             | `script.turn_on`, `scene.turn_on`, `button.press`, `input_button.press`       |
+| `input_select`, `select`                    | select                                                                                             | `select_option`                                                               |
+| `input_number`, `number`                    | slider under the line                                                                              | `set_value`                                                                   |
+| `media_player`                              | previous / play-pause / next, volume slider                                                        | `media_previous_track`, `media_play_pause`, `media_next_track`, `volume_set`  |
+| `humidifier`, `valve`                       | toggle, slider under the line                                                                      | `homeassistant.toggle`, `humidifier.set_humidity`, `valve.set_valve_position` |
+| `water_heater`, `counter`                   | stepper                                                                                            | `water_heater.set_temperature`, `counter.increment` / `decrement`             |
+| `timer`, `update`                           | buttons (start / pause / cancel, skip / install)                                                   | `timer.start`, `pause`, `cancel`, `update.skip`, `install`                    |
+| `date`, `datetime`, `input_datetime`        | a date chip that opens a calendar                                                                  | `date.set_value`, `datetime.set_value`, `input_datetime.set_datetime`         |
 
-Other domains get no control from `auto`; a named control on them needs a domain the table lists for that control, otherwise the card logs a warning and the control does nothing.
+Other domains get no control from `auto`, and a named control the entity's domain has no service for does nothing but log a warning in the browser console.
 
 ## The controls
 
 ### Toggle and lead tap
 
-The library switch, 48 × 28, a smaller one in grid cells, column items and tables. With `control_position: lead` the icon itself is the switch: filled when on, grey when off.
+A switch; a smaller one in grid cells, column items and tables. With `control_position: lead` the icon itself is the switch: filled when on, grey when off.
 
 ::: live
 
@@ -99,7 +103,7 @@ The last tile sets `control_confirm: true`: the switch becomes a hold-to-confirm
 
 ### Slider
 
-The 8 px bar with a knob. Drag it, or focus it and use the arrow keys; a bubble shows the value while dragging. Under the line (`block`, the default in tiles, lists, grid cells and hero leads) it replaces a `visual: bar`; on the line (`end`) it is a short 6 px slider. The fill takes the entity colour, so rules colour the slider too. Brightness, position, volume and fan speed are always 0 to 100 %; `min` and `max` scale the visuals only, and bound the slider of a number or a thermostat.
+A bar with a knob. Drag it, or focus it and use the arrow keys; a bubble shows the value while dragging. Under the line (`block`, the default in tiles, lists, grid cells and hero leads) it replaces a `visual: bar`; on the line (`end`) it is a short slider. The fill takes the entity colour, so rules colour the slider too. Brightness, position, volume and fan speed are always 0 to 100 %; `min` and `max` scale the visuals only, and bound the slider of a number or a thermostat.
 
 ::: live
 
@@ -155,7 +159,7 @@ entities:
 
 ### Segments
 
-Modes, presets and speeds as a pill group; the active one is filled. Options come from the entity (`hvac_modes`, `preset_modes`, fan speeds from `percentage_step`) or from `control_options`, where every entry may carry a `label` and an `icon`. On a thermostat or fan, `control_attribute` says which mode the segments set; without it they follow the shown `attribute` when it is a mode, else the HVAC mode or the fan speed. The last row shows the current temperature and still switches the HVAC mode. A fan with more than six speeds gets a slider instead of segments.
+Modes, presets and speeds as a pill group; the active one is filled. Options come from the entity (`hvac_modes`, `preset_modes`, fan speeds from `percentage_step`) or from `control_options`, where every entry may carry a `label` and an `icon`. `control_attribute` says which mode the segments set; without it they follow the shown `attribute` when it is a mode, else a thermostat's HVAC mode or a fan's speed. The last row shows the current temperature and still switches the HVAC mode. A fan with more than six speeds gets a slider instead of segments.
 
 ::: live
 
@@ -181,7 +185,7 @@ entities:
 
 ### Buttons
 
-Round icon buttons: open / stop / close for covers, previous / play-pause / next for media players.
+Round icon buttons: open / stop / close for covers, previous / play-pause / next for media players, lock / unlock for locks. `control_options` naming the domain's buttons picks which are drawn, in that order (`[open, close]`).
 
 ::: live
 
@@ -235,13 +239,14 @@ entities:
 
 :::
 
-| Key      | Default           | Description                                                                                                                                            |
-| -------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `entity` |                   | What the button runs or switches; the entity of `action` (the target of a `perform-action` without one). Each button needs an `entity` or an `action`. |
-| `action` | the entity's own  | A Home Assistant action, run instead of the entity's service (`perform-action`, `navigate`, `more-info` …).                                            |
-| `color`  | the row's colour  | Colour token, hex or `var()`; the button is a soft tint of it, filled while its entity is on (a lock unlocked, a cover open).                          |
-| `icon`   | the entity's icon | `mdi:` icon.                                                                                                                                           |
-| `label`  | none (icon only)  | Text beside the icon; the name a screen reader reads is the label, else the entity's name.                                                             |
+| Key          | Default           | Description                                                                                                                                            |
+| ------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `entity`     |                   | What the button runs or switches; the entity of `action` (the target of a `perform-action` without one). Each button needs an `entity` or an `action`. |
+| `action`     | the entity's own  | A Home Assistant action, run instead of the entity's service (`perform-action`, `navigate`, `more-info` …).                                            |
+| `color`      | the row's colour  | Colour token, hex or `var()`; the button is a soft tint of it, filled while its entity is on (a lock unlocked, a cover open).                          |
+| `icon`       | the entity's icon | `mdi:` icon.                                                                                                                                           |
+| `label`      | none (icon only)  | Text beside the icon; the name a screen reader reads is the label, else the entity's name.                                                             |
+| `visibility` |                   | [Conditions](/guide/visibility); the button is drawn only while they hold.                                                                             |
 
 An entity with nothing to run or switch (a sensor) opens its more-info dialog. `control_confirm: true` makes every button a hold of its own: round buttons fill their ring, chips fill from the left. `control_position: block` puts the buttons under the line, where many of them wrap. Row items and the header draw no buttons: there an item needs an `entity` or a `value` of its own.
 
@@ -276,7 +281,7 @@ A Run chip for scripts, scenes and buttons; it says Done for a moment after the 
 
 ### Select
 
-A menu for `input_select` and `select` entities, or any `options` list on a domain with a select service.
+A menu for `input_select` and `select` entities, and for the modes of other domains (a thermostat's HVAC mode, a light's effect; `control_attribute` picks another).
 
 ::: live
 
@@ -294,7 +299,7 @@ entities:
 
 ### Hold to confirm
 
-Press and hold for a second; a ring fills around the button and the service runs when it is full. Letting go earlier cancels. The default for locks; `control_confirm: true` turns any toggle or button into one, and gives every button of a group (the garage door's open, stop and close) a hold of its own. `control: hold` on a light, switch, fan or media player toggles it; other domains have nothing to hold and grey the button out.
+Press and hold for a second; a ring fills around the button and the service runs when it is full. Letting go earlier cancels. The default for locks; `control_confirm: true` turns any toggle or button into one, and gives every button of a group (the garage door's open, stop and close) a hold of its own. `control: hold` runs what pressing the entity does: a script, scene or button runs, a lock locks or unlocks, a cover moves, a light, switch, fan or media player toggles; other domains have nothing to hold and grey the button out.
 
 ::: live
 
@@ -314,9 +319,9 @@ Press and hold for a second; a ring fills around the button and the service runs
 
 ## Where a control sits
 
-Controls use the slots the entities already have. In tiles, lists and hero leads the `end` slot is where the toggle used to be and the `block` slot is under the line. Grid cells put small controls next to the icon and sliders under the value. Row items draw only lead controls (tap the icon, a round button, a hold button); column items and table fields put small controls on the right, and keep only the primary control of `control: auto` (a cover's buttons, a light's switch).
+Controls use the slots the entities already have. In tiles, lists and hero leads the `end` slot is at the end of the line and the `block` slot is under it. Grid cells put small controls next to the icon and sliders under the value. Row items draw only lead controls (tap the icon, a round button, a hold button); column items and table fields put small controls on the right, and keep only the primary control of `control: auto` (a cover's buttons, a light's switch).
 
-When a card gets narrow, a control on the line wraps under the name instead of squeezing it away, and in a narrow column a wide control goes under the name. A tile with a control sizes to its content, and asks the sections grid for room: at least 4 columns for a switch or hold button on its line, 6 for anything wider. Segments shrink to their icons and, as a last resort, scroll sideways, so no option is ever cut off.
+When a card gets narrow, a control on the line wraps under the name instead of squeezing it away, and in a narrow column a wide control goes under the name. A tile with a control asks the sections grid for room: at least 4 columns for a switch or hold button on its line, 6 for anything wider. Segments shrink to their icons and, as a last resort, scroll sideways, so no option is ever cut off.
 
 ### Grid
 

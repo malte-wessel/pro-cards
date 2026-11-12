@@ -10,7 +10,7 @@ The illuminance card is deprecated: it still works in 3.0 and goes in 4.0, witho
 
 ## Basic
 
-Two lines: the type and a sensor that reports lux. The default look is a 24 h colour band: one block per time bucket, blended between the zone colours on the log scale.
+A sensor that reports lux. The default look is a 24 h colour band: one block per time bucket, its colour blended between the zones' colours.
 
 ::: live
 
@@ -65,9 +65,7 @@ mode: arc
 
 ## Window and buckets
 
-`hours_to_show` sets the history window for the trend and the band, `bucket_minutes` the width of a band block.
-
-The trend's line is averaged into buckets so passing clouds do not draw a jagged line: one point per 12 px of width by default, or one per `smoothing_minutes` when set. Each bucket is averaged on the log scale it is drawn on, so a bright moment does not lift a dim bucket (100 lx and 10,000 lx average to about 1,000 lx). Hovering the trend shows that average.
+`hours_to_show` sets the history window for the trend and the band, `bucket_minutes` the width of a band block. The trend's line is averaged so passing clouds do not make it jagged: one point per 12 px of width, or one per `smoothing_minutes` when set. The average is taken on the log scale (100 lx and 10,000 lx average to about 1,000 lx); hovering the trend shows it.
 
 ::: live
 
@@ -84,7 +82,7 @@ bucket_minutes: 15
 
 ## Zones and scale
 
-`zones` takes the five fixed keys `night`, `twilight`, `overcast`, `day` and `sun`. Every zone accepts a `label` (your own wording; the default names follow the [language of your Home Assistant profile](../guide/languages)), an upper bound `max` in lux and a `color`. The last zone (`sun`) has no upper bound, so its `max` is ignored; other keys than the five are ignored too. `min_lx` and `max_lx` set the ends of the scale (`min_lx` above 0 and below `max_lx`); the trend labels its y axis with the zone thresholds, and when the window's peak is higher than `max_lx` the top grows to the next round value (1, 2 or 5 times a power of ten) so the peak is never cut off.
+`zones` takes the five keys `night`, `twilight`, `overcast`, `day` and `sun`. Each accepts a `label` (the default names follow the [language of your Home Assistant profile](/guide/languages)), an upper bound `max` in lux and a `color`; `sun` has no upper bound, so leave its `max` out. `min_lx` and `max_lx` set the ends of the scale (`min_lx` above 0 and below `max_lx`). The trend labels its y axis with the zone thresholds, and its top grows above `max_lx` to a round value when the window's peak is higher.
 
 ::: live
 
@@ -117,4 +115,6 @@ zones:
 | `min_lx` / `max_lx` | `0.1` / `100000` | Scale bounds; the trend's top grows above `max_lx` to fit the window's peak.                        |
 | `zones`             | see below        | Per key `{ label, max, color }`.                                                                    |
 
-Default zones: `night` < 1 lx (`indigo`), `twilight` < 100 lx (`blue`), `overcast` < 10 000 lx (`blue-grey`), `day` < 30 000 lx (`amber`), `sun` above (`orange`), with the labels Night, Twilight, Overcast, Day and Sun in the profile language. The default size is 12 columns with `rows: auto`; given more height (fixed rows, a taller card beside it), the trend fills the card, the arc and the band keep their size and sit in the middle ([Filling the height](/guide/sizing#filling-the-height)). Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`, which are passed through to Home Assistant. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height).
+Default zones: `night` < 1 lx (`indigo`), `twilight` < 100 lx (`blue`), `overcast` < 10 000 lx (`blue-grey`), `day` < 30 000 lx (`amber`), `sun` above (`orange`), named Night, Twilight, Overcast, Day and Sun in the profile language.
+
+The card takes 12 columns (at least 6) with `rows: auto`; given more height, the trend fills the card and the arc and the band sit in the middle. Like every card, it also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`, passed through to Home Assistant. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height).

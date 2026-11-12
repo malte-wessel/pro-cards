@@ -119,7 +119,7 @@ sky_color: teal
 
 ## The visual editor
 
-Home Assistant's card editor shows a form for the sun azimuth card: the title, the icon and the view, then **House** (where the front faces, the roof, and each side's name or a shared wall; an empty name shows the direction the side faces), **3D view** (the camera's bearing and its slider; not for the dial), **Content** (what is shown under the plot) and the colours. A value left at its default writes nothing, and what the form does not show stays in the YAML as written. Try it in the [Playground](/playground), or with **Edit** under any example.
+Home Assistant's card editor shows a form for the sun azimuth card: the title, the icon and the view, then **House** (where the front faces, the roof, and each side's name or a shared wall; an empty name shows the direction the side faces), **3D view** (the camera and its slider; not for the dial), **Content** (what is shown under the picture, and the hover preview), the colours and `fill_height`. A value left at its default writes nothing. Try it in the [Playground](/playground), or with **Edit** under any example.
 
 ## Reference
 
@@ -143,4 +143,4 @@ Home Assistant's card editor shows a form for the sun azimuth card: the title, t
 
 The card shows today and refreshes every minute; after sunset it names tomorrow's sunrise. Directions are from true north.
 
-The card takes 12 columns (at least 6) and sizes its height to its content. With `rows` in `grid_options` it takes a fixed height and the picture fits into it, so two cards side by side can match. It also takes Home Assistant's `grid_options`, `visibility`, `view_layout`, `layout_options` and `card_mod`, and `fill_height: false` keeps its own height beside a taller card ([Filling the height](/guide/sizing#filling-the-height)). The card is set up in YAML.
+The card takes 12 columns (at least 6) and sizes its height to its content. With `rows` in `grid_options` it takes a fixed height and the picture fits into it, so two cards side by side can match. It also takes Home Assistant's `grid_options`, `visibility`, `view_layout`, `layout_options` and `card_mod`, and `fill_height: false` keeps its own height beside a taller card ([Filling the height](/guide/sizing#filling-the-height)).

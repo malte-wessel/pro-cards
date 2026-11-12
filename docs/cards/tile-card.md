@@ -2,10 +2,6 @@
 
 `custom:tile-card-pro` draws one entity as a compact tile: an icon, a name and one line with its value and status. It is the small card for most of a dashboard; the [poster](/cards/poster-card) draws the same entities larger.
 
-::: info Beta
-The tile card is new in 3.0 and in beta: its options may still change.
-:::
-
 ## The parts
 
 A tile is half a section wide and one row high, and it grows with what it holds. From left to right:
@@ -95,7 +91,7 @@ Every part has a key of its own: `name`, `icon`, `color`, `value`, `status`, `vi
 
 ## A vertical tile
 
-`vertical: true` puts the icon on top, with the name and the line centred under it and the controls under them, as Home Assistant's own tile does. A vertical tile can be as narrow as a quarter of a section; a control takes a row more.
+`vertical: true` puts the icon on top, with the name and the line centred under it and the controls under them, as Home Assistant's own tile does. A vertical tile takes a quarter of a section (half with a stepper, a select, buttons or segments) and two rows, a third with a control.
 
 ::: live
 
@@ -161,7 +157,7 @@ While its entity is unavailable, a tile draws a dash for the value, its status s
 
 ## The visual editor
 
-Home Assistant's card editor shows a form for the tile. It starts with what the tile shows: the entity as it is, texts of your own (no entity), or a kind; under it the entity, offering only those that fit the kind, and the other entities the kind reads. A kind the entity does not fit waits for one that does, as does a cleared entity for the next one: the YAML stays as it was until you pick one. Then come the name, the value (what it shows, how it is written, its range), the status, the appearance (the colour, then the icon and the visual under headings of their own), the layout (vertical, the alignment, filling the height), the controls, the badges, the rules and the interactions (the card's taps, then the icon's). It offers only what applies, and a field left alone keeps the kind's default and writes nothing to the YAML. The badges, the rules, a trend's lines and a control's options or buttons are lists: a row each, saying what it shows or when it matches, and its form in a view of its own (a back arrow returns). A trend line's form has its own rules (its colour by its value) and conditions for when it shows. A badge's form starts the same way, with what it shows (the entity as it is, a text of your own, or a kind whose colours it takes; an empty entity reads the tile's), then its name, value, appearance, visual, switch, actions and its own rules, each rule opening on top of the badge. Try it in the [Playground](/playground), or with **Edit** under any example.
+Home Assistant's card editor shows a form for the tile. It starts with what the tile shows: the entity as it is, texts of your own (no entity), or a kind; then the entity, offering only those that fit the kind, and the other entities the kind reads. While the entity does not fit the kind, or is cleared, the YAML stays as it was. Sections follow for the name, the value, the status, the appearance (the colour, the icon, the visual), the layout (vertical, the alignment, filling the height), the controls, the badges, the rules and the interactions (the card's taps, then the icon's). The form offers only what applies, and a field left alone keeps the kind's default and writes nothing to the YAML. The badges, the rules, a trend's lines and a control's options are lists: a row each, opening its own form (a back arrow returns); a badge's form reads the tile's entity where its own is empty. Try it in the [Playground](/playground), or with **Edit** under any example.
 
 Coming from the entity card? [Moving to 3.0](/guide/migrating) maps its keys to the tile's.
 
@@ -194,30 +190,30 @@ Coming from the entity card? [Moving to 3.0](/guide/migrating) maps its keys to 
 
 ### Look
 
-| Key              | Default    | Description                                                                                                                                                                                                 |
-| ---------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `icon`           | the kind's | An icon's name or a template; `{ type: icon \| image \| flow, … }` with its options, its own actions and the `badge` on it; or `false` for none. See [Look](/cards/look) and [Badges](/cards/badges).       |
-| `visual`         | the kind's | Below the line: `sparkline`, `columns`, `strip`, `bar`, `gauge`, `segments`, `sun`. Behind the texts: `glow`, `image`, `flow`. A name, `{ type, … }` with its options, or `false`; see [Look](/cards/look). |
-| `color`          | the kind's | The tile's colour: a colour name, a hex or a template. A matching rule's colour wins.                                                                                                                       |
-| `rules`          | the kind's | Colour, icon, status, tint and the visual by value or state; the first match wins. Yours replace the kind's, `[]` drops them. See [Look](/cards/look).                                                      |
-| `vertical_align` | `center`   | Where the content sits in a taller tile: `top`, `center` or `bottom`.                                                                                                                                       |
-| `vertical`       | `false`    | The icon on top, the name and the line centred under it.                                                                                                                                                    |
+| Key              | Default    | Description                                                                                                                                                                                                                                                              |
+| ---------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `icon`           | the kind's | An icon's name or a template; `{ type: icon \| image \| flow, … }` with its options, its own actions and the `badge` on it; or `false` for none. See [Look](/cards/look) and [Badges](/cards/badges).                                                                    |
+| `visual`         | the kind's | Below the line: `sparkline`, `columns`, `strip`, `bar`, `gauge`, `segments`, `sun`. Behind the texts: `glow`, `image`, `flow`, and a kind's `cover`, `path` or `line` (only where written). A name, `{ type, … }` with its options, or `false`; see [Look](/cards/look). |
+| `color`          | the kind's | The tile's colour: a colour name, a hex or a template. A matching rule's colour wins.                                                                                                                                                                                    |
+| `rules`          | the kind's | Colour, icon, status, visual, `tint_card` and `pulse` by value or state; the first match wins. Yours replace the kind's, `[]` drops them. See [Look](/cards/look).                                                                                                       |
+| `vertical_align` | `center`   | Where the content sits in a taller tile: `top`, `center` or `bottom`.                                                                                                                                                                                                    |
+| `vertical`       | `false`    | The icon on top, the name and the line centred under it.                                                                                                                                                                                                                 |
 
 ### Controls, badges and actions
 
-| Key                 | Default     | Description                                                                                                                                                                                 |
-| ------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `control`           | the kind's  | `auto`, a control's name (`toggle`, `slider`, `stepper`, `segments`, `buttons`, `button`, `select`, `hold`), `false` for none, or `{ type, position, … }`; see [Controls](/cards/controls). |
-| `badges`            | –           | Badges at the end of the first row: entity ids or badges of your own; see [Badges](/cards/badges).                                                                                          |
-| `status_badge`      | `false`     | `true` draws the status as the first badge, in place of on the line.                                                                                                                        |
-| `tap_action`        | `more-info` | What a tap on the tile does; see [Actions & hover](/cards/actions).                                                                                                                         |
-| `hold_action`       | `more-info` | What a hold does.                                                                                                                                                                           |
-| `double_tap_action` | `none`      | What a double tap does.                                                                                                                                                                     |
-| `hover`             | `true`      | Home Assistant's hover and press effects; `false` keeps the tile still.                                                                                                                     |
+| Key                 | Default     | Description                                                                                                                                                                                         |
+| ------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `control`           | the kind's  | `auto`, a control's name (`toggle`, `slider`, `stepper`, `segments`, `buttons`, `button`, `select`, `hold`, `date`), `false` for none, or `{ type, position, … }`; see [Controls](/cards/controls). |
+| `badges`            | –           | Badges at the end of the first row: entity ids or badges of your own; see [Badges](/cards/badges).                                                                                                  |
+| `status_badge`      | `false`     | `true` draws the status as the first badge, in place of on the line.                                                                                                                                |
+| `tap_action`        | `more-info` | What a tap on the tile does; see [Actions & hover](/cards/actions).                                                                                                                                 |
+| `hold_action`       | `more-info` | What a hold does.                                                                                                                                                                                   |
+| `double_tap_action` | `none`      | What a double tap does.                                                                                                                                                                             |
+| `hover`             | `true`      | Home Assistant's hover and press effects; `false` keeps the tile still.                                                                                                                             |
 
 ### Grid and Home Assistant options
 
-A tile takes 6 columns and sizes its height to its content (`rows: auto`): one row, or two with a plot below the line. A plain tile can shrink to 3 columns; a vertical one is narrower and taller. See [Sizes](/cards/sizes).
+A tile takes 6 columns and sizes its height to its content (`rows: auto`): one row, or two with a plot below the line. A plain tile can shrink to 3 columns (4 or 6 with a control on its line); a vertical one takes 3 columns (6 with wider controls) and two rows or more. See [Sizes](/cards/sizes).
 
 | Key            | Default | Description                                                              |
 | -------------- | ------- | ------------------------------------------------------------------------ |

@@ -2,15 +2,15 @@
 
 ::: warning Deprecated
 
-The entity group card is deprecated: it still works in 3.0 and goes in 4.0. Use a [tile group](/cards/tile-group-card); [Moving to 3.0](/guide/migrating#the-entity-group-card) says what changes, and how its grid, hero and table become a layout card.
+The entity group card is deprecated: it still works in 3.0 and goes in 4.0. Use a [tile group](/cards/tile-group-card); [Moving to 3.0](/guide/migrating#the-entity-group-card) says what changes, and how its grid and hero become a layout card.
 
 :::
 
-`custom:entity-group-card-pro` shows many entities in one card. Every entity takes the same [entity options](/cards/entity-options) as the entity card; `layout` decides how they are arranged. This page starts with a plain list and adds options one at a time, then walks through the other layouts. One entity with the others as badges in its corner is a [poster card](/cards/poster-card).
+`custom:entity-group-card-pro` shows many entities in one card. Every entity takes the same [entity options](/cards/entity-options) as the entity card; `layout` decides how they are arranged.
 
 ## Basic
 
-The type and a list of entity ids. Each row shows the entity's icon, friendly name and state, coloured like Home Assistant does.
+A list of entity ids. Each row shows the entity's icon, friendly name and state, coloured as Home Assistant does.
 
 ::: live
 
@@ -134,9 +134,7 @@ entities:
 
 ## Grid
 
-`layout` arranges the same entities differently; `list` is the default used so far. The sections from here to [Table](#table) show the other five, the [reference](#layouts) lists them in one table.
-
-Compact cells, `columns` per row. Values scale down to fit the cell.
+`layout` arranges the entities differently; `list` is the default, the [reference](#layouts) lists all six. `grid` draws compact cells, `columns` per row; values scale down to fit the cell.
 
 ::: live
 
@@ -278,7 +276,7 @@ entities:
 
 ## Row
 
-Entities side by side as compact items: a round icon with the name under it, optionally the value under the name. A matching rule's `label` stands in for the value, in the rule's colour (the window below reads Open or Closed instead of its state). Items spread over the width (`align: space-between`) and wrap when the card is narrow; `align` packs them (`start`, `center`, `end`) or gives every item the same share (`stretch`). Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
+Entities side by side as compact items: a round icon with the name and the value under it. A matching rule's `label` stands in for the value, in the rule's colour. Items spread over the width (`align: space-between`) and wrap when the card is narrow; `align` packs them (`start`, `center`, `end`) or gives every item the same share (`stretch`). Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
 
 ::: live
 
@@ -301,7 +299,7 @@ entities:
 
 :::
 
-`show_value: false` hides the value and `show_name: false` drops the label, so icons alone or icons with a value remain. Gauge, bar and history visuals are not drawn in items; use `icon`, `ring` or `badge`.
+`show_value: false` hides the value and `show_name: false` the name, leaving icons alone or icons with a value.
 
 ::: live
 
@@ -319,7 +317,7 @@ entities:
 
 :::
 
-`name_position: above` puts the name on top of the icon instead of under it, and `align: stretch` gives every item the same share of the width.
+`name_position: above` puts the name above the icon; `align: stretch` gives every item the same share of the width.
 
 ::: live
 
@@ -359,7 +357,7 @@ entities:
 
 :::
 
-Icon switches (`control: toggle` on a row item makes the icon the switch) with state colours make a compact switchboard; `align: center` and `show_name: false` turn sensors into a readout.
+`control: toggle` on a row item makes its icon the switch, for a compact switchboard; `align: center` and `show_name: false` turn sensors into a readout.
 
 ::: live
 
@@ -395,7 +393,7 @@ Icon switches (`control: toggle` on a row item makes the icon the switch) with s
 
 ## Column
 
-The same entities stacked vertically as list-like items: the icon with the name over the value beside it, where a rule `label` stands in for the value. They sit on the left by default (`align: start`); `align: center` or `end` moves them. Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
+Items stacked vertically: the icon with the name over the value beside it, where a rule `label` stands in for the value. They sit on the left (`align: start`); `align: center` or `end` moves them. As in a row, block visuals fall back to the icon.
 
 ::: live
 
@@ -414,7 +412,7 @@ grid_options: { columns: 6 }
 
 :::
 
-With names the column is a vertical menu; badges show the state beside the icon, and `name_position` has no effect here.
+With names the column is a vertical menu; `name_position` has no effect here.
 
 ::: live
 
@@ -434,7 +432,7 @@ grid_options: { columns: 6 }
 
 ## Table
 
-Key/value rows: the name on the left in small capitals, the value on the right, where a rule `label` stands in for the value. `show_icon: true` adds an icon column; `align: start` puts the value right after the name, `align: center` in the middle. `control: toggle` puts the switch in the value column. Items draw `icon`, `ring` and `badge`; block visuals fall back to the icon, see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
+Key/value rows: the name on the left in small capitals, the value on the right, where a rule `label` stands in for the value. `show_icon: true` adds an icon column; `align: start` puts the value right after the name, `align: center` in the middle. `control: toggle` puts the switch in the value column. As in a row, block visuals fall back to the icon.
 
 ::: live
 
@@ -487,7 +485,7 @@ entities:
 
 :::
 
-A table of modes with the switch in the value column, and a device sheet where every row shows a different attribute of the same entity.
+A table of switches, and a device sheet where every row shows another attribute of the same entity.
 
 ::: live
 
@@ -574,7 +572,7 @@ entities:
 
 ## Vertical alignment
 
-In a card taller than its content (fixed `rows`, a taller card beside it in a row) the entities sit at the top and the room is left below them. `vertical_align: center` or `bottom` moves them to the middle or the bottom of the card; the title stays on top. A sparkline or columns plot that grows into the room fills it as before.
+In a card taller than its content (fixed `rows`, a taller card beside it) the entities sit at the top. `vertical_align: center` or `bottom` moves them to the middle or the bottom; the title stays on top. A sparkline or columns plot fills the room instead.
 
 ::: live
 
@@ -607,7 +605,7 @@ In a card taller than its content (fixed `rows`, a taller card beside it in a ro
 
 ## Title action
 
-`title_tap_action` makes the title and its icon tappable, for example to open the room's own dashboard from a summary card. It takes any [action](/cards/entity-options#actions); without it the title is plain text. The header entities keep their own actions.
+`title_tap_action` makes the title and its icon tappable, for example to open the room's own dashboard. It takes any [action](/cards/entity-options#actions); without it the title is plain text.
 
 ::: live
 
@@ -627,7 +625,7 @@ entities:
 
 ## Hover
 
-`hover: true` on the card shows what a click will do on every entity, as Home Assistant's tile does; `hover` on an entity turns it on or off for that one. Grid cells and header entities take a light layer under the pointer and a stronger one while pressed; the items of a row or column layout brighten their icon; list rows, heroes and table fields keep still, while their icons and [controls](/cards/entity-controls) answer. See [Hover](/cards/entity-options#hover).
+`hover: true` on the card shows what a click will do on every entity, as Home Assistant's tile does; `hover` on an entity turns it on or off for that one. Grid cells and header entities take a light layer under the pointer, row and column items brighten their icon; list rows, heroes and table fields keep still while their icons and [controls](/cards/entity-controls) answer. See [Hover](/cards/entity-options#hover).
 
 ::: live
 
@@ -691,8 +689,8 @@ entities:
 
 ### Grid defaults
 
-12 columns, `rows: auto`; the sections grid will not shrink it below 6 columns and 2 rows (3 for a hero). See [Sizing in sections](/guide/sizing). Given more height (fixed rows, a taller card beside it), the `sparkline` and `columns` plots share it; without them the rows stay at the top, see [Filling the height](/guide/sizing#filling-the-height).
+12 columns, `rows: auto`, at least 6 columns and 2 rows (3 for a hero); see [Sizing in sections](/guide/sizing). Given more height, the `sparkline` and `columns` plots share it; without them the rows stay at the top unless [`vertical_align`](#vertical-alignment) says otherwise.
 
 ### Home Assistant options
 
-Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`. They are passed through to Home Assistant; see [Sizing in sections](/guide/sizing) for `grid_options`. The card's own `visibility` hides the whole card; its entities, header entities and sections take their own, see [Visibility](/guide/visibility). `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height). `hover: true` shows Home Assistant's hover and press layers on what a click runs, for every entity or, set on an entity, for that one; see [Hover](#hover).
+Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`, passed through to Home Assistant; see [Sizing in sections](/guide/sizing). The card's own `visibility` hides the whole card; its entities and header entities take their own, see [Visibility](/guide/visibility). `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height).

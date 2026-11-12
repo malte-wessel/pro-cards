@@ -6,11 +6,11 @@ The entity card is deprecated: it still works in 3.0 and goes in 4.0. Use a [til
 
 :::
 
-`custom:entity-card-pro` shows one entity as a tile: icon, name and value in one row of the sections grid, or with a gauge, bar or graph below. The entity keys sit directly on the card; the [entity options](/cards/entity-options) explain every one of them. This page builds a tile up option by option. For one entity as a poster, with a large value, a status badge and what its poster type draws, see the [poster card](/cards/poster-card).
+`custom:entity-card-pro` shows one entity as a tile: icon, name and value in one row, or with a gauge, bar or graph below. The entity keys sit directly on the card; the [entity options](/cards/entity-options) explain every one of them.
 
 ## Basic
 
-Two lines. The tile takes the entity's icon, friendly name and formatted state, and colours the icon like Home Assistant does (lights amber when on, people green at home, plain sensors in the primary colour).
+The tile takes the entity's icon, friendly name and formatted state, and colours the icon as Home Assistant does (plain sensors in the primary colour).
 
 ::: live
 
@@ -39,7 +39,7 @@ suffix: " inside"
 
 ## Rules
 
-`rules` pick colour, icon and label by value (`below` / `above`) or by `state`. The first rule that matches wins. The label sits next to the value (in the compact items of the group card it stands in for the value, see [Rules](/cards/entity-options#rules)).
+`rules` pick colour, icon and label by value (`below` / `above`) or by `state`; the first rule that matches wins. The label sits next to the value; see [Rules](/cards/entity-options#rules).
 
 ::: live
 
@@ -76,7 +76,7 @@ rules:
 
 ## Controls
 
-`control: auto` adds the control the entity's domain calls for: a light gets a switch and a brightness slider, a cover its buttons and a position slider, a thermostat a stepper. `control: toggle` and the other names pick one; see [Controls](/cards/entity-controls). `grid_options` here sizes the tiles to half a section, see [Sizing in sections](/guide/sizing).
+`control: auto` adds the control the entity's domain calls for: a light gets a switch and a brightness slider, a cover its buttons and a position slider, a thermostat a stepper. `control: toggle` and the other names pick one; see [Controls](/cards/entity-controls).
 
 ::: live
 
@@ -115,7 +115,7 @@ rules:
 
 :::
 
-All eight side by side. The history visuals (`sparkline`, `columns`, `strip`) read the recorder history for the card's `hours_to_show`, in buckets of `bucket_minutes` for columns and strip.
+All eight side by side. The history visuals (`sparkline`, `columns`, `strip`) show the last `hours_to_show` hours, columns and strip in buckets of `bucket_minutes`.
 
 ::: live
 
@@ -200,11 +200,11 @@ All eight side by side. The history visuals (`sparkline`, `columns`, `strip`) re
 
 :::
 
-Each visual, the options it reads and the layouts it is drawn in are explained one by one under [Visuals](/cards/entity-options#visuals) on the entity options page, including the [history window](/cards/entity-options#history-window) that `hours_to_show` and `bucket_minutes` set for the sparkline, columns and strip.
+[Visuals](/cards/entity-options#visuals) on the entity options page explains each visual and its options, and the [history window](/cards/entity-options#history-window).
 
 ## Card tint
 
-`tint_card: true` on a rule washes the whole card in that rule's colour while it matches. Use it for the states that deserve attention, not for the normal case. See [Rules](/cards/entity-options#rules) for the details.
+`tint_card: true` on a rule washes the whole card in that rule's colour while it matches. Use it for the states that deserve attention, not for the normal case.
 
 ::: live
 
@@ -291,6 +291,53 @@ Each visual, the options it reads and the layouts it is drawn in are explained o
 
 :::
 
+### Templates everywhere
+
+`name`, `icon`, `color`, `secondary` and `value` all take templates. This tile compares two sensors and changes its whole look with the result.
+
+::: live
+
+```yaml
+type: custom:entity-card-pro
+entity: sensor.outdoor_temperature
+name: "{{ 'Warmer outside' if states('sensor.outdoor_temperature') | float(0) > states('sensor.living_room_temperature') | float(0) else 'Warmer inside' }}"
+secondary: "Outside {{ states('sensor.outdoor_temperature') }} °C · inside {{ states('sensor.living_room_temperature') }} °C"
+icon: "{{ 'mdi:home-export-outline' if states('sensor.outdoor_temperature') | float(0) > states('sensor.living_room_temperature') | float(0) else 'mdi:home-import-outline' }}"
+color: "{{ 'orange' if states('sensor.outdoor_temperature') | float(0) > states('sensor.living_room_temperature') | float(0) else 'blue' }}"
+```
+
+:::
+
+### Counting with templates
+
+A template value that looks like a number gets rules, decimals and a unit like a state. Here the tile counts open windows and lights.
+
+::: live
+
+```yaml
+- type: custom:entity-card-pro
+  entity: binary_sensor.window_kitchen
+  name: Open windows
+  icon: mdi:window-open-variant
+  value: "{{ states.binary_sensor | selectattr('attributes.device_class', 'eq', 'window') | selectattr('state', 'eq', 'on') | list | count }}"
+  rules:
+    - { below: 1, color: green, label: All closed }
+    - { above: 1, color: red, label: Airing, tint_card: true }
+  grid_options: { columns: 6 }
+- type: custom:entity-card-pro
+  entity: light.living_room
+  name: Lights on
+  icon: mdi:lightbulb-group
+  value: "{{ states.light | selectattr('state', 'eq', 'on') | list | count }}"
+  suffix: " of 8"
+  rules:
+    - { below: 1, color: grey, label: All off }
+    - { above: 1, color: amber, label: Some on }
+  grid_options: { columns: 6 }
+```
+
+:::
+
 ## Actions
 
 A tile is a button. `tap_action` runs a scene, opens a dashboard or a URL, or toggles; `hold_action` and `double_tap_action` add two more. See [Actions](/cards/entity-options#actions) for every field.
@@ -341,7 +388,7 @@ A tile is a button. `tap_action` runs a scene, opens a dashboard or a URL, or to
 
 ## Hover
 
-`hover: true` shows what a click will do, as Home Assistant's tile does: the whole tile takes a light layer in its colour under the pointer, and a stronger one while pressed. An icon that is a switch (`control_position: lead`) brightens its circle instead and grows a little when pressed, and every [control](/cards/entity-controls) answers on its own: the tile's layer gives way to it. Touch screens show only the press. See [Hover](/cards/entity-options#hover) for the details and the theme variable.
+`hover: true` shows what a click will do, as Home Assistant's tile does: a light layer in the tile's colour under the pointer, a stronger one while pressed. An icon that is a switch (`control_position: lead`) and every [control](/cards/entity-controls) answer on their own. Touch screens show only the press. See [Hover](/cards/entity-options#hover).
 
 ::: live
 
@@ -369,124 +416,13 @@ A tile is a button. `tap_action` runs a scene, opens a dashboard or a URL, or to
 
 :::
 
-## More examples
-
-One card type, many tiles. Rules colour a battery ring, an attribute drives a bar, a person becomes a badge, and prefix and suffix turn a number into a sentence.
-
-::: live
-
-```yaml
-- type: custom:entity-card-pro
-  entity: sensor.kitchen_window_battery
-  name: Window sensor
-  visual: ring
-  rules:
-    - { below: 20, color: red, label: Replace }
-    - { below: 50, color: amber }
-    - { above: 50, color: green }
-  grid_options: { columns: 6 }
-- type: custom:entity-card-pro
-  entity: light.living_room
-  name: Brightness
-  icon: mdi:brightness-6
-  color: amber
-  attribute: brightness
-  unit: ""
-  visual: bar
-  min: 0
-  max: 255
-  grid_options: { columns: 6 }
-- type: custom:entity-card-pro
-  entity: person.kim
-  visual: badge
-  rules:
-    - { state: home, color: green, icon: mdi:home-account, label: Home }
-    - { state: not_home, color: grey, icon: mdi:account-arrow-right, label: Away }
-  grid_options: { columns: 6 }
-- type: custom:entity-card-pro
-  entity: sensor.energy_today
-  name: Energy
-  icon: mdi:lightning-bolt
-  color: green
-  decimals: 1
-  suffix: " so far today"
-  grid_options: { columns: 6 }
-- type: custom:entity-card-pro
-  entity: sun.sun
-  name: Sun
-  visual: badge
-  rules:
-    - { state: above_horizon, color: amber, icon: mdi:white-balance-sunny, label: Up }
-    - { state: below_horizon, color: indigo, icon: mdi:weather-night, label: Down }
-  grid_options: { columns: 6 }
-- type: custom:entity-card-pro
-  entity: sensor.washer_status
-  name: Washer
-  secondary: "{{ states('sensor.washer_remaining') }} min left"
-  visual: badge
-  rules:
-    - { state: run, color: green, icon: mdi:washing-machine, label: Running }
-    - { state: end, color: teal, icon: mdi:washing-machine-alert, label: Done, tint_card: true }
-    - { state: power_off, color: grey, icon: mdi:washing-machine-off, label: "Off" }
-  grid_options: { columns: 6 }
-```
-
-:::
-
-### Templates everywhere
-
-`name`, `icon`, `color`, `secondary` and `value` all take templates. This tile compares two sensors and changes its whole look with the result.
-
-::: live
-
-```yaml
-type: custom:entity-card-pro
-entity: sensor.outdoor_temperature
-name: "{{ 'Warmer outside' if states('sensor.outdoor_temperature') | float(0) > states('sensor.living_room_temperature') | float(0) else 'Warmer inside' }}"
-secondary: "Outside {{ states('sensor.outdoor_temperature') }} °C · inside {{ states('sensor.living_room_temperature') }} °C"
-icon: "{{ 'mdi:home-export-outline' if states('sensor.outdoor_temperature') | float(0) > states('sensor.living_room_temperature') | float(0) else 'mdi:home-import-outline' }}"
-color: "{{ 'orange' if states('sensor.outdoor_temperature') | float(0) > states('sensor.living_room_temperature') | float(0) else 'blue' }}"
-```
-
-:::
-
-### Counting with templates
-
-A template value that looks like a number gets rules, decimals and a unit like a state. Here the tile counts open windows and lights.
-
-::: live
-
-```yaml
-- type: custom:entity-card-pro
-  entity: binary_sensor.window_kitchen
-  name: Open windows
-  icon: mdi:window-open-variant
-  value: "{{ states.binary_sensor | selectattr('attributes.device_class', 'eq', 'window') | selectattr('state', 'eq', 'on') | list | count }}"
-  rules:
-    - { below: 1, color: green, label: All closed }
-    - { above: 1, color: red, label: Airing, tint_card: true }
-  grid_options: { columns: 6 }
-- type: custom:entity-card-pro
-  entity: light.living_room
-  name: Lights on
-  icon: mdi:lightbulb-group
-  value: "{{ states.light | selectattr('state', 'eq', 'on') | list | count }}"
-  suffix: " of 8"
-  rules:
-    - { below: 1, color: grey, label: All off }
-    - { above: 1, color: amber, label: Some on }
-  grid_options: { columns: 6 }
-```
-
-:::
-
 ## Reference
 
 All [entity options](/cards/entity-options#entity-options) plus:
 
 | Option                                             | Default                      | Description                                                                                     |
 | -------------------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------- |
-| `toggle`                                           | `false`                      | Switch on the right that calls `homeassistant.toggle`.                                          |
+| `toggle`                                           | `false`                      | Deprecated spelling of `control: toggle`.                                                       |
 | `secondary`                                        |                              | Line under the name instead of the value and label. Template allowed.                           |
 | `hours_to_show`                                    | `24`                         | History window for `sparkline`, `columns` and `strip`, at least 1.                              |
 | `bucket_minutes`                                   | `60`                         | Bucket size for `columns` and `strip`, at least 5.                                              |
@@ -496,8 +432,8 @@ All [entity options](/cards/entity-options#entity-options) plus:
 
 ### Grid defaults
 
-6 columns, `rows: auto`: one row for a plain tile, more for the block visuals (`gauge`, `bar`, `sparkline`, `columns`, `strip`), at least 2 rows with a `sparkline` or `columns`. Given more height (fixed rows, a taller card beside it), a `sparkline` or `columns` plot fills the card, a `gauge` centres in the room under the icon and name, and any other tile centres its content, see [Filling the height](/guide/sizing#filling-the-height).
+6 columns, `rows: auto`: one row for a plain tile, more for the block visuals (`gauge`, `bar`, `sparkline`, `columns`, `strip`) and controls, at least 2 rows with a `sparkline` or `columns`. Given more height, a `sparkline` or `columns` plot fills the card and other tiles centre their content; see [Filling the height](/guide/sizing#filling-the-height).
 
 ### Home Assistant options
 
-Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`. They are passed through to Home Assistant; see [Sizing in sections](/guide/sizing) for `grid_options`. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height). `hover: true` shows Home Assistant's hover and press layers on what a click runs, for every entity or, set on an entity, for that one; see [Hover](#hover).
+Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`, passed through to Home Assistant; see [Sizing in sections](/guide/sizing). `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height).

@@ -21,7 +21,7 @@ Three things work differently, even where the keys look the same:
 - **`color` and `icon` are defaults.** On the old cards they beat the rules; now a matching rule's colour and icon win (see [Look](/cards/look)). Leave them out to let the value decide.
 - **A rule's text is its `status`.** The old `label` is `status` on a tile and a poster, and `value` on a [badge](/cards/badges).
 
-`hover` is on by default, as on Home Assistant's own tile (see [Actions](/cards/actions)).
+`hover` is on by default, as on Home Assistant's tile (see [Actions](/cards/actions)).
 
 ## The entity card
 
@@ -73,7 +73,7 @@ Several entities are a tile group: a title, an icon, header badges and its `tile
 | `layout: grid`, `hero`                          | a layout card, see below                                       |
 | `header_entities`                               | `badges`, with a [badge's keys](/cards/badges#badge-keys)      |
 | `show_icon`, `show_name`, actions on the card   | on each tile                                                   |
-| `vertical_align`                                | `vertical_align`, the same values                              |
+| `vertical_align`                                | `vertical_align`, the same values and `stretch`                |
 | `align`, `name_position`, a table's `show_icon` | none                                                           |
 
 ::: live
@@ -194,15 +194,15 @@ badges:
 
 ## The weather card
 
-The weather card keeps its sections and speaks the tile's language. What changed still works in 3.0, says so once in the browser console, and goes in 4.0:
+The weather card keeps its sections and speaks the tile's language. A rule's `label`, the entity sections and the keys that set them still work until 4.0 and say so once in the browser console; `hover` changes at once:
 
-| Before                                                                                                                              | Now                                                                                                        |
-| ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| a rule's `label`                                                                                                                    | its `status`, as on a tile (both on one rule is an error)                                                  |
-| `color` beats a matching rule                                                                                                       | until 4.0; then a matching rule's colour wins, as on a tile. Leave `color` out to let the rules decide now |
-| `hover` off unless `true`                                                                                                           | on, as on a tile; `hover: false` turns it off                                                              |
-| entity sections (`row`, `list`, `table`, `grid`, `column`)                                                                          | a [tile group](/cards/tile-group-card) beside the card in a [layout card](/cards/layout-card)              |
-| `columns`, `align`, `show_name`, `show_value`, `show_icon`, `name_position`, `hours_to_show`, `bucket_minutes`, `smoothing_minutes` | go with the entity sections they set                                                                       |
+| Before                                                                                                                              | 3.0                                                                                                                                 |
+| ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| a rule's `label`                                                                                                                    | its `status`, as on a tile (both on one rule is an error)                                                                           |
+| `color` beats a matching rule                                                                                                       | still, until 4.0; then the rule's colour wins, as on a tile (a card with both is warned). Leave `color` out to let the rules decide |
+| `hover` off unless `true`                                                                                                           | on, as on a tile; `hover: false` turns it off                                                                                       |
+| entity sections (`row`, `list`, `table`, `grid`, `column`)                                                                          | a [tile group](/cards/tile-group-card) beside the card in a [layout card](/cards/layout-card)                                       |
+| `columns`, `align`, `show_name`, `show_value`, `show_icon`, `name_position`, `hours_to_show`, `bucket_minutes`, `smoothing_minutes` | go with the entity sections they set                                                                                                |
 
 An entity section's attributes of the weather entity become tiles of the sensors that report them:
 

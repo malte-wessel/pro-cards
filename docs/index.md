@@ -321,7 +321,7 @@ feature_rows:
             tap_action: *own
             visual: { type: strip, hours: 24, bucket: 60 }
   - title: "Control, right on the card."
-    text: "Steppers, sliders, segments, locks and your own buttons sit on the card itself. Swipe through and try them, no dialog opens."
+    text: "Steppers, sliders, segments, selects and locks sit on the card itself. Swipe through and try them, no dialog opens."
     link: /cards/controls
     label: Controls
     cards:
@@ -409,8 +409,8 @@ feature_rows:
         inputs: { wind: sensor.wind_speed, direction: sensor.wind_direction }
   - title: "Follow the sun."
     text: "Its path through the day, the time to sunset, and which side of your house it shines on right now."
-    link: /cards/sun-path-card
-    label: Sun cards
+    link: /cards/sun-azimuth-card
+    label: Sun azimuth card
     cards:
       # one layout row of the posters' height: both cards the same size
       - type: custom:layout-card-pro

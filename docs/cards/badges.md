@@ -4,7 +4,7 @@ A badge is a small pill that shows one more value on a card: another entity, an 
 
 ## Where badges sit
 
-`badges` lists the badges in order. Each one is an entity id, or an object with the [badge keys](#badge-keys). On a [poster](/cards/poster-card) they are a column in the top right corner, floating over the picture. On a [tile](/cards/tile-card) they sit at the end of the first row, beside the name and centred on the icon; the name gives way, the badges always show in full.
+`badges` lists the badges in order. Each one is an entity id, or an object with the [badge keys](#badge-keys). On a [poster](/cards/poster-card) they are a column in the top right corner, floating over the picture. On a [tile](/cards/tile-card) they sit at the end of the first row, beside the name and centred on the icon (on a vertical tile, in a row above the icon); the name gives way, the badges always show in full.
 
 ::: live
 
@@ -46,7 +46,7 @@ A badge's pill holds, in this order, its icon, its name, its value, a visual and
 - an icon's name (`mdi:…`, or a template);
 - `{ type: image }`: the entity's picture, or `src` for another (an image URL, a template or an entity);
 - `{ type: dot }`: a dot in the badge's colour;
-- `{ ring: true }`: a ring of the value around the icon, from `min` to `max` (on a name or a picture too);
+- `{ ring: true }`: a ring of the value around the icon or the picture, from `min` to `max`;
 - `false`: no icon.
 
 `show_name: true` writes the name before the value. `show_value: false` shows the icon alone.
@@ -94,15 +94,13 @@ A badge's pill holds, in this order, its icon, its name, its value, a visual and
 
 ### The entity's kind
 
-A badge takes its entity's [kind](/cards/kinds), but only its colours: a battery red when it runs low, carbon dioxide by its bands, a light in its own colour, a thermostat warm while it heats. A kind that calls for attention makes the badge pulse, such as a jammed lock or hazardous air. The value stays the value; the kind's words belong to the card's status.
+A badge takes its entity's [kind](/cards/kinds), but only its colours: a battery red when it runs low, carbon dioxide by its bands, a light in its own colour, a thermostat warm while it heats. A kind that calls for attention makes the badge pulse, such as a jammed lock or hazardous air. The value stays the value; the kind's words belong to the card's status. The kind's thresholds read the entity's state: a badge showing an `attribute` or a `value` of its own takes only the kind's colour.
 
 `kind` names a kind for an entity the card cannot tell, such as `kind: battery` on a sensor without a device class. `kind: none` leaves the kind out; Home Assistant's own state colour stays.
 
 ### Rules
 
-`rules` work as on the card itself: the first rule that matches its `state`, `above` or `below` wins. A rule sets the badge's `color` and `icon`, and `value` writes a text in place of the value. It can also change the pill (`style`) and make it pulse (`pulse: true`). A badge with rules takes none of its kind's.
-
-The badge's own `color` and `icon` are defaults: a matching rule's win.
+`rules` work as on the card itself: the first rule that matches its `state`, `above` or `below` wins. A rule sets the badge's `color` and `icon`, and `value` writes a text in place of the value. It can also change the pill (`style`) and make it pulse (`pulse: true`). The badge's own `color` and `icon` are defaults: a matching rule's win. A badge with rules takes none of its kind's.
 
 ### Styles and sizes
 
@@ -222,7 +220,7 @@ A card's status (Heating, Low, Locked …) can be a badge too. On a poster it al
 
 ## The tile's icon badge
 
-A tile's icon carries a small badge of its own, as on Home Assistant's tile: what a thermostat is doing in its colour, a person's zone, an orange mark when the entity is unavailable. It takes no room. `icon: { badge: false }` turns it off, and `icon: { badge: { icon, color } }` sets one of your own; both take a template, and an icon that renders empty shows nothing. A rule can set it too while it matches.
+A tile's icon carries a small badge of its own, as on Home Assistant's tile: what a thermostat or a humidifier is doing (in its colour), a person's zone, an orange mark when the entity is unavailable. It takes no room. `icon: { badge: false }` turns it off, and `icon: { badge: { icon, color } }` sets one of your own; both take a template, and an icon that renders empty shows nothing. A rule can set it too while it matches.
 
 ::: live
 
@@ -289,4 +287,4 @@ A badge is an entity id, or an object with these keys. Every key is optional.
 | `status_badge` | tile         | `false`    | `true`: the status as the first badge, in place of on the line. A poster's status is always a badge.    |
 | `icon.badge`   | tile         | `auto`     | The badge on the icon: `auto` (Home Assistant's), `false`, or `{ icon, color }`. A rule may set it too. |
 
-Badges written with the keys of 2.x (`visual: ring`, `show_icon`, a rule's `label` …) give an error that names the new spelling; see [Moving to 3.0](/guide/migrating).
+Old badge keys (`visual: ring`, `show_icon`, a rule's `label` …) give an error naming the key to use; see [Moving to 3.0](/guide/migrating).

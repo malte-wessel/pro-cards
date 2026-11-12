@@ -148,11 +148,11 @@ On a tile, a poster, a tile group and the badges of every card, an entity's colo
 2. the card's `color`, while the entity is active (on, open, playing, home; a sensor always is). Off or closed it takes the state's colour, as on Home Assistant's tile;
 3. the kind's colour: a light in its own colour (a pale one more saturated and white a light grey, so it shows on a card), a thermostat warm while it heats and cool while it cools;
 4. Home Assistant's colour for the entity's state, the theme's `state-<domain>-<state>-color`, whatever value the card shows: lights amber when on, a thermostat by its mode, locks green or red, people green at home, media players light blue while playing, batteries red below 30 %, orange below 70 %, green above; an unavailable entity `state-unavailable-color`;
-5. while active, Home Assistant's state icon colour (`state-icon-color`, steel blue in the default theme) on a tile, a poster and a tile group, and `primary` on a badge; while not (off, unknown), `state-inactive-color`. A plain sensor takes the state icon colour.
+5. while active, Home Assistant's state icon colour (`state-icon-color`, steel blue in the default theme) on a tile, a poster and a tile group, and `primary` on a badge; while not (off, unknown), `state-inactive-color`.
 
-The deprecated cards keep their order: their `color` beats the rules in every state, an off-like word (`idle`, `closed`, `standby` …) is `grey`, and the rest `primary`.
+So set `color` for the usual colour and let rules say when it changes. The icon works the same way: the rule's, then the card's, then the entity's own ([Look](/cards/look)).
 
-So set `color` for the usual colour and let rules say when it changes. The icon works the same way: the rule's, then the card's, then the entity's own ([Look](/cards/look)). In the deprecated cards and the old `header_entities`, `color` and `icon` beat the rules instead ([Moving to 3.0](/guide/migrating)).
+The deprecated cards and the old `header_entities` keep their order: `color` and `icon` beat the rules in every state; after the rules comes Home Assistant's state colour, else `grey` for an off-like word (`idle`, `closed`, `standby` …) and `primary` for the rest ([Moving to 3.0](/guide/migrating)).
 
 ::: live
 

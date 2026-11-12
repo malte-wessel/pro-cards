@@ -135,7 +135,7 @@ consumers:
 
 A link carrying less than `idle_below` (20 W) counts as idle, so standby noise never makes the flow blink. Idle links are dashed tracks; `idle_links: hidden` leaves them out, `faint` draws them as faint lines.
 
-Values show in W below `kw_above` (1000 W) and in kW above it, whatever unit the sensors report. `decimals` sets the decimals of both units, or `{ w, kw }` each.
+Values show in W below `kw_above` (1000 W) and in kW from there on, whatever unit the sensors report. `decimals` sets the decimals of both units, or `{ w, kw }` each.
 
 ::: live
 
@@ -157,7 +157,7 @@ sources:
 
 ## States, rules and the grid
 
-On a grid source, `price` and the card's `expensive_above` add an **Expensive** state while importing at or above that price. `offline` names an entity whose state (`on`, or `{ entity, state }`) means the grid is down: the grid node turns red, the card tints and the line says what keeps the home running. A `generator` sensor takes the grid's place during an outage. `fossil` (the [CO2 Signal](https://www.home-assistant.io/integrations/co2signal/) percentage) or `non_fossil` splits the grid's share of the home ring into low-carbon and fossil.
+On a grid source, `price` and the card's `expensive_above` add an **Expensive** state while importing at or above that price. `offline` names an entity that is `on` while the grid is down (`{ entity, state }` for another state): the grid node turns red, the card tints and the line says what keeps the home running. A `generator` sensor takes the grid's place during an outage. `fossil` (the [CO2 Signal](https://www.home-assistant.io/integrations/co2signal/) percentage) or `non_fossil` splits the grid's share of the home ring into low-carbon and fossil.
 
 `rules` on the card match the home's power in watts: the first matching rule's `label` becomes a pill on the summary line, its `color` paints the home node and `tint_card: true` tints the card. A source or a consumer takes `rules` of its own on its sensor's value, for its node's colour and icon.
 
@@ -186,7 +186,7 @@ rules:
 
 ## Beyond electricity
 
-The tree works for any flow. When the first sensor reports a unit other than power, such as a water flow in L/min, the card shows every value in that unit and leaves the state and self-sufficiency out of the summary. `idle_below`, `hide_consumers_below` and the rules then read that unit too. Every sensor of the tree should report the same unit.
+The tree works for any flow. When the first sensor reports a unit other than power, such as a water flow in L/min, the card shows every value in that unit and leaves the state and self-sufficiency out of the summary. `idle_below` (then 0 unless given), `hide_consumers_below` and the rules read that unit too. Every sensor of the tree should report the same unit.
 
 ::: live
 
@@ -268,7 +268,7 @@ The card takes the full width of a section and is as tall as its tree. With a fi
 
 ## The visual editor
 
-Home Assistant's card editor shows the title and icon, then the card's options in sections: the home (its sensor, name and icon), the sources and the consumers as lists with a view each, how the tree is drawn (Appearance), the values (idle and kW thresholds, the price for Expensive, the animation's range), the badges, the home's rules (each in a view of its own, on its power in W) and the interactions. A consumer is a device's power sensor with its room, name, icon, colour and threshold (a room's devices as YAML). The pickers offer power sensors (a battery's level: its charge in %). A source is a solar array (its sensor and peak), a battery or a grid connection, measured by one signed sensor or by a pair (charge and discharge, import and export); a grid also takes its price, outage, generator and fuel mix. **Add a source** adds the next one a home usually has. A value left at its default writes nothing, and what the form does not show stays in the YAML as written. Try it in the [Playground](/playground), or with **Edit** under any example.
+Home Assistant's card editor shows the title and icon, then the card's options in sections: the home, the sources and the consumers (each in a view of its own), Appearance, the values (thresholds, the price for **Expensive**, the animation's range), the badges, the home's rules (in W) and the title's tap action. A source is measured by one signed sensor or by a pair; a grid also takes its price, outage, generator and fuel mix. A room's devices stay in YAML. A value left at its default writes nothing, and what the form does not show stays in the YAML as written. Try it in the [Playground](/playground), or with **Edit** under any example.
 
 ## Reference
 

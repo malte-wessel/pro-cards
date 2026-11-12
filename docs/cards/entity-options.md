@@ -2,7 +2,7 @@
 
 ::: info For the weather, power flow and energy flow cards, and the deprecated entity cards
 
-These keys describe an entity in the [weather card](/cards/weather-card)'s sections and in the old `header_entities` (deprecated: the weather, [power flow](/cards/power-flow-card) and [energy flow](/cards/energy-flow-card) cards take `badges` now). The entity cards they were made for are deprecated: the [tile](/cards/tile-card), the [poster](/cards/poster-card) and the [tile group](/cards/tile-group-card) write an entity their own way ([Moving to 3.0](/guide/migrating)).
+These keys describe an entity of the deprecated entity cards, of the [weather card](/cards/weather-card)'s entity sections and of `header_entities` (deprecated on the weather, [power flow](/cards/power-flow-card) and [energy flow](/cards/energy-flow-card) cards, which take `badges` instead). All of them go in 4.0. The [tile](/cards/tile-card), the [poster](/cards/poster-card) and the [tile group](/cards/tile-group-card) write an entity their own way; [Moving to 3.0](/guide/migrating) maps the keys.
 
 :::
 
@@ -82,7 +82,7 @@ entities:
 
 ### Secondary line
 
-`secondary` adds a line under the name on the entity card and the hero lead. Templates make it a status line.
+`secondary` sets the line under the name in tiles, list rows and the hero lead, in place of the rule label. Templates make it a status line.
 
 ::: live
 
@@ -143,15 +143,15 @@ entities:
 
 `rules` is a list; the first entry that matches decides colour, icon, label and card tint. Write them in the order they should be tried.
 
-| Matcher | Matches when                                                                   |
-| ------- | ------------------------------------------------------------------------------ |
-| `below` | the value is numeric and `< below`                                             |
-| `above` | the value is numeric and `>= above`                                            |
-| `state` | the state (or attribute, or value) text equals `state`; quote `"on"` / `"off"` |
+| Matcher | Matches when                                                                                            |
+| ------- | ------------------------------------------------------------------------------------------------------- |
+| `below` | the value is numeric and `< below`                                                                      |
+| `above` | the value is numeric and `>= above`                                                                     |
+| `state` | the shown text (state, attribute or value) or the entity's state equals `state`; quote `"on"` / `"off"` |
 
 Where the label goes depends on the layout: list rows and tiles show it next to the value, as a line under the name; row, column and table items and `header_entities` have one line for the value, so there the label stands in for it, in the rule's colour, and the value stays in the item's tooltip. A `badge` always shows the label in its pill.
 
-A rule may combine `below` and `above` for a range. Numeric rules never match text, so numeric and state rules can share one list. States that no rule matches keep the entity icon and use `primary`, or `grey` for off-like states (`off`, `closed`, `idle`, `standby`, `docked`, `not_home`, `disarmed`, `clear`). An explicit `color` or `icon` on the entity always wins over the rules.
+A rule may combine `below` and `above` for a range. Numeric rules never match text, so numeric and state rules can share one list. States that no rule matches keep the entity icon and take Home Assistant's state colour, else `primary`, or `grey` for off-like states (`off`, `closed`, `idle`, `standby`, `docked`, `not_home`, `disarmed`, `clear`). An explicit `color` or `icon` on the entity always wins over the rules.
 
 ::: live
 
@@ -294,22 +294,22 @@ entities:
 
 `visual` decides how the entity is drawn. Every visual uses the same value, rules, colour and actions; it only changes the picture. Three of them (`sparkline`, `columns`, `strip`) read the recorder history for the card's [history window](#history-window). The table lists which keys each visual reads; the sections below show them one by one.
 
-| Visual      | Draws                                                              | Options                                    | Drawn in               |
-| ----------- | ------------------------------------------------------------------ | ------------------------------------------ | ---------------------- |
-| `icon`      | the entity icon in a coloured circle (or alone, `icon_style`)      | `icon_style`                               | everywhere             |
-| `ring`      | a progress ring around the icon (grid cells: around the value)     | `min` / `max`                              | everywhere but headers |
-| `gauge`     | a half-circle gauge with the value inside and `min` / `max` labels | `min` / `max`                              | tile, list, grid, hero |
-| `bar`       | a horizontal progress bar under the value                          | `min` / `max`                              | tile, list, grid, hero |
-| `sparkline` | a smoothed line of the last `hours_to_show` hours                  | `hours_to_show`                            | tile, list, grid, hero |
-| `columns`   | one bar per `bucket_minutes` bucket, peak highlighted              | `hours_to_show`, `bucket_minutes`          | tile, list, grid, hero |
-| `badge`     | a coloured pill with the rule label or the value                   | `rules[].label`                            | everywhere             |
-| `strip`     | a timeline coloured by the matching rule per bucket                | `hours_to_show`, `bucket_minutes`, `rules` | tile, list, grid, hero |
+| Visual      | Draws                                                              | Options                                    | Drawn in                       |
+| ----------- | ------------------------------------------------------------------ | ------------------------------------------ | ------------------------------ |
+| `icon`      | the entity icon in a coloured circle (or alone, `icon_style`)      | `icon_style`                               | everywhere                     |
+| `ring`      | a progress ring around the icon (grid cells: around the value)     | `min` / `max`                              | everywhere                     |
+| `gauge`     | a half-circle gauge with the value inside and `min` / `max` labels | `min` / `max`                              | tile, list, grid, hero         |
+| `bar`       | a horizontal progress bar under the value                          | `min` / `max`                              | tile, list, grid, hero, header |
+| `sparkline` | a smoothed line of the last `hours_to_show` hours                  | `hours_to_show`, `smoothing_minutes`       | tile, list, grid, hero, header |
+| `columns`   | one bar per `bucket_minutes` bucket, peak highlighted              | `hours_to_show`, `bucket_minutes`          | tile, list, grid, hero         |
+| `badge`     | a coloured pill with the rule label or the value                   | `rules[].label`                            | everywhere                     |
+| `strip`     | a timeline coloured by the matching rule per bucket                | `hours_to_show`, `bucket_minutes`, `rules` | tile, list, grid, hero         |
 
-"Everywhere" includes the compact items of the row, column and table layouts; header entities draw the badge visuals. See [Visuals in items and headers](#visuals-in-items-and-headers) for them and for what happens to the others there.
+"Everywhere" includes the compact items of the row, column and table layouts and the header entities. See [Visuals in items and headers](#visuals-in-items-and-headers) for how they draw there.
 
 ### Icon
 
-The default. The icon sits in a soft circle of the entity's colour, the value and the rule label follow. Where the icon and colour come from, in this order: a fixed `icon` / `color` on the entity, the first matching rule, the entity's own icon (or one derived from its `device_class`), and `primary`, or `grey` for off-like states such as `off`, `closed`, `idle` or `not_home`. Use it whenever the value itself is the message and rules only need to flag it.
+The default. The icon sits in a soft circle of the entity's colour, the value and the rule label follow. Icon and colour come from, in this order: a fixed `icon` / `color` on the entity, the first matching rule, the entity's own icon and Home Assistant's state colour, else `primary`, or `grey` for off-like states such as `off`, `closed`, `idle` or `not_home`. Use it whenever the value itself is the message and rules only need to flag it.
 
 ::: live
 
@@ -352,7 +352,7 @@ The default. The icon sits in a soft circle of the entity's colour, the value an
 
 The thermostat tile shows the override: a fixed `icon` or `color` on the entity wins over the rules, which then only contribute the label.
 
-`icon_style: plain` draws the icon without its circle, in the same place and at the same size, so plain and circled entities line up. It works in every layout and with `ring`, where only the fill inside the ring goes. A lead toggle that is off loses its grey circle too and shows a grey icon. A [control on the icon](/cards/entity-controls#where-a-control-sits) that is a button (Run, a confirmed hold) keeps its circle, since that is what marks it as a button.
+`icon_style: plain` draws the icon without its circle, in the same place and at the same size, so plain and circled entities line up. It works in every layout and with `ring`, where only the fill inside the ring goes. A [control on the icon](/cards/entity-controls#where-a-control-sits) that is a button (Run, a confirmed hold) keeps its circle, since that is what marks it as a button.
 
 ::: live
 
@@ -446,7 +446,7 @@ A progress ring around the icon. Progress is `(value − min) / (max − min)`; 
 
 :::
 
-In a `grid` layout the ring grows and the value moves inside it, replacing the icon. Rings also work in row, column and table items, but not in `header_entities`, where they show as a plain icon.
+In a `grid` layout the ring grows and the value moves inside it, replacing the icon. Rings also work in row, column and table items and in `header_entities`, where a thin ring goes around the icon.
 
 ::: live
 
@@ -486,7 +486,7 @@ entities:
 
 ### Gauge
 
-A half-circle gauge below the name with the formatted value in the arc and `min` and `max` printed as small labels at its ends. Same scale rules as the ring: `min` / `max` from the config, else from the entity attributes, else 0 to 100. The gauge is a block visual: it needs the extra height of a tile, list row, grid cell or hero lead, and the entity card switches to `rows: auto` for it.
+A half-circle gauge below the name with the formatted value in the arc and `min` and `max` printed as small labels at its ends. Same scale rules as the ring: `min` / `max` from the config, else from the entity attributes, else 0 to 100. The gauge is a block visual: it is drawn in a tile, list row, grid cell or hero lead.
 
 ::: live
 
@@ -610,7 +610,7 @@ In a card given more height (fixed rows, a taller card beside it) a `sparkline` 
 
 ### Sparkline
 
-A smoothed line with a soft area below it and a dot at the last value, for temperatures, prices and anything else that drifts. It reads `hours_to_show` and `smoothing_minutes`: each point of the line is the mean of the history in its bucket, one point per 12 px of width unless `smoothing_minutes` sets the bucket in minutes, so sensor noise does not show as a zigzag. The line runs from edge to edge through the means, so its dot shows the mean of the last bucket; the value in the row stays the current reading. `bucket_minutes` has no effect, and the vertical scale fits the data (with 10 % padding), so `min` / `max` are ignored too. Colour comes from the current value's rule or the fixed `color`; the whole line takes that colour.
+A smoothed line with a soft area below it and a dot at the last value, for temperatures, prices and anything else that drifts. Each point is the mean of its bucket (one per 12 px of width, or `smoothing_minutes`), so sensor noise does not show as a zigzag; the dot shows the last bucket's mean, while the row's value stays the current reading. The vertical scale fits the data, so `bucket_minutes`, `min` and `max` do nothing here. The whole line takes the current value's rule colour or the fixed `color`.
 
 ::: live
 
@@ -877,11 +877,11 @@ entities:
 
 ### Visuals in items and headers
 
-The row, column and table layouts show every entity as a compact item, and `header_entities` sit on the title line. There is no room for a block there, so items draw `icon`, `ring` and `badge` only. The header line draws badges: `icon`, `ring` (around the icon), `bar` (beside the value), `sparkline` (in the icon's place, over the card's `hours_to_show`), `trend` (the change over `trend_hours`, 1 by default), `count` (how many members of a group are on), `dot` (in the icon's place) and `badge` (a soft pill); `control: toggle` adds a switch. The [heading card](/cards/heading-card) and the v3 cards write their badges another way ([a poster's badge keys](/cards/badges#badge-keys)). Any other visual on such an entity falls back to `icon` and logs a warning in the browser console. `show_icon`, `show_value` and `show_name` decide what the item shows; see [Item options](#item-options).
+The row, column and table layouts show every entity as a compact item, and `header_entities` sit on the title line. Items draw `icon`, `ring` and `badge` only. Header entities are badges: `icon`, `ring` (around the icon), `bar` (beside the value), `sparkline` (in the icon's place, over the card's `hours_to_show`), `trend` (the change over `trend_hours`, 1 by default), `count` (how many members of a group are on), `dot` (in the icon's place) and `badge` (a soft pill); `control: toggle` adds a switch. The [heading card](/cards/heading-card) and the v3 cards write their badges another way ([a poster's badge keys](/cards/badges#badge-keys)). Any other visual on such an entity falls back to `icon` and logs a warning in the browser console. `show_icon`, `show_value` and `show_name` decide what the item shows; see [Item options](#item-options).
 
 ## Actions
 
-`tap_action`, `hold_action` and `double_tap_action` accept every Home Assistant action: `more-info` (default for tap and hold), `toggle`, `navigate`, `url`, `perform-action` (also `call-service`), `assist`, `fire-dom-event` and `none`. Set them on the card as defaults or per entity, as an object or as a bare action name (`tap_action: toggle`). The card only detects the gesture; Home Assistant runs the action, so you get its confirmation dialog, haptic feedback in the companion app and any action HA adds later. `confirmation` asks before running; the [controls](/cards/entity-controls) never ask (use `control_confirm: true` for a hold to confirm) and call their own services.
+`tap_action`, `hold_action` and `double_tap_action` accept every Home Assistant action: `more-info` (default for tap and hold), `toggle`, `navigate`, `url`, `perform-action` (also `call-service`), `assist`, `fire-dom-event` and `none`. Set them on the card as defaults or per entity, as an object or as a bare action name (`tap_action: toggle`). Home Assistant runs the action, so you get its confirmation dialog and haptic feedback in the companion app. `confirmation` asks before running; the [controls](/cards/entity-controls) never ask (use `control_confirm: true` for a hold to confirm) and call their own services.
 
 ::: live
 
@@ -973,7 +973,7 @@ entities:
 
 ### Hover
 
-`hover: true` shows what a click will do, as Home Assistant's tile does. Set it on an entity, or on the card or a section as the default for its entities, as with the actions: the closest one wins, so `hover: false` on one entity leaves it out. A tile, a grid cell or a header entity with an action takes a light layer in its colour under the pointer and, while pressed, a ripple that grows from where you press, as Home Assistant's; a tile is one button, as on Home Assistant's tile card, and the layer fills it. List rows, heroes and table fields keep still. An icon with its own action (`control_position: lead`, the items of a row layout, the power flow's nodes) brightens its circle instead, and a pressed lead toggle grows a little. Every [control](/cards/entity-controls) answers too, as Home Assistant's control buttons do: a button and a chip ripple; a segment, the switch and the select take a light layer over their own colour, the slider a halo around its knob. Over a control the row's layer gives way to the control's. Touch screens show only the press. `hover` is off by default on these cards (the [tile](/cards/tile-card) and [poster](/cards/poster-card) cards answer by default) and changes nothing else, except on header entities: a badge is a button, as Home Assistant's badges are, so it answers whenever it has an action; `hover: false` on the entity or the card keeps it still.
+`hover: true` shows what a click will do, as Home Assistant's tile does. Set it on an entity, or on the card or a section as the default for its entities, as with the actions: the closest one wins, so `hover: false` on one entity leaves it out. A tile, a grid cell or a header entity with an action takes a light layer in its colour under the pointer and a ripple while pressed. List rows, heroes and table fields keep still. An icon with its own action (`control_position: lead`, the items of a row layout) brightens its circle instead. Every [control](/cards/entity-controls) answers too, as Home Assistant's control buttons do; over a control the row's layer gives way to the control's. Touch screens show only the press. `hover` is off by default on these cards, except on header entities: a badge is a button, as Home Assistant's badges are, so it answers whenever it has an action unless `hover: false` is set on the entity or the card.
 
 ::: live
 
@@ -1042,27 +1042,27 @@ All keys an entity accepts, grouped by what they do. "Applies to" names the visu
 
 ### Identity and value
 
-| Option              | Default       | Applies to      | Description                                                                                                                                |
-| ------------------- | ------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `entity`            |               | all             | Entity id. Optional when `value` is plain text or a template, or for a row of [your own buttons](/cards/entity-controls#your-own-buttons). |
-| `name`              | friendly name | all             | Text or template.                                                                                                                          |
-| `secondary`         |               | tile, hero lead | Line under the name instead of the value and label. Template allowed.                                                                      |
-| `attribute`         |               | all             | Show this attribute instead of the state (`hvac_mode` shows a thermostat's mode, which HA keeps in the state).                             |
-| `value`             |               | all             | A template or plain text instead of the state; see [Value and attribute](#value-and-attribute).                                            |
-| `unit`              | entity unit   | all             | Unit text after the value.                                                                                                                 |
-| `decimals`          | as reported   | all             | 0 to 3.                                                                                                                                    |
-| `prefix` / `suffix` |               | all             | Text around the value.                                                                                                                     |
+| Option              | Default       | Applies to            | Description                                                                                                                                |
+| ------------------- | ------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `entity`            |               | all                   | Entity id. Optional when `value` is plain text or a template, or for a row of [your own buttons](/cards/entity-controls#your-own-buttons). |
+| `name`              | friendly name | all                   | Text or template.                                                                                                                          |
+| `secondary`         |               | tile, list, hero lead | Line under the name in place of the rule label (on a tile also of the value). Template allowed.                                            |
+| `attribute`         |               | all                   | Show this attribute instead of the state (`hvac_mode` shows a thermostat's mode, which HA keeps in the state).                             |
+| `value`             |               | all                   | A template or plain text instead of the state; see [Value and attribute](#value-and-attribute).                                            |
+| `unit`              | entity unit   | all                   | Unit text after the value.                                                                                                                 |
+| `decimals`          | as reported   | all                   | 0 to 3.                                                                                                                                    |
+| `prefix` / `suffix` |               | all                   | Text around the value.                                                                                                                     |
 
 ### Look
 
-| Option                | Default     | Applies to | Description                                                                                                                                                                             |
-| --------------------- | ----------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `visual`              | `icon`      | all        | `icon`, `ring`, `gauge`, `bar`, `sparkline`, `columns`, `badge` or `strip`; see [Visuals](#visuals). Block visuals fall back to `icon` in items and headers.                            |
-| `icon`                | entity icon | all        | Fixed icon that overrides rule icons. Template allowed.                                                                                                                                 |
-| `icon_style`          | `circle`    | all        | `circle` draws the icon in a soft circle of its colour, `plain` the icon alone; see [Icon](#icon). Header items have no circle, so it changes nothing there.                            |
-| `show_entity_picture` | `false`     | all        | The entity's picture (a person's photo) in place of its icon; an entity without one keeps its icon. See [Picture](#picture).                                                            |
-| `color`               | HA state    | all        | Fixed colour that overrides rule colours. Without it the entity uses Home Assistant's state colour (see the [colour guide](/guide/colours)), plain sensors `primary`. Template allowed. |
-| `rules`               |             | all        | List of `{ state, below, above, color, icon, label, tint_card }`, first match wins; see [Rules](#rules). `below` and `above` may be numeric strings.                                    |
+| Option                | Default     | Applies to | Description                                                                                                                                                                                           |
+| --------------------- | ----------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `visual`              | `icon`      | all        | `icon`, `ring`, `gauge`, `bar`, `sparkline`, `columns`, `badge` or `strip`, and on header entities `trend`, `count` or `dot`; see [Visuals](#visuals). What a place cannot draw falls back to `icon`. |
+| `icon`                | entity icon | all        | Fixed icon that overrides rule icons. Template allowed.                                                                                                                                               |
+| `icon_style`          | `circle`    | all        | `circle` draws the icon in a soft circle of its colour, `plain` the icon alone; see [Icon](#icon). Header items have no circle, so it changes nothing there.                                          |
+| `show_entity_picture` | `false`     | all        | The entity's picture (a person's photo) in place of its icon; an entity without one keeps its icon. See [Picture](#picture).                                                                          |
+| `color`               | HA state    | all        | Fixed colour that overrides rule colours. Without it the entity uses Home Assistant's state colour (see the [colour guide](/guide/colours)), plain sensors `primary`. Template allowed.               |
+| `rules`               |             | all        | List of `{ state, below, above, color, icon, label, tint_card }`, first match wins; see [Rules](#rules). `below` and `above` may be numeric strings.                                                  |
 
 ### Scale
 
@@ -1084,12 +1084,12 @@ These keys sit on the card, not on the entity, and apply to every history visual
 
 See [Controls](/cards/entity-controls) for what every control looks like and where it sits.
 
-| Option                                             | Default                          | Applies to      | Description                                                                                                                                                                                                                                                                                                                                                 |
-| -------------------------------------------------- | -------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `control`                                          |                                  | all but headers | `auto` (or `true`) picks the domain default, a name picks one, `none` draws nothing. `control_position`, `control_attribute`, `control_step`, `control_options` and `control_confirm` tune it: see [Controls](/cards/entity-controls#one-key); `control: buttons` with `control_options` draws [your own buttons](/cards/entity-controls#your-own-buttons). |
-| `toggle`                                           | `false`                          | all but headers | Deprecated alias of `control: toggle`.                                                                                                                                                                                                                                                                                                                      |
-| `tap_action` / `hold_action` / `double_tap_action` | card defaults                    | all             | Per-entity overrides, see [Action options](#action-options).                                                                                                                                                                                                                                                                                                |
-| `hover`                                            | card / section default (`false`) | all             | Home Assistant's hover and press layers on the entity's tile, cell or header item (on by default for header items), its icon and its controls, see [Hover](#hover).                                                                                                                                                                                         |
+| Option                                             | Default                          | Applies to | Description                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------------------------------------------------- | -------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `control`                                          |                                  | all        | `auto` (or `true`) picks the domain default (header entities: a switch only), a name picks one, `none` draws nothing. `control_position`, `control_attribute`, `control_step`, `control_options` and `control_confirm` tune it: see [Controls](/cards/entity-controls#one-key); `control: buttons` with `control_options` draws [your own buttons](/cards/entity-controls#your-own-buttons). |
+| `toggle`                                           | `false`                          | all        | Deprecated alias of `control: toggle`.                                                                                                                                                                                                                                                                                                                                                       |
+| `tap_action` / `hold_action` / `double_tap_action` | card defaults                    | all        | Per-entity overrides, see [Action options](#action-options).                                                                                                                                                                                                                                                                                                                                 |
+| `hover`                                            | card / section default (`false`) | all        | Home Assistant's hover and press layers on the entity's tile, cell or header item (on by default for header items), its icon and its controls, see [Hover](#hover).                                                                                                                                                                                                                          |
 
 ### Items
 
@@ -1104,4 +1104,4 @@ See [Controls](/cards/entity-controls) for what every control looks like and whe
 | ------------ | ------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `visibility` |         | entities in groups, headers | Drawn only while every condition holds (Home Assistant's conditions); a condition without `entity` reads this one. See [Visibility](/guide/visibility). |
 
-Every card also accepts the Home Assistant keys `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`; see [Sizing in sections](/guide/sizing). On the card itself `visibility` is Home Assistant's and hides the whole card. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height). `hover: true` shows Home Assistant's hover and press layers on what a click runs, for every entity or, set on an entity, for that one; see [Hover](#hover).
+Every card also accepts the Home Assistant keys `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`; see [Sizing in sections](/guide/sizing). On the card itself `visibility` is Home Assistant's and hides the whole card. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height).

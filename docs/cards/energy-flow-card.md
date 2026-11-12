@@ -22,7 +22,7 @@ sources:
 
 :::
 
-Over a period a battery both charges and discharges, and a grid both imports and exports, so their nodes show both values, in `↓` and out `↑`. `soc` draws the battery's charge as it is now. Without `home` the card adds the sources up. The flows split the way Home Assistant's Energy dashboard splits them, hour by hour for a day and day by day for longer periods. A battery with `charge_from: solar` (or the entities of some solar sources) takes only the panels' energy.
+Over a period a battery both charges and discharges, and a grid both imports and exports, so their nodes show both values, in `↓` and out `↑`. `soc` draws the battery's charge as it is now. Without `home` the card adds the sources up. The flows split the way Home Assistant's Energy dashboard splits them: hour by hour for a day, day by day for a week or a month, month by month for a year. A battery with `charge_from: solar` (or the entities of some solar sources) takes only the panels' energy.
 
 The line above the tree names what the grid imported and exported and how self-sufficient the home was. Meters that count something else, such as water in m³, show in the unit of the card's first meter, and the line leaves those out.
 
@@ -160,7 +160,7 @@ consumers:
 
 ## The visual editor
 
-Home Assistant's card editor shows the same form as the [power flow card's](/cards/power-flow-card#the-visual-editor), with energy meters in place of power sensors: the period and its picker at the top (with the energy dashboard's date picker to follow for **As the energy dashboard**), the home, the sources and the consumers, the drawing and the values in kWh, each source in a view of its own: a solar array's meter, a battery's charge and discharge meters with its level, a grid's import and export. Try it in the [Playground](/playground), or with **Edit** under any example.
+Home Assistant's card editor shows the same form as the [power flow card's](/cards/power-flow-card#the-visual-editor), with energy meters in place of power sensors and the values in kWh, and the period and its picker at the top (with the `collection_key` to follow for **As the energy dashboard**). Try it in the [Playground](/playground), or with **Edit** under any example.
 
 ## Reference
 

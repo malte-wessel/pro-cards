@@ -6,7 +6,7 @@ The wind card is deprecated: it still works in 3.0 and goes in 4.0. Use a poster
 
 :::
 
-`custom:wind-card-pro` shows the wind: its speed, where it comes from and how hard it gusts, with an animated wind field whose particles travel where the wind blows. The speed sets their pace, the gusts raise the waves and send streaks across, and your `rules` colour them, label the value and may tint the card. Without options it is a tile like the [entity card](/cards/entity-card); `visual: flow` makes the whole tile the field, `layout: hero` adds the big value and a flow band. YAML only.
+`custom:wind-card-pro` shows the wind's speed, where it comes from and how hard it gusts, with an animated wind field whose particles travel where the wind blows. The speed sets their pace, the gusts raise the waves, and your `rules` colour them. Without options it is a tile; `visual: flow` makes the whole tile the field, `layout: hero` adds the big value and a flow band. YAML only.
 
 ## Tile
 
@@ -39,7 +39,7 @@ entity: weather.home
 
 ## Flow tile
 
-`visual: flow` turns the tile into the animated field with the arrow and the texts on top. A full-width tile shows the name, the rule label with the gusts and the big value; a half-width tile keeps to the name and "speed · direction".
+`visual: flow` turns the tile into the animated field with the arrow and the texts on top. A wide tile shows the name, the rule label with the gusts and the big value; a narrow one the name and "speed · direction".
 
 ::: live
 
@@ -56,7 +56,7 @@ rules:
 
 :::
 
-`flow.style` picks the animation: `dots` (packets of three dots on wave lanes, the default), `lines` (streamlines like a wind map), `swoosh` (curly strokes drawing themselves, like the wind icon come alive) or `vectors` (small arrows turning with their lanes).
+`flow.style` picks the animation: `dots` (the default), `lines` (streamlines like a wind map), `swoosh` (curly strokes) or `vectors` (small arrows).
 
 ::: live
 
@@ -102,7 +102,7 @@ rules:
 
 ## Hero
 
-`layout: hero` shows the big value with the label, the direction and the gusts on the second line, then the flow band with a chip that names the direction. `flow.height` sets the band's height (40 to 400 px, default 120); given more height (fixed rows, a taller card beside it), the band fills the card instead ([Filling the height](/guide/sizing#filling-the-height)). `title`, `icon` and `header_entities` add a header like every entity card.
+`layout: hero` shows the big value with the label, the direction and the gusts, then the flow band with a chip that names the direction. `flow.height` sets the band's height (40 to 400 px, default 120); given more height, the band fills the card ([Filling the height](/guide/sizing#filling-the-height)). `title`, `icon` and `header_entities` add a header.
 
 ::: live
 
@@ -126,11 +126,9 @@ rules:
 
 :::
 
-For the wind as a poster, with the speed large and the field behind it, see the [wind poster](/cards/kinds#wind) (`variant: lines`).
-
 ## Rules and colours
 
-`rules` work on the speed like the [entity rules](/cards/entity-options#rules): `below` / `above` thresholds in the sensor's unit, first match wins. The matching rule's `color` paints the particles, the lead, the label and the chip's arrow; its `label` is the pill of the tile and the accent of the second line; `tint_card: true` tints the whole card. A fixed `color` overrides the rules. Without any rule the field takes the primary colour.
+`rules` work on the speed like the [entity rules](/cards/entity-options#rules): `below` / `above` in the sensor's unit, first match wins. The rule's `color` paints the particles, the lead and the label; its `label` is the tile's pill and the accent of the second line; `tint_card: true` tints the whole card. A fixed `color` overrides the rules; without either the field is in the primary colour.
 
 ::: live
 
@@ -155,9 +153,9 @@ For the wind as a poster, with the speed large and the field behind it, see the 
 
 ## Lead, density and motion
 
-`lead: arrow` puts the direction arrow in the round lead instead of the animation (a flow tile always shows the arrow). `flow.density` sets how many particles cross the field: `sparse`, `normal` or `dense`. Speeds in m/s, mph, kn and ft/s drive the animation the same way as km/h, and a Beaufort force by the speed it stands for; the value is shown as the sensor reports it.
+`lead: arrow` puts the direction arrow in the round lead instead of the animation (a flow tile always shows the arrow). `flow.density` sets how many particles cross the field: `sparse`, `normal` or `dense`; `sparse` suits dashboards with many wind cards. Speeds in km/h, m/s, mph, kn, ft/s or Beaufort all drive the animation alike; the value is shown as the sensor reports it.
 
-The animation is CSS only, keeps flowing through sensor updates (a new speed changes its pace, a new direction turns the field smoothly, only a real change in the gusts redraws the waves) and pauses when your system asks for reduced motion (`prefers-reduced-motion`), leaving a still field. A `dense` field on a wide card is the heaviest choice; `sparse` suits dashboards with many wind cards.
+The animation keeps flowing through sensor updates and pauses, leaving a still field, when your system asks for reduced motion.
 
 ::: live
 
@@ -178,7 +176,7 @@ The animation is CSS only, keeps flowing through sensor updates (a new speed cha
 
 ## Hover
 
-`hover: true` shows what a click will do, as Home Assistant's tile does: a tile takes a light layer under the pointer, over the whole card, and a stronger one while pressed; header entities do too. A hero keeps still, as the heroes of the entity cards do. See [Hover](/cards/entity-options#hover).
+`hover: true` shows what a click will do, as Home Assistant's tile does: a light layer over the tile under the pointer, a stronger one while pressed; header entities do too, a hero keeps still. See [Hover](/cards/entity-options#hover).
 
 ::: live
 
@@ -202,24 +200,24 @@ The animation is CSS only, keeps flowing through sensor updates (a new speed cha
 
 ### Card options
 
-| Option              | Default                   | Description                                                                                                                                                                                     |
-| ------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entity`            | required                  | The wind speed sensor (`sensor.*`), or a weather entity (`weather.*`) whose `wind_speed`, `wind_bearing` and `wind_gust_speed` are read.                                                        |
-| `direction`         | –                         | Direction sensor: degrees or a compass point in English (`N`, `NNE` …). Overrides the weather entity's bearing.                                                                                 |
-| `gust`              | –                         | Gust speed sensor. Overrides the weather entity's gusts.                                                                                                                                        |
-| `name`, `secondary` | friendly name / see above | The first line and the line under it; templates allowed. `secondary` replaces the generated line.                                                                                               |
-| `color`             | –                         | Fixed colour; overrides the rules.                                                                                                                                                              |
-| `decimals`          | sensor                    | Decimals of the speed.                                                                                                                                                                          |
-| `rules`             | –                         | `[{ below, above, color, label, tint_card }]` on the speed; first match wins.                                                                                                                   |
-| `layout`            | `tile`                    | `tile` or `hero`.                                                                                                                                                                               |
-| `visual`            | `icon`                    | Tile: `flow` makes the whole tile the animated field.                                                                                                                                           |
-| `lead`              | `animated`                | The round lead: `animated` (the flow style, small) or `arrow`.                                                                                                                                  |
-| `icon_style`        | `circle`                  | `plain` draws the arrow lead (`lead: arrow`) without its circle; the animated lead keeps it.                                                                                                    |
-| `flow`              | see below                 | The animation options.                                                                                                                                                                          |
-| `title`, `icon`     | –                         | Header, templates allowed. `header_entities` as in the [group card](/cards/entity-group-card#header-entities).                                                                                  |
-| `title_tap_action`  | none                      | Action when the title or its icon is tapped, e.g. `{ action: navigate, navigation_path: /dashboard-rooms/kitchen }` to open the room's dashboard; see [Actions](/cards/entity-options#actions). |
-| `tap_action` …      | `more-info`               | `tap_action`, `hold_action`, `double_tap_action` on the lead row.                                                                                                                               |
-| `hover`             | `false`                   | Home Assistant's hover and press layers on the tile; see [Hover](#hover).                                                                                                                       |
+| Option              | Default                      | Description                                                                                                                                                                                     |
+| ------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entity`            | required                     | The wind speed sensor (`sensor.*`), or a weather entity (`weather.*`) whose `wind_speed`, `wind_bearing` and `wind_gust_speed` are read.                                                        |
+| `direction`         | –                            | Direction sensor: degrees or a compass point in English (`N`, `NNE` …). Overrides the weather entity's bearing.                                                                                 |
+| `gust`              | –                            | Gust speed sensor. Overrides the weather entity's gusts.                                                                                                                                        |
+| `name`, `secondary` | friendly name / see above    | The first line and the line under it; templates allowed. `secondary` replaces the generated line.                                                                                               |
+| `color`             | –                            | Fixed colour; overrides the rules.                                                                                                                                                              |
+| `decimals`          | sensor                       | Decimals of the speed.                                                                                                                                                                          |
+| `rules`             | –                            | `[{ below, above, color, label, tint_card }]` on the speed; first match wins.                                                                                                                   |
+| `layout`            | `tile`                       | `tile` or `hero`.                                                                                                                                                                               |
+| `visual`            | `icon`                       | Tile: `flow` makes the whole tile the animated field.                                                                                                                                           |
+| `lead`              | `animated`                   | The round lead: `animated` (the flow style, small) or `arrow`.                                                                                                                                  |
+| `icon_style`        | `circle`                     | `plain` draws the arrow lead (`lead: arrow`) without its circle; the animated lead keeps it.                                                                                                    |
+| `flow`              | see below                    | The animation options.                                                                                                                                                                          |
+| `title`, `icon`     | –                            | Header, templates allowed. `header_entities` as in the [group card](/cards/entity-group-card#header-entities).                                                                                  |
+| `title_tap_action`  | none                         | Action when the title or its icon is tapped, e.g. `{ action: navigate, navigation_path: /dashboard-rooms/kitchen }` to open the room's dashboard; see [Actions](/cards/entity-options#actions). |
+| `tap_action` …      | more-info / more-info / none | `tap_action`, `hold_action`, `double_tap_action` on the lead row.                                                                                                                               |
+| `hover`             | `false`                      | Home Assistant's hover and press layers on the tile; see [Hover](#hover).                                                                                                                       |
 
 ### Flow options
 
@@ -229,4 +227,4 @@ The animation is CSS only, keeps flowing through sensor updates (a new speed cha
 | `density` | `normal` | `sparse`, `normal` or `dense`: the lanes and particles of the field.                   |
 | `height`  | `120`    | Height of the hero's flow band in px (40 to 400). The flow tile's band fills the tile. |
 
-The tile takes half a section (6 columns) and one row, two with a header; the hero takes the full width and sizes to its content. The card renders the current states only; direction strings are read in English as Home Assistant's integrations report them.
+The tile takes 6 columns, the hero 12; both size to their content (a tile at least one row, two with a header). The card shows the current states only.

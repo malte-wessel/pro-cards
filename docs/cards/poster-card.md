@@ -2,17 +2,13 @@
 
 `custom:poster-card-pro` draws one entity as a poster: its value large, with room for a picture, a plot or an animation. Use it for the few things that deserve the space; the [tile](/cards/tile-card) draws the same entities smaller.
 
-::: info Beta
-The poster card is new in 3.0 and in beta: its options may still change.
-:::
-
 ## The parts
 
 A poster is half a section wide and three rows high. Its content sits at the bottom of whatever height it gets:
 
 - the **icon** at the top left: the entity's icon or picture, or the kind's own drawing.
 - the **badges** at the top right. The first is the **status badge**: the kind's status or the matching rule's.
-- the **name** in small capitals, the large **value**, and a line under it with what the kind adds.
+- the **name** in capitals, the large **value**, and a line under it with what the kind adds.
 - the **controls** beside the value, or under it on a narrow card: a light's switch and dimmer, a thermostat's stepper.
 - the **visual**: along the bottom (a plot of the last hours, the forecast, a battery's segments) or behind it all (a light's glow, a picture, the wind's animation).
 
@@ -118,7 +114,7 @@ While its entity is unavailable, a poster draws a dash for the value, its status
 
 ## The visual editor
 
-Home Assistant's card editor shows a form for the poster. It starts with what the poster shows: the entity as it is, texts of your own (no entity), or a kind; under it the entity, offering only those that fit the kind, and the other entities the kind reads. A kind the entity does not fit waits for one that does, as does a cleared entity for the next one: the YAML stays as it was until you pick one. Then come the name, the value (what it shows, how it is written, its range), the status, the appearance (the colour, then the icon and the visual under headings of their own), the layout (filling the height), the controls, the badges, the rules and the interactions (the card's taps, then the icon's). It offers only what applies, and a field left alone keeps the kind's default and writes nothing to the YAML. The badges, the rules, a trend's lines and a control's options or buttons are lists: a row each, saying what it shows or when it matches, and its form in a view of its own (a back arrow returns). A trend line's form has its own rules (its colour by its value) and conditions for when it shows. A badge's form starts the same way, with what it shows (the entity as it is, a text of your own, or a kind whose colours it takes; an empty entity reads the poster's), then its name, value, appearance, visual, switch, actions and its own rules, each rule opening on top of the badge. Try it in the [Playground](/playground), or with **Edit** under any example.
+Home Assistant's card editor shows a form for the poster. It starts with what the poster shows: the entity as it is, texts of your own (no entity), or a kind; then the entity, offering only those that fit the kind, and the other entities the kind reads. While the entity does not fit the kind, or is cleared, the YAML stays as it was. Sections follow for the name, the value, the status, the appearance (the colour, the icon, the visual), the layout (filling the height), the controls, the badges, the rules and the interactions (the card's taps, then the icon's). The form offers only what applies, and a field left alone keeps the kind's default and writes nothing to the YAML. The badges, the rules, a trend's lines and a control's options are lists: a row each, opening its own form (a back arrow returns); a badge's form reads the poster's entity where its own is empty. Try it in the [Playground](/playground), or with **Edit** under any example.
 
 Coming from the entity card? [Moving to 3.0](/guide/migrating) maps its keys to the poster's.
 
@@ -156,18 +152,18 @@ Coming from the entity card? [Moving to 3.0](/guide/migrating) maps its keys to 
 | `icon`   | the kind's | An icon's name or a template; `{ type: icon \| image \| flow, … }` with its options and its own actions; or `false` for none. See [Look](/cards/look).                                                                                             |
 | `visual` | the kind's | Along the bottom: `sparkline`, `columns`, `strip`, `bar`, `gauge`, `segments`, `sun`. Behind it all: `glow`, `image`, `flow`, and a kind's `cover`, `path` or `line`. A name, `{ type, … }` with its options, or `false`; see [Look](/cards/look). |
 | `color`  | the kind's | The poster's colour: a colour name, a hex or a template. A matching rule's colour wins.                                                                                                                                                            |
-| `rules`  | the kind's | Colour, icon, status, tint and the visual by value or state; the first match wins. Yours replace the kind's, `[]` drops them. See [Look](/cards/look).                                                                                             |
+| `rules`  | the kind's | Colour, icon, status, visual, `tint_card` and `pulse` by value or state; the first match wins. Yours replace the kind's, `[]` drops them. See [Look](/cards/look).                                                                                 |
 
 ### Controls, badges and actions
 
-| Key                 | Default     | Description                                                                                                                                                                                 |
-| ------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `control`           | the kind's  | `auto`, a control's name (`toggle`, `slider`, `stepper`, `segments`, `buttons`, `button`, `select`, `hold`), `false` for none, or `{ type, position, … }`; see [Controls](/cards/controls). |
-| `badges`            | –           | Badges in the corner after the status: entity ids or badges of your own; see [Badges](/cards/badges).                                                                                       |
-| `tap_action`        | `more-info` | What a tap on the poster does; see [Actions & hover](/cards/actions).                                                                                                                       |
-| `hold_action`       | `more-info` | What a hold does.                                                                                                                                                                           |
-| `double_tap_action` | `none`      | What a double tap does.                                                                                                                                                                     |
-| `hover`             | `true`      | Home Assistant's hover and press effects; `false` keeps the poster still.                                                                                                                   |
+| Key                 | Default     | Description                                                                                                                                                                                         |
+| ------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `control`           | the kind's  | `auto`, a control's name (`toggle`, `slider`, `stepper`, `segments`, `buttons`, `button`, `select`, `hold`, `date`), `false` for none, or `{ type, position, … }`; see [Controls](/cards/controls). |
+| `badges`            | –           | Badges in the corner after the status: entity ids or badges of your own; see [Badges](/cards/badges).                                                                                               |
+| `tap_action`        | `more-info` | What a tap on the poster does; see [Actions & hover](/cards/actions).                                                                                                                               |
+| `hold_action`       | `more-info` | What a hold does.                                                                                                                                                                                   |
+| `double_tap_action` | `none`      | What a double tap does.                                                                                                                                                                             |
+| `hover`             | `true`      | Home Assistant's hover and press effects; `false` keeps the poster still.                                                                                                                           |
 
 ### Grid and Home Assistant options
 

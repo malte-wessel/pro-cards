@@ -234,7 +234,7 @@ The light level in lux, its icon and status by how light it is: Dark below 10 lx
 
 ### Doors and windows
 
-`opening`: a binary sensor of class `door`, `window`, `garage_door` or `opening`. Open or Closed with how long it has been, and on the poster a strip along its bottom edge: when it was open in the last 24 hours, amber, where a door opened for a moment still shows. `visual: { variant: timeline }` draws the strip below the texts with its times instead.
+`opening`: a binary sensor of class `door`, `window`, `garage_door` or `opening`. Open or Closed with how long it has been, and on the poster a strip along its bottom edge: when it was open in the last 24 hours. `visual: { variant: timeline }` draws the strip below the texts with its times instead.
 
 ::: live
 
@@ -351,7 +351,7 @@ With a power sensor it is a home battery: while power flows the status says Char
 
 ### Car
 
-`kind: car` on the car's battery shows the charge, with the range beside it. The status says Charging, Plugged in, or where the car is while it is away. The battery's colours apply: orange when low, red when critical. Range, plug, charging and location come from the car's device (`inputs: { range, plugged, charging, location }`); a wallbox's power sensor as `charging` counts as charging above 0 W.
+`kind: car` on the car's battery shows the charge, with the range beside it. The status says Charging, Plugged in, or where the car is while it is away. The battery's colours and its Low and Critical apply. Range, plug, charging and location come from the car's device (`inputs: { range, plugged, charging, location }`); a wallbox's power sensor as `charging` counts as charging above 0 W.
 
 ::: live
 
@@ -372,7 +372,7 @@ With a power sensor it is a home battery: while power flows the status says Char
 
 ### Appliance
 
-An appliance reads a power sensor. Above `running_above` (5 W unless set) it runs: the card shows for how long and the energy of this run. Below it, the card says Off; a power it does not know (unavailable, unknown) shows as any value does, not as Off. Where the device reports more, the kind finds it on the device or takes it from `inputs`: `remaining`, the time left (a duration, or the time it finishes), shown in place of how long it has run; `phase`, its program's phase (Washing, Rinsing …), shown as its status. `appliance` draws a plug; a device with a kind of its own moves while it runs: `pump` and `heat_pump` turn, `washer`, `dryer` and `dishwasher` shake.
+An appliance reads a power sensor. Above `running_above` (5 W unless set) it runs: the card shows for how long and the energy of this run. Below it, the card says Off. Where the device reports more, the kind finds it on the device or takes it from `inputs`: `remaining`, the time left (a duration, or the time it finishes), shown in place of how long it has run; `phase`, its program's phase (Washing, Rinsing …), shown as its status. Each kind draws its device's icon (a plug for `appliance`), which moves while it runs: `pump` and `heat_pump` turn, the others shake.
 
 ::: live
 
@@ -482,7 +482,7 @@ The position, Open, Closed, Opening or Closing, and open, stop and close buttons
 
 ### Lock
 
-Locked or Unlocked; a jammed lock pulses red. Hold the padlock to lock or unlock: a ring fills around it first, so a tap never opens the door by accident.
+Locked or Unlocked; a jammed lock turns red. Hold the padlock to lock or unlock: a ring fills around it first, so a tap never opens the door by accident.
 
 ::: live
 
@@ -533,7 +533,7 @@ The cover art as the icon, blurred behind the card and as its colour. The title 
 
 ### Vacuum and lawn mower
 
-The robot in the icon moves while it works. The value is its state, with the battery and the room where the integration reports them; an error pulses red. Start / pause and back to the dock sit beside it. On a poster its path draws itself across the card (on grass for a mower), and the dock stands there while it is docked; a tile leaves the path out unless you name it.
+The robot in the icon moves while it works. The value is its state, with the battery and the room where the integration reports them; an error turns it red. Start / pause and back to the dock sit beside it. On a poster its path draws itself across the card (on grass for a mower), and the dock stands there while it is docked; a tile leaves the path out unless you name it.
 
 ::: live
 
@@ -569,14 +569,17 @@ Their picture as the icon, and their photo behind the card, blurred. The value i
 
 ## The kinds' rules
 
-Battery, car, air quality, illuminance, wind, rain and weather bring rules of their own: the colours, icons and statuses above. A jammed lock, a triggered alarm, a leak or smoke and a robot with an error pulse red the same way. They apply until the card has `rules` of its own, which replace them as a whole; `rules: []` drops them. The statuses follow the user's language. Copy a set to change one band:
+Battery, car, air quality, illuminance, wind, rain and weather bring rules of their own: the colours, icons and statuses above. A jammed lock, a triggered alarm, a leak or smoke and a robot with an error have one rule each that makes the status badge pulse. The kind's rules apply until the card has `rules` of its own, which replace them as a whole; `rules: []` drops them. The statuses follow the user's language. Copy a set to change one band:
 
 ::: code-group
 
 ```yaml [battery]
 rules:
   - { below: 10, color: red, status: Critical }
-  - { below: 20, color: orange, status: Low }
+  - { below: 20, color: red, status: Low }
+  - { below: 30, color: red }
+  - { below: 70, color: orange }
+  - { above: 70, color: green }
 ```
 
 ```yaml [carbon_dioxide]
@@ -640,26 +643,26 @@ rules:
 
 ```yaml [weather]
 rules:
-  - { state: sunny, color: amber }
-  - { state: clear-night, color: indigo }
-  - { state: partlycloudy, color: light-blue }
-  - { state: cloudy, color: blue-grey }
-  - { state: fog, color: grey }
-  - { state: windy, color: teal }
-  - { state: windy-variant, color: teal }
-  - { state: rainy, color: blue }
-  - { state: pouring, color: indigo }
-  - { state: snowy, color: light-blue }
-  - { state: snowy-rainy, color: light-blue }
-  - { state: hail, color: deep-purple }
-  - { state: lightning, color: deep-orange }
-  - { state: lightning-rainy, color: deep-orange }
-  - { state: exceptional, color: red, pulse: true }
+  - { state: sunny, color: var(--state-weather-sunny-color) }
+  - { state: clear-night, color: var(--state-weather-clear_night-color) }
+  - { state: partlycloudy, color: var(--state-weather-partlycloudy-color) }
+  - { state: cloudy, color: var(--state-weather-cloudy-color) }
+  - { state: fog, color: var(--state-weather-fog-color) }
+  - { state: windy, color: var(--state-weather-windy-color) }
+  - { state: windy-variant, color: var(--state-weather-windy_variant-color) }
+  - { state: rainy, color: var(--state-weather-rainy-color) }
+  - { state: pouring, color: var(--state-weather-pouring-color) }
+  - { state: snowy, color: var(--state-weather-snowy-color) }
+  - { state: snowy-rainy, color: var(--state-weather-snowy_rainy-color) }
+  - { state: hail, color: var(--state-weather-hail-color) }
+  - { state: lightning, color: var(--state-weather-lightning-color) }
+  - { state: lightning-rainy, color: var(--state-weather-lightning_rainy-color) }
+  - { state: exceptional, color: var(--state-weather-exceptional-color), pulse: true }
 ```
 
 :::
 
-The wind's and the rain's own bands follow your sensor's unit. Rules you write read the value as the sensor reports it: for a sensor in m/s, write the thresholds in m/s.
+The kinds' own battery and weather colours are Home Assistant's, so a theme can change them; the battery's set above writes their defaults. The wind's and the rain's own bands follow your sensor's unit. Rules you write read the value as the sensor reports it: for a sensor in m/s, write the thresholds in m/s.
 
 ## Reference
 

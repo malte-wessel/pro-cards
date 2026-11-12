@@ -1,6 +1,6 @@
 # Weather
 
-`custom:weather-card-pro` shows one weather entity, as a tile or as a card built from sections: the current weather large, trend charts and the forecast. For one value drawn large, a [poster of the weather kind](/cards/kinds#weather) is the simpler choice. The card is set up in YAML.
+`custom:weather-card-pro` shows one weather entity, as a tile or as a card built from sections: the current weather large, trend charts and the forecast. For one value drawn large, a [poster of the weather kind](/cards/kinds#weather) is the simpler choice.
 
 ## The tile
 
@@ -145,7 +145,7 @@ sections:
 
 ## Rules and colours
 
-`rules` match the condition (`state: rainy`) and set the colour, the icon and a `status`, or tint the whole card with `tint_card: true`. `temperature_rules` match the temperature with `below` and `above`: they colour the value, the temperature line and the forecast bars, with their `status` beside the high and low. A rule's text was `label` before 3.0; it still works until 4.0, and the console says so once. A `hero`, `trend` or `forecast` section can carry its own `rules` and `temperature_rules`, which replace the card's for that section. The first matching rule wins.
+`rules` match the condition (`state: rainy`) and set the colour, the icon and a `status`, or tint the whole card with `tint_card: true`. `temperature_rules` match the temperature with `below` and `above`: they colour the value, the temperature line and the forecast bars, with their `status` beside the high and low. A `hero`, `trend` or `forecast` section can carry its own `rules` and `temperature_rules`, which replace the card's for that section. The first matching rule wins.
 
 ::: live
 
@@ -199,7 +199,7 @@ sections:
 
 ## The visual editor
 
-Home Assistant's card editor shows the entity, then the card's options in sections: the tile's name and secondary line, the header, the appearance (the colour, the condition icons, their size), the sections, the badges, the rules and the interactions. The rules are the condition's (by its states) and the temperature's (above and below, in its unit), each a list whose rules open in a view of their own (when, its status, colour and icon, how it looks). The sections are a list too, each opening in a view with a form of its type: the lead, a forecast (daily or hourly, rows or columns, the rain figures) or a trend (its window, its lines in order, each with its quantity, name and colour, the layout and axes); an entity section already in the card still edits there, with its defaults in a section of their own. A section's lines, entities and rules open on top of its view. **Add a section** adds one (the lead first), the buttons on a row move or delete it; without sections the card is a tile. A value left at its default writes nothing, and what the form does not show stays in the YAML as written. Try it in the [Playground](/playground), or with **Edit** under any example.
+Home Assistant's card editor shows the entity, then the card's options in sections: the tile's name and secondary line, the header, the appearance (the colour, the condition icons, their size), the sections, the badges, the rules (the condition's and the temperature's) and the interactions. Each section opens in a view with a form of its type; **Add a section** adds one, the hero first. An entity section already in the card still edits there. A value left at its default writes nothing, and what the form does not show stays in the YAML as written. Try it in the [Playground](/playground), or with **Edit** under any example.
 
 ## Reference
 
@@ -235,7 +235,7 @@ Home Assistant's fifteen conditions: the keys of an `icons` map and the `state` 
 | `sections`                  | –                 | The sections, drawn in this order. Without them the card is a tile.                                                  |
 | `name`                      | the friendly name | The tile's name, or the hero's first line. Template allowed.                                                         |
 | `secondary`                 | see description   | The line under the name (tile: temperature · condition; hero: status · high / low). Template allowed.                |
-| `color`                     | the condition's   | A fixed colour for the condition; wins over the rules until 4.0, when a matching rule's colour wins, as on the tile. |
+| `color`                     | `primary`         | A fixed colour for the condition; wins over the rules until 4.0, when a matching rule's colour wins, as on the tile. |
 | `icon_style`                | `circle`          | `plain` draws the tile's and the hero's icon without its circle.                                                     |
 | `decimals`                  | as reported       | Decimals of the temperature, 0 to 3.                                                                                 |
 | `icons`                     | `hass`            | `hass` (Home Assistant's pictures), `mdi`, or a map from condition to an `mdi:` icon or image URL.                   |
@@ -297,7 +297,7 @@ The forecast is the one Home Assistant's own weather card shows, in the entity's
 
 ### Deprecated: entity sections
 
-The `row`, `list`, `table`, `grid` and `column` sections list `entities`: an attribute of the weather entity (`humidity`, `pressure`, `wind_speed`, `wind_gust_speed`, `wind_bearing`, `apparent_temperature`, `dew_point`, `uv_index`, `cloud_coverage`, `visibility`, `ozone`, with a translated name, an icon and the entity's unit) or an entity with the older [entity options](/cards/entity-options). They still work in 3.0, say so once in the browser console, and go in 4.0, with the card options that set them (the first table); put a [tile group](/cards/tile-group-card) beside the card in a layout card instead (see [above](#values-beside-the-weather)).
+The `row`, `list`, `table`, `grid` and `column` sections list `entities`: an attribute of the weather entity (`humidity`, `pressure`, `wind_speed`, `wind_gust_speed`, `wind_bearing`, `apparent_temperature`, `dew_point`, `uv_index`, `cloud_coverage`, `visibility`, `ozone`, with a translated name, an icon and the entity's unit) or an entity with the older [entity options](/cards/entity-options). They still work, say so once in the browser console, and go in 4.0 with the card options that set them (the first table); put a [tile group](/cards/tile-group-card) beside the card in a layout card instead (see [above](#values-beside-the-weather) and [Moving to 3.0](/guide/migrating#the-weather-card)).
 
 | Key                                    | Default             | Description                                                                     |
 | -------------------------------------- | ------------------- | ------------------------------------------------------------------------------- |

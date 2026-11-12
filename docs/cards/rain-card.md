@@ -6,7 +6,7 @@ The rain card is deprecated: it still works in 3.0 and goes in 4.0. Use a poster
 
 :::
 
-`custom:rain-card-pro` shows the rain: how hard it falls now and, with a second sensor, how much fell today. The card animates it in three styles: `drops` fall and splash on the bottom edge, more and faster the harder it rains and slanted by the wind; `ripples` spread where drops land on a puddle; `fill` is a rain gauge whose water rises with today's total. Your `rules` colour the rain, label the value and may tint the card. Without options it is a tile like the [entity card](/cards/entity-card); `visual: flow` makes the whole tile the field, `layout: hero` adds the big value and a band. YAML only.
+`custom:rain-card-pro` shows how hard it rains now and, with a second sensor, how much fell today. It animates the rain in three styles: `drops` fall, more and faster the harder it rains and slanted by the wind; `ripples` spread on a puddle; `fill` is a rain gauge whose water rises with today's total. Your `rules` colour the rain. Without options it is a tile; `visual: flow` makes the whole tile the field, `layout: hero` adds the big value and a band. YAML only.
 
 ## Tile
 
@@ -24,7 +24,7 @@ today: sensor.rain_today
 
 ## Flow tile
 
-`visual: flow` turns the tile into the animated field with the rain icon and the texts on top. A full-width tile shows the name, the rule label with today's total and the big rate; a half-width tile keeps to the name and "rate · total today". `flow.style` picks the animation.
+`visual: flow` turns the tile into the animated field with the rain icon and the texts on top. A wide tile shows the name, the rule label with today's total and the big rate; a narrow one the name and "rate · total today". `flow.style` picks the animation.
 
 ::: live
 
@@ -62,7 +62,7 @@ today: sensor.rain_today
 
 ## Hero
 
-`layout: hero` shows the big rate with the label and today's total on the second line, then the band with a chip that repeats the total. `flow.height` sets the band's height (40 to 400 px, default 120); given more height (fixed rows, a taller card beside it), the band fills the card instead ([Filling the height](/guide/sizing#filling-the-height)). `title`, `icon` and `header_entities` add a header like every entity card. The gauge below is full at 12 mm.
+`layout: hero` shows the big rate with the label and today's total, then the band with a chip that repeats the total. `flow.height` sets the band's height (40 to 400 px, default 120); given more height, the band fills the card ([Filling the height](/guide/sizing#filling-the-height)). `title`, `icon` and `header_entities` add a header. The gauge (`fill`) is full at 12 mm.
 
 ::: live
 
@@ -85,11 +85,9 @@ rules:
 
 :::
 
-For the rain as a poster, with the rate large and the drops behind it, see the [rain poster](/cards/kinds#rain) (`variant: drops`).
-
 ## Wind and direction
 
-`wind` slants the drops with the wind speed (up to 32° at 35 km/h and more; m/s, mph, kn and ft/s are understood) and `direction` says which way: a westerly wind blows them to the right. Without the two the drops fall straight. Ripples and the gauge ignore the wind.
+`wind` slants the drops with the wind speed (up to 32° from about 35 km/h; m/s, mph, kn and ft/s are understood) and `direction` says which way: a westerly wind blows them to the right. Without `wind` the drops fall straight; without `direction` they lean to the right. Ripples and the gauge ignore the wind.
 
 ::: live
 
@@ -106,7 +104,7 @@ layout: hero
 
 ## Rules and colours
 
-`rules` work on the rate like the [entity rules](/cards/entity-options#rules): `below` / `above` thresholds in the sensor's unit, first match wins. The matching rule's `color` paints the rain, the lead and the chip icon; its `label` is the pill of the tile and the accent of the second line; `tint_card: true` tints the whole card. A fixed `color` overrides the rules. Below 0.1 mm/h the card counts as dry: no drops, the icon in the lead. The animation reads the rate in mm/h and the total in mm, whatever the sensors report (in/h, mm/d, in/d; in, cm): the texts stay in the sensor's unit.
+`rules` work on the rate like the [entity rules](/cards/entity-options#rules): `below` / `above` in the sensor's unit, first match wins. The rule's `color` paints the rain, the lead and the chip's icon; its `label` is the tile's pill and the accent of the second line; `tint_card: true` tints the whole card. A fixed `color` overrides the rules. Below 0.1 mm/h it counts as dry: no drops, the icon in the lead. Rates in in/h, mm/d or in/d and totals in in or cm are understood; the texts stay in the sensor's unit.
 
 ::: live
 
@@ -130,7 +128,7 @@ layout: hero
 
 ## Lead and motion
 
-`lead: icon` puts the rain icon in the round lead instead of the animation (a flow tile always shows the icon). The animation is CSS only and keeps flowing through sensor updates: a new rate changes its pace, the field is redrawn only when rain starts or stops or the drop count changes by a quarter, and the wind's slant and the gauge's level move in place. It pauses when your system asks for reduced motion (`prefers-reduced-motion`), leaving a still field.
+`lead: icon` puts the rain icon in the round lead instead of the animation (a flow tile always shows the icon). The animation keeps flowing through sensor updates and pauses, leaving a still field, when your system asks for reduced motion.
 
 ::: live
 
@@ -151,7 +149,7 @@ layout: hero
 
 ## Hover
 
-`hover: true` shows what a click will do, as Home Assistant's tile does: a tile takes a light layer under the pointer, over the whole card, and a stronger one while pressed; header entities do too. A hero keeps still, as the heroes of the entity cards do. See [Hover](/cards/entity-options#hover).
+`hover: true` shows what a click will do, as Home Assistant's tile does: a light layer over the tile under the pointer, a stronger one while pressed; header entities do too, a hero keeps still. See [Hover](/cards/entity-options#hover).
 
 ::: live
 
@@ -175,24 +173,24 @@ layout: hero
 
 ### Card options
 
-| Option              | Default                   | Description                                                                                                                                                                                     |
-| ------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entity`            | required                  | The rain rate sensor (`sensor.*`, mm/h or in/h).                                                                                                                                                |
-| `today`             | –                         | Today's total (mm or in): shown as "… today", fills the gauge, appears in the hero's chip.                                                                                                      |
-| `wind`, `direction` | –                         | Wind speed and direction sensors: slant the drops. Direction in degrees or an English compass point (`N`, `NNE` …).                                                                             |
-| `name`, `secondary` | friendly name / see above | The first line and the line under it; templates allowed. `secondary` replaces the generated line.                                                                                               |
-| `color`             | –                         | Fixed colour; overrides the rules.                                                                                                                                                              |
-| `decimals`          | sensor                    | Decimals of the rate.                                                                                                                                                                           |
-| `rules`             | –                         | `[{ below, above, color, label, tint_card }]` on the rate; first match wins.                                                                                                                    |
-| `layout`            | `tile`                    | `tile` or `hero`.                                                                                                                                                                               |
-| `visual`            | `icon`                    | Tile: `flow` makes the whole tile the animated field.                                                                                                                                           |
-| `lead`              | `animated`                | The round lead: `animated` (the style, small) or `icon`.                                                                                                                                        |
-| `icon_style`        | `circle`                  | `plain` draws the icon lead (`lead: icon`) without its circle; the animated lead keeps it.                                                                                                      |
-| `flow`              | see below                 | The animation options.                                                                                                                                                                          |
-| `title`, `icon`     | –                         | Header, templates allowed. `header_entities` as in the [group card](/cards/entity-group-card#header-entities).                                                                                  |
-| `title_tap_action`  | none                      | Action when the title or its icon is tapped, e.g. `{ action: navigate, navigation_path: /dashboard-rooms/kitchen }` to open the room's dashboard; see [Actions](/cards/entity-options#actions). |
-| `tap_action` …      | `more-info`               | `tap_action`, `hold_action`, `double_tap_action` on the lead row.                                                                                                                               |
-| `hover`             | `false`                   | Home Assistant's hover and press layers on the tile; see [Hover](#hover).                                                                                                                       |
+| Option              | Default                      | Description                                                                                                                                                                                     |
+| ------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entity`            | required                     | The rain rate sensor (`sensor.*`, mm/h or in/h).                                                                                                                                                |
+| `today`             | –                            | Today's total (mm or in): shown as "… today", fills the gauge, appears in the hero's chip.                                                                                                      |
+| `wind`, `direction` | –                            | Wind speed and direction sensors: slant the drops. Direction in degrees or an English compass point (`N`, `NNE` …).                                                                             |
+| `name`, `secondary` | friendly name / see above    | The first line and the line under it; templates allowed. `secondary` replaces the generated line.                                                                                               |
+| `color`             | –                            | Fixed colour; overrides the rules.                                                                                                                                                              |
+| `decimals`          | sensor                       | Decimals of the rate.                                                                                                                                                                           |
+| `rules`             | –                            | `[{ below, above, color, label, tint_card }]` on the rate; first match wins.                                                                                                                    |
+| `layout`            | `tile`                       | `tile` or `hero`.                                                                                                                                                                               |
+| `visual`            | `icon`                       | Tile: `flow` makes the whole tile the animated field.                                                                                                                                           |
+| `lead`              | `animated`                   | The round lead: `animated` (the style, small) or `icon`.                                                                                                                                        |
+| `icon_style`        | `circle`                     | `plain` draws the icon lead (`lead: icon`) without its circle; the animated lead keeps it.                                                                                                      |
+| `flow`              | see below                    | The animation options.                                                                                                                                                                          |
+| `title`, `icon`     | –                            | Header, templates allowed. `header_entities` as in the [group card](/cards/entity-group-card#header-entities).                                                                                  |
+| `title_tap_action`  | none                         | Action when the title or its icon is tapped, e.g. `{ action: navigate, navigation_path: /dashboard-rooms/kitchen }` to open the room's dashboard; see [Actions](/cards/entity-options#actions). |
+| `tap_action` …      | more-info / more-info / none | `tap_action`, `hold_action`, `double_tap_action` on the lead row.                                                                                                                               |
+| `hover`             | `false`                      | Home Assistant's hover and press layers on the tile; see [Hover](#hover).                                                                                                                       |
 
 ### Flow options
 
@@ -201,4 +199,4 @@ layout: hero
 | `style`  | `drops` | `drops`, `ripples` or `fill`. The rate sets how much rain each shows; there is no density. |
 | `height` | `120`   | Height of the hero's band in px (40 to 400). The flow tile's band fills the tile.          |
 
-The tile takes half a section (6 columns) and one row, two with a header; the hero takes the full width and sizes to its content.
+The tile takes 6 columns, the hero 12; both size to their content (a tile at least one row, two with a header). The card shows the current states only.

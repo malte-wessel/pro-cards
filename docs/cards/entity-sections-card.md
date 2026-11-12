@@ -6,11 +6,11 @@ The entity sections card is deprecated: it still works in 3.0 and goes in 4.0. U
 
 :::
 
-`custom:entity-sections-card-pro` stacks several groups of entities under one header. Each section is an [entity group](/cards/entity-group-card) body with its own `layout`, so one card can hold a hero on top of a row of controls, or a table over a grid. This page starts with two bare sections and adds options one at a time.
+`custom:entity-sections-card-pro` stacks several groups of entities under one header. Each section is an [entity group](/cards/entity-group-card) body with its own `layout`, so one card can hold a hero over a row of controls, or a table over a grid.
 
 ## Basic
 
-The type and a list of `sections`, each with its `entities`. Without a `layout` a section is a list.
+A list of `sections`, each with its `entities`. Without a `layout` a section is a list.
 
 ::: live
 
@@ -86,7 +86,7 @@ sections:
 
 ## Header entities
 
-`header_entities` puts compact values on the right of the title line. With the sensors in the header the first section can go, and the controls get icons and actions. Row, column and table sections draw `icon`, `ring` and `badge` only; header entities are badges; see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
+`header_entities` puts compact values on the right of the title line, as on the [group card](/cards/entity-group-card#header-entities). Row, column and table sections draw `icon`, `ring` and `badge` only; see [Visuals in items and headers](/cards/entity-options#visuals-in-items-and-headers).
 
 ::: live
 
@@ -183,35 +183,7 @@ sections:
 
 :::
 
-A kitchen: climate in the header, appliances as a table, lights and windows as a row.
-
-::: live
-
-```yaml
-type: custom:entity-sections-card-pro
-title: Kitchen
-icon: mdi:silverware-fork-knife
-header_entities:
-  - { entity: sensor.kitchen_temperature, decimals: 1 }
-  - { entity: sensor.kitchen_humidity, decimals: 0 }
-sections:
-  - layout: table
-    entities:
-      - { entity: sensor.dishwasher_status, name: Dishwasher, visual: badge, rules: [{ state: run, color: green, label: Running }, { state: end, color: teal, label: Done }, { state: "off", color: grey, label: "Off" }] }
-      - { entity: switch.coffee_machine, name: Coffee machine, control: toggle, show_value: false }
-      - { entity: sensor.range_hood_power, name: Range hood, decimals: 0 }
-  - layout: row
-    divider: true
-    entities:
-      - { entity: light.kitchen, name: Light, control: toggle, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
-      - { entity: light.dining_table, name: Dining, control: toggle, rules: [{ state: "on", color: amber }, { state: "off", color: grey }] }
-      - { entity: media_player.kitchen_speaker, name: Speaker, icon: mdi:speaker, rules: [{ state: playing, color: green }, { state: idle, color: grey }] }
-      - { entity: binary_sensor.window_kitchen, name: Window, rules: [{ state: "on", color: red, icon: mdi:window-open }, { state: "off", color: green, icon: mdi:window-closed }] }
-```
-
-:::
-
-A bathroom: humidity as the hero with its trend, the window as a strip and a right-aligned control.
+A bathroom: humidity as the hero with its trend, the window as a strip.
 
 ::: live
 
@@ -246,11 +218,9 @@ sections:
 
 :::
 
-A device on top as a poster, with the rest as badges in its corner, is a [poster card](/cards/poster-card); a [layout card](/cards/layout-card) stacks it over this card.
-
 ## Devices and status
 
-A security overview: doors and windows as a table with icons, presence as a row of badges.
+A security overview: presence as a row of badges, doors and windows as a table with icons.
 
 ::: live
 
@@ -306,36 +276,9 @@ sections:
 
 :::
 
-Energy: a table of live readings over a grid of charts.
-
-::: live
-
-```yaml
-type: custom:entity-sections-card-pro
-title: Energy
-icon: mdi:lightning-bolt
-hours_to_show: 12
-header_entities:
-  - { entity: sensor.solar_power, decimals: 0, color: amber }
-sections:
-  - layout: table
-    entities:
-      - { entity: sensor.power_consumption, name: Consumption, decimals: 0, rules: [{ below: 1500, color: green }, { above: 1500, color: red, label: High }] }
-      - { entity: sensor.solar_power, name: Solar, decimals: 0 }
-      - { entity: sensor.energy_today, name: Today, decimals: 1 }
-  - layout: grid
-    divider: true
-    columns: 2
-    entities:
-      - { entity: sensor.solar_power, name: Solar, visual: columns, color: amber, decimals: 0 }
-      - { entity: sensor.power_consumption, name: Consumption, visual: sparkline, color: red, decimals: 0 }
-```
-
-:::
-
 ## Hover
 
-`hover` cascades as the actions do: on the card for every entity, on a section for its entities, on an entity for that one. It shows what a click will do, as Home Assistant's tile does: grid cells and header entities take a light layer under the pointer, items brighten their icon, and the [controls](/cards/entity-controls) answer everywhere; list rows, heroes and table fields keep still. See [Hover](/cards/entity-options#hover).
+`hover` cascades as the actions do: on the card for every entity, on a section for its entities, on an entity for that one. It works as on the [group card](/cards/entity-group-card#hover); see [Hover](/cards/entity-options#hover).
 
 ::: live
 
@@ -394,8 +337,8 @@ sections:
 
 ### Grid defaults
 
-12 columns, `rows: auto`; at least 6 columns and 2 rows (3 when a section is a hero). See [Sizing in sections](/guide/sizing). Given more height (fixed rows, a taller card beside it), the `sparkline` and `columns` plots share it; without them the rows stay at the top, see [Filling the height](/guide/sizing#filling-the-height).
+12 columns, `rows: auto`, at least 6 columns and 2 rows (3 when a section is a hero); see [Sizing in sections](/guide/sizing). Given more height, the `sparkline` and `columns` plots share it; without them the sections stay at the top unless `vertical_align` says otherwise.
 
 ### Home Assistant options
 
-Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`. They are passed through to Home Assistant; see [Sizing in sections](/guide/sizing) for `grid_options`. The card's own `visibility` hides the whole card; its entities, header entities and sections take their own, see [Visibility](/guide/visibility). `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height). `hover: true` shows Home Assistant's hover and press layers on what a click runs, for every entity or, set on an entity, for that one; see [Hover](#hover).
+Like every card, this one also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`, passed through to Home Assistant; see [Sizing in sections](/guide/sizing). The card's own `visibility` hides the whole card; its entities, header entities and sections take their own, see [Visibility](/guide/visibility). `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height).

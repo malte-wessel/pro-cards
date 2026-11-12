@@ -45,6 +45,6 @@ The examples on this site render in English.
 
 Translations are plain TypeScript files in `src/i18n/`, one per language, keyed like the English source `src/i18n/en.ts`. To add one:
 
-1. Copy `src/i18n/de.ts` to `src/i18n/<code>.ts` and translate the values. Keep the `{placeholders}`. A key you leave out shows the English text, so a partial file is fine.
+1. Copy `src/i18n/de.ts` to `src/i18n/<code>.ts` and translate every value. Keep the `{placeholders}`.
 2. Register it in `src/shared/i18n.ts`: add the file to `LANGUAGES` under its language code (lower case, as in `hass.locale.language`).
-3. Run `npm run check`; the i18n unit test verifies that every key exists in the English table and that no value is empty.
+3. Run `npm run check`; the i18n unit test checks that the file has every key of the English table, no empty value and every placeholder.
