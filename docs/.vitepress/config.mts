@@ -184,7 +184,10 @@ export default defineConfig({
         text: "Showcase",
         items: showcase,
       },
-      { text: "Playground", link: "/playground" },
+      {
+        text: 'Playground <span class="nav-new" aria-hidden="true">New</span>',
+        link: "/playground",
+      },
       { text: `v${pkg.version}`, link: "https://github.com/malte-wessel/pro-cards/releases" },
     ],
     sidebar: [

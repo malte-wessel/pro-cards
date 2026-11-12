@@ -428,3 +428,35 @@ html {
   text-decoration-thickness: 2px;
   margin-right: 0.1em;
 }
+
+/* a small "New" pill on the top-right corner of a navbar link's label (the Playground);
+   in the phone menu, where a link spans the width, beside its label */
+/* (the link's line is the navbar's height: the label gets a line of its own, so the pill sits
+   on the label's corner, not the bar's) */
+.VPNavBarMenuLink:has(.nav-new) > span {
+  position: relative;
+  display: inline-block;
+  line-height: 20px;
+}
+.nav-new {
+  display: inline-block;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--vp-c-brand-1);
+  color: var(--vp-c-white);
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+.VPNavBarMenuLink .nav-new {
+  position: absolute;
+  top: -6px;
+  right: -14px;
+}
+.VPNavScreenMenuLink .nav-new {
+  margin-left: 8px;
+  vertical-align: 2px;
+}
