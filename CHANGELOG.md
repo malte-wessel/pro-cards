@@ -31,6 +31,7 @@ Requires Home Assistant 2026.4 or newer. [Moving to 3.0](https://malte-wessel.gi
 - The entity, entity group, entity sections, wind, rain and illuminance cards. They still work and say so once in the browser console. Use the tile, the poster, the tile group and the layout card instead; the illuminance card has no successor.
 - `header_entities` on the weather and flow cards: use `badges`.
 - Multi trend card: `hours_to_show` and `smoothing_minutes` are `hours` and `smoothing`.
+- A badge rule's `label` (2.9 betas) is `value`.
 - Weather card: a rule's `label` is `status`, and its entity sections give way to a tile group beside it.
 
 ### Breaking

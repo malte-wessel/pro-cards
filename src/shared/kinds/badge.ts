@@ -168,8 +168,8 @@ const GONE: Record<string, (v: unknown) => string> = {
   series: () => "series is the card's: a badge takes its kind's colours alone",
   status: () => "status is the card's: a badge's rules write its text as value",
 };
+// (a rule's `label`, the 2.9 betas' spelling, is read as its value until 4.0: parseRule)
 const RULE_GONE: Record<string, string> = {
-  label: "label is value (the text in place of the value)",
   status: "status is value (the text in place of the value)",
   tint_card: "a badge's rule tints no card (the card's own rules do)",
   visual: "a badge's rule sets no visual",
@@ -261,9 +261,18 @@ export const normalizePill = (
   const rules: Rule[] = [];
   if (o.rules !== undefined && !Array.isArray(o.rules))
     throw new Error(`${at}.rules must be a list`);
-  ((o.rules as unknown[] | undefined) ?? []).forEach((r, i) => {
-    if (!isObj(r))
+  ((o.rules as unknown[] | undefined) ?? []).forEach((raw, i) => {
+    if (!isObj(raw))
       throw new Error(`${at}.rules[${i}] must be a rule: { state | above | below, … }`);
+    // a rule's `label` is its value until 4.0 (said once in the console); both is an error
+    let r = raw;
+    if (raw.label !== undefined && raw.label !== null) {
+      if (raw.value !== undefined && raw.value !== null)
+        throw new Error(`${at}.rules[${i}]: label is value: write value only`);
+      warnDeprecatedKey(ctx.type, "a badge rule's label", "write value", "header-entities");
+      const { label: text, ...rest } = raw;
+      r = { ...rest, value: text };
+    }
     for (const k of Object.keys(r))
       if (r[k] !== undefined && k in RULE_GONE)
         throw new Error(`${at}.rules[${i}]: ${RULE_GONE[k]}`);

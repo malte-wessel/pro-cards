@@ -344,6 +344,22 @@ describe("card config schemas", () => {
         }),
         type,
       ).toBeNull();
+    // a badge rule's label (the 2.9 betas') still validates until 4.0; not beside value
+    const HC = "custom:heading-card-pro";
+    expect(
+      validate({
+        type: HC,
+        title: "x",
+        badges: [{ entity: "light.a", rules: [{ state: "on", label: "An" }] }],
+      }),
+    ).toBeNull();
+    expect(
+      validate({
+        type: HC,
+        title: "x",
+        badges: [{ entity: "light.a", rules: [{ state: "on", label: "An", value: "An" }] }],
+      }),
+    ).not.toBeNull();
     // a plug told not to look for its power on the device
     expect(
       validate({ type: PC, entity: "switch.a", kind: "plug", inputs: { power: false } }),
@@ -825,7 +841,7 @@ describe("card config schemas", () => {
         { entity: H, visual: { type: "bar", hours: 2 } },
         { entity: H, control: "slider" },
         { entity: H, control: { type: "toggle", confirm: true } },
-        { entity: H, rules: [{ state: "on", label: "On" }] },
+        { entity: H, rules: [{ state: "on", label: "On", value: "On" }] },
         { entity: H, rules: [{ state: "on", tint_card: true }] },
         { entity: H, secondary: "x" },
       ])

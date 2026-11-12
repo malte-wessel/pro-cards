@@ -1,7 +1,8 @@
 // The badges of the v3 cards: written as the cards are (the icon place, a visual after the value,
 // a switch, rules whose colour wins and whose text is a value) and drawn with their entity's kind
 // colours. The entity cards' badges keep their old keys (tests/unit/shared/entity/config.test.ts).
-import { describe, it, expect } from "vitest";
+import { resetDeprecatedKeys } from "../../../../src/shared/card.ts";
+import { describe, it, expect, vi } from "vitest";
 import type { NormalizeCtx } from "../../../../src/shared/entity/config.ts";
 import { modelOf, type FormatCtx } from "../../../../src/shared/entity/model.ts";
 import type { HassEntity, HomeAssistant } from "../../../../src/shared/ha.ts";
@@ -121,9 +122,21 @@ describe("a v3 badge as written", () => {
     ]);
     expect(b.pill?.ruleIcons.get(b.rules[0])?.type).toBe("dot");
     expect(b.pill?.ruleIcons.get(b.rules[1])?.type).toBe("icon");
+    // the 2.9 betas' `label` is read as the value until 4.0, said once; both is an error
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      resetDeprecatedKeys();
+      const old = pill({ entity: "sensor.x", rules: [{ state: "on", label: "Open" }] });
+      expect(old.rules[0].label).toBe("Open");
+      expect(warn.mock.calls.map((c) => String(c[0])).join()).toMatch(
+        /a badge rule's label is deprecated and goes in 4.0: write value/,
+      );
+    } finally {
+      warn.mockRestore();
+    }
     fails(
-      { entity: "sensor.x", rules: [{ state: "on", label: "Open" }] },
-      ".rules[0]: label is value (the text in place of the value)",
+      { entity: "sensor.x", rules: [{ state: "on", label: "Open", value: "Open" }] },
+      ".rules[0]: label is value: write value only",
     );
     fails(
       { entity: "sensor.x", rules: [{ state: "on", tint_card: true }] },

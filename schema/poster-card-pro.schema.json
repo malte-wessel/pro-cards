@@ -1874,6 +1874,11 @@
           "type": ["string", "number"],
           "description": "The text in place of the value, in the rule's colour. Template allowed"
         },
+        "label": {
+          "type": "string",
+          "deprecated": true,
+          "description": "Deprecated, goes in 4.0: use value"
+        },
         "style": {
           "$ref": "entity.schema.json#/$defs/rule/properties/style",
           "description": "The pill while the rule matches"
@@ -1893,7 +1898,10 @@
           "required": ["above"]
         }
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "not": {
+        "required": ["label", "value"]
+      }
     }
   }
 }
