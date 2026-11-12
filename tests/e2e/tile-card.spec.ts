@@ -616,7 +616,8 @@ test.describe("what a tile's control sets", () => {
     const segs = card(page).locator(".ctl-segments .seg");
     // (the demo's registry keeps 0, 30, 70 and 100)
     await expect(segs).toHaveText(["0 %", "30 %", "70 %", "100 %"]);
-    await expect(segs.nth(3)).toHaveClass(/on/);
+    // (the blinds stand at 60 %: none of them is chosen)
+    await expect(card(page).locator(".ctl-segments .seg.on")).toHaveCount(0);
     await segs.nth(1).click();
     expect((await calls(page))[0]).toMatchObject({
       service: "set_cover_position",

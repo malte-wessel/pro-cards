@@ -108,10 +108,10 @@ const olderCards = [
 // the showcase dashboards, linked from the home page
 const showcase = [
   { text: "Home", link: "/showcase/home" },
-  { text: "Posters", link: "/showcase/posters" },
   { text: "Energy", link: "/showcase/energy" },
   { text: "Living room", link: "/showcase/living-room" },
   { text: "Weather", link: "/showcase/weather" },
+  { text: "Posters", link: "/showcase/posters" },
 ];
 
 export default defineConfig({

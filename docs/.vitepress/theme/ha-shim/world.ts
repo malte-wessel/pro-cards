@@ -397,7 +397,7 @@ def("switch.garden_pump", "off", { friendly_name: "Garden pump" });
 def("cover.living_room_blinds", "open", {
   friendly_name: "Living room blinds",
   device_class: "shutter",
-  current_position: 100,
+  current_position: 60,
 });
 def("cover.bedroom_blinds", "closed", {
   friendly_name: "Bedroom blinds",
