@@ -15,10 +15,9 @@ Dashboard cards that look like they belong in Home Assistant: tiles, posters and
 
 <img alt="The Home showcase: weather, sun, wind and rain posters, power, car, robot, dishwasher, lock, a playing speaker, a room's lights and a heating thermostat" src="https://raw.githubusercontent.com/malte-wessel/pro-cards/main/docs/public/readme/home-dark.png" width="100%">
 
-<p>
-  <img alt="The Energy showcase: the power flow now and the energy flow of today, with solar, grid, battery and heat pump posters" src="https://raw.githubusercontent.com/malte-wessel/pro-cards/main/docs/public/readme/energy-dark.png" width="49%">
-  <img alt="The Living room showcase: scenes, temperature and humidity, lights with sliders, blinds, air, thermostat, fan and media" src="https://raw.githubusercontent.com/malte-wessel/pro-cards/main/docs/public/readme/living-room-dark.png" width="49%">
-</p>
+<img alt="The Energy showcase: the power flow now and the energy flow of today, with solar, grid, battery and heat pump posters" src="https://raw.githubusercontent.com/malte-wessel/pro-cards/main/docs/public/readme/energy-dark.png" width="100%">
+
+<img alt="The Living room showcase: scenes, temperature and humidity, lights with sliders, blinds, air, thermostat, fan and media" src="https://raw.githubusercontent.com/malte-wessel/pro-cards/main/docs/public/readme/living-room-dark.png" width="100%">
 
 <img alt="The Weather showcase: the weather card with its forecast, the sun's path and azimuth, the last 24 hours, rain and wind" src="https://raw.githubusercontent.com/malte-wessel/pro-cards/main/docs/public/readme/weather-dark.png" width="100%">
 
