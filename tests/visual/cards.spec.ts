@@ -2233,7 +2233,7 @@ const CASES = {
     },
   ],
   // a tile group's row: on one line shrunk or scrolling (a fade where more tiles are), centred at
-  // the column width, three tiles a line
+  // the column width
   "tg-row-options": [
     {
       type: TG,
@@ -2271,6 +2271,9 @@ const CASES = {
       tiles: ["light.living_room", "sensor.living_room_temperature", "person.malte"],
       grid_options: { columns: 12 },
     },
+  ],
+  // columns: at most three tiles a line where four would fit
+  "tg-row-columns": [
     {
       type: TG,
       layout: "row",
@@ -2398,6 +2401,8 @@ const WIDTHS: Record<string, number> = {
   // two view columns: the swipe card unfolds
   "sw-unfold": 880,
   "lc-min-width-wide": 900,
+  // a tile group's row with room for four tiles a line, capped at three
+  "tg-row-columns": 640,
 };
 
 shoot(ALL, { skins: SKINS, widths: WIDTHS });

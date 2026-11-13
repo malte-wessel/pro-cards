@@ -73,9 +73,9 @@ const STYLE_TILES = `
   .tiles.layout-row.ov-shrink.al-stretch { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
   .tiles.layout-row.ov-shrink:not(.al-stretch) { flex-wrap: nowrap; }
   .tiles.layout-row.ov-shrink:not(.al-stretch) > .tile { flex: 0 1 var(--tg-col, 120px); }
-  /* scroll: one line at the column width that scrolls sideways and snaps to a tile; 4 px above and
-     below it (and as much less margin) keep the tiles' focus rings uncut */
-  .tiles.layout-row.ov-scroll { display: flex; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; padding-block: 4px; margin-block: -4px; }
+  /* scroll: one line at the column width that scrolls sideways and snaps to a tile; 4 px around it
+     (and as much less margin, a snap stopping as far in) keep the tiles' focus rings uncut */
+  .tiles.layout-row.ov-scroll { display: flex; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 4px; margin: -4px; scroll-padding-inline: 4px; }
   .tiles.layout-row.ov-scroll::-webkit-scrollbar { display: none; }
   .tiles.layout-row.ov-scroll > .tile { flex: 0 0 var(--tg-col, 120px); scroll-snap-align: start; }
   .tiles.layout-row.ov-scroll.al-stretch > .tile { flex-grow: 1; }
@@ -96,7 +96,7 @@ const STYLE_TILES = `
      where the card's edge cannot cut it; the header in line with the tiles' icons (their 12 px) */
   .body.flush { padding: 0; }
   .body.flush > .tiles { --tg-gap: 0px; --ha-card-border-radius: 0px; --ha-card-border-width: 0px; --pro-cards-focus-width: 2px; --pro-cards-focus-offset: -2px; }
-  .body.flush > .tiles.ov-scroll { padding-block: 0; margin-block: 0; }
+  .body.flush > .tiles.ov-scroll { padding: 0; margin: 0; scroll-padding-inline: 0; }
   ha-card:has(> .body.flush) > .header { padding-inline: 12px; }
 `;
 

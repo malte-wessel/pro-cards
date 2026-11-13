@@ -317,19 +317,19 @@ Home Assistant's card editor has the group's header, layout and badges, then a t
 
 ### Card options
 
-| Key                | Default   | Description                                                                                                                               |
-| ------------------ | --------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `tiles`            | –         | Required. Entity ids or tiles: the [tile card's keys](/cards/tile-card) without `type`, `grid_options` and `vertical`, plus `visibility`. |
-| `layout`           | `list`    | `list`: one under the other. `row`: vertical tiles side by side, wrapping when narrow. `table`: one line each.                            |
-| `vertical_align`   | `top`     | Where the tiles sit in a taller card: `top`, `center` or `bottom`, or `stretch` to share its height; the title stays on top.              |
-| `overflow`         | `wrap`    | A row's tiles that do not fit: `wrap` onto the next line, `shrink` on one line, or `scroll` on one line. Row only.                        |
-| `align`            | `stretch` | Where a row's tiles sit: `stretch` (they share the width), `start`, `center`, `end` or `space-between`. Row only.                         |
-| `columns`          | –         | The most tiles on a line of a row, 1 to 12; with `overflow: wrap`. Row only.                                                              |
-| `padding`          | `true`    | `false`: the tiles flush with the card and each other, square, without borders.                                                           |
-| `title`            | –         | The header's text. Template allowed.                                                                                                      |
-| `icon`             | –         | The header's icon. Template allowed.                                                                                                      |
-| `title_tap_action` | `none`    | What a tap on the title or its icon does; see [Actions & hover](/cards/actions).                                                          |
-| `badges`           | –         | Badges at the end of the title line, plain and small unless they set `style` or `size`; see [Badge keys](/cards/badges#badge-keys).       |
+| Key                | Default   | Description                                                                                                                                     |
+| ------------------ | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tiles`            | –         | Required. Entity ids or tiles: the [tile card's keys](/cards/tile-card) without `type`, `grid_options` and `vertical`, plus `visibility`.       |
+| `layout`           | `list`    | `list`: one under the other. `row`: vertical tiles side by side, wrapping when narrow unless `overflow` says otherwise. `table`: one line each. |
+| `vertical_align`   | `top`     | Where the tiles sit in a taller card: `top`, `center` or `bottom`, or `stretch` to share its height; the title stays on top.                    |
+| `overflow`         | `wrap`    | A row's tiles that do not fit: `wrap` onto the next line, `shrink` on one line, or `scroll` on one line. Row only.                              |
+| `align`            | `stretch` | Where a row's tiles sit: `stretch` (they share the width), `start`, `center`, `end` or `space-between`. Row only.                               |
+| `columns`          | –         | The most tiles on a line of a row, 1 to 12; with `overflow: wrap`. Row only.                                                                    |
+| `padding`          | `true`    | `false`: the tiles flush with the card and each other, square, without borders.                                                                 |
+| `title`            | –         | The header's text. Template allowed.                                                                                                            |
+| `icon`             | –         | The header's icon. Template allowed.                                                                                                            |
+| `title_tap_action` | `none`    | What a tap on the title or its icon does; see [Actions & hover](/cards/actions).                                                                |
+| `badges`           | –         | Badges at the end of the title line, plain and small unless they set `style` or `size`; see [Badge keys](/cards/badges#badge-keys).             |
 
 Any other key on the card is an error: settings go on each tile. `overflow`, `align` and `columns` on a list or a table are errors too.
 
