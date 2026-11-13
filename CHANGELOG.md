@@ -2,7 +2,7 @@
 
 ## 3.1.0 – Buttons that show state
 
-_Unreleased_
+_Beta_
 
 ### What's new
 
