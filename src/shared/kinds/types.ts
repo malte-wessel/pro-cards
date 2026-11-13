@@ -146,8 +146,9 @@ export interface Kind {
   inputs?: readonly InputDef[];
   // the entities whose history it draws besides the card's own, the templates it renders and the
   // conditions it evaluates (a trend's series)
-  history?(opts: Record<string, unknown>, entity: string | null): string[];
-  // the hours of history it needs at least, whatever window its visual draws (today's low and high)
+  history?(opts: Record<string, unknown>, entity: string | null, card: "poster" | "tile"): string[];
+  // the hours of history a poster needs at least, whatever window its visual draws (today's low
+  // and high); a tile fetches only what its visual and badges draw
   historyHours?: number;
   templates?(opts: Record<string, unknown>): string[];
   visibility?(opts: Record<string, unknown>): Visibility[];

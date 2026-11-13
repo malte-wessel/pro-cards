@@ -1,3 +1,4 @@
+import { normalizePosterConfig } from "../../../../src/poster/config.ts";
 import { describe, it, expect, vi } from "vitest";
 import {
   normalizeRules,
@@ -577,5 +578,27 @@ describe("vertical_align", () => {
       "x-card: vertical_align must be one of top | center | bottom",
     );
     expect(() => normalizeVerticalAlign(1, "x-card")).toThrow(/vertical_align must be one of/);
+  });
+});
+
+describe("a kind card's buttons' templates", () => {
+  it("are the card's to render", () => {
+    const cfg = normalizePosterConfig({
+      type: "custom:poster-card-pro",
+      name: "Room",
+      control: {
+        type: "buttons",
+        options: [
+          {
+            entity: "climate.a",
+            value: "{{ state_attr('climate.a', 'temperature') }}",
+            rules: [{ state: "heat", value: "{{ 1 + 1 }}" }],
+          },
+        ],
+      },
+    });
+    expect([...collectTemplates(cfg)]).toEqual(
+      expect.arrayContaining(["{{ state_attr('climate.a', 'temperature') }}", "{{ 1 + 1 }}"]),
+    );
   });
 });

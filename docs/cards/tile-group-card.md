@@ -27,7 +27,7 @@ tiles:
 
 ## Tiles of their own
 
-A tile in the list takes the [tile card's keys](/cards/tile-card) without `type`, `grid_options` and `vertical`: its kind, visual, controls, status and badges. The group sets nothing on its tiles but their layout, so a tile looks the same in a group as on its own. To share a setting, write it on each tile; a YAML anchor writes it once (`visual: &day { … }`, then `visual: *day`).
+A tile in the list takes the [tile card's keys](/cards/tile-card) without `type`, `grid_options`, `vertical` and `indent`: its kind, visual, controls, status and badges. The group sets nothing on its tiles but their layout, so a tile keeps its kind, its look and its controls in a group. To share a setting, write it on each tile; a YAML anchor writes it once (`visual: &day { … }`, then `visual: *day`).
 
 ::: live
 
@@ -49,6 +49,51 @@ tiles:
 
 :::
 
+## Below the line
+
+What a tile draws below its line (a bar, a plot, a slider, buttons) runs under the icon. In a list, `indent: true` starts it at the name instead, so the icons keep one column and everything else lines up in the next; a name and a bar then take a single row.
+
+::: live
+
+```yaml
+type: custom:tile-group-card-pro
+title: Living room
+icon: mdi:sofa
+indent: true
+tiles:
+  - { entity: sensor.living_room_temperature, visual: sparkline }
+  - { entity: light.dining_table, control: slider }
+  - entity: cover.living_room_blinds
+    control: { type: buttons, position: block }
+  - { entity: sensor.phone_battery, name: Phone, visual: bar }
+```
+
+:::
+
+To show the value at the end of the line, as a list of bars often does, leave it off the line (`show_value: false`) and give the tile a plain badge without an icon: a badge without `entity` shows the tile's own value. `size` makes it larger; see [Badges](/cards/badges#badges-reading-the-card-s-own-entity).
+
+::: live
+
+```yaml
+type: custom:tile-group-card-pro
+title: Batteries
+icon: mdi:battery
+indent: true
+tiles:
+  - entity: sensor.phone_battery
+    name: Phone
+    show_value: false
+    visual: bar
+    badges: [{ style: plain, icon: false }]
+  - entity: sensor.robot_battery
+    name: Robot
+    show_value: false
+    visual: bar
+    badges: [{ style: plain, icon: false }]
+```
+
+:::
+
 ## Row
 
 `layout: row` draws vertical tiles side by side: the icon on top, the name and the line under it, the controls below. The tiles share the width in equal columns and wrap onto a new line when the card is too narrow.
@@ -65,6 +110,103 @@ tiles:
   - light.desk_lamp
   - light.kitchen
   - light.bedroom
+```
+
+:::
+
+### Tiles that do not fit
+
+`overflow` says what a row does when its tiles do not fit on a line. `wrap`, the default, puts them on the next line. `shrink` keeps them on one line and makes them narrower than they need: names and values are cut with "…", and a tile drops controls that no longer fit (more-info still has them). `scroll` keeps them on one line at their width and lets you swipe through them; the row snaps to a tile and fades on the side where more tiles are.
+
+::: live
+
+```yaml
+- type: custom:tile-group-card-pro
+  layout: row
+  overflow: shrink
+  title: Shrink
+  tiles: &lights
+    - light.living_room
+    - light.desk_lamp
+    - light.kitchen
+    - light.bedroom
+    - person.malte
+  grid_options: { columns: 6 }
+- type: custom:tile-group-card-pro
+  layout: row
+  overflow: scroll
+  title: Scroll
+  tiles: *lights
+  grid_options: { columns: 6 }
+```
+
+:::
+
+### Where the tiles sit
+
+By default a row's tiles share its width (`align: stretch`). `start`, `center`, `end` and `space-between` keep every tile at the width the widest one needs and put them at the start, in the middle, at the end, or spread out, so three tiles on a wide card stay tiles. A row that scrolls starts at the start once its tiles no longer fit.
+
+::: live
+
+```yaml
+type: custom:tile-group-card-pro
+layout: row
+align: center
+title: Living room
+tiles:
+  - light.living_room
+  - sensor.living_room_temperature
+  - person.malte
+```
+
+:::
+
+### Even lines
+
+`columns` is the most tiles on a line, so five tiles make a line of three and one of two rather than four and one. A narrower card still wraps them earlier. It works with `overflow: wrap` only.
+
+::: live
+
+```yaml
+type: custom:tile-group-card-pro
+layout: row
+columns: 3
+title: Living room
+tiles:
+  - light.living_room
+  - light.kitchen
+  - sensor.living_room_temperature
+  - sensor.living_room_humidity
+  - person.malte
+```
+
+:::
+
+## Without padding
+
+`padding: false` puts the tiles flush with the card and each other: no space around or between them, square, without borders of their own. Their glows and pictures meet, and the card's rounded corners round what reaches them. It works with every layout.
+
+::: live
+
+```yaml
+- type: custom:tile-group-card-pro
+  title: Living room
+  padding: false
+  tiles:
+    - light.living_room
+    - climate.living_room
+    - person.malte
+  grid_options: { columns: 6 }
+- type: custom:tile-group-card-pro
+  layout: row
+  title: Living room
+  padding: false
+  tiles:
+    - light.living_room
+    - light.kitchen
+    - sensor.living_room_temperature
+    - person.malte
+  grid_options: { columns: 6 }
 ```
 
 :::
@@ -220,17 +362,22 @@ Home Assistant's card editor has the group's header, layout and badges, then a t
 
 ### Card options
 
-| Key                | Default | Description                                                                                                                               |
-| ------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `tiles`            | –       | Required. Entity ids or tiles: the [tile card's keys](/cards/tile-card) without `type`, `grid_options` and `vertical`, plus `visibility`. |
-| `layout`           | `list`  | `list`: one under the other. `row`: vertical tiles side by side, wrapping when narrow. `table`: one line each.                            |
-| `vertical_align`   | `top`   | Where the tiles sit in a taller card: `top`, `center` or `bottom`, or `stretch` to share its height; the title stays on top.              |
-| `title`            | –       | The header's text. Template allowed.                                                                                                      |
-| `icon`             | –       | The header's icon. Template allowed.                                                                                                      |
-| `title_tap_action` | `none`  | What a tap on the title or its icon does; see [Actions & hover](/cards/actions).                                                          |
-| `badges`           | –       | Badges at the end of the title line, plain and small unless they set `style` or `size`; see [Badge keys](/cards/badges#badge-keys).       |
+| Key                | Default   | Description                                                                                                                                         |
+| ------------------ | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tiles`            | –         | Required. Entity ids or tiles: the [tile card's keys](/cards/tile-card) without `type`, `grid_options`, `vertical` and `indent`, plus `visibility`. |
+| `layout`           | `list`    | `list`: one under the other. `row`: vertical tiles side by side, wrapping when narrow unless `overflow` says otherwise. `table`: one line each.     |
+| `vertical_align`   | `top`     | Where the tiles sit in a taller card: `top`, `center` or `bottom`, or `stretch` to share its height; the title stays on top.                        |
+| `overflow`         | `wrap`    | A row's tiles that do not fit: `wrap` onto the next line, `shrink` on one line, or `scroll` on one line. Row only.                                  |
+| `align`            | `stretch` | Where a row's tiles sit: `stretch` (they share the width), `start`, `center`, `end` or `space-between`. Row only.                                   |
+| `columns`          | –         | The most tiles on a line of a row, 1 to 12; with `overflow: wrap`. Row only.                                                                        |
+| `padding`          | `true`    | `false`: the tiles flush with the card and each other, square, without borders.                                                                     |
+| `indent`           | `false`   | `true`: what is below a tile's line (a visual, a slider, buttons) starts at its name, beside the icon, not under it. List only.                     |
+| `title`            | –         | The header's text. Template allowed.                                                                                                                |
+| `icon`             | –         | The header's icon. Template allowed.                                                                                                                |
+| `title_tap_action` | `none`    | What a tap on the title or its icon does; see [Actions & hover](/cards/actions).                                                                    |
+| `badges`           | –         | Badges at the end of the title line, plain and small unless they set `style` or `size`; see [Badge keys](/cards/badges#badge-keys).                 |
 
-Any other key on the card is an error: settings go on each tile.
+Any other key on the card is an error: settings go on each tile. `overflow`, `align` and `columns` on a list or a table are errors too, and so is `indent` on a row or a table.
 
 ### Table rows
 

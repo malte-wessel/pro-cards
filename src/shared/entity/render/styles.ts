@@ -425,10 +425,27 @@ export const STYLE_CONTROLS = `
   .ctl-hold.square { --fill: color-mix(in srgb, var(--fe-color) 45%, transparent); background-image: linear-gradient(var(--fill), var(--fill)); background-repeat: no-repeat; background-size: 0 100%; }
   .ctl-hold.square:is(.armed, .holding) { background-size: 100% 100%; }
   .ctl-hold.square.holding { transition: background-size 1s linear; }
+  /* a hold that switches, filled while its entity is on: the fill that runs over it while held is
+     a shade of its own, so it shows on the filled button too */
+  .ctl-hold.square.on { --fill: color-mix(in srgb, var(--fe-color) 45%, ${CARD_BG}); }
   .ctl-buttons.custom > .chip { flex: 0 1 auto; display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; height: 32px; padding: 0 14px 0 10px; border: 0; border-radius: 999px; font-size: ${fs(13)}; font-weight: ${fw("medium")}; white-space: nowrap; cursor: pointer; --mdc-icon-size: 18px; }
   .ctl-buttons.custom > .chip span { overflow: hidden; text-overflow: ellipsis; }
   /* the colour stays on the icon and the tint; the label reads in the text colour until filled */
   .ctl-buttons.custom > .chip:not(.on) span { color: var(--primary-text-color); }
+  /* a kind card's button: its value after its name, in the regular weight (grey until filled) */
+  .ctl-buttons.custom > .chip span.v { font-weight: ${fw("normal")}; font-variant-numeric: tabular-nums; }
+  .ctl-buttons.custom > .chip:not(.on) span.v { color: var(--secondary-text-color); }
+  /* grey with a matching rule's colour: the icon in it */
+  .ctl-buttons.custom > button.icon-c:not(.on) > :is(ha-icon, ha-state-icon) { color: var(--fe-color); }
+  /* a rule's pulse: a ring that grows and fades; with reduced motion a still ring */
+  .ctl-buttons.custom > button.pulse:not(.pending) { animation: btn-pulse 2s ease-out infinite; }
+  @keyframes btn-pulse {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--fe-color) 50%, transparent); }
+    70%, 100% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--fe-color) 0%, transparent); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ctl-buttons.custom > button.pulse:not(.pending) { animation: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--fe-color) 40%, transparent); }
+  }
   .ctl-buttons.custom.sm > .chip { height: 28px; font-size: ${fs(12)}; padding: 0 12px 0 8px; --mdc-icon-size: 16px; }
   /* a chip or a square button to hold fills from the left instead of a ring */
   :is(.ctl-buttons.custom > .chip, .ctl-buttons.square > button).hold { --fill: var(--fe-color); background-image: linear-gradient(var(--fill), var(--fill)); background-repeat: no-repeat; background-size: 0 100%; touch-action: none; -webkit-user-select: none; user-select: none; }
@@ -493,8 +510,8 @@ export const STYLE_CONTROLS = `
   .toggle.square.pending:not(.on) { background: var(--fe-track); }
   .ctl-buttons.custom.flat > button, .ctl-hold.square { background-color: var(--fe-track); color: var(--primary-text-color); }
   .ctl-segments.square .seg { color: var(--primary-text-color); }
-  .toggle.square.on, .ctl-buttons.custom.flat > button.on, .ctl-buttons.square > .round.f, .ctl-segments.square .seg.on, .ctl-chip.square:not(.round), .ctl-chip.square.done { background-color: var(--fe-color); color: var(--text-primary-color, #fff); }
-  .toggle.square.tinted.on, .ctl-buttons.custom.flat.tinted > button.on, .ctl-buttons.square.tinted > .round.f, .ctl-segments.square.tinted .seg.on, .ctl-chip.square.tinted:not(.round, .done) { background-color: color-mix(in srgb, var(--fe-color) 20%, transparent); color: var(--fe-color); }
+  .toggle.square.on, .ctl-hold.square.on, .ctl-buttons.custom.flat > button.on, .ctl-buttons.square > .round.f, .ctl-segments.square .seg.on, .ctl-chip.square:not(.round), .ctl-chip.square.done { background-color: var(--fe-color); color: var(--text-primary-color, #fff); }
+  .toggle.square.tinted.on, .ctl-hold.square.tinted.on, .ctl-buttons.custom.flat.tinted > button.on, .ctl-buttons.square.tinted > .round.f, .ctl-segments.square.tinted .seg.on, .ctl-chip.square.tinted:not(.round, .done) { background-color: color-mix(in srgb, var(--fe-color) 20%, transparent); color: var(--fe-color); }
   /* a badge's switch in a filled pill (the colour already): the pill's ink, the icon in the colour */
   .row.hval.b-filled > .toggle.square.on { background-color: var(--b-ink); color: var(--fe-color); }
   @keyframes ctl-pulse { 50% { opacity: .45; } }

@@ -64,17 +64,19 @@ One entity is a tile, or a poster where its value should be large. Most keys sta
 
 Several entities are a tile group: a title, an icon, header badges and its `tiles`. The group passes nothing down: `show_name`, the actions and the history window are set on each tile.
 
-| Entity group card                               | Tile group                                                     |
-| ----------------------------------------------- | -------------------------------------------------------------- |
-| `entities`                                      | `tiles`, with a tile's keys                                    |
-| `layout: list`, `column`                        | `layout: list`                                                 |
-| `layout: row`                                   | `layout: row` (vertical tiles side by side)                    |
-| `layout: table`                                 | `layout: table`: the name, the value and one control or visual |
-| `layout: grid`, `hero`                          | a layout card, see below                                       |
-| `header_entities`                               | `badges`, with a [badge's keys](/cards/badges#badge-keys)      |
-| `show_icon`, `show_name`, actions on the card   | on each tile                                                   |
-| `vertical_align`                                | `vertical_align`, the same values and `stretch`                |
-| `align`, `name_position`, a table's `show_icon` | none                                                           |
+| Entity group card                             | Tile group                                                                                                                                              |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entities`                                    | `tiles`, with a tile's keys                                                                                                                             |
+| `layout: list`, `column`                      | `layout: list`                                                                                                                                          |
+| `layout: row`                                 | `layout: row` (vertical tiles side by side)                                                                                                             |
+| `layout: table`                               | `layout: table`: the name, the value and one control or visual                                                                                          |
+| `layout: grid`, `hero`                        | a layout card, see below                                                                                                                                |
+| `header_entities`                             | `badges`, with a [badge's keys](/cards/badges#badge-keys)                                                                                               |
+| `show_icon`, `show_name`, actions on the card | on each tile                                                                                                                                            |
+| `vertical_align`                              | `vertical_align`, the same values and `stretch`                                                                                                         |
+| `align` (row)                                 | a row's `align`: `start`, `center`, `end`, `space-between` or `stretch` (the tile group's default is `stretch`, the entity group's was `space-between`) |
+| `align` (column, table)                       | none: a tile lays out its own line                                                                                                                      |
+| `name_position`, a table's `show_icon`        | none                                                                                                                                                    |
 
 ::: live
 
@@ -256,3 +258,14 @@ rules:
 ```
 
 :::
+
+## A button's label and action (3.1) {#button-keys}
+
+In 3.1 the poster's and the tile's own buttons take a badge's keys (see [Controls](/cards/controls#buttons-that-show-state)). Two 3.0 keys have new spellings; the old ones work until 4.0 and warn once in the console:
+
+| 3.0             | 3.1                                |
+| --------------- | ---------------------------------- |
+| `label: Dim`    | `name: Dim` with `show_name: true` |
+| `action: { … }` | `tap_action: { … }`                |
+
+The visual editor writes the new keys for a button you change in it.

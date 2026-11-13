@@ -1,7 +1,8 @@
 // The tile group card's config (pure): the header (title, icon, its badges), the layout and the
-// tiles. The group sets nothing on its tiles but their layout (a row's are vertical): each tile
-// says everything about itself. The tiles are tile cards of their own (the group hosts them), so
-// their configs are tile card configs, checked by the tile card.
+// tiles. The group sets nothing on its tiles but their layout (a row's are vertical, a list's are
+// indented, a table's are its rows): each tile says everything about itself. The tiles are tile
+// cards of their own (the group hosts them), so their configs are tile card configs, checked by
+// the tile card.
 import type { CardConfigBase } from "../shared/ha.ts";
 import {
   normalizeActionDefaults,
@@ -11,6 +12,7 @@ import {
   type EntityCardConfig,
   type RawAction,
 } from "../shared/entity/config.ts";
+import { ALIGNS, type Align } from "../shared/entity/constants.ts";
 import { badgeWindow, normalizePills } from "../shared/kinds/badge.ts";
 import { normalizeVisibility, type Visibility } from "../shared/visibility.ts";
 
@@ -18,6 +20,11 @@ export const CARD_TYPE = "tile-group-card-pro";
 export const TILE_TYPE = "tile-card-pro";
 export const TILE_GROUP_LAYOUTS = ["list", "row", "table"] as const;
 export type TileGroupLayout = (typeof TILE_GROUP_LAYOUTS)[number];
+// a row's tiles where they do not fit on a line: onto the next one, shrunk on one, or scrolling
+export const TILE_GROUP_OVERFLOWS = ["wrap", "shrink", "scroll"] as const;
+export type TileGroupOverflow = (typeof TILE_GROUP_OVERFLOWS)[number];
+// the row's own keys: no other layout takes them
+const ROW_KEYS = ["overflow", "align", "columns"] as const;
 
 // the card's own keys: the header, the layout, the tiles and Home Assistant's. It sets nothing on
 // its tiles but their layout (`row`: vertical): each tile says everything about itself
@@ -36,6 +43,11 @@ const CARD_KEYS = new Set([
   "card_mod",
   "fill_height",
   "vertical_align",
+  "overflow",
+  "align",
+  "columns",
+  "padding",
+  "indent",
 ]);
 
 export interface TileGroupTile {
@@ -47,6 +59,16 @@ export interface TileGroupTile {
 export interface TileGroupConfig extends EntityCardConfig {
   layout: TileGroupLayout;
   tiles: TileGroupTile[];
+  // a row: its tiles where they do not fit on a line, where they sit on it (stretch: they share
+  // its width; else each keeps the row's column width), the most of them on a line (null: as many
+  // as fit). (`columns` is the entity layer's own)
+  overflow: TileGroupOverflow;
+  rowAlign: Align;
+  rowColumns: number | null;
+  // false: the tiles flush with the card and each other, square, without borders
+  padding: boolean;
+  // a list: what is below a tile's line starts at its name, beside the icon (true; else under it)
+  indent: boolean;
 }
 
 interface RawTileGroupConfig extends CardConfigBase {
@@ -56,6 +78,11 @@ interface RawTileGroupConfig extends CardConfigBase {
   icon?: string | null;
   badges?: unknown;
   tiles?: unknown;
+  overflow?: unknown;
+  align?: unknown;
+  columns?: unknown;
+  padding?: unknown;
+  indent?: unknown;
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
@@ -69,7 +96,6 @@ const OLD_LAYOUTS: Record<string, string> = {
 };
 const OLD_KEYS: Record<string, string> = {
   header_entities: "header_entities is badges",
-  align: "align is gone: a tile lays out its own line",
   name_position: "name_position is gone: a tile's name is above its line",
 };
 
@@ -87,6 +113,35 @@ export const normalizeTileGroupConfig = (input: unknown): TileGroupConfig => {
       throw new Error(
         `${CARD_TYPE}: ${OLD_KEYS[k] ?? `a tile group sets nothing on its tiles: ${k} goes on each tile`}`,
       );
+  // the row's own keys: where its tiles go when they do not fit, where they sit, how many on a line
+  for (const k of ROW_KEYS)
+    if (layout !== "row" && raw[k] !== undefined && raw[k] !== null)
+      throw new Error(`${CARD_TYPE}: ${k} is the row's: layout: row`);
+  const overflow = raw.overflow ?? "wrap";
+  if (!TILE_GROUP_OVERFLOWS.includes(overflow as TileGroupOverflow))
+    throw new Error(`${CARD_TYPE}: overflow must be one of ${TILE_GROUP_OVERFLOWS.join(" | ")}`);
+  const align = raw.align ?? "stretch";
+  if (!ALIGNS.includes(align as Align))
+    throw new Error(`${CARD_TYPE}: align must be one of ${ALIGNS.join(" | ")}`);
+  const columns = raw.columns ?? null;
+  if (
+    columns !== null &&
+    !(Number.isInteger(columns) && (columns as number) >= 1 && (columns as number) <= 12)
+  )
+    throw new Error(
+      `${CARD_TYPE}: columns is the most tiles on a line: a whole number from 1 to 12`,
+    );
+  if (columns !== null && overflow !== "wrap")
+    throw new Error(
+      `${CARD_TYPE}: columns is the most tiles on a line: overflow: ${overflow} keeps them on one`,
+    );
+  const padding = raw.padding ?? true;
+  if (typeof padding !== "boolean") throw new Error(`${CARD_TYPE}: padding takes true or false`);
+  // the list's own key: what is below a tile's line starts at its name
+  if (layout !== "list" && raw.indent !== undefined && raw.indent !== null)
+    throw new Error(`${CARD_TYPE}: indent is the list's: layout: list`);
+  const indent = raw.indent ?? false;
+  if (typeof indent !== "boolean") throw new Error(`${CARD_TYPE}: indent takes true or false`);
   if (!Array.isArray(raw.tiles) || !raw.tiles.length)
     throw new Error(`${CARD_TYPE}: tiles must be a list of entities or tiles`);
   const tiles = raw.tiles.map((e, i): TileGroupTile => {
@@ -100,14 +155,21 @@ export const normalizeTileGroupConfig = (input: unknown): TileGroupConfig => {
       throw new Error(`${CARD_TYPE}: ${label}: vertical is the group's layout (layout: row)`);
     if (own.table !== undefined)
       throw new Error(`${CARD_TYPE}: ${label}: table is the group's layout (layout: table)`);
+    if (own.indent !== undefined)
+      throw new Error(`${CARD_TYPE}: ${label}: indent is the group's (layout: list)`);
     const { visibility, ...rest } = own;
     const entity = typeof rest.entity === "string" ? rest.entity : null;
     return {
       config: {
         type: `custom:${TILE_TYPE}`,
         ...rest,
-        // a table's rows: the name, the value and one thing after it
-        ...(layout === "table" ? { table: true } : { vertical: layout === "row" }),
+        // a table's rows: the name, the value and one thing after it; a row's tiles vertical; a
+        // list's indented where the group says so
+        ...(layout === "table"
+          ? { table: true }
+          : layout === "row"
+            ? { vertical: true }
+            : { vertical: false, ...(indent ? { indent: true } : {}) }),
       },
       visibility: normalizeVisibility(visibility, { type: CARD_TYPE, label, entity }),
     };
@@ -139,5 +201,10 @@ export const normalizeTileGroupConfig = (input: unknown): TileGroupConfig => {
     headerIdxs: badges.map((_, i) => i),
     hasHeader: true,
     tiles,
+    overflow: overflow as TileGroupOverflow,
+    rowAlign: align as Align,
+    rowColumns: columns as number | null,
+    padding,
+    indent,
   };
 };

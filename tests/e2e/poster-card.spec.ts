@@ -710,8 +710,8 @@ test.describe("poster types", () => {
       control: {
         type: "buttons",
         options: [
-          { entity: "scene.dimmed", label: "Dim" },
-          { entity: "scene.movie_night", label: "Movie" },
+          { entity: "scene.dimmed", name: "Dim", show_name: true },
+          { entity: "scene.movie_night", name: "Movie", show_name: true },
         ],
       },
     });
@@ -724,6 +724,69 @@ test.describe("poster types", () => {
     expect(a.top).toBeGreaterThan((await rect(c.locator(".plead"))).bottom);
     await chips.nth(1).click();
     expect(await services(page)).toEqual(["scene.turn_on"]);
+  });
+
+  test("your own buttons show their entity's state: filled while active, their value, their rules", async ({
+    page,
+  }) => {
+    await mount(page, {
+      type: P,
+      entity: "sensor.living_room_temperature",
+      name: "Living room",
+      control: {
+        type: "buttons",
+        position: "block",
+        options: [
+          { entity: "binary_sensor.window_kitchen" },
+          {
+            entity: "climate.living_room",
+            attribute: "current_temperature",
+            show_value: true,
+            rules: [{ attribute: "hvac_action", state: "heating", icon: "mdi:fire" }],
+          },
+          {
+            entity: "sensor.washer_power",
+            rules: [{ above: 5, value: "Running", color: "teal", active: true }],
+          },
+          {
+            entity: "binary_sensor.door_front",
+            visibility: [{ condition: "state", state: "on" }],
+          },
+        ],
+      },
+    });
+    const buttons = card(page).locator(".ctl-buttons.custom > button");
+    // the door is closed: left out
+    await expect(buttons).toHaveCount(3);
+    const [win, heat, washer] = [buttons.nth(0), buttons.nth(1), buttons.nth(2)];
+    await expect(win).toHaveClass(/\bon\b/);
+    await expect(heat).toHaveClass(/\bon\b/);
+    await expect(heat).toHaveText("21.6 °C");
+    expect(
+      await heat
+        .locator("ha-state-icon, ha-icon")
+        .first()
+        .evaluate((e) => (e as HTMLElement & { _icon?: string })._icon || e.getAttribute("icon")),
+    ).toBe("mdi:fire");
+    await expect(washer).toHaveText("Running");
+    // the window shuts, the thermostat is warm enough, the washer is done, the door opens
+    await setState(page, "binary_sensor.window_kitchen", "off");
+    await setState(page, "climate.living_room", "heat", {
+      hvac_action: "idle",
+      current_temperature: 21.6,
+    });
+    await setState(page, "sensor.washer_power", "1");
+    await setState(page, "binary_sensor.door_front", "on");
+    await expect(buttons).toHaveCount(4);
+    await expect(buttons.nth(0)).not.toHaveClass(/\bon\b/);
+    await expect(buttons.nth(1)).not.toHaveClass(/\bon\b/);
+    await expect(buttons.nth(2)).toHaveText("");
+    await expect(buttons.nth(3)).toHaveClass(/\bon\b/);
+    // a sensor's button opens its dialog
+    await buttons.nth(0).click();
+    expect(await infos(page)).toEqual([
+      { type: "more-info", entityId: "binary_sensor.window_kitchen" },
+    ]);
   });
 
   test("a cover glides through the positions it reports on its way, and stops", async ({

@@ -7,6 +7,9 @@ import {
   DETECTED,
   badgeFromForm,
   badgeToForm,
+  buttonFromForm,
+  buttonToForm,
+  buttonsFromForm,
   conditionFromForm,
   conditionToForm,
   configToForm,
@@ -459,7 +462,16 @@ describe("the editor form: the controls", () => {
     const form = formOf({ ...COVER, control: own });
     // the cover's own control is its buttons: the default, with your buttons in its list
     expect(form.control_type).toBe(DEFAULT);
-    expect(form.control_buttons).toEqual([{ entity: "script.check_windows", label: "Morning" }]);
+    // (a 3.0 label is a name that shows; rules and visibility are lists of their own)
+    expect(form.control_buttons).toEqual([
+      {
+        entity: "script.check_windows",
+        name: "Morning",
+        show_name: true,
+        rules: [],
+        visibility: [],
+      },
+    ]);
     // untouched: as written; a button added: still the buttons
     expect(edit({ ...COVER, control: own }, { name: "Awning" })).toEqual({
       ...COVER,
@@ -591,7 +603,9 @@ describe("the editor form: the controls", () => {
         ...LIGHT,
         control: { type: "buttons", options: [{ entity: "scene.bright", label: "Bright" }] },
       }).control_buttons,
-    ).toEqual([{ entity: "scene.bright", label: "Bright" }]);
+    ).toEqual([
+      { entity: "scene.bright", name: "Bright", show_name: true, rules: [], visibility: [] },
+    ]);
   });
 
   it("writes what a control sets where it is not its default", () => {
@@ -1101,5 +1115,58 @@ describe("the editor form: the height", () => {
     expect(
       configToForm({ type: "x" } as CardConfigBase, kindsOf({}, hass).kind, "tile"),
     ).toMatchObject({ fill_height: true });
+  });
+});
+
+describe("the editor form: your own buttons", () => {
+  it("read a 3.0 button in the keys of now, its rules and visibility as lists", () => {
+    const form = buttonToForm({
+      entity: "scene.dimmed",
+      label: "Dim",
+      action: "toggle",
+      rules: [{ state: "on", active: false }],
+      visibility: { condition: "state", state: "on" },
+    });
+    expect(form).toMatchObject({
+      entity: "scene.dimmed",
+      name: "Dim",
+      show_name: true,
+      tap_action: { action: "toggle" },
+      rules: [{ state: "on", active: "false" }],
+      visibility: [{ condition: "state", state: "on" }],
+    });
+    expect(buttonFromForm(form)).toEqual({
+      entity: "scene.dimmed",
+      name: "Dim",
+      show_name: true,
+      tap_action: { action: "toggle" },
+      rules: [{ state: "on", active: false }],
+      visibility: [{ condition: "state", state: "on" }],
+    });
+  });
+
+  it("write what the form says, the shortest way, and keep a button the form left as it was", () => {
+    expect(
+      buttonFromForm({
+        entity: "climate.a",
+        show_name: false,
+        show_value: true,
+        attribute: "current_temperature",
+        rules: [{ attribute: "hvac_action", state: "heating", active: "true" }],
+        visibility: [],
+      }),
+    ).toEqual({
+      entity: "climate.a",
+      attribute: "current_temperature",
+      show_value: true,
+      rules: [{ attribute: "hvac_action", state: "heating", active: true }],
+    });
+    const written = [{ entity: "scene.dimmed", label: "Dim" }, { entity: "light.a" }];
+    const forms = written.map(buttonToForm);
+    expect(buttonsFromForm(forms, written)).toEqual(written);
+    expect(buttonsFromForm([{ ...forms[0], name: "Dimmed" }, forms[1]], written)).toEqual([
+      { entity: "scene.dimmed", name: "Dimmed", show_name: true },
+      { entity: "light.a" },
+    ]);
   });
 });

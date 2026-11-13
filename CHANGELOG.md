@@ -1,5 +1,32 @@
 # Changelog
 
+## 3.1.0 – Buttons that show state, tile group rows
+
+_Beta_
+
+### What's new
+
+- **Buttons that show state:** the poster's and the tile's own buttons (`control: { type: buttons }`) take a badge's keys: `name` and `show_name`, `attribute`, `value` and `show_value`, `unit`, `decimals`, `prefix`, `suffix`, and `rules` that set the icon, the colour, the text, a pulse and whether the button is filled (`active`). A room's poster can carry its lights, blinds, windows and heating in one row, and with `visibility` show only what needs attention. [Controls](https://malte-wessel.github.io/pro-cards/cards/controls#buttons-that-show-state)
+- **A rule's own `attribute`:** a rule on a button, a badge, a tile or a poster can read an attribute in place of the shown value, such as a thermostat's `hvac_action` beside its temperature. [Look](https://malte-wessel.github.io/pro-cards/cards/look#rules)
+- **Tile group rows:** `overflow` says what a row does with tiles that do not fit (`wrap`, `shrink` on one line, or `scroll`), `align` where its tiles sit (`stretch`, `start`, `center`, `end`, `space-between`), `columns` the most tiles on a line. [Tile group](https://malte-wessel.github.io/pro-cards/cards/tile-group-card#row)
+- **Tile group lists beside the icon:** `indent: true` on a list starts what a tile draws below its line (a bar, a plot, a slider, buttons) at its name, beside the icon, so the icons keep one column and everything else lines up in the next. [Tile group](https://malte-wessel.github.io/pro-cards/cards/tile-group-card#below-the-line)
+- **Tile groups without padding:** `padding: false` puts the tiles flush with the card and each other, square and without borders. [Tile group](https://malte-wessel.github.io/pro-cards/cards/tile-group-card#without-padding)
+
+### Changed: existing cards look different
+
+- **Buttons fill by state:** a button of your own fills while its entity is active, as Home Assistant colours it: a window or a door open, motion or smoke seen, a person home, a thermostat while it heats or cools. Before, only buttons that switch their entity filled. A sensor, a number, a scene and a script stay grey.
+- **Today's low and high only on the poster:** a temperature or humidity tile no longer shows them; the poster words them as today's (Today 19.1–21.6 °C). [Kinds](https://malte-wessel.github.io/pro-cards/cards/kinds#temperature-and-humidity)
+- **Attributes as Home Assistant writes them:** an `attribute` you name on a tile, a poster, a badge or a button shows with its unit and in Home Assistant's words ("21.6 °C", "Heating" where it read "heating"). A light's brightness still shows 0–255. A `unit` or `decimals` of your own still win.
+
+### Fixes
+
+- A hold button (`control: hold`) that switches its entity is filled while it is on.
+- A tile leaves out buttons below its line that do not fit, instead of cutting them off.
+
+### Deprecated, gone in 4.0
+
+- A button's `label` is `name` with `show_name: true`, and its `action` is `tap_action`. [Moving](https://malte-wessel.github.io/pro-cards/guide/migrating#button-keys)
+
 ## 3.0.0 – Poster and tile cards, energy flow, heading and swipe cards
 
 _2026-11-12_

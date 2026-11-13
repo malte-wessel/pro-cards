@@ -14,12 +14,14 @@ import {
   DETECTED,
   badgeFromForm,
   badgeToForm,
+  buttonFromForm,
   conditionIsEmpty,
   seriesFromForm,
 } from "./editor-form.ts";
 import {
   badgeFieldLabel,
   badgeItemSchema,
+  buttonFieldLabel,
   buttonItemSchema,
   conditionItemSchema,
   fitsKind,
@@ -38,7 +40,7 @@ export interface RuleReads {
   entity: string;
   unit: string;
   numeric: boolean;
-  flavor?: "card" | "badge" | "line" | "entity";
+  flavor?: "card" | "badge" | "line" | "entity" | "button";
 }
 
 // an item type of a card's own
@@ -193,6 +195,9 @@ export const itemHooks = (ctx: ItemCtx): ViewHooks => {
         flavor: "badge",
       };
     if (parentType === "series") return { ...readsOf(str(parent.entity)), flavor: "line" };
+    // one of your own buttons': its entity and attribute
+    if (of === "control_buttons")
+      return { ...readsOf(str(parent.entity), str(parent.attribute)), flavor: "button" };
     // another item's (a weather section's): what the card says its rules of that name read
     return ctx.rules?.(key) ?? { ...readsOf(str(parent.entity)), flavor: "entity" };
   };
@@ -221,6 +226,7 @@ export const itemHooks = (ctx: ItemCtx): ViewHooks => {
             badge: r.flavor === "badge",
             line: r.flavor === "line",
             entityRule: r.flavor === "entity",
+            button: r.flavor === "button",
           });
         }
         case "series":
@@ -230,7 +236,7 @@ export const itemHooks = (ctx: ItemCtx): ViewHooks => {
         case "control_options":
           return optionItemSchema(h);
         case "control_buttons":
-          return buttonItemSchema(h);
+          return buttonItemSchema(h, item);
       }
       return [];
     },
@@ -242,6 +248,7 @@ export const itemHooks = (ctx: ItemCtx): ViewHooks => {
       const type = builtin(path);
       if (type === "rules") return ruleFieldLabel(hass(), sch.name);
       if (type === "badges") return badgeFieldLabel(hass(), sch.name);
+      if (type === "control_buttons") return buttonFieldLabel(hass(), sch.name);
       const of =
         type === "visibility"
           ? "cond"
@@ -287,7 +294,7 @@ export const itemHooks = (ctx: ItemCtx): ViewHooks => {
         case "control_options":
           return L("option_title", n);
         case "control_buttons":
-          return L("button_title", n);
+          return named("button_title");
         case "series":
           return named("line_title");
       }
@@ -316,8 +323,9 @@ export const itemHooks = (ctx: ItemCtx): ViewHooks => {
           return { condition: "state" };
         case "rules":
         case "control_options":
-        case "control_buttons":
           return {};
+        case "control_buttons":
+          return { rules: [], visibility: [] };
       }
       return undefined;
     },
@@ -338,8 +346,9 @@ export const itemHooks = (ctx: ItemCtx): ViewHooks => {
         }
         case "rules":
         case "control_options":
-        case "control_buttons":
           return saysNothing(item);
+        case "control_buttons":
+          return !Object.keys(buttonFromForm(item)).length;
         case "badges": {
           if (hint.source === "custom" && !item.value) return true;
           const b = badgeFromForm(item);

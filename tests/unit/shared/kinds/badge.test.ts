@@ -144,6 +144,20 @@ describe("a v3 badge as written", () => {
     );
   });
 
+  it("reads a rule on an attribute of its own; fills nothing", () => {
+    const b = pill({
+      entity: "climate.a",
+      attribute: "current_temperature",
+      rules: [{ attribute: "hvac_action", state: "heating", color: "deep-orange" }],
+    });
+    expect(b.rules[0]).toMatchObject({ attribute: "hvac_action", state: "heating" });
+    expect(b.haAttribute).toBe(true);
+    fails(
+      { entity: "sensor.x", rules: [{ state: "on", active: true }] },
+      ".rules[0]: a badge is never filled: active is a button's",
+    );
+  });
+
   it("takes texts, styles and rules as written, never a word YAML read as true", () => {
     fails(
       { entity: "sensor.x", value: true },

@@ -659,6 +659,20 @@ add("po-controls", [
   p("button.restart_router", { control: "button" }),
   p("lock.front_door", { control: "hold" }),
 ]);
+// a hold that switches shows on and off as a switch does: filled in the card's colour while on (a
+// rule's green here), on a poster and on a tile
+{
+  const { ids, states } = levels("switch.coffee_machine", "po_hold", ["on", "off"]);
+  const rules = [{ state: "on", color: "#88e788" }];
+  add(
+    "po-hold-switch",
+    [
+      ...ids.map((id) => p(id, { control: "hold", rules })),
+      ...ids.map((id) => ({ type: "custom:tile-card-pro", entity: id, control: "hold", rules })),
+    ],
+    { states },
+  );
+}
 add("po-controls-buttons", [
   p(null, {
     name: "Living room",
@@ -667,9 +681,9 @@ add("po-controls-buttons", [
     control: {
       type: "buttons",
       options: [
-        { entity: "light.living_room", label: "Ceiling" },
+        { entity: "light.living_room", name: "Ceiling", show_name: true },
         { entity: "light.kitchen", icon: "mdi:lightbulb-outline" },
-        { icon: "mdi:movie-open", label: "Movie", action: { action: "none" } },
+        { icon: "mdi:movie-open", name: "Movie", show_name: true, tap_action: { action: "none" } },
       ],
     },
     grid_options: { columns: 12 },
@@ -678,6 +692,75 @@ add("po-controls-buttons", [
   p("light.attic", { control: { type: "slider", position: "end" }, name: "Slider at the end" }),
   p("input_number.target_humidity", { control: { type: "stepper", position: "block" } }),
   p("fan.living_room", { control: { type: "segments", position: "block" } }),
+]);
+
+// your own buttons showing state: filled while their entity is active (a window open, a person
+// home, a thermostat heating or cooling), their value, rules (a rule's attribute, a text, a fill,
+// a grey icon in a rule's colour, a pulse) and a sensor that never fills on its own
+add("po-controls-buttons-state", [
+  p("sensor.living_room_temperature", {
+    name: "Living room",
+    icon: "mdi:sofa-outline",
+    visual: false,
+    control: {
+      type: "buttons",
+      position: "block",
+      options: [
+        { entity: "light.living_room" },
+        { entity: "cover.living_room_blinds", attribute: "current_position", show_value: true },
+        { entity: "binary_sensor.window_kitchen", rules: [{ state: "on", color: "red" }] },
+        { entity: "binary_sensor.door_front" },
+        { entity: "person.malte" },
+        { entity: "person.sam" },
+      ],
+    },
+    grid_options: { columns: 12 },
+  }),
+  p("sensor.living_room_temperature", {
+    name: "Heating",
+    icon: "mdi:radiator",
+    visual: false,
+    control: {
+      type: "buttons",
+      position: "block",
+      options: [
+        {
+          entity: "climate.living_room",
+          attribute: "current_temperature",
+          show_value: true,
+          rules: [{ attribute: "hvac_action", state: "heating", icon: "mdi:fire" }],
+        },
+        { entity: "climate.office" },
+        { entity: "climate.bedroom" },
+      ],
+    },
+    grid_options: { columns: 12 },
+  }),
+  p("sensor.washer_power", {
+    name: "Utility",
+    visual: false,
+    control: {
+      type: "buttons",
+      position: "block",
+      options: [
+        { entity: "sensor.washer_power", show_value: true },
+        {
+          entity: "sensor.washer_power",
+          icon: "mdi:washing-machine",
+          rules: [{ above: 5, value: "Running", color: "teal", active: true }],
+        },
+        {
+          entity: "binary_sensor.motion_hallway",
+          rules: [{ state: "off", color: "amber", active: false }],
+        },
+        {
+          entity: "binary_sensor.smoke_hallway",
+          rules: [{ state: "off", pulse: true, color: "red", active: true }],
+        },
+      ],
+    },
+    grid_options: { columns: 12 },
+  }),
 ]);
 
 // what a control sets on a poster: a lamp's colour temperature, a water heater's target and

@@ -1488,3 +1488,100 @@ describe("schema: the keys the heading, multi trend and weather cards renamed", 
     expect(validate({ ...W, hover: false })).toBeNull();
   });
 });
+
+describe("a poster's and a tile's own buttons", () => {
+  const card = (options: unknown[], type = "custom:poster-card-pro") =>
+    validate({ type, name: "Room", control: { type: "buttons", options } });
+  it("take a badge's keys and rules of their own", () => {
+    for (const type of ["custom:poster-card-pro", "custom:tile-card-pro"])
+      expect(
+        card(
+          [
+            {
+              entity: "climate.living_room",
+              name: "Heating",
+              show_name: true,
+              attribute: "current_temperature",
+              show_value: true,
+              unit: "°C",
+              decimals: 1,
+              rules: [
+                { attribute: "hvac_action", state: "heating", icon: "mdi:fire", active: true },
+                { state: true, attribute: "is_on", value: "On", color: "red", pulse: true },
+              ],
+              visibility: [{ condition: "state", state: "heat" }],
+            },
+            { name: "Away", tap_action: { action: "navigate", navigation_path: "/a" } },
+          ],
+          type,
+        ),
+      ).toBeNull();
+  });
+  it("read 3.0's label and action, never beside their new spelling", () => {
+    expect(card([{ entity: "scene.a", label: "A", action: { action: "toggle" } }])).toBeNull();
+    expect(card([{ entity: "scene.a", label: "A", name: "A" }])).toBeTruthy();
+    expect(card([{ entity: "scene.a", action: {}, tap_action: {} }])).toBeTruthy();
+  });
+  it("hold a rule to what a button's rule sets", () => {
+    expect(card([{ entity: "scene.a", rules: [{ state: "on", style: "filled" }] }])).toBeTruthy();
+    expect(card([{ entity: "scene.a", rules: [{ state: "on", status: "x" }] }])).toBeTruthy();
+    expect(card([{ entity: "scene.a", rules: [{ icon: "mdi:x" }] }])).toBeTruthy();
+  });
+  it("leave the entity cards' buttons as they were", () => {
+    expect(
+      validate({
+        type: "custom:entity-card-pro",
+        entity: "light.kitchen",
+        control: "buttons",
+        control_options: [{ entity: "scene.a", show_value: true }],
+      }),
+    ).toBeTruthy();
+  });
+  it("let a card's and a badge's rules read an attribute, never fill", () => {
+    const T = "custom:tile-card-pro";
+    expect(
+      validate({
+        type: T,
+        entity: "climate.living_room",
+        rules: [{ attribute: "hvac_action", state: "heating", color: "red" }],
+        badges: [
+          { entity: "climate.living_room", rules: [{ attribute: "hvac_action", state: "idle" }] },
+        ],
+      }),
+    ).toBeNull();
+    expect(
+      validate({
+        type: T,
+        entity: "light.kitchen",
+        badges: [{ rules: [{ state: "on", active: true }] }],
+      }),
+    ).toBeTruthy();
+  });
+});
+
+describe("a tile group's row options and padding", () => {
+  const TG = "custom:tile-group-card-pro";
+  const ok = (o: Record<string, unknown>) => validate({ type: TG, tiles: ["light.kitchen"], ...o });
+  it("takes the row's keys on a row, padding on any layout", () => {
+    expect(ok({ layout: "row", overflow: "scroll", align: "center" })).toBeNull();
+    expect(ok({ layout: "row", overflow: "wrap", columns: 3, align: "space-between" })).toBeNull();
+    for (const layout of ["list", "row", "table"])
+      expect(ok({ layout, padding: false })).toBeNull();
+  });
+  it("refuses the row's keys elsewhere, a most on a line with one line, and wrong values", () => {
+    expect(ok({ align: "start" })).toBeTruthy();
+    expect(ok({ layout: "table", overflow: "scroll" })).toBeTruthy();
+    expect(ok({ layout: "row", columns: 3, overflow: "shrink" })).toBeTruthy();
+    expect(ok({ layout: "row", columns: 0 })).toBeTruthy();
+    expect(ok({ layout: "row", overflow: "hide" })).toBeTruthy();
+    expect(ok({ padding: 0 })).toBeTruthy();
+  });
+  it("takes indent on a list only, never on a tile", () => {
+    expect(ok({ indent: false })).toBeNull();
+    expect(ok({ layout: "list", indent: true })).toBeNull();
+    expect(ok({ layout: "row", indent: false })).toBeTruthy();
+    expect(ok({ layout: "table", indent: true })).toBeTruthy();
+    expect(ok({ indent: "no" })).toBeTruthy();
+    expect(ok({ tiles: [{ entity: "light.kitchen", indent: false }] })).toBeTruthy();
+  });
+});

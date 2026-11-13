@@ -16,35 +16,35 @@ A kind brings:
 - **A visual:** a light's glow, the weather's forecast, a cover's window. See [Look](/cards/look) to change or remove it.
 - **Inputs:** the other entities it reads, such as the gusts beside the wind speed. The kind finds them on the same device as your entity. Name one under `inputs` when it finds none or the wrong one, or set it to `false` to leave it out.
 
-| Kind                                                                            | Reads                                         | Draws                                          |
-| ------------------------------------------------------------------------------- | --------------------------------------------- | ---------------------------------------------- |
-| [`none`](#none)                                                                 | any entity                                    | its icon, name and value                       |
-| [`weather`](#weather)                                                           | `weather.*`                                   | the condition's picture, the forecast          |
-| [`sun`](#sun)                                                                   | `sun.sun`, or no entity                       | the next sunrise or sunset, the day's curve    |
-| [`wind`](#wind)                                                                 | a `wind_speed` sensor, or a weather entity    | particles in the wind, direction and gusts     |
-| [`rain`](#rain)                                                                 | a `precipitation_intensity` sensor            | falling drops, today's total                   |
-| [`carbon_dioxide`, `pm25`, `pm10`, `aqi`](#air-quality)                         | a sensor of that device class                 | the value in the colours of its standard       |
-| [`trend`](#trend)                                                               | its `series` (set with `kind`)                | several sensors as lines on one scale          |
-| [`temperature`, `humidity`](#temperature-and-humidity)                          | a sensor of that device class                 | the day's line, today's low and high           |
-| [`illuminance`](#illuminance)                                                   | an `illuminance` sensor                       | dark, dim or bright, the day's line            |
-| [`opening`](#doors-and-windows)                                                 | a door, window or opening binary sensor       | open or closed, for how long, when it was open |
-| [`motion`](#motion)                                                             | a motion, occupancy or presence binary sensor | detected or clear, for how long, when          |
-| [`safety`](#leaks-and-smoke)                                                    | a leak, smoke, gas or problem binary sensor   | a red pulse while it alerts                    |
-| [`battery`](#battery)                                                           | a `battery` sensor                            | the charge as ten segments                     |
-| [`grid`](#grid)                                                                 | a power sensor (set with `kind`)              | importing or exporting, a power line           |
-| [`solar`](#solar)                                                               | a power sensor (set with `kind`)              | the power now, today's production              |
-| [`car`](#car)                                                                   | the car's battery (set with `kind`)           | the charge, the range, charging or where       |
-| [`appliance`, `pump`, `washer`, `dryer`, `dishwasher`, `heat_pump`](#appliance) | a power sensor (set with `kind`)              | how long it runs, the energy of this run       |
-| [`light`](#light)                                                               | `light.*`                                     | brightness, a switch, a glow                   |
-| [`plug`](#plug)                                                                 | an `outlet` switch                            | a switch, its power                            |
-| [`fan`](#fan)                                                                   | `fan.*`                                       | turning blades, its speeds                     |
-| [`climate`](#climate)                                                           | `climate.*`                                   | the temperature, a stepper, a warm glow        |
-| [`cover`](#cover)                                                               | `cover.*`                                     | the position, open / stop / close, its window  |
-| [`lock`](#lock)                                                                 | `lock.*`                                      | locked or not, hold to lock                    |
-| [`alarm_control_panel`](#alarm)                                                 | `alarm_control_panel.*`                       | its state, hold to arm                         |
-| [`media_player`](#media-player)                                                 | `media_player.*`                              | the cover art, the title, the transport        |
-| [`vacuum`, `lawn_mower`](#vacuum-and-lawn-mower)                                | `vacuum.*`, `lawn_mower.*`                    | the robot at work, its path                    |
-| [`person`](#person)                                                             | `person.*`, `device_tracker.*`                | their picture, the zone and how long           |
+| Kind                                                                            | Reads                                         | Draws                                             |
+| ------------------------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------- |
+| [`none`](#none)                                                                 | any entity                                    | its icon, name and value                          |
+| [`weather`](#weather)                                                           | `weather.*`                                   | the condition's picture, the forecast             |
+| [`sun`](#sun)                                                                   | `sun.sun`, or no entity                       | the next sunrise or sunset, the day's curve       |
+| [`wind`](#wind)                                                                 | a `wind_speed` sensor, or a weather entity    | particles in the wind, direction and gusts        |
+| [`rain`](#rain)                                                                 | a `precipitation_intensity` sensor            | falling drops, today's total                      |
+| [`carbon_dioxide`, `pm25`, `pm10`, `aqi`](#air-quality)                         | a sensor of that device class                 | the value in the colours of its standard          |
+| [`trend`](#trend)                                                               | its `series` (set with `kind`)                | several sensors as lines on one scale             |
+| [`temperature`, `humidity`](#temperature-and-humidity)                          | a sensor of that device class                 | on a poster: the day's line, today's low and high |
+| [`illuminance`](#illuminance)                                                   | an `illuminance` sensor                       | dark, dim or bright, the day's line               |
+| [`opening`](#doors-and-windows)                                                 | a door, window or opening binary sensor       | open or closed, for how long, when it was open    |
+| [`motion`](#motion)                                                             | a motion, occupancy or presence binary sensor | detected or clear, for how long, when             |
+| [`safety`](#leaks-and-smoke)                                                    | a leak, smoke, gas or problem binary sensor   | a red pulse while it alerts                       |
+| [`battery`](#battery)                                                           | a `battery` sensor                            | the charge as ten segments                        |
+| [`grid`](#grid)                                                                 | a power sensor (set with `kind`)              | importing or exporting, a power line              |
+| [`solar`](#solar)                                                               | a power sensor (set with `kind`)              | the power now, today's production                 |
+| [`car`](#car)                                                                   | the car's battery (set with `kind`)           | the charge, the range, charging or where          |
+| [`appliance`, `pump`, `washer`, `dryer`, `dishwasher`, `heat_pump`](#appliance) | a power sensor (set with `kind`)              | how long it runs, the energy of this run          |
+| [`light`](#light)                                                               | `light.*`                                     | brightness, a switch, a glow                      |
+| [`plug`](#plug)                                                                 | an `outlet` switch                            | a switch, its power                               |
+| [`fan`](#fan)                                                                   | `fan.*`                                       | turning blades, its speeds                        |
+| [`climate`](#climate)                                                           | `climate.*`                                   | the temperature, a stepper, a warm glow           |
+| [`cover`](#cover)                                                               | `cover.*`                                     | the position, open / stop / close, its window     |
+| [`lock`](#lock)                                                                 | `lock.*`                                      | locked or not, hold to lock                       |
+| [`alarm_control_panel`](#alarm)                                                 | `alarm_control_panel.*`                       | its state, hold to arm                            |
+| [`media_player`](#media-player)                                                 | `media_player.*`                              | the cover art, the title, the transport           |
+| [`vacuum`, `lawn_mower`](#vacuum-and-lawn-mower)                                | `vacuum.*`, `lawn_mower.*`                    | the robot at work, its path                       |
+| [`person`](#person)                                                             | `person.*`, `device_tracker.*`                | their picture, the zone and how long              |
 
 ## The plain entity
 
@@ -200,7 +200,7 @@ Four kinds, detected by the sensor's device class, colour and name the value by 
 
 ### Temperature and humidity
 
-The value with today's low and high under it (↓ 19.1 ↑ 21.6), and on the poster a line of the last 24 hours. The tile stays compact; `visual: sparkline` adds the line. They bring no colours: a comfortable temperature is yours to say with `rules`.
+On a poster, the value with today's low and high under it (Today 19.1–21.6 °C) and a line of the last 24 hours. A tile shows the value and its status on its one line; `visual: sparkline` adds the line. They bring no colours: a comfortable temperature is yours to say with `rules`.
 
 ::: live
 
