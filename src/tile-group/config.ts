@@ -11,6 +11,7 @@ import {
   type EntityCardConfig,
   type RawAction,
 } from "../shared/entity/config.ts";
+import { ALIGNS, type Align } from "../shared/entity/constants.ts";
 import { badgeWindow, normalizePills } from "../shared/kinds/badge.ts";
 import { normalizeVisibility, type Visibility } from "../shared/visibility.ts";
 
@@ -18,6 +19,11 @@ export const CARD_TYPE = "tile-group-card-pro";
 export const TILE_TYPE = "tile-card-pro";
 export const TILE_GROUP_LAYOUTS = ["list", "row", "table"] as const;
 export type TileGroupLayout = (typeof TILE_GROUP_LAYOUTS)[number];
+// a row's tiles where they do not fit on a line: onto the next one, shrunk on one, or scrolling
+export const TILE_GROUP_OVERFLOWS = ["wrap", "shrink", "scroll"] as const;
+export type TileGroupOverflow = (typeof TILE_GROUP_OVERFLOWS)[number];
+// the row's own keys: no other layout takes them
+const ROW_KEYS = ["overflow", "align", "columns"] as const;
 
 // the card's own keys: the header, the layout, the tiles and Home Assistant's. It sets nothing on
 // its tiles but their layout (`row`: vertical): each tile says everything about itself
@@ -36,6 +42,10 @@ const CARD_KEYS = new Set([
   "card_mod",
   "fill_height",
   "vertical_align",
+  "overflow",
+  "align",
+  "columns",
+  "padding",
 ]);
 
 export interface TileGroupTile {
@@ -47,6 +57,14 @@ export interface TileGroupTile {
 export interface TileGroupConfig extends EntityCardConfig {
   layout: TileGroupLayout;
   tiles: TileGroupTile[];
+  // a row: its tiles where they do not fit on a line, where they sit on it (stretch: they share
+  // its width; else each keeps the row's column width), the most of them on a line (null: as many
+  // as fit). (`columns` is the entity layer's own)
+  overflow: TileGroupOverflow;
+  rowAlign: Align;
+  rowColumns: number | null;
+  // false: the tiles flush with the card and each other, square, without borders
+  padding: boolean;
 }
 
 interface RawTileGroupConfig extends CardConfigBase {
@@ -56,6 +74,10 @@ interface RawTileGroupConfig extends CardConfigBase {
   icon?: string | null;
   badges?: unknown;
   tiles?: unknown;
+  overflow?: unknown;
+  align?: unknown;
+  columns?: unknown;
+  padding?: unknown;
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
@@ -69,7 +91,6 @@ const OLD_LAYOUTS: Record<string, string> = {
 };
 const OLD_KEYS: Record<string, string> = {
   header_entities: "header_entities is badges",
-  align: "align is gone: a tile lays out its own line",
   name_position: "name_position is gone: a tile's name is above its line",
 };
 
@@ -87,6 +108,30 @@ export const normalizeTileGroupConfig = (input: unknown): TileGroupConfig => {
       throw new Error(
         `${CARD_TYPE}: ${OLD_KEYS[k] ?? `a tile group sets nothing on its tiles: ${k} goes on each tile`}`,
       );
+  // the row's own keys: where its tiles go when they do not fit, where they sit, how many on a line
+  for (const k of ROW_KEYS)
+    if (layout !== "row" && raw[k] !== undefined && raw[k] !== null)
+      throw new Error(`${CARD_TYPE}: ${k} is the row's: layout: row`);
+  const overflow = raw.overflow ?? "wrap";
+  if (!TILE_GROUP_OVERFLOWS.includes(overflow as TileGroupOverflow))
+    throw new Error(`${CARD_TYPE}: overflow must be one of ${TILE_GROUP_OVERFLOWS.join(" | ")}`);
+  const align = raw.align ?? "stretch";
+  if (!ALIGNS.includes(align as Align))
+    throw new Error(`${CARD_TYPE}: align must be one of ${ALIGNS.join(" | ")}`);
+  const columns = raw.columns ?? null;
+  if (
+    columns !== null &&
+    !(Number.isInteger(columns) && (columns as number) >= 1 && (columns as number) <= 12)
+  )
+    throw new Error(
+      `${CARD_TYPE}: columns is the most tiles on a line: a whole number from 1 to 12`,
+    );
+  if (columns !== null && overflow !== "wrap")
+    throw new Error(
+      `${CARD_TYPE}: columns is the most tiles on a line: overflow: ${overflow} keeps them on one`,
+    );
+  const padding = raw.padding ?? true;
+  if (typeof padding !== "boolean") throw new Error(`${CARD_TYPE}: padding takes true or false`);
   if (!Array.isArray(raw.tiles) || !raw.tiles.length)
     throw new Error(`${CARD_TYPE}: tiles must be a list of entities or tiles`);
   const tiles = raw.tiles.map((e, i): TileGroupTile => {
@@ -139,5 +184,9 @@ export const normalizeTileGroupConfig = (input: unknown): TileGroupConfig => {
     headerIdxs: badges.map((_, i) => i),
     hasHeader: true,
     tiles,
+    overflow: overflow as TileGroupOverflow,
+    rowAlign: align as Align,
+    rowColumns: columns as number | null,
+    padding,
   };
 };

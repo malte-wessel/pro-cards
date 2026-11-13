@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.1.0 – Buttons that show state
+## 3.1.0 – Buttons that show state, tile group rows
 
 _Beta_
 
@@ -8,6 +8,8 @@ _Beta_
 
 - **Buttons that show state:** the poster's and the tile's own buttons (`control: { type: buttons }`) take a badge's keys: `name` and `show_name`, `attribute`, `value` and `show_value`, `unit`, `decimals`, `prefix`, `suffix`, and `rules` that set the icon, the colour, the text, a pulse and whether the button is filled (`active`). A room's poster can carry its lights, blinds, windows and heating in one row, and with `visibility` show only what needs attention. [Controls](https://malte-wessel.github.io/pro-cards/cards/controls#buttons-that-show-state)
 - **A rule's own `attribute`:** a rule on a button, a badge, a tile or a poster can read an attribute in place of the shown value, such as a thermostat's `hvac_action` beside its temperature. [Look](https://malte-wessel.github.io/pro-cards/cards/look#rules)
+- **Tile group rows:** `overflow` says what a row does with tiles that do not fit (`wrap`, `shrink` on one line, or `scroll`), `align` where its tiles sit (`stretch`, `start`, `center`, `end`, `space-between`), `columns` the most tiles on a line. [Tile group](https://malte-wessel.github.io/pro-cards/cards/tile-group-card#row)
+- **Tile groups without padding:** `padding: false` puts the tiles flush with the card and each other, square and without borders. [Tile group](https://malte-wessel.github.io/pro-cards/cards/tile-group-card#without-padding)
 
 ### Changed: existing cards look different
 

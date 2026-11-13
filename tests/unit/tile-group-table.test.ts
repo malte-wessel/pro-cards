@@ -60,7 +60,7 @@ describe("a tile group's table", () => {
     const fails = (o: Record<string, unknown>, msg: string) =>
       expect(() => normalizeTileGroupConfig({ tiles: ["light.kitchen"], ...o })).toThrow(msg);
     fails({ header_entities: ["sensor.x"] }, "header_entities is badges");
-    fails({ align: "start" }, "align is gone");
+    fails({ align: "start" }, "align is the row's: layout: row");
     fails({ layout: "column" }, "layout: column is list");
     fails({ layout: "grid" }, "layout: grid is a layout card of posters");
     fails({ layout: "hero" }, "layout: hero is a layout card");

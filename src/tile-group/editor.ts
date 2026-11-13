@@ -13,17 +13,30 @@ import type { CardConfigBase, HaFormData, HaFormSchema, HomeAssistant } from "..
 import { hasString, t } from "../shared/i18n.ts";
 import { badgesFromForm, badgesToForm } from "../shared/kinds/editor-form.ts";
 import { ICONS } from "../shared/kinds/editor-schema.ts";
-import { TILE_GROUP_LAYOUTS, TILE_TYPE } from "./config.ts";
+import { ALIGNS } from "../shared/entity/constants.ts";
+import { TILE_GROUP_LAYOUTS, TILE_GROUP_OVERFLOWS, TILE_TYPE } from "./config.ts";
 
 export const TILE_GROUP_CONVS: Record<string, Conv> = {
   title: AS_IS,
   icon: AS_IS,
   layout: AS_IS,
   vertical_align: AS_IS,
+  overflow: AS_IS,
+  align: AS_IS,
+  columns: AS_IS,
+  padding: AS_IS,
   title_tap_action: AS_IS,
 };
 // what the form shows where the card sets nothing
-const DEFAULTS = { layout: "list", vertical_align: "top" };
+const DEFAULTS = {
+  layout: "list",
+  vertical_align: "top",
+  overflow: "wrap",
+  align: "stretch",
+  padding: true,
+};
+// the row's own keys, which no other layout takes, and the one a row on one line does not
+const ROW_KEYS = ["overflow", "align", "columns"];
 const TILE = `custom:${TILE_TYPE}`;
 
 const L = (hass: HomeAssistant | undefined, key: string) => {
@@ -40,21 +53,38 @@ const section = (title: string, icon: string, schema: HaFormSchema[]): HaFormSch
   schema,
 });
 
-export const tileGroupSchema = (hass: HomeAssistant | undefined): HaFormSchema[] => [
+const select = (name: string, options: { value: string; label: string }[]): HaFormSchema => ({
+  name,
+  selector: { select: { mode: "dropdown", options } },
+});
+// the header, then the layout: a row's own options (where its tiles go when they do not fit,
+// where they sit, the most on a line while they wrap), where the tiles sit in a taller card, and
+// the space around them; the badges; the title's tap
+export const tileGroupSchema = (
+  hass: HomeAssistant | undefined,
+  data: HaFormData = {},
+): HaFormSchema[] => [
   grid({ name: "title", selector: { text: {} } }, { name: "icon", selector: { icon: {} } }),
   section(t(hass, "editor.card.section.layout"), ICONS.layout, [
-    {
-      name: "layout",
-      selector: {
-        select: {
-          mode: "dropdown",
-          options: TILE_GROUP_LAYOUTS.map((v) => ({
-            value: v,
-            label: L(hass, `group_layout.${v}`),
-          })),
-        },
-      },
-    },
+    select(
+      "layout",
+      TILE_GROUP_LAYOUTS.map((v) => ({ value: v, label: L(hass, `group_layout.${v}`) })),
+    ),
+    ...(data.layout === "row"
+      ? [
+          select(
+            "overflow",
+            TILE_GROUP_OVERFLOWS.map((v) => ({ value: v, label: L(hass, `overflow.${v}`) })),
+          ),
+          select(
+            "align",
+            ALIGNS.map((v) => ({ value: v, label: L(hass, `row_align.${v}`) })),
+          ),
+          ...(data.overflow === "wrap" || !data.overflow
+            ? [{ name: "columns", selector: { number: { mode: "box", min: 1, max: 12, step: 1 } } }]
+            : []),
+        ]
+      : []),
     // where the tiles sit in a taller card (the layout card's words for its own alignment)
     {
       name: "vertical_align",
@@ -72,6 +102,7 @@ export const tileGroupSchema = (hass: HomeAssistant | undefined): HaFormSchema[]
         },
       },
     },
+    { name: "padding", selector: { boolean: {} } },
   ]),
   section(t(hass, "editor.card.field.badges"), ICONS.badges, [
     { name: "badges", selector: { pro_cards_badges: { entity: "", hide_label: true } } },
@@ -152,8 +183,12 @@ export class TileGroupCardEditor extends CardsEditorBase {
   _childContext() {
     return this.tileGroupLayout;
   }
-  _optionsSchema(hass: HomeAssistant | undefined) {
-    return tileGroupSchema(hass);
+  _optionsSchema(hass: HomeAssistant | undefined, data: HaFormData) {
+    return tileGroupSchema(hass, data);
+  }
+  // (`columns` is the most tiles on a line here, not the layout card's tracks)
+  _helper(s: HaFormSchema): string | undefined {
+    return s.name === "columns" ? L(this._hass, "help.row_columns") : super._helper(s);
   }
   _optionsToForm(config: CardConfigBase) {
     return {
@@ -172,6 +207,10 @@ export class TileGroupCardEditor extends CardsEditorBase {
       else delete (next as Record<string, unknown>).badges;
     }
     const layout = (c: CardConfigBase) => (c as { layout?: string }).layout ?? "list";
+    // a row's own keys go with the row; a row on one line has no most on a line
+    const own = next as Record<string, unknown>;
+    if (layout(next) !== "row") for (const k of ROW_KEYS) delete own[k];
+    else if (own.overflow === "shrink" || own.overflow === "scroll") delete own.columns;
     if (layout(next) === layout(prev) || !Array.isArray(next.cards)) return next;
     return {
       ...next,

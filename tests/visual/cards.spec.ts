@@ -2232,6 +2232,96 @@ const CASES = {
       grid_options: { columns: 12, rows: 6 },
     },
   ],
+  // a tile group's row: on one line shrunk or scrolling (a fade where more tiles are), centred at
+  // the column width, three tiles a line
+  "tg-row-options": [
+    {
+      type: TG,
+      layout: "row",
+      overflow: "shrink",
+      title: "Shrink",
+      tiles: [
+        "light.living_room",
+        "light.kitchen",
+        "sensor.living_room_temperature",
+        "sensor.living_room_humidity",
+        "person.malte",
+      ],
+      grid_options: { columns: 12 },
+    },
+    {
+      type: TG,
+      layout: "row",
+      overflow: "scroll",
+      title: "Scroll",
+      tiles: [
+        "light.living_room",
+        "light.kitchen",
+        "sensor.living_room_temperature",
+        "sensor.living_room_humidity",
+        "person.malte",
+      ],
+      grid_options: { columns: 12 },
+    },
+    {
+      type: TG,
+      layout: "row",
+      align: "center",
+      title: "Centre",
+      tiles: ["light.living_room", "sensor.living_room_temperature", "person.malte"],
+      grid_options: { columns: 12 },
+    },
+    {
+      type: TG,
+      layout: "row",
+      columns: 3,
+      title: "Three a line",
+      tiles: [
+        "light.living_room",
+        "light.kitchen",
+        "sensor.living_room_temperature",
+        "sensor.living_room_humidity",
+        "person.malte",
+      ],
+      grid_options: { columns: 12 },
+    },
+  ],
+  // padding: false: the tiles flush with the card and each other, square, borderless
+  "tg-flush": [
+    {
+      type: TG,
+      title: "List",
+      padding: false,
+      tiles: ["light.living_room", "climate.living_room", "person.malte"],
+      grid_options: { columns: 12 },
+    },
+    {
+      type: TG,
+      layout: "row",
+      title: "Row",
+      padding: false,
+      tiles: [
+        "light.living_room",
+        "light.kitchen",
+        "sensor.living_room_temperature",
+        "person.malte",
+      ],
+      grid_options: { columns: 12 },
+    },
+    {
+      type: TG,
+      layout: "table",
+      title: "Table",
+      padding: false,
+      tiles: [
+        "light.living_room",
+        "light.kitchen",
+        "climate.living_room",
+        "cover.living_room_blinds",
+      ],
+      grid_options: { columns: 12 },
+    },
+  ],
   // a tile group's table: one line a tile, the name, the value and one control or visual; at a
   // quarter of the width the rows give way (the status, the name, the control)
   "tg-table": [

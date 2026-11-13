@@ -131,3 +131,109 @@ test.describe("tile group vertical_align: stretch", () => {
     expect(Math.abs(above - below)).toBeLessThan(4);
   });
 });
+
+test.describe("tile group row options and padding", () => {
+  const ROW = [
+    "light.living_room",
+    "light.kitchen",
+    "sensor.living_room_temperature",
+    "sensor.living_room_humidity",
+    "person.malte",
+  ];
+  const boxes = async (page: import("@playwright/test").Page) => {
+    const tiles = card(page).locator(".tiles > .tile:not([hidden])");
+    const out = [];
+    for (let i = 0; i < (await tiles.count()); i++) out.push((await tiles.nth(i).boundingBox())!);
+    return out;
+  };
+
+  test("shrink keeps every tile on one line, narrower than it needs", async ({ page }) => {
+    await mount(
+      page,
+      { type: G, layout: "row", overflow: "shrink", title: "T", tiles: ROW },
+      { layout: null, width: 340 },
+    );
+    const b = await boxes(page);
+    expect(new Set(b.map((x) => Math.round(x.y))).size).toBe(1);
+    expect(Math.max(...b.map((x) => x.width))).toBeLessThan(120);
+  });
+
+  test("scroll keeps the tiles on one line at their width; it fades where more tiles are", async ({
+    page,
+  }) => {
+    await mount(
+      page,
+      { type: G, layout: "row", overflow: "scroll", title: "T", tiles: ROW },
+      { layout: null, width: 340 },
+    );
+    const row = card(page).locator(".tiles");
+    await expect(row).toHaveClass(/fade-right/);
+    await expect(row).not.toHaveClass(/fade-left/);
+    await expect(row).toHaveAttribute("role", "region");
+    const b = await boxes(page);
+    expect(new Set(b.map((x) => Math.round(x.y))).size).toBe(1);
+    expect(Math.min(...b.map((x) => x.width))).toBeGreaterThanOrEqual(119);
+    // to the end: the fade moves to the start
+    await row.evaluate((e) => e.scrollTo({ left: e.scrollWidth }));
+    await expect(row).toHaveClass(/fade-left/);
+    await expect(row).not.toHaveClass(/fade-right/);
+  });
+
+  test("a scrolling row that fits neither scrolls nor fades, its tiles where align puts them", async ({
+    page,
+  }) => {
+    const three = ROW.slice(0, 2);
+    await mount(
+      page,
+      { type: G, layout: "row", overflow: "scroll", align: "center", title: "T", tiles: three },
+      { layout: null, width: 560 },
+    );
+    const row = card(page).locator(".tiles");
+    await expect(row).not.toHaveClass(/fade-/);
+    await expect(row).not.toHaveAttribute("role", "region");
+    const r = (await row.boundingBox())!;
+    const b = await boxes(page);
+    // as much room before the first as after the last
+    expect(Math.abs(b[0].x - r.x - (r.x + r.width - (b[1].x + b[1].width)))).toBeLessThan(2);
+  });
+
+  test("align keeps the tiles at the column width; columns caps a line", async ({ page }) => {
+    await mount(
+      page,
+      { type: G, layout: "row", align: "end", title: "T", tiles: ROW.slice(0, 2) },
+      { layout: null, width: 560 },
+    );
+    const row = (await card(page).locator(".tiles").boundingBox())!;
+    let b = await boxes(page);
+    expect(Math.abs(b[1].x + b[1].width - (row.x + row.width))).toBeLessThan(2);
+    expect(Math.round(b[0].width)).toBe(120);
+    await mount(
+      page,
+      { type: G, layout: "row", columns: 3, title: "T", tiles: ROW },
+      { layout: null, width: 560 },
+    );
+    b = await boxes(page);
+    // three on the first line, two on the second
+    expect(b.filter((x) => Math.abs(x.y - b[0].y) < 2)).toHaveLength(3);
+  });
+
+  test("without padding the tiles touch the card's sides and each other", async ({ page }) => {
+    await mount(
+      page,
+      { type: G, title: "T", padding: false, tiles: ROW.slice(0, 3) },
+      { layout: null, width: 420 },
+    );
+    const c = card(page);
+    const box = (await c.locator("ha-card").first().boundingBox())!;
+    const b = await boxes(page);
+    // (the group's own 1 px border around them)
+    expect(b[0].x - box.x).toBeLessThanOrEqual(1);
+    expect(box.x + box.width - (b[0].x + b[0].width)).toBeLessThanOrEqual(1);
+    for (let i = 1; i < b.length; i++)
+      expect(b[i].y - (b[i - 1].y + b[i - 1].height)).toBeLessThan(0.5);
+    // the tiles draw no border and no rounding of their own
+    const tile = c.locator("tile-card-pro ha-card").first();
+    await expect(tile).toHaveCSS("border-top-width", "0px");
+    await expect(tile).toHaveCSS("border-top-left-radius", "0px");
+  });
+});

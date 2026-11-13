@@ -20,6 +20,7 @@ import { childKey, reconcile } from "./shared/cards/children.ts";
 import { EntityCardBase, type VisState } from "./shared/entity/base.ts";
 import type { CardConfigBase, GridOptions, HomeAssistant } from "./shared/ha.ts";
 import { t } from "./shared/i18n.ts";
+import { isTemplate } from "./shared/util.ts";
 import type { Visibility } from "./shared/visibility.ts";
 import {
   CARD_TYPE,
@@ -28,6 +29,7 @@ import {
   type TileGroupConfig,
 } from "./tile-group/config.ts";
 import { TileGroupCardEditor } from "./tile-group/editor.ts";
+import { fadesOf } from "./tile-group/scroll.ts";
 import { STYLE_TILE_GROUP_CARD } from "./tile-group/styles.ts";
 
 // a hosted tile card
@@ -119,17 +121,70 @@ export class TileGroupCard extends EntityCardBase {
     return this._tiles.some((x) => this._shown(x.visibility));
   }
   _buildBody(body: HTMLElement) {
+    const cfg = this._config as TileGroupConfig;
     const tiles = document.createElement("div");
-    tiles.className = `tiles layout-${(this._config as TileGroupConfig).layout}`;
+    tiles.className = `tiles layout-${cfg.layout}`;
+    // a row: where its tiles go when they do not fit, where they sit, the most on a line
+    if (cfg.layout === "row") tiles.classList.add(`ov-${cfg.overflow}`, `al-${cfg.rowAlign}`);
+    if (cfg.layout === "row" && cfg.rowColumns) {
+      tiles.classList.add("cols");
+      tiles.style.setProperty("--tg-cols", String(cfg.rowColumns));
+    }
+    // without padding: the tiles flush with the card and each other, square (the header follows)
+    body.classList.toggle("flush", !cfg.padding);
     // the row's columns: as wide as the widest tile needs at least (wide controls: more)
     const min = Math.max(0, ...this._tiles.map((x) => x.el.getGridOptions?.().min_columns ?? 0));
     if (min) tiles.style.setProperty("--tg-col", `${min * COLUMN_PX}px`);
     for (const x of this._tiles) tiles.appendChild(x.wrap);
     body.appendChild(tiles);
+    // a scrolling row fades on the side where more tiles are, as it scrolls
+    this._scroller = cfg.layout === "row" && cfg.overflow === "scroll" ? tiles : null;
+    this._scroller?.addEventListener("scroll", this._onScroll, { passive: true });
   }
   _render() {
     for (const x of this._tiles) x.wrap.hidden = !this._shown(x.visibility);
     super._render();
+    // (a resize renders: the row may scroll now, or no longer)
+    this._syncScroll();
+  }
+
+  // ----- a scrolling row -----
+  _scroller: HTMLElement | null = null;
+  _scrollFrame = 0;
+  _onScroll = () => {
+    if (this._scrollFrame) return;
+    this._scrollFrame = requestAnimationFrame(() => {
+      this._scrollFrame = 0;
+      this._syncScroll();
+    });
+  };
+  // its fades by where it is, and, while it scrolls, the keyboard's way in (arrow keys scroll it)
+  _syncScroll() {
+    const row = this._scroller;
+    if (!row) return;
+    const max = row.scrollWidth - row.clientWidth;
+    const rtl = getComputedStyle(row).direction === "rtl";
+    const { left, right } = fadesOf(row.scrollLeft, max, rtl);
+    row.classList.toggle("fade-left", left);
+    row.classList.toggle("fade-right", right);
+    if (max > 1) {
+      row.tabIndex = 0;
+      row.setAttribute("role", "region");
+      const title = (this._config as TileGroupConfig).title;
+      row.setAttribute(
+        "aria-label",
+        title && !isTemplate(title) ? title : t(this._hass, "tile_group.tiles"),
+      );
+    } else {
+      row.removeAttribute("tabindex");
+      row.removeAttribute("role");
+      row.removeAttribute("aria-label");
+    }
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    cancelAnimationFrame(this._scrollFrame);
+    this._scrollFrame = 0;
   }
 
   getCardSize() {
