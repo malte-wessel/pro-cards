@@ -84,6 +84,7 @@ The card's colour paints its icon, its visual and its status. It comes from the 
 
 - `state` matches the value or the entity's state. Quote `"on"` and `"off"`.
 - `below` matches a value under the number, `above` a value at or over it.
+- `attribute` makes the rule read that attribute of the entity in place of the value: `{ attribute: hvac_action, state: heating, … }` on a thermostat that shows its temperature. It reads the entity as it is now, so a plot's past values never match it.
 
 A matching rule can set:
 
@@ -120,6 +121,20 @@ A matching rule can set:
 Many kinds bring rules of their own: CO₂ from Good to Bad, a battery Low and Critical, the weather a colour per condition. Your `rules` replace them as a whole, and `rules: []` drops them. [Kinds](/cards/kinds) lists each kind's rules.
 
 Rules also match a template's value by its text, so `{ state: Open, color: red }` works on a card without an entity.
+
+A rule with an `attribute` reads that attribute of the entity in place of the value. Below, the thermostat shows its temperature and turns red with a status of its own while it heats:
+
+::: live
+
+```yaml
+type: custom:tile-card-pro
+entity: climate.living_room
+rules:
+  - { attribute: hvac_action, state: heating, color: red, status: Warming up }
+grid_options: { columns: 6 }
+```
+
+:::
 
 ## The places
 
@@ -370,18 +385,19 @@ A card needs no entity: templates fill it. This one counts the lights that are o
 
 ### Rule keys
 
-| Key         | What it does                                                                                           |
-| ----------- | ------------------------------------------------------------------------------------------------------ |
-| `state`     | Matches the value or the entity's state. Quote `"on"` and `"off"`.                                     |
-| `below`     | Matches a value under this number.                                                                     |
-| `above`     | Matches a value at or over this number.                                                                |
-| `color`     | The card's colour while the rule matches. Wins over `color`.                                           |
-| `icon`      | An icon's name, or the icon place's thing or options (no actions). Wins over `icon`.                   |
-| `visual`    | The visual place's thing or options, or `false`. No `hours`, `bucket`, `smoothing`, or a plot's `src`. |
-| `status`    | The status text while the rule matches.                                                                |
-| `tint_card` | `true`: the whole card in the rule's colour.                                                           |
-| `pulse`     | `true`: the status badge pulses.                                                                       |
-| `style`     | The status badge's look: `outline`, `soft`, `filled`, `plain` or `tag`.                                |
+| Key         | What it does                                                                                              |
+| ----------- | --------------------------------------------------------------------------------------------------------- |
+| `state`     | Matches the value or the entity's state. Quote `"on"` and `"off"`.                                        |
+| `below`     | Matches a value under this number.                                                                        |
+| `above`     | Matches a value at or over this number.                                                                   |
+| `attribute` | Reads this attribute of the entity in place of the value (the entity of now, never a plot's past values). |
+| `color`     | The card's colour while the rule matches. Wins over `color`.                                              |
+| `icon`      | An icon's name, or the icon place's thing or options (no actions). Wins over `icon`.                      |
+| `visual`    | The visual place's thing or options, or `false`. No `hours`, `bucket`, `smoothing`, or a plot's `src`.    |
+| `status`    | The status text while the rule matches.                                                                   |
+| `tint_card` | `true`: the whole card in the rule's colour.                                                              |
+| `pulse`     | `true`: the status badge pulses.                                                                          |
+| `style`     | The status badge's look: `outline`, `soft`, `filled`, `plain` or `tag`.                                   |
 
 A rule needs at least one of `state`, `below` and `above`.
 

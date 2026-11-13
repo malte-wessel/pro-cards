@@ -111,6 +111,32 @@ export const fmtNumber = (
   const unit = withUnit ? unitOf(ent, st) : "";
   return unit ? `${n} ${unit}` : n;
 };
+// a v3 item's written attribute as Home Assistant writes it ("75 %", "21.6 °C", "Heating"); null
+// where a unit or decimals of its own, or no formatter, leave it to ours
+const haAttributeText = (
+  ctx: FormatCtx,
+  ent: EntityItem,
+  st: HassEntity | undefined,
+): string | null => {
+  const hass = ctx.hass,
+    src = ent.valueSrc;
+  if (!ent.haAttribute || src.kind !== "attribute" || ent.unit !== null || ent.decimals !== null)
+    return null;
+  if (!st || typeof hass?.formatEntityAttributeValue !== "function") return null;
+  try {
+    // (`attribute: hvac_mode` is a thermostat's state: readValue)
+    const s =
+      src.key === "hvac_mode" && st.entity_id.startsWith("climate.")
+        ? hass.formatEntityState?.(st)
+        : hass.formatEntityAttributeValue(st, src.key);
+    return s || null;
+  } catch {
+    return null;
+  }
+};
+// a formatted number and its unit apart ("21.6 °C" → 21.6, °C; "60%" → 60, %), for the big value
+const NUM_UNIT = /^(.*\d)\s*([^\d\s][^\d]*)$/;
+
 // formatted value: { text, num, unit } — num / unit split for the hero and cell "big" value
 export const fmtValue = (
   ctx: FormatCtx,
@@ -120,6 +146,22 @@ export const fmtValue = (
 ): FmtValue => {
   if (!model.avail) return { text: "–", num: "–", unit: "" };
   const hass = ctx.hass;
+  const ha = haAttributeText(ctx, ent, st);
+  const m = ha !== null && model.num !== null ? NUM_UNIT.exec(ha) : null;
+  // Home Assistant's words, where its number is the one the rules and the visual read: ours for a
+  // number it scales (a light's brightness as a percentage, 128 → 50 %) and for a number it writes
+  // without a unit where ours finds one (a weather entity's `<attribute>_unit`)
+  const same =
+    model.num === null || (m !== null && m[1].trim() === fmtNumber(ctx, ent, model.num, st, false));
+  if (ha !== null && same) {
+    const num = m ? m[1] : ha,
+      unit = m ? m[2].trim() : "";
+    return {
+      text: `${ent.prefix}${ha}${ent.suffix}`,
+      num: `${ent.prefix}${num}${ent.suffix}`,
+      unit,
+    };
+  }
   if (model.num !== null) {
     const useHa =
       ent.valueSrc.kind === "state" &&

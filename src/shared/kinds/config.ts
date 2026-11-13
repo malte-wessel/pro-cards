@@ -56,6 +56,7 @@ import {
   type Written,
 } from "./places.ts";
 import { badgeHours, normalizePill } from "./badge.ts";
+import { normalizeKindButtons } from "./buttons.ts";
 import { toRule } from "./rules.ts";
 import type { Kind } from "./types.ts";
 
@@ -433,9 +434,15 @@ export const normalizeKindItem = (
     ...(places.icon === false ? { show_icon: false } : {}),
     ...ownKeys,
   };
-  const main = normalizeEntity(own, ctx, "the card", ITEM_DEFAULTS.other, { buttons: true });
+  const main = normalizeEntity(own, ctx, "the card", ITEM_DEFAULTS.other, {
+    buttons: true,
+    // its own buttons are items with a badge's keys (kinds/buttons.ts)
+    ownButtons: (list, rowEntity) => normalizeKindButtons(list, ctx, rowEntity),
+  });
   // the card's colour and icon are defaults: a matching rule's win
   main.ruleWins = true;
+  // an attribute the card names reads as Home Assistant writes it (a kind's own keeps the kind's)
+  main.haAttribute = typeof written.attribute === "string" && !!written.attribute;
   const rulePlaces = new Map<Rule, Places>();
   for (const r of main.rules) {
     const p = r.src ? byRule.get(r.src) : undefined;

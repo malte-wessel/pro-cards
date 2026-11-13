@@ -1,12 +1,20 @@
 // Controls (pure): what `control: …` means per entity, where a control sits in each row kind,
 // the value range, the option list and the service a control calls. No DOM here; the builders
 // in render/controls.ts draw what these functions decide.
-import { domainOf, stateActive } from "../color.ts";
+import {
+  actionModeOf,
+  activeColorCss,
+  cssColor,
+  domainOf,
+  stateActive,
+  stateColorCss,
+  stateColored,
+} from "../color.ts";
 import type { ActionConfig, ActionKind, HapticType, HassEntity, HomeAssistant } from "../ha.ts";
 import type { Visibility } from "../visibility.ts";
 import type { StringKey } from "../i18n.ts";
 import { numOrNull, oneOf, snapTo } from "../util.ts";
-import type { EntityItem, NormalizeCtx, RawEntity } from "./config.ts";
+import type { EntityItem, NormalizeCtx, RawEntity, Rule } from "./config.ts";
 import { OFF_STATES } from "./constants.ts";
 import { numAttr } from "./look.ts";
 import {
@@ -63,6 +71,9 @@ export interface CustomButton {
   action: ActionConfig | null;
   // drawn only while its conditions hold (null: always)
   visibility: Visibility;
+  // a kind card's button (the poster's, the tile's): an item of its own, its name, value, icon and
+  // colour resolved with its rules (kinds/buttons.ts); left out on the entity cards
+  item?: EntityItem;
 }
 // the control as written in YAML, after normalisation (`auto` is resolved at render time)
 export interface ControlConfig {
@@ -629,6 +640,46 @@ export const speedsAsSlider = (ent: EntityItem, st: HassEntity | undefined) =>
 // whether a custom button shows its entity as on (a scene's state is a time, never "on")
 export const buttonActive = (b: CustomButton, st: HassEntity | undefined) =>
   pressKindOf(b.entity) === "switch" && isOn(st);
+// domains Home Assistant colours by their state that are never "on" in a sense a button could
+// show: the weather and the sun are always active
+const NEVER_FILLS: ReadonlySet<string> = new Set(["weather", "sun"]);
+// whether a kind card's button (the poster's, the tile's) is filled: as a matching rule says
+// (`active`); a thermostat while it heats, cools or dries (its action, never its mode: one in heat
+// all winter is not busy), a humidifier while it humidifies or dries (else while it is on); never
+// a scene, a script or a button (they flash when pressed), nor an entity Home Assistant colours by
+// no state (a sensor, a number); else while its entity is active, by Home Assistant's rule (a
+// light on, a window open, a person home)
+export const buttonFill = (
+  b: CustomButton,
+  st: HassEntity | undefined,
+  rule: Rule | null,
+): boolean => {
+  if (typeof rule?.active === "boolean") return rule.active;
+  if (!b.entity || !st) return false;
+  const domain = domainOf(b.entity);
+  const mode = actionModeOf(st);
+  if (domain === "climate") return mode !== null && mode !== "off";
+  if (domain === "humidifier" && mode !== null) return mode !== "off";
+  if (pressKindOf(b.entity) === "run") return false;
+  if (!stateColored(domain) || NEVER_FILLS.has(domain)) return false;
+  return isOn(st);
+};
+// the colour a kind card's button fills in: a matching rule's, the button's own, a thermostat's
+// or a humidifier's action's, Home Assistant's for the entity's state (else the card's: null)
+export const buttonFillColor = (
+  b: CustomButton,
+  st: HassEntity | undefined,
+  ruleColor: string | null,
+  ownColor: string | null,
+): string | null => {
+  const mode = actionModeOf(st);
+  return (
+    cssColor(ruleColor) ??
+    cssColor(ownColor) ??
+    (st && mode && mode !== "off" ? stateColorCss(st, mode) : null) ??
+    (b.entity ? activeColorCss(st) : null)
+  );
+};
 // the keys that name what a service call acts on, in `target` or in its data
 const CALL_TARGET_KEYS = ["entity_id", "device_id", "area_id", "floor_id", "label_id"];
 const namesTarget = (o: unknown) =>

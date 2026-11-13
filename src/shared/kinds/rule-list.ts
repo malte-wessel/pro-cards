@@ -22,11 +22,20 @@ export const ruleLines = (
 ): { title: string; detail: string } => {
   const L = (k: string) => t(hass, `editor.card.${k}` as StringKey);
   const st = entity ? hass?.states[entity] : undefined;
-  const num = (v: unknown) => `${v}${unit ? ` ${unit}` : ""}`;
+  // (a rule that reads an attribute of its own: that attribute's words)
+  const attr = filled(r.attribute) ? String(r.attribute) : "";
+  // (the value's unit; an attribute's numbers are written without it)
+  const num = (v: unknown) => `${v}${unit && !attr ? ` ${unit}` : ""}`;
   const when: string[] = [];
   if (filled(r.state)) {
     const s = String(r.state);
-    when.push(st && hass?.formatEntityState ? hass.formatEntityState(st, s) : s);
+    when.push(
+      st && attr && hass?.formatEntityAttributeValue
+        ? hass.formatEntityAttributeValue(st, attr, s)
+        : st && !attr && hass?.formatEntityState
+          ? hass.formatEntityState(st, s)
+          : s,
+    );
   }
   if (filled(r.above)) when.push(`${L("rule.above")} ${num(r.above)}`);
   if (filled(r.below)) when.push(`${L("rule.below")} ${num(r.below)}`);
@@ -40,7 +49,18 @@ export const ruleLines = (
   if (filled(r.style)) then.push(L(`badge_style.${r.style}`));
   if (r.tint_card === true) then.push(L("rule.tint_card"));
   if (r.pulse === true) then.push(L("rule.pulse"));
-  return { title: when.join(" · ") || L("rule_always"), detail: then.join(" · ") };
+  // (a button's rule: the button filled or grey)
+  if (r.active === true || r.active === "true") then.push(L("rule_active.true"));
+  if (r.active === false || r.active === "false") then.push(L("rule_active.false"));
+  const title = when.join(" · ");
+  const attrName = attr
+    ? (st && hass?.formatEntityAttributeName?.(st, attr)) ||
+      attr.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())
+    : "";
+  return {
+    title: title ? (attrName ? `${attrName}: ${title}` : title) : L("rule_always"),
+    detail: then.join(" · "),
+  };
 };
 
 export class RuleListSelector extends ItemListSelector {

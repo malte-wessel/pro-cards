@@ -12,6 +12,7 @@ import {
   badgeItemSchema,
   editorSchema,
   ruleItemSchema,
+  buttonItemSchema,
 } from "../../../../src/shared/kinds/editor-schema.ts";
 import { kindsOf, showsOf } from "../../../../src/shared/kinds/editor.ts";
 import { KIND_THINGS } from "../../../../src/shared/kinds/places.ts";
@@ -575,6 +576,60 @@ describe("the editor's rules", () => {
     });
     expect(light.map((s) => s.name)).toContain("value");
     expect(light.map((s) => s.name)).not.toContain("status");
+  });
+
+  it("read an attribute of a rule's own, and fill or grey a button", () => {
+    const ctx = { entity: "climate.living_room", unit: "°C", numeric: true, button: true };
+    const heat = flat(ruleItemSchema(hass, { attribute: "hvac_action" }, ctx));
+    expect(heat.find((s) => s.name === "attribute")?.selector).toEqual({
+      attribute: { entity_id: "climate.living_room" },
+    });
+    // the attribute's states, no number in the value's unit
+    expect(heat.find((s) => s.name === "state")?.selector).toEqual({
+      state: { entity_id: "climate.living_room", attribute: "hvac_action" },
+    });
+    expect(heat.map((s) => s.name)).not.toContain("above");
+    expect(heat.map((s) => s.name)).toEqual(
+      expect.arrayContaining(["value", "color", "icon", "active", "pulse"]),
+    );
+    expect(heat.map((s) => s.name)).not.toContain("style");
+    // a card's and a badge's rules read one too; a line's does not
+    for (const flavour of [{}, { badge: true }])
+      expect(
+        flat(ruleItemSchema(hass, {}, { ...ctx, button: false, ...flavour })).map((s) => s.name),
+      ).toContain("attribute");
+    expect(
+      flat(ruleItemSchema(hass, {}, { ...ctx, button: false, line: true })).map((s) => s.name),
+    ).not.toContain("attribute");
+  });
+
+  it("edit one of your own buttons as a badge: its name, value, look, tap, rules and visibility", () => {
+    const fields = flat(
+      buttonItemSchema(hass, {
+        entity: "climate.living_room",
+        attribute: "current_temperature",
+        show_value: true,
+      }),
+    ).map((s) => s.name);
+    expect(fields).toEqual(
+      expect.arrayContaining([
+        "entity",
+        "show_name",
+        "show_value",
+        "attribute",
+        "value",
+        "unit",
+        "prefix",
+        "icon",
+        "color",
+        "tap_action",
+        "rules",
+        "visibility",
+      ]),
+    );
+    // the name's field only once it shows
+    expect(fields).not.toContain("name");
+    expect(flat(buttonItemSchema(hass, { show_name: true })).map((s) => s.name)).toContain("name");
   });
 });
 

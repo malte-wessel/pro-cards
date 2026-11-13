@@ -256,3 +256,14 @@ rules:
 ```
 
 :::
+
+## A button's label and action (3.1) {#button-keys}
+
+In 3.1 the poster's and the tile's own buttons take a badge's keys (see [Controls](/cards/controls#buttons-that-show-state)). Two 3.0 keys have new spellings; the old ones work until 4.0 and warn once in the console:
+
+| 3.0             | 3.1                                |
+| --------------- | ---------------------------------- |
+| `label: Dim`    | `name: Dim` with `show_name: true` |
+| `action: { … }` | `tap_action: { … }`                |
+
+The visual editor writes the new keys for a button you change in it.

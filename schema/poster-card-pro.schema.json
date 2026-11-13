@@ -91,6 +91,9 @@
         "above": {
           "$ref": "entity.schema.json#/$defs/rule/properties/above"
         },
+        "attribute": {
+          "$ref": "#/$defs/ruleAttribute"
+        },
         "color": {
           "$ref": "defs.schema.json#/$defs/color",
           "description": "The card's colour while the rule matches (wins over the card's `color`)"
@@ -270,7 +273,7 @@
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_step"
         },
         "options": {
-          "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_options"
+          "$ref": "#/$defs/controlOptions"
         },
         "confirm": {
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/control_confirm"
@@ -308,13 +311,156 @@
                   "$ref": "entity.schema.json#/$defs/buttonId"
                 },
                 {
-                  "$ref": "entity.schema.json#/$defs/buttonOption"
+                  "$ref": "#/$defs/kindButton"
                 }
               ]
             }
           }
         }
       }
+    },
+    "controlOptions": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "type": "string" },
+          { "type": "number" },
+          {
+            "type": "object",
+            "properties": {
+              "value": { "type": ["string", "number"] },
+              "label": { "type": "string" },
+              "icon": { "$ref": "defs.schema.json#/$defs/icon" }
+            },
+            "required": ["value"],
+            "additionalProperties": false
+          },
+          { "$ref": "#/$defs/kindButton" }
+        ]
+      },
+      "description": "Options of segments and select (default: the entity's modes or options, a cover's or light's favourites); with type: buttons, the domain's own buttons by name ([stop, locate]) or your own: { entity, name, icon, color, rules, tap_action, … }"
+    },
+    "ruleAttribute": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The attribute the rule reads in place of the shown value (hvac_action beside a thermostat's temperature). It matches the entity's state of now, never a past value of a plot"
+    },
+    "kindButton": {
+      "type": "object",
+      "description": "A button of type: buttons: it runs its entity (a scene, a script, a button), switches it (a light, a switch …), opens its dialog (a sensor), or runs its tap_action. Filled while its entity is active (a thermostat while it heats or cools), unless a rule says otherwise",
+      "properties": {
+        "entity": {
+          "$ref": "defs.schema.json#/$defs/entityId",
+          "description": "What the button shows and runs or switches, and the target of its tap_action"
+        },
+        "name": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/name",
+          "description": "Its name (default: the entity's), written beside the icon with show_name: true. Template allowed"
+        },
+        "show_name": {
+          "type": "boolean",
+          "default": false,
+          "description": "Write the name beside the icon"
+        },
+        "label": {
+          "type": "string",
+          "deprecated": true,
+          "description": "Deprecated, goes in 4.0: use name with show_name: true"
+        },
+        "attribute": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/attribute"
+        },
+        "value": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/value"
+        },
+        "show_value": {
+          "type": "boolean",
+          "description": "Write the value (the state, or the attribute) after the name. Default: false, true where a value is written"
+        },
+        "unit": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/unit"
+        },
+        "decimals": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/decimals"
+        },
+        "prefix": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/prefix"
+        },
+        "suffix": {
+          "$ref": "entity.schema.json#/$defs/entityKeys/properties/suffix"
+        },
+        "icon": {
+          "$ref": "defs.schema.json#/$defs/icon",
+          "description": "Its icon (default: the entity's), a default: a matching rule's wins"
+        },
+        "color": {
+          "$ref": "defs.schema.json#/$defs/color",
+          "description": "The colour it fills in (default: the entity's state colour), a default: a matching rule's wins. Template allowed"
+        },
+        "rules": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/buttonRule" },
+          "description": "First matching rule wins: its icon, colour, text (value), pulse and fill (active)"
+        },
+        "tap_action": {
+          "$ref": "defs.schema.json#/$defs/action",
+          "description": "Action run instead of the entity's own (without a target: on the button's entity)"
+        },
+        "action": {
+          "$ref": "defs.schema.json#/$defs/action",
+          "deprecated": true,
+          "description": "Deprecated, goes in 4.0: use tap_action"
+        },
+        "visibility": { "$ref": "defs.schema.json#/$defs/visibility" }
+      },
+      "anyOf": [
+        { "required": ["entity"] },
+        { "required": ["tap_action"] },
+        { "required": ["action"] }
+      ],
+      "allOf": [
+        { "not": { "required": ["label", "name"] } },
+        { "not": { "required": ["label", "show_name"] } },
+        { "not": { "required": ["action", "tap_action"] } }
+      ],
+      "additionalProperties": false
+    },
+    "buttonRule": {
+      "type": "object",
+      "description": "First matching rule wins, in the order written: its icon, colour, text and fill win over the button's",
+      "properties": {
+        "state": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/state"
+        },
+        "below": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/below"
+        },
+        "above": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/above"
+        },
+        "attribute": {
+          "$ref": "#/$defs/ruleAttribute"
+        },
+        "color": {
+          "$ref": "defs.schema.json#/$defs/color"
+        },
+        "icon": {
+          "$ref": "defs.schema.json#/$defs/icon"
+        },
+        "value": {
+          "type": ["string", "number"],
+          "description": "The text in place of the value, shown while the rule matches (also on a button that shows no value). Template allowed"
+        },
+        "active": {
+          "type": "boolean",
+          "description": "true fills the button while the rule matches, false keeps it grey (its icon then in the rule's colour)"
+        },
+        "pulse": {
+          "$ref": "entity.schema.json#/$defs/rule/properties/pulse"
+        }
+      },
+      "anyOf": [{ "required": ["state"] }, { "required": ["below"] }, { "required": ["above"] }],
+      "additionalProperties": false
     },
     "kind": {
       "type": "string",
@@ -1863,6 +2009,9 @@
         },
         "above": {
           "$ref": "entity.schema.json#/$defs/rule/properties/above"
+        },
+        "attribute": {
+          "$ref": "#/$defs/ruleAttribute"
         },
         "color": {
           "$ref": "defs.schema.json#/$defs/color"

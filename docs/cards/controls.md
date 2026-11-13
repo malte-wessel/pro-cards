@@ -343,9 +343,9 @@ A slider sits at `block`, every other control at `end`. On a narrow card a contr
 
 - **Runs its `entity`:** a scene or a script turns on, a button is pressed.
 - **Switches its `entity`:** a light, a switch or a fan. The button is grey while it is off and filled in its entity's colour while it is on (tinted with `variant: tinted`).
-- **Runs its `action`:** any [Home Assistant action](https://www.home-assistant.io/dashboards/actions/), written like `tap_action`. Without a target, the action uses the button's `entity`: a robot's Dock button is `entity: vacuum.robot` with `action: { action: perform-action, perform_action: vacuum.return_to_base }`.
+- **Runs its `tap_action`:** any [Home Assistant action](https://www.home-assistant.io/dashboards/actions/). Without a target, the action uses the button's `entity`: a robot's Dock button is `entity: vacuum.robot` with `tap_action: { action: perform-action, perform_action: vacuum.return_to_base }`.
 
-A card of buttons needs no entity: a `name` and an `icon` are enough. A button takes its entity's colour (a light amber, a fan cyan, a cover purple) unless it names one. A button with `visibility` comes and goes with its conditions; below, Movie shows only while the speaker plays.
+An entity a button can neither run nor switch (a sensor, a window) opens its dialog. A card of buttons needs no entity: a `name` and an `icon` are enough. A button takes its entity's colour (a light amber, a fan cyan, a cover purple) unless it names one. `show_name: true` writes its name beside the icon. A button with `visibility` comes and goes with its conditions; below, Movie shows only while the speaker plays.
 
 ::: live
 
@@ -379,14 +379,193 @@ A card of buttons needs no entity: a `name` and an `icon` are enough. A button t
     type: buttons
     position: block
     options:
-      - { entity: scene.dimmed, label: Dim, color: amber }
-      - { entity: light.desk_lamp, label: Desk, color: orange }
+      - { entity: scene.dimmed, name: Dim, show_name: true, color: amber }
+      - { entity: light.desk_lamp, name: Desk, show_name: true, color: orange }
       - entity: scene.movie_night
-        label: Movie
+        name: Movie
+        show_name: true
         color: deep-purple
         visibility:
           - { condition: state, entity: media_player.living_room_speaker, state: playing }
   grid_options: { columns: 6 }
+```
+
+:::
+
+## Buttons that show state
+
+A button shows its entity as a badge does: filled while the entity is active, with its name, its value and rules of its own. A room's poster can carry its lights, its blinds, its windows and its heating in one row.
+
+### What fills a button
+
+A button fills in Home Assistant's colour for its entity while the entity is active:
+
+| Entity                          | Filled while                                          |
+| ------------------------------- | ----------------------------------------------------- |
+| a light, a switch, a fan …      | it is on                                              |
+| a cover, a valve                | it is open                                            |
+| a lock                          | it is unlocked                                        |
+| a binary sensor                 | it is on: a window open, motion seen, smoke detected  |
+| a person, a tracker             | they are not away: home or in a zone                  |
+| a thermostat                    | it heats, cools or dries (`hvac_action`), not by mode |
+| a humidifier                    | it humidifies or dries, else while it is on           |
+| a scene, a script, a button     | never: it flashes when pressed                        |
+| a sensor, a number, the weather | never on its own: a rule can fill it                  |
+
+A thermostat in `heat` all winter stays grey while the room is warm enough, and fills while it heats.
+
+::: live
+
+```yaml
+type: custom:poster-card-pro
+entity: sensor.living_room_temperature
+name: Living room
+icon: mdi:sofa-outline
+visual: false
+control:
+  type: buttons
+  position: block
+  options:
+    - entity: light.living_room
+    - entity: cover.living_room_blinds
+    - entity: binary_sensor.window_kitchen
+    - entity: binary_sensor.door_front
+    - entity: person.malte
+    - entity: climate.living_room
+    - entity: climate.bedroom
+    - entity: sensor.washer_power
+grid_options: { columns: 6 }
+```
+
+:::
+
+### Names and values
+
+`show_name: true` writes the button's name beside its icon, `show_value: true` its value after it: the state, or the `attribute` it names, as Home Assistant writes it (a position's %, a thermostat's °C). A `value` of your own, a text or a template, shows without `show_value`. `unit`, `decimals`, `prefix` and `suffix` work as on the card.
+
+::: live
+
+```yaml
+type: custom:poster-card-pro
+entity: sensor.living_room_temperature
+name: Living room
+icon: mdi:sofa-outline
+visual: false
+control:
+  type: buttons
+  position: block
+  options:
+    - entity: cover.living_room_blinds
+      attribute: current_position
+      show_value: true
+    - entity: climate.living_room
+      attribute: current_temperature
+      show_value: true
+    - entity: binary_sensor.window_kitchen
+      name: Window
+      show_name: true
+      show_value: true
+    - entity: sensor.washer_power
+      show_value: true
+grid_options: { columns: 6 }
+```
+
+:::
+
+### Rules
+
+A button's `rules` work as a badge's: `state`, `above` or `below`, the first match wins, and its `icon` and `color` win over the button's. A rule's `value` is the text while it matches, also on a button that shows no value. `active: true` fills the button while the rule matches, `active: false` keeps it grey; a grey button takes the rule's colour on its icon. `pulse: true` draws a ring around it.
+
+::: live
+
+```yaml
+type: custom:poster-card-pro
+entity: sensor.living_room_temperature
+name: Living room
+icon: mdi:sofa-outline
+visual: false
+control:
+  type: buttons
+  position: block
+  options:
+    - entity: binary_sensor.window_kitchen
+      rules:
+        - { state: "on", icon: mdi:window-open-variant, color: red }
+    - entity: sensor.washer_power
+      icon: mdi:washing-machine-off
+      rules:
+        - above: 5
+          icon: mdi:washing-machine
+          value: Running
+          color: teal
+          active: true
+    # motion only colours the icon: a busy hallway does not fill the row
+    - entity: binary_sensor.motion_hallway
+      icon: mdi:motion-sensor-off
+      rules:
+        - { state: "on", icon: mdi:motion-sensor, color: amber, active: false }
+grid_options: { columns: 6 }
+```
+
+:::
+
+### A rule's own attribute
+
+A rule reads the button's value unless it names an `attribute` of its own. A thermostat's button can show the room's temperature and swap its icon by what the thermostat does. The poster's and the tile's own rules and a badge's take `attribute` too. It reads the entity as it is now, so a plot's past values never match it.
+
+::: live
+
+```yaml
+type: custom:poster-card-pro
+entity: sensor.living_room_temperature
+name: Living room
+icon: mdi:sofa-outline
+visual: false
+control:
+  type: buttons
+  position: block
+  options:
+    - entity: climate.living_room
+      attribute: current_temperature
+      show_value: true
+      rules:
+        - { attribute: hvac_action, state: heating, icon: mdi:fire }
+        - { attribute: hvac_action, state: cooling, icon: mdi:snowflake }
+    - entity: climate.office
+      attribute: current_temperature
+      show_value: true
+      rules:
+        - { attribute: hvac_action, state: heating, icon: mdi:fire }
+        - { attribute: hvac_action, state: cooling, icon: mdi:snowflake }
+grid_options: { columns: 6 }
+```
+
+:::
+
+### Only what needs attention
+
+On a room's card most things are fine most of the time. `visibility` shows a button only while it has something to say: a condition without an `entity` reads the button's own, and `attribute` reads one of its attributes. Below, the door shows only while it is open and the thermostat only while it heats.
+
+::: live
+
+```yaml
+type: custom:poster-card-pro
+entity: sensor.living_room_temperature
+name: Living room
+icon: mdi:sofa-outline
+visual: false
+control:
+  type: buttons
+  position: block
+  options:
+    - entity: light.living_room
+    - entity: binary_sensor.door_front
+      visibility:
+        - { condition: state, state: "on" }
+    - entity: climate.living_room
+      visibility:
+        - { condition: state, attribute: hvac_action, state: heating }
+grid_options: { columns: 6 }
 ```
 
 :::
@@ -518,13 +697,22 @@ The first is what a control of its type sets unless `attribute` names another.
 
 ### Your own buttons
 
-Each entry of `options` with `type: buttons`. A button needs an `entity` or an `action`.
+Each entry of `options` with `type: buttons`. A button needs an `entity` or a `tap_action`.
 
-| Key          | Default           | Description                                                                      |
-| ------------ | ----------------- | -------------------------------------------------------------------------------- |
-| `entity`     |                   | What the button runs or switches, and the target of its `action`.                |
-| `action`     | the entity's own  | A Home Assistant action to run (`perform-action`, `navigate`, `more-info` …).    |
-| `label`      | none              | Text beside the icon. Without one the button holds its icon alone.               |
-| `icon`       | the entity's icon | `mdi:` icon.                                                                     |
-| `color`      | its entity's      | Colour token, hex or `var()`: the tint while its entity is on (else the card's). |
-| `visibility` | always            | [Conditions](/guide/visibility): the button is drawn only while they hold.       |
+| Key                | Default           | Description                                                                                                                         |
+| ------------------ | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `entity`           |                   | What the button shows and runs or switches, and the target of its `tap_action`.                                                     |
+| `tap_action`       | the entity's own  | A Home Assistant action to run (`perform-action`, `navigate`, `more-info` …).                                                       |
+| `name`             | the entity's name | Its name, written beside the icon with `show_name: true`. Template allowed.                                                         |
+| `show_name`        | `false`           | Write the name beside the icon.                                                                                                     |
+| `attribute`        | –                 | Shows this attribute in place of the state.                                                                                         |
+| `value`            | the state         | A text or a template of your own; it shows without `show_value`.                                                                    |
+| `show_value`       | `false`           | Write the value after the name.                                                                                                     |
+| `unit`, `decimals` | the entity's      | The value's unit and decimal places.                                                                                                |
+| `prefix`, `suffix` | –                 | Text before and after the value.                                                                                                    |
+| `icon`             | the entity's icon | `mdi:` icon; a matching rule's wins.                                                                                                |
+| `color`            | its entity's      | Colour token, hex, `var()` or a template: the fill while it is filled (else the card's); a matching rule's wins.                    |
+| `rules`            | –                 | `state`, `above` or `below`, and an optional `attribute`, setting `icon`, `color`, `value`, `active` and `pulse`. First match wins. |
+| `visibility`       | always            | [Conditions](/guide/visibility): the button is drawn only while they hold.                                                          |
+
+`label` and `action` (3.0) are read until 4.0: `label: Dim` is `name: Dim` with `show_name: true`, `action` is `tap_action`.

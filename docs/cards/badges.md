@@ -100,7 +100,7 @@ A badge takes its entity's [kind](/cards/kinds), but only its colours: a battery
 
 ### Rules
 
-`rules` work as on the card itself: the first rule that matches its `state`, `above` or `below` wins. A rule sets the badge's `color` and `icon`, and `value` writes a text in place of the value. It can also change the pill (`style`) and make it pulse (`pulse: true`). The badge's own `color` and `icon` are defaults: a matching rule's win. A badge with rules takes none of its kind's.
+`rules` work as on the card itself: the first rule that matches its `state`, `above` or `below` wins, on the badge's value or on an `attribute` the rule names (a thermostat's `hvac_action` beside its temperature). A rule sets the badge's `color` and `icon`, and `value` writes a text in place of the value. It can also change the pill (`style`) and make it pulse (`pulse: true`). The badge's own `color` and `icon` are defaults: a matching rule's win. A badge with rules takes none of its kind's.
 
 ### Styles and sizes
 
@@ -243,31 +243,31 @@ A tile's icon carries a small badge of its own, as on Home Assistant's tile: wha
 
 A badge is an entity id, or an object with these keys. Every key is optional.
 
-| Key                | Default                    | Description                                                                                                                          |
-| ------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `entity`           | the card's (tile, poster)  | The entity it shows. In a header, a badge needs an `entity` or a `value`.                                                            |
-| `attribute`        | –                          | One of the entity's attributes in place of its state.                                                                                |
-| `value`            | the entity's state         | A text or a template of your own.                                                                                                    |
-| `name`             | the entity's name          | The name, shown with `show_name: true`.                                                                                              |
-| `unit`             | the entity's unit          | The unit after the value.                                                                                                            |
-| `decimals`         | the entity's               | Decimal places of the value.                                                                                                         |
-| `prefix`, `suffix` | –                          | Text before and after the value.                                                                                                     |
-| `min`, `max`       | the entity's, else 0 / 100 | The range of a ring and a bar.                                                                                                       |
-| `show_name`        | `false`                    | Write the name before the value.                                                                                                     |
-| `show_value`       | `true`                     | `false`: the icon alone.                                                                                                             |
-| `icon`             | the entity's icon          | An icon's name, `{ type: icon \| image \| dot, name, ring, src }`, or `false`.                                                       |
-| `visual`           | –                          | After the value: `bar`, `sparkline` or `trend`; `{ type, hours }` for another window (`hours` a number or `today`).                  |
-| `color`            | the kind's                 | The badge's colour; a matching rule's wins. A template is allowed.                                                                   |
-| `kind`             | the entity's               | The kind whose colours it takes; `none` for none.                                                                                    |
-| `rules`            | the kind's                 | `state`, `above` or `below`, setting `color`, `icon`, `value` (a text in place of the value), `style` and `pulse`. First match wins. |
-| `style`            | see below                  | `outline`, `soft`, `filled`, `plain` or `tag`.                                                                                       |
-| `size`             | see below                  | `s`, `m` or `l` (24, 30 or 36 px high).                                                                                              |
-| `format`           | `auto`                     | `auto`, `power` (W / kW / MW), `duration` or `relative`.                                                                             |
-| `stale_after`      | –                          | Grey, with its age, when the entity has not reported for this long: minutes, or `90s`, `30min`, `2h`, `1d`.                          |
-| `control`          | –                          | `toggle`: a switch at the badge's end, a round power button.                                                                         |
-| `tap_action` …     | the card's                 | `tap_action`, `hold_action`, `double_tap_action`, on the badge's own entity.                                                         |
-| `hover`            | the card's                 | Show Home Assistant's hover and press layers on the badge.                                                                           |
-| `visibility`       | –                          | Conditions; a hidden badge takes no room.                                                                                            |
+| Key                | Default                    | Description                                                                                                                                                       |
+| ------------------ | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entity`           | the card's (tile, poster)  | The entity it shows. In a header, a badge needs an `entity` or a `value`.                                                                                         |
+| `attribute`        | –                          | One of the entity's attributes in place of its state.                                                                                                             |
+| `value`            | the entity's state         | A text or a template of your own.                                                                                                                                 |
+| `name`             | the entity's name          | The name, shown with `show_name: true`.                                                                                                                           |
+| `unit`             | the entity's unit          | The unit after the value.                                                                                                                                         |
+| `decimals`         | the entity's               | Decimal places of the value.                                                                                                                                      |
+| `prefix`, `suffix` | –                          | Text before and after the value.                                                                                                                                  |
+| `min`, `max`       | the entity's, else 0 / 100 | The range of a ring and a bar.                                                                                                                                    |
+| `show_name`        | `false`                    | Write the name before the value.                                                                                                                                  |
+| `show_value`       | `true`                     | `false`: the icon alone.                                                                                                                                          |
+| `icon`             | the entity's icon          | An icon's name, `{ type: icon \| image \| dot, name, ring, src }`, or `false`.                                                                                    |
+| `visual`           | –                          | After the value: `bar`, `sparkline` or `trend`; `{ type, hours }` for another window (`hours` a number or `today`).                                               |
+| `color`            | the kind's                 | The badge's colour; a matching rule's wins. A template is allowed.                                                                                                |
+| `kind`             | the entity's               | The kind whose colours it takes; `none` for none.                                                                                                                 |
+| `rules`            | the kind's                 | `state`, `above` or `below`, and an optional `attribute`, setting `color`, `icon`, `value` (a text in place of the value), `style` and `pulse`. First match wins. |
+| `style`            | see below                  | `outline`, `soft`, `filled`, `plain` or `tag`.                                                                                                                    |
+| `size`             | see below                  | `s`, `m` or `l` (24, 30 or 36 px high).                                                                                                                           |
+| `format`           | `auto`                     | `auto`, `power` (W / kW / MW), `duration` or `relative`.                                                                                                          |
+| `stale_after`      | –                          | Grey, with its age, when the entity has not reported for this long: minutes, or `90s`, `30min`, `2h`, `1d`.                                                       |
+| `control`          | –                          | `toggle`: a switch at the badge's end, a round power button.                                                                                                      |
+| `tap_action` …     | the card's                 | `tap_action`, `hold_action`, `double_tap_action`, on the badge's own entity.                                                                                      |
+| `hover`            | the card's                 | Show Home Assistant's hover and press layers on the badge.                                                                                                        |
+| `visibility`       | –                          | Conditions; a hidden badge takes no room.                                                                                                                         |
 
 ### Defaults by place
 

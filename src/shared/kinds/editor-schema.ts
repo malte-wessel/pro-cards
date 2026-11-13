@@ -18,6 +18,8 @@ import {
   BADGE_ICONS,
   BADGE_KEYS,
   BADGE_RULE_KEYS,
+  BUTTON_KEYS,
+  BUTTON_RULE_KEYS,
   ENTITY_RULE_KEYS,
   BADGE_KINDS,
   DEFAULT,
@@ -392,15 +394,33 @@ export const ruleItemSchema = (
     line?: boolean;
     // an entity layer's rule (the flows'): its status is its `label`
     entityRule?: boolean;
+    // a button's rule: a badge's, and whether it fills the button
+    button?: boolean;
   },
 ): HaFormSchema[] => {
-  const keys = ctx.badge ? BADGE_RULE_KEYS : ctx.entityRule ? ENTITY_RULE_KEYS : RULE_KEYS;
+  const keys = ctx.button
+    ? BUTTON_RULE_KEYS
+    : ctx.badge
+      ? BADGE_RULE_KEYS
+      : ctx.entityRule
+        ? ENTITY_RULE_KEYS
+        : RULE_KEYS;
+  // a rule that names an attribute of its own reads it: its states, a number without the unit
+  const attr = typeof item.attribute === "string" ? item.attribute : "";
+  const st = ctx.entity ? hass?.states[ctx.entity] : undefined;
+  const numeric = attr ? isNum(st?.attributes[attr]) : ctx.numeric;
+  const unit = attr ? "" : ctx.unit;
   const f = fieldsOf(hass, keys, "rule", {
-    ...(ctx.entity ? { state: { state: { entity_id: ctx.entity } } } : {}),
+    ...(ctx.entity
+      ? {
+          state: { state: { entity_id: ctx.entity, ...(attr ? { attribute: attr } : {}) } },
+          attribute: { attribute: { entity_id: ctx.entity } },
+        }
+      : {}),
     ...Object.fromEntries(
       (["above", "below"] as const).map((k) => [
         k,
-        { number: { mode: "box", ...(ctx.unit ? { unit_of_measurement: ctx.unit } : {}) } },
+        { number: { mode: "box", ...(unit ? { unit_of_measurement: unit } : {}) } },
       ]),
     ),
   }) as Record<string, { selector: unknown }>;
@@ -409,8 +429,15 @@ export const ruleItemSchema = (
   const sub = (title: string, icon: string, expanded: boolean, schema: HaFormSchema[]) =>
     ({ ...section(title, icon, schema), expanded }) as HaFormSchema;
   const when = sub(L(hass, "section.rule_when"), ICONS.rules, true, [
-    ...(ctx.numeric || has("above") || has("below") ? [grid(field("above"), field("below"))] : []),
-    ...(!ctx.numeric || has("state") ? [field("state")] : []),
+    // (what it reads: the value, else an attribute of the entity's)
+    // (a trend line's rules read its value alone)
+    ...(!ctx.line &&
+    (keys as readonly string[]).includes("attribute") &&
+    (ctx.entity || has("attribute"))
+      ? [field("attribute")]
+      : []),
+    ...(numeric || has("above") || has("below") ? [grid(field("above"), field("below"))] : []),
+    ...(!numeric || has("state") ? [field("state")] : []),
   ]);
   const advanced = sub(L(hass, "section.advanced"), ICONS.code, false, [
     { name: "more", selector: { object: {} } },
@@ -420,6 +447,17 @@ export const ruleItemSchema = (
     return [
       when,
       sub(L(hass, "section.rule_then"), ICONS.content, true, [field("color")]),
+      advanced,
+    ];
+  // a button's: its text, colour and icon, then whether it fills the button and a pulse
+  if (ctx.button)
+    return [
+      when,
+      sub(L(hass, "section.rule_then"), ICONS.content, true, [
+        field("value"),
+        grid(field("color"), field("icon")),
+        grid(field("active"), field("pulse")),
+      ]),
       advanced,
     ];
   return [
@@ -492,14 +530,89 @@ export const optionItemSchema = (hass: HomeAssistant | undefined): HaFormSchema[
   field("icon", { icon: {} }),
   advancedOf(hass),
 ];
-// one of your own buttons: what it shows (an entity, a label, an icon, a colour) and what it does
-export const buttonItemSchema = (hass: HomeAssistant | undefined): HaFormSchema[] => [
-  field("entity", { entity: {} }),
-  grid(field("label", { text: {} }), field("icon", { icon: {} })),
-  field("color", { ui_color: {} }),
-  field("action", { ui_action: {} }),
-  advancedOf(hass),
-];
+// one of your own buttons, as a badge is edited: its entity, its name and its value (whether they
+// show, what it reads, how a number is written), its look (icon, colour), its tap, and its rules
+// and when it shows as lists of their own
+export const buttonItemSchema = (
+  hass: HomeAssistant | undefined,
+  item: Record<string, unknown>,
+): HaFormSchema[] => {
+  const f = fieldsOf(hass, BUTTON_KEYS, "button") as Record<string, { selector: unknown }>;
+  const at = (name: string, extra: Partial<HaFormSchema> = {}): HaFormSchema =>
+    ({ name, selector: f[name].selector as never, ...extra }) as HaFormSchema;
+  const filled = (k: string) =>
+    item[k] !== undefined && item[k] !== null && item[k] !== "" && item[k] !== false;
+  const entity = typeof item.entity === "string" ? item.entity : "";
+  const st = entity ? hass?.states[entity] : undefined;
+  const attr = typeof item.attribute === "string" ? item.attribute : "";
+  const shown = attr ? st?.attributes[attr] : st?.state;
+  const numeric = !filled("value") && isNum(shown);
+  const showsValue = item.show_value === true || filled("value");
+  const sub = (title: string, icon: string, expanded: boolean, schema: HaFormSchema[]) =>
+    ({ ...section(title, icon, schema), expanded }) as HaFormSchema;
+  const friendly = st?.attributes.friendly_name;
+  return [
+    field("entity", { entity: {} }),
+    // its name: whether it shows, then the name (its entity's where it names none)
+    sub(L(hass, "field.name"), ICONS.name, true, [
+      at("show_name"),
+      ...(item.show_name === true || filled("name")
+        ? [
+            at(
+              "name",
+              (typeof friendly === "string" ? { default: friendly } : {}) as Partial<HaFormSchema>,
+            ),
+          ]
+        : []),
+    ]),
+    // its value: whether it shows, what it reads (an attribute, a text of your own), how a number
+    // is written
+    sub(L(hass, "section.badge_value"), ICONS.value, showsValue, [
+      at("show_value"),
+      ...(entity
+        ? [{ name: "attribute", selector: { attribute: { entity_id: entity } } } as HaFormSchema]
+        : []),
+      at("value"),
+      ...(showsValue
+        ? [
+            ...(numeric || filled("unit") || filled("decimals")
+              ? [grid(at("unit"), at("decimals"))]
+              : []),
+            grid(at("prefix"), at("suffix")),
+          ]
+        : []),
+    ]),
+    sub(L(hass, "section.look"), ICONS.look, false, [grid(at("icon"), at("color"))]),
+    sub(L(hass, "section.actions"), ICONS.actions, false, [at("tap_action")]),
+    // its rules: a list, each rule in a view on top of the button's (they read what it reads)
+    sub(L(hass, "section.rules"), ICONS.rules, false, [
+      field("rules", {
+        pro_cards_rules: {
+          hide_label: true,
+          entity,
+          unit:
+            !attr && typeof st?.attributes.unit_of_measurement === "string"
+              ? st.attributes.unit_of_measurement
+              : "",
+        },
+      }),
+    ]),
+    sub(L(hass, "section.visibility"), ICONS.visibility, false, [
+      field("visibility", {
+        pro_cards_list: { key: "visibility", of: "condition", entity, hide_label: true },
+      }),
+    ]),
+    advancedOf(hass),
+  ];
+};
+// a button field's label: what it shares with the card's fields as they are labelled there
+const BUTTON_OWN = new Set(["entity", "icon", "color"]);
+export const buttonFieldLabel = (hass: HomeAssistant | undefined, name: string) =>
+  name === "more"
+    ? L(hass, "more")
+    : BUTTON_OWN.has(name)
+      ? L(hass, `button.${name}`)
+      : L(hass, `field.${name}`);
 // a visibility condition: its type, then its fields (whose entity, empty: the item's own `host`);
 // another type's (user, location, and / or / not) in its YAML
 const CONDITIONS = [
@@ -1399,6 +1512,15 @@ const fieldsOf = (
       };
     // (in a dialog an attribute is typed; the sub-view picks it from the entity's)
     if (of === "badge" && k === "attribute") selector = { text: {} };
+    if (k === "attribute" && !selector) selector = { text: {} };
+    // a button's rule: the button filled or grey while it matches (empty: the button's own)
+    if (of === "rule" && k === "active")
+      selector = {
+        select: {
+          mode: "dropdown",
+          options: ["true", "false"].map((v) => ({ value: v, label: L(hass, `rule_active.${v}`) })),
+        },
+      };
     if (of === "badge" && k === "hours")
       selector = { number: { mode: "box", min: 0.5, step: 0.5 } };
     // a picture's source: named as the card's own icon's picture is
@@ -1408,7 +1530,12 @@ const fieldsOf = (
     }
     out[k] = {
       selector,
-      label: of === "badge" ? badgeFieldLabel(hass, k) : L(hass, `${of}.${k}`),
+      label:
+        of === "badge"
+          ? badgeFieldLabel(hass, k)
+          : of === "button"
+            ? buttonFieldLabel(hass, k)
+            : L(hass, `${of}.${k}`),
     };
   }
   out.more = { selector: { object: {} }, label: L(hass, "more") };

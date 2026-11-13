@@ -653,8 +653,11 @@ describe("the lists in views of their own", () => {
     });
     const b = open("tile", { entity: "light.kitchen", control: "buttons" });
     openItem(b, "control_buttons", 0, b.form());
-    edit(b, { label: "Movie" });
-    expect(last(b).control).toEqual({ type: "buttons", options: [{ label: "Movie" }] });
+    edit(b, { name: "Movie", show_name: true });
+    expect(last(b).control).toEqual({
+      type: "buttons",
+      options: [{ name: "Movie", show_name: true }],
+    });
   });
 });
 

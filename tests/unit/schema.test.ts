@@ -1488,3 +1488,73 @@ describe("schema: the keys the heading, multi trend and weather cards renamed", 
     expect(validate({ ...W, hover: false })).toBeNull();
   });
 });
+
+describe("a poster's and a tile's own buttons", () => {
+  const card = (options: unknown[], type = "custom:poster-card-pro") =>
+    validate({ type, name: "Room", control: { type: "buttons", options } });
+  it("take a badge's keys and rules of their own", () => {
+    for (const type of ["custom:poster-card-pro", "custom:tile-card-pro"])
+      expect(
+        card(
+          [
+            {
+              entity: "climate.living_room",
+              name: "Heating",
+              show_name: true,
+              attribute: "current_temperature",
+              show_value: true,
+              unit: "°C",
+              decimals: 1,
+              rules: [
+                { attribute: "hvac_action", state: "heating", icon: "mdi:fire", active: true },
+                { state: true, attribute: "is_on", value: "On", color: "red", pulse: true },
+              ],
+              visibility: [{ condition: "state", state: "heat" }],
+            },
+            { name: "Away", tap_action: { action: "navigate", navigation_path: "/a" } },
+          ],
+          type,
+        ),
+      ).toBeNull();
+  });
+  it("read 3.0's label and action, never beside their new spelling", () => {
+    expect(card([{ entity: "scene.a", label: "A", action: { action: "toggle" } }])).toBeNull();
+    expect(card([{ entity: "scene.a", label: "A", name: "A" }])).toBeTruthy();
+    expect(card([{ entity: "scene.a", action: {}, tap_action: {} }])).toBeTruthy();
+  });
+  it("hold a rule to what a button's rule sets", () => {
+    expect(card([{ entity: "scene.a", rules: [{ state: "on", style: "filled" }] }])).toBeTruthy();
+    expect(card([{ entity: "scene.a", rules: [{ state: "on", status: "x" }] }])).toBeTruthy();
+    expect(card([{ entity: "scene.a", rules: [{ icon: "mdi:x" }] }])).toBeTruthy();
+  });
+  it("leave the entity cards' buttons as they were", () => {
+    expect(
+      validate({
+        type: "custom:entity-card-pro",
+        entity: "light.kitchen",
+        control: "buttons",
+        control_options: [{ entity: "scene.a", show_value: true }],
+      }),
+    ).toBeTruthy();
+  });
+  it("let a card's and a badge's rules read an attribute, never fill", () => {
+    const T = "custom:tile-card-pro";
+    expect(
+      validate({
+        type: T,
+        entity: "climate.living_room",
+        rules: [{ attribute: "hvac_action", state: "heating", color: "red" }],
+        badges: [
+          { entity: "climate.living_room", rules: [{ attribute: "hvac_action", state: "idle" }] },
+        ],
+      }),
+    ).toBeNull();
+    expect(
+      validate({
+        type: T,
+        entity: "light.kitchen",
+        badges: [{ rules: [{ state: "on", active: true }] }],
+      }),
+    ).toBeTruthy();
+  });
+});

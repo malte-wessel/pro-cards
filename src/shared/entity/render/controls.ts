@@ -15,6 +15,8 @@ import {
   actionServiceFor,
   ARM_MS,
   buttonActive,
+  buttonFill,
+  buttonFillColor,
   buttonRuns,
   buttonsOf,
   canControl,
@@ -54,7 +56,7 @@ import { openDatePicker } from "../../datepicker.ts";
 import { zonedMidnight, zonedParts } from "../../calendar.ts";
 import { timeZoneOf } from "../../format.ts";
 import { registryOptions } from "../../registry-options.ts";
-import { nameOf, type EntityModel, type RenderCtx } from "../model.ts";
+import { modelOf, nameOf, tplOf, type EntityModel, type RenderCtx } from "../model.ts";
 import { iconEl, leadEl } from "./lead.ts";
 
 const SWALLOW = ["pointerdown", "pointerup", "click", "keydown", "keyup"];
@@ -677,6 +679,39 @@ const optionButtonsEl = (
 
 // a lock or cover is on while unlocked / open: that is no "pressed"
 const OPEN_DOMAINS: ReadonlySet<string> = new Set(["lock", "cover"]);
+// a kind card's button now: its name (the friendly name; shown with show_name), its texts (the
+// name, then a matching rule's value, else its value with show_value), its icon, whether it is
+// filled and in which colour, whether a matching rule's colour tints its icon while it is grey,
+// and a rule's pulse
+const ownButtonLook = (
+  ctx: RenderCtx,
+  b: CustomButton,
+  item: EntityItem,
+  st: HassEntity | undefined,
+) => {
+  const m = modelOf(ctx, item);
+  const rule = m.look.rule;
+  const name = nameOf(ctx, item, st) || null;
+  const texts: { text: string; value: boolean }[] = [];
+  if (item.item.showName && name) texts.push({ text: name, value: false });
+  const value =
+    rule && m.look.label !== null
+      ? m.look.label
+      : item.item.showValue && m.model.avail
+        ? m.fmt.text
+        : null;
+  if (value) texts.push({ text: value, value: true });
+  return {
+    name,
+    texts,
+    icon: m.look.icon,
+    active: buttonFill(b, st, rule),
+    color: buttonFillColor(b, st, rule?.color ?? null, tplOf(ctx, item.color)),
+    tint: !!rule?.color,
+    pulse: !!m.look.pulse,
+  };
+};
+
 // `control: buttons` with `control_options`: one round button (or a chip with its label) per
 // entry, on while its entity is (filled then; a kind card's grey until then, else tinted); a
 // button runs its entity (a scene, a script) or switches it, or runs its action. Each button keeps its own call in flight (host.buttonPending).
@@ -698,27 +733,44 @@ const customButtonsEl = (
     // a hidden button is left out; the others keep their index (their calls are keyed by it)
     if (ctx.shown && !ctx.shown(b.visibility)) return;
     const st = b.entity ? ctx.hass?.states[b.entity] : undefined;
-    const name = b.label ?? st?.attributes?.friendly_name ?? b.entity ?? t(ctx.hass, "control.run");
+    // a kind card's button is an item of its own: its name, value, icon and colour with its rules
+    const own = b.item ? ownButtonLook(ctx, b, b.item, st) : null;
+    const name =
+      own?.name ??
+      b.label ??
+      st?.attributes?.friendly_name ??
+      b.entity ??
+      t(ctx.hass, "control.run");
+    const texts = own ? own.texts : b.label ? [{ text: b.label, value: false }] : [];
     const key = `c${i}`,
       runs = buttonRuns(b),
       pending = host.buttonPending.has(`${idx}:${key}`);
-    const btn = button(b.label ? "chip" : "round", name);
+    const btn = button(texts.length ? "chip" : "round", name);
     if (!p.confirm) btn.title = name;
     // its own colour, else (a kind card's) its entity's while on (a light's amber), else the card's
-    const color = cssColor(b.color) ?? (flat ? activeColorCss(st) : null);
+    const color = own ? own.color : (cssColor(b.color) ?? (flat ? activeColorCss(st) : null));
     if (color) btn.style.setProperty("--fe-color", color);
-    // filled while on; a pending switch shows where it goes, a run flashes filled ("done")
-    const active = buttonActive(b, st);
-    btn.classList.toggle("on", pending ? runs || !active : active);
+    // filled while on (a kind card's: as buttonFill says); a pending switch shows where it goes,
+    // from whether its entity is on, whatever the fill shows (a humidifier on but idle is grey and
+    // still turns off), a run flashes filled ("done")
+    const on = buttonActive(b, st);
+    const active = own ? own.active : on;
+    btn.classList.toggle("on", pending ? runs || !on : active);
     btn.classList.toggle("pending", pending && !runs);
+    // (grey with a matching rule's colour: the icon in it; a rule's pulse)
+    btn.classList.toggle("icon-c", !!own?.tint && !active && !pending);
+    btn.classList.toggle("pulse", !!own?.pulse);
     if (b.entity && !runs && !OPEN_DOMAINS.has(domainOf(b.entity)))
-      btn.setAttribute("aria-pressed", String(active));
-    if (p.confirm && !b.label && !p.square) btn.appendChild(ringEl());
-    // its own icon, else its entity's, else a generic one
-    btn.appendChild(iconEl(ctx, { icon: b.icon, fallbackIcon: "mdi:gesture-tap-button" }, st));
-    if (b.label) {
+      btn.setAttribute("aria-pressed", String(on));
+    if (p.confirm && !texts.length && !p.square) btn.appendChild(ringEl());
+    // its own icon (a rule's), else its entity's, else a generic one
+    btn.appendChild(
+      iconEl(ctx, { icon: own ? own.icon : b.icon, fallbackIcon: "mdi:gesture-tap-button" }, st),
+    );
+    for (const x of texts) {
       const s = document.createElement("span");
-      s.textContent = b.label;
+      s.textContent = x.text;
+      if (x.value) s.className = "v";
       btn.appendChild(s);
     }
     const usable = !b.entity || !!b.action || canControlId(b.entity, st);

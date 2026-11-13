@@ -75,6 +75,7 @@ export interface ItemDefaults {
 export const ITEM_DEFAULTS: { [layout: string]: ItemDefaults | undefined } & {
   header: ItemDefaults;
   other: ItemDefaults;
+  button: ItemDefaults;
 } = {
   row: {
     showName: true,
@@ -92,6 +93,8 @@ export const ITEM_DEFAULTS: { [layout: string]: ItemDefaults | undefined } & {
   },
   table: { showName: true, showValue: true, showIcon: false, namePosition: "above", align: "end" },
   header: { showName: false, showValue: true, showIcon: true, namePosition: "above" },
+  // a poster's or a tile's own button: its icon alone unless it says more
+  button: { showName: false, showValue: false, showIcon: true, namePosition: "above" },
   other: { showName: true, showValue: true, showIcon: true, namePosition: "above", align: "start" },
 };
 export const HOLD_MS = 500;

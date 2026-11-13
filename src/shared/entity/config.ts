@@ -78,6 +78,10 @@ export interface RawRule {
   // header badges: the pill while the rule matches, and a pulse around it
   style?: unknown;
   pulse?: boolean;
+  // the v3 cards: the attribute the rule reads in place of the shown value, and (a button's) whether
+  // it fills the button
+  attribute?: unknown;
+  active?: unknown;
 }
 export interface RawEntity extends RawItemOptions, RawActionDefaults {
   entity?: string | null;
@@ -156,6 +160,11 @@ export interface Rule {
   tintCard: boolean;
   style: BadgeStyle | null;
   pulse: boolean;
+  // the attribute it reads in place of the shown value (the v3 cards: a thermostat's hvac_action
+  // beside its temperature); it matches the entity of now only, never a past bucket
+  attribute?: string | null;
+  // a button's: filled while it matches (true) or kept grey (false); null: the button's own
+  active?: boolean | null;
   // a card's own rule (the poster's predefined ones): its label is ours, translated at render time
   labelKey?: StringKey;
   // the rule as written: a card reads keys of its own from it (the poster's icon and backdrop)
@@ -259,6 +268,12 @@ export interface EntityItem extends ActionDefaults {
   ruleUnit?: RuleUnit;
   // a v3 card's badge (left out: the entity cards' badges and every other item)
   pill?: BadgeParts;
+  // a rule's text is the item's value, a template too (a v3 badge's and a button's rules)
+  valueRules?: boolean;
+  // its `attribute` as written by the user, as Home Assistant writes it (its unit, its words) unless
+  // a unit or decimals of its own say otherwise (the v3 cards; a kind's own attribute and the
+  // entity cards keep ours)
+  haAttribute?: boolean;
 }
 // the units a card's own rules can be written in
 export type RuleUnit = "km/h" | "mm/h";
@@ -446,6 +461,8 @@ export const normalizeRules = (list: unknown): Rule[] => {
       tintCard: !!x.tint_card,
       style: oneOf(BADGE_STYLES, x.style) ? x.style : null,
       pulse: !!x.pulse,
+      attribute: typeof x.attribute === "string" && x.attribute ? x.attribute : null,
+      active: typeof x.active === "boolean" ? x.active : null,
       src: x as Readonly<Record<string, unknown>>,
     }))
     .filter((r) => r.state !== null || r.below !== null || r.above !== null);
@@ -477,7 +494,13 @@ export const normalizeEntity = (
   // where the item sits: whether custom buttons are drawn there (only then does an item of buttons
   // alone stand without an entity or a value), else the place, for the error; `header` for a
   // header badge, the only place the badge visuals draw
-  place: { buttons: true } | { buttons: false; name?: string; header?: boolean } = {
+  // (a kind card parses its own buttons: `ownButtons`, src/shared/kinds/buttons.ts)
+  place:
+    | {
+        buttons: true;
+        ownButtons?: (list: unknown, rowEntity: string | null) => CustomButton[] | null;
+      }
+    | { buttons: false; name?: string; header?: boolean } = {
     buttons: false,
   },
 ): EntityItem => {
@@ -492,7 +515,11 @@ export const normalizeEntity = (
   if (control?.kind === "buttons") {
     const ids = buttonIdsFrom(o.control_options, o.entity || null, ctx, label);
     if (ids) control.buttonIds = ids;
-    else control.buttons = normalizeButtons(o.control_options, ctx, label, o.entity || null);
+    else
+      control.buttons =
+        place.buttons && place.ownButtons
+          ? place.ownButtons(o.control_options, o.entity || null)
+          : normalizeButtons(o.control_options, ctx, label, o.entity || null);
   } else if (control?.kind === "auto") {
     // the kind's own controls: names that are all the domain's buttons pick its buttons (a
     // robot's stop and locate); anything else stays the options of its segments
@@ -702,11 +729,14 @@ export const itemTemplates = (e: EntityItem): string[] =>
     e.icon,
     e.color,
     e.valueSrc.kind === "template" ? e.valueSrc.template : null,
-    // a badge's rules write their text as a value (a template too), and its picture
-    ...(e.pill ? e.rules.map((r) => r.label) : []),
+    // a badge's and a button's rules write their text as a value (a template too), and a badge's
+    // picture
+    ...(e.valueRules ? e.rules.map((r) => r.label) : []),
     ...(e.pill ? [e.pill.icon, ...e.pill.ruleIcons.values()] : []).map((i) =>
       i.src?.kind === "template" ? i.src.template : null,
     ),
+    // a kind card's buttons: each an item of its own
+    ...(e.control?.buttons ?? []).flatMap((b) => (b.item ? itemTemplates(b.item) : [])),
   ].filter((x): x is string => isTemplate(x));
 export const collectTemplates = (cfg: EntityCardConfig): Set<string> => {
   const s = new Set<string>();
