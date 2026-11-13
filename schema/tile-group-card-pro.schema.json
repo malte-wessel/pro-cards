@@ -19,6 +19,27 @@
       "default": "top",
       "description": "Where the tiles sit in a card taller than they are (a fixed row count, a taller card beside it): at the top, the centre or the bottom, or stretched to share its height; the title stays on top"
     },
+    "overflow": {
+      "enum": ["wrap", "shrink", "scroll"],
+      "default": "wrap",
+      "description": "A row's tiles that do not fit on a line: wrap onto the next line, shrink on one line (names and values cut, controls that no longer fit left out), or scroll on one line. Row only"
+    },
+    "align": {
+      "enum": ["stretch", "start", "center", "end", "space-between"],
+      "default": "stretch",
+      "description": "Where a row's tiles sit: stretch shares the width among them; the others keep each at the width the widest tile needs and put them at the start, the centre, the end, or spread out. Row only"
+    },
+    "columns": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 12,
+      "description": "The most tiles on a line of a row; a narrower card wraps earlier. Row only, with overflow: wrap"
+    },
+    "padding": {
+      "type": "boolean",
+      "default": true,
+      "description": "false: the tiles flush with the card and each other, square and without borders"
+    },
     "title": {
       "type": "string",
       "description": "Header text. Template allowed."
@@ -55,6 +76,29 @@
   "allOf": [
     {
       "$ref": "entity.schema.json#/$defs/haExtras"
+    },
+    {
+      "if": {
+        "not": {
+          "required": ["layout"],
+          "properties": { "layout": { "const": "row" } }
+        }
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            { "required": ["overflow"] },
+            { "required": ["align"] },
+            { "required": ["columns"] }
+          ]
+        }
+      }
+    },
+    {
+      "not": {
+        "required": ["columns", "overflow"],
+        "properties": { "overflow": { "enum": ["shrink", "scroll"] } }
+      }
     },
     {
       "if": {

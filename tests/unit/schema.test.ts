@@ -1558,3 +1558,22 @@ describe("a poster's and a tile's own buttons", () => {
     ).toBeTruthy();
   });
 });
+
+describe("a tile group's row options and padding", () => {
+  const TG = "custom:tile-group-card-pro";
+  const ok = (o: Record<string, unknown>) => validate({ type: TG, tiles: ["light.kitchen"], ...o });
+  it("takes the row's keys on a row, padding on any layout", () => {
+    expect(ok({ layout: "row", overflow: "scroll", align: "center" })).toBeNull();
+    expect(ok({ layout: "row", overflow: "wrap", columns: 3, align: "space-between" })).toBeNull();
+    for (const layout of ["list", "row", "table"])
+      expect(ok({ layout, padding: false })).toBeNull();
+  });
+  it("refuses the row's keys elsewhere, a most on a line with one line, and wrong values", () => {
+    expect(ok({ align: "start" })).toBeTruthy();
+    expect(ok({ layout: "table", overflow: "scroll" })).toBeTruthy();
+    expect(ok({ layout: "row", columns: 3, overflow: "shrink" })).toBeTruthy();
+    expect(ok({ layout: "row", columns: 0 })).toBeTruthy();
+    expect(ok({ layout: "row", overflow: "hide" })).toBeTruthy();
+    expect(ok({ padding: 0 })).toBeTruthy();
+  });
+});
