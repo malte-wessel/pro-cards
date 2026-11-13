@@ -108,6 +108,10 @@ const measure = (name: string, unit: readonly string[], readsText: string): Kind
   visual: { type: "sparkline" },
   tileVisual: false,
 });
+// a range of two formatted values, the high with its unit: a dash with room around it below zero
+// ("-3.2 – -1.0 °C", not "-3.2–-1.0 °C")
+export const rangeText = (low: string, high: string, belowZero: boolean) =>
+  `${low}${belowZero ? " – " : "–"}${high}`;
 // today's low and high under a poster's value ("Today 19.1–21.6 °C"), written as the value is; a
 // tile's one line keeps to the value and the status
 const lowHigh = (c: KindCtx) => {
@@ -115,8 +119,7 @@ const lowHigh = (c: KindCtx) => {
   const e = extentOf(todayOf(c), c.m.model.num);
   if (!e) return null;
   const n = (v: number, unit: boolean) => fmtNumber(c.ctx, c.ent, v, c.m.st, unit);
-  // (a dash with room around it below zero: "-3.2 – -1.0 °C", not "-3.2–-1.0 °C")
-  const range = `${n(e.lo, false)}${e.lo < 0 ? " – " : "–"}${n(e.hi, true)}`;
+  const range = rangeText(n(e.lo, false), n(e.hi, true), e.lo < 0);
   return secondaryEl([{ text: t(c.ctx.hass, "kind.today_range", { range }) }]);
 };
 const daily = (name: string, unit: readonly string[], readsText: string): Kind => ({

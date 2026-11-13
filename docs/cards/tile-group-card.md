@@ -51,7 +51,7 @@ tiles:
 
 ## Below the line
 
-What a tile draws below its line (a bar, a plot, a gauge, a slider, buttons) runs under the icon, across the whole tile, as on a tile on its own. In a list, `indent: true` starts it at the name, beside the icon (a gauge centres in that column): the icons stay in one column at the start and everything else lines up in the next, as the controls of a narrow tile already do when they move under the line. It starts right under the name, so a name and a bar take one row, as a name and a value do. A tile without an icon keeps all of it at the start.
+What a tile draws below its line (a bar, a plot, a slider, buttons) runs under the icon. In a list, `indent: true` starts it at the name instead, so the icons keep one column and everything else lines up in the next; a name and a bar then take a single row.
 
 ::: live
 

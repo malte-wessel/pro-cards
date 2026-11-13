@@ -77,15 +77,25 @@ describe("a kind card's own button", () => {
     warn.mockRestore();
   });
 
+  it("leaves out with a warning what 3.0 ignored; the new key wins over the old one", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    expect(one({ entity: "scene.a", hold_action: { action: "toggle" } }).action).toBeNull();
+    expect(one({ entity: "scene.a", hold_action: { action: "toggle" } }).entity).toBe("scene.a");
+    expect(warn.mock.calls.map((c) => String(c[0]))).toEqual([
+      expect.stringMatching(/a button's hold_action is left out: a button runs one action/),
+    ]);
+    expect(one({ entity: "scene.a", label: "Old", name: "New" }).item?.name).toBe("New");
+    expect(
+      one({ entity: "scene.a", action: { action: "none" }, tap_action: { action: "toggle" } })
+        .action,
+    ).toEqual({ action: "toggle" });
+    // an empty label was no label: the icon alone
+    expect(one({ entity: "scene.a", label: "" }).item?.item.showName).toBe(false);
+    warn.mockRestore();
+  });
+
   it("says what to write for a key it does not take", () => {
     const err = (b: Record<string, unknown>) => () => one(b);
-    expect(err({ entity: "scene.a", label: "A", name: "A" })).toThrow(
-      "control.options[0]: label is name with show_name: true: write name only",
-    );
-    expect(err({ entity: "scene.a", action: {}, tap_action: {} })).toThrow(
-      "action is tap_action: write tap_action only",
-    );
-    expect(err({ entity: "scene.a", hold_action: {} })).toThrow("a button runs one action");
     expect(err({ entity: "scene.a", icon: { name: "mdi:x" } })).toThrow("icon is an icon's name");
     expect(err({ entity: "scene.a", value: true })).toThrow(/show_value/);
     const ruleErr = (r: Record<string, unknown>) => err({ entity: "scene.a", rules: [r] });

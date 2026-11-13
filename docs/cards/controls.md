@@ -394,23 +394,23 @@ An entity a button can neither run nor switch (a sensor, a window) opens its dia
 
 ## Buttons that show state
 
-A button shows its entity as a badge does: filled while the entity is active, with its name, its value and rules of its own. A room's poster can carry its lights, its blinds, its windows and its heating in one row.
+A button shows its entity with its name, its value and rules of its own, and is filled while the entity is active. A room's poster can carry its lights, its blinds, its windows and its heating in one row.
 
 ### What fills a button
 
 A button fills in Home Assistant's colour for its entity while the entity is active:
 
-| Entity                          | Filled while                                          |
-| ------------------------------- | ----------------------------------------------------- |
-| a light, a switch, a fan …      | it is on                                              |
-| a cover, a valve                | it is open                                            |
-| a lock                          | it is unlocked                                        |
-| a binary sensor                 | it is on: a window open, motion seen, smoke detected  |
-| a person, a tracker             | they are not away: home or in a zone                  |
-| a thermostat                    | it heats, cools or dries (`hvac_action`), not by mode |
-| a humidifier                    | it humidifies or dries, else while it is on           |
-| a scene, a script, a button     | never: it flashes when pressed                        |
-| a sensor, a number, the weather | never on its own: a rule can fill it                  |
+| Entity                          | Filled while                                                        |
+| ------------------------------- | ------------------------------------------------------------------- |
+| a light, a switch, a fan …      | it is on                                                            |
+| a cover, a valve                | it is open                                                          |
+| a lock                          | it is unlocked                                                      |
+| a binary sensor                 | it is on: a window open, motion seen, smoke detected                |
+| a person, a tracker             | they are not away: home or in a zone                                |
+| a thermostat                    | it heats, cools, dries or runs its fan (`hvac_action`), not by mode |
+| a humidifier                    | it humidifies or dries, else while it is on                         |
+| a scene, a script, a button     | never: it flashes when pressed                                      |
+| a sensor, a number, the weather | never on its own: a rule can fill it                                |
 
 A thermostat in `heat` all winter stays grey while the room is warm enough, and fills while it heats.
 
@@ -511,7 +511,7 @@ grid_options: { columns: 6 }
 
 ### A rule's own attribute
 
-A rule reads the button's value unless it names an `attribute` of its own. A thermostat's button can show the room's temperature and swap its icon by what the thermostat does. The poster's and the tile's own rules and a badge's take `attribute` too. It reads the entity as it is now, so a plot's past values never match it.
+A rule reads the button's value unless it names an `attribute` of its own. A thermostat's button can show the room's temperature and swap its icon by what the thermostat does. The poster's and the tile's own rules and a badge's take `attribute` too.
 
 ::: live
 

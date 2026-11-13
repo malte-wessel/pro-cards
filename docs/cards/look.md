@@ -122,7 +122,7 @@ Many kinds bring rules of their own: CO₂ from Good to Bad, a battery Low and C
 
 Rules also match a template's value by its text, so `{ state: Open, color: red }` works on a card without an entity.
 
-A rule with an `attribute` reads that attribute of the entity in place of the value. Below, the thermostat shows its temperature and turns red with a status of its own while it heats:
+Below, the thermostat shows its temperature and turns red with a status of its own while it heats:
 
 ::: live
 

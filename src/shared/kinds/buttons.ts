@@ -40,6 +40,15 @@ const RULE_GONE: Record<string, string> = {
 
 const str = (v: unknown) => (typeof v === "string" && v ? v : null);
 
+// a key a button does not take is left out with one warning per card type and key: 3.0 ignored
+// them, so a dashboard of before keeps working until 4.0
+const goneWarned = new Set<string>();
+const warnGone = (type: string, key: string) => {
+  if (goneWarned.has(`${type} ${key}`)) return;
+  goneWarned.add(`${type} ${key}`);
+  console.warn(`${type}: a button's ${key} is left out: ${GONE[key]}`);
+};
+
 // a button's rules: `state`, `above`, `below` on its value or on its own `attribute`, each setting
 // its icon (a name), colour, text (`value`, a template too), pulse and fill (`active`)
 const buttonRules = (list: unknown, at: string, ctx: NormalizeCtx) => {
@@ -81,20 +90,14 @@ export const normalizeKindButtons = (
       console.warn(`${here} needs 'entity' or 'tap_action'`);
       return;
     }
-    for (const k of Object.keys(x))
-      if (x[k] !== undefined && k in GONE) throw new Error(`${here}: ${GONE[k]}`);
-    // the 3.0 keys, read until 4.0: `label` is a name that shows, `action` the tap's
-    const label = x.label === undefined || x.label === null ? null : x.label;
-    if (label !== null) {
-      if (x.name !== undefined || x.show_name !== undefined)
-        throw new Error(`${here}: label is name with show_name: true: write name only`);
+    for (const k of Object.keys(x)) if (x[k] !== undefined && k in GONE) warnGone(ctx.type, k);
+    // the 3.0 keys, read until 4.0: `label` is a name that shows (an empty one none, as before),
+    // `action` the tap's; where the new key is written too, the new one wins
+    const label = x.label === undefined || x.label === null || x.label === "" ? null : x.label;
+    if (label !== null)
       warnDeprecatedKey(ctx.type, "a button's label", "write name with show_name: true", ANCHOR);
-    }
-    if (x.action !== undefined && x.action !== null) {
-      if (x.tap_action !== undefined)
-        throw new Error(`${here}: action is tap_action: write tap_action only`);
+    if (x.action !== undefined && x.action !== null)
       warnDeprecatedKey(ctx.type, "a button's action", "write tap_action", ANCHOR);
-    }
     textOf(x.name ?? label, `${at}.name`, ctx.type, "name");
     textOf(x.value, `${at}.value`, ctx.type, "value");
     if (x.icon !== undefined && x.icon !== null && typeof x.icon !== "string")

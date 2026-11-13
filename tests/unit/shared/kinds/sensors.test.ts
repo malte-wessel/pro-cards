@@ -1,5 +1,5 @@
 import { afterEach, describe, it, expect } from "vitest";
-import { extentOf } from "../../../../src/shared/kinds/sensors.ts";
+import { extentOf, rangeText } from "../../../../src/shared/kinds/sensors.ts";
 import { PosterCard } from "../../../../src/poster-card.ts";
 import { TileCard } from "../../../../src/tile-card.ts";
 import { snapshot } from "../../../../docs/.vitepress/theme/ha-shim/hass.ts";
@@ -13,6 +13,11 @@ describe("today's low and high", () => {
     expect(extentOf([{ v: 18 }], 25)).toEqual({ lo: 18, hi: 25 });
     expect(extentOf([], 21)).toEqual({ lo: 21, hi: 21 });
     expect(extentOf([{ v: null }])).toBeNull();
+  });
+
+  it("read as a range, its dash spaced below zero", () => {
+    expect(rangeText("19.1", "21.6 °C", false)).toBe("19.1–21.6 °C");
+    expect(rangeText("-3.2", "-1.0 °C", true)).toBe("-3.2 – -1.0 °C");
   });
 });
 
