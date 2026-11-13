@@ -195,8 +195,9 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
     headerIdxs: [],
     hasHeader: false,
     ...kc,
-    ...(Math.max(badgeHours, tableHours(table), kc.kind.historyHours ?? 0) > kc.hours
-      ? { fetchHours: Math.max(badgeHours, tableHours(table), kc.kind.historyHours ?? 0) }
+    // (a kind's own window, today's low and high, is a poster's)
+    ...(Math.max(badgeHours, tableHours(table)) > kc.hours
+      ? { fetchHours: Math.max(badgeHours, tableHours(table)) }
       : {}),
     statusIdx,
     statusText,

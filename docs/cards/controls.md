@@ -603,7 +603,7 @@ At rest a control is grey; a slider's bar is its colour at 20 % behind the fill.
 Some things should not happen by a stray tap. A hold fills the button from the left for a second (one standing in for the icon: a ring around it) and runs when it is full; letting go earlier cancels. There are three ways to get one:
 
 - `confirm: true` on the control turns a switch, a Run button or buttons into holds, each button its own.
-- `control: hold` is a button to hold, for any entity that switches or runs.
+- `control: hold` is a button to hold, for any entity that switches or runs. On one that switches it is filled while the entity is on, as a switch is.
 - `icon: { hold_action: … }` holds the icon ([the icon's actions](/cards/actions#the-icon-s-own-actions)). Locks and alarm panels do this by default.
 
 ::: live

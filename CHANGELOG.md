@@ -15,7 +15,12 @@ _Beta_
 ### Changed: existing cards look different
 
 - **Buttons fill by state:** a button of your own fills while its entity is active, as Home Assistant colours it: a window or a door open, motion or smoke seen, a person home, a thermostat while it heats or cools. Before, only buttons that switch their entity filled. A sensor, a number, a scene and a script stay grey.
+- **Today's low and high only on the poster:** a temperature or humidity tile no longer shows them; the poster words them as today's (Today 19.1–21.6 °C). [Kinds](https://malte-wessel.github.io/pro-cards/cards/kinds#temperature-and-humidity)
 - **Attributes as Home Assistant writes them:** an `attribute` you name on a tile, a poster, a badge or a button shows with its unit and in Home Assistant's words ("60 %", "21.6 °C", "Heating" where it read "heating"). A number Home Assistant scales (a light's brightness as a percentage) keeps its own value, which the rules compare. A `unit` or `decimals` of your own still win.
+
+### Fixes
+
+- A hold button (`control: hold`) that switches its entity is filled while it is on.
 
 ### Deprecated, gone in 4.0
 

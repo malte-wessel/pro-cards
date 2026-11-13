@@ -160,6 +160,20 @@ test.describe("vertical tile", () => {
   });
 });
 
+test.describe("today's low and high", () => {
+  test("are a poster's, worded as today's; a tile's line keeps to the value", async ({ page }) => {
+    const E = "sensor.living_room_temperature";
+    await mount(page, [
+      { type: T, entity: E },
+      { type: T, entity: E, visual: "sparkline" },
+      { type: "custom:poster-card-pro", entity: E },
+    ]);
+    await expect(line(page, 0)).toHaveText(/^\d+\.\d °C$/);
+    await expect(line(page, 1)).toHaveText(/^\d+\.\d °C$/);
+    await expect(card(page, 2).locator(".pbody")).toContainText(/Today \d+\.\d–\d+\.\d °C/);
+  });
+});
+
 test.describe("tile plots", () => {
   test("run to the tile's edges, as on a poster; a strip keeps the padding", async ({ page }) => {
     await mount(page, [

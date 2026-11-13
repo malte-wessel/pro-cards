@@ -79,6 +79,7 @@ const fr: Translation = {
   "kind.climate.drying": "Déshumidifie",
   "kind.climate.fan": "Ventile",
   "kind.since": "depuis {t}",
+  "kind.today_range": "Aujourd'hui {range}",
   "kind.light.dark": "Sombre",
   "kind.light.dim": "Tamisé",
   "kind.light.bright": "Lumineux",

@@ -79,6 +79,7 @@ const es: Translation = {
   "kind.climate.drying": "Secando",
   "kind.climate.fan": "Ventilando",
   "kind.since": "desde hace {t}",
+  "kind.today_range": "Hoy {range}",
   "kind.light.dark": "Oscuro",
   "kind.light.dim": "Tenue",
   "kind.light.bright": "Luminoso",

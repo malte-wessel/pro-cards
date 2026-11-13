@@ -7,6 +7,7 @@ import { secondaryEl } from "../entity/render/lead.ts";
 import type { Point } from "../history.ts";
 import { powerParts, wattsOf } from "../power.ts";
 import { timeZoneOf } from "../format.ts";
+import { t } from "../i18n.ts";
 import { startOfDay } from "../util.ts";
 import { alertGlow, sinceEl } from "./dom.ts";
 import { place } from "./domains.ts";
@@ -103,23 +104,27 @@ const measure = (name: string, unit: readonly string[], readsText: string): Kind
   readsText,
   offers: { deviceClasses: [name], units: unit },
   keys: [],
-  // its line below the texts (a tile stays as it is)
+  // its line below the texts (a tile stays as it is; the line fetches its own history)
   visual: { type: "sparkline" },
   tileVisual: false,
-  history: (_opts, entity) => (entity ? [entity] : []),
 });
-// today's low and high under the value, written as the value is
+// today's low and high under a poster's value ("Today 19.1–21.6 °C"), written as the value is; a
+// tile's one line keeps to the value and the status
 const lowHigh = (c: KindCtx) => {
-  if (!c.m.model.avail) return null;
+  if (c.card !== "poster" || !c.m.model.avail) return null;
   const e = extentOf(todayOf(c), c.m.model.num);
   if (!e) return null;
-  const n = (v: number) => fmtNumber(c.ctx, c.ent, v, c.m.st, false);
-  return secondaryEl([{ text: `↓ ${n(e.lo)}  ↑ ${n(e.hi)}` }]);
+  const n = (v: number, unit: boolean) => fmtNumber(c.ctx, c.ent, v, c.m.st, unit);
+  // (a dash with room around it below zero: "-3.2 – -1.0 °C", not "-3.2–-1.0 °C")
+  const range = `${n(e.lo, false)}${e.lo < 0 ? " – " : "–"}${n(e.hi, true)}`;
+  return secondaryEl([{ text: t(c.ctx.hass, "kind.today_range", { range }) }]);
 };
 const daily = (name: string, unit: readonly string[], readsText: string): Kind => ({
   ...measure(name, unit, readsText),
   fills: ["secondary"],
-  // a day back, so today's low and high are there whatever window the line draws
+  // a poster's day back, so today's low and high are there whatever window its line draws (or
+  // without a line); a tile fetches nothing for them
+  history: (_opts, entity, card) => (card === "poster" && entity ? [entity] : []),
   historyHours: 24,
   slots: (c) => ({ secondary: lowHigh(c) }),
   extra: (c) => [c.ctx.fetched, todayOf(c).length],

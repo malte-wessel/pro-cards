@@ -929,6 +929,11 @@ const todayOf = (tz: string): [number, number, number] => {
   return [y, m, d];
 };
 
+// the holds that switch their entity on and off (homeassistant.toggle), and so show whether it is
+// on; a lock is unlocked, an alarm panel armed, a script run, a cover moved: none of them is
+// "pressed", and a hold on what it cannot switch (a thermostat, a sensor) does nothing
+const holdSwitches = (ent: EntityItem, m: EntityModel) =>
+  serviceFor(ent, m.st, { type: "hold" })?.domain === "homeassistant";
 // what holding does: a lock's next state, a run, a cover's travel, else power; on the icon (the
 // button replaces it) the entity's own icon
 const holdIcon = (ctx: RenderCtx, ent: EntityItem, m: EntityModel, p: Placement) => {
@@ -1074,6 +1079,13 @@ const holdButton = (
   if (!p.square) el.appendChild(ringEl());
   el.appendChild(holdIcon(ctx, ent, m, p));
   el.classList.toggle("pending", host.pending.has(idx));
+  // a kind card's hold that switches shows whether its entity is on (or where a pending call
+  // takes it), as its switch does; the entity cards' round hold stays as it was
+  if (p.square && p.position !== "lead" && holdSwitches(ent, m)) {
+    const { on } = toggleTarget(ctx, ent, idx, m);
+    el.classList.toggle("on", on);
+    el.setAttribute("aria-pressed", String(on));
+  }
   return el;
 };
 // the card's own call of a hold (and of the icon's `toggle`): a lock locks or unlocks, an alarm
@@ -1090,7 +1102,14 @@ const holdCall = (
   const svc = serviceFor(ent, m.st, { type: "hold" });
   // (a lock's or an alarm panel's that wants a code: Home Assistant's dialog)
   if (askCode(host, ent, m, codeTarget(svc))) return;
-  host.call(el, idx, ent, svc, { until: later() }, haptic);
+  // a hold that switches says where it goes, so it shows that while the call is in flight
+  const value =
+    svc?.domain === "homeassistant"
+      ? toggleTarget(ctx, ent, idx, m).on
+        ? "off"
+        : "on"
+      : undefined;
+  host.call(el, idx, ent, svc, { until: later(), ...(value ? { value } : {}) }, haptic);
 };
 // the hold-to-confirm button: locks, or any toggle / button with `control_confirm`
 export const holdEl = (

@@ -659,6 +659,20 @@ add("po-controls", [
   p("button.restart_router", { control: "button" }),
   p("lock.front_door", { control: "hold" }),
 ]);
+// a hold that switches shows on and off as a switch does: filled in the card's colour while on (a
+// rule's green here), on a poster and on a tile
+{
+  const { ids, states } = levels("switch.coffee_machine", "po_hold", ["on", "off"]);
+  const rules = [{ state: "on", color: "#88e788" }];
+  add(
+    "po-hold-switch",
+    [
+      ...ids.map((id) => p(id, { control: "hold", rules })),
+      ...ids.map((id) => ({ type: "custom:tile-card-pro", entity: id, control: "hold", rules })),
+    ],
+    { states },
+  );
+}
 add("po-controls-buttons", [
   p(null, {
     name: "Living room",

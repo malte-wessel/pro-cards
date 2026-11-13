@@ -79,6 +79,7 @@ const ru: Translation = {
   "kind.climate.drying": "Осушение",
   "kind.climate.fan": "Вентиляция",
   "kind.since": "уже {t}",
+  "kind.today_range": "Сегодня {range}",
   "kind.light.dark": "Темно",
   "kind.light.dim": "Полумрак",
   "kind.light.bright": "Светло",

@@ -79,6 +79,7 @@ const nb: Translation = {
   "kind.climate.drying": "Tørking",
   "kind.climate.fan": "Vifte",
   "kind.since": "i {t}",
+  "kind.today_range": "I dag {range}",
   "kind.light.dark": "Mørkt",
   "kind.light.dim": "Dempet",
   "kind.light.bright": "Lyst",

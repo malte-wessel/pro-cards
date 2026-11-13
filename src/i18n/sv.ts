@@ -79,6 +79,7 @@ const sv: Translation = {
   "kind.climate.drying": "Avfuktar",
   "kind.climate.fan": "Fläkt",
   "kind.since": "i {t}",
+  "kind.today_range": "I dag {range}",
   "kind.light.dark": "Mörkt",
   "kind.light.dim": "Dämpat",
   "kind.light.bright": "Ljust",

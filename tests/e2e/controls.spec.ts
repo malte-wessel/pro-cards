@@ -104,6 +104,58 @@ test.describe("controls: focus and gestures", () => {
     await expect.poll(() => focused(page)).toMatch(/ctl-hold/);
   });
 
+  test("a hold that switches is filled while its entity is on, a lock's never", async ({
+    page,
+  }) => {
+    await mount(
+      page,
+      {
+        type: "custom:tile-card-pro",
+        entity: "switch.coffee_machine",
+        control: "hold",
+        rules: [{ state: "on", color: "#88e788" }],
+      },
+      live,
+    );
+    const h = card(page).locator(".ctl-hold");
+    await expect(h).not.toHaveClass(/\bon\b/);
+    await expect(h).toHaveAttribute("aria-pressed", "false");
+    await setState(page, "switch.coffee_machine", "on");
+    await expect(h).toHaveClass(/\bon\b/);
+    await expect(h).toHaveAttribute("aria-pressed", "true");
+    // filled in the matching rule's colour, as a switch in its place would be
+    await expect(h).toHaveCSS("background-color", "rgb(136, 231, 136)");
+    // held, it switches off, and shows that while the call is in flight
+    await page.evaluate(() => window.pc.holdCalls(true));
+    await h.focus();
+    await page.keyboard.down("Space");
+    await expect.poll(() => domainCalls(page), { timeout: 3000 }).toEqual(["homeassistant.toggle"]);
+    await page.keyboard.up("Space");
+    await expect(h).toHaveClass(/pending/);
+    await expect(h).not.toHaveClass(/\bon\b/);
+    await page.evaluate(() => window.pc.release());
+    await expect(h).not.toHaveClass(/pending/);
+    await expect(h).not.toHaveClass(/\bon\b/);
+    // a lock is unlocked, not pressed; the entity cards' round hold stays as it was
+    await mount(
+      page,
+      { type: "custom:tile-card-pro", entity: "lock.front_door", control: "hold" },
+      live,
+    );
+    const lock = card(page).locator(".ctl-hold.square");
+    await expect(lock).not.toHaveClass(/\bon\b/);
+    await expect(lock).not.toHaveAttribute("aria-pressed");
+    await mount(page, { type: T, entity: "switch.coffee_machine", control: "hold" }, live);
+    await expect(card(page).locator(".ctl-hold")).not.toHaveAttribute("aria-pressed");
+    // a thermostat's hold switches nothing: never pressed, whatever it does
+    await mount(
+      page,
+      { type: "custom:tile-card-pro", entity: "climate.living_room", control: "hold" },
+      live,
+    );
+    await expect(card(page).locator(".ctl-hold.square")).not.toHaveAttribute("aria-pressed");
+  });
+
   test("a screen reader's click arms the hold, a second one within five seconds runs it", async ({
     page,
   }) => {

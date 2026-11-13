@@ -79,6 +79,7 @@ const cs: Translation = {
   "kind.climate.drying": "Vysoušení",
   "kind.climate.fan": "Větrání",
   "kind.since": "už {t}",
+  "kind.today_range": "Dnes {range}",
   "kind.light.dark": "Tma",
   "kind.light.dim": "Šero",
   "kind.light.bright": "Světlo",

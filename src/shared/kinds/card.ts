@@ -228,6 +228,10 @@ export abstract class KindCardBase extends EntityCardBase {
     this._feed.sync(conn, entity, wanted);
   }
 
+  // the card it is: a poster or a tile
+  _thing() {
+    return (this.constructor as typeof KindCardBase).thing;
+  }
   // ----- what the card reads beyond its items -----
   _extraTemplates(cfg: EntityCardConfig): string[] {
     const c = cfg as KindConfig;
@@ -239,7 +243,7 @@ export abstract class KindCardBase extends EntityCardBase {
     const c = cfg as KindConfig;
     return [
       ...(c.kind.watch ?? []),
-      ...(c.kind.history?.(c.kindOpts, c.entities[0].entity) ?? []),
+      ...(c.kind.history?.(c.kindOpts, c.entities[0].entity, this._thing()) ?? []),
       ...this._pictures(c).flatMap((src) => (src && src.kind === "entity" ? [src.entity] : [])),
     ];
   }
@@ -295,7 +299,7 @@ export abstract class KindCardBase extends EntityCardBase {
         : [],
     );
     return [
-      ...(c.kind.history?.(c.kindOpts, entity) ?? []),
+      ...(c.kind.history?.(c.kindOpts, entity, this._thing()) ?? []),
       ...plots.filter((x): x is string => !!x),
     ];
   }

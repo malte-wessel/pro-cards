@@ -425,6 +425,9 @@ export const STYLE_CONTROLS = `
   .ctl-hold.square { --fill: color-mix(in srgb, var(--fe-color) 45%, transparent); background-image: linear-gradient(var(--fill), var(--fill)); background-repeat: no-repeat; background-size: 0 100%; }
   .ctl-hold.square:is(.armed, .holding) { background-size: 100% 100%; }
   .ctl-hold.square.holding { transition: background-size 1s linear; }
+  /* a hold that switches, filled while its entity is on: the fill that runs over it while held is
+     a shade of its own, so it shows on the filled button too */
+  .ctl-hold.square.on { --fill: color-mix(in srgb, var(--fe-color) 45%, ${CARD_BG}); }
   .ctl-buttons.custom > .chip { flex: 0 1 auto; display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; height: 32px; padding: 0 14px 0 10px; border: 0; border-radius: 999px; font-size: ${fs(13)}; font-weight: ${fw("medium")}; white-space: nowrap; cursor: pointer; --mdc-icon-size: 18px; }
   .ctl-buttons.custom > .chip span { overflow: hidden; text-overflow: ellipsis; }
   /* the colour stays on the icon and the tint; the label reads in the text colour until filled */
@@ -507,8 +510,8 @@ export const STYLE_CONTROLS = `
   .toggle.square.pending:not(.on) { background: var(--fe-track); }
   .ctl-buttons.custom.flat > button, .ctl-hold.square { background-color: var(--fe-track); color: var(--primary-text-color); }
   .ctl-segments.square .seg { color: var(--primary-text-color); }
-  .toggle.square.on, .ctl-buttons.custom.flat > button.on, .ctl-buttons.square > .round.f, .ctl-segments.square .seg.on, .ctl-chip.square:not(.round), .ctl-chip.square.done { background-color: var(--fe-color); color: var(--text-primary-color, #fff); }
-  .toggle.square.tinted.on, .ctl-buttons.custom.flat.tinted > button.on, .ctl-buttons.square.tinted > .round.f, .ctl-segments.square.tinted .seg.on, .ctl-chip.square.tinted:not(.round, .done) { background-color: color-mix(in srgb, var(--fe-color) 20%, transparent); color: var(--fe-color); }
+  .toggle.square.on, .ctl-hold.square.on, .ctl-buttons.custom.flat > button.on, .ctl-buttons.square > .round.f, .ctl-segments.square .seg.on, .ctl-chip.square:not(.round), .ctl-chip.square.done { background-color: var(--fe-color); color: var(--text-primary-color, #fff); }
+  .toggle.square.tinted.on, .ctl-hold.square.tinted.on, .ctl-buttons.custom.flat.tinted > button.on, .ctl-buttons.square.tinted > .round.f, .ctl-segments.square.tinted .seg.on, .ctl-chip.square.tinted:not(.round, .done) { background-color: color-mix(in srgb, var(--fe-color) 20%, transparent); color: var(--fe-color); }
   /* a badge's switch in a filled pill (the colour already): the pill's ink, the icon in the colour */
   .row.hval.b-filled > .toggle.square.on { background-color: var(--b-ink); color: var(--fe-color); }
   @keyframes ctl-pulse { 50% { opacity: .45; } }

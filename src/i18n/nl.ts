@@ -79,6 +79,7 @@ const nl: Translation = {
   "kind.climate.drying": "Droogt",
   "kind.climate.fan": "Ventileert",
   "kind.since": "al {t}",
+  "kind.today_range": "Vandaag {range}",
   "kind.light.dark": "Donker",
   "kind.light.dim": "Schemerig",
   "kind.light.bright": "Helder",

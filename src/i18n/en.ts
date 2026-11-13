@@ -78,6 +78,7 @@ const en = {
   "kind.climate.drying": "Drying",
   "kind.climate.fan": "Fan",
   "kind.since": "for {t}",
+  "kind.today_range": "Today {range}",
   "kind.light.dark": "Dark",
   "kind.light.dim": "Dim",
   "kind.light.bright": "Bright",

@@ -715,7 +715,7 @@ describe("poster-card config", () => {
       series: [{ entity: "sensor.outdoor_temperature", name: "Out" }, "sensor.x"],
     });
     expect(trend.entities[0]).toMatchObject({ entity: "sensor.outdoor_temperature", name: "Out" });
-    expect(trend.kind.history?.(trend.kindOpts, trend.entities[0].entity)).toEqual([
+    expect(trend.kind.history?.(trend.kindOpts, trend.entities[0].entity, "poster")).toEqual([
       "sensor.outdoor_temperature",
       "sensor.x",
     ]);
