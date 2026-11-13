@@ -867,6 +867,7 @@ const pl: Translation = {
   "tile_group.tiles": "Kafelki",
   "editor.cards.field.overflow": "Kafelki, które się nie mieszczą",
   "editor.cards.field.padding": "Odstęp wokół kafelków",
+  "editor.cards.field.indent": "Wizualizacje i sterowanie obok ikony",
   "editor.cards.overflow.wrap": "Zawijaj do następnego wiersza",
   "editor.cards.overflow.shrink": "Zmniejsz w jednym wierszu",
   "editor.cards.overflow.scroll": "Przewijaj w jednym wierszu",
@@ -877,6 +878,8 @@ const pl: Translation = {
   "editor.cards.row_align.space-between": "Rozłożone",
   "editor.cards.help.row_columns": "Najwyżej tyle kafelków w wierszu",
   "editor.cards.help.padding": "Wyłączone: kafelki przylegają do karty, z prostymi rogami",
+  "editor.cards.help.indent":
+    "Włączone: zaczynają się przy nazwie, w jednej kolumnie na całej liście",
   "editor.cards.tile": "Kafelek",
   "editor.cards.none_yet": "Brak kafelków: + dodaje jeden",
   "editor.cards.field.columns": "Kolumny",

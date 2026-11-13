@@ -12,6 +12,11 @@ import { STYLE_TREND } from "../shared/trend/styles.ts";
 import { STYLE_WEATHER_PICTURES } from "../shared/weather/styles.ts";
 import { STYLE_WIND } from "../shared/wind/styles.ts";
 
+// a tile of a tile group's list with indent and an icon, and one with something shown below its
+// line (a block control the tile left out for want of room is nothing)
+const INDENTED = "ha-card.tindent .row.tile:has(> .top > .tlead:not([hidden]))";
+const HANGING = `${INDENTED}:is(:has(> .top ~ :not(.pprog, .plot.edge, .ctl)), :not(.tdrop):has(> .top ~ .ctl))`;
+
 const STYLE_TILE_CARD = `
   /* 8 px above and below: a one-row tile is its 56 px (38 px of texts, a border up to 2 px) with
      the icon 10 px from its top, and a taller tile (a plot, controls under the line) starts its
@@ -51,6 +56,30 @@ const STYLE_TILE_CARD = `
   ha-card.layout-tile .row.tile > .plot.edge { position: absolute; inset: auto 0 0; height: 4px; margin: 0; }
   ha-card.layout-tile .row.tile > .plot .label.placeholder { margin-left: 12px; }
   ha-card.layout-tile .row.tile > .plot[data-kind="columns"] .label.placeholder { margin-left: 14px; }
+  /* a tile group's list (indent): what is below the line (a visual, a kind's picture, block
+     controls) starts at the name, beside the icon: the 36 px lead and .top's 12 px gap. A plot
+     starts there too and keeps its bleed to the end and the bottom edge (its placeholder needs no
+     offset then); the ribbons along the bottom edge (a strip's, a player's progress) stay as wide
+     as the tile. A tile without an icon moves nothing */
+  ${INDENTED} { --tindent: 48px; }
+  ${INDENTED} > .top ~ :not(.pprog, .plot.edge) { margin-inline-start: var(--tindent); }
+  ${INDENTED} > .top ~ .plot .label.placeholder { margin-left: 0; }
+  /* a block slider is as wide as the row (width: 100%), a gauge up to 120 px: beside the icon,
+     what is left of it (the gauge centred in it) */
+  ${INDENTED} > .top ~ .ctl-slider { width: auto; }
+  ${INDENTED} > .top ~ .gauge { max-width: min(120px, calc(100% - var(--tindent))); }
+  /* with something shown below the line the icon hangs at the top beside it and takes no height
+     of its own, and the texts lose their 36 px: what is below starts right under the name (or the
+     value), so a name and a bar make one 36 px row as a name and a value do. The row keeps the
+     icon's 36 px, so the icon never reaches past it; the texts keep the height of a badge beside
+     them (a pill has none of its own), so it never reaches past the card's edge: a small pill (24 px)
+     stays inside the tile's padding without */
+  ${HANGING} { min-height: 36px; }
+  ${HANGING} > .top { align-items: flex-start; }
+  ${HANGING} > .top > .tlead { margin-bottom: -36px; }
+  ${HANGING} > .top > .main { min-height: 0; }
+  ${HANGING} > .top > .main:has(.tcorner > .row.hval.b-m:not(.empty, [hidden])) { min-height: 30px; }
+  ${HANGING} > .top > .main:has(.tcorner > .row.hval.b-l:not(.empty, [hidden])) { min-height: 36px; }
   /* a picture's tooltip opens upward from its bottom, over the line: one opening downward would
      be cut by the card's edge */
   ha-card.layout-tile .row.tile > :is(.pcurve, .plot) > .tip { top: auto; bottom: 8px; z-index: 3; }

@@ -1,7 +1,8 @@
 // The tile group card's config (pure): the header (title, icon, its badges), the layout and the
-// tiles. The group sets nothing on its tiles but their layout (a row's are vertical): each tile
-// says everything about itself. The tiles are tile cards of their own (the group hosts them), so
-// their configs are tile card configs, checked by the tile card.
+// tiles. The group sets nothing on its tiles but their layout (a row's are vertical, a list's are
+// indented, a table's are its rows): each tile says everything about itself. The tiles are tile
+// cards of their own (the group hosts them), so their configs are tile card configs, checked by
+// the tile card.
 import type { CardConfigBase } from "../shared/ha.ts";
 import {
   normalizeActionDefaults,
@@ -46,6 +47,7 @@ const CARD_KEYS = new Set([
   "align",
   "columns",
   "padding",
+  "indent",
 ]);
 
 export interface TileGroupTile {
@@ -65,6 +67,8 @@ export interface TileGroupConfig extends EntityCardConfig {
   rowColumns: number | null;
   // false: the tiles flush with the card and each other, square, without borders
   padding: boolean;
+  // a list: what is below a tile's line starts at its name, beside the icon (true; else under it)
+  indent: boolean;
 }
 
 interface RawTileGroupConfig extends CardConfigBase {
@@ -78,6 +82,7 @@ interface RawTileGroupConfig extends CardConfigBase {
   align?: unknown;
   columns?: unknown;
   padding?: unknown;
+  indent?: unknown;
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
@@ -132,6 +137,11 @@ export const normalizeTileGroupConfig = (input: unknown): TileGroupConfig => {
     );
   const padding = raw.padding ?? true;
   if (typeof padding !== "boolean") throw new Error(`${CARD_TYPE}: padding takes true or false`);
+  // the list's own key: what is below a tile's line starts at its name
+  if (layout !== "list" && raw.indent !== undefined && raw.indent !== null)
+    throw new Error(`${CARD_TYPE}: indent is the list's: layout: list`);
+  const indent = raw.indent ?? false;
+  if (typeof indent !== "boolean") throw new Error(`${CARD_TYPE}: indent takes true or false`);
   if (!Array.isArray(raw.tiles) || !raw.tiles.length)
     throw new Error(`${CARD_TYPE}: tiles must be a list of entities or tiles`);
   const tiles = raw.tiles.map((e, i): TileGroupTile => {
@@ -145,14 +155,21 @@ export const normalizeTileGroupConfig = (input: unknown): TileGroupConfig => {
       throw new Error(`${CARD_TYPE}: ${label}: vertical is the group's layout (layout: row)`);
     if (own.table !== undefined)
       throw new Error(`${CARD_TYPE}: ${label}: table is the group's layout (layout: table)`);
+    if (own.indent !== undefined)
+      throw new Error(`${CARD_TYPE}: ${label}: indent is the group's (layout: list)`);
     const { visibility, ...rest } = own;
     const entity = typeof rest.entity === "string" ? rest.entity : null;
     return {
       config: {
         type: `custom:${TILE_TYPE}`,
         ...rest,
-        // a table's rows: the name, the value and one thing after it
-        ...(layout === "table" ? { table: true } : { vertical: layout === "row" }),
+        // a table's rows: the name, the value and one thing after it; a row's tiles vertical; a
+        // list's indented where the group says so
+        ...(layout === "table"
+          ? { table: true }
+          : layout === "row"
+            ? { vertical: true }
+            : { vertical: false, ...(indent ? { indent: true } : {}) }),
       },
       visibility: normalizeVisibility(visibility, { type: CARD_TYPE, label, entity }),
     };
@@ -188,5 +205,6 @@ export const normalizeTileGroupConfig = (input: unknown): TileGroupConfig => {
     rowAlign: align as Align,
     rowColumns: columns as number | null,
     padding,
+    indent,
   };
 };

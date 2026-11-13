@@ -1576,4 +1576,12 @@ describe("a tile group's row options and padding", () => {
     expect(ok({ layout: "row", overflow: "hide" })).toBeTruthy();
     expect(ok({ padding: 0 })).toBeTruthy();
   });
+  it("takes indent on a list only, never on a tile", () => {
+    expect(ok({ indent: false })).toBeNull();
+    expect(ok({ layout: "list", indent: true })).toBeNull();
+    expect(ok({ layout: "row", indent: false })).toBeTruthy();
+    expect(ok({ layout: "table", indent: true })).toBeTruthy();
+    expect(ok({ indent: "no" })).toBeTruthy();
+    expect(ok({ tiles: [{ entity: "light.kitchen", indent: false }] })).toBeTruthy();
+  });
 });

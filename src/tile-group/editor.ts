@@ -25,6 +25,7 @@ export const TILE_GROUP_CONVS: Record<string, Conv> = {
   align: AS_IS,
   columns: AS_IS,
   padding: AS_IS,
+  indent: AS_IS,
   title_tap_action: AS_IS,
 };
 // what the form shows where the card sets nothing
@@ -34,6 +35,7 @@ const DEFAULTS = {
   overflow: "wrap",
   align: "stretch",
   padding: true,
+  indent: false,
 };
 // the row's own keys, which no other layout takes, and the one a row on one line does not
 const ROW_KEYS = ["overflow", "align", "columns"];
@@ -58,8 +60,9 @@ const select = (name: string, options: { value: string; label: string }[]): HaFo
   selector: { select: { mode: "dropdown", options } },
 });
 // the header, then the layout: a row's own options (where its tiles go when they do not fit,
-// where they sit, the most on a line while they wrap), where the tiles sit in a taller card, and
-// the space around them; the badges; the title's tap
+// where they sit, the most on a line while they wrap), a list's (what is below a tile's line
+// beside the icon), where the tiles sit in a taller card, and the space around them; the badges;
+// the title's tap
 export const tileGroupSchema = (
   hass: HomeAssistant | undefined,
   data: HaFormData = {},
@@ -85,6 +88,7 @@ export const tileGroupSchema = (
             : []),
         ]
       : []),
+    ...((data.layout ?? "list") === "list" ? [{ name: "indent", selector: { boolean: {} } }] : []),
     // where the tiles sit in a taller card (the layout card's words for its own alignment)
     {
       name: "vertical_align",
@@ -211,6 +215,8 @@ export class TileGroupCardEditor extends CardsEditorBase {
     const own = next as Record<string, unknown>;
     if (layout(next) !== "row") for (const k of ROW_KEYS) delete own[k];
     else if (own.overflow === "shrink" || own.overflow === "scroll") delete own.columns;
+    // and the list's goes with the list
+    if (layout(next) !== "list") delete own.indent;
     if (layout(next) === layout(prev) || !Array.isArray(next.cards)) return next;
     return {
       ...next,

@@ -40,6 +40,11 @@
       "default": true,
       "description": "false: the tiles flush with the card and each other, square and without borders"
     },
+    "indent": {
+      "type": "boolean",
+      "default": false,
+      "description": "true: what is below a tile's line (a visual, a slider, buttons) starts at its name, beside the icon, not under it. List only"
+    },
     "title": {
       "type": "string",
       "description": "Header text. Template allowed."
@@ -69,7 +74,7 @@
     "tiles": {
       "type": "array",
       "minItems": 1,
-      "description": "The tiles: entity ids or tiles (the tile card's keys, without type, grid_options and vertical: the layout decides it; in a table without icon, secondary and badges)"
+      "description": "The tiles: entity ids or tiles (the tile card's keys, without type, grid_options, vertical and indent: the layout decides them; in a table without icon, secondary and badges)"
     }
   },
   "required": ["type", "tiles"],
@@ -92,6 +97,15 @@
             { "required": ["columns"] }
           ]
         }
+      }
+    },
+    {
+      "if": {
+        "required": ["layout"],
+        "properties": { "layout": { "enum": ["row", "table"] } }
+      },
+      "then": {
+        "not": { "required": ["indent"] }
       }
     },
     {

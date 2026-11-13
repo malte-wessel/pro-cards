@@ -33,6 +33,8 @@ export interface RawTileCardConfig extends RawKindCardConfig {
   vertical_align?: unknown;
   // a row of a tile group's table (the group's, never written on a tile)
   table?: unknown;
+  // a tile of a tile group's list, indented (the group's, never written on a tile)
+  indent?: unknown;
 }
 
 // what a table row draws after its value instead of a control (a badge's visuals, its window)
@@ -56,6 +58,9 @@ export interface TileConfig extends KindConfig {
   // a row of a tile group's table: the name, the value and one control or visual after it; no
   // icon, no badges, no secondary, nothing behind the texts
   table: TableRow | null;
+  // a tile of a tile group's list (`indent`, the group's): what is below the line (a visual, a
+  // kind's picture, block controls) starts at the name, beside the icon
+  indent: boolean;
 }
 
 // the badge on the icon (`icon: { badge }`, the card's or a rule's): Home Assistant's (auto), none
@@ -197,6 +202,7 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
     statusText,
     statusBadge,
     vertical: written.vertical === true,
+    indent: written.indent === true && written.vertical !== true && !table,
     vAlign:
       written.vertical_align === undefined
         ? null

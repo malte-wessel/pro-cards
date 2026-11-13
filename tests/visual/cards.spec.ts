@@ -2325,6 +2325,30 @@ const CASES = {
       grid_options: { columns: 12 },
     },
   ],
+  // indent: true, what is below a list tile's line starts at its name: a bar right under a name
+  // alone (one row), a value and a bar, a plot to the end edge, a slider, block buttons, the value
+  // at the line's end as a plain badge, a tile without an icon; then the same list without indent
+  "tg-indent": [true, false].map((indent) => ({
+    type: TG,
+    title: indent ? "Indent" : "Under the icon",
+    ...(indent ? { indent } : {}),
+    tiles: [
+      { entity: "sensor.phone_battery", name: "Phone", visual: "bar", show_value: false },
+      { entity: "sensor.ev_battery", name: "EV", visual: "bar" },
+      { entity: "sensor.living_room_temperature", visual: "sparkline" },
+      { entity: "light.dining_table", control: "slider" },
+      { entity: "cover.living_room_blinds", control: { type: "buttons", position: "block" } },
+      {
+        entity: "sensor.robot_battery",
+        name: "Robot",
+        show_value: false,
+        visual: "bar",
+        badges: [{ style: "plain", icon: false }],
+      },
+      { entity: "sensor.van_battery", name: "No icon", icon: false, visual: "bar" },
+    ],
+    grid_options: { columns: 12 },
+  })),
   // a tile group's table: one line a tile, the name, the value and one control or visual; at a
   // quarter of the width the rows give way (the status, the name, the control)
   "tg-table": [

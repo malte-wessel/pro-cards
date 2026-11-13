@@ -277,6 +277,8 @@ export class TileCard extends KindCardBase {
     // vertical: the icon on top, before anything is laid out; a table's row: one line
     this._root?.classList.toggle("tvertical", !!this._config?.vertical);
     this._root?.classList.toggle("ttable", !!this._config?.table);
+    // a tile group's list: what is below the line starts at the name
+    this._root?.classList.toggle("tindent", !!this._config?.indent);
     // where the content sits in a taller tile: written, else centred (or the group row's top)
     const align = this._config?.vAlign;
     if (align) this._root?.style.setProperty("--pro-cards-tile-align", ALIGN[align]);
@@ -319,13 +321,22 @@ export class TileCard extends KindCardBase {
     const size = `${card.clientWidth}x${card.clientHeight}`;
     if (this._ctlFit?.size !== size) {
       // no control reaches past the card's edges (it clips them); beside the name, none scrolls
-      // either (speeds cut at the line's end)
+      // either (speeds cut at the line's end); under the line, none spills past its own box (a
+      // row of buttons, which does not wrap, in a box as wide as the row, or what is left of it
+      // beside the icon)
+      const block = new Set(row.querySelectorAll<HTMLElement>(":scope > .ctl"));
       const fits = (mode: string) => {
         const box = card.getBoundingClientRect();
         return [...row.querySelectorAll<HTMLElement>(".ctl, .toggle")].every((c) => {
           const b = c.getBoundingClientRect();
           if (!b.width) return true;
           if (mode === "tkeep" && c.scrollWidth > c.clientWidth + 0.5) return false;
+          if (
+            block.has(c) &&
+            c.scrollWidth > c.clientWidth + 0.5 &&
+            getComputedStyle(c).overflowX === "visible"
+          )
+            return false;
           // (both edges: in a right-to-left language the card runs out on the left)
           return (
             b.left >= box.left - 0.5 && b.right <= box.right + 0.5 && b.bottom <= box.bottom + 0.5
