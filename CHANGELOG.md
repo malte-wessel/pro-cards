@@ -2,7 +2,7 @@
 
 ## 3.1.0 – Buttons that show state, tile group rows
 
-_Beta_
+_2026-11-13_
 
 ### What's new
 
