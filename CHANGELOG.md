@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.2.0 – Timers that count down
+## 3.2.0 – Timers that count down, names by their parts
 
 _Beta_
 
