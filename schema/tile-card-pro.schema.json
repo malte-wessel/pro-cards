@@ -185,6 +185,9 @@
         "decimals": {
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/decimals"
         },
+        "format": {
+          "$ref": "poster-card-pro.schema.json#/$defs/format"
+        },
         "prefix": {
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/prefix"
         },

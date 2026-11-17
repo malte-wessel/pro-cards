@@ -16,6 +16,7 @@ import type { KindSlots } from "../entity/render/fill.ts";
 import type { HomeAssistant, WeatherForecastType } from "../ha.ts";
 import type { SunCurveHost } from "../sun/curve.ts";
 import type { Visibility } from "../visibility.ts";
+import { formatValue } from "../entity/value-format.ts";
 import { ForecastFeed } from "../weather/feed.ts";
 import { dailyTypeOf, supportsForecast } from "../weather/forecast.ts";
 import { IMAGE_OPACITY, updateBackdrop } from "./backdrop.ts";
@@ -383,6 +384,10 @@ export abstract class KindCardBase extends EntityCardBase {
     return Math.max(1 / 60, (now - midnight) / 3600e3);
   }
 
+  // a timer's value is its time left on these cards (the deprecated ones keep its state)
+  _ctx(): RenderCtx {
+    return { ...super._ctx(), countdowns: true };
+  }
   // what the kind reads now
   _kindCtx(ctx: RenderCtx): KindCtx {
     const cfg = this._config as KindConfig;
@@ -424,6 +429,15 @@ export abstract class KindCardBase extends EntityCardBase {
       delete o.word;
     }
     if (raw.secondary !== undefined) delete o.secondary;
+    // the value as `format` writes it (a timer's time left) where the kind writes none, and in
+    // place of the kind's where the card writes a format that applies (a plug's power in kW)
+    if (o.value === undefined || (raw.format !== undefined && c.ent.format !== "auto")) {
+      const v = formatValue(c.ctx, c.ent, c.m);
+      if (v) {
+        o.value = v;
+        delete o.word;
+      }
+    }
     // the kind's picture below the texts while the visual is one it draws (the sun's day, a
     // trend's lines); a player's progress along the edge is no visual and always stays
     const v = c.place.visual;

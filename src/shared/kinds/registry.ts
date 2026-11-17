@@ -1,9 +1,10 @@
 // Every kind by name (the list is fixed from 3.0 on, until the next major version: a kind added
-// later changes how existing cards of its domain look, unasked).
+// later changes how existing cards of its domain look, unasked). The one exception is `timer`
+// (3.2): a timer had no look of its own before, and its time left changed how it looks anyway.
 import { AQI_RULES, CO2_RULES, PM10_RULES, PM25_RULES } from "./rules.ts";
 import { APPLIANCE, APPLIANCE_KINDS, BATTERY, CAR, GRID, SOLAR } from "./energy.ts";
 import { COVER, LAWN_MOWER, MEDIA, VACUUM } from "./devices.ts";
-import { ALARM, CLIMATE, FAN, LIGHT, LOCK, PERSON } from "./domains.ts";
+import { ALARM, CLIMATE, FAN, LIGHT, LOCK, PERSON, TIMER } from "./domains.ts";
 import { RAIN } from "./rain.ts";
 import { HUMIDITY, ILLUMINANCE, MOTION, OPENING, PLUG, SAFETY, TEMPERATURE } from "./sensors.ts";
 import { SUN } from "./sun.ts";
@@ -50,6 +51,7 @@ export const KINDS: Record<string, Kind> = {
   lock: LOCK,
   alarm_control_panel: ALARM,
   person: PERSON,
+  timer: TIMER,
   media_player: MEDIA,
   cover: COVER,
   vacuum: VACUUM,

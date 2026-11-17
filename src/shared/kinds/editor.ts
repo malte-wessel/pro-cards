@@ -5,6 +5,8 @@ import { FormEditorBase } from "../editor.ts";
 import type { RawEntity } from "../entity/config.ts";
 import type { CardConfigBase, HaFormData, HaFormSchema, HassEntity, HomeAssistant } from "../ha.ts";
 import { hasString, t, type StringKey } from "../i18n.ts";
+import { favoritesEmpty, hasFavorites } from "../entity/targets.ts";
+import { knownRegistryOptions, onRegistryOptions, registryOptions } from "../registry-options.ts";
 import { isNum } from "../util.ts";
 import { foundInputs } from "./config.ts";
 import { canRead, detectKind, parseKind, resolveKind } from "./detect.ts";
@@ -101,9 +103,19 @@ export abstract class KindCardEditor extends FormEditorBase {
     }
     return null;
   }
-  // put in its place only now: the form again where that is in a group
+  // put in its place only now: the form again where that is in a group; again when the entity's
+  // registry options arrive (whether it has favourites to offer)
+  _unregistry?: () => void;
   connectedCallback() {
+    this._unregistry?.();
+    this._unregistry = onRegistryOptions((id) => {
+      if (id === (this._config as Raw | undefined)?.entity) this._render();
+    });
     this._render();
+  }
+  disconnectedCallback() {
+    this._unregistry?.();
+    this._unregistry = undefined;
   }
 
   _toForm(config: CardConfigBase): HaFormData {
@@ -233,6 +245,8 @@ export abstract class KindCardEditor extends FormEditorBase {
       data,
       numeric: shownIsNum(data, kind, st),
       st,
+      // (asked only where the domain has favourites to offer)
+      reg: hasFavorites(entity.split(".")[0]) ? registryOptions(hass, entity) : null,
     };
     return editorSchema(this._ctx);
   }
@@ -249,6 +263,9 @@ export abstract class KindCardEditor extends FormEditorBase {
       shownIsNum(c, kind, hass.states[entity]),
       this._found(kind, hass),
       this._group(),
+      // its favourites in the registry, once they arrived (a timer without presets offers none)
+      knownRegistryOptions(entity || null) ?? null,
+      knownRegistryOptions(entity || null) === undefined,
     ];
   }
 
@@ -313,6 +330,14 @@ export abstract class KindCardEditor extends FormEditorBase {
       return found
         ? t(this._hass, "editor.card.help.found", { entity: found })
         : t(this._hass, "editor.card.help.not_found");
+    }
+    // favourites chosen that the entity has none of (a timer without presets): where to set them
+    if (name === "control_attribute" && this._ctx) {
+      const x = this._ctx;
+      const chosen = x.data.control_attribute;
+      const id = typeof x.data.entity === "string" ? x.data.entity : "";
+      if (typeof chosen === "string" && favoritesEmpty(id.split(".")[0], chosen, x.st, x.reg))
+        return t(this._hass, "editor.card.help.no_favorites");
     }
     // the card's own rules: what never or always matches, in front of the list's help
     if (name === "rules") {

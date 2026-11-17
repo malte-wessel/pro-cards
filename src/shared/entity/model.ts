@@ -24,6 +24,7 @@ import { decimalsOf, isTemplate } from "../util.ts";
 import { toKmh } from "../flow/maths.ts";
 import { toMmH } from "../rain/rain.ts";
 import type { Visibility } from "../visibility.ts";
+import { shareLeft, timerClock, type Countdown } from "../countdown.ts";
 
 // the card's bound pointer handlers for the history plots
 export interface PlotHandlers {
@@ -35,6 +36,8 @@ export interface PlotHandlers {
 export interface FormatCtx {
   hass: HomeAssistant | undefined;
   tplResult: Map<string, unknown>;
+  // a 3.0 card (poster, tile): a timer's value is its time left (a badge's is on every card)
+  countdowns?: boolean;
 }
 export interface RenderCtx extends FormatCtx {
   series: Map<string, Point[]>;
@@ -54,6 +57,8 @@ export interface FmtValue {
   text: string;
   num: string;
   unit: string;
+  // a time left that runs down: the element showing it is kept current by the page clock
+  live?: { cd: Countdown; write: (left: number) => string };
 }
 // everything a fill function needs for one entity
 export interface EntityModel {
@@ -62,6 +67,8 @@ export interface EntityModel {
   look: Look;
   fmt: FmtValue;
   progress: number | null;
+  // a timer's time left (running or paused), where the card writes it as one
+  countdown?: Countdown;
 }
 
 export const langOf = (ctx: FormatCtx) => lang(ctx.hass);
@@ -281,11 +288,25 @@ export const modelOf = (ctx: FormatCtx, ent: EntityItem): EntityModel => {
   );
   if (ent.pill) badgeIconOf(ctx, ent, look, st);
   if (model.missing) look.label = t(ctx.hass, "common.not_found", { entity: ent.entity ?? "" });
-  return {
+  const out: EntityModel = {
     st,
     model,
     look,
     fmt: count?.fmt ?? fmtValue(ctx, ent, model, st),
     progress: progressOf(ent, model.num, st),
   };
+  // a timer's time left, as its value where it is shown (the fills write it as it runs down), and
+  // the share of its duration left as its progress (a bar, a ribbon)
+  const cd =
+    (ctx.countdowns || ent.pill) && !count && model.avail && isTimerState(ent, st)
+      ? timerClock(st, Date.now())
+      : null;
+  if (cd) {
+    out.countdown = cd;
+    out.progress = shareLeft(cd, Date.now());
+  }
+  return out;
 };
+// the entity's state is a timer's (its time left can stand for it)
+const isTimerState = (ent: EntityItem, st: HassEntity | undefined) =>
+  ent.valueSrc.kind === "state" && !!st && st.entity_id.startsWith("timer.");

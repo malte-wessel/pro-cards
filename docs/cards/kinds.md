@@ -45,6 +45,7 @@ A kind brings:
 | [`media_player`](#media-player)                                                 | `media_player.*`                              | the cover art, the title, the transport           |
 | [`vacuum`, `lawn_mower`](#vacuum-and-lawn-mower)                                | `vacuum.*`, `lawn_mower.*`                    | the robot at work, its path                       |
 | [`person`](#person)                                                             | `person.*`, `device_tracker.*`                | their picture, the zone and how long              |
+| [`timer`](#timer)                                                               | `timer.*`                                     | the time left, counting down, a bar of it         |
 
 ## The plain entity
 
@@ -566,6 +567,24 @@ Their picture as the icon, and their photo behind the card, blurred. The value i
 :::
 
 `icon: { type: icon }` draws the icon in place of the picture, and `visual: false` leaves the photo out; see [Look](/cards/look).
+
+### Timer
+
+The time left is the value, counting down every second (`12:34`), and a bar below it shrinks with it. A paused timer stands at what is left and says Paused; an idle one says Idle. `control: buttons` adds start, pause and cancel. `format` writes the time left another way (`duration`: 12m 34s, `relative`: in 13 minutes), and `visual: false` leaves the bar out.
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: timer.light_bypass
+  control: buttons
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: timer.light_bypass
+  grid_options: { columns: 6 }
+```
+
+:::
 
 ## The kinds' rules
 

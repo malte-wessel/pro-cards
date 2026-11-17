@@ -132,18 +132,19 @@ Coming from the entity card? [Moving to 3.0](/guide/migrating) maps its keys to 
 
 ### Texts and value
 
-| Key                       | Default                      | Description                                                                                             |
-| ------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `name`                    | the friendly name            | The name above the value. Template allowed.                                                             |
-| `value`                   | the kind's, else the state   | A text or a template in place of the state.                                                             |
-| `attribute`               | –                            | Shows this attribute in place of the state.                                                             |
-| `unit`                    | the entity's                 | The value's unit.                                                                                       |
-| `decimals`                | –                            | Decimals of a number, 0 to 3.                                                                           |
-| `prefix`, `suffix`        | –                            | Text before and after the value.                                                                        |
-| `min`, `max`              | the entity's, else 0 and 100 | The range of a bar, a gauge, segments, a glow or the icon's ring.                                       |
-| `secondary`               | the kind's                   | The line under the value. Template allowed.                                                             |
-| `status`                  | the rule's, else the kind's  | The status badge, first in the corner: a text, a template, or `false` for none. It wins over the rules. |
-| `show_name`, `show_value` | `true`                       | `false` leaves out the name or the value.                                                               |
+| Key                       | Default                      | Description                                                                                                                                                         |
+| ------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                    | the friendly name            | The name above the value. Template allowed.                                                                                                                         |
+| `value`                   | the kind's, else the state   | A text or a template in place of the state.                                                                                                                         |
+| `attribute`               | –                            | Shows this attribute in place of the state.                                                                                                                         |
+| `unit`                    | the entity's                 | The value's unit.                                                                                                                                                   |
+| `decimals`                | –                            | Decimals of a number, 0 to 3.                                                                                                                                       |
+| `format`                  | `auto`                       | How the value is written: `auto` (a timer: its time left as a clock), `power`, `duration`, `clock` or `relative`; see [Badges](/cards/badges#format-and-staleness). |
+| `prefix`, `suffix`        | –                            | Text before and after the value.                                                                                                                                    |
+| `min`, `max`              | the entity's, else 0 and 100 | The range of a bar, a gauge, segments, a glow or the icon's ring.                                                                                                   |
+| `secondary`               | the kind's                   | The line under the value. Template allowed.                                                                                                                         |
+| `status`                  | the rule's, else the kind's  | The status badge, first in the corner: a text, a template, or `false` for none. It wins over the rules.                                                             |
+| `show_name`, `show_value` | `true`                       | `false` leaves out the name or the value.                                                                                                                           |
 
 ### Look
 

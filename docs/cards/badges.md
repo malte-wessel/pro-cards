@@ -63,7 +63,7 @@ A badge's pill holds, in this order, its icon, its name, its value, a visual and
 
 ### Format and staleness
 
-`format` writes the value another way: `power` switches between W, kW and MW, `duration` writes a time span (1h 12m), and `relative` writes a date as its time from now (in 38 minutes). `stale_after` greys a badge whose entity has not reported for that long and adds how long ago it did. It takes minutes, or a number with `s`, `min`, `h` or `d`.
+`format` writes the value another way: `power` switches between W, kW and MW, `duration` writes a time span (1h 12m), `clock` writes it as a clock (1:12:00), and `relative` writes a date as its time from now (in 38 minutes). A timer's badge counts its time left down by itself, as a clock; `duration` and `clock` count down to a date too (a `timestamp` sensor), every second. `stale_after` greys a badge whose entity has not reported for that long and adds how long ago it did. It takes minutes, or a number with `s`, `min`, `h` or `d`.
 
 ::: live
 
@@ -75,6 +75,7 @@ A badge's pill holds, in this order, its icon, its name, its value, a visual and
   badges:
     - { entity: sensor.washer_power, format: power, icon: mdi:flash }
     - { entity: sensor.washer_remaining, format: duration }
+    - { entity: sensor.dishwasher_finishes, format: clock }
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: sensor.power_consumption
@@ -262,7 +263,7 @@ A badge is an entity id, or an object with these keys. Every key is optional.
 | `rules`            | the kind's                 | `state`, `above` or `below`, and an optional `attribute`, setting `color`, `icon`, `value` (a text in place of the value), `style` and `pulse`. First match wins. |
 | `style`            | see below                  | `outline`, `soft`, `filled`, `plain` or `tag`.                                                                                                                    |
 | `size`             | see below                  | `s`, `m` or `l` (24, 30 or 36 px high).                                                                                                                           |
-| `format`           | `auto`                     | `auto`, `power` (W / kW / MW), `duration` or `relative`.                                                                                                          |
+| `format`           | `auto`                     | `auto` (a timer: its time left as a clock), `power` (W / kW / MW), `duration`, `clock` or `relative`.                                                             |
 | `stale_after`      | –                          | Grey, with its age, when the entity has not reported for this long: minutes, or `90s`, `30min`, `2h`, `1d`.                                                       |
 | `control`          | –                          | `toggle`: a switch at the badge's end, a round power button.                                                                                                      |
 | `tap_action` …     | the card's                 | `tap_action`, `hold_action`, `double_tap_action`, on the badge's own entity.                                                                                      |

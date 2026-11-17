@@ -265,6 +265,7 @@ const ru: Translation = {
   "editor.card.badge_format.auto": "Как у объекта",
   "editor.card.badge_format.power": "Мощность (Вт, кВт, МВт)",
   "editor.card.badge_format.duration": "Длительность (1 ч 12 мин)",
+  "editor.card.badge_format.clock": "Часы (1:12:00)",
   "editor.card.badge_format.relative": "Относительное время (через 38 минут)",
   "editor.card.section.badge_value": "Значение",
   "editor.card.condition_title": "Условие {n}",
@@ -595,6 +596,7 @@ const ru: Translation = {
   "editor.card.kind.lock": "Замок",
   "editor.card.kind.alarm_control_panel": "Панель сигнализации",
   "editor.card.kind.person": "Человек",
+  "editor.card.kind.timer": "Таймер",
   "editor.card.kind.media_player": "Медиаплеер",
   "editor.card.kind.cover": "Шторы",
   "editor.card.kind.vacuum": "Пылесос",
@@ -715,6 +717,7 @@ const ru: Translation = {
   "editor.card.field.secondary": "Вторая строка",
   "editor.card.field.unit": "Единица измерения",
   "editor.card.field.decimals": "Знаков после запятой",
+  "editor.card.field.format": "Формат",
   "editor.card.field.prefix": "Префикс",
   "editor.card.field.suffix": "Суффикс",
   "editor.card.field.range": "Диапазон значений",
@@ -827,6 +830,8 @@ const ru: Translation = {
   "editor.card.help.suffix": "После значения",
   "editor.card.help.found": "Найдено на устройстве: {entity}",
   "editor.card.help.not_found": "На устройстве объекта ничего не найдено",
+  "editor.card.help.no_favorites":
+    "У этого объекта их пока нет: добавьте их в его настройках в Home Assistant",
   "editor.card.help.icon_src":
     "URL, шаблон или объект, изображение которого показать. Пусто: изображение самого объекта",
   "editor.card.help.visual_src": "История другого объекта. Пусто: объекта этой карточки",

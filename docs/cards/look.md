@@ -163,7 +163,7 @@ An `icon` or an `image` takes `ring: true`, a ring of the value around it. Every
 The **visual** draws one of these:
 
 - behind the texts: `glow` (the card lit from below in its colour), `image` (a [picture](#a-picture-behind)), `flow` (the wind's or the rain's animation);
-- below the texts: `sparkline`, `columns` and `strip` (the history), `bar`, `gauge` and `segments` (the value between `min` and `max`), `sun` (the sun's day);
+- below the texts: `sparkline`, `columns` and `strip` (the history), `bar`, `gauge` and `segments` (the value between `min` and `max`; a timer's bar is its time left), `sun` (the sun's day);
 - a kind's own drawing: `cover` (a cover's shutter, blind, garage …), `path` (a robot's path), `line` (the grid's power line). A tile draws these only where you name them.
 
 On a tile, a visual below the texts adds a second row.
@@ -431,7 +431,7 @@ The icon also takes its own `tap_action`, `hold_action` and `double_tap_action` 
 | `sparkline` | `hours`, `bucket`, `smoothing`, `axis`, `src` | A line of the history. A weather's: the hours ahead; a trend's: its series. |
 | `columns`   | `hours`, `bucket`, `axis`, `src`              | A bar per bucket.                                                           |
 | `strip`     | `hours`, `bucket`, `src`, `variant`           | A block per bucket, coloured by the rule each one matched.                  |
-| `bar`       | –                                             | The value between `min` and `max` as a bar.                                 |
+| `bar`       | –                                             | The value between `min` and `max` as a bar; a timer's time left.            |
 | `gauge`     | –                                             | The value between `min` and `max` as an arc.                                |
 | `segments`  | –                                             | Ten segments, filled to the value.                                          |
 | `sun`       | –                                             | The sun's day, with the sun where it is now. Sun only.                      |

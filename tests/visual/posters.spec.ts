@@ -363,6 +363,27 @@ add(
     },
   },
 );
+// a timer: its time left over a bar of it with its buttons; paused, its corner says so (the time
+// fixed against the frozen clock)
+add(
+  "pt-timer",
+  [
+    p("timer.light_bypass", { control: "buttons" }),
+    p("timer.pt_paused", { control: "buttons" }),
+    p("timer.laundry"),
+  ],
+  {
+    states: {
+      "timer.light_bypass": {
+        attributes: { finishes_at: new Date(FROZEN.getTime() + 754e3).toISOString() },
+      },
+      "timer.pt_paused": like("timer.light_bypass", "paused", {
+        remaining: "0:12:34",
+        finishes_at: null,
+      }),
+    },
+  },
+);
 add("pt-cover", [
   p("cover.living_room_blinds"),
   p("cover.office_blinds"),
