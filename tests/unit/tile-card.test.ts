@@ -23,6 +23,19 @@ describe("tile-card config", () => {
     );
   });
 
+  it("takes a name as Home Assistant composes it, and names a part it cannot read", () => {
+    const e = "light.kitchen";
+    expect(norm({ entity: e, name: { type: "area" } }).entities[0].name).toEqual([
+      { type: "area" },
+    ]);
+    expect(() => norm({ entity: e, name: [{ type: "room" }] })).toThrow(
+      /name must be a text, a template or Home Assistant's parts of a name/,
+    );
+    expect(() =>
+      norm({ entity: e, badges: [{ entity: "light.office", name: { type: "room" } }] }),
+    ).toThrow(/name must be a text/);
+  });
+
   it("names the new spelling of the keys the places replaced", () => {
     const e = "sensor.living_room_temperature";
     const fails = (o: Record<string, unknown>, msg: string) =>

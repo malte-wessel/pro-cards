@@ -1,6 +1,7 @@
 // One series of a trend plot as written (pure): an entity id, or { entity, name, color, rules,
 // visibility }. Used by the multi trend card and the poster card's trend kind.
 import { cssColor } from "../color.ts";
+import { normalizeName, type EntityName } from "../entity-name.ts";
 import { normalizeRules, type Rule } from "../entity/config.ts";
 import { normalizeVisibility, type Visibility } from "../visibility.ts";
 import { PALETTE } from "./scale.ts";
@@ -9,7 +10,8 @@ import { PALETTE } from "./scale.ts";
 // (null: always drawn); the drawn colour is resolved at render time (color.ts: seriesColor)
 export interface TrendSeries {
   entity: string;
-  name?: string;
+  // a text, or Home Assistant's parts of a name (entity-name.ts)
+  name?: EntityName;
   color?: string;
   rules: Rule[];
   visibility: Visibility;
@@ -28,7 +30,7 @@ export const normalizeSeries = (
   if (!o || typeof o !== "object" || typeof o.entity !== "string" || !o.entity) return null;
   return {
     entity: o.entity,
-    name: typeof o.name === "string" ? o.name : undefined,
+    name: normalizeName(o.name, `${type}: ${label}`) ?? undefined,
     color: typeof o.color === "string" ? o.color : undefined,
     rules: normalizeRules(o.rules),
     visibility: normalizeVisibility(o.visibility, { type, label, entity: o.entity }),

@@ -3,7 +3,7 @@
 import { SONGS, world } from "./world.ts";
 import { hsToRgb, kelvinToRgb } from "../../../../src/shared/color.ts";
 import { parseHms } from "../../../../src/shared/countdown.ts";
-import { ENTITIES } from "./registry.ts";
+import { AREAS, DEVICES, ENTITIES, FLOORS, formatEntityName } from "./registry.ts";
 import { renderTemplate } from "./templates.ts";
 import type {
   ActionConfig,
@@ -874,6 +874,10 @@ export const snapshot = (): HassSnapshot => ({
   formatEntityAttributeValue,
   // the registry keeps its identity: a card looks into it again only when it changes
   entities: ENTITIES,
+  devices: DEVICES,
+  areas: AREAS,
+  floors: FLOORS,
+  formatEntityName,
   callService,
   // HA's callWS / subscribeMessage are generic in the caller's result type, so the shim asserts
   // its concrete answers to it (history rows here, template results below)

@@ -581,6 +581,22 @@ describe("the editor's status and badges", () => {
   });
 });
 
+describe("a name", () => {
+  const sel = (schema: HaFormSchema[]) => field(schema, "name")?.selector;
+  it("is Home Assistant's name picker for an entity, a text without one", () => {
+    expect(sel(schemaOf("tile", { entity: "light.kitchen" }))).toEqual({
+      entity_name: { entity_id: "light.kitchen" },
+    });
+    expect(sel(schemaOf("tile", {}, { shows: "custom" }))).toEqual({ text: {} });
+    const badge = flat(
+      badgeItemSchema(hass, badgeToForm({ entity: "light.kitchen", show_name: true }), ""),
+    );
+    expect(sel(badge)).toEqual({ entity_name: { entity_id: "light.kitchen" } });
+    const button = flat(buttonItemSchema(hass, { entity: "light.kitchen", show_name: true }));
+    expect(sel(button)).toEqual({ entity_name: { entity_id: "light.kitchen" } });
+  });
+});
+
 describe("favourites the entity has none of", () => {
   // the schema with the entity's registry options as they arrived (undefined: not yet)
   const withReg = (cfg: Raw, change: HaFormData, reg: Raw | null | undefined) => {

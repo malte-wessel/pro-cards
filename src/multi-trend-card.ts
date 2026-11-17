@@ -23,6 +23,7 @@
  *         - { above: 25, color: red }
  *       visibility: [...]             # optional: drawn only while the conditions hold
  */
+import { nameFor } from "./shared/entity-name.ts";
 import {
   fireAction,
   defineElement,
@@ -246,7 +247,7 @@ export class MultiTrendCard extends HTMLElement {
 
   _name(i: number): string {
     const e = this._config.entities[i];
-    return e.name || this._state(i)?.attributes.friendly_name || e.entity;
+    return nameFor(this._hass, this._state(i), e.name, e.entity);
   }
 
   // the CSS colour of a series now: explicit colour, else its first matching rule, else palette

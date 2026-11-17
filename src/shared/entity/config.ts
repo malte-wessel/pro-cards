@@ -32,6 +32,7 @@ import type { ActionConfig, CardConfigBase, HassEntity } from "../ha.ts";
 import type { StringKey } from "../i18n.ts";
 import { normalizeSmoothing } from "../history.ts";
 import { isTemplate, numOrNull, oneOf } from "../util.ts";
+import { normalizeName, type EntityName, type NameItem } from "../entity-name.ts";
 import { normalizeVisibility, type Visibility } from "../visibility.ts";
 import type { ImageSrc } from "./image.ts";
 import { domainOf } from "../color.ts";
@@ -85,7 +86,8 @@ export interface RawRule {
 }
 export interface RawEntity extends RawItemOptions, RawActionDefaults {
   entity?: string | null;
-  name?: string | null;
+  // a text, a template, or Home Assistant's parts of a name (entity-name.ts)
+  name?: string | NameItem | NameItem[] | null;
   secondary?: string | null;
   icon?: string | null;
   color?: string | null;
@@ -225,7 +227,8 @@ export interface BadgeParts {
 }
 export interface EntityItem extends ActionDefaults {
   entity: string | null;
-  name: string | null;
+  // a text or a template, or the parts Home Assistant composes it of
+  name: EntityName | null;
   // set by cards that build items themselves: a translated default name and the attribute
   // that holds the unit (`temperature_unit` for a weather entity's apparent_temperature)
   nameKey?: StringKey;
@@ -547,7 +550,7 @@ export const normalizeEntity = (
   const trend = numOrNull(o.trend_hours);
   return {
     entity: o.entity || null,
-    name: o.name ?? null,
+    name: normalizeName(o.name, `${ctx.type}: ${label}`),
     secondary: o.secondary ?? null,
     icon: o.icon ?? null,
     color: o.color ?? null,

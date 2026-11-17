@@ -129,6 +129,10 @@ const formatOptions = (hass: HomeAssistant | undefined, timer: boolean) =>
         })),
       ]
     : BADGE_FORMATS.map((v) => ({ value: v, label: L(hass, `badge_format.${v}`) }));
+// a name: Home Assistant's name picker for an entity (its own name, its device's, its area's …,
+// or a text), as its tile's editor has it; a text field without one
+const nameSelector = (entity: string) =>
+  entity ? { entity_name: { entity_id: entity } } : { text: {} };
 // a select whose first option names the default (clearing it goes back there)
 const pick = (name: string, options: { value: string; label: string }[]): HaFormSchema => ({
   name,
@@ -323,6 +327,7 @@ export const badgeItemSchema = (
       ...(named
         ? [
             field("name", {
+              selector: nameSelector(reads),
               ...(reads && hass?.states[reads]?.attributes.friendly_name
                 ? { default: String(hass.states[reads].attributes.friendly_name) }
                 : {}),
@@ -593,10 +598,10 @@ export const buttonItemSchema = (
       at("show_name"),
       ...(item.show_name === true || filled("name")
         ? [
-            at(
-              "name",
-              (typeof friendly === "string" ? { default: friendly } : {}) as Partial<HaFormSchema>,
-            ),
+            at("name", {
+              selector: nameSelector(entity),
+              ...(typeof friendly === "string" ? { default: friendly } : {}),
+            } as Partial<HaFormSchema>),
           ]
         : []),
     ]),
@@ -941,7 +946,9 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   const filledIn = (k: string) => data[k] !== undefined && data[k] !== null && data[k] !== "";
   const nameFields: HaFormSchema[] = [
     { name: "show_name", selector: { boolean: {} } },
-    ...(data.show_name !== false || filledIn("name") ? [text("name")] : []),
+    ...(data.show_name !== false || filledIn("name")
+      ? [{ ...text("name"), selector: nameSelector(entity ?? "") }]
+      : []),
   ];
   // the value: whether it shows; what it reads (the attribute, also what the visual reads); how it
   // is written, only while it shows (a field filled in stays); its range; the line under it

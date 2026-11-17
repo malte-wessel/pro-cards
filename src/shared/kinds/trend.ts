@@ -17,6 +17,7 @@ import { normalizeSeries, type TrendSeries } from "../trend/series.ts";
 import { decimalsOf, isTemplate } from "../util.ts";
 import { partOf } from "./dom.ts";
 import type { Kind, KindCtx } from "./types.ts";
+import { nameFor } from "../entity-name.ts";
 
 const HOURS = 6;
 
@@ -51,7 +52,7 @@ const specOf = (c: KindCtx, shown: TrendSeries[]) => {
           p.v === null ? [] : [{ t: p.t, v: p.v }],
         ),
         color: seriesColor(s, st, tplGet),
-        name: s.name || String(st?.attributes?.friendly_name ?? s.entity),
+        name: nameFor(hass, st, s.name, s.entity),
         fmt: (v: number) => {
           const n = fmtNumber(hass, v, decimalsOf(st?.state ?? ""));
           return typeof unit === "string" && unit ? `${n} ${unit}` : n;

@@ -4,6 +4,32 @@
   "title": "Entity cards – shared definitions",
   "description": "Building blocks of entity-card, entity-group-card and entity-sections-card. Not a card itself.",
   "$defs": {
+    "name": {
+      "description": "Default: the friendly name. A text (template allowed), or Home Assistant's parts of a name: one or a list of { type: floor | area | parent_device | device | entity }, { type: text, text }",
+      "anyOf": [
+        { "type": "string" },
+        { "$ref": "#/$defs/namePart" },
+        { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/namePart" } }
+      ]
+    },
+    "namePart": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": { "enum": ["floor", "area", "parent_device", "device", "entity"] }
+          },
+          "required": ["type"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": { "type": { "const": "text" }, "text": { "type": "string" } },
+          "required": ["type", "text"],
+          "additionalProperties": false
+        }
+      ]
+    },
     "layout": { "type": "string", "enum": ["list", "grid", "hero", "row", "column", "table"] },
     "align": { "type": "string", "enum": ["start", "center", "end", "stretch", "space-between"] },
     "rule": {
@@ -122,7 +148,7 @@
           "$ref": "defs.schema.json#/$defs/entityId",
           "description": "Optional when value is plain text or a template"
         },
-        "name": { "type": "string", "description": "Default: friendly name. Template allowed." },
+        "name": { "$ref": "#/$defs/name" },
         "secondary": {
           "type": "string",
           "description": "Line under the name (entity-card, hero lead). Template allowed."

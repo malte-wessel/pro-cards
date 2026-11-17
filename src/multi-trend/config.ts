@@ -5,11 +5,12 @@ import { normalizeSmoothing } from "../shared/history.ts";
 import { numOrNull } from "../shared/util.ts";
 import { DEFAULT_HOURS } from "../shared/trend/scale.ts";
 import { normalizeSeries, type TrendSeries } from "../shared/trend/series.ts";
+import type { NameItem } from "../shared/entity-name.ts";
 
 export type TrendLayout = "auto" | "overlay" | "lanes";
 export interface MultiTrendEntity {
   entity: string;
-  name?: string;
+  name?: string | NameItem | NameItem[];
   color?: string;
   rules?: unknown;
   visibility?: unknown;

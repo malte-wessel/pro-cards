@@ -134,7 +134,7 @@ Coming from the entity card? [Moving to 3.0](/guide/migrating) maps its keys to 
 
 | Key                       | Default                      | Description                                                                                                                                                         |
 | ------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`                    | the friendly name            | The name above the value. Template allowed.                                                                                                                         |
+| `name`                    | the friendly name            | The name above the value. Template allowed. Or its parts, as Home Assistant composes it: `[{ type: entity }]`; see [Tile](/cards/tile-card#names).                  |
 | `value`                   | the kind's, else the state   | A text or a template in place of the state.                                                                                                                         |
 | `attribute`               | –                            | Shows this attribute in place of the state.                                                                                                                         |
 | `unit`                    | the entity's                 | The value's unit.                                                                                                                                                   |

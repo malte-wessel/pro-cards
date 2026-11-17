@@ -2,7 +2,13 @@
 // tile (icon, name, "temperature · condition").
 import { cssColor } from "../../shared/color.ts";
 import type { EntityItem } from "../../shared/entity/config.ts";
-import { nameOf, tplOf, type EntityModel, type RenderCtx } from "../../shared/entity/model.ts";
+import {
+  nameOf,
+  tplOf,
+  writtenName,
+  type EntityModel,
+  type RenderCtx,
+} from "../../shared/entity/model.ts";
 import { bigEl, leadEl, secondaryEl, textEl } from "../../shared/entity/render/lead.ts";
 import { fmtNumber } from "../../shared/format.ts";
 import type { WeatherConfig } from "../config.ts";
@@ -95,7 +101,7 @@ export const fillCurrent = (
   line.className = "line";
   const texts = document.createElement("div");
   texts.className = "texts";
-  const name = tplOf(ctx, ent.name);
+  const name = writtenName(ctx, ent, cm.cond.st);
   const sec = tplOf(ctx, ent.secondary);
   const condition = condText(ctx, cm.cond);
   if (isTile) {

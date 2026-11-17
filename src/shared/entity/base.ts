@@ -109,6 +109,14 @@ export const groupCardSize = (cfg: EntityCardConfig, group: Group) => {
   }
 };
 
+// the registries a name of parts reads, in the order compared
+const registriesOf = (hass: HomeAssistant | undefined): unknown[] => [
+  hass?.entities,
+  hass?.devices,
+  hass?.areas,
+  hass?.floors,
+];
+
 export abstract class EntityCardBase extends HTMLElement {
   static cardType: string;
 
@@ -127,6 +135,9 @@ export abstract class EntityCardBase extends HTMLElement {
   _timer?: ReturnType<typeof setInterval>;
   // badges whose text follows the clock (stale_after, format: relative) render every minute
   _timed = false;
+  // a name of parts reads the registries (a device's, an area's, a floor's name): a rename there
+  // draws the card again
+  _namedByParts = false;
   _minute?: ReturnType<typeof setInterval>;
   // the items that count a group's members on: they follow the members' states too
   _countIdxs: number[] = [];
@@ -251,6 +262,7 @@ export abstract class EntityCardBase extends HTMLElement {
       ]),
     ];
     this._timed = cfg.entities.some((e) => e.staleMin !== null || e.format === "relative");
+    this._namedByParts = cfg.entities.some((e) => Array.isArray(e.name));
     this._countIdxs = cfg.entities.flatMap((e, i) => (e.visual === "count" && e.entity ? [i] : []));
     this._armMinute();
     this._templates = collectTemplates(cfg);
@@ -296,6 +308,8 @@ export abstract class EntityCardBase extends HTMLElement {
     // a new language, number or time format or time zone (profile settings) re-renders too: words,
     // times and numbers follow them
     let changed = !prev || formatKeyOf(prev) !== formatKeyOf(hass);
+    if (this._namedByParts && registriesOf(prev).some((r, i) => r !== registriesOf(hass)[i]))
+      changed = true;
     // conditions on the user (or the user's whereabouts) look again when they change
     const deps = this._visDeps;
     if (deps.user && prev?.user?.id !== hass.user?.id) changed = true;
@@ -989,6 +1003,8 @@ export abstract class EntityCardBase extends HTMLElement {
       hist?.length,
       hist ? ctx.fetched : null,
       timed ? Math.floor(ctx.now / 60e3) : null,
+      // a name of parts: the registries it reads
+      ...(Array.isArray(ent.name) ? registriesOf(ctx.hass) : []),
     ];
   }
   // the plots: every size read first, then drawn (one layout for all of them); a plot whose
