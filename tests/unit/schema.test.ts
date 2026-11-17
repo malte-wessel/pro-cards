@@ -6,6 +6,7 @@ import { docExamples, walk } from "./docs-examples.ts";
 import { PRESETS } from "../../docs/.vitepress/theme/presets.ts";
 import { normalizeLayoutConfig } from "../../src/layout/config.ts";
 import { normalizeSwipeConfig } from "../../src/swipe/config.ts";
+import { normalizeTileGroupConfig } from "../../src/tile-group/config.ts";
 import { KIND_NAMES } from "../../src/shared/kinds/registry.ts";
 import { TARGET_KEYS } from "../../src/shared/entity/targets.ts";
 import { BUTTONS } from "../../src/shared/entity/control.ts";
@@ -414,6 +415,21 @@ describe("card config schemas", () => {
       expect(validate({ type: "custom:tile-group-card-pro", tiles: [H], [key]: 1 }), key).toMatch(
         /unevaluated/,
       );
+    // the styling plugins' keys style the group's own card, and a tile's in it
+    for (const key of ["card_mod", "uix"]) {
+      const group = { type: "custom:tile-group-card-pro", tiles: [H], [key]: { style: "" } };
+      expect(validate(group), key).toBeNull();
+      expect(() => normalizeTileGroupConfig(group), key).not.toThrow();
+      for (const layout of ["list", "table"])
+        expect(
+          validate({
+            type: "custom:tile-group-card-pro",
+            layout,
+            tiles: [{ entity: H, [key]: { style: "" } }],
+          }),
+          `${layout} tile ${key}`,
+        ).toBeNull();
+    }
     // its layout decides a tile's vertical
     expect(
       validate({ type: "custom:tile-group-card-pro", tiles: [{ entity: H, vertical: true }] }),

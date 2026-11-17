@@ -8,7 +8,14 @@ import { fireAction, fireEvent, fireHaptic, freshShadow, syncKeepHeight } from "
 import { cssColor } from "../color.ts";
 import { REFRESH_MS } from "../constants.ts";
 import { formatKeyOf } from "../format.ts";
-import type { ActionConfig, ActionKind, GridOptions, HapticType, HomeAssistant } from "../ha.ts";
+import type {
+  ActionConfig,
+  ActionKind,
+  CardConfigBase,
+  GridOptions,
+  HapticType,
+  HomeAssistant,
+} from "../ha.ts";
 import { fetchHistory, pointOf, type Point } from "../history.ts";
 import { HistoryFeed } from "../history-feed.ts";
 import { installRipple } from "../ripple.ts";
@@ -203,9 +210,14 @@ export abstract class EntityCardBase extends HTMLElement {
     };
   }
 
+  // the config as written: UIX and card-mod read their key from a card's `config` where no
+  // hui-card holds it (a tile in a tile group); `_config` is the normalized one
+  config?: CardConfigBase;
+
   setConfig(config: unknown) {
     const cfg = this._normalize(config);
     this._config = cfg;
+    this.config = config as CardConfigBase;
     // the entities a row acts on: its own and those of its custom buttons (a change of one ends
     // its pending call); and those it follows besides: the entity whose picture a badge shows
     const idsOf = (e: EntityItem) =>

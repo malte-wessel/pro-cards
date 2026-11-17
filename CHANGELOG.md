@@ -1,10 +1,13 @@
 # Changelog
 
-## 3.1.1 – Glass themes
+## Unreleased
 
-_Unreleased_
+### Fixes
 
 - A tile group and a seamless layout card blur a glass theme's background once: the cards inside no longer blur it again, which made them darker than the header and showed edges between them. A seamless layout's surface now takes the theme's blur itself.
+- A tile group takes UIX (`uix`) on its own card, as it takes `card_mod`; it stopped with an error before.
+- `card_mod` and UIX (`uix`) style a tile in a tile group; they styled nothing there before.
+- The schema (the Playground, YAML completion) accepts `uix` on every card, and `card_mod` and `uix` on a tile in a tile group.
 - Docs: a glass theme through `ha-card-background` and `ha-card-backdrop-filter`, and why a card_mod or UIX rule on every `ha-card` stacks inside a tile group. [Colours](https://malte-wessel.github.io/pro-cards/guide/colours#theme-variables)
 
 ## 3.1.0 – Buttons that show state, tile group rows

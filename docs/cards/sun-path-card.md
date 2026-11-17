@@ -61,4 +61,4 @@ show_dawn_dusk: false
 
 The curve spans 24 hours around solar noon. Dawn and dusk are civil (the sun 6° below the horizon).
 
-The card takes 12 columns (at least 6) and sizes its height to its content; given more height, the curve fills it. It also takes Home Assistant's `grid_options`, `visibility`, `view_layout`, `layout_options` and `card_mod`, and `fill_height: false` keeps its own height beside a taller card ([Filling the height](/guide/sizing#filling-the-height)).
+The card takes 12 columns (at least 6) and sizes its height to its content; given more height, the curve fills it. It also takes Home Assistant's `grid_options`, `visibility`, `view_layout`, `layout_options`, `card_mod` and `uix`, and `fill_height: false` keeps its own height beside a taller card ([Filling the height](/guide/sizing#filling-the-height)).

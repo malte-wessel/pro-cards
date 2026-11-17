@@ -53,6 +53,9 @@
     },
     "card_mod": {
       "$ref": "defs.schema.json#/$defs/haCardExtras/card_mod"
+    },
+    "uix": {
+      "$ref": "defs.schema.json#/$defs/haCardExtras/uix"
     }
   },
   "required": ["type"],

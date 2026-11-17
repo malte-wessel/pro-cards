@@ -30,7 +30,7 @@ import {
   registerCard,
   freshShadow,
 } from "./shared/card.ts";
-import type { GridOptions, HomeAssistant } from "./shared/ha.ts";
+import type { CardConfigBase, GridOptions, HomeAssistant } from "./shared/ha.ts";
 import {
   normalizeTrendConfig,
   type MultiTrendCardConfig,
@@ -117,8 +117,13 @@ export class MultiTrendCard extends HTMLElement {
     this._visWatch = new VisibilityWatch(() => this._render());
   }
 
+  // the config as written: UIX and card-mod read their key from a card's `config` where no
+  // hui-card holds it; `_config` is the normalized one
+  config?: CardConfigBase;
+
   setConfig(config: MultiTrendCardConfig) {
     this._config = normalizeTrendConfig(config, CARD_TYPE);
+    this.config = config;
     const entities = this._config.entities;
     this._series = entities.map(() => []);
     this._history.reset();

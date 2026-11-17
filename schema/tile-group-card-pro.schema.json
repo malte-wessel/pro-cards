@@ -142,6 +142,12 @@
                     "visibility": {
                       "$ref": "defs.schema.json#/$defs/haCardExtras/visibility",
                       "description": "Shows the tile only while the conditions hold"
+                    },
+                    "card_mod": {
+                      "$ref": "defs.schema.json#/$defs/haCardExtras/card_mod"
+                    },
+                    "uix": {
+                      "$ref": "defs.schema.json#/$defs/haCardExtras/uix"
                     }
                   },
                   "unevaluatedProperties": false
@@ -170,6 +176,12 @@
                     "visibility": {
                       "$ref": "defs.schema.json#/$defs/haCardExtras/visibility",
                       "description": "Shows the tile only while the conditions hold"
+                    },
+                    "card_mod": {
+                      "$ref": "defs.schema.json#/$defs/haCardExtras/card_mod"
+                    },
+                    "uix": {
+                      "$ref": "defs.schema.json#/$defs/haCardExtras/uix"
                     },
                     "vertical": false
                   },

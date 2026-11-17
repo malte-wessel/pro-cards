@@ -143,4 +143,4 @@ Home Assistant's card editor has every option: the view, the house and its sides
 
 The card shows today and refreshes every minute; after sunset it names tomorrow's sunrise. Directions are from true north.
 
-The card takes 12 columns (at least 6) and sizes its height to its content. With `rows` in `grid_options` it takes a fixed height and the picture fits into it, so two cards side by side can match. It also takes Home Assistant's `grid_options`, `visibility`, `view_layout`, `layout_options` and `card_mod`, and `fill_height: false` keeps its own height beside a taller card ([Filling the height](/guide/sizing#filling-the-height)).
+The card takes 12 columns (at least 6) and sizes its height to its content. With `rows` in `grid_options` it takes a fixed height and the picture fits into it, so two cards side by side can match. It also takes Home Assistant's `grid_options`, `visibility`, `view_layout`, `layout_options`, `card_mod` and `uix`, and `fill_height: false` keeps its own height beside a taller card ([Filling the height](/guide/sizing#filling-the-height)).

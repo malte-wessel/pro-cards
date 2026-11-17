@@ -451,6 +451,9 @@
       },
       "card_mod": {
         "type": "object"
+      },
+      "uix": {
+        "type": "object"
       }
     },
     "action": {

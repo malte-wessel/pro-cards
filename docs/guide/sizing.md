@@ -15,7 +15,7 @@ tiles: [light.living_room, light.desk_lamp, climate.living_room]
 grid_options: { columns: 12, rows: 4 }
 ```
 
-Every card also takes `visibility`, `layout_options` (the old spelling of `grid_options`), `view_layout` and `card_mod`; Home Assistant (card-mod for `card_mod`) applies them, not the card.
+Every card also takes `visibility`, `layout_options` (the old spelling of `grid_options`), `view_layout`, `card_mod` and `uix`; Home Assistant (card-mod or UIX for those two) applies them, not the card.
 
 ## Default sizes
 
