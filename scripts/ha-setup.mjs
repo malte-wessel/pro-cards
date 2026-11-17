@@ -172,9 +172,67 @@ async function ensureWorldIds(token) {
   c.close();
 }
 
+// the demo home's floors and areas (test/ha/world/areas.json, from scripts/ha-world.ts), the areas
+// on their floors, and the entities on no device in the area of their room (a device's entities
+// are in the device's: the integration suggests it)
+async function ensureAreas(token) {
+  const dir = new URL("../test/ha/world/", import.meta.url);
+  const { floors, areas, entities } = JSON.parse(
+    await readFile(new URL("areas.json", dir), "utf8"),
+  );
+  const c = await connect(token);
+  const floorIds = new Map(
+    (await c.send({ type: "config/floor_registry/list" })).map((f) => [f.name, f.floor_id]),
+  );
+  for (const name of floors)
+    if (!floorIds.has(name))
+      floorIds.set(name, (await c.send({ type: "config/floor_registry/create", name })).floor_id);
+  // (Home Assistant tells names apart without case and spaces: onboarding's "Living Room" is the
+  // demo's "Living room", renamed to it)
+  const key = (n) => n.toLowerCase().replace(/\s+/g, "");
+  const existing = new Map(
+    (await c.send({ type: "config/area_registry/list" })).map((a) => [key(a.name), a]),
+  );
+  const areaIds = new Map();
+  for (const a of areas) {
+    const floor_id = floorIds.get(a.floor) ?? null;
+    const have = existing.get(key(a.name));
+    if (!have)
+      areaIds.set(
+        a.name,
+        await c.send({ type: "config/area_registry/create", name: a.name, floor_id }),
+      );
+    else {
+      if (have.floor_id !== floor_id || have.name !== a.name)
+        await c.send({
+          type: "config/area_registry/update",
+          area_id: have.area_id,
+          name: a.name,
+          floor_id,
+        });
+      areaIds.set(a.name, have);
+    }
+  }
+  const registered = new Map(
+    (await c.send({ type: "config/entity_registry/list" })).map((e) => [e.entity_id, e]),
+  );
+  let placed = 0;
+  // (an entity Home Assistant keeps no entry of, one without a unique id, cannot be placed)
+  for (const [id, area] of Object.entries(entities)) {
+    const area_id = areaIds.get(area)?.area_id;
+    const entry = registered.get(id);
+    if (!area_id || !entry || entry.area_id === area_id) continue;
+    await c.send({ type: "config/entity_registry/update", entity_id: id, area_id });
+    placed++;
+  }
+  console.log(`areas: ${areas.length} on ${floors.length} floors, ${placed} entities placed`);
+  c.close();
+}
+
 const onboarded = await onboard();
 const token = onboarded ?? (await login());
 await ensureResource(token);
 await ensureWorldIds(token);
+await ensureAreas(token);
 await ensureShowcases(token);
 console.log(`ready: ${BASE}  (user ${USERNAME} / ${PASSWORD})`);

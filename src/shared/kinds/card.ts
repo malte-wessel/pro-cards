@@ -11,7 +11,7 @@ import { timeZoneOf } from "../format.ts";
 import { startOfDay } from "../util.ts";
 import type { EntityCardConfig, EntityItem, PlotOptions } from "../entity/config.ts";
 import type { Visual } from "../entity/constants.ts";
-import type { EntityModel, RenderCtx } from "../entity/model.ts";
+import { writtenName, type EntityModel, type RenderCtx } from "../entity/model.ts";
 import type { KindSlots } from "../entity/render/fill.ts";
 import type { HomeAssistant, WeatherForecastType } from "../ha.ts";
 import type { SunCurveHost } from "../sun/curve.ts";
@@ -384,6 +384,17 @@ export abstract class KindCardBase extends EntityCardBase {
     return Math.max(1 / 60, (now - midnight) / 3600e3);
   }
 
+  // its trend's series named by their parts too
+  _readsNameParts(cfg: EntityCardConfig): boolean {
+    const series = (cfg as KindConfig).kindOpts?.series;
+    return (
+      super._readsNameParts(cfg) ||
+      (Array.isArray(series) &&
+        series.some(
+          (s) => !!s && typeof s === "object" && typeof (s as { name?: unknown }).name === "object",
+        ))
+    );
+  }
   // a timer's value is its time left on these cards (the deprecated ones keep its state)
   _ctx(): RenderCtx {
     return { ...super._ctx(), countdowns: true };
@@ -423,7 +434,8 @@ export abstract class KindCardBase extends EntityCardBase {
     const raw = (this._raw ?? {}) as Record<string, unknown>;
     const o: KindSlots = { ...(cfg.kind.slots?.(c) ?? {}), iconActions: cfg.iconActions };
     if (this._userIcon(c)) delete o.lead;
-    if (raw.name !== undefined) delete o.name;
+    // (a name of parts that names nothing here leaves the kind's)
+    if (raw.name !== undefined && writtenName(c.ctx, c.ent, c.m.st)) delete o.name;
     if (raw.value !== undefined || raw.attribute !== undefined) {
       delete o.value;
       delete o.word;

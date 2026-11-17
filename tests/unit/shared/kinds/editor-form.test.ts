@@ -114,6 +114,29 @@ describe("the editor form: the content", () => {
     expect(formOf({ ...TEMP, min: "low" }).min).toBeUndefined();
   });
 
+  it("keeps a badge's one part as written while its name stays", () => {
+    const badge = { entity: "light.kitchen", name: { type: "entity" }, show_name: true };
+    const item = badgeToForm(badge);
+    expect(item.name).toEqual([{ type: "entity" }]);
+    expect(badgeFromForm({ ...item, color: "red" })).toEqual({ ...badge, color: "red" });
+    expect(badgeFromForm({ ...item, name: [{ type: "area" }] })).toMatchObject({
+      name: [{ type: "area" }],
+    });
+  });
+
+  it("writes a name of parts, keeps one part as written, and drops an empty one", () => {
+    const LAMP = { type: "custom:tile-card-pro", entity: "light.kitchen" };
+    const parts = [{ type: "area" }, { type: "entity" }];
+    expect(formOf({ ...LAMP, name: { type: "entity" } }).name).toEqual([{ type: "entity" }]);
+    expect(edit(LAMP, { name: parts }, "tile")).toEqual({ ...LAMP, name: parts });
+    expect(edit({ ...LAMP, name: { type: "entity" } }, { color: "red" }, "tile")).toEqual({
+      ...LAMP,
+      name: { type: "entity" },
+      color: "red",
+    });
+    expect(edit({ ...LAMP, name: parts }, { name: [] }, "tile")).toEqual(LAMP);
+  });
+
   it("writes a format other than the entity's own, and keeps one written", () => {
     const TIMER = { type: "custom:tile-card-pro", entity: "timer.light_bypass" };
     expect(formOf(TIMER).format).toBe("auto");

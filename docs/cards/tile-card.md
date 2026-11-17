@@ -106,6 +106,25 @@ Every part has a key of its own: `name`, `icon`, `color`, `value`, `status`, `vi
 
 :::
 
+## Names
+
+Since Home Assistant 2026.11 an entity's name is its device's name and its own ("Dishwasher Finishes"). `name` takes the parts of a name as Home Assistant's own cards do: `entity` (its own name), `device`, `parent_device`, `area`, `floor`, and `{ type: text, text: … }` of your own, in the order written. They follow renames in Home Assistant, and they work where you cannot write a name per card (auto-entities). Badges, buttons and a tile group's tiles take them too.
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: sensor.dishwasher_finishes
+  name: [{ type: entity }]
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: sensor.dishwasher_finishes
+  name: [{ type: area }, { type: device }]
+  grid_options: { columns: 6 }
+```
+
+:::
+
 ## A vertical tile
 
 `vertical: true` puts the icon on top, with the name and the line centred under it and the controls under them, as Home Assistant's own tile does. A vertical tile takes a quarter of a section (half with a stepper, a select, buttons or segments) and two rows, a third with a control.
@@ -194,7 +213,7 @@ Coming from the entity card? [Moving to 3.0](/guide/migrating) maps its keys to 
 
 | Key                       | Default                      | Description                                                                                                                                                         |
 | ------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`                    | the friendly name            | The name. Template allowed.                                                                                                                                         |
+| `name`                    | the friendly name            | The name. Template allowed. Or its parts, as Home Assistant composes it: `[{ type: area }, { type: entity }]`; see [Names](#names).                                 |
 | `value`                   | the kind's, else the state   | A text or a template in place of the state.                                                                                                                         |
 | `attribute`               | –                            | Shows this attribute in place of the state.                                                                                                                         |
 | `unit`                    | the entity's                 | The value's unit.                                                                                                                                                   |

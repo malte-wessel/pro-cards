@@ -703,7 +703,7 @@ Each entry of `options` with `type: buttons`. A button needs an `entity` or a `t
 | ------------------ | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `entity`           |                   | What the button shows and runs or switches, and the target of its `tap_action`.                                                     |
 | `tap_action`       | the entity's own  | A Home Assistant action to run (`perform-action`, `navigate`, `more-info` …).                                                       |
-| `name`             | the entity's name | Its name, written beside the icon with `show_name: true`. Template allowed.                                                         |
+| `name`             | the entity's name | Its name, written beside the icon with `show_name: true`. Template allowed, or its parts: `[{ type: entity }]`.                     |
 | `show_name`        | `false`           | Write the name beside the icon.                                                                                                     |
 | `attribute`        | –                 | Shows this attribute in place of the state.                                                                                         |
 | `value`            | the state         | A text or a template of your own; it shows without `show_value`.                                                                    |

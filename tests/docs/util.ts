@@ -74,6 +74,9 @@ export const savedCards = (page: Page) =>
 
 // a text field of the visual editor set, as a person types it and leaves it
 export const fill = async (input: Locator, value: string) => {
+  // a name picker's text: "a text of your own" chosen first, as in Home Assistant's picker
+  const own = input.locator("xpath=preceding-sibling::select[option[@value='custom']]");
+  if (await own.count()) await own.selectOption("custom");
   await input.fill(value);
   await input.press("Tab");
 };

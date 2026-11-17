@@ -9,6 +9,7 @@ import type {
   HassUser,
   MessageBase,
 } from "home-assistant-js-websocket";
+import type { NameItem } from "./entity-name.ts";
 
 export type { HassEntity, HassEntities };
 
@@ -41,6 +42,13 @@ export interface HomeAssistant {
   // an attribute's value as Home Assistant shows it (a climate's preset or fan mode, translated)
   formatEntityAttributeValue?: (st: HassEntity, attribute: string, value?: unknown) => string;
   formatEntityAttributeName?: (st: HassEntity, attribute: string) => string;
+  // an entity's name from its parts in the registries (its floor, area, device, own name), as
+  // Home Assistant's cards write it for their `name` (entity-name.ts)
+  formatEntityName?: (
+    st: HassEntity,
+    name?: string | NameItem | NameItem[],
+    options?: { separator?: string },
+  ) => string;
   // a path on the Home Assistant server as a full URL (an entity picture on a cast device)
   hassUrl?: (path?: string) => string;
   // the dashboard's url path ("dashboard-energy"): Home Assistant's energy cards share their period
@@ -51,6 +59,10 @@ export interface HomeAssistant {
   // the entity registry the frontend keeps (narrowed to what the cards read): the device an entity
   // belongs to (the poster's kinds find their inputs among the device's other entities)
   entities?: Record<string, EntityRegistryEntry>;
+  // the device, area and floor registries (a name of parts reads their names)
+  devices?: Record<string, { name?: string | null; name_by_user?: string | null }>;
+  areas?: Record<string, { name?: string }>;
+  floors?: Record<string, { name?: string }>;
 }
 
 // an entity's row in `hass.entities`: `translation_key` is the integration's own name for it, the
@@ -60,6 +72,9 @@ export interface EntityRegistryEntry {
   device_id?: string | null;
   hidden?: boolean;
   translation_key?: string | null;
+  // its own name (null: the integration's), and its area where it has one of its own
+  name?: string | null;
+  area_id?: string | null;
 }
 
 // the compact rows of `history/history_during_period` with minimal_response + no_attributes

@@ -344,7 +344,11 @@ export const badgeToForm = (x: unknown): Raw => {
     else if (BADGE_ON.includes(k) && typeof v === "boolean") item[k] = v;
     // its rules as a list of their own (each in its form)
     else if (k === "rules" && Array.isArray(v)) item.rules = listToForm(v, BADGE_RULE_KEYS);
-    else if (BADGE_PLAIN.includes(k)) item[k] = v;
+    else if (k === "name") {
+      item.name = nameToForm(v);
+      // (as written, so a name left as it was keeps its spelling: one part alone stays one part)
+      if (isObj(v)) item.name_written = v;
+    } else if (BADGE_PLAIN.includes(k)) item[k] = v;
     else more[k] = v;
   }
   if (Object.keys(more).length) item.more = more;
@@ -355,7 +359,9 @@ export const badgeToForm = (x: unknown): Raw => {
 export const badgeFromForm = (item: Raw, cardEntity: string | null = null): unknown => {
   const { more, kind, icon, icon_type, icon_src, icon_ring, visual, hours, control, rules } = item;
   const o: Raw = {};
-  for (const k of BADGE_PLAIN) if (filled(item[k])) o[k] = item[k];
+  for (const k of BADGE_PLAIN)
+    if (filled(item[k]) && !(Array.isArray(item[k]) && !item[k].length)) o[k] = item[k];
+  if (o.name !== undefined) o.name = nameFromForm(o.name, item.name_written);
   // a kind that cannot read the badge's entity is left out (the entity's own is drawn): the card
   // would not take it
   const entity = (typeof item.entity === "string" && item.entity) || cardEntity;
@@ -596,6 +602,17 @@ export const defaultPosition = (type: string, entity: unknown, kind: Kind, thing
   return first ?? (drawnControls(type, entity, kind, thing)[0] === "slider" ? "block" : "end");
 };
 
+// a name in the form: a text, or Home Assistant's parts as a list (its name picker's value; one
+// part written alone is a list of one there)
+export const nameToForm = (v: unknown): unknown =>
+  v === undefined || v === null ? "" : isObj(v) ? [v] : v;
+// back from the form: nothing for an empty text or list; the name as written while the form has it
+// as it was (one part alone stays one part)
+export const nameFromForm = (v: unknown, was: unknown): unknown => {
+  if (v === undefined || v === null || v === "" || (Array.isArray(v) && !v.length))
+    return undefined;
+  return JSON.stringify(nameToForm(was)) === JSON.stringify(v) ? was : v;
+};
 // `kindRules`: the kind's rules as the card would write them (writtenRules: in the user's language
 // and the sensor's unit), shown in the list while the card has none of its own
 export const configToForm = (
@@ -608,7 +625,7 @@ export const configToForm = (
   const d: HaFormData = {
     entity: c.entity ?? "",
     kind: typeof c.kind === "string" ? c.kind : DETECTED,
-    name: c.name ?? "",
+    name: nameToForm(c.name),
     icon: "",
     color: c.color ?? "",
     decimals: num(c.decimals),
@@ -952,7 +969,8 @@ export const formToConfig = (
 
   setOrDrop(c, "entity", data.entity, !data.entity);
   setOrDrop(c, "kind", data.kind, !data.kind || data.kind === DETECTED);
-  setOrDrop(c, "name", data.name, !data.name);
+  const name = nameFromForm(data.name, p.name);
+  setOrDrop(c, "name", name, name === undefined);
   setOrDrop(c, "color", data.color, !data.color);
   // (a text written empty stays while its field is: `unit: ""` hides the unit)
   for (const k of TEXTS) setOrDrop(c, k, data[k], !filled(data[k]) && !(p[k] === "" && !data[k]));

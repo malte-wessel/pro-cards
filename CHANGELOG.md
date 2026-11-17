@@ -8,6 +8,7 @@ _Beta_
 
 - **Timers count down:** a timer's time left is its value, counting down every second (`12:34`) on a tile, a poster, a tile group's table and a badge, without the card drawing itself again. A bar below it shrinks with it (full while the timer is idle), and a paused timer stands at what is left and says Paused. [Kinds](https://malte-wessel.github.io/pro-cards/cards/kinds#timer)
 - **`format: clock`:** writes a duration, a timer's time left or the time until a date as a clock (1:12:00). `duration` and `clock` count down to a date (a `timestamp` sensor such as when a dishwasher is done) every second. [Badges](https://malte-wessel.github.io/pro-cards/cards/badges#format-and-staleness)
+- **Names as Home Assistant composes them:** `name` takes the parts of a name, as Home Assistant's own cards do since 2026.11 named entities by their device: `[{ type: entity }]` for the entity's own name, `[{ type: area }, { type: entity }]`, `device`, `floor` and a `text` of your own. They follow renames and work with auto-entities, on tiles, posters, a tile group's tiles, badges, buttons, trend series and the power and energy flow cards' sources and consumers; the visual editor offers Home Assistant's name picker. [Tile](https://malte-wessel.github.io/pro-cards/cards/tile-card#names)
 - **`format` on a tile's and a poster's value:** the value itself takes `format` (`power`, `duration`, `clock`, `relative`) as a badge does, also in the visual editor; where it applies it replaces the kind's own value (a plug's power in kW).
 
 ### Changed: existing cards look different

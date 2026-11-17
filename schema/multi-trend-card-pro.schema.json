@@ -79,7 +79,7 @@
                 "$ref": "defs.schema.json#/$defs/entityId"
               },
               "name": {
-                "type": "string"
+                "$ref": "entity.schema.json#/$defs/name"
               },
               "color": {
                 "$ref": "defs.schema.json#/$defs/color",

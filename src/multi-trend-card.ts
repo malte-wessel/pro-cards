@@ -23,6 +23,7 @@
  *         - { above: 25, color: red }
  *       visibility: [...]             # optional: drawn only while the conditions hold
  */
+import { nameFor } from "./shared/entity-name.ts";
 import {
   fireAction,
   defineElement,
@@ -165,6 +166,12 @@ export class MultiTrendCard extends HTMLElement {
       // a ruled series takes the colour of its current state, numeric or not
       if (e.rules.length && st?.state !== this._lastStates[i]) changed = true;
     });
+    // a series named by its parts: a device, an area or a floor renamed
+    if (
+      this._config.entities.some((e) => Array.isArray(e.name)) &&
+      (["entities", "devices", "areas", "floors"] as const).some((k) => prev?.[k] !== hass[k])
+    )
+      changed = true;
     // what the visibility conditions read: their entities, the user, the user's person
     const deps = this._visDeps;
     if (deps.user && prev?.user?.id !== hass.user?.id) changed = true;
@@ -246,7 +253,7 @@ export class MultiTrendCard extends HTMLElement {
 
   _name(i: number): string {
     const e = this._config.entities[i];
-    return e.name || this._state(i)?.attributes.friendly_name || e.entity;
+    return nameFor(this._hass, this._state(i), e.name, e.entity);
   }
 
   // the CSS colour of a series now: explicit colour, else its first matching rule, else palette

@@ -18,8 +18,7 @@
           "$ref": "defs.schema.json#/$defs/visibility"
         },
         "name": {
-          "type": "string",
-          "description": "Template allowed."
+          "$ref": "entity.schema.json#/$defs/name"
         },
         "secondary": {
           "type": "string",

@@ -13,6 +13,13 @@ import yaml from "js-yaml";
 import { world } from "../docs/.vitepress/theme/ha-shim/world.ts";
 import { METERS, readingAt } from "../docs/.vitepress/theme/ha-shim/meters.ts";
 import { GARDEN_SNAPSHOT } from "../docs/.vitepress/theme/ha-shim/camera.ts";
+import {
+  AREAS,
+  DEVICES,
+  ENTITIES,
+  FLOORS,
+  ownName,
+} from "../docs/.vitepress/theme/ha-shim/registry.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const out = join(root, "test/ha/world");
@@ -84,12 +91,27 @@ for (const [id, st] of Object.entries(world.states)) {
   const icon = a.icon as string | undefined;
   if (!PACKAGE_DOMAINS.has(domain)) {
     const def = world.defs[id];
+    // on its device, named by its own part (as integrations name entities), else in its room
+    const entry = ENTITIES[id];
+    const dev = entry?.device_id ? DEVICES[entry.device_id] : undefined;
+    const area = !dev && entry?.area_id ? AREAS[entry.area_id]?.name : undefined;
     entities.push({
       id,
       state: st.state,
       attributes: a,
       ...(def?.noise ? { noise: def.noise, min: def.min, max: def.max } : {}),
       ...(def ? { decimals: def.decimals } : {}),
+      ...(dev && entry?.device_id
+        ? {
+            device: {
+              id: entry.device_id,
+              name: dev.name,
+              area: dev.area_id ? AREAS[dev.area_id]?.name : undefined,
+            },
+            name: ownName(String(name ?? id), dev.name) || null,
+          }
+        : {}),
+      ...(area ? { area } : {}),
     });
     continue;
   }
@@ -164,6 +186,20 @@ mkdirSync(out, { recursive: true });
 writeFileSync(
   join(out, "world.json"),
   JSON.stringify({ generated: now, entities, people, forecasts, first, meters, cameras }),
+);
+// the floors and their areas, for the setup to make (scripts/ha-setup.mjs), and the area of every
+// entity of the demo home on no device, the dev config's too (its template lights …)
+writeFileSync(
+  join(out, "areas.json"),
+  JSON.stringify({
+    floors: Object.values(FLOORS).map((f) => f.name),
+    areas: Object.values(AREAS).map((a) => ({ name: a.name, floor: FLOORS[a.floor_id]?.name })),
+    entities: Object.fromEntries(
+      Object.values(ENTITIES).flatMap((e) =>
+        !e.device_id && e.area_id && AREAS[e.area_id] ? [[e.entity_id, AREAS[e.area_id].name]] : [],
+      ),
+    ),
+  }),
 );
 writeFileSync(
   join(out, "package.yaml"),

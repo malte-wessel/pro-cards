@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   normalizeEntity,
   type NormalizeCtx,
@@ -175,6 +175,25 @@ describe("model", () => {
     expect(missing.fmt.text).toBe("–");
     const german = modelOf(ctx({}, { locale: { language: "de" } }), ent({}));
     expect(german.look.label).toBe("sensor.x nicht gefunden");
+  });
+});
+
+describe("a name of parts", () => {
+  const lamp = st("on", { friendly_name: "Office Desk lamp" });
+  const formatEntityName = vi.fn((_: HassEntity, parts: unknown) =>
+    JSON.stringify(parts) === '[{"type":"entity"}]' ? "Desk lamp" : "",
+  );
+  const named = ctx({ "sensor.x": lamp }, { formatEntityName } as Partial<HomeAssistant>);
+  it("is composed by Home Assistant", () => {
+    expect(nameOf(named, ent({ name: [{ type: "entity" }] }), lamp)).toBe("Desk lamp");
+    expect(formatEntityName).toHaveBeenCalledWith(lamp, [{ type: "entity" }]);
+  });
+  it("falls back to the friendly name where it names nothing", () => {
+    expect(nameOf(named, ent({ name: [{ type: "area" }] }), lamp)).toBe("Office Desk lamp");
+    expect(nameOf(ctx(), ent({ name: { type: "entity" } }), lamp)).toBe("Office Desk lamp");
+  });
+  it("leaves a text as it is", () => {
+    expect(nameOf(named, ent({ name: "Lamp" }), lamp)).toBe("Lamp");
   });
 });
 

@@ -1601,3 +1601,53 @@ describe("a tile group's row options and padding", () => {
     expect(ok({ tiles: [{ entity: "light.kitchen", indent: false }] })).toBeTruthy();
   });
 });
+
+describe("a name as Home Assistant composes it", () => {
+  const PARTS = [{ type: "area" }, { type: "text", text: "·" }, { type: "entity" }];
+  it("is taken wherever an entity's name is", () => {
+    const configs = [
+      { type: "custom:tile-card-pro", entity: "light.kitchen", name: PARTS },
+      { type: "custom:tile-card-pro", entity: "light.kitchen", name: { type: "entity" } },
+      { type: "custom:poster-card-pro", entity: "light.kitchen", name: PARTS },
+      {
+        type: "custom:tile-card-pro",
+        entity: "light.kitchen",
+        badges: [{ entity: "sensor.washer_power", name: PARTS, show_name: true }],
+      },
+      {
+        type: "custom:tile-card-pro",
+        entity: "light.kitchen",
+        control: {
+          type: "buttons",
+          options: [{ entity: "light.office", name: PARTS, show_name: true }],
+        },
+      },
+      {
+        type: "custom:tile-group-card-pro",
+        tiles: [{ entity: "light.kitchen", name: [{ type: "entity" }] }],
+      },
+      {
+        type: "custom:heading-card-pro",
+        title: "Home",
+        badges: [{ entity: "light.kitchen", name: PARTS }],
+      },
+      {
+        type: "custom:poster-card-pro",
+        kind: "trend",
+        series: [{ entity: "sensor.living_room_temperature", name: [{ type: "area" }] }],
+      },
+      {
+        type: "custom:multi-trend-card-pro",
+        entities: [{ entity: "sensor.living_room_temperature", name: [{ type: "area" }] }],
+      },
+    ];
+    for (const c of configs) expect(validate(c), JSON.stringify(c)).toBeNull();
+  });
+  it("rejects a part it does not know", () => {
+    for (const name of [{ type: "room" }, [{ type: "text" }], [], [{ type: "entity", x: 1 }]])
+      expect(
+        validate({ type: "custom:tile-card-pro", entity: "light.kitchen", name }),
+        JSON.stringify(name),
+      ).not.toBeNull();
+  });
+});

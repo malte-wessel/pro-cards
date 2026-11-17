@@ -16,6 +16,7 @@ from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.db_schema import StatisticsShortTerm
 from homeassistant.components.recorder.models import StatisticMeanType, StatisticMetaData
 from homeassistant.components.recorder.statistics import async_import_statistics
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery import async_load_platform
@@ -60,14 +61,28 @@ def _load(path: str) -> dict:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Load the world and set up an entity platform per domain."""
+    """Load the world; its entities come with its entry (made here once), so they can sit on
+    devices; the trackers through the legacy scanner, which knows no entries."""
     world = await hass.async_add_executor_job(_load, hass.config.path("test/world/world.json"))
     hass.data[DOMAIN] = world
-    for platform in PLATFORMS:
+    hass.async_create_task(
+        async_load_platform(hass, Platform.DEVICE_TRACKER, DOMAIN, {}, config), eager_start=True
+    )
+    if not hass.config_entries.async_entries(DOMAIN):
         hass.async_create_task(
-            async_load_platform(hass, platform, DOMAIN, {}, config), eager_start=True
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data={}
+            )
         )
     _import_statistics(hass, world)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """An entity platform per domain."""
+    await hass.config_entries.async_forward_entry_setups(
+        entry, [p for p in PLATFORMS if p != Platform.DEVICE_TRACKER]
+    )
     return True
 
 

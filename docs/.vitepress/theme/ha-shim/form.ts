@@ -212,7 +212,19 @@ const BUILTIN = new Set([
   "text",
   "ui_action",
   "object",
+  "entity_name",
 ]);
+// Home Assistant's name picker, in short: the usual parts of a name, or a text of your own
+const NAME_PRESETS: [string, string, unknown[]][] = [
+  ["entity", "Entity", [{ type: "entity" }]],
+  ["device-entity", "Device · entity", [{ type: "device" }, { type: "entity" }]],
+  ["area-entity", "Area · entity", [{ type: "area" }, { type: "entity" }]],
+  [
+    "floor-area-entity",
+    "Floor · area · entity",
+    [{ type: "floor" }, { type: "area" }, { type: "entity" }],
+  ],
+];
 
 export class HaFormShim extends HTMLElement {
   hass?: HassLike;
@@ -518,6 +530,37 @@ export class HaFormShim extends HTMLElement {
         return {
           el: this._box(s, select, "select"),
           set: (v) => (select.value = v === undefined ? "" : String(v)),
+        };
+      }
+      case "entity_name": {
+        const text = document.createElement("input");
+        text.type = "text";
+        const select = this._select(
+          s,
+          [
+            ...NAME_PRESETS.map(([value, label]) => ({ value, label })),
+            { value: "custom", label: "Text of your own" },
+          ],
+          "Default",
+          (v) => {
+            text.hidden = v !== "custom";
+            const preset = NAME_PRESETS.find(([k]) => k === v);
+            this._emit(name, v === "custom" ? text.value || undefined : preset?.[2]);
+          },
+        );
+        text.addEventListener("change", () => this._emit(name, text.value || undefined));
+        const box = document.createElement("div");
+        box.append(select, text);
+        return {
+          el: this._box(s, box, "select"),
+          set: (v) => {
+            const json = JSON.stringify(Array.isArray(v) || !v || typeof v !== "object" ? v : [v]);
+            const preset = NAME_PRESETS.find(([, , parts]) => JSON.stringify(parts) === json);
+            const own = typeof v === "string" && v !== "";
+            select.value = preset ? preset[0] : own ? "custom" : "";
+            text.hidden = !own;
+            text.value = own ? v : "";
+          },
         };
       }
       case "ui_color": {

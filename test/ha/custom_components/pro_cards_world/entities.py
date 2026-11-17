@@ -65,6 +65,8 @@ from homeassistant.components.vacuum import StateVacuumEntity, VacuumActivity, V
 from homeassistant.components.weather import Forecast, WeatherEntity, WeatherEntityFeature
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
@@ -111,6 +113,17 @@ class World(Entity):
         self.entity_id = item["id"]
         self._attr_unique_id = f"pro_cards_world_{item['id']}"
         self._attr_name = a.get("friendly_name")
+        # on its device, named by its own part (none: named after its device), as integrations
+        # name entities; its area is the device's
+        device = item.get("device")
+        if device:
+            self._attr_has_entity_name = True
+            self._attr_name = item.get("name")
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, device["id"])},
+                name=device["name"],
+                suggested_area=device.get("area"),
+            )
         self._attr_icon = a.get("icon")
         self._attr_device_class = a.get("device_class")
         self._attr_available = item["state"] != "unavailable"
@@ -619,7 +632,7 @@ class WorldMediaPlayer(World, MediaPlayerEntity):
     def __init__(self, item: dict, world: dict) -> None:
         super().__init__(item, world)
         self._updated = dt_util.utcnow()
-        f = type(self)._attr_supported_features
+        f = self._attr_supported_features
         if self._a.get("source_list"):
             f |= MediaPlayerEntityFeature.SELECT_SOURCE
         if self._a.get("sound_mode_list"):
@@ -1104,16 +1117,13 @@ CLASSES: dict[str, type[World]] = {
 
 
 def setup_for(domain: str):
-    """The platform's setup: the world's entities of its domain."""
+    """The platform's setup from the world's entry: its entities of the domain."""
 
-    async def async_setup_platform(
+    async def async_setup_entry(
         hass: HomeAssistant,
-        config: dict,
+        entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
-        discovery_info: dict | None = None,
     ) -> None:
-        if discovery_info is None:
-            return
         world = hass.data[DOMAIN]
         entities = [
             CLASSES[domain](item, world)
@@ -1129,7 +1139,7 @@ def setup_for(domain: str):
 
             async_track_time_interval(hass, tick, timedelta(seconds=60))
 
-    return async_setup_platform
+    return async_setup_entry
 
 
 async def setup_trackers(hass: HomeAssistant, async_see) -> None:

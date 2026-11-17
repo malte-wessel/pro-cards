@@ -109,6 +109,14 @@ export const groupCardSize = (cfg: EntityCardConfig, group: Group) => {
   }
 };
 
+// the registries a name of parts reads, in the order compared
+const registriesOf = (hass: HomeAssistant | undefined): unknown[] => [
+  hass?.entities,
+  hass?.devices,
+  hass?.areas,
+  hass?.floors,
+];
+
 export abstract class EntityCardBase extends HTMLElement {
   static cardType: string;
 
@@ -127,6 +135,9 @@ export abstract class EntityCardBase extends HTMLElement {
   _timer?: ReturnType<typeof setInterval>;
   // badges whose text follows the clock (stale_after, format: relative) render every minute
   _timed = false;
+  // a name of parts reads the registries (a device's, an area's, a floor's name): a rename there
+  // draws the card again
+  _namedByParts = false;
   _minute?: ReturnType<typeof setInterval>;
   // the items that count a group's members on: they follow the members' states too
   _countIdxs: number[] = [];
@@ -251,6 +262,7 @@ export abstract class EntityCardBase extends HTMLElement {
       ]),
     ];
     this._timed = cfg.entities.some((e) => e.staleMin !== null || e.format === "relative");
+    this._namedByParts = this._readsNameParts(cfg);
     this._countIdxs = cfg.entities.flatMap((e, i) => (e.visual === "count" && e.entity ? [i] : []));
     this._armMinute();
     this._templates = collectTemplates(cfg);
@@ -296,6 +308,8 @@ export abstract class EntityCardBase extends HTMLElement {
     // a new language, number or time format or time zone (profile settings) re-renders too: words,
     // times and numbers follow them
     let changed = !prev || formatKeyOf(prev) !== formatKeyOf(hass);
+    if (this._namedByParts && registriesOf(prev).some((r, i) => r !== registriesOf(hass)[i]))
+      changed = true;
     // conditions on the user (or the user's whereabouts) look again when they change
     const deps = this._visDeps;
     if (deps.user && prev?.user?.id !== hass.user?.id) changed = true;
@@ -361,6 +375,14 @@ export abstract class EntityCardBase extends HTMLElement {
     // ghosts that expired while the card was away (another view) go now, the rest get their timer
     if ((this._pending.size || this._buttonPending.size) && this._sweepPending()) this._render();
     if (this._hass && this._templates?.size && this._tpl.size === 0) this._subscribeTemplates();
+  }
+  // whether a name of parts is drawn: an item's, or its own buttons' (a kind card adds its trend's
+  // series)
+  _readsNameParts(cfg: EntityCardConfig): boolean {
+    return cfg.entities.some(
+      (e) =>
+        Array.isArray(e.name) || !!e.control?.buttons?.some((b) => Array.isArray(b.item?.name)),
+    );
   }
   // a text the page clock writes grew (1h → 59m 59s): what fits itself to the value does again
   _liveGrew() {
@@ -989,6 +1011,8 @@ export abstract class EntityCardBase extends HTMLElement {
       hist?.length,
       hist ? ctx.fetched : null,
       timed ? Math.floor(ctx.now / 60e3) : null,
+      // a name of parts: the registries it reads
+      ...(this._namedByParts ? registriesOf(ctx.hass) : []),
     ];
   }
   // the plots: every size read first, then drawn (one layout for all of them); a plot whose

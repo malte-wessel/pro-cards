@@ -34,6 +34,9 @@ const openEditor = async (page: Page, config: Raw) => {
 // a form's field by name: typed and left, picked, switched, or opened
 const field = (scope: Locator, name: string) => scope.locator(`[data-name="${name}"]`).first();
 const fill = async (scope: Locator, name: string, value: string) => {
+  // a name picker: a text of your own first
+  const own = field(scope, name).locator("select:has(option[value='custom'])");
+  if (await own.count()) await own.selectOption("custom");
   const input = field(scope, name).locator("input, textarea").first();
   await input.fill(value);
   await input.press("Tab");
