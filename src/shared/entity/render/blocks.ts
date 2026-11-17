@@ -14,7 +14,8 @@ export const barEl = (m: EntityModel) => {
   barFill(d.firstChild as HTMLElement, m);
   return d;
 };
-// a bar's fill for the value between min and max; a timer's time left as it runs down
+// a bar's fill for the value between min and max; a timer's share of its duration left, kept
+// current as it runs down (an idle one's full)
 export const barFill = (fill: HTMLElement, m: EntityModel) => {
   fill.style.width = m.progress === null ? "0%" : `${(m.progress * 100).toFixed(1)}%`;
   if (m.countdown) liveWidth(fill, m.countdown);

@@ -1,7 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clockText,
   leftAt,
+  LIVE_GREW,
+  liveText,
+  liveWidth,
   momentAhead,
   parseHms,
   shareLeft,
@@ -66,10 +69,14 @@ describe("timerClock", () => {
     expect(cd).toEqual({ ends: null, left: 754, total: 2700 });
     expect(leftAt(cd, NOW + 60e3)).toBe(754);
   });
-  it("has none while idle or not known", () => {
-    expect(timerClock(timer("idle", { duration: "0:45:00", remaining: "0:45:00" }), NOW)).toBe(
-      null,
-    );
+  it("has its whole duration while idle, none where not known", () => {
+    expect(timerClock(timer("idle", { duration: "0:45:00", remaining: "0:45:00" }), NOW)).toEqual({
+      ends: null,
+      left: 2700,
+      total: 2700,
+      idle: true,
+    });
+    expect(timerClock(timer("idle", {}), NOW)).toBeNull();
     expect(timerClock(timer("unavailable", {}), NOW)).toBeNull();
     expect(timerClock(timer("active", {}), NOW)).toBeNull();
     expect(timerClock(undefined, NOW)).toBeNull();
@@ -96,5 +103,74 @@ describe("momentAhead", () => {
   });
   it("is none for what is no date", () => {
     for (const v of ["12", "active", "", null, 5]) expect(momentAhead(v, NOW)).toBeNull();
+  });
+});
+
+describe("the page clock", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    document.body.replaceChildren();
+  });
+  const el = () => document.body.appendChild(document.createElement("span"));
+  const running = (left: number, total: number | null = 2700) => ({
+    ends: NOW + left * 1000,
+    left,
+    total,
+  });
+
+  it("writes a text now and every second while it runs, down to its end", () => {
+    const s = el();
+    liveText(s, running(3), (l) => clockText(l));
+    expect(s.textContent).toBe("0:03");
+    // (it ticks just past each whole second left)
+    vi.advanceTimersByTime(1100);
+    expect(s.textContent).toBe("0:02");
+    vi.advanceTimersByTime(5000);
+    expect(s.textContent).toBe("0:00");
+  });
+
+  it("writes a bar's width for the share left", () => {
+    const b = el();
+    liveWidth(b, running(1350, 2700));
+    expect(b.style.width).toBe("50.00%");
+    vi.advanceTimersByTime(27_100);
+    expect(parseFloat(b.style.width)).toBeCloseTo(49, 1);
+    // no whole: nothing to draw
+    const none = el();
+    liveWidth(none, running(60, null));
+    expect(none.style.width).toBe("");
+  });
+
+  it("writes one standing still once, and keeps nothing for it", () => {
+    const s = el();
+    liveText(s, { ends: null, left: 754, total: 2700 }, (l) => clockText(l));
+    expect(s.textContent).toBe("12:34");
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("drops what left the page, and stops when nothing is left", () => {
+    const s = el();
+    liveText(s, running(60), (l) => clockText(l));
+    s.remove();
+    vi.advanceTimersByTime(1000);
+    expect(s.textContent).toBe("1:00");
+    vi.advanceTimersByTime(1000);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("tells its card when a text grew", () => {
+    const s = el();
+    let grew = 0;
+    document.body.addEventListener(LIVE_GREW, () => grew++);
+    // 1h, then 59m 59s
+    liveText(s, running(3600.5), (l) => (l > 3599.5 ? "1h" : "59m 59s"));
+    expect(s.textContent).toBe("1h");
+    vi.advanceTimersByTime(1600);
+    expect(s.textContent).toBe("59m 59s");
+    expect(grew).toBe(1);
   });
 });

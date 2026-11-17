@@ -24,7 +24,7 @@ import { decimalsOf, isTemplate } from "../util.ts";
 import { toKmh } from "../flow/maths.ts";
 import { toMmH } from "../rain/rain.ts";
 import type { Visibility } from "../visibility.ts";
-import { shareLeft, timerClock, type Countdown } from "../countdown.ts";
+import { timerClock, type Countdown } from "../countdown.ts";
 
 // the card's bound pointer handlers for the history plots
 export interface PlotHandlers {
@@ -295,16 +295,14 @@ export const modelOf = (ctx: FormatCtx, ent: EntityItem): EntityModel => {
     fmt: count?.fmt ?? fmtValue(ctx, ent, model, st),
     progress: progressOf(ent, model.num, st),
   };
-  // a timer's time left, as its value where it is shown (the fills write it as it runs down), and
-  // the share of its duration left as its progress (a bar, a ribbon)
+  // a timer's time left, as its value where it is shown and as its bar (the fills write both as it
+  // runs down); no progress: the model stays the same while it runs, so what else reads one (a
+  // gauge, a ring, a glow) would stand at the share of its last change
   const cd =
     (ctx.countdowns || ent.pill) && !count && model.avail && isTimerState(ent, st)
       ? timerClock(st, Date.now())
       : null;
-  if (cd) {
-    out.countdown = cd;
-    out.progress = shareLeft(cd, Date.now());
-  }
+  if (cd) out.countdown = cd;
   return out;
 };
 // the entity's state is a timer's (its time left can stand for it)

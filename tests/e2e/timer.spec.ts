@@ -63,7 +63,8 @@ test.describe("timer", () => {
     );
     const line = card(page).locator(".secondary");
     await expect(line).toHaveText("Idle");
-    expect(await width(page, ".bar > i")).toBe("0%");
+    // its whole duration ahead: the bar full
+    expect(parseFloat(await width(page, ".bar > i"))).toBe(100);
     await card(page).locator(".ctl-buttons button").first().click();
     await expect(line).toHaveText("45:00");
     await page.clock.runFor(2000);

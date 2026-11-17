@@ -76,7 +76,11 @@ describe("formatValue", () => {
   it("writes a duration as a clock or a span, a power in its unit", () => {
     expect(text("sensor.run", { format: "clock" })?.text).toBe("1:12:10");
     expect(text("sensor.run", { format: "duration" })?.text).toBe("1h 12m");
-    expect(text("sensor.power", { format: "power" })?.text).toBe("1.53 kW");
+    expect(text("sensor.power", { format: "power" })).toMatchObject({
+      text: "1.53 kW",
+      num: "1.53",
+      unit: "kW",
+    });
     expect(text("sensor.power", { format: "clock" })).toBeNull();
   });
   it("leaves the deprecated cards' header badges as they were", () => {

@@ -243,5 +243,5 @@ export const TIMER: Kind = {
   visual: { type: "bar" },
   // the state where it says more than the time left: Paused (running is what the clock says,
   // Idle is the value)
-  status: (c) => (c.m.countdown && c.m.countdown.ends === null ? stateText(c) : null),
+  status: (c) => (c.m.st?.state === "paused" && c.m.countdown ? stateText(c) : null),
 };

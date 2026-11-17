@@ -115,9 +115,21 @@ const VARIANTS: Partial<Record<string, readonly string[]>> = {
 const selectOf = (options: { value: string; label: string }[]) => ({
   select: { mode: "dropdown", options },
 });
-// a select whose first option names the default (clearing it goes back there)
 // a date as Home Assistant writes one (a timestamp's state)
 const isDate = (v: unknown) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v);
+// how a value may be written: every format, or a timer's (its default is the clock, so the clock
+// is named there and not offered again; a power is none of its)
+const formatOptions = (hass: HomeAssistant | undefined, timer: boolean) =>
+  timer
+    ? [
+        { value: "auto", label: L(hass, "badge_format.clock") },
+        ...(["duration", "relative"] as const).map((v) => ({
+          value: v,
+          label: L(hass, `badge_format.${v}`),
+        })),
+      ]
+    : BADGE_FORMATS.map((v) => ({ value: v, label: L(hass, `badge_format.${v}`) }));
+// a select whose first option names the default (clearing it goes back there)
 const pick = (name: string, options: { value: string; label: string }[]): HaFormSchema => ({
   name,
   selector: selectOf(options),
@@ -330,7 +342,14 @@ export const badgeItemSchema = (
       ...(custom || filled("value") ? [field("value")] : []),
       ...(showsValue
         ? [
-            ...(when(numeric || dated || timer, "format") ? [field("format")] : []),
+            ...(when(numeric || dated || timer, "format")
+              ? [
+                  field(
+                    "format",
+                    timer && !numeric ? { selector: selectOf(formatOptions(hass, true)) } : {},
+                  ),
+                ]
+              : []),
             ...(when(numeric, "unit") || filled("decimals")
               ? [grid(field("unit"), field("decimals"))]
               : []),
@@ -350,7 +369,16 @@ export const badgeItemSchema = (
     // the icon, and the range a bar or a ring fills
     when(numeric || timer, "visual") &&
       sub(T("section.badge_visual"), ICONS.chart, false, [
-        grid(field("visual"), ...(plot ? [field("hours")] : [])),
+        // (a timer draws a bar of its time left, no history)
+        grid(
+          field(
+            "visual",
+            timer && !numeric
+              ? { selector: selectOf([{ value: "bar", label: L(hass, "badge_visual.bar") }]) }
+              : {},
+          ),
+          ...(plot ? [field("hours")] : []),
+        ),
         ...(when(iconed && numeric, "icon_ring") ? [field("icon_ring")] : []),
         ...(ranged || filled("min") || filled("max") ? [grid(field("min"), field("max"))] : []),
       ]),
@@ -923,12 +951,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   const spans = x.numeric || !!x.st?.entity_id.startsWith("timer.") || isDate(x.st?.state);
   const format: HaFormSchema[] = [
     ...((spans && valueShown) || (filledIn("format") && data.format !== "auto")
-      ? [
-          pick(
-            "format",
-            BADGE_FORMATS.map((v) => opt(v, tr(`badge_format.${v}`))),
-          ),
-        ]
+      ? [pick("format", formatOptions(hass, !!x.st?.entity_id.startsWith("timer.")))]
       : []),
     ...(x.numeric && (writes("unit") || writes("decimals"))
       ? [

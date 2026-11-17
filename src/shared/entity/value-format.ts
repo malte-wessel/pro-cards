@@ -23,7 +23,7 @@ export const formatValue = (ctx: RenderCtx, ent: EntityItem, m: EntityModel): Fm
   const wrap = (s: string) => `${ent.prefix}${s}${ent.suffix}`;
   // a time left: a timer's own, else a date ahead that is to be written as a span
   const cd: Countdown | null =
-    m.countdown ??
+    (m.countdown && !m.countdown.idle ? m.countdown : null) ??
     (v3 && (f === "clock" || f === "duration") ? momentAhead(model.raw, ctx.now) : null);
   if (cd) {
     // the time from now in words while it runs (a minute's steps, as a date's)
@@ -44,7 +44,10 @@ export const formatValue = (ctx: RenderCtx, ent: EntityItem, m: EntityModel): Fm
   const unit = unitOf(ent, m.st);
   if (f === "power") {
     const s = fmtPowerAuto(ctx.hass, model.num, unit, ent.decimals);
-    return s === null ? null : word(wrap(s));
+    if (s === null) return null;
+    // the number and its unit apart, as every value (a poster draws the unit smaller)
+    const parts = /^(.*\d)\s*(\S+)$/.exec(s);
+    return parts ? { text: wrap(s), num: wrap(parts[1]), unit: parts[2] } : word(wrap(s));
   }
   const sec = durationSeconds(model.num, unit);
   if (sec === null) return null;

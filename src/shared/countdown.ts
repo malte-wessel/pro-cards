@@ -24,11 +24,13 @@ export const clockText = (s: number) => {
 };
 
 // a time left: until `ends` while it runs (ms), else `left` (seconds) standing still; `total` the
-// whole span it runs down from (a timer's duration), where it has one
+// whole span it runs down from (a timer's duration), where it has one; `idle` a timer that is not
+// running: its whole duration ahead (a full bar), its state its value
 export interface Countdown {
   ends: number | null;
   left: number;
   total: number | null;
+  idle?: boolean;
 }
 // the seconds left at `now`
 export const leftAt = (cd: Countdown, now: number) =>
@@ -38,7 +40,7 @@ export const shareLeft = (cd: Countdown, now: number) =>
   cd.total ? Math.min(1, Math.max(0, leftAt(cd, now) / cd.total)) : null;
 
 // a timer's time left: running until `finishes_at` (else its `remaining` from its last change),
-// paused at its `remaining`; idle (or not known) none
+// paused at its `remaining`, idle its whole duration; not known (or idle without a duration) none
 export const timerClock = (st: HassEntity | undefined, now: number): Countdown | null => {
   if (!st) return null;
   const a = st.attributes;
@@ -57,6 +59,7 @@ export const timerClock = (st: HassEntity | undefined, now: number): Countdown |
     const rem = parseHms(a.remaining);
     return rem === null ? null : { ends: null, left: rem, total };
   }
+  if (st.state === "idle" && total) return { ends: null, left: total, total, idle: true };
   return null;
 };
 

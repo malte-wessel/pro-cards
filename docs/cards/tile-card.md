@@ -89,6 +89,23 @@ Every part has a key of its own: `name`, `icon`, `color`, `value`, `status`, `vi
 
 :::
 
+`format` writes the value another way: `power` in W, kW or MW, `duration` as a span (12m 34s), `clock` as a clock (1:12:00), `relative` as the time from now. A date ahead written as a span or a clock counts down every second, as a timer does by itself.
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: sensor.washer_power
+  format: power
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: sensor.dishwasher_finishes
+  format: duration
+  grid_options: { columns: 6 }
+```
+
+:::
+
 ## A vertical tile
 
 `vertical: true` puts the icon on top, with the name and the line centred under it and the controls under them, as Home Assistant's own tile does. A vertical tile takes a quarter of a section (half with a stepper, a select, buttons or segments) and two rows, a third with a control.

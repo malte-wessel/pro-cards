@@ -217,7 +217,8 @@ export class PosterCard extends KindCardBase {
       body = row.querySelector<HTMLElement>(":scope > .pbody");
     const b = big?.querySelector("b");
     if (!big || !b || !top || !body) return;
-    const sliders = body.querySelectorAll<HTMLElement>(":scope > .ctl-slider");
+    // (what may go below the value where the card is short: a slider, a bar such as a timer's)
+    const sliders = body.querySelectorAll<HTMLElement>(":scope > :is(.ctl-slider, .bar)");
     const drop = (on: boolean) => sliders.forEach((el) => el.classList.toggle("pfit-out", on));
     const end = body.querySelector<HTMLElement>(":scope > .pmain > .end");
     const size = `${card.clientWidth}x${card.clientHeight}`;
@@ -269,8 +270,9 @@ export class PosterCard extends KindCardBase {
     // 0 % as large as an open one's 100 %); a word (Cleaning) is drawn smaller anyway and keeps
     // them beside it
     const besideMin = big.classList.contains("word") ? min : Math.round(base * 0.8);
-    // short of height, the value gives up a fifth of its size at most while a slider below it
-    // can go instead: the value is the poster's point (a player keeps its title, not its volume)
+    // short of height, the value gives up a fifth of its size at most while a slider or a bar
+    // below it can go instead: the value is the poster's point (a player keeps its title, not its
+    // volume; a timer its time left, not its bar)
     const tallLeast = () => (sliders.length && !fit.drop ? Math.round(base * 0.8) : min);
     const shrink = (from: number, least = min) => {
       let px = from;

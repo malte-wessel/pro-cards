@@ -541,12 +541,34 @@ describe("the editor's status and badges", () => {
     // a timer: how its time left is written, and a bar of it
     const timer = names({ entity: "timer.light_bypass" });
     for (const k of ["format", "visual"]) expect(timer, k).toContain(k);
+    const timerForm = flat(
+      badgeItemSchema(hass, badgeToForm({ entity: "timer.light_bypass" }), ""),
+    );
+    expect(options(timerForm, "format").map((o) => o.value)).toEqual([
+      "auto",
+      "duration",
+      "relative",
+    ]);
+    expect(options(timerForm, "format")[0].label).toBe("Clock (1:12:00)");
+    expect(options(timerForm, "visual").map((o) => o.value)).toEqual(["bar"]);
   });
 
   it("writes a card's value as a span where it is one: a number, a date, a timer", () => {
     const has = (entity: string) =>
       flat(schemaOf("tile", { entity })).some((s) => s.name === "format");
     expect(has("timer.light_bypass")).toBe(true);
+    expect(values(schemaOf("tile", { entity: "timer.light_bypass" }), "format")).toEqual([
+      "auto",
+      "duration",
+      "relative",
+    ]);
+    expect(values(schemaOf("tile", { entity: "sensor.battery_soc" }), "format")).toEqual([
+      "auto",
+      "power",
+      "duration",
+      "clock",
+      "relative",
+    ]);
     expect(has("sensor.dishwasher_finishes")).toBe(true);
     expect(has("sensor.battery_soc")).toBe(true);
     expect(has("light.kitchen")).toBe(false);
