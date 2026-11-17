@@ -262,7 +262,7 @@ export abstract class EntityCardBase extends HTMLElement {
       ]),
     ];
     this._timed = cfg.entities.some((e) => e.staleMin !== null || e.format === "relative");
-    this._namedByParts = cfg.entities.some((e) => Array.isArray(e.name));
+    this._namedByParts = this._readsNameParts(cfg);
     this._countIdxs = cfg.entities.flatMap((e, i) => (e.visual === "count" && e.entity ? [i] : []));
     this._armMinute();
     this._templates = collectTemplates(cfg);
@@ -375,6 +375,14 @@ export abstract class EntityCardBase extends HTMLElement {
     // ghosts that expired while the card was away (another view) go now, the rest get their timer
     if ((this._pending.size || this._buttonPending.size) && this._sweepPending()) this._render();
     if (this._hass && this._templates?.size && this._tpl.size === 0) this._subscribeTemplates();
+  }
+  // whether a name of parts is drawn: an item's, or its own buttons' (a kind card adds its trend's
+  // series)
+  _readsNameParts(cfg: EntityCardConfig): boolean {
+    return cfg.entities.some(
+      (e) =>
+        Array.isArray(e.name) || !!e.control?.buttons?.some((b) => Array.isArray(b.item?.name)),
+    );
   }
   // a text the page clock writes grew (1h → 59m 59s): what fits itself to the value does again
   _liveGrew() {
@@ -1004,7 +1012,7 @@ export abstract class EntityCardBase extends HTMLElement {
       hist ? ctx.fetched : null,
       timed ? Math.floor(ctx.now / 60e3) : null,
       // a name of parts: the registries it reads
-      ...(Array.isArray(ent.name) ? registriesOf(ctx.hass) : []),
+      ...(this._namedByParts ? registriesOf(ctx.hass) : []),
     ];
   }
   // the plots: every size read first, then drawn (one layout for all of them); a plot whose

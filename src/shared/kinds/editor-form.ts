@@ -344,8 +344,11 @@ export const badgeToForm = (x: unknown): Raw => {
     else if (BADGE_ON.includes(k) && typeof v === "boolean") item[k] = v;
     // its rules as a list of their own (each in its form)
     else if (k === "rules" && Array.isArray(v)) item.rules = listToForm(v, BADGE_RULE_KEYS);
-    else if (k === "name") item.name = nameToForm(v);
-    else if (BADGE_PLAIN.includes(k)) item[k] = v;
+    else if (k === "name") {
+      item.name = nameToForm(v);
+      // (as written, so a name left as it was keeps its spelling: one part alone stays one part)
+      if (isObj(v)) item.name_written = v;
+    } else if (BADGE_PLAIN.includes(k)) item[k] = v;
     else more[k] = v;
   }
   if (Object.keys(more).length) item.more = more;
@@ -358,6 +361,7 @@ export const badgeFromForm = (item: Raw, cardEntity: string | null = null): unkn
   const o: Raw = {};
   for (const k of BADGE_PLAIN)
     if (filled(item[k]) && !(Array.isArray(item[k]) && !item[k].length)) o[k] = item[k];
+  if (o.name !== undefined) o.name = nameFromForm(o.name, item.name_written);
   // a kind that cannot read the badge's entity is left out (the entity's own is drawn): the card
   // would not take it
   const entity = (typeof item.entity === "string" && item.entity) || cardEntity;
@@ -598,8 +602,6 @@ export const defaultPosition = (type: string, entity: unknown, kind: Kind, thing
   return first ?? (drawnControls(type, entity, kind, thing)[0] === "slider" ? "block" : "end");
 };
 
-// `kindRules`: the kind's rules as the card would write them (writtenRules: in the user's language
-// and the sensor's unit), shown in the list while the card has none of its own
 // a name in the form: a text, or Home Assistant's parts as a list (its name picker's value; one
 // part written alone is a list of one there)
 export const nameToForm = (v: unknown): unknown =>
@@ -611,6 +613,8 @@ export const nameFromForm = (v: unknown, was: unknown): unknown => {
     return undefined;
   return JSON.stringify(nameToForm(was)) === JSON.stringify(v) ? was : v;
 };
+// `kindRules`: the kind's rules as the card would write them (writtenRules: in the user's language
+// and the sensor's unit), shown in the list while the card has none of its own
 export const configToForm = (
   config: CardConfigBase,
   kind: Kind,

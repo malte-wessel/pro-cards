@@ -16,7 +16,7 @@ import {
   listFromForm,
   listToForm,
 } from "../kinds/editor-form.ts";
-import { ICONS, pickerOf } from "../kinds/editor-schema.ts";
+import { ICONS, nameSelector, pickerOf } from "../kinds/editor-schema.ts";
 import type { ItemType, RuleReads } from "../kinds/item-views.ts";
 
 export type FlowCard = "power" | "energy";
@@ -357,7 +357,9 @@ const CHARGE_FROM = ["any", "solar"] as const;
 
 export const sourceToForm = (s: Raw, card: FlowCard, hint?: string): HaFormData => {
   const type = typeOf(s);
-  const d: HaFormData = { type, name: str(s.name), icon: str(s.icon), color: str(s.color) };
+  // (a name of parts as written: the name picker's value)
+  const name = s.name !== null && typeof s.name === "object" ? s.name : str(s.name);
+  const d: HaFormData = { type, name, icon: str(s.icon), color: str(s.color) };
   for (const k of METERS[card][type])
     if (k === "invert" || k === "both_ways") d[k] = s[k] === true;
     else if (k === "peak") d[k] = numOr(s[k], undefined);
@@ -428,7 +430,20 @@ export const sourceSchema = (
   const type = data.type as SourceType;
   const head: HaFormSchema[] = [
     select("type", TYPES, (v) => t(hass, `power.${v}` as StringKey)),
-    grid({ name: "name", selector: { text: {} } }, { name: "icon", selector: { icon: {} } }),
+    // (its name by its parts: of the first entity it reads)
+    grid(
+      {
+        name: "name",
+        selector: nameSelector(
+          String(
+            (METERS[card][type] ?? [])
+              .map((k) => data[k])
+              .find((v) => typeof v === "string" && v.includes(".")) ?? "",
+          ),
+        ),
+      },
+      { name: "icon", selector: { icon: {} } },
+    ),
     { name: "color", selector: { ui_color: {} } },
   ];
   const measure =
@@ -539,7 +554,10 @@ const consumerType = (hass: () => HomeAssistant | undefined, card: FlowCard): It
   schema: (h, item) => [
     meter(h, "entity", card, item.entity),
     { name: "group", selector: { text: {} } },
-    grid({ name: "name", selector: { text: {} } }, { name: "icon", selector: { icon: {} } }),
+    grid(
+      { name: "name", selector: nameSelector(str(item.entity)) },
+      { name: "icon", selector: { icon: {} } },
+    ),
     grid(
       { name: "color", selector: { ui_color: {} } },
       amount("hide_below", UNIT[card], card === "energy" ? 0.1 : 1),

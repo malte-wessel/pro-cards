@@ -131,7 +131,7 @@ const formatOptions = (hass: HomeAssistant | undefined, timer: boolean) =>
     : BADGE_FORMATS.map((v) => ({ value: v, label: L(hass, `badge_format.${v}`) }));
 // a name: Home Assistant's name picker for an entity (its own name, its device's, its area's …,
 // or a text), as its tile's editor has it; a text field without one
-const nameSelector = (entity: string) =>
+export const nameSelector = (entity: string) =>
   entity ? { entity_name: { entity_id: entity } } : { text: {} };
 // a select whose first option names the default (clearing it goes back there)
 const pick = (name: string, options: { value: string; label: string }[]): HaFormSchema => ({
@@ -540,7 +540,7 @@ export const seriesItemSchema = (
   const unit = entity ? hass?.states[entity]?.attributes.unit_of_measurement : undefined;
   return [
     field("entity", { entity: entitiesFor(hass, "trend", entity) }),
-    grid(field("name", { text: {} }), field("color", { ui_color: {} })),
+    grid(field("name", nameSelector(entity)), field("color", { ui_color: {} })),
     {
       ...section(L(hass, "section.rules"), ICONS.rules, [
         field("rules", {

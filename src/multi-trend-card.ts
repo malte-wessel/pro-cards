@@ -166,6 +166,12 @@ export class MultiTrendCard extends HTMLElement {
       // a ruled series takes the colour of its current state, numeric or not
       if (e.rules.length && st?.state !== this._lastStates[i]) changed = true;
     });
+    // a series named by its parts: a device, an area or a floor renamed
+    if (
+      this._config.entities.some((e) => Array.isArray(e.name)) &&
+      (["entities", "devices", "areas", "floors"] as const).some((k) => prev?.[k] !== hass[k])
+    )
+      changed = true;
     // what the visibility conditions read: their entities, the user, the user's person
     const deps = this._visDeps;
     if (deps.user && prev?.user?.id !== hass.user?.id) changed = true;

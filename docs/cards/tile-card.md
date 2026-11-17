@@ -108,7 +108,7 @@ Every part has a key of its own: `name`, `icon`, `color`, `value`, `status`, `vi
 
 ## Names
 
-Since Home Assistant 2026.11 an entity's name is its device's name and its own ("Dishwasher Finishes"). `name` takes the parts of a name as Home Assistant's own cards do: `entity` (its own name), `device`, `area`, `floor`, and `{ type: text, text: … }` of your own, in the order written. They follow renames in Home Assistant, and they work where you cannot write a name per card (auto-entities). Badges, buttons and a tile group's tiles take them too.
+Since Home Assistant 2026.11 an entity's name is its device's name and its own ("Dishwasher Finishes"). `name` takes the parts of a name as Home Assistant's own cards do: `entity` (its own name), `device`, `parent_device`, `area`, `floor`, and `{ type: text, text: … }` of your own, in the order written. They follow renames in Home Assistant, and they work where you cannot write a name per card (auto-entities). Badges, buttons and a tile group's tiles take them too.
 
 ::: live
 

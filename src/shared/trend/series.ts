@@ -18,6 +18,15 @@ export interface TrendSeries {
   fallbackCss: string;
 }
 
+// a series' name: a text or its parts; one it cannot read is left out (its entity's name), as a
+// name that was no text always was
+const seriesName = (raw: unknown, where: string) => {
+  try {
+    return normalizeName(raw, where) ?? undefined;
+  } catch {
+    return undefined;
+  }
+};
 // the series at config position `i` (`label` names it in errors, e.g. `entities[0]`); null for an
 // entry without an entity, which the card rejects or skips
 export const normalizeSeries = (
@@ -30,7 +39,7 @@ export const normalizeSeries = (
   if (!o || typeof o !== "object" || typeof o.entity !== "string" || !o.entity) return null;
   return {
     entity: o.entity,
-    name: normalizeName(o.name, `${type}: ${label}`) ?? undefined,
+    name: seriesName(o.name, `${type}: ${label}`),
     color: typeof o.color === "string" ? o.color : undefined,
     rules: normalizeRules(o.rules),
     visibility: normalizeVisibility(o.visibility, { type, label, entity: o.entity }),

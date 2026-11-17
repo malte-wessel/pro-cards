@@ -80,8 +80,6 @@ export const tplOf = (ctx: FormatCtx, t: string | null): string | null =>
   isTemplate(t) ? asText(ctx.tplResult.get(t)) : t;
 export const stateOf = (ctx: FormatCtx, ent: EntityItem) =>
   ent.entity ? ctx.hass?.states[ent.entity] : undefined;
-// the name: the config name (template allowed), a translated default (attribute items of the
-// weather card), the friendly name, the entity id
 // the name the card writes: a text or a template, or the parts Home Assistant composes it of
 // (null: none written, or parts that name nothing)
 export const writtenName = (
@@ -90,6 +88,8 @@ export const writtenName = (
   st: HassEntity | undefined,
 ): string | null =>
   Array.isArray(ent.name) ? composedName(ctx.hass, st, ent.name) : tplOf(ctx, ent.name);
+// the name: the config name (template allowed, or its parts), a translated default (attribute
+// items of the weather card), the friendly name, the entity id
 export const nameOf = (ctx: FormatCtx, ent: EntityItem, st: HassEntity | undefined): string =>
   writtenName(ctx, ent, st) ||
   (ent.nameKey ? t(ctx.hass, ent.nameKey) : null) ||

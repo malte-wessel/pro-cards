@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { composedName, nameFor, normalizeName } from "../../../src/shared/entity-name.ts";
 import type { HassEntity, HomeAssistant } from "../../../src/shared/ha.ts";
+import { normalizeSeries } from "../../../src/shared/trend/series.ts";
 import { formatEntityName } from "../../../docs/.vitepress/theme/ha-shim/registry.ts";
 
 const W = "custom:tile-card-pro: the card";
@@ -16,6 +17,16 @@ describe("normalizeName", () => {
     expect(
       normalizeName([{ type: "area" }, { type: "text", text: "·" }, { type: "entity" }], W),
     ).toEqual([{ type: "area" }, { type: "text", text: "·" }, { type: "entity" }]);
+  });
+  it("takes an unquoted YAML On or Off as none, as it always did", () => {
+    expect(normalizeName(false, W)).toBeNull();
+    expect(normalizeName(true, W)).toBeNull();
+  });
+  it("leaves out a series' name it cannot read (its entity's name stands)", () => {
+    const s = normalizeSeries({ entity: "sensor.x", name: { type: "room" } }, 0, "t", "series[0]");
+    expect(s?.name).toBeUndefined();
+    const ok = normalizeSeries({ entity: "sensor.x", name: { type: "area" } }, 0, "t", "series[0]");
+    expect(ok?.name).toEqual([{ type: "area" }]);
   });
   it("names what it cannot read, and where", () => {
     expect(() => normalizeName({ type: "room" }, W)).toThrow(

@@ -20,7 +20,8 @@ const isItem = (v: unknown): v is NameItem => {
 // `name` as written: a text stays, an item is a list of one, a list its items; anything else is
 // an error naming where it is (`where`: "custom:tile-card-pro: the card")
 export const normalizeName = (raw: unknown, where: string): EntityName | null => {
-  if (raw === undefined || raw === null) return null;
+  // (an unquoted YAML On or Off: none, the default name, as it always was)
+  if (raw === undefined || raw === null || typeof raw === "boolean") return null;
   if (typeof raw === "string") return raw;
   if (typeof raw === "number") return String(raw);
   const list = Array.isArray(raw) ? raw : [raw];
