@@ -581,7 +581,6 @@ The time left is the value, counting down every second (`12:34`), and a bar belo
   grid_options: { columns: 6 }
 - type: custom:poster-card-pro
   entity: timer.light_bypass
-  control: buttons
   grid_options: { columns: 6 }
 ```
 
