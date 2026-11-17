@@ -85,6 +85,18 @@ export const ENTITIES: Record<string, EntityRegistryEntry> = Object.fromEntries(
   }),
 );
 
+// an entity's own name beside its device's, as an integration names it ("Dishwasher finishes" on
+// the Dishwasher is "Finishes"; "Dishwasher" itself none: it is named after its device)
+export const ownName = (friendly: string, device?: string): string => {
+  const rest =
+    device && friendly.toLowerCase().startsWith(device.toLowerCase() + " ")
+      ? friendly.slice(device.length + 1)
+      : device && friendly.toLowerCase() === device.toLowerCase()
+        ? ""
+        : friendly;
+  return rest.charAt(0).toUpperCase() + rest.slice(1);
+};
+
 type NamePart = { type: string; text?: string };
 // an entity's name from its parts, as Home Assistant's `hass.formatEntityName` composes it: a
 // text as it is, none the friendly name, parts by the registries (an entity on a device names
@@ -101,14 +113,7 @@ export const formatEntityName = (
   const device = entry?.device_id ? DEVICES[entry.device_id] : undefined;
   const areaId = entry?.area_id ?? device?.area_id ?? null;
   const area = areaId ? AREAS[areaId] : undefined;
-  const rest =
-    device && friendly.toLowerCase().startsWith(device.name.toLowerCase() + " ")
-      ? friendly.slice(device.name.length + 1)
-      : device && friendly.toLowerCase() === device.name.toLowerCase()
-        ? ""
-        : friendly;
-  // (its own name as an integration gives it: "Finishes")
-  const own = rest.charAt(0).toUpperCase() + rest.slice(1);
+  const own = ownName(friendly, device?.name);
   const items = Array.isArray(name) ? name : [name];
   const part = (p: NamePart): string | undefined => {
     switch (p.type) {

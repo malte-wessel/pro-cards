@@ -2,4 +2,4 @@
 
 from .entities import setup_for
 
-async_setup_platform = setup_for("weather")
+async_setup_entry = setup_for("weather")
