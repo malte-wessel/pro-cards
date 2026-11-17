@@ -116,10 +116,12 @@ Since Home Assistant 2026.11 an entity's name is its device's name and its own (
 - type: custom:tile-card-pro
   entity: sensor.dishwasher_finishes
   name: [{ type: entity }]
+  format: duration
   grid_options: { columns: 6 }
 - type: custom:tile-card-pro
   entity: sensor.dishwasher_finishes
   name: [{ type: area }, { type: device }]
+  format: duration
   grid_options: { columns: 6 }
 ```
 
