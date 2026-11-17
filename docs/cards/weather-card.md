@@ -324,4 +324,4 @@ A section of this kind takes:
 
 ### Grid and Home Assistant options
 
-As a tile the card takes 6 columns (at least 3); with sections it takes 12 (at least 6). Both size their height to their content (`rows: auto`). The card also takes Home Assistant's `grid_options`, `visibility`, `view_layout`, `layout_options` and `card_mod`, and `fill_height: false` keeps its own height beside a taller card ([Filling the height](/guide/sizing#filling-the-height)).
+As a tile the card takes 6 columns (at least 3); with sections it takes 12 (at least 6). Both size their height to their content (`rows: auto`). The card also takes Home Assistant's `grid_options`, `visibility`, `view_layout`, `layout_options`, `card_mod` and `uix`, and `fill_height: false` keeps its own height beside a taller card ([Filling the height](/guide/sizing#filling-the-height)).

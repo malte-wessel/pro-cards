@@ -34,7 +34,8 @@
     "visibility": { "$ref": "defs.schema.json#/$defs/haCardExtras/visibility" },
     "layout_options": { "$ref": "defs.schema.json#/$defs/haCardExtras/layout_options" },
     "view_layout": { "$ref": "defs.schema.json#/$defs/haCardExtras/view_layout" },
-    "card_mod": { "$ref": "defs.schema.json#/$defs/haCardExtras/card_mod" }
+    "card_mod": { "$ref": "defs.schema.json#/$defs/haCardExtras/card_mod" },
+    "uix": { "$ref": "defs.schema.json#/$defs/haCardExtras/uix" }
   },
   "required": ["type"],
   "additionalProperties": false

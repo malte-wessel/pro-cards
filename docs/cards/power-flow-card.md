@@ -351,3 +351,4 @@ The card takes 12 columns and sizes its height to its tree (`rows: auto`); it ca
 | `visibility`   | –       | Home Assistant's conditions that show or hide the whole card.      |
 | `view_layout`  | –       | Placement in a [layout card](/cards/layout-card) or a custom view. |
 | `card_mod`     | –       | Styles for the card-mod plugin.                                    |
+| `uix`          | –       | Styles for the UIX plugin.                                         |

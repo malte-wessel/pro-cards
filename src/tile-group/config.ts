@@ -41,6 +41,7 @@ const CARD_KEYS = new Set([
   "view_layout",
   "layout_options",
   "card_mod",
+  "uix",
   "fill_height",
   "vertical_align",
   "overflow",

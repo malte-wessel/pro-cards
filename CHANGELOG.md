@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixes
+
+- A tile group takes UIX (`uix`) on its own card, as it takes `card_mod`; it stopped with an error before.
+- The schema (the Playground, YAML completion) accepts `uix` on every card, and `card_mod` and `uix` on a tile in a tile group.
+
 ## 3.1.0 – Buttons that show state, tile group rows
 
 _2026-11-13_

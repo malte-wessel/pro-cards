@@ -181,4 +181,4 @@ Home Assistant's card editor has every option: the title, icon and subtitle, the
 
 The heading takes the full width and sizes its height to its content (`rows: auto`); it goes down to 3 columns. See [Sizing in sections](/guide/sizing).
 
-The card also takes Home Assistant's `grid_options`, `visibility`, `view_layout` and `card_mod`, plus `fill_height`. The card's `visibility` hides the whole heading; a badge's hides that badge.
+The card also takes Home Assistant's `grid_options`, `visibility`, `view_layout`, `card_mod` and `uix`, plus `fill_height`. The card's `visibility` hides the whole heading; a badge's hides that badge.
