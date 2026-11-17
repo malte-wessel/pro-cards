@@ -703,3 +703,35 @@ test("the multi trend card's lines open in views, with their rules", async ({ pa
     ],
   });
 });
+
+test("the tile's editor offers a timer's presets only where it has some", async ({ page }) => {
+  // the demo's laundry timer has presets in the registry, the light bypass none
+  const laundry = await openEditor(page, {
+    type: "custom:tile-card-pro",
+    entity: "timer.laundry",
+    control: "buttons",
+  });
+  await openSection(laundry.form, "Controls");
+  await expect(field(laundry.form, "control_attribute")).toHaveCount(1);
+  await page.evaluate(() => document.querySelector("tile-card-pro-editor")?.remove());
+
+  const bypass = await openEditor(page, {
+    type: "custom:tile-card-pro",
+    entity: "timer.light_bypass",
+    control: "buttons",
+  });
+  await openSection(bypass.form, "Controls");
+  await expect(field(bypass.form, "control_attribute")).toHaveCount(0);
+  await page.evaluate(() => document.querySelector("tile-card-pro-editor")?.remove());
+
+  // chosen all the same: it stays, and says where to set them
+  const chosen = await openEditor(page, {
+    type: "custom:tile-card-pro",
+    entity: "timer.light_bypass",
+    control: { type: "buttons", attribute: "presets" },
+  });
+  await openSection(chosen.form, "Controls");
+  await expect(field(chosen.form, "control_attribute")).toContainText(
+    "add them in its settings in Home Assistant",
+  );
+});

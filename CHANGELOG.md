@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.2.0 – Timers that count down
+
+_Beta_
+
+### What's new
+
+- **Timers count down:** a timer's time left is its value, counting down every second (`12:34`) on a tile, a poster, a tile group's table and a badge, without the card drawing itself again. A bar below it shrinks with it (full while the timer is idle), and a paused timer stands at what is left and says Paused. [Kinds](https://malte-wessel.github.io/pro-cards/cards/kinds#timer)
+- **`format: clock`:** writes a duration, a timer's time left or the time until a date as a clock (1:12:00). `duration` and `clock` count down to a date (a `timestamp` sensor such as when a dishwasher is done) every second. [Badges](https://malte-wessel.github.io/pro-cards/cards/badges#format-and-staleness)
+- **`format` on a tile's and a poster's value:** the value itself takes `format` (`power`, `duration`, `clock`, `relative`) as a badge does, also in the visual editor; where it applies it replaces the kind's own value (a plug's power in kW).
+
+### Changed: existing cards look different
+
+- **Timers:** a tile or a poster of a timer showed Active or Paused; it now shows the time left with a bar of it below, so a timer tile is two rows high. `visual: false` leaves the bar out, `format` writes the time left another way.
+- **A poster short of height drops its bar** below the value before it draws the value smaller, as it does a slider.
+
+### Fixes
+
+- The visual editor offers a timer's presets only where the timer has some (set in its settings in Home Assistant); a control already set to them says where to add them.
+- A tile group and a seamless layout card blur a glass theme's background once: the cards inside no longer blur it again, which made them darker than the header and showed edges between them. A seamless layout's surface now takes the theme's blur itself.
+- A tile group takes UIX (`uix`) on its own card, as it takes `card_mod`; it stopped with an error before.
+- `card_mod` and UIX (`uix`) style a tile in a tile group; they styled nothing there before.
+- The schema (the Playground, YAML completion) accepts `uix` on every card, and `card_mod` and `uix` on a tile in a tile group.
+- Docs: a glass theme through `ha-card-background` and `ha-card-backdrop-filter`, and why a card_mod or UIX rule on every `ha-card` stacks inside a tile group. [Colours](https://malte-wessel.github.io/pro-cards/guide/colours#theme-variables)
+
 ## 3.1.0 – Buttons that show state, tile group rows
 
 _2026-11-13_

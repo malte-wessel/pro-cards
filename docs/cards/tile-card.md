@@ -89,6 +89,23 @@ Every part has a key of its own: `name`, `icon`, `color`, `value`, `status`, `vi
 
 :::
 
+`format` writes the value another way: `power` in W, kW or MW, `duration` as a span (12m 34s), `clock` as a clock (1:12:00), `relative` as the time from now. A date ahead written as a span or a clock counts down every second, as a timer does by itself.
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: sensor.washer_power
+  format: power
+  grid_options: { columns: 6 }
+- type: custom:tile-card-pro
+  entity: sensor.dishwasher_finishes
+  format: duration
+  grid_options: { columns: 6 }
+```
+
+:::
+
 ## A vertical tile
 
 `vertical: true` puts the icon on top, with the name and the line centred under it and the controls under them, as Home Assistant's own tile does. A vertical tile takes a quarter of a section (half with a stepper, a select, buttons or segments) and two rows, a third with a control.
@@ -175,18 +192,19 @@ Coming from the entity card? [Moving to 3.0](/guide/migrating) maps its keys to 
 
 ### Texts and value
 
-| Key                       | Default                      | Description                                                                              |
-| ------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------- |
-| `name`                    | the friendly name            | The name. Template allowed.                                                              |
-| `value`                   | the kind's, else the state   | A text or a template in place of the state.                                              |
-| `attribute`               | –                            | Shows this attribute in place of the state.                                              |
-| `unit`                    | the entity's                 | The value's unit.                                                                        |
-| `decimals`                | –                            | Decimals of a number, 0 to 3.                                                            |
-| `prefix`, `suffix`        | –                            | Text before and after the value.                                                         |
-| `min`, `max`              | the entity's, else 0 and 100 | The range of a bar, a gauge, segments, a glow or the icon's ring.                        |
-| `status`                  | the rule's, else the kind's  | The status on the line: a text, a template, or `false` for none. It wins over the rules. |
-| `secondary`               | the kind's                   | What follows the value and the status on the line. Template allowed.                     |
-| `show_name`, `show_value` | `true`                       | `false` leaves out the name or the value.                                                |
+| Key                       | Default                      | Description                                                                                                                                                         |
+| ------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                    | the friendly name            | The name. Template allowed.                                                                                                                                         |
+| `value`                   | the kind's, else the state   | A text or a template in place of the state.                                                                                                                         |
+| `attribute`               | –                            | Shows this attribute in place of the state.                                                                                                                         |
+| `unit`                    | the entity's                 | The value's unit.                                                                                                                                                   |
+| `decimals`                | –                            | Decimals of a number, 0 to 3.                                                                                                                                       |
+| `format`                  | `auto`                       | How the value is written: `auto` (a timer: its time left as a clock), `power`, `duration`, `clock` or `relative`; see [Badges](/cards/badges#format-and-staleness). |
+| `prefix`, `suffix`        | –                            | Text before and after the value.                                                                                                                                    |
+| `min`, `max`              | the entity's, else 0 and 100 | The range of a bar, a gauge, segments, a glow or the icon's ring.                                                                                                   |
+| `status`                  | the rule's, else the kind's  | The status on the line: a text, a template, or `false` for none. It wins over the rules.                                                                            |
+| `secondary`               | the kind's                   | What follows the value and the status on the line. Template allowed.                                                                                                |
+| `show_name`, `show_value` | `true`                       | `false` leaves out the name or the value.                                                                                                                           |
 
 ### Look
 
@@ -222,3 +240,4 @@ A tile takes 6 columns and sizes its height to its content (`rows: auto`): one r
 | `visibility`   | –       | Home Assistant's conditions that show or hide the whole card.            |
 | `view_layout`  | –       | Placement in a [layout card](/cards/layout-card) or a custom view.       |
 | `card_mod`     | –       | Styles for the card-mod plugin.                                          |
+| `uix`          | –       | Styles for the UIX plugin.                                               |

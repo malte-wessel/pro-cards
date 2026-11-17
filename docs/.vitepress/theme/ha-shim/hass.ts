@@ -2,6 +2,7 @@
 // document-level events HA would normally handle (actions, more-info, navigation, toasts).
 import { SONGS, world } from "./world.ts";
 import { hsToRgb, kelvinToRgb } from "../../../../src/shared/color.ts";
+import { parseHms } from "../../../../src/shared/countdown.ts";
 import { ENTITIES } from "./registry.ts";
 import { renderTemplate } from "./templates.ts";
 import type {
@@ -144,6 +145,7 @@ const formatEntityState = (st: HassEntity, state?: string): string => {
     auto: "Auto",
     playing: "Playing",
     paused: "Paused",
+    active: "Active",
     locked: "Locked",
     unlocked: "Unlocked",
     locking: "Locking",
@@ -291,6 +293,12 @@ const travel = (id: string, target: number) => {
 };
 const setTimeoutState = (id: string, state: string, attrs: Record<string, unknown>, ms: number) =>
   setTimeout(() => world.set(id, state, attrs), ms);
+// a span as Home Assistant writes a timer's (0:45:00)
+const hms = (secs: number) => {
+  const t = Math.round(secs);
+  const two = (n: number) => String(n).padStart(2, "0");
+  return `${Math.floor(t / 3600)}:${two(Math.floor((t % 3600) / 60))}:${two(t % 60)}`;
+};
 // devices that take a moment to answer, so a control's pending ghost can be seen (the controls
 // page's States example); everything else answers at once
 const SLOW = new Set(["light.attic"]);
@@ -522,28 +530,36 @@ const callService = async (
         world.set(id, Math.min(hi, Math.max(lo, v)));
       });
       break;
-    // a timer runs for its duration (or the one given), pauses, and is cancelled or finished
+    // a timer runs for the duration given, else goes on from where it was paused, else runs its
+    // duration; a pause keeps what is left; cancelled or finished it is idle (as Home Assistant)
     case "timer.start":
       each((id, st) => {
-        const secs = num("duration");
-        const dur = Number.isFinite(secs)
-          ? new Date(secs * 1000).toISOString().slice(11, 19).replace(/^0/, "")
-          : st.attributes.duration;
+        const a = st.attributes;
+        const given = num("duration");
+        const own = Number.isFinite(given) && given > 0;
+        const run = own
+          ? given
+          : ((st.state === "paused" ? parseHms(a.remaining) : null) ?? parseHms(a.duration) ?? 0);
         world.set(id, "active", {
-          duration: dur,
-          remaining: dur,
-          finishes_at: new Date(
-            Date.now() + (Number.isFinite(secs) ? secs * 1000 : 0),
-          ).toISOString(),
+          ...(own ? { duration: hms(given) } : {}),
+          remaining: hms(run),
+          finishes_at: new Date(Date.now() + run * 1000).toISOString(),
         });
       });
       break;
     case "timer.pause":
-      each((id) => world.set(id, "paused"));
+      each((id, st) => {
+        if (st.state !== "active") return;
+        const ends = Date.parse(String(st.attributes.finishes_at));
+        const left = Math.max(0, (ends - Date.now()) / 1000);
+        world.set(id, "paused", { remaining: hms(Math.ceil(left)), finishes_at: null });
+      });
       break;
     case "timer.cancel":
     case "timer.finish":
-      each((id) => world.set(id, "idle", { finishes_at: null }));
+      each((id, st) =>
+        world.set(id, "idle", { remaining: st.attributes.duration, finishes_at: null }),
+      );
       break;
     // an update installs for a moment, then is current; a skipped one is current as well
     case "update.install":

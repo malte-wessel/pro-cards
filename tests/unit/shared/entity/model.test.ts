@@ -178,6 +178,34 @@ describe("model", () => {
   });
 });
 
+describe("a timer's time left", () => {
+  const fin = new Date(Date.now() + 754e3).toISOString();
+  const timer = (state: string, attributes: Record<string, unknown>) =>
+    ({ entity_id: "timer.t", state, attributes }) as unknown as HassEntity;
+  const item = (o: RawEntity = {}) => ent({ entity: "timer.t", ...o });
+  const active = { "timer.t": timer("active", { duration: "0:45:00", finishes_at: fin }) };
+  it("is its countdown on a 3.0 card, and no progress (only its bar runs down)", () => {
+    const m = modelOf({ ...ctx(active), countdowns: true }, item());
+    expect(m.countdown).toMatchObject({ ends: Date.parse(fin), total: 2700 });
+    expect(m.progress).toBeNull();
+    // the rules still read its state
+    expect(m.model.raw).toBe("active");
+  });
+  it("is none on the deprecated cards or for an attribute; idle, its whole duration", () => {
+    expect(modelOf(ctx(active), item()).countdown).toBeUndefined();
+    expect(
+      modelOf({ ...ctx(active), countdowns: true }, item({ attribute: "duration" })).countdown,
+    ).toBeUndefined();
+    const idle = { "timer.t": timer("idle", { duration: "0:45:00", remaining: "0:45:00" }) };
+    expect(modelOf({ ...ctx(idle), countdowns: true }, item()).countdown).toEqual({
+      ends: null,
+      left: 2700,
+      total: 2700,
+      idle: true,
+    });
+  });
+});
+
 describe("a card's own rules", () => {
   const wind = (v: number, unit: string) => {
     const e = ent({});

@@ -265,6 +265,7 @@ const nb: Translation = {
   "editor.card.badge_format.auto": "Slik entiteten skriver den",
   "editor.card.badge_format.power": "Effekt (W, kW, MW)",
   "editor.card.badge_format.duration": "Varighet (1 t 12 min)",
+  "editor.card.badge_format.clock": "Klokke (1:12:00)",
   "editor.card.badge_format.relative": "Tid fra nå (om 38 minutter)",
   "editor.card.section.badge_value": "Verdi",
   "editor.card.condition_title": "Betingelse {n}",
@@ -594,6 +595,7 @@ const nb: Translation = {
   "editor.card.kind.lock": "Lås",
   "editor.card.kind.alarm_control_panel": "Alarmpanel",
   "editor.card.kind.person": "Person",
+  "editor.card.kind.timer": "Tidtaker",
   "editor.card.kind.media_player": "Mediespiller",
   "editor.card.kind.cover": "Gardin/port",
   "editor.card.kind.vacuum": "Støvsuger",
@@ -714,6 +716,7 @@ const nb: Translation = {
   "editor.card.field.secondary": "Andre linje",
   "editor.card.field.unit": "Enhet",
   "editor.card.field.decimals": "Desimaler",
+  "editor.card.field.format": "Format",
   "editor.card.field.prefix": "Prefiks",
   "editor.card.field.suffix": "Suffiks",
   "editor.card.field.range": "Verdiområde",
@@ -826,6 +829,8 @@ const nb: Translation = {
   "editor.card.help.suffix": "Etter verdien",
   "editor.card.help.found": "Funnet på enheten: {entity}",
   "editor.card.help.not_found": "Ingen funnet på entitetens enhet",
+  "editor.card.help.no_favorites":
+    "Denne entiteten har ingen ennå: legg dem til i innstillingene i Home Assistant",
   "editor.card.help.icon_src":
     "En URL, en mal eller en entitet hvis bilde vises. Tom: entitetens eget",
   "editor.card.help.visual_src": "En annen entitets historikk. Tom: dette kortets",

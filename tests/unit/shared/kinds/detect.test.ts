@@ -48,6 +48,7 @@ describe("detectKind", () => {
     expect(detectKind("weather.home", undefined).name).toBe("weather");
     expect(detectKind("sun.sun", undefined).name).toBe("sun");
     expect(detectKind("lawn_mower.garden", undefined).name).toBe("lawn_mower");
+    expect(detectKind("timer.light_bypass", undefined).name).toBe("timer");
     // a cover is the one cover kind, drawn by its device class unless its visual names a variant
     expect(detectKind("cover.garage", st("cover.garage", { device_class: "garage" })).name).toBe(
       "cover",

@@ -7,8 +7,16 @@ import { knownRegistryOptions, onRegistryOptions } from "../registry-options.ts"
 import { fireAction, fireEvent, fireHaptic, freshShadow, syncKeepHeight } from "../card.ts";
 import { cssColor } from "../color.ts";
 import { REFRESH_MS } from "../constants.ts";
+import { LIVE_GREW } from "../countdown.ts";
 import { formatKeyOf } from "../format.ts";
-import type { ActionConfig, ActionKind, GridOptions, HapticType, HomeAssistant } from "../ha.ts";
+import type {
+  ActionConfig,
+  ActionKind,
+  CardConfigBase,
+  GridOptions,
+  HapticType,
+  HomeAssistant,
+} from "../ha.ts";
 import { fetchHistory, pointOf, type Point } from "../history.ts";
 import { HistoryFeed } from "../history-feed.ts";
 import { installRipple } from "../ripple.ts";
@@ -172,6 +180,11 @@ export abstract class EntityCardBase extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
+    // a time left whose text grew as it ran down: the value is fitted again
+    this.shadowRoot!.addEventListener(LIVE_GREW, (ev) => {
+      ev.stopPropagation();
+      this._liveGrew();
+    });
     this._tpl = new TemplateSubscriptions(this._cardType(), () => this._render());
     this._history = new HistoryFeed(this._cardType());
     this._visWatch = new VisibilityWatch(() => this._render());
@@ -203,9 +216,14 @@ export abstract class EntityCardBase extends HTMLElement {
     };
   }
 
+  // the config as written: UIX and card-mod read their key from a card's `config` where no
+  // hui-card holds it (a tile in a tile group); `_config` is the normalized one
+  config?: CardConfigBase;
+
   setConfig(config: unknown) {
     const cfg = this._normalize(config);
     this._config = cfg;
+    this.config = config as CardConfigBase;
     // the entities a row acts on: its own and those of its custom buttons (a change of one ends
     // its pending call); and those it follows besides: the entity whose picture a badge shows
     const idsOf = (e: EntityItem) =>
@@ -343,6 +361,11 @@ export abstract class EntityCardBase extends HTMLElement {
     // ghosts that expired while the card was away (another view) go now, the rest get their timer
     if ((this._pending.size || this._buttonPending.size) && this._sweepPending()) this._render();
     if (this._hass && this._templates?.size && this._tpl.size === 0) this._subscribeTemplates();
+  }
+  // a text the page clock writes grew (1h → 59m 59s): what fits itself to the value does again
+  _liveGrew() {
+    this._resized = true;
+    this._render();
   }
   // every REFRESH_MS: time moves the plots (a fresh history, or a render)
   _tick() {
@@ -934,7 +957,8 @@ export abstract class EntityCardBase extends HTMLElement {
   // buttons are shown, and what every row reads (the refresh, the theme, the user). A subclass
   // returns null for a row it fills from more than its own item: that row is filled every time.
   // A header badge drawing history (sparkline, trend) reads the series too, one that follows the
-  // clock (stale_after, format: relative) the minute
+  // clock (stale_after, format: relative) the minute. A time left that runs down is no input: the
+  // page clock writes it (countdown.ts)
   _rowInputs(ctx: RenderCtx, row: HTMLElement, idx: number, m: EntityModel): unknown[] | null {
     const ent = (this._config as EntityCardConfig).entities[idx];
     const badge = row.classList.contains("hval");
@@ -942,7 +966,8 @@ export abstract class EntityCardBase extends HTMLElement {
       badge && ent.entity && (ent.visual === "sparkline" || ent.visual === "trend")
         ? ctx.series.get(ent.entity)
         : undefined;
-    const timed = badge && (ent.staleMin !== null || ent.format === "relative");
+    // (a card's own value written as the time from now too)
+    const timed = (badge && ent.staleMin !== null) || ent.format === "relative";
     const own = (map: Map<string, unknown>) => {
       const out: unknown[] = [];
       for (const [k, v] of map) if (k.startsWith(`${idx}:`)) out.push(k, v);

@@ -117,4 +117,4 @@ zones:
 
 Default zones: `night` < 1 lx (`indigo`), `twilight` < 100 lx (`blue`), `overcast` < 10 000 lx (`blue-grey`), `day` < 30 000 lx (`amber`), `sun` above (`orange`), named Night, Twilight, Overcast, Day and Sun in the profile language.
 
-The card takes 12 columns (at least 6) with `rows: auto`; given more height, the trend fills the card and the arc and the band sit in the middle. Like every card, it also accepts `grid_options`, `visibility`, `layout_options`, `view_layout` and `card_mod`, passed through to Home Assistant. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height).
+The card takes 12 columns (at least 6) with `rows: auto`; given more height, the trend fills the card and the arc and the band sit in the middle. Like every card, it also accepts `grid_options`, `visibility`, `layout_options`, `view_layout`, `card_mod` and `uix`, passed through to Home Assistant. `fill_height: false` keeps the card at its own height beside a taller card; see [Filling the height](/guide/sizing#filling-the-height).

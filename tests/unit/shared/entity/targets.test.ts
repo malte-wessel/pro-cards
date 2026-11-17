@@ -5,6 +5,8 @@ import type { NormalizeCtx, RawEntity } from "../../../../src/shared/entity/conf
 import { normalizeEntity } from "../../../../src/shared/entity/config.ts";
 import {
   TARGET_KEYS,
+  favoritesEmpty,
+  hasFavorites,
   readsFavorites,
   targetKeysOf,
   targetOf,
@@ -609,5 +611,34 @@ describe("the review's cases", () => {
     expect(
       set(ent("counter.x", { control: "slider" }), st("counter.x", 5), { type: "value", value: 9 }),
     ).toBeNull();
+  });
+});
+
+describe("favoritesEmpty", () => {
+  const timer = { entity_id: "timer.t", state: "idle", attributes: {} } as unknown as HassEntity;
+  const cover = {
+    entity_id: "cover.c",
+    state: "open",
+    attributes: { current_position: 40 },
+  } as unknown as HassEntity;
+  it("is a timer without presets, once the registry answered", () => {
+    expect(favoritesEmpty("timer", "presets", timer, null)).toBe(true);
+    expect(favoritesEmpty("timer", "presets", timer, { timer: { presets: [] } })).toBe(true);
+    expect(favoritesEmpty("timer", "presets", timer, { timer: { presets: [600] } })).toBe(false);
+    // not yet known
+    expect(favoritesEmpty("timer", "presets", timer, undefined)).toBe(false);
+  });
+  it("is never a cover's positions (its defaults) nor what is no favourite", () => {
+    expect(favoritesEmpty("cover", "current_position", cover, null)).toBe(false);
+    expect(favoritesEmpty("timer", "buttons", timer, null)).toBe(false);
+    expect(favoritesEmpty("climate", "preset_mode", undefined, null)).toBe(false);
+  });
+});
+
+describe("hasFavorites", () => {
+  it("is the domains whose controls offer the registry's favourites", () => {
+    for (const d of ["light", "cover", "valve", "timer"]) expect(hasFavorites(d), d).toBe(true);
+    for (const d of ["sensor", "switch", "climate", "counter"])
+      expect(hasFavorites(d), d).toBe(false);
   });
 });

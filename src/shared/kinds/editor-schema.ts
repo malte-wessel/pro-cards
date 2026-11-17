@@ -3,11 +3,12 @@
 // kind's inputs, the controls its domain takes. A select's default comes first, named as what it
 // is (Glow; the kind as "Wind (detected)"): leaving a field alone is a choice the form shows, and
 // writes nothing.
-import { TARGETS, attributeChoices, attributeDefault } from "../entity/targets.ts";
+import { TARGETS, attributeChoices, attributeDefault, favoritesEmpty } from "../entity/targets.ts";
+import type { RegistryOptions } from "../registry-options.ts";
 import { BUTTONS } from "../entity/control.ts";
 import { domainOf } from "../color.ts";
 import type { RawEntity } from "../entity/config.ts";
-import { BADGE_SIZES, BADGE_STYLES } from "../entity/constants.ts";
+import { BADGE_FORMATS, BADGE_SIZES, BADGE_STYLES } from "../entity/constants.ts";
 import type { HaFormData, HaFormSchema, HassEntity, HomeAssistant } from "../ha.ts";
 import { hasString, t, type StringKey } from "../i18n.ts";
 import { RAIN_STYLES } from "../rain/constants.ts";
@@ -66,6 +67,9 @@ export interface SchemaCtx {
   st: HassEntity | undefined;
   // a tile in a tile group: the group's layout decides its `vertical`
   grouped?: boolean;
+  // the entity's options in the registry, where its favourites live: undefined until they arrived
+  // (a choice of favourites is offered until it is known there are none)
+  reg?: RegistryOptions | null;
 }
 
 // the sections' icons (Material Design Icons, as Home Assistant's own editors use)
@@ -111,6 +115,20 @@ const VARIANTS: Partial<Record<string, readonly string[]>> = {
 const selectOf = (options: { value: string; label: string }[]) => ({
   select: { mode: "dropdown", options },
 });
+// a date as Home Assistant writes one (a timestamp's state)
+const isDate = (v: unknown) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v);
+// how a value may be written: every format, or a timer's (its default is the clock, so the clock
+// is named there and not offered again; a power is none of its)
+const formatOptions = (hass: HomeAssistant | undefined, timer: boolean) =>
+  timer
+    ? [
+        { value: "auto", label: L(hass, "badge_format.clock") },
+        ...(["duration", "relative"] as const).map((v) => ({
+          value: v,
+          label: L(hass, `badge_format.${v}`),
+        })),
+      ]
+    : BADGE_FORMATS.map((v) => ({ value: v, label: L(hass, `badge_format.${v}`) }));
 // a select whose first option names the default (clearing it goes back there)
 const pick = (name: string, options: { value: string; label: string }[]): HaFormSchema => ({
   name,
@@ -254,8 +272,9 @@ export const badgeItemSchema = (
   const shown = attr ? st?.attributes[attr] : st?.state;
   const numeric = !text && isNum(shown);
   const switches = !!reads && TILE_ICON_TOGGLES.has(domainOf(reads)) && !attr && !text;
-  // a date (the time from now is written for it)
-  const dated = !text && typeof shown === "string" && /^\d{4}-\d{2}-\d{2}/.test(shown);
+  // a date (the time from now is written for it), a timer (its time left)
+  const dated = !text && isDate(shown);
+  const timer = !text && !attr && !!reads && domainOf(reads) === "timer";
   const showsValue = item.show_value !== false;
   // the range of a bar or a ring
   const ranged = item.visual === "bar" || item.icon_ring === true;
@@ -323,7 +342,14 @@ export const badgeItemSchema = (
       ...(custom || filled("value") ? [field("value")] : []),
       ...(showsValue
         ? [
-            ...(when(numeric || dated, "format") ? [field("format")] : []),
+            ...(when(numeric || dated || timer, "format")
+              ? [
+                  field(
+                    "format",
+                    timer && !numeric ? { selector: selectOf(formatOptions(hass, true)) } : {},
+                  ),
+                ]
+              : []),
             ...(when(numeric, "unit") || filled("decimals")
               ? [grid(field("unit"), field("decimals"))]
               : []),
@@ -341,9 +367,18 @@ export const badgeItemSchema = (
     ]),
     // what a number draws: after it a bar, a sparkline or a trend over its hours, a ring around
     // the icon, and the range a bar or a ring fills
-    when(numeric, "visual") &&
+    when(numeric || timer, "visual") &&
       sub(T("section.badge_visual"), ICONS.chart, false, [
-        grid(field("visual"), ...(plot ? [field("hours")] : [])),
+        // (a timer draws a bar of its time left, no history)
+        grid(
+          field(
+            "visual",
+            timer && !numeric
+              ? { selector: selectOf([{ value: "bar", label: L(hass, "badge_visual.bar") }]) }
+              : {},
+          ),
+          ...(plot ? [field("hours")] : []),
+        ),
         ...(when(iconed && numeric, "icon_ring") ? [field("icon_ring")] : []),
         ...(ranged || filled("min") || filled("max") ? [grid(field("min"), field("max"))] : []),
       ]),
@@ -912,7 +947,12 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   // is written, only while it shows (a field filled in stays); its range; the line under it
   const valueShown = data.show_value !== false;
   const writes = (k: string) => valueShown || filledIn(k);
+  // a value written as a span or a time from now: a number (a duration), a date, a timer
+  const spans = x.numeric || !!x.st?.entity_id.startsWith("timer.") || isDate(x.st?.state);
   const format: HaFormSchema[] = [
+    ...((spans && valueShown) || (filledIn("format") && data.format !== "auto")
+      ? [pick("format", formatOptions(hass, !!x.st?.entity_id.startsWith("timer.")))]
+      : []),
     ...(x.numeric && (writes("unit") || writes("decimals"))
       ? [
           grid(text("unit"), {
@@ -1196,9 +1236,14 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
   ];
 
   // what it sets, and the domain's own buttons
+  // (less favourites the entity has none of, a timer's presets, unless they are the one chosen)
   const attrs =
     domain && entity
-      ? attributeChoices(domain, drawn, x.hass?.states?.[entity], !!BUTTONS[domain])
+      ? attributeChoices(domain, drawn, x.hass?.states?.[entity], !!BUTTONS[domain]).filter(
+          (a) =>
+            a === data.control_attribute ||
+            !favoritesEmpty(domain, a, x.hass?.states?.[entity], x.reg),
+        )
       : [];
   // what it sets unless the form names another: the shown mode, else the first (as the card does)
   const byDefaultSets = domain
@@ -1443,9 +1488,6 @@ const FIELD_SELECTORS: Record<string, Record<string, unknown>> = {
   double_tap_action: { ui_action: {} },
   hover: { boolean: {} },
 };
-// how a badge's value is written: as the entity formats it, in W / kW / MW, as a duration, or the
-// time from now of a date
-const BADGE_FORMATS = ["auto", "power", "duration", "relative"] as const;
 const BADGE_VISUALS = ["bar", "sparkline", "trend"] as const;
 const fieldsOf = (
   hass: HomeAssistant | undefined,

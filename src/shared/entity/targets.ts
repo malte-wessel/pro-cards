@@ -15,6 +15,7 @@ import type { RegistryOptions } from "../registry-options.ts";
 import type { HassEntity, HomeAssistant } from "../ha.ts";
 import type { ControlKind, ControlOption, Range, ServiceCall } from "./control.ts";
 import type { EntityItem } from "./config.ts";
+import { clockText } from "../countdown.ts";
 import { isNum } from "../util.ts";
 import { numAttr, scaleOf } from "./look.ts";
 
@@ -231,14 +232,6 @@ const swatchOf = (f: Favorite): { color: string; label: string } | null => {
   if (!rgb) return null;
   const [r, g, b] = rgb.slice(0, 3).map(Number);
   return { color: `rgb(${r} ${g} ${b})`, label: rgbToHex(r, g, b) };
-};
-// a timer's presets in the registry (seconds), as Home Assistant writes them: 5:00, 1:30:00
-const durationText = (s: number) => {
-  const h = Math.floor(s / 3600),
-    m = Math.floor((s % 3600) / 60),
-    sec = s % 60;
-  const two = (n: number) => String(n).padStart(2, "0");
-  return h ? `${h}:${two(m)}:${two(sec)}` : `${m}:${two(sec)}`;
 };
 // a target humidity: a humidifier's, a thermostat's
 const humidityOf = (domain: string): Target => ({
@@ -461,7 +454,7 @@ export const TARGETS: Record<string, readonly Target[]> = {
               ),
             ]
           : [];
-        return secs.map((v) => ({ value: String(v), label: durationText(v), icon: null }));
+        return secs.map((v) => ({ value: String(v), label: clockText(v), icon: null }));
       },
       current: () => null,
       set: (v, ent) => call(ent, "timer", "start", { duration: Number(v) }),
@@ -658,6 +651,23 @@ export const modeKeysOf = (domain: string): string[] =>
   (TARGETS[domain] ?? [])
     .filter((t) => t.key !== null && t.options && !t.range && !t.favorites && !t.optionButtons)
     .map((t) => t.key as string);
+// whether a domain's controls can offer the entity's favourites (a light, a cover, a valve, a
+// timer): only those are worth asking the registry for
+export const hasFavorites = (domain: string) => (TARGETS[domain] ?? []).some((t) => t.favorites);
+// whether what a control would set has nothing to offer: its options are the entity's favourites
+// (a timer's presets) and the registry, which has answered (`reg` not undefined), gives none and
+// the domain no defaults in their place (a light's colours and a cover's positions have them)
+export const favoritesEmpty = (
+  domain: string,
+  key: string,
+  st: HassEntity | undefined,
+  reg: RegistryOptions | null | undefined,
+): boolean => {
+  const t = (TARGETS[domain] ?? []).find((x) => x.key === key);
+  if (!t?.favorites || !t.options || reg === undefined) return false;
+  // (no favourite reads the item: only the entity's state and its registry options)
+  return t.options({} as EntityItem, st, reg).length === 0;
+};
 // what a control of these types sets unless it names another: the shown mode where it is one of
 // them, else the first (a switch's power, a domain's own buttons)
 export const attributeDefault = (

@@ -387,4 +387,4 @@ A row in a table takes a tile's keys except `icon`, `secondary`, `badges` and `s
 
 The card sizes its height to its content (`rows: auto`). A `list` and a `table` take 6 columns, a `row` 12; none goes below 6. See [Sizing in sections](/guide/sizing).
 
-The card also takes Home Assistant's `grid_options`, `visibility`, `view_layout` and `card_mod`, plus `fill_height` (`false` keeps the card's own height). The card's `visibility` hides the whole card; a tile's hides that tile.
+The card also takes Home Assistant's `grid_options`, `visibility`, `view_layout`, `card_mod` and `uix`, plus `fill_height` (`false` keeps the card's own height). The card's `visibility` hides the whole card; a tile's hides that tile. A tile takes its own `card_mod` and `uix` too, styling that tile.

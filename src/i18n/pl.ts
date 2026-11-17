@@ -265,6 +265,7 @@ const pl: Translation = {
   "editor.card.badge_format.auto": "Tak, jak zapisuje ją encja",
   "editor.card.badge_format.power": "Moc (W, kW, MW)",
   "editor.card.badge_format.duration": "Czas trwania (1h 12m)",
+  "editor.card.badge_format.clock": "Zegar (1:12:00)",
   "editor.card.badge_format.relative": "Czas względny (za 38 minut)",
   "editor.card.section.badge_value": "Wartość",
   "editor.card.condition_title": "Warunek {n}",
@@ -599,6 +600,7 @@ const pl: Translation = {
   "editor.card.kind.lock": "Zamek",
   "editor.card.kind.alarm_control_panel": "Panel kontrolny alarmu",
   "editor.card.kind.person": "Osoba",
+  "editor.card.kind.timer": "Minutnik",
   "editor.card.kind.media_player": "Odtwarzacz mediów",
   "editor.card.kind.cover": "Osłona",
   "editor.card.kind.vacuum": "Odkurzacz",
@@ -719,6 +721,7 @@ const pl: Translation = {
   "editor.card.field.secondary": "Drugi wiersz",
   "editor.card.field.unit": "Jednostka",
   "editor.card.field.decimals": "Miejsca dziesiętne",
+  "editor.card.field.format": "Format",
   "editor.card.field.prefix": "Przedrostek",
   "editor.card.field.suffix": "Przyrostek",
   "editor.card.field.range": "Zakres wartości",
@@ -831,6 +834,8 @@ const pl: Translation = {
   "editor.card.help.suffix": "Po wartości",
   "editor.card.help.found": "Znaleziono na urządzeniu: {entity}",
   "editor.card.help.not_found": "Nic nie znaleziono na urządzeniu encji",
+  "editor.card.help.no_favorites":
+    "Ta encja nie ma jeszcze żadnych: dodaj je w jej ustawieniach w Home Assistant",
   "editor.card.help.icon_src":
     "URL, szablon lub encja, której obraz pokazać. Puste: własny obraz encji",
   "editor.card.help.visual_src": "Historia innej encji. Puste: tej karty",

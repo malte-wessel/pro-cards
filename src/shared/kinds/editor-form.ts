@@ -612,6 +612,7 @@ export const configToForm = (
     icon: "",
     color: c.color ?? "",
     decimals: num(c.decimals),
+    format: typeof c.format === "string" ? c.format : "auto",
     min: num(c.min),
     max: num(c.max),
     show_name: c.show_name !== false,
@@ -959,6 +960,9 @@ export const formToConfig = (
   // changes)
   for (const k of ["decimals", "min", "max", "running_above"])
     if (changed(k)) setOrDrop(c, k, data[k], num(data[k]) === undefined);
+  // (a select left at its default writes nothing)
+  if (changed("format"))
+    setOrDrop(c, "format", data.format, !data.format || data.format === "auto");
   setOrDrop(c, "show_name", false, data.show_name !== false);
   setOrDrop(c, "show_value", false, data.show_value !== false);
   setOrDrop(c, "hover", false, data.hover !== false);

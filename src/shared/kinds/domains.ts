@@ -230,3 +230,18 @@ export const PERSON: Kind = {
   slots: (c) => ({ secondary: sinceEl(c) }),
   extra: (c) => [Math.floor(c.ctx.now / 60e3)],
 };
+
+// ----- timer: its time left as the value (shared: entity/model.ts), a bar of the share of its
+// duration left, and Paused while it stands -----
+
+export const TIMER: Kind = {
+  name: "timer",
+  domains: ["timer"],
+  reads: ["timer"],
+  readsText: "a timer",
+  keys: [],
+  visual: { type: "bar" },
+  // the state where it says more than the time left: Paused (running is what the clock says,
+  // Idle is the value)
+  status: (c) => (c.m.st?.state === "paused" && c.m.countdown ? stateText(c) : null),
+};

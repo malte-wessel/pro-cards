@@ -1,6 +1,7 @@
 // Block visuals below the name line: bar, gauge and the plot skeleton for history visuals.
 import type { EntityItem } from "../config.ts";
 import { HISTORY_VISUALS, PLOT_H, STRIP_AXIS_CSS, type HistoryVisual } from "../constants.ts";
+import { liveWidth } from "../../countdown.ts";
 import { numberFormat } from "../../format.ts";
 import { scaleOf } from "../look.ts";
 import type { EntityModel, RenderCtx } from "../model.ts";
@@ -10,9 +11,14 @@ export const barEl = (m: EntityModel) => {
   const d = document.createElement("div");
   d.className = "bar";
   d.innerHTML = "<i></i>";
-  (d.firstChild as HTMLElement).style.width =
-    m.progress === null ? "0%" : `${(m.progress * 100).toFixed(1)}%`;
+  barFill(d.firstChild as HTMLElement, m);
   return d;
+};
+// a bar's fill for the value between min and max; a timer's share of its duration left, kept
+// current as it runs down (an idle one's full)
+export const barFill = (fill: HTMLElement, m: EntityModel) => {
+  fill.style.width = m.progress === null ? "0%" : `${(m.progress * 100).toFixed(1)}%`;
+  if (m.countdown) liveWidth(fill, m.countdown);
 };
 // the gauge's drawing without the room around it (the arc and its stroke, the end labels): a
 // poster draws its gauge in this box, so the arc takes the height it is given

@@ -53,9 +53,10 @@ export const BADGE_STYLES = ["outline", "soft", "filled", "plain", "tag"] as con
 export type BadgeStyle = (typeof BADGE_STYLES)[number];
 export const BADGE_SIZES = ["s", "m", "l"] as const;
 export type BadgeSize = (typeof BADGE_SIZES)[number];
-// how a badge writes its value: as the entity formats it, in W / kW / MW, as a duration, or as
-// the time from now of a date
-export const BADGE_FORMATS = ["auto", "power", "duration", "relative"] as const;
+// how a value is written (a badge's, a poster's or a tile's own): as the entity formats it (a
+// timer: as a clock), in W / kW / MW, as a span in words or as a clock (a duration, a timer's time
+// left, the time until a date), or as the time from now of a date
+export const BADGE_FORMATS = ["auto", "power", "duration", "clock", "relative"] as const;
 export type BadgeFormat = (typeof BADGE_FORMATS)[number];
 export const DEFAULTS = {
   layout: "list",

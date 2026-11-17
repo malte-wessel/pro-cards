@@ -265,6 +265,7 @@ const pt: Translation = {
   "editor.card.badge_format.auto": "Como a entidade o escreve",
   "editor.card.badge_format.power": "Potência (W, kW, MW)",
   "editor.card.badge_format.duration": "Duração (1h 12m)",
+  "editor.card.badge_format.clock": "Relógio (1:12:00)",
   "editor.card.badge_format.relative": "Tempo a partir de agora (daqui a 38 minutos)",
   "editor.card.section.badge_value": "Valor",
   "editor.card.condition_title": "Condição {n}",
@@ -596,6 +597,7 @@ const pt: Translation = {
   "editor.card.kind.lock": "Fechadura",
   "editor.card.kind.alarm_control_panel": "Painel de alarme",
   "editor.card.kind.person": "Pessoa",
+  "editor.card.kind.timer": "Temporizador",
   "editor.card.kind.media_player": "Leitor multimédia",
   "editor.card.kind.cover": "Cobertura",
   "editor.card.kind.vacuum": "Aspirador",
@@ -716,6 +718,7 @@ const pt: Translation = {
   "editor.card.field.secondary": "Linha secundária",
   "editor.card.field.unit": "Unidade",
   "editor.card.field.decimals": "Casas decimais",
+  "editor.card.field.format": "Formato",
   "editor.card.field.prefix": "Prefixo",
   "editor.card.field.suffix": "Sufixo",
   "editor.card.field.range": "Intervalo de valores",
@@ -828,6 +831,8 @@ const pt: Translation = {
   "editor.card.help.suffix": "Depois do valor",
   "editor.card.help.found": "Encontrado no dispositivo: {entity}",
   "editor.card.help.not_found": "Nada encontrado no dispositivo da entidade",
+  "editor.card.help.no_favorites":
+    "Esta entidade ainda não tem nenhum: adicione-os nas definições dela no Home Assistant",
   "editor.card.help.icon_src":
     "Um URL, um modelo ou uma entidade cuja imagem mostrar. Vazio: a da própria entidade",
   "editor.card.help.visual_src": "O histórico de outra entidade. Vazio: o deste cartão",

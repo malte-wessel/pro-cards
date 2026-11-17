@@ -4,20 +4,15 @@
 // the name, the value, the visual after it and the switch. The row itself is the pill of its style and size; a
 // plain badge's pill draws nothing, but keeps its height, padding and shape.
 import { clampedSeries, lineBuckets, lineMeans, smoothPath, trendOf } from "../../history.ts";
-import {
-  durationSeconds,
-  fmtDuration,
-  fmtNumber,
-  fmtPowerAuto,
-  fmtRelative,
-  timeZoneOf,
-} from "../../format.ts";
+import { fmtDuration, fmtNumber, timeZoneOf } from "../../format.ts";
 import { decimalsOf, startOfDay } from "../../util.ts";
 import type { EntityItem } from "../config.ts";
 import { placementsOf } from "../control.ts";
 import { staleAge } from "../look.ts";
-import { nameOf, unitOf, type EntityModel, type RenderCtx } from "../model.ts";
+import { nameOf, type EntityModel, type FmtValue, type RenderCtx } from "../model.ts";
+import { formatValue, putValue } from "../value-format.ts";
 import { appendControls } from "./controls.ts";
+import { barFill } from "./blocks.ts";
 import { headerBadgeEl, iconOrPictureEl, ringSvg } from "./lead.ts";
 
 // the sparkline in the icon's place, in viewBox units (CSS sizes it with the badge)
@@ -40,23 +35,8 @@ const icon = (name: string) => {
 
 // the value as `format` writes it; the entity's own formatting where the format does not apply
 // (a power format on a value without a power unit, a date that does not parse)
-export const badgeText = (ctx: RenderCtx, ent: EntityItem, m: EntityModel): string => {
-  const { model } = m;
-  if (!model.avail || ent.format === "auto") return m.fmt.text;
-  const wrap = (s: string) => `${ent.prefix}${s}${ent.suffix}`;
-  if (ent.format === "relative") {
-    const t = new Date(model.raw ?? "").getTime();
-    return Number.isNaN(t) ? m.fmt.text : wrap(fmtRelative(ctx.hass, t, ctx.now));
-  }
-  if (model.num === null) return m.fmt.text;
-  const unit = unitOf(ent, m.st);
-  if (ent.format === "power") {
-    const s = fmtPowerAuto(ctx.hass, model.num, unit, ent.decimals);
-    return s === null ? m.fmt.text : wrap(s);
-  }
-  const sec = durationSeconds(model.num, unit);
-  return sec === null ? m.fmt.text : wrap(fmtDuration(ctx.hass, sec));
-};
+export const badgeValue = (ctx: RenderCtx, ent: EntityItem, m: EntityModel): FmtValue =>
+  formatValue(ctx, ent, m) ?? m.fmt;
 
 // the history from t0 as a line, scaled to its own range; empty until it arrived (the entity
 // cards' badges draw the card's window, a v3 badge its own)
@@ -129,9 +109,7 @@ const ringEl = (ctx: RenderCtx, ent: EntityItem, m: EntityModel, withIcon: boole
 // a short bar of the value
 const barEl = (m: EntityModel) => {
   const bar = span("bbar");
-  const fill = document.createElement("i");
-  fill.style.width = m.progress === null ? "0%" : `${(m.progress * 100).toFixed(1)}%`;
-  bar.appendChild(fill);
+  barFill(bar.appendChild(document.createElement("i")), m);
   return bar;
 };
 // the value; a rule's text stands in for it, in the rule's colour
@@ -141,8 +119,15 @@ const valueEl = (ctx: RenderCtx, ent: EntityItem, m: EntityModel, age: number | 
     s.classList.add("accent");
     s.textContent = m.look.label;
   } else {
-    const text = badgeText(ctx, ent, m);
-    s.textContent = age === null ? text : `${text} · ${fmtDuration(ctx.hass, age / 1000, true)}`;
+    const v = badgeValue(ctx, ent, m);
+    // (a time left that runs down in a span of its own, the age after it)
+    const el = age === null || !v.live ? s : s.appendChild(span(""));
+    putValue(el, v.text, v);
+    if (age !== null) {
+      const ago = `${v.text} · ${fmtDuration(ctx.hass, age / 1000, true)}`;
+      if (el === s) s.textContent = ago;
+      else s.append(` · ${fmtDuration(ctx.hass, age / 1000, true)}`);
+    }
   }
   return s;
 };

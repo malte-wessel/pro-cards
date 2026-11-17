@@ -264,6 +264,7 @@ const en = {
   "editor.card.badge_format.auto": "As the entity writes it",
   "editor.card.badge_format.power": "Power (W, kW, MW)",
   "editor.card.badge_format.duration": "Duration (1h 12m)",
+  "editor.card.badge_format.clock": "Clock (1:12:00)",
   "editor.card.badge_format.relative": "Time from now (in 38 minutes)",
   "editor.card.section.badge_value": "Value",
   "editor.card.condition_title": "Condition {n}",
@@ -593,6 +594,7 @@ const en = {
   "editor.card.kind.lock": "Lock",
   "editor.card.kind.alarm_control_panel": "Alarm panel",
   "editor.card.kind.person": "Person",
+  "editor.card.kind.timer": "Timer",
   "editor.card.kind.media_player": "Media player",
   "editor.card.kind.cover": "Cover",
   "editor.card.kind.vacuum": "Vacuum",
@@ -713,6 +715,7 @@ const en = {
   "editor.card.field.secondary": "Secondary line",
   "editor.card.field.unit": "Unit",
   "editor.card.field.decimals": "Decimals",
+  "editor.card.field.format": "Format",
   "editor.card.field.prefix": "Prefix",
   "editor.card.field.suffix": "Suffix",
   "editor.card.field.range": "Value range",
@@ -825,6 +828,8 @@ const en = {
   "editor.card.help.suffix": "After the value",
   "editor.card.help.found": "Found on the device: {entity}",
   "editor.card.help.not_found": "None found on the entity's device",
+  "editor.card.help.no_favorites":
+    "This entity has none set yet: add them in its settings in Home Assistant",
   "editor.card.help.icon_src":
     "A URL, a template or an entity whose picture to show. Empty: the entity's own",
   "editor.card.help.visual_src": "Another entity's history. Empty: this card's",

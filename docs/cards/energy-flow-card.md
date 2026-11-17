@@ -198,4 +198,4 @@ The power flow card's `power`, `invert`, `both_ways`, `peak`, `price`, `offline`
 
 ### Grid and Home Assistant options
 
-As the power flow card: 12 columns, `rows: auto`, and Home Assistant's `grid_options`, `fill_height`, `visibility`, `view_layout` and `card_mod`; see its [grid options](/cards/power-flow-card#grid-and-home-assistant-options).
+As the power flow card: 12 columns, `rows: auto`, and Home Assistant's `grid_options`, `fill_height`, `visibility`, `view_layout`, `card_mod` and `uix`; see its [grid options](/cards/power-flow-card#grid-and-home-assistant-options).

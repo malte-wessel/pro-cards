@@ -188,3 +188,4 @@ The swipe card takes the full width of its section and sizes its height to its c
 | `visibility`   | –       | Home Assistant's conditions that show or hide the whole card.                  |
 | `view_layout`  | –       | Placement in a [layout card](/cards/layout-card) or a custom view.             |
 | `card_mod`     | –       | Styles for the card-mod plugin.                                                |
+| `uix`          | –       | Styles for the UIX plugin.                                                     |

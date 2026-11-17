@@ -14,6 +14,7 @@ import { blockEl, GAUGE_CROP } from "./blocks.ts";
 import { appendControls, bindLeadTap, controlEl, iconActionsEl } from "./controls.ts";
 import { fillBadge } from "./badge.ts";
 import { bigEl, leadEl, pillEl, textEl, valueEl } from "./lead.ts";
+import { putValue } from "../value-format.ts";
 
 // the controls of the row, split by slot; a card without a control host draws none
 const slots = (ctx: RenderCtx, ent: EntityItem, kind: RowKind) => {
@@ -252,8 +253,14 @@ export const fillTileSlots = (
   // the line under the name: its parts joined by " · " (a kind's secondary may be a node: its
   // parts are taken over)
   const parts: (string | Node)[] = [];
-  const text = showValue ? tileValueText(o.value === undefined ? m.fmt : o.value) : "";
-  if (text) parts.push(text);
+  const value = o.value === undefined ? m.fmt : o.value;
+  const text = showValue ? tileValueText(value) : "";
+  // (a time left that runs down in a span of its own)
+  if (text && value?.live) {
+    const v = document.createElement("span");
+    putValue(v, text, value);
+    parts.push(v);
+  } else if (text) parts.push(text);
   const status = o.status === undefined ? m.look.label : o.status;
   if (status && status.toLowerCase() !== text.toLowerCase()) parts.push(status);
   const sec = o.secondary === undefined ? tplOf(ctx, ent.secondary) : o.secondary;
@@ -315,10 +322,10 @@ export const fillTableSlots = (
   const end = document.createElement("div");
   end.className = "end";
   // the value, unless a control shows it (a stepper); the status after it where it says more
-  const text =
-    showValue && !ctls.showsValue ? tileValueText(o.value === undefined ? m.fmt : o.value) : "";
+  const value = o.value === undefined ? m.fmt : o.value;
+  const text = showValue && !ctls.showsValue ? tileValueText(value) : "";
   const status = o.status === undefined ? m.look.label : o.status;
-  if (text) end.appendChild(textEl("state", text));
+  if (text) putValue(end.appendChild(textEl("state", text)), text, value);
   // (the separator before the status is the CSS's: the status alone may be cut); beside a switch
   // it would say On or Off once more
   const sw = ctls.els.some((e) => e.classList.contains("toggle"));
