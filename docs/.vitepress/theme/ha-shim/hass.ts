@@ -113,8 +113,16 @@ const BINARY_WORDS: Record<string, [on: string, off: string]> = {
   plug: ["Plugged in", "Unplugged"],
   battery_charging: ["Charging", "Not charging"],
 };
+// a moment as Home Assistant writes a timestamp's or a date's state (November 17, 2026 at 12:21 PM)
+const momentFormat = new Intl.DateTimeFormat("en", { dateStyle: "long", timeStyle: "short" });
+const dayFormat = new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone: "UTC" });
 const formatEntityState = (st: HassEntity, state?: string): string => {
   const v = state ?? st.state;
+  const dc = st.attributes?.device_class;
+  if ((dc === "timestamp" || dc === "date") && /^\d{4}-\d{2}-\d{2}/.test(v)) {
+    const t = Date.parse(dc === "date" ? `${v.slice(0, 10)}T00:00:00Z` : v);
+    if (Number.isFinite(t)) return (dc === "date" ? dayFormat : momentFormat).format(t);
+  }
   const words = st.entity_id.startsWith("binary_sensor.")
     ? BINARY_WORDS[st.attributes?.device_class as string]
     : undefined;
