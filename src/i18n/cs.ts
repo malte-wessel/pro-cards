@@ -265,6 +265,7 @@ const cs: Translation = {
   "editor.card.badge_format.auto": "Jak jej entita zapisuje",
   "editor.card.badge_format.power": "Výkon (W, kW, MW)",
   "editor.card.badge_format.duration": "Doba trvání (1h 12m)",
+  "editor.card.badge_format.clock": "Hodiny (1:12:00)",
   "editor.card.badge_format.relative": "Relativní čas (za 38 minut)",
   "editor.card.section.badge_value": "Hodnota",
   "editor.card.condition_title": "Podmínka {n}",
@@ -595,6 +596,7 @@ const cs: Translation = {
   "editor.card.kind.lock": "Zámek",
   "editor.card.kind.alarm_control_panel": "Panel alarmu",
   "editor.card.kind.person": "Osoba",
+  "editor.card.kind.timer": "Časovač",
   "editor.card.kind.media_player": "Přehrávač médií",
   "editor.card.kind.cover": "Roleta",
   "editor.card.kind.vacuum": "Vysavač",
@@ -715,6 +717,7 @@ const cs: Translation = {
   "editor.card.field.secondary": "Druhý řádek",
   "editor.card.field.unit": "Jednotka",
   "editor.card.field.decimals": "Desetinná místa",
+  "editor.card.field.format": "Formát",
   "editor.card.field.prefix": "Předpona",
   "editor.card.field.suffix": "Přípona",
   "editor.card.field.range": "Rozsah hodnot",
@@ -827,6 +830,8 @@ const cs: Translation = {
   "editor.card.help.suffix": "Za hodnotou",
   "editor.card.help.found": "Nalezeno na zařízení: {entity}",
   "editor.card.help.not_found": "Na zařízení entity nebylo nic nalezeno",
+  "editor.card.help.no_favorites":
+    "Tato entita zatím žádné nemá: přidejte je v jejím nastavení v Home Assistantu",
   "editor.card.help.icon_src":
     "URL, šablona nebo entita, jejíž obrázek se zobrazí. Prázdné: obrázek entity",
   "editor.card.help.visual_src": "Historie jiné entity. Prázdné: entita této karty",

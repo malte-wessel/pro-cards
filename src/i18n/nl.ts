@@ -265,6 +265,7 @@ const nl: Translation = {
   "editor.card.badge_format.auto": "Zoals de entiteit hem schrijft",
   "editor.card.badge_format.power": "Vermogen (W, kW, MW)",
   "editor.card.badge_format.duration": "Duur (1h 12m)",
+  "editor.card.badge_format.clock": "Klok (1:12:00)",
   "editor.card.badge_format.relative": "Tijd vanaf nu (over 38 minuten)",
   "editor.card.section.badge_value": "Waarde",
   "editor.card.condition_title": "Voorwaarde {n}",
@@ -595,6 +596,7 @@ const nl: Translation = {
   "editor.card.kind.lock": "Slot",
   "editor.card.kind.alarm_control_panel": "Alarmpaneel",
   "editor.card.kind.person": "Persoon",
+  "editor.card.kind.timer": "Timer",
   "editor.card.kind.media_player": "Mediaspeler",
   "editor.card.kind.cover": "Bedekking",
   "editor.card.kind.vacuum": "Stofzuiger",
@@ -715,6 +717,7 @@ const nl: Translation = {
   "editor.card.field.secondary": "Tweede regel",
   "editor.card.field.unit": "Eenheid",
   "editor.card.field.decimals": "Decimalen",
+  "editor.card.field.format": "Opmaak",
   "editor.card.field.prefix": "Voorvoegsel",
   "editor.card.field.suffix": "Achtervoegsel",
   "editor.card.field.range": "Waardebereik",
@@ -827,6 +830,8 @@ const nl: Translation = {
   "editor.card.help.suffix": "Na de waarde",
   "editor.card.help.found": "Gevonden op het apparaat: {entity}",
   "editor.card.help.not_found": "Niets gevonden op het apparaat van de entiteit",
+  "editor.card.help.no_favorites":
+    "Deze entiteit heeft er nog geen: voeg ze toe in haar instellingen in Home Assistant",
   "editor.card.help.icon_src":
     "Een URL, een sjabloon of een entiteit waarvan de afbeelding getoond wordt. Leeg: die van de entiteit zelf",
   "editor.card.help.visual_src":

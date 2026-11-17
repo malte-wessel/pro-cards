@@ -282,7 +282,7 @@ A speaker's select sets its `source` or `sound_mode`, its stepper the volume by 
 
 ### Helpers, updates and dates
 
-A counter steps by its own step, or takes buttons (`decrement`, `reset`, `increment`). A timer's buttons are `start`, `pause` and `cancel` (`finish` when you name it), or its presets with `attribute: presets`. An update's are `skip` and `install`. A date, a date and time or an input date takes `control: date`: a chip with the day that opens a calendar.
+A counter steps by its own step, or takes buttons (`decrement`, `reset`, `increment`). A timer's buttons are `start`, `pause` and `cancel` (`finish` when you name it), or its presets with `attribute: presets`; its time left counts down beside them (see [Timer](/cards/kinds#timer)). An update's are `skip` and `install`. A date, a date and time or an input date takes `control: date`: a chip with the day that opens a calendar.
 
 ::: live
 
@@ -314,7 +314,7 @@ A counter steps by its own step, or takes buttons (`decrement`, `reset`, `increm
 
 ### Favourites
 
-A light's favourite colours, a cover's or a valve's favourite positions and a timer's presets are those you set in Home Assistant, in the entity's more-info dialog, as for Home Assistant's own tile. Without any, a cover offers 0, 25, 75 and 100 %, and a light four whites across its range plus four colours where it takes colours; a timer without presets shows none. `options` sets your own in the card instead.
+A light's favourite colours, a cover's or a valve's favourite positions and a timer's presets are those you set in Home Assistant, in the entity's more-info dialog, as for Home Assistant's own tile. Without any, a cover offers 0, 25, 75 and 100 %, and a light four whites across its range plus four colours where it takes colours; a timer without presets shows none, and the visual editor does not offer them. `options` sets your own in the card instead.
 
 ## Where it sits
 

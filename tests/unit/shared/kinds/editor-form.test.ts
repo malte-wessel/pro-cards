@@ -114,6 +114,18 @@ describe("the editor form: the content", () => {
     expect(formOf({ ...TEMP, min: "low" }).min).toBeUndefined();
   });
 
+  it("writes a format other than the entity's own, and keeps one written", () => {
+    const TIMER = { type: "custom:tile-card-pro", entity: "timer.light_bypass" };
+    expect(formOf(TIMER).format).toBe("auto");
+    expect(edit(TIMER, { format: "duration" }, "tile")).toEqual({ ...TIMER, format: "duration" });
+    expect(edit({ ...TIMER, format: "duration" }, { format: "auto" }, "tile")).toEqual(TIMER);
+    expect(edit({ ...TIMER, format: "auto" }, { name: "Bypass" }, "tile")).toEqual({
+      ...TIMER,
+      format: "auto",
+      name: "Bypass",
+    });
+  });
+
   it("keeps a number written as text until its field changes", () => {
     const quoted = { ...TEMP, min: "10", max: "30" };
     expect(edit(quoted, { name: "Room" }, "tile")).toEqual({ ...quoted, name: "Room" });

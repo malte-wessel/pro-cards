@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.2.0 – Timers that count down
+
+_Unreleased_
+
+### What's new
+
+- **Timers count down:** a timer's time left is its value, counting down every second (`12:34`) on a tile, a poster, a tile group's table and a badge, without the card drawing itself again. A bar below it shrinks with it, and a paused timer stands at what is left and says Paused. [Kinds](https://malte-wessel.github.io/pro-cards/cards/kinds#timer)
+- **`format: clock`:** writes a duration, a timer's time left or the time until a date as a clock (1:12:00). `duration` and `clock` count down to a date (a `timestamp` sensor such as when a dishwasher is done) every second. [Badges](https://malte-wessel.github.io/pro-cards/cards/badges#format-and-staleness)
+- **`format` on a tile's and a poster's value:** the value itself takes `format` (`power`, `duration`, `clock`, `relative`) as a badge does, also in the visual editor; where it applies it replaces the kind's own value (a plug's power in kW).
+
+### Changed: existing cards look different
+
+- **Timers:** a tile or a poster of a timer showed Active or Paused; it now shows the time left with a bar of it below, so a timer tile is two rows high. `visual: false` leaves the bar out, `format` writes the time left another way.
+
+### Fixes
+
+- The visual editor offers a timer's presets only where the timer has some (set in its settings in Home Assistant); a control already set to them says where to add them.
+
 ## 3.1.0 – Buttons that show state, tile group rows
 
 _2026-11-13_

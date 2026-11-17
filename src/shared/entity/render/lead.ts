@@ -3,6 +3,7 @@ import type { HassEntity } from "../../ha.ts";
 import type { EntityItem } from "../config.ts";
 import type { Look } from "../look.ts";
 import type { EntityModel, FmtValue, RenderCtx } from "../model.ts";
+import { putValue } from "../value-format.ts";
 
 export const iconEl = (
   ctx: RenderCtx,
@@ -146,7 +147,7 @@ export const bigEl = (fmt: FmtValue) => {
   const big = document.createElement("div");
   big.className = "big";
   const b = document.createElement("b");
-  b.textContent = fmt.num;
+  putValue(b, fmt.num, fmt);
   big.appendChild(b);
   if (fmt.unit) {
     const u = document.createElement("span");

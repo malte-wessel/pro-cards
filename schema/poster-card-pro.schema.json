@@ -177,6 +177,9 @@
         "decimals": {
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/decimals"
         },
+        "format": {
+          "$ref": "#/$defs/format"
+        },
         "prefix": {
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/prefix"
         },
@@ -462,6 +465,11 @@
       "anyOf": [{ "required": ["state"] }, { "required": ["below"] }, { "required": ["above"] }],
       "additionalProperties": false
     },
+    "format": {
+      "type": "string",
+      "enum": ["auto", "power", "duration", "clock", "relative"],
+      "description": "How the value is written: as the entity formats it (a timer: as a clock), in W / kW / MW, as a span in words (1h 12m) or as a clock (1:12:00) – a duration, a timer's time left or the time until a date, kept current as it runs down –, or as the time from now of a date (in 38 minutes)"
+    },
     "kind": {
       "type": "string",
       "enum": [
@@ -489,6 +497,7 @@
         "lock",
         "alarm_control_panel",
         "person",
+        "timer",
         "media_player",
         "cover",
         "vacuum",
@@ -1171,9 +1180,7 @@
           "$ref": "entity.schema.json#/$defs/badgeSize"
         },
         "format": {
-          "type": "string",
-          "enum": ["auto", "power", "duration", "relative"],
-          "description": "How the value is written: as the entity formats it, in W / kW / MW, as a duration (1h 12m) or as the time from now of a date (in 38 minutes)"
+          "$ref": "#/$defs/format"
         },
         "stale_after": {
           "type": ["number", "string"],
@@ -1262,6 +1269,7 @@
                   "lock",
                   "alarm_control_panel",
                   "person",
+                  "timer",
                   "media_player",
                   "cover",
                   "vacuum",

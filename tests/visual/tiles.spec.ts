@@ -4,6 +4,7 @@
 // id, so one case shows a type at several levels side by side).
 import type { CardConfigBase, GridOptions } from "../../src/shared/ha.ts";
 import type { StateOverride } from "../harness/harness.ts";
+import { FROZEN } from "../e2e/util.ts";
 import { shoot, type Shot } from "./shoot.ts";
 
 const T = "custom:tile-card-pro";
@@ -85,6 +86,38 @@ add("tt-devices", [
   t("cover.living_room_blinds"),
   t("cover.garage_door"),
 ]);
+// a timer: its time left over a bar of it, running and paused with its buttons, idle; written as
+// a span without the bar; a light's badges of it and of a date as a clock (the times fixed
+// against the frozen clock)
+const TIMER_STATES = {
+  "timer.light_bypass": {
+    attributes: { finishes_at: new Date(FROZEN.getTime() + 754e3).toISOString() },
+  },
+  "timer.pt_paused": like("timer.light_bypass", "paused", {
+    remaining: "0:12:34",
+    finishes_at: null,
+  }),
+  "sensor.dishwasher_finishes": { state: new Date(FROZEN.getTime() + 38 * 60e3).toISOString() },
+};
+add(
+  "tt-timer",
+  [
+    t("timer.light_bypass", { control: "buttons", grid_options: { columns: 6 } }),
+    t("timer.pt_paused", { control: "buttons", grid_options: { columns: 6 } }),
+    t("timer.laundry", { grid_options: { columns: 6 } }),
+    t("timer.light_bypass", {
+      name: "Span",
+      format: "duration",
+      visual: false,
+      grid_options: { columns: 6 },
+    }),
+    t("light.living_room", {
+      badges: ["timer.light_bypass", { entity: "sensor.dishwasher_finishes", format: "clock" }],
+      grid_options: { columns: 12 },
+    }),
+  ],
+  { states: TIMER_STATES },
+);
 add(
   "tt-devices-more",
   [

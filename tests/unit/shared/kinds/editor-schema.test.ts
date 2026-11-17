@@ -538,6 +538,63 @@ describe("the editor's status and badges", () => {
     // the value hidden: nothing about how it is written
     const hidden = names({ entity: "sensor.battery_soc", show_value: false });
     for (const k of ["format", "unit", "prefix"]) expect(hidden, k).not.toContain(k);
+    // a timer: how its time left is written, and a bar of it
+    const timer = names({ entity: "timer.light_bypass" });
+    for (const k of ["format", "visual"]) expect(timer, k).toContain(k);
+  });
+
+  it("writes a card's value as a span where it is one: a number, a date, a timer", () => {
+    const has = (entity: string) =>
+      flat(schemaOf("tile", { entity })).some((s) => s.name === "format");
+    expect(has("timer.light_bypass")).toBe(true);
+    expect(has("sensor.dishwasher_finishes")).toBe(true);
+    expect(has("sensor.battery_soc")).toBe(true);
+    expect(has("light.kitchen")).toBe(false);
+    // a format written stays in the form
+    expect(
+      flat(schemaOf("poster", { entity: "light.kitchen", format: "clock" })).some(
+        (s) => s.name === "format",
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("favourites the entity has none of", () => {
+  // the schema with the entity's registry options as they arrived (undefined: not yet)
+  const withReg = (cfg: Raw, change: HaFormData, reg: Raw | null | undefined) => {
+    const data = { ...configToForm(cfg as CardConfigBase, kindsOf(cfg, hass).kind, "tile") };
+    Object.assign(data, change);
+    data.shows ??= showsOf(data, hass);
+    const { kind, detected } = kindsOf(data, hass);
+    const st = hass.states[String(data.entity ?? "")];
+    return editorSchema({
+      hass,
+      thing: "tile",
+      kind,
+      detected,
+      data,
+      numeric: false,
+      st,
+      reg: reg as never,
+    });
+  };
+  const TIMER = { entity: "timer.light_bypass" };
+  const BUTTONS = { control_type: "buttons" };
+  it("offers a timer's presets until it is known it has none", () => {
+    expect(values(withReg(TIMER, BUTTONS, undefined), "control_attribute")).toEqual([
+      DEFAULT,
+      "presets",
+    ]);
+    expect(
+      values(withReg(TIMER, BUTTONS, { timer: { presets: [600] } }), "control_attribute"),
+    ).toEqual([DEFAULT, "presets"]);
+    // none: nothing to choose between, the field goes
+    expect(field(withReg(TIMER, BUTTONS, null), "control_attribute")).toBeUndefined();
+    expect(field(withReg(TIMER, BUTTONS, { timer: {} }), "control_attribute")).toBeUndefined();
+  });
+  it("keeps them where they are chosen", () => {
+    const chosen = { ...BUTTONS, control_attribute: "presets" };
+    expect(values(withReg(TIMER, chosen, null), "control_attribute")).toEqual([DEFAULT, "presets"]);
   });
 });
 

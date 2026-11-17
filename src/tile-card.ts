@@ -312,6 +312,11 @@ export class TileCard extends KindCardBase {
   // tile group): a resize renders a frame later, not inside the observer's pass
   _resizeLater = true;
   _ctlFit: { size: string; mode: string } | null = null;
+  // a value that grew as it ran down: the fit is found again (it is kept per card size)
+  _liveGrew() {
+    this._ctlFit = null;
+    super._liveGrew();
+  }
   _fitControls(card: HTMLElement, row: HTMLElement, vertical: boolean) {
     if (!row.querySelector(":scope > .ctl, :scope > .top > .main > .line > .end > .ctl")) return;
     const set = (mode: string) => {

@@ -265,6 +265,7 @@ const fr: Translation = {
   "editor.card.badge_format.auto": "Comme l'entité l'écrit",
   "editor.card.badge_format.power": "Puissance (W, kW, MW)",
   "editor.card.badge_format.duration": "Durée (1h 12m)",
+  "editor.card.badge_format.clock": "Horloge (1:12:00)",
   "editor.card.badge_format.relative": "Temps relatif (dans 38 minutes)",
   "editor.card.section.badge_value": "Valeur",
   "editor.card.condition_title": "Condition {n}",
@@ -596,6 +597,7 @@ const fr: Translation = {
   "editor.card.kind.lock": "Verrou",
   "editor.card.kind.alarm_control_panel": "Centrale d'alarme",
   "editor.card.kind.person": "Personne",
+  "editor.card.kind.timer": "Minuteur",
   "editor.card.kind.media_player": "Lecteur multimédia",
   "editor.card.kind.cover": "Ouverture",
   "editor.card.kind.vacuum": "Aspirateur",
@@ -716,6 +718,7 @@ const fr: Translation = {
   "editor.card.field.secondary": "Ligne secondaire",
   "editor.card.field.unit": "Unité",
   "editor.card.field.decimals": "Décimales",
+  "editor.card.field.format": "Format",
   "editor.card.field.prefix": "Préfixe",
   "editor.card.field.suffix": "Suffixe",
   "editor.card.field.range": "Plage de valeurs",
@@ -828,6 +831,8 @@ const fr: Translation = {
   "editor.card.help.suffix": "Après la valeur",
   "editor.card.help.found": "Trouvé sur l'appareil : {entity}",
   "editor.card.help.not_found": "Aucun trouvé sur l'appareil de l'entité",
+  "editor.card.help.no_favorites":
+    "Cette entité n'en a pas encore : ajoutez-les dans ses paramètres dans Home Assistant",
   "editor.card.help.icon_src":
     "Une URL, un modèle ou une entité dont afficher l'image. Vide : celle de l'entité",
   "editor.card.help.visual_src": "L'historique d'une autre entité. Vide : celui de cette carte",

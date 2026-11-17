@@ -8,6 +8,7 @@ import type {
   StatisticsResult,
   WeatherForecastType,
 } from "../../../../src/shared/ha.ts";
+import { parseHms } from "../../../../src/shared/countdown.ts";
 import { GARDEN_SNAPSHOT } from "./camera.ts";
 import { MALTE_PHOTO } from "./malte.ts";
 import { isMeter, METERS, readingAt, statistics, statisticsMetadata } from "./meters.ts";
@@ -23,8 +24,12 @@ export interface EntityDef {
   max?: number;
   decimals?: number;
   duty?: number;
+  // a timer that starts again when it runs out (the docs keep one counting down)
+  loop?: boolean;
 }
-export type EntityExtra = Partial<Pick<EntityDef, "noise" | "min" | "max" | "decimals" | "duty">>;
+export type EntityExtra = Partial<
+  Pick<EntityDef, "noise" | "min" | "max" | "decimals" | "duty" | "loop">
+>;
 
 // one compact history row, as `history/history_during_period` returns it
 export interface HistoryPoint {
@@ -58,6 +63,7 @@ export interface World {
   // drops the histories and forecasts drawn so far (the tests: after they set states of their own)
   forget(): void;
   _timer?: ReturnType<typeof setInterval>;
+  _timers?: ReturnType<typeof setInterval>;
 }
 
 const now = () => Date.now();
@@ -850,6 +856,19 @@ def("timer.laundry", "idle", {
   duration: "0:45:00",
   remaining: "0:45:00",
 });
+// a light kept on for at most 45 minutes, 12:34 of them left; it starts again when it runs out
+def(
+  "timer.light_bypass",
+  "active",
+  {
+    friendly_name: "Light bypass",
+    duration: "0:45:00",
+    remaining: "0:45:00",
+    finishes_at: iso(now() + 754e3),
+  },
+  "flat",
+  { loop: true },
+);
 def("update.router_firmware", "on", {
   friendly_name: "Router firmware",
   title: "Router firmware",
@@ -1358,6 +1377,21 @@ export const world: World = {
   },
   start() {
     if (this._timer) return;
+    // a running timer that ran out is idle, or starts again
+    this._timers = setInterval(() => {
+      for (const e of Object.values(E)) {
+        const st = states[e.id];
+        if (!e.id.startsWith("timer.") || st?.state !== "active") continue;
+        if (Date.parse(String(st.attributes.finishes_at)) > now()) continue;
+        const dur = parseHms(st.attributes.duration) ?? 0;
+        if (e.loop && dur > 0)
+          this.set(e.id, "active", {
+            remaining: st.attributes.duration,
+            finishes_at: iso(now() + dur * 1000),
+          });
+        else this.set(e.id, "idle", { remaining: st.attributes.duration, finishes_at: null });
+      }
+    }, 1000);
     this._timer = setInterval(() => {
       // drift a few numeric sensors so cards visibly update
       const r = Math.random;
@@ -1389,7 +1423,9 @@ export const world: World = {
   },
   stop() {
     clearInterval(this._timer);
+    clearInterval(this._timers);
     this._timer = undefined;
+    this._timers = undefined;
   },
   forget() {
     cache.clear();

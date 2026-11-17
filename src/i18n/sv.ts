@@ -265,6 +265,7 @@ const sv: Translation = {
   "editor.card.badge_format.auto": "Som entiteten skriver det",
   "editor.card.badge_format.power": "Effekt (W, kW, MW)",
   "editor.card.badge_format.duration": "Varaktighet (1h 12m)",
+  "editor.card.badge_format.clock": "Klocka (1:12:00)",
   "editor.card.badge_format.relative": "Tid från nu (om 38 minuter)",
   "editor.card.section.badge_value": "Värde",
   "editor.card.condition_title": "Villkor {n}",
@@ -594,6 +595,7 @@ const sv: Translation = {
   "editor.card.kind.lock": "Lås",
   "editor.card.kind.alarm_control_panel": "Larmpanel",
   "editor.card.kind.person": "Person",
+  "editor.card.kind.timer": "Timer",
   "editor.card.kind.media_player": "Mediaspelare",
   "editor.card.kind.cover": "Rullgardin",
   "editor.card.kind.vacuum": "Dammsugare",
@@ -714,6 +716,7 @@ const sv: Translation = {
   "editor.card.field.secondary": "Andra raden",
   "editor.card.field.unit": "Enhet",
   "editor.card.field.decimals": "Decimaler",
+  "editor.card.field.format": "Format",
   "editor.card.field.prefix": "Prefix",
   "editor.card.field.suffix": "Suffix",
   "editor.card.field.range": "Värdeintervall",
@@ -826,6 +829,8 @@ const sv: Translation = {
   "editor.card.help.suffix": "Efter värdet",
   "editor.card.help.found": "Hittades på enheten: {entity}",
   "editor.card.help.not_found": "Ingen hittades på entitetens enhet",
+  "editor.card.help.no_favorites":
+    "Den här entiteten har inga ännu: lägg till dem i dess inställningar i Home Assistant",
   "editor.card.help.icon_src":
     "En URL, en mall eller en entitet vars bild visas. Tomt: entitetens egen",
   "editor.card.help.visual_src": "En annan entitets historik. Tomt: detta korts",

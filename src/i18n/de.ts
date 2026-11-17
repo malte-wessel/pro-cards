@@ -265,6 +265,7 @@ const de: Translation = {
   "editor.card.badge_format.auto": "Wie die Entität ihn schreibt",
   "editor.card.badge_format.power": "Leistung (W, kW, MW)",
   "editor.card.badge_format.duration": "Dauer (1h 12m)",
+  "editor.card.badge_format.clock": "Uhr (1:12:00)",
   "editor.card.badge_format.relative": "Zeit ab jetzt (in 38 Minuten)",
   "editor.card.section.badge_value": "Wert",
   "editor.card.condition_title": "Bedingung {n}",
@@ -596,6 +597,7 @@ const de: Translation = {
   "editor.card.kind.lock": "Schloss",
   "editor.card.kind.alarm_control_panel": "Alarmzentrale",
   "editor.card.kind.person": "Person",
+  "editor.card.kind.timer": "Timer",
   "editor.card.kind.media_player": "Mediaplayer",
   "editor.card.kind.cover": "Abdeckung",
   "editor.card.kind.vacuum": "Staubsauger",
@@ -716,6 +718,7 @@ const de: Translation = {
   "editor.card.field.secondary": "Zweite Zeile",
   "editor.card.field.unit": "Maßeinheit",
   "editor.card.field.decimals": "Nachkommastellen",
+  "editor.card.field.format": "Format",
   "editor.card.field.prefix": "Präfix",
   "editor.card.field.suffix": "Suffix",
   "editor.card.field.range": "Wertebereich",
@@ -828,6 +831,8 @@ const de: Translation = {
   "editor.card.help.suffix": "Nach dem Wert",
   "editor.card.help.found": "Am Gerät gefunden: {entity}",
   "editor.card.help.not_found": "Keine am Gerät der Entität gefunden",
+  "editor.card.help.no_favorites":
+    "Für diese Entität ist noch keine festgelegt: lege sie in ihren Einstellungen in Home Assistant an",
   "editor.card.help.icon_src":
     "Eine URL, ein Template oder eine Entität, deren Bild gezeigt wird. Leer: das Bild der Entität",
   "editor.card.help.visual_src":
