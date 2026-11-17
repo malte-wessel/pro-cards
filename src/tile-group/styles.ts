@@ -19,11 +19,13 @@ const STYLE_TILES = `
   .header { padding: 12px 16px 8px; }
   .body { padding: 4px; gap: 0; }
   /* flat: the surface is painted once, the tiles paint no background, border colour or shadow of
-     their own; what a tile draws in the surface's colour (a knob, a tooltip) reads it from
-     --pro-cards-surface. The border keeps its width (the focus ring colours it) and the corners
-     their radius (a tile's hover and press layers take it) */
+     their own and blur nothing (a glass theme's blur would blur the card's again, darker, its
+     edges showing between the tiles); what a tile draws in the surface's colour (a knob, a
+     tooltip) reads it from --pro-cards-surface. The border keeps its width (the focus ring colours
+     it) and the corners their radius (a tile's hover and press layers take it) */
   .tiles {
     --ha-card-background: transparent;
+    --ha-card-backdrop-filter: none;
     --pro-cards-surface: var(--tg-surface);
     --ha-card-border-color: transparent;
     --ha-card-box-shadow: none;

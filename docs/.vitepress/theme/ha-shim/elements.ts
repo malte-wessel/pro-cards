@@ -230,7 +230,7 @@ class HaCard extends HTMLElement {
     this._root = this.attachShadow({ mode: "open" });
     this._root.innerHTML = `<style>
       :host{display:block;position:relative;box-sizing:border-box;background:var(--ha-card-background,var(--card-background-color,#fff));color:var(--primary-text-color,#212121);
-        border-radius:var(--ha-card-border-radius,12px);border:var(--ha-card-border-width,1px) solid var(--ha-card-border-color,var(--divider-color,#e0e0e0));box-shadow:var(--ha-card-box-shadow,none);
+        border-radius:var(--ha-card-border-radius,12px);border:var(--ha-card-border-width,1px) solid var(--ha-card-border-color,var(--divider-color,#e0e0e0));box-shadow:var(--ha-card-box-shadow,none);backdrop-filter:var(--ha-card-backdrop-filter,none);
         transition:all .3s ease-out;font-family:var(--ha-font-family-body,Roboto,system-ui,sans-serif);-webkit-font-smoothing:antialiased}
       :host([raised]){border:none;box-shadow:0 2px 2px 0 rgba(0,0,0,.14),0 1px 5px 0 rgba(0,0,0,.12),0 3px 1px -2px rgba(0,0,0,.2)}
       h1{font-family:inherit;font-size:var(--ha-heading-card-title-font-size,24px);font-weight:var(--ha-heading-card-title-font-weight,400);letter-spacing:-.012em;line-height:48px;

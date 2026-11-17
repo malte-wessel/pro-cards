@@ -40,6 +40,7 @@ The cards read these theme variables. Set them in a theme (without the leading `
 | Variable                                                                                    | What it changes                                                                                |
 | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `ha-card-background`, `card-background-color`                                               | the card's background                                                                          |
+| `ha-card-backdrop-filter`                                                                   | what the card does to what is behind it, such as a glass theme's blur                          |
 | `ha-card-border-radius`, `ha-card-border-width`, `ha-card-border-color`                     | the card's corners and border                                                                  |
 | `ha-card-box-shadow`                                                                        | the card's shadow                                                                              |
 | `primary-color`                                                                             | the default colour of a badge, and of an entity in the deprecated cards; the power flow's home |
@@ -66,7 +67,17 @@ frontend:
       tile-icon-opacity: 0
 ```
 
-card_mod and UIX still work, but the cards' inner class names can change with any release, so prefer the variables.
+A glass theme sets a translucent background and a blur. A tile group and a layout card with `card_style: seamless` draw both once, on their own surface, and the cards inside stay clear on it:
+
+```yaml
+frontend:
+  themes:
+    Glass:
+      ha-card-background: "rgba(0, 0, 0, 0.35)"
+      ha-card-backdrop-filter: blur(12px)
+```
+
+card_mod and UIX still work, but the cards' inner class names can change with any release, so prefer the variables. This matters most for glass: a card_mod or UIX theme rule written on every `ha-card` also reaches the tiles inside a tile group and the cards inside a seamless layout, so each paints and blurs once more over the surface.
 
 ## Text size
 

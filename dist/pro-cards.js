@@ -1284,11 +1284,13 @@
   .header { padding: 12px 16px 8px; }
   .body { padding: 4px; gap: 0; }
   /* flat: the surface is painted once, the tiles paint no background, border colour or shadow of
-     their own; what a tile draws in the surface's colour (a knob, a tooltip) reads it from
-     --pro-cards-surface. The border keeps its width (the focus ring colours it) and the corners
-     their radius (a tile's hover and press layers take it) */
+     their own and blur nothing (a glass theme's blur would blur the card's again, darker, its
+     edges showing between the tiles); what a tile draws in the surface's colour (a knob, a
+     tooltip) reads it from --pro-cards-surface. The border keeps its width (the focus ring colours
+     it) and the corners their radius (a tile's hover and press layers take it) */
   .tiles {
     --ha-card-background: transparent;
+    --ha-card-backdrop-filter: none;
     --pro-cards-surface: var(--tg-surface);
     --ha-card-border-color: transparent;
     --ha-card-box-shadow: none;
@@ -1883,6 +1885,7 @@
     --pl-border-width: var(--ha-card-border-width, 1px);
     --pl-border-color: var(--ha-card-border-color, var(--divider-color));
     --pl-shadow: var(--ha-card-box-shadow, none);
+    --pl-backdrop: var(--ha-card-backdrop-filter, none);
   }
   /* a panel view's only card: the theme's card look is in the --restore-card-* variables (HA's
      panel view resets the --ha-card-* ones), for the cards inside and the seamless surface */
@@ -1901,12 +1904,15 @@
     border: var(--pl-border-width) solid var(--pl-border-color);
     border-radius: var(--pl-radius);
     box-shadow: var(--pl-shadow);
+    backdrop-filter: var(--pl-backdrop);
     overflow: hidden;
-    /* the surface is painted once: the cards inside paint no background of their own (a
-       translucent theme colour would stack, each card darker than the surface); what the cards
-       draw in the surface colour (a slider's knob, a tooltip, a dot's halo) reads it from
+    /* the surface is painted once: the cards inside paint no background and blur nothing of their
+       own (a translucent theme colour would stack, each card darker than the surface, and a glass
+       theme's blur would blur the surface again, its edges showing between the cards); what the
+       cards draw in the surface colour (a slider's knob, a tooltip, a dot's halo) reads it from
        --pro-cards-surface (CARD_BG) */
     --ha-card-background: transparent;
+    --ha-card-backdrop-filter: none;
     --pro-cards-surface: var(--pl-surface);
     --ha-card-border-width: 0px;
     --ha-card-border-radius: 0px;

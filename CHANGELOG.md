@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.1.1 – Glass themes
+
+_Unreleased_
+
+- A tile group and a seamless layout card blur a glass theme's background once: the cards inside no longer blur it again, which made them darker than the header and showed edges between them. A seamless layout's surface now takes the theme's blur itself.
+- Docs: a glass theme through `ha-card-background` and `ha-card-backdrop-filter`, and why a card_mod or UIX rule on every `ha-card` stacks inside a tile group. [Colours](https://malte-wessel.github.io/pro-cards/guide/colours#theme-variables)
+
 ## 3.1.0 – Buttons that show state, tile group rows
 
 _2026-11-13_
