@@ -236,4 +236,20 @@ test.describe("tile group row options and padding", () => {
     await expect(tile).toHaveCSS("border-top-width", "0px");
     await expect(tile).toHaveCSS("border-top-left-radius", "0px");
   });
+
+  test("paints and blurs a glass theme's surface once", async ({ page }) => {
+    await mount(page, { type: G, title: "T", padding: false, tiles: ROW.slice(0, 2) });
+    const c = card(page);
+    await c.evaluate((el: HTMLElement) => {
+      el.style.setProperty("--ha-card-background", "rgba(200, 0, 0, 0.4)");
+      el.style.setProperty("--ha-card-backdrop-filter", "blur(8px)");
+    });
+    // the group's card is the glass, its tiles are clear on it
+    const surface = c.locator("ha-card").first();
+    await expect(surface).toHaveCSS("background-color", "rgba(200, 0, 0, 0.4)");
+    await expect(surface).toHaveCSS("backdrop-filter", "blur(8px)");
+    const tile = c.locator("tile-card-pro ha-card").first();
+    await expect(tile).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await expect(tile).toHaveCSS("backdrop-filter", "none");
+  });
 });

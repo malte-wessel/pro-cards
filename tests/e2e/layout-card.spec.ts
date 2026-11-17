@@ -296,15 +296,20 @@ test.describe("layout-card-pro", () => {
     );
     const look = (theme?: string) =>
       page.evaluate((theme) => {
-        if (theme) window.pc.card(0).style.setProperty("--ha-card-background", theme);
+        if (theme) {
+          window.pc.card(0).style.setProperty("--ha-card-background", theme);
+          window.pc.card(0).style.setProperty("--ha-card-backdrop-filter", "blur(8px)");
+        }
         const card = window.pc.cards()[0] as HTMLElement;
         const cs = getComputedStyle(card.shadowRoot!.querySelector("ha-card")!);
-        const body = window.pc.card(0).shadowRoot!.querySelector(".body")!;
+        const body = getComputedStyle(window.pc.card(0).shadowRoot!.querySelector(".body")!);
         const knob = card.shadowRoot!.querySelector(".knob");
         return {
           border: cs.borderTopWidth,
           bg: cs.backgroundColor,
-          surface: getComputedStyle(body).backgroundColor,
+          blur: cs.backdropFilter,
+          surface: body.backgroundColor,
+          surfaceBlur: body.backdropFilter,
           knob: knob ? getComputedStyle(knob).backgroundColor : null,
         };
       }, theme);
@@ -315,10 +320,13 @@ test.describe("layout-card-pro", () => {
     expect(opaque.bg).toBe("rgba(0, 0, 0, 0)");
     expect(opaque.surface).not.toBe("rgba(0, 0, 0, 0)");
     expect(opaque.knob).toBe(opaque.surface);
-    // a translucent theme colour does not stack over the surface
+    // a translucent theme colour and its blur do not stack over the surface: the surface is the
+    // glass, the cards are clear on it
     const glass = await look("rgba(200, 0, 0, 0.4)");
     expect(glass.surface).toBe("rgba(200, 0, 0, 0.4)");
+    expect(glass.surfaceBlur).toBe("blur(8px)");
     expect(glass.bg).toBe("rgba(0, 0, 0, 0)");
+    expect(glass.blur).toBe("none");
     expect(glass.knob).toBe("rgba(200, 0, 0, 0.4)");
     const [a, b] = await items(page);
     expect(b.x).toBe(a.x + a.w); // no gap: the divider sits between them

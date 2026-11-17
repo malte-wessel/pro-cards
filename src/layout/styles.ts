@@ -15,6 +15,7 @@ export const STYLE = `
     --pl-border-width: var(--ha-card-border-width, 1px);
     --pl-border-color: var(--ha-card-border-color, var(--divider-color));
     --pl-shadow: var(--ha-card-box-shadow, none);
+    --pl-backdrop: var(--ha-card-backdrop-filter, none);
   }
   /* a panel view's only card: the theme's card look is in the --restore-card-* variables (HA's
      panel view resets the --ha-card-* ones), for the cards inside and the seamless surface */
@@ -33,12 +34,15 @@ export const STYLE = `
     border: var(--pl-border-width) solid var(--pl-border-color);
     border-radius: var(--pl-radius);
     box-shadow: var(--pl-shadow);
+    backdrop-filter: var(--pl-backdrop);
     overflow: hidden;
-    /* the surface is painted once: the cards inside paint no background of their own (a
-       translucent theme colour would stack, each card darker than the surface); what the cards
-       draw in the surface colour (a slider's knob, a tooltip, a dot's halo) reads it from
+    /* the surface is painted once: the cards inside paint no background and blur nothing of their
+       own (a translucent theme colour would stack, each card darker than the surface, and a glass
+       theme's blur would blur the surface again, its edges showing between the cards); what the
+       cards draw in the surface colour (a slider's knob, a tooltip, a dot's halo) reads it from
        --pro-cards-surface (CARD_BG) */
     --ha-card-background: transparent;
+    --ha-card-backdrop-filter: none;
     --pro-cards-surface: var(--pl-surface);
     --ha-card-border-width: 0px;
     --ha-card-border-radius: 0px;
