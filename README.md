@@ -9,7 +9,7 @@
 [![Validate](https://github.com/malte-wessel/pro-cards/actions/workflows/validate.yml/badge.svg)](https://github.com/malte-wessel/pro-cards/actions/workflows/validate.yml)
 [![License](https://img.shields.io/github/license/malte-wessel/pro-cards)](LICENSE)
 
-Dashboard cards that look like they belong in Home Assistant: tiles, posters and tile groups for every kind of entity, power and energy flows, weather, headings, layouts and more. One bundle, no dependencies, styled by your theme, in 12 languages.
+Dashboard cards that look like they belong in Home Assistant: tiles, posters and tile groups for every kind of entity, power and energy flows, weather, schedules, headings, layouts and more. One bundle, no dependencies, styled by your theme, in 12 languages.
 
 **[Docs with live examples](https://malte-wessel.github.io/pro-cards/)** · [Playground](https://malte-wessel.github.io/pro-cards/playground) · [Showcase](https://malte-wessel.github.io/pro-cards/showcase/home)
 
@@ -40,6 +40,7 @@ Dashboard cards that look like they belong in Home Assistant: tiles, posters and
 | Power flow  | `custom:power-flow-card-pro`  | Solar, battery and grid into the home and out to rooms and devices, animated.       |
 | Energy flow | `custom:energy-flow-card-pro` | The same tree over a day, week, month or year from the energy statistics.           |
 | Weather     | `custom:weather-card-pro`     | The current weather with an hourly or daily forecast, as a tile or in sections.     |
+| Schedule    | `custom:schedule-card-pro`    | A schedule helper's week, its blocks edited right on the card.                      |
 | Multi trend | `custom:multi-trend-card-pro` | Several sensors over time in one graph.                                             |
 | Sun path    | `custom:sun-path-card-pro`    | Today's sun elevation with sunrise, sunset, dawn, noon and dusk.                    |
 | Sun azimuth | `custom:sun-azimuth-card-pro` | Where the sun is around your house, and the sides it shines on.                     |

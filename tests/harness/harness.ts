@@ -77,6 +77,8 @@ export interface PcApi {
   world: ShimWorld;
   hass: typeof hassMod;
   calls: ServiceCall[];
+  // the websocket messages the cards sent (hass.callWS), in order
+  ws: Record<string, unknown>[];
   events: HarnessEvent[];
   // what reached window.onerror since the last reset, the browser's own reports too (a
   // "ResizeObserver loop" error is one: it never reaches the console)
@@ -87,6 +89,8 @@ export interface PcApi {
   setLanguage(language: string): void;
   // the logged-in user the mounted cards see (hass.user), by id; null logs out. Default demo-malte
   setUser(id: string | null): void;
+  // whether that user is an administrator (default true)
+  setAdmin(admin: boolean): void;
   root: HTMLElement;
   card(i?: number): CardElement;
   // every card on show, through layout cards to the cards inside them
@@ -111,12 +115,14 @@ defineElements();
 const world = shimWorld as unknown as ShimWorld;
 const root = document.getElementById("root")!;
 const calls: ServiceCall[] = [];
+const ws: Record<string, unknown>[] = [];
 const events: HarnessEvent[] = [];
 const actions: unknown[] = [];
 const errors: string[] = [];
 let unsub: (() => void) | null = null;
 let language = "en-GB";
 let user: string | null = hassMod.DEMO_USER;
+let admin = true;
 let mounted: CardElement[] = [];
 let failing = false,
   holding = false;
@@ -139,7 +145,12 @@ const themesNow = () => {
 const snapshot = (): HomeAssistant => {
   const h: HomeAssistant = baseSnapshot();
   h.locale = { language, time_zone: "server" };
-  h.user = user === null ? undefined : { id: user, name: user, is_admin: true };
+  h.user = user === null ? undefined : { id: user, name: user, is_admin: admin };
+  const origWS = h.callWS;
+  h.callWS = <T>(msg: Parameters<HomeAssistant["callWS"]>[0]) => {
+    ws.push({ ...msg });
+    return origWS<T>(msg);
+  };
   h.themes = themesNow();
   const orig = h.callService;
   h.callService = (d: string, s: string, data?: Record<string, unknown>, target?: unknown) => {
@@ -311,6 +322,10 @@ const setUser = (id: string | null) => {
   user = id;
   push();
 };
+const setAdmin = (on: boolean) => {
+  admin = on;
+  push();
+};
 
 // the cards a mounted card shows: a layout or swipe card's own cards (each inside a hui-card), a
 // tile group with its tiles, else itself
@@ -347,12 +362,14 @@ window.pc = {
   world,
   hass: hassMod,
   calls,
+  ws,
   events,
   errors,
   actions,
   snapshot,
   setLanguage,
   setUser,
+  setAdmin,
   root,
   card: (i = 0) => root.querySelectorAll(".cell > *")[i] as CardElement,
   cards,
@@ -370,6 +387,7 @@ window.pc = {
   reset: () => {
     unstage();
     calls.length = 0;
+    ws.length = 0;
     events.length = 0;
     errors.length = 0;
     actions.length = 0;
@@ -377,6 +395,7 @@ window.pc = {
     failing = holding = false;
     held = [];
     user = hassMod.DEMO_USER;
+    admin = true;
   },
 };
 window.__pcReady = true;

@@ -2,6 +2,7 @@
 // warm or cool backdrop, an alarm's red pulse. Every animation has a paused frame
 // (prefers-reduced-motion, the visual tests): the blades stand at an angle, the pulse is still.
 import { CARD_BG } from "../constants.ts";
+import { STYLE_SCHEDULE_LANE } from "../schedule/styles.ts";
 
 // focus on a card that is one button, as Home Assistant's tile: the card's border in its colour
 // (--card-tint, set by the card) with a 1 px ring outside it, in place of a ring inside the card.
@@ -57,6 +58,18 @@ export const STYLE_KIND_TRACK = `
 `;
 export const STYLE_KINDS = `
   ${STYLE_KIND_TRACK}
+  /* schedule: the day's lane below the value (a tooltip above it), or a ribbon along the bottom
+     edge behind the texts, taking no room */
+  ${STYLE_SCHEDULE_LANE}
+  :is(.pbody, .row.tile) > .psched { position: relative; flex: none; }
+  .pbody > .psched { margin: 8px 0 -6px; }
+  .row.actionable .psched { pointer-events: auto; }
+  .psched > .tip { top: auto; bottom: calc(100% + 4px); z-index: 3; }
+  :is(.pbody, .row.tile) > .psched.edge { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; margin: 0; }
+  .row.tile > .psched.edge { height: 4px; }
+  .psched.edge > .slane { height: 100%; border-radius: 0; }
+  .psched.edge > .slane > .sb { border-radius: 0; }
+  .psched.edge > .tip { bottom: 10px; }
   /* an icon that switches, while off: the state's colour (Home Assistant's inactive grey) at 20 %
      behind it, as its tile, not the text colour */
   .row .lead.tap.off .shape { color: var(--fe-color); background: color-mix(in srgb, var(--fe-color) 20%, transparent); }

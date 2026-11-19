@@ -15,6 +15,7 @@ body:
         - sun-path-card-pro
         - sun-azimuth-card-pro
         - weather-card-pro
+        - schedule-card-pro
         - power-flow-card-pro
         - energy-flow-card-pro
         - layout-card-pro

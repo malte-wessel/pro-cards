@@ -229,10 +229,31 @@ async function ensureAreas(token) {
   c.close();
 }
 
+// the schedule helpers made in the UI (test/ha/world/schedules.json, from scripts/ha-world.ts),
+// once: stored, so the schedule card can save them (an edit made in Home Assistant stays)
+async function ensureSchedules(token) {
+  const file = new URL("../test/ha/world/schedules.json", import.meta.url);
+  const wanted = JSON.parse(await readFile(file, "utf8"));
+  const c = await connect(token);
+  const have = new Set((await c.send({ type: "schedule/list" })).map((s) => s.name));
+  let made = 0;
+  for (const item of wanted) {
+    if (have.has(item.name)) continue;
+    // (the docs' item id: Home Assistant makes its own from the name)
+    const fields = { ...item };
+    delete fields.id;
+    await c.send({ type: "schedule/create", ...fields });
+    made++;
+  }
+  console.log(`schedules: ${wanted.length - made} present, ${made} made`);
+  c.close();
+}
+
 const onboarded = await onboard();
 const token = onboarded ?? (await login());
 await ensureResource(token);
 await ensureWorldIds(token);
 await ensureAreas(token);
+await ensureSchedules(token);
 await ensureShowcases(token);
 console.log(`ready: ${BASE}  (user ${USERNAME} / ${PASSWORD})`);

@@ -91,6 +91,9 @@
           },
           "description": "trend: the series, ids or objects (entity, name, color, rules, visibility)"
         },
+        "data": {
+          "$ref": "poster-card-pro.schema.json#/$defs/scheduleData"
+        },
         "status": {
           "oneOf": [
             {

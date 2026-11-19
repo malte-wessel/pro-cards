@@ -15,7 +15,7 @@ import { STYLE_WIND } from "../shared/wind/styles.ts";
 // a tile of a tile group's list with indent and an icon, and one with something shown below its
 // line (a block control the tile left out for want of room is nothing)
 const INDENTED = "ha-card.tindent .row.tile:has(> .top > .tlead:not([hidden]))";
-const HANGING = `${INDENTED}:is(:has(> .top ~ :not(.pprog, .plot.edge, .ctl)), :not(.tdrop):has(> .top ~ .ctl))`;
+const HANGING = `${INDENTED}:is(:has(> .top ~ :not(.pprog, .plot.edge, .psched.edge, .ctl)), :not(.tdrop):has(> .top ~ .ctl))`;
 
 const STYLE_TILE_CARD = `
   /* 8 px above and below: a one-row tile is its 56 px (38 px of texts, a border up to 2 px) with
@@ -62,7 +62,7 @@ const STYLE_TILE_CARD = `
      offset then); the ribbons along the bottom edge (a strip's, a player's progress) stay as wide
      as the tile. A tile without an icon moves nothing */
   ${INDENTED} { --tindent: 48px; }
-  ${INDENTED} > .top ~ :not(.pprog, .plot.edge) { margin-inline-start: var(--tindent); }
+  ${INDENTED} > .top ~ :not(.pprog, .plot.edge, .psched.edge) { margin-inline-start: var(--tindent); }
   ${INDENTED} > .top ~ .plot .label.placeholder { margin-left: 0; }
   /* a block slider is as wide as the row (width: 100%), a gauge up to 120 px: beside the icon,
      what is left of it (the gauge centred in it) */

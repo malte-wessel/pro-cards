@@ -46,6 +46,7 @@ A kind brings:
 | [`vacuum`, `lawn_mower`](#vacuum-and-lawn-mower)                                | `vacuum.*`, `lawn_mower.*`                    | the robot at work, its path                       |
 | [`person`](#person)                                                             | `person.*`, `device_tracker.*`                | their picture, the zone and how long              |
 | [`timer`](#timer)                                                               | `timer.*`                                     | the time left, counting down, a bar of it         |
+| [`schedule`](#schedule)                                                         | `schedule.*`                                  | when it changes next, the day's blocks            |
 
 ## The plain entity
 
@@ -586,6 +587,26 @@ The time left is the value, counting down every second (`12:34`), and a bar belo
 
 :::
 
+### Schedule
+
+On or off, and when the schedule changes next with the data of its block (`until 22:30 · 21 °C`, `next Fri 06:00`); a poster says how soon in its corner. Below it the day's blocks, today's from midnight to midnight with a line at now; `visual: { variant: ahead }` draws the next 24 hours, `edge` a ribbon along the card's bottom edge. `data` names the block data to write, as on the [schedule card](/cards/schedule-card#block-data), which also edits the week. The blocks keep the schedule's colour while it is off.
+
+::: live
+
+```yaml
+- type: custom:tile-card-pro
+  entity: schedule.heating
+  color: deep-orange
+  data: [{ key: temperature, unit: °C }]
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: schedule.hallway_lights
+  visual: { variant: edge }
+  grid_options: { columns: 6 }
+```
+
+:::
+
 ## The kinds' rules
 
 Battery, car, air quality, illuminance, wind, rain and weather bring rules of their own: the colours, icons and statuses above. A jammed lock, a triggered alarm, a leak or smoke and a robot with an error have one rule each that makes the status badge pulse. The kind's rules apply until the card has `rules` of its own, which replace them as a whole; `rules: []` drops them. The statuses follow the user's language. Copy a set to change one band (on a home battery, rules of your own also replace its charging and discharging colours):
@@ -707,3 +728,4 @@ These keys are the same on the tile and the poster. A key the kind does not read
 | `inputs.phase`     | on the appliance's device                             | Appliance kinds: its phase (an enum or a select), shown as its status, or `false`.           |
 | `running_above`    | `5`                                                   | Appliance kinds: the power in W above which it runs.                                         |
 | `series`           | required for `trend`                                  | Trend: entity ids, or `{ entity, name, color, rules, visibility }`.                          |
+| `data`             | –                                                     | Schedule: the block data written, keys or `{ key, unit }`.                                   |

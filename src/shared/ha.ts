@@ -33,6 +33,8 @@ export interface HomeAssistant {
     time_zone?: "local" | "server";
     number_format?: string;
     time_format?: string;
+    // the week's first day: a weekday's name, or "language" (the language's own)
+    first_weekday?: string;
   };
   // the logged-in user (visibility's `user` and `location` conditions)
   user?: Pick<HassUser, "id" | "name" | "is_admin">;

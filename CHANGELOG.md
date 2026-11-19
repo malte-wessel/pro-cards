@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.3.0 – Schedules
+
+_Beta_
+
+### What's new
+
+- **New schedule card** (`custom:schedule-card-pro`): a schedule helper's week, a lane per day with its blocks, a line at now and when it changes next; a block's tooltip gives its times and its data (`data`: a temperature with its unit). [Schedule](https://malte-wessel.github.io/pro-cards/cards/schedule-card)
+- **Edit a schedule on the card:** the pencil or a long press turns edit mode on. Tap blocks (or a day's name) to select them, drag them to another time or day (or copy them), drag their ends, drag the dot under a day over other days to copy it there, draw a new block on an empty spot; the toolbar changes their value or deletes them. Every change stays on the card until Done saves the week in one go, with Undo before that. It works with a finger, a mouse and the keyboard (Enter, the arrows, Delete), for administrators and schedules made in the UI; `edit: false` keeps it view only. [Schedule](https://malte-wessel.github.io/pro-cards/cards/schedule-card#editing-on-the-card)
+- **Schedules on tiles and posters:** the schedule kind says when a schedule changes next with its block's data, how soon on a poster's corner, and draws the day's blocks below the value: today, the next 24 hours (`visual: { variant: ahead }`) or a ribbon along the edge. [Kinds](https://malte-wessel.github.io/pro-cards/cards/kinds#schedule)
+
+### Changed: existing cards look different
+
+- **Schedules:** a tile or a poster of a schedule helper showed On or Off; it now says when the schedule changes next and draws today's blocks below, so a schedule tile is two rows high. `visual: false` leaves the blocks out.
+
 ## 3.2.0 – Timers that count down, names by their parts
 
 _Beta_

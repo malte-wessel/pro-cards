@@ -82,6 +82,7 @@ const energy = [
 ];
 const moreCards = [
   { text: "Weather", link: "/cards/weather-card" },
+  { text: "Schedule", link: "/cards/schedule-card" },
   { text: "Sun path", link: "/cards/sun-path-card" },
   { text: "Sun azimuth", link: "/cards/sun-azimuth-card" },
   { text: "Multi trend", link: "/cards/multi-trend-card" },

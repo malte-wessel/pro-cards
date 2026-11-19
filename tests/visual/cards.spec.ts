@@ -78,6 +78,13 @@ const PF_CONS = [
 ];
 
 const HC = "custom:heading-card-pro";
+const SC = "custom:schedule-card-pro";
+const SC_HEATING = {
+  type: SC,
+  entity: "schedule.heating",
+  color: "deep-orange",
+  data: [{ key: "temperature", unit: "°C", step: 0.5 }],
+};
 const TG = "custom:tile-group-card-pro";
 const EF = "custom:energy-flow-card-pro";
 // the demo world's meters (meters.ts): their statistics follow the frozen clock
@@ -2405,7 +2412,50 @@ const CASES = {
     type: HC,
     badges: ["sensor.outdoor_temperature", "sensor.living_room_humidity", "light.living_room"],
   },
+  // the schedule card's week: today, the line at now, the six-hour lines, its colour
+  "sc-week": SC_HEATING,
+  // narrow: one letter a day, three times on the axis; a YAML schedule's view only
+  "sc-narrow": { type: SC, entity: "schedule.office_hours" },
+  // the schedule kind: today's lane on a poster, the next 24 hours on a tile, the edge ribbon, a
+  // tile group's list of schedules
+  "sc-kinds": [
+    {
+      type: "custom:poster-card-pro",
+      entity: "schedule.heating",
+      color: "deep-orange",
+      data: [{ key: "temperature", unit: "°C" }],
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:poster-card-pro",
+      entity: "schedule.hallway_lights",
+      visual: { variant: "edge" },
+      grid_options: { columns: 6 },
+    },
+    {
+      type: "custom:tile-card-pro",
+      entity: "schedule.garden_watering",
+      color: "teal",
+      data: [{ key: "duration", unit: "min" }],
+      visual: { variant: "ahead" },
+    },
+    { type: TG, title: "Schedules", tiles: ["schedule.heating", "schedule.hallway_lights"] },
+  ],
 };
+
+// edit mode: a block selected (its handles, the dot under it, the toolbar above it)
+for (const theme of THEMES) {
+  test(`sc-edit (${theme})`, async ({ page }) => {
+    await mount(page, SC_HEATING, { theme });
+    const c = page.locator("#root .cell").first().locator("> *");
+    await c.locator('.sctl [data-act="edit"]').click();
+    await c.locator(".slane").nth(3).locator(".sb[data-id]").last().click();
+    await page.mouse.move(0, 0);
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(150);
+    await expect(c).toHaveScreenshot(`sc-edit-${theme}.png`);
+  });
+}
 
 // cases rendered under a Home Assistant theme from ha.css instead of the default one
 const SKINS: Record<string, string> = { "fill-graphite": "graphite", "large-text": "large" };
@@ -2419,6 +2469,7 @@ const ALL: Record<string, Parameters<typeof mount>[1]> = {
 // of tree, after the card's padding)
 const WIDTHS: Record<string, number> = {
   "hc-narrow": 260,
+  "sc-narrow": 240,
   "pf-list-rooms": 640,
   "pf-two-way-down": 340,
   "ef-month-list": 640,

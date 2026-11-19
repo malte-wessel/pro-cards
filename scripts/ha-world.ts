@@ -13,6 +13,7 @@ import yaml from "js-yaml";
 import { world } from "../docs/.vitepress/theme/ha-shim/world.ts";
 import { METERS, readingAt } from "../docs/.vitepress/theme/ha-shim/meters.ts";
 import { GARDEN_SNAPSHOT } from "../docs/.vitepress/theme/ha-shim/camera.ts";
+import { scheduleList } from "../docs/.vitepress/theme/ha-shim/schedules.ts";
 import {
   AREAS,
   DEVICES,
@@ -85,7 +86,8 @@ const picture = (key: string, uri: string) => {
 const entities: unknown[] = [];
 for (const [id, st] of Object.entries(world.states)) {
   const [domain, key] = id.split(".");
-  if (taken.has(id) || domain === "sun") continue;
+  // (the schedules are helpers of their own: scripts/ha-setup.mjs makes them from schedules.json)
+  if (taken.has(id) || domain === "sun" || domain === "schedule") continue;
   const a = st.attributes;
   const name = a.friendly_name as string | undefined;
   const icon = a.icon as string | undefined;
@@ -187,6 +189,9 @@ writeFileSync(
   join(out, "world.json"),
   JSON.stringify({ generated: now, entities, people, forecasts, first, meters, cameras }),
 );
+// the schedule helpers made in the UI (stored, so the schedule card can save them), for the setup
+// to make; the one set in YAML (office hours) is in configuration.yaml
+writeFileSync(join(out, "schedules.json"), JSON.stringify(scheduleList()));
 // the floors and their areas, for the setup to make (scripts/ha-setup.mjs), and the area of every
 // entity of the demo home on no device, the dev config's too (its template lights …)
 writeFileSync(

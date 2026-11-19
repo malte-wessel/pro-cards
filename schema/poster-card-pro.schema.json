@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://malte-wessel.github.io/pro-cards/schema/poster-card-pro.schema.json",
   "title": "custom:poster-card-pro",
-  "description": "One entity (or none) as a poster, drawn the way its kind says: the icon and the badges on top, the name, the large value and the visual at the bottom. The kind is detected from the entity (its domain, then its device class) or set with `kind`; the entities it reads besides the card's own are its `inputs`; an appliance's `running_above` and a trend's `series` sit on the card; none of them decides the kind. Two places say what the card draws: `icon` and `visual`, each a thing with its options, false, or left out for the kind's. Strings containing {{ }} are Jinja templates rendered by Home Assistant (name, secondary, icon, color, value, status, an image's src).",
+  "description": "One entity (or none) as a poster, drawn the way its kind says: the icon and the badges on top, the name, the large value and the visual at the bottom. The kind is detected from the entity (its domain, then its device class) or set with `kind`; the entities it reads besides the card's own are its `inputs`; an appliance's `running_above`, a trend's `series` and a schedule's `data` sit on the card; none of them decides the kind. Two places say what the card draws: `icon` and `visual`, each a thing with its options, false, or left out for the kind's. Strings containing {{ }} are Jinja templates rendered by Home Assistant (name, secondary, icon, color, value, status, an image's src).",
   "type": "object",
   "properties": {
     "type": {
@@ -27,6 +27,9 @@
         "$ref": "#/$defs/trendEntity"
       },
       "description": "trend: the series, ids or objects (entity, name, color, rules, visibility)"
+    },
+    "data": {
+      "$ref": "#/$defs/scheduleData"
     },
     "status": {
       "oneOf": [
@@ -55,7 +58,7 @@
     },
     "visual": {
       "$ref": "#/$defs/visualPlace",
-      "description": "The visual: behind the texts (glow, image, flow, and a kind's cover, path or line), or below them (a plot of the history, a bar, a gauge, segments, the sun's day; a weather's sparkline is its forecast); false for none. Left out: the kind's"
+      "description": "The visual: behind the texts (glow, image, flow, and a kind's cover, path or line), or below them (a plot of the history, a bar, a gauge, segments, the sun's day, a schedule's day; a weather's sparkline is its forecast); false for none. Left out: the kind's"
     }
   },
   "required": ["type"],
@@ -498,6 +501,7 @@
         "alarm_control_panel",
         "person",
         "timer",
+        "schedule",
         "media_player",
         "cover",
         "vacuum",
@@ -694,7 +698,8 @@
             "bar",
             "gauge",
             "segments",
-            "sun"
+            "sun",
+            "schedule"
           ]
         },
         {
@@ -720,9 +725,10 @@
             "bar",
             "gauge",
             "segments",
-            "sun"
+            "sun",
+            "schedule"
           ],
-          "description": "Behind the texts: glow, image, flow, and what only a kind draws (cover, path, line). Below them: sparkline, columns, strip (the history), bar, gauge, segments (the value), sun (the sun's day). A trend's sparkline is its series, a weather's its forecast, unless it plots another entity (src)"
+          "description": "Behind the texts: glow, image, flow, and what only a kind draws (cover, path, line). Below them: sparkline, columns, strip (the history), bar, gauge, segments (the value), sun (the sun's day), schedule (a schedule's day). A trend's sparkline is its series, a weather's its forecast, unless it plots another entity (src)"
         },
         "src": {
           "type": "string",
@@ -768,9 +774,11 @@
             "awning",
             "window",
             "timeline",
-            "edge"
+            "edge",
+            "day",
+            "ahead"
           ],
-          "description": "flow: the animation's drawing, wind: dots, lines, swoosh, vectors; rain: drops, ripples, fill. cover: the window's drawing, shutter, blind, curtain, garage, gate, awning, window. strip: timeline (below the texts, with its times) or edge (a ribbon along the card's bottom edge). Default: the kind's (a cover's device class's, a door's or motion's strip: edge)"
+          "description": "flow: the animation's drawing, wind: dots, lines, swoosh, vectors; rain: drops, ripples, fill. cover: the window's drawing, shutter, blind, curtain, garage, gate, awning, window. strip: timeline (below the texts, with its times) or edge (a ribbon along the card's bottom edge). schedule: day (today from midnight to midnight), ahead (the next 24 hours) or edge. Default: the kind's (a cover's device class's, a door's or motion's strip: edge)"
         },
         "hours": {
           "oneOf": [
@@ -1023,6 +1031,27 @@
               "enum": ["type"]
             }
           }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "const": "schedule"
+              }
+            }
+          },
+          "then": {
+            "propertyNames": {
+              "enum": ["type", "variant"]
+            },
+            "properties": {
+              "variant": {
+                "enum": ["day", "ahead", "edge"]
+              }
+            }
+          }
         }
       ]
     },
@@ -1241,9 +1270,56 @@
         }
       ]
     },
+    "scheduleData": {
+      "type": "array",
+      "description": "schedule: the block data shown (the secondary line, the tooltip), each a key of the blocks' data or { key, unit, step, min, max, default }",
+      "items": {
+        "oneOf": [
+          { "type": "string", "minLength": 1 },
+          {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The key in the blocks' data (temperature)"
+              },
+              "unit": { "type": "string", "description": "The unit written after the value" },
+              "step": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "The step the schedule card's toolbar changes it by (default 1)"
+              },
+              "min": { "type": "number", "description": "The least the toolbar sets" },
+              "max": { "type": "number", "description": "The most the toolbar sets" },
+              "default": { "type": "number", "description": "A new block's value" }
+            },
+            "required": ["key"],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
     "typeKeys": {
-      "description": "The keys each kind takes (another kind's are not allowed), and the kinds that draw a kind's own thing (flow, sun, cover, path, line)",
+      "description": "The keys each kind takes (another kind's are not allowed), and the kinds that draw a kind's own thing (flow, sun, schedule, cover, path, line)",
       "allOf": [
+        {
+          "if": {
+            "required": ["kind"],
+            "properties": {
+              "kind": {
+                "not": {
+                  "const": "schedule"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "data": false
+            }
+          }
+        },
         {
           "if": {
             "required": ["kind"],
@@ -1270,6 +1346,7 @@
                   "alarm_control_panel",
                   "person",
                   "timer",
+                  "schedule",
                   "media_player",
                   "cover",
                   "vacuum",
@@ -1692,6 +1769,36 @@
             "properties": {
               "kind": {
                 "enum": ["sun"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": ["kind", "visual"],
+            "properties": {
+              "visual": {
+                "anyOf": [
+                  {
+                    "const": "schedule"
+                  },
+                  {
+                    "type": "object",
+                    "required": ["type"],
+                    "properties": {
+                      "type": {
+                        "const": "schedule"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "enum": ["schedule"]
               }
             }
           }

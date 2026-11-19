@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://malte-wessel.github.io/pro-cards/schema/schedule-card-pro.schema.json",
+  "title": "custom:schedule-card-pro",
+  "description": "A schedule helper's week: a lane per day with its blocks, when it changes next, and an edit mode on the card that saves the week in one call.",
+  "type": "object",
+  "properties": {
+    "type": {
+      "const": "custom:schedule-card-pro"
+    },
+    "entity": {
+      "type": "string",
+      "pattern": "^schedule\\.[a-z0-9_]+$",
+      "description": "The schedule helper (schedule.…)"
+    },
+    "name": {
+      "type": "string",
+      "description": "The header's title. Default: the entity's name. Template allowed."
+    },
+    "icon": {
+      "$ref": "defs.schema.json#/$defs/icon",
+      "description": "The header's icon. Default: the entity's"
+    },
+    "color": {
+      "$ref": "defs.schema.json#/$defs/color",
+      "description": "The blocks' colour. Default: Home Assistant's for a schedule that is on"
+    },
+    "data": {
+      "$ref": "poster-card-pro.schema.json#/$defs/scheduleData",
+      "description": "The block data shown on the blocks and in their tooltip, each a key or { key, unit, step, min, max, default }; edit mode's toolbar changes the first one"
+    },
+    "edit": {
+      "type": "boolean",
+      "default": true,
+      "description": "The pencil in the header and a long press on the week turn edit mode on, for administrators and schedules made in the UI; false: view only"
+    },
+    "snap": {
+      "enum": [5, 10, 15, 30, 60],
+      "default": 15,
+      "description": "The minutes a block's times snap to while editing"
+    },
+    "first_weekday": {
+      "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+      "description": "The first day of the week shown. Default: the user's profile"
+    },
+    "title_tap_action": {
+      "$ref": "defs.schema.json#/$defs/action",
+      "description": "What a tap on the title does (default: nothing)"
+    }
+  },
+  "required": ["type", "entity"],
+  "allOf": [
+    {
+      "$ref": "entity.schema.json#/$defs/haExtras"
+    }
+  ],
+  "unevaluatedProperties": false
+}

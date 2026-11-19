@@ -120,6 +120,9 @@ export const setLanguage = (page: Page, language: string) =>
 // log a user in (by id) or out (null); the mounted cards re-render at once
 export const setUser = (page: Page, id: string | null) =>
   page.evaluate((u) => window.pc.setUser(u), id);
+export const setAdmin = (page: Page, on: boolean) =>
+  page.evaluate((a) => window.pc.setAdmin(a), on);
+export const wsMessages = (page: Page) => page.evaluate(() => window.pc.ws);
 export const card = (page: Page, i = 0): Locator =>
   page.locator("#root .cell").nth(i).locator("> *");
 export { test, expect };

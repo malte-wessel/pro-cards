@@ -19,6 +19,7 @@ import type { SunCurveHost } from "../sun/curve.ts";
 import type { Visibility } from "../visibility.ts";
 import { formatValue } from "../entity/value-format.ts";
 import { ForecastFeed } from "../weather/feed.ts";
+import { onScheduleWeek, scheduleWeek } from "../schedule/feed.ts";
 import { dailyTypeOf, supportsForecast } from "../weather/forecast.ts";
 import { IMAGE_OPACITY, updateBackdrop } from "./backdrop.ts";
 import {
@@ -81,12 +82,14 @@ export abstract class KindCardBase extends EntityCardBase {
   _sunHost: SunCurveHost = { _day: null };
   _kindHoverT: number | null = null;
   _host: KindHost;
+  _unweek?: () => void;
 
   constructor() {
     super();
     const hoverT = () => this._kindHoverT;
     this._host = {
       forecast: (type: WeatherForecastType) => this._feed.forecast[type],
+      schedule: () => scheduleWeek(this._hass, this._config?.entities[0]?.entity ?? null),
       sun: this._sunHost,
       hover: (plot, timeAt, show) => {
         const at = (ev: PointerEvent) => {
@@ -211,10 +214,18 @@ export abstract class KindCardBase extends EntityCardBase {
   connectedCallback() {
     super.connectedCallback();
     this._syncForecast();
+    // a schedule's week arriving: the card draws it
+    this._unweek?.();
+    this._unweek = onScheduleWeek((id) => {
+      if (this._config?.kind.name === "schedule" && id === this._config.entities[0]?.entity)
+        this._render();
+    });
   }
   disconnectedCallback() {
     super.disconnectedCallback();
     this._feed.unsubscribe();
+    this._unweek?.();
+    this._unweek = undefined;
   }
   // the forecast types the kind reads and the entity offers
   _syncForecast() {

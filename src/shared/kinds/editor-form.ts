@@ -3,6 +3,7 @@
 // is the shortest YAML that draws the same: nothing for the kind's default, a name for a thing
 // without options, `{ type, … }` else. Keys the form does not show are kept as written.
 import { attributeChoices, attributeDefault, targetKeysOf } from "../entity/targets.ts";
+import { dataFromForm, dataToForm, type DataField } from "../schedule/data.ts";
 import { BUTTONS, buttonIdsOf, defaultButtonIds, type ButtonId } from "../entity/control.ts";
 import { setOrDrop } from "../editor.ts";
 import { VARIANT_KINDS, type ControlKind } from "../entity/control.ts";
@@ -583,8 +584,11 @@ const controlTypeOf = (c: CardConfigBase, kind: Kind, thing: CardThing): string 
 };
 // the drawing a visual thing has unless told: the rain's drops, the wind's dots (a cover's follows
 // its device class: none here)
+// a schedule's data on a poster or a tile: its key and unit
+const SCHEDULE_DATA: readonly DataField[] = ["key", "unit"];
 export const visualVariant = (visual: string | null, kind: Kind, thing: CardThing) => {
   if (visual === "flow") return kind.name === "rain" ? "drops" : "dots";
+  if (visual === "schedule") return "day";
   if (visual !== "strip") return undefined;
   // a strip: the kind's own drawing of it on this card (a door's along the edge), else a timeline
   const own = thing === "row" ? null : placeDefaults(kind, thing).visual;
@@ -693,6 +697,7 @@ export const configToForm = (
     d[`input_${def.key}`] = typeof inputs[def.key] === "string" ? inputs[def.key] : "";
   d.running_above = num(c.running_above);
   d.series = seriesToForm(c.series);
+  if (kind.keys.includes("data")) Object.assign(d, dataToForm(c, SCHEDULE_DATA));
 
   // the control: its thing (the kind's, none, auto or a control) and its options
   const ctl = c.control;
@@ -996,6 +1001,7 @@ export const formToConfig = (
     const series = seriesFromForm(data.series);
     put("series", series.length ? series : undefined);
   }
+  if (changed("data_")) put("data", dataFromForm(data, p, SCHEDULE_DATA));
   if (changed("control_"))
     put(
       "control",
