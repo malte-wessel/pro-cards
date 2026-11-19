@@ -149,9 +149,11 @@ export const COVER: Kind = {
   tileVisual: false,
   draws: ["cover"],
   status: (c) => c.m.look.label ?? stateText(c),
+  // the bar, the gauge and the ring at its position (an open cover without one: all the way)
   slots: (c) => {
     const p = num(c.m.st, "current_position");
-    return p === null ? {} : { value: pctValue(c.ctx.hass, p), word: false };
+    const at = positionOf(c);
+    return p === null ? { num: at } : { value: pctValue(c.ctx.hass, p), word: false, num: at };
   },
   backdrop: {
     key: (c) => (drawn(c) ? styleOf(c) : ""),

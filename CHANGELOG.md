@@ -14,10 +14,13 @@ _Beta_
 ### Changed: existing cards look different
 
 - **Timers:** a tile or a poster of a timer showed Active or Paused; it now shows the time left with a bar of it below, so a timer tile is two rows high. `visual: false` leaves the bar out, `format` writes the time left another way.
+- **Controls below the value come before the visual below it** on a poster and a tile: a bar (a timer's, a battery's) now sits under its buttons or segments, as a plot along the bottom does. A gauge is the picture and keeps its controls under it.
 - **A poster short of height drops its bar** below the value before it draws the value smaller, as it does a slider.
 
 ### Fixes
 
+- A poster's or a tile's control below the value sits above a plot along the bottom (a sparkline, columns, a kind's curve); it was drawn after the plot, over it and cut off by the card's edge.
+- A bar, a gauge, a battery's segments and the icon's ring fill to the value a poster or a tile shows of its own where the state is no number: a cover's position, a light's brightness, a fan's speed (all the way for a light or a fan without levels that is on), a plug's power up to a `max` the card writes. They stood empty (a light's gauge said On) unless the card named an `attribute`; a tile group's table row fills its bar so too.
 - The visual editor offers a timer's presets only where the timer has some (set in its settings in Home Assistant); a control already set to them says where to add them.
 - A tile group and a seamless layout card blur a glass theme's background once: the cards inside no longer blur it again, which made them darker than the header and showed edges between them. A seamless layout's surface now takes the theme's blur itself.
 - A tile group takes UIX (`uix`) on its own card, as it takes `card_mod`; it stopped with an error before.

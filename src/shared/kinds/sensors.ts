@@ -164,6 +164,9 @@ export const PLUG: Kind = {
   slots: (c) => {
     const w = c.m.st?.state === "on" ? plugW(c) : null;
     const v: FmtValue | null = w === null ? null : powerParts(c.ctx.hass, w);
-    return v ? { value: v, word: false } : {};
+    // its watts fill a bar or a gauge only up to a max the card writes (they have no scale of
+    // their own; on 0 to 100 any kettle is full)
+    const n = c.ent.max === null ? {} : { num: w };
+    return v ? { value: v, word: false, ...n } : n;
   },
 };

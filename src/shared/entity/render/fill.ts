@@ -9,6 +9,7 @@ import {
   type Placement,
   type RowKind,
 } from "../control.ts";
+import { progressOf } from "../look.ts";
 import { nameOf, tplOf, type EntityModel, type FmtValue, type RenderCtx } from "../model.ts";
 import { blockEl, GAUGE_CROP } from "./blocks.ts";
 import { appendControls, bindLeadTap, controlEl, iconActionsEl } from "./controls.ts";
@@ -72,6 +73,25 @@ const blockOf = (
   block: Placement[],
 ) =>
   ent.visual === "bar" && block.some((p) => p.kind === "slider") ? null : blockEl(ctx, ent, idx, m);
+// a tile's and a poster's controls below the line, then its visual there (a bar, segments, a
+// plot): a plot or a kind's curve runs along the card's bottom edge (its negative margins reach
+// into the padding), and every visual takes the same place. A gauge is the card's picture: its
+// controls follow it, centred with it (a poster draws its gauge apart, above the name). What is
+// behind the texts (a glow, a picture) is not drawn here
+const appendBlock = (
+  ctx: RenderCtx,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+  block: Placement[],
+  host: HTMLElement,
+  visual: HTMLElement | null,
+) => {
+  const picture = !!visual?.classList.contains("gauge");
+  if (visual && picture) host.appendChild(visual);
+  appendControls(ctx, ent, idx, m, block, host);
+  if (visual && !picture) host.appendChild(visual);
+};
 
 export const fillRow = (
   ctx: RenderCtx,
@@ -175,6 +195,10 @@ export interface KindSlots {
   value?: FmtValue | null;
   // a word (Cleaning, Away) is drawn smaller than a number (default: the value is no number)
   word?: boolean;
+  // the number the kind's value shows where the entity's state is none (a cover's position, a
+  // light's brightness in %): the bar, the gauge and the ring fill to it on the card's scale
+  // (min and max, 0 to 100 unless written); null fills nothing
+  num?: number | null;
   secondary?: string | Node | null;
   picture?: HTMLElement | null;
   // the status the tile's line shows after the value (null: none; the poster's is a badge of its own)
@@ -182,6 +206,10 @@ export interface KindSlots {
   // the icon's own actions (`icon_*_action`): the lead takes them
   iconActions?: IconActions;
 }
+
+// the model the visuals read: the kind's number and value in place of the state's
+export const kindModel = (ent: EntityItem, m: EntityModel, o: KindSlots): EntityModel =>
+  o.num === undefined ? m : { ...m, progress: progressOf(ent, o.num, m.st), fmt: o.value ?? m.fmt };
 
 // the tile's icon slot (built once, so an animated lead in it is kept through fills): in the row
 // at once, so the card's lead and the fill after it find the same one
@@ -227,6 +255,7 @@ export const fillTileSlots = (
   m: EntityModel,
   o: KindSlots = {},
 ) => {
+  m = kindModel(ent, m, o);
   const c = slots(ctx, ent, "tile");
   const lead = tileLead(row);
   // the badges beside the texts: built once by the card, kept here
@@ -292,8 +321,7 @@ export const fillTileSlots = (
   top.append(lead, main);
   row.appendChild(top);
   const block = o.picture !== undefined ? o.picture : blockOf(ctx, ent, idx, m, c.block);
-  if (block) row.appendChild(block);
-  appendControls(ctx, ent, idx, m, c.block, row);
+  appendBlock(ctx, ent, idx, m, c.block, row, block);
 };
 
 // a row of a tile group's table: the name, then at the line's end the value (the status after
@@ -347,8 +375,8 @@ export const fillTableSlots = (
 
 // a poster (the poster card's row): the icon at the top left, and at the bottom the name, then
 // the big value and the secondary line as one block with the controls beside it (under it where
-// they do not fit), then the block visual or controls; `show_icon`, `show_name` and `show_value`
-// leave their part out. Only the poster's own parts are filled again, never the badge rows in its
+// they do not fit), then the controls below it and the visual (a plot along the bottom);
+// `show_icon`, `show_name` and `show_value` leave their part out. Only the poster's own parts are filled again, never the badge rows in its
 // corner (filled apart).
 export const fillPosterSlots = (
   ctx: RenderCtx,
@@ -358,6 +386,7 @@ export const fillPosterSlots = (
   m: EntityModel,
   o: KindSlots = {},
 ) => {
+  m = kindModel(ent, m, o);
   const c = slots(ctx, ent, "poster");
   const lead = row.querySelector<HTMLElement>(":scope > .ptop > .plead"),
     body = row.querySelector<HTMLElement>(":scope > .pbody");
@@ -418,8 +447,7 @@ export const fillPosterSlots = (
     }
     body.appendChild(main);
   }
-  if (block && !gauge) body.appendChild(block);
-  appendControls(ctx, ent, idx, m, c.block, body);
+  appendBlock(ctx, ent, idx, m, c.block, body, gauge ? null : block);
 };
 
 export const fillCell = (

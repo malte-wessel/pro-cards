@@ -68,8 +68,12 @@ export const LIGHT: Kind = {
   stateColor: (st) => lightColor(st),
   status: (c) => c.m.look.label ?? stateText(c),
   slots: (c) => {
-    const v = percent(c, brightness(c.m.st));
-    return v ? { value: v, word: false } : {};
+    // the bar, the gauge and the ring at its brightness (a light that only switches: all the way,
+    // as its glow)
+    const b = brightness(c.m.st);
+    const v = percent(c, b);
+    const n = c.m.st?.state === "on" ? (b ?? 100) : null;
+    return v ? { value: v, word: false, num: n } : { num: n };
   },
   // its glow (its default visual) as strong as its brightness, dark while off
   level: (c) => (c.m.st?.state === "on" ? (brightness(c.m.st) ?? 100) / 100 : 0),
@@ -90,8 +94,9 @@ export const FAN: Kind = {
   controls: [place("segments", "end")],
   status: (c) => c.m.look.label ?? stateText(c),
   slots: (c) => {
+    // the bar, the gauge and the ring at its speed (one without speeds: all the way, as its blades)
     const v = percent(c, num(c.m.st, "percentage"));
-    return v ? { value: v, word: false } : {};
+    return v ? { value: v, word: false, num: speed(c.m.st) } : { num: speed(c.m.st) };
   },
   lead: {
     key: () => "fan",

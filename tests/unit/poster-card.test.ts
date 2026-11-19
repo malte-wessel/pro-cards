@@ -1727,4 +1727,47 @@ describe("poster-card drawing", () => {
       expect(q(r, ".pbody").lastElementChild).toBe(plot);
     }
   });
+
+  it("draws a control below the value before the visual below it, a plot or a bar", () => {
+    const control = { type: "select", attribute: "preset_mode", position: "block" };
+    // the body's last two parts
+    const lastTwo = (r: ShadowRoot) => [...q(r, ".pbody").children].slice(-2);
+    const [ctl, plot] = lastTwo(
+      draw({ entity: "climate.living_room", visual: { type: "sparkline", src: TEMP }, control }),
+    );
+    expect(ctl.matches(".ctl")).toBe(true);
+    expect(plot.matches(".plot")).toBe(true);
+    const [buttons, bar] = lastTwo(
+      draw({
+        entity: "cover.living_room_blinds",
+        visual: "bar",
+        control: { type: "buttons", position: "block" },
+      }),
+    );
+    expect(buttons.matches(".ctl")).toBe(true);
+    expect(bar.matches(".bar")).toBe(true);
+  });
+
+  it("fills its visuals to the kind's value where the state is no number", () => {
+    const width = (r: ShadowRoot) => r.querySelector<HTMLElement>(".pbody .bar > i")?.style.width;
+    // a cover's position in its bar and its segments (60 %: six of ten)
+    expect(width(draw({ entity: "cover.living_room_blinds", visual: "bar" }))).toBe("60.0%");
+    const segs = draw({ entity: "cover.living_room_blinds", visual: "segments" });
+    const fills = [...segs.querySelectorAll<HTMLElement>(".pstrip > i")].map((i) =>
+      i.style.getPropertyValue("--f"),
+    );
+    expect(fills.filter((f) => f === "1")).toHaveLength(6);
+    // a light's brightness in its ring; one that only switches is all the way while on
+    const ring = draw({ entity: "light.living_room", icon: { ring: true } });
+    expect(ring.querySelector(".plead svg .prog")).not.toBeNull();
+    set("light.hallway", "on");
+    expect(width(draw({ entity: "light.hallway", visual: "bar", control: false }))).toBe("100.0%");
+    // a fan that is off fills nothing
+    expect(width(draw({ entity: "fan.bedroom", visual: "bar" }))).toBe("0%");
+    // a plug's watts only up to a max the card writes
+    set("switch.coffee_machine", "on");
+    set("sensor.coffee_machine_power", 50);
+    expect(width(draw({ entity: "switch.coffee_machine", visual: "bar" }))).toBe("0%");
+    expect(width(draw({ entity: "switch.coffee_machine", visual: "bar", max: 200 }))).toBe("25.0%");
+  });
 });

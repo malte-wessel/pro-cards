@@ -802,6 +802,49 @@ add("po-controls-more", [
   p("humidifier.bedroom", { control: { type: "select", attribute: "mode" } }),
 ]);
 
+// a control below the value comes before the visual below it: the plot along the bottom to the
+// card's edges (a sparkline, columns, a kind's curve), a bar
+{
+  const TEMP = "sensor.living_room_temperature";
+  const select = { type: "select", attribute: "preset_mode", position: "block" };
+  add("po-controls-plot", [
+    p("climate.living_room", {
+      visual: { type: "sparkline", src: TEMP },
+      control: select,
+      grid_options: { rows: "auto" },
+    }),
+    p("climate.living_room", {
+      visual: { type: "columns", src: TEMP },
+      control: select,
+      grid_options: { rows: 4 },
+    }),
+    p("light.living_room", {
+      visual: { type: "sparkline", src: "sensor.power_consumption" },
+      grid_options: { rows: 4 },
+    }),
+    p("sensor.living_room_humidity", {
+      visual: "bar",
+      min: 0,
+      max: 100,
+      control: { type: "buttons", position: "block", options: [{ entity: "fan.living_room" }] },
+      grid_options: { rows: 4 },
+    }),
+    p("sensor.living_room_temperature", {
+      kind: "trend",
+      series: ["sensor.outdoor_temperature"],
+      control: { type: "buttons", position: "block", options: [{ entity: "light.living_room" }] },
+      grid_options: { columns: 12, rows: 4 },
+    }),
+  ]);
+}
+
+// a kind's own value fills the visual: a cover's position in its bar, a light's brightness in its
+// gauge
+add("po-kind-value", [
+  p("cover.living_room_blinds", { visual: "bar", grid_options: { rows: 4 } }),
+  p("light.living_room", { visual: "gauge", grid_options: { rows: 4 } }),
+]);
+
 // ----- the status and the badges -----
 
 add("pb-status", [

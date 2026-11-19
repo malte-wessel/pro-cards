@@ -196,6 +196,16 @@ add("to-picture", [
   t("sensor.living_room_humidity", { visual: "bar" }),
   t("sensor.living_room_humidity", { visual: "gauge" }),
 ]);
+// a kind's own value where the state is no number: a cover's position, a fan's speed, a light's
+// brightness fill the bar, the gauge, the segments and the ring
+add("to-kind-value", [
+  t("cover.living_room_blinds", { visual: "bar" }),
+  t("fan.living_room", { visual: "bar" }),
+  t("light.attic", { visual: "gauge", grid_options: { columns: 6, rows: 3 } }),
+  t("cover.living_room_blinds", { visual: "segments" }),
+  t("light.living_room", { icon: { ring: true }, visual: false }),
+  t("light.bedroom", { visual: "bar" }),
+]);
 add("to-controls", [
   t("light.living_room", { control: "slider" }),
   t("light.living_room", { visual: false }),
@@ -203,6 +213,32 @@ add("to-controls", [
   t("cover.living_room_blinds", { control: "slider" }),
   t("fan.living_room", { control: "toggle" }),
   t("media_player.living_room_speaker", { visual: false, control: false }),
+]);
+// a control below the line comes before the visual below it: the plot along the bottom to the
+// tile's edges, a bar; a gauge is the tile's picture, its control under it
+add("to-controls-plot", [
+  t("climate.living_room", {
+    visual: { type: "sparkline", src: "sensor.living_room_temperature" },
+    control: { type: "select", attribute: "preset_mode", position: "block" },
+    grid_options: { columns: 6, rows: "auto" },
+  }),
+  t("input_select.house_mode", {
+    visual: { type: "columns", src: "sensor.power_consumption" },
+    control: { type: "segments", position: "block" },
+    grid_options: { columns: 12, rows: "auto" },
+  }),
+  t("sensor.living_room_humidity", {
+    visual: "bar",
+    min: 0,
+    max: 100,
+    control: { type: "buttons", position: "block", options: [{ entity: "fan.living_room" }] },
+    grid_options: { columns: 6, rows: "auto" },
+  }),
+  t("sensor.living_room_humidity", {
+    visual: "gauge",
+    control: { type: "buttons", position: "block", options: [{ entity: "fan.living_room" }] },
+    grid_options: { columns: 6, rows: 4 },
+  }),
 ]);
 
 // the controls' shape: rounded squares of one height, the stepper one bar; your own buttons grey
