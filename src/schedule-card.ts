@@ -34,8 +34,8 @@ import {
   drawn,
   fillDays,
   findBlock,
-  fit,
   relocate,
+  resize,
   removeBlocks,
   setData,
   snapMin,
@@ -68,6 +68,7 @@ import {
   changeText,
   dayNames,
   firstWeekdayOf,
+  rangeText,
   scheduleZone,
   valueText,
 } from "./shared/schedule/text.ts";
@@ -78,14 +79,13 @@ import {
   normalizeScheduleCardConfig,
   type ScheduleCardConfig,
 } from "./schedule/config.ts";
+import { HOLD_MS } from "./shared/entity/constants.ts";
 import { ScheduleCardEditor } from "./schedule/editor.ts";
 import { weekHtml, type DayNames, type EditView, type Span } from "./schedule/render.ts";
 import { STYLE_SCHEDULE_CARD } from "./schedule/styles.ts";
 
 defineElement(`${CARD_TYPE}-editor`, ScheduleCardEditor);
 
-// a press held this long without moving turns edit mode on
-const LONG_PRESS_MS = 500;
 // a pointer that moved less than this is still a tap
 const SLOP = 6;
 // "Saved" shows this long after Done
@@ -93,7 +93,13 @@ const SAVED_MS = 2000;
 
 // what a pointer is doing on the week
 type Gesture =
-  | { type: "press"; day: number; min: number; timer: ReturnType<typeof setTimeout> }
+  | {
+      type: "press";
+      day: number;
+      min: number;
+      timer: ReturnType<typeof setTimeout>;
+      off: () => void;
+    }
   | { type: "block"; id: number; day: number; ids: number[] }
   | { type: "size"; edge: "from" | "to"; id: number; day: number; ids: number[] }
   | { type: "fill"; day: number; blocks: EBlock[] }
@@ -115,6 +121,9 @@ interface Drag {
 }
 interface EditState {
   days: EDays;
+  // the weekday the days start on, as edit mode started (the week is saved by it, whatever the
+  // profile or the config says by then)
+  first: number;
   // the week as edit mode started (unchanged: Done just leaves)
   start: Week;
   hist: EDays[];
@@ -234,7 +243,9 @@ export class ScheduleCard extends EntityCardBase {
   }
 
   // ----- what the card shows -----
+  // the weekday the week starts on (0 = Monday); while editing, the one the edit began with
   _first() {
+    if (this._edit) return this._edit.first;
     const cfg = this._config as ScheduleCardConfig;
     return cfg.firstWeekday ?? firstWeekdayOf(this._hass);
   }
@@ -247,8 +258,8 @@ export class ScheduleCard extends EntityCardBase {
       this._first(),
     );
   }
-  // whether the user may edit this schedule now (undefined: still finding out)
-  _editable(): boolean | undefined {
+  // whether the user may edit this schedule now
+  _editable(): boolean {
     const cfg = this._config;
     const st = cfg && this._hass?.states[cfg.entity];
     if (!cfg?.edit || !st || st.state === "unavailable") return false;
@@ -365,7 +376,8 @@ export class ScheduleCard extends EntityCardBase {
   // 28 px), never narrower
   _fitDays(wk: HTMLElement) {
     const keys = [...wk.querySelectorAll<HTMLElement>(".key")];
-    const w = Math.max(28, ...keys.map((k) => Math.ceil(k.scrollWidth)));
+    // (an inline box has no scroll width: its drawn one)
+    const w = Math.max(28, ...keys.map((k) => Math.ceil(k.getBoundingClientRect().width)));
     if (wk.style.getPropertyValue("--sdn") !== `${w}px`) wk.style.setProperty("--sdn", `${w}px`);
   }
 
@@ -476,7 +488,8 @@ export class ScheduleCard extends EntityCardBase {
       header && !header.hidden ? header.getBoundingClientRect().bottom - wkTop : 0;
     let y = rows[top].offsetTop - bh - 8;
     if (y < headerBottom + 4) y = rows[bottom].offsetTop + rows[bottom].offsetHeight + 12;
-    bar.style.top = `${Math.round(y)}px`;
+    // never past the week's end (the card cuts it there): over the rows between, then
+    bar.style.top = `${Math.round(Math.min(y, wk.clientHeight - bh))}px`;
   }
 
   // ----- the tooltip (view mode) -----
@@ -545,8 +558,20 @@ export class ScheduleCard extends EntityCardBase {
       // a tap shows the block's tooltip (a mouse shows it on hover)
       this._showTip(at.day, at.min);
       if (!this._editable()) return;
-      const timer = setTimeout(() => this._longPress(), LONG_PRESS_MS);
-      this._startDrag(ev, { type: "press", day: at.day, min: at.min, timer }, false);
+      const timer = setTimeout(() => this._longPress(), HOLD_MS);
+      // (not captured: the page scrolls under a finger; a release outside the week ends it too)
+      const off = () => {
+        window.removeEventListener("pointerup", end, true);
+        window.removeEventListener("pointercancel", end, true);
+      };
+      const end = (up: PointerEvent) => {
+        if (up.pointerId !== ev.pointerId) return;
+        off();
+        if (this._drag?.g.type === "press" && this._drag.pointer === up.pointerId) this._endDrag();
+      };
+      window.addEventListener("pointerup", end, true);
+      window.addEventListener("pointercancel", end, true);
+      this._startDrag(ev, { type: "press", day: at.day, min: at.min, timer, off }, false);
       return;
     }
     const e = this._edit;
@@ -605,15 +630,29 @@ export class ScheduleCard extends EntityCardBase {
   }
   _endDrag() {
     const d = this._drag;
-    if (d?.g.type === "press") clearTimeout(d.g.timer);
+    if (d?.g.type === "press") {
+      clearTimeout(d.g.timer);
+      d.g.off();
+    }
     this._drag = null;
   }
   _longPress() {
     const d = this._drag;
     if (!d || d.g.type !== "press" || !this._editable()) return;
     const g = d.g;
+    g.off();
     this._drag = null;
+    // its release clicks nothing; a pointer released elsewhere clicks nothing at all, so the flag
+    // goes with the pointer (after the click its release makes here)
     this._pressed = true;
+    const unpress = (up: PointerEvent) => {
+      if (up.pointerId !== d.pointer) return;
+      window.removeEventListener("pointerup", unpress, true);
+      window.removeEventListener("pointercancel", unpress, true);
+      setTimeout(() => (this._pressed = false));
+    };
+    window.addEventListener("pointerup", unpress, true);
+    window.addEventListener("pointercancel", unpress, true);
     this._hideTip();
     this._enter();
     const e = this._edit as EditState | null;
@@ -664,55 +703,46 @@ export class ScheduleCard extends EntityCardBase {
     const dd = Math.round(dy / (d.pitch || 28));
     // the same snapped place as the move before: nothing to draw again
     const place =
-      d.g.type === "draw" ? `${snapMin(this._at(ev, d).min, step)}` : `${dd}|${dm}|${e.copy}`;
+      d.g.type === "draw" ? `${snapMin(this._at(ev, d).min, step)}|${dd}` : `${dd}|${dm}|${e.copy}`;
     if (place === d.last) return;
     d.last = place;
     const names = this._names().map((n) => n.short);
     const hass = this._hass;
     const g = d.g;
     if (g.type === "block") {
+      // (blocks it lands on merge with it, on its own day as on another)
       const r =
-        dd === 0 && !e.copy
-          ? dm === 0
-            ? { days: d.base, ids: g.ids, d: 0 }
-            : (() => {
-                const f = fit(d.base, g.ids, "both", dm, step);
-                return f && { ...f, ids: g.ids };
-              })()
+        dd === 0 && dm === 0 && !e.copy
+          ? { days: d.base, ids: g.ids, d: 0 }
           : (() => {
               const m = relocate(d.base, g.ids, dd, dm, e.copy);
               return m && { days: m.days, ids: m.ids, d: m.dm };
             })();
-      if (!r) return;
+      // nowhere to go there: back where it began (never the place of the move before)
+      const held = !r;
+      const r1 = r || { days: d.base, ids: g.ids, d: 0 };
+      const day1 = held ? 0 : dd;
       const b0 = findBlock(d.base, g.id)?.b as EBlock;
-      const ghosts: Span[] = [];
-      if (!e.copy && (dd !== 0 || r.d !== 0))
-        d.base.forEach((day, i) =>
-          day.forEach(
-            (b) => g.ids.includes(b.id) && ghosts.push({ day: i, from: b.from, to: b.to }),
-          ),
-        );
-      const to = Math.max(0, Math.min(6, g.day + dd));
-      e.days = r.days;
-      e.sel = r.ids;
-      e.ghosts = ghosts;
+      const to = Math.max(0, Math.min(6, g.day + day1));
+      e.days = r1.days;
+      e.sel = r1.ids;
+      e.ghosts = [];
       e.bubble = {
         day: to,
-        at: (b0.from + b0.to) / 2 + r.d,
+        at: (b0.from + b0.to) / 2 + r1.d,
         text:
-          (dd ? `${names[to]} ` : "") +
-          `${fmtDayMinutes(hass, b0.from + r.d)} – ${fmtDayMinutes(hass, b0.to + r.d)}` +
+          (day1 ? `${names[to]} ` : "") +
+          rangeText(hass, b0.from + r1.d, b0.to + r1.d) +
           (e.copy ? ` · ${t(hass, "schedule.copy_short")}` : ""),
       };
     } else if (g.type === "size") {
-      const r = fit(d.base, g.ids, g.edge, dm, step);
-      if (!r && dm !== 0) return;
-      e.days = r ? r.days : d.base;
-      const b = findBlock(e.days, g.id)?.b;
-      if (b) {
-        const at = g.edge === "from" ? b.from : b.to;
-        e.bubble = { day: g.day, at, text: fmtDayMinutes(hass, at) };
-      }
+      // (blocks it reaches into merge with it)
+      const r = resize(d.base, g.ids, g.edge, dm, step);
+      const b0 = findBlock(d.base, g.id)?.b as EBlock;
+      e.days = r.d ? r.days : d.base;
+      e.sel = r.d ? r.ids : g.ids;
+      const at = (g.edge === "from" ? b0.from : b0.to) + r.d;
+      e.bubble = { day: g.day, at, text: fmtDayMinutes(hass, at) };
     } else if (g.type === "fill") {
       const to = Math.max(0, Math.min(6, g.day + dd)),
         lo = Math.min(g.day, to),
@@ -736,12 +766,19 @@ export class ScheduleCard extends EntityCardBase {
     } else if (g.type === "draw") {
       const { min } = this._at(ev, d);
       const r = drawn(g, g.m0, min, step);
-      if (!r) return;
-      e.draft = { day: g.day, ...r };
-      e.bubble = {
-        day: g.day,
+      e.draft = r && { day: g.day, ...r };
+      // drawn over other days: the same block on each of them
+      const to = Math.max(0, Math.min(6, g.day + dd));
+      const others: number[] = [];
+      for (let i = Math.min(g.day, to); r && i <= Math.max(g.day, to); i++)
+        if (i !== g.day) others.push(i);
+      e.ghosts = r ? others.map((day) => ({ day, ...r })) : [];
+      e.bubble = r && {
+        day: to,
         at: (r.from + r.to) / 2,
-        text: `${fmtDayMinutes(hass, r.from)} – ${fmtDayMinutes(hass, r.to)}`,
+        text:
+          (others.length ? `${daysText([g.day, ...others], names)} ` : "") +
+          rangeText(hass, r.from, r.to),
       };
     }
     this._edit = { ...e };
@@ -763,13 +800,22 @@ export class ScheduleCard extends EntityCardBase {
     const g = d.g;
     if (g.type === "draw") {
       const cfg = this._config as ScheduleCardConfig;
-      const r = d.moved && e.draft ? e.draft : drawn(g, g.m0, null, cfg.snap);
+      const r = d.moved ? e.draft : drawn(g, g.m0, null, cfg.snap);
       if (!r) {
         this._edit = { ...e, ...clean };
         return this._render();
       }
       const made = addBlock(d.base, g.day, r.from, r.to, this._newData(d.base, g.day, r.from));
-      this._commit({ ...e, ...clean, days: d.base }, made.days, [made.id]);
+      // the days it was drawn over get the same block (joining what it lands on there); all of
+      // them selected, to be changed together
+      const others = d.moved ? [...new Set(e.ghosts.map((x) => x.day))] : [];
+      const block = findBlock(made.days, made.id)?.b;
+      const all = others.length && block ? fillDays(made.days, [block], others) : null;
+      this._commit(
+        { ...e, ...clean, days: d.base },
+        all ? all.days : made.days,
+        all ? [made.id, ...all.ids] : [made.id],
+      );
       fireHaptic(this, "selection");
       return;
     }
@@ -789,7 +835,8 @@ export class ScheduleCard extends EntityCardBase {
         return this._render();
       }
       const r = fillDays(d.base, g.blocks, targets);
-      this._commit({ ...e, ...clean, days: d.base }, r.days, e.sel);
+      // the copies join the selection: all of them are changed together from here
+      this._commit({ ...e, ...clean, days: d.base }, r.days, [...new Set([...e.sel, ...r.ids])]);
       return;
     }
     this._commit({ ...e, ...clean, days: d.base }, e.days, e.sel);
@@ -850,7 +897,8 @@ export class ScheduleCard extends EntityCardBase {
       let v = (cur ?? spec.default ?? spec.min ?? 0) + (cur === undefined ? 0 : dir * spec.step);
       if (spec.min !== null) v = Math.max(spec.min, v);
       if (spec.max !== null) v = Math.min(spec.max, v);
-      v = Number(v.toFixed(stepDecimals(spec.step)));
+      // (the value's own decimals stay: 20.5 by a step of 1 is 21.5)
+      v = Number(v.toFixed(Math.max(stepDecimals(spec.step), stepDecimals(cur ?? 0))));
       this._refocusSel = `a${act}`;
       this._commit(e, setData(e.days, ids, spec.key, v), ids);
       return;
@@ -858,8 +906,10 @@ export class ScheduleCard extends EntityCardBase {
     this._render();
   }
   // a change made: the days before it go into the undo history
+  // (the same days again, a drag back to where it began: nothing to undo)
   _commit(e: EditState, days: EDays, sel: number[]) {
-    this._edit = { ...e, hist: [...e.hist, e.days], days, sel };
+    const same = JSON.stringify(days) === JSON.stringify(e.days);
+    this._edit = same ? { ...e, sel } : { ...e, hist: [...e.hist, e.days], days, sel };
     this._render();
   }
 
@@ -907,7 +957,10 @@ export class ScheduleCard extends EntityCardBase {
       // Shift: its end, Alt: its start
       const dm = ev.key === "ArrowLeft" ? -step : step;
       const edge = ev.shiftKey ? "to" : ev.altKey ? "from" : "both";
-      move(fit(e.days, ids, edge, dm, step)?.days);
+      // (a step into the next block joins it, as a drag does)
+      const r =
+        edge === "both" ? relocate(e.days, ids, 0, dm, false) : resize(e.days, ids, edge, dm, step);
+      move(r?.days, r?.ids);
     } else if (ev.key === "ArrowUp" || ev.key === "ArrowDown") {
       // (the copy toggle copies to the day above or below)
       const r = relocate(e.days, ids, ev.key === "ArrowUp" ? -1 : 1, 0, e.copy);
@@ -997,10 +1050,12 @@ export class ScheduleCard extends EntityCardBase {
     const cfg = this._config;
     const week = cfg ? knownWeek(cfg.entity) : null;
     if (!cfg || !week) return;
-    const days = withIds(rotate(week, this._first()));
+    const first = this._first();
+    const days = withIds(rotate(week, first));
     this._hideTip();
     this._edit = {
       days,
+      first,
       start: week,
       hist: [],
       sel: [],
@@ -1024,7 +1079,7 @@ export class ScheduleCard extends EntityCardBase {
     const cfg = this._config;
     const hass = this._hass;
     if (!e || !cfg || !hass || e.saving) return;
-    const week = unrotate(withoutIds(e.days), this._first());
+    const week = unrotate(withoutIds(e.days), e.first);
     if (sameWeek(week, e.start)) return this._leave();
     this._edit = { ...e, saving: true };
     this._render();

@@ -9,6 +9,7 @@ import { ICONS } from "../shared/kinds/editor-schema.ts";
 import { DATA_FIELDS, dataFromForm, dataToForm } from "../shared/schedule/data.ts";
 import { WEEKDAYS } from "../shared/schedule/model.ts";
 import { dayNames } from "../shared/schedule/text.ts";
+import { numOrNull } from "../shared/util.ts";
 import { SNAPS } from "./config.ts";
 
 type Raw = Record<string, unknown>;
@@ -39,7 +40,7 @@ export const configToForm = (c: Raw): HaFormData => {
   for (const k of TEXTS) d[k] = typeof c[k] === "string" ? c[k] : "";
   Object.assign(d, dataToForm(c));
   d.edit = c.edit !== false;
-  d.snap = String(typeof c.snap === "number" ? c.snap : 15);
+  d.snap = String(numOrNull(c.snap) ?? 15);
   d.first_weekday = typeof c.first_weekday === "string" ? c.first_weekday : PROFILE;
   if (c.title_tap_action !== undefined && c.title_tap_action !== null)
     d.title_tap_action = c.title_tap_action;

@@ -102,6 +102,31 @@ describe("where a schedule stands", () => {
     expect(nextChange(wrap, { day: 0, min: 60 })).toMatchObject({ on: true, day: 0, min: 120 });
   });
 
+  it("changes where a block's data does, though the next block follows at once", () => {
+    const two = week({
+      monday: [
+        B("08:00:00", "13:00:00", { temperature: 21 }),
+        B("13:00:00", "22:30:00", { temperature: 18 }),
+      ],
+    });
+    expect(nextChange(two, { day: 0, min: 720 })).toEqual({ on: true, in: 60, day: 0, min: 780 });
+    expect(nextChange(two, { day: 0, min: 800 })).toMatchObject({ on: true, min: 1350 });
+    // the same data on both sides: one run
+    const one = week({
+      monday: [
+        B("08:00:00", "13:00:00", { temperature: 21 }),
+        B("13:00:00", "22:30:00", { temperature: 21 }),
+      ],
+    });
+    expect(nextChange(one, { day: 0, min: 720 })).toMatchObject({ on: true, min: 1350 });
+    // and across the week's turn
+    const wrap = week({
+      monday: [B("00:00:00", "02:00:00", { temperature: 18 })],
+      sunday: [B("23:00:00", "24:00:00", { temperature: 21 })],
+    });
+    expect(nextChange(wrap, { day: 6, min: 1400 })).toMatchObject({ on: true, day: 0, min: 0 });
+  });
+
   it("has no change on a week always on, or never", () => {
     expect(nextChange(week({}), { day: 0, min: 0 })).toBeNull();
     const all = week(

@@ -2,7 +2,7 @@
 // call it), one fetch per entity for the whole page, shared by every card that shows it. Fetched
 // again when the entity's state changes (a block starts or ends, the schedule was saved), every
 // few minutes, and after a card saved it. Saving (admins, and only a schedule made in the UI: one
-// set in YAML has no item to update) goes through the helper's own `schedule/update`, after
+// set in YAML has no item to update; the entity's `editable` says which) goes through the helper's own `schedule/update`, after
 // reading the week and the helper again: a week changed elsewhere since the edit began is not
 // overwritten unasked, and the helper's name and icon are the ones it has now.
 import type { HomeAssistant, HassEntity } from "../ha.ts";
@@ -40,8 +40,15 @@ const fetchWeek = async (hass: HomeAssistant, id: string): Promise<Week | null> 
   return mine ? parseWeek(mine) : null;
 };
 
+// (a listener that throws stops neither the others nor what told them: a save stays saved)
 const tell = (id: string) => {
-  for (const fn of listeners) fn(id);
+  for (const fn of [...listeners]) {
+    try {
+      fn(id);
+    } catch (err) {
+      console.error("pro-cards: a schedule listener failed", err);
+    }
+  }
 };
 
 const ask = (hass: HomeAssistant, id: string) => {
@@ -109,12 +116,6 @@ interface ScheduleItem {
   name: string;
   icon?: string | null;
 }
-// per entity: the item's id (null: none, a schedule set in YAML), undefined while it is looked up;
-// a lookup that failed is tried again a minute later
-const items = new Map<string, string | null>();
-const lookingUp = new Set<string>();
-const failedAt = new Map<string, number>();
-
 const findItem = async (hass: HomeAssistant, id: string): Promise<ScheduleItem | null> => {
   const [entry, list] = await Promise.all([
     hass.callWS<{ unique_id?: string } | null>({
@@ -126,36 +127,10 @@ const findItem = async (hass: HomeAssistant, id: string): Promise<ScheduleItem |
   return (Array.isArray(list) ? list : []).find((i) => i.id === entry?.unique_id) ?? null;
 };
 
-// whether the user may edit the schedule: undefined while that is found out (for an admin: the
-// entity's registry entry names the item), then true or false
-export const scheduleEditable = (
-  hass: HomeAssistant | undefined,
-  id: string | null,
-): boolean | undefined => {
-  if (!id || !hass?.user?.is_admin || !hass.callWS) return false;
-  if (items.has(id)) return items.get(id) !== null;
-  const failed = failedAt.get(id);
-  if (failed !== undefined && Date.now() - failed < RETRY_MS) return false;
-  if (!lookingUp.has(id)) {
-    lookingUp.add(id);
-    findItem(hass, id)
-      .then(
-        (item) => {
-          failedAt.delete(id);
-          items.set(id, item ? item.id : null);
-        },
-        (err) => {
-          console.warn(`pro-cards: the schedule helper of ${id} could not be read`, err);
-          failedAt.set(id, Date.now());
-        },
-      )
-      .finally(() => {
-        lookingUp.delete(id);
-        tell(id);
-      });
-  }
-  return failed !== undefined ? false : undefined;
-};
+// whether the user may edit the schedule: an administrator, and a helper made in the UI (Home
+// Assistant says so in the entity's `editable`; one set in YAML has no item to update)
+export const scheduleEditable = (hass: HomeAssistant | undefined, id: string | null): boolean =>
+  !!id && !!hass?.user?.is_admin && !!hass.callWS && hass.states[id]?.attributes.editable === true;
 
 // why a save did not happen: the schedule is set in YAML, or was changed elsewhere since `start`
 // (the week Home Assistant has now in `week`)
@@ -197,7 +172,4 @@ export const resetSchedules = () => {
   asking.clear();
   again.clear();
   gen.clear();
-  items.clear();
-  lookingUp.clear();
-  failedAt.clear();
 };

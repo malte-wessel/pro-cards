@@ -23,19 +23,6 @@ export const snapMin = (m: number, step: number) => Math.round(m / step) * step;
 
 const sorted = (d: EBlock[]) => d.sort((a, b) => a.from - b.from);
 
-// every block in its day and none overlapping the next; the blocks changed (`ids`) at least
-// `least` minutes long (a shorter one Home Assistant already has stays as it is)
-export const valid = (days: EDays, least: number, ids: readonly number[] = []) =>
-  days.every((d) =>
-    d.every(
-      (b, i) =>
-        b.from >= 0 &&
-        b.to <= DAY_MIN &&
-        (!ids.includes(b.id) || b.to - b.from >= least) &&
-        (i === 0 || d[i - 1].to <= b.from),
-    ),
-  );
-
 // blocks that overlap merged into one; touching blocks stay two. The merged block keeps the data
 // of the block that came (`came`: moved, copied), else the earlier one's
 export const merge = (d: readonly EBlock[], came: readonly number[] = []): EBlock[] => {
@@ -65,22 +52,6 @@ export const shifted = (days: EDays, ids: readonly number[], edge: Edge, d: numb
       ),
     ),
   );
-
-// the largest step towards d (a step at a time) that keeps every day valid: null for none
-export const fit = (
-  days: EDays,
-  ids: readonly number[],
-  edge: Edge,
-  d: number,
-  step: number,
-): { days: EBlock[][]; d: number } | null => {
-  const s = d < 0 ? -step : step;
-  for (let k = d; k !== 0 && Math.sign(k) === Math.sign(d); k -= s) {
-    const c = shifted(days, ids, edge, k);
-    if (valid(c, step, ids)) return { days: c, d: k };
-  }
-  return null;
-};
 
 // The chosen blocks moved (or copied) by dd days and dm minutes, the minutes held so every block
 // stays in its day; blocks that land on others merge with them. Null where a block would leave
@@ -119,6 +90,29 @@ const landedIds = (days: EDays, landed: { d: number; from: number }[]) => [
     }),
   ),
 ];
+
+// The chosen blocks' start or end moved by d minutes, held so each stays in its day and a step
+// long (one shorter already only grows); blocks they reach into merge with them. The result names
+// the blocks that hold them now, and the minutes they moved.
+export const resize = (
+  days: EDays,
+  ids: readonly number[],
+  edge: "from" | "to",
+  d: number,
+  step: number,
+): { days: EBlock[][]; ids: number[]; d: number } => {
+  const picked = days.flat().filter((b) => ids.includes(b.id));
+  const room = (b: EBlock) => Math.max(0, b.to - b.from - step);
+  const lo = Math.max(...picked.map((b) => (edge === "to" ? -room(b) : -b.from))),
+    hi = Math.min(...picked.map((b) => (edge === "to" ? DAY_MIN - b.to : room(b))));
+  const m = picked.length ? Math.max(lo, Math.min(hi, d)) : 0;
+  const landed: { d: number; from: number }[] = [];
+  const out = shifted(days, ids, edge, m).map((day, i) => {
+    for (const b of day) if (ids.includes(b.id)) landed.push({ d: i, from: b.from });
+    return merge(day, ids);
+  });
+  return { days: out, ids: landedIds(out, landed), d: m };
+};
 
 // copies of the blocks of one day onto other days (merging where they land); the copies' ids
 export const fillDays = (

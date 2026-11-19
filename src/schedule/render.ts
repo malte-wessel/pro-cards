@@ -102,7 +102,7 @@ const editRow = (v: WeekView, e: EditView, d: number) => {
   html += laneHtml([], null, true);
   for (const g of e.ghosts)
     if (g.day === d)
-      html += `<i class="sghost" style="left:${pct(g.from)};width:${pct(g.to - g.from)}"></i>`;
+      html += `<i class="sb draft" style="left:${pct(g.from)};width:${pct(g.to - g.from)}"></i>`;
   for (const b of blocks) {
     const on = e.sel.has(b.id);
     html += `<button class="sb${on ? " sel" : ""}" data-id="${b.id}" data-day="${d}" style="left:${pct(b.from)};width:${pct(b.to - b.from)}" aria-pressed="${on}" aria-label="${esc(blockLabel(v.hass, b, name.long, v.specs))}">${blockInner(v, e, b)}</button>`;

@@ -114,6 +114,24 @@ describe("schedule-card-pro editor", () => {
     ]);
   });
 
+  it("reads numbers written as text, and keeps them through another field's change", () => {
+    const card = {
+      type: T,
+      entity: "schedule.heating",
+      snap: "30",
+      data: [{ key: "temperature", unit: "°C", step: "0.5", min: "5" }],
+    };
+    const form = configToForm(card);
+    expect(form).toMatchObject({ snap: "30", data_step: 0.5, data_min: 5 });
+    expect(formToConfig({ ...form, data_unit: "°F" }, card)).toEqual({
+      ...card,
+      data: [{ key: "temperature", unit: "°F", step: "0.5", min: "5" }],
+    });
+    expect(formToConfig({ ...form, data_step: 1 }, card).data).toEqual([
+      { key: "temperature", unit: "°C", step: 1, min: "5" },
+    ]);
+  });
+
   it("writes nothing for a select left at its default", () => {
     const card = { type: T, entity: "schedule.heating" };
     const form = configToForm(card);

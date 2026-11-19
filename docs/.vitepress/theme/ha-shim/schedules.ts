@@ -77,6 +77,8 @@ export const scheduleState = (id: string, t: number) => {
     state: cur ? "on" : "off",
     attributes: {
       ...SCHEDULE_ATTRS[id],
+      // (a helper made in the UI; one set in YAML is not)
+      editable: id in ITEMS,
       next_event: c ? new Date(Math.round((t + c.in * 60e3) / 60e3) * 60e3).toISOString() : null,
       ...(cur?.data ?? {}),
     },

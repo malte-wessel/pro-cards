@@ -1,7 +1,7 @@
 // A schedule's week read once per page and saved: answers older than a save are dropped, a week
 // that did not change keeps its identity, a save re-reads Home Assistant first (a week changed
-// elsewhere is not overwritten unasked; a YAML schedule is never saved), a failed lookup is tried
-// again.
+// elsewhere is not overwritten unasked; a YAML schedule is never saved), a listener that throws
+// fails no save.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { HassEntity, HomeAssistant } from "../../../../src/shared/ha.ts";
 import {
@@ -112,41 +112,42 @@ describe("the schedule feed", () => {
   });
 
   it("knows who may edit: an administrator, a schedule made in the UI", async () => {
-    expect(scheduleEditable(fake(false).hass, ID)).toBe(false);
-    const f = fake();
-    expect(scheduleEditable(f.hass, ID)).toBeUndefined();
-    await tick();
-    await tick();
-    expect(scheduleEditable(f.hass, ID)).toBe(true);
-    resetSchedules();
+    const as = (admin: boolean, editable: unknown) => {
+      const f = fake(admin);
+      f.hass.states[ID].attributes.editable = editable;
+      return scheduleEditable(f.hass, ID);
+    };
+    expect(as(true, true)).toBe(true);
+    expect(as(false, true)).toBe(false);
+    // set in YAML: Home Assistant says so, and a save refuses it
+    expect(as(true, false)).toBe(false);
+    expect(as(true, undefined)).toBe(false);
     const yaml = fake();
     (yaml.hass.callWS as ReturnType<typeof vi.fn>).mockImplementation(
       async (msg: { type: string }) =>
         msg.type === "schedule/list" ? [] : { unique_id: "office_hours", response: {} },
     );
-    scheduleEditable(yaml.hass, ID);
-    await tick();
-    await tick();
-    expect(scheduleEditable(yaml.hass, ID)).toBe(false);
     const err = await saveWeek(yaml.hass, ID, parseWeek({}), null).catch((e) => e);
     expect(err.reason).toBe("yaml");
+    // (asking who may edit calls nothing)
+    expect(fake().sent).toHaveLength(0);
   });
 
-  it("tries a failed lookup again a minute later", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
+  it("saves though a card listening to it throws", async () => {
     const f = fake();
-    const call = f.hass.callWS as ReturnType<typeof vi.fn>;
-    call.mockRejectedValueOnce(new Error("dropped"));
-    vi.spyOn(console, "warn").mockImplementation(() => {});
-    scheduleEditable(f.hass, ID);
+    scheduleWeek(f.hass, ID);
     await tick();
-    await tick();
-    expect(scheduleEditable(f.hass, ID)).toBe(false);
-    vi.setSystemTime(Date.now() + 61e3);
-    // (asked again; view only meanwhile, no flicker)
-    expect(scheduleEditable(f.hass, ID)).toBe(false);
-    await tick();
-    await tick();
-    expect(scheduleEditable(f.hass, ID)).toBe(true);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const heard: string[] = [];
+    const off1 = onScheduleWeek(() => {
+      throw new Error("broken card");
+    });
+    const off2 = onScheduleWeek((id) => heard.push(id));
+    await expect(
+      saveWeek(f.hass, ID, parseWeek(week("09:00:00")), knownWeek(ID) ?? null),
+    ).resolves.toBeUndefined();
+    expect(heard).toContain(ID);
+    off1();
+    off2();
   });
 });

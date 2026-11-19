@@ -68,7 +68,7 @@ export const dataToForm = (c: Raw, fields: readonly DataField[] = DATA_FIELDS): 
     d: Raw = {};
   for (const k of fields)
     if (k === "key" || k === "unit") d[`data_${k}`] = typeof first[k] === "string" ? first[k] : "";
-    else if (typeof first[k] === "number") d[`data_${k}`] = first[k];
+    else if (numOrNull(first[k]) !== null) d[`data_${k}`] = numOrNull(first[k]);
   return d;
 };
 // `data` with the form's first entry (a key alone where it has nothing else; none without a key),
@@ -83,7 +83,8 @@ export const dataFromForm = (
   for (const k of fields) {
     const v = form[`data_${k}`];
     if (empty(v)) delete entry[k];
-    else entry[k] = v;
+    // (a number written as text that still says the same keeps its spelling)
+    else if (typeof v !== "number" || numOrNull(entry[k]) !== v) entry[k] = v;
   }
   const one = Object.keys(entry).length === 1 ? entry.key : entry;
   const list = empty(entry.key) ? rest : [one, ...rest];

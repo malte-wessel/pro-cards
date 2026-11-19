@@ -75,7 +75,6 @@ const STYLE_WEEK = `
   .sfill { position: absolute; top: 18px; width: 12px; height: 12px; margin: 0 0 0 -6px; padding: 0; box-sizing: border-box; border: 2px solid ${CARD_BG}; border-radius: 50%; background: var(--fe-color); box-shadow: 0 0 2px rgba(0,0,0,.35); cursor: ns-resize; touch-action: none; z-index: 3; }
   /* (its target reaches down and to the sides, not up over the block it belongs to) */
   .sfill::before { content: ""; position: absolute; inset: -2px -16px -18px; }
-  .sghost { position: absolute; top: 0; bottom: 0; box-sizing: border-box; border: 2px dashed var(--fe-color); border-radius: 2px; background: color-mix(in srgb, var(--fe-color) 15%, transparent); pointer-events: none; }
   .sbubble { position: absolute; bottom: calc(100% + 6px); transform: translateX(-50%); padding: 3px 8px; border-radius: 999px; background: var(--primary-text-color); color: ${CARD_BG}; ${type(12, 14)} font-weight: ${fw("medium")}; white-space: nowrap; font-variant-numeric: tabular-nums; z-index: 5; pointer-events: none; }
   /* on a touch screen the bubble stands clear of the finger */
   .wk.touch .sbubble { bottom: calc(100% + 30px); }
@@ -84,7 +83,6 @@ const STYLE_WEEK = `
   .sbar .sstep { display: flex; align-items: center; height: 28px; border-radius: 8px; background: var(--fe-track); }
   .sbar .sstep > .sbtn { background: transparent; color: var(--primary-text-color); }
   .sbar .sstep > .val { min-width: 56px; padding: 0 4px; text-align: center; font-size: ${fs(13)}; font-weight: ${fw("medium")}; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  @keyframes ctl-pulse { 50% { opacity: .45; } }
   @media (prefers-reduced-motion: reduce) { .sbtn.done.saving { animation: none; } }
 `;
 

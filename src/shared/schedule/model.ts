@@ -111,14 +111,16 @@ export const weekPos = (t: number, tz: string): WeekPos => {
   return { day: p.wd < 0 ? 0 : p.wd, min: p.h * 60 + p.mi + p.s / 60 };
 };
 
-// the week's blocks on one line of minutes from Monday 00:00, blocks that touch (also across
-// midnight, and Sunday into Monday) as one run
+// the week's blocks on one line of minutes from Monday 00:00, blocks that touch and hold the same
+// data (also across midnight, and Sunday into Monday) as one run: where the data changes, the
+// schedule changes
 interface Run {
   from: number;
   to: number;
   block: Block;
   day: number;
 }
+const sameData = (a: Block, b: Block) => JSON.stringify(a.data) === JSON.stringify(b.data);
 const runsOf = (week: Week): Run[] => {
   const runs: Run[] = [];
   week.forEach((day, d) =>
@@ -126,12 +128,17 @@ const runsOf = (week: Week): Run[] => {
       const from = d * DAY_MIN + b.from,
         to = d * DAY_MIN + b.to;
       const last = runs[runs.length - 1];
-      if (last && from <= last.to) last.to = Math.max(last.to, to);
+      if (last && from <= last.to && sameData(last.block, b)) last.to = Math.max(last.to, to);
       else runs.push({ from, to, block: b, day: d });
     }),
   );
   // Sunday's last run reaching Monday 00:00 goes on into Monday's first
-  if (runs.length > 1 && runs[runs.length - 1].to >= WEEK_MIN && runs[0].from === 0) {
+  if (
+    runs.length > 1 &&
+    runs[runs.length - 1].to >= WEEK_MIN &&
+    runs[0].from === 0 &&
+    sameData(runs[runs.length - 1].block, runs[0].block)
+  ) {
     const last = runs.pop() as Run;
     runs[0] = { ...runs[0], from: last.from - WEEK_MIN };
   }

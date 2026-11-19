@@ -7,12 +7,11 @@ import {
   drawBounds,
   drawn,
   fillDays,
-  fit,
   merge,
   relocate,
+  resize,
   removeBlocks,
   setData,
-  valid,
   withIds,
   withoutIds,
   type EDays,
@@ -29,21 +28,6 @@ const spans = (d: EDays) => d.map((day) => day.map((x) => [x.from, x.to]));
 const idAt = (d: EDays, day: number, i: number) => d[day][i].id;
 
 describe("schedule edits", () => {
-  it("keeps every block in its day, a step long, apart from the next", () => {
-    expect(valid(days([b(0, 60), b(60, 120)]), 15)).toBe(true);
-    expect(valid(days([b(0, 70), b(60, 120)]), 15)).toBe(false);
-    expect(valid(days([b(1430, 1450)]), 15)).toBe(false);
-    // a block changed is a step long at least; one only kept as it was may be shorter
-    const short = days([b(0, 10)]);
-    expect(valid(short, 15, [idAt(short, 0, 0)])).toBe(false);
-    expect(valid(short, 15)).toBe(true);
-  });
-
-  it("moves a block though another block of the week is shorter than a step", () => {
-    const d = days([b(60, 120)], [b(600, 605)]);
-    expect(spans(fit(d, [idAt(d, 0, 0)], "both", 15, 15)!.days)[0]).toEqual([[75, 135]]);
-  });
-
   it("keeps the data of a block moved onto another", () => {
     const d = days([b(360, 480, { temperature: 18 }), b(480, 600, { temperature: 21 })]);
     const r = relocate(d, [idAt(d, 0, 1)], 0, -60, false)!;
@@ -58,20 +42,26 @@ describe("schedule edits", () => {
     ]);
   });
 
-  it("moves blocks by the largest step that fits, never past their neighbours", () => {
-    const d = days([b(60, 120), b(180, 240)]);
+  it("moves a block's end into the next block, which joins it with its data", () => {
+    const d = days([b(60, 120, { t: 1 }), b(180, 240, { t: 2 }), b(300, 360, { t: 3 })]);
     const id = idAt(d, 0, 0);
-    expect(spans(fit(d, [id], "both", 30, 15)!.days)[0]).toEqual([
-      [90, 150],
-      [180, 240],
+    // up to the next block: two blocks that touch
+    expect(spans(resize(d, [id], "to", 60, 15).days)[0]).toHaveLength(3);
+    const r = resize(d, [id], "to", 90, 15);
+    expect(spans(r.days)[0]).toEqual([
+      [60, 240],
+      [300, 360],
     ]);
-    // 90 would overlap the next block: it goes as far as it can
-    expect(fit(d, [id], "both", 90, 15)!.d).toBe(60);
-    // the end alone
-    expect(spans(fit(d, [id], "to", 30, 15)!.days)[0][0]).toEqual([60, 150]);
-    // nowhere to go
-    const full = days([b(0, 1440)]);
-    expect(fit(full, [idAt(full, 0, 0)], "both", -15, 15)).toBeNull();
+    expect(r.days[0][0].data).toEqual({ t: 1 });
+    expect(r.ids).toEqual([r.days[0][0].id]);
+    // a start, back into the block before; several at once
+    const last = idAt(d, 0, 2);
+    const both = resize(d, [idAt(d, 0, 1), last], "from", -90, 15);
+    expect(spans(both.days)[0]).toEqual([[60, 360]]);
+    // never shorter than a step, never out of the day
+    expect(resize(d, [id], "to", -300, 15)).toMatchObject({ d: -45 });
+    expect(resize(d, [id], "from", -300, 15)).toMatchObject({ d: -60 });
+    expect(resize(d, [last], "to", 5000, 15)).toMatchObject({ d: 1080 });
   });
 
   it("moves blocks to another day, merging where they land, and follows them", () => {

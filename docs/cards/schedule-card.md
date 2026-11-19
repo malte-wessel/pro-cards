@@ -43,11 +43,11 @@ The pencil in the header, or a long press on the week, turns edit mode on. Every
 - **Tap a block** to select it, tap more to change them together; **tap a day's name** to select the whole day. The cross on the count in the header clears the selection.
 - **Drag a block** to another time or another day. The copy button in the toolbar copies it there instead.
 - **Drag a handle** on a selected block's end to change its start or end.
-- **Drag the dot** under a day's selection up or down over other days to copy it to all of them.
-- **Drag across an empty spot** to draw a new block; a tap there makes one of an hour. **+** in the header adds an hour to the selected block's day.
+- **Drag the dot** under a day's selection up or down over other days to copy it to all of them. The copies are selected with it, so the toolbar changes them together.
+- **Drag across an empty spot** to draw a new block, and on over other days to draw the same block on each of them; a tap there makes one of an hour. **+** in the header adds an hour to the selected block's day.
 - The **toolbar** above the selection changes its value (the first `data`), copies or deletes it.
 
-Times snap to 15 minutes (`snap`: 5, 10, 15, 30 or 60). Blocks that land on each other merge, as Home Assistant keeps no overlapping blocks: the merged block keeps the data of the one you moved or copied. While the card edits, the handles and the toolbar float over the week: the card keeps its size.
+Times snap to 15 minutes (`snap`: 5, 10, 15, 30 or 60). Blocks that land on each other merge, whether you moved, copied or drew them or dragged an end into the next block, as Home Assistant keeps no overlapping blocks: the merged block keeps the data of the one you moved or copied. While the card edits, the handles and the toolbar float over the week: the card keeps its size.
 
 ::: live
 
@@ -62,7 +62,7 @@ snap: 30
 
 ### With the keyboard
 
-In edit mode every block is a button that names its day, its times and its data. **Enter** selects it, **←** and **→** move it by `snap` (with **Shift** its end), **↑** and **↓** move it to the day above or below, **Delete** removes it, **Escape** clears the selection.
+In edit mode every block is a button that names its day, its times and its data. **Enter** selects it, **←** and **→** move it by `snap` (with **Shift** its end), **↑** and **↓** move it to the day above or below, a step into the next block joins the two, **Delete** removes it, **Escape** clears the selection.
 
 ### Who can edit
 
