@@ -361,6 +361,42 @@ test.describe("schedule card", () => {
     await expect(card(page).locator(".sb:focus")).toHaveAttribute("aria-label", /12:15 to 22:30/);
   });
 
+  test("keeps Done on a narrow card with a selection, and the focus in the header", async ({
+    page,
+  }) => {
+    await mount(page, CFG, { width: 228 });
+    await edit(page);
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("Enter");
+    const done = (await card(page).locator('.sctl [data-act="done"]').boundingBox())!;
+    const box = (await card(page).boundingBox())!;
+    expect(done.x + done.width).toBeLessThanOrEqual(box.x + box.width);
+    // Escape on a header button clears the selection, as on the week
+    const undo = card(page).locator('.sctl [data-act="undo"]');
+    await undo.focus();
+    await page.keyboard.press("Escape");
+    await expect(card(page).locator(".spill")).toHaveCount(0);
+    // the last Undo: it cannot be pressed again, the focus goes on to Done
+    await undo.focus();
+    await page.keyboard.press("Enter");
+    await expect(undo).toBeDisabled();
+    await expect(card(page).locator('.sctl [data-act="done"]')).toBeFocused();
+  });
+
+  test("a row's blocks and day take the pointer over their whole height", async ({ page }) => {
+    await mount(page, CFG, { width: 400 });
+    await edit(page);
+    // Wednesday's first block (the toolbar goes above it)
+    const b = (await blocks(page, 2).first().boundingBox())!;
+    await page.mouse.click(b.x + b.width / 2, b.y + b.height - 1);
+    await expect(blocks(page, 2).first()).toHaveAttribute("aria-pressed", "true");
+    await expect(blocks(page, 3).first()).toHaveAttribute("aria-pressed", "false");
+    // the dot under it leaves Thursday's block to the pointer
+    const t = (await blocks(page, 3).first().boundingBox())!;
+    await page.mouse.click(t.x + t.width / 2, t.y + t.height / 2);
+    await expect(blocks(page, 3).first()).toHaveAttribute("aria-pressed", "true");
+  });
+
   test("is view only for a user who is no administrator, a YAML schedule and edit: false", async ({
     page,
   }) => {

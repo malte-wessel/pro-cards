@@ -85,10 +85,20 @@ describe("where a schedule stands", () => {
     expect(nextChange(w, { day: 0, min: 1100 })).toEqual({ on: true, in: 400, day: 1, min: 60 });
   });
 
+  it("ends a block that runs to midnight at 24:00 of its day", () => {
+    const late = week({ sunday: [B("22:00:00", "24:00:00")] });
+    expect(nextChange(late, { day: 6, min: 1380 })).toEqual({
+      on: true,
+      in: 60,
+      day: 6,
+      min: 1440,
+    });
+  });
+
   it("finds when it turns on next, across days and the week's turn", () => {
     expect(nextChange(w, { day: 0, min: 600 })).toEqual({ on: false, in: 420, day: 0, min: 1020 });
     expect(nextChange(w, { day: 3, min: 0 })).toMatchObject({ on: false, day: 6, min: 1320 });
-    expect(nextChange(w, { day: 6, min: 1380 })).toEqual({ on: true, in: 60, day: 0, min: 0 });
+    expect(nextChange(w, { day: 6, min: 1380 })).toEqual({ on: true, in: 60, day: 6, min: 1440 });
   });
 
   it("joins Sunday's last block to Monday's first across the week's turn", () => {
@@ -124,7 +134,7 @@ describe("where a schedule stands", () => {
       monday: [B("00:00:00", "02:00:00", { temperature: 18 })],
       sunday: [B("23:00:00", "24:00:00", { temperature: 21 })],
     });
-    expect(nextChange(wrap, { day: 6, min: 1400 })).toMatchObject({ on: true, day: 0, min: 0 });
+    expect(nextChange(wrap, { day: 6, min: 1400 })).toMatchObject({ on: true, day: 6, min: 1440 });
   });
 
   it("has no change on a week always on, or never", () => {

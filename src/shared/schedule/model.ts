@@ -167,7 +167,12 @@ export const nextChange = (week: Week, at: WeekPos): Change | null => {
     let t = to;
     while (t <= p) t += WEEK_MIN;
     const w = ((t % WEEK_MIN) + WEEK_MIN) % WEEK_MIN;
-    return { on, in: t - p, day: Math.floor(w / DAY_MIN), min: w % DAY_MIN };
+    const day = Math.floor(w / DAY_MIN),
+      min = w % DAY_MIN;
+    // (it runs until the end of a day, 24:00, not until the next day's 00:00)
+    return on && min === 0
+      ? { on, in: t - p, day: (day + 6) % 7, min: DAY_MIN }
+      : { on, in: t - p, day, min };
   };
   for (const r of runs) {
     // (a run that wrapped from Sunday starts before Monday 00:00)

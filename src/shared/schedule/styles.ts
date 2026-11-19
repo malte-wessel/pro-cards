@@ -1,7 +1,7 @@
 // The schedule's lane and axis (lane.ts): the strip's look (22 px, blocks at .7, the running one
 // outlined), a line at now, dashed lines every six hours. Times run left to right in every
 // language. Inside a container (`.sbox`) a narrow one drops the axis' quarter labels.
-import { fw, type } from "../typography.ts";
+import { type } from "../typography.ts";
 
 export const STYLE_SCHEDULE_LANE = `
   .sbox { container-type: inline-size; min-width: 0; }
@@ -16,5 +16,4 @@ export const STYLE_SCHEDULE_LANE = `
   .slbl.r { transform: translateX(-100%); }
   @container (max-width: 259px) { .slbl.q { display: none; } }
   .slane > .sph { position: absolute; left: 8px; top: 5px; ${type(10, 12)} color: var(--secondary-text-color); }
-  .sbox .tip b { font-weight: ${fw("medium")}; font-variant-numeric: tabular-nums; }
 `;

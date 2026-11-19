@@ -8,7 +8,7 @@ export interface EBlock extends Block {
   id: number;
 }
 export type EDays = readonly (readonly EBlock[])[];
-export type Edge = "from" | "to" | "both";
+export type Edge = "from" | "to";
 
 let nextId = 1;
 export const newId = () => nextId++;
@@ -37,16 +37,16 @@ export const merge = (d: readonly EBlock[], came: readonly number[] = []): EBloc
   return out;
 };
 
-// the chosen blocks' start, end or both moved by d minutes, within their days
-export const shifted = (days: EDays, ids: readonly number[], edge: Edge, d: number): EBlock[][] =>
+// the chosen blocks' start or end moved by d minutes
+const shifted = (days: EDays, ids: readonly number[], edge: Edge, d: number): EBlock[][] =>
   days.map((day) =>
     sorted(
       day.map((b) =>
         ids.includes(b.id)
           ? {
               ...b,
-              from: edge !== "to" ? b.from + d : b.from,
-              to: edge !== "from" ? b.to + d : b.to,
+              from: edge === "from" ? b.from + d : b.from,
+              to: edge === "to" ? b.to + d : b.to,
             }
           : b,
       ),
@@ -97,7 +97,7 @@ const landedIds = (days: EDays, landed: { d: number; from: number }[]) => [
 export const resize = (
   days: EDays,
   ids: readonly number[],
-  edge: "from" | "to",
+  edge: Edge,
   d: number,
   step: number,
 ): { days: EBlock[][]; ids: number[]; d: number } => {

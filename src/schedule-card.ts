@@ -221,6 +221,10 @@ export class ScheduleCard extends EntityCardBase {
     ctl.className = "sctl";
     header.append(next, ctl);
     ctl.addEventListener("click", (ev) => this._onHeaderClick(ev));
+    // (Escape on the header's buttons as on the week)
+    ctl.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape") this._onKey(ev);
+    });
   }
   _buildBody(body: HTMLElement) {
     const wk = document.createElement("div");
@@ -442,8 +446,13 @@ export class ScheduleCard extends EntityCardBase {
     else if (cfg.edit && editable === false && st && st.state !== "unavailable")
       ctl.innerHTML = `<span class="sbtn icon-only" role="img" aria-label="${esc(t(hass, "schedule.view_only"))}" title="${esc(t(hass, "schedule.view_only"))}"><ha-icon icon="mdi:eye-outline"></ha-icon></span>`;
     else ctl.innerHTML = "";
+    // the focus stays on its button; where that went or cannot be pressed any more (the last Undo,
+    // the selection cleared), on Done
     if (keep)
-      ctl.querySelector<HTMLElement>(`[data-act="${keep}"]`)?.focus({ preventScroll: true });
+      (
+        ctl.querySelector<HTMLElement>(`[data-act="${keep}"]:not(:disabled)`) ??
+        ctl.querySelector<HTMLElement>('[data-act="done"]')
+      )?.focus({ preventScroll: true });
   }
 
   // the toolbar above the selection's topmost row, centred on it, kept inside the card (below the
@@ -1025,7 +1034,7 @@ export class ScheduleCard extends EntityCardBase {
     } else if (act === "add") this._addAtFocus();
     else if (act === "done") this._done();
   }
-  // Add: an hour on the day of the focused or selected block (else today), in the first free hour
+  // Add: an hour on the day of the block selected last (else today), in the first free hour
   // from 08:00 on (then from midnight)
   _addAtFocus() {
     const e = this._edit;
