@@ -72,6 +72,25 @@ const blockOf = (
   block: Placement[],
 ) =>
   ent.visual === "bar" && block.some((p) => p.kind === "slider") ? null : blockEl(ctx, ent, idx, m);
+// a tile's and a poster's controls below the line, then its visual there (a bar, segments, a
+// plot): a plot or a kind's curve runs along the card's bottom edge (its negative margins reach
+// into the padding), and every visual takes the same place. A gauge is the card's picture: its
+// controls follow it, centred with it (a poster draws its gauge apart, above the name). What is
+// behind the texts (a glow, a picture) is not drawn here
+const appendBlock = (
+  ctx: RenderCtx,
+  ent: EntityItem,
+  idx: number,
+  m: EntityModel,
+  block: Placement[],
+  host: HTMLElement,
+  visual: HTMLElement | null,
+) => {
+  const picture = !!visual?.classList.contains("gauge");
+  if (visual && picture) host.appendChild(visual);
+  appendControls(ctx, ent, idx, m, block, host);
+  if (visual && !picture) host.appendChild(visual);
+};
 
 export const fillRow = (
   ctx: RenderCtx,
@@ -292,8 +311,7 @@ export const fillTileSlots = (
   top.append(lead, main);
   row.appendChild(top);
   const block = o.picture !== undefined ? o.picture : blockOf(ctx, ent, idx, m, c.block);
-  if (block) row.appendChild(block);
-  appendControls(ctx, ent, idx, m, c.block, row);
+  appendBlock(ctx, ent, idx, m, c.block, row, block);
 };
 
 // a row of a tile group's table: the name, then at the line's end the value (the status after
@@ -347,8 +365,8 @@ export const fillTableSlots = (
 
 // a poster (the poster card's row): the icon at the top left, and at the bottom the name, then
 // the big value and the secondary line as one block with the controls beside it (under it where
-// they do not fit), then the block visual or controls; `show_icon`, `show_name` and `show_value`
-// leave their part out. Only the poster's own parts are filled again, never the badge rows in its
+// they do not fit), then the controls below it and the visual (a plot along the bottom);
+// `show_icon`, `show_name` and `show_value` leave their part out. Only the poster's own parts are filled again, never the badge rows in its
 // corner (filled apart).
 export const fillPosterSlots = (
   ctx: RenderCtx,
@@ -418,8 +436,7 @@ export const fillPosterSlots = (
     }
     body.appendChild(main);
   }
-  if (block && !gauge) body.appendChild(block);
-  appendControls(ctx, ent, idx, m, c.block, body);
+  appendBlock(ctx, ent, idx, m, c.block, body, gauge ? null : block);
 };
 
 export const fillCell = (

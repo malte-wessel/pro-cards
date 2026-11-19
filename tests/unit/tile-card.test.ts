@@ -564,6 +564,42 @@ describe("tile-card config", () => {
     }
   });
 
+  it("draws a control below the line before the visual below it, after a gauge", () => {
+    const tiles: TileCard[] = [];
+    // the row's last two parts
+    const lastTwo = (cfg: Record<string, unknown>) => {
+      const el = new TileCard();
+      el.setConfig(cfg);
+      document.body.appendChild(el);
+      el.hass = snapshot() as never;
+      tiles.push(el);
+      return [...el.shadowRoot!.querySelector(".row.tile")!.children].slice(-2);
+    };
+    const buttons = { type: "buttons", position: "block" };
+    try {
+      const plotted = lastTwo({
+        entity: "climate.living_room",
+        visual: { type: "sparkline", src: "sensor.living_room_temperature" },
+        control: { type: "select", attribute: "preset_mode", position: "block" },
+      });
+      expect(plotted.map((e) => e.matches(".ctl"))).toEqual([true, false]);
+      expect(plotted[1].matches(".plot")).toBe(true);
+      const bar = lastTwo({ entity: "cover.living_room_blinds", visual: "bar", control: buttons });
+      expect(bar.map((e) => e.matches(".ctl"))).toEqual([true, false]);
+      expect(bar[1].matches(".bar")).toBe(true);
+      // a gauge is the tile's picture: its control under it
+      const gauge = lastTwo({
+        entity: "sensor.living_room_humidity",
+        visual: "gauge",
+        control: { ...buttons, options: [{ entity: "fan.living_room" }] },
+      });
+      expect(gauge[0].matches(".gauge")).toBe(true);
+      expect(gauge[1].matches(".ctl")).toBe(true);
+    } finally {
+      for (const t of tiles) t.remove();
+    }
+  });
+
   it("takes one row unless something below the line needs a second", () => {
     const grid = (cfg: Record<string, unknown>) => {
       const el = new TileCard();

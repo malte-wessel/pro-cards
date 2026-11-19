@@ -1727,4 +1727,24 @@ describe("poster-card drawing", () => {
       expect(q(r, ".pbody").lastElementChild).toBe(plot);
     }
   });
+
+  it("draws a control below the value before the visual below it, a plot or a bar", () => {
+    const control = { type: "select", attribute: "preset_mode", position: "block" };
+    // the body's last two parts
+    const lastTwo = (r: ShadowRoot) => [...q(r, ".pbody").children].slice(-2);
+    const [ctl, plot] = lastTwo(
+      draw({ entity: "climate.living_room", visual: { type: "sparkline", src: TEMP }, control }),
+    );
+    expect(ctl.matches(".ctl")).toBe(true);
+    expect(plot.matches(".plot")).toBe(true);
+    const [buttons, bar] = lastTwo(
+      draw({
+        entity: "cover.living_room_blinds",
+        visual: "bar",
+        control: { type: "buttons", position: "block" },
+      }),
+    );
+    expect(buttons.matches(".ctl")).toBe(true);
+    expect(bar.matches(".bar")).toBe(true);
+  });
 });

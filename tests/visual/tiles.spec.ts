@@ -204,6 +204,32 @@ add("to-controls", [
   t("fan.living_room", { control: "toggle" }),
   t("media_player.living_room_speaker", { visual: false, control: false }),
 ]);
+// a control below the line comes before the visual below it: the plot along the bottom to the
+// tile's edges, a bar; a gauge is the tile's picture, its control under it
+add("to-controls-plot", [
+  t("climate.living_room", {
+    visual: { type: "sparkline", src: "sensor.living_room_temperature" },
+    control: { type: "select", attribute: "preset_mode", position: "block" },
+    grid_options: { columns: 6, rows: "auto" },
+  }),
+  t("input_select.house_mode", {
+    visual: { type: "columns", src: "sensor.power_consumption" },
+    control: { type: "segments", position: "block" },
+    grid_options: { columns: 12, rows: "auto" },
+  }),
+  t("sensor.living_room_humidity", {
+    visual: "bar",
+    min: 0,
+    max: 100,
+    control: { type: "buttons", position: "block", options: [{ entity: "fan.living_room" }] },
+    grid_options: { columns: 6, rows: "auto" },
+  }),
+  t("sensor.living_room_humidity", {
+    visual: "gauge",
+    control: { type: "buttons", position: "block", options: [{ entity: "fan.living_room" }] },
+    grid_options: { columns: 6, rows: 4 },
+  }),
+]);
 
 // the controls' shape: rounded squares of one height, the stepper one bar; your own buttons grey
 // until on, then tinted in their entity's colour (or their own)
