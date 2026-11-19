@@ -838,6 +838,13 @@ add("po-controls-more", [
   ]);
 }
 
+// a kind's own value fills the visual: a cover's position in its bar, a light's brightness in its
+// gauge
+add("po-kind-value", [
+  p("cover.living_room_blinds", { visual: "bar", grid_options: { rows: 4 } }),
+  p("light.living_room", { visual: "gauge", grid_options: { rows: 4 } }),
+]);
+
 // ----- the status and the badges -----
 
 add("pb-status", [

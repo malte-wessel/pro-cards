@@ -7,6 +7,7 @@
 import { cssColor } from "../color.ts";
 import { CARD_BG } from "../constants.ts";
 import { EntityCardBase } from "../entity/base.ts";
+import { progressOf } from "../entity/look.ts";
 import { timeZoneOf } from "../format.ts";
 import { startOfDay } from "../util.ts";
 import type { EntityCardConfig, EntityItem, PlotOptions } from "../entity/config.ts";
@@ -439,6 +440,7 @@ export abstract class KindCardBase extends EntityCardBase {
     if (raw.value !== undefined || raw.attribute !== undefined) {
       delete o.value;
       delete o.word;
+      delete o.num;
     }
     if (raw.secondary !== undefined) delete o.secondary;
     // the value as `format` writes it (a timer's time left) where the kind writes none, and in
@@ -456,8 +458,10 @@ export abstract class KindCardBase extends EntityCardBase {
     const own = !!v && BELOW.includes(v.type as never) && kindDraws(cfg.kind, v);
     if (!own && !o.picture?.classList.contains("pprog")) delete o.picture;
     // a battery's segments for any value between min and max
-    if (v && v.type === "segments" && !own)
-      o.picture = stripEl(c.m.progress === null ? null : c.m.progress * 100, false);
+    if (v && v.type === "segments" && !own) {
+      const p = o.num === undefined ? c.m.progress : progressOf(c.ent, o.num, c.m.st);
+      o.picture = stripEl(p === null ? null : p * 100, false);
+    }
     return o;
   }
   // the card draws its own lead: an icon it names (the card's), a picture it names, an icon where

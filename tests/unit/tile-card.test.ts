@@ -600,6 +600,42 @@ describe("tile-card config", () => {
     }
   });
 
+  it("fills a bar and a gauge to the kind's value where the state is no number", () => {
+    const tiles: TileCard[] = [];
+    const draw = (cfg: Record<string, unknown>) => {
+      const el = new TileCard();
+      el.setConfig(cfg);
+      document.body.appendChild(el);
+      el.hass = snapshot() as never;
+      tiles.push(el);
+      return el.shadowRoot as ShadowRoot;
+    };
+    const width = (r: ShadowRoot) => r.querySelector<HTMLElement>(".bar > i")?.style.width;
+    try {
+      // a cover's position (open), a fan's speed (on), a light's brightness (180 of 255: 71 %)
+      expect(width(draw({ entity: "cover.living_room_blinds", visual: "bar" }))).toBe("60.0%");
+      expect(width(draw({ entity: "fan.living_room", visual: "bar" }))).toBe("66.0%");
+      const gauge = draw({ entity: "light.living_room", visual: "gauge" });
+      expect(gauge.querySelector(".gauge .prog")).not.toBeNull();
+      expect(gauge.querySelector(".gauge .val")?.textContent).toBe("71 %");
+      // on the card's scale
+      expect(
+        width(draw({ entity: "cover.living_room_blinds", visual: "bar", min: 50, max: 70 })),
+      ).toBe("50.0%");
+      // a light that is off fills nothing
+      expect(width(draw({ entity: "light.bedroom", visual: "bar" }))).toBe("0%");
+      // a tile group's table row: the bar after the value
+      const row = draw({ entity: "cover.living_room_blinds", table: true, visual: "bar" });
+      expect(row.querySelector<HTMLElement>(".bbar > i")?.style.width).toBe("60.0%");
+      // a value the card names itself is read as it is
+      expect(width(draw({ entity: "cover.living_room_blinds", visual: "bar", value: "30" }))).toBe(
+        "30.0%",
+      );
+    } finally {
+      for (const t of tiles) t.remove();
+    }
+  });
+
   it("takes one row unless something below the line needs a second", () => {
     const grid = (cfg: Record<string, unknown>) => {
       const el = new TileCard();

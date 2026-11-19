@@ -9,6 +9,7 @@ import {
   type Placement,
   type RowKind,
 } from "../control.ts";
+import { progressOf } from "../look.ts";
 import { nameOf, tplOf, type EntityModel, type FmtValue, type RenderCtx } from "../model.ts";
 import { blockEl, GAUGE_CROP } from "./blocks.ts";
 import { appendControls, bindLeadTap, controlEl, iconActionsEl } from "./controls.ts";
@@ -194,6 +195,10 @@ export interface KindSlots {
   value?: FmtValue | null;
   // a word (Cleaning, Away) is drawn smaller than a number (default: the value is no number)
   word?: boolean;
+  // the number the kind's value shows where the entity's state is none (a cover's position, a
+  // light's brightness in %): the bar, the gauge and the ring fill to it on the card's scale
+  // (min and max, 0 to 100 unless written); null fills nothing
+  num?: number | null;
   secondary?: string | Node | null;
   picture?: HTMLElement | null;
   // the status the tile's line shows after the value (null: none; the poster's is a badge of its own)
@@ -201,6 +206,10 @@ export interface KindSlots {
   // the icon's own actions (`icon_*_action`): the lead takes them
   iconActions?: IconActions;
 }
+
+// the model the visuals read: the kind's number and value in place of the state's
+export const kindModel = (ent: EntityItem, m: EntityModel, o: KindSlots): EntityModel =>
+  o.num === undefined ? m : { ...m, progress: progressOf(ent, o.num, m.st), fmt: o.value ?? m.fmt };
 
 // the tile's icon slot (built once, so an animated lead in it is kept through fills): in the row
 // at once, so the card's lead and the fill after it find the same one
@@ -246,6 +255,7 @@ export const fillTileSlots = (
   m: EntityModel,
   o: KindSlots = {},
 ) => {
+  m = kindModel(ent, m, o);
   const c = slots(ctx, ent, "tile");
   const lead = tileLead(row);
   // the badges beside the texts: built once by the card, kept here
@@ -376,6 +386,7 @@ export const fillPosterSlots = (
   m: EntityModel,
   o: KindSlots = {},
 ) => {
+  m = kindModel(ent, m, o);
   const c = slots(ctx, ent, "poster");
   const lead = row.querySelector<HTMLElement>(":scope > .ptop > .plead"),
     body = row.querySelector<HTMLElement>(":scope > .pbody");

@@ -29,6 +29,7 @@ import { inlineVisualEl } from "./shared/entity/render/badge.ts";
 import {
   fillTableSlots,
   fillTileSlots,
+  kindModel,
   tileCorner,
   tileLead,
   tileValueText,
@@ -167,7 +168,9 @@ export class TileCard extends KindCardBase {
         : "";
       slots.status = this._status(kc);
       const t = cfg.table;
-      const inline = t.visual ? inlineVisualEl(ctx, ent, m, t.visual, t.hours) : null;
+      const inline = t.visual
+        ? inlineVisualEl(ctx, ent, kindModel(ent, m, slots), t.visual, t.hours)
+        : null;
       fillTableSlots(ctx, row, ent, idx, m, slots, inline);
       return;
     }

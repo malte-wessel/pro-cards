@@ -196,6 +196,16 @@ add("to-picture", [
   t("sensor.living_room_humidity", { visual: "bar" }),
   t("sensor.living_room_humidity", { visual: "gauge" }),
 ]);
+// a kind's own value where the state is no number: a cover's position, a fan's speed, a light's
+// brightness fill the bar, the gauge, the segments and the ring
+add("to-kind-value", [
+  t("cover.living_room_blinds", { visual: "bar" }),
+  t("fan.living_room", { visual: "bar" }),
+  t("light.attic", { visual: "gauge", grid_options: { columns: 6, rows: 3 } }),
+  t("cover.living_room_blinds", { visual: "segments" }),
+  t("light.living_room", { icon: { ring: true }, visual: false }),
+  t("light.bedroom", { visual: "bar" }),
+]);
 add("to-controls", [
   t("light.living_room", { control: "slider" }),
   t("light.living_room", { visual: false }),

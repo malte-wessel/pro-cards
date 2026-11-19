@@ -20,6 +20,7 @@ _Beta_
 ### Fixes
 
 - A poster's or a tile's control below the value sits above a plot along the bottom (a sparkline, columns, a kind's curve); it was drawn after the plot, over it and cut off by the card's edge.
+- A bar, a gauge, a battery's segments and the icon's ring fill to the value a poster or a tile shows of its own where the state is no number: a cover's position, a light's brightness, a fan's speed (all the way for a light or a fan without levels that is on), a plug's power up to a `max` the card writes. They stood empty (a light's gauge said On) unless the card named an `attribute`; a tile group's table row fills its bar so too.
 - The visual editor offers a timer's presets only where the timer has some (set in its settings in Home Assistant); a control already set to them says where to add them.
 - A tile group and a seamless layout card blur a glass theme's background once: the cards inside no longer blur it again, which made them darker than the header and showed edges between them. A seamless layout's surface now takes the theme's blur itself.
 - A tile group takes UIX (`uix`) on its own card, as it takes `card_mod`; it stopped with an error before.
