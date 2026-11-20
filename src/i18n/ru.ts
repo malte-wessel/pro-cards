@@ -114,8 +114,6 @@ const ru: Translation = {
   "schedule.edit": "Изменить расписание",
   "schedule.view_only": "Только просмотр",
   "schedule.add": "Добавить блок",
-  "schedule.hint_click": "Дважды щёлкните, чтобы добавить блок",
-  "schedule.hint_hold": "Удерживайте, чтобы добавить блок",
   "schedule.undo": "Отменить",
   "schedule.done": "Готово",
   "schedule.saving": "Сохранение …",

@@ -43,7 +43,7 @@ The pencil in the header, or a long press on the week, turns edit mode on. Every
 - **Select:** click a block to select it, Shift-click (or Ctrl, Cmd) to add more; with a finger, tap blocks to add them. **Click a day's name** to select the whole day. Drag a box from an empty spot to select every block it touches (Shift adds them). A click or tap on an empty spot, or Escape, clears the selection.
 - **Drag a block** to another time or another day. Hold **Alt** (Option) while dragging, or turn on the copy button in the toolbar, to copy it there instead.
 - **Drag a handle** on a selected block's end to change its start or end; drag on up or down over other days to put the changed block on each of them too.
-- **Drag the dot** under a day's selection up or down over other days to copy it to all of them. The copies are selected with it, so the toolbar changes them together.
+- **Drag a dot** above or below the selection over other days to copy there: the dot above copies the selected blocks of the selection's first day, the one below those of its last day. Dragged sideways too, it stretches them toward the drag (left: an earlier start, right: a later end), on that day and on the copies. The copies are selected with it, so the toolbar changes them together.
 - **Make a block:** double-click an empty spot for an hour there, or double-click and drag to draw it, over other days too for the same block on each. With a finger, hold an empty spot, and drag on to draw. **+** in the header adds an hour to the selected block's day.
 - The **toolbar** above the selection changes its value (the first `data`), copies or deletes it.
 

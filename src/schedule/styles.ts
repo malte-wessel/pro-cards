@@ -37,8 +37,6 @@ const STYLE_WEEK = `
      and done */
   .header .snext { display: flex; align-items: center; gap: 4px; min-width: 0; color: var(--primary-text-color); --mdc-icon-size: 18px; }
   .header .snext > ha-icon { color: var(--fe-color); }
-  /* (in edit mode with nothing selected: how a block is made) */
-  .header .snext.hint, .header .snext.hint > ha-icon { color: var(--secondary-text-color); }
   .header .snext > span { ${type(13, 16)} white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
   .header .sctl { display: flex; align-items: center; gap: 6px; flex: none; margin-block: -4px; margin-inline-end: -6px; }
   .header .sctl:empty { display: none; }
@@ -68,7 +66,6 @@ const STYLE_WEEK = `
   .slane > button.sb::before { content: ""; position: absolute; inset: -3px 0; }
   .slane > .sb.sel { opacity: 1; z-index: 1; box-shadow: 0 0 0 2px ${CARD_BG}, 0 0 0 4px var(--fe-color); }
   .slane > button.sb:focus-visible { opacity: 1; z-index: 1; box-shadow: 0 0 0 2px ${CARD_BG}, 0 0 0 4px var(--primary-text-color); }
-  .slane > .sb.draft { opacity: 1; z-index: 1; box-shadow: 0 0 0 2px ${CARD_BG}, 0 0 0 4px var(--fe-color); background: color-mix(in srgb, var(--fe-color) 70%, ${CARD_BG}); }
   .sb > .st { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; ${type(10, 12)} font-weight: ${fw("medium")}; color: var(--text-primary-color, #fff); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; pointer-events: none; }
   /* the slider's handle (a hollow capsule) on a selected block's ends: a 44 px target around it */
   .sknob { position: absolute; top: 3px; bottom: 3px; width: 8px; margin: 0 0 0 -4px; padding: 0; box-sizing: border-box; border: 2px solid var(--text-primary-color, #fff); border-radius: 4px; background: var(--fe-color); box-shadow: 0 0 2px rgba(0,0,0,.35); cursor: ew-resize; touch-action: none; z-index: 2; }
@@ -76,12 +73,15 @@ const STYLE_WEEK = `
   .sknob::before { content: ""; position: absolute; inset: -14px 0; }
   .sknob[data-act="from"]::before { left: -20px; }
   .sknob[data-act="to"]::before { right: -20px; }
-  /* the dot under a day's selection: drag it over the days above or below to copy there */
+  /* the dots below the selection's last row and above its first: drag one over other days to copy
+     that row's selected blocks there */
   .sfill { position: absolute; top: 18px; width: 12px; height: 12px; margin: 0 0 0 -6px; padding: 0; box-sizing: border-box; border: 2px solid ${CARD_BG}; border-radius: 50%; background: var(--fe-color); box-shadow: 0 0 2px rgba(0,0,0,.35); cursor: ns-resize; touch-action: none; z-index: 3; }
-  /* (its target: the dot for a mouse, so the block of the day below stays the pointer's; for a
-     finger it reaches down and to the sides, not up over the block it belongs to) */
+  .sfill.top { top: -8px; }
+  /* (its target: the dot for a mouse, so the block of the next day stays the pointer's; for a
+     finger it reaches away from its row and to the sides, not over the block it belongs to) */
   .sfill::before { content: ""; position: absolute; inset: -2px -6px; }
   .wk.touch .sfill::before { inset: -2px -16px -18px; }
+  .wk.touch .sfill.top::before { inset: -18px -16px -2px; }
   .sbubble { position: absolute; bottom: calc(100% + 6px); transform: translateX(-50%); padding: 3px 8px; border-radius: 999px; background: var(--primary-text-color); color: ${CARD_BG}; ${type(12, 14)} font-weight: ${fw("medium")}; white-space: nowrap; font-variant-numeric: tabular-nums; z-index: 5; pointer-events: none; }
   /* on a touch screen the bubble stands clear of the finger */
   .wk.touch .sbubble { bottom: calc(100% + 30px); }

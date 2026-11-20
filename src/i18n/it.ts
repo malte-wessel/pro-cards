@@ -114,8 +114,6 @@ const it: Translation = {
   "schedule.edit": "Modifica la pianificazione",
   "schedule.view_only": "Sola lettura",
   "schedule.add": "Aggiungi un blocco",
-  "schedule.hint_click": "Fai doppio clic per aggiungere un blocco",
-  "schedule.hint_hold": "Tieni premuto per aggiungere un blocco",
   "schedule.undo": "Annulla",
   "schedule.done": "Fatto",
   "schedule.saving": "Salvataggio …",

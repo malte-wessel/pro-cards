@@ -114,8 +114,6 @@ const sv: Translation = {
   "schedule.edit": "Redigera schemat",
   "schedule.view_only": "Endast visning",
   "schedule.add": "Lägg till ett block",
-  "schedule.hint_click": "Dubbelklicka för att lägga till ett block",
-  "schedule.hint_hold": "Håll ned för att lägga till ett block",
   "schedule.undo": "Ångra",
   "schedule.done": "Klar",
   "schedule.saving": "Sparar …",

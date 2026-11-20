@@ -114,8 +114,6 @@ const nb: Translation = {
   "schedule.edit": "Rediger tidsplanen",
   "schedule.view_only": "Kun visning",
   "schedule.add": "Legg til en blokk",
-  "schedule.hint_click": "Dobbeltklikk for å legge til en blokk",
-  "schedule.hint_hold": "Hold inne for å legge til en blokk",
   "schedule.undo": "Angre",
   "schedule.done": "Ferdig",
   "schedule.saving": "Lagrer …",

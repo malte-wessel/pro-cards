@@ -16,8 +16,8 @@
  * adds it; a finger's tap always adds it; a day's name selects the day), a drag from an empty spot
  * selects with a box, its handles change its times (dragged over other days, the block goes there
  * too), a drag moves it (to another day too; Alt or the
- * toolbar's toggle copies), the dot under a day's selection copies it to the days it is dragged
- * over, a double click on an empty spot makes an hour (held on the second press, it draws a block).
+ * toolbar's toggle copies), the dots above and below the selection copy its first or last row's
+ * blocks to the days they are dragged over (sideways, they stretch them toward the drag), a double click on an empty spot makes an hour (held on the second press, it draws a block).
  * A click on an empty spot clears the selection. A finger scrolls the page
  * over the week in edit mode too: it holds an empty spot to make an hour there (and drags on to draw
  * it, over other days too), holds a block it has not selected to drag it; a selected block drags at
@@ -87,7 +87,7 @@ import {
 } from "./schedule/config.ts";
 import { HOLD_MS } from "./shared/entity/constants.ts";
 import { ScheduleCardEditor } from "./schedule/editor.ts";
-import { weekHtml, type DayNames, type EditView, type Span } from "./schedule/render.ts";
+import { weekHtml, type DayNames, type EditView } from "./schedule/render.ts";
 import { STYLE_SCHEDULE_CARD } from "./schedule/styles.ts";
 
 defineElement(`${CARD_TYPE}-editor`, ScheduleCardEditor);
@@ -131,7 +131,8 @@ type Gesture =
     }
   | { type: "block"; id: number; day: number; ids: number[] }
   | { type: "size"; edge: "from" | "to"; id: number; day: number; ids: number[] }
-  | { type: "fill"; day: number; blocks: EBlock[] }
+  // (sel: the selection as it began)
+  | { type: "fill"; day: number; side: "top" | "bottom"; blocks: EBlock[]; sel: number[] }
   | { type: "draw"; day: number; m0: number; lo: number; hi: number }
   // a mouse's drag from an empty spot: the box selects the blocks it touches (Shift, Ctrl or Cmd:
   // adds them to those selected before)
@@ -155,8 +156,8 @@ interface Drag {
   last?: string;
   // a finger held it still first (the block it drags is selected already)
   held?: boolean;
-  // the block a handle changes, as it is now (copied to the days the drag reaches)
-  sized?: EBlock;
+  // the selection as it began
+  sel0: number[];
   // Alt (Option) is down: a moved block is copied; the pointer's last move, to show it again when
   // Alt changes; what stops watching the keys
   alt: boolean;
@@ -174,8 +175,6 @@ interface EditState {
   sel: number[];
   copy: boolean;
   saving: boolean;
-  ghosts: Span[];
-  draft: Span | null;
   bubble: { day: number; at: number; text: string } | null;
   // the selection box being drawn, in pixels of the week
   box: { x: number; y: number; w: number; h: number } | null;
@@ -197,8 +196,8 @@ export class ScheduleCard extends EntityCardBase {
   _unweek?: () => void;
   // the focus to give back after the week is drawn again (a block's id, a day)
   _refocusSel: string | null = null;
-  // the last pointer on the week was a finger (the header's hint says hold, not drag)
-  _touch = typeof matchMedia === "function" && matchMedia("(hover: none)").matches;
+  // the last pointer on the week was a finger
+  _touch = false;
   // a mouse's last click on an empty spot: a second one there soon after makes an hour
   _lastTap: { t: number; day: number; x: number; y: number } | null = null;
 
@@ -399,23 +398,28 @@ export class ScheduleCard extends EntityCardBase {
     let editView: EditView | null = null;
     if (e) {
       const where = e.sel.map((id) => findBlock(e.days, id)).filter((x) => !!x);
-      const oneDay = where.length > 0 && where.every((w) => w.d === where[0].d);
       const dragging = !!this._drag?.moved;
+      const g = this._drag?.g;
+      // a dot above the selection's first row and one below its last, centred on that row's
+      // selected blocks (while one is dragged, that one alone)
+      const dot = (day: number, side: "top" | "bottom") => {
+        const row = where.filter((w) => w.d === day);
+        return {
+          day,
+          side,
+          at: (Math.min(...row.map((w) => w.b.from)) + Math.max(...row.map((w) => w.b.to))) / 2,
+        };
+      };
+      const fills = where.length
+        ? [
+            dot(Math.min(...where.map((w) => w.d)), "top" as const),
+            dot(Math.max(...where.map((w) => w.d)), "bottom" as const),
+          ].filter((f) => !dragging || (g?.type === "fill" && g.side === f.side))
+        : [];
       editView = {
         sel,
-        ghosts: e.ghosts,
-        draft: e.draft,
         bubble: e.bubble,
-        fill:
-          oneDay && (!dragging || this._drag?.g.type === "fill")
-            ? {
-                day: where[0].d,
-                at:
-                  (Math.min(...where.map((w) => w.b.from)) +
-                    Math.max(...where.map((w) => w.b.to))) /
-                  2,
-              }
-            : null,
+        fills,
         dragging,
         laneW: this._laneW || 300,
         // a block's text as its style draws it (measured once per theme)
@@ -475,21 +479,8 @@ export class ScheduleCard extends EntityCardBase {
       const c = nextChange(week, weekPos(now, scheduleZone(hass)));
       if (c) text = changeText(hass, c, today);
     }
-    // in edit mode with nothing selected: how a block is made
-    const hint = !!this._edit && !this._edit.sel.length && !this._edit.saving;
-    if (hint) text = t(hass, this._touch ? "schedule.hint_hold" : "schedule.hint_click");
-    next.hidden = !text || (!!this._edit && !hint);
-    next.classList.toggle("hint", hint);
-    qs(next, "ha-icon").setAttribute(
-      "icon",
-      hint
-        ? this._touch
-          ? "mdi:gesture-tap-hold"
-          : "mdi:gesture-double-tap"
-        : now < this._saved
-          ? "mdi:check"
-          : "mdi:clock-outline",
-    );
+    next.hidden = !text || !!this._edit;
+    qs(next, "ha-icon").setAttribute("icon", now < this._saved ? "mdi:check" : "mdi:clock-outline");
     const span = qs(next, "span");
     if (span.textContent !== text) span.textContent = text;
     const ctl = qs(header, ".sctl");
@@ -576,8 +567,9 @@ export class ScheduleCard extends EntityCardBase {
     const wkTop = wk.getBoundingClientRect().top;
     const headerBottom =
       header && !header.hidden ? header.getBoundingClientRect().bottom - wkTop : 0;
-    let y = rows[top].offsetTop - bh - 8;
-    if (y < headerBottom + 4) y = rows[bottom].offsetTop + rows[bottom].offsetHeight + 12;
+    // (clear of the dots above and below the selection)
+    let y = rows[top].offsetTop - bh - 14;
+    if (y < headerBottom + 4) y = rows[bottom].offsetTop + rows[bottom].offsetHeight + 14;
     // never past the week's end (the card cuts it there): over the rows between, then
     bar.style.top = `${Math.round(Math.min(y, wk.clientHeight - bh))}px`;
   }
@@ -642,11 +634,7 @@ export class ScheduleCard extends EntityCardBase {
     const wk = ev.currentTarget as HTMLElement;
     const touch = ev.pointerType === "touch";
     wk.classList.toggle("touch", touch);
-    if (touch !== this._touch) {
-      this._touch = touch;
-      // (the header's hint: hold or drag)
-      if (this._edit) this._render();
-    }
+    this._touch = touch;
     const lane = target.closest<HTMLElement>(".slane");
     if (!this._edit) {
       if (!lane) return;
@@ -691,8 +679,11 @@ export class ScheduleCard extends EntityCardBase {
     ev.preventDefault();
     if (!act) wk.focus({ preventScroll: true });
     if (act?.dataset.act === "fill") {
-      const where = e.sel.map((id) => findBlock(e.days, id)).filter((x) => !!x);
-      this._startDrag(ev, { type: "fill", day: where[0].d, blocks: where.map((w) => w.b) });
+      // the selected blocks of the dot's row
+      const day = Number(act.dataset.day);
+      const blocks = e.days[day].filter((b) => e.sel.includes(b.id));
+      const side = act.dataset.side === "top" ? "top" : "bottom";
+      if (blocks.length) this._startDrag(ev, { type: "fill", day, side, blocks, sel: e.sel });
     } else if (act?.dataset.act === "from" || act?.dataset.act === "to") {
       const id = Number(act.dataset.id);
       const f = findBlock(e.days, id);
@@ -743,6 +734,7 @@ export class ScheduleCard extends EntityCardBase {
       kind: ev.pointerType,
       add: ev.shiftKey || ev.ctrlKey || ev.metaKey,
       alt: ev.altKey,
+      sel0: this._edit?.sel ?? [],
       x0: ev.clientX,
       y0: ev.clientY,
       moved: false,
@@ -832,9 +824,11 @@ export class ScheduleCard extends EntityCardBase {
       const draw = { type: "draw" as const, day: g.day, m0: g.min, ...bounds };
       d.g = draw;
       const r = drawn(draw, draw.m0, null, cfg.snap);
+      const m = r ? this._drawnDays(e.days, g.day, r, []) : { days: e.days, sel: e.sel };
       this._edit = {
         ...e,
-        draft: r && { day: g.day, ...r },
+        days: m.days,
+        sel: m.sel,
         bubble: r && {
           day: g.day,
           at: (r.from + r.to) / 2,
@@ -967,7 +961,6 @@ export class ScheduleCard extends EntityCardBase {
       const to = Math.max(0, Math.min(6, g.day + day1));
       e.days = r1.days;
       e.sel = r1.ids;
-      e.ghosts = [];
       e.bubble = {
         day: to,
         at: (b0.from + b0.to) / 2 + r1.d,
@@ -985,12 +978,16 @@ export class ScheduleCard extends EntityCardBase {
       const at = (g.edge === "from" ? b0.from : b0.to) + r.d;
       // dragged up or down over other days: the block as it is now on each of them
       const b = e.days[g.day].find((x) => e.sel.includes(x.id) && x.from <= at && at <= x.to) ?? b0;
-      d.sized = b;
       const to = Math.max(0, Math.min(6, g.day + dd));
       const others: number[] = [];
       for (let i = Math.min(g.day, to); i <= Math.max(g.day, to); i++)
         if (i !== g.day) others.push(i);
-      e.ghosts = others.map((day) => ({ day, from: b.from, to: b.to }));
+      // (joining what it lands on there, shown as it will be; all of them selected)
+      if (others.length) {
+        const f = fillDays(e.days, [b], others);
+        e.days = f.days;
+        e.sel = [...new Set([...e.sel, ...f.ids])];
+      }
       e.bubble = others.length
         ? {
             day: to,
@@ -999,35 +996,61 @@ export class ScheduleCard extends EntityCardBase {
           }
         : { day: g.day, at, text: fmtDayMinutes(hass, at) };
     } else if (g.type === "fill") {
-      const to = Math.max(0, Math.min(6, g.day + dd)),
-        lo = Math.min(g.day, to),
-        hi = Math.max(g.day, to);
-      const ghosts: Span[] = [];
-      for (let i = lo; i <= hi; i++)
-        if (i !== g.day) for (const b of g.blocks) ghosts.push({ day: i, from: b.from, to: b.to });
-      e.ghosts = ghosts;
-      e.bubble = ghosts.length
-        ? {
-            day: to,
-            at: (g.blocks[0].from + g.blocks[g.blocks.length - 1].to) / 2,
-            text: t(hass, "schedule.copy_to", {
-              days: daysText(
-                ghosts.map((x) => x.day),
-                names,
-              ),
-            }),
-          }
-        : null;
+      // sideways the row stretches toward the drag: its first block's start earlier, or its last
+      // block's end later (blocks it reaches into merge with it)
+      let days = d.base,
+        sel = g.sel,
+        at: number | null = null;
+      if (dm) {
+        const edge = dm > 0 ? "to" : "from";
+        const end = dm > 0 ? g.blocks[g.blocks.length - 1] : g.blocks[0];
+        const r = resize(d.base, [end.id], edge, dm, step);
+        if (r.d) {
+          days = r.days;
+          const ids = new Set(days.flat().map((b) => b.id));
+          sel = [...new Set([...g.sel.filter((id) => id !== end.id), ...r.ids])].filter((id) =>
+            ids.has(id),
+          );
+          at = (edge === "to" ? end.to : end.from) + r.d;
+        }
+      }
+      const row = days[g.day].filter((b) => sel.includes(b.id));
+      // and up or down, it goes to the days it reaches (joining what it lands on there, shown as
+      // it will be; the copies join the selection)
+      const to = Math.max(0, Math.min(6, g.day + dd));
+      const targets: number[] = [];
+      for (let i = Math.min(g.day, to); i <= Math.max(g.day, to); i++)
+        if (i !== g.day) targets.push(i);
+      if (targets.length && row.length) {
+        const f = fillDays(days, row, targets);
+        days = f.days;
+        sel = [...new Set([...sel, ...f.ids])];
+      }
+      e.days = days;
+      e.sel = sel;
+      const copyTo = targets.length
+        ? t(hass, "schedule.copy_to", { days: daysText(targets, names) })
+        : "";
+      const time = at === null ? "" : fmtDayMinutes(hass, at);
+      e.bubble =
+        copyTo || time
+          ? {
+              day: to,
+              at: at ?? (row[0].from + row[row.length - 1].to) / 2,
+              text: [copyTo, time].filter(Boolean).join(" · "),
+            }
+          : null;
     } else if (g.type === "draw") {
       const { min } = this._at(ev, d);
       const r = drawn(g, g.m0, min, step);
-      e.draft = r && { day: g.day, ...r };
       // drawn over other days: the same block on each of them
       const to = Math.max(0, Math.min(6, g.day + dd));
       const others: number[] = [];
       for (let i = Math.min(g.day, to); r && i <= Math.max(g.day, to); i++)
         if (i !== g.day) others.push(i);
-      e.ghosts = r ? others.map((day) => ({ day, ...r })) : [];
+      const m = r ? this._drawnDays(d.base, g.day, r, others) : { days: d.base, sel: d.sel0 };
+      e.days = m.days;
+      e.sel = m.sel;
       e.bubble = r && {
         day: to,
         at: (r.from + r.to) / 2,
@@ -1045,7 +1068,7 @@ export class ScheduleCard extends EntityCardBase {
     this._endDrag();
     const e = this._edit;
     if (d.g.type === "press" || d.g.type === "hold" || !e) return;
-    const clean = { ghosts: [], draft: null, bubble: null, box: null };
+    const clean = { bubble: null, box: null };
     if (cancelled) {
       // the edit the drag showed is dropped
       this._edit = { ...e, ...clean, days: d.base };
@@ -1062,23 +1085,11 @@ export class ScheduleCard extends EntityCardBase {
       return this._render();
     }
     if (g.type === "draw") {
+      // what the drag (or a finger's hold) shows; a double click: an hour
       const cfg = this._config as ScheduleCardConfig;
-      const r = d.moved ? e.draft : drawn(g, g.m0, null, cfg.snap);
-      if (!r) {
-        this._edit = { ...e, ...clean };
-        return this._render();
-      }
-      const made = addBlock(d.base, g.day, r.from, r.to, this._newData(d.base, g.day, r.from));
-      // the days it was drawn over get the same block (joining what it lands on there); all of
-      // them selected, to be changed together
-      const others = d.moved ? [...new Set(e.ghosts.map((x) => x.day))] : [];
-      const block = findBlock(made.days, made.id)?.b;
-      const all = others.length && block ? fillDays(made.days, [block], others) : null;
-      this._commit(
-        { ...e, ...clean, days: d.base },
-        all ? all.days : made.days,
-        all ? [made.id, ...all.ids] : [made.id],
-      );
+      const r = d.moved || d.held ? null : drawn(g, g.m0, null, cfg.snap);
+      const m = r ? this._drawnDays(d.base, g.day, r, []) : { days: e.days, sel: e.sel };
+      this._commit({ ...e, ...clean, days: d.base }, m.days, m.sel);
       fireHaptic(this, "selection");
       return;
     }
@@ -1098,25 +1109,16 @@ export class ScheduleCard extends EntityCardBase {
       }
       return this._render();
     }
-    if (g.type === "fill") {
-      const targets = [...new Set(e.ghosts.map((x) => x.day))];
-      if (!targets.length) {
-        this._edit = { ...e, ...clean };
-        return this._render();
-      }
-      const r = fillDays(d.base, g.blocks, targets);
-      // the copies join the selection: all of them are changed together from here
-      this._commit({ ...e, ...clean, days: d.base }, r.days, [...new Set([...e.sel, ...r.ids])]);
-      return;
-    }
-    if (g.type === "size" && e.ghosts.length && d.sized) {
-      // the changed block on the days it was dragged over too (joining what it lands on there);
-      // one change, all of them selected
-      const r = fillDays(e.days, [d.sized], [...new Set(e.ghosts.map((x) => x.day))]);
-      this._commit({ ...e, ...clean, days: d.base }, r.days, [...new Set([...e.sel, ...r.ids])]);
-      return;
-    }
+    // (the days a drag shows are the edit it makes)
     this._commit({ ...e, ...clean, days: d.base }, e.days, e.sel);
+  }
+  // a block drawn on its day, and the same on the days in `others` (joining what it lands on
+  // there): the days it makes, all of it selected
+  _drawnDays(base: EDays, day: number, r: { from: number; to: number }, others: number[]) {
+    const made = addBlock(base, day, r.from, r.to, this._newData(base, day, r.from));
+    const block = findBlock(made.days, made.id)?.b;
+    const all = others.length && block ? fillDays(made.days, [block], others) : null;
+    return { days: all ? all.days : made.days, sel: all ? [made.id, ...all.ids] : [made.id] };
   }
   // the data of a new block: the first key's default, else that of the nearest block that day,
   // else of any block
@@ -1368,8 +1370,6 @@ export class ScheduleCard extends EntityCardBase {
       sel: [],
       copy: false,
       saving: false,
-      ghosts: [],
-      draft: null,
       bubble: null,
       box: null,
     };

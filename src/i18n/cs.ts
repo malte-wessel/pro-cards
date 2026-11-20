@@ -114,8 +114,6 @@ const cs: Translation = {
   "schedule.edit": "Upravit plán",
   "schedule.view_only": "Jen zobrazení",
   "schedule.add": "Přidat blok",
-  "schedule.hint_click": "Dvojitým kliknutím přidáte blok",
-  "schedule.hint_hold": "Podržte pro přidání bloku",
   "schedule.undo": "Zpět",
   "schedule.done": "Hotovo",
   "schedule.saving": "Ukládání …",

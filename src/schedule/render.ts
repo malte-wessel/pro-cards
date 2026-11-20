@@ -1,6 +1,6 @@
 // The schedule card's week as markup, from what the card shows now: seven lanes in the order the
 // card shows the days, the axis under them; in edit mode the blocks are buttons, the selected
-// ones with their handles, the dot under a one-day selection, the ghosts and the bubble of a drag.
+// ones with their handles, the dots above and below the selection, the bubble of a drag.
 import type { HomeAssistant } from "../shared/ha.ts";
 import { t } from "../shared/i18n.ts";
 import type { EBlock } from "../shared/schedule/edit.ts";
@@ -15,18 +15,12 @@ export interface DayNames {
   narrow: string;
   long: string;
 }
-export interface Span {
-  day: number;
-  from: number;
-  to: number;
-}
 export interface EditView {
   sel: ReadonlySet<number>;
-  ghosts: readonly Span[];
-  draft: Span | null;
   bubble: { day: number; at: number; text: string } | null;
-  // the row whose selection takes the copy dot, and where (null: none)
-  fill: { day: number; at: number } | null;
+  // the dots above the selection's first row and below its last: dragged over other days, they
+  // copy that row's selected blocks there
+  fills: readonly { day: number; at: number; side: "top" | "bottom" }[];
   // the handles show only while no drag runs
   dragging: boolean;
   // the lanes' width in px and a text's width on a block (what text fits on it)
@@ -100,15 +94,10 @@ const editRow = (v: WeekView, e: EditView, d: number) => {
   const name = v.names[d];
   let html = `<div class="wrow"><button class="sday" data-day="${d}" aria-pressed="${all}" aria-label="${esc(t(v.hass, "schedule.select_day", { day: name.long }))}">${dayKey(name, isToday)}</button><div class="slane e" data-day="${d}">`;
   html += laneHtml([], null, true);
-  for (const g of e.ghosts)
-    if (g.day === d)
-      html += `<i class="sb draft" style="left:${pct(g.from)};width:${pct(g.to - g.from)}"></i>`;
   for (const b of blocks) {
     const on = e.sel.has(b.id);
     html += `<button class="sb${on ? " sel" : ""}" data-id="${b.id}" data-day="${d}" style="left:${pct(b.from)};width:${pct(b.to - b.from)}" aria-pressed="${on}" aria-label="${esc(blockLabel(v.hass, b, name.long, v.specs))}">${blockInner(v, e, b)}</button>`;
   }
-  if (e.draft?.day === d)
-    html += `<i class="sb draft" style="left:${pct(e.draft.from)};width:${pct(e.draft.to - e.draft.from)}"></i>`;
   if (!e.dragging)
     for (const b of blocks)
       if (e.sel.has(b.id))
@@ -117,8 +106,9 @@ const editRow = (v: WeekView, e: EditView, d: number) => {
           ["to", b.to],
         ] as const)
           html += `<button class="sknob" tabindex="-1" data-act="${edge}" data-id="${b.id}" style="left:${pct(at)}" aria-label="${esc(t(v.hass, edge === "from" ? "schedule.start" : "schedule.end", { time: fmtDayMinutes(v.hass, at) }))}"></button>`;
-  if (e.fill?.day === d)
-    html += `<button class="sfill" tabindex="-1" data-act="fill" style="left:${pct(e.fill.at)}" aria-label="${esc(t(v.hass, "schedule.fill"))}"></button>`;
+  for (const f of e.fills)
+    if (f.day === d)
+      html += `<button class="sfill ${f.side}" tabindex="-1" data-act="fill" data-day="${d}" data-side="${f.side}" style="left:${pct(f.at)}" aria-label="${esc(t(v.hass, "schedule.fill"))}"></button>`;
   if (isToday) html += `<i class="snow" style="left:${pct(v.now)}"></i>`;
   if (e.bubble?.day === d)
     html += `<span class="sbubble" style="left:${pct(e.bubble.at)}">${esc(e.bubble.text)}</span>`;

@@ -114,8 +114,6 @@ const nl: Translation = {
   "schedule.edit": "Schema bewerken",
   "schedule.view_only": "Alleen bekijken",
   "schedule.add": "Blok toevoegen",
-  "schedule.hint_click": "Dubbelklik om een blok toe te voegen",
-  "schedule.hint_hold": "Houd vast om een blok toe te voegen",
   "schedule.undo": "Ongedaan maken",
   "schedule.done": "Klaar",
   "schedule.saving": "Opslaan …",

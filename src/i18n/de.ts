@@ -114,8 +114,6 @@ const de: Translation = {
   "schedule.edit": "Zeitplan bearbeiten",
   "schedule.view_only": "Nur ansehen",
   "schedule.add": "Block hinzufügen",
-  "schedule.hint_click": "Doppelklicken, um einen Block hinzuzufügen",
-  "schedule.hint_hold": "Gedrückt halten, um einen Block hinzuzufügen",
   "schedule.undo": "Rückgängig",
   "schedule.done": "Fertig",
   "schedule.saving": "Speichern …",

@@ -113,8 +113,6 @@ const en = {
   "schedule.edit": "Edit the schedule",
   "schedule.view_only": "View only",
   "schedule.add": "Add a block",
-  "schedule.hint_click": "Double-click to add a block",
-  "schedule.hint_hold": "Hold to add a block",
   "schedule.undo": "Undo",
   "schedule.done": "Done",
   "schedule.saving": "Saving …",

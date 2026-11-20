@@ -114,8 +114,6 @@ const pl: Translation = {
   "schedule.edit": "Edytuj harmonogram",
   "schedule.view_only": "Tylko podgląd",
   "schedule.add": "Dodaj blok",
-  "schedule.hint_click": "Kliknij dwukrotnie, aby dodać blok",
-  "schedule.hint_hold": "Przytrzymaj, aby dodać blok",
   "schedule.undo": "Cofnij",
   "schedule.done": "Gotowe",
   "schedule.saving": "Zapisywanie …",
