@@ -37,10 +37,10 @@ const STYLE_WEEK = `
      and done */
   .header .snext { display: flex; align-items: center; gap: 4px; min-width: 0; color: var(--primary-text-color); --mdc-icon-size: 18px; }
   .header .snext > ha-icon { color: var(--fe-color); }
+  /* (in edit mode with nothing selected: how a block is made) */
+  .header .snext.hint, .header .snext.hint > ha-icon { color: var(--secondary-text-color); }
   .header .snext > span { ${type(13, 16)} white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
   .header .sctl { display: flex; align-items: center; gap: 6px; flex: none; margin-block: -4px; margin-inline-end: -6px; }
-  /* (only the selection's pill gives way on a narrow card: Done stays in it) */
-  .header .sctl:has(.spill) { flex: 0 1 auto; min-width: 0; }
   .header .sctl:empty { display: none; }
   .sbtn { flex: none; width: 28px; height: 28px; border: 0; padding: 0; border-radius: 8px; background: transparent; color: var(--secondary-text-color); display: flex; align-items: center; justify-content: center; cursor: pointer; --mdc-icon-size: 18px; position: relative; }
   .sbtn::before { content: ""; position: absolute; inset: -8px; }
@@ -50,18 +50,21 @@ const STYLE_WEEK = `
   .sbtn.done { width: auto; padding: 0 12px; background: var(--fe-color); color: var(--text-primary-color, #fff); font: inherit; ${type(12, 16)} font-weight: ${fw("medium")}; white-space: nowrap; }
   .sbtn.done.saving { animation: ctl-pulse 1s ease-in-out infinite; }
   .sbtn.icon-only { color: var(--secondary-text-color); cursor: default; }
-  .spill { flex: 0 1 auto; min-width: 0; display: inline-flex; align-items: center; gap: 2px; height: 24px; box-sizing: border-box; padding: 0 4px 0 8px; border: 1px solid color-mix(in srgb, var(--fe-color) 40%, transparent); border-radius: 999px; background: transparent; color: var(--fe-color); font: inherit; ${type(12, 16)} font-weight: ${fw("medium")}; white-space: nowrap; cursor: pointer; --mdc-icon-size: 14px; }
-  .spill > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  :is(.sbtn, .spill, .sday):focus-visible { outline: none; box-shadow: 0 0 0 2px var(--fe-color); }
-  ${controlLayer(":is(.sbtn:not(.icon-only), .spill)")}
+  :is(.sbtn, .sday):focus-visible { outline: none; box-shadow: 0 0 0 2px var(--fe-color); }
+  ${controlLayer(".sbtn:not(.icon-only)")}
 
-  /* edit mode: blocks are buttons; the lanes take the finger (a drag moves blocks, not the page) */
-  .wk.edit .slane { touch-action: none; cursor: crosshair; }
+  /* edit mode: blocks are buttons. A finger still scrolls the page over the lanes and the blocks it
+     has not selected (a hold takes them); a selected block and its handles take it at once */
+  .wk.edit .slane { cursor: crosshair; }
+  .wk:focus { outline: none; }
+  /* the box a mouse draws to select the blocks it touches */
+  .slasso { position: absolute; z-index: 4; box-sizing: border-box; border: 1px solid var(--fe-color); border-radius: 4px; background: color-mix(in srgb, var(--fe-color) 12%, transparent); pointer-events: none; }
   .sday { flex: none; width: var(--sdn, 28px); height: 22px; border: 0; padding: 0; margin: 0; background: transparent; text-align: start; font: inherit; cursor: pointer; border-radius: 4px; position: relative; }
   /* (a row's targets reach half the gap to the next row, never over it) */
   .sday::before { content: ""; position: absolute; inset: -3px -8px; }
   .sday[aria-pressed="true"] .key { color: var(--fe-color); }
-  .slane > button.sb { border: 0; padding: 0; margin: 0; font: inherit; color: inherit; cursor: grab; touch-action: none; pointer-events: auto; outline: none; }
+  .slane > button.sb { border: 0; padding: 0; margin: 0; font: inherit; color: inherit; cursor: grab; touch-action: pan-y; pointer-events: auto; outline: none; }
+  .slane > button.sb.sel { touch-action: none; }
   .slane > button.sb::before { content: ""; position: absolute; inset: -3px 0; }
   .slane > .sb.sel { opacity: 1; z-index: 1; box-shadow: 0 0 0 2px ${CARD_BG}, 0 0 0 4px var(--fe-color); }
   .slane > button.sb:focus-visible { opacity: 1; z-index: 1; box-shadow: 0 0 0 2px ${CARD_BG}, 0 0 0 4px var(--primary-text-color); }

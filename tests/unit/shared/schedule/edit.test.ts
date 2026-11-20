@@ -71,8 +71,9 @@ describe("schedule edits", () => {
     expect(spans(r.days).slice(0, 2)).toEqual([[], [[360, 600]]]);
     // the moved block joined Tuesday's: the selection is that block
     expect(r.ids).toEqual([r.days[1][0].id]);
-    // nothing leaves the week shown
-    expect(relocate(d, [id], -1, 0, false)).toBeNull();
+    // nothing leaves the week shown: past the first day: as far as it can go
+    expect(relocate(d, [id], -1, 0, false)).toMatchObject({ dd: 0 });
+    expect(relocate(d, [id], 9, 0, false)).toMatchObject({ dd: d.length - 1 });
     // the minutes are held so the block stays in its day
     expect(relocate(d, [id], 0, 2000, false)!.dm).toBe(1440 - 510);
   });

@@ -54,18 +54,24 @@ const shifted = (days: EDays, ids: readonly number[], edge: Edge, d: number): EB
   );
 
 // The chosen blocks moved (or copied) by dd days and dm minutes, the minutes held so every block
-// stays in its day; blocks that land on others merge with them. Null where a block would leave
-// the days shown. The result names the moved blocks (the copies, for a copy).
+// stays in its day and the days so every block stays in the days shown (the result says by how
+// many it went); blocks that land on others merge with them. The result names the moved blocks
+// (the copies, for a copy).
 export const relocate = (
   days: EDays,
   ids: readonly number[],
   dd: number,
   dm: number,
   copy: boolean,
-): { days: EBlock[][]; ids: number[]; dm: number } | null => {
+): { days: EBlock[][]; ids: number[]; dd: number; dm: number } | null => {
   const picked: { d: number; b: EBlock }[] = [];
   days.forEach((day, d) => day.forEach((b) => ids.includes(b.id) && picked.push({ d, b })));
-  if (!picked.length || picked.some((p) => p.d + dd < 0 || p.d + dd >= days.length)) return null;
+  if (!picked.length) return null;
+  // (as many days as all of them can go: the first and the last day stop them together)
+  dd = Math.max(
+    0 - Math.min(...picked.map((p) => p.d)),
+    Math.min(days.length - 1 - Math.max(...picked.map((p) => p.d)), dd),
+  );
   const lo = Math.max(...picked.map((p) => -p.b.from)),
     hi = Math.min(...picked.map((p) => DAY_MIN - p.b.to));
   const m = Math.max(lo, Math.min(hi, dm));
@@ -79,7 +85,7 @@ export const relocate = (
     out[p.d + dd].push(nb);
   }
   const merged = out.map((day) => merge(day, came));
-  return { days: merged, ids: landedIds(merged, landed), dm: m };
+  return { days: merged, ids: landedIds(merged, landed), dd, dm: m };
 };
 // the blocks that hold what landed (a block merged into another goes by the one it joined)
 const landedIds = (days: EDays, landed: { d: number; from: number }[]) => [

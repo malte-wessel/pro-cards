@@ -114,6 +114,8 @@ const ru: Translation = {
   "schedule.edit": "Изменить расписание",
   "schedule.view_only": "Только просмотр",
   "schedule.add": "Добавить блок",
+  "schedule.hint_click": "Дважды щёлкните, чтобы добавить блок",
+  "schedule.hint_hold": "Удерживайте, чтобы добавить блок",
   "schedule.undo": "Отменить",
   "schedule.done": "Готово",
   "schedule.saving": "Сохранение …",
@@ -122,8 +124,6 @@ const ru: Translation = {
   "schedule.save_yaml": "Оно задано в YAML и меняется только там",
   "schedule.save_changed":
     "Тем временем его изменили в другом месте: повторное «Готово» сохранит ваше поверх",
-  "schedule.selected": "Выбрано: {n}",
-  "schedule.clear": "Снять выделение",
   "schedule.select_day": "Выбрать все блоки: {day}",
   "schedule.toolbar": "Выбранные блоки",
   "schedule.lower": "Уменьшить {name}",

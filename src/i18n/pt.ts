@@ -114,6 +114,8 @@ const pt: Translation = {
   "schedule.edit": "Editar o agendamento",
   "schedule.view_only": "Só visualização",
   "schedule.add": "Adicionar um bloco",
+  "schedule.hint_click": "Faça duplo clique para adicionar um bloco",
+  "schedule.hint_hold": "Mantenha premido para adicionar um bloco",
   "schedule.undo": "Desfazer",
   "schedule.done": "Concluído",
   "schedule.saving": "A guardar …",
@@ -122,8 +124,6 @@ const pt: Translation = {
   "schedule.save_yaml": "Está definido em YAML e só pode ser alterado lá",
   "schedule.save_changed":
     "Foi alterado noutro lugar entretanto: Concluído de novo guarda o seu por cima",
-  "schedule.selected": "{n} selecionados",
-  "schedule.clear": "Limpar a seleção",
   "schedule.select_day": "Selecionar todos os blocos de {day}",
   "schedule.toolbar": "Blocos selecionados",
   "schedule.lower": "Diminuir {name}",

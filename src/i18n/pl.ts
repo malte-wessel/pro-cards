@@ -114,6 +114,8 @@ const pl: Translation = {
   "schedule.edit": "Edytuj harmonogram",
   "schedule.view_only": "Tylko podgląd",
   "schedule.add": "Dodaj blok",
+  "schedule.hint_click": "Kliknij dwukrotnie, aby dodać blok",
+  "schedule.hint_hold": "Przytrzymaj, aby dodać blok",
   "schedule.undo": "Cofnij",
   "schedule.done": "Gotowe",
   "schedule.saving": "Zapisywanie …",
@@ -122,8 +124,6 @@ const pl: Translation = {
   "schedule.save_yaml": "Jest ustawiony w YAML i można go zmienić tylko tam",
   "schedule.save_changed":
     "W międzyczasie zmieniono go gdzie indziej: ponowne Gotowe zapisze Twój w jego miejsce",
-  "schedule.selected": "Zaznaczone: {n}",
-  "schedule.clear": "Wyczyść zaznaczenie",
   "schedule.select_day": "Zaznacz wszystkie bloki: {day}",
   "schedule.toolbar": "Zaznaczone bloki",
   "schedule.lower": "Zmniejsz {name}",

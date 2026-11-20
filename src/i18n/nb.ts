@@ -114,6 +114,8 @@ const nb: Translation = {
   "schedule.edit": "Rediger tidsplanen",
   "schedule.view_only": "Kun visning",
   "schedule.add": "Legg til en blokk",
+  "schedule.hint_click": "Dobbeltklikk for å legge til en blokk",
+  "schedule.hint_hold": "Hold inne for å legge til en blokk",
   "schedule.undo": "Angre",
   "schedule.done": "Ferdig",
   "schedule.saving": "Lagrer …",
@@ -122,8 +124,6 @@ const nb: Translation = {
   "schedule.save_yaml": "Den er satt i YAML og kan bare endres der",
   "schedule.save_changed":
     "Den er endret et annet sted i mellomtiden: Ferdig igjen lagrer din over den",
-  "schedule.selected": "{n} valgt",
-  "schedule.clear": "Fjern utvalget",
   "schedule.select_day": "Velg alle blokker på {day}",
   "schedule.toolbar": "Valgte blokker",
   "schedule.lower": "Senk {name}",

@@ -114,6 +114,8 @@ const nl: Translation = {
   "schedule.edit": "Schema bewerken",
   "schedule.view_only": "Alleen bekijken",
   "schedule.add": "Blok toevoegen",
+  "schedule.hint_click": "Dubbelklik om een blok toe te voegen",
+  "schedule.hint_hold": "Houd vast om een blok toe te voegen",
   "schedule.undo": "Ongedaan maken",
   "schedule.done": "Klaar",
   "schedule.saving": "Opslaan …",
@@ -122,8 +124,6 @@ const nl: Translation = {
   "schedule.save_yaml": "Het is in YAML ingesteld en kan alleen daar worden gewijzigd",
   "schedule.save_changed":
     "Het is intussen elders gewijzigd: nogmaals Klaar slaat het jouwe eroverheen op",
-  "schedule.selected": "{n} geselecteerd",
-  "schedule.clear": "Selectie wissen",
   "schedule.select_day": "Alle blokken op {day} selecteren",
   "schedule.toolbar": "Geselecteerde blokken",
   "schedule.lower": "{name} verlagen",

@@ -114,6 +114,8 @@ const sv: Translation = {
   "schedule.edit": "Redigera schemat",
   "schedule.view_only": "Endast visning",
   "schedule.add": "Lägg till ett block",
+  "schedule.hint_click": "Dubbelklicka för att lägga till ett block",
+  "schedule.hint_hold": "Håll ned för att lägga till ett block",
   "schedule.undo": "Ångra",
   "schedule.done": "Klar",
   "schedule.saving": "Sparar …",
@@ -122,8 +124,6 @@ const sv: Translation = {
   "schedule.save_yaml": "Det är angivet i YAML och kan bara ändras där",
   "schedule.save_changed":
     "Det har ändrats någon annanstans under tiden: Klar igen sparar ditt över det",
-  "schedule.selected": "{n} valda",
-  "schedule.clear": "Rensa urvalet",
   "schedule.select_day": "Välj alla block på {day}",
   "schedule.toolbar": "Valda block",
   "schedule.lower": "Sänk {name}",
