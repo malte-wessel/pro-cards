@@ -686,6 +686,92 @@ test.describe("schedule card with a mouse", () => {
   });
 });
 
+test.describe("schedule card: snapping, the toolbar and drags", () => {
+  test("times land on the snap's grid, from a block that is off it", async ({ page }) => {
+    await mount(
+      page,
+      { type: "custom:schedule-card-pro", entity: "schedule.garden_watering" },
+      { width: 400 },
+    );
+    await edit(page);
+    // Monday's 06:00–06:20: its end goes to 06:30, not 06:35
+    const b = blocks(page, 0).first();
+    await b.focus();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Shift+ArrowRight");
+    await expect(blocks(page, 0).first()).toHaveAttribute("aria-label", /06:00 to 06:30/);
+    await page.keyboard.press("ControlOrMeta+z");
+    // dragged 40 minutes on (07:00), the end lands on 07:00 (not 07:05: 06:20 and 45 minutes)
+    const k = (await lane(page, 0).locator('.sknob[data-act="to"]').boundingBox())!;
+    const w = (await lane(page, 0).boundingBox())!.width;
+    const x = k.x + k.width / 2,
+      y = k.y + k.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + (w * 40) / 1440, y, { steps: 3 });
+    await expect(card(page).locator(".sbubble")).toHaveText("07:00");
+    await page.mouse.up();
+    await expect(blocks(page, 0).first()).toHaveAttribute("aria-label", /06:00 to 07:00/);
+  });
+
+  test("Undo and the keys wait for a drag; Escape drops what it shows", async ({ page }) => {
+    await mount(page, CFG, { width: 400 });
+    await edit(page);
+    // a change to undo first: Sunday's morning deleted
+    await blocks(page, 6).first().click();
+    await page.keyboard.press("Delete");
+    await expect(blocks(page, 6)).toHaveCount(1);
+    // Wednesday's midday block held two hours later
+    const p = await at(lane(page, 2), 765);
+    await page.mouse.move(p.x, p.y);
+    await page.mouse.down();
+    await page.mouse.move(p.x + p.w / 12, p.y, { steps: 4 });
+    await page.keyboard.press("ControlOrMeta+z");
+    // (no undo meanwhile: Sunday's morning is still gone)
+    await expect(blocks(page, 6)).toHaveCount(1);
+    await expect(blocks(page, 2).nth(1)).toHaveAttribute("aria-label", /14:00 to 15:30/);
+    await page.keyboard.press("Escape");
+    await expect(blocks(page, 2).nth(1)).toHaveAttribute("aria-label", /12:00 to 13:30/);
+    await page.mouse.up();
+    await expect(blocks(page, 2).nth(1)).toHaveAttribute("aria-label", /12:00 to 13:30/);
+    // one change to undo, the one before the drag
+    await card(page).locator('.sctl [data-act="undo"]').click();
+    await expect(blocks(page, 6)).toHaveCount(2);
+    await expect(card(page).locator('.sctl [data-act="undo"]')).toBeDisabled();
+  });
+
+  test("the copy toggle is the selection's: a block dragged that was not selected moves", async ({
+    page,
+  }) => {
+    await mount(page, CFG, { width: 400 });
+    await edit(page);
+    await blocks(page, 6).first().click();
+    await card(page).locator('.sbar [data-act="copy"]').click();
+    await page.keyboard.press("Escape");
+    // Wednesday's midday block, not selected, two hours later
+    const p = await at(lane(page, 2), 765);
+    await page.mouse.move(p.x, p.y);
+    await page.mouse.down();
+    await page.mouse.move(p.x + p.w / 12, p.y, { steps: 4 });
+    await page.mouse.up();
+    await expect(blocks(page, 2)).toHaveCount(3);
+    await expect(blocks(page, 2).nth(1)).toHaveAttribute("aria-label", /14:00 to 15:30/);
+  });
+
+  test("the toolbar comes next in the tab order after the selected block's row", async ({
+    page,
+  }) => {
+    await mount(page, CFG, { width: 400 });
+    await edit(page);
+    // Wednesday's midday block (its evening block is next on the row, then the toolbar)
+    await blocks(page, 2).nth(1).focus();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Tab");
+    await expect(card(page).locator('.sbar [data-act="minus"]')).toBeFocused();
+  });
+});
+
 test.describe("schedule card on a touch screen", () => {
   test.use({ hasTouch: true, isMobile: true, viewport: { width: 400, height: 800 } });
   test("a long press turns edit mode on with the block selected", async ({ page }) => {
@@ -703,7 +789,7 @@ test.describe("schedule card on a touch screen", () => {
     await page.keyboard.press("Enter");
     await expect(copy).toHaveAttribute("aria-pressed", "true");
   });
-  test("in edit mode the page scrolls over the week; a tap selects or clears, a hold makes an hour or drags", async ({
+  test("in edit mode the lanes and unselected blocks leave a swipe to the page; a tap selects or clears, a hold makes an hour or drags", async ({
     page,
   }) => {
     await mount(page, CFG, { width: 360 });

@@ -270,3 +270,37 @@ describe("the editor's value range", () => {
     ).toBe(false);
   });
 });
+
+describe("a schedule's block data in the poster's and tile's editor", () => {
+  const SCHED = KINDS.schedule;
+  const card = { type: "custom:poster-card-pro", entity: "schedule.heating" };
+  it("shows the first data entry's key and unit, and writes a change back", () => {
+    const cfg = { ...card, data: [{ key: "temperature", unit: "°C", step: 0.5 }, "mode"] };
+    const form = configToForm(cfg as CardConfigBase, SCHED, "poster");
+    expect(form).toMatchObject({ data_key: "temperature", data_unit: "°C" });
+    // the unit changed: the entry keeps its other keys, the second entry stays
+    expect(
+      formToConfig({ ...form, data_unit: "℃" }, cfg as CardConfigBase, SCHED, "poster"),
+    ).toEqual({ ...cfg, data: [{ key: "temperature", unit: "℃", step: 0.5 }, "mode"] });
+    // untouched: as written
+    expect(formToConfig(form, cfg as CardConfigBase, SCHED, "poster")).toEqual(cfg);
+  });
+  it("writes a key typed into an empty form, and drops data whose key is cleared", () => {
+    const form = configToForm(card as CardConfigBase, SCHED, "tile");
+    expect(form).toMatchObject({ data_key: "", data_unit: "" });
+    const typed = formToConfig(
+      { ...form, data_key: "duration", data_unit: "min" },
+      card as CardConfigBase,
+      SCHED,
+      "tile",
+    );
+    expect(typed).toEqual({ ...card, data: [{ key: "duration", unit: "min" }] });
+    const cleared = formToConfig(
+      { ...configToForm(typed, SCHED, "tile"), data_key: "", data_unit: "" },
+      typed,
+      SCHED,
+      "tile",
+    );
+    expect(cleared).toEqual(card);
+  });
+});

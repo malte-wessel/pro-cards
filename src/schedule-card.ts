@@ -445,7 +445,7 @@ export class ScheduleCard extends EntityCardBase {
       box.style.cssText = `left:${e.box.x}px;top:${e.box.y}px;width:${e.box.w}px;height:${e.box.h}px`;
       wk.append(box);
     }
-    if (e && e.sel.length && !this._drag?.moved) this._placeBar(wk, e);
+    if (e && e.sel.length && !this._drag?.moved) this._placeBar(wk, e, this._refocusSel ?? focused);
     this._refocusWeek(wk, this._refocusSel ?? focused);
     this._refocusSel = null;
     if (this._tipAt && !e) this._showTip(this._tipAt.day, this._tipAt.min);
@@ -529,7 +529,7 @@ export class ScheduleCard extends EntityCardBase {
 
   // the toolbar above the selection's topmost row, centred on it, kept inside the card (below the
   // selection where the card has no room above it)
-  _placeBar(wk: HTMLElement, e: EditState) {
+  _placeBar(wk: HTMLElement, e: EditState, focus: string | null) {
     const hass = this._hass;
     const cfg = this._config as ScheduleCardConfig;
     const spec = cfg.data[0] ?? null;
@@ -550,10 +550,13 @@ export class ScheduleCard extends EntityCardBase {
     html += `<button class="sbtn track${e.copy ? " on" : ""}" data-act="copy" aria-pressed="${e.copy}" aria-label="${esc(t(hass, "schedule.copy"))}" title="${esc(t(hass, "schedule.copy"))}"><ha-icon icon="mdi:content-copy"></ha-icon></button>`;
     html += `<button class="sbtn track" data-act="delete" aria-label="${esc(t(hass, "schedule.delete"))}" title="${esc(t(hass, "schedule.delete"))}"><ha-icon icon="mdi:delete-outline"></ha-icon></button>`;
     bar.innerHTML = html;
-    wk.appendChild(bar);
     const rows = wk.querySelectorAll<HTMLElement>(".wrow");
     const top = Math.min(...blocks.map((w) => w.d)),
       bottom = Math.max(...blocks.map((w) => w.d));
+    // (next in the tab order after the row of the selected block that has the focus, else the
+    // selection's first row: a keyboard reaches it in a few steps, not after the whole week)
+    const at = focus?.[0] === "b" ? blocks.find((w) => w.b.id === Number(focus.slice(1))) : null;
+    rows[at ? at.d : top].after(bar);
     const lane = wk.querySelector<HTMLElement>(".slane") as HTMLElement;
     const mid = blocks.reduce((a, w) => a + (w.b.from + w.b.to) / 2, 0) / blocks.length;
     const W = wk.clientWidth,
@@ -766,6 +769,16 @@ export class ScheduleCard extends EntityCardBase {
       window.removeEventListener("keyup", on, true);
     };
   }
+  // whether a pointer drags now: Undo, Done, the toolbar and the keys wait for it (its edit is
+  // made against the days it began on); a press still deciding (a hold, a long press) is dropped
+  _pointerBusy() {
+    const d = this._drag;
+    if (d && (d.g.type === "press" || d.g.type === "hold")) {
+      this._endDrag();
+      return false;
+    }
+    return !!d;
+  }
   // a press the page may still scroll: not captured, so its release (anywhere) is seen on the
   // window; returns what stops watching
   _watchUp(pointer: number, done: (up: PointerEvent) => void) {
@@ -913,10 +926,26 @@ export class ScheduleCard extends EntityCardBase {
     const step = cfg.snap;
     const dx = ev.clientX - d.x0,
       dy = ev.clientY - d.y0;
-    const dm = snapMin((dx / (d.width || 1)) * DAY_MIN, step);
+    // the minutes moved, so that the time the drag holds lands on the snap's grid (a block's start,
+    // the end a handle holds, the end a dot stretches): a block at 06:20 goes to 06:30, not 06:35
+    const raw = (dx / (d.width || 1)) * DAY_MIN;
+    const grid = (at: number) => snapMin(at + raw, step) - at;
+    const g0 = d.g;
+    const held = (id: number) => findBlock(d.base, id)?.b;
+    const dm =
+      g0.type === "block"
+        ? grid(held(g0.id)?.from ?? 0)
+        : g0.type === "size"
+          ? grid((g0.edge === "from" ? held(g0.id)?.from : held(g0.id)?.to) ?? 0)
+          : g0.type === "fill"
+            ? raw >= 0
+              ? grid(g0.blocks[g0.blocks.length - 1].to)
+              : grid(g0.blocks[0].from)
+            : snapMin(raw, step);
     const dd = Math.round(dy / (d.pitch || 28));
     // the same snapped place as the move before: nothing to draw again
-    const copy = e.copy || d.alt;
+    // (the toolbar's copy toggle is the selection's: a block dragged that was not selected moves)
+    const copy = (e.copy && g0.type === "block" && d.sel0.includes(g0.id)) || d.alt;
     const place =
       d.g.type === "draw"
         ? `${snapMin(this._at(ev, d).min, step)}|${dd}`
@@ -1158,7 +1187,7 @@ export class ScheduleCard extends EntityCardBase {
   _toolbar(act: string | undefined) {
     const e = this._edit;
     const cfg = this._config;
-    if (!e || !cfg) return;
+    if (!e || !cfg || this._pointerBusy()) return;
     if (act === "copy") {
       this._edit = { ...e, copy: !e.copy };
       this._refocusSel = "acopy";
@@ -1207,11 +1236,25 @@ export class ScheduleCard extends EntityCardBase {
     const e = this._edit;
     const cfg = this._config;
     if (!e || !cfg || e.saving) return;
+    // a pointer drags: Escape drops what it shows, other keys wait for it
+    const d = this._drag;
+    if (d && this._pointerBusy()) {
+      if (ev.key === "Escape") {
+        this._endDrag();
+        this._edit = { ...e, days: d.base, sel: d.sel0, bubble: null, box: null };
+        this._render();
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+      return;
+    }
     if (ev.key === "Escape") {
+      // (nothing selected and changes made: it does nothing, and a dialog around may take it)
       if (e.sel.length) {
         this._edit = { ...e, sel: [] };
         this._render();
       } else if (!e.hist.length) this._leave();
+      else return;
       ev.preventDefault();
       ev.stopPropagation();
       return;
@@ -1263,16 +1306,22 @@ export class ScheduleCard extends EntityCardBase {
       this._commit(e, removeBlocks(e.days, ids), []);
       this._root?.querySelector<HTMLElement>(".wk .sday")?.focus({ preventScroll: true });
     } else if (ev.key === "ArrowLeft" || ev.key === "ArrowRight") {
-      // Shift: its end, Alt: its start
-      const dm = ev.key === "ArrowLeft" ? -step : step;
+      // Shift: its end, Alt: its start; to the snap's next grid line (06:20 → 06:30, not 06:35)
       const edge = ev.shiftKey ? "to" : ev.altKey ? "from" : "both";
+      const b = findBlock(e.days, id)?.b;
+      const at = (edge === "to" ? b?.to : b?.from) ?? 0;
+      const dm =
+        ev.key === "ArrowLeft"
+          ? Math.ceil(at / step) * step - step - at
+          : Math.floor(at / step) * step + step - at;
       // (a step into the next block joins it, as a drag does)
       const r =
         edge === "both" ? relocate(e.days, ids, 0, dm, false) : resize(e.days, ids, edge, dm, step);
       move(r?.days, r?.ids);
     } else if (ev.key === "ArrowUp" || ev.key === "ArrowDown") {
       // (the copy toggle copies to the day above or below)
-      const r = relocate(e.days, ids, ev.key === "ArrowUp" ? -1 : 1, 0, e.copy || ev.altKey);
+      const copy = (e.copy && e.sel.includes(id)) || ev.altKey;
+      const r = relocate(e.days, ids, ev.key === "ArrowUp" ? -1 : 1, 0, copy);
       move(r?.days, r?.ids);
     }
   }
@@ -1300,7 +1349,7 @@ export class ScheduleCard extends EntityCardBase {
   // ----- modes -----
   _onHeaderClick(ev: MouseEvent) {
     const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>("button[data-act]");
-    if (!btn || btn.disabled) return;
+    if (!btn || btn.disabled || this._pointerBusy()) return;
     const act = btn.dataset.act;
     const e = this._edit;
     if (act === "edit") {

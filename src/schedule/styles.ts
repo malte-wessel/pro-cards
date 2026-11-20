@@ -35,7 +35,10 @@ const STYLE_WEEK = `
 
   /* the header: when the schedule changes next, the pencil; in edit mode the selection, add, undo
      and done */
-  .header .snext { display: flex; align-items: center; gap: 4px; min-width: 0; color: var(--primary-text-color); --mdc-icon-size: 18px; }
+  /* (on a narrow card the title and when it changes next share the header by their widths, the
+     latter giving way first: neither goes) */
+  .header .title { flex: 1 1 auto; }
+  .header .snext { flex: 0 2 auto; display: flex; align-items: center; gap: 4px; min-width: 0; color: var(--primary-text-color); --mdc-icon-size: 18px; }
   .header .snext > ha-icon { color: var(--fe-color); }
   .header .snext > span { ${type(13, 16)} white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
   .header .sctl { display: flex; align-items: center; gap: 6px; flex: none; margin-block: -4px; margin-inline-end: -6px; }

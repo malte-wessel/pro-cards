@@ -134,8 +134,11 @@ export const SCHEDULE: Kind = {
   visual: { type: "schedule" },
   draws: ["schedule"],
   // `data` as written: checked with the card's config (the kind reads it on every render)
-  main: (_entity, _raw, opts) => {
-    normalizeData(opts.data, "schedule kind");
+  main: (_entity, raw, opts) => {
+    // (its errors name the card: "poster-card-pro: data …")
+    const type = (raw as { type?: unknown }).type;
+    const card = typeof type === "string" ? type.replace(/^custom:/, "") : "";
+    normalizeData(opts.data, card || "schedule kind");
     return {};
   },
   // how soon it changes, on a poster's corner (a tile's line says when)

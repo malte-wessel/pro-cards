@@ -49,7 +49,7 @@ The pencil in the header, or a long press on the week, turns edit mode on. Every
 
 On a phone the page still scrolls over the week in edit mode: a swipe on an empty spot or a block you have not selected scrolls, a hold takes it (a hold on a block drags it). A selected block drags at once.
 
-Times snap to 15 minutes (`snap`: 5, 10, 15, 30 or 60). Blocks that land on each other merge, whether you moved, copied or drew them or dragged an end into the next block, as Home Assistant keeps no overlapping blocks: the merged block keeps the data of the one you moved or copied. While the card edits, the handles and the toolbar float over the week: the card keeps its size.
+Times snap to 15 minutes (`snap`: 5, 10, 15, 30 or 60): a block at 06:20 moves to 06:30, then 06:45. Blocks that land on each other merge, whether you moved, copied or drew them or dragged an end into the next block, as Home Assistant keeps no overlapping blocks: the merged block keeps the data of the one you moved or copied. While the card edits, the handles and the toolbar float over the week: the card keeps its size.
 
 ::: live
 
@@ -64,7 +64,7 @@ snap: 30
 
 ### With the keyboard
 
-In edit mode every block is a button that names its day, its times and its data. **Enter** selects it, **←** and **→** move it by `snap` (with **Shift** its end), **↑** and **↓** move it to the day above or below (with **Alt** copy it there), a step into the next block joins the two, **Delete** removes it (or the selection), **Escape** clears the selection. **Ctrl+Z** (**Cmd+Z** on a Mac) undoes the last change, **Ctrl+A** (**Cmd+A**) selects every block.
+In edit mode every block is a button that names its day, its times and its data. **Enter** selects it, **←** and **→** move it to the next `snap` time (with **Shift** its end), **Escape** during a drag drops it, **↑** and **↓** move it to the day above or below (with **Alt** copy it there), a step into the next block joins the two, **Delete** removes it (or the selection), **Escape** clears the selection. **Ctrl+Z** (**Cmd+Z** on a Mac) undoes the last change, **Ctrl+A** (**Cmd+A**) selects every block.
 
 ### Who can edit
 

@@ -99,7 +99,8 @@ describe("the schedule feed", () => {
     await tick();
     const start = knownWeek(ID) ?? null;
     f.set(week("05:00:00"));
-    const mine = parseWeek(week("09:00:00"));
+    // (Monday 07:00–08:00: a week of its own, not an empty one)
+    const mine = parseWeek(week("07:00:00"));
     const err = await saveWeek(f.hass, ID, mine, start).catch((e) => e);
     expect(err).toBeInstanceOf(ScheduleSaveError);
     expect(err.reason).toBe("changed");
@@ -108,12 +109,14 @@ describe("the schedule feed", () => {
     await saveWeek(f.hass, ID, mine, err.week);
     const update = f.sent.find((m) => m.type === "schedule/update");
     expect(update).toMatchObject({ schedule_id: "heating", name: "Heating", icon: "mdi:x" });
-    expect(update?.monday).toEqual([]);
+    expect(update?.monday).toEqual([{ from: "07:00:00", to: "08:00:00" }]);
   });
 
   it("knows who may edit: an administrator, a schedule made in the UI", async () => {
+    const asked: Record<string, unknown>[][] = [];
     const as = (admin: boolean, editable: unknown) => {
       const f = fake(admin);
+      asked.push(f.sent);
       f.hass.states[ID].attributes.editable = editable;
       return scheduleEditable(f.hass, ID);
     };
@@ -122,6 +125,8 @@ describe("the schedule feed", () => {
     // set in YAML: Home Assistant says so, and a save refuses it
     expect(as(true, false)).toBe(false);
     expect(as(true, undefined)).toBe(false);
+    // (asking who may edit calls nothing)
+    expect(asked.flat()).toHaveLength(0);
     const yaml = fake();
     (yaml.hass.callWS as ReturnType<typeof vi.fn>).mockImplementation(
       async (msg: { type: string }) =>
@@ -129,8 +134,6 @@ describe("the schedule feed", () => {
     );
     const err = await saveWeek(yaml.hass, ID, parseWeek({}), null).catch((e) => e);
     expect(err.reason).toBe("yaml");
-    // (asking who may edit calls nothing)
-    expect(fake().sent).toHaveLength(0);
   });
 
   it("saves though a card listening to it throws", async () => {
@@ -144,7 +147,7 @@ describe("the schedule feed", () => {
     });
     const off2 = onScheduleWeek((id) => heard.push(id));
     await expect(
-      saveWeek(f.hass, ID, parseWeek(week("09:00:00")), knownWeek(ID) ?? null),
+      saveWeek(f.hass, ID, parseWeek(week("07:00:00")), knownWeek(ID) ?? null),
     ).resolves.toBeUndefined();
     expect(heard).toContain(ID);
     off1();
