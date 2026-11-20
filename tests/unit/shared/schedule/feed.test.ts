@@ -57,6 +57,19 @@ beforeEach(() => resetSchedules());
 afterEach(() => vi.useRealTimers());
 
 describe("the schedule feed", () => {
+  it("reads a fetch that failed before any answer as not known yet, and asks again later", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const f = fake();
+    (f.hass.callWS as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("timeout"));
+    expect(scheduleWeek(f.hass, ID)).toBeUndefined();
+    await tick();
+    // (not an empty week: the cards show it loading)
+    expect(scheduleWeek(f.hass, ID)).toBeUndefined();
+    expect(knownWeek(ID)).toBeUndefined();
+    vi.useFakeTimers({ now: Date.now() + 61e3 });
+    scheduleWeek(f.hass, ID);
+    await vi.waitFor(() => expect(knownWeek(ID)?.[0][0].from).toBe(360));
+  });
   it("reads the week once, and keeps its identity when it did not change", async () => {
     const f = fake();
     const told = vi.fn();

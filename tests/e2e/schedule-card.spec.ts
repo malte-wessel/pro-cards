@@ -843,7 +843,7 @@ test.describe("schedule card on a touch screen", () => {
     await expect(blocks(page, 3).nth(1)).toHaveAttribute("aria-label", /13:30 to 14:30/);
     await card(page).locator('.sctl [data-act="undo"]').click();
     await expect(blocks(page, 3)).toHaveCount(2);
-    // a hold that drags on sideways draws it longer (up or down, a phone's page scrolls)
+    // a hold that drags on sideways draws it longer
     await touch("touchStart", thu);
     await page.waitForTimeout(650);
     for (let i = 1; i <= 4; i++)
@@ -862,6 +862,62 @@ test.describe("schedule card on a touch screen", () => {
     await expect(blocks(page, 0).first()).toHaveAttribute("aria-label", /07:00 to 09:30/);
     await expect(blocks(page, 0).first()).toHaveAttribute("aria-pressed", "true");
     await expect(selected(page)).toHaveCount(1);
+  });
+  test("a swipe scrolls the page; a hold then a drag up or down takes the finger, the page stays", async ({
+    page,
+  }) => {
+    await mount(page, CFG, { width: 360 });
+    await edit(page);
+    // (a page that can scroll)
+    await page.evaluate(() => {
+      document.body.style.paddingBottom = "2000px";
+      window.scrollTo(0, 0);
+    });
+    const cdp = await page.context().newCDPSession(page);
+    const touch = (type: "touchStart" | "touchMove" | "touchEnd", p?: { x: number; y: number }) =>
+      cdp.send("Input.dispatchTouchEvent", {
+        type,
+        touchPoints: p ? [{ x: p.x, y: p.y, radiusX: 1, radiusY: 1 }] : [],
+      });
+    const drag = async (from: { x: number; y: number }, dx: number, dy: number) => {
+      for (let i = 1; i <= 10; i++)
+        await touch("touchMove", { x: from.x + (dx * i) / 10, y: from.y + (dy * i) / 10 });
+    };
+    const scrollY = () => page.evaluate(() => window.scrollY);
+    const pitch = (await lane(page, 4).boundingBox())!.y - (await lane(page, 3).boundingBox())!.y;
+    // a swipe up on an empty spot (Thursday 02:00) scrolls the page
+    const empty = await at(lane(page, 3), 120);
+    await touch("touchStart", empty);
+    await drag(empty, 0, -150);
+    await touch("touchEnd");
+    await expect.poll(scrollY).toBeGreaterThan(40);
+    // (back at the top once the fling has run out)
+    await expect
+      .poll(async () => {
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.waitForTimeout(100);
+        return scrollY();
+      })
+      .toBe(0);
+    // a hold on Thursday 14:00, then down a row and two hours on: drawn on Thursday and Friday
+    const thu = await at(lane(page, 3), 840);
+    await touch("touchStart", thu);
+    await page.waitForTimeout(650);
+    await drag(thu, thu.w / 12, pitch);
+    await expect(card(page).locator(".sbubble")).toHaveText("Thu, Fri 14:00 – 16:00");
+    expect(await scrollY()).toBe(0);
+    await touch("touchEnd");
+    for (const day of [3, 4])
+      await expect(blocks(page, day).nth(1)).toHaveAttribute("aria-label", /14:00 to 16:00/);
+    // a hold on Monday's evening (not selected), then down a row: it goes to Tuesday's
+    const mon = await at(lane(page, 0), 1200);
+    await touch("touchStart", mon);
+    await page.waitForTimeout(650);
+    await drag(mon, 0, pitch);
+    await touch("touchEnd");
+    expect(await scrollY()).toBe(0);
+    await expect(blocks(page, 0)).toHaveCount(1);
+    await expect(blocks(page, 1).last()).toHaveAttribute("aria-label", /17:00 to 22:30/);
   });
   test("a short tap shows the tooltip and keeps view mode", async ({ page }) => {
     await mount(page, CFG, { width: 360 });

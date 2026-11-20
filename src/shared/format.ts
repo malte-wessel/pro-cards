@@ -127,7 +127,12 @@ export const fmtDayMinutes = (
   };
   let f = dateFormat(langOf(hass), opts);
   const h24 = /^h2[34]$/.test(f.resolvedOptions().hourCycle ?? "");
-  if (m >= 1440 && h24) return "24:00";
+  // (the end of the day as 24 and the language's own separator: 24.00 in Finnish)
+  if (m >= 1440 && h24)
+    return f
+      .formatToParts(new Date(Date.UTC(2000, 0, 1)))
+      .map((p) => (p.type === "hour" ? "24" : p.value))
+      .join("");
   if (axis && !h24 && m % 60 === 0)
     f = dateFormat(langOf(hass), {
       hour: "numeric",

@@ -23,6 +23,7 @@ import {
 import { parseWeek } from "../../src/shared/schedule/model.ts";
 import { resetSchedules } from "../../src/shared/schedule/feed.ts";
 import { docExamples, withNested } from "./docs-examples.ts";
+import { near, stretchOf } from "../../src/schedule/pointer.ts";
 
 const T = "custom:schedule-card-pro";
 const hass = { locale: { language: "en", time_format: "24" } } as unknown as HomeAssistant;
@@ -217,5 +218,28 @@ describe("the week's first day", () => {
     expect(firstWeekdayOf(h("de", "language"))).toBe(0);
     expect(firstWeekdayOf(h("en-US"))).toBe(6);
     expect(firstWeekdayOf(h("xx-invalid-!!"))).toBe(0);
+  });
+});
+
+describe("the schedule card's pointer maths", () => {
+  it("takes a point on a box, or a few pixels off it, as on it", () => {
+    const box = { left: 100, right: 120, top: 50, bottom: 72 };
+    expect(near(box, 110, 60)).toBe(true);
+    expect(near(box, 128, 60)).toBe(true);
+    expect(near(box, 129, 60)).toBe(false);
+    expect(near(box, 110, 41)).toBe(false);
+  });
+  it("stretches a dot's row only past its blocks, to the pointer", () => {
+    const row = [
+      { from: 720, to: 810 },
+      { from: 1020, to: 1350 },
+    ];
+    // between the first start and the last end: nothing
+    expect(stretchOf(row, 900)).toBe(0);
+    expect(stretchOf(row, 720)).toBe(0);
+    // past the end: the end to the pointer; before the start: the start
+    expect(stretchOf(row, 1380)).toBe(30);
+    expect(stretchOf(row, 660)).toBe(-60);
+    expect(stretchOf([], 600)).toBe(0);
   });
 });

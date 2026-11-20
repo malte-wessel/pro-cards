@@ -10,7 +10,9 @@ import { REFRESH_MS } from "../constants.ts";
 import { parseWeek, sameWeek, toHaWeek, type Week } from "./model.ts";
 
 interface Entry {
-  week: Week | null; // null: none to read (an error, an unknown entity)
+  // null: none to read (an unknown entity); undefined: not read yet, a fetch failed before any
+  // answer (asked again a minute later: the cards show it loading, not an empty week)
+  week: Week | null | undefined;
   st: HassEntity | undefined; // the state it was fetched for
   at: number;
 }
@@ -61,10 +63,10 @@ const ask = (hass: HomeAssistant, id: string) => {
   const g = gen.get(id) ?? 0;
   fetchWeek(hass, id)
     .then(
-      (week) => ({ week, at: Date.now() }),
+      (week): { week: Week | null | undefined; at: number } => ({ week, at: Date.now() }),
       (err) => {
         console.warn(`pro-cards: schedule.get_schedule for ${id} failed`, err);
-        return { week: got.get(id)?.week ?? null, at: Date.now() - REFRESH_MS + RETRY_MS };
+        return { week: got.get(id)?.week, at: Date.now() - REFRESH_MS + RETRY_MS };
       },
     )
     .then(({ week, at }) => {

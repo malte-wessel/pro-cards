@@ -44,10 +44,10 @@ The pencil in the header, or a long press on the week, turns edit mode on. Every
 - **Drag a block** to another time or another day. Hold **Alt** (Option) while dragging, or turn on the copy button in the toolbar, to copy it there instead.
 - **Drag a handle** on a selected block's end to change its start or end; drag on up or down over other days to put the changed block on each of them too.
 - **Drag a dot** above or below the selection over other days to copy there: the dot above copies the selected blocks of the selection's first day, the one below those of its last day. Dragged past their start or end, it stretches them to where it is (an earlier start, a later end), on that day and on the copies; between them their times stay. The copies are selected with it, so the toolbar changes them together.
-- **Make a block:** double-click an empty spot for an hour there, or double-click and drag to draw it, over other days too for the same block on each. With a finger, hold an empty spot for an hour there, and drag on sideways to draw it longer. **+** in the header adds an hour to the selected block's day.
+- **Make a block:** double-click an empty spot for an hour there, or double-click and drag to draw it, over other days too for the same block on each. With a finger, hold an empty spot for an hour there, and drag on to draw it, over other days too. **+** in the header adds an hour to the selected block's day.
 - The **toolbar** above the selection changes its value (the first `data`), copies or deletes it.
 
-On a phone the page still scrolls over the week in edit mode: a swipe on an empty spot or a block you have not selected scrolls, a hold takes it (a hold on a block drags it to another time). Up or down the page scrolls, so a finger takes blocks to other days with what takes it at once: a selected block, its handles and the dots.
+On a phone the page still scrolls over the week in edit mode: a swipe on an empty spot or a block you have not selected scrolls, a hold takes it: on an empty spot it draws, on a block it drags it, to another day too. A selected block, its handles and the dots take the finger at once.
 
 Times snap to 15 minutes (`snap`: 5, 10, 15, 30 or 60): a block at 06:20 moves to 06:30, then 06:45. Blocks that land on each other merge, whether you moved, copied or drew them or dragged an end into the next block, as Home Assistant keeps no overlapping blocks: the merged block keeps the data of the one you moved or copied. While the card edits, the handles and the toolbar float over the week, so the card keeps its size; only a toolbar with no room above or below the selection goes under the week, and the card grows by its height while it shows.
 
@@ -64,7 +64,7 @@ snap: 30
 
 ### With the keyboard
 
-In edit mode every block is a button that names its day, its times and its data. **Enter** selects it, **←** and **→** move it to the next `snap` time (with **Shift** its end), **Escape** during a drag drops it, **↑** and **↓** move it to the day above or below (with **Alt** copy it there), a step into the next block joins the two, **Delete** removes it (or the selection), **Escape** clears the selection. **Ctrl+Z** (**Cmd+Z** on a Mac) undoes the last change, **Ctrl+A** (**Cmd+A**) selects every block.
+In edit mode every block is a button that names its day, its times and its data. **Enter** selects it, **←** and **→** move it to the next `snap` time (with **Shift** its end, with **Alt** its start), **Escape** during a drag drops it, **↑** and **↓** move it to the day above or below (with **Alt** copy it there), a step into the next block joins the two, **Delete** removes it (or the selection), **Escape** clears the selection. **Ctrl+Z** (**Cmd+Z** on a Mac) undoes the last change, **Ctrl+A** (**Cmd+A**) selects every block.
 
 ### Who can edit
 

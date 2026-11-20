@@ -1,7 +1,8 @@
 // CSS of the schedule card: the entity cards' header, the week of lanes under it (the lane's own
 // look in src/shared/schedule/styles.ts), and edit mode: the selected blocks ringed, the handles on
 // their ends and the dot under them floating over the lanes, the toolbar above the selection, the
-// bubble that says where a drag lands. Every hit area is at least 44 px; the card keeps its size.
+// bubble that says where a drag lands. A handle's and a dot's hit areas are 44 px for a finger, a
+// row's blocks and day take the row's height; the card keeps its size.
 import { CARD_BG } from "../shared/constants.ts";
 import {
   STYLE_BASE,
@@ -58,6 +59,7 @@ const STYLE_WEEK = `
      has not selected (a hold takes them); a selected block and its handles take it at once */
   .wk.edit .slane { cursor: crosshair; }
   .wk:focus { outline: none; }
+  .ssaid { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   /* the box a mouse draws to select the blocks it touches */
   .slasso { position: absolute; z-index: 4; box-sizing: border-box; border: 1px solid var(--fe-color); border-radius: 4px; background: color-mix(in srgb, var(--fe-color) 12%, transparent); pointer-events: none; }
   .sday { flex: none; width: var(--sdn, 28px); height: 22px; border: 0; padding: 0; margin: 0; background: transparent; text-align: start; font: inherit; cursor: pointer; border-radius: 4px; position: relative; }
