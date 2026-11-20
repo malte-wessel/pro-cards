@@ -2,31 +2,29 @@
 
 ## 3.2.0 – Timers that count down, names by their parts
 
-_Beta_
+_2026-11-20_
 
 ### What's new
 
-- **Timers count down:** a timer's time left is its value, counting down every second (`12:34`) on a tile, a poster, a tile group's table and a badge, without the card drawing itself again. A bar below it shrinks with it (full while the timer is idle), and a paused timer stands at what is left and says Paused. [Kinds](https://malte-wessel.github.io/pro-cards/cards/kinds#timer)
-- **`format: clock`:** writes a duration, a timer's time left or the time until a date as a clock (1:12:00). `duration` and `clock` count down to a date (a `timestamp` sensor such as when a dishwasher is done) every second. [Badges](https://malte-wessel.github.io/pro-cards/cards/badges#format-and-staleness)
-- **Names as Home Assistant composes them:** `name` takes the parts of a name, as Home Assistant's own cards do since 2026.11 named entities by their device: `[{ type: entity }]` for the entity's own name, `[{ type: area }, { type: entity }]`, `device`, `floor` and a `text` of your own. They follow renames and work with auto-entities, on tiles, posters, a tile group's tiles, badges, buttons, trend series and the power and energy flow cards' sources and consumers; the visual editor offers Home Assistant's name picker. [Tile](https://malte-wessel.github.io/pro-cards/cards/tile-card#names)
-- **`format` on a tile's and a poster's value:** the value itself takes `format` (`power`, `duration`, `clock`, `relative`) as a badge does, also in the visual editor; where it applies it replaces the kind's own value (a plug's power in kW).
+- **Timers count down:** a timer's time left is its value, every second, with a bar below that shrinks with it; paused, it says so. [Kinds](https://malte-wessel.github.io/pro-cards/cards/kinds#timer)
+- **`format: clock`** writes a duration or the time until a date as a clock (1:12:00); `duration` and `clock` count down to a date every second. [Badges](https://malte-wessel.github.io/pro-cards/cards/badges#format-and-staleness)
+- **Names by their parts**, as Home Assistant's own cards: `name: [{ type: area }, { type: entity }]` (also `device`, `floor`, `text`), following renames, on every card that names an entity; the visual editor offers Home Assistant's name picker. [Tile](https://malte-wessel.github.io/pro-cards/cards/tile-card#names)
+- **`format` on a tile's and a poster's value** (`power`, `duration`, `clock`, `relative`), also in the visual editor.
 
 ### Changed: existing cards look different
 
-- **Timers:** a tile or a poster of a timer showed Active or Paused; it now shows the time left with a bar of it below, so a timer tile is two rows high. `visual: false` leaves the bar out, `format` writes the time left another way.
-- **Controls below the value come before the visual below it** on a poster and a tile: a bar (a timer's, a battery's) now sits under its buttons or segments, as a plot along the bottom does. A gauge is the picture and keeps its controls under it.
-- **A poster short of height drops its bar** below the value before it draws the value smaller, as it does a slider.
+- **Timers:** a timer tile or poster showed Active or Paused; it now shows the time left with a bar below (a tile is two rows high). `visual: false` leaves the bar out.
+- **Controls below the value come before the visual** below it on a poster and a tile.
+- **A poster short of height drops its bar** before it draws the value smaller.
 
 ### Fixes
 
-- A poster's or a tile's control below the value sits above a plot along the bottom (a sparkline, columns, a kind's curve); it was drawn after the plot, over it and cut off by the card's edge.
-- A bar, a gauge, a battery's segments and the icon's ring fill to the value a poster or a tile shows of its own where the state is no number: a cover's position, a light's brightness, a fan's speed (all the way for a light or a fan without levels that is on), a plug's power up to a `max` the card writes. They stood empty (a light's gauge said On) unless the card named an `attribute`; a tile group's table row fills its bar so too.
-- The visual editor offers a timer's presets only where the timer has some (set in its settings in Home Assistant); a control already set to them says where to add them.
-- A tile group and a seamless layout card blur a glass theme's background once: the cards inside no longer blur it again, which made them darker than the header and showed edges between them. A seamless layout's surface now takes the theme's blur itself.
-- A tile group takes UIX (`uix`) on its own card, as it takes `card_mod`; it stopped with an error before.
-- `card_mod` and UIX (`uix`) style a tile in a tile group; they styled nothing there before.
-- The schema (the Playground, YAML completion) accepts `uix` on every card, and `card_mod` and `uix` on a tile in a tile group.
-- Docs: a glass theme through `ha-card-background` and `ha-card-backdrop-filter`, and why a card_mod or UIX rule on every `ha-card` stacks inside a tile group. [Colours](https://malte-wessel.github.io/pro-cards/guide/colours#theme-variables)
+- A control below the value no longer sits under a plot along the bottom, cut off by the card's edge.
+- Bars, gauges, a battery's segments and the icon's ring fill to the value shown where the state is no number (a cover's position, a light's brightness, a fan's speed, a plug's power).
+- The visual editor offers a timer's presets only where the timer has some.
+- A tile group and a seamless layout card blur a glass theme's background once, not again per card.
+- A tile group takes UIX (`uix`); `card_mod` and `uix` style a tile inside a tile group; the schema accepts both.
+- Docs: glass themes, and card_mod or UIX rules inside a tile group. [Colours](https://malte-wessel.github.io/pro-cards/guide/colours#theme-variables)
 
 ## 3.1.0 – Buttons that show state, tile group rows
 
