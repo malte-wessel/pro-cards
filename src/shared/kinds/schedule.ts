@@ -1,6 +1,7 @@
 // The schedule kind: a schedule helper (On while a block of its week runs). When it changes next
-// as the secondary ("until 22:30 · 21 °C", "next Fri 06:00 · 20 min", the block's data as `data`
-// names it), how soon on a poster's corner, and the week's lane below the texts: today from
+// as a tile's secondary ("until 22:30 · 21 °C", "next Fri 06:00 · 20 min", the block's data as
+// `data` names it), how soon on a poster's corner (a poster leaves the line under its value empty:
+// the lane below takes its room, so the value keeps its size), and the week's lane below the texts: today from
 // midnight to midnight, the next 24 hours from now, or a ribbon along the card's bottom edge. Its
 // week is read once per page (schedule/feed.ts); the cards read it, the schedule card edits it.
 import { cssColor, stateColorCss } from "../color.ts";
@@ -151,6 +152,8 @@ export const SCHEDULE: Kind = {
   slots: (c) => {
     const week = c.host.schedule();
     const st = c.m.st;
+    // (a poster: no line under the value, the corner says how soon and the lane shows the rest)
+    if (c.card === "poster") return { picture: laneEl(c, week) };
     let secondary: HTMLElement | null = null;
     if (week && st && st.state !== "unavailable") {
       const { pos, ch, block } = changeOf(c, week);

@@ -17,7 +17,7 @@
  * selects with a box, its handles change its times (dragged over other days, the block goes there
  * too), a drag moves it (to another day too; Alt or the
  * toolbar's toggle copies), the dots above and below the selection copy its first or last row's
- * blocks to the days they are dragged over (sideways, they stretch them toward the drag), a double click on an empty spot makes an hour (held on the second press, it draws a block).
+ * blocks to the days they are dragged over (past the blocks' ends, they stretch them to the pointer), a double click on an empty spot makes an hour (held on the second press, it draws a block).
  * A click on an empty spot clears the selection. A finger scrolls the page
  * over the week in edit mode too: it holds an empty spot to make an hour there (and drags on to draw
  * it, over other days too), holds a block it has not selected to drag it; a selected block drags at
@@ -445,6 +445,9 @@ export class ScheduleCard extends EntityCardBase {
       box.style.cssText = `left:${e.box.x}px;top:${e.box.y}px;width:${e.box.w}px;height:${e.box.h}px`;
       wk.append(box);
     }
+    // (the room a toolbar under the axis took goes with it, but not during a drag: the card keeps
+    // its height until the drag ends)
+    if (!this._drag?.moved) wk.style.removeProperty("padding-bottom");
     if (e && e.sel.length && !this._drag?.moved) this._placeBar(wk, e, this._refocusSel ?? focused);
     this._refocusWeek(wk, this._refocusSel ?? focused);
     this._refocusSel = null;
@@ -573,8 +576,14 @@ export class ScheduleCard extends EntityCardBase {
     // (clear of the dots above and below the selection)
     let y = rows[top].offsetTop - bh - 14;
     if (y < headerBottom + 4) y = rows[bottom].offsetTop + rows[bottom].offsetHeight + 14;
-    // never past the week's end (the card cuts it there): over the rows between, then
-    bar.style.top = `${Math.round(Math.min(y, wk.clientHeight - bh))}px`;
+    // no room below the selection either: under the week's axis, the card growing by its height
+    // while something is selected, so it never covers the rows between
+    const end = wk.clientHeight;
+    if (y + bh > end) {
+      wk.style.paddingBottom = `${bh + 8}px`;
+      y = end + 4;
+    }
+    bar.style.top = `${Math.round(y)}px`;
   }
 
   // ----- the tooltip (view mode) -----
@@ -918,6 +927,13 @@ export class ScheduleCard extends EntityCardBase {
     this._hideTip();
     this._dragTo(d, ev);
   }
+  // a dot dragged sideways: its row's blocks stretch only once the pointer is past them, their
+  // end (or start) then where it is; between their start and end nothing changes
+  _stretch(blocks: readonly EBlock[], at: number) {
+    const from = blocks[0].from,
+      to = blocks[blocks.length - 1].to;
+    return at > to ? at - to : at < from ? at - from : 0;
+  }
   // the edit a drag makes so far, shown (not yet in the undo history)
   _dragTo(d: Drag, ev: PointerEvent) {
     const e = this._edit;
@@ -938,9 +954,7 @@ export class ScheduleCard extends EntityCardBase {
         : g0.type === "size"
           ? grid((g0.edge === "from" ? held(g0.id)?.from : held(g0.id)?.to) ?? 0)
           : g0.type === "fill"
-            ? raw >= 0
-              ? grid(g0.blocks[g0.blocks.length - 1].to)
-              : grid(g0.blocks[0].from)
+            ? this._stretch(g0.blocks, snapMin(this._at(ev, d).min, step))
             : snapMin(raw, step);
     const dd = Math.round(dy / (d.pitch || 28));
     // the same snapped place as the move before: nothing to draw again
@@ -1070,8 +1084,12 @@ export class ScheduleCard extends EntityCardBase {
             }
           : null;
     } else if (g.type === "draw") {
+      // (not yet a snap step sideways: the hour a double click or a hold makes)
       const { min } = this._at(ev, d);
-      const r = drawn(g, g.m0, min, step);
+      const r =
+        Math.abs(snapMin(min, step) - snapMin(g.m0, step)) < step
+          ? drawn(g, g.m0, null, step)
+          : drawn(g, g.m0, min, step);
       // drawn over other days: the same block on each of them
       const to = Math.max(0, Math.min(6, g.day + dd));
       const others: number[] = [];
@@ -1098,7 +1116,9 @@ export class ScheduleCard extends EntityCardBase {
     const e = this._edit;
     if (d.g.type === "press" || d.g.type === "hold" || !e) return;
     const clean = { bubble: null, box: null };
-    if (cancelled) {
+    // (a finger that held still and then scrolls: the page took it, and what the hold made, the
+    // hour drawn or the block selected and where it was dragged, stays)
+    if (cancelled && !d.held) {
       // the edit the drag showed is dropped
       this._edit = { ...e, ...clean, days: d.base };
       this._render();

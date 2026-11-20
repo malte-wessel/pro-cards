@@ -589,7 +589,7 @@ The time left is the value, counting down every second (`12:34`), and a bar belo
 
 ### Schedule
 
-On or off, and when the schedule changes next with the data of its block (`until 22:30 · 21 °C`, `next Fri 06:00`); a poster says how soon in its corner. Below it the day's blocks, today's from midnight to midnight with a line at now; `visual: { variant: ahead }` draws the next 24 hours, `edge` a ribbon along the card's bottom edge. `data` names the block data to write, as on the [schedule card](/cards/schedule-card#block-data), which also edits the week. The blocks keep the schedule's colour while it is off.
+On or off, and when the schedule changes next with the data of its block (`until 22:30 · 21 °C`, `next Fri 06:00`) on a tile's line; a poster says how soon in its corner and leaves the line under its value empty, so the value keeps its size (`secondary` writes one). Below it the day's blocks, today's from midnight to midnight with a line at now; `visual: { variant: ahead }` draws the next 24 hours, `edge` a ribbon along the card's bottom edge. `data` names the block data to write, as on the [schedule card](/cards/schedule-card#block-data), which also edits the week. The blocks keep the schedule's colour while it is off.
 
 ::: live
 

@@ -255,28 +255,33 @@ test.describe("schedule card", () => {
     }
   });
 
-  test("a dot dragged sideways stretches its row's blocks toward the drag, copies included", async ({
+  test("a dot dragged past its row's blocks stretches them to the pointer, copies included", async ({
     page,
   }) => {
     await mount(page, CFG, { width: 400 });
     await edit(page);
-    // Wednesday's 12:00–13:30: the dot below, a row down and an hour right
+    // Wednesday's 12:00–13:30: the dot below
     await blocks(page, 2).nth(1).click();
-    const w = (await lane(page, 2).boundingBox())!.width;
     const pitch = (await lane(page, 3).boundingBox())!.y - (await lane(page, 2).boundingBox())!.y;
     const b = (await card(page).locator(".sfill.bottom").boundingBox())!;
     await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
     await page.mouse.down();
-    await page.mouse.move(b.x + b.width / 2 + w / 24, b.y + b.height / 2 + pitch, { steps: 6 });
+    // sideways inside the block (to 13:15): nothing changes
+    const inside = await at(lane(page, 2), 795);
+    await page.mouse.move(inside.x, b.y + b.height / 2, { steps: 4 });
+    await expect(blocks(page, 2).nth(1)).toHaveAttribute("aria-label", /12:00 to 13:30/);
+    // past its end, at 14:30, and a row down: the end is where the pointer is
+    const past = await at(lane(page, 2), 870);
+    await page.mouse.move(past.x, b.y + b.height / 2 + pitch, { steps: 6 });
     await expect(card(page).locator(".sbubble")).toHaveText("Copy to Thu · 14:30");
     await page.mouse.up();
     for (const day of [2, 3])
       await expect(blocks(page, day).nth(1)).toHaveAttribute("aria-label", /12:00 to 14:30/);
-    // the dot above, an hour left and no day further: Wednesday alone starts earlier
+    // the dot above, to 11:00 and no day further: Wednesday alone starts earlier
     const t = (await card(page).locator(".sfill.top").boundingBox())!;
     await page.mouse.move(t.x + t.width / 2, t.y + t.height / 2);
     await page.mouse.down();
-    await page.mouse.move(t.x + t.width / 2 - w / 24, t.y + t.height / 2, { steps: 4 });
+    await page.mouse.move((await at(lane(page, 2), 660)).x, t.y + t.height / 2, { steps: 4 });
     await expect(card(page).locator(".sbubble")).toHaveText("11:00");
     await page.mouse.up();
     await expect(blocks(page, 2).nth(1)).toHaveAttribute("aria-label", /11:00 to 14:30/);
@@ -419,6 +424,12 @@ test.describe("schedule card", () => {
     const header = (await card(page).locator(".header").boundingBox())!;
     expect(bar.y + bar.height).toBeLessThanOrEqual(box.y + box.height);
     expect(bar.y).toBeGreaterThanOrEqual(header.y + header.height);
+    // no room above the first row nor below the last: under the axis, over none of the rows
+    const last = (await lane(page, 6).boundingBox())!;
+    expect(bar.y).toBeGreaterThanOrEqual(last.y + last.height);
+    // and the card gives it back once nothing is selected
+    await page.keyboard.press("Escape");
+    expect((await card(page).boundingBox())!.height).toBeLessThan(box.height);
   });
 
   test("gives the days' names the room they need, in view and in edit mode alike", async ({
@@ -832,17 +843,15 @@ test.describe("schedule card on a touch screen", () => {
     await expect(blocks(page, 3).nth(1)).toHaveAttribute("aria-label", /13:30 to 14:30/);
     await card(page).locator('.sctl [data-act="undo"]').click();
     await expect(blocks(page, 3)).toHaveCount(2);
-    // a hold that drags on draws, over the day below too
-    const pitch = (await lane(page, 4).boundingBox())!.y - (await lane(page, 3).boundingBox())!.y;
+    // a hold that drags on sideways draws it longer (up or down, a phone's page scrolls)
     await touch("touchStart", thu);
     await page.waitForTimeout(650);
     for (let i = 1; i <= 4; i++)
-      await touch("touchMove", { x: thu.x + (thu.w / 12) * (i / 4), y: thu.y + (pitch * i) / 4 });
-    await expect(card(page).locator(".sbubble")).toHaveText("Thu, Fri 14:00 – 16:00");
+      await touch("touchMove", { x: thu.x + (thu.w / 12) * (i / 4), y: thu.y });
+    await expect(card(page).locator(".sbubble")).toHaveText("14:00 – 16:00");
     await touch("touchEnd");
-    await expect(selected(page)).toHaveCount(2);
-    for (const day of [3, 4])
-      await expect(blocks(page, day).nth(1)).toHaveAttribute("aria-label", /14:00 to 16:00/);
+    await expect(selected(page)).toHaveCount(1);
+    await expect(blocks(page, 3).nth(1)).toHaveAttribute("aria-label", /14:00 to 16:00/);
     // a hold on a block not selected drags that block alone (Monday's morning, an hour later)
     const mon = await at(lane(page, 0), 435);
     await touch("touchStart", mon);
@@ -874,7 +883,8 @@ test.describe("the schedule kind", () => {
       },
       { width: 283 },
     );
-    await expect(card(page).locator(".pbody .secondary")).toHaveText("from 14:00 · 21.5 °C");
+    // no line under the value: the corner says how soon, the lane shows the rest
+    await expect(card(page).locator(".pbody .secondary")).toHaveCount(0);
     await expect(card(page).locator(".corner")).toContainText("in 2h");
     await expect(card(page).locator(".psched .sb")).toHaveCount(2);
     await expect(card(page).locator(".psched .snow")).toHaveCount(1);
