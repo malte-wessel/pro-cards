@@ -32,6 +32,21 @@ views:
             title: Living room
             icon: mdi:sofa
             tiles: [light.living_room, cover.living_room_blinds, sensor.living_room_temperature]
+      # schedules: the card edits the ones made in the UI (an administrator), not the YAML one
+      - type: grid
+        cards:
+          - type: custom:schedule-card-pro
+            entity: schedule.heating
+            color: deep-orange
+            data: [{ key: temperature, unit: °C, step: 0.5, min: 5, max: 30, default: 21 }]
+          - { type: custom:schedule-card-pro, entity: schedule.office_hours }
+          - {
+              type: custom:poster-card-pro,
+              entity: schedule.garden_watering,
+              data: [{ key: duration, unit: min }],
+              visual: { variant: ahead },
+            }
+          - { type: custom:tile-card-pro, entity: schedule.hallway_lights }
       - type: grid
         cards:
           - type: heading

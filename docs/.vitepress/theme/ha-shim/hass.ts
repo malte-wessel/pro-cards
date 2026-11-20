@@ -5,6 +5,7 @@ import { hsToRgb, kelvinToRgb } from "../../../../src/shared/color.ts";
 import { parseHms } from "../../../../src/shared/countdown.ts";
 import { AREAS, DEVICES, ENTITIES, FLOORS, formatEntityName } from "./registry.ts";
 import { renderTemplate } from "./templates.ts";
+import { SCHEDULE_WEEKS, scheduleList, scheduleUniqueId, updateSchedule } from "./schedules.ts";
 import type {
   ActionConfig,
   ActionKind,
@@ -892,8 +893,31 @@ export const snapshot = (): HassSnapshot => ({
   callWS: async <T>(msg: MessageBase): Promise<T> => {
     // an entity's registry options: the demo's favourites (a timer's presets)
     if (msg.type === "config/entity_registry/get") {
-      const options = REGISTRY_OPTIONS[String(msg.entity_id)];
-      return { entity_id: msg.entity_id, options: options ?? {} } as T;
+      const id = String(msg.entity_id);
+      const options = REGISTRY_OPTIONS[id];
+      return { entity_id: id, unique_id: scheduleUniqueId(id), options: options ?? {} } as T;
+    }
+    // a schedule's week (any user may call it), the schedules made in the UI, and saving one
+    if (
+      msg.type === "call_service" &&
+      msg.domain === "schedule" &&
+      msg.service === "get_schedule" &&
+      msg.return_response
+    ) {
+      const ids = ([] as string[]).concat(msg.target?.entity_id ?? []);
+      const response: Record<string, unknown> = {};
+      for (const id of ids) {
+        if (!SCHEDULE_WEEKS[id]) throw new Error(`Entity ${id} not found`);
+        response[id] = SCHEDULE_WEEKS[id];
+      }
+      return { context: { id: "demo" }, response } as T;
+    }
+    if (msg.type === "schedule/list") return scheduleList() as T;
+    if (msg.type === "schedule/update") {
+      updateSchedule(msg);
+      // (the entity follows its new week, as Home Assistant's does)
+      world.syncSchedules();
+      return scheduleList().find((i) => i.id === msg.schedule_id) as T;
     }
     if (msg.type === "history/history_during_period") {
       return world.history(

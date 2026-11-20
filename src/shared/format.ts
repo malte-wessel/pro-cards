@@ -108,6 +108,40 @@ export const fmtTime = (
   return dateFormat(langOf(hass), o).format(new Date(t));
 };
 
+// A time of day given as minutes from midnight (a schedule's block, a wall clock's), in the
+// profile's time format; no zone: the time is the one written. The end of the day is 24:00 on a
+// 24-hour clock. `axis`: a whole hour on a 12-hour clock without its minutes ("6 AM"), as an
+// axis has room for
+export const fmtDayMinutes = (
+  hass: HomeAssistant | null | undefined,
+  min: number,
+  axis = false,
+) => {
+  const m = Math.round(min);
+  const hc = hourCycleOf(hass);
+  const opts: Intl.DateTimeFormatOptions = {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+    ...(hc && { hourCycle: hc }),
+  };
+  let f = dateFormat(langOf(hass), opts);
+  const h24 = /^h2[34]$/.test(f.resolvedOptions().hourCycle ?? "");
+  // (the end of the day as 24 and the language's own separator: 24.00 in Finnish)
+  if (m >= 1440 && h24)
+    return f
+      .formatToParts(new Date(Date.UTC(2000, 0, 1)))
+      .map((p) => (p.type === "hour" ? "24" : p.value))
+      .join("");
+  if (axis && !h24 && m % 60 === 0)
+    f = dateFormat(langOf(hass), {
+      hour: "numeric",
+      timeZone: "UTC",
+      ...(hc && { hourCycle: hc }),
+    });
+  return f.format(new Date(Date.UTC(2000, 0, 1) + (m % 1440) * 60e3));
+};
+
 // a number with exactly `dec` decimals in the user's number format
 export const fmtNumber = (hass: HomeAssistant | null | undefined, v: number, dec: number) =>
   numberFormat(hass, { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(v);

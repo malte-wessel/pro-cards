@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   dateFormat,
+  fmtDayMinutes,
   durationSeconds,
   fmtDuration,
   fmtNumber,
@@ -146,5 +147,20 @@ describe("relative days", () => {
     // 20:00 in Berlin is 14:00 in New York; 02:00 in Berlin two days on is 20:00 there tomorrow
     const ny = profile({ time_zone: "server" }, "America/New_York");
     expect(fmtRelative(ny, at(23, 2), at(21, 20))).toBe("tomorrow");
+  });
+});
+
+describe("fmtDayMinutes", () => {
+  const h = (time_format: string) =>
+    ({ locale: { language: "en", time_format } }) as unknown as Parameters<typeof fmtDayMinutes>[0];
+  it("writes a time of day in the profile's format, the end of the day as 24:00", () => {
+    expect(fmtDayMinutes(h("24"), 390)).toBe("06:30");
+    expect(fmtDayMinutes(h("24"), 1440)).toBe("24:00");
+    expect(fmtDayMinutes(h("12"), 390)).toMatch(/^06:30\sAM$/);
+    expect(fmtDayMinutes(h("12"), 1440)).toMatch(/^12:00\sAM$/);
+  });
+  it("writes an axis' whole hours short on a 12-hour clock", () => {
+    expect(fmtDayMinutes(h("12"), 360, true)).toMatch(/^6\sAM$/);
+    expect(fmtDayMinutes(h("24"), 360, true)).toBe("06:00");
   });
 });

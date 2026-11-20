@@ -13,13 +13,22 @@ export const ICON_THINGS = ["icon", "image", "flow"] as const;
 export type IconThing = (typeof ICON_THINGS)[number];
 // behind the texts, and below them
 export const BEHIND = ["glow", "image", "flow", "cover", "path", "line"] as const;
-export const BELOW = ["sparkline", "columns", "strip", "bar", "gauge", "segments", "sun"] as const;
+export const BELOW = [
+  "sparkline",
+  "columns",
+  "strip",
+  "bar",
+  "gauge",
+  "segments",
+  "sun",
+  "schedule",
+] as const;
 export const VISUAL_THINGS = [...BEHIND, ...BELOW] as const;
 export type VisualThing = (typeof VISUAL_THINGS)[number];
 // the history plots, which read a window of the past
 export const HISTORY_THINGS: readonly VisualThing[] = ["sparkline", "columns", "strip"];
 // what only a kind draws: it fits the kinds that draw it (Kind.draws)
-export const KIND_THINGS: readonly string[] = ["flow", "sun", "cover", "path", "line"];
+export const KIND_THINGS: readonly string[] = ["flow", "sun", "cover", "path", "line", "schedule"];
 export const FLOW_ALL = [...FLOW_STYLES, ...RAIN_STYLES] as const;
 export type FlowStyleAny = (typeof FLOW_ALL)[number];
 // a cover's drawings (its device class picks one by default)
@@ -36,9 +45,17 @@ export type CoverVariant = (typeof COVER_VARIANTS)[number];
 // a strip's drawings: a timeline below the texts with its times, or a ribbon along the card's
 // bottom edge behind them (a door's or motion's, where the value keeps its size)
 export const STRIP_VARIANTS = ["timeline", "edge"] as const;
+// a schedule's: today's lane from midnight to midnight, the next 24 hours from now, or a ribbon
+// along the card's bottom edge
+export const SCHEDULE_VARIANTS = ["day", "ahead", "edge"] as const;
 // the drawings of the things that have more than one: the wind's or the rain's flow, a cover, a
-// strip
-const VARIANTS = [...FLOW_ALL, ...COVER_VARIANTS, ...STRIP_VARIANTS] as const;
+// strip, a schedule
+const VARIANTS = [
+  ...FLOW_ALL,
+  ...COVER_VARIANTS,
+  ...STRIP_VARIANTS,
+  ...SCHEDULE_VARIANTS.filter((v) => v !== "edge"),
+] as const;
 export type Variant = (typeof VARIANTS)[number];
 
 export interface IconPlace {
@@ -104,6 +121,8 @@ export const VISUAL_OPTIONS: Record<VisualThing, readonly string[]> = {
   cover: ["variant"],
   path: [],
   line: [],
+  // a schedule's week: its day (or the next 24 hours), or a ribbon
+  schedule: ["variant"],
 };
 // what a rule may not set: a visual's data (a rule that matches must not fetch another history)
 // and not what a tap does: a matching rule changes how the card looks
@@ -239,6 +258,8 @@ export const parseVisual = (raw: unknown, at: string, rule = false): Written<Vis
     throw new Error(`${at}: a cover's variant is one of ${list(COVER_VARIANTS)}`);
   if (type === "strip" && opts.variant !== undefined && !oneOf(STRIP_VARIANTS, opts.variant))
     throw new Error(`${at}: a strip's variant is one of ${list(STRIP_VARIANTS)}`);
+  if (type === "schedule" && opts.variant !== undefined && !oneOf(SCHEDULE_VARIANTS, opts.variant))
+    throw new Error(`${at}: a schedule's variant is one of ${list(SCHEDULE_VARIANTS)}`);
   if (rule && opts.src !== undefined && type && HISTORY_THINGS.includes(type))
     throw new Error(`${at}: a rule sets no src of a plot (it is the card's history)`);
   return type ? { type, ...opts } : opts;

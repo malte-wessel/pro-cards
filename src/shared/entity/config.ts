@@ -298,7 +298,7 @@ export interface NormalizeCtx extends ActionDefaults {
 }
 export interface EntityCardConfig extends ActionDefaults {
   type: string;
-  layout: GroupLayout | "tile" | "poster" | "sections" | "heading";
+  layout: GroupLayout | "tile" | "poster" | "sections" | "heading" | "schedule";
   title: string | null;
   // the action of the title and its icon (null: they are plain text)
   titleTap: ActionConfig | null;

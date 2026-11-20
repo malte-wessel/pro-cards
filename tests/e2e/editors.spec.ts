@@ -517,6 +517,23 @@ test("the heading's style, layout and badges are set in its form", async ({ page
   });
 });
 
+test("the schedule card's data, editing and snap are set in its form", async ({ page }) => {
+  const T = "custom:schedule-card-pro";
+  const e = await openEditor(page, { type: T, entity: "schedule.heating" });
+  await openSection(e.form, "Block data");
+  await fill(e.form, "data_key", "temperature");
+  await expect.poll(e.last).toEqual({ type: T, entity: "schedule.heating", data: ["temperature"] });
+  await fill(e.form, "data_unit", "°C");
+  await expect.poll(e.last).toMatchObject({ data: [{ key: "temperature", unit: "°C" }] });
+  await openSection(e.form, "Editing");
+  await choose(e.form, "snap", "30");
+  await toggle(e.form, "edit");
+  await expect.poll(e.last).toMatchObject({ snap: 30, edit: false });
+  // back to the default: nothing written
+  await choose(e.form, "snap", "15");
+  await expect.poll(e.last).not.toHaveProperty("snap");
+});
+
 test("the tile group's header badges are added in the badge list", async ({ page }) => {
   const e = await openEditor(page, {
     type: "custom:tile-group-card-pro",

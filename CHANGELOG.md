@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.3.0 – Schedules
+
+_Beta_
+
+### What's new
+
+- **New schedule card** (`custom:schedule-card-pro`): a schedule helper's week, with when it changes next and each block's data. [Schedule](https://malte-wessel.github.io/pro-cards/cards/schedule-card)
+- **Edit a schedule on the card** with a mouse, a finger or the keyboard: select, move, copy, resize and draw blocks across days; Done saves the week in one go. [Editing](https://malte-wessel.github.io/pro-cards/cards/schedule-card#editing-on-the-card)
+- **Schedules on tiles and posters:** the new `schedule` kind shows when it changes next and the day's blocks. [Kinds](https://malte-wessel.github.io/pro-cards/cards/kinds#schedule)
+
+### Changed: existing cards look different
+
+- **Schedules:** a schedule tile or poster showed On or Off; it now shows when it changes next and today's blocks (a tile is two rows high). `visual: false` leaves the blocks out.
+
 ## 3.2.0 – Timers that count down, names by their parts
 
 _2026-11-20_

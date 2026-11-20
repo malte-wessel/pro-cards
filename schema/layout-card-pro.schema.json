@@ -444,6 +444,7 @@
                   "custom:multi-trend-card-pro",
                   "custom:sun-path-card-pro",
                   "custom:sun-azimuth-card-pro",
+                  "custom:schedule-card-pro",
                   "custom:illuminance-card-pro",
                   "custom:weather-card-pro",
                   "custom:wind-card-pro",
@@ -546,6 +547,19 @@
           },
           "then": {
             "$ref": "heading-card-pro.schema.json"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom:schedule-card-pro"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "$ref": "schedule-card-pro.schema.json"
           }
         },
         {

@@ -436,7 +436,12 @@ export class TileCard extends KindCardBase {
     // the visual below the line as the card writes it (or the kind's): a plot or the kind's
     // picture needs a second row, a bar or a gauge takes one too
     const v = this._writtenVisual();
-    const below = !!v && BELOW.includes(v.type as never) && v.type !== "segments";
+    // (a schedule's ribbon along the edge takes no room)
+    const below =
+      !!v &&
+      BELOW.includes(v.type as never) &&
+      v.type !== "segments" &&
+      !(v.type === "schedule" && v.variant === "edge");
     const plot = below && v.type !== "bar" && v.type !== "gauge";
     // a vertical tile: the icon over two lines of text, as narrow as its controls let it be (a
     // quarter of a section); two rows for those, one more for a control under them, one more for

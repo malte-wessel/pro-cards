@@ -43,6 +43,7 @@ import {
 import {
   COVER_VARIANTS,
   KIND_THINGS,
+  SCHEDULE_VARIANTS,
   STRIP_VARIANTS,
   type IconThing,
   type VisualThing,
@@ -110,6 +111,7 @@ const VARIANTS: Partial<Record<string, readonly string[]>> = {
   rain: RAIN_STYLES,
   cover: COVER_VARIANTS,
   strip: STRIP_VARIANTS,
+  schedule: SCHEDULE_VARIANTS,
 };
 
 const selectOf = (options: { value: string; label: string }[]) => ({
@@ -1065,6 +1067,7 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
     "segments",
     "flow",
     "sun",
+    "schedule",
     "cover",
     "path",
     "line",
@@ -1142,7 +1145,9 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
       ? [
           variants(
             "visual_variant",
-            visualThing === "cover" || visualThing === "strip" ? visualThing : kind.name,
+            visualThing === "cover" || visualThing === "strip" || visualThing === "schedule"
+              ? visualThing
+              : kind.name,
             visualVariant(visualThing, kind, thing),
           ),
         ]
@@ -1227,6 +1232,15 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
       : []),
     ...(kind.keys.includes("series")
       ? [{ name: "series", selector: { pro_cards_list: { key: "series", of: "series" } } }]
+      : []),
+    // a schedule's block data: the first key shown with its unit (more stay as written)
+    ...(kind.keys.includes("data")
+      ? [
+          grid(
+            { name: "data_key", selector: { text: {} } },
+            { name: "data_unit", selector: { text: {} } },
+          ),
+        ]
       : []),
   ];
 

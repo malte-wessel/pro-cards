@@ -117,6 +117,12 @@ badges:
   - { entity: sensor.power_consumption, visual: sparkline, format: power }
   - { entity: light.living_room, control: toggle }
 `,
+  "Schedule card": `type: custom:schedule-card-pro
+entity: schedule.heating
+color: deep-orange
+data:
+  - { key: temperature, unit: °C, step: 0.5, default: 21 }
+`,
   "Multi trend card": `type: custom:multi-trend-card-pro
 title: Temperature & dew point
 icon: mdi:thermometer

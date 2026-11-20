@@ -1,0 +1,1514 @@
+/*
+ * schedule-card-pro – a schedule helper's week, edited on the card.
+ *
+ *   type: custom:schedule-card-pro
+ *   entity: schedule.heating
+ *   name / icon / color                     # the header (defaults: the entity's)
+ *   data:                                   # the block data shown; the first is edited
+ *     - { key: temperature, unit: °C, step: 0.5, min: 5, max: 30, default: 21 }
+ *   edit: true                              # the pencil and a long press (admins, a schedule
+ *                                           # made in the UI); false: view only
+ *   snap: 15                                # minutes: 5 | 10 | 15 | 30 | 60
+ *   first_weekday: monday                   # default: the profile's
+ *
+ * Edit mode keeps every change on the card until Done, which saves the week in one call
+ * (`schedule/update`); Undo steps back before that. A click selects a block (Shift, Ctrl or Cmd:
+ * adds it; a finger's tap always adds it; a day's name selects the day), a drag from an empty spot
+ * selects with a box, its handles change its times (dragged over other days, the block goes there
+ * too), a drag moves it (to another day too; Alt or the
+ * toolbar's toggle copies), the dots above and below the selection copy its first or last row's
+ * blocks to the days they are dragged over (past the blocks' ends, they stretch them to the pointer), a double click on an empty spot makes an hour (held on the second press, it draws a block).
+ * A click on an empty spot clears the selection. A finger scrolls the page
+ * over the week in edit mode too: it holds an empty spot to make an hour there (and drags on to draw
+ * it, over other days too), holds a block it has not selected to drag it; a selected block drags at
+ * once. Blocks that land on others merge with them. Every block is a button: Enter selects, the
+ * arrows move it (Shift: its end), Delete removes it; Ctrl/Cmd+Z undoes, Ctrl/Cmd+A selects all.
+ */
+import { defineElement, fireEvent, fireHaptic, registerCard } from "./shared/card.ts";
+import { cssColor, stateColorCss } from "./shared/color.ts";
+import { EntityCardBase } from "./shared/entity/base.ts";
+import type { RenderCtx } from "./shared/entity/model.ts";
+import { fmtDayMinutes, formatKeyOf, textWidth } from "./shared/format.ts";
+import { measure } from "./shared/typography.ts";
+import type { GridOptions, HassEntity, HomeAssistant } from "./shared/ha.ts";
+import { hideHover } from "./shared/hover.ts";
+import { t } from "./shared/i18n.ts";
+import {
+  addBlock,
+  daysText,
+  drawBounds,
+  drawn,
+  fillDays,
+  findBlock,
+  relocate,
+  resize,
+  removeBlocks,
+  setData,
+  snapMin,
+  withIds,
+  withoutIds,
+  type EBlock,
+  type EDays,
+} from "./shared/schedule/edit.ts";
+import {
+  knownWeek,
+  onScheduleWeek,
+  saveWeek,
+  ScheduleSaveError,
+  scheduleEditable,
+  scheduleWeek,
+} from "./shared/schedule/feed.ts";
+import {
+  DAY_MIN,
+  dataValue,
+  nextChange,
+  rotate,
+  sameWeek,
+  unrotate,
+  weekPos,
+  type Block,
+  type Week,
+} from "./shared/schedule/model.ts";
+import {
+  blockText,
+  changeText,
+  dayNames,
+  firstWeekdayOf,
+  rangeText,
+  scheduleZone,
+  valueText,
+} from "./shared/schedule/text.ts";
+import { ofDomain } from "./shared/suggest.ts";
+import { escapeHtml as esc, qs, stepDecimals } from "./shared/util.ts";
+import {
+  CARD_TYPE,
+  normalizeScheduleCardConfig,
+  type ScheduleCardConfig,
+} from "./schedule/config.ts";
+import { HOLD_MS } from "./shared/entity/constants.ts";
+import { ScheduleCardEditor } from "./schedule/editor.ts";
+import { weekHtml, type DayNames, type EditView } from "./schedule/render.ts";
+import { STYLE_SCHEDULE_CARD } from "./schedule/styles.ts";
+import { near, stretchOf } from "./schedule/pointer.ts";
+
+defineElement(`${CARD_TYPE}-editor`, ScheduleCardEditor);
+
+// a pointer that moved less than this is still a tap
+const SLOP = 6;
+// a mouse's second click on an empty spot this soon after the first makes an hour there
+const DOUBLE_MS = 400;
+// "Saved" shows this long after Done
+const SAVED_MS = 2000;
+
+// what a pointer is doing on the week
+type Gesture =
+  | {
+      type: "press";
+      day: number;
+      min: number;
+      timer: ReturnType<typeof setTimeout>;
+      off: () => void;
+    }
+  // a finger in edit mode on an empty spot (id null) or a block it has not selected: a tap selects
+  // (or clears), a hold draws or drags, a move first scrolls the page
+  | {
+      type: "hold";
+      day: number;
+      min: number;
+      id: number | null;
+      timer: ReturnType<typeof setTimeout>;
+      off: () => void;
+    }
+  | { type: "block"; id: number; day: number; ids: number[] }
+  | { type: "size"; edge: "from" | "to"; id: number; day: number; ids: number[] }
+  // (sel: the selection as it began)
+  | { type: "fill"; day: number; side: "top" | "bottom"; blocks: EBlock[]; sel: number[] }
+  | { type: "draw"; day: number; m0: number; lo: number; hi: number }
+  // a mouse's drag from an empty spot: the box selects the blocks it touches (Shift, Ctrl or Cmd:
+  // adds them to those selected before)
+  | { type: "lasso"; add: boolean; before: number[] };
+interface Drag {
+  g: Gesture;
+  pointer: number;
+  // the pointer's kind, and whether Shift, Ctrl or Cmd was down
+  kind: string;
+  add: boolean;
+  x0: number;
+  y0: number;
+  moved: boolean;
+  // the lanes' box and the rows' pitch at its start
+  left: number;
+  width: number;
+  pitch: number;
+  // the days before it (an undo goes back to them)
+  base: EDays;
+  // the snapped place it was last drawn at
+  last?: string;
+  // a finger held it still first (the block it drags is selected already)
+  held?: boolean;
+  // the element it began on (a finger's moves go to it, though the week was drawn again), and what
+  // stops the page scrolling under a held finger
+  target: EventTarget | null;
+  offTouch?: () => void;
+  // the selection as it began
+  sel0: number[];
+  // Alt (Option) is down: a moved block is copied; the pointer's last move, to show it again when
+  // Alt changes; what stops watching the keys
+  alt: boolean;
+  lastEv?: PointerEvent;
+  offKeys?: () => void;
+}
+interface EditState {
+  days: EDays;
+  // the weekday the days start on, as edit mode started (the week is saved by it, whatever the
+  // profile or the config says by then)
+  first: number;
+  // the week as edit mode started (unchanged: Done just leaves)
+  start: Week;
+  hist: EDays[];
+  sel: number[];
+  copy: boolean;
+  saving: boolean;
+  bubble: { day: number; at: number; text: string } | null;
+  // the selection box being drawn, in pixels of the week
+  box: { x: number; y: number; w: number; h: number } | null;
+}
+
+export class ScheduleCard extends EntityCardBase {
+  static cardType = CARD_TYPE;
+  declare _config?: ScheduleCardConfig;
+  _edit: EditState | null = null;
+  _drag: Drag | null = null;
+  // a long press entered edit mode: its release selects nothing more
+  _pressed = false;
+  _saved = 0;
+  _savedTimer?: ReturnType<typeof setTimeout>;
+  // the tooltip's block (view mode): its day and minute
+  _tipAt: { day: number; min: number } | null = null;
+  _bodyInputs: unknown[] = [];
+  _laneW = 0;
+  _unweek?: () => void;
+  // the focus to give back after the week is drawn again (a block's id, a day)
+  _refocusSel: string | null = null;
+  // the last pointer on the week was a finger
+  _touch = false;
+  // a mouse's last click on an empty spot: a second one there soon after makes an hour
+  _lastTap: { t: number; day: number; x: number; y: number } | null = null;
+
+  static getConfigElement() {
+    return document.createElement(`${CARD_TYPE}-editor`);
+  }
+  static getStubConfig(hass: HomeAssistant | undefined, entities?: string[]) {
+    const all = [...(entities || []), ...Object.keys(hass?.states ?? {})];
+    return { entity: all.find((id) => id.startsWith("schedule.")) ?? "" };
+  }
+  _normalize(raw: unknown) {
+    return normalizeScheduleCardConfig(raw);
+  }
+  _styles() {
+    return STYLE_SCHEDULE_CARD;
+  }
+  getGridOptions(): GridOptions {
+    return { columns: 12, rows: "auto", min_columns: 6 };
+  }
+  getCardSize() {
+    return 5;
+  }
+  setConfig(config: unknown) {
+    super.setConfig(config);
+    this._edit = null;
+    this._endDrag();
+    this._bodyInputs = [];
+    // the line at now and when it changes next follow the clock
+    this._timed = true;
+    this._armMinute();
+  }
+  // a user who becomes (or stops being) an administrator: the pencil comes or goes
+  _setHass(hass: HomeAssistant) {
+    const was = this._hass?.user?.is_admin;
+    super._setHass(hass);
+    if (was !== undefined && was !== hass.user?.is_admin) this._render();
+  }
+  _extraWatchIds(cfg: ScheduleCardConfig) {
+    return [cfg.entity];
+  }
+  _headerExtra() {
+    return true;
+  }
+  _defaultTitle(ctx: RenderCtx) {
+    const cfg = this._config as ScheduleCardConfig;
+    const st = ctx.hass?.states[cfg.entity];
+    return (st?.attributes.friendly_name as string | undefined) ?? cfg.entity;
+  }
+  connectedCallback() {
+    super.connectedCallback();
+    this._unweek?.();
+    this._unweek = onScheduleWeek((id) => {
+      if (id === this._config?.entity) this._render();
+    });
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._unweek?.();
+    this._unweek = undefined;
+    this._endDrag();
+    clearTimeout(this._savedTimer);
+  }
+
+  // ----- DOM -----
+  _buildHeader(header: HTMLElement) {
+    const next = document.createElement("div");
+    next.className = "snext";
+    next.innerHTML = `<ha-icon icon="mdi:clock-outline"></ha-icon><span></span>`;
+    const ctl = document.createElement("div");
+    ctl.className = "sctl";
+    header.append(next, ctl);
+    ctl.addEventListener("click", (ev) => this._onHeaderClick(ev));
+    // (Escape and the shortcuts on the header's buttons as on the week)
+    ctl.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape" || ev.metaKey || ev.ctrlKey) this._onKey(ev);
+    });
+  }
+  _buildBody(body: HTMLElement) {
+    const wk = document.createElement("div");
+    wk.className = "sbox wk";
+    // (a click on an empty spot gives it the focus: the keys go to the week, not a block)
+    wk.tabIndex = -1;
+    wk.addEventListener("pointerdown", (ev) => this._onDown(ev));
+    wk.addEventListener("pointermove", (ev) => this._onMove(ev));
+    wk.addEventListener("pointerup", (ev) => this._onUp(ev, false));
+    wk.addEventListener("pointercancel", (ev) => this._onUp(ev, true));
+    wk.addEventListener("pointerleave", (ev) => {
+      if (ev.pointerType !== "touch" && !this._drag) this._hideTip();
+    });
+    // a finger that drags: the page stays where it is (a listener that may cancel the moves, here
+    // over the whole week, keeps the browser asking before it scrolls; a held finger's moves are
+    // stopped where they go, on the element it touched)
+    wk.addEventListener(
+      "touchmove",
+      (ev) => {
+        const g = this._drag?.g.type;
+        if (g && g !== "press" && g !== "hold" && ev.cancelable) ev.preventDefault();
+      },
+      { passive: false },
+    );
+    // (a finger's long press opens no menu over the week; a mouse's right click keeps it)
+    wk.addEventListener("contextmenu", (ev) => {
+      if (this._touch && (this._edit || this._editable())) ev.preventDefault();
+    });
+    wk.addEventListener("click", (ev) => this._onClick(ev));
+    wk.addEventListener("keydown", (ev) => this._onKey(ev));
+    body.appendChild(wk);
+    // what the toolbar's stepper set, said by a screen reader (the toolbar is drawn anew each time)
+    const said = document.createElement("span");
+    said.className = "ssaid";
+    said.setAttribute("aria-live", "polite");
+    body.appendChild(said);
+    this._bodyInputs = [];
+  }
+
+  // ----- what the card shows -----
+  // the weekday the week starts on (0 = Monday); while editing, the one the edit began with
+  _first() {
+    if (this._edit) return this._edit.first;
+    const cfg = this._config as ScheduleCardConfig;
+    return cfg.firstWeekday ?? firstWeekdayOf(this._hass);
+  }
+  _names(): DayNames[] {
+    const short = dayNames(this._hass, "short"),
+      narrow = dayNames(this._hass, "narrow"),
+      long = dayNames(this._hass, "long");
+    return rotate(
+      short.map((s, i) => ({ short: s, narrow: narrow[i], long: long[i] })),
+      this._first(),
+    );
+  }
+  // whether the user may edit this schedule now
+  _editable(): boolean {
+    const cfg = this._config;
+    const st = cfg && this._hass?.states[cfg.entity];
+    if (!cfg?.edit || !st || st.state === "unavailable") return false;
+    return scheduleEditable(this._hass, cfg.entity);
+  }
+  // the week shown (in the card's order of days): the one edited, else Home Assistant's
+  _shownDays(week: Week | null | undefined): readonly (readonly (Block | EBlock)[])[] {
+    if (this._edit) return this._edit.days;
+    return week ? rotate(week, this._first()) : Array.from({ length: 7 }, () => []);
+  }
+
+  _render() {
+    super._render();
+    const cfg = this._config,
+      hass = this._hass,
+      card = this._root;
+    if (!cfg || !hass || !card) return;
+    const st = hass.states[cfg.entity];
+    // the card's colour, else Home Assistant's for the schedule while on
+    card.style.setProperty(
+      "--fe-color",
+      cssColor(cfg.color) ??
+        stateColorCss(st ?? ({ entity_id: cfg.entity } as HassEntity), "on") ??
+        "var(--primary-color)",
+    );
+    const header = card.querySelector<HTMLElement>(".header");
+    if (header && !cfg.icon) {
+      const hi = qs(header, "ha-icon");
+      hi.setAttribute("icon", (st?.attributes.icon as string | undefined) || "mdi:calendar-clock");
+      hi.style.display = "";
+    }
+    const week = scheduleWeek(hass, cfg.entity);
+    // (nothing to edit before the week is read)
+    const editable = week ? this._editable() : week === null ? false : undefined;
+    const tz = scheduleZone(hass);
+    const now = Date.now();
+    const pos = weekPos(now, tz);
+    const first = this._first();
+    const today = (pos.day - first + 7) % 7;
+    if (header) this._drawHeader(header, week, editable, pos.day, now);
+    const wk = card.querySelector<HTMLElement>(".wk");
+    if (!wk) return;
+    const lane = wk.querySelector<HTMLElement>(".slane");
+    if (lane?.clientWidth) this._laneW = lane.clientWidth;
+    // the week is drawn again only when what it shows changed (or a drag moved)
+    const inputs = [
+      this._laneW,
+      week,
+      this._edit,
+      this._drag?.moved,
+      Math.floor(now / 60e3),
+      formatKeyOf(hass),
+      first,
+      editable,
+      st?.state,
+      this._fillEpoch,
+    ];
+    if (
+      inputs.length === this._bodyInputs.length &&
+      inputs.every((v, i) => Object.is(v, this._bodyInputs[i]))
+    )
+      return;
+    this._bodyInputs = inputs;
+    wk.classList.toggle("edit", !!this._edit);
+    wk.classList.toggle("editable", !!editable);
+    const e = this._edit;
+    const sel = new Set(e?.sel ?? []);
+    let editView: EditView | null = null;
+    if (e) {
+      const where = e.sel.map((id) => findBlock(e.days, id)).filter((x) => !!x);
+      const dragging = !!this._drag?.moved;
+      const g = this._drag?.g;
+      // a dot above the selection's first row and one below its last, centred on that row's
+      // selected blocks (while one is dragged, that one alone)
+      const dot = (day: number, side: "top" | "bottom") => {
+        const row = where.filter((w) => w.d === day);
+        return {
+          day,
+          side,
+          at: (Math.min(...row.map((w) => w.b.from)) + Math.max(...row.map((w) => w.b.to))) / 2,
+        };
+      };
+      const fills = where.length
+        ? [
+            dot(Math.min(...where.map((w) => w.d)), "top" as const),
+            dot(Math.max(...where.map((w) => w.d)), "bottom" as const),
+          ].filter((f) => !dragging || (g?.type === "fill" && g.side === f.side))
+        : [];
+      editView = {
+        sel,
+        bubble: e.bubble,
+        fills,
+        dragging,
+        laneW: this._laneW || 300,
+        // a block's text as its style draws it (measured once per theme)
+        textW: (text: string) =>
+          textWidth(text, measure(this._textCache, wk, ["sb", "st"], [10, 12, 500]).font),
+      };
+    }
+    const focused = this._focusKey();
+    wk.innerHTML = weekHtml({
+      hass,
+      days: this._shownDays(week),
+      names: this._names(),
+      today,
+      now: pos.min,
+      specs: cfg.data,
+      loading: week === undefined,
+      edit: editView,
+    });
+    this._fitDays(wk);
+    if (e?.box) {
+      const box = document.createElement("div");
+      box.className = "slasso";
+      box.style.cssText = `left:${e.box.x}px;top:${e.box.y}px;width:${e.box.w}px;height:${e.box.h}px`;
+      wk.append(box);
+    }
+    // (the room a toolbar under the axis took goes with it, but not during a drag: the card keeps
+    // its height until the drag ends)
+    if (!this._drag?.moved) wk.style.removeProperty("padding-bottom");
+    if (e && e.sel.length && !this._drag?.moved) this._placeBar(wk, e, this._refocusSel ?? focused);
+    this._refocusWeek(wk, this._refocusSel ?? focused);
+    this._refocusSel = null;
+    if (this._tipAt && !e) this._showTip(this._tipAt.day, this._tipAt.min);
+  }
+
+  // the days' column as wide as its widest name (a language's three letters may need more than
+  // 28 px), never narrower
+  _fitDays(wk: HTMLElement) {
+    const keys = [...wk.querySelectorAll<HTMLElement>(".key")];
+    // (an inline box has no scroll width: its drawn one)
+    const w = Math.max(28, ...keys.map((k) => Math.ceil(k.getBoundingClientRect().width)));
+    if (wk.style.getPropertyValue("--sdn") !== `${w}px`) wk.style.setProperty("--sdn", `${w}px`);
+  }
+
+  // when it changes next (or Saved), and the buttons of the mode
+  _drawHeader(
+    header: HTMLElement,
+    week: Week | null | undefined,
+    editable: boolean | undefined,
+    today: number,
+    now: number,
+  ) {
+    const cfg = this._config as ScheduleCardConfig,
+      hass = this._hass;
+    const st = hass?.states[cfg.entity];
+    const next = qs(header, ".snext");
+    let text = "";
+    if (!st || st.state === "unavailable") text = t(hass, "common.unavailable");
+    else if (now < this._saved) text = t(hass, "schedule.saved");
+    else if (week) {
+      const c = nextChange(week, weekPos(now, scheduleZone(hass)));
+      if (c) text = changeText(hass, c, today);
+    }
+    next.hidden = !text || !!this._edit;
+    qs(next, "ha-icon").setAttribute("icon", now < this._saved ? "mdi:check" : "mdi:clock-outline");
+    const span = qs(next, "span");
+    if (span.textContent !== text) span.textContent = text;
+    const ctl = qs(header, ".sctl");
+    const key = JSON.stringify([
+      !!this._edit,
+      this._edit?.sel.length,
+      this._edit?.hist.length,
+      this._edit?.saving,
+      this._edit?.copy,
+      editable,
+      cfg.edit,
+      st?.state === "unavailable",
+      formatKeyOf(hass),
+    ]);
+    if (ctl.dataset.key === key) return;
+    const keep = this.shadowRoot?.activeElement?.closest?.(".sctl")
+      ? (this.shadowRoot.activeElement as HTMLElement).dataset.act
+      : null;
+    ctl.dataset.key = key;
+    const btn = (act: string, icon: string, label: string, cls = "sbtn", extra = "") =>
+      `<button class="${cls}" data-act="${act}" aria-label="${label}" title="${label}"${extra}><ha-icon icon="${icon}"></ha-icon></button>`;
+    const e = this._edit;
+    if (e) {
+      ctl.innerHTML =
+        btn("add", "mdi:plus", esc(t(hass, "schedule.add"))) +
+        btn(
+          "undo",
+          "mdi:undo",
+          esc(t(hass, "schedule.undo")),
+          "sbtn",
+          e.hist.length ? "" : " disabled",
+        ) +
+        `<button class="sbtn done${e.saving ? " saving" : ""}" data-act="done"${e.saving ? " disabled" : ""}>${esc(t(hass, e.saving ? "schedule.saving" : "schedule.done"))}</button>`;
+    } else if (editable) ctl.innerHTML = btn("edit", "mdi:pencil", esc(t(hass, "schedule.edit")));
+    else if (cfg.edit && editable === false && st && st.state !== "unavailable")
+      ctl.innerHTML = `<span class="sbtn icon-only" role="img" aria-label="${esc(t(hass, "schedule.view_only"))}" title="${esc(t(hass, "schedule.view_only"))}"><ha-icon icon="mdi:eye-outline"></ha-icon></span>`;
+    else ctl.innerHTML = "";
+    // the focus stays on its button; where that went or cannot be pressed any more (the last Undo,
+    // the selection cleared), on Done
+    if (keep)
+      (
+        ctl.querySelector<HTMLElement>(`[data-act="${keep}"]:not(:disabled)`) ??
+        ctl.querySelector<HTMLElement>('[data-act="done"]')
+      )?.focus({ preventScroll: true });
+  }
+
+  // the toolbar above the selection's topmost row, centred on it, kept inside the card (below the
+  // selection where the card has no room above it)
+  _placeBar(wk: HTMLElement, e: EditState, focus: string | null) {
+    const hass = this._hass;
+    const cfg = this._config as ScheduleCardConfig;
+    const spec = cfg.data[0] ?? null;
+    const blocks = e.sel.map((id) => findBlock(e.days, id)).filter((x) => !!x);
+    if (!blocks.length) return;
+    const bar = document.createElement("div");
+    bar.className = "sbar";
+    bar.setAttribute("role", "toolbar");
+    bar.setAttribute("aria-label", t(hass, "schedule.toolbar"));
+    let html = "";
+    if (spec) {
+      const vals = blocks.map((w) => dataValue(w.b, spec.key));
+      const same = vals.every((v) => v === vals[0]);
+      const text = same && vals[0] !== null ? valueText(hass, vals[0], spec) : "–";
+      const name = spec.key.replace(/_/g, " ");
+      html += `<div class="sstep"><button class="sbtn" data-act="minus" aria-label="${esc(t(hass, "schedule.lower", { name }))}"><ha-icon icon="mdi:minus"></ha-icon></button><span class="val">${esc(text)}</span><button class="sbtn" data-act="plus" aria-label="${esc(t(hass, "schedule.raise", { name }))}"><ha-icon icon="mdi:plus"></ha-icon></button></div>`;
+    }
+    html += `<button class="sbtn track${e.copy ? " on" : ""}" data-act="copy" aria-pressed="${e.copy}" aria-label="${esc(t(hass, "schedule.copy"))}" title="${esc(t(hass, "schedule.copy"))}"><ha-icon icon="mdi:content-copy"></ha-icon></button>`;
+    html += `<button class="sbtn track" data-act="delete" aria-label="${esc(t(hass, "schedule.delete"))}" title="${esc(t(hass, "schedule.delete"))}"><ha-icon icon="mdi:delete-outline"></ha-icon></button>`;
+    bar.innerHTML = html;
+    const rows = wk.querySelectorAll<HTMLElement>(".wrow");
+    const top = Math.min(...blocks.map((w) => w.d)),
+      bottom = Math.max(...blocks.map((w) => w.d));
+    // (next in the tab order after the row of the selected block that has the focus, else the
+    // selection's first row: a keyboard reaches it in a few steps, not after the whole week)
+    const at = focus?.[0] === "b" ? blocks.find((w) => w.b.id === Number(focus.slice(1))) : null;
+    rows[at ? at.d : top].after(bar);
+    const lane = wk.querySelector<HTMLElement>(".slane") as HTMLElement;
+    const mid = blocks.reduce((a, w) => a + (w.b.from + w.b.to) / 2, 0) / blocks.length;
+    const W = wk.clientWidth,
+      bw = bar.offsetWidth,
+      bh = bar.offsetHeight;
+    const x = lane.offsetLeft + (mid / DAY_MIN) * lane.clientWidth - bw / 2;
+    bar.style.left = `${Math.round(Math.max(0, Math.min(W - bw, x)))}px`;
+    // above the row, clear of its blocks' rings; below the lowest row where it would cover the
+    // header (its Undo and Done)
+    const header = this._root?.querySelector<HTMLElement>(".header");
+    const wkTop = wk.getBoundingClientRect().top;
+    const headerBottom =
+      header && !header.hidden ? header.getBoundingClientRect().bottom - wkTop : 0;
+    // (clear of the dots above and below the selection)
+    let y = rows[top].offsetTop - bh - 14;
+    if (y < headerBottom + 4) y = rows[bottom].offsetTop + rows[bottom].offsetHeight + 14;
+    // no room below the selection either: under the week's axis, the card growing by its height
+    // while something is selected, so it never covers the rows between
+    const end = wk.clientHeight;
+    if (y + bh > end) {
+      wk.style.paddingBottom = `${bh + 8}px`;
+      y = end + 4;
+    }
+    bar.style.top = `${Math.round(y)}px`;
+  }
+
+  // ----- the tooltip (view mode) -----
+  _showTip(day: number, min: number) {
+    const wk = this._root?.querySelector<HTMLElement>(".wk");
+    const tip = wk?.querySelector<HTMLElement>(":scope > .tip");
+    const lane = wk?.querySelector<HTMLElement>(`.slane[data-day="${day}"]`);
+    const cfg = this._config;
+    if (!wk || !tip || !lane || !cfg) return;
+    const days = this._shownDays(knownWeek(cfg.entity));
+    const b = days[day]?.find((x) => x.from <= min && min < x.to);
+    if (!b) return this._hideTip();
+    this._tipAt = { day, min };
+    const name = this._names()[day].short;
+    const text = blockText(this._hass, b, cfg.data, name);
+    tip.textContent = text;
+    tip.classList.add("on");
+    const x = lane.offsetLeft + ((b.from + b.to) / 2 / DAY_MIN) * lane.clientWidth;
+    const half = tip.offsetWidth / 2;
+    tip.style.left = `${Math.round(Math.max(half, Math.min(wk.clientWidth - half, x)))}px`;
+    tip.style.top = `${Math.round(lane.parentElement!.offsetTop - tip.offsetHeight - 6)}px`;
+  }
+  _hideTip() {
+    this._tipAt = null;
+    hideHover(this._root);
+  }
+  _hideHover() {
+    super._hideHover();
+    this._tipAt = null;
+  }
+
+  // ----- pointer -----
+  // the day and minute under a pointer (the lane it is over, else the nearest row)
+  _at(ev: PointerEvent, d?: Drag): { day: number; min: number } {
+    const wk = this._root?.querySelector<HTMLElement>(".wk") as HTMLElement;
+    const lanes = [...wk.querySelectorAll<HTMLElement>(".slane")];
+    const r = lanes[0].getBoundingClientRect();
+    const left = d?.left ?? r.left,
+      width = d?.width ?? r.width;
+    const min = Math.max(0, Math.min(DAY_MIN, ((ev.clientX - left) / (width || 1)) * DAY_MIN));
+    let day = 0,
+      best = Infinity;
+    lanes.forEach((l, i) => {
+      const b = l.getBoundingClientRect();
+      const dist = Math.abs(ev.clientY - (b.top + b.bottom) / 2);
+      if (dist < best) {
+        best = dist;
+        day = i;
+      }
+    });
+    return { day, min };
+  }
+  _onDown(ev: PointerEvent) {
+    if (ev.button !== 0 || !this._config) return;
+    // a second finger while one drags, or anything while the week is saved, does nothing
+    if (this._drag && ev.pointerId !== this._drag.pointer) return;
+    if (this._edit?.saving) return;
+    this._pressed = false;
+    const target = ev.target as HTMLElement;
+    const wk = ev.currentTarget as HTMLElement;
+    const touch = ev.pointerType === "touch";
+    wk.classList.toggle("touch", touch);
+    this._touch = touch;
+    const lane = target.closest<HTMLElement>(".slane");
+    if (!this._edit) {
+      if (!lane) return;
+      const at = this._at(ev);
+      // a tap shows the block's tooltip (a mouse shows it on hover)
+      this._showTip(at.day, at.min);
+      if (!this._editable()) return;
+      const timer = setTimeout(() => this._longPress(), HOLD_MS);
+      const off = this._watchUp(ev.pointerId, (up) => {
+        if (this._drag?.g.type === "press" && this._drag.pointer === up.pointerId) this._endDrag();
+      });
+      this._startDrag(ev, { type: "press", day: at.day, min: at.min, timer, off }, false);
+      return;
+    }
+    const e = this._edit;
+    let act = target.closest<HTMLElement>("[data-act], .sb[data-id]");
+    if (!act && !lane) return;
+    let id = act?.classList.contains("sb") ? Number(act.dataset.id) : null;
+    // (a finger's block is the one under it: Chrome moves a touch onto the nearest button, which
+    // would take a hold meant for the empty spot beside it)
+    if (touch && act && id !== null && !near(act.getBoundingClientRect(), ev.clientX, ev.clientY)) {
+      act = null;
+      id = null;
+    }
+    // a finger on an empty spot or on a block it has not selected: the page may still scroll, so
+    // it waits (a tap selects, a hold draws or drags)
+    const own = act && (id !== null || /^(fill|from|to)$/.test(act.dataset.act ?? ""));
+    if (touch && lane && (!own || (id !== null && !e.sel.includes(id)))) {
+      const at = this._at(ev);
+      const day = id === null ? at.day : (findBlock(e.days, id)?.d ?? at.day);
+      const timer = setTimeout(() => this._held(wk), HOLD_MS);
+      const off = this._watchUp(ev.pointerId, (up) => {
+        const d = this._drag;
+        if (d?.g.type !== "hold" || d.pointer !== up.pointerId) return;
+        this._endDrag();
+        if (up.type === "pointerup") this._tap(d.g.id);
+      });
+      this._startDrag(ev, { type: "hold", day, min: at.min, id, timer, off }, false);
+      return;
+    }
+    // (a button keeps the focus it takes; the lane's own drag gives it to the week)
+    ev.preventDefault();
+    if (!act) wk.focus({ preventScroll: true });
+    if (act?.dataset.act === "fill") {
+      // the selected blocks of the dot's row
+      const day = Number(act.dataset.day);
+      const blocks = e.days[day].filter((b) => e.sel.includes(b.id));
+      const side = act.dataset.side === "top" ? "top" : "bottom";
+      if (blocks.length) this._startDrag(ev, { type: "fill", day, side, blocks, sel: e.sel });
+    } else if (act?.dataset.act === "from" || act?.dataset.act === "to") {
+      const id = Number(act.dataset.id);
+      const f = findBlock(e.days, id);
+      if (f) this._startDrag(ev, { type: "size", edge: act.dataset.act, id, day: f.d, ids: e.sel });
+    } else if (act?.classList.contains("sb")) {
+      const id = Number(act.dataset.id);
+      const f = findBlock(e.days, id);
+      act.focus({ preventScroll: true });
+      if (f)
+        this._startDrag(ev, {
+          type: "block",
+          id,
+          day: f.d,
+          ids: e.sel.includes(id) ? e.sel : [id],
+        });
+    } else if (lane) {
+      // an empty spot: a second press soon after a click there draws a block (a double click: an
+      // hour), else a drag selects with a box
+      const at = this._at(ev);
+      const day = Number(lane.dataset.day);
+      const tap = this._lastTap;
+      this._lastTap = null;
+      const twice =
+        !!tap &&
+        ev.timeStamp - tap.t < DOUBLE_MS &&
+        tap.day === day &&
+        Math.abs(tap.x - ev.clientX) < SLOP &&
+        Math.abs(tap.y - ev.clientY) < SLOP;
+      const bounds = twice ? drawBounds(e.days[day], at.min) : null;
+      if (bounds) this._startDrag(ev, { type: "draw", day, m0: at.min, ...bounds });
+      else
+        this._startDrag(ev, {
+          type: "lasso",
+          add: ev.shiftKey || ev.ctrlKey || ev.metaKey,
+          before: e.sel,
+        });
+    }
+  }
+  _startDrag(ev: PointerEvent, g: Gesture, capture = true) {
+    const wk = ev.currentTarget as HTMLElement;
+    const rows = wk.querySelectorAll<HTMLElement>(".wrow");
+    const lane = wk.querySelector<HTMLElement>(".slane") as HTMLElement;
+    const r = lane.getBoundingClientRect();
+    this._endDrag();
+    this._drag = {
+      g,
+      pointer: ev.pointerId,
+      kind: ev.pointerType,
+      add: ev.shiftKey || ev.ctrlKey || ev.metaKey,
+      alt: ev.altKey,
+      sel0: this._edit?.sel ?? [],
+      target: ev.target,
+      x0: ev.clientX,
+      y0: ev.clientY,
+      moved: false,
+      left: r.left,
+      width: r.width,
+      pitch: rows.length > 1 ? rows[1].offsetTop - rows[0].offsetTop : 28,
+      base: this._edit?.days ?? [],
+    };
+    if (capture) {
+      try {
+        wk.setPointerCapture(ev.pointerId);
+      } catch {
+        // (a synthetic event)
+      }
+      this._watchAlt(this._drag);
+    }
+  }
+  // Alt (Option) pressed or let go during a drag: a moved block is copied, or moved again
+  _watchAlt(d: Drag) {
+    const on = (k: KeyboardEvent) => {
+      if (k.key !== "Alt" || this._drag !== d || d.alt === k.altKey) return;
+      d.alt = k.altKey;
+      if (d.moved && d.lastEv) this._dragTo(d, d.lastEv);
+    };
+    window.addEventListener("keydown", on, true);
+    window.addEventListener("keyup", on, true);
+    d.offKeys = () => {
+      window.removeEventListener("keydown", on, true);
+      window.removeEventListener("keyup", on, true);
+    };
+  }
+  // whether a pointer drags now: Undo, Done, the toolbar and the keys wait for it (its edit is
+  // made against the days it began on); a press still deciding (a hold, a long press) is dropped
+  _pointerBusy() {
+    const d = this._drag;
+    if (d && (d.g.type === "press" || d.g.type === "hold")) {
+      this._endDrag();
+      return false;
+    }
+    return !!d;
+  }
+  // a press the page may still scroll: not captured, so its release (anywhere) is seen on the
+  // window; returns what stops watching
+  _watchUp(pointer: number, done: (up: PointerEvent) => void) {
+    const off = () => {
+      window.removeEventListener("pointerup", end, true);
+      window.removeEventListener("pointercancel", end, true);
+    };
+    const end = (up: PointerEvent) => {
+      if (up.pointerId !== pointer) return;
+      off();
+      done(up);
+    };
+    window.addEventListener("pointerup", end, true);
+    window.addEventListener("pointercancel", end, true);
+    return off;
+  }
+  // a finger's tap in edit mode: a block it had not selected joins the selection, an empty spot
+  // clears it
+  _tap(id: number | null) {
+    const e = this._edit;
+    if (!e || e.saving) return;
+    if (id === null) {
+      if (!e.sel.length) return;
+      this._edit = { ...e, sel: [] };
+    } else {
+      this._edit = { ...e, sel: [...e.sel, id] };
+      fireHaptic(this, "selection");
+    }
+    this._render();
+  }
+  // a finger held still in edit mode: on an empty spot it draws an hour there (and on, as it
+  // drags), on a block it drags that block alone; the page no longer scrolls under it
+  _held(wk: HTMLElement) {
+    const d = this._drag,
+      e = this._edit,
+      cfg = this._config;
+    if (!d || d.g.type !== "hold" || !e || !cfg || e.saving) return;
+    const g = d.g;
+    g.off();
+    try {
+      wk.setPointerCapture(d.pointer);
+    } catch {
+      // (a synthetic event)
+    }
+    d.held = true;
+    d.base = e.days;
+    // a finger's moves go to the element it touched, even once the week is drawn again without it
+    // (they reach the week no more): there the page is kept from scrolling under the held finger
+    const el = d.target;
+    if (el) {
+      const stop = (t: Event) => {
+        if (t.cancelable) t.preventDefault();
+      };
+      el.addEventListener("touchmove", stop, { passive: false });
+      d.offTouch = () => el.removeEventListener("touchmove", stop);
+    }
+    if (g.id !== null) {
+      d.g = { type: "block", id: g.id, day: g.day, ids: [g.id] };
+      this._edit = { ...e, sel: [g.id] };
+    } else {
+      const bounds = drawBounds(e.days[g.day], g.min);
+      if (!bounds) {
+        this._drag = null;
+        return;
+      }
+      const draw = { type: "draw" as const, day: g.day, m0: g.min, ...bounds };
+      d.g = draw;
+      const r = drawn(draw, draw.m0, null, cfg.snap);
+      const m = r ? this._drawnDays(e.days, g.day, r, []) : { days: e.days, sel: e.sel };
+      this._edit = {
+        ...e,
+        days: m.days,
+        sel: m.sel,
+        bubble: r && {
+          day: g.day,
+          at: (r.from + r.to) / 2,
+          text: rangeText(this._hass, r.from, r.to),
+        },
+      };
+    }
+    fireHaptic(this, "medium");
+    this._render();
+  }
+  _endDrag() {
+    const d = this._drag;
+    if (d?.g.type === "press" || d?.g.type === "hold") {
+      clearTimeout(d.g.timer);
+      d.g.off();
+    }
+    d?.offKeys?.();
+    d?.offTouch?.();
+    this._drag = null;
+  }
+  _longPress() {
+    const d = this._drag;
+    if (!d || d.g.type !== "press" || !this._editable()) return;
+    const g = d.g;
+    g.off();
+    this._drag = null;
+    // its release clicks nothing; a pointer released elsewhere clicks nothing at all, so the flag
+    // goes with the pointer (after the click its release makes here)
+    this._pressed = true;
+    const unpress = (up: PointerEvent) => {
+      if (up.pointerId !== d.pointer) return;
+      window.removeEventListener("pointerup", unpress, true);
+      window.removeEventListener("pointercancel", unpress, true);
+      setTimeout(() => (this._pressed = false));
+    };
+    window.addEventListener("pointerup", unpress, true);
+    window.addEventListener("pointercancel", unpress, true);
+    this._hideTip();
+    this._enter();
+    const e = this._edit as EditState | null;
+    const b = e?.days[g.day].find((x) => x.from <= g.min && g.min < x.to);
+    if (e && b) {
+      e.sel = [b.id];
+      this._refocusSel = `b${b.id}`;
+    }
+    fireHaptic(this, "medium");
+    this._render();
+  }
+  _onMove(ev: PointerEvent) {
+    const d = this._drag;
+    if (!d) {
+      // a mouse over the week shows the block under it
+      if (
+        !this._edit &&
+        ev.pointerType !== "touch" &&
+        (ev.target as HTMLElement).closest(".slane")
+      ) {
+        const at = this._at(ev);
+        this._showTip(at.day, at.min);
+      }
+      return;
+    }
+    if (ev.pointerId !== d.pointer) return;
+    const dx = ev.clientX - d.x0,
+      dy = ev.clientY - d.y0;
+    if (!d.moved && Math.abs(dx) < SLOP && Math.abs(dy) < SLOP) return;
+    if (d.g.type === "press" || d.g.type === "hold") {
+      // moved before the press was long: a scroll, or the pointer looking around
+      this._endDrag();
+      return;
+    }
+    d.moved = true;
+    d.alt = ev.altKey;
+    d.lastEv = ev;
+    this._hideTip();
+    this._dragTo(d, ev);
+  }
+  // the edit a drag makes so far, shown (not yet in the undo history)
+  _dragTo(d: Drag, ev: PointerEvent) {
+    const e = this._edit;
+    const cfg = this._config;
+    if (!e || !cfg) return;
+    const step = cfg.snap;
+    const dx = ev.clientX - d.x0,
+      dy = ev.clientY - d.y0;
+    // the minutes moved, so that the time the drag holds lands on the snap's grid (a block's start,
+    // the end a handle holds, the end a dot stretches): a block at 06:20 goes to 06:30, not 06:35
+    const raw = (dx / (d.width || 1)) * DAY_MIN;
+    const grid = (at: number) => snapMin(at + raw, step) - at;
+    const g0 = d.g;
+    const held = (id: number) => findBlock(d.base, id)?.b;
+    const dm =
+      g0.type === "block"
+        ? grid(held(g0.id)?.from ?? 0)
+        : g0.type === "size"
+          ? grid((g0.edge === "from" ? held(g0.id)?.from : held(g0.id)?.to) ?? 0)
+          : g0.type === "fill"
+            ? stretchOf(g0.blocks, snapMin(this._at(ev, d).min, step))
+            : snapMin(raw, step);
+    const dd = Math.round(dy / (d.pitch || 28));
+    // the same snapped place as the move before: nothing to draw again
+    // (the toolbar's copy toggle is the selection's: a block dragged that was not selected moves)
+    const copy = (e.copy && g0.type === "block" && d.sel0.includes(g0.id)) || d.alt;
+    const place =
+      d.g.type === "draw"
+        ? `${snapMin(this._at(ev, d).min, step)}|${dd}`
+        : d.g.type === "lasso"
+          ? `${ev.clientX}|${ev.clientY}`
+          : `${dd}|${dm}|${copy}`;
+    if (place === d.last) return;
+    d.last = place;
+    const names = this._names().map((n) => n.short);
+    const hass = this._hass;
+    const g = d.g;
+    if (g.type === "lasso") {
+      // the blocks the box touches: on the rows it reaches, in the minutes it spans
+      const wk = this._root?.querySelector<HTMLElement>(".wk");
+      if (!wk) return;
+      const r = wk.getBoundingClientRect();
+      const x1 = Math.min(d.x0, ev.clientX),
+        x2 = Math.max(d.x0, ev.clientX),
+        y1 = Math.min(d.y0, ev.clientY),
+        y2 = Math.max(d.y0, ev.clientY);
+      const min = (x: number) =>
+        Math.max(0, Math.min(DAY_MIN, ((x - d.left) / (d.width || 1)) * DAY_MIN));
+      const lo = min(x1),
+        hi = min(x2);
+      const hit: number[] = [];
+      for (const l of wk.querySelectorAll<HTMLElement>(".slane")) {
+        const b = l.getBoundingClientRect();
+        if (b.bottom < y1 || b.top > y2) continue;
+        for (const blk of e.days[Number(l.dataset.day)] ?? [])
+          if (blk.from <= hi && blk.to >= lo) hit.push(blk.id);
+      }
+      e.sel = g.add ? [...new Set([...g.before, ...hit])] : hit;
+      e.box = { x: x1 - r.left, y: y1 - r.top, w: x2 - x1, h: y2 - y1 };
+    } else if (g.type === "block") {
+      // (blocks it lands on merge with it, on its own day as on another)
+      // (and they go as many days and minutes as all of them can: past the first or the last day,
+      // or the day's ends, they stay there, never back where they began)
+      const m = dd === 0 && dm === 0 && !copy ? null : relocate(d.base, g.ids, dd, dm, copy);
+      const r1 = m ? { days: m.days, ids: m.ids, d: m.dm } : { days: d.base, ids: g.ids, d: 0 };
+      const day1 = m ? m.dd : 0;
+      const b0 = findBlock(d.base, g.id)?.b as EBlock;
+      const to = Math.max(0, Math.min(6, g.day + day1));
+      e.days = r1.days;
+      e.sel = r1.ids;
+      e.bubble = {
+        day: to,
+        at: (b0.from + b0.to) / 2 + r1.d,
+        text:
+          (day1 ? `${names[to]} ` : "") +
+          rangeText(hass, b0.from + r1.d, b0.to + r1.d) +
+          (copy ? ` · ${t(hass, "schedule.copy_short")}` : ""),
+      };
+    } else if (g.type === "size") {
+      // (blocks it reaches into merge with it)
+      const r = resize(d.base, g.ids, g.edge, dm, step);
+      const b0 = findBlock(d.base, g.id)?.b as EBlock;
+      e.days = r.d ? r.days : d.base;
+      e.sel = r.d ? r.ids : g.ids;
+      const at = (g.edge === "from" ? b0.from : b0.to) + r.d;
+      // dragged up or down over other days: the block as it is now on each of them
+      const b = e.days[g.day].find((x) => e.sel.includes(x.id) && x.from <= at && at <= x.to) ?? b0;
+      const to = Math.max(0, Math.min(6, g.day + dd));
+      const others: number[] = [];
+      for (let i = Math.min(g.day, to); i <= Math.max(g.day, to); i++)
+        if (i !== g.day) others.push(i);
+      // (joining what it lands on there, shown as it will be; all of them selected)
+      if (others.length) {
+        const f = fillDays(e.days, [b], others);
+        e.days = f.days;
+        e.sel = [...new Set([...e.sel, ...f.ids])];
+      }
+      e.bubble = others.length
+        ? {
+            day: to,
+            at: (b.from + b.to) / 2,
+            text: `${daysText([g.day, ...others], names)} ${rangeText(hass, b.from, b.to)}`,
+          }
+        : { day: g.day, at, text: fmtDayMinutes(hass, at) };
+    } else if (g.type === "fill") {
+      // sideways the row stretches toward the drag: its first block's start earlier, or its last
+      // block's end later (blocks it reaches into merge with it)
+      let days = d.base,
+        sel = g.sel,
+        at: number | null = null;
+      if (dm) {
+        const edge = dm > 0 ? "to" : "from";
+        const end = dm > 0 ? g.blocks[g.blocks.length - 1] : g.blocks[0];
+        const r = resize(d.base, [end.id], edge, dm, step);
+        if (r.d) {
+          days = r.days;
+          const ids = new Set(days.flat().map((b) => b.id));
+          sel = [...new Set([...g.sel.filter((id) => id !== end.id), ...r.ids])].filter((id) =>
+            ids.has(id),
+          );
+          at = (edge === "to" ? end.to : end.from) + r.d;
+        }
+      }
+      const row = days[g.day].filter((b) => sel.includes(b.id));
+      // and up or down, it goes to the days it reaches (joining what it lands on there, shown as
+      // it will be; the copies join the selection)
+      const to = Math.max(0, Math.min(6, g.day + dd));
+      const targets: number[] = [];
+      for (let i = Math.min(g.day, to); i <= Math.max(g.day, to); i++)
+        if (i !== g.day) targets.push(i);
+      if (targets.length && row.length) {
+        const f = fillDays(days, row, targets);
+        days = f.days;
+        sel = [...new Set([...sel, ...f.ids])];
+      }
+      e.days = days;
+      e.sel = sel;
+      const copyTo = targets.length
+        ? t(hass, "schedule.copy_to", { days: daysText(targets, names) })
+        : "";
+      const time = at === null ? "" : fmtDayMinutes(hass, at);
+      e.bubble =
+        copyTo || time
+          ? {
+              day: to,
+              at: at ?? (row[0].from + row[row.length - 1].to) / 2,
+              text: [copyTo, time].filter(Boolean).join(" · "),
+            }
+          : null;
+    } else if (g.type === "draw") {
+      // (not yet a snap step sideways: the hour a double click or a hold makes)
+      const { min } = this._at(ev, d);
+      const r =
+        Math.abs(snapMin(min, step) - snapMin(g.m0, step)) < step
+          ? drawn(g, g.m0, null, step)
+          : drawn(g, g.m0, min, step);
+      // drawn over other days: the same block on each of them
+      const to = Math.max(0, Math.min(6, g.day + dd));
+      const others: number[] = [];
+      for (let i = Math.min(g.day, to); r && i <= Math.max(g.day, to); i++)
+        if (i !== g.day) others.push(i);
+      const m = r ? this._drawnDays(d.base, g.day, r, others) : { days: d.base, sel: d.sel0 };
+      e.days = m.days;
+      e.sel = m.sel;
+      e.bubble = r && {
+        day: to,
+        at: (r.from + r.to) / 2,
+        text:
+          (others.length ? `${daysText([g.day, ...others], names)} ` : "") +
+          rangeText(hass, r.from, r.to),
+      };
+    }
+    this._edit = { ...e };
+    this._render();
+  }
+  _onUp(ev: PointerEvent, cancelled: boolean) {
+    const d = this._drag;
+    if (!d || ev.pointerId !== d.pointer) return;
+    this._endDrag();
+    const e = this._edit;
+    if (d.g.type === "press" || d.g.type === "hold" || !e) return;
+    const clean = { bubble: null, box: null };
+    // (a finger that held still and then scrolls: the page took it, and what the hold made, the
+    // hour drawn or the block selected and where it was dragged, stays)
+    if (cancelled && !d.held) {
+      // the edit the drag showed is dropped, and the selection it made
+      this._edit = { ...e, ...clean, days: d.base, sel: d.sel0 };
+      this._render();
+      return;
+    }
+    const g = d.g;
+    if (g.type === "lasso") {
+      // a click: the selection cleared (Shift, Ctrl or Cmd: kept), and a second press there soon
+      // after draws a block
+      if (!d.moved)
+        this._lastTap = { t: ev.timeStamp, day: this._at(ev).day, x: ev.clientX, y: ev.clientY };
+      this._edit = { ...e, ...clean, sel: d.moved || g.add ? e.sel : [] };
+      return this._render();
+    }
+    if (g.type === "draw") {
+      // what the drag (or a finger's hold) shows; a double click: an hour
+      const cfg = this._config as ScheduleCardConfig;
+      const r = d.moved || d.held ? null : drawn(g, g.m0, null, cfg.snap);
+      const m = r ? this._drawnDays(d.base, g.day, r, []) : { days: e.days, sel: e.sel };
+      this._commit({ ...e, ...clean, days: d.base }, m.days, m.sel);
+      fireHaptic(this, "selection");
+      return;
+    }
+    if (!d.moved) {
+      this._edit = { ...e, ...clean };
+      // a click selects the block alone, with Shift, Ctrl or Cmd it adds it or takes it out; a
+      // finger's tap adds or takes out (one that held it has it selected already)
+      if (g.type === "block" && !d.held) {
+        const on = e.sel.includes(g.id);
+        this._edit.sel =
+          d.kind === "touch" || d.add
+            ? on
+              ? e.sel.filter((x) => x !== g.id)
+              : [...e.sel, g.id]
+            : [g.id];
+        fireHaptic(this, "selection");
+      }
+      return this._render();
+    }
+    // (the days a drag shows are the edit it makes)
+    this._commit({ ...e, ...clean, days: d.base }, e.days, e.sel);
+  }
+  // a block drawn on its day, and the same on the days in `others` (joining what it lands on
+  // there): the days it makes, all of it selected
+  _drawnDays(base: EDays, day: number, r: { from: number; to: number }, others: number[]) {
+    const made = addBlock(base, day, r.from, r.to, this._newData(base, day, r.from));
+    const block = findBlock(made.days, made.id)?.b;
+    const all = others.length && block ? fillDays(made.days, [block], others) : null;
+    return { days: all ? all.days : made.days, sel: all ? [made.id, ...all.ids] : [made.id] };
+  }
+  // the data of a new block: the first key's default, else that of the nearest block that day,
+  // else of any block
+  _newData(days: EDays, day: number, at: number): Record<string, unknown> | null {
+    const spec = (this._config as ScheduleCardConfig).data[0];
+    if (spec?.default !== null && spec?.default !== undefined) return { [spec.key]: spec.default };
+    const near = [...days[day]].sort((a, b) => Math.abs(a.from - at) - Math.abs(b.from - at))[0];
+    return (near ?? days.flat()[0])?.data ?? null;
+  }
+  _onClick(ev: MouseEvent) {
+    // (the release of the long press that turned edit mode on clicks nothing)
+    if (this._pressed) {
+      this._pressed = false;
+      return;
+    }
+    const btn = (ev.target as HTMLElement).closest<HTMLElement>("button");
+    const e = this._edit;
+    if (!btn || !e || e.saving) return;
+    if (btn.classList.contains("sday")) {
+      // a day's name: every block of the day in the selection, or out of it
+      const day = Number(btn.dataset.day);
+      const ids = e.days[day].map((b) => b.id);
+      const all = ids.length > 0 && ids.every((id) => e.sel.includes(id));
+      this._edit = {
+        ...e,
+        sel: all ? e.sel.filter((id) => !ids.includes(id)) : [...new Set([...e.sel, ...ids])],
+      };
+      this._refocusSel = `d${day}`;
+      fireHaptic(this, "selection");
+      this._render();
+      return;
+    }
+    const act = btn.dataset.act;
+    if (btn.closest(".sbar")) this._toolbar(act);
+    // (a block's tap is its pointerup's; Enter on it is a key)
+  }
+  _toolbar(act: string | undefined) {
+    const e = this._edit;
+    const cfg = this._config;
+    if (!e || !cfg || this._pointerBusy()) return;
+    if (act === "copy") {
+      this._edit = { ...e, copy: !e.copy };
+      this._refocusSel = "acopy";
+    } else if (act === "delete") {
+      this._commit(e, removeBlocks(e.days, e.sel), []);
+      return;
+    } else if (act === "minus" || act === "plus") {
+      const spec = cfg.data[0];
+      if (!spec) return;
+      const dir = act === "plus" ? 1 : -1;
+      const ids = e.sel;
+      const cur = ids
+        .map((id) => dataValue(findBlock(e.days, id)?.b, spec.key))
+        .find((v) => typeof v === "number") as number | undefined;
+      let v = (cur ?? spec.default ?? spec.min ?? 0) + (cur === undefined ? 0 : dir * spec.step);
+      if (spec.min !== null) v = Math.max(spec.min, v);
+      if (spec.max !== null) v = Math.min(spec.max, v);
+      // (the value's own decimals stay: 20.5 by a step of 1 is 21.5)
+      v = Number(v.toFixed(Math.max(stepDecimals(spec.step), stepDecimals(cur ?? 0))));
+      this._refocusSel = `a${act}`;
+      this._commit(e, setData(e.days, ids, spec.key, v), ids);
+      const said = this._root?.querySelector(".ssaid");
+      if (said) said.textContent = valueText(this._hass, v, spec);
+      return;
+    }
+    this._render();
+  }
+  // a change made: the days before it go into the undo history
+  // (the same days again, a drag back to where it began: nothing to undo)
+  _commit(e: EditState, days: EDays, sel: number[]) {
+    const same = JSON.stringify(days) === JSON.stringify(e.days);
+    this._edit = same ? { ...e, sel } : { ...e, hist: [...e.hist, e.days], days, sel };
+    // (the keys go on acting on the selection: where a drag lost the focus, or left it on a block
+    // that is not selected any more (a copy left it behind) or is gone (merged), it goes to the
+    // selection, else the week; the toolbar's buttons and the keys say where it goes themselves)
+    if (!this._refocusSel) {
+      const f = this._focusKey();
+      const id = f?.[0] === "b" ? Number(f.slice(1)) : null;
+      const kept = id !== null && days.some((d) => d.some((b) => b.id === id));
+      if (!f || (id !== null && (!kept || (sel.length && !sel.includes(id)))))
+        this._refocusSel = sel.length ? `b${sel[0]}` : "week";
+    }
+    this._render();
+  }
+
+  // ----- keyboard -----
+  _onKey(ev: KeyboardEvent) {
+    const e = this._edit;
+    const cfg = this._config;
+    if (!e || !cfg || e.saving) return;
+    // a pointer drags: Escape drops what it shows, other keys wait for it
+    const d = this._drag;
+    if (d && this._pointerBusy()) {
+      if (ev.key === "Escape") {
+        this._endDrag();
+        this._edit = { ...e, days: d.base, sel: d.sel0, bubble: null, box: null };
+        this._render();
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+      return;
+    }
+    if (ev.key === "Escape") {
+      // (nothing selected and changes made: it does nothing, and a dialog around may take it)
+      if (e.sel.length) {
+        this._edit = { ...e, sel: [] };
+        this._render();
+      } else if (!e.hist.length) this._leave();
+      else return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      return;
+    }
+    // Cmd/Ctrl+Z takes the change before back, Cmd/Ctrl+A selects every block
+    const mod = (ev.metaKey || ev.ctrlKey) && !ev.altKey;
+    const key = ev.key.toLowerCase();
+    if (mod && key === "z" && !ev.shiftKey) {
+      ev.preventDefault();
+      this._undo();
+      return;
+    }
+    if (mod && key === "a") {
+      ev.preventDefault();
+      this._edit = { ...e, sel: e.days.flat().map((b) => b.id) };
+      this._render();
+      return;
+    }
+    const btn = (ev.target as HTMLElement).closest<HTMLElement>(".sb[data-id]");
+    // (Delete away from a block: the selection)
+    if (!btn && (ev.key === "Delete" || ev.key === "Backspace") && e.sel.length) {
+      ev.preventDefault();
+      this._commit(e, removeBlocks(e.days, e.sel), []);
+      return;
+    }
+    if (!btn) return;
+    const id = Number(btn.dataset.id);
+    const ids = e.sel.includes(id) ? e.sel : [id];
+    const step = cfg.snap;
+    const move = (days: EDays | null | undefined, sel = ids) => {
+      ev.preventDefault();
+      if (!days) return;
+      // the focus stays on the block, or on the one it merged into
+      const still = days.some((d) => d.some((b) => b.id === id));
+      this._refocusSel = `b${still ? id : sel[0]}`;
+      this._commit(e, days, sel);
+    };
+    if (ev.key === "Enter" || ev.key === " ") {
+      ev.preventDefault();
+      this._edit = {
+        ...e,
+        sel: e.sel.includes(id) ? e.sel.filter((x) => x !== id) : [...e.sel, id],
+      };
+      this._refocusSel = `b${id}`;
+      fireHaptic(this, "selection");
+      this._render();
+    } else if (ev.key === "Delete" || ev.key === "Backspace") {
+      ev.preventDefault();
+      this._commit(e, removeBlocks(e.days, ids), []);
+      this._root?.querySelector<HTMLElement>(".wk .sday")?.focus({ preventScroll: true });
+    } else if (ev.key === "ArrowLeft" || ev.key === "ArrowRight") {
+      // Shift: its end, Alt: its start; to the snap's next grid line (06:20 → 06:30, not 06:35)
+      const edge = ev.shiftKey ? "to" : ev.altKey ? "from" : "both";
+      const b = findBlock(e.days, id)?.b;
+      const at = (edge === "to" ? b?.to : b?.from) ?? 0;
+      const dm =
+        ev.key === "ArrowLeft"
+          ? Math.ceil(at / step) * step - step - at
+          : Math.floor(at / step) * step + step - at;
+      // (a step into the next block joins it, as a drag does)
+      const r =
+        edge === "both" ? relocate(e.days, ids, 0, dm, false) : resize(e.days, ids, edge, dm, step);
+      move(r?.days, r?.ids);
+    } else if (ev.key === "ArrowUp" || ev.key === "ArrowDown") {
+      // (the copy toggle copies to the day above or below)
+      const copy = (e.copy && e.sel.includes(id)) || ev.altKey;
+      const r = relocate(e.days, ids, ev.key === "ArrowUp" ? -1 : 1, 0, copy);
+      move(r?.days, r?.ids);
+    }
+  }
+  // the element the focus is on in the week (to give it back after drawing it again)
+  _focusKey(): string | null {
+    const a = this.shadowRoot?.activeElement as HTMLElement | null;
+    if (!a || !a.closest(".wk")) return null;
+    if (a.dataset.id) return `b${a.dataset.id}`;
+    if (a.classList.contains("sday")) return `d${a.dataset.day}`;
+    if (a.dataset.act) return `a${a.dataset.act}`;
+    return null;
+  }
+  _refocusWeek(wk: HTMLElement, key: string | null) {
+    if (!key) return;
+    if (key === "week") return wk.focus({ preventScroll: true });
+    const sel =
+      key[0] === "b"
+        ? `.sb[data-id="${key.slice(1)}"]`
+        : key[0] === "d"
+          ? `.sday[data-day="${key.slice(1)}"]`
+          : `.sbar [data-act="${key.slice(1)}"]`;
+    // (gone with the change, a block deleted or the toolbar with the selection: the week keeps it)
+    (wk.querySelector<HTMLElement>(sel) ?? wk).focus({ preventScroll: true });
+  }
+
+  // ----- modes -----
+  _onHeaderClick(ev: MouseEvent) {
+    const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>("button[data-act]");
+    if (!btn || btn.disabled || this._pointerBusy()) return;
+    const act = btn.dataset.act;
+    const e = this._edit;
+    if (act === "edit") {
+      this._enter();
+      this._render();
+      // the focus goes to the first block (or the first day)
+      const wk = this._root?.querySelector<HTMLElement>(".wk");
+      (
+        wk?.querySelector<HTMLElement>(".sb[data-id]") ?? wk?.querySelector<HTMLElement>(".sday")
+      )?.focus({
+        preventScroll: true,
+      });
+      return;
+    }
+    if (!e || e.saving) return;
+    if (act === "undo") this._undo();
+    else if (act === "add") this._addAtFocus();
+    else if (act === "done") this._done();
+  }
+  // the change before, taken back
+  _undo() {
+    const e = this._edit;
+    if (!e || e.saving || !e.hist.length) return;
+    const days = e.hist[e.hist.length - 1];
+    const ids = new Set(days.flat().map((b) => b.id));
+    this._edit = {
+      ...e,
+      days,
+      hist: e.hist.slice(0, -1),
+      sel: e.sel.filter((id) => ids.has(id)),
+    };
+    this._render();
+  }
+  // Add: an hour on the day of the block selected last (else today), the first one free from
+  // 08:00 on (then from midnight) at the snap's steps; a day with no free hour gets the longest
+  // free stretch it has
+  _addAtFocus() {
+    const e = this._edit;
+    const cfg = this._config;
+    if (!e || !cfg) return;
+    const sel = e.sel.length ? findBlock(e.days, e.sel[e.sel.length - 1]) : null;
+    const pos = weekPos(Date.now(), scheduleZone(this._hass));
+    const day = sel?.d ?? (pos.day - this._first() + 7) % 7;
+    const blocks = e.days[day];
+    const step = cfg.snap;
+    const fits = (from: number, len: number) =>
+      from + len <= DAY_MIN && !blocks.some((b) => b.from < from + len && from < b.to);
+    const starts = [...Array(DAY_MIN / step).keys()].map((i) => (480 + i * step) % DAY_MIN);
+    let from: number | undefined,
+      len = 60;
+    for (; len >= step; len -= step) {
+      from = starts.find((m) => fits(m, len));
+      if (from !== undefined) break;
+    }
+    if (from === undefined) {
+      fireHaptic(this, "failure");
+      return;
+    }
+    const made = addBlock(e.days, day, from, from + len, this._newData(e.days, day, from));
+    this._refocusSel = `b${made.id}`;
+    this._commit(e, made.days, [made.id]);
+  }
+  _enter() {
+    const cfg = this._config;
+    const week = cfg ? knownWeek(cfg.entity) : null;
+    if (!cfg || !week) return;
+    const first = this._first();
+    const days = withIds(rotate(week, first));
+    this._hideTip();
+    this._edit = {
+      days,
+      first,
+      start: week,
+      hist: [],
+      sel: [],
+      copy: false,
+      saving: false,
+      bubble: null,
+      box: null,
+    };
+  }
+  _leave() {
+    this._edit = null;
+    this._endDrag();
+    this._render();
+    this._root
+      ?.querySelector<HTMLElement>('.sctl [data-act="edit"]')
+      ?.focus({ preventScroll: true });
+  }
+  async _done() {
+    const e = this._edit;
+    const cfg = this._config;
+    const hass = this._hass;
+    if (!e || !cfg || !hass || e.saving) return;
+    const week = unrotate(withoutIds(e.days), e.first);
+    if (sameWeek(week, e.start)) return this._leave();
+    this._edit = { ...e, saving: true };
+    this._render();
+    try {
+      await saveWeek(hass, cfg.entity, week, e.start);
+      fireHaptic(this, "success");
+      this._saved = Date.now() + SAVED_MS;
+      clearTimeout(this._savedTimer);
+      this._savedTimer = setTimeout(() => this._render(), SAVED_MS + 10);
+      this._leave();
+    } catch (err) {
+      console.warn(`${CARD_TYPE}: the schedule was not saved`, err);
+      fireHaptic(this, "failure");
+      // changed elsewhere: said, and the next Done saves over it; set in YAML: never saved here
+      const why =
+        err instanceof ScheduleSaveError
+          ? t(hass, err.reason === "yaml" ? "schedule.save_yaml" : "schedule.save_changed")
+          : err instanceof Error && err.message
+            ? err.message
+            : typeof (err as { message?: unknown })?.message === "string"
+              ? String((err as { message: string }).message)
+              : "";
+      const message = why
+        ? `${t(hass, "schedule.save_failed")}: ${why}`
+        : t(hass, "schedule.save_failed");
+      fireEvent(this, "hass-notification", { message });
+      if (this._edit)
+        this._edit = {
+          ...this._edit,
+          saving: false,
+          ...(err instanceof ScheduleSaveError && err.week ? { start: err.week } : {}),
+        };
+      this._render();
+    }
+  }
+}
+
+registerCard(ScheduleCard, {
+  name: "Schedule Card Pro",
+  description: "A schedule helper's week: when it runs, and editing its blocks right on the card",
+  suggest: ofDomain("schedule"),
+});

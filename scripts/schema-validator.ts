@@ -17,6 +17,7 @@ const TYPES = [
   "multi-trend-card-pro",
   "sun-path-card-pro",
   "sun-azimuth-card-pro",
+  "schedule-card-pro",
   "illuminance-card-pro",
   "weather-card-pro",
   "wind-card-pro",

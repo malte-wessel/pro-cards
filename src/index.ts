@@ -6,6 +6,7 @@ import "./heading-card.ts";
 import "./multi-trend-card.ts";
 import "./sun-path-card.ts";
 import "./sun-azimuth-card.ts";
+import "./schedule-card.ts";
 import "./weather-card.ts";
 import "./power-flow-card.ts";
 import "./energy-flow-card.ts";

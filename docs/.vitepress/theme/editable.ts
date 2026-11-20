@@ -12,6 +12,7 @@ export const EDITABLE = new Set([
   "custom:heading-card-pro",
   "custom:sun-azimuth-card-pro",
   "custom:sun-path-card-pro",
+  "custom:schedule-card-pro",
   "custom:multi-trend-card-pro",
   "custom:weather-card-pro",
   "custom:power-flow-card-pro",

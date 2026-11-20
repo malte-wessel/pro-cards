@@ -12,6 +12,7 @@ import { parseHms } from "../../../../src/shared/countdown.ts";
 import { GARDEN_SNAPSHOT } from "./camera.ts";
 import { MALTE_PHOTO } from "./malte.ts";
 import { isMeter, METERS, readingAt, statistics, statisticsMetadata } from "./meters.ts";
+import { SCHEDULE_WEEKS, scheduleState } from "./schedules.ts";
 
 // an entity of the demo home: its initial state plus how its history and drift are generated
 export interface EntityDef {
@@ -62,6 +63,9 @@ export interface World {
   stop(): void;
   // drops the histories and forecasts drawn so far (the tests: after they set states of their own)
   forget(): void;
+  // the schedule helpers' states from their weeks now (after a week changed, and as time runs):
+  // whether one changed (its listeners are told)
+  syncSchedules(): boolean;
   _timer?: ReturnType<typeof setInterval>;
   _timers?: ReturnType<typeof setInterval>;
 }
@@ -1318,6 +1322,11 @@ def("script.check_windows", "off", {
   friendly_name: "Check windows",
   icon: "mdi:window-open-variant",
 });
+// the schedule helpers (schedules.ts): on while a block of their week runs
+for (const id of Object.keys(SCHEDULE_WEEKS)) {
+  const s = scheduleState(id, now());
+  def(id, s.state, s.attributes);
+}
 
 // ---------- state store ----------
 
@@ -1375,10 +1384,35 @@ export const world: World = {
   statisticsMetadata(ids) {
     return statisticsMetadata(ids);
   },
+  syncSchedules() {
+    let changed = false;
+    for (const id of Object.keys(SCHEDULE_WEEKS)) {
+      const st = states[id],
+        s = scheduleState(id, now());
+      if (
+        st &&
+        st.state === s.state &&
+        JSON.stringify(st.attributes) === JSON.stringify(s.attributes)
+      )
+        continue;
+      const t = iso(now());
+      states[id] = {
+        ...st,
+        state: s.state,
+        attributes: s.attributes,
+        last_updated: t,
+        last_changed: st?.state === s.state ? st.last_changed : t,
+      };
+      changed = true;
+    }
+    if (changed) notify();
+    return changed;
+  },
   start() {
     if (this._timer) return;
-    // a running timer that ran out is idle, or starts again
+    // a running timer that ran out is idle, or starts again; a schedule's block starts or ends
     this._timers = setInterval(() => {
+      this.syncSchedules();
       for (const e of Object.values(E)) {
         const st = states[e.id];
         if (!e.id.startsWith("timer.") || st?.state !== "active") continue;

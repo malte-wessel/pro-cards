@@ -80,6 +80,18 @@ input_boolean:
   coffee_machine:
     name: Coffee machine
 
+# a schedule set in YAML: the schedule card shows it, never edits it (the others are made in the UI
+# by scripts/ha-setup.mjs, so the card can save them)
+schedule:
+  office_hours:
+    name: Office hours
+    icon: mdi:briefcase-clock
+    monday: &office [{ from: "08:00:00", to: "17:00:00" }]
+    tuesday: *office
+    wednesday: *office
+    thursday: *office
+    friday: *office
+
 automation:
   - alias: Demo drive
     description: Moves the demo value every minute so history visuals have data

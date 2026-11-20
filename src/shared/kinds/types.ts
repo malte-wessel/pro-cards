@@ -7,6 +7,7 @@ import type { EntityModel, RenderCtx } from "../entity/model.ts";
 import type { KindSlots } from "../entity/render/fill.ts";
 import type { ActionConfig, ForecastEntry, HassEntity, WeatherForecastType } from "../ha.ts";
 import type { StringKey } from "../i18n.ts";
+import type { Week } from "../schedule/model.ts";
 import type { SunCurveHost } from "../sun/curve.ts";
 import type { Visibility } from "../visibility.ts";
 import type { Finder } from "./discover.ts";
@@ -53,6 +54,8 @@ export interface Read {
 export interface KindHost {
   // a weather entity's forecast (undefined while loading, null when there is none)
   forecast(type: WeatherForecastType): ForecastEntry[] | null | undefined;
+  // a schedule helper's week (undefined while loading, null when there is none to read)
+  schedule(): Week | null | undefined;
   // the sun curve's state for its tooltip
   sun: SunCurveHost;
   // the plot's pointer: `timeAt` reads the time under it, `show` draws the tooltip there (false:
