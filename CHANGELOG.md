@@ -13,6 +13,7 @@ _Beta_
 ### Changed: existing cards look different
 
 - **Schedules:** a schedule tile or poster showed On or Off; it now shows when it changes next and today's blocks (a tile is two rows high). `visual: false` leaves the blocks out.
+- **A soft badge's name** is in the badge's colour, as its value is; it was grey on the coloured tint.
 
 ## 3.2.0 – Timers that count down, names by their parts
 

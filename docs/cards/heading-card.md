@@ -71,7 +71,7 @@ badges:
 
 ## Badge style and size
 
-`badge_style` sets the pill of every badge: `outline` (the default, as Home Assistant's badges), `soft` (a tint of the badge's colour), `filled`, `tag` (an outline and text in the badge's colour) or `plain` (the icon and value alone). `badge_size` sets their height: `s`, `m` (the default) or `l`. A badge's own `style` and `size` win.
+`badge_style` sets the pill of every badge: `outline` (the default, as Home Assistant's badges), `soft` (a tint of the badge's colour, its text in the colour), `filled`, `tag` (an outline and text in the badge's colour) or `plain` (the icon and value alone). `badge_size` sets their height: `s`, `m` (the default) or `l`. A badge's own `style` and `size` win.
 
 ::: live
 

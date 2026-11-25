@@ -868,6 +868,18 @@ add("pb-styles", [
       style,
     })),
   }),
+  // with their names: grey beside the value on a neutral pill, in the colour on a coloured one
+  p("sensor.outdoor_temperature", {
+    name: "Named",
+    status: false,
+    grid_options: { columns: 12, rows: 4 },
+    badges: ["outline", "soft", "filled", "plain", "tag"].map((style) => ({
+      entity: "sensor.outdoor_humidity",
+      name: "Humid",
+      show_name: true,
+      style,
+    })),
+  }),
   p("sensor.outdoor_temperature", {
     name: "Sizes",
     status: false,
