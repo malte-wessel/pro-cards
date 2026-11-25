@@ -16,6 +16,11 @@ _Beta_
 - **Schedules:** a schedule tile or poster showed On or Off; it now shows when it changes next and today's blocks (a tile is two rows high). `visual: false` leaves the blocks out.
 - **Plots of the card's own entity** take the `min` and `max` written on the card, as its bar, gauge and ring do; they fitted their data alone. A card that writes them (for a bar, a ring or a slider) now draws its plot on that scale: columns as bright as they are tall, growing from a `min` above 0.
 - **A soft badge's name** is in the badge's colour, as its value is; it was grey on the coloured tint.
+- **A plot's axis** (`axis: true`) is a row above the drawing: the scale's range on the left, the window (`24 h`) on the right. Its labels lay over the columns or the line, with the window's start above now; the plot keeps its height, the drawing is the row shorter.
+
+### Fixes
+
+- A plot of another entity (`src`) writes that entity's unit and precision in its tooltip and axis, also on a card whose value is an attribute (a thermostat's temperature): it showed "16" for "16.0 %". Its tooltip no longer names the card's rules, which are written for the card's own value.
 
 ## 3.2.0 – Timers that count down, names by their parts
 

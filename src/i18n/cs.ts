@@ -10,6 +10,7 @@ const cs: Translation = {
   "common.plus_hours": "+{n} h",
   "common.minus_hours": "−{n} h",
   "common.hours": "{n} h",
+  "common.today": "Dnes",
 
   "entity.peak": "Vrchol",
   "control.toggle": "Přepnout {name}",

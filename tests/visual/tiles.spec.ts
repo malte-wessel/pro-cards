@@ -186,6 +186,10 @@ add("to-icon", [
   t("light.desk_lamp", { icon: { tap_action: { action: "toggle" } }, control: false }),
   t("media_player.living_room_speaker", { visual: false, icon: { type: "icon" } }),
 ]);
+add("to-axis", [
+  t("sensor.living_room_humidity", { visual: { type: "columns", max: 100, axis: true } }),
+  t("sensor.outdoor_temperature", { visual: { type: "sparkline", axis: true } }),
+]);
 add("to-picture", [
   t("weather.home"),
   t("sun.sun"),

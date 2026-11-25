@@ -10,6 +10,7 @@ const nb: Translation = {
   "common.plus_hours": "+{n} t",
   "common.minus_hours": "−{n} t",
   "common.hours": "{n} t",
+  "common.today": "I dag",
 
   "entity.peak": "Topp",
   "control.toggle": "Veksle {name}",

@@ -633,11 +633,13 @@ export const STYLE_PLOT = `
   .plot .hair { stroke: var(--secondary-text-color); stroke-width: 1; opacity: .6; }
   .plot .col { fill: var(--fe-color); }
   .plot .hl { fill: none; stroke: var(--primary-text-color); stroke-width: 1.5; }
-  /* axis: true: faint lines at the scale's top and bottom, their values and the window's ends in
-     the plot's corners */
+  /* axis: true: faint lines at the scale's edges below a row of labels, the range and the window
+     (plots.ts axisRow) */
   .plot .grid { stroke: var(--divider-color); stroke-width: 1; stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }
   .label { position: absolute; ${font(10, 12)} color: var(--secondary-text-color); white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums; }
   .label.right { transform: translateX(-100%); }
+  /* the axis' range: cut where even it alone is wider than the plot (its window has gone) */
+  .label.axis:not(.right) { max-width: calc(100% - 24px); overflow: hidden; text-overflow: ellipsis; }
   ${tipStyle()}
   .tip .time { color: var(--secondary-text-color); }
   .tip b { font-weight: 600; font-variant-numeric: tabular-nums; }

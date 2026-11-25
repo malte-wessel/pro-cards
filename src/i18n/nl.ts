@@ -10,6 +10,7 @@ const nl: Translation = {
   "common.plus_hours": "+{n} u",
   "common.minus_hours": "−{n} u",
   "common.hours": "{n} u",
+  "common.today": "Vandaag",
 
   "entity.peak": "Piek",
   "control.toggle": "{name} omschakelen",

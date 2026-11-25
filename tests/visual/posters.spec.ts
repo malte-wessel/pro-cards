@@ -601,6 +601,13 @@ add("po-colour", [
   p("sensor.outdoor_temperature", { rules: [{ above: 0, color: "red", pulse: true }] }),
   p("light.kitchen", { rules: [{ state: "off", color: "grey", status: "Dark" }], color: "purple" }),
 ]);
+// a plot's axis: a row above the drawing in the plot's own height, the scale's range and the window
+add("po-axis", [
+  p("sensor.living_room_humidity", { visual: { type: "columns", max: 100, axis: true } }),
+  p("sensor.outdoor_temperature", { visual: { type: "sparkline", axis: true } }),
+  p("sensor.power_consumption", { visual: { type: "columns", hours: "today", axis: true } }),
+  p("sensor.outdoor_temperature", { visual: { type: "sparkline", min: 0, max: 30, axis: true } }),
+]);
 add("po-visuals", [
   p("sensor.outdoor_temperature", { visual: "sparkline" }),
   p("sensor.power_consumption", { visual: "columns" }),

@@ -98,13 +98,24 @@ export const blockEl = (
     // a plot of its own (the v3 cards' visual): its window, bucket, smoothing, axes, scale and entity
     const p = ent.plot;
     if (!p) return plotEl(ctx, ent, idx, m);
-    // another entity's history in its own unit and precision: its state, not the card's, and only
-    // the visual's limits (the card's min and max scale the card's value)
+    // another entity's history in its own unit and precision: its state, not what the card reads
+    // (a thermostat's current_temperature, and that attribute's unit), and only the visual's
+    // limits (the card's min and max scale the card's value). The card's rules are written for its
+    // own value, so a line or columns name none of them in the tooltip; a strip keeps them, they
+    // colour its blocks
     if (p.src) {
       const st = ctx.hass?.states[p.src];
       return plotEl(
         ctx,
-        { ...ent, entity: p.src, unit: null, decimals: null },
+        {
+          ...ent,
+          entity: p.src,
+          valueSrc: { kind: "state" },
+          unitAttr: undefined,
+          unit: null,
+          decimals: null,
+          ...(ent.visual === "strip" ? {} : { rules: [] }),
+        },
         idx,
         { ...m, st },
         {
