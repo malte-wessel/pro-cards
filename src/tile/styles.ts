@@ -1,6 +1,6 @@
 // CSS of the tile card on top of the entity layer's tile: the icon slot (kept through fills, so a
 // kind's animated lead runs on) and the kinds' leads.
-import { PLOT_H } from "../shared/entity/constants.ts";
+import { COL_BLEED, PLOT_H } from "../shared/entity/constants.ts";
 import { POSTER_NAME, STYLE_ENTITY_CARD } from "../shared/entity/render/styles.ts";
 import { fw, type } from "../shared/typography.ts";
 import { STYLE_FLOW, STYLE_FLOW_MOTION } from "../shared/flow/styles.ts";
@@ -43,15 +43,15 @@ const STYLE_TILE_CARD = `
   .row.actionable > .pcurve { pointer-events: auto; }
   /* a plot below the line (a sparkline, columns, a kind's curve) runs to the tile's edges under the
      body's padding, as on a poster; the card's corners clip it. A strip (blocks and their time
-     labels) keeps the padding; columns run a little past the edges, so the card cuts the first and
-     the last bar and none shows its rounded foot; a placeholder (no data, loading) keeps the
-     padding */
+     labels) keeps the padding; columns run a little past the edges (COL_BLEED), standing on the
+     bottom edge on square feet, so the card cuts the first and the last bar; a placeholder (no
+     data, loading) keeps the padding */
   ha-card.layout-tile .row.tile > :is(.plot, .pcurve) { width: auto; margin: 0 -12px -8px; }
   ha-card.layout-tile .row.tile > .plot[data-kind="strip"] { margin: 0; }
-  ha-card.layout-tile .row.tile > .plot[data-kind="columns"] { margin: 0 -14px -12px; }
+  ha-card.layout-tile .row.tile > .plot[data-kind="columns"] { margin: 0 -${12 + COL_BLEED / 2}px -${8 + COL_BLEED}px; }
   ha-card.tvertical .row.tile > :is(.plot, .pcurve) { margin: 0 -12px -12px; }
   ha-card.tvertical .row.tile > .plot[data-kind="strip"] { margin: 0; }
-  ha-card.tvertical .row.tile > .plot[data-kind="columns"] { margin: 0 -14px -16px; }
+  ha-card.tvertical .row.tile > .plot[data-kind="columns"] { margin: 0 -${12 + COL_BLEED / 2}px -${12 + COL_BLEED}px; }
   /* a strip as a ribbon along the tile's bottom edge: it takes no room */
   ha-card.layout-tile .row.tile > .plot.edge { position: absolute; inset: auto 0 0; height: 4px; margin: 0; }
   ha-card.layout-tile .row.tile > .plot .label.placeholder { margin-left: 12px; }

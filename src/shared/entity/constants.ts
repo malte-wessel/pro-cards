@@ -111,6 +111,10 @@ export const OFF_STATES: ReadonlySet<string> = new Set([
   "clear",
 ]);
 export const PLOT_H: Record<HistoryVisual, number> = { sparkline: 56, columns: 56, strip: 22 };
+// a poster's and a tile's columns plot reaches this far past the card's bottom edge (and half of it
+// past its sides, so the card cuts the first and the last column): its columns stand on the edge,
+// this much above the plot's foot, on square feet
+export const COL_BLEED = 4;
 // the strip's time labels below it: their line height (STYLE_PLOT `.label`, which grows with the
 // theme's text) and 2 px; 14 px at the default size
 export const STRIP_AXIS_CSS = `(${lh(10, 12)} + 2px)`;
