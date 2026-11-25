@@ -16,7 +16,7 @@ import {
 import { nearestPoint, placeTip } from "../../hover.ts";
 import { t as tr } from "../../i18n.ts";
 import { measure } from "../../typography.ts";
-import { timeZoneOf } from "../../format.ts";
+import { textWidth, timeZoneOf } from "../../format.ts";
 import { qs, startOfDay } from "../../util.ts";
 import type { EntityItem } from "../config.ts";
 import { PLOT_H, type HistoryVisual } from "../constants.ts";
@@ -94,9 +94,11 @@ export const addLabel = (
 const INSET = 12;
 // `axis: true` (the v3 cards' visual): a row of labels at the top of the plot's own height, above
 // the drawing (the plot never grows for it, and nothing is drawn over the columns or the line): the
-// scale as a range on the left, the window on the right; faint lines at the scale's edges. The
-// row's height follows the theme's text; 0 where no axis is asked for, or where the plot is too
-// short to keep 16 px of drawing below it
+// scale as a range on the left, the window on the right; a faint line at the scale's top (and its
+// bottom, on a line and on columns whose written scale does not start at 0). The row's height
+// follows the theme's text; 0 where no axis is asked for, or where the plot is too short to keep
+// 16 px of drawing below it. On a plot too narrow for both labels the window goes, and the range is
+// cut with an ellipsis where even it does not fit (STYLE_PLOT)
 const axisBand = (ctx: RenderCtx, plot: PlotElement, labels: HTMLElement, H: number) => {
   if (!plot._ctx.axis) return 0;
   const band = Math.ceil(measure(ctx.text, labels, ["label"], [10, 12]).line) + 2;
@@ -116,29 +118,24 @@ const axisRow = (
   if (!band) return "";
   const { ent, st } = plot._ctx;
   // in the entity's precision, but a scale of whole numbers (written limits, 0 to 100) without
-  // the zeros: 0–100 %, not 0.0–100.0 %
-  const whole = Number.isInteger(scale.bottom) && Number.isInteger(scale.top);
+  // the zeros: 0–100 %, not 0.0–100.0 %; decimals written on the card are kept
+  const whole =
+    ent.decimals === null && Number.isInteger(scale.bottom) && Number.isInteger(scale.top);
   const num = (v: number) => fmtNumber(ctx, whole ? { ...ent, decimals: 0 } : ent, v, st, false);
   const unit = unitOf(ent, st);
   // a range with a negative end keeps its dash apart from the minus
   const sep = scale.bottom < 0 || scale.top < 0 ? " – " : "–";
-  addLabel(
-    labels,
-    "axis",
-    `${num(scale.bottom)}${sep}${num(scale.top)}${unit ? ` ${unit}` : ""}`,
-    INSET,
-    1,
-  );
-  // the window: its hours (the right edge is now), or today since midnight
-  addLabel(
-    labels,
-    "axis right",
+  const range = `${num(scale.bottom)}${sep}${num(scale.top)}${unit ? ` ${unit}` : ""}`;
+  addLabel(labels, "axis", range, INSET, 1);
+  // the window: its hours (the right edge is now), or today since midnight; only where it fits
+  // beside the range, a label's gap (8 px) apart
+  const win =
     plot._ctx.hours === "today"
       ? tr(ctx.hass, "common.today")
-      : tr(ctx.hass, "common.hours", { n: Math.round((now - t0) / 3600e3) }),
-    W - INSET,
-    1,
-  );
+      : tr(ctx.hass, "common.hours", { n: Math.round((now - t0) / 3600e3) });
+  const { font } = measure(ctx.text, labels, ["label"], [10, 12]);
+  if (textWidth(range, font) + 8 + textWidth(win, font) <= W - 2 * INSET)
+    addLabel(labels, "axis right", win, W - INSET, 1);
   return lines
     .map((y) => `<line class="grid" x1="0" x2="${W}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}"/>`)
     .join("");

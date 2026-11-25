@@ -563,6 +563,22 @@ test.describe("tile places", () => {
     await expect(axis(2)).toHaveCount(0);
   });
 
+  test("an axis on a narrow tile keeps its range and leaves the window out", async ({ page }) => {
+    const cols = { type: "columns", axis: true };
+    await mount(page, [
+      { type: T, entity: "sensor.power_consumption", visual: cols, grid_options: { columns: 3 } },
+      { type: T, entity: "sensor.power_consumption", visual: cols, grid_options: { columns: 12 } },
+    ]);
+    const labels = (i: number) => card(page, i).locator(".row.tile > .plot .label.axis");
+    await expect(labels(1)).toHaveCount(2);
+    await expect(labels(0)).toHaveCount(1);
+    await expect(labels(0)).toHaveText(/ W$/);
+    // what is left stays inside the plot
+    const plot = (await card(page, 0).locator(".row.tile > .plot").boundingBox())!;
+    const range = (await labels(0).boundingBox())!;
+    expect(range.x + range.width).toBeLessThanOrEqual(plot.x + plot.width);
+  });
+
   test("a cover, a robot and the grid draw nothing behind a tile unless asked", async ({
     page,
   }) => {

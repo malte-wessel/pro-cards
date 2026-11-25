@@ -195,6 +195,10 @@ describe("a plot's axis", () => {
     for (const c of cols(el)) expect(c.y).toBeGreaterThanOrEqual(band - 0.1);
     expect(tallest(scaled("columns", { max: 3, axis: true }))).toBeCloseTo(band, 0);
   });
+  it("keeps decimals written on the card on a whole scale", () => {
+    const el = scaled("columns", { max: 100, axis: true }, { decimals: 1 });
+    expect(labels(el)[0]).toBe("0.0–100.0");
+  });
   it("names today's window by its day", () => {
     expect(labels(scaled("sparkline", { hours: "today", axis: true }))[1]).toBe("Today");
   });
