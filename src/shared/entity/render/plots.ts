@@ -19,7 +19,7 @@ import { measure } from "../../typography.ts";
 import { textWidth, timeZoneOf } from "../../format.ts";
 import { qs, startOfDay } from "../../util.ts";
 import type { EntityItem } from "../config.ts";
-import { PLOT_H, type HistoryVisual } from "../constants.ts";
+import { COL_BLEED, PLOT_H, type HistoryVisual } from "../constants.ts";
 import { resolveLook } from "../look.ts";
 import { fmtNumber, fmtTime, tplGetter, unitOf, type RenderCtx } from "../model.ts";
 
@@ -141,6 +141,17 @@ const axisRow = (
     .join("");
 };
 
+// a column with its tip rounded (2 px, less on a thin or short one) and its foot square: the tip
+// up for a value above the base, down for one below it
+const colPath = (x: number, y: number, w: number, h: number, up: boolean) => {
+  const r = Math.min(2, w / 2, h);
+  const f = (n: number) => n.toFixed(1);
+  const [x1, y1] = [x + w, y + h];
+  return up
+    ? `M${f(x)},${f(y1)}V${f(y + r)}Q${f(x)},${f(y)} ${f(x + r)},${f(y)}H${f(x1 - r)}Q${f(x1)},${f(y)} ${f(x1)},${f(y + r)}V${f(y1)}Z`
+    : `M${f(x)},${f(y)}V${f(y1 - r)}Q${f(x)},${f(y1)} ${f(x + r)},${f(y1)}H${f(x1 - r)}Q${f(x1)},${f(y1)} ${f(x1)},${f(y1 - r)}V${f(y)}Z`;
+};
+
 // ctx also needs { cfg, series, fetched, now, t0 }; `size` is the plot's box when the caller
 // measured it already (the card reads every plot first, so drawing them costs one layout)
 export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; h: number }) => {
@@ -233,9 +244,13 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
     const sc = plotScale(vals, plot._ctx, true, 0);
     const vmax = sc.top,
       range = sc.hi - sc.lo;
+    // a poster's and a tile's columns stand on the card's edge, COL_BLEED above the plot's foot,
+    // on square feet (rounded at the tip alone); elsewhere (the entity cards) rounded all round
+    const onEdge = !!ent.plot,
+      floor = H - (onEdge ? COL_BLEED : 0);
     // below the axis' row, where there is one
-    const band = axisBand(ctx, plot, labels, H);
-    const yOf = (v: number) => band + (H - band) * (1 - (v - sc.lo) / range),
+    const band = axisBand(ctx, plot, labels, floor);
+    const yOf = (v: number) => band + (floor - band) * (1 - (v - sc.lo) / range),
       y0 = yOf(sc.base);
     let peak = -1,
       pv = -Infinity;
@@ -264,7 +279,11 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
       const y = Math.min(yOf(b.v), y0),
         h = Math.max(1, Math.abs(y0 - yOf(b.v)));
       const op = opOf(b.v, i);
-      html += `<rect class="col" x="${(i * bw + gap / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(1, bw - gap).toFixed(1)}" height="${h.toFixed(1)}" rx="2" opacity="${op}"/>`;
+      const x = i * bw + gap / 2,
+        w = Math.max(1, bw - gap);
+      html += onEdge
+        ? `<path class="col" d="${colPath(x, y, w, h, b.v >= sc.base)}" opacity="${op}"/>`
+        : `<rect class="col" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="2" opacity="${op}"/>`;
     });
     html += `<g class="hover"><rect class="hl" y="${band - 1}" width="${(Math.max(1, bw - gap) + 2).toFixed(1)}" height="${H - band + 2}" rx="3"/></g>`;
     svg.innerHTML = html;

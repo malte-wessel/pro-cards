@@ -132,7 +132,8 @@ describe("the share of a taller card a group asks for", () => {
   });
 });
 
-// a v3 card's plot (its visual's options in `plot`), RISING's 1 to 3 at a measured 200 × 120
+// a v3 card's plot (its visual's options in `plot`), RISING's 1 to 3 at a measured 200 × 120; its
+// columns stand on the card's edge, COL_BLEED (4 px) above the plot's foot: 116 px to draw in
 const scaled = (visual: string, plot: PlotOptions, item: Partial<EntityItem> = {}) => {
   const ctx = ctxOf(visual);
   const ent = { ...ctx.cfg.entities[0], plot, ...item } as EntityItem;
@@ -142,12 +143,13 @@ const scaled = (visual: string, plot: PlotOptions, item: Partial<EntityItem> = {
   drawPlot(ctx, el as Parameters<typeof drawPlot>[1]);
   return el;
 };
+// a poster's or tile's column is a path (a square foot): its top and height from its points
 const cols = (el: HTMLElement) =>
-  [...el.querySelectorAll("rect.col")].map((c) => ({
-    y: Number(c.getAttribute("y")),
-    h: Number(c.getAttribute("height")),
-    op: Number(c.getAttribute("opacity")),
-  }));
+  [...el.querySelectorAll("path.col")].map((c) => {
+    const ys = [...c.getAttribute("d")!.matchAll(/,(-?[\d.]+)/g)].map((m) => Number(m[1]));
+    const y = Math.min(...ys);
+    return { y, h: Math.max(...ys) - y, op: Number(c.getAttribute("opacity")) };
+  });
 const tallest = (el: HTMLElement) => Math.min(...cols(el).map((c) => c.y));
 
 describe("a plot's scale", () => {
@@ -159,20 +161,20 @@ describe("a plot's scale", () => {
   it("draws on the written scale, each column as bright as it is tall", () => {
     const el = scaled("columns", { max: 100 });
     // 3 of 100: the tallest column reaches 3 % of the height
-    expect(tallest(el)).toBeCloseTo(120 * 0.97, 0);
+    expect(tallest(el)).toBeCloseTo(116 * 0.97, 0);
     for (const c of cols(el)) expect(c.op).toBeLessThan(0.43);
   });
   it("grows columns from a min above 0", () => {
     const el = scaled("columns", { min: 1, max: 5 });
     // every column stands on the floor (1), the tallest (3) half way up (one at the floor is
     // drawn a pixel tall)
-    for (const c of cols(el).filter((c) => c.h > 1)) expect(c.y + c.h).toBeCloseTo(120, 0);
-    expect(tallest(el)).toBeCloseTo(60, 0);
+    for (const c of cols(el).filter((c) => c.h > 1)) expect(c.y + c.h).toBeCloseTo(116, 0);
+    expect(tallest(el)).toBeCloseTo(58, 0);
   });
   it("takes the card's min and max for a plot of the card's own state", () => {
-    expect(tallest(scaled("columns", {}, { max: 10 }))).toBeCloseTo(120 * 0.7, 0);
+    expect(tallest(scaled("columns", {}, { max: 10 }))).toBeCloseTo(116 * 0.7, 0);
     // the visual's own limit wins
-    expect(tallest(scaled("columns", { max: 100 }, { max: 10 }))).toBeCloseTo(120 * 0.97, 0);
+    expect(tallest(scaled("columns", { max: 100 }, { max: 10 }))).toBeCloseTo(116 * 0.97, 0);
   });
   it("leaves the card's min and max to the card's value for another entity or value", () => {
     expect(tallest(scaled("columns", { src: "sensor.a" }, { max: 10 }))).toBe(0);
@@ -201,6 +203,13 @@ describe("a plot's axis", () => {
   });
   it("names today's window by its day", () => {
     expect(labels(scaled("sparkline", { hours: "today", axis: true }))[1]).toBe("Today");
+  });
+  it("stands a poster's or tile's columns on square feet, rounded at the tip alone", () => {
+    const d = scaled("columns", { max: 4 }).querySelector("path.col")!.getAttribute("d")!;
+    // from the foot's corner straight up, the rounded tip, straight down to the other foot: on
+    // the card's edge, COL_BLEED (4 px) above the plot's foot, which the card cuts
+    expect(d).toMatch(/^M[\d.]+,116\.0V[\d.]+Q/);
+    expect(d).toMatch(/V116\.0Z$/);
   });
   it("draws no row without axis", () => {
     const el = scaled("columns", { max: 100 });

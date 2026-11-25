@@ -14,6 +14,7 @@ import {
   type,
 } from "../../typography.ts";
 import { STYLE_SLIDER } from "../../slider.ts";
+import { COL_BLEED } from "../constants.ts";
 
 export const STYLE_BASE = `
   ${STYLE_ICONS}
@@ -142,7 +143,9 @@ const STYLE_POSTER = `
   ha-card.layout-poster .row.poster > .hit:focus-visible { box-shadow: inset 0 0 0 2px var(--fe-color); }
   ha-card.layout-poster .pbody > .plot { width: auto; margin: 8px -16px -16px; }
   ha-card.layout-poster .pbody > .plot[data-kind="strip"] { margin: 8px 0 -6px; }
-  ha-card.layout-poster .pbody > .plot[data-kind="columns"] { margin: 8px -18px -20px; }
+  /* columns run past the card's edges (COL_BLEED): they stand on its bottom edge on square feet,
+     and the card cuts the first and the last column, so no gap is left before them */
+  ha-card.layout-poster .pbody > .plot[data-kind="columns"] { margin: 8px -${16 + COL_BLEED / 2}px -${16 + COL_BLEED}px; }
   /* a strip as a ribbon along the card's bottom edge, behind the texts: it takes no room */
   ha-card.layout-poster .pbody > .plot.edge { position: absolute; inset: auto 0 0; height: 6px; margin: 0; }
   ha-card.layout-poster .pbody > .plot.edge > .tip { bottom: 10px; }
