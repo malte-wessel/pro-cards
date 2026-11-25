@@ -115,7 +115,10 @@ const axisRow = (
 ): string => {
   if (!band) return "";
   const { ent, st } = plot._ctx;
-  const num = (v: number) => fmtNumber(ctx, ent, v, st, false);
+  // in the entity's precision, but a scale of whole numbers (written limits, 0 to 100) without
+  // the zeros: 0–100 %, not 0.0–100.0 %
+  const whole = Number.isInteger(scale.bottom) && Number.isInteger(scale.top);
+  const num = (v: number) => fmtNumber(ctx, whole ? { ...ent, decimals: 0 } : ent, v, st, false);
   const unit = unitOf(ent, st);
   // a range with a negative end keeps its dash apart from the minus
   const sep = scale.bottom < 0 || scale.top < 0 ? " – " : "–";

@@ -18,6 +18,10 @@ _Beta_
 - **A soft badge's name** is in the badge's colour, as its value is; it was grey on the coloured tint.
 - **A plot's axis** (`axis: true`) is a row above the drawing: the scale's range on the left, the window (`24 h`) on the right. Its labels lay over the columns or the line, with the window's start above now; the plot keeps its height, the drawing is the row shorter.
 
+### Fixes
+
+- A plot of another entity (`src`) writes that entity's unit and precision in its tooltip and axis, also on a card whose value is an attribute (a thermostat's temperature): it showed "16" for "16.0 %". Its tooltip no longer names the card's rules, which are written for the card's own value.
+
 ## 3.2.0 – Timers that count down, names by their parts
 
 _2026-11-20_

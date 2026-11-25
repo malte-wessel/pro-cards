@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { blockEl, plotEl, plotRows } from "../../../../src/shared/entity/render/blocks.ts";
-import { drawPlot } from "../../../../src/shared/entity/render/plots.ts";
+import { drawPlot, showHover } from "../../../../src/shared/entity/render/plots.ts";
 import type { EntityItem, PlotOptions } from "../../../../src/shared/entity/config.ts";
 import type { EntityModel, RenderCtx } from "../../../../src/shared/entity/model.ts";
 import { normalizeEntityCardConfig } from "../../../../src/entity-card.ts";
@@ -202,5 +202,57 @@ describe("a plot's axis", () => {
     const el = scaled("columns", { max: 100 });
     expect(labels(el)).toEqual([]);
     expect(el.querySelector("line.grid")).toBeNull();
+  });
+});
+
+// a thermostat's card (its value the current_temperature attribute, a rule on it) whose plot reads
+// another entity: sensor.a, a valve in % whose state has one decimal
+describe("a plot of another entity", () => {
+  const thermostat = (visual: string, plot: PlotOptions) => {
+    const ctx = ctxOf(visual, RISING, {
+      attribute: "current_temperature",
+      rules: [{ above: 0, label: "Warm", color: "amber" }],
+    });
+    ctx.hass = {
+      locale: { language: "en" },
+      states: {
+        "sensor.a": {
+          entity_id: "sensor.a",
+          state: "2.0",
+          attributes: { unit_of_measurement: "%" },
+        },
+      },
+    } as unknown as HomeAssistant;
+    // (the card's own entity has the history where the plot is its own)
+    const entity = plot.src ? "climate.x" : "sensor.a";
+    const ent = { ...ctx.cfg.entities[0], entity, plot } as EntityItem;
+    const el = blockEl(ctx, ent, 0, {} as EntityModel) as Parameters<typeof drawPlot>[1];
+    Object.defineProperty(el, "clientWidth", { value: 200 });
+    Object.defineProperty(el, "clientHeight", { value: 120 });
+    drawPlot(ctx, el);
+    return { ctx, el };
+  };
+  const tipAt = (visual: string, plot: PlotOptions) => {
+    const { ctx, el } = thermostat(visual, plot);
+    showHover(ctx, el, HOUR * 0.75);
+    return el.querySelector(".tip")!.textContent;
+  };
+  it("writes its values in that entity's unit and precision", () => {
+    expect(tipAt("columns", { src: "sensor.a" })).toMatch(/3\.0 %$/);
+    expect(tipAt("sparkline", { src: "sensor.a" })).toMatch(/\d\.\d %$/);
+  });
+  it("names that entity's unit in its axis", () => {
+    const { el } = thermostat("columns", { src: "sensor.a", max: 100, axis: true });
+    expect(el.querySelector(".label.axis")!.textContent).toBe("0–100 %");
+  });
+  it("names none of the card's rules, which are written for the card's own value", () => {
+    expect(tipAt("columns", { src: "sensor.a" })).not.toContain("Warm");
+    // a plot of the card's own value still does
+    expect(tipAt("columns", {})).toContain("Warm");
+  });
+  it("keeps the card's rules on a strip, which colour its blocks", () => {
+    const { el } = thermostat("strip", { src: "sensor.a" });
+    const fills = [...el.querySelectorAll("svg > rect")].map((r) => r.getAttribute("fill"));
+    expect(fills).toContain("var(--amber-color)");
   });
 });
