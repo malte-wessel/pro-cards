@@ -769,6 +769,7 @@ const it: Translation = {
   "editor.card.field.value": "Valore",
   "editor.card.field.secondary": "Riga secondaria",
   "editor.card.field.aside": "Secondo valore",
+  "editor.card.field.aside_attribute": "Attributo del secondo valore",
   "editor.card.field.unit": "Unità",
   "editor.card.field.decimals": "Decimali",
   "editor.card.field.format": "Formato",
@@ -778,6 +779,7 @@ const it: Translation = {
   "editor.card.field.min": "Da (min)",
   "editor.card.field.max": "A (max)",
   "editor.card.field.show_name": "Mostra il nome",
+  "editor.card.field.show_secondary": "Mostra riga secondaria",
   "editor.card.field.show_value": "Mostra il valore",
   "editor.card.field.icon_thing": "L'icona mostra",
   "editor.card.field.icon_src": "Immagine",
@@ -888,6 +890,8 @@ const it: Translation = {
   "editor.card.help.prefix": "Prima del valore, come ~ o +",
   "editor.card.help.aside":
     "Un altro valore accanto al valore, più piccolo (un obiettivo, una previsione)",
+  "editor.card.help.aside_attribute":
+    "Vuoto: il suo stato; senza entità del secondo valore, l'attributo della scheda",
   "editor.card.help.icon_ring_entity":
     "Un'altra entità per l'anello; vuoto: il valore della scheda",
   "editor.card.help.suffix": "Dopo il valore",

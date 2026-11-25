@@ -1447,4 +1447,31 @@ test.describe("a poster's second value and a ring of another entity", () => {
       await expect.poll(() => filled(lead.locator(".prog"))).toBeCloseTo(0.64, 2);
     }
   });
+
+  test("secondary: false leaves the line under the value out, not the second value", async ({
+    page,
+  }) => {
+    await mount(
+      page,
+      [
+        { type: P, entity: TEMP, secondary: false },
+        { type: P, entity: "climate.living_room", control: false, secondary: false },
+        {
+          type: "custom:tile-card-pro",
+          entity: "climate.living_room",
+          control: false,
+          secondary: false,
+        },
+        { type: "custom:tile-card-pro", entity: "climate.living_room", control: false },
+      ],
+      { width: 800 },
+    );
+    // a temperature's "Today …" line goes, and takes no room
+    await expect(card(page, 0).locator(".ptext > .secondary")).toHaveCount(0);
+    // a thermostat keeps its target beside the value
+    await expect(card(page, 1).locator(".paside")).toHaveText("21.0°C");
+    // a tile's line keeps the value, not the target
+    await expect(card(page, 2)).not.toContainText("→");
+    await expect(card(page, 3)).toContainText("→ 21.0 °C");
+  });
 });

@@ -89,7 +89,7 @@ export interface RawEntity extends RawItemOptions, RawActionDefaults {
   entity?: string | null;
   // a text, a template, or Home Assistant's parts of a name (entity-name.ts)
   name?: string | NameItem | NameItem[] | null;
-  secondary?: string | null;
+  secondary?: string | false | null;
   icon?: string | null;
   color?: string | null;
   attribute?: string | null;
@@ -561,7 +561,8 @@ export const normalizeEntity = (
   return {
     entity: o.entity || null,
     name: normalizeName(o.name, `${ctx.type}: ${label}`),
-    secondary: o.secondary ?? null,
+    // (false: none, not even the kind's)
+    secondary: typeof o.secondary === "string" ? o.secondary : null,
     icon: o.icon ?? null,
     color: o.color ?? null,
     valueSrc,

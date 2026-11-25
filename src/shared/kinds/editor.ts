@@ -15,6 +15,7 @@ import {
   DETECTED,
   configToForm,
   defaultVisual,
+  fitAside,
   fitEntity,
   formToConfig,
   type CardThing,
@@ -219,13 +220,19 @@ export abstract class KindCardEditor extends FormEditorBase {
     if (moved && entity && written && !canRead(written, entity)) d = { ...d, kind: DETECTED };
     const { kind } = kindsOf(d, this._hass);
     const was = kindsOf(prev as Raw, this._hass).kind;
-    const c = formToConfig(d, prev, kind, this._thing, was, {
+    let c = formToConfig(d, prev, kind, this._thing, was, {
       before: this._kindRules(was, prev as Raw),
       now: this._kindRules(kind, d),
     });
-    if (!moved) return c;
-    const st = entity ? this._hass?.states[entity] : undefined;
-    return fitEntity(c, kind, this._thing, st ? Object.keys(st.attributes) : null, was);
+    // (an entity's attributes; null: not known)
+    const attrsOf = (id: string) => {
+      const s = this._hass?.states[id];
+      return s ? Object.keys(s.attributes) : null;
+    };
+    if (moved) c = fitEntity(c, kind, this._thing, entity ? attrsOf(entity) : null, was);
+    // a poster's second value reads what its entity has: another one picked for it, or for the card
+    // while it reads the card's, drops an attribute it lacks
+    return this._thing === "poster" ? fitAside(c, attrsOf) : c;
   }
 
   _schema(hass: HomeAssistant, data: HaFormData): HaFormSchema[] {

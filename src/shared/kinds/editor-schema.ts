@@ -995,18 +995,37 @@ export const editorSchema = (x: SchemaCtx): HaFormSchema[] => {
         ]
       : []),
     ...(writes("value") ? [text("value")] : []),
-    // (a row has no secondary)
+    // (a row has no secondary) whether the line under the value shows, then the line (one written
+    // stays, so it can be cleared)
     ...(thing === "row"
       ? []
       : [
-          {
-            name: "secondary",
-            selector: { text: {} },
-            ...(shown.secondary !== undefined ? { default: shown.secondary } : {}),
-          },
+          { name: "show_secondary", selector: { boolean: {} } },
+          ...(data.show_secondary !== false || filledIn("secondary")
+            ? [
+                {
+                  name: "secondary",
+                  selector: { text: {} },
+                  ...(shown.secondary !== undefined ? { default: shown.secondary } : {}),
+                },
+              ]
+            : []),
         ]),
     // a poster's second value beside its value (another entity's state; its other keys in YAML)
-    ...(thing === "poster" && writes("aside") ? [{ name: "aside", selector: { entity: {} } }] : []),
+    ...(thing === "poster" && (writes("aside") || filledIn("aside_attribute"))
+      ? [
+          { name: "aside", selector: { entity: {} } },
+          // what it reads of its entity, else of the card's (a thermostat's target)
+          {
+            name: "aside_attribute",
+            selector: {
+              attribute: {
+                entity_id: (filledIn("aside") ? data.aside : entity) as string,
+              },
+            },
+          },
+        ]
+      : []),
     ...(format.length ? [heading("format_heading"), ...format] : []),
     ...(range.shown
       ? [

@@ -224,7 +224,7 @@ Coming from the entity card? [Moving to 3.0](/guide/migrating) maps its keys to 
 | `prefix`, `suffix`        | –                            | Text before and after the value.                                                                                                                                                                   |
 | `min`, `max`              | the entity's, else 0 and 100 | The range of a bar, a gauge, segments, a glow or a ring of the card's value. Written, they also scale a plot of the entity's state (`sparkline`, `columns`) that has no `min` or `max` of its own. |
 | `status`                  | the rule's, else the kind's  | The status on the line: a text, a template, or `false` for none. It wins over the rules.                                                                                                           |
-| `secondary`               | the kind's                   | What follows the value and the status on the line. Template allowed.                                                                                                                               |
+| `secondary`               | the kind's                   | What follows the value and the status on the line. Template allowed. `false` for none, not even the kind's.                                                                                        |
 | `show_name`, `show_value` | `true`                       | `false` leaves out the name or the value.                                                                                                                                                          |
 
 ### Look

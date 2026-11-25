@@ -597,6 +597,11 @@ describe("card config schemas", () => {
       { entity: B, rules: [] },
     ])
       expect(poster({ aside }), JSON.stringify(aside)).toBeTruthy();
+    // the line under the value: a text, or false for none
+    for (const type of ["custom:poster-card-pro", "custom:tile-card-pro"]) {
+      expect(validate({ type, entity: H, secondary: false })).toBeNull();
+      expect(validate({ type, entity: H, secondary: true })).toBeTruthy();
+    }
     // a tile's line has no second value
     expect(validate({ type: "custom:tile-card-pro", entity: H, aside: B })).toBeTruthy();
   });

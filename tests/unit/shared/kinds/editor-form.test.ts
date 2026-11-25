@@ -13,6 +13,7 @@ import {
   conditionFromForm,
   conditionToForm,
   configToForm,
+  fitAside,
   formToConfig,
   seriesFromForm,
   seriesToForm,
@@ -1280,5 +1281,73 @@ describe("the editor form: a ring of another entity and a second value", () => {
     ).not.toHaveProperty("aside");
     // the tile has none
     expect(formOf({ ...TILE }, "tile")).not.toHaveProperty("aside");
+  });
+});
+
+describe("the editor form: the second value's attribute and the line under the value", () => {
+  const TEMP = { type: "custom:poster-card-pro", entity: "sensor.living_room_temperature" };
+  const CLIMATE = { type: "custom:poster-card-pro", entity: "climate.living_room" };
+  const attrs: Record<string, string[]> = {
+    "climate.living_room": ["temperature", "current_temperature"],
+    "sensor.outdoor_aqi": ["unit_of_measurement"],
+    "sensor.living_room_temperature": ["unit_of_measurement"],
+  };
+  const attrsOf = (id: string) => attrs[id] ?? null;
+
+  it("shows the attribute a second value reads, and writes it back", () => {
+    const aside = { entity: "climate.living_room", attribute: "temperature" };
+    expect(formOf({ ...TEMP, aside })).toMatchObject({
+      aside: "climate.living_room",
+      aside_attribute: "temperature",
+    });
+    expect(
+      edit(TEMP, { aside: "climate.living_room", aside_attribute: "temperature" }).aside,
+    ).toEqual(aside);
+    // the card's attribute: no entity of its own
+    expect(edit(CLIMATE, { aside_attribute: "temperature" }).aside).toEqual({
+      attribute: "temperature",
+    });
+    // cleared: the entity alone is its id
+    expect(edit({ ...TEMP, aside }, { aside_attribute: "" }).aside).toBe("climate.living_room");
+  });
+
+  it("drops an attribute the entity it reads does not have", () => {
+    // another entity for the second value
+    expect(
+      fitAside(
+        { ...TEMP, aside: { entity: "sensor.outdoor_aqi", attribute: "temperature", decimals: 1 } },
+        attrsOf,
+      ),
+    ).toMatchObject({ aside: { entity: "sensor.outdoor_aqi", decimals: 1 } });
+    expect(
+      fitAside(
+        { ...TEMP, aside: { entity: "sensor.outdoor_aqi", attribute: "temperature" } },
+        attrsOf,
+      ).aside,
+    ).toBe("sensor.outdoor_aqi");
+    // another entity for the card while the second value reads the card's: nothing left, it goes
+    expect(fitAside({ ...TEMP, aside: { attribute: "temperature" } }, attrsOf)).not.toHaveProperty(
+      "aside",
+    );
+    // what the entity has stays; an entity not known keeps it
+    const kept = { ...CLIMATE, aside: { attribute: "temperature" } };
+    expect(fitAside(kept, attrsOf)).toBe(kept);
+    const unknown = { ...TEMP, aside: { entity: "sensor.gone", attribute: "x" } };
+    expect(fitAside(unknown, attrsOf)).toBe(unknown);
+  });
+
+  it("turns the line under the value off and on", () => {
+    expect(formOf(TEMP).show_secondary).toBe(true);
+    expect(formOf({ ...TEMP, secondary: false })).toMatchObject({
+      show_secondary: false,
+      secondary: "",
+    });
+    expect(edit(TEMP, { show_secondary: false }).secondary).toBe(false);
+    expect(edit({ ...TEMP, secondary: false }, { show_secondary: true })).not.toHaveProperty(
+      "secondary",
+    );
+    expect(edit({ ...TEMP, secondary: "Hi" }, { name: "x" }).secondary).toBe("Hi");
+    // on a tile too
+    expect(edit(TILE, { show_secondary: false }, "tile").secondary).toBe(false);
   });
 });

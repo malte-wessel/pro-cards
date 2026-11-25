@@ -10,6 +10,7 @@ _Beta_
 - **Edit a schedule on the card** with a mouse, a finger or the keyboard: select, move, copy, resize and draw blocks across days; Done saves the week in one go. [Editing](https://malte-wessel.github.io/pro-cards/cards/schedule-card#editing-on-the-card)
 - **Schedules on tiles and posters:** the new `schedule` kind shows when it changes next and the day's blocks. [Kinds](https://malte-wessel.github.io/pro-cards/cards/kinds#schedule)
 - **A second value on the poster:** `aside` puts another value beside the value, smaller and in the secondary colour: a target beside a temperature (`aside: { entity: climate.living_room, attribute: temperature }`). [Poster](https://malte-wessel.github.io/pro-cards/cards/poster-card#a-second-value)
+- **`secondary: false`** leaves the line under a poster's value (a tile's: what follows the value) out, the kind's too; the visual editor has a switch for it.
 - **A ring of another entity:** `icon: { ring: sensor.valve }` draws another entity's value around the icon, on its own scale, on posters, tiles and badges; `{ entity, attribute, min, max, color }` for its options. [Look](https://malte-wessel.github.io/pro-cards/cards/look#the-places)
 - **Plots on one scale:** `min` and `max` on a sparkline or columns visual set its scale, so cards side by side can be compared (`visual: { type: columns, max: 100 }`). Values beyond them widen the scale, nothing is cut off; with either, a column is as bright as it is tall. [Look](https://malte-wessel.github.io/pro-cards/cards/look#plots-on-one-scale)
 

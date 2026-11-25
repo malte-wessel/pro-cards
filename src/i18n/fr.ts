@@ -770,6 +770,7 @@ const fr: Translation = {
   "editor.card.field.value": "Valeur",
   "editor.card.field.secondary": "Ligne secondaire",
   "editor.card.field.aside": "Deuxième valeur",
+  "editor.card.field.aside_attribute": "Attribut de la deuxième valeur",
   "editor.card.field.unit": "Unité",
   "editor.card.field.decimals": "Décimales",
   "editor.card.field.format": "Format",
@@ -779,6 +780,7 @@ const fr: Translation = {
   "editor.card.field.min": "De (min)",
   "editor.card.field.max": "À (max)",
   "editor.card.field.show_name": "Afficher le nom",
+  "editor.card.field.show_secondary": "Afficher la ligne secondaire",
   "editor.card.field.show_value": "Afficher la valeur",
   "editor.card.field.icon_thing": "L'icône affiche",
   "editor.card.field.icon_src": "Image",
@@ -889,6 +891,8 @@ const fr: Translation = {
   "editor.card.help.prefix": "Avant la valeur, comme ~ ou +",
   "editor.card.help.aside":
     "Une autre valeur à côté de la valeur, plus petite (une consigne, une prévision)",
+  "editor.card.help.aside_attribute":
+    "Vide : son état ; sans entité pour la deuxième valeur, l'attribut de la carte",
   "editor.card.help.icon_ring_entity":
     "Une autre entité pour l'anneau ; vide : la valeur de la carte",
   "editor.card.help.suffix": "Après la valeur",
