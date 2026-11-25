@@ -786,6 +786,8 @@ const nb: Translation = {
   "editor.card.field.visual_bucket": "Intervall",
   "editor.card.field.visual_smoothing": "Utjevning",
   "editor.card.field.visual_axis": "Akser",
+  "editor.card.field.visual_min": "Skala nederst",
+  "editor.card.field.visual_max": "Skala øverst",
   "editor.card.field.visual_src": "Kilde",
   "editor.card.field.visual_opacity": "Opasitet",
   "editor.card.field.visual_tint": "Toning",
@@ -889,6 +891,10 @@ const nb: Translation = {
   "editor.card.help.visual_src": "En annen entitets historikk. Tom: dette kortets",
   "editor.card.help.visual_opacity": "Hvor mye av bildet som skinner gjennom",
   "editor.card.help.visual_bucket": "Minutter per søyle eller blokk",
+  "editor.card.help.visual_min":
+    "Lavere verdier utvider skalaen. Tom: kortets minimum, ellers dataenes",
+  "editor.card.help.visual_max":
+    "Høyere verdier utvider skalaen. Tom: kortets maksimum, ellers dataenes",
   "editor.card.help.status": "En tekst eller en mal. Tom: fra typen eller regelen som passer",
   "editor.card.help.rules":
     "Den første regelen som passer endrer utseendet: fargen, ikonet, statusen og mer",

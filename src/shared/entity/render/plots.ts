@@ -7,6 +7,7 @@ import {
   clampedSeries,
   lineBuckets,
   lineMeans,
+  plotScale,
   smoothPath,
   type LastBucket,
   type MeanBucket,
@@ -40,6 +41,10 @@ export interface PlotCtx {
   bucketMin?: number;
   smoothMin?: number;
   axis?: boolean;
+  // the scale's written limits (the v3 cards' visual, or the card's for its own entity): soft, data
+  // beyond them widens the scale
+  min?: number;
+  max?: number;
   // a strip as a ribbon along the card's bottom edge: no times, its own height
   edge?: boolean;
 }
@@ -165,19 +170,13 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
     const smooth = plot._ctx.smoothMin ?? ctx.cfg.smoothMin;
     const sampled = lineMeans(pts, t0, now, lineBuckets(now - t0, smooth, W));
     if (sampled.length < 2) return empty();
-    let lo = Infinity,
-      hi = -Infinity;
-    for (const p of sampled) {
-      if (p.v < lo) lo = p.v;
-      if (p.v > hi) hi = p.v;
-    }
-    if (hi === lo) {
-      hi += 1;
-      lo -= 1;
-    }
-    const pad = (hi - lo) * 0.1;
-    lo -= pad;
-    hi += pad;
+    const sc = plotScale(
+      sampled.map((p) => p.v),
+      plot._ctx,
+      false,
+      0.1,
+    );
+    const { lo, hi } = sc;
     const yOf = (v: number) => 4 + (H - 8) * (1 - (v - lo) / (hi - lo));
     const xy = sampled.map((p) => [+xOf(p.t).toFixed(1), +yOf(p.v).toFixed(1)]);
     const d = smoothPath(xy);
@@ -187,8 +186,8 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
       plot,
       labels,
       [
-        { v: hi - pad, y: yOf(hi - pad) },
-        { v: lo + pad, y: yOf(lo + pad) },
+        { v: sc.top, y: yOf(sc.top) },
+        { v: sc.bottom, y: yOf(sc.bottom) },
       ],
       W,
       H,
@@ -222,11 +221,11 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
     const buckets = bucketMean(pts, t0, now, nb, true);
     const vals = buckets.filter((b): b is MeanBucket => b !== null).map((b) => b.v);
     if (!vals.length) return empty();
-    const vmax = Math.max(0, ...vals),
-      vmin = Math.min(0, ...vals),
-      range = vmax - vmin || 1;
-    const yOf = (v: number) => H * (1 - (v - vmin) / range),
-      y0 = yOf(0);
+    const sc = plotScale(vals, plot._ctx, true, 0);
+    const vmax = sc.top,
+      range = sc.hi - sc.lo;
+    const yOf = (v: number) => H * (1 - (v - sc.lo) / range),
+      y0 = yOf(sc.base);
     let peak = -1,
       pv = -Infinity;
     buckets.forEach((b, i) => {
@@ -235,13 +234,26 @@ export const drawPlot = (ctx: RenderCtx, plot: PlotElement, size?: { w: number; 
         peak = i;
       }
     });
+    // with a limit written, a column is as bright as it is tall on the scale; else the window's
+    // peak is full and the rest by how near they come to it
+    const opOf = (v: number, i: number) => {
+      if (sc.fixed) {
+        const span = v >= sc.base ? sc.hi - sc.base : sc.base - sc.lo;
+        return +(0.4 + (0.6 * Math.abs(v - sc.base)) / (span || 1)).toFixed(2);
+      }
+      return i === peak ? 1 : vmax > 0 && v >= 0.66 * vmax ? 0.7 : 0.4;
+    };
     const gap = Math.min(3, bw * 0.25);
-    let html = axisLabels(ctx, plot, labels, [{ v: vmax, y: yOf(vmax) }], W, H, t0, now);
+    // the top of the scale; a written scale that does not start at 0 names its bottom too
+    const lines = [{ v: vmax, y: yOf(vmax) }];
+    if (sc.fixed && sc.bottom !== 0 && sc.bottom !== sc.top)
+      lines.push({ v: sc.bottom, y: yOf(sc.bottom) });
+    let html = axisLabels(ctx, plot, labels, lines, W, H, t0, now);
     buckets.forEach((b, i) => {
       if (!b) return;
       const y = Math.min(yOf(b.v), y0),
         h = Math.max(1, Math.abs(y0 - yOf(b.v)));
-      const op = i === peak ? 1 : vmax > 0 && b.v >= 0.66 * vmax ? 0.7 : 0.4;
+      const op = opOf(b.v, i);
       html += `<rect class="col" x="${(i * bw + gap / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(1, bw - gap).toFixed(1)}" height="${h.toFixed(1)}" rx="2" opacity="${op}"/>`;
     });
     html += `<g class="hover"><rect class="hl" y="-1" width="${(Math.max(1, bw - gap) + 2).toFixed(1)}" height="${H + 2}" rx="3"/></g>`;

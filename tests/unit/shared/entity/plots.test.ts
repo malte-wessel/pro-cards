@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { plotEl, plotRows } from "../../../../src/shared/entity/render/blocks.ts";
+import { blockEl, plotEl, plotRows } from "../../../../src/shared/entity/render/blocks.ts";
 import { drawPlot } from "../../../../src/shared/entity/render/plots.ts";
+import type { EntityItem, PlotOptions } from "../../../../src/shared/entity/config.ts";
 import type { EntityModel, RenderCtx } from "../../../../src/shared/entity/model.ts";
 import { normalizeEntityCardConfig } from "../../../../src/entity-card.ts";
 import type { HassEntity, HomeAssistant } from "../../../../src/shared/ha.ts";
@@ -128,5 +129,54 @@ describe("the share of a taller card a group asks for", () => {
   it("leaves out layouts that draw no plots", () => {
     expect(plotRows("row", 2, ["sparkline"])).toBe(0);
     expect(plotRows("table", 2, ["sparkline"])).toBe(0);
+  });
+});
+
+// a v3 card's plot (its visual's options in `plot`), RISING's 1 to 3 at a measured 200 × 120
+const scaled = (visual: string, plot: PlotOptions, item: Partial<EntityItem> = {}) => {
+  const ctx = ctxOf(visual);
+  const ent = { ...ctx.cfg.entities[0], plot, ...item } as EntityItem;
+  const el = blockEl(ctx, ent, 0, {} as EntityModel) as HTMLElement & { clientWidth: number };
+  Object.defineProperty(el, "clientWidth", { value: 200 });
+  Object.defineProperty(el, "clientHeight", { value: 120 });
+  drawPlot(ctx, el as Parameters<typeof drawPlot>[1]);
+  return el;
+};
+const cols = (el: HTMLElement) =>
+  [...el.querySelectorAll("rect.col")].map((c) => ({
+    y: Number(c.getAttribute("y")),
+    h: Number(c.getAttribute("height")),
+    op: Number(c.getAttribute("opacity")),
+  }));
+const tallest = (el: HTMLElement) => Math.min(...cols(el).map((c) => c.y));
+
+describe("a plot's scale", () => {
+  it("fits its data without limits: the tallest column reaches the top at full brightness", () => {
+    const el = scaled("columns", {});
+    expect(tallest(el)).toBe(0);
+    expect(Math.max(...cols(el).map((c) => c.op))).toBe(1);
+  });
+  it("draws on the written scale, each column as bright as it is tall", () => {
+    const el = scaled("columns", { max: 100 });
+    // 3 of 100: the tallest column reaches 3 % of the height
+    expect(tallest(el)).toBeCloseTo(120 * 0.97, 0);
+    for (const c of cols(el)) expect(c.op).toBeLessThan(0.43);
+  });
+  it("grows columns from a min above 0", () => {
+    const el = scaled("columns", { min: 1, max: 5 });
+    // every column stands on the floor (1), the tallest (3) half way up (one at the floor is
+    // drawn a pixel tall)
+    for (const c of cols(el).filter((c) => c.h > 1)) expect(c.y + c.h).toBeCloseTo(120, 0);
+    expect(tallest(el)).toBeCloseTo(60, 0);
+  });
+  it("takes the card's min and max for a plot of the card's own state", () => {
+    expect(tallest(scaled("columns", {}, { max: 10 }))).toBeCloseTo(120 * 0.7, 0);
+    // the visual's own limit wins
+    expect(tallest(scaled("columns", { max: 100 }, { max: 10 }))).toBeCloseTo(120 * 0.97, 0);
+  });
+  it("leaves the card's min and max to the card's value for another entity or value", () => {
+    expect(tallest(scaled("columns", { src: "sensor.a" }, { max: 10 }))).toBe(0);
+    const attr = { max: 10, valueSrc: { kind: "attribute", key: "level" } } as const;
+    expect(tallest(scaled("columns", {}, attr))).toBe(0);
   });
 });

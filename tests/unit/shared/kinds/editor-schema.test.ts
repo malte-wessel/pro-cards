@@ -292,6 +292,8 @@ describe("the editor's icon and visual", () => {
       "visual_today",
       "visual_bucket",
       "visual_smoothing",
+      "visual_min",
+      "visual_max",
       "visual_axis",
       "visual_src",
     ]);
@@ -299,10 +301,13 @@ describe("the editor's icon and visual", () => {
     expect(visual({ visual_thing: "columns", visual_today: true })).toEqual([
       "visual_today",
       "visual_bucket",
+      "visual_min",
+      "visual_max",
       "visual_axis",
       "visual_src",
     ]);
     expect(visual({ visual_thing: "strip" })).not.toContain("visual_axis");
+    expect(visual({ visual_thing: "strip" })).not.toContain("visual_max");
     expect(visual({ visual_thing: "image" })).toEqual([
       "visual_src",
       "visual_opacity",

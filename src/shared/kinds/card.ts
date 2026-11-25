@@ -530,6 +530,8 @@ export abstract class KindCardBase extends EntityCardBase {
             smoothing: v.smoothing,
             axis: v.axis,
             src: v.src,
+            min: v.min,
+            max: v.max,
             ...(v.type === "strip" && v.variant === "edge" ? { edge: true } : {}),
           }
         : undefined;

@@ -789,6 +789,8 @@ const es: Translation = {
   "editor.card.field.visual_bucket": "Intervalo",
   "editor.card.field.visual_smoothing": "Suavizado",
   "editor.card.field.visual_axis": "Ejes",
+  "editor.card.field.visual_min": "Base de la escala",
+  "editor.card.field.visual_max": "Tope de la escala",
   "editor.card.field.visual_src": "Origen",
   "editor.card.field.visual_opacity": "Opacidad",
   "editor.card.field.visual_tint": "Tinte",
@@ -892,6 +894,10 @@ const es: Translation = {
   "editor.card.help.visual_src": "El historial de otra entidad. Vacío: el de esta tarjeta",
   "editor.card.help.visual_opacity": "Cuánto se transparenta la imagen",
   "editor.card.help.visual_bucket": "Minutos por columna o bloque",
+  "editor.card.help.visual_min":
+    "Los valores menores amplían la escala. Vacío: el mínimo de la tarjeta, si no el de los datos",
+  "editor.card.help.visual_max":
+    "Los valores mayores amplían la escala. Vacío: el máximo de la tarjeta, si no el de los datos",
   "editor.card.help.status":
     "Un texto o una plantilla. Vacío: el del tipo o el de la regla que coincide",
   "editor.card.help.rules":

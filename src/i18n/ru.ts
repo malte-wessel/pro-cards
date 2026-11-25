@@ -787,6 +787,8 @@ const ru: Translation = {
   "editor.card.field.visual_bucket": "Интервал",
   "editor.card.field.visual_smoothing": "Сглаживание",
   "editor.card.field.visual_axis": "Оси",
+  "editor.card.field.visual_min": "Низ шкалы",
+  "editor.card.field.visual_max": "Верх шкалы",
   "editor.card.field.visual_src": "Источник",
   "editor.card.field.visual_opacity": "Непрозрачность",
   "editor.card.field.visual_tint": "Оттенок",
@@ -890,6 +892,10 @@ const ru: Translation = {
   "editor.card.help.visual_src": "История другого объекта. Пусто: объекта этой карточки",
   "editor.card.help.visual_opacity": "Насколько сильно проступает изображение",
   "editor.card.help.visual_bucket": "Минут на столбец или блок",
+  "editor.card.help.visual_min":
+    "Меньшие значения расширяют шкалу. Пусто: минимум карточки, иначе данных",
+  "editor.card.help.visual_max":
+    "Большие значения расширяют шкалу. Пусто: максимум карточки, иначе данных",
   "editor.card.help.status": "Текст или шаблон. Пусто: статус типа или подходящего правила",
   "editor.card.help.rules": "Первое подходящее правило меняет вид: цвет, иконку, статус и другое",
   "editor.card.help.badges":

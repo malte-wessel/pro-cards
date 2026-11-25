@@ -226,7 +226,7 @@ Options a thing cannot use are caught: with a written `kind` the card shows an e
 
 ### By rule
 
-A rule takes `icon` and `visual` too, drawn over the card's while it matches. As on the card, an object without `type` changes options only, a `type` draws another thing and `false` empties the place. A rule never changes a plot's window: `hours`, `bucket`, `smoothing` and a plot's `src` stay the card's.
+A rule takes `icon` and `visual` too, drawn over the card's while it matches. As on the card, an object without `type` changes options only, a `type` draws another thing and `false` empties the place. A rule never sets a plot's window or scale: it takes no `hours`, `bucket`, `smoothing`, `min`, `max` or a plot's `src`. A rule that names another plot (`visual: columns` over the card's sparkline) draws it with the defaults, and with the card's `min` and `max` where written.
 
 Each place is resolved in layers: the kind's default, then the card's, then the first matching rule's.
 
@@ -335,6 +335,25 @@ With an `entity`, the card takes the name, the icon, the state and the colour fr
 
 :::
 
+### Plots on one scale
+
+A plot fits its own data: columns reach from 0 to the window's highest bucket, a line from its lowest value to its highest. Side by side, cards are then hard to compare. `min` and `max` on the visual give them one scale. A plot of the card's own entity takes the card's `min` and `max` as well.
+
+::: live
+
+```yaml
+- type: custom:poster-card-pro
+  entity: sensor.living_room_humidity
+  visual: { type: columns, max: 100 }
+  grid_options: { columns: 6 }
+- type: custom:poster-card-pro
+  entity: sensor.bathroom_humidity
+  visual: { type: columns, max: 100 }
+  grid_options: { columns: 6 }
+```
+
+:::
+
 ### A card without an entity
 
 A card needs no entity: templates fill it. This one counts the lights that are on. Without an entity a tap does nothing until you give it a [`tap_action`](/cards/actions).
@@ -364,40 +383,40 @@ A card needs no entity: templates fill it. This one counts the lights that are o
 
 ### Texts and colour
 
-| Key            | Default                              | What it does                                                               |
-| -------------- | ------------------------------------ | -------------------------------------------------------------------------- |
-| `name`         | the friendly name                    | The name. Text or template.                                                |
-| `value`        | the state, or the kind's value       | The value. Text or template.                                               |
-| `attribute`    | –                                    | Shows this attribute of the entity in place of its state.                  |
-| `unit`         | the entity's unit                    | The unit after a number.                                                   |
-| `decimals`     | Home Assistant's                     | Decimal places of a number, `0` to `3`.                                    |
-| `prefix`       | –                                    | A text before the value.                                                   |
-| `suffix`       | –                                    | A text after the value.                                                    |
-| `status`       | the rule's, else the kind's          | The status. Text or template; `false` for none.                            |
-| `status_badge` | `false`                              | Tile only: the status as the first badge instead of on the line.           |
-| `secondary`    | the kind's line                      | The extra line. Text or template.                                          |
-| `show_name`    | `true`                               | `false` hides the name.                                                    |
-| `show_value`   | `true`                               | `false` hides the value.                                                   |
-| `color`        | the kind's, else Home Assistant's    | The card's colour: a theme colour name, hex, `rgb()`, `var()` or template. |
-| `min`, `max`   | the entity's own, else `0` and `100` | The range of a ring, a bar, a gauge, segments and a glow.                  |
-| `rules`        | the kind's                           | Look by value or state; first match wins. `[]` drops the kind's.           |
-| `kind`         | detected from the entity             | The kind; `none` draws only what you write. See [Kinds](/cards/kinds).     |
+| Key            | Default                              | What it does                                                                                                                                                                    |
+| -------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`         | the friendly name                    | The name. Text or template.                                                                                                                                                     |
+| `value`        | the state, or the kind's value       | The value. Text or template.                                                                                                                                                    |
+| `attribute`    | –                                    | Shows this attribute of the entity in place of its state.                                                                                                                       |
+| `unit`         | the entity's unit                    | The unit after a number.                                                                                                                                                        |
+| `decimals`     | Home Assistant's                     | Decimal places of a number, `0` to `3`.                                                                                                                                         |
+| `prefix`       | –                                    | A text before the value.                                                                                                                                                        |
+| `suffix`       | –                                    | A text after the value.                                                                                                                                                         |
+| `status`       | the rule's, else the kind's          | The status. Text or template; `false` for none.                                                                                                                                 |
+| `status_badge` | `false`                              | Tile only: the status as the first badge instead of on the line.                                                                                                                |
+| `secondary`    | the kind's line                      | The extra line. Text or template.                                                                                                                                               |
+| `show_name`    | `true`                               | `false` hides the name.                                                                                                                                                         |
+| `show_value`   | `true`                               | `false` hides the value.                                                                                                                                                        |
+| `color`        | the kind's, else Home Assistant's    | The card's colour: a theme colour name, hex, `rgb()`, `var()` or template.                                                                                                      |
+| `min`, `max`   | the entity's own, else `0` and `100` | The range of a ring, a bar, a gauge, segments and a glow. Written, they also scale a plot of the entity's state (`sparkline`, `columns`) that has no `min` or `max` of its own. |
+| `rules`        | the kind's                           | Look by value or state; first match wins. `[]` drops the kind's.                                                                                                                |
+| `kind`         | detected from the entity             | The kind; `none` draws only what you write. See [Kinds](/cards/kinds).                                                                                                          |
 
 ### Rule keys
 
-| Key         | What it does                                                                                              |
-| ----------- | --------------------------------------------------------------------------------------------------------- |
-| `state`     | Matches the value or the entity's state. Quote `"on"` and `"off"`.                                        |
-| `below`     | Matches a value under this number.                                                                        |
-| `above`     | Matches a value at or over this number.                                                                   |
-| `attribute` | Reads this attribute of the entity in place of the value (the entity of now, never a plot's past values). |
-| `color`     | The card's colour while the rule matches. Wins over `color`.                                              |
-| `icon`      | An icon's name, or the icon place's thing or options (no actions). Wins over `icon`.                      |
-| `visual`    | The visual place's thing or options, or `false`. No `hours`, `bucket`, `smoothing`, or a plot's `src`.    |
-| `status`    | The status text while the rule matches.                                                                   |
-| `tint_card` | `true`: the whole card in the rule's colour.                                                              |
-| `pulse`     | `true`: the status badge pulses.                                                                          |
-| `style`     | The status badge's look: `outline`, `soft`, `filled`, `plain` or `tag`.                                   |
+| Key         | What it does                                                                                                         |
+| ----------- | -------------------------------------------------------------------------------------------------------------------- |
+| `state`     | Matches the value or the entity's state. Quote `"on"` and `"off"`.                                                   |
+| `below`     | Matches a value under this number.                                                                                   |
+| `above`     | Matches a value at or over this number.                                                                              |
+| `attribute` | Reads this attribute of the entity in place of the value (the entity of now, never a plot's past values).            |
+| `color`     | The card's colour while the rule matches. Wins over `color`.                                                         |
+| `icon`      | An icon's name, or the icon place's thing or options (no actions). Wins over `icon`.                                 |
+| `visual`    | The visual place's thing or options, or `false`. No `hours`, `bucket`, `smoothing`, `min`, `max`, or a plot's `src`. |
+| `status`    | The status text while the rule matches.                                                                              |
+| `tint_card` | `true`: the whole card in the rule's colour.                                                                         |
+| `pulse`     | `true`: the status badge pulses.                                                                                     |
+| `style`     | The status badge's look: `outline`, `soft`, `filled`, `plain` or `tag`.                                              |
 
 A rule needs at least one of `state`, `below` and `above`.
 
@@ -420,30 +439,31 @@ The icon also takes its own `tap_action`, `hold_action` and `double_tap_action` 
 
 ### Visual things
 
-| Thing       | Options                                       | Draws                                                                       |
-| ----------- | --------------------------------------------- | --------------------------------------------------------------------------- |
-| `glow`      | –                                             | The card lit from below in its colour, as strong as the value's level.      |
-| `image`     | `src`, `opacity`, `tint`, `blur`              | A picture behind the whole card.                                            |
-| `flow`      | `variant`                                     | The wind's or the rain's animation behind the card. Wind and rain only.     |
-| `cover`     | `variant`                                     | A cover's drawing. Cover only.                                              |
-| `path`      | –                                             | A robot's path. Vacuum and lawn mower only.                                 |
-| `line`      | –                                             | The power line. Grid only.                                                  |
-| `sparkline` | `hours`, `bucket`, `smoothing`, `axis`, `src` | A line of the history. A weather's: the hours ahead; a trend's: its series. |
-| `columns`   | `hours`, `bucket`, `axis`, `src`              | A bar per bucket.                                                           |
-| `strip`     | `hours`, `bucket`, `src`, `variant`           | A block per bucket, coloured by the rule each one matched.                  |
-| `bar`       | –                                             | The value between `min` and `max` as a bar; a timer's time left.            |
-| `gauge`     | –                                             | The value between `min` and `max` as an arc.                                |
-| `segments`  | –                                             | Ten segments, filled to the value.                                          |
-| `sun`       | –                                             | The sun's day, with the sun where it is now. Sun only.                      |
+| Thing       | Options                                                     | Draws                                                                       |
+| ----------- | ----------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `glow`      | –                                                           | The card lit from below in its colour, as strong as the value's level.      |
+| `image`     | `src`, `opacity`, `tint`, `blur`                            | A picture behind the whole card.                                            |
+| `flow`      | `variant`                                                   | The wind's or the rain's animation behind the card. Wind and rain only.     |
+| `cover`     | `variant`                                                   | A cover's drawing. Cover only.                                              |
+| `path`      | –                                                           | A robot's path. Vacuum and lawn mower only.                                 |
+| `line`      | –                                                           | The power line. Grid only.                                                  |
+| `sparkline` | `hours`, `bucket`, `smoothing`, `axis`, `src`, `min`, `max` | A line of the history. A weather's: the hours ahead; a trend's: its series. |
+| `columns`   | `hours`, `bucket`, `axis`, `src`, `min`, `max`              | A bar per bucket.                                                           |
+| `strip`     | `hours`, `bucket`, `src`, `variant`                         | A block per bucket, coloured by the rule each one matched.                  |
+| `bar`       | –                                                           | The value between `min` and `max` as a bar; a timer's time left.            |
+| `gauge`     | –                                                           | The value between `min` and `max` as an arc.                                |
+| `segments`  | –                                                           | Ten segments, filled to the value.                                          |
+| `sun`       | –                                                           | The sun's day, with the sun where it is now. Sun only.                      |
 
-| Option      | What it does                                                                                                                                                                                     |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `src`       | `image`: a URL, a template that renders one, or an entity whose picture it shows. A plot: another entity's history.                                                                              |
-| `opacity`   | How much of the picture shows through its shade, `0` to `1`. Default `0.3`.                                                                                                                      |
-| `tint`      | A colour mixed into the shade.                                                                                                                                                                   |
-| `blur`      | Blurs the picture: a number of px, `true` for 20, `false` for none.                                                                                                                              |
-| `variant`   | Flow: as for the icon. Cover: `shutter`, `blind`, `curtain`, `garage`, `gate`, `awning`, `window`. Strip: `timeline` (below the texts, with its times) or `edge` (along the card's bottom edge). |
-| `hours`     | The window in hours, or `today` (since midnight). Default 24; a weather's forecast 12 ahead, a trend 6 back, solar `today`.                                                                      |
-| `bucket`    | A bucket's minutes, at least 5: a column or a block of the strip. Default 60.                                                                                                                    |
-| `smoothing` | The sparkline's averaging in minutes, at least 5. Default: by the plot's width.                                                                                                                  |
-| `axis`      | `true`: the plot's axes.                                                                                                                                                                         |
+| Option       | What it does                                                                                                                                                                                                                                                                                                                                        |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src`        | `image`: a URL, a template that renders one, or an entity whose picture it shows. A plot: another entity's history.                                                                                                                                                                                                                                 |
+| `opacity`    | How much of the picture shows through its shade, `0` to `1`. Default `0.3`.                                                                                                                                                                                                                                                                         |
+| `tint`       | A colour mixed into the shade.                                                                                                                                                                                                                                                                                                                      |
+| `blur`       | Blurs the picture: a number of px, `true` for 20, `false` for none.                                                                                                                                                                                                                                                                                 |
+| `variant`    | Flow: as for the icon. Cover: `shutter`, `blind`, `curtain`, `garage`, `gate`, `awning`, `window`. Strip: `timeline` (below the texts, with its times) or `edge` (along the card's bottom edge).                                                                                                                                                    |
+| `hours`      | The window in hours, or `today` (since midnight). Default 24; a weather's forecast 12 ahead, a trend 6 back, solar `today`.                                                                                                                                                                                                                         |
+| `bucket`     | A bucket's minutes, at least 5: a column or a block of the strip. Default 60.                                                                                                                                                                                                                                                                       |
+| `smoothing`  | The sparkline's averaging in minutes, at least 5. Default: by the plot's width.                                                                                                                                                                                                                                                                     |
+| `axis`       | `true`: the plot's axes.                                                                                                                                                                                                                                                                                                                            |
+| `min`, `max` | A plot's scale, its bottom and top (not a weather's or a trend's own line). Values beyond it widen the scale, so nothing is cut off; a side left out fits the data. Left out on a plot of the card's own entity: the card's `min` and `max`, where written and the card shows the entity's state. With either, a column is as bright as it is tall. |

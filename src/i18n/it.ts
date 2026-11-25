@@ -788,6 +788,8 @@ const it: Translation = {
   "editor.card.field.visual_bucket": "Intervallo",
   "editor.card.field.visual_smoothing": "Livellamento",
   "editor.card.field.visual_axis": "Assi",
+  "editor.card.field.visual_min": "Base della scala",
+  "editor.card.field.visual_max": "Cima della scala",
   "editor.card.field.visual_src": "Sorgente",
   "editor.card.field.visual_opacity": "Opacità",
   "editor.card.field.visual_tint": "Tinta",
@@ -891,6 +893,10 @@ const it: Translation = {
   "editor.card.help.visual_src": "Lo storico di un'altra entità. Vuoto: quello di questa scheda",
   "editor.card.help.visual_opacity": "Quanto traspare l'immagine",
   "editor.card.help.visual_bucket": "Minuti per colonna o blocco",
+  "editor.card.help.visual_min":
+    "Valori più bassi allargano la scala. Vuoto: il minimo della scheda, altrimenti quello dei dati",
+  "editor.card.help.visual_max":
+    "Valori più alti allargano la scala. Vuoto: il massimo della scheda, altrimenti quello dei dati",
   "editor.card.help.status":
     "Un testo o un modello. Vuoto: quello del tipo o della regola corrispondente",
   "editor.card.help.rules":

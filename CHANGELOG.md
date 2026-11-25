@@ -9,10 +9,12 @@ _Beta_
 - **New schedule card** (`custom:schedule-card-pro`): a schedule helper's week, with when it changes next and each block's data. [Schedule](https://malte-wessel.github.io/pro-cards/cards/schedule-card)
 - **Edit a schedule on the card** with a mouse, a finger or the keyboard: select, move, copy, resize and draw blocks across days; Done saves the week in one go. [Editing](https://malte-wessel.github.io/pro-cards/cards/schedule-card#editing-on-the-card)
 - **Schedules on tiles and posters:** the new `schedule` kind shows when it changes next and the day's blocks. [Kinds](https://malte-wessel.github.io/pro-cards/cards/kinds#schedule)
+- **Plots on one scale:** `min` and `max` on a sparkline or columns visual set its scale, so cards side by side can be compared (`visual: { type: columns, max: 100 }`). Values beyond them widen the scale, nothing is cut off; with either, a column is as bright as it is tall. [Look](https://malte-wessel.github.io/pro-cards/cards/look#plots-on-one-scale)
 
 ### Changed: existing cards look different
 
 - **Schedules:** a schedule tile or poster showed On or Off; it now shows when it changes next and today's blocks (a tile is two rows high). `visual: false` leaves the blocks out.
+- **Plots of the card's own entity** take the `min` and `max` written on the card, as its bar, gauge and ring do; they fitted their data alone. A card that writes them (for a bar, a ring or a slider) now draws its plot on that scale: columns as bright as they are tall, growing from a `min` above 0.
 - **A soft badge's name** is in the badge's colour, as its value is; it was grey on the coloured tint.
 
 ## 3.2.0 – Timers that count down, names by their parts

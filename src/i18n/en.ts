@@ -784,6 +784,8 @@ const en = {
   "editor.card.field.visual_bucket": "Bucket",
   "editor.card.field.visual_smoothing": "Smoothing",
   "editor.card.field.visual_axis": "Axes",
+  "editor.card.field.visual_min": "Scale bottom",
+  "editor.card.field.visual_max": "Scale top",
   "editor.card.field.visual_src": "Source",
   "editor.card.field.visual_opacity": "Opacity",
   "editor.card.field.visual_tint": "Tint",
@@ -887,6 +889,10 @@ const en = {
   "editor.card.help.visual_src": "Another entity's history. Empty: this card's",
   "editor.card.help.visual_opacity": "How much of the picture shows through",
   "editor.card.help.visual_bucket": "Minutes per column or block",
+  "editor.card.help.visual_min":
+    "Lower values widen the scale. Empty: the card's min, else the data's",
+  "editor.card.help.visual_max":
+    "Higher values widen the scale. Empty: the card's max, else the data's",
   "editor.card.help.status": "A text or a template. Empty: the kind's or the matching rule's",
   "editor.card.help.rules":
     "The first rule that matches changes the look: the colour, the icon, the status and more",

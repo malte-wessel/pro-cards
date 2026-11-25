@@ -187,13 +187,16 @@ export interface ActionDefaults {
   // `hover: false` on the card: header badges, which answer by default, keep still too
   hoverOff?: boolean;
 }
-// a plot's own options (the v3 cards' `visual: { hours, bucket, smoothing, axis, src }`)
+// a plot's own options (the v3 cards' `visual: { hours, bucket, smoothing, axis, src, min, max }`)
 export interface PlotOptions {
   hours?: number | "today";
   bucket?: number;
   smoothing?: number;
   axis?: boolean;
   src?: string;
+  // the scale's limits as written on the visual
+  min?: number;
+  max?: number;
   // a strip as a ribbon along the card's bottom edge
   edge?: boolean;
 }

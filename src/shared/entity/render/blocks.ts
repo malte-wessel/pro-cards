@@ -95,10 +95,11 @@ export const blockEl = (
   if (ent.visual === "bar") return barEl(m);
   if (ent.visual === "gauge") return gaugeEl(ctx, ent, m);
   if (HISTORY_VISUALS.has(ent.visual)) {
-    // a plot of its own (the v3 cards' visual): its window, bucket, smoothing, axes and entity
+    // a plot of its own (the v3 cards' visual): its window, bucket, smoothing, axes, scale and entity
     const p = ent.plot;
     if (!p) return plotEl(ctx, ent, idx, m);
-    // another entity's history in its own unit and precision: its state, not the card's
+    // another entity's history in its own unit and precision: its state, not the card's, and only
+    // the visual's limits (the card's min and max scale the card's value)
     if (p.src) {
       const st = ctx.hass?.states[p.src];
       return plotEl(
@@ -111,15 +112,23 @@ export const blockEl = (
           bucketMin: p.bucket,
           smoothMin: p.smoothing,
           axis: p.axis,
+          min: p.min,
+          max: p.max,
           edge: p.edge,
         },
       );
     }
+    // the card's own entity: the visual's limits, else those written on the card where the card
+    // shows the entity's state, which is what the plot draws (never the entity's own min and max
+    // attributes or the bar's 0 to 100: a plot left alone fits its data)
+    const own = ent.valueSrc.kind === "state";
     return plotEl(ctx, ent, idx, m, {
       hours: p.hours,
       bucketMin: p.bucket,
       smoothMin: p.smoothing,
       axis: p.axis,
+      min: p.min ?? (own ? (ent.min ?? undefined) : undefined),
+      max: p.max ?? (own ? (ent.max ?? undefined) : undefined),
       edge: p.edge,
     });
   }

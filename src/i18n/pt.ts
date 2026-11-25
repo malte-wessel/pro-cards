@@ -788,6 +788,8 @@ const pt: Translation = {
   "editor.card.field.visual_bucket": "Agrupamento",
   "editor.card.field.visual_smoothing": "Suavização",
   "editor.card.field.visual_axis": "Eixos",
+  "editor.card.field.visual_min": "Base da escala",
+  "editor.card.field.visual_max": "Topo da escala",
   "editor.card.field.visual_src": "Origem",
   "editor.card.field.visual_opacity": "Opacidade",
   "editor.card.field.visual_tint": "Tonalidade",
@@ -891,6 +893,10 @@ const pt: Translation = {
   "editor.card.help.visual_src": "O histórico de outra entidade. Vazio: o deste cartão",
   "editor.card.help.visual_opacity": "Quanto da imagem transparece",
   "editor.card.help.visual_bucket": "Minutos por coluna ou bloco",
+  "editor.card.help.visual_min":
+    "Valores menores alargam a escala. Vazio: o mínimo do cartão, senão o dos dados",
+  "editor.card.help.visual_max":
+    "Valores maiores alargam a escala. Vazio: o máximo do cartão, senão o dos dados",
   "editor.card.help.status": "Um texto ou um modelo. Vazio: o do tipo ou da regra correspondente",
   "editor.card.help.rules":
     "A primeira regra que corresponde muda o aspeto: a cor, o ícone, o estado e mais",

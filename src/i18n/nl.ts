@@ -787,6 +787,8 @@ const nl: Translation = {
   "editor.card.field.visual_bucket": "Interval",
   "editor.card.field.visual_smoothing": "Afvlakking",
   "editor.card.field.visual_axis": "Assen",
+  "editor.card.field.visual_min": "Schaal onder",
+  "editor.card.field.visual_max": "Schaal boven",
   "editor.card.field.visual_src": "Bron",
   "editor.card.field.visual_opacity": "Dekking",
   "editor.card.field.visual_tint": "Tint",
@@ -891,6 +893,10 @@ const nl: Translation = {
     "De geschiedenis van een andere entiteit. Leeg: die van deze kaart",
   "editor.card.help.visual_opacity": "Hoeveel van de afbeelding doorschijnt",
   "editor.card.help.visual_bucket": "Minuten per kolom of blok",
+  "editor.card.help.visual_min":
+    "Lagere waarden verbreden de schaal. Leeg: het minimum van de kaart, anders dat van de gegevens",
+  "editor.card.help.visual_max":
+    "Hogere waarden verbreden de schaal. Leeg: het maximum van de kaart, anders dat van de gegevens",
   "editor.card.help.status":
     "Een tekst of een sjabloon. Leeg: die van de soort of van de passende regel",
   "editor.card.help.rules":

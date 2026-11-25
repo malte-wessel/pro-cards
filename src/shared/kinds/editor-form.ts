@@ -681,6 +681,8 @@ export const configToForm = (
     d.visual_hours = num(v.hours);
     d.visual_bucket = num(v.bucket);
     d.visual_smoothing = num(v.smoothing);
+    d.visual_min = num(v.min);
+    d.visual_max = num(v.max);
     d.visual_axis = v.axis === true;
     d.visual_src = v.src ?? "";
     d.visual_opacity = num(v.opacity);
@@ -792,7 +794,7 @@ const visualFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknown
   if (takes.includes("hours") && data.visual_today === true) o.hours = "today";
   else if (takes.includes("hours") && num(data.visual_hours) !== undefined)
     o.hours = data.visual_hours;
-  for (const k of ["bucket", "smoothing", "opacity"] as const)
+  for (const k of ["bucket", "smoothing", "min", "max", "opacity"] as const)
     if (takes.includes(k) && num(data[`visual_${k}`]) !== undefined) o[k] = data[`visual_${k}`];
   if (takes.includes("axis") && data.visual_axis === true) o.axis = true;
   for (const k of ["src", "tint", "variant"] as const)

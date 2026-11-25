@@ -805,6 +805,14 @@
           "type": "number",
           "minimum": 5,
           "description": "sparkline: the averaging bucket in minutes (default: one point per 12 px)"
+        },
+        "min": {
+          "type": "number",
+          "description": "sparkline, columns: the scale's bottom; lower values widen it. Left out: the card's min for a plot of its own entity, else fitted to the data"
+        },
+        "max": {
+          "type": "number",
+          "description": "sparkline, columns: the scale's top; higher values widen it. Left out: the card's max for a plot of its own entity, else fitted to the data"
         }
       },
       "additionalProperties": false,
@@ -927,7 +935,7 @@
           },
           "then": {
             "propertyNames": {
-              "enum": ["type", "hours", "bucket", "src", "axis", "smoothing"]
+              "enum": ["type", "hours", "bucket", "src", "axis", "smoothing", "min", "max"]
             }
           }
         },
@@ -943,7 +951,7 @@
           },
           "then": {
             "propertyNames": {
-              "enum": ["type", "hours", "bucket", "src", "axis"]
+              "enum": ["type", "hours", "bucket", "src", "axis", "min", "max"]
             }
           }
         },
@@ -1056,7 +1064,7 @@
       ]
     },
     "ruleVisualPlace": {
-      "description": "The visual while the rule matches, as the card's visual; a rule sets no hours, bucket or smoothing, nor a plot's src (the history is the card's)",
+      "description": "The visual while the rule matches, as the card's visual; a rule sets no hours, bucket or smoothing, nor a plot's src (the history is the card's), nor its min or max (the scale is the card's)",
       "allOf": [
         {
           "$ref": "#/$defs/visualPlace"
@@ -1069,7 +1077,9 @@
             "properties": {
               "hours": false,
               "bucket": false,
-              "smoothing": false
+              "smoothing": false,
+              "min": false,
+              "max": false
             }
           }
         },
