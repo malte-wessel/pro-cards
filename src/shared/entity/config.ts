@@ -4,6 +4,7 @@
 //   { type, title, icon, hours, bucketMin, smoothMin, columns, tap, hold, dbl,
 //     entities: [Entity], groups: [{ layout, idxs, align, columns, divider, visibility }], headerIdxs, hasHeader }
 // `entities` is one flat list; groups and header entities point into it by index.
+import type { RingSource } from "./ring.ts";
 import {
   ALIGNS,
   BADGE_FORMATS,
@@ -88,7 +89,7 @@ export interface RawEntity extends RawItemOptions, RawActionDefaults {
   entity?: string | null;
   // a text, a template, or Home Assistant's parts of a name (entity-name.ts)
   name?: string | NameItem | NameItem[] | null;
-  secondary?: string | null;
+  secondary?: string | false | null;
   icon?: string | null;
   color?: string | null;
   attribute?: string | null;
@@ -206,8 +207,10 @@ export interface PlotOptions {
 export interface BadgeIcon {
   // the icon, a picture (its src, else the entity's), a dot in its place, or nothing
   type: "icon" | "image" | "dot" | "none";
-  // a ring of the value (min to max) around it
+  // a ring of the value (min to max) around it, or of the entity its ring reads (`ringSrc`), in its
+  // own colour where it names one
   ring: boolean;
+  ringColor?: string | null;
   src: ImageSrc | null;
 }
 export interface BadgeKindLook {
@@ -248,6 +251,10 @@ export interface EntityItem extends ActionDefaults {
   iconStyle: IconStyle;
   // a ring of the value around the icon whatever the visual (the poster's `icon_ring`)
   iconRing?: boolean;
+  // what a ring around its icon reads where it reads another entity (the v3 cards' `ring: …`;
+  // kinds/ring.ts), and its colour as drawn now (null: the item's)
+  ringSrc?: RingSource;
+  ringColor?: string | null;
   // the entity's picture (a person's photo) in place of its icon, where it has one
   picture: boolean;
   // the matching rule's colour and icon win over the item's own (the v3 cards: the item's are the
@@ -554,7 +561,8 @@ export const normalizeEntity = (
   return {
     entity: o.entity || null,
     name: normalizeName(o.name, `${ctx.type}: ${label}`),
-    secondary: o.secondary ?? null,
+    // (false: none, not even the kind's)
+    secondary: typeof o.secondary === "string" ? o.secondary : null,
     icon: o.icon ?? null,
     color: o.color ?? null,
     valueSrc,

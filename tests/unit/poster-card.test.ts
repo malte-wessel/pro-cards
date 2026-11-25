@@ -484,6 +484,73 @@ describe("poster-card config", () => {
     );
   });
 
+  it("reads a second value beside its value: an entity, or a badge's value keys", () => {
+    const H = "sensor.living_room_humidity";
+    const c = norm({ entity: H, aside: "sensor.outdoor_temperature" });
+    expect(c.asideIdx).not.toBeNull();
+    expect(c.entities[c.asideIdx!]).toMatchObject({
+      entity: "sensor.outdoor_temperature",
+      valueSrc: { kind: "state" },
+      rules: [],
+      control: null,
+    });
+    // without an entity: the card's, here its attribute
+    const t = norm({
+      entity: "climate.living_room",
+      aside: { attribute: "temperature", decimals: 1 },
+    });
+    expect(t.entities[t.asideIdx!]).toMatchObject({
+      entity: "climate.living_room",
+      valueSrc: { kind: "attribute", key: "temperature" },
+      decimals: 1,
+    });
+    // a template needs no entity
+    const v = norm({ entity: H, aside: { value: "{{ 3 }}", unit: "x" } });
+    // the line under the value turned off: none, not even the kind's
+    expect(norm({ entity: H, secondary: false }).entities[0].secondary).toBeNull();
+    // nothing to read of its own: never the card's value again
+    expect(() => norm({ entity: H, aside: {} })).toThrow(`${T}: aside needs an entity`);
+    expect(v.entities[v.asideIdx!].entity).toBeNull();
+    // none written, or none at all: no item (the kind's, where it has one, or nothing)
+    expect(norm({ entity: H }).asideIdx).toBeNull();
+    expect(norm({ entity: H, aside: false }).asideIdx).toBeNull();
+    // it draws no row: the corner keeps its badges
+    expect(c.groups[0].badgeIdxs).not.toContain(c.asideIdx);
+  });
+  it("names what is wrong with a second value", () => {
+    const H = "sensor.living_room_humidity";
+    expect(() => norm({ entity: H, aside: true })).toThrow(`${T}: aside takes an entity id`);
+    expect(() => norm({ entity: H, aside: { entity: H, color: "red" } })).toThrow(
+      `${T}: aside takes entity, attribute, value, unit, decimals, format, prefix, icon, not color`,
+    );
+    expect(() => norm({ entity: H, aside: { entity: H, icon: true } })).toThrow(
+      `${T}: aside: icon must be an icon's name`,
+    );
+  });
+  it("reads a ring around its icon or a badge's from another entity", () => {
+    const H = "sensor.living_room_humidity";
+    const c = norm({
+      entity: H,
+      icon: { ring: { entity: "sensor.battery_soc", max: 80, color: "orange" } },
+      badges: [{ entity: H, icon: { ring: "sensor.battery_soc" } }],
+    });
+    expect(c.entities[0].ringSrc).toEqual({
+      entity: "sensor.battery_soc",
+      attribute: null,
+      min: null,
+      max: 80,
+    });
+    expect(c.entities.at(-1)?.ringSrc?.entity).toBe("sensor.battery_soc");
+    // the card's own value: nothing else to read
+    expect(norm({ entity: H, icon: { ring: true } }).entities[0].ringSrc).toBeUndefined();
+    // a rule switches the ring and colours it, it reads nothing else
+    expect(() =>
+      norm({ entity: H, rules: [{ above: 50, icon: { ring: "sensor.battery_soc" } }] }),
+    ).toThrow("a rule's ring reads no other entity");
+    expect(drawn(norm({ entity: H, icon: { ring: { color: "red" } } })).icon.ring).toEqual({
+      color: "red",
+    });
+  });
   it("takes a ring around the icon as the icon's option", () => {
     const H = "sensor.living_room_humidity";
     expect(norm({ entity: H, icon: { ring: true } }).places.icon).toEqual({ ring: true });

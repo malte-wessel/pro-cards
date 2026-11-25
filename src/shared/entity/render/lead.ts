@@ -1,4 +1,5 @@
 // Small DOM builders: icon lead, pills, text and the big value.
+import { cssColor } from "../../color.ts";
 import type { HassEntity } from "../../ha.ts";
 import type { EntityItem } from "../config.ts";
 import type { Look } from "../look.ts";
@@ -53,6 +54,13 @@ export const ringSvg = (
       : `<circle class="prog" cx="${c}" cy="${c}" r="${r}" stroke-width="${sw}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * (1 - p)).toFixed(1)}" transform="rotate(-90 ${c} ${c})"/>`
   }</svg>`;
 };
+// a ring's own colour (`ring: { color }`), its track a tint of it; none: the item's colour
+export const ringColorTo = (el: HTMLElement, color: string | null | undefined) => {
+  if (!color) return;
+  const c = cssColor(color, "var(--fe-color)");
+  el.style.setProperty("--ring-color", c);
+  el.style.setProperty("--ring-soft", `color-mix(in srgb, ${c} 22%, transparent)`);
+};
 // round lead of `size` px: icon (or the value) in a soft circle, a progress ring for visual: ring
 // (the poster's `icon_ring`)
 export const leadEl = (
@@ -68,7 +76,9 @@ export const leadEl = (
   if (ent.iconStyle === "plain") el.classList.add("plain");
   if (ent.visual === "ring" || ent.iconRing) {
     el.classList.add("ring");
-    el.innerHTML = ringSvg(size, m.progress);
+    // (another entity's, where the ring reads one: ringSrc)
+    el.innerHTML = ringSvg(size, ent.ringSrc ? (m.ring ?? null) : m.progress);
+    ringColorTo(el, ent.ringColor);
   }
   const shape = document.createElement("div");
   shape.className = "shape";

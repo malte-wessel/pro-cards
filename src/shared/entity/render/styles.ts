@@ -88,8 +88,21 @@ const STYLE_POSTER = `
   .pmain > .end { align-self: center; }
   .ptext { flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .ptext > :is(.pname, .secondary) { contain: inline-size; }
-  .pvalue { display: flex; min-width: 0; }
+  .pvalue { display: flex; align-items: baseline; gap: 0 12px; min-width: 0; }
   .pvalue > .big { flex: 0 1 auto; }
+  /* the second value (aside): its number a step above the value's unit, its own unit a step below,
+     in the secondary colour; it never shrinks, the poster moves it under the value or leaves it
+     out first (PosterCard._fitValue) */
+  .paside { flex: none; display: flex; align-items: baseline; gap: 3px; color: var(--secondary-text-color); white-space: nowrap; }
+  .paside b { font-size: ${fs(20)}; line-height: ${lh(20, 24)}; font-weight: ${fw("normal")}; font-variant-numeric: tabular-nums; }
+  .paside span { font-size: ${fs(13)}; }
+  .paside ha-icon { align-self: center; --mdc-icon-size: 18px; }
+  /* under the value it is the line under it: that line's size and gap, so the card keeps its
+     height */
+  .pvalue.aside-under { flex-wrap: wrap; }
+  .pvalue.aside-under > .paside { flex-basis: 100%; margin-top: 4px; }
+  .pvalue.aside-under > .paside :is(b, span) { font-size: ${fs(12)}; line-height: ${lh(12, 16)}; }
+  .paside.pfit-out { display: none; }
   .pmain > .end { min-width: 0; max-width: 100%; }
   /* the place the card found for its size (PosterCard._placeControls) holds: beside, a wider value
      is drawn smaller; under, a narrower one leaves the controls where they are */
@@ -205,8 +218,8 @@ const STYLE_BADGES = `
   .hval .bdot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--b-ink, var(--fe-color)); }
   .hval .bring { position: relative; flex: none; width: var(--b-ring, 20px); height: var(--b-ring, 20px); display: flex; align-items: center; justify-content: center; }
   .hval .bring svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .hval .bring .track { fill: none; stroke: color-mix(in srgb, var(--b-ink, var(--fe-color)) 22%, transparent); }
-  .hval .bring .prog { fill: none; stroke: var(--b-ink, var(--fe-color)); stroke-linecap: round; }
+  .hval .bring .track { fill: none; stroke: var(--ring-soft, color-mix(in srgb, var(--b-ink, var(--fe-color)) 22%, transparent)); }
+  .hval .bring .prog { fill: none; stroke: var(--ring-color, var(--b-ink, var(--fe-color))); stroke-linecap: round; }
   /* a ring sits in the pill's rounded end, the same gap to the edge all round */
   .row.hval.pb:has(> .bring:first-child, > .hit:first-child + .bring) { padding-left: calc((var(--b-h) - var(--b-ring)) / 2 - var(--b-bw, 0px)); }
   /* the icon inside the ring, clear of its stroke (beats the pill's icon size) */
@@ -283,8 +296,8 @@ export const STYLE_ROW = `
   .lead.ring .shape { inset: 16%; border-radius: 50%; --mdc-icon-size: calc(var(--lead, 36px) * .42); }
   /* show_entity_picture: the picture fills the shape (in a ring, the inside of the ring) */
   .lead .shape > img.picture { display: block; width: 100%; height: 100%; object-fit: cover; }
-  .lead .track { fill: none; stroke: var(--fe-soft); }
-  .lead .prog { fill: none; stroke: var(--fe-color); stroke-linecap: round; transition: stroke-dashoffset .4s; }
+  .lead .track { fill: none; stroke: var(--ring-soft, var(--fe-soft)); }
+  .lead .prog { fill: none; stroke: var(--ring-color, var(--fe-color)); stroke-linecap: round; transition: stroke-dashoffset .4s; }
   .main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
   .line { display: flex; align-items: center; gap: 10px; min-width: 0; }
   .texts { flex: 1 1 0; min-width: 24px; display: flex; flex-direction: column; gap: 2px; }

@@ -12,11 +12,13 @@ import {
   type KindConfig,
   type RawKindCardConfig,
 } from "../shared/kinds/config.ts";
+import { normalizeAside } from "./aside.ts";
 import { CARD_TYPE } from "./constants.ts";
 
 export interface RawPosterCardConfig extends RawKindCardConfig {
   status?: unknown;
   badges?: unknown;
+  aside?: unknown;
 }
 
 export interface PosterConfig extends KindConfig {
@@ -24,6 +26,8 @@ export interface PosterConfig extends KindConfig {
   // else the matching rule's status)
   statusIdx: number | null;
   statusText: ValueSrc | null;
+  // the second value's item beside the value (null: none written; the kind's, where it has one)
+  asideIdx: number | null;
 }
 
 export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): PosterConfig => {
@@ -52,6 +56,9 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
     CARD_TYPE,
     "a poster's corner",
   );
+  // the second value: an item of the card's, drawn in the value's line (no row of its own)
+  const aside = normalizeAside((input as RawPosterCardConfig).aside, ctx, entities[0].entity);
+  const asideIdx = aside ? entities.push(aside) - 1 : null;
   const kc = kindConfigOf(k);
 
   return {
@@ -82,5 +89,6 @@ export const normalizePosterConfig = (input: unknown, hass?: HomeAssistant): Pos
       : {}),
     statusIdx,
     statusText,
+    asideIdx,
   };
 };

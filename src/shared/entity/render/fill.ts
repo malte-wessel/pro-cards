@@ -200,6 +200,9 @@ export interface KindSlots {
   // (min and max, 0 to 100 unless written); null fills nothing
   num?: number | null;
   secondary?: string | Node | null;
+  // a poster's second value beside its value (its icon before it): the card's `aside`, else the
+  // kind's (a thermostat's target); null: none
+  aside?: { fmt: FmtValue; icon: string | null } | null;
   picture?: HTMLElement | null;
   // the status the tile's line shows after the value (null: none; the poster's is a badge of its own)
   status?: string | null;
@@ -373,6 +376,27 @@ export const fillTableSlots = (
   row.appendChild(top);
 };
 
+// a poster's second value: a number a step above the value's unit, its own unit a step below, in
+// the secondary colour (styles: .paside); the poster moves it under the value, or leaves it out,
+// before the value gets smaller (PosterCard._fitValue)
+const asideEl = (fmt: FmtValue, icon: string | null) => {
+  const el = document.createElement("div");
+  el.className = "paside";
+  if (icon) {
+    const i = document.createElement("ha-icon");
+    i.setAttribute("icon", icon);
+    el.appendChild(i);
+  }
+  const b = document.createElement("b");
+  putValue(b, fmt.num, fmt);
+  el.appendChild(b);
+  if (fmt.unit) {
+    const u = document.createElement("span");
+    u.textContent = fmt.unit;
+    el.appendChild(u);
+  }
+  return el;
+};
 // a poster (the poster card's row): the icon at the top left, and at the bottom the name, then
 // the big value and the secondary line as one block with the controls beside it (under it where
 // they do not fit), then the controls below it and the visual (a plot along the bottom);
@@ -429,6 +453,7 @@ export const fillPosterSlots = (
     // a word (Cleaning, Away) is drawn smaller than a number, so the controls stay beside it
     big.classList.toggle("word", o.word ?? m.model.num === null);
     value.appendChild(big);
+    if (o.aside) value.appendChild(asideEl(o.aside.fmt, o.aside.icon));
     text.appendChild(value);
   }
   const sec = o.secondary !== undefined ? o.secondary : tplOf(ctx, ent.secondary);

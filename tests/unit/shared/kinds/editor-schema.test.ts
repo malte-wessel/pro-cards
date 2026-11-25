@@ -123,7 +123,16 @@ describe("the editor's sections", () => {
     const hidden = schemaOf("poster", TEMP, { show_name: false, show_value: false });
     expect(sectionOf(hidden, "Name")).toEqual(["show_name"]);
     // what the visual reads too stays, and the line under the value
-    expect(sectionOf(hidden, "Value")).toEqual(["show_value", "attribute", "secondary"]);
+    expect(sectionOf(hidden, "Value")).toEqual([
+      "show_value",
+      "attribute",
+      "show_secondary",
+      "secondary",
+    ]);
+    // the line turned off: its switch alone
+    expect(
+      sectionOf(schemaOf("poster", TEMP, { show_value: false, show_secondary: false }), "Value"),
+    ).toEqual(["show_value", "attribute", "show_secondary"]);
     // a field filled in stays, so it can be cleared
     expect(
       sectionOf(schemaOf("poster", { ...TEMP, show_name: false, name: "Hi" }), "Name"),

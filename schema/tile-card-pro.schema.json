@@ -166,7 +166,15 @@
           "$ref": "entity.schema.json#/$defs/entityKeys/properties/name"
         },
         "secondary": {
-          "$ref": "entity.schema.json#/$defs/entityKeys/properties/secondary"
+          "description": "What follows the value and the status on the line: a text or a template, or false for none (not even the kind's)",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "const": false
+            }
+          ]
         },
         "icon": {
           "$ref": "#/$defs/iconPlace",
@@ -286,6 +294,9 @@
       "properties": {
         "badge": {
           "$ref": "#/$defs/iconBadge"
+        },
+        "ring": {
+          "$ref": "poster-card-pro.schema.json#/$defs/ruleRing"
         },
         "tap_action": false,
         "hold_action": false,

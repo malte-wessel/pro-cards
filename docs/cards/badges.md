@@ -46,7 +46,7 @@ A badge's pill holds, in this order, its icon, its name, its value, a visual and
 - an icon's name (`mdi:…`, or a template);
 - `{ type: image }`: the entity's picture, or `src` for another (an image URL, a template or an entity);
 - `{ type: dot }`: a dot in the badge's colour;
-- `{ ring: true }`: a ring of the value around the icon or the picture, from `min` to `max`;
+- `{ ring: true }`: a ring of the value around the icon or the picture, from `min` to `max`; `{ ring: sensor.phone_battery }` or `{ ring: { entity, attribute, min, max, color } }` rings another entity's value;
 - `false`: no icon.
 
 `show_name: true` writes the name before the value. `show_value: false` shows the icon alone.
@@ -256,7 +256,7 @@ A badge is an entity id, or an object with these keys. Every key is optional.
 | `min`, `max`       | the entity's, else 0 / 100 | The range of a ring and a bar.                                                                                                                                    |
 | `show_name`        | `false`                    | Write the name before the value.                                                                                                                                  |
 | `show_value`       | `true`                     | `false`: the icon alone.                                                                                                                                          |
-| `icon`             | the entity's icon          | An icon's name, `{ type: icon \| image \| dot, name, ring, src }`, or `false`.                                                                                    |
+| `icon`             | the entity's icon          | An icon's name, `{ type: icon \| image \| dot, name, ring, src }`, or `false`. `ring` is `true` or another entity (see [Look](/cards/look#the-places)).           |
 | `visual`           | –                          | After the value: `bar`, `sparkline` or `trend`; `{ type, hours }` for another window (`hours` a number or `today`).                                               |
 | `color`            | the kind's                 | The badge's colour; a matching rule's wins. A template is allowed.                                                                                                |
 | `kind`             | the entity's               | The kind whose colours it takes; `none` for none.                                                                                                                 |

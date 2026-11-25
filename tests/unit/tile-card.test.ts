@@ -714,3 +714,11 @@ describe("tile-card profile settings", () => {
     }
   });
 });
+
+describe("what is a poster's alone", () => {
+  it("leaves the second value to the poster", () => {
+    expect(() =>
+      norm({ entity: "sensor.living_room_temperature", aside: "sensor.outdoor_temperature" }),
+    ).toThrow("tile-card-pro: aside is a poster's");
+  });
+});

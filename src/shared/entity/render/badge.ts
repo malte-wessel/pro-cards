@@ -13,7 +13,7 @@ import { nameOf, type EntityModel, type FmtValue, type RenderCtx } from "../mode
 import { formatValue, putValue } from "../value-format.ts";
 import { appendControls } from "./controls.ts";
 import { barFill } from "./blocks.ts";
-import { headerBadgeEl, iconOrPictureEl, ringSvg } from "./lead.ts";
+import { headerBadgeEl, iconOrPictureEl, ringColorTo, ringSvg } from "./lead.ts";
 
 // the sparkline in the icon's place, in viewBox units (CSS sizes it with the badge)
 const SPARK_W = 34;
@@ -99,10 +99,19 @@ const trendEl = (ctx: RenderCtx, ent: EntityItem, m: EntityModel, hours: number)
   return el;
 };
 
-// a ring of the value around the icon
-const ringEl = (ctx: RenderCtx, ent: EntityItem, m: EntityModel, withIcon: boolean) => {
+// a ring of the value around the icon, or of the entity it reads (ringSrc), in its own colour where
+// it names one
+const ringEl = (
+  ctx: RenderCtx,
+  ent: EntityItem,
+  m: EntityModel,
+  withIcon: boolean,
+  color: string | null = null,
+) => {
   const el = span("bring");
-  el.innerHTML = ringSvg(RING_PX[ent.badge.size], m.progress, ent.badge.size === "s" ? 1.75 : 2);
+  const p = ent.ringSrc ? (m.ring ?? null) : m.progress;
+  el.innerHTML = ringSvg(RING_PX[ent.badge.size], p, ent.badge.size === "s" ? 1.75 : 2);
+  ringColorTo(el, color);
   if (withIcon) el.appendChild(iconOrPictureEl(ctx, m.look, m.st));
   return el;
 };
@@ -174,7 +183,9 @@ const fillPill = (
   const icon = m.look.badgeIcon ?? pill.icon;
   if (icon.type === "dot") el.appendChild(span("bdot"));
   else if (icon.type !== "none")
-    el.appendChild(icon.ring ? ringEl(ctx, ent, m, true) : iconOrPictureEl(ctx, m.look, m.st));
+    el.appendChild(
+      icon.ring ? ringEl(ctx, ent, m, true, icon.ringColor) : iconOrPictureEl(ctx, m.look, m.st),
+    );
   if (ent.item.showName) el.appendChild(span("secondary", nameOf(ctx, ent, m.st)));
   if (ent.item.showValue) el.appendChild(valueEl(ctx, ent, m, age));
   if (ent.visual === "bar") el.appendChild(barEl(m));

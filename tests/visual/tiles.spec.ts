@@ -186,6 +186,14 @@ add("to-icon", [
   t("light.desk_lamp", { icon: { tap_action: { action: "toggle" } }, control: false }),
   t("media_player.living_room_speaker", { visual: false, icon: { type: "icon" } }),
 ]);
+// a ring of another entity around the icon, in its own colour, and a badge's
+add("to-ring", [
+  t("person.malte", { icon: { ring: "sensor.phone_battery" } }),
+  t("sensor.living_room_temperature", {
+    icon: { ring: { entity: "sensor.battery_soc", color: "orange" } },
+    badges: [{ entity: "sensor.battery_soc", icon: { ring: "sensor.phone_battery" } }],
+  }),
+]);
 add("to-axis", [
   t("sensor.living_room_humidity", { visual: { type: "columns", max: 100, axis: true } }),
   t("sensor.outdoor_temperature", { visual: { type: "sparkline", axis: true } }),

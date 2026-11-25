@@ -55,6 +55,7 @@ import {
   type VisualPlace,
   type Written,
 } from "./places.ts";
+import { ringSourceOf } from "./ring.ts";
 import { badgeHours, normalizePill } from "./badge.ts";
 import { normalizeKindButtons } from "./buttons.ts";
 import { toRule } from "./rules.ts";
@@ -441,6 +442,10 @@ export const normalizeKindItem = (
   });
   // the card's colour and icon are defaults: a matching rule's win
   main.ruleWins = true;
+  // a ring that reads another entity: what it reads is the card's (a rule only switches it and
+  // colours it), so the item follows that entity
+  const ringSrc = places.icon ? ringSourceOf(places.icon.ring) : null;
+  if (ringSrc) main.ringSrc = ringSrc;
   // an attribute the card names reads as Home Assistant writes it (a kind's own keeps the kind's)
   main.haAttribute = typeof written.attribute === "string" && !!written.attribute;
   const rulePlaces = new Map<Rule, Places>();

@@ -329,7 +329,13 @@ export const badgeToForm = (x: unknown): Raw => {
   for (const [k, v] of Object.entries(o)) {
     if (k === "icon" && v === false) item.icon_type = "none";
     else if (k === "icon" && typeof v === "string") item.icon = v;
-    else if (k === "icon" && isObj(v) && only(v, ["type", "name", "ring", "src"])) {
+    // (a ring of another entity stays in the YAML, with the rest of its icon)
+    else if (
+      k === "icon" &&
+      isObj(v) &&
+      only(v, ["type", "name", "ring", "src"]) &&
+      (v.ring === undefined || typeof v.ring === "boolean")
+    ) {
       if (typeof v.type === "string") item.icon_type = v.type;
       if (typeof v.name === "string") item.icon = v.name;
       if (v.ring === true) item.icon_ring = true;
@@ -642,6 +648,22 @@ export const configToForm = (
     fill_height: c.fill_height !== false,
   };
   for (const k of TEXTS) d[k] = c[k] ?? "";
+  // the line under the value: shown unless `secondary: false`
+  d.show_secondary = c.secondary !== false;
+  if (c.secondary === false) d.secondary = "";
+  // a poster's second value: whether it shows (`aside: false`: not even the kind's), its entity and
+  // its attribute (its other keys stay as written)
+  if (thing === "poster") {
+    d.show_aside = c.aside !== false;
+    d.aside =
+      typeof c.aside === "string"
+        ? c.aside
+        : isObj(c.aside) && typeof c.aside.entity === "string"
+          ? c.aside.entity
+          : "";
+    d.aside_attribute =
+      isObj(c.aside) && typeof c.aside.attribute === "string" ? c.aside.attribute : "";
+  }
   for (const k of ACTIONS) if (c[k] !== undefined) d[k] = actionToForm(c[k]);
 
   // the icon: its thing, its options, its own actions and (a tile's) badge
@@ -655,7 +677,14 @@ export const configToForm = (
     iconThing =
       typeof icon.type === "string" ? icon.type : icon.name !== undefined ? "icon" : DEFAULT;
     if (typeof icon.name === "string") d.icon = icon.name;
-    d.icon_ring = icon.ring === true;
+    // (a ring of another entity: its entity in the form, its other options kept as written)
+    d.icon_ring = icon.ring !== undefined && icon.ring !== false;
+    d.icon_ring_entity =
+      typeof icon.ring === "string"
+        ? icon.ring
+        : isObj(icon.ring) && typeof icon.ring.entity === "string"
+          ? icon.ring.entity
+          : "";
     d.icon_style = icon.style ?? "";
     d.icon_src = icon.src ?? "";
     d.icon_variant = icon.variant === kind.icon?.variant ? "" : (icon.variant ?? "");
@@ -750,8 +779,63 @@ export const configToForm = (
   return withDefaults(d);
 };
 
-// each part of the config from the form: undefined leaves it out (the kind's default)
-const iconFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknown => {
+// a poster's second value from the form's entity: the object as written keeps its other keys (an
+// attribute without an entity reads the card's); cleared, it is left out
+const asideFromForm = (entity: unknown, attribute: unknown, written: unknown): unknown => {
+  const e = filled(entity) ? entity : undefined;
+  const rest: Raw = isObj(written) ? { ...written } : {};
+  delete rest.entity;
+  delete rest.attribute;
+  if (filled(attribute)) rest.attribute = attribute;
+  if (!e && rest.attribute === undefined && rest.value === undefined) return undefined;
+  // the shortest spelling: an entity alone is its id
+  if (!Object.keys(rest).length) return e;
+  return { ...(e ? { entity: e } : {}), ...rest };
+};
+// the entity a poster's second value names (null: none, it reads the card's)
+export const asideEntityOf = (config: CardConfigBase): string | null => {
+  const a = (config as Raw).aside;
+  if (typeof a === "string" && a) return a;
+  return isObj(a) && typeof a.entity === "string" && a.entity ? a.entity : null;
+};
+// a poster's second value fitted to the entities it reads now (another one picked for it, or for
+// the card while it reads the card's): an attribute its entity lacks goes, and with nothing left to
+// read the second value goes; `attrsOf` gives an entity's attributes (null: not known, kept)
+export const fitAside = (
+  config: CardConfigBase,
+  attrsOf: (entity: string) => readonly string[] | null,
+): CardConfigBase => {
+  const c: Raw = { ...config };
+  const a = c.aside;
+  if (!isObj(a) || typeof a.attribute !== "string") return config;
+  const entity = typeof a.entity === "string" && a.entity ? a.entity : c.entity;
+  const attrs = typeof entity === "string" && entity ? attrsOf(entity) : null;
+  if (!attrs || attrs.includes(a.attribute)) return config;
+  const rest: Raw = { ...a };
+  delete rest.attribute;
+  if (!rest.entity && rest.value === undefined) delete c.aside;
+  else c.aside = Object.keys(rest).length === 1 && rest.entity ? rest.entity : rest;
+  return c as CardConfigBase;
+};
+// the ring as the form has it: true, an entity id, or its options as written with the form's entity
+// (another entity's attribute, min and max go with it; its colour stays)
+const ringFromForm = (data: HaFormData, written: unknown): unknown => {
+  const was = isObj(written) ? written.ring : undefined;
+  const rest: Raw = isObj(was) ? { ...was } : {};
+  delete rest.entity;
+  const entity = filled(data.icon_ring_entity) ? data.icon_ring_entity : undefined;
+  if (!entity) for (const k of ["attribute", "min", "max"]) delete rest[k];
+  if (Object.keys(rest).length) return { ...(entity ? { entity } : {}), ...rest };
+  return entity ?? true;
+};
+// each part of the config from the form: undefined leaves it out (the kind's default); `written`
+// is the icon as the config had it
+const iconFromForm = (
+  data: HaFormData,
+  kind: Kind,
+  thing: CardThing,
+  written?: unknown,
+): unknown => {
   if (data.icon_thing === "none") return false;
   const iconThing = (
     data.icon_thing === DEFAULT ? defaultIcon(kind) : data.icon_thing
@@ -759,7 +843,7 @@ const iconFromForm = (data: HaFormData, kind: Kind, thing: CardThing): unknown =
   const takes = ICON_OPTIONS[iconThing] ?? [];
   const o: Raw = {};
   if (takes.includes("name") && filled(data.icon)) o.name = data.icon;
-  if (takes.includes("ring") && data.icon_ring === true) o.ring = true;
+  if (takes.includes("ring") && data.icon_ring === true) o.ring = ringFromForm(data, written);
   if (takes.includes("style") && data.icon_style === "plain") o.style = "plain";
   if (takes.includes("src") && filled(data.icon_src)) o.src = data.icon_src;
   if (takes.includes("variant") && chosen(data.icon_variant)) o.variant = data.icon_variant;
@@ -981,6 +1065,8 @@ export const formToConfig = (
   setOrDrop(c, "color", data.color, !data.color);
   // (a text written empty stays while its field is: `unit: ""` hides the unit)
   for (const k of TEXTS) setOrDrop(c, k, data[k], !filled(data[k]) && !(p[k] === "" && !data[k]));
+  // the line under the value turned off: no line at all, not even the kind's
+  if (thing !== "row" && data.show_secondary === false) c.secondary = false;
   // numbers as their fields have them (one written as text, `min: "10"`, stays until its field
   // changes)
   for (const k of ["decimals", "min", "max", "running_above"])
@@ -996,7 +1082,13 @@ export const formToConfig = (
   for (const k of ACTIONS)
     if (JSON.stringify(data[k]) !== JSON.stringify(actionToForm(p[k])))
       setOrDrop(c, k, data[k], !isObj(data[k]));
-  if (changed("icon_", ["icon"])) put("icon", iconFromForm(data, kind, thing));
+  if (changed("icon_", ["icon"])) put("icon", iconFromForm(data, kind, thing, p.icon));
+  // a poster's second value: its entity from the form, its other keys as written
+  if (thing === "poster" && changed("aside"))
+    put("aside", asideFromForm(data.aside, data.aside_attribute, p.aside));
+  // turned off: none, not even the kind's; on again: the kind's, or the one written
+  if (thing === "poster" && data.show_aside === false) c.aside = false;
+  else if (thing === "poster" && c.aside === false) delete c.aside;
   if (changed("visual_")) put("visual", visualFromForm(data, kind, thing));
   if (changed("input_")) put("inputs", inputsFromForm(data, kind, isObj(p.inputs) ? p.inputs : {}));
   if (changed("series")) {

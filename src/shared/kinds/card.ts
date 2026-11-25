@@ -5,6 +5,7 @@
 // animated lead kept through fills), what it draws behind the texts and its colour. The card
 // supplies `_normalize` (a KindConfig) and draws its places.
 import { cssColor } from "../color.ts";
+import { ringColorOf, ringOn } from "./ring.ts";
 import { CARD_BG } from "../constants.ts";
 import { EntityCardBase } from "../entity/base.ts";
 import { progressOf } from "../entity/look.ts";
@@ -436,7 +437,12 @@ export abstract class KindCardBase extends EntityCardBase {
     // the item with its icon as the place draws it now (its style, its ring): a kind that builds
     // its own lead (the weather's condition, the sun, a solar's) draws it so
     const look = this._iconLook(kc);
-    kc.ent = { ...kc.ent, iconStyle: look.iconStyle, iconRing: look.iconRing };
+    kc.ent = {
+      ...kc.ent,
+      iconStyle: look.iconStyle,
+      iconRing: look.iconRing,
+      ringColor: look.iconRingColor,
+    };
     return kc;
   }
   // the places the kind fills, less those the card sets itself; the icon's own actions take the
@@ -453,7 +459,15 @@ export abstract class KindCardBase extends EntityCardBase {
       delete o.word;
       delete o.num;
     }
-    if (raw.secondary !== undefined) delete o.secondary;
+    // (a written line under the value replaces what the kind says there, and a text of its own
+    // what it says beside the value: a thermostat's target, which was its line; `secondary: false`
+    // only hides the line)
+    if (raw.secondary !== undefined) {
+      delete o.secondary;
+      if (raw.secondary !== false) delete o.aside;
+    }
+    // (a poster's own second value, or aside: false, in place of the kind's)
+    if (raw.aside !== undefined) delete o.aside;
     // the value as `format` writes it (a timer's time left) where the kind writes none, and in
     // place of the kind's where the card writes a format that applies (a plug's power in kW)
     if (o.value === undefined || (raw.format !== undefined && c.ent.format !== "auto")) {
@@ -508,7 +522,8 @@ export abstract class KindCardBase extends EntityCardBase {
             : null;
     return {
       iconStyle: i.style === "plain" || i.style === "circle" ? i.style : kc.ent.iconStyle,
-      iconRing: !!i.ring,
+      iconRing: ringOn(i.ring),
+      iconRingColor: ringColorOf(i.ring),
       iconImage: image,
     };
   }
@@ -539,6 +554,7 @@ export abstract class KindCardBase extends EntityCardBase {
       ...ent,
       iconStyle: look.iconStyle,
       iconRing: look.iconRing,
+      ringColor: look.iconRingColor,
       visual: block,
       plot,
       // icon: false (the card's or a matching rule's): no icon

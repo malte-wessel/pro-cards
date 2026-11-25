@@ -164,16 +164,17 @@ export const CLIMATE: Kind = {
     const value = c.m.fmt.unit ? undefined : { ...c.m.fmt, unit };
     // a stepper shows the target itself
     const stepper = placementsOf(c.ent, "poster").some((p) => p.kind === "stepper");
+    if (stepper) return value ? { value } : {};
+    const t = target === null ? null : fmtNumber(c.ctx.hass, target, 1);
+    // a poster's target is its second value, beside the temperature; a tile's the line below
+    if (c.card === "poster")
+      return {
+        ...(value ? { value } : {}),
+        aside: t === null ? null : { fmt: { num: t, unit, text: `${t} ${unit}` }, icon: null },
+      };
     return {
       ...(value ? { value } : {}),
-      ...(stepper
-        ? {}
-        : {
-            secondary:
-              target === null
-                ? null
-                : secondaryEl([{ text: `→ ${fmtNumber(c.ctx.hass, target, 1)} ${unit}` }]),
-          }),
+      secondary: t === null ? null : secondaryEl([{ text: `→ ${t} ${unit}` }]),
     };
   },
   // its glow: warm while heating, cool while cooling

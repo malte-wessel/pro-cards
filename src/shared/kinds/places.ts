@@ -8,6 +8,7 @@ import { ICON_STYLES, type IconStyle } from "../entity/constants.ts";
 import { RAIN_STYLES } from "../rain/constants.ts";
 import { FLOW_STYLES } from "../wind/constants.ts";
 import { oneOf } from "../util.ts";
+import { parseRing, ringOver, type RingWritten } from "./ring.ts";
 
 export const ICON_THINGS = ["icon", "image", "flow"] as const;
 export type IconThing = (typeof ICON_THINGS)[number];
@@ -61,7 +62,8 @@ export type Variant = (typeof VARIANTS)[number];
 export interface IconPlace {
   type?: IconThing;
   name?: string;
-  ring?: boolean;
+  // a ring of the value around the icon, or of another entity's (ring.ts)
+  ring?: RingWritten;
   // the circle or none, whatever it draws
   style?: IconStyle;
   // which drawing of the thing (a flow's: dots, lines, swoosh …)
@@ -157,7 +159,6 @@ const optionOf = (k: string, v: unknown, at: string): unknown => {
     case "tint":
       if (typeof v !== "string" || !v) fail("must be a text");
       return v;
-    case "ring":
     case "axis":
       if (typeof v !== "boolean") fail("must be true or false");
       return v;
@@ -216,7 +217,7 @@ export const optionsOf = (
       throw new Error(
         `${at}: a rule sets no ${k} (it is the card's: ${k.endsWith("_action") ? "a rule changes the look, not what a tap does" : "a rule must not fetch history"})`,
       );
-    out[k] = optionOf(k, v, at);
+    out[k] = k === "ring" ? parseRing(v, at, rule) : optionOf(k, v, at);
   }
   return out;
 };
@@ -296,8 +297,13 @@ export const mergePlace = <P extends { type?: string }>(
 // thing's own options (a picture's src, a flow's variant) go with it
 const iconOver = (base: Written<IconPlace>, over: Written<IconPlace>): Written<IconPlace> => {
   const merged = mergePlace(base, over);
+  // a ring over a ring merges: a rule's colour onto the card's, true keeps what it reads
+  const ring =
+    base && over && base.ring !== undefined && over.ring !== undefined
+      ? { ring: ringOver(base.ring, over.ring) }
+      : {};
   if (!base || !over || !merged || merged === base || !over.type || base.type === over.type)
-    return merged;
+    return merged && { ...merged, ...ring };
   const kept: IconPlace = {};
   for (const k of [
     "ring",
@@ -309,7 +315,7 @@ const iconOver = (base: Written<IconPlace>, over: Written<IconPlace>): Written<I
   ] as const)
     if (base[k] !== undefined && over[k] === undefined)
       (kept as Record<string, unknown>)[k] = base[k];
-  return { ...kept, ...merged };
+  return { ...kept, ...merged, ...ring };
 };
 
 // the places a card draws now: the kind's default, the group's, the card's and the matching

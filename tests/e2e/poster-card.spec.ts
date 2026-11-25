@@ -680,9 +680,10 @@ test.describe("poster types", () => {
     // the name is not cut by the controls: it runs over them
     const name = await rect(robot.locator(".pbody > .pname"));
     expect(name.right).toBeGreaterThan(end.left);
-    // under: segments too wide to sit beside go under the line under the value
+    // under: segments too wide to sit beside go under the value and what is under it (a
+    // thermostat's target, its second value)
     const bed = card(page, 1);
-    const line = await rect(bed.locator(".ptext > .secondary"));
+    const line = await rect(bed.locator(".ptext"));
     const segs = await rect(bed.locator(".pmain > .end"));
     expect(segs.top).toBeGreaterThanOrEqual(line.bottom);
     // the value and the name sit where they sit without a control; the select centred on the value
@@ -1322,5 +1323,155 @@ test.describe("poster pointer", () => {
       "outline-color",
       "rgba(0, 0, 0, 0)",
     );
+  });
+});
+
+test.describe("a poster's second value and a ring of another entity", () => {
+  const TEMP = "sensor.living_room_temperature";
+  // how far a ring is filled: 1 - its dash offset over its circumference
+  const filled = (ring: Locator) =>
+    ring.evaluate((c) => {
+      const C = parseFloat(c.getAttribute("stroke-dasharray") ?? "0");
+      return 1 - parseFloat(c.getAttribute("stroke-dashoffset") ?? "0") / C;
+    });
+
+  test("the second value follows its entity beside the value", async ({ page }) => {
+    await mount(
+      page,
+      { type: P, entity: TEMP, aside: { entity: "climate.living_room", attribute: "temperature" } },
+      { width: 800 },
+    );
+    const aside = card(page).locator(".pvalue > .paside");
+    // a thermostat's temperature attribute in Home Assistant's unit
+    await expect(aside).toHaveText("21°C");
+    await expect(aside.locator("span")).toHaveText("°C");
+    // beside the value, on its baseline, a step above the value's unit
+    const big = card(page).locator(".pvalue > .big");
+    expect((await rect(aside)).left).toBeGreaterThan((await rect(big)).right);
+    expect(await fontPx(aside.locator("b"))).toBeGreaterThan(await fontPx(big.locator("span")));
+    expect(await fontPx(aside.locator("span"))).toBeLessThan(await fontPx(aside.locator("b")));
+    await setState(page, "climate.living_room", "heat", { temperature: 22.5 });
+    await expect(aside.locator("b")).toHaveText("22.5");
+    // no value: no second value
+    await setState(page, "climate.living_room", "unavailable");
+    await expect(aside).toHaveCount(0);
+  });
+
+  test("a thermostat's target is its second value, unless a stepper shows it", async ({ page }) => {
+    await mount(
+      page,
+      [
+        { type: P, entity: "climate.living_room", control: false },
+        { type: P, entity: "climate.living_room" },
+        { type: P, entity: "climate.living_room", control: false, aside: false },
+        { type: "custom:tile-card-pro", entity: "climate.living_room", control: false },
+        { type: P, entity: "climate.living_room", control: false, secondary: "Living room" },
+      ],
+      { width: 800 },
+    );
+    await expect(card(page, 0).locator(".paside")).toHaveText("21.0°C");
+    // the line below no longer repeats it
+    await expect(card(page, 0).locator(".ptext > .secondary")).toHaveCount(0);
+    await expect(card(page, 1).locator(".paside")).toHaveCount(0);
+    await expect(card(page, 2).locator(".paside")).toHaveCount(0);
+    // a line of the card's own replaces the target, as it replaced the target's line
+    await expect(card(page, 4).locator(".paside")).toHaveCount(0);
+    await expect(card(page, 4).locator(".ptext > .secondary")).toHaveText("Living room");
+    // a tile keeps its target in its line
+    await expect(card(page, 3)).toContainText("→ 21.0 °C");
+  });
+
+  test("the second value gives way before the value gets smaller", async ({ page }) => {
+    await mount(page, [
+      // no line under the value: it moves under it
+      { type: P, entity: "climate.living_room", control: false },
+      // a line under the value: it is left out
+      { type: P, entity: TEMP, aside: "sensor.outdoor_temperature" },
+      {
+        type: P,
+        entity: "climate.living_room",
+        control: false,
+        aside: { entity: "climate.living_room", value: "Comfort until a quarter past ten" },
+      },
+    ]);
+    await expect(card(page, 0).locator(".pvalue")).toHaveClass(/aside-under/);
+    await expect(card(page, 0).locator(".paside")).toBeVisible();
+    await expect(card(page, 1).locator(".paside")).toBeHidden();
+    // a text wider than the card under the value: out too, never cut by the card's edge
+    await expect(card(page, 2).locator(".paside")).toBeHidden();
+    // the value keeps its size
+    for (const i of [0, 1, 2]) await expect(card(page, i).locator(".big")).not.toHaveClass(/hfit/);
+  });
+
+  test("a ring around the icon or a badge's reads another entity", async ({ page }) => {
+    await mount(
+      page,
+      {
+        type: P,
+        entity: TEMP,
+        icon: { ring: { entity: "sensor.battery_soc", color: "orange" } },
+        badges: [{ entity: TEMP, icon: { ring: "sensor.battery_soc" } }],
+      },
+      { width: 800 },
+    );
+    const lead = card(page).locator(".plead .lead.ring");
+    const badge = card(page).locator(".corner .hval .bring .prog");
+    // the battery's 64 %, on its own scale (0 to 100)
+    await expect.poll(() => filled(lead.locator(".prog"))).toBeCloseTo(0.64, 2);
+    await expect.poll(() => filled(badge)).toBeCloseTo(0.64, 2);
+    // in its own colour
+    expect(await lead.evaluate((e) => e.style.getPropertyValue("--ring-color"))).toBe(
+      "var(--orange-color)",
+    );
+    await setState(page, "sensor.battery_soc", "20");
+    await expect.poll(() => filled(lead.locator(".prog"))).toBeCloseTo(0.2, 2);
+    await expect.poll(() => filled(badge)).toBeCloseTo(0.2, 2);
+  });
+
+  test("a ring keeps its colour where the kind draws the icon", async ({ page }) => {
+    const ring = { entity: "sensor.battery_soc", color: "orange" };
+    await mount(
+      page,
+      [
+        { type: P, entity: "weather.home", icon: { ring } },
+        { type: "custom:tile-card-pro", entity: "weather.home", icon: { ring } },
+      ],
+      { width: 800 },
+    );
+    for (const i of [0, 1]) {
+      const lead = card(page, i).locator(".lead.ring");
+      await expect(lead).toHaveCount(1);
+      expect(await lead.evaluate((e) => e.style.getPropertyValue("--ring-color"))).toBe(
+        "var(--orange-color)",
+      );
+      await expect.poll(() => filled(lead.locator(".prog"))).toBeCloseTo(0.64, 2);
+    }
+  });
+
+  test("secondary: false leaves the line under the value out, not the second value", async ({
+    page,
+  }) => {
+    await mount(
+      page,
+      [
+        { type: P, entity: TEMP, secondary: false },
+        { type: P, entity: "climate.living_room", control: false, secondary: false },
+        {
+          type: "custom:tile-card-pro",
+          entity: "climate.living_room",
+          control: false,
+          secondary: false,
+        },
+        { type: "custom:tile-card-pro", entity: "climate.living_room", control: false },
+      ],
+      { width: 800 },
+    );
+    // a temperature's "Today …" line goes, and takes no room
+    await expect(card(page, 0).locator(".ptext > .secondary")).toHaveCount(0);
+    // a thermostat keeps its target beside the value
+    await expect(card(page, 1).locator(".paside")).toHaveText("21.0°C");
+    // a tile's line keeps the value, not the target
+    await expect(card(page, 2)).not.toContainText("→");
+    await expect(card(page, 3)).toContainText("→ 21.0 °C");
   });
 });

@@ -117,6 +117,10 @@ export const normalizeTileConfig = (input: unknown, hass?: HomeAssistant): TileC
   const written = input as RawTileCardConfig;
   if (written.toggle !== undefined)
     throw new Error(`${CARD_TYPE}: toggle is control: toggle on the tile card`);
+  if ((written as { aside?: unknown }).aside !== undefined)
+    throw new Error(
+      `${CARD_TYPE}: aside is a poster's: a tile's line has its value, its status and its secondary`,
+    );
   if (typeof written.visual === "string" && GONE[written.visual])
     throw new Error(`${CARD_TYPE}: ${GONE[written.visual]}`);
   const table = written.table === true ? tableOf(written) : null;
